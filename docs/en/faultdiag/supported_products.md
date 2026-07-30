@@ -13,7 +13,7 @@ MindCluster Ascend FaultDiag is designed to provide users with the ability to ef
 </th>
 </tr>
 </thead>
-<tbody><tr id="row1357695881416"><td class="cellrowborder" rowspan="6" valign="top" width="31.89%" headers="mcps1.2.3.1.1 "><p id="p19576185814144"><a name="p19576185814144"></a><a name="p19576185814144"></a><span id="ph1157665817140"><a name="ph1157665817140"></a><a name="ph1157665817140"></a>Atlas Training Series Products</span></p>
+<tbody><tr id="row1357695881416"><td class="cellrowborder" rowspan="6" valign="top" width="31.89%" headers="mcps1.2.3.1.1 "><p id="p19576185814144"><a name="p19576185814144"></a><a name="p19576185814144"></a><span id="ph1157665817140"><a name="ph1157665817140"></a><a name="ph1157665817140"></a>Atlas Training Products</span></p>
 <p id="p187773141516"><a name="p187773141516"></a><a name="p187773141516"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="68.11%" headers="mcps1.2.3.1.2 "><p id="p0253711155"><a name="p0253711155"></a><a name="p0253711155"></a><span id="ph82143771517"><a name="ph82143771517"></a><a name="ph82143771517"></a>Atlas 300T Training Card (Model 9000)</span></p>

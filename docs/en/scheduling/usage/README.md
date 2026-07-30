@@ -9,6 +9,6 @@
 - [Resumable Training](./resumable_training/menu_resumable_training.md)
 - [Appliance](./appliance/menu_appliance.md)
 - [Best Practices for MindIE Motor Inference Jobs](./mindie_motor_best_practice/menu_mindie_motor_best_practice.md)
-- [Best Practices for SGLang Inference Jobs](./sglang_best_practice)
+- [Best Practices for SGLang Inference Jobs](./sglang_best_practice/menu_sglang_best_practice.md)
 - [Best Practices for vLLM Inference Jobs](./vllm_best_practice/menu_vllm_best_practice.md)
 - [Best Practices for Infer Operator Inference Jobs](./infer_operator_best_practice/menu_infer_operator_best_practice.md)

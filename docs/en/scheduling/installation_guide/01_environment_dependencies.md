@@ -7,9 +7,9 @@
 **Ascend Docker Runtime<a name="section14779174114012"></a>**
 
 - The Docker version in the current environment must be 18.09 and later.
-- The host machine must have the drivers and firmware installed. For details, see "Installing the NPU Driver and Firmware" in the [CANN Software Installation Guide](https://www.hiascend.com/document/detail/en/canncommercial/900/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian).
+- The host machine must have the drivers and firmware installed. For details, see "Installing the NPU Driver and Firmware" in the [CANN Software Installation](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/900/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian).
 - For Atlas 500 A2 intelligent station, installing Ascend Docker Runtime requires modifying the Docker configuration. Run the **vi /etc/sysconfig/docker** command to delete the `--config-file=""` parameter, and run **systemctl restart docker** to make the configuration take effect.
-- The MEF service pre-installed on the Atlas 500 A2 intelligent station performs security hardening on Docker. Ascend Docker Runtime does not support running in a security-hardened Docker environment. If you need to use Ascend Docker Runtime, manually uninstall the MEF service by referring to the "Uninstalling MEF Edge" in the [MindEdge Framework User Guide](https://gitcode.com/Ascend/MEF/blob/master/docs/zh/user_guide/installation_guide.md#%E5%8D%B8%E8%BD%BDmef-edge).
+- The MEF service pre-installed on the Atlas 500 A2 intelligent station performs security hardening on Docker. Ascend Docker Runtime does not support running in a security-hardened Docker environment. If you need to use Ascend Docker Runtime, manually uninstall the MEF service by referring to the "Uninstalling MEF Edge" in the [MindEdge Framework User Guide](https://gitcode.com/Ascend/MEF/blob/branch_v26.0.0/docs/en/user_guide/installation_guide.md#uninstalling-mef-edge).
 
     >[!NOTE]
     >
@@ -29,7 +29,7 @@ The dependencies for the Arm architecture and x86_64 architecture are different.
 |(Optional) Docker|18.09.x~28.5.1|All nodes|It can be obtained from the [Docker community or official website](https://docs.docker.com/engine/install/). The Docker version used must be compatible with Kubernetes. For compatibility details, refer to the Kubernetes [release notes](https://github.com/kubernetes/kubernetes/tree/master/CHANGELOG) or obtain information from the Kubernetes community. It is recommended to select the latest bugfix version.|
 |(Optional) Containerd|1.4.x~2.1.4 (1.6.x is recommended)|All nodes|It can be obtained from the Containerd [official website](https://containerd.io/downloads/) or [community](https://github.com/containerd/containerd/blob/main/docs/getting-started.md#installing-containerd). It is recommended to select the latest bugfix version. Pay attention to the [CRI version](https://kubernetes.io/docs/setup/production-environment/container-runtimes/#cri-versions) used with Kubernetes.|
 |Ascend AI Processor Drivers and Firmware|Select the drivers and firmware compatible with MindCluster based on the actual hardware device model.|Compute node|See the [Driver and Firmware Installation and Upgrade Guide](https://support.huawei.com/enterprise/en/ascend-computing/ascend-hdk-pid-252764743) for each hardware product for corresponding instructions.<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><p>To ensure that NPU Exporter can be installed by a non-root user (such as hwMindX) when deployed as a binary, use the --install-for-all parameter during driver installation. An example is as follows.</p><pre class="screen">./Ascend-hdk-&lt;chip_type&gt;-npu-driver_&lt;version&gt;_linux-&lt;arch&gt;.run --full --install-for-all</pre></div></div>|
-|(Optional) CANN|If only the cluster scheduling component is installed, CANN is not required. Users can choose to install the required CANN software package based on actual needs. See the version compatibility table to install the corresponding software package.|Compute node or inside training/inference containers|To install the CANN software package on the host, see [CANN Software Installation Guide](https://www.hiascend.com/document/detail/en/canncommercial/900/softwareinst/instg/instg_0000.html?Mode=PmIns&InstallType=netconda&OS=openEuler).<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">If the soft partitioning virtualization function is used, CANN must be installed, and the compatible CANN version is 8.5.0. For details, see [vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md).</div></div>|
+|(Optional) CANN|If only the cluster scheduling component is installed, CANN is not required. Users can choose to install the required CANN software package based on actual needs. See the version compatibility table to install the corresponding software package.|Compute node or inside training/inference containers|To install the CANN software package on the host, see [CANN Software Installation](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/900/softwareinst/instg/instg_0000.html?Mode=PmIns&InstallType=netconda&OS=openEuler).<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">If the soft partitioning virtualization function is used, CANN must be installed, and the compatible CANN version is 8.5.0. For details, see [vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md).</div></div>|
 |Python|3.8~3.12|Inside training or inference containers|When using Python, the version should be based on the specific AI framework.|
 
 >[!NOTE]
@@ -76,7 +76,7 @@ The recommended operating system disk partition is shown in [Table 2](#table1477
 |--|--|--|--|
 |/boot|Boot partition.|500 MB|on|
 |/var|Partition for storing data generated during software operation, such as logs and caches.|> 300 GB|off|
-|/var/lib/docker|Partition for storing Docker images and containers.<div class="note"><span class="notetitle">[!NOTE] Note:</span><div class="notebody">Docker images and containers are stored in the /var/lib/docker partition by default. If the usage of the /var/lib/docker partition exceeds 85%, K8s will trigger the resource eviction mechanism. Ensure that the usage of the /var/lib/docker partition remains below 85% during use.</div></div>|> 300 GB|off|
+|/var/lib/docker|Partition for storing Docker images and containers.<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">Docker images and containers are stored in the /var/lib/docker partition by default. If the usage of the /var/lib/docker partition exceeds 85%, K8s will trigger the resource eviction mechanism. Ensure that the usage of the /var/lib/docker partition remains below 85% during use.</div></div>|> 300 GB|off|
 |/etc/mindx-dl|This partition stores imported certificates, KubeConfig, and other files. It is recommended to configure 100 MB, which can be adjusted based on actual conditions.|100 MB|off|
 |/|Main partition.|> 300 GB|off|
 
@@ -84,7 +84,7 @@ The recommended operating system disk partition is shown in [Table 2](#table1477
 
 The hardware must meet the following requirements:
 
-**Table 2** Resource requirements
+**Table 3** Resource requirements
 
 <a name="table292311420386"></a>
 
@@ -92,14 +92,14 @@ The hardware must meet the following requirements:
 |--|--|
 |CPU|Management node CPU > 32 cores|
 |Memory|Management node memory > 64 GB|
-|Disk space|> 1 TB. For disk space planning, see [Table 1](#table147711423499)|
+|Disk space|> 1 TB. For disk space planning, see [Table 2](#table147711423499)|
 |Network|<ul><li>Out-of-band management (BMC): ≥ 1 Gbit/s</li><li>In-band management (SSH): ≥ 1 Gbit/s</li><li>Service plane: ≥ 10 Gbit/s</li><li>Storage plane: ≥ 25 Gbit/s</li><li>Parameter plane: 100 Gbit/s or 200 Gbit/s</li></ul>|
 
 **Cluster Scheduling Component Resource Configuration Requirements<a name="section168471642185618"></a>**
 
 The cluster scheduling component resource configuration must meet the following requirements:
 
-**Table 3** Resource configuration requirements for components installed on management nodes
+**Table 4** Resource configuration requirements for components installed on management nodes
 
 <a name="table1259491717587"></a>
 <table><thead align="left"><tr id="row13594171755810"><th class="cellrowborder" rowspan="2" valign="top" id="mcps1.2.8.1.1"><p id="p16594201795815"><a name="p16594201795815"></a><a name="p16594201795815"></a>Component</p>
@@ -203,7 +203,7 @@ The cluster scheduling component resource configuration must meet the following 
 </tbody>
 </table>
 
-**Table 4** Resource configuration requirements for components installed on compute nodes
+**Table 5** Resource configuration requirements for components installed on compute nodes
 
 <a name="table8522160193317"></a>
 
@@ -212,4 +212,4 @@ The cluster scheduling component resource configuration must meet the following 
 |Ascend Device Plugin|0.5|0.5|
 |NodeD|0.5|0.3|
 |NPU Exporter|1|1|
-|Ascend Docker Runtime|A Docker service plugin that does not require dedicated CPU and memory space|
+|Ascend Docker Runtime|A Docker service plugin that does not require dedicated CPU|A Docker service plugin that does not require dedicated memory space|

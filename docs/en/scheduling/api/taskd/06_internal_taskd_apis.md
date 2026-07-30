@@ -15,7 +15,7 @@ rpc Register(RegisterReq) returns (Ack)</pre>
 
 **Input Parameters<a name="section1177311115553"></a>**
 
-**Table 1**  Parameter description
+**Table 1** Parameter description
 
 |Parameter|Type (Protobuf Definition)|Description|
 |--|--|--|
@@ -23,11 +23,11 @@ rpc Register(RegisterReq) returns (Ack)</pre>
 
 **Return Value<a name="section4468173015517"></a>**
 
-**Table 2**  Return value description
+**Table 2** Return value description
 
 |Return Value|Type (Protobuf Definition)|Description|
 |--|--|--|
-|Ack|message Ack {<p>string uuid = 1;</p><p>uint32 code = 2;</p><p>Position src = 3;</p>}|<p>**uuid**: Consistent with the UUID of the registration message</p><p>**code**: Return Code<li>Value `0`: Registration success</li><li>Other Values: Registration Failure</li></p><p>**src**: Position information of the role returning the Ack confirmation message</p>|
+|Ack|message Ack {<p>string uuid = 1;</p><p>uint32 code = 2;</p><p>Position src = 3;</p>}|<p>**uuid**: Consistent with the UUID of the registration message</p><p>**code**: Return Code<li>Value `0`: Registration success</li><li>Other Values: Registration failure</li></p><p>**src**: Position information of the role returning the Ack confirmation message</p>|
 
 ## PathDiscovery (Internal, Do Not Call)<a name="ZH-CN_TOPIC_0000002479226818"></a>
 
@@ -50,7 +50,7 @@ rpc PathDiscovery(PathDiscoveryReq) returns (Ack)</pre>
 
 **Return Value<a name="section4468173015517"></a>**
 
-**Table 2**  Return value description
+**Table 2** Return value description
 
 |Return Value|Type (Protobuf Definition)|Description|
 |--|--|--|
@@ -69,7 +69,7 @@ rpc TransferMessage(Message) returns (Ack)</pre>
 
 **Input Parameters<a name="section1177311115553"></a>**
 
-**Table 1**  Parameter description
+**Table 1** Parameter description
 
 | Parameter | Type (Protobuf Definition) | Description |
 |--|--|--|
@@ -77,7 +77,7 @@ rpc TransferMessage(Message) returns (Ack)</pre>
 
 **Return Value<a name="section4468173015517"></a>**
 
-**Table 2**  Return value description
+**Table 2** Return value description
 
 | Return Value | Type (Protobuf Definition) | Description |
 |--|--|--|

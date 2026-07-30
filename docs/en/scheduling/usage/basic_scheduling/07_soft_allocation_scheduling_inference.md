@@ -16,7 +16,7 @@ To use the soft partitioning-based scheduling feature, ensure that the following
 
 The usage of the soft partitioning-based scheduling feature is as follows:
 
-- Via command line: Instal cluster scheduling components and use the soft partitioning-based scheduling feature via the command line.
+- Via command line: Install cluster scheduling components and use the soft partitioning-based scheduling feature via the command line.
 - After integration: Integrate cluster scheduling components into an existing third-party AI platform or an AI platform developed based on these components.
 
 ### Supported Product Forms
@@ -29,15 +29,16 @@ The usage of the soft partitioning-based scheduling feature is as follows:
 The process for using the soft partitioning-based scheduling via command line can be seen in [Figure 1](#fig24252498666vcann).
 
 **Figure 1** Usage process<a name="fig24252498666vcann"></a>
+
 ![](../../../figures/scheduling/basic_scheduling_001.png)
 
 For details about how to modify the parameters of related cluster scheduling components, see [Soft Partitioning-based Virtualization](../virtual_instance/virtual_instance_with_vcann_rt/01_soft_allocation_virtualization.md).
 
 ## Implementation Principles
 
-Currently, only the acjob type is supported. Its schematic diagram is shown in [Figure 1](#fig23698010123).
+Currently, only the acjob type is supported. Its schematic diagram is shown in [Figure 2](#fig23698010123).
 
-**Figure 1** Schematic diagram of acjob scheduling<a name="fig23698010123"></a>
+**Figure 2** Schematic diagram of acjob scheduling<a name="fig23698010123"></a>
 ![](../../../figures/scheduling/basic_scheduling_002.PNG)
 
 The description of each step is as follows:
@@ -46,13 +47,13 @@ The description of each step is as follows:
     - kubelet reports the number of node chips to the node object.
     - Ascend Device Plugin periodically reports chip topology information.
 
-        Reports soft-partitioned NPU information. Reports the physical ID of the chip to `device-info-cm;` reports the total allocatable chip percentage, the alloacated chip percentage, and basic chip information (device_ip and super_device_ip) to the node for soft partitioning-based scheduling.
+        Reports soft-partitioned NPU information. Reports the physical ID of the chip to `device-info-cm`; reports the total allocatable chip percentage, the allocated chip percentage, and basic chip information (device_ip and super_device_ip) to the node for soft partitioning-based scheduling.
 
     - When a fault exists on the node, NodeD periodically reports the node health status, node hardware fault information, and node DPC shared storage fault information to `node-info-cm`.
 
 2. After reading the information in `device-info-cm` and `node-info-cm`, ClusterD writes the information to `cluster-info-cm`.
 3. Deliver an acjob via kubectl or other deep learning platforms.
-4. Ascend Operator creates the corresponding PodGroup for the jop. For detailed information about PodGroup, see the [official open-source Volcano documentation](https://volcano.sh/en/docs/v1-9-0/podgroup/).
+4. Ascend Operator creates the corresponding PodGroup for the job. For detailed information about PodGroup, see the [official open-source Volcano documentation](https://volcano.sh/en/docs/v1-9-0/podgroup/).
 5. Ascend Operator creates the corresponding Pod for the job and injects the environment variables required for collective communication into the container.
 6. volcano-scheduler selects an appropriate node for the job based on the node's total chip AICore percentage, total chip high-bandwidth memory, and the used information in the annotations of Pods already deployed on that node, and writes the selected chip information into the Pod's annotations.
 7. When kubelet creates the container, it calls Ascend Device Plugin to mount the chip and the files required for chip sharing. Ascend Device Plugin or volcano-scheduler writes the chip information into the Pod's annotations. Ascend Docker Runtime assists in mounting the corresponding resources.

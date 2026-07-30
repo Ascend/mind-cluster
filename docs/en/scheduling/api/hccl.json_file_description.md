@@ -37,7 +37,7 @@ hccl.json:
         "host_ip": "xx.xx.xx.xx",      // Host IP Address of the AI Server
         "container_ip": "192.168.149.xx",   // Pod IP
     "hardware_type":"800I-A2-32G"       // Product Model
-    }]
+    }],
     "server_count": "1",   // Total Number of Servers for the Task
     "version": "1.0"
 }

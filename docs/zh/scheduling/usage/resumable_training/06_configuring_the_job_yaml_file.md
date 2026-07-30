@@ -229,15 +229,15 @@
 </div>
 <div class="p" id="zh-cn_topic_0000002039339953_p136171314938"><a name="zh-cn_topic_0000002039339953_p136171314938"></a><a name="zh-cn_topic_0000002039339953_p136171314938"></a><span id="zh-cn_topic_0000002039339953_ph161712141313"><a name="zh-cn_topic_0000002039339953_ph161712141313"></a><a name="zh-cn_topic_0000002039339953_ph161712141313"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="zh-cn_topic_0000002039339953_ph188291824164611"><a name="zh-cn_topic_0000002039339953_ph188291824164611"></a><a name="zh-cn_topic_0000002039339953_ph188291824164611"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph83001907446"><a name="ph83001907446"></a><a name="ph83001907446"></a>Atlas 800T A3 超节点服务器</span>：<a name="zh-cn_topic_0000002039339953_ul261751412316"></a><a name="zh-cn_topic_0000002039339953_ul261751412316"></a><ul id="zh-cn_topic_0000002039339953_ul261751412316"><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、6、8、10、12、14、16</li><li>分布式任务：2、4、6、8、10、12、14、16</li><li>针对<span id="ph6583110111012"><a name="ph6583110111012"></a><a name="ph6583110111012"></a>Atlas 900 A3 SuperPoD 超节点</span>的逻辑超节点亲和任务：16</li></ul>
 </div>
-<div class="p"><a name=""></a><a name=""></a><span>Atlas 350 标卡（无互联节点内8卡）</span>：<a name=""></a><a name=""></a><ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul>
+<div class="p"><a name=""></a><a name=""></a><span>Atlas 350 标卡服务器（无互联节点内8卡）</span>：<a name=""></a><a name=""></a><ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul>
 </div>
-<div class="p"><a name=""></a><a name=""></a><span>Atlas 350 标卡（无互联节点内16卡）</span>：<a name=""></a><a name=""></a><ul><li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li><li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li></ul>
+<div class="p"><a name=""></a><a name=""></a><span>Atlas 350 标卡服务器（无互联节点内16卡）</span>：<a name=""></a><a name=""></a><ul><li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li><li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li></ul>
 </div>
-<div class="p"><a name=""></a><a name=""></a><span>Atlas 350 标卡（4P mesh 8卡）</span>：<a name=""></a><a name=""></a><ul><li>单机（满足亲和性）：1、2、3、4、8</li><li>单机（不保证亲和性）：5、6、7</li><li>分布式（满足亲和性）：1、2、3、4、8</li><li>分布式（不保证亲和性）：5、6、7</li></ul>
+<div class="p"><a name=""></a><a name=""></a><span>Atlas 350 标卡服务器（4P mesh 8卡）</span>：<a name=""></a><a name=""></a><ul><li>单机（满足亲和性）：1、2、3、4、8</li><li>单机（不保证亲和性）：5、6、7</li><li>分布式（满足亲和性）：1、2、3、4、8</li><li>分布式（不保证亲和性）：5、6、7</li></ul>
 </div>
-<div class="p"><a name=""></a><a name=""></a><span>Atlas 350 标卡（4P mesh 16卡）</span>：<a name=""></a><a name=""></a><ul><li>单机（满足亲和性）：1、2、3、4、8、12、16</li><li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li><li>分布式（满足亲和性）：1、2、3、4、8、12、16</li><li>分布式（不保证亲和性）：5、6、7、9、10、11、13、14、15</li></ul>
+<div class="p"><a name=""></a><a name=""></a><span>Atlas 350 标卡服务器（4P mesh 16卡）</span>：<a name=""></a><a name=""></a><ul><li>单机（满足亲和性）：1、2、3、4、8、12、16</li><li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li><li>分布式（满足亲和性）：1、2、3、4、8、12、16</li><li>分布式（不保证亲和性）：5、6、7、9、10、11、13、14、15</li></ul>
 </div>
-<div class="p"><a name=""></a><a name=""></a><span>Atlas 850 系列硬件产品（普通集群）</span>：<a name=""></a><a name=""></a><ul><li>单机：1、2、4、8</li><li>分布式：1、2、4、8</li></ul>
+<div class="p"><a name=""></a><a name=""></a><span>Atlas 850 系列硬件产品（普通集群）</span>：<a name=""></a><a name=""></a><ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul>
 </div>
 <div class="p"><a name=""></a><a name=""></a><span>Atlas 850 系列硬件产品（超节点集群）</span>：<a name=""></a><a name=""></a><ul><li>单机：1、2、4、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul>
 </div>
@@ -605,8 +605,8 @@
            framework: pytorch   
            ring-controller.atlas: ascend-{xxx}b    
            <strong>fault-scheduling: "grace"</strong>    
-           <strong>fault-retry-times: "10"   // 开启无条件重试</strong>
-           <strong>pod-rescheduling: "on"   // 开启Pod级重调度</strong>
+           <strong>fault-retry-times: "10"   # 开启无条件重试</strong>
+           <strong>pod-rescheduling: "on"   # 开启Pod级重调度</strong>
            tor-affinity: "null" # 该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不适用。large-model-schema表示大模型任务或填充任务，normal-schema表示普通任务
     ...
       annotations:  

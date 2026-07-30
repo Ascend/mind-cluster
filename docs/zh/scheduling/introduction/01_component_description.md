@@ -200,7 +200,7 @@ Resilience Controller组件属于Kubernetes插件，需要安装到K8s集群中�
 **图 1**  组件上下游依赖<a name="fig19841330125219"></a>  
 ![](../../figures/scheduling/组件上下游依赖-6.png "组件上下游依赖-6")
 
-- MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写入ConfigMap中，并映射到容器内，ConfigMap名称为[reset-config-任务名称](../api/volcano.md#任务信息)。
+- MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写入ConfigMap中，并映射到容器内，ConfigMap名称为[reset-config-<任务名称\>](../api/volcano.md#任务信息)。
 - Elastic Agent通过ConfigMap获取当前训练容器所使用的设备状况和训练任务状态等信息。
 - Elastic Agent对接K8s集群控制中心，根据集群控制中心完成训练管理。
 
@@ -325,7 +325,7 @@ MindCluster提供Infer Operator组件，根据推理服务的实例配置，拉�
 
 **组件上下游依赖**
 
-**图 1**  组件上下游依赖<a name="fig107831859288"></a>  
+**图 1**  组件上下游依赖<a name="fig1078318592693"></a>  
 ![](../../figures/scheduling/introduction_infer-operator.PNG "introduction_infer-operator")
 
 1. 基于用户配置的任务YAML创建推理实例Workload。

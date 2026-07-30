@@ -2,7 +2,7 @@
 
 <!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-04T12:22:22.102Z pushedAt=2026-06-04T12:26:58.406Z -->
 
-MindCluster is a deep learning for an AI cluster built to support NPUs (Ascend AI Processors), providing cluster-level solutions specifically for training and inference tasks. By leveraging MindCluster, deep learning platform developers can minimize development efforts related to underlying resource scheduling and rapidly build their platforms.
+MindCluster is a deep learning component for an AI cluster built to support NPUs (Ascend AI Processors), providing cluster-level solutions specifically for training and inference tasks. By leveraging MindCluster, deep learning platform developers can minimize development efforts related to underlying resource scheduling and rapidly build their platforms.
 
 **Figure 1** MindCluster Stack Diagram<a name="fig163081328205916"></a>
 ![](figures/scheduling/mindcluster-arch.png)
@@ -15,7 +15,7 @@ MindCluster is a deep learning for an AI cluster built to support NPUs (Ascend A
 
 |Key Feature|Introduction|Reference|
 |--|--|--|
-|Installation and deployment|Provides online download, installation, and signature verification for Ascend software and its dependencies.|[Installation and Deployment](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/en/introduction.md)|
+|Installation and deployment|Provides online download, installation, and signature verification for Ascend software and its dependencies.|[Installation and Deployment](https://gitcode.com/Ascend/ascend-deployer/blob/26.0.0/docs/en/introduction.md)|
 |Performance testing|Provides functions such as Atlas hardware compatibility check, performance testing, and fault diagnosis.|[Performance Testing](https://www.hiascend.com/document/detail/en/mindcluster/2600/toolbox/toolboxug/toolboxug_0002.html)|
 |Fault Diagnosis|Provides log cleaning and fault diagnosis functions for training and inference tasks, and locates the root cause of failures.|[Fault Diagnosis](./faultdiag/introduction.md)|
 |Cluster Scheduling|Provides functions such as NPU resource scheduling and management, configuration generation for distributed training collective communication, and resumable training.|[Cluster Scheduling](./scheduling/introduction/00_overview.md)|
@@ -57,5 +57,5 @@ MindCluster is a deep learning for an AI cluster built to support NPUs (Ascend A
 |TaskD|Provides status monitoring and status control capabilities for training and inference tasks on Ascend devices.|
 |MindIO ACP|Uses the training server memory as a cache to accelerate the saving and loading of checkpoints during large model training.|
 |MindIO TFT|Provides functions such as TTP, UCE, and ARF.|
-|Container Manager|Provides service container recovery capability in non-Kubernetes scenarios, mainly used an appliance.|
+|Container Manager|Provides service container recovery capability in non-Kubernetes scenarios, mainly used in appliances.|
 |Infer Operator|Manages the lifecycle of inference services based on their configuration, supporting instance-level scaling and task role expansion.|

@@ -116,14 +116,14 @@ Sets device connection configuration.
 
 | Format | Description |
 |---------|------|
-| `set_conn_config <file path>` | Sets the device connection configuration file. |
+| `set_conn_config <file_path>` | Sets the device connection configuration file. |
 | `set_conn_config ?` | Views details of the configuration. |
 
 **Parameter Description**
 
 |Parameter|Description|
 |---|---|
-|`<file path>`|Path to the connection configuration file|
+|`<file_path>`|Path to the connection configuration file|
 
 **Configuration File Structure**
 
@@ -266,14 +266,14 @@ Starts inspection result diagnosis.
 | Format | Description |
 |---------|------|
 | `auto_inspection` | Starts diagnosis using the default customer type. |
-| `auto_inspection <customer type>` | Starts diagnosis using the specified customer type. |
+| `auto_inspection <customer_type>` | Starts diagnosis using the specified customer type. |
 | `auto_inspection ?` | Views supported customer types. |
 
 **Parameter Description**
 
 |Parameter|Description|
 |---|---|
-|`<customer type>`|Enumeration value of supported customer types. Currently supports `default`.|
+|`<customer_type>`|Enumeration value of supported customer types. Currently supports `default`.|
 
 ### auto_diag
 

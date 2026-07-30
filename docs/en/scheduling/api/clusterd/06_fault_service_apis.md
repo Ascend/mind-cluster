@@ -24,7 +24,7 @@ rpc Register(ClientInfo) returns (Status) {}
 
 |Return Value|Type (Protobuf Definition)|Description|
 |--|--|--|
-|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info =2;</p>}|**Status.code**: Return code.<ul><li>Value `0`: Indicates successful registration.</li><li>Other values: Indicates registration failure.</li></ul>**Status.info**: Return information.|
+|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info = 2;</p>}|**Status.code**: Return code.<ul><li>Value `0`: Indicates successful registration.</li><li>Other values: Indicates registration failure.</li></ul>**Status.info**: Return information.|
 
 ## SubscribeFaultMsgSignal<a name="ZH-CN_TOPIC_0000002511426699"></a>
 

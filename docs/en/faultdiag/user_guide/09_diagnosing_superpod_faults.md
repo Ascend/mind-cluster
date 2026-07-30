@@ -2,9 +2,9 @@
 
 The SuperPoD fault diagnosis involves three scenarios: manually configured SuperPoD topology, non-manually configured SuperPoD topology, and missing host logs.
 
-- In [non-manually configured SuperPoD topology](#non-manually-configured-SuperPoD-topology) scenario, any of the BMC, Host, and LCNE logs cannot be missing.
-- If LCNE or BMC logs are missing, see [manually configured SuperPoD topology](#manually-configured-SuperPoD-topology).
-- If host logs are missing, store the cleaning output results in the same folder for diagnosis by referring to [host log missing](#host-log-missing). 
+- In [non-manually configured SuperPoD topology](#section181656598409) scenario, any of the BMC, Host, and LCNE logs cannot be missing.
+- If LCNE or BMC logs are missing, see [manually configured SuperPoD topology](#section117571749184019).
+- If host logs are missing, store the cleaning output results in the same folder for diagnosis by referring to [host log missing](#section2910173013308). 
 
 ## Non-manually Configured SuperPoD Topology<a name="section181656598409"></a>
 
@@ -117,7 +117,7 @@ When performing diagnosis with `-s super_pod`, ensure that BMC, host, and LCNE l
 >[!NOTE]
 >
 >- For more details about the example provided in this section, refer to [SuperPoD Log Cleaning and Diagnosis Script](https://gitcode.com/Ascend/mindxdl-deploy/tree/master/super_pod_diag) to decompress, clean, and diagnose superPoD logs in batches.
->- When the log level is low, key logs may be refreshed and cannot be diagnosed. The involved environment variables include `ASCEND_GLOBAL_EVENT_ENABLE`, `HCCL_ENTRY_LOG_ENABLE`, `ASCEND_GLOBAL_LOG_LEVEL`, and `ASCEND_MODULE_LOG_LEVEL`. For more information, see [Environment Variable List](https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/envvar/envref_07_0001.html) in the *CANN Environment Variable Reference*.
+>- When the log level is low, key logs may be refreshed and cannot be diagnosed. The involved environment variables include `ASCEND_GLOBAL_EVENT_ENABLE`, `HCCL_ENTRY_LOG_ENABLE`, `ASCEND_GLOBAL_LOG_LEVEL`, and `ASCEND_MODULE_LOG_LEVEL`. For more information, see [Environment Variable List](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/900/maintenref/envvar/envref_07_0001.html) in the *CANN Environment Variable Reference*.
 
 ## Manually Configured SuperPoD Topology<a name="section117571749184019"></a>
 

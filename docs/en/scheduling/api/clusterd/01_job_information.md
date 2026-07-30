@@ -52,6 +52,6 @@ This ConfigMap is located in the `cluster-system` namespace. It is used to displ
 |- jobType|Job type, for example, vcjob, acjob, etc.|String|
 |- nameSpace|Namespace where the job resides.|String|
 |- conditions|Details of job exception conditions.|Object|
-|-- status|Job status.<ul><li>`JobEmptyStatus`: Job status is empty.</li><li>`JobInitialized`: Job has been initialized.</li><li>JobFailed: Job failed.</li><li>`PodGroupCreated`: PodGroup has been created.</li><li>`PodGroupPending`: PodGroup is in Pending status.</li><li>`PodGroupInqueue`: PodGroup is in Inqueue status.</li><li>`PodGroupUnknown:` PodGroup status is unknown.</li><li>`PodGroupRunning`: PodGroup is in Running status.</li></ul>|String|
+|-- status|Job status.<ul><li>`JobEmptyStatus`: Job status is empty.</li><li>`JobInitialized`: Job has been initialized.</li><li>`JobFailed`: Job failed.</li><li>`PodGroupCreated`: PodGroup has been created.</li><li>`PodGroupPending`: PodGroup is in Pending status.</li><li>`PodGroupInqueue`: PodGroup is in Inqueue status.</li><li>`PodGroupUnknown`: PodGroup status is unknown.</li><li>`PodGroupRunning`: PodGroup is in Running status.</li></ul>|String|
 |-- reason|Exception reason, including `JobEnqueueFailed`, `JobValidateFailed`, `NodePredicateFailed`, `BatchOrderFailed`, `NotEnoughResources`, `PodPending`, `PodFailed`, `PgNotInitialized`, `JobNoInitialized`, etc.|String|
 |-- message|Detailed exception information, including fault description and troubleshooting suggestions.|String|

@@ -113,7 +113,7 @@ To deliver inference jobs of the InferServiceSet type, you must install Infer Op
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="p56159486469"><a name="p56159486469"></a><a name="p56159486469"></a>/var/log/mindx-dl/infer-operator/infer-operator.log</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p16151448144613"><a name="p16151448144613"></a><a name="p16151448144613"></a>Log file. When a single log file exceeds 20 MB, the automatic dump function is triggered. The maximum file size cannot be modified. The naming format of the dumped file is: infer-operator-<time when dump is triggered/>.log, for example: infer-operator-2023-10-07T03-38-24.402.log.</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p16151448144613"><a name="p16151448144613"></a><a name="p16151448144613"></a>Log file. When a single log file exceeds 20 MB, the automatic dump function is triggered. The maximum file size cannot be modified. The naming format of the dumped file is: infer-operator-<em>dump_trigger_time</em>.log, for example: infer-operator-2023-10-07T03-38-24.402.log.</p>
 </td>
 </tr>
 <tr id="row8615248184611"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="p361516481465"><a name="p361516481465"></a><a name="p361516481465"></a>-maxBackups</p>

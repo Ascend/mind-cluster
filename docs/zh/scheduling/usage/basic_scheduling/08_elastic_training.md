@@ -750,10 +750,10 @@
             if args_opt.run_type == "train":
                 args_opt.start_lr = 6e-5
                 args_opt.end_lr = 6e-6
-               args_opt.stage_num = 8               # 流水线阶段的数量
-               args_opt.micro_size = 16             # 流水线并行模式下的微批次大小，其取值应大于args_opt.stage_num
+                args_opt.stage_num = 8               # 流水线阶段的数量
+                args_opt.micro_size = 16             # 流水线并行模式下的微批次大小，其取值应大于args_opt.stage_num
                 args_opt.op_level_model_parallel_num = 16
-                if args_opt.optimizer_shard = 1:
+                if args_opt.optimizer_shard == 1:
                     args_opt.op_level_model_parallel_num = 8
             elif args_opt.run_type == "predict":
                 args_opt.stage_num = 4
@@ -811,7 +811,7 @@
     # 如果运行的模型开启pipeline并行，则修改在以下函数
     # 安全提示，涉及对路径和输入参数的校验
     def set_pipeline_parallel_context(args_opt):
-    # 在mindspore.set_auto_parallel_context前添加以下代码，请参考[MindSpore文档分布式并行接口说明](https://www.mindspore.cn/tutorials/experts/zh-CN/r2.0/index.html)对set_auto_parallel_context参数的使用说明
+    # 在mindspore.set_auto_parallel_context前添加以下代码，请参考https://www.mindspore.cn/tutorials/experts/zh-CN/r2.0/index.html对set_auto_parallel_context参数的使用说明
             
              
             # 弹性训练中增加内容
@@ -819,9 +819,9 @@
                 args_opt.strategy_load_ckpt_path = ""
     
             # 弹性训练中增加内容，strategy_ckpt_save_file_path参数可以根据容器内路径指定
-            strategy_ckpt_save_file_path = '/job/data/code/fault_torlence/pangu_alpha/strategy.ckpt' 
+            strategy_ckpt_save_file_path = '/job/data/code/fault_tolerance/pangu_alpha/strategy.ckpt' 
             if args_opt.strategy_load_ckpt_path == strategy_ckpt_save_file_path:
-                 strategy_ckpt_save_file_path = '/job/data/code/fault_torlence/pangu_alpha/strategy_new.ckpt'
+                 strategy_ckpt_save_file_path = '/job/data/code/fault_tolerance/pangu_alpha/strategy_new.ckpt'
      
             # 将strategy_ckpt_save_file='strategy.ckpt'修改成strategy_ckpt_save_file=strategy_ckpt_save_file_path，如果set_auto_parallel_context里没有指定strategy_ckpt_save_file参数，则需要手动添加strategy_ckpt_save_file=strategy_ckpt_save_file_path，如下粗体所示
             mindspore.set_auto_parallel_context(
@@ -899,8 +899,8 @@
     ...
         parser.add_argument("--strategy_load_ckpt_path",
                             type=str,
-                            default="/job/data/code/fault_torlence/pangu_alpha/strategy/strategy.ckpt", # 弹性训练中，根据用户习惯指定容器内路径，且路径不会被训练覆盖。
-                            help="The training prallel strategy for the model.")
+                            default="/job/data/code/fault_tolerance/pangu_alpha/strategy/strategy.ckpt", # 弹性训练中，根据用户习惯指定容器内路径，且路径不会被训练覆盖。
+                            help="The training parallel strategy for the model.")
         parser.add_argument("--tokenizer_path",
                             type=str,
                             default="./tokenizer_path",
@@ -912,11 +912,11 @@
         """
         opt.add_argument("--pre_trained",
                          type=str,
-                         default="/job/data/code/fault_torlence/pangu_alpha/8p", # 指定预训练模型路径，
+                         default="/job/data/code/fault_tolerance/pangu_alpha/8p", # 指定预训练模型路径，
                          help="Pretrained checkpoint path.")
         opt.add_argument("--save_checkpoint_path",  
                          type=str,
-                         default="/job/data/code/fault_torlence/pangu_alpha/8p",   # 指定模型保存路径
+                         default="/job/data/code/fault_tolerance/pangu_alpha/8p",   # 指定模型保存路径
                          help="Save checkpoint path.")
         opt.add_argument("--keep_checkpoint_max", # 指定模型保存策略：最大数量
                          type=int,

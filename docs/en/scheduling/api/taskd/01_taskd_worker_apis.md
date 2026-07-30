@@ -22,7 +22,7 @@ The user-side code calls this function to initialize TaskD Worker.
 
 |Return Value Type|Description|
 |--|--|
-|bool|Indicates whether the initialization is successful.<ul><li>`True:` Initialization succeed.</li><li>`False`: Initialization failed.</li></ul>|
+|bool|Indicates whether the initialization is successful.<ul><li>`True:` Initialization succeeded.</li><li>`False`: Initialization failed.</li></ul>|
 
 ## def start_taskd_worker() -> bool<a name="ZH-CN_TOPIC_0000002511346737"></a>
 
@@ -38,7 +38,7 @@ No input parameters.
 
 |Parameter|Description|
 |--|--|
-|bool|Indicates whether the initialization is successful.<ul><li>`True:` Initialization succeed.</li><li>`False`: Initialization failed.</li></ul>|
+|bool|Indicates whether the initialization is successful.<ul><li>`True:` Initialization succeeded.</li><li>`False`: Initialization failed.</li></ul>|
 
 ## def destroy_taskd_worker() -> bool:<a name="ZH-CN_TOPIC_0000002511426721"></a>
 

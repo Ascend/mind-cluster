@@ -4,7 +4,7 @@
 
 ## Scheduling Configuration<a name="ZH-CN_TOPIC_0000002511427007"></a>
 
-Volcano supports native K8s scheduling and can use `nodeAffinity` for scheduling. The following example uses mandatory node affinity for scheduling. For more information about the `nodeAffinity` field, see the [official Kubernetes official](https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/).
+Volcano supports native K8s scheduling and can use `nodeAffinity` for scheduling. The following example uses mandatory node affinity for scheduling. For more information about the `nodeAffinity` field, see the [official Kubernetes documentation](https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/).
 
 - In the Volcano Job YAML, add the following fields in bold.
 
@@ -108,7 +108,7 @@ Network File System (NFS) allows computers in a network to share resources. In c
 4. Append the following content to the end of the `/etc/exports` file, configure the allowed IP addresses as needed, and strengthen the relevant permission settings.
 
     ```shell
-    /data/atlas_dls Service IP address (configure the necessary permission)
+    /data/atlas_dls <Service_IP_address> (configure the necessary permission)
     ```
 
 5. Start rpcbind.
@@ -215,7 +215,7 @@ NFS is a network file system that allows computers on a network to share resourc
 4. Run the `vi /etc/exports` command, append the following content to the end of the file, configure the allowed IP addresses as needed, and strengthen the relevant permission settings.
 
     ```shell
-    /data/atlas_dls Service IP address (configure necessary permission)
+    /data/atlas_dls <Service_IP_address> (configure necessary permission)
     ```
 
 5. Start rpcbind.
@@ -366,7 +366,7 @@ If information similar to the following appears, the service is normal.
 
 Volcano collects internal chip faults, parameter plane network faults, and node fault information, and places them as external information in the K8s ConfigMap for external query and use.
 
-The query command is `kubectl describe cm -n volcano-system vcjob-fault-npu-cm`. The command response example is as follows. For key parameterdescriptions, see [Table 2 vcjob-fault-npu-cm field description](./api/volcano.md#job-information).
+The query command is `kubectl describe cm -n volcano-system vcjob-fault-npu-cm`. The command response example is as follows. For key parameter descriptions, see [Table 2 vcjob-fault-npu-cm field description](./api/volcano.md#job-information).
 
 ```ColdFusion
 Name:         vcjob-fault-npu-cm
@@ -395,7 +395,7 @@ Events:  <none>
 
 Ascend Device Plugin collects internal chip faults, parameter plane network faults, and node faults, and places them as external information in K8s ConfigMaps. One ConfigMap stores the information of one node for external query and use.
 
-Query command: `kubectl describe cm -n kube-system mindx-dl-deviceinfo-$*_\{node\_name\}_`
+Query command: **kubectl describe cm -n kube-system mindx-dl-deviceinfo-$**_\{node\_name\}_
 
 Taking <term>Atlas A3 Training Series Products</term> as an example, the response example is as follows. The response parameters may vary for different devices, and the actual output shall prevail. For key parameter descriptions, see [Table 1 DeviceInfoCfg](./api/ascend_device_plugin.md#chip-resources).
 
@@ -423,7 +423,7 @@ kube-system   8s          Warning   Occur      pod/ascend-device-plugin-daemonse
 |TYPE|<p>Event type, with values of <span>"Normal"</span> and <span>"Warning"</span>.</p>|
 |REASON|<p>Reason for the event. The values are described as follows:</p><ul><li>Occur: fault occurrence</li><li>Recovery: Fault recovery</li><li>Notice: Notification</li></ul>|
 |OBJECT|<p>Event object, with the value specification of pod/<span><em>Ascend Device Plugin</em></span><em> Pod name</em>, such as pod/ascend-device-plugin-daemonset-910-dlpmv.</p>|
-|MESSAGE|<p>Description of the event information content. The fields of the event content are described as follows:</p><ul><li>nodeName: node name</li><li>assertion: information type<ul><li>Occur: fault occurrence</li><li>Recovery: Fault recovery</li><li>Notice: Notification</li></ul></li><li>cardID: NPU management unit ID (NPU device ID)</li><li>deviceID: Device number</li><li>faultCodes: Fault code, such as 8C084E00</li><li>faultLevelName: Fault level name<ul><li>NotHandleFault: no handling required</li><li>RestartRequest: <span>affect services execution; need to re-execute service requests</span></li><li>RestartBusiness: <span>affect services execution;</span> need to restart services</li><li>FreeRestartNPU: affect services execution; need to reset the chip when it is idle</li><li>RestartNPU: directly reset the chip and re-execute services</li><li>SeparateNPU: isolate chip</li><li>PreSeparateNPU: does not affect services temporarily, and no more jobs will be scheduled to this chip subsequently.</li><li>SubHealthFault: dandled according to the subHealthyStrategy parameter configured in the job YAML</li></ul></li><li>alarmRaisedTime: fault occurrence time</li></ul>|
+|MESSAGE|<p>Description of the event information content. The fields of the event content are described as follows:</p><ul><li>nodeName: node name</li><li>assertion: information type<ul><li>Occur: fault occurrence</li><li>Recovery: Fault recovery</li><li>Notice: Notification</li></ul></li><li>cardID: NPU management unit ID (NPU device ID)</li><li>deviceID: Device number</li><li>faultCodes: Fault code, such as 8C084E00</li><li>faultLevelName: Fault level name<ul><li>NotHandleFault: no handling required</li><li>RestartRequest: <span>affect services execution; need to re-execute service requests</span></li><li>RestartBusiness: <span>affect services execution;</span> need to restart services</li><li>FreeRestartNPU: affect services execution; need to reset the chip when it is idle</li><li>RestartNPU: directly reset the chip and re-execute services</li><li>SeparateNPU: isolate chip</li><li>PreSeparateNPU: does not affect services temporarily, and no more jobs will be scheduled to this chip subsequently.</li><li>SubHealthFault: handled according to the subHealthyStrategy parameter configured in the job YAML</li></ul></li><li>alarmRaisedTime: fault occurrence time</li></ul>|
 
 ### ClusterD<a name="ZH-CN_TOPIC_0000002511347035"></a>
 
@@ -433,7 +433,7 @@ ClusterD collects internal node faults, chip faults, and UnifiedBus device fault
 
 Query command: `kubectl describe cm -n mindx-dl cluster-info-node-cm`
 
-Taking the <term>Atlas A3 Training Series products</term> as an example, the response example is as follows. The response parameters may vary for different devices, and the actual output shall prevail. For key parameter descriptions, see [Table 1 cluster-info-node-cm](./api/clusterd/00_cluster_resources.md#configmap-description).
+Taking the <term>Atlas A3 Training Series Products</term> as an example, the response example is as follows. The response parameters may vary for different devices, and the actual output shall prevail. For key parameter descriptions, see [Table 1 cluster-info-node-cm](./api/clusterd/00_cluster_resources.md#configmap-description).
 
 ```ColdFusion
 {"mindx-dl-nodeinfo-kwok-node-0":{"FaultDevList":[],"NodeStatus":"Healthy","CmName":"mindx-dl-nodeinfo-kwok-node-0"},"mindx-dl-deviceinfo-kwok-node-1001":{"FaultDevList":[],"NodeStatus":"Healthy","CmName":"mindx-dl-nodeinfo-kwok-node-1001"}}
@@ -443,7 +443,7 @@ Taking the <term>Atlas A3 Training Series products</term> as an example, the res
 
 Query command: **kubectl describe cm -n mindx-dl cluster-info-device-$**_\{m\}_
 
-*m* is an integer incrementing from 0. For every additional 1000 nodes in ae cluster, a new ConfigMap file `cluster-info-device-$\{m\}` is added.
+*m* is an integer incrementing from 0. For every additional 1000 nodes in a cluster, a new ConfigMap file `cluster-info-device-$\{m\}` is added.
 
 Taking the <term>Atlas A3 Training Series Products</term> as an example, the response example is as follows. The response parameters may vary for different devices, and the actual output shall prevail. For key parameter descriptions, see [Table 2 cluster-info-device-$\{m\}](./api/clusterd/00_cluster_resources.md#configmap-description).
 
@@ -463,7 +463,7 @@ Taking <term>Atlas A3 Training Series Products</term> as an example, the respons
 {"FaultCode":[000001c1],"FaultLevel":"NotHandle","UpdateTime":1722845555,"NodeStatus":"Healthy"}
 ```
 
-**Table 1**  Lingqu bus device fault parameter description
+**Table 1**  UnifiedBus bus device fault parameter description
 
 <a name="table9246232250"></a>
 
@@ -478,7 +478,7 @@ Taking <term>Atlas A3 Training Series Products</term> as an example, the respons
 
 NodeD collects node fault information and node health status information, and places it as external information in a K8s ConfigMap for external query and use.
 
-The query command is `kubectl describe cm mindx-dl-nodeinfo-<nodename> -n mindx-dl`. A command response example is shown below. For key parameter descriptions, see [Table 1 mindx-dl-nodeinfo-_<nodename\>_](./api/noded.md#node-resources).
+The query command is **kubectl describe cm mindx-dl-nodeinfo-**<i>\<nodename\></i> **-n mindx-dl**. A command response example is shown below. For key parameter descriptions, see [Table 1 mindx-dl-nodeinfo-_<nodename\>_](./api/noded.md#node-resources).
 
 ```ColdFusion
 Name:         mindx-dl-nodeinfo-<nodename>
@@ -512,7 +512,7 @@ In the package name, *{version}* indicates the version, *{arch}* indicates the a
 |--|--|--|
 |Ascend-cann-toolkit_<i>{version}</i>_linux-<i>{arch}</i>.run|CANN Toolkit.|<p>[Download Link](https://www.hiascend.com/developer/download/community/result?module=cann)</p>|
 |<p>Ascend-cann-<em>{chip_type}</em>-ops_<em>{version}</em>_linux-<em>{arch}</em>.run</p>|<p>CANN operator package.</p><p>Before CANN 8.5.0, this package was named Ascend-cann-kernels-<em>{chip_type}</em>_<em>{version}</em>_linux-<em>{arch}</em>.run</p>|[Download Link](https://www.hiascend.com/developer/download/community/result?module=cann)|
-|apex-0.1+ascend-cp3x-cp3x-linux_<em>{arch}</em>.whl|<p>Mixed precision module.</p><p>cp3x in the package name indicates the Python version. For example, x being 10 indicates Python 3.10.</p>|Compile the APEX software package based on the actual situation.|
+|apex-0.1+ascend-cp3x-cp3x-linux_<em>{arch}</em>.whl|<p>Mixed precision module.</p><p>cp3x in the package name indicates the Python version. For example, x being 10 indicates Python 3.10.</p>|See the "[Installing the APEX Module](https://gitcode.com/Ascend/apex/blob/master/docs/en/installing_apex.md)" section in *Ascend Extension for PyTorch Software Installation Guide*, and compile the APEX software package based on the actual situation.|
 |<ul><li><span>x86_64</span>: torch-<em>v{version}</em>+cpu-cp3x-cp3x-linux_x86_64.whl</li><li><span>ARM</span>: torch-<em>v{version}</em>-cp3x-cp3x-manylinux_2_17_aarch64.manylinux2014_aarch64.whl</li></ul>|<p>Official <span>PyTorch</span> package.</p><p>cp3x in the package name indicates the Python version. For example, x being 10 indicates Python 3.10.</p><p><em>{version}</em> indicates the <span>PyTorch</span> version. Currently, <span>PyTorch</span> 2.1.0 to 2.7.1 is supported.</p>|<p>[Download Link](https://download.pytorch.org/whl/torch/)</p><p>Select the <span>PyTorch</span> version to install based on the actual situation.</p>|
 |<p>torch_npu-<em>v{version}</em><em>.</em>post<em>{version}</em>-cp3x-cp3x-manylinux_2_17_<em>{arch}</em>.manylinux2014_<em>{arch}</em>.whl</p>|<p><span>Ascend Extension for PyTorch</span> plugin.</p><p>cp3x in the package name indicates the Python version. For example, x being 10 indicates Python 3.10.</p>|<p>[Download Link](https://www.hiascend.com/document/detail/zh/Pytorch/600/configandinstg/instg/insg_0001.html)</p><ul><li>Select a torch_npu version that is compatible with <span>PyTorch</span>.</li><li>If using <span>PyTorch</span> models from the MindSpeed-LLM repository, <span>Ascend Extension for PyTorch</span> 2.1.0 or later is required.</li></ul>|
 |Dockerfile|Required for creating images.|Refer to [Dockerfile Writing Example](#zh-cn_topic_0000001497364957_li104026527188)|
@@ -525,7 +525,7 @@ In the package name, *{version}* indicates the version, *{arch}* indicates the a
 
 To prevent software packages from being maliciously tampered with during transmission or storage, you need to download the corresponding digital signature file for integrity verification when downloading the software packages.
 
-After downloading the software packages, refer to the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/doc/EDOC1100209376)* to perform PGP digital signature verification on the software packages downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers first.
+After downloading the software packages, refer to the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054)* to perform PGP digital signature verification on the software packages downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers first.
 
 Before installing or upgrading using a software package, you must also verify the digital signature of the software package following the above process to ensure that the software package has not been tampered with.
 
@@ -585,10 +585,10 @@ For enterprise customers, please visit [https://support.huawei.com/enterprise/en
 
     2. For the content to be written, refer to the [Dockerfile](#zh-cn_topic_0000001497364957_li104026527188) writing example, then run the `:wq` command to save the content. The content uses the Ubuntu OS as an example.
 
-7. Go to the directory where the software packages are located and run the following command to build the container image. **Note: Do not omit the the dot (".") at the end of the command.**
+7. Go to the directory where the software packages are located and run the following command to build the container image. **Note: Do not omit the dot (".") at the end of the command.**
 
     ```shell
-    docker build -t Image name_OS architecture: Image tag .
+    docker build -t <image_name>_<system_architecture>:<image_tag> .
     ```
 
     In the above command, the description of each parameter is shown in the following table.
@@ -600,7 +600,7 @@ For enterprise customers, please visit [https://support.huawei.com/enterprise/en
     |Name|Description|
     |--|--|
     |-t|Specifies the image name.|
-    |Image name_OS architecture: Image tag|Image name and tag. Enter the actual values.|
+    |<i>image_name_system_architecture:image_tag</i>|Image name and tag. Enter the actual values.|
 
     Example:
 
@@ -671,7 +671,7 @@ For enterprise customers, please visit [https://support.huawei.com/enterprise/en
     #!/bin/bash
     #--------------------------------------------------------------------------------
 
-    # Use bash syntax to write script code here to for installation preparation, such as configuring proxies
+    # Use bash syntax to write script code here for installation preparation, such as configuring proxies
     # This script will be executed before the formal build process starts
     #
     # Note: This script will not be automatically removed after execution. If it does not need to be retained in the image, please clean it up in the postbuild.sh script
@@ -926,7 +926,7 @@ In the package name, *{version}* indicates the version number, *{arch}* indicate
 
 To prevent software packages from being maliciously tampered with during transmission or storage, you need to download the corresponding digital signature file for integrity verification when downloading the software package.
 
-After downloading the software package, refer to *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/doc/EDOC1100209376)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers for resolution first.
+After downloading the software package, refer to *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers for resolution first.
 
 Before installing or upgrading using a software package, you must also verify the digital signature of the software package as described above to ensure that it has not been tampered with.
 
@@ -988,20 +988,21 @@ For enterprise customers, please visit [https://support.huawei.com/enterprise/en
 7. Go to the directory where the software packages are located and run the following command to build the container image. **Note: Do not omit the dot (".") at the end of the command**.
 
     ```shell
-    docker build -t image_name_system_architecture:image_tag .
+    docker build -t <image_name>_<system_architecture>:<image_tag> .
     ```
 
-In the above command, the parameters are described in the following table.
+   In the above command, the parameters are described in the following table.
 
-**Table 2** Command parameter description
+   **Table 2** Command parameter description
 
-<a name="table1021203815279"></a>
+   <a name="table1021203815279"></a>
 
-    |Name|Description|
-    |--|--|
-    |-t|Image name|
-    |image_name_system_architecture:image_tag|Image name and tag. Use the actual values.|
-For example:
+   |Name|Description|
+   |--|--|
+   |-t|Image name|
+   |<i>image_name_system_architecture:image_tag</i>|Image name and tag. Use the actual values.|
+
+   Example:
 
     ```shell
     docker build -t test_train_arm64:v1.0 .
@@ -1009,7 +1010,7 @@ For example:
 
     When "Successfully built xxx" appears, it indicates that the image has been built successfully.
 
-1. After the build is complete, run the following command to view the image information.
+8. After the build is complete, run the following command to view the image information.
 
     ```shell
     docker images
@@ -1022,7 +1023,7 @@ For example:
     test_train_arm64          v1.0                d82746acd7f0        27 minutes ago      749MB
     ```
 
-2. (Optional) Verify that the base image is available.
+9. (Optional) Verify that the base image is available.
     1. Use Ascend Docker Runtime to mount the driver in the base image, using the base image `test_train_arm64:v1.0` as an example.
 
         ```shell
@@ -1050,12 +1051,12 @@ For example:
         ```shell
         #!/bin/bash
         #--------------------------------------------------------------------------------
-        # # Write script code here using bash syntax to for installation preparations, such as configuring proxies
-        # # This script will be executed before the formal build process starts
+        # Write script code here using bash syntax for installation preparations, such as configuring proxies
+        # This script will be executed before the formal build process starts
         #
-        # # Note: This script will not be automatically cleaned up after execution. If it does not need to be retained in the image, please clean it up in the postbuild.sh script
+        # Note: This script will not be automatically cleaned up after execution. If it does not need to be retained in the image, please clean it up in the postbuild.sh script
         #--------------------------------------------------------------------------------
-        # # DNS settings
+        # DNS settings
         tee /etc/resolv.conf <<- EOF
         nameserver xxx.xxx.xxx.xxx  ## DNS server IP, multiple can be filled in, configure according to actual conditions
         nameserver xxx.xxx.xxx.xxx
@@ -1089,12 +1090,12 @@ For example:
         #!/bin/bash
         #--------------------------------------------------------------------------------
 
-        # # Write script code here using bash syntax for installation preparations, such as configuring proxies
-        # # This script will be executed before the formal build process starts
+        # Write script code here using bash syntax for installation preparations, such as configuring proxies
+        # This script will be executed before the formal build process starts
         #
-        # # Note: This script will not be automatically removed after execution. If it does not need to be retained in the image, please remove it in the postbuild.sh script
+        # Note: This script will not be automatically removed after execution. If it does not need to be retained in the image, please remove it in the postbuild.sh script
         #--------------------------------------------------------------------------------
-        # # apt proxy settings
+        # apt proxy settings
         tee /etc/apt/apt.conf.d/80proxy <<- EOF
         Acquire::http::Proxy "http://xxx.xxx.xxx.xxx:xxx";    ## HTTP proxy server IP address and port
         Acquire::https::Proxy "http://xxx.xxx.xxx.xxx:xxx";   #HTTPS proxy server IP address and port
@@ -1208,7 +1209,7 @@ For example:
         ENV https_proxy http://xxx
 
 
-        # # system packages
+        # system packages
         RUN apt update && \
             apt install --no-install-recommends curl g++ pkg-config unzip wget build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev \
                 libblas3 liblapack3 liblapack-dev openssl libssl-dev libblas-dev gfortran libhdf5-dev libffi-dev libicu60 libxml2 -y
@@ -1220,20 +1221,20 @@ For example:
             ln -s /usr/local/python3.9.2/bin/pip3.9 /usr/local/python3.9.2/bin/pip
 
 
-        # # configure Python pip source
+        # configure Python pip source
         RUN mkdir -p ~/.pip \
         && echo '[global] \n\
         index-url=https://pypi.doubanio.com/simple/\n\
         trusted-host=pypi.doubanio.com' >> ~/.pip/pip.conf
 
-        # # users need to modify the PYTHONPATH path according to the actual situation
+        # users need to modify the PYTHONPATH path according to the actual situation
         ENV LD_LIBRARY_PATH=/usr/local/python3.9.2/lib:$LD_LIBRARY_PATH
         ENV PATH=/usr/local/python3.9.2/bin:$PATH
         ENV PYTHONPATH=/usr/local/python3.9.2/lib/python3.9/site-packages:$PYTHONPATH
-        # # create HwHiAiUser user and owner. UID and GID must be consistent with the physical machine to avoid ownerless files. The example will automatically create the user and corresponding group, with both UID and GID set to 1000
+        # create HwHiAiUser user and owner. UID and GID must be consistent with the physical machine to avoid ownerless files. The example will automatically create the user and corresponding group, with both UID and GID set to 1000
         RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser
 
-        # # install Python 3.9. If installing other versions, modify the following commands according to the actual situation
+        # install Python 3.9. If installing other versions, modify the following commands according to the actual situation
         RUN pip install numpy && \
             pip install decorator && \
             pip install sympy==1.4 && \
@@ -1285,7 +1286,7 @@ For example:
         ENV https_proxy http://xxx
 
 
-        # # System packages
+        # System packages
         RUN apt update && \
             apt install --no-install-recommends curl g++ pkg-config unzip wget build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev \
                 libblas3 liblapack3 liblapack-dev openssl libssl-dev libblas-dev gfortran libhdf5-dev libffi-dev libicu60 libxml2 -y
@@ -1296,20 +1297,20 @@ For example:
         RUN ln -s /usr/local/python3.9.2/bin/python3.9 /usr/local/python3.9.2/bin/python && \
             ln -s /usr/local/python3.9.2/bin/pip3.9 /usr/local/python3.9.2/bin/pip
 
-        # # Configure Python pip source
+        # Configure Python pip source
         RUN mkdir -p ~/.pip \
         && echo '[global] \n\
         index-url=https://pypi.doubanio.com/simple/\n\
         trusted-host=pypi.doubanio.com' >> ~/.pip/pip.conf
 
-        # # Modify the PYTHONPATH path according to the actual situation
+        # Modify the PYTHONPATH path according to the actual situation
         ENV LD_LIBRARY_PATH=/usr/local/python3.9.2/lib:$LD_LIBRARY_PATH
         ENV PATH=/usr/local/python3.9.2/bin:$PATH
         ENV PYTHONPATH=/usr/local/python3.9.2/lib/python3.9/site-packages:$PYTHONPATH
-        # # Create HwHiAiUser user and owner. UID and GID should be consistent with the physical machine to avoid ownerless files. In this example, the user and corresponding group are automatically created, with both UID and GID set to 1000
+        # Create HwHiAiUser user and owner. UID and GID should be consistent with the physical machine to avoid ownerless files. In this example, the user and corresponding group are automatically created, with both UID and GID set to 1000
         RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser
 
-        # # Install Python 3.9. If installing other versions, modify the following commands according to the actual situation
+        # Install Python 3.9. If installing other versions, modify the following commands according to the actual situation
         RUN pip install numpy && \
             pip install decorator && \
             pip install sympy==1.4 && \
@@ -1366,7 +1367,7 @@ In the package name, `{version}` indicates the version number, `{arch}` indicate
 
 To prevent software packages from being maliciously tampered with during transmission or storage, you need to download the corresponding digital signature file for integrity verification when downloading software packages.
 
-After downloading the software package, refer to the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/doc/EDOC1100209376)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers for resolution first.
+After downloading the software package, refer to the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers for resolution first.
 
 Before using a software package for installation or upgrade, you also need to verify the digital signature of the software package following the above process to ensure that the software package has not been tampered with.
 
@@ -1511,10 +1512,10 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
     COPY $TOOLKIT_PKG .
     COPY $OPS_PKG .
 
-    # # Install the Toolkit package and OPS package
+    # Install the Toolkit package and OPS package
     RUN umask 0022 && \
         groupadd xxx (User-defined; be consistent with that specified during driver installation) && \
-        useradd -g xxx(User-defined; be consistent with that specified during driver installation)） -s /usr/sbin/nologin (user login disabling; Ubuntu as an example) -m -d /home/xxx xxx(User-defined; be consistent with that specified during driver installation) && \
+        useradd -g xxx (User-defined; be consistent with that specified during driver installation) -s /usr/sbin/nologin (user login disabling; Ubuntu as an example) -m -d /home/xxx xxx (User-defined; be consistent with that specified during driver installation) && \
         chmod +x ${TOOLKIT_PKG} &&\
         ./${TOOLKIT_PKG} --quiet --install --install-for-all --whitelist=nnrt --force &&\
         rm ${TOOLKIT_PKG}
@@ -1522,13 +1523,13 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
         ./${OPS_PKG} --install --install-for-all --quiet --force &&\
         rm ${OPS_PKG}
 
-    # # Copy the compressed package of the service inference program, installation script, and running script
+    # Copy the compressed package of the service inference program, installation script, and running script
     ARG DIST_PKG
     COPY $DIST_PKG .
     COPY install.sh .
     COPY run.sh .
 
-    # # Run the installation script
+    # Run the installation script
     RUN mkdir -p /usr/slog && \
         mkdir -p /var/log/npu/slog/slogd && \
         chmod u+x run.sh install.sh && \
@@ -1542,7 +1543,7 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
     >[!NOTE]
     >For CANN package versions 6.2.RC1, 6.3.RC1, and later, the `--force` parameter is added when installing the package. This parameter has already been included in the Dockerfile example above. If you are using a package version earlier than 6.2.RC1 or 6.3.RC1, you need to remove this parameter from the Dockerfile example.
 
-## Quering Information About Currently Available Devices in the Cluster<a name="ZH-CN_TOPIC_0000002516255287"></a>
+## Querying Information About Currently Available Devices in the Cluster<a name="ZH-CN_TOPIC_0000002516255287"></a>
 
 1. Query the ConfigMap.
 

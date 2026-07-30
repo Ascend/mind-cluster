@@ -233,7 +233,7 @@ The import tool `cert-importer` is included in the component's package.
 </td>
 <td class="cellrowborder" valign="top" width="11.01%" headers="mcps1.2.5.1.3 "><p id="p1232182685820"><a name="p1232182685820"></a><a name="p1232182685820"></a>/var/log/mindx-dl/cert-importer/cert-importer.log</p>
 </td>
-<td class="cellrowborder" valign="top" width="52.23%" headers="mcps1.2.5.1.4 "><p id="p102331826175814"><a name="p102331826175814"></a><a name="p102331826175814"></a>Tool runtime log file. The naming format for the dumped file is: cert-importer-<trigger dump time/>.log, for example: cert-importer-2023-10-07T03-38-24.402.log.</p>
+<td class="cellrowborder" valign="top" width="52.23%" headers="mcps1.2.5.1.4 "><p id="p102331826175814"><a name="p102331826175814"></a><a name="p102331826175814"></a>Tool runtime log file. The naming format for the dumped file is: cert-importer-<em>dump_trigger_time</em>.log, for example: cert-importer-2023-10-07T03-38-24.402.log.</p>
 </td>
 </tr>
 <tr id="row8384164173412"><td class="cellrowborder" valign="top" width="17.349999999999998%" headers="mcps1.2.5.1.1 "><p id="p1138412411345"><a name="p1138412411345"></a><a name="p1138412411345"></a>-updateMk</p>
@@ -327,7 +327,7 @@ The import tool `cert-importer` is included in the component's package.
     kubectl get pod -n mindx-dl
     ```
 
-The response example is as follows. **Running** indicates that the component startup is successful.
+    The response example is as follows. **Running** indicates that the component startup is successful.
 
     ```ColdFusion
     NAME                                            READY    STATUS      RESTARTS   AGE

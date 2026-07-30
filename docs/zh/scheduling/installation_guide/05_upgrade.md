@@ -343,14 +343,14 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 **升级步骤<a name="section65996266718"></a>**
 
-1. 卸载MindCluster旧版本组件。详情请参见[卸载](./06_uninstallation.md)中“卸载其他组件 \> 步骤2”。
+1. 卸载MindCluster旧版本组件。详情请参见[卸载其他组件](./06_uninstallation.md#卸载其他组件)中的步骤2。
 2. 参考[获取软件包](./03_installation/manual_installation/00_obtaining_software_packages.md)章节，下载新版本组件安装包。
 3. （可选）准备MindCluster集群调度组件新版本镜像。若新版本组件采用二进制方式安装，可跳过本步骤。
 
     参考[准备镜像](./03_installation/manual_installation/01_preparing_for_installation.md#准备镜像)章节，从昇腾镜像仓库拉取新版本镜像或者制作新版本镜像。注意新版本组件镜像tag要与旧版本组件镜像tag不一致，避免覆盖旧版本组件镜像。
 
 4. <a name="li147194506333"></a>请根据要升级的组件，重新执行手动安装步骤。详细步骤请参见[安装MindCluster新版本组件](./03_installation/manual_installation/00_obtaining_software_packages.md)。
-5. （可选）如需回退老版本，依次执行[卸载](./06_uninstallation.md)中“卸载其他组件 \> 步骤2”和[步骤4](#li147194506333)，卸载新版本组件后安装旧版本组件即可。
+5. （可选）如需回退老版本，依次执行[卸载其他组件](./06_uninstallation.md#卸载其他组件)中的步骤2和[步骤4](#li147194506333)，卸载新版本组件后安装旧版本组件即可。
 
 ## 升级镜像<a name="ZH-CN_TOPIC_0000002511346311"></a>
 
@@ -443,7 +443,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
     以NodeD为例，回显示例如下，表示Pod已拉起。
 
     ```ColdFusion
-    mindx-dl   noded- m4j4r  1/1  Running 0     1m
+    mindx-dl   noded-m4j4r  1/1  Running 0     1m
     ```
 
 ## Elastic Agent升级TaskD<a name="ZH-CN_TOPIC_0000002515202401"></a>

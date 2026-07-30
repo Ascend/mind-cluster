@@ -2841,7 +2841,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 
 - 缩容训练参数适配
 
-    在[LLM仓参考链接](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/mindspeed_llm/features_manager/high_availability/high_availability.py)中，patch\_world\_size\_func\_wrapper、log\_wrapper、is\_last\_rank\_wrapper、optimizer\_param\_scheduler\_step\_wrapper、track\_app\_tag\_wrapper、print\_rank\_last\_wrapper、num\_floating\_point\_operations\_wrapper等是为了适配global\_batch\_size、world\_size等训练中使用的参数而patch。例如：原生使用dp\_size\*micro\_batch\_size\*num\_microbatches，缩容后各个DP内num\_microbatches可能不一样，因此直接使用args.globatch\_size。缩容后判断是否最后一个rank使用缩容后的全局组；全局组大小修改为缩容后的大小等。
+    在[LLM仓参考链接](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/mindspeed_llm/features_manager/high_availability/high_availability.py)中，patch\_world\_size\_func\_wrapper、log\_wrapper、is\_last\_rank\_wrapper、optimizer\_param\_scheduler\_step\_wrapper、track\_app\_tag\_wrapper、print\_rank\_last\_wrapper、num\_floating\_point\_operations\_wrapper等是为了适配global\_batch\_size、world\_size等训练中使用的参数而patch。例如：原生使用dp\_size\*micro\_batch\_size\*num\_microbatches，缩容后各个DP内num\_microbatches可能不一样，因此直接使用args.global\_batch\_size。缩容后判断是否最后一个rank使用缩容后的全局组；全局组大小修改为缩容后的大小等。
 
 - 梯度精度计算适配
 

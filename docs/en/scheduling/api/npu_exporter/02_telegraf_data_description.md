@@ -152,7 +152,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p547061925610"><a name="p547061925610"></a><a name="p547061925610"></a><span id="ph1415520117467"><a name="ph1415520117467"></a><a name="ph1415520117467"></a>Ascend AI Processor</span> error code</p>
 <p id="p2011915418141"><a name="p2011915418141"></a><a name="p2011915418141"></a>When there is no error code on the Ascend AI Processor, this field will not be reported.</p>
-<div class="note" id="note71551511134616"><a name="note71551511134616"></a><a name="note71551511134616"></a><span class="notetitle">Note:</span><div class="notebody"><a name="ul01551011174616"></a><a name="ul01551011174616"></a><ul id="ul01551011174616"><li>Prometheus scenario: If multiple error codes exist on this <span id="ph4155141154620"><a name="ph4155141154620"></a><a name="ph4155141154620"></a>Ascend AI Processor</span> simultaneously, due to Prometheus format limitations, only the first ten error codes that appear are currently supported for reporting. The value range of X: 1~9</li><li>Telegraf scenario: Supports reporting up to 128 error codes.</li><li>For detailed descriptions of error codes, see the <a href="../../appendix.md#chip-fault-code-references">Chip Fault Code References</a> section.</li></ul>
+<div class="note" id="note71551511134616"><a name="note71551511134616"></a><a name="note71551511134616"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><a name="ul01551011174616"></a><a name="ul01551011174616"></a><ul id="ul01551011174616"><li>Prometheus scenario: If multiple error codes exist on this <span id="ph4155141154620"><a name="ph4155141154620"></a><a name="ph4155141154620"></a>Ascend AI Processor</span> simultaneously, due to Prometheus format limitations, only the first ten error codes that appear are currently supported for reporting. The value range of X: 1~9</li><li>Telegraf scenario: Supports reporting up to 128 error codes.</li><li>For detailed descriptions of error codes, see the <a href="../../appendix.md#chip-fault-code-references">Chip Fault Code References</a> section.</li></ul>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p2470171915560"><a name="p2470171915560"></a><a name="p2470171915560"></a>-</p>
@@ -448,7 +448,7 @@ This interface supports querying default metric groups and custom metric groups.
 
 ## On-Chip Memory Data Information<a name="section177232045203114"></a>
 
-**Table 5**  On-Chip memory data information
+**Table 5** On-Chip memory data information
 
 <a name="table728745315300"></a>
 <table><thead align="left"><tr id="row72881853103019"><th class="cellrowborder" valign="top" width="9.21%" id="mcps1.2.6.1.1"><p id="p11126227312"><a name="p11126227312"></a><a name="p11126227312"></a>Category</p>
@@ -599,19 +599,19 @@ This interface supports querying default metric groups and custom metric groups.
 <tbody><tr id="row2040184552518"><td class="cellrowborder" valign="top" width="8.950000000000001%" headers="mcps1.2.6.1.1 "><p id="p14401145172516"><a name="p14401145172516"></a><a name="p14401145172516"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" width="28.190000000000005%" headers="mcps1.2.6.1.2 "><p id="p338114141712"><a name="p338114141712"></a><a name="p338114141712"></a>npu_chip_info_hccs_statistic_info_tx_cnt_X</p>
-<p id="p1024171512455"><a name="p1024171512455"></a><a name="p1024171512455"></a>X range: 1~7 (Atlas A2 Training Series products or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD)</p>
+<p id="p1024171512455"><a name="p1024171512455"></a><a name="p1024171512455"></a>X range: 1~7 (Atlas A2 Training Series Products or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD)</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.990000000000006%" headers="mcps1.2.6.1.3 "><a name="ul1424913612438"></a><a name="ul1424913612438"></a><ul id="ul1424913612438"><li>Number of packets sent on the X-th HDLC link, unit is flit.</li><li>-1 is reported if collection fails.</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="15.570000000000004%" headers="mcps1.2.6.1.4 "><p id="p840184516254"><a name="p840184516254"></a><a name="p840184516254"></a>-</p>
 </td>
-<td class="cellrowborder" rowspan="8" valign="top" width="25.300000000000004%" headers="mcps1.2.6.1.5 "><a name="ul11925372813"></a><a name="ul11925372813"></a><ul id="ul11925372813"><li>Atlas A2 Training Series products</li><li>Atlas A3 Training Series products</li></ul>
+<td class="cellrowborder" rowspan="8" valign="top" width="25.300000000000004%" headers="mcps1.2.6.1.5 "><a name="ul11925372813"></a><a name="ul11925372813"></a><ul id="ul11925372813"><li>Atlas A2 Training Series Products</li><li>Atlas A3 Training Series Products</li></ul>
 </td>
 </tr>
 <tr id="row1140184517258"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1240115459259"><a name="p1240115459259"></a><a name="p1240115459259"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p186021875020"><a name="p186021875020"></a><a name="p186021875020"></a>npu_chip_info_hccs_statistic_info_rx_cnt_X</p>
-<p id="p11562871013"><a name="p11562871013"></a><a name="p11562871013"></a>X range: 1~7 (Atlas A2 Training Series products or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD)</p>
+<p id="p11562871013"><a name="p11562871013"></a><a name="p11562871013"></a>X range: 1~7 (Atlas A2 Training Series Products or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD)</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><a name="ul1234520167435"></a><a name="ul1234520167435"></a><ul id="ul1234520167435"><li>Number of packets received on the X-th HDLC link, unit is flit.</li><li>-1 is reported if collection fails.</li></ul>
 </td>
@@ -621,7 +621,7 @@ This interface supports querying default metric groups and custom metric groups.
 <tr id="row1240254522514"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p5402245122513"><a name="p5402245122513"></a><a name="p5402245122513"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p1139102394715"><a name="p1139102394715"></a><a name="p1139102394715"></a>npu_chip_info_hccs_statistic_info_crc_err_cnt_X</p>
-<p id="p1429534131018"><a name="p1429534131018"></a><a name="p1429534131018"></a>X range: 1~7 (Atlas A2 Training Series products or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD)</p>
+<p id="p1429534131018"><a name="p1429534131018"></a><a name="p1429534131018"></a>X range: 1~7 (Atlas A2 Training Series Products or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD)</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><a name="ul112792234316"></a><a name="ul112792234316"></a><ul id="ul112792234316"><li>CRC error in received packets on the X‑th HDLC link, unit is flit.</li><li>-1 is reported if collection fails.</li></ul>
 </td>
@@ -658,7 +658,7 @@ This interface supports querying default metric groups and custom metric groups.
 <tr id="row1853162231416"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p153161253161412"><a name="p153161253161412"></a><a name="p153161253161412"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p549352091516"><a name="p549352091516"></a><a name="p549352091516"></a>npu_chip_info_hccs_bandwidth_info_tx_X</p>
-<p id="p2493172021511"><a name="p2493172021511"></a><a name="p2493172021511"></a>X range: 1~7 (Atlas A2 Training Series products, Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD).</p>
+<p id="p2493172021511"><a name="p2493172021511"></a><a name="p2493172021511"></a>X range: 1~7 (Atlas A2 Training Series Products, Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD).</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p3493152051511"><a name="p3493152051511"></a><a name="p3493152051511"></a>TX data bandwidth for a single HCCS link. -1 is reported if collection fails.</p>
 </td>
@@ -668,7 +668,7 @@ This interface supports querying default metric groups and custom metric groups.
 <tr id="row18299930131419"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1031665361416"><a name="p1031665361416"></a><a name="p1031665361416"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p7494122091513"><a name="p7494122091513"></a><a name="p7494122091513"></a>npu_chip_info_hccs_bandwidth_info_rx_X</p>
-<p id="p10494720131520"><a name="p10494720131520"></a><a name="p10494720131520"></a>X range: 1–7 (Atlas A2 Training Series products, Atlas 900 A3 SuperPoD), 2–7 (Atlas 9000 A3 SuperPoD)</p>
+<p id="p10494720131520"><a name="p10494720131520"></a><a name="p10494720131520"></a>X range: 1–7 (Atlas A2 Training Series Products, Atlas 900 A3 SuperPoD), 2–7 (Atlas 9000 A3 SuperPoD)</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p449492011517"><a name="p449492011517"></a><a name="p449492011517"></a>RX data bandwidth for a single HCCS link. -1 is reported if collection fails.</p>
 </td>
@@ -703,7 +703,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="11.59%" headers="mcps1.2.6.1.4 "><p id="p1191992510210"><a name="p1191992510210"></a><a name="p1191992510210"></a>Unit: MB/ms</p>
 </td>
-<td class="cellrowborder" rowspan="6" valign="top" width="30.91%" headers="mcps1.2.6.1.5 "><a name="ul64395165289"></a><a name="ul64395165289"></a><ul id="ul64395165289"><li><p id="li2043917168282p0"><a name="li2043917168282p0"></a><a name="li2043917168282p0"></a>Atlas A2 Training Series products</p>
+<td class="cellrowborder" rowspan="6" valign="top" width="30.91%" headers="mcps1.2.6.1.5 "><a name="ul64395165289"></a><a name="ul64395165289"></a><ul id="ul64395165289"><li><p id="li2043917168282p0"><a name="li2043917168282p0"></a><a name="li2043917168282p0"></a>Atlas A2 Training Series Products</p>
 </li><li><p id="li114396166286p0"><a name="li114396166286p0"></a><a name="li114396166286p0"></a><span id="ph1722042181618"><a name="ph1722042181618"></a><a name="ph1722042181618"></a>Atlas 800I A2 Inference Server</span></p>
 </li><li><p id="p258313228429"><a name="p258313228429"></a><a name="p258313228429"></a><span id="ph18642192315427"><a name="ph18642192315427"></a><a name="ph18642192315427"></a>A200I A2 Box Heterogeneous Subrack</span></p>
 </li></ul>
@@ -782,7 +782,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="13.52%" headers="mcps1.2.6.1.4 "><p id="p1413585319348"><a name="p1413585319348"></a><a name="p1413585319348"></a>-</p>
 </td>
-<td class="cellrowborder" rowspan="21" valign="top" width="28.299999999999997%" headers="mcps1.2.6.1.5 "><a name="ul3135253123412"></a><a name="ul3135253123412"></a><ul id="ul3135253123412"><li>Atlas Training Series products</li><li>Atlas A2 Training Series products</li><li>Atlas A3 Training Series products</li><li><span id="ph1241332842611"><a name="ph1241332842611"></a><a name="ph1241332842611"></a>Atlas 800I A2 Inference Server</span></li><li><span id="ph6496152317452"><a name="ph6496152317452"></a><a name="ph6496152317452"></a>A200I A2 Box Heterogeneous Subrack</span></li></ul>
+<td class="cellrowborder" rowspan="21" valign="top" width="28.299999999999997%" headers="mcps1.2.6.1.5 "><a name="ul3135253123412"></a><a name="ul3135253123412"></a><ul id="ul3135253123412"><li>Atlas Training Series Products</li><li>Atlas A2 Training Series Products</li><li>Atlas A3 Training Series Products</li><li><span id="ph1241332842611"><a name="ph1241332842611"></a><a name="ph1241332842611"></a>Atlas 800I A2 Inference Server</span></li><li><span id="ph6496152317452"><a name="ph6496152317452"></a><a name="ph6496152317452"></a>A200I A2 Box Heterogeneous Subrack</span></li></ul>
 </td>
 </tr>
 <tr id="row762714116330"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p13135135314348"><a name="p13135135314348"></a><a name="p13135135314348"></a>RoCE</p>
@@ -993,7 +993,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="17.509999999999998%" headers="mcps1.2.6.1.4 "><p id="p10113449181711"><a name="p10113449181711"></a><a name="p10113449181711"></a>-</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="23.309999999999995%" headers="mcps1.2.6.1.5 "><ul><li>Atlas A3 Training Series products</li><li>Atlas 350 standard card</li></ul>
+<td class="cellrowborder" rowspan="2" valign="top" width="23.309999999999995%" headers="mcps1.2.6.1.5 "><ul><li>Atlas A3 Training Series Products</li><li>Atlas 350 PCIe card</li></ul>
 </td>
 </tr>
 <tr id="row1111082310171"><td class="cellrowborder" valign="top" width="9.509999999999998%" headers="mcps1.2.6.1.1 "><p id="p10114204910174"><a name="p10114204910174"></a><a name="p10114204910174"></a>SIO</p>
@@ -1333,7 +1333,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_length_err_cnt_rx_X_Y</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>>Number of packets received on the RX side that are identified as length‑error packets after validation. X is the Udie ID, and Y is the Port ID.</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>Number of packets received on the RX side that are identified as length‑error packets after validation. X is the Udie ID, and Y is the Port ID.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
@@ -1522,7 +1522,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_crc_error_sum_X_Y</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>>Number of CRC validation errors. X is the Udie ID, and Y is the Port ID.</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>Number of CRC validation errors. X is the Udie ID, and Y is the Port ID.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>

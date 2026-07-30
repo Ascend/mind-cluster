@@ -88,7 +88,7 @@ This chapter guides users through installing and deploying Prometheus-related so
 
 8. Log in to the Prometheus service and view the monitored data information.
     1. Open a browser.
-    2. Enter `http://management node IP address:port number` in the browser and press `Enter`.
+    2. Enter `http://<management_node_IP_address>:<port_number>` in the browser and press `Enter`.
 
         Find the `nodePort` field in the `prometheus.yaml` file. The value of this field is the port number of the Prometheus service, which defaults to `30003`.
 
@@ -255,7 +255,7 @@ This chapter guides users through installing and deploying Prometheus-related so
 
 5. Log in to the Prometheus service to view the monitored data information.
     1. Open a browser.
-    2. Enter `http://management node IP address:port number`" in the browser and press `Enter`.
+    2. Enter `http://<management_node_IP_address>:<port_number>` in the browser and press `Enter`.
 
         Find the `nodePort` field in the `prometheus.yaml` file. The value of this field is the port number of the Prometheus service, which defaults to `30003`.
 

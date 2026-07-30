@@ -237,8 +237,8 @@ NPU Exporter
 
 **使用说明<a name="section74221327111220"></a>**
 
-- 安装组件请参见[安装部署](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-- 特性使用指导请参见[推理卡故障恢复](../usage/basic_scheduling/10_recovery_of_inference_card_faults.md)章节进行操作。
+1. 安装组件请参见[安装部署](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+2. 特性使用指导请参见[推理卡故障恢复](../usage/basic_scheduling/10_recovery_of_inference_card_faults.md)章节进行操作。
 
 ### 推理卡故障重调度<a name="ZH-CN_TOPIC_0000002511346875"></a>
 
@@ -258,8 +258,8 @@ NPU Exporter
 
 **使用说明<a name="section18894171918127"></a>**
 
-- 安装组件请参见[安装部署](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-- 特性使用指导请参见[推理卡故障重调度](../usage/basic_scheduling/09_rescheduling_upon_inference_card_faults.md)章节进行操作。
+1. 安装组件请参见[安装部署](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+2. 特性使用指导请参见[推理卡故障重调度](../usage/basic_scheduling/09_rescheduling_upon_inference_card_faults.md)章节进行操作。
 
 ## 断点续训<a name="ZH-CN_TOPIC_0000002511346867"></a>
 

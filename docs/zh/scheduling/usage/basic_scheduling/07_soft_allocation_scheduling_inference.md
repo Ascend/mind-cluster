@@ -26,8 +26,10 @@
 
 **支持的产品形态**
 
-- Atlas A2 推理系列产品
-- Atlas A3 推理系列产品
+- <term>Atlas A2 训练系列产品</term>
+- <term>Atlas A2 推理系列产品</term>
+- <term>Atlas A3 训练系列产品</term>
+- <term>Atlas A3 推理系列产品</term>
 
 **使用流程**
 
@@ -148,7 +150,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
 
     |任务类型|硬件型号|YAML名称|获取链接|
     |--|--|--|--|
-    |Ascend Job|<ul><li>Atlas A2 推理系列产品</li><li>Atlas A3 推理系列产品</li></ul>|pytorch_acjob_infer_<i>\{xxx\}</i>b_softsharedev.yaml|[获取YAML](https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.0.0/samples/inference/volcano/pytorch_acjob_infer_910b_softsharedev.yaml)|
+    |Ascend Job|<ul><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A2 推理系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li><term>Atlas A3 推理系列产品</term></li></ul>|pytorch_acjob_infer_<i>\{xxx\}</i>b_softsharedev.yaml|[获取YAML](https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.0.0/samples/inference/volcano/pytorch_acjob_infer_910b_softsharedev.yaml)|
 
 2. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
 
@@ -163,11 +165,11 @@ npu-smi set -t device-share-cfg-recover -d ${value}
         framework: pytorch
         ring-controller.atlas: ascend-910b
         fault-scheduling: "force"
-        <strong>huawei.com/scheduler.softShareDev.aicoreQuota: "50" # 软切分任务请求的芯片AICore百分比，单位为%
-        huawei.com/scheduler.softShareDev.hbmQuota: "2048" # 软切分任务请求的芯片高带宽内存量，单位为MB
-        huawei.com/scheduler.softShareDev.policy: "fixed-share" # 软切分策略，取值为fixed-share、elastic和best-effort
+        <strong>huawei.com/scheduler.softShareDev.aicoreQuota: "50" # 软切分任务请求的芯片AICore百分比，单位为%</strong>
+        <strong>huawei.com/scheduler.softShareDev.hbmQuota: "2048" # 软切分任务请求的芯片高带宽内存量，单位为MB</strong>
+        <strong>huawei.com/scheduler.softShareDev.policy: "fixed-share" # 软切分策略，取值为fixed-share、elastic和best-effort</strong>
       annotations:
-        huawei.com/schedule_policy: "chip1-softShareDev" # 软切分场景Volcano调度策略</strong>
+        <strong>huawei.com/schedule_policy: "chip1-softShareDev" # 软切分场景Volcano调度策略</strong>
     spec:
       schedulerName: volcano   # work when enableGangScheduling is true
       runPolicy:
@@ -216,10 +218,10 @@ npu-smi set -t device-share-cfg-recover -d ${value}
                       mountPath: /usr/local/Ascend/add-ons
                     - name: localtime
                       mountPath: /etc/localtime
-                    <strong>- name: libpreload # 软切分动态库地址
-                      mountPath: /opt/enpu/vcann-rt/lib/libvruntime.so
-                    - name: preload # preload配置文件地址
-                      mountPath: ${preload_path}/ld.so.preload</strong>
+                    <strong>- name: libpreload # 软切分动态库地址</strong>
+                      <strong>mountPath: /opt/enpu/vcann-rt/lib/libvruntime.so</strong>
+                    <strong>- name: preload # preload配置文件地址</strong>
+                      <strong>mountPath: /etc/ld.so.preload</strong>
               volumes:
                 - name: ascend-driver
                   hostPath:
@@ -230,12 +232,12 @@ npu-smi set -t device-share-cfg-recover -d ${value}
                 - name: localtime
                   hostPath:
                     path: /etc/localtime
-                <strong>- name: libpreload # 软切分动态库地址
-                  hostPath:
-                    path: /opt/enpu/vcann-rt/lib/libvruntime.so
-                - name: preload # preload配置文件地址
-                  hostPath:
-                    path: ${preload_path}/ld.so.preload</strong>
+                <strong>- name: libpreload # 软切分动态库地址</strong>
+                  <strong>hostPath:</strong>
+                    <strong>path: /opt/enpu/vcann-rt/lib/libvruntime.so</strong>
+                <strong>- name: preload # preload配置文件地址</strong>
+                  <strong>hostPath:</strong>
+                    <strong>path: ${preload_path}/ld.so.preload # 主机侧ld.so.preload文件的路径用户可自定义，文档后续内容中使用${preload_path}表示，容器内为固定路径/etc/ld.so.preload。不建议将ld.so.preload文件放置在主机的/etc目录，否则将在主机侧预加载软切分动态库，可能影响主机侧业务。</strong>
     </pre>
 
     **表 2**  pytorch_acjob_infer_910b_softsharedev.yaml参数说明

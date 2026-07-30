@@ -45,10 +45,11 @@ There are three usage scenarios for full-NPU scheduling, static vNPU scheduling:
 The usage flow for using Volcano and other schedulers via command line is the same. When using other schedulers, refer to the [Using via command line (other schedulers)](#using-via-command-line-other-schedulers) section to create the job YAML. The remaining operations for using other schedulers are the same as those for Volcano, and you can refer to [Using via command line (Volcano)](#using-via-command-line-volcano) for the operations.
 
 **Figure 1**  Full-NPU scheduling and static vNPU scheduling usage flow<a name="fig107864120214"></a>
+
 ![](../../../figures/scheduling/full-npu-scheduling-process.PNG)
 
 1. During script adaptation, you can choose to configure resource information through environment variables or files based on actual conditions.
-2. When preparing the job YAML, the submitted job  YAML needs to be modified and adapted by selecting different YAMLs based on the specific NPU model. When selecting a YAML, refer to [Preparing the Job YAML](#preparing-the-job-yaml) and choose the appropriate YAML based on actual conditions.
+2. When preparing the job YAML, the submitted job YAML needs to be modified and adapted by selecting different YAMLs based on the specific NPU model. When selecting a YAML, refer to [Preparing the Job YAML](#preparing-the-job-yaml) and choose the appropriate YAML based on actual conditions.
 
 ## Implementation Principles<a name="ZH-CN_TOPIC_0000002479387150"></a>
 
@@ -137,8 +138,8 @@ The steps are described as follows:
    - Write the entire NPU information for full NPU scheduling.
    - Write vNPU information for static vNPU scheduling.
 
-7. When kubelet creates the container, it calls Ascend Device Plugin to mount chips. Ascend Device Plugin writes the chip information into the Pod  annotations. Ascend Docker Runtime assists in mounting corresponding resources and `hccl.json` into the container.
-8. Ascend Operator obtains each Pod annotation, and write the information into `hccl.json`.
+7. When kubelet creates the container, it calls Ascend Device Plugin to mount chips. Ascend Device Plugin writes the chip information into the Pod annotations. Ascend Docker Runtime assists in mounting corresponding resources and `hccl.json` into the container.
+8. Ascend Operator obtains each Pod annotation, and writes the information into `hccl.json`.
 9. The container reads `hccl.json`, sets up a communication channel, and executes the training job.
 
 ## Using via Command Line (Volcano)
@@ -201,7 +202,7 @@ Select a reference based on your framework:
         11G
         ```
 
-4. Decompress the training code downloaded from [step 4](#zh-cn_topic_0000001558834814_li1298552813512) in a local environment. Upload the `ModelZoo-PyTorch/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch` directory in the training code to the `/data/atlas_dls/public/code/` path.
+4. Decompress the training code downloaded from [step 1](#zh-cn_topic_0000001558834814_li1298552813512) in a local environment. Upload the `ModelZoo-PyTorch/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch` directory in the training code to the `/data/atlas_dls/public/code/` path.
 5. In the `/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch` path, comment out or delete the fields in bold in `main.py`.
 
     <pre codetype="Python">
@@ -255,7 +256,7 @@ Select a reference based on your framework:
         ```
 
 4. Locally extract the training code downloaded in [Step 1](#zh-cn_topic_0000001558834814_li1141932513379), and rename the ResNet directory under `models/official/cv/` to `ResNet50_for_MindSpore_2.0_code`. The subsequent steps use `ResNet50_for_MindSpore_2.0_code` as an example.
-5. Upload the `ResNet50_for_MindSpore_2.0_cod`e directory to `/data/atlas_dls/public/code/` on the target environment.
+5. Upload the `ResNet50_for_MindSpore_2.0_code` directory to `/data/atlas_dls/public/code/` on the target environment.
 6. Navigate to the [mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy) repository and check out the branch corresponding to the version described in the [mindcluster-deploy open-source repository version description](../../appendix.md#mindcluster-deploy-open-source-repository-version-description). Obtain the `train_start.sh` file from the `samples/train/basic-training/without-ranktable/mindspore` directory. Combine this with the scripts directory from the training code to create the following directory structure on the host.
 
     ```text
@@ -268,7 +269,7 @@ Select a reference based on your framework:
     └── train_start.sh
     ```
 
-7. Go to the `/data/atlas_dls/public/code/ResNet5_for_MindSpore_2.0_code/train.py` directory, and modify `train.py` as follows.
+7. Go to the `/data/atlas_dls/public/code/ResNet50_for_MindSpore_2.0_code/train.py` directory, and modify `train.py` as follows.
 
     ```Python
      ...
@@ -372,7 +373,7 @@ Configuring resource information through file variables supports creating the fo
         ```
 
 4. Decompress the training code downloaded in [Step 1](#zh-cn_topic_0000001558834798_li1141932513379) locally, and rename the `ResNet` directory under `models/official/cv/" to "ResNet50_for_MindSpore_2.0_code`. The following steps use the `ResNet50_for_MindSpore_2.0_code` directory as an example.
-5. Upload the `ResNet50_for_MindSpore_2.0_code` file to the environment path `/data/atlas_dls/public/code/`.
+5. Upload the `ResNet50_for_MindSpore_2.0_code` directory to the environment path `/data/atlas_dls/public/code/`.
 6. Access the "[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)" repository, and based on the [mindcluster-deploy open-source repository version description](../../appendix.md#mindcluster-deploy-open-source-repository-version-description), switch to the corresponding version branch. Obtain the `train_start.sh`, `utils.sh`, and `rank_table.sh` files from the `samples/train/basic-training/ranktable` directory, and combine them with the `scripts` directory in the training code to construct the following directory structure on the host.
 
     ```text
@@ -503,7 +504,7 @@ The following YAML examples are provided. You need to select the appropriate YAM
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p370024915266"><a name="p370024915266"></a><a name="p370024915266"></a>mindspore_multinodes_acjob.yaml</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p6700104952618"><a name="p6700104952618"></a><a name="p6700104952618"></a>The example defaults to a two-node 8-processor job.</p>
-<div class="note" id="note170014493266"><a name="note170014493266"></a><a name="note170014493266"></a><span class="notetitle">[!NOTE] Note</span><div class="notebody"><p id="p1370015494264"><a name="p1370015494264"></a><a name="p1370015494264"></a>If submitting a single-node 8-processor <span id="ph6700049182610"><a name="ph6700049182610"></a><a name="ph6700049182610"></a>job running MindSpore</span>, you need to modify minAvailable to 2 and Worker replicas to 1 in mindspore_multinodes_acjob.yaml.</p>
+<div class="note" id="note170014493266"><a name="note170014493266"></a><a name="note170014493266"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p1370015494264"><a name="p1370015494264"></a><a name="p1370015494264"></a>If submitting a single-node 8-processor <span id="ph6700049182610"><a name="ph6700049182610"></a><a name="ph6700049182610"></a>job running MindSpore</span>, you need to modify minAvailable to 2 and Worker replicas to 1 in mindspore_multinodes_acjob.yaml.</p>
 </div></div>
 </td>
 </tr>
@@ -832,7 +833,7 @@ This section guides you on configuring the job YAML for the full-NPU scheduling 
     <tr id="row0832171652816"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p178320163285"><a name="p178320163285"></a><a name="p178320163285"></a><a href="#li1731218243100">Creating a Distributed Job on an Atlas 800T A2 Training Server</a></p>
     </td>
     </tr>
-    <tr id="row108334168282"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p2833141612811"><a name="p2833141612811"></a><a name="p2833141612811"></a>Full Card Scheduling</p>
+    <tr id="row108334168282"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p2833141612811"><a name="p2833141612811"></a><a name="p2833141612811"></a>Full-NPU Scheduling</p>
     </td>
     <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p18339161282"><a name="p18339161282"></a><a name="p18339161282"></a><a href="#li1086213163289">Creating a Single-Node Training Job on an Atlas 900 A3 SuperPoD</a></p>
     </td>
@@ -998,7 +999,7 @@ This section guides you on configuring the job YAML for the full-NPU scheduling 
 
         After modification, perform [Step 2](#li118885168281) to configure other fields in the YAML.
 
-    - <a name="li1086213163289"></a>To use the full-NPU scheduling feature, refer to this configuration. Taking `pytorch_standalone_acjob_super_pod.yaml` as an example, create a ingle-node training job on an Atlas 900 A3 SuperPoD. The modification example is as follows.
+    - <a name="li1086213163289"></a>To use the full-NPU scheduling feature, refer to this configuration. Taking `pytorch_standalone_acjob_super_pod.yaml` as an example, create a single-node training job on an Atlas 900 A3 SuperPoD. The modification example is as follows.
 
         ```Yaml
         apiVersion: mindxdl.gitee.com/v1
@@ -1628,7 +1629,7 @@ This section guides you on configuring the job YAML for the full-NPU scheduling 
 >[!NOTE]
 >
 >- If the training job remains in the `Pending` state after being delivered, see [Training Job in Pending State, Cause: nodes are unavailable](https://gitcode.com/Ascend/mind-cluster/issues/352) or [Job in Pending State Due to Insufficient Resources](https://gitcode.com/Ascend/mind-cluster/issues/355) for troubleshooting.
->- If the `hccl.jso`n file inside the training container remains in the `initializing` state after the training job is successfully started, see [hccl.json File Not Generated](https://gitcode.com/Ascend/mind-cluster/issues/323) for troubleshooting.
+>- If the `hccl.json` file inside the training container remains in the `initializing` state after the training job is successfully started, see [hccl.json File Not Generated](https://gitcode.com/Ascend/mind-cluster/issues/323) for troubleshooting.
 
 ### Viewing the Job Process<a name="ZH-CN_TOPIC_0000002479387130"></a>
 
@@ -1918,9 +1919,9 @@ The usage procedure for using via command line (other schedulers) is the same as
 
 1. Upload the YAML file to any directory on the management node and modify its content as required.
 
-There is no YAML file of other schedulers is provided. You can modify the Volcano YAML file for adaptation.
+   No YAML file of other schedulers is provided. You can modify the Volcano YAML file for adaptation.
 
-Taking `pytorch_standalone_acjob.yaml` as an example, create a single-node eight-processor training job on an  Atlas 800T A2 server. The modification is as follows:
+   Taking `pytorch_standalone_acjob.yaml` as an example, create a single-node eight-processor training job on an  Atlas 800T A2 server. The modification is as follows:
 
     <pre codetype="yaml">
     apiVersion: mindxdl.gitee.com/v1

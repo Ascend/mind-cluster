@@ -4,7 +4,7 @@ Containerization is a technical capability that packages an application and its 
 
 ## Prerequisites<a name="section1632062465010"></a>
 
-Before using the containerization feature, ensure that the Ascend Docker Runtime component are installed. If they are not installed, refer to the [Installation and Deployment](../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) section for instructions.
+Before using the containerization feature, ensure that the Ascend Docker Runtime component is installed. If it are not installed, refer to the [Installation and Deployment](../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) section for instructions.
 
 ## Usage Instructions<a name="section44381612353"></a>
 

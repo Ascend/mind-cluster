@@ -12,8 +12,8 @@ Ascend Docker Runtime
 
 **How to Use<a name="section1245612501584"></a>**
 
-1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for detailed instructions.
-2. See [Containerization](../usage/containerization/00_before_you_start.md) for detailed instructions.
+1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for component installation.
+2. See [Containerization](../usage/containerization/00_before_you_start.md) for feature usage.
 
 ## Resource Monitoring<a name="ZH-CN_TOPIC_0000002479386910"></a>
 
@@ -27,8 +27,8 @@ NPU Exporter
 
 **How to Use<a name="section1245612501584"></a>**
 
-1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for detailed instructions.
-2. See [Resource Monitoring](../usage/resource_monitoring/00_before_you_start.md) for detailed instructions.
+1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for component installation.
+2. See [Resource Monitoring](../usage/resource_monitoring/00_before_you_start.md) for feature usage.
 
 ## Virtual Instance<a name="ZH-CN_TOPIC_0000002511346855"></a>
 
@@ -36,7 +36,9 @@ NPU Exporter
 
 **Overview<a name="section1337420477275"></a>**
 
-This feature allows multiple users to share one server and to allocate vNPU resources as needed, making the NPU computing power more accessible and affordable.
+The Ascend virtual instance can virtualize an Ascend AI processor (NPU) of a physical machine or virtual machine into several virtual NPUs (vNPUs) and mount the vNPUs to containers. Such virtualization method allocates and reclaims resources of different specifications in a unified manner, allowing users to allocate and release resources repeatedly.
+
+The Ascend virtual instance allows multiple users to share one server and to allocate vNPU resources as needed, making the NPU computing power more accessible and affordable. To be specific, users can share NPU resources on the same server and use containers to isolate resources. This ensures the stability and security of the operating environment. In addition, resources can be allocated and reclaimed in a unified manner, making it easier to manage multiple tenants.
 
 **Required Components<a name="ZH-CN_TOPIC_0000002479226932"></a>**
 
@@ -62,15 +64,19 @@ You can use either of following methods to mount vNPUs to a container.
 
 **How to Use<a name="section1350915844811"></a>**
 
-- Install Docker by referring to [Install Docker Engine](https://docs.docker.com/engine/install/).
-- Install Kubernetes by referring to [Installing Kubernetes with deployment tools](https://kubernetes.io/docs/setup/production-environment/tools/).
+- After the driver is installed, the npu-smi tool is installed by default. (For details, see "Installing the NPU Driver and Firmware" in the [CANN Software Installation](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/900/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian).) After the installation is successful, the npu-smi tool is stored in /usr/local/sbin/ and /usr/local/bin/.
+- Install Ascend Docker Runtime, Ascend Device Plugin, and Volcano by referring to [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md).
+- Install Docker by referring to [Install Docker](https://docs.docker.com/engine/install/).
+- Install Kubernetes by referring to [Installing Kubernetes](https://kubernetes.io/docs/setup/production-environment/tools/).
 - For details about how to use this feature, see [HDK-based Virtual Instance](../usage/virtual_instance/virtual_instance_with_hdk/01_description.md).
 
 ### vCANN-RT-based Virtual Instance<a name="ZH-CN_TOPIC_0000002511346855vcann"></a>
 
 **Overview<a name="section1337420477275vcann"></a>**
 
-It allows multiple users to share one server. Users can allocate NPU resources on demand, lowering the threshold and cost for using NPU computing power.
+The virtualization feature based on vCANN‑RT provides a soft‑slicing configuration file to the vCANN‑RT, which then mounts the NPUs (Ascend AI Processors) configured on a physical machine into containers for use. The virtualization management enables the allocation and reclamation of resources in various specifications, accommodating repeated resource request and release operations from multiple users.
+
+The vCANN‑RT‑based virtual instance feature on Ascend allows multiple users to share a single server on demand, lowering the entry barrier and cost of accessing NPU computing power. By enabling resource isolation through containers, this approach ensures a stable and secure runtime environment. The unified resource allocation and reclamation process also facilitates multi‑tenant management.
 
 **Required Components<a name="ZH-CN_TOPIC_0000002479226932vcann"></a>**
 
@@ -82,8 +88,8 @@ It allows multiple users to share one server. Users can allocate NPU resources o
 
 **How to Use<a name="section1350915844811vcann"></a>**
 
-1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for detailed instructions.
-2. For details about how to use this feature, see [vCANN-RT-based Virtual Instance](../usage/virtual_instance/virtual_instance_with_vcann_rt/00_description.md).
+1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for component installation.
+2. See [vCANN-RT-based Virtual Instance](../usage/virtual_instance/virtual_instance_with_vcann_rt/00_description.md) for feature usage.
 
 ## Basic Scheduling<a name="ZH-CN_TOPIC_0000002511346871"></a>
 
@@ -107,8 +113,8 @@ Volcano can be used to implement switch affinity scheduling and Ascend AI Proces
 
 **How to Use<a name="section1245612501584"></a>**
 
-1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for detailed instructions.
-2. For details about how to use this feature, see [Full-NPU Scheduling or Static vNPU Scheduling (Training)](../usage/basic_scheduling/03_full_npu_scheduling_and_static_vnpu_scheduling_training.md).
+1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for component installation.
+2. See [Full-NPU Scheduling or Static vNPU Scheduling (Training)](../usage/basic_scheduling/03_full_npu_scheduling_and_static_vnpu_scheduling_training.md) for feature usage.
 
 ### Static vNPU Scheduling<a name="ZH-CN_TOPIC_0000002511426831"></a>
 
@@ -130,8 +136,8 @@ The following components need to be installed for training and inference jobs:
 
 **How to Use<a name="section1245612501584"></a>**
 
-1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for detailed instructions.
-2. For details about how to use this feature, see [Full-NPU Scheduling or Static vNPU Scheduling (Training)](../usage/basic_scheduling/03_full_npu_scheduling_and_static_vnpu_scheduling_training.md).
+1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for component installation.
+2. See [Full-NPU Scheduling or Static vNPU Scheduling (Training)](../usage/basic_scheduling/03_full_npu_scheduling_and_static_vnpu_scheduling_training.md) for feature usage.
 
 ### Multi-Level Scheduling
 
@@ -139,7 +145,7 @@ The following components need to be installed for training and inference jobs:
 
 Multi-level scheduling is an advanced scheduling policy introduced by the ascend-for-volcano plugin, specifically designed for NPU clusters with complex network topologies. As a special case of full-NPU scheduling, it abstracts cluster resources into a multi-level structure based on the network topology hierarchy of NPUs, providing efficient, flexible, and reliable scheduling capabilities for NPU clusters. When running a training job, users can select appropriate NPUs based on the network topology to maximize NPU performance and achieve optimal NPU allocation for the training job.
 
-**Required Component**
+**Required Components**
 
 - Volcano
 - Ascend Device Plugin
@@ -150,8 +156,8 @@ Multi-level scheduling is an advanced scheduling policy introduced by the ascend
 
 **How to Use**
 
-1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for detailed instructions.
-2. For details about how to use this feature, see [Multi-Level Scheduling](../usage/basic_scheduling/05_multi_level_scheduling.md).
+1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for component installation.
+2. See [Multi-Level Scheduling](../usage/basic_scheduling/05_multi_level_scheduling.md) for feature usage.
 
 ### Dynamic vNPU Scheduling<a name="ZH-CN_TOPIC_0000002479226956"></a>
 
@@ -169,16 +175,16 @@ This feature requires Ascend Device Plugin to report the available number of AI 
 
 **How to Use<a name="section1245612501584"></a>**
 
-1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for detailed instructions.
-2. See [Dynamic vNPU Scheduling (Inference)](../usage/virtual_instance/virtual_instance_with_hdk/01_description.md) for detailed instructions.
+1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for component installation.
+2. See [Dynamic vNPU Scheduling (Inference)](../usage/virtual_instance/virtual_instance_with_hdk/01_description.md) for feature usage.
 
 ### Soft Partitioning-based Scheduling
 
 **Overview**
 
-This feature requires Ascend Device Plugin to the available AI Core percentage of the node where it is installed. After a virtualization task is reported, Volcano schedules the task to a node that meets the task requirements. Ascend Device Plugin generates a soft partitioning configuration file based on the task configuration and mounts the file to the task container for [vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md) to use. With this feature, users can allocate NPU resources on demand, allowing for refined management and dynamic allocation and enabling multiple users to share NPU resources of a single server. This virtualization management mode provides unified resource allocation and reclamation capabilities, meeting the dynamic operation requirements of repeatedly allocating and deallocating resources in multi-tenant scenarios and improving resource utilization.
+This feature requires Ascend Device Plugin to report the available AI Core percentage of the node where it is installed. After a virtualization task is reported, Volcano schedules the task to a node that meets the task requirements. Ascend Device Plugin generates a soft partitioning configuration file based on the task configuration and mounts the file to the task container for [vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md) to use. With this feature, users can allocate NPU resources on demand, allowing for refined management and dynamic allocation and enabling multiple users to share NPU resources of a single server. This virtualization management mode provides unified resource allocation and reclamation capabilities, meeting the dynamic operation requirements of repeatedly allocating and deallocating resources in multi-tenant scenarios and improving resource utilization.
 
-**Required Component**
+**Required Components**
 
 - Volcano
 - Ascend Device Plugin
@@ -188,8 +194,8 @@ This feature requires Ascend Device Plugin to the available AI Core percentage o
 
 **How to Use**
 
-1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for detailed instructions.
-2. See [Soft Partitioning-based Scheduling (Inference)](../usage/virtual_instance/virtual_instance_with_vcann_rt/00_description.md) for detailed instructions.
+1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for component installation.
+2. See [Soft Partitioning-based Scheduling (Inference)](../usage/basic_scheduling/07_soft_allocation_scheduling_inference.md) for feature usage.
 
 ### Elastic Training<a name="ZH-CN_TOPIC_0000002479226936"></a>
 
@@ -212,7 +218,8 @@ If a training node fails, the cluster scheduling components isolate the failed n
 
 **How to Use<a name="section1245612501584"></a>**
 
-1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for detailed instructions.
+1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for component installation.
+2. See [Elastic Training](../usage/basic_scheduling/08_elastic_training.md) for feature usage.
 
 ### Recovery of Inference Card Faults<a name="ZH-CN_TOPIC_0000002479226952"></a>
 
@@ -230,8 +237,8 @@ If an inference NPU resource managed by the cluster scheduling components is fau
 
 **How to Use<a name="section74221327111220"></a>**
 
-- See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for detailed instructions.
-- See *Recovery of Inference Card Faults* for detailed instructions.
+1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for component installation.
+2. See [Recovery of Inference Card Faults](../usage/basic_scheduling/10_recovery_of_inference_card_faults.md) for feature usage.
 
 ### Rescheduling Upon Inference Card Faults<a name="ZH-CN_TOPIC_0000002511346875"></a>
 
@@ -251,8 +258,8 @@ If an inference NPU resource managed by the cluster scheduling components is fau
 
 **How to Use<a name="section18894171918127"></a>**
 
-- See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for detailed instructions.
-- See *Rescheduling Upon Inference Card Faults* for detailed instructions.
+1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for component installation.
+2. See [Rescheduling Upon Inference Card Faults](../usage/basic_scheduling/09_rescheduling_upon_inference_card_faults.md) for feature usage.
 
 ## Resumable Training<a name="ZH-CN_TOPIC_0000002511346867"></a>
 
@@ -280,8 +287,8 @@ When a training job is faulty, the job can be rescheduled to a healthy device fo
 
 **How to Use<a name="section1245612501584"></a>**
 
-1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for detailed instructions.
-2. For details about how to use this feature, see [Resumable Training](../usage/resumable_training/00_feature_description.md).
+1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for component installation.
+2. See [Resumable Training](../usage/resumable_training/00_feature_description.md) for feature usage.
 3. TaskD must be installed in a container. For details, see [Creating an Image](../usage/resumable_training/07_using_resumable_training_on_the_cli.md).
 4. For details about MindIO ACP and its installation procedure, see [Optimizing Checkpoint Saving and Loading](../optimizing_saving_and_loading_checkpoints/01_product_description.md).
 5. For details about MindIO TFT and its installation procedure, see [Fault Recovery Acceleration](../fault_recovery_acceleration/01_product_description.md).
@@ -302,5 +309,5 @@ Container Manager
 
 **How to Use<a name="section1245612501584"></a>**
 
-1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for detailed instructions.
-2. For details about how to use this feature, see [Appliance Feature Guide](../usage/appliance/01_npu_hardware_fault_detection_and_rectification.md).
+1. See [Installation and Deployment](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md) for component installation.
+2. See [Appliance Feature Guide](../usage/appliance/01_npu_hardware_fault_detection_and_rectification.md) for feature usage.

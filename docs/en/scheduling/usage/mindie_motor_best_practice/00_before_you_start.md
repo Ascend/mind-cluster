@@ -1,6 +1,6 @@
 # Before You Start<a name="ZH-CN_TOPIC_0000002511346371"></a>
 
-MindCluster support containerized deployment, fault rescheduling, and elastic scaling of MindIE Motor by generating inference jobs of acjob type.
+MindCluster supports containerized deployment, fault rescheduling, and elastic scaling of MindIE Motor by generating inference jobs of acjob type.
 
 This section only describes the principles of related features and provides corresponding configuration examples. The provided YAML examples are not sufficient to complete the deployment of MindIE jobs. For details about the complete deployment process of MindIE Motor, see the [MindIE Motor Development Guide](https://www.hiascend.com/document/detail/en/mindie/300/mindiemotor/motordev/user_guide/introduction.md).
 

@@ -26,13 +26,13 @@ Constructs a `DLRecoverManager` for subsequent communication.
 
 Registers a client. The server performs pre-recovery initialization operations for the job specified by the request.
 
-**Table 2**  Parameters
+**Table 2** Parameters
 
 |Parameter|Type|Description|
 |--|--|--|
 |request|pb.ClientInfo|<p>request.jobId: str type, job ID.</p><p>request.role: str type, client role.</p>|
 
-**Table 3**  Return value description
+**Table 3** Return value description
 
 |Return Value Type|Description|
 |--|--|
@@ -42,7 +42,7 @@ Registers a client. The server performs pre-recovery initialization operations f
 
 The client and server establish a gRPC persistent connection, through which the server communicates unidirectionally with the client. For example, when a fault occurs, the server sends the client information such as a training stop signal and global faulty process rank.
 
-**Table 4**  Parameters
+**Table 4** Parameters
 
 |Parameter|Type|Description|
 |--|--|--|
@@ -66,7 +66,7 @@ The client reports to the server that the job process has stopped. Typically, af
 |--|--|--|
 |code|int|Status code|
 |msg|str|Return information|
-|fault_ranks|dict|Rank fo the faulty process|
+|fault_ranks|dict|Rank of the faulty process|
 
 **Return Value<a name="section924216017310"></a>**
 
@@ -162,7 +162,7 @@ Registers a process management function with TaskD for subsequent use in managin
 
 |Parameter|Type|Description|
 |--|--|--|
-|operator|string|The type of callback currently being injected.<ul><li>`KILL_WORKER`: Registers a stop method for the MindSpore process to stop a specific training process.</li><li>START_ALL_WORKER: Registers a start method for the MindSpore process to start all processes on the current node.</li><li>`MONITOR`: Registers a monitoring method for the MindSpore process to return information about each rank process on the current node.</li><li>`START_WORKER_LIST`: Registers a start method for the MindSpore process to start some processes on the current node.</li></ul>|
+|operator|string|The type of callback currently being injected.<ul><li>`KILL_WORKER`: Registers a stop method for the MindSpore process to stop a specific training process.</li><li>`START_ALL_WORKER`: Registers a start method for the MindSpore process to start all processes on the current node.</li><li>`MONITOR`: Registers a monitoring method for the MindSpore process to return information about each rank process on the current node.</li><li>`START_WORKER_LIST`: Registers a start method for the MindSpore process to start some processes on the current node.</li></ul>|
 |func|Function|The function callback for the currently registered function|
 
 ## start(self)<a name="ZH-CN_TOPIC_0000002479226816"></a>

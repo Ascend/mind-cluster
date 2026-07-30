@@ -19,12 +19,12 @@ Currently, this feature is supported only for MindIE Motor inference jobs.
 1. The user configures multiple Jobs belonging to the same inference job, divides the Jobs into multiple groups, and configures a scaling rule.
 2. The elastic scaling rule is deployed in the cluster as a ConfigMap. Different types of instances correspond to different groups in the scaling-rule. For example, all Prefill instances can be classified as group0, and all Decode instances as group1.
 3. In a scenario where rescheduling is configured, when a hardware or software fault occurs, Ascend Device Plugin and NodeD report the fault, and Volcano deletes all Pods under that instance.
-4. ClusterD sends the `global-ranktabl`e to MindIE Controller. For details about the `global-ranktable`, see [SubscribeRankTable](../../api/clusterd/05_service_configuration_apis.md#subscriberanktable).
+4. ClusterD sends the `global-ranktable` to MindIE Controller. For details about the `global-ranktable`, see [SubscribeRankTable](../../api/clusterd/05_service_configuration_apis.md#subscriberanktable).
 5. MindIE Controller determines the instance that needs to exit based on `global-ranktable` and notifies the process in the container to exit with a non-zero code.
-6. After Volcano-Scheduler the Pod anomaly, it deletes all Pods of the instance.
+6. After Volcano-Scheduler detects the Pod anomaly, it deletes all Pods of the instance.
 7. After detecting that the Pods have been deleted, Ascend Operator collects the running status of all instances under the scaling-rule corresponding to the current MindIE Motor.
 8. Ascend Operator determines whether the current instance needs to create a Pod based on the scaling-rule.
-9. After the Pod is created, the scheduler schedule it, or the Pod enters the `Pending` state and waits for scheduling.
+9. After the Pod is created, the scheduler schedules it, or the Pod enters the `Pending` state and waits for scheduling.
 10. When resources are sufficient, the Pod in the `Pending` state automatically completes scheduling.
 11. If a Pod cannot be created currently, it waits for other instances to run successfully before creation.
 
@@ -197,7 +197,7 @@ metadata:
      fault-scheduling: "force"
      fault-retry-times: "100000000"    # To handle service plane faults, you must configure the number of unconditional retries on the service plane.
      jobID: mindie-xxx      # Defined by the user.
-     app: mindeie-ms-server
+     app: mindie-ms-server
      mind-cluster/scaling-rule: scaling-rule   # Must be consistent with the name of the scaling rule ConfigMap.
      mind-cluster/group-name: group0           # Must be consistent with the group_name value in the scaling rule ConfigMap
 spec:

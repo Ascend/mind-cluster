@@ -66,7 +66,7 @@ The inference server (with Atlas 300I inference card) supports affinity scheduli
 The value description of the `npu-310-strategy` parameter is as follows:
 
 - `card`: Schedule by inference card. The number of Ascend AI processors requested does not exceed 4, and the Ascend AI processors on the same Atlas 300I inference card are used.
-- `chip:` Schedule by Ascend AI processor. The number of Ascend AI processors requested does not exceed the maximum number of processors that a single node hosts.
+- `chip`: Schedule by Ascend AI processor. The number of Ascend AI processors requested does not exceed the maximum number of processors that a single node hosts.
 
 ### Inference Server (with Atlas 300I Duo Inference Card) <a name="ZH-CN_TOPIC_0000002511426809"></a>
 
@@ -431,7 +431,7 @@ The number of Ascend AI processors requested by the task supports 2, 4, 6, 8, 10
 - The number of Ascend AI processors requested by the inference task cannot exceed the total number of Ascend AI processors on the node.
 - When the number of Ascend AI processors requested by an inference task is less than or equal to 4, the inference task must be scheduled to the same Atlas 300I inference card.
 
-***Distributed Affinity Policy for Inference Server (with Atlas 300I Duo Inference Card)**<a name="section195417249277"></a>
+**Distributed Affinity Policy for Inference Server (with Atlas 300I Duo Inference Card)**<a name="section195417249277"></a>
 
 - The number of Ascend AI processors requested by an inference task cannot exceed the total number of Ascend AI processors in a node.
 - When the number of Ascend AI processors requested by an inference task is less than or equal to 2, the inference task must be scheduled to the same Atlas 300I Duo inference card.

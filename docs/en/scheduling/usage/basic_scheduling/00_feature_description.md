@@ -15,13 +15,13 @@ This document demonstrates how to deploy and execute training or inference jobs 
 
 Ascend Operator provides the following two ways to configure resource information:
 
-- Configure resource information through environment variables: Provide corresponding environment variables for distributed training jobs of different AI frameworks. See [Ascend Operator Environment Variable Description](../../api/environment_variable_description.md). Users who use this method can only create Ascend Job (hereinafter referred to as acjob) objects.
+- Configure resource information through environment variables: Provide corresponding environment variables for distributed training jobs of different AI frameworks. See [Ascend Operator Environment Variable Description](../../api/environment_variable_description.md#ascend-operator-environment-variables). Users who use this method can only create Ascend Job (hereinafter referred to as acjob) objects.
 - Configure resource information through files: Training job collective communication configuration file (RankTable File, also known as [hccl.json](../../api/hccl.json_file_description.md)). Users who use this method can create the following three types of objects: Volcano Job (hereinafter referred to as vcjob), Ascend Job (hereinafter referred to as acjob), and Deployment (hereinafter referred to as deploy).
     - (Recommended) Ascend Job: It is a custom job type defined by MindCluster. Currently, it supports launching training or inference jobs through two methods: configuring resource information via environment variables and configuring resource information via files.
 
-        Each acjob YAML contains some fixed fields, such as `apiVersion`, `kind`, etc. For detailed descriptions of these fields, please refer to [acjob Yaml Description](../../api).
+        Each acjob YAML contains some fixed fields, such as `apiVersion`, `kind`, etc. For detailed descriptions of these fields, please refer to [acjob Yaml Description](../../api/ascend_job.md).
 
-    - Volcano Job: I is suitable for batch processing jobs with a completion status.
+    - Volcano Job: It is suitable for batch processing jobs with a completion status.
     - Deployment: It is suitable for background resident jobs without a completion status. It is selected when continuous training jobs, persistent resource occupation, debugging training jobs, or providing inference service interfaces are required.
 
         >[!NOTE]
@@ -29,7 +29,7 @@ Ascend Operator provides the following two ways to configure resource informatio
 
 ## Scheduling Time Description<a name="section12177114564719"></a>
 
-In multi-job or single-job scenarios, the reference scheduling time for acjob on the Atlas 800T A2 training server is described as follows. To achieve the following reference times, ensure that the CPU frequency is at least 2.60 GHz and the API Server latency does not exceed 80 milliseconds. The scheduling time refers to the period from when a job is submitted until the Pod status changes to Running..
+In multi-job or single-job scenarios, the reference scheduling time for acjob on the Atlas 800T A2 training server is described as follows. To achieve the following reference times, ensure that the CPU frequency is at least 2.60 GHz and the API Server latency does not exceed 80 milliseconds. The scheduling time refers to the period from when a job is submitted until the Pod status changes to Running.
 
 - Multi-job scheduling time
     - The peak number of concurrently created single-server single-device jobs is 100, meaning that 100 jobs are created simultaneously using 100 job YAML files, and the scheduling time for these 100 jobs is 107 seconds.

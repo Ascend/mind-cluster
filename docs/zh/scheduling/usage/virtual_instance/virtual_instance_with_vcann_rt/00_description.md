@@ -17,22 +17,49 @@
 
 <a name="table32786155236vcann"></a>
 
-|产品系列|支持的场景|虚拟化方式|是否支持|
-|--|--|--|--|
-|<term>Atlas A2 推理系列产品</term><ul><li>Atlas 800I A2 推理服务器</li></ul>|在物理机生成软切分配置文件，挂载NPU和位置文件到容器|软切分虚拟化|是|
-|<term>Atlas A3 推理系列产品</term><ul><li>Atlas 800I A3 超节点服务器</li></ul>|在物理机生成软切分配置文件，挂载NPU和位置文件到容器|软切分虚拟化|是|
+<table>
+<thead align="left">
+<tr>
+<th class="cellrowborder" align="center" valign="center" width="30%"><p>产品系列</p></th>
+<th class="cellrowborder" align="center" valign="center" width="40%"><p>支持的场景</p></th>
+<th class="cellrowborder" align="center" valign="center" width="15%"><p>虚拟化方式</p></th>
+<th class="cellrowborder" align="center" valign="center" width="15%"><p>是否支持</p></th>
+</tr>
+</thead>
+<tbody align="left">
+<tr>
+<td class="cellrowborder" valign="top" width="30%"><term>Atlas A2 训练系列产品</term></td>
+<td class="cellrowborder" rowspan="5" valign="center" width="40%"><p>在物理机生成软切分配置文件，挂载NPU和配置文件到容器</p></td>
+<td class="cellrowborder" rowspan="4" align="center" valign="center" width="15%"><p>软切分虚拟化</p></td>
+<td class="cellrowborder" rowspan="5" align="center" valign="center" width="10%"><p>是</p></td>
+</tr>
+<tr>
+<td class="cellrowborder" valign="top" width="30%"><term>Atlas A2 推理系列产品</term></td>
+</tr>
+<tr>
+<td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 训练系列产品</term></td>
+</tr>
+<tr>
+<td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 推理系列产品</term></td>
+</tr>
+</tbody>
+</table>
 
 ## 使用说明<a name="section1296713336303vcann"></a>
 
 - 软切分虚拟化基于[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)实现，直接将NPU重复挂载到多个容器，容器内的CANN按照配置好的比例使用NPU资源。
 - 如果使用软切分虚拟化功能，需要先参见[软切分虚拟化](./01_soft_allocation_virtualization.md)，再进行挂载到容器操作。
 
+>[!NOTICE]
+>若未按照[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)文档完成编译与部署，软切分虚拟化功能将无法正常运行。
+
 ## 使用约束<a name="section911013420264vcann"></a>
 
+- 软切分虚拟化功能仅支持推理任务。
 - 软切分虚拟化功能仅支持acjob任务类型。
 - 在软切分虚拟化场景下，一个容器只能挂载一个NPU。
 - 任务YAML中requests对应的数据表示请求的NPU的AICore百分比，不是真实NPU卡数。
-- Atlas A3 推理系列产品使用软切分虚拟化功能时，必须开启单die直通模式，即在Ascend Device Plugin的YAML中，增加启动参数-useSingleDieMode=true。
+- **Atlas A3 训练或推理系列产品**使用软切分虚拟化功能时，必须开启单die直通模式，即在Ascend Device Plugin的YAML中，增加启动参数-useSingleDieMode=true。
 - 物理NPU软切分虚拟化后，仅支持将物理NPU挂载到容器，不支持将该物理NPU直通到虚拟机。
 - 在软切分虚拟化场景下，如果所有容器都挂载了相同的物理NPU，则该物理NPU必须采用相同的软切分策略。
 - 由于硬件设备的限制（可参见[使用约束](https://www.hiascend.com/document/detail/zh/canncommercial/900/programug/acldevg/aclcppdevg_000222.html)），建议vCANN-RT最大切分数量不超过单个Device支持的最大用户进程数。

@@ -47,7 +47,7 @@ You can prevent DoS attacks on the system by limiting the connection rate to the
 
 ### sudo Configuration<a name="ZH-CN_TOPIC_0000002511346403"></a>
 
-- Set the `targetpw` option in the *sudo command` to require the target user's password by default. This prevents all users from escalating to the root account and executing system commands without entering the root password after adding sudo rules, which could lead to unauthorized command execution by ordinary users. This option is not added by default; it is recommended to add it.
+- Set the `targetpw` option in the `sudo command` to require the target user's password by default. This prevents all users from escalating to the root account and executing system commands without entering the root password after adding sudo rules, which could lead to unauthorized command execution by ordinary users. This option is not added by default; it is recommended to add it.
 
     Run the `cat /etc/sudoers | grep -E "^[^#]*Defaults[[:space:]]+targetpw"` command to check if the `"Defaults targetpw"` or `"Defaults rootpw"` configuration entry exists. If not exist, add the `"Defaults targetpw"` or `"Defaults rootpw"` configuration entry under the `"#Defaults specification"` section in the `"/etc/sudoers"` file.
 
@@ -59,7 +59,7 @@ You can prevent DoS attacks on the system by limiting the connection rate to the
 
 Use the Linux built-in ASLR (Address Space Layout Randomization) feature to strengthen protection against vulnerabilities.
 
-Write 2` to the `"/proc/sys/kernel/randomize_va_space"` file.
+Write 2 to the `"/proc/sys/kernel/randomize_va_space"` file.
 
 ## Security Hardening for Docker<a name="ZH-CN_TOPIC_0000002479386408"></a>
 
@@ -183,7 +183,7 @@ Enabling the audit function will allow the system to collect logs and other rela
 
 ### Controlling the Running User of Docker Containers<a name="ZH-CN_TOPIC_0000002511426373"></a>
 
-It is recommended that you run containers as a non-root user or as a non-privileged root user. when using Docker.
+It is recommended that you run containers as a non-root user or as a non-privileged root user when using Docker.
 
 ### Disabling Insecure Protocols in Containers<a name="ZH-CN_TOPIC_0000002511426313"></a>
 
@@ -293,7 +293,7 @@ The seccomp configuration can constrain the system calls of a container, reducin
 
 In Kubernetes versions earlier than 1.19, seccomp uses the `annotations[seccomp.security.alpha.kubernetes.io/pod]` method. In version 1.19 and later, the seccomp feature has reached GA. For version 1.19 and later, it is recommended to use `securityContext.seccompProfile` for configuration, and starting from version 1.27, the annotation method is no longer effective. For details, see: [Kubernetes Removals and Major Changes In v1.27](https://kubernetes.io/blog/2023/03/17/upcoming-changes-in-kubernetes-v1-27/#support-for-deprecated-seccomp-annotations). Therefore, modify the seccomp configuration based on different Kubernetes versions and container security requirements.
 
-There are two configuration methods provided to modify thehe MindCluster component settings. The following is the seccomp configuration for Resilience Controller, and other components have reserved related configurations.
+There are two configuration methods provided to modify the MindCluster component settings. The following is the seccomp configuration for Resilience Controller, and other components have reserved related configurations.
 
 >[!NOTE]
 >
@@ -410,7 +410,7 @@ Before performing mutual authentication, prepare the following certificate files
 
          ssl_session_tickets off;
 
-         ssl_certificate     /etc/nginx/conf.d/cert/server.crt;                     # Server certificate path (permissions 400)cate path (permissions 400)
+         ssl_certificate     /etc/nginx/conf.d/cert/server.crt;                     # Server certificate path (permissions 400)
          ssl_certificate_key /etc/nginx/conf.d/cert/server.key;              # Server private key path, which cannot be configured in plain text (permissions 400).
          ssl_client_certificate /etc/nginx/conf.d/cert/rootCA.crt;
          ssl_verify_client on;
@@ -443,9 +443,9 @@ Before performing mutual authentication, prepare the following certificate files
 
 4. Modify or add the following bolded fields in the ClusterD startup YAML file.
 
-    ```shell
+    <pre codetype="yaml">
     # Configure -useProxy=true in the ClusterD startup command to enable the local proxy
-       args: [ "/usr/local/bin/clusterd -logFile=/var/log/mindx-dl/clusterd/clusterd.log -logLevel=0 <strong>-useProxy=true"</strong> ]
+       args: [ "/usr/local/bin/clusterd -logFile=/var/log/mindx-dl/clusterd/clusterd.log -logLevel=0 <strong>-useProxy=true"</strong> ]      
     # Add to the containers section in Deployment
                <strong>- name: nginx</strong>
                  <strong>image: nginx:latest</strong>
@@ -457,7 +457,6 @@ Before performing mutual authentication, prepare the following certificate files
                      <strong>mountPath: /etc/nginx/conf.d/cert</strong>
                    <strong>- name: nginx-conf</strong>
                      <strong>mountPath: /etc/nginx/conf</strong>
-
     # Add to the volumes section in Deployment
                <strong>- name: nginx-cert</strong>
                  <strong>hostPath:</strong>
@@ -465,12 +464,10 @@ Before performing mutual authentication, prepare the following certificate files
                <strong>- name: nginx-conf</strong>
                  <strong>hostPath:</strong>
                    <strong>path: /{PathA}/config       # nginx startup configuration file. Replace PathA with the file path from Step 2</strong>
-
     # Change the ports section in Service to the following
            <strong>- protocol: TCP</strong>
              <strong>port: 8899</strong>
              <strong>targetPort: 9500</strong></pre>
-    ```
 
 5. Run the following command to start the ClusterD service.
 
@@ -555,10 +552,9 @@ Before performing mutual authentication, prepare the following certificate files
 
     3. Add the following bold fields to the NodeD startup YAML file.
 
-        ```shell
+        <pre codetype="yaml">
         # Add `sleep 150`
                 args: [ "<strong>sleep 150;</strong> /usr/local/bin/noded -logFile=/var/log/mindx-dl/noded/noded.log -logLevel=0" ]
-
         # Add to containers section
                    <strong>- name: nginx</strong>
                      <strong>image: nginx:latest</strong>
@@ -570,7 +566,6 @@ Before performing mutual authentication, prepare the following certificate files
                          <strong>mountPath: /etc/nginx/conf.d/cert</strong>
                        <strong>- name: nginx-conf</strong>
                          <strong>mountPath: /etc/nginx/conf</strong>
-
         # Add to volumes item
                    <strong>- name: nginx-cert</strong>
                      <strong>hostPath:</strong>
@@ -578,7 +573,6 @@ Before performing mutual authentication, prepare the following certificate files
                    <strong>- name: nginx-conf</strong>
                      <strong>hostPath:</strong>
                        <strong>path: /{Path B}/config      # nginx startup configuration file</strong></pre>
-        ```
 
     4. Run the following command to start NodeD.
 
@@ -646,7 +640,7 @@ Before performing mutual authentication, prepare the following certificate files
       listen 127.0.0.1:8899;
                     http2 on;
       location / {
-       grpc_pass grpcs://{ClusterD的Pod IP}:9500;      # If it is an IPv6 address, configure it as grpcs://[{Pod IP of ClusterD}]:9500;0;
+       grpc_pass grpcs://{ClusterD的Pod IP}:9500;      # If it is an IPv6 address, configure it as grpcs://[{Pod IP of ClusterD}]:9500;
        grpc_ssl_verify on;
        grpc_ssl_trusted_certificate /etc/nginx/rootCA.crt;
        grpc_ssl_certificate /etc/nginx/client.crt;
@@ -779,7 +773,7 @@ On Linux systems, the `history` command generally saves the latest 1,000 command
     sed -i 's/^HISTSIZE=1000/HISTSIZE=200/' /etc/profile
     ```
 
-After the modification is complete, execute `source /etc/profile`* to make the environment variable take effect.
+After the modification is complete, execute `source /etc/profile` to make the environment variable take effect.
 
 **Modify the Timestamp of the History Command File<a name="section18178420544"></a>**
 

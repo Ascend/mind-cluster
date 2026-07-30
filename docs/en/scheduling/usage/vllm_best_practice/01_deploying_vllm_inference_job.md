@@ -8,15 +8,15 @@
     - kubelet reports the node's chip count to the node object.
     - Ascend Device Plugin reports chip memory and topology information.
 
-For chips with on-chip memory, the Ascend Device Plugin reports the chip memory status upon startup, as described in the node-label description; it reports full-NPU information, uploading the chip's physical ID to `device-info-cm`; the total number of allocatable chips, the number of allocated chips, and basic chip information (device_ip and super_device_ip) are reported to the node for full-NPU scheduling.
+      For chips with on-chip memory, the Ascend Device Plugin reports the chip memory status upon startup, as described in the node-label description; it reports full-NPU information, uploading the chip's physical ID to `device-info-cm`; the total number of allocatable chips, the number of allocated chips, and basic chip information (device_ip and super_device_ip) are reported to the node for full-NPU scheduling.
 
     - When a fault exists on a node, NodeD periodically reports the node health status and node hardware fault information to `node-info-cm`, and reports shared storage faults to the public faults of ClusterD.
 
-1. After reading the information in `device-info-cm` and `node-info-cm`, as well as the public fault information, ClusterD integrates the information into `cluster-info-cm`.
-2. Users submit StormService inference jobs of the AIBrix framework through kubectl or other deep learning platforms. The aibrix-controller-manager generates `RoleSet` or `PodSet` sub-workloads based on the inference job configuration, and the corresponding sub-workloads then generate multiple inference service Pods. For a detailed description of `RoleSet` or `PodSet`, see the [AIBrix documentation](https://aibrix.readthedocs.io/latest/designs/aibrix-stormservice.html).
-3. volcano-controller creates the corresponding PodGroup for the job. For a detailed description of PodGroup, see the [official open-source Volcano documentation](https://volcano.sh/docs/v1.9.0/Concepts/podgroup). The PodGroup generation strategy is as follows:
+2. After reading the information in `device-info-cm` and `node-info-cm`, as well as the public fault information, ClusterD integrates the information into `cluster-info-cm`.
+3. Users submit StormService inference jobs of the AIBrix framework through kubectl or other deep learning platforms. The aibrix-controller-manager generates `RoleSet` or `PodSet` sub-workloads based on the inference job configuration, and the corresponding sub-workloads then generate multiple inference service Pods. For a detailed description of `RoleSet` or `PodSet`, see the [AIBrix documentation](https://aibrix.readthedocs.io/latest/designs/aibrix-stormservice.html).
+4. volcano-controller creates the corresponding PodGroup for the job. For a detailed description of PodGroup, see the [official open-source Volcano documentation](https://volcano.sh/docs/v1.9.0/Concepts/podgroup). The PodGroup generation strategy is as follows:
 
-Currently, setting `volcanoSchedulingStrategy` in `stormservice.spec.template.spec.schedulingStrategy` or `stormservice.spec.template.spec.roles[*].schedulingStrategy` is not supported. In this case, the corresponding PodGroup is created by volcano-controller, with the specific strategy as follows:
+   Currently, setting `volcanoSchedulingStrategy` in `stormservice.spec.template.spec.schedulingStrategy` or `stormservice.spec.template.spec.roles[*].schedulingStrategy` is not supported. In this case, the corresponding PodGroup is created by volcano-controller, with the specific strategy as follows:
 
     - All instances with a podGroupSize equal to 1 belong to a single PodGroup.
     - Each instance with a podGroupSize greater than 1 belongs to an independent PodGroup.
@@ -30,7 +30,7 @@ Currently, setting `volcanoSchedulingStrategy` in `stormservice.spec.template.sp
 
 ### Flow Description<a name="ZH-CN_TOPIC_0000002516292977"></a>
 
-An AIBrix-based vLLM inference job consists of Routing pods and inference instance pods. Inference instance pods are classified into prefill instance pods and decode instance pods pod. Routing pods do not require NPU resources. AIBrix generates different workloads based on inference service configuration modes to create different inference instances, and the Router provides inference services for external systems in a unified manner..
+An AIBrix-based vLLM inference job consists of Routing pods and inference instance pods. Inference instance pods are classified into prefill instance pods and decode instance pods. Routing pods do not require NPU resources. AIBrix generates different workloads based on inference service configuration modes to create different inference instances, and the Router provides inference services for external systems in a unified manner.
 
 For a detailed description of AIBrix-based job deployment, see the [AIBrix documentation](https://aibrix.readthedocs.io/latest/designs/aibrix-stormservice.html).
 
@@ -51,7 +51,7 @@ The image preparation has been completed. For the vLLM inference image, refer to
 
 **YAML Selection<a name="section1419519264165"></a>**
 
-Currently, vllm-ascend inference jobs based on the AIBrix framework are deployed through the StormService custom CRD. For the usage and deployment of StormService, see the [Aibrix StormService documentation](https://aibrix.readthedocs.io/latest/designs/aibrix-stormservice.html). For a StormService YAML example, see [YAML](https://github.com/vllm-project/aibrix/blob/v0.5.0/samples/disaggregation/vllm/1p1d.yaml).
+Currently, vllm-ascend inference jobs based on the AIBrix framework are deployed through the StormService custom CRD. For the usage and deployment of StormService, see the [AIBrix StormService documentation](https://aibrix.readthedocs.io/latest/designs/aibrix-stormservice.html). For a StormService YAML example, see [YAML](https://github.com/vllm-project/aibrix/blob/v0.5.0/samples/disaggregation/vllm/1p1d.yaml).
 
 All AIBrix examples are natively configured for GPU environments. If you use NPUs, these examples must be adapted accordingly. The following provides a reference for NPU adaptation, which can be tailored to your specific requirements.
 
@@ -86,7 +86,7 @@ spec:
                 model.aibrix.ai/port: "8000"
                 model.aibrix.ai/engine: "vllm"
                 fault-scheduling: "force"          # Enable rescheduling
-                <strong>pod-rescheduling："on"         # If podGroupSize is 1, pod-rescheduling needs to be configured as "on"; if podGroupSize is greater than 1, configuration is not required and this parameter should be deleted</strong>
+                <strong>pod-rescheduling: "on"         # If podGroupSize is 1, pod-rescheduling needs to be configured as "on"; if podGroupSize is greater than 1, configuration is not required and this parameter should be deleted</strong>
               annotations:
                 <strong>huawei.com/schedule_policy: "chip2-node16-sp"</strong>
                 <strong>huawei.com/schedule_minAvailable: "1" # The minimum scheduling replica count under the Gang scheduling policy. In StormService, all instances with a podGroupSize of 1 will form a podGroup for scheduling, and their minimum scheduling replica count value range is [1, the sum of instance replicas]. The recommended configuration is the sum of instance replicas. Instances with a podGroupSize greater than 1 each form their own podGroup, and their minimum scheduling replica count value range is [1, podGroupSize]. The recommended configuration is podGroupSize. For example, if the prefill instance's podGroupSize is 1 and the decode instance's podGroupSize is 2, then the prefill instance's minimum scheduling replica count is set to the prefill instance's replicas, and the decode instance's minimum scheduling replica count is set to the decode instance's podGroupSize</strong>
@@ -156,16 +156,16 @@ The table below describes only the fields related to MindCluster in the StormSer
 |---|---|---|
 |schedulerName|The value is "volcano".|Configures the scheduler as Volcano.|
 |(Optional) host-arch|<ul><li>Arm: huawei-arm</li><li>x86_64: huawei-x86</li></ul>|<p>Architecture of the node where a training job is executed. Set this parameter as required.</p><p>In a distributed training job, ensure that the nodes running the training job have the same architecture.</p>|
-|sp-block|Specifies the number of logical SuperPoD chips.<p>It must be an integer multiple of the node chip count, and the total chip count of the P/D instance must be an integer multiple of it.</p>|Specifies the sp-block field. The cluster scheduling component divides the physical SuperPoD into logical SuperPoDs based on the splitting policy for affinity scheduling of the job. If the user does not specify this field, Volcano sets the logical SuperPoD size for this job to the total number of NPUs configured for the job during scheduling.<ul><li>For a detailed description, see [UnifiedBus Device Network Description](../basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md).</li><li>This field is only supported on Atlas 800I A3 SuperPoD servers.</li></ul>|
-|pod-rescheduling|<ul><li>on: Enables pod-level rescheduling.</li><li>Other values or when this field is not used: Disables pod-level rescheduling.</li></ul>|Pod-level rescheduling means that after a job failure, not all job pods in the PodGroup are deleted. Instead, the failed pod is deleted, and the controller recreates a new pod for rescheduling.<div class="note"><span class="notetitle">[!NOTE] Description</span><div class="notebody">If podGroupSize is 1, pod-rescheduling must be set to "on"; when podGroupSize is greater than 1, do not configure this parameter.</div></div>|
+|sp-block|Specifies the number of logical SuperPoD chips.<p>It must be an integer multiple of the node chip count, and the total chip count of the P/D instance must be an integer multiple of it.</p>|Specifies the sp-block field. The cluster scheduling component divides the physical SuperPoD into logical SuperPoDs based on the splitting policy for affinity scheduling of the job. If the user does not specify this field, Volcano sets the logical SuperPoD size for this job to the total number of NPUs configured for the job during scheduling.<ul><li>For a detailed description, see [UnifiedBus Device Network Description](../basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod).</li><li>This field is only supported on Atlas 800I A3 SuperPoD servers.</li></ul>|
+|pod-rescheduling|<ul><li>on: Enables pod-level rescheduling.</li><li>Other values or when this field is not used: Disables pod-level rescheduling.</li></ul>|Pod-level rescheduling means that after a job failure, not all job pods in the PodGroup are deleted. Instead, the failed pod is deleted, and the controller recreates a new pod for rescheduling.<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">If podGroupSize is 1, pod-rescheduling must be set to "on"; when podGroupSize is greater than 1, do not configure this parameter.</div></div>|
 |huawei.com/schedule\_minAvailable|A numeric string|The minimum scheduling replica count under the gang scheduling policy. In StormService, <ul><li>All instances with podGroupSize of 1 form a podGroup for scheduling, and their minimum scheduling replica count value range is [1, the sum of instance replicas]. The recommended configuration is the sum of instance replicas.</li><li>Instances with podGroupSize greater than 1 each form their own podGroup, and their minimum scheduling replica count value range is [1, podGroupSize]. The recommended configuration is podGroupSize.</li></ul>For example, if the podGroupSize of the prefill instance is 1 and that of the decode instance is 2, then the minimum scheduling replica count of the prefill instance is set to the replicas of the prefill instance, and the minimum scheduling replica count of the decode instance is set to the podGroupSize of the decode instance.|
 |huawei.com/recover\_policy\_path|"pod"|The path for job recovery when pod-rescheduling is "on". Set to "pod", indicating that when pod-level rescheduling fails, it will not escalate to job-level rescheduling. Because each pod in the current podGroup is an independent instance, its fault handling cannot propagate to other instances. (When using vcjob, you need to configure this policy: policies: -event:PodFailed -action:RestartTask)|
 |accelerator-type|<ul><li>Atlas 800I A2 inference server: module-910b-8</li><li>Atlas 800I A3 SuperPoD Server: module-a3-16</li><li>Atlas 900 A3 SuperPoD: module-a3-16-super-pod</li></ul>|Set this parameter based on the type of the node where a training job is executed.|
-|huawei.com/Ascend910|<ul><li>Atlas 800I A2 inference server: 8</li><li>Atlas 900 A3 SuperPoD SuperPoD, Atlas 800I A3 SuperPoD server: 16</li></ul>|The number of NPUs requested. Currently, only full-server scheduling is supported. Modify this based on the actual hardware card count.|
-|env\[name==ASCEND\_VISIBLE\_DEVICES\].valueFrom.fieldRef.fieldPath|The value is metadata.annotations\['huawei.com/Ascend910'\], which must be consistent with the actual chip type in the environment.| Ascend Docker Runtime obtains this parameter value to mount the corresponding type of NPU to the container.<div class="note"><span class="notetitle">Note:</span><div class="notebody">This parameter only supports the full-card scheduling feature of the Volcano scheduler. Users who use static vNPU scheduling or other schedulers need to delete the relevant fields of this parameter in the sample YAML.</div></div>|
+|huawei.com/Ascend910|<ul><li>Atlas 800I A2 inference server: 8</li><li>Atlas 900 A3 SuperPoD, Atlas 800I A3 SuperPoD server: 16</li></ul>|The number of NPUs requested. Currently, only full-server scheduling is supported. Modify this based on the actual hardware card count.|
+|env\[name==ASCEND\_VISIBLE\_DEVICES\].valueFrom.fieldRef.fieldPath|The value is metadata.annotations\['huawei.com/Ascend910'\], which must be consistent with the actual chip type in the environment.| Ascend Docker Runtime obtains this parameter value to mount the corresponding type of NPU to the container.<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">This parameter only supports the full-card scheduling feature of the Volcano scheduler. Users who use static vNPU scheduling or other schedulers need to delete the relevant fields of this parameter in the sample YAML.</div></div>|
 |fault-scheduling|<ul><li>grace: Configures the job to use graceful deletion mode, where the original pod is gracefully deleted first. If unsuccessful after 15 minutes, the original pod is forcefully deleted.</li><li>force: Configures the job to use forceful deletion mode, where the original pod is forcefully deleted during the process.</li><li>off, none (no fault-scheduling field), or other values: This inference job does not use the fault rescheduling feature.</li></ul>|-|
 |fault-retry-times|<ul><li>0 \< fault-retry-times: Handles service plane faults. The number of unconditional retries for the service plane must be configured.</li><li>None (no fault-retry-times) or 0: This job does not use the unconditional retry feature. Volcano will not actively delete the faulty pod after a service plane fault occurs.</li></ul>|-|
-|restartPolicy|<ul><li>Never: Never restart</li><li>Always: Always restart</li><li>OnFailure: Restart on failure</li><li>ExitCode: Whether to restart the pod based on the process exit code. It does not restart when the error code is 1 to 127, and restarts the pod when the error code is 128 to 255.<div class="note"><span class="notetitle">Note:</span><div class="notebody">The vcjob type training job does not support ExitCode.</div></div></li></ul>|Container restart policy. When unconditional retry for service plane faults is configured, the container restart policy value must be "Never".|
+|restartPolicy|<ul><li>Never: Never restart</li><li>Always: Always restart</li><li>OnFailure: Restart on failure</li><li>ExitCode: Whether to restart the pod based on the process exit code. It does not restart when the error code is 1 to 127, and restarts the pod when the error code is 128 to 255.<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The vcjob type training job does not support ExitCode.</div></div></li></ul>|Container restart policy. When unconditional retry for service plane faults is configured, the container restart policy value must be "Never".|
 
 ### Delivering, Viewing, and Deleting an Inference Job<a name="ZH-CN_TOPIC_0000002484213020"></a>
 
@@ -213,22 +213,23 @@ The current script only supports P/D disaggregation deployment.
     ```
 
 4. (Optional) Modify the instance startup script. Modify it based on the actual situation of your model.
-5. Open the `example/scripts/start_server.sh` file.
+
+   1. Open the `example/scripts/start_server.sh` file.
 
         ```shell
         vi example/scripts/start_server.sh
         ```
 
-6. Press `i` to enter insert mode. Based on the actual situation of your model, modify the vLLM process startup command, such as `max-model-len`, `max-num-batched-tokens`, etc.
-7. Press the `Esc` key, type `:wq!`, and press `Enter` to save and exit the editing.
+   2. Press `i` to enter insert mode. Based on the actual situation of your model, modify the vLLM process startup command, such as `max-model-len`, `max-num-batched-tokens`, etc.
+   3. Press the `Esc` key, type `:wq!`, and press `Enter` to save and exit the editing.
 
-8. (Optional) Copy the startup script to another directory on the host or to other nodes in the cluster. In a single-server environment, this step can be skipped. If your environment includes shared storage, the script file can also be copied to the shared storage, and the shared storage can be mounted to the inference service.
+5. (Optional) Copy the startup script to another directory on the host or to other nodes in the cluster. In a single-server environment, this step can be skipped. If your environment includes shared storage, the script file can also be copied to the shared storage, and the shared storage can be mounted to the inference service.
 
->[!NOTE]
->The default [proxy script](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/k8s-deploy-tool/example/scripts/load_balance_proxy_layerwise_server_example.py) in the `scripts` folder enables the fault isolation feature. If this feature is not required, replace the proxy script in the `scripts` folder with the [native proxy script](https://github.com/vllm-project/vllm-ascend/blob/main/examples/disaggregated_prefill_v1/load_balance_proxy_layerwise_server_example.py).
+    >[!NOTE]
+    >The default [proxy script](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/k8s-deploy-tool/example/scripts/load_balance_proxy_layerwise_server_example.py) in the `scripts` folder enables the fault isolation feature. If this feature is not required, replace the proxy script in the `scripts` folder with the [native proxy script](https://github.com/vllm-project/vllm-ascend/blob/main/examples/disaggregated_prefill_v1/load_balance_proxy_layerwise_server_example.py).
 
     ```shell
-    cp example/scripts/*  <target_dir>
+    cp example/scripts/* <target_dir>
     scp example/scripts/* <user>@<IP>:<target_dir>
     ```
 
@@ -332,9 +333,9 @@ The current script only supports P/D disaggregation deployment.
     >   kubectl get pod -A -o wide
     >   ```
     >
-    >- <model_name> depends on the startup parameter `served_model_name` used by vLLM to set the model name.
+    >- <model_name\> depends on the startup parameter `served_model_name` used by vLLM to set the model name.
 
-13. (Optional) Delete the inference lob.
+13. (Optional) Delete the inference job.
 
     ```shell
     python main.py delete -n my-test -ns default

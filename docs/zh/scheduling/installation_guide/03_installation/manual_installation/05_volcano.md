@@ -229,8 +229,8 @@
               image: volcanosh/vc-scheduler:v1.7.0
               args: [ ...
                   ...
-                  <strong>--enable-healthz=true   # 为保证可正常访问Volcano健康检查端口，本参数取值需为"true"
-                  --enable-metrics=true   # 为保证可正常访问Prometheus信息收集端口，本参数取值需为"true"</strong>
+                  <strong>--enable-healthz=true   # 为保证可正常访问Volcano健康检查端口，本参数取值需为"true"</strong>
+                  <strong>--enable-metrics=true   # 为保证可正常访问Prometheus信息收集端口，本参数取值需为"true"</strong>
                   ...
     ...</pre>
 

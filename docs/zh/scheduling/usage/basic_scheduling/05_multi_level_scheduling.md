@@ -48,7 +48,7 @@
 
   资源树中的网络层级可以参考Volcano的[网络拓扑感知调度](https://volcano.sh/docs/keyfeatures/networktopologyaware/)特性中的HyperNode定义。
 
-  **图 1**  资源树样例<a name="fig69396965487duoji"></a>  
+  **图 2**  资源树样例<a name="fig69396965487duoji"></a>  
   ![](../../../figures/scheduling/资源树.PNG "资源树")
 
   - 第一层交换机S0-S3直接连接到工作节点。
@@ -198,7 +198,7 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
     ...
     ```
 
-    Atlas 9000 A3 SuperPoD 集群算力系统可以通过脚本配合xlxs格式的LLD文档生成网络配置csv文件，命令如下：
+    Atlas 9000 A3 SuperPoD 集群算力系统可以通过脚本配合xlsx格式的LLD文档生成网络配置csv文件，命令如下：
 
     ```shell
     python3 lld_parser.py --input {LLD文档路径}  --output {生成的csv配置文件路径} --topotree-name default
@@ -300,8 +300,8 @@ metadata:
     ring-controller.atlas: ascend-{xxx}b  # 标识产品类型
     podgroup-sched-enable: "true"  # 仅在集群使用openFuyao定制Kubernetes和volcano-ext组件场景下配置。取值为字符串"true"时，表示开启批量调度功能；取值为其他字符串时，表示批量调度功能不生效，使用普通调度；若不配置该参数，表示批量调度功能不生效，使用普通调度。
   annotations:
-huawei.com/schedule_policy: multilevel # 配置调度策略为多级调度策略
-huawei.com/affinity-config: level1=2,level2=4 # 按照任务实际需求配置不同层级的网络组大小
+    huawei.com/schedule_policy: multilevel # 配置调度策略为多级调度策略
+    huawei.com/affinity-config: level1=2,level2=4 # 按照任务实际需求配置不同层级的网络组大小
 spec:
   schedulerName: volcano  # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
   runPolicy:

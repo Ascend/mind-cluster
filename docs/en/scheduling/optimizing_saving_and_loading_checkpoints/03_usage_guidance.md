@@ -18,7 +18,7 @@ After installing MindIO ACP SDK, to leverage the cache acceleration capabilities
 
 1. Log in to the compute node as the service user.
 
-    > [!NOTE]NOTE
+    > [!NOTE]
     > The service user is not the `{MindIO-install-user}`, `HwHiAiUser`, or `hwMindX` user. It is determined based on the actual situation.
 
 2. Go to the DeepSpeed installation directory.
@@ -112,7 +112,7 @@ After installing MindIO ACP SDK, to leverage the cache acceleration capabilities
                                 map_location='cpu')
             ```
 
-    3. <a id="step_acp_li003"></a>Press `Esc`, type *`:wq!`, and press `Enter` to save and exit insert mode.
+    3. <a id="step_acp_li003"></a>Press `Esc`, type `:wq!`, and press `Enter` to save and exit insert mode.
 
 4. Modify the `module.py` file.
     1. Open the `module.py` file.
@@ -150,7 +150,7 @@ After installing MindIO ACP SDK, to leverage the cache acceleration capabilities
         vim checkpointing.py
         ```
 
-    2. Press `i to enter edit mode and modify the following content.
+    2. Press `i` to enter edit mode and modify the following content.
         - Add the following content to the first line of the file.
 
             ```python
@@ -218,7 +218,7 @@ After installing MindIO ACP SDK, to leverage the cache acceleration capabilities
 
 1. Log in to the compute node as a service user.
 
-    > [!NOTE]Note
+    > [!NOTE]
     > The service user is not the `{MindIO-install-user}`, `HwHiAiUser`, or `hwMindX` user. It is determined based on the actual situation.
 
 2. Go to the MindSpeed-LLM installation directory.
@@ -438,7 +438,7 @@ When using the MindIO ACP acceleration service in a container, you need to insta
 
 For users of the PyTorch framework, after large model training is complete, the checkpoint files need to be used for inference. Here is an example of how to convert checkpoint files saved by MindIO ACP into files in the native Torch format.
 
-> [!NOTE] NOTE
+> [!NOTE]
 >
 > - `load_dir`: Replace with the actual Checkpoint save directory.
 > - `new_dir`: Replace with the new directory for saving the converted Checkpoint. An empty directory is recommended.

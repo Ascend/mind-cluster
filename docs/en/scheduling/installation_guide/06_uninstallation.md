@@ -23,7 +23,7 @@ If you need to retain one of the container engines, reinstall it for the corresp
     2. Run the following command to edit the `pingmesh-config` file.
 
         ```shell
-        kubectl edit cm -n cluster-system   pingmesh-config
+        kubectl edit cm -n cluster-system pingmesh-config
         ```
 
     3. Modify the value of the `activate` field.
@@ -59,7 +59,7 @@ If you need to retain one of the container engines, reinstall it for the corresp
             >- If the Containerd configuration file path is not the default `/etc/containerd/config.toml`, add the `--config-file-path` parameter to specify the configuration file path.
             >- To uninstall Ascend Docker Runtime in a specified installation path, add the `--install-path=<path>` parameter to the uninstall command.
 
-            The echo example is as follows, indicating a successful uninstallation.
+            The output example is as follows, indicating a successful uninstallation.
 
             ```ColdFusion
             Uncompressing ascend-docker-runtime  100%
@@ -80,13 +80,13 @@ If you need to retain one of the container engines, reinstall it for the corresp
             - Docker scenario (or K8s integration with Docker scenario)
 
                 ```shell
-                uninstall.sh docker docker <daemon.json file path>
+                ./uninstall.sh docker docker <daemon.json file path>
                 ```
 
             - Containerd scenario (or K8s integrated with Containerd scenario)
 
                 ```shell
-                uninstall.sh containerd containerd <config.toml file path>
+                ./uninstall.sh containerd containerd <config.toml file path>
                 ```
 
             >[!NOTE]
@@ -116,8 +116,6 @@ If you need to retain one of the container engines, reinstall it for the corresp
         ```
 
 ## Uninstalling Container Manager<a name="section1461059103619"></a>
-
-Use the deployment script (`deploy.sh`) for uninstallation. The script automatically completes operations such as stopping and disabling the service, deleting the systemd unit file, and removing binary files.
 
 1. Log in to the node where Container Manager is deployed as the `root` user.
 
@@ -156,7 +154,7 @@ Uninstalling cluster scheduling components is supported. You can uninstall compo
     2. Run the following command to edit the `pingmesh-config` file.
 
         ```shell
-        kubectl edit cm -n cluster-system   pingmesh-config
+        kubectl edit cm -n cluster-system pingmesh-config
         ```
 
     3. Modify the value of the `activate` field.
@@ -220,7 +218,7 @@ Uninstalling cluster scheduling components is supported. You can uninstall compo
     kubectl delete ns mindx-dl
     ```
 
-    The echo example is as follows:
+    The output example is as follows:
 
     ```ColdFusion
     namespace "mindx-dl" deleted

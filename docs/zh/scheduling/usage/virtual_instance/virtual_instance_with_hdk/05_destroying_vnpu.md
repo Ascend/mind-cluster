@@ -8,11 +8,11 @@
 
 ## 使用示例<a name="section198531444111215"></a>
 
-执行**npu-smi set -t destroy-vnpu -i 0 -c 0 -v 103**销毁设备0的芯片编号0中编号为103的vNPU设备。显示以下信息表示销毁成功。
+执行**npu-smi set -t destroy-vnpu -i 0 -c 0 -v 100**销毁设备0的芯片编号0中编号为100的vNPU设备。显示以下信息表示销毁成功。
 
 ```ColdFusion
        Status : OK
-       Message : Destroy vnpu 103 success
+       Message : Destroy vnpu 100 success
 ```
 
 >[!NOTE] 

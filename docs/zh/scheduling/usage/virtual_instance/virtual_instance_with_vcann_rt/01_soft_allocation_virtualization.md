@@ -77,13 +77,13 @@
 
     虚拟化实例涉及修改相关参数的集群调度组件为Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 
-    1. 在device-plugin-volcano-v\{version\}.yaml中添加-shareDevCount=100 -softShareDevConfigDir=/share_device/，其中/share_device/由用户手动创建。当Atlas A3 推理系列产品使用软切分虚拟化功能时，需额外增加启动参数-useSingleDieMode=true。
+    1. 在device-plugin-volcano-v\{version\}.yaml中添加-shareDevCount=100 -softShareDevConfigDir=/share_device/，其中/share_device/由用户手动创建。当Atlas A3 训练或推理系列产品使用软切分虚拟化功能时，需额外增加启动参数-useSingleDieMode=true。
 
        ```Yaml
        ...
-
+              # 只有Atlas A3 训练或推理系列产品使用软切分虚拟化功能时，才需增加-useSingleDieMode=true
                args: [ "device-plugin  -useAscendDocker=true -volcanoType=true -presetVirtualDevice=true
-                 -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0 -shareDevCount=100 -softShareDevConfigDir=/share_device/ -useSingleDieMode=true" ]   # 只有Atlas A3 推理系列产品使用软切分虚拟化功能时，才需增加-useSingleDieMode=true
+                 -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0 -shareDevCount=100 -softShareDevConfigDir=/share_device/ -useSingleDieMode=true" ]  
              ...
                volumeMounts:
              ...
@@ -113,7 +113,7 @@
        |--|--|--|--|
        |-shareDevCount|uint|1|使用软切分虚拟化功能时，值只能为100。|
        |-softShareDevConfigDir|string|""|软切分虚拟化场景配置目录。|
-       |-useSingleDieMode|bool|false|Atlas A3 推理系列产品是否开启单die直通模式。<ul><li>true：开启单die直通模式。</li><li>false：关闭单die直通模式。</li></ul>使用软切分虚拟化功能时，该参数必须配置为true。|
+       |-useSingleDieMode|bool|false|Atlas A3 训练或推理系列产品是否开启单die直通模式。<ul><li>true：开启单die直通模式。</li><li>false：关闭单die直通模式。</li></ul>使用软切分虚拟化功能时，该参数必须配置为true。|
 
     2. （可选）针对软切分虚拟化功能和非软切分虚拟化功能混合部署场景，需要对Ascend Device Plugin的YAML进行如下修改。
 
@@ -222,7 +222,7 @@ spec:
             accelerator-type: module-910b-8 # depend on your device model, 910bx8 is module-910b-8 ,910bx16 is module-910b-16
           containers:
             - name: ascend # do not modify
-              image: pytorch-test:latest         # trainning framework image， which can be modified
+              image: pytorch-test:latest         # training framework image， which can be modified
               imagePullPolicy: IfNotPresent
               env:
                 - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running
@@ -251,7 +251,7 @@ spec:
                 <strong>- name: libpreload # 软切分动态库地址</strong>
                   <strong>mountPath: /opt/enpu/vcann-rt/lib/libvruntime.so</strong>
                 <strong>- name: preload # preload配置文件地址</strong>
-                  <strong>mountPath: ${preload_path}/ld.so.preload</strong>
+                  <strong>mountPath: /etc/ld.so.preload</strong>
           volumes:
             - name: ascend-driver
               hostPath:
@@ -267,11 +267,11 @@ spec:
                 <strong>path: /opt/enpu/vcann-rt/lib/libvruntime.so</strong>
             <strong>- name: preload # preload配置文件地址</strong>
               <strong>hostPath:</strong>
-                <strong>path: ${preload_path}/ld.so.preload</strong>
+                <strong>path: ${preload_path}/ld.so.preload # 主机侧ld.so.preload文件的路径用户可自定义，文档后续内容中使用${preload_path}表示，容器内为固定路径/etc/ld.so.preload。不建议将ld.so.preload文件放置在主机的/etc目录，否则将在主机侧预加载软切分动态库，可能影响主机侧业务。</strong>
 </pre>
 
 >[!NOTE] 
-><term>Atlas A3 推理系列产品</term>下发软切分虚拟化任务时，在任务容器中，/dev下实际只会挂载1个die（即1个davinci设备），但是执行<b>npu-smi info</b>命令查询会显示挂载了2个die，此为正常现象。回显示例如下：
+>Atlas A3 训练或推理系列产品下发软切分虚拟化任务时，在任务容器中，/dev下实际只会挂载1个die（即1个davinci设备），但是执行<b>npu-smi info</b>命令查询会显示挂载了2个die，此为正常现象。回显示例如下：
 >
 > ```ColdFusion
 > +-----------------------------------------------------------------------------------------------+

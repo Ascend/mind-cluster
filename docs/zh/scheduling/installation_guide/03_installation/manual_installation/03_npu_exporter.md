@@ -291,7 +291,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
 
     ```ColdFusion
     namespace/npu-exporter created
-    networkpolicy.networking.K8s.io/exporter-network-policy created
+    networkpolicy.networking.k8s.io/exporter-network-policy created
     daemonset.apps/npu-exporter created
     ```
 

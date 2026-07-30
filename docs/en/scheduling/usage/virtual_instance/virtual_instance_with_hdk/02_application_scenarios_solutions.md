@@ -24,7 +24,7 @@ There are two ways to partition vNPUs.
 </th>
 </tr>
 </thead>
-<tbody><tr id="row158123818304"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1819384303"><a name="p1819384303"></a><a name="p1819384303"></a>partition vNPUs on the physical machine and mount vNPUs to the virtual machine.</p>
+<tbody><tr id="row158123818304"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1819384303"><a name="p1819384303"></a><a name="p1819384303"></a>Partition vNPUs on the physical machine and mount vNPUs to the virtual machine.</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p1290518155817"><a name="p1290518155817"></a><a name="p1290518155817"></a>Partition vNPUs on the physical machine and mount vNPUs to the virtual machine.</p>
 </td>
@@ -32,14 +32,14 @@ There are two ways to partition vNPUs.
 <p id="p333261621717"><a name="p333261621717"></a><a name="p333261621717"></a></p>
 </td>
 </tr>
-<tr id="row89138123014"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p391138203014"><a name="p391138203014"></a><a name="p391138203014"></a>partition vNPUs on the physical machine and mount vNPUs to the container.</p>
+<tr id="row89138123014"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p391138203014"><a name="p391138203014"></a><a name="p391138203014"></a>Partition vNPUs on the physical machine and mount vNPUs to the container.</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol4232523123116"></a><a name="ol4232523123116"></a><ol id="ol4232523123116"><li>For the steps to partition vNPUs on the physical machine, see <a href="./04_creating_vnpu.md">Creating a NPUs</a>.</li><li>For the steps to mount vNPUs to the container, see <a href="./06_mounting_vnpu.md">Mounting vNPUs</a>.</li></ol>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol4232523123116"></a><a name="ol4232523123116"></a><ol id="ol4232523123116"><li>For the steps to partition vNPUs on the physical machine, see <a href="./04_creating_vnpu.md">Creating vNPUs</a>.</li><li>For the steps to mount vNPUs to the container, see <a href="./06_mounting_vnpu.md">Mounting vNPUs</a>.</li></ol>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><ul><li>Static Virtualization</li><li>Dynamic Virtualization: <ul><li>Mount using Ascend Docker Runtime</li><li>Mount using Kubernetes</li></ul></li></ul>
 </td>
 </tr>
-<tr id="row131012387307"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1010133833013"><a name="p1010133833013"></a><a name="p1010133833013"></a>partition vNPUs on the physical machine, mount vNPUs to the virtual machine, and then mount vNPUs to containers within the virtual machine.</p>
+<tr id="row131012387307"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1010133833013"><a name="p1010133833013"></a><a name="p1010133833013"></a>Partition vNPUs on the physical machine, mount vNPUs to the virtual machine, and then mount vNPUs to containers within the virtual machine.</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol14307634103119"></a><a name="ol14307634103119"></a><ol id="ol14307634103119"><li>Partition vNPUs on the physical machine and mount vNPUs to the virtual machine.</li><li>For the steps to mount vNPUs to containers within the virtual machine, see <a href="./06_mounting_vnpu.md">Mounting vNPUs</a>.</li></ol>
 </td>
@@ -69,4 +69,4 @@ The following solutions are available for mounting vNPUs to containers:
     - Ascend Docker Runtime (container engine plugin): Used independently. Both static virtualization and dynamic virtualization are supported. vNPUs are mounted to containers when containers are started using Ascend Docker Runtime.
     - Kubernetes: Combined with Ascend Device Plugin and Volcano. Both static virtualization and dynamic virtualization are supported. vNPUs are mounted to containers when containers are started through Kubernetes.
         - Static virtualization: Multiple vNPUs are created in advance using the `npu-smi` tool. When users need to use vNPU resources, Ascend Device Plugin provides device discovery, device allocation, and device health status reporting functions to allocate vNPU resources for upper-layer users. In this solution, Volcano of the cluster scheduling components is optional.
-        - Dynamic virtualization: Ascend Device Plugin  reports the number of available AICores on its node. After a virtualization task is submitted, Volcano calculates and schedules the task to a node that meets its requirements. The Ascend Device Plugin on that node automatically creates the vNPU device upon receiving the request and mounts it for the task, completing the dynamic virtualization process. This process does not require users to pre‑partition vNPUs, and the vNPUs are automatically reclaimed after task completion, effectively supporting scenarios with fluctuating computing power requirements.
+        - Dynamic virtualization: Ascend Device Plugin  reports the number of available AICores on its node. After a virtualization task is submitted, Volcano calculates and schedules the task to a node that meets its requirements. The Ascend Device Plugin on that node automatically creates the vNPU device upon receiving the request and mounts it for the task, completing the dynamic virtualization process. This process does not require users to pre\-partition vNPUs, and the vNPUs are automatically reclaimed after task completion, effectively supporting scenarios with fluctuating computing power requirements.

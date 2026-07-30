@@ -15,7 +15,7 @@ You have created a specific mount path for the [hccl.json](../../api/hccl.json_f
 **Procedure<a name="zh-cn_topic_0000002202737289_zh-cn_topic_0000001951258657_section18181655154219"></a>**
 
 1. Upload the YAML file to any directory on the management node and modify the file content based on the actual situation.
-    - Taking `a800_AscendJob_{xxx}>b.yaml` as an example, create a **distributed training** job on an Atlas 200T A2 Box16 heterogeneous subrack. The job uses 2*4 chips. The modification example is as follows.
+    - Taking `a800_AscendJob_{xxx}b.yaml` as an example, create a **distributed training** job on an Atlas 200T A2 Box16 heterogeneous subrack. The job uses 2*4 chips. The modification example is as follows.
 
         ```Yaml
         apiVersion: mindxdl.gitee.com/v1
@@ -210,8 +210,8 @@ You have created a specific mount path for the [hccl.json](../../api/hccl.json_f
            framework: pytorch
            ring-controller.atlas: ascend-{xxx}b
            <strong>fault-scheduling: "grace"</strong>
-           <strong>fault-retry-times: "10"   // Enable unconditional retry</strong>
-           <strong>pod-rescheduling: "on"   // Enable Pod-level rescheduling</strong>
+           <strong>fault-retry-times: "10"   # Enable unconditional retry</strong>
+           <strong>pod-rescheduling: "on"   # Enable Pod-level rescheduling</strong>
            tor-affinity: "null" # This label specifies whether the job uses switch affinity scheduling. null or omitting this label means it is not applied. large-model-schema indicates a large model job or filler job, normal-schema indicates a normal job
     ...
       annotations:
@@ -264,7 +264,7 @@ You have created a specific mount path for the [hccl.json](../../api/hccl.json_f
              ports:                          # Default value
                - containerPort: 2222
                  name: ascendjob-port
-               <strong>- containerPort: 8000    # Used for MindIO communication. Ensure consistency throughout the configuratin.</strong>
+               <strong>- containerPort: 8000    # Used for MindIO communication. Ensure consistency throughout the configuration.</strong>
                  <strong>name: ttp-port</strong>
                <strong>- containerPort: 9601    # Communication port between TaskD Pods</strong>
                  <strong>name: taskd-port</strong>

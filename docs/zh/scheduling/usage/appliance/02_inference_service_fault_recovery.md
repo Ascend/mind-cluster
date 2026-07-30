@@ -251,7 +251,7 @@
     -H "Content-Type: application/json" \
     -X POST -d '{
         "model": "<model_name>", 
-    "messages": [ 
+        "messages": [ 
             {"role": "system", "content": "you are a helpful assistant."},
             { "role": "user", "content": "How many r are in the word \"strawberry\"" } 
         ], 

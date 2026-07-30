@@ -23,7 +23,7 @@ Ensure that the cluster environment has been set up.
     >[!NOTE]
     >
     >- Refer to the [Ascend Training Solution Version Mapping](https://support.huawei.com/enterprise/en/ascend-computing/ascend-training-solution-pid-258915853/software) to confirm whether the firmware and driver versions are compatible with the cluster scheduling components.
-    >- The NPU driver and firmware versions can be queried using the `npu-smi info -t board -i NPU ID` command. In the example output, the `Software Version` field indicates the NPU driver version, and the `Firmware Version` field indicates the NPU firmware version.
+    >- The NPU driver and firmware versions can be queried using the `npu-smi info -t board -i <NPU_ID>` command. In the example output, the `Software Version` field indicates the NPU driver version, and the `Firmware Version` field indicates the NPU firmware version.
     >- In the following text, `{xxx}` takes the value `910` as the chip model.
 
 ## Installing Components <a name="section1837511531098"></a>
@@ -326,7 +326,7 @@ The following uses an Atlas 800T A2 training server as an example. For detailed 
                 spec:
                   nodeSelector:
                     host-arch: huawei-arm
-                    accelerator-type: module-{xxx}b-8   # Change from the original `card-{xxx}b-2` to `module-{xxx}b-8`, where `{xxx}` indicates the chip model.
+                    accelerator-type: module-{xxx}b-8   # Change from the original card-{xxx}b-2 to module-{xxx}b-8, where {xxx} indicates the chip model.
                   containers:
                   - name: ascend
                     image: pytorch-test:latest     # Modify to the image name obtained in Step 1.

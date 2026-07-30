@@ -197,7 +197,7 @@ metadata:
      fault-scheduling: "force"
      fault-retry-times: "100000000"    # 处理业务面故障，必须配置业务面无条件重试的次数
      jobID: mindie-xxx      # 由用户自行定义
-     app: mindeie-ms-server
+     app: mindie-ms-server
      mind-cluster/scaling-rule: scaling-rule   # 需与扩缩容规则ConfigMap的名称保持一致
      mind-cluster/group-name: group0           # 需与扩缩容规则ConfigMap中的group_name取值保持一致
 spec:

@@ -1574,7 +1574,7 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
     下面将以故障码010001008为例，介绍公共故障码故障级别的配置步骤。
 
 1. 登录环境，进入/user1/mindx-dl/clusterd目录。
-2. 执行**vi publicCustomization.json**命令，编辑文件。publicCustomization.json的详细说明请参见[表2](#ZH-CN_TOPIC_0000002511346487)。
+2. 执行**vi publicCustomization.json**命令，编辑文件。publicCustomization.json的详细说明请参见[表2](#zh-cn_topic_0000002181110120_table8202741102717)。
 
     >[!NOTE] 
     >- 创建文件publicCustomization.json之后，用户需要保证该文件有ClusterD用户hwMindX的可读权限。例如，如果用户权限为root，该文件权限建议设置为644。
@@ -1604,7 +1604,7 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
 下面将以新增故障发送方XXX为例，介绍公共故障码发送方的配置步骤。
 
 1. 登录环境，进入/user1/mindx-dl/clusterd目录。
-2. 执行**vi publicCustomization.json**命令，编辑文件。publicCustomization.json的详细说明请参见[表2](#ZH-CN_TOPIC_0000002511346487)。
+2. 执行**vi publicCustomization.json**命令，编辑文件。publicCustomization.json的详细说明请参见[表2](#zh-cn_topic_0000002181110120_table8202741102717)。
 
     ```json
     {

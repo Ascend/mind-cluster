@@ -6,7 +6,7 @@
 
 **Function Description<a name="section3468140175411"></a>**
 
-The user-side code calls this function to initializeTaskD Manager.
+The user-side code calls this function to initialize TaskD Manager.
 
 **Input Parameters<a name="section1177311115553"></a>**
 
@@ -40,4 +40,4 @@ None
 
 |Return Value Type|Description|
 |--|--|
-|bool|Indicates whether the startup was successful.<ul><li>`True`: Startup succeed.</li><li>`False`: Startup failed.</li></ul>|
+|bool|Indicates whether the startup was successful.<ul><li>`True`: Startup succeeded.</li><li>`False`: Startup failed.</li></ul>|

@@ -81,7 +81,7 @@ metadata:
         import os
 
         job_id=os.getenv("MINDX_TASK_ID")
-        node_nums=XX          # Total number of task nodes
+        node_nums=XX          # Total number of nodes
         proc_per_node=XX     # Number of training processes per node
 
         init_taskd_manager({"job_id":job_id, "node_nums": node_nums, "proc_per_node": proc_per_node})
@@ -94,7 +94,7 @@ metadata:
     2. Add the following code to the training script (for example, `train_start.sh`) to start TaskD Manager. In the following code:
 
         - The two statements `TASKD_SO_PATH` and export `LD_PRELOAD` are used to configure the path of `libtaskd.so` (from the TaskD installation) into the environment variable `LD_PRELOAD`. If these two statements are not configured successfully, you can manually run the `pip show taskd` command to obtain the `Location` value, append `/taskd/python/cython_api/libs/libtaskd.so`, and then set it via `export`.
-        - `TASKD_PROCESS_ENABLE` configuration instructions: If `recover-strategy` in the job YAML does not configure a recovery policy and does not enable hot switching, you need to configure `export TASKD_PROCESS_ENABLE="off`"; if `recover-strategy` is configured or hot switching is enabled, you do not need to configure `export TASKD\_PROCESS\_ENABLE="off`.
+        - `TASKD_PROCESS_ENABLE` configuration instructions: If `recover-strategy` in the job YAML does not configure a recovery policy and does not enable hot switching, you need to configure `export TASKD_PROCESS_ENABLE="off"`; if `recover-strategy` is configured or hot switching is enabled, you do not need to configure `export TASKD\_PROCESS\_ENABLE="off"`.
 
         ```shell
         TASKD_SO_PATH="$(pip show taskd | awk '/^Location: / {print $2"/taskd/python/cython_api/libs/libtaskd.so"}')"
@@ -266,7 +266,7 @@ Currently, process-level rescheduling supports the following two scenarios. Choo
         >[!NOTE]
         >For details about the parameters in the manager.py file, see [def init_taskd_manager(config:dict) -> bool:](../../api/taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool).
 
-3. Add the following code to the training script (for example, `train_start.sh`) to start TaskD Manager. In the following code, the two statements `TASKD_SO_PATH` and `export LD_PRELOAD` configure the path of `libtaskd.so` (from the TaskD installation) into the environment variable `LD_PRELOAD`. If these two statements fail to configure successfully, you can manually run the `pip show taskd` command to obtain the value of Location, append `/taskd/python/cython_api/libs/libtaskd.so` to it, and then set it via `export`.
+    2. Add the following code to the training script (for example, `train_start.sh`) to start TaskD Manager. In the following code, the two statements `TASKD_SO_PATH` and `export LD_PRELOAD` configure the path of `libtaskd.so` (from the TaskD installation) into the environment variable `LD_PRELOAD`. If these two statements fail to configure successfully, you can manually run the `pip show taskd` command to obtain the value of Location, append `/taskd/python/cython_api/libs/libtaskd.so` to it, and then set it via `export`.
 
         ```shell
         TASKD_SO_PATH="$(pip show taskd | awk '/^Location: / {print $2"/taskd/python/cython_api/libs/libtaskd.so"}')"
@@ -442,7 +442,7 @@ This part describes key steps for configuring operator-level online recovery. Fo
 
 **Configuring Environment Variables<a name="section12610013287a"></a>**
 
-Before using operator-level online recovery, configure the environment variables `HCCL_OP_RETRY_ENABLE` and `HCCL_OP_RETRY_PARAMS` in the training startup script. For detailed descriptions of these environment variables, see the *[CANN Environment Variable Reference](https://www.hiascend.com/document/detail/en/canncommercial/900/maintenref/envvar/envref_07_0001.html)*. A configuration example is shown below.
+Before using operator-level online recovery, configure the environment variables `HCCL_OP_RETRY_ENABLE` and `HCCL_OP_RETRY_PARAMS` in the training startup script. For detailed descriptions of these environment variables, see the *[CANN Environment Variable List](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/900/maintenref/envvar/envref_07_0001.html)*. A configuration example is shown below.
 
 ```shell
 export HCCL_OP_RETRY_ENABLE="L0:0, L1:1, L2:1"     # Whether to enable the re-execution feature of HCCL operators
@@ -612,7 +612,7 @@ This section describes how to configure suspension and switchback of link failov
 
 1. After the distributed environment is initialized and the global rank is obtained, modify the training script to start TaskD Manager in the training script, start TaskD Proxy in the management process, and start TaskD Worker in the training process.
     1. Start TaskD Manager.
-        1. Create `a manager.py` file in the current directory when calling the training script. The content of the `manager.py` file is as follows.
+        1. Create a `manager.py` file in the current directory when calling the training script. The content of the `manager.py` file is as follows.
 
             ```Python
             from taskd.api import init_taskd_manager, start_taskd_manager
@@ -757,7 +757,7 @@ This section describes how to configure graceful fault tolerance. For details ab
 Use a Dockerfile to build a container image and add a startup command.
 
 ```shell
-# Adaptation script to MindCluster resuamble training. MINDIO_TTP_PKG is the path to the MindIO whl installation package. Fill it in according to the actual situation.
+# Adaptation script to MindCluster resumable training. MINDIO_TTP_PKG is the path to the MindIO whl installation package. Fill it in according to the actual situation.
 RUN pip3 install $MINDIO_TTP_PKG
 ```
 
@@ -825,7 +825,7 @@ This section guides users through the key steps for configuring online stress te
             import os
 
             job_id=os.getenv("MINDX_TASK_ID")
-            node_nums=XX         #Total number of nodes
+            node_nums=XX         # Total number of nodes
             proc_per_node=XX     # Number of training processes per node
 
             init_taskd_manager({"job_id":job_id, "node_nums": node_nums, "proc_per_node": proc_per_node})
@@ -881,7 +881,7 @@ This section guides users through the key steps for configuring online stress te
     >```
     >
     >- `libmspti.so`: This .so file is provided by MindStudio and integrated in the CANN package. The default installation path is `/usr/local/Ascend/cann/lib64/libmspti.so`.
-    >- `libtaskd.so`: This so is provided by TaskD. After the whl package is installed, the path is `TaskD installation path/taskd/python/cython_api/libs/libtaskd.so`. You can run the following command to query the path where TaskD is located. The `Location` field in the command output is the target path.
+    >- `libtaskd.so`: This .so is provided by TaskD. After the whl package is installed, the path is `TaskD installation path/taskd/python/cython_api/libs/libtaskd.so`. You can run the following command to query the path where TaskD is located. The `Location` field in the command output is the target path.
     >
     >     ```shell
     >     pip show taskd
@@ -1102,7 +1102,7 @@ RUN pip3 install $TASKD_WHL
 RUN pip3 install $MINDSPORE_WHL
 ```
 
-**Prepararing the Job YAML<a name="zh-cn_topic_0000002134174097_section98717593512"></a>**
+**Preparing the Job YAML<a name="zh-cn_topic_0000002134174097_section98717593512"></a>**
 
 In the job YAML, add the following fields to enable hot switching, modify the container port, and add port 9601 for TaskD communication under all Pods.
 
@@ -1287,7 +1287,7 @@ This section describes how to configure elastic training. For details about its 
 
 ## Parameter Description<a name="ZH-CN_TOPIC_0000002511346491"></a>
 
-Different fault handling modes require different parameters to be configured, as shown in [Table 1](#table1247342123814). For details about the meaning and filling instructions of each parameter, see [Table 2](#zh-cn_topic_0000002163392281_table1474820818115).In scenarios such as process-level rescheduling, process-level online recovery, process-level in-place recovery, and elastic training, Ascend Operator injects different environment variables based on the user-configured `recover-strategy` and `pod-rescheduling`, and automatically labels the job with `process-recover-enable=on` to enable process-level recovery, without requiring manual specification by the user. The specific injected environment variables are shown in [Table 3](#table10283161512105).
+Different fault handling modes require different parameters to be configured, as shown in [Table 1](#table1247342123814). For details about the meaning and filling instructions of each parameter, see [Table 2](#zh-cn_topic_0000002163392281_table1474820818115). In scenarios such as process-level rescheduling, process-level online recovery, process-level in-place recovery, and elastic training, Ascend Operator injects different environment variables based on the user-configured `recover-strategy` and `pod-rescheduling`, and automatically labels the job with `process-recover-enable=on` to enable process-level recovery, without requiring manual specification by the user. The specific injected environment variables are shown in [Table 3](#table10283161512105).
 
 **Table 1**  Parameters required for fault handling
 
@@ -1574,13 +1574,13 @@ Different fault handling modes require different parameters to be configured, as
 
 |Parameter Name|Parameter Location| Parameter Description                                                                                                                                                                                                                                                                                 |
 |--|--|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|hotReset|Startup YAML of Ascend Device Plugin | Graceful fault tolerance switch.<ul><li>Value 1: When using resumable training, you can enable the hot reset feature on top of Job-level or Pod-level rescheduling to use graceful fault tolerance mode;</li><li>Value 2: When using process-level recovery, set the hotReset parameter value to 2 to enable offline recovery mode.</li></ul><div class="note"><span class="notetitle">[!NOTE] NOTE</span><div class="notebody"><p>The feature corresponding to value 1 has been sunset. Please configure other values.</p></div></div>                            |
+|hotReset|Startup YAML of Ascend Device Plugin | Graceful fault tolerance switch.<ul><li>Value 1: When using resumable training, you can enable the hot reset feature on top of Job-level or Pod-level rescheduling to use graceful fault tolerance mode;</li><li>Value 2: When using process-level recovery, set the hotReset parameter value to 2 to enable offline recovery mode.</li></ul><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><p>The feature corresponding to value 1 has been sunset. Please configure other values.</p></div></div>                            |
 |pod-rescheduling|metadata.labels of the training job YAML| <ul><li>on: Enable Pod-level rescheduling.</li><li>Other values or not using this field: Disable Pod-level rescheduling.</li></ul>                                                                                                                                                                                                                      |
 |fault-scheduling|metadata.labels of the training job YAML| Rescheduling switch.                                                                                                                                                                                                                                                                               |
 |process-recover-enable|metadata.labels of the training job YAML| <ul><li>on: Enable process-level rescheduling and process-level online recovery. Process-level rescheduling and graceful fault tolerance cannot be enabled simultaneously. If both are enabled, checkpoint restart will resume training through Job-level rescheduling.</li><li>pause: Temporarily disable process-level rescheduling and process-level online recovery.</li><li>off or not using this field: Disable process-level rescheduling and process-level online recovery.</li></ul>                                                                                                                         |
 |recover-strategy|metadata.annotations of the training job YAML| Available recovery strategies for the job.<ul><li>retry: Process-level online recovery.</li><li>recover: Process-level rescheduling.</li><li>recover-in-place: Process-level in-place recovery.</li><li>elastic-training: Elastic training.</li><li>dump: Save last words.</li><li>exit: Exit training.</li></ul>                                                                                                          |
 |PROCESS_RECOVER|spec.replicaSpecs.{ Master \|Scheduler\| Worker}.template.spec.containers.env of the training job YAML| Master switch on the Elastic Agent/TaskD side for process-level rescheduling and process-level online recovery.<ul><li>on: Enable.</li><li>off: Disable.</li></ul>                                                                                                                                                                                                      |
-|ELASTIC_PROCESS_RECOVER_ENABLE|spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args of the startup training YAML| Switch on the Elastic Agent side for process-level rescheduling, process-level online recovery, and last CKPT recovery features.<ul><li>Value 1: Enable this feature.</li><li>Other values: Disable this feature.<p>When disabling this feature, the related features on the MindIO side must be disabled simultaneously.</p></li></ul><div class="note"><span class="notetitle">[!NOTE] NOTE</span><div class="notebody"><p>The Elastic Agent component has been sunset, and related materials will be removed in the version released on December 30, 2026. This environment variable will be removed accordingly.</p></div></div> |
+|ELASTIC_PROCESS_RECOVER_ENABLE|spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args of the startup training YAML| Switch on the Elastic Agent side for process-level rescheduling, process-level online recovery, and last CKPT recovery features.<ul><li>Value 1: Enable this feature.</li><li>Other values: Disable this feature.<p>When disabling this feature, the related features on the MindIO side must be disabled simultaneously.</p></li></ul><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><p>The Elastic Agent component has been sunset, and related materials will be removed in the version released on December 30, 2026. This environment variable will be removed accordingly.</p></div></div> |
 |ENABLE_RESTART_FAULT_PROCESS|spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args of the startup training YAML| Switch for the Elastic Agent/TaskD component to enable the in-place recovery feature for faulty processes.<ul><li>on: Enable this feature;</li><li>Other values: Disable this feature</li></ul>                                                                                                                                                                                                   |
 |--enable-high-availability|Startup parameter of the training script pretrain_gpt.py| Fault fast recovery feature switch, disabled by default. When configured, the last words feature is enabled.                                                                                                                                                                                                                                                        |
 |--enable-hbmfault-repair|Startup parameter of the training script pretrain_gpt.py| Process-level online recovery feature switch, disabled by default. When configured, fault detection is performed on on-chip memory and online repair is completed. Must be enabled together with enable-high-availability.                                                                                                                                                                                                               |

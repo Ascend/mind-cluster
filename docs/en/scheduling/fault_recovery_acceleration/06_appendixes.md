@@ -10,7 +10,7 @@
 |Variable|Description|Value Range|Default Value|
 |--|--|--|--|
 |TTP_LOG_PATH|MindIO TFT log path. Configuring soft links is prohibited. The log file name is supplemented as `ttp_log.log`. It is recommended to include the date and time in the log path to avoid multiple training records being written to the same log, causing cyclic overwriting. It is recommended to configure the log path in the training startup script as follows: <br> `date_time=\$(date +%Y-%m-%d-%H_%M_%S)` <br> `export TTP_LOG_PATH=logs/\${date_time}` <br>When using shared storage, it is recommended to configure the log path per node:<br>`export TTP_LOG_PATH=logs/\${nodeId}`|Folder path.|logs|
-|TTP_LOG_LEVEL|MindIO TFT log level.<ul><li>DEBUG: Detailed information, applicable only when diagnosing problems.</li><li>INFO: Confirms that the program is running as expected.</li><li>WARNING: Indicates that an unexpected event has occurred or is about to occur. The program continues to run as expected.</li><li>ERROR: Indicates that some functions of the program cannot be executed normally due to a serious problem.</li></ul>|<ul><li>DEBUG</li><li>INFO</li><li>WARNING</li><li>ERROR|INFO</li></ul>|
+|TTP_LOG_LEVEL|MindIO TFT log level.<ul><li>DEBUG: Detailed information, applicable only when diagnosing problems.</li><li>INFO: Confirms that the program is running as expected.</li><li>WARNING: Indicates that an unexpected event has occurred or is about to occur. The program continues to run as expected.</li><li>ERROR: Indicates that some functions of the program cannot be executed normally due to a serious problem.</li></ul>|<ul><li>DEBUG</li><li>INFO</li><li>WARNING</li><li>ERROR</li></ul>|INFO|
 |TTP_LOG_MODE|MindIO TFT log mode.<ul><li>ONLY_ONE: All MindIO TFT processes write one log.</li><li>PER_PROC: Each MindIO TFT process writes an independent log. The log file path is `{TTP_LOG_PATH}/ttp_log.log.{pid}`.</li></ul>|<ul><li>ONLY_ONE</li><li>PER_PROC (If ONLY_ONE is not specified, the default is PER_PROC)</li></ul>|PER_PROC|
 |TTP_LOG_STDOUT|MindIO TFT log recording method.<ul><li>0: Records MindIO TFT runtime logs to the corresponding log file.</li><li>1: Prints MindIO TFT runtime logs directly without local storage.</li></ul>|<ul><li>0</li><li>1</li></ul>|0|
 |MASTER_ADDR|IP address or domain name of the training master node.|Valid IPv4, IPv6 address, or domain name.|-|
@@ -73,7 +73,7 @@ Passwords must meet at least the following requirements:
     - One lowercase letter
     - One uppercase letter
     - One digit
-    - One special character: `~!@#$%^&*()-_=+\|[{}];:'",<.>/? and space
+    - One special character: `~!@#$%^&*()-_=+\\|[{}];:'",<.>/? and space
 
 3. The password cannot be the same as the account name.
 

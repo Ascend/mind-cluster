@@ -23,7 +23,7 @@ After an inference chip resource managed by the cluster scheduling components be
 The usage methods for rescheduling upon inference card faults are as follows:
 
 - [Using via Command Line](#ZH-CN_TOPIC_0000002511427039): Install cluster scheduling components and use rescheduling upon inference card faults via the command line.
-- [using after integration](#ZH-CN_TOPIC_0000002479387118): Integrate the cluster scheduling components into an existing third-party AI platform or an AI platform developed based on these component.
+- [Using after integration](#ZH-CN_TOPIC_0000002479387118): Integrate the cluster scheduling components into an existing third-party AI platform or an AI platform developed based on these components.
 
 **Usage Notes<a name="section10769161412815"></a>**
 
@@ -31,7 +31,6 @@ The usage methods for rescheduling upon inference card faults are as follows:
 - When multiple inference jobs run concurrently in a cluster, each job can use different features, but jobs using static vNPUs and jobs using dynamic vNPUs cannot coexist.
 - The rescheduling upon inference card faults feature uses full-NPU scheduling by default; static vNPU scheduling is not supported; dynamic vNPU scheduling is supported for Atlas inference series products.
 - Rescheduling upon inference card faults supports submitting single-node jobs with single or multiple replicas, where each replica works independently. It only supports distributed jobs of the AscendJob type deployed on inference servers (with Atlas 300I Duo inference cards), Atlas 800I A2 inference servers, and A200I A2 Box heterogeneous subracks.
-
 - Rescheduling upon inference card faults supports VolcanoJob or Deployment job types, and the label `fault-scheduling` for the rescheduling switch must be added to such jobs and set to `grace` or `force`.
 
 **Supported Product Forms<a name="section169961844182917"></a>**

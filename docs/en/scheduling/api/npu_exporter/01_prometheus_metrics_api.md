@@ -193,7 +193,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p41551011194610"><a name="p41551011194610"></a><a name="p41551011194610"></a><span id="ph1415520117467"><a name="ph1415520117467"></a><a name="ph1415520117467"></a>Ascend AI Processor</span> error code</p>
 <p id="p2011915418141"><a name="p2011915418141"></a><a name="p2011915418141"></a>When there is no error code on the Ascend AI Processor, this field will not be reported.</p>
-<div class="note" id="note71551511134616"><a name="note71551511134616"></a><a name="note71551511134616"></a><span class="notetitle">Note:</span><div class="notebody"><a name="ul01551011174616"></a><a name="ul01551011174616"></a><ul id="ul01551011174616"><li>Prometheus scenario: If multiple error codes exist on the <span id="ph4155141154620"><a name="ph4155141154620"></a><a name="ph4155141154620"></a>Ascend AI Processor</span> simultaneously, due to Prometheus format limitations, only the first ten error codes that occur are currently reported. The value range of X is 1 to 9.</li><li>Telegraf scenario: A maximum of 128 error codes can be reported.</li><li>For detailed descriptions of error codes, see the <a href="../../appendix.md#chip-fault-code-references">Chip Fault Code References</a> section.</li></ul>
+<div class="note" id="note71551511134616"><a name="note71551511134616"></a><a name="note71551511134616"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><a name="ul01551011174616"></a><a name="ul01551011174616"></a><ul id="ul01551011174616"><li>Prometheus scenario: If multiple error codes exist on the <span id="ph4155141154620"><a name="ph4155141154620"></a><a name="ph4155141154620"></a>Ascend AI Processor</span> simultaneously, due to Prometheus format limitations, only the first ten error codes that occur are currently reported. The value range of X is 1 to 9.</li><li>Telegraf scenario: A maximum of 128 error codes can be reported.</li><li>For detailed descriptions of error codes, see the <a href="../../appendix.md#chip-fault-code-references">Chip Fault Code References</a> section.</li></ul>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p1222255524811"><a name="p1222255524811"></a><a name="p1222255524811"></a><a href="#table191895615241">Label 1</a></p>
@@ -268,7 +268,7 @@ To understand the description of labels in the above data information, see [Data
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p146607681918"><a name="p146607681918"></a><a name="p146607681918"></a>npu_container_info</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p1266186161910"><a name="p1266186161910"></a><a name="p1266186161910"></a>NPU container information</p>
-<div class="note" id="note15661264198"><a name="note15661264198"></a><a name="note15661264198"></a><span class="notetitle">Note:</span><div class="notebody"><p id="p76611668193"><a name="p76611668193"></a><a name="p76611668193"></a>Telegraf does not support reporting this metric.</p>
+<div class="note" id="note15661264198"><a name="note15661264198"></a><a name="note15661264198"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p76611668193"><a name="p76611668193"></a><a name="p76611668193"></a>Telegraf does not support reporting this metric.</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p1966106141918"><a name="p1966106141918"></a><a name="p1966106141918"></a><a href="#table191895615241">Label 5</a></p>
@@ -281,7 +281,7 @@ To understand the description of labels in the above data information, see [Data
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p16165101174617"><a name="p16165101174617"></a><a name="p16165101174617"></a>npu_chip_info_power</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p616601115461"><a name="p616601115461"></a><a name="p616601115461"></a><span id="ph216617115462"><a name="ph216617115462"></a><a name="ph216617115462"></a>Ascend AI Processor</span> power consumption</p>
-<div class="note" id="note125551721182116"><a name="note125551721182116"></a><a name="note125551721182116"></a><span class="notetitle">Note:</span><div class="notebody"><p id="p2555192112218"><a name="p2555192112218"></a><a name="p2555192112218"></a>Only the Atlas Inference Series products report board power consumption; other products report <span id="ph13555921192113"><a name="ph13555921192113"></a><a name="ph13555921192113"></a>Ascend AI Processor</span> power consumption.</p>
+<div class="note" id="note125551721182116"><a name="note125551721182116"></a><a name="note125551721182116"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p2555192112218"><a name="p2555192112218"></a><a name="p2555192112218"></a>Only the Atlas Inference Series Products report board power consumption; other products report <span id="ph13555921192113"><a name="ph13555921192113"></a><a name="ph13555921192113"></a>Ascend AI Processor</span> power consumption.</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p1837111312397"><a name="p1837111312397"></a><a name="p1837111312397"></a><a href="#table191895615241">Label 1</a></p>
@@ -318,7 +318,7 @@ To understand the description of labels in the above data information, see [Data
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p1576464114356"><a name="p1576464114356"></a><a name="p1576464114356"></a>container_npu_utilization</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p1076564110356"><a name="p1076564110356"></a><a name="p1076564110356"></a> AICore utilization of NPU with container information</p>
-<div class="note" id="note15509181573618"><a name="note15509181573618"></a><a name="note15509181573618"></a><span class="notetitle">Note:</span><div class="notebody"><p id="p1851016154367"><a name="p1851016154367"></a><a name="p1851016154367"></a>Telegraf does not support reporting this metric</p>
+<div class="note" id="note15509181573618"><a name="note15509181573618"></a><a name="note15509181573618"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p1851016154367"><a name="p1851016154367"></a><a name="p1851016154367"></a>Telegraf does not support reporting this metric</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p9765641143519"><a name="p9765641143519"></a><a name="p9765641143519"></a><a href="#table191895615241">Label 1</a></p>
@@ -365,7 +365,7 @@ To understand the description of labels in the above data information, see [Data
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p13216171154611"><a name="p13216171154611"></a><a name="p13216171154611"></a>container_npu_total_memory</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p72161211174615"><a name="p72161211174615"></a><a name="p72161211174615"></a>Total NPU memory size with container information</p>
-<div class="note" id="note47464273266"><a name="note47464273266"></a><a name="note47464273266"></a><span class="notetitle">Note:</span><div class="notebody"><p id="p167469276269"><a name="p167469276269"></a><a name="p167469276269"></a>Telegraf does not support reporting this metric.</p>
+<div class="note" id="note47464273266"><a name="note47464273266"></a><a name="note47464273266"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p167469276269"><a name="p167469276269"></a><a name="p167469276269"></a>Telegraf does not support reporting this metric.</p>
 </div></div>
 <p id="p5592191117464"><a name="p5592191117464"></a><a name="p5592191117464"></a></p>
 </td>
@@ -384,7 +384,7 @@ To understand the description of labels in the above data information, see [Data
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p13224141194611"><a name="p13224141194611"></a><a name="p13224141194611"></a>container_npu_used_memory</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p112259114466"><a name="p112259114466"></a><a name="p112259114466"></a>Used NPU memory with container information</p>
-<div class="note" id="note1789193552611"><a name="note1789193552611"></a><a name="note1789193552611"></a><span class="notetitle">Note:</span><div class="notebody"><p id="p8891143517268"><a name="p8891143517268"></a><a name="p8891143517268"></a>Telegraf does not support reporting this metric.</p>
+<div class="note" id="note1789193552611"><a name="note1789193552611"></a><a name="note1789193552611"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p8891143517268"><a name="p8891143517268"></a><a name="p8891143517268"></a>Telegraf does not support reporting this metric.</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p1369214472452"><a name="p1369214472452"></a><a name="p1369214472452"></a><a href="#table191895615241">Label 1</a></p>
@@ -900,7 +900,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p686412451026"><a name="p686412451026"></a><a name="p686412451026"></a>npu_chip_info_hccs_bandwidth_info_total_tx</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p178641345920"><a name="p178641345920"></a><a name="p178641345920"></a>Total TX bandwidth of the HCCS link. -1 is reported if colelction fails.</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p178641345920"><a name="p178641345920"></a><a name="p178641345920"></a>Total TX bandwidth of the HCCS link. -1 is reported if collection fails.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p123732216538"><a name="p123732216538"></a><a name="p123732216538"></a><a href="#table191895615241">Label 1</a></p>
 </td>
@@ -1917,7 +1917,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_retry_ack_sum_X_Y</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>Number of response retires. X is the Udie ID, and Y is the Port ID.</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>Number of response retries. X is the Udie ID, and Y is the Port ID.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">Label 1</a></p>
 </td>
@@ -2053,7 +2053,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1469410183214"><a name="p1469410183214"></a><a name="p1469410183214"></a>String</p>
 </td>
 </tr>
-<tr id="row739383919217"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p43931839326"><a name="p43931839326"></a><a name="p43931839326"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">Note:</span><div class="notebody">The return information for Atlas A3 series products does not contain the Chip Type field.</div></div>
+<tr id="row739383919217"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p43931839326"><a name="p43931839326"></a><a name="p43931839326"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for Atlas A3 series products does not contain the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p143931839928"><a name="p143931839928"></a><a name="p143931839928"></a>String</p>
 </td>
@@ -2095,7 +2095,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p17907225953"><a name="p17907225953"></a><a name="p17907225953"></a>String</p>
 </td>
 </tr>
-<tr id="row16907162510513"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p890718251958"><a name="p890718251958"></a><a name="p890718251958"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to the Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">Note: </span><div class="notebody">The return information for Atlas A3 series products does not contain the Chip Type field.</div></div>
+<tr id="row16907162510513"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p890718251958"><a name="p890718251958"></a><a name="p890718251958"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to the Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for Atlas A3 series products does not contain the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p390718251755"><a name="p390718251755"></a><a name="p390718251755"></a>String</p>
 </td>
@@ -2143,7 +2143,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p320616197163"><a name="p320616197163"></a><a name="p320616197163"></a>String</p>
 </td>
 </tr>
-<tr id="row9989656471"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14989556078"><a name="p14989556078"></a><a name="p14989556078"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE] Note</span><div class="notebody">The return information for Atlas A3 series products does not contain the Chip Type field.</div></div>
+<tr id="row9989656471"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14989556078"><a name="p14989556078"></a><a name="p14989556078"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for Atlas A3 series products does not contain the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p11206819191615"><a name="p11206819191615"></a><a name="p11206819191615"></a>String</p>
 </td>
@@ -2180,7 +2180,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p113712551439"><a name="p113712551439"></a><a name="p113712551439"></a>String</p>
 </td>
 </tr>
-<tr id="row12181801433"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p17371205512310"><a name="p17371205512310"></a><a name="p17371205512310"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to the Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">Note:</span><div class="notebody">The return information for Atlas A3 series products does not include the Chip Type field.</div></div>
+<tr id="row12181801433"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p17371205512310"><a name="p17371205512310"></a><a name="p17371205512310"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to the Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for Atlas A3 series products does not include the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p6371125516312"><a name="p6371125516312"></a><a name="p6371125516312"></a>String</p>
 </td>
@@ -2233,7 +2233,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p199299511345"><a name="p199299511345"></a><a name="p199299511345"></a>String</p>
 </td>
 </tr>
-<tr id="row127379715315"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14670733636"><a name="p14670733636"></a><a name="p14670733636"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">Note:</span><div class="notebody">The return information for Atlas A3 series products does not include the Chip Type field.</div></div>
+<tr id="row127379715315"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14670733636"><a name="p14670733636"></a><a name="p14670733636"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for Atlas A3 series products does not include the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p10930125193414"><a name="p10930125193414"></a><a name="p10930125193414"></a>String</p>
 </td>
@@ -2270,7 +2270,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1570549114116"><a name="p1570549114116"></a><a name="p1570549114116"></a>String</p>
 </td>
 </tr>
-<tr id="row113218442408"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p6706394412"><a name="p6706394412"></a><a name="p6706394412"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to the Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">Note:</span><div class="notebody">The return information for Atlas A3 series products does not contain the Chip Type field.</div></div>
+<tr id="row113218442408"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p6706394412"><a name="p6706394412"></a><a name="p6706394412"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to the Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for Atlas A3 series products does not contain the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1670611944113"><a name="p1670611944113"></a><a name="p1670611944113"></a>String</p>
 </td>
@@ -2312,7 +2312,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE] Note</span><div class="notebody">The return information for Atlas A3 series products does not contain the Chip Type field.</div></div>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for Atlas A3 series products does not contain the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>

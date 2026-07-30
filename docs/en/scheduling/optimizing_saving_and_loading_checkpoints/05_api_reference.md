@@ -32,7 +32,7 @@ mindio_acp.initialize(server_info: Dict[str, str] = None) -> int
 |'background.backup.thread_num'|'32'|Optional|Number of backup threads.|[1, 256]|
 
 > [!NOTE]
-> If `server_info` is not passed to m`indio_acp.initialize`, the server starts with the default parameters listed in the table.
+> If `server_info` is not passed to `mindio_acp.initialize`, the server starts with the default parameters listed in the table.
 
 **Example 1**
 
@@ -89,7 +89,7 @@ mindio_acp.save(obj, path, open_way='memfs')
 - `-1`: Failure.
 - `0`: Save is implemented via the native `torch.save` method.
 - `1`: Save using the memfs method.
-- 2`: Save using the fopen method.
+- `2`: Save using the fopen method.
 
 ## multi_save
 

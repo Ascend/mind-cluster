@@ -39,7 +39,7 @@ Checkpoint serialization uses the pickle component built into Python. It is esse
 
 **Firewall Configuration**
 
-After the operating system is installed, if a regular user is configured, you can add the `"ALWAYS_SET_PATH=yes"` configuration in the `"/etc/login.defs"` file to prevent unauthorized operations. In addition, to prevent privilege escalation caused by bringing the current user's environment variables into other environments when using the `su` command to switch users, use the `su - [user]` command for user switching, and add the configuration parameter `"ALWAYS_SET_PATH=yes` in the server configuration file `"/etc/default/su"` to prevent privilege escalation.
+After the operating system is installed, if a regular user is configured, you can add the `"ALWAYS_SET_PATH=yes"` configuration in the `"/etc/login.defs"` file to prevent unauthorized operations. In addition, to prevent privilege escalation caused by bringing the current user's environment variables into other environments when using the `su` command to switch users, use the `su - [user]` command for user switching, and add the configuration parameter `"ALWAYS_SET_PATH=yes"` in the server configuration file `"/etc/default/su"` to prevent privilege escalation.
 
 **Setting umask**
 
@@ -53,7 +53,7 @@ Taking setting `umask` to `027` as an example, the specific operation is as foll
     vim /etc/profile
     ```
 
-2. Add `umask 027` at the end of the `"/etc/profile`" file, save and exit.
+2. Add `umask 027` at the end of the `"/etc/profile"` file, save and exit.
 3. Run the following command to apply the configuration.
 
     ```bash
@@ -141,7 +141,7 @@ echo 2 >/proc/sys/kernel/randomize_va_space
     ```python
     from mindio_ttp.framework_ttp import tft_start_controller, tft_init_processor, tft_register_decrypt_handler
 
-    # In tls_info, use ";" to separate different fields and "," to separate individual fileserent fields
+    # In tls_info, use ";" to separate different fields and "," to separate individual files
     tls_info = r"(
     tlsCert: /etc/ssl/certs/cert.pem;
     tlsCrlPath: /etc/ssl/crl/;
