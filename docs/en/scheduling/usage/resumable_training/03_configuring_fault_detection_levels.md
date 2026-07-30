@@ -73,7 +73,7 @@ In the table above, the handling policy for each fault level is described as fol
 <td class="cellrowborder" valign="top" width="35.74%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p05771854113911"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p05771854113911"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p05771854113911"></a>Affects service execution and requires re-executing the service request.</p>
 </td>
 <td class="cellrowborder" rowspan="5" valign="top" width="23.39%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p13855131912555"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p13855131912555"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p13855131912555"></a>Isolate the chip and reschedule the job.</p>
-<div class="note" id="note11901123612819"><a name="note11901123612819"></a><a name="note11901123612819"></a><span class="notetitle">Note:</span><div class="notebody"><p id="p1069261722310"><a name="p1069261722310"></a><a name="p1069261722310"></a>If the inference job subscribes to fault information, and a RestartRequest fault occurs on the inference card used by the job with a fault duration not exceeding 60 seconds, job rescheduling will not be performed. If the fault duration exceeds 60 seconds without recovery, the chip will be isolated and job rescheduling will be performed.</p>
+<div class="note" id="note11901123612819"><a name="note11901123612819"></a><a name="note11901123612819"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p1069261722310"><a name="p1069261722310"></a><a name="p1069261722310"></a>If the inference job subscribes to fault information, and a RestartRequest fault occurs on the inference card used by the job with a fault duration not exceeding 60 seconds, job rescheduling will not be performed. If the fault duration exceeds 60 seconds without recovery, the chip will be isolated and job rescheduling will be performed.</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" width="21.81%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p9145165785517"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p9145165785517"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p9145165785517"></a>In inference scenarios, re-execute the inference request; in training scenarios, re-execute the training service.</p>
@@ -110,11 +110,11 @@ In the table above, the handling policy for each fault level is described as fol
 <tr id="row870814247412"><td class="cellrowborder" valign="top" width="19.06%" headers="mcps1.2.5.1.1 "><p id="p5708202454117"><a name="p5708202454117"></a><a name="p5708202454117"></a>SeparateFault</p>
 </td>
 <td class="cellrowborder" valign="top" width="35.74%" headers="mcps1.2.5.1.2 "><p id="p12708162474117"><a name="p12708162474117"></a><a name="p12708162474117"></a>The job will definitely be affected.</p>
-<div class="note" id="note1521013164613"><a name="note1521013164613"></a><a name="note1521013164613"></a><span class="notetitle">Note:</span><div class="notebody"><p id="p92101114465"><a name="p92101114465"></a><a name="p92101114465"></a>When the UnifiedBus device fault level is SeparateFault, it indicates that the service has failed to run, and the component or board needs to be replaced.</p>
+<div class="note" id="note1521013164613"><a name="note1521013164613"></a><a name="note1521013164613"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p92101114465"><a name="p92101114465"></a><a name="p92101114465"></a>When the UnifiedBus device fault level is SeparateFault, it indicates that the service has failed to run, and the component or board needs to be replaced.</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" width="23.39%" headers="mcps1.2.5.1.3 "><p id="p0708624204112"><a name="p0708624204112"></a><a name="p0708624204112"></a>Reschedule the job.</p>
-<div class="note" id="note44451347164716"><a name="note44451347164716"></a><a name="note44451347164716"></a><span class="notetitle">[!NOTE] Note</span><div class="notebody"><p id="p64453471479"><a name="p64453471479"></a><a name="p64453471479"></a>For UnifiedBus device faults, the fault handling policy represented by this fault level is to stop the current training job, isolate the node, and reschedule the job.</p>
+<div class="note" id="note44451347164716"><a name="note44451347164716"></a><a name="note44451347164716"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p64453471479"><a name="p64453471479"></a><a name="p64453471479"></a>For UnifiedBus device faults, the fault handling policy represented by this fault level is to stop the current training job, isolate the node, and reschedule the job.</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" width="21.81%" headers="mcps1.2.5.1.4 "><p id="p137081824174117"><a name="p137081824174117"></a><a name="p137081824174117"></a>-</p>
@@ -161,7 +161,7 @@ In the table above, the handling policy for each fault level is described as fol
 <td class="cellrowborder" valign="top" width="35.74%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p1354813311915"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p1354813311915"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p1354813311915"></a>Handled based on the value of the subHealthyStrategy parameter configured in the job YAML. For details, see <a href="../../api/">YAML Configuration Description</a>.</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.39%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p3352524125220"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p3352524125220"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p3352524125220"></a>When a sub-health fault occurs on the chip, it needs to be handled according to the <a href="./06_configuring_the_job_yaml_file.md">Configuring YAML</a>.</p>
-<div class="note" id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"></a><span class="notetitle">Note:</span><div class="notebody"><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"></a>If a fault of another level occurs on the chip subsequently, the SubHealthFault handling policy will not affect the handling of faults at other levels.</p>
+<div class="note" id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"></a>If a fault of another level occurs on the chip subsequently, the SubHealthFault handling policy will not affect the handling of faults at other levels.</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" width="21.81%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"></a>Not handled for now</p>
@@ -176,7 +176,7 @@ In the table above, the handling policy for each fault level is described as fol
 
 Resumable training performs hierarchical processing for different levels of **node hardware faults**. NodeD obtains the fault code of the current fault and processes the fault accordingly based on the fault level configured for the fault code in `NodeDConfiguration.json`. The supported fault levels and handling methods for node hardware faults are described as follows.
 
-The NodeD configuration file `NodeDConfiguration.json` is a system configuration file. Do not modify it arbitrarily unless you have special requirements. If you need to modify the fault level of a fault code, you can do so through the `mindx-dl-node-fault-config` file created from `NodeDConfiguration.json`. For operation instructions, see [(Optional) Configuring Node Hardware Fault Levels](#optional-configuring-node-hardware-fault-levels).For fault level descriptions and node status descriptions, see [Customizing Node Faults](../../api/noded.md#customizing-node-faults).
+The NodeD configuration file `NodeDConfiguration.json` is a system configuration file. Do not modify it arbitrarily unless you have special requirements. If you need to modify the fault level of a fault code, you can do so through the `mindx-dl-node-fault-config` file created from `NodeDConfiguration.json`. For operation instructions, see [(Optional) Configuring Node Hardware Fault Levels](#optional-configuring-node-hardware-fault-levels). For fault level descriptions and node status descriptions, see [Customizing Node Faults](../../api/noded.md#customizing-node-faults).
 
 ### (Optional) Configuring Node Hardware Fault Levels<a name="ZH-CN_TOPIC_0000002511346507"></a>
 
@@ -769,7 +769,7 @@ When performing hierarchical processing for different levels of chip faults, Clu
 
 #### (Optional) Configuring Chip Fault Frequency
 
-When ClusterD is installed, the ConfigMap (c`lusterd-config-cm`) is automatically created as the detection basis for manually isolated chips. For parameter descriptions of this ConfigMap, see [Table 1](../../installation_guide/03_installation/manual_installation/06_clusterd.md).
+When ClusterD is installed, the ConfigMap (`clusterd-config-cm`) is automatically created as the detection basis for manually isolated chips. For parameter descriptions of this ConfigMap, see [Table 1](../../installation_guide/03_installation/manual_installation/06_clusterd.md).
 
 If you want to customize the chip fault frequency, you can modify this ConfigMap. If the modified ConfigMap content has format errors or other issues, ClusterD will retain the last successfully read configuration as the detection basis for manual chip isolation. If the ConfigMap content read by ClusterD at startup is incorrect, the manual chip isolation detection mechanism will be disabled by default until the format and content are correct.
 
@@ -938,7 +938,7 @@ When performing hierarchical processing for different levels of **bus device** f
 
 Resumable training supports hierarchical processing for different levels of **bus device** faults. If you need to modify the fault level of a fault code, see [(Optional) Configuring Bus Device Fault Levels](#optional-configuring-bus-device-fault-levels) for operation instructions.
 
-After Ascend Device Plugin obtains the fault code from the driver, it classifies the fault into several levels based on the impact of the fault code on the device and service, and performs corresponding rescheduling processing. For details, see [Table. Fault levels and handling policies](../../api/ascend_device_plugin.md#custom-unifiedbus-device-faults).
+After Ascend Device Plugin obtains the fault code from the driver, it classifies the fault into several levels based on the impact of the fault code on the device and service, and performs corresponding rescheduling processing. For details, see [Fault levels and handling policies](../../api/ascend_device_plugin.md#custom-unifiedbus-device-faults).
 
 #### (Optional) Configuring Bus Device Fault Levels<a name="ZH-CN_TOPIC_0000002511426433"></a>
 
@@ -1557,7 +1557,7 @@ The fault code for common faults is 9 digits, as described below.
 
 ### (Optional) Configuring the Level and Sender of Common Faults<a name="ZH-CN_TOPIC_0000002479226494"></a>
 
-When the ClusterD image is created, the fault level configuration file `publicFaultConfiguration.jso`n is built into the image. When ClusterD starts, it reads the default configuration of this file as the basis for current fault handling.
+When the ClusterD image is created, the fault level configuration file `publicFaultConfiguration.json` is built into the image. When ClusterD starts, it reads the default configuration of this file as the basis for current fault handling.
 
 If you want to customize fault levels, create the `/user1/mindx-dl/clusterd/publicCustomization.json` file on the host.
 
@@ -1575,7 +1575,7 @@ Configuring the level of common fault codes is divided into the following two sc
     The following uses fault code `010001008` as an example to describe how to configure a common fault code level.
 
 1. Log in to the environment and go to the `/user1/mindx-dl/clusterd` directory.
-2. Run the `vi publicCustomization.json` command to edit the file. For detailed description of `publicCustomization.json`, see [Table 2](#ZH-CN_TOPIC_0000002511346487).
+2. Run the `vi publicCustomization.json` command to edit the file. For detailed description of `publicCustomization.json`, see [Table 2](#zh-cn_topic_0000002181110120_table8202741102717).
 
     >[!NOTE]
     >- After creating the `publicCustomization.json` file, ensure that the file has the read permission for the ClusterD user `hwMindX`. For example, if the user permission is `root`, the file permission is recommended to be set to `644`.
@@ -1605,7 +1605,7 @@ Configuring the level of common fault codes is divided into the following two sc
 The following uses the new fault sender XXX as an example to describe the steps for configuring the sender of common fault codes.
 
 1. Log in to the environment and go to the `/user1/mindx-dl/clusterd` directory.
-2. Run the `vi publicCustomization.json` command to edit the file. For detailed description of `publicCustomization.json`, see [Table 2](#ZH-CN_TOPIC_0000002511346487).
+2. Run the `vi publicCustomization.json` command to edit the file. For detailed description of `publicCustomization.json`, see [Table 2](#zh-cn_topic_0000002181110120_table8202741102717).
 
     ```json
     {

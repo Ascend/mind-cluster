@@ -1397,7 +1397,7 @@ Job任务部署，每个Worker节点上部署一个Pod，Pod内承载该Ray集�
 </table>
 
 >[!NOTE] 
->当前断点续训并未提供Atlas 900 A3 SuperPoD 超节点产品的示例YAML，用户可以在示例YAML中的labels下新增annotations字段即可。示例如下：
+>目前部分训练框架未提供Atlas 900 A3 SuperPoD 超节点产品的断点续训示例YAML，用户可以在示例YAML中的labels下新增annotations字段即可。示例如下：
 >
 >```Yaml
 >...

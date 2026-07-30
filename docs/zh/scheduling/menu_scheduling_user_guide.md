@@ -61,7 +61,7 @@
       - [基于昇腾AI处理器的亲和性](./usage/basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md)
       - [基于节点的亲和性](./usage/basic_scheduling/01_affinity_scheduling/04_node_based_affinity.md)
       - [昇腾AI处理器的调度算法说明](./usage/basic_scheduling/01_affinity_scheduling/05_scheduling_algorithm_of_ascend_ai_processor.md)
-    - [昇腾AI处理器的调度流程](./usage/basic_scheduling/02_schedulling_process_of_the_ascend_ai_processor.md)
+    - [昇腾AI处理器的调度流程](./usage/basic_scheduling/02_scheduling_process_of_the_ascend_ai_processor.md)
     - [整卡调度或静态vNPU调度（训练）](./usage/basic_scheduling/03_full_npu_scheduling_and_static_vnpu_scheduling_training.md)
     - [整卡调度或静态vNPU调度（推理）](./usage/basic_scheduling/04_full_npu_scheduling_and_static_vnpu_scheduling_inference.md)
     - [多级调度](./usage/basic_scheduling/05_multi_level_scheduling.md)

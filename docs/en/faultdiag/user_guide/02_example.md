@@ -23,8 +23,9 @@ This section is for reference only. Use the component based on the actual traini
 
 ## Log Path Mapping<a name="section1246617719225"></a>
 
-The figure below shows the mapping between log paths in the host and container and log paths of shared storage.
+[Figure 1](#fig118691742112210) shows the mapping between log paths in the host and container and log paths of shared storage.
 
+**Figure 1**  Log path mapping<a name="fig118691742112210"></a>
 ![](../../figures/faultdiag/log-path-mapping.png)
 
 ## Usage Process<a name="section125992312510"></a>
@@ -70,7 +71,7 @@ The following log directory is for reference only. You can customize the storage
     1. Run the following command to use the `msnpureport_auto_export.sh` script to periodically export device-side logs. If you want to export device-side logs at a time, see [Device-Side Logs](./03_collecting_logs.md#device-side-logs).
 
         ```shell
-        *Driver_installation_directory*/driver/tools/msnpureport_auto_export.sh *Collection_interval* *Maximum_storage_directory_capacity*/*Device_log_storage_directory_name*
+        ${Driver_installation_directory}/driver/tools/msnpureport_auto_export.sh <Collection_interval> <Maximum_storage_directory_capacity> /<Device_log_storage_directory_name>
         ```
 
         For example:
@@ -98,10 +99,10 @@ The following log directory is for reference only. You can customize the storage
 
             ```shell
             docker run \
-                -v /*Path of CANN App logs in the shared storage*:/*Path of CANN App logs in the container* \
-                --env ASCEND_PROCESS_LOG_PATH=/CANN App log path in the container \
+                -v /${CANN_App_log_path_in_the_shared_storage}:/${CANN_App_log_path_in_the_container} \
+                --env ASCEND_PROCESS_LOG_PATH=/${CANN_App_log_path_in_the_container} \
                 \... Other items...\
-                ${Training image name} /bin/bash
+                ${Training_image_name} /bin/bash
             ```
 
             For example:
@@ -111,13 +112,13 @@ The following log directory is for reference only. You can customize the storage
                 -v /ascend_cluster_log/job202405181309/worker-0/process_log:/ascend_cluster_log/job202405181309/worker-0/process_log \
                 --env ASCEND_PROCESS_LOG_PATH=/ascend_cluster_log/job202405181309/worker-0/process_log \
                 \... Other items...\
-                ${Training image name} /bin/bash
+                ${Training_image_name} /bin/bash
             ```
 
         - To perform training on the host, run the following command:
 
             ```shell
-            export ASCEND_PROCESS_LOG_PATH=/CANN App log path
+            export ASCEND_PROCESS_LOG_PATH=/${CANN_App_log_path}
             ```
 
             For example:
@@ -131,9 +132,9 @@ The following log directory is for reference only. You can customize the storage
 
             ```shell
             docker run \
-                -v /*User training log collection directory of the shared storage*:/*User training log collection directory in the container* \
+                -v /${User_training_log_collection_directory_of_the_shared_storage}:/${User_training_log_collection_directory_in_the_container} \
                 \... Other items...\
-                ${Training image name} /bin/bash
+                ${Training_image_name} /bin/bash
             ```
 
             For example:
@@ -142,7 +143,7 @@ The following log directory is for reference only. You can customize the storage
             docker run \
                 -v /ascend_cluster_log/job202405181309/worker-0/train_log:/ascend_cluster_log/job202405181309/worker-0/train_log \
                 \... Other items...\
-                ${Training image name} /bin/bash
+                ${Training_image_name} /bin/bash
             ```
 
         2. Flush the script execution output to the drive in redirection mode.
@@ -152,7 +153,7 @@ The following log directory is for reference only. You can customize the storage
             ```
 
             >[!NOTE]
-            >- Save the training log file of each NPU as a `.txt` or `.log` file. For versions earlier than 6.0.RC3, name the user training dump log file in the format of `rank-(*rank_id*).txt`
+            >- Save the training log file of each NPU as a `.txt` or `.log` file. For versions earlier than 6.0.RC3, name the user training dump log file in the format of `rank-(rank_id).txt`
             >- If the PyTorch framework is used, the training logs of all NPUs can be redirected to the same file, for example, **rank-all.txt**.
 
     4. Before starting a training job, query NPU information by referring to [NPU Environment Check File Before Training and Inference](./03_collecting_logs.md#npu-environment-check-file-before-training-and-inference). After the training is complete, query NPU information by referring to [NPU Environment Check File After Training and Inference](./03_collecting_logs.md#npu-environment-check-file-after-training-and-inference).
@@ -174,7 +175,7 @@ In the following example, the server is named `worker-0`. You need to create a d
 2. Run the `ascend-fd parse` command to clean logs of a single training server.
 
     ```shell
-    ascend-fd parse --process_log *CANN App log directory* --train_log *User training log directory* --env_check *Environment check file directory* --host_log *Host OS log directory* --device_log *NPU log directory* --dl_log *MindCluster component log directory* --custom_log *Custom parser file directory* -o *Cleaning result output directory*
+    ascend-fd parse --process_log ${CANN_App_log_directory} --train_log ${User_training_log_directory} --env_check ${Environment_check_file_directory} --host_log ${Host_OS_log_directory} --device_log ${NPU_log_directory} --dl_log ${MindCluster_component_log_directory} --custom_log ${Custom_parser_file_directory} -o ${Cleaning_result_output_directory}
     ```
 
     For example:
@@ -187,7 +188,7 @@ In the following example, the server is named `worker-0`. You need to create a d
 3. (Optional) If there are BMC logs, run the following command:
 
     ```shell
-    ascend-fd parse --bmc_log *BMC log directory* -o *Cleaning result output directory*
+    ascend-fd parse --bmc_log ${BMC_log_directory} -o ${Cleaning_result_output_directory}
     ```
 
     For example:
@@ -199,7 +200,7 @@ In the following example, the server is named `worker-0`. You need to create a d
 4. (Optional) If there are LCNE logs, run the following command:
 
     ```shell
-    ascend-fd parse --lcne_log *LCNE log directory* -o *Cleaning result output directory*
+    ascend-fd parse --lcne_log ${LCNE_log_directory} -o ${Cleaning_result_output_directory}
     ```
 
     For example:

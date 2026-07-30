@@ -19,7 +19,7 @@ To use the dynamic vNPU scheduling feature in command-line scenarios, ensure tha
 The dynamic vNPU scheduling feature can be used in either of the following modes:
 
 - Using via command line: Install the cluster scheduling components and use the dynamic vNPU scheduling feature via the command line.
-- Using after integration: Integrate the cluster scheduling components into an existing third-party AI platform or an AI platform developed based on these component.
+- Using after integration: Integrate the cluster scheduling components into an existing third-party AI platform or an AI platform developed based on these components.
 
 ### Usage Notes<a name="section10769161412815"></a>
 
@@ -37,6 +37,7 @@ Atlas inference series products
 For the process of using the dynamic vNPU scheduling feature via the command line, see [Figure 1](#zh-cn_topic_0000001559979444_fig242524985412).
 
 **Figure 1** Usage Process<a name="zh-cn_topic_0000001559979444_fig242524985412"></a>
+
 ![](../../../figures/scheduling/usage-process-3.png)
 
 For details about how to modify the parameters of related cluster scheduling components, see [Dynamic Virtualization](../virtual_instance/virtual_instance_with_hdk/06_mounting_vnpu.md#dynamic-virtualization).
@@ -54,7 +55,7 @@ The schematic diagram of the feature varies slightly depending on the type of in
 
 The description of each step is as follows:
 
-1. Custer scheduling components periodically report node and chip information.
+1. Cluster scheduling components periodically report node and chip information.
     - kubelet reports the number of node chips to the node object.
     - Ascend Device Plugin periodically reports the number of AICores to the node.
     - When a fault exists on a node, NodeD periodically reports the node health status, node hardware fault information, and node DPC shared storage fault information to `node-info-cm`.
@@ -524,7 +525,7 @@ The following is an example of the command output:
 ```
 
 >[!NOTE]
->_resnetinfer1-2-scpr5_ indicates the name of the running job in [Step 1](#zh-cn_topic_0000001609093161_zh-cn_topic_0000001609474293_section96791230183711011) in "Job Process Viewing"..
+>_resnetinfer1-2-scpr5_ indicates the name of the running job in [Step 1](#zh-cn_topic_0000001609093161_zh-cn_topic_0000001609474293_section96791230183711011) in "Job Process Viewing".
 
 ### Job Deletion<a name="ZH-CN_TOPIC_0000002511347065"></a>
 
@@ -543,7 +544,6 @@ kubectl delete -f infer-deploy-dynamic.yaml
 Command output:
 
 ```ColdFusion
-root@ubuntu:/home/test/yaml# kubectl delete -f infer-310p-1usoc.yaml
 job "resnetinfer1-1" deleted
 ```
 

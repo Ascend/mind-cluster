@@ -100,7 +100,7 @@ The input format of custom_entity is as follows. This example cannot be used dir
 }
 ```
 
-> **NOTE**
+>[!NOTE]
 >For details about the parameters in the custom_entity custom fault entity, see [Table 1 Description](./04_customizing_fault_entities.md).
 
 **Table 2** err_msg_list Description

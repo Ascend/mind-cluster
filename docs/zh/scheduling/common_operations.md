@@ -364,7 +364,7 @@ NFS网络文件系统，它允许网络中的计算机之间共享资源。在�
 
 Volcano收集了内部的芯片故障、参数面网络故障和节点故障信息，将其作为对外的信息放在K8s的ConfigMap中，以供外部查询和使用。
 
-查询命令为**kubectl describe cm -n volcano-system  vcjob-fault-npu-cm**，命令回显示例如下，**关键参数**说明请参见[表1](#table1895051254314)。
+查询命令为**kubectl describe cm -n volcano-system  vcjob-fault-npu-cm**，命令回显示例如下，**关键参数**说明请参见[表2 vcjob-fault-npu-cm字段说明](./api/volcano.md#任务信息)。
 
 ```ColdFusion
 Name:         vcjob-fault-npu-cm
@@ -387,166 +387,6 @@ BinaryData
 Events:  <none>
 ```
 
-**表 1** vcjob-fault-npu-cm字段说明
-
-<a name="table1895051254314"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002479386798_row4530818101120"><th class="cellrowborder" valign="top" width="25%" id="mcps1.2.5.1.1"><p id="zh-cn_topic_0000002479386798_p1653191871120"><a name="zh-cn_topic_0000002479386798_p1653191871120"></a><a name="zh-cn_topic_0000002479386798_p1653191871120"></a><span id="zh-cn_topic_0000002479386798_ph135612450384"><a name="zh-cn_topic_0000002479386798_ph135612450384"></a><a name="zh-cn_topic_0000002479386798_ph135612450384"></a>名称</span></p>
-</th>
-<th class="cellrowborder" valign="top" width="26.75%" id="mcps1.2.5.1.2"><p id="zh-cn_topic_0000002479386798_p353111818113"><a name="zh-cn_topic_0000002479386798_p353111818113"></a><a name="zh-cn_topic_0000002479386798_p353111818113"></a><span id="zh-cn_topic_0000002479386798_ph4571459382"><a name="zh-cn_topic_0000002479386798_ph4571459382"></a><a name="zh-cn_topic_0000002479386798_ph4571459382"></a>作用</span></p>
-</th>
-<th class="cellrowborder" valign="top" width="23.25%" id="mcps1.2.5.1.3"><p id="zh-cn_topic_0000002479386798_p6531101821116"><a name="zh-cn_topic_0000002479386798_p6531101821116"></a><a name="zh-cn_topic_0000002479386798_p6531101821116"></a><span id="zh-cn_topic_0000002479386798_ph12579458385"><a name="zh-cn_topic_0000002479386798_ph12579458385"></a><a name="zh-cn_topic_0000002479386798_ph12579458385"></a>取值</span></p>
-</th>
-<th class="cellrowborder" valign="top" width="25%" id="mcps1.2.5.1.4"><p id="zh-cn_topic_0000002479386798_p1753115188111"><a name="zh-cn_topic_0000002479386798_p1753115188111"></a><a name="zh-cn_topic_0000002479386798_p1753115188111"></a><span id="zh-cn_topic_0000002479386798_ph658045153811"><a name="zh-cn_topic_0000002479386798_ph658045153811"></a><a name="zh-cn_topic_0000002479386798_ph658045153811"></a>备注</span></p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002479386798_row14547818131118"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p1454791821114"><a name="zh-cn_topic_0000002479386798_p1454791821114"></a><a name="zh-cn_topic_0000002479386798_p1454791821114"></a><span id="zh-cn_topic_0000002479386798_ph1158545163819"><a name="zh-cn_topic_0000002479386798_ph1158545163819"></a><a name="zh-cn_topic_0000002479386798_ph1158545163819"></a>fault-node</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p5547131815113"><a name="zh-cn_topic_0000002479386798_p5547131815113"></a><a name="zh-cn_topic_0000002479386798_p5547131815113"></a><span id="zh-cn_topic_0000002479386798_ph1359154516384"><a name="zh-cn_topic_0000002479386798_ph1359154516384"></a><a name="zh-cn_topic_0000002479386798_ph1359154516384"></a>故障节点信息</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002479386798_p1454719188113"><a name="zh-cn_topic_0000002479386798_p1454719188113"></a><a name="zh-cn_topic_0000002479386798_p1454719188113"></a><span id="zh-cn_topic_0000002479386798_ph11601045193815"><a name="zh-cn_topic_0000002479386798_ph11601045193815"></a><a name="zh-cn_topic_0000002479386798_ph11601045193815"></a>-</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002479386798_p154731817113"><a name="zh-cn_topic_0000002479386798_p154731817113"></a><a name="zh-cn_topic_0000002479386798_p154731817113"></a><span id="zh-cn_topic_0000002479386798_ph260204519383"><a name="zh-cn_topic_0000002479386798_ph260204519383"></a><a name="zh-cn_topic_0000002479386798_ph260204519383"></a>-</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row0547118101117"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p155476181111"><a name="zh-cn_topic_0000002479386798_p155476181111"></a><a name="zh-cn_topic_0000002479386798_p155476181111"></a><span id="zh-cn_topic_0000002479386798_ph186084513387"><a name="zh-cn_topic_0000002479386798_ph186084513387"></a><a name="zh-cn_topic_0000002479386798_ph186084513387"></a>- NodeName</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p254841814114"><a name="zh-cn_topic_0000002479386798_p254841814114"></a><a name="zh-cn_topic_0000002479386798_p254841814114"></a><span id="zh-cn_topic_0000002479386798_ph1161174511388"><a name="zh-cn_topic_0000002479386798_ph1161174511388"></a><a name="zh-cn_topic_0000002479386798_ph1161174511388"></a>节点名称</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002479386798_p054815183116"><a name="zh-cn_topic_0000002479386798_p054815183116"></a><a name="zh-cn_topic_0000002479386798_p054815183116"></a><span id="zh-cn_topic_0000002479386798_ph15611245113815"><a name="zh-cn_topic_0000002479386798_ph15611245113815"></a><a name="zh-cn_topic_0000002479386798_ph15611245113815"></a>字符串</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002479386798_p2054851813118"><a name="zh-cn_topic_0000002479386798_p2054851813118"></a><a name="zh-cn_topic_0000002479386798_p2054851813118"></a><span id="zh-cn_topic_0000002479386798_ph1621745143812"><a name="zh-cn_topic_0000002479386798_ph1621745143812"></a><a name="zh-cn_topic_0000002479386798_ph1621745143812"></a>-</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row55481518151111"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p954816185116"><a name="zh-cn_topic_0000002479386798_p954816185116"></a><a name="zh-cn_topic_0000002479386798_p954816185116"></a><span id="zh-cn_topic_0000002479386798_ph36311451382"><a name="zh-cn_topic_0000002479386798_ph36311451382"></a><a name="zh-cn_topic_0000002479386798_ph36311451382"></a>- UpdateTime</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p1554814184117"><a name="zh-cn_topic_0000002479386798_p1554814184117"></a><a name="zh-cn_topic_0000002479386798_p1554814184117"></a><span id="zh-cn_topic_0000002479386798_ph1964154513813"><a name="zh-cn_topic_0000002479386798_ph1964154513813"></a><a name="zh-cn_topic_0000002479386798_ph1964154513813"></a>-</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002479386798_p105487180118"><a name="zh-cn_topic_0000002479386798_p105487180118"></a><a name="zh-cn_topic_0000002479386798_p105487180118"></a><span id="zh-cn_topic_0000002479386798_ph3665457384"><a name="zh-cn_topic_0000002479386798_ph3665457384"></a><a name="zh-cn_topic_0000002479386798_ph3665457384"></a>64位整数类型</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002479386798_p11548151841113"><a name="zh-cn_topic_0000002479386798_p11548151841113"></a><a name="zh-cn_topic_0000002479386798_p11548151841113"></a><span id="zh-cn_topic_0000002479386798_ph1682459383"><a name="zh-cn_topic_0000002479386798_ph1682459383"></a><a name="zh-cn_topic_0000002479386798_ph1682459383"></a>-</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row11549151819118"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p75491618121111"><a name="zh-cn_topic_0000002479386798_p75491618121111"></a><a name="zh-cn_topic_0000002479386798_p75491618121111"></a><span id="zh-cn_topic_0000002479386798_ph2069144503818"><a name="zh-cn_topic_0000002479386798_ph2069144503818"></a><a name="zh-cn_topic_0000002479386798_ph2069144503818"></a>- UnhealthyNPU</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p17549518101114"><a name="zh-cn_topic_0000002479386798_p17549518101114"></a><a name="zh-cn_topic_0000002479386798_p17549518101114"></a><span id="zh-cn_topic_0000002479386798_ph57194583812"><a name="zh-cn_topic_0000002479386798_ph57194583812"></a><a name="zh-cn_topic_0000002479386798_ph57194583812"></a>故障节点上芯片故障的芯片集合</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002479386798_p35499187114"><a name="zh-cn_topic_0000002479386798_p35499187114"></a><a name="zh-cn_topic_0000002479386798_p35499187114"></a><span id="zh-cn_topic_0000002479386798_ph8711945133815"><a name="zh-cn_topic_0000002479386798_ph8711945133815"></a><a name="zh-cn_topic_0000002479386798_ph8711945133815"></a>字符串切片</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002479386798_p17549318151111"><a name="zh-cn_topic_0000002479386798_p17549318151111"></a><a name="zh-cn_topic_0000002479386798_p17549318151111"></a><span id="zh-cn_topic_0000002479386798_ph18721545163813"><a name="zh-cn_topic_0000002479386798_ph18721545163813"></a><a name="zh-cn_topic_0000002479386798_ph18721545163813"></a>-</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row95491186111"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p25501518181120"><a name="zh-cn_topic_0000002479386798_p25501518181120"></a><a name="zh-cn_topic_0000002479386798_p25501518181120"></a><span id="zh-cn_topic_0000002479386798_ph573164511386"><a name="zh-cn_topic_0000002479386798_ph573164511386"></a><a name="zh-cn_topic_0000002479386798_ph573164511386"></a>- NetworkUnhealthyNPU</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p2550161841120"><a name="zh-cn_topic_0000002479386798_p2550161841120"></a><a name="zh-cn_topic_0000002479386798_p2550161841120"></a><span id="zh-cn_topic_0000002479386798_ph873174553816"><a name="zh-cn_topic_0000002479386798_ph873174553816"></a><a name="zh-cn_topic_0000002479386798_ph873174553816"></a>故障节点上网络故障的芯片集合</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002479386798_p1955041814116"><a name="zh-cn_topic_0000002479386798_p1955041814116"></a><a name="zh-cn_topic_0000002479386798_p1955041814116"></a><span id="zh-cn_topic_0000002479386798_ph12741045163816"><a name="zh-cn_topic_0000002479386798_ph12741045163816"></a><a name="zh-cn_topic_0000002479386798_ph12741045163816"></a>字符串切片</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002479386798_p65505186116"><a name="zh-cn_topic_0000002479386798_p65505186116"></a><a name="zh-cn_topic_0000002479386798_p65505186116"></a><span id="zh-cn_topic_0000002479386798_ph67494593817"><a name="zh-cn_topic_0000002479386798_ph67494593817"></a><a name="zh-cn_topic_0000002479386798_ph67494593817"></a>-</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row7551201831116"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p6551181831118"><a name="zh-cn_topic_0000002479386798_p6551181831118"></a><a name="zh-cn_topic_0000002479386798_p6551181831118"></a><span id="zh-cn_topic_0000002479386798_ph127544519384"><a name="zh-cn_topic_0000002479386798_ph127544519384"></a><a name="zh-cn_topic_0000002479386798_ph127544519384"></a>- NodeDEnable</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p17551318111111"><a name="zh-cn_topic_0000002479386798_p17551318111111"></a><a name="zh-cn_topic_0000002479386798_p17551318111111"></a><span id="zh-cn_topic_0000002479386798_ph776114513812"><a name="zh-cn_topic_0000002479386798_ph776114513812"></a><a name="zh-cn_topic_0000002479386798_ph776114513812"></a>节点状态检测开关是否打开</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><a name="zh-cn_topic_0000002479386798_ul55510181111"></a><a name="zh-cn_topic_0000002479386798_ul55510181111"></a><ul id="zh-cn_topic_0000002479386798_ul55510181111"><li><span id="zh-cn_topic_0000002479386798_ph078174514388"><a name="zh-cn_topic_0000002479386798_ph078174514388"></a><a name="zh-cn_topic_0000002479386798_ph078174514388"></a>True</span></li><li><span id="zh-cn_topic_0000002479386798_ph138054563812"><a name="zh-cn_topic_0000002479386798_ph138054563812"></a><a name="zh-cn_topic_0000002479386798_ph138054563812"></a>False</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002479386798_p3552171818117"><a name="zh-cn_topic_0000002479386798_p3552171818117"></a><a name="zh-cn_topic_0000002479386798_p3552171818117"></a><span id="zh-cn_topic_0000002479386798_ph081545103815"><a name="zh-cn_topic_0000002479386798_ph081545103815"></a><a name="zh-cn_topic_0000002479386798_ph081545103815"></a>-</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row95521718111118"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p8552111817116"><a name="zh-cn_topic_0000002479386798_p8552111817116"></a><a name="zh-cn_topic_0000002479386798_p8552111817116"></a><span id="zh-cn_topic_0000002479386798_ph17811545153817"><a name="zh-cn_topic_0000002479386798_ph17811545153817"></a><a name="zh-cn_topic_0000002479386798_ph17811545153817"></a>- NodeHealthState</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p14552191817115"><a name="zh-cn_topic_0000002479386798_p14552191817115"></a><a name="zh-cn_topic_0000002479386798_p14552191817115"></a><span id="zh-cn_topic_0000002479386798_ph1082184563820"><a name="zh-cn_topic_0000002479386798_ph1082184563820"></a><a name="zh-cn_topic_0000002479386798_ph1082184563820"></a>节点健康状态</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002479386798_p355221821111"><a name="zh-cn_topic_0000002479386798_p355221821111"></a><a name="zh-cn_topic_0000002479386798_p355221821111"></a><span id="zh-cn_topic_0000002479386798_ph882184593816"><a name="zh-cn_topic_0000002479386798_ph882184593816"></a><a name="zh-cn_topic_0000002479386798_ph882184593816"></a>字符串</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002479386798_p255214185116"><a name="zh-cn_topic_0000002479386798_p255214185116"></a><a name="zh-cn_topic_0000002479386798_p255214185116"></a><span id="zh-cn_topic_0000002479386798_ph1883545163815"><a name="zh-cn_topic_0000002479386798_ph1883545163815"></a><a name="zh-cn_topic_0000002479386798_ph1883545163815"></a>-</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row356761891116"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p956814189118"><a name="zh-cn_topic_0000002479386798_p956814189118"></a><a name="zh-cn_topic_0000002479386798_p956814189118"></a><span id="zh-cn_topic_0000002479386798_ph1593145103817"><a name="zh-cn_topic_0000002479386798_ph1593145103817"></a><a name="zh-cn_topic_0000002479386798_ph1593145103817"></a>FaultDeviceList</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p35681218131114"><a name="zh-cn_topic_0000002479386798_p35681218131114"></a><a name="zh-cn_topic_0000002479386798_p35681218131114"></a><span id="zh-cn_topic_0000002479386798_ph1693134583816"><a name="zh-cn_topic_0000002479386798_ph1693134583816"></a><a name="zh-cn_topic_0000002479386798_ph1693134583816"></a>-</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002479386798_p1756811861117"><a name="zh-cn_topic_0000002479386798_p1756811861117"></a><a name="zh-cn_topic_0000002479386798_p1756811861117"></a><span id="zh-cn_topic_0000002479386798_ph0931545163813"><a name="zh-cn_topic_0000002479386798_ph0931545163813"></a><a name="zh-cn_topic_0000002479386798_ph0931545163813"></a>-</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002479386798_p12568201801117"><a name="zh-cn_topic_0000002479386798_p12568201801117"></a><a name="zh-cn_topic_0000002479386798_p12568201801117"></a><span id="zh-cn_topic_0000002479386798_ph16941545183819"><a name="zh-cn_topic_0000002479386798_ph16941545183819"></a><a name="zh-cn_topic_0000002479386798_ph16941545183819"></a>-</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row1056811831111"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p15568151819118"><a name="zh-cn_topic_0000002479386798_p15568151819118"></a><a name="zh-cn_topic_0000002479386798_p15568151819118"></a><span id="zh-cn_topic_0000002479386798_ph199418457387"><a name="zh-cn_topic_0000002479386798_ph199418457387"></a><a name="zh-cn_topic_0000002479386798_ph199418457387"></a>- fault_type</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p4568118151117"><a name="zh-cn_topic_0000002479386798_p4568118151117"></a><a name="zh-cn_topic_0000002479386798_p4568118151117"></a><span id="zh-cn_topic_0000002479386798_ph195104520386"><a name="zh-cn_topic_0000002479386798_ph195104520386"></a><a name="zh-cn_topic_0000002479386798_ph195104520386"></a>故障类型对象</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><a name="zh-cn_topic_0000002479386798_ul15568201841114"></a><a name="zh-cn_topic_0000002479386798_ul15568201841114"></a><ul id="zh-cn_topic_0000002479386798_ul15568201841114"><li><span id="zh-cn_topic_0000002479386798_ph179524583815"><a name="zh-cn_topic_0000002479386798_ph179524583815"></a><a name="zh-cn_topic_0000002479386798_ph179524583815"></a>CardUnhealthy：芯片故障</span></li><li><span id="zh-cn_topic_0000002479386798_ph596845183816"><a name="zh-cn_topic_0000002479386798_ph596845183816"></a><a name="zh-cn_topic_0000002479386798_ph596845183816"></a>CardNetworkUnhealthy：芯片网络故障</span></li><li><span id="zh-cn_topic_0000002479386798_ph139684533810"><a name="zh-cn_topic_0000002479386798_ph139684533810"></a><a name="zh-cn_topic_0000002479386798_ph139684533810"></a>NodeUnhealthy：节点故障</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002479386798_p85692183111"><a name="zh-cn_topic_0000002479386798_p85692183111"></a><a name="zh-cn_topic_0000002479386798_p85692183111"></a><span id="zh-cn_topic_0000002479386798_ph1497114514381"><a name="zh-cn_topic_0000002479386798_ph1497114514381"></a><a name="zh-cn_topic_0000002479386798_ph1497114514381"></a>-</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row4569191813112"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p4569171841117"><a name="zh-cn_topic_0000002479386798_p4569171841117"></a><a name="zh-cn_topic_0000002479386798_p4569171841117"></a><span id="zh-cn_topic_0000002479386798_ph59720456384"><a name="zh-cn_topic_0000002479386798_ph59720456384"></a><a name="zh-cn_topic_0000002479386798_ph59720456384"></a>- npu_name</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p256931831110"><a name="zh-cn_topic_0000002479386798_p256931831110"></a><a name="zh-cn_topic_0000002479386798_p256931831110"></a><span id="zh-cn_topic_0000002479386798_ph189811454383"><a name="zh-cn_topic_0000002479386798_ph189811454383"></a><a name="zh-cn_topic_0000002479386798_ph189811454383"></a>故障的芯片名称，节点故障时为空</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002479386798_p65691318151118"><a name="zh-cn_topic_0000002479386798_p65691318151118"></a><a name="zh-cn_topic_0000002479386798_p65691318151118"></a><span id="zh-cn_topic_0000002479386798_ph169812450388"><a name="zh-cn_topic_0000002479386798_ph169812450388"></a><a name="zh-cn_topic_0000002479386798_ph169812450388"></a>字符串</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002479386798_p356931818115"><a name="zh-cn_topic_0000002479386798_p356931818115"></a><a name="zh-cn_topic_0000002479386798_p356931818115"></a><span id="zh-cn_topic_0000002479386798_ph129994517380"><a name="zh-cn_topic_0000002479386798_ph129994517380"></a><a name="zh-cn_topic_0000002479386798_ph129994517380"></a>-</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row11570131817115"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p1057018180118"><a name="zh-cn_topic_0000002479386798_p1057018180118"></a><a name="zh-cn_topic_0000002479386798_p1057018180118"></a><span id="zh-cn_topic_0000002479386798_ph1899445113813"><a name="zh-cn_topic_0000002479386798_ph1899445113813"></a><a name="zh-cn_topic_0000002479386798_ph1899445113813"></a>- fault_level</span></p>
-</td>
-<td class="cellrowborder" rowspan="3" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p1257021816119"><a name="zh-cn_topic_0000002479386798_p1257021816119"></a><a name="zh-cn_topic_0000002479386798_p1257021816119"></a><span id="zh-cn_topic_0000002479386798_ph510084533811"><a name="zh-cn_topic_0000002479386798_ph510084533811"></a><a name="zh-cn_topic_0000002479386798_ph510084533811"></a>故障处理类型，节点故障时取值为空</span></p>
-<p id="zh-cn_topic_0000002479386798_p7570111819115"><a name="zh-cn_topic_0000002479386798_p7570111819115"></a><a name="zh-cn_topic_0000002479386798_p7570111819115"></a></p>
-<p id="zh-cn_topic_0000002479386798_p12570171881115"><a name="zh-cn_topic_0000002479386798_p12570171881115"></a><a name="zh-cn_topic_0000002479386798_p12570171881115"></a></p>
-</td>
-<td class="cellrowborder" rowspan="3" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><a name="zh-cn_topic_0000002479386798_ul1157001871115"></a><a name="zh-cn_topic_0000002479386798_ul1157001871115"></a><ul id="zh-cn_topic_0000002479386798_ul1157001871115"><li>NotHandleFault：不做处理</li><li>RestartRequest：推理场景需要重新执行推理请求，训练场景重新执行训练业务</li><li>RestartBusiness：需要重新执行业务</li><li>FreeRestartNPU：影响业务执行，待芯片空闲时需复位芯片</li><li>RestartNPU：直接复位芯片并重新执行业务</li><li>SeparateNPU：隔离芯片</li><li>PreSeparateNPU：预隔离芯片，会根据训练任务实际运行情况判断是否重调度</li></ul>
-</td>
-<td class="cellrowborder" rowspan="3" valign="top" width="25%" headers="mcps1.2.5.1.4 "><div class="note" id="zh-cn_topic_0000002479386798_note11570618121119"><a name="zh-cn_topic_0000002479386798_note11570618121119"></a><div class="notebody"><a name="zh-cn_topic_0000002479386798_ul17072011133917"></a><a name="zh-cn_topic_0000002479386798_ul17072011133917"></a><ul id="zh-cn_topic_0000002479386798_ul17072011133917"><li><span id="zh-cn_topic_0000002479386798_ph181001745123813"><a name="zh-cn_topic_0000002479386798_ph181001745123813"></a><a name="zh-cn_topic_0000002479386798_ph181001745123813"></a>fault_level、fault_handling和large_model_fault_level参数功能一致，推荐使用fault_handling。</span></li><li>若推理任务订阅了故障信息，任务使用的推理卡上发生RestartRequest故障且故障持续时间未超过60秒，则不执行任务重调度；若故障持续时间超过60秒仍未恢复，则隔离芯片，进行任务重调度。</li></ul>
-</div></div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row195701318101112"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p19571111810111"><a name="zh-cn_topic_0000002479386798_p19571111810111"></a><a name="zh-cn_topic_0000002479386798_p19571111810111"></a><span id="zh-cn_topic_0000002479386798_ph141016453386"><a name="zh-cn_topic_0000002479386798_ph141016453386"></a><a name="zh-cn_topic_0000002479386798_ph141016453386"></a>- fault_handling</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row957116185118"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p6571111812118"><a name="zh-cn_topic_0000002479386798_p6571111812118"></a><a name="zh-cn_topic_0000002479386798_p6571111812118"></a><span id="zh-cn_topic_0000002479386798_ph2010174510386"><a name="zh-cn_topic_0000002479386798_ph2010174510386"></a><a name="zh-cn_topic_0000002479386798_ph2010174510386"></a>- large_model_fault_level</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row657171818113"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p7571518141116"><a name="zh-cn_topic_0000002479386798_p7571518141116"></a><a name="zh-cn_topic_0000002479386798_p7571518141116"></a><span id="zh-cn_topic_0000002479386798_ph5103164513389"><a name="zh-cn_topic_0000002479386798_ph5103164513389"></a><a name="zh-cn_topic_0000002479386798_ph5103164513389"></a>- fault_code</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p857117181110"><a name="zh-cn_topic_0000002479386798_p857117181110"></a><a name="zh-cn_topic_0000002479386798_p857117181110"></a><span id="zh-cn_topic_0000002479386798_ph1410384543813"><a name="zh-cn_topic_0000002479386798_ph1410384543813"></a><a name="zh-cn_topic_0000002479386798_ph1410384543813"></a>故障码，由英文逗号拼接而成的字符串</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002479386798_p057261817110"><a name="zh-cn_topic_0000002479386798_p057261817110"></a><a name="zh-cn_topic_0000002479386798_p057261817110"></a><span id="zh-cn_topic_0000002479386798_ph171041450384"><a name="zh-cn_topic_0000002479386798_ph171041450384"></a><a name="zh-cn_topic_0000002479386798_ph171041450384"></a>字符串</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><a name="zh-cn_topic_0000002479386798_ul057261815113"></a><a name="zh-cn_topic_0000002479386798_ul057261815113"></a><ul id="zh-cn_topic_0000002479386798_ul057261815113"><li><span id="zh-cn_topic_0000002479386798_ph41041545133816"><a name="zh-cn_topic_0000002479386798_ph41041545133816"></a><a name="zh-cn_topic_0000002479386798_ph41041545133816"></a>Disconnected：芯片网络不连通故障。</span></li><li><span id="zh-cn_topic_0000002479386798_ph31051045203810"><a name="zh-cn_topic_0000002479386798_ph31051045203810"></a><a name="zh-cn_topic_0000002479386798_ph31051045203810"></a>heartbeatTimeOut：节点状态丢失故障</span></li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row1757216185116"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p1357251820116"><a name="zh-cn_topic_0000002479386798_p1357251820116"></a><a name="zh-cn_topic_0000002479386798_p1357251820116"></a><span id="zh-cn_topic_0000002479386798_ph181051445163811"><a name="zh-cn_topic_0000002479386798_ph181051445163811"></a><a name="zh-cn_topic_0000002479386798_ph181051445163811"></a>remain-retry-times</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p35725186119"><a name="zh-cn_topic_0000002479386798_p35725186119"></a><a name="zh-cn_topic_0000002479386798_p35725186119"></a><span id="zh-cn_topic_0000002479386798_ph17106945133816"><a name="zh-cn_topic_0000002479386798_ph17106945133816"></a><a name="zh-cn_topic_0000002479386798_ph17106945133816"></a>任务剩余可重调度信息</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002479386798_p11573181820118"><a name="zh-cn_topic_0000002479386798_p11573181820118"></a><a name="zh-cn_topic_0000002479386798_p11573181820118"></a><span id="zh-cn_topic_0000002479386798_ph12106134593818"><a name="zh-cn_topic_0000002479386798_ph12106134593818"></a><a name="zh-cn_topic_0000002479386798_ph12106134593818"></a>-</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002479386798_p857381812119"><a name="zh-cn_topic_0000002479386798_p857381812119"></a><a name="zh-cn_topic_0000002479386798_p857381812119"></a><span id="zh-cn_topic_0000002479386798_ph181064454387"><a name="zh-cn_topic_0000002479386798_ph181064454387"></a><a name="zh-cn_topic_0000002479386798_ph181064454387"></a>-</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row1057312188112"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p35731618131111"><a name="zh-cn_topic_0000002479386798_p35731618131111"></a><a name="zh-cn_topic_0000002479386798_p35731618131111"></a><span id="zh-cn_topic_0000002479386798_ph1510784515383"><a name="zh-cn_topic_0000002479386798_ph1510784515383"></a><a name="zh-cn_topic_0000002479386798_ph1510784515383"></a>- UUID</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p11573141813118"><a name="zh-cn_topic_0000002479386798_p11573141813118"></a><a name="zh-cn_topic_0000002479386798_p11573141813118"></a><span id="zh-cn_topic_0000002479386798_ph8107104543812"><a name="zh-cn_topic_0000002479386798_ph8107104543812"></a><a name="zh-cn_topic_0000002479386798_ph8107104543812"></a>任务UID</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002479386798_p3573141861113"><a name="zh-cn_topic_0000002479386798_p3573141861113"></a><a name="zh-cn_topic_0000002479386798_p3573141861113"></a><span id="zh-cn_topic_0000002479386798_ph1122184510383"><a name="zh-cn_topic_0000002479386798_ph1122184510383"></a><a name="zh-cn_topic_0000002479386798_ph1122184510383"></a>字符串</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002479386798_p15731518101119"><a name="zh-cn_topic_0000002479386798_p15731518101119"></a><a name="zh-cn_topic_0000002479386798_p15731518101119"></a><span id="zh-cn_topic_0000002479386798_ph9123154533816"><a name="zh-cn_topic_0000002479386798_ph9123154533816"></a><a name="zh-cn_topic_0000002479386798_ph9123154533816"></a>-</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002479386798_row1457316187116"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002479386798_p12573151841115"><a name="zh-cn_topic_0000002479386798_p12573151841115"></a><a name="zh-cn_topic_0000002479386798_p12573151841115"></a><span id="zh-cn_topic_0000002479386798_ph512334517386"><a name="zh-cn_topic_0000002479386798_ph512334517386"></a><a name="zh-cn_topic_0000002479386798_ph512334517386"></a>- Times</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002479386798_p185741118141119"><a name="zh-cn_topic_0000002479386798_p185741118141119"></a><a name="zh-cn_topic_0000002479386798_p185741118141119"></a><span id="zh-cn_topic_0000002479386798_ph17123134517384"><a name="zh-cn_topic_0000002479386798_ph17123134517384"></a><a name="zh-cn_topic_0000002479386798_ph17123134517384"></a>任务剩余可重调度次数</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002479386798_p18574151841113"><a name="zh-cn_topic_0000002479386798_p18574151841113"></a><a name="zh-cn_topic_0000002479386798_p18574151841113"></a><span id="zh-cn_topic_0000002479386798_ph8124545193810"><a name="zh-cn_topic_0000002479386798_ph8124545193810"></a><a name="zh-cn_topic_0000002479386798_ph8124545193810"></a>整数类型</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002479386798_p457421819116"><a name="zh-cn_topic_0000002479386798_p457421819116"></a><a name="zh-cn_topic_0000002479386798_p457421819116"></a><span id="zh-cn_topic_0000002479386798_ph191247456380"><a name="zh-cn_topic_0000002479386798_ph191247456380"></a><a name="zh-cn_topic_0000002479386798_ph191247456380"></a>-</span></p>
-</td>
-</tr>
-</tbody>
-</table>
-
 ### Ascend Device Plugin<a name="ZH-CN_TOPIC_0000002511347041"></a>
 
 #### 故障信息<a name="ZH-CN_TOPIC_0000002479387086"></a>
@@ -555,141 +395,11 @@ Ascend Device Plugin收集了内部的芯片故障、参数面网络故障和节
 
 查询命令：**kubectl describe cm -n kube-system  mindx-dl-deviceinfo-$**_\{node\_name\}_
 
-以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准。关键参数说明请参见[表1](#table189505125431444)。
+以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准。关键参数说明请参见[表1 DeviceInfoCfg](./api/ascend_device_plugin.md#芯片资源)。
 
 ```ColdFusion
 {"DeviceInfo":{"DeviceList":{"huawei.com/Ascend910":"Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-5,Ascend910-6,Ascend910-7","huawei.com/Ascend910-Fault":"[{\"fault_type\":\"CardNetworkUnhealthy\",\"npu_name\":\"Ascend910-0\",\"large_model_fault_level\":\"PreSeparateNPU\",\"fault_level\":\"PreSeparateNPU\",\"fault_handling\":\"PreSeparateNPU\",\"fault_code\":\"81078603\",\"fault_time_and_level_map\":{\"81078603\":{\"fault_time\":1744168468259,\"fault_level\":\"PreSeparateNPU\"}}},{\"fault_type\":\"CardUnhealthy\",\"npu_name\":\"Ascend910-4\",\"large_model_fault_level\":\"SeparateNPU\",\"fault_level\":\"SeparateNPU\",\"fault_handling\":\"SeparateNPU\",\"fault_code\":\"A8028801,A4028801,80E18402,80E18401\",\"fault_time_and_level_map\":{\"80E18401\":{\"fault_time\":1744167455784,\"fault_level\":\"NotHandleFault\"},\"80E18402\":{\"fault_time\":1744167455784,\"fault_level\":\"SeparateNPU\"},\"A4028801\":{\"fault_time\":1744167455784,\"fault_level\":\"NotHandleFault\"},\"A8028801\":{\"fault_time\":1744167455784,\"fault_level\":\"SeparateNPU\"}}}]","huawei.com/Ascend910-NetworkUnhealthy":"Ascend910-0","huawei.com/Ascend910-Recovering":"","huawei.com/Ascend910-Unhealthy":"Ascend910-4"},"UpdateTime":1744182144},"SuperPodID":-2,"ServerIndex":-2,"CheckCode":"a550811fdfafb5717555526816af2ca4ac6c3e102f5907574048578e0c8fcc73"}
 ```
-
-**表 1**  参数说明
-
-<a name="table189505125431444"></a>
-<table><thead align="left"><tr id="row1795031213433"><th class="cellrowborder" valign="top" width="28.89%" id="mcps1.2.3.1.1"><p id="p195011122437"><a name="p195011122437"></a><a name="p195011122437"></a>参数名</p>
-</th>
-<th class="cellrowborder" valign="top" width="71.11%" id="mcps1.2.3.1.2"><p id="p11950101217439"><a name="p11950101217439"></a><a name="p11950101217439"></a>描述</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row1537311172012"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p1337319172019"><a name="p1337319172019"></a><a name="p1337319172019"></a>huawei.com/Ascend910</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p133731813208"><a name="p133731813208"></a><a name="p133731813208"></a>当前节点可用的芯片名称信息，存在多个时用英文逗号拼接。</p>
-    <div class="note" id="note19861106567"><a name="note19861106567"></a><a name="note19861106567"></a><span class="notetitle">[!NOTE] 说明</span>
-        <div class="notebody">
-            <ul>
-                <li>
-                    <p id="p1286118615617"><a name="p1286118615617"></a><a name="p1286118615617"></a>该字段正在日落，后续版本该字段不再呈现。默认情况下，节点的可用芯片由Volcano维护，该字段不生效。如果需要生效，可以修改Volcano的配置参数“self-maintain-available-card”值为false。</p>
-                </li>
-                <li>
-                    <p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu作为参数名称。</p>
-                </li>
-            </ul>
-        </div>
-    </div>
-</td>
-</tr>
-<tr id="row141511628182110"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p1615272892115"><a name="p1615272892115"></a><a name="p1615272892115"></a>huawei.com/Ascend910-NetworkUnhealthy</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
-    <p id="p5152528162120"><a name="p5152528162120"></a><a name="p5152528162120"></a>当前节点网络不健康的芯片名称信息，存在多个时用英文逗号拼接。</p>
-    <div class="note">
-        <span class="notetitle">[!NOTE] 说明</span>
-        <div class="notebody">
-            <p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-NetworkUnhealthy作为参数名称。</p>
-        </div>
-    </div>
-</td>
-</tr>
-<tr id="row5480193118216"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p1148013118214"><a name="p1148013118214"></a><a name="p1148013118214"></a>huawei.com/Ascend910-Unhealthy</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
-    <p id="p048119312212"><a name="p048119312212"></a><a name="p048119312212"></a>当前芯片不健康的芯片名称信息，存在多个时用英文逗号拼接。</p>
-    <div class="note">
-        <span class="notetitle">[!NOTE] 说明</span>
-        <div class="notebody">
-            <p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-Unhealthy作为参数名称。</p>
-        </div>
-    </div>
-</td>
-</tr>
-<tr id="row14769122916281"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p576934513919"><a name="p576934513919"></a><a name="p576934513919"></a>huawei.com/Ascend910-Recovering</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
-    <p id="p4769174519918"><a name="p4769174519918"></a><a name="p4769174519918"></a>标记当前节点正在进行恢复的芯片，存在多个时用英文逗号拼接。</p>
-    <div class="note">
-        <span class="notetitle">[!NOTE] 说明</span>
-        <div class="notebody">
-            <p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-Recovering作为参数名称。</p>
-        </div>
-    </div>
-</td>
-</tr>
-<tr id="row1454493482212"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p19545134202211"><a name="p19545134202211"></a><a name="p19545134202211"></a>huawei.com/Ascend910-Fault</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
-    <p id="p1754514348220"><a name="p1754514348220"></a><a name="p1754514348220"></a>数组对象，对象包含fault_type、npu_name、large_model_fault_level、 fault_level、fault_handling、fault_code和fault_time_and_level_map这7个字段。</p>
-    <div class="note">
-        <span class="notetitle">[!NOTE] 说明</span>
-        <div class="notebody">
-            <p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-Fault作为参数名称。</p>
-        </div>
-    </div>
-</td>
-</tr>
-<tr id="row15951101284313"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p1595114125437"><a name="p1595114125437"></a><a name="p1595114125437"></a>- fault_type</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p11181832386"><a name="p11181832386"></a><a name="p11181832386"></a>故障类型。</p>
-<a name="ul114361917173814"></a><a name="ul114361917173814"></a><ul id="ul114361917173814"><li>CardUnhealthy：芯片故障</li><li>CardNetworkUnhealthy：参数面网络故障（芯片网络相关故障）</li><li>NodeUnhealthy：节点故障</li></ul>
-</td>
-</tr>
-<tr id="row2951131234318"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p179514122433"><a name="p179514122433"></a><a name="p179514122433"></a>- npu_name</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p495117123435"><a name="p495117123435"></a><a name="p495117123435"></a>故障的芯片名称，节点故障时为空</p>
-</td>
-</tr>
-<tr id="row13951151213439"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p2951312194310"><a name="p2951312194310"></a><a name="p2951312194310"></a>- large_model_fault_level</p>
-</td>
-<td class="cellrowborder" rowspan="3" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p11803142254019"><a name="p11803142254019"></a><a name="p11803142254019"></a>故障处理类型，节点故障时取值为空。</p>
-<a name="ul15747052113013"></a><a name="ul15747052113013"></a><ul id="ul15747052113013"><li>NotHandleFault：不做处理</li><li>RestartRequest：推理场景需要重新执行推理请求，训练场景重新执行训练业务</li><li>RestartBusiness：需要重新执行业务</li><li>FreeRestartNPU：影响业务执行，待芯片空闲时需复位芯片</li><li>RestartNPU：直接复位芯片并重新执行业务</li><li>SeparateNPU：隔离芯片</li><li>PreSeparateNPU：预隔离芯片，会根据训练任务实际运行情况判断是否重调度</li></ul>
-<div class="note" id="note14939164094218"><a name="note14939164094218"></a><a name="note14939164094218"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul18200135914915"></a><a name="ul18200135914915"></a><ul id="ul18200135914915"><li>large_model_fault_level、fault_handling和fault_level参数功能一致，推荐使用fault_handling。</li><li>若推理任务订阅了故障信息，任务使用的推理卡上发生RestartRequest故障且故障持续时间未超过60秒，则不执行任务重调度；若故障持续时间超过60秒仍未恢复，则隔离芯片，进行任务重调度。</li></ul>
-</div></div>
-</td>
-</tr>
-<tr id="row1159031719475"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p6590151724711"><a name="p6590151724711"></a><a name="p6590151724711"></a>- fault_level</p>
-</td>
-</tr>
-<tr id="row898832991113"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p20297816131219"><a name="p20297816131219"></a><a name="p20297816131219"></a>- fault_handling</p>
-</td>
-</tr>
-<tr id="row1766220208478"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p1166219204476"><a name="p1166219204476"></a><a name="p1166219204476"></a>- fault_code</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p1734520170421"><a name="p1734520170421"></a><a name="p1734520170421"></a>故障码，英文逗号拼接的字符串。芯片故障码的详细说明，请参见<a href="./appendix.md#芯片故障码参考文档">芯片故障码参考文档</a>章节。</p>
-</td>
-</tr>
-<tr id="row5444162415209"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p209612801611"><a name="p209612801611"></a><a name="p209612801611"></a>-fault_time_and_level_map</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p10342516152120"><a name="p10342516152120"></a><a name="p10342516152120"></a>故障码、故障发生时间及故障处理等级。</p>
-</td>
-</tr>
-<tr id="row1551259133310"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p551259133319"><a name="p551259133319"></a><a name="p551259133319"></a>SuperPodID</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p351559113319"><a name="p351559113319"></a><a name="p351559113319"></a>超节点ID。</p>
-</td>
-</tr>
-<tr id="row873710101348"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p9737410113420"><a name="p9737410113420"></a><a name="p9737410113420"></a>ServerIndex</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p473715105347"><a name="p473715105347"></a><a name="p473715105347"></a>当前节点在超节点中的相对位置。</p>
-<div class="note" id="note92501142163620"><a name="note92501142163620"></a><div class="notebody"><a name="ul1526885424618"></a><a name="ul1526885424618"></a><ul id="ul1526885424618"><li>驱动上报的SuperPodID或ServerIndex的值为0xffffffff时，SuperPodID或ServerIndex的取值为-1。</li><li>存在以下情况，SuperPodID或ServerIndex的取值为-2。<a name="ul186445504473"></a><a name="ul186445504473"></a><ul id="ul186445504473"><li>当前设备不支持查询超节点信息。</li><li>因驱动问题导致获取超节点信息失败。</li></ul>
-</li></ul>
-</div></div>
-</td>
-</tr>
-<tr id="row1794364134718"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p758815349457"><a name="p758815349457"></a><a name="p758815349457"></a>CheckCode</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p258810347451"><a name="p258810347451"></a><a name="p258810347451"></a>校验码。</p>
-</td>
-</tr>
-</tbody>
-</table>
 
 #### 故障事件信息<a name="ZH-CN_TOPIC_0000002511347039"></a>
 
@@ -721,26 +431,11 @@ ClusterD收集了内部的节点故障、芯片故障和灵衢总线设备故障
 
 查询命令：**kubectl describe cm -n mindx-dl cluster-info-node-cm**
 
-以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准。关键参数说明请参见[表1](#table25031946405)。
+以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准。关键参数说明请参见[表1 cluster-info-node-cm](./api/clusterd/00_cluster_resources.md#configmap说明)。
 
 ```ColdFusion
 {"mindx-dl-nodeinfo-kwok-node-0":{"FaultDevList":[],"NodeStatus":"Healthy","CmName":"mindx-dl-nodeinfo-kwok-node-0"},"mindx-dl-deviceinfo-kwok-node-1001":{"FaultDevList":[],"NodeStatus":"Healthy","CmName":"mindx-dl-nodeinfo-kwok-node-1001"}}
 ```
-
-**表 1**  节点故障参数说明
-
-<a name="table25031946405"></a>
-
-|参数|说明|
-|--|--|
-|mindx-dl-nodeinfo-\<kwok-node-0>|前缀为固定的mindx-dl-nodeinfo，kwok-node-0是节点名称，方便定位故障的具体节点。|
-|NodeInfo|节点维度的故障信息。|
-|FaultDevList|节点故障设备列表。|
-|- DeviceType|故障设备类型。|
-|- DeviceId|故障设备ID。|
-|- FaultCode|故障码，由英文和数组拼接而成的字符串，字符串表示故障码的十六进制。|
-|- FaultLevel|故障处理等级。<ul><li>NotHandleFault：无需处理。</li><li>PreSeparateFault：该节点上有任务则不处理，后续调度时不调度任务到该节点。</li><li>SeparateFault：任务重调度。</li></ul>|
-|NodeStatus|<p>节点健康状态，由本节点故障处理等级最严重的设备决定。</p><ul><li>Healthy：该节点故障处理等级存在且不超过NotHandleFault，该节点为健康节点，可以正常训练。若该节点故障处理等级为PreSeparateFault，且节点有NPU卡正在使用，则该节点为健康节点。任务执行完成后，该节点将变为故障节点。</li><li>UnHealthy：该节点故障处理等级存在SeparateFault，该节点为故障节点，将影响训练任务，立即将任务调离该节点。若该节点故障处理等级为PreSeparateFault，且节点无NPU卡正在使用，则该节点为故障节点，不可将任务调度到该节点。</li></ul>|
 
 **芯片故障<a name="section834865016504"></a>**
 
@@ -748,124 +443,11 @@ ClusterD收集了内部的节点故障、芯片故障和灵衢总线设备故障
 
 m为从0开始递增的整数。集群规模每增加1000个节点，则会新增一个ConfigMap文件cluster-info-device-$\{m\}。
 
-以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准，关键参数说明请参见[表2](#table189505125431456)。
+以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准，关键参数说明请参见[表2 cluster-info-device-$\{m\}](./api/clusterd/00_cluster_resources.md#configmap说明)。
 
 ```ColdFusion
 {"mindx-dl-deviceinfo-kwok-node-0":{"DeviceList":{"huawei.com/Ascend910":"Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7","huawei.com/Ascend910-NetworkUnhealthy":"","huawei.com/Ascend910-Unhealthy":""},"UpdateTime":1693899390,"CmName":"mindx-dl-deviceinfo-kwok-node-0","SuperPodID":0,"ServerIndex":0},"mindx-dl-deviceinfo-kwok-node-1001":{"DeviceList":{"huawei.com/Ascend910":"Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7","huawei.com/Ascend910-NetworkUnhealthy":"","huawei.com/Ascend910-Unhealthy":""},"UpdateTime":1693899390,"CmName":"mindx-dl-deviceinfo-kwok-node-1001","SuperPodID":0,"ServerIndex":0}}
 ```
-
-**表 2** cluster-info-device-$\{m\}
-
-<a name="table189505125431456"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002511346785_row181588478362"><th class="cellrowborder" valign="top" width="28.89%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002511346785_p115834719367"><a name="zh-cn_topic_0000002511346785_p115834719367"></a><a name="zh-cn_topic_0000002511346785_p115834719367"></a><span id="zh-cn_topic_0000002511346785_ph4751165618820"><a name="zh-cn_topic_0000002511346785_ph4751165618820"></a><a name="zh-cn_topic_0000002511346785_ph4751165618820"></a>参数</span></p>
-</th>
-<th class="cellrowborder" valign="top" width="71.11%" id="mcps1.2.3.1.2"><p id="zh-cn_topic_0000002511346785_p8158247163614"><a name="zh-cn_topic_0000002511346785_p8158247163614"></a><a name="zh-cn_topic_0000002511346785_p8158247163614"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002511346785_row966664563815"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p46661545103810"><a name="zh-cn_topic_0000002511346785_p46661545103810"></a><a name="zh-cn_topic_0000002511346785_p46661545103810"></a><span id="zh-cn_topic_0000002511346785_ph167549561811"><a name="zh-cn_topic_0000002511346785_ph167549561811"></a><a name="zh-cn_topic_0000002511346785_ph167549561811"></a>mindx-dl-deviceinfo-<em id="zh-cn_topic_0000002511346785_i115834281122"><a name="zh-cn_topic_0000002511346785_i115834281122"></a><a name="zh-cn_topic_0000002511346785_i115834281122"></a>&lt;</em><em id="zh-cn_topic_0000002511346785_i14257184412518"><a name="zh-cn_topic_0000002511346785_i14257184412518"></a><a name="zh-cn_topic_0000002511346785_i14257184412518"></a>kwok-node-0</em><em id="zh-cn_topic_0000002511346785_i586723171216"><a name="zh-cn_topic_0000002511346785_i586723171216"></a><a name="zh-cn_topic_0000002511346785_i586723171216"></a>&gt;</em></span></p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511346785_p206671945153818"><a name="zh-cn_topic_0000002511346785_p206671945153818"></a><a name="zh-cn_topic_0000002511346785_p206671945153818"></a><span id="zh-cn_topic_0000002511346785_ph1175519563820"><a name="zh-cn_topic_0000002511346785_ph1175519563820"></a><a name="zh-cn_topic_0000002511346785_ph1175519563820"></a>前缀为固定的mindx-dl-deviceinfo，kwok-node-0是节点名称，用于定位故障的具体节点。</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511346785_row1537311172012"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p815924703619"><a name="zh-cn_topic_0000002511346785_p815924703619"></a><a name="zh-cn_topic_0000002511346785_p815924703619"></a><span id="zh-cn_topic_0000002511346785_ph157567569819"><a name="zh-cn_topic_0000002511346785_ph157567569819"></a><a name="zh-cn_topic_0000002511346785_ph157567569819"></a>huawei.com/Ascend910</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
-    <p id="zh-cn_topic_0000002511346785_p115919478362"><a name="zh-cn_topic_0000002511346785_p115919478362"></a><a name="zh-cn_topic_0000002511346785_p115919478362"></a><span id="zh-cn_topic_0000002511346785_ph1175620561885"><a name="zh-cn_topic_0000002511346785_ph1175620561885"></a><a name="zh-cn_topic_0000002511346785_ph1175620561885"></a>当前节点可用的芯片名称信息，存在多个时用英文逗号拼接。</span></p>
-    <div class="note">
-        <span class="notetitle">[!NOTE] 说明</span>
-        <div class="notebody">
-            <p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu作为参数名称。</p>
-        </div>
-    </div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511346785_row141511628182110"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p31592478363"><a name="zh-cn_topic_0000002511346785_p31592478363"></a><a name="zh-cn_topic_0000002511346785_p31592478363"></a><span id="zh-cn_topic_0000002511346785_ph127565563814"><a name="zh-cn_topic_0000002511346785_ph127565563814"></a><a name="zh-cn_topic_0000002511346785_ph127565563814"></a>huawei.com/Ascend910-NetworkUnhealthy</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
-    <p id="zh-cn_topic_0000002511346785_p10159174753614"><a name="zh-cn_topic_0000002511346785_p10159174753614"></a><a name="zh-cn_topic_0000002511346785_p10159174753614"></a><span id="zh-cn_topic_0000002511346785_ph1675713561789"><a name="zh-cn_topic_0000002511346785_ph1675713561789"></a><a name="zh-cn_topic_0000002511346785_ph1675713561789"></a>当前节点网络不健康的芯片名称信息，存在多个时用英文逗号拼接。</span></p>
-    <div class="note">
-        <span class="notetitle">[!NOTE] 说明</span>
-        <div class="notebody">
-            <p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-NetworkUnhealthy作为参数名称。</p>
-        </div>
-    </div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511346785_row5480193118216"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p1716054723614"><a name="zh-cn_topic_0000002511346785_p1716054723614"></a><a name="zh-cn_topic_0000002511346785_p1716054723614"></a><span id="zh-cn_topic_0000002511346785_ph47571856981"><a name="zh-cn_topic_0000002511346785_ph47571856981"></a><a name="zh-cn_topic_0000002511346785_ph47571856981"></a>huawei.com/Ascend910-Unhealthy</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
-    <p id="zh-cn_topic_0000002511346785_p1916004773611"><a name="zh-cn_topic_0000002511346785_p1916004773611"></a><a name="zh-cn_topic_0000002511346785_p1916004773611"></a><span id="zh-cn_topic_0000002511346785_ph17573569819"><a name="zh-cn_topic_0000002511346785_ph17573569819"></a><a name="zh-cn_topic_0000002511346785_ph17573569819"></a>当前芯片不健康的芯片名称信息，存在多个时用英文逗号拼接。</span></p>
-    <div class="note">
-        <span class="notetitle">[!NOTE] 说明</span>
-        <div class="notebody">
-            <p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-Unhealthy作为参数名称。</p>
-        </div>
-    </div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511346785_row1454493482212"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p16161164717366"><a name="zh-cn_topic_0000002511346785_p16161164717366"></a><a name="zh-cn_topic_0000002511346785_p16161164717366"></a><span id="zh-cn_topic_0000002511346785_ph1375817561389"><a name="zh-cn_topic_0000002511346785_ph1375817561389"></a><a name="zh-cn_topic_0000002511346785_ph1375817561389"></a>huawei.com/Ascend910-Fault</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
-    <p id="zh-cn_topic_0000002511346785_p11611747103611"><a name="zh-cn_topic_0000002511346785_p11611747103611"></a><a name="zh-cn_topic_0000002511346785_p11611747103611"></a><span id="zh-cn_topic_0000002511346785_ph107588564815"><a name="zh-cn_topic_0000002511346785_ph107588564815"></a><a name="zh-cn_topic_0000002511346785_ph107588564815"></a>数组对象，对象包含fault_type、npu_name、large_model_fault_level、 fault_level、fault_handling、fault_code和<span id="zh-cn_topic_0000002511346785_ph1411311427424"><a name="zh-cn_topic_0000002511346785_ph1411311427424"></a><a name="zh-cn_topic_0000002511346785_ph1411311427424"></a>fault_time_and_level_map</span>字段。</span></p>
-    <div class="note">
-        <span class="notetitle">[!NOTE] 说明</span>
-        <div class="notebody">
-            <p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-Fault作为参数名称。</p>
-        </div>
-    </div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511346785_row5162134716364"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p8162114713611"><a name="zh-cn_topic_0000002511346785_p8162114713611"></a><a name="zh-cn_topic_0000002511346785_p8162114713611"></a><span id="zh-cn_topic_0000002511346785_ph147591356181"><a name="zh-cn_topic_0000002511346785_ph147591356181"></a><a name="zh-cn_topic_0000002511346785_ph147591356181"></a>- fault_type</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511346785_p11162247183614"><a name="zh-cn_topic_0000002511346785_p11162247183614"></a><a name="zh-cn_topic_0000002511346785_p11162247183614"></a><span id="zh-cn_topic_0000002511346785_ph97593560811"><a name="zh-cn_topic_0000002511346785_ph97593560811"></a><a name="zh-cn_topic_0000002511346785_ph97593560811"></a>故障类型。</span></p>
-<a name="zh-cn_topic_0000002511346785_ul114361917173814"></a><a name="zh-cn_topic_0000002511346785_ul114361917173814"></a><ul id="zh-cn_topic_0000002511346785_ul114361917173814"><li><span id="zh-cn_topic_0000002511346785_ph13759205616817"><a name="zh-cn_topic_0000002511346785_ph13759205616817"></a><a name="zh-cn_topic_0000002511346785_ph13759205616817"></a>CardUnhealthy：芯片故障</span></li><li><span id="zh-cn_topic_0000002511346785_ph2760856888"><a name="zh-cn_topic_0000002511346785_ph2760856888"></a><a name="zh-cn_topic_0000002511346785_ph2760856888"></a>CardNetworkUnhealthy：参数面网络故障（芯片网络相关故障）</span></li><li><span id="zh-cn_topic_0000002511346785_ph1176115619819"><a name="zh-cn_topic_0000002511346785_ph1176115619819"></a><a name="zh-cn_topic_0000002511346785_ph1176115619819"></a>NodeUnhealthy：节点故障</span></li><li><span id="zh-cn_topic_0000002511346785_ph1976145612818"><a name="zh-cn_topic_0000002511346785_ph1976145612818"></a><a name="zh-cn_topic_0000002511346785_ph1976145612818"></a>PublicFault：公共故障</span></li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511346785_row31638472361"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p18163147183617"><a name="zh-cn_topic_0000002511346785_p18163147183617"></a><a name="zh-cn_topic_0000002511346785_p18163147183617"></a><span id="zh-cn_topic_0000002511346785_ph1976216564817"><a name="zh-cn_topic_0000002511346785_ph1976216564817"></a><a name="zh-cn_topic_0000002511346785_ph1976216564817"></a>- npu_name</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511346785_p8163134717366"><a name="zh-cn_topic_0000002511346785_p8163134717366"></a><a name="zh-cn_topic_0000002511346785_p8163134717366"></a><span id="zh-cn_topic_0000002511346785_ph6762135610818"><a name="zh-cn_topic_0000002511346785_ph6762135610818"></a><a name="zh-cn_topic_0000002511346785_ph6762135610818"></a>故障的芯片名称，节点故障时为空。</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511346785_row13951151213439"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p1916464793617"><a name="zh-cn_topic_0000002511346785_p1916464793617"></a><a name="zh-cn_topic_0000002511346785_p1916464793617"></a><span id="zh-cn_topic_0000002511346785_ph1376355618814"><a name="zh-cn_topic_0000002511346785_ph1376355618814"></a><a name="zh-cn_topic_0000002511346785_ph1376355618814"></a>- large_model_fault_level</span></p>
-</td>
-<td class="cellrowborder" rowspan="3" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511346785_p81649473361"><a name="zh-cn_topic_0000002511346785_p81649473361"></a><a name="zh-cn_topic_0000002511346785_p81649473361"></a><span id="zh-cn_topic_0000002511346785_ph1476345610814"><a name="zh-cn_topic_0000002511346785_ph1476345610814"></a><a name="zh-cn_topic_0000002511346785_ph1476345610814"></a>故障处理类型，节点故障时取值为空。</span></p>
-<a name="zh-cn_topic_0000002511346785_ul15747052113013"></a><a name="zh-cn_topic_0000002511346785_ul15747052113013"></a><ul id="zh-cn_topic_0000002511346785_ul15747052113013"><li><span id="zh-cn_topic_0000002511346785_ph1763165618812"><a name="zh-cn_topic_0000002511346785_ph1763165618812"></a><a name="zh-cn_topic_0000002511346785_ph1763165618812"></a>NotHandleFault：不做处理</span></li><li><span id="zh-cn_topic_0000002511346785_ph18764175614812"><a name="zh-cn_topic_0000002511346785_ph18764175614812"></a><a name="zh-cn_topic_0000002511346785_ph18764175614812"></a>RestartRequest：推理场景需要重新执行推理请求，训练场景重新执行训练业务</span></li><li><span id="zh-cn_topic_0000002511346785_ph376425615815"><a name="zh-cn_topic_0000002511346785_ph376425615815"></a><a name="zh-cn_topic_0000002511346785_ph376425615815"></a>RestartBusiness：需要重新执行业务</span></li><li><span id="zh-cn_topic_0000002511346785_ph6765135619814"><a name="zh-cn_topic_0000002511346785_ph6765135619814"></a><a name="zh-cn_topic_0000002511346785_ph6765135619814"></a>FreeRestartNPU：影响业务执行，待芯片空闲时需复位芯片</span></li><li><span id="zh-cn_topic_0000002511346785_ph197651356484"><a name="zh-cn_topic_0000002511346785_ph197651356484"></a><a name="zh-cn_topic_0000002511346785_ph197651356484"></a>RestartNPU：直接复位芯片并重新执行业务</span></li><li><span id="zh-cn_topic_0000002511346785_ph3765105619815"><a name="zh-cn_topic_0000002511346785_ph3765105619815"></a><a name="zh-cn_topic_0000002511346785_ph3765105619815"></a>SeparateNPU：隔离芯片</span></li><li><span id="zh-cn_topic_0000002511346785_ph117661256185"><a name="zh-cn_topic_0000002511346785_ph117661256185"></a><a name="zh-cn_topic_0000002511346785_ph117661256185"></a>PreSeparateNPU：预隔离芯片，会根据训练任务实际运行情况判断是否重调度</span></li><li>ManuallySeparateNPU：人工隔离芯片。当达到Ascend Device Plugin和ClusterD各自的故障频率，Ascend Device Plugin和ClusterD会将故障芯片进行人工隔离。</li></ul>
-<div class="note" id="zh-cn_topic_0000002511346785_note7165154723619"><a name="zh-cn_topic_0000002511346785_note7165154723619"></a><a name="zh-cn_topic_0000002511346785_note7165154723619"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511346785_ul1616082713111"></a><a name="zh-cn_topic_0000002511346785_ul1616082713111"></a><ul id="zh-cn_topic_0000002511346785_ul1616082713111"><li><span id="zh-cn_topic_0000002511346785_ph127668561685"><a name="zh-cn_topic_0000002511346785_ph127668561685"></a><a name="zh-cn_topic_0000002511346785_ph127668561685"></a>large_model_fault_level、fault_handling和fault_level参数功能一致，推荐使用fault_handling。</span></li><li>若推理任务订阅了故障信息，任务使用的推理卡上发生RestartRequest故障且故障持续时间未超过60秒，则不执行任务重调度；若故障持续时间超过60秒仍未恢复，则隔离芯片，进行任务重调度。</li></ul>
-</div></div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511346785_row111658470367"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p1116524703614"><a name="zh-cn_topic_0000002511346785_p1116524703614"></a><a name="zh-cn_topic_0000002511346785_p1116524703614"></a><span id="zh-cn_topic_0000002511346785_ph37672561381"><a name="zh-cn_topic_0000002511346785_ph37672561381"></a><a name="zh-cn_topic_0000002511346785_ph37672561381"></a>- fault_level</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511346785_row898832991113"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p20297816131219"><a name="zh-cn_topic_0000002511346785_p20297816131219"></a><a name="zh-cn_topic_0000002511346785_p20297816131219"></a><span id="zh-cn_topic_0000002511346785_ph1776719569815"><a name="zh-cn_topic_0000002511346785_ph1776719569815"></a><a name="zh-cn_topic_0000002511346785_ph1776719569815"></a>- fault_handling</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511346785_row016615477362"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p18166134783618"><a name="zh-cn_topic_0000002511346785_p18166134783618"></a><a name="zh-cn_topic_0000002511346785_p18166134783618"></a><span id="zh-cn_topic_0000002511346785_ph177671756284"><a name="zh-cn_topic_0000002511346785_ph177671756284"></a><a name="zh-cn_topic_0000002511346785_ph177671756284"></a>- fault_code</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511346785_p7166747163614"><a name="zh-cn_topic_0000002511346785_p7166747163614"></a><a name="zh-cn_topic_0000002511346785_p7166747163614"></a><span id="zh-cn_topic_0000002511346785_ph276835610815"><a name="zh-cn_topic_0000002511346785_ph276835610815"></a><a name="zh-cn_topic_0000002511346785_ph276835610815"></a>故障码，英文逗号拼接的字符串。</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511346785_row1550642515417"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p74651730164111"><a name="zh-cn_topic_0000002511346785_p74651730164111"></a><a name="zh-cn_topic_0000002511346785_p74651730164111"></a><span id="zh-cn_topic_0000002511346785_ph18465123018413"><a name="zh-cn_topic_0000002511346785_ph18465123018413"></a><a name="zh-cn_topic_0000002511346785_ph18465123018413"></a>- fault_time_and_level_map</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511346785_p34651930104112"><a name="zh-cn_topic_0000002511346785_p34651930104112"></a><a name="zh-cn_topic_0000002511346785_p34651930104112"></a><span id="zh-cn_topic_0000002511346785_ph4465930104114"><a name="zh-cn_topic_0000002511346785_ph4465930104114"></a><a name="zh-cn_topic_0000002511346785_ph4465930104114"></a>故障码、故障发生时间及故障处理等级。</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511346785_row1551259133310"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p15167174720367"><a name="zh-cn_topic_0000002511346785_p15167174720367"></a><a name="zh-cn_topic_0000002511346785_p15167174720367"></a><span id="zh-cn_topic_0000002511346785_ph37686563810"><a name="zh-cn_topic_0000002511346785_ph37686563810"></a><a name="zh-cn_topic_0000002511346785_ph37686563810"></a>SuperPodID</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511346785_p1916734793615"><a name="zh-cn_topic_0000002511346785_p1916734793615"></a><a name="zh-cn_topic_0000002511346785_p1916734793615"></a><span id="zh-cn_topic_0000002511346785_ph1676915561588"><a name="zh-cn_topic_0000002511346785_ph1676915561588"></a><a name="zh-cn_topic_0000002511346785_ph1676915561588"></a>超节点ID。</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511346785_row873710101348"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p1816714710362"><a name="zh-cn_topic_0000002511346785_p1816714710362"></a><a name="zh-cn_topic_0000002511346785_p1816714710362"></a><span id="zh-cn_topic_0000002511346785_ph1876917561080"><a name="zh-cn_topic_0000002511346785_ph1876917561080"></a><a name="zh-cn_topic_0000002511346785_ph1876917561080"></a>ServerIndex</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511346785_p129696128196"><a name="zh-cn_topic_0000002511346785_p129696128196"></a><a name="zh-cn_topic_0000002511346785_p129696128196"></a><span id="zh-cn_topic_0000002511346785_ph147702568817"><a name="zh-cn_topic_0000002511346785_ph147702568817"></a><a name="zh-cn_topic_0000002511346785_ph147702568817"></a>当前节点在超节点中的相对位置。</span></p>
-<div class="note" id="zh-cn_topic_0000002511346785_note7863165712181"><a name="zh-cn_topic_0000002511346785_note7863165712181"></a><div class="notebody"><a name="zh-cn_topic_0000002511346785_zh-cn_topic_0000001828570877_ul1526885424618"></a><a name="zh-cn_topic_0000002511346785_zh-cn_topic_0000001828570877_ul1526885424618"></a><ul id="zh-cn_topic_0000002511346785_zh-cn_topic_0000001828570877_ul1526885424618"><li><span id="zh-cn_topic_0000002511346785_ph17701756289"><a name="zh-cn_topic_0000002511346785_ph17701756289"></a><a name="zh-cn_topic_0000002511346785_ph17701756289"></a>驱动上报的SuperPodID或ServerIndex的值为0xffffffff时，SuperPodID或ServerIndex的取值为-1。</span></li><li><span id="zh-cn_topic_0000002511346785_ph1377125610813"><a name="zh-cn_topic_0000002511346785_ph1377125610813"></a><a name="zh-cn_topic_0000002511346785_ph1377125610813"></a>存在以下情况，SuperPodID或ServerIndex的取值为-2。</span><a name="zh-cn_topic_0000002511346785_zh-cn_topic_0000001828570877_ul186445504473"></a><a name="zh-cn_topic_0000002511346785_zh-cn_topic_0000001828570877_ul186445504473"></a><ul id="zh-cn_topic_0000002511346785_zh-cn_topic_0000001828570877_ul186445504473"><li><span id="zh-cn_topic_0000002511346785_ph10771756385"><a name="zh-cn_topic_0000002511346785_ph10771756385"></a><a name="zh-cn_topic_0000002511346785_ph10771756385"></a>当前设备不支持查询超节点信息。</span></li><li><span id="zh-cn_topic_0000002511346785_ph1577213561785"><a name="zh-cn_topic_0000002511346785_ph1577213561785"></a><a name="zh-cn_topic_0000002511346785_ph1577213561785"></a>因驱动问题导致获取超节点信息失败。</span></li></ul>
-</li></ul>
-</div></div>
-</td>
-</tr>
-</tbody>
-</table>
 
 **灵衢总线设备故障<a name="section1728713587242"></a>**
 
@@ -879,7 +461,7 @@ m为从0开始递增的整数。集群规模每增加2000个节点，则会新�
 {"FaultCode":[000001c1],"FaultLevel":"NotHandle","UpdateTime":1722845555,"NodeStatus":"Healthy"}
 ```
 
-**表 3**  灵衢总线设备故障参数说明
+**表 1**  灵衢总线设备故障参数说明
 
 <a name="table9246232250"></a>
 
@@ -894,7 +476,7 @@ m为从0开始递增的整数。集群规模每增加2000个节点，则会新�
 
 NodeD收集了节点故障信息和节点健康状态信息，将其作为对外的信息放在K8s的ConfigMap中，以供外部查询和使用。
 
-查询命令为**kubectl describe cm mindx-dl-nodeinfo-**<i>\<nodename\></i> **-n mindx-dl**，命令回显示例如下，关键参数说明请参见[表1](#table189505125431478)。
+查询命令为**kubectl describe cm mindx-dl-nodeinfo-**<i>\<nodename\></i> **-n mindx-dl**，命令回显示例如下，关键参数说明请参见[表1 mindx-dl-nodeinfo-_<nodename\>_](./api/noded.md#节点资源)。
 
 ```ColdFusion
 Name:         mindx-dl-nodeinfo-<nodename>
@@ -909,21 +491,6 @@ NodeInfo:
 {"NodeInfo":{"FaultDevList":[{"DeviceType":"CPU","DeviceId":1,"FaultCode":["00000011"],"FaultLevel":"SeparateFault"}],"NodeStatus":"UnHealthy"},"CheckCode":"3a2934c3cb875f2256c770c75a6fdf24594fcf64481ac6cd0d0f74b8fea88855"}
 Events:  <none>
 ```
-
-**表 1**  回显参数说明
-
-<a name="table189505125431478"></a>
-
-|参数|说明|
-|--|--|
-|NodeInfo|节点维度的故障信息。|
-|FaultDevList|节点故障设备列表。|
-|- DeviceType|故障设备类型。|
-|- DeviceId|故障设备ID。|
-|- FaultCode|故障码，由英文和数组拼接而成的字符串，字符串表示故障码的十六进制。|
-|- FaultLevel|<p>故障处理等级。</p><ul><li>NotHandleFault：无需处理。</li><li>PreSeparateFault：该节点上有任务则不处理，后续调度时不调度任务到该节点。</li><li>SeparateFault：任务重调度。</li></ul>|
-|NodeStatus|<p>节点健康状态，由本节点故障处理等级最严重的设备决定。</p><ul><li>Healthy：该节点故障处理等级存在且不超过NotHandleFault，该节点为健康节点，可以正常训练。</li><li>PreSeparate：该节点故障处理等级存在且不超过PreSeparateFault，该节点为预隔离节点，暂时可能对任务无影响，待任务受到影响退出后，后续不会再调度任务到该节点。</li><li>UnHealthy：该节点故障处理等级存在SeparateFault，该节点为故障节点，将影响训练任务，立即将任务调离该节点。</li></ul>|
-|CheckCode|校验码。|
 
 ## 制作镜像<a name="ZH-CN_TOPIC_0000002479227114"></a>
 
@@ -1952,6 +1519,7 @@ Events:  <none>
     |--|--|
     |**-t**|指定镜像名称。|
     |*镜像名_系统架构:镜像tag*|镜像名称与标签，请用户根据实际情况写入。|
+    
     例如：
 
     ```shell

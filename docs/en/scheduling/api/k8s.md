@@ -44,8 +44,8 @@
 |accelerator|Identifies the processing chip of the node|<ul><li>huawei-npu</li><li>huawei-Ascend910</li><li>huawei-Ascend310</li><li>huawei-Ascend310P</li></ul>|Ascend Device Plugin|
 |host-arch|Identifies the CPU architecture of the node|<ul><li>huawei-x86</li><li>huawei-arm</li></ul>|Volcano|
 |masterselector|Identifies the management node of MindCluster|dls-master-node|Volcano, Ascend Operator, Resilience Controller, ClusterD|
-|node.kubernetes.io/npu.chip.name|Reports the specific type of the current chip|<ul><li>310</li><li>310P1</li><li>310P2</li><li>310P3</li><li>310P4</li><li>{xxx}A</li><li>910PremiumA</li><li>910ProA</li><li>910ProB</li><li>{xxx}Bx (x can be 1, 2, 3, or 4)</li><li>Ascend950PR</li><li>Ascend950DT</li></ul>|<p>Ascend Device Plugin</p><div class="note"><span class="notetitle">[!NOTE] Description</span><div class="notebody">In the following text, {*xxx*} represents the chip model number using the characters "910".</div></div>|
-|nodeDEnable|Switch for starting the NodeD node|on|Volcano, Resilience Controller<div class="note"><span class="notetitle">[!NOTE] Description</span><div class="notebody"><ul><li>The nodeDEnable=on label enables the NodeD node status monitoring function, which is used to obtain node status Information and determine whether a node is Faulty.</li><li>A value of off or the absence of this parameter indicates that only node Information is reported, without determining whether the node is Faulty.</li><li>When using **Containerized Support** or **Resource Monitoring**, this label does not need to be configured; for other features, this label must be configured.</li></ul></div></div>|
+|node.kubernetes.io/npu.chip.name|Reports the specific type of the current chip|<ul><li>310</li><li>310P1</li><li>310P2</li><li>310P3</li><li>310P4</li><li>{xxx}A</li><li>910PremiumA</li><li>910ProA</li><li>910ProB</li><li>{xxx}Bx (x can be 1, 2, 3, or 4)</li><li>Ascend950PR</li><li>Ascend950DT</li></ul>|<p>Ascend Device Plugin</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">In the following text, {*xxx*} represents the chip model number using the characters "910".</div></div>|
+|nodeDEnable|Switch for starting the NodeD node|on|Volcano, Resilience Controller<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><ul><li>The nodeDEnable=on label enables the NodeD node status monitoring function, which is used to obtain node status Information and determine whether a node is Faulty.</li><li>A value of off or the absence of this parameter indicates that only node Information is reported, without determining whether the node is Faulty.</li><li>When using **Containerized Support** or **Resource Monitoring**, this label does not need to be configured; for other features, this label must be configured.</li></ul></div></div>|
 |workerselector|Identifies the compute node of MindCluster|dls-worker-node|Ascend Device Plugin, NodeD, NPU Exporter|
 |accelerator-type|Identifies the Atlas server type|<ul><li>card</li><li>module</li><li>half</li><li>module-{xxx}b-8</li><li>module-{xxx}b-16</li><li>card-{xxx}b-2</li><li>card-{xxx}b-infer</li><li>module-a3-16</li><li>module-a3-16-super-pod</li><li>module-a3-8-super-pod</li><li>350-Atlas-8</li><li>350-Atlas-16</li><li>350-Atlas-4p-8</li><li>350-Atlas-4p-16</li><li>850-Atlas-8p-8</li><li>850-SuperPod-Atlas-8</li><li>950-SuperPod-Atlas-8</li></ul>|Ascend Device Plugin, Volcano|
 |servertype|Device type|<ul><li>npu-{Number of Cores}</li><li>soc</li><li>Ascend910-{Number of Cores}</li><li>Ascend310P-{Number of Cores}</li></ul>|Volcano, Ascend Device Plugin|
@@ -53,7 +53,7 @@
 |<p>huawei.com/Ascend910-NetworkRecover</p><p>huawei.com/npu-NetworkRecover</p>|Network fault recovery identifier for Atlas training series products|Faulty Chip ID|Ascend Device Plugin|
 |infer-card-type|Written by Ascend Device Plugin, indicates the node's inference card Type.|card-300i-duo|Volcano|
 |mind-cluster/npu-chip-memory|On-chip memory|mind-cluster/npu-chip-memory=64G|Volcano, Ascend Device Plugin|
-|huawei.com/scheduler.chip1softsharedev.enable|Indicates whether the node supports the soft partitioning virtualization function|<ul><li>true</li><li>false</li></ul>|Volcano, Ascend Device Plugin<div class="note"><span class="notetitle">[!NOTE] Description</span><div class="notebody"><ul><li>The huawei.com/scheduler.chip1softsharedev.enable=true label indicates that the node supports the soft partitioning virtualization function.</li><li>The huawei.com/scheduler.chip1softsharedev.enable=false label indicates that the node does not support the soft partitioning virtualization function.</li></ul></div></div>|
+|huawei.com/scheduler.chip1softsharedev.enable|Indicates whether the node supports the soft partitioning virtualization function|<ul><li>true</li><li>false</li></ul>|Volcano, Ascend Device Plugin<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><ul><li>The huawei.com/scheduler.chip1softsharedev.enable=true label indicates that the node supports the soft partitioning virtualization function.</li><li>The huawei.com/scheduler.chip1softsharedev.enable=false label indicates that the node does not support the soft partitioning virtualization function.</li></ul></div></div>|
 |huawei.com/topotree.rackid|Identifies the rack ID of the node|Rack ID to which the node belongs|Volcano|
 |huawei.com/topotree.superpodid|Identifies the super node ID of the node|Super node ID to which the node belongs|Volcano|
 |huawei.com/topotree.groupid|Identifies the Pod group ID of the node|Pod group ID to which the node belongs|Volcano|
@@ -72,7 +72,7 @@
 | volcano.sh/job-name | Mark the vcjob name corresponding to the Pod | String | Volcano |
 | volcano.sh/job-namespace | Mark the vcjob namespace corresponding to the Pod | String | Volcano |
 | volcano.sh/queue-name | Mark the queue name corresponding to the Pod | String | Volcano |
-| volcano.sh/task-spec | Mark the job name corresponding to the Pod | String | Volcano |
+| volcano.sh/task-spec | Mark the task name corresponding to the Pod | String | Volcano |
 | fault-type | Mark the Pod fault handling policy | <ul><li>SubHealth</li><li>Separate</li></ul> | Volcano |
 | deploy-name | Mark the deployment name corresponding to the Pod | String | Ascend Operator |
 | group-name | Mark the group name of the acjob corresponding to the Pod | mindxdl.gitee.com | Volcano, Ascend Operator |
@@ -108,13 +108,13 @@
 |scheduling.k8s.io/group-name|Marks the podGroup name corresponding to the Pod|String|Volcano|
 |volcano.sh/job-name|Marks the vcjob name corresponding to the Pod|String|Volcano|
 |volcano.sh/job-version|Marks the vcjob version corresponding to the Pod|String|Volcano|
-|volcano.sh/queue-name|Marks the queue version corresponding to the Pod|String|Volcano|
-|volcano.sh/task-spec|Marks the job  name corresponding to the Pod|String|Volcano|
+|volcano.sh/queue-name|Marks the queue name corresponding to the Pod|String|Volcano|
+|volcano.sh/task-spec|Marks the task name corresponding to the Pod|String|Volcano|
 |volcano.sh/template-uid|Marks the pod-template name corresponding to the Pod|String|Volcano|
 |sharedTorIp|Marks the shared switch information used by the job |String|Volcano, ClusterD|
 |fault-job-delete|Marks the rank information of the job|String|Volcano|
 |mind-cluster/hardware-type=800I-A2-xx|xx indicates the on-chip memory of the current node, for example, mind-cluster/hardware-type=800I-A2-64G|String|Volcano|
-|super-pod-rank|Logical SuperPoDe rank of the job |Number|Ascend Operator, Volcano|
+|super-pod-rank|Logical SuperPoD rank of the job |Number|Ascend Operator, Volcano|
 |inHotSwitchFlow|Marks that the current Pod (faulty Pod and backup Pod) is in a hot switching process|true|ClusterD, Ascend Operator|
 |backupNewPodName|Marks the name of the backup Pod created for the current faulty Pod|Corresponding backup Pod name|ClusterD, Ascend Operator|
 |backupSourcePodName|Marks the original Pod name corresponding to the current backup Pod|Corresponding original Pod name|Ascend Operator|

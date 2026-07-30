@@ -283,7 +283,7 @@ inferserviceset.mindcluster.huawei.com/my-test created
    kubectl get pod -n <namespace>
    ```
 
-   EIf the following information is displayed, all instance Pods are in the `Running` state.
+   If the following information is displayed, all instance Pods are in the `Running` state.
 
    ```ColdFusion
    NAME                                  READY   STATUS    RESTARTS   AGE
@@ -453,13 +453,13 @@ The current script supports prefill/decode disaggregation and prefill/decode hyb
     python main.py deploy -c config/user-config.yaml
     ```
 
-Use Python or Python3 based on the actual environment. The parameters are described as follows:
+   Use Python or Python3 based on the actual environment. The parameters are described as follows:
 
-- `-c, --config`: Path to the configuration file. Optional. Default value: `config/user-config.yaml`.
-- `-k, --kubeconfig`: Path to the KubeConfig file. Optional. Default value: `~/.kube/config`.
-- `--dry-run`: Dry run (does not actually deploy, displays the generated YAML). Optional.
+    - `-c, --config`: Path to the configuration file. Optional. Default value: `config/user-config.yaml`.
+    - `-k, --kubeconfig`: Path to the KubeConfig file. Optional. Default value: `~/.kube/config`.
+    - `--dry-run`: Dry run (does not actually deploy, displays the generated YAML). Optional.
 
-1. Check the job running status.
+8. Check the job running status.
 
     1. Check whether the Pods of the relevant inference instances are started. Here, `<namespace>` is `deploy_config.namespace` set in `config/user-config.yaml`.
 
@@ -517,7 +517,7 @@ Use Python or Python3 based on the actual environment. The parameters are descri
        qwen   2m38s
        ```
 
-2. Open a new terminal window and run the following command on a node in the current K8s cluster to access the inference service. If the request returns successfully, the inference service has been deployed successfully.
+9. Open a new terminal window and run the following command on a node in the current K8s cluster to access the inference service. If the request returns successfully, the inference service has been deployed successfully.
 
     ```shell
     curl http://<routing-podip>:8080/v1/completions \
@@ -548,7 +548,7 @@ Use Python or Python3 based on the actual environment. The parameters are descri
    >
    >- `<Model Name>` is the `engine_common_config.serve_name` field in the configuration file.
 
-3. (Optional) Delete the inference job. If you need to delete the job, perform this step.
+10. (Optional) Delete the inference job. If you need to delete the job, perform this step.
 
     ```shell
     python main.py delete -n qwen -ns default

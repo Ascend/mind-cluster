@@ -100,7 +100,7 @@ rpc ReportStopComplete(StopCompleteRequest) returns (Status){}
 
 |Parameter|Type (Protobuf Definition)|Description|
 |--|--|--|
-|StopCompleteRequest|message StopCompleteRequest{<p>string jobId = 1;</p><p>Status status = 2;</p><p>repeated FaultRank faultRankIds = 3;</p>}|<p>**StopCompleteRequest.jobId**: Job ID.</p><p>**StopCompleteRequest.status.code**: Return code. `OK` indicates that the training process was paused successfully; other values indicate that the pause failed.</p><p>**StopCompleteRequest.status.info**: Return information.</p><p>**StopCompleteRequest.faultRankIds**: List of global fault ranks for the faulty chips. `FaultRank` is a set of key-value pairs containing fault information, consisting of `rankId` (global rank ID) and `faultType` (fault type). `faultType = 0` indicates an on-chip Memory fault; `faultType = 1`, it indicates other faults; `faultType = 2` indicates a network fault.</p>|
+|StopCompleteRequest|message StopCompleteRequest{<p>string jobId = 1;</p><p>Status status = 2;</p><p>repeated FaultRank faultRankIds = 3;</p>}|<p>**StopCompleteRequest.jobId**: Job ID.</p><p>**StopCompleteRequest.status.code**: Return code. `OK` indicates that the training process was paused successfully; other values indicate that the pause failed.</p><p>**StopCompleteRequest.status.info**: Return information.</p><p>**StopCompleteRequest.faultRankIds**: List of global fault ranks for the faulty chips. `FaultRank` is a set of key-value pairs containing fault information, consisting of `rankId` (global rank ID) and `faultType` (fault type). `faultType = 0` indicates an on-chip Memory fault; `faultType = 1` indicates other faults; `faultType = 2` indicates a network fault.</p>|
 
 **Return Value<a name="section206103328174"></a>**
 
@@ -124,7 +124,7 @@ rpc ReportRecoverStrategy(RecoverStrategyRequest) returns (Status) {}
 
 |Parameter|Type (Protobuf Definition)|Description|
 |--|--|--|
-|RecoverStrategyRequest|message RecoverStrategyRequest{<p>string jobId = 1;</p><p>repeated FaultRank faultRankIds = 2;</p><p>repeated string strategies = 3;</p>}|<p>**RecoverStrategyRequest.jobId**: Job ID</p><p>**RecoverStrategyRequest.faultRankIds**: List of global fault ranks for faulty chips. `FaultRank` is a set of key-value pairs containing fault information, consisting of `rankId` (global rank ID) and `faultType` (fault type). `faultType = 0` indicates an on-chip Memory fault; `faultType = 1`, it indicates other faults; `faultType = 2` indicates a network fault.</p><p>**RecoverStrategyRequest.strategies**: Recovery strategies supported by the Current job.</p>|
+|RecoverStrategyRequest|message RecoverStrategyRequest{<p>string jobId = 1;</p><p>repeated FaultRank faultRankIds = 2;</p><p>repeated string strategies = 3;</p>}|<p>**RecoverStrategyRequest.jobId**: Job ID</p><p>**RecoverStrategyRequest.faultRankIds**: List of global fault ranks for faulty chips. `FaultRank` is a set of key-value pairs containing fault information, consisting of `rankId` (global rank ID) and `faultType` (fault type). `faultType = 0` indicates an on-chip Memory fault; `faultType = 1`, it indicates other faults; `faultType = 2` indicates a network fault.</p><p>**RecoverStrategyRequest.strategies**: Recovery strategies supported by the current job.</p>|
 
 **Return Value<a name="section206103328174"></a>**
 

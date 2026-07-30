@@ -38,11 +38,11 @@ Downloading software indicates your acceptance of the terms and conditions of th
 
 To prevent software packages from being maliciously tampered with during transmission or storage, the corresponding digital signature file must be downloaded for integrity verification when downloading the software package.
 
-After the software package is downloaded, refer to the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/doc/EDOC1100209376)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers first.
+After the software package is downloaded, refer to the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers first.
 
 Before installing or upgrading using the software package, the digital signature of the software package must also be verified according to the above process to ensure that the software package has not been tampered with.
 
-For cCarrier customers, please visit [https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction).
+For Carrier customers, please visit [https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction).
 
 For enterprise customers, please visit [https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054).
 

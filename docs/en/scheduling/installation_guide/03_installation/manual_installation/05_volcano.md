@@ -4,20 +4,17 @@
 
 ## Installing Volcano<a name="ZH-CN_TOPIC_0000002511426351"></a>
 
-- Users who use full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, inference card fault recovery, or inference card fault rescheduling must install a **scheduler** on the master node. This scheduler can be Volcano or another scheduler.
+- Users who use full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, inference card fault recovery, or inference card fault rescheduling must install a scheduler on the master node. This scheduler can be Volcano or another scheduler.
 - If Volcano is used for job scheduling, it is not recommended to create or mount NPU containers through Docker or Containerd instructions and run jobs inside the containers. Otherwise, Volcano scheduling issues may be triggered.
 - Users who only use containerization support and resource monitoring do not need to install Volcano. Please skip this chapter directly.
 
-This chapter provides installation guidance for the Volcano components (vc-scheduler and vc-controller-manager) for cluster scheduling. If you need to use other components of open-source Volcano, install them yourself and ensure their security.
+  This chapter provides installation guidance for the Volcano components (vc-scheduler and vc-controller-manager) for cluster scheduling. If you need to use other components of open-source Volcano, install them yourself and ensure their security.
 
->[!NOTE]
->
->- In this document, Volcano refers to  Volcano provided by the cluster scheduler components by default. Other schedulers based on open-source Volcano can integrate the Ascend-volcano-plugin for developers to implement NPU scheduling-related functions. For details, see  [(Optional) Integrating Ascend Plugins to Extend Open-Source Volcano](#optional-integrating-ascend-plugins-to-extend-open-source-volcano).
->
->- NodeD versions 6.0.RC1 and later are incompatible with earlier versions of Volcano. If you are using NodeD 6.0.RC1 or later, you must use Volcano 6.0.RC1 or later.
->
->- For Volcano 6.0.RC2 and later, ClusterD must be installed by default. If ClusterD is not installed, the startup parameters of Volcano must be modified; otherwise, Volcano will not be able to schedule jobs normally.
-
+  >[!NOTE]
+  >
+  >- In this document, Volcano refers to  Volcano provided by the cluster scheduler components by default. Other schedulers based on open-source Volcano can integrate the Ascend-volcano-plugin for developers to implement NPU scheduling-related functions. For details, see  [(Optional) Integrating Ascend Plugins to Extend Open-Source Volcano](#optional-integrating-ascend-plugins-to-extend-open-source-volcano).
+  >- NodeD versions 6.0.RC1 and later are incompatible with earlier versions of Volcano. If you are using NodeD 6.0.RC1 or later, you must use Volcano 6.0.RC1 or later.
+  >- For Volcano 6.0.RC2 and later, ClusterD must be installed by default. If ClusterD is not installed, the startup parameters of Volcano must be modified; otherwise, Volcano will not be able to schedule jobs normally.
 - Managing the same node resources with Volcano, and other schedulers is not supported.
 
 **Procedure<a name="section57241227172819"></a>**
@@ -124,7 +121,7 @@ This chapter provides installation guidance for the Volcano components (vc-sched
     <td class="cellrowborder" valign="top" width="45.82458245824582%" headers="mcps1.2.4.1.3 "><p id="p131273112314"><a name="p131273112314"></a><a name="p131273112314"></a>The size unit can be specified as:</p>
     <a name="ul1012771118311"></a><a name="ul1012771118311"></a><ul id="ul1012771118311"><li>byte (default)</li><li>K</li><li>M</li></ul>
     <p id="p1112761173115"><a name="p1112761173115"></a><a name="p1112761173115"></a>For example, size 50M means the log file is dumped when it reaches 50 MB.</p>
-    <div class="note" id="note191277111311"><a name="note191277111311"></a><a name="note191277111311"></a><span class="notetitle">[!NOTE] NOTE</span><div class="notebody"><p id="p17127191193120"><a name="p17127191193120"></a><a name="p17127191193120"></a>logrotate periodically checks the log file size based on the configured dumping frequency. Only files whose size exceeds the size limit during the check will trigger dumping.</p>
+    <div class="note" id="note191277111311"><a name="note191277111311"></a><a name="note191277111311"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p17127191193120"><a name="p17127191193120"></a><a name="p17127191193120"></a>logrotate periodically checks the log file size based on the configured dumping frequency. Only files whose size exceeds the size limit during the check will trigger dumping.</p>
     <p id="p112771153111"><a name="p112771153111"></a><a name="p112771153111"></a>This means that logrotate does not dump the log file immediately when it reaches the size limit.</p>
     </div></div>
     </td>
@@ -185,7 +182,7 @@ This chapter provides installation guidance for the Volcano components (vc-sched
                   cpu: 2000m</strong>
     ...</pre>
 
-6. (Optional) Tune scheduling time performance. It is supported to configure the plugins used by Volcano in `volcano-v{version}</i>.yaml`. Refer to the tables of Volcano advanced configuration parameters and supported plugins list in the [Open-Source Volcano Official Documentation](https://support.huaweicloud.com/usermanual-cce/cce_10_0193.html) for operation.
+6. (Optional) Tune scheduling time performance. It is supported to configure the plugins used by Volcano in `volcano-v{version}.yaml`. Refer to the tables of Volcano advanced configuration parameters and supported plugins list in the [Open-Source Volcano Official Documentation](https://support.huaweicloud.com/usermanual-cce/cce_10_0193.html) for operation.
 
     ```Yaml
     ...
@@ -235,8 +232,8 @@ This chapter provides installation guidance for the Volcano components (vc-sched
               image: volcanosh/vc-scheduler:v1.7.0
               args: [ ...
                   ...
-                  <strong>--enable-healthz=true   # To ensure normal access to the Volcano health check port, this parameter value must be "true"
-                  --enable-metrics=true   # To ensure normal access to the Prometheus information collection port, this parameter value must be "true"</strong>
+                  <strong>--enable-healthz=true   # To ensure normal access to the Volcano health check port, this parameter value must be "true"</strong>
+                  <strong>--enable-metrics=true   # To ensure normal access to the Prometheus information collection port, this parameter value must be "true"</strong>
                   ...
     ...</pre>
 
@@ -521,7 +518,7 @@ This chapter provides installation guidance for the Volcano components (vc-sched
 <td class="cellrowborder" valign="top" width="29.69%" headers="mcps1.2.5.1.3 "><p id="p430620132116"><a name="p430620132116"></a><a name="p430620132116"></a>None</p>
 </td>
 <td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.4 "><p id="p930615020218"><a name="p930615020218"></a><a name="p930615020218"></a>Log file name. The default value in the component startup YAML is /var/log/mindx-dl/volcano-scheduler/volcano-scheduler.log.</p>
-<div class="note" id="note19596191219291"><a name="note19596191219291"></a><a name="note19596191219291"></a><div class="notebody"><p id="p10596012112919"><a name="p10596012112919"></a><a name="p10596012112919"></a>The naming format for dumped files is: volcano-scheduler.log-<trigger dumping time/>.gz, for example: volcano-scheduler.log-20230926.gz.</p>
+<div class="note" id="note19596191219291"><a name="note19596191219291"></a><a name="note19596191219291"></a><div class="notebody"><p id="p10596012112919"><a name="p10596012112919"></a><a name="p10596012112919"></a>The naming format for dumped files is: volcano-scheduler.log-<em>dump_trigger_time</em>.gz, for example: volcano-scheduler.log-20230926.gz.</p>
 </div></div>
 </td>
 </tr>
@@ -634,7 +631,7 @@ This chapter provides installation guidance for the Volcano components (vc-sched
 <td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.3 "><p id="p1930714062115"><a name="p1930714062115"></a><a name="p1930714062115"></a>None</p>
 </td>
 <td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.4 "><p id="p143077018217"><a name="p143077018217"></a><a name="p143077018217"></a>Log file name. The default value in the component startup YAML is /var/log/mindx-dl/volcano-controller/volcano-controller.log.</p>
-<div class="note" id="note215144410296"><a name="note215144410296"></a><a name="note215144410296"></a><div class="notebody"><p id="p715144132910"><a name="p715144132910"></a><a name="p715144132910"></a>The naming format for files after dumping is: volcano-controller.log-<trigger dumping time/>.gz, for example: volcano-controller.log-20230926.gz.</p>
+<div class="note" id="note215144410296"><a name="note215144410296"></a><a name="note215144410296"></a><div class="notebody"><p id="p715144132910"><a name="p715144132910"></a><a name="p715144132910"></a>The naming format for files after dumping is: volcano-controller.log-<em>dump_trigger_time</em>.gz, for example: volcano-controller.log-20230926.gz.</p>
 </div></div>
 </td>
 </tr>
@@ -738,11 +735,11 @@ To configure switch affinity scheduling, you need to configure the `tor-affinity
 
 |Parameter|Value|Description|
 |--|--|--|
-|(.kind=="AscendJob").metadata.labels.tor-affinity|<ul><li>large-model-schema: Large model job or padding job</li><li>normal-schema: Normal job</li><li>null: Switch affinity scheduling is not used<div class="note"><span class="notetitle">[!NOTE] Description</span><div class="notebody"><p>Users need to select the job type based on the number of job replicas. If the number of job replicas is less than 4, it is a padding job. If the number of job replicas is greater than or equal to 4, it is a large model job. Normal jobs have no restrictions on the number of job replicas.</p></div></div></li></ul>|<p>The default value is null, indicating that switch affinity scheduling is not used. Users need to configure it based on the job type.</p><ul><li>Switch affinity scheduling 1.0 supports Atlas training series products and <term>Atlas A2 training series products</term>; supports PyTorch and MindSpore frameworks.</li><li>Switch affinity scheduling 2.0 supports <term>Atlas A2 training series products</term>; supports the PyTorch framework.</li><li>Only full cards are supported for switch affinity scheduling. Static vNPU is not supported for switch affinity scheduling.</li></ul>|
+|(.kind=="AscendJob").metadata.labels.tor-affinity|<ul><li>large-model-schema: Large model job or padding job</li><li>normal-schema: Normal job</li><li>null: Switch affinity scheduling is not used<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><p>Users need to select the job type based on the number of job replicas. If the number of job replicas is less than 4, it is a padding job. If the number of job replicas is greater than or equal to 4, it is a large model job. Normal jobs have no restrictions on the number of job replicas.</p></div></div></li></ul>|<p>The default value is null, indicating that switch affinity scheduling is not used. Users need to configure it based on the job type.</p><ul><li>Switch affinity scheduling 1.0 supports Atlas training series products and <term>Atlas A2 training series products</term>; supports PyTorch and MindSpore frameworks.</li><li>Switch affinity scheduling 2.0 supports <term>Atlas A2 training series products</term>; supports the PyTorch framework.</li><li>Only full cards are supported for switch affinity scheduling. Static vNPU is not supported for switch affinity scheduling.</li></ul>|
 
 ## (Optional) Integrating Ascend Plugins to Extend Open-Source Volcano<a name="ZH-CN_TOPIC_0000002511426365"></a>
 
-The cluster scheduling Volcano compomet adds NPU scheduling-related features on top of the open-source Volcano. This functionality can be implemented by integrating the Ascend-volcano-plugin provided by cluster scheduling for developers. The open-source [Volcano](https://volcano.sh/docs/v1.9.0/Home/Introduction) framework supports a plugin mechanism for users to register scheduling plugins and implement different scheduling policies.
+The cluster scheduling Volcano component adds NPU scheduling-related features on top of the open-source Volcano. This functionality can be implemented by integrating the Ascend-volcano-plugin provided by cluster scheduling for developers. The open-source [Volcano](https://volcano.sh/docs/v1.9.0/Home/Introduction) framework supports a plugin mechanism for users to register scheduling plugins and implement different scheduling policies.
 
 >[!NOTE]
 >Ascend-volcano-plugin currently supports open-source Volcano v1.7.0 and v1.9.0, and no modifications have been made to the open-source Volcano framework.
@@ -757,7 +754,7 @@ The cluster scheduling Volcano compomet adds NPU scheduling-related features on 
     git clone -b release-1.7 https://github.com/volcano-sh/volcano.git
     ```
 
-2. Rename the obtained [ascend-for-volcano](https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-for-volcano) source code to ascend-volcano-plugin, and upload it to the plugin path of the official open-source Volcano code (`_$GOPATH_/src/volcano.sh/volcano/pkg/scheduler/plugins/`).
+2. Rename the obtained [ascend-for-volcano](https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-for-volcano) source code to ascend-volcano-plugin, and upload it to the plugin path of the official open-source Volcano code (`$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/`).
 3. <a name="li627818212613"></a>Run the following commands in sequence to compile the open-source Volcano binary files and the Huawei NPU scheduling plugin .so file. Select the corresponding parameter for the `build.sh` script based on the open-source code version, for example, v1.7.0.
 
     ```shell
@@ -821,7 +818,7 @@ The cluster scheduling Volcano compomet adds NPU scheduling-related features on 
             ```
 
     - Using the startup YAML of the open-source Volcano
-        1. Copy the `volcano-npu-_{version}_.so` file compiled in [Step 3](#li627818212613) to the `$GOPATH/src/volcano.sh/volcano` directory of the open-source Volcano; add the following command to the Dockerfile of the open-source Volcano (path: `$GOPATH/src/volcano.sh/volcano/installer/dockerfile/scheduler/Dockerfile`).
+        1. Copy the `volcano-npu-{version}.so` file compiled in [Step 3](#li627818212613) to the `$GOPATH/src/volcano.sh/volcano` directory of the open-source Volcano; add the following command to the Dockerfile of the open-source Volcano (path: `$GOPATH/src/volcano.sh/volcano/installer/dockerfile/scheduler/Dockerfile`).
 
             ```shell
             FROM golang:1.19.1 AS builder
@@ -892,7 +889,7 @@ The cluster scheduling Volcano compomet adds NPU scheduling-related features on 
                         <strong>- --plugins-dir=plugins       # Load custom plugins in the volcano-scheduler startup command</strong>
                         - -v=3
                         - 2>&1
-
+            ---
             # Source: volcano/templates/scheduler.yaml
             kind: ClusterRole
             apiVersion: rbac.authorization.k8s.io/v1

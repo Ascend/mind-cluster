@@ -32,6 +32,7 @@ The multi-level scheduling feature only supports distributed jobs whose job Pod 
 For the process of using the multi-level scheduling feature through the command line, see [Figure 1](#fig2425249866601duoji).
 
 **Figure 1**  Usage flow<a name="fig2425249866601duoji"></a>
+
 ![](../../../figures/scheduling/multi-level-scheduling-process.PNG)
 
 ## Implementation Principles<a name="ZH-CN_TOPIC_0000002479387150duoji"></a>
@@ -48,7 +49,7 @@ Multi-level scheduling is an advanced scheduling strategy within the ascend-for-
 
   For the network levels in the resource tree, refer to the `HyperNode` definition in Volcano's [Network Topology Aware Scheduling](https://volcano.sh/docs/keyfeatures/networktopologyaware/) feature.
 
-  **Figure 1**  Resource tree example<a name="fig69396965487duoji"></a>
+  **Figure 2**  Resource tree example<a name="fig69396965487duoji"></a>
   ![](../../../figures/scheduling/resource_tree.PNG)
 
 - The first-layer switches S0-S3 are directly connected to the worker nodes.
@@ -127,7 +128,7 @@ data:
 ...
 ```
 
-The preceding example shows the configured  network tree `default`. The node label corresponding to the network level1 is `huawei.com/topotree.superpodid`, the number of reserved nodes in each level1 node group is `1`, and the node label corresponding to the network level2 is `huawei.com/topotree.groupid`. Volcano obtains the network topology information of nodes in the cluster through node labels.
+The preceding example shows the configured network tree `default`. The node label corresponding to the network level1 is `huawei.com/topotree.superpodid`, the number of reserved nodes in each level1 node group is `1`, and the node label corresponding to the network level2 is `huawei.com/topotree.groupid`. Volcano obtains the network topology information of nodes in the cluster through node labels.
 
 >[!NOTE]
 >
@@ -256,8 +257,7 @@ Multi-level scheduling tasks are configured additionally on top of full-NPU sche
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="10.280000000000001%" headers="mcps1.2.7.1.5 "><p id="p3707749162616"><a name="p3707749162616"></a><a name="p3707749162616"></a>The example defaults to a two-node job.</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/tree/branch_v26.0.0/samples/train/basic-training/without-ranktable
-">Get YAML</a></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/tree/branch_v26.0.0/samples/train/basic-training/without-ranktable">Get YAML</a></p>
 </td>
 </tr>
 <tr id="row7707164912262"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p><span>MindSpore</span></p>
@@ -295,8 +295,8 @@ metadata:
     ring-controller.atlas: ascend-{xxx}b  # Identifies the product type
     podgroup-sched-enable: "true"  # Configure this only when the cluster uses the openFuyao-customized Kubernetes and volcano-ext components. When the value is the string "true", the batch scheduling function is enabled. When the value is any other string, the batch scheduling function does not take effect, and normal scheduling is used. If this parameter is not configured, the batch scheduling function does not take effect, and normal scheduling is used.
   annotations:
-huawei.com/schedule_policy: multilevel # Configure the scheduling policy as the multi-level scheduling policy
-huawei.com/affinity-config: level1=2,level2=4 # Configure network group sizes at different levels based on actual job requirements
+    huawei.com/schedule_policy: multilevel # Configure the scheduling policy as the multi-level scheduling policy
+    huawei.com/affinity-config: level1=2,level2=4 # Configure network group sizes at different levels based on actual job requirements
 spec:
   schedulerName: volcano  # Takes effect when the startup parameter enableGangScheduling of the Ascend Operator component is set to true
   runPolicy:
@@ -387,7 +387,7 @@ For details, see [Deleting a Job](./03_full_npu_scheduling_and_static_vnpu_sched
 
 ## Using After Integration
 
-This section requires you to be familiar with programming and development, and to have some understanding of K8s. If you already have your own an AI platform or want to develop an AI platform based on cluster scheduling components, complete the following:
+This section requires you to be familiar with programming and development, and to have some understanding of K8s. If you already have an AI platform or want to develop an AI platform based on cluster scheduling components, complete the following:
 
 1. Find the corresponding K8s [official API library](https://github.com/kubernetes-client) based on the programming language.
 2. Create, query, and delete jobs based on the K8s official API library.

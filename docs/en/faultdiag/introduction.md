@@ -41,7 +41,7 @@ MindCluster Ascend FaultDiag provides diagnostic functions for the following two
 |Abnormal exit of training and inference tasks|<ul><li>Root cause node analysis: Based on the HCCL error message of cluster communication, locate the root cause node that triggered the error.</li><li>Fault event analysis: Analyze the root cause error of the device where the root cause node resides based on the fault patterns contained in the fault knowledge graph.</li></ul>|
 |Performance degradation during training and inference|<ul><li>Device resource analysis for device resource status: By analyzing the device-related metric files collected by the user, locate issues such as computing frequency reduction and CPU resource contention.</li><li>Network congestion analysis: Analyze the network status between nodes, typically used to locate network issues in Spine + Leaf networking scenarios. By analyzing the NPU network port's monitoring metric files collected by the user, it analyzes whether network congestion anomalies occur on node links.</li></ul>|
 
-> **NOTE**
+>[!NOTE]
 > Performance degradation issues are diagnosed only when the training and inference tasks have not exited abnormally.
 
 **Usage Process<a name="section7779135035518"></a>**
@@ -55,7 +55,7 @@ The usage process of MindCluster Ascend FaultDiag is shown in the following tabl
 |Cleaning result dumping|After log cleaning is complete, dump and aggregate the cleaning results from each training or inference device to a single training device or general-purpose device, and store them according to a predefined structure.|For details, see [Log Cleaning and Dumping](./user_guide/06_cleaning_and_dumping_logs.md).|
 |Fault diagnosis|Based on the aggregated cleaning results, use the diagnosis function of MindCluster Ascend FaultDiag to analyze the root cause of the training or inference task failure or abnormality.|For details, see [Fault Diagnosis](./user_guide/07_diagnosing_faults.md).|
 
-> **NOTE**
+>[!NOTE]
 >
 >In the preceding usage process, log collection and cleaning result dumping are not functions provided by MindCluster Ascend FaultDiag. This document only provides operation guidance for them.
 

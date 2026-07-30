@@ -24,7 +24,7 @@ The usage method of the full-NPU scheduling or static vNPU scheduling feature is
 
 - Resource monitoring can be used together with all features in the inference scenario.
 - Multiple inference jobs are running in a cluster at the same time. Each job can use different features, but jobs that use static vNPUs and dynamic vNPUs cannot coexist.
-- The inference card fault recovery feature can be used together with the ful-NPU scheduling feature. To enable the inference card fault recovery feature, you only need to set the Ascend Device Plugin startup parameter `-hotReset` to `0` or `2` (the default value is `-1`, which means fault recovery is not supported).
+- The inference card fault recovery feature can be used together with the full-NPU scheduling feature. To enable the inference card fault recovery feature, you only need to set the Ascend Device Plugin startup parameter `-hotReset` to `0` or `2` (the default value is `-1`, which means fault recovery is not supported).
 - Full-NPU scheduling supports submitting single-node jobs with a single replica or multiple replicas, where each replica works independently. It only supports inference servers (with Atlas 300I Duo inference cards), Atlas 800I A2 inference servers, and A200I A2 Box heterogeneous subracks for deploying distributed acjob.
 - Static vNPU scheduling supports only single-server jobs with a single replica and does not support distributed jobs.
 - The static vNPU scheduling feature can be used in conjunction with the computing power virtualization feature. For detailed descriptions and operations of static virtualization, see [Static Virtualization](../virtual_instance/virtual_instance_with_hdk/06_mounting_vnpu.md#static-virtualization).
@@ -79,8 +79,8 @@ The steps are described as follows:
 5. Ascend Operator creates the corresponding Pod for the job and injects the environment variables required for collective communication into the container.
 6. volcano-scheduler selects appropriate nodes for the job based on node and chip topology information, and writes the selected chip information into the Pod's annotation. For full-NPU scheduling, NPU information is written.
 7. When kubelet creates the container, it calls Ascend Device Plugin to mount the chip. Ascend Device Plugin or volcano-scheduler writes the chip information into the Pod's annotation. Ascend Docker Runtime assists in mounting the corresponding resources.
-8. Ascend Operator reads Pod's annotation and write the information into `hccl.json`.
-9. The container read environment variables or `hccl.json` to set up an communication channel for starting the inference job.
+8. Ascend Operator reads Pod's annotation and writes the information into `hccl.json`.
+9. The container reads environment variables or `hccl.json` to set up an communication channel for starting the inference job.
 
     >[!NOTE]
     >Ascend Operator supports only `hccl.json` generation for PyTorch jobs,
@@ -105,7 +105,7 @@ The steps are described as follows:
 3. The user delivers a vcjob through kubectl or other deep learning platforms.
 4. volcano-controller creates a corresponding PodGroup for the job. For detailed information about PodGroup, refer to the [official open-source Volcano documentation](https://volcano.sh/en/docs/v1-9-0/podgroup/).
 5. volcano-controller creates the job Pod when the cluster resources meet the conditions.
-6. volcano-scheduler select a proper node for the job based on the node and chip topology information, and writes chip information into the Pod's annotation.
+6. volcano-scheduler selects a proper node for the job based on the node and chip topology information, and writes chip information into the Pod's annotation.
 7. When kubelet creates a container, it calls Ascend Device Plugin to mount the chip. Ascend Device Plugin writes chip information into the Pod's annotation. Ascend Docker Runtime assists in mounting resources.
 
 **deploy<a name="section148711820709"></a>**
@@ -128,7 +128,7 @@ The steps are described as follows:
 3. The user delivers a deploy job through kubectl or other deep learning platforms.
 4. kube-controller creates the job Pod.
 5. volcano-controller creates a corresponding PodGroup for the job. For detailed information about PodGroup, refer to the [official open-source Volcano documentation](https://volcano.sh/en/docs/v1-9-0/podgroup/).
-6. volcano-scheduler select a proper node for the job based on the node and chip topology information, and writes chip information into the Pod's annotation.
+6. volcano-scheduler selects a proper node for the job based on the node and chip topology information, and writes chip information into the Pod's annotation.
 7. When kubelet creates a container, it calls Ascend Device Plugin to mount the chip. Ascend Device Plugin writes chip information into the Pod's annotation. Ascend Docker Runtime assists in mounting resources.
 
 ## Using via Command Line (Volcano)
@@ -176,7 +176,7 @@ This section uses the inference image from the Ascend Image Repository as an exa
 
 1. Download the corresponding YAML file.
 
-    **Table 1** YAML files of difference job types and hardware models
+    **Table 1** YAML files of different job types and hardware models
 
     <a name="zh-cn_topic_0000001609074213_table15169151021912"></a>
     <table><thead align="left"><tr id="zh-cn_topic_0000001609074213_row16169201019192"><th class="cellrowborder" valign="top" width="18.48%" id="mcps1.2.5.1.1"><p id="zh-cn_topic_0000001609074213_p4169191017192"><a name="zh-cn_topic_0000001609074213_p4169191017192"></a><a name="zh-cn_topic_0000001609074213_p4169191017192"></a>Job Type</p>
@@ -573,7 +573,7 @@ This section uses the inference image from the Ascend Image Repository as an exa
 
     >[!NOTE]
     >- `/path-to-weights` denotes the path to your model weights. You are responsible for preparing the weights yourself. For downloading the mindie image, please follow the instructions provided in `$ATB\_SPEED\_HOME\_PATH/examples/models/llama3/README.md`.
-    >- `ATB_SPEED_HOME_PATH` defaults to `/usr/local/Ascend/atb-models` and is automatically set when you source the `setenv.sh` script from the model repository—no manual setting is needed.
+    >- `ATB_SPEED_HOME_PATH` defaults to `/usr/local/Ascend/atb-models` and is automatically set when you source the `set_env.sh` script from the model repository—no manual setting is needed.
 
 5. In the example YAML file, edit the container startup command (the `command` field). If it is not present, you must add it.
 
@@ -664,7 +664,7 @@ job.batch/resnetinfer1-2 created
         In the displayed information, locate `huawei.com/Ascend310P` under `Allocated resources`. The value of this parameter increases after the inference job is executed, and the increment equals the number of NPU chips used by the inference job.
 
     >[!NOTE]
-    >- If you are using Atlas inference s in non-mixed insertion mode, the field above is displayed as `Ascend310P`, `Ascend310P-2c`.
+    >- If you are using Atlas inference products in non-mixed insertion mode, the field above is displayed as `Ascend310P`, `Ascend310P-2c`.
     >- If you are using Atlas inference products in mixed insertion mode, the field above is displayed as one of `Ascend310P-V`, `Ascend310P-VPro`, or `Ascend310P-IPro`.
 
 ### Viewing Scheduling Results<a name="ZH-CN_TOPIC_0000002511347083"></a>

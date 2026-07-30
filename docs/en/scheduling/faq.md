@@ -2,7 +2,7 @@
 
 <!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T06:26:26.393Z pushedAt=2026-06-09T07:15:15.713Z -->
 
-> The FAQs in this document has been migrated to GitCode Issues. Click the corresponding problem description to view details.
+The FAQs in this document have been migrated to GitCode Issues. Click the corresponding problem description to view details.
 
 ## Faults During Installation
 

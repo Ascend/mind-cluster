@@ -47,7 +47,7 @@ rpc GetTrainingDataTraceSwitch(DataStatusReq) returns (DataStatusRes) {}
 |--|--|--|
 |DataStatusReq|message DataStatusReq{<p>string jobNsName = 1;</p>}|**jobNsName**: The namespace and name of the job to be modified, concatenated with '/', e.g., `default/test-pytorch`.|
 
-**Return Value Description<a name="section93011951104217"></a>**
+**Return Value<a name="section93011951104217"></a>**
 
 |Parameter|Type (Protobuf Definition)|Description|
 |--|--|--|
@@ -71,7 +71,7 @@ rpc SubscribeDataTraceSwitch(ProfilingClientInfo) returns (stream DataStatusRes)
 |--|--|--|
 |ProfilingClientInfo|message ProfilingClientInfo{<p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**jobId**: Job ID.</p><p>**role**: Client role.</p>|
 
-**Return Value Description<a name="section7920469381"></a>**
+**Return Value<a name="section7920469381"></a>**
 
 | Parameter | Type (Protobuf Definition) | Description |
 |--|--|--|

@@ -7,8 +7,8 @@
 
 |参数名称|参数说明|取值范围|缺省值|
 |--|--|--|--|
-|**TTP_LOG_PATH**|MindIO TFT日志路径。禁止配置软链接，日志文件名补充为ttp_log.log，建议日志路径中包含日期时间，避免多次训练记录在同一个日志中，造成循环覆写。推荐在训练启动脚本中按如下方式配置日志路径： <br> `date_time=\$(date +%Y-%m-%d-%H_%M_%S)` <br> `export TTP_LOG_PATH=logs/\${date_time}` <br>当使用共享存储时，建议按照节点配置日志路径：<br>`export TTP_LOG_PATH=logs/\${nodeId}`|文件夹路径。|logs|
-|**TTP_LOG_LEVEL**|MindIO TFT日志等级。<ul><li>DEBUG：细节信息，仅当诊断问题时适用。</li><li>INFO：确认程序按预期运行。</li><li>WARNING：表明有已经或即将发生的意外。程序仍按预期进行。</li><li>ERROR：由于严重的问题，程序的某些功能已经不能正常执行。</li></ul>|<ul><li>DEBUG</li><li>INFO</li><li>WARNING</li><li>ERROR|INFO</li></ul>|
+|TTP_LOG_PATH|MindIO TFT日志路径。禁止配置软链接，日志文件名补充为ttp_log.log，建议日志路径中包含日期时间，避免多次训练记录在同一个日志中，造成循环覆写。推荐在训练启动脚本中按如下方式配置日志路径： <br> `date_time=\$(date +%Y-%m-%d-%H_%M_%S)` <br> `export TTP_LOG_PATH=logs/\${date_time}` <br>当使用共享存储时，建议按照节点配置日志路径：<br>`export TTP_LOG_PATH=logs/\${nodeId}`|文件夹路径。|logs|
+|TTP_LOG_LEVEL|MindIO TFT日志等级。<ul><li>DEBUG：细节信息，仅当诊断问题时适用。</li><li>INFO：确认程序按预期运行。</li><li>WARNING：表明有已经或即将发生的意外。程序仍按预期进行。</li><li>ERROR：由于严重的问题，程序的某些功能已经不能正常执行。</li></ul>|<ul><li>DEBUG</li><li>INFO</li><li>WARNING</li><li>ERROR</li></ul>|INFO|
 |TTP_LOG_MODE|MindIO TFT日志模式。<ul><li>ONLY_ONE：所有MindIO TFT进程写一个日志。</li><li>PER_PROC：每个MindIO TFT进程写独立日志，日志文件路径为 {TTP_LOG_PATH}/ttp_log.log.{pid}。</li></ul>|<ul><li>ONLY_ONE</li><li>PER_PROC（若非指定ONLY_ONE，则默认为PER_PROC）</li></ul>|PER_PROC|
 |TTP_LOG_STDOUT|MindIO TFT日志记录方式。<ul><li>0：将MindIO TFT运行日志记录到对应的日志文件中。</li><li>1：直接打印MindIO TFT运行日志，不在本地存储。</li></ul>|<ul><li>0</li><li>1</li></ul>|0|
 |MASTER_ADDR|训练主节点IP地址或域名。|合法的IPv4、IPv6地址或域名。|-|

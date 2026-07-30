@@ -36,12 +36,12 @@ Currently, more than 200 faults can be detected. For details about the fault typ
 
 **ConfigMap Description<a name="zh-cn_topic_0000002039699773_section49901206282"></a>**
 
-- Ascend Device Plugin on each computing node creates a ConfigMap file that records the NPU and UnifiedBus device information of the node. This ConfigMap file is named `mindx-dl-deviceinfo-_<nodename>_` (hereinafter referred to as `device-info-cm`), and fault information is reported through this ConfigMap. For descriptions of the fields in this ConfigMap file, see the [DeviceInfoCfg](../../api/ascend_device_plugin.md#chip-resources) table.
-- When a node fault exists on a node, NodeD on each computing node creates a ConfigMap file that records the device information of the node. This ConfigMap file is named `mindx-dl-nodeinfo-_<nodename>_` (hereinafter referred to as `node-info-cm`), and node fault information is reported through this ConfigMap. For descriptions of the fields in this ConfigMap file, see the [mindx-dl-nodeinfo-<nodename\>](../../api/noded.md#node-resources) table.
+- Ascend Device Plugin on each computing node creates a ConfigMap file that records the NPU and UnifiedBus device information of the node. This ConfigMap file is named `mindx-dl-deviceinfo-<nodename>` (hereinafter referred to as `device-info-cm`), and fault information is reported through this ConfigMap. For descriptions of the fields in this ConfigMap file, see the [DeviceInfoCfg](../../api/ascend_device_plugin.md#chip-resources) table.
+- When a node fault exists on a node, NodeD on each computing node creates a ConfigMap file that records the device information of the node. This ConfigMap file is named `mindx-dl-nodeinfo-<nodename>` (hereinafter referred to as `node-info-cm`), and node fault information is reported through this ConfigMap. For descriptions of the fields in this ConfigMap file, see the [mindx-dl-nodeinfo-<nodename\>](../../api/noded.md#node-resources) table.
 - ClusterD creates a ConfigMap file that records the cluster device information. The ConfigMap file is named `cluster-info-<device/switch\>-<[0-5]>` or `cluster-info-node-cm` (hereinafter referred to as `cluster-info-cm`). Node and chip fault information is reported via [cluster-info-cm](../../api/clusterd/00_cluster_resources.md).
-- When creating each job, you need to configure a ConfigMap file in the YAML. The ConfigMap file is named `reset-config-_<job-name>_` (hereinafter referred to as `reset-info-cm`). This ConfigMap is mounted to the container's `/user/restore/reset/config` path. Ascend Device Plugin automatically mounts the ConfigMap to the `/user/restore/reset/<job-namespace>.<job-name>` path on the local node.
+- When creating each job, you need to configure a ConfigMap file in the YAML. The ConfigMap file is named `reset-config-<job-name>` (hereinafter referred to as `reset-info-cm`). This ConfigMap is mounted to the container's `/user/restore/reset/config` path. Ascend Device Plugin automatically mounts the ConfigMap to the `/user/restore/reset/<job-namespace>.<job-name>` path on the local node.
 
-    You can also replace the ConfigMap with `/user/restore/reset/<job-namespace>.<job-nam>` on the node and mount it to the container's `/user/restore/reset/config` path. For field descriptions of this ConfigMap file, see the [reset-config-<job-name\>](../../api/ascend_device_plugin.md#job-information) table.
+    You can also replace the ConfigMap with `/user/restore/reset/<job-namespace>.<job-name>` on the node and mount it to the container's `/user/restore/reset/config` path. For field descriptions of this ConfigMap file, see the [reset-config-<job-name\>](../../api/ascend_device_plugin.md#job-information) table.
 
 ### Node Faults<a name="ZH-CN_TOPIC_0000002479386528"></a>
 
@@ -236,7 +236,7 @@ Job-level rescheduling, Pod-level rescheduling, process-level rescheduling, and 
 
 ### Public Faults<a name="ZH-CN_TOPIC_0000002511426387"></a>
 
-Public faults refer to faults reported by other fault senders (non-MindCluster components), including NPU faults, node faults, network faults, and storage faults..
+Public faults refer to faults reported by other fault senders (non-MindCluster components), including NPU faults, node faults, network faults, and storage faults.
 
 >[!NOTE]
 >The prerequisite for ClusterD to receive public faults is that Ascend Device Plugin must be installed on the node and the corresponding `device-info-cm` must be generated.
@@ -245,7 +245,7 @@ Public faults refer to faults reported by other fault senders (non-MindCluster c
 
 Upon fault detection, the public fault sender transmits the fault details to ClusterD through ConfigMap or gRPC. ClusterD summarizes the received information, writes it to cluster-info-device-cm, and reports it to Ascend-volcano-plugin.
 
-- ConfigMapL: The fault discoverer writes fault information into a ConfigMap, and ClusterD obtains the fault information. You can call the ConfigMap interface to inject public faults by referring to [ConfigMap](../../api/clusterd/03_public_fault_apis.md#configmap).
+- ConfigMap: The fault discoverer writes fault information into a ConfigMap, and ClusterD obtains the fault information. You can call the ConfigMap interface to inject public faults by referring to [ConfigMap](../../api/clusterd/03_public_fault_apis.md#configmap).
 - gRPC: The fault discoverer sends fault information to ClusterD through gRPC, and ClusterD obtains the fault information. You can call the gRPC interface to inject public faults by referring to [gRPC Interface](../../api/clusterd/03_public_fault_apis.md#grpc-interface).
 
 **Figure 1** Public fault reporting<a name="fig72618571585"></a>
@@ -348,7 +348,7 @@ To configure UnifiedBus network detection, perform the following steps.
             |global|Cluster configuration information.|-|
             |"1"|Configuration example for SuperPoD ID 1. Users can modify or add configurations based on actual conditions. When a SuperPoD is configured, NodeD uses the its configuration and ignores the global configuration.|SuperPoD ID|
             |activate|Whether to enable the pingmesh feature.|on or off|
-            |task_interval|Pingmesh task interval, in seconds.|[1–60]|
+            |task_interval|Pingmesh task interval, in seconds.|[1~60]|
 
     - Ascend Device Plugin and ClusterD not installed.
 
@@ -881,10 +881,10 @@ MindCluster cluster scheduling components provide the diagnosis function for per
 
 This solution applies only to TaskD of versions earlier than 7.1.RC1. If you are version 7.1.RC1 or later, see the [Using TaskD 7.1.RC1 or Later](#using-taskd-71rc1-or-later) section.
 
-- **PyTorc**
+- **PyTorch**
 
   1. (Optional) Install mstx_torch_plugin in the container.
-      1. Download [mstx_torc_plugin](https://gitee.com/link?target=https%3A%2F%2Fptdbg.obs.myhuaweicloud.com%2Fprofiler%2Fexample%2F1.0%2Fmstx_torch_plugin-1.0-py3-none-any.whl).
+      1. Download [mstx_torch_plugin](https://gitee.com/link?target=https%3A%2F%2Fptdbg.obs.myhuaweicloud.com%2Fprofiler%2Fexample%2F1.0%2Fmstx_torch_plugin-1.0-py3-none-any.whl).
       2. Install the package.
 
           ```shell
@@ -981,7 +981,7 @@ This solution applies only to TaskD of versions earlier than 7.1.RC1. If you are
         >The input parameter 5000 in the above code `init_taskd_worker(rank,5000)` is the upper limit size of `/user/cluster-info/profiling`. For detailed description, see the "`upper_limit_of_disk_in_mb`" parameter in [def init\_taskd\_worker\(rank\_id: int, upper\_limit\_of\_disk\_in\_mb: int = 5000, framework: str = "pt"\) -\> bool](../../api/taskd/01_taskd_worker_apis.md#def-init_taskd_workerrank_id-int-upper_limit_of_disk_in_mb-int--5000-framework-str--pt---bool).
 
   6. <a name="li5236890yaml"></a>Modify the job YAML.
-      1. MMount the lightweight profiling configuration file: You need to flush the data-trace ConfigMap on the host to the `/user/cluster-info/datatrace-config/Namespace.data-trace-Job name/` folder. Mount the profilingSwitch file to the specified path `/user/cluster-info/datatrace-config/` in the container.
+      1. Mount the lightweight profiling configuration file: You need to flush the data-trace ConfigMap on the host to the `/user/cluster-info/datatrace-config/Namespace.data-trace-Job name/` folder. Mount the profilingSwitch file to the specified path `/user/cluster-info/datatrace-config/` in the container.
       2. Mount the lightweight profiling disk file: Lightweight profiling data is written to the `/user/cluster-info/profiling` path inside the container. To obtain it on the host, modify the job YAML to mount this path out.
           - The following is an example of YAML mounting inside a container.
 
@@ -1182,7 +1182,7 @@ resources:
 
 **Deployment Mode<a name="zh-cn_topic_0000002333550505_section1048011118418"></a>**
 
-ClusterD and the Fault Diagnose Online (FD-OL) framework are deployed in one process on the management node. Once ClusterD is started, FD-OL is automatically started..
+ClusterD and the Fault Diagnose Online (FD-OL) framework are deployed in one process on the management node. Once ClusterD is started, FD-OL is automatically started.
 
 #### Slow Node Diagnosis<a name="ZH-CN_TOPIC_0000002500880704"></a>
 
@@ -1305,7 +1305,7 @@ Run the `kubectl logs -n mindx-dl node-9ld8k | grep "is degradation"` command to
 
 ![](../../../figures/scheduling/zh-cn_image_0000002457149146.png)
 
-**Known Slow Node Faults <a name="zh-cn_topic_0000002278667326_section10496211245"></a>**
+**Known Slow Node Faults<a name="zh-cn_topic_0000002278667326_section10496211245"></a>**
 
 <a name="zh-cn_topic_0000002278667326_table4804164084414"></a>
 
@@ -1314,9 +1314,9 @@ Run the `kubectl logs -n mindx-dl node-9ld8k | grep "is degradation"` command to
 | 110001010 | Slow node fault, reported as a one-time message. | SubHealthFault |
 | 100001011 | Deterioration rectified | NotHandleFault |
 
-#### Slow Network Diagnosis <a name="ZH-CN_TOPIC_0000002500720860"></a>
+#### Slow Network Diagnosis<a name="ZH-CN_TOPIC_0000002500720860"></a>
 
-**Function Description <a name="zh-cn_topic_0000002313236861_section27999216294"></a>**
+**Function Description<a name="zh-cn_topic_0000002313236861_section27999216294"></a>**
 
 This feature provides parameter plane connectivity checks, real-time monitoring, and proactive risk warnings. By streamlining fault diagnostics and demarcation, it pre-warns network issues and sub-healthy faults and ensures the long-term stability of the cluster network.
 
@@ -1377,7 +1377,7 @@ Currently, it only supports online deployment integrated with ClusterD and NodeD
         |global|-|Cluster configuration|
         |"1"|SuperPoD ID|Configuration example for SuperPoD ID 1. Modify or add configurations based on actual conditions. When a SuperPoD is configured, NodeD uses the configuration of the SuperPoD and ignores the global configuration.|
         |activate|<ul><li>on: enabled</li><li>off: disabled</li></ul>|Whether to enable the pingmesh function.|
-        |task_interval|[1–60]|Interval for executing a pingmesh task, in seconds.|
+        |task_interval|[1~60]|Interval for executing a pingmesh task, in seconds.|
 
 **Viewing Detection Results<a name="zh-cn_topic_0000002313236861_section74321914202214"></a>**
 
@@ -1395,7 +1395,7 @@ The pingmesh results of network detection are written to the file `<nodename>.lo
 |taskID|<ul><li>Intra-node task: 0</li><li>Inter-node task: 1</li></ul>|Task ID|
 |DestNum|[0–47]|Number of destination addresses in this pingmesh task|
 |source_addr|IPv4 network address|Source address.|
-|target_addr|IPv4 network address|Destination addres|
+|target_addr|IPv4 network address|Destination address|
 |suc_pkt_num|-|Number of packets sent successfully|
 |fail_pkt_num|-|Number of packets that failed to be sent|
 |max_time|<ul><li>Normal: non-negative value</li><li>Ping failure: -1</li></ul>|Maximum response time|
@@ -1409,7 +1409,7 @@ The pingmesh results of network detection are written to the file `<nodename>.lo
 
 If a slow network fault is detected, the fault is reported to the public fault management center of ClusterD through gRPC.
 
-If a slow network fault is detected, the fault is reported to the public fault management center of ClusterD through gRPC.
+The ConfigMap file displays related information, which is automatically cleared 5 seconds later.
 
 ![](../../../figures/scheduling/zh-cn_image_0000002300581874.png)
 
@@ -1492,7 +1492,7 @@ For key configuration procedures of Job-level rescheduling, see [Configuring Job
 
 |Product Type|Hardware Form Factor|Training Framework|
 |--|--|--|
-|Atlas training series products|<ul><li>Atlas 800 training server (model 9000)</li><li>Atlas 800 training server (model 9010)</li></ul><div class="note"><span class="notetitle">Note:</span><div class="notebody">If the chip operating mode of the Atlas 800 training server is SMP mode and the number of NPUs requested per Pod is 1 or 2, the rescheduling mode is not supported. For detailed instructions on querying and setting the NPU chip operating mode, see the "[Querying and Setting the NPU Chip Working Mode (npuworkmode)](https://support.huawei.com/enterprise/en/doc/EDOC1100136580/51fd0a0/querying-and-setting-the-npu-chip-working-mode-npuworkmode)" section in the *Atlas 800 Training Server iBMC User Guide (Model 9000)*.</div></div>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas training series products|<ul><li>Atlas 800 training server (model 9000)</li><li>Atlas 800 training server (model 9010)</li></ul><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">If the chip operating mode of the Atlas 800 training server is SMP mode and the number of NPUs requested per Pod is 1 or 2, the rescheduling mode is not supported. For detailed instructions on querying and setting the NPU chip operating mode, see the "[Querying and Setting the NPU Chip Working Mode (npuworkmode)](https://support.huawei.com/enterprise/en/doc/EDOC1100136580/51fd0a0/querying-and-setting-the-npu-chip-working-mode-npuworkmode)" section in the *Atlas 800 Training Server iBMC User Guide (Model 9000)*.</div></div>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 |Atlas A2 training series products|<ul><li>Atlas 800T A2 training server</li><li>Atlas 200T A2 Box16 heterogeneous subrack</li><li>Atlas 900 A2 PoD cluster basic unit</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 |Atlas A3 training series products|<ul><li>Atlas 900 A3 SuperPoD</li><li>Atlas 800T A3 SuperPoD server</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 |A200T A3 Box8 superPoD server|A200T A3 Box8 SuperPoD server|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
@@ -1538,7 +1538,7 @@ For key configuration procedures of Pod-level rescheduling, see [Configuring Pod
 </thead>
 <tbody><tr id="zh-cn_topic_0000002003034876_row12917151994410"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002003034876_p339114714459"><a name="zh-cn_topic_0000002003034876_p339114714459"></a><a name="zh-cn_topic_0000002003034876_p339114714459"></a><span id="zh-cn_topic_0000002003034876_ph327965117217"><a name="zh-cn_topic_0000002003034876_ph327965117217"></a><a name="zh-cn_topic_0000002003034876_ph327965117217"></a>Atlas training series products</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="63.10631063106311%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002003034876_ul17412295261"></a><a name="zh-cn_topic_0000002003034876_ul17412295261"></a><ul id="zh-cn_topic_0000002003034876_ul17412295261"><li><span id="ph1179307345"><a name="ph1179307345"></a><a name="ph1179307345"></a>Atlas 800 training server (model 9000)</span></li><li><span id="zh-cn_topic_0000002039194017_ph1627888115712"><a name="zh-cn_topic_0000002039194017_ph1627888115712"></a><a name="zh-cn_topic_0000002039194017_ph1627888115712"></a>Atlas 800 training server (model 9010)</span><div class="note" id="zh-cn_topic_0000002003034876_note186291241356"><a name="zh-cn_topic_0000002003034876_note186291241356"></a><a name="zh-cn_topic_0000002003034876_note186291241356"></a><span class="notetitle">Note:</span><div class="notebody"><p id="zh-cn_topic_0000002003034876_p86294411854"><a name="zh-cn_topic_0000002003034876_p86294411854"></a><a name="zh-cn_topic_0000002003034876_p86294411854"></a>If the chip working mode of the <span id="zh-cn_topic_0000002003034876_ph1162924110518"><a name="zh-cn_topic_0000002003034876_ph1162924110518"></a><a name="zh-cn_topic_0000002003034876_ph1162924110518"></a>Atlas 800 training server</span> is SMP mode and the number of NPUs requested per Pod is 1 or 2, the rescheduling mode is not supported. For details on querying and setting the NPU chip working mode, see the "<a href="https://support.huawei.com/enterprise/en/doc/EDOC1100136580/51fd0a0/querying-and-setting-the-npu-chip-working-mode-npuworkmode" target="_blank" rel="noopener noreferrer">Querying and Setting the NPU Chip Working Mode (npuworkmode)</a>" section in the <span id="zh-cn_topic_0000002003034876_ph66296417518"><a name="zh-cn_topic_0000002003034876_ph66296417518"></a><a name="zh-cn_topic_0000002003034876_ph66296417518"></a>Atlas 800 Training Server iBMC User Guide (Model 9000)</span>.</p>
+<td class="cellrowborder" valign="top" width="63.10631063106311%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002003034876_ul17412295261"></a><a name="zh-cn_topic_0000002003034876_ul17412295261"></a><ul id="zh-cn_topic_0000002003034876_ul17412295261"><li><span id="ph1179307345"><a name="ph1179307345"></a><a name="ph1179307345"></a>Atlas 800 training server (model 9000)</span></li><li><span id="zh-cn_topic_0000002039194017_ph1627888115712"><a name="zh-cn_topic_0000002039194017_ph1627888115712"></a><a name="zh-cn_topic_0000002039194017_ph1627888115712"></a>Atlas 800 training server (model 9010)</span><div class="note" id="zh-cn_topic_0000002003034876_note186291241356"><a name="zh-cn_topic_0000002003034876_note186291241356"></a><a name="zh-cn_topic_0000002003034876_note186291241356"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="zh-cn_topic_0000002003034876_p86294411854"><a name="zh-cn_topic_0000002003034876_p86294411854"></a><a name="zh-cn_topic_0000002003034876_p86294411854"></a>If the chip working mode of the <span id="zh-cn_topic_0000002003034876_ph1162924110518"><a name="zh-cn_topic_0000002003034876_ph1162924110518"></a><a name="zh-cn_topic_0000002003034876_ph1162924110518"></a>Atlas 800 training server</span> is SMP mode and the number of NPUs requested per Pod is 1 or 2, the rescheduling mode is not supported. For details on querying and setting the NPU chip working mode, see the "<a href="https://support.huawei.com/enterprise/en/doc/EDOC1100136580/51fd0a0/querying-and-setting-the-npu-chip-working-mode-npuworkmode" target="_blank" rel="noopener noreferrer">Querying and Setting the NPU Chip Working Mode (npuworkmode)</a>" section in the <span id="zh-cn_topic_0000002003034876_ph66296417518"><a name="zh-cn_topic_0000002003034876_ph66296417518"></a><a name="zh-cn_topic_0000002003034876_ph66296417518"></a>Atlas 800 Training Server iBMC User Guide (Model 9000)</span>.</p>
 </div></div>
 </li></ul>
 </td>
@@ -1692,7 +1692,7 @@ For non-MindSpeed-LLM/MindCluster users, adapt the following functions as listed
 </td>
 <td class="cellrowborder" rowspan="9" valign="top" width="18.13181318131813%" headers="mcps1.2.5.1.3 "><p id="p5119132211596"><a name="p5119132211596"></a><a name="p5119132211596"></a>Distributed training framework</p>
 </td>
-<td class="cellrowborder" rowspan="9" valign="top" width="21.862186218621858%" headers="mcps1.2.5.1.4 "><p id="p252632095917"><a name="p252632095917"></a><a name="p252632095917"></a><a href="../../fault_recovery_acceleration/03_usage_guidance.md">Integrating Non-MindSpeed-LLM Frameworks</a></p>
+<td class="cellrowborder" rowspan="9" valign="top" width="21.862186218621858%" headers="mcps1.2.5.1.4 "><p id="p252632095917"><a name="p252632095917"></a><a name="p252632095917"></a><a href="../../fault_recovery_acceleration/03_usage_guidance.md#integrating-with-non-mindspeed-llm-frameworks">Integrating Non-MindSpeed-LLM Frameworks</a></p>
 </td>
 </tr>
 <tr id="row1793717157396"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1122104645414"><a name="p1122104645414"></a><a name="p1122104645414"></a>Optimizer update status reporting</p>
@@ -2152,7 +2152,7 @@ For non-MindSpeed-LLM/MindCluster users, adapt the following functions as listed
 </th>
 <th class="cellrowborder" valign="top" width="43.419999999999995%" id="mcps1.2.5.1.2"><p id="p176601638153816"><a name="p176601638153816"></a><a name="p176601638153816"></a>Description</p>
 </th>
-<th class="cellrowborder" valign="top" width="14.719999999999999%" id="mcps1.2.5.1.3"><p id="p10978953142414"><a name="p10978953142414"></a><a name="p10978953142414"></a>Adaptated Component</p>
+<th class="cellrowborder" valign="top" width="14.719999999999999%" id="mcps1.2.5.1.3"><p id="p10978953142414"><a name="p10978953142414"></a><a name="p10978953142414"></a>Adapted Component</p>
 </th>
 <th class="cellrowborder" valign="top" width="22.99%" id="mcps1.2.5.1.4"><p id="p4660113823812"><a name="p4660113823812"></a><a name="p4660113823812"></a>Reference Link</p>
 </th>
@@ -2552,7 +2552,7 @@ When a hardware fault occurs and there are no available backup resources in the 
 - Since elastic training creates additional communication groups, it may increase on-chip memory usage.
 - Currently not supported in IPv6 scenarios.
 
-    Memory size calculation formula: `Maximum increased memory (MB) = HCCL_BUFFSIZE * 2 * 9`, where `HCCL_BUFFSIZE` defaults to 200 MB. For details about `HCCL_BUFFSIZE`, see the "[HCCL_BUFFSIZE](https://www.hiascend.com/document/detail/en/canncommercial/900/maintenref/envvar/envref_07_0080.html)" section in the *CANN Environment Variable Reference*.
+    Memory size calculation formula: `Maximum increased memory (MB) = HCCL_BUFFSIZE * 2 * 9`, where `HCCL_BUFFSIZE` defaults to 200 MB. For details about `HCCL_BUFFSIZE`, see the "[HCCL_BUFFSIZE](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/900/maintenref/envvar/envref_07_0080.html)" section in the *CANN Environment Variable Reference*.
 
 For more constraints, see [MindSpeed-LLM Elastic Training Constraints](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/docs/pytorch/features/high_availability.md).
 
@@ -2621,7 +2621,7 @@ In elastic training, the cluster brain decides on a recovery policy based on glo
 - When the cluster brain detects a fault and no redundant backup resources are available, it delivers a scale-in policy to MindIO, which performs operator resource cleanup, scale-in reconstruction, and continues training in the scaled-in state.
 - When the cluster brain detects available resources and a new node is successfully brought up, it delivers a scale-out policy to MindIO, which performs operator resource cleanup, scale-out communication reconstruction, scale-out parameter plane recovery, and scale-out state rollback, completing elastic scale-out to restore the original scale and continue training.
 
-For non-MindSpeed-LLM/MindCluster users, adapt the following functions listed in [Table 2](#table19955141136107)..
+For non-MindSpeed-LLM/MindCluster users, adapt the following functions listed in [Table 2](#table19955141136107).
 
 **Table 2**  Functions adapted for elastic training
 
@@ -2651,7 +2651,7 @@ For non-MindSpeed-LLM/MindCluster users, adapt the following functions listed in
 </tr>
 <tr id="row1793717157396"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p106371759163113"><a name="p106371759163113"></a><a name="p106371759163113"></a>2</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p1942113117919"><a name="p1942113117919"></a><a name="p1942113117919"></a>Optimizer Uupdate status reproting</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p1942113117919"><a name="p1942113117919"></a><a name="p1942113117919"></a>Optimizer update status reporting</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p92821518193"><a name="p92821518193"></a><a name="p92821518193"></a>Reports the start and end status of optimizer updates before the optimizer updates.</p>
 </td>
@@ -2840,7 +2840,7 @@ Native Megatron uses the group corresponding to the `data_parallel_group_gloo` m
 
 - Scale-in training parameter adaptation
 
-    In [LLM Repository Reference Link](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/mindspeed_llm/features_manager/high_availability/high_availability.py), functions such as `patch_world_size_func_wrapper`, `log_wrapper`, `is_last_rank_wrapper`,`optimizer_param_scheduler_step_wrapper`,`track_app_tag_wrapper`,`print_rank_last_wrapper`, and `num_floating_point_operations_wrapper` are patched to adapt parameters used during training, such as `global_batch_size` and `world_size`. For example: the native implementation uses `dp_size*micro_batch_size*num_microbatches,` but after scaling in, `num_microbatches` may differ across DPs, so `args.globatch_size` is used directly. After scaling in, the global group after scaling in is used to determine whether it is the last rank; the global group size is modified to the size after scaling in, etc.
+    In [LLM Repository Reference Link](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/mindspeed_llm/features_manager/high_availability/high_availability.py), functions such as `patch_world_size_func_wrapper`, `log_wrapper`, `is_last_rank_wrapper`,`optimizer_param_scheduler_step_wrapper`,`track_app_tag_wrapper`,`print_rank_last_wrapper`, and `num_floating_point_operations_wrapper` are patched to adapt parameters used during training, such as `global_batch_size` and `world_size`. For example: the native implementation uses `dp_size*micro_batch_size*num_microbatches,` but after scaling in, `num_microbatches` may differ across DPs, so `args.global_batch_size` is used directly. After scaling in, the global group after scaling in is used to determine whether it is the last rank; the global group size is modified to the size after scaling in, etc.
 
 - Gradient precision calculation
 
@@ -2980,7 +2980,7 @@ For non-MindSpeed-LLM users, the functional adaptations in [Table 1](#table19955
 </tr>
 <tr id="row1375943411593"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p138221254105112"><a name="p138221254105112"></a><a name="p138221254105112"></a>Dying gasp checkpoint</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1582210547513"><a name="p1582210547513"></a><a name="p1582210547513"></a>Completes the dying gaspl checkpoint saving through newly added callback functions and the optimizer replica dump method.</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1582210547513"><a name="p1582210547513"></a><a name="p1582210547513"></a>Completes the dying gasp checkpoint saving through newly added callback functions and the optimizer replica dump method.</p>
 </td>
 </tr>
 </tbody>

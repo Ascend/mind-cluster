@@ -64,4 +64,4 @@ The user-side code calls this function to register a TaskD Agent callback functi
 
 |Return Value Type|Description|
 |--|--|
-|bool|Indicates whether the registration is successful.<ul><li>`True`: Registration succeed.</li><li>`False`: Registration failed.</li></ul>|
+|bool|Indicates whether the registration is successful.<ul><li>`True`: Registration succeeded.</li><li>`False`: Registration failed.</li></ul>|

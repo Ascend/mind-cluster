@@ -401,7 +401,7 @@ deploy任务原理图如[图2](#fig349112913199)所示。
 
     >[!NOTE] 
     >- /path-to-weights为模型权重，需要用户自行准备。mindie镜像可以参考镜像中$ATB\_SPEED\_HOME\_PATH/examples/models/llama3/README.md文件中的说明进行下载。
-    >- ATB_SPEED_HOME_PATH默认路径为“/usr/local/Ascend/atb-models”，在source模型仓中set_env.sh脚本时已配置，用户无需自行配置。
+    >- ATB_SPEED_HOME_PATH默认路径为“/usr/local/Ascend/atb-models”，在source模型仓中执行set_env.sh脚本时已配置，用户无需自行配置。
 
 4. 修改所选YAML中的容器启动命令，即“command”字段内容，如果没有则需添加。
 
@@ -529,7 +529,6 @@ kubectl delete -f infer-deploy-dynamic.yaml
 回显示例如下：
 
 ```ColdFusion
-root@ubuntu:/home/test/yaml# kubectl delete -f infer-310p-1usoc.yaml 
 job "resnetinfer1-1" deleted
 ```
 

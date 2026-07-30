@@ -45,9 +45,9 @@ mindio_ttp.framework_ttp.tft_start_controller(bind_ip: str, port: int, enable_tl
 |Parameter|Mandatory|Description|Value|
 |--|--|--|--|
 |bind_ip|Mandatory|IP address or domain name of the node where Controller resides.|An IPv4 address that complies with the IP address specifications is required. It must be in the IP address range of cluster nodes. An all-zero IP address is not allowed. Domain names are supported.|
-|port|Mandatory|Listening Parameters number of Controller.|[1024, 65535]|
+|port|Mandatory|Listening port number of Controller.|[1024, 65535]|
 |enable_tls|Optional|Whether to enable TLS encrypted transmission.|<ul><li>False: disabled</li><li>True: enabled</li></ul>The default value is True.|
-|tls_info|Optional|TLS certificate configuration.|By default, this parameter is left empty. When TLS authentication is enabled, you need to configure the certificate information. The related fields must be organized in key-value pairs. For details about the configuration, see section [Importing LS Certificates] (./04_security_management_and_hardening.md#Import-tls-certificates).|
+|tls_info|Optional|TLS certificate configuration.|By default, this parameter is left empty. When TLS authentication is enabled, you need to configure the certificate information. The related fields must be organized in key-value pairs. For details about the configuration, see section [Importing LS Certificates](./04_security_management_and_hardening.md#importing-tls-certificates).|
 
 **Return Value**
 
@@ -93,7 +93,7 @@ mindio_ttp.framework_ttp.tft_init_processor(rank: int, world_size: int, enable_l
 |world_size|Mandatory|Number of NPUs that participate in training jobs in a cluster.|int, [1, 100000].|
 |enable_local_copy|Mandatory|Whether to enable local copy.|<ul><li>False: disabled</li><li>True: enabled</li></ul>|
 |enable_tls|Optional|Whether to enable TLS encrypted transmission.|<ul><li>False: disabled</li><li>True: enabled</li></ul>The default value is True.|
-|tls_info|Optional|TLS certificate configuration.|By default, this parameter is left empty. When TLS authentication is enabled, you need to configure the certificate information. The related fields must be organized in key-value pairs. For details about the configuration, see section [Importing LS Certificates] (./04_security_management_and_hardening.md#Import-tls-certificates).|
+|tls_info|Optional|TLS certificate configuration.|By default, this parameter is left empty. When TLS authentication is enabled, you need to configure the certificate information. The related fields must be organized in key-value pairs. For details about the configuration, see section [Importing LS Certificates](./04_security_management_and_hardening.md#importing-tls-certificates).|
 |enable_uce|Optional|Whether to enable MindIO UCE.|<ul><li>False: disabled</li><li>True: enabled</li></ul>The default value is True.|
 |enable_arf|Optional|Whether to enable MindIO ARF.|<ul><li>False: disabled</li><li>True: enabled</li></ul>The default value is False.|
 |enable_zit|Optional|Whether to enable MindIO ZIT.|<ul><li>False: disabled</li><li>True: enabled</li></ul>The default value is False.|
@@ -119,7 +119,7 @@ mindio_ttp.framework_ttp.tft_start_processor(master_ip: str, port: int, local_ip
 |Parameter|Mandatory|Description|Value|
 |--|--|--|--|
 |master_ip|Mandatory|IP address or domain name of the node where Controller resides.|An IPv4 address that complies with the IP address specifications is required. It must be in the IP address range of cluster nodes. An all-zero IP address is not allowed. Domain names are supported.|
-|port|Mandatory|Listening Parameters number of Controller.|[1024, 65535]|
+|port|Mandatory|Listening port number of Controller.|[1024, 65535]|
 |local_ip|Optional|Service IP address or domain name of the node where Processor is located in Kubernetes.|An IPv4 address that complies with the IP address specifications is required. It must be in the IP address range of cluster nodes. An all-zero IP address is not allowed. Domain names are supported.|
 
 **Return Value**
@@ -162,7 +162,7 @@ mindio_ttp.framework_ttp.tft_start_updating_os(backup_step: int)
 
 |Parameter|Mandatory|Description|Value|
 |--|--|--|--|
-|backup_step|Mandatory|Backup step.|-1 or a natural number. The value range is [-1, 9223372036854775807). <ul><li>–1: backup step is not used. </li><li>Natural number: step corresponding to the backup optimizer state data before the optimizer is updated.</li></ul>|
+|backup_step|Mandatory|Backup step.|-1 or a natural number. The value range is [-1, 9223372036854775807). <ul><li>-1: backup step is not used. </li><li>Natural number: step corresponding to the backup optimizer state data before the optimizer is updated.</li></ul>|
 
 **Return Value**
 
@@ -261,7 +261,7 @@ mindio_ttp.framework_ttp.tft_exception_handler(func: Callable)
 
 Parameter set of the training framework.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > For MindSpeed-LLM, the setting function has been adapted by MindIO TFT, and this API does not need to be called.
 
 **Format**
@@ -286,7 +286,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 
 Registers the rename callback function in the framework.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > For the MindSpeed-LLM training framework, the callback function has been adapted by MindIO TFT. For other frameworks, you need to ensure the security of the callback function.
 
 **Format**
@@ -326,7 +326,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 
 Registers the dump callback function in the framework.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > For the MindSpeed-LLM training framework, the callback function has been adapted by MindIO TFT. For other frameworks, you need to ensure the security of the callback function.
 
 **Format**
@@ -339,7 +339,7 @@ mindio_ttp.framework_ttp.tft_register_save_ckpt_handler(func: Callable, ctx = No
 
 |Parameter|Mandatory|Description|Value|
 |--|--|--|--|
-|func|Mandatory|Dying gasp checkpoint saving function.|Callback function, which is not empty. For details about the input parameters o see [Table 1](#table_tft_08). This callback function has no return value. If the execution fails, an exception is thrown.|
+|func|Mandatory|Dying gasp checkpoint saving function.|Callback function, which is not empty. For details about the input parameters to see [Table 1](#table_tft_08). This callback function has no return value. If the execution fails, an exception is thrown.|
 |ctx|Optional|Callback function context.|This parameter is left empty by default.|
 
 **Table 1<a id="table_tft_08"></a>** Callback function parameters
@@ -361,7 +361,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 
 Registers a user-defined exit method with MindIO TFT.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > Currently, the registration and exit callback function is provided only for the MindSpore framework. You need to ensure the security of the callback function. For other frameworks, MindIO TFT is responsible for the exit.
 
 **Format**
@@ -393,7 +393,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 
 Registers the callback function for stopping training during recovery.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > For the MindSpeed-LLM training framework, the callback function has been adapted by MindIO TFT. For other frameworks, you need to ensure the security of the callback function.
 
 **Format**
@@ -426,7 +426,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 
 Registers the callback function for clearing residual operator executions during recovery.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > For the MindSpeed-LLM training framework, the callback function has been adapted by MindIO TFT. For other frameworks, you need to ensure the security of the callback function.
 
 **Format**
@@ -460,7 +460,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 
 Registers the callback function for re-establishing MindIO ARF groups.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > For the MindSpeed-LLM training framework, the callback function has been adapted by MindIO TFT. For other frameworks, you need to ensure the security of the callback function.
 
 **Format**
@@ -494,7 +494,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 
 Registers the repair callback function.
 
-> [!NOTE]NOTE
+> [!NOTE]
 >
 > - For the MindSpeed-LLM training framework, the callback function has been adapted by MindIO TFT. For other frameworks, you need to ensure the security of the callback function.
 > - MindIO TFT has rebuilt and overwritten the variables in the model optimizer in the callback function. You need to similarly rebuild and overwrite any other variables that are involved in calculations and customized within the framework, and do so in the repair function.
@@ -517,7 +517,7 @@ mindio_ttp.framework_ttp.tft_register_repair_handler(func: Callable, ctx = None)
 |Parameter|Description|Value|
 |--|--|--|
 |step|Step corresponding to the repair.|Positive integer.|
-|need_rebuild|-|Whether the model and optimizer need to be rebuilt.|<ul><li>False: No rebuilding is required. </li><li>True: Rebuilding is required.</li></ul>|
+|need_rebuild|Whether the model and optimizer need to be rebuilt.|<ul><li>False: No rebuilding is required. </li><li>True: Rebuilding is required.</li></ul>|
 |error_ranks|List of faulty NPUs to be repaired.|list.|
 |repair_info|Repair policy dictionary. The optimizer type follows the relationship of ATTENTION (0) and MOE (1).|{<br>"type": int,   # Optimizer type<br>"repair_type": Enum,   # See [RepairType](#repairtype).<br>"src": list,   # List of source ranks for optimizer repair data<br>"dst": list, # List of destination ranks for optimizer repair data<br>"rank_list": list, # List of ranks required for communication group repair<br>}|
 |args|Parameter set by **tft_set_step_args**.|Determined by the registration party.|
@@ -533,7 +533,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 
 Register the callback function of rollback.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > For the MindSpeed-LLM training framework, the callback function has been adapted by MindIO TFT. For other frameworks, you need to ensure the security of the callback function.
 
 **Format**
@@ -567,7 +567,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 
 Registers a synchronous callback.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > For the MindSpeed-LLM training framework, the callback function has been adapted by MindIO TFT. For other frameworks, you need to ensure the security of the callback function.
 
 **Format**
@@ -593,7 +593,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 
 Registers the upgrade rollback callback function with Processor.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > For MindSpeed-LLM, the callback function has been adapted. For other frameworks, you need to ensure the security of the callback function.
 
 **Format**
@@ -619,7 +619,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 
 Registers the upgrade repair callback function with Processor.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > For MindSpeed-LLM, the callback function has been adapted. For other frameworks, you need to ensure the security of the callback function.
 
 **Format**
@@ -644,7 +644,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 **Function**
 Registers the callback function for rebuilding communication groups during upgrade with Processor.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > For MindSpeed-LLM, the callback function has been adapted. For other frameworks, you need to ensure the security of the callback function.
 
 **Format**
@@ -670,7 +670,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 
 Registers the callback function for repair rebuilding during downgrade with Processor.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > For MindSpeed-LLM, the callback function has been adapted. For other frameworks, you need to ensure the security of the callback function.
 
 **Format**
@@ -742,7 +742,7 @@ No return value. If an error occurs, an error log is recorded and an exception i
 
 During the repair, the main training thread calls this API in the decorator to wait for the secondary thread to complete service data repair.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > This API is a blocking API. It will be blocked until next action is obtained.
 
 **Format**
@@ -1019,7 +1019,7 @@ mindio_ttp.controller_ttp.tft_notify_controller_on_global_rank(fault_ranks: dict
 
 This API is called by MindCluster to notify the repair policy to be executed by MindIO TFT.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > The repair policy must be within the range of optional repair policies negotiated by MindCluster and MindIO TFT.
 
 **Format**
@@ -1046,7 +1046,7 @@ mindio_ttp.controller_ttp.tft_notify_controller_prepare_action(action: str, faul
 
 This API is called by MindCluster to notify the repair policy to be executed by MindIO TFT.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > The repair policy must be within the range of optional repair policies negotiated by MindCluster and MindIO TFT.
 
 **Format**
@@ -1147,7 +1147,7 @@ Boolean value, indicating whether high availability is enabled.
 
 This API is called by MindSpore to determine whether the optimizer data is polluted in the time dimension based on the time when an UCE is triggered by the L2 cache and the time before and after the optimizer is updated, and then return the result of whether the fault can be rectified.
 
-> [!NOTE]NOTE
+> [!NOTE]
 > This API determines optimizer data corruption solely by evaluating the intersection of time ranges, instead of memory addresses.
 
 **Format**
@@ -1316,7 +1316,7 @@ mindio_ttp.framework_ttp.RepairType
 
 |Parameter|Mandatory|Description|Value|
 |--|--|--|--|
-|RepairType|Mandatory|Repair type. <ul><li>RT_SEND: The backup rank sends data. </li><li>RT_UCE_HIGHLEVEL: The optimizer and model need to be rebuilt for the faulty rank. </li><li>RT_UCE_LOWLEVEL: The optimizer and model reconstruction are not required for the faulty rank. </li><li>RT_ROLLBACK: dataset rollback. </li><li>RT_RECV_REPAIR: rank started bo ARF to receive data. </li><li>RT_LOAD_CKPT: periodic checkpoint repair. </li><li>RT_LOAD_REBUILD: rebuilds periodic checkpoint repair for the model optimizer.</li></ul>|<ul><li>RT_SEND.value: ttp_c2python_api.RepairType_RT_SEND. </li><li>RT_UCE_HIGHLEVEL.value: ttp_c2python_api.RepairType_RT_UCE_HIGHLEVEL. </li><li>RT_UCE_LOWLEVEL.value: ttp_c2python_api.RepairType_RT_UCE_LOWLEVEL. </li><li>RT_ROLLBACK.value: ttp_c2python_api.RepairType_RT_ROLLBACK. </li><li>RT_RECV_REPAIR.value: ttp_c2python_api.RepairType_RT_RECV_REPAIR. </li><li>RT_LOAD_CKPT.value: ttp_c2python_api.RepairType_RT_LOAD_CKPT. </li><li>RT_LOAD_REBUILD.value: ttp_c2python_api.RepairType_RT_LOAD_REBUILD.</li></ul>|
+|RepairType|Mandatory|Repair type. <ul><li>RT_SEND: The backup rank sends data. </li><li>RT_UCE_HIGHLEVEL: The optimizer and model need to be rebuilt for the faulty rank. </li><li>RT_UCE_LOWLEVEL: The optimizer and model reconstruction are not required for the faulty rank. </li><li>RT_ROLLBACK: dataset rollback. </li><li>RT_RECV_REPAIR: rank started by ARF to receive data. </li><li>RT_LOAD_CKPT: periodic checkpoint repair. </li><li>RT_LOAD_REBUILD: rebuilds periodic checkpoint repair for the model optimizer.</li></ul>|<ul><li>RT_SEND.value: ttp_c2python_api.RepairType_RT_SEND. </li><li>RT_UCE_HIGHLEVEL.value: ttp_c2python_api.RepairType_RT_UCE_HIGHLEVEL. </li><li>RT_UCE_LOWLEVEL.value: ttp_c2python_api.RepairType_RT_UCE_LOWLEVEL. </li><li>RT_ROLLBACK.value: ttp_c2python_api.RepairType_RT_ROLLBACK. </li><li>RT_RECV_REPAIR.value: ttp_c2python_api.RepairType_RT_RECV_REPAIR. </li><li>RT_LOAD_CKPT.value: ttp_c2python_api.RepairType_RT_LOAD_CKPT. </li><li>RT_LOAD_REBUILD.value: ttp_c2python_api.RepairType_RT_LOAD_REBUILD.</li></ul>|
 
 **Return Values**
 

@@ -8,7 +8,7 @@ This section describes key steps for periodic checkpoint saving. For details on 
 
 **Configuring Storage Checkpoint Loading<a name="zh-c_topic_0000002111866386_section1296017551704"></a>**
 
-Loading checkpnoints from storage can be performed using the loading interface provided by the AI framework. You need to pass the file path to be loaded into the AI framework. Taking the MindSpeed-LLM framework as an example, you can refer to the following example if you need to configure the storage checkpoint loading function.
+Loading checkpoints from storage can be performed using the loading interface provided by the AI framework. You need to pass the file path to be loaded into the AI framework. Taking the MindSpeed-LLM framework as an example, you can refer to the following example if you need to configure the storage checkpoint loading function.
 
 In the job YAML, add the `--load /data/ckpt/XXX \` parameter to enable storage checkpoint loading. `--load` is the unified switch for training process recovery; training process recovery takes effect only after this switch is turned on.
 
@@ -76,7 +76,7 @@ metadata:
 ...
    annotations:
      ...
-     <strong>recover-strategy: "dump"       # Ding gasp checkpoint saving</strong>
+     <strong>recover-strategy: "dump"       # Dying gasp checkpoint saving</strong>
  ...
 
 ...
@@ -158,13 +158,13 @@ spec:
       Here, --max_restarts specifies the maximum number of fault triggers allowed within the container, expressed as an integer. If this limit is exceeded, the PyTorch training process will exit immediately. If this parameter is not configured, the default value is `32767`.
 
 >[!NOTE]
->If the error "the libtaskd.so has not been loaded" occurs during training, you need to import the L`D_PRELOAD` environment variable in the training script. This environment variable allows the system to preload specified .so files. An example is shown below.
+>If the error "the libtaskd.so has not been loaded" occurs during training, you need to import the `LD_PRELOAD` environment variable in the training script. This environment variable allows the system to preload specified .so files. An example is shown below.
 >
 >```shell
 >export LD_PRELOAD=/usr/local/Ascend/cann/lib64/libmspti.so:/usr/local/lib/python3.10/dist-packages/taskd/python/cython_api/libs/libtaskd.so
 >```
 >
->- `libmspti.so`: This .so file is provided by MindStudio and integrated in the CANN package. The default installation path is /`usr/local/Ascend/cann/lib64/libmspti.so`.
+>- `libmspti.so`: This .so file is provided by MindStudio and integrated in the CANN package. The default installation path is `/usr/local/Ascend/cann/lib64/libmspti.so`.
 >- `libtaskd.so`: This .so file is provided by TaskD. After the whl package is installed, the path is `TaskD installation path/taskd/python/cython_api/libs/libtaskd.so`. You can run the following command to query the path where TaskD is located. The `Location` field in the command output is the target path.
 >
 >     ```shell
@@ -329,7 +329,7 @@ Parallel Store multi-thread link setup optimization: When PyTorch creates commun
     </tbody>
     </table>
 
-- Link setup optimization in RankTable mode: Ascend Operator provides the function of generating a collective communication configuration file (RankTable file, also called `hccl.json`) for PyTorch. Links can be set up in RankTable mode to shorten cluster communication link setup time. For details,, see [Table 4](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table1749892464019).
+- Link setup optimization in RankTable mode: Ascend Operator provides the function of generating a collective communication configuration file (RankTable file, also called `hccl.json`) for PyTorch. Links can be set up in RankTable mode to shorten cluster communication link setup time. For details, see [Table 4](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table1749892464019).
 
     **Table 4** Link setup for collective communication in RankTable mode
 
@@ -341,7 +341,7 @@ Parallel Store multi-thread link setup optimization: When PyTorch creates commun
     </tr>
     <tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row16498162484017"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.2.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p849802464013"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p849802464013"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p849802464013"></a>Feature Description</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.2.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p20499624194016"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p20499624194016"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p20499624194016"></a>Uses <span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph173171749164715"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph173171749164715"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph173171749164715"></a>Ascend Operator</span> is used to generate the collective communication configuration file for PyTorch tasks, reducing the cluster communication link setup time.</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.2.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p20499624194016"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p20499624194016"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p20499624194016"></a><span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph173171749164715"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph173171749164715"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph173171749164715"></a>Ascend Operator</span> is used to generate the collective communication configuration file for PyTorch tasks, reducing the cluster communication link setup time.</p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row2499424194015"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.3.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p2499182413406"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p2499182413406"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p2499182413406"></a>Instructions</p>
@@ -442,7 +442,7 @@ Parallel Store multi-thread link setup optimization: When PyTorch creates commun
 If an operator needs to be re-executed during resumable training, building the operator takes a long time. To solve this problem, you can select the operator binary or operator building cache to reduce the building time. For details, see [Table 7](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table8599191019143) and [Table 8](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table2193759172110).
 
 >[!NOTE]
->The operator binary and operator compliation cache are incompatible. Please choose one of them to use.
+>The operator binary and operator compilation cache are incompatible. Please choose one of them to use.
 
 **Table 7**  Operator Binary Function Description
 
@@ -506,7 +506,7 @@ This section describes the optimization items that can be used to shorten the re
 
 **Fault Detection Time<a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_section517194154019"></a>**
 
-SA parameter plane network fault in a cluster may not affect a training job. Therefore, the cluster scheduling components do not forcibly interrupt the job. When the parameter plane network fault affects a training job, the network timeout mechanism of collective communication is triggered. After a default waiting period of 30 minutes, the cluster scheduling components can detect the fault and trigger resumable training. To solve this problem, MindSpore provides a watchdog fault detection function to determine if training jobs are affected and to reduce fault detection time. For details, see [Table 1](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table17897155873217).
+A parameter plane network fault in a cluster may not affect a training job. Therefore, the cluster scheduling components do not forcibly interrupt the job. When the parameter plane network fault affects a training job, the network timeout mechanism of collective communication is triggered. After a default waiting period of 30 minutes, the cluster scheduling components can detect the fault and trigger resumable training. To solve this problem, MindSpore provides a watchdog fault detection function to determine if training jobs are affected and to reduce fault detection time. For details, see [Table 1](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table17897155873217).
 
 **Table 1** Watchdog fault detection
 
@@ -558,7 +558,7 @@ context:
     </tr>
     <tr id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_row126061827152113"><th class="firstcol" valign="top" width="19.98%" id="mcps1.2.3.3.1"><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p2060672782119"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p2060672782119"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p2060672782119"></a>Instructions</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.3.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p1460622714218"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p1460622714218"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p1460622714218"></a>Only cluster scheduling components and <span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph620813251731"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph620813251731"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph620813251731"></a>MindIO</span> components of version 6.0.RC2 and later are suppported.</p>
+    <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.3.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p1460622714218"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p1460622714218"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p1460622714218"></a>Only cluster scheduling components and <span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph620813251731"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph620813251731"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph620813251731"></a>MindIO</span> components of version 6.0.RC2 and later are supported.</p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_row136069278219"><th class="firstcol" valign="top" width="19.98%" id="mcps1.2.3.4.1"><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p5606527102113"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p5606527102113"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p5606527102113"></a>Key Operations</p>
@@ -591,7 +591,7 @@ context:
     </tr>
     <tr id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_row196071127102110"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.4.1"><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p7607327172119"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p7607327172119"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p7607327172119"></a>Key Operations</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"></a>To install and use <span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"></a>MindIO</span>, see <span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"></a><a href="../../optimizing_saving_and_loading_checkpoints/01_product_description.md">Opyimizing Checkpoint Saving and Loading</a></span>.</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"></a>To install and use <span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"></a>MindIO</span>, see <span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"></a><a href="../../optimizing_saving_and_loading_checkpoints/01_product_description.md">Optimizing Checkpoint Saving and Loading</a></span>.</p>
     </td>
     </tr>
     </tbody>
@@ -635,7 +635,7 @@ If faults occur in the HCCL link setup phase, process-level rescheduling or proc
 
 **PyTorch Single-Operator Scenario<a name="section145466566911"></a>**
 
-n the PyTorch single-operator scenario, HCCL links are set up in lazy loading mode. After a Torch communication group is set up, its first operator triggers the creation of the HCCL communicator. After the creation, the inter-rank link is set up. Therefore, to ensure all communicators are linked during training initialization, a communication operator must be dispatched to each group at that stage.
+In the PyTorch single-operator scenario, HCCL links are set up in lazy loading mode. After a Torch communication group is set up, its first operator triggers the creation of the HCCL communicator. After the creation, the inter-rank link is set up. Therefore, to ensure all communicators are linked during training initialization, a communication operator must be dispatched to each group at that stage.
 
 The following is an example of actively creating a communication group:
 

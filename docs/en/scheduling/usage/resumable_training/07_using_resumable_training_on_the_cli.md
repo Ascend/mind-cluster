@@ -149,11 +149,11 @@ As shown in [Table 1](#zh-cn_topic_0000002039339945_table1172542119019),obtain t
 <td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.2 "><p id="p4321152352612"><a name="p4321152352612"></a><a name="p4321152352612"></a>Yes</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p205155310512"><a name="zh-cn_topic_0000002039339945_p205155310512"></a><a name="zh-cn_topic_0000002039339945_p205155310512"></a>Resumable training whl package</p>
-<div class="note" id="zh-cn_topic_0000002039339945_note494818501423"><a name="zh-cn_topic_0000002039339945_note494818501423"></a><a name="zh-cn_topic_0000002039339945_note494818501423"></a><span class="notetitle"> Note:</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p159489506423"><a name="zh-cn_topic_0000002039339945_p159489506423"></a><a name="zh-cn_topic_0000002039339945_p159489506423"></a>Before installing <span id="ph1670711477256"><a name="ph1670711477256"></a><a name="ph1670711477256"></a>TaskD</span>, ensure that the <span id="zh-cn_topic_0000002039339945_ph998914174412"><a name="zh-cn_topic_0000002039339945_ph998914174412"></a><a name="zh-cn_topic_0000002039339945_ph998914174412"></a>PyTorch</span> framework is correctly installed. The currently supported <span id="zh-cn_topic_0000002039339945_ph2908133144419"><a name="zh-cn_topic_0000002039339945_ph2908133144419"></a><a name="zh-cn_topic_0000002039339945_ph2908133144419"></a>PyTorch</span> versions are 2.1.0, 2.3.0, 2.4.0, 2.5.0, 2.6.0, 2.7.1. TaskD depends on the PyTorch framework. Select a PyTorch version without known security vulnerabilities or obtain the corresponding version with security issues fixed from the official community.</p>
+<div class="note" id="zh-cn_topic_0000002039339945_note494818501423"><a name="zh-cn_topic_0000002039339945_note494818501423"></a><a name="zh-cn_topic_0000002039339945_note494818501423"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p159489506423"><a name="zh-cn_topic_0000002039339945_p159489506423"></a><a name="zh-cn_topic_0000002039339945_p159489506423"></a>Before installing <span id="ph1670711477256"><a name="ph1670711477256"></a><a name="ph1670711477256"></a>TaskD</span>, ensure that the <span id="zh-cn_topic_0000002039339945_ph998914174412"><a name="zh-cn_topic_0000002039339945_ph998914174412"></a><a name="zh-cn_topic_0000002039339945_ph998914174412"></a>PyTorch</span> framework is correctly installed. The currently supported <span id="zh-cn_topic_0000002039339945_ph2908133144419"><a name="zh-cn_topic_0000002039339945_ph2908133144419"></a><a name="zh-cn_topic_0000002039339945_ph2908133144419"></a>PyTorch</span> versions are 2.1.0, 2.3.0, 2.4.0, 2.5.0, 2.6.0, 2.7.1. TaskD depends on the PyTorch framework. Select a PyTorch version without known security vulnerabilities or obtain the corresponding version with security issues fixed from the official community.</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p19595310517"><a name="zh-cn_topic_0000002039339945_p19595310517"></a><a name="zh-cn_topic_0000002039339945_p19595310517"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann" target="_blank" rel="noopener noreferrer">Download Link</a></p>
-<div class="note" id="zh-cn_topic_0000002039339945_note1386820525510"><a name="zh-cn_topic_0000002039339945_note1386820525510"></a><a name="zh-cn_topic_0000002039339945_note1386820525510"></a><span class="notetitle">Note:</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p12512532515"><a name="zh-cn_topic_0000002039339945_p12512532515"></a><a name="zh-cn_topic_0000002039339945_p12512532515"></a>The link points to the download page of the <span id="ph480901420289"><a name="ph480901420289"></a><a name="ph480901420289"></a>TaskD's</span> compressed package Ascend-mindxdl-taskd_<em id="i112838253389"><a name="i112838253389"></a><a name="i112838253389"></a>{version}</em>_linux-<em id="i1328312515383"><a name="i1328312515383"></a><a name="i1328312515383"></a>{arch}</em>.zip. You need to decompress it to obtain the corresponding whl software package.</p>
+<div class="note" id="zh-cn_topic_0000002039339945_note1386820525510"><a name="zh-cn_topic_0000002039339945_note1386820525510"></a><a name="zh-cn_topic_0000002039339945_note1386820525510"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p12512532515"><a name="zh-cn_topic_0000002039339945_p12512532515"></a><a name="zh-cn_topic_0000002039339945_p12512532515"></a>The link points to the download page of the <span id="ph480901420289"><a name="ph480901420289"></a><a name="ph480901420289"></a>TaskD's</span> compressed package Ascend-mindxdl-taskd_<em id="i112838253389"><a name="i112838253389"></a><a name="i112838253389"></a>{version}</em>_linux-<em id="i1328312515383"><a name="i1328312515383"></a><a name="i1328312515383"></a>{arch}</em>.zip. You need to decompress it to obtain the corresponding whl software package.</p>
 </div></div>
 </td>
 </tr>
@@ -175,7 +175,7 @@ As shown in [Table 1](#zh-cn_topic_0000002039339945_table1172542119019),obtain t
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p166105316515"><a name="zh-cn_topic_0000002039339945_p166105316515"></a><a name="zh-cn_topic_0000002039339945_p166105316515"></a>Mixed precision training uses a mix of single-precision (float32) and half-precision (float16) data types during training, combining both and using the same hyperparameters to achieve almost the same precision as float32.</p>
 <p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a>The cp3x in the software package indicates the Python version number. For example, x being 10 indicates Python 3.10. The specific Python version is subject to the MindSpeed-LLM version.</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a>Compile the APEX package based on the actual situation.</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a>For details, see the "<a href="https://gitcode.com/Ascend/apex/blob/master/docs/en/installing_apex.md">Installing the APEX Module</a>" section in <span id="zh-cn_topic_0000002039339945_ph156792413596"><a name="zh-cn_topic_0000002039339945_ph156792413596"></a><a name="zh-cn_topic_0000002039339945_ph156792413596"></a>Ascend Extension for PyTorch Installation Guide</span>, and compile the APEX package based on the actual situation.</p>
 <p id="zh-cn_topic_0000002039339945_p1761531257"><a name="zh-cn_topic_0000002039339945_p1761531257"></a><a name="zh-cn_topic_0000002039339945_p1761531257"></a></p>
 </td>
 </tr>
@@ -188,7 +188,7 @@ As shown in [Table 1](#zh-cn_topic_0000002039339945_table1172542119019),obtain t
 <p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"></a>The cp3x in the software package indicates the Python version number. For example, x being 10 indicates Python 3.10. The specific Python version is subject to the MindSpeed-LLM version.</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p10718533510"><a name="zh-cn_topic_0000002039339945_p10718533510"></a><a name="zh-cn_topic_0000002039339945_p10718533510"></a><a href="https://www.hiascend.com/document/detail/zh/Pytorch/720/configandinstg/instg/insg_0004.html" target="_blank" rel="noopener noreferrer">Download Link</a></p>
-<div class="note" id="zh-cn_topic_0000002039339945_note1165115165020"><a name="zh-cn_topic_0000002039339945_note1165115165020"></a><a name="zh-cn_topic_0000002039339945_note1165115165020"></a><span class="notetitle">Note:</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p167047813263"><a name="zh-cn_topic_0000002039339945_p167047813263"></a><a name="zh-cn_topic_0000002039339945_p167047813263"></a>To use the <span id="zh-cn_topic_0000002039339945_ph1987542822613"><a name="zh-cn_topic_0000002039339945_ph1987542822613"></a><a name="zh-cn_topic_0000002039339945_ph1987542822613"></a>PyTorch</span> model from the MindSpeed-LLM code repository, <span id="zh-cn_topic_0000002039339945_ph1412723132619"><a name="zh-cn_topic_0000002039339945_ph1412723132619"></a><a name="zh-cn_topic_0000002039339945_ph1412723132619"></a>Ascend Extension for PyTorch</span> 2.6.0 or later is required.</p>
+<div class="note" id="zh-cn_topic_0000002039339945_note1165115165020"><a name="zh-cn_topic_0000002039339945_note1165115165020"></a><a name="zh-cn_topic_0000002039339945_note1165115165020"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p167047813263"><a name="zh-cn_topic_0000002039339945_p167047813263"></a><a name="zh-cn_topic_0000002039339945_p167047813263"></a>To use the <span id="zh-cn_topic_0000002039339945_ph1987542822613"><a name="zh-cn_topic_0000002039339945_ph1987542822613"></a><a name="zh-cn_topic_0000002039339945_ph1987542822613"></a>PyTorch</span> model from the MindSpeed-LLM code repository, <span id="zh-cn_topic_0000002039339945_ph1412723132619"><a name="zh-cn_topic_0000002039339945_ph1412723132619"></a><a name="zh-cn_topic_0000002039339945_ph1412723132619"></a>Ascend Extension for PyTorch</span> 2.6.0 or later is required.</p>
 </div></div>
 </td>
 </tr>
@@ -210,7 +210,7 @@ As shown in [Table 1](#zh-cn_topic_0000002039339945_table1172542119019),obtain t
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p5720531514"><a name="zh-cn_topic_0000002039339945_p5720531514"></a><a name="zh-cn_topic_0000002039339945_p5720531514"></a>CANN operator package.</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p87153755"><a name="zh-cn_topic_0000002039339945_p87153755"></a><a name="zh-cn_topic_0000002039339945_p87153755"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=cann" target="_blank" rel="noopener noreferrer">Download Link</a></p>
-<div class="note" id="zh-cn_topic_0000002039339945_note13775154104217"><a name="zh-cn_topic_0000002039339945_note13775154104217"></a><a name="zh-cn_topic_0000002039339945_note13775154104217"></a><span class="notetitle">Note:</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p2075812144313"><a name="zh-cn_topic_0000002039339945_p2075812144313"></a><a name="zh-cn_topic_0000002039339945_p2075812144313"></a>Obtain the software package that matches the server.</p>
+<div class="note" id="zh-cn_topic_0000002039339945_note13775154104217"><a name="zh-cn_topic_0000002039339945_note13775154104217"></a><a name="zh-cn_topic_0000002039339945_note13775154104217"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p2075812144313"><a name="zh-cn_topic_0000002039339945_p2075812144313"></a><a name="zh-cn_topic_0000002039339945_p2075812144313"></a>Obtain the software package that matches the server.</p>
 </div></div>
 </td>
 </tr>
@@ -221,7 +221,7 @@ As shown in [Table 1](#zh-cn_topic_0000002039339945_table1172542119019),obtain t
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p13738226114218"><a name="p13738226114218"></a><a name="p13738226114218"></a>CANN Toolkit package.</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p19271154916428"><a name="p19271154916428"></a><a name="p19271154916428"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=cann" target="_blank" rel="noopener noreferrer">Download Link</a></p>
-<div class="note" id="note3272104913427"><a name="note3272104913427"></a><a name="note3272104913427"></a><span class="notetitle">Note:</span><div class="notebody"><p id="p2272174920421"><a name="p2272174920421"></a><a name="p2272174920421"></a>Obtain the software package that matches the server.</p>
+<div class="note" id="note3272104913427"><a name="note3272104913427"></a><a name="note3272104913427"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p2272174920421"><a name="p2272174920421"></a><a name="p2272174920421"></a>Obtain the software package that matches the server.</p>
 </div></div>
 </td>
 </tr>
@@ -288,7 +288,7 @@ As shown in [Table 1](#zh-cn_topic_0000002039339945_table1172542119019),obtain t
 
 To prevent software packages from being maliciously tampered with during transmission or storage, you need to download the corresponding digital signature file for integrity verification when downloading software packages.
 
-After downloading the software package, see the [OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/doc/EDOC1100209376) to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers for resolution.
+After downloading the software package, see the [OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054) to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers for resolution.
 
 Before installing or upgrading using a software package, you must also verify the digital signature of the software package following the above process to ensure that the software package has not been tampered with.
 
@@ -451,7 +451,7 @@ For enterprise customers, please visit: [https://support.huawei.com/enterprise/e
     >[!NOTE]
     >If Python 3.10 cannot be installed successfully through PPA, or the deadsnakes PPA does not provide an image source for Python 3.10, you can download the source code and manually compile and install it.
 
-   1. Build the image. Run the following command to generate the image. To make the Dockerfile more secure, you can define a `HEALTHCHECK` in it based on your service. Check the running status of the container by running the `HEALTHCHECK _[OPTIONS]_ CMD` command inside the container. **Note: Do not omit the the period (".") at the end of the command.**
+3. Build the image. Run the following command to generate the image. To make the Dockerfile more secure, you can define a `HEALTHCHECK` in it based on your service. Check the running status of the container by running the `HEALTHCHECK _[OPTIONS]_ CMD` command inside the container. **Note: Do not omit the period (".") at the end of the command.**
 
     ```shell
     docker build -t mindspeed-dl:v1 .
@@ -531,7 +531,7 @@ As shown in [Table 1](#zh-cn_topic_0000002003180012_table223643812168), obtain t
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002003180012_p193931713181710"><a name="zh-cn_topic_0000002003180012_p193931713181710"></a><a name="zh-cn_topic_0000002003180012_p193931713181710"></a>CANN operator package.</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002003180012_p139312131171"><a name="zh-cn_topic_0000002003180012_p139312131171"></a><a name="zh-cn_topic_0000002003180012_p139312131171"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=cann" target="_blank" rel="noopener noreferrer">Download Link</a></p>
-<div class="note" id="zh-cn_topic_0000002003180012_note13501612171513"><a name="zh-cn_topic_0000002003180012_note13501612171513"></a><a name="zh-cn_topic_0000002003180012_note13501612171513"></a><span class="notetitle">Note:</span><div class="notebody"><p id="zh-cn_topic_0000002003180012_p1519161921516"><a name="zh-cn_topic_0000002003180012_p1519161921516"></a><a name="zh-cn_topic_0000002003180012_p1519161921516"></a>Please obtain the software package that matches the server.</p>
+<div class="note" id="zh-cn_topic_0000002003180012_note13501612171513"><a name="zh-cn_topic_0000002003180012_note13501612171513"></a><a name="zh-cn_topic_0000002003180012_note13501612171513"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="zh-cn_topic_0000002003180012_p1519161921516"><a name="zh-cn_topic_0000002003180012_p1519161921516"></a><a name="zh-cn_topic_0000002003180012_p1519161921516"></a>Please obtain the software package that matches the server.</p>
 </div></div>
 </td>
 </tr>
@@ -542,7 +542,7 @@ As shown in [Table 1](#zh-cn_topic_0000002003180012_table223643812168), obtain t
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002003180012_p5393121371719"><a name="zh-cn_topic_0000002003180012_p5393121371719"></a><a name="zh-cn_topic_0000002003180012_p5393121371719"></a>CANN Toolkit package.</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002003180012_p239319132175"><a name="zh-cn_topic_0000002003180012_p239319132175"></a><a name="zh-cn_topic_0000002003180012_p239319132175"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=cann" target="_blank" rel="noopener noreferrer">Download Link</a></p>
-<div class="note" id="zh-cn_topic_0000002003180012_note1733918441613"><a name="zh-cn_topic_0000002003180012_note1733918441613"></a><a name="zh-cn_topic_0000002003180012_note1733918441613"></a><span class="notetitle">Note:</span><div class="notebody"><p id="zh-cn_topic_0000002003180012_p533924121616"><a name="zh-cn_topic_0000002003180012_p533924121616"></a><a name="zh-cn_topic_0000002003180012_p533924121616"></a>Please obtain the software package that matches the server.</p>
+<div class="note" id="zh-cn_topic_0000002003180012_note1733918441613"><a name="zh-cn_topic_0000002003180012_note1733918441613"></a><a name="zh-cn_topic_0000002003180012_note1733918441613"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="zh-cn_topic_0000002003180012_p533924121616"><a name="zh-cn_topic_0000002003180012_p533924121616"></a><a name="zh-cn_topic_0000002003180012_p533924121616"></a>Please obtain the software package that matches the server.</p>
 </div></div>
 </td>
 </tr>
@@ -553,7 +553,7 @@ As shown in [Table 1](#zh-cn_topic_0000002003180012_table223643812168), obtain t
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002003180012_p4825711171415"><a name="zh-cn_topic_0000002003180012_p4825711171415"></a><a name="zh-cn_topic_0000002003180012_p4825711171415"></a>Resumable training whl package.</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002003180012_p18169645192413"><a name="zh-cn_topic_0000002003180012_p18169645192413"></a><a name="zh-cn_topic_0000002003180012_p18169645192413"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann" target="_blank" rel="noopener noreferrer">Download Link</a></p>
-<div class="note" id="zh-cn_topic_0000002003180012_note079418496154"><a name="zh-cn_topic_0000002003180012_note079418496154"></a><a name="zh-cn_topic_0000002003180012_note079418496154"></a><span class="notetitle">Note:</span><div class="notebody"><a name="zh-cn_topic_0000002003180012_ul79293962319"></a><a name="zh-cn_topic_0000002003180012_ul79293962319"></a><ul id="zh-cn_topic_0000002003180012_ul79293962319"><li>In the MindSpore scenario, this whl package must be installed to use graceful fault tolerance, Pod-level rescheduling, process-level rescheduling, and process-level online recovery.</li><li>This download link points to the <span id="zh-cn_topic_0000002003180012_ph11742444163719"><a name="zh-cn_topic_0000002003180012_ph11742444163719"></a><a name="zh-cn_topic_0000002003180012_ph11742444163719"></a>TaskD's</span> compressed package Ascend-mindxdl-taskd_<em id="i112838253389"><a name="i112838253389"></a><a name="i112838253389"></a>{version}</em>_linux-<em id="i1328312515383"><a name="i1328312515383"></a><a name="i1328312515383"></a>{arch}</em>.zip. You need to decompress it to obtain the corresponding whl package.</li></ul>
+<div class="note" id="zh-cn_topic_0000002003180012_note079418496154"><a name="zh-cn_topic_0000002003180012_note079418496154"></a><a name="zh-cn_topic_0000002003180012_note079418496154"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><a name="zh-cn_topic_0000002003180012_ul79293962319"></a><a name="zh-cn_topic_0000002003180012_ul79293962319"></a><ul id="zh-cn_topic_0000002003180012_ul79293962319"><li>In the MindSpore scenario, this whl package must be installed to use graceful fault tolerance, Pod-level rescheduling, process-level rescheduling, and process-level online recovery.</li><li>This download link points to the <span id="zh-cn_topic_0000002003180012_ph11742444163719"><a name="zh-cn_topic_0000002003180012_ph11742444163719"></a><a name="zh-cn_topic_0000002003180012_ph11742444163719"></a>TaskD's</span> compressed package Ascend-mindxdl-taskd_<em id="i112838253389"><a name="i112838253389"></a><a name="i112838253389"></a>{version}</em>_linux-<em id="i1328312515383"><a name="i1328312515383"></a><a name="i1328312515383"></a>{arch}</em>.zip. You need to decompress it to obtain the corresponding whl package.</li></ul>
 </div></div>
 </td>
 </tr>
@@ -600,7 +600,7 @@ As shown in [Table 1](#zh-cn_topic_0000002003180012_table223643812168), obtain t
 
 To prevent software packages from being maliciously tampered with during transmission or storage, you need to download the corresponding digital signature file for integrity verification when downloading software packages.
 
-After downloading the software package, see the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/doc/EDOC1100209376)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers for resolution.
+After downloading the software package, see the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers for resolution.
 
 Before installing or upgrading using a software package, you also need to verify the digital signature of the software package following the above process to ensure that the software package has not been tampered with.
 
@@ -715,7 +715,7 @@ For enterprise customers, please visit [https://support.huawei.com/enterprise/en
     RUN echo "source /usr/local/Ascend/cann/set_env.sh" >> ~/.bashrc
     RUN umask 0022 && ./$OPS --install --quiet
 
-    # After the toolkit package is installed, clear the following files. During container startup, the toolkit package is mounted by Ascend Docker..
+    # After the toolkit package is installed, clear the following files. During container startup, the toolkit package is mounted by Ascend Docker.
     RUN rm -f version.info && \
         rm -rf /usr/local/Ascend/driver/
 
@@ -810,10 +810,10 @@ Resumable training can be used only after a model script adapts to checkpoints. 
 
 ### Adaptation Example<a name="ZH-CN_TOPIC_0000002511346445"></a>
 
-This sectiond describes adaptation steps for resumable training.
+This section describes adaptation steps for resumable training.
 
 - [Adaptation Example for PyTorch (MindSpeed-LLM)](#zh-cn_topic_0000002003180016_section412442472511)
-- [Adaptation Example for MindSpor (MindFormers)](#zh-cn_topic_0000002003180016_section718243883518)
+- [Adaptation Example for MindSpore (MindFormers)](#zh-cn_topic_0000002003180016_section718243883518)
 - [Adaptation Example for Reinforcement Learning Post-Training (Verl)](#section1335017512276)
 
 >[!NOTE]
@@ -822,7 +822,7 @@ This sectiond describes adaptation steps for resumable training.
 - The displayed component code for resumable training is open-source code. For related security instructions, see [Security Statement](../../appendix.md#security-statement).
 - The sample code below may differ from the actual implementation. Please use the actual code.
 - Configure the model parameters according to the settings defined in the model repository. Improper modifications may lead to unexpected issues.
-- If the error "Failed to bind the IP port. Reason: The IP address and port have been bound already" occurs during training, rectify the fault as follows. For details, see the "[HCCL_HOST_SOCKET_PORT_RANGE](https://www.hiascend.com/document/detail/en/canncommercial/900/maintenref/envvar/envref_07_0143.html)" section in the *CANN Environment Variable Reference*.
+- If the error "Failed to bind the IP port. Reason: The IP address and port have been bound already" occurs during training, rectify the fault as follows. For details, see the "[HCCL_HOST_SOCKET_PORT_RANGE](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/900/maintenref/envvar/envref_07_0143.html)" section in the *CANN Environment Variable Reference*.
 
   ```shell
   export HCCL_HOST_SOCKET_PORT_RANGE="60000-60050"
@@ -831,7 +831,7 @@ This sectiond describes adaptation steps for resumable training.
 
 - If TaskD is used and the training container uses the host network, first query the current reserved port configuration using `sysctl net.ipv4.ip_local_reserved_ports`, then add reserved ports 9601 and 9602 using `sysctl -w net.ipv4.ip_local_reserved_ports="xxx,9601,9602"` (where *xxx* refers to the previously queried configured ports; omit if none exist).
 
-**PAdaptation Example for PyTorch (MindSpeed-LLM)<a name="zh-cn_topic_0000002003180016_section412442472511"></a>**
+**Adaptation Example for PyTorch (MindSpeed-LLM)<a name="zh-cn_topic_0000002003180016_section412442472511"></a>**
 
 For training code and dataset preparation, see [MindSpeed-LLM User Guide](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/docs/pytorch/solutions/pretrain/pretrain.md). The following uses two Atlas 800T A2 training servers as an example to describe the specific operation steps.
 
@@ -891,7 +891,7 @@ For training code and dataset preparation, see [MindSpeed-LLM User Guide](https:
         ```Python
         python preprocess_data.py \
             --input /data/atlas_dls/public/dataset/qwen3-alpaca/train-00000-of-00001-a09b74b3ef9c3b56.parquet \ # Dataset file path
-            --tokenizer-name-or-path /data/atlas_dls/public/dataset/qwen3-8b-hf \ # Open-source model weight file directorye
+            --tokenizer-name-or-path /data/atlas_dls/public/dataset/qwen3-8b-hf \ # Open-source model weight file directory
             --tokenizer-type PretrainedFromHF \
             --handler-name GeneralPretrainHandler \
             --output-prefix /data/atlas_dls/public/dataset/qwen3-alpaca/alpaca \ # Generates alpaca_text_document.bin and .idx files
@@ -1400,7 +1400,7 @@ The cluster scheduling components provide YAML examples. You need to select an a
 </table>
 
 >[!NOTE]
->Currently, resumable training does not provide an example YAML for the Atlas 900 A3 SuperPoD. You can add the `annotations` field under `labels` in the example YAML. An example is as follows:
+>Currently, some training frameworks do not provide resumable training YAML examples for the Atlas 900 A3 SuperPoD. You can add the `annotations` field under `labels` in the example YAML. An example is as follows:
 >
 >```Yaml
 >...
@@ -1527,7 +1527,7 @@ This section describes how to construct simple faults, including node faults, pa
 Restart the training node to simulate node status loss caused by node power-off. This fault can be automatically rectified after the node is restarted.
 
 1. After an iteration ends in a normal training job, log in to the node that is being trained.
-2. Run the following commandto restart the training node to simulate a node status loss fault.
+2. Run the following command to restart the training node to simulate a node status loss fault.
 
     ```shell
     reboot

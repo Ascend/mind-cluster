@@ -190,17 +190,17 @@ Resilience Controller is a Kubernetes plugin and needs to be installed in the Ku
 
 Various software and hardware faults may occur during foundation model training, affecting training jobs. To address this issue, MindCluster provides the binary package of Elastic Agent deployed on compute nodes to manage training jobs on Ascend devices.
 
-Component Functions<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section1112014512117"></a>
+**Component Functions<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section1112014512117"></a>**
 
 - Manage Ascend device processes in the PyTorch framework. That is, stop or restart training processes if a software or hardware fault occurs.
 - Connect to the control plane in the Kubernetes cluster and manage training jobs based on the plane.
 
-Upstream and Downstream Dependencies<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section4941922192110"></a>
+**Upstream and Downstream Dependencies<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section4941922192110"></a>**
 
 **Figure 1** Upstream and downstream dependencies<a name="fig19841330125219"></a>
 ![](../../figures/scheduling/upstream-and-downstream-dependencies-6.png)
 
-- MindCluster writes information such as the device and training job status to ConfigMap through Kubernetes and maps the information to the container. The ConfigMap name is [reset-config-*Job name*](../api/volcano.md).
+- MindCluster writes information such as the device and training job status to ConfigMap through Kubernetes and maps the information to the container. The ConfigMap name is [reset-config-<job-name\>](../api/volcano.md#job-information).
 - Elastic Agent obtains the device and training job status of the current training container through ConfigMap.
 - Elastic Agent connects to the control plane in the Kubernetes cluster and manages training jobs based on the control plane.
 
@@ -239,7 +239,7 @@ In the figure:
 
 - Dependency description in service flow 1
 
-    - MindCluster writes information such as the device and training status to ConfigMap through Kubernetes and maps the information to the container. The ConfigMap name is [reset-config-<*Job name*\>](../api/volcano.md#job-information).
+    - MindCluster writes information such as the device and training status to ConfigMap through Kubernetes and maps the information to the container. The ConfigMap name is [reset-config-<job-name\>](../api/volcano.md#job-information).
     - MindCluster writes the training status detection instruction to ConfigMap through Kubernetes and maps the instruction to the container.
     - TaskD Manager obtains the device and training job status of the current training container through ConfigMap.
     - TaskD Manager connects to the control plane in the Kubernetes cluster and manages training jobs based on the control plane.
@@ -325,7 +325,7 @@ MindCluster provides Infer Operator which starts an inference service based on i
 
 **Upstream and Downstream Dependencies**
 
-**Figure 1** Upstream and downstream dependencies<a name="fig107831859288"></a>
+**Figure 1** Upstream and downstream dependencies<a name="fig1078318592693"></a>
 ![](../../figures/scheduling/introduction_infer-operator.PNG)
 
 1. Create Workload of an inference instance based on the job YAML configured by the user.

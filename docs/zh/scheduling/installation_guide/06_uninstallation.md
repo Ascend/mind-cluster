@@ -21,7 +21,7 @@
     2. 执行以下命令编辑pingmesh-config文件。
 
         ```shell
-        kubectl edit cm -n cluster-system   pingmesh-config
+        kubectl edit cm -n cluster-system pingmesh-config
         ```
 
     3. 修改activate字段的取值。
@@ -78,13 +78,13 @@
             - Docker场景（或K8s集成Docker场景）
 
                 ```shell
-                uninstall.sh docker docker <daemon.json文件路径>
+                ./uninstall.sh docker docker <daemon.json文件路径>
                 ```
 
             - Containerd场景（或K8s集成Containerd场景）
 
                 ```shell
-                uninstall.sh containerd containerd <config.toml文件路径>
+                ./uninstall.sh containerd containerd <config.toml文件路径>
                 ```
 
             >[!NOTE]
@@ -151,7 +151,7 @@
     2. 执行以下命令编辑pingmesh-config文件。
 
         ```shell
-        kubectl edit cm -n cluster-system   pingmesh-config
+        kubectl edit cm -n cluster-system pingmesh-config
         ```
 
     3. 修改activate字段的取值。

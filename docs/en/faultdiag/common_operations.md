@@ -9,10 +9,10 @@ The home directory of MindCluster Ascend FaultDiag can be set via the environmen
 Run the following command to set the home directory of MindCluster Ascend FaultDiag.
 
 ```shell
-export ASCEND_FD_HOME_PATH=/Custom path
+export ASCEND_FD_HOME_PATH=/<Custom_path>
 ```
 
-> **NOTE**
+>[!NOTE]
 >
 > - When this environment variable is not set, the home directory of MindCluster Ascend FaultDiag defaults to `$HOME/.ascend_faultdiag/`.
 > - When this environment variable is set, the specified path must exist and be a directory. The `/tmp` path is not supported as the home directory. The directory owner must be `root` or the program executor, and the program executor must have permissions to create, read, and write files in this directory.

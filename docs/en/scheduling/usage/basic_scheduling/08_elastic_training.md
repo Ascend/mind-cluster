@@ -33,7 +33,7 @@ If a hardware fault occurs and no backup device is available, the cluster schedu
 The usage method of the elastic training feature is as follows:
 
 - [Using via Command Line](#ZH-CN_TOPIC_0000002511427031): Install cluster scheduling components and use the elastic training feature via the command line.
-- [Using After Integration](#ZH-CN_TOPIC_0000002511347077): Integrate the cluster scheduling components into an existing third-party AI platform or an AI platform developed based on these component.
+- [Using After Integration](#ZH-CN_TOPIC_0000002511347077): Integrate the cluster scheduling components into an existing third-party AI platform or an AI platform developed based on these components.
 
 **Usage Notes<a name="section252320491398"></a>**
 
@@ -74,7 +74,7 @@ The usage method of the elastic training feature is as follows:
     <tr id="row53711449152015"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p45358632316"><a name="p45358632316"></a><a name="p45358632316"></a>In scenarios with limited cluster resources, when multiple jobs fail simultaneously and trigger rescheduling, jobs may enter a Pending state due to insufficient resources.</p>
     </td>
     </tr>
-    <tr id="row046671715231"><td class="cellrowborder" rowspan="3" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="p1471143519233"><a name="p1471143519233"></a><a name="p1471143519233"></a>Feature dDescription</p>
+    <tr id="row046671715231"><td class="cellrowborder" rowspan="3" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="p1471143519233"><a name="p1471143519233"></a><a name="p1471143519233"></a>Feature Description</p>
     </td>
     <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="p87431448172312"><a name="p87431448172312"></a><a name="p87431448172312"></a>This feature is not applicable to virtual instances.</p>
     </td>
@@ -205,7 +205,7 @@ Obtain the software packages for the corresponding operating system, as well as 
 
 To prevent software packages from being maliciously tampered with during transmission or storage, you need to download the corresponding digital signature file for integrity verification when downloading the software package.
 
-After downloading the software package, refer to the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/doc/EDOC1100209376)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers first.
+After downloading the software package, refer to the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers first.
 
 Before installing or upgrading using the software package, you also need to verify the digital signature of the software package following the above process to ensure that the software package has not been tampered with.
 
@@ -232,16 +232,16 @@ For enterprise customers, please visit [https://support.huawei.com/enterprise/en
 6. Go to the directory where the software package is located and run the following command to build the container image. **Note: Do not omit the dot (".") at the end of the command**.
 
     ```shell
-    docker build -t  [OPTIONS] Image name_System architecture:Image tag .
+    docker build -t  [OPTIONS] <Image_name>_<System_architecture>:<Image_tag> .
     ```
 
-For example:
+    For example:
 
     ```shell
     docker build -t test_train_arm64:v1.0 .
     ```
 
-[Table 2](#zh-cn_topic_0272789326_zh-cn_topic_0256378845_table47051919193111) describes parameters in the command.
+    [Table 2](#zh-cn_topic_0272789326_zh-cn_topic_0256378845_table47051919193111) describes parameters in the command.
 
     **Table 2** Command parameter description
 
@@ -251,7 +251,7 @@ For example:
     |--|--|
     |-t|Image name|
     |OPTIONS|"--disable-content-trust" option: Ignores verification, which is enabled by default. For security reasons, it is recommended to disable this option.|
-    |Image name_System architecture:Image tag|Image name and tag. Change them based on the actual situation.|
+    |<i>Image_name_System_architecture:Image_tag</i>|Image name and tag. Change them based on the actual situation.|
 
     When "Successfully built xxx" appears, it indicates that the image has been built successfully.
 
@@ -313,13 +313,13 @@ Modify the software package version and architecture based on the actual situati
         ENV http_proxy xxx
         ENV https_proxy xxx
 
-        # # Configure Python pip source
+        # Configure Python pip source
         RUN mkdir -p ~/.pip \
         && echo '[global] \n\
         index-url=https://pypi.doubanio.com/simple/\n\
         trusted-host=pypi.doubanio.com' >> ~/.pip/pip.conf
 
-        # # Install MindFormers
+        # Install MindFormers
         RUN pip install $MINDFORMERS_PKG
 
 
@@ -505,8 +505,8 @@ This chapter provides fault recovery script adaptation examples. Select a script
     # Retraining options
     save_graphs: False  # Whether to save graph compilation results
     save_graphs_path: "./graphs" # Graph compilation result save path
-    has_trained_epoch: 0 # Epoch of model pre-training; defaulte to 0
-    has_trained_step: 0 # Step of model pre-training; defaulte to 0
+    has_trained_epoch: 0 # Epoch of model pre-training; default to 0
+    has_trained_step: 0 # Step of model pre-training; default to 0
     ---
     # Help description for each configuration item
     enable_modelarts: "Whether training on modelarts, default: False"
@@ -700,10 +700,10 @@ This chapter provides fault recovery script adaptation examples. Select a script
             if args_opt.run_type == "train":
                 args_opt.start_lr = 6e-5
                 args_opt.end_lr = 6e-6
-               args_opt.stage_num = 8               # Number of pipeline stages
-               args_opt.micro_size = 16             # Micro-batch size in pipeline parallelism mode. Its value should be greater than args_opt.stage_num.
+                args_opt.stage_num = 8               # Number of pipeline stages
+                args_opt.micro_size = 16             # Micro-batch size in pipeline parallelism mode. Its value should be greater than args_opt.stage_num.
                 args_opt.op_level_model_parallel_num = 16
-                if args_opt.optimizer_shard = 1:
+                if args_opt.optimizer_shard == 1:
                     args_opt.op_level_model_parallel_num = 8
             elif args_opt.run_type == "predict":
                 args_opt.stage_num = 4
@@ -761,7 +761,7 @@ This chapter provides fault recovery script adaptation examples. Select a script
     # If the running model has pipeline parallelism enabled, modify the following function
     # Security tip: involves validation of paths and input parameters
     def set_pipeline_parallel_context(args_opt):
-    # Add the following code before mindspore.set_auto_parallel_context. Refer to [MindSpore tutorial on distributed parallel interface instructions](https://www.mindspore.cn/tutorials/experts/zh-CN/r2.0/index.html) for usage instructions of the set_auto_parallel_context parametert_auto_parallel_context parameter
+    # Add the following code before mindspore.set_auto_parallel_context. Refer to https://www.mindspore.cn/tutorials/experts/zh-CN/r2.0/index.html for usage instructions of the set_auto_parallel_context parameter
 
 
             # Content added for elastic training
@@ -769,9 +769,9 @@ This chapter provides fault recovery script adaptation examples. Select a script
                 args_opt.strategy_load_ckpt_path = ""
 
             # Content added for elastic training. The strategy_ckpt_save_file_path parameter can be specified based on the in-container path.
-            strategy_ckpt_save_file_path = '/job/data/code/fault_torlence/pangu_alpha/strategy.ckpt'
+            strategy_ckpt_save_file_path = '/job/data/code/fault_tolerance/pangu_alpha/strategy.ckpt'
             if args_opt.strategy_load_ckpt_path == strategy_ckpt_save_file_path:
-                 strategy_ckpt_save_file_path = '/job/data/code/fault_torlence/pangu_alpha/strategy_new.ckpt'
+                 strategy_ckpt_save_file_path = '/job/data/code/fault_tolerance/pangu_alpha/strategy_new.ckpt'
 
             # Change strategy_ckpt_save_file='strategy.ckpt' to strategy_ckpt_save_file=strategy_ckpt_save_file_path. If the strategy_ckpt_save_file parameter is not specified in set_auto_parallel_context, you need to manually add strategy_ckpt_save_file=strategy_ckpt_save_file_path, as shown in bold below.
             mindspore.set_auto_parallel_context(
@@ -849,8 +849,8 @@ This chapter provides fault recovery script adaptation examples. Select a script
     ...
         parser.add_argument("--strategy_load_ckpt_path",
                             type=str,
-                            default="/job/data/code/fault_torlence/pangu_alpha/strategy/strategy.ckpt", # In elastic training, specify the in-container path based on user habits, and the path will not be overwritten by training.
-                            help="The training prallel strategy for the model.")
+                            default="/job/data/code/fault_tolerance/pangu_alpha/strategy/strategy.ckpt", # In elastic training, specify the in-container path based on user habits, and the path will not be overwritten by training.
+                            help="The training parallel strategy for the model.")
         parser.add_argument("--tokenizer_path",
                             type=str,
                             default="./tokenizer_path",
@@ -862,11 +862,11 @@ This chapter provides fault recovery script adaptation examples. Select a script
         """
         opt.add_argument("--pre_trained",
                          type=str,
-                         default="/job/data/code/fault_torlence/pangu_alpha/8p", # Specify the pre-trained model path
+                         default="/job/data/code/fault_tolerance/pangu_alpha/8p", # Specify the pre-trained model path
                          help="Pretrained checkpoint path.")
         opt.add_argument("--save_checkpoint_path",
                          type=str,
-                         default="/job/data/code/fault_torlence/pangu_alpha/8p",   # Specify the model save path
+                         default="/job/data/code/fault_tolerance/pangu_alpha/8p",   # Specify the model save path
                          help="Save checkpoint path.")
         opt.add_argument("--keep_checkpoint_max", # Specify the model saving policy: maximum number
                          type=int,

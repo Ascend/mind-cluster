@@ -144,7 +144,7 @@ The following uses the Qwen3-1.7B model as an example.
 
     3. Press `Esc`, type `:wq!`, and press `Enter` to save and exit.
 
-6. Go to the [mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy) repository, switch to the corresponding version branch according to [mindcluster-deploy Open-Source Repository Version Description](../../appendix.md), obtain the startup script `infer_start.sh` from the `samples/inference/without-k8s/` directory, place it in the node directory `/data/atlas_dls/public/infer/script/Qwen3-1.7B/`, and edit the `infer_start.sh` script.
+6. Go to the [mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy) repository, switch to the corresponding version branch according to [mindcluster-deploy Open-Source Repository Version Description](../../appendix.md#mindcluster-deploy-open-source-repository-version-description), obtain the startup script `infer_start.sh` from the `samples/inference/without-k8s/` directory, place it in the node directory `/data/atlas_dls/public/infer/script/Qwen3-1.7B/`, and edit the `infer_start.sh` script.
 
     1. Open the `infer_start.sh` script.
 
@@ -251,7 +251,7 @@ The following uses the Qwen3-1.7B model as an example.
     -H "Content-Type: application/json" \
     -X POST -d '{
         "model": "<model_name>",
-    "messages": [
+        "messages": [
             {"role": "system", "content": "you are a helpful assistant."},
             { "role": "user", "content": "How many r are in the word \"strawberry\"" }
         ],

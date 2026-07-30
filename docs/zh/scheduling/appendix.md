@@ -1366,7 +1366,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
             <strong>if cur_step_num in uce_step_rank and get_rank() == uce_step_rank[cur_step_num] and GLB_CNT < cur_step_num: </strong>
                <strong>GLB_CNT = cur_step_num</strong>
                <strong>print(f"############# rank:{get_rank()} start UCE error #############")</strong>
-               <strong>raise RuntimeError('UCEError occured.')</strong>
+               <strong>raise RuntimeError('UCEError occurred.')</strong>
             if self.tensor_writer is not None:
                 ...</pre>
 

@@ -177,7 +177,7 @@ When a fault occurs on the node or Ascend AI processor where the task is located
 
 **MindIE Service Inference Task Scheduling<a name="section243084619505"></a>**
 
-For MindIE Service inference tasks, the following affinity scheduling policy is added. For detailed configuration instructions of this affinity scheduling policy, see the [Configuring Instance-Level Affinity Scheduling](../../mindie_motor_best_practice/01_deploying_mindie_motor.md) section.
+For MindIE Service inference tasks, the following affinity scheduling policy is added. For detailed configuration instructions of this affinity scheduling policy, see the [Configuring Instance-Level Affinity Scheduling](../../mindie_motor_best_practice/01_deploying_mindie_motor.md#optional-configuring-instance-level-affinity-scheduling) section.
 
 - You can specify the `sp-block` field in the task YAML. The value of `sp-block` must be consistent with the number of job chips to ensure that the entire job is scheduled to one physical SuperPoD.
 
@@ -187,19 +187,19 @@ For MindIE Service inference tasks, the following affinity scheduling policy is 
 - If `sp-fit` is set to `idlest`, the logical SuperPoD is scheduled to a more idle physical SuperPoD.
 - If `sp-fit` is set to `podAffinity`, the logical SuperPoD is scheduled to a physical SuperPoD with more affinity Pods.
 
-## Logical Rack Affinity Scheduling<a name="ZH-CN_TOPIC_0000002479386896"></a>
+## Logical Rack Affinity Scheduling<a name="ZH-CN_TOPIC_0000002479386896236"></a>
 
-**Usage Instructions<a name="section773381911315"></a>**
+**Usage Instructions**
 
-- The number of logical racks must be less than the number of physical rack.
+- The number of logical racks must be less than the number of physical racks.
 - Nodes within a logical rack must be within a physical rack.
 - The rank IDs of NPUs within a logical rack are consecutive.
 
-**Normal Task Scheduling<a name="section082914315117"></a>**
+**Normal Task Scheduling**
 
 - You can specify the `ra-block` field in the task YAML to define the number of logical rack chips. For a single node, it must match the number of chips requested by the task. For distributed scenarios, it must be an integer multiple of the node chip count, and the total number of task chips must be an integer multiple of it. If you do not specify this field, Volcano will set the logical rack size of this task to the total number of NPUs on the node during scheduling.
 
-**Fault Rescheduling**<a name="section84520611516"></a>
+**Fault Rescheduling**
 
 - If all nodes in the logical rack have no faults, the nodes under this logical rack must continue to be used during rescheduling.
 - If some nodes in the logical rack become faulty and unavailable, nodes are selected from the physical rack they belong to, while other nodes remain unchanged.

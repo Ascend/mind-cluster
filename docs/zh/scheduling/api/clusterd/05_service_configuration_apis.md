@@ -22,7 +22,7 @@ rpc Register(ClientInfo) returns (Status) {}
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info =2;</p>}|<p>**Status.code**：返回码。<ul><li>取值为0：表示注册成功。</li><li>其他值：表示注册失败。</li></ul></p><p>**Status.info**：返回信息描述。</p>|
+|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<ul><li>取值为0：表示注册成功。</li><li>其他值：表示注册失败。</li></ul></p><p>**Status.info**：返回信息描述。</p>|
 
 ## SubscribeRankTable<a name="ZH-CN_TOPIC_0000002511346779"></a>
 

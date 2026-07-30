@@ -11,6 +11,6 @@ The resumable training feature is an advanced feature for MindCluster scheduling
     Some processes of resumable training depend on reading storage data, such as loading checkpoint, starting training, and loading compilation caches. Storage performance affects the overall recovery time of resumable training. To prevent degradation of training recovery time, it is recommended to optimize storage performance configuration. The recommended configuration provided below uses a cluster of 10,000-card scale as an example.
 
     - 8K IO read IOPS: > 10.24 million
-    - 8K IO write IOPS:> 1.28 million
+    - 8K IO write IOPS: > 1.28 million
     - Large file sequential read bandwidth: > 288 GB/s
     - Write bandwidth for large file creation: > 173 GB/s

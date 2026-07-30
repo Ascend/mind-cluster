@@ -21,7 +21,7 @@ rpc SwitchNicTrack(SwitchNics) returns (Status) {}
 
 |Parameter|Type (Protobuf Definition)|Description|
 |--|--|--|
-|SwitchNics|<p>message SwitchNics{</p><p>string jobID;</p><p>map<string, DeviceList> nicOps;</p>}<p>message DeviceList {<p>repeated string dev;</p><p>repeated bool op;</p>}</p>|<p>**SwitchNics.jobID**: Job ID.</p><p>**SwitchNics.nicOps**: Devices and operations for which the user issues link failover/switchback Commands. The key is the node name, and the value is the Device to be operated on that node.</p><p>**DeviceList.dev**: List of device IDs on this node. The number must match that of DeviceList.op.</p><p>**DeviceList.op**: List of link failover operations to be performed for the devices corresponding to the DeviceIDs on this node. `true` indicates switching to the standby link, and `false` indicates using the primary link.</p>|
+|SwitchNics|<p>message SwitchNics{</p><p>string jobID;</p><p>map<string, DeviceList> nicOps;</p>}<p>message DeviceList {<p>repeated string dev;</p><p>repeated bool op;</p>}</p>|<p>**SwitchNics.jobID**: Job ID.</p><p>**SwitchNics.nicOps**: Devices and operations for which the user issues link failover/switchback commands. The key is the node name, and the value is the Device to be operated on that node.</p><p>**DeviceList.dev**: List of device IDs on this node. The number must match that of DeviceList.op.</p><p>**DeviceList.op**: List of link failover operations to be performed for the devices corresponding to the DeviceIDs on this node. `true` indicates switching to the standby link, and `false` indicates using the primary link.</p>|
 
 **Return Value Description<a name="section146221236193515"></a>**
 
@@ -51,7 +51,7 @@ rpc SubscribeSwitchNicSignal(SwitchNicRequest) returns (stream SwitchNicResponse
 
 |Parameter|Type (Protobuf Definition)|Description|
 |--|--|--|
-|SwitchNicResponse|message SwitchNicResponse{<p>string jobID;</p><p>string msg;</p>}|<p>**SwitchNicResponse.jobID**: Job ID</p><p>**SwitchNicResponse.msg**: Execution result of the link failover/switchback Command</p>|
+|SwitchNicResponse|message SwitchNicResponse{<p>string jobID;</p><p>string msg;</p>}|<p>**SwitchNicResponse.jobID**: Job ID</p><p>**SwitchNicResponse.msg**: Execution result of the link failover/switchback command</p>|
 
 ## SubscribeNotifySwitch<a name="ZH-CN_TOPIC_0000002511346769"></a>
 

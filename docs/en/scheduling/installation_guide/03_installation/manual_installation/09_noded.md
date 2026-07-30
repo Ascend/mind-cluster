@@ -162,7 +162,7 @@
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p48961228192511"><a name="p48961228192511"></a><a name="p48961228192511"></a>7</p>
 </td>
 <td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p198961128162516"><a name="p198961128162516"></a><a name="p198961128162516"></a>Number of days to retain pingmesh result backup files. Value range: [7, 700], unit: days.</p>
-<div class="note" id="note1058610517274"><a name="note1058610517274"></a><a name="note1058610517274"></a><span class="notetitle">[!NOTE] Description</span><div class="notebody"><p id="p946415413280"><a name="p946415413280"></a><a name="p946415413280"></a>This parameter is supported only on <span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD</span>. The driver version must be ≥ 24.1.RC1.</p>
+<div class="note" id="note1058610517274"><a name="note1058610517274"></a><a name="note1058610517274"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p946415413280"><a name="p946415413280"></a><a name="p946415413280"></a>This parameter is supported only on <span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD</span>. The driver version must be ≥ 24.1.RC1.</p>
 </div></div>
 </td>
 </tr>
@@ -172,7 +172,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p962817282367"><a name="p962817282367"></a><a name="p962817282367"></a>/var/log/mindx-dl/noded/noded.log</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p1862816283365"><a name="p1862816283365"></a><a name="p1862816283365"></a>Log file. When a single log file exceeds 20 MB, automatic rotation is triggered. The maximum file size cannot be modified. The naming format of the rotated file is: noded-rotation_time.log, for example: noded-2023-10-07T03-38-24.402.log.</p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p1862816283365"><a name="p1862816283365"></a><a name="p1862816283365"></a>Log file. When a single log file exceeds 20 MB, automatic rotation is triggered. The maximum file size cannot be modified. The naming format of the rotated file is: noded-<em>dump_trigger_time</em>.log, for example: noded-2023-10-07T03-38-24.402.log.</p>
 </td>
 </tr>
 <tr id="row1862892813363"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p10628202814365"><a name="p10628202814365"></a><a name="p10628202814365"></a>-maxBackups</p>

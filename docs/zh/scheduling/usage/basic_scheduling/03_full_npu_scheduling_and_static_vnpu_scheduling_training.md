@@ -204,7 +204,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ```
 
 3. <a name="zh-cn_topic_0000001558834814_li1630573712375"></a>在本地解压[步骤1](#zh-cn_topic_0000001558834814_li1040412108620)中下载的训练代码，将“ModelZoo-TensorFlow-master/TensorFlow2/built-in/cv/image\_classification/”下的“ResNet50\_ID0360\_for\_TensorFlow2.X”目录重命名为“ResNet50\_for\_TensorFlow\_2.6\_code/”目录。
-4. 将ResNet50\_for\_TensorFlow\_2.6\_code文件上传至环境的“/data/atlas\_dls/public/code/”路径下。
+4. 将ResNet50\_for\_TensorFlow\_2.6\_code目录上传至环境的“/data/atlas\_dls/public/code/”路径下。
 5. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/without-ranktable/tensorflow”目录中的“train\_start.sh”文件，结合[步骤3](#zh-cn_topic_0000001558834814_li1630573712375)中的“ResNet50\_for\_TensorFlow\_2.6\_code”目录，在host的“/data/atlas\_dls/public/code”路径下，构造如下的目录结构。
 
     ```text
@@ -308,7 +308,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ```
 
 4. 在本地解压[步骤1](#zh-cn_topic_0000001558834814_li1141932513379)中下载的训练代码，将“models/official/cv/”下的“ResNet”目录重命名为“ResNet50\_for\_MindSpore\_2.0\_code”。后续步骤以“ResNet50\_for\_MindSpore\_2.0\_code”目录为例。
-5. 将ResNet50\_for\_MindSpore\_2.0\_code文件上传至环境“/data/atlas\_dls/public/code/”路径下。
+5. 将ResNet50\_for\_MindSpore\_2.0\_code目录上传至环境“/data/atlas\_dls/public/code/”路径下。
 6. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/without-ranktable/mindspore”目录中的“train\_start.sh”文件，结合训练代码中“scripts”目录，在host上构造如下的目录结构。
 
     ```text
@@ -478,7 +478,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ```
 
 4. 在本地解压[步骤1](#zh-cn_topic_0000001558834798_li1141932513379)中下载的训练代码，将“models/official/cv/”下的“ResNet”目录重命名为“ResNet50\_for\_MindSpore\_2.0\_code”。后续步骤以“ResNet50\_for\_MindSpore\_2.0\_code”目录为例。
-5. 将ResNet50\_for\_MindSpore\_2.0\_code文件上传至环境“/data/atlas\_dls/public/code/”路径下。
+5. 将ResNet50\_for\_MindSpore\_2.0\_code目录上传至环境“/data/atlas\_dls/public/code/”路径下。
 6. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/ranktable”目录中的“train\_start.sh”、“utils.sh”和“rank\_table.sh”文件，结合训练代码中“scripts”目录，在host上构造如下的目录结构。
 
     ```text
@@ -1146,21 +1146,21 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </li><li><span id="ph18991153532717"><a name="ph18991153532717"></a><a name="ph18991153532717"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="ph20855174373110"><a name="ph20855174373110"></a><a name="ph20855174373110"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph27041232195"><a name="ph27041232195"></a><a name="ph27041232195"></a>Atlas 800T A3 超节点服务器</span>：<a name="ul499153515277"></a><a name="ul499153515277"></a><ul id="ul499153515277"><li>单机多芯片任务：2、4、6、8、10、12、14、16</li><li>分布式任务：2、4、6、8、10、12、14、16</li><li>针对<span id="ph798511112819"><a name="ph798511112819"></a><a name="ph798511112819"></a>Atlas 900 A3 SuperPoD 超节点</span>的逻辑超节点亲和任务：16</li></ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（无互联节点内8卡）</span>：
+    <span>Atlas 350 标卡服务器（无互联节点内8卡）</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8</li>
         <li>分布式：1、2、3、4、5、6、7、8</li>
     </ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（无互联节点内16卡）</span>：
+    <span>Atlas 350 标卡服务器（无互联节点内16卡）</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
         <li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
     </ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（4P mesh 8卡）</span>：
+    <span>Atlas 350 标卡服务器（4P mesh 8卡）</span>：
     <ul>
         <li>单机（满足亲和性）：1、2、3、4、8</li>
         <li>单机（不保证亲和性）：5、6、7</li>
@@ -1169,7 +1169,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     </ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（4P mesh 16卡）</span>：
+    <span>Atlas 350 标卡服务器（4P mesh 16卡）</span>：
     <ul>
         <li>单机（满足亲和性）：1、2、3、4、8、12、16</li>
         <li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li>
@@ -1180,8 +1180,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 <li>
     <span>Atlas 850 系列硬件产品（普通集群）</span>：
     <ul>
-        <li>单机：1、2、4、8</li>
-        <li>分布式：1、2、4、8</li>
+        <li>单机：1、2、3、4、5、6、7、8</li>
+        <li>分布式：1、2、3、4、5、6、7、8</li>
     </ul>
 </li>
 <li>
@@ -1380,21 +1380,21 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </li><li><span id="ph133001904447"><a name="ph133001904447"></a><a name="ph133001904447"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="ph830011074420"><a name="ph830011074420"></a><a name="ph830011074420"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph83001907446"><a name="ph83001907446"></a><a name="ph83001907446"></a>Atlas 800T A3 超节点服务器</span>：<a name="ul130020074415"></a><a name="ul130020074415"></a><ul id="ul130020074415"><li>单机多芯片：2、4、6、8、10、12、14、16</li><li>分布式：16</li></ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（无互联节点内8卡）</span>：
+    <span>Atlas 350 标卡服务器（无互联节点内8卡）</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8</li>
         <li>分布式：1、2、3、4、5、6、7、8</li>
     </ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（无互联节点内16卡）</span>：
+    <span>Atlas 350 标卡服务器（无互联节点内16卡）</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
         <li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
     </ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（4P mesh 8卡）</span>：
+    <span>Atlas 350 标卡服务器（4P mesh 8卡）</span>：
     <ul>
         <li>单机（满足亲和性）：1、2、3、4、8</li>
         <li>单机（不保证亲和性）：5、6、7</li>
@@ -1403,7 +1403,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     </ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（4P mesh 16卡）</span>：
+    <span>Atlas 350 标卡服务器（4P mesh 16卡）</span>：
     <ul>
         <li>单机（满足亲和性）：1、2、3、4、8、12、16</li>
         <li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li>
@@ -1414,8 +1414,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 <li>
     <span>Atlas 850 系列硬件产品（普通集群）</span>：
     <ul>
-        <li>单机：1、2、4、8</li>
-        <li>分布式：1、2、4、8</li>
+        <li>单机：1、2、3、4、5、6、7、8</li>
+        <li>分布式：1、2、3、4、5、6、7、8</li>
     </ul>
 </li>
 <li>

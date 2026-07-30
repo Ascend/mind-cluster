@@ -39,7 +39,7 @@ Checkpoint serialization uses the pickle component built into Python. It is esse
 
 **Firewall Configuration**
 
-After the operating system is installed, if a regular user is configured, you can add the `"ALWAYS_SET_PATH=yes"` configuration in the `"/etc/login.defs"` file to prevent unauthorized operations. In addition, to prevent privilege escalation caused by bringing the current user's environment variables into other environments when using the `su` command to switch users, use the `su - [user]` command for user switching, and add the configuration parameter `"ALWAYS_SET_PATH=yes` in the server configuration file `"/etc/default/su"` to prevent privilege escalation.
+After the operating system is installed, if a regular user is configured, you can add the `"ALWAYS_SET_PATH=yes"` configuration in the `"/etc/login.defs"` file to prevent unauthorized operations. In addition, to prevent privilege escalation caused by bringing the current user's environment variables into other environments when using the `su` command to switch users, use the `su - [user]` command for user switching, and add the configuration parameter `"ALWAYS_SET_PATH=yes"` in the server configuration file `"/etc/default/su"` to prevent privilege escalation.
 
 **Setting umask**
 

@@ -4,7 +4,7 @@
 
 Before installing the components, you must read [Introduction](../introduction/00_overview.md) carefully to understand the detailed functions of each cluster scheduling component, and select the corresponding components to install based on the features you intend to use.
 
-The Elastic Agent, TaskD, and MindIO components must be deployed in containers. For detailed installation steps, see [Creating an Image](../usage/resumable_training/07_using_resumable_training_on_the_cli.md).
+The Elastic Agent, TaskD, and MindIO components must be deployed in containers. For detailed installation steps, see [Creating an Image](../usage/resumable_training/07_using_resumable_training_on_the_cli.md#building-an-image).
 
 >[!NOTE]
 >The Resilience Controller and Elastic Agent components have been deprecated. Content related to Resilience Controller will be removed in the version released on September 30, 2026; content related to Elastic Agent will be removed in the version released on December 30, 2026.

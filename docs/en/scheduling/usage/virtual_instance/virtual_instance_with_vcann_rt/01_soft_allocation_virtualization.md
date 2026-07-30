@@ -116,7 +116,7 @@ Before using soft partitioning-based virtualization, you need to understand the 
 
     2. (Optional) For hybrid deployment scenarios involving soft partitioning-based virtualization and non-soft partitioning-based virtualization, the YAML of Ascend Device Plugin needs to be modified as follows.
 
-       - Install Ascend Device Plugin that supports soft partitioning on nodes that support soft partitioning-based virtualization, and copy `device-plugin-volcano-v{version}.yaml to softsharedev-device-plugin-volcano-v{version}.yaml`. Modify `softsharedev-device-plugin-volcano-v{version}`.yaml as follows:
+       - Install Ascend Device Plugin that supports soft partitioning on nodes that support soft partitioning-based virtualization, and copy `device-plugin-volcano-v{version}.yaml` to `softsharedev-device-plugin-volcano-v{version}.yaml`. Modify `softsharedev-device-plugin-volcano-v{version}.yaml` as follows:
 
          ```Yaml
          apiVersion: apps/v1
@@ -221,7 +221,7 @@ spec:
             accelerator-type: module-910b-8 # depend on your device model, 910bx8 is module-910b-8 ,910bx16 is module-910b-16
           containers:
             - name: ascend # do not modify
-              image: pytorch-test:latest         # trainning framework image， which can be modified
+              image: pytorch-test:latest         # training framework image， which can be modified
               imagePullPolicy: IfNotPresent
               env:
                 - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running

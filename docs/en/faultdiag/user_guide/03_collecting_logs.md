@@ -81,7 +81,7 @@ This section describes the structure of the directory to be cleaned. You can col
         ${Collection_directory}/*/log_1_*.log
         ```
 
-        The table below describes the log files stored in each directory.
+        [Table 1](#table12937722195315) describes the log files stored in each directory.
 
         **Table 1** Log file list
 
@@ -388,7 +388,7 @@ This section describes the structure of the directory to be cleaned. You can col
         </tbody>
         </table>
 
-- You can also enter the corresponding log directory in the cleaning command for cleaning. The following describes the log storage structure of each parameter. For details about the parameters of the cleaning command, see Table 1.
+- You can also enter the corresponding log directory in the cleaning command for cleaning. The following describes the log storage structure of each parameter. For details about the parameters of the cleaning command, see [Table 1](../api/log_cleaning.md).
 
     ```text
     |-- ${--process_log paths}
@@ -1375,7 +1375,7 @@ Example:
 /usr/local/Ascend/driver/tools/hccn_tool -i ${device_id} -stat -g
 ```
 
-Record all metrics and their values and save them as a CSV file, as shown in [Table 1].
+Record all metrics and their values and save them as a CSV file, as shown in [Table 1](#table205133240413).
 
 Command output:
 
@@ -1595,9 +1595,9 @@ MindCluster Ascend FaultDiag can collect the host resource information in either
     ```json
     host_metrics_${core_num}.json:
     {
-    "node_mem_used": [[*Unix timestamp*, *Metric value*],...],
-    "node_rss_{pid}": [[*Unix timestamp*, *Metric value*],...],
-    "node_cpu_{pid}": [[*Unix timestamp*, *Metric value*],...],
+    "node_mem_used": [[${Unix_timestamp}, ${Metric_value}],...],
+    "node_rss_{pid}": [[${Unix_timestamp}, ${Metric_value}],...],
+    "node_cpu_{pid}": [[${Unix_timestamp}, ${Metric_value}],...],
     }
     ```
 
@@ -1699,7 +1699,7 @@ MindCluster Ascend FaultDiag can collect MindIE Pod console logs in either of th
 - Naming restriction: `npu_info_after.txt`.
 - Constraints on the storage path:
     - `${Collection_directory}/environment_check/`
-    - `${--env_check-specified path}/`
+    - `${--env_check parameter-specified path}/`
     - For details, see [Log Collection Directory Structure](#log-collection-directory-structure).
 
 **Collection Methods <a name="section225344011339"></a>**
@@ -2303,7 +2303,7 @@ MindCluster Ascend FaultDiag can collect NPU environment check files after train
 - Naming rule: The file name contains `rank-` or `worker-` and ends with `.txt` or `.log`.
 - Constraints on the storage path: The data is stored in the collection directory. For details about the collection directory, see [Log Collection Directory Structure](#log-collection-directory-structure).
 
-    **Figure 1**
+    **Figure 1** Example
     ![](../../figures/faultdiag/example.png)
 
 **Collection Methods <a name="section1020314437418"></a>**
@@ -2316,7 +2316,7 @@ This feature requires that the training or inference logs of each user be dumped
 
 **File Description <a name="section56641436194180007"></a>**
 
-- Include host-side App log `plog-{pid}-{time}.log` and device-side App log `device-{pid}-{time}.log`. For details, see [Viewing Logs (Ascend EP)](https://www.hiascend.com/document/detail/en/canncommercial/850/maintenref/logreference/logreference_0002.html) in the *CANN Log Reference*.
+- Include host-side App log `plog-{pid}-{time}.log` and device-side App log `device-{pid}-{time}.log`. For details, see [Viewing Logs (Ascend EP)](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/900/maintenref/logreference/logreference_0002.html) in the *CANN Log Reference*.
 - Naming rule: `plog-{pid}-{time}.log`, `device-{pid}-{time}.log`
 - Constraints on the storage path:
     - `${Collection_directory}/`
@@ -2476,7 +2476,7 @@ dmidecode > dmidecode.txt
 **File Description <a name="section11629750194115"></a>**
 
 - Include logs on the device.
-- Naming rule: `device-os_{time}.log`, `event_{time}.log`, d`evice-{id}_{time}.log`, and `history.log`.
+- Naming rule: `device-os_{time}.log`, `event_{time}.log`, `device-{id}_{time}.log`, and `history.log`.
 - Constraints on the storage path:
     - `${Collection_directory}/device_log`
     - `${--device_log}/`
@@ -2556,7 +2556,7 @@ msnpureport
 ```
 
 - After the command is executed, a folder with the timestamp is generated in the current directory. You need to dump the `slog` and `hisi_logs` folders in the timestamp directory to `${Collection_directory}/device_log`.
-- If collection fails, refer to [FAQs > What Do I Do If Log Flush Fails](https://www.hiascend.com/document/detail/en/canncommercial/850/maintenref/logreference/logreference_0024.html) in the *CANN Log Reference*.
+- If collection fails, refer to [FAQs > What Do I Do If Log Flush Fails](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/900/maintenref/logreference/logreference_0024.html) in the *CANN Log Reference*.
 
 ### MindCluster Logs <a name="ZH-CN_TOPIC_0000002045702997"></a>
 
@@ -2592,7 +2592,7 @@ cp -r /var/log/mindx-dl/npu-exporter ${Collection_directory}/dl_log
 Run the following command to go to the log storage directory and copy the logs of related components:
 
 ```shell
-cp -r ~/mindie Collection directory
+cp -r ~/mindie ${Collection_directory}
 ```
 
 ### AMCT Logs <a name="ZH-CN_TOPIC_0000002107731865"></a>
@@ -2641,7 +2641,7 @@ cp -r ~/ttp_log ${Collection_directory}/dl_log/ttp_log
 
 **Collection Methods**
 
-When the the LCNE component (Ascend 950) is running, log files are generated.
+When the LCNE component (Ascend 950) is running, log files are generated.
 
 - Method 1: Log in to the Ascend 950 1213 background and obtain the `log.log` file from the `/opt/vrpv8/home/logfile` directory.
 - Method 2: Log in to the Ascend 950 1213 foreground, run the `collect diagnostic information` command to collect logs, and obtain the `diagnostic_information_*.zip` compressed log file from the `/opt/vrpv8/home/logfile` directory on the Ascend 950 1213 background. You need to manually decompress all compressed logs.

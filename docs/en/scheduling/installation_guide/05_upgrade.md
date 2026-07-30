@@ -85,13 +85,13 @@ Before performing the upgrade steps for each component, select the corresponding
         ```
 
     3. <a name="li1427143773119"></a>(Optional) Modify the value of the activate field.
-        - If the SuperPoD ID is in the `pingmesh-confi`g file, modify the `activate` field under this SuperPo ID to `off`.
-        - If the SuperPo ID is not in the `pingmesh-config` file, you can configure it using the following two methods.
+        - If the SuperPoD ID is in the `pingmesh-config` file, modify the `activate` field under this SuperPoD ID to `off`.
+        - If the SuperPoD ID is not in the `pingmesh-config` file, you can configure it using the following two methods.
             - Add the SuperPoD information in the configuration file and set `activate` to `off`.
             - Delete all SuperPoD information in the `pingmesh-config` file, and set the value of the `activate` field in the global configuration to `off`.
 
 3. Check the installed MindCluster components.
-    - (Optional) CheckTaskD. Execute the following command to enter the container and view the TaskD installation status.
+    - (Optional) Check TaskD. Execute the following command to enter the container and view the TaskD installation status.
 
         ```shell
         docker run -it  {Training image name}:tag /bin/bash
@@ -113,9 +113,9 @@ Before performing the upgrade steps for each component, select the corresponding
         Required-by:
         ```
 
-    - (Optional)Check other components. Refer to [Component Status Confirmation](../installation_guide/04_confirming_status.md) to confirm whether the corresponding components are installed on the nodes in the cluster.
+    - (Optional) Check other components. Refer to [Component Status Confirmation](../installation_guide/04_confirming_status.md) to confirm whether the corresponding components are installed on the nodes in the cluster.
 
-4. (Optional) If MindCluster cluster scheduling components have not been installed, refer to the [Installation and Deployment](./03_installation/manual_installation/00_obtaining_software_packages.md) chapter to install them first. For the installation steps of TaskD, refer to the [Preparing Image](../usage/resumable_training/07_using_resumable_training_on_the_cli.md) chapter.
+4. (Optional) If MindCluster cluster scheduling components have not been installed, refer to the [Installation and Deployment](./03_installation/manual_installation/00_obtaining_software_packages.md) chapter to install them first. For the installation steps of TaskD, refer to the [Preparing Image](../usage/resumable_training/07_using_resumable_training_on_the_cli.md#building-an-image) chapter.
 
 ## Upgrading Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002479226420"></a>
 
@@ -279,7 +279,7 @@ Directly replace the Container Manager binary file to upgrade the component on a
     ```
 
 5. Verify the upgrade status of Container Manager.
-    1. Check the component service status, which should be `active (running)`。
+    1. Check the component service status, which should be `active (running)`.
 
         ```shell
         systemctl status container-manager.service
@@ -345,14 +345,14 @@ If a job with resumable training enabled is running, upgrading ClusterD will cau
 
 **Upgrade Steps<a name="section65996266718"></a>**
 
-1. Uninstall the old version of MindCluster components. For details, see "Uninstalling Other Components > Step 2" in [Uninstallation](./06_uninstallation.md).
-2. Refer to the [Obtain Software Packages](./03_installation/manual_installation/00_obtaining_software_packages.md) chapter to download the new of the component installation packages.
+1. Uninstall the old version of MindCluster components. For details, see "Step 2" in [Uninstall Other Components](./06_uninstallation.md#uninstalling-other-components).
+2. Refer to the [Obtain Software Packages](./03_installation/manual_installation/00_obtaining_software_packages.md) chapter to download the new version of the component installation packages.
 3. (Optional) Prepare the new image of the MindCluster cluster scheduling components. If the new component is installed using binary files, you can skip this step.
 
     Refer to the [Preparing Image](./03_installation/manual_installation/01_preparing_for_installation.md#preparing-an-image) chapter to pull the new version image from the Ascend image repository or create a new version image. Note that the tag of the new version component image must be inconsistent with that of the old component image to avoid overwriting the old component image.
 
 4. <a name="li147194506333"></a>Re-execute the manual installation steps based on the component to be upgraded. For detailed steps, see [Installing New MindCluster Components](./03_installation/manual_installation/00_obtaining_software_packages.md).
-5. (Optional) If you need to roll back to an older version, execute [Uninstallation](./06_uninstallation.md) "Uninstall Other Components > Step 2" and [Step 4](#li147194506333) in sequence to uninstall the new components and then install the old components.
+5. (Optional) If you need to roll back to an older version, execute "Step 2" in [Uninstall Other Components](./06_uninstallation.md#uninstalling-other-components) and [Step 4](#li147194506333) in sequence to uninstall the new components and then install the old components.
 
 ## Upgrading Image<a name="ZH-CN_TOPIC_0000002511346311"></a>
 
@@ -445,7 +445,7 @@ This chapter only guides users on upgrading the binary file version within a con
     Taking NodeD as an example, the output example is as follows, indicating that the Pod has been started.
 
     ```ColdFusion
-    mindx-dl   noded- m4j4r  1/1  Running 0     1m
+    mindx-dl   noded-m4j4r  1/1  Running 0     1m
     ```
 
 ## Elastic Agent Upgrade to TaskD<a name="ZH-CN_TOPIC_0000002515202401"></a>

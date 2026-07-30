@@ -103,7 +103,7 @@ You can prepare images in the following two ways. After obtaining the images, cr
     <td class="cellrowborder" valign="top" width="54.76547654765477%" headers="mcps1.2.5.1.3 "><pre class="screen" id="screen3237730141519"><a name="screen3237730141519"></a><a name="screen3237730141519"></a>docker build --no-cache -t ascend-k8sdeviceplugin:<em id="i02419301157"><a name="i02419301157"></a><a name="i02419301157"></a>{</em><em id="i133991029173612"><a name="i133991029173612"></a><a name="i133991029173612"></a>tag}</em> ./</pre>
     </td>
     <td class="cellrowborder" rowspan="9" valign="top" width="19.21192119211921%" headers="mcps1.2.5.1.4 "><p id="p10280193431010"><a name="p10280193431010"></a><a name="p10280193431010"></a><em id="i472612293915"><a name="i472612293915"></a><a name="i472612293915"></a>{tag}</em> must reference the version on the software package. For example, if the version on the software package is <span id="ph18653133316811"><a name="ph18653133316811"></a><a name="ph18653133316811"></a>26.0.0</span>, then <em id="i1572610273910"><a name="i1572610273910"></a><a name="i1572610273910"></a>{tag}</em> is v<span id="ph205239348813"><a name="ph205239348813"></a><a name="ph205239348813"></a>26.0.0</span>.</p>
-    <div class="note" id="note1217913258443"><a name="note1217913258443"></a><a name="note1217913258443"></a><span class="notetitle">[!NOTE] Description</span><div class="notebody"><p id="p11793259444"><a name="p11793259444"></a><a name="p11793259444"></a>Ensure that the <span id="ph18833164913291"><a name="ph18833164913291"></a><a name="ph18833164913291"></a>GID</span> and <span id="ph5530185193011"><a name="ph5530185193011"></a><a name="ph5530185193011"></a>UID</span> of HwDmUser and HwBaseUser in Dockerfile-310P-1usoc are consistent with those on the physical machine.</p>
+    <div class="note" id="note1217913258443"><a name="note1217913258443"></a><a name="note1217913258443"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p11793259444"><a name="p11793259444"></a><a name="p11793259444"></a>Ensure that the <span id="ph18833164913291"><a name="ph18833164913291"></a><a name="ph18833164913291"></a>GID</span> and <span id="ph5530185193011"><a name="ph5530185193011"></a><a name="ph5530185193011"></a>UID</span> of HwDmUser and HwBaseUser in Dockerfile-310P-1usoc are consistent with those on the physical machine.</p>
     </div></div>
     <p id="p7733142881719"><a name="p7733142881719"></a><a name="p7733142881719"></a></p>
     </td>
@@ -167,7 +167,7 @@ You can prepare images in the following two ways. After obtaining the images, cr
     </tbody>
     </table>
 
-Taking the image creation of Ascend Operator as an example, run the `docker build --no-cache -t ascend-operator:v{version} .` command to create the image. The sample output is as follows. **Note: Do not omit the "." at the end of the command.**
+   Taking the image creation of Ascend Operator as an example, run the `docker build --no-cache -t ascend-operator:v{version} .` command to create the image. The sample output is as follows. **Note: Do not omit the "." at the end of the command.**
 
     ```ColdFusion
     DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
@@ -210,7 +210,7 @@ Taking the image creation of Ascend Operator as an example, run the `docker buil
     2. Copy the image to other nodes.
 
         ```shell
-        scp noded-v{version}-linux-aarch64.tar root@{Target node IP}:Save path
+        scp noded-v{version}-linux-aarch64.tar root@{Target_node_IP}:{Save_path}
         ```
 
     3. Log in to each node as the `root` user and load the offline image.
@@ -380,7 +380,7 @@ In a K8s cluster, if a node containing an Ascend AI Processor is used as the K8s
 2. Label the corresponding nodes based on the label information in [Table 1](#table202738181704) to facilitate the cluster scheduling components in scheduling across various types of worker nodes.
 
     ```shell
-    kubectl label nodes Hostname Label
+    kubectl label nodes <Hostname> <Label>
     ```
 
     Taking the hostname `ubuntu` and the label `masterselector=dls-master-node` as an example, the command is as follows.
@@ -533,7 +533,7 @@ In a K8s cluster, if a node containing an Ascend AI Processor is used as the K8s
     </tr>
     <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>Compute node</p>
     </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p>Atlas 350 standard card</p>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p>Atlas 350 PCIe card</p>
     </td>
     <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3"><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm or host-arch=huawei-x86</li><li>accelerator=huawei-npu</li><li>(Optional) nodeDEnable=on</li></ul>
     </td>

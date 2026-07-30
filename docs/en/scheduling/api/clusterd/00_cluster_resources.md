@@ -47,7 +47,7 @@ After ClusterD starts, the following ConfigMaps are created:
 |RackID|Rack ID.|
 |ServerIndex|The relative position of the current node in the SuperPoD.<ul><li>When the value of `SuperPodID` or `ServerIndex` reported by the driver is `0xffffffff`, the value of `SuperPodID` or `ServerIndex` is `-1`.</li><li>The value of `SuperPodID` or `ServerIndex` is `-2` in the following cases.</li><ul><li>The current device does not support querying SuperPoD information.</li><li>Failed to obtain SuperPoD information due to a driver issue.</li></ul></ul>|
 
-**Table 3**  cluster-info-switch-${x}
+**Table 3** cluster-info-switch-${x}
 
 <a name="table9246232250"></a>
 
@@ -143,7 +143,7 @@ localhost.localdomain:
 Events:  <none>
 ```
 
-**Table 7**  clusterd-manual-info-cm
+**Table 7** clusterd-manual-info-cm
 
 |Parameter|Description|
 |--|--|

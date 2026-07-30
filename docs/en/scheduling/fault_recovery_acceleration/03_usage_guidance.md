@@ -192,8 +192,8 @@ After installing the MindIO TFT SDK, you need to start the MindIO TFT module in 
 
             For distributed optimizers, the static memory increases due to the addition of optimizer replicas. However, as the cluster size increases, the DP Size becomes larger, and the average increase in memory per device is very small, which helps avoid OOM. Therefore, it is recommended to be used in large clusters. Choose whether to enable it and adjust parameters based on the memory situation.
 
-        - `enable-hbmfault-repair`: switch for MindIO UCE, disabled by default. When configured, it performs fault detection on on-chip memory and completes online repair, achieving step-level recomputation functionality. This switch takes effect when `enable-high-availability` is enabled. This feature depends on the memory management mechanism of PyTorch and can only be used when the PyTorch environment variable `PYTORCH_NO_NPU_MEMORY_CACHING` is not configured, meaning the memory reuse mechanism is enabled. If `export PYTORCH_NO_NPU_MEMORY_CACHING = 1`, this feature cannot be used.
-        - `enable-worker-reboot`: switch for MindIO ARF, disabled by default. When configured, it performs process-level restart repair to continue training when a general fault occurs. This switch takes effect when `enable-high-availability` is enabled.
+        - `enable-hbmfault-repair`: switch for MindIO UCE, disabled by default. When configured, it performs fault detection on on-chip memory and network status, and completes online repair, achieving process-level online recovery functionality. This switch takes effect when `enable-high-availability` is enabled. This feature depends on the memory management mechanism of PyTorch and can only be used when the PyTorch environment variable `PYTORCH_NO_NPU_MEMORY_CACHING` is not configured, meaning the memory reuse mechanism is enabled. If `export PYTORCH_NO_NPU_MEMORY_CACHING = 1`, this feature cannot be used.
+        - `enable-worker-reboot`: switch for MindIO ARF, disabled by default. When configured, it performs process-level rescheduling repair to continue training when a general fault occurs. This switch takes effect when `enable-high-availability` is enabled.
         - `distributed-optimizer-no-replica`: After enabling the high availability feature, the distributed optimizer adds optimizer replicas by default, which increases on-chip memory usage. After enabling this switch, the distributed optimizer does not increase replica memory usage. In MindIO UCE and MindIO ARF scenarios, periodic checkpoints are directly used for online repair.
 
         **Table 1<a id="table_tft_03"></a>**  Theoretical numerical changes in optimizer parameters between the native optimizer and the optimizer when MindIO TFT enabled
@@ -262,20 +262,20 @@ Before you proceed, please understand the [Constraints](./02_installation_and_de
 
 **Feature Reference**
 
-The functional adaptation points required for related features are shown in [Table 1](#table_tft_04), and the code reference links corresponding to each functional adaptation point are shown in [Table 2](#table_tft_05).
+The functional adaptation points required for related features are shown in [Table 2](#table_tft_04), and the code reference links corresponding to each functional adaptation point are shown in [Table 3](#table_tft_05).
 
-**Table 1<a id="table_tft_04"></a>**  Features and functional adaptation points
+**Table 2<a id="table_tft_04"></a>**  Features and functional adaptation points
 
 | Feature |  Adaptation Point Number |
 |--|--|
 | Dying Gasp | 1, 2, 3, 4, 5, 6, 7 |
-| UCE Fast Recovery | 1, 2, 3, 4, 5, 6, 8, 10, 11 |
-| Network Fast Recovery | 1, 2, 5, 6, 11 |
-| Process Fast Recovery | 1, 2, 3, 4, 5, 6, 9, 10, 11 |
+| Process-level online recovery (on-chip memory fault)| 1, 2, 3, 4, 5, 6, 8, 10, 11 |
+| Process-level online recovery (network fault) | 1, 2, 5, 6, 11 |
+| Process-level rescheduling | 1, 2, 3, 4, 5, 6, 9, 10, 11 |
 | Hot Switching | 1, 2, 3, 4, 5, 9, 10, 11, 12 |
 | Online Stress Testing/Link Failover and Switchback | 1, 2, 12 |
 
-**Table 2<a id="table_tft_05"></a>** Code reference links for related features
+**Table 3<a id="table_tft_05"></a>** Code reference links for related features
 
 | No. | Adapted Feature | Reference Code |
 |--|--|--|

@@ -53,7 +53,7 @@ This section guides users through installing and deploying Telegraf, and viewing
             tar -zxvf telegraf-1.34.3_linux_arm64.tar.gz
             ```
 
-        5. Go to the decompressed directory, find the Telegraf binary file in the `./usr/bin` path, and copy the file to any path such as "`/home/npu_plugin`.
+        5. Go to the decompressed directory, find the Telegraf binary file in the `./usr/bin` path, and copy the file to any path such as `/home/npu_plugin`.
 
     - **Online Installation**
         1. Go to the [Telegraf download page](https://www.influxdata.com/downloads/).

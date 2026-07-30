@@ -367,7 +367,7 @@ In Kubernetes scenarios, when you need to use vNPU resources, you must combine A
 
     2. Volcano parameter modification and startup instructions:
 
-       In the Volcano deployment file `volcano-v{version}.yaml`", you need to configure `presetVirtualDevice` and the value can only be `true`.
+       In the Volcano deployment file `volcano-v{version}.yaml`, you need to configure `presetVirtualDevice` and the value can only be `true`.
 
         ```Yaml
         ...
@@ -397,7 +397,7 @@ In Kubernetes scenarios, when you need to use vNPU resources, you must combine A
 
 - When creating a training job, modify the following configuration in the YAML file. This example uses Atlas training series products.
 
-    The resource type specified in `requests` and `limits` under `resources` should be changed to `huawei.com/Ascend910-Y`, where the <i>Y</i> value is related to the vNPU type. For specific values, refer to the "vNPU Type" column in [Table 2 Virtual instance templates and vNPU types](#table47415104403).
+    The resource type specified in `requests` and `limits` under `resources` should be changed to `huawei.com/Ascend910-Y`, where the <i>Y</i> value is related to the vNPU type. For specific values, refer to the "vNPU Type" column in [Table 1 Virtual instance templates and vNPU types](#table47415104403).
 
     ```Yaml
     ...
@@ -411,7 +411,7 @@ In Kubernetes scenarios, when you need to use vNPU resources, you must combine A
 
 - When creating an inference job, modify the following configuration in the YAML file. This example uses Atlas inference series products.
 
-  The resource type specified in `requests` and `limits` under `resources` should be changed to `huawei.com/Ascend310P-Y`, where the <i>Y</i> value is related to the vNPU type. For specific values, refer to the "vNPU Type" column in [Table 2 Virtual instance templates and vNPU types](#table47415104403).
+  The resource type specified in `requests` and `limits` under `resources` should be changed to `huawei.com/Ascend310P-Y`, where the <i>Y</i> value is related to the vNPU type. For specific values, refer to the "vNPU Type" column in [Table 1 Virtual instance templates and vNPU types](#table47415104403).
 
     ```Yaml
     ...
@@ -440,7 +440,7 @@ Before using dynamic virtualization, read [Table1 Scenario description](#table62
 </thead>
 <tbody><tr id="row132012115910"><td class="cellrowborder" rowspan="4" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p id="p1950512911598"><a name="p1950512911598"></a><a name="p1950512911598"></a>General Description</p>
 </td>
-<td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p id="p450516910592"><a name="p450516910592"></a><a name="p450516910592"></a>The allocated chip information is reflected in the Pod's annotation. For detailed description of Pod annotation, see the huawei.com/npu-core and huawei.com/AscendReal parameters in <a href="../../../api/k8s.md">Pod annotation</a>.</p>
+<td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p id="p450516910592"><a name="p450516910592"></a><a name="p450516910592"></a>The allocated chip information is reflected in the Pod's annotation. For detailed description of Pod annotation, see the huawei.com/npu-core and huawei.com/AscendReal parameters in <a href="../../../api/k8s.md#pod-annotations">Pod annotation</a>.</p>
 </td>
 </tr>
 <tr id="row48061646595"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p1749665239"><a name="p1749665239"></a><a name="p1749665239"></a>At any given time, only jobs with the same <a href="./03_virtualization_templates.md">virtualization template</a> can be submitted.</p>
@@ -498,7 +498,7 @@ Before using dynamic virtualization, read [Table1 Scenario description](#table62
 
 **Table 2** Relationship between virtual instance templates and vNPU types
 
-<a name="table47415104403"></a>
+<a name="table474151044030123"></a>
 <table><thead align="left"><tr id="row67416101402"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.5.1.1"><p id="p117491014400"><a name="p117491014400"></a><a name="p117491014400"></a>NPU Type</p>
 </th>
 <th class="cellrowborder" valign="top" width="19.98%" id="mcps1.2.5.1.2"><p id="p177431064013"><a name="p177431064013"></a><a name="p177431064013"></a>Virtual Instance Template</p>
@@ -576,7 +576,7 @@ Before using dynamic virtualization, read [Table1 Scenario description](#table62
 
       **Table 3** Ascend Device Plugin startup parameters
 
-      <a name="table1064314568229"></a>
+      <a name="table1064314568229112"></a>
 
       |Name|Type|Default Value|Description|
       |--|--|--|--|
@@ -596,7 +596,7 @@ Before using dynamic virtualization, read [Table1 Scenario description](#table62
 
    2. Volcano parameter modification and startup instructions
 
-      In the Volcano deployment file "`volcano-v{version}.yaml`", you need to configure the value of "`presetVirtualDevice`" to "`false`".
+      In the Volcano deployment file `volcano-v{version}.yaml`, you need to configure the value of `presetVirtualDevice` to `false`.
 
        ```Yaml
        ...

@@ -9,4 +9,4 @@
   - [Mounting vNPUs](./virtual_instance_with_hdk/06_mounting_vnpu.md)
 - [vCANN-RT-based Virtual Instance](./virtual_instance_with_vcann_rt/menu_virtual_instance_with_vcann_rt.md)
   - [Feature Description](./virtual_instance_with_vcann_rt/00_description.md)
-  - [Soft Partitioning-based Scheduling (Inference)](./virtual_instance_with_vcann_rt/01_soft_allocation_virtualization.md)
+  - [Soft Partitioning-based Virtualization](./virtual_instance_with_vcann_rt/01_soft_allocation_virtualization.md)

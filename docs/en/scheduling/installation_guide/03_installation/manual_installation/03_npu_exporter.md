@@ -45,7 +45,7 @@ Before installing NPU Exporter, you need to understand the relevant constraints 
 <tr id="row1650710572715"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p195079518272"><a name="p195079518272"></a><a name="p195079518272"></a>The path depth of the DCMI dynamic library must be less than 20.</p>
 </td>
 </tr>
-<tr id="row35071553276"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18507205192711"><a name="p18507205192711"></a><a name="p18507205192711"></a>If you set the dynamic library path by configuring LD_LIBRARY_PATH, the total length of the LD_LIBRARY_PATH environment variable cannot exceed 1,024.</p>
+<tr id="row35071553276"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18507205192711"><a name="p18507205192711"></a><a name="p18507205192711"></a>If you set the dynamic library path by configuring LD_LIBRARY_PATH, the total length of the LD_LIBRARY_PATH environment variable cannot exceed 1024.</p>
 </td>
 </tr>
 <tr id="row75074519275"><td class="cellrowborder" rowspan="2" valign="top" width="29.970000000000002%" headers="mcps1.2.3.1.1 "><p id="p050719519271"><a name="p050719519271"></a><a name="p050719519271"></a><span id="ph13135203152812"><a name="ph13135203152812"></a><a name="ph13135203152812"></a>Atlas 200I SoC A1 Core Board</span></p>
@@ -132,7 +132,7 @@ NPU Exporter supports two installation modes. You can choose either one based on
         </table>
 
     6. If custom metrics are developed through the plugin method, you need to rebuild and compile the binary file.
-    7. See [Preparing an Image](./01_preparing_for_installation.md#preparing-an-image) to remake and distribute the image.
+    7. See [Preparing an Image](./01_preparing_for_installation.md#preparing-an-image) to remake and distribute the image, and perform [Step 4](#li0640635114211).
 
 3. Check whether the NPU Exporter image and version number are correct.
     - **Docker scenario**: Run the following command.
@@ -293,7 +293,7 @@ NPU Exporter supports two installation modes. You can choose either one based on
 
     ```ColdFusion
     namespace/npu-exporter created
-    networkpolicy.networking.K8s.io/exporter-network-policy created
+    networkpolicy.networking.k8s.io/exporter-network-policy created
     daemonset.apps/npu-exporter created
     ```
 
@@ -500,7 +500,7 @@ When NPU Exporter runs in Image Mode, it requires a privileged container, the `r
 |-concurrency|int|5|HTTP service throttling limit. The default value is 5 concurrent requests. Value range: 1 to 512.|
 |-logLevel|int|0|Log level:<ul><li>-1: debug</li><li>0: info</li><li>1: warning</li><li>2: error</li><li>3: critical</li></ul>|
 |-maxAge|int|7|Log backup retention period. Value range: 7 to 700, in days.|
-|-logFile|string|/var/log/mindx-dl/npu-exporter/npu-exporter.log|Log file.<p>Automatic log rotation is triggered when a single log file exceeds 20 MB. The maximum file size cannot be modified. The naming format for rotated files is: npu-exporter-<rotation trigger time/>.log, for example, npu-exporter-2023-10-07T03-38-24.402.log.</p>|
+|-logFile|string|/var/log/mindx-dl/npu-exporter/npu-exporter.log|Log file.<p>Automatic log rotation is triggered when a single log file exceeds 20 MB. The maximum file size cannot be modified. The naming format for rotated files is: npu-exporter-\<dump_trigger_time>.log, for example, npu-exporter-2023-10-07T03-38-24.402.log.</p>|
 |-maxBackups|int|30|Maximum number of rotated log files to retain. Value range: 1 to 30, in units.|
 |-containerMode|string|docker|Sets the container runtime type.<ul><li>Set to docker to indicate that the current environment uses Docker as the container runtime.</li><li>Set to containerd to indicate that the current environment uses Containerd as the container runtime.</li><li>Set to isula to indicate that the current environment uses iSula as the container runtime.</li></ul>|
 |-containerd|string|<ul><li>(Docker) unix:///run/docker/containerd/docker-containerd.sock</li><li>(Containerd) unix:///run/containerd/containerd.sock</li><li>(iSula) unix:///run/isulad.sock</li></ul>|Endpoint of the containerd daemon process, used for communication with Containerd.<ul><li>If containerMode=docker, the default value is /run/docker/containerd/docker-containerd.sock. If the connection fails, it automatically attempts to connect to unix:///run/containerd/containerd.sock and unix:///run/docker/containerd/containerd.sock.</li><li>If containerMode=containerd, the default value is /run/containerd/containerd.sock.</li><li>If containerMode=isula, the default value is /run/isulad.sock.</li></ul><p>In most cases, the default value can be used. If you have modified the sock file path of Containerd, you need to modify the path accordingly.</p><p>You can run the **ps aux \| grep containerd** command to check whether the sock file path of Containerd has been modified.</p>|
@@ -514,5 +514,5 @@ When NPU Exporter runs in Image Mode, it requires a privileged container, the `r
 |-poll_interval|duration(int)|1|Interval for Telegraf data reporting, in seconds. This parameter takes effect only when connecting to the Telegraf platform, meaning -platform=Telegraf must be specified; otherwise, this parameter does not take effect.|
 |-profilingTime|int|200|Configures the PCIe bandwidth collection duration, in milliseconds. Value range: 1 to 2,000.|
 |-hccsBWProfilingTime|int|200|HCCS link bandwidth sampling duration. Value range: 1 to 1,000, in milliseconds.|
-|-deviceResetTimeout|int|60|Maximum waiting time for the driver to report complete chips if the number of chips is insufficient during component startup, in seconds. Value range: 10 to 600.<ul><li>Atlas A2 training series products, Atlas 800I A2 inference servers, A200I A2 Box heterogeneous components: Recommended value is 150 seconds.</li><li>Atlas A3 training series products, A200T A3 Box8 super node servers, Atlas 800I A3 super node servers: Recommended value is 360 seconds.</li><li>Atlas 350 standard cards, Atlas 850 series hardware products, Atlas 950 SuperPoD: Recommended value is 600 seconds.</li></ul>|
-|-textMetricsFilePath|string|None|Specifies the file path for custom metric files. For details about its constraints, see [Constraint Description](../../../api/npu_exporter/03_custom_metrics_file.md).|
+|-deviceResetTimeout|int|60|Maximum waiting time for the driver to report complete chips if the number of chips is insufficient during component startup, in seconds. Value range: 10 to 600.<ul><li>Atlas A2 training series products, Atlas 800I A2 inference servers, A200I A2 Box heterogeneous components: Recommended value is 150 seconds.</li><li>Atlas A3 training series products, A200T A3 Box8 super node servers, Atlas 800I A3 super node servers: Recommended value is 360 seconds.</li><li>Atlas 350 PCIe cards, Atlas 850 series hardware products, Atlas 950 SuperPoD: Recommended value is 600 seconds.</li></ul>|
+|-textMetricsFilePath|string|None|Specifies the file path for custom metric files. For details about its constraints, see [Constraint Description](../../../api/npu_exporter/03_custom_metrics_file.md#constraints).|

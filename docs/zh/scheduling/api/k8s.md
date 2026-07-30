@@ -106,7 +106,7 @@
 |scheduling.k8s.io/group-name|标记Pod对应podGroup名称|字符串|Volcano|
 |volcano.sh/job-name|标记Pod对应的vcjob名称|字符串|Volcano|
 |volcano.sh/job-version|标记Pod对应的vcjob版本|字符串|Volcano|
-|volcano.sh/queue-name|标记Pod对应的queue版本|字符串|Volcano|
+|volcano.sh/queue-name|标记Pod对应的queue名称|字符串|Volcano|
 |volcano.sh/task-spec|标记Pod对应task名称|字符串|Volcano|
 |volcano.sh/template-uid|标记Pod对应pod-template名称|字符串|Volcano|
 |sharedTorIp|标记任务使用的共享交换机信息|字符串|Volcano、ClusterD|

@@ -145,7 +145,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="p1668892293119"><a name="p1668892293119"></a><a name="p1668892293119"></a>/var/log/mindx-dl/clusterd/clusterd.log</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p16151448144613"><a name="p16151448144613"></a><a name="p16151448144613"></a>Log file. Automatic rotation is triggered when a single log file exceeds 20 MB. The maximum file size cannot be modified. The naming format for rotated files is: clusterd-<i>rotation_time</i>.log, for example, clusterd-2024-06-07T03-38-24.402.log.</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p16151448144613"><a name="p16151448144613"></a><a name="p16151448144613"></a>Log file. Automatic rotation is triggered when a single log file exceeds 20 MB. The maximum file size cannot be modified. The naming format for rotated files is: clusterd-<em>dump_trigger_time</em>.log, for example, clusterd-2024-06-07T03-38-24.402.log.</p>
 </td>
 </tr>
 <tr id="row8615248184611"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="p361516481465"><a name="p361516481465"></a><a name="p361516481465"></a>-maxBackups</p>
@@ -165,7 +165,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p2748131042020"><a name="p2748131042020"></a><a name="p2748131042020"></a>Whether to use a proxy to forward gRPC requests.</p>
 <a name="ul71770166215"></a><a name="ul71770166215"></a><ul id="ul71770166215"><li>true: Yes</li><li>false: No
-</li></ul><div class="note" id="note12300045132119"><a name="note12300045132119"></a><a name="note12300045132119"></a><span class="notetitle">[!NOTE] Note</span><div class="notebody"><p id="p17300245162118"><a name="p17300245162118"></a><a name="p17300245162118"></a>It is recommended to set this parameter to "true" in the startup YAML and perform security hardening for ClusterD. For details, see the <a href="../../../security_hardening.md#clusterd-security-hardening">ClusterD Security Hardening</a> section.</p>
+</li></ul><div class="note" id="note12300045132119"><a name="note12300045132119"></a><a name="note12300045132119"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p17300245162118"><a name="p17300245162118"></a><a name="p17300245162118"></a>It is recommended to set this parameter to "true" in the startup YAML and perform security hardening for ClusterD. For details, see the <a href="../../../security_hardening.md#clusterd-security-hardening">ClusterD Security Hardening</a> section.</p>
 </div></div>
 </td>
 </tr>

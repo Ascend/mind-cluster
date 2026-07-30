@@ -21,7 +21,7 @@ The NPU information reported by Ascend Device Plugin is shown in [Table 1](#tabl
 |huawei.com/Ascend910-Fault|Records specific fault information of the chip. |<ul><li>Array object. The object contains seven fields: fault_type, npu_name, large_model_fault_level, fault_level, fault_handling, fault_code, and fault_time_and_level_map.</li><li>Atlas 350 PCIe card, Atlas 850 series hardware products, and Atlas 950 SuperPoD use huawei.com/npu-Fault as the parameter name.</li></ul>|
 |-fault_type|Fault type. |<ul><li>CardUnhealthy: Chip fault</li><li>CardNetworkUnhealthy: Chip network fault</li><li>NodeUnhealthy: Node fault</li></ul>|
 |-npu_name|Name of the faulty chip. It is empty for a node fault. |String|
-|<p>-large_model_fault_level</p><p>-fault_level</p><p>-fault_handling</p>|Fault handling type. The value is empty for a node fault. |<ul><li>NotHandleFault: No handling</li><li>RestartRequest: In inference scenarios, the inference request needs to be re-executed. In training scenarios, the training workload needs to be re-executed.</li><li>RestartBusiness: The workload needs to be re-executed.</li><li>FreeRestartNPU: Affects workload execution. The chip needs to be reset when it is idle.</li><li>RestartNPU: Directly reset the chip and re-execute the workload.</li><li>SeparateNPU: Isolate chip</li><li>PreSeparateNPU: Pre-isolate chip. Whether to reschedule is determined based on the actual running status of the training task.</li></ul><div class="note"><span class="notetitle">[!NOTE] NOTE</span><div class="notebody"><ul><li>The large_model_fault_level, fault_level, and fault_handling parameters have the same function. It is recommended to use fault_handling.</li><li>If an inference task subscribes to fault information, and a RestartRequest fault occurs on the inference card used by the task, and the fault duration does not exceed 60 seconds, task rescheduling is not performed. If the fault duration exceeds 60 seconds and the fault is not recovered, the chip is isolated and task rescheduling is performed.</li></ul></div></div>|
+|<p>-large_model_fault_level</p><p>-fault_level</p><p>-fault_handling</p>|Fault handling type. The value is empty for a node fault. |<ul><li>NotHandleFault: No handling</li><li>RestartRequest: In inference scenarios, the inference request needs to be re-executed. In training scenarios, the training workload needs to be re-executed.</li><li>RestartBusiness: The workload needs to be re-executed.</li><li>FreeRestartNPU: Affects workload execution. The chip needs to be reset when it is idle.</li><li>RestartNPU: Directly reset the chip and re-execute the workload.</li><li>SeparateNPU: Isolate chip</li><li>PreSeparateNPU: Pre-isolate chip. Whether to reschedule is determined based on the actual running status of the training task.</li></ul><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><ul><li>The large_model_fault_level, fault_level, and fault_handling parameters have the same function. It is recommended to use fault_handling.</li><li>If an inference task subscribes to fault information, and a RestartRequest fault occurs on the inference card used by the task, and the fault duration does not exceed 60 seconds, task rescheduling is not performed. If the fault duration exceeds 60 seconds and the fault is not recovered, the chip is isolated and task rescheduling is performed.</li></ul></div></div>|
 |-fault_code|Fault code, a string concatenated with commas. |For a detailed description of chip fault codes, see [Chip Fault Code References](../appendix.md#chip-fault-code-references).|
 |-fault_time_and_level_map|Fault code, fault generation time, and fault handling level. |-|
 |SuperPodID|SuperPod ID. |String|
@@ -133,7 +133,7 @@ The NPU device fault information reported by Ascend Device Plugin is shown in [T
 
 **Table 1**  fault-config-job-name
 
-<a name="table68216761214"></a>
+<a name="table68216761545"></a>
 
 |Field |Description|Value|Remarks|
 |--|--|--|--|
@@ -348,11 +348,11 @@ Stores the save path and start/stop switch for the job's iteration latency and g
 
 **Fault Levels in faultCode.json<a name="section579455712489"></a>**
 
-The hierarchical handling based on different chip fault levels is introduced in resumable training. If you need to modify the fault level of a fault code, see [(Optional) Configuring Chip Fault Levels](../usage/resumable_training/03_configuring_fault_detection_levels.md).
+The hierarchical handling based on different chip fault levels is introduced in resumable training. If you need to modify the fault level of a fault code, see [(Optional) Configuring Chip Fault Levels](../usage/resumable_training/03_configuring_fault_detection_levels.md#optional-configuring-chip-fault-levels).
 
 After Ascend Device Plugin obtains chip fault codes from the driver, it classifies the faults into the following levels based on their impact on devices and workloads. For a detailed description, see [Table 1](#table7618951152212).
 
-**Table 1**  Fault level and handling polices
+**Table 1**  Fault level and handling policies
 
 <a name="table7618951152212"></a>
 <table><thead align="left"><tr id="row461812518228"><th class="cellrowborder" valign="top" width="19.06%" id="mcps1.2.5.1.1"><p id="p12618851162220"><a name="p12618851162220"></a><a name="p12618851162220"></a>Fault Handling Policy</p>
@@ -379,7 +379,7 @@ After Ascend Device Plugin obtains chip fault codes from the driver, it classifi
 <td class="cellrowborder" valign="top" width="35.78%" headers="mcps1.2.5.1.2 "><p id="p05771854113911"><a name="p05771854113911"></a><a name="p05771854113911"></a>Affects service execution and requires re-execution of the service request.</p>
 </td>
 <td class="cellrowborder" rowspan="5" valign="top" width="20.349999999999998%" headers="mcps1.2.5.1.3 "><p id="p13855131912555"><a name="p13855131912555"></a><a name="p13855131912555"></a>Isolate the chip and reschedule the job</p>
-<div class="note" id="note11901123612819"><a name="note11901123612819"></a><a name="note11901123612819"></a><span class="notetitle">Note:</span><div class="notebody"><p id="zh-cn_topic_0000002479386448_p1069261722310"><a name="zh-cn_topic_0000002479386448_p1069261722310"></a><a name="zh-cn_topic_0000002479386448_p1069261722310"></a>If an inference job subscribes<span id="zh-cn_topic_0000002479386448_ph4356222144812"><a name="zh-cn_topic_0000002479386448_ph4356222144812"></a><a name="zh-cn_topic_0000002479386448_ph4356222144812"></a> to</span> fault information, and a RestartRequest fault occurs on the inference card used by the job and the fault duration does not exceed 60 seconds, job rescheduling will not be performed. If the fault duration exceeds 60 seconds and the fault is not recovered, the chip will be isolated and job rescheduling will be performed.</p>
+<div class="note" id="note11901123612819"><a name="note11901123612819"></a><a name="note11901123612819"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="zh-cn_topic_0000002479386448_p1069261722310"><a name="zh-cn_topic_0000002479386448_p1069261722310"></a><a name="zh-cn_topic_0000002479386448_p1069261722310"></a>If an inference job subscribes<span id="zh-cn_topic_0000002479386448_ph4356222144812"><a name="zh-cn_topic_0000002479386448_ph4356222144812"></a><a name="zh-cn_topic_0000002479386448_ph4356222144812"></a> to</span> fault information, and a RestartRequest fault occurs on the inference card used by the job and the fault duration does not exceed 60 seconds, job rescheduling will not be performed. If the fault duration exceeds 60 seconds and the fault is not recovered, the chip will be isolated and job rescheduling will be performed.</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" width="24.81%" headers="mcps1.2.5.1.4 "><p id="p9145165785517"><a name="p9145165785517"></a><a name="p9145165785517"></a>Re-execute the inference request in inference scenarios, and re-execute the training workload in training scenarios</p>
@@ -473,7 +473,7 @@ If the user does not manually modify the `faultCustomization.json` file, Ascend 
 
 ## Custom UnifiedBus Device Faults<a name="ZH-CN_TOPIC_0000002511426735"></a>
 
-Resumable training performs hierarchical handling based on different levels of UnifiedBus bus device faults. If users need to modify the fault level of a fault code, see [(Optional) Configuring UnifiedBus Device Fault Levels](../usage/resumable_training/03_configuring_fault_detection_levels.md).
+Resumable training performs hierarchical handling based on different levels of UnifiedBus bus device faults. If users need to modify the fault level of a fault code, see [(Optional) Configuring UnifiedBus Device Fault Levels](../usage/resumable_training/03_configuring_fault_detection_levels.md#optional-configuring-bus-device-fault-levels).
 
 After Ascend Device Plugin obtains fault codes from the driver, it classifies faults into the following five levels based on their impact on devices and workloads, and performs corresponding rescheduling handling. For detailed description, see [Table 1](#table212253274720).
 
@@ -484,7 +484,7 @@ After Ascend Device Plugin obtains fault codes from the driver, it classifies fa
 |Fault Type|Description|Rescheduling Policy|
 |--|--|--|
 |NotHandleFault|Does not affect workloads temporarily and can recover automatically. No handling required.|Not handled for now.|
-|SubHealthFault|Affects workload running performance. The cause of sub-health fault needs to be investigated.|When a sub-health fault occurs, it needs to be handled according to the sub-health policy specified by the subHealthyStrategy parameter in [Table 1 YAML parameter description](../api/ascend_operator.md).|
+|SubHealthFault|Affects workload running performance. The cause of sub-health fault needs to be investigated.|When a sub-health fault occurs, it needs to be handled according to the sub-health policy specified by the subHealthyStrategy parameter.|
 |RestartRequestFault|Workload running fails. The workload request needs to be re-executed.|Stop the current training job, isolate the node, and reschedule the job.|
 |ResetFault|Workload running fails.|Stop the current training job, isolate the node, and reschedule the job.|
 |SeparateFault|Workload running fails. The device or board needs to be replaced.|Stop the current training job, isolate the node, and reschedule the job.|

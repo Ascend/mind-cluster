@@ -23,7 +23,7 @@
     ```
 
     - If correct, proceed to [Step 2](#li19793191914420).
-    - If not correct, see [Preparing Images](./01_preparing_for_installation.md) to complete image creation and distribution.
+    - If not correct, see [Preparing Images](./01_preparing_for_installation.md#preparing-an-image) to complete image creation and distribution.
 
 2. <a name="li19793191914420"></a>Copy the YAML files from the extracted Ascend Operator software package directory to any directory on the K8s management node.
 3. If you do not modify the component startup parameters, you can skip this step. Otherwise, modify the Ascend Operator startup parameters in the YAML file based on the actual situation. For startup parameters, see [Table 1](#table11614104894617). You can run `./ascend-operator -h` to view parameter descriptions.
@@ -146,7 +146,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="p56159486469"><a name="p56159486469"></a><a name="p56159486469"></a>/var/log/mindx-dl/ascend-operator/ascend-operator.log</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p16151448144613"><a name="p16151448144613"></a><a name="p16151448144613"></a>Log file. When a single log file exceeds 20 MB, the automatic dump function is triggered. The maximum file size cannot be modified. The naming format of the dumped file is: ascend-operator-.log, for example: ascend-operator-2023-10-07T03-38-24.402.log.</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p16151448144613"><a name="p16151448144613"></a><a name="p16151448144613"></a>Log file. When a single log file exceeds 20 MB, the automatic dump function is triggered. The maximum file size cannot be modified. The naming format of the dumped file is: ascend-operator-<em>dump_trigger_time</em>.log, for example: ascend-operator-2023-10-07T03-38-24.402.log.</p>
 </td>
 </tr>
 <tr id="row8615248184611"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="p361516481465"><a name="p361516481465"></a><a name="p361516481465"></a>-maxBackups</p>

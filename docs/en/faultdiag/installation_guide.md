@@ -48,7 +48,7 @@
 </tbody>
 </table>
 
-> **NOTE**
+>[!NOTE]
 >
 > <i>{version}</i> is the version number of the software package. Download the target software package based on actual requirements.
 

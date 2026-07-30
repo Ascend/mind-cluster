@@ -198,9 +198,9 @@ In the single-server inference scenario, the supported products and OSs are show
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul877545583412"></a><a name="ul877545583412"></a><ul id="ul877545583412"><li>openEuler 22.03 LTS SP4 for aarch64</li><li>Euler 2.13 for aarch64</li><li>CUlinux 3.0 for aarch64</li><li>CUlinux 4.0 for aarch64</li><li>CTYunOS 4.0 for aarch64</li><li>HCE 2.0.2506 for aarch64</li><li>Velinux 2.0 for aarch64</li><li>Kylin V10 SP3 2403 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p>Atlas 350 Standard Card</p>
+<tr><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p>Atlas 350 PCIe Card</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p><span>Atlas 350 Standard Card</span></p><div class="note"><span class="notetitle">[!NOTE] Note</span><div class="notebody">The Atlas 350 Standard Card device does not support DPU hardware device communication in the current version.</div></div>
+<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p><span>Atlas 350 PCIe Card</span></p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The Atlas 350 PCIe Card device does not support DPU hardware device communication in the current version.</div></div>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><ul><li>Velinux 2.0</li><li>Alinux 3 for x86_64</li></ul>
 </td>
@@ -229,7 +229,7 @@ In the single-server inference scenario, the supported products and OSs are show
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p31781131153019"><a name="p31781131153019"></a><a name="p31781131153019"></a><span id="ph8178173117309"><a name="ph8178173117309"></a><a name="ph8178173117309"></a>Atlas 200I A2 Acceleration Module</span></p>
 </td>
 </tr>
-<tr id="row12749144516310"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1191393818517"><a name="p1191393818517"></a><a name="p1191393818517"></a><span id="ph374453873014"><a name="ph374453873014"></a><a name="ph374453873014"></a>Atlas 200I DK A2 </span></p>
+<tr id="row12749144516310"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1191393818517"><a name="p1191393818517"></a><a name="p1191393818517"></a><span id="ph374453873014"><a name="ph374453873014"></a><a name="ph374453873014"></a>Atlas 200I DK A2 Developer Kit</span></p>
 </td>
 </tr>
 <tr id="row1774913451236"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p17935174814307"><a name="p17935174814307"></a><a name="p17935174814307"></a><span id="ph99355488303"><a name="ph99355488303"></a><a name="ph99355488303"></a>Atlas 500 A2 Intelligent Station</span></p>

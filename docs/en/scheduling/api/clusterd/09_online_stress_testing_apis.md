@@ -35,7 +35,7 @@ rpc StressTest(StressTestParam) returns (Status) {}
 
 Interface for the O&M platform to query stress testing results. After the O&M personnel successfully issue an online stress testing command, the results can be queried through this interface.
 
-*Prototype<a name="section3958124212115"></a>**
+**Prototype<a name="section3958124212115"></a>**
 
 ```proto
 rpc SubscribeStressTestResponse(StressTestRequest) returns (stream StressTestResponse) {}
@@ -105,4 +105,4 @@ rpc ReplyStressTestResult(StressTestResult) returns (Status) {}
 
 |Parameter|Type (Protobuf Definition)|Description|
 |--|--|--|
-|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info =2;</p>}|**Status.code**: Return code.<ul><li>Value `0`: normal process</li><li>Other values: abnormal process</li></ul>**Status.info**: Return information.|
+|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info = 2;</p>}|**Status.code**: Return code.<ul><li>Value `0`: normal process</li><li>Other values: abnormal process</li></ul>**Status.info**: Return information.|

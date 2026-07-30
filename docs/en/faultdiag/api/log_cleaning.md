@@ -38,11 +38,11 @@
     ascend-fd parse --lcne_log  "lcne/worker-111" -o "auto_diag_combine/lcne/worker-111"
     ```
 
-**NOTE**
-
-- When both `-i` and detailed log collection directory parameters are used together, the input values of the detailed log collection directory parameters will be read first, and then the remaining log collection directories will be read based on the `-i` parameter.
-- At least one of the following parameters must be specified: `--input_path`, `--host_log`, `--device_log`, `--train_log`, `--process_log`, `--env_check`, `--dl_log`, `--mindie_log`, `--amct_log`, `--custom_log`, and `--bus_log`. Otherwise, the cleaning command will fail.
-- The disk space of the output directory specified by the cleaning command must be greater than 5 GB. Insufficient space may cause partial loss of cleaning results, leading to abnormal or inaccurate diagnostic results.
+>[!NOTE]
+>
+>- When both `-i` and detailed log collection directory parameters are used together, the input values of the detailed log collection directory parameters will be read first, and then the remaining log collection directories will be read based on the `-i` parameter.
+>- At least one of the following parameters must be specified: `--input_path`, `--host_log`, `--device_log`, `--train_log`, `--process_log`, `--env_check`, `--dl_log`, `--mindie_log`, `--amct_log`, `--custom_log`, and `--bus_log`. Otherwise, the cleaning command will fail.
+>- The disk space of the output directory specified by the cleaning command must be greater than 5 GB. Insufficient space may cause partial loss of cleaning results, leading to abnormal or inaccurate diagnostic results.
 
 ## Function<a name="zh-cn_topic_0000001461778658_section10145143713297"></a>
 
