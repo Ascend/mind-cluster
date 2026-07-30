@@ -419,7 +419,7 @@ Ascend Docker Runtime会根据实际环境情况默认以只读方式挂载以�
 </tbody>
 </table>
 
-**表 6**  默认挂载目录和文件（Atlas 350 标卡）
+**表 6**  默认挂载目录和文件（Atlas 350 标卡、Atlas 850系列硬件产品及Atlas 950 SuperPoD）
 
 |路径|说明|
 |--|--|
@@ -432,7 +432,7 @@ Ascend Docker Runtime会根据实际环境情况默认以只读方式挂载以�
 |/usr/local/Ascend/driver/include|目录，驱动提供的头文件。|
 |/usr/local/dcmi|目录，DCMI头文件和库。|
 |/usr/local/bin/npu-smi|文件，NPU-SMI工具。|
-|/etc/hccl_rootinfo.json|mindcluster-tools生成的rootinfo文件，该文件非必需挂载项。|
+|/etc/hccl_rootinfo.json|rootinfo文件，该文件非必需挂载项，在主机中存在时挂载。|
 |/usr/local/Ascend/driver/topo|拓扑目录。|
 
 **表 7**  默认挂载目录和文件（其他设备）
