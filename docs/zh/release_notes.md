@@ -32,7 +32,7 @@
 
 |MindCluster|CANN| HDK                                                                   |MindSpeed-LLM|TorchNPU|MindSpore|
 |--|--|-----------------------------------------------------------------------|--|--|--|
-|26.1.0|9.1.0| <ul><li>Atlas A2/A3 系列产品：26.1.0</li><li>Ascend 950 系列产品：25.1.RC1</li></ul> |26.1.0|26.1.0|2.10.0|
+|26.1.0|9.1.0| <ul><li>Atlas A2/A3 系列产品：26.1.0</li><li>Atlas 350 系列产品：25.7.RC1</li><li>Atlas 950 系列产品：25.1.RC1</li><li>Atlas 850 系列产品：25.6.RC1</li></ul> |26.1.0|26.1.0|2.10.0|
 
 ### 版本兼容性说明
 
@@ -63,14 +63,14 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
   <tr>
     <td>7.3.0</td>
     <td>Y</td>
-    <td>/</td>
-    <td>/</td>
+    <td> </td>
+    <td> </td>
   </tr>
   <tr>
     <td>26.0.0</td>
     <td>Y</td>
     <td>Y</td>
-    <td>/</td>
+    <td> </td>
   </tr>
   <tr>
     <td>26.1.0</td>
@@ -92,7 +92,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 <thead>
   <tr>
     <th rowspan="2">MindCluster</th>
-    <th colspan="3">HDK版本</th>
+    <th colspan="3">A2/A3 HDK版本</th>
   </tr>
   <tr>
     <th>25.5.X</th>
@@ -103,19 +103,46 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
   <tr>
     <td>7.3.0</td>
     <td>Y</td>
-    <td>/</td>
-    <td>/</td>
+    <td> </td>
+    <td> </td>
   </tr>
   <tr>
     <td>26.0.0</td>
     <td>Y</td>
     <td>Y</td>
-    <td>/</td>
+    <td> </td>
   </tr>
   <tr>
     <td>26.1.0</td>
     <td>Y</td>
     <td>Y</td>
+    <td>Y</td>
+  </tr>
+</tbody>
+</table>
+
+<table style="table-layout: fixed; width: 433px"><colgroup>
+<col style="width: 156px">
+<col style="width: 88px">
+<col style="width: 91px">
+<col style="width: 98px">
+</colgroup>
+<thead>
+  <tr>
+    <th rowspan="2">MindCluster</th>
+    <th colspan="1">Ascend 950系列产品 HDK版本</th>
+  </tr>
+  <tr>
+    <th>25.1.RC1/25.6.RC1/25.7.RC1</th>
+  </tr></thead>
+<tbody>
+
+  <tr>
+    <td>26.0.0</td>
+    <td>Y</td>
+  </tr>
+  <tr>
+    <td>26.1.0</td>
     <td>Y</td>
   </tr>
 </tbody>
@@ -143,14 +170,14 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
   <tr>
     <td>7.3.0</td>
     <td>Y</td>
-    <td>/</td>
-    <td>/</td>
+    <td> </td>
+    <td> </td>
   </tr>
   <tr>
     <td>26.0.0</td>
     <td>Y</td>
     <td>Y</td>
-    <td>/</td>
+    <td> </td>
   </tr>
   <tr>
     <td>26.1.0</td>
@@ -183,14 +210,14 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
   <tr>
     <td>7.3.0</td>
     <td>Y</td>
-    <td>/</td>
-    <td>/</td>
+    <td> </td>
+    <td> </td>
   </tr>
   <tr>
     <td>26.0.0</td>
     <td>Y</td>
     <td>Y</td>
-    <td>/</td>
+    <td> </td>
   </tr>
   <tr>
     <td>26.1.0</td>
@@ -223,14 +250,14 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
   <tr>
     <td>7.3.0</td>
     <td>Y</td>
-    <td>/</td>
-    <td>/</td>
+    <td> </td>
+    <td> </td>
   </tr>
   <tr>
     <td>26.0.0</td>
     <td>Y</td>
     <td>Y</td>
-    <td>/</td>
+    <td> </td>
   </tr>
   <tr>
     <td>26.1.0</td>
@@ -253,25 +280,25 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 ### 新增特性
 
-|特性名称| 特性描述                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-|--|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|MindIO| MindIO支持IPv6场景。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|MindCluster Ascend FaultDiag| <ul><li>新增Ascend 950 系列产品的故障模式库。</li><li>新增基于pyMotor+vLLM的故障模式库。</li><li>优化链路诊断工具输出报告的内容。</li><li>故障诊断支持IPv6场景。</li></ul>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-|MindCluster基础组件| <ul><li>支持存储DTFS故障。</li><li>Volcano支持Pod优先调度回原运行节点。</li><li>Ascend Device Plugin故障处理插件化。</li><li>支持带内检测1825故障上报。</li><li>提供1825网卡的RDMA设备插件。</li><li>发布镜像新增openEuler。</li><li>社区资料、组件的安装与部署易用性提升。</li><li>NPU Exporter支持分组配置采集周期。</li><li>Atlas 9000 A3 SuperPoD 集群算力系统能力补齐。</li><li>支持配置存活探针。</li><li>新增卡死检测与恢复功能。</li><li>支持Atlas 850 系列硬件产品和Atlas 950 SuperPoD的设备管理、亲和性调度、指标监控、故障检测，RankTable生成等基础能力。</li><li>支持Atlas 850 系列硬件产品的基础断点续训能力；支持Atlas 950 SuperPoD的全量断点续训能力。</li><li>支持Atlas 850 系列硬件产品和Atlas 950 SuperPoD的容器化能力。</li><li>支持推理故障恢复能力，包括优先级调度、缩P保D和实例级重调度。</li><li>支持推理场景基于负载的弹性扩缩容能力和容器快照能力。</li></ul> |
+|组件名称| 特性描述 |
+|--|----------|
+|MindCluster Ascend FaultDiag| <ul><li>在已有故障模式库中，针对Ascend 950系列产品补充故障模式，并新增支持基于pyMotor+vLLM的故障模式。</li><li>优化链路诊断工具输出报告的内容。</li><li>故障诊断支持IPv6场景。</li></ul>   |
+|MindCluster集群调度组件| <ul><li>支持存储DTFS故障。</li><li>Atlas 950 SuperPoD产品支持IPv6场景（参数面除外）。A2/A3支持IPv6。</li><li>Volcano支持Pod优先调度回原运行节点。</li><li>Ascend Device Plugin故障处理插件化。</li><li>支持带内检测1825故障上报。</li><li>提供1825网卡的RDMA设备插件。</li><li>支持helm一键化部署易用性提升。</li><li>NPU Exporter支持分组配置采集周期。</li><li>多级调度场景支持亚健康热切。</li><li>支持配置存活探针。</li><li>新增卡死检测与恢复功能。</li><li>支持Atlas 850 系列硬件产品和Atlas 950 SuperPoD的设备管理、亲和性调度、指标监控、故障检测，RankTable生成等基础能力。</li><li>支持Atlas 850 系列硬件产品的基础断点续训能力；支持Atlas 950 SuperPoD的全量断点续训能力。</li><li>支持Atlas 850 系列硬件产品和Atlas 950 SuperPoD的容器化能力。</li><li>支持推理故障恢复能力，包括优先级调度、缩P保D和实例级重调度。</li><li>支持推理场景基于负载的弹性扩缩容能力和容器快照能力。</li></ul> |
 
 ### 关键特性变更
 
-MindCluster基础组件：
+MindCluster集群调度组件：
 
-- Ascend Docker Runtime支持默认配置LD_LIBRARY_PATH环境变量，以便npu-smi工具能够正常使用。
+- Ascend Docker Runtime支持默认配置HDK驱动的LD_LIBRARY_PATH环境变量，以便npu-smi工具能够正常使用。
 - 启动Ascend Device Plugin、NPU Exporter、NodeD等组件时，若芯片数量不足，则等待驱动上报完整芯片的最大时长参数“-deviceResetTimeout”的默认值由60s修改为600s。
+- Infer Operator组件日志权限更新为root权限。
 
 ### 业务接口变更
 
-|特性名称|接口变更|
+|组件名称|接口变更|
 |--|--|
 |MindCluster Ascend FaultDiag|<ul><li>链路诊断工具新增配置命令set_config_dir，当前仅支持设置组网配置文件LLD.xlsx所在路径。</li><li>性能劣化功能（资源抢占和网络拥塞）采集指标数据时对训练、推理业务性能有一定影响，该特性将在后续版本日落。</li></ul>|
-|MindCluster基础组件|所有K8s组件新增存活探针。|
+|MindCluster集群调度组件|所有K8s部署的组件新增存活探针。|
 
 ### 已解决的问题
 
@@ -282,7 +309,9 @@ MindCluster基础组件：
 
 ### 遗留问题
 
-进程级别重调度特性在多次重调度恢复后，可能存在PyTorch原生组件gloo的段错误问题，概率约0.00125，详细请参见[issue 188266](https://github.com/pytorch/pytorch/issues/188266)。可以通过配置Job/Pod重调度作为兜底措施。
+进程级别重调度特性在多次重调度恢复后，存在PyTorch原生组件gloo的段错误问题，概率约0.00125，详细请参见[issue 188266](https://github.com/pytorch/pytorch/issues/188266)。可以通过配置Job/Pod重调度作为兜底措施。
+
+A3开启算子重执行，在linkdown故障场景下，进程级重调度有概率失败。可以配置进程级在线恢复规避，或配置Job/Pod重调度作为兜底措施。
 
 ## 升级影响
 
