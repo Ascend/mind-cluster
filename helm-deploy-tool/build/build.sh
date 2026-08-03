@@ -50,17 +50,26 @@ function replace_yaml_value() {
 }
 
 function helm_package() {
+  local ver="${build_version#v}"
+  sed -i "s/26.1.0/${ver}/g" "${TOP_DIR}"/app*/charts/*/Chart.yaml
+  sed -i "s/26.1.0/${ver}/g" "${TOP_DIR}"/app*/Chart.yaml
+  sed -i "s/26.1.0/${ver}/g" "${TOP_DIR}"/app/values.yaml
+
   helm package "${TOP_DIR}"/app
   helm package "${TOP_DIR}"/app-crds
 }
 
 function mv_file() {
   cp "${TOP_DIR}"/build/helm_tool.sh "${TOP_DIR}"/output
-  cp "${TOP_DIR}"/build/*.tgz "${TOP_DIR}"/output
+  mv "${TOP_DIR}"/build/*.tgz "${TOP_DIR}"/output
 }
 
 function change_mod() {
     chmod 400 "${TOP_DIR}"/output/*
+}
+
+function clear() {
+  rm -rf "${TOP_DIR}"/app*/charts/*/yamls
 }
 
 function main() {
@@ -71,6 +80,7 @@ function main() {
   helm_package
   mv_file
   change_mod
+  clear
 }
 
 main
