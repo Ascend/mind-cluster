@@ -833,7 +833,7 @@
 >- 断点续训展示的组件代码为开源代码，其中涉及到相关安全说明请参见[安全说明](../../07_references/05_appendix.md#安全说明)。
 >- 下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
 >- 模型的参数配置，根据模型仓的模型配置以实际情况来写。若修改不当，可能会引发不可预知的问题。
->- 若训练过程中出现“Failed to bind the IP port. Reason: The IP address and port have been bound already”报错，可以按照如下进行配置，详情请参见《CANN 环境变量参考》中的“[HCCL_HOST_SOCKET_PORT_RANGE](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0143.html)”章节。
+>- 若训练过程中出现“Failed to bind the IP port. Reason: The IP address and port have been bound already”报错，可以按照如下进行配置，详情请参见《CANN HCCL集合通信库》中的“[HCCL_HOST_SOCKET_PORT_RANGE](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/commlib/hcclug/docs/zh/user_guide/hccl_env/HCCL_HOST_SOCKET_PORT_RANGE.md)”章节。
 >
 >   ```shell
 >   export HCCL_HOST_SOCKET_PORT_RANGE="60000-60050"
@@ -1418,7 +1418,7 @@ Verl的训练任务被Ray集群所管理，为适配MindCluster的Ascend Job任�
 </table>
 
 >[!NOTE]
->当前断点续训并未提供Atlas 900 A3 SuperPoD 超节点产品的示例YAML，用户可以在示例YAML中的labels下新增annotations字段即可。示例如下：
+>当前部分训练框架未提供Atlas 900 A3 SuperPoD 超节点的断点续训示例YAML，用户可以在示例YAML中的labels下新增annotations字段即可。示例如下：
 >
 >```yaml
 >...

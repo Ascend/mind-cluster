@@ -11,7 +11,7 @@
 
 1. 获取MindIE容器镜像。
     - 方式一：进入昇腾镜像仓库的[MindIE镜像下载](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)页面，下载MindIE镜像。
-    - 方式二：参考《MindIE安装指南》中的“安装MindIE \> [方式三：容器安装方式](https://gitcode.com/Ascend/MindIE-LLM/blob/v3.0.0/docs/zh/user_guide/install/source/installation_in_containerized.md)”章节，自行准备镜像。
+    - 方式二：参考《MindIE安装指南》中的“安装MindIE \> [方式三：容器安装方式](https://gitcode.com/Ascend/MindIE-LLM/blob/v3.1.0/docs/zh/user_guide/install/source/installation_in_containerized.md)”章节，自行准备镜像。
 
 2. 在节点上查看MindIE镜像。
 
