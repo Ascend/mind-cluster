@@ -759,7 +759,7 @@
     # 如果运行的模型开启pipeline并行，则修改在以下函数
     # 安全提示，涉及对路径和输入参数的校验
     def set_pipeline_parallel_context(args_opt):
-    # 在mindspore.set_auto_parallel_context前添加以下代码，请参考[MindSpore文档分布式并行接口说明](https://www.mindspore.cn/tutorials/experts/zh-CN/r2.0/index.html)对set_auto_parallel_context参数的使用说明
+    # 在mindspore.set_auto_parallel_context前添加以下代码，请参考https://www.mindspore.cn/tutorials/experts/zh-CN/r2.0/index.html对set_auto_parallel_context参数的使用说明
 
 
             # 弹性训练中增加内容

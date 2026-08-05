@@ -2667,7 +2667,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 - 不支持开启watchdog功能。
 - 由于弹性训练会额外创建新的通信组，因此可能会导致片上内存占用增加。
 
-    增加内存大小计算公式：增加内存最大值（MB）= HCCL\_BUFFSIZE \* 2 \* 9，其中，HCCL\_BUFFSIZE默认为200MB，HCCL\_BUFFSIZE的说明详细请参见《CANN 环境变量参考》中的“[HCCL_BUFFSIZE](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0080.html)”章节。
+    增加内存大小计算公式：增加内存最大值（MB）= HCCL\_BUFFSIZE \* 2 \* 9，其中，HCCL\_BUFFSIZE默认为200MB，HCCL\_BUFFSIZE的说明详细请参见《CANN HCCL集合通信库》中的“[HCCL_BUFFSIZE](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/commlib/hcclug/docs/zh/user_guide/hccl_env/HCCL_BUFFSIZE.md)”章节。
 
 - 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
 

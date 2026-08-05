@@ -13,13 +13,11 @@
 
 **前提条件**
 
-在基础调度的任务YAML中，添加Job级别重调度的配置，配置说明可参考[配置Job级别重调度](03_configuration/02_configuring_fault_handling_policies.md#zh-cn_topic_0000002098814658_section463203519254)，原理可参考[Job级别重调度](01_solutions_principles.md#ZH-CN_TOPIC_0000002479226586)。
+在基础调度的任务YAML中，添加Job级别重调度的配置，配置说明可参考[配置Job级别重调度](03_configuration/02_configuring_fault_handling_policies.md#配置job级别重调度)，原理可参考[Job级别重调度](01_solutions_principles.md#job级别重调度)。
 
 **操作步骤**
 
-1. 下发任务
-
-   执行以下命令下发任务：
+1. 下发任务。
 
    ```bash
    kubectl apply -f trjob.yaml
@@ -29,24 +27,24 @@
    > - 请将`trjob.yaml`替换为实际的任务YAML文件。
    > - 任务Pod的名称、命名空间会根据任务YAML中的配置而变化，以下出现的`taskmgr-npu-020-default-test-`和`trjob`都是示例值，实际值会根据任务YAML中的配置而变化。
 
-2. 查看任务状态和UID
+2. 查看任务状态和UID。
 
-   1. 执行以下命令查看任务状态：
+   1. 查看任务状态。
 
       ```bash
       kubectl get pod -A -o wide
       ```
 
-      回显示例如下，出现Running表示任务正常运行：
+      回显示例如下，STATUS字段为Running表示任务正常运行。
 
-      <pre codetype="bash">
+      <pre codetype="ColdFusion">
       NAMESPACE        NAME                                            READY   STATUS    RESTARTS   AGE     IP                NODE                    NOMINATED NODE   READINESS GATES
       ...              ...                                             ...     ...       ...        ...     ...               ...                     ...              ...
       trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>    0          2s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
       trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>    0          3s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
       </pre>
 
-   2. 执行以下命令查看2个Pod的UID：
+   2. 查看2个Pod的UID：
 
       ```bash
       kubectl get pod taskmgr-npu-020-default-test-0  -n trjob -o jsonpath='{.metadata.uid}'
@@ -60,31 +58,31 @@
       997add9e-6115-456c-9e8e-e05e4b70bb12
       ```
 
-3. 构造故障
+3. 构造故障。
 
-   执行以下命令查询任务进程：
+   1. 查询任务进程。
 
-   ```bash
-   npu-smi info|grep python|awk '{print $5}'
-   ```
+      ```bash
+      npu-smi info|grep python|awk '{print $5}'
+      ```
 
-   回显示例如下：
+      回显示例如下：
 
-   ```bash
-   2398104
-   2398105
-   2398107
-   ```
+      ```ColdFusion
+      2398104
+      2398105
+      2398107
+      ```
 
-   执行以下命令将进程终止模拟故障：
+   2. 终止进程模拟故障。
 
-   ```bash
-   kill -9 2398104
-   ```
+      ```bash
+      kill -9 2398104
+      ```
 
-4. 观察重调度过程
+4. 观察重调度过程。
 
-   执行以下命令监控该Job的2个Pod状态变化：
+   监控该Job的2个Pod状态变化。
 
    ```bash
    kubectl get pod -A -o wide -w | grep trjob
@@ -92,7 +90,7 @@
 
    该Job的2个Pod历史状态如下，观察加粗字段的变化可以发现该Job的2个Pod会经历Terminating→Pending→ContainerCreating→Running阶段，然后正常运行，表示Job重调度成功：
 
-   <pre codetype="bash">
+   <pre codetype="ColdFusion">
    trjob            taskmgr-npu-020-default-test-0                  1/1     Running             0          2s      xx.xx.xx.xx       node173                 &lt;none&gt;           &lt;none&gt;
    trjob            taskmgr-npu-020-default-test-1                  1/1     Running             0          3s      xx.xx.xx.xx       localhost.localdomain   &lt;none&gt;           &lt;none&gt;
    // ===================== 注入故障 ======================
@@ -117,24 +115,24 @@
    trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0          2s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
    </pre>
 
-5. 查看任务状态和UID
+5. 查看任务状态和UID。
 
-   1. 执行以下命令查看任务状态：
+   1. 查看任务状态。
 
       ```bash
       kubectl get pod -A -o wide
       ```
 
-      回显示例如下，出现Running表示任务正常运行：
+      回显示例如下，STATUS字段为Running表示任务正常运行。
 
-      <pre codetype="bash">
+      <pre codetype="ColdFusion">
       NAMESPACE        NAME                                            READY   STATUS    RESTARTS   AGE     IP                NODE                    NOMINATED NODE   READINESS GATES
       ...              ...                                             ...     ...       ...        ...     ...               ...                     ...              ...
       trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          2s      xx.xx.xx.xx      node173   &lt;none&gt;           &lt;none&gt;
       trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          33s     xx.xx.xx.xx      node173   &lt;none&gt;           &lt;none&gt;
       </pre>
 
-   2. 执行以下命令查看2个Pod的UID：
+   2. 查看2个Pod的UID：
 
       ```bash
       kubectl get pod taskmgr-npu-020-default-test-0  -n trjob -o jsonpath='{.metadata.uid}'
@@ -143,7 +141,7 @@
 
       回显示例如下，该Job的2个Pod的UID均发生变化，说明2个Pod都经历了重调度，即触发Job级别重调度：
 
-      ```bash
+      ```ColdFusion
       2a24eee8-88f1-4107-bc9d-dabcfb09dea9
       074f9f9c-35f1-4b9e-9298-5b2bcf3759e7
       ```
@@ -152,13 +150,11 @@
 
 **前提条件**
 
-在基础调度的任务YAML中，添加Pod级别重调度的配置，配置说明可参考[配置Pod级别重调度](03_configuration/02_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002479226508)，原理可参考[Pod级别重调度](01_solutions_principles.md#ZH-CN_TOPIC_0000002511346429)。
+在基础调度的任务YAML中，添加Pod级别重调度的配置，配置说明可参考[配置Pod级别重调度](03_configuration/02_configuring_fault_handling_policies.md#配置pod级别重调度)，原理可参考[Pod级别重调度](01_solutions_principles.md#pod级别重调度)。
 
 **操作步骤**
 
-1. 下发任务
-
-   执行以下命令下发任务：
+1. 下发任务。
 
    ```bash
    kubectl apply -f trjob.yaml
@@ -168,22 +164,22 @@
    > - 请将`trjob.yaml`替换为实际的任务YAML文件。
    > - 任务Pod的名称、命名空间会根据任务YAML中的配置而变化，以下出现的`taskmgr-npu-020-default-test-`和`trjob`都是示例值，实际值会根据任务YAML中的配置而变化。
 
-2. 查看任务状态和UID
+2. 查看任务状态和UID。
 
-   1. 执行以下命令查看任务状态：
+   1. 查看任务状态。
 
       ```bash
       kubectl get pod -A -o wide
       ```
 
-      回显示例如下，出现Running表示任务正常运行：
+      回显示例如下，出现Running表示任务正常运行。
 
-      <pre codetype="bash">
+      <pre codetype="ColdFusion">
       trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
       trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
       </pre>
 
-   2. 执行以下命令查看2个Pod的UID：
+   2. 查看2个Pod的UID。
 
       ```bash
       kubectl get pod taskmgr-npu-020-default-test-0  -n trjob -o jsonpath='{.metadata.uid}'
@@ -192,36 +188,36 @@
 
       回显示例如下：
 
-      ```bash
+      ```ColdFusion
       de1f8848-ed88-4e18-abda-7abc8dbede87
       47291595-85b0-47ff-8393-c922d0e2dfb2
       ```
 
-3. 构造故障
+3. 构造故障。
 
-   执行以下命令查询任务进程：
+   1. 查询任务进程。
 
-   ```bash
-   npu-smi info|grep python|awk '{print $5}'
-   ```
+      ```bash
+      npu-smi info|grep python|awk '{print $5}'
+      ```
 
-   回显示例如下：
+      回显示例如下：
 
-   ```bash
-   2398132
-   2398144
-   2398158
-   ```
+      ```ColdFusion
+      2398132
+      2398144
+      2398158
+      ```
 
-   执行以下命令将进程终止模拟故障：
+   2. 终止进程模拟故障。
 
-   ```bash
-   kill -9 2398144
-   ```
+      ```bash
+      kill -9 2398144
+      ```
 
-4. 观察重调度过程
+4. 观察重调度过程。
 
-   执行以下命令监控该Job的2个Pod状态变化：
+   监控该Job的2个Pod状态变化。
 
    ```bash
    kubectl get pod -A -o wide -w | grep trjob
@@ -229,7 +225,7 @@
 
    该Job的2个Pod历史状态如下，观察加粗字段的变化可以发现故障Pod（taskmgr-npu-020-default-test-1）会经历Error→Terminating→Pending→ContainerCreating→Running阶段，然后正常运行，表示Pod重调度成功：
 
-   <pre codetype="bash">
+   <pre codetype="ColdFusion">
    trjob            taskmgr-npu-020-default-test-0                  1/1     Running              0          6s      xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
    trjob            taskmgr-npu-020-default-test-1                  1/1     Running              0          6s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
    // ===================== 注入故障 ======================
@@ -244,22 +240,22 @@
    trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0           2s      xx.xx.xx.xx     localhost.localdomain   &lt;none&gt;           &lt;none&gt;
    </pre>
 
-5. 查看任务状态和UID
+5. 查看任务状态和UID。
 
-   1. 执行以下命令查看任务状态：
+   1. 查看任务状态。
 
       ```bash
       kubectl get pod -A -o wide
       ```
 
-      回显示例如下，出现Running表示任务正常运行：
+      回显示例如下，出现Running表示任务正常运行。
 
-      <pre codetype="bash">
+      <pre codetype="ColdFusion">
       trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          66s      xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
       trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          31s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
       </pre>
 
-   2. 执行以下命令再次查看2个Pod的UID：
+   2. 再次查看2个Pod的UID。
 
       ```bash
       kubectl get pod taskmgr-npu-020-default-test-0  -n trjob -o jsonpath='{.metadata.uid}'
@@ -268,7 +264,7 @@
 
       回显示例如下，taskmgr-npu-020-default-test-0 Pod的UID未发生变化，taskmgr-npu-020-default-test-1 Pod的UID发生变化，说明只有发生故障的Pod（taskmgr-npu-020-default-test-1）经历了重调度，即触发Pod级别重调度：
 
-      ```bash
+      ```ColdFusion
       de1f8848-ed88-4e18-abda-7abc8dbede87
       6eb3c217-3b63-457a-9010-9d236d281634
       ```
@@ -277,13 +273,11 @@
 
 **前提条件**
 
-在基础调度的任务YAML中，添加进程级别重调度的配置，配置说明可参考[配置进程级别重调度](03_configuration/02_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002511426407)，原理可参考[进程级别重调度](01_solutions_principles.md#ZH-CN_TOPIC_0000002511346457)。
+在基础调度的任务YAML中，添加进程级别重调度的配置，配置说明可参考[配置进程级别重调度](03_configuration/02_configuring_fault_handling_policies.md#配置进程级别重调度)，原理可参考[进程级别重调度](01_solutions_principles.md#进程级别重调度)。
 
 **操作步骤**
 
-1. 下发任务
-
-   执行以下命令下发任务：
+1. 下发任务。
 
    ```bash
    kubectl apply -f trjob.yaml
@@ -293,23 +287,19 @@
    > - 请将`trjob.yaml`替换为实际的任务YAML文件。
    > - 任务Pod的名称、命名空间会根据任务YAML中的配置而变化，以下出现的`process-reschedule-function-`和`trjob`都是示例值，实际值会根据任务YAML中的配置而变化。
 
-2. 查看任务状态
-
-   执行以下命令查看任务状态：
+2. 查看任务状态。
 
    ```bash
    kubectl get pod -A -o wide
    ```
 
    回显示例如下，出现Running表示任务正常运行：
-   <pre codetype="bash">
+   <pre codetype="ColdFusion">
    trjob            process-reschedule-function-master-0   1/1     Running   0               14s   xx.xx.xx.xx     master-69-117   &lt;none&gt;           &lt;none&gt;
    trjob            process-reschedule-function-worker-0   1/1     Running   0               14s   xx.xx.xx.xx     work-69-115     &lt;none&gt;           &lt;none&gt;
    </pre>
 
-3. 查看训练日志迭代步数
-
-   执行以下命令查看迭代步数，确认训练已正常迭代：
+3. 查看训练日志迭代步数，确认训练已正常迭代。
 
    ```bash
    kubectl logs -n trjob process-reschedule-function-worker-0|grep -Po '] iteration [[:space:]]*'|wc -l
@@ -321,36 +311,34 @@
    50
    ```
 
-4. 查看进程ID，并构造故障
+4. 查看进程ID，并构造故障。
 
-   执行以下命令查看进程ID：
+   1. 查看进程ID。
 
-   ```bash
-   npu-smi info|grep python|awk '{print $5}'
-   ```
+      ```bash
+      npu-smi info|grep python|awk '{print $5}'
+      ```
 
-   回显示例如下：
+      回显示例如下：
 
-   ```bash
-   635755
-   635756
-   635760
-   635770
-   635777
-   635784
-   635791
-   635795
-   ```
+      ```ColdFusion
+      635755
+      635756
+      635760
+      635770
+      635777
+      635784
+      635791
+      635795
+      ```
 
-   终止其中一个进程来模拟故障发生：
+   2. 终止其中一个进程模拟故障。
 
-   ```bash
-   kill -9 635777
-   ```
+      ```bash
+      kill -9 635777
+      ```
 
-5. 观察训练日志
-
-   执行以下命令监控训练日志：
+5. 观察训练日志。
 
    ```bash
    kubectl logs -n trjob process-reschedule-function-master-0
@@ -358,7 +346,7 @@
 
    回显示例如下：
 
-   ```bash
+   ```ColdFusion
    # 出现以下信息说明开始触发ARF流程
    Mindx calling notify do ARF repair
 
@@ -366,9 +354,7 @@
    ... Mindio do repair operation ok ...
    ```
 
-6. 观察job-reschedule-reason内容是否准确
-
-   执行以下命令查看ConfigMap job-reschedule-reason中是否有任务信息：
+6. 查看ConfigMap job-reschedule-reason中是否有任务信息。
 
    ```bash
    kubectl describe cm -n mindx-dl job-reschedule-reason |grep process-reschedule-function
@@ -376,7 +362,7 @@
 
    回显示例如下，其中包含重调度的时间，触发重调度的pod、node、rank，本任务当前重调度次数等信息：
 
-   ```bash
+   ```ColdFusion
    {"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07":{"JobID":"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07","TotalRescheduleTimes":1,"RescheduleRecords":[{"LogFileFormatTime":"I0603 05:16:52","RescheduleTimeStamp":1780435012,"ReasonOfTask":[{"RescheduleReason":"pod-failed","PodName":"process-reschedule-function-worker-0","NodeName":"work-69-115","NodeRankIndex":"1"}]}]}}
    ```
 
@@ -578,72 +564,67 @@
 
 ### 验证流程
 
-以下示例基于**双机 16 卡**（单机 8 卡，Master rank 0–7、Worker rank 8–15）环境，与[脚本适配](#ZH-CN_TOPIC_0000002479226412)中 `RAISE_UCE_ERROR_STEP_AND_RANK="{3:8,10:9}"` 的配置一致。若使用单机或其他拓扑，请同步调整环境变量与下文 `grep` 中的 rank、Pod 名称。
+以下示例基于**双机16卡**（单机8卡，Master rank 0–7、Worker rank 8–15）环境，与[脚本适配](#ZH-CN_TOPIC_0000002479226412)中 `RAISE_UCE_ERROR_STEP_AND_RANK="{3:8,10:9}"` 的配置一致。若使用单机或其他拓扑，请同步调整环境变量与下文 `grep` 中的rank、Pod名称。
 
 **前提条件**
 
-- 在基础调度的任务 YAML 中，添加进程级在线恢复的配置，配置说明可参考[配置进程级在线恢复](03_configuration/02_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002479386492)，原理可参考[进程级在线恢复](01_solutions_principles.md#ZH-CN_TOPIC_0000002479386460)。
+- 在基础调度的任务 YAML 中，添加进程级在线恢复的配置，配置说明可参考[配置进程级在线恢复](03_configuration/02_configuring_fault_handling_policies.md#配置进程级在线恢复)，原理可参考[进程级在线恢复](01_solutions_principles.md#进程级在线恢复)。
 - 已完成 MindCluster 适配和脚本适配；启动脚本中的 `RAISE_UCE_ERROR_STEP_AND_RANK` 与下文验证命令中的 rank、迭代步保持一致。
 
 **操作步骤**
 
-1. 下发任务
-
-   执行以下命令下发任务：
+1. 下发任务。
 
    ```bash
    kubectl apply -f trjob.yaml
    ```
 
    >[!NOTE]
-   > - 请将 `trjob.yaml` 替换为实际的任务 YAML 文件；若按上文 QWEN3 脚本适配，请使用对应的任务 YAML 与 Pod 名称。
-   > - 任务 Pod 的名称、命名空间会根据任务 YAML 中的配置而变化，以下出现的 `process-online-recovery-` 和 `trjob` 均为示例值。
+   > - 请将 `trjob.yaml` 替换为实际的任务YAML文件；若按上文QWEN3脚本适配，请使用对应的任务YAML与Pod名称。
+   > - 任务Pod的名称、命名空间会根据任务YAML中的配置而变化，以下出现的 `process-online-recovery-` 和 `trjob` 均为示例值。
 
-2. 查看任务状态
+2. 查看任务状态。
 
-   1. 执行以下命令查看任务状态：
+   ```bash
+   kubectl get pod -A -o wide
+   ```
 
-      ```bash
-      kubectl get pod -A -o wide
-      ```
+   回显示例如下，出现Running表示任务正常运行。
 
-   2. 回显示例如下，出现Running表示任务正常运行：
-
-      <pre codetype="bash">
-      trjob            process-online-recovery-master-0                   1/1     Running   0                 14s     xx.xx.xx.xx   master-x   &lt;none&gt;           &lt;none&gt;
-      trjob            process-online-recovery-worker-0                   1/1     Running   0                 14s     xx.xx.xx.xx     work-x     &lt;none&gt;           &lt;none&gt;
-      </pre>
+   ```ColdFusion
+   trjob            process-online-recovery-master-0                   1/1     Running   0                 14s     xx.xx.xx.xx     master-x   <none>           <none>
+   trjob            process-online-recovery-worker-0                   1/1     Running   0                 14s     xx.xx.xx.xx     worker-x   <none>           <none>
+   ```
 
 3. 监控训练日志
-
-   1. 执行以下命令，监控训练日志检查是否触发UCE故障：
+   1. 监控训练日志检查是否触发UCE故障。
 
       ```bash
       kubectl logs -n trjob process-online-recovery-master-0 --all-containers=true | grep -Fa "status error, rank:8"
       ```
 
       >[!NOTE]
-      > 本示例在第3步将故障注入在rank 8。`grep` 关键字中的rank须与环境变量中配置的全局rank一致。
+      > 本示例在第3步将故障注入rank 8。`grep` 关键字中的rank需与环境变量中配置的全局rank保持一致。
 
-      回显示例如下，触发UCE故障：
+      回显示例如下，触发UCE故障。
 
-      ```bash
+      ```ColdFusion
       2026-06-04 09:24:31.767278 warn 3062106 [TTP controller.cpp:2510] status error, rank:8 step: 3 npu_status: 2 run_status: 0 data_aval: 0 data_status: 0 diff_time : 0
       2026-06-04 09:24:33.767422 warn 3062106 [TTP controller.cpp:2510] status error, rank:8 step: 3 npu_status: 2 run_status: 0 data_aval: 0 data_status: 0 diff_time : 1417
       ```
 
       >[!NOTE]
-      > 日志中的 `step: 3` 表示故障在第 3 个训练迭代步触发。`npu_status: 2` 表示 MindIO/TTP 侧已进入 UCE 处理状态；在本打桩场景下由软件模拟路径触发，不代表真实硬件片上内存故障。
+      >日志中的 `step: 3` 表示故障在第3个训练迭代步触发。`npu_status: 2` 表示MindIO/TTP侧已进入UCE处理状态；在本打桩场景下由软件模拟路径触发，不代表真实硬件片上内存故障。
 
-   2. 执行以下命令，检查第 3 步故障的恢复结果。在 master 或 worker 任一 Pod 上输出大于等于 1，即说明修复成功：
+   2. 检查第3步故障的恢复结果。在Master或Worker任一Pod上输出大于等于1，即说明修复成功。
 
       ```bash
       kubectl logs -n trjob process-online-recovery-master-0 --all-containers=true | grep -Fa "(0, 'Mindio do repair operation ok', {}, 'retry')"|wc -l
       ```
 
-4. 检查迭代是否正常
+4. 检查迭代是否正常。
 
-   1. 执行以下命令查看任务状态：
+   1. 查看任务状态：
 
       ```bash
       kubectl get pod -A -o wide
@@ -651,7 +632,7 @@
 
       回显示例如下：
 
-      ```bash
+      ```ColdFusion
       trjob            process-online-recovery-master-0                   1/1     Running   0                 110s    xx.xx.xx.xx     master-x   <none>           <none>
       trjob            process-online-recovery-worker-0                   1/1     Running   0                 110s    xx.xx.xx.xx     worker-x   <none>           <none>
       ```
@@ -659,7 +640,7 @@
       >[!NOTE]
       > 此时请检查RESTARTS列，该数值必须保持为0。证明在整个UCE故障及修复过程中，Pod容器从未发生过重启。
 
-   2. 执行以下命令查看训练迭代步数：
+   2. 查看训练迭代步数。
 
       ```bash
       kubectl logs -n trjob process-online-recovery-master-0 | grep -Po "] iteration [[:space:]]*4"|wc -l
@@ -669,6 +650,6 @@
       ```
 
       >[!NOTE]
-      > - 以上命令中 `grep` 的迭代步数（如 `iteration 4`）需根据实际注入故障的步数调整。若故障注入在第 `N` 步，恢复后应从第 `N+1` 步继续训练，因此应 `grep iteration [[:space:]]*{N+1}`。本示例中第3步故障对应 `iteration 4`，第10步故障对应 `iteration 11`。
+      > - 以上命令中 `grep` 的迭代步数（如 `iteration 4`）需根据实际注入故障的步数调整。若故障注入在第 `N` 步，恢复后应从第 `N+1` 步继续训练，因此应为 `grep iteration [[:space:]]*{N+1}`。本示例中第3步故障对应 `iteration 4`，第10步故障对应 `iteration 11`。
       > - 在分布式多机训练中，受训练框架的日志重定向机制影响，各Rank的迭代日志可能仅输出在部分节点的stdout中，或被重定向至本地物理日志文件。
-      > - 本示例中Master节点返回0、Worker节点返回11，只要任一节点能搜出大于0的计数，即证明热修复后训练已跨越对应故障步数并继续。
+      > - 本示例中Master节点返回0、Worker节点返回11，只要任一节点存在大于0的计数，即证明热修复后训练已跨越对应故障步数并继续。

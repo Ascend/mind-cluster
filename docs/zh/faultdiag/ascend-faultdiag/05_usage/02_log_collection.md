@@ -102,7 +102,7 @@ cp -r $HOME/ascend/log/* {采集目录}/process_log
 > [!NOTE]
 >
 > - CANN 应用类日志默认存储在 `$HOME/ascend/log` 目录下，并支持通过环境变量 `ASCEND_PROCESS_LOG_PATH` 自定义日志存储路径。
-> - 文件说明：由 CANN 打印的应用类日志，包括 Host 侧应用类日志 `plog-{pid}_{unix时间}.log` 和 Device 侧应用类日志 `device-{pid}_{unix时间}.log` 两类，更多日志相关信息请参见[《CANN 日志参考》](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/logreference/logreference_0001.html)中的“[查看日志（Ascend EP）](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/logreference/logreference_0002.html)”章节。
+> - 文件说明：由 CANN 打印的应用类日志，包括 Host 侧应用类日志 `plog-{pid}_{unix时间}.log` 和 Device 侧应用类日志 `device-{pid}_{unix时间}.log` 两类，更多日志相关信息请参见[《CANN 日志参考》](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/maintenref/logreference/logreference_0001.html)中的“[查看日志（Ascend EP）](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/maintenref/logreference/logreference_0002.html)”章节。
 
 ### 用户训练/推理日志
 
