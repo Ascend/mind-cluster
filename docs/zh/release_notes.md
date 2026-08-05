@@ -32,9 +32,9 @@
 
 |MindCluster|CANN| HDK                                                                   |MindSpeed-LLM|TorchNPU|MindSpore|
 |--|--|-----------------------------------------------------------------------|--|--|--|
-|26.1.0|9.1.0| <ul><li>Atlas A2/A3 系列产品：26.1.0</li><li>Atlas 350 系列产品：25.7.RC1</li><li>Atlas 950 系列产品：25.1.RC1</li><li>Atlas 850 系列产品：25.6.RC1</li></ul> |26.1.0|26.1.0|2.10.0|
+|26.1.0|9.1.0| <ul><li>Atlas 350 标卡：25.7.RC1</li><li>Atlas 950 SuperPoD：25.1.RC1</li><li>Atlas 850 Server：25.6.RC1</li><li>其他产品：26.1.0</li></ul> |26.1.0|26.1.0|2.10.0|
 
-### 版本兼容性说明
+## 版本兼容性说明
 
 MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
@@ -92,7 +92,34 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 <thead>
   <tr>
     <th rowspan="2">MindCluster</th>
-    <th colspan="3">A2/A3 HDK版本</th>
+    <th colspan="1">Ascend 950 系列产品HDK版本</th>
+  </tr>
+  <tr>
+    <th>25.1.RC1/25.6.RC1/25.7.RC1</th>
+  </tr></thead>
+<tbody>
+
+  <tr>
+    <td>26.0.0</td>
+    <td>Y</td>
+  </tr>
+  <tr>
+    <td>26.1.0</td>
+    <td>Y</td>
+  </tr>
+</tbody>
+</table>
+
+<table style="table-layout: fixed; width: 433px"><colgroup>
+<col style="width: 156px">
+<col style="width: 88px">
+<col style="width: 91px">
+<col style="width: 98px">
+</colgroup>
+<thead>
+  <tr>
+    <th rowspan="2">MindCluster</th>
+    <th colspan="3">其他产品HDK版本</th>
   </tr>
   <tr>
     <th>25.5.X</th>
@@ -116,33 +143,6 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
     <td>26.1.0</td>
     <td>Y</td>
     <td>Y</td>
-    <td>Y</td>
-  </tr>
-</tbody>
-</table>
-
-<table style="table-layout: fixed; width: 433px"><colgroup>
-<col style="width: 156px">
-<col style="width: 88px">
-<col style="width: 91px">
-<col style="width: 98px">
-</colgroup>
-<thead>
-  <tr>
-    <th rowspan="2">MindCluster</th>
-    <th colspan="1">Ascend 950系列产品 HDK版本</th>
-  </tr>
-  <tr>
-    <th>25.1.RC1/25.6.RC1/25.7.RC1</th>
-  </tr></thead>
-<tbody>
-
-  <tr>
-    <td>26.0.0</td>
-    <td>Y</td>
-  </tr>
-  <tr>
-    <td>26.1.0</td>
     <td>Y</td>
   </tr>
 </tbody>
@@ -188,7 +188,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 </tbody>
 </table>
 
-**表 5**  MindCluster与FrameworkPTAdapter版本兼容
+**表 5**  MindCluster与TorchNPU版本兼容
 
 <table style="table-layout: fixed; width: 433px"><colgroup>
 <col style="width: 156px">
@@ -199,7 +199,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 <thead>
   <tr>
     <th rowspan="2">MindCluster</th>
-    <th colspan="3">FrameworkPTAdapter版本</th>
+    <th colspan="3">TorchNPU版本</th>
   </tr>
   <tr>
     <th>7.3.X</th>
@@ -268,15 +268,11 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 </tbody>
 </table>
 
-### 病毒扫描结果
-
-病毒扫描通过。
-
 ## 版本使用注意事项
 
 无
 
-## 26.1.0更新说明
+## 更新说明
 
 ### 新增特性
 
@@ -323,12 +319,16 @@ A3开启算子重执行，在linkdown故障场景下，进程级重调度有概�
 
 Infer Operator组件从26.1.0之前版本升级到26.1.0及之后版本时，需删除日志目录重新创建为root权限或修改日志目录及日志文件的权限为root。
 
-## 26.1.0版本配套文档
+## 版本配套文档
 
 |文档名称|内容简介|更新说明|
 |--|--|--|
 |《[MindCluster 集群调度用户指南](./scheduling/01_introduction/00_overview.md)》|提供集群调度组件说明、特性原理和使用参考，包括各组件的安装部署、集成适配示例和API参考，以及部分调度方案的原理介绍参考。|新增使用helm安装组件、开发者指南、容器快照部署及使用等，其他变更详见《[MindCluster 集群调度用户指南](./scheduling/01_introduction/00_overview.md)》。|
-|《[MindCluster 故障诊断用户指南](./faultdiag/README.md)》|提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。|新增Ascend 950 系列产品、基于pyMotor+vLLM的故障模式等，其他变更详见《[MindCluster 故障诊断用户指南](./faultdiag/README.md)》。|
+|《[MindCluster 故障诊断用户指南](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)》|提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。|新增Ascend 950 系列产品、基于pyMotor+vLLM的故障模式等，其他变更详见《[MindCluster 故障诊断用户指南](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)》。|
+
+## 病毒扫描结果
+
+病毒扫描通过。
 
 ## 漏洞修补列表
 

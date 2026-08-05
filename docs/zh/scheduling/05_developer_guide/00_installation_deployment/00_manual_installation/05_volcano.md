@@ -154,13 +154,13 @@
         spec:
     ...
               imagePullPolicy: "IfNotPresent"
-              <strong>resources:
-                requests:
-                  memory: 4Gi
-                  cpu: 5500m
-                limits:
-                  memory: 8Gi
-                  cpu: 5500m</strong>
+              <strong>resources:</strong>
+                <strong>requests:</strong>
+                  <strong>memory: 4Gi</strong>
+                  <strong>cpu: 5500m</strong>
+                <strong>limits:</strong>
+                  <strong>memory: 8Gi</strong>
+                  <strong>cpu: 5500m</strong>
     ...
     kind: Deployment
     ...
@@ -170,13 +170,13 @@
     ...
         spec:
     ...
-              <strong>resources:
-                requests:
-                  memory: 3Gi
-                  cpu: 2000m
-                limits:
-                  memory: 3Gi
-                  cpu: 2000m</strong>
+              <strong>resources:</strong>
+                <strong>requests:</strong>
+                  <strong>memory: 3Gi</strong>
+                  <strong>cpu: 2000m</strong>
+                <strong>limits:</strong>
+                  <strong>memory: 3Gi</strong>
+                  <strong>cpu: 2000m</strong>
     ...</pre>
 
 6. （可选）调度时间性能调优。支持在“volcano-v<i>\{version\}</i>.yaml“中，配置Volcano所使用的插件。请参见[开源Volcano官方文档](https://support.huaweicloud.com/usermanual-cce/cce_10_0193.html)中Volcano高级配置参数说明和支持的Plugins列表的表格说明进行操作。
@@ -229,8 +229,8 @@
               image: volcanosh/vc-scheduler:v1.7.0-v26.1.0   # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
               args: [ ...
                   ...
-                  <strong>--enable-healthz=true   # 为保证可正常访问Volcano健康检查端口，本参数取值需为"true"
-                  --enable-metrics=true   # 为保证可正常访问Prometheus信息收集端口，本参数取值需为"true"</strong>
+                  <strong>--enable-healthz=true   # 为保证可正常访问Volcano健康检查端口，本参数取值需为"true"</strong>
+                  <strong>--enable-metrics=true   # 为保证可正常访问Prometheus信息收集端口，本参数取值需为"true"</strong>
                   ...
     ...</pre>
 

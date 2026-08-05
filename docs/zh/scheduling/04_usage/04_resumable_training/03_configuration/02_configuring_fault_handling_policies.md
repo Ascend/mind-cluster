@@ -381,7 +381,7 @@ context:
 
 **配置环境变量<a name="section12610013287"></a>**
 
-使用算子级在线恢复前，用户需在启动训练的脚本中配置环境变量HCCL\_OP\_RETRY\_ENABLE和HCCL\_OP\_RETRY\_PARAMS。关于该环境变量的详细说明请参见《[CANN 环境变量参考](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0001.html)》。配置示例如下。
+使用算子级在线恢复前，用户需在启动训练的脚本中配置环境变量HCCL\_OP\_RETRY\_ENABLE和HCCL\_OP\_RETRY\_PARAMS。关于该环境变量的详细说明请参见《[CANN HCCL集合通信库](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/commlib/hcclug/docs/zh/user_guide/hccl_env/HCCL_OP_RETRY_ENABLE.md)》。配置示例如下。
 
 ```shell
 export HCCL_OP_RETRY_ENABLE="L0:0, L1:1, L2:1"     # 是否开启HCCL算子的重执行特性
