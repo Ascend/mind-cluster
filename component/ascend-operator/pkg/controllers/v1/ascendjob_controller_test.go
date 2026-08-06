@@ -13,12 +13,12 @@ import (
 	"errors"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/go-logr/logr"
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"github.com/kubeflow/common/pkg/controller.v1/common"
-	"github.com/kubeflow/training-operator/pkg/common/util"
 	"github.com/smartystreets/goconvey/convey"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -69,7 +69,7 @@ func newCommonReconciler() *ASJobReconciler {
 	rc.JobController = common.JobController{
 		Controller:          rc,
 		Config:              common.JobControllerConfiguration{EnableGangScheduling: true},
-		WorkQueue:           &util.FakeWorkQueue{},
+		WorkQueue:           &fakeWorkQueue{},
 		PodLister:           &fakePodLister{},
 		PriorityClassLister: &fakePriorityClassLister{},
 		Recorder:            &fakeRecorder{},
@@ -260,6 +260,42 @@ func (s *fakePodLister) List(selector labels.Selector) ([]*corev1.Pod, error) {
 func (s *fakePodLister) Pods(namespace string) corelisters.PodNamespaceLister {
 	return nil
 }
+
+// fakeWorkQueue implements RateLimitingInterface but actually does nothing.
+type fakeWorkQueue struct{}
+
+// Add WorkQueue Add method
+func (f *fakeWorkQueue) Add(item interface{}) {}
+
+// Len WorkQueue Len method
+func (f *fakeWorkQueue) Len() int { return 0 }
+
+// Get WorkQueue Get method
+func (f *fakeWorkQueue) Get() (item interface{}, shutdown bool) { return nil, false }
+
+// Done WorkQueue Done method
+func (f *fakeWorkQueue) Done(item interface{}) {}
+
+// ShutDown WorkQueue ShutDown method
+func (f *fakeWorkQueue) ShutDown() {}
+
+// ShutDown WorkQueue ShutDownWithDrain method
+func (f *fakeWorkQueue) ShutDownWithDrain() {}
+
+// ShuttingDown WorkQueue ShuttingDown method
+func (f *fakeWorkQueue) ShuttingDown() bool { return true }
+
+// AddAfter WorkQueue AddAfter method
+func (f *fakeWorkQueue) AddAfter(item interface{}, duration time.Duration) {}
+
+// AddRateLimited WorkQueue AddRateLimited method
+func (f *fakeWorkQueue) AddRateLimited(item interface{}) {}
+
+// Forget WorkQueue Forget method
+func (f *fakeWorkQueue) Forget(item interface{}) {}
+
+// NumRequeues WorkQueue NumRequeues method
+func (f *fakeWorkQueue) NumRequeues(item interface{}) int { return 0 }
 
 const fakeResourceName = "huawei.com/Ascend910"
 

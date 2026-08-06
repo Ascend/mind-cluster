@@ -21,9 +21,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
-
 	"ascend-common/common-utils/hwlog"
+	autils "ascend-common/common-utils/utils"
 	"taskd/common/constant"
 	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure/storage"
@@ -157,7 +156,7 @@ func registerAndLoopRecv(ctx context.Context) {
 	registerSucc := false
 	for i := 0; i < maxRegisterTime; i++ {
 		time.Sleep(time.Duration(i) * time.Second)
-		_, err := netTool.SyncSendMessage(uuid.NewString(), "default", utils.ObjToString(body), &common.Position{
+		_, err := netTool.SyncSendMessage(autils.NewUUID(), "default", utils.ObjToString(body), &common.Position{
 			Role:       common.MgrRole,
 			ServerRank: "0",
 		})

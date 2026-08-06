@@ -72,7 +72,7 @@
 
     pip3 install wheel setuptools \
         scikit-learn pandas numpy ply paramiko scp cryptography openpyxl \
-        grpcio protobuf pyOpenSSL
+        grpcio protobuf
 
 （可通过 `-i https://mirrors.aliyun.com/pypi/simple/` 使用国内 PyPI 镜像加速。）
 

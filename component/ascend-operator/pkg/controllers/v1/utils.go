@@ -325,3 +325,12 @@ func isSoftShareDevJob(job *mindxdlv1.AscendJob) bool {
 	_, hasSchedulingPolicy := job.Labels[api.SchedulerSoftShareDevPolicyKey]
 	return hasAicoreQuota && hasHbmQuota && hasSchedulingPolicy
 }
+
+func getSchedulerName(replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec) string {
+	for _, spec := range replicas {
+		if len(spec.Template.Spec.SchedulerName) > 0 {
+			return spec.Template.Spec.SchedulerName
+		}
+	}
+	return ""
+}

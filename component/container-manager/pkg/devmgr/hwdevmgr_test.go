@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
-	"github.com/gogo/protobuf/sortkeys"
 	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-common/api"
@@ -47,9 +46,9 @@ func TestHwDevMgrBasicMethod(t *testing.T) {
 	})
 	convey.Convey("test method 'GetDevNum' success", t, func() {
 		phyIds := mockDevMgr.GetPhyIds()
-		sortkeys.Int32s(phyIds)
+		sort.Slice(phyIds, func(i, j int) bool { return phyIds[i] < phyIds[j] })
 		expPhyIds := []int32{dev0, dev1, dev2, dev3, dev4, dev5, dev6, dev7}
-		sortkeys.Int32s(expPhyIds)
+		sort.Slice(expPhyIds, func(i, j int) bool { return expPhyIds[i] < expPhyIds[j] })
 		convey.So(phyIds, convey.ShouldResemble, expPhyIds)
 	})
 }

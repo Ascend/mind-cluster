@@ -375,8 +375,7 @@
         pip install transformers==4.51.0 && \
         pip install absl-py && \
         pip install datasets && \
-        pip install tokenizers==0.20.1 && \
-        pip install pyOpenSSL
+        pip install tokenizers==0.20.1
     RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser
     # 安装torch、TorchNPU、apex包
     RUN umask 0022 && pip install $PYTORCH_WHL && \
@@ -703,8 +702,7 @@
         pip install grpcio-tools && \
         pip install absl-py && \
         pip install datasets && \
-        pip install tokenizers==0.20.1 && \
-        pip install pyOpenSSL
+        pip install tokenizers==0.20.1
 
     # 创建HwHiAiUser用户和属主，UID和GID请与物理机保持一致避免出现无属主文件。示例中会自动创建user和对应的group，UID和GID都为1000
     RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser

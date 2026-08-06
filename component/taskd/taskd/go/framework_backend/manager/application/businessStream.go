@@ -29,9 +29,8 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/google/uuid"
-
 	"ascend-common/common-utils/hwlog"
+	autils "ascend-common/common-utils/utils"
 	"taskd/common/constant"
 	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure"
@@ -179,7 +178,7 @@ func (b *BusinessStreamProcessor) DistributeMsg(msgs []infrastructure.Msg) error
 
 // DistributedMsgToMgr distributed message to manager
 func (b *BusinessStreamProcessor) DistributedMsgToMgr(msg infrastructure.Msg) {
-	b.MsgHandler.SendMsgToMgr(uuid.New().String(), constant.DefaultDomainName,
+	b.MsgHandler.SendMsgToMgr(autils.NewUUID(), constant.DefaultDomainName,
 		&common.Position{
 			Role:        common.MgrRole,
 			ServerRank:  "0",

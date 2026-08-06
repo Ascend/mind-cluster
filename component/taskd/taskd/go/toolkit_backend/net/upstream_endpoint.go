@@ -24,7 +24,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/google/uuid"
+	"ascend-common/common-utils/utils"
 	"google.golang.org/grpc"
 
 	"taskd/toolkit_backend/net/common"
@@ -118,7 +118,7 @@ func (up *upStreamEndpoint) joinTaskNetwork() {
 func (up *upStreamEndpoint) pathJoin(pos *proto.Position) {
 	for !up.destroyed.Load() {
 		_, err := up.upStreamClient.PathDiscovery(up.netInstance.ctx, &proto.PathDiscoveryReq{
-			Uuid:     uuid.NewString(),
+			Uuid:     utils.NewUUID(),
 			ProxyPos: pos,
 			Path:     []*proto.Position{pos},
 		})

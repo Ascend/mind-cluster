@@ -26,11 +26,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"ascend-common/common-utils/hwlog"
+	autils "ascend-common/common-utils/utils"
 	"ascend-faultdiag-online/pkg/core/model/enum"
 	"ascend-faultdiag-online/pkg/model"
 	"ascend-faultdiag-online/pkg/utils"
@@ -208,7 +208,7 @@ func (c *Client) ReportFault(faults []*pubfault.Fault) error {
 		return errors.New("grpc client is nil")
 	}
 	req := pubfault.PublicFaultRequest{
-		Id:        uuid.New().String(),
+		Id:        autils.NewUUID(),
 		Timestamp: time.Now().UnixMilli(),
 		Version:   "1.0",
 		Resource:  "fd-online",
@@ -237,7 +237,7 @@ func (c *Client) registerJobSummary() error {
 		return nil
 	}
 	// register
-	var clientId = uuid.New().String()
+	var clientId = autils.NewUUID()
 	clientInfo := &job.ClientInfo{
 		Role:     "FdAgent",
 		ClientId: clientId,
@@ -322,7 +322,7 @@ func (c *Client) SubscribeJobSummary(jobName, namespace string, f func(job *mode
 		return "", errors.New("callback function is nil")
 	}
 	// add f to process list
-	registerId := uuid.New().String()
+	registerId := autils.NewUUID()
 	cb := callback{
 		registerId: registerId,
 		jobName:    jobName,
