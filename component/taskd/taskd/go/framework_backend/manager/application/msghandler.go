@@ -22,8 +22,6 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/google/uuid"
-
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	clusterdconstant "clusterd/pkg/common/constant"
@@ -264,7 +262,7 @@ func (mhd *MsgHandler) receiveGoroutine(tool *net.NetInstance, ctx context.Conte
 // SendMsgUseGrpc send message use grpc server
 func (mhd *MsgHandler) SendMsgUseGrpc(msgType string, msgBody string, dst *common.Position) {
 	mhd.Sender.RequestChan <- service.SendGrpcMsg{
-		Uuid:    uuid.New().String(),
+		Uuid:    utils.NewUUID(),
 		MsgType: msgType,
 		MsgBody: msgBody,
 		Dst:     dst,

@@ -15,9 +15,8 @@ import (
 	"strconv"
 	"unsafe"
 
-	"github.com/google/uuid"
-
 	"ascend-common/common-utils/hwlog"
+	autils "ascend-common/common-utils/utils"
 	"taskd/common/constant"
 	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure/storage"
@@ -96,7 +95,7 @@ func notifySwitchNicResult(result, uid string) {
 			constant.SwitchNicUUID: uid,
 		},
 	}
-	_, err := SwitchNicNetTool.SyncSendMessage(uuid.New().String(), "default", utils.ObjToString(msg), &common.Position{
+	_, err := SwitchNicNetTool.SyncSendMessage(autils.NewUUID(), "default", utils.ObjToString(msg), &common.Position{
 		Role:       common.MgrRole,
 		ServerRank: "0",
 	})

@@ -24,9 +24,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc/metadata"
 
+	"ascend-common/common-utils/utils"
 	"taskd/toolkit_backend/net/proto"
 )
 
@@ -95,7 +95,7 @@ func DataFrame(uid, mtype, body string, src, dst *Position) *proto.Message {
 // RegisterReqFrame creates a new proto.RegisterReq with the given source position.
 func RegisterReqFrame(src *Position) *proto.RegisterReq {
 	return &proto.RegisterReq{
-		Uuid: uuid.New().String(),
+		Uuid: utils.NewUUID(),
 		Pos: &proto.Position{
 			Role:        src.Role,
 			ServerRank:  src.ServerRank,

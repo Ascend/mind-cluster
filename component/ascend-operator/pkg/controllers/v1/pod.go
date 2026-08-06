@@ -37,7 +37,6 @@ import (
 	commonutil "github.com/kubeflow/common/pkg/util"
 	"github.com/kubeflow/common/pkg/util/labels"
 	"github.com/kubeflow/common/pkg/util/train"
-	"github.com/kubeflow/training-operator/pkg/common/util"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -797,7 +796,7 @@ func (r *ASJobReconciler) setGangScheduleInfo(job *mindxdlv1.AscendJob, podTempl
 		hwlog.RunLog.Warn(errMsg)
 		r.Recorder.Event(job, corev1.EventTypeWarning, jobSchedulerNameReason, errMsg)
 	}
-	podSchedulerName := util.GetSchedulerName(replicas)
+	podSchedulerName := getSchedulerName(replicas)
 	if len(podSchedulerName) == 0 {
 		podTemplate.Spec.SchedulerName = jobSchedulerName
 	} else if strings.Compare(podSchedulerName, gangSchedulerName) != 0 {

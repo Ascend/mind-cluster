@@ -18,8 +18,6 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/google/uuid"
-
 	"ascend-common/common-utils/hwlog"
 	autils "ascend-common/common-utils/utils"
 	"clusterd/pkg/interface/grpc/recover"
@@ -111,7 +109,7 @@ func sendHeartBeatMsg(ctx context.Context) {
 				hwlog.RunLog.Error("StressTestNetTool for worker is nil")
 				continue
 			}
-			_, err := StressTestNetTool.SyncSendMessage(uuid.New().String(), "default", utils.ObjToString(msg), &common.Position{
+			_, err := StressTestNetTool.SyncSendMessage(autils.NewUUID(), "default", utils.ObjToString(msg), &common.Position{
 				Role:       common.MgrRole,
 				ServerRank: "0",
 			})
@@ -158,7 +156,7 @@ func notifyStressTestResult(result, uid string) {
 			constant.StressTestUUID: uid,
 		},
 	}
-	_, err := StressTestNetTool.SyncSendMessage(uuid.New().String(), "default", utils.ObjToString(msg), &common.Position{
+	_, err := StressTestNetTool.SyncSendMessage(autils.NewUUID(), "default", utils.ObjToString(msg), &common.Position{
 		Role:       common.MgrRole,
 		ServerRank: "0",
 	})

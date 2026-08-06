@@ -22,9 +22,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/google/uuid"
-
 	"ascend-common/common-utils/hwlog"
+	autils "ascend-common/common-utils/utils"
 	"taskd/common/constant"
 	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure/storage"
@@ -178,7 +177,7 @@ func notifyMgrSwitchChange(result constant.ProfilingResult) {
 		MsgType: constant.STATUS,
 		Code:    utils.ProfilingResultToBizCode(result),
 	}
-	_, err := NetTool.SyncSendMessage(uuid.New().String(), "default", utils.ObjToString(msg), &common.Position{
+	_, err := NetTool.SyncSendMessage(autils.NewUUID(), "default", utils.ObjToString(msg), &common.Position{
 		Role:       common.MgrRole,
 		ServerRank: "0",
 	})

@@ -380,8 +380,7 @@ For enterprise customers, please visit: [https://support.huawei.com/enterprise/e
         pip install transformers==4.51.0 && \
         pip install absl-py && \
         pip install datasets && \
-        pip install tokenizers==0.20.1 && \
-        pip install pyOpenSSL
+        pip install tokenizers==0.20.1
     RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser
     # Install torch, torch_npu, and apex packages
     RUN umask 0022 && pip install $PYTORCH_WHL && \
@@ -696,8 +695,7 @@ For enterprise customers, please visit [https://support.huawei.com/enterprise/en
         pip install grpcio-tools && \
         pip install absl-py && \
         pip install datasets && \
-        pip install tokenizers==0.20.1 && \
-        pip install pyOpenSSL
+        pip install tokenizers==0.20.1
 
     # Create the HwHiAiUser and its owner. Ensure the UID and GID are consistent with those on the physical machine to avoid ownerless files. In this example, the user and the corresponding group are automatically created, with both UID and GID set to 1000.
     RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser

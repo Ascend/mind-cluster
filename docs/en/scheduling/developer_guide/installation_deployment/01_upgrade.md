@@ -78,7 +78,7 @@ Before performing the upgrade steps for each component, select the corresponding
         kubectl edit cm -n cluster-system   pingmesh-config
         ```
 
-If the output is as follows, it indicates that the pingmesh UnifiedBus network detection switch is off. There is no need to perform [Step 3](#li1427143773119).
+       If the output is as follows, it indicates that the pingmesh UnifiedBus network detection switch is off. There is no need to perform [Step 3](#li1427143773119).
 
         ```ColdFusion
         Error from server (NotFound): configmaps "pingmesh-config" not found
@@ -109,11 +109,11 @@ If the output is as follows, it indicates that the pingmesh UnifiedBus network d
         Author-email:
         License: UNKNOWN
         Location: /usr/local/python3/lib/python3.10/site-packages
-        Requires: grpcio, protobuf, pyOpenSSL, torch, torch-npu
+        Requires: grpcio, protobuf, torch, torch-npu
         Required-by:
         ```
 
-    - (Optional)Check other components. Refer to [Component Status Confirmation](../../installation_guide/03_confirming_status) to confirm whether the corresponding components are installed on the nodes in the cluster.
+    - (Optional)Check other components. Refer to [Component Status Confirmation](../../installation_guide/03_confirming_status.md) to confirm whether the corresponding components are installed on the nodes in the cluster.
 
 4. (Optional) If MindCluster cluster scheduling components have not been installed, refer to the [Installation and Deployment](./manual_installation/00_obtaining_software_packages.md) chapter to install them first. For the installation steps of TaskD, refer to the [Preparing Image](../../usage/resumable_training/07_using_resumable_training_on_the_cli.md) chapter.
 

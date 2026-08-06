@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/google/uuid"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -29,6 +28,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"ascend-common/common-utils/hwlog"
+	autils "ascend-common/common-utils/utils"
 	"ascend-faultdiag-online/pkg/utils"
 )
 
@@ -152,7 +152,7 @@ func (c *cmWatcher) Subscribe(namespace, cmName string, f callbackFunc) string {
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	registerId := uuid.New().String()
+	registerId := autils.NewUUID()
 	if _, exists := c.watchers[key]; exists {
 		callbacks := c.callbackMap[key]
 		callbacks = append(callbacks, callback{registerId: registerId, f: f})

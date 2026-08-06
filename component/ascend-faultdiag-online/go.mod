@@ -6,7 +6,6 @@ require (
 	ascend-common v0.0.0-00010101000000-000000000000
 	github.com/agiledragon/gomonkey/v2 v2.8.0
 	github.com/golang/protobuf v1.5.4
-	github.com/google/uuid v1.4.0
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.59.0
@@ -31,6 +30,7 @@ require (
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
+	github.com/google/uuid v1.4.0 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect

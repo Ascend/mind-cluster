@@ -81,7 +81,7 @@
         Author-email:
         License: UNKNOWN
         Location: /usr/local/python3/lib/python3.10/site-packages
-        Requires: grpcio, protobuf, pyOpenSSL, torch, torch-npu
+        Requires: grpcio, protobuf, torch, torch-npu
         Required-by:
         ```
 

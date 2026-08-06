@@ -7,7 +7,6 @@ require (
 	github.com/agiledragon/gomonkey/v2 v2.14.0
 	github.com/containerd/containerd v1.7.33
 	github.com/docker/docker v25.0.16+incompatible
-	github.com/gogo/protobuf v1.3.2
 	github.com/smartystreets/goconvey v1.6.4
 	golang.org/x/time v0.12.0
 	k8s.io/apimachinery v0.28.15
@@ -36,6 +35,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect

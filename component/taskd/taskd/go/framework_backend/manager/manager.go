@@ -24,11 +24,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"ascend-common/common-utils/hwlog"
+	autils "ascend-common/common-utils/utils"
 	clusterd_constant "clusterd/pkg/common/constant"
 	"clusterd/pkg/interface/grpc/profiling"
 	"clusterd/pkg/interface/grpc/recover"
@@ -249,7 +249,7 @@ func (m *BaseManager) enqueueStressTest(stressParam *pb.StressTestRankParams) {
 	message := storage.BaseMessage{
 		Header: storage.MsgHeader{
 			BizType: "default",
-			Uuid:    uuid.New().String(),
+			Uuid:    autils.NewUUID(),
 			Src: &common.Position{
 				Role:       constant.ClusterRole,
 				ServerRank: constant.ClusterDRank,
@@ -332,7 +332,7 @@ func (m *BaseManager) enqueueSwitchNic(ranks []string, ops []bool) {
 	message := storage.BaseMessage{
 		Header: storage.MsgHeader{
 			BizType: "default",
-			Uuid:    uuid.New().String(),
+			Uuid:    autils.NewUUID(),
 			Src: &common.Position{
 				Role:       constant.ClusterRole,
 				ServerRank: constant.ClusterDRank,
@@ -405,7 +405,7 @@ func (m *BaseManager) enqueueProfilingSwitch(cmd constant.ProfilingDomainCmd, wh
 	message := storage.BaseMessage{
 		Header: storage.MsgHeader{
 			BizType: "default",
-			Uuid:    uuid.New().String(),
+			Uuid:    autils.NewUUID(),
 			Src: &common.Position{
 				Role:       constant.ClusterRole,
 				ServerRank: whichServer,
@@ -548,7 +548,7 @@ func (m *BaseManager) enqueueProcessManageSignal(processManageSignal *pb.Process
 	message := storage.BaseMessage{
 		Header: storage.MsgHeader{
 			BizType: "default",
-			Uuid:    uuid.New().String(),
+			Uuid:    autils.NewUUID(),
 			Src: &common.Position{
 				Role:       role,
 				ServerRank: serverRank,
@@ -573,7 +573,7 @@ func (m *BaseManager) updateFaultRecover() {
 	message := storage.BaseMessage{
 		Header: storage.MsgHeader{
 			BizType: "default",
-			Uuid:    uuid.New().String(),
+			Uuid:    autils.NewUUID(),
 			Src: &common.Position{
 				Role:       common.MgrRole,
 				ServerRank: "0",

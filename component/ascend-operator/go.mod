@@ -7,7 +7,6 @@ require (
 	github.com/agiledragon/gomonkey/v2 v2.14.0
 	github.com/go-logr/logr v1.4.2
 	github.com/kubeflow/common v0.4.3
-	github.com/kubeflow/training-operator v1.5.0
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/time v0.12.0

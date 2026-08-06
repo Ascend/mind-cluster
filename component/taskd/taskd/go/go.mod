@@ -7,7 +7,6 @@ require (
 	clusterd v0.0.0-00010101000000-000000000000
 	github.com/agiledragon/gomonkey/v2 v2.12.0
 	github.com/golang/protobuf v1.5.4
-	github.com/google/uuid v1.4.0
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/time v0.3.0
@@ -21,6 +20,7 @@ require (
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
+	github.com/google/uuid v1.4.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
