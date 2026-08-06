@@ -19,7 +19,8 @@ from functools import wraps
 from .patch_utils import PatchManager
 
 try:
-    import mindio_ttp
+    import mindio_ttp  # noqa: F401
+
     has_mindio_ttp = True
 except Exception:
     has_mindio_ttp = False
@@ -41,10 +42,10 @@ def patch_training():
     from .save_checkpoint_patch import save_checkpoint_wrapper
     from .load_checkpoint_patch import load_checkpoint_wrapper
     from .preload_checkpoint_patch import setup_logging_wrapper
+
     PatchManager.register_patch('megatron.training.checkpointing.save_checkpoint', save_checkpoint_wrapper)
     PatchManager.register_patch('megatron.training.checkpointing.load_checkpoint', load_checkpoint_wrapper)
-    PatchManager.register_patch('megatron.training.initialize.setup_logging',
-                                setup_logging_wrapper)
+    PatchManager.register_patch('megatron.training.initialize.setup_logging', setup_logging_wrapper)
 
 
 def patch_miscellaneous():
@@ -53,21 +54,16 @@ def patch_miscellaneous():
 
 def patch_core_optimizer():
     from .save_checkpoint_patch import distrib_optimizer_step_wrapper
-    PatchManager.register_patch('megatron.core.optimizer.optimizer.ChainedOptimizer.step',
-                                distrib_optimizer_step_wrapper)
-    PatchManager.register_patch('megatron.core.optimizer.optimizer.MixedPrecisionOptimizer.step',
-                                distrib_optimizer_step_wrapper)
-    PatchManager.register_patch('megatron.core.optimizer.optimizer.FP32Optimizer.step',
-                                distrib_optimizer_step_wrapper)
+
+    PatchManager.register_patch(
+        'megatron.core.optimizer.optimizer.ChainedOptimizer.step', distrib_optimizer_step_wrapper
+    )
+    PatchManager.register_patch(
+        'megatron.core.optimizer.optimizer.MixedPrecisionOptimizer.step', distrib_optimizer_step_wrapper
+    )
+    PatchManager.register_patch('megatron.core.optimizer.optimizer.FP32Optimizer.step', distrib_optimizer_step_wrapper)
     if has_mindio_ttp:
-        PatchManager.register_patch('mindio_ttp.adaptor.TTPReplicaOptimizer.step',
-                                    distrib_optimizer_step_wrapper)
-        PatchManager.register_patch('mindio_ttp.adaptor.TTPFP16ReplicaOptimizer.step',
-                                    distrib_optimizer_step_wrapper)
-        PatchManager.register_patch('mindio_ttp.adaptor.TTPFP32ReplicaOptimizer.step',
-                                    distrib_optimizer_step_wrapper)
-        PatchManager.register_patch('mindio_ttp.adaptor.TTPReplicaChainedOptimizer.step',
-                                    distrib_optimizer_step_wrapper)
+        raise RuntimeError("MindIO-ACP cannot be used together with MindIO-TTP when integrated with MindSpeed-LLM")
 
 
 def extra_args_provider_decorator(extra_args_provider):
@@ -99,8 +95,5 @@ def process_args(parser):
 def _add_high_availability_args(parser):
     group = parser.add_argument_group(title='high_availability')
 
-    group.add_argument('--replica-count',
-                       type=int,
-                       default=1,
-                       help='high availability for replica count')
+    group.add_argument('--replica-count', type=int, default=1, help='high availability for replica count')
     return parser
