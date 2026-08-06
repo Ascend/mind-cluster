@@ -1,0 +1,234 @@
+name: PR-pipeline_mindcluster
+
+on:
+  pull_request_comment:
+    types: [created]
+    branches: [ 'master', '26.1.0', '26.0.0', '7.3.0' ]
+    comments: [ 'compile' ]
+  workflow_dispatch:
+    inputs:
+      print_tags:
+        description: 'True to print to STDOUT'
+        required: true
+        type: boolean
+      tags:
+        description: 'Test scenario tags'
+        required: true
+        type: boolean
+inputs:
+  repo:
+    type: string
+    description: "仓库名称"
+    default: ${{ atomgit.event.repository.name }}
+  REMOTE_URL:
+    type: string
+    description: "远程仓库URL"
+    default: ${{ atomgit.repositoryurl }}
+  pr_id:
+    type: string
+    description: "PR ID"
+    default: ${{ atomgit.event.pull_request.number }}
+  TARGET_BRANCH:
+    type: string
+    default: ${{ atomgit.event.pull_request.base.ref }}
+  workspace:
+    type: string
+    description: "工作目录"
+    default: ${{ env.ATOMGIT_WORKSPACE }}
+
+env:
+  BUILD_SKIP: "no"
+  img_clone_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:only_obsutil"
+  img_sca_x86: "swr.cn-north-4.myhuaweicloud.com/huawei-ascend/demo_mindx:mindxdl_20230912_1"
+  img_antipoison_x86: "swr.cn-north-4.myhuaweicloud.com/huawei-ascend/demo_mindx:mindxdl_20230912_1"
+  img_precommit_x86: "swr.cn-north-4.myhuaweicloud.com/mindspore/mindspore_python3.11:v0.1"
+  img_SAST_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_20251203"
+  img_build_arm: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:mindCluster_20260617"
+  img_build_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindCluster_20260617"
+  img_build_mindio_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_20251203"
+  img_build_mindio_arm: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:mindxdl_go1207_20251202_1"
+  img_build_faultdiag_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:SDK_20260113_1"
+  img_build_faultdiag_arm: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:SDK_20260113_1"
+  img_ut_go_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindCluster_20260617"
+  img_ut_cpp_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86_runtime_dt:mindxdl_DT_20240124"
+  img_ut_python_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_ub22_ut_20260421_cluster"
+  img_ut_faultdiag_python_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:SDK_20260113_1"
+  img_ut_mindio_cpp_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_ub22_ut_20260421_cluster"
+  img_presmoke_arm: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:SDK_20260112_1"
+stages:
+  stage_0:
+    name: CodeCheck
+    select: selected_by_default
+    jobs:
+      pre_commit:
+        name: pre_commit
+        runs-on: [ 'codearts-hosted', 'ubuntu-latest', 'x64', 'large' ]
+        container:
+          image: swr.cn-north-4.myhuaweicloud.com/mindspore/mindspore_python3.11:v0.1
+        steps:
+          - name: checkout
+            uses: checkout
+            with:
+              ref: ${{ atomgit.event.pull_request.merge_commit_sha || '' }}
+          - name: gitleanks install
+            run: |
+              wget -q --no-host-directories -c --no-check-certificate https://pytorch-package.obs.cn-north-4.myhuaweicloud.com/pta-codecheck/gitleaks
+              chmod +x gitleaks
+          - name: setup-python311
+            run: |
+              ln -sf /usr/local/bin/python3.11 /usr/bin/python
+              python --version
+              ls -al
+          - name: run pre-commit
+            uses: openlibing-pre-commit-action
+
+      Only_doc_commit_check:
+        name: Only_doc_commit_check
+        runs-on: [ dedicate-hosted, x64, large ]
+        container:
+          image: swr.cn-north-4.myhuaweicloud.com/pytorch_images_x86/pytorchx86:v_03
+        outputs:
+          build_skip: ${{ steps.set-skip.outputs.build_skip }}
+        steps:
+          - name: checkout
+            uses: checkout
+            with:
+              ref: ${{ atomgit.event.pull_request.merge_commit_sha || '' }}
+          - name: only doc commit check
+            id: filter
+            uses: paths-changes-filter
+            with:
+              event-name: 'pull_request'
+              base: ${{ atomgit.event.pull_request.base.ref }}
+              repo: ${{ atomgit.repository }}
+              number: ${{ env.pr_id }}
+              token: ${{ atomgit.ATOMGIT_TOKEN }}
+              list-files: json
+              predicate-quantifier: every
+              filters: |
+                changed:
+                  - '**'
+                non-doc:
+                  - '!**.md'
+                  - '!**.rst'
+                  - '!**.log'
+                  - '!**.png'
+                  - '!**.jpg'
+                  - '!**.doc'
+                  - '!**.eddx'
+                  - '!**.svg'
+          - name: set build skip flag
+            id: set-skip
+            run: |
+              echo "changed: ${{ steps.filter.outputs.changed_files }}"
+              echo "non-doc: ${{ steps.filter.outputs.non-doc }}"
+              if [ "${{ steps.filter.outputs.non-doc }}" = "true" ]; then
+                echo "need_build=yes" >> "$ATOMGIT_OUTPUT"
+              else
+                echo "need_build=no" >> "$ATOMGIT_OUTPUT"
+              fi
+
+  stage_1:
+    name: Build
+    select: selected_by_default
+    jobs:
+      Build_x86:
+        name: Build_x86
+        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        uses: .gitcode/workflows/.build_job.yml
+        with:
+          IMAGE_FLAG: "mindx_x86:mindCluster_20260617"
+          runs_on_arch: "x64"
+          runs_on_os: "os=euler"
+
+      Build_arm:
+        name: Build_arm
+        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        uses: .gitcode/workflows/.build_job.yml
+        with:
+          IMAGE_FLAG: "mindx_arm:mindCluster_20260617"
+          runs_on_arch: "arm64"
+          runs_on_os: "os=euler"
+
+      Build_mindio_x86:
+        name: Build_mindio_x86
+        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
+        uses: .gitcode/workflows/.build_mindio.yml
+        with:
+          IMAGE_FLAG: "mindx_x86:mindxdl_go1207_20251203"
+          runs_on_arch: "x64"
+          runs_on_os: "os=euler"
+          CMC_USERNAME: "cn-north-4_0d336455b30091fa0f31c00317ab1240_788240de372e46a69b01788c5e7a05ac"
+
+      Build_mindio_arm:
+        name: Build_mindio_arm
+        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
+        uses: .gitcode/workflows/.build_mindio.yml
+        with:
+          IMAGE_FLAG: "mindx_arm:mindxdl_go1207_20251202_1"
+          runs_on_arch: "arm64"
+          runs_on_os: "os=euler"
+          CMC_USERNAME: "cn-north-4_0d336455b30091fa0f31c00317ab1240_788240de372e46a69b01788c5e7a05ac"
+
+      Build_faultdiag_x86:
+        name: Build_faultdiag_x86
+        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
+        uses: .gitcode/workflows/.build_faultdiag.yml
+        with:
+          IMAGE_FLAG: "mindx_x86:SDK_20260113_1"
+          runs_on_arch: "x64"
+          runs_on_os: "os=euler"
+
+      Build_faultdiag_arm:
+        name: Build_faultdiag_arm
+        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
+        uses: .gitcode/workflows/.build_faultdiag.yml
+        with:
+          IMAGE_FLAG: "mindx_arm:SDK_20260113_1"
+          runs_on_arch: "arm64"
+          runs_on_os: "os=euler"
+
+      UT_go:
+        name: UT_go
+        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        uses: .gitcode/workflows/.ut_go.yml
+        with:
+          IMAGE_FLAG: "mindx_x86:mindCluster_20260617"
+          runs_on_arch: "x64"
+          runs_on_os: "os=euler"
+
+      UT_cpp:
+        name: UT_cpp
+        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        uses: .gitcode/workflows/.ut_cpp.yml
+        with:
+          IMAGE_FLAG: "mindx_x86_runtime_dt:mindxdl_DT_20240124"
+          runs_on_arch: "x64"
+          runs_on_os: "os=euler"
+
+      UT_python:
+        name: UT_python
+        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        uses: .gitcode/workflows/.ut_python.yml
+        with:
+          IMAGE_FLAG: "mindx_x86:mindxdl_go1207_ub22_ut_20260421_cluster"
+          runs_on_arch: "x64"
+          runs_on_os: "os=euler"
+
+      UT_faultdiag_python:
+        name: UT_faultdiag_python
+        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        uses: .gitcode/workflows/.ut_faultdiag_python.yml
+        with:
+          IMAGE_FLAG: "mindx_x86:SDK_20260113_1"
+          runs_on_arch: "x64"
+          runs_on_os: "os=euler"
+
+      UT_mindio_cpp:
+        name: UT_mindio_cpp
+        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        uses: .gitcode/workflows/.ut_mindio_cpp.yml
+        with:
+          IMAGE_FLAG: "mindx_x86:mindxdl_go1207_ub22_ut_20260421_cluster"
+          runs_on_arch: "x64"
+          runs_on_os: "os=euler"

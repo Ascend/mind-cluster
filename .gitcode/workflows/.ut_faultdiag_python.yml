@@ -1,0 +1,54 @@
+name: UT Job
+
+on:
+  workflow_call:
+    inputs:
+      REMOTE_URL:
+        required: false
+        type: string
+        default: ${{ atomgit.repositoryurl }}
+      pr_id:
+        required: false
+        type: string
+        default: ${{ atomgit.event.pull_request.number }}
+      IMAGE_FLAG:
+        required: true
+        type: string
+      TARGET_BRANCH:
+        required: false
+        type: string
+        default: ${{ atomgit.event.pull_request.base.ref }}
+      servicename:
+        required: false
+        type: string
+        default: $(echo "${{ atomgit.repository }}" | cut -d '/' -f 2)
+jobs:
+  JOB_UT:
+    name: JOB_UT
+    select: selected_by_default
+    runs-on: [ 'dedicate-hosted', 'x64', 'large' ]
+    container:
+      image: swr.cn-north-4.myhuaweicloud.com/ascend-mindx/${{ inputs.IMAGE_FLAG }}
+      options: --user root
+    steps:
+      - name: clone repo
+        run: |
+          set -ex
+
+          rm -rf ./* .git
+          servicename_1=$(echo "${{ atomgit.repository }}" | cut -d '/' -f 2)
+          git clone --no-tags --single-branch -b ${{ inputs.TARGET_BRANCH }} ${{ inputs.REMOTE_URL }} ${{ inputs.servicename }}
+          cd ${{ inputs.servicename }}
+
+          git fetch origin ${{ inputs.TARGET_BRANCH }}
+          git fetch --no-tags origin refs/merge-requests/${{ inputs.pr_id }}/head:pr_${{ inputs.pr_id }}
+          git reset --hard "origin/${{ inputs.TARGET_BRANCH }}"
+          git checkout -b new_${{ inputs.TARGET_BRANCH }}
+          git config --global user.name AtlasAccount
+          git config --global user.email AtlasAccount@noreply.gitcode.com
+          git merge --no-edit pr_${{ inputs.pr_id }}
+          git diff-tree -r --name-only --no-commit-id origin/${{ inputs.TARGET_BRANCH }} HEAD > ${ATOMGIT_WORKSPACE}/change.txt
+          cat ${ATOMGIT_WORKSPACE}/change.txt
+      - name: execute test
+        run: |
+          cd ${ATOMGIT_WORKSPACE}/${{ inputs.servicename }}/.gitcode/workflows/scripts && bash +x ut_faultdiag_python_execute.sh

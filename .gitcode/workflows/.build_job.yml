@@ -1,0 +1,92 @@
+name: Build Job
+
+on:
+  workflow_call:
+    inputs:
+      REMOTE_URL:
+        required: false
+        type: string
+        default: ${{ atomgit.repositoryurl }}
+      pr_id:
+        required: false
+        type: string
+        default: ${{ atomgit.event.pull_request.number }}
+      IMAGE_FLAG:
+        required: true
+        type: string
+      TARGET_BRANCH:
+        required: false
+        type: string
+        default: ${{ atomgit.event.pull_request.base.ref }}
+      runs_on_arch:
+        required: true
+        type: string
+      servicename:
+        required: false
+        type: string
+        default: $(echo "${{ atomgit.repository }}" | cut -d '/' -f 2)
+
+jobs:
+  JOB_compile:
+    name: JOB_compile
+    select: selected_by_default
+    runs-on: [ dedicate-hosted, "${{ inputs.runs_on_arch }}", large ]
+    container:
+      image: swr.cn-north-4.myhuaweicloud.com/ascend-mindx/${{ inputs.IMAGE_FLAG }}
+      options: --user root
+    steps:
+      - name: print env
+        run: |
+          echo "pr_id=${{ inputs.pr_id }}"
+          echo "IMAGE_FLAG=swr.cn-north-4.myhuaweicloud.com/ascend-mindx/${{ inputs.IMAGE_FLAG }}"
+          echo "REMOTE_URL=${{ inputs.REMOTE_URL }}"
+          echo "inputs.REMOTE_URL: ${{ inputs.REMOTE_URL }}"
+          echo "inputs.TARGET_BRANCH=${{ inputs.TARGET_BRANCH }}"
+          echo "ATOMGIT_WORKSPACE=${ATOMGIT_WORKSPACE}"
+          pwd
+      - name: clone repo
+        run: |
+            set -x
+            rm -rf ./* .git
+            git clone -b ${{ inputs.TARGET_BRANCH }} --depth=100 ${{ inputs.REMOTE_URL }} ${{ inputs.servicename }}
+            cd ${{ inputs.servicename }}
+            echo 'cd servicename'
+            ls -al ./
+            # 获取PR代码快照
+            git fetch origin refs/merge-requests/${{ inputs.pr_id }}/head
+            # 新建分支指向PR快照
+            git checkout FETCH_HEAD -b new_${{ inputs.TARGET_BRANCH }}
+            git diff ${{ inputs.TARGET_BRANCH }}...HEAD --no-commit-id --name-only > ${ATOMGIT_WORKSPACE}/change.txt
+
+            # git diff-tree -r --name-only --no-commit-id origin/${{ inputs.TARGET_BRANCH }} HEAD > ${ATOMGIT_WORKSPACE}/change.txt
+            cat ${ATOMGIT_WORKSPACE}/change.txt
+            echo "new_master分支"
+            echo "ATOMGIT_WORKSPACE=${ATOMGIT_WORKSPACE}"
+            ls -al ${ATOMGIT_WORKSPACE}/
+            echo "new_master分支2"
+            echo "ATOMGIT_WORKSPACE=${ATOMGIT_WORKSPACE}"
+            ls -al ${ATOMGIT_WORKSPACE}/${{ inputs.servicename }}/
+
+            cd ${ATOMGIT_WORKSPACE}
+            git clone -b v1.1.10 https://gitee.com/openeuler/libboundscheck.git ${{ inputs.servicename }}/component/ascend-docker-runtime/platform/libboundscheck
+            git clone -b openEuler-22.03-LTS https://gitee.com/src-openeuler/makeself.git ${{ inputs.servicename }}/component/ascend-docker-runtime/opensource/makeself
+            git clone -b master https://gitee.com/song-xiangbing/makeself-header.git ${{ inputs.servicename }}/component/ascend-docker-runtime/opensource/makeself-header
+
+            if [ "${{ env.ATOMGIT_BASE_REF }}" != "master" ]; then
+                workflow_path=${ATOMGIT_WORKSPACE}/${{ inputs.servicename }}/.gitcode/workflows
+                mkdir -p ${workflow_path}
+                ls -al ${workflow_path}
+
+                git clone --no-tags --single-branch --depth 1 -b master ${{ inputs.REMOTE_URL }} ${ATOMGIT_WORKSPACE}/tempdir
+                ls -al ${ATOMGIT_WORKSPACE}/tempdir
+                cp -fr ${ATOMGIT_WORKSPACE}/tempdir/.gitcode/workflows/build ${workflow_path}/
+                cp -fr ${ATOMGIT_WORKSPACE}/tempdir/.gitcode/workflows/config ${workflow_path}/
+                rm -fr ${ATOMGIT_WORKSPACE}/tempdir
+            fi
+      - name: compile
+        run: |
+            echo "new_master分支1"
+            # servicename=$(echo "${{ atomgit.repository }}" | cut -d '/' -f 2)
+            echo "ATOMGIT_WORKSPACE=${ATOMGIT_WORKSPACE}"
+            ls -al ${ATOMGIT_WORKSPACE}/${{ inputs.servicename }}/
+            cd ${ATOMGIT_WORKSPACE}/${{ inputs.servicename }}/.gitcode/workflows/scripts && bash +x build_job_compile.sh ${{ inputs.servicename }} ${{ inputs.TARGET_BRANCH }}

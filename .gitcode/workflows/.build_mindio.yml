@@ -1,0 +1,84 @@
+name: Build Job
+
+on:
+  workflow_call:
+    inputs:
+      REMOTE_URL:
+        required: false
+        type: string
+        default: ${{ atomgit.repositoryurl }}
+      pr_id:
+        required: false
+        type: string
+        default: ${{ atomgit.event.pull_request.number }}
+      IMAGE_FLAG:
+        required: true
+        type: string
+      TARGET_BRANCH:
+        required: false
+        type: string
+        default: ${{ atomgit.event.pull_request.base.ref }}
+      CMC_USERNAME:
+        required: false
+        type: string
+        default: "cn-north-4_0d336455b30091fa0f31c00317ab1240_788240de372e46a69b01788c5e7a05ac"
+      runs_on_arch:
+        required: true
+        type: string
+
+jobs:
+  JOB_compile:
+    name: JOB_compile
+    select: selected_by_default
+    runs-on: [ 'dedicate-hosted', '${{ inputs.runs_on_arch }}', 'large' ]
+    container:
+      image: swr.cn-north-4.myhuaweicloud.com/ascend-mindx/${{ inputs.IMAGE_FLAG }}
+      options: --user root
+    steps:
+      - name: clone repo
+        run: |
+            set -x
+            rm -rf ./* .git
+            servicename_1=$(echo "${{ atomgit.repository }}" | cut -d '/' -f 2)
+            git clone --no-tags --single-branch -b ${{ inputs.TARGET_BRANCH }} ${{ inputs.REMOTE_URL }} ${servicename_1}
+            cd ${servicename_1}
+
+            git fetch origin ${{ inputs.TARGET_BRANCH }}
+            git fetch --no-tags origin refs/merge-requests/${{ inputs.pr_id }}/head:pr_${{ inputs.pr_id }}
+            git reset --hard "origin/${{ inputs.TARGET_BRANCH }}"
+            git checkout -b new_${{ inputs.TARGET_BRANCH }}
+            git config --global user.name AtlasAccount
+            git config --global user.email AtlasAccount@noreply.gitcode.com
+            git merge --no-edit pr_${{ inputs.pr_id }}
+            git diff-tree -r --name-only --no-commit-id origin/${{ inputs.TARGET_BRANCH }} HEAD > ${ATOMGIT_WORKSPACE}/change.txt
+            cat ${ATOMGIT_WORKSPACE}/change.txt
+
+            cd ${ATOMGIT_WORKSPACE}
+            if grep -q "mindio" "${ATOMGIT_WORKSPACE}/change.txt"; then
+                SPDLOG_OBS_URL="https://mindcluster.obs.cn-north-4.myhuaweicloud.com/blueImageDependency/spdlog-1.12.0.zip"
+
+                git clone -b v1.1.16 https://atomgit.com/openeuler/libboundscheck.git ${servicename_1}/component/mindio/acp/3rdparty/libboundscheck/libboundscheck
+                wget -c --no-check-certificate -O ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/acp/3rdparty/spdlog/spdlog-1.12.0.zip ${SPDLOG_OBS_URL}
+                unzip -d ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/acp/3rdparty/spdlog/ ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/acp/3rdparty/spdlog/spdlog-1.12.0.zip && mv ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/acp/3rdparty/spdlog/spdlog-1.12.0 ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/acp/3rdparty/spdlog/spdlog
+                git clone -b master https://atomgit.com/openeuler/ubs-comm.git ${servicename_1}/component/mindio/acp/3rdparty/ubs-comm/ubs-comm
+
+                git clone -b v1.1.16 https://atomgit.com/openeuler/libboundscheck.git ${servicename_1}/component/mindio/tft/3rdparty/libboundscheck/libboundscheck
+                wget -c --no-check-certificate -O ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/tft/3rdparty/spdlog/spdlog-1.12.0.zip ${SPDLOG_OBS_URL}
+                unzip -d ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/tft/3rdparty/spdlog/ ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/tft/3rdparty/spdlog/spdlog-1.12.0.zip && mv ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/tft/3rdparty/spdlog/spdlog-1.12.0 ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/tft/3rdparty/spdlog/spdlog
+            fi
+
+            if [ "${{ inputs.TARGET_BRANCH }}" != "master" ]; then
+                workflow_path=${ATOMGIT_WORKSPACE}/${servicename_1}/.gitcode/workflows
+                mkdir -p ${workflow_path}
+                ls -al ${workflow_path}
+
+                git clone --no-tags --single-branch --depth 1 -b master ${{ inputs.REMOTE_URL }} ${ATOMGIT_WORKSPACE}/tempdir
+                ls -al ${ATOMGIT_WORKSPACE}/tempdir
+                cp -fr ${ATOMGIT_WORKSPACE}/tempdir/.gitcode/workflows/build ${workflow_path}/
+                cp -fr ${ATOMGIT_WORKSPACE}/tempdir/.gitcode/workflows/config ${workflow_path}/
+                rm -fr ${ATOMGIT_WORKSPACE}/tempdir
+            fi
+      - name: compile
+        id: compile
+        run: |
+            cd ${ATOMGIT_WORKSPACE}/${servicename_1}/.gitcode/workflows/scripts && bash +x build_mindio_compile.sh
