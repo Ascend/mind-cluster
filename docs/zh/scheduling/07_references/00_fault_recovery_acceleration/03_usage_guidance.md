@@ -17,6 +17,7 @@
 > - 本次发布包配套MindSpeed-LLM的 **2.3.0** 分支，环境、代码、数据集准备请用户参考MindSpeed-LLM仓库的相关指导说明，并确保其安全性。
 > - MindIO TFT对接MindSpeed-LLM框架，目前支持MindIO TTP、MindIO UCE和MindIO ARF功能。
 > - 对于PyTorch类框架，安装或开启MindCluster后，跳过[步骤1](#step_tft_li001)对“torchrun”文件的修改，由MindCluster控制进程退出。
+> - MindSpeed-LLM框架开启MindIO ACP周期性Checkpoint加速功能时，与MindIO TFT特性不兼容，无法同时安装使用。
 
 **操作步骤**
 

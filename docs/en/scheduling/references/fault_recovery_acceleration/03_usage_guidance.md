@@ -19,6 +19,7 @@ After installing the MindIO TFT SDK, you need to start the MindIO TFT module in 
 > - This release package is paired with the **2.3.0** branch of MindSpeed-LLM. For environment, code, and dataset preparation, users should refer to the relevant guidance in the MindSpeed-LLM repository and ensure its security.
 > - MindIO TFT- MindSpeed-LLM integration currently supports MindIO TTP, MindIO UCE, and MindIO ARF features.
 > - For PyTorch Frameworks, after installing or enabling MindCluster, skip the modification of the `"torchrun"` file in [Step 1](#step_tft_li001), and let MindCluster control the process exit.
+> - When the MindIO ACP periodic Checkpoint acceleration feature is enabled in the MindSpeed-LLM framework, it is incompatible with the MindIO TFT feature and cannot be installed and used simultaneously.
 
 **Procedure**
 
