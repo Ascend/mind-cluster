@@ -7,26 +7,31 @@
 - Ascend for Volcano 由 [MindCluster 代码仓](https://gitcode.com/Ascend/mind-cluster)  维护
 - 从哪里获取帮助
     - [MindCluster 代码仓](https://gitcode.com/Ascend/mind-cluster)
-    - [MindCluster 昇腾社区](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
+    - [MindCluster 昇腾社区](https://www.hiascend.com/document/detail/zh/mindcluster/latest/clustersched/dlug/docs/zh/scheduling/01_introduction/00_overview.md)
     - [问题反馈](https://gitcode.com/Ascend/mind-cluster/issues)
 
 ---
 
 ## Ascend for Volcano
 
-Ascend for Volcano 是基于开源 Volcano 调度的插件机制，增加了昇腾 AI 处理器（NPU）的亲和性调度、虚拟设备调度等特性，部署在管理节点上。Volcano 是基于昇腾 AI 处理器的互联拓扑结构和处理逻辑，实现了昇腾 AI 处理器最佳利用的调度器组件，可以最大化发挥昇腾 AI 处理器计算性能。
+Ascend for Volcano 是基于开源 Volcano 调度的插件机制，增加了昇腾 AI 处理器（NPU）的亲和性调度、虚拟设备调度等特性，部署在管理节点上。Volcano
+是基于昇腾 AI 处理器的互联拓扑结构和处理逻辑，实现了昇腾 AI 处理器最佳利用的调度器组件，可以最大化发挥昇腾 AI 处理器计算性能。
 
 ### 应用场景
 
-K8s 基础调度仅能通过感知昇腾芯片的数量进行资源调度。为实现亲和性调度，最大化资源利用，需要感知昇腾芯片之间的网络连接方式，选择网络最优的资源。MindCluster 提供了部署在管理节点的 Volcano 服务，针对不同的昇腾设备和组网方式提供网络亲和性调度。
+K8s 基础调度仅能通过感知昇腾芯片的数量进行资源调度。为实现亲和性调度，最大化资源利用，需要感知昇腾芯片之间的网络连接方式，选择网络最优的资源。MindCluster
+提供了部署在管理节点的 Volcano 服务，针对不同的昇腾设备和组网方式提供网络亲和性调度。
 
 ### 组件功能
 
-- **可用设备计算**：根据集群调度底层组件上报的故障信息及节点信息计算集群的可用设备信息。（`self-maintain-available-card` 默认开启。关闭时从集群调度底层组件获取集群的可用设备信息。）
+- **可用设备计算**：根据集群调度底层组件上报的故障信息及节点信息计算集群的可用设备信息。（`self-maintain-available-card`
+  默认开启。关闭时从集群调度底层组件获取集群的可用设备信息。）
 - **最优资源分配**：从 K8s 的任务对象中获取用户期望的资源数量，结合集群的设备数量、设备类型和设备组网方式，选择最优资源分配给任务。
 - **故障重调度**：任务资源故障时，重新调度任务。
-- **NPU 亲和性调度**：基于昇腾 AI 处理器的互联拓扑结构，优先将任务调度到同一张卡内的处理器，其次调度到 HCCS 互联的处理器，最后调度到 PCIe 互联的处理器，减少资源碎片和网络拥塞。
-- **交换机亲和性调度**：基于交换机下节点的组网配置和参数面网络配置，实现节点的最佳利用。支持 Spine-Leaf 双层互联、单层交换机互联等多种组网方式。
+- **NPU 亲和性调度**：基于昇腾 AI 处理器的互联拓扑结构，优先将任务调度到同一张卡内的处理器，其次调度到 HCCS 互联的处理器，最后调度到
+  PCIe 互联的处理器，减少资源碎片和网络拥塞。
+- **交换机亲和性调度**：基于交换机下节点的组网配置和参数面网络配置，实现节点的最佳利用。支持 Spine-Leaf
+  双层互联、单层交换机互联等多种组网方式。
 - **逻辑超节点亲和性调度**：对物理超节点根据切分策略划分出逻辑超节点，实现节点的最佳利用。
 - **多级调度策略**：根据 NPU 的网络拓扑层级关系将集群资源抽象为多层级结构，支持通过 `resource-level-config` 参数配置。
 - **多种调度模式**：支持整卡调度、静态 vNPU 调度、动态 vNPU 调度和软切分调度。
@@ -112,7 +117,8 @@ Ascend for Volcano 包含两个镜像：
 
 ### Ascend for Volcano 26.0.0（Volcano v1.9.0）
 
-以 linux-aarch64 架构为例： Ascend for Volcano组件安装包下载：[Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip](https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip)
+以 linux-aarch64 架构为例： Ascend for
+Volcano组件安装包下载：[Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip](https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip)
 
 | Tag              | Dockerfile(安装包内文件路径)                 | 镜像内容                                                                  |
 |------------------|--------------------------------------|-----------------------------------------------------------------------|
@@ -121,7 +127,8 @@ Ascend for Volcano 包含两个镜像：
 
 ### Ascend for Volcano 26.0.0（Volcano v1.7.0）
 
-以 linux-aarch64 架构为例： Ascend for Volcano组件安装包下载：[Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip](https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip)
+以 linux-aarch64 架构为例： Ascend for
+Volcano组件安装包下载：[Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip](https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip)
 
 | Tag              | Dockerfile(安装包内文件路径)                 | 镜像内容                                                                  |
 |------------------|--------------------------------------|-----------------------------------------------------------------------|
@@ -136,20 +143,20 @@ Ascend for Volcano 包含两个镜像：
 
 #### 软件依赖
 
-| 软件名称 | 支持的版本 | 安装位置 | 说明 |
-| -- | -- | -- | -- |
-| Kubernetes | 1.19.x~1.34.x | 所有节点 | 了解 K8s 的使用请参见 [Kubernetes 文档](https://kubernetes.io/zh-cn/docs/) |
-| Ascend Device Plugin | 与 Volcano 同版本 | 计算节点 | Volcano 依赖 Ascend Device Plugin 上报设备信息 |
-| ClusterD | 与 Volcano 同版本 | 管理节点 | Volcano 依赖 ClusterD 汇总集群故障信息 |
+| 软件名称                 | 支持的版本         | 安装位置 | 说明                                                               |
+|----------------------|---------------|------|------------------------------------------------------------------|
+| Kubernetes           | 1.19.x~1.34.x | 所有节点 | 了解 K8s 的使用请参见 [Kubernetes 文档](https://kubernetes.io/zh-cn/docs/) |
+| Ascend Device Plugin | 与 Volcano 同版本 | 计算节点 | Volcano 依赖 Ascend Device Plugin 上报设备信息                           |
+| ClusterD             | 与 Volcano 同版本 | 管理节点 | Volcano 依赖 ClusterD 汇总集群故障信息                                     |
 
 #### 硬件规格要求
 
-| 名称 | 100节点以内 | 500节点 | 1000节点 |
-| -- | -- | -- | -- |
-| Volcano Scheduler CPU | 2.5核 | 4核 | 5.5核 |
-| Volcano Scheduler 内存 | 2.5GB | 5GB | 8GB |
-| Volcano Controller CPU | 2核 | 2核 | 2.5核 |
-| Volcano Controller 内存 | 2.5GB | 3GB | 4GB |
+| 名称                     | 100节点以内 | 500节点 | 1000节点 |
+|------------------------|---------|-------|--------|
+| Volcano Scheduler CPU  | 2.5核    | 4核    | 5.5核   |
+| Volcano Scheduler 内存   | 2.5GB   | 5GB   | 8GB    |
+| Volcano Controller CPU | 2核      | 2核    | 2.5核   |
+| Volcano Controller 内存  | 2.5GB   | 3GB   | 4GB    |
 
 ### 在线获取 Ascend for Volcano 镜像
 
@@ -179,8 +186,8 @@ Ascend for Volcano 包含两个镜像：
 
 1. 获取对应架构的 Dockerfile
 
-   前往[支持的 Tags 及 Dockerfile 链接](#支持的-Tags-及-Dockerfile-链接)章节，打开目标版本对应的
-   Dockerfile-scheduler.alpine 和 Dockerfile-controller.alpine 链接，保存文件至 aarch64 架构环境的本地目录。
+   前往支持的 Tags 及 Dockerfile 链接章节，打开目标版本对应的 Dockerfile-scheduler.alpine 和 Dockerfile-controller.alpine
+   链接，保存文件至 aarch64 架构环境的本地目录。
 
 2. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
 
@@ -194,9 +201,11 @@ Ascend for Volcano 包含两个镜像：
 
 > **重要注意事项**
 > 若 Docker 版本低于 18.09，或未手动开启 BuildKit，构建镜像时将无法读取 TARGETPLATFORM 变量，会造成镜像构建失败。
+>
 > 1. TARGETPLATFORM 为 Docker BuildKit 内置全局变量，用于识别当前构建目标平台，示例：linux/amd64、linux/arm64。
 > 2. 该变量仅在 BuildKit 启用后自动注入；老旧 Docker 环境、默认关闭 BuildKit 的环境无法使用此参数。
 > 3. 构建前可执行以下命令临时开启 BuildKit：
+>
 > ```bash
 > export DOCKER_BUILDKIT=1
 > ```
@@ -234,6 +243,7 @@ Ascend for Volcano 包含两个镜像：
    ```
 
 > **注意**：
+>
 > - TARGETPLATFORM 是 Docker BuildKit 提供的全局内置参数，用于获取当前构建的目标平台（如 linux/amd64、linux/arm64）。
 > - 只有启用 BuildKit，才会自动注入这个变量。旧版 Docker / 默认关闭 BuildKit
     的环境，构建时不存在这个变量，需要在运行构建指令前通过 <b>export DOCKER_BUILDKIT=1</b> 临时启用。
@@ -242,7 +252,8 @@ Ascend for Volcano 包含两个镜像：
 
 1. 启动 Volcano
 
-   YAML文件名中 `{version}` 替换为实际版本（当前使用的volcano版本为 v1.9.0），部署前需将 YAML 文件内的镜像 `{tag}` 替换为实际使用的镜像版本。
+   YAML文件名中 `{version}` 替换为实际版本（当前使用的volcano版本为 v1.9.0），部署前需将 YAML 文件内的镜像 `{tag}`
+   替换为实际使用的镜像版本。
 
    ```bash
    kubectl apply -f volcano-{version}.yaml
