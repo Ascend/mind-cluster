@@ -96,12 +96,11 @@ ascend-fd-tk about
 
 **软件包 SUM 值校验步骤**：
 
-1. 下载与工具软件包对应版本的 [MindCluster_sha256sum.zip](https://gitcode.com/Ascend/mind-cluster/releases)
+1. 下载 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum` 文件，[下载链接](https://gitcode.com/Ascend/mind-cluster/releases/)
 
-2. 将 `MindCluster_sha256sum.zip` 和 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` 放置到同一目录，执行以下命令进行校验：
+2. 将 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum` 和 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` 放置到同一目录，执行以下命令进行校验：
 
     ```bash
-    unzip MindCluster_sha256sum.zip
     sha256sum -c Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum
     ```
 
