@@ -7,18 +7,20 @@
 - NodeD 由 [MindCluster 代码仓](https://gitcode.com/Ascend/mind-cluster)  维护
 - 从哪里获取帮助
     - [MindCluster 代码仓](https://gitcode.com/Ascend/mind-cluster)
-    - [MindCluster 昇腾社区](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
+    - [MindCluster 昇腾社区](https://www.hiascend.com/document/detail/zh/mindcluster/latest/clustersched/dlug/docs/zh/scheduling/01_introduction/00_overview.md)
     - [问题反馈](https://gitcode.com/Ascend/mind-cluster/issues)
 
 ---
 
 ## NodeD
 
-NodeD 是 MindCluster 集群调度组件之一，部署在计算节点上，用于检测节点的异常状态，从 IPMI 获取计算节点的 CPU、内存、硬盘的故障信息，并上报给 ClusterD。
+NodeD 是 MindCluster 集群调度组件之一，部署在计算节点上，用于检测节点的异常状态，从 IPMI 获取计算节点的 CPU、内存、硬盘的故障信息，并上报给
+ClusterD。
 
 ### 应用场景
 
-节点的 CPU、内存或硬盘发生某些故障后，训练任务会失败。为了让训练任务在节点故障情况下快速退出，并且后续的新任务不再调度到故障节点上，MindCluster 提供了 NodeD 组件，用于检测节点的异常。
+节点的 CPU、内存或硬盘发生某些故障后，训练任务会失败。为了让训练任务在节点故障情况下快速退出，并且后续的新任务不再调度到故障节点上，MindCluster
+提供了 NodeD 组件，用于检测节点的异常。
 
 ### 组件功能
 
@@ -88,16 +90,16 @@ v26.0.0及以前版本的 Tag 遵循以下格式：
 
 #### 硬件规格要求
 
-| 名称 | 要求 |
-| -- | -- |
-| CPU | 0.5核 |
-| 内存 | 0.3GB |
+| 名称  | 要求    |
+|-----|-------|
+| CPU | 0.5核  |
+| 内存  | 0.3GB |
 
 ### 在线获取 NodeD 镜像
 
 1. 拉取官方镜像
 
-   拉取昇腾镜像仓库提供的 NodeD 镜像，替换 {tag} 为实际版本号（推荐 v26.0.0）。
+   拉取昇腾镜像仓库提供的 NodeD 镜像，替换 {tag} 为实际版本号。
 
    ```bash
    docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:{tag}
@@ -119,8 +121,7 @@ v26.0.0及以前版本的 Tag 遵循以下格式：
 
 1. 获取对应架构的 Dockerfile
 
-   前往[支持的 Tags 及 Dockerfile 链接](#支持的-Tags-及-Dockerfile-链接)章节，打开目标版本对应的 Dockerfile.ubuntu
-   链接，保存文件至 aarch64 架构环境的本地目录。
+   前往支持的 Tags 及 Dockerfile 链接章节，打开目标版本对应的 Dockerfile.ubuntu 链接，保存文件至 aarch64 架构环境的本地目录。
 
 2. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
 
@@ -130,9 +131,11 @@ v26.0.0及以前版本的 Tag 遵循以下格式：
 
 > **重要注意事项**
 > 若 Docker 版本低于 18.09，或未手动开启 BuildKit，构建镜像时将无法读取 TARGETPLATFORM 变量，会造成镜像构建失败。
+>
 > 1. TARGETPLATFORM 为 Docker BuildKit 内置全局变量，用于识别当前构建目标平台，示例：linux/amd64、linux/arm64。
 > 2. 该变量仅在 BuildKit 启用后自动注入；老旧 Docker 环境、默认关闭 BuildKit 的环境无法使用此参数。
 > 3. 构建前可执行以下命令临时开启 BuildKit：
+>
 > ```bash
 > export DOCKER_BUILDKIT=1
 > ```

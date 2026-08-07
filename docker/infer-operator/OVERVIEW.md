@@ -7,18 +7,22 @@
 - Infer Operator is maintained by [MindCluster Repository](https://gitcode.com/Ascend/mind-cluster)
 - Where to get help
     - [MindCluster Repository](https://gitcode.com/Ascend/mind-cluster)
-    - [MindCluster Atlas Community](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
+    - [MindCluster Atlas Community](https://www.hiascend.com/document/detail/zh/mindcluster/latest/clustersched/dlug/docs/zh/scheduling/01_introduction/00_overview.md)
     - [Issue Tracker](https://gitcode.com/Ascend/mind-cluster/issues)
 
 ---
 
 ## Infer Operator
 
-Infer Operator is one of the MindCluster cluster scheduling components, deployed on management nodes. It is a Kubernetes Operator used to deploy and manage multi-role collaborative inference jobs. Infer Operator defines three CRDs: InferServiceSet, InferService, and InstanceSet, and implements controllers for these three resource types to reconcile their instance states.
+Infer Operator is one of the MindCluster cluster scheduling components, deployed on management nodes. It is a Kubernetes
+Operator used to deploy and manage multi-role collaborative inference jobs. Infer Operator defines three CRDs:
+InferServiceSet, InferService, and InstanceSet, and implements controllers for these three resource types to reconcile
+their instance states.
 
 ### Use Cases
 
-MindCluster provides the Infer Operator component to launch inference services based on instance configurations of inference services, and supports manual scaling of inference instances.
+MindCluster provides the Infer Operator component to launch inference services based on instance configurations of
+inference services, and supports manual scaling of inference instances.
 
 ### Features
 
@@ -81,24 +85,24 @@ Tags for v26.0.0 and earlier versions follow the format below:
 
 #### Software Dependencies
 
-| Software | Supported Versions | Installation Location | Description |
-|---|---|---|---|
-| Kubernetes | 1.17.x~1.34.x (1.19.x or later recommended) | All nodes | See [Kubernetes Documentation](https://kubernetes.io/docs/) |
-| Volcano | See [Volcano Kubernetes compatibility](https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility) | Management nodes | Infer Operator depends on Volcano for resource scheduling |
-| Atlas Device Plugin | Same version as Infer Operator | Compute nodes | Required when inference jobs use NPU resources |
+| Software            | Supported Versions                                                                                                           | Installation Location | Description                                                 |
+|---------------------|------------------------------------------------------------------------------------------------------------------------------|-----------------------|-------------------------------------------------------------|
+| Kubernetes          | 1.17.x~1.34.x (1.19.x or later recommended)                                                                                  | All nodes             | See [Kubernetes Documentation](https://kubernetes.io/docs/) |
+| Volcano             | See [Volcano Kubernetes compatibility](https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility) | Management nodes      | Infer Operator depends on Volcano for resource scheduling   |
+| Atlas Device Plugin | Same version as Infer Operator                                                                                               | Compute nodes         | Required when inference jobs use NPU resources              |
 
 #### Hardware Requirements
 
 | Resource | Requirement |
-|---|---|
-| CPU | 2 cores |
-| Memory | 2 GB |
+|----------|-------------|
+| CPU      | 2 cores     |
+| Memory   | 2 GB        |
 
 ### Obtain Infer Operator Image Online
 
 1. Pull the official image
 
-   Pull the Infer Operator image from the Atlas image repository, replacing {tag} with the actual version (v26.0.0 recommended).
+   Pull the Infer Operator image from the Atlas image repository, replacing {tag} with the actual version.
 
    ```bash
    docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:{tag}
@@ -120,9 +124,8 @@ Example: build an Infer Operator image of architecture linux-aarch64, version v2
 
 1. Obtain the target Dockerfile
 
-   Navigate to the chapter [Supported Tags and Dockerfile Links](#Supported-Tags-and-Dockerfile-Links), open the
-   Dockerfile.ubuntu link corresponding to your target version, and save the file to a local directory on your aarch64
-   environment.
+   Navigate to the chapter Supported Tags and Dockerfile Links, open the Dockerfile.ubuntu link corresponding to your
+   target version, and save the file to a local directory on your aarch64 environment.
 
 2. Build the Docker image locally (disable cache to ensure a clean build)
 
@@ -133,11 +136,13 @@ Example: build an Infer Operator image of architecture linux-aarch64, version v2
 > **Important Notes**
 > If your Docker version is earlier than 18.09 or BuildKit is not manually enabled, the TARGETPLATFORM variable cannot
 > be read during image building, which will cause the image build to fail.
+>
 > 1. TARGETPLATFORM is a built-in global variable of Docker BuildKit for identifying the target build platform, e.g.
      linux/amd64, linux/arm64.
 > 2. This variable is automatically injected only after BuildKit is enabled. It cannot be used in legacy Docker
      environments or environments where BuildKit is disabled by default.
 > 3. Run the following command before building to enable BuildKit temporarily:
+>
 > ```bash
 > export DOCKER_BUILDKIT=1
 > ```
@@ -199,6 +204,8 @@ For descriptions of currently supported Atlas hardware models, please refer to t
 
 ## License
 
-View the [license information](https://www.hiascend.com/zh/legal/softlicense) for the Mind series software contained in these images.
+View the [license information](https://www.hiascend.com/zh/legal/softlicense) for the Mind series software contained in
+these images.
 
-As with all container images, pre-installed software packages (Python, system libraries, etc.) may be subject to their respective license agreements.
+As with all container images, pre-installed software packages (Python, system libraries, etc.) may be subject to their
+respective license agreements.

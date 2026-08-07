@@ -7,7 +7,7 @@
 - Ascend Device Plugin 由 [MindCluster 代码仓](https://gitcode.com/Ascend/mind-cluster) 维护
 - 从哪里获取帮助
     - [MindCluster 代码仓](https://gitcode.com/Ascend/mind-cluster)
-    - [MindCluster 昇腾社区](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
+    - [MindCluster 昇腾社区](https://www.hiascend.com/document/detail/zh/mindcluster/latest/clustersched/dlug/docs/zh/scheduling/01_introduction/00_overview.md)
     - [问题反馈](https://gitcode.com/Ascend/mind-cluster/issues)
 
 ---
@@ -18,15 +18,22 @@ Ascend Device Plugin 是 MindCluster 集群调度组件的核心组件之一，�
 
 ### 应用场景
 
-Kubernetes 需要感知资源信息来实现对资源信息的调度。除基础的 CPU 和内存信息以外，需通过 Kubernetes 提供的设备插件机制，供用户自定义新的资源类型，从而定制个性化的资源发现和上报策略。MindCluster 提供了部署在计算节点的 Ascend Device Plugin 服务，用于提供适合昇腾设备的资源发现和上报策略。
+Kubernetes 需要感知资源信息来实现对资源信息的调度。除基础的 CPU 和内存信息以外，需通过 Kubernetes
+提供的设备插件机制，供用户自定义新的资源类型，从而定制个性化的资源发现和上报策略。MindCluster 提供了部署在计算节点的 Ascend
+Device Plugin 服务，用于提供适合昇腾设备的资源发现和上报策略。
 
 ### 组件功能
 
-- **设备发现**：从驱动中获取芯片的类型及型号，并上报给 kubelet 和资源调度的上层服务 ClusterD。支持从昇腾设备驱动中发现设备个数，将其发现的设备个数上报到 Kubernetes 系统中。支持发现拆分物理设备得到的虚拟设备并上报 Kubernetes 系统。
+- **设备发现**：从驱动中获取芯片的类型及型号，并上报给 kubelet 和资源调度的上层服务 ClusterD。支持从昇腾设备驱动中发现设备个数，将其发现的设备个数上报到
+  Kubernetes 系统中。支持发现拆分物理设备得到的虚拟设备并上报 Kubernetes 系统。
 
-- **健康检查**：从驱动中订阅芯片故障信息，并将芯片状态上报给 kubelet，同时将芯片状态和具体故障信息上报给资源调度的上层服务。支持检测昇腾设备的健康状态，当设备处于不健康状态时，上报到 Kubernetes 系统中，Kubernetes 系统会自动将不健康设备从可用列表中剔除。虚拟设备健康状态由拆分这些虚拟设备的物理设备决定。
+- **健康检查**：从驱动中订阅芯片故障信息，并将芯片状态上报给
+  kubelet，同时将芯片状态和具体故障信息上报给资源调度的上层服务。支持检测昇腾设备的健康状态，当设备处于不健康状态时，上报到
+  Kubernetes 系统中，Kubernetes 系统会自动将不健康设备从可用列表中剔除。虚拟设备健康状态由拆分这些虚拟设备的物理设备决定。
 
-- **设备分配**：支持在 Kubernetes 系统中分配昇腾设备；支持 NPU 设备重调度功能，设备故障后会自动拉起新容器，挂载健康设备，并重建训练任务。在资源挂载阶段，负责获取集群调度选中的芯片信息，并通过环境变量传递给 Ascend Docker Runtime 挂载。
+- **设备分配**：支持在 Kubernetes 系统中分配昇腾设备；支持 NPU
+  设备重调度功能，设备故障后会自动拉起新容器，挂载健康设备，并重建训练任务。在资源挂载阶段，负责获取集群调度选中的芯片信息，并通过环境变量传递给
+  Ascend Docker Runtime 挂载。
 
 - **故障处理**：可配置故障的处理级别，且可在故障反复发生，或者长时间连续存在的情况下提升故障处理级别。若故障芯片处于空闲状态，且重启后可恢复，对芯片执行热复位。
 
@@ -82,24 +89,27 @@ v26.0.0及以前版本的 Tag 遵循以下格式：
 
 #### 软件依赖
 
-| 软件名称 | 支持的版本 | 安装位置 | 说明 |
-|---|---|---|---|
-| Kubernetes | 1.17.x~1.34.x（推荐使用1.19.x及以上版本） | 所有节点 | 了解 K8s 的使用请参见 [Kubernetes 文档](https://kubernetes.io/zh-cn/docs/) |
-| Docker | 18.09.x~28.5.1 | 所有节点 | 可从 [Docker 社区或官网](https://docs.docker.com/engine/install/) 获取 |
-| Containerd | 1.4.x~2.1.4（推荐使用1.6.x版本） | 所有节点 | 可从 Containerd 的 [官网](https://containerd.io/downloads/) 获取 |
-| 昇腾AI处理器驱动和固件 | 请参见版本配套表 | 计算节点 | 请参见《CANN 软件安装指南》中的"安装NPU驱动和固件"章节 |
-| UMDK软件包      | 请参见版本配套表 | 计算节点 | 针对Atlas 850 系列硬件产品、Atlas 950 SuperPod产品，在构建镜像时需要 |
+| 软件名称         | 支持的版本                          | 安装位置 | 说明                                                               |
+|--------------|--------------------------------|------|------------------------------------------------------------------|
+| Kubernetes   | 1.17.x~1.34.x（推荐使用1.19.x及以上版本） | 所有节点 | 了解 K8s 的使用请参见 [Kubernetes 文档](https://kubernetes.io/zh-cn/docs/) |
+| Docker       | 18.09.x~28.5.1                 | 所有节点 | 可从 [Docker 社区或官网](https://docs.docker.com/engine/install/) 获取    |
+| Containerd   | 1.4.x~2.1.4（推荐使用1.6.x版本）       | 所有节点 | 可从 Containerd 的 [官网](https://containerd.io/downloads/) 获取        |
+| 昇腾AI处理器驱动和固件 | 请参见版本配套表                       | 计算节点 | 请参见《CANN 软件安装指南》中的"安装NPU驱动和固件"章节                                 |
+| UMDK软件包      | 请参见版本配套表                       | 计算节点 | 针对Atlas 850 系列硬件产品、Atlas 950 SuperPod产品，在构建镜像时需要                 |
 
 #### 硬件规格要求
 
-| 名称 | 要求 |
-|---|---|
-| CPU | 0.5核 |
-| 内存 | 0.5GB |
+| 名称  | 要求    |
+|-----|-------|
+| CPU | 0.5核  |
+| 内存  | 0.5GB |
 
 #### 安装驱动
 
-宿主机已安装驱动和固件，详情请参见《CANN 软件安装指南》中的"[安装NPU驱动和固件](https://www.hiascend.com/document/detail/zh/canncommercial/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian)"章节（商用版）或"[安装NPU驱动和固件](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler)"章节（社区版）。
+宿主机已安装驱动和固件，详情请参见《CANN
+软件安装指南》中的"[安装NPU驱动和固件](https://www.hiascend.com/document/detail/zh/canncommercial/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian)"
+章节（商用版）或"[安装NPU驱动和固件](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler)"
+章节（社区版）。
 
 ### 在线获取 Ascend Device Plugin 镜像
 
@@ -127,8 +137,7 @@ v26.0.0及以前版本的 Tag 遵循以下格式：
 
 1. 获取对应架构的 Dockerfile
 
-   前往[支持的 Tags 及 Dockerfile 链接](#支持的-Tags-及-Dockerfile-链接)章节，打开目标版本对应的 Dockerfile.ubuntu
-   链接，保存文件至 aarch64 架构环境的本地目录。
+   前往支持的 Tags 及 Dockerfile 链接章节，打开目标版本对应的 Dockerfile.ubuntu 链接，保存文件至 aarch64 架构环境的本地目录。
 
 2. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
 
@@ -138,9 +147,11 @@ v26.0.0及以前版本的 Tag 遵循以下格式：
 
 > **重要注意事项**
 > 若 Docker 版本低于 18.09，或未手动开启 BuildKit，构建镜像时将无法读取 TARGETPLATFORM 变量，会造成镜像构建失败。
+>
 > 1. TARGETPLATFORM 为 Docker BuildKit 内置全局变量，用于识别当前构建目标平台，示例：linux/amd64、linux/arm64。
 > 2. 该变量仅在 BuildKit 启用后自动注入；老旧 Docker 环境、默认关闭 BuildKit 的环境无法使用此参数。
 > 3. 构建前可执行以下命令临时开启 BuildKit：
+>
 > ```bash
 > export DOCKER_BUILDKIT=1
 > ```

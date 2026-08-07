@@ -7,7 +7,7 @@
 - ClusterD 由 [MindCluster 代码仓](https://gitcode.com/Ascend/mind-cluster)  维护
 - 从哪里获取帮助
     - [MindCluster 代码仓](https://gitcode.com/Ascend/mind-cluster)
-    - [MindCluster 昇腾社区](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
+    - [MindCluster 昇腾社区](https://www.hiascend.com/document/detail/zh/mindcluster/latest/clustersched/dlug/docs/zh/scheduling/01_introduction/00_overview.md)
     - [问题反馈](https://gitcode.com/Ascend/mind-cluster/issues)
 
 ---
@@ -18,7 +18,8 @@ ClusterD 是 MindCluster 集群调度组件之一，部署在管理节点上，�
 
 ### 应用场景
 
-一个节点可能发生多个故障，如果由各个节点自发进行故障处理，会造成任务同时处于多种恢复策略的场景。为了协调任务的处理级别，MindCluster 提供了部署在管理节点的 ClusterD 服务。ClusterD 收集并汇总集群任务、资源和故障信息及影响范围，从任务、芯片和故障维度统计分析，统一判定故障处理级别和策略。
+一个节点可能发生多个故障，如果由各个节点自发进行故障处理，会造成任务同时处于多种恢复策略的场景。为了协调任务的处理级别，MindCluster
+提供了部署在管理节点的 ClusterD 服务。ClusterD 收集并汇总集群任务、资源和故障信息及影响范围，从任务、芯片和故障维度统计分析，统一判定故障处理级别和策略。
 
 ### 组件功能
 
@@ -86,24 +87,24 @@ v26.0.0及以前版本的 Tag 遵循以下格式：
 
 #### 软件依赖
 
-| 软件名称 | 支持的版本 | 安装位置 | 说明 |
-| -- | -- | -- | -- |
-| Kubernetes | 1.17.x~1.34.x（推荐使用1.19.x及以上版本） | 所有节点 | 了解 K8s 的使用请参见 [Kubernetes 文档](https://kubernetes.io/zh-cn/docs/) |
-| Ascend Device Plugin | 与 ClusterD 同版本 | 计算节点 | ClusterD 依赖 Ascend Device Plugin 上报芯片信息 |
-| NodeD | 与 ClusterD 同版本 | 计算节点 | ClusterD 依赖 NodeD 上报节点故障信息 |
+| 软件名称                 | 支持的版本                          | 安装位置 | 说明                                                               |
+|----------------------|--------------------------------|------|------------------------------------------------------------------|
+| Kubernetes           | 1.17.x~1.34.x（推荐使用1.19.x及以上版本） | 所有节点 | 了解 K8s 的使用请参见 [Kubernetes 文档](https://kubernetes.io/zh-cn/docs/) |
+| Ascend Device Plugin | 与 ClusterD 同版本                 | 计算节点 | ClusterD 依赖 Ascend Device Plugin 上报芯片信息                          |
+| NodeD                | 与 ClusterD 同版本                 | 计算节点 | ClusterD 依赖 NodeD 上报节点故障信息                                       |
 
 #### 硬件规格要求
 
-| 名称 | 100节点以内 | 500节点 | 1000节点 |
-| -- | -- | -- | -- |
-| CPU | 1核 | 2核 | 4核 |
-| 内存 | 1GB | 2GB | 8GB |
+| 名称  | 100节点以内 | 500节点 | 1000节点 |
+|-----|---------|-------|--------|
+| CPU | 1核      | 2核    | 4核     |
+| 内存  | 1GB     | 2GB   | 8GB    |
 
 ### 在线获取 ClusterD 镜像
 
 1. 拉取官方镜像
 
-   拉取昇腾镜像仓库提供的 ClusterD 镜像，替换 {tag} 为实际版本号（推荐 v26.0.0）。
+   拉取昇腾镜像仓库提供的 ClusterD 镜像，替换 {tag} 为实际版本号。
 
    ```bash
    docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:{tag}
@@ -125,8 +126,7 @@ v26.0.0及以前版本的 Tag 遵循以下格式：
 
 1. 获取对应架构的 Dockerfile
 
-   前往[支持的 Tags 及 Dockerfile 链接](#支持的-Tags-及-Dockerfile-链接)章节，打开目标版本对应的 Dockerfile.ubuntu
-   链接，保存文件至 aarch64 架构环境的本地目录。
+   前往支持的 Tags 及 Dockerfile 链接章节，打开目标版本对应的 Dockerfile.ubuntu 链接，保存文件至 aarch64 架构环境的本地目录。
 
 2. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
 
@@ -136,9 +136,11 @@ v26.0.0及以前版本的 Tag 遵循以下格式：
 
 > **重要注意事项**
 > 若 Docker 版本低于 18.09，或未手动开启 BuildKit，构建镜像时将无法读取 TARGETPLATFORM 变量，会造成镜像构建失败。
+>
 > 1. TARGETPLATFORM 为 Docker BuildKit 内置全局变量，用于识别当前构建目标平台，示例：linux/amd64、linux/arm64。
 > 2. 该变量仅在 BuildKit 启用后自动注入；老旧 Docker 环境、默认关闭 BuildKit 的环境无法使用此参数。
 > 3. 构建前可执行以下命令临时开启 BuildKit：
+>
 > ```bash
 > export DOCKER_BUILDKIT=1
 > ```

@@ -7,18 +7,20 @@
 - K8s RDMA Shared Device Plugin is maintained by [MindCluster Code Repository](https://gitcode.com/Ascend/mind-cluster)
 - Where to get help
     - [MindCluster Code Repository](https://gitcode.com/Ascend/mind-cluster)
-  - [MindCluster Atlas Community](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
-    - [Issue Tracker](https://gitcode.com/Ascend/mind-cluster/issues)
+    - [MindCluster Atlas Community](https://www.hiascend.com/document/detail/zh/mindcluster/latest/clustersched/dlug/docs/zh/scheduling/01_introduction/00_overview.md)
+        - [Issue Tracker](https://gitcode.com/Ascend/mind-cluster/issues)
 
 ---
 
 ## K8s RDMA Shared Device Plugin
 
-K8s RDMA Shared Device Plugin is a Kubernetes device plugin for managing RDMA devices in a shared manner. It enables containers to share RDMA devices, providing high-performance networking for distributed applications.
+K8s RDMA Shared Device Plugin is a Kubernetes device plugin for managing RDMA devices in a shared manner. It enables
+containers to share RDMA devices, providing high-performance networking for distributed applications.
 
 ### Use Cases
 
-When running distributed training or high-performance computing workloads that require RDMA (Remote Direct Memory Access), the K8s RDMA Shared Device Plugin allows multiple containers to share RDMA devices efficiently.
+When running distributed training or high-performance computing workloads that require RDMA (Remote Direct Memory
+Access), the K8s RDMA Shared Device Plugin allows multiple containers to share RDMA devices efficiently.
 
 ### Features
 
@@ -68,17 +70,17 @@ Tags follow this format:
 
 #### Software Dependencies
 
-| Software | Supported Versions | Installation Location | Description |
-| -- | -- | -- | -- |
-| Kubernetes | 1.17.x~1.34.x (1.19.x or later recommended) | All nodes | See [Kubernetes Documentation](https://kubernetes.io/docs/) |
-| RDMA Drivers | OFED 5.6 or later | Compute nodes | RDMA device drivers |
+| Software     | Supported Versions                          | Installation Location | Description                                                 |
+|--------------|---------------------------------------------|-----------------------|-------------------------------------------------------------|
+| Kubernetes   | 1.17.x~1.34.x (1.19.x or later recommended) | All nodes             | See [Kubernetes Documentation](https://kubernetes.io/docs/) |
+| RDMA Drivers | OFED 5.6 or later                           | Compute nodes         | RDMA device drivers                                         |
 
 #### Hardware Requirements
 
 | Resource | Requirement |
-| -- | -- |
-| CPU | 0.1 cores |
-| Memory | 0.1 GB |
+|----------|-------------|
+| CPU      | 0.1 cores   |
+| Memory   | 0.1 GB      |
 
 ### Build Locally (Optional)
 
@@ -87,9 +89,8 @@ Example: build an K8s RDMA Shared Device Plugin image of architecture linux-aarc
 
 1. Obtain the target Dockerfile
 
-   Navigate to the chapter [Supported Tags and Dockerfile Links](#Supported-Tags-and-Dockerfile-Links), open the
-   Dockerfile.ubuntu link corresponding to your target version, and save the file to a local directory on your aarch64
-   environment.
+   Navigate to the chapter Supported Tags and Dockerfile Links, open the Dockerfile.ubuntu link corresponding to your
+   target version, and save the file to a local directory on your aarch64 environment.
 
 2. Build the Docker image locally (disable cache to ensure a clean build)
 
@@ -100,11 +101,13 @@ Example: build an K8s RDMA Shared Device Plugin image of architecture linux-aarc
 > **Important Notes**
 > If your Docker version is earlier than 18.09 or BuildKit is not manually enabled, the TARGETPLATFORM variable cannot
 > be read during image building, which will cause the image build to fail.
+>
 > 1. TARGETPLATFORM is a built-in global variable of Docker BuildKit for identifying the target build platform, e.g.
      linux/amd64, linux/arm64.
 > 2. This variable is automatically injected only after BuildKit is enabled. It cannot be used in legacy Docker
      environments or environments where BuildKit is disabled by default.
 > 3. Run the following command before building to enable BuildKit temporarily:
+>
 > ```bash
 > export DOCKER_BUILDKIT=1
 > ```
@@ -145,21 +148,21 @@ Example: build an K8s RDMA Shared Device Plugin image of architecture linux-aarc
 
 The K8s RDMA Shared Device Plugin can be configured with the following parameters:
 
-| Parameter | Type | Description                                                   | Default      |
-| -- | -- |---------------------------------------------------------------|--------------|
-| `periodicUpdateInterval` | int | Interval (seconds) for periodic device updates                | 0 (disabled) |
-| `faultDetectPeriod`      | int | Periodic fault detection interval (seconds)                        | 5 (minimum configuration is 1) |
-| `configList` | array | List of device configurations                                 | []           |
-| `resourceName` | string | Resource name for the device plugin                           | rdma         |
-| `resourcePrefix` | string | Resource prefix                                               | huawei.com   |
-| `rdmaHcaMax` | int | Maximum number of RDMA HCA devices                            | 1000         |
-| `devices` | array | List of device names to include                               | []           |
-| `selectors.buses` | array | Bus types to filter devices (e.g., "ub" to enable UB devices) | []           |
-| `selectors.vendors` | array | Vendor IDs to filter devices                                  | []           |
-| `selectors.deviceIDs` | array | Device IDs to filter devices                                  | []           |
-| `selectors.drivers` | array | Driver names to filter devices                                | []           |
-| `selectors.ifNames` | array | Interface names to filter devices                             | []           |
-| `selectors.linkTypes` | array | Link types to filter devices                                  | []           |
+| Parameter                | Type   | Description                                                   | Default                        |
+|--------------------------|--------|---------------------------------------------------------------|--------------------------------|
+| `periodicUpdateInterval` | int    | Interval (seconds) for periodic device updates                | 0 (disabled)                   |
+| `faultDetectPeriod`      | int    | Periodic fault detection interval (seconds)                   | 5 (minimum configuration is 1) |
+| `configList`             | array  | List of device configurations                                 | []                             |
+| `resourceName`           | string | Resource name for the device plugin                           | rdma                           |
+| `resourcePrefix`         | string | Resource prefix                                               | huawei.com                     |
+| `rdmaHcaMax`             | int    | Maximum number of RDMA HCA devices                            | 1000                           |
+| `devices`                | array  | List of device names to include                               | []                             |
+| `selectors.buses`        | array  | Bus types to filter devices (e.g., "ub" to enable UB devices) | []                             |
+| `selectors.vendors`      | array  | Vendor IDs to filter devices                                  | []                             |
+| `selectors.deviceIDs`    | array  | Device IDs to filter devices                                  | []                             |
+| `selectors.drivers`      | array  | Driver names to filter devices                                | []                             |
+| `selectors.ifNames`      | array  | Interface names to filter devices                             | []                             |
+| `selectors.linkTypes`    | array  | Link types to filter devices                                  | []                             |
 
 ---
 
@@ -171,6 +174,8 @@ PCI and UB type DPU network cards
 
 ## License
 
-View the [license information](https://www.hiascend.com/en/legal/softlicense) for the Mind series software contained in these images.
+View the [license information](https://www.hiascend.com/en/legal/softlicense) for the Mind series software contained in
+these images.
 
-As with all container images, pre-installed software packages (Python, system libraries, etc.) may be subject to their respective license agreements.
+As with all container images, pre-installed software packages (Python, system libraries, etc.) may be subject to their
+respective license agreements.
