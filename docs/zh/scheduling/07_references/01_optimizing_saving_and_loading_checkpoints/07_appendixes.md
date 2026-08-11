@@ -23,10 +23,7 @@ NDS 1.0更多信息请参见[《OceanStor DataTurbo 25.x.x DTFS用户指南》](
 
 ## 环境变量
 
-|参数名称|参数说明|取值范围|缺省值|
-|--|--|--|--|
-|MINDIO_AUTO_PATCH_MEGATRON|是否在import mindio_acp的时候自动patch Megatron框架的源代码中的Checkpoint相关函数。|<ul><li>true或者1：开启</li><li>其他值：关闭</li></ul>|false|
-|HCOM_FILE_PATH_PREFIX|HCOM生成的文件路径的前缀，通过前缀保证文件只会在当前路径下（此路径需要已存在）创建和删除。|路径参数|${install_path}|
+MindIO ACP环境变量请参见[MindIO ACP环境变量](../../06_api/13_environment_variable_description.md#section10131935198741)。
 
 ## 设置用户有效期
 

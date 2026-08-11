@@ -2,26 +2,7 @@
 
 ## 环境变量
 
-> [!NOTE]说明
-> 加粗显示的环境变量为常用环境变量。
-
-|参数名称|参数说明|取值范围|缺省值|
-|--|--|--|--|
-|TTP_LOG_PATH|MindIO TFT日志路径。禁止配置软链接，日志文件名补充为ttp_log.log，建议日志路径中包含日期时间，避免多次训练记录在同一个日志中，造成循环覆写。推荐在训练启动脚本中按如下方式配置日志路径： <br> `date_time=\$(date +%Y-%m-%d-%H_%M_%S)` <br> `export TTP_LOG_PATH=logs/\${date_time}` <br>当使用共享存储时，建议按照节点配置日志路径：<br>`export TTP_LOG_PATH=logs/\${nodeId}`|文件夹路径。|logs|
-|TTP_LOG_LEVEL|MindIO TFT日志等级。<ul><li>DEBUG：细节信息，仅当诊断问题时适用。</li><li>INFO：确认程序按预期运行。</li><li>WARNING：表明有已经或即将发生的意外。程序仍按预期进行。</li><li>ERROR：由于严重的问题，程序的某些功能已经不能正常执行。</li></ul>|<ul><li>DEBUG</li><li>INFO</li><li>WARNING</li><li>ERROR</li></ul>|INFO|
-|TTP_LOG_MODE|MindIO TFT日志模式。<ul><li>ONLY_ONE：所有MindIO TFT进程写一个日志。</li><li>PER_PROC：每个MindIO TFT进程写独立日志，日志文件路径为 {TTP_LOG_PATH}/ttp_log.log.{pid}。</li></ul>|<ul><li>ONLY_ONE</li><li>PER_PROC（若非指定ONLY_ONE，则默认为PER_PROC）</li></ul>|PER_PROC|
-|TTP_LOG_STDOUT|MindIO TFT日志记录方式。<ul><li>0：将MindIO TFT运行日志记录到对应的日志文件中。</li><li>1：直接打印MindIO TFT运行日志，不在本地存储。</li></ul>|<ul><li>0</li><li>1</li></ul>|0|
-|MASTER_ADDR|训练主节点IP地址或域名。|合法的IPv4、IPv6地址或域名。|-|
-|MASTER_PORT|训练主节点通信端口，端口可配。|[1024, 65535]|-|
-|TTP_RETRY_TIMES|Processor TCP（Transmission Control Protocol）建链尝试次数。|[1, 300]|10|
-|MINDIO_WAIT_MINDX_TIME|Controller等待MindCluster响应的最大时间，单位：s。|[1, 3600]|30|
-|TTP_ACCLINK_CHECK_PERIOD_HOURS|开启TLS认证后，MindIO TFT检查证书有效性的周期，单位：h。|[24, 720]|168|
-|TTP_ACCLINK_CERT_CHECK_AHEAD_DAYS|开启TLS认证后，MindIO TFT检查证书过期日提前告警的时长，单位：天。需满足证书过期提前告警时长不小于巡检周期，保证及时发现证书过期风险并告警。|[7, 180]，且需满足TTP_ACCLINK_CERT_CHECK_AHEAD_DAYS * 24 ≥ TTP_ACCLINK_CHECK_PERIOD_HOURS。|30|
-|TTP_NORMAL_ACTION_TIME_LIMIT|故障恢复流程中，执行rebuild/repair/rollback回调函数的超时时间，单位：s。|[30, 1800]|180|
-|MINDIO_FOR_MINDSPORE|表示是否启用MindSpore开关，传入True（不区分大小写）或1时，开启MindSpore开关，其他值关闭MindSpore开关。|<ul><li>True（不区分大小写）或1：启用MindSpore。</li><li>其他：关闭MindSpore。</li></ul>|False|
-|MINDX_TASK_ID|MindIO ARF特性使用，MindCluster任务ID，由ClusterD配置，无需用户干预。|字符串。|-|
-|TORCHELASTIC_USE_AGENT_STORE|PyTorch环境变量，控制创建TCP Store Server还是Client，MindIO TFT在临终Checkpoint保存且Torch Agent TCP Store Server连接失败场景下使用。|<ul><li>True：创建Client。</li><li>False：创建Server。</li></ul>|-|
-|TTP_STOP_CLEAN_BEFORE_DUMP|MindIO TFT特性使用，控制MindIO TTP在保存临终Checkpoint前是否做stop&clean操作。|<ul><li>0：关闭临终前stop&clean操作。</li><li>1：启用临终前stop&clean操作。</li></ul>|0|
+MindIO TFT环境变量请参见[MindIO TFT环境变量](../../06_api/13_environment_variable_description.md#section10131935156854)。
 
 ## 设置用户有效期
 
