@@ -1110,6 +1110,35 @@ func TestInstanceSetReconcilerUpdateStatus2(t *testing.T) {
 	})
 }
 
+// TestUpdateStatusPassesNamespaceToIndexer tests that updateStatus passes
+// instanceSet.Namespace to InstanceReady via indexer.Namespace.
+func TestUpdateStatusPassesNamespaceToIndexer(t *testing.T) {
+	convey.Convey("should pass instanceSet.Namespace to indexer when updating status", t, func() {
+		const customNamespace = "custom-ns"
+		instanceSet := CreateTestInstanceSet("test-instance", customNamespace, int32(1))
+		fakeClient := NewFakeClient(instanceSet).Build()
+		workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+		reconciler := &InstanceSetReconciler{
+			Client:             fakeClient,
+			WorkLoadReconciler: workLoadReconciler,
+		}
+
+		var capturedIndexer common.InstanceIndexer
+		patches := gomonkey.ApplyMethodFunc(workLoadReconciler, "InstanceReady",
+			func(_ context.Context, _ *v1.InstanceSet, indexer common.InstanceIndexer) (int, error) {
+				capturedIndexer = indexer
+				return 1, nil
+			})
+		defer patches.Reset()
+
+		err := reconciler.updateStatus(context.Background(), instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(capturedIndexer.Namespace, convey.ShouldEqual, customNamespace)
+		convey.So(capturedIndexer.ServiceName, convey.ShouldEqual, "test-service")
+		convey.So(capturedIndexer.InstanceSetKey, convey.ShouldEqual, "test-role")
+	})
+}
+
 // TestWorkLoadPredicate tests the WorkLoadPredicate function.
 func TestWorkLoadPredicate(t *testing.T) {
 	convey.Convey("Test WorkLoadPredicate function", t, func() {
