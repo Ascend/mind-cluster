@@ -31,7 +31,6 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
-
 	"huawei.com/npu-exporter/v6/collector/container/isula"
 	"huawei.com/npu-exporter/v6/collector/container/v1"
 	"huawei.com/npu-exporter/v6/utils/logger"

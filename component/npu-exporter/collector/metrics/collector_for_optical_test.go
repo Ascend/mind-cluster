@@ -334,3 +334,13 @@ func TestStoreSingleOpticalNpuInfo(t *testing.T) {
 		})
 	})
 }
+
+// TestOpticalCollectorSupportDcmi tests OpticalCollector SupportDcmi
+func TestOpticalCollectorSupportDcmi(t *testing.T) {
+	n := mockNewNpuCollector()
+	convey.Convey("returns false and result is cached", t, func() {
+		c := &OpticalCollector{}
+		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
+		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
+	})
+}

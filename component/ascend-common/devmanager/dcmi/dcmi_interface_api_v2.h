@@ -115,6 +115,9 @@ extern "C"
                                                             dcmi_urma_eid_info_t *eid_list, unsigned int *eid_cnt);
 
     DCMIDLLEXPORT int dcmiv2_get_device_elabel_info(int dev_id, struct dcmi_elabel_info *elabel_info);
+
+    DCMIDLLEXPORT int dcmiv2_get_port_pkt_stats_info(int dev_id, struct dcmi_ub_port_info *ub_port_info,
+                                                     struct dcmi_port_pkt_stats_info *port_pkt_stats_info);
 #endif
 
 #ifdef __cplusplus

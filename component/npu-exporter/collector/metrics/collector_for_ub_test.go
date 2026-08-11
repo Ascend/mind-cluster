@@ -244,7 +244,7 @@ func TestCollectUBInfo(t *testing.T) {
 
 		// Call the function to test
 		logicID := int32(0)
-		result := collectUbInfo(logicID)
+		result := collectUbInfo(logicID, nil, false)
 
 		// Verify getUBStatInfo was called the expected number of times
 		convey.So(callCount, convey.ShouldEqual, expectedCalls)
@@ -370,6 +370,7 @@ func TestCollectToCacheUB(t *testing.T) {
 
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
+		mockUbDcmiProbe(patches, n, fmt.Errorf("error code: %s", common.NotSupportErrorCode))
 		patches.ApplyFuncReturn(hccn.GetNPUUbStatInfo, mockUBStatInfo(), nil)
 		chips := mockGetNPUChipList()
 		c := UbCollector{}
@@ -447,5 +448,231 @@ func TestUpdatePrometheusUB(t *testing.T) {
 
 		// Verify promUpdateUbInfo was called
 		convey.So(promUpdateUbInfoCalled, convey.ShouldBeTrue)
+	})
+}
+
+// mockUbDcmiProbe patches GetDeviceList and GetPortPktStatsInfo
+func mockUbDcmiProbe(patches *gomonkey.Patches, n *colcommon.NpuCollector,
+	portErr error) {
+	patches.ApplyMethodReturn(n.Dmgr, "GetDeviceList", int32(1), []int32{0}, nil)
+	patches.ApplyMethodReturn(n.Dmgr, "GetPortPktStatsInfo",
+		(*common.PortPktStatsInfo)(nil), portErr)
+}
+
+// TestUbCollectorSupportDcmi tests UbCollector SupportDcmi
+func TestUbCollectorSupportDcmi(t *testing.T) {
+	n := mockNewNpuCollector()
+	convey.Convey("supported when dcmi call succeeds", t, func() {
+		c := &UbCollector{}
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		mockUbDcmiProbe(patches, n, nil)
+		convey.So(c.SupportDcmi(n), convey.ShouldBeTrue)
+	})
+	convey.Convey("not supported when error contains -8255", t, func() {
+		c := &UbCollector{}
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		mockUbDcmiProbe(patches, n, fmt.Errorf("error code: %s", common.NotSupportErrorCode))
+		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
+	})
+	convey.Convey("not supported when error contains -99998", t, func() {
+		c := &UbCollector{}
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		mockUbDcmiProbe(patches, n, fmt.Errorf("error code: %s", common.FuncNotFoundErrorCode))
+		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
+	})
+}
+
+// TestUbCollectorSupportDcmiNoDevice tests when GetDeviceList fails
+func TestUbCollectorSupportDcmiNoDevice(t *testing.T) {
+	n := mockNewNpuCollector()
+	convey.Convey("not supported when GetDeviceList fails", t, func() {
+		c := &UbCollector{}
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyMethodReturn(n.Dmgr, "GetDeviceList",
+			int32(0), []int32{}, fmt.Errorf("no device"))
+		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
+	})
+}
+
+// mockPortPktStatsInfo builds a PortPktStatsInfo with the given portMode for testing.
+func mockPortPktStatsInfo(portMode int) *common.PortPktStatsInfo {
+	return &common.PortPktStatsInfo{
+		PortMode:             portMode,
+		UbGlbIpv4PktCntRx:    1,
+		UbGlbIpv6PktCntRx:    2,
+		UnicIpv4PktCntRx:     3,
+		UnicIpv6PktCntRx:     4,
+		UbClanPktCntRx:       5,
+		UbUmocCtphCntRx:      6,
+		UbUmocNtphCntRx:      7,
+		UbMemPktCntRx:        8,
+		UnknownPktCntRx:      9,
+		DropIndCntRx:         10,
+		ErrIndCntRx:          11,
+		ToHostPktCntRx:       12,
+		ToImpPktCntRx:        13,
+		ToMarPktCntRx:        14,
+		ToLinkPktCntRx:       15,
+		ToNocPktCntRx:        16,
+		RouteErrCntRx:        17,
+		OutErrCntRx:          18,
+		LengthErrCntRx:       19,
+		RxBusiFlitNum:        20,
+		RxSendAckFlit:        21,
+		UbGlbIpv4PktCntTx:    22,
+		UbGlbIpv6PktCntTx:    23,
+		UnicIpv4PktCntTx:     24,
+		UnicIpv6PktCntTx:     25,
+		UbClanPktCntTx:       26,
+		UbUmocCtphCntTx:      27,
+		UbUmocNtphCntTx:      28,
+		UbMemPktCntTx:        29,
+		UnknownPktCntTx:      30,
+		DropIndCntTx:         31,
+		ErrIndCntTx:          32,
+		LpbkIndCntTx:         33,
+		OutErrCntTx:          34,
+		LengthErrCntTx:       35,
+		TxBusiFlitNum:        36,
+		TxRecvAckFlit:        37,
+		RetryReqSum:          38,
+		RetryAckSum:          39,
+		CrcErrorSum:          40,
+		CoreMibRxPausePkts:   41,
+		CoreMibTxPausePkts:   42,
+		CoreMibRxPfcPkts:     43,
+		CoreMibTxPfcPkts:     44,
+		CoreMibRxBadPkts:     45,
+		CoreMibTxBadPkts:     46,
+		CoreMibRxBadOctets:   47,
+		CoreMibTxBadOctets:   48,
+	}
+}
+
+// TestGetUBStatInfoByDcmi tests the getUBStatInfoByDcmi function
+func TestGetUBStatInfoByDcmi(t *testing.T) {
+	n := mockNewNpuCollector()
+	logicID := int32(0)
+	uDieID := 0
+	portID := 1
+
+	convey.Convey("success and is UBOE port", t, func() {
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyMethodReturn(n.Dmgr, "GetPortPktStatsInfo", mockPortPktStatsInfo(isUboe), nil)
+		patches.ApplyFunc(hwlog.ResetErrCnt, func(domain string, id interface{}) {})
+
+		result := getUBStatInfoByDcmi(logicID, n, uDieID, portID)
+
+		convey.So(result, convey.ShouldNotBeNil)
+		convey.So(result.Udie, convey.ShouldEqual, uDieID)
+		convey.So(result.Port, convey.ShouldEqual, portID)
+		convey.So(result.UBCommonStats, convey.ShouldNotBeNil)
+		convey.So(result.UboeExtensions, convey.ShouldNotBeNil)
+		convey.So(result.UBCommonStats.UbIpv4PktCntRx, convey.ShouldEqual, 1)
+		convey.So(result.UBCommonStats.CrcErrorSum, convey.ShouldEqual, 40)
+		convey.So(result.UboeExtensions.CoreMibRxPausePkts, convey.ShouldEqual, 41)
+		convey.So(result.UboeExtensions.CoreMibTxBadOctets, convey.ShouldEqual, 48)
+	})
+
+	convey.Convey("success but not UBOE port", t, func() {
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyMethodReturn(n.Dmgr, "GetPortPktStatsInfo", mockPortPktStatsInfo(0), nil)
+		patches.ApplyFunc(hwlog.ResetErrCnt, func(domain string, id interface{}) {})
+
+		result := getUBStatInfoByDcmi(logicID, n, uDieID, portID)
+
+		convey.So(result, convey.ShouldNotBeNil)
+		convey.So(result.UBCommonStats, convey.ShouldNotBeNil)
+		convey.So(result.UboeExtensions, convey.ShouldBeNil)
+		convey.So(result.UBCommonStats.UbIpv4PktCntTx, convey.ShouldEqual, 22)
+	})
+
+	convey.Convey("returns nil when GetPortPktStatsInfo fails", t, func() {
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		testErr := fmt.Errorf("dcmi error")
+		patches.ApplyMethodReturn(n.Dmgr, "GetPortPktStatsInfo",
+			(*common.PortPktStatsInfo)(nil), testErr)
+		patches.ApplyFunc(logWarnMetricsWithLimit, func(domain string, lid int32, uDie, port int, err error) {})
+
+		result := getUBStatInfoByDcmi(logicID, n, uDieID, portID)
+
+		convey.So(result, convey.ShouldBeNil)
+	})
+}
+
+// TestConvertDcmiUBCommonStats tests convertDcmiUBCommonStats field mapping
+func TestConvertDcmiUBCommonStats(t *testing.T) {
+	convey.Convey("all fields are mapped correctly", t, func() {
+		p := mockPortPktStatsInfo(0)
+		stats := &common.UBCommonStats{}
+
+		convertDcmiUBCommonStats(stats, p)
+
+		convey.So(stats.UbIpv4PktCntRx, convey.ShouldEqual, int(p.UbGlbIpv4PktCntRx))
+		convey.So(stats.UbIpv6PktCntRx, convey.ShouldEqual, int(p.UbGlbIpv6PktCntRx))
+		convey.So(stats.UnicIpv4PktCntRx, convey.ShouldEqual, int(p.UnicIpv4PktCntRx))
+		convey.So(stats.UnicIpv6PktCntRx, convey.ShouldEqual, int(p.UnicIpv6PktCntRx))
+		convey.So(stats.UbCompactPktCntRx, convey.ShouldEqual, int(p.UbClanPktCntRx))
+		convey.So(stats.UbUmocCtphCntRx, convey.ShouldEqual, int(p.UbUmocCtphCntRx))
+		convey.So(stats.UbUmocNtphCntRx, convey.ShouldEqual, int(p.UbUmocNtphCntRx))
+		convey.So(stats.UbMemPktCntRx, convey.ShouldEqual, int(p.UbMemPktCntRx))
+		convey.So(stats.UnknownPktCntRx, convey.ShouldEqual, int(p.UnknownPktCntRx))
+		convey.So(stats.DropIndCntRx, convey.ShouldEqual, int(p.DropIndCntRx))
+		convey.So(stats.ErrIndCntRx, convey.ShouldEqual, int(p.ErrIndCntRx))
+		convey.So(stats.ToHostPktCntRx, convey.ShouldEqual, int(p.ToHostPktCntRx))
+		convey.So(stats.ToImpPktCntRx, convey.ShouldEqual, int(p.ToImpPktCntRx))
+		convey.So(stats.ToMarPktCntRx, convey.ShouldEqual, int(p.ToMarPktCntRx))
+		convey.So(stats.ToLinkPktCntRx, convey.ShouldEqual, int(p.ToLinkPktCntRx))
+		convey.So(stats.ToNocPktCntRx, convey.ShouldEqual, int(p.ToNocPktCntRx))
+		convey.So(stats.RouteErrCntRx, convey.ShouldEqual, int(p.RouteErrCntRx))
+		convey.So(stats.OutErrCntRx, convey.ShouldEqual, int(p.OutErrCntRx))
+		convey.So(stats.LengthErrCntRx, convey.ShouldEqual, int(p.LengthErrCntRx))
+		convey.So(stats.RxBusiFlitNum, convey.ShouldEqual, int(p.RxBusiFlitNum))
+		convey.So(stats.RxSendAckFlit, convey.ShouldEqual, int(p.RxSendAckFlit))
+		convey.So(stats.UbIpv4PktCntTx, convey.ShouldEqual, int(p.UbGlbIpv4PktCntTx))
+		convey.So(stats.UbIpv6PktCntTx, convey.ShouldEqual, int(p.UbGlbIpv6PktCntTx))
+		convey.So(stats.UnicIpv4PktCntTx, convey.ShouldEqual, int(p.UnicIpv4PktCntTx))
+		convey.So(stats.UnicIpv6PktCntTx, convey.ShouldEqual, int(p.UnicIpv6PktCntTx))
+		convey.So(stats.UbCompactPktCntTx, convey.ShouldEqual, int(p.UbClanPktCntTx))
+		convey.So(stats.UbUmocCtphCntTx, convey.ShouldEqual, int(p.UbUmocCtphCntTx))
+		convey.So(stats.UbUmocNtphCntTx, convey.ShouldEqual, int(p.UbUmocNtphCntTx))
+		convey.So(stats.UbMemPktCntTx, convey.ShouldEqual, int(p.UbMemPktCntTx))
+		convey.So(stats.UnknownPktCntTx, convey.ShouldEqual, int(p.UnknownPktCntTx))
+		convey.So(stats.DropIndCntTx, convey.ShouldEqual, int(p.DropIndCntTx))
+		convey.So(stats.ErrIndCntTx, convey.ShouldEqual, int(p.ErrIndCntTx))
+		convey.So(stats.LpbkIndCntTx, convey.ShouldEqual, int(p.LpbkIndCntTx))
+		convey.So(stats.OutErrCntTx, convey.ShouldEqual, int(p.OutErrCntTx))
+		convey.So(stats.LengthErrCntTx, convey.ShouldEqual, int(p.LengthErrCntTx))
+		convey.So(stats.TxBusiFlitNum, convey.ShouldEqual, int(p.TxBusiFlitNum))
+		convey.So(stats.TxRecvAckFlit, convey.ShouldEqual, int(p.TxRecvAckFlit))
+		convey.So(stats.RetryReqSum, convey.ShouldEqual, int(p.RetryReqSum))
+		convey.So(stats.RetryAckSum, convey.ShouldEqual, int(p.RetryAckSum))
+		convey.So(stats.CrcErrorSum, convey.ShouldEqual, int(p.CrcErrorSum))
+	})
+}
+
+// TestConvertDcmiUboeExtensions tests convertDcmiUboeExtensions field mapping
+func TestConvertDcmiUboeExtensions(t *testing.T) {
+	convey.Convey("all fields are mapped correctly", t, func() {
+		p := mockPortPktStatsInfo(isUboe)
+		ext := &common.UBOEExtensions{}
+
+		convertDcmiUboeExtensions(ext, p)
+
+		convey.So(ext.CoreMibRxPausePkts, convey.ShouldEqual, int(p.CoreMibRxPausePkts))
+		convey.So(ext.CoreMibTxPausePkts, convey.ShouldEqual, int(p.CoreMibTxPausePkts))
+		convey.So(ext.CoreMibRxPfcPkts, convey.ShouldEqual, int(p.CoreMibRxPfcPkts))
+		convey.So(ext.CoreMibTxPfcPkts, convey.ShouldEqual, int(p.CoreMibTxPfcPkts))
+		convey.So(ext.CoreMibRxBadPkts, convey.ShouldEqual, int(p.CoreMibRxBadPkts))
+		convey.So(ext.CoreMibTxBadPkts, convey.ShouldEqual, int(p.CoreMibTxBadPkts))
+		convey.So(ext.CoreMibRxBadOctets, convey.ShouldEqual, int(p.CoreMibRxBadOctets))
+		convey.So(ext.CoreMibTxBadOctets, convey.ShouldEqual, int(p.CoreMibTxBadOctets))
 	})
 }

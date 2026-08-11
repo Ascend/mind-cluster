@@ -18,6 +18,7 @@ package metrics
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -27,9 +28,9 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
-
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
+	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 const (
@@ -205,6 +206,42 @@ func (c *UbCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	return isSupport
 }
 
+// SupportDcmi probes GetPortPktStatsInfo with first valid port and stores the
+// result in DcmiSupported. Should only be called once during classifyCollectors;
+// afterwards callers read c.DcmiSupported directly.
+func (c *UbCollector) SupportDcmi(n *colcommon.NpuCollector) bool {
+	c.DcmiSupported = probeUbDcmi(n)
+	logger.Infof("[UbCollector] dcmi supported: %v", c.DcmiSupported)
+	return c.DcmiSupported
+}
+
+// probeUbDcmi returns true unless dcmi reports function not supported/missing.
+func probeUbDcmi(n *colcommon.NpuCollector) bool {
+	_, logicIDs, err := n.Dmgr.GetDeviceList()
+	if err != nil || len(logicIDs) == 0 {
+		return false
+	}
+	portMap := colcommon.NpuDevPortInfos.GetPortMap()
+	for udie, ports := range portMap {
+		if len(ports) == 0 {
+			continue
+		}
+		_, err := n.Dmgr.GetPortPktStatsInfo(logicIDs[0], int32(udie), int32(ports[0].PortID))
+		return !isDcmiFuncMissingErr(err)
+	}
+	return false
+}
+
+// isDcmiFuncMissingErr returns true if dcmi function is not supported or missing.
+func isDcmiFuncMissingErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, common.NotSupportErrorCode) ||
+		strings.Contains(msg, common.FuncNotFoundErrorCode)
+}
+
 // Describe description of the metric
 func (c *UbCollector) Describe(ch chan<- *prometheus.Desc) {
 	// ub rx
@@ -222,8 +259,9 @@ func (c *UbCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // CollectToCache collect the metric to cache
 func (c *UbCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colcommon.HuaWeiAIChip) {
+	useDcmi := c.DcmiSupported
 	for _, chip := range chipList {
-		ubInfo := collectUbInfo(chip.LogicID)
+		ubInfo := collectUbInfo(chip.LogicID, n, useDcmi)
 		c.LocalCache.Store(chip.PhyId, ubCache{
 			chip:      chip,
 			timestamp: time.Now(),
@@ -534,7 +572,7 @@ func initBuildDescTx() {
 	buildUbDesc(&txRecvAckFlitDesc, txRecvAckFlit, "cumulative number of acks released to the peer on the tx ub port")
 }
 
-func collectUbInfo(logicID int32) []*common.UBInfo {
+func collectUbInfo(logicID int32, n *colcommon.NpuCollector, useDcmi bool) []*common.UBInfo {
 	var newUbInfos []*common.UBInfo
 	// udie only has 0 and 1, fixed order
 	dieIDs := []int{0, 1}
@@ -544,7 +582,11 @@ func collectUbInfo(logicID int32) []*common.UBInfo {
 			continue
 		}
 		for _, port := range portIDs {
-			newUbInfos = append(newUbInfos, getUBStatInfo(logicID, dieID, port.PortID))
+			if useDcmi {
+				newUbInfos = append(newUbInfos, getUBStatInfoByDcmi(logicID, n, dieID, port.PortID))
+			} else {
+				newUbInfos = append(newUbInfos, getUBStatInfo(logicID, dieID, port.PortID))
+			}
 		}
 	}
 	return newUbInfos
@@ -571,6 +613,83 @@ func getUBStatInfo(logicID int32, uDieID, portID int) *common.UBInfo {
 	convertUBCommonStats(&ubInfos, ubInfo)
 	hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForUb, uDieID, portID), logicID)
 	return &ubInfos
+}
+
+func getUBStatInfoByDcmi(logicID int32, n *colcommon.NpuCollector, uDieID, portID int) *common.UBInfo {
+	ubInfos := common.UBInfo{
+		UBCommonStats:  &common.UBCommonStats{},
+		UboeExtensions: &common.UBOEExtensions{},
+		Udie:           uDieID,
+		Port:           portID,
+	}
+	stats, err := n.Dmgr.GetPortPktStatsInfo(logicID, int32(uDieID), int32(portID))
+	if err != nil {
+		logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForUb, uDieID, portID), logicID, uDieID, portID, err)
+		return nil
+	}
+	hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForUb, uDieID, portID), logicID)
+	if stats.PortMode == isUboe {
+		hwlog.RunLog.Debugf("logicID:%v ,UdieID:%v, portID:%v is uboe port", logicID, uDieID, portID)
+		convertDcmiUboeExtensions(ubInfos.UboeExtensions, stats)
+	} else {
+		ubInfos.UboeExtensions = nil
+	}
+	convertDcmiUBCommonStats(ubInfos.UBCommonStats, stats)
+	return &ubInfos
+}
+
+func convertDcmiUBCommonStats(stats *common.UBCommonStats, p *common.PortPktStatsInfo) {
+	stats.UbIpv4PktCntRx = int(p.UbGlbIpv4PktCntRx)
+	stats.UbIpv6PktCntRx = int(p.UbGlbIpv6PktCntRx)
+	stats.UnicIpv4PktCntRx = int(p.UnicIpv4PktCntRx)
+	stats.UnicIpv6PktCntRx = int(p.UnicIpv6PktCntRx)
+	stats.UbCompactPktCntRx = int(p.UbClanPktCntRx)
+	stats.UbUmocCtphCntRx = int(p.UbUmocCtphCntRx)
+	stats.UbUmocNtphCntRx = int(p.UbUmocNtphCntRx)
+	stats.UbMemPktCntRx = int(p.UbMemPktCntRx)
+	stats.UnknownPktCntRx = int(p.UnknownPktCntRx)
+	stats.DropIndCntRx = int(p.DropIndCntRx)
+	stats.ErrIndCntRx = int(p.ErrIndCntRx)
+	stats.ToHostPktCntRx = int(p.ToHostPktCntRx)
+	stats.ToImpPktCntRx = int(p.ToImpPktCntRx)
+	stats.ToMarPktCntRx = int(p.ToMarPktCntRx)
+	stats.ToLinkPktCntRx = int(p.ToLinkPktCntRx)
+	stats.ToNocPktCntRx = int(p.ToNocPktCntRx)
+	stats.RouteErrCntRx = int(p.RouteErrCntRx)
+	stats.OutErrCntRx = int(p.OutErrCntRx)
+	stats.LengthErrCntRx = int(p.LengthErrCntRx)
+	stats.RxBusiFlitNum = int(p.RxBusiFlitNum)
+	stats.RxSendAckFlit = int(p.RxSendAckFlit)
+	stats.UbIpv4PktCntTx = int(p.UbGlbIpv4PktCntTx)
+	stats.UbIpv6PktCntTx = int(p.UbGlbIpv6PktCntTx)
+	stats.UnicIpv4PktCntTx = int(p.UnicIpv4PktCntTx)
+	stats.UnicIpv6PktCntTx = int(p.UnicIpv6PktCntTx)
+	stats.UbCompactPktCntTx = int(p.UbClanPktCntTx)
+	stats.UbUmocCtphCntTx = int(p.UbUmocCtphCntTx)
+	stats.UbUmocNtphCntTx = int(p.UbUmocNtphCntTx)
+	stats.UbMemPktCntTx = int(p.UbMemPktCntTx)
+	stats.UnknownPktCntTx = int(p.UnknownPktCntTx)
+	stats.DropIndCntTx = int(p.DropIndCntTx)
+	stats.ErrIndCntTx = int(p.ErrIndCntTx)
+	stats.LpbkIndCntTx = int(p.LpbkIndCntTx)
+	stats.OutErrCntTx = int(p.OutErrCntTx)
+	stats.LengthErrCntTx = int(p.LengthErrCntTx)
+	stats.TxBusiFlitNum = int(p.TxBusiFlitNum)
+	stats.TxRecvAckFlit = int(p.TxRecvAckFlit)
+	stats.RetryReqSum = int(p.RetryReqSum)
+	stats.RetryAckSum = int(p.RetryAckSum)
+	stats.CrcErrorSum = int(p.CrcErrorSum)
+}
+
+func convertDcmiUboeExtensions(ext *common.UBOEExtensions, p *common.PortPktStatsInfo) {
+	ext.CoreMibRxPausePkts = int(p.CoreMibRxPausePkts)
+	ext.CoreMibTxPausePkts = int(p.CoreMibTxPausePkts)
+	ext.CoreMibRxPfcPkts = int(p.CoreMibRxPfcPkts)
+	ext.CoreMibTxPfcPkts = int(p.CoreMibTxPfcPkts)
+	ext.CoreMibRxBadPkts = int(p.CoreMibRxBadPkts)
+	ext.CoreMibTxBadPkts = int(p.CoreMibTxBadPkts)
+	ext.CoreMibRxBadOctets = int(p.CoreMibRxBadOctets)
+	ext.CoreMibTxBadOctets = int(p.CoreMibTxBadOctets)
 }
 
 func convertUboeExtensions(ubInfos *common.UBInfo, ubInfo map[string]string) {

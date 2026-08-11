@@ -183,6 +183,8 @@ const (
 
 	// NotSupportErrorCode for not support error code
 	NotSupportErrorCode = "-8255"
+	// FuncNotFoundErrorCode for function missing error code
+	FuncNotFoundErrorCode = "-99998"
 )
 
 const (

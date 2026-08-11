@@ -191,6 +191,10 @@ func TestRegister(t *testing.T) {
 		patches.ApplyMethodReturn(&metrics.RoceCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.OpticalCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.UbCollector{}, "IsSupported", true)
+		patches.ApplyMethodReturn(&metrics.UbCollector{}, "SupportDcmi", true)
+		patches.ApplyMethodReturn(&metrics.NetworkCollector{}, "SupportDcmi", false)
+		patches.ApplyMethodReturn(&metrics.RoceCollector{}, "SupportDcmi", false)
+		patches.ApplyMethodReturn(&metrics.OpticalCollector{}, "SupportDcmi", false)
 		patches.ApplyFunc(loadConfiguration, func() {
 			initConfiguration(loadFromFile("../../build/metricConfiguration.json"), &presetConfigs, defaultPresetConfigs)
 			initConfiguration(loadFromFile("../../build/pluginConfiguration.json"), &pluginConfigs, defaultPluginConfigs)

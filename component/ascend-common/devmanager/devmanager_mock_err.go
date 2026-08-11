@@ -416,3 +416,8 @@ func (d *DeviceManagerMockErr) GetMultiDiePolicy() (dcmi.DiePolicyType, error) {
 func (d *DeviceManagerMockErr) SetMultiDiePolicy(policy dcmi.DiePolicyType) error {
 	return errors.New(errorMsg)
 }
+
+// GetPortPktStatsInfo get UB port packet statistics
+func (d *DeviceManagerMockErr) GetPortPktStatsInfo(logicID int32, udieID, portID int32) (*common.PortPktStatsInfo, error) {
+	return nil, errors.New(errorMsg)
+}

@@ -117,6 +117,8 @@ type DeviceInterface interface {
 	// Deprecated: Use SetValidMainBoardInfo in DeviceCommonSetInterface and GetMainBoardId instead
 	GetValidMainBoardInfo() (uint32, error)
 	WaitDeviceOnline(resetTimeout int)
+	// GetPortPktStatsInfo get UB port packet statistics for A5
+	GetPortPktStatsInfo(logicID int32, udieID, portID int32) (*common.PortPktStatsInfo, error)
 }
 
 const (
@@ -739,6 +741,11 @@ func (d *DeviceManager) GetDeviceHbmInfo(logicID int32) (*common.HbmInfo, error)
 	}
 
 	return hbmInfo, nil
+}
+
+// GetPortPktStatsInfo not supported in dcmi v1
+func (d *DeviceManager) GetPortPktStatsInfo(logicID int32, udieID, portID int32) (*common.PortPktStatsInfo, error) {
+	return nil, fmt.Errorf("not support in dcmi v1 api")
 }
 
 // GetDeviceErrorCode get npu device error code

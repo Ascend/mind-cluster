@@ -257,6 +257,12 @@ package dcmi
         CALL_FUNC(dcmiv2_get_eid_list_by_urma_dev_index, dev_id, dev_index, eid_list, eid_cnt)
     }
 
+    static int (*dcmiv2_get_port_pkt_stats_info_func)(int, struct dcmi_ub_port_info*,
+                struct dcmi_port_pkt_stats_info*);
+    static int dcmiv2_get_port_pkt_stats_info(int dev_id, struct dcmi_ub_port_info *ub_port_info,
+                struct dcmi_port_pkt_stats_info *port_pkt_stats_info){
+        CALL_FUNC(dcmiv2_get_port_pkt_stats_info, dev_id, ub_port_info, port_pkt_stats_info)
+    }
 
     // load .so files and functions
     static int dcmiv2Init_dl(const char* dcmiLibPath){
@@ -309,6 +315,7 @@ package dcmi
         dcmiv2_stop_ub_ping_mesh_func = dlsym(dcmiHandle,"dcmiv2_stop_ub_ping_mesh");
         dcmiv2_get_ub_ping_mesh_info_func = dlsym(dcmiHandle,"dcmiv2_get_ub_ping_mesh_info");
         dcmiv2_get_ub_ping_mesh_state_func = dlsym(dcmiHandle,"dcmiv2_get_ub_ping_mesh_state");
+        dcmiv2_get_port_pkt_stats_info_func = dlsym(dcmiHandle,"dcmiv2_get_port_pkt_stats_info");
         return SUCCESS;
     }
 
@@ -386,6 +393,7 @@ type DcV2DriverInterface interface {
 	DcStopUbPingMesh(logicID int32, taskID uint) error
 	DcGetUbPingMeshInfo(int32, uint, int) (*common.HccspingMeshInfo, error)
 	DcGetUbPingMeshState(logicID int32, taskID uint) (int, error)
+	DcGetPortPktStatsInfo(logicID int32, udieID, portID int32) (*common.PortPktStatsInfo, error)
 }
 
 // DcV2Manager for manager dcmi interface
@@ -1524,5 +1532,71 @@ func (d *DcV2Manager) DcGetCardElabel(logicID int32) (common.ElabelInfo, error) 
 		Manufacturer:     C.GoString(&elabelInfo.manufacturer[0]),
 		ManufacturerDate: C.GoString(&elabelInfo.manufacturer_date[0]),
 		SerialNumber:     C.GoString(&elabelInfo.serial_number[0]),
+	}, nil
+}
+
+// DcGetPortPktStatsInfo get UB port packet statistics
+func (d *DcV2Manager) DcGetPortPktStatsInfo(logicID int32, udieID, portID int32) (*common.PortPktStatsInfo, error) {
+	if !common.IsValidLogicIDOrPhyID(logicID) {
+		return nil, fmt.Errorf("logicID(%d) is invalid", logicID)
+	}
+	portInfo := C.struct_dcmi_ub_port_info{
+		udie_id: C.int(udieID),
+		port_id: C.int(portID),
+	}
+	var stats C.struct_dcmi_port_pkt_stats_info
+	if retCode := C.dcmiv2_get_port_pkt_stats_info(C.int(logicID), &portInfo, &stats); int32(retCode) != common.Success {
+		return nil, buildDcmiV2Err(logicID, "port pkt stats", retCode)
+	}
+	return &common.PortPktStatsInfo{
+		PortMode:           int(stats.port_mode),
+		UbGlbIpv4PktCntRx:  uint64(stats.ub_glb_ipv4_pkt_cnt_rx),
+		UbGlbIpv6PktCntRx:  uint64(stats.ub_glb_ipv6_pkt_cnt_rx),
+		UnicIpv4PktCntRx:   uint64(stats.unic_ipv4_pkt_cnt_rx),
+		UnicIpv6PktCntRx:   uint64(stats.unic_ipv6_pkt_cnt_rx),
+		UbClanPktCntRx:     uint64(stats.ub_clan_pkt_cnt_rx),
+		UbUmocCtphCntRx:    uint64(stats.ub_umoc_ctph_cnt_rx),
+		UbUmocNtphCntRx:    uint64(stats.ub_umoc_ntph_cnt_rx),
+		UbMemPktCntRx:      uint64(stats.ub_mem_pkt_cnt_rx),
+		UnknownPktCntRx:    uint64(stats.unknown_pkt_cnt_rx),
+		DropIndCntRx:       uint64(stats.drop_ind_cnt_rx),
+		ErrIndCntRx:        uint64(stats.err_ind_cnt_rx),
+		ToHostPktCntRx:     uint64(stats.to_host_pkt_cnt_rx),
+		ToImpPktCntRx:      uint64(stats.to_imp_pkt_cnt_rx),
+		ToMarPktCntRx:      uint64(stats.to_mar_pkt_cnt_rx),
+		ToLinkPktCntRx:     uint64(stats.to_link_pkt_cnt_rx),
+		ToNocPktCntRx:      uint64(stats.to_noc_pkt_cnt_rx),
+		RouteErrCntRx:      uint64(stats.route_err_cnt_rx),
+		OutErrCntRx:        uint64(stats.out_err_cnt_rx),
+		LengthErrCntRx:     uint64(stats.length_err_cnt_rx),
+		RxBusiFlitNum:      uint64(stats.rx_busi_flit_num),
+		RxSendAckFlit:      uint64(stats.rx_send_ack_flit),
+		UbGlbIpv4PktCntTx:  uint64(stats.ub_glb_ipv4_pkt_cnt_tx),
+		UbGlbIpv6PktCntTx:  uint64(stats.ub_glb_ipv6_pkt_cnt_tx),
+		UnicIpv4PktCntTx:   uint64(stats.unic_ipv4_pkt_cnt_tx),
+		UnicIpv6PktCntTx:   uint64(stats.unic_ipv6_pkt_cnt_tx),
+		UbClanPktCntTx:     uint64(stats.ub_clan_pkt_cnt_tx),
+		UbUmocCtphCntTx:    uint64(stats.ub_umoc_ctph_cnt_tx),
+		UbUmocNtphCntTx:    uint64(stats.ub_umoc_ntph_cnt_tx),
+		UbMemPktCntTx:      uint64(stats.ub_mem_pkt_cnt_tx),
+		UnknownPktCntTx:    uint64(stats.unknown_pkt_cnt_tx),
+		DropIndCntTx:       uint64(stats.drop_ind_cnt_tx),
+		ErrIndCntTx:        uint64(stats.err_ind_cnt_tx),
+		LpbkIndCntTx:       uint64(stats.lpbk_ind_cnt_tx),
+		OutErrCntTx:        uint64(stats.out_err_cnt_tx),
+		LengthErrCntTx:     uint64(stats.length_err_cnt_tx),
+		TxBusiFlitNum:      uint64(stats.tx_busi_flit_num),
+		TxRecvAckFlit:      uint64(stats.tx_recv_ack_flit),
+		RetryReqSum:        uint64(stats.retry_req_sum),
+		RetryAckSum:        uint64(stats.retry_ack_sum),
+		CrcErrorSum:        uint64(stats.crc_error_sum),
+		CoreMibRxPausePkts: uint64(stats.core_mib_rxpausepkts),
+		CoreMibTxPausePkts: uint64(stats.core_mib_txpausepkts),
+		CoreMibRxPfcPkts:   uint64(stats.core_mib_rxpfcpkts),
+		CoreMibTxPfcPkts:   uint64(stats.core_mib_txpfcpkts),
+		CoreMibRxBadPkts:   uint64(stats.core_mib_rxbadpkts),
+		CoreMibTxBadPkts:   uint64(stats.core_mib_txbadpkts),
+		CoreMibRxBadOctets: uint64(stats.core_mib_rxbadoctets),
+		CoreMibTxBadOctets: uint64(stats.core_mib_txbadoctets),
 	}, nil
 }
