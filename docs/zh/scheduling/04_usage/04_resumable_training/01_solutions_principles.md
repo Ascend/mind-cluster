@@ -873,7 +873,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 
     >[!NOTE]
     >- 如无该环境变量，默认会落盘到名为default\_task\_id\_<i>时间戳</i>的文件夹内。
-    >- /user/cluster-info/profiling达到配置的上限大小（PyTorch场景参考[4.b](#li23023)；MindSpore场景参考[3.b](#li2302301)）后，将进行文件老化，默认每次删除修改时间最早的20%个文件。老化过程中仅删除profiling目录下rank文件夹中的以数字命名的文件，建议不手动添加其他文件到profiling文件夹下。如果用户手动添加其他文件，TaskD不会将该文件删除，但该文件会占用空间。
+    >- /user/cluster-info/profiling达到配置的上限大小（PyTorch场景参考[4.b](#li23023)；MindSpore场景参考[3.b](#li2302301)）后，将进行文件老化，默认每次删除修改时间最早的20%个文件。
     >- 轻量profiling文件以时间戳命名，各条记录以换行分割，每次追加写入rank下最新文件。最新文件大小超过10MB时，TaskD会新建profiling文件。如果使用NFS等网络存储方式，当数据同步较慢时，可能存在文件大小未达到10MB即创建新文件的情况。
 
 #### 使用其他版本TaskD<a name="ZH-CN_TOPIC_0000002511346483"></a>
@@ -1181,7 +1181,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 
     >[!NOTE]
     >- 如无该环境变量，默认会落盘到名为default\_task\_id\_<i>时间戳</i>的文件夹内。
-    >- /user/cluster-info/profiling达到配置的上限大小（PyTorch场景参考[步骤5](#li230238965)；MindSpore场景参考[步骤3](#li23023896501)）后，将进行文件老化，默认每次删除修改时间最早的20%个文件。老化过程中仅删除profiling目录下rank文件夹中的以数字命名的文件，建议不手动添加其他文件到profiling文件夹下。如果用户手动添加其他文件，TaskD不会将该文件删除，但该文件会占用空间。
+    >- /user/cluster-info/profiling达到配置的上限大小（PyTorch场景参考[步骤5](#li230238965)；MindSpore场景参考[步骤3](#li23023896501)）后，将进行文件老化，默认每次删除修改时间最早的20%个文件。
     >- 轻量profiling文件以时间戳命名，各条记录以换行分割，每次追加写入rank下最新文件。最新文件大小超过10MB时，TaskD会新建profiling文件。如果使用NFS等网络存储方式，当数据同步较慢时，可能存在文件大小未达到10MB即创建新文件的情况。
 
 ### 慢节点&慢网络故障<a name="ZH-CN_TOPIC_0000002511426421"></a>
