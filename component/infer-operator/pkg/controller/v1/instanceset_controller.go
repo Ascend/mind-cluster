@@ -322,6 +322,7 @@ func (r *InstanceSetReconciler) updateStatus(ctx context.Context, instanceSet *a
 		return nil
 	}
 	indexer := common.InstanceIndexer{
+		Namespace:      instanceSet.Namespace,
 		ServiceName:    instanceSet.Labels[common.InferServiceNameLabelKey],
 		InstanceSetKey: instanceSet.Labels[common.InstanceSetNameLabelKey],
 	}
