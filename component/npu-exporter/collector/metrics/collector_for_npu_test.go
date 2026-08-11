@@ -19,6 +19,7 @@ import (
 	"errors"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/prometheus/client_golang/prometheus"
@@ -334,6 +335,184 @@ func TestGetHealthCode(t *testing.T) {
 		convey.Convey(tt.name, t, func() {
 			result := getHealthCode(tt.healthStatus)
 			convey.So(result, convey.ShouldEqual, tt.expectCode)
+		})
+	}
+}
+
+type countHealthStatusTestCase struct {
+	name            string
+	chips           []colcommon.HuaWeiAIChip
+	caches          map[int32]chipCache
+	expectHealthy   int32
+	expectUnhealthy int32
+	expectUnknown   int32
+}
+
+func buildCountHealthStatusTestCases() []countHealthStatusTestCase {
+	return []countHealthStatusTestCase{
+		{
+			name:  "should count all healthy chips",
+			chips: []colcommon.HuaWeiAIChip{{PhyId: 0}, {PhyId: 1}},
+			caches: map[int32]chipCache{
+				0: {HealthStatus: colcommon.Healthy},
+				1: {HealthStatus: colcommon.Healthy},
+			},
+			expectHealthy:   2,
+			expectUnhealthy: 0,
+			expectUnknown:   0,
+		},
+		{
+			name:  "should count mixed health statuses",
+			chips: []colcommon.HuaWeiAIChip{{PhyId: 0}, {PhyId: 1}, {PhyId: 2}, {PhyId: 3}},
+			caches: map[int32]chipCache{
+				0: {HealthStatus: colcommon.Healthy},
+				1: {HealthStatus: colcommon.UnHealthy},
+				2: {HealthStatus: colcommon.Unknown},
+				3: {HealthStatus: colcommon.UnHealthy},
+			},
+			expectHealthy:   1,
+			expectUnhealthy: 2,
+			expectUnknown:   1,
+		},
+		{
+			name:  "should count chips missing from cache as unknown",
+			chips: []colcommon.HuaWeiAIChip{{PhyId: 0}, {PhyId: 1}},
+			caches: map[int32]chipCache{
+				0: {HealthStatus: colcommon.Healthy},
+			},
+			expectHealthy:   1,
+			expectUnhealthy: 0,
+			expectUnknown:   1,
+		},
+		{
+			name:  "should treat unsupported health status as unknown",
+			chips: []colcommon.HuaWeiAIChip{{PhyId: 0}, {PhyId: 1}},
+			caches: map[int32]chipCache{
+				0: {HealthStatus: colcommon.Healthy},
+				1: {HealthStatus: ""},
+			},
+			expectHealthy:   1,
+			expectUnhealthy: 0,
+			expectUnknown:   1,
+		},
+		{
+			name:            "should return zero when no chips",
+			chips:           []colcommon.HuaWeiAIChip{},
+			caches:          map[int32]chipCache{0: {HealthStatus: colcommon.Healthy}},
+			expectHealthy:   0,
+			expectUnhealthy: 0,
+			expectUnknown:   0,
+		},
+	}
+}
+
+func TestCountHealthStatus(t *testing.T) {
+	for _, tt := range buildCountHealthStatusTestCases() {
+		convey.Convey(tt.name, t, func() {
+			healthy, unhealthy, unknown := countHealthStatus(tt.chips, tt.caches)
+			convey.So(healthy, convey.ShouldEqual, tt.expectHealthy)
+			convey.So(unhealthy, convey.ShouldEqual, tt.expectUnhealthy)
+			convey.So(unknown, convey.ShouldEqual, tt.expectUnknown)
+		})
+	}
+}
+
+// replayCollector re-emits pre-built metrics into a registry so they can be gathered by name.
+type replayCollector struct {
+	metrics []prometheus.Metric
+}
+
+func (c *replayCollector) Describe(_ chan<- *prometheus.Desc) {}
+
+func (c *replayCollector) Collect(out chan<- prometheus.Metric) {
+	for _, m := range c.metrics {
+		out <- m
+	}
+}
+
+// gatherGaugeValues drains ch and returns gauge values keyed by metric name.
+func gatherGaugeValues(ch chan prometheus.Metric) map[string]float64 {
+	metrics := make([]prometheus.Metric, 0)
+	for m := range ch {
+		metrics = append(metrics, m)
+	}
+	registry := prometheus.NewRegistry()
+	registry.MustRegister(&replayCollector{metrics: metrics})
+	families, err := registry.Gather()
+	if err != nil {
+		return map[string]float64{}
+	}
+	values := make(map[string]float64)
+	for _, family := range families {
+		for _, metric := range family.GetMetric() {
+			if gauge := metric.GetGauge(); gauge != nil {
+				values[family.GetName()] = gauge.GetValue()
+			}
+		}
+	}
+	return values
+}
+
+func mockChipCacheWithHealth(n *colcommon.NpuCollector, c *BaseInfoCollector, chips []colcommon.HuaWeiAIChip,
+	healthByPhyID map[int32]string) {
+	localCache := sync.Map{}
+	for _, chip := range chips {
+		status := healthByPhyID[chip.PhyId]
+		if status == "" {
+			status = colcommon.Healthy
+		}
+		localCache.Store(chip.PhyId, chipCache{chip: chip, timestamp: time.Now(), HealthStatus: status,
+			ErrorCodes: []int64{0}, Temperature: 0, Power: 0, Voltage: 0, AICoreCurrentFreq: 0,
+			NetHealthStatus: colcommon.Healthy, DevProcessInfo: mockProcessInfo()})
+	}
+	colcommon.UpdateCache[chipCache](n, colcommon.GetCacheKey(c), &localCache)
+}
+
+func TestUpdatePrometheusMachineHealthMetrics(t *testing.T) {
+	for _, tt := range []struct {
+		name            string
+		healthByPhyID   map[int32]string
+		expectHealthy   float64
+		expectUnhealthy float64
+		expectUnknown   float64
+	}{
+		{
+			name:            "should report all healthy chips",
+			healthByPhyID:   map[int32]string{},
+			expectHealthy:   float64(maxChipNum),
+			expectUnhealthy: 0,
+			expectUnknown:   0,
+		},
+		{
+			name: "should report mixed health statuses",
+			healthByPhyID: map[int32]string{
+				0: colcommon.Healthy,
+				1: colcommon.UnHealthy,
+				2: colcommon.UnHealthy,
+				3: colcommon.Unknown,
+			},
+			expectHealthy:   5,
+			expectUnhealthy: 2,
+			expectUnknown:   1,
+		},
+	} {
+		convey.Convey(tt.name, t, func() {
+			n := mockNewNpuCollector()
+			c := &BaseInfoCollector{}
+			chips := mockGetNPUChipList()
+			mockChipCacheWithHealth(n, c, chips, tt.healthByPhyID)
+
+			ch := make(chan prometheus.Metric, maxMetricsCount)
+			go func() {
+				defer close(ch)
+				c.UpdatePrometheus(ch, n, mockGetContainerNPUInfo(), chips)
+			}()
+
+			values := gatherGaugeValues(ch)
+			convey.So(values["machine_npu_nums"], convey.ShouldEqual, float64(len(chips)))
+			convey.So(values["machine_healthy_npu_nums"], convey.ShouldEqual, tt.expectHealthy)
+			convey.So(values["machine_unhealthy_npu_nums"], convey.ShouldEqual, tt.expectUnhealthy)
+			convey.So(values["machine_unknown_npu_nums"], convey.ShouldEqual, tt.expectUnknown)
 		})
 	}
 }

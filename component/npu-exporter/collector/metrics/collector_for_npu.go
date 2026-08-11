@@ -58,8 +58,12 @@ var (
 )
 
 var (
-	machineInfoNPUDesc  = colcommon.BuildDescWithLabel("machine_npu_nums", "Amount of npu installed on the machine.", nil)
-	machineInfoCardDesc = prometheus.NewDesc("machine_card_nums", "Amount of card installed on the machine.", nil, nil)
+	machineInfoNPUDesc   = colcommon.BuildDescWithLabel("machine_npu_nums", "Amount of npu installed on the machine.", nil)
+	machineInfoCardDesc  = prometheus.NewDesc("machine_card_nums", "Amount of card installed on the machine.", nil, nil)
+	machineHealthyDesc   = colcommon.BuildDescWithLabel("machine_healthy_npu_nums", "Amount of healthy npu on the machine.", nil)
+	machineUnhealthyDesc = colcommon.BuildDescWithLabel("machine_unhealthy_npu_nums", "Amount of unhealthy npu on the machine.", nil)
+	machineUnknownDesc   = colcommon.BuildDescWithLabel("machine_unknown_npu_nums",
+		"Amount of the npus whose health status cannot be obtained via DCMI interface on the machine.", nil)
 
 	descTemp    = colcommon.BuildDesc("npu_chip_info_temperature", "the npu temperature")
 	descPower   = colcommon.BuildDesc("npu_chip_info_power", "the npu power")
@@ -143,6 +147,9 @@ func (c *BaseInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 	// base info
 	ch <- machineInfoNPUDesc
 	ch <- machineInfoCardDesc
+	ch <- machineHealthyDesc
+	ch <- machineUnhealthyDesc
+	ch <- machineUnknownDesc
 	ch <- descTemp
 	ch <- descPower
 	ch <- descVoltage
@@ -282,6 +289,11 @@ func (c *BaseInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *col
 	updateFrame[chipCache](colcommon.GetCacheKey(c), n, containerMap, chips, updateSingleChip)
 	updateMachineInfoCardMetric(ch, &c.LocalCache)
 	ch <- prometheus.MustNewConstMetric(machineInfoNPUDesc, prometheus.GaugeValue, float64(len(chips)))
+
+	healthyNum, unhealthyNum, unknownNum := countHealthStatus(chips, getChipCaches(n, c))
+	ch <- prometheus.MustNewConstMetric(machineHealthyDesc, prometheus.GaugeValue, float64(healthyNum))
+	ch <- prometheus.MustNewConstMetric(machineUnhealthyDesc, prometheus.GaugeValue, float64(unhealthyNum))
+	ch <- prometheus.MustNewConstMetric(machineUnknownDesc, prometheus.GaugeValue, float64(unknownNum))
 }
 
 func updateMachineInfoCardMetric(ch chan<- prometheus.Metric, localCache *sync.Map) {
@@ -354,7 +366,7 @@ func updateProcessInfoForPrometheus(ch chan<- prometheus.Metric, chip *chipCache
 // UpdateTelegraf updates the base info of the chip
 func (c *BaseInfoCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
-	caches := colcommon.GetInfoFromCache[chipCache](n, colcommon.GetCacheKey(c))
+	caches := getChipCaches(n, c)
 	for _, chip := range chips {
 		cache, ok := caches[chip.PhyId]
 		if !ok {
@@ -390,6 +402,10 @@ func (c *BaseInfoCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n
 		doUpdateTelegraf(metric.Fields, machineInfoCardDesc, machineInfoCardCache, "")
 	}
 	doUpdateTelegraf(metric.Fields, machineInfoNPUDesc, len(chips), "")
+	healthyNum, unhealthyNum, unknownNum := countHealthStatus(chips, caches)
+	doUpdateTelegraf(metric.Fields, machineHealthyDesc, healthyNum, "")
+	doUpdateTelegraf(metric.Fields, machineUnhealthyDesc, unhealthyNum, "")
+	doUpdateTelegraf(metric.Fields, machineUnknownDesc, unknownNum, "")
 	ch <- metric
 }
 
@@ -485,4 +501,31 @@ func isSupportNetworkHealthDevices(devType string, mainBoardId uint32) bool {
 		return false
 	}
 	return true
+}
+
+func getChipCaches(n *colcommon.NpuCollector, c *BaseInfoCollector) map[int32]chipCache {
+	return colcommon.GetInfoFromCache[chipCache](n, colcommon.GetCacheKey(c))
+}
+
+// countHealthStatus counts the health status of the chips on the machine.
+// The count is derived from the current chip list so that healthy+unhealthy+unknown
+// always equals len(chips). Chips whose health status is unknown or not yet cached
+// are counted as unknown.
+func countHealthStatus(chips []colcommon.HuaWeiAIChip, caches map[int32]chipCache) (healthy, unhealthy, unknown int32) {
+	for _, chip := range chips {
+		cache, ok := caches[chip.PhyId]
+		if !ok {
+			unknown++
+			continue
+		}
+		switch cache.HealthStatus {
+		case colcommon.Healthy:
+			healthy++
+		case colcommon.UnHealthy:
+			unhealthy++
+		default:
+			unknown++
+		}
+	}
+	return
 }
