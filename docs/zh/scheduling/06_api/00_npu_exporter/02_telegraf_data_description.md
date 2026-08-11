@@ -105,7 +105,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" width="19.68%" headers="mcps1.2.6.1.4 "><p id="p19999944144617"><a name="p19999944144617"></a><a name="p19999944144617"></a>单位：个</p>
 </td>
-<td class="cellrowborder" rowspan="12" valign="top" width="23.94%" headers="mcps1.2.6.1.5 "><a name="ul1142611144613"></a><a name="ul1142611144613"></a><ul id="ul1142611144613"><li>Atlas 训练系列产品</li><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>推理服务器（插Atlas 300I 推理卡）</li><li>Atlas 推理系列产品</li><li><span id="ph279972618380"><a name="ph279972618380"></a><a name="ph279972618380"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph1823654413571"><a name="ph1823654413571"></a><a name="ph1823654413571"></a>A200I A2 Box 异构组件</span></li><li><span>Atlas 350 标卡</span></li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>
+<td class="cellrowborder" rowspan="15" valign="top" width="23.94%" headers="mcps1.2.6.1.5 "><a name="ul1142611144613"></a><a name="ul1142611144613"></a><ul id="ul1142611144613"><li>Atlas 训练系列产品</li><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>推理服务器（插Atlas 300I 推理卡）</li><li>Atlas 推理系列产品</li><li><span id="ph279972618380"><a name="ph279972618380"></a><a name="ph279972618380"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph1823654413571"><a name="ph1823654413571"></a><a name="ph1823654413571"></a>A200I A2 Box 异构组件</span></li><li><span>Atlas 350 标卡</span></li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>
 <p id="p72006546535"><a name="p72006546535"></a><a name="p72006546535"></a></p>
 <p id="p4385659175311"><a name="p4385659175311"></a><a name="p4385659175311"></a></p>
 <p id="p11457148195318"><a name="p11457148195318"></a><a name="p11457148195318"></a></p>
@@ -125,6 +125,33 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 <p id="p1945262715417"><a name="p1945262715417"></a><a name="p1945262715417"></a></p>
 <p id="p156813447544"><a name="p156813447544"></a><a name="p156813447544"></a></p>
 <p id="p589672265514"><a name="p589672265514"></a><a name="p589672265514"></a></p>
+</td>
+</tr>
+<tr id="row_machine_healthy_npu_nums"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p_machine_healthy_npu_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p_machine_healthy_npu_nums_name">machine_healthy_npu_nums</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p_machine_healthy_npu_nums_desc">昇腾AI处理器健康数目</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p_machine_healthy_npu_nums_unit">单位：个</p>
+</td>
+</tr>
+<tr id="row_machine_unhealthy_npu_nums"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p_machine_unhealthy_npu_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p_machine_unhealthy_npu_nums_name">machine_unhealthy_npu_nums</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p_machine_unhealthy_npu_nums_desc">昇腾AI处理器故障数目</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p_machine_unhealthy_npu_nums_unit">单位：个</p>
+</td>
+</tr>
+<tr id="row_machine_unknown_npu_nums"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p_machine_unknown_npu_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p_machine_unknown_npu_nums_name">machine_unknown_npu_nums</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p_machine_unknown_npu_nums_desc">无法通过DCMI接口获取健康状态的昇腾AI处理器数目</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p_machine_unknown_npu_nums_unit">单位：个</p>
 </td>
 </tr>
 <tr id="row1883144115448"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p18433255105719"><a name="p18433255105719"></a><a name="p18433255105719"></a>NPU</p>

@@ -25,6 +25,15 @@
 # HELP machine_npu_nums Amount of npu installed on the machine.
 # TYPE machine_npu_nums gauge
 machine_npu_nums 8
+# HELP machine_healthy_npu_nums Amount of healthy npu on the machine.
+# TYPE machine_healthy_npu_nums gauge
+machine_healthy_npu_nums 6
+# HELP machine_unhealthy_npu_nums Amount of unhealthy npu on the machine.
+# TYPE machine_unhealthy_npu_nums gauge
+machine_unhealthy_npu_nums 1
+# HELP machine_unknown_npu_nums Amount of the npus whose health status cannot be obtained via DCMI interface on the machine.
+# TYPE machine_unknown_npu_nums gauge
+machine_unknown_npu_nums 1
 # HELP machine_card_nums Amount of card installed on the machine.
 # TYPE machine_card_nums gauge
 machine_card_nums 8
@@ -158,10 +167,43 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10.77%" headers="mcps1.2.7.1.5 "><p id="p114201174619"><a name="p114201174619"></a><a name="p114201174619"></a>单位：个</p>
 </td>
-<td class="cellrowborder" rowspan="12" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><a name="ul16872655115116"></a><a name="ul16872655115116"></a><ul id="ul16872655115116"><li>Atlas 训练系列产品</li><li>Atlas A2 训练系列产品</li></ul>
+<td class="cellrowborder" rowspan="15" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><a name="ul16872655115116"></a><a name="ul16872655115116"></a><ul id="ul16872655115116"><li>Atlas 训练系列产品</li><li>Atlas A2 训练系列产品</li></ul>
 <a name="ul13196335219"></a><a name="ul13196335219"></a><ul id="ul13196335219"><li>Atlas A3 训练系列产品</li><li>推理服务器（插Atlas 300I 推理卡）</li></ul>
 <a name="ul199548911521"></a><a name="ul199548911521"></a><ul id="ul199548911521"><li>Atlas 推理系列产品</li><li><span id="ph328863144019"><a name="ph328863144019"></a><a name="ph328863144019"></a>Atlas 800I A2 推理服务器</span></li></ul>
 <a name="ul12630181715213"></a><a name="ul12630181715213"></a><ul id="ul12630181715213"><li><span id="ph14798132394418"><a name="ph14798132394418"></a><a name="ph14798132394418"></a>A200I A2 Box 异构组件</span></li></ul><ul><li><span>Atlas 350 标卡</span></li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>
+</td>
+</tr>
+<tr id="row_machine_healthy_npu_nums"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p_machine_healthy_npu_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p_machine_healthy_npu_nums_name">machine_healthy_npu_nums</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p_machine_healthy_npu_nums_desc"><span>昇腾AI处理器</span>健康数目</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p_machine_healthy_npu_nums_label">-</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p_machine_healthy_npu_nums_unit">单位：个</p>
+</td>
+</tr>
+<tr id="row_machine_unhealthy_npu_nums"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p_machine_unhealthy_npu_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p_machine_unhealthy_npu_nums_name">machine_unhealthy_npu_nums</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p_machine_unhealthy_npu_nums_desc"><span>昇腾AI处理器</span>故障数目</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p_machine_unhealthy_npu_nums_label">-</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p_machine_unhealthy_npu_nums_unit">单位：个</p>
+</td>
+</tr>
+<tr id="row_machine_unknown_npu_nums"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p_machine_unknown_npu_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p_machine_unknown_npu_nums_name">machine_unknown_npu_nums</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p_machine_unknown_npu_nums_desc">无法通过DCMI接口获取健康状态的<span>昇腾AI处理器</span>数目</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p_machine_unknown_npu_nums_label">-</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p_machine_unknown_npu_nums_unit">单位：个</p>
 </td>
 </tr>
 <tr id="row1679397191510"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p3433112131511"><a name="p3433112131511"></a><a name="p3433112131511"></a>NPU</p>
