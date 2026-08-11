@@ -29,6 +29,7 @@ import (
 	"ascend-common/devmanager/hccn"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
+	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 const (
@@ -151,6 +152,13 @@ func (c *OpticalCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	logForUnSupportDevice(isSupport, colcommon.DevType, colcommon.GetCacheKey(c),
 		"only training card supports optical related info")
 	return isSupport
+}
+
+// SupportDcmi returns false for now; will probe dcmi once the interface is ready.
+func (c *OpticalCollector) SupportDcmi(n *colcommon.NpuCollector) bool {
+	c.DcmiSupported = false
+	logger.Infof("[OpticalCollector] dcmi supported: %v", c.DcmiSupported)
+	return c.DcmiSupported
 }
 
 // Describe description of the metric

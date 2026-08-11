@@ -485,6 +485,11 @@ func (d *DeviceManagerV2) GetDeviceHbmInfo(logicID int32) (*common.HbmInfo, erro
 	return hbmInfo, nil
 }
 
+// GetPortPktStatsInfo get UB port packet statistics
+func (d *DeviceManagerV2) GetPortPktStatsInfo(logicID int32, udieID, portID int32) (*common.PortPktStatsInfo, error) {
+	return d.DcMgr.DcGetPortPktStatsInfo(logicID, udieID, portID)
+}
+
 // GetDeviceErrorCode get npu device error code
 func (d *DeviceManagerV2) GetDeviceErrorCode(logicID int32) (int32, int64, error) {
 	errCount, errCode, err := d.DcMgr.DcGetDeviceErrorCode(logicID)

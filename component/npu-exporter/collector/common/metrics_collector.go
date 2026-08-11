@@ -83,6 +83,9 @@ type MetricsCollector interface {
 
 	// IsSupported Check whether the current hardware supports this metric
 	IsSupported(*NpuCollector) bool
+
+	// SupportDcmi reports whether this collector can collect via dcmi instead of hccn_tool.
+	SupportDcmi(*NpuCollector) bool
 }
 
 // MetricsCollectorAdapter base collector for metrics collector
@@ -91,6 +94,9 @@ type MetricsCollectorAdapter struct {
 	Is910Series  bool
 	ContainerMap map[int32]container.DevicesInfo
 	Chips        []HuaWeiAIChip
+	// DcmiSupported caches the result of SupportDcmi. classifyCollectors calls
+	// SupportDcmi once at registration; afterwards callers read DcmiSupported directly.
+	DcmiSupported bool
 }
 
 // Describe report metrics to prometheus
@@ -124,6 +130,11 @@ func (c *MetricsCollectorAdapter) PostCollect(*NpuCollector) {
 
 // IsSupported Check whether the current hardware supports this metric
 func (c *MetricsCollectorAdapter) IsSupported(*NpuCollector) bool {
+	return true
+}
+
+// SupportDcmi default true; multi chain collectors override to probe dcmi.
+func (c *MetricsCollectorAdapter) SupportDcmi(*NpuCollector) bool {
 	return true
 }
 

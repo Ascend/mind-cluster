@@ -26,6 +26,7 @@ import (
 	"ascend-common/devmanager/hccn"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
+	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 const (
@@ -108,6 +109,13 @@ func (c *RoceCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	}
 	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c), "")
 	return isSupport
+}
+
+// SupportDcmi returns false for now; will probe dcmi once the interface is ready.
+func (c *RoceCollector) SupportDcmi(n *colcommon.NpuCollector) bool {
+	c.DcmiSupported = false
+	logger.Infof("[RoceCollector] dcmi supported: %v", c.DcmiSupported)
+	return c.DcmiSupported
 }
 
 // Describe description of the metric

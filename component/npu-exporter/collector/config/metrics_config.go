@@ -30,8 +30,8 @@ import (
 )
 
 var (
-	// singleGoroutineMap metrics in this map will be collected in single goroutine
-	singleGoroutineMap = map[string]common.MetricsCollector{
+	// candidateCollectors holds all preset collectors; split into single/multi maps at Register time.
+	candidateCollectors = map[string]common.MetricsCollector{
 		groupHccs:        &metrics.HccsCollector{},
 		groupNpu:         &metrics.BaseInfoCollector{},
 		groupUtilization: &metrics.UtilizationCollector{},
@@ -42,14 +42,15 @@ var (
 		groupVnpu:        &metrics.VnpuCollector{},
 		groupPcie:        &metrics.PcieCollector{},
 		groupNodeBase:    &metrics.NodeBaseCollector{},
+		groupNetwork:     &metrics.NetworkCollector{},
+		groupRoce:        &metrics.RoceCollector{},
+		groupOptical:     &metrics.OpticalCollector{},
+		groupUb:          &metrics.UbCollector{},
 	}
-	// multiGoroutineMap metrics in this map will be collected in multi goroutine
-	multiGoroutineMap = map[string]common.MetricsCollector{
-		groupNetwork: &metrics.NetworkCollector{},
-		groupRoce:    &metrics.RoceCollector{},
-		groupOptical: &metrics.OpticalCollector{},
-		groupUb:      &metrics.UbCollector{},
-	}
+	// singleGoroutineMap filled by classifyCollectors; SupportDcmi=true collectors go here.
+	singleGoroutineMap = map[string]common.MetricsCollector{}
+	// multiGoroutineMap filled by classifyCollectors; SupportDcmi=false collectors go here.
+	multiGoroutineMap = map[string]common.MetricsCollector{}
 	// pluginCollectorMap metrics in this map will be collected in plugin goroutine
 	pluginCollectorMap = map[string]common.MetricsCollector{}
 	presetConfigs      = make([]MetricsGroupConfig, 0)
@@ -303,9 +304,28 @@ func matchCollectors(validated []validatedConfig, collectorMap map[string]common
 	return collectors, entries
 }
 
+// classifyCollectors splits candidateCollectors into singleGoroutineMap and multiGoroutineMap.
+// IsSupported filters first, then SupportDcmi decides the chain.
+func classifyCollectors(n *common.NpuCollector) {
+	singleGoroutineMap = map[string]common.MetricsCollector{}
+	multiGoroutineMap = map[string]common.MetricsCollector{}
+	for name, c := range candidateCollectors {
+		if !c.IsSupported(n) {
+			continue
+		}
+		if c.SupportDcmi(n) {
+			singleGoroutineMap[name] = c
+		} else {
+			multiGoroutineMap[name] = c
+		}
+	}
+}
+
 // Register registers collectors to cache. It loads configuration files, determines the collection interval
 func Register(n *common.NpuCollector) {
 	loadConfiguration()
+
+	classifyCollectors(n)
 
 	fallbackInterval := n.GetUpdateTime()
 

@@ -62,6 +62,7 @@ type fakeCollector struct {
 
 func (f *fakeCollector) Describe(_ chan<- *prometheus.Desc)               {}
 func (f *fakeCollector) IsSupported(_ *NpuCollector) bool                 { return true }
+func (f *fakeCollector) SupportDcmi(_ *NpuCollector) bool                 { return false }
 func (f *fakeCollector) PreCollect(_ *NpuCollector, _ []HuaWeiAIChip)     {}
 func (f *fakeCollector) CollectToCache(_ *NpuCollector, _ []HuaWeiAIChip) {}
 func (f *fakeCollector) PostCollect(_ *NpuCollector)                      {}

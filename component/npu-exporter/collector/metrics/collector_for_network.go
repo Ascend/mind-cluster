@@ -27,8 +27,10 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
+	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 var (
@@ -97,6 +99,13 @@ func (c *NetworkCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	logForUnSupportDevice(isSupport, colcommon.DevType, colcommon.GetCacheKey(c),
 		"only training card supports network related info")
 	return isSupport
+}
+
+// SupportDcmi returns false for now; will probe dcmi once the interface is ready.
+func (c *NetworkCollector) SupportDcmi(n *colcommon.NpuCollector) bool {
+	c.DcmiSupported = false
+	logger.Infof("[NetworkCollector] dcmi supported: %v", c.DcmiSupported)
+	return c.DcmiSupported
 }
 
 // Describe description of the metric

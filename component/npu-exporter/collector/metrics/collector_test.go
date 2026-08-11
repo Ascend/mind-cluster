@@ -30,7 +30,6 @@ import (
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
-
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 	"huawei.com/npu-exporter/v6/utils/logger"
@@ -175,6 +174,7 @@ func TestCollectToCache(t *testing.T) {
 		patches.ApplyMethodReturn(n.Dmgr, "GetDevicePowerInfo", float32(0), nil)
 		patches.ApplyMethodReturn(n.Dmgr, "GetDeviceUtilizationRate", uint32(0), nil)
 		patches.ApplyMethodReturn(n.Dmgr, "GetDevProcessInfo", mockProcessInfo(), nil)
+		patches.ApplyMethodReturn(n.Dmgr, "GetDeviceList", int32(0), []int32{}, nil)
 
 		chips := mockGetNPUChipList()
 		for _, c := range collectorChain {

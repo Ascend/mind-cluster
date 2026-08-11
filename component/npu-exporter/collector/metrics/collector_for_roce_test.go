@@ -43,3 +43,13 @@ func TestRoceCollectorIsSupported(t *testing.T) {
 		})
 	}
 }
+
+// TestRoceCollectorSupportDcmi tests RoceCollector SupportDcmi
+func TestRoceCollectorSupportDcmi(t *testing.T) {
+	n := mockNewNpuCollector()
+	convey.Convey("returns false and result is cached", t, func() {
+		c := &RoceCollector{}
+		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
+		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
+	})
+}
