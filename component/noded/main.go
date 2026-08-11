@@ -16,6 +16,8 @@
 // Package main
 package main
 
+// Touch entrypoint so CI rebuilds this component after ascend-common boardId updates.
+
 import (
 	"context"
 	"flag"

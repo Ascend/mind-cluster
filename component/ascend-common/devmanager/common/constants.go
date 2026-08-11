@@ -40,7 +40,8 @@ var (
 
 	// a3BoardIds for A3 Board IDs
 	a3BoardIds = sets.NewInt32(A900A3SuperPodBin1BoardId, A900A3SuperPodBin2BoardId,
-		A900A3SuperPodBin3BoardId, A800IA3BoardId, A3SuperPodZQBoardId, A3ServerZQBoardId, A3SuperPodZQNpuBoardId, A3ServerZQNpuBoardId)
+		A900A3SuperPodBin3BoardId, A800IA3BoardId, A800IA3BoardId2, A3SuperPodZQBoardId, A3ServerZQBoardId,
+		A3SuperPodZQNpuBoardId, A3ServerZQNpuBoardId)
 
 	// a900A3SuperPodMainBoardIds for A900 A3 Super Pod Main Board IDs
 	a900A3SuperPodMainBoardIds = sets.NewInt32(A900A3SuperPodMainBoardId1, A900A3SuperPodMainBoardId2)
@@ -237,6 +238,9 @@ const (
 
 	// A800IA3BoardId board id of A800I A3
 	A800IA3BoardId = 0xb3
+
+	// A800IA3BoardId2 board id of A800I A3 additional SKU
+	A800IA3BoardId2 = 0xb4
 
 	// A900A3SuperPodMainBoardId1 board id of A900 A3 SuperPod MainBoard1
 	A900A3SuperPodMainBoardId1 = 0x18
