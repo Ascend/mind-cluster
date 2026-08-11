@@ -21,6 +21,8 @@ import (
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
+
+	"ascend-common/api"
 )
 
 // TestDeepCopyHccsBandwidthInfo TestDeepCopySlice
@@ -159,6 +161,23 @@ func TestIsValidHccspingMeshOperate02(t *testing.T) {
 			op.TaskId = int(ExternalPingMeshTaskID) + 1
 			expectedErr = fmt.Errorf("task id %d is invalid", op.TaskId)
 			check(op, expectedErr)
+		})
+	})
+}
+
+func TestGetDevTypeAndA3BoardIds(t *testing.T) {
+	convey.Convey("GetDevType and A3 board/mainboard helpers", t, func() {
+		convey.Convey("01-When boardId is A800IA3BoardId2 0xb4, GetDevType returns Ascend910A3", func() {
+			convey.So(GetDevType("", A800IA3BoardId2), convey.ShouldEqual, api.Ascend910A3)
+		})
+		convey.Convey("02-When boardId is 0xb4 or existing 0xb3, Is910A3Chip returns true", func() {
+			convey.So(Is910A3Chip(A800IA3BoardId2), convey.ShouldBeTrue)
+			convey.So(Is910A3Chip(A800IA3BoardId), convey.ShouldBeTrue)
+		})
+		convey.Convey("03-When mainBoardId is 0x14, Is800IA3Chip returns true; otherwise false", func() {
+			convey.So(Is800IA3Chip(A800IA3MainBoardId), convey.ShouldBeTrue)
+			convey.So(Is800IA3Chip(0), convey.ShouldBeFalse)
+			convey.So(Is800IA3Chip(A900A3SuperPodMainBoardId1), convey.ShouldBeFalse)
 		})
 	})
 }
