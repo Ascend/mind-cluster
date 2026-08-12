@@ -27,8 +27,9 @@ from ascend_fd_tk.core.collect.fetcher.dump_log_fetcher.bmc.bmc_dump_log_parser 
 from ascend_fd_tk.core.collect.fetcher.dump_log_fetcher.cli_output_parsed_data import CliOutputParsedData
 from ascend_fd_tk.core.collect.fetcher.dump_log_fetcher.host.host_dump_log_fetcher import HostDumpLogFetcher
 from ascend_fd_tk.core.collect.fetcher.dump_log_fetcher.host.host_log_parser_builder import HostLogParserBuilder
-from ascend_fd_tk.core.collect.fetcher.dump_log_fetcher.switch.diag_info_output.collect_diag_info_log_parser import \
-    CollectDiagInfoLogParser
+from ascend_fd_tk.core.collect.fetcher.dump_log_fetcher.switch.diag_info_output.collect_diag_info_log_parser import (
+    CollectDiagInfoLogParser,
+)
 from ascend_fd_tk.core.collect.fetcher.dump_log_fetcher.switch.swi_cli_output_parser import SwiCliOutputParser
 from ascend_fd_tk.core.collect.fetcher.dump_log_fetcher.switch.swi_cli_output_fetcher import SwiCliOutputFetcher
 from ascend_fd_tk.core.collect.fetcher.dump_log_fetcher.switch.switch_log_path_finder import SwitchLogPathFinder
@@ -95,7 +96,7 @@ class InitFetcher(DiagService):
         for conn, future, fetchers_map, fetcher_type in futures:
             success, info = await future
             if not success:
-                DIAG_LOGGER.warning(f"ping {conn.host} failed: {info}")
+                DIAG_LOGGER.warning("ping %s failed: %s", conn.host, info)
                 continue
             async_tasks.append(self._check_and_add_executor(conn, fetchers_map, fetcher_type))
         await asyncio.gather(*async_tasks)
@@ -156,20 +157,26 @@ class InitFetcher(DiagService):
             try:
                 await future
             except Exception as e:
-                DIAG_LOGGER.error(f"文件{targz_abspath}解压任务执行失败: {e}")
+                DIAG_LOGGER.error("文件%s解压任务执行失败: %s", targz_abspath, str(e))
 
     async def _add_host_fetchers(self, host_dump_log_dir: str):
         parsers = HostLogParserBuilder.build(host_dump_log_dir)
         await self._add_file_fetchers_by_parser(self.diag_ctx.host_fetchers, parsers, HostDumpLogFetcher)
 
     async def _add_bmc_fetchers(self, bmc_dump_log_dir: str):
-        log_collect_dirs = file_tool.find_all_sub_paths(bmc_dump_log_dir,
-                                                        constants.TOOL_BMC_LOG_COLLECT_DIR_NAME, self._FIND_DEPTH)
-        parsers = [BmcDumpLogParser(bmc_dump_log_dir, log_collect_dir) for log_collect_dir in log_collect_dirs]
+        log_collect_dirs = file_tool.find_all_sub_paths(
+            bmc_dump_log_dir, constants.TOOL_BMC_LOG_COLLECT_DIR_NAME, self._FIND_DEPTH
+        )
+        parsers = [
+            BmcDumpLogParser(bmc_dump_log_dir, log_collect_dir)
+            for log_collect_dir in log_collect_dirs
+            if os.path.isdir(log_collect_dir)  # 过滤掉名字为dump_info的文件
+        ]
         return await self._add_file_fetchers_by_parser(self.diag_ctx.bmcs_fetchers, parsers, BmcDumpLogFetcher)
 
-    async def _add_file_fetchers_by_parser(self, fetchers_map: Dict, parsers: List[DumpLogDirParser],
-                                           fetcher_type: Type):
+    async def _add_file_fetchers_by_parser(
+        self, fetchers_map: Dict, parsers: List[DumpLogDirParser], fetcher_type: Type
+    ):
         futures = []
         for parser in parsers:
             futures.append([parser.parse_dir, self.diag_ctx.submit_multi_process_task(parser.parse)])
@@ -182,7 +189,7 @@ class InitFetcher(DiagService):
                 fetcher_id = await fetcher.fetch_id()
                 fetchers_map[fetcher_id] = fetcher
             except Exception as e:
-                DIAG_LOGGER.error(f"parse dir {log_collect_dir} failed: {e}")
+                DIAG_LOGGER.error("parse dir %s failed: %s", log_collect_dir, str(e))
 
     async def _add_swi_file_fetchers(self, switch_dump_log_dir: str):
         switch_dump_log_dir = convert_log_path(switch_dump_log_dir)
@@ -200,14 +207,15 @@ class InitFetcher(DiagService):
             file_path = Path(diag_info_log_path)
             zip_abspath = str(file_path)  # 压缩包绝对路径
             zip_dir = str(file_path.parent)  # 压缩包所在目录
-            future = self.diag_ctx.submit_multi_process_task(CompressTool.extract_zip_recursive,
-                                                             zip_abspath, zip_dir, 4)
+            future = self.diag_ctx.submit_multi_process_task(
+                CompressTool.extract_zip_recursive, zip_abspath, zip_dir, 4
+            )
             unzip_futures.append(future)
         for future in unzip_futures:
             try:
                 await future
             except Exception as e:
-                DIAG_LOGGER.error(f"unzip zip failed: {e}")
+                DIAG_LOGGER.error("unzip zip failed: %s", str(e))
 
     async def _parse_cli_and_log(self, switch_dump_log_dir: str) -> Tuple[List[asyncio.Future], List[asyncio.Future]]:
         diag_info_dirs, cli_output_txt_paths = SwitchLogPathFinder.find(switch_dump_log_dir)
@@ -223,8 +231,9 @@ class InitFetcher(DiagService):
             diag_info_futures.append(future)
         return cli_output_futures, diag_info_futures
 
-    async def _add_swi_file_fetcher_by_future(self, cli_output_futures: List[asyncio.Future],
-                                              diag_info_futures: List[asyncio.Future]):
+    async def _add_swi_file_fetcher_by_future(
+        self, cli_output_futures: List[asyncio.Future], diag_info_futures: List[asyncio.Future]
+    ):
         # 获取回显fetcher
         local_fetchers: Dict[str, SwiCliOutputFetcher] = {}
         for future in cli_output_futures:

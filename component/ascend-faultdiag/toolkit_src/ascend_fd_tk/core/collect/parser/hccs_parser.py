@@ -35,7 +35,7 @@ from ascend_fd_tk.core.model.hccs import (
     HccsChipPortSnr,
 )
 from ascend_fd_tk.core.model.switch import PortDownStatus
-from ascend_fd_tk.utils.helpers import to_int
+from ascend_fd_tk.utils.helpers import to_int, split_str
 from ascend_fd_tk.utils.logger import DIAG_LOGGER
 from ascend_fd_tk.utils.table_parser import TableParser
 
@@ -65,6 +65,8 @@ class HccsParser:
     _PORT_STATISTIC_PATTERN = re.compile(
         r'enp s 1 c (?P<chip_id>\d{1,5}) "get port statistic count port (?P<port_id>\d{1,5}) module "(?P<module_id>\d{1,5})"'
     )
+
+    _CHIP_PORT_ID_PATTERN = re.compile(r"chip id:\s{0,3}(\d)\s{0,3}port id:\s{0,3}(\d{1,3})")
 
     @classmethod
     def parse_hccs_proxy_response_statistics(cls, cmd_res: str) -> List[ProxyTimeoutStatis]:
@@ -241,23 +243,21 @@ class HccsParser:
 
     @classmethod
     def parse_hccs_port_snr_table(cls, cmd_res: str) -> List[HccsChipPortSnr]:
-        port_mapping_config_instance = port_mapping_config.get_port_mapping_config_instance()
-        _chip_port_id_regx = re.compile(r"chip id:\s{0,3}(\d)\s{0,3}port id:\s{0,3}(\d{1,3})")
         res = []
         if not cmd_res:
             return res
+        port_mapping_config_instance = port_mapping_config.get_port_mapping_config_instance()
         titles_dict = {"lane_id": "laneId", "snr": "snr"}
-        parts = [part for part in cmd_res.split("display for info enp s 1 c") if part.strip()]
-        for part in parts:
-            if not part.strip():
+        cmd_res_list = split_str(cmd_res, "display for info enp s 1 c")
+        for cmd_res_str in cmd_res_list:
+            match_data = cls._CHIP_PORT_ID_PATTERN.search(cmd_res_str)
+            if not match_data:
                 continue
-            match = _chip_port_id_regx.search(part)
-            if not match:
-                continue
-            for row in TableParser.parse(part, titles_dict):
-                port_snr = HccsChipPortSnr.from_dict(row)
-                port_snr.swi_chip_id = match.group(1)
-                port_snr.port_id = match.group(2)
+            tables = TableParser.parse(cmd_res_str, titles_dict, {}, 1)
+            for table in tables:
+                port_snr = HccsChipPortSnr.from_dict(table)
+                port_snr.swi_chip_id = match_data.group(1)
+                port_snr.port_id = match_data.group(2)
                 port_mapping_instance = port_mapping_config_instance.find_swi_port(
                     str(port_snr.swi_chip_id), phy_id=str(port_snr.port_id)
                 )
