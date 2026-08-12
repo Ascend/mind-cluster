@@ -17,7 +17,7 @@
 >[!NOTE]
 >
 >- 若用户需要保留其中一个容器引擎，需要在Ascend Docker Runtime卸载之后，针对相应场景进行重新安装。
->- 卸载Ascend Docker Runtime会将Docker或Containerd的默认runtime恢复成runc。
+>- 卸载Ascend Docker Runtime会将Docker、Containerd或CRI-O的默认runtime恢复成runc。
 
 1. （可选）关闭pingmesh灵衢网络检测。
     1. 执行以下命令编辑pingmesh-config ConfigMap。
@@ -54,9 +54,16 @@
                 ./Ascend-docker-runtime_{version}_linux-{arch}.run --uninstall --install-scene=containerd
                 ```
 
+            - CRI-O场景
+
+                ```shell
+                ./Ascend-docker-runtime_{version}_linux-{arch}.run --uninstall --install-scene=crio
+                ```
+
             >[!NOTE]
             >- Docker配置文件路径不是默认的“/etc/docker/daemon.json”时，需要新增“--config-file-path”参数，用于指定该配置文件路径。
             >- Containerd的配置文件路径不是默认的“/etc/containerd/config.toml”时，需要新增“--config-file-path”参数，用于指定该配置文件路径。
+            >- CRI-O的drop-in配置文件路径不是默认的“/etc/crio/crio.conf.d/99-ascend-runtime.conf”时，需要新增“--config-file-path”参数，用于指定该配置文件路径。
             >- 如需要卸载指定安装路径下的Ascend Docker Runtime，需要在卸载命令中新增“--install-path=<path\>”参数。
 
             回显示例如下，表示卸载成功。
@@ -89,9 +96,16 @@
                 ./uninstall.sh containerd containerd <config.toml文件路径>
                 ```
 
+            - CRI-O场景
+
+                ```shell
+                uninstall.sh crio crio <crio.conf.d下drop-in文件路径>
+                ```
+
             >[!NOTE]
             >- 可以不指定Docker的配置文件daemon.json路径，不指定时默认使用“/etc/docker/daemon.json”。
             >- 可以不指定Containerd的配置文件config.toml路径，不指定时默认使用“/etc/containerd/config.toml”。
+            >- 可以不指定CRI-O的drop-in文件路径，不指定时默认使用“/etc/crio/crio.conf.d/99-ascend-runtime.conf”。
 
         回显示例如下，表示卸载成功。
 
@@ -113,6 +127,12 @@
 
         ```shell
         systemctl daemon-reload && systemctl restart containerd
+        ```
+
+    - CRI-O场景
+
+        ```shell
+        systemctl daemon-reload && systemctl restart crio
         ```
 
     >[!NOTE]

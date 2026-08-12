@@ -75,9 +75,9 @@ func main() {
 	}
 
 	const helpMessage = "\tadd <config file path> <new config file path> " +
-		"<docker-runtime path> <whether reserve default> <docker or containerd> <cgroup info> <os name> <os version>\n" +
-		"\t rm <config file path> <new config file path> <docker or containerd> <whether reserve default>" +
-		" <docker or containerd> <cgroup info> <os name> <os version>\n" + "\t -h help command"
+		"<docker-runtime path> <whether reserve default> <docker or containerd or crio> <cgroup info> <os name> <os version>\n" +
+		"\t rm <config file path> <new config file path> <whether reserve default>" +
+		" <docker or containerd or crio> <cgroup info> <os name> <os version>\n" + "\t -h help command"
 	helpFlag := flag.Bool("h", false, helpMessage)
 	flag.Parse()
 	if *helpFlag {
@@ -97,6 +97,8 @@ func main() {
 		behavior, err = process.DockerProcess(command)
 	} else if installScene == process.InstallSceneContainerd {
 		behavior, err = process.ContainerdProcess(command)
+	} else if installScene == process.InstallSceneCriO {
+		behavior, err = process.CriOProcess(command)
 	} else {
 		hwlog.RunLog.Errorf("error param: %v", command[len(command)-1])
 		log.Fatalf("error param: %v", command[len(command)-1])

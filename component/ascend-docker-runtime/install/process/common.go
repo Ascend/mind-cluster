@@ -14,6 +14,15 @@
 
 package process
 
+import (
+	"fmt"
+	"os"
+
+	"github.com/pelletier/go-toml"
+
+	"ascend-common/common-utils/hwlog"
+)
+
 func checkParamAndGetBehavior(action string, command []string) (bool, string) {
 	correctParam, behavior := false, ""
 	if action == addCommand && len(command) == addCommandLength {
@@ -30,4 +39,41 @@ func checkParamAndGetBehavior(action string, command []string) (bool, string) {
 // CheckParamLength whether the param length is valid
 func CheckParamLength(command []string) bool {
 	return len(command) == addCommandLength || len(command) == rmCommandLength
+}
+
+// writeTomlConfigToFile marshals the toml tree to destFilePath (created or
+// truncated, mode perm). Shared by the containerd and CRI-O install scenes.
+// Close/Sync errors are captured via the named return so flush-time failures
+// (disk full, NFS, quota) are not silently swallowed.
+func writeTomlConfigToFile(configTree *toml.Tree, destFilePath string) (err error) {
+	if configTree == nil {
+		return fmt.Errorf("config tree is nil")
+	}
+
+	tomlData, err := configTree.Marshal()
+	if err != nil {
+		return fmt.Errorf("unable to convert to TOML: %v", err)
+	}
+
+	file, err := os.OpenFile(destFilePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, perm)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to open file for writing: %v", err)
+		return err
+	}
+	defer func() {
+		if cerr := file.Close(); cerr != nil && err == nil {
+			err = fmt.Errorf("failed to close config file: %v", cerr)
+		}
+	}()
+
+	if _, err = file.Write(tomlData); err != nil {
+		hwlog.RunLog.Errorf("failed to write config to file: %v", err)
+		return err
+	}
+	if err = file.Sync(); err != nil {
+		hwlog.RunLog.Errorf("failed to sync config file: %v", err)
+		return err
+	}
+
+	return nil
 }
