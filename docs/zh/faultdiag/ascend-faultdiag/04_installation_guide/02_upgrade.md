@@ -8,8 +8,8 @@
 
     > [!NOTE]
     >
-    > - version 为 ascend-fd 版本。
-    > - arch 为软件包架构，分为 x86_64 和 aarch64，请根据实际需要修改，可通过 `arch` 命令查看。
+    > - `{version}` 为 ascend-fd 版本。
+    > - `{arch}` 为软件包架构，分为 x86_64 和 aarch64，请根据实际需要修改，可通过 `arch` 命令查看。
     > - 如果版本号相同，可以使用 `--force-reinstall` 参数强制重新安装。
     > - 请确保没有未完成的清洗或诊断任务。
 

@@ -10,27 +10,27 @@
 
 ## 安装步骤
 
-### 1. 获取 WHL 包
+### 1. 获取 Whl 包
 
-通过以下任意一种方式获取 WHL 包。
+通过以下任意一种方式获取 Whl 包。
 
 **方式 1：从发行版本下载**
 
 | 软件包                                                | 子文件                                                          | 说明          | 链接                                                         |
 |-------------------------------------------------------|-----------------------------------------------------------------|-------------|--------------------------------------------------------------|
-| `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag_toolkit-{version}-py3-none-any.whl`          | 链路故障诊断组件安装包 | [下载链接](https://gitcode.com/Ascend/mind-cluster/releases) |
+| `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag_toolkit-{version}-py3-none-any.whl`          | 链路故障诊断组件安装包 | [下载链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0) |
 
 > - `{version}` 为软件包版本号，默认为最新版本。
 > - `{arch}` 为软件包架构，分为 x86_64 和 aarch64，请根据实际需要修改，可通过 `arch` 命令查看。
-> - ascend-fd-tk WHL 包不区分架构。
+> - ascend-fd-tk Whl 包不区分架构。
 > - 为防止软件包在传递过程中或存储期间被恶意篡改，建议校验软件包的 SUM 值。如需对软件包进行 SUM 值校验，请参考[软件包 SUM 值校验](#参考)
 
-解压获取 WHL 包：
+解压获取 Whl 包：
 
 ```bash
 # 解压
 unzip Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip
-# 获取 WHL 包：ascend_faultdiag_toolkit-{version}-py3-none-any.whl
+# 获取 Whl 包：ascend_faultdiag_toolkit-{version}-py3-none-any.whl
 ```
 
 **方式 2：源码编译生成**
@@ -51,15 +51,15 @@ python3 setup.py --version {version} bdist_wheel
 ```
 
 > - `{version}` 为版本号，需替换为实际版本，例：`v1.0.0`。
-> - 根据 Wheel 标准生成 WHL 包名称：`ascend_faultdiag_toolkit-{去掉 version 的前缀 ‘v’ }-py3-none-any.whl`，例：`ascend_faultdiag_toolkit-1.0.0-py3-none-any.whl`
+> - 根据 Wheel 标准生成 Whl 包名称：`ascend_faultdiag_toolkit-{去掉 version 的前缀 ‘v’ }-py3-none-any.whl`，例：`ascend_faultdiag_toolkit-1.0.0-py3-none-any.whl`
 
-生成的 WHL 包位于 `dist/` 目录下：
+生成的 Whl 包位于 `dist/` 目录下：
 
 ```text
 dist/ascend_faultdiag_toolkit-{version}-py3-none-any.whl
 ```
 
-### 2. 安装 WHL 包
+### 2. 安装 Whl 包
 
 安装所需三方依赖库：
 
@@ -96,7 +96,7 @@ ascend-fd-tk about
 
 **软件包 SUM 值校验步骤**：
 
-1. 下载 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum` 文件，[下载链接](https://gitcode.com/Ascend/mind-cluster/releases/)
+1. 下载[Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0)文件
 
 2. 将 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum` 和 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` 放置到同一目录，执行以下命令进行校验：
 
@@ -104,9 +104,9 @@ ascend-fd-tk about
     sha256sum -c Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum
     ```
 
-3. 校验验证
+3. 校验结果
 
-    回显结果如下所示，即代表软件包校验通过。
+    回显示例如下，即代表软件包校验通过。
 
     ```bash
     Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip: OK
