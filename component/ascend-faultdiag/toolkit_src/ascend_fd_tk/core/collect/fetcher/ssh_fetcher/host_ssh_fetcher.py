@@ -31,6 +31,8 @@ _CONSOLE_LOGGER = logger.CONSOLE_LOGGER
 
 
 class HostSshFetcher(SshFetcher, HostFetcher):
+    _ANSI_ESCAPE = re.compile(r'\x1b\[[0-?]*[ -/]*[@-~]')
+
     async def fetch_id(self):
         return self.executor.host
 
@@ -107,12 +109,15 @@ class HostSshFetcher(SshFetcher, HostFetcher):
 
     async def fetch_sn_num(self) -> str:
         command_res = await self.executor.run_cmd(CmdTask("dmidecode -s system-serial-number"))
-        if command_res.is_success():
-            lines = command_res.stdout.strip().split('\n')
-            # 返回第一行非空行作为序列号
-            for line in lines[1:]:  # 跳过第一行标题行
-                if line.strip():
-                    return line.strip()
+        if not command_res.is_success():
+            return ""
+        # 先清理ANSI转义码
+        clean_out = self._ANSI_ESCAPE.sub("", command_res.stdout.strip())
+        lines = clean_out.split('\n')
+        # 返回第一行非空行作为序列号
+        for line in lines[1:]:  # 跳过第一行标题行
+            if line.strip():
+                return line.strip()
         return ""
 
     async def fetch_hccs_info(self, npu_id, chip_id) -> str:

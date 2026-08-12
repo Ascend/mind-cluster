@@ -87,10 +87,10 @@ class HccsLinkDegradedAnalyzer(Analyzer):
         # 板级别的分析
         for swi_chip_id, cpu_port_list in enumerate(tiancheng_cpu_port_list):
             swi_chip_err_ports = set()
-            cpu_port_set = set(cpu_port_list)
+            cpu_port_set = set(str(p) for p in cpu_port_list)
             for port_mapping in port_mappings:
                 if port_mapping.swi_chip_id == str(swi_chip_id):
-                    swi_chip_err_ports.add(port_mapping)
+                    swi_chip_err_ports.add(port_mapping.phy_id)
             if cpu_port_set == swi_chip_err_ports:
                 diag_result = DiagResult(
                     domain=SwitchDomain(swi_id=chassis_mapping.l1_swi_ip, interface=str(swi_chip_id)),
