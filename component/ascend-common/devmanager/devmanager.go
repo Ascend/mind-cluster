@@ -95,6 +95,7 @@ type DeviceInterface interface {
 	GetHccsStatisticInfo(logicID int32) (*common.HccsStatisticInfo, error)
 	GetHccsStatisticInfoInU64(logicID int32) (*common.HccsStatisticInfo, error)
 	GetMainBoardId() uint32
+	GetAffinityCpuInfo(logicID int32) (string, error)
 	GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error)
 
 	StartHccsPingMesh(logicID int32, portID int, operate common.HccspingMeshOperate) error
@@ -1165,6 +1166,16 @@ func (d *DeviceManager) GetDcmiVersion() string {
 // GetMainBoardId  get mainBoardId
 func (d *DeviceManager) GetMainBoardId() uint32 {
 	return d.mainBoardId
+}
+
+// GetAffinityCpuInfo get affinity cpu info for npu by logicID
+func (d *DeviceManager) GetAffinityCpuInfo(logicID int32) (string, error) {
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		hwlog.RunLog.Errorf("get cardID and deviceID by logicID(%d) failed, error: %v", logicID, err)
+		return "", err
+	}
+	return d.DcMgr.DcGetAffinityCpuInfo(cardID, deviceID)
 }
 
 // GetDeviceEccInfo query device ECC info

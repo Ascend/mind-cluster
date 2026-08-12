@@ -40,6 +40,7 @@ const (
 	MaxChipNameLen = 32
 	productTypeLen = 64
 	DcmiVersionLen = 32
+	TopoInfoMaxLen = 32
 
 	// MainCmdChipInf main cmd chip inf
 	MainCmdChipInf MainCmd = 12

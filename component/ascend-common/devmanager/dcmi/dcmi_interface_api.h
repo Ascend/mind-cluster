@@ -690,6 +690,9 @@ extern "C"
 
     DCMIDLLEXPORT int dcmi_get_mainboard_id(int card_id, int device_id, unsigned int *mainboard_id);
 
+    DCMIDLLEXPORT int dcmi_get_affinity_cpu_info_by_device_id(int card_id, int device_id, char *affinity_cpu,
+                                                              int *length);
+
     DCMIDLLEXPORT int dcmi_get_hccs_link_bandwidth_info(int card_id, int device_id,
                                                         struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info);
 

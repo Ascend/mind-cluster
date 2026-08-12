@@ -315,6 +315,11 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
         CALL_FUNC(dcmi_get_mainboard_id,card_id,device_id,mainboard_id)
     }
 
+    static int (*dcmi_get_affinity_cpu_info_by_device_id_func)(int card_id, int device_id, char *affinity_cpu, int *length);
+    int dcmi_get_affinity_cpu_info_by_device_id(int card_id, int device_id, char *affinity_cpu, int *length){
+        CALL_FUNC(dcmi_get_affinity_cpu_info_by_device_id,card_id,device_id,affinity_cpu,length)
+    }
+
 	static int (*dcmi_start_hccsping_mesh_func)(int card_id, int device_id, int port_id,
 struct dcmi_hccsping_mesh_operate *hccsping_mesh);
     int dcmi_start_hccsping_mesh(int card_id, int device_id, int port_id,
@@ -509,6 +514,8 @@ unsigned int *state){
 
     dcmi_get_mainboard_id_func = dlsym(dcmiHandle, "dcmi_get_mainboard_id");
 
+    dcmi_get_affinity_cpu_info_by_device_id_func = dlsym(dcmiHandle, "dcmi_get_affinity_cpu_info_by_device_id");
+
    	dcmi_get_hccs_link_bandwidth_info_func = dlsym(dcmiHandle,"dcmi_get_hccs_link_bandwidth_info");
 
 	dcmi_start_hccsping_mesh_func = dlsym(dcmiHandle,"dcmi_start_hccsping_mesh");
@@ -641,6 +648,7 @@ type DcDriverInterface interface {
 	DcGetHccsStatisticInfo(int32, int32) (common.HccsStatisticInfo, error)
 	DcGetHccsStatisticInfoU64(int32, int32) (common.HccsStatisticInfo, error)
 	DcGetDeviceMainBoardInfo(int32, int32) (uint32, error)
+	DcGetAffinityCpuInfo(int32, int32) (string, error)
 	DcGetHccsBandwidthInfo(int32, int32, int) (common.HccsBandwidthInfo, error)
 
 	DcStartHccsPingMesh(int32, int32, int, common.HccspingMeshOperate) error
@@ -2430,6 +2438,25 @@ func (d *DcManager) DcGetDeviceMainBoardInfo(cardID, deviceID int32) (uint32, er
 
 	return uint32(cMainBoardId), nil
 }
+
+// DcGetAffinityCpuInfo get device affinity cpu info
+func (d *DcManager) DcGetAffinityCpuInfo(cardID, deviceID int32) (string, error) {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return "", fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+	}
+	cAffinityCpu := C.CString(string(make([]byte, TopoInfoMaxLen)))
+	defer C.free(unsafe.Pointer(cAffinityCpu))
+	cLen := C.int(0)
+	if retCode := C.dcmi_get_affinity_cpu_info_by_device_id(C.int(cardID), C.int(deviceID), cAffinityCpu,
+		&cLen); int32(retCode) != common.Success {
+		return "", buildDcmiErr(cardID, deviceID, "AffinityCpu", retCode)
+	}
+	if cLen < 0 || cLen > TopoInfoMaxLen {
+		return "", fmt.Errorf("output len(%d) is invalid, which should be in range [0,%d]", int(cLen), TopoInfoMaxLen)
+	}
+	return C.GoStringN(cAffinityCpu, cLen), nil
+}
+
 func buildDcmiErr(cardID, deviceID int32, msg string, errCode C.int) error {
 	errDesc, ok := dcmiErrMap[int32(errCode)]
 	if !ok {

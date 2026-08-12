@@ -7,6 +7,9 @@
 
     不同的特性依赖不同的组件，详细介绍请参见[基础调度](../../01_introduction/02_feature_description.md#基础调度)章节。
 
+    Ascend Device Plugin支持上报NPU设备的NUMA节点到kubelet，如需开启NUMA亲和性调度策略，只能使用Kubernetes原生调度器。NUMA节点信息查询依赖DCMI
+  接口：dcmi_get_affinity_cpu_info_by_device_id、dcmiv2_get_affinity_cpu_info_by_dev_id、dcmi_get_device_pcie_info_v2、dcmiv2_get_device_pcie_info，请查看对应产品配套的HDK接口API文档确认是否支持。
+
 本文档演示如何基于某模型部署并执行使用NPU的训练或推理任务。生产环境与示例存在差异，本章节内示例仅做参考，用户需要根据实际生产环境做修改。
 
 ## 任务类型<a name="section14151030191813"></a>
