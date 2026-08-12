@@ -102,15 +102,7 @@
 
 **软件数字签名验证**
 
-为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
-
-在软件包下载之后，请参见《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请勿使用该软件包，先联系华为技术支持工程师解决。
-
-使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
-
-运营商客户请访问：[运营商数字签名验证页面](https://support.huawei.com/carrier/digitalSignatureAction)
-
-企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
+为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需进行完整性验证，校验过程可参考[软件包 SUM 值校验](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md#section51703441649)小节。
 
 ### （可选）启动haveged服务
 
