@@ -31,3 +31,14 @@ MindCluster集群调度组件支持通过以下方式部署Infer Operator推理�
   - [通过命令行使用](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md#通过命令行使用)：通过配置的YAML文件部署任务。
   - [通过MindCluster社区部署工具一键部署使用](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md#通过mindcluster社区部署工具一键部署使用)：通过自动化脚本参考设计部署任务。
 - [基于MindIE PyMotor部署Infer Operator推理任务](./02_deploying_infer_operator_inference_job_with_mindie_pymotor.md)。
+
+> [!NOTE]
+> Infer Operator支持在同一个InferServiceSet中下发如下角色：
+>
+> - 请求NPU资源的推理角色（如Prefill、Decode）
+> - 不请求NPU资源的通算角色（如路由Router、管理中心MetaService等）
+>
+> 通算角色的下发、优先级与重调度配置与推理角色一致，复用现有YAML参数，区别在于：
+>
+> - 通算角色不请求NPU资源，`resources.requests`中无需配置`huawei.com/`字段，ascend-for-volcano的NPU调度插件在过滤、打分、预留各阶段提前返回、不参与NPU分配，Pod由Volcano默认插件调度到节点（含无NPU节点）
+> - 通算角色的故障重调度仅通过节点故障、业务面故障触发，NPU故障不会触发通算角色的故障重调度
