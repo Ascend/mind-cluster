@@ -68,6 +68,8 @@ const (
 	dockerDirContainerPath  = "/run/docker"
 	containerdHostPath      = "/run/containerd"
 	containerdContainerPath = "/run/containerd"
+	crioSockHostPath        = "/var/run/crio/crio.sock"
+	crioSockContainerPath   = "/var/run/crio/crio.sock"
 )
 
 type dpMountConfig struct {
@@ -80,6 +82,7 @@ var dpMountConfigs = []dpMountConfig{
 	{dockerSockHostPath, dockerSockContainerPath, true},
 	{dockerDirHostPath, dockerDirContainerPath, true},
 	{containerdHostPath, containerdContainerPath, true},
+	{crioSockHostPath, crioSockContainerPath, true},
 }
 
 var (

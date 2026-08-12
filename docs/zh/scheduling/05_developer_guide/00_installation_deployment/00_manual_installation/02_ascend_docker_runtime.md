@@ -296,6 +296,74 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     systemctl daemon-reload && systemctl restart containerd kubelet
     ```
 
+## CRI-O场景下安装Ascend Docker Runtime<a name="zh-cn_topic_0000001930317932_section_crio_install"></a>
+
+1. 安装包下载完成后，进入安装包（run包）所在路径。
+
+    ```shell
+    cd <path to run package>
+    ```
+
+2. 执行以下命令，为软件包添加可执行权限。
+
+    ```shell
+    chmod u+x Ascend-docker-runtime_{version}_linux-{arch}.run
+    ```
+
+3. 执行如下命令，校验软件包安装文件的一致性和完整性。
+
+    ```shell
+    ./Ascend-docker-runtime_{version}_linux-{arch}.run --check
+    ```
+
+4. 执行以下命令安装Ascend Docker Runtime，CRI-O场景须指定`--install-scene=crio`。
+
+    - 安装到默认路径下。
+
+        ```shell
+        ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=crio
+        ```
+
+    - 安装到指定路径下，“--install-path”参数为指定的安装路径。
+
+        ```shell
+        ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=crio --install-path=<path>
+        ```
+
+        >[!NOTE]
+        >- 指定安装路径时必须使用绝对路径。
+        >- 安装程序会写入CRI-O drop-in配置文件“/etc/crio/crio.conf.d/99-ascend-runtime.conf”，将“ascend”注册为OCI运行时并设为默认runtime。drop-in目录或文件不是默认路径时，需新增--config-file-path参数指定。
+
+    回显示例如下，表示安装成功。
+
+    ```ColdFusion
+    Uncompressing ascend-docker-runtime  100%
+    [INFO]: installing ascend-docker-runtime
+    ...
+    [INFO] ascend-docker-runtime install success
+    ```
+
+5. <a name="zh-cn_topic_0000001930317932_section_crio_install_manual"></a>（可选）如果安装失败，可参照以下步骤手动配置CRI-O。新建或编辑“/etc/crio/crio.conf.d/99-ascend-runtime.conf”：
+
+    ```ini
+    [crio.runtime]
+    default_runtime = "ascend"
+
+    [crio.runtime.runtimes.ascend]
+    runtime_path = "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime"
+    runtime_type = "oci"
+    runtime_root = "/var/run/ascend"
+    privileged_without_host_devices = false
+    ```
+
+    其中runtime_type、runtime_root等字段建议与当前“[crio.runtime.runtimes.runc]”保持一致，仅runtime_path为ascend专属。
+
+6. 执行以下命令，重启CRI-O使配置生效。
+
+    ```shell
+    systemctl daemon-reload && systemctl restart crio
+    ```
+
 ## Ascend Docker Runtime安装包命令行参数说明<a name="zh-cn_topic_0000001930317932_section425619177219"></a>
 
 参数说明如[表1](#zh-cn_topic_0000001930317932_table35676204212)所示。
@@ -328,7 +396,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
 <tr id="zh-cn_topic_0000001930317932_row1444404185013"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p1144584125019"><a name="zh-cn_topic_0000001930317932_p1144584125019"></a><a name="zh-cn_topic_0000001930317932_p1144584125019"></a>--install-scene=&lt;scene&gt;</p>
 </td>
 <td class="cellrowborder" valign="top" width="67.57%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001930317932_p153510190174"><a name="zh-cn_topic_0000001930317932_p153510190174"></a><a name="zh-cn_topic_0000001930317932_p153510190174"></a><span id="zh-cn_topic_0000001930317932_ph1308455195116"><a name="zh-cn_topic_0000001930317932_ph1308455195116"></a><a name="zh-cn_topic_0000001930317932_ph1308455195116"></a>Ascend Docker Runtime</span>安装场景。<span id="zh-cn_topic_0000001930317932_ph1641213426170"><a name="zh-cn_topic_0000001930317932_ph1641213426170"></a><a name="zh-cn_topic_0000001930317932_ph1641213426170"></a>默认值为</span><span id="zh-cn_topic_0000001930317932_ph8821719135318"><a name="zh-cn_topic_0000001930317932_ph8821719135318"></a><a name="zh-cn_topic_0000001930317932_ph8821719135318"></a>docker，</span>取值说明如下。</p>
-<a name="zh-cn_topic_0000001930317932_ul8352122811918"></a><a name="zh-cn_topic_0000001930317932_ul8352122811918"></a><ul id="zh-cn_topic_0000001930317932_ul8352122811918"><li><span id="zh-cn_topic_0000001930317932_ph3371331161710"><a name="zh-cn_topic_0000001930317932_ph3371331161710"></a><a name="zh-cn_topic_0000001930317932_ph3371331161710"></a>docker</span>：表示在<span id="zh-cn_topic_0000001930317932_ph1159416519530"><a name="zh-cn_topic_0000001930317932_ph1159416519530"></a><a name="zh-cn_topic_0000001930317932_ph1159416519530"></a>Docker</span>（或<span id="zh-cn_topic_0000001930317932_ph5391475179"><a name="zh-cn_topic_0000001930317932_ph5391475179"></a><a name="zh-cn_topic_0000001930317932_ph5391475179"></a>K8s集成Docker</span>）场景安装。</li><li><span id="zh-cn_topic_0000001930317932_ph7743733115213"><a name="zh-cn_topic_0000001930317932_ph7743733115213"></a><a name="zh-cn_topic_0000001930317932_ph7743733115213"></a>c</span><span id="zh-cn_topic_0000001930317932_ph1274373385212"><a name="zh-cn_topic_0000001930317932_ph1274373385212"></a><a name="zh-cn_topic_0000001930317932_ph1274373385212"></a>ontainerd：表示在</span>Containerd（或K8s集成Containerd）场景安装。</li><li>isula：表示在iSula容器引擎场景下安装。</li></ul><p>--install-scene不能单独使用，必须和--install、--uninstall或--upgrade一起使用。</p>
+<a name="zh-cn_topic_0000001930317932_ul8352122811918"></a><a name="zh-cn_topic_0000001930317932_ul8352122811918"></a><ul id="zh-cn_topic_0000001930317932_ul8352122811918"><li><span id="zh-cn_topic_0000001930317932_ph3371331161710"><a name="zh-cn_topic_0000001930317932_ph3371331161710"></a><a name="zh-cn_topic_0000001930317932_ph3371331161710"></a>docker</span>：表示在<span id="zh-cn_topic_0000001930317932_ph1159416519530"><a name="zh-cn_topic_0000001930317932_ph1159416519530"></a><a name="zh-cn_topic_0000001930317932_ph1159416519530"></a>Docker</span>（或<span id="zh-cn_topic_0000001930317932_ph5391475179"><a name="zh-cn_topic_0000001930317932_ph5391475179"></a><a name="zh-cn_topic_0000001930317932_ph5391475179"></a>K8s集成Docker</span>）场景安装。</li><li><span id="zh-cn_topic_0000001930317932_ph7743733115213"><a name="zh-cn_topic_0000001930317932_ph7743733115213"></a><a name="zh-cn_topic_0000001930317932_ph7743733115213"></a>c</span><span id="zh-cn_topic_0000001930317932_ph1274373385212"><a name="zh-cn_topic_0000001930317932_ph1274373385212"></a><a name="zh-cn_topic_0000001930317932_ph1274373385212"></a>ontainerd：表示在</span>Containerd（或K8s集成Containerd）场景安装。</li><li>isula：表示在iSula容器引擎场景下安装。</li><li>crio：表示在CRI-O容器引擎场景下安装。</li></ul><p>--install-scene不能单独使用，必须和--install、--uninstall或--upgrade一起使用。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001930317932_row16570162013216"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p1457092012114"><a name="zh-cn_topic_0000001930317932_p1457092012114"></a><a name="zh-cn_topic_0000001930317932_p1457092012114"></a>--uninstall</p>

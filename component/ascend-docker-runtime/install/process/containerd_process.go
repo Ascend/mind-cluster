@@ -248,29 +248,5 @@ func removeRuntime(name string, tree *toml.Tree, criRuntimePluginName string) er
 }
 
 func writeContainerdConfigToFile(configTree *toml.Tree, destFilePath string) error {
-	if configTree == nil {
-		return fmt.Errorf("config tree is nil")
-	}
-
-	// Marshal config to TOML
-	tomlData, err := configTree.Marshal()
-	if err != nil {
-		return fmt.Errorf("unable to convert to TOML: %v", err)
-	}
-
-	// Write to file
-	file, err := os.OpenFile(destFilePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, perm)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to open file for writing: %v", err)
-		return err
-	}
-	defer file.Close()
-
-	_, err = file.Write(tomlData)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to write config to file: %v", err)
-		return err
-	}
-
-	return nil
+	return writeTomlConfigToFile(configTree, destFilePath)
 }

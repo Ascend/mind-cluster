@@ -60,6 +60,8 @@ const (
 	InstallSceneContainerd = "containerd"
 	// InstallSceneIsula is a 'isula' string of scene
 	InstallSceneIsula = "isula"
+	// InstallSceneCriO is a 'crio' string of scene
+	InstallSceneCriO = "crio"
 	runtimeName       = "ascend"
 	// default runtime type for containerd
 	v2RuncRuntimeType         = "io.containerd.runc.v2"
@@ -74,4 +76,14 @@ const (
 	binaryNameKey             = "BinaryName"
 	defaultRuntimeNameKey     = "default_runtime_name"
 	systemdCgroupKey          = "SystemdCgroup"
+
+	// CRI-O config keys (drop-in /etc/crio/crio.conf.d/*.conf)
+	crioSectionKey         = "crio"
+	crioRuntimeSectionKey  = "runtime"
+	crioRuntimesSectionKey = "runtimes"
+	crioDefaultRuntimeKey  = "default_runtime"
+	crioRuntimeTypeKey     = "runtime_type"
+	crioRuntimePathKey     = "runtime_path"
+	crioRuntimeRootKey     = "runtime_root"
+	crioOciRuntimeType = "oci"
 )

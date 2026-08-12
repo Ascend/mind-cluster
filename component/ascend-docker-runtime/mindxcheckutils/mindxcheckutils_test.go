@@ -569,6 +569,21 @@ func TestStringChecker(t *testing.T) {
 	if ok := StringChecker("123.-/~", 0, DefaultStringSize, DefaultWhiteList); !ok {
 		t.Fatalf("failed on strange words")
 	}
+	// CRI-O emits args such as "--log-format=json"; '=' must be admitted.
+	if ok := StringChecker("--log-format=json", 0, DefaultStringSize, DefaultWhiteList); !ok {
+		t.Fatalf("failed on crio style arg containing '='")
+	}
+	// ':' appears in some socket/url style args; must be admitted.
+	if ok := StringChecker("a:b", 0, DefaultStringSize, DefaultWhiteList); !ok {
+		t.Fatalf("failed on arg containing ':'")
+	}
+	// Shell metacharacters must still be rejected.
+	if ok := StringChecker("a;b", 0, DefaultStringSize, DefaultWhiteList); ok {
+		t.Fatalf("failed on shell metacharacter ';'")
+	}
+	if ok := StringChecker("a|b", 0, DefaultStringSize, DefaultWhiteList); ok {
+		t.Fatalf("failed on shell metacharacter '|'")
+	}
 }
 
 func createTestFile(t *testing.T, fileName string) (string, string, error) {

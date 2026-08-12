@@ -33,8 +33,11 @@ const (
 	oneMegabytes      = 1048576
 	// DefaultSize default size of file allowed
 	DefaultSize = 100 // in megabytes
-	// DefaultWhiteList default white list in string
-	DefaultWhiteList = "-_./~"
+	// DefaultWhiteList default white list in string.
+	// '=' and ':' are admitted so the arg/path checker accepts CRI-O runtime
+	// invocations (e.g. "--log-format=json") and socket URLs, which docker and
+	// containerd do not emit. Shell metacharacters remain rejected.
+	DefaultWhiteList = "-_./~=:"
 	// DefaultStringSize default string max length
 	DefaultStringSize = 256
 	// DefaultPathSize default string max length
