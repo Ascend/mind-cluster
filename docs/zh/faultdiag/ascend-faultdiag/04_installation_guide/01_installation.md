@@ -9,19 +9,19 @@
 
 ## 安装方式
 
-ascend-fd 支持通过 whl 包安装和使用 MindCluster Ascend Deployer 安装，推荐使用 whl 包安装。
+ascend-fd 支持通过 Whl 包安装和使用 MindCluster Ascend Deployer 安装，推荐使用 Whl 包安装。
 
-### whl 包安装（推荐）
+### Whl 包安装（推荐）
 
 #### 获取软件包
 
-软件包可以通过开源社区下载 zip 包或者自行通过源码编译 whl 包。
+软件包可以通过开源社区下载 zip 包或者自行通过源码编译 Whl 包。
 
 1. 从开源社区获取软件包
 
     | 软件包                                                | 子文件                                                          | 说明                   | 链接                                                         |
     |-------------------------------------------------------|-----------------------------------------------------------------|------------------------|--------------------------------------------------------------|
-    | `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag-{version}-py3-none-linux_{arch}.whl`          | 日志故障诊断组件安装包 | [下载链接](https://gitcode.com/Ascend/mind-cluster/releases) |
+    | `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag-{version}-py3-none-linux_{arch}.whl`          | 日志故障诊断组件安装包 | [下载链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0) |
 
     > [!NOTE]
     >
@@ -29,29 +29,29 @@ ascend-fd 支持通过 whl 包安装和使用 MindCluster Ascend Deployer 安装
     > - `{arch}` 为软件包架构，分为 x86_64 和 aarch64，请根据实际需要修改，可通过 `arch` 命令查看。
     > - 为防止软件包在传递过程中或存储期间被恶意篡改，建议校验软件包的 SUM 值。如需对软件包进行 SUM 值校验，请参考[软件包 SUM 值校验](#软件包-sum-值校验步骤)。
 
-2. 通过源码编译 whl 包
+2. 通过源码编译 Whl 包
 
-    - 克隆仓库
+    1. 克隆仓库
 
-    ```shell
-    git clone https://gitcode.com/Ascend/mind-cluster
-    # 切换到 ascend-faultdiag 目录
-    cd mind-cluster/component/ascend-faultdiag
-    ```
+        ```shell
+        git clone https://gitcode.com/Ascend/mind-cluster
+        # 切换到 ascend-faultdiag 目录
+        cd mind-cluster/component/ascend-faultdiag
+        ```
 
-    - 使用 pip3 安装编译所需三方依赖库
+    2. 使用 pip3 安装编译所需三方依赖库
 
-    ```shell
-    pip3 install -r src/requirements.txt && pip3 install 'setuptools>=60.3.0' 'wheel>=0.45.1'
-    ```
+        ```shell
+        pip3 install -r src/requirements.txt && pip3 install 'setuptools>=60.3.0' 'wheel>=0.45.1'
+        ```
 
-    - 如需自定义版本信息，可在当前目录（`mind-cluster/component/ascend-faultdiag`）创建 `service_config.ini` 文件，填入版本号如 `26.1.0`，版本号格式须符合 [Python 版本号规范](https://packaging.pythonlang.cn/en/latest/specifications/version-specifiers/)
+    3. 如需自定义版本信息，可在当前目录（`mind-cluster/component/ascend-faultdiag`）创建 `service_config.ini` 文件，填入版本号如 `26.1.0`，版本号格式须符合 [Python 版本号规范](https://packaging.pythonlang.cn/en/latest/specifications/version-specifiers/)
 
-    - 执行编译
+    4. 执行编译
 
-    ```shell
-    bash build/build.sh
-    ```
+        ```shell
+        bash build/build.sh
+        ```
 
     执行 build 脚本后，会在 `output/` 目录下生成 `ascend_faultdiag-{version}-py3-none-linux_{arch}.whl` 文件。
 
@@ -111,7 +111,7 @@ MindCluster Ascend Deployer 支持 7.1.RC1 及以上版本的 ascend-fd 组件�
 
 ### 软件包 SUM 值校验步骤
 
-1. 下载 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum` 文件，[下载链接](https://gitcode.com/Ascend/mind-cluster/releases/)
+1. 下载[Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0)文件
 
 2. 将 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum` 和 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` 放置到同一目录，执行以下命令进行校验
 
@@ -121,7 +121,7 @@ MindCluster Ascend Deployer 支持 7.1.RC1 及以上版本的 ascend-fd 组件�
 
 3. 校验结果
 
-    回显结果如下所示，即代表软件包校验通过。
+    回显示例如下，即代表软件包校验通过。
 
     ```bash
     Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip: OK

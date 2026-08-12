@@ -2,7 +2,7 @@
 
 ## 方式一：基于原生Docker挂载vNPU
 
-原生Docker场景下（未部署MindCluster集群调度组件），需要使用npu-smi工具创建vNPU后，将vNPU挂载到容器。具体操作请参见《Atlas 中心训练服务器 NPU驱动和固件安装指南》的“昇腾虚拟化实例（AVI）容器场景下的安装与卸载>[多容器场景下安装](https://support.huawei.com/enterprise/zh/doc/EDOC1100568429/5b32515a)”章节，该章节指导用户安装Docker和将vNPU挂载进容器。
+原生Docker场景下（未部署MindCluster集群调度组件），需要使用npu-smi工具创建vNPU后，将vNPU挂载到容器。具体操作请参见《Atlas 中心训练服务器 NPU驱动和固件安装指南》的“昇腾虚拟化实例（AVI）容器场景下的安装与卸载>[多容器场景下安装](https://support.huawei.com/enterprise/zh/doc/EDOC1100591788/5b32515a)”章节，该章节指导用户安装Docker和将vNPU挂载进容器。
 
 ## 方式二：Ascend Docker Runtime挂载vNPU
 
