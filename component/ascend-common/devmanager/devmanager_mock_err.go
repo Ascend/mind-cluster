@@ -31,6 +31,10 @@ var _ DeviceInterface = &DeviceManagerMockErr{}
 type DeviceManagerMockErr struct {
 }
 
+func (d *DeviceManagerMockErr) GetAffinityCpuInfo(logicID int32) (string, error) {
+	return "", errors.New("get affinity cpu info failed")
+}
+
 // WaitDeviceOnline wait device online until reset timeout, retry per defaultRetryDelay
 func (d *DeviceManagerMockErr) WaitDeviceOnline(resetTimeout int) {
 

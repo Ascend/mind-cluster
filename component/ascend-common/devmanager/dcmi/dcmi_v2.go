@@ -221,6 +221,11 @@ package dcmi
         CALL_FUNC(dcmiv2_get_mainboard_id,dev_id,mainboard_id)
     }
 
+    static int (*dcmiv2_get_affinity_cpu_info_by_dev_id_func)(int dev_id, char *affinity_cpu, int *len);
+    static int dcmiv2_get_affinity_cpu_info_by_dev_id(int dev_id, char *affinity_cpu, int *len){
+        CALL_FUNC(dcmiv2_get_affinity_cpu_info_by_dev_id,dev_id,affinity_cpu,len)
+    }
+
     static int (*dcmiv2_start_ub_ping_mesh_func)(int dev_id, int count,
         struct dcmi_ub_ping_mesh_operate *ubping_mesh);
     static int dcmiv2_start_ub_ping_mesh(int dev_id, int count,
@@ -309,6 +314,7 @@ package dcmi
         dcmiv2_get_dcmi_version_func = dlsym(dcmiHandle,"dcmiv2_get_dcmi_version");
         dcmiv2_get_device_ecc_info_func = dlsym(dcmiHandle,"dcmiv2_get_device_ecc_info");
         dcmiv2_get_mainboard_id_func = dlsym(dcmiHandle, "dcmiv2_get_mainboard_id");
+        dcmiv2_get_affinity_cpu_info_by_dev_id_func = dlsym(dcmiHandle, "dcmiv2_get_affinity_cpu_info_by_dev_id");
         dcmiv2_get_urma_device_cnt_func = dlsym(dcmiHandle, "dcmiv2_get_urma_device_cnt");
         dcmiv2_get_eid_list_by_urma_dev_index_func = dlsym(dcmiHandle, "dcmiv2_get_eid_list_by_urma_dev_index");
         dcmiv2_start_ub_ping_mesh_func = dlsym(dcmiHandle,"dcmiv2_start_ub_ping_mesh");
@@ -385,6 +391,7 @@ type DcV2DriverInterface interface {
 	DcGetDeviceEccInfo(logicID int32, inputType common.DcmiDeviceType) (*common.ECCInfo, error)
 	DcGetSioInfo(logicID int32) (common.SioCrcErrStatisticInfo, error)
 	DcGetDeviceMainBoardInfo(logicID int32) (uint32, error)
+	DcGetAffinityCpuInfo(logicID int32) (string, error)
 	DcGetCardElabel(logicID int32) (common.ElabelInfo, error)
 	DcGetUrmaDeviceCount(logicID int32) (int32, error)
 	DcGetUrmaDevEidList(logicID int32, urmaDevIndex int32) (*common.UrmaDeviceInfo, error)
@@ -1515,6 +1522,24 @@ func (d *DcV2Manager) DcGetDeviceMainBoardInfo(logicID int32) (uint32, error) {
 		return 0, buildDcmiV2Err(logicID, "mainBoardId", retCode)
 	}
 	return uint32(cMainBoardId), nil
+}
+
+// DcGetAffinityCpuInfo get device affinity cpu info
+func (d *DcV2Manager) DcGetAffinityCpuInfo(logicID int32) (string, error) {
+	if !common.IsValidLogicIDOrPhyID(logicID) {
+		return "", fmt.Errorf("logicID(%d) is invalid", logicID)
+	}
+	cAffinityCpu := C.CString(string(make([]byte, TopoInfoMaxLen)))
+	defer C.free(unsafe.Pointer(cAffinityCpu))
+	cLen := C.int(0)
+	if retCode := C.dcmiv2_get_affinity_cpu_info_by_dev_id(C.int(logicID), cAffinityCpu,
+		&cLen); int32(retCode) != common.Success {
+		return "", buildDcmiV2Err(logicID, "AffinityCpu", retCode)
+	}
+	if cLen < 0 || cLen > TopoInfoMaxLen {
+		return "", fmt.Errorf("output len(%d) is invalid, which should be in range [0,%d]", int(cLen), TopoInfoMaxLen)
+	}
+	return C.GoStringN(cAffinityCpu, cLen), nil
 }
 
 // DcGetCardElabel get device elabel info

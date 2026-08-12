@@ -99,6 +99,8 @@ extern "C"
 
     DCMIDLLEXPORT int dcmiv2_get_mainboard_id(int dev_id, unsigned int *mainboard_id);
 
+    DCMIDLLEXPORT int dcmiv2_get_affinity_cpu_info_by_dev_id(int dev_id, char *affinity_cpu, int *len);
+
     DCMIDLLEXPORT int dcmiv2_start_ub_ping_mesh(int dev_id, int count, struct dcmi_ub_ping_mesh_operate *ubping_mesh);
 
     DCMIDLLEXPORT int dcmiv2_stop_ub_ping_mesh(int dev_id, int task_id);

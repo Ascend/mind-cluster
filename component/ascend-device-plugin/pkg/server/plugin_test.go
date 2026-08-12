@@ -2355,3 +2355,93 @@ func TestAllocateWithSoftShareDevice(t *testing.T) {
 		})
 	})
 }
+
+// TestConvertNpuDeviceToPluginDevice_NilNumaNodes test when cache returns nil
+func TestConvertNpuDeviceToPluginDevice_NilNumaNodes(t *testing.T) {
+	convey.Convey("01-should not set Topology when cache returns nil", t, func() {
+		ps := &PluginServer{}
+		patch := gomonkey.ApplyFuncReturn(device.GetNumaNodesByPhyID, []int64(nil))
+		defer patch.Reset()
+
+		dev := common.NpuDevice{DeviceName: "Ascend910-0", Health: "Healthy", LogicID: 0, PhyID: 0}
+		result := ps.convertNpuDeviceToPluginDevice(dev, "Ascend910-0")
+		convey.So(result.ID, convey.ShouldEqual, "Ascend910-0")
+		convey.So(result.Health, convey.ShouldEqual, "Healthy")
+		convey.So(result.Topology, convey.ShouldBeNil)
+	})
+}
+
+// TestConvertNpuDeviceToPluginDevice_EmptyNumaNodes test when cache returns empty slice
+func TestConvertNpuDeviceToPluginDevice_EmptyNumaNodes(t *testing.T) {
+	convey.Convey("02-should not set Topology when cache returns empty slice", t, func() {
+		ps := &PluginServer{}
+		patch := gomonkey.ApplyFuncReturn(device.GetNumaNodesByPhyID, []int64{})
+		defer patch.Reset()
+
+		dev := common.NpuDevice{DeviceName: "Ascend910-0", Health: "Healthy", LogicID: 0, PhyID: 0}
+		result := ps.convertNpuDeviceToPluginDevice(dev, "Ascend910-0")
+		convey.So(result.Topology, convey.ShouldBeNil)
+	})
+}
+
+// TestConvertNpuDeviceToPluginDevice_SingleNumaNode test with single NUMA node
+func TestConvertNpuDeviceToPluginDevice_SingleNumaNode(t *testing.T) {
+	convey.Convey("03-should set Topology with single NUMA node", t, func() {
+		ps := &PluginServer{}
+		patch := gomonkey.ApplyFuncReturn(device.GetNumaNodesByPhyID, []int64{0})
+		defer patch.Reset()
+
+		dev := common.NpuDevice{DeviceName: "Ascend910-0", Health: "Healthy", LogicID: 0, PhyID: 0}
+		result := ps.convertNpuDeviceToPluginDevice(dev, "Ascend910-0")
+		convey.So(result.Topology, convey.ShouldNotBeNil)
+		convey.So(len(result.Topology.Nodes), convey.ShouldEqual, 1)
+		convey.So(result.Topology.Nodes[0].ID, convey.ShouldEqual, int64(0))
+	})
+}
+
+// TestConvertNpuDeviceToPluginDevice_MultipleNumaNodes test with multiple NUMA nodes
+func TestConvertNpuDeviceToPluginDevice_MultipleNumaNodes(t *testing.T) {
+	convey.Convey("04-should set Topology with multiple NUMA nodes", t, func() {
+		ps := &PluginServer{}
+		patch := gomonkey.ApplyFuncReturn(device.GetNumaNodesByPhyID, []int64{0, 1})
+		defer patch.Reset()
+
+		dev := common.NpuDevice{DeviceName: "Ascend910-0", Health: "Healthy", LogicID: 0, PhyID: 0}
+		result := ps.convertNpuDeviceToPluginDevice(dev, "Ascend910-0")
+		convey.So(result.Topology, convey.ShouldNotBeNil)
+		convey.So(len(result.Topology.Nodes), convey.ShouldEqual, 2)
+		convey.So(result.Topology.Nodes[0].ID, convey.ShouldEqual, int64(0))
+		convey.So(result.Topology.Nodes[1].ID, convey.ShouldEqual, int64(1))
+	})
+}
+
+// TestConvertNpuDeviceToPluginDevice_CustomName test with custom device name
+func TestConvertNpuDeviceToPluginDevice_CustomName(t *testing.T) {
+	convey.Convey("05-should use custom device name", t, func() {
+		ps := &PluginServer{}
+		patch := gomonkey.ApplyFuncReturn(device.GetNumaNodesByPhyID, []int64{3})
+		defer patch.Reset()
+
+		dev := common.NpuDevice{DeviceName: "Ascend910-0", Health: "Healthy", LogicID: 0, PhyID: 0}
+		result := ps.convertNpuDeviceToPluginDevice(dev, "CustomName-0")
+		convey.So(result.ID, convey.ShouldEqual, "CustomName-0")
+		convey.So(result.Topology.Nodes[0].ID, convey.ShouldEqual, int64(3))
+	})
+}
+
+// TestDeepCopyDevice_BasicCopy test deepCopyDevice basic copy
+func TestDeepCopyDevice_BasicCopy(t *testing.T) {
+	convey.Convey("should deep copy device fields correctly", t, func() {
+		ps := &PluginServer{cachedDevices: make([]common.NpuDevice, 0)}
+		srcDevices := []*common.NpuDevice{
+			{DeviceName: "Ascend910-0", Health: "Healthy", PhyID: 0, LogicID: 0, DevType: "Ascend910"},
+			{DeviceName: "Ascend910-1", Health: "Healthy", PhyID: 1, LogicID: 1, DevType: "Ascend910"},
+		}
+		ps.deepCopyDevice(srcDevices)
+		convey.So(len(ps.cachedDevices), convey.ShouldEqual, 2)
+		convey.So(ps.cachedDevices[0].DeviceName, convey.ShouldEqual, "Ascend910-0")
+		convey.So(ps.cachedDevices[0].PhyID, convey.ShouldEqual, int32(0))
+		convey.So(ps.cachedDevices[1].DeviceName, convey.ShouldEqual, "Ascend910-1")
+		convey.So(ps.cachedDevices[1].PhyID, convey.ShouldEqual, int32(1))
+	})
+}

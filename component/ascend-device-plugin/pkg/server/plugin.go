@@ -199,7 +199,7 @@ func (ps *PluginServer) addSoftShareDev(resp *v1beta1.ListAndWatchResponse, newD
 	hwlog.RunLog.Infof("%s add soft share device to kubelet", newDeviceName)
 	for i := 0; i < int(common.ParamOption.ShareCount); i++ {
 		resp.Devices = append(resp.Devices,
-			&v1beta1.Device{ID: newDeviceName + fmt.Sprintf("-%d", i), Health: device.Health})
+			ps.convertNpuDeviceToPluginDevice(device, newDeviceName+fmt.Sprintf("-%d", i)))
 	}
 }
 
@@ -216,7 +216,7 @@ func (ps *PluginServer) responseToKubelet() *v1beta1.ListAndWatchResponse {
 			}
 			hwlog.RunLog.Infof("ListAndWatch resp devices: %s %s", device.DeviceName, device.Health)
 			newDeviceName := customname.ReplaceDevicePublicName(ps.deviceType, device.DeviceName)
-			resp.Devices = append(resp.Devices, &v1beta1.Device{ID: newDeviceName, Health: device.Health})
+			resp.Devices = append(resp.Devices, ps.convertNpuDeviceToPluginDevice(device, newDeviceName))
 		}
 	} else if common.ParamOption.UseVolcanoType && !common.IsVirtualDev(ps.deviceType) {
 		vol2kltMap := ps.generateAllDeviceMap()
@@ -233,18 +233,33 @@ func (ps *PluginServer) responseToKubelet() *v1beta1.ListAndWatchResponse {
 				ps.addSoftShareDev(resp, newDeviceName, device)
 				continue
 			}
-			resp.Devices = append(resp.Devices, &v1beta1.Device{ID: newDeviceName, Health: device.Health})
+			resp.Devices = append(resp.Devices, ps.convertNpuDeviceToPluginDevice(device, newDeviceName))
 		}
 	} else {
 		for _, device := range ps.cachedDevices {
 			hwlog.RunLog.Infof("ListAndWatch resp devices: %s %s", device.DeviceName, device.Health)
 			newDeviceName := customname.ReplaceDevicePublicName(ps.deviceType, device.DeviceName)
-			resp.Devices = append(resp.Devices, &v1beta1.Device{ID: newDeviceName, Health: device.Health})
+			resp.Devices = append(resp.Devices, ps.convertNpuDeviceToPluginDevice(device, newDeviceName))
 		}
 	}
 	hwlog.RunLog.Debugf("response to kubelet resp.devices len: %+v", len(resp.Devices))
 	ps.cachedLock.RUnlock()
 	return resp
+}
+
+func (ps *PluginServer) convertNpuDeviceToPluginDevice(devOri common.NpuDevice, newDeviceName string) *v1beta1.Device {
+	dev := &v1beta1.Device{ID: newDeviceName, Health: devOri.Health}
+	numaNodes := device.GetNumaNodesByPhyID(devOri.PhyID)
+	if len(numaNodes) == 0 {
+		return dev
+	}
+	dev.Topology = &v1beta1.TopologyInfo{
+		Nodes: make([]*v1beta1.NUMANode, 0, len(numaNodes)),
+	}
+	for _, nodeId := range numaNodes {
+		dev.Topology.Nodes = append(dev.Topology.Nodes, &v1beta1.NUMANode{ID: nodeId})
+	}
+	return dev
 }
 
 func (ps *PluginServer) deepCopyDevice(cachedDevices []*common.NpuDevice) {

@@ -100,6 +100,10 @@ func NewHwDevManager(devM devmanager.DeviceInterface) *HwDevManager {
 		hwlog.RunLog.Errorf("set all device and type failed, err: %v", err)
 		return nil
 	}
+	if err := device.InitAllNumaNodeInfo(hdm.manager.GetDmgr(), &hdm.allInfo); err != nil {
+		hwlog.RunLog.Errorf("init all numa node info failed, err: %v", err)
+		// ignore err because numa node info is not critical
+	}
 	device.InitResetInfoMgr(hdm.manager.GetKubeClient())
 	if err := hdm.checkSupportedProductType(); err != nil {
 		hwlog.RunLog.Errorf("check supported product type failed, err: %v", err)

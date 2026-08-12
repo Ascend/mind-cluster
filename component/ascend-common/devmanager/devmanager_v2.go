@@ -256,6 +256,11 @@ func (d *DeviceManagerV2) GetMainBoardId() uint32 {
 	return d.mainBoardId
 }
 
+// GetAffinityCpuInfo get affinity cpu info for npu by logicID
+func (d *DeviceManagerV2) GetAffinityCpuInfo(logicID int32) (string, error) {
+	return d.DcMgr.DcGetAffinityCpuInfo(logicID)
+}
+
 // GetValidChipInfo get valid chip info
 func (d *DeviceManagerV2) GetValidChipInfo() (common.ChipInfo, error) {
 	devNum, devList, err := d.DcMgr.DcGetDeviceList()

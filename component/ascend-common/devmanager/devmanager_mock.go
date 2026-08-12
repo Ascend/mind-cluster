@@ -29,6 +29,10 @@ type DeviceManagerMock struct {
 	DevType string // Add this field
 }
 
+func (d *DeviceManagerMock) GetAffinityCpuInfo(logicID int32) (string, error) {
+	return "0", nil
+}
+
 // WaitDeviceOnline wait device online until reset timeout, retry per defaultRetryDelay
 func (d *DeviceManagerMock) WaitDeviceOnline(resetTimeout int) {
 
@@ -133,6 +137,7 @@ func (d *DeviceManagerMock) GetDeviceUtilizationRateV2Period(logicID int32) (com
 		NpuUtil:    1,
 	}, nil
 }
+
 // GetDeviceUtilizationRateCommon get npu device utilization
 func (d *DeviceManagerMock) GetDeviceUtilizationRateCommon(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
 	return common.DcmiMultiUtilizationInfo{
@@ -224,7 +229,7 @@ func (d *DeviceManagerMock) GetDeviceIPAddress(logicID, ipType int32) (string, e
 
 // CreateVirtualDevice create virtual device
 func (d *DeviceManagerMock) CreateVirtualDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-CgoCreateVDevOut, error) {
+	CgoCreateVDevOut, error) {
 	return common.CgoCreateVDevOut{}, nil
 }
 
