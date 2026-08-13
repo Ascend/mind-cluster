@@ -26,24 +26,16 @@
 
 # 最新消息
 
-- [2026.01.13]: 🚀 NPU Exporter支持输出SN序列号
-- [2026.01.13]: 🚀 支持基于AIBrix vLLM服务化实例级重调度
-- [2026.01.13]: 🚀 基于AIBrix定义的PD分离CRD一键部署vLLM推理服务
-- [2026.01.13]: 🚀 基于OME定义的PD分离CRD一键部署SGLang推理服务
-- [2026.01.13]: 🚀 支持SGLang OME部署与实例级重调度
-- [2026.01.13]: 🚀 调度与资源控制对象解耦
-- [2026.01.13]: 🚀 调度资源占用优化，任务入队一定时间后未调度则重新入队
-- [2026.01.13]: 🚀 支持公共故障预隔离
-- [2026.01.13]: 🚀 NPU Exporter支持自定义指标
-- [2026.01.13]: 🚀 支持A3推理多实例任务调度
-- [2026.01.13]: 🚀 A3兼容A2 accelerator-type资源类型
-- [2026.01.13]: 🚀 volcano1.10、1.11、1.12；k8s 1.31、1.32、1.34；docker 28.5.1、containerd 2.1.4兼容性验证
-- [2026.01.13]: 🚀 一体机推理任务容器守护进程参考设计
-- [2026.01.13]: 🚀 一体机的NPU故障检测与恢复
-- [2026.01.13]: 🚀 调度器支持StatefulSet功能
-- [2026.01.13]: 🚀 支持MindSpore框架下亚健康热切
-- [2026.01.13]: 🚀 训练快恢易用性增强
-- [2026.01.13]: 🚀 新增A3 AI服务器故障模式
+- [2026.04.15]: 🚀 支持故障后处理策略配置
+- [2026.04.15]: 🚀 支持A2\A3设备的软切分
+- [2026.04.15]: 🚀 推理支持交换机亲和性
+- [2026.04.15]: 🚀 RoCE网络故障隔离和恢复机制增强
+- [2026.04.15]: 🚀 人工隔离芯片准确性增强
+- [2026.04.15]: 🚀 支持天工组网亲和性调度
+- [2026.04.15]: 🚀 支持隔离芯片自动解除隔离
+- [2026.04.15]: 🚀 支持任务调度异常原因统计
+- [2026.04.15]: 🚀 支持A2\A3设备的硬切分
+- [2026.04.15]: 🚀 npu-exporter支持根据文件上报自定义指标
 
 # 简介
 
@@ -306,7 +298,8 @@ MindCluster基础调度特性与断点续训特性支持的框架：Pytorch、Mi
 
 4. 执行完成后进入/home/mind-cluster，在各组件“output”目录下生成编译完成的文件。
 
-5. 此处使用的go版本为1.21。
+>[!NOTE]
+>此处使用的go版本为1.21。
 
 ### 组件安装
 
@@ -362,12 +355,13 @@ MindCluster具体特性介绍如下：
 | 容器化支持特性    | [link](./docs/zh/scheduling/usage/containerization/00_before_you_start.md) | ✅ |
 | 资源监测特性     | [link](./docs/zh/scheduling/usage/resource_monitoring/00_before_you_start.md)                                                                                                 | ✅ |
 | 虚拟化实例特性    | [link](./docs/zh/scheduling/usage/virtual_instance/virtual_instance_with_hdk/01_description.md)                                                                                                  | ✅ |
-| 基础调度特性     | [link](./docs/zh/scheduling/usage/basic_scheduling/00_feature_description.md)                                                                                                    | ✅ |
+| 调度特性     | [link](./docs/zh/scheduling/usage/basic_scheduling/00_feature_description.md)                                                                                                    | ✅ |
 | 断点续训特性     |[link](./docs/zh/scheduling/usage/resumable_training/00_feature_description.md)                                                                                                  | ✅ |
 | 一体机特性     |[link](./docs/zh/scheduling/usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)                                                                                                  | ✅ |
 | MindIE Motor推理任务最佳实践 |[link](./docs/zh/scheduling/usage/mindie_motor_best_practice/00_before_you_start.md)   | ✅ |
 | SGLang推理任务最佳实践 |[link](./docs/zh/scheduling/usage/sglang_best_practice/00_before_you_start.md)   | ✅ |
 | vLLM推理任务最佳实践 |[link](./docs/zh/scheduling/usage/vllm_best_practice/00_before_you_start.md)   | ✅ |
+| Infer Operator推理任务最佳实践 |[link](./docs/zh/scheduling/usage/infer_operator_best_practice/00_before_you_start.md)   | ✅ |
 
 ## MindCluster Ascend FaultDiag
 

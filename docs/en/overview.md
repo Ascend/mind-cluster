@@ -15,8 +15,8 @@ MindCluster is a deep learning component for an AI cluster built to support NPUs
 
 |Key Feature|Introduction|Reference|
 |--|--|--|
-|Installation and deployment|Provides online download, installation, and signature verification for Ascend software and its dependencies.|[Installation and Deployment](https://gitcode.com/Ascend/ascend-deployer/blob/26.0.0/docs/en/introduction.md)|
-|Performance testing|Provides functions such as Atlas hardware compatibility check, performance testing, and fault diagnosis.|[Performance Testing](https://www.hiascend.com/document/detail/en/mindcluster/2600/toolbox/toolboxug/toolboxug_0002.html)|
+|Installation and deployment|Provides online download, installation, and signature verification for Ascend software and its dependencies.|[Installation and Deployment](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.0.0/docs/en/introduction.md)|
+|Performance testing|Provides functions such as Atlas hardware compatibility check, performance testing, and fault diagnosis.|[Performance Testing](https://www.hiascend.com/document/detail/zh/mindcluster/2600/toolbox/toolboxug/toolboxug_0002.html)|
 |Fault Diagnosis|Provides log cleaning and fault diagnosis functions for training and inference tasks, and locates the root cause of failures.|[Fault Diagnosis](./faultdiag/introduction.md)|
 |Cluster Scheduling|Provides functions such as NPU resource scheduling and management, configuration generation for distributed training collective communication, and resumable training.|[Cluster Scheduling](./scheduling/introduction/00_overview.md)|
 

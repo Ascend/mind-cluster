@@ -2,9 +2,9 @@
 
 借助Ascend Deployer工具可以批量安装集群调度组件，大幅度简化手动安装过程中繁琐的配置操作，简化安装流程，适用于集群场景下批量安装组件。
 
-Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见《MindCluster Ascend Deployer 用户指南》中的“[支持的产品和OS清单](https://gitcode.com/Ascend/ascend-deployer/blob/26.0.0/docs/zh/supported_product_and_os.md)”章节，请根据“支持部署”列的支持情况，选择是否使用Ascend Deployer工具。
+Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见《MindCluster Ascend Deployer 用户指南》中的“[支持的产品和OS清单](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.0.0/docs/zh/supported_product_and_os.md)”章节，请根据“支持部署”列的支持情况，选择是否使用Ascend Deployer工具。
 
-如需使用Ascend Deployer工具安装，请参考《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/26.0.0/docs/zh/installation_guide.md#%E5%AE%89%E8%A3%85%E6%98%87%E8%85%BE%E8%BD%AF%E4%BB%B6)”章节。
+如需使用Ascend Deployer工具安装，请参考《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.0.0/docs/zh/installation_guide.md#%E5%AE%89%E8%A3%85%E6%98%87%E8%85%BE%E8%BD%AF%E4%BB%B6)”章节。
 
 >[!NOTE]
 >

@@ -6,8 +6,6 @@ To obtain the corresponding software, see [Downloading Software Packages](#secti
 
 ## Downloading Software Packages<a name="section10979172103311"></a>
 
-Downloading software indicates your acceptance of the terms and conditions of the [Huawei Enterprise End User License Agreement (EULA)](https://e.huawei.com/cn/about/eula).
-
 >[!NOTE]
 ><i>\{version\}</i> indicates the software version number, and <i>\{arch\}</i> indicates the CPU architecture.
 
@@ -33,18 +31,6 @@ Downloading software indicates your acceptance of the terms and conditions of th
 
 >[!NOTE]
 >Resilience Controller and Elastic Agent have reached their end of life in version 7.3.0. Please obtain packages from versions prior to 7.3.0.
-
-## Software digital signature verification<a name="section51703441649"></a>
-
-To prevent software packages from being maliciously tampered with during transmission or storage, the corresponding digital signature file must be downloaded for integrity verification when downloading the software package.
-
-After the software package is downloaded, refer to the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers first.
-
-Before installing or upgrading using the software package, the digital signature of the software package must also be verified according to the above process to ensure that the software package has not been tampered with.
-
-For Carrier customers, please visit [https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction).
-
-For enterprise customers, please visit [https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054).
 
 ## Open-Source Component Source Code<a name="section149534517468"></a>
 

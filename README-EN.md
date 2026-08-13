@@ -6,32 +6,17 @@
  [![DeepWiki](https://img.shields.io/badge/DeepWiki-Ask_AI-_.svg?style=flat&color=0052D9&labelColor=000000&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAyCAYAAAAnWDnqAAAAAXNSR0IArs4c6QAAA05JREFUaEPtmUtyEzEQhtWTQyQLHNak2AB7ZnyXZMEjXMGeK/AIi+QuHrMnbChYY7MIh8g01fJoopFb0uhhEqqcbWTp06/uv1saEDv4O3n3dV60RfP947Mm9/SQc0ICFQgzfc4CYZoTPAswgSJCCUJUnAAoRHOAUOcATwbmVLWdGoH//PB8mnKqScAhsD0kYP3j/Yt5LPQe2KvcXmGvRHcDnpxfL2zOYJ1mFwrryWTz0advv1Ut4CJgf5uhDuDj5eUcAUoahrdY/56ebRWeraTjMt/00Sh3UDtjgHtQNHwcRGOC98BJEAEymycmYcWwOprTgcB6VZ5JK5TAJ+fXGLBm3FDAmn6oPPjR4rKCAoJCal2eAiQp2x0vxTPB3ALO2CRkwmDy5WohzBDwSEFKRwPbknEggCPB/imwrycgxX2NzoMCHhPkDwqYMr9tRcP5qNrMZHkVnOjRMWwLCcr8ohBVb1OMjxLwGCvjTikrsBOiA6fNyCrm8V1rP93iVPpwaE+gO0SsWmPiXB+jikdf6SizrT5qKasx5j8ABbHpFTx+vFXp9EnYQmLx02h1QTTrl6eDqxLnGjporxl3NL3agEvXdT0WmEost648sQOYAeJS9Q7bfUVoMGnjo4AZdUMQku50McDcMWcBPvr0SzbTAFDfvJqwLzgxwATnCgnp4wDl6Aa+Ax283gghmj+vj7feE2KBBRMW3FzOpLOADl0Isb5587h/U4gGvkt5v60Z1VLG8BhYjbzRwyQZemwAd6cCR5/XFWLYZRIMpX39AR0tjaGGiGzLVyhse5C9RKC6ai42ppWPKiBagOvaYk8lO7DajerabOZP46Lby5wKjw1HCRx7p9sVMOWGzb/vA1hwiWc6jm3MvQDTogQkiqIhJV0nBQBTU+3okKCFDy9WwferkHjtxib7t3xIUQtHxnIwtx4mpg26/HfwVNVDb4oI9RHmx5WGelRVlrtiw43zboCLaxv46AZeB3IlTkwouebTr1y2NjSpHz68WNFjHvupy3q8TFn3Hos2IAk4Ju5dCo8B3wP7VPr/FGaKiG+T+v+TQqIrOqMTL1VdWV1DdmcbO8KXBz6esmYWYKPwDL5b5FA1a0hwapHiom0r/cKaoqr+27/XcrS5UwSMbQAAAABJRU5ErkJggg==)](https://deepwiki.com/Ascend/mind-cluster)
 </div>
 
-- [MindCluster](#mindcluster)
 - [News](#news)
 - [Introduction](#introduction)
 - [Directory Structure](#directory-structure)
 - [Release Notes](#release-notes)
 - [Compatibility Information](#compatibility-information)
 - [Environment Deployment](#environment-deployment)
-  - [MindCluster Cluster Scheduling](#mindcluster-cluster-scheduling)
-    - [Compilation](#compilation)
-    - [Component Installation](#component-installation)
-  - [MindCluster Ascend FaultDiag](#mindcluster-ascend-faultdiag)
-    - [Compilation and Build](#compilation-and-build)
-      - [Environment Requirements](#environment-requirements)
-      - [Build](#build)
-    - [Component Installation](#component-installation-1)
 - [Quick Start](#quick-start)
-  - [MindCluster Cluster Scheduling](#mindcluster-cluster-scheduling-1)
-  - [MindCluster Ascend FaultDiag](#mindcluster-ascend-faultdiag-1)
 - [Feature Introduction](#feature-introduction)
-  - [MindCluster Cluster Scheduling](#mindcluster-cluster-scheduling-2)
-  - [MindCluster Ascend FaultDiag](#mindcluster-ascend-faultdiag-2)
 - [API Reference](#api-reference)
 - [FAQs](#faqs)
 - [Security Statement](#security-statement)
-  - [MindCluster Cluster Scheduling](#mindcluster-cluster-scheduling-3)
-  - [MindCluster Ascend FaultDiag](#mindcluster-ascend-faultdiag-3)
 - [Branch Maintenance Policy](#branch-maintenance-policy)
 - [Version Maintenance Policy](#version-maintenance-policy)
 - [Disclaimer](#disclaimer)
@@ -44,20 +29,13 @@
 - [2026.04.15]: 🚀 Support for fault post-processing policy configuration
 - [2026.04.15]: 🚀 Support for soft partitioning of A2\A3 devices
 - [2026.04.15]: 🚀 Support for switch affinity during inference
-- [2026.04.15]: 🚀 verl supports asynchronous saving
-- [2026.04.15]: 🚀 Modification to ClusterD heartbeat frequency
 - [2026.04.15]: 🚀 Enhancement of RoCE network fault isolation and recovery
 - [2026.04.15]: 🚀 Improved accuracy of manual chip isolation
 - [2026.04.15]: 🚀 Support for affinity scheduling within Tiangong networking
-- [2026.04.15]: 🚀 Optimization of the job information subscription interface
-- [2026.04.15]: 🚀 Volcano log optimization
 - [2026.04.15]: 🚀 Support for automatic de-isolation of isolated chips
 - [2026.04.15]: 🚀 Support for statistics on causes of abnormal task scheduling
 - [2026.04.15]: 🚀 Support for hard partitioning of A2/A3 devices
 - [2026.04.15]: 🚀 NPU Exporter supports custom metrics reporting based on files
-- [2026.04.15]: 🚀 NPU Exporter supports NPU utilization metrics
-- [2026.04.15]: 🚀 Optimization of NPU hardware fault handling process during process-level rescheduling
-- [2026.04.15]: 🚀 Enhancement of fault handling during process-level rescheduling
 
 # Introduction
 
@@ -320,11 +298,12 @@ This part introduces the compilation and installation methods of MindCluster.
 
 4. After execution, go to `/home/mind-cluster`. The compiled files are generated in the `output` directory of each component.
 
-Note: The Go version used here is 1.21.
+>[!NOTE]
+>The Go version used here is 1.21.
 
 ### Component Installation
 
-Before installing and using cluster scheduling components, you need to understand [their features](./docs/en/scheduling/introduction/00_overview.md) in advance, and select the features to use and install the corresponding components accordingly.
+Before installing and using cluster scheduling components, you need to understand [their features](./docs/en/scheduling/introduction/00_overview.md) in advance, and select the features to use and [install the corresponding components](./docs/en/scheduling/installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md).
 
 ## MindCluster Ascend FaultDiag
 
@@ -359,7 +338,7 @@ For details, see [Installing MindCluster Ascend FaultDiag](./docs/en/faultdiag/i
 
 ## MindCluster Cluster Scheduling
 
-A single Atlas 800T A2 training server (serving as both the management node and compute node) is used as an example to demonstrate how to install NodeD, Ascend Device Plugin, Ascend Docker Runtime, Volcano, ClusterD, and Ascend Operator, and how to use the full-NPU scheduling feature to quickly submit training tasks. For details, see the [user guide](./docs/en/scheduling/menu_scheduling_user_guide.md).
+A single Atlas 800T A2 training server (serving as both the management node and compute node) is used as an example to demonstrate how to install NodeD, Ascend Device Plugin, Ascend Docker Runtime, Volcano, ClusterD, and Ascend Operator, and how to use the full-NPU scheduling feature to quickly submit training tasks. For details, see the [Quick Start](./docs/en/scheduling/quick_start.md).
 
 ## MindCluster Ascend FaultDiag
 
@@ -373,28 +352,29 @@ This part describes the specific features of MindCluster.
 
 | Feature        | Introduction                                                                                                            | Released |
 |------------|---------------------------------------------------------------------------------------------------------------|----------|
-| Containerization    | [Containerization](./docs/en/scheduling/usage/containerization/00_before_you_start.md) | ✅ |
-| Resource Monitoring     | [Resource Monitoring](./docs/en/scheduling/usage/resource_monitoring/00_before_you_start.md)                                                                                                 | ✅ |
-| Virtual Instance    | [Virtual Instance](./docs/en/scheduling/usage/virtual_instance/virtual_instance_with_hdk/01_description.md)                                                                                                  | ✅ |
-| Basic Scheduling     | [Basic Scheduling](./docs/en/scheduling/usage/basic_scheduling/00_feature_description.md)                                                                                                    | ✅ |
-| Resumable Training     |[Resumable Training](./docs/en/scheduling/usage/resumable_training/00_feature_description.md)                                                                                                  | ✅ |
-| Appliance     |[Appliance](./docs/en/scheduling/usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)                                                                                                  | ✅ |
-| Best Practices of MindIE Motor Inference Tasks |[Best Practices of MindIE Motor Inference Tasks](./docs/en/scheduling/usage/mindie_motor_best_practice/00_before_you_start.md)   | ✅ |
-| Best Practices of SGLang Inference Tasks |[Best Practices of SGLang Inference Tasks](./docs/en/scheduling/usage/sglang_best_practice/00_before_you_start.md)   | ✅ |
-| Best Practices of vLLM Inference Tasks |[Best Practices of vLLM Inference Tasks](./docs/en/scheduling/usage/vllm_best_practice/00_before_you_start.md)   | ✅ |
+| Containerization    | [link](./docs/en/scheduling/usage/containerization/00_before_you_start.md) | ✅ |
+| Resource Monitoring     | [link](./docs/en/scheduling/usage/resource_monitoring/00_before_you_start.md)                                                                                                 | ✅ |
+| Virtual Instance    | [link](./docs/en/scheduling/usage/virtual_instance/virtual_instance_with_hdk/01_description.md)                                                                                                  | ✅ |
+| Scheduling     | [link](./docs/en/scheduling/usage/basic_scheduling/00_feature_description.md)                                                                                                    | ✅ |
+| Resumable Training     |[link](./docs/en/scheduling/usage/resumable_training/00_feature_description.md)                                                                                                  | ✅ |
+| Appliance     |[link](./docs/en/scheduling/usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)                                                                                                  | ✅ |
+| Best Practices of MindIE Motor Inference Tasks |[link](./docs/en/scheduling/usage/mindie_motor_best_practice/00_before_you_start.md)   | ✅ |
+| Best Practices of SGLang Inference Tasks |[link](./docs/en/scheduling/usage/sglang_best_practice/00_before_you_start.md)   | ✅ |
+| Best Practices of vLLM Inference Tasks |[link](./docs/en/scheduling/usage/vllm_best_practice/00_before_you_start.md)   | ✅ |
+| Best Practices of Infer Operator Inference Jobs |[link](./docs/en/scheduling/usage/infer_operator_best_practice/00_before_you_start.md)   | ✅ |
 
 ## MindCluster Ascend FaultDiag
 
 | Feature       | Introduction                                                                                                              | Released |
 |-----------|-----------------------------------------------------------------------------------------------------------------|----------|
-| Log Cleaning and Dumping   | [Log Cleaning and Dumping](./docs/en/faultdiag/user_guide/06_cleaning_and_dumping_logs.md) | ✅        |
-| Fault Diagnosis      | [Fault Diagnosis](./docs/en/faultdiag/user_guide/07_diagnosing_faults.md) | ✅        |
-| Single-Server Fault Diagnosis    | [Single-Server Fault Diagnosis](./docs/en/faultdiag/user_guide/08_diagnosing_faults_on_a_single_server.md) | ✅        |
-| SuperPoD Fault Diagnosis   | [SuperPoD Fault Diagnosis](./docs/en/faultdiag/user_guide/09_diagnosing_superpod_faults.md) | ✅        |
-| Service Flow Log Cleaning   | [Service Flow Log Cleaning](./docs/en/faultdiag/user_guide/10_cleaning_service_flow_logs.md) | ✅        |
-| Root Cause Node Cleaning and Diagnosis | [Root Cause Node Cleaning and Diagnosis](./docs/en/faultdiag/user_guide/11_cleaning_and_diagnosing_the_root_cause_node.md) | ✅        |
-| Fault Event Cleaning and Diagnosis | [Fault Event Cleaning and Diagnosis](./docs/en/faultdiag/user_guide/12_cleaning_and_diagnosing_fault_events.md) | ✅        |
-| Custom Configuration File   | [Custom Configuration File](./docs/en/faultdiag/user_guide/13_customizing_a_configuration_file.md) | ✅        |
+| Log Cleaning and Dumping   | [link](./docs/en/faultdiag/user_guide/06_cleaning_and_dumping_logs.md) | ✅        |
+| Fault Diagnosis      | [link](./docs/en/faultdiag/user_guide/07_diagnosing_faults.md) | ✅        |
+| Single-Server Fault Diagnosis    | [link](./docs/en/faultdiag/user_guide/08_diagnosing_faults_on_a_single_server.md) | ✅        |
+| SuperPoD Fault Diagnosis   | [link](./docs/en/faultdiag/user_guide/09_diagnosing_superpod_faults.md) | ✅        |
+| Service Flow Log Cleaning   | [link](./docs/en/faultdiag/user_guide/10_cleaning_service_flow_logs.md) | ✅        |
+| Root Cause Node Cleaning and Diagnosis | [link](./docs/en/faultdiag/user_guide/11_cleaning_and_diagnosing_the_root_cause_node.md) | ✅        |
+| Fault Event Cleaning and Diagnosis | [link](./docs/en/faultdiag/user_guide/12_cleaning_and_diagnosing_fault_events.md) | ✅        |
+| Custom Configuration File   | [link](./docs/en/faultdiag/user_guide/13_customizing_a_configuration_file.md) | ✅        |
 
 # API Reference
 
