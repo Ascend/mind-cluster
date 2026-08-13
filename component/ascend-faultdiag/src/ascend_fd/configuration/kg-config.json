@@ -21838,9 +21838,9 @@
             ],
             "source_file": "TrainLog",
             "regex": {
-                "regex": "[EWI][A-Z0-9][0-9]{4}:"
+                "regex": "[EWI][A-Z0-9][0-9]{4}[):]"
             },
-            "attr_regex": "(?P<complement>[EWI][A-Z0-9][0-9]{4}):"
+            "attr_regex": "(?P<complement>[EWI][A-Z0-9][0-9]{4})[):]"
         },
         "AISW_PyTorch_ERRCODE_Common": {
             "attribute": {
