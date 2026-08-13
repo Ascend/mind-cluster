@@ -27,6 +27,7 @@ DOCKER_CONFIG_DIR=/etc/docker
 CONTAINERD_CONFIG_DIR=/etc/containerd
 CONFIG_FILE_PATH=""
 INSTALL_SCENE=docker
+INJECTION_MODE=""
 INSTALL_PATH=/usr/local/Ascend/Ascend-Docker-Runtime
 readonly INSTALL_LOG_DIR=/var/log/${RT_LOWER_CASE}
 readonly INSTALL_LOG_PATH=${INSTALL_LOG_DIR}/installer.log
@@ -145,6 +146,7 @@ Options:
                                 (eg: --install-type=A200IA2, when your product is A200I A2 or A200I DK A2)
   --version                     Query ${RT_FIRST_CASE} version
   --install-scene=<scene>       Installation scenario, only docker, containerd or isula(eg: --install-scene=docker, default: docker)
+  --injection-mode=<mode>       Injection mode for NPU devices, cdi or legacy (eg: --injection-mode=cdi, default: legacy)
   --config-file-path            Specifies the path of the Docker or containerd configuration file
                                 (eg: --config-file-path=/etc/containerd/config.toml).
                                 If this parameter is not specified, the default configuration file path
@@ -178,6 +180,7 @@ function save_install_args() {
       echo -e "a200ia2=${a200ia2}"
       echo -e "install-scene=${INSTALL_SCENE}"
       echo -e "config-file-path=${CONFIG_FILE_PATH}"
+      echo -e "injection-mode=${INJECTION_MODE}"
     } > "${INSTALL_PATH}"/ascend_docker_runtime_install.info
     chmod 640 ${INSTALL_PATH}/ascend_docker_runtime_install.info
 }
@@ -311,6 +314,12 @@ function install()
     fi
     chmod 440 ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
 
+    if [[ -n "${INJECTION_MODE}" ]]; then
+        echo "{\"injectionMode\": \"${INJECTION_MODE}\"}" > ${ASCEND_RUNTIME_CONFIG_DIR}/config.json
+        chmod 640 ${ASCEND_RUNTIME_CONFIG_DIR}/config.json
+        log "[INFO]" "injection-mode set to: ${INJECTION_MODE}"
+    fi
+
     echo "[INFO] install executable files success"
 
     if [[ ${CONFIG_FILE_PATH} == "" ]]; then
@@ -387,6 +396,8 @@ function uninstall()
         exit 1
     fi
 
+    rm -f ${ASCEND_RUNTIME_CONFIG_DIR}/config.json
+
     log "[INFO]" "${RT_LOWER_CASE} uninstall success"
 }
 
@@ -435,6 +446,13 @@ function upgrade()
         exit 1
     fi
 
+    # Preserve the previously configured injection-mode when upgrading without an
+    # explicit --injection-mode argument, so save_install_args does not overwrite
+    # the install.info record with an empty value.
+    if [[ -z "${INJECTION_MODE}" ]] && [ -f "${INSTALL_PATH}"/ascend_docker_runtime_install.info ]; then
+        INJECTION_MODE=$(grep "^injection-mode=" "${INSTALL_PATH}"/ascend_docker_runtime_install.info | head -n 1 | cut -d"=" -f2-)
+    fi
+
     if [ -f "${INSTALL_PATH}"/ascend_docker_runtime_install.info ]; then
         if [ "$(grep "a500=y" "${INSTALL_PATH}"/ascend_docker_runtime_install.info)" == "a500=y" ];then
             a500=y
@@ -468,6 +486,12 @@ function upgrade()
     fi
     chmod 440 ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
 
+    if [[ -n "${INJECTION_MODE}" ]]; then
+        echo "{\"injectionMode\": \"${INJECTION_MODE}\"}" > ${ASCEND_RUNTIME_CONFIG_DIR}/config.json
+        chmod 640 ${ASCEND_RUNTIME_CONFIG_DIR}/config.json
+        log "[INFO]" "injection-mode set to: ${INJECTION_MODE}"
+    fi
+
     echo "[INFO] ${RT_LOWER_CASE} has been installed in: ${INSTALL_PATH}"
     echo "[INFO] upgrade ${RT_LOWER_CASE} success"
     echo "[INFO] The version of ${RT_LOWER_CASE} is: v${PACKAGE_VERSION}"
@@ -486,6 +510,7 @@ a500a2=n
 a200ia2=n
 ISULA=none
 RESERVEDEFAULT=no
+INJECTION_MODE_FLAG=n
 need_help=y
 
 check_log
@@ -520,6 +545,23 @@ do
                 RESERVEDEFAULT=yes
             else
                 log "[ERROR]" "failed, please check the parameter of --install-scene=<scene>"
+                exit 1
+            fi
+            shift
+            ;;
+        --injection-mode=*)
+            if [ "${INJECTION_MODE_FLAG}" == "y" ]; then
+                log "[ERROR]" "failed, '--injection-mode' Repeat parameter!"
+                exit 1
+            fi
+            need_help=n
+            INJECTION_MODE_FLAG=y
+            if [ "$3" == "--injection-mode=cdi" ]; then
+                INJECTION_MODE=cdi
+            elif [ "$3" == "--injection-mode=legacy" ]; then
+                INJECTION_MODE=legacy
+            else
+                log "[ERROR]" "failed, please check the parameter of --injection-mode=<mode>, only cdi or legacy are supported"
                 exit 1
             fi
             shift
@@ -632,6 +674,14 @@ if [ "${INSTALL_SCENE_FLAG}" == "y" ] && \
    [ "${UNINSTALL_FLAG}" == "n" ] && \
    [ "${UPGRADE_FLAG}" == "n" ]; then
       log "[ERROR]" "failed, only input <install-scene> command. When use --install-scene you also need input --install or --uninstall or --upgrade"
+      exit 1
+fi
+
+# it is not allowed to input only injection-mode
+if [ "${INJECTION_MODE_FLAG}" == "y" ] && \
+   [ "${INSTALL_FLAG}" == "n" ] && \
+   [ "${UPGRADE_FLAG}" == "n" ]; then
+      log "[ERROR]" "failed, only input <injection-mode> command. When use --injection-mode you also need input --install or --upgrade"
       exit 1
 fi
 

@@ -1,4 +1,4 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2026. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -19,8 +19,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -38,10 +38,13 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/cdi"
+	cdimount "ascend-common/cdi/mount"
 	"ascend-docker-runtime/mindxcheckutils"
 	"ascend-docker-runtime/runtime/common"
 	"ascend-docker-runtime/runtime/dcmi"
 	"ascend-docker-runtime/runtime/grus"
+	cdispec "tags.cncf.io/container-device-interface/specs-go"
 )
 
 const (
@@ -282,7 +285,7 @@ func TestModifySpecFilePatch1(t *testing.T) {
 			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil).
 				ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
 				ApplyFuncReturn(os.OpenFile, &os.File{}, nil).
-				ApplyFuncReturn(ioutil.ReadAll, []byte{}, testError)
+				ApplyFuncReturn(io.ReadAll, []byte{}, testError)
 			defer patches.Reset()
 			err := modifySpecFile("")
 			convey.So(err, convey.ShouldBeError)
@@ -291,7 +294,7 @@ func TestModifySpecFilePatch1(t *testing.T) {
 			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil).
 				ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
 				ApplyFuncReturn(os.OpenFile, &os.File{}, nil).
-				ApplyFuncReturn(ioutil.ReadAll, []byte{}, nil).
+				ApplyFuncReturn(io.ReadAll, []byte{}, nil).
 				ApplyMethodReturn(&os.File{}, "Truncate", testError)
 			defer patches.Reset()
 			err := modifySpecFile("")
@@ -301,7 +304,7 @@ func TestModifySpecFilePatch1(t *testing.T) {
 			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil).
 				ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
 				ApplyFuncReturn(os.OpenFile, &os.File{}, nil).
-				ApplyFuncReturn(ioutil.ReadAll, []byte{}, nil).
+				ApplyFuncReturn(io.ReadAll, []byte{}, nil).
 				ApplyMethodReturn(&os.File{}, "Truncate", nil).
 				ApplyMethodReturn(&os.File{}, "Seek", int64(0), testError)
 			defer patches.Reset()
@@ -317,7 +320,7 @@ func TestModifySpecFilePatch2(t *testing.T) {
 		patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil).
 			ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
 			ApplyFuncReturn(os.OpenFile, &os.File{}, nil).
-			ApplyFuncReturn(ioutil.ReadAll, []byte{}, nil).
+			ApplyFuncReturn(io.ReadAll, []byte{}, nil).
 			ApplyMethodReturn(&os.File{}, "Truncate", nil).
 			ApplyMethodReturn(&os.File{}, "Seek", int64(0), nil).
 			ApplyFuncReturn(json.Unmarshal, nil)
@@ -367,7 +370,7 @@ func TestModifySpecFilePatch3(t *testing.T) {
 		patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil).
 			ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
 			ApplyFuncReturn(os.OpenFile, &os.File{}, nil).
-			ApplyFuncReturn(ioutil.ReadAll, []byte{}, nil).
+			ApplyFuncReturn(io.ReadAll, []byte{}, nil).
 			ApplyMethodReturn(&os.File{}, "Truncate", nil).
 			ApplyMethodReturn(&os.File{}, "Seek", int64(0), nil).
 			ApplyFuncReturn(json.Unmarshal, nil).
@@ -390,7 +393,7 @@ func TestModifySpecFilePatch4(t *testing.T) {
 		patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil).
 			ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
 			ApplyFuncReturn(os.OpenFile, &os.File{}, nil).
-			ApplyFuncReturn(ioutil.ReadAll, []byte{}, nil).
+			ApplyFuncReturn(io.ReadAll, []byte{}, nil).
 			ApplyMethodReturn(&os.File{}, "Truncate", nil).
 			ApplyMethodReturn(&os.File{}, "Seek", int64(0), nil)
 		defer patches.Reset()
@@ -428,12 +431,12 @@ func TestReadSpecFile(t *testing.T) {
 		patch2 := patch1.ApplyFuncReturn(mindxcheckutils.CheckFileInfo, nil)
 		defer patch2.Reset()
 		convey.Convey("04-read file error, should return error", func() {
-			patch := patch2.ApplyFuncReturn(ioutil.ReadAll, nil, testError)
+			patch := patch2.ApplyFuncReturn(io.ReadAll, nil, testError)
 			defer patch.Reset()
 			_, err := readSpecFile("/valid/path")
 			convey.So(err, convey.ShouldBeError)
 		})
-		patch3 := patch2.ApplyFuncReturn(ioutil.ReadAll, []byte("invalid json"), nil)
+		patch3 := patch2.ApplyFuncReturn(io.ReadAll, []byte("invalid json"), nil)
 		defer patch3.Reset()
 		convey.Convey("05-unmarshal error, should return error", func() {
 			patch := patch3.ApplyFuncReturn(json.Unmarshal, testError)
@@ -466,6 +469,221 @@ func TestProcessDevicesAndHooks(t *testing.T) {
 			}
 			err := processDevicesAndHooks(spec)
 			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+// TestProcessDevicesAndHooks_CDI tests the CDI injection path in processDevicesAndHooks.
+func TestProcessDevicesAndHooks_CDI(t *testing.T) {
+	convey.Convey("test processDevicesAndHooks CDI path", t, func() {
+		baseSpec := &specs.Spec{
+			Process: &specs.Process{
+				Env: []string{"ASCEND_VISIBLE_DEVICES=0"},
+			},
+		}
+		mockSpec := &cdispec.Spec{Version: "0.8.0", Kind: "ascend.com/npu"}
+
+		convey.Convey("01-CDI mode success, should return nil", func() {
+			patches := gomonkey.ApplyFuncReturn(loadConfig, &Config{InjectionMode: "cdi"}).
+				ApplyFuncReturn(checkVisibleDevice, []int{0}, nil).
+				ApplyFuncReturn(dcmi.GetMatchingNpuWorker, &dcmi.NpuV1Worker{}, nil).
+				ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{CardID: -1, DeviceID: -1, VdeviceID: -1}, nil).
+				ApplyFuncReturn(cdi.BuildSpec, mockSpec, nil).
+				ApplyFuncReturn(InjectEdits, nil).
+				ApplyFunc(addAscendDockerEnv, func(spec *specs.Spec) {}).
+				ApplyFunc(addAscendLibraryPath, func(spec *specs.Spec) {}).
+				ApplyFuncReturn(isMountByRuntimeForDP, false)
+			defer patches.Reset()
+
+			patchGetChip := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetChipName",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "910", nil })
+			defer patchGetChip.Reset()
+
+			patchGetProductType := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetProductType",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "", nil })
+			defer patchGetProductType.Reset()
+
+			err := processDevicesAndHooks(baseSpec)
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("02-CDI mode with BuildSpec error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(loadConfig, &Config{InjectionMode: "cdi"}).
+				ApplyFuncReturn(checkVisibleDevice, []int{0}, nil).
+				ApplyFuncReturn(dcmi.GetMatchingNpuWorker, &dcmi.NpuV1Worker{}, nil).
+				ApplyFuncReturn(cdi.BuildSpec, (*cdispec.Spec)(nil), testError)
+			defer patches.Reset()
+
+			patchGetChip := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetChipName",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "910", nil })
+			defer patchGetChip.Reset()
+
+			patchGetProductType := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetProductType",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "", nil })
+			defer patchGetProductType.Reset()
+
+			err := processDevicesAndHooks(baseSpec)
+			convey.So(err, convey.ShouldBeError)
+		})
+
+		convey.Convey("03-CDI mode with InjectEdits error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(loadConfig, &Config{InjectionMode: "cdi"}).
+				ApplyFuncReturn(checkVisibleDevice, []int{0}, nil).
+				ApplyFuncReturn(dcmi.GetMatchingNpuWorker, &dcmi.NpuV1Worker{}, nil).
+				ApplyFuncReturn(cdi.BuildSpec, mockSpec, nil).
+				ApplyFuncReturn(InjectEdits, testError)
+			defer patches.Reset()
+
+			patchGetChip := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetChipName",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "910", nil })
+			defer patchGetChip.Reset()
+
+			patchGetProductType := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetProductType",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "", nil })
+			defer patchGetProductType.Reset()
+
+			err := processDevicesAndHooks(baseSpec)
+			convey.So(err, convey.ShouldBeError)
+		})
+
+		convey.Convey("04-CDI mode with GetMatchingNpuWorker error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(loadConfig, &Config{InjectionMode: "cdi"}).
+				ApplyFuncReturn(checkVisibleDevice, []int{0}, nil).
+				ApplyFuncReturn(dcmi.GetMatchingNpuWorker, (*dcmi.NpuV1Worker)(nil), testError)
+			defer patches.Reset()
+
+			err := processDevicesAndHooks(baseSpec)
+			convey.So(err, convey.ShouldBeError)
+		})
+
+		convey.Convey("05-CDI mode with dynamic vNPU split, should update env and post hook", func() {
+			vpuSpec := &specs.Spec{
+				Process: &specs.Process{
+					Env: []string{"ASCEND_VISIBLE_DEVICES=0", "ASCEND_VNPU_SPECS=vir02"},
+				},
+			}
+			updateEnvCalled := false
+			patches := gomonkey.ApplyFuncReturn(loadConfig, &Config{InjectionMode: "cdi"}).
+				ApplyFuncReturn(checkVisibleDevice, []int{0}, nil).
+				ApplyFuncReturn(dcmi.GetMatchingNpuWorker, &dcmi.NpuV1Worker{}, nil).
+				ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{CardID: 0, DeviceID: 0, VdeviceID: 5}, nil).
+				ApplyFunc(updateEnvAndPostHook, func(spec *specs.Spec, vdevice dcmi.VDeviceInfo) error {
+					updateEnvCalled = true
+					return nil
+				}).
+				ApplyFuncReturn(cdi.BuildSpec, mockSpec, nil).
+				ApplyFuncReturn(InjectEdits, nil).
+				ApplyFunc(addAscendDockerEnv, func(spec *specs.Spec) {}).
+				ApplyFunc(addAscendLibraryPath, func(spec *specs.Spec) {}).
+				ApplyFuncReturn(isMountByRuntimeForDP, false)
+			defer patches.Reset()
+
+			patchGetChip := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetChipName",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "910", nil })
+			defer patchGetChip.Reset()
+
+			patchGetProductType := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetProductType",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "", nil })
+			defer patchGetProductType.Reset()
+
+			err := processDevicesAndHooks(vpuSpec)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(updateEnvCalled, convey.ShouldBeTrue)
+			convey.So(vpuSpec.Hooks, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("06-CDI mode with explicit VIRTUAL and no split, should set useVirtual", func() {
+			virtualSpec := &specs.Spec{
+				Process: &specs.Process{
+					Env: []string{"ASCEND_VISIBLE_DEVICES=0", "ASCEND_RUNTIME_OPTIONS=VIRTUAL"},
+				},
+			}
+			capturedUseVirtual := false
+			patches := gomonkey.ApplyFuncReturn(loadConfig, &Config{InjectionMode: "cdi"}).
+				ApplyFuncReturn(checkVisibleDevice, []int{0}, nil).
+				ApplyFuncReturn(dcmi.GetMatchingNpuWorker, &dcmi.NpuV1Worker{}, nil).
+				ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{CardID: -1, DeviceID: -1, VdeviceID: -1}, nil).
+				ApplyFunc(cdi.BuildSpec, func(cfg cdi.BuildSpecConfig) (*cdispec.Spec, error) {
+					capturedUseVirtual = cfg.UseVirtual
+					return mockSpec, nil
+				}).
+				ApplyFuncReturn(InjectEdits, nil).
+				ApplyFunc(addAscendDockerEnv, func(spec *specs.Spec) {}).
+				ApplyFunc(addAscendLibraryPath, func(spec *specs.Spec) {}).
+				ApplyFuncReturn(isMountByRuntimeForDP, false)
+			defer patches.Reset()
+
+			patchGetChip := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetChipName",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "910", nil })
+			defer patchGetChip.Reset()
+
+			patchGetProductType := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetProductType",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "", nil })
+			defer patchGetProductType.Reset()
+
+			err := processDevicesAndHooks(virtualSpec)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(capturedUseVirtual, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("07-CDI mode with GetProductType error, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(loadConfig, &Config{InjectionMode: "cdi"}).
+				ApplyFuncReturn(checkVisibleDevice, []int{0}, nil).
+				ApplyFuncReturn(dcmi.GetMatchingNpuWorker, &dcmi.NpuV1Worker{}, nil).
+				ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{CardID: -1, DeviceID: -1, VdeviceID: -1}, nil).
+				ApplyFuncReturn(cdi.BuildSpec, mockSpec, nil).
+				ApplyFuncReturn(InjectEdits, nil).
+				ApplyFunc(addAscendDockerEnv, func(spec *specs.Spec) {}).
+				ApplyFunc(addAscendLibraryPath, func(spec *specs.Spec) {}).
+				ApplyFuncReturn(isMountByRuntimeForDP, false)
+			defer patches.Reset()
+
+			patchGetChip := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetChipName",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "910", nil })
+			defer patchGetChip.Reset()
+
+			patchGetProductType := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetProductType",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "", testError })
+			defer patchGetProductType.Reset()
+
+			err := processDevicesAndHooks(baseSpec)
+			convey.So(err, convey.ShouldBeError)
+		})
+
+		convey.Convey("08-CDI mode reads ASCEND_RUNTIME_MOUNTS from container env", func() {
+			mountSpec := &specs.Spec{
+				Process: &specs.Process{
+					Env: []string{"ASCEND_VISIBLE_DEVICES=0", "ASCEND_RUNTIME_MOUNTS=base,custom"},
+				},
+			}
+			capturedMountNames := ""
+			patches := gomonkey.ApplyFuncReturn(loadConfig, &Config{InjectionMode: "cdi"}).
+				ApplyFuncReturn(checkVisibleDevice, []int{0}, nil).
+				ApplyFuncReturn(dcmi.GetMatchingNpuWorker, &dcmi.NpuV1Worker{}, nil).
+				ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{CardID: -1, DeviceID: -1, VdeviceID: -1}, nil).
+				ApplyFunc(cdi.BuildSpec, func(cfg cdi.BuildSpecConfig) (*cdispec.Spec, error) {
+					if provider, ok := cfg.Provider.(*cdimount.FileProvider); ok {
+						capturedMountNames = provider.MountNames
+					}
+					return mockSpec, nil
+				}).
+				ApplyFuncReturn(InjectEdits, nil).
+				ApplyFunc(addAscendDockerEnv, func(spec *specs.Spec) {}).
+				ApplyFunc(addAscendLibraryPath, func(spec *specs.Spec) {}).
+				ApplyFuncReturn(isMountByRuntimeForDP, false)
+			defer patches.Reset()
+
+			patchGetChip := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetChipName",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "910", nil })
+			defer patchGetChip.Reset()
+
+			patchGetProductType := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetProductType",
+				func(f *dcmi.NpuV1Worker) (string, error) { return "", nil })
+			defer patchGetProductType.Reset()
+
+			err := processDevicesAndHooks(mountSpec)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(capturedMountNames, convey.ShouldEqual, "base,custom")
 		})
 	})
 }
@@ -657,11 +875,11 @@ func TestParseDevicesCase7(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-// TestRemoveDuplication tests the function removeDuplication
-func TestRemoveDuplication(t *testing.T) {
+// TestRemoveDuplicates tests the function removeDuplicates
+func TestRemoveDuplicates(t *testing.T) {
 	originList := []int{1, 2, 2, 4, 5, 5, 5, 6, 8, 8}
 	targetList := []int{1, 2, 4, 5, 6, 8}
-	resultList := removeDuplication(originList)
+	resultList := removeDuplicates(originList)
 
 	assert.EqualValues(t, targetList, resultList)
 }
@@ -797,21 +1015,21 @@ func TestUpdateEnvAndPostHook(t *testing.T) {
 		convey.Convey("get executable path failed, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(os.Executable, "", errors.New("executable failed"))
 			defer patch.Reset()
-			err := updateEnvAndPostHook(&spec, vdvice, &deviceList)
+			err := updateEnvAndPostHook(&spec, vdvice)
 			convey.ShouldContain(err.Error(), "cannot get the path of docker-destroy:")
 		})
 		convey.Convey("deviceIdList is nil, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", errors.New("check failed")).
 				ApplyFuncReturn(os.Executable, "", nil)
 			defer patch.Reset()
-			err := updateEnvAndPostHook(&spec, vdvice, &deviceList)
+			err := updateEnvAndPostHook(&spec, vdvice)
 			convey.ShouldContain(err.Error(), "failed to check docker-destroy executable file at")
 		})
 		convey.Convey("updateEnvAndPostHook success, should return nil", func() {
 			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
 				ApplyFuncReturn(os.Executable, "", nil)
 			defer patch.Reset()
-			err := updateEnvAndPostHook(&spec, vdvice, &deviceList)
+			err := updateEnvAndPostHook(&spec, vdvice)
 			assert.Nil(t, err)
 			assert.Contains(t, spec.Process.Env, "ASCEND_VISIBLE_DEVICES=0")
 			assert.Contains(t, spec.Process.Env, "ASCEND_RUNTIME_OPTIONS=VIRTUAL")
@@ -823,11 +1041,15 @@ func TestUpdateEnvAndPostHook(t *testing.T) {
 // TestUpdateEnvAndPostHookPatch1 tests the function updateEnvAndPostHook
 func TestUpdateEnvAndPostHookPatch1(t *testing.T) {
 	convey.Convey("test updateEnvAndPostHook patch1", t, func() {
-		convey.Convey("01-deviceIdList is nil, should return nil", func() {
-			spec := &specs.Spec{}
-			err := updateEnvAndPostHook(spec, dcmi.VDeviceInfo{}, nil)
-			convey.ShouldBeNil(err)
-			convey.So(spec.Process, convey.ShouldBeNil)
+		convey.Convey("01-no deviceIdList param, env update proceeds", func() {
+			spec := &specs.Spec{
+				Process: &specs.Process{},
+				Hooks:   &specs.Hooks{},
+			}
+			patch := gomonkey.ApplyFuncReturn(os.Executable, "", errors.New("executable failed"))
+			defer patch.Reset()
+			err := updateEnvAndPostHook(spec, dcmi.VDeviceInfo{})
+			convey.ShouldNotBeNil(err)
 		})
 	})
 }

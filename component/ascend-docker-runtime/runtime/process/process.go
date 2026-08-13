@@ -1,4 +1,4 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2026. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -33,6 +33,8 @@ import (
 	"github.com/opencontainers/runtime-spec/specs-go"
 
 	"ascend-common/api"
+	"ascend-common/cdi"
+	cdimount "ascend-common/cdi/mount"
 	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
 	"ascend-docker-runtime/runtime/common"
@@ -60,6 +62,9 @@ const (
 	// void indicates that the NPU card does not need to be mounted
 	void = "void"
 
+	// vDeviceNumberRe extracts the numeric ID from a vdavinci host path (e.g. /dev/vdavinci0 → 0).
+	vDeviceNumberRe = `[0-9]+`
+
 	mountByRuntimeForDPEnv = "MOUNT_BY_RUNTIME_FOR_DP"
 
 	dockerSockHostPath      = "/run/docker.sock"
@@ -71,6 +76,9 @@ const (
 	crioSockHostPath        = "/var/run/crio/crio.sock"
 	crioSockContainerPath   = "/var/run/crio/crio.sock"
 )
+
+// vDeviceNumberPat compiles vDeviceNumberRe once at package load time.
+var vDeviceNumberPat = regexp.MustCompile(vDeviceNumberRe)
 
 type dpMountConfig struct {
 	hostPath      string
@@ -275,6 +283,8 @@ func collectExistingLibPaths() []string {
 	for _, libPath := range ascendDriverLibPaths {
 		if _, err := os.Stat(libPath); err == nil {
 			paths = append(paths, libPath)
+		} else {
+			hwlog.RunLog.Warnf("LD_LIBRARY_PATH: stat %s failed: %v", libPath, err)
 		}
 	}
 	return paths
@@ -397,15 +407,16 @@ func addHook(w dcmi.WorkerInterface, spec *specs.Spec, deviceIdList *[]int) erro
 	hwlog.RunLog.Infof("vnpu split done: vdevice: %v", vdevice.VdeviceID)
 
 	if vdevice.VdeviceID != -1 {
-		if err = updateEnvAndPostHook(spec, vdevice, deviceIdList); err != nil {
+		if err = updateEnvAndPostHook(spec, vdevice); err != nil {
 			return fmt.Errorf("update evn and post hook failed: %v ", err)
 		}
+		*deviceIdList = []int{int(vdevice.VdeviceID)}
 	}
 
 	return nil
 }
 
-func removeDuplication(devices []int) []int {
+func removeDuplicates(devices []int) []int {
 	list := make([]int, 0, len(devices))
 	prev := -1
 
@@ -434,7 +445,7 @@ func parseDevices(visibleDevices string) ([]int, error) {
 	}
 
 	sort.Slice(devices, func(i, j int) bool { return i < j })
-	return removeDuplication(devices), nil
+	return removeDuplicates(devices), nil
 }
 
 func getDeviceListFromVisibleValue(visibleValue string) ([]int, error) {
@@ -496,7 +507,7 @@ func parseAscendDevices(visibleDevices string) ([]int, error) {
 	}
 
 	sort.Slice(devices, func(i, j int) bool { return i < j })
-	return removeDuplication(devices), nil
+	return removeDuplicates(devices), nil
 }
 
 func getValueByKey(data []string, name string) string {
@@ -539,7 +550,7 @@ func getValueByDeviceKey(data []string) string {
 func getMountPath(dHostPath string, deviceType string) (string, error) {
 	switch deviceType {
 	case virtualDavinciName:
-		vDeviceNumber := regexp.MustCompile("[0-9]+").FindAllString(dHostPath, -1)
+		vDeviceNumber := vDeviceNumberPat.FindAllString(dHostPath, -1)
 		if len(vDeviceNumber) != 1 {
 			return "", fmt.Errorf("invalid vdavinci path: %s", dHostPath)
 		}
@@ -766,13 +777,9 @@ func addDevice(w dcmi.WorkerInterface, spec *specs.Spec, deviceIdList []int) err
 	return nil
 }
 
-func updateEnvAndPostHook(spec *specs.Spec, vdevice dcmi.VDeviceInfo, deviceIdList *[]int) error {
-	if deviceIdList == nil {
-		return nil
-	}
+func updateEnvAndPostHook(spec *specs.Spec, vdevice dcmi.VDeviceInfo) error {
 	newEnv := make([]string, 0, len(spec.Process.Env)+1)
 	needAddVirtualFlag := true
-	*deviceIdList = []int{int(vdevice.VdeviceID)}
 	for _, line := range spec.Process.Env {
 		words := strings.Split(line, "=")
 		if len(words) == envLength && strings.TrimSpace(words[0]) == ascendRuntimeOptions {
@@ -842,7 +849,7 @@ func readSpecFile(path string) (*specs.Spec, error) {
 		hwlog.RunLog.Error(err)
 		return nil, err
 	}
-	jsonContent, err := ioutil.ReadAll(jsonFile)
+	jsonContent, err := io.ReadAll(jsonFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read oci spec file %s: %v", path, err)
 	}
@@ -854,13 +861,112 @@ func readSpecFile(path string) (*specs.Spec, error) {
 	return &spec, nil
 }
 
-// processDevicesAndHooks handles device detection and hook addition
+// processDevicesAndHooks handles device detection and hook addition.
 func processDevicesAndHooks(spec *specs.Spec) error {
 	devices, err := checkVisibleDevice(spec)
 	if err != nil {
 		return fmt.Errorf("failed to check %v parameter, err: %v", api.AscendVisibleDevicesEnv, err)
 	}
 
+	if loadConfig().InjectionMode == cdiInjectionMode {
+		if err = processDevicesCDI(spec, devices); err != nil {
+			return err
+		}
+	} else {
+		if err = processDevicesLegacy(spec, devices); err != nil {
+			return err
+		}
+	}
+
+	addAscendDockerEnv(spec)
+	if isMountByRuntimeForDP(spec.Process.Env) {
+		addDPMountsToSpec(spec)
+	}
+	return nil
+}
+
+// processDevicesCDI handles the CDI injection path.
+func processDevicesCDI(spec *specs.Spec, devices []int) error {
+	runtimeOpts := getValueByKey(spec.Process.Env, ascendRuntimeOptions)
+	hasNODRV := strings.Contains(runtimeOpts, "NODRV")
+
+	var devType, productType string
+	var useVirtual bool
+	if len(devices) != 0 {
+		npuWorker, err := dcmi.GetMatchingNpuWorker()
+		if err != nil {
+			return err
+		}
+		devices, useVirtual, err = resolveVDevice(spec, npuWorker, devices)
+		if err != nil {
+			return err
+		}
+		devType, productType, err = resolveDeviceTypes(npuWorker)
+		if err != nil {
+			return err
+		}
+	}
+
+	provider := &cdimount.FileProvider{
+		Dir:        api.RunTimeDConfigPath,
+		MountNames: getValueByKey(spec.Process.Env, api.AscendRuntimeMountsEnv),
+	}
+	edits, err := cdi.BuildSpec(cdi.BuildSpecConfig{
+		DeviceConfig: cdi.DeviceConfig{
+			DeviceIDs:   devices,
+			DevType:     devType,
+			ProductType: productType,
+		},
+		UseVirtual:    useVirtual,
+		DisableMounts: hasNODRV,
+		Provider:      provider,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to generate CDI edits: %v", err)
+	}
+	if err = InjectEdits(spec, edits); err != nil {
+		return fmt.Errorf("failed to inject CDI edits: %v", err)
+	}
+	return nil
+}
+
+// resolveVDevice first attempts dynamic vNPU splitting via CreateVDevice (which
+// splits only when ASCEND_VNPU_SPECS is set), then falls back to the explicitly
+// requested VIRTUAL mode when no split is performed.
+func resolveVDevice(spec *specs.Spec, npuWorker dcmi.WorkerInterface, devices []int) ([]int, bool, error) {
+	vdevice, err := dcmi.CreateVDevice(npuWorker, spec, devices)
+	if err != nil {
+		return devices, false, err
+	}
+	hwlog.RunLog.Infof("vnpu split done: vdevice: %v", vdevice.VdeviceID)
+	if vdevice.VdeviceID != -1 {
+		if spec.Hooks == nil {
+			spec.Hooks = &specs.Hooks{}
+		}
+		if err = updateEnvAndPostHook(spec, vdevice); err != nil {
+			return devices, false, fmt.Errorf("update env and post hook failed: %v", err)
+		}
+		return []int{int(vdevice.VdeviceID)}, true, nil
+	}
+	runtimeOpts := getValueByKey(spec.Process.Env, ascendRuntimeOptions)
+	return devices, strings.Contains(runtimeOpts, "VIRTUAL"), nil
+}
+
+// resolveDeviceTypes resolves the device type and product type of the matched NPU worker.
+func resolveDeviceTypes(npuWorker dcmi.WorkerInterface) (string, string, error) {
+	chipName, err := npuWorker.GetChipName()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to get chip name: %v", err)
+	}
+	productType, err := npuWorker.GetProductType()
+	if err != nil {
+		return "", "", fmt.Errorf("parse product type error: %v", err)
+	}
+	return GetDeviceTypeByChipName(chipName), productType, nil
+}
+
+// processDevicesLegacy handles the legacy Prestart Hook injection path.
+func processDevicesLegacy(spec *specs.Spec, devices []int) error {
 	if len(devices) != 0 {
 		npuWorker, err := dcmi.GetMatchingNpuWorker()
 		if err != nil {
@@ -873,11 +979,8 @@ func processDevicesAndHooks(spec *specs.Spec) error {
 			return fmt.Errorf("failed to add device to env: %v", err)
 		}
 	}
-	addAscendDockerEnv(spec)
+
 	addAscendLibraryPath(spec)
-	if isMountByRuntimeForDP(spec.Process.Env) {
-		addDPMountsToSpec(spec)
-	}
 	return nil
 }
 
