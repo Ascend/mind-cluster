@@ -21796,7 +21796,7 @@
                 "description_zh": "CANN {}组件上报{}故障码",
                 "suggestion_zh": [
                     "1. CANN组件上报故障码，建议参考CANN官方文档中对应ERROR CODE的案例解决，Error Code介绍：",
-                    "  https://www.hiascend.com/document/detail/zh/canncommercial/800/developmentguide/maintenref/troubleshooting/troubleshooting_0225.html",
+                    "  https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/maintenref/troubleshooting/troubleshooting_0225.html",
                     "2. 若无法解决，请联系华为工程师定位排查；"
                 ],
                 "cause_en": "Error code reported by CANN",
