@@ -91,7 +91,7 @@
 |--|--|--|
 |MindIO ACP|内存缓存系统软件包|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases)|
 
-**软件数字签名验证**
+**软件完整性验证**
 
 为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需进行完整性验证，校验过程可参考[软件包 SUM 值校验](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md#section51703441649)小节。
 

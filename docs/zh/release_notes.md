@@ -63,14 +63,14 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
   <tr>
     <td>7.3.0</td>
     <td>Y</td>
-    <td> </td>
-    <td> </td>
+    <td>Y</td>
+    <td>Y</td>
   </tr>
   <tr>
     <td>26.0.0</td>
     <td>Y</td>
     <td>Y</td>
-    <td> </td>
+    <td>Y</td>
   </tr>
   <tr>
     <td>26.1.0</td>

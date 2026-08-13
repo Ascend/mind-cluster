@@ -713,12 +713,12 @@
     ...
     ```
 
-    >[!NOTE]
-    >若回显中出现类似如下信息，可忽略，不影响实际功能，可能原因是未配置RoCE网卡IP地址和子网掩码。若不想打印该信息，可参见《Atlas A2 中心推理和训练硬件 HCCN Tool 接口参考》的“[配置功能\>配置RoCE网卡IP地址和子网掩码](https://support.huawei.com/enterprise/zh/doc/EDOC1100568362/83923a94)”章节。
-    >
-    >```ColdFusion
-    >[dsmi_common_interface.c:1017][ascend][curpid:244135,244135][drv][dmp][dsmi_get_device_ip_address]devid 0 dsmi_cmd_get_device_ip_address return 1 error!
-    >```
+   >[!NOTE]
+   >若回显中出现类似如下信息，可忽略，不影响实际功能，可能原因是未配置RoCE网卡IP地址和子网掩码。若不想打印该信息，可参见《Atlas A2 中心推理和训练硬件 HCCN Tool 接口参考》的“[配置功能\>配置RoCE网卡IP地址和子网掩码](https://support.huawei.com/enterprise/zh/doc/EDOC1100591765/9c6819b7)”章节。
+   >
+   >```ColdFusion
+   >[dsmi_common_interface.c:1017][ascend][curpid:244135,244135][drv][dmp][dsmi_get_device_ip_address]devid 0 dsmi_cmd_get_device_ip_address return 1 error!
+   >```
 
 2. 查看组件日志。
 
