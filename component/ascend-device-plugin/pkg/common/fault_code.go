@@ -1398,10 +1398,17 @@ func setNetworkAlarmRaisedTime(device *NpuDevice) {
 
 // SetNewFaultAndCacheOnceRecoverFault set new fault code and cache once recover fault
 func SetNewFaultAndCacheOnceRecoverFault(logicID int32, chipFaultInfos []common.DevFaultInfo, device *NpuDevice,
-	curFaultCodesMap sets.Int64) {
+	getCurFaultCodes func(logicID int32) sets.Int64) {
 	if device == nil {
 		hwlog.RunLog.Error("param device is nil in SetNewFaultAndCacheOnceRecoverFault")
 		return
+	}
+	curFaultCodesMap := sets.Int64{}
+	for _, faultInfo := range chipFaultInfos {
+		if faultInfo.Assertion == common.FaultRecover && getCurFaultCodes != nil {
+			curFaultCodesMap = getCurFaultCodes(logicID)
+			break
+		}
 	}
 	newChipFaultInfos := chipFaultInfos
 	if _, ok := faultDurationMap[HbmDoubleBitFaultCodeStr]; ok {
