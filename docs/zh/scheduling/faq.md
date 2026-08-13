@@ -674,7 +674,7 @@ kubelet重启后会重新创建新dockershim.sock文件，但是NPU Exporter获�
 
 针对原因二：参考[Ascend Device Plugin](./installation_guide/03_installation/manual_installation/04_ascend_device_plugin.md)章节，修改Ascend Device Plugin的启动参数“-volcanoType=true”之后再重新apply对应的YAML文件。
 
-针对原因三：正确配置device ip，请参见《MindCluster Ascend Deployer用户指南》中的“[使用HCCN Tool工具配置](https://gitcode.com/Ascend/ascend-deployer/blob/26.0.0/docs/zh/installation_guide.md#%E4%BD%BF%E7%94%A8hccn-tool%E5%B7%A5%E5%85%B7%E9%85%8D%E7%BD%AE)”章节。
+针对原因三：正确配置device ip，请参见《MindCluster Ascend Deployer用户指南》中的“[使用HCCN Tool工具配置](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.0.0/docs/zh/installation_guide.md#%E4%BD%BF%E7%94%A8hccn-tool%E5%B7%A5%E5%85%B7%E9%85%8D%E7%BD%AE)”章节。
 
 ### K8s配置CPU绑核后无法使用npu-smi info<a name="ZH-CN_TOPIC_0000002479226454"></a>
 

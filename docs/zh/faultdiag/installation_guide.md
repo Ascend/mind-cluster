@@ -54,11 +54,11 @@
 >- <i>\{arch}</i>为软件包架构，分为x86_64和aarch64，请根据实际需要修改，可通过arch命令查看。
 >- 为了防止软件包在传递过程中或存储期间被恶意篡改，建议校验软件包的SUM值，操作步骤如下。
 >
->   1. 下载与工具软件包对应版本的[MindCluster_sha256sum.zip](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)。
+>   1. 下载软件包对应的[MindCluster_sha256sum.zip](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)。
 >
->   2. 将 `MindCluster_sha256sum.zip` 和 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` 放置到同一目录，执行以下命令进行校验。
+>   2. 将 `MindCluster_sha256sum.zip` 和 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` 放置到同一目录下，执行以下命令进行校验。
 >
->      ```bash
+>      ```shell
 >      unzip MindCluster_sha256sum.zip
 >      sha256sum -c Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum
 >      ```
@@ -67,7 +67,7 @@
 >
 >      显示如下信息，表示软件包校验通过。
 >
->      ```bash
+>      ```ColdFusion
 >      Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip: OK
 >      ```
 
@@ -129,7 +129,7 @@ MindCluster Ascend Deployer支持5.0.0.2及以上版本的MindCluster Ascend Fau
 
 **单机安装MindCluster Ascend FaultDiag<a name="section16724191613286"></a>**
 
-单台设备安装MindCluster Ascend FaultDiag组件，请参见《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/26.0.0/docs/zh/installation_guide.md#%E5%AE%89%E8%A3%85%E6%98%87%E8%85%BE%E8%BD%AF%E4%BB%B6)”章节。
+单台设备安装MindCluster Ascend FaultDiag组件，请参见《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.0.0/docs/zh/installation_guide.md#%E5%AE%89%E8%A3%85%E6%98%87%E8%85%BE%E8%BD%AF%E4%BB%B6)”章节。
 
 安装命令如下：
 
@@ -139,7 +139,7 @@ bash install.sh --install=fault-diag                                            
 
 **批量安装MindCluster Ascend FaultDiag<a name="section207590522915"></a>**
 
-批量安装MindCluster Ascend FaultDiag组件，请参见《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/26.0.0/docs/zh/installation_guide.md#%E5%AE%89%E8%A3%85%E6%98%87%E8%85%BE%E8%BD%AF%E4%BB%B6)”章节。
+批量安装MindCluster Ascend FaultDiag组件，请参见《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.0.0/docs/zh/installation_guide.md#%E5%AE%89%E8%A3%85%E6%98%87%E8%85%BE%E8%BD%AF%E4%BB%B6)”章节。
 
 详细安装流程如[图1](#fig56301358747)所示：
 

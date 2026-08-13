@@ -85,25 +85,11 @@ The recommended disk partitions for the operating system are shown in [Table 3](
 
 **Downloading the Software Package**
 
-Once downloading this software, you agree to the terms and conditions of the [Huawei Enterprise End User License Agreement (EULA)](https://e.huawei.com/en/about/eula).
-
 **Table 1** Required software
 
 |Component Name|Software Package|URL|
 |--|--|--|
-|MindIO ACP|Memory cache system package|[Download link](https://gitcode.com/Ascend/mind-cluster/releases)|
-
-**Verifying the Software Digital Signature**
-
-To prevent the software package from being maliciously tampered with during transmission or storage, you need to download the corresponding digital signature file for integrity verification when downloading the software package.
-
-After downloading the software package, see the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers for resolution.
-
-Before installing or upgrading using the software package, you also need to verify the digital signature of the software package following the preceding process to ensure that the software package has not been tampered with.
-
-Carrier customers, visit [https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction)
-
-Enterprise customers, visit [https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054)
+|MindIO ACP|Memory cache system package|[Download link](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
 
 ## Installing MindIO ACP SDK on the Compute Node
 

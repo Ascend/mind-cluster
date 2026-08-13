@@ -4,8 +4,6 @@
 
 ## 下载软件包<a name="section10979172103311"></a>
 
-下载本软件即表示您同意[华为企业业务最终用户许可协议（EULA）](https://e.huawei.com/cn/about/eula)的条款和条件。
-
 >[!NOTE] 
 ><i>\{version\}</i>表示软件版本号，<i>\{arch\}</i>表示CPU架构。
 
@@ -32,17 +30,25 @@
 >[!NOTE]
 >Resilience Controller和Elastic Agent组件已经在7.3.0版本日落，请获取7.3.0之前版本的软件包。
 
-## 软件数字签名验证<a name="section51703441649"></a>
+## 软件包SUM值校验<a name="section51703441649"></a>
 
-为了防止软件包在传递过程中或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
+为了防止软件包在传递过程中或存储期间被恶意篡改，下载软件包时需进行完整性验证。
 
-在软件包下载之后，请参考《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请不要使用该软件包，先联系华为技术支持工程师解决。
+1. 下载软件包对应的[MindCluster_sha256sum.zip](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)。
+2. 将 `MindCluster_sha256sum.zip` 和软件包放置到同一目录下，执行以下命令进行校验。以Ascend Device Plugin组件为例。
 
-使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
+   ```shell
+   unzip MindCluster_sha256sum.zip
+   sha256sum -c Ascend-mindxdl-device-plugin_{version}_linux-{arch}.zip.sha256sum
+   ```
 
-运营商客户请访问：[https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction)
+3. 验证校验结果。
 
-企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
+   显示如下信息，表示软件包校验通过。
+
+   ```ColdFusion
+   Ascend-mindxdl-device-plugin_{version}_linux-{arch}.zip: OK
+   ```
 
 ## 开源组件源码<a name="section149534517468"></a>
 

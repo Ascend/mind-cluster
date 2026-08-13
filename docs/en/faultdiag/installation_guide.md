@@ -110,7 +110,7 @@ MindCluster Ascend Deployer supports the installation of MindCluster Ascend Faul
 
 **Single-node Installation of MindCluster Ascend FaultDiag<a name="section16724191613286"></a>**
 
-To install MindCluster Ascend FaultDiag on a single node, see [Installing Ascend Software](https://gitcode.com/Ascend/ascend-deployer/blob/26.0.0/docs/en/installation_guide.md) in the *MindCluster Ascend Deployer User Guide*.
+To install MindCluster Ascend FaultDiag on a single node, see [Installing Ascend Software](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.0.0/docs/en/installation_guide.md) in the *MindCluster Ascend Deployer User Guide*.
 
 The installation command is as follows:
 
@@ -120,7 +120,7 @@ bash install.sh --install=fault-diag                                            
 
 **Batch Installation of MindCluster Ascend FaultDiag<a name="section207590522915"></a>**
 
-For batch installation of MindCluster Ascend FaultDiag, see the [Installing Ascend Software](https://gitcode.com/Ascend/ascend-deployer/blob/26.0.0/docs/en/installation_guide.md) in the *MindCluster Ascend Deployer User Guide*.
+For batch installation of MindCluster Ascend FaultDiag, see the [Installing Ascend Software](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.0.0/docs/en/installation_guide.md) in the *MindCluster Ascend Deployer User Guide*.
 
 The detailed installation process is shown in [Figure 1](#fig56301358747):
 

@@ -12,7 +12,7 @@ MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）构建�
 
 |关键特性|特性介绍|链接|
 |--|--|--|
-|安装部署|提供昇腾软件和其依赖软件的在线下载、安装和签名校验。|[安装部署](https://gitcode.com/Ascend/ascend-deployer/blob/26.0.0/docs/zh/introduction.md)|
+|安装部署|提供昇腾软件和其依赖软件的在线下载、安装和签名校验。|[安装部署](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.0.0/docs/zh/introduction.md)|
 |性能测试|提供Atlas硬件产品兼容性检查、性能测试、故障诊断等功能。|[性能测试](https://www.hiascend.com/document/detail/zh/mindcluster/2600/toolbox/toolboxug/toolboxug_0002.html)|
 |故障诊断|提供训练和推理任务的日志清洗和故障诊断功能，定位失败根因。|[故障诊断](https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.0.0/docs/zh/faultdiag/introduction.md)|
 |集群调度|提供NPU资源调度和管理、生成分布式训练集合通信配置、断点续训等功能。|[集群调度](https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.0.0/docs/zh/scheduling/introduction/00_overview.md)|

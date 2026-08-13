@@ -90,25 +90,15 @@
 
 **下载软件包**
 
-下载本软件即表示您同意[华为企业业务最终用户许可协议（EULA）](https://e.huawei.com/cn/about/eula)的条款和条件。
-
 **表 1**  软件下载
 
 |组件名称|软件包|获取地址|
 |--|--|--|
-|MindIO TFT|内存缓存系统软件包|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases)|
+|MindIO TFT|内存缓存系统软件包|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
 
-**软件数字签名验证**
+**软件完整性校验**
 
-为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
-
-在软件包下载之后，请参见《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请勿使用该软件包，先联系华为技术支持工程师解决。
-
-使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
-
-运营商客户请访问：[http://support.huawei.com/carrier/digitalSignatureAction](http://support.huawei.com/carrier/digitalSignatureAction)
-
-企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
+为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需进行完整性校验。校验过程可参考[软件包SUM值校验](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md#软件包sum值校验)。
 
 ### （可选）启动haveged服务
 
