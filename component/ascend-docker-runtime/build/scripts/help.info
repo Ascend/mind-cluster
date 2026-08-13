@@ -8,6 +8,8 @@
   --version                     Query ascend-docker-runtime version
   --install-scene=<scene>       Installation scenario, only docker, containerd or isula
                                 (eg: --install-scene=docker, default: docker)
+  --injection-mode=<mode>       Injection mode for NPU devices, cdi or legacy
+                                (eg: --injection-mode=cdi, default: legacy)
   --config-file-path            Specifies the path of the Docker or containerd configuration file
                                 (eg: --config-file-path=/etc/containerd/config.toml).
                                 If this parameter is not specified, the default configuration file path

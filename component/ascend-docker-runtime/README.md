@@ -23,6 +23,10 @@ Ascend Docker在prestart-hook这个钩子函数中，对容器做了以下配置
 2.在Host上配置该容器的device cgroup，确保该容器只可以使用指定的NPU，保证设备的隔离。
 3.将Host上的CANN Runtime Library挂载到容器的namespace。
 
+## CDI Mode (NEW)
+
+`injectionMode: cdi` in `/etc/ascend-docker-runtime.d/config.json` replaces the legacy Prestart Hook with direct OCI spec injection via `cdi/`.
+
 # 编译Ascend-Docker-Runtime
 
 执行以下步骤进行编译
