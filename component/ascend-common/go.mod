@@ -7,6 +7,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/kubeflow/common v0.4.3
 	github.com/smartystreets/goconvey v1.6.4
+	golang.org/x/sys v0.19.0
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8
 	k8s.io/api v0.26.2
 	k8s.io/apimachinery v0.26.2
@@ -41,7 +42,6 @@ require (
 	golang.org/x/mod v0.19.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.11.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
