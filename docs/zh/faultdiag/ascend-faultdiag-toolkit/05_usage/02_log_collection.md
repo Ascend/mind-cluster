@@ -12,7 +12,7 @@
 | **离线日志收集** | 已获取到日志文件，仅需归档分析 | 提前收集日志到工具所在节点的目录 |
 
 > - **快速导航**：[服务器（Host）日志](#服务器host日志) | [BMC 日志](#BMC-log) | [交换机日志](#交换机日志)
-> - 在线采集命令请根据产品型号选对应的参考资料，如：[Atlas A3 中心推理和训练硬件HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100568348/426cffd9?idPath=23710424|251366513|22892968|252309113|261716443)、[Atlas 800T A3 超节点 iBMC 命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100461433/2cd78eac?idPath=23710424|251366513|22892968|252309113|261716443)、[交换机命令参考](https://support.huawei.com/enterprise/zh/switches/s3700-s5700-s6700-pid-259602657?category=reference-guides&subcategory=command-reference)
+> - 在线采集命令请根据产品型号选对应的参考资料，如：[Atlas A3 中心推理和训练硬件 HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100591762/426cffd9)、[Atlas 800T A3 超节点 iBMC 命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100461433/2cd78eac?idPath=23710424|251366513|22892968|252309113|261716443)、[交换机命令参考](https://support.huawei.com/enterprise/zh/switches/s3700-s5700-s6700-pid-259602657?category=reference-guides&subcategory=command-reference)
 > - 离线日志目录结构说明：工具支持压缩包自动解析，使用时无需手动解压。下文离线日志目录结构展示了压缩包内部层级，用于说明包内的重要文件。
 
 <a id="服务器host日志"></a>

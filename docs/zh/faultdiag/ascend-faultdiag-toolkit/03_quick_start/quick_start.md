@@ -9,15 +9,15 @@
 
 ## 步骤 1：安装工具
 
-1. 下载链路诊断安装包：
+1. 下载链路诊断软件包：
 
     ```bash
-    # 下载 v26.1.0 版本的 故障诊断 ZIP 压缩包（因为 ascend-fd-tk WHL 安装包不区分架构，所以以下示例直接下载 aarch64 架构的）。
+    # 下载 v26.1.0 版本的 故障诊断 ZIP 压缩包（因为 ascend-fd-tk Whl 安装包不区分架构，所以以下示例直接下载 aarch64 架构的）。
     wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-faultdiag_26.1.0_linux-aarch64.zip
     unzip Ascend-mindxdl-faultdiag_26.1.0_linux-aarch64.zip
     ```
 
-2. 安装 WHL 包：
+2. 安装软件包：
 
     ```bash
     pip3 install ascend_faultdiag_toolkit-26.1.0-py3-none-any.whl
