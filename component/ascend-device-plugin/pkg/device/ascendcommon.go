@@ -1335,8 +1335,8 @@ func (tool *AscendTools) writeNewFaultCode(deviceMap map[string][]*common.NpuDev
 	isFirstFlushFault = false
 }
 
-func (tool *AscendTools) getCurDeviceFaultCode(logicID int32, devFaultInfo []npuCommon.DevFaultInfo) sets.Int64 {
-	if len(devFaultInfo) == 0 {
+func (tool *AscendTools) getCurDeviceFaultCode(logicID int32) sets.Int64 {
+	if tool == nil || tool.dmgr == nil {
 		return sets.Int64{}
 	}
 	_, faultCodes, err := tool.dmgr.GetDeviceAllErrorCode(logicID)
@@ -1362,9 +1362,9 @@ func (tool *AscendTools) flushFaultCodesWithInitForSingleDevice(device *common.N
 			}
 		}
 	}
-	curFaultCodesMap := tool.getCurDeviceFaultCode(logicID, devFaultInfoMap[logicID])
 	classified := common.ClassifyFaultInfos(devFaultInfoMap[logicID])
-	common.SetNewFaultAndCacheOnceRecoverFault(device.LogicID, classified[common.ChipFaultKey], device, curFaultCodesMap)
+	common.SetNewFaultAndCacheOnceRecoverFault(device.LogicID, classified[common.ChipFaultKey], device,
+		tool.getCurDeviceFaultCode)
 	common.SetNetworkNewFaultAndCacheOnceRecoverFault(device.LogicID, classified[common.ParameterPlaneFaultKey], device)
 	common.SetHyperPlaneNewFaultAndCacheOnceRecoverFault(device.LogicID, classified[common.HyperPlaneFaultKey], device)
 }

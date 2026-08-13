@@ -251,29 +251,99 @@ func TestGetAndCleanLogicID(t *testing.T) {
 func TestSetNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 	convey.Convey("test SetNewFaultAndCacheOnceRecoverFault", t, func() {
 		convey.Convey("device is nil, should return directly", func() {
-			SetNewFaultAndCacheOnceRecoverFault(0, nil, nil, sets.NewInt64())
+			queryCalls := 0
+			getCurFaultCodes := func(_ int32) sets.Int64 {
+				queryCalls++
+				return sets.NewInt64()
+			}
+			SetNewFaultAndCacheOnceRecoverFault(0, nil, nil, getCurFaultCodes)
 			convey.So(len(recoverFaultMap), convey.ShouldEqual, 0)
+			convey.So(queryCalls, convey.ShouldEqual, 0)
 		})
-		convey.Convey("SetNewFaultAndCacheOnceRecoverFault success", func() {
+		convey.Convey("no chip fault recover, should not query current fault codes", func() {
 			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
-			logicID := int32(0)
-			faultInfos := []common.DevFaultInfo{
+			queryCalls := 0
+			getCurFaultCodes := func(_ int32) sets.Int64 {
+				queryCalls++
+				return sets.NewInt64()
+			}
+			device := &NpuDevice{}
+			chipFaultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultOccur, EventID: 1},
+				{Assertion: common.FaultOnce, EventID: 2},
+			}
+			SetNewFaultAndCacheOnceRecoverFault(0, chipFaultInfos, device, getCurFaultCodes)
+			convey.So(queryCalls, convey.ShouldEqual, 0)
+		})
+		convey.Convey("mixed chip events should preserve occur, recover and once handling", func() {
+			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
+			queryCalls := 0
+			getCurFaultCodes := func(_ int32) sets.Int64 {
+				queryCalls++
+				return sets.NewInt64()
+			}
+			const logicID int32 = 0
+			chipFaultInfos := []common.DevFaultInfo{
 				{Assertion: common.FaultRecover},
 				{Assertion: common.FaultRecover, EventID: 1},
-				{Assertion: common.FaultOnce, EventID: 0},
-				{Assertion: common.FaultOccur, EventID: LinkDownFaultCode},
-				{Assertion: common.FaultRecover, EventID: LinkDownFaultCode},
+				{Assertion: common.FaultOnce},
 			}
-			device := &NpuDevice{FaultCodes: []int64{1}}
-			expectedFaultCodes, expectedFaultMapLen := []int64{0}, 2
-			originNetworkFaultCodes := NetworkFaultCodes
-			defer func() { NetworkFaultCodes = originNetworkFaultCodes }()
-			NetworkFaultCodes = sets.NewInt64()
-			NetworkFaultCodes.Insert(LinkDownFaultCode)
-			classified := ClassifyFaultInfos(faultInfos)
-			SetNewFaultAndCacheOnceRecoverFault(logicID, classified[ChipFaultKey], device, sets.NewInt64())
-			convey.So(device.FaultCodes, convey.ShouldResemble, expectedFaultCodes)
-			convey.So(len(recoverFaultMap[logicID]), convey.ShouldEqual, expectedFaultMapLen)
+			device := &NpuDevice{LogicID: logicID, FaultCodes: []int64{1}}
+			SetNewFaultAndCacheOnceRecoverFault(logicID, chipFaultInfos, device, getCurFaultCodes)
+			convey.So(queryCalls, convey.ShouldEqual, 1)
+			convey.So(device.FaultCodes, convey.ShouldResemble, []int64{0})
+			convey.So(len(recoverFaultMap[logicID]), convey.ShouldEqual, 2)
+		})
+		convey.Convey("multiple chip fault recovers, should query current fault codes once", func() {
+			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
+			queryCalls := 0
+			getCurFaultCodes := func(_ int32) sets.Int64 {
+				queryCalls++
+				return sets.NewInt64()
+			}
+			const (
+				firstFaultCode  = int64(0x100)
+				secondFaultCode = int64(0x101)
+			)
+			device := &NpuDevice{FaultCodes: []int64{firstFaultCode, secondFaultCode}}
+			chipFaultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultRecover, EventID: firstFaultCode},
+				{Assertion: common.FaultRecover, EventID: secondFaultCode},
+			}
+			SetNewFaultAndCacheOnceRecoverFault(0, chipFaultInfos, device, getCurFaultCodes)
+			convey.So(queryCalls, convey.ShouldEqual, 1)
+			convey.So(device.FaultCodes, convey.ShouldBeEmpty)
+		})
+		convey.Convey("same fault code recovers in multiple modules, should retain code from DCMI", func() {
+			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
+			queryCalls := 0
+			const faultCode int64 = 0x102
+			getCurFaultCodes := func(_ int32) sets.Int64 {
+				queryCalls++
+				return sets.NewInt64(faultCode)
+			}
+			device := &NpuDevice{FaultCodes: []int64{faultCode}}
+			chipFaultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultRecover, EventID: faultCode, ModuleID: 1},
+				{Assertion: common.FaultRecover, EventID: faultCode, ModuleID: 2},
+			}
+			SetNewFaultAndCacheOnceRecoverFault(0, chipFaultInfos, device, getCurFaultCodes)
+			convey.So(queryCalls, convey.ShouldEqual, 1)
+			convey.So(device.FaultCodes, convey.ShouldResemble, []int64{faultCode})
+		})
+		convey.Convey("recover code absent from DCMI, should remove code", func() {
+			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
+			queryCalls := 0
+			const faultCode int64 = 0x103
+			getCurFaultCodes := func(_ int32) sets.Int64 {
+				queryCalls++
+				return sets.NewInt64()
+			}
+			device := &NpuDevice{FaultCodes: []int64{faultCode}}
+			chipFaultInfos := []common.DevFaultInfo{{Assertion: common.FaultRecover, EventID: faultCode}}
+			SetNewFaultAndCacheOnceRecoverFault(0, chipFaultInfos, device, getCurFaultCodes)
+			convey.So(queryCalls, convey.ShouldEqual, 1)
+			convey.So(device.FaultCodes, convey.ShouldBeEmpty)
 		})
 		convey.Convey("A950 card type, a950 chip fault steps should be applied", func() {
 			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
@@ -285,7 +355,8 @@ func TestSetNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			}
 			device := &NpuDevice{LogicID: logicID}
 			classified := ClassifyFaultInfos(faultInfos)
-			SetNewFaultAndCacheOnceRecoverFault(logicID, classified[ChipFaultKey], device, sets.NewInt64())
+			SetNewFaultAndCacheOnceRecoverFault(logicID, classified[ChipFaultKey], device,
+				func(_ int32) sets.Int64 { return sets.NewInt64() })
 			convey.So(device.FaultCodes, convey.ShouldContain, CardDropFaultCode)
 			convey.So(device.AlarmRaisedTime, convey.ShouldBeGreaterThan, 0)
 		})

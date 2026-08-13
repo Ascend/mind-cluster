@@ -510,7 +510,6 @@ func TestCheckCardDropFault(t *testing.T) {
 
 // TestHandleLostChipFaultEvents for test HandleLostChipFaultEvents
 func TestHandleLostChipFaultEvents(t *testing.T) {
-	tool := mockAscendTools()
 	convey.Convey("test HandleLostChipFaultEvents", t, func() {
 		device := &common.NpuDevice{
 			FaultCodes: []int64{},
@@ -519,21 +518,21 @@ func TestHandleLostChipFaultEvents(t *testing.T) {
 		mockGlobalVar := gomonkey.ApplyGlobalVar(&isFirstFlushFault, true)
 		defer mockGlobalVar.Reset()
 		convey.Convey("01-get device all error code fail, devFaultInfoMap should not be updated", func() {
-			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, []int64, error) {
+			tool := AscendTools{dmgr: &faultCodeDeviceManagerMock{
+				getDeviceAllErrorCode: func(_ int32) (int32, []int64, error) {
 					return 1, nil, errors.New("mock failure message")
-				})
-			defer mockGetDeviceAllErrorCode.Reset()
+				},
+			}}
 			tool.HandleLostChipFaultEvents(device, nil)
 			faultInfo := common.GetAndCleanFaultInfo()
 			convey.So(len(faultInfo) == 0, convey.ShouldBeTrue)
 		})
 		convey.Convey("02-handle lost chip fault event, devFaultInfoMap should be updated", func() {
-			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, []int64, error) {
+			tool := AscendTools{dmgr: &faultCodeDeviceManagerMock{
+				getDeviceAllErrorCode: func(_ int32) (int32, []int64, error) {
 					return 1, []int64{common.LinkDownFaultCode, common.CardDropFaultCode}, nil
-				})
-			defer mockGetDeviceAllErrorCode.Reset()
+				},
+			}}
 			tool.HandleLostChipFaultEvents(device, nil)
 			faultInfoMap := common.GetAndCleanFaultInfo()
 			convey.So(len(faultInfoMap) == 1, convey.ShouldBeTrue)
@@ -545,9 +544,56 @@ func TestHandleLostChipFaultEvents(t *testing.T) {
 	})
 }
 
+// TestInitialChipFaultReconciliationQueriesOnce verifies startup reconciliation without a redundant DCMI query.
+func TestInitialChipFaultReconciliationQueriesOnce(t *testing.T) {
+	convey.Convey("initial chip fault reconciliation should query DCMI only once", t, func() {
+		const logicID int32 = 1
+		const chipFaultCode int64 = 0xABCDEF
+		var callCount int32
+		device := &common.NpuDevice{LogicID: logicID}
+		tool := AscendTools{dmgr: &faultCodeDeviceManagerMock{
+			getDeviceAllErrorCode: func(queriedLogicID int32) (int32, []int64, error) {
+				if queriedLogicID != logicID {
+					t.Errorf("unexpected logic ID: %d", queriedLogicID)
+				}
+				atomic.AddInt32(&callCount, 1)
+				return 1, []int64{chipFaultCode}, nil
+			},
+		}}
+
+		common.GetAndCleanFaultInfo()
+		common.GetAndCleanLogicID()
+		drainAllFaultInfoForTest()
+		defer func() {
+			common.GetAndCleanFaultInfo()
+			common.GetAndCleanLogicID()
+			drainAllFaultInfoForTest()
+		}()
+
+		firstFlushPatch := gomonkey.ApplyGlobalVar(&isFirstFlushFault, false)
+		defer firstFlushPatch.Reset()
+
+		common.SetDeviceInit(logicID)
+		initLogicIDs := common.GetAndCleanLogicID()
+		tool.HandleLostChipFaultEvents(device, initLogicIDs)
+		convey.So(atomic.LoadInt32(&callCount), convey.ShouldEqual, 1)
+
+		deviceMap := map[string][]*common.NpuDevice{api.Ascend910: {device}}
+		tool.writeNewFaultCode(deviceMap, api.Ascend910)
+		convey.So(device.FaultCodes, convey.ShouldContain, chipFaultCode)
+		convey.So(atomic.LoadInt32(&callCount), convey.ShouldEqual, 1)
+		select {
+		case faultInfo := <-allFaultInfo:
+			convey.So(faultInfo.EventID, convey.ShouldEqual, chipFaultCode)
+			convey.So(faultInfo.Assertion, convey.ShouldEqual, npuCommon.FaultOccur)
+		default:
+			t.Fatal("startup fault event should be queued")
+		}
+	})
+}
+
 // TestHandleLostNetworkFaultEvents for test HandleLostNetworkFaultEvents
 func TestHandleLostNetworkFaultEvents(t *testing.T) {
-	tool := mockAscendTools()
 	convey.Convey("test HandleLostNetworkFaultEvents", t, func() {
 		device := &common.NpuDevice{
 			FaultCodes: []int64{},
@@ -557,21 +603,21 @@ func TestHandleLostNetworkFaultEvents(t *testing.T) {
 		defer mockGlobalVar.Reset()
 
 		convey.Convey("01-get device all error code fail, devFaultInfoMap should not be updated", func() {
-			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, []int64, error) {
+			tool := AscendTools{dmgr: &faultCodeDeviceManagerMock{
+				getDeviceAllErrorCode: func(_ int32) (int32, []int64, error) {
 					return 1, nil, errors.New("mock failure message")
-				})
-			defer mockGetDeviceAllErrorCode.Reset()
+				},
+			}}
 			tool.HandleLostNetworkFaultEvents(device, nil)
 			faultInfo := common.GetAndCleanFaultInfo()
 			convey.So(len(faultInfo) == 0, convey.ShouldBeTrue)
 		})
 		convey.Convey("02-handle lost network fault event, devFaultInfoMap should be updated", func() {
-			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, []int64, error) {
+			tool := AscendTools{dmgr: &faultCodeDeviceManagerMock{
+				getDeviceAllErrorCode: func(_ int32) (int32, []int64, error) {
 					return 1, []int64{common.LinkDownFaultCode, common.CardDropFaultCode}, nil
-				})
-			defer mockGetDeviceAllErrorCode.Reset()
+				},
+			}}
 			tool.HandleLostNetworkFaultEvents(device, nil)
 			faultInfoMap := common.GetAndCleanFaultInfo()
 			convey.So(len(faultInfoMap) == 1, convey.ShouldBeTrue)
@@ -1229,6 +1275,18 @@ func mockAscendTools() AscendTools {
 	return AscendTools{name: api.Ascend910, client: &kubeclient.ClientK8s{}, dmgr: &devmanager.DeviceManagerMock{}}
 }
 
+type faultCodeDeviceManagerMock struct {
+	devmanager.DeviceManagerMock
+	getDeviceAllErrorCode func(int32) (int32, []int64, error)
+}
+
+func (d *faultCodeDeviceManagerMock) GetDeviceAllErrorCode(logicID int32) (int32, []int64, error) {
+	if d.getDeviceAllErrorCode != nil {
+		return d.getDeviceAllErrorCode(logicID)
+	}
+	return d.DeviceManagerMock.GetDeviceAllErrorCode(logicID)
+}
+
 // A device has both network fault and card fault, `getDeviceFaults` should return two `DeviceFault`
 func TestAscendToolsGetDeviceFaults(t *testing.T) {
 	t.Run("getDeviceFaults", func(t *testing.T) {
@@ -1588,29 +1646,149 @@ func TestGetUsedDevices(t *testing.T) {
 
 func TestGetCurDeviceFaultCode(t *testing.T) {
 	convey.Convey("test getCurDeviceFaultCode", t, func() {
-		tool := mockAscendTools()
-		convey.Convey("when devFaultInfo is empty, should return empty result", func() {
-			res := tool.getCurDeviceFaultCode(0, []npuCommon.DevFaultInfo{})
+		const chipFaultCode int64 = 123456
+		convey.Convey("when DCMI query fails, should return empty result", func() {
+			tool := AscendTools{dmgr: &faultCodeDeviceManagerMock{
+				getDeviceAllErrorCode: func(_ int32) (int32, []int64, error) {
+					return 0, nil, errors.New("get device fault code failed")
+				},
+			}}
+			res := tool.getCurDeviceFaultCode(0)
 			convey.So(res.Len(), convey.ShouldEqual, 0)
 		})
-		devFaultInfo := []npuCommon.DevFaultInfo{
-			{LogicID: 0, Assertion: npuCommon.FaultRecover, EventID: common.LinkDownFaultCode},
-		}
-		convey.Convey("when dcmi get device fault code failed, should return empty result", func() {
-			mockMethod := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
-				"GetDeviceAllErrorCode", int32(0), []int64{}, errors.New("failed"))
-			defer mockMethod.Reset()
-			res := tool.getCurDeviceFaultCode(0, devFaultInfo)
-			convey.So(res.Len(), convey.ShouldEqual, 0)
-		})
-		convey.Convey("when dcmi get device fault code success, should return fault code sets", func() {
-			mockMethod := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
-				"GetDeviceAllErrorCode", int32(1), []int64{common.LinkDownFaultCode}, nil)
-			defer mockMethod.Reset()
-			res := tool.getCurDeviceFaultCode(0, devFaultInfo)
-			convey.So(res.Len(), convey.ShouldEqual, 1)
+		convey.Convey("when DCMI query succeeds, should return current fault code set", func() {
+			var queriedLogicID int32
+			tool := AscendTools{dmgr: &faultCodeDeviceManagerMock{
+				getDeviceAllErrorCode: func(logicID int32) (int32, []int64, error) {
+					queriedLogicID = logicID
+					return 0, []int64{chipFaultCode}, nil
+				},
+			}}
+			res := tool.getCurDeviceFaultCode(7)
+			convey.So(queriedLogicID, convey.ShouldEqual, int32(7))
+			convey.So(res, convey.ShouldResemble, sets.NewInt64(chipFaultCode))
 		})
 	})
+}
+
+func TestFlushFaultCodesWithInitForSingleDeviceQueryCurFaultCodesWhenRecover(t *testing.T) {
+	convey.Convey("test flushFaultCodesWithInitForSingleDevice query cur fault codes when recover", t, func() {
+		var callCount int32
+		const chipFaultCode int64 = 123456
+		var currentFaultCodes []int64
+		tool := AscendTools{dmgr: &faultCodeDeviceManagerMock{
+			getDeviceAllErrorCode: func(_ int32) (int32, []int64, error) {
+				atomic.AddInt32(&callCount, 1)
+				return 1, currentFaultCodes, nil
+			},
+		}}
+		oldNetworkFaultCodes := common.NetworkFaultCodes
+		common.NetworkFaultCodes = sets.NewInt64(common.LinkDownFaultCode)
+		defer func() { common.NetworkFaultCodes = oldNetworkFaultCodes }()
+		drainAllFaultInfoForTest()
+		defer drainAllFaultInfoForTest()
+
+		convey.Convey("when fault does not recover, should skip dcmi query", func() {
+			atomic.StoreInt32(&callCount, 0)
+			currentFaultCodes = nil
+			device := &common.NpuDevice{LogicID: 0}
+			devFaultInfoMap := map[int32][]npuCommon.DevFaultInfo{
+				0: {
+					{LogicID: 0, Assertion: npuCommon.FaultOccur, EventID: chipFaultCode},
+				},
+			}
+			tool.flushFaultCodesWithInitForSingleDevice(device, devFaultInfoMap)
+			convey.So(atomic.LoadInt32(&callCount), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("when no fault info for device, should skip dcmi query", func() {
+			atomic.StoreInt32(&callCount, 0)
+			currentFaultCodes = nil
+			device := &common.NpuDevice{LogicID: 0}
+			devFaultInfoMap := map[int32][]npuCommon.DevFaultInfo{}
+			tool.flushFaultCodesWithInitForSingleDevice(device, devFaultInfoMap)
+			convey.So(atomic.LoadInt32(&callCount), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("when only network fault recovers, should skip dcmi query", func() {
+			atomic.StoreInt32(&callCount, 0)
+			currentFaultCodes = nil
+			device := &common.NpuDevice{LogicID: 0}
+			devFaultInfoMap := map[int32][]npuCommon.DevFaultInfo{
+				0: {
+					{LogicID: 0, Assertion: npuCommon.FaultRecover, EventID: common.LinkDownFaultCode},
+				},
+			}
+			tool.flushFaultCodesWithInitForSingleDevice(device, devFaultInfoMap)
+			convey.So(atomic.LoadInt32(&callCount), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("when chip fault recovers, should query dcmi once", func() {
+			atomic.StoreInt32(&callCount, 0)
+			currentFaultCodes = nil
+			device := &common.NpuDevice{LogicID: 0}
+			devFaultInfoMap := map[int32][]npuCommon.DevFaultInfo{
+				0: {
+					{LogicID: 0, Assertion: npuCommon.FaultRecover, EventID: chipFaultCode},
+				},
+			}
+			tool.flushFaultCodesWithInitForSingleDevice(device, devFaultInfoMap)
+			convey.So(atomic.LoadInt32(&callCount), convey.ShouldEqual, 1)
+		})
+
+		convey.Convey("when network and chip fault both recover, should query dcmi once", func() {
+			atomic.StoreInt32(&callCount, 0)
+			currentFaultCodes = nil
+			device := &common.NpuDevice{LogicID: 0}
+			devFaultInfoMap := map[int32][]npuCommon.DevFaultInfo{
+				0: {
+					{LogicID: 0, Assertion: npuCommon.FaultRecover, EventID: common.LinkDownFaultCode},
+					{LogicID: 0, Assertion: npuCommon.FaultRecover, EventID: chipFaultCode},
+				},
+			}
+			tool.flushFaultCodesWithInitForSingleDevice(device, devFaultInfoMap)
+			convey.So(atomic.LoadInt32(&callCount), convey.ShouldEqual, 1)
+		})
+
+		convey.Convey("when multiple chip faults recover, should query dcmi once", func() {
+			atomic.StoreInt32(&callCount, 0)
+			currentFaultCodes = nil
+			device := &common.NpuDevice{LogicID: 0}
+			devFaultInfoMap := map[int32][]npuCommon.DevFaultInfo{
+				0: {
+					{LogicID: 0, Assertion: npuCommon.FaultRecover, EventID: chipFaultCode},
+					{LogicID: 0, Assertion: npuCommon.FaultRecover, EventID: chipFaultCode + 1},
+				},
+			}
+			tool.flushFaultCodesWithInitForSingleDevice(device, devFaultInfoMap)
+			convey.So(atomic.LoadInt32(&callCount), convey.ShouldEqual, 1)
+		})
+
+		convey.Convey("when DCMI still reports recovered code, should retain device fault code", func() {
+			atomic.StoreInt32(&callCount, 0)
+			currentFaultCodes = []int64{chipFaultCode}
+			device := &common.NpuDevice{LogicID: 0, FaultCodes: []int64{chipFaultCode}}
+			devFaultInfoMap := map[int32][]npuCommon.DevFaultInfo{
+				0: {
+					{LogicID: 0, ModuleID: 1, Assertion: npuCommon.FaultRecover, EventID: chipFaultCode},
+					{LogicID: 0, ModuleID: 2, Assertion: npuCommon.FaultRecover, EventID: chipFaultCode},
+				},
+			}
+			tool.flushFaultCodesWithInitForSingleDevice(device, devFaultInfoMap)
+			convey.So(atomic.LoadInt32(&callCount), convey.ShouldEqual, 1)
+			convey.So(device.FaultCodes, convey.ShouldResemble, []int64{chipFaultCode})
+		})
+	})
+}
+
+func drainAllFaultInfoForTest() {
+	for {
+		select {
+		case <-allFaultInfo:
+		default:
+			return
+		}
+	}
 }
 
 func TestGetNodeDeviceInfoCache(t *testing.T) {
