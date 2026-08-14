@@ -26,7 +26,7 @@ import shutil
 from unittest.mock import patch, MagicMock
 
 import ascend_fd.pkg.parse.parser_saver
-from ascend_fd.pkg.parse.parser_saver import TrainLogSaver, ProcessLogSaver
+from ascend_fd.pkg.parse.parser_saver import TrainLogSaver, ProcessLogSaver, LogInfoSaver
 from ascend_fd.utils import tool
 from ascend_fd.pkg.diag.knowledge_graph.kg_diag_job import get_super_pod_analyzer_dict
 
@@ -296,6 +296,72 @@ device-1   1             4          os running
     def test_load_device_info_map_not_found(self):
         """没有 device_info.txt"""
         self.assertEqual(tool.load_device_info_map(["/hisi_logs/device-0/kernel.log"]), {})
+
+    def test_load_device_info_map_sdk_log_info_saver(self):
+        """SDK 输入：hisi_logs_list 为 LogInfoSaver 对象列表，需取 path"""
+        with tempfile.NamedTemporaryFile(mode="w", suffix="device_info.txt", delete=False) as f:
+            f.write("""devices info:
+==============================================
+dir        phy-id        logic-id   status
+device-0   0             3          os running
+device-1   1             4          os running
+""")
+        try:
+            hisi_logs = [
+                LogInfoSaver(
+                    path="/hisi_logs/device-0/kernel.log",
+                    source_file="NPU_History",
+                    device_id=0,
+                    log_lines=[],
+                    modification_time="",
+                    component="",
+                ),
+                LogInfoSaver(
+                    path=f.name,
+                    source_file="NPU_History",
+                    device_id=0,
+                    log_lines=[],
+                    modification_time="",
+                    component="",
+                ),
+            ]
+            self.assertEqual(tool.load_device_info_map(hisi_logs), {"3": "0", "4": "1"})
+        finally:
+            os.unlink(f.name)
+
+    def test_load_device_info_map_sdk_no_device_info(self):
+        """SDK 输入：没有 device_info.txt 时返回空 dict，不抛异常"""
+        hisi_logs = [
+            LogInfoSaver(
+                path="/hisi_logs/device-0/kernel.log",
+                source_file="NPU_History",
+                device_id=0,
+                log_lines=[],
+                modification_time="",
+                component="",
+            )
+        ]
+        self.assertEqual(tool.load_device_info_map(hisi_logs), {})
+
+    def test_load_device_info_map_none_items(self):
+        """列表中含 None 或空 path 的元素应被跳过"""
+        self.assertEqual(
+            tool.load_device_info_map(
+                [
+                    None,
+                    LogInfoSaver(
+                        path="",
+                        source_file="NPU_History",
+                        device_id=0,
+                        log_lines=[],
+                        modification_time="",
+                        component="",
+                    ),
+                    "/hisi_logs/device-0/kernel.log",
+                ]
+            ),
+            {},
+        )
 
 
 class TestPatternMatcherAll(unittest.TestCase):

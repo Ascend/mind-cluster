@@ -1665,8 +1665,12 @@ def load_device_info_map(hisi_logs_list: list) -> dict:
     for hisi_file in hisi_logs_list:
         if not hisi_file:
             continue
-        if hisi_file.endswith(regular_table.DEVICE_INFO_FILE):
-            return parse_device_info_file(hisi_file)
+        # SDK 输入时 hisi_logs_list 中为 LogInfoSaver 对象，需取其 path；非 SDK 输入为路径字符串
+        hisi_path = getattr(hisi_file, "path", hisi_file)
+        if not hisi_path:
+            continue
+        if hisi_path.endswith(regular_table.DEVICE_INFO_FILE):
+            return parse_device_info_file(hisi_path)
     return {}
 
 
