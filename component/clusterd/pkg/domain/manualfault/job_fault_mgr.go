@@ -76,7 +76,6 @@ func (m *JobFaultManager) AddFault(newFault *Fault) {
 		return
 	}
 	if newFault.JobId == "" {
-		Counter.AddFault(newFault)
 		return
 	}
 
