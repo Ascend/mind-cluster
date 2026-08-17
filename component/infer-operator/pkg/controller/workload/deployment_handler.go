@@ -312,7 +312,7 @@ func (d *DeploymentHandler) DeleteExtraWorkLoad(
 		}
 		hwlog.RunLog.Infof("Delete Extra Deployment<%s>", deploy.Name)
 	}
-	return d.deleteExtraService(ctx, selectLabels, indexLimit)
+	return d.deleteExtraService(ctx, selectLabels, indexer.Namespace, indexLimit)
 }
 
 // GetWorkLoadReadyReplicas returns the number of ready replicas of the deployment
@@ -341,6 +341,7 @@ func (d *DeploymentHandler) GetWorkLoadReadyReplicas(
 func (d *DeploymentHandler) deleteExtraService(
 	ctx context.Context,
 	selectLabels map[string]string,
+	namespace string,
 	indexLimit int) error {
 	// 1. fetch services
 	serviceList := &corev1.ServiceList{}
@@ -351,7 +352,8 @@ func (d *DeploymentHandler) deleteExtraService(
 		hwlog.RunLog.Errorf("Failed to create ServiceList<%s>: %v", selectLabels, err)
 		return common.NewRequeueError(err.Error())
 	}
-	if err = d.client.List(ctx, serviceList, client.MatchingLabelsSelector{Selector: selector}); err != nil {
+	if err = d.client.List(ctx, serviceList,
+		client.MatchingLabelsSelector{Selector: selector}, client.InNamespace(namespace)); err != nil {
 		hwlog.RunLog.Errorf("Failed to list ServiceList<%s>: %v", selectLabels, err)
 		return common.NewRequeueError(err.Error())
 	}
