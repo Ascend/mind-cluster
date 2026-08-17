@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
 
 //go:build !race
 
@@ -6,7 +6,9 @@
 package pod
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -563,4 +565,20 @@ func testCreateDevNameJobMapAndGet() {
 	devJobMap = CreateDevNameJobMap(nodeName3, api.Ascend910)
 	jobName = GetJobIdByDev(devJobMap, fmt.Sprintf("%s-%s", api.Ascend910, dev0))
 	convey.So(jobName, convey.ShouldEqual, "")
+}
+
+func TestGetServerInfoDoesNotLeakLevelList(t *testing.T) {
+	convey.Convey("test getServerInfo does not leak levelList", t, func() {
+		podDev := constant.PodDevice{
+			PodName: "test-pod",
+			Devices: []constant.Device{fakeDeviceWithLevelList("0")},
+		}
+		podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+		server := getServerInfo(podDev, *podDemo, map[string]string{}, 0)
+		convey.So(len(server.DeviceList), convey.ShouldEqual, 1)
+		convey.So(server.DeviceList[0].LevelList, convey.ShouldBeNil)
+		b, err := json.Marshal(server)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(strings.Contains(string(b), `"levelList"`), convey.ShouldBeFalse)
+	})
 }

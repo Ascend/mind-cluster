@@ -1,9 +1,13 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
 
 // Package constant a series of para
 package constant
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"ascend-common/api"
+)
 
 // FaultTimeAndLevel of each fault code
 // some fault may not have accurate fault time and level,
@@ -216,6 +220,17 @@ type RankTable struct {
 	ServerList  []ServerHccl `json:"server_list"`
 	ServerCount string       `json:"server_count"`
 	Total       int          `json:"total"`
+	Version     string       `json:"version,omitempty"`
+	RankList    []Rank       `json:"rank_list,omitempty"`
+	RankCount   int          `json:"rank_count,omitempty"`
+}
+
+type Rank struct {
+	RankID    int                `json:"rank_id"`
+	LocalID   int                `json:"local_id"`
+	DeviceID  int                `json:"device_id"`
+	LevelList []api.LevelElement `json:"level_list,omitempty"`
+	Device    Device             `json:"-"`
 }
 
 // ServerHccl to hccl
@@ -238,6 +253,11 @@ type Device struct {
 	DeviceIP      string `json:"device_ip"`
 	RankID        string `json:"rank_id"` // rank id
 	SuperDeviceID string `json:"super_device_id,omitempty"`
+	// LevelList is the raw per-device multi-layer network data parsed from the pod device
+	// annotation (camelCase "levelList", written by device-plugin). It feeds v2 rank_list
+	// generation via ConstructRankListV2 and is intentionally NOT emitted in v1 server_list
+	// (getServerInfo never sets it), hence the snake_case/camelCase tag difference with Rank.LevelList.
+	LevelList []api.RankLevel `json:"levelList,omitempty"`
 }
 
 // PodDevice pod annotation device info

@@ -402,7 +402,7 @@ func TestSplitMapToSafeChunks(t *testing.T) {
 			result := SplitMapToSafeChunks(data, len(serialized), serialize)
 			convey.So(len(result), convey.ShouldEqual, 1)
 		})
-		convey.Convey("data exceeding limit splits into chunks, each under limit", func() {
+		convey.Convey("data exceeding limit splits into chunks, each at or under limit", func() {
 			maxSize := 100
 			payload := strings.Repeat("x", 50)
 			data := map[string]string{}
@@ -412,7 +412,7 @@ func TestSplitMapToSafeChunks(t *testing.T) {
 			result := SplitMapToSafeChunks(data, maxSize, serialize)
 			convey.So(len(result), convey.ShouldBeGreaterThan, 1)
 			for i := range result {
-				convey.So(len(result[i]), convey.ShouldBeLessThan, maxSize)
+				convey.So(len(result[i]), convey.ShouldBeLessThanOrEqualTo, maxSize)
 			}
 		})
 		convey.Convey("non-last chunks are filled close to limit", func() {
@@ -425,7 +425,7 @@ func TestSplitMapToSafeChunks(t *testing.T) {
 			result := SplitMapToSafeChunks(data, maxSize, serialize)
 			convey.So(len(result), convey.ShouldBeGreaterThan, 1)
 			for i := range result {
-				convey.So(len(result[i]), convey.ShouldBeLessThan, maxSize)
+				convey.So(len(result[i]), convey.ShouldBeLessThanOrEqualTo, maxSize)
 				if i < len(result)-1 {
 					convey.So(len(result[i]),
 						convey.ShouldBeGreaterThan, maxSize*4/5)
@@ -447,8 +447,34 @@ func TestSplitMapToSafeChunks(t *testing.T) {
 			result := SplitMapToSafeChunks(data, maxSize, serialize)
 			convey.So(len(result), convey.ShouldBeGreaterThanOrEqualTo, 1)
 			for i := range result {
-				convey.So(len(result[i]), convey.ShouldBeLessThan, maxSize)
+				convey.So(len(result[i]), convey.ShouldBeLessThanOrEqualTo, maxSize)
 			}
+		})
+	})
+}
+
+func TestBinarySearchMaxFit(t *testing.T) {
+	convey.Convey("TestBinarySearchMaxFit", t, func() {
+		convey.Convey("all prefixes fit within maxSize", func() {
+			const length = 5
+			cost := func(k int) int { return k * 10 }
+			convey.So(BinarySearchMaxFit(length, length*10, cost), convey.ShouldEqual, length)
+		})
+		convey.Convey("exact boundary is inclusive", func() {
+			cost := func(k int) int { return k * 10 }
+			convey.So(BinarySearchMaxFit(10, 40, cost), convey.ShouldEqual, 4)
+		})
+		convey.Convey("cost of first prefix exceeds maxSize returns 0", func() {
+			cost := func(k int) int { return k * 10 }
+			convey.So(BinarySearchMaxFit(10, 5, cost), convey.ShouldEqual, 0)
+		})
+		convey.Convey("middle split returns largest k that still fits", func() {
+			cost := func(k int) int { return k * 10 }
+			convey.So(BinarySearchMaxFit(10, 65, cost), convey.ShouldEqual, 6)
+		})
+		convey.Convey("length is zero returns 0", func() {
+			cost := func(k int) int { return k * 10 }
+			convey.So(BinarySearchMaxFit(0, 100, cost), convey.ShouldEqual, 0)
 		})
 	})
 }

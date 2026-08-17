@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
 
 //go:build !race
 
@@ -6,6 +6,9 @@
 package job
 
 import (
+	"encoding/json"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -16,6 +19,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/custom"
 	"clusterd/pkg/domain/pod"
@@ -38,6 +42,7 @@ const (
 	pgMinMember2Str = "2"
 	masterIp        = "127.0.0.1"
 	mindIeJobId     = "mindie-ms"
+	a5DeviceAnno    = `{"pod_name":"p0","devices":[{"device_id":"0","device_ip":"192.168.0.1","levelList":[{"level":0,"info":{"UB":{"net_layer":0,"net_instance_id":"L0"}}},{"level":1,"info":{"UB":{"net_layer":1,"net_instance_id":"L1"}}},{"level":3,"info":{"ROCE":{"net_layer":3,"net_instance_id":"L3"}}}]}]}`
 )
 
 func TestPreDeleteCmAndCache(t *testing.T) {
@@ -541,6 +546,207 @@ func TestGetSidForJobInfo(t *testing.T) {
 			podsInJob[podUid2] = pod2
 			expectedJobKey := string(pgInfo.GetOwnerReferences()[0].UID)
 			convey.So(getSidForJobInfo(pgInfo, podsInJob), convey.ShouldEqual, expectedJobKey)
+		})
+	})
+}
+
+func TestGetHcclSlice(t *testing.T) {
+	convey.Convey("test getHcclSlice", t, func() {
+		convey.Convey("non A5 job: rankList is nil, hccl json should not contain v2.0 fields", func() {
+			table := constant.RankTable{
+				ServerCount: "3",
+				Total:       1,
+				ServerList: []constant.ServerHccl{
+					{ServerID: "192.168.0.1", HostIp: "192.168.0.1", ServerName: nodeName1,
+						DeviceList: []constant.Device{{DeviceID: "0", DeviceIP: "192.168.0.1", RankID: "0"}}},
+					{ServerID: "192.168.0.2", HostIp: "192.168.0.2", ServerName: nodeName2,
+						DeviceList: []constant.Device{{DeviceID: "0", DeviceIP: "192.168.0.2", RankID: "1"}}},
+					{ServerID: "192.168.0.3", HostIp: "192.168.0.3", ServerName: podName3,
+						DeviceList: []constant.Device{{DeviceID: "0", DeviceIP: "192.168.0.3", RankID: "2"}}},
+				},
+			}
+			hccls := getHcclSlice(table)
+			convey.So(len(hccls), convey.ShouldEqual, 1)
+			rankTable := constant.RankTable{}
+			convey.So(json.Unmarshal([]byte(hccls[0]), &rankTable), convey.ShouldBeNil)
+			convey.So(rankTable.RankList, convey.ShouldBeNil)
+			convey.So(rankTable.RankCount, convey.ShouldEqual, 0)
+			convey.So(rankTable.Version, convey.ShouldEqual, "")
+			convey.So(len(rankTable.ServerList), convey.ShouldEqual, 3)
+		})
+		convey.Convey("A5 single slice job: hccl json should serialize the whole table including rankList", func() {
+			table := buildServerRankTable(1)
+			table.ServerList[0].ServerName = nodeName1
+			table.ServerList[0].DeviceList = table.ServerList[0].DeviceList[:1]
+			table.RankList = table.RankList[:1]
+			table.RankCount = 1
+			hccls := getHcclSlice(table)
+			convey.So(len(hccls), convey.ShouldEqual, 1)
+			convey.So(strings.Contains(hccls[0], `"rank_list"`), convey.ShouldBeTrue)
+			convey.So(strings.Contains(hccls[0], `"version":"2.0"`), convey.ShouldBeTrue)
+			rankTable := constant.RankTable{}
+			convey.So(json.Unmarshal([]byte(hccls[0]), &rankTable), convey.ShouldBeNil)
+			convey.So(len(rankTable.RankList), convey.ShouldEqual, 1)
+			convey.So(rankTable.RankList[0].RankID, convey.ShouldEqual, 0)
+			convey.So(rankTable.Version, convey.ShouldEqual, "2.0")
+			convey.So(rankTable.RankCount, convey.ShouldEqual, 1)
+		})
+	})
+}
+
+// buildServerRankTable builds n servers (each 2 devices) plus an aligned rankList 0..2n-1.
+func buildServerRankTable(n int) constant.RankTable {
+	serverList := make([]constant.ServerHccl, 0, n)
+	for s := 0; s < n; s++ {
+		serverList = append(serverList, constant.ServerHccl{
+			ServerID: "192.168.0." + strconv.Itoa(s+1),
+			HostIp:   "192.168.0." + strconv.Itoa(s+1),
+			DeviceList: []constant.Device{
+				{DeviceID: "0", RankID: strconv.Itoa(s * 2)},
+				{DeviceID: "1", RankID: strconv.Itoa(s*2 + 1)},
+			},
+		})
+	}
+	rankList := make([]constant.Rank, 0, n*2)
+	for r := 0; r < n*2; r++ {
+		rankList = append(rankList, constant.Rank{RankID: r, LocalID: r, DeviceID: r})
+	}
+	return constant.RankTable{
+		Version:     "2.0",
+		RankCount:   n * 2,
+		ServerCount: strconv.Itoa(n),
+		ServerList:  serverList,
+		RankList:    rankList,
+	}
+}
+
+// sliceMaxSize returns the marshaled byte size of the first serverCount servers (+ their ranks).
+func sliceMaxSize(table constant.RankTable, serverCount int) int {
+	part := table
+	part.ServerList = table.ServerList[:serverCount]
+	part.RankList = table.RankList[:serverCount*2]
+	b, _ := json.Marshal(part)
+	return len(b)
+}
+
+func TestGetHcclSliceMultiSliceAlignment(t *testing.T) {
+	convey.Convey("test getHcclSliceBySize rankList alignment across multiple slices", t, func() {
+		table := buildServerRankTable(5)
+		// maxSize = marshaled size of a 2-server sub-table; byte threshold splits 5 servers into slices [2,2,1].
+		maxSize := sliceMaxSize(table, 2)
+		hccls := getHcclSliceBySize(table, maxSize)
+		convey.So(len(hccls), convey.ShouldEqual, 3)
+
+		expectedRanks := [][]int{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9}}
+		expectedServers := []int{2, 2, 1}
+		var allRankIds []int
+		for i, hccl := range hccls {
+			part := constant.RankTable{}
+			convey.So(json.Unmarshal([]byte(hccl), &part), convey.ShouldBeNil)
+			convey.So(len(part.ServerList), convey.ShouldEqual, expectedServers[i])
+			convey.So(len(part.RankList), convey.ShouldEqual, len(expectedRanks[i]))
+			for j, rank := range part.RankList {
+				convey.So(rank.RankID, convey.ShouldEqual, expectedRanks[i][j])
+				allRankIds = append(allRankIds, rank.RankID)
+			}
+		}
+		convey.So(allRankIds, convey.ShouldResemble, []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
+	})
+}
+
+func TestGetHcclSliceBySize(t *testing.T) {
+	convey.Convey("test getHcclSliceBySize", t, func() {
+		convey.Convey("byte-threshold slicing: each slice fits maxSize and keeps full-table semantics", func() {
+			table := buildServerRankTable(6)
+			// +64 slack for rank-id digit growth in later slices (e.g. rank 10/11), still far below a 3-server part.
+			maxSize := sliceMaxSize(table, 2) + 64
+			hccls := getHcclSliceBySize(table, maxSize)
+			convey.So(len(hccls), convey.ShouldEqual, 3)
+			for _, hccl := range hccls {
+				part := constant.RankTable{}
+				convey.So(json.Unmarshal([]byte(hccl), &part), convey.ShouldBeNil)
+				rb, err := json.Marshal(part)
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(len(rb), convey.ShouldBeLessThanOrEqualTo, maxSize)
+				convey.So(part.Total, convey.ShouldEqual, len(hccls))
+				convey.So(part.ServerCount, convey.ShouldEqual, "6")
+			}
+		})
+		convey.Convey("empty ServerList returns nil", func() {
+			convey.So(getHcclSliceBySize(constant.RankTable{}, 1024), convey.ShouldBeNil)
+		})
+		convey.Convey("single oversized server is emitted as one slice with its ranks", func() {
+			table := buildServerRankTable(1)
+			table.ServerList[0].ContainerIds = map[string]string{"c0": strings.Repeat("x", 4*1024)}
+			maxSize := 1024 // smaller than the single server's marshaled size
+			hccls := getHcclSliceBySize(table, maxSize)
+			convey.So(len(hccls), convey.ShouldEqual, 1)
+			part := constant.RankTable{}
+			convey.So(json.Unmarshal([]byte(hccls[0]), &part), convey.ShouldBeNil)
+			convey.So(len(part.ServerList), convey.ShouldEqual, 1)
+			convey.So(len(part.RankList), convey.ShouldEqual, 2)
+			convey.So(part.Total, convey.ShouldEqual, 1)
+		})
+		convey.Convey("non-A5 regression: nil RankList slices keep v1.0 semantics", func() {
+			serverList := make([]constant.ServerHccl, 0, 4)
+			for s := 0; s < 4; s++ {
+				serverList = append(serverList, constant.ServerHccl{
+					ServerID:   "192.168.0." + strconv.Itoa(s+1),
+					HostIp:     "192.168.0." + strconv.Itoa(s+1),
+					ServerName: nodeName1,
+					DeviceList: []constant.Device{{DeviceID: "0", DeviceIP: "192.168.0." + strconv.Itoa(s+1), RankID: strconv.Itoa(s)}},
+				})
+			}
+			table := constant.RankTable{ServerCount: "4", ServerList: serverList}
+			part := table
+			part.ServerList = table.ServerList[0:1]
+			b, _ := json.Marshal(part)
+			maxSize := len(b)
+			hccls := getHcclSliceBySize(table, maxSize)
+			convey.So(len(hccls), convey.ShouldEqual, 4)
+			for _, hccl := range hccls {
+				convey.So(strings.Contains(hccl, `"rank_list"`), convey.ShouldBeFalse)
+				part := constant.RankTable{}
+				convey.So(json.Unmarshal([]byte(hccl), &part), convey.ShouldBeNil)
+				convey.So(part.RankList, convey.ShouldBeNil)
+				convey.So(part.RankCount, convey.ShouldEqual, 0)
+				convey.So(part.Version, convey.ShouldEqual, "")
+				convey.So(len(part.ServerList), convey.ShouldEqual, 1)
+			}
+		})
+	})
+}
+
+func TestUpdateCmAndCacheA5(t *testing.T) {
+	convey.Convey("test UpdateCmAndCache for A5 job", t, func() {
+		convey.Convey("when job resourceType is npu, rankList should be generated with version 2.0", func() {
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo.Spec.NodeName = nodeName1
+			podDemo.Annotations = map[string]string{
+				api.PodRankIndexAnno: "0",
+				api.PodNPUDeviceAnno: a5DeviceAnno,
+			}
+			podsInJob := map[string]v1.Pod{podUid1: *podDemo}
+			pgDemo := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
+			jobInfo := getDemoJob(jobName1, jobNameSpace, jobUid1)
+			jobInfo.ResourceType = api.NPULowerCase
+			jobInfo.Replicas = 1
+			jobInfo.TotalCmNum = 1
+			SaveJobCache(jobUid1, jobInfo)
+			defer DeleteJobCache(jobUid1)
+			mockUpdateCM := gomonkey.ApplyFunc(updateCM,
+				func(jobInfo constant.JobInfo, index int, hccl string) bool {
+					return true
+				})
+			defer mockUpdateCM.Reset()
+			UpdateCmAndCache(StatusJobRunning, jobUid1, *pgDemo, podsInJob)
+			jobInfo, ok := GetJobCache(jobUid1)
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(jobInfo.JobRankTable.Version, convey.ShouldEqual, "2.0")
+			convey.So(jobInfo.JobRankTable.RankCount, convey.ShouldEqual, 1)
+			convey.So(len(jobInfo.JobRankTable.RankList), convey.ShouldEqual, 1)
+			convey.So(jobInfo.JobRankTable.RankList[0].RankID, convey.ShouldEqual, 0)
+			convey.So(len(jobInfo.JobRankTable.ServerList), convey.ShouldEqual, 1)
 		})
 	})
 }
