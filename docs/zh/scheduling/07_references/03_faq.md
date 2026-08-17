@@ -19,6 +19,7 @@
 - [Volcano组件工作异常，日志出现Failed to get plugin](https://gitcode.com/Ascend/mind-cluster/issues/348)
 - [Ascend Operator日志打印Failed to watch \*v1alpha1.Job](https://gitcode.com/Ascend/mind-cluster/issues/349)
 - [NPU Exporter检查动态路径失败，日志出现check uid or mode failed](https://gitcode.com/Ascend/mind-cluster/issues/350)
+- [Helm工具安装或升级组件时拉取镜像失败](https://gitcode.com/Ascend/mind-cluster/issues/1013)
 
 ## 使用时出现的故障
 
