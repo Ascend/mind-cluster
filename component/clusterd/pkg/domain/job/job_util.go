@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
 
 // Package job a series of job function
 package job
@@ -15,6 +15,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/custom"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
@@ -22,7 +23,7 @@ import (
 
 const (
 	cmDataInitLength = 16
-	safeDeviceSize   = 1000
+	maxHcclSliceSize = 800 * 1024
 	vcJobKind        = "Job"
 	masterAddr       = "MASTER_ADDR"
 )
@@ -148,7 +149,7 @@ func getJobBasicInfoByPG(pgInfo v1beta1.PodGroup, podsInJob map[string]v1.Pod) c
 	jobInfo.Name = name
 	jobInfo.PgName = pgInfo.Name
 	jobInfo.Replicas = max(int(pgInfo.Spec.MinMember), pod.GetMinMember(podsInJob))
-	jobInfo.TotalCmNum = (jobInfo.Replicas-1)/safeDeviceSize + 1
+	jobInfo.TotalCmNum = 1
 	jobInfo.JobType = podgroup.GetJobTypeByPG(&pgInfo)
 	jobInfo.NameSpace = pgInfo.Namespace
 	jobInfo.Framework = podgroup.GetModelFramework(&pgInfo)
@@ -175,6 +176,10 @@ func UpdateCmAndCache(status string, jobKey string, podGroup v1beta1.PodGroup,
 	jobInfo.IsPreDelete = false
 	var completedPodNum int
 	jobInfo.JobRankTable, completedPodNum = pod.ConstructRankTableByPod(podsInJob, jobInfo.Replicas)
+	if jobInfo.ResourceType == api.NPULowerCase {
+		customScaleOutType := strings.ToUpper(strings.TrimSpace(podGroup.Labels[constant.ScaleOutTypeLabel]))
+		pod.ConstructRankListV2(&jobInfo.JobRankTable, podsInJob, jobInfo.Replicas, customScaleOutType)
+	}
 	if jobInfo.Framework == "" {
 		// vcjob framework in pod label, it is empty when init jobInfo with podGroup
 		jobInfo.Framework = pod.GetModelFramework(podsInJob)
@@ -188,8 +193,12 @@ func UpdateCmAndCache(status string, jobKey string, podGroup v1beta1.PodGroup,
 	} else {
 		jobInfo.JobRankTable.Status = StatusRankTableInit
 	}
-	jobInfo.JobRankTable.Total = jobInfo.TotalCmNum
 	hccls := getHcclSlice(jobInfo.JobRankTable)
+	jobInfo.TotalCmNum = len(hccls)
+	if jobInfo.TotalCmNum == 0 {
+		jobInfo.TotalCmNum = 1
+	}
+	jobInfo.JobRankTable.Total = jobInfo.TotalCmNum
 	result := true
 	for i := 0; i < jobInfo.TotalCmNum; i++ {
 		hccl := ""
@@ -237,26 +246,71 @@ func initJobShareTorInfo(jobInfo *constant.JobInfo, podsInJob map[string]v1.Pod)
 }
 
 func getHcclSlice(table constant.RankTable) []string {
+	return getHcclSliceBySize(table, maxHcclSliceSize)
+}
+
+// computeRankEnd returns the RankList end index aligned to ServerList[serverBegin:serverEnd].
+func computeRankEnd(table constant.RankTable, serverBegin, serverEnd, rankBegin int) int {
+	rankEnd := rankBegin
+	for i := serverBegin; i < serverEnd; i++ {
+		rankEnd += len(table.ServerList[i].DeviceList)
+	}
+	if rankEnd > len(table.RankList) {
+		rankEnd = len(table.RankList)
+	}
+	return rankEnd
+}
+
+// marshalHcclPart marshals the sub-table for ServerList[serverBegin:serverEnd] with aligned RankList.
+func marshalHcclPart(table constant.RankTable, serverBegin, serverEnd, rankBegin int) (string, error) {
+	part := table
+	part.ServerList = table.ServerList[serverBegin:serverEnd]
+	if len(table.RankList) > 0 {
+		part.RankList = table.RankList[rankBegin:computeRankEnd(table, serverBegin, serverEnd, rankBegin)]
+	}
+	b, err := json.Marshal(part)
+	return string(b), err
+}
+
+// getHcclSliceBySize slices ServerList by byte threshold (maxSize), keeping RankList aligned.
+// Each slice carries the full Total (= number of slices) and ServerCount, matching prior semantics.
+func getHcclSliceBySize(table constant.RankTable, maxSize int) []string {
 	if len(table.ServerList) == 0 {
 		return nil
 	}
-	hcclJsons := make([]string, 0, table.Total)
-	serverHcclSlice := make([][]constant.ServerHccl, 0, table.Total)
-	for i := 0; i < len(table.ServerList); i += safeDeviceSize {
-		if i+safeDeviceSize > len(table.ServerList) {
-			serverHcclSlice = append(serverHcclSlice, table.ServerList[i:])
-		} else {
-			serverHcclSlice = append(serverHcclSlice, table.ServerList[i:i+safeDeviceSize])
+	// Phase 1: measure split boundaries by binary search over server count.
+	type boundary struct{ serverEnd, rankEnd int }
+	bounds := make([]boundary, 0)
+	serverBegin, rankBegin := 0, 0
+	for serverBegin < len(table.ServerList) {
+		remaining := len(table.ServerList) - serverBegin
+		serverCount := util.BinarySearchMaxFit(remaining, maxSize, func(k int) int {
+			s, _ := marshalHcclPart(table, serverBegin, serverBegin+k, rankBegin)
+			return len(s)
+		})
+		if serverCount < 1 {
+			serverCount = 1 // single oversized server: emit as-is (fallback)
+			hwlog.RunLog.Warnf("single server exceeds hccl slice size limit, serverBegin=%d", serverBegin)
 		}
+		serverEnd := serverBegin + serverCount
+		rankEnd := computeRankEnd(table, serverBegin, serverEnd, rankBegin)
+		bounds = append(bounds, boundary{serverEnd, rankEnd})
+		serverBegin, rankBegin = serverEnd, rankEnd
 	}
-	for i, serverHccl := range serverHcclSlice {
-		table.ServerList = serverHccl
-		str, err := json.Marshal(table)
+	// Phase 2: emit slices with Total = number of slices.
+	total := len(bounds)
+	table.Total = total
+	hcclJsons := make([]string, 0, total)
+	serverBegin, rankBegin = 0, 0
+	for _, b := range bounds {
+		str, err := marshalHcclPart(table, serverBegin, b.serverEnd, rankBegin)
 		if err != nil {
-			hwlog.RunLog.Errorf("Marshal hccl json part %v error, error is %v", i, err)
+			hwlog.RunLog.Errorf("Marshal hccl json part %v error, error is %v", len(hcclJsons), err)
+			serverBegin, rankBegin = b.serverEnd, b.rankEnd
 			continue
 		}
-		hcclJsons = append(hcclJsons, string(str))
+		hcclJsons = append(hcclJsons, str)
+		serverBegin, rankBegin = b.serverEnd, b.rankEnd
 	}
 	return hcclJsons
 }

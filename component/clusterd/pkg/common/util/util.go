@@ -270,6 +270,22 @@ func splitToCmChunks[T any](data map[string]T, maxSize int, serialize func(map[s
 	return result
 }
 
+// BinarySearchMaxFit returns the largest k in [1, length] such that
+// sizeOfPrefix(k) <= maxSize, or 0 when even k=1 exceeds maxSize.
+// It is the ordered-range generalization of binarySearchMaxFit (map version).
+func BinarySearchMaxFit(length, maxSize int, sizeOfPrefix func(k int) int) int {
+	low, high := 1, length
+	for low <= high {
+		mid := (low + high) / 2
+		if sizeOfPrefix(mid) <= maxSize {
+			low = mid + 1
+		} else {
+			high = mid - 1
+		}
+	}
+	return high
+}
+
 func binarySearchMaxFit[T any](data map[string]T, keys []string, maxSize int, serialize func(map[string]T) string) int {
 	low, high := 1, len(keys)
 	for low <= high {
