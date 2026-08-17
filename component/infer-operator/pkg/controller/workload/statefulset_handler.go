@@ -301,7 +301,7 @@ func (s *StatefulSetHandler) DeleteExtraWorkLoad(
 		hwlog.RunLog.Infof("Delete Extra StatefulSet<%s>", statefulset.Name)
 	}
 	// 3. delete extra services
-	return s.deleteExtraService(ctx, selectLabels, indexLimit)
+	return s.deleteExtraService(ctx, selectLabels, indexer.Namespace, indexLimit)
 }
 
 // GetWorkLoadReadyReplicas returns the number of ready replicas of the statefulset
@@ -330,6 +330,7 @@ func (s *StatefulSetHandler) GetWorkLoadReadyReplicas(
 func (s *StatefulSetHandler) deleteExtraService(
 	ctx context.Context,
 	selectLabels map[string]string,
+	namespace string,
 	indexLimit int) error {
 	// 1. fetch services
 	serviceList := &corev1.ServiceList{}
@@ -340,7 +341,8 @@ func (s *StatefulSetHandler) deleteExtraService(
 		hwlog.RunLog.Errorf("Failed to convert label selector to selector: %v", err)
 		return common.NewRequeueError(err.Error())
 	}
-	if err = s.client.List(ctx, serviceList, client.MatchingLabelsSelector{Selector: selector}); err != nil {
+	if err = s.client.List(ctx, serviceList,
+		client.MatchingLabelsSelector{Selector: selector}, client.InNamespace(namespace)); err != nil {
 		hwlog.RunLog.Errorf("Failed to list extra services: %v", err)
 		return common.NewRequeueError(err.Error())
 	}
