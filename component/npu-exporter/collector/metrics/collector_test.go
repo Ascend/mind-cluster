@@ -133,6 +133,55 @@ func TestIsSupported(t *testing.T) {
 	}
 }
 
+// TestPcieCollectorIsSupported verifies the PCIe collector enablement matrix:
+func TestPcieCollectorIsSupported(t *testing.T) {
+	npuCollector := mockNewNpuCollector()
+	testCases := []isSupportedTestCase{
+		isSupportedTestCase{name: "Ascend910B => true", collectorType: &PcieCollector{},
+			devType: api.Ascend910B, expectedResult: true},
+		isSupportedTestCase{name: "Ascend910 => false", collectorType: &PcieCollector{},
+			devType: api.Ascend910, expectedResult: false},
+		isSupportedTestCase{name: "Ascend910A5, Atlas3501PMainBoardID => true",
+			collectorType: &PcieCollector{}, devType: api.Ascend910A5,
+			mainBoardId: api.Atlas3501PMainBoardID, expectedResult: true},
+		isSupportedTestCase{name: "Ascend910A5, Atlas3502PMainBoardID => true",
+			collectorType: &PcieCollector{}, devType: api.Ascend910A5,
+			mainBoardId: api.Atlas3502PMainBoardID, expectedResult: true},
+		isSupportedTestCase{name: "Ascend910A5, Atlas3504PMainBoardID => true",
+			collectorType: &PcieCollector{}, devType: api.Ascend910A5,
+			mainBoardId: api.Atlas3504PMainBoardID, expectedResult: true},
+		isSupportedTestCase{name: "Ascend910A5, UbxMainBoardID => true",
+			collectorType: &PcieCollector{}, devType: api.Ascend910A5,
+			mainBoardId: api.UbxMainBoardID, expectedResult: true},
+		isSupportedTestCase{name: "Ascend910A5, Atlas850MainBoardID => false",
+			collectorType: &PcieCollector{}, devType: api.Ascend910A5,
+			mainBoardId: api.Atlas850MainBoardID, expectedResult: false},
+		isSupportedTestCase{name: "Ascend910A5, Atlas850MainBoardID2 => false",
+			collectorType: &PcieCollector{}, devType: api.Ascend910A5,
+			mainBoardId: api.Atlas850MainBoardID2, expectedResult: false},
+		isSupportedTestCase{name: "Ascend910A5, Atlas850MainBoardID3 => false",
+			collectorType: &PcieCollector{}, devType: api.Ascend910A5,
+			mainBoardId: api.Atlas850MainBoardID3, expectedResult: false},
+		isSupportedTestCase{name: "Ascend910A5, Atlas950MainBoardID => false",
+			collectorType: &PcieCollector{}, devType: api.Ascend910A5,
+			mainBoardId: api.Atlas950MainBoardID, expectedResult: false},
+		isSupportedTestCase{name: "Ascend910A5, Atlas9501DMainBoardID => false",
+			collectorType: &PcieCollector{}, devType: api.Ascend910A5,
+			mainBoardId: api.Atlas9501DMainBoardID, expectedResult: false},
+	}
+
+	for _, testCase := range testCases {
+		patches := gomonkey.NewPatches()
+		convey.Convey(testCase.name, t, func() {
+			defer patches.Reset()
+			patches.ApplyMethodReturn(npuCollector.Dmgr, "GetDevType", testCase.devType)
+			patches.ApplyMethodReturn(npuCollector.Dmgr, "GetMainBoardId", testCase.mainBoardId)
+			isSupported := testCase.collectorType.IsSupported(npuCollector)
+			convey.So(isSupported, convey.ShouldEqual, testCase.expectedResult)
+		})
+	}
+}
+
 // TestIsSupported2 test IsSupported
 func TestIsSupported2(t *testing.T) {
 	n := mockNewNpuCollector()

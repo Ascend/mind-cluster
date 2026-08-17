@@ -212,6 +212,8 @@ const (
 	Atlas850MainBoardID2 = 0x25
 	// Atlas850MainBoardID3 board id of Atlas850 Server MainBoard
 	Atlas850MainBoardID3 = 0x27
+	// UbxMainBoardID board id of UBX training card MainBoard
+	UbxMainBoardID = 0x44
 )
 
 const (
