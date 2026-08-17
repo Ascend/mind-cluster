@@ -141,6 +141,7 @@
 4. 安装MindCluster应用组件的Release实例。
     > [!NOTE]
     >- **默认配置安装**方式会从昇腾镜像仓库下载应用组件的镜像。若用户节点无法连接互联网且本地未缓存镜像，可能会升级失败。
+    >- 用户升级26.1.0版本组件时需注意：昇腾镜像仓库中，26.1.0版本的组件，镜像tag是`v26.1.0-ubuntu22.04`、`v26.1.0-alpinelatest`或`v26.1.0-openeuler24.03`，但26.1.0版本Helm工具的默认配置中，tag只指定了`v26.1.0`。若采用**默认配置安装**，安装时会因找不到镜像而报错，因此需使用**自定义配置安装**方式配置正确的tag。
     >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式进行操作即可。
    - **默认配置安装**：若[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)符合用户需求，可执行如下命令。
 
@@ -150,6 +151,9 @@
        # 正式执行安装
        helm install mindcluster mindcluster-deploy-tool-{chart_version}.tgz
        ```
+
+       > [!NOTE]
+       > 执行命令后，如果拉取镜像失败，可参考[Helm工具安装或升级组件时拉取镜像失败](https://gitcode.com/Ascend/mind-cluster/issues/1013)章节进行处理。
 
    - **自定义配置安装**：若[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)不符合用户需求，请创建values.yaml文件，将[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)的YAML文件内容复制到values.yaml文件中，修改相关配置后执行如下命令。
 
@@ -239,6 +243,7 @@
 3. 升级MindCluster应用组件的Release实例。
    >[!NOTE]
    >- **默认配置升级**会从昇腾镜像仓库下载应用组件的镜像。若用户节点无法连接互联网且本地未缓存镜像，可能会升级失败。
+   >- 用户升级26.1.0版本组件时需注意：昇腾镜像仓库中，26.1.0版本的组件，镜像tag是`v26.1.0-ubuntu22.04`、`v26.1.0-alpinelatest`或`v26.1.0-openeuler24.03`，但26.1.0版本Helm工具的默认配置中，tag只指定了`v26.1.0`。若采用**默认配置升级**，升级时会因找不到镜像而报错，因此需使用**自定义配置升级**方式配置正确的tag。
    >- 请用户按需选择**默认配置升级**或**自定义配置升级**其中一种方式进行操作即可。
    - **默认配置升级**：若[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)符合用户需求，可执行如下命令。
 
@@ -248,6 +253,9 @@
        # 正式执行升级
        helm upgrade mindcluster mindcluster-deploy-tool-{chart_version}.tgz
        ```
+
+       > [!NOTE]
+       > 执行命令后，如果拉取镜像失败，可参考[Helm工具安装或升级组件时拉取镜像失败](https://gitcode.com/Ascend/mind-cluster/issues/1013)章节进行处理。
 
    - **自定义配置升级**：若[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)不符合用户需求，请创建values.yaml文件，将[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)的YAML文件内容复制到values.yaml文件中，修改相关配置后执行如下命令。
        >[!WARNING]
