@@ -17,6 +17,7 @@ package metrics
 
 import (
 	"time"
+	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -62,7 +63,15 @@ var (
 )
 var (
 	supportedPcieDevices = map[string]bool{
-		api.Ascend910B: true,
+		api.Ascend910B:  true,
+		api.Ascend910A5: true,
+	}
+
+	supportedPcieA5MainBoards = map[uint32]bool{
+		api.Atlas3501PMainBoardID: true,
+		api.Atlas3502PMainBoardID: true,
+		api.Atlas3504PMainBoardID: true,
+		api.UbxMainBoardID:        true,
 	}
 )
 
@@ -80,10 +89,23 @@ type PcieCollector struct {
 
 // IsSupported check whether the collector is supported
 func (c *PcieCollector) IsSupported(n *colcommon.NpuCollector) bool {
-	// only 910A2 supports pcie info
-	isSupport := supportedPcieDevices[n.Dmgr.GetDevType()]
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c), "")
-	return isSupport
+	devType := n.Dmgr.GetDevType()
+	if !supportedPcieDevices[devType] {
+		logForUnSupportDevice(false, devType, colcommon.GetCacheKey(c), "")
+		return false
+	}
+
+	if devType == api.Ascend910A5 {
+		mainBoardID := n.Dmgr.GetMainBoardId()
+		if !supportedPcieA5MainBoards[mainBoardID] {
+			logForUnSupportDevice(false, devType, colcommon.GetCacheKey(c),
+				fmt.Sprint("this mainBoardId:", mainBoardID, " is not supported"))
+			return false
+		}
+	}
+
+	logForUnSupportDevice(true, devType, colcommon.GetCacheKey(c), "")
+	return true
 }
 
 // Describe description of the metric
