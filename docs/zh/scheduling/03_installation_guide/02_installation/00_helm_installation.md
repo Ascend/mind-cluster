@@ -121,7 +121,8 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 4. 使用Helm安装MindCluster应用组件的Release实例。
     > [!NOTE]
     >- **默认配置安装方式**会从昇腾镜像仓库下载应用组件的镜像。若用户节点无法连接互联网且本地未缓存镜像，可能会导致安装失败。
-    >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式进行操作即可。
+    >- 用户安装26.1.0版本组件时需注意：昇腾镜像仓库中，26.1.0版本的组件，镜像tag是`v26.1.0-ubuntu22.04`、`v26.1.0-alpinelatest`或`v26.1.0-openeuler24.03`，但26.1.0版本Helm工具的默认配置中，tag只指定了`v26.1.0`。若采用**默认配置安装**，安装时会因找不到镜像而报错，因此需使用**自定义配置安装**方式配置正确的tag。
+    >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式操作即可。
     - **默认配置安装**：若[应用组件默认配置](#default_app_yaml_install_config)符合用户需求，可执行如下命令安装应用组件。
 
       ```bash
@@ -130,6 +131,9 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       # 正式执行安装
       helm install mindcluster mindcluster-deploy-tool-{chart_version}.tgz
       ```
+
+      > [!NOTE]
+      > 执行命令后，如果拉取镜像失败，可参考[Helm工具安装或升级组件时拉取镜像失败](https://gitcode.com/Ascend/mind-cluster/issues/1013)章节进行处理。
 
     - **自定义配置安装<a name="update_app_values_before_install_app"></a>**：若[应用组件默认配置](#default_app_yaml_install_config)不符合用户需求，请创建values.yaml文件，将[应用组件默认配置](#default_app_yaml_install_config)的YAML文件内容复制到values.yaml文件中，修改相关配置。例如，修改Ascend Device Plugin组件的镜像名、日志级别和离线热复位的配置示例如下：
 
@@ -199,6 +203,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     >- 默认安装的组件包括：Ascend Device Plugin、Ascend Operator、Volcano、ClusterD、NodeD、NPU Exporter和Infer Operator，Volcano版本为v1.9.0。
     >- 默认不安装的组件包括：K8s RDMA Shared Dev Plugin。
     >- 参数说明可参见[表2](#table15274931175242)和[表3](#table15274931175243)，其中[表3](#table15274931175243)中的参数未在下方YAML配置中展示，用户可根据实际情况新增或修改。
+    >- 26.1.0版本中，tag字段默认值为`v26.1.0`，不带`-openeuler24.03`、`-ubuntu22.04`或`-alpinelatest`后缀，与昇腾镜像仓库中的镜像tag不一致，直接使用默认值可能导致镜像拉取失败。可将其配置为`v26.1.0-openeuler24.03`、`v26.1.0-ubuntu22.04`、`v1.9.0-v26.1.0-alpinelatest`等带后缀的tag。
 
    ```yaml
    # 安装应用组件时的默认yaml配置如下
@@ -206,7 +211,8 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
      enabled: true                                                         # 安装ClusterD组件
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd"   # ClusterD组件镜像名，请根据实际情况修改
-       tag: "v26.1.0"                                                      # ClusterD组件镜像标签，请根据实际情况修改
+       # 昇腾镜像仓库镜像tag为"v26.1.0-openeuler24.03"或"v26.1.0-ubuntu22.04"
+       tag: "v26.1.0"                                                      # ClusterD组件镜像标签，请根据实际情况修改，以后版本（包括补丁版本）会加上后缀："-openeuler24.03"和"-ubuntu22.04"
        pullPolicy: "IfNotPresent"                                          # ClusterD组件镜像拉取策略，请根据实际情况修改
 
    noded:
@@ -214,7 +220,8 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
      enabledStorageCheck: ""                                                # 开启的共享存储故障检测类型，为空表示不开启
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/noded"      # NodeD组件镜像名，请根据实际情况修改
-       tag: "v26.1.0"                                                      # NodeD组件镜像标签，请根据实际情况修改
+       # 昇腾镜像仓库镜像tag为"v26.1.0-openeuler24.03"或"v26.1.0-ubuntu22.04"
+       tag: "v26.1.0"                                                      # NodeD组件镜像标签，请根据实际情况修改，以后版本（包括补丁版本）会加上后缀："-openeuler24.03"和"-ubuntu22.04"
        pullPolicy: "IfNotPresent"                                          # NodeD组件镜像拉取策略，请根据实际情况修改
 
    npu-exporter:
@@ -222,14 +229,16 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
      is310P1usoc: false                                                    # false表示产品不是Atlas 200I SoC A1 核心板
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter" # NPU Exporter组件镜像名，请根据实际情况修改
-       tag: "v26.1.0"                                                      # NPU Exporter组件镜像标签，请根据实际情况修改
+       # 昇腾镜像仓库镜像tag为"v26.1.0-openeuler24.03"或"v26.1.0-ubuntu22.04"
+       tag: "v26.1.0"                                                      # NPU Exporter组件镜像标签，请根据实际情况修改，以后版本（包括补丁版本）会加上后缀："-openeuler24.03"和"-ubuntu22.04"
        pullPolicy: "IfNotPresent"                                          # NPU Exporter组件镜像拉取策略，请根据实际情况修改
 
    ascend-operator:
      enabled: true                                                         # 安装Ascend Operator组件
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator" # Ascend Operator组件镜像名，请根据实际情况修改
-       tag: "v26.1.0"                                                      # Ascend Operator组件镜像标签，请根据实际情况修改
+       # 昇腾镜像仓库镜像tag为"v26.1.0-openeuler24.03"或"v26.1.0-ubuntu22.04"
+       tag: "v26.1.0"                                                      # Ascend Operator组件镜像标签，请根据实际情况修改，以后版本（包括补丁版本）会加上后缀："-openeuler24.03"和"-ubuntu22.04"
        pullPolicy: "IfNotPresent"                                          # Ascend Operator组件镜像拉取策略，请根据实际情况修改
 
    ascend-for-volcano:
@@ -238,19 +247,22 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
      scheduler:
        image:
          repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler"      # Volcano Scheduler组件镜像名，请根据实际情况修改
-         tag: "v1.9.0-v26.1.0"                                                      # Volcano Scheduler组件镜像标签
+         # 昇腾镜像仓库镜像tag为"v1.9.0-v26.1.0-openeuler24.03"或"v1.9.0-v26.1.0-alpinelatest"
+         tag: "v1.9.0-v26.1.0"                                                      # Volcano Scheduler组件镜像标签，以后版本（包括补丁版本）会加上后缀："-openeuler24.03"和"-alpinelatest"
          pullPolicy: "IfNotPresent"                                                 # Volcano Scheduler组件镜像拉取策略
      controller:
        image:
          repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager" # Volcano Controller组件镜像名，请根据实际情况修改
-         tag: "v1.9.0-v26.1.0"                                                          # Volcano Controller组件镜像标签，请根据实际情况修改
+         # 昇腾镜像仓库镜像tag为"v1.9.0-v26.1.0-openeuler24.03"或"v1.9.0-v26.1.0-alpinelatest"
+         tag: "v1.9.0-v26.1.0"                                                          # Volcano Controller组件镜像标签，请根据实际情况修改，以后版本（包括补丁版本）会加上后缀："-openeuler24.03"和"-alpinelatest"
          pullPolicy: "IfNotPresent"                                                     # Volcano Controller组件镜像拉取策略
 
    infer-operator:
      enabled: true                                                         # 安装Infer Operator组件
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator" # Infer Operator组件镜像名，请根据实际情况修改
-       tag: "v26.1.0"                                                      # Infer Operator组件镜像标签，请根据实际情况修改
+       # 昇腾镜像仓库镜像tag为"v26.1.0-openeuler24.03"或"v26.1.0-ubuntu22.04"
+       tag: "v26.1.0"                                                      # Infer Operator组件镜像标签，请根据实际情况修改，以后版本（包括补丁版本）会加上后缀："-openeuler24.03"和"-ubuntu22.04"
        pullPolicy: "IfNotPresent"                                          # Infer Operator组件镜像拉取策略，请根据实际情况修改
 
    ascend-device-plugin:
@@ -259,14 +271,16 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
      volcanoType: true                                                     # true表示使用volcano进行调度，请根据实际情况修改
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin" # Ascend Device Plugin组件镜像名，请根据实际情况修改
-       tag: "v26.1.0"                                                                  # Ascend Device Plugin组件镜像标签，请根据实际情况修改
-       pullPolicy: "IfNotPresent"                                                      # Ascend Device Plugin组件镜像拉取策略，请根据实际情况修改
+       # 昇腾镜像仓库镜像tag为"v26.1.0-openeuler24.03"或"v26.1.0-ubuntu22.04"
+       tag: "v26.1.0"                                                      # Ascend Device Plugin组件镜像标签，请根据实际情况修改，以后版本（包括补丁版本）会加上后缀："-openeuler24.03"和"-ubuntu22.04"
+       pullPolicy: "IfNotPresent"                                          # Ascend Device Plugin组件镜像拉取策略，请根据实际情况修改
 
    k8s-rdma-shared-dev-plugin:
      enabled: false                                                           # false表示不安装K8s RDMA Shared Dev Plugin组件
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dp" # K8s RDMA Shared Dev Plugin组件镜像名，请根据实际情况修改
-       tag: "v26.1.0"                                                              # K8s RDMA Shared Dev Plugin组件镜像标签，请根据实际情况修改
+       # 昇腾镜像仓库镜像tag为"v26.1.0-openeuler24.03"或"v26.1.0-ubuntu22.04"
+       tag: "v26.1.0"                                                              # K8s RDMA Shared Dev Plugin组件镜像标签，请根据实际情况修改，以后版本（包括补丁版本）会加上后缀："-openeuler24.03"和"-ubuntu22.04"
        pullPolicy: "IfNotPresent"                                                  # K8s RDMA Shared Dev Plugin组件镜像拉取策略，请根据实际情况修改
    ```
 

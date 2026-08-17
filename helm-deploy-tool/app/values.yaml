@@ -2,7 +2,7 @@ clusterd:
   enabled: true
   image:
     repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd"
-    tag: "v26.1.0"
+    tag: "v26.1.0-openeuler24.03"
     pullPolicy: "IfNotPresent"
 
 noded:
@@ -10,7 +10,7 @@ noded:
   enabledStorageCheck: "" # Shared storage clients to enable detection for, Can be set to "dpc"、"dtfs"、"dpc,dtfs"
   image:
     repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/noded"
-    tag: "v26.1.0"
+    tag: "v26.1.0-openeuler24.03"
     pullPolicy: "IfNotPresent"
 
 npu-exporter:
@@ -18,14 +18,14 @@ npu-exporter:
   is310P1usoc: false # Whether it is 310P-1usoc
   image:
     repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter"
-    tag: "v26.1.0"
+    tag: "v26.1.0-openeuler24.03"
     pullPolicy: "IfNotPresent"
 
 ascend-operator:
   enabled: true
   image:
     repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator"
-    tag: "v26.1.0"
+    tag: "v26.1.0-openeuler24.03"
     pullPolicy: "IfNotPresent"
 
 ascend-for-volcano:
@@ -34,19 +34,19 @@ ascend-for-volcano:
   scheduler:
     image:
       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler"
-      tag: "v1.9.0-v26.1.0"
+      tag: "v1.9.0-v26.1.0-openeuler24.03"
       pullPolicy: "IfNotPresent"
   controller:
     image:
       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager"
-      tag: "v1.9.0-v26.1.0"
+      tag: "v1.9.0-v26.1.0-openeuler24.03"
       pullPolicy: "IfNotPresent"
 
 infer-operator:
   enabled: true
   image:
     repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator"
-    tag: "v26.1.0"
+    tag: "v26.1.0-openeuler24.03"
     pullPolicy: "IfNotPresent"
 
 ascend-device-plugin:
@@ -55,12 +55,12 @@ ascend-device-plugin:
   volcanoType: true # Whether to use volcano for scheduling
   image:
     repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin"
-    tag: "v26.1.0"
+    tag: "v26.1.0-openeuler24.03"
     pullPolicy: "IfNotPresent"
 
 k8s-rdma-shared-dev-plugin:
   enabled: false
   image:
     repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dp"
-    tag: "v26.1.0"
+    tag: "v26.1.0-openeuler24.03"
     pullPolicy: "IfNotPresent"

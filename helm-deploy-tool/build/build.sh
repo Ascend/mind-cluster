@@ -43,6 +43,8 @@ function update_version() {
   sed -i "s/name: volcano-npu_v6.0.RC1_linux-x86_64/name: ${REL_NPU_PLUGIN}/" "${TOP_DIR}/app/charts/ascend-for-volcano/yamls/${BASE_VER}"/ConfigMap-*.yaml
   BASE_VER=v1.12.0
   sed -i "s/name: volcano-npu_v6.0.RC1_linux-x86_64/name: ${REL_NPU_PLUGIN}/" "${TOP_DIR}/app/charts/ascend-for-volcano/yamls/${BASE_VER}"/ConfigMap-*.yaml
+
+  sed -i 's#/bin/ash#/bin/sh#g' ${TOP_DIR}/app/charts/ascend-for-volcano/yamls/*/Deployment-volcano-*.yaml
 }
 
 function replace_yaml_value() {
