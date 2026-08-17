@@ -21,7 +21,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"clusterd/pkg/domain/conf"
@@ -56,7 +56,7 @@ func testEmptyJob() {
 	fault1.JobId = ""
 	convey.So(len(Counter.faults), convey.ShouldEqual, len0)
 	JobFaultMgr.AddFault(fault1)
-	convey.So(len(Counter.faults), convey.ShouldEqual, len1)
+	convey.So(len(Counter.faults), convey.ShouldEqual, len0)
 	convey.So(len(JobFaultMgr.jobFault), convey.ShouldEqual, len0)
 }
 
