@@ -43,6 +43,8 @@ function update_version() {
   sed -i "s/name: volcano-npu_v6.0.RC1_linux-x86_64/name: ${REL_NPU_PLUGIN}/" "${TOP_DIR}/app/charts/ascend-for-volcano/yamls/${BASE_VER}"/ConfigMap-*.yaml
   BASE_VER=v1.12.0
   sed -i "s/name: volcano-npu_v6.0.RC1_linux-x86_64/name: ${REL_NPU_PLUGIN}/" "${TOP_DIR}/app/charts/ascend-for-volcano/yamls/${BASE_VER}"/ConfigMap-*.yaml
+
+  sed -i 's#/bin/ash#/bin/sh#g' ${TOP_DIR}/app/charts/ascend-for-volcano/yamls/*/Deployment-volcano-*.yaml
 }
 
 function replace_yaml_value() {
@@ -50,6 +52,11 @@ function replace_yaml_value() {
 }
 
 function helm_package() {
+  local ver="${build_version#v}"
+  sed -i "s/26.1.0/${ver}/g" "${TOP_DIR}"/app*/charts/*/Chart.yaml
+  sed -i "s/26.1.0/${ver}/g" "${TOP_DIR}"/app*/Chart.yaml
+  sed -i "s/26.1.0/${ver}/g" "${TOP_DIR}"/app/values.yaml
+
   helm package "${TOP_DIR}"/app
   helm package "${TOP_DIR}"/app-crds
 }
@@ -63,6 +70,10 @@ function change_mod() {
     chmod 400 "${TOP_DIR}"/output/*
 }
 
+function clear() {
+  rm -rf "${TOP_DIR}"/app*/charts/*/yamls
+}
+
 function main() {
   clear_env
   generate_yaml_from_component
@@ -71,6 +82,7 @@ function main() {
   helm_package
   mv_file
   change_mod
+  clear
 }
 
 main
