@@ -16,12 +16,14 @@
 package fault
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -47,6 +49,9 @@ const (
 	CheckBondMember  = "check_bond_member"
 	CheckDpuCardDrop = "check_dpu_card_drop"
 )
+
+var hinicHeaderRe = regexp.MustCompile(`(hinic\d+)`)
+var nicLineRe = regexp.MustCompile(`NIC:([^\s)]+)`)
 
 func validateSysfsPath(resolvedPath string) bool {
 	return strings.HasPrefix(resolvedPath, "/sys/")
@@ -206,17 +211,84 @@ func checkBondMember(hca string) (string, string) {
 	if ethName == "" {
 		return "false", fmt.Sprintf("cannot get eth name for hca %s", hca)
 	}
-
-	bondName, slaves, err := findBondByEthName(ethName)
+	siblings, err := GetSiblingEthFor1825(ethName)
 	if err != nil {
-		return "false", fmt.Sprintf("bond not found for eth %s: %v", ethName, err)
+		return "false", fmt.Sprintf("get sibling eth failed: %v", err)
 	}
 
-	if bondName == "" {
-		return "false", fmt.Sprintf("no bond contains eth %s", ethName)
+	for _, eth := range siblings {
+		// 判断是否属于bond, 如果master不存在， 则说明不是bond成员, 如果不配置bond，则全部跳过
+		if _, err := os.Stat(fmt.Sprintf("/sys/class/net/%s/master", eth)); err != nil {
+			continue
+		}
+		if isEthPortDown(eth) {
+			return "true", fmt.Sprintf("bonding down: %v", eth)
+		}
+	}
+	return "false", fmt.Sprintf("bond for %s is ok or not exist", hca)
+}
+
+/**
+ *
+ *hinicadm5 info output lis like:
+ *     Card       UB Entity
+ * |---- hinic0(CAL_2X400G_UB_EXE)
+ *       |------- 0000f(NIC:ens0p0)
+ *       |------- 0000f(NIC:ens0p1)
+ * |---- hinic1(CAL_2X400G_UB_EXE)
+ *       |------- 0000f(NIC:ens1p0)
+ * 从中解析出hinic0中包含的 eth网卡列表
+ */
+func GetSiblingEthFor1825(ethName string) ([]string, error) {
+	output, err := exec.Command("bash", "-c", "hinicadm5 info", ethName).CombinedOutput()
+	if err != nil {
+		return []string{}, fmt.Errorf("failed to run hinicadm5 info: %v, output: %s", err, output)
+	}
+	result, err1 := parseHinicNICMap(string(output))
+	if err1 != nil {
+		return []string{}, fmt.Errorf("parse hinic nic map failed: %v", err1)
 	}
 
-	return checkBondSlavesState(bondName, slaves, hca)
+	for _, value := range result {
+		if utils.Contains(value, ethName) {
+			return value, nil
+		}
+	}
+
+	return []string{}, fmt.Errorf("eth %s not found in any hinic", ethName)
+}
+
+func parseHinicNICMap(output string) (map[string][]string, error) {
+	result := make(map[string][]string)
+	var currentKey string
+
+	scanner := bufio.NewScanner(strings.NewReader(output))
+	for scanner.Scan() {
+		line := scanner.Text()
+		trimmed := strings.TrimSpace(line)
+
+		// 命中新的 hinicX 头
+		if m := hinicHeaderRe.FindStringSubmatch(trimmed); m != nil {
+			currentKey = m[1]
+			if _, ok := result[currentKey]; !ok {
+				result[currentKey] = make([]string, 0)
+			}
+			continue
+		}
+
+		// 命中 NIC 子项：归入当前 hinic
+		if m := nicLineRe.FindStringSubmatch(trimmed); m != nil {
+			if currentKey == "" {
+				// 没有对应的 hinic 头，跳过孤立 NIC 行
+				continue
+			}
+			result[currentKey] = append(result[currentKey], m[1])
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("scan output failed: %v", err)
+	}
+	return result, nil
 }
 
 func findBondByEthName(ethName string) (string, []string, error) {
@@ -227,12 +299,15 @@ func findBondByEthName(ethName string) (string, []string, error) {
 
 	for _, bondDir := range netDirs {
 		bondName := bondDir.Name()
-		if !strings.HasPrefix(bondName, "bond") {
+
+		bondingPath := filepath.Join(common.SysClassNet, bondName, "bonding")
+		if _, err := os.Stat(bondingPath); err != nil {
+			// bonding dir not exist, not a bond device, skip
 			continue
 		}
 
 		slaves, err := getBondSlaves(bondName)
-		if err != nil || len(slaves) != 2 {
+		if err != nil {
 			continue
 		}
 
@@ -282,7 +357,19 @@ func isEthPortDown(ifName string) bool {
 	if err != nil {
 		return false
 	}
-	return strings.TrimSpace(string(operstate)) == "down"
+	// operstate state down mearns ethernet status down
+	if strings.TrimSpace(string(operstate)) == "down" {
+		return true
+	}
+
+	carrierPath := filepath.Join(common.SysClassNet, ifName, "carrier")
+	carrierState, err := utils.ReadLimitBytesWithSymlink(carrierPath, readLimitBytes, validateSysfsPath)
+	if err != nil {
+		hwlog.RunLog.Debugf("Read carrier state for %s failed, carrier error", ifName)
+		return true
+	}
+	// carrier state 0 mearns phy link down
+	return strings.TrimSpace(string(carrierState)) == "0"
 }
 
 func checkDpuCardDrop(hca string) (string, string) {
