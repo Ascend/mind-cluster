@@ -216,7 +216,7 @@ spec:
 </td>
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 ">取值可参考<a href="../../06_api/01_volcano.md#podgroup">参数说明</a>中表3对该字段的说明。
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >根据需要运行训练任务的节点类型，选取不同的值。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >根据需要运行任务的节点类型，选取不同的值。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >huawei.com/Ascend910</p>
@@ -461,7 +461,7 @@ inferserviceset.mindcluster.huawei.com "my-test" deleted
     >[!NOTE]
     >用户配置文件中的配置字段说明详细请参见[infer-operator-deploy-tool](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/infer-operator-deploy-tool/README.md)。
 
-6. （可选）创建任务名称空间，<namespace\>为“config/user-config.yaml”设置的“deploy_config.namespace”。如果“deploy_config.namespace”为“default”或未设置，可以不创建名称空间。
+6. （可选）创建任务命名空间，<namespace\>为“config/user-config.yaml”设置的“deploy_config.namespace”。如果“deploy_config.namespace”为“default”或未设置，可以不创建命名空间。
 
     ```shell
     kubectl create ns <namespace>

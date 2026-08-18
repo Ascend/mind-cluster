@@ -1430,7 +1430,7 @@ Verl的训练任务被Ray集群所管理，为适配MindCluster的Ascend Job任�
 
 ## 下发任务<a name="ZH-CN_TOPIC_0000002479226548"></a>
 
-示例YAML中，任务部署在default命名空间下。本章节以Pytorch框架为例，下发训练任务。
+示例YAML中，任务部署在default命名空间下。本章节以PyTorch框架为例，下发训练任务。
 
 1. 登录管理节点，进入YAML文件所在路径。
 2. 在管理节点执行以下命令，使用YAML下发训练任务。

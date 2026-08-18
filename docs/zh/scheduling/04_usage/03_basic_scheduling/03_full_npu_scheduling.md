@@ -933,9 +933,6 @@ deploy任务原理图如[图4](#fig06571541566)所示。
                   labels:
                     ring-controller.atlas: ascend-{xxx}b
                 spec:
-                  nodeSelector:
-                    host-arch: huawei-arm      # 可选值，根据实际情况填写
-                    accelerator-type: module-a3-16-super-pod    # 节点类型
                   containers:
                   - name: ascend  # 必须为ascend，不能修改
                     image: pytorch-test:latest      # 训练基础镜像
