@@ -105,6 +105,7 @@ var (
 		util.MinAvailableKey,
 		util.RecoverPolicyPathKey,
 		util.InferServiceScheduleAnnoKey,
+		util.AffinityConfig,
 	}
 )
 
