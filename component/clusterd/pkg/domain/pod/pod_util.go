@@ -521,3 +521,12 @@ func GetJobIdByDev(devJobMap map[string]string, devName string) string {
 	}
 	return jobId
 }
+
+// CheckPodIsNotSoftShareDev check pod is softShareDev
+func CheckPodIsNotSoftShareDev(podId string) bool {
+	localPod, ok := GetPodByPodId(podId)
+	if !ok {
+		return true
+	}
+	return localPod.Annotations == nil || localPod.Annotations[api.SchedulePolicyAnnoKey] != api.Chip1SoftShareDev
+}

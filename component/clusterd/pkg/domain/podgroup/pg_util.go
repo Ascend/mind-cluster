@@ -19,29 +19,29 @@ import (
 
 // GetJobKeyByPG get job unique key by podGroup
 func GetJobKeyByPG(info *v1beta1.PodGroup) string {
-	key, _ := GetJobKeyAndNameByPG(info)
+	key, _, _ := GetJobInfoByPG(info)
 	return key
 }
 
 // GetJobNameByPG get job name by podGroup
 func GetJobNameByPG(info *v1beta1.PodGroup) string {
-	_, name := GetJobKeyAndNameByPG(info)
+	_, name, _ := GetJobInfoByPG(info)
 	return name
 }
 
-// GetJobKeyAndNameByPG get job unique key and name by podGroup
-func GetJobKeyAndNameByPG(info *v1beta1.PodGroup) (key, name string) {
+// GetJobInfoByPG get job unique key and name by podGroup
+func GetJobInfoByPG(info *v1beta1.PodGroup) (key, name, kind string) {
 	if info == nil {
 		hwlog.RunLog.Error("get unique key failed, podGroup is nil")
-		return "", ""
+		return "", "", ""
 	}
 	for _, owner := range info.GetOwnerReferences() {
 		if owner.Controller != nil && *owner.Controller {
-			return string(owner.UID), owner.Name
+			return string(owner.UID), owner.Name, owner.Kind
 		}
 	}
 	hwlog.RunLog.Errorf("get unique key failed, podGroup don't have controller %s/%s", info.Namespace, info.Name)
-	return "", ""
+	return "", "", ""
 }
 
 // GetOwnerRefByPG get owner reference by pg
