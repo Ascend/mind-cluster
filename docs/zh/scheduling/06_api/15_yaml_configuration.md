@@ -420,7 +420,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="pcustomjobkeyvalue2"><a name="pcustomjobkeyvalue2"></a><a name="pcustomjobkeyvalue2"></a>用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<br> customJobKey: tid<br> tid: "123456"</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="pcustomjobkeydesc2"><a name="pcustomjobkeydesc2"></a><a name="pcustomjobkeydesc2"></a>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。<br> <ul><li>vcjob任务在资源Job的metadata.labels标签中设置。<br></li> <li>deploy任务在资源Deployment的spec.template.metadata.labels标签中设置。</li></ul></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="pcustomjobkeydesc2"><a name="pcustomjobkeydesc2"></a><a name="pcustomjobkeydesc2"></a>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。<br> <ul><li>vcjob任务在资源Job的metadata.labels标签中设置。<br></li> <li>Deployment任务在资源Deployment的spec.template.metadata.labels标签中设置。</li></ul></p>
 </td>
 </tr>
 <tr id="rowcustomjobid2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobid2"><a name="pcustomjobid2"></a><a name="pcustomjobid2"></a>custom-job-id</p>
@@ -539,11 +539,12 @@
 </tbody>
 </table>
 
-## deploy任务yaml参数说明<a name="deploy"></a>
+## Deployment任务及第三方任务yaml参数说明<a name="deploy"></a>
 
-在deploy任务中，可使用的YAML参数说明如下表所示。
+- 在Deployment任务及第三方任务中，可使用的yaml参数说明如下表所示。
+- 直接使用Pod任务调度时，Pod任务yaml参数配置为Deployment任务中spec.template.metadata内容；如需使用gang调度，需要显式创建PodGroup，并在PodGroup中配置最小成员数(spec.minMember)、最少资源数(spec.minResources)，Pod任务yaml指定所属PodGroup。
 
-**表 3** deploy任务关键字段说明
+**表 3** Deployment任务关键字段说明
 
 <a name="zh-cn_topic_0000001609074269_table1565872494511"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0000001609074269_row1465822412450"><th class="cellrowborder" valign="top" width="22.58%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000001609074269_p13658124194513"><a name="zh-cn_topic_0000001609074269_p13658124194513"></a><a name="zh-cn_topic_0000001609074269_p13658124194513"></a>参数</p>
@@ -795,7 +796,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="pcustomjobkeyvalue2"><a name="pcustomjobkeyvalue2"></a><a name="pcustomjobkeyvalue2"></a>用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<br> customJobKey: tid<br> tid: "123456"</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="pcustomjobkeydesc2"><a name="pcustomjobkeydesc2"></a><a name="pcustomjobkeydesc2"></a>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。<br> <ul><li>vcjob任务在资源Job的metadata.labels标签中设置。<br></li> <li>deploy任务在资源Deployment的spec.template.metadata.labels标签中设置。</li></ul></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="pcustomjobkeydesc2"><a name="pcustomjobkeydesc2"></a><a name="pcustomjobkeydesc2"></a>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。<br> <ul><li>vcjob任务在资源Job的metadata.labels标签中设置。<br></li> <li>Deployment任务在资源Deployment的spec.template.metadata.labels标签中设置。</li></ul></p>
 </td>
 </tr>
 <tr id="rowcustomjobid2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobid2"><a name="pcustomjobid2"></a><a name="pcustomjobid2"></a>custom-job-id</p>
