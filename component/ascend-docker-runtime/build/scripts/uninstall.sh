@@ -139,6 +139,9 @@ elif [ "${INSTALL_SCENE}" == "isula" ] ; then
   DST='/etc/isulad/daemon.json'
   MSG="[INFO] You will recover iSula's daemon"
   RESERVEDEFAULT=yes
+elif [ "${INSTALL_SCENE}" == "crio" ] ; then
+  DST='/etc/crio/crio.conf.d/99-ascend-runtime.conf'
+  MSG="[INFO] You will recover CRI-O's daemon"
 elif [ "${INSTALL_SCENE}" == "" ] ; then
   INSTALL_SCENE=docker
 fi

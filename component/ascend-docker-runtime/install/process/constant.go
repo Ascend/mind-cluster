@@ -62,7 +62,7 @@ const (
 	InstallSceneIsula = "isula"
 	// InstallSceneCriO is a 'crio' string of scene
 	InstallSceneCriO = "crio"
-	runtimeName       = "ascend"
+	runtimeName      = "ascend"
 	// default runtime type for containerd
 	v2RuncRuntimeType         = "io.containerd.runc.v2"
 	defaultRuntimeValue       = "runc"
@@ -84,6 +84,8 @@ const (
 	crioDefaultRuntimeKey  = "default_runtime"
 	crioRuntimeTypeKey     = "runtime_type"
 	crioRuntimePathKey     = "runtime_path"
+	monitorEnvKey          = "monitor_env"
 	crioRuntimeRootKey     = "runtime_root"
-	crioOciRuntimeType = "oci"
+	crioOciRuntimeType     = "oci"
+	pathEnvValue           = "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 )
