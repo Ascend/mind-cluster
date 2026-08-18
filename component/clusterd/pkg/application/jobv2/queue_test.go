@@ -16,9 +16,11 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"golang.org/x/time/rate"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/pod"
 )
 
 func init() {
@@ -180,6 +182,58 @@ func TestPodGroupMessage(t *testing.T) {
 			podGroupMessage(pg, "illegal")
 			_, ok := uniqueQueue.Load(jobUid1)
 			convey.So(ok, convey.ShouldEqual, false)
+		})
+		convey.Convey("when job key is empty, should not store queue", func() {
+			uniqueQueue = sync.Map{}
+			pgWithEmptyKey := getDemoPodGroup("", jobNameSpace, "")
+			podGroupMessage(pgWithEmptyKey, constant.AddOperator)
+			messageLength := 0
+			uniqueQueue.Range(func(_, _ interface{}) bool {
+				messageLength++
+				return true
+			})
+			convey.So(messageLength, convey.ShouldEqual, 0)
+		})
+		convey.Convey("when pg owner kind is Pod and pod is SoftShareDev, should not store queue", func() {
+			uniqueQueue = sync.Map{}
+			pgPod := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
+			pgPod.OwnerReferences[0].Kind = PodOwnerKind
+			softPod := getDemoPod(podName1, podNameSpace1, podUid1, podRank1)
+			softPod.SetAnnotations(map[string]string{api.SchedulePolicyAnnoKey: api.Chip1SoftShareDev})
+			pod.SavePod(softPod)
+			defer pod.DeletePod(softPod)
+			podGroupMessage(pgPod, constant.AddOperator)
+			_, ok := uniqueQueue.Load(jobUid1)
+			convey.So(ok, convey.ShouldEqual, false)
+		})
+		convey.Convey("when pg owner kind is Pod and pod is not SoftShareDev, should store queue", func() {
+			uniqueQueue = sync.Map{}
+			pgPod := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
+			pgPod.OwnerReferences[0].Kind = PodOwnerKind
+			normalPod := getDemoPod(podName1, podNameSpace1, podUid1, podRank1)
+			pod.SavePod(normalPod)
+			defer pod.DeletePod(normalPod)
+			podGroupMessage(pgPod, constant.AddOperator)
+			value, ok := uniqueQueue.Load(jobUid1)
+			convey.So(ok, convey.ShouldEqual, true)
+			convey.So(value, convey.ShouldEqual, queueOperatorAdd)
+		})
+		convey.Convey("when pg annotation is Chip1SoftShareDev, should not store queue", func() {
+			uniqueQueue = sync.Map{}
+			pgSoft := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
+			pgSoft.SetAnnotations(map[string]string{api.SchedulePolicyAnnoKey: api.Chip1SoftShareDev})
+			podGroupMessage(pgSoft, constant.AddOperator)
+			_, ok := uniqueQueue.Load(jobUid1)
+			convey.So(ok, convey.ShouldEqual, false)
+		})
+		convey.Convey("when pg annotation is not Chip1SoftShareDev, should store queue", func() {
+			uniqueQueue = sync.Map{}
+			pgNormal := getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
+			pgNormal.SetAnnotations(map[string]string{api.SchedulePolicyAnnoKey: "other-policy"})
+			podGroupMessage(pgNormal, constant.AddOperator)
+			value, ok := uniqueQueue.Load(jobUid1)
+			convey.So(ok, convey.ShouldEqual, true)
+			convey.So(value, convey.ShouldEqual, queueOperatorAdd)
 		})
 	})
 }
