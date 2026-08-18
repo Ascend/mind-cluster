@@ -1039,7 +1039,7 @@ Ascend Device Plugin从驱动获取到故障码后，将根据故障码对设备
     ====
     SwitchFaultCode.json:
     ----
-    {"NotHandleFaultCodes":[0x00f1ff09,155913,cpu,na],
+    {"NotHandleFaultCodes":["[0x00f1ff09,155913,cpu,na]"],
     ...
     ```
 

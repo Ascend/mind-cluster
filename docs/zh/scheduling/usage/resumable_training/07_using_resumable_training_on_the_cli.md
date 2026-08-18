@@ -400,8 +400,7 @@ TaskD和MindIO TFT软件包的校验过程可参考[软件包SUM值校验](../..
     RUN umask 0022 && ./$OPS --install --quiet 
       
     # 只为了安装toolkit包，所以需要清理，容器启动时通过Ascend Docker Runtime挂载进来 
-    RUN rm -f version.info && rm -f ascend_install.info \ 
-        rm -rf /usr/local/Ascend/driver/ 
+    RUN rm -f version.info && rm -f ascend_install.info && rm -rf /usr/local/Ascend/driver/ 
       
     RUN umask 0022 && cd $MINDSPEED && \ 
         pip install -r requirements.txt && \ 
@@ -1410,7 +1409,7 @@ Job任务部署，每个Worker节点上部署一个Pod，Pod内承载该Ray集�
 
 ## 下发任务<a name="ZH-CN_TOPIC_0000002479226548"></a>
 
-示例YAML中，任务部署在default命名空间下。本章节以Pytorch框架为例，下发训练任务。
+示例YAML中，任务部署在default命名空间下。本章节以PyTorch框架为例，下发训练任务。
 
 1. 登录管理节点，进入YAML文件所在路径。
 2. 在管理节点执行以下命令，使用YAML下发训练任务。

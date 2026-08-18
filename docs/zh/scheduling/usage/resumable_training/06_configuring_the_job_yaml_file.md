@@ -111,7 +111,7 @@
 </div></div>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000002039339953_row163537304214"><td class="cellrowborder" valign="top" width="25.042504250425047%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039339953_p10887172213238"><a name="zh-cn_topic_0000002039339953_p10887172213238"></a><a name="zh-cn_topic_0000002039339953_p10887172213238"></a>(.kind=="AscendJob").specs.schedulerName</p>
+<tr id="zh-cn_topic_0000002039339953_row163537304214"><td class="cellrowborder" valign="top" width="25.042504250425047%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039339953_p10887172213238"><a name="zh-cn_topic_0000002039339953_p10887172213238"></a><a name="zh-cn_topic_0000002039339953_p10887172213238"></a>(.kind=="AscendJob").spec.schedulerName</p>
 </td>
 <td class="cellrowborder" valign="top" width="24.76247624762476%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002039339953_p1888718226237"><a name="zh-cn_topic_0000002039339953_p1888718226237"></a><a name="zh-cn_topic_0000002039339953_p1888718226237"></a>默认值为“volcano”，用户需根据自身情况填写</p>
 </td>
@@ -607,7 +607,7 @@
            <strong>fault-scheduling: "grace"</strong>    
            <strong>fault-retry-times: "10"   # 开启无条件重试</strong>
            <strong>pod-rescheduling: "on"   # 开启Pod级重调度</strong>
-           tor-affinity: "null" # 该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不适用。large-model-schema表示大模型任务或填充任务，normal-schema表示普通任务
+           tor-affinity: "null" # 该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不使用。large-model-schema表示大模型任务或填充任务，normal-schema表示普通任务
     ...
       annotations:  
          ...  

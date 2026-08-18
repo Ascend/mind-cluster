@@ -2278,7 +2278,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 - 确保已开启进程级恢复相关功能特性。
 - 压测过程中不支持重启ClusterD，如果ClusterD异常重启，需要重启训练并下发压测任务。
 - 压测过程中，需要关闭热复位功能。
-- P2P压测需确保device侧有10G以上的空闲内存。
+- P2P压测需确保device侧有10GB以上的空闲内存。
 - 需要在节点增加nodeDEnable=on标签，保证出现压测的节点可以隔离。
 - 对于MindSpore训练框架，需要在启动TaskD  Manager前设置export TASKD\_PROCESS\_ENABLE="on"。
 - 暂不支持在IPv6场景下使用。

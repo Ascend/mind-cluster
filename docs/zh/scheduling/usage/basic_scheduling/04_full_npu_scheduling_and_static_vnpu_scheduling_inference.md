@@ -507,7 +507,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
 
     - <a name="li1888133815128"></a>使用**整卡调度**特性，参考本配置。以infer-deploy.yaml为例，在推理服务器（插Atlas 300I 推理卡）节点创建一个单卡推理任务，并且启用了调度策略，示例如下。
 
-        ```Yaml
+        ```yaml
         apiVersion: apps/v1
         kind: Deployment
         ...
@@ -532,11 +532,11 @@ deploy任务原理图如[图3](#fig178781320593)所示。
                 valueFrom:
                   fieldRef:
                     fieldPath: metadata.annotations['huawei.com/Ascend310']               # 需要和下面resources.requests保持一致
-                resources:
-                  requests:
-                    huawei.com/Ascend310: 1                   # 申请的芯片数量
-                  limits:
-                    huawei.com/Ascend310: 1
+              resources:
+                requests:
+                  huawei.com/Ascend310: 1                   # 申请的芯片数量
+                limits:
+                  huawei.com/Ascend310: 1
         ...
         ```
 
@@ -635,7 +635,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
 
     - <a name="li7275039313101"></a>使用**整卡调度**特性，参考本配置。以infer-deploy.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板和Atlas 300I Duo 推理卡节点）创建一个不使用混插模式的单卡推理任务，示例如下。
 
-        ```Yaml
+        ```yaml
         apiVersion: apps/v1
         kind: Deployment
         ...
@@ -681,7 +681,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
 
     - <a name="li132621943121411"></a>使用**整卡调度**特性，参考本配置。以infer-deploy-310p-1usoc.yaml为例，在Atlas 200I SoC A1 核心板节点（不支持混插模式）创建一个单卡推理任务，示例如下。
 
-        ```Yaml
+        ```yaml
         apiVersion: apps/v1
         kind: Deployment
         ...
@@ -716,7 +716,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
 
     - <a name="li1134113548015"></a>使用**整卡调度**特性，参考本配置。以infer-vcjob-910.yaml为例，在Atlas 800I A2 推理服务器上创建一个单卡推理任务，示例如下。
 
-        ```Yaml
+        ```yaml
         apiVersion: batch.volcano.sh/v1alpha1
         kind: Job
         metadata:
@@ -741,10 +741,11 @@ deploy任务原理图如[图3](#fig178781320593)所示。
                 valueFrom:
                   fieldRef:
                     fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-                      requests:
-                        huawei.com/Ascend910: 1          # 所需的芯片数量
-                      limits:
-                        huawei.com/Ascend910: 1          # 必须与requests的值一致.
+              resources:
+                requests:
+                  huawei.com/Ascend910: 1          # 所需的芯片数量
+                limits:
+                  huawei.com/Ascend910: 1          # 必须与requests的值一致.
                     volumeMounts:
                       - name: localtime                  # 容器时间必须与主机时间一致
                         mountPath: /etc/localtime
@@ -760,7 +761,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
 
     - <a name="li21860112612"></a>使用**静态vNPU调度**特性，参考本配置。以infer-deploy.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板节点）创建一个使用vNPU的推理任务，示例如下。
 
-        ```Yaml
+        ```yaml
         apiVersion: apps/v1
         kind: Deployment
         ...
@@ -794,7 +795,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
 
 4. 挂载权重文件。
 
-    ```Yaml
+    ```yaml
     ...
                   ports:     # 分布式训练集合通信端口
                     - containerPort: 2222      
@@ -825,7 +826,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
 
 5. 修改示例YAML中容器启动命令，即“command”字段内容，如果没有则需添加。
 
-    ```Yaml
+    ```yaml
     ...
           containers:
           - image: ubuntu-infer:v1
@@ -1121,7 +1122,7 @@ job "resnetinfer1-2" deleted
 
     - <a name="li18881338151288"></a>以infer.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板节点）创建一个不使用混插模式的单卡推理任务，示例如下。
 
-        ```Yaml
+        ```yaml
         apiVersion: batch/v1
         kind: Job
         metadata:
@@ -1153,7 +1154,7 @@ job "resnetinfer1-2" deleted
 
     - <a name="li727503931310"></a>以infer-310p-1usoc.yaml为例，在Atlas 200I SoC A1 核心板节点（不支持混插模式）创建一个单卡推理任务，示例如下。
 
-        ```Yaml
+        ```yaml
         apiVersion: batch/v1
         kind: Job
         metadata:
@@ -1180,7 +1181,7 @@ job "resnetinfer1-2" deleted
 
     - <a name="li11341135480159"></a>使用**整卡调度**特性，参考本配置。以infer.yaml为例，在Atlas 800I A2 推理服务器上创建一个单卡推理任务，示例如下。
 
-        ```Yaml
+        ```yaml
         apiVersion: batch/v1
         kind: Job
         metadata:
@@ -1204,7 +1205,7 @@ job "resnetinfer1-2" deleted
 
     - <a name="li11239121841616"></a>以infer.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板节点）创建一个使用vNPU的推理任务，示例如下。
 
-        ```Yaml
+        ```yaml
         apiVersion: batch/v1
         kind: Job
         metadata:

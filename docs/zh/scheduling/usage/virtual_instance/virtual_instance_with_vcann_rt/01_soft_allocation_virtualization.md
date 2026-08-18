@@ -184,7 +184,7 @@
 
 创建推理任务时，需要在创建YAML文件时，修改如下配置。以Atlas 800I A2推理服务器为例。
 
-申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。
+申请芯片AICore百分比为50%，芯片高带宽内存量为2GB，软切分策略为fixed-share的参数配置示例如下。
 
 <pre codetype="yaml">
 apiVersion: mindxdl.gitee.com/v1

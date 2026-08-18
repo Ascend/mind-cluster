@@ -182,7 +182,7 @@
 
 2. 在[整卡调度](./04_full_npu_scheduling_and_static_vnpu_scheduling_inference.md#准备任务yaml)或者[动态vNPU调度](./06_dynamic_vnpu_scheduling_inference.md#准备任务yaml)的YAML配置基础上，增加如下字段启用重调度功能，以整卡调度的infer-deploy.yaml为例。
 
-    ```Yaml
+    ```yaml
     apiVersion: apps/v1
     kind: Deployment
     metadata:
@@ -198,8 +198,8 @@
         metadata:
           labels:
     ...
-             fault-scheduling: grace               # 添加该字段
-             ring-controller.atlas: ascend-310   # 添加该字段
+            fault-scheduling: grace               # 添加该字段
+            ring-controller.atlas: ascend-310   # 添加该字段
         spec:
           schedulerName: volcano
           nodeSelector:
@@ -244,7 +244,7 @@
 
 3. 挂载权重文件。
 
-    ```Yaml
+    ```yaml
     ...
                   ports:     # 分布式训练集合通信端口
                     - containerPort: 2222      
@@ -275,7 +275,7 @@
 
 4. 修改所选YAML中的容器启动命令，即“command”字段内容，如果没有则需添加。
 
-    ```Yaml
+    ```yaml
     ...
           containers:
           - image: ubuntu-infer:v1

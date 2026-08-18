@@ -72,7 +72,7 @@ affScoreList\[3\] = \[\]int\{8,8,8,0,1,2,3,4\}
 - 划分方式1：按照Leaf交换机下的节点划分，如\[node1,node2,node3,node4\]一组。
 - 划分方式2：按照Leaf交换机下的相对位置划分，如\[node1,node5,node9,node13,node17,node21\]一组。
 
-**图 1**  划分二维数组<a name="fig177844214611"></a>  
+**图 2**  划分二维数组<a name="fig177844214611"></a>  
 ![](../../../../figures/scheduling/划分二维数组.png "划分二维数组")
 
 **表 1**  节点优选原则

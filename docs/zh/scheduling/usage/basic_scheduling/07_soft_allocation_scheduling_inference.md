@@ -192,7 +192,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
                 accelerator-type: module-910b-8 # depend on your device model, 910bx8 is module-910b-8 ,910bx16 is module-910b-16
               containers:
                 - name: ascend # do not modify
-                  image: pytorch-test:latest         # trainning framework image， which can be modified
+                  image: pytorch-test:latest         # training framework image， which can be modified
                   imagePullPolicy: IfNotPresent
                   env:
                     - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running
