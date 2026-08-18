@@ -1114,3 +1114,96 @@ func TestCreateCMForSnapshot(t *testing.T) {
 		})
 	})
 }
+
+// TestStatefulSetHandlerDeleteExtraService tests deleteExtraService method.
+func TestStatefulSetHandlerDeleteExtraService(t *testing.T) {
+	const (
+		ns         = "default"
+		svcName    = "test-service"
+		instSetKey = "test-role"
+		idxLimit   = 3
+		extraIdx   = "5"
+		negIdx     = "-1"
+		normalIdx  = "0"
+		invalidIdx = "invalid"
+	)
+	selectLabels := map[string]string{
+		common.InferServiceNameLabelKey: svcName,
+		common.InstanceSetNameLabelKey:  instSetKey,
+	}
+	testCases := []struct {
+		name     string
+		services []*corev1.Service
+	}{
+		{name: "should return nil when no services exist"},
+		{name: "should delete service when index exceeds limit",
+			services: []*corev1.Service{CreateTestServiceWithIndex("svc-extra", ns, extraIdx)}},
+		{name: "should delete service when index is negative",
+			services: []*corev1.Service{CreateTestServiceWithIndex("svc-neg", ns, negIdx)}},
+		{name: "should keep service when index in normal range",
+			services: []*corev1.Service{CreateTestServiceWithIndex("svc-normal", ns, normalIdx)}},
+		{name: "should skip service when index label is missing",
+			services: []*corev1.Service{CreateTestServiceWithoutIndex("svc-noidx", ns)}},
+		{name: "should skip service when index is invalid integer",
+			services: []*corev1.Service{CreateTestServiceWithIndex("svc-invalid", ns, invalidIdx)}},
+	}
+	for _, tc := range testCases {
+		convey.Convey(tc.name, t, func() {
+			objs := make([]runtime.Object, len(tc.services))
+			for i, svc := range tc.services {
+				objs[i] = svc
+			}
+			fc := NewFakeClient(objs...).Build()
+			handler := NewStatefulSetHandler(fc)
+			err := handler.deleteExtraService(context.Background(), selectLabels, ns, idxLimit)
+			convey.So(err, convey.ShouldBeNil)
+		})
+	}
+}
+
+// TestStatefulSetHandlerDeleteExtraServiceError tests deleteExtraService error cases.
+func TestStatefulSetHandlerDeleteExtraServiceError(t *testing.T) {
+	const (
+		ns         = "default"
+		svcName    = "test-service"
+		instSetKey = "test-role"
+		idxLimit   = 3
+		extraIdx   = "5"
+	)
+	selectLabels := map[string]string{
+		common.InferServiceNameLabelKey: svcName,
+		common.InstanceSetNameLabelKey:  instSetKey,
+	}
+	testCases := []struct {
+		name      string
+		services  []*corev1.Service
+		listErr   error
+		deleteErr error
+	}{
+		{name: "should return error when listing services fails",
+			listErr: errors.New("list failed")},
+		{name: "should return error when deleting service fails",
+			services:  []*corev1.Service{CreateTestServiceWithIndex("svc-extra", ns, extraIdx)},
+			deleteErr: errors.New("delete failed")},
+	}
+	for _, tc := range testCases {
+		convey.Convey(tc.name, t, func() {
+			objs := make([]runtime.Object, len(tc.services))
+			for i, svc := range tc.services {
+				objs[i] = svc
+			}
+			fc := NewFakeClient(objs...).Build()
+			handler := NewStatefulSetHandler(fc)
+			if tc.listErr != nil {
+				patches := gomonkey.ApplyMethodReturn(fc, "List", tc.listErr)
+				defer patches.Reset()
+			}
+			if tc.deleteErr != nil {
+				patches := gomonkey.ApplyMethodReturn(fc, "Delete", tc.deleteErr)
+				defer patches.Reset()
+			}
+			err := handler.deleteExtraService(context.Background(), selectLabels, ns, idxLimit)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	}
+}

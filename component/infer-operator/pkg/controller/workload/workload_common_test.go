@@ -219,6 +219,20 @@ func GetTestIndexer(serviceName, instanceSetKey, instanceIndex string) common.In
 	}
 }
 
+// CreateTestServiceWithIndex creates a test Service with the specified instance index label.
+func CreateTestServiceWithIndex(name, namespace, instanceIndex string) *corev1.Service {
+	svc := CreateTestService(name, namespace)
+	svc.Labels[common.InstanceIndexLabelKey] = instanceIndex
+	return svc
+}
+
+// CreateTestServiceWithoutIndex creates a test Service without the instance index label.
+func CreateTestServiceWithoutIndex(name, namespace string) *corev1.Service {
+	svc := CreateTestService(name, namespace)
+	delete(svc.Labels, common.InstanceIndexLabelKey)
+	return svc
+}
+
 func TestDeletePodsForExternalRescheduling(t *testing.T) {
 	convey.Convey("Test deletePodsForExternalRescheduling function", t, func() {
 		convey.Convey("Should return nil when workload has no fault-scheduling label", func() {
