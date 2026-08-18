@@ -104,7 +104,6 @@ func (c *PcieCollector) IsSupported(n *colcommon.NpuCollector) bool {
 		}
 	}
 
-	logForUnSupportDevice(true, devType, colcommon.GetCacheKey(c), "")
 	return true
 }
 
