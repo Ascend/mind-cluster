@@ -25,6 +25,7 @@ start_script=${start_arg#*--}
 ASCEND_RUNTIME_CONFIG_DIR=/etc/${RT_LOWER_CASE}.d
 DOCKER_CONFIG_DIR=/etc/docker
 CONTAINERD_CONFIG_DIR=/etc/containerd
+CRIO_CONFIG_DIR=/etc/crio
 CONFIG_FILE_PATH=""
 INSTALL_SCENE=docker
 INJECTION_MODE=""
@@ -145,13 +146,14 @@ Options:
                                 the installation type of ${RT_FIRST_CASE}
                                 (eg: --install-type=A200IA2, when your product is A200I A2 or A200I DK A2)
   --version                     Query ${RT_FIRST_CASE} version
-  --install-scene=<scene>       Installation scenario, only docker, containerd or isula(eg: --install-scene=docker, default: docker)
+  --install-scene=<scene>       Installation scenario, only docker, containerd, crio or isula(eg: --install-scene=docker, default: docker)
   --injection-mode=<mode>       Injection mode for NPU devices, cdi or legacy (eg: --injection-mode=cdi, default: legacy)
-  --config-file-path            Specifies the path of the Docker or containerd configuration file
+  --config-file-path            Specifies the path of the Docker, containerd or CRI-O configuration file
                                 (eg: --config-file-path=/etc/containerd/config.toml).
                                 If this parameter is not specified, the default configuration file path
-                                of docker or containerd is used. For docker, the path is /etc/docker/daemon.json.
+                                of docker, containerd or crio is used. For docker, the path is /etc/docker/daemon.json.
                                 For containerd, the path is /etc/containerd/config.toml.
+                                For crio, the path is /etc/crio/crio.conf.d/99-ascend-runtime.conf.
 "
 }
 
@@ -349,6 +351,12 @@ function install()
                   echo "[INFO] containerd config file does not exist, default ${DST} will be created"
                   containerd config default > ${DST}
                 fi
+            elif [[ "${INSTALL_SCENE}" == "crio" ]]; then
+                echo "[INFO] install scene is 'crio'."
+                [[ ! -d ${CRIO_CONFIG_DIR}/crio.conf.d ]] && mkdir -p -m 750 ${CRIO_CONFIG_DIR}/crio.conf.d
+
+                SRC="${CRIO_CONFIG_DIR}/crio.conf.d/99-ascend-runtime.conf.${PPID}"
+                DST="${CRIO_CONFIG_DIR}/crio.conf.d/99-ascend-runtime.conf"
             else
                 log "[ERROR]" "install failed, invalid value '${INSTALL_SCENE}' of 'install-scene' "
                 exit 1
@@ -539,6 +547,8 @@ do
                 INSTALL_SCENE=docker
             elif [ "$3" == "--install-scene=containerd" ]; then
                 INSTALL_SCENE=containerd
+            elif [ "$3" == "--install-scene=crio" ]; then
+                INSTALL_SCENE=crio
             elif [ "$3" == "--install-scene=isula" ]; then
                 INSTALL_SCENE=isula
                 DOCKER_CONFIG_DIR="/etc/isulad"

@@ -163,6 +163,8 @@ func addCriORuntime(name string, path string, tree *toml.Tree) error {
 	// Only the binary path is ascend-specific; runtime_type / runtime_root
 	// follow the site's runc configuration (or the defaults above).
 	tree.SetPath(crioRuntimePath(name, crioRuntimePathKey), path)
+	monitorEnvPath := []string{pathEnvValue}
+	tree.SetPath(crioRuntimePath(name, monitorEnvKey), monitorEnvPath)
 	tree.SetPath([]string{crioSectionKey, crioRuntimeSectionKey, crioDefaultRuntimeKey}, name)
 	return nil
 }

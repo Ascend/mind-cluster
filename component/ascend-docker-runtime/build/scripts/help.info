@@ -6,12 +6,13 @@
                                 the installation type of ascend-docker-runtime
                                 (eg: --install-type=A200IA2, when your product is A200I A2 or A200I DK A2)
   --version                     Query ascend-docker-runtime version
-  --install-scene=<scene>       Installation scenario, only docker, containerd or isula
+  --install-scene=<scene>       Installation scenario, only docker, containerd, crio or isula
                                 (eg: --install-scene=docker, default: docker)
   --injection-mode=<mode>       Injection mode for NPU devices, cdi or legacy
                                 (eg: --injection-mode=cdi, default: legacy)
-  --config-file-path            Specifies the path of the Docker or containerd configuration file
+  --config-file-path            Specifies the path of the Docker, Containerd or CRI-O configuration file
                                 (eg: --config-file-path=/etc/containerd/config.toml).
                                 If this parameter is not specified, the default configuration file path
-                                of docker or containerd is used. For docker, the path is /etc/docker/daemon.json.
+                                of docker, containerd or crio is used. For docker, the path is /etc/docker/daemon.json.
                                 For containerd, the path is /etc/containerd/config.toml.
+                                For crio, the path is /etc/crio/crio.conf.d/99-ascend-runtime.conf.
