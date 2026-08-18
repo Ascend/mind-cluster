@@ -10,7 +10,7 @@
 
 ## 重调度原理<a name="section06701958011"></a>
 
-AIBrix根据任务YAML中的role实例生成PodGroup，对应实例发生故障时，重调度实例PodGroup下的所有Pod，若实例配置的podGroupSize均配置为1，只会生成一个PodGroup，发生故障时重调度对应实例的故障Pod。
+AIBrix根据任务YAML中的role实例生成PodGroup，对应实例发生故障时，重调度实例PodGroup下的所有Pod，若实例配置的podGroupSize均为1，只会生成一个PodGroup，发生故障时重调度对应实例的故障Pod。
 
 ## 配置实例级重调度<a name="section86725515019"></a>
 

@@ -32,7 +32,7 @@ MindIE Motor推理任务中，用户可通过配置Job级别弹性扩缩容功�
 
 用户需要设置特定的扩缩容规则，将其以ConfigMap的形式部署到k8s集群中，示例如下
 
-```Yaml
+```yaml
 apiVersion: v1
 data:
   elastic_scaling.json: |          # 固定字段，请勿修改
@@ -40,7 +40,8 @@ data:
       "version": "1.0",            # 固定字段，请勿修改
       "elastic_scaling_list": [    # 以下为模板，用户根据自身需求进行设置
         {
-          "group_list": [                 # 一个可以正常运行的任务配比状态            {
+          "group_list": [                 # 一个可以正常运行的任务配比状态
+            {
               "group_name": "group0",      # 用户自行设置
               "group_num": "2",            # 用户自行设置，要求从上往下不能增加
               "server_num_per_group": "2"  # 用户自行设置，要求相同的group_name，该值保持不变
@@ -97,7 +98,7 @@ metadata:
 
 如果此时已经运行了2个group0和1个group1的Job，用户需要增加运行一个group0的Job，那么用户需提前修改扩缩容模板，再下发新的任务，修改示例如下：
 
-```Yaml
+```yaml
 apiVersion: v1
 data:
   elastic_scaling.json: |          # 固定字段，请勿修改
@@ -156,7 +157,7 @@ metadata:
 
 如果在任务正常运行的情况下，需要减少其中一个group0的Job，用户需要修改模板，再删除任务，修改示例如下。
 
-```Yaml
+```yaml
 apiVersion: v1
 data:
   elastic_scaling.json: |          # 固定字段，请勿修改
@@ -189,7 +190,7 @@ metadata:
 
 在任务YAML中，修改或新增以下字段，开启Job级别弹性扩缩容。
 
-```Yaml
+```yaml
 ... 
 metadata:  
    labels:  

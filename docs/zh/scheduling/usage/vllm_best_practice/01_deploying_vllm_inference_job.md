@@ -151,12 +151,12 @@ spec:
 |参数|取值|说明|
 |---|---|---|
 |schedulerName|取值为“volcano”。|配置调度器为Volcano。|
-|（可选）host-arch|<ul ><li><span >Arm</span>环境：<span >huawei-arm</span></li><li><span >x86_64</span>环境：<span >huawei-x86</span></li></ul>|<p>需要运行训练任务的节点架构，请根据实际修改。</p><p>分布式任务中，请确保运行训练任务的节点架构相同。</p>|
+|（可选）host-arch|<ul ><li><span >Arm</span>环境：<span >huawei-arm</span></li><li><span >x86_64</span>环境：<span >huawei-x86</span></li></ul>|<p>需要运行任务的节点架构，请根据实际修改。</p><p>分布式任务中，请确保运行推理任务的节点架构相同。</p>|
 |sp-block|指定逻辑超节点芯片数量。<p>需要是节点芯片数量的整数倍，且P/D实例的总芯片数量是其整数倍。</p>|指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于任务的亲和性调度。若用户未指定该字段，Volcano调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。<ul><li>了解详细说明请参见[灵衢总线设备节点网络说明](../basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点)。</li><li>仅支持在Atlas 800I A3 超节点服务器中使用该字段。</li></ul>|
 |pod-rescheduling|<ul><li>on：开启Pod级别重调度。</li><li>其他值或不使用该字段：关闭Pod级别重调度。</li></ul>|Pod级重调度，表示任务发生故障后，不会删除PodGroup内的所有任务Pod，而是将发生故障的Pod进行删除，由控制器重新创建新Pod后进行重调度。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">如果podGroupSize为1，pod-rescheduling需要配置为"on"；podGroupSize大于1时，不配置该参数。</div></div>|
 |huawei.com/schedule\_minAvailable|数字类型字符串|Gang调度策略下最小调度的副本数。在StormService中，<ul><li>所有podGroupSize为1的实例会组成一个podGroup进行调度，其最小调度的副本数范围为\[1, 实例replicas之和\]，建议配置为实例replicas之和。</li><li>podGroupSize大于1的实例各自组成一个podGroup，其最小调度副本数范围为\[1, podGroupSize\]，建议配置为podGroupSize。</li></ul>例如，prefill实例的podGroupSize为1，decode实例的podGroupSize为2，那么prefill实例的最小调度副本数设置为prefill实例的replicas，decode实例的最小调度副本数设置为decode实例的podGroupSize。|
 |huawei.com/recover\_policy\_path|"pod"|pod-rescheduling为"on"时任务执行恢复的路径。设置为"pod"，表明Pod级重调度失败时，不升级到Job级重调度。因为当前podGroup中的每一个Pod都是一个独立的实例，所以其故障处理不能扩散到其他实例。（当使用vcjob时，需要配置该策略：policies: -event:PodFailed -action:RestartTask）|
-|accelerator-type|<ul><li>Atlas 800I A2 推理服务器：module-910b-8</li><li>Atlas 800I A3 超节点服务器：module-a3-16</li><li>Atlas 900 A3 SuperPoD 超节点：module-a3-16-super-pod</li></ul>|<p>根据需要运行训练任务的节点类型，选取不同的值。</p>|
+|accelerator-type|<ul><li>Atlas 800I A2 推理服务器：module-910b-8</li><li>Atlas 800I A3 超节点服务器：module-a3-16</li><li>Atlas 900 A3 SuperPoD 超节点：module-a3-16-super-pod</li></ul>|<p>根据需要运行任务的节点类型，选取不同的值。</p>|
 |huawei.com/Ascend910|<ul><li>Atlas 800I A2 推理服务器：8</li><li>Atlas 900 A3 SuperPoD 超节点、Atlas 800I A3 超节点服务器: 16</li></ul>|请求的NPU数量。当前仅支持整机调度，请根据实际硬件卡数进行修改。|
 |env\[name==ASCEND\_VISIBLE\_DEVICES\].valueFrom.fieldRef.fieldPath|取值为metadata.annotations\['huawei.com/Ascend910'\]，和环境上实际的芯片类型保持一致。| Ascend Docker Runtime会获取该参数值，用于给容器挂载相应类型的NPU。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">该参数只支持使用Volcano调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</div></div>|
 |fault-scheduling|<ul><li>grace：配置任务采用优雅删除模式，并在过程中先优雅删除原Pod，15分钟后若还未成功，使用强制删除原Pod。</li><li>force：配置任务采用强制删除模式，在过程中强制删除原Pod。</li><li>off、无（无fault-scheduling字段）或其他值：该推理任务不使用故障重调度特性。</li></ul>|-|
@@ -237,17 +237,17 @@ spec:
 
     2. 按“i”进入编辑模式，修改容器中模型存放目录。
 
-        ```Yaml
+        ```yaml
         volumeMounts:
         - name: model
-        mountPath: /mnt/models
+          mountPath: /mnt/models
         volumes:                  #修改挂载的volume
         - name: model             #设置为模型实际存放目录
-        hostPath:
-        path: /mnt/models
+          hostPath:
+            path: /mnt/models
         - name: scripts           #设置为启动脚本实际存放目录
-        hostPath:
-        path: /scripts
+          hostPath:
+            path: /scripts
         ```
 
     3. 按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。

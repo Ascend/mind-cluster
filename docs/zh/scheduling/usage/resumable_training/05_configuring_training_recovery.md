@@ -407,7 +407,7 @@ Parallel Store多线程建链优化：PyTorch框架创建通信组时，使用TC
     </tbody>
     </table>
 
-- 高效恢复Checkpoint：回滚恢复训练时，通常需要从存储中加载保存的Checkpoint，由于Checkpoint数据量较大，直接从存储读取加载Checkpoint的耗时较长。针对该问题，集群调度组件支持通过MindIO ACP进行Checkpoint高效恢复，详细说明请参见[表6](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table1163115196618)。
+- Checkpoint高效恢复：回滚恢复训练时，通常需要从存储中加载保存的Checkpoint，由于Checkpoint数据量较大，直接从存储读取加载Checkpoint的耗时较长。针对该问题，集群调度组件支持通过MindIO ACP进行Checkpoint高效恢复，详细说明请参见[表6](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table1163115196618)。
 
     **表 6**  Checkpoint高效恢复功能说明
 
@@ -567,7 +567,7 @@ context:
     </tbody>
     </table>
 
-- 高效恢复Checkpoint：回滚恢复训练时，通常需要从存储中加载保存的Checkpoint，由于Checkpoint数据量较大，直接从存储读取加载Checkpoint的耗时较长。针对该问题，集群调度组件支持通过MindIO ACP进行Checkpoint高效恢复，详细说明请参见[表3](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table66066274216)。
+- Checkpoint高效恢复：回滚恢复训练时，通常需要从存储中加载保存的Checkpoint，由于Checkpoint数据量较大，直接从存储读取加载Checkpoint的耗时较长。针对该问题，集群调度组件支持通过MindIO ACP进行Checkpoint高效恢复，详细说明请参见[表3](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table66066274216)。
 
     **表 3**  Checkpoint高效恢复功能说明
 

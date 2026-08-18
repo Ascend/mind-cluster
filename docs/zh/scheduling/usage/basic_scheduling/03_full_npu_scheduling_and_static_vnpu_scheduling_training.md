@@ -1214,7 +1214,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 <tr id="row1899517352272"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p999523582714"><a name="p999523582714"></a><a name="p999523582714"></a>limits</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p203039915181"><a name="p203039915181"></a><a name="p203039915181"></a>限制请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。</p>
-<p id="p4739213121713"><a name="p4739213121713"></a><a name="p4739213121713"></a>limits需要和requests的芯片名称和数量需保持一致。</p>
+<p id="p4739213121713"><a name="p4739213121713"></a><a name="p4739213121713"></a>limits的芯片名称和数量需与requests保持一致。</p>
 </td>
 </tr>
 <tr id="row119951035132715"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="p6995103513275"><a name="p6995103513275"></a><a name="p6995103513275"></a>metadata.annotations['huawei.com/Ascend<em id="i1599519355274"><a name="i1599519355274"></a><a name="i1599519355274"></a>XXX</em>']</p>
@@ -1448,7 +1448,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 <tr id="row25918533287"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p05117110298"><a name="p05117110298"></a><a name="p05117110298"></a>limits</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p13683185074711"><a name="p13683185074711"></a><a name="p13683185074711"></a>限制请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。</p>
-<p id="p16683135019479"><a name="p16683135019479"></a><a name="p16683135019479"></a>limits需要和requests的芯片名称和数量需保持一致。</p>
+<p id="p16683135019479"><a name="p16683135019479"></a><a name="p16683135019479"></a>limits的芯片名称和数量需与requests保持一致。</p>
 </td>
 </tr>
 <tr id="row14747131720228"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p10781181822210"><a name="p10781181822210"></a><a name="p10781181822210"></a>metadata.annotations['huawei.com/Ascend<em id="i103895254475"><a name="i103895254475"></a><a name="i103895254475"></a>XXX</em>']</p>
@@ -1633,7 +1633,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         metadata:
           name: default-test-pytorch
           labels:
-            framework: pytorch   # 镜像名称
+            framework: pytorch   # 训练框架
             tor-affinity: "normal-schema" # 该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不使用该特性。large-model-schema表示大模型任务或填充任务，normal-schema表示普通任务
         spec:
           schedulerName: volcano  # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
@@ -2062,7 +2062,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         command:
           - /bin/bash
           - -c
-        args: ["cd /job/code/scripts; chmod +x train_start.sh; bash train_start.sh /job/code/ /job/code/output train.py  --data_path=/job/data/resnet50/imagenet/train --config=/job/code/config/resnet50_imagenet2012_config.yaml"]
+        args: ["cd /job/code/scripts; chmod +x train_start.sh; bash train_start.sh /job/code/ /job/output train.py  --data_path=/job/data/resnet50/imagenet/train --config=/job/code/config/resnet50_imagenet2012_config.yaml"]
         ...
         ```
 

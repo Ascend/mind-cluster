@@ -164,7 +164,7 @@ deploy任务原理图如[图2](#fig349112913199)所示。
 
     在Atlas 推理系列产品上，以infer-deploy-dynamic.yaml为例，申请1个AICore的参数配置示例如下。
 
-    ```Yaml
+    ```yaml
     apiVersion: apps/v1
     kind: Deployment
     metadata:
@@ -374,16 +374,16 @@ deploy任务原理图如[图2](#fig349112913199)所示。
 
 3. 挂载权重文件。
 
-    ```Yaml
+    ```yaml
     ...
                   ports:     # 分布式训练集合通信端口
                     - containerPort: 2222      
                       name: ascendjob-port      
                   resources:
                     limits:
-                      huawei.com/Ascend310P: 1   # 申请的芯片数
+                      huawei.com/npu-core: 1   # 申请的动态vNPU核心数
                     requests:
-                      huawei.com/Ascend310P: 1   #与limits取值一致
+                      huawei.com/npu-core: 1   #与limits取值一致
                   volumeMounts:
     ...
                       # 权重文件挂载路径
@@ -405,7 +405,7 @@ deploy任务原理图如[图2](#fig349112913199)所示。
 
 4. 修改所选YAML中的容器启动命令，即“command”字段内容，如果没有则需添加。
 
-    ```Yaml
+    ```yaml
     ...
           containers:
           - image: ubuntu-infer:v1

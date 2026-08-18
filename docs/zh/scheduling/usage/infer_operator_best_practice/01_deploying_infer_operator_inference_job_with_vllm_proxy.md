@@ -11,7 +11,7 @@
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
 2. ClusterD读取device-info-cm和node-info-cm中的信息后，将信息整合到cluster-info-cm中。
-3. 用户通过kubectl或者其他深度学习平台下发Infer Operator组件的InferServiceSet推理任务，Infer Operator根据推理任务的配置生成Deployment、Statefulset等子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。
+3. 用户通过kubectl或者其他深度学习平台下发Infer Operator组件的InferServiceSet推理任务，Infer Operator根据推理任务的配置生成Deployment、StatefulSet等子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。
 4. Infer Operator根据推理任务的配置为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
 5. volcano-scheduler根据节点内存、CPU及标签、亲和性为Pod选择合适的节点，并在Pod的annotation上写入选择的芯片信息以及节点硬件信息。
 6. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片和节点硬件信息。Ascend Docker Runtime协助挂载相应资源。
@@ -43,7 +43,7 @@
 
 以下是一个适配示例，用户可根据需求进行修改。
 
-```Yaml
+```yaml
 apiVersion: mindcluster.huawei.com/v1
 kind: InferServiceSet
 metadata:
@@ -181,7 +181,7 @@ spec:
 </td>
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li><span >Arm</span>环境：<span >huawei-arm</span></li><li><span >x86_64</span>环境：<span >huawei-x86</span></li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >需要运行训练任务的节点架构，请根据实际修改。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >需要运行任务的节点架构，请根据实际修改。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >pod-rescheduling</p>
@@ -205,7 +205,7 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li><span >Atlas 800I A2 推理服务器</span>：module-910b-8</li><li><span >Atlas 800I A3 超节点服务器</span>：module-a3-16</li>
 </ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >根据需要运行训练任务的节点类型，选取不同的值。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >根据需要运行任务的节点类型，选取不同的值。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >huawei.com/Ascend910</p>
@@ -441,7 +441,7 @@ inferserviceset.mindcluster.huawei.com "my-test" deleted
     >[!NOTE]
     >用户配置文件中的配置字段说明详细请参见[infer-operator-deploy-tool](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/infer-operator-deploy-tool/README.md)。
 
-6. （可选）创建任务名称空间，<namespace\>为“config/user-config.yaml”设置的“deploy_config.namespace”。如果“deploy_config.namespace”为“default”或未设置，可以不创建名称空间。
+6. （可选）创建任务命名空间，<namespace\>为“config/user-config.yaml”设置的“deploy_config.namespace”。如果“deploy_config.namespace”为“default”或未设置，可以不创建命名空间。
 
     ```shell
     kubectl create ns <namespace>
