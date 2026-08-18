@@ -267,6 +267,26 @@ class TestA5RootInfoDetect(unittest.TestCase):
         self.assertEqual(parser.timeout_params.get("CONNECT_TIMEOUT"), 180)
         self.assertEqual(parser.timeout_params.get("EXEC_TIMEOUT"), 300)
 
+    def test_parse_default_timeout_set_info_with_float_value(self):
+        """看护 _parse_default_timeout_set_info：超时值以 float 格式打印（[7200.00]s）时解析不抛异常并转为 int"""
+        line = (
+            "[INFO] HCCL(6082,_ref_init_model):2026-08-17-18:48:34.400.874 "
+            "[externalinput.cc:1003] [6834][HCCL_ENV] HCCL_EXEC_TIMEOUT set by environment to [7200.00]s"
+        )
+        parser = self._create_parser()
+        parser.parse_line(line)
+
+        self.assertEqual(parser.timeout_params.get("EXEC_TIMEOUT"), 7200)
+
+    def test_parse_a5_timeout_info_with_float_value(self):
+        """看护 _parse_a5_timeout_info：超时值以 float 格式打印（[300.00]s）时解析不抛异常并转为 int"""
+        line = "[HCCL_TRACE]Env config hcclSocketFamily[*], linkTimeOut[180]s, execTimeOut[300.00]s"
+        parser = self._create_parser()
+        parser.parse_line(line)
+
+        self.assertEqual(parser.timeout_params.get("CONNECT_TIMEOUT"), 180)
+        self.assertEqual(parser.timeout_params.get("EXEC_TIMEOUT"), 300)
+
     def test_parse_eid_plane_info(self):
         line = "[HCCL_TRACE]Net2PeerLink rankId[0] eid[0x1234] planeId[1]"
         parser = self._create_parser()

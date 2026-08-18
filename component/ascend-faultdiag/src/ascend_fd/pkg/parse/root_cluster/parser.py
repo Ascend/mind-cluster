@@ -421,7 +421,8 @@ class BaseInfoParser:
             return
         timeout = filter_single_rank_info(line, "to [")
         if timeout:
-            self.timeout_params.update({cate: int(timeout)})
+            # 超时值可能以浮点格式打印（如 [7200.00]s），先转 float 再转 int 兼容处理
+            self.timeout_params.update({cate: int(float(timeout))})
 
     def _parse_a5_timeout_info(self, line: str):
         """
@@ -436,7 +437,7 @@ class BaseInfoParser:
                 continue
             timeout = filter_single_rank_info(line, keyword)
             if timeout:
-                self.timeout_params.update({cate: int(timeout)})
+                self.timeout_params.update({cate: int(float(timeout))})
 
     def _parse_root_init_info(self, line: str):
         """
