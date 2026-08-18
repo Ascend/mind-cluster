@@ -144,7 +144,7 @@ func getSidForJobInfo(pgInfo v1beta1.PodGroup, podsInJob map[string]v1.Pod) stri
 
 func getJobBasicInfoByPG(pgInfo v1beta1.PodGroup, podsInJob map[string]v1.Pod) constant.JobInfo {
 	var jobInfo constant.JobInfo
-	key, name := podgroup.GetJobKeyAndNameByPG(&pgInfo)
+	key, name, _ := podgroup.GetJobInfoByPG(&pgInfo)
 	jobInfo.Key = key
 	jobInfo.Name = name
 	jobInfo.PgName = pgInfo.Name

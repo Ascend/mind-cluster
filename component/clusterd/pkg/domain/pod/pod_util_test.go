@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
 
 //go:build !race
 
@@ -565,6 +565,46 @@ func testCreateDevNameJobMapAndGet() {
 	devJobMap = CreateDevNameJobMap(nodeName3, api.Ascend910)
 	jobName = GetJobIdByDev(devJobMap, fmt.Sprintf("%s-%s", api.Ascend910, dev0))
 	convey.So(jobName, convey.ShouldEqual, "")
+}
+
+func TestCheckPodIsSoftShareDev(t *testing.T) {
+	convey.Convey("test CheckPodIsNotSoftShareDev", t, func() {
+		convey.Convey("when podId does not exist in storage, should return true", func() {
+			convey.So(CheckPodIsNotSoftShareDev("not-exist-pod-id"), convey.ShouldBeTrue)
+		})
+		convey.Convey("when pod has no annotations, should return true", func() {
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo.SetAnnotations(nil)
+			SavePod(podDemo)
+			defer DeletePod(podDemo)
+			convey.So(CheckPodIsNotSoftShareDev(podUid1), convey.ShouldBeTrue)
+		})
+		convey.Convey("when pod annotation does not contain SchedulePolicyAnnoKey, should return true", func() {
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo.SetAnnotations(map[string]string{podGroupKey: pgName1})
+			SavePod(podDemo)
+			defer DeletePod(podDemo)
+			convey.So(CheckPodIsNotSoftShareDev(podUid1), convey.ShouldBeTrue)
+		})
+		convey.Convey("when pod SchedulePolicyAnnoKey is not Chip1SoftShareDev, should return true", func() {
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo.SetAnnotations(map[string]string{
+				api.SchedulePolicyAnnoKey: "other-policy",
+			})
+			SavePod(podDemo)
+			defer DeletePod(podDemo)
+			convey.So(CheckPodIsNotSoftShareDev(podUid1), convey.ShouldBeTrue)
+		})
+		convey.Convey("when pod SchedulePolicyAnnoKey is Chip1SoftShareDev, should return false", func() {
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo.SetAnnotations(map[string]string{
+				api.SchedulePolicyAnnoKey: api.Chip1SoftShareDev,
+			})
+			SavePod(podDemo)
+			defer DeletePod(podDemo)
+			convey.So(CheckPodIsNotSoftShareDev(podUid1), convey.ShouldBeFalse)
+		})
+	})
 }
 
 func TestGetServerInfoDoesNotLeakLevelList(t *testing.T) {

@@ -12,6 +12,7 @@ import (
 	"k8s.io/api/core/v1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/statistics"
 	"clusterd/pkg/common/constant"
@@ -25,6 +26,8 @@ const (
 	queueOperatorUpdate    = "update"
 	queueOperatorPreDelete = "preDelete"
 	queueOperatorDelete    = "delete"
+
+	PodOwnerKind = "Pod"
 )
 
 var uniqueQueue sync.Map
@@ -160,13 +163,28 @@ func jobStcMessage(jobKey string, operator string) {
 
 // podGroupMessage set job operator with pogGroup
 func podGroupMessage(newPGInfo *v1beta1.PodGroup, operator string) {
+	key, _, kind := podgroup.GetJobInfoByPG(newPGInfo)
+	if key == "" {
+		hwlog.RunLog.Warnf("update %s job summary configmap failed: job key is empty", newPGInfo.Name)
+		return
+	}
+	if kind == PodOwnerKind {
+		if !pod.CheckPodIsNotSoftShareDev(key) {
+			hwlog.RunLog.Warnf("update %s job summary configmap failed: pod is SoftShareDev", newPGInfo.Name)
+			return
+		}
+	} else if newPGInfo.Annotations != nil &&
+		newPGInfo.Annotations[api.SchedulePolicyAnnoKey] == api.Chip1SoftShareDev {
+		hwlog.RunLog.Warnf("update %s job summary configmap failed: podGroup is SoftShareDev", newPGInfo.Name)
+		return
+	}
 	switch operator {
 	case constant.AddOperator:
-		uniqueQueue.Store(podgroup.GetJobKeyByPG(newPGInfo), queueOperatorAdd)
+		uniqueQueue.Store(key, queueOperatorAdd)
 	case constant.DeleteOperator:
-		uniqueQueue.Store(podgroup.GetJobKeyByPG(newPGInfo), queueOperatorPreDelete)
+		uniqueQueue.Store(key, queueOperatorPreDelete)
 	case constant.UpdateOperator:
-		uniqueQueue.Store(podgroup.GetJobKeyByPG(newPGInfo), queueOperatorUpdate)
+		uniqueQueue.Store(key, queueOperatorUpdate)
 	default:
 		hwlog.RunLog.Errorf("abnormal informer operator: %s", operator)
 	}
@@ -174,5 +192,10 @@ func podGroupMessage(newPGInfo *v1beta1.PodGroup, operator string) {
 
 // podMessage set job operator with pod
 func podMessage(oldPodInfo, newPodInfo *v1.Pod, operator string) {
-	uniqueQueue.Store(pod.GetJobKeyByPod(newPodInfo), queueOperatorUpdate)
+	if jobKey := pod.GetJobKeyByPod(newPodInfo); jobKey != "" {
+		if newPodInfo.Annotations != nil && newPodInfo.Annotations[api.SchedulePolicyAnnoKey] == api.Chip1SoftShareDev {
+			return
+		}
+		uniqueQueue.Store(jobKey, queueOperatorUpdate)
+	}
 }
