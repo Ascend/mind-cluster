@@ -226,6 +226,9 @@ const (
 	SchedulePolicyAnnoKey = "huawei.com/schedule_policy"
 	// AffinityConfigAnnoKey annotation key for multilevel schedule policy
 	AffinityConfigAnnoKey = "huawei.com/affinity-config"
+
+	// Chip1SoftShareDev annotation value for chip share dev policy
+	Chip1SoftShareDev = "chip1-softShareDev"
 )
 
 // for cm
