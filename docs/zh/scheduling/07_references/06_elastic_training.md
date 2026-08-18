@@ -286,9 +286,7 @@
 
         # 配置Python pip源
         RUN mkdir -p ~/.pip \
-        && echo '[global] \n\
-        index-url=https://pypi.doubanio.com/simple/\n\
-        trusted-host=pypi.doubanio.com' >> ~/.pip/pip.conf
+        && printf '[global]\nindex-url=https://pypi.doubanio.com/simple/\ntrusted-host=pypi.doubanio.com\n' >> ~/.pip/pip.conf
 
         # 安装MindFormers
         RUN pip install $MINDFORMERS_PKG
@@ -313,9 +311,7 @@
 
         # 配置Python pip源
         RUN mkdir -p ~/.pip \
-        && echo '[global] \n\
-        index-url=https://pypi.doubanio.com/simple/\n\
-        trusted-host=pypi.doubanio.com' >> ~/.pip/pip.conf
+        && printf '[global]\nindex-url=https://pypi.doubanio.com/simple/\ntrusted-host=pypi.doubanio.com\n' >> ~/.pip/pip.conf
 
         # 安装MindFormers
         RUN pip install $MINDFORMERS_PKG
@@ -1090,7 +1086,7 @@
 
     - 使用**MindSpore架构**的模型，包括ResNet50模型和Pangu\_alpha模型需要跳过此步骤。
 
-6. YAML为使用NFS场景，需要指定NFS服务器地址、训练数据集路径、脚本路径和训练输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
+6. YAML为使用NFS场景时，需要指定NFS服务器地址、训练数据集路径、脚本路径和训练输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
 
     ```Yaml
     ...
@@ -1325,8 +1321,8 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
     2023-06-09 22:17:33,442:INFO:--> log_dir: /job/code/mindspore/output/resnet50/imagenet2012/log
     2023-06-09 22:17:33,442:INFO:--> logger: <LOGGER resnet (NOTSET)>
     2023-06-09 22:17:33,442:INFO:
-    [WARNING] DEVICE(312,fffd6e363470,python):2023-06-09-22:17:33.999.925 [mindspore/ccsrc/plugin/device/ascend/hal/hardware/ge_graph_executor.cc:128] RunGEInitGraph] Can not find init_subgraph.kernel_graph_0 subgraph, don't need data init subgraph in INFER mode.
-    [WARNING] DEVICE(312,fffd6e363470,python):2023-06-09-22:17:43.733.157 [mindspore/ccsrc/plugin/device/ascend/hal/hardware/ge_graph_executor.cc:128] RunGEInitGraph] Can not find init_subgraph.kernel_graph_1 sub graph, don't need data init subgraph in INFER mode.
+    [WARNING] DEVICE(312,fffd6e363470,python):2023-06-09-22:17:33.999.925 [mindspore/ccsrc/plugin/device/ascend/hal/hardware/ge_graph_executor.cc:128] [RunGEInitGraph] Can not find init_subgraph.kernel_graph_0 subgraph, don't need data init subgraph in INFER mode.
+    [WARNING] DEVICE(312,fffd6e363470,python):2023-06-09-22:17:43.733.157 [mindspore/ccsrc/plugin/device/ascend/hal/hardware/ge_graph_executor.cc:128] [RunGEInitGraph] Can not find init_subgraph.kernel_graph_1 sub graph, don't need data init subgraph in INFER mode.
     ....2023-06-09 22:18:45,025:INFO:epoch: [40/90] loss: 3.465011, epoch time: 71.582 s, per step time: 1491.285 ms
     2023-06-09 22:18:49,453:INFO:epoch: [41/90] loss: 3.396700, epoch time: 4.428 s, per step time: 92.245 ms
     .2023-06-09 22:19:02,685:INFO:epoch: [42/90] loss: 3.297215, epoch time: 13.232 s, per step time: 275.659 ms
@@ -1368,4 +1364,4 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
 
 1. 根据编程语言找到对应的K8s的[官方API库](https://github.com/kubernetes-client)。
 2. 根据K8s官方提供的API库，对任务进行创建、查询、删除等操作。
-3. 创建、查询或删除操作任务时，用户需要将[示例YAML](#准备任务yaml)的内容转换成K8s官方API中定义的对象，通过官方库中提供的API发送给K8s的API Server或者将YAML内容转换为JSON格式直接发送给K8s的API Server。
+3. 创建、查询或删除任务时，用户需要将[示例YAML](#准备任务yaml)的内容转换成K8s官方API中定义的对象，通过官方库中提供的API发送给K8s的API Server或者将YAML内容转换为JSON格式直接发送给K8s的API Server。
