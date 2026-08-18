@@ -465,9 +465,9 @@ The documentation under the `docs` directory is licensed under [CC-BY 4.0](./doc
 
 - Before contributing, please sign the [Open Project Contributor License Agreement (CLA)](https://clasign.osinfra.cn/sign/gitee_ascend-1611222220829317930).
 - If you encounter a bug, please submit an [issue](https://gitcode.com/Ascend/mind-cluster/issues).
-- If you plan to contribute bug-fixes, please submit a [PR](https://gitcode.com/Ascend/mind-cluster/blob/master/contributing.md#PullRequest).
+- If you plan to contribute bug-fixes, please submit a [PR](https://gitcode.com/Ascend/mind-cluster/blob/master/CONTRIBUTING.md#PullRequest).
 - If you plan to contribute new features or functions, please create an issue to discuss with us first. In your issue, please describe the background/purpose of the requirement, the design approach, and the impact on existing APIs, etc. Submitting a PR without prior discussion may result in rejection, as the project's evolution direction may differ from your ideas.
-- For a more detailed contribution process, please refer to the [Contribution Guide](https://gitcode.com/Ascend/mind-cluster/blob/master/contributing.md).
+- For a more detailed contribution process, please refer to the [Contribution Guide](https://gitcode.com/Ascend/mind-cluster/blob/master/CONTRIBUTING.md).
 
 # Suggestions and Feedback
 
