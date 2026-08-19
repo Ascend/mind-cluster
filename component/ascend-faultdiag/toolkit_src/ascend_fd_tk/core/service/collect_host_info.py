@@ -15,7 +15,8 @@
 # limitations under the License.
 # ==============================================================================
 
-from ascend_fd_tk.core.collect.collector.host_collector import HostCollector
+from ascend_fd_tk.core.collect.collector.host_collector_factory import create_host_collector
+from ascend_fd_tk.core.common.diag_enum import NpuType
 from ascend_fd_tk.core.service.base import DiagService
 
 
@@ -24,9 +25,15 @@ class CollectHostsInfo(DiagService):
         if not self.diag_ctx.host_fetchers:
             return
         async_tasks = []
-        for fetcher in self.diag_ctx.host_fetchers.values():
-            async_tasks.append(HostCollector(fetcher).collect())
-        for task in async_tasks:
+        fetchers = list(self.diag_ctx.host_fetchers.values())
+        for fetcher in fetchers:
+            # 按 fetcher 携带的代际选择对应的主机采集器（A3/A5）
+            collector = create_host_collector(fetcher)
+            async_tasks.append(collector.collect())
+        for fetcher, task in zip(fetchers, async_tasks):
             host_info = await task
             self.diag_ctx.location_config.enrich_host_info(host_info)
+            # 代际写入 HostInfo，随 JSON 落盘；诊断阶段 LoadCache 读回后聚合到 cache
+            generation = getattr(fetcher, 'chip_generation', NpuType.A3)
+            host_info.chip_generation = generation.value if generation else NpuType.A3.value
             self.diag_ctx.cache.hosts_info.update({host_info.host_id: host_info})

@@ -15,7 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 
-from typing import Dict, Tuple, Type
+from typing import Dict, Tuple, Type, Union
 
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.config import port_mapping_config
@@ -23,19 +23,24 @@ from ascend_fd_tk.core.config.threshold_config import OpticalModuleThreshold
 from ascend_fd_tk.core.model.bmc import BmcInfo
 from ascend_fd_tk.core.model.cluster_mapping import ChassisMapping, L1SwiServerMapping
 from ascend_fd_tk.core.model.host import HostInfo
+from ascend_fd_tk.core.model.host_a5 import HostInfoA5
 from ascend_fd_tk.core.model.switch import SwitchInfo, InterfaceFullInfo
 
 
 class ClusterInfoCache(JsonObj):
     def __init__(
         self,
-        hosts_info: Dict[str, HostInfo] = None,
+        # A3 集群存 HostInfo，A5 集群存 HostInfoA5；诊断阶段按 chip_generation 分流，不跨代际访问
+        hosts_info: Dict[str, Union[HostInfo, HostInfoA5]] = None,
         bmcs_info: Dict[str, BmcInfo] = None,
         swis_info: Dict[str, SwitchInfo] = None,
+        chip_generation: str = None,
     ):
-        self.hosts_info: Dict[str, HostInfo] = hosts_info or {}
+        self.hosts_info: Dict[str, Union[HostInfo, HostInfoA5]] = hosts_info or {}
         self.bmcs_info: Dict[str, BmcInfo] = bmcs_info or {}
         self.swis_info: Dict[str, SwitchInfo] = swis_info or {}
+        # 芯片代际（"A3"/"A5"），清洗阶段写入，诊断阶段用于分流 analyzer；默认 None 兼容旧 cache，未写入时按 A3 处理
+        self.chip_generation: str = chip_generation
         # 交换机名字和交换机信息映射关系
         self.swi_info_name_map = {}
         self._chassis_mappings: ChassisMapping = None
@@ -51,6 +56,9 @@ class ClusterInfoCache(JsonObj):
         self.hosts_info.update(cache.hosts_info)
         self.bmcs_info.update(cache.bmcs_info)
         self.swis_info.update(cache.swis_info)
+        # 代际以最新探测结果为准（集群默认同代际，后写入覆盖前者）
+        if cache.chip_generation is not None:
+            self.chip_generation = cache.chip_generation
 
     def init_diag_data(self):
         l1_swi_server_mappings = self._build_l1_swi_server_mappings()
@@ -64,7 +72,7 @@ class ClusterInfoCache(JsonObj):
         return self._chassis_mappings
 
     # 根据服务器superpod id找到服务器信息
-    def find_host_info_by_server_spod_id(self, server_id) -> HostInfo:
+    def find_host_info_by_server_spod_id(self, server_id) -> Union[HostInfo, HostInfoA5]:
         for host_info in self.hosts_info.values():
             if server_id == host_info.server_index:
                 return host_info
@@ -76,7 +84,7 @@ class ClusterInfoCache(JsonObj):
                 return bmc_info
         return None
 
-    def find_host_info_by_sn_num(self, sn_num) -> HostInfo:
+    def find_host_info_by_sn_num(self, sn_num) -> Union[HostInfo, HostInfoA5]:
         for host_info in self.hosts_info.values():
             if host_info.sn_num == sn_num:
                 return host_info

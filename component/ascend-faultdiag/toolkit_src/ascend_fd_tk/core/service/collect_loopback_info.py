@@ -15,15 +15,10 @@
 # limitations under the License.
 # ==============================================================================
 from ascend_fd_tk.core.collect.collector.host_loopback_collector import HostLoopbackCollector
-from ascend_fd_tk.core.context.diag_ctx import DiagCtx
 from ascend_fd_tk.core.service.base import DiagService
 
 
 class CollectLoopbackInfo(DiagService):
-
-    def __init__(self, diag_ctx: DiagCtx):
-        super().__init__(diag_ctx)
-
     async def run(self):
         if not self.diag_ctx.host_fetchers:
             return

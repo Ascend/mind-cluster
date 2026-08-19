@@ -47,6 +47,53 @@ def split_str(data: str, input_pattern: str, regex=False) -> List[str]:
     return [block.strip() for block in result]
 
 
+def split_multiline(data: str, line_marks: List[str]) -> List[str]:
+    """按连续多行标记切分多行文本（不用正则）。
+
+    当连续 len(line_marks) 行依次包含对应 line_marks 中的标记时切分：
+    前段保留前 N-1 行（末分隔符），后段从第 N 行开始（起始分隔符），
+    保证每段含完整起止分隔符行。
+
+    Args:
+        data: 原始字符串
+        line_marks: 连续多行的行内特征字符串列表。如 ["+-", "+-"] 表示
+                    相邻两行都包含 "+-" 时切分（表间边界 = 末分隔符行 +
+                    起始分隔符行）。
+    """
+    if not data or not data.strip():
+        return []
+    if not line_marks:
+        return [data.strip()]
+
+    lines = data.splitlines(keepends=True)
+    n = len(line_marks)
+    # 计算每行的起始偏移量，line_starts[i+1] = 第 i 行的末尾位置
+    line_starts = [0]
+    for line in lines:
+        line_starts.append(line_starts[-1] + len(line))
+
+    result = []
+    current_start = 0
+    i = 0
+    while i <= len(lines) - n:
+        # 检查从 i 开始的 n 行是否依次匹配 line_marks
+        if all(line_marks[j] in lines[i + j] for j in range(n)):
+            # 切分位置：第 i 行末尾（前段保留到第 i 行，后段从 i+1 行开始）
+            # 当 n=2 时，前段含第 i 行（末分隔符），后段从第 i+1 行（起始分隔符）开始
+            split_pos = line_starts[i + 1]
+            segment = data[current_start:split_pos].strip()
+            if segment:
+                result.append(segment)
+            current_start = split_pos
+        i += 1
+
+    last_segment = data[current_start:].strip()
+    if last_segment:
+        result.append(last_segment)
+
+    return result
+
+
 def to_int(data, default=0) -> int:
     if isinstance(data, str) and data.isdigit():
         return int(data)
@@ -68,7 +115,7 @@ def trans_date_fmt(date_str: str, src_fmt: str, target_fmt: str) -> str:
         date = datetime.datetime.strptime(date_str, src_fmt)
         return date.strftime(target_fmt)
     except Exception as e:
-        DIAG_LOGGER.error(f"trans date fmt failed: {date_str} {src_fmt} to {target_fmt}, error: {e}")
+        DIAG_LOGGER.error("trans date fmt failed: %s %s to %s, error: %s", date_str, src_fmt, target_fmt, str(e))
         return ""
 
 

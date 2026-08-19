@@ -15,16 +15,17 @@
 # limitations under the License.
 # ==============================================================================
 
+from ascend_fd_tk.core.collect.collector.host_collector import HostCollector
+from ascend_fd_tk.core.context.register import HOST_COLLECTOR_REGISTRY
+from ascend_fd_tk.core.collect.fetcher.host_fetcher import HostFetcher
 from ascend_fd_tk.core.common.diag_enum import NpuType
-from ascend_fd_tk.core.context.register import recursive_scan_and_register, get_analyzers
-from ascend_fd_tk.core.service.base import DiagService
 
 
-class AutoDiag(DiagService):
-    async def run(self):
-        recursive_scan_and_register("ascend_fd_tk.core.fault_analyzer")
-        # cache 中 chip_generation 存为字符串，未写入时按 A3 处理
-        gen_str = self.diag_ctx.cache.chip_generation
-        generation = NpuType(gen_str) if gen_str else NpuType.A3
-        for cls in get_analyzers(generation):
-            self.diag_ctx.diag_result.extend(cls(self.diag_ctx.cache).analyse())
+def create_host_collector(fetcher: HostFetcher) -> HostCollector:
+    """根据 fetcher 携带的芯片代际返回对应的主机采集器。"""
+    # 触发 A5 collector 模块导入，确保其装饰器完成注册
+    import ascend_fd_tk.core.collect.collector.host_collector_a5  # noqa: F401
+
+    generation = getattr(fetcher, 'chip_generation', NpuType.A3)
+    cls = HOST_COLLECTOR_REGISTRY.get(generation, HostCollector)
+    return cls(fetcher)
