@@ -113,6 +113,8 @@ func (v *VolcanoPodGroupManager) createPodGroupForInstance(
 	spec v1beta1.PodGroupSpec) error {
 	pgName := common.GetPGNameFromIndexer(indexer)
 	labels := common.DeepCopyLabelsMap(instanceSet.Labels)
+	// inferserviceid is only carried by the pods
+	delete(labels, common.InferServiceIDLabelKey)
 	labels = common.AddLabelsFromIndexer(labels, indexer)
 	podGroup := &v1beta1.PodGroup{
 		ObjectMeta: metav1.ObjectMeta{

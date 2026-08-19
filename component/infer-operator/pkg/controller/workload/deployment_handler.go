@@ -202,6 +202,7 @@ func (d *DeploymentHandler) createDeployment(
 	}
 
 	deploymentSpec.Template.Labels = common.AddLabelsFromIndexer(deploymentSpec.Template.Labels, indexer)
+	common.AddInferServiceIDToPodTemplate(instanceSet.Labels, &deploymentSpec.Template)
 	if deploymentSpec.Template.Annotations == nil {
 		deploymentSpec.Template.Annotations = map[string]string{}
 	}

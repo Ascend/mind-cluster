@@ -229,6 +229,16 @@ const (
 
 	// Chip1SoftShareDev annotation value for chip share dev policy
 	Chip1SoftShareDev = "chip1-softShareDev"
+	// Chip8Node8Sp is the super-pod schedule policy of 850-SuperPod-Atlas-8
+	Chip8Node8Sp = "chip8-node8-sp"
+	// Chip8Node8Ra64Sp is the super-pod schedule policy of 950-SuperPod-Atlas-8
+	Chip8Node8Ra64Sp = "chip8-node8-ra64-sp"
+	// Chip2Node16Sp is the super-pod schedule policy of A3-Atlas-16-SuperPod (a3x16)
+	Chip2Node16Sp = "chip2-node16-sp"
+	// Chip2Node8Sp is the super-pod schedule policy of A3-Atlas-8-SuperPod (a3x8)
+	Chip2Node8Sp = "chip2-node8-sp"
+	// SuperPodPolicySuffix is the suffix of super-pod policy
+	SuperPodPolicySuffix = "-sp"
 )
 
 // for cm

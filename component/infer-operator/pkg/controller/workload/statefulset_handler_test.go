@@ -30,6 +30,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 
 	"infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
@@ -192,6 +193,26 @@ func TestCreateStatefulSet(t *testing.T) {
 			ctx := context.Background()
 			err = handler.createStatefulSet(ctx, instanceSet, indexer)
 			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should add inferserviceid to pod template labels", func() {
+			fakeClient := NewFakeClient().Build()
+			handler := NewStatefulSetHandler(fakeClient)
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+			instanceSet.Labels[common.InferServiceIDLabelKey] = "test-uid"
+			indexer := GetTestIndexer("test-service", "test-role", "0")
+			statefulSetSpec := getTestStatefulSetSpec()
+			specBytes, err := json.Marshal(statefulSetSpec)
+			convey.So(err, convey.ShouldBeNil)
+			instanceSet.Spec.InstanceSpec = runtime.RawExtension{Raw: specBytes}
+			ctx := context.Background()
+			err = handler.createStatefulSet(ctx, instanceSet, indexer)
+			convey.So(err, convey.ShouldBeNil)
+			created := &appsv1.StatefulSet{}
+			err = fakeClient.Get(ctx, types.NamespacedName{
+				Name: common.GetWorkLoadNameFromIndexer(indexer), Namespace: "default"}, created)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(created.Spec.Template.Labels[common.InferServiceIDLabelKey], convey.ShouldEqual, "test-uid")
 		})
 
 		convey.Convey("Should return error when creating StatefulSet fails", func() {

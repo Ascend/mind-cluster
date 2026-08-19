@@ -109,6 +109,14 @@ const (
 	BitSize = 32
 )
 
+const (
+	// InferServiceIDLabelKey is the label key of the infer service affinity id. It
+	// intentionally does NOT use LabelKeyPrefix to stay aligned with the
+	// ascend-for-volcano inferServiceIDLabelKey so the scheduler reads it across
+	// components without extra translation.
+	InferServiceIDLabelKey = "inferserviceid"
+)
+
 // InferServiceSetConditionType is the type of the infer serviceset condition
 type InferServiceSetConditionType string
 

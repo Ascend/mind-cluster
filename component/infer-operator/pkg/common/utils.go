@@ -91,6 +91,24 @@ func GetPGNameFromIndexer(indexer InstanceIndexer) string {
 	return fmt.Sprintf("pg-%s-%s-%s", indexer.ServiceName, indexer.InstanceSetKey, indexer.InstanceIndex)
 }
 
+// AddInferServiceIDToPodTemplate copies the inferserviceid label from the
+// instanceSet labels to the pod template labels, so the scheduler can read
+// it from pods even when gang scheduling is disabled and no PodGroup exists.
+// A user-provided value in the pod template takes precedence.
+func AddInferServiceIDToPodTemplate(labels map[string]string, template *corev1.PodTemplateSpec) {
+	id, ok := labels[InferServiceIDLabelKey]
+	if !ok || id == "" {
+		return
+	}
+	if _, exist := template.Labels[InferServiceIDLabelKey]; exist {
+		return
+	}
+	if template.Labels == nil {
+		template.Labels = make(map[string]string)
+	}
+	template.Labels[InferServiceIDLabelKey] = id
+}
+
 // AddEnvToPodTemplate adds environment variables to pod template.
 func AddEnvToPodTemplate(pod *corev1.PodTemplateSpec, indexer InstanceIndexer) {
 	for index := range pod.Spec.Containers {

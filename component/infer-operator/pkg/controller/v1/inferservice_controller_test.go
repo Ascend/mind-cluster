@@ -19,6 +19,7 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
@@ -35,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 
+	ascendapi "ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	apiv1 "infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
@@ -280,6 +282,160 @@ func TestNewInstanceSet(t *testing.T) {
 		convey.So(result.Labels[common.InstanceSetNameLabelKey], convey.ShouldEqual, "role1")
 		convey.So(result.Labels["key1"], convey.ShouldEqual, "value1")
 		convey.So(result.Annotations["key2"], convey.ShouldEqual, "value2")
+	})
+}
+
+// targetSuperPodJobCase is a case for TestIsTargetSuperPodJob.
+type targetSuperPodJobCase struct {
+	name        string
+	annotations map[string]string
+	expected    bool
+}
+
+// getTargetSuperPodJobCases returns cases covering nil/empty/missing-key, known
+// target policies, custom policies with the super-pod suffix, and non-target values.
+func getTargetSuperPodJobCases() []targetSuperPodJobCase {
+	return []targetSuperPodJobCase{
+		{name: "nil annotations", annotations: nil, expected: false},
+		{name: "empty annotations", annotations: map[string]string{}, expected: false},
+		{name: "no schedule_policy key",
+			annotations: map[string]string{"other": "value"}, expected: false},
+		{name: "policy chip8-node8-sp",
+			annotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: ascendapi.Chip8Node8Sp},
+			expected:    true},
+		{name: "policy chip8-node8-ra64-sp",
+			annotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: ascendapi.Chip8Node8Ra64Sp},
+			expected:    true},
+		{name: "policy chip2-node16-sp",
+			annotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: ascendapi.Chip2Node16Sp},
+			expected:    true},
+		{name: "policy chip2-node8-sp",
+			annotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: ascendapi.Chip2Node8Sp},
+			expected:    true},
+		{name: "custom policy with -sp suffix",
+			annotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: "chip9-node8-sp"},
+			expected:    true},
+		{name: "policy exactly -sp",
+			annotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: "-sp"}, expected: false},
+		{name: "policy sp without dash",
+			annotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: "sp"}, expected: false},
+		{name: "non-target policy chip2-node8",
+			annotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: "chip2-node8"}, expected: false},
+	}
+}
+
+func TestIsTargetSuperPodJob(t *testing.T) {
+	convey.Convey("TestIsTargetSuperPodJob", t, func() {
+		cases := getTargetSuperPodJobCases()
+		for i := range cases {
+			tc := cases[i]
+			convey.Convey(tc.name, func() {
+				convey.So(isTargetSuperPodJob(tc.annotations), convey.ShouldEqual, tc.expected)
+			})
+		}
+	})
+}
+
+// inferServiceIDInjectionCase is a case for TestNewInstanceSetInferServiceIDInjection.
+type inferServiceIDInjectionCase struct {
+	name                   string
+	isName                 string
+	uid                    types.UID
+	roleLabels             map[string]string
+	annotations            map[string]string
+	podTemplateLabels      map[string]string
+	podTemplateAnnotations map[string]string
+	expectedID             string // empty means inferserviceid must not be injected
+}
+
+// getInferServiceIDInjectionCases returns cases covering uid injection for target
+// policies, no-injection for non-target/missing annotation, and user-provided value
+// precedence.
+func getInferServiceIDInjectionCases() []inferServiceIDInjectionCase {
+	return []inferServiceIDInjectionCase{
+		{name: "chip8-node8-sp injects inferservice uid", isName: "svc-0",
+			uid:         "11111111-2222-3333-4444-555555555555",
+			annotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: ascendapi.Chip8Node8Sp},
+			expectedID:  "11111111-2222-3333-4444-555555555555"},
+		{name: "non-target policy does not inject", isName: "svc-0",
+			uid:         "11111111-2222-3333-4444-555555555555",
+			annotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: "chip2-node8"},
+			expectedID:  ""},
+		{name: "no annotation does not inject", isName: "svc-0",
+			uid:         "11111111-2222-3333-4444-555555555555",
+			annotations: nil, expectedID: ""},
+		{name: "user-provided inferserviceid takes precedence", isName: "svc-0",
+			uid:         "11111111-2222-3333-4444-555555555555",
+			roleLabels:  map[string]string{common.InferServiceIDLabelKey: "custom-xxx"},
+			annotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: ascendapi.Chip8Node8Sp},
+			expectedID:  "custom-xxx"},
+		{name: "schedule policy in pod template injects inferservice uid", isName: "svc-2",
+			uid:                    "22222222-3333-4444-5555-666666666666",
+			podTemplateAnnotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: ascendapi.Chip2Node16Sp},
+			expectedID:             "22222222-3333-4444-5555-666666666666"},
+		{name: "workload meta policy wins over pod template policy", isName: "svc-3",
+			uid:                    "33333333-4444-5555-6666-777777777777",
+			annotations:            map[string]string{ascendapi.SchedulePolicyAnnoKey: ascendapi.Chip2Node8Sp},
+			podTemplateAnnotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: ascendapi.Chip8Node8Sp},
+			expectedID:             "33333333-4444-5555-6666-777777777777"},
+		{name: "non-target policy in pod template does not inject", isName: "svc-4",
+			uid:                    "44444444-5555-6666-7777-888888888888",
+			podTemplateAnnotations: map[string]string{ascendapi.SchedulePolicyAnnoKey: "chip2-node8"},
+			expectedID:             ""},
+		{name: "empty workload spec does not inject", isName: "svc-5",
+			uid:        "55555555-6666-7777-8888-999999999999",
+			expectedID: ""},
+		{name: "pod template inferserviceid label skips auto injection", isName: "svc-6",
+			uid:               "66666666-7777-8888-9999-aaaaaaaaaaaa",
+			annotations:       map[string]string{ascendapi.SchedulePolicyAnnoKey: ascendapi.Chip8Node8Sp},
+			podTemplateLabels: map[string]string{common.InferServiceIDLabelKey: "custom-pod"},
+			expectedID:        ""},
+	}
+}
+
+// marshalPodTemplateMeta marshals pod template labels/annotations into a
+// workload spec RawExtension with the same shape as roles[].spec.
+func marshalPodTemplateMeta(labels, annotations map[string]string) runtime.RawExtension {
+	workloadSpec := struct {
+		Template struct {
+			Metadata metav1.ObjectMeta `json:"metadata"`
+		} `json:"template"`
+	}{}
+	workloadSpec.Template.Metadata.Labels = labels
+	workloadSpec.Template.Metadata.Annotations = annotations
+	raw, _ := json.Marshal(&workloadSpec)
+	return runtime.RawExtension{Raw: raw}
+}
+
+func TestNewInstanceSetInferServiceIDInjection(t *testing.T) {
+	convey.Convey("TestNewInstanceSetInferServiceIDInjection", t, func() {
+		reconciler := &InferServiceReconciler{}
+		cases := getInferServiceIDInjectionCases()
+		for i := range cases {
+			tc := cases[i]
+			convey.Convey(tc.name, func() {
+				is := &apiv1.InferService{
+					ObjectMeta: metav1.ObjectMeta{Name: tc.isName, Namespace: "default", UID: tc.uid},
+				}
+				role := apiv1.InstanceSetSpec{
+					Name: "role1",
+					WorkloadObjectMeta: apiv1.ObjectMeta{
+						Labels:      tc.roleLabels,
+						Annotations: tc.annotations,
+					},
+					InstanceSpec: marshalPodTemplateMeta(tc.podTemplateLabels, tc.podTemplateAnnotations),
+				}
+				result := reconciler.newInstanceSet(is, role)
+				convey.So(result, convey.ShouldNotBeNil)
+				if tc.expectedID == "" {
+					_, exist := result.Labels[common.InferServiceIDLabelKey]
+					convey.So(exist, convey.ShouldBeFalse)
+				} else {
+					convey.So(result.Labels[common.InferServiceIDLabelKey],
+						convey.ShouldEqual, tc.expectedID)
+				}
+			})
+		}
 	})
 }
 
