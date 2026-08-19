@@ -26,9 +26,16 @@ from ascend_fd_tk.utils import helpers
 
 
 class LanePowerInfo(JsonObj):
-
-    def __init__(self, lane_id: str = "", tx_power: str = "", rx_power: str = "", bias: str = "",
-                 media_snr: str = "", host_snr: str = "", power_unit_type: PowerUnitType = PowerUnitType.MW):
+    def __init__(
+        self,
+        lane_id: str = "",
+        tx_power: str = "",
+        rx_power: str = "",
+        bias: str = "",
+        media_snr: str = "",
+        host_snr: str = "",
+        power_unit_type: PowerUnitType = PowerUnitType.MW,
+    ):
         self.lane_id = lane_id
         self.tx_power = tx_power
         self.rx_power = rx_power
@@ -47,15 +54,23 @@ class LanePowerInfo(JsonObj):
 
 
 class OpticalModuleInfo(JsonObj):
-
-    def __init__(self, lane_power_infos: List[LanePowerInfo] = None, sn="", op_id="", tx_los="", rx_los="",
-                 log_time=""):
+    def __init__(
+        self,
+        lane_power_infos: List[LanePowerInfo] = None,
+        sn="",
+        op_id="",
+        tx_los="",
+        rx_los="",
+        log_time="",
+        optical_id="",
+    ):
         self.lane_power_infos: List[LanePowerInfo] = lane_power_infos or []
         self.sn = sn
         self.op_id = op_id
         self.tx_los = tx_los
         self.rx_los = rx_los
         self.log_time = log_time
+        self.optical_id = optical_id
 
     def get_lane_diff_desc(self) -> str:
         check_snr_list = []
@@ -69,9 +84,11 @@ class OpticalModuleInfo(JsonObj):
         min_lane_id, min_media_snr = check_snr_list[0]
         max_lane_id, max_media_snr = check_snr_list[-1]
         if max_media_snr - min_media_snr > SNR_LANE_DIFF_THRESHOLD:
-            return (f"Lane最大值和最小值差值大于{SNR_LANE_DIFF_THRESHOLD}db，"
-                    f"实际最大值lane{max_lane_id}：{max_media_snr}db，"
-                    f"最小值lane{min_lane_id}：{min_media_snr}db")
+            return (
+                f"Lane最大值和最小值差值大于{SNR_LANE_DIFF_THRESHOLD}db，"
+                f"实际最大值lane{max_lane_id}：{max_media_snr}db，"
+                f"最小值lane{min_lane_id}：{min_media_snr}db"
+            )
         return ""
 
     def get_abnormal_snr_infos(self, host_th: Threshold, media_th: Threshold):
@@ -113,11 +130,10 @@ class OpticalModuleInfo(JsonObj):
     def get_abnormal_txrx_infos(self):
         abnormal_txrx_info_list = []
         if self.tx_los and helpers.parse_hex(self.tx_los) > 0:
-            abnormal_txrx_info_list.append(f"")
+            abnormal_txrx_info_list.append("")
 
 
 class OpticalModule(abc.ABC):
-
     @abc.abstractmethod
     def get_optical_module_info(self) -> OpticalModuleInfo:
         pass
