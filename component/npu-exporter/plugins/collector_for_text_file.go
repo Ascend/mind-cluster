@@ -224,7 +224,7 @@ func checker(jsonFilePath string, structInfo string, newData string, logFlag str
 
 // UpdatePrometheus update prometheus metric
 func (c *TextMetricsInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *common.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []common.HuaWeiAIChip) {
 	logger.Debug("TextMetricsInfoCollector UpdatePrometheus")
 	c.update(func(jsonFilePath string, structInfo metricStructInfo, timestamp time.Time, item DataItem, index int) {
 		labelValues := make([]string, len(structInfo.labels))
@@ -243,7 +243,7 @@ func (c *TextMetricsInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric,
 
 // UpdateTelegraf update telegraf metric
 func (c *TextMetricsInfoCollector) UpdateTelegraf(ch chan<- common.TelegrafMetric, n *common.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []common.HuaWeiAIChip) {
 	logger.Debug("TextMetricsInfoCollector UpdateTelegraf")
 	c.update(func(jsonFilePath string, structInfo metricStructInfo, timestamp time.Time, item DataItem, index int) {
 		labelsMap := make(map[string]string)

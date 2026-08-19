@@ -79,7 +79,7 @@ func TestVnpuCollectorCollectToCache(t *testing.T) {
 func TestVnpuCollectorUpdatePrometheus(t *testing.T) {
 	collector := &VnpuCollector{}
 	n := mockNewNpuCollector()
-	containerMap := mockContainerInfo()
+	containerMap := mockContainerInfoSlice()
 
 	testChips := []colcommon.HuaWeiAIChip{{PhyId: 0}}
 	collector.CollectToCache(n, testChips)
@@ -95,7 +95,18 @@ func TestVnpuCollectorUpdatePrometheus(t *testing.T) {
 		},
 		{name: "TestVnpuCollectorUpdatePrometheus_there is no container info",
 			preHandleFunc: func() {
-				containerMap = map[int32]container.DevicesInfo{}
+				containerMap = map[int32][]container.DevicesInfo{}
+			},
+			expectValue: 0,
+		},
+		{name: "TestVnpuCollectorUpdatePrometheus_multiple containers",
+			preHandleFunc: func() {
+				containerMap = map[int32][]container.DevicesInfo{
+					validVnpuID: {
+						{Devices: []int{0}, ID: strconv.Itoa(validVnpuID), Name: "ns1_pod1_ctr1"},
+						{Devices: []int{0}, ID: strconv.Itoa(validVnpuID + 1), Name: "ns2_pod2_ctr2"},
+					},
+				}
 			},
 			expectValue: 0,
 		},
@@ -130,13 +141,13 @@ func TestVnpuCollectorUpdatePrometheus(t *testing.T) {
 	}
 }
 
-func mockContainerInfo() map[int32]container.DevicesInfo {
-	containerMap := map[int32]container.DevicesInfo{
-		validVnpuID: {
+func mockContainerInfoSlice() map[int32][]container.DevicesInfo {
+	containerMap := map[int32][]container.DevicesInfo{
+		validVnpuID: {{
 			Devices: []int{0},
 			ID:      strconv.Itoa(validVnpuID),
 			Name:    "nsName_podName_ctrName",
-		},
+		}},
 	}
 	return containerMap
 }
@@ -144,7 +155,7 @@ func mockContainerInfo() map[int32]container.DevicesInfo {
 func TestVnpuCollectorUpdateTelegraf(t *testing.T) {
 	collector := &VnpuCollector{}
 	n := mockNewNpuCollector()
-	containerMap := mockContainerInfo()
+	containerMap := mockContainerInfoSlice()
 	testChips := []colcommon.HuaWeiAIChip{{PhyId: 0}}
 	collector.CollectToCache(n, testChips)
 	chip := createValidVnpuChip()
@@ -158,7 +169,7 @@ func TestVnpuCollectorUpdateTelegraf(t *testing.T) {
 	convey.Convey("there is no container info", t, func() {
 		chip.VDevActivityInfo = nil
 		chipsWithVnpu := []colcommon.HuaWeiAIChip{chip}
-		received := drainUpdateTelegraf(collector, n, map[int32]container.DevicesInfo{}, chipsWithVnpu)
+		received := drainUpdateTelegraf(collector, n, map[int32][]container.DevicesInfo{}, chipsWithVnpu)
 		convey.So(len(received), convey.ShouldEqual, 0)
 	})
 }

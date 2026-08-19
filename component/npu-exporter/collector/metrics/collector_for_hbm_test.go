@@ -25,6 +25,7 @@ import (
 
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
+	"huawei.com/npu-exporter/v6/collector/container"
 )
 
 type TestCase struct {
@@ -54,15 +55,16 @@ func TestUpdateHbmInfo(t *testing.T) {
 		desc *prometheus.Desc) {
 		ch <- 0
 	})
-	patch.ApplyFuncReturn(geenContainerInfo, nil)
+	patch.ApplyFuncReturn(geenContainerInfos, []container.DevicesInfo{{}})
 	patch.ApplyFuncReturn(getContainerNameArray, []string{mockNs, mockPodName, mockContainerName})
 	defer patch.Reset()
 
+	cardLabel := []string{"0", "", "", "", mockNs, mockPodName, mockContainerName}
 	for _, c := range cases {
 		convey.Convey(c.name, t, func() {
 			ch = make(chan int, maxMetrics)
 			c.initFunc()
-			collector.updateHbmInfo(nil, cache, nil, nil, *chipWithVnpu)
+			collector.updateHbmInfo(nil, cache, cardLabel, nil, *chipWithVnpu)
 			convey.So(len(ch), convey.ShouldEqual, c.expectMetricLen)
 		})
 	}

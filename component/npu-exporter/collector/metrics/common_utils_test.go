@@ -25,6 +25,7 @@ import (
 
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
+	"huawei.com/npu-exporter/v6/collector/container"
 )
 
 const (
@@ -160,6 +161,123 @@ func TestNilValidation(t *testing.T) {
 
 		convey.Convey("non pointer types should return false", func() {
 			convey.So(validateNotNilForEveryElement(val), convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestGeenContainerInfos(t *testing.T) {
+	convey.Convey("TestGeenContainerInfos", t, func() {
+		chip := &colcommon.HuaWeiAIChip{
+			DeviceID: 0,
+			ChipInfo: &common.ChipInfo{Name: "1", Type: "1", Version: "1"},
+			VDieID:   "die1",
+		}
+
+		convey.Convey("should return one container info", func() {
+			containerMap := map[int32][]container.DevicesInfo{
+				0: {{ID: "c1", Name: "ns_pod_container1", Devices: []int{0}}},
+			}
+			result := geenContainerInfos(chip, containerMap)
+			convey.So(result, convey.ShouldHaveLength, 1)
+			convey.So(result[0].ID, convey.ShouldEqual, "c1")
+		})
+
+		convey.Convey("should return multiple container infos", func() {
+			containerMap := map[int32][]container.DevicesInfo{
+				0: {
+					{ID: "c1", Name: "ns_pod_container1", Devices: []int{0}},
+					{ID: "c2", Name: "ns_pod_container2", Devices: []int{0}},
+				},
+			}
+			result := geenContainerInfos(chip, containerMap)
+			convey.So(result, convey.ShouldHaveLength, 2)
+			convey.So(result[0].ID, convey.ShouldEqual, "c1")
+			convey.So(result[1].ID, convey.ShouldEqual, "c2")
+		})
+
+		convey.Convey("should return empty when no container for device", func() {
+			containerMap := map[int32][]container.DevicesInfo{
+				1: {{ID: "c1", Name: "ns_pod_container1", Devices: []int{1}}},
+			}
+			result := geenContainerInfos(chip, containerMap)
+			convey.So(result, convey.ShouldBeEmpty)
+		})
+
+		convey.Convey("should use VDevID when chip is virtual device", func() {
+			vdevChip := &colcommon.HuaWeiAIChip{
+				DeviceID: 0,
+				ChipInfo: &common.ChipInfo{Name: "1", Type: "1", Version: "1"},
+				VDieID:   "die1",
+				VDevActivityInfo: &common.VDevActivityInfo{
+					VDevID:       2,
+					IsVirtualDev: true,
+				},
+			}
+			containerMap := map[int32][]container.DevicesInfo{
+				2: {{ID: "c-vdev", Name: "ns_pod_vdevContainer", Devices: []int{2}}},
+			}
+			result := geenContainerInfos(vdevChip, containerMap)
+			convey.So(result, convey.ShouldHaveLength, 1)
+			convey.So(result[0].ID, convey.ShouldEqual, "c-vdev")
+		})
+	})
+}
+
+func TestGeenGeneralCardLabel(t *testing.T) {
+	convey.Convey("TestGeenGeneralCardLabel", t, func() {
+		convey.Convey("should show podName when one card one container", func() {
+			chip := &colcommon.HuaWeiAIChip{
+				PhyId:       0,
+				DeviceID:    0,
+				ChipInfo:    &common.ChipInfo{Name: "910", Type: "910", Version: "A"},
+				VDieID:      "die1",
+				PCIeBusInfo: "0000:00:01.0",
+			}
+			containerMap := map[int32][]container.DevicesInfo{
+				0: {{ID: "c1", Name: "test-ns_test-pod_test-container", Devices: []int{0}}},
+			}
+			labels := geenGeneralCardLabel(chip, containerMap)
+			convey.So(labels, convey.ShouldHaveLength, 7)
+			convey.So(labels[4], convey.ShouldEqual, "test-ns")
+			convey.So(labels[5], convey.ShouldEqual, "test-pod")
+			convey.So(labels[6], convey.ShouldEqual, "test-container")
+		})
+
+		convey.Convey("should show description labels when one card multiple containers", func() {
+			chip := &colcommon.HuaWeiAIChip{
+				PhyId:       0,
+				DeviceID:    0,
+				ChipInfo:    &common.ChipInfo{Name: "910", Type: "910", Version: "A"},
+				VDieID:      "die1",
+				PCIeBusInfo: "0000:00:01.0",
+			}
+			containerMap := map[int32][]container.DevicesInfo{
+				0: {
+					{ID: "c1", Name: "ns1_pod1_container1", Devices: []int{0}},
+					{ID: "c2", Name: "ns2_pod2_container2", Devices: []int{0}},
+				},
+			}
+			labels := geenGeneralCardLabel(chip, containerMap)
+			convey.So(labels, convey.ShouldHaveLength, 7)
+			convey.So(labels[4], convey.ShouldEqual, colcommon.NotDisplayedForMultiPod)
+			convey.So(labels[5], convey.ShouldEqual, colcommon.NotDisplayedForMultiPod)
+			convey.So(labels[6], convey.ShouldEqual, colcommon.NotDisplayedForMultiPod)
+		})
+
+		convey.Convey("should return empty container labels when no container", func() {
+			chip := &colcommon.HuaWeiAIChip{
+				PhyId:       0,
+				DeviceID:    0,
+				ChipInfo:    &common.ChipInfo{Name: "910", Type: "910", Version: "A"},
+				VDieID:      "die1",
+				PCIeBusInfo: "0000:00:01.0",
+			}
+			containerMap := map[int32][]container.DevicesInfo{}
+			labels := geenGeneralCardLabel(chip, containerMap)
+			convey.So(labels, convey.ShouldHaveLength, 7)
+			convey.So(labels[4], convey.ShouldEqual, "")
+			convey.So(labels[5], convey.ShouldEqual, "")
+			convey.So(labels[6], convey.ShouldEqual, "")
 		})
 	})
 }

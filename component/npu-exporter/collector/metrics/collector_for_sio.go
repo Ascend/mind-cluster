@@ -85,7 +85,7 @@ func (c *SioCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colc
 
 // UpdatePrometheus update prometheus metrics
 func (c *SioCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache sioCache, cardLabel []string) {
 		extInfo := cache.extInfo
@@ -100,7 +100,7 @@ func (c *SioCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 
 // UpdateTelegraf update telegraf metrics
 func (c *SioCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	caches := colcommon.GetInfoFromCache[sioCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {

@@ -16,6 +16,7 @@
 package metrics
 
 import (
+	"huawei.com/npu-exporter/v6/utils/logger"
 	"strconv"
 	"time"
 
@@ -25,7 +26,6 @@ import (
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
-	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 var (
@@ -45,12 +45,15 @@ const (
 	vNpuUUID  = "v_dev_id"
 	aiCoreCnt = "aicore_count"
 	isVirtual = "is_virtual"
+	// vnpuLabelIdx is the index positions in the vnpu label array
+	vnpuUUIDIdx   = 2
+	vnpuAiCoreIdx = 3
 )
 
 func init() {
 	cardLabelForVNpuName = append(colcommon.CardLabel, isVirtual)
-	cardLabelForVNpuName[2] = vNpuUUID
-	cardLabelForVNpuName[3] = aiCoreCnt
+	cardLabelForVNpuName[vnpuUUIDIdx] = vNpuUUID
+	cardLabelForVNpuName[vnpuAiCoreIdx] = aiCoreCnt
 
 	podAiCoreUtilizationRate = colcommon.BuildDescWithLabel("vnpu_pod_aicore_utilization",
 		"the vnpu aicore utilization rate, unit is '%'", cardLabelForVNpuName)
@@ -94,7 +97,7 @@ func (c *VnpuCollector) CollectToCache(n *colcommon.NpuCollector, chipList []col
 
 // UpdatePrometheus update prometheus metrics
 func (c *VnpuCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache chipCache, cardLabel []string) {
 		if chipWithVnpu.VDevActivityInfo == nil {
@@ -104,10 +107,11 @@ func (c *VnpuCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcomm
 		if !common.IsValidVDevID(vDevActivityInfo.VDevID) {
 			return
 		}
-		containerName := getContainerNameArray(containerMap[int32(vDevActivityInfo.VDevID)])
-		if len(containerName) != colcommon.ContainerNameLen {
+		containerInfos := containerMap[int32(vDevActivityInfo.VDevID)]
+		if len(containerInfos) != 1 {
 			return
 		}
+		containerName := getContainerNameArray(containerInfos[0])
 		cardLabel = getPodDisplayInfo(&chipWithVnpu, containerName)
 		doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevAiCoreRate, cardLabel, podAiCoreUtilizationRate)
 		doUpdateMetric(ch, cache.timestamp, vDevActivityInfo.VDevTotalMem, cardLabel, podTotalMemory)
@@ -120,7 +124,7 @@ func (c *VnpuCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcomm
 
 // UpdateTelegraf update telegraf metrics
 func (c *VnpuCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	caches := colcommon.GetInfoFromCache[chipCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
@@ -147,7 +151,6 @@ func getPodDisplayInfo(chip *colcommon.HuaWeiAIChip, containerName []string) []s
 		logger.Errorf("container name length %v is not %v", len(containerName), colcommon.ContainerNameLen)
 		return nil
 	}
-
 	chipInfo := common.DeepCopyChipInfo(chip.ChipInfo)
 	vDevActivityInfo := common.DeepCopyVDevActivityInfo(chip.VDevActivityInfo)
 

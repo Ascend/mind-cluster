@@ -32,8 +32,15 @@ type HostConfig struct {
 	Privileged bool         `json:"Privileged,omitempty" platform:"linux"`
 }
 
+// State represents container runtime state content in isula inspect json
+type State struct {
+	// Pid is the main container process PID on the host
+	Pid uint32 `json:"Pid,omitempty" platform:"linux"`
+}
+
 // ContainerJson represents container json content
 type ContainerJson struct {
 	Config     *Config     `json:"Config,omitempty" platform:"linux"`
 	HostConfig *HostConfig `json:"HostConfig,omitempty" platform:"linux"`
+	State      *State      `json:"State,omitempty" platform:"linux"`
 }

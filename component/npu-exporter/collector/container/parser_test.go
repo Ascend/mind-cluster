@@ -25,6 +25,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/utils"
 	"huawei.com/npu-exporter/v6/collector/container/isula"
 	"huawei.com/npu-exporter/v6/collector/container/v1"
@@ -207,7 +208,7 @@ func TestDevicesParserParseDevicesInContainerd(t *testing.T) {
 			ctx := context.Background()
 			container := &CommonContainer{Id: "test-container"}
 
-			err := dp.parseDevicesInContainerd(ctx, container, nil)
+			err := dp.parseDevicesInContainerd(ctx, container, nil, nil)
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(err.Error(), convey.ShouldContainSubstring, "empty result channel")
 		})
@@ -227,8 +228,34 @@ func TestDevicesParserParseDevicesInContainerd(t *testing.T) {
 			container := &CommonContainer{Id: "test-container"}
 			resultChan := make(chan DevicesInfo, 1)
 
-			err := dp.parseDevicesInContainerd(ctx, container, resultChan)
+			err := dp.parseDevicesInContainerd(ctx, container, resultChan, nil)
 			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("should attach container pids to device info", func() {
+			dp := &DevicesParser{}
+			mockOperator := &RuntimeOperatorTool{}
+			dp.RuntimeOperator = mockOperator
+
+			testPIDs := []uint32{1000, 2000}
+			patches := gomonkey.ApplyMethod(mockOperator, "GetContainerInfoByID",
+				func(*RuntimeOperatorTool, context.Context, string) (v1.Spec, error) {
+					return v1.Spec{
+						Process: &v1.Process{Env: []string{api.AscendDeviceInfo + "=0"}},
+						Linux:   &v1.Linux{Resources: &v1.LinuxResources{}},
+					}, nil
+				}).ApplyFuncReturn((*DevicesParser).getDevicesWithAscendRuntime,
+				DevicesInfo{ID: "test", Name: "test-name", Devices: []int{device0}}, nil)
+			defer patches.Reset()
+
+			ctx := context.Background()
+			container := &CommonContainer{Id: "test-container"}
+			resultChan := make(chan DevicesInfo, 1)
+
+			err := dp.parseDevicesInContainerd(ctx, container, resultChan, testPIDs)
+			convey.So(err, convey.ShouldBeNil)
+			result := <-resultChan
+			convey.So(result.PIDs, convey.ShouldResemble, toPIDSet(testPIDs))
 		})
 	})
 }
@@ -335,7 +362,7 @@ func TestDevicesParserParseDeviceInIsula(t *testing.T) {
 			ctx := context.Background()
 			container := &CommonContainer{Id: "test-container"}
 
-			err := dp.parseDeviceInIsula(ctx, container, nil)
+			err := dp.parseDeviceInIsula(ctx, container, nil, nil)
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(err.Error(), convey.ShouldContainSubstring, "empty result channel")
 		})
@@ -347,8 +374,34 @@ func TestDevicesParserParseDeviceInIsula(t *testing.T) {
 			container := &CommonContainer{Id: longId}
 			resultChan := make(chan DevicesInfo, 1)
 
-			err := dp.parseDeviceInIsula(ctx, container, resultChan)
+			err := dp.parseDeviceInIsula(ctx, container, resultChan, nil)
 			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("should attach container pids to device info in isula", func() {
+			dp := &DevicesParser{}
+			mockOperator := &RuntimeOperatorTool{}
+			dp.RuntimeOperator = mockOperator
+
+			testPIDs := []uint32{3000}
+			patches := gomonkey.ApplyMethod(mockOperator, "GetIsulaContainerInfoByID",
+				func(*RuntimeOperatorTool, context.Context, string) (isula.ContainerJson, error) {
+					return isula.ContainerJson{
+						Config:     &isula.Config{Env: []string{api.AscendDeviceInfo + "=0"}},
+						HostConfig: &isula.HostConfig{},
+					}, nil
+				}).ApplyFuncReturn((*DevicesParser).getDevicesWithAscendRuntime,
+				DevicesInfo{ID: "test", Name: "test-name", Devices: []int{device0}}, nil)
+			defer patches.Reset()
+
+			ctx := context.Background()
+			container := &CommonContainer{Id: "test-container"}
+			resultChan := make(chan DevicesInfo, 1)
+
+			err := dp.parseDeviceInIsula(ctx, container, resultChan, testPIDs)
+			convey.So(err, convey.ShouldBeNil)
+			result := <-resultChan
+			convey.So(result.PIDs, convey.ShouldResemble, toPIDSet(testPIDs))
 		})
 	})
 }

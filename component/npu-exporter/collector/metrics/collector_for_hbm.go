@@ -108,7 +108,7 @@ func (c *HbmCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colc
 
 // UpdatePrometheus updates the prometheus metrics.
 func (c *HbmCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache hbmCache, cardLabel []string) {
 		extInfo := cache.extInfo
@@ -129,7 +129,7 @@ func (c *HbmCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 
 // UpdateTelegraf updates the telegraf metrics.
 func (c *HbmCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 	caches := colcommon.GetInfoFromCache[hbmCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
 		cache, ok := caches[chip.PhyId]
@@ -202,7 +202,7 @@ func updateHbmEccInfo(ch chan<- prometheus.Metric, eccInfo *common.ECCInfo, time
 }
 
 func (c *HbmCollector) updateHbmInfo(ch chan<- prometheus.Metric, cache hbmCache, cardLabel []string,
-	containerMap map[int32]container.DevicesInfo, chipWithVnpu colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chipWithVnpu colcommon.HuaWeiAIChip) {
 	hbmInfo := cache.extInfo
 	if hbmInfo == nil || hbmInfo.HbmInfo == nil {
 		return
@@ -219,8 +219,8 @@ func (c *HbmCollector) updateHbmInfo(ch chan<- prometheus.Metric, cache hbmCache
 		return
 	}
 
-	containerNameArray := getContainerNameArray(geenContainerInfo(&chipWithVnpu, containerMap))
-	if c.Is910Series && len(containerNameArray) == colcommon.ContainerNameLen {
+	if c.Is910Series &&
+		cardLabel[len(cardLabel)-1] != "" && cardLabel[len(cardLabel)-1] != colcommon.NotDisplayedForMultiPod {
 		doUpdateMetric(ch, timestamp, hbmInfo.MemorySize, cardLabel, npuCtrTotalMemory)
 		doUpdateMetric(ch, timestamp, hbmInfo.Usage, cardLabel, npuCtrUsedMemory)
 	}

@@ -87,7 +87,7 @@ func getDevTagValue(cardType string) string {
 }
 
 func (npu *WatchNPU) collectChain(ch chan<- common.TelegrafMetric, chain []common.MetricsCollector,
-	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []common.HuaWeiAIChip) {
 	for _, collector := range chain {
 		if collector == nil {
 			continue

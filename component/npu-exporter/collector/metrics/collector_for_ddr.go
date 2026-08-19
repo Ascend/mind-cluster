@@ -85,7 +85,7 @@ func (c *DdrCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colc
 
 // UpdatePrometheus update prometheus metrics
 func (c *DdrCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache ddrCache, cardLabel []string) {
 		extInfo := cache.extInfo
@@ -103,9 +103,8 @@ func (c *DdrCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 		if vDevActivityInfo != nil && common.IsValidVDevID(vDevActivityInfo.VDevID) {
 			return
 		}
-
-		containerNameArray := getContainerNameArray(geenContainerInfo(&chipWithVnpu, containerMap))
-		if !c.Is910Series && len(containerNameArray) == colcommon.ContainerNameLen {
+		if !c.Is910Series &&
+			cardLabel[len(cardLabel)-1] != "" && cardLabel[len(cardLabel)-1] != colcommon.NotDisplayedForMultiPod {
 			doUpdateMetric(ch, cache.timestamp, memorySize, cardLabel, npuCtrTotalMemory)
 			doUpdateMetric(ch, cache.timestamp, memorySize-memoryAvailable, cardLabel, npuCtrUsedMemory)
 		}
@@ -116,7 +115,7 @@ func (c *DdrCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 
 // UpdateTelegraf update telegraf metrics
 func (c *DdrCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	caches := colcommon.GetInfoFromCache[ddrCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {

@@ -774,6 +774,148 @@ func TestRuntimeOperatorToolGetContainerType(t *testing.T) {
 	})
 }
 
+// mockV1ContainersClient implements v1.ContainersClient for testing.
+type mockV1ContainersClient struct{}
+
+func (m *mockV1ContainersClient) Get(ctx context.Context, in *v1.GetContainerRequest,
+	opts ...grpc.CallOption) (*v1.GetContainerResponse, error) {
+	return nil, nil
+}
+
+// mockTasksClient implements v1.TasksClient for testing.
+type mockTasksClient struct {
+	listPidsFunc func(ctx context.Context, in *v1.ListPidsRequest,
+		opts ...grpc.CallOption) (*v1.ListPidsResponse, error)
+}
+
+func (m *mockTasksClient) ListPids(ctx context.Context, in *v1.ListPidsRequest,
+	opts ...grpc.CallOption) (*v1.ListPidsResponse, error) {
+	if m.listPidsFunc == nil {
+		return nil, nil
+	}
+	return m.listPidsFunc(ctx, in, opts...)
+}
+
+// mockIsulaContainerServiceClient implements isula.ContainerServiceClient for testing.
+type mockIsulaContainerServiceClient struct{}
+
+func (m *mockIsulaContainerServiceClient) Inspect(ctx context.Context, in *isula.InspectContainerRequest,
+	opts ...grpc.CallOption) (*isula.InspectContainerResponse, error) {
+	return nil, nil
+}
+
+func TestRuntimeOperatorToolGetContainerPIDs(t *testing.T) {
+	convey.Convey("TestRuntimeOperatorToolGetContainerPIDs", t, func() {
+		convey.Convey("should return error when OCI client is empty", func() {
+			operator := &RuntimeOperatorTool{}
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, true)
+			defer patches.Reset()
+			pids, err := operator.GetContainerPIDs(context.Background(), testContainerID)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldEqual, testOciClientEmptyError)
+			convey.So(pids, convey.ShouldBeNil)
+		})
+		convey.Convey("should return error when OCI connection is nil", func() {
+			operator := &RuntimeOperatorTool{client: "mock-client"}
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+			pids, err := operator.GetContainerPIDs(context.Background(), testContainerID)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldEqual, testOciClientEmptyError)
+			convey.So(pids, convey.ShouldBeNil)
+		})
+		convey.Convey("should return error when client type is unexpected", func() {
+			operator := &RuntimeOperatorTool{client: "unexpected", conn: &grpc.ClientConn{}}
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+			pids, err := operator.GetContainerPIDs(context.Background(), testContainerID)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldEqual, testUnexpectedContainerdClientError)
+			convey.So(pids, convey.ShouldBeNil)
+		})
+		convey.Convey("should return containerd container PIDs via Tasks ListPids", func() {
+			operator := &RuntimeOperatorTool{
+				client: &mockV1ContainersClient{},
+				conn:   &grpc.ClientConn{},
+			}
+			mockTasks := &mockTasksClient{
+				listPidsFunc: func(ctx context.Context, in *v1.ListPidsRequest,
+					opts ...grpc.CallOption) (*v1.ListPidsResponse, error) {
+					return &v1.ListPidsResponse{
+						Processes: []*v1.ProcessInfo{
+							{Pid: 1000},
+							{Pid: 1001},
+						},
+					}, nil
+				},
+			}
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+			patches.ApplyFuncReturn(v1.NewTasksClient, mockTasks)
+			pids, err := operator.GetContainerPIDs(context.Background(), testContainerID)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(pids, convey.ShouldResemble, []uint32{1000, 1001})
+		})
+		convey.Convey("should return error when containerd Tasks ListPids fails", func() {
+			operator := &RuntimeOperatorTool{
+				client: &mockV1ContainersClient{},
+				conn:   &grpc.ClientConn{},
+			}
+			mockTasks := &mockTasksClient{
+				listPidsFunc: func(ctx context.Context, in *v1.ListPidsRequest,
+					opts ...grpc.CallOption) (*v1.ListPidsResponse, error) {
+					return nil, errors.New("list pids failed")
+				},
+			}
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+			patches.ApplyFuncReturn(v1.NewTasksClient, mockTasks)
+			pids, err := operator.GetContainerPIDs(context.Background(), testContainerID)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(pids, convey.ShouldBeNil)
+		})
+		convey.Convey("should return isula container main PID via Inspect", func() {
+			operator := &RuntimeOperatorTool{
+				client: &mockIsulaContainerServiceClient{},
+				conn:   &grpc.ClientConn{},
+			}
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+			patches.ApplyMethodReturn(operator, "GetIsulaContainerInfoByID", isula.ContainerJson{
+				State: &isula.State{Pid: 2000},
+			}, nil)
+			pids, err := operator.GetContainerPIDs(context.Background(), testContainerID)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(pids, convey.ShouldResemble, []uint32{2000})
+		})
+		convey.Convey("should return error when isula Inspect fails", func() {
+			operator := &RuntimeOperatorTool{
+				client: &mockIsulaContainerServiceClient{},
+				conn:   &grpc.ClientConn{},
+			}
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+			patches.ApplyMethodReturn(operator, "GetIsulaContainerInfoByID", isula.ContainerJson{},
+				errors.New("inspect failed"))
+			pids, err := operator.GetContainerPIDs(context.Background(), testContainerID)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(pids, convey.ShouldBeNil)
+		})
+		convey.Convey("should return error when isula container state is empty", func() {
+			operator := &RuntimeOperatorTool{
+				client: &mockIsulaContainerServiceClient{},
+				conn:   &grpc.ClientConn{},
+			}
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+			patches.ApplyMethodReturn(operator, "GetIsulaContainerInfoByID", isula.ContainerJson{}, nil)
+			pids, err := operator.GetContainerPIDs(context.Background(), testContainerID)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(pids, convey.ShouldBeNil)
+		})
+	})
+}
+
 func TestSetGrpcNamespaceHeader(t *testing.T) {
 	convey.Convey("TestSetGrpcNamespaceHeader", t, func() {
 		convey.Convey("should set namespace header when context has no metadata", func() {

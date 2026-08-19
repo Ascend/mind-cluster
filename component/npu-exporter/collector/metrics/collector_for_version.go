@@ -40,13 +40,13 @@ func (c *VersionCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // UpdatePrometheus update prometheus metric
 func (c *VersionCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *common.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []common.HuaWeiAIChip) {
 	ch <- prometheus.MustNewConstMetric(versionInfoDesc, prometheus.GaugeValue, 1, []string{versions.BuildVersion}...)
 }
 
 // UpdateTelegraf update telegraf metric
 func (c *VersionCollector) UpdateTelegraf(ch chan<- common.TelegrafMetric, n *common.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []common.HuaWeiAIChip) {
 
 	metric := common.NewGeneralMetric()
 	doUpdateTelegraf(metric.Fields, versionInfoDesc, versions.BuildVersion, "")
