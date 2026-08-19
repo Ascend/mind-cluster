@@ -31,6 +31,20 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
+// SuperPod groups the candidate nodes of one physical super pod by node name.
+type SuperPod map[string]NPUNode
+
+// NodeNames returns the node names of the super pod in sorted order, used for
+// deterministic log output.
+func (s SuperPod) NodeNames() []string {
+	nodeNames := make([]string, 0, len(s))
+	for k := range s {
+		nodeNames = append(nodeNames, k)
+	}
+	sort.Strings(nodeNames)
+	return nodeNames
+}
+
 // GetResourceTrees gets resource tree
 func GetResourceTrees(npuNodes map[string]NPUNode, resourceLevelsMap map[string][]util.ResourceTreeLevel,
 	taskLevel []util.TaskTreeLevel) ([]*util.ResourceTree, error) {

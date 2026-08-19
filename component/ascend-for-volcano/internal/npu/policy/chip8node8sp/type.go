@@ -68,26 +68,7 @@ const (
 
 	// SchedulePolicy8Px8Sp the label 8p-8-sp
 	SchedulePolicy8Px8Sp = "8p-8-sp"
-
-	inferServiceIDLabelKey = "inferserviceid"
-
-	inferServiceGroupSameSP  = 1
-	inferServiceGroupOtherSP = 2
 )
-
-type inferServiceSPInfo struct {
-	superPodID  int32
-	freeNodeNum int
-}
-
-type inferServicePQItem struct {
-	superPodID int32
-	freeNodes  int
-	group      int
-	index      int
-}
-
-type inferServicePQ []*inferServicePQItem
 
 type superPodInfo struct {
 	firstLevel     remainderTopType
@@ -102,12 +83,4 @@ type vPodIdRecorder struct {
 
 type remainderTopType = [][][]superPod
 
-type superPod map[string]plugin.NPUNode
-
-func (s superPod) NodeNames() []string {
-	var nodeNames []string
-	for k := range s {
-		nodeNames = append(nodeNames, k)
-	}
-	return nodeNames
-}
+type superPod = plugin.SuperPod

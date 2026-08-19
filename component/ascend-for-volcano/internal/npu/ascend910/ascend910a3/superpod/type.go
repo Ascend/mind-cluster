@@ -20,8 +20,6 @@ Package superpod is using for HuaWei Atlas 900 A3 SuperPod affinity schedule.
 package superpod
 
 import (
-	"sort"
-
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
@@ -29,8 +27,10 @@ import (
 
 type module910SuperPod struct {
 	ascend910a3.Base910A3
-	nodeVPodId map[string]string
-	spBlock    int
+	nodeVPodId        map[string]string
+	spBlock           int
+	isInferServiceJob bool
+	inferServiceID    string
 }
 
 const (
@@ -58,16 +58,7 @@ type superPodInfo struct {
 
 type remainderTop = [][][]superPod
 
-type superPod map[string]plugin.NPUNode
-
-func (s superPod) NodeNames() []string {
-	var nodeNames []string
-	for k := range s {
-		nodeNames = append(nodeNames, k)
-	}
-	sort.Strings(nodeNames)
-	return nodeNames
-}
+type superPod = plugin.SuperPod
 
 type vPodIdRecorder struct {
 	unReadyId  []string
