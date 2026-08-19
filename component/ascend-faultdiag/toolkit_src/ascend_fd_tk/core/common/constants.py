@@ -34,6 +34,7 @@ KEY_UNCORR_CW = "uncorr_cw_cnt_check"
 KEY_PCS_LINK = "pcs_link_check"
 # 高功率模式开启状态
 HIGH_POWER_ENABLE = "enabled"
+HIGH_POWER_ENABLE_A5 = "enable"
 # 光模块在位状态
 OP_PRESENT = "present"
 # 光模块开光状态

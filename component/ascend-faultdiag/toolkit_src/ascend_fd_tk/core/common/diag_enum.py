@@ -60,6 +60,7 @@ class SwitchType(Enum):
 class NpuType(Enum):
     A2 = "A2"
     A3 = "A3"
+    A5 = "A5"
 
 
 # 设备状态枚举
