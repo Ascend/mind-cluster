@@ -20,7 +20,7 @@ Package util is using for the total variable.
 
 package util
 
-import "k8s.io/klog"
+import "k8s.io/klog/v2"
 
 // ErrorCollector is used to collect errors
 type ErrorCollector struct {

@@ -126,7 +126,7 @@ helm-deploy-tool/
 │   ├── values.yaml
 │   └── charts/
 │       ├── ascend-operator-crds/
-│       ├── ascend-for-volcano-crds/  # 含 v1.7.0 / v1.9.0 / v1.12.0 多版本 CRD
+│       ├── ascend-for-volcano-crds/  # 含 v1.9.0 / v1.12.0 / v1.15.0 多版本 CRD
 │       └── infer-operator-crds/
 ├── build/                            # 构建脚本目录
 │   ├── build.sh                      # 主构建入口

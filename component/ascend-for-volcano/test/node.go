@@ -85,14 +85,14 @@ func SetFakeDefaultNodeSource(nodeInf *api.NodeInfo) {
 		ScalarResources: map[v1.ResourceName]float64{},
 	}
 	nodeInf.Idle = &tmpResource
-	nodeInf.Capability = &tmpResource
+	nodeInf.Capacity = &tmpResource
 	nodeInf.Allocatable = &tmpResource
 }
 
 // addFakeNodeSource add fake node the idle, Capability, Allocatable source.
 func addFakeNodeSource(nodeInf *api.NodeInfo, name string, value int) {
 	nodeInf.Idle.ScalarResources[v1.ResourceName(name)] = float64(value) * NPUHexKilo
-	nodeInf.Capability.ScalarResources[v1.ResourceName(name)] = float64(value) * NPUHexKilo
+	nodeInf.Capacity.ScalarResources[v1.ResourceName(name)] = float64(value) * NPUHexKilo
 	nodeInf.Allocatable.ScalarResources[v1.ResourceName(name)] = float64(value) * NPUHexKilo
 }
 

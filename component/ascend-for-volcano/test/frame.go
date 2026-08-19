@@ -70,8 +70,8 @@ func FakeNormalSSN(confs []conf.Configuration) *framework.Session {
 		Binder:        binder,
 		StatusUpdater: &util.FakeStatusUpdater{},
 		VolumeBinder:  &util.FakeVolumeBinder{},
-
-		Recorder: record.NewFakeRecorder(npuIndex3),
+		Recorder:      record.NewFakeRecorder(npuIndex3),
+		NodeList:      []string{},
 	}
 
 	nodes := FakeNormalTestNodes(fakeNodeNum)
@@ -81,7 +81,8 @@ func FakeNormalSSN(confs []conf.Configuration) *framework.Session {
 		node.Node.Labels[chipTypeKey] = fakeChipName + fakeChipType
 		node.Node.Annotations[NPU910CardName] = annoCards
 		node.Node.Annotations[BaseDeviceInfoKey] = fakeBaseDeviceInfo
-		schedulerCache.AddNode(node.Node)
+		schedulerCache.Nodes[node.Name] = node
+		schedulerCache.NodeList = append(schedulerCache.NodeList, node.Name)
 	}
 
 	jobInf := FakeNormalTestJob("pg0", npuIndex3)

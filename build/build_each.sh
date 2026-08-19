@@ -46,14 +46,6 @@ case "$servicename" in
     mkdir -p ${GOPATH}/output/volcano-v1.9.0 && cp -rf ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${GOPATH}/output/volcano-v1.9.0/
     ls -la ${GOPATH}/output/volcano-v1.9.0/
     rm -rf ${GOPATH}/src/volcano.sh/volcano
-    echo "***************start complie volcano 1.7***********************"
-    cp -rf /opt/buildtools/volcano_opensource/volcano_1.7/volcano ${GOPATH}/src/volcano.sh/
-    ls -la ./ &&  cp -rf ${GOPATH}/${servicename} ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/
-    cd ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ${servicename} ascend-volcano-plugin
-    build_volcano v1.7.0
-    mkdir -p ${GOPATH}/output/volcano-v1.7.0 && cp -rf ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${GOPATH}/output/volcano-v1.7.0/
-    ls -la ${GOPATH}/output/volcano-v1.7.0/
-    rm -rf ${GOPATH}/src/volcano.sh/volcano
 
   ;;
   ascend-docker-runtime)
@@ -69,8 +61,3 @@ case "$servicename" in
     build_other ${servicename}
 
 esac
-
-
-
-
-

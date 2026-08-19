@@ -312,7 +312,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano-crds.volcanoVersion</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p><p>string</p><ul><li>v1.7.0</li><li>v1.9.0</li><li>v1.12.0</li></ul></p><p>默认值为v1.9.0</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p><p>string</p><ul><li>v1.9.0</li><li>v1.12.0</li><li>v1.15.0</li></ul></p><p>默认值为v1.9.0</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>选择Volcano版本。</p></td>
   </tr>
   <tr>
@@ -378,7 +378,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano.volcanoVersion</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string</p><p>取值包括：<ul><li>v1.7.0</li><li>v1.9.0</li><li>v1.12.0</li></ul></p><p>默认值为v1.9.0</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string</p><p>取值包括：<ul><li>v1.9.0</li><li>v1.12.0</li><li>v1.15.0</li></ul></p><p>默认值为v1.9.0</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>选择启用的volcano版本。</p></td>
   </tr>
   <tr>

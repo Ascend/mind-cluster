@@ -30,7 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -275,7 +275,7 @@ func jobPipelined(obj interface{}, tp *huaweiNPUPlugin) int {
 	}
 	klog.V(util.LogInfoLev).Infof("job %s/%s WaitingTaskNum: %d, ReadyTaskNum: %d, MinAvailable: %d", ji.Namespace,
 		ji.Name, ji.WaitingTaskNum(), ji.ReadyTaskNum(), job.MinAvailable)
-	if ji.WaitingTaskNum()+ji.ReadyTaskNum() < job.MinAvailable {
+	if ji.WaitingTaskNum()+ji.ReadyTaskNum()+ji.PendingBestEffortTaskNum() < job.MinAvailable {
 		return util.Reject
 	}
 	return util.Abstain

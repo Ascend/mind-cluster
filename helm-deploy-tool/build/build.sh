@@ -37,11 +37,11 @@ function generate_yaml_from_component() {
 
 function update_version() {
   REL_NPU_PLUGIN=volcano-npu_${build_version}
-  BASE_VER=v1.7.0
-  sed -i "s/name: volcano-npu_v6.0.RC1_linux-x86_64/name: ${REL_NPU_PLUGIN}/" "${TOP_DIR}/app/charts/ascend-for-volcano/yamls/${BASE_VER}"/ConfigMap-*.yaml
   BASE_VER=v1.9.0
   sed -i "s/name: volcano-npu_v6.0.RC1_linux-x86_64/name: ${REL_NPU_PLUGIN}/" "${TOP_DIR}/app/charts/ascend-for-volcano/yamls/${BASE_VER}"/ConfigMap-*.yaml
   BASE_VER=v1.12.0
+  sed -i "s/name: volcano-npu_v6.0.RC1_linux-x86_64/name: ${REL_NPU_PLUGIN}/" "${TOP_DIR}/app/charts/ascend-for-volcano/yamls/${BASE_VER}"/ConfigMap-*.yaml
+  BASE_VER=v1.15.0
   sed -i "s/name: volcano-npu_v6.0.RC1_linux-x86_64/name: ${REL_NPU_PLUGIN}/" "${TOP_DIR}/app/charts/ascend-for-volcano/yamls/${BASE_VER}"/ConfigMap-*.yaml
 
   sed -i 's#/bin/ash#/bin/sh#g' ${TOP_DIR}/app/charts/ascend-for-volcano/yamls/*/Deployment-volcano-*.yaml

@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"strings"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
@@ -46,7 +46,7 @@ func (tp *VirtualNPU) GetTaskResource(task *api.TaskInfo, node plugin.NPUNode) (
 
 	tempCore := node.TotalRes.Aicore
 	if tempCore == 0 {
-		return util.VResource{}, fmt.Errorf("%s not inital for Aicore is 0", node.Name)
+		return util.VResource{}, fmt.Errorf("%s not initial for Aicore is 0", node.Name)
 	}
 	if node.IsResourceWholeCard(coreNum) {
 		res := util.VResource{
