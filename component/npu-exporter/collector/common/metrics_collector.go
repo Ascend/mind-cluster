@@ -68,12 +68,12 @@ type MetricsCollector interface {
 	CollectToCache(n *NpuCollector, chipList []HuaWeiAIChip)
 
 	// UpdatePrometheus update prometheus
-	UpdatePrometheus(ch chan<- prometheus.Metric, n *NpuCollector, containerMap map[int32]container.DevicesInfo,
+	UpdatePrometheus(ch chan<- prometheus.Metric, n *NpuCollector, containerMap map[int32][]container.DevicesInfo,
 		chips []HuaWeiAIChip)
 
 	// UpdateTelegraf update telegraf
 	UpdateTelegraf(ch chan<- TelegrafMetric, n *NpuCollector,
-		containerMap map[int32]container.DevicesInfo, chips []HuaWeiAIChip)
+		containerMap map[int32][]container.DevicesInfo, chips []HuaWeiAIChip)
 
 	// PreCollect pre handle before collect
 	PreCollect(*NpuCollector, []HuaWeiAIChip)
@@ -92,7 +92,7 @@ type MetricsCollector interface {
 type MetricsCollectorAdapter struct {
 	LocalCache   sync.Map
 	Is910Series  bool
-	ContainerMap map[int32]container.DevicesInfo
+	ContainerMap map[int32][]container.DevicesInfo
 	Chips        []HuaWeiAIChip
 	// DcmiSupported caches the result of SupportDcmi. classifyCollectors calls
 	// SupportDcmi once at registration; afterwards callers read DcmiSupported directly.
@@ -109,12 +109,12 @@ func (c *MetricsCollectorAdapter) CollectToCache(n *NpuCollector, chipList []Hua
 
 // UpdatePrometheus update prometheus
 func (c *MetricsCollectorAdapter) UpdatePrometheus(ch chan<- prometheus.Metric, n *NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []HuaWeiAIChip) {
 }
 
 // UpdateTelegraf update telegraf
 func (c *MetricsCollectorAdapter) UpdateTelegraf(ch chan<- TelegrafMetric, n *NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []HuaWeiAIChip) {
 }
 
 // PreCollect pre handle before collect

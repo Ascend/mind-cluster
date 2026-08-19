@@ -78,6 +78,7 @@ type RuntimeOperator interface {
 	GetContainers(ctx context.Context) ([]*CommonContainer, error)
 	GetContainerInfoByID(ctx context.Context, id string) (v1.Spec, error)
 	GetIsulaContainerInfoByID(ctx context.Context, id string) (isula.ContainerJson, error)
+	GetContainerPIDs(ctx context.Context, id string) ([]uint32, error)
 	GetContainerType() string
 }
 
@@ -328,6 +329,51 @@ func (operator *RuntimeOperatorTool) GetIsulaContainerInfoByID(ctx context.Conte
 	}
 
 	return containerJsonInfo, errors.New("unexpected isula client")
+}
+
+// GetContainerPIDs returns the host process PIDs belonging to the given container.
+// It queries the mounted container runtime socket (containerd Tasks API for
+// docker/containerd, isulad Inspect for isula) instead of host /proc, which is
+// not mounted in container mode.
+func (operator *RuntimeOperatorTool) GetContainerPIDs(ctx context.Context, id string) ([]uint32, error) {
+	if utils.IsNil(operator.client) || operator.conn == nil {
+		return nil, errors.New("oci client is empty")
+	}
+	if _, ok := operator.client.(isula.ContainerServiceClient); ok {
+		return operator.getIsulaContainerPIDs(ctx, id)
+	}
+	if _, ok := operator.client.(v1.ContainersClient); ok {
+		return operator.getContainerdContainerPIDs(ctx, id)
+	}
+	logger.Errorf("client %v is unexpected", operator.client)
+	return nil, errors.New("unexpected containerd client")
+}
+
+func (operator *RuntimeOperatorTool) getContainerdContainerPIDs(ctx context.Context, id string) ([]uint32, error) {
+	tasksClient := v1.NewTasksClient(operator.conn)
+	resp, err := tasksClient.ListPids(setGrpcNamespaceHeader(ctx, operator.Namespace), &v1.ListPidsRequest{
+		ContainerId: id,
+	})
+	if err != nil {
+		hwlog.RunLog.Error("call containerd Tasks ListPids method failed")
+		return nil, err
+	}
+	pids := make([]uint32, 0, len(resp.Processes))
+	for _, process := range resp.Processes {
+		pids = append(pids, process.Pid)
+	}
+	return pids, nil
+}
+
+func (operator *RuntimeOperatorTool) getIsulaContainerPIDs(ctx context.Context, id string) ([]uint32, error) {
+	containerJsonInfo, err := operator.GetIsulaContainerInfoByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if containerJsonInfo.State == nil {
+		return nil, errors.New("container state is empty")
+	}
+	return []uint32{containerJsonInfo.State.Pid}, nil
 }
 
 // GetContainerType return container type

@@ -202,7 +202,7 @@ func (c *HccsCollector) PreCollect(n *colcommon.NpuCollector, chipList []colcomm
 
 // UpdatePrometheus update prometheus
 func (c *HccsCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache hccsCache, cardLabel []string) {
 		timestamp := cache.timestamp
@@ -251,7 +251,7 @@ func promUpdateHccsStatisticInfo(ch chan<- prometheus.Metric, cache hccsCache, c
 
 // UpdateTelegraf update telegraf
 func (c *HccsCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	caches := colcommon.GetInfoFromCache[hccsCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
@@ -297,11 +297,11 @@ func telegrafUpdateHccsStatisticInfo(cache hccsCache, c *HccsCollector, fieldMap
 // buildFailedHccsInfo build failed hccs info
 func buildFailedHccsInfo() *common.HccsStatisticInfo {
 	errorResult := &common.HccsStatisticInfo{
-		TxCnt:     make([]uint64, 8),
-		RxCnt:     make([]uint64, 8),
-		CrcErrCnt: make([]uint64, 8),
+		TxCnt:     make([]uint64, MaxHccsNum),
+		RxCnt:     make([]uint64, MaxHccsNum),
+		CrcErrCnt: make([]uint64, MaxHccsNum),
 	}
-	for i := 0; i < 8; i++ {
+	for i := 0; i < MaxHccsNum; i++ {
 		errorResult.TxCnt[i] = common.FailedValue
 		errorResult.RxCnt[i] = common.FailedValue
 		errorResult.CrcErrCnt[i] = common.FailedValue

@@ -16,8 +16,8 @@
 package metrics
 
 import (
-	"time"
 	"fmt"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -133,7 +133,7 @@ func (c *PcieCollector) CollectToCache(n *colcommon.NpuCollector, chipList []col
 
 // UpdatePrometheus update prometheus metrics
 func (c *PcieCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache pcieCache, cardLabel []string) {
 		pcieBwInfo := cache.extInfo
@@ -159,7 +159,7 @@ func (c *PcieCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcomm
 
 // UpdateTelegraf update telegraf metrics
 func (c *PcieCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	caches := colcommon.GetInfoFromCache[pcieCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {

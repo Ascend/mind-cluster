@@ -583,8 +583,8 @@ func mockGetNPUChipList() []colcommon.HuaWeiAIChip {
 	return chips
 }
 
-func mockGetContainerNPUInfo() map[int32]container.DevicesInfo {
-	containsInfo := make(map[int32]container.DevicesInfo)
+func mockGetContainerNPUInfo() map[int32][]container.DevicesInfo {
+	containsInfo := make(map[int32][]container.DevicesInfo)
 	for id := int32(0); id < maxChipNum; id++ {
 
 		containerInfo := container.DevicesInfo{
@@ -592,7 +592,7 @@ func mockGetContainerNPUInfo() map[int32]container.DevicesInfo {
 			Name:    mockContainerName,
 			Devices: []int{int(id)},
 		}
-		containsInfo[id] = containerInfo
+		containsInfo[id] = []container.DevicesInfo{containerInfo}
 	}
 	return containsInfo
 }
@@ -640,7 +640,7 @@ func createChip() colcommon.HuaWeiAIChip {
 }
 
 func drainUpdateTelegraf(collector colcommon.MetricsCollector, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) []colcommon.TelegrafMetric {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) []colcommon.TelegrafMetric {
 	ch := make(chan colcommon.TelegrafMetric, chanCacheSizeForTest)
 	received := make([]colcommon.TelegrafMetric, 0)
 	done := make(chan struct{})

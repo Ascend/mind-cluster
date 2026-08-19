@@ -67,10 +67,10 @@ func (f *fakeCollector) PreCollect(_ *NpuCollector, _ []HuaWeiAIChip)     {}
 func (f *fakeCollector) CollectToCache(_ *NpuCollector, _ []HuaWeiAIChip) {}
 func (f *fakeCollector) PostCollect(_ *NpuCollector)                      {}
 func (f *fakeCollector) UpdatePrometheus(_ chan<- prometheus.Metric, _ *NpuCollector,
-	_ map[int32]container.DevicesInfo, _ []HuaWeiAIChip) {
+	_ map[int32][]container.DevicesInfo, _ []HuaWeiAIChip) {
 }
 func (f *fakeCollector) UpdateTelegraf(_ chan<- TelegrafMetric, _ *NpuCollector,
-	_ map[int32]container.DevicesInfo, _ []HuaWeiAIChip) {
+	_ map[int32][]container.DevicesInfo, _ []HuaWeiAIChip) {
 }
 
 func TestScheduleUpdateNext(t *testing.T) {

@@ -153,4 +153,7 @@ const (
 
 	// DomainForCardNum domain for cardNum
 	DomainForCardNum = "cardNum"
+
+	// NotDisplayedForMultiPod is the description shown for namespace/pod_name/container_name labels in the one-card-multi-pod scenario
+	NotDisplayedForMultiPod = "not_displayed_for_multi_pod"
 )

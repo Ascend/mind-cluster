@@ -93,7 +93,7 @@ func (n *CollectorForPrometheus) Collect(ch chan<- prometheus.Metric) {
 	collectChain(ch, n, containerMap, chips, plugin)
 }
 
-func collectChain(ch chan<- prometheus.Metric, n *CollectorForPrometheus, containerMap map[int32]container.DevicesInfo,
+func collectChain(ch chan<- prometheus.Metric, n *CollectorForPrometheus, containerMap map[int32][]container.DevicesInfo,
 	chips []common.HuaWeiAIChip, chain []common.MetricsCollector) {
 	if ch == nil {
 		logger.Error("ch is nil")

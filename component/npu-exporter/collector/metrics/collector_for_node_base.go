@@ -64,7 +64,7 @@ func (c *NodeBaseCollector) CollectToCache(n *common.NpuCollector, chipList []co
 
 // UpdatePrometheus update prometheus metric
 func (c *NodeBaseCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *common.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []common.HuaWeiAIChip) {
 	nodeBaseInfo, ok := c.LocalCache.Load(common.GetCacheKey(c))
 	if !ok {
 		logger.Debugf("cacheKey(%v) not found", common.GetCacheKey(c))
@@ -80,7 +80,7 @@ func (c *NodeBaseCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *com
 
 // UpdateTelegraf update telegraf metric
 func (c *NodeBaseCollector) UpdateTelegraf(ch chan<- common.TelegrafMetric, n *common.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []common.HuaWeiAIChip) {
 	nodeBaseInfo, ok := c.LocalCache.Load(common.GetCacheKey(c))
 	if !ok {
 		logger.Debugf("cacheKey(%v) not found", common.GetCacheKey(c))

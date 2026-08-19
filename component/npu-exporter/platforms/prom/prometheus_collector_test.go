@@ -176,8 +176,8 @@ func mockGetNPUChipList() []common.HuaWeiAIChip {
 	return chips
 }
 
-func mockGetContainerNPUInfo() map[int32]container.DevicesInfo {
-	containsInfo := make(map[int32]container.DevicesInfo)
+func mockGetContainerNPUInfo() map[int32][]container.DevicesInfo {
+	containsInfo := make(map[int32][]container.DevicesInfo)
 	for id := int32(0); id < maxChipNum; id++ {
 
 		containerInfo := container.DevicesInfo{
@@ -185,7 +185,7 @@ func mockGetContainerNPUInfo() map[int32]container.DevicesInfo {
 			Name:    mockContainerName,
 			Devices: []int{int(id)},
 		}
-		containsInfo[id] = containerInfo
+		containsInfo[id] = []container.DevicesInfo{containerInfo}
 	}
 	return containsInfo
 }

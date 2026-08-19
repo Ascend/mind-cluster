@@ -267,7 +267,7 @@
 
     // UpdatePrometheus update prometheus metric
     func (c *PluginInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *common.NpuCollector,
-        containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
+        containerMap map[int32][]container.DevicesInfo, chips []common.HuaWeiAIChip) {
         logger.Debug("PluginInfoCollector UpdatePrometheus")
         // get metric from cache
         pluginCache, pluginOk := c.Cache.Load(pluginInfoKey)
@@ -288,7 +288,7 @@
 
     // UpdateTelegraf update telegraf metric
     func (c *PluginInfoCollector) UpdateTelegraf(ch chan<- common.TelegrafMetric, n *common.NpuCollector,
-    containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip)  {
+    containerMap map[int32][]container.DevicesInfo, chips []common.HuaWeiAIChip)  {
         logger.Debug("PluginInfoCollector UpdateTelegraf")
         // get metric from cache
         pluginCache, pluginOk := c.Cache.Load(pluginInfoKey)

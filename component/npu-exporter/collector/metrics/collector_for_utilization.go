@@ -111,10 +111,14 @@ func (c *UtilizationCollector) CollectToCache(n *colcommon.NpuCollector, chipLis
 
 // UpdatePrometheus updates the base info of the chip
 func (c *UtilizationCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache chipUtilizationCache, cardLabel []string) {
-		containerInfo := geenContainerInfo(&chipWithVnpu, containerMap)
+		containerInfos := geenContainerInfos(&chipWithVnpu, containerMap)
+		var containerInfo container.DevicesInfo
+		if len(containerInfos) == 1 {
+			containerInfo = containerInfos[0]
+		}
 		timestamp := cache.timestamp
 		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.Utilization), cardLabel, descUtil)
 		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.OverallUtilization), cardLabel, descOverUtil)
@@ -145,7 +149,7 @@ func updateContainerUtilization(ch chan<- prometheus.Metric, containerInfo conta
 
 // UpdateTelegraf updates the base info of the chip
 func (c *UtilizationCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 	caches := colcommon.GetInfoFromCache[chipUtilizationCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
 		cache, ok := caches[chip.PhyId]

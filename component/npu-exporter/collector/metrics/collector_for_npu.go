@@ -35,6 +35,15 @@ import (
 	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
+const (
+	containerNameIndexOffsetInCardLabel = 1
+	podNameIndexOffsetInCardLabel       = 2
+	namespaceIndexOffsetInCardLabel     = 3
+	cardLabelWihtContainerInfoLen       = 3
+	// hexBase is the base for formatting error codes as hexadecimal strings
+	hexBase = 16
+)
+
 var (
 	errorCodeDescs        []*prometheus.Desc
 	cardLabelForProcess   = append(colcommon.CardLabel, "process_id", "container_id")
@@ -200,7 +209,7 @@ func (c *BaseInfoCollector) CollectToCache(n *colcommon.NpuCollector, chipList [
 		if len(errCodes) > 0 {
 			var errCodesInHex []string
 			for _, errCode := range errCodes {
-				errCodesInHex = append(errCodesInHex, strings.ToUpper(strconv.FormatInt(errCode, 16)))
+				errCodesInHex = append(errCodesInHex, strings.ToUpper(strconv.FormatInt(errCode, hexBase)))
 			}
 			logger.Warnf("there are error(s) on chip(logicID: %v), errorCodes: %v", logicID, errCodesInHex)
 		}
@@ -257,10 +266,14 @@ func collectPower(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCach
 
 // UpdatePrometheus updates the base info of the chip
 func (c *BaseInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache chipCache, cardLabel []string) {
-		containerInfo := geenContainerInfo(&chipWithVnpu, containerMap)
+		containerInfos := geenContainerInfos(&chipWithVnpu, containerMap)
+		var containerInfo container.DevicesInfo
+		if len(containerInfos) == 1 {
+			containerInfo = containerInfos[0]
+		}
 		timestamp := cache.timestamp
 		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.Power), cardLabel, descPower)
 		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.Voltage), cardLabel, descVoltage)
@@ -275,7 +288,7 @@ func (c *BaseInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *col
 
 		updateContainerInfo(ch, containerInfo, cardLabel, &cache, chipWithVnpu)
 
-		updateProcessInfoForPrometheus(ch, &cache, containerInfo, timestamp, cardLabel)
+		updateProcessInfoForPrometheus(ch, &cache, containerInfos, timestamp, cardLabel)
 		updateErrorCodesInfo(ch, &cache, timestamp, cardLabel)
 		// Update NPU serial number info
 		if cache.chip.ElabelInfo != nil {
@@ -331,41 +344,85 @@ func updateErrorCodesInfo(ch chan<- prometheus.Metric, chip *chipCache, timestam
 }
 
 func updateProcessInfoForPrometheus(ch chan<- prometheus.Metric, chip *chipCache,
-	containerInfo container.DevicesInfo, timestamp time.Time, cardLabel []string) {
+	containerInfos []container.DevicesInfo, timestamp time.Time, cardLabel []string) {
 	devProcessInfo := chip.DevProcessInfo
 	if devProcessInfo == nil {
 		return
 	}
 	doUpdateMetric(ch, timestamp, devProcessInfo.ProcNum, cardLabel, descDevProcessNum)
-
-	containerID := ""
-	containerName := ""
-	cNameArray := getContainerNameArray(containerInfo)
-	if len(cNameArray) == colcommon.ContainerNameLen {
-		containerID = containerInfo.ID
-		containerName = strings.Join(cNameArray, "_")
-	}
-
-	newCardLabel := make([]string, len(cardLabel))
-	copy(newCardLabel, cardLabel)
-	// containerName in process info is namespace_podName_containerName
-	newCardLabel[len(newCardLabel)-1] = containerName
-
-	if devProcessInfo.ProcNum == 0 {
-		doUpdateMetric(ch, timestamp, 0, append(newCardLabel, "", containerID), descDevProcessInfo)
-		return
-	}
-
 	for i := int32(0); i < devProcessInfo.ProcNum; i++ {
+		containerID := ""
+		newCardLabel := make([]string, len(cardLabel))
+		if len(cardLabel) > cardLabelWihtContainerInfoLen {
+			copy(newCardLabel, cardLabel)
+			newCardLabel[len(newCardLabel)-1] = ""
+			newCardLabel[len(newCardLabel)-2] = ""
+			newCardLabel[len(newCardLabel)-3] = ""
+		}
 		procInfo := devProcessInfo.DevProcArray[i]
+		if containerInfo, ok := findContainerForPID(procInfo.Pid, containerInfos); ok {
+			newCardLabel, containerID = buildProcessCardLabel(cardLabel, containerInfo)
+		}
 		doUpdateMetric(ch, timestamp, procInfo.MemUsage,
 			append(newCardLabel, strconv.FormatInt(int64(procInfo.Pid), colcommon.Base), containerID), descDevProcessInfo)
 	}
 }
 
+// getDefaultProcessLabel builds the card label used before/without PID-container
+// matching, taking the first associated container's joined name as the container
+// label while preserving the namespace/podName slots of the incoming card label.
+func getDefaultProcessLabel(cardLabel []string, containerInfo container.DevicesInfo) ([]string, string) {
+	containerID, containerName := "", ""
+	cNameArray := getContainerNameArray(containerInfo)
+	if len(cNameArray) == colcommon.ContainerNameLen {
+		containerID = containerInfo.ID
+		containerName = strings.Join(cNameArray, "_")
+	}
+	newCardLabel := make([]string, len(cardLabel))
+	copy(newCardLabel, cardLabel)
+	// containerName in process info is namespace_podName_containerName
+	newCardLabel[len(newCardLabel)-1] = containerName
+	return newCardLabel, containerID
+}
+
+// buildProcessCardLabel builds the card label for a process metric after its PID is
+// matched to a container, filling the namespace/podName/containerName slots with the
+// matched container's values, and returns the matched container ID.
+func buildProcessCardLabel(cardLabel []string, containerInfo container.DevicesInfo) ([]string, string) {
+	cNameArray := getContainerNameArray(containerInfo)
+	if len(cNameArray) != colcommon.ContainerNameLen {
+		return cardLabel, containerInfo.ID
+	}
+	namespaceValue := cNameArray[colcommon.NameSpaceIdx]
+	podNameValue := cNameArray[colcommon.PodNameIdx]
+	containerName := cNameArray[colcommon.ConNameIdx]
+	if len(cardLabel) > cardLabelWihtContainerInfoLen {
+		// containerName in process info is namespace_podName_containerName
+		cardLabel[len(cardLabel)-containerNameIndexOffsetInCardLabel] = strings.Join(
+			[]string{namespaceValue, podNameValue, containerName}, "_")
+		cardLabel[len(cardLabel)-podNameIndexOffsetInCardLabel] = podNameValue
+		cardLabel[len(cardLabel)-namespaceIndexOffsetInCardLabel] = namespaceValue
+
+	}
+	return cardLabel, containerInfo.ID
+}
+
+// findContainerForPID matches the given chip process PID to a container. It first
+// checks the host PIDs cached in DevicesInfo.PIDs collected from the container
+// runtime socket, then falls back to reading /proc/{pid}/cgroup (mainly works in
+// binary mode where the host /proc is accessible).
+func findContainerForPID(pid int32, containerInfos []container.DevicesInfo) (container.DevicesInfo, bool) {
+	for _, info := range containerInfos {
+		if _, ok := info.PIDs[pid]; ok {
+			return info, true
+		}
+	}
+	return container.DevicesInfo{}, false
+}
+
 // UpdateTelegraf updates the base info of the chip
 func (c *BaseInfoCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 	caches := getChipCaches(n, c)
 	for _, chip := range chips {
 		cache, ok := caches[chip.PhyId]

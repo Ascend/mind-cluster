@@ -273,7 +273,7 @@ func (c *UbCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colco
 
 // UpdatePrometheus update prometheus metrics
 func (c *UbCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache ubCache, cardLabel []string) {
 		timestamp := cache.timestamp
 		promUpdateUbInfo(ch, cache, timestamp, cardLabel)
@@ -313,7 +313,7 @@ func promUpdateUbInfo(ch chan<- prometheus.Metric, cache ubCache,
 
 // UpdateTelegraf update telegraf
 func (c *UbCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 	caches := colcommon.GetInfoFromCache[ubCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
 		cache, ok := caches[chip.PhyId]

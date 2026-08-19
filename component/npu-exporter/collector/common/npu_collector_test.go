@@ -74,6 +74,10 @@ const (
 
 type mockContainerRuntimeOperator struct{}
 
+func (operator *mockContainerRuntimeOperator) GetContainerPIDs(ctx context.Context, id string) ([]uint32, error) {
+	return []uint32{}, nil
+}
+
 // Init implements ContainerRuntimeOperator
 func (operator *mockContainerRuntimeOperator) Init() error {
 	return nil

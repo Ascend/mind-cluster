@@ -97,7 +97,7 @@ func TestGather(t *testing.T) {
 			patches.ApplyFuncReturn(common.GetChipListWithVNPU, nil)
 			patches.ApplyMethodFunc(common.ChainForSingleGoroutine[0], "UpdateTelegraf",
 				func(ch chan<- common.TelegrafMetric, n *common.NpuCollector,
-					containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
+					containerMap map[int32][]container.DevicesInfo, chips []common.HuaWeiAIChip) {
 					ch <- common.TelegrafMetric{
 						DeviceID: common.NoDeviceID,
 						VDevID:   common.NoDeviceID,

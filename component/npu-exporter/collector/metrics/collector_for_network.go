@@ -148,7 +148,7 @@ func (c *NetworkCollector) CollectToCache(n *colcommon.NpuCollector, chipList []
 
 // UpdatePrometheus update prometheus metrics
 func (c *NetworkCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 	if colcommon.DevType == api.Ascend910A5 {
 		// Update Npu specific metrics
 		updateSingleChipNpu := func(chipWithVnpu colcommon.HuaWeiAIChip, cache netInfoNPUCache, cardLabel []string) {
@@ -185,7 +185,7 @@ func (c *NetworkCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colc
 
 // UpdateTelegraf update telegraf metrics
 func (c *NetworkCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
+	containerMap map[int32][]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 	if colcommon.DevType == api.Ascend910A5 {
 		// Update Npu specific metrics
 		caches := colcommon.GetInfoFromCache[netInfoNPUCache](n, colcommon.GetCacheKey(c))

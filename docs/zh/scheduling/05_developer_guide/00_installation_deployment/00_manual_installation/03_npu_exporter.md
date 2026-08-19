@@ -62,7 +62,13 @@
 </tr>
 <tr id="row_container_metrics"><td class="cellrowborder" valign="top" width="29.970000000000002%" headers="mcps1.2.3.1.1 "><p id="p_container_metrics_cat">容器相关指标</p>
 </td>
-<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><ul id="ol_container_metrics"><li>仅支持Prometheus场景下，NPU卡挂载到K8s的Pod中时展示相关指标，不支持Telegraf场景展示容器相关指标。</li><li>Prometheus场景下，若NPU卡未挂载到K8s的Pod中，则各指标label中的container_name、namespace、pod_name为空。</li><li>解析Pod挂载NPU卡信息时，优先解析容器中是否存在ASCEND_VISIBLE_DEVICE环境变量，请确保镜像中未预置该环境变量，避免干扰。</li><li>请勿使用特权模式启动业务容器，如使用特权启动业务容器，可能会出现业务进程实际使用的NPU卡和MindCluster组件分配的NPU卡不一致的情况。</li></ul>
+<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><ul id="ol_container_metrics"><li>仅支持Prometheus场景下，NPU卡挂载到K8s的Pod中时展示相关指标，不支持Telegraf场景展示容器相关指标。</li><li>Prometheus场景下，若NPU卡未挂载到K8s的Pod中，则各指标label中的container_name、namespace、pod_name为空。</li><li>解析Pod挂载NPU卡信息时，优先解析容器中是否存在ASCEND_VISIBLE_DEVICE环境变量，请确保镜像中未预置该环境变量，避免干扰。</li><li>请勿使用特权模式启动业务容器，如使用特权启动业务容器，可能会出现业务进程实际使用的NPU卡和MindCluster组件分配的NPU卡不一致的情况。</li>
+<li>一张NPU卡被多个Pod挂载的场景下，容器相关label展示规则如下：
+   <ul>
+     <li>芯片级指标：一张卡对应多个Pod时，pod_name、namespace、container_name为not_displayed_for_multi_pod，其余label字段正常展示。</li>
+     <li>进程级指标：一张卡上每个Pod只有1个业务进程时，pod_name、namespace、container_name正常展示；每个Pod有多个业务进程时，pod_name、namespace、container_name仍展示，但无法保证正确性；当容器运行时为isula时，不支持容器信息展示，pod_name、namespace、container_name为空，其余label字段正常展示。</li>
+   </ul>
+</li></ul>
 </td>
 </tr>
 </tbody>

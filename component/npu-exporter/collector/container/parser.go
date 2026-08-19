@@ -125,6 +125,12 @@ type DevicesInfo struct {
 	// container name, the format is: PodNameSpace_PodName_ContainerName
 	Name    string
 	Devices []int
+	// PIDs are the host PIDs of the processes inside the container, stored as a
+	// set (map[int32]struct{}). They are collected from the container runtime
+	// socket at parse time and used to associate chip process PIDs with their
+	// container in container mode. The set enables O(1) membership lookup per
+	// container without building an intermediate PID → container map.
+	PIDs map[int32]struct{}
 }
 
 // DevicesInfos the device information storage map
@@ -166,20 +172,43 @@ func (dp *DevicesParser) Close() {
 }
 
 func (dp *DevicesParser) parseDevices(ctx context.Context, c *CommonContainer, rs chan<- DevicesInfo) error {
+	// Collect the host PIDs of the processes inside the container through the
+	// mounted container runtime socket. The PIDs are cached in DevicesInfo and
+	// later used to associate chip process PIDs with their container.
+	pids, err := dp.RuntimeOperator.GetContainerPIDs(ctx, c.Id)
+	if err != nil {
+		pids = []uint32{}
+		logger.Debugf("failed to get container %s pids: %v", c.Id, err)
+	}
 	if dp.RuntimeOperator.GetContainerType() == IsulaContainer {
-		return dp.parseDeviceInIsula(ctx, c, rs)
+		return dp.parseDeviceInIsula(ctx, c, rs, pids)
 	}
 
-	return dp.parseDevicesInContainerd(ctx, c, rs)
+	return dp.parseDevicesInContainerd(ctx, c, rs, pids)
+}
+
+// toPIDSet converts the host PIDs returned by the container runtime into a set
+// (map[int32]struct{}) for O(1) membership lookup. PID 0 is not a valid host
+// PID and is filtered out here so that the collector does not need to check it.
+func toPIDSet(pids []uint32) map[int32]struct{} {
+	set := make(map[int32]struct{}, len(pids))
+	for _, pid := range pids {
+		if pid == 0 {
+			continue
+		}
+		set[int32(pid)] = struct{}{}
+	}
+	return set
 }
 
 func (dp *DevicesParser) parseDevicesInContainerd(ctx context.Context, c *CommonContainer,
-	rs chan<- DevicesInfo) error {
+	rs chan<- DevicesInfo, pids []uint32) error {
 	if rs == nil {
 		return errors.New("empty result channel")
 	}
 	deviceInfo := DevicesInfo{}
 	defer func(di *DevicesInfo) {
+		di.PIDs = toPIDSet(pids)
 		rs <- *di
 	}(&deviceInfo)
 
@@ -369,13 +398,15 @@ func (dp *DevicesParser) getDevWithoutAscendRuntimeInIsula(containerInfo isula.C
 	return deviceInfo, nil
 }
 
-func (dp *DevicesParser) parseDeviceInIsula(ctx context.Context, c *CommonContainer, rs chan<- DevicesInfo) error {
+func (dp *DevicesParser) parseDeviceInIsula(ctx context.Context, c *CommonContainer, rs chan<- DevicesInfo,
+	pids []uint32) error {
 	if rs == nil {
 		return errors.New("empty result channel")
 	}
 
 	deviceInfo := DevicesInfo{}
 	defer func(di *DevicesInfo) {
+		di.PIDs = toPIDSet(pids)
 		rs <- *di
 	}(&deviceInfo)
 

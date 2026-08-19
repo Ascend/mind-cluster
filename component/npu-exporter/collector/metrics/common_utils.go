@@ -102,25 +102,40 @@ func getContainerInfoWithDefault(cNameArray []string) (containerName, namespaceV
 	return containerName, namespaceValue, podNameValue
 }
 
-func geenGeneralCardLabel(chip *colcommon.HuaWeiAIChip, containerMap map[int32]container.DevicesInfo) []string {
+// getContainerLabels generates the namespace/pod_name/container_name label values based on
+// the number of containers associated with one card. When one card corresponds to 0 Pods,
+// all three labels are empty; when it corresponds to 1 Pod, they are displayed normally;
+// when it corresponds to multiple Pods, concise English description labels are shown.
+func getContainerLabels(containerInfos []container.DevicesInfo) (containerName, namespaceValue, podNameValue string) {
+	switch {
+	case len(containerInfos) == 1:
+		return getContainerInfoWithDefault(getContainerNameArray(containerInfos[0]))
+	case len(containerInfos) > 1:
+		return colcommon.NotDisplayedForMultiPod, colcommon.NotDisplayedForMultiPod, colcommon.NotDisplayedForMultiPod
+	default:
+		return "", "", ""
+	}
+}
 
-	containerInfo := geenContainerInfo(chip, containerMap)
+func geenGeneralCardLabel(chip *colcommon.HuaWeiAIChip, containerMap map[int32][]container.DevicesInfo) []string {
 
-	containerName, namespaceValue, podNameValue := getContainerInfoWithDefault(getContainerNameArray(containerInfo))
+	containerInfos := geenContainerInfos(chip, containerMap)
+
+	containerName, namespaceValue, podNameValue := getContainerLabels(containerInfos)
 	cardLabel := collectCardLabelValue(chip, namespaceValue, podNameValue, containerName)
 	return cardLabel
 }
 
-func geenContainerInfo(chip *colcommon.HuaWeiAIChip, containerMap map[int32]container.DevicesInfo) container.DevicesInfo {
+func geenContainerInfos(chip *colcommon.HuaWeiAIChip, containerMap map[int32][]container.DevicesInfo) []container.DevicesInfo {
 	deviceID := chip.DeviceID
 	if chip.VDevActivityInfo != nil && chip.VDevActivityInfo.IsVirtualDev {
 		deviceID = int32(chip.VDevActivityInfo.VDevID)
 	}
-	containerInfo, ok := containerMap[deviceID]
+	containerInfos, ok := containerMap[deviceID]
 	if !ok {
-		containerInfo = container.DevicesInfo{}
+		return []container.DevicesInfo{}
 	}
-	return containerInfo
+	return containerInfos
 }
 func collectCardLabelValue(chip *colcommon.HuaWeiAIChip, namespaceValue, podNameValue, containerName string) []string {
 
@@ -169,7 +184,7 @@ func logForUnSupportDevice(isSupport bool, devType string, group string, extInfo
 	}
 }
 
-func updateFrame[T any](cacheKey string, n *colcommon.NpuCollector, containerMap map[int32]container.DevicesInfo,
+func updateFrame[T any](cacheKey string, n *colcommon.NpuCollector, containerMap map[int32][]container.DevicesInfo,
 	chips []colcommon.HuaWeiAIChip, callBack func(chipWithVnpu colcommon.HuaWeiAIChip, cache T, cardLabel []string)) {
 
 	caches := colcommon.GetInfoFromCache[T](n, cacheKey)
