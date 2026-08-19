@@ -17,7 +17,7 @@
 
 set -e
 
-# BASE_VER supports v1.7.0, v1.9.0, and 1.10+
+# BASE_VER supports v1.9.0, and 1.10+
 if [ ! -n "$1" ]; then
     BASE_VER=v1.12.0
 else
@@ -35,10 +35,6 @@ BASE_PATH=${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-
 CMD_PATH=${GOPATH}/src/volcano.sh/volcano/cmd/
 PKG_PATH=volcano.sh/volcano/pkg
 DATE=$(date "+%Y-%m-%d %H:%M:%S")
-
-function is_1.9_plus() {
-    [[ "$BASE_VER" != "v1.7.0" ]]
-}
 
 function parse_version() {
     version_file="${TOP_DIR}"/service_config.ini
@@ -104,15 +100,6 @@ function patch_all_source() {
       sed -i "s/switch action {/switch action { case \"Ignore\" : return nil/g" "$REPLACE_FILE"
     fi
 
-    if is_1.9_plus; then
-        # Replace klog with v2 version
-        cd $BASE_PATH
-        find . -type f ! -path './.git*/*' ! -path './doc/*' -exec sed -i 's/k8s.io\/klog\"/k8s.io\/klog\/v2\"/g' {} +
-        # Pipeline task patch
-        REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
-        sed -i "s/ji.WaitingTaskNum()+ji.ReadyTaskNum() < job.MinAvailable/ji.WaitingTaskNum()+ji.ReadyTaskNum()+ji.PendingBestEffortTaskNum() < job.MinAvailable/g" "$REPLACE_FILE"
-    fi
-
     # Version-differentiated predicate patch
     if [[ "$BASE_VER" == "v1.9.0" ]]; then
         REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
@@ -127,34 +114,18 @@ function patch_all_source() {
         # 4. Change return nil to return nil, nil inside the addPredicateFn closure
         #    Uses range from the line containing "passed" to the line containing "return nil"
         sed -i '/predicateFn.*passed/,/return nil/s/return nil/return nil, nil/' "$REPLACE_FILE"
-    elif [[ "$BASE_VER" == "v1.7.0" ]]; then
-        REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
-        sed -i '/return api\.NewFitErrWithStatus/,/})/c\       return predicateErr' "$REPLACE_FILE"
     fi
 
     # Node scoring logic patch
     REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/actions/allocate/allocate.go"
-    if [[ "$BASE_VER" == "v1.7.0" ]];then
-          sed -i '
-          /case len(candidateNodes) == 1:/ {
-              N
-              N
-              s/case len(candidateNodes) == 1:.*\n.*\n.*/            default:/
-          }' "$REPLACE_FILE"
-    else
-        sed -i '
-        /case len(nodes) == 1:/ {
-            N
-            N
-            s/case len(nodes) == 1:.*\n.*\n.*/            default:/
-        }' "$REPLACE_FILE"
-    fi
 
-    # K8s version modification exclusive to v1.7
-    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/go.mod"
-    if [[ "$BASE_VER" == "v1.7.0" ]];then
-      sed -i "s/1.25.0/1.25.14/g" "$REPLACE_FILE"
-    fi
+    sed -i '
+    /case len(nodes) == 1:/ {
+        N
+        N
+        s/case len(nodes) == 1:.*\n.*\n.*/            default:/
+    }' "$REPLACE_FILE"
+
     echo "===== Source patch finished ====="
     echo ""
 }

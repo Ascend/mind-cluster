@@ -25,8 +25,8 @@
     回显示例如下。
 
     ```ColdFusion
-    volcanosh/vc-controller-manager      v1.7.0              84c73128cc55        3 days ago          44.5MB
-    volcanosh/vc-scheduler               v1.7.0              e90c114c75b1        3 days ago          188MB
+    volcanosh/vc-controller-manager      v1.9.0              84c73128cc55        3 days ago          44.5MB
+    volcanosh/vc-scheduler               v1.9.0              e90c114c75b1        3 days ago          188MB
     ```
 
     - 是，执行[步骤2](#li823273914318)。
@@ -226,7 +226,7 @@
       template:
     ...
             - name: volcano-scheduler
-              image: volcanosh/vc-scheduler:v1.7.0-v26.1.0   # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
+              image: volcanosh/vc-scheduler:v1.9.0-v26.1.0   # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
               args: [ ...
                   ...
                   <strong>--enable-healthz=true   # 为保证可正常访问Volcano健康检查端口，本参数取值需为"true"</strong>
@@ -428,7 +428,7 @@
     ...
           containers:
             - name: volcano-scheduler
-              image: volcanosh/vc-scheduler:v1.7.0-v26.1.0   # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
+              image: volcanosh/vc-scheduler:v1.9.0-v26.1.0   # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
               command: ["/bin/ash"]
               args: ["-c", "umask 027; <strong>GOMEMLIMIT=15000000000 GOGC=off</strong> /vc-scheduler      <strong># 新增GOMEMLIMIT=15000000000和GOGC=off字段</strong>
                       --scheduler-conf=/volcano.scheduler/volcano-scheduler.conf
@@ -752,25 +752,25 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 集群调度提供的Volcano组件是在开源Volcano的基础上新增了关于NPU调度相关的功能，该功能可通过集成集群调度为开发者提供的Ascend-volcano-plugin插件实现。开源[Volcano](https://volcano.sh/docs/v1.9.0/Home/Introduction)框架支持插件机制供用户注册调度插件，实现不同的调度策略。
 
 >[!NOTE]
->Ascend-volcano-plugin目前支持开源Volcano v1.7.0和v1.9.0版本，且未对开源Volcano框架做修改。
+>Ascend-volcano-plugin目前支持开源Volcano v1.9.0版本，且未对开源Volcano框架做修改。
 
 **操作步骤<a name="section2672154791712"></a>**
 
-1. 依次执行以下命令，在“$GOPATH/src/volcano.sh/”目录下拉取Volcano版本（以v1.7为例）官方开源代码。
+1. 依次执行以下命令，在“$GOPATH/src/volcano.sh/”目录下拉取Volcano版本（以v1.9为例）官方开源代码。
 
     ```shell
     mkdir -p $GOPATH/src/volcano.sh/
     cd $GOPATH/src/volcano.sh/
-    git clone -b release-1.7 https://github.com/volcano-sh/volcano.git
+    git clone -b release-1.9 https://github.com/volcano-sh/volcano.git
     ```
 
 2. 将获取的[ascend-for-volcano](https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-for-volcano)源码重命名为ascend-volcano-plugin，并上传至开源Volcano官方开源代码的插件路径下（“_$GOPATH_/src/volcano.sh/volcano/pkg/scheduler/plugins/”）。
-3. <a name="li627818212613"></a>依次执行以下命令，编译开源Volcano二进制文件和华为NPU调度插件so文件。根据开源代码版本，为build.sh脚本选择对应的参数，如v1.7.0。
+3. <a name="li627818212613"></a>依次执行以下命令，编译开源Volcano二进制文件和华为NPU调度插件so文件。根据开源代码版本，为build.sh脚本选择对应的参数，如v1.9.0。
 
     ```shell
     cd $GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/build
     chmod +x build.sh
-    ./build.sh v1.7.0
+    ./build.sh v1.9.0
     ```
 
     >[!NOTE]
@@ -793,11 +793,11 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 
 4. 选择以下两种方式之一，启动volcano-scheduler组件。
     - 使用集群调度组件提供的启动YAML，启动volcano-scheduler组件。
-        1. 执行以下命令，制作Volcano镜像。根据开源代码版本，为镜像选择对应的参数，如v1.7.0。
+        1. 执行以下命令，制作Volcano镜像。根据开源代码版本，为镜像选择对应的参数，如v1.9.0。
 
             ```shell
             # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
-            docker build --no-cache -t volcanosh/vc-scheduler:v1.7.0-v26.1.0 ./ -f ./Dockerfile-scheduler
+            docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0-v26.1.0 ./ -f ./Dockerfile-scheduler
             ```
 
         2. 执行以下命令，启动volcano-scheduler组件。
@@ -842,12 +842,12 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
             ENTRYPOINT ["/vc-scheduler"]
             ```
 
-        2. 依次执行以下命令，制作Volcano镜像。根据开源代码版本，为镜像选择对应的参数，如v1.7.0。
+        2. 依次执行以下命令，制作Volcano镜像。根据开源代码版本，为镜像选择对应的参数，如v1.9.0。
 
             ```shell
             cd $GOPATH/src/volcano.sh/volcano
             # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
-            docker build --no-cache -t volcanosh/vc-scheduler:v1.7.0-v26.1.0 ./ -f installer/dockerfile/scheduler/Dockerfile
+            docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0-v26.1.0 ./ -f installer/dockerfile/scheduler/Dockerfile
             ```
 
         3. 修改volcano-development.yaml，该文件路径为“$GOPATH/src/volcano.sh/volcano/installer/volcano-development.yaml”。
@@ -892,7 +892,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
               template:
             ...
                     - name: volcano-scheduler
-                      image: volcanosh/vc-scheduler:v1.7.0-v26.1.0   # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
+                      image: volcanosh/vc-scheduler:v1.9.0-v26.1.0   # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
                       args:
                         - --logtostderr
                         - --scheduler-conf=/volcano.scheduler/volcano-scheduler.conf

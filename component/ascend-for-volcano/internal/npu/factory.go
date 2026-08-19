@@ -22,7 +22,7 @@ package npu
 import (
 	"strings"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend310/card310x4"

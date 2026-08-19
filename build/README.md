@@ -151,15 +151,14 @@ build_all.sh 末尾会构建 helm-deploy-tool（打包 chart），该组件依�
 
 # 自动拉取源码失败
 
-1. 参考以下命令，分别在/opt/buildtools/volcano_opensource/volcano_1.9/与
-    /opt/buildtools/volcano_opensource/volcano_1.7/目录下手动拉取Volcano v1.9.0与v1.7.0版本官方开源代码。
+1. 参考以下命令，在/opt/buildtools/volcano_opensource/volcano_1.9/目录下手动拉取Volcano v1.9.0版本官方开源代码。
 
         cd /opt/buildtools/volcano_opensource/volcano_1.9/
         git clone -b release-1.9 https://github.com/volcano-sh/volcano.git
 
     > 注：国内网络从 github 克隆 volcano 限速严重。可改用 gitee 镜像加速：
     >
-    > `git clone -b release-1.9 https://gitee.com/mirrors/volcano.git`（v1.7 对应 `-b release-1.7`）。
+    > `git clone -b release-1.9 https://gitee.com/mirrors/volcano.git`
 2. 进入$GOPATH/mind-cluster/ascend-docker-runtime目录，执行ascend-docker-runtime 组件readme
     中编译部分2,3命令手动拉取编译所需包，其中ascend-docker-runtime目录修改为当前目录
 

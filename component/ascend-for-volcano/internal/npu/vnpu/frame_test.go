@@ -87,7 +87,7 @@ func buildGetTaskResourceTestCase02() getTaskResourceTest {
 		fields:  virtualNPUTestFields{},
 		args:    getTaskResourceArgs{task: tempTask, node: tempNode},
 		want:    util.VResource{},
-		wantErr: fmt.Errorf("%s not inital for Aicore is 0", tempNode.Name),
+		wantErr: fmt.Errorf("%s not initial for Aicore is 0", tempNode.Name),
 	}
 }
 

@@ -23,7 +23,7 @@ import (
 	"errors"
 	"strconv"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"

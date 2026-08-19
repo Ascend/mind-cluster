@@ -29,7 +29,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
@@ -232,7 +232,7 @@ func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfo k8s.Nod
 	n.Address = getNPUNodeAddress(npuNode)
 	n.Tasks = npuNode.Tasks
 	n.syncAnnotation(npuNode, nodeInfoOfNodeD, switchInfo)
-	capability := getNPUNodeCapacity(npuNode)
+	capability := npuNode.Capacity.ScalarResources
 	// serverIndex key of node annotations for A5
 	n.ServerIndex = npuNode.Node.Annotations[util.ServerIndexKey]
 	if capability == nil {
@@ -258,25 +258,6 @@ func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfo k8s.Nod
 		klog.V(util.LogDebugLev).Infof("setNodeVNPUInfo %s %s", npuNode.Name, setVNPUErr)
 	}
 	klog.V(util.LogDebugLev).Infof("initNPUNodeByNodeInf <%s> success %#v", npuNode.Name, n.CommonNode)
-	return nil
-}
-
-// getNPUNodeCapacity get npu node Capacity by diff volcano version
-func getNPUNodeCapacity(npuNode *api.NodeInfo) map[v1.ResourceName]float64 {
-	valueOfP := reflect.ValueOf(*npuNode)
-	if valueOfP.Kind() != reflect.Struct {
-		return nil
-	}
-	for i := 0; i < valueOfP.NumField(); i++ {
-		if valueOfP.Type().Field(i).Name != oldCapacity && valueOfP.Type().Field(i).Name != newCapacity {
-			continue
-		}
-		if capacity, ok := valueOfP.Field(i).Interface().(*api.Resource); ok {
-			return capacity.ScalarResources
-		}
-		klog.V(util.LogErrorLev).Info("get capacity failed by not meet the resource type")
-		return nil
-	}
 	return nil
 }
 

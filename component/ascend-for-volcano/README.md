@@ -252,7 +252,7 @@
 
 ## 编译Volcano<a name="section1922947135013"></a>
 
-1. 执行以下命令，在“$GOPATH/src/volcano.sh/“目录下拉取Volcano v1.9.0（或v1.7.0）版本官方开源代码。
+1. 执行以下命令，在“$GOPATH/src/volcano.sh/“目录下拉取Volcano v1.9.0版本官方开源代码。
 
    **cd** **$GOPATH/src/volcano.sh/**\
    **git clone -b release-1.9 <https://github.com/volcano-sh/volcano.git>**
@@ -310,7 +310,7 @@
     </table>
 
    >![](doc/figures/icon-note.gif) **说明：**\
-   >_\{__version__\}_：表示volcano框架版本号。取值为：v1.7.0、v1.9.0。\
+   >_\{__version__\}_：表示volcano框架版本号。取值为：v1.9.0、v1.12.0、v1.15.0。\
    > _\{__arch__\}_：表示Volcano二进制文件架构。取值为：x86_64、aarch64。
    >
    >![](doc/figures/icon-note.gif) **说明：**\

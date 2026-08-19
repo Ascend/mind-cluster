@@ -21,12 +21,21 @@ export PATH=$GOPATH/bin:$PATH
 
 VOLCANO_PLUGIN_PKG="${GOPATH}"/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/...
 
-function replace_node_predicate_v17() {
-    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
+ function replace_node_predicate_v19() {
+     REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
 
-    sed -i '/return api\.NewFitErrWithStatus/,/})/c\       return predicateErr' "$REPLACE_FILE"
-    sed -i '/predicateFn.*passed/,/return nil/s/return nil/return nil/' "$REPLACE_FILE"
-}
+     # 1. Change closure signature: error -> ([]*api.Status, error)
+     sed -i "s/api.NodeInfo) error {/api.NodeInfo) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
+     # 2. Change convertToNPUFitError signature: error -> ([]*api.Status, error)
+     sed -i "s/predicateErr error) error {/predicateErr error) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
+     # 3. Replace return api.NewFitErrWithStatus(...) with return []*api.Status{}, predicateErr
+     #    Assumes the return statements are on a single line (as in your example).
+     #    Matches up to the semicolon.
+     sed -i '/return api\.NewFitErrWithStatus/,/})/c\       return []*api.Status{}, predicateErr' "$REPLACE_FILE"
+     # 4. Change return nil to return nil, nil inside the addPredicateFn closure
+     #    Uses range from the line containing "passed" to the line containing "return nil"
+     sed -i '/predicateFn.*passed/,/return nil/s/return nil/return nil, nil/' "$REPLACE_FILE"
+ }
 
 function filter_cov_by_tested_pkgs() {
   local tested_pkgs
@@ -44,7 +53,7 @@ function filter_cov_by_tested_pkgs() {
 }
 
 cd "${GOPATH}"/src/volcano.sh/volcano
-replace_node_predicate_v17
+replace_node_predicate_v19
 go get github.com/agiledragon/gomonkey/v2@v2.8.0
 go get github.com/smartystreets/goconvey@v1.6.4
 go mod vendor

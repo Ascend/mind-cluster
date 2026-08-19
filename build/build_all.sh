@@ -30,12 +30,6 @@ TOP_DIR=$(realpath "${CUR_DIR}"/..)
 cp -rf "$TOP_DIR"/component/* ${GOPATH}/
 if [[ ! -d /opt/buildtools/volcano_opensource ]]; then
     mkdir -p /opt/buildtools/volcano_opensource/volcano_1.9/
-    mkdir -p /opt/buildtools/volcano_opensource/volcano_1.7/
-fi
-
-if [[ ! -d /opt/buildtools/volcano_opensource/volcano_1.7/volcano ]]; then
-    cd /opt/buildtools/volcano_opensource/volcano_1.7
-    git clone -b release-1.7 https://github.com/volcano-sh/volcano.git
 fi
 
 if [[ ! -d /opt/buildtools/volcano_opensource/volcano_1.9/volcano ]]; then

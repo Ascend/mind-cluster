@@ -253,7 +253,7 @@ func fakeNPUNodeNilDeviceInfo(name string) *plugin.NPUNode {
 	return &plugin.NPUNode{
 		CommonNode: plugin.CommonNode{
 			Name:       name,
-			Capability: nodeInfo.Capability.ScalarResources,
+			Capability: nodeInfo.Capacity.ScalarResources,
 			Allocate:   nodeInfo.Allocatable.ScalarResources,
 			Idle:       nodeInfo.Idle.ScalarResources,
 			Annotation: nodeInfo.Node.Annotations,
@@ -272,7 +272,7 @@ func fakeNPUNodeWithDeviceInfo(name string) *plugin.NPUNode {
 	npuNode := &plugin.NPUNode{
 		CommonNode: plugin.CommonNode{
 			Name:       name,
-			Capability: nodeInfo.Capability.ScalarResources,
+			Capability: nodeInfo.Capacity.ScalarResources,
 			Allocate:   nodeInfo.Allocatable.ScalarResources,
 			Idle:       nodeInfo.Idle.ScalarResources,
 			Annotation: anno,

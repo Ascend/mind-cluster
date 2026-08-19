@@ -18,7 +18,7 @@
 package util
 
 import (
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 // MergeUnique is the union function but keep only one same item
