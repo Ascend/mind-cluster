@@ -18,13 +18,14 @@
 import re
 from typing import List
 
+from ascend_fd_tk.core.common.diag_enum import NpuType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
 from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
 from ascend_fd_tk.core.model.switch import SwitchInfo
 
 
-@register_analyzer
+@register_analyzer(generation=[NpuType.A3, NpuType.A5])
 class OpticalInvalidAnalyzer(Analyzer):
     _LOS_ALARM_ERR_CODE = 0x8130059
     _LOS_ALARM_ERR_PATTERN = re.compile(r"EntPhysicalName=([^,]+).*Reason=([^)]+)")

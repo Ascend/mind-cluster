@@ -50,6 +50,9 @@ class HostReportData(DiagReportData):
     sn_num: str = ""  # 主机SN
     npu_id: str = ""  # NPU ID
     chip_phy_id: str = ""  # 物理芯片ID
+    optical_id: str = ""  # 光模块ID
+    nic_id: str = ""  # 网卡名
+    port_id: str = ""  # 网卡端口
     room_name: str = ""  # 机房名称
     cabinet_id: str = ""  # 机柜编号
 
@@ -72,6 +75,7 @@ class SwitchReportData(DiagReportData):
     sn_num: str = ""  # 交换机SN
     swi_name: str = ""  # 交换机名
     interface: str = ""  # 交换机端口
+    optical_id: str = ""  # 光模块ID
     room_name: str = ""  # 机房名称
     cabinet_id: str = ""  # 机柜编号
 
@@ -88,17 +92,31 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         constants.FAULT_TYPE_SWITCH: "交换机故障分析(L1&L2&RoCE)",
     }
 
-    # 每种sheet类型的实体排序属性（同时也是实体分组键）
+    # 每种sheet类型的实体排序属性（同时也是最细粒度实体分组键）
+    # host 包含 optical_id/nic_id/port_id：A5 同一 NPU 下多光模块、同一主机多网卡端口的故障
+    # 需分别按光模块/网卡端口分组，避免对应列被错误合并；
+    # 层级合并逻辑见 _compute_merge_ranges，A3 的 optical_id/nic_id/port_id 恒为空串，行为保持不变。
     _ENTITY_SORT_ATTRS: Dict[str, List[str]] = {
-        constants.FAULT_TYPE_HOST: ["host_id", "npu_id", "chip_phy_id"],
+        constants.FAULT_TYPE_HOST: ["host_id", "npu_id", "chip_phy_id", "optical_id", "nic_id", "port_id"],
         constants.FAULT_TYPE_BMC: ["bmc_id", "npu_id", "chip_phy_id"],
-        constants.FAULT_TYPE_SWITCH: ["swi_id", "interface"],
+        constants.FAULT_TYPE_SWITCH: ["swi_id", "interface", "optical_id"],
     }
 
     # 故障列属性（不参与实体合并）
     _FAULT_ATTRS = {"fault_code", "fault_info", "solution", "root_cause_status"}
-    # 第二级合并的故障列属性
+    # 第二级合并的故障列属性（在实体组内合并 solution / root_cause_status）
     _FAULT_MERGE_ATTRS = ["solution", "root_cause_status"]
+
+    # 二级合并的实体分组键：solution/root_cause_status 在此键相同的相邻行间合并。
+    # 与 fault_domain 显示字符串解耦，避免 get_domain_desc() 变化影响合并逻辑。
+    # - host_id/npu_id/chip_phy_id：NPU 侧实体定位（光模块故障时同一 NPU 下不同光模块可合并）
+    # - nic_id/port_id：NIC 侧实体定位（不同网卡/端口不合并，同端口可合并）
+    # - optical_id 不在此列：同一 NPU 下不同光模块的相同建议/根因应合并
+    _FAULT_MERGE_KEY_ATTRS: Dict[str, List[str]] = {
+        constants.FAULT_TYPE_HOST: ["host_id", "npu_id", "chip_phy_id", "nic_id", "port_id"],
+        constants.FAULT_TYPE_BMC: ["bmc_id", "npu_id", "chip_phy_id"],
+        constants.FAULT_TYPE_SWITCH: ["swi_id", "interface", "optical_id"],
+    }
 
     def __init__(
         self,
@@ -151,6 +169,9 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
                 "cabinet_id": "机柜编号",
                 "npu_id": "NPU ID",
                 "chip_phy_id": "物理芯片ID",
+                "optical_id": "光模块ID",
+                "nic_id": "网卡名",
+                "port_id": "网卡端口",
                 **base_mapping,
             }
         elif sheet_type == constants.FAULT_TYPE_BMC:
@@ -169,6 +190,7 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
                 "room_name": "机房名称",
                 "cabinet_id": "机柜编号",
                 "interface": "端口",
+                "optical_id": "光模块ID",
                 **base_mapping,
             }
         else:
@@ -176,28 +198,10 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         return header_mapping
 
     @classmethod
-    def _get_entity_merge_titles(cls, sheet_type: str) -> List[str]:
-        """第一级合并列标题：从header_mapping中排除故障列，自动推导"""
-        header_mapping = cls._create_header_config(sheet_type)
-        return [title for attr, title in header_mapping.items() if attr not in cls._FAULT_ATTRS]
-
-    @classmethod
-    def _get_fault_merge_titles(cls) -> List[str]:
-        """第二级合并列标题：在实体合并基础上按故障域分组"""
-        header_mapping = cls._create_header_config(sheet_type="")
-        return [header_mapping[attr] for attr in cls._FAULT_MERGE_ATTRS if attr in header_mapping]
-
-    @classmethod
     def _get_sort_key(cls, data: Union[HostReportData, BmcReportData, SwitchReportData], sheet_type: str) -> Tuple:
         """获取排序键：实体属性 + fault_domain"""
         sort_attrs = cls._ENTITY_SORT_ATTRS.get(sheet_type, [])
         return tuple(getattr(data, attr, "") for attr in sort_attrs) + (data.fault_domain,)
-
-    @classmethod
-    def _get_entity_key(cls, data: Union[HostReportData, BmcReportData, SwitchReportData], sheet_type: str) -> Tuple:
-        """获取实体分组键（第一级合并依据）"""
-        sort_attrs = cls._ENTITY_SORT_ATTRS.get(sheet_type, [])
-        return tuple(getattr(data, attr, "") for attr in sort_attrs)
 
     def generate_sheet(self) -> None:
         """
@@ -272,6 +276,9 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         data.host_id = domain.host_id
         data.npu_id = domain.npu_id
         data.chip_phy_id = domain.chip_phy_id
+        data.optical_id = domain.optical_id
+        data.nic_id = domain.nic_id
+        data.port_id = domain.port_id
         host_info = self.cluster_info.hosts_info.get(data.host_id)
         if host_info:
             data.hostname = host_info.hostname
@@ -296,6 +303,7 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         domain = diag_result.domain
         data.swi_id = domain.swi_id
         data.interface = domain.interface
+        data.optical_id = domain.optical_id
         swi_info = self.cluster_info.swis_info.get(data.swi_id)
         if swi_info:
             data.sn_num = swi_info.sn
@@ -312,57 +320,63 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
     ) -> List[Tuple[int, int, int, int]]:
         """计算诊断报告的合并区域（两级合并）
 
-        第一级：按实体分组，合并实体列（主机ID、主机名、SN等）
-        第二级：在实体组内按 fault_domain 分组，合并故障列（处理建议、是否根因）
+        一级合并（实体列）：每个实体列按自己的层级键（_ENTITY_SORT_ATTRS 的前 N 个属性）分组相邻行合并。
+            - 排序属性（host_id/npu_id/chip_phy_id/optical_id/nic_id/port_id 等）按其在 _ENTITY_SORT_ATTRS
+              中的位置取层级
+            - 非排序属性（hostname/sn_num/room_name/cabinet_id 等）归到 level=1，与首个排序属性同级
+            例：host 列按 host_id 合并；npu_id 按 host_id+npu_id 合并；optical_id/nic_id/port_id 按各自层级合并
+
+        二级合并（故障列）：solution / root_cause_status 按 _FAULT_MERGE_KEY_ATTRS + solution + root_cause_status
+            三者相同的相邻行合并。
+            - 分组键为显式实体属性列表，与 fault_domain 显示字符串解耦
+            - _FAULT_MERGE_KEY_ATTRS 不含 optical_id：同一 NPU 下不同光模块的相同建议/根因会合并
+            - _FAULT_MERGE_KEY_ATTRS 含 nic_id/port_id：不同网卡/端口的建议/根因不会合并
+
+        扩展性：新增实体列只需更新 _ENTITY_SORT_ATTRS（一级合并自动适配）和 _FAULT_MERGE_KEY_ATTRS
+            （二级合并按需配置）；修改 get_domain_desc() 显示不影响合并逻辑。
         """
         if not data_list:
             return []
 
         title_to_col = {title: idx + 1 for idx, title in enumerate(header_mapping.values())}
-        entity_col_indices = [title_to_col[t] for t in self._get_entity_merge_titles(sheet_type) if t in title_to_col]
-        fault_col_indices = [title_to_col[t] for t in self._get_fault_merge_titles() if t in title_to_col]
-
+        sort_attrs = self._ENTITY_SORT_ATTRS.get(sheet_type, [])
         merge_ranges = []
-        group_start = 0
-        while group_start < len(data_list):
-            group_end = self._find_entity_group_end(data_list, group_start, sheet_type)
-            # 第一级：合并实体列
-            if group_end - group_start > 1:
-                for col in entity_col_indices:
-                    merge_ranges.append((group_start + self._TWO_ROW, col, group_end + 1, col))
-            # 第二级：在实体组内按故障域分组，合并故障列
-            merge_ranges.extend(
-                self._compute_fault_merge_in_group(data_list, group_start, group_end, fault_col_indices)
-            )
-            group_start = group_end
+
+        # 一级合并：实体列层级合并
+        for attr, title in header_mapping.items():
+            if attr in self._FAULT_ATTRS or title not in title_to_col:
+                continue
+            level = sort_attrs.index(attr) + 1 if attr in sort_attrs else 1
+            key_attrs = sort_attrs[:level]
+            merge_ranges.extend(self._compute_col_merge_ranges(data_list, title_to_col[title], key_attrs))
+
+        # 二级合并：故障列（solution / root_cause_status）按实体分组键 + 自身值合并
+        entity_key_attrs = self._FAULT_MERGE_KEY_ATTRS.get(sheet_type, sort_attrs)
+        fault_key_attrs = entity_key_attrs + list(self._FAULT_MERGE_ATTRS)
+        for attr in self._FAULT_MERGE_ATTRS:
+            if attr in header_mapping:
+                col_idx = title_to_col[header_mapping[attr]]
+                merge_ranges.extend(self._compute_col_merge_ranges(data_list, col_idx, fault_key_attrs))
 
         return merge_ranges
 
-    def _find_entity_group_end(self, data_list: List[DiagReportData], group_start: int, sheet_type: str) -> int:
-        """查找实体分组的结束位置（不含），返回第一个不属于当前实体的行索引"""
-        entity_key = self._get_entity_key(data_list[group_start], sheet_type)
-        group_end = group_start + 1
-        while group_end < len(data_list) and self._get_entity_key(data_list[group_end], sheet_type) == entity_key:
-            group_end += 1
-        return group_end
-
-    def _compute_fault_merge_in_group(
+    def _compute_col_merge_ranges(
         self,
         data_list: List[DiagReportData],
-        group_start: int,
-        group_end: int,
-        fault_col_indices: List[int],
+        col_idx: int,
+        key_attrs: List[str],
     ) -> List[Tuple[int, int, int, int]]:
-        """在实体组内按 fault_domain 分组，计算故障列的合并范围"""
+        """按 key_attrs 分组相邻行，合并 col_idx 列"""
+        if not key_attrs:
+            return []
         merge_ranges = []
-        seg_start = group_start
-        while seg_start < group_end:
-            fault_domain = data_list[seg_start].fault_domain
+        seg_start = 0
+        while seg_start < len(data_list):
+            cur_key = tuple(getattr(data_list[seg_start], a, "") for a in key_attrs)
             seg_end = seg_start + 1
-            while seg_end < group_end and data_list[seg_end].fault_domain == fault_domain:
+            while seg_end < len(data_list) and tuple(getattr(data_list[seg_end], a, "") for a in key_attrs) == cur_key:
                 seg_end += 1
             if seg_end - seg_start > 1:
-                for col in fault_col_indices:
-                    merge_ranges.append((seg_start + self._TWO_ROW, col, seg_end + 1, col))
+                merge_ranges.append((seg_start + self._TWO_ROW, col_idx, seg_end + 1, col_idx))
             seg_start = seg_end
         return merge_ranges

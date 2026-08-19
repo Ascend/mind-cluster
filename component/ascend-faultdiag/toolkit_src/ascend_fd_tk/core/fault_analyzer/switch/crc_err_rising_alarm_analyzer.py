@@ -18,6 +18,7 @@
 import re
 from typing import List
 
+from ascend_fd_tk.core.common.diag_enum import NpuType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
@@ -32,7 +33,7 @@ class CrcErrInfo(JsonObj):
         self.if_name = if_name
 
 
-@register_analyzer
+@register_analyzer(generation=[NpuType.A3, NpuType.A5])
 class CrcRisingCheckItem(Analyzer):
     _ERR_CODE = 0x081300BC
     _CRC_ERR_INFO_PATTERN = re.compile(
