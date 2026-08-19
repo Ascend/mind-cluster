@@ -34,7 +34,9 @@ from ascend_fd_tk.core.collect.fetcher.dump_log_fetcher.switch.swi_cli_output_pa
 from ascend_fd_tk.core.collect.fetcher.dump_log_fetcher.switch.swi_cli_output_fetcher import SwiCliOutputFetcher
 from ascend_fd_tk.core.collect.fetcher.dump_log_fetcher.switch.switch_log_path_finder import SwitchLogPathFinder
 from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.bmc_ssh_fetcher import BmcSshFetcher
+from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.generation_probe.factory import create_generation_probe
 from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.host_ssh_fetcher import HostSshFetcher
+from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.host_ssh_fetcher_factory import create_host_ssh_fetcher
 from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.switch_ssh_fetcher import SwiSshFetcher
 from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import CollectType
@@ -70,7 +72,15 @@ class InitFetcher(DiagService):
     async def _check_and_add_executor(conn, fetchers_map, fetcher_type):
         executor = AsyncSSHExecutor(conn.host, conn.port, conn.username, conn.password, conn.private_key)
         executor.ensure_shell_session()
-        if executor.shell_channel:
+        if not executor.shell_channel:
+            return
+        # 需要代际探测的设备（host）先探测再按代际构造；switch/bmc 直接构造
+        probe = create_generation_probe(fetcher_type)
+        if probe is not None:
+            generation, extra = await probe.probe(executor)
+            if fetcher_type is HostSshFetcher:
+                fetchers_map[executor.host] = create_host_ssh_fetcher(executor, generation, npu_mapping_cache=extra)
+        else:
             fetchers_map[executor.host] = fetcher_type(executor)
 
     async def run(self):

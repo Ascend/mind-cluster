@@ -28,6 +28,11 @@ from ascend_fd_tk.core.common.constants import (
 )
 from ascend_fd_tk.core.common.diag_enum import TimeFormat, PowerUnitType
 from ascend_fd_tk.core.common.json_obj import JsonObj
+
+# 代际注册表基础设施（独立模块，避免与 host_a5.py 循环导入）
+from ascend_fd_tk.core.context.host_registry import register_host_info
+
+
 from ascend_fd_tk.core.log_parser.base import FindResult
 from ascend_fd_tk.core.model.optical_module import OpticalModule, OpticalModuleInfo, LanePowerInfo
 from ascend_fd_tk.core.model.threshold import Threshold
@@ -654,6 +659,7 @@ class NpuInfo(JsonObj):
         self.duplex = duplex
 
 
+@register_host_info("A3")
 class HostInfo(JsonObj):
     def __init__(
         self,
@@ -664,10 +670,12 @@ class HostInfo(JsonObj):
         cabinet_id="",
         server_superpod_id="",
         server_index="",
+        chip_generation: str = "A3",
         msnpureport_log: List[FindResult] = None,
         npu_chip_info: Dict[str, NpuChipInfo] = None,
         loopback_info_list: List[NpuChipLoopBackInfo] = None,
     ):
+        # pylint: disable=R0801
         self.host_id = host_id
         self.sn_num = sn_num
         self.hostname = hostname
@@ -675,6 +683,7 @@ class HostInfo(JsonObj):
         self.cabinet_id = cabinet_id
         self.server_superpod_id = server_superpod_id
         self.server_index = server_index
+        self.chip_generation = chip_generation
         self.msnpureport_log = msnpureport_log or []
         self.npu_chip_info = npu_chip_info or {}
         self.loopback_info_list = loopback_info_list or []

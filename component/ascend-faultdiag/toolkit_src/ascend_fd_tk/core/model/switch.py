@@ -90,10 +90,12 @@ class SwiOpticalModel(JsonObj):
     def __init__(
         self,
         interface_name: str = "",
+        optical_id: str = "",
         base_info: List[OpticalModelBaseInfo] = None,
         state_flag_diag_infos: List[OpticalStateFlagDiagInfo] = None,
     ):
         self.interface_name = interface_name
+        self.optical_id = optical_id
         self.base_info: List[OpticalModelBaseInfo] = base_info or []
         self.state_flag_diag_infos: List[OpticalStateFlagDiagInfo] = state_flag_diag_infos or []
 
@@ -307,7 +309,9 @@ class InterfaceFullInfo(JsonObj, OpticalModule):
         if not lane_power_infos:
             lane_power_infos = self.transceiver_info.get_lane_power_infos()
         self._optical_module_info = OpticalModuleInfo(
-            lane_power_infos, self.transceiver_info and self.transceiver_info.manufacture_information.manu_serial_number
+            lane_power_infos,
+            self.transceiver_info and self.transceiver_info.manufacture_information.manu_serial_number,
+            optical_id=self.swi_optical_model.optical_id,
         )
         return self._optical_module_info
 

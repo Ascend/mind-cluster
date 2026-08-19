@@ -16,8 +16,10 @@
 # ==============================================================================
 
 from ascend_fd_tk.core.collect.base import Collector, log_collect_async_event
+from ascend_fd_tk.core.context.register import register_host_collector
 from ascend_fd_tk.core.collect.fetcher.host_fetcher import HostFetcher
 from ascend_fd_tk.core.collect.parser.host_parser import HostParser
+from ascend_fd_tk.core.common.diag_enum import NpuType
 from ascend_fd_tk.core.model.host import (
     HostInfo,
     NpuChipInfo,
@@ -32,6 +34,7 @@ from ascend_fd_tk.core.model.host import (
 )
 
 
+@register_host_collector(NpuType.A3)
 class HostCollector(Collector):
     def __init__(self, fetcher: HostFetcher):
         self.fetcher = fetcher
@@ -39,6 +42,7 @@ class HostCollector(Collector):
 
     @log_collect_async_event()
     async def collect(self) -> HostInfo:
+        # pylint: disable=R0801
         host_id = await self.get_id()
         host_name = await self.fetcher.fetch_hostname()
         msnpureport_log = await self.fetcher.fetch_msnpureport_log()
