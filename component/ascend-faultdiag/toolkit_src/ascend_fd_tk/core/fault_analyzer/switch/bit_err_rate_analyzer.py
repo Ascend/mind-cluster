@@ -16,6 +16,7 @@
 # ==============================================================================
 from typing import List
 
+from ascend_fd_tk.core.common.diag_enum import NpuType
 from ascend_fd_tk.core.common.constants import BIT_ERROR_RATE_LIMIT
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
@@ -23,7 +24,7 @@ from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
 from ascend_fd_tk.utils.helpers import to_float
 
 
-@register_analyzer
+@register_analyzer(generation=[NpuType.A3, NpuType.A5])
 class BitErrRateAnalyzer(Analyzer):
     def analyse(self) -> List[DiagResult]:
         diag_results = []

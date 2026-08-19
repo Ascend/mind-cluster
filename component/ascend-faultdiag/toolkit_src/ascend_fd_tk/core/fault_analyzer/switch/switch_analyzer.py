@@ -17,6 +17,7 @@
 import re
 from typing import List, Dict, Set
 
+from ascend_fd_tk.core.common.diag_enum import NpuType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
 from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
@@ -53,7 +54,7 @@ class AbnormalInfo:
         self.bias_warn = bias_warn or []
 
 
-@register_analyzer
+@register_analyzer(generation=[NpuType.A3, NpuType.A5])
 class SwitchAnalyzer(Analyzer):
     _MAC_DIR_REGEX = re.compile(r"^[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}")
 
@@ -86,7 +87,9 @@ class SwitchAnalyzer(Analyzer):
                 continue
             self.analyzed_switch_names.add(analyzed_tag)
             # 获取对端信息（对端交换机信息+对端交换机端口光模块信息）
-            remote_optical_module_info, domain = self.get_remote_info(interface_mapping_by_name, interface, switch_info)
+            remote_optical_module_info, domain = self.get_remote_info(
+                interface_mapping_by_name, interface, switch_info, optical_module_info.optical_id
+            )
             if not remote_optical_module_info and domain is None:
                 # 与host侧相连或者已经分析
                 continue
@@ -99,9 +102,17 @@ class SwitchAnalyzer(Analyzer):
         return res_list
 
     def get_remote_info(
-        self, interface_mapping_by_name: Dict[str, DeviceInterface], local_interface_name: str, local_switch: SwitchInfo
+        self,
+        interface_mapping_by_name: Dict[str, DeviceInterface],
+        local_interface_name: str,
+        local_switch: SwitchInfo,
+        local_optical_id: str = "",
     ):
-        domain = SwitchDomain(swi_id=local_switch.swi_id, interface=local_interface_name)
+        domain = SwitchDomain(
+            swi_id=local_switch.swi_id,
+            interface=local_interface_name,
+            optical_id=local_optical_id,
+        )
         remove_device = interface_mapping_by_name.get(local_interface_name)
         if not remove_device:
             _DIAG_LOGGER.warning("未收集到交换机[%s]端口[%s]的对端信息", local_switch.name, local_interface_name)

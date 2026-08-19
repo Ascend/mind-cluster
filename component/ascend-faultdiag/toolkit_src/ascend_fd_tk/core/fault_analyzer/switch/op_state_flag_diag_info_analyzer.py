@@ -17,6 +17,7 @@
 
 from typing import List
 
+from ascend_fd_tk.core.common.diag_enum import NpuType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
@@ -32,7 +33,7 @@ class CheckItemInfo(JsonObj):
         self.desc = desc
 
 
-@register_analyzer
+@register_analyzer(generation=[NpuType.A3, NpuType.A5])
 class OpStateFlagDiagInfoAnalyzer(Analyzer):
     """
     检查display optical-module interface xxx 的State Flag信息
@@ -55,7 +56,11 @@ class OpStateFlagDiagInfoAnalyzer(Analyzer):
                 lane_fault_info = '\n'.join(fault_info_list)
                 fault_info = f"端口{op_model.interface_name} flag信息异常：\n{lane_fault_info}"
                 result = DiagResult(
-                    domain=SwitchDomain(swi_id=swi_info.swi_id, interface=op_model.interface_name),
+                    domain=SwitchDomain(
+                        swi_id=swi_info.swi_id,
+                        interface=op_model.interface_name,
+                        optical_id=op_model.optical_id,
+                    ),
                     fault_info=fault_info,
                     suggestion="请检查端口",
                 )
@@ -74,7 +79,7 @@ class OpStateFlagDiagInfoAnalyzer(Analyzer):
                 cur_fault_info = []
                 for idx, check_state in enumerate(check_states):
                     check_state = str(check_state).strip()
-                    if check_state == check_item.normal_value:
+                    if check_state in [check_item.normal_value, "-"]:
                         continue
                     lane_info = f"{('lane' + str(idx) + ' ') if check_item.is_multi_lane else ''}"
                     lane_fault_info = (

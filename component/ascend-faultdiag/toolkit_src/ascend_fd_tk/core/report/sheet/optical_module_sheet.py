@@ -330,10 +330,10 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "host_optical_sn": optical_module_info.sn or getattr(optical_info, 'vendor_serial_number', ""),
             "host_optical_temp": getattr(optical_info, 'temperature', ""),
             "host_optical_vcc": getattr(optical_info, 'vcc', ""),
-            "host_link_speed": npu_chip_info.speed or "",
-            "host_link_duplex": npu_chip_info.duplex or "",
-            "host_net_health": npu_chip_info.net_health or "",
-            "host_link_status": npu_chip_info.link_status or "",
+            "host_link_speed": getattr(npu_chip_info, 'speed', "") or "",
+            "host_link_duplex": getattr(npu_chip_info, 'duplex', "") or "",
+            "host_net_health": getattr(npu_chip_info, 'net_health', "") or "",
+            "host_link_status": getattr(npu_chip_info, 'link_status', "") or "",
             "host_link_up_count": getattr(link_stat_info, 'link_up_count', ""),
             "host_link_down_count": getattr(link_stat_info, 'link_down_count', ""),
             **lane_data,
@@ -478,25 +478,33 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             if not host_info.npu_chip_info:
                 continue
             for chip_id, npu_chip_info in host_info.npu_chip_info.items():
-                optical_module_info = npu_chip_info.get_optical_module_info()
-                if not optical_module_info:
+                # A5 支持单 NPU 多光模块，每个光模块生成一行数据
+                if hasattr(npu_chip_info, 'get_optical_module_infos'):
+                    optical_module_infos = npu_chip_info.get_optical_module_infos()
+                else:
+                    optical_module_infos = [npu_chip_info.get_optical_module_info()]
+                if not optical_module_infos:
                     continue
-                lane_data = self._get_lane_info(optical_module_info)
-                host_data = self._build_host_base_data(
-                    host_id, host_info, npu_chip_info, optical_module_info, lane_data
-                )
+                # peer switch 信息与光模块无关，循环外取一次
                 peer_switch_name, peer_port, peer_switch, peer_interface_info = self._get_peer_switch_info(
                     npu_chip_info
                 )
                 peer_data = self._build_peer_switch_data(peer_switch, peer_interface_info)
-                data = HostToSwitchOpticalModuleData(
-                    peer_switch_name=peer_switch_name,
-                    peer_switch_port=peer_port,
-                    **host_data,
-                    **peer_data,
-                )
-                # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
-                data_list.append(data)
+                for optical_module_info in optical_module_infos:
+                    if not optical_module_info:
+                        continue
+                    lane_data = self._get_lane_info(optical_module_info)
+                    host_data = self._build_host_base_data(
+                        host_id, host_info, npu_chip_info, optical_module_info, lane_data
+                    )
+                    data = HostToSwitchOpticalModuleData(
+                        peer_switch_name=peer_switch_name,
+                        peer_switch_port=peer_port,
+                        **host_data,
+                        **peer_data,
+                    )
+                    # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
+                    data_list.append(data)
         return data_list
 
     def _create_threshold_configs(self) -> List[ThresholdConfig]:

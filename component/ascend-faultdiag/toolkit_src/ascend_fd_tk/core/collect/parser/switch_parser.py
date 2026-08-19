@@ -20,8 +20,19 @@ from typing import List, Dict
 
 from ascend_fd_tk.core.config import port_mapping_config
 from ascend_fd_tk.core.log_parser.base import FindResult
-from ascend_fd_tk.core.model.switch import OpticalModelBaseInfo, InterfaceBrief, SwiOpticalModel, DeviceInterface, \
-    InterfaceMapping, AlarmInfo, InterfaceInfo, BitErrRate, TransceiverInfo, OpticalStateFlagDiagInfo, PortMapping
+from ascend_fd_tk.core.model.switch import (
+    OpticalModelBaseInfo,
+    InterfaceBrief,
+    SwiOpticalModel,
+    DeviceInterface,
+    InterfaceMapping,
+    AlarmInfo,
+    InterfaceInfo,
+    BitErrRate,
+    TransceiverInfo,
+    OpticalStateFlagDiagInfo,
+    PortMapping,
+)
 from ascend_fd_tk.utils import logger
 from ascend_fd_tk.utils.form_parser import FormParser
 from ascend_fd_tk.utils.helpers import split_str, to_int
@@ -33,7 +44,6 @@ INTERFACE_STR = "interface"
 
 
 class SwitchParser:
-
     @staticmethod
     def parse_op_state_flag_diag_info(cmd_res: str) -> List[OpticalStateFlagDiagInfo]:
         titles_dict = {"items": "Items", "status": "Status"}
@@ -45,8 +55,13 @@ class SwitchParser:
     @staticmethod
     def trans_opt_module_results(cmd_res: str):
         titles_dict = {  # 需与标题顺序一致
-            "items": "Items", "value": "Value", "high_alarm": "HighAlarm", "high_warn": "HighWarn",
-            "low_alarm": "LowAlarm", "low_warn": "LowWarn", "status": "Status",
+            "items": "Items",
+            "value": "Value",
+            "high_alarm": "HighAlarm",
+            "high_warn": "HighWarn",
+            "low_alarm": "LowAlarm",
+            "low_warn": "LowWarn",
+            "status": "Status",
         }
         end_sign = "------------"
         parse_data_list = TableParser.parse(cmd_res, titles_dict, separate_title_content_lines_num=1, end_sign=end_sign)
@@ -63,8 +78,10 @@ class SwitchParser:
             info_dict = log_info.info_dict
             if not info_dict:
                 continue
-            group_key = (f"{info_dict.get('chip_id', '')}{info_dict.get('port_id', '')}{info_dict.get('items', '')}"
-                         f"{info_dict.get('lane_id', '')}{info_dict.get('mode', '')}")
+            group_key = (
+                f"{info_dict.get('chip_id', '')}{info_dict.get('port_id', '')}{info_dict.get('items', '')}"
+                f"{info_dict.get('lane_id', '')}{info_dict.get('mode', '')}"
+            )
             current_time = info_dict.get('time', '')
             if group_key not in result_dict or current_time > result_dict[group_key].get('time', ''):
                 result_dict[group_key] = info_dict
@@ -92,7 +109,9 @@ class SwitchParser:
     @classmethod
     def parse_lldp_nei_brief(cls, cmd_res: str) -> List[InterfaceMapping]:
         titles_dict = {  # 需与标题顺序一致
-            "local_interface": "Local Interface", "exptime": "Exptime(s)", "neighbor_interface": "Neighbor Interface",
+            "local_interface": "Local Interface",
+            "exptime": "Exptime(s)",
+            "neighbor_interface": "Neighbor Interface",
             "neighbor_device": "Neighbor Device",
         }
         parse_data_list = TableParser.parse(cmd_res, titles_dict, separate_title_content_lines_num=1)
@@ -196,7 +215,7 @@ class SwitchParser:
             "tp": "TP",
             "chip_id": "Chip",
             "port_id": "Port",
-            "core": "Core"
+            "core": "Core",
         }
         table_data_list = TableParser.parse(cmd_res, titles_dict, separate_title_content_lines_num=1, end_sign="------")
         mapping_list = [PortMapping.from_dict(data) for data in table_data_list]
@@ -215,15 +234,14 @@ class SwitchParser:
 
     @classmethod
     def parse_opt_module_info_from_line(
-            cls,
-            switch_log_info: List[FindResult],
-            port_mapping: Dict[str, str]) -> List[SwiOpticalModel]:
+        cls, switch_log_info: List[FindResult], port_mapping: Dict[str, str]
+    ) -> List[SwiOpticalModel]:
         convert_dict = {
             "txpower": "TxPower Lane",
             "rxpower": "RxPower Lane",
             "bias": "Bias Lane",
             "SNR0": "HostSNR Lane",
-            "SNR1": "MediaSNR Lane"
+            "SNR1": "MediaSNR Lane",
         }
         filter_info_dict = cls.filter_opt_module_info(switch_log_info)
         swi_opt_model_info = {}
@@ -251,8 +269,13 @@ class SwitchParser:
     @classmethod
     def parse_interface_brief(cls, cmd_res: str) -> List[InterfaceBrief]:
         titles_dict = {
-            "interface": "Interface", "phy": "PHY", "protocol": "Protocol", "in_uti": "InUti",
-            "out_uti": "OutUti", "in_errors": "inErrors", "out_errors": "outErrors",
+            "interface": "Interface",
+            "phy": "PHY",
+            "protocol": "Protocol",
+            "in_uti": "InUti",
+            "out_uti": "OutUti",
+            "in_errors": "inErrors",
+            "out_errors": "outErrors",
         }
         parse_data_list = TableParser.parse(cmd_res, titles_dict)
         interface_info_list = []
@@ -268,15 +291,36 @@ class SwitchParser:
 
     @classmethod
     def parse_opt_module_info_from_table(
-            cls, cmd_res: str, interface_briefs: List[InterfaceBrief]
+        cls, cmd_res: str, interface_briefs: List[InterfaceBrief]
     ) -> List[SwiOpticalModel]:
         cmd_res_list = split_str(cmd_res, "dis optical-module interface")
         optical_model_list = []
         for cmd_res_str, interface_brief in zip(cmd_res_list, interface_briefs):
-            optical_model_base_info = cls.trans_opt_module_results(cmd_res_str)
-            op_state_flag_diag_info = cls.parse_op_state_flag_diag_info(cmd_res_str)
-            if not optical_model_base_info:
-                continue
-            optical_model = SwiOpticalModel(interface_brief.interface, optical_model_base_info, op_state_flag_diag_info)
-            optical_model_list.append(optical_model)
+            block_list = split_str(cmd_res_str, "diagnostic information")
+            for block_text in block_list:
+                optical_id = cls.extract_optical_module_id(block_text)
+                table_list = split_str(block_text, "==============")
+                base_info, diag_flag_info = [], []
+                for table_str in table_list:
+                    if "Digital Diagnostic Monitoring" in table_str:
+                        base_info = cls.trans_opt_module_results(table_str)
+                    if "State-flag Diagnostic Monitoring" in table_str:
+                        diag_flag_info = cls.parse_op_state_flag_diag_info(table_str)
+                if not base_info and not diag_flag_info:
+                    continue
+                optical_model = SwiOpticalModel(interface_brief.interface, optical_id, base_info, diag_flag_info)
+                optical_model_list.append(optical_model)
         return optical_model_list
+
+    @staticmethod
+    def extract_optical_module_id(line: str) -> str:
+        """提取 optical-module(42) 括号内数字。"""
+        key = "optical-module("
+        idx1 = line.find(key)
+        if idx1 < 0:
+            return ""
+        idx2 = line.find(")", idx1)
+        if idx2 < 0:
+            return ""
+        num_str = line[idx1 + len(key) : idx2]
+        return num_str if num_str.isdigit() else ""
