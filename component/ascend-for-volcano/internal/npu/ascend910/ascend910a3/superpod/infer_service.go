@@ -14,7 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package chip8node8sp
+/*
+Package superpod is using for A3 SuperPod affinity schedule.
+*/
+package superpod
 
 import (
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -25,7 +28,7 @@ import (
 
 // isInferServiceJobCheck checks whether current job is an infer service job by reading
 // the inferServiceID label. If it is, the inferServiceID is cached on the handler.
-func (tp *chip8node8sp) isInferServiceJobCheck() bool {
+func (tp *module910SuperPod) isInferServiceJobCheck() bool {
 	if id := inferservice.GetInferServiceID(tp.Label); id != "" {
 		tp.inferServiceID = id
 		return true
@@ -35,7 +38,7 @@ func (tp *chip8node8sp) isInferServiceJobCheck() bool {
 
 // selectNodesForInferService selects nodes for an infer service job with same-super-pod
 // soft affinity, implemented by the shared inferservice package.
-func (tp *chip8node8sp) selectNodesForInferService(task *api.TaskInfo,
+func (tp *module910SuperPod) selectNodesForInferService(task *api.TaskInfo,
 	nodes []*api.NodeInfo) (map[string][]plugin.SuperNode, error) {
 	return inferservice.SelectNodesForInferService(inferservice.InferServiceReq{
 		Jobs:           tp.ScheduleEnv.Jobs,
