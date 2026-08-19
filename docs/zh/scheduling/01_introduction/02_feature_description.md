@@ -110,6 +110,7 @@ NPU Exporter
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[整卡调度](../04_usage/03_basic_scheduling/03_full_npu_scheduling.md)章节进行操作。
 3. Preempt和Reclaim Action的使用样例请参见[潮汐调度最佳实践](../04_usage/10_tidal_scheduling/00_before_you_start.md)章节进行操作。
+4. Ascend插件会基于任务具体的亲和性调度策略选择被驱逐对象，但最终被驱逐的对象是由Volcano框架的多个插件共同决定，因此可能存在最终被驱逐的对象所释放的资源不满足当前任务所需的情况，导致驱逐失败。
 
 ### 多级调度<a name="ZH-CN_TOPIC_0000002511346873"></a>
 
