@@ -542,7 +542,7 @@
 ## Deployment任务及第三方任务yaml参数说明<a name="deploy"></a>
 
 - 在Deployment任务及第三方任务中，可使用的yaml参数说明如下表所示。
-- 直接使用Pod任务调度时，Pod任务yaml参数配置为Deployment任务中spec.template.metadata内容；如需使用gang调度，需要显式创建PodGroup，并在PodGroup中配置最小成员数(spec.minMember)、最少资源数(spec.minResources)，Pod任务yaml指定所属PodGroup。
+- 直接使用Pod任务调度时，Pod任务yaml参数配置为Deployment任务中spec.template.metadata内容；如需使用gang调度，需要显式创建PodGroup，并在PodGroup中配置最小成员数(spec.minMember)、最少资源数(spec.minResources)，Pod任务yaml指定所属PodGroup；Pod任务不支持重调度。
 
 **表 3** Deployment任务关键字段说明
 
