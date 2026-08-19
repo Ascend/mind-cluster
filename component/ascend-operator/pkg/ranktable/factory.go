@@ -57,7 +57,7 @@ func containsNPURequest(containers []corev1.Container) bool {
 
 func useV1dot2(job *mindxdlv1.AscendJob) bool {
 	if policy, schedulePolicyExist := job.Annotations[api.SchedulePolicyAnnoKey]; schedulePolicyExist {
-		return policy == utils.Chip2Node16Sp || policy == utils.Chip2Node8Sp ||
+		return policy == api.Chip2Node16Sp || policy == api.Chip2Node8Sp ||
 			(policy == utils.Multilevel && !useV2dot0(job))
 	}
 	if _, spBlockExit := job.Annotations[utils.AnnoKeyOfSuperPod]; spBlockExit {

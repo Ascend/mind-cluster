@@ -179,6 +179,7 @@ func (s *StatefulSetHandler) createStatefulSet(
 	}
 
 	statefulsetSpec.Template.Labels = common.AddLabelsFromIndexer(statefulsetSpec.Template.Labels, indexer)
+	common.AddInferServiceIDToPodTemplate(instanceSet.Labels, &statefulsetSpec.Template)
 	if statefulsetSpec.Template.Annotations == nil {
 		statefulsetSpec.Template.Annotations = map[string]string{}
 	}

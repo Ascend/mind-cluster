@@ -109,7 +109,7 @@ func TestIsMultiLevelJob(t *testing.T) {
 			convey.So(res, convey.ShouldBeTrue)
 		})
 		convey.Convey("04-job with huawei.com/schedule_policy:chip2-node16-sp will return false", func() {
-			job.SetAnnotations(map[string]string{api.SchedulePolicyAnnoKey: Chip2Node16Sp})
+			job.SetAnnotations(map[string]string{api.SchedulePolicyAnnoKey: api.Chip2Node16Sp})
 			res := IsMultiLevelJob(job)
 			convey.So(res, convey.ShouldBeFalse)
 		})

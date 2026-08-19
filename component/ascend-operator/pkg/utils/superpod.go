@@ -36,10 +36,6 @@ const (
 	HardStrategy = "hard"
 	// SuperPodRankAnno super pod rank annotation key
 	SuperPodRankAnno = "super-pod-rank"
-	// Chip2Node16Sp a3x16 super pod schedule policy
-	Chip2Node16Sp = "chip2-node16-sp"
-	// Chip2Node8Sp a3x8 super pod schedule policy
-	Chip2Node8Sp = "chip2-node8-sp"
 	// Multilevel multi network level schedule policy
 	Multilevel = "multilevel"
 )

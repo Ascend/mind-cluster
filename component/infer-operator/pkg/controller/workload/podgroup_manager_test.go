@@ -24,6 +24,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"infer-operator/pkg/common"
@@ -276,6 +277,30 @@ func TestVolcanoPodGroupManagerCreatePodGroupForInstance(t *testing.T) {
 			ctx := context.Background()
 			err := volcanoManager.createPodGroupForInstance(ctx, instanceSet, indexer, spec)
 			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should not add inferserviceid to PodGroup labels", func() {
+			fakeClient := NewFakeClient().Build()
+			manager := NewVolcanoPodGroupManager(fakeClient)
+			volcanoManager, ok := manager.(*VolcanoPodGroupManager)
+			convey.So(ok, convey.ShouldNotBeNil)
+
+			replicas := int32(1)
+			spec := v1beta1.PodGroupSpec{
+				MinMember: replicas,
+			}
+			instanceSet := CreateTestInstanceSet("test-instance", "default", replicas)
+			instanceSet.Labels[common.InferServiceIDLabelKey] = "test-uid"
+			indexer := GetTestIndexer("test-service", "test-role", "0")
+			ctx := context.Background()
+			err := volcanoManager.createPodGroupForInstance(ctx, instanceSet, indexer, spec)
+			convey.So(err, convey.ShouldBeNil)
+			created := &v1beta1.PodGroup{}
+			err = fakeClient.Get(ctx, types.NamespacedName{
+				Name: common.GetPGNameFromIndexer(indexer), Namespace: "default"}, created)
+			convey.So(err, convey.ShouldBeNil)
+			_, exist := created.Labels[common.InferServiceIDLabelKey]
+			convey.So(exist, convey.ShouldBeFalse)
 		})
 
 		convey.Convey("Should return error when creating PodGroup fails", func() {

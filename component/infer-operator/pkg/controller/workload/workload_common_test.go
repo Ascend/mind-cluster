@@ -496,3 +496,40 @@ func TestForceDeletePodsAfterGrace(t *testing.T) {
 		})
 	})
 }
+
+func TestAddInferServiceIDToPodTemplate(t *testing.T) {
+	convey.Convey("Test AddInferServiceIDToPodTemplate method", t, func() {
+		const (
+			id     = "11111111-2222-3333-4444-555555555555"
+			userID = "custom-xxx"
+		)
+
+		convey.Convey("Should copy inferserviceid to pod template", func() {
+			template := &corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"app": "test"}}}
+			labels := map[string]string{common.InferServiceIDLabelKey: id}
+			common.AddInferServiceIDToPodTemplate(labels, template)
+			convey.So(template.Labels[common.InferServiceIDLabelKey], convey.ShouldEqual, id)
+			convey.So(template.Labels["app"], convey.ShouldEqual, "test")
+		})
+
+		convey.Convey("Should keep user-provided value in pod template", func() {
+			template := &corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{common.InferServiceIDLabelKey: userID}},
+			}
+			common.AddInferServiceIDToPodTemplate(map[string]string{common.InferServiceIDLabelKey: id}, template)
+			convey.So(template.Labels[common.InferServiceIDLabelKey], convey.ShouldEqual, userID)
+		})
+
+		convey.Convey("Should not modify template when instanceSet has no inferserviceid", func() {
+			template := &corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"app": "test"}}}
+			common.AddInferServiceIDToPodTemplate(nil, template)
+			convey.So(template.Labels, convey.ShouldResemble, map[string]string{"app": "test"})
+		})
+
+		convey.Convey("Should create labels map when template has no labels", func() {
+			template := &corev1.PodTemplateSpec{}
+			common.AddInferServiceIDToPodTemplate(map[string]string{common.InferServiceIDLabelKey: id}, template)
+			convey.So(template.Labels[common.InferServiceIDLabelKey], convey.ShouldEqual, id)
+		})
+	})
+}

@@ -19,8 +19,10 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -40,6 +42,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
+	ascendapi "ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	apiv1 "infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
@@ -498,6 +501,19 @@ func (r *InferServiceReconciler) newInstanceSet(is *apiv1.InferService, role api
 			annotations[k] = v
 		}
 	}
+	// Fall back to the schedule policy from the task pod template
+	if _, exist := annotations[ascendapi.SchedulePolicyAnnoKey]; !exist {
+		if policy, ok := getSchedulePolicyFromPodTemplate(role.InstanceSpec); ok {
+			annotations[ascendapi.SchedulePolicyAnnoKey] = policy
+		}
+	}
+	// Auto-inject inferserviceid (InferService UID, unique and label-length safe)
+	if isTargetSuperPodJob(annotations) {
+		if _, exist := labels[common.InferServiceIDLabelKey]; !exist &&
+			!hasInferServiceIDInPodTemplate(role.InstanceSpec) {
+			labels[common.InferServiceIDLabelKey] = string(is.UID)
+		}
+	}
 
 	return &apiv1.InstanceSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -508,6 +524,67 @@ func (r *InferServiceReconciler) newInstanceSet(is *apiv1.InferService, role api
 		},
 		Spec: role,
 	}
+}
+
+// isTargetSuperPodJob checks whether the role targets a super-pod schedule policy
+// that needs auto-injected inferserviceid, i.e. the policy value ends with the
+// SuperPodPolicySuffix. The annotations are the ones already propagated to the
+// InstanceSet from role.WorkloadObjectMeta.Annotations.
+func isTargetSuperPodJob(annotations map[string]string) bool {
+	if annotations == nil {
+		return false
+	}
+	policy, ok := annotations[ascendapi.SchedulePolicyAnnoKey]
+	if ok && len(policy) > len(ascendapi.SuperPodPolicySuffix) &&
+		strings.HasSuffix(policy, ascendapi.SuperPodPolicySuffix) {
+		return true
+	}
+	return false
+}
+
+// podTemplateWrapper extracts the pod template metadata from a workload spec
+// (roles[].spec) without depending on the workload kind.
+type podTemplateWrapper struct {
+	Template struct {
+		Metadata metav1.ObjectMeta `json:"metadata"`
+	} `json:"template"`
+}
+
+// getPodTemplateObjectMeta extracts the pod template metadata from the task
+// workload spec (roles[].spec).
+func getPodTemplateObjectMeta(instanceSpec runtime.RawExtension) (*metav1.ObjectMeta, bool) {
+	if len(instanceSpec.Raw) == 0 {
+		return nil, false
+	}
+	var wrapper podTemplateWrapper
+	if err := json.Unmarshal(instanceSpec.Raw, &wrapper); err != nil {
+		hwlog.RunLog.Warnf("failed to unmarshal workload spec: %v", err)
+		return nil, false
+	}
+	return &wrapper.Template.Metadata, true
+}
+
+// getSchedulePolicyFromPodTemplate reads the schedule policy from the task pod
+// template annotations (roles[].spec.template.metadata.annotations).
+func getSchedulePolicyFromPodTemplate(instanceSpec runtime.RawExtension) (string, bool) {
+	templateObjectMeta, ok := getPodTemplateObjectMeta(instanceSpec)
+	if !ok {
+		return "", false
+	}
+	policy, ok := templateObjectMeta.Annotations[ascendapi.SchedulePolicyAnnoKey]
+	return policy, ok
+}
+
+// hasInferServiceIDInPodTemplate checks whether the task pod template already
+// carries a user-provided inferserviceid label; if so, auto-injection is
+// skipped so instanceSet/workload/pod labels stay consistent with user values.
+func hasInferServiceIDInPodTemplate(instanceSpec runtime.RawExtension) bool {
+	templateObjectMeta, ok := getPodTemplateObjectMeta(instanceSpec)
+	if !ok {
+		return false
+	}
+	_, exist := templateObjectMeta.Labels[common.InferServiceIDLabelKey]
+	return exist
 }
 
 // filterInstanceSetEvents filters InstanceSet events to only process those belonging to an InferService
