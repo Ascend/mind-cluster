@@ -33,7 +33,8 @@
 
 ## 使用场景<a name="section124697813416"></a>
 
-Ascend Docker Runtime组件支持在以下2种场景下使用容器化支持功能。
+Ascend Docker Runtime组件支持在以下3种场景下使用容器化支持功能。
 
 - [在Docker客户端使用](./02_usage_on_the_docker_client.md)
 - [在Containerd客户端使用](./03_usage_on_the_containerd_client.md)
+- [通过crictl命令行工具使用CRI-O](./04_usage_on_the_crio_client.md)
