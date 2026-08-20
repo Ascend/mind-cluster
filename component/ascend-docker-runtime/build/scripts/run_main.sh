@@ -316,12 +316,6 @@ function install()
     fi
     chmod 440 ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
 
-    if [[ -n "${INJECTION_MODE}" ]]; then
-        echo "{\"injectionMode\": \"${INJECTION_MODE}\"}" > ${ASCEND_RUNTIME_CONFIG_DIR}/config.json
-        chmod 640 ${ASCEND_RUNTIME_CONFIG_DIR}/config.json
-        log "[INFO]" "injection-mode set to: ${INJECTION_MODE}"
-    fi
-
     echo "[INFO] install executable files success"
 
     if [[ ${CONFIG_FILE_PATH} == "" ]]; then
@@ -403,8 +397,6 @@ function uninstall()
         log "[ERROR]" "uninstall failed, '${INSTALL_PATH}/script/uninstall.sh ${ISULA} ${INSTALL_SCENE} ${CONFIG_FILE_PATH}' return non-zero"
         exit 1
     fi
-
-    rm -f ${ASCEND_RUNTIME_CONFIG_DIR}/config.json
 
     log "[INFO]" "${RT_LOWER_CASE} uninstall success"
 }
@@ -493,12 +485,6 @@ function upgrade()
         save_install_args
     fi
     chmod 440 ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
-
-    if [[ -n "${INJECTION_MODE}" ]]; then
-        echo "{\"injectionMode\": \"${INJECTION_MODE}\"}" > ${ASCEND_RUNTIME_CONFIG_DIR}/config.json
-        chmod 640 ${ASCEND_RUNTIME_CONFIG_DIR}/config.json
-        log "[INFO]" "injection-mode set to: ${INJECTION_MODE}"
-    fi
 
     echo "[INFO] ${RT_LOWER_CASE} has been installed in: ${INSTALL_PATH}"
     echo "[INFO] upgrade ${RT_LOWER_CASE} success"
