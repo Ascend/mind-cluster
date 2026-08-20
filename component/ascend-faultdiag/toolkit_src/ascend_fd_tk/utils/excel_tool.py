@@ -180,6 +180,12 @@ class ExcelGenerator:
         if isinstance(cell_data, StyledCell):
             return cell_data.value, cell_data.style
 
+        # openpyxl 只能写入基础类型（str/int/float/bool/datetime），
+        # dict/list 等复杂类型需转为字符串，否则 sheet.cell(value=...) 会抛
+        # ValueError: Cannot convert {dict/list} to Excel
+        if isinstance(cell_data, (dict, list, tuple, set)):
+            return str(cell_data) if cell_data else na_rep, CellStyle()
+
         return cell_data, CellStyle()
 
     def add_sheet(

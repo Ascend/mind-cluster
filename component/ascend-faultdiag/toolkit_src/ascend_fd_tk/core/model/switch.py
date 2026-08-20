@@ -311,7 +311,7 @@ class InterfaceFullInfo(JsonObj, OpticalModule):
         self._optical_module_info = OpticalModuleInfo(
             lane_power_infos,
             self.transceiver_info and self.transceiver_info.manufacture_information.manu_serial_number,
-            optical_id=self.swi_optical_model.optical_id,
+            optical_id=self.swi_optical_model and self.swi_optical_model.optical_id,
         )
         return self._optical_module_info
 

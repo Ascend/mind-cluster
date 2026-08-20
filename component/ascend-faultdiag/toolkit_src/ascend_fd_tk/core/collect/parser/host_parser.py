@@ -36,6 +36,8 @@ class HostParser:
     _NET_HEALTH_PATTERN = re.compile(r"net health status: (.+?)$")
     _LINK_STATUS_PATTERN = re.compile(r"link status: (.+?)$")
     _RECORD_PATTERN = re.compile(r'\[devid \d+]\s+(\w+\s+\w+\s+\d+\s+\d+:\d+:\d+\s+\d+)\s+(LINK UP|LINK DOWN)')
+    # HCCNOpticalInfo 中类型为 dict 的字段名集合（与命令输出命名一致），这些字段的空 dict 不应被清理。
+    _DICT_FIELDS = set()
 
     @classmethod
     def parse_optical_info(cls, cmd_res: str) -> HCCNOpticalInfo:
@@ -44,7 +46,20 @@ class HostParser:
         form = FormParser().parse(cmd_res)
         if not form:
             return None
+        # FormParser 对行尾为 ":" 的分组标题会赋空 dict {}，
+        # HCCNOpticalInfo 字段均为 str，空 dict 会导致 Excel 写入报错，统一转为空串。
+        cls._clean_empty_dict(form, cls._DICT_FIELDS)
         return HCCNOpticalInfo.from_dict(form)
+
+    @staticmethod
+    def _clean_empty_dict(form, exclude) -> None:
+        """将 form 中的空 dict 转为空串，但跳过 exclude 集合中的字段。"""
+        exclude = exclude or set()
+        for k, v in list(form.items()):
+            if k in exclude:
+                continue
+            if isinstance(v, dict) and not v:
+                form[k] = ""
 
     @classmethod
     def parse_link_stat_info(cls, cmd_res: str) -> HCCNLinkStatInfo:
