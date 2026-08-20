@@ -47,6 +47,7 @@ const (
 	defaultAscendDockerCli = "/usr/local/bin/ascend-docker-cli"
 	configDir              = api.RunTimeDConfigPath
 	baseConfig             = "base"
+	ubDriverConfig         = "ub_driver"
 	configFileSuffix       = "list"
 	hcclRootInfo           = "/etc/hccl_rootinfo.json"
 	topoDirPath            = "/usr/local/Ascend/driver/topo"
@@ -61,6 +62,7 @@ var (
 	doExec                     = syscall.Exec
 	ascendDockerCliName        = ascendDockerCli
 	defaultAscendDockerCliName = defaultAscendDockerCli
+	ubConfigFilePath           = filepath.Join(configDir, ubDriverConfig+"."+configFileSuffix)
 )
 
 var validRuntimeOptions = [...]string{
@@ -159,6 +161,17 @@ func parseSoftLinkMode(allowLink string) (string, error) {
 	}
 
 	return "", fmt.Errorf("invalid soft link option")
+}
+
+func parseDisableUBMount(disableUBMount string) (bool, error) {
+	if disableUBMount == "True" {
+		return true, nil
+	}
+	if disableUBMount == "" || disableUBMount == "False" {
+		return false, nil
+	}
+
+	return false, fmt.Errorf("invalid disable UB mount option")
 }
 
 func parseOciSpecFile(file string) (*specs.Spec, error) {
@@ -278,11 +291,21 @@ func readMountConfig(dir string, name string) ([]string, []string, error) {
 		}
 		mountPath = absMountPath
 
+		if containsGlob(mountPath) {
+			fileList, dirList := expandGlobPath(mountPath)
+			fileMountList = append(fileMountList, fileList...)
+			dirMountList = append(dirMountList, dirList...)
+			continue
+		}
+
 		stat, err := os.Stat(mountPath)
 		if err != nil {
 			continue // skipping files/dirs with any problems
 		}
 
+		if !checkSymlinkOwner(mountPath, stat) {
+			continue
+		}
 		if stat.Mode().IsRegular() {
 			fileMountList = append(fileMountList, mountPath)
 		} else if stat.Mode().IsDir() {
@@ -291,6 +314,76 @@ func readMountConfig(dir string, name string) ([]string, []string, error) {
 	}
 
 	return fileMountList, dirMountList, nil
+}
+
+// containsGlob checks if a path contains glob wildcard characters
+func containsGlob(path string) bool {
+	return strings.ContainsAny(path, "*?[")
+}
+
+// expandGlobPath expands a glob pattern and returns matched files and directories
+// with symlink validation to ensure targets are in the same directory as the pattern
+func expandGlobPath(pattern string) ([]string, []string) {
+	var fileList, dirList []string
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		hwlog.RunLog.Warnf("failed to glob %s: %v", pattern, err)
+		return fileList, dirList
+	}
+	expectedDir := filepath.Dir(pattern)
+	for _, match := range matches {
+		realPath, err := filepath.EvalSymlinks(match)
+		if err != nil {
+			hwlog.RunLog.Warnf("failed to resolve symlink %s: %v", match, err)
+			continue
+		}
+		if filepath.Dir(realPath) != expectedDir {
+			hwlog.RunLog.Warnf("symlink %s points to %s outside expected dir %s", match, realPath, expectedDir)
+			continue
+		}
+		stat, err := os.Stat(realPath)
+		if err != nil {
+			hwlog.RunLog.Warnf("%s may not exists, error: %v", realPath, err)
+			continue
+		}
+		if !checkSymlinkOwner(match, stat) {
+			continue
+		}
+		if stat.Mode().IsDir() {
+			dirList = append(dirList, match)
+		} else if stat.Mode().IsRegular() {
+			fileList = append(fileList, match)
+		}
+	}
+	return fileList, dirList
+}
+
+// getFileUID extracts the UID from os.FileInfo. Returns 0 if extraction fails.
+var getFileUID = func(info os.FileInfo) uint32 {
+	if stat, ok := info.Sys().(*syscall.Stat_t); ok {
+		return stat.Uid
+	}
+	return 0
+}
+
+// checkSymlinkOwner verifies that if match is a symlink, both the symlink and
+// the real file are owned by root (UID 0). Non-symlink files pass through.
+func checkSymlinkOwner(match string, realStat os.FileInfo) bool {
+	linkStat, err := os.Lstat(match)
+	if err != nil {
+		hwlog.RunLog.Warnf("failed to lstat %s: %v", match, err)
+		return false
+	}
+	if linkStat.Mode()&os.ModeSymlink == 0 {
+		return true
+	}
+	linkUID := getFileUID(linkStat)
+	realUID := getFileUID(realStat)
+	if linkUID != 0 || realUID != 0 {
+		hwlog.RunLog.Warnf("symlink %s (uid=%d) or target (uid=%d) not owned by root", match, linkUID, realUID)
+		return false
+	}
+	return true
 }
 
 func readConfigsOfDir(dir string, configs []string) ([]string, []string, error) {
@@ -333,6 +426,22 @@ func getArgs(cliPath string, containerConfig *containerConfig, fileMountList []s
 	return args
 }
 
+func shouldMountUBDriverFiles(disableUBMount bool) bool {
+	if disableUBMount {
+		return false
+	}
+	_, err := os.Stat(ubConfigFilePath)
+	if err == nil {
+		hwlog.RunLog.Infof("%s exists", ubConfigFilePath)
+		return true
+	}
+	if os.IsNotExist(err) {
+		return false
+	}
+	hwlog.RunLog.Warnf("stat %s failed: %v", ubConfigFilePath, err)
+	return false
+}
+
 // DoPrestartHook parses the environment variables in the container to obtain the files and directories to be mounted.
 func DoPrestartHook() error {
 	containerConfig, err := getContainerConfig()
@@ -345,6 +454,14 @@ func DoPrestartHook() error {
 	}
 
 	mountConfigs := parseMounts(getValueByKey(containerConfig.Env, ascendRuntimeMounts))
+
+	disableUBMount, err := parseDisableUBMount(getValueByKey(containerConfig.Env, api.DisableUBMountEnv))
+	if err != nil {
+		return fmt.Errorf("failed to parse disable UB mount option: %#v", err)
+	}
+	if shouldMountUBDriverFiles(disableUBMount) {
+		mountConfigs = append(mountConfigs, ubDriverConfig)
+	}
 
 	fileMountList, dirMountList, err := readConfigsOfDir(configDir, mountConfigs)
 	if err != nil {
@@ -363,6 +480,11 @@ func DoPrestartHook() error {
 	allowLink, err := parseSoftLinkMode(getValueByKey(containerConfig.Env, ascendAllowLink))
 	if err != nil {
 		return fmt.Errorf("failed to parse soft link mode: %#v", err)
+	}
+
+	if allowLink == "False" && shouldMountUBDriverFiles(disableUBMount) {
+		hwlog.RunLog.Warnf("need UB driver files mounting, but allow link is False, will set allow link to True")
+		allowLink = "True"
 	}
 
 	currentExecPath, err := os.Executable()
