@@ -1,12 +1,12 @@
-﻿# 诊断项参考
+# 诊断项参考
 
-诊断项按设备类型分类，每个诊断项均明确了其在线命令来源和离线日志路径。同一设备可能涉及多个诊断项，每个诊断项对应一个或多个在线命令与离线日志。工具共内置 **40 项** 诊断项，覆盖主机、BMC、交换机、HCCS 及通用维度。
+诊断项按设备类型分类，每个诊断项均明确了其在线命令来源和离线日志路径。同一设备可能涉及多个诊断项，每个诊断项对应一个或多个在线命令与离线日志。工具共内置 **50 项** 诊断项，覆盖主机、BMC、交换机、HCCS 及通用维度。其中 Ascend 950 产品新增 10 项诊断项（6 项光模块 + 4 项 NIC）。
 
 ## 诊断项索引
 
 | 设备类型 | 诊断项数量 | 详细说明 |
 |----------|------------|----------|
-| 主机侧相关诊断 | 18 | [查看](#主机侧相关诊断) |
+| 主机侧相关诊断 | 28 | [查看](#主机侧相关诊断) |
 | BMC 相关诊断 | 2 | [查看](#bmc-相关诊断) |
 | 交换机相关诊断 | 11 | [查看](#交换机相关诊断) |
 | HCCS 相关诊断 | 8 | [查看](#hccs-相关诊断) |
@@ -137,6 +137,75 @@
 </table>
 
 > Host 日志 V1/V2/V3 版本详情请参考 [host 离线日志采集](../05_usage/02_log_collection.md#host-offline-log)。
+
+### Ascend 950 铲平主机侧额外诊断
+
+Ascend 950 产品的主机侧诊断项与 Atlas A3 对应项的诊断逻辑一致，但光模块诊断命令变更为按光模块编号逐个采集：`hccn_tool -g -optical -i {npu_id} -optical_id {optical_id}`。此外，Ascend 950 新增网卡（NIC）SFP lane 级诊断，命令来源为 `hinicadm5 sfp -i {card_name} -p {port_id}`。
+
+<table>
+<thead>
+<tr>
+<th>诊断项</th>
+<th>在线命令</th>
+<th>诊断逻辑</th>
+<th>异常输出示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>光模块在位检测</td>
+<td rowspan="6"><code>hccn_tool -g -optical -i {npu_id} -optical_id {optical_id}</code></td>
+<td>检查光模块是否在位</td>
+<td>光模块未在位，状态：NA</td>
+</tr>
+<tr>
+<td>高功耗使能寄存器状态检测</td>
+<td>检查高功率使能寄存器状态</td>
+<td>光模块处于低功率模式，high power enable reg:0x00</td>
+</tr>
+<tr>
+<td>光模块Los/LoL检测</td>
+<td>检查 TxFault / TxLos / RxLos / TxLol / RxLol Flag 各 lane 状态值是否为 Normal</td>
+<td>光模块 TxLos Flag 指标状态异常：Lane1：0x1</td>
+</tr>
+<tr>
+<td>光模块偏置电流检测</td>
+<td>检查各 lane 的 Bias 值是否超出阈值范围</td>
+<td>光模块Bias异常：Lane1 偏置电流78mA低于阈值90mA</td>
+</tr>
+<tr>
+<td>光模块光功率检测</td>
+<td>检查各 lane 的 TxPower / RxPower 值是否超出阈值范围</td>
+<td>光模块光功率异常：Lane1 RX功率-18.5dBm低于阈值-15dBm</td>
+</tr>
+<tr>
+<td>光模块SNR检测及LANE间差值</td>
+<td>检查各 lane 的 Host SNR / Media SNR 值是否低于阈值，并检查 lane 间差值是否超过阈值</td>
+<td>光模块Host SNR异常：Lane1 Host SNR值7.2dB低于阈值8.0dB</td>
+</tr>
+<tr>
+<td>NIC光模块Los/LoL检测</td>
+<td rowspan="4"><code>hinicadm5 sfp -i {card_name} -p {port_id}</code></td>
+<td>检查网卡端口各 lane 的 TxLos / RxLos / TxCdrLol / RxCdrLol 状态值是否非 0</td>
+<td>网卡端口 Lane1 TxLos 异常：实际值 0x1（正常值 0）</td>
+</tr>
+<tr>
+<td>NIC光模块光功率检测</td>
+<td>检查网卡端口各 lane 的 TxPower / RxPower 值是否超出阈值范围</td>
+<td>网卡端口 tx_power 异常：Lane1 RX功率-18.5dBm低于阈值-15dBm</td>
+</tr>
+<tr>
+<td>NIC光模块偏置电流检测</td>
+<td>检查网卡端口各 lane 的 Bias 值是否超出阈值范围</td>
+<td>网卡端口 bias 异常：Lane1 偏置电流78mA低于阈值90mA</td>
+</tr>
+<tr>
+<td>NIC光模块SNR检测</td>
+<td>检查网卡端口各 lane 的 Host SNR / Media SNR 值是否低于阈值</td>
+<td>网卡端口 host_snr 异常：Lane1 Host SNR值7.2dB低于阈值8.0dB</td>
+</tr>
+</tbody>
+</table>
 
 ## BMC 相关诊断
 
