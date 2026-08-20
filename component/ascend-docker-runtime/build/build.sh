@@ -131,6 +131,7 @@ function copy_file_output()
     chmod 550 run_pkg/*
 
     /bin/cp -f scripts/base.list run_pkg
+    /bin/cp -f scripts/ub_driver.list run_pkg
     /bin/cp -f scripts/base.list_A500 run_pkg
     /bin/cp -f scripts/base.list_A500A2 run_pkg
     /bin/cp -f scripts/base.list_A200 run_pkg
@@ -138,7 +139,7 @@ function copy_file_output()
     /bin/cp -f scripts/base.list_A200IA2 run_pkg
     /bin/cp -f scripts/agreement.txt run_pkg
     /bin/cp -f ${ROOT}/README.md run_pkg
-    chmod 640 run_pkg/base.list* run_pkg/README.md
+    chmod 640 run_pkg/base.list* run_pkg/ub_driver.list run_pkg/README.md
     chmod 440 run_pkg/agreement.txt
 
     /bin/cp -rf ${ROOT}/assets run_pkg

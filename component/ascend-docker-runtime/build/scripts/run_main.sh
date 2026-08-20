@@ -35,6 +35,7 @@ readonly INSTALL_LOG_PATH=${INSTALL_LOG_DIR}/installer.log
 readonly INSTALL_LOG_PATH_BAK=${INSTALL_LOG_DIR}/installer_bak.log
 readonly LOG_SIZE_THRESHOLD=$((20*1024*1024))
 readonly PACKAGE_VERSION=REPLACE_VERSION
+readonly UNIFIED_BUS_DIR="/sys/class/unified_bus"
 
 umask 027
 
@@ -234,6 +235,20 @@ function check_eula()
     done
 }
 
+function prepare_ub_driver_list()
+{
+    if [[ -d "${UNIFIED_BUS_DIR}" ]]; then
+        echo "[INFO] unified bus dir ${UNIFIED_BUS_DIR} exists"
+        check_path ${ASCEND_RUNTIME_CONFIG_DIR}/ub_driver.list
+        if [[ $? != 0 ]]; then
+            log "[ERROR]" "check failed, ${ASCEND_RUNTIME_CONFIG_DIR}/ub_driver.list is invalid"
+            return 1
+        fi
+        cp -f ./ub_driver.list ${ASCEND_RUNTIME_CONFIG_DIR}/ub_driver.list
+        chmod 440 ${ASCEND_RUNTIME_CONFIG_DIR}/ub_driver.list
+    fi
+}
+
 function install()
 {
     check_eula
@@ -315,6 +330,11 @@ function install()
         cp -f ./base.list ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
     fi
     chmod 440 ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
+
+    if ! prepare_ub_driver_list; then
+        log "[ERROR]" "install failed, prepare ub_driver.list failed"
+        exit 1
+    fi
 
     echo "[INFO] install executable files success"
 
@@ -485,6 +505,11 @@ function upgrade()
         save_install_args
     fi
     chmod 440 ${ASCEND_RUNTIME_CONFIG_DIR}/base.list
+
+    if ! prepare_ub_driver_list; then
+        log "[ERROR]" "upgrade failed, prepare ub_driver.list failed"
+        exit 1
+    fi
 
     echo "[INFO] ${RT_LOWER_CASE} has been installed in: ${INSTALL_PATH}"
     echo "[INFO] upgrade ${RT_LOWER_CASE} success"

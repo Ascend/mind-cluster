@@ -1,0 +1,7 @@
+/usr/lib64/libummu*
+/usr/lib64/liburma*
+/usr/lib64/urma
+/usr/lib64/libnl*
+/usr/bin/urma_admin
+/usr/bin/urma_perftest
+/usr/bin/urma_ping

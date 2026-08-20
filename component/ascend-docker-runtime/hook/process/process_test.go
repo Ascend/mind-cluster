@@ -135,39 +135,64 @@ func TestDoPrestartHookPatch1(t *testing.T) {
 		patches := gomonkey.ApplyFuncReturn(getContainerConfig, ctrCfg, nil).
 			ApplyFuncReturn(getValueByKey, testStr).
 			ApplyFuncReturn(parseMounts, []string{testStr}).
-			ApplyFuncReturn(readConfigsOfDir, []string{testStr}, []string{testStr}, nil)
+			ApplyFuncReturn(parseDisableUBMount, false, nil).
+			ApplyFuncReturn(os.Stat, fileInfoMock{}, nil).
+			ApplyFuncReturn(readConfigsOfDir, []string{testStr}, []string{testStr}, nil).
+			ApplyFunc(addUBMount, func(fileMountList []string, dirMountList []string) ([]string, []string) {
+				return fileMountList, dirMountList
+			})
 		defer patches.Reset()
-		convey.Convey("01-parseRuntimeOptions error, should return error", func() {
+		convey.Convey("01-parseDisableUBMount error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(parseDisableUBMount, false, testError)
+			defer patch.Reset()
+			err := DoPrestartHook()
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(parseDisableUBMount, false, nil)
+		convey.Convey("02-readConfigsOfDir error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(readConfigsOfDir, []string{}, []string{}, testError)
+			defer patch.Reset()
+			err := DoPrestartHook()
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(readConfigsOfDir, []string{testStr}, []string{testStr}, nil)
+		convey.Convey("03-parseRuntimeOptions error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(parseRuntimeOptions, []string{testStr}, testError)
 			defer patch.Reset()
 			err := DoPrestartHook()
 			convey.So(err, convey.ShouldBeError)
 		})
 		patches.ApplyFuncReturn(parseRuntimeOptions, []string{testStr}, nil)
-		convey.Convey("02-parseSoftLinkMode error, should return error", func() {
+		convey.Convey("04-parseSoftLinkMode error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(parseSoftLinkMode, "", testError)
 			defer patch.Reset()
 			err := DoPrestartHook()
 			convey.So(err, convey.ShouldBeError)
 		})
 		patches.ApplyFuncReturn(parseSoftLinkMode, testStr, nil)
-		convey.Convey("03-Executable error, should return error", func() {
+		convey.Convey("05-Executable error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(os.Executable, "", testError)
 			defer patch.Reset()
 			err := DoPrestartHook()
 			convey.So(err, convey.ShouldBeError)
 		})
 		patches.ApplyFuncReturn(os.Executable, testStr, nil)
-		convey.Convey("04-Stat error, should return error", func() {
+		convey.Convey("06-Stat error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(os.Stat, fileInfoMock{}, testError)
 			defer patch.Reset()
 			err := DoPrestartHook()
 			convey.So(err, convey.ShouldBeError)
 		})
 		patches.ApplyFuncReturn(os.Stat, fileInfoMock{}, nil).
-			ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil).
 			ApplyFuncReturn(getArgs, []string{testStr})
-		convey.Convey("05-ChangeRuntimeLogMode error, should return error", func() {
+		convey.Convey("07-RealFileChecker error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, testError)
+			defer patch.Reset()
+			err := DoPrestartHook()
+			convey.So(err, convey.ShouldBeError)
+		})
+		patches.ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil)
+		convey.Convey("08-ChangeRuntimeLogMode error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.ChangeRuntimeLogMode, testError)
 			defer patch.Reset()
 			err := DoPrestartHook()
@@ -183,7 +208,11 @@ func TestDoPrestartHookPatch2(t *testing.T) {
 		patches := gomonkey.ApplyFuncReturn(getContainerConfig, ctrCfg, nil).
 			ApplyFuncReturn(getValueByKey, testStr).
 			ApplyFuncReturn(parseMounts, []string{testStr}).
+			ApplyFuncReturn(parseDisableUBMount, false, nil).
 			ApplyFuncReturn(readConfigsOfDir, []string{testStr}, []string{testStr}, nil).
+			ApplyFunc(addUBMount, func(fileMountList []string, dirMountList []string) ([]string, []string) {
+				return fileMountList, dirMountList
+			}).
 			ApplyFuncReturn(parseRuntimeOptions, []string{testStr}, nil).
 			ApplyFuncReturn(parseSoftLinkMode, testStr, nil).
 			ApplyFuncReturn(os.Executable, testStr, nil).
@@ -202,6 +231,23 @@ func TestDoPrestartHookPatch2(t *testing.T) {
 		convey.Convey("07-success, should return nil", func() {
 			err := DoPrestartHook()
 			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("08-allowLink forced to True when allowLink=False and disableUBMount=False", func() {
+			var capturedAllowLink string
+			patchSoftLink := gomonkey.ApplyFuncReturn(parseSoftLinkMode, "False", nil)
+			defer patchSoftLink.Reset()
+			patchGetArgs := gomonkey.ApplyFunc(getArgs,
+				func(cliPath string, containerConfig *containerConfig, fileMountList []string,
+					dirMountList []string, allowLink string) []string {
+					capturedAllowLink = allowLink
+					return []string{testStr}
+				})
+			defer patchGetArgs.Reset()
+			patchDoExec := gomonkey.ApplyFuncReturn(doExec, nil)
+			defer patchDoExec.Reset()
+			err := DoPrestartHook()
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(capturedAllowLink, convey.ShouldEqual, "True")
 		})
 	})
 }
@@ -539,6 +585,128 @@ func TestAddUBMount(t *testing.T) {
 	})
 }
 
+// TestContainsGlob tests the containsGlob function
+func TestContainsGlob(t *testing.T) {
+	convey.Convey("test containsGlob", t, func() {
+		convey.Convey("should return true for patterns with *", func() {
+			convey.So(containsGlob("/usr/lib64/libummu*"), convey.ShouldBeTrue)
+		})
+		convey.Convey("should return true for patterns with ?", func() {
+			convey.So(containsGlob("/usr/lib64/libummu?.so"), convey.ShouldBeTrue)
+		})
+		convey.Convey("should return true for patterns with [", func() {
+			convey.So(containsGlob("/usr/lib64/lib[abc].so"), convey.ShouldBeTrue)
+		})
+		convey.Convey("should return false for exact paths", func() {
+			convey.So(containsGlob("/usr/lib64/libummu.so"), convey.ShouldBeFalse)
+		})
+	})
+}
+
+// TestExpandGlobPathWhenValidFile tests expandGlobPath with a valid glob match
+func TestExpandGlobPathWhenValidFile(t *testing.T) {
+	convey.Convey("test expandGlobPath when glob matches valid files", t, func() {
+		mockGlob := gomonkey.ApplyFunc(filepath.Glob, func(pattern string) ([]string, error) {
+			if strings.Contains(pattern, "ubrma") {
+				return []string{"/usr/lib64/ubrma/lib.so"}, nil
+			}
+			return []string{"/usr/lib64/libummu.so"}, nil
+		})
+		defer mockGlob.Reset()
+		mockEvalSymlinks := gomonkey.ApplyFunc(filepath.EvalSymlinks,
+			func(path string) (string, error) { return path, nil })
+		defer mockEvalSymlinks.Reset()
+		mockStat := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
+			return mockFileInfo{mode: os.ModeTemporary}, nil
+		})
+		defer mockStat.Reset()
+		mockLstat := gomonkey.ApplyFunc(os.Lstat, func(name string) (os.FileInfo, error) {
+			return mockFileInfo{mode: 0}, nil
+		})
+		defer mockLstat.Reset()
+		fileList, dirList := expandGlobPath("/usr/lib64/libummu*")
+		convey.So(len(fileList), convey.ShouldEqual, 1)
+		convey.So(dirList, convey.ShouldBeEmpty)
+	})
+}
+
+// TestExpandGlobPathWhenSymlinkOutsideDir tests expandGlobPath skips symlink outside expected dir
+func TestExpandGlobPathWhenSymlinkOutsideDir(t *testing.T) {
+	convey.Convey("test expandGlobPath when symlink points outside expected dir", t, func() {
+		mockGlob := gomonkey.ApplyFunc(filepath.Glob, func(pattern string) ([]string, error) {
+			return []string{"/usr/lib64/libummu.so"}, nil
+		})
+		defer mockGlob.Reset()
+		mockEvalSymlinks := gomonkey.ApplyFunc(filepath.EvalSymlinks,
+			func(path string) (string, error) { return "/opt/other/libummu.so", nil })
+		defer mockEvalSymlinks.Reset()
+		fileList, dirList := expandGlobPath("/usr/lib64/libummu*")
+		convey.So(fileList, convey.ShouldBeEmpty)
+		convey.So(dirList, convey.ShouldBeEmpty)
+	})
+}
+
+// TestExpandGlobPathWhenSymlinkNotOwnedByRoot tests expandGlobPath skips symlink not owned by root
+func TestExpandGlobPathWhenSymlinkNotOwnedByRoot(t *testing.T) {
+	convey.Convey("test expandGlobPath when symlink is not owned by root", t, func() {
+		mockGlob := gomonkey.ApplyFunc(filepath.Glob, func(pattern string) ([]string, error) {
+			return []string{"/usr/lib64/libummu.so"}, nil
+		})
+		defer mockGlob.Reset()
+		mockEvalSymlinks := gomonkey.ApplyFunc(filepath.EvalSymlinks,
+			func(path string) (string, error) { return path, nil })
+		defer mockEvalSymlinks.Reset()
+		mockStat := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
+			return mockFileInfo{mode: os.ModeTemporary}, nil
+		})
+		defer mockStat.Reset()
+		mockLstat := gomonkey.ApplyFunc(os.Lstat, func(name string) (os.FileInfo, error) {
+			return mockFileInfo{mode: os.ModeSymlink}, nil
+		})
+		defer mockLstat.Reset()
+		mockGetFileUID := gomonkey.ApplyFunc(getFileUID, func(info os.FileInfo) uint32 {
+			return 1000
+		})
+		defer mockGetFileUID.Reset()
+		fileList, dirList := expandGlobPath("/usr/lib64/libummu*")
+		convey.So(fileList, convey.ShouldBeEmpty)
+		convey.So(dirList, convey.ShouldBeEmpty)
+	})
+}
+
+// TestExpandGlobPathWhenRealFileNotOwnedByRoot tests expandGlobPath skips when real file is not owned by root
+func TestExpandGlobPathWhenRealFileNotOwnedByRoot(t *testing.T) {
+	convey.Convey("test expandGlobPath when real file is not owned by root", t, func() {
+		mockGlob := gomonkey.ApplyFunc(filepath.Glob, func(pattern string) ([]string, error) {
+			return []string{"/usr/lib64/libummu.so"}, nil
+		})
+		defer mockGlob.Reset()
+		mockEvalSymlinks := gomonkey.ApplyFunc(filepath.EvalSymlinks,
+			func(path string) (string, error) { return path, nil })
+		defer mockEvalSymlinks.Reset()
+		mockStat := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
+			return mockFileInfo{mode: os.ModeTemporary}, nil
+		})
+		defer mockStat.Reset()
+		mockLstat := gomonkey.ApplyFunc(os.Lstat, func(name string) (os.FileInfo, error) {
+			return mockFileInfo{mode: os.ModeSymlink}, nil
+		})
+		defer mockLstat.Reset()
+		callCount := 0
+		mockGetFileUID := gomonkey.ApplyFunc(getFileUID, func(info os.FileInfo) uint32 {
+			callCount++
+			if callCount == 1 {
+				return 0 // symlink owner is root
+			}
+			return 1000 // real file owner is not root
+		})
+		defer mockGetFileUID.Reset()
+		fileList, dirList := expandGlobPath("/usr/lib64/libummu*")
+		convey.So(fileList, convey.ShouldBeEmpty)
+		convey.So(dirList, convey.ShouldBeEmpty)
+	})
+}
+
 // TestGetArgs tests the function getArgs
 func TestGetArgs(t *testing.T) {
 	tests := []struct {
@@ -649,6 +817,58 @@ func TestReadMountConfig(t *testing.T) {
 			defer patch.Reset()
 			_, _, err := readMountConfig("", "")
 			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestParseDisableUBMount(t *testing.T) {
+	convey.Convey("test parseDisableUBMount", t, func() {
+		convey.Convey("should return True for 'True' input", func() {
+			result, err := parseDisableUBMount("True")
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result, convey.ShouldBeTrue)
+		})
+		convey.Convey("should return False for 'False' input", func() {
+			result, err := parseDisableUBMount("False")
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+		convey.Convey("should return False for empty input", func() {
+			result, err := parseDisableUBMount("")
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+		convey.Convey("should return error for invalid input", func() {
+			_, err := parseDisableUBMount("invalid")
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+// TestShouldMountUBDriverFiles tests shouldMountUBDriverFiles
+func TestShouldMountUBDriverFiles(t *testing.T) {
+	convey.Convey("test shouldMountUBDriverFiles", t, func() {
+		convey.Convey("should return false when disableUBMount is True", func() {
+			result := shouldMountUBDriverFiles(true)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+		convey.Convey("should return true when UB config file exists", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
+			defer patches.Reset()
+			result := shouldMountUBDriverFiles(false)
+			convey.So(result, convey.ShouldBeTrue)
+		})
+		convey.Convey("should return false when UB config file does not exist", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, os.ErrNotExist)
+			defer patches.Reset()
+			result := shouldMountUBDriverFiles(false)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+		convey.Convey("should return false when stat returns other error", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, os.ErrPermission)
+			defer patches.Reset()
+			result := shouldMountUBDriverFiles(false)
+			convey.So(result, convey.ShouldBeFalse)
 		})
 	})
 }

@@ -1,6 +1,6 @@
 # （可选）配置自定义挂载内容<a name="ZH-CN_TOPIC_0000002511427171"></a>
 
-Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/etc/ascend-docker-runtime.d/base.list”中的全部内容，并且Ascend Docker Runtime默认会检查路径“/usr/local/Ascend/driver/lib64/common”和“/usr/local/Ascend/driver/lib64/driver”，如果存在，则会自动添加到LD_LIBRARY_PATH环境变量中，以便npu-smi info命令自动可用。若用户需要挂载文件里的全部路径，则跳过本小节；若用户不需要挂载基础配置文件base.list中的全部内容时，可新增自定义配置文件，减少挂载的内容。自定义配置文件挂载内容须基于base.list文件，操作如下：
+Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/etc/ascend-docker-runtime.d/base.list”和“/etc/ascend-docker-runtime.d/ub_driver.list”中的全部内容，并且Ascend Docker Runtime默认会检查路径“/usr/local/Ascend/driver/lib64/common”、“/usr/local/Ascend/driver/lib64/driver”和“/usr/lib64”，如果存在，则会自动添加到LD_LIBRARY_PATH环境变量中，以便npu-smi info命令自动可用。若用户需要挂载文件里的全部路径，则跳过本小节；若用户不需要挂载基础配置文件base.list和ub_driver.list中的全部内容时，可新增自定义配置文件，减少挂载的内容。自定义配置文件挂载内容须基于base.list文件，操作如下：
 
 1. 进入配置文件目录。
 
@@ -8,7 +8,7 @@ Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/e
     cd /etc/ascend-docker-runtime.d/
     ```
 
-    该目录下已存在基础配置文件base.list，内容即Ascend Docker Runtime默认挂载内容，具体可参见[Ascend Docker Runtime默认挂载内容](../../07_references/05_appendix.md#ascend-docker-runtime默认挂载内容)，原则上不允许用户修改base.list文件。
+    该目录下已存在基础配置文件base.list和ub_driver.list，内容即Ascend Docker Runtime默认挂载内容，具体可参见[Ascend Docker Runtime默认挂载内容](../../07_references/05_appendix.md#ascend-docker-runtime默认挂载内容)，原则上不允许用户修改base.list和ub_driver.list文件。
 
 2. 创建新的配置文件，文件名可自定义（如hostlog.list）。
 
@@ -25,3 +25,4 @@ Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/e
 
     >[!NOTE]
     >ASCEND\_VISIBLE\_DEVICES和ASCEND\_RUNTIME\_MOUNTS参数说明，请参见[表1](./02_usage_on_the_docker_client.md#参数说明)。
+    >ub_driver.list属于UB驱动的挂载配置文件，目前仅支持宿主机OS为openEuler系统。
