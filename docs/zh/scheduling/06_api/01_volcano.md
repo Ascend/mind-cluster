@@ -31,6 +31,7 @@
 |fault-scheduling|任务故障重调度开关|grace、force、off|Volcano|
 |fault-retry-times|任务发生业务面故障可以重调度的次数|0-100|Volcano、Ascend Operator|
 |tor-affinity|交换机亲和性策略|<ul><li>normal-schema</li><li>large-model-schema</li><li>null</li></ul>|Volcano|
+|inferserviceid|推理服务亲和性调度标识，表征当前任务属于哪个推理服务。取值相同的任务会被优先调度至同一框或同一超节点。|字符串，由用户自定义或Infer Operator自动注入|Volcano、Infer Operator|
 |npu-310-strategy|标记推理服务器（插Atlas 300I 推理卡）调度策略|<ul><li>card</li><li>chip</li></ul>|Volcano|
 |pod-rescheduling|是否启用Pod级别重调度。|<ul><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>|Volcano|
 |process-recover-enable|是否启用进程级别重调度。|<ul><li>on：开启进程级别重调度</li><li>其他值或不使用该字段：关闭进程级别重调度</li></ul>|Volcano|
@@ -259,6 +260,15 @@
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul18716519102210"></a><a name="ul18716519102210"></a><ul id="ul18716519102210"><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>hotSwitch：执行亚健康热切，拉起备份Pod后，暂停训练任务，并使用新节点重新拉起训练。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p929902143119"><a name="p929902143119"></a><a name="p929902143119"></a><span id="ph6299326312"><a name="ph6299326312"></a><a name="ph6299326312"></a>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_inferserviceid_pod"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_inferserviceid_pod"><a name="p_inferserviceid_pod"></a><a name="p_inferserviceid_pod"></a>inferserviceid</p>
+</td>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p_inferserviceid_pod_desc">推理服务亲和性调度标识，表征当前任务属于哪个推理服务。取值相同的任务会被优先调度至同一框或同一超节点。</p>
+</td>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p_inferserviceid_pod_val">字符串，由用户自定义或Infer Operator自动注入。</p>
+</td>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p_inferserviceid_pod_comp">Volcano、Infer Operator</p>
 </td>
 </tr>
 </tbody>

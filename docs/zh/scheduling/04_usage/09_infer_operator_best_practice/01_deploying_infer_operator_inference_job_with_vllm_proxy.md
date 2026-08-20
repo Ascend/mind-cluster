@@ -217,6 +217,7 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 ">取值可参考<a href="../../06_api/01_volcano.md#podgroup">参数说明</a>中表3对该字段的说明。
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >根据需要运行任务的节点类型，选取不同的值。</p>
+<p>当取值为超节点调度策略（以-sp结尾）并配置在角色metadata的annotations中时，Infer Operator会自动为同一推理服务下的所有实例配置inferserviceid标签以开启推理服务亲和性调度，详细请参见<a href="./07_configuring_infer_service_affinity_scheduling.md">配置推理服务亲和性调度</a>。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >huawei.com/Ascend910</p>
