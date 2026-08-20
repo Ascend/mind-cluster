@@ -22,7 +22,6 @@ package mount
 
 import (
 	"fmt"
-	"os"
 
 	cdispec "tags.cncf.io/container-device-interface/specs-go"
 )
@@ -73,20 +72,21 @@ type TopologyItem struct {
 }
 
 // Build fetches mounts from the provider and appends HCCL topology mounts.
-// This is the primary entry point called by cdi.BuildSpec.
-func Build(provider Provider) ([]*cdispec.Mount, error) {
+// hostRoot, when non-empty, prefixes the stat target for non-/dev paths
+// (see StatHostPath). This is the primary entry point called by cdi.BuildSpec.
+func Build(provider Provider, hostRoot string) ([]*cdispec.Mount, error) {
 	mounts, err := provider.GetMounts()
 	if err != nil {
 		return nil, fmt.Errorf("cdi: get mounts: %w", err)
 	}
-	return appendTopology(mounts), nil
+	return appendTopology(mounts, hostRoot), nil
 }
 
 // appendTopology appends bind-mounts for HCCL topology artifacts when they
 // exist on the host.
-func appendTopology(mounts []*cdispec.Mount) []*cdispec.Mount {
+func appendTopology(mounts []*cdispec.Mount, hostRoot string) []*cdispec.Mount {
 	for _, item := range TopologyItems {
-		if _, err := os.Stat(item.HostPath); err != nil {
+		if err := StatHostPath(hostRoot, item.HostPath); err != nil {
 			continue
 		}
 		mounts = append(mounts, &cdispec.Mount{

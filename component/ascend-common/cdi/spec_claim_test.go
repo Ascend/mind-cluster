@@ -46,26 +46,26 @@ func TestClaimSpec_Lifecycle(t *testing.T) {
 	}
 
 	// Delete.
-	if err := DeleteClaimSpec("claim-1"); err != nil {
+	if err := DeleteClaimSpec("", "claim-1"); err != nil {
 		t.Fatal("delete failed:", err)
 	}
 }
 
 func TestClaimSpec_Errors(t *testing.T) {
 	t.Run("empty claimUID", func(t *testing.T) {
-		_, _, err := GenerateClaimSpec(ClaimSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "Ascend910"}, ClaimUID: "", Provider: newMockProvider(nil)})
+		_, _, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "Ascend910"}, Provider: newMockProvider(nil)}, "")
 		if err == nil {
 			t.Fatal("expected error")
 		}
 	})
 	t.Run("invalid devType", func(t *testing.T) {
-		_, _, err := GenerateClaimSpec(ClaimSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "Unknown"}, ClaimUID: "c", Provider: newMockProvider(nil)})
+		_, _, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "Unknown"}, Provider: newMockProvider(nil)}, "c")
 		if err == nil {
 			t.Fatal("expected error")
 		}
 	})
 	t.Run("case-sensitive devType", func(t *testing.T) {
-		_, _, err := GenerateClaimSpec(ClaimSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "ascend910"}, ClaimUID: "c", Provider: newMockProvider(nil)})
+		_, _, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "ascend910"}, Provider: newMockProvider(nil)}, "c")
 		if err == nil {
 			t.Fatal("expected error")
 		}
@@ -73,7 +73,7 @@ func TestClaimSpec_Errors(t *testing.T) {
 }
 
 func TestClaimSpec_EmptyLogicIDs(t *testing.T) {
-	_, ids, err := GenerateClaimSpec(ClaimSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{}, DevType: "Ascend910"}, ClaimUID: "claim-empty", Provider: newMockProvider(nil)})
+	_, ids, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{}, DevType: "Ascend910"}, Provider: newMockProvider(nil)}, "claim-empty")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,12 +95,12 @@ func TestClaimSpec_AutoCreateDir(t *testing.T) {
 
 func TestDeleteClaimSpec_EdgeCases(t *testing.T) {
 	t.Run("non-existent spec", func(t *testing.T) {
-		if err := DeleteClaimSpec("x"); err != nil {
+		if err := DeleteClaimSpec("", "x"); err != nil {
 			t.Fatal("should be idempotent:", err)
 		}
 	})
 	t.Run("empty claimUID", func(t *testing.T) {
-		if err := DeleteClaimSpec(""); err != nil {
+		if err := DeleteClaimSpec("", ""); err != nil {
 			t.Fatal(err)
 		}
 	})
