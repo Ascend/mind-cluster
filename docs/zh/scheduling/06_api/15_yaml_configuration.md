@@ -571,13 +571,21 @@
 </td>
 </tr>
 <tr>
-<td rowspan="2">spec.template.metadata.labels['fault-scheduling']</td>
+<td rowspan="4">spec.template.metadata.labels['fault-scheduling']</td>
 <td>grace</td>
 <td>配置任务采用优雅删除模式，并在过程中先优雅删除原Pod，15分钟后若还未成功，使用强制删除原Pod。</td>
 </tr>
 <tr>
 <td>force</td>
 <td>配置任务采用强制删除模式，在过程中强制删除原Pod。</td>
+</tr>
+<tr>
+<td>external-force</td>
+<td>Volcano只写入故障原因到Pod的annotation，Pod删除交由外部组件，比如在<a href="../04_usage/09_infer_operator_best_practice/01_deploying_infer_operator_inference_job_with_vllm_proxy.md">infer-operator</a>的workload中使用此配置，实例级重调度时感知Pod故障并强制删除原Pod。</td>
+</tr>
+<tr>
+<td>external-grace</td>
+<td>Volcano只写入故障原因到Pod的annotation，Pod删除交由外部组件，比如在<a href="../04_usage/09_infer_operator_best_practice/01_deploying_infer_operator_inference_job_with_vllm_proxy.md">infer-operator</a>的workload中使用此配置，实例级重调度时感知Pod故障并优雅删除Pod。</td>
 </tr>
 <tr id="row171754462391"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p15220101916253"><a name="p15220101916253"></a><a name="p15220101916253"></a>{metadata, spec.template.metadata}.labels['ring-controller.atlas']</p>
 </td>
