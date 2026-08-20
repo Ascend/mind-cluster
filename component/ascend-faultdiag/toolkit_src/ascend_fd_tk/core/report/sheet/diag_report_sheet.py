@@ -199,9 +199,13 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
 
     @classmethod
     def _get_sort_key(cls, data: Union[HostReportData, BmcReportData, SwitchReportData], sheet_type: str) -> Tuple:
-        """获取排序键：实体属性 + fault_domain"""
+        """获取排序键：实体属性 + fault_domain
+
+        注意：getattr 的默认值仅在属性不存在时生效；属性存在但值为 None 时仍返回 None，
+        会导致 sorted 比较时 None 与 str 报 TypeError。因此用 `or ""` 把 None 统一转为空串。
+        """
         sort_attrs = cls._ENTITY_SORT_ATTRS.get(sheet_type, [])
-        return tuple(getattr(data, attr, "") for attr in sort_attrs) + (data.fault_domain,)
+        return tuple(getattr(data, attr, "") or "" for attr in sort_attrs) + (data.fault_domain or "",)
 
     def generate_sheet(self) -> None:
         """
@@ -372,9 +376,12 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         merge_ranges = []
         seg_start = 0
         while seg_start < len(data_list):
-            cur_key = tuple(getattr(data_list[seg_start], a, "") for a in key_attrs)
+            cur_key = tuple(getattr(data_list[seg_start], a, "") or "" for a in key_attrs)
             seg_end = seg_start + 1
-            while seg_end < len(data_list) and tuple(getattr(data_list[seg_end], a, "") for a in key_attrs) == cur_key:
+            while (
+                seg_end < len(data_list)
+                and tuple(getattr(data_list[seg_end], a, "") or "" for a in key_attrs) == cur_key
+            ):
                 seg_end += 1
             if seg_end - seg_start > 1:
                 merge_ranges.append((seg_start + self._TWO_ROW, col_idx, seg_end + 1, col_idx))
