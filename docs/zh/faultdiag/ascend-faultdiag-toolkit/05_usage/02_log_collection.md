@@ -43,6 +43,18 @@
 | RoCE 速率 | `hccn_tool -i {chip_phy_id} -speed -g` | RoCE 速率 |
 | RoCE 双工 | `hccn_tool -i {chip_phy_id} -duplex -g` | RoCE 双工模式 |
 
+> 以上命令适用于 Atlas A3 产品。Ascend 950 产品除上述命令外，还会额外采集光模块头版头条信息与网卡 SFP 信息，详见下表。
+
+#### Ascend 950 额外采集命令
+
+| 类别 | 命令 | 用途                                                      |
+|------|------|---------------------------------------------------------|
+| 光模块头版头条 | `hccn_tool -g -optical -i {npu_id}` | NPU 下所有光模块的编号、速率、用途等                                    |
+| 光模块详情 | `hccn_tool -g -optical -i {npu_id} -optical_id {optical_id}` | 单个光模块的硬件属性、序列号、状态标志、监控项（Bias/TxPower/RxPower/SNR）       |
+| 网卡列表 | `hinicadm5 info` | 所有网卡名称                                           |
+| 网卡端口数 | `hinicadm5 info -i {card_name}` | 指定网卡的端口数量                                               |
+| 网卡 SFP 信息 | `hinicadm5 sfp -i {card_name} -p {port_id}` | 指定网卡指定端口的 SFP lane 信息（Bias/TxPower/RxPower/Los/Lol/SNR） |
+
 <a id="host-offline-log"></a>
 
 ### 2. 离线日志采集

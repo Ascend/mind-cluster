@@ -51,6 +51,19 @@ ascend-fd-tk 工具支持的服务器产品如下表所示：
 <td>Atlas A3 推理系列产品</td>
 <td>Atlas 800I A3 超节点服务器</td>
 </tr>
+<tr>
+<td rowspan="4">Ascend 950 系列产品</td>
+<td>Atlas 350 加速卡（Ascend 950PR）</td>
+</tr>
+<tr>
+<td>Atlas 850E 超节点（Ascend 950DT）</td>
+</tr>
+<tr>
+<td>Atlas 650E 服务器（Ascend 950DT）</td>
+</tr>
+<tr>
+<td>Atlas 950 SuperPoD 超节点（Ascend 950DT）</td>
+</tr>
 </tbody>
 </table>
 
