@@ -44,6 +44,14 @@ type FileProvider struct {
 	// Each name corresponds to a <name>.list file under Dir.
 	// If empty, defaults to "base" (reads only base.list).
 	MountNames string
+	// HostRoot is the path where the host root filesystem is mounted inside
+	// the container (e.g. "/host"). When non-empty, existence checks for
+	// non-/dev paths are performed against <HostRoot><path>, since the host
+	// filesystem is only visible under that prefix. /dev device nodes are
+	// stat'd directly (visible via privileged). The emitted HostPath remains
+	// the original host path without the prefix. An empty HostRoot disables
+	// prefixing (compatible with the legacy ascend-docker-runtime usage).
+	HostRoot string
 }
 
 // GetMounts reads specific .list files from the directory based on MountNames,
@@ -134,7 +142,7 @@ func (p *FileProvider) readListFile(path string) ([]*cdispec.Mount, error) {
 			continue
 		}
 
-		if _, err := os.Stat(absPath); err != nil {
+		if err := StatHostPath(p.HostRoot, absPath); err != nil {
 			hwlog.RunLog.Warnf("FileMountProvider: skip non-existent path %q in %s: %v", absPath, path, err)
 			continue
 		}
@@ -152,4 +160,19 @@ func (p *FileProvider) readListFile(path string) ([]*cdispec.Mount, error) {
 	}
 
 	return mounts, nil
+}
+
+// StatHostPath stats the host path for existence. When hostRoot is set,
+// non-/dev paths are prefixed with hostRoot because the host filesystem is
+// mounted under that prefix inside the container. /dev device nodes are
+// visible directly (via privileged) and are stat'd without the prefix. The
+// path is checked as-is when hostRoot is empty (host filesystem visible
+// directly, e.g. ascend-docker-runtime usage).
+func StatHostPath(hostRoot, absPath string) error {
+	if hostRoot == "" || strings.HasPrefix(absPath, "/dev/") {
+		_, err := os.Stat(absPath)
+		return err
+	}
+	_, err := os.Stat(filepath.Join(hostRoot, absPath))
+	return err
 }

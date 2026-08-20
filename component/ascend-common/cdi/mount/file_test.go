@@ -428,3 +428,91 @@ func TestReadListFile_TooManyEntries(t *testing.T) {
 		t.Fatal("expected error for too many entries")
 	}
 }
+
+// =============================================================================
+// FileProvider.GetMounts — HostRoot prefixing
+// =============================================================================
+
+func TestFileProvider_HostRootPrefixesNonDevPath(t *testing.T) {
+	tmpDir := t.TempDir()
+	hostRoot := t.TempDir()
+
+	// Simulate the host filesystem mounted under HostRoot: host /usr/local/lib
+	// appears at <hostRoot>/usr/local/lib inside the container.
+	hostPath := "/usr/local/lib"
+	if err := os.MkdirAll(filepath.Join(hostRoot, "usr", "local", "lib"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	listFile := filepath.Join(tmpDir, "base.list")
+	if err := os.WriteFile(listFile, []byte(hostPath+"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	provider := &FileProvider{Dir: tmpDir, MountNames: "base", HostRoot: hostRoot}
+	mounts, err := provider.GetMounts()
+	if err != nil {
+		t.Fatalf("GetMounts returned error: %v", err)
+	}
+	if len(mounts) != 1 {
+		t.Fatalf("expected 1 mount, got %d", len(mounts))
+	}
+	// The emitted HostPath must be the original host path, without the prefix.
+	if mounts[0].HostPath != hostPath {
+		t.Errorf("HostPath = %q, want %q (no host root prefix)", mounts[0].HostPath, hostPath)
+	}
+	if mounts[0].ContainerPath != hostPath {
+		t.Errorf("ContainerPath = %q, want %q", mounts[0].ContainerPath, hostPath)
+	}
+}
+
+func TestFileProvider_HostRootDevPathNoPrefix(t *testing.T) {
+	if _, err := os.Stat("/dev/null"); err != nil {
+		t.Skip("skipping: /dev/null not available")
+	}
+	tmpDir := t.TempDir()
+	hostRoot := t.TempDir()
+
+	// /dev/null is visible directly in the (privileged) container, so it must
+	// be stat'd without the HostRoot prefix. If it were prefixed, the stat
+	// would fail (<hostRoot>/dev/null does not exist) and the entry would be
+	// skipped.
+	devPath := "/dev/null"
+	listFile := filepath.Join(tmpDir, "base.list")
+	if err := os.WriteFile(listFile, []byte(devPath+"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	provider := &FileProvider{Dir: tmpDir, MountNames: "base", HostRoot: hostRoot}
+	mounts, err := provider.GetMounts()
+	if err != nil {
+		t.Fatalf("GetMounts returned error: %v", err)
+	}
+	if len(mounts) != 1 {
+		t.Fatalf("expected 1 mount for /dev path, got %d", len(mounts))
+	}
+	if mounts[0].HostPath != devPath {
+		t.Errorf("HostPath = %q, want %q", mounts[0].HostPath, devPath)
+	}
+}
+
+func TestFileProvider_HostRootMissingPathSkipped(t *testing.T) {
+	tmpDir := t.TempDir()
+	hostRoot := t.TempDir()
+
+	// The path does not exist under HostRoot, so it should be skipped.
+	missingPath := "/usr/local/missing"
+	listFile := filepath.Join(tmpDir, "base.list")
+	if err := os.WriteFile(listFile, []byte(missingPath+"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	provider := &FileProvider{Dir: tmpDir, MountNames: "base", HostRoot: hostRoot}
+	mounts, err := provider.GetMounts()
+	if err != nil {
+		t.Fatalf("GetMounts returned error: %v", err)
+	}
+	if len(mounts) != 0 {
+		t.Fatalf("expected 0 mounts for missing path under HostRoot, got %d", len(mounts))
+	}
+}

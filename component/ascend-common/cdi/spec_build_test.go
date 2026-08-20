@@ -22,6 +22,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	cdispec "tags.cncf.io/container-device-interface/specs-go"
@@ -245,5 +246,62 @@ func TestBuildSpec_HCCLTopologyFilesMissing(t *testing.T) {
 	}
 	if len(edits.ContainerEdits.Mounts) != 1 {
 		t.Fatalf("got %d mounts, want 1", len(edits.ContainerEdits.Mounts))
+	}
+}
+
+// BuildSpec — HostRoot prefixing for driver library paths
+
+func TestBuildSpec_HostRootPrefixesLibPaths(t *testing.T) {
+	cleanup := setupMocks()
+	defer cleanup()
+
+	hostRoot := t.TempDir()
+	// Simulate driver libraries mounted under HostRoot.
+	for _, sub := range []string{"common", "driver"} {
+		p := filepath.Join(hostRoot, "usr", "local", "Ascend", "driver", "lib64", sub)
+		if err := os.MkdirAll(p, 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	spec, err := BuildSpec(BuildSpecConfig{
+		DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: Ascend910},
+		Provider:     newMockProvider(nil),
+		HostRoot:     hostRoot,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(spec.ContainerEdits.Env) != 1 {
+		t.Fatalf("expected 1 env (LD_LIBRARY_PATH), got %v", spec.ContainerEdits.Env)
+	}
+	if !strings.Contains(spec.ContainerEdits.Env[0], "/usr/local/Ascend/driver/lib64/common") {
+		t.Errorf("Env[0] = %q, want to contain common driver lib path", spec.ContainerEdits.Env[0])
+	}
+	if !strings.Contains(spec.ContainerEdits.Env[0], "/usr/local/Ascend/driver/lib64/driver") {
+		t.Errorf("Env[0] = %q, want to contain driver driver lib path", spec.ContainerEdits.Env[0])
+	}
+}
+
+// BuildSpec — custom Version/Kind override
+
+func TestBuildSpec_CustomVersionAndKind(t *testing.T) {
+	cleanup := setupMocks()
+	defer cleanup()
+
+	spec, err := BuildSpec(BuildSpecConfig{
+		DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: Ascend910},
+		Provider:     newMockProvider(nil),
+		Version:      "0.7.0",
+		Kind:         "example.com/custom",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if spec.Version != "0.7.0" {
+		t.Errorf("Version = %q, want 0.7.0", spec.Version)
+	}
+	if spec.Kind != "example.com/custom" {
+		t.Errorf("Kind = %q, want example.com/custom", spec.Kind)
 	}
 }

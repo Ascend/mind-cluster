@@ -243,7 +243,7 @@ func saveRestoreHCCLItems() func() {
 // type and a mock provider.  It is a shorthand to reduce test boilerplate.
 func writeClaimSpec(t *testing.T, claimUID string, deviceIDs []int, productType string, provider mount.Provider) (string, []string) {
 	t.Helper()
-	specName, ids, err := GenerateClaimSpec(ClaimSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: deviceIDs, DevType: "Ascend910", ProductType: productType}, ClaimUID: claimUID, Provider: provider})
+	specName, ids, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: deviceIDs, DevType: "Ascend910", ProductType: productType}, Provider: provider}, claimUID)
 	if err != nil {
 		t.Fatalf("GenerateClaimSpec: %v", err)
 	}

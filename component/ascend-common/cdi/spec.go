@@ -65,18 +65,22 @@ type BuildSpecConfig struct {
 	// Provider supplies the mount configuration for ContainerEdits.
 	// Use &mount.FileProvider{Dir: "/etc/ascend-docker-runtime.d"} for runtime CDI.
 	Provider mount.Provider
-}
 
-// ClaimSpecConfig holds all configuration for GenerateClaimSpec.
-type ClaimSpecConfig struct {
-	DeviceConfig // embed shared device fields
+	// HostRoot is the path where the host root filesystem is mounted inside
+	// the container (e.g. "/host"). When non-empty, existence checks for
+	// non-/dev paths are performed against <HostRoot><path> (mounts, HCCL
+	// topology, and driver library paths). An empty HostRoot disables
+	// prefixing, which is the behavior for ascend-docker-runtime running on
+	// the host filesystem directly.
+	HostRoot string
 
-	// ClaimUID is the unique identifier for this resource claim.
-	// Must be non-empty. Used as the CDI spec file name: ascend.com-npu_{ClaimUID}.yaml.
-	ClaimUID string
+	// Version is the CDI spec version. Empty falls back to the package
+	// default (cdiVersion).
+	Version string
 
-	// Provider supplies the mount configuration for ContainerEdits.
-	Provider mount.Provider
+	// Kind is the CDI spec kind (device vendor/class identifier). Empty
+	// falls back to the package default (cdiKind).
+	Kind string
 }
 
 // ---------------------------------------------------------------------------
@@ -84,9 +88,8 @@ type ClaimSpecConfig struct {
 // ---------------------------------------------------------------------------
 
 const (
-	cdiVersion      = "0.8.0"
-	cdiKind         = "ascend.com/npu"
-	cdiKindFullName = cdiKind + "="
+	cdiVersion = "0.8.0"
+	cdiKind    = "ascend.com/npu"
 )
 
 // validDevTypes enumerates known device type strings for input validation.
@@ -115,11 +118,12 @@ var ascendDriverLibPaths = []string{
 const ldLibraryPathKey = "LD_LIBRARY_PATH"
 
 // collectAscendLibPaths returns the subset of ascendDriverLibPaths that
-// exist on the filesystem.
-func collectAscendLibPaths() []string {
+// exist on the filesystem. hostRoot, when non-empty, prefixes the stat
+// target for non-/dev paths (see mount.StatHostPath).
+func collectAscendLibPaths(hostRoot string) []string {
 	var paths []string
 	for _, libPath := range ascendDriverLibPaths {
-		if _, err := osStat(libPath); err == nil {
+		if err := mount.StatHostPath(hostRoot, libPath); err == nil {
 			paths = append(paths, libPath)
 		}
 	}
@@ -136,21 +140,30 @@ func collectAscendLibPaths() []string {
 //
 // Used by both GenerateEdits (memory CDI) and GenerateClaimSpec (file CDI).
 func BuildSpec(cfg BuildSpecConfig) (*cdispec.Spec, error) {
+	version := cfg.Version
+	if version == "" {
+		version = cdiVersion
+	}
+	kind := cfg.Kind
+	if kind == "" {
+		kind = cdiKind
+	}
+
 	var mounts []*cdispec.Mount
 	if !cfg.DisableMounts {
 		var err error
-		mounts, err = mount.Build(cfg.Provider)
+		mounts, err = mount.Build(cfg.Provider, cfg.HostRoot)
 		if err != nil {
 			return nil, err
 		}
 	}
 	specEdits := cdispec.ContainerEdits{Mounts: mounts}
-	if libPaths := collectAscendLibPaths(); len(libPaths) > 0 {
+	if libPaths := collectAscendLibPaths(cfg.HostRoot); len(libPaths) > 0 {
 		specEdits.Env = append(specEdits.Env, ldLibraryPathKey+"="+strings.Join(libPaths, ":"))
 	}
 
 	if len(cfg.DeviceIDs) == 0 {
-		return &cdispec.Spec{Version: cdiVersion, Kind: cdiKind, ContainerEdits: specEdits}, nil
+		return &cdispec.Spec{Version: version, Kind: kind, ContainerEdits: specEdits}, nil
 	}
 	if !validDevTypes[cfg.DevType] {
 		return nil, fmt.Errorf("cdi: unknown device type %q", cfg.DevType)
@@ -167,8 +180,8 @@ func BuildSpec(cfg BuildSpecConfig) (*cdispec.Spec, error) {
 	specEdits.DeviceNodes = sharedNodes
 
 	spec := &cdispec.Spec{
-		Version:        cdiVersion,
-		Kind:           cdiKind,
+		Version:        version,
+		Kind:           kind,
 		ContainerEdits: specEdits,
 		Devices:        devices,
 	}
@@ -219,31 +232,25 @@ func validateSpec(spec *cdispec.Spec) error {
 // list of logical device IDs, then writes it to the CDI cache's configured
 // Spec directory using the standard CDI library API.
 //
-// See ClaimSpecConfig for field documentation.
+// claimUID is the unique identifier for the claim; it is used as the CDI
+// spec file name suffix. cfg.Version and cfg.Kind, when empty, fall back to
+// the package defaults.
 //
 // Returns:
 //   - specName:  the generated Spec file name (without extension), used for later removal
 //   - cdidIDs:   fully-qualified CDI device names ("ascend.com/npu={id}")
 //   - err:       non-nil on validation, I/O, or serialisation failure
-func GenerateClaimSpec(cfg ClaimSpecConfig) (string, []string, error) {
-	if cfg.ClaimUID == "" {
+func GenerateClaimSpec(cfg BuildSpecConfig, claimUID string) (string, []string, error) {
+	if claimUID == "" {
 		return "", nil, fmt.Errorf("cdi: claimUID must not be empty")
 	}
 
-	spec, err := BuildSpec(BuildSpecConfig{
-		DeviceConfig: DeviceConfig{
-			DeviceIDs:   cfg.DeviceIDs,
-			DevType:     cfg.DevType,
-			ProductType: cfg.ProductType,
-		},
-		UseVirtual: false,
-		Provider:   cfg.Provider,
-	})
+	spec, err := BuildSpec(cfg)
 	if err != nil {
 		return "", nil, fmt.Errorf("cdi: build spec: %w", err)
 	}
 
-	name, err := cdiapi.GenerateNameForTransientSpec(spec, cfg.ClaimUID)
+	name, err := cdiapi.GenerateNameForTransientSpec(spec, claimUID)
 	if err != nil {
 		return "", nil, fmt.Errorf("cdi: generate spec name: %w", err)
 	}
@@ -254,7 +261,7 @@ func GenerateClaimSpec(cfg ClaimSpecConfig) (string, []string, error) {
 
 	cdidIDs := make([]string, 0, len(cfg.DeviceIDs))
 	for _, id := range cfg.DeviceIDs {
-		cdidIDs = append(cdidIDs, fmt.Sprintf(cdiKindFullName+"%d", id))
+		cdidIDs = append(cdidIDs, fmt.Sprintf("%s=%d", spec.Kind, id))
 	}
 
 	return name, cdidIDs, nil
@@ -263,9 +270,17 @@ func GenerateClaimSpec(cfg ClaimSpecConfig) (string, []string, error) {
 // DeleteClaimSpec removes a previously generated per-claim CDI spec
 // from the CDI cache's configured Spec directory.
 //
-// claimUID is the same unique identifier passed to GenerateClaimSpec.
+// kind is the same CDI kind passed to GenerateClaimSpec (empty falls back to
+// the package default); claimUID is the same unique identifier passed to
+// GenerateClaimSpec.
 // Returns nil when the Spec does not exist (the operation is idempotent).
-func DeleteClaimSpec(claimUID string) error {
-	name := fmt.Sprintf("ascend.com-npu_%s", claimUID)
+func DeleteClaimSpec(kind, claimUID string) error {
+	if kind == "" {
+		kind = cdiKind
+	}
+	name, err := cdiapi.GenerateNameForTransientSpec(&cdispec.Spec{Kind: kind}, claimUID)
+	if err != nil {
+		return fmt.Errorf("cdi: invalid kind %q: %w", kind, err)
+	}
 	return cdiapi.GetDefaultCache().RemoveSpec(name)
 }
