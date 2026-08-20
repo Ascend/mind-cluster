@@ -1,12 +1,19 @@
 # 推理服务亲和性调度
 
-在推理业务场景下，单个推理服务通常由多个推理实例构成，包含若干 Prefill 实例与若干 Decode 实例。
-对于 Atlas 950 SuperPoD，同框内节点间网络通信时延最低、吞吐性能最优，同一超节点内不同框的节点之间通信性能次之；对于 Atlas 850 Server超节点，同一超节点内节点之间的网络通信表现最佳。
-基于上述网络特性，Ascend-for-volcano调度插件支持配置推理服务亲和性调度策略：对于Atlas 950 SuperPoD，优先将同一推理服务的全部实例调度至同一框内，无法满足时，优先将同服务实例调度至同一超节点；对于Atlas 850 Server超节点，优先将同服务实例调度至同一超节点，以此充分发挥网络优势，整体提升推理服务运行性能。
+在推理业务场景下，单个推理服务通常由多个推理实例构成，包含若干Prefill实例与若干Decode实例。
+对于Atlas 950 SuperPoD，同框内节点间网络通信时延最低、吞吐性能最优，同一超节点内不同框的节点之间通信性能次之；对于Atlas 850 Server超节点、Atlas 900 A3 SuperPoD超节点和Atlas 9000 A3 SuperPoD集群算力系统，同一超节点内节点之间的网络通信表现最佳。
+基于上述网络特性，Ascend-for-volcano调度插件支持配置推理服务亲和性调度策略：对于Atlas 950 SuperPoD，优先将同一推理服务的全部实例调度至同一框内，无法满足时，优先将同服务实例调度至同一超节点；对于Atlas 850 Server超节点、Atlas 900 A3 SuperPoD超节点和Atlas 9000 A3 SuperPoD集群算力系统，优先将同服务实例调度至同一超节点，无法满足时回退至其他超节点，以此充分发挥网络优势，整体提升推理服务运行性能。
 
 ## 前置条件
 
 确保Kubernetes集群已经正确部署并配置了Volcano调度器，并且相关的调度插件Ascend-for-volcano已启用。
+
+## 支持的产品形态
+
+- Atlas 950 SuperPoD
+- Atlas 850 Server超节点
+- Atlas 900 A3 SuperPoD 超节点
+- Atlas 9000 A3 SuperPoD 集群算力系统
 
 ## 配置推理服务亲和性调度策略
 
@@ -71,7 +78,7 @@ spec:
           path: /etc/localtime
 </pre>
 
-对于Atlas 850 Server超节点，以Deployment资源为例，推理服务亲和性调度策略的配置与Atlas 950 SuperPoD类似，添加如下加粗部分内容：
+对于Atlas 850 Server超节点、Atlas 900 A3 SuperPoD 超节点、Atlas 9000 A3 SuperPoD集群算力系统，推理服务亲和性调度策略的配置与Atlas 950 SuperPoD类似，以Deployment资源、Atlas 850 Server超节点为例，添加如下加粗部分内容：
 
 <pre codetype="yaml">
 apiVersion: apps/v1
@@ -129,9 +136,15 @@ spec:
           path: /etc/localtime
 </pre>
 
+对于Atlas 900 A3 SuperPoD 超节点和Atlas 9000 A3 SuperPoD 集群算力系统，推理服务亲和性调度策略的配置与上述示例相同，仅需根据硬件形态调整以下取值：
+
+- 将`huawei.com/schedule_policy`修改为`chip2-node16-sp`（Atlas 900 A3 SuperPoD 超节点）或`chip2-node8-sp`（Atlas 9000 A3 SuperPoD 集群算力系统）。
+- 资源名称使用`huawei.com/Ascend910`，即resources中的请求/上限字段与env中`ASCEND_VISIBLE_DEVICES`引用的注解（`metadata.annotations['huawei.com/Ascend910']`）均需使用该名称。
+
 > [!NOTE]
 >
->- 推理服务亲和性调度策略仅支持Atlas 950 SuperPoD与Atlas 850 Server超节点。
+>- 推理服务亲和性调度策略仅支持超节点调度策略（取值以-sp结尾）。
+>- 使用Infer Operator部署推理服务时，若调度策略为超节点调度策略，Infer Operator会自动为同一推理服务下的所有实例配置inferserviceid标签以开启推理服务亲和性调度，无需手动配置，详细请参见[配置推理服务亲和性调度](../../09_infer_operator_best_practice/07_configuring_infer_service_affinity_scheduling.md)。
 >- 针对Atlas 950 SuperPoD，若开启推理服务亲和性调度特性，当前版本下该特性强制要求单个实例不得跨框调度。因此可能出现如下情况：多个框的空闲节点资源总和虽能满足某实例的需求，但这些空闲节点分属不同框，导致实例因无法跨框而处于Pending状态。若希望该实例能够成功调度，可删除labels中的inferserviceid标签以关闭推理亲和性，并将huawei.com/schedule_policy修改为chip8-node8-sp，从而确保单实例不跨超节点调度。
 >- 使用其他类型的K8s资源部署推理服务示例请参见[推理任务类型与硬件型号对应YAML文件](../03_full_npu_scheduling.md#准备任务yaml)，添加对应的label即可开启推理服务亲和性调度策略。
 >- 对于可以生成PodGroup的资源，在PodGroup上添加相应字段也可以实现推理服务亲和性调度。

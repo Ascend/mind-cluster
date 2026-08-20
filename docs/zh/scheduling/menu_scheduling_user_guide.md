@@ -99,6 +99,7 @@
     - [配置推理任务实例级重调度](./04_usage/09_infer_operator_best_practice/04_configuring_rescheduling_inference_job.md)
     - [配置基于负载的弹性扩缩容](./04_usage/09_infer_operator_best_practice/05_configuring_elastic_scaling.md)
     - [容器快照部署及使用](./04_usage/09_infer_operator_best_practice/06_container_snapshot_usage.md)
+    - [配置推理服务亲和性调度](./04_usage/09_infer_operator_best_practice/07_configuring_infer_service_affinity_scheduling.md)
   - [潮汐调度最佳实践](./04_usage/10_tidal_scheduling/menu_tidal_scheduling.md)
     - [使用前必读](./04_usage/10_tidal_scheduling/00_before_you_start.md)
     - [基于Preempt的推理/训练任务的潮汐调度](./04_usage/10_tidal_scheduling/01_preempt_based_alternation.md)
