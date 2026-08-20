@@ -1,4 +1,4 @@
-﻿# Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002479226434"></a>
+# Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002479226434"></a>
 
 - 使用容器化支持、整卡调度、静态vNPU调度、动态vNPU调度、断点续训、弹性训练、推理卡故障恢复或推理卡故障重调度的用户，必须安装Ascend Docker Runtime。
 - 仅使用资源监测的用户，可以不安装Ascend Docker Runtime，请直接跳过本章节。
@@ -6,7 +6,7 @@
 ## 前提条件<a name="section137058405153"></a>
 
 - 安装前，请确保runc文件的用户ID为0。
-- 安装前，Containerd场景下请确保“/etc/containerd/config.toml”文件的用户及用户组为root；Docker场景或Isula场景下请确保“/etc/docker/daemon.json”文件的用户及用户组为root。
+- 安装前，Containerd场景下请确保“/etc/containerd/config.toml”文件的用户及用户组为root；Docker场景或Isula场景下请确保“/etc/docker/daemon.json”文件的用户及用户组为root；CRI-O场景下请确保“/etc/crio/crio.config.d”目录的用户及用户组为root。
 - 安装前，请确保“/etc/ld.so.preload”中配置的so文件的RPATH和RUNPATH不要包含带有相对路径的HDK驱动目录（可以通过“readelf -d xxx.so”命令查看）。
 
 ## 确认安装场景<a name="zh-cn_topic_0000001930317932_section1235447163310"></a>
@@ -32,11 +32,13 @@
         ```shell
         docker --version      # Docker
         containerd --version     # Containerd
+        crio --version     # CRI-O
         ```
 
         - 若回显为Docker的版本信息，表示当前是[Docker场景](#zh-cn_topic_0000001930317932_section1443063532919)。
         - 若回显为Containerd的版本信息，表示当前是[Containerd场景](#zh-cn_topic_0000001930317932_section196591123133116)。
-        - 若同时有Docker和Containerd的版本信息，请用户自行确定任务所要使用的容器运行时。
+        - 若回显为CRI-O的版本信息，表示当前是[CRI-O场景](#zh-cn_topic_0000001930317932_section196591123133117)。
+        - 若同时存在多个容器运行时的版本信息，请用户自行确定任务所要使用的容器运行时。
 
     - K8s集成容器运行时场景：在管理节点执行以下命令。
 
@@ -46,6 +48,7 @@
 
         - 若回显中有Docker信息，表示当前是[K8s集成Docker场景](#zh-cn_topic_0000001930317932_section1443063532919)。
         - 若回显中有Containerd信息，表示当前是[K8s集成Containerd场景](#zh-cn_topic_0000001930317932_section14600174633116)。
+        - 若回显中有CRI-O信息，表示当前是[K8s集成CRI-O场景](#zh-cn_topic_0000001930317932_section14600174633117)。
 
 ## Docker场景下安装Ascend Docker Runtime<a name="zh-cn_topic_0000001930317932_section1443063532919"></a>
 
@@ -240,6 +243,59 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     systemctl daemon-reload && systemctl restart containerd
     ```
 
+## CRI-O场景下安装Ascend Docker Runtime<a name="zh-cn_topic_0000001930317932_section196591123133117"></a>
+
+1. 安装包下载完成后，进入安装包（run包）所在路径。
+
+    ```shell
+    cd <path to run package>
+    ```
+
+2. 执行以下命令，为软件包添加可执行权限。
+
+    ```shell
+    chmod u+x Ascend-docker-runtime_{version}_linux-{arch}.run
+    ```
+
+3. 执行如下命令，校验软件包安装文件的一致性和完整性。
+
+    ```shell
+    ./Ascend-docker-runtime_{version}_linux-{arch}.run --check
+    ```
+
+4. 执行以下命令安装Ascend Docker Runtime，CRI-O场景须指定`--install-scene=crio`。
+
+    - 安装到默认路径下。
+
+        ```shell
+        ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=crio
+        ```
+
+    - 安装到指定路径下，“--install-path”参数为指定的安装路径。
+
+        ```shell
+        ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=crio --install-path=<path>
+        ```
+
+        >[!NOTE]
+        >- 指定安装路径时必须使用绝对路径。
+        >- 安装程序会写入CRI-O drop-in配置文件“/etc/crio/crio.conf.d/99-ascend-runtime.conf”，将“ascend”注册为OCI运行时并设为默认runtime。drop-in目录或文件不是默认路径时，需新增--config-file-path参数指定。
+
+    回显示例如下，表示安装成功。
+
+    ```ColdFusion
+    Uncompressing ascend-docker-runtime  100%
+    [INFO]: installing ascend-docker-runtime
+    ...
+    [INFO] ascend-docker-runtime install success
+    ```
+
+5. 执行以下命令，重启CRI-O使配置生效。
+
+    ```shell
+    systemctl daemon-reload && systemctl restart crio
+    ```
+
 ## K8s集成Containerd场景下安装Ascend Docker Runtime<a name="zh-cn_topic_0000001930317932_section14600174633116"></a>
 
 1. 安装包下载完成后，首先进入安装包（run包）所在路径。
@@ -296,9 +352,9 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     systemctl daemon-reload && systemctl restart containerd kubelet
     ```
 
-## CRI-O场景下安装Ascend Docker Runtime<a name="zh-cn_topic_0000001930317932_section_crio_install"></a>
+## K8s集成CRI-O场景下安装Ascend Docker Runtime<a name="zh-cn_topic_0000001930317932_section14600174633117"></a>
 
-1. 安装包下载完成后，进入安装包（run包）所在路径。
+1. 安装包下载完成后，首先进入安装包（run包）所在路径。
 
     ```shell
     cd <path to run package>
@@ -310,13 +366,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     chmod u+x Ascend-docker-runtime_{version}_linux-{arch}.run
     ```
 
-3. 执行如下命令，校验软件包安装文件的一致性和完整性。
-
-    ```shell
-    ./Ascend-docker-runtime_{version}_linux-{arch}.run --check
-    ```
-
-4. 执行以下命令安装Ascend Docker Runtime，CRI-O场景须指定`--install-scene=crio`。
+3. 可通过以下命令安装Ascend Docker Runtime。
 
     - 安装到默认路径下。
 
@@ -324,15 +374,14 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
         ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=crio
         ```
 
-    - 安装到指定路径下，“--install-path”参数为指定的安装路径。
+    - 安装到指定路径下，执行以下命令，“--install-path”参数为指定的安装路径。
 
         ```shell
         ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=crio --install-path=<path>
         ```
 
         >[!NOTE]
-        >- 指定安装路径时必须使用绝对路径。
-        >- 安装程序会写入CRI-O drop-in配置文件“/etc/crio/crio.conf.d/99-ascend-runtime.conf”，将“ascend”注册为OCI运行时并设为默认runtime。drop-in目录或文件不是默认路径时，需新增--config-file-path参数指定。
+        >指定安装路径时必须使用绝对路径。
 
     回显示例如下，表示安装成功。
 
@@ -343,25 +392,12 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     [INFO] ascend-docker-runtime install success
     ```
 
-5. <a name="zh-cn_topic_0000001930317932_section_crio_install_manual"></a>（可选）如果安装失败，可参照以下步骤手动配置CRI-O。新建或编辑“/etc/crio/crio.conf.d/99-ascend-runtime.conf”：
+4. 如需将节点上的容器运行时从其他容器运行时更改为CRI-O，需要修改节点上kubelet的配置文件kubeadm-flags.env。可参考[K8s官方文档](https://kubernetes.io/docs/tasks/administer-cluster/migrating-from-dockershim/change-runtime-containerd/)中"Docker切换至containerd"的方法，该方法对切换至CRI-O同样适用，仅需将容器运行时相关配置项替换为CRI-O即可。
 
-    ```ini
-    [crio.runtime]
-    default_runtime = "ascend"
-
-    [crio.runtime.runtimes.ascend]
-    runtime_path = "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime"
-    runtime_type = "oci"
-    runtime_root = "/var/run/ascend"
-    privileged_without_host_devices = false
-    ```
-
-    其中runtime_type、runtime_root等字段建议与当前“[crio.runtime.runtimes.runc]”保持一致，仅runtime_path为ascend专属。
-
-6. 执行以下命令，重启CRI-O使配置生效。
+5. 执行命令，重启CRI-O和kubelet，示例如下。
 
     ```shell
-    systemctl daemon-reload && systemctl restart crio
+    systemctl daemon-reload && systemctl restart crio kubelet
     ```
 
 ## Ascend Docker Runtime安装包命令行参数说明<a name="zh-cn_topic_0000001930317932_section425619177219"></a>
