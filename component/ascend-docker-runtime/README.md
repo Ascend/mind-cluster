@@ -25,7 +25,7 @@ Ascend Docker在prestart-hook这个钩子函数中，对容器做了以下配置
 
 ## CDI Mode (NEW)
 
-`injectionMode: cdi` in `/etc/ascend-docker-runtime.d/config.json` replaces the legacy Prestart Hook with direct OCI spec injection via `cdi/`.
+Install with `--injection-mode=cdi` to enable direct OCI spec injection via `cdi/`, replacing the legacy Prestart Hook. The mode is recorded in `ascend_docker_runtime_install.info` under the install path.
 
 # 编译Ascend-Docker-Runtime
 

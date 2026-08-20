@@ -15,29 +15,47 @@
 package process
 
 import (
-	"encoding/json"
+	"bufio"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 
-	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
 )
 
-// Config holds ascend-docker-runtime configuration loaded from config file.
+// Config holds ascend-docker-runtime configuration loaded from the install
+// info file that the installer writes during deployment.
 type Config struct {
-	InjectionMode string `json:"injectionMode"`
+	InjectionMode string
 }
 
 const (
 	defaultInjectionMode = "legacy"
 	cdiInjectionMode     = "cdi"
+
+	// installInfoFileName is the install record file deployed alongside
+	// ascend-docker-runtime under the same install path.
+	installInfoFileName = "ascend_docker_runtime_install.info"
+	// injectionModeKey is the key in install.info that records the value of
+	// the --injection-mode install argument.
+	injectionModeKey = "injection-mode"
 )
 
-// configFilePath is the path to the runtime configuration JSON file.
-// Built from the shared config directory constant in ascend-common/api.
-// Exported as var to allow test overrides.
-var configFilePath = api.RunTimeDConfigPath + "/config.json"
+// installInfoPath resolves the path to the install info file that records the
+// --injection-mode install argument. It is a function variable to allow test
+// overrides. Resolution happens lazily on the first loadConfig() call (guarded
+// by configOnce), after the run logger is initialized, so errors can be logged.
+var installInfoPath = resolveInstallInfoPath
+
+func resolveInstallInfoPath() (string, error) {
+	execPath, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(filepath.Dir(execPath), installInfoFileName), nil
+}
 
 var (
 	config     *Config
@@ -56,32 +74,43 @@ func loadConfig() *Config {
 func loadConfigFromFile() *Config {
 	cfg := &Config{InjectionMode: defaultInjectionMode}
 
-	if _, err := mindxcheckutils.RealFileChecker(configFilePath, false, false, mindxcheckutils.DefaultSize); err != nil {
-		hwlog.RunLog.Warnf("config file %s failed security check: %v, using default injectionMode=%s",
-			configFilePath, err, defaultInjectionMode)
+	filePath, pathErr := installInfoPath()
+	if filePath == "" {
+		hwlog.RunLog.Warnf("failed to resolve install info path: %v, using default injection-mode=%s",
+			pathErr, defaultInjectionMode)
 		return cfg
 	}
 
-	data, err := os.ReadFile(configFilePath)
+	if _, err := mindxcheckutils.RealFileChecker(filePath, false, false, mindxcheckutils.DefaultSize); err != nil {
+		hwlog.RunLog.Warnf("install info file %s failed security check: %v, using default injection-mode=%s",
+			filePath, err, defaultInjectionMode)
+		return cfg
+	}
+
+	file, err := os.Open(filePath)
 	if err != nil {
-		hwlog.RunLog.Warnf("config file %s not found, using default injectionMode=%s",
-			configFilePath, defaultInjectionMode)
+		hwlog.RunLog.Warnf("install info file %s not found, using default injection-mode=%s",
+			filePath, defaultInjectionMode)
 		return cfg
 	}
+	defer file.Close()
 
-	if err := json.Unmarshal(data, cfg); err != nil {
-		hwlog.RunLog.Warnf("failed to parse config file %s: %v, using default injectionMode=%s",
-			configFilePath, err, defaultInjectionMode)
-		return &Config{InjectionMode: defaultInjectionMode}
-	}
-
-	switch cfg.InjectionMode {
-	case defaultInjectionMode, cdiInjectionMode:
-		// valid
-	default:
-		hwlog.RunLog.Warnf("unknown injectionMode: %s, falling back to %s",
-			cfg.InjectionMode, defaultInjectionMode)
-		cfg.InjectionMode = defaultInjectionMode
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 || strings.TrimSpace(parts[0]) != injectionModeKey {
+			continue
+		}
+		mode := strings.TrimSpace(parts[1])
+		switch mode {
+		case defaultInjectionMode, cdiInjectionMode:
+			cfg.InjectionMode = mode
+		default:
+			hwlog.RunLog.Warnf("unknown injection-mode: %s, falling back to %s",
+				mode, defaultInjectionMode)
+		}
+		break
 	}
 
 	return cfg

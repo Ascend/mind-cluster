@@ -44,10 +44,30 @@ func init() {
 	}, nil)
 }
 
+// setInstallInfoPath overrides the install info path resolver for a test.
+func setInstallInfoPath(t *testing.T, path string) {
+	t.Helper()
+	orig := installInfoPath
+	installInfoPath = func() (string, error) { return path, nil }
+	t.Cleanup(func() { installInfoPath = orig })
+}
+
+// writeInstallInfo writes an install.info file with the given content and
+// overrides installInfoPath to resolve to it. Returns the written path.
+func writeInstallInfo(t *testing.T, content string) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), installInfoFileName)
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("failed to write install info file: %v", err)
+	}
+	setInstallInfoPath(t, path)
+	return path
+}
+
 func TestLoadConfig_Defaults(t *testing.T) {
 	resetConfig()
-	// Point configFilePath to a non-existent file
-	configFilePath = filepath.Join(t.TempDir(), "nonexistent.json")
+	// Point the install info path to a non-existent file
+	setInstallInfoPath(t, filepath.Join(t.TempDir(), installInfoFileName))
 
 	cfg := loadConfig()
 
@@ -56,61 +76,76 @@ func TestLoadConfig_Defaults(t *testing.T) {
 
 func TestLoadConfig_CDI(t *testing.T) {
 	resetConfig()
-	dir := t.TempDir()
-	cfgPath := filepath.Join(dir, "config.json")
-	configFilePath = cfgPath
-
-	err := os.WriteFile(cfgPath, []byte(`{"injectionMode": "cdi"}`), 0644)
-	assert.NoError(t, err)
+	writeInstallInfo(t, "injection-mode=cdi\n")
 
 	cfg := loadConfig()
 
 	assert.Equal(t, cdiInjectionMode, cfg.InjectionMode)
 }
 
+func TestLoadConfig_Legacy(t *testing.T) {
+	resetConfig()
+	writeInstallInfo(t, "injection-mode=legacy\n")
+
+	cfg := loadConfig()
+
+	assert.Equal(t, defaultInjectionMode, cfg.InjectionMode)
+}
+
 func TestLoadConfig_UnknownMode(t *testing.T) {
 	resetConfig()
-	dir := t.TempDir()
-	cfgPath := filepath.Join(dir, "config.json")
-	configFilePath = cfgPath
-
-	err := os.WriteFile(cfgPath, []byte(`{"injectionMode": "unknown_mode"}`), 0644)
-	assert.NoError(t, err)
+	writeInstallInfo(t, "injection-mode=unknown_mode\n")
 
 	cfg := loadConfig()
 
 	assert.Equal(t, defaultInjectionMode, cfg.InjectionMode, "unknown mode should fall back to legacy")
 }
 
-func TestLoadConfig_InvalidJSON(t *testing.T) {
+func TestLoadConfig_MissingKey(t *testing.T) {
 	resetConfig()
-	dir := t.TempDir()
-	cfgPath := filepath.Join(dir, "config.json")
-	configFilePath = cfgPath
-
-	err := os.WriteFile(cfgPath, []byte("{{{ garbage json }}}\n"), 0644)
-	assert.NoError(t, err)
+	writeInstallInfo(t, "version=v1.0.0\narch=x86_64\n")
 
 	cfg := loadConfig()
 
-	assert.Equal(t, defaultInjectionMode, cfg.InjectionMode, "invalid JSON should fall back to legacy")
+	assert.Equal(t, defaultInjectionMode, cfg.InjectionMode, "missing injection-mode key should fall back to legacy")
+}
+
+func TestLoadConfig_EmptyValue(t *testing.T) {
+	resetConfig()
+	writeInstallInfo(t, "injection-mode=\n")
+
+	cfg := loadConfig()
+
+	assert.Equal(t, defaultInjectionMode, cfg.InjectionMode, "empty injection-mode should fall back to legacy")
+}
+
+func TestLoadConfig_MultiLine(t *testing.T) {
+	resetConfig()
+	writeInstallInfo(t, "version=v1.0.0\narch=x86_64\ninjection-mode=cdi\ninstall-scene=docker\n")
+
+	cfg := loadConfig()
+
+	assert.Equal(t, cdiInjectionMode, cfg.InjectionMode, "injection-mode in a middle line should be parsed")
+}
+
+func TestLoadConfig_KeyWithSpaces(t *testing.T) {
+	resetConfig()
+	writeInstallInfo(t, "injection-mode = cdi\n")
+
+	cfg := loadConfig()
+
+	assert.Equal(t, cdiInjectionMode, cfg.InjectionMode, "key with surrounding spaces should be parsed")
 }
 
 func TestLoadConfig_Cached(t *testing.T) {
 	resetConfig()
-	dir := t.TempDir()
-	cfgPath := filepath.Join(dir, "config.json")
-	configFilePath = cfgPath
-
-	// Create a valid config file
-	err := os.WriteFile(cfgPath, []byte(`{"injectionMode": "cdi"}`), 0644)
-	assert.NoError(t, err)
+	path := writeInstallInfo(t, "injection-mode=cdi\n")
 
 	cfg1 := loadConfig()
 	assert.Equal(t, cdiInjectionMode, cfg1.InjectionMode)
 
-	// Delete the config file — loadConfig should still return cached result
-	err = os.Remove(cfgPath)
+	// Delete the install info file — loadConfig should still return cached result
+	err := os.Remove(path)
 	assert.NoError(t, err)
 
 	// Suppress expected warning via gomonkey since file is now gone,
@@ -125,16 +160,9 @@ func TestLoadConfig_Cached(t *testing.T) {
 
 func TestLoadConfig_EmptyFile(t *testing.T) {
 	resetConfig()
-	dir := t.TempDir()
-	cfgPath := filepath.Join(dir, "config.json")
-	configFilePath = cfgPath
-
-	err := os.WriteFile(cfgPath, []byte(""), 0644)
-	assert.NoError(t, err)
+	writeInstallInfo(t, "")
 
 	cfg := loadConfig()
 
-	// Empty JSON file: json.Unmarshal returns an error,
-	// so the error path falls back to defaultInjectionMode ("legacy").
 	assert.Equal(t, defaultInjectionMode, cfg.InjectionMode)
 }
