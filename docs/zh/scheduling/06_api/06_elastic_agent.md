@@ -64,11 +64,11 @@ DLRecoverManager类提供进程级恢复和进程级在线恢复相关接口。�
 
 **start\_subscribe\(self\)<a name="section5051271214"></a>**
 
-客户端和服务端建立gRPC长链接，服务端将通过该长链接与客户端单向通信。比如发生故障时，服务端给客户端发送停止训练、全局故障rank信息等。
+客户端和服务端建立gRPC长连接，服务端将通过该长连接与客户端单向通信。比如发生故障时，服务端给客户端发送停止训练、全局故障rank信息等。
 
 **init\_clusterd\(self\)<a name="section18270133519256"></a>**
 
-客户端初始化ClusterD服务端状态，保证后续任务正常注册、建立链接。
+客户端初始化ClusterD服务端状态，保证后续任务正常注册、建立连接。
 
 ## report\_stop\_complete\(code: int, msg: str, fault\_ranks: dict\) -\> int<a name="ZH-CN_TOPIC_0000002511426697"></a>
 
@@ -90,7 +90,7 @@ DLRecoverManager类提供进程级恢复和进程级在线恢复相关接口。�
 
 ## report\_recover\_strategy\(fault\_ranks: dict, strategy\_list: list\) -\> int<a name="ZH-CN_TOPIC_0000002511346757"></a>
 
-客户端给服务端上报客户端支持的恢复策略，供服务端选择最佳恢复策略，服务端再通过start\_subscribe构建的长链接下发给客户端。
+客户端给服务端上报客户端支持的恢复策略，供服务端选择最佳恢复策略，服务端再通过start\_subscribe构建的长连接下发给客户端。
 
 **表 1**  参数说明
 

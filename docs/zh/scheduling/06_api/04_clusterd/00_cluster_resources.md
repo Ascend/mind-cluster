@@ -90,7 +90,7 @@ ClusterD启动后，会创建如下ConfigMap：
 |Description|公共故障数量过大时的提示信息。|
 
 >[!NOTE]
->公共故障对外展示1M数据，大约4500条。超过4500条时，部分数据不再对外展示，ConfigMap中会新增Description内容进行提示，内部缓存正常运行。
+>公共故障对外展示1MB数据，大约4500条。超过4500条时，部分数据不再对外展示，ConfigMap中会新增Description内容进行提示，内部缓存正常运行。
 
 ## super-pod-<super-pod-id\><a name="section53741611135414"></a>
 
