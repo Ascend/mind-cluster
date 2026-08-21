@@ -50,7 +50,7 @@
 |<p>huawei.com/Ascend910-Recover</p><p>huawei.com/npu-Recover</p>|Atlas 训练系列产品故障恢复标识|故障芯片ID|Ascend Device Plugin|
 |<p>huawei.com/Ascend910-NetworkRecover</p><p>huawei.com/npu-NetworkRecover</p>|Atlas 训练系列产品网络故障恢复标识|故障芯片ID|Ascend Device Plugin|
 |infer-card-type|由Ascend Device Plugin写入，表明节点推理卡类型。|card-300i-duo|Volcano|
-|mind-cluster/npu-chip-memory|芯片片上内存|mind-cluster/npu-chip-memory=64G|Volcano、Ascend Device Plugin|
+|mind-cluster/npu-chip-memory|芯片片上内存|64G|Volcano、Ascend Device Plugin|
 |huawei.com/scheduler.chip1softsharedev.enable|表示节点是否支持软切分虚拟化功能|<ul><li>true</li><li>false</li></ul>|Volcano、Ascend Device Plugin<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>huawei.com/scheduler.chip1softsharedev.enable=true标签表示节点支持软切分虚拟化功能。</li><li>huawei.com/scheduler.chip1softsharedev.enable=false标签表示节点不支持软切分虚拟化功能。</li></ul></div></div>|
 |huawei.com/topotree.rackid|标识节点的机框ID|节点所属机框ID|Volcano|
 |huawei.com/topotree.superpodid|标识节点的超节点ID|节点所属超节点ID|Volcano|
@@ -111,7 +111,7 @@
 |volcano.sh/template-uid|标记Pod对应pod-template名称|字符串|Volcano|
 |sharedTorIp|标记任务使用的共享交换机信息|字符串|Volcano、ClusterD|
 |fault-job-delete|标记job的rank信息|字符串|Volcano|
-|mind-cluster/hardware-type=800I-A2-xx|xx表示当前节点的片上内存，例如mind-cluster/hardware-type=800I-A2-64G|字符串|Volcano|
+|mind-cluster/hardware-type|xx表示当前节点的片上内存，例如mind-cluster/hardware-type=800I-A2-64G|字符串|Volcano|
 |super-pod-rank|任务的逻辑超节点rank|数字|Ascend Operator、Volcano|
 |inHotSwitchFlow|标记当前Pod（故障Pod和备份Pod）处于亚健康热切流程中|true|ClusterD、Ascend Operator|
 |backupNewPodName|标记当前故障Pod拉起的备份Pod名称|对应的备份Pod名称|ClusterD、Ascend Operator|

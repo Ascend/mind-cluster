@@ -19,7 +19,7 @@ rpc StressTest(StressTestParam) returns (Status) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|StressTest|<p>message StressTestParam {</p><p>string jobID = 1;</p><p>map<string, StressOpList> stressParam = 2;</p><p>repeated int64 allNodesOps = 3;</p>}<p>message StressOpList {<p>repeated int64 ops = 1;</p>}</p>|<p>**StressTestParam.jobID**：任务ID。</p><p>**StressTestParam.stressParam**：用户下发压测指令的节点与操作。key为node name，value为该节点要执行的压测操作。</p><p>**StressTestParam.allNodesOps**：若用户要对任务的所有节点进行压测，则该字段表示所有节点要执行的压测操作。allNodesOps字段优先级高于stressParam。其中，0表示“aic”压测；1表示“p2p”压测。</p><p>**StressOpList.ops**：该节点要执行的压测操作。0表示“aic”压测；1表示“p2p”压测。</p>|
+|StressTestParam|<p>message StressTestParam {</p><p>string jobID = 1;</p><p>map<string, StressOpList> stressParam = 2;</p><p>repeated int64 allNodesOps = 3;</p>}<p>message StressOpList {<p>repeated int64 ops = 1;</p>}</p>|<p>**StressTestParam.jobID**：任务ID。</p><p>**StressTestParam.stressParam**：用户下发压测指令的节点与操作。key为node name，value为该节点要执行的压测操作。</p><p>**StressTestParam.allNodesOps**：若用户要对任务的所有节点进行压测，则该字段表示所有节点要执行的压测操作。allNodesOps字段优先级高于stressParam。其中，0表示“aic”压测；1表示“p2p”压测。</p><p>**StressOpList.ops**：该节点要执行的压测操作。0表示“aic”压测；1表示“p2p”压测。</p>|
 
 **返回值说明<a name="section146221236193515"></a>**
 

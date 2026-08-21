@@ -443,7 +443,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>物理端口的速率。</p><p>其中，X为Udie ID，Y为Port ID，在Atlas 350 标卡中，Udie ID为0，Port ID取值范围为[4, 6]。</p>
 </td>
-<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：G</p>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：Gbps</p>
 </td>
 </tr>
 </tbody>
@@ -1309,7 +1309,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_to_noc_pkt_cnt_rx_X_Y</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的报文经过路由后的P2P报文数量。X为Udie ID，Y为Port ID</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的报文经过路由后的P2P报文数。X为Udie ID，Y为Port ID</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
@@ -1462,7 +1462,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_lpbk_ind_cnt_tx_X_Y</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送报文在NL环回的报文个数。X为Udie ID，Y为Port ID</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送报文在NL环回的报文数。X为Udie ID，Y为Port ID</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>

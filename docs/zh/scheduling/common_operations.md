@@ -841,7 +841,7 @@ Events:  <none>
     - Ubuntu  ARM系统，配套Python  3.7的Dockerfile示例。
 
         ```Dockerfile
-        FROM Ubuntu:18.04
+        FROM ubuntu:18.04
         
         ARG TF_PKG=tensorflow-1.15.0-cp3x-cp3xm-linux_aarch64.whl
         ARG HOST_ASCEND_BASE=/usr/local/Ascend
@@ -890,7 +890,7 @@ Events:  <none>
         RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser
         
         # 用户需根据实际情况修改PYTHONPATH的路径
-        ENV PYTHONPATH=/usr/local/python3.7.5/lib/python3.7/site-packages:$PYTHONPATH
+        ENV PYTHONPATH=/usr/lib/python3.7/site-packages:$PYTHONPATH
         
         # Python包
         RUN pip3.7 install numpy && \
@@ -931,7 +931,7 @@ Events:  <none>
     - Ubuntu  x86\_64系统Dockerfile示例。
 
         ```Dockerfile
-        FROM Ubuntu:18.04
+        FROM ubuntu:18.04
         # 编译镜像时在线下载安装使用下面行，与下面的whl配置互斥
         ARG TF_PKG=tensorflow-cpu==1.15.0
         # 使用离线的x86_64的TensorFlow包，注释上面行，取消下面行的注释
@@ -983,7 +983,7 @@ Events:  <none>
         RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser
         
         # 用户需根据实际情况修改PYTHONPATH的路径
-        ENV PYTHONPATH=/usr/local/python3.7.5/lib/python3.7/site-packages:$PYTHONPATH
+        ENV PYTHONPATH=/usr/lib/python3.7/site-packages:$PYTHONPATH
         
         # Python包
         RUN pip3.7 install numpy && \
@@ -1459,7 +1459,7 @@ Events:  <none>
 
 **操作步骤<a name="zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_section38151530134817"></a>**
 
-1. 将准备的软件包、深度学习框架、host侧驱动安装信息文件及驱动版本信息文件上传到服务器同一目录（如“/home/test“）。
+1. 将准备的软件包、深度学习框架、host侧驱动安装信息文件及驱动版本信息文件上传到服务器同一目录（如“/home/test”）。
     - Ascend-cann-toolkit\__\{version\}_\_linux-_\{arch\}_.run
     - Ascend-cann-kernels-_\{chip\_type\}_\__\{version\}_\_linux-_\{arch\}_.run
     - mindspore-_\{version\}_-cp3x-cp3x-linux\__\{arch\}_.whl
@@ -2036,7 +2036,7 @@ Events:  <none>
         useradd -g xxx（自定义用户,需要与驱动安装指定的一致） -s /usr/sbin/nologin（禁止用户登录，示例为Ubuntu系统） -m -d /home/xxx xxx（自定义用户,需要与驱动安装指定的一致） && \
         chmod +x ${TOOLKIT_PKG} &&\
         ./${TOOLKIT_PKG} --quiet --install --install-for-all --whitelist=nnrt --force &&\
-        rm ${TOOLKIT_PKG}
+        rm ${TOOLKIT_PKG} && \
         chmod +x ${OPS_PKG} &&\
         ./${OPS_PKG} --install --install-for-all --quiet --force &&\
         rm ${OPS_PKG}

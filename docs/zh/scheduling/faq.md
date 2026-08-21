@@ -68,7 +68,7 @@ Kubernetes社区存在Issue但该问题未被解决。用户如果能够修改�
 
 针对原因一：检查对应组件是否有正确版本的镜像，若没有，请参见[准备镜像](./installation_guide/03_installation/manual_installation/01_preparing_for_installation.md#准备镜像)章节重新准备镜像。
 
-针对原因二：执行**kubectl logs -f**查看日志记录，若原因是镜像架构错误，则需要参见[准备镜像](./installation_guide/03_installation/manual_installation/01_preparing_for_installation.md#准备镜像)章节重新准备镜像；若日志路径没有权限，则需要参见[创建日志目录](./installation_guide/03_installation/manual_installation/01_preparing_for_installation.md#创建日志目录)章节为对应的日志目录设置对应的权限和属主。
+针对原因二：执行**kubectl logs -f <Pod名称>**查看日志记录，若原因是镜像架构错误，则需要参见[准备镜像](./installation_guide/03_installation/manual_installation/01_preparing_for_installation.md#准备镜像)章节重新准备镜像；若日志路径没有权限，则需要参见[创建日志目录](./installation_guide/03_installation/manual_installation/01_preparing_for_installation.md#创建日志目录)章节为对应的日志目录设置对应的权限和属主。
 
 针对原因三：为相应的管理节点配置selector。
 

@@ -19,7 +19,7 @@
 客户端如需订阅集群任务信息，需先调用本接口获取返回的UUID后，持有该ID调用订阅接口SubscribeJobSummarySignal和SubscribeJobSummarySignalList获取集群的任务信息。
 
 >[!NOTE] 
->集群内最多存在80个活跃订阅链接，每种客户端角色最多支持创建20个活跃订阅链接。
+>集群内最多存在80个活跃订阅连接，每种客户端角色最多支持创建20个活跃订阅连接。
 
 **函数原型<a name="section4140960433"></a>**
 
@@ -48,7 +48,7 @@ rpc Register(ClientInfo) returns (Status) {}
 >[!NOTE] 
 >
 >- 本接口具有限流机制，1秒内允许访问的最大次数为20。
->- 集群内最多存在80个活跃订阅链接，每种客户端角色最多支持创建20个活跃订阅链接。
+>- 集群内最多存在80个活跃订阅连接，每种客户端角色最多支持创建20个活跃订阅连接。
 
 **函数原型<a name="section1199205575113"></a>**
 
@@ -72,7 +72,7 @@ rpc SubscribeJobSummarySignal(ClientInfo) returns (stream JobSummarySignal){}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|JobSummarySignal|<p>message JobSummarySignal{</p><p>string uuid = 1;</p><p>string jobId = 2;</p><p>string jobName = 3;</p><p>string namespace =4;</p><p>string frameWork = 5;</p><p>string jobStatus = 6;</p><p>string time = 7;</p><p>string cmIndex = 8;</p><p>string total = 9;</p><p>string HcclJson = 10;</p><p>string deleteTime = 11;</p><p>string sharedTorIp = 12;</p><p>string masterAddr = 13;</p><p>string operator = 14;</p><p>string sid = 15;</p>}|<p>**uuid**：本条消息id</p><p>**jobId**：任务的K8s ID信息</p><p>**jobName**：当前任务的名称</p><p>**namespace**：任务所属命名空间</p><p>**frameWork**：任务框架</p>**jobStatus**：任务状态，存在以下几种状态：<ul><li>pending</li><li>running</li><li>complete</li><li>failed</li></ul><p>**time**：任务开始时间</p><p>**cmIndex**：序号</p><p>**total**：任务对应的jobsummary ConfigMap的数量总数</p><p>**HcclJson**：任务使用的芯片通信信息。若任务调度的NPU数量超过4万，客户端接收的上报信息中HcclJson会被设置为空。<p>可转义为JSON格式，字段说明如下：</p><ul><li>status：任务RankTable是否已经生成</li><li>initializing：还在为任务分配设备，RankTable未生成</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段</li><li>server_list：任务设备分配情况</li><li>device：记录NPU分配，NPU IP和rank_id信息</li><li>server_id：AI Server标识，全局唯一</li><li>server_name：节点名称</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持</li><li>server_count：任务使用的节点数量</li><li>version：版本信息</li></ul></p><p>**deleteTime**：任务被删除的时间</p><p>**sharedTorIp**：任务使用的共享交换机信息</p><p>**masterAddr**：PyTorch训练时指定的MASTER_ADDR值</p><p>**operator**：接收到添加任务命令后状态更新为add；接收到删除任务命令后状态更新为delete</p><p>**sid**：作业唯一标识符</p>|
+|JobSummarySignal|<p>message JobSummarySignal{</p><p>string uuid = 1;</p><p>string jobId = 2;</p><p>string jobName = 3;</p><p>string namespace = 4;</p><p>string frameWork = 5;</p><p>string jobStatus = 6;</p><p>string time = 7;</p><p>string cmIndex = 8;</p><p>string total = 9;</p><p>string HcclJson = 10;</p><p>string deleteTime = 11;</p><p>string sharedTorIp = 12;</p><p>string masterAddr = 13;</p><p>string operator = 14;</p><p>string sid = 15;</p>}|<p>**uuid**：本条消息id</p><p>**jobId**：任务的K8s ID信息</p><p>**jobName**：当前任务的名称</p><p>**namespace**：任务所属命名空间</p><p>**frameWork**：任务框架</p>**jobStatus**：任务状态，存在以下几种状态：<ul><li>pending</li><li>running</li><li>complete</li><li>failed</li></ul><p>**time**：任务开始时间</p><p>**cmIndex**：序号</p><p>**total**：任务对应的jobsummary ConfigMap的数量总数</p><p>**HcclJson**：任务使用的芯片通信信息。若任务调度的NPU数量超过4万，客户端接收的上报信息中HcclJson会被设置为空。<p>可转义为JSON格式，字段说明如下：</p><ul><li>status：任务RankTable是否已经生成</li><li>initializing：还在为任务分配设备，RankTable未生成</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段</li><li>server_list：任务设备分配情况</li><li>device：记录NPU分配，NPU IP和rank_id信息</li><li>server_id：AI Server标识，全局唯一</li><li>server_name：节点名称</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持</li><li>server_count：任务使用的节点数量</li><li>version：版本信息</li></ul></p><p>**deleteTime**：任务被删除的时间</p><p>**sharedTorIp**：任务使用的共享交换机信息</p><p>**masterAddr**：PyTorch训练时指定的MASTER_ADDR值</p><p>**operator**：接收到添加任务命令后状态更新为add；接收到删除任务命令后状态更新为delete</p><p>**sid**：作业唯一标识符</p>|
 
 ## SubscribeJobSummarySignalList
 
@@ -83,7 +83,7 @@ rpc SubscribeJobSummarySignal(ClientInfo) returns (stream JobSummarySignal){}
 >[!NOTE]
 > 
 >- 本接口具有限流机制，1秒内允许访问的最大次数为20。
->- 集群内最多存在80个活跃订阅链接，每种客户端角色最多支持创建20个活跃订阅链接。
+>- 集群内最多存在80个活跃订阅连接，每种客户端角色最多支持创建20个活跃订阅连接。
 
 **函数原型**
 
@@ -107,4 +107,4 @@ rpc SubscribeJobSummarySignalList(ClientInfo) returns (stream JobSummarySignalLi
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|JobSummarySignalList|<p>message JobSummarySignalList{</p><p>repeated JobSummarySignal jobSummarySignals = 1;</p><p>string ReportTime = 2;</p><p>int32 JobTotalNum = 3;</p>}<p>message JobSummarySignal{<p>string uuid = 1;</p><p>string jobId = 2;</p><p>string jobName = 3;</p><p>string namespace =4;</p><p>string frameWork = 5;</p><p>string jobStatus = 6;</p><p>string time = 7;</p><p>string cmIndex = 8;</p><p>string total = 9;</p><p>string HcclJson = 10;</p><p>string deleteTime = 11;</p><p>string sharedTorIp = 12;</p><p>string masterAddr = 13;</p><p>string operator = 14;</p><p>string sid = 15;</p>}</p>|<p>**jobSummarySignals**: 任务信息列表</p><p>**ReportTime**：当前批次上报的时间</p><p>**JobTotalNum**：相同批次上报的任务总数</p><p>**uuid**：本条消息id</p><p>**jobId**：任务的K8s ID信息</p><p>**jobName**：当前任务的名称</p><p>**namespace**：任务所属命名空间</p><p>**frameWork**：任务框架</p>**jobStatus**：任务状态，存在以下几种状态：<ul><li>pending</li><li>running</li><li>complete</li><li>failed</li></ul><p>**time**：任务开始时间</p><p>**cmIndex**：序号</p><p>**total**：任务对应的jobsummary ConfigMap的数量总数</p><p>**HcclJson**：任务使用的芯片通信信息。可转义为JSON格式，字段说明如下：<ul><li>status：任务RankTable是否已经生成</li><li>initializing：还在为任务分配设备，RankTable未生成</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段</li><li>server_list：任务设备分配情况</li><li>device：记录NPU分配，NPU IP和rank_id信息</li><li>server_id：AI Server标识，全局唯一</li><li>server_name：节点名称</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持</li><li>server_count：任务使用的节点数量</li><li>version：版本信息</li></ul></p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>若单个任务所使用的NPU数量超过4万，上报的任务信息中HcclJson会被设置为空。</li><li>客户端初次订阅接口时，若多个任务合计使用的NPU数量超过4万，会对上报信息进行分页上报，确保每条上报信息中任务总NPU数不超过4万。</li></ul></div></div><p>**deleteTime**：任务被删除的时间</p><p>**sharedTorIp**：任务使用的共享交换机信息</p><p>**masterAddr**：PyTorch训练时指定的MASTER_ADDR值</p><p>**operator**：接收到添加任务命令后状态更新为add；接收到删除任务命令后状态更新为delete</p><p>**sid**：作业唯一标识符</p>|
+|JobSummarySignalList|<p>message JobSummarySignalList{</p><p>repeated JobSummarySignal jobSummarySignals = 1;</p><p>string ReportTime = 2;</p><p>int32 JobTotalNum = 3;</p>}<p>message JobSummarySignal{<p>string uuid = 1;</p><p>string jobId = 2;</p><p>string jobName = 3;</p><p>string namespace = 4;</p><p>string frameWork = 5;</p><p>string jobStatus = 6;</p><p>string time = 7;</p><p>string cmIndex = 8;</p><p>string total = 9;</p><p>string HcclJson = 10;</p><p>string deleteTime = 11;</p><p>string sharedTorIp = 12;</p><p>string masterAddr = 13;</p><p>string operator = 14;</p><p>string sid = 15;</p>}</p>|<p>**jobSummarySignals**: 任务信息列表</p><p>**ReportTime**：当前批次上报的时间</p><p>**JobTotalNum**：相同批次上报的任务总数</p><p>**uuid**：本条消息id</p><p>**jobId**：任务的K8s ID信息</p><p>**jobName**：当前任务的名称</p><p>**namespace**：任务所属命名空间</p><p>**frameWork**：任务框架</p>**jobStatus**：任务状态，存在以下几种状态：<ul><li>pending</li><li>running</li><li>complete</li><li>failed</li></ul><p>**time**：任务开始时间</p><p>**cmIndex**：序号</p><p>**total**：任务对应的jobsummary ConfigMap的数量总数</p><p>**HcclJson**：任务使用的芯片通信信息。可转义为JSON格式，字段说明如下：<ul><li>status：任务RankTable是否已经生成</li><li>initializing：还在为任务分配设备，RankTable未生成</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段</li><li>server_list：任务设备分配情况</li><li>device：记录NPU分配，NPU IP和rank_id信息</li><li>server_id：AI Server标识，全局唯一</li><li>server_name：节点名称</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持</li><li>server_count：任务使用的节点数量</li><li>version：版本信息</li></ul></p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>若单个任务所使用的NPU数量超过4万，上报的任务信息中HcclJson会被设置为空。</li><li>客户端初次订阅接口时，若多个任务合计使用的NPU数量超过4万，会对上报信息进行分页上报，确保每条上报信息中任务总NPU数不超过4万。</li></ul></div></div><p>**deleteTime**：任务被删除的时间</p><p>**sharedTorIp**：任务使用的共享交换机信息</p><p>**masterAddr**：PyTorch训练时指定的MASTER_ADDR值</p><p>**operator**：接收到添加任务命令后状态更新为add；接收到删除任务命令后状态更新为delete</p><p>**sid**：作业唯一标识符</p>|
