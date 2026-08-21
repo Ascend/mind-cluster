@@ -363,6 +363,7 @@
     <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p6613173818516"><a name="p6613173818516"></a><a name="p6613173818516"></a>48</p>
     </td>
     <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p461323812519"><a name="p461323812519"></a><a name="p461323812519"></a><span id="ph128111331314"><a name="ph128111331314"></a><a name="ph128111331314"></a>Atlas 900 A3 SuperPoD 超节点</span>中一个超节点的节点数量。</p>
+    <p id="p1704246153099"><a name="p1704246153099"></a><a name="p1704246153099"></a>取值范围：大于0。若设置为0、负数或非数字，则按配置错误处理，使用默认值48。</p>
     </td>
     </tr>
     <tr id="row9561856657"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p956215565514"><a name="p956215565514"></a><a name="p956215565514"></a>reserve-nodes</p>
@@ -370,6 +371,7 @@
     <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p125626567516"><a name="p125626567516"></a><a name="p125626567516"></a>2</p>
     </td>
     <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p25637568515"><a name="p25637568515"></a><a name="p25637568515"></a><span id="ph915032251212"><a name="ph915032251212"></a><a name="ph915032251212"></a>Atlas 900 A3 SuperPoD 超节点</span>中一个超节点中预留节点数量。</p>
+    <p id="p1704246153100"><a name="p1704246153100"></a><a name="p1704246153100"></a>取值范围：大于等于0。设置为0时表示不预留节点。</p>
     <div class="note" id="note1514175285210"><a name="note1514175285210"></a><a name="note1514175285210"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p96481321115510"><a name="p96481321115510"></a><a name="p96481321115510"></a>若设置的reserve-nodes大于super-pod-size时，存在以下场景。</p>
     <a name="ul13842528165510"></a><a name="ul13842528165510"></a><ul id="ul13842528165510"><li>super-pod-size大于2，则默认重置reserve-nodes取值为2</li><li>super-pod-size小于或等于2，则默认重置reserve-nodes取值为0。</li></ul>
     </div></div>

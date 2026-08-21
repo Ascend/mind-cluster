@@ -284,7 +284,7 @@ func getDefaultVolcanoFrameCasesOfReserveNodesSelfValueError(superPodSizeKey,
 	reserveNodesKey string) []initVolcanoFrameFromSsnTestCase {
 	return []initVolcanoFrameFromSsnTestCase{
 		{
-			name: "05-GetReserveNodes failed, set default reserve-nodes: 2",
+			name: "05-GetReserveNodes failed, reserve-nodes not exist, set default reserve-nodes: 2",
 			configs: []conf.Configuration{
 				{
 					Name: util.CMInitParamKey,
@@ -296,11 +296,11 @@ func getDefaultVolcanoFrameCasesOfReserveNodesSelfValueError(superPodSizeKey,
 			want: VolcanoFrame{
 				ConfigParameters: ConfigParameters{DynamicParameters: DynamicParameters{
 					SuperPodSize:   40,
-					ReservePodSize: 2,
+					ReservePodSize: defaultReserveNodes,
 				}}},
 		},
 		{
-			name: "06-GetReserveNodes failed, set default reserve-nodes: 2",
+			name: "06-GetReserveNodes failed, reserve-nodes is negative, set default reserve-nodes: 2",
 			configs: []conf.Configuration{
 				{
 					Name: util.CMInitParamKey,
@@ -313,7 +313,7 @@ func getDefaultVolcanoFrameCasesOfReserveNodesSelfValueError(superPodSizeKey,
 			want: VolcanoFrame{
 				ConfigParameters: ConfigParameters{DynamicParameters: DynamicParameters{
 					SuperPodSize:   40,
-					ReservePodSize: 2,
+					ReservePodSize: defaultReserveNodes,
 				}}},
 		},
 	}
@@ -411,8 +411,8 @@ func getDefaultVolcanoFrameCasesOfSuperPodSizeFormatError(superPodSizeKey,
 	reserveNodesKey string) []initVolcanoFrameFromSsnTestCase {
 	return []initVolcanoFrameFromSsnTestCase{
 		{
-			name: "01-GetSizeOfSuperPod and GetReserveNodes failed, set default super-pod-size: 48, " +
-				"default reserve-nodes: 2",
+			name: "01-GetSizeOfSuperPod failed, set default super-pod-size: 48, reserve-nodes not configured, " +
+				"set default reserve-nodes: 2",
 			configs: []conf.Configuration{
 				{
 					Name:      util.CMInitParamKey,
@@ -1888,6 +1888,196 @@ func TestInitJobsPlugin(t *testing.T) {
 							jobID, handler.initCalled, wantCalled)
 					}
 				}
+			}
+		})
+	}
+}
+
+type reserveNodesFnArgs struct {
+	configurations map[string]string
+	superPodSize   int
+}
+
+type reserveNodesFnTest struct {
+	name string
+	args reserveNodesFnArgs
+	want int
+}
+
+func buildGetReserveNodesCases() []reserveNodesFnTest {
+	return []reserveNodesFnTest{
+		{
+			name: "01-configurations is nil, set default reserve-nodes: 2",
+			args: reserveNodesFnArgs{
+				configurations: nil,
+				superPodSize:   48,
+			},
+			want: defaultReserveNodes,
+		},
+		{
+			name: "02-reserve-nodes key not exist, set default reserve-nodes: 2",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{"super-pod-size": "48"},
+				superPodSize:   48,
+			},
+			want: defaultReserveNodes,
+		},
+		{
+			name: "03-reserve-nodes is 0, return 0",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "0"},
+				superPodSize:   48,
+			},
+			want: 0,
+		},
+		{
+			name: "04-reserve-nodes is negative, set default reserve-nodes: 2",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "-1"},
+				superPodSize:   48,
+			},
+			want: defaultReserveNodes,
+		},
+		{
+			name: "05-reserve-nodes is not a number, set default reserve-nodes: 2",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "abc"},
+				superPodSize:   48,
+			},
+			want: defaultReserveNodes,
+		},
+		{
+			name: "06-reserve-nodes less than super-pod-size, return reserve-nodes",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "2"},
+				superPodSize:   48,
+			},
+			want: 2,
+		},
+		{
+			name: "07-reserve-nodes equal to super-pod-size, set default reserve-nodes: 2",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "48"},
+				superPodSize:   48,
+			},
+			want: defaultReserveNodes,
+		},
+		{
+			name: "08-reserve-nodes bigger than super-pod-size, set default reserve-nodes: 2",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "50"},
+				superPodSize:   48,
+			},
+			want: defaultReserveNodes,
+		},
+		{
+			name: "09-reserve-nodes bigger than super-pod-size and super-pod-size less than default, return 0",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "2"},
+				superPodSize:   1,
+			},
+			want: 0,
+		},
+		{
+			name: "10-reserve-nodes equal to super-pod-size and super-pod-size equal to default, return 0",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "2"},
+				superPodSize:   2,
+			},
+			want: 0,
+		},
+	}
+}
+
+// TestGetReserveNodes test getReserveNodes
+func TestGetReserveNodes(t *testing.T) {
+	for _, tt := range buildGetReserveNodesCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getReserveNodes(tt.args.configurations, tt.args.superPodSize); got != tt.want {
+				t.Errorf("getReserveNodes() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+type superPodInfoFromConfigFnArgs struct {
+	key            string
+	configurations map[string]string
+}
+
+type superPodInfoFromConfigFnTest struct {
+	name    string
+	args    superPodInfoFromConfigFnArgs
+	want    int
+	wantErr bool
+}
+
+func buildGetSuperPodInfoFromConfigCases() []superPodInfoFromConfigFnTest {
+	return []superPodInfoFromConfigFnTest{
+		{
+			name: "01-configurations is nil, return error",
+			args: superPodInfoFromConfigFnArgs{
+				key:            reserveNodesKey,
+				configurations: nil,
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "02-key not exist, return error",
+			args: superPodInfoFromConfigFnArgs{
+				key:            reserveNodesKey,
+				configurations: map[string]string{"super-pod-size": "48"},
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "03-configuration is 0, return 0",
+			args: superPodInfoFromConfigFnArgs{
+				key:            reserveNodesKey,
+				configurations: map[string]string{reserveNodesKey: "0"},
+			},
+			want:    0,
+			wantErr: false,
+		},
+		{
+			name: "04-configuration is valid, return the value",
+			args: superPodInfoFromConfigFnArgs{
+				key:            reserveNodesKey,
+				configurations: map[string]string{reserveNodesKey: "5"},
+			},
+			want:    5,
+			wantErr: false,
+		},
+		{
+			name: "05-configuration is negative, return error",
+			args: superPodInfoFromConfigFnArgs{
+				key:            reserveNodesKey,
+				configurations: map[string]string{reserveNodesKey: "-1"},
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "06-configuration is not a number, return error",
+			args: superPodInfoFromConfigFnArgs{
+				key:            reserveNodesKey,
+				configurations: map[string]string{reserveNodesKey: "abc"},
+			},
+			want:    0,
+			wantErr: true,
+		},
+	}
+}
+
+// TestGetSuperPodInfoFromConfig test getSuperPodInfoFromConfig
+func TestGetSuperPodInfoFromConfig(t *testing.T) {
+	for _, tt := range buildGetSuperPodInfoFromConfigCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getSuperPodInfoFromConfig(tt.args.key, tt.args.configurations)
+			if got != tt.want || (err != nil) != tt.wantErr {
+				t.Errorf("getSuperPodInfoFromConfig() = %v, err %v, want %v, wantErr %v", got, err, tt.want, tt.wantErr)
 			}
 		})
 	}
