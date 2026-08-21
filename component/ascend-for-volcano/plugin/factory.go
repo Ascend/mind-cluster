@@ -942,12 +942,12 @@ func getConfigurationByKey(configurations []config.Configuration) map[string]str
 
 // getSizeOfSuperPod get size of super pod
 func getSizeOfSuperPod(configurations map[string]string) (int, int) {
-	superPodSize := getSuperPodInfoFromConfig(sizeOfSuperPodKey, configurations)
+	superPodSize, err := getSuperPodInfoFromConfig(sizeOfSuperPodKey, configurations)
 	// we need to cache the original value from configuration
 	superPodSizeFromConfig := superPodSize
-	if superPodSize == 0 {
-		klog.V(util.LogWarningLev).Infof(" super-pod-size configuration should be a number bigger than 0, "+
-			"set default super-pod-size: %d", defaultSuperPodSize)
+	if err != nil || superPodSize == 0 {
+		klog.V(util.LogWarningLev).Infof("get super-pod-size failed: %v, set default super-pod-size: %d",
+			err, defaultSuperPodSize)
 		superPodSize = defaultSuperPodSize
 	}
 	return superPodSize, superPodSizeFromConfig
@@ -955,11 +955,15 @@ func getSizeOfSuperPod(configurations map[string]string) (int, int) {
 
 // getReserveNodes get reserve nodes
 func getReserveNodes(configurations map[string]string, superPodSize int) int {
-	reserve := getSuperPodInfoFromConfig(reserveNodesKey, configurations)
-	if reserve == 0 {
-		klog.V(util.LogWarningLev).Infof("reserve-nodes less than or equal 0, "+
-			"set as default: %d", defaultReserveNodes)
+	reserve, err := getSuperPodInfoFromConfig(reserveNodesKey, configurations)
+	if err != nil {
+		klog.V(util.LogWarningLev).Infof("get reserve-nodes failed: %v, set default reserve-nodes: %d",
+			err, defaultReserveNodes)
 		reserve = defaultReserveNodes
+	}
+	if reserve == 0 {
+		klog.V(util.LogDebugLev).Infof("get reserve-nodes: %d", reserve)
+		return 0
 	}
 	if reserve >= superPodSize {
 		validRes := 0
@@ -970,30 +974,27 @@ func getReserveNodes(configurations map[string]string, superPodSize int) int {
 			reserve, superPodSize, validRes)
 		reserve = validRes
 	}
+	klog.V(util.LogDebugLev).Infof("get reserve-nodes: %d", reserve)
 	return reserve
 }
 
-func getSuperPodInfoFromConfig(key string, configurations map[string]string) int {
+func getSuperPodInfoFromConfig(key string, configurations map[string]string) (int, error) {
 	if len(configurations) == 0 {
-		klog.V(util.LogWarningLev).Info("volcano scheduler config init-params map is nil")
-		return 0
+		return 0, fmt.Errorf("volcano scheduler config init-params map is nil")
 	}
 	value, ok := configurations[key]
 	if !ok {
-		klog.V(util.LogWarningLev).Infof("%s configuration not exist", key)
-		return 0
+		return 0, fmt.Errorf("%s configuration not exist", key)
 	}
 
 	res, err := strconv.Atoi(value)
 	if err != nil {
-		klog.V(util.LogWarningLev).Infof("cannot convert %s configuration, err: %v", key, err)
-		return 0
+		return 0, fmt.Errorf("cannot convert %s configuration, err: %v", key, err)
 	}
 	if res < 0 {
-		klog.V(util.LogWarningLev).Infof(" %s configuration should not be negative number", key)
-		return 0
+		return 0, fmt.Errorf("%s configuration should not be negative number", key)
 	}
-	return res
+	return res, nil
 }
 
 // checkGraceDeleteTimeValid used by GetGraceDeleteTime for validity checking
