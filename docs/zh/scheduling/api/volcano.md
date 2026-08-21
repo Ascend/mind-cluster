@@ -770,7 +770,7 @@ MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写
 
 **mindx-dl/job-reschedule-reason<a name="section20866121155814"></a>**
 
-该ConfigMap用于记录任务重调度历史信息，默认情况下会保存任务最近的十次重调度记录，当ConfigMap内容超过950Kb时会依次删除每个任务中发生时间最早的记录。
+该ConfigMap用于记录任务重调度历史信息，默认情况下会保存任务最近的十次重调度记录，当ConfigMap内容超过950KB时会依次删除每个任务中发生时间最早的记录。
 
 **表 4**  任务字段说明
 

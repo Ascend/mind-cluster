@@ -22,7 +22,7 @@
 
 ## current-job-statistic<a name="section39901331194218"></a>
 
-用于展示集群中当前任务的统计信息，详细信息记录在/var/log/mindx-dl/clusterd/event\_job.log日志文件中。由于K8s的ConfigMap容量大小限制，最大支持统计集群任务数量约为1w条。当日志文件达到20M时，触发自动转储，最多保存5份转储日志，转储日志最长保留时间为40天。
+用于展示集群中当前任务的统计信息，详细信息记录在/var/log/mindx-dl/clusterd/event\_job.log日志文件中。由于K8s的ConfigMap容量大小限制，最大支持统计集群任务数量约为1w条。当日志文件达到20MB时，触发自动转储，最多保存5份转储日志，转储日志最长保留时间为40天。
 
 |参数|说明|
 |--|--|

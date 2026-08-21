@@ -11,7 +11,7 @@
 >- 实际的ConfigMap中的参数如果与定义的取值范围不相符，ClusterD会将故障信息丢弃，不作处理。
 >- 通过ConfigMap或者gRPC接口注入的公共故障，所有节点的故障数量之和上限为5w。当故障数量超过5w时，再次注入故障，ClusterD会将故障信息丢弃，不作处理。
 >- ConfigMap的Label需要为mc-consumer-publicfault=true，Data的key需要为PublicFault。
->- 通过ConfigMap方式发送公共故障时，单次数据量不能超过1M大小，否则ConfigMap会更新失败。
+>- 通过ConfigMap方式发送公共故障时，单次数据量不能超过1MB大小，否则ConfigMap会更新失败。
 
 **参数说明<a name="section4809204015614"></a>**
 

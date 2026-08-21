@@ -462,7 +462,7 @@ ClusterD运行后，会启动gRPC服务端侦听训练容器内gRPC客户端的�
                    <strong>path: /{路径A}/cert           # x509证书、私钥目录路径，请将路径A替换成步骤2中的文件路径</strong>
                <strong>- name: nginx-conf</strong>
                  <strong>hostPath:</strong>
-                   <strong>path: /{路径A}/config       # nginx启动配置文件，请将路径A替换成步骤2中的文件路径</strong>
+                   <strong>path: /{路径A}/conf       # nginx启动配置文件，请将路径A替换成步骤2中的文件路径</strong>
         
        # Service中的ports项改为如下
            <strong>- protocol: TCP</strong>

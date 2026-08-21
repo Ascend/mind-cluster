@@ -140,7 +140,7 @@ echo 2 >/proc/sys/kernel/randomize_va_space
     from mindio_ttp.framework_ttp import tft_start_controller, tft_init_processor, tft_register_decrypt_handler
     
     # 在tls_info中，以“;”分隔不同字段,以“,”分隔各个文件
-    tls_info = r"(
+    tls_info = """
     tlsCert: /etc/ssl/certs/cert.pem;
     tlsCrlPath: /etc/ssl/crl/;
     tlsCaPath: /etc/ssl/ca/;
@@ -149,7 +149,7 @@ echo 2 >/proc/sys/kernel/randomize_va_space
     tlsPk: private key;
     tlsPkPwd: private key pwd;
     packagePath: /etc/ssl/
-    )"
+    """
     
     # 若tlsPkPwd口令为密文，则需注册口令解密函数
     tft_register_decrypt_handler(user_decrypt_callback)
