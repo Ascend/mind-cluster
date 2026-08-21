@@ -111,11 +111,11 @@ func (c *RoceCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	return isSupport
 }
 
-// SupportDcmi returns false for now; will probe dcmi once the interface is ready.
-func (c *RoceCollector) SupportDcmi(n *colcommon.NpuCollector) bool {
+// IsParallel returns true so RoceCollector always runs in parallel goroutines.
+func (c *RoceCollector) IsParallel(n *colcommon.NpuCollector) bool {
 	c.DcmiSupported = false
-	logger.Infof("[RoceCollector] dcmi supported: %v", c.DcmiSupported)
-	return c.DcmiSupported
+	logger.Infof("[RoceCollector] isParallel: true")
+	return true
 }
 
 // Describe description of the metric

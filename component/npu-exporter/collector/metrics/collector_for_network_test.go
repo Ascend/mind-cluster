@@ -266,12 +266,12 @@ func TestGetLinkStatusCode(t *testing.T) {
 	}
 }
 
-// TestNetworkCollectorSupportDcmi tests NetworkCollector SupportDcmi
-func TestNetworkCollectorSupportDcmi(t *testing.T) {
+// TestNetworkCollectorIsParallel tests NetworkCollector IsParallel
+func TestNetworkCollectorIsParallel(t *testing.T) {
 	n := mockNewNpuCollector()
-	convey.Convey("returns false and result is cached", t, func() {
+	convey.Convey("isParallel returns true", t, func() {
 		c := &NetworkCollector{}
-		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
-		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
+		convey.So(c.IsParallel(n), convey.ShouldBeTrue)
+		convey.So(c.DcmiSupported, convey.ShouldBeFalse)
 	})
 }

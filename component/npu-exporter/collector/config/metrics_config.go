@@ -47,9 +47,9 @@ var (
 		groupOptical:     &metrics.OpticalCollector{},
 		groupUb:          &metrics.UbCollector{},
 	}
-	// singleGoroutineMap filled by classifyCollectors; SupportDcmi=true collectors go here.
+	// singleGoroutineMap filled by classifyCollectors; IsParallel=false collectors go here.
 	singleGoroutineMap = map[string]common.MetricsCollector{}
-	// multiGoroutineMap filled by classifyCollectors; SupportDcmi=false collectors go here.
+	// multiGoroutineMap filled by classifyCollectors; IsParallel=true collectors go here.
 	multiGoroutineMap = map[string]common.MetricsCollector{}
 	// pluginCollectorMap metrics in this map will be collected in plugin goroutine
 	pluginCollectorMap = map[string]common.MetricsCollector{}
@@ -305,7 +305,7 @@ func matchCollectors(validated []validatedConfig, collectorMap map[string]common
 }
 
 // classifyCollectors splits candidateCollectors into singleGoroutineMap and multiGoroutineMap.
-// IsSupported filters first, then SupportDcmi decides the chain.
+// IsSupported filters first, then IsParallel decides the chain.
 func classifyCollectors(n *common.NpuCollector) {
 	singleGoroutineMap = map[string]common.MetricsCollector{}
 	multiGoroutineMap = map[string]common.MetricsCollector{}
@@ -313,10 +313,10 @@ func classifyCollectors(n *common.NpuCollector) {
 		if !c.IsSupported(n) {
 			continue
 		}
-		if c.SupportDcmi(n) {
-			singleGoroutineMap[name] = c
-		} else {
+		if c.IsParallel(n) {
 			multiGoroutineMap[name] = c
+		} else {
+			singleGoroutineMap[name] = c
 		}
 	}
 }

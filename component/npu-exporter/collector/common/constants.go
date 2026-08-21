@@ -15,6 +15,8 @@
 // Package common for general constants
 package common
 
+import "time"
+
 // metric label name
 const (
 	npuID       = "id"
@@ -153,6 +155,9 @@ const (
 
 	// DomainForCardNum domain for cardNum
 	DomainForCardNum = "cardNum"
+
+	// DcmiProbeLatencyThreshold if a single dcmi call exceeds this, use parallel goroutines.
+	DcmiProbeLatencyThreshold = 10 * time.Millisecond
 
 	// NotDisplayedForMultiPod is the description shown for namespace/pod_name/container_name labels in the one-card-multi-pod scenario
 	NotDisplayedForMultiPod = "not_displayed_for_multi_pod"

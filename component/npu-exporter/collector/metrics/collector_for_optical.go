@@ -154,11 +154,11 @@ func (c *OpticalCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	return isSupport
 }
 
-// SupportDcmi returns false for now; will probe dcmi once the interface is ready.
-func (c *OpticalCollector) SupportDcmi(n *colcommon.NpuCollector) bool {
+// IsParallel returns true so OpticalCollector always runs in parallel goroutines.
+func (c *OpticalCollector) IsParallel(n *colcommon.NpuCollector) bool {
 	c.DcmiSupported = false
-	logger.Infof("[OpticalCollector] dcmi supported: %v", c.DcmiSupported)
-	return c.DcmiSupported
+	logger.Infof("[OpticalCollector] isParallel: true")
+	return true
 }
 
 // Describe description of the metric
