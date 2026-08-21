@@ -234,3 +234,11 @@ const (
 	// OperatorLogFilePath Operator log file name
 	OperatorLogFilePath = "/var/log/mindx-dl/ascend-operator/ascend-operator.log"
 )
+
+// ascend-dynamic-resource-allocation
+const (
+	// DefaultLogFile is the default log file path.
+	DefaultLogFile = "/var/log/mindx-dl/ascend-dra/ascend-dra.log"
+	// DefaultCDIProviderDir is the default CDI provider config directory.
+	DefaultCDIProviderDir = ""
+)
