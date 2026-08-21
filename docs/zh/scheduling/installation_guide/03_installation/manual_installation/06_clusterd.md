@@ -83,7 +83,7 @@
 
     ```ColdFusion
     NAME                          READY   STATUS              RESTARTS   AGE
-    clusterd-7844cb867d-fwcj7     0/1     Running            0          45s
+    clusterd-7844cb867d-fwcj7     1/1     Running            0          45s
     ```
 
 >[!NOTE] 
