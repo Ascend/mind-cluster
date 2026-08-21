@@ -875,8 +875,8 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 
 - 涉及使用外部变量作为命令的一部分都进行严格的参数校验和防注入措施。
 - 从环境变量中获取的外部变量在用于命令拼接之前都要做严格的校验和防注入措施。
-- 所有的进程理应最小权限原则，避免由于注入导致严重后果。
-- 代码中不存在直接使用外部变量作为命令。
+- 所有的进程理应遵循最小权限原则，避免由于注入导致严重后果。
+- 代码中不存在直接使用外部变量作为命令执行。
 - 遵守各类编程语言安全规范。
 
 文件路径校验项目包括但不限于：
@@ -1077,9 +1077,9 @@ MindCluster集群调度组件是基于K8s生态的功能组件，因此训练任
 <tr id="row3786150112317"><td class="cellrowborder" rowspan="2" valign="top" width="17.578242175782425%" headers="mcps1.2.5.1.1 "><p id="p1678690152319"><a name="p1678690152319"></a><a name="p1678690152319"></a>修改etcd启动参数</p>
 <p id="p4773205225"><a name="p4773205225"></a><a name="p4773205225"></a></p>
 </td>
-<td class="cellrowborder" valign="top" width="41.675832416758325%" headers="mcps1.2.5.1.2 "><p id="p7151173693015"><a name="p7151173693015"></a><a name="p7151173693015"></a>--quota-backend-bytes参数为etcd的存储上限，默认为2G。</p>
+<td class="cellrowborder" valign="top" width="41.675832416758325%" headers="mcps1.2.5.1.2 "><p id="p7151173693015"><a name="p7151173693015"></a><a name="p7151173693015"></a>--quota-backend-bytes参数为etcd的存储上限，默认为2GB。</p>
 </td>
-<td class="cellrowborder" valign="top" width="25.51744825517448%" headers="mcps1.2.5.1.3 "><p id="p7795115813293"><a name="p7795115813293"></a><a name="p7795115813293"></a>修改为8G。</p>
+<td class="cellrowborder" valign="top" width="25.51744825517448%" headers="mcps1.2.5.1.3 "><p id="p7795115813293"><a name="p7795115813293"></a><a name="p7795115813293"></a>修改为8GB。</p>
 <pre class="screen" id="screen59032533500"><a name="screen59032533500"></a><a name="screen59032533500"></a>--quota-backend-bytes=8589934592</pre>
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="15.22847715228477%" headers="mcps1.2.5.1.4 "><p id="p1052214919162"><a name="p1052214919162"></a><a name="p1052214919162"></a>/etc/kubernetes/manifests/etcd.yaml</p>
@@ -1112,7 +1112,7 @@ MindCluster集群调度组件是基于K8s生态的功能组件，因此训练任
 </td>
 <td class="cellrowborder" valign="top" width="41.675832416758325%" headers="mcps1.2.5.1.2 "><p id="p18820154062717"><a name="p18820154062717"></a><a name="p18820154062717"></a>Volcano配置的CPU和内存资源将影响Volcano的处理能力。</p>
 </td>
-<td class="cellrowborder" valign="top" width="25.51744825517448%" headers="mcps1.2.5.1.3 "><p id="p3821140192710"><a name="p3821140192710"></a><a name="p3821140192710"></a>Volcano request的CPU资源上限调整为20核，memory资源上限调整为8G。</p>
+<td class="cellrowborder" valign="top" width="25.51744825517448%" headers="mcps1.2.5.1.3 "><p id="p3821140192710"><a name="p3821140192710"></a><a name="p3821140192710"></a>Volcano request的CPU资源上限调整为20核，memory资源上限调整为8GB。</p>
 <pre class="screen" id="screen6620102175310"><a name="screen6620102175310"></a><a name="screen6620102175310"></a>resources:
   requests:
     cpu: 20000m
