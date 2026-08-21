@@ -1,42 +1,22 @@
-FROM openeuler/openeuler:24.03-lts AS build
+FROM ubuntu:22.04 AS build
 
-ARG VERSION=26.1.0
+ARG VERSION=26.1.1
 ARG TARGETPLATFORM
 
-RUN yum update -y && \
-    yum install -y wget unzip && \
-    yum clean all && rm -rf /var/cache/yum /tmp/* && \
-    mkdir -p /build && rm -rf /build/* && \
+RUN apt update && apt install -y wget unzip &&\
+    apt-get clean &&\
+    rm -rf /var/lib/apt/lists/* &&\
+    rm -rf /var/tmp/* &&\
+    rm -rf /tmp/* &&\
     ARCH=$(case "${TARGETPLATFORM}" in \
         "linux/amd64") echo "x86_64" ;; \
         "linux/arm64") echo "aarch64" ;; \
         *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
-    esac) && \
-    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip && \
-    unzip Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip -d /build && \
-    wget https://mirrors.huaweicloud.com/ascend/archive/rpm/unifiedbus/common/umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz && \
-    cp umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz /build
+    esac) &&\
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip &&\
+    unzip Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip -d /build
 
-FROM openeuler/openeuler:24.03-lts
-
-ARG TARGETPLATFORM
-ARG UMDK_PKG=umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz
-
-COPY --from=build /build/${UMDK_PKG} /tmp/${UMDK_PKG}
-
-RUN yum install -y shadow-utils libnl3 libnl3-devel ca-certificates bash glibc sqlite-devel gcc gcc-c++ make cmake git  jq curl numactl-devel && \
-    yum clean all && rm -rf /var/cache/yum && \
-    if [ "${TARGETPLATFORM}" = "linux/arm64" ] && [ -n "${UMDK_PKG}" ] && [ -f "/tmp/${UMDK_PKG}" ]; then \
-        echo "INFO: Install umdk from /tmp/${UMDK_PKG}"; \
-        mkdir -p /tmp/umdk_pkgs; \
-        tar -mzxf "/tmp/${UMDK_PKG}" -C /tmp/umdk_pkgs; \
-        rpm -ivh /tmp/umdk_pkgs/*.rpm; \
-    elif [ "${TARGETPLATFORM}" = "linux/amd64" ]; then \
-        echo "INFO: amd64 platform skip local umdk rpm install"; \
-    else \
-        echo "WARN: umdk package not supported in platform ${TARGETPLATFORM}"; \
-    fi && \
-    rm -rf /tmp/*
+FROM ubuntu:22.04
 
 RUN groupadd -g 1000 HwHiAiUser && useradd -u 1000 -g HwHiAiUser -d /home/HwHiAiUser -m HwHiAiUser &&\
     groupadd -g 1101 HwDmUser && useradd -u 1101 -g HwDmUser -d /home/HwDmUser -m HwDmUser &&\
@@ -45,7 +25,7 @@ RUN groupadd -g 1000 HwHiAiUser && useradd -u 1000 -g HwHiAiUser -d /home/HwHiAi
     usermod -a -G HwDmUser HwHiAiUser &&\
     usermod -a -G HwBaseUser HwDmUser &&\
     usermod -a -G HwHiAiUser HwDmUser &&\
-    usermod root -s /bin/false
+    usermod root -s /usr/sbin/nologin
 
 COPY --from=build /build/npu-exporter  /usr/local/bin/
 COPY --from=build /build/run_for_310P_1usoc.sh /
