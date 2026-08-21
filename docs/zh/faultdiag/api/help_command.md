@@ -28,7 +28,7 @@ ascend-fd --help
 
 返回参数与使用说明。
 
-```ColdFusion
+```text
 usage: ascend-fd [-h] {version,parse,diag,blacklist,config,entity,single-diag} ...
 Ascend Fault Diag
 positional arguments:

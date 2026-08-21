@@ -11,12 +11,12 @@
     单机诊断默认返回故障事件模块的对应数据。
 
     ```shell
-    ascend-fd single-diag -i 采集目录 -o 单机诊断结果输出目录 
+    ascend-fd single-diag -i 采集目录 -o 单机诊断结果输出目录
     ```
 
     诊断训练任务异常退出问题，回显示例如下：
 
-    ```ColdFusion
+    ```text
     The single-diag job starts. Please wait. Job id: [****], run log file is [****].
     +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |                                                                                       Ascend Fault-Diag Report                                                                                       |
@@ -73,8 +73,8 @@
 
     ```text
     单机诊断结果输出目录
-    ├── fault_diag_result    
-        ├── diag_report.json    # 诊断结果
+    └── fault_diag_result
+        └── diag_report.json  # 诊断结果
     ```
 
     >[!NOTE] 

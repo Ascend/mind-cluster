@@ -235,7 +235,7 @@ private_key="~/.ssh/your_private_key"
 
 **输出说明**
 
-收集完成后，日志位于 `CommonPath.TOOL_HOME_BMC_DUMP_CACHE_DIR` 目录。
+收集完成后，日志位于工具默认缓存目录下的 `bmc_dump_cache` 子目录中。
 
 ### auto_collect
 

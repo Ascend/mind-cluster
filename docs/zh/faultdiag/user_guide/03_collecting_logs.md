@@ -6,7 +6,7 @@
 
 >[!NOTE] 
 >
->- Ascend-fd parse输入目录的日志文件大小会影响执行清洗命令的效率，总文件大小应限制在5G以下，文件总数量不能超过1000000。
+>- Ascend-fd parse输入目录的日志文件大小会影响执行清洗命令的效率，总文件大小应限制在5GB以下，文件总数量不能超过1000000。
 >- CANN应用类日志的单个文件应限制在20MB以下。
 >- NPU状态监测指标文件、NPU网口统计监测指标文件、主机侧资源信息文件应限制在512MB以下。
 >- 用户训练及推理日志大小无限制，会默认只读最后1MB日志。
@@ -28,7 +28,7 @@
         |-- dmesg                # 主机侧内核消息日志
         |-- crash
             |-- 主机+故障时间目录(eg:127.xx.xx.1-2024-09-23-11:25:29)
-                |-- vmcore_dmesg.txt     # 系统崩溃时保存的Host侧内核消息日志文件
+                |-- vmcore-dmesg.txt     # 系统崩溃时保存的Host侧内核消息日志文件
         |-- sysmonitor.log       # 主机侧系统监测日志
         |-- rank-0.txt           # 训练及推理控制台日志
         |-- dmidecode.txt        # dmidecode命令输出日志
@@ -195,11 +195,11 @@
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1193532265318"><a name="p1193532265318"></a><a name="p1193532265318"></a>采集目录/messages-*?</p>
         </td>
         </tr>
-        <tr id="row293522265317"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p69351922185310"><a name="p69351922185310"></a><a name="p69351922185310"></a>vmcore_dmesg.txt</p>
+        <tr id="row293522265317"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p69351922185310"><a name="p69351922185310"></a><a name="p69351922185310"></a>vmcore-dmesg.txt</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1893512218538"><a name="p1893512218538"></a><a name="p1893512218538"></a>系统崩溃时保存的Host侧内核消息日志文件。</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9935132235315"><a name="p9935132235315"></a><a name="p9935132235315"></a>采集目录/crash/主机+故障时间目录(eg: 127.xx.xx.1-2024-09-23-11:25:29)/vmcore_dmesg.txt</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9935132235315"><a name="p9935132235315"></a><a name="p9935132235315"></a>采集目录/crash/主机+故障时间目录(eg: 127.xx.xx.1-2024-09-23-11:25:29)/vmcore-dmesg.txt</p>
         </td>
         </tr>
         <tr id="row1193562265314"><td class="cellrowborder" rowspan="7" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p149350225535"><a name="p149350225535"></a><a name="p149350225535"></a>Device侧日志</p>
@@ -415,7 +415,7 @@
            |-- npu_info_after.txt 
            |-- npu_smi_0_details.csv
             ...
-           |-- npu_smi_0_details.csv
+           |-- npu_smi_7_details.csv
            |-- npu_0_details.csv
            ...
            |-- npu_7_details.csv
@@ -429,7 +429,7 @@
            |-- messages
            |-- crash
                   |-- 主机+故障时间目录(eg:127.xx.xx.1-2024-09-23-11:25:29)
-                         |-- vmcore_dmesg.txt
+                         |-- vmcore-dmesg.txt
            |-- dmesg 
            |-- sysmonitor.log   
     
@@ -497,14 +497,14 @@
     </td>
     <td class="cellrowborder" valign="top" width="21.790000000000003%" headers="mcps1.1.5.1.2 "><p id="p82834811121"><a name="p82834811121"></a><a name="p82834811121"></a>npu_info_before.txt</p>
     </td>
-    <td class="cellrowborder" valign="top" width="20.34%" headers="mcps1.1.5.1.3 "><p id="p1028548121213"><a name="p1028548121213"></a><a name="p1028548121213"></a>训练前NPU网口检查。</p>
+    <td class="cellrowborder" valign="top" width="20.34%" headers="mcps1.1.5.1.3 "><p id="p1028548121213"><a name="p1028548121213"></a><a name="p1028548121213"></a>训练及推理前NPU网口检查。</p>
     </td>
     <td class="cellrowborder" valign="top" width="42.230000000000004%" headers="mcps1.1.5.1.4 "><p id="p18882956161517"><a name="p18882956161517"></a><a name="p18882956161517"></a>${--env_check}/npu_info_before.txt</p>
     </td>
     </tr>
     <tr id="row1428248191217"><td class="cellrowborder" valign="top" headers="mcps1.1.5.1.1 "><p id="p328144851218"><a name="p328144851218"></a><a name="p328144851218"></a>npu_info_after.txt</p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.2 "><p id="p192810485120"><a name="p192810485120"></a><a name="p192810485120"></a>训练后NPU网口检查。</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.2 "><p id="p192810485120"><a name="p192810485120"></a><a name="p192810485120"></a>训练及推理后NPU网口检查。</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.3 "><p id="p1317894520179"><a name="p1317894520179"></a><a name="p1317894520179"></a>${--env_check}/npu_info_after.txt</p>
     </td>
@@ -552,7 +552,7 @@
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.2 "><p id="p58274315720"><a name="p58274315720"></a><a name="p58274315720"></a>系统崩溃时保存的Host侧内核消息日志文件。</p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.3 "><p id="p17824439712"><a name="p17824439712"></a><a name="p17824439712"></a>${--host_log}/crash/主机+故障时间目录(eg: 127.xx.xx.1-2024-09-23-11:25:29)/vmcore_dmesg.txt</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.3 "><p id="p17824439712"><a name="p17824439712"></a><a name="p17824439712"></a>${--host_log}/crash/主机+故障时间目录(eg: 127.xx.xx.1-2024-09-23-11:25:29)/vmcore-dmesg.txt</p>
     </td>
     </tr>
     <tr id="row1258783414010"><td class="cellrowborder" valign="top" headers="mcps1.1.5.1.1 "><p id="p8842648154011"><a name="p8842648154011"></a><a name="p8842648154011"></a>sysmonitor.log</p>
@@ -755,7 +755,7 @@
 
     回显如下：
 
-    ```ColdFusion
+    ```text
     net health status: Init
     ```
 
@@ -767,7 +767,7 @@
 
     回显如下：
 
-    ```ColdFusion
+    ```text
     link status: UP
     ```
 
@@ -779,7 +779,7 @@
 
     回显如下：
 
-    ```ColdFusion
+    ```text
     optical info:
     present              : not present
     ...
@@ -809,7 +809,7 @@
 
     回显如下：
 
-    ```ColdFusion
+    ```text
     dev_id:0, tls switch[0](0:disable, 1:enable), tls preconfigured[1](0:non-preset, 1:preset), tls alarm time threshold[60]days
     ```
 
@@ -821,7 +821,7 @@
 
     回显如下：
 
-    ```ColdFusion
+    ```text
     fec mode: rs FEC mode
     ```
 
@@ -833,7 +833,7 @@
 
     回显如下：
 
-    ```ColdFusion
+    ```text
     ipaddr:10.xx.xx.10
     netmask:255.255.255.0
     ```
@@ -846,7 +846,7 @@
 
     回显如下：
 
-    ```ColdFusion
+    ```text
     packet statistics:
     mac_tx_mac_pause_num:0
     mac_rx_mac_pause_num:0
@@ -867,7 +867,7 @@
 
     回显如下：
 
-    ```ColdFusion
+    ```text
     [device 0]current time        : Wed Jun  7 10:08:28 2023
     [device 0]link up count       : 2
     [device 0]link change records :
@@ -878,7 +878,7 @@
 
     文件存储示例如下，示例仅为0卡存储示例，请用户采集所有卡的信息。
 
-    ```ColdFusion
+    ```text
     /usr/local/Ascend/driver/tools/hccn_tool -i 0 -net_health -g
     net health status: Init
     
@@ -956,7 +956,7 @@
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         +------------------------------------------------------------------------------------------------+
         | npu-smi 24.1.rc1                 Version: 24.1.rc1                                             |
         +---------------------------+---------------+----------------------------------------------------+
@@ -986,7 +986,7 @@
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         NPU ID                                   : 1
         Chip Count                               : 1
         
@@ -1013,7 +1013,7 @@
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         NPU ID                         : 0
         Software Version               : 23.0.5
         Firmware Version               : 7.1.0.7.220
@@ -1039,7 +1039,7 @@
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         NPU ID                         : 0
         Chip ID                        : 0
         Chip Type                      : Ascend
@@ -1063,7 +1063,7 @@
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         NPU ID                         : 0
         Chip Count                     : 1
         
@@ -1089,7 +1089,7 @@
 
         回显如下：
 
-        ```ColdFusion
+        ```text
          Health Status                  : OK
          Error Code                     : NA
          Error Information              : NA
@@ -1097,7 +1097,7 @@
 
         文件存储示例如下，请用户采集所有卡的信息。
 
-        ```ColdFusion
+        ```text
         /usr/local/bin/npu-smi info
         +------------------------------------------------------------------------------------------------+
         | npu-smi 23.0.5                   Version: 23.0.5                                               |
@@ -1222,7 +1222,7 @@
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         Datetime: 2024-06-26 01:13:36
         ```
 
@@ -1234,7 +1234,7 @@
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         Version=24.1.rc1
         ascendhal_version=7.35.19
         aicpu_version=1.0
@@ -1256,7 +1256,7 @@
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         Version=7.1.0.11.220
         firmware_version=1.0
         package_version=23.0.7
@@ -1271,7 +1271,7 @@
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         package_name=Ascend-cann-toolkit
         version=8.5.0
         innerversion=V100R001C25SPC001B212
@@ -1289,7 +1289,7 @@
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         package_name=Ascend-cann-toolkit
         version=8.5.0
         innerversion=V100R001C25SPC001B212
@@ -1309,7 +1309,7 @@
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         torch              1.11.0
         torch-npu          2.1.0.post8.dev20241009
         mindspore          2.3.0
@@ -1323,7 +1323,7 @@
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         {
         Get component version(7.1.0.7.220) succeed for deviceId(0), componentType(0).
         {"device_id":0, "component":nve, "version":7.1.0.7.220}
@@ -1380,7 +1380,7 @@
 
 命令回显如下：
 
-```ColdFusion
+```text
 packet statistics:
 mac_tx_mac_pause_num:0
 mac_rx_mac_pause_num:0
@@ -1437,7 +1437,7 @@ nic_rx_all_oct_num:482237805
 
 命令回显如下：
 
-```ColdFusion
+```text
         NPU ID                         : 0
         Chip Count                     : 1
         Chip ID                        : 0
@@ -1505,7 +1505,7 @@ nic_rx_all_oct_num:482237805
 
     回显如下：
 
-    ```ColdFusion
+    ```text
     +------------------------------------------------------------------------------------------------+
     | npu-smi 23.0.rc3          Version: 23.0.rc2.3                                      |
     +---------------------------+---------------+----------------------------------------------------+
@@ -1571,7 +1571,7 @@ nic_rx_all_oct_num:482237805
 
     回显如下：
 
-    ```ColdFusion
+    ```text
     top - 14:15:53 up 39 days, 22:54,  9 users,  load average: 28.32, 10.28, 5.44
     Tasks: 2727 total,   9 running, 1261 sleeping,   1 stopped,   0 zombie
     %Cpu(s):  5.6 us,  5.4 sy,  0.0 ni, 89.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
@@ -1612,7 +1612,7 @@ nic_rx_all_oct_num:482237805
 
     存储示例如下：
 
-    ```ColdFusion
+    ```text
     {
     "node_mem_used": [[1689732534, 10259988480],[1689732594, 10259988481]],
     "node_rss_139667": [[1689732534, 353370112],[1689732594, 353370115]],
@@ -1674,7 +1674,7 @@ nic_rx_all_oct_num:482237805
 
     日志内容如下：
 
-    ```ColdFusion
+    ```text
     ……
     INFO:root:status of ranktable is not completed, waiting for file update.
     INFO:root:status of ranktable is not completed, waiting for file update.
@@ -1721,7 +1721,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         net health status: Init
         ```
 
@@ -1733,7 +1733,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         link status: UP
         ```
 
@@ -1745,7 +1745,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         optical info:
         present              : not present
         ...
@@ -1775,7 +1775,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         dev_id:0, tls switch[0](0:disable, 1:enable), tls preconfigured[1](0:non-preset, 1:preset), tls alarm time threshold[60]days
         ```
 
@@ -1787,7 +1787,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         fec mode: rs FEC mode
         ```
 
@@ -1799,7 +1799,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         ipaddr:10.xx.xx.10
         netmask:255.255.255.0
         ```
@@ -1812,7 +1812,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         packet statistics:
         mac_tx_mac_pause_num:0
         mac_rx_mac_pause_num:0
@@ -1833,7 +1833,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         [device 0]current time        : Wed Jun  7 10:08:28 2023
         [device 0]link up count       : 2
         [device 0]link change records :
@@ -1844,7 +1844,7 @@ nic_rx_all_oct_num:482237805
 
         文件存储示例如下，示例仅为0卡存储示例，请用户采集所有卡的信息。
 
-        ```ColdFusion
+        ```text
         /usr/local/Ascend/driver/tools/hccn_tool -i 0 -net_health -g
         net health status: Init
         
@@ -1921,7 +1921,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         +------------------------------------------------------------------------------------------------+
         | npu-smi 24.1.rc1                 Version: 24.1.rc1                                             |
         +---------------------------+---------------+----------------------------------------------------+
@@ -1951,7 +1951,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         NPU ID                                   : 1
         Chip Count                               : 1
         ```
@@ -1964,7 +1964,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         NPU ID                         : 0
         Software Version               : 23.0.5
         Firmware Version               : 7.1.0.7.220
@@ -1990,7 +1990,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         NPU ID                         : 0
         Chip ID                        : 0
         Chip Type                      : Ascend
@@ -2014,7 +2014,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         NPU ID                         : 0
         Chip Count                     : 1
         
@@ -2040,7 +2040,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
          Health Status                  : OK
          Error Code                     : NA
          Error Information              : NA
@@ -2048,7 +2048,7 @@ nic_rx_all_oct_num:482237805
 
         文件存储示例如下，请用户采集所有卡的信息。
 
-        ```ColdFusion
+        ```text
         /usr/local/bin/npu-smi info
         +------------------------------------------------------------------------------------------------+
         | npu-smi 23.0.5                   Version: 23.0.5                                               |
@@ -2173,7 +2173,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         Datetime: 2024-06-26 01:13:36
         ```
 
@@ -2185,7 +2185,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         Version=24.1.rc1
         ascendhal_version=7.35.19
         aicpu_version=1.0
@@ -2207,7 +2207,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         Version=7.1.0.11.220
         firmware_version=1.0
         package_version=23.0.7
@@ -2222,7 +2222,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         package_name=Ascend-cann-toolkit
         version=8.5.0
         innerversion=V100R001C25SPC001B212
@@ -2240,7 +2240,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         package_name=Ascend-cann-toolkit
         version=8.5.0
         innerversion=V100R001C25SPC001B212
@@ -2260,7 +2260,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         torch              1.11.0
         torch-npu          2.1.0.post8.dev20241009
         mindspore          2.3.0
@@ -2274,7 +2274,7 @@ nic_rx_all_oct_num:482237805
 
         回显如下：
 
-        ```ColdFusion
+        ```text
         {
         Get component version(7.1.0.7.220) succeed for deviceId(0), componentType(0).
         {"device_id":0, "component":nve, "version":7.1.0.7.220}
@@ -2404,7 +2404,7 @@ export ASCEND_PROCESS_LOG_PATH=${自定义目录路径}
 
     将日志信息转储，日志示例如下：
 
-    ```ColdFusion
+    ```text
     Aug 13 03:19:24 训练及推理任务开始
     ...
     Aug 13 04:14:39 训练及推理任务结束
@@ -2422,7 +2422,7 @@ dmesg -T | tail -n 100000 > 采集目录/dmesg
 
 日志示例如下：
 
-```ColdFusion
+```text
 [Fri Aug 30 16:42:49 2024] 日志打印
 …
 [Fri Aug 30 16:42:49 2024] 日志打印
@@ -2438,7 +2438,7 @@ cp -r /var/log/sysmonitor.log 采集目录/
 
 日志示例如下：
 
-```ColdFusion
+```text
 2024-08-27T19:54:48.242959+00:00|info|sysmonitor[xxxxx]: 日志打印
      …
 2024-08-27T19:54:48.343493+00:00|info|sysmonitor[xxxxx]: 日志打印
@@ -2456,7 +2456,7 @@ cp -r /var/crash/ 采集目录/
 
 日志示例如下：
 
-```ColdFusion
+```text
 [292.448078]日志打印
 ……
 [292.448080]日志打印

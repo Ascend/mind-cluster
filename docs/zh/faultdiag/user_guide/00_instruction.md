@@ -2,7 +2,7 @@
 
 ## 使用建议<a name="section181951321155817"></a>
 
-- 使用诊断功能时，因Linux系统最大进程数限制（默认为1024），故集群规格建议≤128台服务器（1024卡）。若服务器数量超过此规格时，需使用**ulimit -n**命令调整文件描述符上限。
+- 使用诊断功能时，因Linux系统文件描述符限制（默认为1024），故集群规格建议≤128台服务器（1024卡）。若服务器数量超过此规格时，需使用**ulimit -n**命令调整文件描述符上限。
 - 用户在使用MindCluster Ascend FaultDiag工具命令时，尽量不使用管道命令，可能会影响用户IP的获取、影响日志审计。
 
 ## 支持的场景<a name="section12381154319315"></a>
@@ -30,6 +30,6 @@
 |Device侧日志|Ascend HDK|23.0.RC3及以上|-|
 |MindCluster组件日志|Ascend Device Plugin、NodeD、Ascend Docker Runtime、NPU Exporter、Volcano|6.0.RC3及以上|-|
 |MindIE组件日志|MindIE Server、MindIE LLM、MindIE SD、MindIE RT、MindIE Torch、MindIE MS、MindIE Benchmark、MindIE Client|6.0.0及以上|-|
-|AMCT组件日志|AMCT模型压缩组件|7.0.RC1及以上|AMCT集成在CANN包中进行发布。更多相关信息请参见《[AMCT模型压缩工具用户指南](https://www.hiascend.com/document/detail/zh/canncommercial/900/devaids/amct/atlasamct_16_0001.html)》。|
+|AMCT组件日志|模型压缩组件|7.0.RC1及以上|AMCT集成在CANN包中进行发布。更多相关信息请参见《[AMCT模型压缩工具用户指南](https://www.hiascend.com/document/detail/zh/canncommercial/900/devaids/amct/atlasamct_16_0001.html)》。|
 |MindIE Pod控制台日志|MindIE Pod控制台日志|-|-|
 |MindIO组件日志|MindIO组件日志|-|-|

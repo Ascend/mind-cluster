@@ -41,8 +41,8 @@
 >[!NOTE]
 >
 >- 同时共用-i与详细日志采集目录参数时，会优先读取详细日志采集目录参数的输入值，再根据-i参数读取剩余日志采集目录。
->- 至少需要指定--input\_path、--host\_log、--device\_log、--train\_log、--process\_log、--env\_check、--dl\_log、--mindie\_log、--amct\_log、--custom\_log、--bus\_log其中一个参数，否则清洗命令会执行失败。
->- 清洗命令指定的输出目录磁盘空间需大于5G，空间不足可能导致部分清洗结果丢失，进而导致诊断结果异常或不准确。
+>- 至少需要指定--input\_path、--host\_log、--device\_log、--train\_log、--process\_log、--env\_check、--dl\_log、--mindie\_log、--amct\_log、--custom\_log、--bus\_log、--bmc\_log、--lcne\_log其中一个参数，否则清洗命令会执行失败。
+>- 清洗命令指定的输出目录磁盘空间需大于5GB，空间不足可能导致部分清洗结果丢失，进而导致诊断结果异常或不准确。
 
 ## 功能说明<a name="zh-cn_topic_0000001461778658_section10145143713297"></a>
 
@@ -67,7 +67,7 @@
 |--bus_log|无|否|String|Ascend 950代际LCNE组件日志目录。仅支持数字、大小写字母和字符“~”，“-”，“+”，“_”，“.”，“/”，“ ”。|
 |--custom_log|无|否|String|自定义解析文件目录。仅支持数字、大小写字母和字符“~”，“-”，“+”，“_”，“.”，“/”，“ ”。|
 |--input_path|-i|否|String|预处理数据输入路径，仅支持数字、大小写字母和字符“~”，“-”，“+”，“_”，“.”，“/”，“ ”。|
-|--output_path|-o|是|String|清洗完毕数据输出路径，仅支持数字、大小写字母和字符“~”，“-”，“+”，“_”，“.”，“/”，“ ”。|
+|--output_path|-o|是|String|清洗输出目录，仅支持数字、大小写字母和字符“~”，“-”，“+”，“_”，“.”，“/”，“ ”。|
 |--performance|-p|否|Bool|指定该参数时将执行所有清洗模块。不指定则只执行根因节点与故障事件两个模块的日志清洗功能。|
 |--help|-h|否|-|查询二级命令与参数含义以及使用说明。|
 
@@ -75,7 +75,7 @@
 
 日志清洗任务执行状态。
 
-```ColdFusion
+```text
 The parse job starts. Please wait. Job id: [****], run log file is [****].
 These job ['模块1', '模块2'...] succeeded.
 The parse job is complete.

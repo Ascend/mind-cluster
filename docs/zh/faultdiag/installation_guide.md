@@ -67,7 +67,7 @@
 >
 >      显示如下信息，表示软件包校验通过。
 >
->      ```ColdFusion
+>      ```text
 >      Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip: OK
 >      ```
 
@@ -111,15 +111,15 @@
 
     回显示例如下：
 
-    ```ColdFusion
+    ```text
     ascend-fd ${版本号}
     ```
 
 >[!NOTE]
 >
->- MindCluster Ascend FaultDiag的运行日志文件默认路径为“$\(HOME\)/.ascend\_faultdiag/RUN\_LOG/”目录下。每次执行ascend-fd parse或diag命令，会生成一个时间戳+随机数的文件夹，文件夹内部按PID分别落盘运行日志。RUN\_LOG目录下的文件夹数量若超过100个，将会按照时间先后删除20个文件夹；如果文件夹数量未超过100个，但是文件总内存大小超过100M，也会按时间先后删除旧日志并保留最大80M的文件。
+>- MindCluster Ascend FaultDiag的运行日志文件默认路径为“$\{HOME\}/.ascend\_faultdiag/RUN\_LOG/”目录下。每次执行ascend-fd parse或diag命令，会生成一个时间戳+随机数的文件夹，文件夹内部按PID分别落盘运行日志。RUN\_LOG目录下的文件夹数量若超过100个，将会按照时间先后删除20个文件夹；如果文件夹数量未超过100个，但是文件总存储大小超过100MB，也会按时间先后删除旧日志并保留最大80MB的文件。
 >- MindCluster Ascend FaultDiag的操作日志文件默认路径为“$\{HOME\}/.ascend\_faultdiag/ascend\_faultdiag\_operation.log”。
->- 日志文件大小不超过10M，超过限制大小后将自动转储另一个日志文件，同PID日志文件数量不超过10个，超过限制个数时将自动覆盖最早创建的日志。
+>- 日志文件大小不超过10MB，超过限制大小后将自动转储另一个日志文件，同PID日志文件数量不超过10个，超过限制个数时将自动覆盖最早创建的日志。
 >- 如果需要自定义日志文件路径，可以参考[自定义MindCluster Ascend FaultDiag家目录](./common_operations.md#自定义mindcluster-ascend-faultdiag家目录)章节进行操作。
 >- MindCluster Ascend FaultDiag的设备资源分析与网络拥塞分析模块依赖于scikit-learn、pandas、numpy与joblib三方库。若需使用这部分功能，请保证按照以下版本要求安装相应依赖库：scikit-learn\>=1.3.0、pandas\>=1.3.5、numpy\>=1.21.6、1.5.0\>joblib\>=1.2.0。
 
@@ -161,7 +161,7 @@ bash install.sh --install=fault-diag                                            
 
     回显示例如下：
 
-    ```ColdFusion
+    ```text
     ascend-fd ${版本号}
     ```
 

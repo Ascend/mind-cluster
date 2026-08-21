@@ -2,7 +2,7 @@
 
 ## 接口原型<a name="section1652101232010"></a>
 
-```shell
+```python
 parse_knowledge_graph(input_log_list: list, custom_entity: dict = None)
 ```
 

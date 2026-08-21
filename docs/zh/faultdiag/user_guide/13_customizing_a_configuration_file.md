@@ -15,7 +15,7 @@
 
     回显示例如下，表示操作成功。
 
-    ```ColdFusion
+    ```text
     The custom config file was updated successfully.
     ```
 
@@ -23,17 +23,17 @@
 
     ```json
     {
-        "enable_model_asrt": false,   # 是否支持清洗ModelArts关键日志。默认关闭
-        "train_log_size": 1048576,    # 配置读取控制台日志大小。默认1MB=1024*1024B=1048576B
-        "custom_parse_file": [        # 配置解析自定义的文件。可配置为[]，最大支持配置10个
+        "enable_model_asrt": false,
+        "train_log_size": 1048576,
+        "custom_parse_file": [
             {
-                "file_path_glob": "test_custom/*.log",      # --custom_log xx，指定大目录。对应路径下，按照 Unix 风格的通配符模式匹配文件。
-                "log_time_format": "%Y-%m-%d-%H:%M:%S.%f",  # 日志文件的时间格式，日期时间解析或格式化的标准格式字符串。     
-                "source_file": ["CustomLog"]                # 日志文件类型，最大支持配置10个
+                "file_path_glob": "test_custom/*.log",
+                "log_time_format": "%Y-%m-%d-%H:%M:%S.%f",
+                "source_file": ["CustomLog"]
             }
         ],
         "timezone_config" : {
-            "lcne" : true    # 是否支持LCNE日志时区转换。默认关闭
+            "lcne" : true
         }
     }
     ```
@@ -45,17 +45,17 @@
 
     <a name="table122501013255309"></a>
 
-    |参数名称|取值类型|参数说明|是否必选|取值说明|
-    |--|--|--|--|--|
-    |enable_model_asrt|Bool|是否支持清洗ModelArts关键日志。|可选|默认为false。<ul><li>true</li><li>false</li></ul>|
-    |train_log_size|Int|配置读取控制台日志大小。|可选|正整数，默认为1048576（1MB=1024\*1024B=1048576B）。|
-    |custom_parse_file|List|配置解析自定义的文件。|可选|列表格式，最大支持配置10个文件。|
-    |file_path_glob|String|自定义的解析文件（Unix风格的通配符模式）。|custom_parse_file存在且不为[]时必选|支持英文字母、数字、英文符号、空格与“\*”（例如配置："test_custom/\*.log"）。|
-    |log_time_format|String|自定义解析文件中日志打印的时间格式字符串。|可选|取值长度为1~50个字符，支持字符："YmdHMSf%- :,."（例如配置为"%Y-%m-%d %H:%M:%S.%f"）。<ul><li>%Y：4位年份（例如：2023、2024）。</li><li>%m：2位月份（01-12，例如：03 表示3月）。</li><li>%d：2位日期（01-31，例如：05表示5号）。</li><li>%H：24小时制的小时数（00-23）。</li><li>%M：2位分钟数（00-59）。</li><li>%S：2位秒数（00-59）。</li><li>%f：微秒数。</li></ul>|
-    |source_file|List|日志文件类型。|custom_parse_file存在且不为[]时必选|列表格式，最大支持配置10个字符串。每个字符串取值长度为1~50个字符，支持英文字母、数字、英文符号与空格。|
-    |timezone_config|Dictionary|日志时区转换。|可选|-|
-    |lcne|Bool|是否支持LCNE日志时区转换。|可选|默认为false。<ul><li>true</li><li>false</li></ul>|
-    |mindie|Bool|是否支持MindIE日志时区转换。该功能暂不支持。|可选|默认为false。<ul><li>true</li><li>false</li></ul>|
+    |参数名称|取值类型|参数说明|是否必选| 取值说明                                                                                                                                                                                                                                                                       |
+    |--|--|--|--|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+    |enable_model_asrt|Bool|是否支持清洗ModelArts关键日志。|可选| 默认为false。<ul><li>true</li><li>false</li></ul>                                                                                                                                                                                                                              |
+    |train_log_size|Int|配置读取控制台日志大小。|可选| 正整数，默认为1048576（1MB=1024\*1024Byte=1048576Byte）。                                                                                                                                                                                                                               |
+    |custom_parse_file|List|配置解析自定义的文件。|可选| 列表格式，最大支持配置10个文件。                                                                                                                                                                                                                                                          |
+    |file_path_glob|String|自定义的解析文件（Unix风格的通配符模式）。|custom_parse_file存在且不为[]时必选| 支持英文字母、数字、英文符号、空格与“\*”（例如配置："test_custom/\*.log"）。                                                                                                                                                                                                                         |
+    |log_time_format|String|自定义解析文件中日志打印的时间格式字符串。|可选| 取值长度为1~50个字符，支持字符："YmdHMSf%- :,."（例如配置为"%Y-%m-%d %H:%M:%S.%f"）。<ul><li>%Y：4位年份（例如：2023、2024）。</li><li>%m：2位月份（01-12，例如：03 表示3月）。</li><li>%d：2位日期（01-31，例如：05表示5号）。</li><li>%H：24小时制的小时数（00-23）。</li><li>%M：2位分钟数（00-59）。</li><li>%S：2位秒数（00-59）。</li><li>%f：微秒数。</li></ul> |
+    |source_file|List|日志文件类型。|custom_parse_file存在且不为[]时必选| 列表格式，最大支持配置10个字符串。每个字符串取值长度为1~50个字符，支持英文字母、数字、英文符号与空格。                                                                                                                                                                                                                     |
+    |timezone_config|Dictionary|日志时区转换。|可选| -                                                                                                                                                                                                                                                                          |
+    |lcne|Bool|是否支持LCNE日志时区转换。|可选| 默认为false。<ul><li>true</li><li>false</li></ul>                                                                                                                                                                                                                              |
+    |mindie|Bool|是否支持MindIE日志时区转换。该功能暂不支持。|可选| 默认为false。<ul><li>true</li><li>false</li></ul>                                                                                                                                                                                                                              |
 
 2. 查看用户自定义的配置信息。
 
@@ -63,7 +63,7 @@
     ascend-fd config --show
     ```
 
-3. （可选）校验custom-fd-config.json文件。若用户直接修改custom-fd-config.json文件的相关自定义故障实体信息，可以执行以下命令，校验修改后文件的完整性和可用性。
+3. （可选）校验custom-fd-config.json文件。若用户直接修改custom-fd-config.json文件的相关自定义配置信息，可以执行以下命令，校验修改后文件的完整性和可用性。
 
     ```shell
     ascend-fd config --check
@@ -71,7 +71,7 @@
 
     回显示例如下，表示文件校验通过。
 
-    ```ColdFusion
+    ```text
     The custom config file was updated successfully.
     ```
 

@@ -94,7 +94,7 @@ results输出格式示例如下。
 |component|String|故障组件。|
 |cause|String|故障原因。|
 |description|String|故障描述。|
-|suggestion|String|建议方案。|
+|suggestion|List|建议方案。|
 |device_list|List|发生该故障的设备列表。|
 |server|String|服务器地址。|
 |device|List|device卡信息。|

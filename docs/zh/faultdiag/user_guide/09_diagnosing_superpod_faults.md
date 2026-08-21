@@ -4,7 +4,7 @@
 
 - [超节点拓扑信息非手动关联场景](#超节点拓扑信息非手动关联场景)下，暂不支持缺失BMC、Host、LCNE三类中任一类日志。
 - 若缺失LCNE或BMC的某一类日志，请参考[超节点拓扑信息手动关联场景](#超节点拓扑信息手动关联场景)。
-- 若缺失Host日志，请参考[缺失host日志场景](#缺失host日志场景)将清洗输出结果存放至同一文件夹下进行诊断。
+- 若缺失Host日志，请参考[缺失Host日志场景](#缺失host日志场景)将清洗输出结果存放至同一文件夹下进行诊断。
 
 ## 超节点拓扑信息非手动关联场景<a name="section181656598409"></a>
 
@@ -66,7 +66,7 @@
 
     诊断回显示例如下：
 
-    ```ColdFusion
+    ```text
     The diag job starts. Please wait. Job id: [***], run log file is [***].
     +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |                                                                                   Ascend Fault-Diag Report                                                                  |
@@ -125,7 +125,7 @@
 
 清洗示例如下所示。
 
-```ColdFusion
+```shell
 ascend-fd parse --host_log parse_input/host/xxx.xx.xx.131/host_log/   --mindie_log parse_input/host/xxx.xx.xx.131/mindie/ --process_log parse_input/host/xxx.xx.xx.131/process_log/  --bmc_log parse_input/bmc/worker-104 --lcne_log parse_input/lcne/worker-204 -o 清洗结果输出目录/worker-1
 ascend-fd parse --host_log parse_input/host/xxx.xx.xx.129/host_log/   --mindie_log parse_input/host/xxx.xx.xx.129/mindie/ --process_log parse_input/host/xxx.xx.xx.129/process_log/  --bmc_log parse_input/bmc/worker-102 --lcne_log parse_input/lcne/worker-202 -o 清洗结果输出目录/worker-2
 ascend-fd parse --host_log parse_input/host/xxx.xx.xx.127/host_log/   --mindie_log parse_input/host/xxx.xx.xx.127/mindie/ --process_log parse_input/host/xxx.xx.xx.127/process_log/  --bmc_log parse_input/bmc/worker-100 --lcne_log parse_input/lcne/worker-200 -o 清洗结果输出目录/worker-3
@@ -185,7 +185,7 @@ ascend-fd parse --host_log parse_input/host/xxx.xx.xx.128/host_log/   --mindie_l
 
     诊断回显示例如下：
 
-    ```ColdFusion
+    ```text
     The diag job starts. Please wait. Job id: [***], run log file is [***].
     +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |                                                                        Ascend Fault-Diag Report                                                                             |
@@ -272,7 +272,7 @@ ascend-fd parse --host_log parse_input/host/xxx.xx.xx.128/host_log/   --mindie_l
 
 3. 诊断结果输出如下：
 
-    ```ColdFusion
+    ```text
     fault_diag_result/
     ├── diag_report_xxx.xxx.xx8.201-xxx.xxx.xx2.204-xxx.xxx.8.183-xxx.xxx.x7.203.json #诊断结果1
     └── diag_report_xxx.xxx.xx7.11.json #诊断结果2
@@ -324,7 +324,7 @@ ascend-fd parse --host_log parse_input/host/xxx.xx.xx.128/host_log/   --mindie_l
 
     诊断回显示例如下：
 
-    ```ColdFusion
+    ```text
     The diag job starts. Please wait. Job id: [***], run log file is [***].
     +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |                                                                      Ascend Fault-Diag Report                                                                               |
@@ -388,7 +388,7 @@ ascend-fd parse --host_log parse_input/host/xxx.xx.xx.128/host_log/   --mindie_l
 
 4. 诊断结果输出如下：
 
-    ```ColdFusion
+    ```text
     fault_diag_result/
     └── diag_report.json #诊断结果
     ```

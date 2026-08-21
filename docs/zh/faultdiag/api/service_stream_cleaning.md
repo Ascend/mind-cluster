@@ -2,7 +2,7 @@
 
 ## 接口原型<a name="section1652101232010"></a>
 
-```shell
+```python
 parse_fault_type(input_log_list: list)
 ```
 

@@ -247,7 +247,7 @@ HCCS链路降级：当事件代码包含"0x28000049"时
 **输入**
 
 - 交换机SSH在线采集：`dis optical-module interface {interface}` (光模块信息)
-- 交换机离线日志：CLI命令输出中的光模块信息表格（包含`Items, Value, HighAlarm, HighWarn, LowAlarm, Status`字段）
+- 交换机离线日志：CLI输出中的光模块信息表格（包含`Items, Value, HighAlarm, HighWarn, LowAlarm, Status`字段）
 
 **诊断逻辑**
 
@@ -363,13 +363,13 @@ HCCS链路降级：当事件代码包含"0x28000049"时
 
 **诊断逻辑**
 
-计算同一端口不同lane间的功率最大值和最小值差值，判断是否超过阈值（3db）。
+计算同一端口不同lane间的功率最大值和最小值差值，判断是否超过阈值（3dB）。
 
 **异常输出**
 
-lane间功率差异过大：当同一端口不同lane间的功率最大值和最小值差值超过阈值（3db）时
+lane间功率差异过大：当同一端口不同lane间的功率最大值和最小值差值超过阈值（3dB）时
 
-示例："端口lane功率差异过大，端口：eth0，最大差值：4.2db（阈值：3db），指示端口内部lane故障"
+示例："端口lane功率差异过大，端口：eth0，最大差值：4.2dB（阈值：3dB），指示端口内部lane故障"
 
 ## HCCS相关诊断片段
 

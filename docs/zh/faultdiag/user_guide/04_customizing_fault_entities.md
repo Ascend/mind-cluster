@@ -15,7 +15,7 @@
 
     回显示例如下，表示操作成功。
 
-    ```ColdFusion
+    ```text
     Updated entity successfully.
     ```
 
@@ -23,7 +23,7 @@
 
     ```json
     {
-        "41001": {      #故障码，用户需根据实际情况自定义故障码，不能与MindCluster Ascend FaultDiag已支持的故障码相同
+        "41001": {
             "attribute.class": "Software",
             "attribute.component": "AI Framework",
             "attribute.module": "Compiler",
@@ -61,7 +61,7 @@
                 "Abstract type", "cannot join with"
                 ]
         },
-        "41002": {                #故障码，用户需根据实际情况自定义故障码，不能与MindCluster Ascend FaultDiag已支持的故障码相同
+        "41002": {
             "attribute.class": "",
             "attribute.component": "",
             "attribute.module": "",
@@ -88,7 +88,7 @@
     ```
 
     >[!NOTE] 
-    >JSON文件示例中的41001和41002为用户自定义故障码，取值长度需为1\~50个字符串，支持英文字母、数字、英文符号、下划线（\_）和中划线（-），不能与MindCluster Ascend FaultDiag已支持的故障码相同。
+    >JSON文件示例中的41001和41002为用户自定义故障码，取值长度需为1\~50个字符，支持英文字母、数字、英文符号、下划线（\_）和中划线（-），不能与MindCluster Ascend FaultDiag已支持的故障码相同。
 
     **表 1**  参数说明
 
@@ -284,6 +284,6 @@
 
     回显示例如下，表示文件校验通过。
 
-    ```ColdFusion
+    ```text
     Custom entity verification passed.
     ```

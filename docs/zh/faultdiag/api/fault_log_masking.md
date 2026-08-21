@@ -32,8 +32,8 @@ ascend-fd blacklist 子命令
 
 例如返回当前已有的屏蔽规则。
 
-```ColdFusion
+```text
 [BLACKLIST]
-0. ERROR2, ERROR3, ERROR3
+0. ERROR1, ERROR2, ERROR3
 1. ERR1, ERR2, ERR3, ERR4
 ```

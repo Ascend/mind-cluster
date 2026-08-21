@@ -24,7 +24,7 @@
 2. 通过JSON文件，导入屏蔽规则。
 
     ```shell
-    ascend-fd blacklist --file test.json 
+    ascend-fd blacklist --file test.json
     ```
 
     >[!NOTE] 
@@ -34,7 +34,9 @@
 
     ```json
     {
-        "blacklist":[["ERROR2","ERROR3","ERROR3"],
+        "blacklist":[
+            ["ERROR","FUSION"],
+            ["ERROR1","ERROR2","ERROR3"],
             ["ERR1","ERR2","ERR3","ERR4"]
         ]
     }
@@ -48,10 +50,10 @@
 
     回显示例如下：
 
-    ```ColdFusion
+    ```text
     [BLACKLIST]
     0. 'ERROR', 'FUSION'
-    1. 'ERROR2', 'ERROR2', 'ERROR3'
+    1. 'ERROR1', 'ERROR2', 'ERROR3'
     2. 'ERR1', 'ERR2', 'ERR3', 'ERR4'
     ```
 

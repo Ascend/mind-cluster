@@ -10,10 +10,10 @@
 
 **解决方案<a name="section18590815191418"></a>**
 
-1. 执行**ulimit -n**命令，查看允许同时打开的最大文件描述符数量。
+1. 执行 `ulimit -n` 命令，查看允许同时打开的最大文件描述符数量。
 
     ![](../figures/faultdiag/zh-cn_image_0000001632540996.png)
 
-2. 执行**ulimit -n** <i>num</i>命令，调整文件描述符上限，如ulimit -n 2048。
+2. 执行 `ulimit -n <num>` 命令，调整文件描述符上限，如 `ulimit -n 2048`。
 
     ![](../figures/faultdiag/zh-cn_image_0000001632700908.png)

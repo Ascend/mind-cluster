@@ -9,7 +9,7 @@
 执行以下命令，在环境变量中，设置MindCluster Ascend FaultDiag家目录。
 
 ```shell
-export ASCEND_FD_HOME_PATH=/自定义路径
+export ASCEND_FD_HOME_PATH=<自定义路径>
 ```
 
 >[!NOTE] 

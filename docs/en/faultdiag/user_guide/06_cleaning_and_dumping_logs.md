@@ -62,7 +62,7 @@
         |-- dmesg                # Host kernel message logs
         |-- crash
             |-- Host + Fault time (eg:127.xx.xx.1-2024-09-23-11:25:29)
-                |-- vmcore_dmesg.txt     # Host kernel message log saved when the system breaks down
+                |-- vmcore-dmesg.txt     # Host kernel message log saved when the system breaks down
         |-- sysmonitor.log       # System monitoring log
         |-- rank-0.txt     # Training console logs
         ...
