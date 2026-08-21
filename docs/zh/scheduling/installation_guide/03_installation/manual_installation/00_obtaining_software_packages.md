@@ -16,7 +16,7 @@
 |Ascend Docker Runtime|Ascend-docker-runtime\_<i>{version}</i>\_linux-<i>{arch}</i>.run|Ascend Docker Runtime软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
 |NPU Exporter|Ascend-mindxdl-npu-exporter\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|NPU Exporter软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
 |Ascend Device Plugin|Ascend-mindxdl-device-plugin\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Ascend Device Plugin软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
-|Volcano|Ascend-mindxdl-volcano\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Volcano软件包。<p>请根据K8s和开源Volcano的兼容性选择合适的版本进行安装，具体版本请参见[Volcano官网中对应的Kubernetes版本](https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility)。</p><ul><li>Volcano v1.7.0兼容的K8s版本范围为1.19.x~1.28.x。</li><li>Volcano v1.9.0兼容的K8s版本范围为1.21.x~1.28.x。</li></ul>|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
+|Volcano|Ascend-mindxdl-volcano\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Volcano软件包。<p>请根据K8s（Kubernetes）和开源Volcano的兼容性选择合适的版本进行安装，具体版本请参见[Volcano官网中对应的Kubernetes版本](https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility)。</p><ul><li>Volcano v1.7.0兼容的K8s版本范围为1.19.x~1.28.x。</li><li>Volcano v1.9.0兼容的K8s版本范围为1.21.x~1.28.x。</li></ul>|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
 |Infer Operator|Ascend-mindxdl-infer-operator\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Infer Operator软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
 |Ascend Operator|Ascend-mindxdl-ascend-operator\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Ascend Operator软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
 |NodeD|Ascend-mindxdl-noded\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|NodeD软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
@@ -39,7 +39,7 @@
 
    ```shell
    unzip MindCluster_sha256sum.zip
-   sha256sum -c Ascend-mindxdl-device-plugin_{version}_linux-{arch}.zip.sha256sum
+   sha256sum -c Ascend-mindxdl-device-plugin_{version}_linux-{arch}.zip.sha256sum # 请将{version}和{arch}替换为实际值
    ```
 
 3. 验证校验结果。

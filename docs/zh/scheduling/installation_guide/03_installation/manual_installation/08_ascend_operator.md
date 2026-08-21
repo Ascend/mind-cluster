@@ -26,7 +26,7 @@
 2. <a name="li19793191914420"></a>将Ascend Operator软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
 3. 如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中Ascend Operator的启动参数。启动参数请参见[表1](#table11614104894617)，可执行<b>./ascend-operator -h</b>查看参数说明。
 4. （可选）使用Ascend Operator为PyTorch和MindSpore框架下的训练任务生成集合通信配置文件（RankTable File，也叫[hccl.json](../../../api/hccl.json_file_description.md)文件），缩短集群通信建链时间。使用其他框架的用户，可跳过本步骤。
-    1. 启动YAML中已经默认挂载了hccl.json文件的父目录，用户可以根据实际情况进行修改。
+    1. YAML中已经默认挂载了hccl.json文件的父目录，用户可以根据实际情况进行修改。
 
         <pre codetype="yaml">
         ...
