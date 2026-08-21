@@ -36,7 +36,7 @@
 3. 如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改对应启动YAML文件中Volcano的启动参数。常用启动参数请参见[表4](#table5305150122116)和[表5](#table203077022111)。
 4. 配置Volcano日志转储。
 
-    安装过程中，Volcano日志将挂载到磁盘空间（“/var/log/mindx-dl”）。默认情况下单日日志写入达到1.8G后，Volcano将清空日志文件。为防止空间被占满，请为Volcano配置日志转储，配置项信息参见[表1](#table1123141112311)，或选择更频繁的日志转储策略，避免日志丢失。
+    安装过程中，Volcano日志将挂载到磁盘空间（“/var/log/mindx-dl”）。默认情况下单日日志写入达到1.8GB后，Volcano将清空日志文件。为防止空间被占满，请为Volcano配置日志转储，配置项信息参见[表1](#table1123141112311)，或选择更频繁的日志转储策略，避免日志丢失。
 
     1. 在管理节点“/etc/logrotate.d”目录下，执行以下命令，创建日志转储配置文件。
 
@@ -586,7 +586,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="29.69%" headers="mcps1.2.5.1.3 "><p id="p1021949203420"><a name="p1021949203420"></a><a name="p1021949203420"></a>1800</p>
 </td>
-<td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.4 "><p id="p1321749193419"><a name="p1321749193419"></a><a name="p1321749193419"></a>日志文件最大存储大小（单位为M）。</p>
+<td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.4 "><p id="p1321749193419"><a name="p1321749193419"></a><a name="p1321749193419"></a>日志文件最大存储大小（单位为MB）。</p>
 <div class="note" id="note1919311416364"><a name="note1919311416364"></a><a name="note1919311416364"></a><div class="notebody"><p id="p7193444361"><a name="p7193444361"></a><a name="p7193444361"></a>当日志文件大小超过阈值时，日志内容会被清空。</p>
 </div></div>
 </td>
@@ -680,7 +680,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.3 "><p id="p31301349183714"><a name="p31301349183714"></a><a name="p31301349183714"></a>1800</p>
 </td>
-<td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.4 "><p id="p111301349113715"><a name="p111301349113715"></a><a name="p111301349113715"></a>日志文件最大存储大小（单位为M）。</p>
+<td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.4 "><p id="p111301349113715"><a name="p111301349113715"></a><a name="p111301349113715"></a>日志文件最大存储大小（单位为MB）。</p>
 <div class="note" id="note1513064943719"><a name="note1513064943719"></a><a name="note1513064943719"></a><div class="notebody"><p id="p111317492373"><a name="p111317492373"></a><a name="p111317492373"></a>当日志文件大小超过阈值时，日志内容会被清空。</p>
 </div></div>
 </td>
