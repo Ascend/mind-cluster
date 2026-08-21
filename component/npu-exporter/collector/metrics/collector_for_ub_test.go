@@ -459,42 +459,39 @@ func mockUbDcmiProbe(patches *gomonkey.Patches, n *colcommon.NpuCollector,
 		(*common.PortPktStatsInfo)(nil), portErr)
 }
 
-// TestUbCollectorSupportDcmi tests UbCollector SupportDcmi
-func TestUbCollectorSupportDcmi(t *testing.T) {
+// TestUbCollectorIsParallel tests UbCollector IsParallel probes dcmi and sets
+// DcmiSupported.
+func TestUbCollectorIsParallel(t *testing.T) {
 	n := mockNewNpuCollector()
-	convey.Convey("supported when dcmi call succeeds", t, func() {
+	convey.Convey("dcmi supported, probe latency <= 10ms => single goroutine", t, func() {
 		c := &UbCollector{}
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
 		mockUbDcmiProbe(patches, n, nil)
-		convey.So(c.SupportDcmi(n), convey.ShouldBeTrue)
+		convey.So(c.IsParallel(n), convey.ShouldBeFalse)
+		convey.So(c.DcmiSupported, convey.ShouldBeTrue)
 	})
-	convey.Convey("not supported when error contains -8255", t, func() {
+	convey.Convey("not supported when GetPortPktStatsInfo fails => parallel", t, func() {
 		c := &UbCollector{}
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		mockUbDcmiProbe(patches, n, fmt.Errorf("error code: %s", common.NotSupportErrorCode))
-		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
-	})
-	convey.Convey("not supported when error contains -99998", t, func() {
-		c := &UbCollector{}
-		patches := gomonkey.NewPatches()
-		defer patches.Reset()
-		mockUbDcmiProbe(patches, n, fmt.Errorf("error code: %s", common.FuncNotFoundErrorCode))
-		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
+		mockUbDcmiProbe(patches, n, fmt.Errorf("any error"))
+		convey.So(c.IsParallel(n), convey.ShouldBeTrue)
+		convey.So(c.DcmiSupported, convey.ShouldBeFalse)
 	})
 }
 
-// TestUbCollectorSupportDcmiNoDevice tests when GetDeviceList fails
-func TestUbCollectorSupportDcmiNoDevice(t *testing.T) {
+// TestUbCollectorIsParallelNoDevice tests when GetDeviceList fails
+func TestUbCollectorIsParallelNoDevice(t *testing.T) {
 	n := mockNewNpuCollector()
-	convey.Convey("not supported when GetDeviceList fails", t, func() {
+	convey.Convey("not supported when GetDeviceList fails => parallel", t, func() {
 		c := &UbCollector{}
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
 		patches.ApplyMethodReturn(n.Dmgr, "GetDeviceList",
 			int32(0), []int32{}, fmt.Errorf("no device"))
-		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
+		convey.So(c.IsParallel(n), convey.ShouldBeTrue)
+		convey.So(c.DcmiSupported, convey.ShouldBeFalse)
 	})
 }
 

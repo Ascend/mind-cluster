@@ -44,12 +44,12 @@ func TestRoceCollectorIsSupported(t *testing.T) {
 	}
 }
 
-// TestRoceCollectorSupportDcmi tests RoceCollector SupportDcmi
-func TestRoceCollectorSupportDcmi(t *testing.T) {
+// TestRoceCollectorIsParallel tests RoceCollector IsParallel
+func TestRoceCollectorIsParallel(t *testing.T) {
 	n := mockNewNpuCollector()
-	convey.Convey("returns false and result is cached", t, func() {
+	convey.Convey("isParallel returns true", t, func() {
 		c := &RoceCollector{}
-		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
-		convey.So(c.SupportDcmi(n), convey.ShouldBeFalse)
+		convey.So(c.IsParallel(n), convey.ShouldBeTrue)
+		convey.So(c.DcmiSupported, convey.ShouldBeFalse)
 	})
 }

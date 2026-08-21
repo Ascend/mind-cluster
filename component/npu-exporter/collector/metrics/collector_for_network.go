@@ -101,11 +101,11 @@ func (c *NetworkCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	return isSupport
 }
 
-// SupportDcmi returns false for now; will probe dcmi once the interface is ready.
-func (c *NetworkCollector) SupportDcmi(n *colcommon.NpuCollector) bool {
+// IsParallel returns true so NetworkCollector always runs in parallel goroutines.
+func (c *NetworkCollector) IsParallel(n *colcommon.NpuCollector) bool {
 	c.DcmiSupported = false
-	logger.Infof("[NetworkCollector] dcmi supported: %v", c.DcmiSupported)
-	return c.DcmiSupported
+	logger.Infof("[NetworkCollector] isParallel: true")
+	return true
 }
 
 // Describe description of the metric

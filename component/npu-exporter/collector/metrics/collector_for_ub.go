@@ -18,7 +18,6 @@ package metrics
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -206,40 +205,46 @@ func (c *UbCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	return isSupport
 }
 
-// SupportDcmi probes GetPortPktStatsInfo with first valid port and stores the
-// result in DcmiSupported. Should only be called once during classifyCollectors;
-// afterwards callers read c.DcmiSupported directly.
-func (c *UbCollector) SupportDcmi(n *colcommon.NpuCollector) bool {
-	c.DcmiSupported = probeUbDcmi(n)
-	logger.Infof("[UbCollector] dcmi supported: %v", c.DcmiSupported)
-	return c.DcmiSupported
+// IsParallel probes dcmi and measures latency. Returns true (parallel) if:
+// - dcmi is not supported (falls back to slow HCCN shell commands), or
+// - dcmi is supported but single call latency > 10ms (too slow for single goroutine).
+func (c *UbCollector) IsParallel(n *colcommon.NpuCollector) bool {
+	supported, elapsed := probeUbDcmi(n)
+	c.DcmiSupported = supported
+	parallel := !c.DcmiSupported || elapsed > colcommon.DcmiProbeLatencyThreshold
+	logger.Infof("[UbCollector] isParallel: %v, dcmi supported: %v, probe latency: %v",
+		parallel, c.DcmiSupported, elapsed)
+	// If dcmi is not supported, use HCCN (shell commands, even slower), need parallel.
+	// If dcmi is supported but slow, also need parallel.
+	return parallel
 }
 
-// probeUbDcmi returns true unless dcmi reports function not supported/missing.
-func probeUbDcmi(n *colcommon.NpuCollector) bool {
+// probeUbDcmi probes dcmi by calling GetPortPktStatsInfo on the first valid port.
+// Returns (supported, elapsed_time_of_GetPortPktStatsInfo).
+func probeUbDcmi(n *colcommon.NpuCollector) (bool, time.Duration) {
 	_, logicIDs, err := n.Dmgr.GetDeviceList()
 	if err != nil || len(logicIDs) == 0 {
-		return false
+		if err != nil {
+			logger.Errorf("[probeUbDcmi] GetDeviceList failed: %v", err)
+		}
+		return false, 0
 	}
 	portMap := colcommon.NpuDevPortInfos.GetPortMap()
 	for udie, ports := range portMap {
 		if len(ports) == 0 {
 			continue
 		}
+		start := time.Now()
 		_, err := n.Dmgr.GetPortPktStatsInfo(logicIDs[0], int32(udie), int32(ports[0].PortID))
-		return !isDcmiFuncMissingErr(err)
+		elapsed := time.Since(start)
+		logger.Infof("[probeUbDcmi] GetPortPktStatsInfo latency: %v", elapsed)
+		if err != nil {
+			logger.Errorf("[probeUbDcmi] GetPortPktStatsInfo failed: %v", err)
+			return false, elapsed
+		}
+		return true, elapsed
 	}
-	return false
-}
-
-// isDcmiFuncMissingErr returns true if dcmi function is not supported or missing.
-func isDcmiFuncMissingErr(err error) bool {
-	if err == nil {
-		return false
-	}
-	msg := err.Error()
-	return strings.Contains(msg, common.NotSupportErrorCode) ||
-		strings.Contains(msg, common.FuncNotFoundErrorCode)
+	return false, 0
 }
 
 // Describe description of the metric

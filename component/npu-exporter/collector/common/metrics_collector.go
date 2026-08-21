@@ -84,8 +84,9 @@ type MetricsCollector interface {
 	// IsSupported Check whether the current hardware supports this metric
 	IsSupported(*NpuCollector) bool
 
-	// SupportDcmi reports whether this collector can collect via dcmi instead of hccn_tool.
-	SupportDcmi(*NpuCollector) bool
+	// IsParallel reports whether this collector should run in parallel goroutines.
+	// Base returns false (single goroutine). Collectors with slow operations override to return true.
+	IsParallel(*NpuCollector) bool
 }
 
 // MetricsCollectorAdapter base collector for metrics collector
@@ -133,9 +134,9 @@ func (c *MetricsCollectorAdapter) IsSupported(*NpuCollector) bool {
 	return true
 }
 
-// SupportDcmi default true; multi chain collectors override to probe dcmi.
-func (c *MetricsCollectorAdapter) SupportDcmi(*NpuCollector) bool {
-	return true
+// IsParallel default false; collectors with slow operations override to return true.
+func (c *MetricsCollectorAdapter) IsParallel(*NpuCollector) bool {
+	return false
 }
 
 // UpdateCache update cache
