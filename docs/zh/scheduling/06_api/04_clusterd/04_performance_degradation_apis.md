@@ -43,7 +43,7 @@ rpc GetTrainingDataTraceSwitch(DataStatusReq) returns (DataStatusRes) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|DataStatusReq|message DataStatusReq{<p>string jobNsName = 1;</p>}|**jobNsName**：所需修改的任务的命名空间和任务名称，以’/’拼接，如：default/test-pytorch。|
+|DataStatusReq|message DataStatusReq{<p>string jobNsName = 1;</p>}|**jobNsName**：所需查询的任务的命名空间和任务名称，以’/’拼接，如：default/test-pytorch。|
 
 **返回值说明<a name="section93011951104217"></a>**
 

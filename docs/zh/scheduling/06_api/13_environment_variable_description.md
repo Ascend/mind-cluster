@@ -12,7 +12,7 @@ MindCluster组件使用的环境变量说明如[表1](#table1132513610543)所示
 |--|--|--|--|--|
 |POD_IP|部署组件的YAML中写入|是|当前容器所在Pod的Pod IP|ClusterD、TaskD用于启动gRPC服务|
 |POD_UID|部署组件的YAML中写入|否|当前容器所在Pod的PodUID|用于解析ranktable文件的server_id字段|
-|ASCEND_DOCKER_RUNTIME|容器创建时Ascend Docker Runtime写入|否|"true"|Ascend Device Plugin用于判断当前节点容器默认运行时是否是Ascend Docker Runtime|
+|ASCEND_DOCKER_RUNTIME|容器创建时Ascend Docker Runtime写入|否|"True"|Ascend Device Plugin用于判断当前节点容器默认运行时是否是Ascend Docker Runtime|
 |HOSTNAME|K8s创建容器时写入|是|当前容器所在Pod的Pod名称|Ascend Device Plugin用于获取当前Pod名称|
 |NODE_NAME|部署组件的YAML中写入|是|当前容器所在节点的节点名称|Ascend Device Plugin、NodeD、ClusterD用于获取当前节点名称|
 |LD_LIBRARY_PATH|Dockerfile中写入|是|文件路径|Ascend Device Plugin和NPU Exporter用于初始化DCMI|
@@ -289,7 +289,7 @@ Ascend Operator为不同AI框架的分布式训练任务（acjob）提供相应�
 </td>
 <td class="cellrowborder" valign="top" width="16.869999999999997%" headers="mcps1.2.6.1.2 "><p id="p118117596323"><a name="p118117596323"></a><a name="p118117596323"></a>ELASTIC_PROCESS_RECOVER_ENABLE</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.77%" headers="mcps1.2.6.1.3 "><p id="p1518175973216"><a name="p1518175973216"></a><a name="p1518175973216"></a><span id="ph1072282311518"><a name="ph1072282311518"></a><a name="ph1072282311518"></a>Elastic Agent</span>侧进程级别重调度、进程级在线恢复、临终CKPT恢复功能开关。</p>
+<td class="cellrowborder" valign="top" width="27.77%" headers="mcps1.2.6.1.3 "><p id="p1518175973216"><a name="p1518175973216"></a><a name="p1518175973216"></a><span id="ph1072282311518"><a name="ph1072282311518"></a><a name="ph1072282311518"></a>Elastic Agent</span>侧进程级别重调度、进程级在线恢复、临终CheckPoint恢复功能开关。</p>
 </td>
 <td class="cellrowborder" valign="top" width="19.79%" headers="mcps1.2.6.1.4 "><a name="ul167945693511"></a><a name="ul167945693511"></a><ul id="ul167945693511"><li>取值为1：开启本功能。</li><li>取值为其他值：关闭本功能。关闭本功能时，MindIO侧相关功能需同时关闭。</li></ul>
 </td>
@@ -424,7 +424,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 
 |环境变量名称|说明|取值范围|缺省值|
 |--|--|--|--|
-|TTP_LOG_PATH|MindIO TFT日志路径。禁止配置软链接，日志文件名补充为ttp_log.log，建议日志路径中包含日期时间，避免多次训练记录在同一个日志中，造成循环覆写。推荐在训练启动脚本中按如下方式配置日志路径： <br> `date_time=\$(date +%Y-%m-%d-%H_%M_%S)` <br> `export TTP_LOG_PATH=logs/\${date_time}` <br>当使用共享存储时，建议按照节点配置日志路径：<br>`export TTP_LOG_PATH=logs/\${nodeId}`|文件夹路径。|logs|
+|TTP_LOG_PATH|MindIO TFT日志路径。禁止配置软链接，日志文件名补充为ttp_log.log，建议日志路径中包含日期时间，避免多次训练记录在同一个日志中，造成循环覆写。推荐在训练启动脚本中按如下方式配置日志路径： <br> `date_time=$(date +%Y-%m-%d-%H_%M_%S)` <br> `export TTP_LOG_PATH=logs/${date_time}` <br>当使用共享存储时，建议按照节点配置日志路径：<br>`export TTP_LOG_PATH=logs/${nodeId}`|文件夹路径。|logs|
 |TTP_LOG_LEVEL|MindIO TFT日志等级。<ul><li>DEBUG：细节信息，仅当诊断问题时适用。</li><li>INFO：确认程序按预期运行。</li><li>WARNING：表明有已经或即将发生的意外，程序仍按预期进行。</li><li>ERROR：由于严重的问题，程序的某些功能已经不能正常执行。</li></ul>|<ul><li>DEBUG</li><li>INFO</li><li>WARNING</li><li>ERROR</li></ul>|INFO|
 |TTP_LOG_MODE|MindIO TFT日志模式。<ul><li>ONLY_ONE：所有MindIO TFT进程写一个日志。</li><li>PER_PROC：每个MindIO TFT进程写独立日志，日志文件路径为 {TTP_LOG_PATH}/ttp_log.log.{pid}。</li></ul>|<ul><li>ONLY_ONE</li><li>PER_PROC（若非指定ONLY_ONE，则默认为PER_PROC）</li></ul>|PER_PROC|
 |TTP_LOG_STDOUT|MindIO TFT日志记录方式。<ul><li>0：将MindIO TFT运行日志记录到对应的日志文件中。</li><li>1：直接打印MindIO TFT运行日志，不在本地存储。</li></ul>|<ul><li>0</li><li>1</li></ul>|0|
