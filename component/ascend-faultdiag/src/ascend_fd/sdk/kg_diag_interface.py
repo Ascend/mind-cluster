@@ -16,8 +16,16 @@
 # ==============================================================================
 from ascend_fd.model.node_info import FaultFilterTime
 from ascend_fd.utils.status import ParamError
-from ascend_fd.utils.tool import MAX_PARAM_LEN, Field, SchemaValidator, validate_list_length, MultiProcessJob, \
-    sort_results_by_id, validate_type, init_sdk_task
+from ascend_fd.utils.tool import (
+    MAX_PARAM_LEN,
+    Field,
+    SchemaValidator,
+    validate_list_length,
+    MultiProcessJob,
+    sort_results_by_id,
+    validate_type,
+    init_sdk_task,
+)
 from ascend_fd.pkg.parse.knowledge_graph.utils.data_descriptor import DataDescriptor
 from ascend_fd.pkg.diag.knowledge_graph.kg_diag_job import pre_analyze_job, hand_all_root_cause
 from ascend_fd.utils.regular_table import MIN_TIME, MAX_TIME
@@ -40,14 +48,18 @@ def diag_knowledge_graph(input_log_list: list):
     except ParamError as err:
         err_msg_list.append(f"All validation failed, the reason is: {err}")
         return results, err_msg_list
+    if not filtered_input_list:
+        return results, err_msg_list
     err_msg_list.extend(input_validation_err)
     task_id = init_sdk_task()
-    multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH_PARSE_INTERFACE", pool_size=len(filtered_input_list),
-                                       task_id=task_id, failed_raise=False)
+    multiprocess_job = MultiProcessJob(
+        "KNOWLEDGE_GRAPH_PARSE_INTERFACE", pool_size=len(filtered_input_list), task_id=task_id, failed_raise=False
+    )
     for idx, param in enumerate(filtered_input_list):
         server, kg_analyzer = param
-        multiprocess_job.add_security_job(f"KG_DIAG_SERVER_{server}_ID_{idx}", diagnose_server, server,
-                                          kg_analyzer, task_id, idx)
+        multiprocess_job.add_security_job(
+            f"KG_DIAG_SERVER_{server}_ID_{idx}", diagnose_server, server, kg_analyzer, task_id, idx
+        )
     multiprocess_results, _ = multiprocess_job.join_and_get_results()
     results = sort_results_by_id(multiprocess_results)
     return results, err_msg_list
@@ -73,11 +85,13 @@ def diagnose_server(server: str, kg_analyzer: dict, task_id: str, idx: int):
     device_list = []
     for device in kg_analyzer.get("response", dict()).keys():
         device_list.append(device)
-    pre_results, pre_failed_details = pre_analyze_job(server, device_list, kg_analyzer,
-                                                      FaultFilterTime(MIN_TIME, MAX_TIME))
+    pre_results, pre_failed_details = pre_analyze_job(
+        server, device_list, kg_analyzer, FaultFilterTime(MIN_TIME, MAX_TIME)
+    )
     kg_result = hand_all_root_cause(pre_results, pre_failed_details)
-    result_formatter = JsonWrapper(result=kg_result, failed_details=dict(), performance_flag=False,
-                                   task_id=task_id, single_diag_flag=False)
+    result_formatter = JsonWrapper(
+        result=kg_result, failed_details=dict(), performance_flag=False, task_id=task_id, single_diag_flag=False
+    )
     return result_formatter.export_kg_sdk_results(), idx
 
 
@@ -120,9 +134,9 @@ def process_input(input_log: dict, idx: int):
                     "key_info": Field(type=str, allow_empty=True),
                     "source_file": Field(type=str, allow_empty=True, size_limit=SDK_STR_PARAM_LIMIT),
                     "source_device": Field(type=str, size_limit=MAX_PARAM_LEN),
-                    "occur_time": Field(type=str, size_limit=MAX_PARAM_LEN)
-                }
-            )
+                    "occur_time": Field(type=str, size_limit=MAX_PARAM_LEN),
+                },
+            ),
         }
         validator = SchemaValidator(input_schema)
         validator.validate(input_log, root=f"input_log_list[{idx}]")
@@ -131,7 +145,7 @@ def process_input(input_log: dict, idx: int):
         input_schema = {
             "server": Field(type=str),
             "source": Field(type=str, allow_empty=True, mandatory=False),
-            "fault": Field(type=list, size_limit=1, sub_element_type=dict)
+            "fault": Field(type=list, size_limit=1, sub_element_type=dict),
         }
         validator = SchemaValidator(input_schema)
         validator.validate(input_log, root=f"input_log_list[{idx}]")

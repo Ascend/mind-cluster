@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+# pylint: disable=duplicate-code
 import os
 import logging
 import bisect
@@ -73,6 +74,9 @@ class BaseNpuLogParser(FileParser):
         """
         events_list = []
         kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
+        if not file_source_list:
+            kg_logger.info("No %s files matched, skip the %s log parse job.", self.SOURCE_FILE, self.SOURCE_FILE)
+            return [], {}
         if self.is_sdk_input:
             results = dict()
             for idx, file_source in enumerate(file_source_list):

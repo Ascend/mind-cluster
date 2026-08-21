@@ -14,13 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+# pylint: disable=duplicate-code
 import json
 
 from ascend_fd.model.mindie_info import MindIEParseResult
 from ascend_fd.pkg.parse.knowledge_graph.parser.mindie_parser import MindieParser
 from ascend_fd.utils.status import ParamError
-from ascend_fd.utils.tool import MultiProcessJob, validate_list_length, MAX_PARAM_LEN, Field, SchemaValidator, \
-    sort_results_by_id, init_sdk_task, validate_type
+from ascend_fd.utils.tool import (
+    MultiProcessJob,
+    validate_list_length,
+    MAX_PARAM_LEN,
+    Field,
+    SchemaValidator,
+    sort_results_by_id,
+    init_sdk_task,
+    validate_type,
+)
 from ascend_fd.pkg.parse.root_cluster.parser import PidFileParser
 
 MAX_SERVER_NUM_LIMIT = 256
@@ -45,8 +54,9 @@ def parse_root_cluster(input_log_list: list):
     results, failed_details = parse_data(param_list)
     if failed_details:
         first_key, first_value = next(iter(failed_details.items()))
-        err_msg_list.append(f"Some Root Cluster parse job failed. The first failed job: {first_key}, "
-                            f"error reason is: {first_value}")
+        err_msg_list.append(
+            f"Some Root Cluster parse job failed. The first failed job: {first_key}, error reason is: {first_value}"
+        )
     return results, err_msg_list
 
 
@@ -82,8 +92,8 @@ def input_params_validation(log_info: dict, idx: int):
             type=dict,
             sub_schema={
                 "server": Field(type=str, size_limit=MAX_PARAM_LEN),
-                "instance_id": Field(type=str, size_limit=MAX_PARAM_LEN)
-            }
+                "instance_id": Field(type=str, size_limit=MAX_PARAM_LEN),
+            },
         ),
         "log_items": Field(
             type=list,
@@ -95,9 +105,9 @@ def input_params_validation(log_info: dict, idx: int):
                 "pid": Field(type=int),
                 "device_id": Field(type=int, mandatory=False, allow_empty=True, choices=range(MAX_DEVICE_NUM)),
                 "rank_id": Field(type=int, mandatory=False, allow_empty=True),
-                "log_lines": Field(type=list, allow_empty=True, sub_element_type=str)
-            }
-        )
+                "log_lines": Field(type=list, allow_empty=True, sub_element_type=str),
+            },
+        ),
     }
     validator = SchemaValidator(rc_parse_input_schema)
     validator.validate(log_info, root=f"input_log_list[{idx}]")
@@ -162,13 +172,17 @@ def multiprocess_log_lines(pid_data_list: list, rc_parser_list: list):
     :param rc_parser_list: list or RootClusterParser
     :return: a list of pid parser for each server and failed details
     """
+    if not rc_parser_list:
+        return [], {}
     task_id = init_sdk_task()
-    multiprocess_job = MultiProcessJob("ROOT_CLUSTER_PARSE_INTERFACE", pool_size=len(rc_parser_list), task_id=task_id,
-                                       failed_raise=False)
+    multiprocess_job = MultiProcessJob(
+        "ROOT_CLUSTER_PARSE_INTERFACE", pool_size=len(rc_parser_list), task_id=task_id, failed_raise=False
+    )
     # parse server
     for idx, rc_parser in enumerate(rc_parser_list):
-        multiprocess_job.add_security_job(f"RC_PARSE_PROCESS_RESULT_SERVER_{rc_parser}_ID_{idx}",
-                                          rc_parser.parse_server, pid_data_list[idx])
+        multiprocess_job.add_security_job(
+            f"RC_PARSE_PROCESS_RESULT_SERVER_{rc_parser}_ID_{idx}", rc_parser.parse_server, pid_data_list[idx]
+        )
     results_with_id, failed_details = multiprocess_job.join_and_get_results()
     # this list still has the same order with rc_parser_list and pid_data_list
     pid_parser_list = sort_results_by_id(results_with_id)
@@ -274,11 +288,7 @@ class RootClusterParser:
         return pid_parser_map, self.idx
 
     def fabricate_rank_map(self, rank_id, unique_pid_count, pid_file_parser):
-        instance_rank_map = {
-            self.instance_id: {
-                "rank_num": unique_pid_count, "rank_id": str(rank_id)
-            }
-        }
+        instance_rank_map = {self.instance_id: {"rank_num": unique_pid_count, "rank_id": str(rank_id)}}
         pid_file_parser.base_info_parser.supplement_rank_info(self.instance_id, instance_rank_map, self.server)
 
     def get_pid_structured_data(self):

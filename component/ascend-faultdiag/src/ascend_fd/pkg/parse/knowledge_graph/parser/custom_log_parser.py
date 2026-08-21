@@ -34,9 +34,6 @@ class CustomLogParser(FileParser):
     SOURCE_FILE = ""
     TARGET_FILE_PATTERNS = "custom_log_list"
 
-    def __init__(self, params):
-        super().__init__(params)
-
     @staticmethod
     def _get_occur_time(line, log_time_format):
         """
@@ -45,15 +42,19 @@ class CustomLogParser(FileParser):
         :param log_time_format: log time format
         :return: time info
         """
-        log_time_regex = re.sub(r"%(Y|f|[mdHMS])", lambda match: {
-            "Y": r"\d{4}",
-            "f": r"\d{3,6}",
-            "m": r"\d{2}",
-            "d": r"\d{2}",
-            "H": r"\d{2}",
-            "M": r"\d{2}",
-            "S": r"\d{2}"
-        }[match.group(1)], log_time_format)
+        log_time_regex = re.sub(
+            r"%(Y|f|[mdHMS])",
+            lambda match: {
+                "Y": r"\d{4}",
+                "f": r"\d{3,6}",
+                "m": r"\d{2}",
+                "d": r"\d{2}",
+                "H": r"\d{2}",
+                "M": r"\d{2}",
+                "S": r"\d{2}",
+            }[match.group(1)],
+            log_time_format,
+        )
         time_regex = re.compile(log_time_regex)
         ret = time_regex.findall(line)
         if not ret:
@@ -80,15 +81,22 @@ class CustomLogParser(FileParser):
         if self.is_sdk_input:
             results = dict()
             for idx, each_custom_info in enumerate(parse_ctx.custom_info_list):
-                results.update({
-                    f"{self.TARGET_FILE_PATTERNS}_ID-{idx}": self._parse_each_custom_info(each_custom_info)
-                })
+                results.update(
+                    {f"{self.TARGET_FILE_PATTERNS}_ID-{idx}": self._parse_each_custom_info(each_custom_info)}
+                )
         else:
-            multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_info_list), task_id=task_id,
-                                               daemon=False)
+            if not file_info_list:
+                # 自定义配置未匹配到任何文件时直接返回空结果，
+                # 避免以空任务池创建多进程任务，导致阻塞直至 MultiProcessJob 超时（默认 600s）
+                kg_logger.info("No %s files matched, skip the custom log parse job.", self.TARGET_FILE_PATTERNS)
+                return [], {}
+            multiprocess_job = MultiProcessJob(
+                "KNOWLEDGE_GRAPH", pool_size=len(file_info_list), task_id=task_id, daemon=False
+            )
             for idx, each_custom_info in enumerate(parse_ctx.custom_info_list):
-                multiprocess_job.add_security_job(f"{self.TARGET_FILE_PATTERNS}_ID-{idx}",
-                                                  self._parse_each_custom_info, each_custom_info, task_id)
+                multiprocess_job.add_security_job(
+                    f"{self.TARGET_FILE_PATTERNS}_ID-{idx}", self._parse_each_custom_info, each_custom_info, task_id
+                )
             results, _ = multiprocess_job.join_and_get_results()
         kg_logger.info("%s files parse job is complete.", self.TARGET_FILE_PATTERNS)
         return list(chain(*results.values())), {}
@@ -136,8 +144,12 @@ class CustomLogParser(FileParser):
         event_storage = EventStorage()
         multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(each_custom_log_list), task_id=task_id)
         for idx, file_path in enumerate(each_custom_log_list):
-            multiprocess_job.add_security_job(f"{self.TARGET_FILE_PATTERNS}_ID-{idx}_{os.path.basename(file_path)}",
-                                              self._parse_file, file_path, each_custom_info.custom_file_info)
+            multiprocess_job.add_security_job(
+                f"{self.TARGET_FILE_PATTERNS}_ID-{idx}_{os.path.basename(file_path)}",
+                self._parse_file,
+                file_path,
+                each_custom_info.custom_file_info,
+            )
         results, _ = multiprocess_job.join_and_get_results()
         for result in chain(*results.values()):
             event_storage.record_event(result)
@@ -151,8 +163,9 @@ class CustomLogParser(FileParser):
         """
         if not os.path.isfile(file_path) or not file_info.source_file:
             return []
-        occur_time = self.params.get("end_time") or \
-                     time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(os.path.getmtime(file_path))))
+        occur_time = self.params.get("end_time") or time.strftime(
+            "%Y-%m-%d %H:%M:%S", time.localtime(float(os.path.getmtime(file_path)))
+        )
 
         for source in file_info.source_file:
             self.user_conf.update(self.regex_user.get(source, {}))
@@ -162,8 +175,9 @@ class CustomLogParser(FileParser):
             if file_info.log_time_format:
                 occur_time = self._get_occur_time(line, file_info.log_time_format)
                 if not occur_time:
-                    kg_logger.warning("Custom parsing failed, time format: [%s], actual log: [%s].",
-                                      file_info.log_time_format, line)
+                    kg_logger.warning(
+                        "Custom parsing failed, time format: [%s], actual log: [%s].", file_info.log_time_format, line
+                    )
                     continue
                 if occur_time < self.resuming_training_time:
                     continue
@@ -174,10 +188,8 @@ class CustomLogParser(FileParser):
             event_dict = self.parse_from_user_repository(line)
             if not event_dict:
                 continue
-            event_dict.update({
-                "occur_time": occur_time,
-                "source_file": os.path.basename(file_path),
-                "type": file_info.source_file
-            })
+            event_dict.update(
+                {"occur_time": occur_time, "source_file": os.path.basename(file_path), "type": file_info.source_file}
+            )
             events_list.append(event_dict)
         return events_list

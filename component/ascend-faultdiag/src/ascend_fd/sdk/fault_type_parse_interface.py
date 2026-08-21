@@ -38,14 +38,18 @@ def input_params_validation(log_info: dict):
     domain = log_info.get("log_domain", dict())
     items = log_info.get("log_items", [])
     if not domain or not items:
-        raise ParamError("Invalid parameters, both 'log_domain' and 'log_items' should be "
-                         "available and valid for a log element.")
+        raise ParamError(
+            "Invalid parameters, both 'log_domain' and 'log_items' should be available and valid for a log element."
+        )
     validate_type(domain, dict, "log_domain")
     validate_type(items, list, "log_items")
     items_size = len(items)
     if items_size > MAX_ITEM_NUM_LIMIT:
-        raise ParamError("The size of server info 'log_items' exceeds the limit, which is {}, "
-                         "whereas the current size is {}".format(MAX_ITEM_NUM_LIMIT, items_size))
+        raise ParamError(
+            "The size of server info 'log_items' exceeds the limit, which is {}, whereas the current size is {}".format(
+                MAX_ITEM_NUM_LIMIT, items_size
+            )
+        )
     if "device" not in domain:
         raise ParamError("Insufficient parameters, 'device' should be a filed of 'log_domain'.")
     server, device = domain.get("server", ""), domain.get("device", [])
@@ -65,8 +69,11 @@ def valid_input(input_log_list: list):
     validate_type(input_log_list, list, "input_log_list")
     input_list_size = len(input_log_list)
     if input_list_size > MAX_SERVER_NUM_LIMIT:
-        raise ParamError("The size of the input list exceeds the limit, which is {}, "
-                         "whereas the current size is {}.".format(MAX_SERVER_NUM_LIMIT, input_list_size))
+        raise ParamError(
+            "The size of the input list exceeds the limit, which is {}, whereas the current size is {}.".format(
+                MAX_SERVER_NUM_LIMIT, input_list_size
+            )
+        )
     filtered_list = []
     for log_info in input_log_list:
         valid_params = input_params_validation(log_info)
@@ -87,9 +94,12 @@ def parse_fault_type(input_log_list: list):
     except ParamError as e:
         err_msg_list.append(f"Parse failed, the reason is: [{e}]")
         return results, err_msg_list
+    if not filtered_input_list:
+        return results, err_msg_list
     task_id = init_sdk_task()
-    multiprocess_job = MultiProcessJob("PARSE_INTERFACE", pool_size=len(filtered_input_list), task_id=task_id,
-                                       daemon=False, failed_raise=False)
+    multiprocess_job = MultiProcessJob(
+        "PARSE_INTERFACE", pool_size=len(filtered_input_list), task_id=task_id, daemon=False, failed_raise=False
+    )
     for idx, log_info in enumerate(filtered_input_list):
         server, device, items = log_info
         log_parser = ParseDataPacker(server, device)
@@ -104,8 +114,10 @@ def parse_fault_type(input_log_list: list):
         saved_fault.update_domain_info(fault.server, fault.device)
     results = format_output(fault_map)
     if failed_details:
-        err_msg_list.append(f"Some parsing works failed, the failure can be partly attributed to: "
-                            f"[{next(iter(failed_details.values()))}]")
+        err_msg_list.append(
+            f"Some parsing works failed, the failure can be partly attributed to: "
+            f"[{next(iter(failed_details.values()))}]"
+        )
     return results, err_msg_list
 
 
@@ -117,21 +129,22 @@ def format_output(fault_map: dict):
     """
     results = []
     for error_type, fault in fault_map.items():
-        results.append({
-            "error_type": error_type,
-            "fault_domain": fault.attribute.class_,
-            "attribute": fault.get_attribute(),
-            "device_list": fault.get_device_list()
-        })
+        results.append(
+            {
+                "error_type": error_type,
+                "fault_domain": fault.attribute.class_,
+                "attribute": fault.get_attribute(),
+                "device_list": fault.get_device_list(),
+            }
+        )
     return results
 
 
 class LogItemParser(FileParser):
-
     def __init__(self, item_type: str, log_lines: list):
         self.params = {
             "default_conf": ParseRegexMap([KNOWLEDGE_GRAPH_CONF]).get_parse_regex(),
-            "user_conf": ParseRegexMap([DEFAULT_USER_CONF]).get_parse_regex()
+            "user_conf": ParseRegexMap([DEFAULT_USER_CONF]).get_parse_regex(),
         }
         self.SOURCE_FILE = item_type
         super().__init__(self.params)
@@ -158,7 +171,6 @@ class LogItemParser(FileParser):
 
 
 class ParseDataPacker:
-
     def __init__(self, server: str, device: list):
         self.server = server
         self.device = device
@@ -176,12 +188,15 @@ class ParseDataPacker:
         log_lines_key = "log_lines"
         for item in items:
             if log_lines_key not in item:
-                raise ParamError("Insufficient parameters, '{}' need to exist for a 'log_items' element."
-                                 .format(log_lines_key))
+                raise ParamError(
+                    "Insufficient parameters, '{}' need to exist for a 'log_items' element.".format(log_lines_key)
+                )
             item_type = item.get("item_type", "")
             if not item_type:
-                raise ParamError("Invalid parameters, both 'item_type' and 'log_lines' should be "
-                                 "available and valid for a log element.")
+                raise ParamError(
+                    "Invalid parameters, both 'item_type' and 'log_lines' should be "
+                    "available and valid for a log element."
+                )
             log_lines = item.get(log_lines_key, [])
             validate_type(log_lines, list, log_lines_key)
             validate_type(item_type, str, "item_type")
