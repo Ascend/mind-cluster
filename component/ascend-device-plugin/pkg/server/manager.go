@@ -30,6 +30,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
@@ -66,6 +67,8 @@ const (
 	serverIndexKey               = "serverIndex"
 	serverTypeKey                = "serverType"
 	cardTypeKey                  = "cardType"
+
+	faultConfigLocalVersion = "local file"
 )
 
 // HwDevManager manages huawei device devices.
@@ -1565,8 +1568,15 @@ func (hdm *HwDevManager) loadFaultCode() int {
 	interval := common.PollFaultCodeCMInterval
 	configMap, err := hdm.manager.GetKubeClient().GetConfigMap(common.FaultCodeCMName, api.KubeNS)
 	if err != nil {
-		hwlog.RunLog.Debugf("cannot find '%s' configmap, reason: %v", common.FaultCodeCMName, err)
-		initFaultInfoFromFile()
+		if apierrors.IsNotFound(err) {
+			hwlog.RunLog.Infof("configmap '%s' not found, fallback to local fault config", common.FaultCodeCMName)
+			// initFaultInfoFromFile marks resourceVersion with faultConfigLocalVersion after success,
+			// so that the configmap will be reloaded when it is created later
+			initFaultInfoFromFile()
+		} else {
+			hwlog.RunLog.Warnf("cannot access '%s' configmap, keep current config, reason: %v",
+				common.FaultCodeCMName, err)
+		}
 	} else {
 		updateFaultConfigFromCm(configMap)
 		interval = getFaultCodeCMPollInterval(configMap)
@@ -1590,18 +1600,30 @@ func updateFaultConfigFromCm(configMap *v1.ConfigMap) {
 }
 
 func initFaultInfoFromFile() {
+	// skip repeated loading if local fault config has been loaded successfully before
+	if resourceVersion == faultConfigLocalVersion {
+		return
+	}
+	loadFailed := false
 	if err := common.LoadFaultCodeFromFile(); err != nil {
 		hwlog.RunLog.Errorf("load fault code from file failed, err: %v", err)
+		loadFailed = true
 	}
 	if err := common.LoadFaultCustomizationFromFile(); err != nil {
 		hwlog.RunLog.Errorf("load fault customization from file failed, err: %v", err)
+		loadFailed = true
 	}
 	if common.ParamOption.RealCardType == api.Ascend910A3 && common.ParamOption.EnableSwitchFault {
 		if err := common.LoadSwitchFaultCodeFromFile(); err != nil {
 			hwlog.RunLog.Errorf("load switch fault code from file failed, err: %v", err)
-			return
+			loadFailed = true
+		} else {
+			deviceswitch.UpdateSwitchFaultLevel()
 		}
-		deviceswitch.UpdateSwitchFaultLevel()
+	}
+	// only mark as loaded when all fault configs are loaded successfully,
+	if !loadFailed {
+		resourceVersion = faultConfigLocalVersion
 	}
 }
 

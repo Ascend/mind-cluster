@@ -29,9 +29,11 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -1761,6 +1763,110 @@ func TestLoadFaultCode(t *testing.T) {
 				func() error { return errors.New("file load error") })
 			defer patch2.Reset()
 			convey.So(CapturePanic(func() { loadFaultCode(configMap) }), convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestHwDevManagerLoadFaultCode tests the loadFaultCode method of HwDevManager for error classification.
+func TestHwDevManagerLoadFaultCode(t *testing.T) {
+	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}}
+	convey.Convey("Test HwDevManager.loadFaultCode", t, func() {
+		patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetKubeClient", &kubeclient.ClientK8s{})
+		defer patch.Reset()
+		convey.Convey("When configmap not found, load fault config from local file and mark resourceVersion", func() {
+			originalVersion := resourceVersion
+			resourceVersion = ""
+			defer func() { resourceVersion = originalVersion }()
+			faultCodeCalled, customizationCalled := false, false
+			patch1 := gomonkey.ApplyFunc(common.LoadFaultCodeFromFile,
+				func() error { faultCodeCalled = true; return nil }).
+				ApplyFunc(common.LoadFaultCustomizationFromFile,
+					func() error { customizationCalled = true; return nil }).
+				ApplyFunc(common.LoadSwitchFaultCodeFromFile, func() error { return nil }).
+				ApplyFunc(deviceswitch.UpdateSwitchFaultLevel, func() {}).
+				ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetConfigMap",
+					func(_ *kubeclient.ClientK8s, _, _ string) (*v1.ConfigMap, error) {
+						return nil, apierrors.NewNotFound(schema.GroupResource{Resource: "configmaps"},
+							common.FaultCodeCMName)
+					})
+			defer patch1.Reset()
+			interval := hdm.loadFaultCode()
+			convey.So(faultCodeCalled, convey.ShouldBeTrue)
+			convey.So(customizationCalled, convey.ShouldBeTrue)
+			convey.So(resourceVersion, convey.ShouldEqual, faultConfigLocalVersion)
+			convey.So(interval, convey.ShouldEqual, common.PollFaultCodeCMInterval)
+		})
+		convey.Convey("When local fault config already loaded, skip the repeated loading", func() {
+			originalVersion := resourceVersion
+			resourceVersion = faultConfigLocalVersion
+			defer func() { resourceVersion = originalVersion }()
+			called := false
+			patch1 := gomonkey.ApplyFunc(common.LoadFaultCodeFromFile,
+				func() error { called = true; return nil }).
+				ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetConfigMap",
+					func(_ *kubeclient.ClientK8s, _, _ string) (*v1.ConfigMap, error) {
+						return nil, apierrors.NewNotFound(schema.GroupResource{Resource: "configmaps"},
+							common.FaultCodeCMName)
+					})
+			defer patch1.Reset()
+			interval := hdm.loadFaultCode()
+			convey.So(called, convey.ShouldBeFalse)
+			convey.So(resourceVersion, convey.ShouldEqual, faultConfigLocalVersion)
+			convey.So(interval, convey.ShouldEqual, common.PollFaultCodeCMInterval)
+		})
+		convey.Convey("When part of local fault configs load failed, keep resourceVersion for the next retry", func() {
+			originalVersion := resourceVersion
+			resourceVersion = "some-version"
+			defer func() { resourceVersion = originalVersion }()
+			customizationCalled := false
+			patch1 := gomonkey.ApplyFunc(common.LoadFaultCodeFromFile,
+				func() error { return errors.New("file load error") }).
+				ApplyFunc(common.LoadFaultCustomizationFromFile,
+					func() error { customizationCalled = true; return nil }).
+				ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetConfigMap",
+					func(_ *kubeclient.ClientK8s, _, _ string) (*v1.ConfigMap, error) {
+						return nil, apierrors.NewNotFound(schema.GroupResource{Resource: "configmaps"},
+							common.FaultCodeCMName)
+					})
+			defer patch1.Reset()
+			interval := hdm.loadFaultCode()
+			convey.So(customizationCalled, convey.ShouldBeTrue)
+			convey.So(resourceVersion, convey.ShouldEqual, "some-version")
+			convey.So(interval, convey.ShouldEqual, common.PollFaultCodeCMInterval)
+		})
+		convey.Convey("When all local fault configs load failed, keep resourceVersion for the next retry", func() {
+			originalVersion := resourceVersion
+			resourceVersion = "some-version"
+			defer func() { resourceVersion = originalVersion }()
+			patch1 := gomonkey.ApplyFunc(common.LoadFaultCodeFromFile,
+				func() error { return errors.New("fault code load error") }).
+				ApplyFunc(common.LoadFaultCustomizationFromFile,
+					func() error { return errors.New("customization load error") }).
+				ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetConfigMap",
+					func(_ *kubeclient.ClientK8s, _, _ string) (*v1.ConfigMap, error) {
+						return nil, apierrors.NewNotFound(schema.GroupResource{Resource: "configmaps"},
+							common.FaultCodeCMName)
+					})
+			defer patch1.Reset()
+			interval := hdm.loadFaultCode()
+			convey.So(resourceVersion, convey.ShouldEqual, "some-version")
+			convey.So(interval, convey.ShouldEqual, common.PollFaultCodeCMInterval)
+		})
+		convey.Convey("When api server unreachable, keep current config", func() {
+			originalVersion := resourceVersion
+			resourceVersion = "keep-version"
+			defer func() { resourceVersion = originalVersion }()
+			called := false
+			patch1 := gomonkey.ApplyFunc(initFaultInfoFromFile, func() { called = true }).
+				ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetConfigMap",
+					func(_ *kubeclient.ClientK8s, _, _ string) (*v1.ConfigMap, error) {
+						return nil, errors.New("connection refused")
+					})
+			defer patch1.Reset()
+			interval := hdm.loadFaultCode()
+			convey.So(called, convey.ShouldBeFalse)
+			convey.So(resourceVersion, convey.ShouldEqual, "keep-version")
+			convey.So(interval, convey.ShouldEqual, common.PollFaultCodeCMInterval)
 		})
 	})
 }
