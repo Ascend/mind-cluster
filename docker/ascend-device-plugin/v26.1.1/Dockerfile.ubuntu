@@ -1,0 +1,58 @@
+FROM ubuntu:22.04 AS build
+
+ARG VERSION=26.1.1
+ARG TARGETPLATFORM
+
+RUN apt update && apt install -y wget unzip &&\
+    apt-get clean &&\
+    rm -rf /var/lib/apt/lists/* &&\
+    rm -rf /var/tmp/* &&\
+    rm -rf /tmp/* &&\
+    ARCH=$(case "${TARGETPLATFORM}" in \
+        "linux/amd64") echo "x86_64" ;; \
+        "linux/arm64") echo "aarch64" ;; \
+        *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+    esac) &&\
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-device-plugin_${VERSION}_linux-${ARCH}.zip &&\
+    unzip Ascend-mindxdl-device-plugin_${VERSION}_linux-${ARCH}.zip -d /build
+
+FROM ubuntu:22.04
+
+RUN groupadd -g 1000 HwHiAiUser && useradd -u 1000 -g HwHiAiUser -d /home/HwHiAiUser -m HwHiAiUser &&\
+    groupadd -g 1101 HwDmUser && useradd -u 1101 -g HwDmUser -d /home/HwDmUser -m HwDmUser &&\
+    groupadd -g 1102 HwBaseUser && useradd -u 1102 -g HwBaseUser -d /home/HwBaseUser -m HwBaseUser &&\
+    usermod -a -G HwBaseUser HwHiAiUser &&\
+    usermod -a -G HwDmUser HwHiAiUser &&\
+    usermod -a -G HwBaseUser HwDmUser &&\
+    usermod -a -G HwHiAiUser HwDmUser &&\
+    usermod root -s /usr/sbin/nologin
+
+ENV LD_LIBRARY_PATH /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common
+
+COPY --from=build /build/device-plugin /usr/local/bin/
+COPY --from=build /build/run_for_310P_1usoc.sh /
+COPY --from=build /build/faultCode.json /usr/local/
+COPY --from=build /build/faultCustomization.json /usr/local/
+COPY --from=build /build/SwitchFaultCode.json /usr/local/
+COPY --from=build /build/deviceNameCustomization.json /usr/local/
+COPY --from=build /build/hangDetectionConfig.json /usr/local/
+COPY --from=build /build/hotResetPluginConfiguration.json /usr/local/
+COPY --from=build /build/agreement.txt /usr/local/
+COPY --from=build /build/npu-nic-mapping.json /user/mindx-dl/npu/
+
+RUN chmod 550 /usr/local/bin/device-plugin &&\
+    chmod 550 /usr/local/bin &&\
+    chmod 440 /usr/local/faultCode.json &&\
+    chmod 440 /usr/local/faultCustomization.json &&\
+    chmod 440 /usr/local/SwitchFaultCode.json &&\
+    chmod 440 /usr/local/deviceNameCustomization.json &&\
+    chmod 440 /usr/local/hangDetectionConfig.json &&\
+    chmod 440 /usr/local/hotResetPluginConfiguration.json &&\
+    chmod 440 /usr/local/agreement.txt &&\
+    chmod 440 /user/mindx-dl/npu/npu-nic-mapping.json &&\
+    chmod 750 /home/HwHiAiUser &&\
+    chmod 500 /run_for_310P_1usoc.sh &&\
+    echo 'umask 027' >> /etc/profile &&\
+    echo 'source /etc/profile' >> ~/.bashrc
+
+ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /bin/bash"]
