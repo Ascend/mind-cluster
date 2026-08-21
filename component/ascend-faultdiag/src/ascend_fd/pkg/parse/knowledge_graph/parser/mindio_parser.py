@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+# pylint: disable=duplicate-code
 import os
 import re
 import logging
@@ -34,9 +35,6 @@ class MindIOLogParser(FileParser):
     TARGET_FILE_PATTERNS = "mindio_log_path"
     LOG_TIME_REGEX = re.compile(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[.,]\d{3,6})")
 
-    def __init__(self, params):
-        super().__init__(params)
-
     def parse(self, parse_ctx: KGParseCtx, task_id: str):
         """
         Parse log file
@@ -51,17 +49,21 @@ class MindIOLogParser(FileParser):
         self.is_sdk_input = parse_ctx.is_sdk_input
         file_list = self.find_log(parse_ctx.parse_file_path)
         kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
+        if not file_list:
+            kg_logger.info("No %s files matched, skip the mindio log parse job.", self.SOURCE_FILE)
+            return [], {}
         if self.is_sdk_input:
             results = dict()
             for idx, file_source in enumerate(sorted(file_list)):
-                results.update({
-                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_file(file_source)
-                })
+                results.update(
+                    {f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_file(file_source)}
+                )
         else:
             multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_list), task_id=task_id)
             for idx, file_source in enumerate(file_list):
-                multiprocess_job.add_security_job(f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}",
-                                                  self._parse_file, file_source)
+                multiprocess_job.add_security_job(
+                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}", self._parse_file, file_source
+                )
             results, _ = multiprocess_job.join_and_get_results()
         for event_list in results.values():
             events_list.extend(event_list)
@@ -89,10 +91,7 @@ class MindIOLogParser(FileParser):
             event_dict = self.parse_single_line(log_line)
             if not event_dict:
                 continue
-            event_dict.update({
-                "source_file": os.path.basename(file_path),
-                "occur_time": occur_time
-            })
+            event_dict.update({"source_file": os.path.basename(file_path), "occur_time": occur_time})
             if "source_device" not in event_dict:
                 event_dict.update({"source_device": "Unknown"})
             event_storage.record_event(event_dict)

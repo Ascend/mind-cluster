@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-import os
+# pylint: disable=duplicate-code
 import re
 import logging
 
@@ -36,15 +36,12 @@ class CommonDlParser(FileParser):
     FILE_TIME_REGEX = None
     LOG_TIME_REGEX = re.compile(r"(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2}.\d{6})")
 
-    def __init__(self, params):
-        super().__init__(params)
-
     def parse(self, parse_ctx: KGParseCtx, task_id):
         """
-        Parse log file
-       :param parse_ctx: knowledge graph parser context
-        :param task_id: unique task id
-        :return: parse descriptor result
+         Parse log file
+        :param parse_ctx: knowledge graph parser context
+         :param task_id: unique task id
+         :return: parse descriptor result
         """
         self.start_time = self.params.get("start_time")
         self.end_time = self.params.get("end_time")
@@ -52,17 +49,21 @@ class CommonDlParser(FileParser):
         self.is_sdk_input = parse_ctx.is_sdk_input
         kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
         file_source_list = self._path_preprocessing(parse_ctx.parse_file_path)
+        if not file_source_list:
+            kg_logger.info("No %s files matched, skip the common dl log parse job.", self.SOURCE_FILE)
+            return [], {}
         if self.is_sdk_input:
             results = dict()
             for idx, file_source in enumerate(file_source_list):
-                results.update({
-                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_file(file_source)
-                })
+                results.update(
+                    {f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_file(file_source)}
+                )
         else:
             multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_source_list), task_id=task_id)
             for idx, file_source in enumerate(file_source_list):
-                multiprocess_job.add_security_job(f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}",
-                                                  self._parse_file, file_source)
+                multiprocess_job.add_security_job(
+                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}", self._parse_file, file_source
+                )
             results, _ = multiprocess_job.join_and_get_results()
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
         return list(chain(*results.values())), {}
@@ -84,12 +85,12 @@ class CommonDlParser(FileParser):
         """
         if len(dl_list) < 2:
             return dl_list
-        dl_list.sort(key=lambda x: self._get_filename(x))
+        dl_list.sort(key=self._get_filename)
         if not self.start_time or not self.end_time:
             return dl_list[-2:]
         if self.start_time > self.end_time:
             return dl_list[-2:]
-        filtered_dl_list = list()
+        filtered_dl_list = []
         for file_source in dl_list:
             filename = self._get_filename(file_source)
             if self.is_sdk_input and not filename:
@@ -150,14 +151,14 @@ class DockerRuntimeParser(CommonDlParser):
     HOOK_RUN_FILE_TIME_REGEX = re.compile(r"hook-run-(\d{4}-\d{2}-\d{2})T(\d{2}-\d{2}-\d{2}.\d{3}).log")
     FILE_TIME_REGEX_LIST = [RUNTIME_RUN_FILE_TIME_REGEX, HOOK_RUN_FILE_TIME_REGEX]
 
-    def _path_preprocessing(self, file_dict):
+    def _path_preprocessing(self, parse_filepath):
         """
         Filter two types of log file lists separately, then compose them as one
-        :param file_dict: file paths dict
+        :param parse_filepath: file paths dict
         :return: preprocessed file path list
         """
         path_lists = [[], []]
-        for file_source in self.find_log(file_dict):
+        for file_source in self.find_log(parse_filepath):
             filename = self._get_filename(file_source)
             # currently only one fault for docker runtime, which comes from runtime-run.log
             if filename.startswith("runtime") or self.is_sdk_input:
@@ -166,7 +167,8 @@ class DockerRuntimeParser(CommonDlParser):
             if filename.startswith("hook"):
                 path_lists[1].append(file_source)
         composed_path_list = []
-        for path_list, time_regex, default_name in zip(path_lists, self.FILE_TIME_REGEX_LIST,
-                                                       self.DEFAULT_LOG_FILENAME_LIST):
+        for path_list, time_regex, default_name in zip(
+            path_lists, self.FILE_TIME_REGEX_LIST, self.DEFAULT_LOG_FILENAME_LIST
+        ):
             composed_path_list.extend(self._filter_dl_log_list(path_list, time_regex, default_name))
         return composed_path_list

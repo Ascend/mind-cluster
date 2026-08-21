@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+# pylint: disable=duplicate-code
 import os
 import re
 import time
@@ -42,7 +43,7 @@ class TrainLogParser(FileParser):
     KEY_FOR_FILTER_OTHER_FRAMEWORK_CODE = {
         MINDSPORE_KEY: [TORCH_KEY, TF_KEY],
         TORCH_KEY: [MINDSPORE_KEY, TF_KEY],
-        TF_KEY: [TORCH_KEY, MINDSPORE_KEY]
+        TF_KEY: [TORCH_KEY, MINDSPORE_KEY],
     }
     READ_LINES = 100
 
@@ -66,18 +67,27 @@ class TrainLogParser(FileParser):
         self.is_sdk_input = parse_ctx.is_sdk_input
         kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
         file_source_list = self.find_log(parse_ctx.parse_file_path)
+        if not file_source_list:
+            kg_logger.info("No %s files matched, skip the %s log parse job.", self.SOURCE_FILE, self.SOURCE_FILE)
+            return [], {}
         if self.is_sdk_input:
             results = dict()
             for idx, file_source in enumerate(file_source_list):
-                results.update({
-                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}":
-                        self._parse_single_file(file_source)
-                })
+                results.update(
+                    {
+                        f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_single_file(
+                            file_source
+                        )
+                    }
+                )
         else:
             multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_source_list), task_id=task_id)
             for idx, file_source in enumerate(file_source_list):
-                multiprocess_job.add_security_job(f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}",
-                                                  self._parse_single_file, file_source)
+                multiprocess_job.add_security_job(
+                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}",
+                    self._parse_single_file,
+                    file_source,
+                )
             results, _ = multiprocess_job.join_and_get_results()
         for event_list in results.values():
             events_list.extend(event_list)
@@ -105,16 +115,18 @@ class TrainLogParser(FileParser):
 
     def _determine_occur_time(self, file_source: Union[str, LogInfoSaver]):
         if isinstance(file_source, str):
-            return self.params.get("end_time") or \
-                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(os.path.getmtime(file_source))))
+            return self.params.get("end_time") or time.strftime(
+                "%Y-%m-%d %H:%M:%S", time.localtime(float(os.path.getmtime(file_source)))
+            )
         return getattr(file_source, "modification_time", "") or self.params.get("end_time") or KG_MAX_TIME
 
     def _parse_single_train_log(self, line: str, event_storage: EventStorage, multi_line_locator):
         """
         Process single line of train log, return a non-empty event dict if matched
         """
-        if self.MINDIO_FINISH_REPAIR_KEYWORD in line and \
-                any(status in line for status in self.MINDIO_REPAIR_STATUS_LIST):
+        if self.MINDIO_FINISH_REPAIR_KEYWORD in line and any(
+            status in line for status in self.MINDIO_REPAIR_STATUS_LIST
+        ):
             event_storage.clear_event()
             return {}
         if self.TYPE_OF_MA_LOG in line:  # MA logs support only user-defined faults
@@ -127,8 +139,7 @@ class TrainLogParser(FileParser):
         if not event_dict:
             return {}
         # 如果PTA通用故障事件未解析出相关属性，则不记录该故障事件
-        if event_dict.get("event_code", "").startswith(PYTORCH_ERRCODE_COMMON) \
-                and not event_dict.get("complement"):
+        if event_dict.get("event_code", "").startswith(PYTORCH_ERRCODE_COMMON) and not event_dict.get("complement"):
             return {}
         return event_dict
 
@@ -197,7 +208,7 @@ class TrainLogParser(FileParser):
         :return: train framework type
         """
         if self.is_sdk_input:
-            for line in file_source.log_lines[:self.READ_LINES]:
+            for line in file_source.log_lines[: self.READ_LINES]:
                 framework_cate = self._check_framework_key(line)
                 if framework_cate:
                     return framework_cate
@@ -307,7 +318,7 @@ class TrainCallFaultParser:
             return
 
         if self.has_same_prefix:
-            temp_line = line[len(self.prefix):] if line.startswith(self.prefix.strip()) else line
+            temp_line = line[len(self.prefix) :] if line.startswith(self.prefix.strip()) else line
             self._deal_same_prefix(temp_line)
             return
         self._match_specific_err(line)
@@ -343,16 +354,16 @@ class TrainCallFaultParser:
         """
         if self.ERROR_STR in line:
             prefix = line.split(self.ERROR_STR, 1)[0]
-            find_datas = self.ERROR_PATTERN.findall(prefix)
-            if find_datas:
-                return f"{find_datas[-1]}{self.ERROR_STR}"
+            find_data = self.ERROR_PATTERN.findall(prefix)
+            if find_data:
+                return f"{find_data[-1]}{self.ERROR_STR}"
         if self.EXCEPTION_STR in line:
             prefix = line.split(self.EXCEPTION_STR, 1)[0]
             if not prefix or prefix.endswith(' '):
                 return self.EXCEPTION_STR
-            find_datas = self.ERROR_PATTERN.findall(prefix)
-            if find_datas:
-                return f"{find_datas[-1]}{self.EXCEPTION_STR}"
+            find_data = self.ERROR_PATTERN.findall(prefix)
+            if find_data:
+                return f"{find_data[-1]}{self.EXCEPTION_STR}"
         return ""
 
     def _deal_same_prefix(self, line):
@@ -384,15 +395,17 @@ class TrainCallFaultParser:
         :param event_code: event code
         """
         event_code = event_code or self.UNKNOWN_TRAIN_CALL_FAULT
-        self.train_call_events.update({
-            event_code: {
-                "event_code": event_code,
-                "key_info": "\n".join(self.train_call_info),
-                "source_device": "Unknown",
-                "occur_time": self.default_time,
-                "source_file": self.source_file
+        self.train_call_events.update(
+            {
+                event_code: {
+                    "event_code": event_code,
+                    "key_info": "\n".join(self.train_call_info),
+                    "source_device": "Unknown",
+                    "occur_time": self.default_time,
+                    "source_file": self.source_file,
+                }
             }
-        })
+        )
 
 
 class TracebackInfoParser(TrainCallFaultParser):
@@ -400,14 +413,8 @@ class TracebackInfoParser(TrainCallFaultParser):
     PRE_TRAIN_CALL_FAULT = PRE_TRACEBACK_FAULT
     UNKNOWN_TRAIN_CALL_FAULT = f"{PRE_TRAIN_CALL_FAULT}_UnknownError"
 
-    def __init__(self, default_time, source_file):
-        super().__init__(default_time, source_file)
-
 
 class SegInfoParser(TrainCallFaultParser):
     TRAIN_CALL_HEADER = "Fatal Python error: Segmentation fault"
     PRE_TRAIN_CALL_FAULT = PRE_SEG_FAULT
     UNKNOWN_TRAIN_CALL_FAULT = f"{PRE_TRAIN_CALL_FAULT}_UnknownError"
-
-    def __init__(self, default_time, source_file):
-        super().__init__(default_time, source_file)
