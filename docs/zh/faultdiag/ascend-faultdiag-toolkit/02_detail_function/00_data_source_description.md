@@ -23,26 +23,26 @@
 
 ### SSH在线采集
 
-| 数据项 | 采集命令                                                 | 说明 |
-|--------|------------------------------------------------------|------|
-| 主机名 | `hostname`                                           | 获取主机名称 |
-| NPU映射信息 | `npu-smi info -m`                                    | 获取NPU芯片映射关系（NPU ID、芯片ID、物理ID） |
-| 光模块信息 | `hccn_tool -i {chip_phy_id} -optical -g`             | 获取指定物理芯片的光模块信息 |
-| 链路状态 | `hccn_tool -i {chip_phy_id} -link_stat -g`           | 获取指定物理芯片的链路状态 |
-| 统计信息 | `hccn_tool -i {chip_phy_id} -stat -g`                | 获取指定物理芯片的统计信息 |
-| LLDP信息 | `hccn_tool -i {chip_phy_id} -lldp -g`                | 获取指定物理芯片的LLDP邻居信息 |
-| NPU类型 | `lspci \| grep 'Device d80'`                         | 获取NPU设备类型 |
-| 系统序列号 | `dmidecode -s system-serial-number`                  | 获取系统序列号 |
-| HCCS信息 | `npu-smi info -t hccs -i {npu_id} -c {chip_id}`      | 获取指定NPU和芯片的HCCS信息 |
-| SPOD信息 | `npu-smi info -t spod-info -i {npu_id} -c {chip_id}` | 获取指定NPU和芯片的SPOD信息 |
+| 数据项           | 采集命令                                                 | 说明 |
+|---------------|------------------------------------------------------|------|
+| 主机名           | `hostname`                                           | 获取主机名称 |
+| NPU映射信息       | `npu-smi info -m`                                    | 获取NPU芯片映射关系（NPU ID、芯片ID、物理ID） |
+| 光模块信息         | `hccn_tool -i {chip_phy_id} -optical -g`             | 获取指定物理芯片的光模块信息 |
+| 链路历史状态        | `hccn_tool -i {chip_phy_id} -link_stat -g`           | 获取指定物理芯片的链路历史状态 |
+| 统计信息          | `hccn_tool -i {chip_phy_id} -stat -g`                | 获取指定物理芯片的统计信息 |
+| LLDP信息        | `hccn_tool -i {chip_phy_id} -lldp -g`                | 获取指定物理芯片的LLDP邻居信息 |
+| NPU类型         | `lspci \| grep 'Device d80'`                         | 获取NPU设备类型 |
+| 系统序列号         | `dmidecode -s system-serial-number`                  | 获取系统序列号 |
+| HCCS信息        | `npu-smi info -t hccs -i {npu_id} -c {chip_id}`      | 获取指定NPU和芯片的HCCS信息 |
+| SPOD信息        | `npu-smi info -t spod-info -i {npu_id} -c {chip_id}` | 获取指定NPU和芯片的SPOD信息 |
 | MSNPUREPORT日志 | `msnpureport`                                        | 生成并解析MSNPUREPORT日志 |
-| RoCE速度 | `hccn_tool -i {chip_phy_id} -speed -g`               | 获取指定物理芯片的RoCE速度 |
-| RoCE双工模式 | `hccn_tool -i {chip_phy_id} -duplex -g`              | 获取指定物理芯片的RoCE双工模式 |
-| 网络健康状态 | `hccn_tool -i {chip_phy_id} -net_health -g`          | 获取指定物理芯片的网络健康状态 |
-| 链路状态 | `hccn_tool -i {chip_phy_id} -link -g`         | 获取指定物理芯片的链路状态 |
-| CDR信息 | `hccn_tool -i {chip_phy_id} -scdr -t 5`              | 获取指定物理芯片的CDR信息 |
-| DFX配置 | `hccn_tool -i {chip_phy_id} -optical -g dfx_cfg`     | 获取指定物理芯片的DFX配置 |
-| 光模块环回测试 | `hccn_tool -i {npu_id} -optical -t {model}`          | 执行光模块环回测试 |
+| RoCE速度        | `hccn_tool -i {chip_phy_id} -speed -g`               | 获取指定物理芯片的RoCE速度 |
+| RoCE双工模式      | `hccn_tool -i {chip_phy_id} -duplex -g`              | 获取指定物理芯片的RoCE双工模式 |
+| 网络健康状态        | `hccn_tool -i {chip_phy_id} -net_health -g`          | 获取指定物理芯片的网络健康状态 |
+| 链路状态          | `hccn_tool -i {chip_phy_id} -link -g`         | 获取指定物理芯片的链路状态 |
+| CDR信息         | `hccn_tool -i {chip_phy_id} -scdr -t 5`              | 获取指定物理芯片的CDR信息 |
+| DFX配置         | `hccn_tool -i {chip_phy_id} -optical -g dfx_cfg`     | 获取指定物理芯片的DFX配置 |
+| 光模块环回测试       | `hccn_tool -i {npu_id} -optical -t {model}`          | 执行光模块环回测试 |
 
 ### 离线日志解析
 
@@ -235,18 +235,18 @@ dump_info/
 
 **数据类型与来源**
 
-| 数据类型 | 日志来源特征 | 说明 |
-|----------|--------------|------|
-| 活动告警详情 | 包含`AlarmId, AlarmName, AlarmType, State : active`字段的内容块 | 从CLI输出日志中提取活动告警的详细信息 |
-| 历史告警详情 | 包含`AlarmId, AlarmName, AlarmType, State : cleared`字段的内容块 | 从CLI输出日志中提取已清除告警的详细信息 |
-| 活动告警 | 包含`Sequence, AlarmId, Severity, Date Time, Description`字段的表格 | 从CLI输出日志中提取活动告警摘要 |
-| 历史告警 | 包含`Sequence, AlarmId, Severity, Date Time, Description`字段的表格且带有历史标记 | 从CLI输出日志中提取历史告警记录 |
+| 数据类型 | 日志来源特征                                                                    | 说明 |
+|----------|---------------------------------------------------------------------------|------|
+| 活动告警详情 | 包含`AlarmId, AlarmName, AlarmType, State : active`字段的内容块                   | 从CLI输出日志中提取活动告警的详细信息 |
+| 历史告警详情 | 包含`AlarmId, AlarmName, AlarmType, State : cleared`字段的内容块                  | 从CLI输出日志中提取已清除告警的详细信息 |
+| 活动告警 | 包含`Sequence, AlarmId, Severity, Date Time, Description`字段的表格              | 从CLI输出日志中提取活动告警摘要 |
+| 历史告警 | 包含`Sequence, AlarmId, Severity, Date Time, Description`字段的表格且带有历史标记       | 从CLI输出日志中提取历史告警记录 |
 | LLDP邻居 | 包含`Local Interface, Exptime(s), Neighbor Interface, Neighbor Device`字段的表格 | 从CLI输出日志中提取LLDP邻居信息 |
-| 光模块信息 | 包含`Items, Value, HighAlarm, HighWarn, LowAlarm, Status`字段的表格 | 从CLI输出日志中提取光模块监控数据 |
-| 接口摘要 | 包含`Interface, PHY, Protocol, InUti, OutUti, inErrors, outErrors`字段的表格 | 从CLI输出日志中提取接口基本状态 |
-| 误码率 | 包含`Current state, Speed`字段的内容块 | 从CLI输出日志中提取接口误码率信息 |
-| 接口信息 | 包含`current state, Description, Port Mode`字段的内容块 | 从CLI输出日志中提取接口详细配置 |
-| 许可证ESN | 包含`MainBoard, ESN`字段的内容块 | 从CLI输出日志中提取交换机序列号 |
-| 系统时钟 | 包含`clock, Time Zone`字段的内容块 | 从CLI输出日志中提取交换机当前时间 |
-| 收发器信息 | 包含`transceiver information:`标记的内容块 | 从CLI输出日志中提取收发器详细信息 |
-| HCCS相关信息 | 包含`HCCS`关键字的各种表格和内容块 | 从CLI输出日志中提取HCCS协议相关的各种统计信息 |
+| 光模块信息 | 包含`Items, Value, HighAlarm, HighWarn, LowAlarm, Status`字段的表格              | 从CLI输出日志中提取光模块监控数据 |
+| 接口摘要 | 包含`Interface, PHY, Protocol, InUti, OutUti, inErrors, outErrors`字段的表格     | 从CLI输出日志中提取接口基本状态 |
+| 误码率 | 包含`Current state, Speed`等字段的内容块                                           | 从CLI输出日志中提取接口误码率信息 |
+| 接口信息 | 包含`current state, Description, Port Mode`字段的内容块                           | 从CLI输出日志中提取接口详细配置 |
+| 许可证ESN | 包含`MainBoard, ESN`字段的内容块                                                  | 从CLI输出日志中提取交换机序列号 |
+| 系统时钟 | 包含`clock, Time Zone`字段的内容块                                                | 从CLI输出日志中提取交换机当前时间 |
+| 收发器信息 | 包含`transceiver information:`标记的内容块                                        | 从CLI输出日志中提取收发器详细信息 |
+| HCCS相关信息 | 包含`HCCS`关键字的各种表格和内容块                                                      | 从CLI输出日志中提取HCCS协议相关的各种统计信息 |

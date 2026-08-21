@@ -28,7 +28,7 @@ ascend-fd entity 子命令
 
 例如通过JSON文件，新增自定义故障实体。
 
-```ColdFusion
+```text
 ascend-fd entity -u test_base.json
 Updated entity successfully.
 ```

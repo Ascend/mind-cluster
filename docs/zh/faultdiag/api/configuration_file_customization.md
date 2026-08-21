@@ -25,7 +25,7 @@ ascend-fd config 子命令
 
 例如通过JSON文件，新增自定义配置文件实体。
 
-```ColdFusion
+```text
 ascend-fd config -u custom-config.json
 Updated entity successfully.
 ```

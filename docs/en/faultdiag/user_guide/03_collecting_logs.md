@@ -10,7 +10,7 @@ This section describes the structure of the directory to be cleaned. You can col
 >- The size of a CANN App log file must be less than 20 MB.
 >- The size of the NPU status monitoring metric file, monitoring metric file of NPU network port statistics, and host resource information file must be less than 512 MB.
 >- The size of a user training or inference log is not limited. By default, only the last log file of 1 MB size is read.
->- The host OS logs include `messages`, `dmesg`, `vmcore_dmesg.txt`, and `sysmonitor.log`. The dump size of a single file must be less than 512 MB. The latest `dmesg` log is used, and the maximum number of lines is 100,000.
+>- The host OS logs include `messages`, `dmesg`, `vmcore-dmesg.txt`, and `sysmonitor.log`. The dump size of a single file must be less than 512 MB. The latest `dmesg` log is used, and the maximum number of lines is 100,000.
 >- The locations of `process_log`, `environment_check`, `device_log`, `dl_log`, `mindie`, and `amct_log` are not restricted. They can be stored in any location in the collection directory.
 >- If you perform training or inference in a container, save logs, such as user training or inference logs and CANN App logs, to the host in a timely manner.
 >- Collect the NPU environment check file before or after training/inference, NPU network port statistics monitoring metric file, NPU status monitoring metric file, host resource information, host OS logs, device logs, MindCluster logs, MindIE logs, and AMCT logs on the host.
@@ -28,7 +28,7 @@ This section describes the structure of the directory to be cleaned. You can col
         |-- dmesg                # Host kernel message logs
         |-- crash
             |--Host + Fault timestamp (eg:127.xx.xx.1-2024-09-23-11:25:29)
-                |-- vmcore_dmesg.txt     # Host kernel message log saved when the system breaks down
+                |-- vmcore-dmesg.txt     # Host kernel message log saved when the system breaks down
         |-- sysmonitor.log       # System monitoring log
         |-- rank-0.txt           # Training and inference console log file
         |-- dmidecode.txt        # dmidecode output log file
@@ -195,11 +195,11 @@ This section describes the structure of the directory to be cleaned. You can col
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1193532265318"><a name="p1193532265318"></a><a name="p1193532265318"></a>${Collection_directory}/messages-*?</p>
         </td>
         </tr>
-        <tr id="row293522265317"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p69351922185310"><a name="p69351922185310"></a><a name="p69351922185310"></a>vmcore_dmesg.txt</p>
+        <tr id="row293522265317"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p69351922185310"><a name="p69351922185310"></a><a name="p69351922185310"></a>vmcore-dmesg.txt</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1893512218538"><a name="p1893512218538"></a><a name="p1893512218538"></a>Host kernel message file saved during a system crash</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9935132235315"><a name="p9935132235315"></a><a name="p9935132235315"></a>${Collection_directory}/crash/Host + Fault timestamp (eg: 127.xx.xx.1-2024-09-23-11:25:29)/vmcore_dmesg.txt</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9935132235315"><a name="p9935132235315"></a><a name="p9935132235315"></a>${Collection_directory}/crash/Host + Fault timestamp (eg: 127.xx.xx.1-2024-09-23-11:25:29)/vmcore-dmesg.txt</p>
         </td>
         </tr>
         <tr id="row1193562265314"><td class="cellrowborder" rowspan="7" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p149350225535"><a name="p149350225535"></a><a name="p149350225535"></a>Device-side logs</p>
@@ -428,7 +428,7 @@ This section describes the structure of the directory to be cleaned. You can col
            |-- messages
            |-- crash
                   |--Host + Fault timestamp directory (eg:127.xx.xx.1-2024-09-23-11:25:29)
-                         |-- vmcore_dmesg.txt
+                         |-- vmcore-dmesg.txt
            |-- dmesg
            |-- sysmonitor.log
 
@@ -551,7 +551,7 @@ This section describes the structure of the directory to be cleaned. You can col
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.2 "><p id="p58274315720"><a name="p58274315720"></a><a name="p58274315720"></a>Host kernel message file saved during a system crash</p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.3 "><p id="p17824439712"><a name="p17824439712"></a><a name="p17824439712"></a>${--host_log}/crash/Host + fault timestamp (eg: 127.xx.xx.1-2024-09-23-11:25:29)/vmcore_dmesg.txt</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.3 "><p id="p17824439712"><a name="p17824439712"></a><a name="p17824439712"></a>${--host_log}/crash/Host + fault timestamp (eg: 127.xx.xx.1-2024-09-23-11:25:29)/vmcore-dmesg.txt</p>
     </td>
     </tr>
     <tr id="row1258783414010"><td class="cellrowborder" valign="top" headers="mcps1.1.5.1.1 "><p id="p8842648154011"><a name="p8842648154011"></a><a name="p8842648154011"></a>sysmonitor.log</p>

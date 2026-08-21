@@ -4,21 +4,21 @@
 
 1. 从MindCluster Ascend FaultDiag组件中，导入故障事件清洗接口、故障事件诊断接口。
 
-    ```shell
+    ```python
     from ascend_fd import parse_knowledge_graph
     from ascend_fd import diag_knowledge_graph
     ```
 
 2. 清洗故障事件。
 
-    ```shell
+    ```python
     # 故障事件清洗结果与清洗过程中发生的错误
     kg_parse_results, kg_parse_err_msg = parse_knowledge_graph(input_log_list, custom_entity)
     ```
 
 3. 诊断清洗后的故障事件。
 
-    ```shell
+    ```python
     # 故障事件诊断结果与诊断过程中发生的错误
     results, err_msg_list = diag_knowledge_graph(kg_parse_results)
     ```
@@ -49,17 +49,17 @@ input_log_list输入格式如下所示，该示例不可直接使用，用户需
 
 **表 1** input_log_list参数说明
 
-|字段|参数类型|是否必选|描述|
-|--|--|--|--|
-|log_domain|Dictionary|是|日志域。|
-|server|String|是|服务器地址。|
-|log_items|List|是|日志项。|
-|item_type|String|是|日志类型。|
-|path|String|否|日志文件路径。在清洗NPU环境检查文件npu_info_before.txt或npu_info_after.txt时，此参数必填。|
-|device_id|Int|否|设备卡号。|
-|modification_time|String|否|日志修改时间。在清洗训练及推理控制台日志和MindIE组件日志时，将此时间作为故障的发生时间。|
-|component|String|否|组件名称。当前仅支持MindIE的Coordinator和Controller组件。|
-|log_lines|List|是|待解析的日志行。|
+|字段|参数类型| 是否必选    | 描述                                                                   |
+|--|--|---------|----------------------------------------------------------------------|
+|log_domain|Dictionary| 是       | 日志域。                                                                 |
+|server|String| 是       | 服务器地址。                                                               |
+|log_items|List| 是       | 日志项。                                                                 |
+|item_type|String| 是       | 日志类型。                                                                |
+|path|String| 是（特定场景） | 日志文件路径。在清洗NPU环境检查文件npu_info_before.txt或npu_info_after.txt时必填，其他场景可选。 |
+|device_id|Int| 否       | 设备卡号。                                                                |
+|modification_time|String| 否       | 日志修改时间。在清洗训练及推理控制台日志和MindIE组件日志时，将此时间作为故障的发生时间。                      |
+|component|String| 否       | 组件名称。当前仅支持MindIE的Coordinator和Controller组件。                           |
+|log_lines|List| 是       | 待解析的日志行。                                                             |
 
 custom_entity输入格式如下所示，该示例不可直接使用，用户需根据实际情况修改自定义故障实体的相关信息。
 
@@ -101,7 +101,7 @@ custom_entity输入格式如下所示，该示例不可直接使用，用户需�
 ```
 
 >[!NOTE] 
->custom_entity自定义故障实体中的相关参数说明请参见[表1 参数说明](./04_customizing_fault_entities.md)。
+>custom_entity自定义故障实体中的相关参数说明请参见自定义故障实体章节[表1 参数说明](./04_customizing_fault_entities.md)。
 
 **表 2**  err\_msg\_list参数说明
 

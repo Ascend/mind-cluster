@@ -2,7 +2,7 @@
 
 >[!NOTE] 
 >
->- 清洗命令指定的输出目录磁盘空间需大于5G，空间不足可能导致部分清洗结果丢失，进而导致诊断结果异常或不准确。
+>- 清洗命令指定的输出目录磁盘空间需大于5GB，空间不足可能导致部分清洗结果丢失，进而导致诊断结果异常或不准确。
 >- MindCluster Ascend FaultDiag在清洗时会读取用户采集的日志文件及监测指标文件，请用户自行确认目录中无敏感信息，避免信息泄露。
 >- 在进行清洗时，请保证待清洗目录仅包含单台训练设备的原始日志及监测指标文件，若包含其他设备相关文件，可能导致清洗失败。
 >- 执行清洗命令时，若需要清洗设备资源、网络拥塞两个性能劣化检测模块的数据，需指定--performance\(-p\)参数。当不指定时，程序默认仅清洗根因节点、故障事件两个模块的对应数据。
@@ -16,7 +16,7 @@
 
         回显示例如下，实际位置请以查询结果为主：
 
-        ```ColdFusion
+        ```text
         /usr/local/python3.7.5/bin/ascend-fd
         ```
 
@@ -34,7 +34,7 @@
 
         显示以下内容即表示配置完成。
 
-        ```ColdFusion
+        ```text
         usage: ascend-fd [-h] {version,parse,diag,blacklist,config,entity,single-diag} ...
         Ascend Fault Diag
         positional arguments:
@@ -62,7 +62,7 @@
         |-- dmesg                # 主机侧内核消息日志
         |-- crash
             |-- 主机+故障时间目录(eg:127.xx.xx.1-2024-09-23-11:25:29)
-                |-- vmcore_dmesg.txt     # 系统崩溃时保存的Host侧内核消息日志文件
+                |-- vmcore-dmesg.txt     # 系统崩溃时保存的Host侧内核消息日志文件
         |-- sysmonitor.log       # 主机侧系统监测日志
         |-- rank-0.txt      # 训练控制台日志
         ...
@@ -123,7 +123,7 @@
 
     回显如下：
 
-    ```ColdFusion
+    ```text
     The parse job starts. Please wait. Job id: [****], run log file is [****].
     These job ['模块1', '模块2'...] succeeded.
     The parse job is complete.

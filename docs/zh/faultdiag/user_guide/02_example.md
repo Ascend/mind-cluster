@@ -84,11 +84,11 @@
 
         **表 1**  参数说明
 
-        |参数|说明|
-        |--|--|
-        |采集间隔时间|导出Device侧日志和文件的间隔时间。取值为大于0的整数，单位是s，如：2s。|
-        |最大存储目录容量|导出Device侧日志和文件的存储目录容量。取值为大于等于2的整数，单位是G，如：10G。|
-        |Device日志存储目录名|导出Device侧日志和文件的存储路径（任意的绝对路径）。如：“/home/log/”。|
+        |参数| 说明                                              |
+        |--|-------------------------------------------------|
+        |采集间隔时间| 导出Device侧日志和文件的间隔时间。取值为大于0的整数，单位是s，如：2s。        |
+        |最大存储目录容量| 导出Device侧日志和文件的存储目录容量。取值为大于等于2的整数，单位是GB，如：10GB。 |
+        |Device日志存储目录名| 导出Device侧日志和文件的存储路径（任意的绝对路径）。如：“/home/log/”。    |
 
         >[!NOTE] 
         >- msnpureport\_auto\_export.sh脚本的更多使用指导请参见《Atlas 系列硬件产品 msnpureport 工具使用指南》的“[连续导出Device侧系统类日志和其他维测信息](https://support.huawei.com/enterprise/zh/doc/EDOC1100568649/7f3ad48)”章节。
@@ -182,7 +182,7 @@
     如：
 
     ```shell
-    ascend-fd parse --process_log /ascend_cluster_log/job202405181309/worker-0/process_log --train_log /ascend_cluster_log/job202405181309/worker-0/train_log --env_check /ascend_cluster_log/job202405181309/worker-0/environment_check --host_log /var/log --device_log /ascend_cluster_log/device_log/worker-0/msnpureport_log_new --dl_log /ascend_cluster_log/job202405181309/worker-0/dl_log --custom_log worker-0/
+    ascend-fd parse --process_log /ascend_cluster_log/job202405181309/worker-0/process_log --train_log /ascend_cluster_log/job202405181309/worker-0/train_log --env_check /ascend_cluster_log/job202405181309/worker-0/environment_check --host_log /var/log --device_log /ascend_cluster_log/device_log/worker-0/msnpureport_log_new --dl_log /ascend_cluster_log/job202405181309/worker-0/dl_log --custom_log worker-0/ \
     -o /ascend_cluster_log/job202405181309/faultdiag_work_tmp/parse_out/worker-0 
     ```
 
