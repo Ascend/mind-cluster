@@ -1747,6 +1747,40 @@ func TestGetFaultTypeFromFaultFrequency(t *testing.T) {
 	})
 }
 
+// TestGetFaultTypeFromFaultFrequencyMultiMatch verifies that when multiple frequency faults match the same
+// logic id, all matched fault levels are accumulated instead of being overwritten by the last one.
+func TestGetFaultTypeFromFaultFrequencyMultiMatch(t *testing.T) {
+	convey.Convey("test GetFaultTypeFromFaultFrequency with multiple matched frequency faults", t, func() {
+		logicId := int32(0)
+		now := time.Now().UnixMilli()
+		manuallyCode := "80e01801"
+		restartCode := "8c204e00"
+		faultFrequencyMap = map[string]*FaultFrequencyCache{
+			manuallyCode: {
+				Frequency: map[int32][]int64{logicId: {now}},
+				FaultFrequency: FaultFrequency{
+					TimeWindow:    86400,
+					Times:         1,
+					FaultHandling: ManuallySeparateNPU,
+				},
+			},
+			restartCode: {
+				Frequency: map[int32][]int64{logicId: {now}},
+				FaultFrequency: FaultFrequency{
+					TimeWindow:    86400,
+					Times:         1,
+					FaultHandling: RestartBusiness,
+				},
+			},
+		}
+		manuallySeparateNpuMap = make(map[int32]ManuallyFaultInfo, GeneralMapSize)
+		recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
+		convey.So(GetFaultTypeFromFaultFrequency(logicId, ChipFaultMode), convey.ShouldEqual, ManuallySeparateNPU)
+		convey.So(manuallySeparateNpuMap[logicId].FirstHandle, convey.ShouldEqual, true)
+		ResetFaultCustomizationCache()
+	})
+}
+
 // TestGetFaultTypeFromFaultDurationPart1 for test GetFaultTypeFromFaultDuration
 func TestGetFaultTypeFromFaultDurationPart1(t *testing.T) {
 	convey.Convey("test GetFaultTypeFromFaultDuration success part1", t, func() {
