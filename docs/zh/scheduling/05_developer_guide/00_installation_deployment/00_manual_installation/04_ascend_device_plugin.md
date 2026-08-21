@@ -146,7 +146,7 @@
 
     - 在Ascend Device Plugin的YAML中增加以下挂载声明，将创建的文件挂载到容器内固定路径`/user/mindx-dl/npu/npu-nic-mapping.json`（该路径不可修改）。
 
-        ```Yaml
+        ```yaml
         volumeMounts:
           ...
           - name: npu-nic-mapping
@@ -240,7 +240,7 @@
 
     - 如果容器运行时为Docker，保留docker-sock和docker-dir挂载配置，示例如下：
 
-        ```Yaml
+        ```yaml
         volumeMounts:
           ...
           - name: docker-sock
@@ -267,7 +267,7 @@
 
     - 如果容器运行时为containerd，不需要docker-sock和docker-dir挂载配置，保留containerd挂载配置。示例如下：
 
-        ```Yaml
+        ```yaml
         volumeMounts:
             ...
             - name: containerd
@@ -318,8 +318,8 @@
 
     ```ColdFusion
     serviceaccount/ascend-device-plugin-sa created
-    clusterrole.rbac.authorization.K8s.io/pods-node-ascend-device-plugin-role created
-    clusterrolebinding.rbac.authorization.K8s.io/pods-node-ascend-device-plugin-rolebinding created
+    clusterrole.rbac.authorization.k8s.io/pods-node-ascend-device-plugin-role created
+    clusterrolebinding.rbac.authorization.k8s.io/pods-node-ascend-device-plugin-rolebinding created
     daemonset.apps/ascend-device-plugin-daemonset created
     ```
 

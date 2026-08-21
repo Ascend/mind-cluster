@@ -125,7 +125,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p1962732833610"><a name="p1962732833610"></a><a name="p1962732833610"></a>5</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><a name="ul49338283283"></a><a name="ul49338283283"></a><ul id="ul49338283283"><li>上报节点故障信息的最小间隔，如果节点状态有变化，那么在5s内就会上报，如果节点状态持续没有变化，那么上报周期为30分钟。</li><li>取值范围为1~300，单位为秒。</li><li>当K8s APIServer请求压力变大时，可根据实际情况增大间隔时间，以减轻APIServer压力。</li></ul>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><a name="ul49338283283"></a><a name="ul49338283283"></a><ul id="ul49338283283"><li>上报节点故障信息的最小间隔，如果节点状态有变化，那么在5秒内就会上报，如果节点状态持续没有变化，那么上报周期为30分钟。</li><li>取值范围为1~300，单位为秒。</li><li>当K8s APIServer请求压力变大时，可根据实际情况增大间隔时间，以减轻APIServer压力。</li></ul>
 </td>
 </tr>
 <tr id="row1240181274312"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1691522724316"><a name="p1691522724316"></a><a name="p1691522724316"></a>-monitorPeriod</p>
