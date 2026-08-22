@@ -1009,7 +1009,8 @@ func insertFrequencyFaultOccur(logicId int32, eventId int64, faultTime int64) {
 	frequencyCache.Frequency[logicId] = append(frequencyCache.Frequency[logicId], faultTime)
 	frequencyCache.LastFaultTime[logicId] = faultTime
 	hwlog.RunLog.Infof("insert fault frequency success, event id: %s, logic id: %d, fault time: %d, "+
-		"occurrence times :%d", eventIdStr, logicId, faultTime, len(frequencyCache.Frequency[logicId]))
+		"occurrence times: %d, upgrade times: %d", eventIdStr, logicId, faultTime,
+		len(frequencyCache.Frequency[logicId]), frequencyCache.Times)
 }
 
 func insertFrequencyFaultRecover(logicId int32, eventId int64, faultRecoverTime int64) {
@@ -1220,7 +1221,7 @@ func GetFaultTypeFromFaultFrequency(logicId int32, mode string) string {
 		if !ok {
 			continue
 		}
-		faultTypes = handleFrequencyFault(logicId, frequencyCache, eventId)
+		faultTypes = append(faultTypes, handleFrequencyFault(logicId, frequencyCache, eventId)...)
 	}
 	return getMostSeriousFaultType(faultTypes)
 }
