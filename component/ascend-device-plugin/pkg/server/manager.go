@@ -30,6 +30,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
@@ -1561,8 +1562,21 @@ func (hdm *HwDevManager) loadFaultCode() int {
 	interval := common.PollFaultCodeCMInterval
 	configMap, err := hdm.manager.GetKubeClient().GetConfigMap(common.FaultCodeCMName, api.KubeNS)
 	if err != nil {
-		hwlog.RunLog.Debugf("cannot find '%s' configmap, reason: %v", common.FaultCodeCMName, err)
-		initFaultInfoFromFile()
+		if apierrors.IsNotFound(err) {
+			hwlog.RunLog.Infof("configmap '%s' not found, fallback to local fault config", common.FaultCodeCMName)
+			initFaultInfoFromFile()
+			resourceVersion = ""
+		} else if resourceVersion == "" {
+			// no config loaded yet on the first load, fallback to local fault config to
+			// avoid the fault upgrade policy missing until the next poll
+			hwlog.RunLog.Warnf("cannot access '%s' configmap at first load, fallback to local fault config, reason: %v",
+				common.FaultCodeCMName, err)
+			initFaultInfoFromFile()
+		} else {
+			// keep current config to avoid overwriting the configmap policy with local config
+			hwlog.RunLog.Warnf("cannot access '%s' configmap, keep current config, reason: %v",
+				common.FaultCodeCMName, err)
+		}
 	} else {
 		updateFaultConfigFromCm(configMap)
 		interval = getFaultCodeCMPollInterval(configMap)
