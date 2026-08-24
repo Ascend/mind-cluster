@@ -218,7 +218,7 @@
        ```
 
    - **自定义配置升级**：若[crd默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)不符合用户需求，请创建crds-values.yaml文件，将[crd默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)的YAML文件内容复制到crds-values.yaml文件中，修改相关配置后执行如下命令。
-      >[!WARNING]
+      >[!NOTICE]
       >若只升级单个组件，crds-values.yaml中其他已安装组件的配置请保持与安装时的配置一致，不能将其他已安装组件的Enabled参数设置为false，否则对应组件的资源会被删除。
 
       ```bash
@@ -258,7 +258,7 @@
        > 执行命令后，如果拉取镜像失败，可参考[Helm工具安装或升级组件时拉取镜像失败](https://gitcode.com/Ascend/mind-cluster/issues/1013)章节进行处理。
 
    - **自定义配置升级**：若[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)不符合用户需求，请创建values.yaml文件，将[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)的YAML文件内容复制到values.yaml文件中，修改相关配置后执行如下命令。
-       >[!WARNING]
+       >[!NOTICE]
        >若只升级单个组件，values.yaml中其他已安装组件的配置请保持与安装时的配置一致，不能将其他已安装组件的Enabled参数设置为false，否则对应组件的资源会被删除。
 
        ```bash

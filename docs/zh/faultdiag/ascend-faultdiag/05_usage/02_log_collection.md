@@ -117,7 +117,7 @@ cp -r $HOME/ascend/log/* {采集目录}/process_log
 
 > [!NOTE]
 >
-> - 当使用 AI 框架时，训练及推理日志为 Python 打印在屏幕上的日志，通常用户会通过重定向方式存储在本地，在 PyTorch 框架下，控制台日志仅有一份。
+> 当使用 AI 框架时，训练及推理日志为 Python 打印在屏幕上的日志，通常用户会通过重定向方式存储在本地，在 PyTorch 框架下，控制台日志仅有一份。
 
 ### 环境检查日志
 
@@ -422,22 +422,22 @@ cp -r ~/ttp_log {采集目录}/dl_log/ttp_log
 
 训练或推理结束后，需要采集 LCNE 组件日志。
 
-- Ascend 950 系列产品
+**<term>Ascend 950 系列产品</term>**
 
-Ascend 950 系列 LCNE 组件运行时，会产生相关日志文件 `log.log` 。
+Ascend 950 系列产品 LCNE 组件运行时，会产生相关日志文件 `log.log` 。
 
 将 `log.log` 日志复制至 `采集目录/lcne_log/` 下。可按照以下方式进行采集：
 
-1. 进入 Ascend 950 系列产品 1213 后台，在 `/opt/vrpv8/home/logfile` 目录下获取 `log.log` 日志。
-2. 进入 Ascend 950 系列产品 1213 前台，执行 **collect diagnostic information** 命令采集日志后，从 Ascend 950 系列产品 1213 后台的 `/opt/vrpv8/home/logfile` 目录下获取 `diagnostic_information_*.zip` 压缩日志文件。需要手动解压所有压缩日志。
+1. 进入 <term>Ascend 950 系列产品</term> 1213 后台，在 `/opt/vrpv8/home/logfile` 目录下获取 `log.log` 日志。
+2. 进入 <term>Ascend 950 系列产品</term> 1213 前台，执行 **collect diagnostic information** 命令采集日志后，从 <term>Ascend 950 系列产品</term> 1213 后台的 `/opt/vrpv8/home/logfile` 目录下获取 `diagnostic_information_*.zip` 压缩日志文件。需要手动解压所有压缩日志。
 
-- Atlas A3 系列产品
+**<term>Atlas A3 训练系列产品</term>、<term>Atlas A3 推理系列产品</term>**
 
 直接将 SmartKit 或 CCAE 导出的 LCNE 组件日志递归解压后放置到 `采集目录/lcne_log/` 下。
 
 > [!NOTE]
 >
-> - 如果不能确定 LCNE 归属于哪个节点，请单独放置到一个目录，如 `LCNE采集日志/` 下，使用请参考[场景一拓扑信息自动关联推荐](./06_superpod_diagnosis.md#场景一拓扑信息自动关联推荐)。
+> 如果不能确定 LCNE 归属于哪个节点，请单独放置到一个目录，如 `LCNE采集日志/` 下，使用请参考[场景一拓扑信息自动关联推荐](./06_superpod_diagnosis.md#场景一拓扑信息自动关联推荐)。
 
 ### BMC 日志
 

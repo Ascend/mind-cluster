@@ -29,7 +29,7 @@
                 command: [ "/bin/bash", "-c", "--"]
                 args: [ "device-plugin
                          <strong>-volcanoType=true                    # 重调度场景下必须使用Volcano</strong>
-                         <strong>-autoStowing=true                    # 该字段已日落。是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品</strong>
+                         <strong>-autoStowing=true                    # 该字段已日落。是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于<term>Atlas 训练系列产品</term></strong>
                          <strong>-listWatchPeriod=5                   # 设置健康状态检查周期，范围[3,1800]；单位为秒</strong>
                          -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log
                          -logLevel=0" ]
@@ -62,7 +62,7 @@
                 command: [ "/bin/bash", "-c", "--"]
                 args: [ "device-plugin
                          -volcanoType=true                    # 重调度场景下必须使用Volcano
-                         -autoStowing=true                    # 该字段已日落。是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品
+                         -autoStowing=true                    # 该字段已日落。是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于<term>Atlas 训练系列产品</term>
                          <span style="color:#D80000;"><strong>-hotReset=1 # 【DEPRECATED】开启优雅容错模式，系统会尝试自动复位故障芯片（取值为1的在线热复位功能已日落）</strong></span>
                          -listWatchPeriod=5                   # 健康状态检查周期，范围[3,1800]；单位为秒
                          -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log
@@ -509,7 +509,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../05_dev
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002003180012_p439011371714"><a name="zh-cn_topic_0000002003180012_p439011371714"></a><a name="zh-cn_topic_0000002003180012_p439011371714"></a>由于通过pip安装MindSpore时，可能出现依赖的组件安装报错，故可以先安装依赖。</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002003180012_p6390121315177"><a name="zh-cn_topic_0000002003180012_p6390121315177"></a><a name="zh-cn_topic_0000002003180012_p6390121315177"></a>wget https://gitcode.com/mindspore/mindspore/raw/r2.4.1/requirements.txt</p>
-<div class="note" id="zh-cn_topic_0000002003180012_note14449193224617"><a name="zh-cn_topic_0000002003180012_note14449193224617"></a><a name="zh-cn_topic_0000002003180012_note14449193224617"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002003180012_p15449133274617"><a name="zh-cn_topic_0000002003180012_p15449133274617"></a><a name="zh-cn_topic_0000002003180012_p15449133274617"></a>MindSpore软件包与<span id="zh-cn_topic_0000002003180012_ph327965117217"><a name="zh-cn_topic_0000002003180012_ph327965117217"></a><a name="zh-cn_topic_0000002003180012_ph327965117217"></a>Atlas 训练系列产品</span>需配套使用，请参见MindSpore<a href="https://www.mindspore.cn/install" target="_blank" rel="noopener noreferrer">安装指南</a>查看对应关系。</p>
+<div class="note" id="zh-cn_topic_0000002003180012_note14449193224617"><a name="zh-cn_topic_0000002003180012_note14449193224617"></a><a name="zh-cn_topic_0000002003180012_note14449193224617"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002003180012_p15449133274617"><a name="zh-cn_topic_0000002003180012_p15449133274617"></a><a name="zh-cn_topic_0000002003180012_p15449133274617"></a>MindSpore软件包与<span id="zh-cn_topic_0000002003180012_ph327965117217"><a name="zh-cn_topic_0000002003180012_ph327965117217"></a><a name="zh-cn_topic_0000002003180012_ph327965117217"></a><term>Atlas 训练系列产品</term></span>需配套使用，请参见MindSpore<a href="https://www.mindspore.cn/install" target="_blank" rel="noopener noreferrer">安装指南</a>查看对应关系。</p>
 </div></div>
 </td>
 </tr>

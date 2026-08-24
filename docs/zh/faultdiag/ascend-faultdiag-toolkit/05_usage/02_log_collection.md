@@ -11,15 +11,22 @@
 | **在线 SSH 采集** | 设备可网络访问（IP / 账号密码 / 密钥 / 免密），实时采集 | 工具所在节点到目标设备端口可达 |
 | **离线日志收集** | 已获取到日志文件，仅需归档分析 | 提前收集日志到工具所在节点的目录 |
 
-> - **快速导航**：[服务器（Host）日志](#服务器host日志) | [BMC 日志](#BMC-log) | [交换机日志](#交换机日志)
-> - 在线采集命令请根据产品型号选对应的参考资料，如：[Atlas A3 中心推理和训练硬件 HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100591762/426cffd9)、[Atlas 800T A3 超节点 iBMC 命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100461433/2cd78eac?idPath=23710424|251366513|22892968|252309113|261716443)、[交换机命令参考](https://support.huawei.com/enterprise/zh/switches/s3700-s5700-s6700-pid-259602657?category=reference-guides&subcategory=command-reference)
+>[!NOTE]
+>
+> - 在线采集命令请根据产品型号选择对应的参考资料，例如：[Atlas A3 中心推理和训练硬件 HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100591762/426cffd9)、[Atlas 800T A3 超节点 iBMC 命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100461433/2cd78eac?idPath=23710424|251366513|22892968|252309113|261716443)、[交换机命令参考](https://support.huawei.com/enterprise/zh/switches/s3700-s5700-s6700-pid-259602657?category=reference-guides&subcategory=command-reference)。
 > - 离线日志目录结构说明：工具支持压缩包自动解析，使用时无需手动解压。下文离线日志目录结构展示了压缩包内部层级，用于说明包内的重要文件。
+
+**快速导航**
+
+- [服务器（Host）日志](#服务器host日志)
+- [BMC 日志](#BMC-log)
+- [交换机日志](#交换机日志)
 
 <a id="服务器host日志"></a>
 
 ## 服务器（Host）日志
 
-### 1. 在线数据采集
+### 在线数据采集
 
 工具会自动通过 SSH 在服务器上执行以下命令进行采集：
 
@@ -57,7 +64,7 @@
 
 <a id="host-offline-log"></a>
 
-### 2. 离线日志采集
+### 离线日志采集
 
 工具支持 3 个版本的离线日志结构，版本识别由工具自动完成，无需手动指定。通过以下任意一种 [host 日志采集脚本](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/ascend-fd-tk/host_collector)收集日志，收集后获得 `{file_name}.tar.gz`，直接将压缩包放入日志采集目录即可。
 
@@ -109,7 +116,7 @@ host日志采集目录/
 
 ## BMC 日志
 
-### 1. 在线数据采集
+### 在线数据采集
 
 工具通过 BMC IPMI 协议自动采集以下数据项：
 
@@ -133,7 +140,7 @@ ascend-fd-tk set_conn_config /home/user/conn.ini collect_bmc_dump_info
 
 <a id="BMC-offline-log"></a>
 
-### 2. 离线日志采集
+### 离线日志采集
 
 支持通过以下任意一种方式收集 BMC 日志：
 
@@ -161,7 +168,7 @@ bmc日志采集目录/
 
 ## 交换机日志
 
-### 1. 在线数据采集
+### 在线数据采集
 
 工具通过 SSH 登录交换机后，自动执行以下命令：
 
@@ -194,7 +201,7 @@ bmc日志采集目录/
 
 <a id="switch-offline-log"></a>
 
-### 2. 离线日志采集
+### 离线日志采集
 
 交换机离线日志主要需要以下两种日志：
 

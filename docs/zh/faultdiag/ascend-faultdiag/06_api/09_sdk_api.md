@@ -40,7 +40,7 @@ parse_fault_type(input_log_list: list) -> Tuple[List, List]
 |----------------|------|------------------------|
 | input_log_list | List | 用户输入的业务日志列表 |
 
-- input_log_list 示例
+**input_log_list 示例**
 
 ```json
 [
@@ -63,7 +63,7 @@ parse_fault_type(input_log_list: list) -> Tuple[List, List]
 ]
 ```
 
-- input_log_list 字段说明
+**input_log_list 字段说明**
 
 | 字段                    | 类型         | 必填 | 说明                   |
 |-------------------------|--------------|------|------------------------|
@@ -82,7 +82,7 @@ parse_fault_type(input_log_list: list) -> Tuple[List, List]
 | results      | List         | 清洗整合的结果                   |
 | err_msg_list | List[String] | 接口执行过程中产生的错误信息列表 |
 
-- results 示例
+**results 示例**
 
 ```json
 [
@@ -111,7 +111,7 @@ parse_fault_type(input_log_list: list) -> Tuple[List, List]
 ]
 ```
 
-- results 字段说明
+**results 字段说明**
 
 | 字段                    | 类型         | 必返回 | 说明          |
 |-------------------------|--------------|--------|---------------|
@@ -128,7 +128,7 @@ parse_fault_type(input_log_list: list) -> Tuple[List, List]
 | `device_list[].server`  | String       | 是     | 故障服务器 IP |
 | `device_list[].device`  | List[String] | 是     | device 卡信息 |
 
-- err_msg_list 示例
+**err_msg_list 示例**
 
 ```json
 ["Input validation failed, the reason is: [Invalid parameter type for 'input_log_list', it should be 'list'.]"]
@@ -156,7 +156,7 @@ parse_root_cluster(input_log_list: list) -> Tuple[List, List]
 |----------------|------|------------------------|
 | input_log_list | List | 用户输入的节点信息列表 |
 
-- **input_log_list 示例**
+**input_log_list 示例**
 
 ```json
 [
@@ -180,7 +180,7 @@ parse_root_cluster(input_log_list: list) -> Tuple[List, List]
 ]
 ```
 
-- **input_log_list 字段说明**
+**input_log_list 字段说明**
 
 | 字段                     | 类型         | 必填 | 说明           |
 |--------------------------|--------------|------|----------------|
@@ -201,9 +201,9 @@ parse_root_cluster(input_log_list: list) -> Tuple[List, List]
 | results      | List         | 清洗整合后的日志信息             |
 | err_msg_list | List[String] | 接口执行过程中产生的错误信息列表 |
 
-- **results 示例**
+**results 示例**
 
-> 列表每个元素对应一个 server 的解析结果，key 为 pid 字符串；若输入包含 MindIE 日志，列表末尾会追加一个 MindIE 解析结果对象。
+列表每个元素对应一个 server 的解析结果，key 为 pid 字符串；若输入包含 MindIE 日志，列表末尾会追加一个 MindIE 解析结果对象。
 
 ```json
 [
@@ -265,7 +265,7 @@ parse_root_cluster(input_log_list: list) -> Tuple[List, List]
 ]
 ```
 
-- **results 字段说明**
+**results 字段说明**
 
 | 字段                                               | 类型         | 必返回 | 说明                                                 |
 |----------------------------------------------------|--------------|--------|------------------------------------------------------|
@@ -309,7 +309,7 @@ parse_root_cluster(input_log_list: list) -> Tuple[List, List]
 | `link_error_info_map`                              | Object       | 否     | 链路错误信息，key 为本端 IP，value 为对端 IP 列表    |
 | `pull_kv_error_map`                                | Object       | 否     | KV 拉取错误信息，key 为本端 IP，value 为对端 IP 列表 |
 
-- **err_msg_list 示例**
+**err_msg_list 示例**
 
 ```json
 ["Input validation failed, the reason is: [Invalid parameter type for 'input_log_list', it should be 'list'.]"]
@@ -344,7 +344,7 @@ diag_root_cluster(input_log_list: list) -> Tuple[Dict, List]
 | results      | Dict         | 发生错误的根因节点信息           |
 | err_msg_list | List[String] | 接口执行过程中产生的错误信息列表 |
 
-- **results 示例**
+**results 示例**
 
 ```json
 {
@@ -361,11 +361,11 @@ diag_root_cluster(input_log_list: list) -> Tuple[Dict, List]
 }
 ```
 
-- **results 字段说明**
+**results 字段说明**
 
 | 字段                       | 类型         | 必返回 | 说明                                |
 |----------------------------|--------------|--------|-------------------------------------|
-| `analyze_success`          | Boolean      | 是     | 是否诊断成功，true 成功，false 失败 |
+| `analyze_success`          | Boolean      | 是     | 是否诊断成功。<ul><li>true：成功</li><li>false：失败</li></ul>|
 | `fault_description`        | Object       | 是     | 故障描述                            |
 | `fault_description.code`   | Integer      | 是     | 故障码                              |
 | `fault_description.string` | String       | 是     | 故障码描述                          |
@@ -375,7 +375,7 @@ diag_root_cluster(input_log_list: list) -> Tuple[Dict, List]
 | `first_error_device`       | String       | 是     | 任务中最早发生错误的 Device         |
 | `last_error_device`        | String       | 是     | 任务中最晚发生错误的 Device         |
 
-- **err_msg_list 示例**
+**err_msg_list 示例**
 
 ```json
 ["The list of workers to be checked is empty. Please check the root cluster diag result."]
@@ -404,7 +404,7 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
 | input_log_list | List | 是       | 用户输入的故障日志列表                   |
 | custom_entity  | Dict | 否       | 自定义故障实体，仅本次调用有效，不会落盘 |
 
-- input_log_list 示例
+**input_log_list 示例**
 
 ```json
 [
@@ -428,7 +428,7 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
 ]
 ```
 
-- input_log_list 字段说明
+**input_log_list 字段说明**
 
 | 字段                            | 类型         | 必填 | 说明                                                                                  |
 |---------------------------------|--------------|------|---------------------------------------------------------------------------------------|
@@ -442,7 +442,7 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
 | `log_items[].component`         | String       | 否   | 故障组件                                                                              |
 | `log_items[].log_lines`         | List[String] | 是   | 待解析的日志行                                                                        |
 
-- custom_entity 示例
+**custom_entity 示例**
 
 ```json
 {
@@ -481,7 +481,7 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
 }
 ```
 
-- custom_entity 字段说明
+**custom_entity 字段说明**
 
 | 字段                       | 类型                | 说明               |
 |----------------------------|---------------------|--------------------|
@@ -509,7 +509,7 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
 | results      | List         | 清洗整合后相关性较高的故障事件   |
 | err_msg_list | List[String] | 接口执行过程中产生的错误信息列表 |
 
-- results 示例
+**results 示例**
 
 > [!NOTE]
 >
@@ -560,7 +560,7 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
 ]
 ```
 
-- results 字段说明
+**results 字段说明**
 
 | 字段                                                   | 类型         | 必返回 | 说明                                       |
 |--------------------------------------------------------|--------------|--------|--------------------------------------------|
@@ -568,7 +568,7 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
 | `fault`                                                | List[Object] | 是     | 故障分析结果列表（每个元素对应一次解析）   |
 | `fault[].parse_version`                                | String       | 是     | 解析器版本号                               |
 | `fault[].response`                                     | Object       | 是     | 各设备的故障事件分析，key 为 source_device |
-| `fault[].response.<source_device>.analyze_success`     | Boolean      | 是     | 是否分析成功，true 成功，false 失败        |
+| `fault[].response.<source_device>.analyze_success`     | Boolean      | 是     | 是否分析成功。<ul><li>true：成功</li><li>false：失败</li></ul>        |
 | `fault[].response.<source_device>.error`               | String       | 是     | 错误信息（无错误时为 "None"）              |
 | `fault[].response.<source_device>.root_causes`         | Object       | 是     | 根因事件字典，key 为故障码 code            |
 | `root_causes.<code>.code`                              | String       | 是     | 故障码                                     |
@@ -588,7 +588,7 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
 | `root_causes.<code>.events_attribute[].event_id`       | String       | 是     | 事件唯一标识                               |
 | `root_causes.<code>.chains`                            | Object       | 是     | 故障传播链                                 |
 
-- err_msg_list 示例
+**err_msg_list 示例**
 
 ```json
 ["Validation for the input list[0] failed, the reason is: ParamError: input_log_list[0].server is missing"]
@@ -623,7 +623,7 @@ diag_knowledge_graph(input_log_list: list) -> Tuple[List, List]
 | results      | List         | 分析后的故障事件诊断报告         |
 | err_msg_list | List[String] | 接口执行过程中产生的错误信息列表 |
 
-- results 示例
+**results 示例**
 
 ```json
 [
@@ -648,11 +648,11 @@ diag_knowledge_graph(input_log_list: list) -> Tuple[List, List]
 ]
 ```
 
-- results 字段说明
+**results 字段说明**
 
 | 字段                     | 类型         | 必返回 | 说明                                |
 |--------------------------|--------------|--------|-------------------------------------|
-| `analyze_success`        | Boolean      | 是     | 分析是否成功，true 成功，false 失败 |
+| `analyze_success`        | Boolean      | 是     | 分析是否成功。<ul><li>true：成功</li><li>false：失败</li></ul> |
 | `version_info`           | Object       | 是     | 版本信息                            |
 | `note`                   | String       | 是     | 备注                                |
 | `fault`                  | List[Object] | 是     | 故障事件列表                        |
@@ -666,7 +666,7 @@ diag_knowledge_graph(input_log_list: list) -> Tuple[List, List]
 | `fault[].fault_source`   | List[String] | 是     | 故障来源                            |
 | `fault[].fault_chains`   | List         | 是     | 故障传播链                          |
 
-- err_msg_list 示例
+**err_msg_list 示例**
 
 ```json
 ["Validation for the input list[0] failed, the reason is: ParamError: input_log_list[0].server is missing",

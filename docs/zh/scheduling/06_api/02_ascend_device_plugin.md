@@ -12,11 +12,11 @@ Ascend Device Plugin上报的NPU芯片信息如[表1](#table13817185391117)所�
 
 |名称|含义|说明|
 |--|--|--|
-|huawei.com/Ascend910|标记当前节点可用的芯片名称信息，存在多个时用英文逗号拼接。|<ul><li>该字段正在日落，后续版本该字段不再呈现。默认情况下，节点的可用芯片由Volcano维护，该字段不生效。如果需要生效，可以修改Volcano的配置参数“self-maintain-available-card”值为false。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu作为参数名称。</li></ul>|
-|huawei.com/Ascend910-NetworkUnhealthy|标记当前节点网络不健康的芯片名称信息，存在多个时用英文逗号拼接。|Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-NetworkUnhealthy作为参数名称。|
-|huawei.com/Ascend910-Unhealthy|标记当前芯片不健康的芯片名称信息，存在多个时用英文逗号拼接。|Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-Unhealthy作为参数名称。|
-|huawei.com/Ascend910-Recovering|标记当前节点正在进行恢复的芯片，存在多个时用英文逗号拼接。|Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-Recovering作为参数名称。|
-|huawei.com/Ascend910-Fault|记录芯片具体的故障信息。|<ul><li>数组对象，对象包含fault_type、npu_name、large_model_fault_level、fault_level、fault_handling、fault_code和fault_time_and_level_map这7个字段。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-Fault作为参数名称。</li></ul>|
+|huawei.com/Ascend910|标记当前节点可用的芯片名称信息，存在多个时用英文逗号拼接。|<ul><li>该字段正在日落，后续版本该字段不再呈现。默认情况下，节点的可用芯片由Volcano维护，该字段不生效。如果需要生效，可以修改Volcano的配置参数“self-maintain-available-card”值为false。</li><li>Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点使用huawei.com/npu作为参数名称。</li></ul>|
+|huawei.com/Ascend910-NetworkUnhealthy|标记当前节点网络不健康的芯片名称信息，存在多个时用英文逗号拼接。|Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点使用huawei.com/npu-NetworkUnhealthy作为参数名称。|
+|huawei.com/Ascend910-Unhealthy|标记当前芯片不健康的芯片名称信息，存在多个时用英文逗号拼接。|Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点使用huawei.com/npu-Unhealthy作为参数名称。|
+|huawei.com/Ascend910-Recovering|标记当前节点正在进行恢复的芯片，存在多个时用英文逗号拼接。|Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点使用huawei.com/npu-Recovering作为参数名称。|
+|huawei.com/Ascend910-Fault|记录芯片具体的故障信息。|<ul><li>数组对象，对象包含fault_type、npu_name、large_model_fault_level、fault_level、fault_handling、fault_code和fault_time_and_level_map这7个字段。</li><li>Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点使用huawei.com/npu-Fault作为参数名称。</li></ul>|
 |-fault_type|故障类型。|<ul><li>CardUnhealthy：芯片故障</li><li>CardNetworkUnhealthy：芯片网络故障</li><li>NodeUnhealthy：节点故障</li></ul>|
 |-npu_name|故障的芯片名称，节点故障时为空。|字符串|
 |<p>-large_model_fault_level</p><p>-fault_level</p><p>-fault_handling</p>|故障处理类型，节点故障时取值为空。|<ul><li>NotHandleFault：不做处理</li><li>SubHealthFault：亚健康故障，不隔离芯片，调度器根据<a href="./01_volcano.md#table143562050699">亚健康策略</a>处理该类型故障。</li><li>RestartRequest：推理场景需要重新执行推理请求，训练场景重新执行训练业务</li><li>RestartBusiness：需要重新执行业务</li><li>FreeRestartNPU：影响业务执行，待芯片空闲时需复位芯片</li><li>RestartNPU：直接复位芯片并重新执行业务</li><li>SeparateNPU：隔离芯片</li><li>PreSeparateNPU：预隔离芯片，会根据训练任务实际运行情况判断是否重调度</li><li>ManuallySeparateNPU：人工隔离芯片，当芯片故障频次达到Ascend Device Plugin的故障频次阈值，Ascend Device Plugin会将故障芯片进行人工隔离</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>large_model_fault_level、fault_level和fault_handling参数功能一致，推荐使用fault_handling。</li><li>若推理任务订阅了故障信息，任务使用的推理卡上发生RestartRequest故障且故障持续时间未超过60秒，则不执行任务重调度；若故障持续时间超过60秒仍未恢复，则隔离芯片，进行任务重调度。</li></ul></div></div>|
@@ -112,7 +112,7 @@ Ascend Device Plugin上报的NPU设备故障信息如[表6](#table68216761214)�
 
 **deviceNameCustomization.json<a name="section579455712489"></a>**
 
-deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Plugin镜像时，将该文件放在二进制包的同级目录下，即可将Ascend Device Plugin对外展示的资源类型、资源名称修改为自定义的名称。Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD目前不支持该功能。
+deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Plugin镜像时，将该文件放在二进制包的同级目录下，即可将Ascend Device Plugin对外展示的资源类型、资源名称修改为自定义的名称。Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点目前不支持该功能。
 
 **表 7**  deviceNameCustomization.json支持自定义设备名称
 

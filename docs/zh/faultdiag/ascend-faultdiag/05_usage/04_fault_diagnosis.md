@@ -112,9 +112,7 @@ fault_diag_result/
 └── diag_report.json    # 完整的诊断结果（JSON 格式）
 ```
 
-> [!NOTE]
->
-> - 说明：诊断结果文件 `diag_report.json` 结构请参考[诊断结果输出](../06_api/03_command_diag.md#诊断结果输出)。
+诊断结果文件 `diag_report.json` 结构请参考[诊断结果输出](../06_api/03_command_diag.md#诊断结果输出)。
 
 ## 诊断性能劣化问题
 
@@ -123,9 +121,7 @@ fault_diag_result/
 - **设备资源分析**：检查 NPU 计算降频和 CPU 资源抢占问题。
 - **网络拥塞分析**：检查节点间的网络拥塞情况。
 
-> [!NOTE]
->
-> - 用例可参考[含性能劣化诊断](../06_api/03_command_diag.md#含性能劣化诊断)。
+用例可参考[含性能劣化诊断](../06_api/03_command_diag.md#含性能劣化诊断)。
 
 ## 注意事项
 

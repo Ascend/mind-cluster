@@ -11,12 +11,12 @@ Volcano可实现以下2个方面的亲和性调度：基于昇腾AI处理器的�
 - 基于节点的亲和性
     - 交换机亲和性调度：基于交换机下节点的组网配置和参数面网络配置，实现节点的最佳利用。
     - 逻辑超节点亲和性调度：对集群设备中的物理超节点根据切分策略划分出逻辑超节点，实现节点的最佳利用。
-    - 框亲和性调度：Atlas 950 SuperPoD由多个物理框组成，每个物理框共8个节点，框内节点之间的网络通信性能更优，实现节点的最佳利用。
+    - 框亲和性调度：Atlas 950 SuperPoD 超节点由多个物理框组成，每个物理框共8个节点，框内节点之间的网络通信性能更优，实现节点的最佳利用。
 
 ## 基于昇腾AI处理器的亲和性<a name="section18208162194419"></a>
 
-本文档详细介绍了Atlas 训练系列产品、Atlas 200T A2 Box16 异构子框、A200T A3 Box8 超节点服务器、Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD等产品的昇腾AI处理器亲和性规则，以及在此基础上研发的Volcano组件调度规则方案。
+本文档详细介绍了<term>Atlas 训练系列产品</term>、Atlas 200T A2 Box16 异构子框、A200T A3 Box8 超节点服务器、Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点等产品的昇腾AI处理器亲和性规则，以及在此基础上研发的Volcano组件调度规则方案。
 
 ## 基于节点的亲和性<a name="section654613453444"></a>
 
-本文档同时介绍了基于Atlas 训练系列产品、<term>Atlas A2 训练系列产品</term>、Atlas 900 A3 SuperPoD 超节点、Atlas 950 SuperPoD等产品的亲和性规则，即交换机的节点调度规则；对<term>Spine-Leaf</term>网络架构模式下，选择调用哪个交换机下的节点进行了详细介绍。
+本文档同时介绍了基于<term>Atlas 训练系列产品</term>、<term>Atlas A2 训练系列产品</term>、Atlas 900 A3 SuperPoD 超节点、Atlas 950 SuperPoD 超节点等产品的亲和性规则，即交换机的节点调度规则；对<term>Spine-Leaf</term>网络架构模式下，选择调用哪个交换机下的节点进行了详细介绍。

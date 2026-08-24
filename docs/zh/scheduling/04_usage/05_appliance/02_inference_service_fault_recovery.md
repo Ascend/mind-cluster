@@ -11,7 +11,7 @@
 
 1. 获取MindIE容器镜像。
     - 方式一：进入昇腾镜像仓库的[MindIE镜像下载](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)页面，下载MindIE镜像。
-    - 方式二：参考《MindIE安装指南》中的“安装MindIE \> [方式三：容器安装方式](https://gitcode.com/Ascend/MindIE-LLM/blob/v3.1.0/docs/zh/user_guide/install/source/installation_in_containerized.md)”章节，自行准备镜像。
+    - 方式二：参考《MindIE LLM开发指南》中的“安装指南 \> [方式二：离线安装](https://www.hiascend.com/document/detail/zh/mindie/310/mindiellm/llmdev/mindie_llm/user_guide/install/source/preparing_software_and_dependencies.md)”章节，自行准备镜像。
 
 2. 在节点上查看MindIE镜像。
 
@@ -100,7 +100,7 @@
         vi /data/atlas_dls/public/infer/script/Qwen3-1.7B/config.json
         ```
 
-    2. 按“i”进入编辑模式，按实际使用情况修改如下参数。参数说明详细请参见《MindIE LLM开发指南》中的“核心概念与配置 \> [配置参数说明（服务化）](https://www.hiascend.com/document/detail/zh/mindie/300/mindiellm/llmdev/user_guide/user_manual/service_parameter_configuration.md)”章节。
+    2. 按“i”进入编辑模式，按实际使用情况修改如下参数。参数说明详细请参见《MindIE LLM开发指南》中的“核心概念与配置 \> [配置参数说明（服务化）](https://www.hiascend.com/document/detail/zh/mindie/310/mindiellm/llmdev/mindie_llm/user_guide/user_manual/service_parameter_configuration.md)”章节。
 
         ```json
         {

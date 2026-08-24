@@ -6,6 +6,7 @@
 
 非交互式模式将多个命令串联在一行中执行，适用于自动化运维场景。
 
+>[!NOTE]
 > 设置配置文件路径命令 `set_config_dir` 为可选命令。
 
 ### 1. 清理缓存
@@ -21,27 +22,27 @@ ascend-fd-tk clear_cache
 
 - 在线场景
 
-```bash
-# 第一步：采集信息
-ascend-fd-tk set_config_dir /path/to/your_config_path set_conn_config /path/to/conn.ini auto_collect
-收集完成，若完成全部收集请进行诊断/巡检
+    ```bash
+    # 第一步：采集信息
+    ascend-fd-tk set_config_dir /path/to/your_config_path set_conn_config /path/to/conn.ini auto_collect
+    收集完成，若完成全部收集请进行诊断/巡检
 
-# 第二步：执行特定客户类型的巡检
-ascend-fd-tk auto_inspection <客户类型>
-巡检完成
-```
+    # 第二步：执行特定客户类型的巡检
+    ascend-fd-tk auto_inspection <客户类型>
+    巡检完成
+    ```
 
 - 离线场景
 
-```bash
-# 第一步：采集信息
-ascend-fd-tk set_config_dir /path/to/your_config_path set_host_dump_log /path/to/host_logs set_bmc_dump_log /path/to/bmc_logs set_switch_dump_log /path/to/switch_logs auto_collect
-收集完成，若完成全部收集请进行诊断/巡检
+    ```bash
+    # 第一步：采集信息
+    ascend-fd-tk set_config_dir /path/to/your_config_path set_host_dump_log /path/to/host_logs set_bmc_dump_log /path/to/bmc_logs set_switch_dump_log /path/to/switch_logs auto_collect
+    收集完成，若完成全部收集请进行诊断/巡检
 
-# 第二步：执行特定客户类型的巡检
-ascend-fd-tk auto_inspection <客户类型>
-巡检完成
-```
+    # 第二步：执行特定客户类型的巡检
+    ascend-fd-tk auto_inspection <客户类型>
+    巡检完成
+    ```
 
 ## 交互式命令执行（展示命令与回显）
 

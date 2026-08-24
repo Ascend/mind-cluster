@@ -1,6 +1,6 @@
 # 创建vNPU<a name="ZH-CN_TOPIC_0000002479226382"></a>
 
-- 在物理机和虚拟机使用npu-smi工具创建vNPU的命令基本相同，所以本节命令可以适用于物理机和虚拟机，其中只有Atlas 推理系列产品支持在虚拟机创建vNPU。
+- 在物理机和虚拟机使用npu-smi工具创建vNPU的命令基本相同，所以本节命令可以适用于物理机和虚拟机，其中只有<term>Atlas 推理系列产品</term>支持在虚拟机创建vNPU。
 - 当使用**静态虚拟化**创建vNPU并挂载到容器时，需要使用**npu-smi**命令创建vNPU，再参考[挂载vNPU（静态虚拟化）](./02_mounting_vnpu_static.md)章节挂载到容器。
 - 当使用**动态虚拟化**时，无需提前创建vNPU，请跳过本节，直接在容器拉起时按以下要求进行参数配置。
     - 使用Ascend Docker Runtime：参考[动态vNPU调度](../05_dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md)，通过ASCEND\_VISIBLE\_DEVICES和ASCEND\_VNPU\_SPECS参数从物理芯片上虚拟化出多个vNPU并挂载至容器。
@@ -50,8 +50,8 @@
     |id| 设备ID。通过<b>npu-smi info -m</b>命令查出的NPU ID即为设备ID。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
     |chip_id| 芯片ID。通过<b>npu-smi info -m</b>命令查出的Chip ID即为芯片ID。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
     |vnpu_config| 虚拟化实例模板名称，详细请参见[虚拟化模板](../03_virtualization_templates.md)中表1的“虚拟化实例模板”列。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-    |vnpu_id| <p>指定需要创建的vNPU的ID。</p><ul><li>首次创建可以不指定该参数，由系统默认分配。若重启后业务需要使用重启前的vnpu_id，可以使用-v参数指定重启前的vnpu_id进行恢复。</li><li>取值范围：<ul><li>Atlas 推理系列产品<p>vnpu_id的取值范围为[phy_id \* 16 + 100, phy_id \* 16+107]。</p></li><li>Atlas 训练系列产品<p>vnpu_id的取值范围为[phy_id \* 16 + 100, phy_id \* 16+115]。</p></li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">phy_id表示芯片物理ID，可通过执行<strong>ls /dev/davinci*</strong>命令获取芯片的物理ID。例如/dev/davinci0，表示芯片的物理ID为0。</div></div></li><li>vnpu_id传入4294967295时表示不指定虚拟设备号。</li><li>同一台服务器内不可重复创建相同vnpu_id的vNPU。</li></ul> |
-    |vgroup_id| 虚拟资源组vGroup的ID，取值范围为0~3。<p>vGroup是指虚拟化时NPU根据用户指定的虚拟化模板划分出虚拟资源组vGroup，每个vGroup包含若干AICore、AICPU、片上内存、DVPP资源。</p><p>仅<span>Atlas 推理系列产品</span>支持本参数。</p> |
+    |vnpu_id| <p>指定需要创建的vNPU的ID。</p><ul><li>首次创建可以不指定该参数，由系统默认分配。若重启后业务需要使用重启前的vnpu_id，可以使用-v参数指定重启前的vnpu_id进行恢复。</li><li>取值范围：<ul><li><term>Atlas 推理系列产品</term><p>vnpu_id的取值范围为[phy_id \* 16 + 100, phy_id \* 16+107]。</p></li><li><term>Atlas 训练系列产品</term><p>vnpu_id的取值范围为[phy_id \* 16 + 100, phy_id \* 16+115]。</p></li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">phy_id表示芯片物理ID，可通过执行<strong>ls /dev/davinci*</strong>命令获取芯片的物理ID。例如/dev/davinci0，表示芯片的物理ID为0。</div></div></li><li>vnpu_id传入4294967295时表示不指定虚拟设备号。</li><li>同一台服务器内不可重复创建相同vnpu_id的vNPU。</li></ul> |
+    |vgroup_id| 虚拟资源组vGroup的ID，取值范围为0~3。<p>vGroup是指虚拟化时NPU根据用户指定的虚拟化模板划分出虚拟资源组vGroup，每个vGroup包含若干AICore、AICPU、片上内存、DVPP资源。</p><p>仅<span><term>Atlas 推理系列产品</term></span>支持本参数。</p> |
 
     使用示例如下：
 
@@ -121,4 +121,4 @@
     ![](../../../../../figures/scheduling/1.png)
 
     >[!NOTE]
-    >Atlas 推理系列产品支持返回AICPU，Vgroup ID信息，Atlas 训练系列产品不支持返回AICPU，Vgroup ID信息。
+    ><term>Atlas 推理系列产品</term>支持返回AICPU，Vgroup ID信息，<term>Atlas 训练系列产品</term>不支持返回AICPU，Vgroup ID信息。

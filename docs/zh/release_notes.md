@@ -32,7 +32,7 @@
 
 |MindCluster|CANN| HDK                                                                   |MindSpeed-LLM|TorchNPU|MindSpore|
 |--|--|-----------------------------------------------------------------------|--|--|--|
-|26.1.0|9.1.0| <ul><li>Atlas 350 标卡：25.7.RC1</li><li>Atlas 950 SuperPoD：25.1.RC1</li><li>Atlas 850 Server：25.6.RC1</li><li>其他产品：26.1.0</li></ul> |26.1.0|26.1.0|2.10.0|
+|26.1.0|9.1.0| <ul><li>Atlas 350 加速卡：25.7.RC1</li><li>Atlas 950 SuperPoD 超节点：25.1.RC1</li><li>Atlas 850E 超节点/Atlas 650E 服务器：25.6.RC1</li><li>其他产品：26.1.0</li></ul> |26.1.0|26.1.0|2.10.0|
 
 ## 版本兼容性说明
 
@@ -92,7 +92,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 <thead>
   <tr>
     <th rowspan="2">MindCluster</th>
-    <th colspan="1">Ascend 950 系列产品HDK版本</th>
+    <th colspan="1"><term>Ascend 950 系列产品</term>HDK版本</th>
   </tr>
   <tr>
     <th>25.1.RC1/25.6.RC1/25.7.RC1</th>
@@ -278,8 +278,8 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 |组件名称| 特性描述 |
 |--|----------|
-|MindCluster Ascend FaultDiag| <ul><li>在已有故障模式库中，针对Ascend 950系列产品补充故障模式，并新增支持基于pyMotor+vLLM的故障模式。</li><li>优化链路诊断工具输出报告的内容。</li><li>故障诊断支持IPv6场景。</li></ul>   |
-|MindCluster集群调度组件| <ul><li>支持存储DTFS故障。</li><li>Atlas 950 SuperPoD产品支持IPv6场景（参数面除外）。A2/A3支持IPv6。</li><li>Volcano支持Pod优先调度回原运行节点。</li><li>Ascend Device Plugin故障处理插件化。</li><li>支持带内检测1825故障上报。</li><li>提供1825网卡的RDMA设备插件。</li><li>支持helm一键化部署易用性提升。</li><li>NPU Exporter支持分组配置采集周期。</li><li>多级调度场景支持亚健康热切。</li><li>支持配置存活探针。</li><li>新增卡死检测与恢复功能。</li><li>支持Atlas 850 系列硬件产品和Atlas 950 SuperPoD的设备管理、亲和性调度、指标监控、故障检测，RankTable生成等基础能力。</li><li>支持Atlas 850 系列硬件产品的基础断点续训能力；支持Atlas 950 SuperPoD的全量断点续训能力。</li><li>支持Atlas 850 系列硬件产品和Atlas 950 SuperPoD的容器化能力。</li><li>支持推理故障恢复能力，包括优先级调度、缩P保D和实例级重调度。</li><li>支持推理场景基于负载的弹性扩缩容能力和容器快照能力。</li></ul> |
+|MindCluster Ascend FaultDiag| <ul><li>在已有故障模式库中，针对<term>Ascend 950 系列产品</term>补充故障模式，并新增支持基于pyMotor+vLLM的故障模式。</li><li>优化链路诊断工具输出报告的内容。</li><li>故障诊断支持IPv6场景。</li></ul>   |
+|MindCluster集群调度组件| <ul><li>支持存储DTFS故障。</li><li>Atlas 950 SuperPoD 超节点支持IPv6场景（参数面除外）。Atlas A2/A3 系列产品支持IPv6。</li><li>Volcano支持Pod优先调度回原运行节点。</li><li>Ascend Device Plugin故障处理插件化。</li><li>支持带内检测1825故障上报。</li><li>提供1825网卡的RDMA设备插件。</li><li>支持helm一键化部署易用性提升。</li><li>NPU Exporter支持分组配置采集周期。</li><li>多级调度场景支持亚健康热切。</li><li>支持配置存活探针。</li><li>新增卡死检测与恢复功能。</li><li>支持Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点的设备管理、亲和性调度、指标监控、故障检测，RankTable生成等基础能力。</li><li>支持Atlas 850E 超节点、Atlas 650E 服务器的基础断点续训能力；支持Atlas 950 SuperPoD 超节点的全量断点续训能力。</li><li>支持Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点的容器化能力。</li><li>支持推理故障恢复能力，包括优先级调度、缩P保D和实例级重调度。</li><li>支持推理场景基于负载的弹性扩缩容能力和容器快照能力。</li></ul> |
 
 ### 关键特性变更
 
@@ -298,16 +298,16 @@ MindCluster集群调度组件：
 
 ### 已解决的问题
 
-- 修复Atlas 350 标卡驱动部署后的软链接校验报错问题。
-- 修复Ascend 950 系列产品huawei.com/AscendReal注解赋值phyID和logicID存在不同含义时，导致Ascend Device Plugin判断卡是否被占用出现异常的问题。
-- 修复Ascend 950 系列产品device-cm的ManuallySeparateNPU中芯片名称未适配为NPU的问题。
+- 修复Atlas 350 加速卡驱动部署后的软链接校验报错问题。
+- 修复<term>Ascend 950 系列产品</term>huawei.com/AscendReal注解赋值phyID和logicID存在不同含义时，导致Ascend Device Plugin判断卡是否被占用出现异常的问题。
+- 修复<term>Ascend 950 系列产品</term>device-cm的ManuallySeparateNPU中芯片名称未适配为NPU的问题。
 - 修复NPU Exporter采集光模块指标失效时，optical_index存在内容但未上报的问题。
 
 ### 遗留问题
 
 进程级别重调度特性在多次重调度恢复后，存在PyTorch原生组件gloo的段错误问题，概率约0.00125，详细请参见[issue 188266](https://github.com/pytorch/pytorch/issues/188266)。可以通过配置Job/Pod重调度作为兜底措施。
 
-A3开启算子重执行，在linkdown故障场景下，进程级重调度有概率失败。可以配置进程级在线恢复规避，或配置Job/Pod重调度作为兜底措施。
+Atlas A3 系列产品开启算子重执行，在linkdown故障场景下，进程级重调度有概率失败。可以配置进程级在线恢复规避，或配置Job/Pod重调度作为兜底措施。
 
 ## 升级影响
 
@@ -324,7 +324,7 @@ Infer Operator组件从26.1.0之前版本升级到26.1.0及之后版本时，需
 |文档名称|内容简介|更新说明|
 |--|--|--|
 |《[MindCluster 集群调度用户指南](./scheduling/01_introduction/00_overview.md)》|提供集群调度组件说明、特性原理和使用参考，包括各组件的安装部署、集成适配示例和API参考，以及部分调度方案的原理介绍参考。|新增使用helm安装组件、开发者指南、容器快照部署及使用等，其他变更详见《[MindCluster 集群调度用户指南](./scheduling/01_introduction/00_overview.md)》。|
-|《[MindCluster 故障诊断用户指南](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)》|提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。|新增Ascend 950 系列产品、基于pyMotor+vLLM的故障模式等，其他变更详见《[MindCluster 故障诊断用户指南](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)》。|
+|《[MindCluster 故障诊断用户指南](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)》|提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。|新增<term>Ascend 950 系列产品</term>、基于pyMotor+vLLM的故障模式等，其他变更详见《[MindCluster 故障诊断用户指南](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)》。|
 
 ## 病毒扫描结果
 

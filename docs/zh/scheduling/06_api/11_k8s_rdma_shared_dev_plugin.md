@@ -69,9 +69,7 @@ K8s RDMA Shared Dev Plugin通过`-config-file`参数指定的JSON配置文件配
 |------|---------|------|--------|--------------------------------------------------------------|
 | periodicUpdateInterval | 否 | int | 60 | 周期性更新设备资源的时间间隔，单位为秒。取值为0时禁用周期性更新设备资源功能；未设置时使用默认值60秒；取值不能小于0。 |
 | faultDetectPeriod | 否 | int | 0 | 故障检测周期，单位为秒，仅对UB类型设备生效。未设置或取值小于1时禁用故障检测功能。                   |
-| configList | 是 | object列表 | - | 资源配置列表，每个元素描述一组RDMA设备的上报规则，列表至少包含1个元素。                       |
-
-configList中每个配置对象的字段说明详见[表4](#table_config_list_k8s_rdma_shared_dev_plugin)。
+| configList | 是 | object列表 | - | 资源配置列表，每个元素描述一组RDMA设备的上报规则，列表至少包含1个元素。<p>configList中每个配置对象的字段说明详见[表4](#table_config_list_k8s_rdma_shared_dev_plugin)。 </p>                     |
 
 **表 4**  configList配置字段<a name="table_config_list_k8s_rdma_shared_dev_plugin"></a>
 
@@ -149,9 +147,9 @@ ConfigMap中Data字段的Key为`DpuInfoCfg`，Value为JSON格式的DPU故障信�
 
 业务Pod使用RDMA共享设备时，K8s RDMA Shared Dev Plugin会自动将所有RDMA设备挂载到Pod中。以下步骤用于验证业务Pod的资源申请和设备挂载状态。
 
-### 业务Pod资源申请配置<a name="ZH-CN_TOPIC_biz_pod_resource_config"></a>
+### 配置业务Pod资源<a name="ZH-CN_TOPIC_biz_pod_resource_config"></a>
 
-业务Pod使用RDMA共享设备需要在Pod配置中声明资源请求，配置示例（申请1份RDMA设备资源，最大值可配参考[配置文件说明](#配置文件说明)rdmaHcaMax）如下：
+业务Pod使用RDMA共享设备需要在Pod配置中声明资源请求，配置示例（申请1份RDMA设备资源，最大值配置可参考[配置文件说明](#配置文件说明)中的`rdmaHcaMax`）如下：
 
 ```yaml
 apiVersion: v1
@@ -181,68 +179,67 @@ spec:
               sleep 1000000
 ```
 
-> [!NOTICE]
-> `hostNetwork`必须配置为`true`。由于业务Pod需要访问宿主机的网络命名空间来使用RDMA设备，因此必须启用hostNetwork模式。
-> 资源名称格式为`<resourcePrefix>/<resourceName>`，需要在K8s RDMA Shared Dev Plugin的配置文件中定义（详见[配置文件说明](#配置文件说明)）。
+> [!NOTE]
+>
+>- `hostNetwork`必须配置为`true`。由于业务Pod需要访问宿主机的网络命名空间来使用RDMA设备，因此必须启用hostNetwork模式。
+>- 资源名称格式为`<resourcePrefix>/<resourceName>`，需要在K8s RDMA Shared Dev Plugin的配置文件中定义（详见[配置文件说明](#配置文件说明)）。
 
-### 业务Pod状态检查步骤<a name="ZH-CN_TOPIC_biz_pod_status_check"></a>
+### 检查业务Pod状态<a name="ZH-CN_TOPIC_biz_pod_status_check"></a>
 
 > [!NOTE]
 >
 > 业务容器使用1825 DPU设备时，除了需要组件挂载外，还需要：
 >
-> - 配置主机网络 `hostNetwork: true`
+> - 配置主机网络`hostNetwork: true`
 > - 配置用户态驱动，两种方式任选其一：
->   1. 在镜像中安装1825 DPU的OFED驱动
->   2. 启动容器后从主机挂载1825 DPU的OFED驱动
+>   - 在镜像中安装1825 DPU的OFED驱动
+>   - 启动容器后从主机挂载1825 DPU的OFED驱动
 
-1. **查看Pod状态**
+执行以下命令，查看业务Pod是否创建成功：
 
-   执行以下命令，查看业务Pod是否创建成功：
+```shell
+kubectl get pod rdma-app -o wide
+```
 
-    ```shell
-    kubectl get pod rdma-app -o wide
-    ```
+回显示例如下，出现**Running**表示Pod创建成功：
 
-   回显示例如下，出现 **Running** 表示Pod创建成功：
+```ColdFusion
+NAME       READY   STATUS    RESTARTS   AGE   IP            NODE
+rdma-app   1/1     Running   0          10s   10.244.1.*   compute-node-1
+```
 
-    ```ColdFusion
-    NAME       READY   STATUS    RESTARTS   AGE   IP            NODE
-    rdma-app   1/1     Running   0          10s   10.244.1.*   compute-node-1
-    ```
-
-### Pod内RDMA设备验证<a name="ZH-CN_TOPIC_biz_pod_rdma_verify"></a>
+### 验证Pod内RDMA设备<a name="ZH-CN_TOPIC_biz_pod_rdma_verify"></a>
 
 业务Pod创建成功后，可以通过以下步骤验证RDMA设备是否被组件正确挂载：
 
-1. **进入Pod内部**
+1. 进入Pod内部
 
     ```shell
     kubectl exec -it rdma-app -- /bin/bash
     ```
 
-2. **检查RDMA设备节点**
+2. 检查RDMA设备节点
 
     ```shell
     ls -la /dev/infiniband/
     ```
 
-   正常情况下应显示`uverbs0`、`uverbs1`等设备节点文件。如果设备节点为空或不存在，说明RDMA设备未正确挂载。
+   正常情况下显示`uverbs0`、`uverbs1`等设备节点文件。如果设备节点为空或不存在，说明RDMA设备未正确挂载。
 
 业务Pod创建成功后，还需检查RDMA网卡设备及对应的网络接口挂载情况：
 
-1**检查Infiniband设备信息**
+1. 检查Infiniband设备信息
 
     ```shell
     ls -la /sys/class/infiniband/
     ```
 
-正常情况下应显示当前节点上的RDMA网卡设备，如`hrn5_0`、`hrn5_1`。
+    正常情况下显示当前节点上的RDMA网卡设备，如`hrn5_0`、`hrn5_1`。
 
-2**检查网络接口信息**
+2. 检查网络接口信息
 
-     ```shell
-     ls -la /sys/class/net/
-     ```
+   ```shell
+   ls -la /sys/class/net/
+   ```
 
-正常情况下应显示节点上的网络接口设备，包括RDMA网卡对应的网络接口（如`ens***`）。如果网络没出现在Pod内，需要检查hostNetwork是否配置为true。
+   正常情况下显示节点上的网络接口设备，包括RDMA网卡对应的网络接口（如`ens***`）。如果网络没出现在Pod内，需要检查`hostNetwork`是否配置为`true`。

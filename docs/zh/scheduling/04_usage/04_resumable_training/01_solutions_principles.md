@@ -295,7 +295,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度
    - AICore利用率：通过驱动接口获取NPU的AICore使用率。
    - HBM显存使用率：通过驱动接口获取NPU的HBM显存使用率。
    - 网络通信流量：
-     - 对于Ascend 950 系列产品场景，通过hccn_tool工具采集UB的tx_busi_flit_num和rx_busi_flit_num统计量；
+     - 对于<term>Ascend 950 系列产品</term>场景，通过hccn_tool工具采集UB的tx_busi_flit_num和rx_busi_flit_num统计量；
      - 对于其他场景，通过hccn_tool工具采集RoCE的roce_tx_all_pkt_num和roce_rx_all_pkt_num统计量。
    - 进程CPU时间：通过读取/proc/{pid}/stat文件获取进程的utime和stime，计算所有NPU关联进程的CPU时间。
 3. 将当前轮次指标与上一轮次保存的指标进行对比，计算各项指标的增量值。
@@ -1469,7 +1469,7 @@ ConfigMap文件会显示相关信息，5秒钟之后自动清除。
 
 ### 光链路成员端口故障<a name="ZH-CN_TOPIC_0000002511426421"></a>
 
-包括Atlas 950 SuperPoD中的npu到unions及5808的端口故障，以及Atlas 850 Server和Atlas 850E Server中的npu到1825及5808端口的故障等。
+包括Atlas 950 SuperPoD 超节点中的npu到unions及5808的端口故障，以及Atlas 850E 超节点和Atlas 650E 服务器中的npu到1825及5808端口的故障等。
 
 **检测原理<a name="zh-cn_topic_0000002216292814_section_hangdetectprinciple"></a>**
 
@@ -1489,7 +1489,7 @@ UB PORT link状态变化（UP -> DOWN）；UBOE PORT link状态变化 (UP -> DOW
 
 **使用约束<a name="zh-cn_topic_0000002193288232_section156679598384"></a>**
 
-本功能仅支持在以下产品型号中使用：适用于Atlas 950 SuperPoD、Atlas 850 Server和Atlas 850E Server。
+本功能仅支持在以下产品型号中使用：适用于Atlas 950 SuperPoD 超节点、Atlas 850E 超节点和Atlas 650E 服务器。
 
 |故障码|故障说明|故障级别|
 |--|--|--|
@@ -1569,12 +1569,10 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas 训练系列产品|<ul><li>Atlas 800 训练服务器（型号 9000）</li><li>Atlas 800 训练服务器（型号 9010）</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">若Atlas 800 训练服务器的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见《Atlas 800 训练服务器 iBMC用户指南（型号 9000）》中的“[查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。</div></div>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Atlas A2 训练系列产品|<ul><li>Atlas 800T A2 训练服务器</li><li>Atlas 200T A2 Box16 异构子框</li><li>Atlas 900 A2 PoD 集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Atlas A3 训练系列产品|<ul><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|A200T A3 Box8 超节点服务器|A200T A3 Box8 超节点服务器|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Atlas 950 训练系列产品|<ul><li>Atlas 950 SuperPoD</li></ul>|<ul><li>PyTorch</li></ul>|
-|Atlas 850 训练系列产品|<ul><li>Atlas 850 Server</li><li>Atlas 850E Server</li></ul>|<ul><li>PyTorch</li></ul>|
+|<term>Atlas 训练系列产品</term>|<ul><li>Atlas 800 训练服务器（型号 9000）</li><li>Atlas 800 训练服务器（型号 9010）</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">若Atlas 800 训练服务器的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见《Atlas 800 训练服务器 iBMC用户指南（型号 9000）》中的“[查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。</div></div>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Atlas A2 训练系列产品</term>|<ul><li>Atlas 800T A2 训练服务器</li><li>Atlas 200T A2 Box16 异构子框</li><li>Atlas 900 A2 PoD 集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Atlas A3 训练系列产品</term>|<ul><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li><li>A200T A3 Box8 超节点服务器</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Ascend 950 系列产品</term>|<ul><li>Atlas 950 SuperPoD 超节点</li><li>Atlas 850E 超节点</li><li>Atlas 650E 服务器</li></ul>|PyTorch|
 
 **重调度原理<a name="zh-cn_topic_0000002039194017_section57901137171110"></a>**
 
@@ -1605,65 +1603,16 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 **支持的产品型号和AI框架<a name="zh-cn_topic_0000002003034876_section48174410591"></a>**
 
-**表 1**  重调度支持的产品和框架
+**表 1**  Pod级别重调度支持的产品和框架
 
 <a name="zh-cn_topic_0000002003034876_table1991711954417"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002003034876_row1091711912447"><th class="cellrowborder" valign="top" width="20.462046204620464%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002003034876_p199171819164417"><a name="zh-cn_topic_0000002003034876_p199171819164417"></a><a name="zh-cn_topic_0000002003034876_p199171819164417"></a>产品类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="63.10631063106311%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002003034876_p2917819114420"><a name="zh-cn_topic_0000002003034876_p2917819114420"></a><a name="zh-cn_topic_0000002003034876_p2917819114420"></a>硬件形态</p>
-</th>
-<th class="cellrowborder" valign="top" width="16.43164316431643%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002003034876_p27578257424"><a name="zh-cn_topic_0000002003034876_p27578257424"></a><a name="zh-cn_topic_0000002003034876_p27578257424"></a>训练框架</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002003034876_row12917151994410"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002003034876_p339114714459"><a name="zh-cn_topic_0000002003034876_p339114714459"></a><a name="zh-cn_topic_0000002003034876_p339114714459"></a><span id="zh-cn_topic_0000002003034876_ph327965117217"><a name="zh-cn_topic_0000002003034876_ph327965117217"></a><a name="zh-cn_topic_0000002003034876_ph327965117217"></a>Atlas 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="63.10631063106311%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002003034876_ul17412295261"></a><a name="zh-cn_topic_0000002003034876_ul17412295261"></a><ul id="zh-cn_topic_0000002003034876_ul17412295261"><li><span id="ph1179307345"><a name="ph1179307345"></a><a name="ph1179307345"></a>Atlas 800 训练服务器（型号 9000）</span></li><li><span id="zh-cn_topic_0000002039194017_ph1627888115712"><a name="zh-cn_topic_0000002039194017_ph1627888115712"></a><a name="zh-cn_topic_0000002039194017_ph1627888115712"></a>Atlas 800 训练服务器（型号 9010）</span><div class="note" id="zh-cn_topic_0000002003034876_note186291241356"><a name="zh-cn_topic_0000002003034876_note186291241356"></a><a name="zh-cn_topic_0000002003034876_note186291241356"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002003034876_p86294411854"><a name="zh-cn_topic_0000002003034876_p86294411854"></a><a name="zh-cn_topic_0000002003034876_p86294411854"></a>若<span id="zh-cn_topic_0000002003034876_ph1162924110518"><a name="zh-cn_topic_0000002003034876_ph1162924110518"></a><a name="zh-cn_topic_0000002003034876_ph1162924110518"></a>Atlas 800 训练服务器</span>的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见<span id="zh-cn_topic_0000002003034876_ph66296417518"><a name="zh-cn_topic_0000002003034876_ph66296417518"></a><a name="zh-cn_topic_0000002003034876_ph66296417518"></a>《Atlas 800 训练服务器 iBMC用户指南（型号 9000）》中的“<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a" target="_blank" rel="noopener noreferrer">查询和设置NPU芯片工作模式（npuworkmode）</a>”</span>章节。</p>
-</div></div>
-</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="16.43164316431643%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002003034876_ul353572894311"></a><a name="zh-cn_topic_0000002003034876_ul353572894311"></a><ul id="zh-cn_topic_0000002003034876_ul353572894311"><li><span id="zh-cn_topic_0000002003034876_ph2075216585425"><a name="zh-cn_topic_0000002003034876_ph2075216585425"></a><a name="zh-cn_topic_0000002003034876_ph2075216585425"></a>MindSpore</span></li><li><span id="zh-cn_topic_0000002003034876_ph19355165113512"><a name="zh-cn_topic_0000002003034876_ph19355165113512"></a><a name="zh-cn_topic_0000002003034876_ph19355165113512"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002003034876_row6171182004512"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002003034876_p153913472453"><a name="zh-cn_topic_0000002003034876_p153913472453"></a><a name="zh-cn_topic_0000002003034876_p153913472453"></a><span id="zh-cn_topic_0000002003034876_ph151431757142112"><a name="zh-cn_topic_0000002003034876_ph151431757142112"></a><a name="zh-cn_topic_0000002003034876_ph151431757142112"></a>Atlas A2 训练系列产品</span></p>
-<p id="p15647160165615"><a name="p15647160165615"></a><a name="p15647160165615"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="63.10631063106311%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002003034876_ul1843217118563"></a><a name="zh-cn_topic_0000002003034876_ul1843217118563"></a><ul id="zh-cn_topic_0000002003034876_ul1843217118563"><li><span id="ph2153181425619"><a name="ph2153181425619"></a><a name="ph2153181425619"></a>Atlas 800T A2 训练服务器</span></li><li><span id="zh-cn_topic_0000002003034876_ph1114211211203"><a name="zh-cn_topic_0000002003034876_ph1114211211203"></a><a name="zh-cn_topic_0000002003034876_ph1114211211203"></a>Atlas 200T A2 Box16 异构子框</span></li><li><span id="zh-cn_topic_0000002003034876_ph495114991519"><a name="zh-cn_topic_0000002003034876_ph495114991519"></a><a name="zh-cn_topic_0000002003034876_ph495114991519"></a>Atlas 900 A2 PoD 集群基础单元</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="16.43164316431643%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002003034876_ul693112434815"></a><a name="zh-cn_topic_0000002003034876_ul693112434815"></a><ul id="zh-cn_topic_0000002003034876_ul693112434815"><li><span id="zh-cn_topic_0000002003034876_ph1393112494820"><a name="zh-cn_topic_0000002003034876_ph1393112494820"></a><a name="zh-cn_topic_0000002003034876_ph1393112494820"></a>MindSpore</span></li><li><span id="zh-cn_topic_0000002003034876_ph2093210246488"><a name="zh-cn_topic_0000002003034876_ph2093210246488"></a><a name="zh-cn_topic_0000002003034876_ph2093210246488"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002003034876_row62157458147"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002003034876_p18222246142212"><a name="zh-cn_topic_0000002003034876_p18222246142212"></a><a name="zh-cn_topic_0000002003034876_p18222246142212"></a><span id="zh-cn_topic_0000002003034876_ph18411121792018"><a name="zh-cn_topic_0000002003034876_ph18411121792018"></a><a name="zh-cn_topic_0000002003034876_ph18411121792018"></a>Atlas A3 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="63.10631063106311%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002003034876_ul1367372444211"></a><a name="zh-cn_topic_0000002003034876_ul1367372444211"></a><ul id="zh-cn_topic_0000002003034876_ul1367372444211"><li><p id="p14426829306"><a name="p14426829306"></a><a name="p14426829306"></a><span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span></p>
-</li><li><span id="ph10355115144111"><a name="ph10355115144111"></a><a name="ph10355115144111"></a>Atlas 800T A3 超节点服务器</span></li><li><span id="ph9000a3superpod"><a name="ph9000a3superpod"></a><a name="ph9000a3superpod"></a>Atlas 9000 A3 SuperPoD 集群算力系统</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="16.43164316431643%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002039194017_ul7201511105411"></a><a name="zh-cn_topic_0000002039194017_ul7201511105411"></a><ul id="zh-cn_topic_0000002039194017_ul7201511105411"><li><span id="zh-cn_topic_0000002039194017_ph52034113546"><a name="zh-cn_topic_0000002039194017_ph52034113546"></a><a name="zh-cn_topic_0000002039194017_ph52034113546"></a>MindSpore</span></li><li><span id="zh-cn_topic_0000002039194017_ph620418118547"><a name="zh-cn_topic_0000002039194017_ph620418118547"></a><a name="zh-cn_topic_0000002039194017_ph620418118547"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="row999211122017"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="p09912115201"><a name="p09912115201"></a><a name="p09912115201"></a><span id="ph126247155413"><a name="ph126247155413"></a><a name="ph126247155413"></a>A200T A3 Box8 超节点服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="63.10631063106311%" headers="mcps1.2.4.1.2 "><p id="p49961172020"><a name="p49961172020"></a><a name="p49961172020"></a><span id="ph6124114710214"><a name="ph6124114710214"></a><a name="ph6124114710214"></a>A200T A3 Box8 超节点服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="16.43164316431643%" headers="mcps1.2.4.1.3 "><a name="ul5581185452113"></a><a name="ul5581185452113"></a><ul id="ul5581185452113"><li><span id="ph19581195472117"><a name="ph19581195472117"></a><a name="ph19581195472117"></a>MindSpore</span></li><li><span id="ph8581154132114"><a name="ph8581154132114"></a><a name="ph8581154132114"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="row_ascend950_pod"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="p_ascend950_pod"><a name="p_ascend950_pod"></a><a name="p_ascend950_pod"></a><span id="ph_ascend950_pod"><a name="ph_ascend950_pod"></a><a name="ph_ascend950_pod"></a>Atlas 950 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="63.10631063106311%" headers="mcps1.2.4.1.2 "><ul id="ul_ascend950_pod"><li><span id="ph_ascend950_superpod_pod"><a name="ph_ascend950_superpod_pod"></a><a name="ph_ascend950_superpod_pod"></a>Atlas 950 SuperPoD</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="16.43164316431643%" headers="mcps1.2.4.1.3 "><ul id="ul_ascend950_fw_pod"><li><span id="ph_ascend950_pt_pod"><a name="ph_ascend950_pt_pod"></a><a name="ph_ascend950_pt_pod"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="row_ascend850_pod"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="p_ascend850_pod"><a name="p_ascend850_pod"></a><a name="p_ascend850_pod"></a><span id="ph_ascend850_pod"><a name="ph_ascend850_pod"></a><a name="ph_ascend850_pod"></a>Atlas 850 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="63.10631063106311%" headers="mcps1.2.4.1.2 "><ul id="ul_ascend850_pod"><li><span id="ph_ascend850_hardware_pod"><a name="ph_ascend850_hardware_pod"></a><a name="ph_ascend850_hardware_pod"></a>Atlas 850 Server</span></li><li><span id="ph_ascend850e_hardware_pod"><a name="ph_ascend850e_hardware_pod"></a><a name="ph_ascend850e_hardware_pod"></a>Atlas 850E Server</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="16.43164316431643%" headers="mcps1.2.4.1.3 "><ul id="ul_ascend850_fw_pod"><li><span id="ph_ascend850_pt_pod"><a name="ph_ascend850_pt_pod"></a><a name="ph_ascend850_pt_pod"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+
+|产品类型|硬件形态|训练框架|
+|--|--|--|
+|<term>Atlas 训练系列产品</term>|<ul><li>Atlas 800 训练服务器（型号 9000）</li><li>Atlas 800 训练服务器（型号 9010）</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">若Atlas 800 训练服务器的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见《Atlas 800 训练服务器 iBMC用户指南（型号 9000）》中的“[查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。</div></div>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Atlas A2 训练系列产品</term>|<ul><li>Atlas 800T A2 训练服务器</li><li>Atlas 200T A2 Box16 异构子框</li><li>Atlas 900 A2 PoD 集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Atlas A3 训练系列产品</term>|<ul><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li><li>A200T A3 Box8 超节点服务器</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Ascend 950 系列产品</term>|<ul><li>Atlas 950 SuperPoD 超节点</li><li>Atlas 850E 超节点</li><li>Atlas 650E 服务器</li></ul>|PyTorch|
 
 **重调度原理<a name="zh-cn_topic_0000002003034876_section19557184814234"></a>**
 
@@ -1707,49 +1656,21 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 - 不支持多模态模型。
 - 不支持开启watchdog功能。
 - 不支持在保存Checkpoint期间触发进程级别重调度。
-- Atlas A3 训练系列产品场景下，若发生NPU掉卡类、OS断连类的故障，可导致进程级别重调度失败。
+- <term>Atlas A3 训练系列产品</term>场景下，若发生NPU掉卡类、OS断连类的故障，可导致进程级别重调度失败。
 - 当故障发生在HCCL建链阶段时，会导致进程级别重调度失败。如果除训练初始化的HCCL建链外，还存在其他训练阶段的HCCL建链，可参考[配置HCCL主动触发建链](./03_configuration/03_configuring_training_recovery.md#配置hccl主动触发建链)章节进行提前建链，防止故障出现在HCCL建链阶段。
 - 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
 
 **支持的产品型号和AI框架<a name="zh-cn_topic_0000002039353153_section136131584164"></a>**
 
-**表 1**  重调度支持的产品和框架
+**表 1**  进程级别重调度支持的产品和框架
 
 <a name="zh-cn_topic_0000002039353153_table1991711954417"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002039353153_row1091711912447"><th class="cellrowborder" valign="top" width="20.462046204620464%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002039353153_p199171819164417"><a name="zh-cn_topic_0000002039353153_p199171819164417"></a><a name="zh-cn_topic_0000002039353153_p199171819164417"></a>产品类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="66.2966296629663%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002039353153_p2917819114420"><a name="zh-cn_topic_0000002039353153_p2917819114420"></a><a name="zh-cn_topic_0000002039353153_p2917819114420"></a>硬件形态</p>
-</th>
-<th class="cellrowborder" valign="top" width="13.24132413241324%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002039353153_p27578257424"><a name="zh-cn_topic_0000002039353153_p27578257424"></a><a name="zh-cn_topic_0000002039353153_p27578257424"></a>训练框架</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002039353153_row6171182004512"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039353153_p153913472453"><a name="zh-cn_topic_0000002039353153_p153913472453"></a><a name="zh-cn_topic_0000002039353153_p153913472453"></a><span id="zh-cn_topic_0000002039353153_ph151431757142112"><a name="zh-cn_topic_0000002039353153_ph151431757142112"></a><a name="zh-cn_topic_0000002039353153_ph151431757142112"></a>Atlas A2 训练系列产品</span></p>
-<p id="p737515258512"><a name="p737515258512"></a><a name="p737515258512"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="66.2966296629663%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002039353153_ul1843217118563"></a><a name="zh-cn_topic_0000002039353153_ul1843217118563"></a><ul id="zh-cn_topic_0000002039353153_ul1843217118563"><li><p id="p1546725019404"><a name="p1546725019404"></a><a name="p1546725019404"></a><span id="ph157633217501"><a name="ph157633217501"></a><a name="ph157633217501"></a>Atlas 800T A2 训练服务器</span></p>
-</li><li><span id="zh-cn_topic_0000002039353153_ph1114211211203"><a name="zh-cn_topic_0000002039353153_ph1114211211203"></a><a name="zh-cn_topic_0000002039353153_ph1114211211203"></a>Atlas 200T A2 Box16 异构子框</span></li><li><span id="zh-cn_topic_0000002039353153_ph495114991519"><a name="zh-cn_topic_0000002039353153_ph495114991519"></a><a name="zh-cn_topic_0000002039353153_ph495114991519"></a>Atlas 900 A2 PoD 集群基础单元</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="13.24132413241324%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002039353153_ul693112434815"></a><a name="zh-cn_topic_0000002039353153_ul693112434815"></a><ul id="zh-cn_topic_0000002039353153_ul693112434815"><li><span id="zh-cn_topic_0000002039353153_ph1393112494820"><a name="zh-cn_topic_0000002039353153_ph1393112494820"></a><a name="zh-cn_topic_0000002039353153_ph1393112494820"></a>MindSpore</span></li><li><span id="zh-cn_topic_0000002039353153_ph2093210246488"><a name="zh-cn_topic_0000002039353153_ph2093210246488"></a><a name="zh-cn_topic_0000002039353153_ph2093210246488"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039353153_row62157458147"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039353153_p18222246142212"><a name="zh-cn_topic_0000002039353153_p18222246142212"></a><a name="zh-cn_topic_0000002039353153_p18222246142212"></a><span id="zh-cn_topic_0000002039353153_ph18411121792018"><a name="zh-cn_topic_0000002039353153_ph18411121792018"></a><a name="zh-cn_topic_0000002039353153_ph18411121792018"></a>Atlas A3 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="66.2966296629663%" headers="mcps1.2.4.1.2 "><a name="ul61561253231"></a><a name="ul61561253231"></a><ul id="ul61561253231"><li><span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span></li><li><span id="ph10355115144111"><a name="ph10355115144111"></a><a name="ph10355115144111"></a>Atlas 800T A3 超节点服务器</span></li><li><span id="ph9000a3superpod_process_resched"><a name="ph9000a3superpod_process_resched"></a><a name="ph9000a3superpod_process_resched"></a>Atlas 9000 A3 SuperPoD 集群算力系统</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="13.24132413241324%" headers="mcps1.2.4.1.3 "><a name="ul18946810161311"></a><a name="ul18946810161311"></a><ul id="ul18946810161311"><li><span id="ph99461100137"><a name="ph99461100137"></a><a name="ph99461100137"></a>MindSpore</span><p id="p664545214"><a name="p664545214"></a><a name="p664545214"></a><span id="ph294661010130"><a name="ph294661010130"></a><a name="ph294661010130"></a></span></p>
-</li><li><span id="ph99469109139"><a name="ph99469109139"></a><a name="ph99469109139"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="row_ascend950_process"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="p_ascend950_process"><a name="p_ascend950_process"></a><a name="p_ascend950_process"></a><span id="ph_ascend950_process"><a name="ph_ascend950_process"></a><a name="ph_ascend950_process"></a>Atlas 950 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="66.2966296629663%" headers="mcps1.2.4.1.2 "><ul id="ul_ascend950_process"><li><span id="ph_ascend950_superpod_process"><a name="ph_ascend950_superpod_process"></a><a name="ph_ascend950_superpod_process"></a>Atlas 950 SuperPoD</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="13.24132413241324%" headers="mcps1.2.4.1.3 "><ul id="ul_ascend950_process_fw"><li><span id="ph_ascend950_pt_process"><a name="ph_ascend950_pt_process"></a><a name="ph_ascend950_pt_process"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+
+|产品类型|硬件形态|训练框架|
+|--|--|--|
+|<term>Atlas A2 训练系列产品</term>|<ul><li>Atlas 800T A2 训练服务器</li><li>Atlas 200T A2 Box16 异构子框</li><li>Atlas 900 A2 PoD 集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Atlas A3 训练系列产品</term>|<ul><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Ascend 950 系列产品</term>|Atlas 950 SuperPoD 超节点|PyTorch|
 
 **重调度原理<a name="zh-cn_topic_0000002039353153_section12206164333619"></a>**
 
@@ -1901,62 +1822,20 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 **表 1**  网络故障进程级在线恢复支持的产品和框架
 
 <a name="zh-cn_topic_0000002003193196_table18104314924"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002003193196_row81042144212"><th class="cellrowborder" valign="top" width="33.333333333333336%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002003193196_p51041814022"><a name="zh-cn_topic_0000002003193196_p51041814022"></a><a name="zh-cn_topic_0000002003193196_p51041814022"></a>产品系列</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.29332933293329%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002003193196_p91041414627"><a name="zh-cn_topic_0000002003193196_p91041414627"></a><a name="zh-cn_topic_0000002003193196_p91041414627"></a>产品名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.373337333733375%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002003193196_p11040145218"><a name="zh-cn_topic_0000002003193196_p11040145218"></a><a name="zh-cn_topic_0000002003193196_p11040145218"></a>训练框架</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002003193196_row1910518141229"><td class="cellrowborder" valign="top" width="33.333333333333336%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002003193196_p191051114524"><a name="zh-cn_topic_0000002003193196_p191051114524"></a><a name="zh-cn_topic_0000002003193196_p191051114524"></a><span id="zh-cn_topic_0000002003193196_ph19105814420"><a name="zh-cn_topic_0000002003193196_ph19105814420"></a><a name="zh-cn_topic_0000002003193196_ph19105814420"></a>Atlas A3 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.2 "><a name="ul18927338231"></a><a name="ul18927338231"></a><ul id="ul18927338231"><li><span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span></li><li><span id="ph10355115144111"><a name="ph10355115144111"></a><a name="ph10355115144111"></a>Atlas 800T A3 超节点服务器</span></li><li><span id="ph9000a3superpod_net_online"><a name="ph9000a3superpod_net_online"></a><a name="ph9000a3superpod_net_online"></a>Atlas 9000 A3 SuperPoD 集群算力系统</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.3 "><a name="ul17506112910131"></a><a name="ul17506112910131"></a><ul id="ul17506112910131"><li><span id="ph135064298139"><a name="ph135064298139"></a><a name="ph135064298139"></a>MindSpore</span></li></ul>
-<a name="ul7506132918139"></a><a name="ul7506132918139"></a><ul id="ul7506132918139"><li><span id="ph550610294136"><a name="ph550610294136"></a><a name="ph550610294136"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+
+|产品类型|硬件形态|训练框架|
+|--|--|--|
+|<term>Atlas A3 训练系列产品</term>|<ul><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 
 **表 2** 片上内存故障进程级在线恢复支持的产品和框架
 
 <a name="table0630917154413"></a>
-<table><thead align="left"><tr id="row13630161784418"><th class="cellrowborder" valign="top" width="33.333333333333336%" id="mcps1.2.4.1.1"><p id="p963031734417"><a name="p963031734417"></a><a name="p963031734417"></a>产品系列</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.29332933293329%" id="mcps1.2.4.1.2"><p id="p663151714415"><a name="p663151714415"></a><a name="p663151714415"></a>产品名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.373337333733375%" id="mcps1.2.4.1.3"><p id="p13631111710444"><a name="p13631111710444"></a><a name="p13631111710444"></a>训练框架</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row5631517114410"><td class="cellrowborder" valign="top" width="33.333333333333336%" headers="mcps1.2.4.1.1 "><p id="p166312178442"><a name="p166312178442"></a><a name="p166312178442"></a><span id="ph1463121734416"><a name="ph1463121734416"></a><a name="ph1463121734416"></a>Atlas A2 训练系列产品</span></p>
-<p id="p12631191713449"><a name="p12631191713449"></a><a name="p12631191713449"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.2 "><a name="ul0631181774417"></a><a name="ul0631181774417"></a><ul id="ul0631181774417"><li><span id="ph46319177449"><a name="ph46319177449"></a><a name="ph46319177449"></a>Atlas 800T A2 训练服务器</span></li><li><span id="ph1463131724413"><a name="ph1463131724413"></a><a name="ph1463131724413"></a>Atlas 900 A2 PoD 集群基础单元</span></li><li><span id="ph46311417154417"><a name="ph46311417154417"></a><a name="ph46311417154417"></a>Atlas 900 A2 PoDc 集群基础单元</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.3 "><a name="ul3631151714415"></a><a name="ul3631151714415"></a><ul id="ul3631151714415"><li><span id="ph36311817154419"><a name="ph36311817154419"></a><a name="ph36311817154419"></a>MindSpore</span></li></ul>
-<a name="ul1263181794418"></a><a name="ul1263181794418"></a><ul id="ul1263181794418"><li><span id="ph1263191704413"><a name="ph1263191704413"></a><a name="ph1263191704413"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="row16631181714416"><td class="cellrowborder" valign="top" width="33.333333333333336%" headers="mcps1.2.4.1.1 "><p id="p563111714440"><a name="p563111714440"></a><a name="p563111714440"></a><span id="ph363111714444"><a name="ph363111714444"></a><a name="ph363111714444"></a>Atlas A3 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.2 "><a name="ul1763161764415"></a><a name="ul1763161764415"></a><ul id="ul1763161764415"><li><span id="ph1963121720449"><a name="ph1963121720449"></a><a name="ph1963121720449"></a>Atlas 900 A3 SuperPoD 超节点</span></li><li><span id="ph1363115172443"><a name="ph1363115172443"></a><a name="ph1363115172443"></a>Atlas 800T A3 超节点服务器</span></li><li><span id="ph9000a3superpod_uce_online"><a name="ph9000a3superpod_uce_online"></a><a name="ph9000a3superpod_uce_online"></a>Atlas 9000 A3 SuperPoD 集群算力系统</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.3 "><a name="ul96311517144415"></a><a name="ul96311517144415"></a><ul id="ul96311517144415"><li><span id="ph96310177449"><a name="ph96310177449"></a><a name="ph96310177449"></a>MindSpore</span></li></ul>
-<a name="ul7631141712447"></a><a name="ul7631141712447"></a><ul id="ul7631141712447"><li><span id="ph1563101734413"><a name="ph1563101734413"></a><a name="ph1563101734413"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="row_ascend950_hbm"><td class="cellrowborder" valign="top" width="33.333333333333336%" headers="mcps1.2.4.1.1 "><p id="p_ascend950_hbm"><a name="p_ascend950_hbm"></a><a name="p_ascend950_hbm"></a><span id="ph_ascend950_hbm"><a name="ph_ascend950_hbm"></a><a name="ph_ascend950_hbm"></a>Atlas 950 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.2 "><ul id="ul_ascend950_hbm"><li><span id="ph_ascend950_superpod_hbm"><a name="ph_ascend950_superpod_hbm"></a><a name="ph_ascend950_superpod_hbm"></a>Atlas 950 SuperPoD</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.3 "><ul id="ul_ascend950_hbm_fw2"><li><span id="ph_ascend950_pt_hbm"><a name="ph_ascend950_pt_hbm"></a><a name="ph_ascend950_pt_hbm"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+
+|产品类型|硬件形态|训练框架|
+|--|--|--|
+|<term>Atlas A2 训练系列产品</term>|<ul><li>Atlas 800T A2 训练服务器</li><li>Atlas 900 A2 PoD 集群基础单元</li><li>Atlas 900 A2 PoDc 集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Atlas A3 训练系列产品</term>|<ul><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Ascend 950 系列产品</term>|Atlas 950 SuperPoD 超节点|PyTorch|
 
 **进程级在线恢复原理<a name="zh-cn_topic_0000002003193196_section961210366427"></a>**
 
@@ -2124,7 +2003,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 ### 算子级在线恢复<a name="ZH-CN_TOPIC_0000002479386484"></a>
 
-Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执行通信算子重传。在故障进程不退出的情况下，算子级在线恢复可容忍更长时间的网络异常，训练任务不中断。
+<term>Atlas A3 训练系列产品</term>支持在发生参数面网络故障时，HCCL会执行通信算子重传。在故障进程不退出的情况下，算子级在线恢复可容忍更长时间的网络异常，训练任务不中断。
 
 若网络故障的算子级在线恢复（HCCL通信算子重执行）执行失败，则回退至进程级在线恢复
 
@@ -2150,23 +2029,10 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 **表 1**  支持的产品和框架
 
 <a name="table11647101624213"></a>
-<table><thead align="left"><tr id="row17647111614214"><th class="cellrowborder" valign="top" width="33.333333333333336%" id="mcps1.2.4.1.1"><p id="p1664831610428"><a name="p1664831610428"></a><a name="p1664831610428"></a>产品系列</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.29332933293329%" id="mcps1.2.4.1.2"><p id="p1664816167422"><a name="p1664816167422"></a><a name="p1664816167422"></a>产品名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.373337333733375%" id="mcps1.2.4.1.3"><p id="p17648141664214"><a name="p17648141664214"></a><a name="p17648141664214"></a>训练框架</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row14649101615422"><td class="cellrowborder" valign="top" width="33.333333333333336%" headers="mcps1.2.4.1.1 "><p id="p8649101644216"><a name="p8649101644216"></a><a name="p8649101644216"></a><span id="ph96491216144210"><a name="ph96491216144210"></a><a name="ph96491216144210"></a>Atlas A3 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.2 "><ul id="ul_op_online_product_list"><li><span id="ph264911612426"><a name="ph264911612426"></a><a name="ph264911612426"></a>Atlas 900 A3 SuperPoD 超节点</span></li><li><span id="ph9000a3superpod_op_online_name"><a name="ph9000a3superpod_op_online_name"></a><a name="ph9000a3superpod_op_online_name"></a>Atlas 9000 A3 SuperPoD 集群算力系统</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.3 "><p id="p1664981614218"><a name="p1664981614218"></a><a name="p1664981614218"></a>-</p>
-</td>
-</tr>
-</tbody>
-</table>
+
+|产品类型|硬件形态|训练框架|
+|--|--|--|
+|<term>Atlas A3 训练系列产品</term>|<ul><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li></ul>|-|
 
 **算子级在线恢复原理<a name="section41453583611"></a>**
 
@@ -2182,7 +2048,7 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 
 ### 借轨通信任务暂停与回切<a name="ZH-CN_TOPIC_0000002479226530"></a>
 
-Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练任务借轨通信的暂停与回切功能。即在训练过程中，使用主动借轨回切接口，可自由切换NPU芯片使用的RoCE网口。
+<term>Atlas A3 训练系列产品</term>场景下，MindCluster集群调度组件提供训练任务借轨通信的暂停与回切功能。即在训练过程中，使用主动借轨回切接口，可自由切换NPU芯片使用的RoCE网口。
 
 使用借轨回切功能时，NPU芯片的组网关系可参考《Ascend Training Solution 组网指南（Atlas A3训练产品）》中的“网络平面介绍 \> 参数面网络 \> [端口对接策略](https://support.huawei.com/enterprise/zh/doc/EDOC1100570090/3e6a1479)”章节。
 
@@ -2220,24 +2086,10 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 **表 1**  支持的产品和框架
 
 <a name="zh-cn_topic_0000002098609234_table1526819106465"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002098609234_row22681310134611"><th class="cellrowborder" valign="top" width="33.333333333333336%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002098609234_p137295354447"><a name="zh-cn_topic_0000002098609234_p137295354447"></a><a name="zh-cn_topic_0000002098609234_p137295354447"></a>产品系列</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.29332933293329%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002098609234_p1172993554412"><a name="zh-cn_topic_0000002098609234_p1172993554412"></a><a name="zh-cn_topic_0000002098609234_p1172993554412"></a>产品名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.373337333733375%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002098609234_p97299357449"><a name="zh-cn_topic_0000002098609234_p97299357449"></a><a name="zh-cn_topic_0000002098609234_p97299357449"></a>训练框架</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002098609234_row71691214122315"><td class="cellrowborder" valign="top" width="33.333333333333336%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002098609234_p112681620231"><a name="zh-cn_topic_0000002098609234_p112681620231"></a><a name="zh-cn_topic_0000002098609234_p112681620231"></a><span id="zh-cn_topic_0000002098609234_ph9126121617231"><a name="zh-cn_topic_0000002098609234_ph9126121617231"></a><a name="zh-cn_topic_0000002098609234_ph9126121617231"></a>Atlas A3 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.2 "><a name="ul13725194132419"></a><a name="ul13725194132419"></a><ul id="ul13725194132419"><li><span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span></li><li><span id="ph10355115144111"><a name="ph10355115144111"></a><a name="ph10355115144111"></a>Atlas 800T A3 超节点服务器</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.3 "><a name="ul7583132019396"></a><a name="ul7583132019396"></a><ul id="ul7583132019396"><li><span id="ph135835207394"><a name="ph135835207394"></a><a name="ph135835207394"></a>MindSpore</span></li></ul>
-<a name="ul75831320173911"></a><a name="ul75831320173911"></a><ul id="ul75831320173911"><li><span id="ph13583142013394"><a name="ph13583142013394"></a><a name="ph13583142013394"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+
+|产品类型|硬件形态|训练框架|
+|--|--|--|
+|<term>Atlas A3 训练系列产品</term>|<ul><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 
 **借轨通信任务暂停与回切原理<a name="section56986212179"></a>**
 
@@ -2324,41 +2176,12 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 **表 1**  优雅容错支持的产品和框架
 
 <a name="zh-cn_topic_0000002098609234_table1526819106465"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002098609234_row22681310134611"><th class="cellrowborder" valign="top" width="33.333333333333336%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002098609234_p137295354447"><a name="zh-cn_topic_0000002098609234_p137295354447"></a><a name="zh-cn_topic_0000002098609234_p137295354447"></a>产品系列</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.29332933293329%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002098609234_p1172993554412"><a name="zh-cn_topic_0000002098609234_p1172993554412"></a><a name="zh-cn_topic_0000002098609234_p1172993554412"></a>产品名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.373337333733375%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002098609234_p97299357449"><a name="zh-cn_topic_0000002098609234_p97299357449"></a><a name="zh-cn_topic_0000002098609234_p97299357449"></a>训练框架</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002098609234_row17268131014613"><td class="cellrowborder" valign="top" width="33.333333333333336%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002098609234_p889791444417"><a name="zh-cn_topic_0000002098609234_p889791444417"></a><a name="zh-cn_topic_0000002098609234_p889791444417"></a><span id="zh-cn_topic_0000002098609234_ph289810142442"><a name="zh-cn_topic_0000002098609234_ph289810142442"></a><a name="zh-cn_topic_0000002098609234_ph289810142442"></a>Atlas 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002039353153_ul17412295261"></a><a name="zh-cn_topic_0000002039353153_ul17412295261"></a><ul id="zh-cn_topic_0000002039353153_ul17412295261"><li><span id="ph1638757114220"><a name="ph1638757114220"></a><a name="ph1638757114220"></a>Atlas 800 训练服务器（型号 9000）</span></li><li><span id="zh-cn_topic_0000002039194017_ph1627888115712"><a name="zh-cn_topic_0000002039194017_ph1627888115712"></a><a name="zh-cn_topic_0000002039194017_ph1627888115712"></a>Atlas 800 训练服务器（型号 9010）</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002098609234_ul1381333331316"></a><a name="zh-cn_topic_0000002098609234_ul1381333331316"></a><ul id="zh-cn_topic_0000002098609234_ul1381333331316"><li><span id="zh-cn_topic_0000002098609234_ph1246144904420"><a name="zh-cn_topic_0000002098609234_ph1246144904420"></a><a name="zh-cn_topic_0000002098609234_ph1246144904420"></a>MindSpore</span></li></ul>
-<a name="zh-cn_topic_0000002098609234_ul10570112811135"></a><a name="zh-cn_topic_0000002098609234_ul10570112811135"></a><ul id="zh-cn_topic_0000002098609234_ul10570112811135"><li><span id="zh-cn_topic_0000002098609234_ph473115306133"><a name="zh-cn_topic_0000002098609234_ph473115306133"></a><a name="zh-cn_topic_0000002098609234_ph473115306133"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002098609234_row181221631185611"><td class="cellrowborder" valign="top" width="33.333333333333336%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002098609234_p128991832165620"><a name="zh-cn_topic_0000002098609234_p128991832165620"></a><a name="zh-cn_topic_0000002098609234_p128991832165620"></a><span id="zh-cn_topic_0000002098609234_ph13899123211565"><a name="zh-cn_topic_0000002098609234_ph13899123211565"></a><a name="zh-cn_topic_0000002098609234_ph13899123211565"></a>Atlas A2 训练系列产品</span></p>
-<p id="p96481557151918"><a name="p96481557151918"></a><a name="p96481557151918"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002098609234_ul13899193245613"></a><a name="zh-cn_topic_0000002098609234_ul13899193245613"></a><ul id="zh-cn_topic_0000002098609234_ul13899193245613"><li><span id="ph157633217501"><a name="ph157633217501"></a><a name="ph157633217501"></a>Atlas 800T A2 训练服务器</span></li><li><span id="zh-cn_topic_0000002098609234_ph189001332105615"><a name="zh-cn_topic_0000002098609234_ph189001332105615"></a><a name="zh-cn_topic_0000002098609234_ph189001332105615"></a>Atlas 900 A2 PoD 集群基础单元</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002098609234_ul664419915495"></a><a name="zh-cn_topic_0000002098609234_ul664419915495"></a><ul id="zh-cn_topic_0000002098609234_ul664419915495"><li><span id="zh-cn_topic_0000002098609234_ph146444924919"><a name="zh-cn_topic_0000002098609234_ph146444924919"></a><a name="zh-cn_topic_0000002098609234_ph146444924919"></a>MindSpore</span></li></ul>
-<a name="zh-cn_topic_0000002098609234_ul36445934915"></a><a name="zh-cn_topic_0000002098609234_ul36445934915"></a><ul id="zh-cn_topic_0000002098609234_ul36445934915"><li><span id="zh-cn_topic_0000002098609234_ph364489174917"><a name="zh-cn_topic_0000002098609234_ph364489174917"></a><a name="zh-cn_topic_0000002098609234_ph364489174917"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002098609234_row71691214122315"><td class="cellrowborder" valign="top" width="33.333333333333336%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002098609234_p112681620231"><a name="zh-cn_topic_0000002098609234_p112681620231"></a><a name="zh-cn_topic_0000002098609234_p112681620231"></a><span id="zh-cn_topic_0000002098609234_ph9126121617231"><a name="zh-cn_topic_0000002098609234_ph9126121617231"></a><a name="zh-cn_topic_0000002098609234_ph9126121617231"></a>Atlas A3 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.2 "><a name="ul13725194132419"></a><a name="ul13725194132419"></a><ul id="ul13725194132419"><li><span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span></li><li><span id="ph10355115144111"><a name="ph10355115144111"></a><a name="ph10355115144111"></a>Atlas 800T A3 超节点服务器</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.3 "><a name="ul7583132019396"></a><a name="ul7583132019396"></a><ul id="ul7583132019396"><li><span id="ph135835207394"><a name="ph135835207394"></a><a name="ph135835207394"></a>MindSpore</span></li></ul>
-<a name="ul75831320173911"></a><a name="ul75831320173911"></a><ul id="ul75831320173911"><li><span id="ph13583142013394"><a name="ph13583142013394"></a><a name="ph13583142013394"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+
+|产品类型|硬件形态|训练框架|
+|--|--|--|
+|<term>Atlas 训练系列产品</term>|<ul><li>Atlas 800 训练服务器（型号 9000）</li><li>Atlas 800 训练服务器（型号 9010）</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Atlas A2 训练系列产品</term>|<ul><li>Atlas 800T A2 训练服务器</li><li>Atlas 900 A2 PoD 集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Atlas A3 训练系列产品</term>|<ul><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 
 **优雅容错原理<a name="zh-cn_topic_0000002098609234_section882584011262"></a>**
 
@@ -2401,31 +2224,11 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 **表 1**  在线压测支持的产品和框架
 
 <a name="zh-cn_topic_0000002039194017_table6198201175416_benchmark"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002039194017_row111997118547"><th class="cellrowborder" valign="top" width="25.172517251725168%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002039194017_p91998117543"><a name="zh-cn_topic_0000002039194017_p91998117543"></a><a name="zh-cn_topic_0000002039194017_p91998117543"></a>产品类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="43.834383438343835%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002039194017_p3199161115419"><a name="zh-cn_topic_0000002039194017_p3199161115419"></a><a name="zh-cn_topic_0000002039194017_p3199161115419"></a>硬件形态</p>
-</th>
-<th class="cellrowborder" valign="top" width="30.993099309930994%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002039194017_p5199011125416"><a name="zh-cn_topic_0000002039194017_p5199011125416"></a><a name="zh-cn_topic_0000002039194017_p5199011125416"></a>训练框架</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002039194017_row920001115417"><td class="cellrowborder" valign="top" width="25.172517251725168%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039194017_p192011311155411"><a name="zh-cn_topic_0000002039194017_p192011311155411"></a><a name="zh-cn_topic_0000002039194017_p192011311155411"></a><span id="ph2314323124211"><a name="ph2314323124211"></a><a name="ph2314323124211"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span></p>
-<p id="p773278122616"><a name="p773278122616"></a><a name="p773278122616"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="43.834383438343835%" headers="mcps1.2.4.1.2 "><p id="p17354133423610"><a name="p17354133423610"></a><a name="p17354133423610"></a><span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 800T A2 训练服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="30.993099309930994%" headers="mcps1.2.4.1.3 "><a name="ul15879359132214"></a><a name="ul15879359132214"></a><ul id="ul15879359132214"><li><span id="ph135835207394"><a name="ph135835207394"></a><a name="ph135835207394"></a>MindSpore</span></li><li><span id="ph19425111582712"><a name="ph19425111582712"></a><a name="ph19425111582712"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039194017_row13204101125410"><td class="cellrowborder" valign="top" width="25.172517251725168%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039194017_p172044116542"><a name="zh-cn_topic_0000002039194017_p172044116542"></a><a name="zh-cn_topic_0000002039194017_p172044116542"></a><span id="ph531432344210"><a name="ph531432344210"></a><a name="ph531432344210"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span></p>
-</td>
-<td class="cellrowborder" valign="top" width="43.834383438343835%" headers="mcps1.2.4.1.2 "><p id="p4897194703620"><a name="p4897194703620"></a><a name="p4897194703620"></a><span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="30.993099309930994%" headers="mcps1.2.4.1.3 "><a name="ul13821123132320"></a><a name="ul13821123132320"></a><ul id="ul13821123132320"><li><span id="ph19127156230"><a name="ph19127156230"></a><a name="ph19127156230"></a>MindSpore</span></li><li><span id="ph310231710274"><a name="ph310231710274"></a><a name="ph310231710274"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+
+|产品类型|硬件形态|训练框架|
+|--|--|--|
+|<term>Atlas A2 训练系列产品</term>|Atlas 800T A2 训练服务器|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Atlas A3 训练系列产品</term>|Atlas 900 A3 SuperPoD 超节点|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 
 **在线压测原理<a name="section56986212179"></a>**
 
@@ -2521,31 +2324,11 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 **表 1**  亚健康热切支持的产品和框架
 
 <a name="zh-cn_topic_0000002039194017_table6198201175417"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002039194017_row111997118547"><th class="cellrowborder" valign="top" width="25.172517251725175%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002039194017_p91998117543"><a name="zh-cn_topic_0000002039194017_p91998117543"></a><a name="zh-cn_topic_0000002039194017_p91998117543"></a>产品类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="59.82598259825983%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002039194017_p3199161115419"><a name="zh-cn_topic_0000002039194017_p3199161115419"></a><a name="zh-cn_topic_0000002039194017_p3199161115419"></a>硬件形态</p>
-</th>
-<th class="cellrowborder" valign="top" width="15.001500150015001%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002039194017_p5199011125416"><a name="zh-cn_topic_0000002039194017_p5199011125416"></a><a name="zh-cn_topic_0000002039194017_p5199011125416"></a>训练框架</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002039194017_row920001115417"><td class="cellrowborder" valign="top" width="25.172517251725175%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039194017_p192011311155411"><a name="zh-cn_topic_0000002039194017_p192011311155411"></a><a name="zh-cn_topic_0000002039194017_p192011311155411"></a><span id="ph2314323124211"><a name="ph2314323124211"></a><a name="ph2314323124211"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span></p>
-<p id="p773278122616"><a name="p773278122616"></a><a name="p773278122616"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="59.82598259825983%" headers="mcps1.2.4.1.2 "><p id="p3799611168"><a name="p3799611168"></a><a name="p3799611168"></a><span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 800T A2 训练服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="15.001500150015001%" headers="mcps1.2.4.1.3 "><a name="ul15879359132214"></a><a name="ul15879359132214"></a><ul id="ul15879359132214"><li><span id="ph135835207394"><a name="ph135835207394"></a><a name="ph135835207394"></a>MindSpore</span></li><li><span id="ph19425111582712"><a name="ph19425111582712"></a><a name="ph19425111582712"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039194017_row13204101125410"><td class="cellrowborder" valign="top" width="25.172517251725175%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039194017_p172044116542"><a name="zh-cn_topic_0000002039194017_p172044116542"></a><a name="zh-cn_topic_0000002039194017_p172044116542"></a><span id="ph531432344210"><a name="ph531432344210"></a><a name="ph531432344210"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span></p>
-</td>
-<td class="cellrowborder" valign="top" width="59.82598259825983%" headers="mcps1.2.4.1.2 "><a name="ul9000a3superpod_hotswitch"></a><a name="ul9000a3superpod_hotswitch"></a><ul id="ul9000a3superpod_hotswitch"><li><span id="ph10355115144111"><a name="ph10355115144111"></a><a name="ph10355115144111"></a>Atlas 800T A3 超节点服务器</span></li><li><span id="ph9000a3superpod_hotswitch"><a name="ph9000a3superpod_hotswitch"></a><a name="ph9000a3superpod_hotswitch"></a>Atlas 9000 A3 SuperPoD 集群算力系统</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="15.001500150015001%" headers="mcps1.2.4.1.3 "><a name="ul6531100274"></a><a name="ul6531100274"></a><ul id="ul6531100274"><li><span id="ph1053216019718"><a name="ph1053216019718"></a><a name="ph1053216019718"></a>MindSpore</span></li><li><span id="ph35321001570"><a name="ph35321001570"></a><a name="ph35321001570"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+
+|产品类型|硬件形态|训练框架|
+|--|--|--|
+|<term>Atlas A2 训练系列产品</term>|Atlas 800T A2 训练服务器|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|<term>Atlas A3 训练系列产品</term>|<ul><li>Atlas 800T A3 超节点服务器</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 
 **亚健康热切原理<a name="zh-cn_topic_0000002039194017_section57901137171110"></a>**
 
@@ -2678,31 +2461,11 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 **表 1**  弹性训练支持的产品和框架
 
 <a name="zh-cn_topic_0000002039353153_table1991711954417"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002039353153_row1091711912447"><th class="cellrowborder" valign="top" width="20.462046204620464%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002039353153_p199171819164417"><a name="zh-cn_topic_0000002039353153_p199171819164417"></a><a name="zh-cn_topic_0000002039353153_p199171819164417"></a>产品类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="66.2966296629663%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002039353153_p2917819114420"><a name="zh-cn_topic_0000002039353153_p2917819114420"></a><a name="zh-cn_topic_0000002039353153_p2917819114420"></a>硬件形态</p>
-</th>
-<th class="cellrowborder" valign="top" width="13.24132413241324%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002039353153_p27578257424"><a name="zh-cn_topic_0000002039353153_p27578257424"></a><a name="zh-cn_topic_0000002039353153_p27578257424"></a>训练框架</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002039353153_row6171182004512"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039353153_p153913472453"><a name="zh-cn_topic_0000002039353153_p153913472453"></a><a name="zh-cn_topic_0000002039353153_p153913472453"></a><span id="zh-cn_topic_0000002039353153_ph151431757142112"><a name="zh-cn_topic_0000002039353153_ph151431757142112"></a><a name="zh-cn_topic_0000002039353153_ph151431757142112"></a>Atlas A2 训练系列产品</span></p>
-<p id="p737515258512"><a name="p737515258512"></a><a name="p737515258512"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="66.2966296629663%" headers="mcps1.2.4.1.2 "><p id="p697681955215"><a name="p697681955215"></a><a name="p697681955215"></a><span id="ph157633217501"><a name="ph157633217501"></a><a name="ph157633217501"></a>Atlas 800T A2 训练服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="13.24132413241324%" headers="mcps1.2.4.1.3 "><p id="p139316519435"><a name="p139316519435"></a><a name="p139316519435"></a><span id="zh-cn_topic_0000002039353153_ph2093210246488"><a name="zh-cn_topic_0000002039353153_ph2093210246488"></a><a name="zh-cn_topic_0000002039353153_ph2093210246488"></a>PyTorch</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039353153_row62157458147"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039353153_p18222246142212"><a name="zh-cn_topic_0000002039353153_p18222246142212"></a><a name="zh-cn_topic_0000002039353153_p18222246142212"></a><span id="zh-cn_topic_0000002039353153_ph18411121792018"><a name="zh-cn_topic_0000002039353153_ph18411121792018"></a><a name="zh-cn_topic_0000002039353153_ph18411121792018"></a>Atlas A3 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="66.2966296629663%" headers="mcps1.2.4.1.2 "><p id="p1711620216528"><a name="p1711620216528"></a><a name="p1711620216528"></a><span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="13.24132413241324%" headers="mcps1.2.4.1.3 "><p id="p16887149174313"><a name="p16887149174313"></a><a name="p16887149174313"></a><span id="ph99469109139"><a name="ph99469109139"></a><a name="ph99469109139"></a>PyTorch</span></p>
-</td>
-</tr>
-</tbody>
-</table>
+
+|产品类型|硬件形态|训练框架|
+|--|--|--|
+|<term>Atlas A2 训练系列产品</term>|Atlas 800T A2 训练服务器|PyTorch|
+|<term>Atlas A3 训练系列产品</term>|Atlas 900 A3 SuperPoD 超节点|PyTorch|
 
 **弹性训练原理<a name="section3841210162013"></a>**
 
