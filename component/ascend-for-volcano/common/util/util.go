@@ -428,6 +428,27 @@ func IsNPUTask(nT *api.TaskInfo) bool {
 	return false
 }
 
+// IsDRATask reports whether the task requests devices through Kubernetes Dynamic Resource Allocation.
+func IsDRATask(nT *api.TaskInfo) bool {
+	if nT == nil || nT.Pod == nil {
+		return false
+	}
+	return len(nT.Pod.Spec.ResourceClaims) > 0
+}
+
+// IsDRAJob reports whether any task of the job uses DRA.
+func IsDRAJob(job *api.JobInfo) bool {
+	if job == nil {
+		return false
+	}
+	for _, task := range job.Tasks {
+		if IsDRATask(task) {
+			return true
+		}
+	}
+	return false
+}
+
 // IsStrategyInSubHealthyStrategs to judge the subHealthyStrategy is in subHealthyStrategs or not.
 func IsStrategyInSubHealthyStrategs(subHealthyStrategy string) bool {
 	return CheckStrInSlice(subHealthyStrategy, subHealthyStrategs)

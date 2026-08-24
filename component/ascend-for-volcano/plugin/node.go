@@ -150,6 +150,14 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 		return nil
 	}
 
+	// Bypass DRA tasks before fault check: DRA pods are allocated by the DRA
+	// driver, they should never be rejected by NPU fault handling.
+	if util.IsDRATask(taskInfo) {
+		klog.V(util.LogInfoLev).Infof("NodePredicate bypass DRA task <%s> on node <%s>.",
+			taskInfo.Name, nodeInfo.Name)
+		return nil
+	}
+
 	if sHandle.FaultHandle != nil {
 		if err := sHandle.FaultHandle.CheckNodeNPUByTask(taskInfo, &vcNode); err != nil {
 			return err

@@ -1008,6 +1008,55 @@ func TestIsNPUTask(t *testing.T) {
 	}
 }
 
+func TestIsDRATaskAndJob(t *testing.T) {
+	draTask := &api.TaskInfo{Pod: &v1.Pod{Spec: v1.PodSpec{
+		ResourceClaims: []v1.PodResourceClaim{{Name: "npu-claim"}},
+	}}}
+	normalTask := &api.TaskInfo{Pod: &v1.Pod{}}
+
+	taskTests := []struct {
+		name string
+		task *api.TaskInfo
+		want bool
+	}{
+		{name: "nil task is not DRA", task: nil, want: false},
+		{name: "normal task is not DRA", task: normalTask, want: false},
+		{name: "task with resource claim is DRA", task: draTask, want: true},
+	}
+	for _, tt := range taskTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsDRATask(tt.task); got != tt.want {
+				t.Fatalf("IsDRATask() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+
+	jobTests := []struct {
+		name string
+		job  *api.JobInfo
+		want bool
+	}{
+		{name: "nil job is not DRA job", job: nil, want: false},
+		{
+			name: "job with DRA task is DRA job",
+			job:  &api.JobInfo{Tasks: map[api.TaskID]*api.TaskInfo{"dra": draTask}},
+			want: true,
+		},
+		{
+			name: "job without DRA task is not DRA job",
+			job:  &api.JobInfo{Tasks: map[api.TaskID]*api.TaskInfo{"normal": normalTask}},
+			want: false,
+		},
+	}
+	for _, tt := range jobTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsDRAJob(tt.job); got != tt.want {
+				t.Fatalf("IsDRAJob() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestIsStrategyInSubHealthyStrategse(t *testing.T) {
 	tests := []struct {
 		name     string

@@ -598,6 +598,36 @@ func TestJobValid(t *testing.T) {
 	}
 }
 
+// TestJobValidBypassDRAJobInFirstSession ensures DRA jobs bypass Ascend validation even in first session.
+func TestJobValidBypassDRAJobInFirstSession(t *testing.T) {
+	job := test.FakeNormalTestJob("dra-job", 1)
+	for _, task := range job.Tasks {
+		task.Pod.Spec.ResourceClaims = []v1.PodResourceClaim{{Name: "npu-claim"}}
+	}
+
+	sHandle := &ScheduleHandler{
+		ScheduleEnv: ScheduleEnv{
+			FrameAttr: NewVolcanoFrame(),
+		},
+	}
+	if got := sHandle.JobValid(job); got != nil {
+		t.Errorf("JobValid() = %v, want nil for DRA job", got)
+	}
+}
+
+// TestJobValidRejectNormalJobInFirstSession ensures normal jobs are still rejected in first session.
+func TestJobValidRejectNormalJobInFirstSession(t *testing.T) {
+	job := test.FakeNormalTestJob("normal-job", 1)
+	sHandle := &ScheduleHandler{
+		ScheduleEnv: ScheduleEnv{
+			FrameAttr: NewVolcanoFrame(),
+		},
+	}
+	if got := sHandle.JobValid(job); got == nil || got.Pass {
+		t.Errorf("JobValid() = %v, want Pass=false for normal job in first session", got)
+	}
+}
+
 type setJobPendReasonByNodesCaseArgs struct {
 	job *api.JobInfo
 }

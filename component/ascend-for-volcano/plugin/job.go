@@ -861,7 +861,7 @@ func (sHandle *ScheduleHandler) JobValid(obj interface{}) *api.ValidateResult {
 	klog.V(util.LogDebugLev).Infof("enter job valid")
 	defer klog.V(util.LogDebugLev).Infof("leave job valid")
 
-	if sHandle == nil || *sHandle.FrameAttr.IsFirstSession {
+	if sHandle == nil {
 		return &api.ValidateResult{Pass: false, Reason: objectNilError,
 			Message: fmt.Sprintf("validJobFn [%#v] failed:%s", obj, objectNilError)}
 	}
@@ -871,6 +871,16 @@ func (sHandle *ScheduleHandler) JobValid(obj interface{}) *api.ValidateResult {
 		klog.V(util.LogErrorLev).Infof("%s :%#v.", reason, obj)
 		return &api.ValidateResult{Pass: false, Reason: reason,
 			Message: fmt.Sprintf("validJobFn [%#v] failed:%s", obj, reason)}
+	}
+	// DRA jobs are allocated by the DRA driver. Bypass all Ascend validation,
+	// including the first-session, PodGroup and virtual-device checks.
+	if util.IsDRAJob(job) {
+		klog.V(util.LogInfoLev).Infof("%s job <%s> is DRA job, bypass job valid.", PluginName, job.Name)
+		return nil
+	}
+	if *sHandle.FrameAttr.IsFirstSession {
+		return &api.ValidateResult{Pass: false, Reason: objectNilError,
+			Message: fmt.Sprintf("validJobFn [%#v] failed:%s", obj, objectNilError)}
 	}
 	var result *api.ValidateResult
 	defer func() {
