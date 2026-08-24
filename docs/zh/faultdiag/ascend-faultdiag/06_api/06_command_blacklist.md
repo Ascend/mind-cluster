@@ -39,7 +39,7 @@ ascend-fd blacklist -a "ERROR_KEYWORD"
 ascend-fd blacklist -a "ERROR1 ERROR2 ERROR3"
 ```
 
-> 一条屏蔽规则最多支持 10 个关键词，使用空格分隔。
+一条屏蔽规则最多支持 10 个关键词，使用空格分隔。
 
 ### 导入屏蔽规则
 

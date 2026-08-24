@@ -29,8 +29,8 @@ ascend-fd config [-h] (-u UPDATE | -s | -c)
 ascend-fd config -u <custom-config.json>
 ```
 
-> - `custom-config.json` 为用户自定义输入文件
-> - JSON 文件参考[配置文件说明](#配置文件说明)
+- `custom-config.json` 为用户自定义输入文件。
+- JSON 文件参考[配置文件说明](#配置文件说明)。
 
 回显示例：
 

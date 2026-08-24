@@ -18,7 +18,7 @@ ascend-fd 版本号格式为 `X.Y.Z`，例如 `26.1.0`。
 
 > [!NOTE]
 >
-> - 日志文件大小不超过 10MB，超过后自动转储。
+> 日志文件大小不超过 10MB，超过后自动转储。
 
 ## 组件错误码
 
@@ -37,4 +37,4 @@ ascend-fd 版本号格式为 `X.Y.Z`，例如 `26.1.0`。
 
 ## 已支持故障
 
-请参考 [MindCluster 26.1.0 故障诊断类型](https://raw.gitcode.com/Ascend/mind-cluster/blobs/c49ed595d1b87b34eaf020591778c4536c34b2fe/%E6%95%85%E9%9A%9C%E8%AF%8A%E6%96%AD%E7%B1%BB%E5%9E%8B.xlsx)。
+请参考[MindCluster 26.1.0 故障诊断类型](https://raw.gitcode.com/Ascend/mind-cluster/blobs/c49ed595d1b87b34eaf020591778c4536c34b2fe/%E6%95%85%E9%9A%9C%E8%AF%8A%E6%96%AD%E7%B1%BB%E5%9E%8B.xlsx)。

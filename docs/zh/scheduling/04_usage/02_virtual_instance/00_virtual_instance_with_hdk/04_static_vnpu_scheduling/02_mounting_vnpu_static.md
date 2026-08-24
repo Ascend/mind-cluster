@@ -99,7 +99,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 </th>
 </tr>
 </thead>
-<tbody><tr id="row5741710164014"><td class="cellrowborder" rowspan="4" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p074181014408"><a name="p074181014408"></a><a name="p074181014408"></a><span id="ph327965117217"><a name="ph327965117217"></a><a name="ph327965117217"></a>Atlas 训练系列产品</span>（30或32个AICore）</p>
+<tbody><tr id="row5741710164014"><td class="cellrowborder" rowspan="4" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p074181014408"><a name="p074181014408"></a><a name="p074181014408"></a><span id="ph327965117217"><a name="ph327965117217"></a><a name="ph327965117217"></a><term>Atlas 训练系列产品</term></span>（30或32个AICore）</p>
 </td>
 <td class="cellrowborder" valign="top" width="19.96%" headers="mcps1.2.5.1.2 "><p id="p974510184017"><a name="p974510184017"></a><a name="p974510184017"></a>vir02</p>
 </td>
@@ -128,7 +128,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p188588202135"><a name="p188588202135"></a><a name="p188588202135"></a>Ascend910-16c-100-0</p>
 </td>
 </tr>
-<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A2 训练系列产品</span>（24个AICore）</p>
+<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span><term>Atlas A2 训练系列产品</term></span>（24个AICore）</p>
 </td>
 <td><p>vir12_3c_32g</p>
 </td>
@@ -144,7 +144,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 <td><p>Ascend910-6c.1cpu.16g-100-0</p>
 </td>
 </tr>
-<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A3 训练系列产品</span>（48个AICore）</p>
+<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span><term>Atlas A3 训练系列产品</term></span>（48个AICore）</p>
 </td>
 <td><p>vir12_3c_32g</p>
 </td>
@@ -160,7 +160,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 <td><p>Ascend910-6c.1cpu.16g-100-0</p>
 </td>
 </tr>
-<tr id="row84911853114212"><td class="cellrowborder" rowspan="7" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p1868751772016"><a name="p1868751772016"></a><a name="p1868751772016"></a><span id="ph1623844892113"><a name="ph1623844892113"></a><a name="ph1623844892113"></a>Atlas 推理系列产品</span>（8个AICore）</p>
+<tr id="row84911853114212"><td class="cellrowborder" rowspan="7" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p1868751772016"><a name="p1868751772016"></a><a name="p1868751772016"></a><span id="ph1623844892113"><a name="ph1623844892113"></a><a name="ph1623844892113"></a><term>Atlas 推理系列产品</term></span>（8个AICore）</p>
 <p id="p12827141603014"><a name="p12827141603014"></a><a name="p12827141603014"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="19.96%" headers="mcps1.2.5.1.2 "><p id="p11312190431"><a name="p11312190431"></a><a name="p11312190431"></a>vir01</p>
@@ -212,7 +212,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9957636276"><a name="p9957636276"></a><a name="p9957636276"></a>Ascend310P-4c.4cpu.dvpp-100-0</p>
 </td>
 </tr>
-<tr><td rowspan="6" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A2 推理系列产品</span>（20个AICore）</p>
+<tr><td rowspan="6" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span><term>Atlas A2 推理系列产品</term></span>（20个AICore）</p>
 </td>
 <td><p>vir10_3c_16g</p>
 </td>
@@ -256,7 +256,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 <td><p>Ascend910-5c.1cpu.16g-100-0</p>
 </td>
 </tr>
-<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A3 推理系列产品</span>（40个AICore）</p>
+<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span><term>Atlas A3 推理系列产品</term></span>（40个AICore）</p>
 </td>
 <td><p>vir10_3c_32g</p>
 </td>
@@ -300,13 +300,13 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 
         YAML启动说明如下：
 
-        - K8s集群中存在使用Atlas 推理系列产品节点、Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品、Atlas A2 推理系列产品、Atlas A3 推理系列产品节点（Ascend Device Plugin独立工作，不配合Volcano和Ascend Operator使用）。
+        - K8s集群中存在使用<term>Atlas 推理系列产品</term>节点、<term>Atlas 训练系列产品</term>、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>、<term>Atlas A2 推理系列产品</term>、<term>Atlas A3 推理系列产品</term>节点（Ascend Device Plugin独立工作，不配合Volcano和Ascend Operator使用）。
 
             ```shell
             kubectl apply -f device-plugin-v{version}.yaml
             ```
 
-        - K8s集群中存在使用Atlas 推理系列产品节点、Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品、Atlas A2 推理系列产品、Atlas A3 推理系列产品节点（配合Volcano和Ascend Operator使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
+        - K8s集群中存在使用<term>Atlas 推理系列产品</term>节点、<term>Atlas 训练系列产品</term>、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>、<term>Atlas A2 推理系列产品</term>、<term>Atlas A3 推理系列产品</term>节点（配合Volcano和Ascend Operator使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
 
             ```shell
             kubectl apply -f device-plugin-volcano-v{version}.yaml
@@ -344,7 +344,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 
 ### 使用方法
 
-- 创建训练任务时，需要在创建YAML文件时，修改如下配置。以Atlas 训练系列产品使用为例。
+- 创建训练任务时，需要在创建YAML文件时，修改如下配置。以<term>Atlas 训练系列产品</term>使用为例。
 
     resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend910-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表2 虚拟化实例模板与vNPU类型关系表](#table47415104403)中的“vNPU类型”列。
 
@@ -358,7 +358,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
     ...
     ```
 
-- 创建推理任务时，需要在创建YAML文件时，修改如下配置。以Atlas 推理系列产品使用为例。
+- 创建推理任务时，需要在创建YAML文件时，修改如下配置。以<term>Atlas 推理系列产品</term>使用为例。
 
     resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend310P-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表2 虚拟化实例模板与vNPU类型关系表](#table47415104403)中的“vNPU类型”列。
 

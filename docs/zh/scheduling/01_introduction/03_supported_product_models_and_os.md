@@ -23,28 +23,24 @@
 </th>
 </tr>
 </thead>
-<tbody><tr id="rowAtlas950"><td class="cellrowborder" valign="top" width="15.93%" headers="mcpsGen1.2.4.1.1 "><p id="pAtlas950"><a name="pAtlas950"></a><a name="pAtlas950"></a><span id="phAtlas950"><a name="phAtlas950"></a><a name="phAtlas950"></a>Atlas 950</span></p>
+<tbody><tr id="rowAtlas950"><td class="cellrowborder" rowspan="4" valign="top" width="15.93%" headers="mcpsGen1.2.4.1.1 "><p id="pAtlas950"><a name="pAtlas950"></a><a name="pAtlas950"></a><span id="phAtlas950"><a name="phAtlas950"></a><a name="phAtlas950"></a><term>Ascend 950 系列产品</term></span></p>
 </td>
-<td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas950SuperPoD"><a name="pAtlas950SuperPoD"></a><a name="pAtlas950SuperPoD"></a><span id="phAtlas950SuperPoD"><a name="phAtlas950SuperPoD"></a><a name="phAtlas950SuperPoD"></a>Atlas 950 SuperPoD</span></p>
+<td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas950SuperPoD"><a name="pAtlas950SuperPoD"></a><a name="pAtlas950SuperPoD"></a><span id="phAtlas950SuperPoD"><a name="phAtlas950SuperPoD"></a><a name="phAtlas950SuperPoD"></a>Atlas 950 SuperPoD 超节点</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas950OS"><a name="pAtlas950OS"></a><a name="pAtlas950OS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
 </td>
 </tr>
-<tr id="rowAtlas850"><td class="cellrowborder" rowspan="2" valign="top" width="15.93%" headers="mcpsGen1.2.4.1.1 "><p id="pAtlas850"><a name="pAtlas850"></a><a name="pAtlas850"></a><span id="phAtlas850"><a name="phAtlas850"></a><a name="phAtlas850"></a>Atlas 850</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850Server"><a name="pAtlas850Server"></a><a name="pAtlas850Server"></a><span id="phAtlas850Server"><a name="phAtlas850Server"></a><a name="phAtlas850Server"></a>Atlas 850 Server</span></p>
+<tr id="rowAtlas850"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850Server"><a name="pAtlas850Server"></a><a name="pAtlas850Server"></a><span id="phAtlas850Server"><a name="phAtlas850Server"></a><a name="phAtlas850Server"></a>Atlas 850E 超节点</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850ServerOS"><a name="pAtlas850ServerOS"></a><a name="pAtlas850ServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
 </td>
 </tr>
-<tr id="rowAtlas850E"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850EServer"><a name="pAtlas850EServer"></a><a name="pAtlas850EServer"></a><span id="phAtlas850EServer"><a name="phAtlas850EServer"></a><a name="phAtlas850EServer"></a>Atlas 850E Server</span></p>
+<tr id="rowAtlas850E"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850EServer"><a name="pAtlas850EServer"></a><a name="pAtlas850EServer"></a><span id="phAtlas850EServer"><a name="phAtlas850EServer"></a><a name="phAtlas850EServer"></a>Atlas 650E 服务器</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850EServerOS"><a name="pAtlas850EServerOS"></a><a name="pAtlas850EServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
 </td>
 </tr>
-<tr id="rowAtlas350"><td class="cellrowborder" valign="top" width="15.93%" headers="mcpsGen1.2.4.1.1 "><p id="pAtlas350"><a name="pAtlas350"></a><a name="pAtlas350"></a><span id="phAtlas350"><a name="phAtlas350"></a><a name="phAtlas350"></a>Atlas 350</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas350Card"><a name="pAtlas350Card"></a><a name="pAtlas350Card"></a><span id="phAtlas350Card"><a name="phAtlas350Card"></a><a name="phAtlas350Card"></a>Atlas 350 标卡</span></p>
+<tr id="rowAtlas350"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas350Card"><a name="pAtlas350Card"></a><a name="pAtlas350Card"></a><span id="phAtlas350Card"><a name="phAtlas350Card"></a><a name="phAtlas350Card"></a>Atlas 350 加速卡</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas350OS"><a name="pAtlas350OS"></a><a name="pAtlas350OS"></a>由机头决定</p>
 </td>
@@ -67,7 +63,7 @@
 </th>
 </tr>
 </thead>
-<tbody><tr id="row193141923124213"><td class="cellrowborder" rowspan="5" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p13314132394215"><a name="p13314132394215"></a><a name="p13314132394215"></a><span id="ph1331492318423"><a name="ph1331492318423"></a><a name="ph1331492318423"></a>Atlas 训练系列产品</span></p>
+<tbody><tr id="row193141923124213"><td class="cellrowborder" rowspan="5" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p13314132394215"><a name="p13314132394215"></a><a name="p13314132394215"></a><span id="ph1331492318423"><a name="ph1331492318423"></a><a name="ph1331492318423"></a><term>Atlas 训练系列产品</term></span></p>
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p123141723124213"><a name="p123141723124213"></a><a name="p123141723124213"></a>训练服务器（插<span id="ph113141423144220"><a name="ph113141423144220"></a><a name="ph113141423144220"></a>Atlas 300T 训练卡（型号 9000）</span>）</p>
 </td>
@@ -158,7 +154,7 @@
 </th>
 </tr>
 </thead>
-<tbody><tr id="row87471045632"><td class="cellrowborder" rowspan="9" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p174718453315"><a name="p174718453315"></a><a name="p174718453315"></a><span id="ph19590185162111"><a name="ph19590185162111"></a><a name="ph19590185162111"></a>Atlas 推理系列产品</span></p>
+<tbody><tr id="row87471045632"><td class="cellrowborder" rowspan="9" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p174718453315"><a name="p174718453315"></a><a name="p174718453315"></a><span id="ph19590185162111"><a name="ph19590185162111"></a><a name="ph19590185162111"></a><term>Atlas 推理系列产品</term></span></p>
 <p id="p374720458313"><a name="p374720458313"></a><a name="p374720458313"></a></p>
 <p id="p87473453312"><a name="p87473453312"></a><a name="p87473453312"></a></p>
 <p id="p167479451233"><a name="p167479451233"></a><a name="p167479451233"></a></p>

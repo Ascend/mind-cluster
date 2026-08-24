@@ -28,4 +28,5 @@
 | uncorr_cw_cnt | uncorrectable codeword count，不可纠正码字数 |
 | VRP | Versatile Routing Platform，华为通用路由平台操作系统，交换机需运行 VRP 以支持工具采集命令 |
 
+>[!NOTE]
 > 更多术语请参考[昇腾术语表](https://www.hiascend.com/document/detail/zh/Glossary/gls/gls_0001.html)。

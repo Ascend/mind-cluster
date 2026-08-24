@@ -94,8 +94,8 @@ ascend-fd diag -i /tmp/parse_out -o /tmp/diag_out
     > [!NOTE]
     >
     > - 当未找到对端设备时，不同产品形态的根因节点链展示不同。
-    > - Atlas A2/A3 系列产品：展示对端设备 IP。
-    > - Ascend 950 系列产品：展示对端设备 EID。
+    >   - <term>Ascend 950 系列产品</term>：展示对端设备 EID。
+    >   - 其他产品：展示对端设备 IP。
     > - 回显结果字段说明，请参考[诊断结果回显参数说明](#诊断结果回显参数说明)。
 
 2. 诊断多实例推理任务异常，回显示例
@@ -159,9 +159,7 @@ ascend-fd diag -i /tmp/parse_out -o /tmp/diag_out
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     </pre>
 
-    > [!NOTE]
-    >
-    > - 回显结果字段说明，请参考[诊断结果回显参数说明](#诊断结果回显参数说明)。
+    回显结果字段说明，请参考[诊断结果回显参数说明](#诊断结果回显参数说明)。
 
 ### 含性能劣化诊断
 
@@ -431,7 +429,7 @@ diag_report.json 示例：
 <!-- markdownlint-disable -->
 | 字段                       | 类型                       | 说明                                                           |
 |----------------------------|----------------------------|----------------------------------------------------------------|
-| `analyze_success`          | Boolean                    | 根因节点分析是否成功，true 成功，false 失败。                  |
+| `analyze_success`          | Boolean                    | 根因节点分析是否成功。<ul><li>true：成功</li><li>false：失败</li></ul>                  |
 | `fault_description`        | Object                     | 故障描述。                                                     |
 | `fault_description.code`   | Integer                    | 故障码。                                                       |
 | `fault_description.string` | String                     | 故障码描述。                                                   |
@@ -467,7 +465,7 @@ diag_report.json 示例：
 <!-- markdownlint-disable -->
 | 字段              | 类型         | 说明                                          |
 |-------------------|--------------|-----------------------------------------------|
-| `analyze_success` | Boolean      | 故障事件分析是否成功，true 成功，false 失败。 |
+| `analyze_success` | Boolean      | 故障事件分析是否成功。<ul><li>true：成功</li><li>false：失败</li></ul> |
 | `version_info`    | Object       | 版本信息。                                    |
 | `note`            | String       | 备注。                                        |
 | `fault`           | List[Object] | 故障事件列表，字段见下表。                    |

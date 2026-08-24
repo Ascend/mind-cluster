@@ -6,11 +6,11 @@
 
 - 交换机亲和性调度1.0
 
-    由Volcano进行亲和性调度，保证任务训练时的流量不会造成Spine交换机的下行流量冲突。当前支持的产品为Atlas 训练系列产品和Atlas A2 训练系列产品；支持的框架为PyTorch和MindSpore框架。
+    由Volcano进行亲和性调度，保证任务训练时的流量不会造成Spine交换机的下行流量冲突。当前支持的产品为<term>Atlas 训练系列产品</term>和<term>Atlas A2 训练系列产品</term>；支持的框架为PyTorch和MindSpore框架。
 
 - 交换机亲和性调度2.0
 
-    采用Volcano+iMaster NCE-Fabric的方案，通过iMaster NCE-Fabric来动态计算训练任务通信时的网络通路，不再使用调度器来解决Spine交换机下行流量冲突。同时支持一个交换机下的节点可以被多个跨交换机的任务使用，提高集群的资源利用率。当前支持的产品为Atlas A2 训练系列产品；支持的框架为PyTorch框架。
+    采用Volcano+iMaster NCE-Fabric的方案，通过iMaster NCE-Fabric来动态计算训练任务通信时的网络通路，不再使用调度器来解决Spine交换机下行流量冲突。同时支持一个交换机下的节点可以被多个跨交换机的任务使用，提高集群的资源利用率。当前支持的产品为<term>Atlas A2 训练系列产品</term>；支持的框架为PyTorch框架。
 
 - 单层交换机亲和性调度
 
