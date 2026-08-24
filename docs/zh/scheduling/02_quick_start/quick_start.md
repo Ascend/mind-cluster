@@ -59,7 +59,7 @@
 
    >[!NOTE]
    >
-   > `VERSION` 环境变量用于指定Ascend组件版本，本文档以`26.1.0`为例。每个独立的代码块中均需设置此变量。
+   > `VERSION` 环境变量用于指定Ascend组件版本，`BASE`环境变量用于指定基础镜像版本类型，本文档以`26.1.0`为例，`26.1.0`版本镜像版本有两种，即`ubuntu22.04`和`openeuler24.03`，本文以`ubuntu22.04`举例。每个独立的代码块中均需设置此变量。
 
     1. 部署Ascend Docker Runtime。
 
@@ -93,11 +93,12 @@
 
         ```shell
         VERSION=26.1.0
+        BASE=ubuntu22.04
         # 从华为云镜像仓拉取Ascend Device Plugin镜像
-        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}
+        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}-${BASE}
 
         # 为镜像添加本地标签
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION} ascend-k8sdeviceplugin:v${VERSION}
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}-${BASE} ascend-k8sdeviceplugin:v${VERSION}-${BASE}
         ```
 
     3. 部署Ascend Device Plugin。
