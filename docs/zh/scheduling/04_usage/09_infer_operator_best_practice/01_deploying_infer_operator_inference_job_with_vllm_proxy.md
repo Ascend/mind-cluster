@@ -222,10 +222,10 @@ spec:
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >huawei.com/Ascend910</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li><span >Atlas 800I A2 推理服务器</span>：1-8</li><li><span >Atlas 800I A3 超节点服务器</span>：1-16</li><li><span >Atlas 350 标卡（节点内8卡）</span>：1-8</li><li><span >Atlas 350 标卡（节点内16卡）</span>：1-16</li><li><span >Atlas 850 系列硬件产品</span>：1-8</li><li><span >Atlas 950 SuperPoD</span>：1-8</li></ul>
+<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li><span >Atlas 800I A2 推理服务器</span>：1-8</li><li><span >Atlas 800I A3 超节点服务器</span>：1-16</li><li><span >Atlas 350 加速卡（节点内8卡）</span>：1-8</li><li><span >Atlas 350 加速卡（节点内16卡）</span>：1-16</li><li><span >Atlas 850E 超节点、Atlas 650E 服务器</span>：1-8</li><li><span >Atlas 950 SuperPoD 超节点</span>：1-8</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >请求的NPU数量。当前仅支持整机调度，请根据实际硬件卡数与需求卡数进行修改。</p>
-<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD需将参数名称修改为huawei.com/npu。</div></div>
+<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点需将参数名称修改为huawei.com/npu。</div></div>
 </td>
 </tr>
 <tr ><td class="cellrowborder" rowspan="7" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >fault-scheduling</p>

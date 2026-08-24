@@ -344,7 +344,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_acjob_infer_910b_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 标卡</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 加速卡</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>pytorch_acjob_infer_950_softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_acjob_infer_950_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
@@ -355,7 +355,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-vcjob-910-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 标卡</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 加速卡</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-vcjob-950-softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-vcjob-950-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
@@ -366,7 +366,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 标卡</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 加速卡</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-deploy-950-softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy-950-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>

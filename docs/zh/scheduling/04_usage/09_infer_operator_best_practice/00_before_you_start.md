@@ -19,9 +19,10 @@ MindCluster集群调度组件支持用户通过Infer Operator部署推理任务�
 
 - Atlas 800I A2 推理服务器
 - Atlas 800I A3 超节点服务器
-- Atlas 350 标卡
-- Atlas 850 系列硬件产品
-- Atlas 950 SuperPoD
+- Atlas 350 加速卡
+- Atlas 850E 超节点
+- Atlas 650E 服务器
+- Atlas 950 SuperPoD 超节点
 
 ## 使用方式
 
@@ -40,5 +41,5 @@ MindCluster集群调度组件支持通过以下方式部署Infer Operator推理�
 >
 > 通算角色的下发、优先级与重调度配置与推理角色一致，复用现有YAML参数，区别在于：
 >
-> - 通算角色不请求NPU资源，`resources.requests`中无需配置`huawei.com/`字段，ascend-for-volcano的NPU调度插件在过滤、打分、预留各阶段提前返回、不参与NPU分配，Pod由Volcano默认插件调度到节点（含无NPU节点）
-> - 通算角色的故障重调度仅通过节点故障、业务面故障触发，NPU故障不会触发通算角色的故障重调度
+> - 通算角色不请求NPU资源，`resources.requests`中无需配置`huawei.com/`字段。ascend-for-volcano的NPU调度插件在过滤、打分、预留各阶段提前返回，不参与NPU分配。Pod由Volcano默认插件调度到节点（含无NPU节点）。
+> - 通算角色的故障重调度仅通过节点故障、业务面故障触发，NPU故障不会触发通算角色的故障重调度。

@@ -8,8 +8,8 @@
 
 ## 支持的产品形态
 
-- Atlas 950 SuperPoD
-- Atlas 850 Server超节点
+- Atlas 950 SuperPoD 超节点
+- Atlas 850E 超节点
 - Atlas 900 A3 SuperPoD 超节点
 - Atlas 9000 A3 SuperPoD 集群算力系统
 
@@ -17,7 +17,7 @@
 
 1. 用户在InferServiceSet任务YAML的角色（role）中将`huawei.com/schedule_policy`注解配置为超节点调度策略（取值以-sp结尾，例如chip8-node8-sp、chip8-node8-ra64-sp、chip2-node16-sp、chip2-node8-sp）。
 2. Infer Operator创建InstanceSet时，检测到超节点调度策略后，自动为该推理服务下所有角色的InstanceSet注入`inferserviceid`标签，取值为当前推理服务（InferService）的唯一标识。同一推理服务下所有实例的`inferserviceid`取值相同。
-3. `inferserviceid`标签随InstanceSet传递至对应的PodGroup与工作负载，Ascend-for-volcano调度插件基于该标签将同一推理服务的实例优先调度至同一框（Atlas 950 SuperPoD）或同一超节点（Atlas 850 Server超节点、Atlas 900 A3 SuperPoD 超节点），资源不足时回退至其他超节点。
+3. `inferserviceid`标签随InstanceSet传递至对应的PodGroup与工作负载，Ascend-for-volcano调度插件基于该标签将同一推理服务的实例优先调度至同一框（Atlas 950 SuperPoD 超节点）或同一超节点（Atlas 850E 超节点、Atlas 900 A3 SuperPoD 超节点），资源不足时回退至其他超节点。
 
 若用户已在角色metadata的labels中手动配置`inferserviceid`，则以用户配置为准，Infer Operator不会覆盖。
 

@@ -30,10 +30,10 @@ ClusterD启动后，会创建如下ConfigMap：
 |参数|说明|
 |--|--|
 |mindx-dl-deviceinfo-*\<kwok-node-0\>*|前缀为固定的mindx-dl-deviceinfo，kwok-node-0是节点名称，用于定位故障的具体节点。|
-|huawei.com/Ascend910|<ul><li>当前节点可用的芯片名称信息，存在多个时用英文逗号拼接。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu作为参数名称。</li></ul>|
-|huawei.com/Ascend910-NetworkUnhealthy|<ul><li>当前节点网络不健康的芯片名称信息，存在多个时用英文逗号拼接。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-NetworkUnhealthy作为参数名称。</li></ul>|
-|huawei.com/Ascend910-Unhealthy|<ul><li>当前芯片不健康的芯片名称信息，存在多个时用英文逗号拼接。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-Unhealthy作为参数名称。</li></ul>|
-|huawei.com/Ascend910-Fault|<ul><li>数组对象，对象包含fault_type、npu_name、large_model_fault_level、 fault_level、fault_handling、fault_code和fault_time_and_level_map字段。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD使用huawei.com/npu-Fault作为参数名称。</li></ul>|
+|huawei.com/Ascend910|<ul><li>当前节点可用的芯片名称信息，存在多个时用英文逗号拼接。</li><li>Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点使用huawei.com/npu作为参数名称。</li></ul>|
+|huawei.com/Ascend910-NetworkUnhealthy|<ul><li>当前节点网络不健康的芯片名称信息，存在多个时用英文逗号拼接。</li><li>Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点使用huawei.com/npu-NetworkUnhealthy作为参数名称。</li></ul>|
+|huawei.com/Ascend910-Unhealthy|<ul><li>当前芯片不健康的芯片名称信息，存在多个时用英文逗号拼接。</li><li>Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点使用huawei.com/npu-Unhealthy作为参数名称。</li></ul>|
+|huawei.com/Ascend910-Fault|<ul><li>数组对象，对象包含fault_type、npu_name、large_model_fault_level、 fault_level、fault_handling、fault_code和fault_time_and_level_map字段。</li><li>Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点使用huawei.com/npu-Fault作为参数名称。</li></ul>|
 |- fault_type|故障类型。<ul><li>CardUnhealthy：芯片故障</li><li>CardNetworkUnhealthy：参数面网络故障（芯片网络相关故障）</li><li>NodeUnhealthy：节点故障</li><li>PublicFault：公共故障</li></ul>|
 |- npu_name|故障的芯片名称，节点故障时为空。|
 |<p>- large_model_fault_level</p><p>- fault_level</p><p>- fault_handling</p>|故障处理类型，节点故障时取值为空。<ul><li>NotHandleFault：不做处理</li><li>SubHealthFault：亚健康故障，不隔离芯片，调度器根据<a href="../01_volcano.md#table143562050699">亚健康策略</a>处理该类型故障。</li><li>RestartRequest：推理场景需要重新执行推理请求，训练场景重新执行训练业务</li><li>RestartBusiness：需要重新执行业务</li><li>FreeRestartNPU：影响业务执行，待芯片空闲时需复位芯片</li><li>RestartNPU：直接复位芯片并重新执行业务</li><li>SeparateNPU：隔离芯片</li><li>PreSeparateNPU：预隔离芯片，会根据训练任务实际运行情况判断是否重调度</li><li>ManuallySeparateNPU：人工隔离芯片。当达到Ascend Device Plugin和ClusterD各自的故障频率，Ascend Device Plugin和ClusterD会将故障芯片进行人工隔离。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>large_model_fault_level、fault_handling和fault_level参数功能一致，推荐使用fault_handling。</li><li>若推理任务订阅了故障信息，任务使用的推理卡上发生RestartRequest故障且故障持续时间未超过60秒，则不执行任务重调度；若故障持续时间超过60秒仍未恢复，则隔离芯片，进行任务重调度。</li></ul></div></div>|

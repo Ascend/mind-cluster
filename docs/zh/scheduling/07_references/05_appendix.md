@@ -419,7 +419,7 @@ Ascend Docker Runtime会根据实际环境情况默认以只读方式挂载以�
 </tbody>
 </table>
 
-**表 6**  默认挂载目录和文件（Atlas 350 标卡、Atlas 850系列硬件产品及Atlas 950 SuperPoD）
+**表 6**  默认挂载目录和文件（Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器及Atlas 950 SuperPoD 超节点）
 
 |路径|说明|
 |--|--|
@@ -816,13 +816,13 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 
 |产品形态|参考文档|
 |--|--|
-|Atlas 训练系列产品|<ul><li><span>《[Atlas 中心训练服务器 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591757)》</span></li><li><span>《[Atlas 中心训练服务器 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591764)》</span></li></ul>|
+|<term>Atlas 训练系列产品</term>|<ul><li><span>《[Atlas 中心训练服务器 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591757)》</span></li><li><span>《[Atlas 中心训练服务器 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591764)》</span></li></ul>|
 |<term>Atlas A2 训练系列产品</term>|<ul><li><span>《[Atlas A2 中心推理和训练硬件 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591767)》</span></li><li><span>《[Atlas A2 中心推理和训练硬件 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591760)》</span></li></ul>|
 |<term>Atlas A3 训练系列产品</term>|<ul><li><span>《[Atlas A3 中心推理和训练硬件 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591769)》</span></li><li><span>《[Atlas A3 中心推理和训练硬件 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591758)》</span></li></ul>|
 |推理服务器（插Atlas 300I 推理卡）|<span>《[Atlas 300I 推理卡 黑匣子错误码信息列表（型号 3000, 3010）](https://support.huawei.com/enterprise/zh/doc/EDOC1100438311)》</span>|
 |Atlas 200I SoC A1 核心板|<ul><li><span>《[Atlas 200I SoC A1核心板 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100493983)》</span></li><li><span>《[Atlas 200I SoC A1核心板 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100493985)》</span></li></ul>|
-|Atlas 推理系列产品（不包含Atlas 200I SoC A1 核心板）|<ul><li><span>《[Atlas 中心推理卡 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591759)》</span></li><li><span>《[Atlas 中心推理卡 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591768)》</span></li></ul>|
-|Ascend 950 系列产品|<ul><li><span>《[健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100569783)》</span></li><li><span>《[黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100569782)》</span></li></ul>|
+|<term>Atlas 推理系列产品</term>（不包含Atlas 200I SoC A1 核心板）|<ul><li><span>《[Atlas 中心推理卡 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591759)》</span></li><li><span>《[Atlas 中心推理卡 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591768)》</span></li></ul>|
+|<term>Ascend 950 系列产品</term>|<ul><li><span>《[健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100569783)》</span></li><li><span>《[黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100569782)》</span></li></ul>|
 
 ## 节点故障码参考文档<a name="ZH-CN_TOPIC_0000002479386430"></a>
 
@@ -864,15 +864,15 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 
 |url|说明|
 |--|--|
-|huawei.com/Ascend910|Atlas 训练系列产品资源名称，非网址，不访问。|
-|huawei.com/Ascend310P|Atlas 推理系列产品资源名称，非网址，不访问。|
+|huawei.com/Ascend910|<term>Atlas 训练系列产品</term>资源名称，非网址，不访问。|
+|huawei.com/Ascend310P|<term>Atlas 推理系列产品</term>资源名称，非网址，不访问。|
 |huawei.com/Ascend310|<term>Atlas 200/300/500 推理产品</term>资源名称，非网址，不访问。|
 |huawei.com/Ascend*|Ascend*切分芯片资源名称，非网址，不访问。|
 |`https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3`|注释参考信息，不访问。|
-|huawei.com/Ascend310P-V|Atlas 推理系列产品混插模式：Atlas 300V 视频解析卡资源名称，非网址，不访问。|
-|huawei.com/Ascend310P-VPro|Atlas 推理系列产品混插模式：Atlas 300V Pro 视频解析卡资源名称，非网址，不访问。|
-|huawei.com/Ascend310P-IPro|Atlas 推理系列产品混插模式：Atlas 300I Pro 推理卡资源名称，非网址，不访问。|
-|huawei.com/npu|Atlas 350/850/950 系列产品资源名称，非网址，不访问。|
+|huawei.com/Ascend310P-V|<term>Atlas 推理系列产品</term>混插模式：Atlas 300V 视频解析卡资源名称，非网址，不访问。|
+|huawei.com/Ascend310P-VPro|<term>Atlas 推理系列产品</term>混插模式：Atlas 300V Pro 视频解析卡资源名称，非网址，不访问。|
+|huawei.com/Ascend310P-IPro|<term>Atlas 推理系列产品</term>混插模式：Atlas 300I Pro 推理卡资源名称，非网址，不访问。|
+|huawei.com/npu|<term>Ascend 950 系列产品</term>资源名称，非网址，不访问。|
 
 ## 安全说明<a name="ZH-CN_TOPIC_0000002479386374"></a>
 

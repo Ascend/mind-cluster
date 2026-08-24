@@ -29,5 +29,5 @@
 - Atlas 800I A2 推理服务器
 - A200I A2 Box 异构组件
 - Atlas 800I A3 超节点服务器
-- Atlas 350 标卡
-- Atlas 950 SuperPoD
+- Atlas 350 加速卡
+- Atlas 950 SuperPoD 超节点

@@ -26,7 +26,7 @@
 
 ## 通过命令行使用<a name="ZH-CN_TOPIC_0000002511426327"></a>
 
->[!WARNING]
+>[!NOTICE]
 >如果用户未配置RoCE网络：
 >
 >- 在非超节点调度场景下，单机推理实例可以正常调度，但是推理实例间的KV传输可能异常，导致推理任务无法正常运行。
@@ -38,7 +38,7 @@ MindIE Motor包含两个部分，MindIE MS（MindIE Management Service）和Mind
 
 MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Server组件分别运行在独立的Pod内。使用MindCluster集群调度组件进行MindIE Motor任务部署时，MS Controller、MS Coordinator以及MindIE Server中的每个实例分别以一个AscendJob进行部署，例如一个推理任务包含2个Prefill实例和1个Decode实例，则需要部署5个AscendJob。
 
-了解PD分离服务部署的详细说明可参考《MindIE Motor开发指南》中的“集群服务部署 \> [PD分离服务部署](https://www.hiascend.com/document/detail/zh/mindie/300/mindiemotor/motordev/user_guide/service_deployment/pd_separation_service_deployment.md)”章节。
+了解PD分离服务部署的详细说明可参考《MindIE LLM开发指南》中的“MindIE Motor CPP开发指南 \> 集群服务部署 \> [PD分离服务部署](https://www.hiascend.com/document/detail/zh/mindie/310/mindiellm/llmdev/mindie_motor_cpp/user_guide/service_deployment/pd_separation_service_deployment.md)”章节。
 
 **使用流程<a name="zh-cn_topic_0000002328850238_section5640184231810"></a>**
 
@@ -275,7 +275,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 |mind-cluster/group-name|标记扩缩容规则中对应的group名称。|仅支持MindIE Motor推理任务在Atlas 800I A2 推理服务器、Atlas 800I A3 超节点服务器上使用本参数。|
 |podAffinity|表示逻辑超节点会往具有更多亲和性Pod的物理超节点调度。|仅支持MindIE Motor推理任务Atlas 800I A3 超节点服务器上使用本参数。|
 |sp-fit|超节点调度策略。<ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul>|仅支持MindIE Motor推理任务Atlas 800I A3 超节点服务器上使用本参数。|
-|ring-controller.atlas|<ul><li>Atlas A2 训练系列产品、A200T A3 Box8 超节点服务器、Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器取值为：ascend-<i>{xxx}</i>b</li><li>Atlas 800 训练服务器、服务器（插Atlas 300T 训练卡）取值为：ascend-910</li></ul>|标识任务使用的芯片的产品类型。需要在ConfigMap和任务task中配置。|
+|ring-controller.atlas|<ul><li><term>Atlas A2 训练系列产品</term>、A200T A3 Box8 超节点服务器、Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器取值为：ascend-<i>{xxx}</i>b</li><li>Atlas 800 训练服务器、服务器（插Atlas 300T 训练卡）取值为：ascend-910</li></ul>|标识任务使用的芯片的产品类型。需要在ConfigMap和任务task中配置。|
 |schedulerName|默认值为“volcano”，用户需根据自身情况填写|Ascend Operator启用“gang”调度时所选择的调度器。|
 |minAvailable|默认值为任务总副本数|Ascend Operator启用“gang”调度生效，且调度器为Volcano时，任务运行总副本数。|
 |queue|默认值为“default”，用户需根据自身情况填写|Ascend Operator启用“gang”调度生效，且调度器为Volcano时，任务所属队列。|
@@ -285,7 +285,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 |replicas|<ul><li>单机：1</li><li>分布式：N</li></ul>|N为任务副本数。|
 |image|-|训练镜像名称，请根据实际修改。|
 |sp-block|指定逻辑超节点芯片数量。<ul><li>单机时需要和任务请求的芯片数量一致。</li><li>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</li></ul>|指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于任务的亲和性调度。若用户未指定该字段，Volcano调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。<ul><li>了解详细说明请参见[灵衢总线设备节点网络说明](../03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点)。</li><li>仅支持在Atlas 800I A3 超节点服务器中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：[任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败](https://gitcode.com/Ascend/mind-cluster/issues/377)</li></ul>|
-|tor-affinity|<ul><li>large-model-schema：大模型任务或填充任务</li><li>normal-schema：普通任务</li><li>null：不使用交换机亲和性调度</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">用户需要根据任务副本数，选择任务类型。任务副本数小于4为填充任务。任务副本数大于或等于4为大模型任务。普通任务不限制任务副本数。</div></div>|默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。<ul><li>交换机亲和性调度1.0版本支持Atlas 训练系列产品和Atlas A2 训练系列产品；支持PyTorch和MindSpore框架。</li><li>交换机亲和性调度2.0版本支持Atlas A2 训练系列产品；支持PyTorch框架。</li></ul>|
+|tor-affinity|<ul><li>large-model-schema：大模型任务或填充任务</li><li>normal-schema：普通任务</li><li>null：不使用交换机亲和性调度</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">用户需要根据任务副本数，选择任务类型。任务副本数小于4为填充任务。任务副本数大于或等于4为大模型任务。普通任务不限制任务副本数。</div></div>|默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。<ul><li>交换机亲和性调度1.0版本支持<term>Atlas 训练系列产品</term>和<term>Atlas A2 训练系列产品</term>；支持PyTorch和MindSpore框架。</li><li>交换机亲和性调度2.0版本支持<term>Atlas A2 训练系列产品</term>；支持PyTorch框架。</li></ul>|
 |pod-rescheduling|<ul><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>|Pod级别重调度，表示任务发生故障后，不会删除所有任务Pod，而是将发生故障的Pod进行删除，重新创建新Pod后进行重调度。<ul><li>重调度模式默认为任务级重调度，若需要开启Pod级别重调度，需要新增该字段。</li><li>Pod级别重调度目前只支持MS Controller和MS Coordinator。</li></ul>|
 |subHealthyStrategy|<ul><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>默认取值为ignore。</li></ul>|节点状态为亚健康（SubHealthy）的节点的处理策略。|
 |huawei.com/Ascend910|Atlas 800 训练服务器（NPU满配）：<ul><li>单机单芯片：1</li><li>单机多芯片：2、4、8</li><li>分布式：1、2、4、8</li></ul>Atlas 800 训练服务器（NPU半配）：<ul><li>单机单芯片：1</li><li>单机多芯片：2、4</li><li>分布式：1、2、4</li></ul>服务器（插Atlas 300T 训练卡）：<ul><li>单机单芯片：1</li><li>单机多芯片：2</li><li>分布式：2</li></ul>Atlas 800T A2 训练服务器和Atlas 900 A2 PoD 集群基础单元：<ul><li>单机单芯片：1</li><li>单机多芯片：2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul>Atlas 200T A2 Box16 异构子框和Atlas 200I A2 Box16 异构子框：<ul><li>单机单芯片：1</li><li>单机多芯片：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式：1、2、3、4、5、6、7、8、10、12、14、16</li></ul>Atlas 900 A3 SuperPoD 超节点<ul><li>单机单芯片：1</li><li>单机多芯片：2、4、6、8、10、12、14、16</li><li>分布式：16</li></ul>|请求的NPU数量，请根据实际修改。|
@@ -308,7 +308,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 3. 查看推理任务运行情况
 4. （可选）删除任务
 
-了解以上步骤的详细说明，请参见《MindIE Motor开发指南》中的“集群服务部署 \> PD分离服务部署 \> 安装部署 \> [使用kubectl部署单机PD分离服务示例](https://www.hiascend.com/document/detail/zh/mindie/300/mindiemotor/motordev/user_guide/service_deployment/pd_separation_service_deployment.md#使用kubectl部署单机pd分离服务示例)”章节。
+了解以上步骤的详细说明，请参见《MindIE LLM开发指南》中的“MindIE Motor CPP开发指南 \> 集群服务部署 \> PD分离服务部署 \> 安装部署 \> [使用kubectl部署单机PD分离服务示例](https://www.hiascend.com/document/detail/zh/mindie/310/mindiellm/llmdev/mindie_motor_cpp/user_guide/service_deployment/pd_separation_service_deployment.md#使用kubectl部署单机pd分离服务示例)”章节。
 
 ### global-ranktable说明<a name="ZH-CN_TOPIC_0000002479226414"></a>
 

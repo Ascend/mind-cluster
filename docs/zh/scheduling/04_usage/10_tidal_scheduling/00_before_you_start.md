@@ -42,6 +42,6 @@
 - Atlas 800I A2 推理服务器
 - Atlas 900 A3 SuperPoD 超节点
 - Atlas 9000 A3 SuperPoD 集群算力系统
-- Atlas 推理系列产品
+- <term>Atlas 推理系列产品</term>
 - A200I A2 Box 异构组件
-- Atlas 350 标卡
+- Atlas 350 加速卡

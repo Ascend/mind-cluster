@@ -2,7 +2,7 @@
 
 ## 流程介绍<a name="ZH-CN_TOPIC_0000002511346865"></a>
 
-调度器的调度流程主要包括任务校验、节点预选、节点优选、昇腾AI处理器选择、提交分配结果。Volcano的亲和性调度代码实现请参考[ascend-for-volcano](https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-for-volcano)开源代码仓，用户可参考代码在其调度器中集成亲和性调度策略。下文以Atlas 训练系列产品的昇腾AI处理器为例，介绍Volcano的调度流程。
+调度器的调度流程主要包括任务校验、节点预选、节点优选、昇腾AI处理器选择、提交分配结果。Volcano的亲和性调度代码实现请参考[ascend-for-volcano](https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-for-volcano)开源代码仓，用户可参考代码在其调度器中集成亲和性调度策略。下文以<term>Atlas 训练系列产品</term>的昇腾AI处理器为例，介绍Volcano的调度流程。
 
 **图 1** Volcano调度流程<a name="fig17808636817"></a>
 
@@ -20,7 +20,7 @@
 
 **任务说明<a name="section188628591428"></a>**
 
-对任务所需昇腾AI处理器数量进行判断；Atlas 训练系列产品要求的昇腾AI处理器数量只能是1、2、4、8。
+对任务所需昇腾AI处理器数量进行判断；<term>Atlas 训练系列产品</term>要求的昇腾AI处理器数量只能是1、2、4、8。
 
 **具体实现<a name="section158817331130"></a>**
 
@@ -30,7 +30,7 @@
 
 **任务说明<a name="section134971615243"></a>**
 
-根据任务所需昇腾AI处理器数量和节点可用昇腾AI处理器数量，判断节点是否满足任务需求。Atlas 训练系列产品要求任务所需昇腾AI处理器为1、2、4时，只能在一个HCCL环内进行选择。
+根据任务所需昇腾AI处理器数量和节点可用昇腾AI处理器数量，判断节点是否满足任务需求。<term>Atlas 训练系列产品</term>要求任务所需昇腾AI处理器为1、2、4时，只能在一个HCCL环内进行选择。
 
 例如某个任务需要4个昇腾AI处理器，某个节点具有4个昇腾AI处理器，但这4个并未在同一个HCCL环内，而是两环各两个，则不选择该节点分配任务。
 

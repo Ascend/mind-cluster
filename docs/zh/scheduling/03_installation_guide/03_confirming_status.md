@@ -312,7 +312,7 @@
        ...
        ```
 
-   - 以服务器（插Atlas 300I Pro 推理卡）为例。非混插模式，节点包含Atlas 推理系列产品，回显示例如下，节点上芯片个数请以实际为准。
+   - 以服务器（插Atlas 300I Pro 推理卡）为例。非混插模式，节点包含<term>Atlas 推理系列产品</term>，回显示例如下，节点上芯片个数请以实际为准。
 
        ```ColdFusion
        root@ubuntu:~# kubectl describe node ubuntu
@@ -337,7 +337,7 @@
        ...
        ```
 
-   - 以服务器（插Atlas 300I Pro 推理卡）为例。混插模式，节点包含Atlas 推理系列产品，回显示例如下，节点上芯片个数请以实际为准。
+   - 以服务器（插Atlas 300I Pro 推理卡）为例。混插模式，节点包含<term>Atlas 推理系列产品</term>，回显示例如下，节点上芯片个数请以实际为准。
 
        ```ColdFusion
        root@ubuntu:~# kubectl describe node ubuntu
@@ -651,7 +651,7 @@
 
 ## Resilience Controller<a name="ZH-CN_TOPIC_0000002511426295"></a>
 
->[!WARNING]
+>[!NOTICE]
 >Resilience Controller 组件已经日落，相关内容将于2026年9月30日的版本删除。以下内容仅适用于仍在使用该组件的旧版本用户。
 
 请在任意节点执行以下步骤验证Resilience Controller的安装状态。

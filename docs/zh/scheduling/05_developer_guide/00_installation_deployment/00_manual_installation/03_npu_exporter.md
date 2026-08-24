@@ -571,9 +571,9 @@ NPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 |-poll_interval|duration(int)|1|Telegraf数据上报的间隔时间，单位：秒。此参数在对接Telegraf平台时才起作用，即需要指定-platform=Telegraf时才生效，否则该参数不生效。|
 |-profilingTime|int|200|配置采集PCIe带宽时间，单位：毫秒，取值范围为1~2000。|
 |-hccsBWProfilingTime|int|200|HCCS链路带宽采样时长，取值范围1~1000，单位：毫秒。|
-|-deviceResetTimeout|int|600|组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10~600。<ul><li>Atlas A2 训练系列产品、Atlas 800I A2 推理服务器、A200I A2 Box 异构组件：建议配置为150秒。</li><li>Atlas A3 训练系列产品、A200T A3 Box8 超节点服务器、Atlas 800I A3 超节点服务器：建议配置为360秒。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD：建议配置为600秒。</li></ul>|
+|-deviceResetTimeout|int|600|组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10~600。<ul><li><term>Atlas A2 训练系列产品</term>、Atlas 800I A2 推理服务器、A200I A2 Box 异构组件：建议配置为150秒。</li><li><term>Atlas A3 训练系列产品</term>、A200T A3 Box8 超节点服务器、Atlas 800I A3 超节点服务器：建议配置为360秒。</li><li>Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点：建议配置为600秒。</li></ul>|
 |-textMetricsFilePath|string|无|指定自定义指标文件的路径，其约束说明详细请参见[约束说明](../../../06_api/00_npu_exporter/03_custom_metrics_file.md#约束说明)。|
-|-enableLegacyMetrics|bool|false|指定是否开启Atlas 350旧版本Prometheus网络类指标格式,默认false不开启。|
+|-enableLegacyMetrics|bool|false|指定是否开启Atlas 350 加速卡旧版本Prometheus网络类指标格式,默认false不开启。|
 
 ## 动态加载配置说明<a name="动态配置加载说明"></a>
 
