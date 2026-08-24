@@ -83,6 +83,12 @@ func (sHandle *ScheduleHandler) InitJobsFromSsn(ssn *framework.Session) {
 	}
 	newJobs := make(map[api.JobID]SchedulerJob, util.MapInitNum)
 	for jobID, jobInfo := range ssn.Jobs {
+		// If the job is DRA job, ascend-volcano-plugin will not handle it, bypass it.
+		if util.IsDRAJob(jobInfo) {
+			klog.V(util.LogInfoLev).Infof("job <%s/%s> is DRA job, bypass ascend-volcano-plugin.",
+				jobInfo.Namespace, jobInfo.Name)
+			continue
+		}
 		// get ownerInfo, deployment job need
 		ownerInfo, err := getOwnerInfo(jobInfo, sHandle.FrameAttr)
 		if err != nil {
@@ -615,6 +621,11 @@ func (sHandle *ScheduleHandler) TaskOrderFn(InterfaceA interface{}, InterfaceB i
 	taskInfoB, ok := InterfaceB.(*api.TaskInfo)
 	if !ok {
 		klog.V(util.LogDebugLev).Info("TaskOrderFn failed, object is not a TaskInfo")
+		return taskOrderSamePriority
+	}
+
+	// DRA tasks take no part in Ascend-specific task ordering.
+	if util.IsDRATask(taskInfoA) || util.IsDRATask(taskInfoB) {
 		return taskOrderSamePriority
 	}
 

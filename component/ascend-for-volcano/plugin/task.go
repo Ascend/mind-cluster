@@ -37,12 +37,15 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 		klog.V(util.LogErrorLev).Infof("NPUAllocateFunc %s.", util.ArgumentError)
 		return
 	}
+	if util.IsDRATask(task) {
+		klog.V(util.LogInfoLev).Infof("NPUAllocateFunc bypass DRA task <%s>.", task.Name)
+		return
+	}
 
 	if !sHandle.isTaskNeedNPUAllocated(task) {
 		klog.V(util.LogDebugLev).Infof("NPUAllocateFunc %s no need to set pod annotation.", task.Name)
 		return
 	}
-
 	vcJob, ok := sHandle.Jobs[task.Job]
 	if !ok {
 		klog.V(util.LogDebugLev).Infof("NPUAllocateFunc %s not req npu.", task.Name)
@@ -100,6 +103,10 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 func (sHandle *ScheduleHandler) NPUDeallocateFunc(task *api.TaskInfo) {
 	if sHandle == nil || task == nil {
 		klog.V(util.LogInfoLev).Infof("NPUDeallocateFunc failed: %s.", util.ArgumentError)
+		return
+	}
+	if util.IsDRATask(task) {
+		klog.V(util.LogInfoLev).Infof("NPUDeallocateFunc bypass DRA task <%s>.", task.Name)
 		return
 	}
 	vcJob, ok := sHandle.Jobs[task.Job]

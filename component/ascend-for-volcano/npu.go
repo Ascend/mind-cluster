@@ -266,6 +266,10 @@ func jobPipelined(obj interface{}, tp *huaweiNPUPlugin) int {
 		return util.Reject
 	}
 
+	if util.IsDRAJob(ji) {
+		return util.Abstain
+	}
+
 	job, ok := tp.Scheduler.Jobs[ji.UID]
 	if !ok {
 		return util.Abstain
@@ -283,6 +287,10 @@ func jobPipelined(obj interface{}, tp *huaweiNPUPlugin) int {
 
 func addBatchNodeOrderFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 	ssn.AddBatchNodeOrderFn(tp.Name(), func(task *api.TaskInfo, nodes []*api.NodeInfo) (map[string]float64, error) {
+		if util.IsDRATask(task) {
+			klog.V(util.LogInfoLev).Infof("batchNodeOrderFn: bypass DRA task <%s>.", task.Name)
+			return nil, nil
+		}
 		klog.V(util.LogInfoLev).Infof("batchNodeOrderFn: task<%s> scoring %d nodes", task.Name, len(nodes))
 		_, ok := tp.Scheduler.PredicatedNodes[task.Job]
 		if !ok {
@@ -304,6 +312,10 @@ func addBatchNodeOrderFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 func addPreemptableFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 	ssn.AddPreemptableFn(tp.Name(), func(preemptor *api.TaskInfo, preemptees []*api.TaskInfo) ([]*api.TaskInfo, int) {
 		klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> evaluating %d preemptees", preemptor.Name, len(preemptees))
+		if util.IsDRATask(preemptor) {
+			klog.V(util.LogInfoLev).Infof("preemptableFn: bypass DRA task <%s>, Abstain", preemptor.Name)
+			return nil, util.Abstain
+		}
 		vcJob, ok := tp.Scheduler.Jobs[preemptor.Job]
 		if !ok || vcJob.NPUJob == nil || vcJob.GetPolicyHandler() == nil {
 			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> job not found or not NPU job, Abstain",
@@ -356,6 +368,10 @@ func addPreemptableFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 func addReclaimableFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 	ssn.AddReclaimableFn(tp.Name(), func(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo) ([]*api.TaskInfo, int) {
 		klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> evaluating %d reclaimees", reclaimer.Name, len(reclaimees))
+		if util.IsDRATask(reclaimer) {
+			klog.V(util.LogInfoLev).Infof("reclaimableFn: bypass DRA task <%s>, Abstain", reclaimer.Name)
+			return nil, util.Abstain
+		}
 		vcJob, ok := tp.Scheduler.Jobs[reclaimer.Job]
 		if !ok || vcJob.NPUJob == nil || vcJob.GetPolicyHandler() == nil {
 			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> job not found or not NPU job, Abstain",
@@ -411,6 +427,9 @@ func jobReady(obj interface{}, tp *huaweiNPUPlugin) bool {
 		klog.V(util.LogErrorLev).Info("obj assertion failed.")
 		return false
 	}
+	if util.IsDRAJob(ji) {
+		return true
+	}
 	job, ok := tp.Scheduler.Jobs[ji.UID]
 	if !ok {
 		return true
@@ -425,6 +444,10 @@ func addEventHandler(ssn *framework.Session, tp *huaweiNPUPlugin) {
 				klog.V(util.LogErrorLev).Infof("AllocateFunc event nil.")
 				return
 			}
+			if util.IsDRATask(event.Task) {
+				klog.V(util.LogInfoLev).Infof("AllocateFunc bypass DRA task <%s>.", event.Task.Name)
+				return
+			}
 			klog.V(util.LogInfoLev).Infof("AllocateFunc: task<%s> on node<%s>",
 				event.Task.Name, event.Task.NodeName)
 			tp.Scheduler.NPUAllocateFunc(event.Task)
@@ -432,6 +455,10 @@ func addEventHandler(ssn *framework.Session, tp *huaweiNPUPlugin) {
 		DeallocateFunc: func(event *framework.Event) {
 			if event == nil {
 				klog.V(util.LogErrorLev).Infof("DeallocateFunc event nil.")
+				return
+			}
+			if util.IsDRATask(event.Task) {
+				klog.V(util.LogInfoLev).Infof("DeallocateFunc bypass DRA task <%s>.", event.Task.Name)
 				return
 			}
 			klog.V(util.LogInfoLev).Infof("DeallocateFunc: task<%s> on node<%s>",
@@ -448,6 +475,11 @@ func jobEnqueueable(job interface{}, ssn *framework.Session, tp *huaweiNPUPlugin
 	}
 	vcjob, ok := job.(*api.JobInfo)
 	if !ok {
+		return util.JobEnqueueSkip
+	}
+	// DRA jobs are allocated by the DRA driver, bypass cluster NPU quota check.
+	if util.IsDRAJob(vcjob) {
+		klog.V(util.LogInfoLev).Infof("job <%s> is DRA job, bypass enqueueable check.", vcjob.Name)
 		return util.JobEnqueueSkip
 	}
 	jobDequeueForTimeout(vcjob, ssn)
@@ -543,6 +575,10 @@ func jobOrderFn(interfaceA interface{}, interfaceB interface{}, sHandle *plugin.
 		klog.V(util.LogDebugLev).Infof("jobOrderFn failed, object is not JobInfo")
 		return util.JobOrderSamePriority
 	}
+	// DRA jobs take no part in Ascend-specific job ordering.
+	if util.IsDRAJob(jobInfoA) || util.IsDRAJob(jobInfoB) {
+		return util.JobOrderSamePriority
+	}
 	aFragile := isFragileJob(jobInfoA, sHandle)
 	bFragile := isFragileJob(jobInfoB, sHandle)
 	if aFragile && !bFragile {
@@ -585,6 +621,9 @@ func jobOrderFn(interfaceA interface{}, interfaceB interface{}, sHandle *plugin.
 
 func updatePgAnnotation(ssn *framework.Session) {
 	for _, jobInfo := range ssn.Jobs {
+		if util.IsDRAJob(jobInfo) {
+			continue
+		}
 		if jobInfo.PodGroup == nil {
 			continue
 		}
