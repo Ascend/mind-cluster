@@ -127,14 +127,14 @@
     1. 在K8s管理节点执行以下命令，查询节点名称。
 
         ```shell
-        kubectl get node  
+        kubectl get node
         ```
 
         回显示例如下：
 
         ```ColdFusion
         NAME       STATUS   ROLES           AGE   VERSION
-        worker01   Ready    worker    23h   v1.17.3
+        worker01   Ready    worker          23h   v1.17.3
         ```
 
     2. 依次执行以下命令，为**计算节点**创建节点标签（如节点名称为“worker01”）。
@@ -380,7 +380,7 @@
     1. 在任意节点执行如下命令，查看训练结果。
 
         ```shell
-        kubectl logs -n  命名空间名称 pod名称
+        kubectl logs -n 命名空间名称 pod名称
         ```
 
         如：

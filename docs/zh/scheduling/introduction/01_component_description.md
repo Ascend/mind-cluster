@@ -178,7 +178,7 @@ Resilience Controller组件属于Kubernetes插件，需要安装到K8s集群中�
 - Resilience Controller读取volcano-system命名空间下，名为volcano-scheduler-configmap的ConfigMap，读取其中“**grace-over-time**”字段，获取重调度pod优雅删除超时配置。
 - Resilience Controller获取集群中所有包含label为“**nodeDEnable=on**”的节点，作为调度资源池。
 - Resilience Controller获取集群中所有vcjob对应的pod，读取“**huawei.com/AscendReal**”获取pod实际使用的NPU列表。
-- Resilience Controller读取Volcano Job，获取**“fault-scheduling”、**“**elastic-scheduling**”、“**minReplicas**”、“**phase**”等字段，确定该Volcano Job是否可以进行弹性训练。
+- Resilience Controller读取Volcano Job，获取“**fault-scheduling**”、“**elastic-scheduling**”、“**minReplicas**”、“**phase**”等字段，确定该Volcano Job是否可以进行弹性训练。
 - 当设备和节点发生故障时，Resilience Controller根据原有Volcano Job的副本数和集群资源情况，创建NPU需求减半的Volcano Job。
 
 ## Elastic Agent<a name="ZH-CN_TOPIC_0000002479386918"></a>
