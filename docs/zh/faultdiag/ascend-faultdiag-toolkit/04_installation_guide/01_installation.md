@@ -20,10 +20,12 @@
 |-------------------------------------------------------|-----------------------------------------------------------------|-------------|--------------------------------------------------------------|
 | `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag_toolkit-{version}-py3-none-any.whl`          | 链路故障诊断组件安装包 | [下载链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0) |
 
+>[!NOTE]
+>
 > - `{version}` 为软件包版本号，默认为最新版本。
 > - `{arch}` 为软件包架构，分为 x86_64 和 aarch64，请根据实际需要修改，可通过 `arch` 命令查看。
 > - ascend-fd-tk Whl 包不区分架构。
-> - 为防止软件包在传递过程中或存储期间被恶意篡改，建议校验软件包的 SUM 值。如需对软件包进行 SUM 值校验，请参考[软件包 SUM 值校验](#参考)
+> - 为防止软件包在传递过程中或存储期间被恶意篡改，建议校验软件包的 SUM 值。如需对软件包进行 SUM 值校验，请参考[软件包 SUM 值校验](#参考)。
 
 解压获取 Whl 包：
 
@@ -50,6 +52,8 @@ cd mind-cluster/component/ascend-faultdiag/toolkit_src
 python3 setup.py --version {version} bdist_wheel
 ```
 
+>[!NOTE]
+>
 > - `{version}` 为版本号，需替换为实际版本，例：`v1.0.0`。
 > - 根据 Wheel 标准生成 Whl 包名称：`ascend_faultdiag_toolkit-{去掉 version 的前缀 ‘v’ }-py3-none-any.whl`，例：`ascend_faultdiag_toolkit-1.0.0-py3-none-any.whl`
 
@@ -61,7 +65,7 @@ dist/ascend_faultdiag_toolkit-{version}-py3-none-any.whl
 
 ### 2. 安装 Whl 包
 
-安装所需三方依赖库：
+安装如下三方依赖库，安装过程中会自动联网下载所需的三方依赖库。
 
 | 依赖 | 版本要求 | 用途 |
 |------|----------|------|
@@ -69,8 +73,6 @@ dist/ascend_faultdiag_toolkit-{version}-py3-none-any.whl
 | `scp` | \>= 0.14.0 | 远程文件传输（用于 BMC 日志获取） |
 | `cryptography` | \>= 41.0.0 | 连接配置加密 |
 | `openpyxl` | \>= 3.1.0 | `.xlsx` 文件解析、Excel 报告生成 |
-
-> 安装过程中会自动联网下载所需的三方依赖库。
 
 执行安装操作：
 

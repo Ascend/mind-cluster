@@ -8,12 +8,12 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 ## 支持的产品形态<a name="section_supported_products"></a>
 
 - 支持以下产品使用故障管理和故障容器的自动恢复功能：
-    - Atlas 训练系列产品
-    - Atlas A2 训练系列产品
-    - Atlas A3 训练系列产品
-    - Atlas 推理系列产品
-    - Atlas A2 推理系列产品
-    - Atlas A3 推理系列产品
+    - <term>Atlas 训练系列产品</term>
+    - <term>Atlas A2 训练系列产品</term>
+    - <term>Atlas A3 训练系列产品</term>
+    - <term>Atlas 推理系列产品</term>
+    - <term>Atlas A2 推理系列产品</term>
+    - <term>Atlas A3 推理系列产品</term>
 
 ## 操作步骤
 

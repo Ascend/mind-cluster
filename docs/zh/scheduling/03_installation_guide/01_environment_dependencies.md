@@ -34,7 +34,7 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 >
 >- 请根据业务的实际使用场景，选择安装Docker或者Containerd。
 >- Atlas 服务器产品安装操作系统可以参见[安装指导书](https://support.huawei.com/enterprise/zh/ascend-computing/a800-9000-pid-250702818?category=installation-upgrade&subcategory=software-deployment-guide)（ARM）和[安装指导书](https://support.huawei.com/enterprise/zh/ascend-computing/a800-9010-pid-250702809?category=installation-upgrade&subcategory=software-deployment-guide)（x86\_64），安装指导书并不包含上述所有操作系统，仅供参考。
->- Atlas A2 训练系列产品在虚拟机场景下对操作系统的要求不同，具体的操作系统约束请参见《Atlas A2 中心推理和训练硬件 NPU驱动和固件安装指南》中的“[虚拟机安装与卸载](https://support.huawei.com/enterprise/zh/doc/EDOC1100591781/cb91d9dc)”章节。
+>- <term>Atlas A2 训练系列产品</term>在虚拟机场景下对操作系统的要求不同，具体的操作系统约束请参见《Atlas A2 中心推理和训练硬件 NPU驱动和固件安装指南》中的“[虚拟机安装与卸载](https://support.huawei.com/enterprise/zh/doc/EDOC1100591781/cb91d9dc)”章节。
 
 ## 组网要求<a name="ZH-CN_TOPIC_0000002479386452"></a>
 

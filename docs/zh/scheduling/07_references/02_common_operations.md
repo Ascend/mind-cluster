@@ -403,7 +403,7 @@ Ascend Device Plugin收集了内部的芯片故障、参数面网络故障和节
 
 #### 故障事件信息<a name="ZH-CN_TOPIC_0000002511347039"></a>
 
-Ascend Device Plugin收集到的故障事件可以通过K8s的event事件进行上报，查询命令为**kubectl get events -n kube-system**。以Atlas 训练系列产品为例，回显示例如下，参数说明请参见[表1](#table66076214393)。
+Ascend Device Plugin收集到的故障事件可以通过K8s的event事件进行上报，查询命令为**kubectl get events -n kube-system**。以<term>Atlas 训练系列产品</term>为例，回显示例如下，参数说明请参见[表1](#table66076214393)。
 
 ```ColdFusion
 NAMESPACE     LAST SEEN   TYPE      REASON     OBJECT                                         MESSAGE
@@ -904,7 +904,7 @@ Events:  <none>
 软件包名称中\{version\}表示版本号、\{arch\}表示架构、\{chip\_type\}表示芯片类型。配套的CANN软件包在6.3.RC3、6.2.RC3及以上版本增加了“您是否接受EULA来安装CANN（Y/N）”的安装提示；在Dockerfile编写示例中的安装命令包含“--quiet”参数的默认同意EULA，用户可自行修改。
 
 >[!NOTE]
->MindSpore软件包与Atlas 训练系列产品软件配套需满足对应关系，请参见MindSpore[安装指南](https://www.mindspore.cn/install)查看对应关系。
+>MindSpore软件包与<term>Atlas 训练系列产品</term>软件配套需满足对应关系，请参见MindSpore[安装指南](https://www.mindspore.cn/install)查看对应关系。
 
 **表 1**  所需软件
 

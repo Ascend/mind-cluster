@@ -136,6 +136,7 @@
 </tbody>
 </table>
 
+>[!NOTE]
 > Host 日志 V1/V2/V3 版本详情请参考 [host 离线日志采集](../05_usage/02_log_collection.md#host-offline-log)。
 
 ## BMC 相关诊断

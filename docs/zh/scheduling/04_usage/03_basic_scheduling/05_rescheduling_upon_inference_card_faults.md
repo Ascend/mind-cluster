@@ -29,7 +29,7 @@
 
 - 资源监测可以和推理场景下的所有特性一起使用。
 - 集群中同时跑多个推理任务，每个任务使用的特性可以不同，但不能同时存在使用静态vNPU的任务和使用动态vNPU的任务。
-- 推理场景故障重调度特性默认使用整卡调度；不支持静态vNPU调度；支持Atlas 推理系列产品使用动态vNPU调度。
+- 推理场景故障重调度特性默认使用整卡调度；不支持静态vNPU调度；支持<term>Atlas 推理系列产品</term>使用动态vNPU调度。
 - 推理场景故障重调度支持下发单副本数或者多副本数的单机任务，每个副本独立工作；只支持推理服务器（插Atlas 300I Duo 推理卡）和Atlas 800I A2 推理服务器、A200I A2 Box 异构组件部署acjob类型的分布式任务。
 
 - 推理场景故障重调度支持vcjob或Deployment类型任务，且需在该类任务中增加故障重调度的开关的标签“fault-scheduling”，并将其设置为“grace”或者“force”。
@@ -43,7 +43,7 @@
 - Atlas 800I A2 推理服务器
 - A200I A2 Box 异构组件
 - Atlas 800I A3 超节点服务器
-- Atlas 350 标卡
+- Atlas 350 加速卡
 
 **使用流程<a name="zh-cn_topic_0000001559979444_section246711128536"></a>**
 
@@ -120,7 +120,7 @@
     </td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD</p><p>Atlas 850 系列硬件产品（超节点）</p><p>Atlas 350 标卡</p></td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 350 加速卡</p></td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-deploy-950.yaml</p></td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
@@ -144,7 +144,7 @@
     </td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD</p><p>Atlas 850 系列硬件产品（超节点）</p><p>Atlas 350 标卡</p></td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 350 加速卡</p></td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-vcjob-950.yaml</p></td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-vcjob-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
@@ -169,7 +169,7 @@
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p962512301913"><a name="p962512301913"></a><a name="p962512301913"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_910b_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
-    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD</p><p>Atlas 850 系列硬件产品（超节点）</p><p>Atlas 350 标卡</p></td>
+    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 350 加速卡</p></td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>pytorch_multinodes_acjob_infer_950_with_ranktable.yaml</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_950_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
@@ -235,7 +235,7 @@
     </tr>
     <tr id="row11397142634918"><td class="cellrowborder" valign="top" width="16.48%" headers="mcps1.2.4.1.1 "><p id="p7397026134913"><a name="p7397026134913"></a><a name="p7397026134913"></a>ring-controller.atlas</p>
     </td>
-    <td class="cellrowborder" valign="top" width="29.42%" headers="mcps1.2.4.1.2 "><a name="ul16397426184918"></a><a name="ul16397426184918"></a><ul id="ul16397426184918"><li>推理服务器（插<span id="ph3690191194813"><a name="ph3690191194813"></a><a name="ph3690191194813"></a>Atlas 300I 推理卡</span>）：ascend-310</li><li><span id="ph56912120486"><a name="ph56912120486"></a><a name="ph56912120486"></a>Atlas 推理系列产品</span>：ascend-310P</li><li><span id="ph16267162611508"><a name="ph16267162611508"></a><a name="ph16267162611508"></a>Atlas 800I A2 推理服务器</span>、<span id="ph344045773615"><a name="ph344045773615"></a><a name="ph344045773615"></a>A200I A2 Box 异构组件</span>、<span id="ph1175141233710"><a name="ph1175141233710"></a><a name="ph1175141233710"></a>Atlas 800I A3 超节点服务器</span>：ascend-<span id="ph4487202241512"><a name="ph4487202241512"></a><a name="ph4487202241512"></a><em id="zh-cn_topic_0000001519959665_i1489729141619"><a name="zh-cn_topic_0000001519959665_i1489729141619"></a><a name="zh-cn_topic_0000001519959665_i1489729141619"></a>{xxx}</em></span>b</li></ul>
+    <td class="cellrowborder" valign="top" width="29.42%" headers="mcps1.2.4.1.2 "><a name="ul16397426184918"></a><a name="ul16397426184918"></a><ul id="ul16397426184918"><li>推理服务器（插<span id="ph3690191194813"><a name="ph3690191194813"></a><a name="ph3690191194813"></a>Atlas 300I 推理卡</span>）：ascend-310</li><li><span id="ph56912120486"><a name="ph56912120486"></a><a name="ph56912120486"></a><term>Atlas 推理系列产品</term></span>：ascend-310P</li><li><span id="ph16267162611508"><a name="ph16267162611508"></a><a name="ph16267162611508"></a>Atlas 800I A2 推理服务器</span>、<span id="ph344045773615"><a name="ph344045773615"></a><a name="ph344045773615"></a>A200I A2 Box 异构组件</span>、<span id="ph1175141233710"><a name="ph1175141233710"></a><a name="ph1175141233710"></a>Atlas 800I A3 超节点服务器</span>：ascend-<span id="ph4487202241512"><a name="ph4487202241512"></a><a name="ph4487202241512"></a><em id="zh-cn_topic_0000001519959665_i1489729141619"><a name="zh-cn_topic_0000001519959665_i1489729141619"></a><a name="zh-cn_topic_0000001519959665_i1489729141619"></a>{xxx}</em></span>b</li></ul>
     </td>
     <td class="cellrowborder" valign="top" width="54.1%" headers="mcps1.2.4.1.3 "><p id="p1397826104915"><a name="p1397826104915"></a><a name="p1397826104915"></a>用于校验任务使用的芯片类型。</p>
     </td>

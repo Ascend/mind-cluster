@@ -2,7 +2,7 @@
 
 本文档介绍链路诊断工具的卸载流程。
 
-1. 卸载 WHL 包
+1. 卸载 Whl 包
 
     ```bash
     pip3 uninstall ascend-faultdiag-toolkit

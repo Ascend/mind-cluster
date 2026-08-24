@@ -25,6 +25,7 @@ ascend-fd-tk 工具提供完整的链路故障诊断能力，覆盖从数据采�
 | `家目录/report/` | 诊断 / 巡检报告输出目录（`diag_report_{YYYYMMDD_HHMMSS}.xlsx` / `inspection_errors.csv`） |
 | `家目录/encrypted_conn_config` | 在线连接配置文件 `conn.ini` 加密后的文件 |
 
+>[!NOTE]
 > 工具运行日志单文件上限为 10MB，文件达到阈值后自动触发日志切分归档，归档文件命名规则为 ascend-fd-tk.log.1、ascend-fd-tk.log.2……其中编号数值越小代表日志生成时间越新，系统最多留存 5 份归档日志文件。
 
 ## 特性列表

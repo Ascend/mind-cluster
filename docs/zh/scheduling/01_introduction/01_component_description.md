@@ -26,7 +26,7 @@
 
 **组件上下游依赖<a name="section10767161681"></a>**
 
-**图 1** Ascend Docker Runtime<a name="fig24667426549"></a>
+**图 1** 组件上下游依赖<a name="fig24667426549"></a>
 
 ![](../../figures/scheduling/01_introduction/01_component_description/ascend_docker_runtime.png "组件上下游依赖")
 

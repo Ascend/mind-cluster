@@ -6,6 +6,7 @@
 
 非交互式模式将多个命令串联在一行中执行，适用于自动化运维场景。
 
+>[!NOTE]
 > 设置配置文件路径命令 `set_config_dir` 为可选命令。
 
 ### 1. 清理缓存
@@ -21,39 +22,39 @@ ascend-fd-tk clear_cache
 
 - 在线场景
 
-```bash
-# 第一批：采集网络平面 A 的设备
-ascend-fd-tk set_config_dir /path/to/your_config_path set_conn_config /path/to/conn_plane_a.ini auto_collect
-收集完成，若完成全部收集请进行诊断/巡检
+    ```bash
+    # 第一批：采集网络平面 A 的设备
+    ascend-fd-tk set_config_dir /path/to/your_config_path set_conn_config /path/to/conn_plane_a.ini auto_collect
+    收集完成，若完成全部收集请进行诊断/巡检
 
-# 第二批：采集网络平面 B 的设备
-ascend-fd-tk set_config_dir /path/to/your_config_path set_conn_config /path/to/conn_plane_b.ini auto_collect
-收集完成，若完成全部收集请进行诊断/巡检
+    # 第二批：采集网络平面 B 的设备
+    ascend-fd-tk set_config_dir /path/to/your_config_path set_conn_config /path/to/conn_plane_b.ini auto_collect
+    收集完成，若完成全部收集请进行诊断/巡检
 
-...
+    ...
 
-# 统一诊断
-ascend-fd-tk auto_diag
-诊断完成
-```
+    # 统一诊断
+    ascend-fd-tk auto_diag
+    诊断完成
+    ```
 
 - 离线场景
 
-```bash
-# 第一批：采集平面 A 的离线日志
-ascend-fd-tk set_config_dir /path/to/your_config_path set_host_dump_log /path/to/host_logs_a set_bmc_dump_log /path/to/bmc_logs_a set_switch_dump_log /path/to/switch_logs_a auto_collect
-收集完成，若完成全部收集请进行诊断/巡检
+    ```bash
+    # 第一批：采集平面 A 的离线日志
+    ascend-fd-tk set_config_dir /path/to/your_config_path set_host_dump_log /path/to/host_logs_a set_bmc_dump_log /path/to/bmc_logs_a set_switch_dump_log /path/to/switch_logs_a auto_collect
+    收集完成，若完成全部收集请进行诊断/巡检
 
-# 第二批：采集平面 B 的离线日志
-ascend-fd-tk set_config_dir /path/to/your_config_path set_host_dump_log /path/to/host_logs_b set_bmc_dump_log /path/to/bmc_logs_b set_switch_dump_log /path/to/switch_logs_b auto_collect
-收集完成，若完成全部收集请进行诊断/巡检
+    # 第二批：采集平面 B 的离线日志
+    ascend-fd-tk set_config_dir /path/to/your_config_path set_host_dump_log /path/to/host_logs_b set_bmc_dump_log /path/to/bmc_logs_b set_switch_dump_log /path/to/switch_logs_b auto_collect
+    收集完成，若完成全部收集请进行诊断/巡检
 
-...
+    ...
 
-# 统一诊断
-ascend-fd-tk auto_diag
-诊断完成
-```
+    # 统一诊断
+    ascend-fd-tk auto_diag
+    诊断完成
+    ```
 
 ## 交互式命令执行（展示命令与回显）
 

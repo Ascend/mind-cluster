@@ -46,7 +46,7 @@
 <td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 推理系列产品</term></td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" width="30%">Atlas 350 标卡</td>
+<td class="cellrowborder" valign="top" width="30%">Atlas 350 加速卡</td>
 </tr>
 </tbody>
 </table>
