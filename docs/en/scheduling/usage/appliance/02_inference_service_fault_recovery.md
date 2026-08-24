@@ -11,7 +11,7 @@ The following uses the Qwen3-1.7B model as an example.
 
 1. Obtain the MindIE container image.
     - Method 1: Go to the [MindIE Image Download](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f) page in the Ascend image repository and download the MindIE image.
-    - Method 2: Refer to the "Installing MindIE > [Method 3: Containerized Installation](https://gitcode.com/Ascend/MindIE-LLM/blob/v3.0.0/docs/en/user_guide/install/source/installation_in_containerized.md)" section in the *MindIE Installation Guide* to prepare the image yourself.
+    - Method 2: Refer to the "Installing MindIE > [Method 2: Offline Installation](https://www.hiascend.com/document/detail/en/mindie/300/envpre/instg/docs/en/user_guide/install/source/preparing_software_and_dependencies.md)" section in the *MindIE Installation Guide* to prepare the image yourself.
 
 2. View the MindIE image on the node.
 
