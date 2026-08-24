@@ -91,7 +91,10 @@
 
         在prometheus.yaml文件中找到nodePort字段，该字段的值为Prometheus服务的端口号，默认为30003。
 
-    3. 选择NPU的相关标签，查看对应数据信息。
+    3. 选择NPU的相关标签，查看对应数据信息，如下图为查询集群内NPU卡在过去15分钟的功率信息。
+
+        **图 1**  查询集群内NPU卡功率信息<a name="fig-npu-power-query"></a>
+        ![](../../../figures/scheduling/Prometheus-示例01.png "查询集群内NPU卡功率信息")
 
 ## 通过Prometheus Operator对接Prometheus<a name="section1031014512341"></a>
 
@@ -258,4 +261,7 @@
 
         在prometheus.yaml文件中找到nodePort字段，该字段的值为Prometheus服务的端口号，默认为30003。
 
-    3. 选择NPU的相关标签，查看对应数据信息。
+    3. 选择NPU的相关标签，查看对应数据信息，如下图为查询集群内NPU卡在过去15分钟的温度信息。
+
+        **图 2**  查询集群内NPU卡温度信息<a name="fig-npu-temperature-query"></a>
+        ![](../../../figures/scheduling/Prometheus-示例02.png "查询集群内NPU卡温度信息")
