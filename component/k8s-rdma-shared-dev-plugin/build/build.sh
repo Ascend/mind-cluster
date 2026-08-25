@@ -60,6 +60,7 @@ function mv_file() {
   cp "${TOP_DIR}"/build/agreement.txt "${TOP_DIR}"/output
   cp "${TOP_DIR}"/pkg/fault/config/fault_code.json "${TOP_DIR}"/output/fault_code.json
   cp "${TOP_DIR}"/pkg/fault/scripts/fault_detection.sh "${TOP_DIR}"/output/fault_detection.sh
+  cp "${TOP_DIR}"/build/npu-nic-mapping.json "${TOP_DIR}"/output/npu-nic-mapping.json
   sed -i 's/\r$//' "${TOP_DIR}"/output/fault_detection.sh
   sed -i "s/k8s-rdma-shared-dp:.*/k8s-rdma-shared-dp:${build_version}/" "${TOP_DIR}"/output/k8s-rdma-shared-dp-"${build_version}".yaml
   sed -i "s/K8sRdmaSharedDp Version .*/K8sRdmaSharedDp Version ${build_version}/" "${TOP_DIR}"/output/agreement.txt
