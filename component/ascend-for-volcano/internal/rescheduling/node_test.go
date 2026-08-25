@@ -20,6 +20,7 @@ Package rescheduling is using for HuaWei Ascend pin fault rescheduling.
 package rescheduling
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -111,6 +112,57 @@ func TestSetNodeHealthyByNodeD(t *testing.T) {
 		fNode.setNodeHealthyByNodeD(node)
 		if fNode.NodeHealthState != NodeHealthy {
 			t.Errorf("setNodeHealthyByNodeD() NodeHealthState %v, want %v", fNode.NodeHealthState, NodeHealthy)
+		}
+	})
+}
+
+func TestUpdateFaultNodesFromDpuInfo(t *testing.T) {
+	t.Run("01-return early when node is nil", func(t *testing.T) {
+		fNode := FaultNode{}
+		fNode.updateFaultNodesFromDpuInfo(nil)
+		if len(fNode.FaultDpuList) != 0 || fNode.DpuNodeEvent != nil {
+			t.Errorf("updateFaultNodesFromDpuInfo() should not modify fNode when node is nil")
+		}
+	})
+	t.Run("02-extract faulty dpu from annotation", func(t *testing.T) {
+		dpuCfg := k8s.DpuInfoCfg{
+			DPUInfo: k8s.DPUInfoBody{
+				DPUList: []k8s.DPUItem{
+					{HcaName: "mlx5_0", FaultList: []k8s.DpuFaultDetail{{FaultLevel: SeparateDPU}}},
+				},
+				NodeEvent: &k8s.DpuNodeEvent{FaultList: []k8s.DpuFaultDetail{{FaultLevel: SeparateDPU}}},
+			},
+		}
+		dpuData, _ := json.Marshal(dpuCfg)
+		node := fakeNodeWithAnnotation("node0", map[string]string{
+			util.DpuInfoAnnoKey: string(dpuData),
+		})
+		fNode := FaultNode{NodeName: "node0"}
+		fNode.updateFaultNodesFromDpuInfo(node)
+		if len(fNode.FaultDpuList) != 1 {
+			t.Errorf("updateFaultDpuFromAnnotation() FaultDpuList len = %v, want 1",
+				len(fNode.FaultDpuList))
+		}
+		if fNode.DpuNodeEvent == nil {
+			t.Errorf("updateFaultDpuFromAnnotation() DpuNodeEvent should not be nil")
+		}
+	})
+	t.Run("03-no faulty dpu in annotation", func(t *testing.T) {
+		dpuCfg := k8s.DpuInfoCfg{
+			DPUInfo: k8s.DPUInfoBody{
+				DPUList: []k8s.DPUItem{
+					{HcaName: "mlx5_0", FaultList: nil},
+				},
+			},
+		}
+		dpuData, _ := json.Marshal(dpuCfg)
+		node := fakeNodeWithAnnotation("node0", map[string]string{
+			util.DpuInfoAnnoKey: string(dpuData),
+		})
+		fNode := FaultNode{NodeName: "node0"}
+		fNode.updateFaultNodesFromDpuInfo(node)
+		if len(fNode.FaultDpuList) != 0 || fNode.DpuNodeEvent != nil {
+			t.Errorf("updateFaultDpuFromAnnotation() should not extract any faulty dpu")
 		}
 	})
 }

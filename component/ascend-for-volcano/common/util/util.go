@@ -453,3 +453,26 @@ func IsDRAJob(job *api.JobInfo) bool {
 func IsStrategyInSubHealthyStrategs(subHealthyStrategy string) bool {
 	return CheckStrInSlice(subHealthyStrategy, subHealthyStrategs)
 }
+
+// IsRdmaTask check whether the task requests rdma resources.
+func IsRdmaTask(nT *api.TaskInfo, nodeAnnotation map[string]string) bool {
+	if nT == nil || nT.Resreq == nil || nodeAnnotation == nil {
+		return false
+	}
+	rdmaResName, ok := nodeAnnotation[DpuResourceNameKey]
+	if !ok || rdmaResName == "" {
+		return false
+	}
+	rdmaResSet := make(map[string]bool)
+	for _, name := range strings.Split(rdmaResName, ",") {
+		if name = strings.TrimSpace(name); name != "" {
+			rdmaResSet[name] = true
+		}
+	}
+	for k := range nT.Resreq.ScalarResources {
+		if rdmaResSet[string(k)] {
+			return true
+		}
+	}
+	return false
+}

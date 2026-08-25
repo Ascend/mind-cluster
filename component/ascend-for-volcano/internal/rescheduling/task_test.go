@@ -22,6 +22,7 @@ package rescheduling
 import (
 	"testing"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 )
@@ -68,10 +69,10 @@ func TestGetTaskHealthStateBySubHealth(t *testing.T) {
 			expectedFaultType:  SubHealthFault,
 		},
 		{
-			name:      "HotSwitch delete annotation with backup pod should mark hotSwitchDelete",
+			name:               "HotSwitch delete annotation with backup pod should mark hotSwitchDelete",
 			subHealthyStrategy: util.SubHealthyHotSwitch,
 			hasSubHealthFault:  true,
-			annotations:        map[string]string{util.NeedVolcanoOpeKey: util.OpeTypeDelete,
+			annotations: map[string]string{util.NeedVolcanoOpeKey: util.OpeTypeDelete,
 				consts.BackupNewPodNameKey: "backup-pod-1"},
 			expectedIsFault:         true,
 			expectedFaultType:       SubHealthFault,
@@ -101,6 +102,124 @@ func TestGetTaskHealthStateBySubHealth(t *testing.T) {
 			if fTask.IsHotSwitchDelete != tt.expectedHotSwitchDelete {
 				t.Errorf("getTaskHealthStateBySubHealth() IsHotSwitchDelete = %v, want %v",
 					fTask.IsHotSwitchDelete, tt.expectedHotSwitchDelete)
+			}
+		})
+	}
+}
+
+func TestHasDpuNodeSeparateFault(t *testing.T) {
+	tests := []struct {
+		name       string
+		nodeEvent  *k8s.DpuNodeEvent
+		wantResult bool
+	}{
+		{
+			name:       "01 return false when nodeEvent is nil",
+			nodeEvent:  nil,
+			wantResult: false,
+		},
+		{
+			name: "02 return false when fault level is sub-health",
+			nodeEvent: &k8s.DpuNodeEvent{FaultList: []k8s.DpuFaultDetail{
+				{FaultLevel: util.SubHealthFault},
+			}},
+			wantResult: false,
+		},
+		{
+			name: "03 return true when fault level is isolate",
+			nodeEvent: &k8s.DpuNodeEvent{FaultList: []k8s.DpuFaultDetail{
+				{FaultLevel: SeparateDPU},
+			}},
+			wantResult: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := hasDpuNodeSeparateFault(tt.nodeEvent); got != tt.wantResult {
+				t.Errorf("hasDpuNodeSeparateFault() = %v, want %v", got, tt.wantResult)
+			}
+		})
+	}
+}
+
+func TestIsDpuSeparateFault(t *testing.T) {
+	tests := []struct {
+		name       string
+		dpu        k8s.DPUItem
+		wantResult bool
+	}{
+		{
+			name:       "01 return false when fault list is empty",
+			dpu:        k8s.DPUItem{},
+			wantResult: false,
+		},
+		{
+			name: "02 return false when fault level is not handle",
+			dpu: k8s.DPUItem{FaultList: []k8s.DpuFaultDetail{
+				{FaultLevel: NotHandleFault},
+			}},
+			wantResult: false,
+		},
+		{
+			name: "03 return true when fault level is isolate",
+			dpu: k8s.DPUItem{FaultList: []k8s.DpuFaultDetail{
+				{FaultLevel: SeparateDPU},
+			}},
+			wantResult: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsDpuSeparateFault(tt.dpu); got != tt.wantResult {
+				t.Errorf("IsDpuSeparateFault() = %v, want %v", got, tt.wantResult)
+			}
+		})
+	}
+}
+
+func TestTaskUsesFaultDpuAffectedNpu(t *testing.T) {
+	fNode := &FaultNode{
+		NodeName: "node0",
+		FaultDpuList: []k8s.DPUItem{
+			{
+				HcaName:     "mlx5_0",
+				AffectedNPU: []int{0, 1},
+				FaultList:   []k8s.DpuFaultDetail{{FaultLevel: SeparateDPU}},
+			},
+		},
+	}
+	tests := []struct {
+		name       string
+		fTask      *FaultTask
+		wantResult bool
+	}{
+		{
+			name:       "01 return true when task uses NPU affected by faulty dpu",
+			fTask:      &FaultTask{UseCardName: []string{"Ascend910-0"}},
+			wantResult: true,
+		},
+		{
+			name:       "02 return false when task does not use affected NPU",
+			fTask:      &FaultTask{UseCardName: []string{"Ascend910-7"}},
+			wantResult: false,
+		},
+		{
+			name:       "03 return false when dpu fault is not isolate level",
+			fTask:      &FaultTask{UseCardName: []string{"Ascend910-0"}},
+			wantResult: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.name == "03 return false when dpu fault is not isolate level" {
+				fNode = &FaultNode{
+					FaultDpuList: []k8s.DPUItem{
+						{AffectedNPU: []int{0}, FaultList: []k8s.DpuFaultDetail{{FaultLevel: NotHandleFault}}},
+					},
+				}
+			}
+			if got := tt.fTask.taskUsesFaultDpuAffectedNpu(fNode); got != tt.wantResult {
+				t.Errorf("taskUsesFaultDpuAffectedNpu() = %v, want %v", got, tt.wantResult)
 			}
 		})
 	}

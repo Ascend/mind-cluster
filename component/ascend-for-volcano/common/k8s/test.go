@@ -82,6 +82,42 @@ func FakeSwitchInfos() string {
 	return ""
 }
 
+// FakeDpuInfoCMData fake dpu info cm data written by dpu-dp
+func FakeDpuInfoCMData(nodeName string, dpuInfo DpuInfoCfg) *v1.ConfigMap {
+	cmName := util.DpuInfoPreName + nodeName
+	dataBytes, _ := json.Marshal(dpuInfo)
+	return &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{Name: cmName, Namespace: util.DevInfoNameSpace},
+		Data:       map[string]string{util.DpuInfoCMKey: string(dataBytes)},
+	}
+}
+
+// FakeClusterDpuInfoCMData fake cluster dpu info cm data aggregated by clusterd
+func FakeClusterDpuInfoCMData(cmName string, dpuInfoMap map[string]DpuInfoWithNode) *v1.ConfigMap {
+	dataBytes, _ := json.Marshal(dpuInfoMap)
+	return &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{Name: cmName, Namespace: util.MindXDlNameSpace},
+		Data:       map[string]string{cmName: string(dataBytes)},
+	}
+}
+
+// FakeDpuInfoCfg fake a DpuInfoCfg for testing
+func FakeDpuInfoCfg() DpuInfoCfg {
+	return DpuInfoCfg{
+		DPUInfo: DPUInfoBody{
+			DPUList: []DPUItem{
+				{
+					HcaName:     "mlx5_0",
+					DeviceID:    "0000:01:00.0",
+					FaultList:   []DpuFaultDetail{{FaultCode: "0x8200", FaultLevel: "Separate"}},
+					AffectedNPU: []int{0, 1},
+				},
+			},
+		},
+		UpdateTime: 1234567890,
+	}
+}
+
 // FakeNodeInfos fake node infos
 func FakeNodeInfos() map[string]string {
 	nodeInfos := NodeDNodeInfo{

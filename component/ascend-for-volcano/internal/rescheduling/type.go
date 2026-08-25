@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -134,6 +135,8 @@ const (
 	NodeFaultCode = "heartbeatTimeOut"
 	// SubHealthFault subHealth code
 	SubHealthFault = "SubHealthFault"
+	// SeparateDPU dpu isolate fault level
+	SeparateDPU = "SeparateDPU"
 )
 
 const (
@@ -269,6 +272,8 @@ type FaultNode struct {
 	IsNpuNode               bool
 	NodeFault               []FaultDetail
 	SwitchFault             FaultDetail
+	FaultDpuList            []k8s.DPUItem
+	DpuNodeEvent            *k8s.DpuNodeEvent
 }
 
 type FaultDetail struct {
@@ -313,6 +318,7 @@ type FaultTask struct {
 	PodCreateTime      int64
 	faultType          string
 	IsNpuTask          bool
+	IsUseRdmaTask      bool
 	Labels             map[string]string
 	Annotations        map[string]string
 	FaultTaskA5Field

@@ -35,6 +35,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
@@ -1453,6 +1454,55 @@ func TestSetTaskFaultReasonByFaultNode(t *testing.T) {
 			result := setTaskFaultReasonByFaultNode(testCase.fTask, testCase.fNode)
 			if (len(result) != 0) != testCase.wantResult {
 				t.Errorf("setTaskFaultReasonByFaultNode() result = %v, want is empty slice", result)
+			}
+		})
+	}
+}
+
+func TestSetTaskFaultReasonByDpu(t *testing.T) {
+	fTask := &FaultTask{UseCardName: []string{"Ascend910-0"}, IsUseRdmaTask: true}
+	testCases := []struct {
+		name       string
+		fTask      *FaultTask
+		fNode      *FaultNode
+		wantResult bool
+	}{
+		{
+			name:  "01-setTaskFaultReasonByDpu return empty when task is not rdma",
+			fTask: &FaultTask{UseCardName: []string{"Ascend910-0"}, IsUseRdmaTask: false},
+			fNode: &FaultNode{
+				FaultDpuList: []k8s.DPUItem{
+					{AffectedNPU: []int{0}, FaultList: []k8s.DpuFaultDetail{{FaultLevel: SeparateDPU}}},
+				},
+			},
+			wantResult: false,
+		},
+		{
+			name:  "02-setTaskFaultReasonByDpu return non-empty when task uses affected NPU",
+			fTask: fTask,
+			fNode: &FaultNode{
+				FaultDpuList: []k8s.DPUItem{
+					{AffectedNPU: []int{0}, FaultList: []k8s.DpuFaultDetail{{FaultLevel: SeparateDPU}}},
+				},
+			},
+			wantResult: true,
+		},
+		{
+			name:  "03-setTaskFaultReasonByDpu return empty when task does not use affected NPU",
+			fTask: &FaultTask{UseCardName: []string{"Ascend910-7"}, IsUseRdmaTask: true},
+			fNode: &FaultNode{
+				FaultDpuList: []k8s.DPUItem{
+					{AffectedNPU: []int{0}, FaultList: []k8s.DpuFaultDetail{{FaultLevel: SeparateDPU}}},
+				},
+			},
+			wantResult: false,
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			result := setTaskFaultReasonByDpu(testCase.fTask, testCase.fNode)
+			if (len(result) != 0) != testCase.wantResult {
+				t.Errorf("setTaskFaultReasonByDpu() result = %v, want is empty slice", result)
 			}
 		})
 	}

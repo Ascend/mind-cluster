@@ -31,6 +31,7 @@ import (
 	"k8s.io/klog/v2"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
@@ -193,4 +194,83 @@ func getTaskIsSoftwareFault(task *api.TaskInfo) bool {
 		return false
 	}
 	return task.Pod.Labels[taskFaultKey] == softwareKey
+}
+
+// hasDpuNodeSeparateFault checks whether node has dpu isolate-level fault.
+func hasDpuNodeSeparateFault(nodeEvent *k8s.DpuNodeEvent) bool {
+	if nodeEvent == nil {
+		return false
+	}
+	for _, fault := range nodeEvent.FaultList {
+		switch fault.FaultLevel {
+		case NotHandleFault, SubHealthFault:
+			continue
+		default:
+			return true
+		}
+	}
+	return false
+}
+
+// IsDpuSeparateFault checks whether dpu has isolate-level fault.
+func IsDpuSeparateFault(dpu k8s.DPUItem) bool {
+	for _, fault := range dpu.FaultList {
+		switch fault.FaultLevel {
+		case NotHandleFault, SubHealthFault:
+			continue
+		default:
+			return true
+		}
+	}
+	return false
+}
+
+// getNpuIDFromCardName extracts numeric id from npu card name.
+func getNpuIDFromCardName(cardName string) (int, error) {
+	idx := strings.LastIndex(cardName, "-")
+	if idx < 0 || idx == len(cardName)-1 {
+		return 0, fmt.Errorf("invalid npu card name %s", cardName)
+	}
+	return strconv.Atoi(cardName[idx+1:])
+}
+
+// taskUsesFaultDpuAffectedNpu checks whether task uses NPU in isolate-level faulty dpu AffectedNPU list.
+func (fTask *FaultTask) taskUsesFaultDpuAffectedNpu(fNode *FaultNode) bool {
+	for _, fDpu := range fNode.FaultDpuList {
+		if !IsDpuSeparateFault(fDpu) {
+			continue
+		}
+		for _, taskNpu := range fTask.UseCardName {
+			taskNpuID, err := getNpuIDFromCardName(taskNpu)
+			if err != nil {
+				klog.V(util.LogWarningLev).Infof("task %s npu name %s parse id failed: %s",
+					fTask.TaskName, taskNpu, util.SafePrint(err))
+				continue
+			}
+			for _, affectedNpu := range fDpu.AffectedNPU {
+				if affectedNpu == taskNpuID {
+					klog.V(util.LogInfoLev).Infof("task %s uses npu %d affected by faulty dpu %s",
+						fTask.TaskName, taskNpuID, fDpu.HcaName)
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// getTaskNpuInDpuAffected returns the task-used NPU name that is in this dpu AffectedNPU list.
+func (fTask *FaultTask) getTaskNpuInDpuAffected(fDpu k8s.DPUItem) (string, bool) {
+	for _, taskNpu := range fTask.UseCardName {
+		taskNpuID, err := getNpuIDFromCardName(taskNpu)
+		if err != nil {
+			continue
+		}
+		for _, affectedNpu := range fDpu.AffectedNPU {
+			if affectedNpu == taskNpuID {
+				return taskNpu, true
+			}
+		}
+	}
+	return "", false
 }

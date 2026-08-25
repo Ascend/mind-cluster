@@ -63,6 +63,11 @@ func (reScheduler *ReScheduler) createFaultTaskHandler(job *api.JobInfo, cardNam
 			klog.V(util.LogInfoLev).Infof("getUseCardName %s %s", task.Name, util.SafePrint(getErr))
 		}
 		faultTask.setUseCardName(tmpUseCardName)
+		var nodeAnnotation map[string]string
+		if npuNode, ok := reScheduler.Nodes[task.NodeName]; ok {
+			nodeAnnotation = npuNode.Annotation
+		}
+		faultTask.IsUseRdmaTask = util.IsRdmaTask(task, nodeAnnotation)
 		err = reScheduler.setTaskCardHealthCode(&faultTask)
 		if err != nil {
 			klog.V(util.LogDebugLev).Infof("setTaskCardHealthCode task %s err %s", task.Name, util.SafePrint(err))
@@ -520,6 +525,7 @@ func (reScheduler *ReScheduler) AddFaultNodeWithSession() {
 		faultNode.RackID = npuNode.RackID
 		faultNode.updateFaultNodesFromDeviceInfo(&npuNode)
 		faultNode.updateFaultNodesAttr(&npuNode)
+		faultNode.updateFaultNodesFromDpuInfo(&npuNode)
 		tmpFaultNodes[name] = faultNode
 	}
 	addfaultNodeErrors.Print()
@@ -867,6 +873,11 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode *plugin.NPUNode, 
 			"switchSubHealthy=%v, but sub-healthy strategy is %v", fNode.HasCardSubHealthFault,
 			fNode.HasSwitchSubHealthFault, schedulerJob.SubHealthyStrategy)
 	}
+	if util.IsRdmaTask(task, vcNode.Annotation) && hasDpuNodeSeparateFault(fNode.DpuNodeEvent) {
+		klog.V(util.LogWarningLev).Infof("node %s has dpu card drop fault, not suitable for rdma task %s",
+			vcNode.Name, task.Name)
+		return fmt.Errorf("node has dpu card drop fault, not suitable for rdma task")
+	}
 	if fNode.LinkDownTime == 0 {
 		klog.V(util.LogDebugLev).Infof("node %s is not fault node, check success", vcNode.Name)
 		return nil
@@ -932,6 +943,8 @@ func (reScheduler ReScheduler) setTaskCardHealthCode(fTask *FaultTask) error {
 		fTask.HasSubHealthFault = fNode.HasSwitchSubHealthFault || fTask.RelationFault == util.SubHealthFaultStrategy
 		tmpReason := setTaskFaultReasonByFaultNode(fTask, fNode)
 		reasonList = append(reasonList, tmpReason...)
+		tmpReason = setTaskFaultReasonByDpu(fTask, fNode)
+		reasonList = append(reasonList, tmpReason...)
 		break
 	}
 	if fTask.IsSoftwareFault {
@@ -989,6 +1002,38 @@ func setTaskFaultReasonByFaultNode(fTask *FaultTask, fNode *FaultNode) []FaultRe
 	return reasonList
 }
 
+// setTaskFaultReasonByDpu collect dpu fault reason for rdma task.
+func setTaskFaultReasonByDpu(fTask *FaultTask, fNode *FaultNode) []FaultReasonList {
+	reasonList := make([]FaultReasonList, 0)
+	if !fTask.IsUseRdmaTask {
+		return reasonList
+	}
+	for _, fDpu := range fNode.FaultDpuList {
+		usedNpuName, hit := fTask.getTaskNpuInDpuAffected(fDpu)
+		if !hit {
+			continue
+		}
+		for _, fault := range fDpu.FaultList {
+			if fault.FaultLevel == NotHandleFault {
+				continue
+			}
+			if fault.FaultLevel == SubHealthFault {
+				fTask.HasSubHealthFault = true
+				continue
+			}
+			var reason FaultReasonList
+			reason.NodeName = fNode.NodeName
+			reason.TaskName = fTask.TaskName
+			reason.FaultRankList = fTask.initFaultRankIndex()
+			reason.NPUName = usedNpuName
+			reason.FaultLevel = fault.FaultLevel
+			reason.FaultCode = fault.FaultCode
+			reasonList = append(reasonList, reason)
+		}
+	}
+	return reasonList
+}
+
 func (reScheduler ReScheduler) updateJobHealthCode(fJob *FaultJob) {
 	if fJob == nil {
 		return
@@ -1013,6 +1058,22 @@ func (reScheduler ReScheduler) getTaskHealthState(fTask *FaultTask, task *api.Ta
 
 	if isFault, state := reScheduler.getTaskHealthStateByNode(fTask); isFault {
 		return isFault, state
+	}
+
+	if fTask.IsUseRdmaTask {
+		fNode, exist := reScheduler.FaultNodes[fTask.NodeName]
+		if exist && fNode != nil {
+			if hasDpuNodeSeparateFault(fNode.DpuNodeEvent) {
+				klog.V(util.LogInfoLev).Infof("task %s use rdma, node %s has dpu card drop, thus task sets %s",
+					fTask.TaskName, fNode.NodeName, NodeUnhealthy)
+				return true, NodeUnhealthy
+			}
+			if fTask.taskUsesFaultDpuAffectedNpu(fNode) {
+				klog.V(util.LogInfoLev).Infof("task %s use rdma, uses npu affected by faulty dpu, thus task sets %s",
+					fTask.TaskName, NodeCardUnhealthy)
+				return true, NodeCardUnhealthy
+			}
+		}
 	}
 
 	if isFault, state := reScheduler.getTaskHealthStateByPod(task); isFault && fTask.IsFaultRetryEnable {
