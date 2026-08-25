@@ -112,6 +112,7 @@ const (
 	DeviceProcessType
 	NodeProcessType
 	SwitchProcessType
+	DpuProcessType
 )
 
 const (

@@ -454,6 +454,110 @@ func (cm *NodeInfo) UpdateFaultReceiveTime(oldInfo ConfigMapInterface) {
 	return
 }
 
+// GetCmName get configmap name of dpu info
+func (cm *DpuInfo) GetCmName() string {
+	if cm == nil {
+		hwlog.RunLog.Error("cm is nil")
+		return ""
+	}
+	return cm.CmName
+}
+
+// IsSame compare with another cm
+func (cm *DpuInfo) IsSame(another ConfigMapInterface) bool {
+	anotherDpuInfo, ok := another.(*DpuInfo)
+	if !ok {
+		hwlog.RunLog.Warnf("compare with cm which is not DpuInfo")
+		return false
+	}
+	return cm.CmName == anotherDpuInfo.CmName && !DpuInfoBusinessDataIsNotEqual(cm, anotherDpuInfo)
+}
+
+// UpdateFaultReceiveTime update fault receive time
+func (cm *DpuInfo) UpdateFaultReceiveTime(oldInfo ConfigMapInterface) {
+	return
+}
+
+// DpuInfoBusinessDataIsNotEqual determine the business data is not equal
+func DpuInfoBusinessDataIsNotEqual(oldDpuInfo *DpuInfo, newDpuInfo *DpuInfo) bool {
+	if oldDpuInfo == nil && newDpuInfo == nil {
+		hwlog.RunLog.Debug("both oldDpuInfo and newDpuInfo are nil")
+		return false
+	}
+	if oldDpuInfo == nil || newDpuInfo == nil {
+		hwlog.RunLog.Debug("one of oldDpuInfo and newDpuInfo is not empty, and the other is empty")
+		return true
+	}
+	if oldDpuInfo.UpdateTime != newDpuInfo.UpdateTime {
+		hwlog.RunLog.Debug("the UpdateTime of oldDpuInfo is not equal to that of newDpuInfo")
+		return true
+	}
+	if len(oldDpuInfo.DPUInfo.DPUList) != len(newDpuInfo.DPUInfo.DPUList) {
+		hwlog.RunLog.Debug("the length of the DPUList of oldDpuInfo is not equal to that of newDpuInfo")
+		return true
+	}
+	oldDpuMap := make(map[string]DpuItem, len(oldDpuInfo.DPUInfo.DPUList))
+	for _, dpu := range oldDpuInfo.DPUInfo.DPUList {
+		oldDpuMap[dpu.DeviceID] = dpu
+	}
+	for _, newDpu := range newDpuInfo.DPUInfo.DPUList {
+		oldDpu, exists := oldDpuMap[newDpu.DeviceID]
+		if !exists || len(oldDpu.FaultList) != len(newDpu.FaultList) {
+			hwlog.RunLog.Debug("DPUList is not equal")
+			return true
+		}
+		oldFaultMap := make(map[string]DpuFaultDetail, len(oldDpu.FaultList))
+		for _, f := range oldDpu.FaultList {
+			oldFaultMap[f.FaultCode] = f
+		}
+		for _, newFault := range newDpu.FaultList {
+			oldFault, exists := oldFaultMap[newFault.FaultCode]
+			if !exists || oldFault.FaultLevel != newFault.FaultLevel ||
+				oldFault.Time != newFault.Time ||
+				oldFault.Description != newFault.Description {
+				hwlog.RunLog.Debug("FaultList is not equal")
+				return true
+			}
+		}
+		if len(oldDpu.AffectedNPU) != len(newDpu.AffectedNPU) {
+			hwlog.RunLog.Debug("AffectedNPU length is not equal")
+			return true
+		}
+		for i := range newDpu.AffectedNPU {
+			if oldDpu.AffectedNPU[i] != newDpu.AffectedNPU[i] {
+				hwlog.RunLog.Debug("AffectedNPU element is not equal")
+				return true
+			}
+		}
+	}
+	// compare NodeEvent
+	if (oldDpuInfo.DPUInfo.NodeEvent == nil) != (newDpuInfo.DPUInfo.NodeEvent == nil) {
+		hwlog.RunLog.Debug("NodeEvent nil status is not equal")
+		return true
+	}
+	if oldDpuInfo.DPUInfo.NodeEvent != nil && newDpuInfo.DPUInfo.NodeEvent != nil {
+		if len(oldDpuInfo.DPUInfo.NodeEvent.FaultList) != len(newDpuInfo.DPUInfo.NodeEvent.FaultList) {
+			hwlog.RunLog.Debug("NodeEvent FaultList length is not equal")
+			return true
+		}
+		oldNodeFaultMap := make(map[string]DpuFaultDetail, len(oldDpuInfo.DPUInfo.NodeEvent.FaultList))
+		for _, f := range oldDpuInfo.DPUInfo.NodeEvent.FaultList {
+			oldNodeFaultMap[f.FaultCode] = f
+		}
+		for _, newFault := range newDpuInfo.DPUInfo.NodeEvent.FaultList {
+			oldFault, exists := oldNodeFaultMap[newFault.FaultCode]
+			if !exists || oldFault.FaultLevel != newFault.FaultLevel ||
+				oldFault.Time != newFault.Time ||
+				oldFault.Description != newFault.Description {
+				hwlog.RunLog.Debug("NodeEvent FaultList is not equal")
+				return true
+			}
+		}
+	}
+	hwlog.RunLog.Debug("oldDpuInfo is equal to newDpuInfo")
+	return false
+}
+
 // DeviceInfoBusinessDataIsNotEqual determine the business data is not equal
 func DeviceInfoBusinessDataIsNotEqual(oldDevInfo *DeviceInfo, devInfo *DeviceInfo) bool {
 	if oldDevInfo == nil && devInfo == nil {

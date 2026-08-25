@@ -14,6 +14,7 @@ import (
 var DeviceCmCollectBuffer *ConfigmapCollectBuffer[*constant.AdvanceDeviceFaultCm]
 var NodeCmCollectBuffer *ConfigmapCollectBuffer[*constant.NodeInfo]
 var SwitchCmCollectBuffer *ConfigmapCollectBuffer[*constant.SwitchInfo]
+var DpuCmCollectBuffer *ConfigmapCollectBuffer[*constant.DpuInfo]
 
 type ConfigmapCollectBuffer[T constant.ConfigMapInterface] struct {
 	mutex    sync.Mutex
@@ -36,6 +37,11 @@ func init() {
 		mutex:    sync.Mutex{},
 		buffer:   make(map[string]*[]constant.InformerCmItem[*constant.SwitchInfo]),
 		lastItem: make(map[string]constant.InformerCmItem[*constant.SwitchInfo]),
+	}
+	DpuCmCollectBuffer = &ConfigmapCollectBuffer[*constant.DpuInfo]{
+		mutex:    sync.Mutex{},
+		buffer:   make(map[string]*[]constant.InformerCmItem[*constant.DpuInfo]),
+		lastItem: make(map[string]constant.InformerCmItem[*constant.DpuInfo]),
 	}
 }
 
@@ -95,6 +101,8 @@ func informInfoUpdate(newInfo any, whichToInformer int, isAdd bool) {
 		NodeCmCollectBuffer.Push(newInfo.(*constant.NodeInfo), isAdd)
 	case constant.SwitchProcessType:
 		SwitchCmCollectBuffer.Push(newInfo.(*constant.SwitchInfo), isAdd)
+	case constant.DpuProcessType:
+		DpuCmCollectBuffer.Push(newInfo.(*constant.DpuInfo), isAdd)
 	default:
 		hwlog.RunLog.Errorf("cannot process %d", whichToInformer)
 		return
@@ -137,5 +145,18 @@ func NodeCollector(oldNodeInfo, newNodeInfo *constant.NodeInfo, operator string)
 		informInfoUpdate(newNodeInfo, constant.NodeProcessType, true)
 	} else if operator == constant.DeleteOperator {
 		informInfoUpdate(newNodeInfo, constant.NodeProcessType, false)
+	}
+}
+
+// DpuInfoCollector collects dpu info
+func DpuInfoCollector(oldDpuInfo, newDpuInfo *constant.DpuInfo, operator string) {
+	if newDpuInfo == nil {
+		hwlog.RunLog.Error("newDpuInfo is nil")
+		return
+	}
+	if operator == constant.AddOperator || operator == constant.UpdateOperator {
+		informInfoUpdate(newDpuInfo, constant.DpuProcessType, true)
+	} else if operator == constant.DeleteOperator {
+		informInfoUpdate(newDpuInfo, constant.DpuProcessType, false)
 	}
 }

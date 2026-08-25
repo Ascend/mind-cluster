@@ -43,6 +43,7 @@ func TestRegister(t *testing.T) {
 		GlobalFaultProcessCenter.Register(make(chan int, 1), constant.DeviceProcessType)
 		GlobalFaultProcessCenter.Register(make(chan int, 1), constant.NodeProcessType)
 		GlobalFaultProcessCenter.Register(make(chan int, 1), constant.SwitchProcessType)
+		GlobalFaultProcessCenter.Register(make(chan int, 1), constant.DpuProcessType)
 	})
 }
 

@@ -387,6 +387,49 @@ type ConfigMapInterface interface {
 	UpdateFaultReceiveTime(oldInfo ConfigMapInterface)
 }
 
+// DpuFaultDetail represents detailed information about a dpu fault
+type DpuFaultDetail struct {
+	FaultCode   string `json:"FaultCode"`
+	Time        int64  `json:"Time"`
+	Description string `json:"Description"`
+	FaultLevel  string `json:"FaultLevel"`
+}
+
+// DpuItem represents a single DPU device information
+type DpuItem struct {
+	HcaName     string           `json:"HcaName"`
+	EthName     string           `json:"EthName"`
+	IpAddr      string           `json:"IpAddr,omitempty"`
+	DeviceID    string           `json:"DeviceID"`
+	VendorID    string           `json:"VendorID"`
+	FaultList   []DpuFaultDetail `json:"FaultList"`
+	AffectedNPU []int            `json:"AffectedNPU"`
+}
+
+// DpuNodeEvent represents node-level dpu fault events (e.g. dpu card drop)
+type DpuNodeEvent struct {
+	NodeName  string           `json:"NodeName"`
+	FaultList []DpuFaultDetail `json:"FaultList"`
+}
+
+// DpuInfoBody is the body of DPU info, containing DPU list and node event
+type DpuInfoBody struct {
+	DPUList   []DpuItem     `json:"DPUList"`
+	NodeEvent *DpuNodeEvent `json:"NodeEvent"`
+}
+
+// DpuInfoCfg represents the DPU information configuration structure, aligned with dpu-dp cm
+type DpuInfoCfg struct {
+	DPUInfo    DpuInfoBody `json:"DPUInfo"`
+	UpdateTime int64       `json:"UpdateTime"`
+}
+
+// DpuInfo record dpu info reported by dpu-dp
+type DpuInfo struct {
+	DpuInfoCfg
+	CmName string
+}
+
 // FaultRank defines the structure for storing fault rank information.
 // It includes the rank ID and fault code.
 type FaultRank struct {

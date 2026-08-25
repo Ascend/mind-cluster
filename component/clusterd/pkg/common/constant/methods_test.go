@@ -564,3 +564,74 @@ func TestJobStatisticV2JSON(t *testing.T) {
 		})
 	})
 }
+
+func TestDpuInfoBusinessDataIsNotEqual(t *testing.T) {
+	convey.Convey("test DpuInfoBusinessDataIsNotEqual", t, func() {
+		base := &DpuInfo{
+			DpuInfoCfg: DpuInfoCfg{
+				DPUInfo: DpuInfoBody{
+					DPUList: []DpuItem{
+						{DeviceID: "0x8200", FaultList: []DpuFaultDetail{
+							{FaultCode: "21000023", FaultLevel: "SubHealth", Time: 100},
+						}},
+					},
+				},
+				UpdateTime: 999,
+			},
+			CmName: "dpuinfo-node1",
+		}
+
+		convey.Convey("same data returns false", func() {
+			other := &DpuInfo{
+				DpuInfoCfg: DpuInfoCfg{
+					DPUInfo: DpuInfoBody{
+						DPUList: []DpuItem{
+							{DeviceID: "0x8200", FaultList: []DpuFaultDetail{
+								{FaultCode: "21000023", FaultLevel: "SubHealth", Time: 100},
+							}},
+						},
+					},
+					UpdateTime: 999,
+				},
+				CmName: "dpuinfo-node1",
+			}
+			convey.So(DpuInfoBusinessDataIsNotEqual(base, other), convey.ShouldBeFalse)
+		})
+
+		convey.Convey("different UpdateTime returns true", func() {
+			other := &DpuInfo{
+				DpuInfoCfg: DpuInfoCfg{UpdateTime: 888},
+			}
+			convey.So(DpuInfoBusinessDataIsNotEqual(base, other), convey.ShouldBeTrue)
+		})
+
+		convey.Convey("nil cases", func() {
+			convey.So(DpuInfoBusinessDataIsNotEqual(nil, nil), convey.ShouldBeFalse)
+			convey.So(DpuInfoBusinessDataIsNotEqual(nil, base), convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestDpuInfoIsSame(t *testing.T) {
+	convey.Convey("test DpuInfo IsSame", t, func() {
+		base := &DpuInfo{
+			DpuInfoCfg: DpuInfoCfg{UpdateTime: 100},
+			CmName:     "dpuinfo-node1",
+		}
+		convey.Convey("same CmName and data returns true", func() {
+			other := &DpuInfo{
+				DpuInfoCfg: DpuInfoCfg{UpdateTime: 100},
+				CmName:     "dpuinfo-node1",
+			}
+			convey.So(base.IsSame(other), convey.ShouldBeTrue)
+		})
+
+		convey.Convey("different CmName returns false", func() {
+			other := &DpuInfo{
+				DpuInfoCfg: DpuInfoCfg{UpdateTime: 100},
+				CmName:     "dpuinfo-node2",
+			}
+			convey.So(base.IsSame(other), convey.ShouldBeFalse)
+		})
+	})
+}

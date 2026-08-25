@@ -26,6 +26,7 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/device"
+	"clusterd/pkg/domain/dpu"
 	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/pingmeshconfig"
 	"clusterd/pkg/domain/publicfault"
@@ -37,6 +38,7 @@ var (
 	cmDeviceFuncs    = map[string][]func(*constant.DeviceInfo, *constant.DeviceInfo, string){}
 	cmNodeFuncs      = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
 	cmSwitchFuncs    = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
+	cmDpuFuncs       = map[string][]func(*constant.DpuInfo, *constant.DpuInfo, string){}
 	cmPubFaultFuncs  = map[string][]func(*api.PubFaultInfo, *api.PubFaultInfo, string){}
 	acJobFuncs       = map[string][]func(*ascendv1.AscendJob, *ascendv1.AscendJob, string){}
 	vcJobFuncs       = map[string][]func(*v1alpha1.Job, *v1alpha1.Job, string){}
@@ -115,6 +117,7 @@ func CleanFuncs() {
 	cmDeviceFuncs = map[string][]func(*constant.DeviceInfo, *constant.DeviceInfo, string){}
 	cmNodeFuncs = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
 	cmSwitchFuncs = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
+	cmDpuFuncs = map[string][]func(*constant.DpuInfo, *constant.DpuInfo, string){}
 	cmPubFaultFuncs = map[string][]func(*api.PubFaultInfo, *api.PubFaultInfo, string){}
 	acJobFuncs = map[string][]func(*ascendv1.AscendJob, *ascendv1.AscendJob, string){}
 	vcJobFuncs = map[string][]func(*v1alpha1.Job, *v1alpha1.Job, string){}
@@ -195,6 +198,15 @@ func AddCmNodeFunc(business string, func1 ...func(*constant.NodeInfo, *constant.
 	}
 
 	cmNodeFuncs[business] = append(cmNodeFuncs[business], func1...)
+}
+
+// AddCmDpuFunc add dpu func, map by business
+func AddCmDpuFunc(business string, func1 ...func(*constant.DpuInfo, *constant.DpuInfo, string)) {
+	if _, ok := cmDpuFuncs[business]; !ok {
+		cmDpuFuncs[business] = []func(*constant.DpuInfo, *constant.DpuInfo, string){}
+	}
+
+	cmDpuFuncs[business] = append(cmDpuFuncs[business], func1...)
 }
 
 // AddCmConfigPingMeshFunc add configmap func of pingmesh config
@@ -424,6 +436,23 @@ func InitCMInformer() {
 			},
 		},
 	})
+
+	cmInformer.AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: checkConfigMapIsDpuInfo,
+		Handler: cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				cmDpuHandler(nil, obj, constant.AddOperator)
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				if !reflect.DeepEqual(oldObj, newObj) {
+					cmDpuHandler(oldObj, newObj, constant.UpdateOperator)
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				cmDpuHandler(nil, obj, constant.DeleteOperator)
+			},
+		},
+	})
 	AddRankTableEventHandler(&cmInformer)
 	addPingMeshConfigEventHandler(&cmInformer)
 	informerFactory.Start(informerCh)
@@ -591,6 +620,48 @@ func cmNodeHandler(oldObj interface{}, newObj interface{}, operator string) {
 	}
 }
 
+func cmDpuHandler(oldObj interface{}, newObj interface{}, operator string) {
+	var oldDpuInfo *constant.DpuInfo
+	var newDpuInfo *constant.DpuInfo
+	var err error
+	if oldObj != nil {
+		oldCm, ok := oldObj.(*v1.ConfigMap)
+		if !ok {
+			hwlog.RunLog.Error("oldObj not dpu configmap")
+			return
+		}
+		oldDpuInfo, err = dpu.ParseDpuInfoCM(oldCm)
+		if err != nil {
+			hwlog.RunLog.Errorf("parse old cm error: %v", err)
+			return
+		}
+	}
+	newCm, ok := newObj.(*v1.ConfigMap)
+	if !ok {
+		hwlog.RunLog.Error("newObj not dpu configmap")
+		return
+	}
+	newDpuInfo, err = dpu.ParseDpuInfoCM(newCm)
+	if err != nil {
+		hwlog.RunLog.Errorf("parse new cm error: %v", err)
+		return
+	}
+	index := 0
+	for _, cmFuncs := range cmDpuFuncs {
+		// different businesses use different data sources
+		oldDpuInfoForBusiness := oldDpuInfo
+		newDpuInfoForBusiness := newDpuInfo
+		if index > 0 {
+			oldDpuInfoForBusiness = dpu.DeepCopy(oldDpuInfo)
+			newDpuInfoForBusiness = dpu.DeepCopy(newDpuInfo)
+		}
+		for _, cmFunc := range cmFuncs {
+			cmFunc(oldDpuInfoForBusiness, newDpuInfoForBusiness, operator)
+		}
+		index++
+	}
+}
+
 func cmSwitchHandler(oldCm *v1.ConfigMap, newCm *v1.ConfigMap, operator string) {
 	var oldSwitchInfo *constant.SwitchInfo
 	var newSwitchInfo *constant.SwitchInfo
@@ -637,6 +708,11 @@ func checkConfigMapIsDeviceInfo(obj interface{}) bool {
 // checkConfigMapIsNodeInfo check if configmap is node info
 func checkConfigMapIsNodeInfo(obj interface{}) bool {
 	return util.IsNSAndNameMatched(obj, api.DLNamespace, constant.NodeInfoPrefix)
+}
+
+// checkConfigMapIsDpuInfo check if configmap is dpu info
+func checkConfigMapIsDpuInfo(obj interface{}) bool {
+	return util.IsNSAndNameMatched(obj, api.KubeNS, constant.DpuInfoPrefix)
 }
 
 // checkConfigMapIsEpRankTableInfo check if configmap is ep ranktable info
