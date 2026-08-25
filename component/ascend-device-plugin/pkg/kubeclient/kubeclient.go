@@ -40,6 +40,7 @@ import (
 	"Ascend-device-plugin/pkg/common"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	common2 "ascend-common/devmanager/common"
 )
 
 const retryTime = 3
@@ -122,29 +123,40 @@ func (ki *ClientK8s) PatchNodeState(curNode, newNode *v1.Node) (*v1.Node, []byte
 	return node, patchBytes, err
 }
 
-// AddAnnotation add annotation
-func (ki *ClientK8s) AddAnnotation(key, value string) error {
-	patchMap := map[string]string{
-		"op":    "replace",
-		"path":  "/metadata/annotations/" + key,
-		"value": value,
+// AddAnnotations patches multiple annotations to the node in a single API call,
+// ensuring atomicity (all succeed or all fail).
+func (ki *ClientK8s) AddAnnotations(annotations map[string]string) error {
+	patchList := make([]map[string]string, 0, len(annotations))
+	for key, value := range annotations {
+		escapedKey := strings.ReplaceAll(key, "~", "~0")
+		escapedKey = strings.ReplaceAll(escapedKey, "/", "~1")
+		patchList = append(patchList, map[string]string{
+			"op":    common2.ReplaceOP,
+			"path":  common2.PathForAnnotations + escapedKey,
+			"value": value,
+		})
 	}
-	patchMapByte, err := json.Marshal([]interface{}{patchMap})
+	patchByte, err := json.Marshal(patchList)
 	if err != nil {
-		hwlog.RunLog.Errorf("marshal patchMap failed, err is %v", err)
+		hwlog.RunLog.Errorf("marshal patch list failed, err is %v", err)
 		return err
 	}
 	for i := 0; i < retryTime; i++ {
 		_, err = ki.Clientset.CoreV1().Nodes().Patch(context.TODO(), ki.NodeName,
-			types.JSONPatchType, patchMapByte, metav1.PatchOptions{})
+			types.JSONPatchType, patchByte, metav1.PatchOptions{})
 		if err != nil {
-			hwlog.RunLog.Errorf("patch node annotation failed, err is %v", err)
+			hwlog.RunLog.Errorf("patch node annotations failed, err is %v", err)
 			time.Sleep(time.Second)
 			continue
 		}
 		break
 	}
 	return err
+}
+
+// AddAnnotation add annotation
+func (ki *ClientK8s) AddAnnotation(key, value string) error {
+	return ki.AddAnnotations(map[string]string{key: value})
 }
 
 // GetPod get pod by namespace and name

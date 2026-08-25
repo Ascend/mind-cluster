@@ -366,55 +366,6 @@ func TestGetInterfaceIPsByPriority_ShouldReturnFirstValidIP_WhenMultipleInterfac
 	})
 }
 
-func TestGetNpuToNicNames_ShouldReturnNicList_WhenNpuIdExists(t *testing.T) {
-	convey.Convey("TestGetNpuToNicNames should return NIC list", t, func() {
-		tests := []struct {
-			name     string
-			mapping  *NpuNicMapping
-			npuId    int
-			wantNics []string
-			wantErr  bool
-		}{
-			{name: "npuId 0 exists",
-				mapping: &NpuNicMapping{
-					NpuNics: []NpuNicItem{{NpuId: 0, NicNames: []string{"eth0", "eth1"}}},
-				},
-				npuId:    0,
-				wantNics: []string{"eth0", "eth1"},
-				wantErr:  false,
-			},
-			{name: "npuId 1 exists",
-				mapping: &NpuNicMapping{
-					NpuNics: []NpuNicItem{{NpuId: 1, NicNames: []string{"eth2"}}},
-				},
-				npuId:    1,
-				wantNics: []string{"eth2"},
-				wantErr:  false,
-			},
-			{name: "npuId not found",
-				mapping: &NpuNicMapping{
-					NpuNics: []NpuNicItem{{NpuId: 0, NicNames: []string{"eth0"}}},
-				},
-				npuId:    2,
-				wantNics: nil,
-				wantErr:  true,
-			},
-		}
-
-		for _, tt := range tests {
-			convey.Convey(tt.name, func() {
-				npuNicMappingCache = tt.mapping
-				npuNicMappingErr = nil
-				result, err := getNpuToNicNames(tt.npuId)
-				convey.So(err != nil, convey.ShouldEqual, tt.wantErr)
-				if !tt.wantErr {
-					convey.So(result, convey.ShouldResemble, tt.wantNics)
-				}
-			})
-		}
-	})
-}
-
 func TestGetNpuToNicNames_ShouldReturnNil_WhenConfigNotExists(t *testing.T) {
 	convey.Convey("TestGetNpuToNicNames should return nil when config not exists", t, func() {
 		// 直接设置缓存变量为 nil

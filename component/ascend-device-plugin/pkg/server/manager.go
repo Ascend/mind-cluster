@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -44,7 +45,10 @@ import (
 	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"Ascend-device-plugin/pkg/plugin/builtin"
 	"ascend-common/api"
+	"ascend-common/api/annotation"
+	"ascend-common/api/label"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
 	"ascend-common/devmanager/dcmi"
@@ -53,22 +57,20 @@ import (
 var resourceVersion = ""
 
 var acceleratorLabelMap = map[string]string{
-	api.Ascend910:   api.Accelerator910Label,
-	api.Ascend910B:  api.Accelerator910Label,
-	api.Ascend910A3: api.Accelerator910Label,
-	api.Ascend910A5: api.AcceleratorNPULabel,
-	api.Ascend310:   api.Accelerator310Label,
-	api.Ascend310P:  api.Accelerator310PLabel,
+	api.Ascend910:   label.Accelerator910Label,
+	api.Ascend910B:  label.Accelerator910Label,
+	api.Ascend910A3: label.Accelerator910Label,
+	api.Ascend910A5: label.AcceleratorNPULabel,
+	api.Ascend310:   label.Accelerator310Label,
+	api.Ascend310P:  label.Accelerator310PLabel,
 }
 
 const (
 	memoryRadix                  = 1024
 	nodeAnnotationUpdateInterval = 60
-	serverIndexKey               = "serverIndex"
-	serverTypeKey                = "serverType"
-	cardTypeKey                  = "cardType"
 
 	faultConfigLocalVersion = "local file"
+	jitterDuration          = 1000
 )
 
 // HwDevManager manages huawei device devices.
@@ -84,6 +86,8 @@ type HwDevManager struct {
 	ManagerLock      sync.Mutex
 	ContainerRuntime string
 	unifiedResetMgr  *UnifiedHotResetManager
+	labelGroup       *label.Group
+	annotationGroup  *annotation.Group
 }
 
 type shareDevResourceQuota struct {
@@ -113,6 +117,7 @@ func NewHwDevManager(devM devmanager.DeviceInterface) *HwDevManager {
 		return nil
 	}
 	hdm.setSuperPodInfo()
+	hdm.initMarkerGroups()
 	if err := hdm.UpdateNode(); err != nil {
 		hwlog.RunLog.Errorf("update node label failed, err: %v", err)
 		return nil
@@ -186,6 +191,14 @@ func (hdm *HwDevManager) setAscendManager(dmgr devmanager.DeviceInterface) error
 	return nil
 }
 
+// initMarkerGroups pre-initializes the label and annotation groups.
+// This is called once during initialization, not on every updateNode call.
+func (hdm *HwDevManager) initMarkerGroups() {
+	hdm.labelGroup = label.NewLabelGroup()
+
+	hdm.annotationGroup = annotation.NewAnnotationGroup()
+}
+
 // UpdateNode update server type, like Ascend910-32, and label of 910b infer card
 // other common label will be updated in the future
 func (hdm *HwDevManager) UpdateNode() error {
@@ -217,14 +230,34 @@ func (hdm *HwDevManager) updateNode() error {
 	}
 	// rank table needs this info for A5
 	hdm.SetNodeInternalIPInK8s(oldNode)
-	newLabelMap, err := hdm.getNewNodeLabel(oldNode)
+
+	chipNames := hdm.getAllChipNames()
+	isHeterogeneous := len(chipNames) > 1
+	if isHeterogeneous {
+		hwlog.RunLog.Warnf("heterogeneous chips detected: %v, skipping chip-level single-value labels", chipNames)
+	}
+
+	ctx := &label.NodeContext{
+		Node:            oldNode,
+		IsHeterogeneous: isHeterogeneous,
+	}
+
+	newLabelMap, err := hdm.labelGroup.WriteAll(ctx)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get new node label, err: %v", err)
+		hwlog.RunLog.Errorf("failed to generate node labels, err: %v", err)
 		return err
 	}
-	if len(newLabelMap) == 0 {
+
+	newAnnotationMap, err := hdm.annotationGroup.WriteAll(ctx)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to generate node annotations, err: %v", err)
+		return err
+	}
+
+	if len(newLabelMap) == 0 && len(newAnnotationMap) == 0 {
 		return nil
 	}
+
 	newNode := oldNode.DeepCopy()
 	labelRegex := regexp.MustCompile(common.LabelValueRegex)
 	for key, value := range newLabelMap {
@@ -234,155 +267,22 @@ func (hdm *HwDevManager) updateNode() error {
 		}
 		newNode.Labels[key] = value
 	}
-
-	newAnnotationMap, err := hdm.getNewNodeAnnotation(oldNode)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get new node annotation, err: %v", err)
-		return err
-	}
 	for key, value := range newAnnotationMap {
 		newNode.Annotations[key] = value
 	}
 
+	// Add random jitter (0~1s) before first attempt to avoid all nodes hitting apiserver simultaneously
+	time.Sleep(time.Duration(rand.Intn(jitterDuration)) * time.Millisecond)
+
 	for i := 0; i < common.RetryUpdateCount; i++ {
 		if _, _, err = hdm.manager.GetKubeClient().PatchNodeState(oldNode, newNode); err == nil {
-			hwlog.RunLog.Info("update node label success")
+			hwlog.RunLog.Info("update node label/annotation success")
 			return nil
 		}
-		hwlog.RunLog.Warnf("failed to patch new label to node, err: %s, retry count: %d", err.Error(), i+1)
+		hwlog.RunLog.Warnf("failed to patch new label/annotation to node, err: %s, retry count: %d", err.Error(), i+1)
 		time.Sleep(time.Second)
 	}
-	return fmt.Errorf("update node label failed")
-}
-
-func (hdm *HwDevManager) getNewNodeAnnotation(oldNode *v1.Node) (map[string]string, error) {
-	annotationMap := make(map[string]string)
-	cardType, err := hdm.getCardType()
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get node board info, err: %v", err)
-	}
-	if cardType != "" {
-		annotationMap[cardTypeKey] = cardType
-		common.ParamOption.CardType = cardType
-	}
-	mashaledNpuInfo, err := json.Marshal(hdm.getNpuBaseInfo())
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal device ip map: %w", err)
-	}
-	hdm.baseNPUInfo = hdm.getNpuBaseInfo()
-	newMashaledNpuInfo := customname.ReplaceDevicePublicName(hdm.RunMode, string(mashaledNpuInfo))
-	annotationMap[api.BaseDevInfoAnno] = newMashaledNpuInfo
-	annotationMap[common.SuperPodIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().SuperPodId))
-	annotationMap[serverIndexKey] = strconv.Itoa(int(hdm.getSuperPodInfo().ServerId))
-	annotationMap[serverTypeKey] = getDevType(common.ParamOption.RealCardType)
-	if common.ParamOption.RealCardType == api.Ascend910A5 {
-		superPodType := hdm.getSuperPodInfo().SuperPodType
-		if superPodType == common.ProductType1D || superPodType == common.ProductType2D {
-			annotationMap[api.RackIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().RackId))
-		}
-	}
-
-	return annotationMap, nil
-}
-
-func (hdm *HwDevManager) getNewNodeLabel(node *v1.Node) (map[string]string, error) {
-	newLabelMap, err := hdm.updateChipNameToNode()
-	if err != nil {
-		return nil, err
-	}
-	cardType := common.ParamOption.RealCardType + common.MiddelLine +
-		strconv.Itoa(int(common.ParamOption.AiCoreCount))
-	if !customname.IsOldDeviceType(common.ParamOption.RealCardType) {
-		newLabelMap[common.ServerTypeLabelKey] = api.AscendMinuxPrefix +
-			strconv.Itoa(int(common.ParamOption.AiCoreCount))
-	} else {
-		if _, ok := node.Labels[common.ServerTypeLabelKey]; !ok {
-			newLabelMap[common.ServerTypeLabelKey] = customname.ReplaceDevicePublicName(hdm.RunMode, cardType)
-		}
-	}
-
-	driverVersion := hdm.manager.GetDmgr().GetDcmiVersion()
-	if driverVersion != "" {
-		newLabelMap[common.DcmiDriverVersion] = driverVersion
-	} else {
-		hwlog.RunLog.Warnf("failed to get dcmi driver version")
-	}
-
-	if len(hdm.allInfo.AllDevs) <= common.FirstDevice {
-		return nil, fmt.Errorf("index(%d) exceeds the range of alldevs", common.FirstDevice)
-	}
-	boardInfo, err := hdm.manager.GetDmgr().GetBoardInfo(hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get node board info, err: %s", err.Error())
-	}
-
-	if common.HasOnChipMemory() {
-		hwlog.RunLog.Debug("get node on-chip-memory info")
-		hbmInfo, err := hdm.manager.GetDmgr().GetDeviceHbmInfo(hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
-		if err != nil {
-			hwlog.RunLog.Warnf("failed to get node on-chip-memory info, err: %s", err)
-		} else {
-			newLabelMap[api.NPUChipMemoryLabel] = fmt.Sprintf("%dG", hbmInfo.MemorySize/memoryRadix)
-		}
-	}
-
-	if common.ParamOption.RealCardType == api.Ascend910B {
-		// only auto label 300IA2 with910B card
-		if boardInfo.BoardId == common.A300IA2BoardId || boardInfo.BoardId == common.A300IA2GB64BoardId {
-			newLabelMap[common.AcceleratorTypeKey] = api.A300IA2Label
-		}
-	}
-	if common.IsContainAll300IDuo() {
-		newLabelMap[common.InferCardKey] = api.A300IDuoLabel
-	}
-	hdm.setAcceleratorLabel(newLabelMap)
-	hdm.addTopologyLabel(newLabelMap)
-
-	return newLabelMap, nil
-}
-
-func (hdm *HwDevManager) setAcceleratorLabel(newLabelMap map[string]string) {
-	if newLabelMap == nil {
-		hwlog.RunLog.Error("label map is nil")
-		return
-	}
-	if v, ok := acceleratorLabelMap[common.ParamOption.RealCardType]; ok {
-		newLabelMap[api.AcceleratorLabelKey] = v
-	}
-}
-
-func (hdm *HwDevManager) addTopologyLabel(newLabelMap map[string]string) {
-	if newLabelMap == nil {
-		hwlog.RunLog.Errorf("label map is nil")
-		return
-	}
-	if common.ParamOption.RealCardType == api.Ascend910A3 {
-		superPodId := hdm.manager.GetSuperPodID()
-		if int(superPodId) >= 0 {
-			hwlog.RunLog.Infof("A3 device add superid label: %d", superPodId)
-			newLabelMap[npuCommon.TopoLabelSuperPodId] = strconv.Itoa(int(superPodId))
-		}
-	}
-	if common.ParamOption.RealCardType == api.Ascend910A5 {
-		superPodId := hdm.manager.GetSuperPodID()
-		if int(superPodId) >= 0 {
-			hwlog.RunLog.Infof("npu device add superid label: %d", superPodId)
-			newLabelMap[npuCommon.TopoLabelSuperPodId] = strconv.Itoa(int(superPodId))
-		}
-		superPodType := hdm.manager.GetSuperPodType()
-		if superPodType == common.ProductType1D || superPodType == common.ProductType2D {
-			rackId := hdm.manager.GetRackID()
-			if int(rackId) >= 0 {
-				hwlog.RunLog.Infof("npu device add rackid label: %d", rackId)
-				newLabelMap[npuCommon.TopoLabelRackId] = strconv.Itoa(int(rackId))
-			}
-		}
-		serverIndex := hdm.manager.GetServerIndex()
-		if int(serverIndex) >= 0 {
-			hwlog.RunLog.Infof("npu device add serverid label: %d", serverIndex)
-			newLabelMap[npuCommon.TopoLabelServerId] = strconv.Itoa(int(serverIndex))
-		}
-	}
+	return fmt.Errorf("update node label/annotation failed")
 }
 
 func (hdm *HwDevManager) getNpuBaseInfo() map[string]*common.NpuBaseInfo {
@@ -404,16 +304,6 @@ func (hdm *HwDevManager) getNpuBaseInfo() map[string]*common.NpuBaseInfo {
 		hdm.allInfo.AllDevs[index].LevelList = levelList
 	}
 	return ipMap
-}
-
-func (hdm *HwDevManager) updateChipNameToNode() (map[string]string, error) {
-	newLabelMap := make(map[string]string, 1)
-	chipInfo, err := hdm.manager.GetDmgr().GetValidChipInfo()
-	if err != nil {
-		return nil, err
-	}
-	newLabelMap[common.ChipNameLabel] = chipInfo.Name
-	return newLabelMap, nil
 }
 
 func (hdm *HwDevManager) setAllDeviceAndType() error {
@@ -721,12 +611,16 @@ func (hdm *HwDevManager) doUpdateNodeAnnotations() {
 	}
 
 	for i := 0; i < common.RetryUpdateCount; i++ {
-		if err = hdm.manager.GetKubeClient().AddAnnotation(api.BaseDevInfoAnno, string(mashaledNpuInfo)); err == nil {
+		// Dual-write old + new standardized key in a single API call
+		if err = hdm.manager.GetKubeClient().AddAnnotations(map[string]string{
+			annotation.BaseDevInfoAnnoDeprecated: string(mashaledNpuInfo),
+			annotation.NPUBaseDevInfosAnnotation: string(mashaledNpuInfo),
+		}); err == nil {
 			hwlog.RunLog.Info("update node annotations success")
 			hdm.baseNPUInfo = newBaseInfo
 			return
 		}
-		hwlog.RunLog.Warnf("failed to patch new label to node, err: %s, retry count: %d", err.Error(), i+1)
+		hwlog.RunLog.Warnf("failed to patch annotations to node, err: %s, retry count: %d", err.Error(), i+1)
 		time.Sleep(time.Second)
 	}
 }
@@ -1829,4 +1723,111 @@ func (hdm *HwDevManager) DoSetMultiDiePolicyForA3() {
 func (hdm *HwDevManager) startFaultProducer(ctx context.Context) {
 	// start the hang detection fault producer
 	go hangdetection.StartHangDetectionProducer(ctx, hdm.manager.GetDmgr())
+}
+
+// getDieIDAnnotations returns die-ID maps for all devices.
+// A5 (deviceType=npu) gets DDIE IDs; non-A5 gets VDIE IDs. They are mutually exclusive.
+func (hdm *HwDevManager) getDieIDAnnotations() map[dcmi.DieType]map[string]string {
+	ret := map[dcmi.DieType]map[string]string{
+		dcmi.VDIE: make(map[string]string),
+		dcmi.DDIE: make(map[string]string),
+	}
+
+	isA5 := common.ParamOption.RealCardType == api.Ascend910A5
+	dieType := dcmi.VDIE
+	if isA5 {
+		dieType = dcmi.DDIE
+	}
+
+	for _, dev := range hdm.allInfo.AllDevs {
+		dieID := hdm.getDieID(dev.LogicID, dieType)
+		if dieID == "" {
+			continue
+		}
+		ret[dieType][strconv.Itoa(int(dev.LogicID))] = dieID
+	}
+	return ret
+}
+
+// getDieID gets a single die ID (VDIE or DDIE) for a device by logic ID.
+// Returns empty string on error or empty result; errors are logged internally.
+func (hdm *HwDevManager) getDieID(logicID int32, dieType dcmi.DieType) string {
+	dieTypeName := "vdie"
+	if dieType == dcmi.DDIE {
+		dieTypeName = "ddie"
+	}
+	dieID, err := hdm.manager.GetDmgr().GetDieID(logicID, dieType)
+	if err != nil {
+		hwlog.RunLog.Warnf("failed to get %s id for logicID %d, err: %v", dieTypeName, logicID, err)
+		return ""
+	}
+	return dieID
+}
+
+// getChipSerialNumbers returns chip serial numbers from elabel for all cards.
+func (hdm *HwDevManager) getChipSerialNumbers() map[string]string {
+	serialNumbers := make(map[string]string)
+	cardIDs := make(map[int32]bool)
+
+	for _, dev := range hdm.allInfo.AllDevs {
+		if cardIDs[dev.CardID] {
+			continue
+		}
+		cardIDs[dev.CardID] = true
+
+		elabelInfo, err := hdm.manager.GetDmgr().GetCardElabelV2(dev.CardID)
+		if err != nil {
+			hwlog.RunLog.Warnf("failed to get elabel for cardID %d, err: %v", dev.CardID, err)
+			continue
+		}
+		if elabelInfo.SerialNumber != "" && elabelInfo.SerialNumber != "NA" {
+			serialNumbers[strconv.Itoa(int(dev.LogicID))] = elabelInfo.SerialNumber
+		}
+	}
+
+	if len(serialNumbers) == 0 {
+		hwlog.RunLog.Warn("no chip serial numbers obtained from any card")
+	}
+	return serialNumbers
+}
+
+// getProductType returns the product type from DcGetProductType for the first device.
+func (hdm *HwDevManager) getProductType() string {
+	devType := hdm.manager.GetDmgr().GetDevType()
+	if devType != api.Ascend310P {
+		// product type is only supported for 310P
+		hwlog.RunLog.Warnf("product type is not supported for this device [%v]", utils.MaskDevType(devType))
+		return ""
+	}
+	if len(hdm.allInfo.AllDevs) == 0 {
+		return ""
+	}
+	productType, err := hdm.manager.GetDmgr().GetProductType(hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
+	if err != nil {
+		hwlog.RunLog.Warnf("failed to get product type: %v", err)
+		return ""
+	}
+	return productType
+}
+
+// getAllChipNames returns all distinct chip names from all devices.
+func (hdm *HwDevManager) getAllChipNames() []string {
+	chipNameSet := make(map[string]bool)
+	for _, dev := range hdm.allInfo.AllDevs {
+		chipInfo, err := hdm.manager.GetDmgr().GetChipInfo(dev.LogicID)
+		if err != nil {
+			hwlog.RunLog.Warnf("failed to get chip info for logicID %d: %v", dev.LogicID, err)
+			continue
+		}
+		if chipInfo.Name == "" {
+			hwlog.RunLog.Warnf("chip name is empty for logicID %d", dev.LogicID)
+			continue
+		}
+		chipNameSet[chipInfo.Name] = true
+	}
+	names := make([]string, 0, len(chipNameSet))
+	for name := range chipNameSet {
+		names = append(names, name)
+	}
+	return names
 }

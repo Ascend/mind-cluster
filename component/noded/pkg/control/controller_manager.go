@@ -20,7 +20,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/rand"
 
-	"ascend-common/api"
+	"ascend-common/api/annotation"
+	"ascend-common/api/label"
 	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/common/manager"
@@ -65,8 +66,8 @@ func (nc *ControllerManager) SetNextFaultProcessor(faultProcessor common.FaultPr
 	nc.nextFaultProcessor = faultProcessor
 }
 
-// InitNodeAnnotation init node sn
-func (nc *ControllerManager) InitNodeAnnotation() error {
+// InitNodeSNInfo init node sn
+func (nc *ControllerManager) InitNodeSNInfo() error {
 	rand.Seed(time.Now().UnixNano())
 	randomSecond := time.Duration(rand.Intn(randSecond)) * time.Second
 	time.Sleep(randomSecond)
@@ -75,10 +76,16 @@ func (nc *ControllerManager) InitNodeAnnotation() error {
 		hwlog.RunLog.Errorf("get node SN failed, err is %v", err)
 		return err
 	}
-	hwlog.RunLog.Infof("get node SN success, add SN(%s) to node annotation", nodeSN)
-	err = nc.kubeClient.AddAnnotation(api.NodeSNAnnotation, nodeSN)
+	hwlog.RunLog.Infof("get node SN success, add SN(%s) to node annotation and label", nodeSN)
+	err = nc.kubeClient.AddLabel(label.NPUServerSerialNumberLabel, nodeSN)
+	if err != nil {
+		hwlog.RunLog.Warnf("add server.serial-number label failed, err is %v", err)
+	}
+	// Also write product-serial-number annotation
+	err = nc.kubeClient.AddAnnotation(annotation.NodeSNAnnotationDeprecated, nodeSN)
 	if err != nil {
 		hwlog.RunLog.Errorf("add node annotation failed, err is %v", err)
+		return err
 	}
-	return err
+	return nil
 }

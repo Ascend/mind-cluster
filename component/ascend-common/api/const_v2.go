@@ -47,8 +47,6 @@ const (
 )
 
 const (
-	// RackIDKey rack id in a super pod
-	RackIDKey = "rackID"
 	// VersionNPU Type for RAS Net Fault Detection in A5
 	VersionNPU = "npu"
 	// VersionA3 Type for RAS Net Fault Detection in A3

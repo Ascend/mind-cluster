@@ -30,6 +30,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"ascend-common/api"
+	"ascend-common/api/label"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -789,11 +790,11 @@ func (hnm *HwAscend910Manager) getRecoverLabelFromNodeSets(devRecoverLabel, netR
 		return nil, fmt.Errorf("invalid node")
 	}
 	// devRecoverLabel like Ascend910-0,Ascend910-2,Ascend910-3, means dev healthy exception
-	*devRecoverLabel = hnm.toStandardDeviceFmt(common.ConvertDevListToSets(
-		curNode.Labels[common.GetAscend910Key(api.NodeLabelRecoverSuffix)], common.DotSepDev))
+	devRecoverVal, _ := label.GetNodeLabel(curNode, common.GetAscend910Key(api.NodeLabelRecoverSuffix))
+	*devRecoverLabel = hnm.toStandardDeviceFmt(common.ConvertDevListToSets(devRecoverVal, common.DotSepDev))
 	// netRecoverLabel like Ascend910-0,Ascend910-2,Ascend910-3, means dev network exception
-	*netRecoverLabel = hnm.toStandardDeviceFmt(common.ConvertDevListToSets(
-		curNode.Labels[common.GetAscend910Key(api.NodeLabelNetworkRecoverSuffix)], common.DotSepDev))
+	netRecoverVal, _ := label.GetNodeLabel(curNode, common.GetAscend910Key(api.NodeLabelNetworkRecoverSuffix))
+	*netRecoverLabel = hnm.toStandardDeviceFmt(common.ConvertDevListToSets(netRecoverVal, common.DotSepDev))
 	return curNode, nil
 }
 

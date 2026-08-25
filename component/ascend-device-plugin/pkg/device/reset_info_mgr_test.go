@@ -28,8 +28,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/api/annotation"
 )
 
 const (
@@ -47,7 +47,7 @@ func init() {
 // TestWriteResetInfo tests WriteResetInfo
 func TestWriteResetInfo(t *testing.T) {
 	flag := false
-	patch := gomonkey.ApplyFunc(writeNodeAnnotation, func(resetStr string) {
+	patch := gomonkey.ApplyFunc(writeResetInfoAnnotation, func(resetStr string) {
 		flag = true
 	})
 	defer patch.Reset()
@@ -149,7 +149,7 @@ func TestMergeAndDeduplicate(t *testing.T) {
 // TestReadResetNodeAnnotation tests ReadResetNodeAnnotation
 func TestReadResetNodeAnnotation(t *testing.T) {
 	const id0 = 0
-	patch := gomonkey.ApplyFunc(writeNodeAnnotation, func(resetStr string) {
+	patch := gomonkey.ApplyFunc(writeResetInfoAnnotation, func(resetStr string) {
 		return
 	})
 	defer patch.Reset()
@@ -169,8 +169,8 @@ func TestReadResetNodeAnnotation(t *testing.T) {
 // TestWriteNodeAnnotation tests writeNodeAnnotation
 func TestWriteNodeAnnotation(t *testing.T) {
 	flag := false
-	patch := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "AddAnnotation",
-		func(_ *kubeclient.ClientK8s, key, value string) error {
+	patch := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "AddAnnotations",
+		func(_ *kubeclient.ClientK8s, annotations map[string]string) error {
 			flag = true
 			return resettoolTestErr
 		})
@@ -178,7 +178,7 @@ func TestWriteNodeAnnotation(t *testing.T) {
 	convey.Convey("test writeNodeAnnotation", t, func() {
 		convey.Convey("enter AddAnnotation, flag should be true", func() {
 			mgr.client = &kubeclient.ClientK8s{}
-			writeNodeAnnotation("")
+			writeResetInfoAnnotation("")
 			convey.So(flag, convey.ShouldBeTrue)
 		})
 	})
@@ -212,7 +212,7 @@ func TestReadAnnotation(t *testing.T) {
 		convey.Convey("01-key not exists, should return empty info", func() {
 			annotations := map[string]string{}
 			key := "test"
-			info := readAnnotation(annotations, key)
+			info := readResetInfoFromAnnotation(annotations, key)
 			convey.So(info.ThirdPartyResetDevs, convey.ShouldBeEmpty)
 		})
 		convey.Convey("02-unmarshal error, should return empty info", func() {
@@ -220,7 +220,7 @@ func TestReadAnnotation(t *testing.T) {
 			key := "test"
 			patch1 := gomonkey.ApplyFuncReturn(json.Unmarshal, resettoolTestErr)
 			defer patch1.Reset()
-			info := readAnnotation(annotations, key)
+			info := readResetInfoFromAnnotation(annotations, key)
 			convey.So(info.ThirdPartyResetDevs, convey.ShouldBeEmpty)
 		})
 		convey.Convey("03-success, should return info", func() {
@@ -236,7 +236,7 @@ func TestReadAnnotation(t *testing.T) {
 			defer patch.Reset()
 			annotations := map[string]string{"test": "test"}
 			key := "test"
-			info := readAnnotation(annotations, key)
+			info := readResetInfoFromAnnotation(annotations, key)
 			convey.So(*info, convey.ShouldResemble, *res)
 		})
 	})
@@ -295,7 +295,7 @@ func TestInitResetInfoMgr(t *testing.T) {
 			mockNode := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "GetNode",
 				func(_ *kubeclient.ClientK8s) (*v1.Node, error) {
 					return &v1.Node{ObjectMeta: metav1.ObjectMeta{
-						Annotations: map[string]string{common.ResetInfoAnnotationKey: string(data)}},
+						Annotations: map[string]string{annotation.NPUResetInfoAnnotation: string(data)}},
 					}, nil
 				})
 			defer mockNode.Reset()

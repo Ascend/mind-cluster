@@ -11,6 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"ascend-common/api"
+	"ascend-common/api/label"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/generator"
@@ -67,9 +68,9 @@ func useV1dot2(job *mindxdlv1.AscendJob) bool {
 		if replicaSpec.Template.Spec.NodeSelector == nil {
 			continue
 		}
-		value, ok := replicaSpec.Template.Spec.NodeSelector[api.AcceleratorTypeKey]
-		if ok && (value == api.AcceleratorTypeModule910A3x16SuperPod ||
-			value == api.AcceleratorTypeModule910A3x8SuperPod) {
+		value, ok := replicaSpec.Template.Spec.NodeSelector[label.AcceleratorTypeKeyDeprecated]
+		if ok && (value == label.AcceleratorTypeModule910A3x16SuperPod ||
+			value == label.AcceleratorTypeModule910A3x8SuperPod) {
 			return true
 		}
 	}

@@ -27,6 +27,8 @@ import (
 	"k8s.io/api/core/v1"
 
 	"ascend-common/api"
+	"ascend-common/api/annotation"
+	"ascend-common/api/label"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -36,7 +38,7 @@ const (
 )
 
 func getNodeAcceleratorType(node *v1.Node) string {
-	acceleratorType, hasTypeKey := node.Labels[api.AcceleratorTypeKey]
+	acceleratorType, hasTypeKey := label.GetNodeLabel(node, label.AcceleratorTypeKeyDeprecated)
 	if !hasTypeKey {
 		hwlog.RunLog.Debugf("empty acceleratorType, nodeName=%s", node.Name)
 		return ""
@@ -45,8 +47,11 @@ func getNodeAcceleratorType(node *v1.Node) string {
 }
 
 func getRackIdFromNode(node *v1.Node) (string, error) {
-	rackID, hasRackIDKey := node.Annotations[api.RackIDKey]
-	rackID = strings.Trim(rackID, " ")
+	// Prefer topotree.rackid label, fallback to rackID annotation
+	if rackID, ok := label.GetNodeLabel(node, label.TopoLabelRackId); ok && rackID != "" {
+		return rackID, nil
+	}
+	rackID, hasRackIDKey := annotation.GetNodeAnnotation(node, annotation.RackIDKeyDeprecated)
 	if !hasRackIDKey || len(rackID) == 0 {
 		hwlog.RunLog.Debugf("empty rack id, nodeName=%s", node.Name)
 		return "", fmt.Errorf("invalid rack id in node anno")

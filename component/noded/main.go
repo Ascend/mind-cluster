@@ -217,7 +217,7 @@ func initFunction(ctx context.Context) error {
 		return err
 	}
 	go func() {
-		if err := controller.InitNodeAnnotation(); err != nil {
+		if err := controller.InitNodeSNInfo(); err != nil {
 			hwlog.RunLog.Warnf("init node annotation failed when start, err is %v", err)
 		}
 	}()

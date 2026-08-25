@@ -13,6 +13,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"ascend-common/api"
+	"ascend-common/api/annotation"
+	"ascend-common/api/label"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/node"
@@ -20,7 +22,6 @@ import (
 )
 
 const (
-	superPodIDKey   = "superPodID"
 	testNodeName    = "test-node"
 	testDeviceKey   = `{"device1":{"IP":"192.168.1.1","SuperDeviceID":1}}`
 	invalidOperator = "invalid-operator"
@@ -35,8 +36,8 @@ func setupNode() *v1.Node {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: testNodeName,
 			Annotations: map[string]string{
-				superPodIDKey:       testSuperPodID,
-				api.BaseDevInfoAnno: testDeviceKey,
+				label.TopoLabelSuperPodId:            testSuperPodID,
+				annotation.NPUBaseDevInfosAnnotation: testDeviceKey,
 			},
 		},
 	}

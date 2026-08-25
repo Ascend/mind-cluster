@@ -22,6 +22,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"ascend-common/api/annotation"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -91,7 +92,8 @@ func InitResetInfoMgr(client *kubeclient.ClientK8s) {
 			mgr = &infoMgr
 			return
 		}
-		infoMgr.resetInfo = readAnnotation(curNode.Annotations, common.ResetInfoAnnotationKey)
+		infoMgr.resetInfo = readResetInfoFromAnnotation(curNode.Annotations, annotation.NPUResetInfoAnnotation,
+			annotation.ResetInfoKeyDeprecated)
 		mgr = &infoMgr
 	})
 }
@@ -118,7 +120,7 @@ func WriteResetInfo(resetInfo ResetInfo, writeMode WriteMode, updateNode bool) {
 	}
 	mgr.mu.Unlock()
 	if updateNode {
-		writeNodeAnnotation(string(dataBytes))
+		writeResetInfoAnnotation(string(dataBytes))
 	}
 }
 
@@ -177,8 +179,11 @@ func SetResetCnt(logicID int32, cnt int) {
 	mgr.resetCnt.Store(strconv.Itoa(int(logicID)), cnt)
 }
 
-func writeNodeAnnotation(resetStr string) {
-	if err := mgr.client.AddAnnotation(common.ResetInfoAnnotationKey, resetStr); err != nil {
+func writeResetInfoAnnotation(resetStr string) {
+	if err := mgr.client.AddAnnotations(map[string]string{
+		annotation.NPUResetInfoAnnotation: resetStr,
+		annotation.ResetInfoKeyDeprecated: resetStr,
+	}); err != nil {
 		hwlog.RunLog.Errorf("fail to write reset info to node annotation, err: %v", err)
 	}
 }
@@ -248,12 +253,13 @@ func excludeArray(curArr, delArr []ResetDevice) []ResetDevice {
 	return ret
 }
 
-func readAnnotation(annotation map[string]string, key string) *ResetInfo {
-	if _, exist := annotation[key]; !exist {
+func readResetInfoFromAnnotation(annotations map[string]string, keys ...string) *ResetInfo {
+	val, exist := annotation.GetAnnotationValue(annotations, keys...)
+	if !exist {
 		return &ResetInfo{}
 	}
 	var ret ResetInfo
-	if err := json.Unmarshal([]byte(annotation[key]), &ret); err != nil {
+	if err := json.Unmarshal([]byte(val), &ret); err != nil {
 		hwlog.RunLog.Errorf("unmarshal node annotation failed, err: %v", err)
 		return &ResetInfo{}
 	}

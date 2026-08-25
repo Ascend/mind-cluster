@@ -96,16 +96,10 @@ const (
 	PodPredicateTime = "predicate-time"
 	// Pod2kl pod annotation key, means kubelet allocate device
 	Pod2kl = "kltDev"
-	// SuperPodIDKey super node id
-	SuperPodIDKey = "superPodID"
-	// ChipNameLabel label value is card type, eg. 910A
-	ChipNameLabel = "node.kubernetes.io/npu.chip.name"
 	// MetaDataAnnotation downward api which map annotation from volcano to container's env
 	MetaDataAnnotation = "metadata.annotations"
 	// MetaData is meta data of pod
 	MetaData = "metadata"
-	// ResetInfoAnnotationKey is the key of reset fail information in node annotation
-	ResetInfoAnnotationKey = "ResetInfo"
 	// DefaultScanDelay default delay time before scanning devices reset by third party, seconds
 	DefaultScanDelay = 300
 
@@ -350,16 +344,10 @@ const (
 )
 
 const (
-	// ServerTypeLabelKey the node label key of server type
-	ServerTypeLabelKey = "servertype"
-	// AcceleratorTypeKey the node label key of accelerator type
-	AcceleratorTypeKey = "accelerator-type"
-	// InferCardKey the node label key of infer card
-	InferCardKey = "infer-card-type"
 	// LabelValueRegex k8s label value regex (max 63 characters)
 	LabelValueRegex = "(([A-Za-z0-9][-A-Za-z0-9_.]{0,61})?[A-Za-z0-9])?"
-	// DCMI driver version
-	DcmiDriverVersion = "huawei.com/driver.version"
+	// LabelSanitizeRegex regex for sanitizing label values
+	LabelSanitizeRegex = `[^A-Za-z0-9\-_. ]`
 )
 
 const (

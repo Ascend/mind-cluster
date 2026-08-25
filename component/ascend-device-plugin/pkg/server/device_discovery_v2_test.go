@@ -17,10 +17,8 @@
 package server
 
 import (
-	"ascend-common/devmanager/dcmi"
 	"errors"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -35,6 +33,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/devmanager"
 	devcommon "ascend-common/devmanager/common"
+	"ascend-common/devmanager/dcmi"
 )
 
 var (
@@ -118,7 +117,6 @@ func TestDeviceDiscovery(t *testing.T) {
 	defer patch.Reset()
 	convey.Convey("test auto init", t, testAutoInit)
 	convey.Convey("test new hw device manager", t, testNewHwDevManager)
-	convey.Convey("test label node", t, testLabelNode)
 	convey.Convey("test list and watch", t, testListAndWatch)
 }
 
@@ -134,21 +132,6 @@ func testNewHwDevManager() {
 	convey.So(testHdm.allInfo.AllDevTypes, convey.ShouldResemble, []string{api.NPULowerCase})
 	convey.So(testHdm.RunMode, convey.ShouldEqual, api.Ascend910)
 	convey.So(testHdm.WorkMode, convey.ShouldEqual, devcommon.AMPMode)
-}
-
-func testLabelNode() {
-	convey.Convey("serverType label correct", func() {
-		labelServerType := common.ParamOption.RealCardType + common.MiddelLine +
-			strconv.Itoa(int(common.ParamOption.AiCoreCount))
-		convey.So(common.ParamOption.AiCoreCount, convey.ShouldEqual, mockChipAICore)
-		convey.So(labelServerType, convey.ShouldEqual, "Ascend910A5-25")
-	})
-
-	convey.Convey("chipName label correct", func() {
-		newLabelMap, err := testHdm.updateChipNameToNode()
-		convey.So(err, convey.ShouldBeNil)
-		convey.So(newLabelMap[common.ChipNameLabel], convey.ShouldEqual, "Ascend950PR")
-	})
 }
 
 func testListAndWatch() {

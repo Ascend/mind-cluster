@@ -32,7 +32,7 @@ func TestNodeController(t *testing.T) {
 	controlManager = NewControlManager(testK8sClient)
 	convey.Convey("test NodeController method 'SetNextFaultProcessor'", t, testNodeCtlSetNextFaultProcessor)
 	convey.Convey("test NodeController method 'Init'", t, testNodeCtlInit)
-	convey.Convey("test NodeController method 'initNodeAnnotation'", t, testInitNodeAnnotation)
+	convey.Convey("test NodeController method 'initNodeAnnotation'", t, testInitNodeSNInfo)
 }
 
 func testNodeCtlSetNextFaultProcessor() {
@@ -56,7 +56,7 @@ func testNodeCtlInit() {
 	convey.So(err, convey.ShouldBeNil)
 }
 
-func testInitNodeAnnotation() {
+func testInitNodeSNInfo() {
 	if controlManager == nil {
 		panic("nodeController is nil")
 	}
@@ -65,7 +65,7 @@ func testInitNodeAnnotation() {
 		defer p1.Reset()
 		var p2 = gomonkey.ApplyMethodReturn(controlManager.kubeClient, "AddAnnotation", nil)
 		defer p2.Reset()
-		err := controlManager.InitNodeAnnotation()
+		err := controlManager.InitNodeSNInfo()
 		convey.So(err, convey.ShouldBeNil)
 	})
 	convey.Convey("when GetNodeSN failed and AddAnnotation success, should return err", func() {
@@ -73,7 +73,7 @@ func testInitNodeAnnotation() {
 		defer p1.Reset()
 		var p2 = gomonkey.ApplyMethodReturn(controlManager.kubeClient, "AddAnnotation", nil)
 		defer p2.Reset()
-		err := controlManager.InitNodeAnnotation()
+		err := controlManager.InitNodeSNInfo()
 		convey.So(err, convey.ShouldNotBeNil)
 	})
 	convey.Convey("when GetNodeSN success and AddAnnotation failed, should return err", func() {
@@ -82,7 +82,7 @@ func testInitNodeAnnotation() {
 		var p2 = gomonkey.ApplyMethodReturn(controlManager.kubeClient,
 			"AddAnnotation", errors.New("test err"))
 		defer p2.Reset()
-		err := controlManager.InitNodeAnnotation()
+		err := controlManager.InitNodeSNInfo()
 		convey.So(err, convey.ShouldNotBeNil)
 	})
 }

@@ -12,15 +12,14 @@ import (
 	"k8s.io/api/core/v1"
 
 	"ascend-common/api"
+	"ascend-common/api/annotation"
+	"ascend-common/api/label"
 	"ascend-common/common-utils/hwlog"
+	npuCommon "ascend-common/devmanager/common"
 	"clusterd/pkg/common/util"
 )
 
 const (
-	serverIndexKey   = "serverIndex"
-	serverTypeKey    = "serverType"
-	baseDevInfoAnno  = "baseDeviceInfos"
-	superPodIDKey    = "superPodID"
 	maxNodeDeviceNum = 128
 	formatBase       = 10
 )
@@ -103,8 +102,11 @@ func DeleteNodeFromCache(node *v1.Node) {
 }
 
 func getServerID(node *v1.Node) string {
-	serverID, hasServerIdKey := node.Annotations[serverIndexKey]
-	serverID = strings.Trim(serverID, " ")
+	// Prefer topotree.serverid label, fallback to serverIndex annotation
+	if serverID, ok := label.GetNodeLabel(node, label.TopoLabelServerId); ok && serverID != "" {
+		return serverID
+	}
+	serverID, hasServerIdKey := annotation.GetNodeAnnotation(node, annotation.ServerIndexKeyDeprecated)
 	if !hasServerIdKey || len(serverID) == 0 {
 		hwlog.RunLog.Debugf("empty server id, nodeName=%s", node.Name)
 		return ""
@@ -113,12 +115,22 @@ func getServerID(node *v1.Node) string {
 }
 
 func getNodeSN(node *v1.Node) string {
-	return node.Annotations[api.NodeSNAnnotation]
+	// Prefer new server.serial-number label, fallback to old annotation
+	if sn, ok := label.GetNodeLabel(node, label.NPUServerSerialNumberLabel); ok {
+		return sn
+	}
+	if sn, ok := annotation.GetNodeAnnotation(node, annotation.NodeSNAnnotationDeprecated); ok {
+		return sn
+	}
+	return ""
 }
 
 func getSuerPodID(node *v1.Node) string {
-	superPodID, ok := node.Annotations[superPodIDKey]
-	superPodID = strings.Trim(superPodID, " ")
+	// Prefer topotree.superpodid label, fallback to superPodID annotation
+	if spID, ok := label.GetNodeLabel(node, label.TopoLabelSuperPodId); ok && spID != "" {
+		return spID
+	}
+	superPodID, ok := annotation.GetNodeAnnotation(node, annotation.SuperPodIDKeyDeprecated)
 	if !ok || len(superPodID) == 0 {
 		hwlog.RunLog.Debugf("empty super pod id, nodeName=%s", node.Name)
 		return ""
@@ -137,7 +149,9 @@ func getNodeIP(node *v1.Node) string {
 
 func getBaseDevInfos(node *v1.Node) map[string]*api.NpuBaseInfo {
 	baseDeviceMap := make(map[string]*api.NpuBaseInfo)
-	deviceStr, ok := node.Annotations[baseDevInfoAnno]
+	// Prefer new standardized key, fallback to old key
+	deviceStr, ok := annotation.GetNodeAnnotation(node,
+		annotation.NPUBaseDevInfosAnnotation, annotation.BaseDevInfoAnnoDeprecated)
 	if !ok || len(deviceStr) == 0 {
 		hwlog.RunLog.Debugf("empty device info, nodeName=%s", node.Name)
 		return nil
@@ -269,11 +283,50 @@ func GetNodeDeviceAndSuperPodID(node *v1.Node) (*api.NodeDevice, string) {
 }
 
 func getDeviceType(node *v1.Node) string {
-	devType, hasVersionKey := node.Annotations[serverTypeKey]
+	// Prefer chipname+boardid for device type judgment, fallback to serverType annotation
+	devType, success := deriveServerTypeByChipNameAndBoardID(node)
+	if success {
+		return devType
+	}
+	// Fallback to serverType annotation for backward compatibility
+	devType, hasVersionKey := annotation.GetNodeAnnotation(node, annotation.ServerTypeKeyDeprecated)
 	devType = strings.Trim(devType, " ")
 	if !hasVersionKey || len(devType) == 0 {
 		hwlog.RunLog.Debugf("empty version, nodeName=%s", node.Name)
 		return ""
 	}
 	return devType
+}
+
+// deriveServerTypeByChipNameAndBoardID determines device type (A3/A5/npu) by chip name and board ID.
+// Returns (devType, success). success=false means unable to determine (should fallback to old annotation).
+func deriveServerTypeByChipNameAndBoardID(node *v1.Node) (string, bool) {
+	if node.Labels == nil {
+		return "", false
+	}
+	chipName, ok := label.GetNodeLabel(node, label.NPUChipNameLabel, label.NPUChipNameLabelDeprecated)
+	if !ok {
+		return "", false
+	}
+
+	if npuCommon.Is910A5Chip(chipName) {
+		return api.VersionNPU, true
+	}
+
+	boardID, ok := label.GetNodeLabel(node, label.NPUChipBoardIDLabel)
+	if !ok {
+		hwlog.RunLog.Debugf("empty board id, nodeName=%s", node.Name)
+		return "", false
+	}
+
+	const bitSize = 32
+	boardIDInt, err := strconv.ParseUint(boardID, 0, bitSize)
+	if err != nil {
+		hwlog.RunLog.Debugf("convert boardID to int failed, nodeName=%s, boardID=%s, err: %v", node.Name, boardID, err)
+		return "", false
+	}
+	if npuCommon.Is910A3Chip(uint32(boardIDInt)) {
+		return api.VersionA3, true
+	}
+	return "", true
 }

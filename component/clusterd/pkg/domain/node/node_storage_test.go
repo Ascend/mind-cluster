@@ -13,6 +13,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"ascend-common/api"
+	"ascend-common/api/annotation"
+	"ascend-common/api/label"
 	"clusterd/pkg/common/util"
 )
 
@@ -186,9 +188,11 @@ func testGetNodeDevAndSpIDNotInCache() {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: nodeName2,
 			Annotations: map[string]string{
-				api.NodeSNAnnotation: nodeSN1,
-				superPodIDKey:        superPodIDStr,
-				baseDevInfoAnno:      string(baseDevInfo),
+				annotation.NodeSNAnnotationDeprecated: nodeSN1,
+				annotation.NPUBaseDevInfosAnnotation:  string(baseDevInfo),
+			},
+			Labels: map[string]string{
+				label.TopoLabelSuperPodId: superPodIDStr,
 			},
 		},
 	}
@@ -220,10 +224,12 @@ func testGetNodeDevAndSpIDNotInCacheA5() {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: nodeName2,
 			Annotations: map[string]string{
-				api.NodeSNAnnotation: nodeSN1,
-				superPodIDKey:        superPodIDStr,
-				baseDevInfoAnno:      string(baseDevInfo),
-				serverTypeKey:        api.VersionNPU,
+				annotation.NodeSNAnnotationDeprecated: nodeSN1,
+				annotation.NPUBaseDevInfosAnnotation:  string(baseDevInfo),
+				annotation.ServerTypeKeyDeprecated:    api.VersionNPU,
+			},
+			Labels: map[string]string{
+				label.TopoLabelSuperPodId: superPodIDStr,
 			},
 		},
 	}
@@ -350,10 +356,12 @@ func TestGetServerID(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: nodeName2,
 				Annotations: map[string]string{
-					api.NodeSNAnnotation: nodeSN1,
-					superPodIDKey:        superPodIDStr,
-					baseDevInfoAnno:      string(baseDevInfo),
-					serverIndexKey:       " ",
+					annotation.NodeSNAnnotationDeprecated: nodeSN1,
+					annotation.NPUBaseDevInfosAnnotation:  string(baseDevInfo),
+				},
+				Labels: map[string]string{
+					label.TopoLabelSuperPodId: superPodIDStr,
+					label.TopoLabelServerId:   " ",
 				},
 			},
 		}
@@ -366,10 +374,12 @@ func TestGetServerID(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: nodeName2,
 				Annotations: map[string]string{
-					api.NodeSNAnnotation: nodeSN1,
-					superPodIDKey:        superPodIDStr,
-					baseDevInfoAnno:      string(baseDevInfo),
-					serverIndexKey:       serverID2,
+					annotation.NodeSNAnnotationDeprecated: nodeSN1,
+					annotation.NPUBaseDevInfosAnnotation:  string(baseDevInfo),
+				},
+				Labels: map[string]string{
+					label.TopoLabelSuperPodId: superPodIDStr,
+					label.TopoLabelServerId:   serverID2,
 				},
 			},
 		}
@@ -394,10 +404,12 @@ func TestGetVersion(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: nodeName2,
 				Annotations: map[string]string{
-					api.NodeSNAnnotation: nodeSN1,
-					superPodIDKey:        superPodIDStr,
-					baseDevInfoAnno:      string(baseDevInfo),
-					serverTypeKey:        "  ",
+					annotation.NodeSNAnnotationDeprecated: nodeSN1,
+					annotation.NPUBaseDevInfosAnnotation:  string(baseDevInfo),
+					annotation.ServerTypeKeyDeprecated:    "  ",
+				},
+				Labels: map[string]string{
+					label.TopoLabelSuperPodId: superPodIDStr,
 				},
 			},
 		}
@@ -411,10 +423,12 @@ func TestGetVersion(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: nodeName2,
 				Annotations: map[string]string{
-					api.NodeSNAnnotation: nodeSN1,
-					superPodIDKey:        superPodIDStr,
-					baseDevInfoAnno:      string(baseDevInfo),
-					serverTypeKey:        testDevType,
+					annotation.NodeSNAnnotationDeprecated: nodeSN1,
+					annotation.NPUBaseDevInfosAnnotation:  string(baseDevInfo),
+					annotation.ServerTypeKeyDeprecated:    testDevType,
+				},
+				Labels: map[string]string{
+					label.TopoLabelSuperPodId: superPodIDStr,
 				},
 			},
 		}

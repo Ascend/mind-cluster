@@ -12,6 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"ascend-common/api"
+	"ascend-common/api/annotation"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/node"
@@ -359,7 +360,7 @@ func TestPubFaultInfoChecker(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: testNodeName1,
 			Annotations: map[string]string{
-				"product-serial-number": testNodeSN1,
+				annotation.NodeSNAnnotationDeprecated: testNodeSN1,
 			},
 		},
 	}

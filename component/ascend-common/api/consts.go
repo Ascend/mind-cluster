@@ -32,26 +32,6 @@ const (
 	KubeNS      = "kube-system"
 )
 
-// Node
-const (
-	// NPUChipMemoryLabel label value is npu chip memory
-	NPUChipMemoryLabel = "mind-cluster/npu-chip-memory"
-
-	// NodeSNAnnotation annotation value is node sn
-	NodeSNAnnotation = "product-serial-number"
-	// BaseDevInfoAnno annotation value is device base info
-	BaseDevInfoAnno = "baseDeviceInfos"
-
-	// AcceleratorTypeKey the node label key of accelerator type
-	AcceleratorTypeKey = "accelerator-type"
-	// AcceleratorLabelKey the node label key of accelerator
-	AcceleratorLabelKey = "accelerator"
-	// AcceleratorTypeModule910A3x16SuperPod for 16-npu 910A3-SuperPod hardware
-	AcceleratorTypeModule910A3x16SuperPod = "module-a3-16-super-pod"
-	// AcceleratorTypeModule910A3x8SuperPod for 8-npu 910A3-SuperPod hardware
-	AcceleratorTypeModule910A3x8SuperPod = "module-a3-8-super-pod"
-)
-
 // Pod
 const (
 	// PodUsedHardwareTypeAnno annotation value is the hardware type that real used in pod
