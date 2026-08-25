@@ -58,6 +58,12 @@ type cdiSpecManager struct {
 	productTypes []string
 }
 
+// mountConfigDir is the host directory where the JSON mount profile
+// (mounts.json) is written by PrepareMountConfigFile and read by CDI when
+// generating per-claim specs. It is backed by a hostPath volume (see
+// build/ascend-dra-driver.yaml).
+const mountConfigDir = "/etc/ascend-dra/mounts"
+
 // NewCDISpecManager constructs a cdiSpecManager. devType and productTypes
 // come from the generation once it has been handed a device manager.
 // cdiRoot configures the default CDI cache's Spec directory so
@@ -71,6 +77,13 @@ func NewCDISpecManager(
 	// Spec directory once at construction time. Safe to call before the
 	// cache is first touched by GenerateClaimSpec.
 	_ = cdiapi.Configure(cdiapi.WithSpecDirs(cdiRoot))
+
+	// Publish the builtin mount config (generation + UB partitions) as JSON so
+	// the CDI spec generation can read it from the shared host directory.
+	if err := cdi.PrepareMountConfigFile(mountConfigDir); err != nil {
+		hwlog.RunLog.Warnf("prepare mount profile file failed: %v", err)
+	}
+
 	return &cdiSpecManager{
 		devType:      devType,
 		productTypes: productTypes,
@@ -108,9 +121,8 @@ func (m *cdiSpecManager) WriteClaimSpec(claimUID string, deviceNames []string) (
 			DevType:     m.devType,
 			ProductType: productType,
 		},
-		Provider: &mount.FileProvider{
-			Dir:        "/etc/ascend-docker-runtime.d",
-			MountNames: "",
+		MountConfig: mount.MountConfig{
+			Dir: mountConfigDir,
 		},
 	}, claimUID)
 	if err != nil {

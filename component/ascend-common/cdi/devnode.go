@@ -19,6 +19,7 @@
 package cdi
 
 import (
+	"ascend-common/api"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -69,11 +70,6 @@ const (
 )
 
 const (
-	Ascend310    = "Ascend310"
-	Ascend310B   = "Ascend310B"
-	Ascend310P   = "Ascend310P"
-	Ascend910    = "Ascend910"
-	Ascend910A5  = "Ascend910A5"
 	Atlas200ISoc = "Atlas 200I SoC A1"
 	Atlas200     = "Atlas 200 Model 3000"
 )
@@ -135,12 +131,12 @@ func GenerateSharedNodes(devType, productType string) ([]*cdispec.DeviceNode, er
 	devices := []*cdispec.DeviceNode{mgr}
 
 	// dvpp_cmdlist: all types except Ascend910A5
-	if devType != Ascend910A5 {
+	if devType != api.Ascend910A5 {
 		appendDeviceNode(&devices, dvppCmdList)
 	}
 
 	// Ascend310B: 14 special manager devices
-	if devType == Ascend310B {
+	if devType == api.Ascend310B {
 		for _, name := range ascend310BManagerDevices {
 			appendDeviceNode(&devices, name)
 		}
@@ -149,8 +145,8 @@ func GenerateSharedNodes(devType, productType string) ([]*cdispec.DeviceNode, er
 	// Common manager devices (devmm_svm, hisi_hdc)
 	// Skip: Atlas200 products, Ascend310B
 	// Ascend910A5: hisi_hdc only; others: both
-	if devType != Ascend310B && productType != Atlas200ISoc && productType != Atlas200 {
-		if devType == Ascend910A5 {
+	if devType != api.Ascend310B && productType != Atlas200ISoc && productType != Atlas200 {
+		if devType == api.Ascend910A5 {
 			appendDeviceNode(&devices, hisiHdc)
 		} else {
 			appendDeviceNode(&devices, devmmSvm)
@@ -183,7 +179,7 @@ func appendDeviceNode(devices *[]*cdispec.DeviceNode, name string) {
 // Returns an error if the device cannot be found (davinci_manager is mandatory).
 func resolveDavinciManager(devType string) (*cdispec.DeviceNode, error) {
 	hostPath := devicePath + davinciManager
-	if devType == Ascend310B {
+	if devType == api.Ascend310B {
 		dockerPath := devicePath + davinciManagerDocker
 		if _, err := osStat(dockerPath); err == nil {
 			hostPath = dockerPath

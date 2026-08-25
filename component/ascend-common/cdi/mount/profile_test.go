@@ -23,6 +23,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	cdispec "tags.cncf.io/container-device-interface/specs-go"
 )
 
 // mustWriteFile writes content to path, failing the test on error.
@@ -207,5 +209,96 @@ func TestReadProfileEntries_InvalidJSON(t *testing.T) {
 	mustWriteFile(t, filepath.Join(dir, "mounts.json"), "{not json")
 	if _, _, err := readProfileEntries(dir, "Ascend910A5", false); err == nil {
 		t.Fatal("expected error for invalid mounts.json")
+	}
+}
+
+// assertBindMount asserts a bind mount with a matching container path and
+// the rbind/rprivate/ro options.
+func assertBindMount(t *testing.T, m *cdispec.Mount) {
+	t.Helper()
+	if m.Type != "bind" {
+		t.Errorf("mount %s: Type = %q, want bind", m.HostPath, m.Type)
+	}
+	if m.HostPath != m.ContainerPath {
+		t.Errorf("mount %s: ContainerPath = %q, want %q", m.HostPath, m.ContainerPath, m.HostPath)
+	}
+	if len(m.Options) != 3 || m.Options[0] != "rbind" || m.Options[1] != "rprivate" || m.Options[2] != "ro" {
+		t.Errorf("mount %s: Options = %v, want [rbind rprivate ro]", m.HostPath, m.Options)
+	}
+}
+
+// End-to-end: JSON-mode Build
+func TestBuildJSON_EndToEnd(t *testing.T) {
+	filesDir := t.TempDir()
+	cfgDir := t.TempDir()
+
+	real1 := filepath.Join(filesDir, "base_lib.so")
+	real2 := filepath.Join(filesDir, "base_bin")
+	missing := filepath.Join(filesDir, "no_such.so")
+	for _, p := range []string{real1, real2} {
+		mustWriteFile(t, p, "")
+	}
+
+	cfg := MountProfile{defaultGenerationKey: []MountEntry{
+		{Paths: []string{real1}},
+		{Paths: []string{real2}},
+		{Paths: []string{missing}},
+	}}
+	if err := WriteMountProfile(cfgDir, cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	// Disable HCCL topology injection so mount counts are deterministic.
+	orig := TopologyItems
+	TopologyItems = nil
+	defer func() { TopologyItems = orig }()
+
+	mounts, err := Build(MountConfig{Dir: cfgDir}, "Ascend910A5")
+	if err != nil {
+		t.Fatalf("Build returned error: %v", err)
+	}
+	if len(mounts) != 2 {
+		t.Fatalf("expected 2 mounts (missing path skipped), got %d: %v", len(mounts), mounts)
+	}
+	got := map[string]bool{mounts[0].HostPath: true, mounts[1].HostPath: true}
+	if !got[real1] || !got[real2] {
+		t.Errorf("expected mounts for %s and %s, got %v", real1, real2, got)
+	}
+	for _, m := range mounts {
+		assertBindMount(t, m)
+	}
+}
+
+// TestBuildJSON_NoTopologyInjection proves the topology append is list-mode
+// only: with TopologyItems pointing at a real file, a JSON-mode Build must
+// not append it (the topology paths are data-driven in mounts.json instead).
+func TestBuildJSON_NoTopologyInjection(t *testing.T) {
+	filesDir := t.TempDir()
+	cfgDir := t.TempDir()
+
+	real := filepath.Join(filesDir, "real.so")
+	mustWriteFile(t, real, "")
+	// A topology item whose host path exists: appendTopology would emit it if
+	// JSON-mode Build still called it.
+	topoFile := filepath.Join(filesDir, "hccl_rootinfo.json")
+	mustWriteFile(t, topoFile, "")
+	orig := TopologyItems
+	TopologyItems = []TopologyItem{{HostPath: topoFile, Options: []string{"rbind", "rprivate", "ro"}}}
+	defer func() { TopologyItems = orig }()
+
+	cfg := MountProfile{defaultGenerationKey: []MountEntry{{Paths: []string{real}}}}
+	if err := WriteMountProfile(cfgDir, cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	mounts, err := Build(MountConfig{Dir: cfgDir}, "Ascend910A5")
+	if err != nil {
+		t.Fatalf("Build returned error: %v", err)
+	}
+	if len(mounts) != 1 {
+		t.Fatalf("expected 1 mount (no topology injection), got %d: %v", len(mounts), mounts)
+	}
+	if mounts[0].HostPath != real {
+		t.Errorf("expected mount for %q, got %q", real, mounts[0].HostPath)
 	}
 }

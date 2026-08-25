@@ -527,6 +527,18 @@ func getValueByKey(data []string, name string) string {
 	return ""
 }
 
+// parseBoolOption parses a boolean option encoded as "True"/"False"/"".
+func parseBoolOption(value string) (bool, error) {
+	switch value {
+	case "True":
+		return true, nil
+	case "", "False":
+		return false, nil
+	default:
+		return false, fmt.Errorf("invalid boolean option %q", value)
+	}
+}
+
 func getValueByDeviceKey(data []string) string {
 	res := ""
 	for i := len(data) - 1; i >= 0; i-- {
@@ -908,19 +920,29 @@ func processDevicesCDI(spec *specs.Spec, devices []int) error {
 		}
 	}
 
-	provider := &cdimount.FileProvider{
-		Dir:        api.RunTimeDConfigPath,
-		MountNames: getValueByKey(spec.Process.Env, api.AscendRuntimeMountsEnv),
+	disableUBMount, err := parseBoolOption(getValueByKey(spec.Process.Env, api.DisableUBMountEnv))
+	if err != nil {
+		return fmt.Errorf("failed to parse disable UB mount option: %#v", err)
+	}
+	allowLink, err := parseBoolOption(getValueByKey(spec.Process.Env, api.AscendAllowLinkEnv))
+	if err != nil {
+		return fmt.Errorf("failed to parse allow link option: %#v", err)
 	}
 	edits, err := cdi.BuildSpec(cdi.BuildSpecConfig{
 		DeviceConfig: cdi.DeviceConfig{
 			DeviceIDs:   devices,
 			DevType:     devType,
 			ProductType: productType,
+			UseVirtual:  useVirtual,
 		},
-		UseVirtual:    useVirtual,
-		DisableMounts: hasNODRV,
-		Provider:      provider,
+		MountConfig: cdimount.MountConfig{
+			DisableMounts:         hasNODRV,
+			DisableUBMounts:       disableUBMount,
+			AllowLink:             allowLink,
+			Dir:                   api.RunTimeDConfigPath,
+			Names:                 getValueByKey(spec.Process.Env, api.AscendRuntimeMountsEnv),
+			IsAscendDockerRuntime: true,
+		},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to generate CDI edits: %v", err)

@@ -15,7 +15,8 @@
 // Package mount — legacy_config.go
 //
 // Legacy .list mode reader: reads mount entries from <name>.list files in a
-// directory (one host path per line).
+// directory (one host path per line), plus the HCCL topology bind-mount
+// injection used by list mode.
 package mount
 
 import (
@@ -23,14 +24,62 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
+
+	cdispec "tags.cncf.io/container-device-interface/specs-go"
 
 	"ascend-common/common-utils/hwlog"
 )
 
-// ubDriverConfig is the mount collection name for UB driver user-space files
-// (corresponds to ub_driver.list under Dir).
-const ubDriverConfig = "ub_driver"
+const (
+	// maxEntriesPerFile limits the number of mount entries in a single .list file.
+	maxEntriesPerFile = 128
+
+	// ubDriverConfig is the mount collection name for UB driver user-space files
+	// (corresponds to ub_driver.list under Dir).
+	ubDriverConfig = "ub_driver"
+)
+
+// ---------------------------------------------------------------------------
+// HCCL topology injection (list mode only)
+// ---------------------------------------------------------------------------
+
+const (
+	hcclRootInfoPath = "/etc/hccl_rootinfo.json"
+	topoDirPath      = "/usr/local/Ascend/driver/topo"
+)
+
+// TopologyItems lists host paths that should be bind-mounted into the
+// container when present (list mode only). Exported so tests can substitute
+// temporary files.
+var TopologyItems = []TopologyItem{
+	{hcclRootInfoPath, []string{mountOptRBind, mountOptRPrivate, mountOptReadOnly}},
+	{topoDirPath, []string{mountOptRBind, mountOptRPrivate, mountOptReadOnly}},
+}
+
+// TopologyItem pairs a host path with its bind-mount options.
+type TopologyItem struct {
+	HostPath string
+	Options  []string
+}
+
+// appendTopology appends bind-mounts for HCCL topology artifacts when they
+// exist on the host. List mode only.
+func appendTopology(mounts []*cdispec.Mount, hostRoot string) []*cdispec.Mount {
+	for _, item := range TopologyItems {
+		if err := StatHostPath(hostRoot, item.HostPath); err != nil {
+			continue
+		}
+		mounts = append(mounts, &cdispec.Mount{
+			ContainerPath: item.HostPath,
+			HostPath:      item.HostPath,
+			Type:          mountTypeBind,
+			Options:       item.Options,
+		})
+	}
+	return mounts
+}
 
 // readListEntries reads <name>.list files from dir. Each non-comment,
 // non-blank line is treated as a host path. Empty names defaults to ["base"];
@@ -57,7 +106,9 @@ func readListEntries(dir, names string, disableUBMounts bool) ([]MountEntry, boo
 	if !disableUBMounts {
 		ubListFile := filepath.Join(dir, ubDriverConfig+".list")
 		if _, err := os.Stat(ubListFile); err == nil {
-			nameList = append(nameList, ubDriverConfig)
+			if !slices.Contains(nameList, ubDriverConfig) {
+				nameList = append(nameList, ubDriverConfig)
+			}
 			ubIncluded = true
 		} else if !os.IsNotExist(err) {
 			hwlog.RunLog.Warnf("Mount: stat %s failed: %v", ubListFile, err)
@@ -82,6 +133,24 @@ func readListEntries(dir, names string, disableUBMounts bool) ([]MountEntry, boo
 	}
 
 	return entries, ubIncluded, nil
+}
+
+// parseMountNames splits a comma-separated mountNames string into a slice of
+// individual names. Empty or blank entries are skipped, and duplicate names
+// are deduplicated (first occurrence wins). If the input is empty, returns
+// ["base"] to align with legacy parseMounts behavior.
+func parseMountNames(mountNames string) []string {
+	if mountNames == "" {
+		return []string{"base"}
+	}
+	var names []string
+	for _, name := range strings.Split(mountNames, ",") {
+		name = strings.TrimSpace(name)
+		if name != "" && !slices.Contains(names, name) {
+			names = append(names, name)
+		}
+	}
+	return names
 }
 
 // parseListFile parses a single .list file and returns normalized entries.

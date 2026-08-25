@@ -27,11 +27,11 @@ import (
 
 	cdispec "tags.cncf.io/container-device-interface/specs-go"
 
+	"ascend-common/api"
 	"ascend-common/cdi/mount"
 )
 
 // BuildSpec — edge cases
-
 func TestBuildSpec_SingleDeviceEdgeCases(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
@@ -49,7 +49,7 @@ func TestBuildSpec_SingleDeviceEdgeCases(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			spec, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: tt.deviceIDs, DevType: "Ascend910"}, Provider: &mockMountProvider{mounts: []*cdispec.Mount{}}})
+			spec, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: tt.deviceIDs, DevType: "Ascend910"}, MountConfig: testMountSource(t)})
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -67,8 +67,7 @@ func TestBuildSpec_SingleDeviceChecks(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
 
-	provider := &mockMountProvider{mounts: []*cdispec.Mount{}}
-	edits, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{7}, DevType: Ascend910}, Provider: provider})
+	edits, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{7}, DevType: api.Ascend910}, MountConfig: testMountSource(t)})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -85,13 +84,19 @@ func TestBuildSpec_SingleDeviceChecks(t *testing.T) {
 	}
 }
 
-func TestBuildSpec_RespectsMountFormat(t *testing.T) {
+// TestBuildSpec_RespectsMountStub verifies the mount stub seam: the mounts
+// returned by the stubbed mount build function flow into the spec unchanged.
+func TestBuildSpec_RespectsMountStub(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
 
-	spec, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "Ascend910"}, Provider: newMockProvider([]*cdispec.Mount{{
-		HostPath: "/host/src", ContainerPath: "/container/dst", Type: "bind", Options: []string{"ro", "nosuid"}},
-	})})
+	defer stubMountBuildFn(func(cfg mount.MountConfig, devType string) ([]*cdispec.Mount, error) {
+		return []*cdispec.Mount{{
+			HostPath: "/host/src", ContainerPath: "/container/dst", Type: "bind", Options: []string{"ro", "nosuid"},
+		}}, nil
+	})()
+
+	spec, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "Ascend910"}, MountConfig: testMountSource(t)})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -110,23 +115,26 @@ func TestBuildSpec_RespectsMountFormat(t *testing.T) {
 	}
 }
 
-func TestBuildSpec_NilProviderPanics(t *testing.T) {
+func TestBuildSpec_EmptyMountConfig(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
+	defer saveRestoreHCCLItems()()
+	mount.TopologyItems = nil
 
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("expected panic with nil provider")
-		}
-	}()
-	BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "Ascend910"}})
-	t.Fatal("unreachable")
+	// A zero-value MountConfig yields no mounts (configs are plain values).
+	spec, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "Ascend910"}})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(spec.ContainerEdits.Mounts) != 0 {
+		t.Errorf("expected 0 mounts for zero MountConfig, got %d", len(spec.ContainerEdits.Mounts))
+	}
 }
 
 func TestBuildSpec_MultipleLogicIDs(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
-	spec, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{3, 4, 5}, DevType: "Ascend910A5"}, Provider: &mockMountProvider{mounts: []*cdispec.Mount{}}})
+	spec, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{3, 4, 5}, DevType: "Ascend910A5"}, MountConfig: testMountSource(t)})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -155,7 +163,7 @@ func TestBuildSpec_NegativeLogicIDs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: tt.deviceIDs, DevType: "Ascend910"}, Provider: &mockMountProvider{mounts: []*cdispec.Mount{}}})
+			_, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: tt.deviceIDs, DevType: "Ascend910"}, MountConfig: testMountSource(t)})
 			if err == nil {
 				t.Fatal("expected error")
 			}
@@ -163,17 +171,18 @@ func TestBuildSpec_NegativeLogicIDs(t *testing.T) {
 	}
 }
 
-// BuildSpec — mount provider error
-
-func TestBuildSpec_MountProviderError(t *testing.T) {
+// BuildSpec — mount error
+func TestBuildSpec_MountError(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
 
-	wantErr := errors.New("mount provider failure")
-	provider := &mockMountProvider{err: wantErr}
-	_, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: Ascend910}, Provider: provider})
+	wantErr := errors.New("mount failure")
+	defer stubMountBuildFn(func(cfg mount.MountConfig, devType string) ([]*cdispec.Mount, error) {
+		return nil, wantErr
+	})()
+	_, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: api.Ascend910}, MountConfig: testMountSource(t)})
 	if err == nil {
-		t.Fatal("expected error from provider.GetMounts")
+		t.Fatal("expected error from mount source")
 	}
 	if !errors.Is(err, wantErr) {
 		t.Errorf("error chain should contain %v, got %v", wantErr, err)
@@ -181,7 +190,6 @@ func TestBuildSpec_MountProviderError(t *testing.T) {
 }
 
 // BuildSpec — HCCL topology
-
 func TestBuildSpec_HCCLTopologyFilesExist(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
@@ -196,12 +204,14 @@ func TestBuildSpec_HCCLTopologyFilesExist(t *testing.T) {
 		{HostPath: tmpFile, Options: []string{"rbind", "rprivate", "ro"}},
 		{HostPath: filepath.Join(tmpDir, "no_such_dir"), Options: []string{"rbind", "rprivate", "ro"}},
 	}
-	provider := &mockMountProvider{
-		mounts: []*cdispec.Mount{
-			{HostPath: "/usr/lib64/libfoo.so", ContainerPath: "/usr/lib64/libfoo.so", Type: "bind", Options: []string{"ro"}},
-		},
+	libFile := filepath.Join(tmpDir, "libfoo.so")
+	if err := os.WriteFile(libFile, nil, 0644); err != nil {
+		t.Fatal(err)
 	}
-	edits, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: Ascend910}, Provider: provider})
+	mountDir := t.TempDir()
+	writeBaseList(t, mountDir, libFile)
+
+	edits, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: api.Ascend910}, MountConfig: mount.MountConfig{Dir: mountDir, IsAscendDockerRuntime: true}})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -235,12 +245,14 @@ func TestBuildSpec_HCCLTopologyFilesMissing(t *testing.T) {
 		{HostPath: "/nonexistent/hccl_rootinfo.json", Options: []string{"rbind", "rprivate", "ro"}},
 		{HostPath: "/nonexistent/topo", Options: []string{"rbind", "rprivate", "ro"}},
 	}
-	provider := &mockMountProvider{
-		mounts: []*cdispec.Mount{
-			{HostPath: "/usr/lib64/libfoo.so", ContainerPath: "/usr/lib64/libfoo.so", Type: "bind", Options: []string{"ro"}},
-		},
+	libFile := filepath.Join(t.TempDir(), "libfoo.so")
+	if err := os.WriteFile(libFile, nil, 0644); err != nil {
+		t.Fatal(err)
 	}
-	edits, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: Ascend910}, Provider: provider})
+	mountDir := t.TempDir()
+	writeBaseList(t, mountDir, libFile)
+
+	edits, err := BuildSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: api.Ascend910}, MountConfig: mount.MountConfig{Dir: mountDir, IsAscendDockerRuntime: true}})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -250,7 +262,6 @@ func TestBuildSpec_HCCLTopologyFilesMissing(t *testing.T) {
 }
 
 // BuildSpec — HostRoot prefixing for driver library paths
-
 func TestBuildSpec_HostRootPrefixesLibPaths(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
@@ -265,9 +276,8 @@ func TestBuildSpec_HostRootPrefixesLibPaths(t *testing.T) {
 	}
 
 	spec, err := BuildSpec(BuildSpecConfig{
-		DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: Ascend910},
-		Provider:     newMockProvider(nil),
-		HostRoot:     hostRoot,
+		DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: api.Ascend910},
+		MountConfig:  mount.MountConfig{Dir: t.TempDir(), IsAscendDockerRuntime: true, HostRoot: hostRoot},
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -284,14 +294,13 @@ func TestBuildSpec_HostRootPrefixesLibPaths(t *testing.T) {
 }
 
 // BuildSpec — custom Version/Kind override
-
 func TestBuildSpec_CustomVersionAndKind(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
 
 	spec, err := BuildSpec(BuildSpecConfig{
-		DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: Ascend910},
-		Provider:     newMockProvider(nil),
+		DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: api.Ascend910},
+		MountConfig:  testMountSource(t),
 		Version:      "0.7.0",
 		Kind:         "example.com/custom",
 	})

@@ -136,6 +136,9 @@ spec:
         - name: ascend-docker-runtime
           mountPath: /etc/ascend-docker-runtime.d
           readOnly: true
+        - name: ascend-dra-mounts
+          mountPath: /etc/ascend-dra/mounts
+          readOnly: false
       volumes:
       - name: plugins-registry
         hostPath:
@@ -153,6 +156,10 @@ spec:
       - name: ascend-docker-runtime
         hostPath:
           path: /etc/ascend-docker-runtime.d
+          type: DirectoryOrCreate
+      - name: ascend-dra-mounts
+        hostPath:
+          path: /etc/ascend-dra/mounts
           type: DirectoryOrCreate
 ---
 apiVersion: resource.k8s.io/v1

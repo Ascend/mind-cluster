@@ -37,9 +37,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
 	"ascend-common/cdi"
-	cdimount "ascend-common/cdi/mount"
+	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
 	"ascend-docker-runtime/runtime/common"
 	"ascend-docker-runtime/runtime/dcmi"
@@ -662,9 +661,7 @@ func TestProcessDevicesAndHooks_CDI(t *testing.T) {
 				ApplyFuncReturn(dcmi.GetMatchingNpuWorker, &dcmi.NpuV1Worker{}, nil).
 				ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{CardID: -1, DeviceID: -1, VdeviceID: -1}, nil).
 				ApplyFunc(cdi.BuildSpec, func(cfg cdi.BuildSpecConfig) (*cdispec.Spec, error) {
-					if provider, ok := cfg.Provider.(*cdimount.FileProvider); ok {
-						capturedMountNames = provider.MountNames
-					}
+					capturedMountNames = cfg.MountConfig.Names
 					return mockSpec, nil
 				}).
 				ApplyFuncReturn(InjectEdits, nil).
