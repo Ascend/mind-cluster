@@ -28,6 +28,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"ascend-common/api"
+	"ascend-common/api/annotation"
+	"ascend-common/api/label"
 )
 
 const (
@@ -41,7 +43,7 @@ func TestGetNodeAcceleratorType(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "test-node",
 					Labels: map[string]string{
-						api.AcceleratorTypeKey: "ascend800ia5x8",
+						label.AcceleratorTypeKeyDeprecated: "ascend800ia5x8",
 					},
 				},
 			}
@@ -119,7 +121,7 @@ func TestGetRackIdFromNode(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "test-node",
 					Annotations: map[string]string{
-						api.RackIDKey: " 1 ",
+						annotation.RackIDKeyDeprecated: " 1 ",
 					},
 				},
 			}
@@ -132,7 +134,7 @@ func TestGetRackIdFromNode(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "test-node",
 					Annotations: map[string]string{
-						api.RackIDKey: "",
+						annotation.RackIDKeyDeprecated: "",
 					},
 				},
 			}

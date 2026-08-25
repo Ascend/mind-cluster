@@ -13,7 +13,8 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"ascend-common/api"
+	"ascend-common/api/annotation"
+	"ascend-common/api/label"
 	"ascend-common/common-utils/hwlog"
 )
 
@@ -54,9 +55,11 @@ func constructNodeInfo() error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: nodeName1,
 			Annotations: map[string]string{
-				api.NodeSNAnnotation: nodeSN1,
-				superPodIDKey:        superPodIDStr,
-				baseDevInfoAnno:      string(baseDevInfo),
+				annotation.NodeSNAnnotationDeprecated: nodeSN1,
+				annotation.NPUBaseDevInfosAnnotation:  string(baseDevInfo),
+			},
+			Labels: map[string]string{
+				label.TopoLabelSuperPodId: superPodIDStr,
 			},
 		},
 		Status: v1.NodeStatus{

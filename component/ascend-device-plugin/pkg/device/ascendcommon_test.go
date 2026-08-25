@@ -41,6 +41,7 @@ import (
 	"Ascend-device-plugin/pkg/device/hangdetection"
 	"Ascend-device-plugin/pkg/kubeclient"
 	"ascend-common/api"
+	"ascend-common/api/label"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
 )
@@ -1068,11 +1069,11 @@ func TestCheckDeviceTypeLabel(t *testing.T) {
 					return node, nil
 				})
 			defer mockNode.Reset()
-			delete(node.Labels, common.ServerTypeLabelKey)
+			delete(node.Labels, label.NPUServerTypeLabel)
 			err := tool.CheckDeviceTypeLabel()
 			convey.So(err, convey.ShouldNotBeNil)
 			common.ParamOption.AiCoreCount = aiCoreCount
-			node.Labels[common.ServerTypeLabelKey] = api.Ascend310PMinuxPrefix + "8"
+			node.Labels[label.NPUServerTypeLabel] = api.Ascend310PMinuxPrefix + "8"
 			err = tool.CheckDeviceTypeLabel()
 			convey.So(err, convey.ShouldBeNil)
 		})
@@ -1081,7 +1082,7 @@ func TestCheckDeviceTypeLabel(t *testing.T) {
 
 func getMockNode() *v1.Node {
 	labels := make(map[string]string, 1)
-	labels[common.ServerTypeLabelKey] = "Ascend310P-8"
+	labels[label.NPUServerTypeLabel] = "Ascend310P-8"
 	return &v1.Node{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: labels,

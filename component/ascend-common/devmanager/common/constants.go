@@ -342,15 +342,6 @@ const (
 )
 
 const (
-	// TopoLabelSuperPodId topological label for super-pod id
-	TopoLabelSuperPodId = "huawei.com/topotree.superpodid"
-	// TopoLabelRackId topological label for rack id
-	TopoLabelRackId = "huawei.com/topotree.rackid"
-	// TopoLabelServerId topological label for server id
-	TopoLabelServerId = "huawei.com/topotree.serverid"
-)
-
-const (
 	// NPUNetworkLinkDownStatus indicate the network status of down
 	NPUNetworkLinkDownStatus = "DOWN"
 	// NPUNetworkLinkUpStatus indicate the network status of up
@@ -361,4 +352,15 @@ const (
 	RoceParameterPlanePortAllDownCount = 1
 	// UBOEParameterPlanePortAllDownCount indicate the network port all up count for UBOE
 	UBOEParameterPlanePortAllDownCount = 2
+)
+
+// constants for k8s
+const (
+	// ReplaceOP is the replace operation
+	ReplaceOP = "replace"
+
+	// PathForAnnotations is the path for annotations
+	PathForAnnotations = "/metadata/annotations/"
+	// PathForLabels is the path for labels
+	PathForLabels = "/metadata/labels/"
 )

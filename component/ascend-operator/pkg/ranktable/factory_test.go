@@ -8,13 +8,14 @@ Package ranktable is using for reconcile AscendJob.
 package ranktable
 
 import (
-	"ascend-common/api"
 	"testing"
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"github.com/smartystreets/goconvey/convey"
 	corev1 "k8s.io/api/core/v1"
 
+	"ascend-common/api"
+	"ascend-common/api/label"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	v1 "ascend-operator/pkg/ranktable/v1"
 	"ascend-operator/pkg/ranktable/v1dot2"
@@ -38,7 +39,7 @@ func TestNewGenerator(t *testing.T) {
 		})
 		convey.Convey("03-job without schedule policy annotation and with accelerator-type A3x16"+
 			" should return v1.2 ranktable", func() {
-			selector := map[string]string{api.AcceleratorTypeKey: api.AcceleratorTypeModule910A3x16SuperPod}
+			selector := map[string]string{label.AcceleratorTypeKeyDeprecated: label.AcceleratorTypeModule910A3x16SuperPod}
 			rpls := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{"": &commonv1.ReplicaSpec{
 				Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{NodeSelector: selector}},
 			}}
@@ -49,7 +50,7 @@ func TestNewGenerator(t *testing.T) {
 		})
 		convey.Convey("04-job without schedule policy annotation and with accelerator-type A3x8"+
 			" should return v1.2 ranktable", func() {
-			selector := map[string]string{api.AcceleratorTypeKey: api.AcceleratorTypeModule910A3x8SuperPod}
+			selector := map[string]string{label.AcceleratorTypeKeyDeprecated: label.AcceleratorTypeModule910A3x8SuperPod}
 			rpls := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{"": &commonv1.ReplicaSpec{
 				Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{NodeSelector: selector}},
 			}}

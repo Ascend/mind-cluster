@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -32,6 +33,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	common2 "ascend-common/devmanager/common"
 	"nodeD/pkg/common"
 )
 
@@ -166,9 +168,11 @@ func (ck *ClientK8s) CreateOrUpdateConfigMap(cm *v1.ConfigMap) error {
 
 // AddAnnotation add annotation
 func (ck *ClientK8s) AddAnnotation(key, value string) error {
+	escapedKey := strings.ReplaceAll(key, "~", "~0")
+	escapedKey = strings.ReplaceAll(escapedKey, "/", "~1")
 	patchMap := map[string]string{
-		"op":    "replace",
-		"path":  "/metadata/annotations/" + key,
+		"op":    common2.ReplaceOP,
+		"path":  common2.PathForAnnotations + escapedKey,
 		"value": value,
 	}
 	patchMapByte, err := json.Marshal([]interface{}{patchMap})
@@ -181,6 +185,34 @@ func (ck *ClientK8s) AddAnnotation(key, value string) error {
 			types.JSONPatchType, patchMapByte, metav1.PatchOptions{})
 		if err != nil {
 			hwlog.RunLog.Errorf("patch node annotation failed, err is %v", err)
+			time.Sleep(time.Second)
+			continue
+		}
+		break
+	}
+	return err
+}
+
+// AddLabel add label to node
+func (ck *ClientK8s) AddLabel(key, value string) error {
+	// JSON Patch path for labels: escape ~ and / characters
+	escapedKey := strings.ReplaceAll(key, "~", "~0")
+	escapedKey = strings.ReplaceAll(escapedKey, "/", "~1")
+	patchMap := map[string]string{
+		"op":    common2.ReplaceOP,
+		"path":  common2.PathForLabels + escapedKey,
+		"value": value,
+	}
+	patchMapByte, err := json.Marshal([]interface{}{patchMap})
+	if err != nil {
+		hwlog.RunLog.Errorf("marshal patchMap for label failed, err is %v", err)
+		return err
+	}
+	for i := 0; i < retryTime; i++ {
+		_, err = ck.ClientSet.CoreV1().Nodes().Patch(context.TODO(), ck.NodeName,
+			types.JSONPatchType, patchMapByte, metav1.PatchOptions{})
+		if err != nil {
+			hwlog.RunLog.Errorf("patch node label failed, err is %v", err)
 			time.Sleep(time.Second)
 			continue
 		}

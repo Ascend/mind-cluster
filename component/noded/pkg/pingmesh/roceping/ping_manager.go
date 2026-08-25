@@ -28,7 +28,7 @@ import (
 	"sync"
 	"time"
 
-	"ascend-common/api"
+	"ascend-common/api/label"
 	"ascend-common/api/slownet"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -71,9 +71,9 @@ func NewPingManager(superPodId, rackId, serverIndex uint32, client *kubeclient.C
 		hwlog.RunLog.Errorf("get node resource info from k8s failed, err: %v", errInfo)
 		return nil
 	}
-	acType, exist := nodeInfo.Labels[api.AcceleratorTypeKey]
+	acType, exist := label.GetNodeLabel(nodeInfo, label.AcceleratorTypeKeyDeprecated)
 	if !exist {
-		hwlog.RunLog.Warnf("the node label %s is not exist, cannot decide node type", api.AcceleratorTypeKey)
+		hwlog.RunLog.Warnf("the node label %s is not exist, cannot decide node type", label.AcceleratorTypeKeyDeprecated)
 		// the first time the expansion scenario is added, the nodes may not have been manually labeled yet
 	}
 	if exist && !strings.Contains(strings.ToLower(acType), labelPrefix900SuperPodA5) {
@@ -123,9 +123,9 @@ func (m *PingManager) CheckNodeLabelSupported() bool {
 		return false
 	}
 
-	acType, exist := nodeInfo.Labels[api.AcceleratorTypeKey]
+	acType, exist := label.GetNodeLabel(nodeInfo, label.AcceleratorTypeKeyDeprecated)
 	if !exist {
-		hwlog.RunLog.Warnf("the node label %s is not exist, cannot decide node type", api.AcceleratorTypeKey)
+		hwlog.RunLog.Warnf("the node label %s is not exist, cannot decide node type", label.AcceleratorTypeKeyDeprecated)
 		return false
 	}
 

@@ -30,7 +30,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"ascend-common/api"
+	"ascend-common/api/label"
 	"ascend-common/api/slownet"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -332,7 +332,7 @@ func TestNewPingManager(t *testing.T) {
 			patch := gomonkey.ApplyMethod(testK8sClient, "GetNodeWithCache",
 				func(ck *kubeclient.ClientK8s) (*v1.Node, error) {
 					node := &v1.Node{}
-					node.Labels = map[string]string{api.AcceleratorTypeKey: label800IA5x8}
+					node.Labels = map[string]string{label.AcceleratorTypeKeyDeprecated: label800IA5x8}
 					return node, nil
 				})
 			defer patch.Reset()
@@ -343,7 +343,7 @@ func TestNewPingManager(t *testing.T) {
 			patch := gomonkey.ApplyMethod(testK8sClient, "GetNodeWithCache",
 				func(ck *kubeclient.ClientK8s) (*v1.Node, error) {
 					node := &v1.Node{}
-					node.Labels = map[string]string{api.AcceleratorTypeKey: label900POD}
+					node.Labels = map[string]string{label.AcceleratorTypeKeyDeprecated: label900POD}
 					return node, nil
 				})
 			defer patch.Reset()
@@ -453,7 +453,7 @@ func testCheckNodeLabelSupportedWithLabelCase(testK8sClient *kubeclient.ClientK8
 		patch := gomonkey.ApplyMethod(testK8sClient, "GetNodeWithCache",
 			func(ck *kubeclient.ClientK8s) (*v1.Node, error) {
 				node := &v1.Node{}
-				node.Labels = map[string]string{api.AcceleratorTypeKey: label800IA5x8}
+				node.Labels = map[string]string{label.AcceleratorTypeKeyDeprecated: label800IA5x8}
 				return node, nil
 			})
 		defer patch.Reset()
@@ -468,7 +468,7 @@ func testCheckNodeLabelSupportedWithLabelCase(testK8sClient *kubeclient.ClientK8
 		patch := gomonkey.ApplyMethod(testK8sClient, "GetNodeWithCache",
 			func(ck *kubeclient.ClientK8s) (*v1.Node, error) {
 				node := &v1.Node{}
-				node.Labels = map[string]string{api.AcceleratorTypeKey: label900POD}
+				node.Labels = map[string]string{label.AcceleratorTypeKeyDeprecated: label900POD}
 				return node, nil
 			})
 		defer patch.Reset()

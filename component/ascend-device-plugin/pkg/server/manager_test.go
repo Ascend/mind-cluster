@@ -44,8 +44,9 @@ import (
 	"Ascend-device-plugin/pkg/device"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/kubeclient"
-	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"ascend-common/api"
+	"ascend-common/api/annotation"
+	"ascend-common/api/label"
 	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
@@ -236,25 +237,18 @@ func TestUpdateNodeUpdateLabelSuccess(t *testing.T) {
 	convey.Convey("test update node when update node label success", t, func() {
 		testLabel := map[string]string{"testKey": "testValue"}
 
-		mockGetNewNodeLabel := gomonkey.ApplyPrivateMethod(
-			reflect.TypeOf(new(HwDevManager)), "getNewNodeLabel",
-			func(_ *HwDevManager, _ *v1.Node) (map[string]string, error) { return testLabel, nil },
-		)
-		defer mockGetNewNodeLabel.Reset()
+		hdm.labelGroup = label.NewLabelGroup()
+		hdm.annotationGroup = annotation.NewAnnotationGroup()
 
-		mockGetCardType := gomonkey.ApplyPrivateMethod(
-			reflect.TypeOf(new(HwDevManager)), "getCardType",
-			func(_ *HwDevManager) (string, error) { return "", nil },
-		)
-		defer mockGetCardType.Reset()
+		mockLabelWriteAll := gomonkey.ApplyMethod(reflect.TypeOf(&label.Group{}), "WriteAll",
+			func(_ *label.Group, _ *label.NodeContext) (map[string]string, error) { return testLabel, nil })
+		defer mockLabelWriteAll.Reset()
 
-		mockGetNewNodeAnnotation := gomonkey.ApplyPrivateMethod(
-			reflect.TypeOf(new(HwDevManager)), "getNewNodeAnnotation",
-			func(_ *HwDevManager, _ *v1.Node) (map[string]string, error) {
+		mockAnnotationWriteAll := gomonkey.ApplyMethod(reflect.TypeOf(&annotation.Group{}), "WriteAll",
+			func(_ *annotation.Group, _ *label.NodeContext) (map[string]string, error) {
 				return map[string]string{}, nil
-			},
-		)
-		defer mockGetNewNodeAnnotation.Reset()
+			})
+		defer mockAnnotationWriteAll.Reset()
 
 		mockGetNode := gomonkey.ApplyMethod(&kubeclient.ClientK8s{}, "GetNode",
 			func(_ *kubeclient.ClientK8s) (*v1.Node, error) {
@@ -277,287 +271,6 @@ func TestUpdateNodeUpdateLabelSuccess(t *testing.T) {
 
 		err := hdm.UpdateNode()
 		convey.So(err, convey.ShouldBeNil)
-	})
-}
-
-// TestGetNewNodeLabel for test getNewNodeLabel
-func TestGetNewNodeLabel(t *testing.T) {
-	hdm := &HwDevManager{
-		manager: device.NewHwAscend310Manager(),
-		allInfo: common.NpuAllInfo{
-			AllDevs: []common.NpuDevice{{LogicID: 0}},
-		},
-	}
-	testNode := &v1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Labels: map[string]string{common.ServerTypeLabelKey: "test server type"},
-			Name:   "node",
-		}}
-	mockGetDmgr := gomonkey.ApplyMethod(reflect.TypeOf(new(device.HwAscend310Manager)), "GetDmgr",
-		func(_ *device.HwAscend310Manager) devmanager.DeviceInterface { return &devmanager.DeviceManagerMock{} })
-	defer mockGetDmgr.Reset()
-	convey.Convey("test getNewNodeLabel when chip info error", t, func() {
-		mockGetValidChipInfo := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-			"GetValidChipInfo", func(_ *devmanager.DeviceManagerMock) (npuCommon.ChipInfo, error) {
-				return npuCommon.ChipInfo{}, fmt.Errorf("chip info error")
-			})
-		defer mockGetValidChipInfo.Reset()
-		labelMap, err := hdm.getNewNodeLabel(testNode)
-		convey.So(labelMap, convey.ShouldBeNil)
-		convey.So(err.Error(), convey.ShouldEqual, "chip info error")
-	})
-	convey.Convey("test getNewNodeLabel success", t, func() {
-		common.ParamOption.RealCardType = api.Ascend310
-		mockGetBoardInfo := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-			"GetBoardInfo", func(_ *devmanager.DeviceManagerMock, _ int32) (npuCommon.BoardInfo, error) {
-				return npuCommon.BoardInfo{BoardId: common.A300IA2BoardId}, nil
-			})
-		defer mockGetBoardInfo.Reset()
-		mockGetValidChipInfo := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-			"GetValidChipInfo", func(_ *devmanager.DeviceManagerMock) (npuCommon.ChipInfo, error) {
-				return npuCommon.ChipInfo{Name: "testName"}, nil
-			})
-		defer mockGetValidChipInfo.Reset()
-		mockIsContainAll300IDuo := gomonkey.ApplyFuncReturn(common.IsContainAll300IDuo, true)
-		defer mockIsContainAll300IDuo.Reset()
-		labelMap, err := hdm.getNewNodeLabel(testNode)
-		convey.So(labelMap, convey.ShouldResemble, map[string]string{
-			api.AcceleratorLabelKey: api.Accelerator310Label,
-			common.InferCardKey:     api.A300IDuoLabel,
-			common.ChipNameLabel:    "testName", common.DcmiDriverVersion: "v1"})
-		convey.So(err, convey.ShouldBeNil)
-	})
-}
-
-// TestAddTopologyLabel_NilMap_A3 tests addTopologyLabel with nil map and A3 device type
-func TestAddTopologyLabel_NilMap_A3(t *testing.T) {
-	convey.Convey("Test addTopologyLabel: newLabelMap is nil and RealCardType is A3", t, func() {
-		hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
-		common.ParamOption.RealCardType = api.Ascend910A3
-
-		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
-			"GetSuperPodID", testSuperPodId)
-		defer mockGetSuperPodInfo.Reset()
-
-		newLabelMap := make(map[string]string)
-		hdm.addTopologyLabel(newLabelMap)
-		convey.So(newLabelMap[npuCommon.TopoLabelSuperPodId], convey.ShouldEqual, strconv.Itoa(int(testSuperPodId)))
-	})
-}
-
-// TestAddTopologyLabel_ExistingMap_A3 tests addTopologyLabel with existing map and A3 device type
-func TestAddTopologyLabel_ExistingMap_A3(t *testing.T) {
-	convey.Convey("Test addTopologyLabel: newLabelMap is not nil and RealCardType is A3", t, func() {
-		hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
-		common.ParamOption.RealCardType = api.Ascend910A3
-
-		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
-			"GetSuperPodID", testSuperPodId)
-		defer mockGetSuperPodInfo.Reset()
-
-		newLabelMap := map[string]string{"existing-label": "value"}
-		hdm.addTopologyLabel(newLabelMap)
-		convey.So(newLabelMap[npuCommon.TopoLabelSuperPodId], convey.ShouldEqual, strconv.Itoa(int(testSuperPodId)))
-		convey.So(newLabelMap["existing-label"], convey.ShouldEqual, "value")
-	})
-}
-
-// TestAddTopologyLabel_ExistingMap_A5 tests addTopologyLabel with existing map and A5 device type
-func TestAddTopologyLabel_ExistingMap_A5(t *testing.T) {
-	convey.Convey("Test addTopologyLabel: newLabelMap is not nil and RealCardType is A5", t, func() {
-		hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
-		common.ParamOption.RealCardType = api.Ascend910A5
-
-		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
-			"GetSuperPodID", testSuperPodId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testRackId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testServerIndex).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetSuperPodType", int32(common.ProductType2D))
-		defer mockGetSuperPodInfo.Reset()
-
-		newLabelMap := map[string]string{"existing-label": "value"}
-		hdm.addTopologyLabel(newLabelMap)
-		convey.So(newLabelMap[npuCommon.TopoLabelSuperPodId], convey.ShouldEqual, strconv.Itoa(int(testSuperPodId)))
-		convey.So(newLabelMap[npuCommon.TopoLabelRackId], convey.ShouldEqual, strconv.Itoa(int(testRackId)))
-		convey.So(newLabelMap[npuCommon.TopoLabelServerId], convey.ShouldEqual, strconv.Itoa(int(testServerIndex)))
-		convey.So(newLabelMap["existing-label"], convey.ShouldEqual, "value")
-	})
-}
-
-// TestAddTopologyLabel_NonA3A5 tests non-A3/A5 card type: no topology labels written
-func TestAddTopologyLabel_NonA3A5(t *testing.T) {
-	convey.Convey("Test addTopologyLabel: non-A3/A5 card type should not write any topology label", t, func() {
-		hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
-
-		convey.Convey("01-Ascend910A should not write topology labels", func() {
-			common.ParamOption.RealCardType = api.Ascend910A
-			newLabelMap := make(map[string]string)
-			hdm.addTopologyLabel(newLabelMap)
-			convey.So(len(newLabelMap), convey.ShouldEqual, 0)
-		})
-
-		convey.Convey("02-Ascend910B should not write topology labels", func() {
-			common.ParamOption.RealCardType = api.Ascend910B
-			newLabelMap := make(map[string]string)
-			hdm.addTopologyLabel(newLabelMap)
-			convey.So(len(newLabelMap), convey.ShouldEqual, 0)
-		})
-
-		convey.Convey("03-Ascend310 should not write topology labels", func() {
-			common.ParamOption.RealCardType = api.Ascend310
-			newLabelMap := make(map[string]string)
-			hdm.addTopologyLabel(newLabelMap)
-			convey.So(len(newLabelMap), convey.ShouldEqual, 0)
-		})
-	})
-}
-
-// TestAddTopologyLabel_A5_NegativeServerIndex tests A5 with negative serverIndex
-func TestAddTopologyLabel_A5_NegativeServerIndex(t *testing.T) {
-	convey.Convey("Test addTopologyLabel: A5 with negative serverIndex", t, func() {
-		hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
-		common.ParamOption.RealCardType = api.Ascend910A5
-
-		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
-			"GetSuperPodID", testSuperPodId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testRackId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testNegativeServerIdx).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetSuperPodType", int32(common.ProductType2D))
-		defer mockGetSuperPodInfo.Reset()
-
-		convey.Convey("01-should skip serverIndex but write superPodId and rackId labels", func() {
-			newLabelMap := make(map[string]string)
-			hdm.addTopologyLabel(newLabelMap)
-			convey.So(newLabelMap[npuCommon.TopoLabelSuperPodId], convey.ShouldEqual, strconv.Itoa(int(testSuperPodId)))
-			convey.So(newLabelMap[npuCommon.TopoLabelRackId], convey.ShouldEqual, strconv.Itoa(int(testRackId)))
-			_, serverExists := newLabelMap[npuCommon.TopoLabelServerId]
-			convey.So(serverExists, convey.ShouldBeFalse)
-		})
-	})
-}
-
-// TestAddTopologyLabel_A5_AllNegative tests A5 with all negative values
-func TestAddTopologyLabel_A5_AllNegative(t *testing.T) {
-	convey.Convey("Test addTopologyLabel: A5 with all negative values", t, func() {
-		hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
-		common.ParamOption.RealCardType = api.Ascend910A5
-
-		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
-			"GetSuperPodID", testNegativeSuperPodId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testNegativeRackId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testNegativeServerIdx).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetSuperPodType", int32(common.ProductType2D))
-		defer mockGetSuperPodInfo.Reset()
-
-		convey.Convey("01-should not write any topology label", func() {
-			newLabelMap := make(map[string]string)
-			hdm.addTopologyLabel(newLabelMap)
-			convey.So(len(newLabelMap), convey.ShouldEqual, 0)
-		})
-	})
-}
-
-func TestAddTopologyLabel_A5ServerNoRackId(t *testing.T) {
-	convey.Convey("Test addTopologyLabel: A5 Server type should not add rackid label", t, func() {
-		hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
-		common.ParamOption.RealCardType = api.Ascend910A5
-
-		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
-			"GetSuperPodID", testSuperPodId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testRackId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testServerIndex).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetSuperPodType", int32(common.ProductTypeServer))
-		defer mockGetSuperPodInfo.Reset()
-
-		newLabelMap := make(map[string]string)
-		hdm.addTopologyLabel(newLabelMap)
-		convey.So(newLabelMap[npuCommon.TopoLabelSuperPodId], convey.ShouldEqual, strconv.Itoa(int(testSuperPodId)))
-		_, hasRackId := newLabelMap[npuCommon.TopoLabelRackId]
-		convey.So(hasRackId, convey.ShouldBeFalse)
-		convey.So(newLabelMap[npuCommon.TopoLabelServerId], convey.ShouldEqual, strconv.Itoa(int(testServerIndex)))
-	})
-}
-
-func TestAddTopologyLabel_A5CardNoRackId(t *testing.T) {
-	convey.Convey("Test addTopologyLabel: A5 Card type should not add rackid label", t, func() {
-		hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
-		common.ParamOption.RealCardType = api.Ascend910A5
-
-		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
-			"GetSuperPodID", testSuperPodId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testRackId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testServerIndex).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetSuperPodType", int32(common.ProductType1PCard))
-		defer mockGetSuperPodInfo.Reset()
-
-		newLabelMap := make(map[string]string)
-		hdm.addTopologyLabel(newLabelMap)
-		convey.So(newLabelMap[npuCommon.TopoLabelSuperPodId], convey.ShouldEqual, strconv.Itoa(int(testSuperPodId)))
-		_, hasRackId := newLabelMap[npuCommon.TopoLabelRackId]
-		convey.So(hasRackId, convey.ShouldBeFalse)
-		convey.So(newLabelMap[npuCommon.TopoLabelServerId], convey.ShouldEqual, strconv.Itoa(int(testServerIndex)))
-	})
-}
-
-func TestSetAcceleratorLabel_NilMap(t *testing.T) {
-	convey.Convey("Test setAcceleratorLabel: newLabelMap is nil", t, func() {
-		hdm := &HwDevManager{}
-		hdm.setAcceleratorLabel(nil)
-	})
-}
-
-func TestSetAcceleratorLabel_AllCardTypes(t *testing.T) {
-	convey.Convey("Test setAcceleratorLabel: all card types", t, func() {
-		hdm := &HwDevManager{}
-
-		convey.Convey("01-Ascend910 should set huawei-Ascend910", func() {
-			common.ParamOption.RealCardType = api.Ascend910
-			newLabelMap := make(map[string]string)
-			hdm.setAcceleratorLabel(newLabelMap)
-			convey.So(newLabelMap[api.AcceleratorLabelKey], convey.ShouldEqual, api.Accelerator910Label)
-		})
-
-		convey.Convey("02-Ascend910B should set huawei-Ascend910", func() {
-			common.ParamOption.RealCardType = api.Ascend910B
-			newLabelMap := make(map[string]string)
-			hdm.setAcceleratorLabel(newLabelMap)
-			convey.So(newLabelMap[api.AcceleratorLabelKey], convey.ShouldEqual, api.Accelerator910Label)
-		})
-
-		convey.Convey("03-Ascend910A3 should set huawei-Ascend910", func() {
-			common.ParamOption.RealCardType = api.Ascend910A3
-			newLabelMap := make(map[string]string)
-			hdm.setAcceleratorLabel(newLabelMap)
-			convey.So(newLabelMap[api.AcceleratorLabelKey], convey.ShouldEqual, api.Accelerator910Label)
-		})
-
-		convey.Convey("04-Ascend910A5 should set huawei-npu", func() {
-			common.ParamOption.RealCardType = api.Ascend910A5
-			newLabelMap := make(map[string]string)
-			hdm.setAcceleratorLabel(newLabelMap)
-			convey.So(newLabelMap[api.AcceleratorLabelKey], convey.ShouldEqual, api.AcceleratorNPULabel)
-		})
-
-		convey.Convey("05-Ascend310 should set huawei-Ascend310", func() {
-			common.ParamOption.RealCardType = api.Ascend310
-			newLabelMap := make(map[string]string)
-			hdm.setAcceleratorLabel(newLabelMap)
-			convey.So(newLabelMap[api.AcceleratorLabelKey], convey.ShouldEqual, api.Accelerator310Label)
-		})
-
-		convey.Convey("06-Ascend310P should set huawei-Ascend310P", func() {
-			common.ParamOption.RealCardType = api.Ascend310P
-			newLabelMap := make(map[string]string)
-			hdm.setAcceleratorLabel(newLabelMap)
-			convey.So(newLabelMap[api.AcceleratorLabelKey], convey.ShouldEqual, api.Accelerator310PLabel)
-		})
-
-		convey.Convey("07-unknown card type should not set accelerator label", func() {
-			common.ParamOption.RealCardType = "UnknownType"
-			newLabelMap := make(map[string]string)
-			hdm.setAcceleratorLabel(newLabelMap)
-			convey.So(len(newLabelMap), convey.ShouldEqual, 0)
-		})
 	})
 }
 
@@ -1395,148 +1108,6 @@ func TestGetFaultCodeCMPollInterval(t *testing.T) {
 	})
 }
 
-func mockGetNewNodeAnnotationDeps(superPodInfo common.SuperPodInfo, cardType string) []*gomonkey.Patches {
-	patches := make([]*gomonkey.Patches, 0, 4)
-	p1 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getCardType",
-		func(_ *HwDevManager) (string, error) { return cardType, nil })
-	patches = append(patches, p1)
-	p2 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getNpuBaseInfo",
-		func(_ *HwDevManager) map[string]*common.NpuBaseInfo { return map[string]*common.NpuBaseInfo{} })
-	patches = append(patches, p2)
-	p3 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getSuperPodInfo",
-		func(_ *HwDevManager) common.SuperPodInfo { return superPodInfo })
-	patches = append(patches, p3)
-	p4 := gomonkey.ApplyFuncReturn(customname.ReplaceDevicePublicName, "")
-	patches = append(patches, p4)
-	return patches
-}
-
-func resetPatches(patches []*gomonkey.Patches) {
-	for _, p := range patches {
-		p.Reset()
-	}
-}
-
-func TestGetNewNodeAnnotation_NonA5NoRackID(t *testing.T) {
-	common.ParamOption.RealCardType = api.Ascend910B
-	patches := mockGetNewNodeAnnotationDeps(common.SuperPodInfo{
-		SuperPodId: testNegativeSuperPodId, ServerId: testNegativeServerIdx, RackId: int32(0),
-		SuperPodType: common.ProductTypeServer,
-	}, "")
-	defer resetPatches(patches)
-
-	convey.Convey("should not contain rackID when RealCardType is Ascend910B", t, func() {
-		hdm := &HwDevManager{}
-		annotationMap, err := hdm.getNewNodeAnnotation(&v1.Node{})
-		convey.So(err, convey.ShouldBeNil)
-		_, hasRackID := annotationMap[api.RackIDKey]
-		convey.So(hasRackID, convey.ShouldBeFalse)
-	})
-}
-
-func TestGetNewNodeAnnotation_A5PodHasRackID(t *testing.T) {
-	common.ParamOption.RealCardType = api.Ascend910A5
-	patches := mockGetNewNodeAnnotationDeps(common.SuperPodInfo{
-		SuperPodId: testSuperPodId, ServerId: testServerIndex, RackId: testRackId,
-		SuperPodType: common.ProductType2D,
-	}, "")
-	defer resetPatches(patches)
-
-	convey.Convey("should contain rackID when RealCardType is Ascend910A5 and superPodType is Pod", t, func() {
-		hdm := &HwDevManager{}
-		annotationMap, err := hdm.getNewNodeAnnotation(&v1.Node{})
-		convey.So(err, convey.ShouldBeNil)
-		convey.So(annotationMap[api.RackIDKey], convey.ShouldEqual, strconv.Itoa(int(testRackId)))
-		convey.So(annotationMap[common.SuperPodIDKey], convey.ShouldEqual, strconv.Itoa(int(testSuperPodId)))
-		convey.So(annotationMap[serverIndexKey], convey.ShouldEqual, strconv.Itoa(int(testServerIndex)))
-	})
-}
-
-func TestGetNewNodeAnnotation_A5ServerNoRackID(t *testing.T) {
-	common.ParamOption.RealCardType = api.Ascend910A5
-	patches := mockGetNewNodeAnnotationDeps(common.SuperPodInfo{
-		SuperPodId: testSuperPodId, ServerId: testServerIndex, RackId: testRackId,
-		SuperPodType: common.ProductTypeServer,
-	}, "")
-	defer resetPatches(patches)
-
-	convey.Convey("should not contain rackID when RealCardType is Ascend910A5 and superPodType is Server", t, func() {
-		hdm := &HwDevManager{}
-		annotationMap, err := hdm.getNewNodeAnnotation(&v1.Node{})
-		convey.So(err, convey.ShouldBeNil)
-		_, hasRackID := annotationMap[api.RackIDKey]
-		convey.So(hasRackID, convey.ShouldBeFalse)
-	})
-}
-
-func TestGetNewNodeAnnotation_A5CardNoRackID(t *testing.T) {
-	common.ParamOption.RealCardType = api.Ascend910A5
-	patches := mockGetNewNodeAnnotationDeps(common.SuperPodInfo{
-		SuperPodId: testSuperPodId, ServerId: testServerIndex, RackId: testRackId,
-		SuperPodType: common.ProductType1PCard,
-	}, "")
-	defer resetPatches(patches)
-
-	convey.Convey("should not contain rackID when RealCardType is Ascend910A5 and superPodType is Card", t, func() {
-		hdm := &HwDevManager{}
-		annotationMap, err := hdm.getNewNodeAnnotation(&v1.Node{})
-		convey.So(err, convey.ShouldBeNil)
-		_, hasRackID := annotationMap[api.RackIDKey]
-		convey.So(hasRackID, convey.ShouldBeFalse)
-	})
-}
-
-func TestGetNewNodeAnnotation_CardTypeNotEmpty(t *testing.T) {
-	common.ParamOption.RealCardType = api.Ascend910A5
-	patches := mockGetNewNodeAnnotationDeps(common.SuperPodInfo{
-		SuperPodId: testSuperPodId, ServerId: testServerIndex, RackId: testRackId,
-		SuperPodType: common.ProductType2D,
-	}, "testCardType")
-	defer resetPatches(patches)
-
-	convey.Convey("should contain cardType when getCardType returns non-empty", t, func() {
-		hdm := &HwDevManager{}
-		annotationMap, err := hdm.getNewNodeAnnotation(&v1.Node{})
-		convey.So(err, convey.ShouldBeNil)
-		convey.So(annotationMap[cardTypeKey], convey.ShouldEqual, "testCardType")
-	})
-}
-
-func TestGetNewNodeAnnotation_MarshalError(t *testing.T) {
-	common.ParamOption.RealCardType = api.Ascend910B
-	p1 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getCardType",
-		func(_ *HwDevManager) (string, error) { return "", nil })
-	defer p1.Reset()
-	p2 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getNpuBaseInfo",
-		func(_ *HwDevManager) map[string]*common.NpuBaseInfo { return map[string]*common.NpuBaseInfo{} })
-	defer p2.Reset()
-	p3 := gomonkey.ApplyFuncReturn(json.Marshal, []byte{}, fmt.Errorf("marshal error"))
-	defer p3.Reset()
-
-	convey.Convey("should return error when json.Marshal fails", t, func() {
-		hdm := &HwDevManager{}
-		_, err := hdm.getNewNodeAnnotation(&v1.Node{})
-		convey.So(err, convey.ShouldNotBeNil)
-	})
-}
-
-func TestGetNewNodeAnnotation_A3NoRackID(t *testing.T) {
-	common.ParamOption.RealCardType = api.Ascend910A3
-	patches := mockGetNewNodeAnnotationDeps(common.SuperPodInfo{
-		SuperPodId: testSuperPodId, ServerId: testServerIndex, RackId: int32(0),
-		SuperPodType: common.ProductTypeServer,
-	}, "")
-	defer resetPatches(patches)
-
-	convey.Convey("should not contain rackID when RealCardType is Ascend910A3", t, func() {
-		hdm := &HwDevManager{}
-		annotationMap, err := hdm.getNewNodeAnnotation(&v1.Node{})
-		convey.So(err, convey.ShouldBeNil)
-		_, hasRackID := annotationMap[api.RackIDKey]
-		convey.So(hasRackID, convey.ShouldBeFalse)
-	})
-}
-
 // CapturePanic executes a function and returns any panic value that occurred
 // Returns nil if the function executed without panicking
 func CapturePanic(f func()) error {
@@ -1994,13 +1565,13 @@ func TestUpdateNodeAnnotations(t *testing.T) {
 		patch2 := gomonkey.ApplyMethodReturn(hdm.manager, "GetKubeClient", client)
 		defer patch2.Reset()
 		convey.Convey("02-update node annotations failed will not refresh cache", func() {
-			patch3 := gomonkey.ApplyMethodReturn(client, "AddAnnotation", errors.New("patch node failed"))
+			patch3 := gomonkey.ApplyMethodReturn(client, "AddAnnotations", errors.New("patch node failed"))
 			defer patch3.Reset()
 			hdm.doUpdateNodeAnnotations()
 			convey.So(hdm.baseNPUInfo, convey.ShouldResemble, preBaseInfo)
 		})
 		convey.Convey("04-update node annotations succeed will refresh cache", func() {
-			patch3 := gomonkey.ApplyMethodReturn(client, "AddAnnotation", nil)
+			patch3 := gomonkey.ApplyMethodReturn(client, "AddAnnotations", nil)
 			defer patch3.Reset()
 			hdm.doUpdateNodeAnnotations()
 			convey.So(hdm.baseNPUInfo, convey.ShouldResemble, map[string]*common.NpuBaseInfo{

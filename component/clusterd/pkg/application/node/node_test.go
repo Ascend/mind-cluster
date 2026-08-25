@@ -10,14 +10,14 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"ascend-common/api/annotation"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/node"
 )
 
 const (
-	nodeSN         = "nodeSN"
-	nodeName       = "nodeName"
-	nodeAnnotation = "product-serial-number"
+	nodeSN   = "nodeSN"
+	nodeName = "nodeName"
 )
 
 var nodeInfo *v1.Node
@@ -26,7 +26,7 @@ func TestUpdateNodeInfoCache(t *testing.T) {
 	nodeInfo = &v1.Node{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        nodeName,
-			Annotations: map[string]string{nodeAnnotation: nodeSN},
+			Annotations: map[string]string{annotation.NodeSNAnnotationDeprecated: nodeSN},
 		},
 	}
 

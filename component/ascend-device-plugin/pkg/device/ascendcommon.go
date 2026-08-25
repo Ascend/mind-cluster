@@ -41,6 +41,7 @@ import (
 	"Ascend-device-plugin/pkg/kubeclient"
 	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"ascend-common/api"
+	"ascend-common/api/label"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
@@ -1219,9 +1220,9 @@ func (tool *AscendTools) CheckDeviceTypeLabel() error {
 	if err != nil {
 		return err
 	}
-	deviceType, exist := curNode.Labels[common.ServerTypeLabelKey]
+	deviceType, exist := label.GetNodeLabel(curNode, label.NPUServerTypeLabel, label.NPUServerTypeLabelDeprecated)
 	if !exist {
-		return fmt.Errorf("label of %s not exist", common.ServerTypeLabelKey)
+		return fmt.Errorf("label of [%s]&[%s]not exist", label.NPUServerTypeLabel, label.NPUServerTypeLabelDeprecated)
 	}
 	deviceTypeInfos := strings.Split(deviceType, common.MiddelLine)
 	if len(deviceTypeInfos) < common.ServerTypeInfoMinLen {
