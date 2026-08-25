@@ -60,7 +60,7 @@ function build() {
 
 function mv_file() {
     mv "${TOP_DIR}/${output_name}"   "${TOP_DIR}"/output
-    mv "${CUR_DIR}/${script_name}" "${TOP_DIR}"/output && chmod 0500 "${TOP_DIR}"/output/"${script_name}"
+    cp "${CUR_DIR}/${script_name}" "${TOP_DIR}"/output && chmod 0500 "${TOP_DIR}"/output/"${script_name}"
 }
 
 function main() {

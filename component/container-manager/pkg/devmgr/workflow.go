@@ -96,7 +96,7 @@ func (hdm *HwDevMgr) initInfoRelatedNode() error {
 	devType := hdm.GetDmgr().GetDevType()
 	hdm.devType = devType
 	switch devType {
-	case api.Ascend910A, api.Ascend910B, api.Ascend910A3:
+	case api.Ascend910A, api.Ascend910B, api.Ascend910A3, api.Ascend910A5:
 		hdm.workMode = hdm.dmgr.GetNpuWorkMode()
 	default:
 	}
@@ -108,10 +108,6 @@ func (hdm *HwDevMgr) initInfoRelatedNode() error {
 	for _, info := range hdm.npuInfos {
 		// init boardId
 		if err := hdm.setBoardId(info.LogicID); err != nil {
-			return err
-		}
-		// init usage
-		if err := hdm.setDeviceUsage(info.PhyID); err != nil {
 			return err
 		}
 		// the boardid and devUsage for each npu are the same

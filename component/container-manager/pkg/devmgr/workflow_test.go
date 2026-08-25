@@ -130,7 +130,6 @@ func testInitInfoRelatedNode() {
 		var patches = gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDevType", api.Ascend910).
 			ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetNpuWorkMode", ascommon.AMPMode).
 			ApplyPrivateMethod(&HwDevMgr{}, "setBoardId", func(_ int32) error { return nil }).
-			ApplyPrivateMethod(&HwDevMgr{}, "setDeviceUsage", func(_ int32) error { return nil }).
 			ApplyPrivateMethod(&HwDevMgr{}, "setRingInfo", func() error { return nil })
 		defer patches.Reset()
 		err := mockDevMgr.initInfoRelatedNode()
@@ -145,22 +144,11 @@ func testInitInfoRelatedNode() {
 		err := mockDevMgr.initInfoRelatedNode()
 		convey.So(err, convey.ShouldResemble, testErr)
 	})
-	convey.Convey("test method 'initInfoRelatedNode' failed, setDeviceUsage error", func() {
-		resetDevMgr()
-		var patches = gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDevType", api.Ascend910).
-			ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetNpuWorkMode", ascommon.AMPMode).
-			ApplyPrivateMethod(&HwDevMgr{}, "setBoardId", func(_ int32) error { return nil }).
-			ApplyPrivateMethod(&HwDevMgr{}, "setDeviceUsage", func(_ int32) error { return testErr })
-		defer patches.Reset()
-		err := mockDevMgr.initInfoRelatedNode()
-		convey.So(err, convey.ShouldResemble, testErr)
-	})
 	convey.Convey("test method 'initInfoRelatedNode' failed, setRingInfo error", func() {
 		resetDevMgr()
 		var patches = gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetDevType", api.Ascend910).
 			ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetNpuWorkMode", ascommon.AMPMode).
 			ApplyPrivateMethod(&HwDevMgr{}, "setBoardId", func(_ int32) error { return nil }).
-			ApplyPrivateMethod(&HwDevMgr{}, "setDeviceUsage", func(_ int32) error { return nil }).
 			ApplyPrivateMethod(&HwDevMgr{}, "setRingInfo", func() error { return testErr })
 		defer patches.Reset()
 		err := mockDevMgr.initInfoRelatedNode()

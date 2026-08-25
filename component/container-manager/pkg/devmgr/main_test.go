@@ -77,7 +77,6 @@ func resetDevMgr() {
 	mockDevMgr = &HwDevMgr{
 		devType:  api.Ascend910B,
 		boardId:  0,
-		devUsage: common.Infer,
 		workMode: ascommon.AMPMode,
 		npuInfos: map[int32]*common.NPUInfo{
 			dev0: {PhyID: dev0, LogicID: dev0},

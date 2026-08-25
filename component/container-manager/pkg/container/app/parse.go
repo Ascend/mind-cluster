@@ -50,12 +50,13 @@ var (
 		return strings.Contains(s, minus) && strings.Contains(s, comma)
 	}
 	ascendStyle = func(s string) bool {
-		return strings.Contains(s, api.Ascend)
+		return strings.Contains(s, api.Ascend) || strings.Contains(s, api.NPULowerCase)
 	}
 
 	npuMajorFetchCtrl sync.Once
 	npuMajorID        []string
 	majorIdRegex      = regexp.MustCompile("^[0-9]{1,3}\\s[v]?devdrv-cdev$")
+	davinciDevRegex   = regexp.MustCompile(`^/dev/davinci(\d+)$`)
 )
 
 func getUsedDevsWithAscendRuntime(env string) ([]int32, error) {
@@ -63,12 +64,15 @@ func getUsedDevsWithAscendRuntime(env string) ([]int32, error) {
 	if len(devInfo) != ascendEnvPart {
 		return nil, fmt.Errorf("env %s is invalid", devInfo)
 	}
+	if devInfo[0] != api.AscendDeviceInfo {
+		return []int32{}, fmt.Errorf("env %s is invalid, must be %s", devInfo[0], api.AscendDeviceInfo)
+	}
 	idsStr := devInfo[1]
 	if len(idsStr) > maxEnvLength {
 		return []int32{}, errors.New("env length invalid")
 	}
 	// parse 4 env value format
-	if ascendStyle(idsStr) { // eg. Ascend910-0, Ascend-1
+	if ascendStyle(idsStr) { // eg. Ascend910-0, Ascend-1 or npu-0, npu-1
 		return getDevIdsByAscendStyle(idsStr)
 	}
 	if commaMinusStyle(idsStr) { // eg. 0-2,4
@@ -88,8 +92,8 @@ func getDevIdsByAscendStyle(idsStr string) ([]int32, error) {
 		if len(deviceName) != ascendEnvPart {
 			return ids, errors.New("ascend style env format error")
 		}
-		if !strings.HasPrefix(deviceName[0], api.Ascend) {
-			return ids, fmt.Errorf("ascend style env must start with %s", api.Ascend)
+		if !strings.HasPrefix(deviceName[0], api.Ascend) && !strings.HasPrefix(deviceName[0], api.NPULowerCase) {
+			return ids, fmt.Errorf("ascend style env must start with %s or %s", api.Ascend, api.NPULowerCase)
 		}
 		id, err := strconv.Atoi(deviceName[1])
 		if err != nil {
