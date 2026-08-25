@@ -1,6 +1,6 @@
 FROM openeuler/openeuler:24.03-lts AS build
 
-ARG VERSION=26.1.0
+ARG VERSION=26.1.1
 ARG TARGETPLATFORM
 
 RUN yum update -y &&\
