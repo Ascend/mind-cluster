@@ -1020,6 +1020,61 @@ func TestRunPeriodicUpdateTickerEvent(t *testing.T) {
 	})
 }
 
+// ---------- MarkDevicesUnhealthy ----------
+
+func TestMarkDevicesUnhealthyEmptyAndForward(t *testing.T) {
+	convey.Convey("When hcaNames is empty and no servers registered, returns 0", t, func() {
+		rm := newTestUbResourceManager()
+		changed := rm.MarkDevicesUnhealthy([]string{})
+		convey.So(changed, convey.ShouldEqual, 0)
+	})
+	convey.Convey("When servers exist, forwards hcaNames and sums results", t, func() {
+		rm := newTestUbResourceManager()
+		rs := &ubResourceServer{
+			resourceName: "ub_dev",
+			ubDevices: []types.Device{
+				&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
+				&ubDevice{ubID: "ub1", deviceName: "mlx5_1", ifName: "enp0s2"},
+			},
+			devs: []*pluginapi.Device{
+				{ID: "0", Health: pluginapi.Healthy},
+				{ID: "1", Health: pluginapi.Healthy},
+			},
+			health: make(chan *pluginapi.Device, 1),
+		}
+		rm.AddResourceServer(rs)
+
+		changed := rm.MarkDevicesUnhealthy([]string{"mlx5_0", "mlx5_1"})
+		convey.So(changed, convey.ShouldEqual, 2)
+		convey.So(rs.devs[0].Health, convey.ShouldEqual, pluginapi.Unhealthy)
+		convey.So(rs.devs[1].Health, convey.ShouldEqual, pluginapi.Unhealthy)
+	})
+	convey.Convey("When hcaNames is empty and device already Unhealthy, restores to Healthy (recovery path)", t, func() {
+		rm := newTestUbResourceManager()
+		rs := &ubResourceServer{
+			resourceName: "ub_dev",
+			ubDevices: []types.Device{
+				&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
+			},
+			devs: []*pluginapi.Device{
+				{ID: "0", Health: pluginapi.Unhealthy},
+			},
+			health: make(chan *pluginapi.Device, 1),
+		}
+		rm.AddResourceServer(rs)
+
+		changed := rm.MarkDevicesUnhealthy([]string{})
+		convey.So(changed, convey.ShouldEqual, 1)
+		convey.So(rs.devs[0].Health, convey.ShouldEqual, pluginapi.Healthy)
+
+		select {
+		case <-rs.health:
+		default:
+			t.Fatalf("health signal not sent after recovery")
+		}
+	})
+}
+
 type mockDirEntry struct {
 	name  string
 	isDir bool

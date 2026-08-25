@@ -48,12 +48,14 @@ import (
 
 	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
+
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/fault"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/core"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/ub_device"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
+	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/utils"
 )
 
 const (
@@ -239,8 +241,18 @@ func main() {
 			return ub_device.NewUbResourceManager(configFilePath, useCdi)
 		})
 
+		k8sClient, err := createK8sClient()
+		if err != nil {
+			hwlog.RunLog.Errorf("Failed to create k8s client: %v", err)
+		}
+
 		if ubRm, ok := rm.(ub_device.UbResourceManager); ok {
-			startFaultDetection(ctx, ubRm, tempCoreManager.GetFaultDetectPeriod())
+			if k8sClient != nil {
+				if err := writeDpuResourceAnnotation(k8sClient, ubRm.GetConfigList()); err != nil {
+					hwlog.RunLog.Errorf("write dpu resource annotation failed: %v", err)
+				}
+			}
+			startFaultDetection(ctx, ubRm, tempCoreManager.GetFaultDetectPeriod(), k8sClient)
 		} else {
 			hwlog.RunLog.Error("Resource manager is not of type UbResourceManager, skipping fault detection")
 		}
@@ -306,7 +318,34 @@ func initAndStartDevices(deviceType string, createRm func() types.ResourceManage
 	return rm, rm.PeriodicUpdate()
 }
 
-func startFaultDetection(ctx context.Context, ubRm ub_device.UbResourceManager, faultDetectPeriod int) {
+func createK8sClient() (*kubernetes.Clientset, error) {
+	k8sConfig, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get in-cluster config: %v", err)
+	}
+	return kubernetes.NewForConfig(k8sConfig)
+}
+
+func writeDpuResourceAnnotation(clientset kubernetes.Interface, configList []*types.UserConfig) error {
+	nodeName, err := utils.GetNodeName()
+	if err != nil {
+		return err
+	}
+
+	var resourceNames []string
+	for _, config := range configList {
+		fullName := fmt.Sprintf("%s/%s", config.ResourcePrefix, config.ResourceName)
+		resourceNames = append(resourceNames, fullName)
+	}
+
+	annotationValue := strings.Join(resourceNames, ",")
+	hwlog.RunLog.Infof("Writing DPU resource annotation to node %s: %s=%s",
+		nodeName, common.DPUResourceAnnotationKey, annotationValue)
+	return utils.UpdateNodeAnnotation(clientset, nodeName, common.DPUResourceAnnotationKey, annotationValue)
+}
+
+func startFaultDetection(ctx context.Context, ubRm ub_device.UbResourceManager, faultDetectPeriod int,
+	k8sClient *kubernetes.Clientset) {
 	hwlog.RunLog.Infof("Fault detection HCA list from UB devices: %v", ubRm.GetHcaNames())
 
 	if faultDetectPeriod < common.MinFaultDetectionPeriod {
@@ -317,19 +356,17 @@ func startFaultDetection(ctx context.Context, ubRm ub_device.UbResourceManager, 
 
 	hwlog.RunLog.Infof("Fault detection period: %d seconds, starting...", faultDetectPeriod)
 
-	k8sConfig, err := rest.InClusterConfig()
-	if err != nil {
-		hwlog.RunLog.Errorf("Failed to get in-cluster config for fault reporting: %v", err)
+	if k8sClient == nil {
+		hwlog.RunLog.Errorf("k8s client is nil, skip starting fault detection")
 		return
 	}
-	k8sClient, err := kubernetes.NewForConfig(k8sConfig)
-	if err != nil {
-		hwlog.RunLog.Errorf("Failed to create k8s client for fault reporting: %v", err)
-		return
+
+	healthCallback := func(hcaNames []string) {
+		ubRm.MarkDevicesUnhealthy(hcaNames)
 	}
 
 	go fault.StartFaultDetection(ctx, func() []string {
 		return ubRm.GetHcaNames()
-	}, ubRm.GetHcaDiscoverChan(), faultDetectPeriod)
+	}, ubRm.GetHcaDiscoverChan(), faultDetectPeriod, healthCallback)
 	go fault.StartFaultReporting(ctx, k8sClient)
 }

@@ -522,3 +522,94 @@ func TestGetUbDevicesSpecWithRdmaSpec(t *testing.T) {
 		})
 	})
 }
+
+// ---------- reconcileDevs ----------
+
+func TestReconcileDevsPreservesHealthByDeviceName(t *testing.T) {
+	rs := newTestUbServer()
+	rs.ubDevices = []types.Device{
+		&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
+		&ubDevice{ubID: "ub1", deviceName: "mlx5_1", ifName: "enp0s2"},
+	}
+	rs.devs = []*pluginapi.Device{
+		{ID: "0", Health: pluginapi.Unhealthy},
+		{ID: "1", Health: pluginapi.Healthy},
+	}
+
+	convey.Convey("When device order changes, Health is preserved by deviceName", t, func() {
+		newDevices := []types.Device{
+			&ubDevice{ubID: "ub1", deviceName: "mlx5_1", ifName: "enp0s2"},
+			&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
+		}
+		result := rs.reconcileDevs(newDevices)
+		convey.So(len(result), convey.ShouldEqual, 2)
+		convey.So(result[0].Health, convey.ShouldEqual, pluginapi.Healthy)
+		convey.So(result[1].Health, convey.ShouldEqual, pluginapi.Unhealthy)
+	})
+}
+
+func TestReconcileDevsNewDeviceDefaultsHealthy(t *testing.T) {
+	rs := newTestUbServer()
+	rs.ubDevices = []types.Device{
+		&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
+	}
+	rs.devs = []*pluginapi.Device{{ID: "0", Health: pluginapi.Unhealthy}}
+
+	convey.Convey("When a new device appears, it defaults to Healthy", t, func() {
+		newDevices := []types.Device{
+			&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
+			&ubDevice{ubID: "ub1", deviceName: "mlx5_1", ifName: "enp0s2"},
+		}
+		result := rs.reconcileDevs(newDevices)
+		convey.So(len(result), convey.ShouldEqual, 2)
+		convey.So(result[0].Health, convey.ShouldEqual, pluginapi.Unhealthy)
+		convey.So(result[1].Health, convey.ShouldEqual, pluginapi.Healthy)
+	})
+}
+
+// ---------- MarkDevicesUnhealthy ----------
+
+func TestMarkDevicesUnhealthyMarksFaultyAndRestoresHealthy(t *testing.T) {
+	rs := newTestUbServer()
+	rs.ubDevices = []types.Device{
+		&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
+		&ubDevice{ubID: "ub1", deviceName: "mlx5_1", ifName: "enp0s2"},
+	}
+	rs.devs = []*pluginapi.Device{
+		{ID: "0", Health: pluginapi.Healthy},
+		{ID: "1", Health: pluginapi.Unhealthy},
+	}
+	rs.health = make(chan *pluginapi.Device, 1)
+
+	convey.Convey("When marking mlx5_0 faulty and mlx5_1 restored", t, func() {
+		changed := rs.MarkDevicesUnhealthy([]string{"mlx5_0"})
+		convey.So(changed, convey.ShouldEqual, 2)
+		convey.So(rs.devs[0].Health, convey.ShouldEqual, pluginapi.Unhealthy)
+		convey.So(rs.devs[1].Health, convey.ShouldEqual, pluginapi.Healthy)
+	})
+}
+
+func TestMarkDevicesUnhealthyNoChangeReturnsZero(t *testing.T) {
+	rs := newTestUbServer()
+	rs.ubDevices = []types.Device{
+		&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
+	}
+	rs.devs = []*pluginapi.Device{{ID: "0", Health: pluginapi.Unhealthy}}
+	rs.health = make(chan *pluginapi.Device, 1)
+
+	convey.Convey("When device already Unhealthy and marked faulty again", t, func() {
+		changed := rs.MarkDevicesUnhealthy([]string{"mlx5_0"})
+		convey.So(changed, convey.ShouldEqual, 0)
+		convey.So(rs.devs[0].Health, convey.ShouldEqual, pluginapi.Unhealthy)
+	})
+}
+
+func TestMarkDevicesUnhealthyEmptyListReturnsZero(t *testing.T) {
+	rs := newTestUbServer()
+	rs.health = make(chan *pluginapi.Device, 1)
+
+	convey.Convey("When hcaNames is empty", t, func() {
+		changed := rs.MarkDevicesUnhealthy([]string{})
+		convey.So(changed, convey.ShouldEqual, 0)
+	})
+}

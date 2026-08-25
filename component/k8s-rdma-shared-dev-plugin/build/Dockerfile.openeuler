@@ -12,6 +12,7 @@ COPY ./k8s-rdma-shared-dp /usr/local/bin
 COPY ./agreement.txt /usr/local/
 COPY ./fault_code.json /etc/rdma-plugin/
 COPY ./fault_detection.sh /etc/rdma-plugin/
+COPY ./npu-nic-mapping.json /etc/rdma-plugin/
 
 RUN chmod 550 /usr/local/bin/k8s-rdma-shared-dp &&\
     chmod 440 /usr/local/agreement.txt &&\

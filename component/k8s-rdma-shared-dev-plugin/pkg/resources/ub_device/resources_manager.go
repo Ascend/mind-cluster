@@ -31,6 +31,7 @@ import (
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/core"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
+	util "github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/utils"
 )
 
 const (
@@ -44,8 +45,10 @@ const (
 // UbResourceManager for UB device plugin
 type UbResourceManager interface {
 	types.ResourceManager
+	GetConfigList() []*types.UserConfig
 	GetHcaNames() []string
 	GetHcaDiscoverChan() <-chan struct{}
+	MarkDevicesUnhealthy(hcaNames []string) int
 }
 
 // ubResourceManager implements UbResourceManager interface
@@ -73,6 +76,7 @@ type UbDeviceInfo struct {
 // NewUbResourceManager returns a new instance of UbResourceManager
 func NewUbResourceManager(configFile string, useCdi bool) UbResourceManager {
 	coreManager := core.NewCoreResourceManager(configFile, rdmaUbResourcePrefix, socketSuffix, useCdi)
+	util.InitNpuNicMapping()
 
 	return &ubResourceManager{
 		CoreResourceManager: coreManager,
@@ -293,6 +297,19 @@ func (rm *ubResourceManager) GetFilteredDevices(devices []types.Device, selector
 // GetHcaDiscoverChan returns a channel that receives a signal when UB devices are re-discovered
 func (rm *ubResourceManager) GetHcaDiscoverChan() <-chan struct{} {
 	return rm.rediscoverCh
+}
+
+// MarkDevicesUnhealthy forwards faulty HCA names to all UB resource servers.
+func (rm *ubResourceManager) MarkDevicesUnhealthy(hcaNames []string) int {
+	totalMarked := 0
+	for _, server := range rm.GetResourceServers() {
+		ubServer, ok := server.(UbResourceServer)
+		if !ok {
+			continue
+		}
+		totalMarked += ubServer.MarkDevicesUnhealthy(hcaNames)
+	}
+	return totalMarked
 }
 
 // GetHcaNames returns HCA names from UB devices filtered by configured selectors

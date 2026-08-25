@@ -156,6 +156,24 @@ func TestIsDPUItemEqualDifferentFaultList(t *testing.T) {
 	})
 }
 
+func TestIsDPUItemEqualDifferentAffectedNPU(t *testing.T) {
+	a := &DPUItem{HcaName: "mlx5_0", AffectedNPU: []int{0, 1}}
+	b := &DPUItem{HcaName: "mlx5_0", AffectedNPU: []int{0, 2}}
+
+	convey.Convey("When AffectedNPU lists differ", t, func() {
+		convey.So(isDPUItemEqual(a, b), convey.ShouldBeFalse)
+	})
+}
+
+func TestIsDPUItemEqualSameAffectedNPU(t *testing.T) {
+	a := &DPUItem{HcaName: "mlx5_0", AffectedNPU: []int{0, 1, 2}}
+	b := &DPUItem{HcaName: "mlx5_0", AffectedNPU: []int{0, 1, 2}}
+
+	convey.Convey("When AffectedNPU lists are identical", t, func() {
+		convey.So(isDPUItemEqual(a, b), convey.ShouldBeTrue)
+	})
+}
+
 func TestUpdateLastReportedDataNil(t *testing.T) {
 	lastReportedDataMu.Lock()
 	savedLastReportedData := lastReportedData

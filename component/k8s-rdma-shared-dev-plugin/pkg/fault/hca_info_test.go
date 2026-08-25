@@ -555,6 +555,42 @@ func TestBuildDPUInfoCfgNodeFaultCacheCleared(t *testing.T) {
 	})
 }
 
+func TestBuildDPUInfoCfgAffectedNPU(t *testing.T) {
+	results := []FaultResult{
+		{
+			Fault:   FaultConfig{Name: "hca_port_down", FaultCode: "21000024"},
+			Hca:     "mlx5_0",
+			Result:  "false",
+			Details: "port ok",
+		},
+	}
+
+	patches := gomonkey.ApplyFunc(GetHcaDeviceID, func(hca string) string { return "0xa222" })
+	patches.ApplyFunc(GetHcaVendor, func(hca string) string { return "0x19e5" })
+	patches.ApplyFunc(GetHcaEthName, func(hca string) string { return "enp0s1" })
+	patches.ApplyFunc(GetHcaIpAddr, func(ethName string) string { return "10.0.0.1" })
+	patches.ApplyFunc(util.GetNodeName, func() (string, error) { return "test-node", nil })
+	patches.ApplyFunc(util.GetAffectedNPU, func(ethName string) []int {
+		if ethName == "enp0s1" {
+			return []int{0}
+		}
+		return nil
+	})
+	defer patches.Reset()
+
+	faultTimeCacheMu.Lock()
+	faultTimeCache = make(map[string]int64)
+	faultTimeCacheMu.Unlock()
+
+	convey.Convey("When buildDPUItem populates AffectedNPU from util.GetAffectedNPU", t, func() {
+		cfg := BuildDPUInfoCfg(results)
+		convey.Convey("Then DPUItem should carry affected NPU ids", func() {
+			convey.So(len(cfg.DPUInfo.DPUList), convey.ShouldEqual, 1)
+			convey.So(cfg.DPUInfo.DPUList[0].AffectedNPU, convey.ShouldResemble, []int{0})
+		})
+	})
+}
+
 func TestReadFileSuccess(t *testing.T) {
 	patches := gomonkey.ApplyFunc(utils.ReadLimitBytesWithSymlink, func(path string, limit int, validate func(string) bool) ([]byte, error) {
 		return []byte("  test content  "), nil

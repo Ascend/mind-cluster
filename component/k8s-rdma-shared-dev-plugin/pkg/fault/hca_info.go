@@ -27,6 +27,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	util "github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/utils"
 )
@@ -43,6 +44,13 @@ type HcaInfo struct {
 	PhysState string
 }
 
+const (
+	// NotHandleFault not handle fault
+	NotHandleFault = "NotHandleFault"
+	// SubHealthFault subHealth fault
+	SubHealthFault = "SubHealthFault"
+)
+
 // FaultDetail represents detailed information about a fault
 type FaultDetail struct {
 	FaultCode   string `json:"FaultCode"`
@@ -53,12 +61,13 @@ type FaultDetail struct {
 
 // DPUItem represents a single DPU device information
 type DPUItem struct {
-	HcaName   string        `json:"HcaName"`
-	EthName   string        `json:"EthName"`
-	IpAddr    string        `json:"IpAddr,omitempty"`
-	DeviceID  string        `json:"DeviceID"`
-	VendorID  string        `json:"VendorID"`
-	FaultList []FaultDetail `json:"FaultList"`
+	HcaName     string        `json:"HcaName"`
+	EthName     string        `json:"EthName"`
+	IpAddr      string        `json:"IpAddr,omitempty"`
+	DeviceID    string        `json:"DeviceID"`
+	VendorID    string        `json:"VendorID"`
+	FaultList   []FaultDetail `json:"FaultList"`
+	AffectedNPU []int         `json:"AffectedNPU"`
 }
 
 // NodeEvent represents node-level fault events (e.g. DPU card missing)
@@ -349,12 +358,13 @@ func buildNodeEvent(results []FaultResult) *NodeEvent {
 
 func buildDPUItem(hcaName string, basicInfo hcaBasicInfo, faults []FaultDetail) DPUItem {
 	return DPUItem{
-		HcaName:   hcaName,
-		EthName:   basicInfo.EthName,
-		IpAddr:    basicInfo.IpAddr,
-		DeviceID:  basicInfo.DeviceID,
-		VendorID:  basicInfo.VendorID,
-		FaultList: faults,
+		HcaName:     hcaName,
+		EthName:     basicInfo.EthName,
+		IpAddr:      basicInfo.IpAddr,
+		DeviceID:    basicInfo.DeviceID,
+		VendorID:    basicInfo.VendorID,
+		FaultList:   faults,
+		AffectedNPU: util.GetAffectedNPU(basicInfo.EthName),
 	}
 }
 
