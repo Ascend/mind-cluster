@@ -47,12 +47,6 @@ const (
 	NPULowerCase = "npu"
 )
 
-// for a5 rescheduling
-const (
-	// ServerIndexKey serverIndex key of node annotations for A5
-	ServerIndexKey = "serverIndex"
-)
-
 // RankLevel for rank table level info
 type RankLevel struct {
 	// Level for the level index in rank table

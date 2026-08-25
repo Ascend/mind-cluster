@@ -1,5 +1,5 @@
 /*
-Copyright(C)2020-2025. Huawei Technologies Co.,Ltd. All rights reserved.
+Copyright(C)2020-2026. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -750,7 +750,7 @@ func TestGetNodeDevListFromAnno(t *testing.T) {
 		Node: &v1.Node{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{BaseDeviceInfoKey: string(baseDevInfo)},
+				Annotations: map[string]string{NPUBaseDevInfosAnnotation: string(baseDevInfo)},
 			},
 		},
 	}
@@ -773,7 +773,7 @@ func TestGetNodeDevListFromAnno(t *testing.T) {
 			},
 		}
 		_, _, err = GetNodeDevListFromAnno(invalidNodeInfo)
-		expErr := fmt.Errorf("node annotation[%s] does not exist", BaseDeviceInfoKey)
+		expErr := fmt.Errorf("node annotation[%s]&[%s] does not exist", NPUBaseDevInfosAnnotation, BaseDeviceInfoKeyDeprecated)
 		if !reflect.DeepEqual(err, expErr) {
 			t.Errorf("Get node device list, err = %v, want %v", err, expErr)
 		}
@@ -914,7 +914,7 @@ func fakeNodeInfo(pod1, pod2 *v1.Pod) *api.NodeInfo {
 		Node: &v1.Node{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{BaseDeviceInfoKey: string(baseDevInfo)},
+				Annotations: map[string]string{NPUBaseDevInfosAnnotation: string(baseDevInfo)},
 			},
 		},
 		Tasks: map[api.TaskID]*api.TaskInfo{taskInfo1.UID: taskInfo1, taskInfo2.UID: taskInfo2},

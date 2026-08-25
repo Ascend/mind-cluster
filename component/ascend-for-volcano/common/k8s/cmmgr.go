@@ -492,7 +492,7 @@ func getSoftShareDevEnableByNode(nodeInfo *api.NodeInfo) bool {
 	if nodeInfo == nil || nodeInfo.Node == nil {
 		return false
 	}
-	softShareDevEnable, ok := nodeInfo.Node.Labels[util.SchedulerSoftShareDevEnableNodeLabel]
+	softShareDevEnable, ok := util.GetNodeLabel(nodeInfo.Node, util.SchedulerSoftShareDevEnableNodeLabel)
 	return ok && softShareDevEnable == "true"
 }
 

@@ -156,7 +156,7 @@ func TestGetA3AcceleratorType(t *testing.T) {
 			attr := util.SchedulerJobAttr{
 				ComJob: util.ComJob{
 					Selector: map[string]string{
-						util.AcceleratorType: config.selector,
+						util.AcceleratorTypeKeyDeprecated: config.selector,
 					},
 				},
 			}

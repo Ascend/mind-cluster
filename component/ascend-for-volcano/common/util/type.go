@@ -100,16 +100,10 @@ const (
 	MaxSliceNum = 128
 	// NPUHexKilo for const 1000,volcano frame used.
 	NPUHexKilo = 1000
-	// Accelerator for custom tag.
-	Accelerator = "accelerator"
 	// CMInitParamKey init param key in scheduler configmap
 	CMInitParamKey = "init-params"
-	// AcceleratorType for selector.
-	AcceleratorType = "accelerator-type"
 	// ModuleAcceleratorType for module mode.
 	ModuleAcceleratorType = "module"
-	// ServerType server type value takes Ascend310P-10-dual/Ascend910-32...
-	ServerType = "servertype"
 	// ServerTypeDual dual card
 	ServerTypeDual = "dual"
 
@@ -274,8 +268,6 @@ const (
 	ProcessRecoverEnable = "process-recover-enable"
 	// ProcessRecoverPause close process recover temporarily
 	ProcessRecoverPause = "pause"
-	// BaseDeviceInfoKey base device info key
-	BaseDeviceInfoKey = "baseDeviceInfos"
 	// DpuResourceNameKey node annotation key for DPU resource name, written by dpu-dp
 	DpuResourceNameKey = "huawei.com/dpu.resource.name"
 	// DpuInfoAnnoKey node annotation key for DPU info (serialized DpuInfoCfg), written by volcano from dpu cm
@@ -379,6 +371,77 @@ const (
 	NeedVolcanoOpeKey = "needVolcanoOpe"
 	// OpeTypeDelete operation type delete
 	OpeTypeDelete = "delete"
+)
+
+// Node label and annotation keys centralized for ascend-for-volcano.
+const (
+	// NPUServerTypeLabel unified server type label key
+	NPUServerTypeLabel = "huawei.com/npu.server.type"
+
+	// NPUBaseDevInfosAnnotation unified base device info annotation key
+	NPUBaseDevInfosAnnotation = "huawei.com/npu.base-device-infos"
+
+	// NPUChipNameLabel unified chip name label key
+	NPUChipNameLabel = "huawei.com/npu.chip.name"
+
+	// TopoLabelServerId topological label for server id
+	TopoLabelServerId = "huawei.com/topotree.serverid"
+
+	// NPUChipProductTypeLabel unified chip product type label key
+	NPUChipProductTypeLabel = "huawei.com/npu.chip.product-type"
+)
+
+// values for node labels
+const (
+	// Atlas300IDuoLabel the value of the A300I Duo node label
+	Atlas300IDuoLabel = "Atlas 300I Duo"
+
+	// Deprecated: A300IDuoLabel the value of the A300I Duo node label
+	A300IDuoLabel = "card-300i-duo"
+)
+
+// Node label and annotation keys for soft share dev
+const (
+	// NPUChipMemoryLabelKey unified npu chip memory label key
+	NPUChipMemoryLabelKey = "huawei.com/npu.chip.memory"
+
+	// SchedulerSoftShareDevEnableNodeLabel node label for scheduler soft share dev
+	SchedulerSoftShareDevEnableNodeLabel = "huawei.com/scheduler.chip1softsharedev.enable"
+)
+
+// Deprecated: Node label and annotation keys centralized for ascend-for-volcano.
+const (
+	// Deprecated: AcceleratorDeprecated is the old accelerator label key,
+	// Not migrated to new prefix; consumers derive chipKind from chip.name. Will be removed in Phase 2.
+	AcceleratorDeprecated = "accelerator"
+
+	// Deprecated: ServerTypeDeprecated is the old server type label key,
+	// replaced by NPUServerTypeLabel. Will be removed in Phase 2.
+	ServerTypeDeprecated = "servertype"
+
+	// Deprecated: AcceleratorTypeKeyDeprecated for selector.
+	// Will be removed in Phase 2.
+	AcceleratorTypeKeyDeprecated = "accelerator-type"
+
+	// Deprecated: NPUChipMemoryLabelKeyDeprecated is the old npu chip memory label key,
+	// replaced by NPUChipMemoryLabelKey. Will be removed in Phase 2.
+	NPUChipMemoryLabelKeyDeprecated = "mind-cluster/npu-chip-memory"
+
+	// Deprecated: ServerIndexKeyDeprecated serverIndex key of node annotations for A5,
+	// replaced by TopoLabelServerId label. Will be removed in Phase 2.
+	ServerIndexKeyDeprecated = "serverIndex"
+
+	// Deprecated: BaseDeviceInfoKeyDeprecated is the old base device info annotation key,
+	// replaced by NPUBaseDevInfosAnnotation. Will be removed in Phase 2.
+	BaseDeviceInfoKeyDeprecated = "baseDeviceInfos"
+
+	// Deprecated: ChipTypeKeyDeprecated is the old chip name label key,
+	// replaced by NPUChipNameLabel. Will be removed in Phase 2.
+	ChipTypeKeyDeprecated = "node.kubernetes.io/npu.chip.name"
+
+	// Deprecated: InferCardKeyDeprecated is the old infer card label key,
+	// replaced by NPUChipProductTypeLabel. Will be removed in Phase 2.
+	InferCardKeyDeprecated = "infer-card-type"
 )
 
 var (

@@ -66,7 +66,7 @@ func mockCommonNode() plugin.CommonNode {
 		Idle:           map[v1.ResourceName]float64{util.NPU910CardName: num4 * util.NPUHexKilo},
 		BaseDeviceInfo: "",
 		Annotation:     map[string]string{util.NPU910CardName: "Ascend910-0,Ascend910-1"},
-		Label:          map[string]string{util.Accelerator: "huawei-Ascend910"},
+		Label:          map[string]string{util.AcceleratorDeprecated: "huawei-Ascend910"},
 		Address:        "",
 		SuperPodID:     0,
 	}

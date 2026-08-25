@@ -471,7 +471,7 @@ func TestInitNodeDeviceInfoByCmMgr(t *testing.T) {
 					TypeMeta: metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{
 						Name:        nodeName,
-						Annotations: map[string]string{util.BaseDeviceInfoKey: string(baseDevInfo)},
+						Annotations: map[string]string{util.NPUBaseDevInfosAnnotation: string(baseDevInfo)},
 					},
 				},
 				Tasks: test.FakeTaskInfo(tt.podUsedCard1, tt.podUsedCard2),

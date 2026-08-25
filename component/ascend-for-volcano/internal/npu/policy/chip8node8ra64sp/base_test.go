@@ -259,7 +259,7 @@ func newNPUNodeWithNPUNum(nodeName string, superPodID int32, rackID int32,
 				faultNPU:            "",
 			},
 			Label: map[string]string{
-				util.AcceleratorType: SuperPodx8,
+				util.AcceleratorTypeKeyDeprecated: SuperPodx8,
 			},
 		},
 	}

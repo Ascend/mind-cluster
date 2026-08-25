@@ -105,8 +105,17 @@ func (tp *chip310px2) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode
 		return err
 	}
 
-	if node.Label[InferCardKey] != A300IDuoLabel {
-		return fmt.Errorf("judgeNodeLabel node card label not right, is %s", node.Label[InferCardKey])
+	// New key and old key have different values, judge by priority: new key first
+	newLabel, ok := util.GetLabelValue(node.Label, util.NPUChipProductTypeLabel)
+	if ok {
+		if newLabel != util.Atlas300IDuoLabel {
+			return fmt.Errorf("judgeNodeLabel node card label not right, is %s", newLabel)
+		}
+	} else {
+		oldLabel, _ := util.GetLabelValue(node.Label, util.InferCardKeyDeprecated)
+		if oldLabel != util.A300IDuoLabel {
+			return fmt.Errorf("judgeNodeLabel node card label not right, is %s", oldLabel)
+		}
 	}
 
 	if err = tp.judgeNodeByTaskNPU(taskNPUNum, nodeTop); err != nil {

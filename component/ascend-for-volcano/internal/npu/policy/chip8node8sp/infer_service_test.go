@@ -90,6 +90,13 @@ func buildInferNPUNodes(start, end, spSize int) map[string]plugin.NPUNode {
 			CommonNode: plugin.CommonNode{
 				Name:       nodeName,
 				SuperPodID: int32(i / spSize),
+				Annotation: map[string]string{
+					util.NPUCardName:    "Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7",
+					networkUnhealthyNPU: "",
+				},
+				Label: map[string]string{
+					util.AcceleratorTypeKeyDeprecated: AcceleratorType,
+				},
 			},
 		}
 	}

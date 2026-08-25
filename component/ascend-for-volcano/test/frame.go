@@ -33,6 +33,8 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/conf"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 	"volcano.sh/volcano/pkg/scheduler/util"
+
+	ascendutil "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 const (
@@ -76,11 +78,11 @@ func FakeNormalSSN(confs []conf.Configuration) *framework.Session {
 
 	nodes := FakeNormalTestNodes(fakeNodeNum)
 	for _, node := range nodes {
-		node.Node.Labels[acceleratorKey] = acceleratorValue
-		node.Node.Labels[serverTypeKey] = fake910ServerType
-		node.Node.Labels[chipTypeKey] = fakeChipName + fakeChipType
+		node.Node.Labels[ascendutil.AcceleratorDeprecated] = acceleratorValue
+		node.Node.Labels[ascendutil.NPUServerTypeLabel] = fake910ServerType
+		node.Node.Labels[ascendutil.NPUChipNameLabel] = fakeChipName + fakeChipType
 		node.Node.Annotations[NPU910CardName] = annoCards
-		node.Node.Annotations[BaseDeviceInfoKey] = fakeBaseDeviceInfo
+		node.Node.Annotations[ascendutil.NPUBaseDevInfosAnnotation] = fakeBaseDeviceInfo
 		schedulerCache.Nodes[node.Name] = node
 		schedulerCache.NodeList = append(schedulerCache.NodeList, node.Name)
 	}

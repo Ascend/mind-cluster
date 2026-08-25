@@ -233,7 +233,7 @@ func get910CardHandlerName(attr util.SchedulerJobAttr) string {
 	if _, ok := attr.Annotation[util.SuperPodAnnoKey]; ok {
 		return getA3HandlerNameWithSpBlock(attr)
 	}
-	v, ok := attr.Selector[util.AcceleratorType]
+	v, ok := attr.Selector[util.AcceleratorTypeKeyDeprecated]
 	if !ok {
 		return util.NPU910CardName + util.ModuleAcceleratorType
 	}
@@ -244,7 +244,7 @@ func get910CardHandlerName(attr util.SchedulerJobAttr) string {
 }
 
 func getA3HandlerNameWithSpBlock(attr util.SchedulerJobAttr) string {
-	v, ok := attr.Selector[util.AcceleratorType]
+	v, ok := attr.Selector[util.AcceleratorTypeKeyDeprecated]
 	if ok && v == util.Module910A3x8SuperPodAcceleratorType {
 		return superpod.A3x8SchedulerName
 	}

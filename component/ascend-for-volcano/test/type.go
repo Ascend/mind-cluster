@@ -71,14 +71,11 @@ const (
 	reserveNodesValue          = "2"
 	fakeResourceNum            = "8000"
 	fakeNPUNum                 = "8"
-	acceleratorKey             = "accelerator"
 	acceleratorValue           = "huawei-Ascend910"
 	npuCoreName                = "huawei.com/npu-core"
 	fakeNpuCoreStr             = "0-vir05_1c_16g"
 	fakeWholeCardStr           = "0,1,2,3"
-	serverTypeKey              = "servertype"
 	fake910ServerType          = "Ascend910B-20"
-	BaseDeviceInfoKey          = "baseDeviceInfos"
 	fakeBaseDeviceInfo         = "{}"
 )
 
@@ -93,7 +90,6 @@ const (
 )
 
 const (
-	chipTypeKey    = "node.kubernetes.io/npu.chip.name"
 	fakeChipType   = "B3"
 	fakeChipName   = "910"
 	torAffinityKey = "tor-affinity"

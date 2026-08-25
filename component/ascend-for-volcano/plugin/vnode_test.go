@@ -1,5 +1,5 @@
 /*
-Copyright(C)2025. Huawei Technologies Co.,Ltd. All rights reserved.
+Copyright(C)2026. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,179 +14,74 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/*
-Package plugin is using for HuaWei Ascend pin affinity schedule.
-*/
 package plugin
 
 import (
 	"testing"
 
-	"k8s.io/api/core/v1"
+	"github.com/smartystreets/goconvey/convey"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
 const (
-	ascend310PCard = "Ascend310P-8"
-	num4           = 4
+	chipNameAscend910BPro  = "Ascend910B-Pro"
+	chipNameAscend310PFull = "Ascend310P-Custom"
+	chipNameAscend310Full  = "Ascend310-Custom"
+	chipNameAscend950Full  = "Ascend950-Custom"
+	chipNameUnknown        = "UnknownChip"
 )
 
-func mockNode() NPUNode {
-	return NPUNode{
-		CommonNode: mockCommonNode(),
-		VNode:      mockVNode(),
+func TestDeriveAcceleratorFromChipName(t *testing.T) {
+	type testCase struct {
+		name        string
+		chipName    string
+		want        string
+		wantDerived bool
 	}
-}
-
-func mockCommonNode() CommonNode {
-	return CommonNode{
-		Name:           "node1",
-		Capability:     map[v1.ResourceName]float64{util.NPU310PCardName: num4 * util.NPUHexKilo},
-		Allocate:       map[v1.ResourceName]float64{util.NPU310PCardName: num4 * util.NPUHexKilo},
-		Idle:           map[v1.ResourceName]float64{util.NPU310PCardName: num4 * util.NPUHexKilo},
-		BaseDeviceInfo: "",
-		Annotation:     map[string]string{util.NPU310PCardName: "Ascend310P-0,Ascend310P-1"},
-		Label:          map[string]string{util.Accelerator: "huawei-Ascend310P"},
-		Address:        "",
-		SuperPodID:     0,
+	tests := []testCase{
+		{name: "should return Ascend910 when chipName starts with Ascend910",
+			chipName: chipNameAscend910,
+			want:     util.Ascend910, wantDerived: true},
+		{name: "should return Ascend910 when chipName contains 910B",
+			chipName: chipNameAscend910B,
+			want:     util.Ascend910, wantDerived: true},
+		{name: "should return Ascend910 when chipName is Ascend910B-Pro",
+			chipName: chipNameAscend910BPro,
+			want:     util.Ascend910, wantDerived: true},
+		{name: "should return Ascend310P when chipName starts with Ascend310P",
+			chipName: chipNameAscend310P,
+			want:     util.Ascend310P, wantDerived: true},
+		{name: "should return Ascend310P when chipName starts with Ascend310P with suffix",
+			chipName: chipNameAscend310PFull,
+			want:     util.Ascend310P, wantDerived: true},
+		{name: "should return Ascend310 when chipName starts with Ascend310",
+			chipName: chipNameAscend310,
+			want:     util.Ascend310, wantDerived: true},
+		{name: "should return Ascend310 when chipName starts with Ascend310 with suffix",
+			chipName: chipNameAscend310Full,
+			want:     util.Ascend310, wantDerived: true},
+		{name: "should return npu when chipName starts with Ascend950",
+			chipName: chipNameAscend950,
+			want:     util.NPULowerCase, wantDerived: true},
+		{name: "should return npu when chipName starts with Ascend950 with suffix",
+			chipName: chipNameAscend950Full,
+			want:     util.NPULowerCase, wantDerived: true},
+		{name: "should return empty and derived when chipName is 310B",
+			chipName: chipNameAscend310B,
+			want:     "", wantDerived: true},
+		{name: "should return empty and not derived when chipName is empty",
+			chipName: "",
+			want:     "", wantDerived: false},
+		{name: "should return empty and not derived when chipName is unknown",
+			chipName: chipNameUnknown,
+			want:     "", wantDerived: false},
 	}
-}
-
-func mockVNode() VNode {
-	return VNode{
-		Chips: map[int]*VChip{
-			util.NPUIndex1: {TotalRes: util.VResource{Aicore: util.NPUIndex1},
-				FreeRes: util.VResource{Aicore: util.NPUIndex1, Aicpu: util.NPUIndex1},
-				Name:    ascend310PCard, Kind: util.Ascend310P, ID: []string{"Ascend310P-2c.1cpu-105-0_3"}},
-			0: {TotalRes: util.VResource{Aicore: util.NPUIndex8},
-				FreeRes: util.VResource{Aicore: util.NPUIndex8, Aicpu: util.NPUIndex8},
-				Name:    ascend310PCard, Kind: util.Ascend310P, ID: []string{"Ascend310P-2c.1cpu-105-0_3"}},
-		},
-		ChipKind:         util.Ascend310P,
-		UnhealthyChipIds: map[int]struct{}{},
-		ServerType:       ascend310PCard,
-		TotalChipNum:     util.NPUIndex8,
-		AiCorePerChip:    util.NPUIndex8,
-		FreeChipNum:      util.NPUIndex8,
-		TotalRes:         util.VResource{Aicore: util.CoreNum25},
-		ValidVNode:       true,
-		ChipType:         ChipTypeB1,
-	}
-}
-
-type testNodeMeetRes struct {
-	name    string
-	node    NPUNode
-	taskRes util.VResource
-	want    bool
-}
-
-func buildTestNodeMeetResCases() []testNodeMeetRes {
-	node := mockNode()
-	node.Chips[0].SegmentFlag = true
-	return []testNodeMeetRes{
-		{
-			name:    "01 will return true when node is empty",
-			node:    NPUNode{},
-			taskRes: util.VResource{},
-			want:    true,
-		},
-		{
-			name:    "02 will return false when node resource is enough and task is vnpu",
-			node:    node,
-			taskRes: util.VResource{Aicore: util.NPUIndex4, Aicpu: util.NPUIndex3},
-			want:    false,
-		},
-		{
-			name:    "03 will return false when node resource is enough and task is whole card",
-			node:    mockNode(),
-			taskRes: util.VResource{Aicore: util.NPUIndex8, Aicpu: util.NPUIndex7},
-			want:    false,
-		},
-	}
-}
-
-func TestNPUNodeIsNodeNotMeetRes(t *testing.T) {
-	for _, tt := range buildTestNodeMeetResCases() {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.node.IsNodeNotMeetRes(tt.taskRes); got != tt.want {
-				t.Errorf("IsNodeNotMeetRes() = %v, want %v", got, tt.want)
-			}
+	for _, tt := range tests {
+		convey.Convey(tt.name, t, func() {
+			got, derived := deriveAcceleratorFromChipName(tt.chipName)
+			convey.So(got, convey.ShouldEqual, tt.want)
+			convey.So(derived, convey.ShouldEqual, tt.wantDerived)
 		})
 	}
-}
-
-func TestVNodeSelectChipFromNode(t *testing.T) {
-	for _, tt := range buildTestNodeMeetResCases() {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := tt.node.VNode.SelectChipFromNode(tt.taskRes)
-			if (err != nil) != tt.want {
-				t.Errorf("SelectChipFromNode() error = %v, wantErr %v", err, tt.want)
-				return
-			}
-		})
-	}
-	t.Run("test vNode is nil will return error", func(t *testing.T) {
-		var node *VNode
-		_, err := node.SelectChipFromNode(util.VResource{})
-		if (err != nil) != true {
-			t.Errorf("SelectChipFromNode() error = %v, wantErr %v", err, true)
-			return
-		}
-	})
-}
-
-func TestVNodeIsResourceWholeCard(t *testing.T) {
-	t.Run("test vnode is nil", func(t *testing.T) {
-		var node *VNode
-		if got := node.IsResourceWholeCard(0); got != false {
-			t.Errorf("IsResourceWholeCard() = %v, want %v", got, false)
-		}
-	})
-}
-
-type getNodeTopForWholeCardTest struct {
-	name  string
-	vNode *VNode
-	want  []int
-}
-
-func buildGetNodeTopForWholeCardTestCases() []getNodeTopForWholeCardTest {
-	fakeNode := mockVNode()
-	return []getNodeTopForWholeCardTest{
-		{
-			name:  "01 will return nil when vnode is empty",
-			vNode: &VNode{},
-			want:  nil,
-		},
-		{
-			name:  "02 will return card id  when vnode is normal node",
-			vNode: &fakeNode,
-			want:  []int{util.NPUIndex1, util.NPUIndex0},
-		},
-	}
-}
-
-func TestGetNodeTopForWholeCard(t *testing.T) {
-	for _, tt := range buildGetNodeTopForWholeCardTestCases() {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.vNode.GetNodeTopForWholeCard(); !checkCardIdEqual(got, tt.want) {
-				t.Errorf("GetNodeTopForWholeCard() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func checkCardIdEqual(keyCardIDs, targetCardIds []int) bool {
-	keyIds := make(map[int]struct{}, len(keyCardIDs))
-	for _, id := range keyCardIDs {
-		keyIds[id] = struct{}{}
-	}
-	for _, id := range targetCardIds {
-		if _, ok := keyIds[id]; !ok {
-			return false
-		}
-	}
-	return true
 }

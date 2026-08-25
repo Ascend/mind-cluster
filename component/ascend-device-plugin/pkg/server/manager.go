@@ -194,9 +194,26 @@ func (hdm *HwDevManager) setAscendManager(dmgr devmanager.DeviceInterface) error
 // initMarkerGroups pre-initializes the label and annotation groups.
 // This is called once during initialization, not on every updateNode call.
 func (hdm *HwDevManager) initMarkerGroups() {
-	hdm.labelGroup = label.NewLabelGroup()
+	hdm.labelGroup = label.NewLabelGroup(
+		&chipNameLabeler{hdm: hdm},
+		&serverTypeLabeler{hdm: hdm},
+		&driverVersionLabeler{hdm: hdm},
+		&acceleratorLabeler{hdm: hdm},
+		&topologyLabeler{hdm: hdm},
+		&chipMemoryLabeler{hdm: hdm},
+		&chipBoardIDLabeler{hdm: hdm},
+		&chipProductTypeLabeler{hdm: hdm},
+		&acceleratorTypeLabeler{hdm: hdm},
+	)
 
-	hdm.annotationGroup = annotation.NewAnnotationGroup()
+	hdm.annotationGroup = annotation.NewAnnotationGroup(
+		&baseInfoAnnotator{hdm: hdm},
+		&vdieDdieAnnotator{hdm: hdm},
+		&serialNumberAnnotator{hdm: hdm},
+		&serverTypeAnnotator{hdm: hdm},
+		&superPodInfoAnnotator{hdm: hdm},
+		&cardTypeAnnotator{hdm: hdm},
+	)
 }
 
 // UpdateNode update server type, like Ascend910-32, and label of 910b infer card
@@ -613,8 +630,8 @@ func (hdm *HwDevManager) doUpdateNodeAnnotations() {
 	for i := 0; i < common.RetryUpdateCount; i++ {
 		// Dual-write old + new standardized key in a single API call
 		if err = hdm.manager.GetKubeClient().AddAnnotations(map[string]string{
-			annotation.BaseDevInfoAnnoDeprecated: string(mashaledNpuInfo),
-			annotation.NPUBaseDevInfosAnnotation: string(mashaledNpuInfo),
+			annotation.BaseDevInfoAnnoDeprecated: sanitizeLabelValue(string(mashaledNpuInfo)),
+			annotation.NPUBaseDevInfosAnnotation: sanitizeLabelValue(string(mashaledNpuInfo)),
 		}); err == nil {
 			hwlog.RunLog.Info("update node annotations success")
 			hdm.baseNPUInfo = newBaseInfo
