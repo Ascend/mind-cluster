@@ -358,6 +358,8 @@ const (
 const (
 	// ReplaceOP is the replace operation
 	ReplaceOP = "replace"
+	// AddOP is the add operation
+	AddOP = "add"
 
 	// PathForAnnotations is the path for annotations
 	PathForAnnotations = "/metadata/annotations/"

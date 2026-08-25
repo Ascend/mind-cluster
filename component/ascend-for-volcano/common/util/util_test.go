@@ -31,6 +31,7 @@ import (
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
+	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -1338,4 +1339,156 @@ func TestIsRdmaTask(t *testing.T) {
 			}
 		})
 	}
+}
+
+const (
+	utilLabelKeyNew     = "huawei.com/npu.new"
+	utilLabelKeyOld     = "huawei.com/npu.old"
+	utilLabelValue1     = "val1"
+	utilLabelValue2     = " val2 "
+	utilLabelValue2Trim = "val2"
+)
+
+func TestGetLabelValue_Util(t *testing.T) {
+	convey.Convey("should return empty when labels is nil", t, func() {
+		val, ok := GetLabelValue(nil, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(val, convey.ShouldBeEmpty)
+	})
+	convey.Convey("should return empty when key not found", t, func() {
+		labels := map[string]string{"other": "val"}
+		val, ok := GetLabelValue(labels, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(val, convey.ShouldBeEmpty)
+	})
+	convey.Convey("should return empty when value is empty string", t, func() {
+		labels := map[string]string{utilLabelKeyNew: ""}
+		val, ok := GetLabelValue(labels, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(val, convey.ShouldBeEmpty)
+	})
+	convey.Convey("should return first key value when found", t, func() {
+		labels := map[string]string{utilLabelKeyNew: utilLabelValue1, utilLabelKeyOld: utilLabelValue2}
+		val, ok := GetLabelValue(labels, utilLabelKeyNew, utilLabelKeyOld)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(val, convey.ShouldEqual, utilLabelValue1)
+	})
+	convey.Convey("should fallback to second key when first not found", t, func() {
+		labels := map[string]string{utilLabelKeyOld: utilLabelValue1}
+		val, ok := GetLabelValue(labels, utilLabelKeyNew, utilLabelKeyOld)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(val, convey.ShouldEqual, utilLabelValue1)
+	})
+	convey.Convey("should trim spaces from value", t, func() {
+		labels := map[string]string{utilLabelKeyNew: utilLabelValue2}
+		val, ok := GetLabelValue(labels, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(val, convey.ShouldEqual, utilLabelValue2Trim)
+	})
+}
+
+func TestGetAnnotationValue_Util(t *testing.T) {
+	convey.Convey("should return empty when annotations is nil", t, func() {
+		val, ok := GetAnnotationValue(nil, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(val, convey.ShouldBeEmpty)
+	})
+	convey.Convey("should return empty when key not found", t, func() {
+		annotations := map[string]string{"other": "val"}
+		val, ok := GetAnnotationValue(annotations, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(val, convey.ShouldBeEmpty)
+	})
+	convey.Convey("should return empty when value is empty string", t, func() {
+		annotations := map[string]string{utilLabelKeyNew: ""}
+		val, ok := GetAnnotationValue(annotations, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(val, convey.ShouldBeEmpty)
+	})
+	convey.Convey("should return first key value when found", t, func() {
+		annotations := map[string]string{utilLabelKeyNew: utilLabelValue1, utilLabelKeyOld: utilLabelValue2}
+		val, ok := GetAnnotationValue(annotations, utilLabelKeyNew, utilLabelKeyOld)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(val, convey.ShouldEqual, utilLabelValue1)
+	})
+	convey.Convey("should fallback to second key when first not found", t, func() {
+		annotations := map[string]string{utilLabelKeyOld: utilLabelValue1}
+		val, ok := GetAnnotationValue(annotations, utilLabelKeyNew, utilLabelKeyOld)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(val, convey.ShouldEqual, utilLabelValue1)
+	})
+	convey.Convey("should trim spaces from value", t, func() {
+		annotations := map[string]string{utilLabelKeyNew: utilLabelValue2}
+		val, ok := GetAnnotationValue(annotations, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(val, convey.ShouldEqual, utilLabelValue2Trim)
+	})
+}
+
+func TestGetNodeLabel_Util(t *testing.T) {
+	convey.Convey("should return empty when node is nil", t, func() {
+		val, ok := GetNodeLabel(nil, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(val, convey.ShouldBeEmpty)
+	})
+	convey.Convey("should return empty when node labels is nil", t, func() {
+		node := &v1.Node{}
+		val, ok := GetNodeLabel(node, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(val, convey.ShouldBeEmpty)
+	})
+	convey.Convey("should return value when key found in node labels", t, func() {
+		node := &v1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: map[string]string{utilLabelKeyNew: utilLabelValue1},
+			},
+		}
+		val, ok := GetNodeLabel(node, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(val, convey.ShouldEqual, utilLabelValue1)
+	})
+	convey.Convey("should fallback to second key in node labels", t, func() {
+		node := &v1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: map[string]string{utilLabelKeyOld: utilLabelValue1},
+			},
+		}
+		val, ok := GetNodeLabel(node, utilLabelKeyNew, utilLabelKeyOld)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(val, convey.ShouldEqual, utilLabelValue1)
+	})
+}
+
+func TestGetNodeAnnotation_Util(t *testing.T) {
+	convey.Convey("should return empty when node is nil", t, func() {
+		val, ok := GetNodeAnnotation(nil, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(val, convey.ShouldBeEmpty)
+	})
+	convey.Convey("should return empty when node annotations is nil", t, func() {
+		node := &v1.Node{}
+		val, ok := GetNodeAnnotation(node, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeFalse)
+		convey.So(val, convey.ShouldBeEmpty)
+	})
+	convey.Convey("should return value when key found in node annotations", t, func() {
+		node := &v1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{utilLabelKeyNew: utilLabelValue1},
+			},
+		}
+		val, ok := GetNodeAnnotation(node, utilLabelKeyNew)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(val, convey.ShouldEqual, utilLabelValue1)
+	})
+	convey.Convey("should fallback to second key in node annotations", t, func() {
+		node := &v1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{utilLabelKeyOld: utilLabelValue1},
+			},
+		}
+		val, ok := GetNodeAnnotation(node, utilLabelKeyNew, utilLabelKeyOld)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(val, convey.ShouldEqual, utilLabelValue1)
+	})
 }
