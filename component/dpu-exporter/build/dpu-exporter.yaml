@@ -1,0 +1,172 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dpu-exporter
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dpu-exporter-config
+  namespace: dpu-exporter
+data:
+  config.json: |
+    {
+      "hinicadm5CollectorInterval": 60,
+      "sysfsCollectorInterval": 30,
+      "dpuListRefreshInterval": 60,
+      "metricWhiteList": [],
+      "port": 8080,
+      "logLevel": "info"
+    }
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: dpu-exporter
+  namespace: dpu-exporter
+spec:
+  selector:
+    matchLabels:
+      app: dpu-exporter
+  template:
+    metadata:
+      annotations:
+        seccomp.security.alpha.kubernetes.io/pod: runtime/default
+      labels:
+        app: dpu-exporter
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        workerselector: dls-worker-node
+      initContainers:
+      - name: init-log-setup
+        image: dpu-exporter:v6.0.0
+        command: ['sh', '-c', 'mkdir -p /var/log/mindx-dl && chmod 755 /var/log/mindx-dl && chown root:root /var/log/mindx-dl && mkdir -p /var/log/mindx-dl/dpu-exporter && chmod 750 /var/log/mindx-dl/dpu-exporter && chown root:root /var/log/mindx-dl/dpu-exporter']
+        securityContext:
+          runAsUser: 0
+          runAsNonRoot: false
+        volumeMounts:
+          - name: log-dpu-exporter
+            mountPath: /var/log
+      containers:
+      - name: dpu-exporter
+        image: dpu-exporter:v6.0.0
+        imagePullPolicy: Never
+        command: ["/usr/local/bin/dpu-exporter"]
+        args:
+          - "-config=/etc/dpu-exporter/config.json"
+          - "-cardType=huawei"
+        ports:
+          - name: http
+            containerPort: 8080
+            protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+          limits:
+            memory: "512Mi"
+            cpu: "1000m"
+        securityContext:
+          privileged: true
+          readOnlyRootFilesystem: true
+          runAsUser: 0
+          runAsGroup: 0
+        volumeMounts:
+          - name: config
+            mountPath: /etc/dpu-exporter
+            readOnly: true
+          - name: localtime
+            mountPath: /etc/localtime
+            readOnly: true
+          - name: sysfs
+            mountPath: /sys
+            readOnly: true
+          - name: tmp
+            mountPath: /tmp
+          - name: logdir
+            mountPath: /var/log/mindx-dl/dpu-exporter
+          - name: hiniclogdir
+            mountPath: /var/log/hinic5
+          - name: usrsbin
+            mountPath: /usr/sbin
+            readOnly: true
+          - name: usrlib64
+            mountPath: /usr/lib64
+            readOnly: true
+          - name: lib
+            mountPath: /lib
+            readOnly: true
+      volumes:
+        - name: log-dpu-exporter
+          hostPath:
+            path: /var/log
+        - name: config
+          configMap:
+            name: dpu-exporter-config
+            items:
+              - key: config.json
+                path: config.json
+            defaultMode: 0444
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+        - name: sysfs
+          hostPath:
+            path: /sys
+        - name: tmp
+          hostPath:
+            path: /tmp
+        - name: logdir
+          hostPath:
+            path: /var/log/mindx-dl/dpu-exporter
+            type: DirectoryOrCreate
+        - name: hiniclogdir
+          hostPath:
+            path: /var/log/hinic5
+            type: DirectoryOrCreate
+        - name: usrsbin
+          hostPath:
+            path: /usr/sbin
+        - name: usrlib64
+          hostPath:
+            path: /usr/lib64
+        - name: lib
+          hostPath:
+            path: /lib
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dpu-exporter
+  namespace: dpu-exporter
+  labels:
+    app: dpu-exporter
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: dpu-exporter
