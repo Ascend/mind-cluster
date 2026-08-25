@@ -297,13 +297,14 @@ func GetDeviceType(devList map[string]string) string {
 
 // GetNodeDevListFromAnno get node device list from annotation
 func GetNodeDevListFromAnno(nodeInfo *api.NodeInfo) ([]string, bool, error) {
-	baseDevInfo, ok := nodeInfo.Node.Annotations[BaseDeviceInfoKey]
+	baseInfo, ok := GetAnnotationValue(nodeInfo.Node.Annotations, NPUBaseDevInfosAnnotation, BaseDeviceInfoKeyDeprecated)
 	if !ok {
-		klog.V(LogErrorLev).Infof("node annotation[%s] does not exist", BaseDeviceInfoKey)
-		return nil, false, fmt.Errorf("node annotation[%s] does not exist", BaseDeviceInfoKey)
+		str := fmt.Sprintf("node annotation[%s]&[%s] does not exist", NPUBaseDevInfosAnnotation, BaseDeviceInfoKeyDeprecated)
+		klog.V(LogErrorLev).Infof(str)
+		return nil, false, fmt.Errorf(str)
 	}
 	devIpMap := make(map[string]NpuBaseInfo)
-	if err := json.Unmarshal([]byte(baseDevInfo), &devIpMap); err != nil {
+	if err := json.Unmarshal([]byte(baseInfo), &devIpMap); err != nil {
 		klog.V(LogErrorLev).Infof("unmarshal node device list failed, error: %v", err)
 		return nil, false, errors.New("unmarshal node device list failed")
 	}
@@ -475,4 +476,50 @@ func IsRdmaTask(nT *api.TaskInfo, nodeAnnotation map[string]string) bool {
 		}
 	}
 	return false
+}
+
+// GetLabelValue reads label value from map, trying keys in priority order (front to back).
+// Returns the label value and a bool indicating whether the value was found.
+func GetLabelValue(labels map[string]string, keys ...string) (string, bool) {
+	if labels == nil {
+		return "", false
+	}
+	for _, key := range keys {
+		if val, ok := labels[key]; ok && val != "" {
+			return strings.Trim(val, " "), true
+		}
+	}
+	return "", false
+}
+
+// GetAnnotationValue reads annotation value from map, trying keys in priority order (front to back).
+// Returns the annotation value and a bool indicating whether the value was found.
+func GetAnnotationValue(annotations map[string]string, keys ...string) (string, bool) {
+	if annotations == nil {
+		return "", false
+	}
+	for _, key := range keys {
+		if val, ok := annotations[key]; ok && val != "" {
+			return strings.Trim(val, " "), true
+		}
+	}
+	return "", false
+}
+
+// GetNodeLabel reads label value from node, trying keys in priority order (front to back).
+// Returns the label value and a bool indicating whether the value was found.
+func GetNodeLabel(node *v1.Node, keys ...string) (string, bool) {
+	if node == nil {
+		return "", false
+	}
+	return GetLabelValue(node.Labels, keys...)
+}
+
+// GetNodeAnnotation reads annotation value from node, trying keys in priority order (front to back).
+// Returns the annotation value and a bool indicating whether the value was found.
+func GetNodeAnnotation(node *v1.Node, keys ...string) (string, bool) {
+	if node == nil {
+		return "", false
+	}
+	return GetAnnotationValue(node.Annotations, keys...)
 }

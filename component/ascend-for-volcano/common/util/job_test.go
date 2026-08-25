@@ -279,7 +279,7 @@ func TestGetPluginNameByReq(t *testing.T) {
 func TestIsSuperPodJob(t *testing.T) {
 	annotationSpBlock := map[string]string{SuperPodAnnoKey: "16"}
 	annotationNotSpPolicy := map[string]string{SchedulePolicyAnnoKey: SchedulePolicyA3x16}
-	selectorSp := map[string]string{AcceleratorType: Module910A3x16SuperPodAcceleratorType}
+	selectorSp := map[string]string{AcceleratorTypeKeyDeprecated: Module910A3x16SuperPodAcceleratorType}
 	annotationSchedulePolicySp := map[string]string{SchedulePolicyAnnoKey: Chip2Node16Sp}
 	annotationSchedulePolicyAtlas9000Sp := map[string]string{SchedulePolicyAnnoKey: Chip2Node8Sp}
 	t.Run("01-isSuperPodJob true, when sp-block exist",
@@ -352,7 +352,7 @@ func TestIsSuperPodJob(t *testing.T) {
 	t.Run("10-isSuperPodJob true, when accelerator-type is module-a3-8-super-pod",
 		func(t *testing.T) {
 			attr := SchedulerJobAttr{ComJob: ComJob{Selector: map[string]string{
-				AcceleratorType: Module910A3x8SuperPodAcceleratorType,
+				AcceleratorTypeKeyDeprecated: Module910A3x8SuperPodAcceleratorType,
 			}}}
 			if !attr.IsSuperPodJob() {
 				t.Errorf("isSuperPodJob() err, want true while return false")
@@ -375,7 +375,7 @@ func TestIsSuperPodJob(t *testing.T) {
 	t.Run("13-isSuperPodJob false, when selector has wrong accelerator-type",
 		func(t *testing.T) {
 			attr := SchedulerJobAttr{ComJob: ComJob{Selector: map[string]string{
-				AcceleratorType: "unknown-accelerator",
+				AcceleratorTypeKeyDeprecated: "unknown-accelerator",
 			}}}
 			if attr.IsSuperPodJob() {
 				t.Errorf("isSuperPodJob() err, want false while return true")

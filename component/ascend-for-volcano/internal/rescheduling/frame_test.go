@@ -67,7 +67,7 @@ func fakeSchedulerJobEmptyTask(jobName, namespace string) plugin.SchedulerJob {
 			ComJob: util.ComJob{
 				Name:      api.JobID(jobName),
 				NameSpace: namespace,
-				Selector:  map[string]string{util.AcceleratorType: util.ModuleAcceleratorType},
+				Selector:  map[string]string{util.AcceleratorTypeKeyDeprecated: util.ModuleAcceleratorType},
 				Label: map[string]string{
 					JobRescheduleLabelKey: JobGraceRescheduleLabelValue,
 				},

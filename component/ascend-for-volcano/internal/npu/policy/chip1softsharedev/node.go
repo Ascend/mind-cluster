@@ -31,7 +31,7 @@ import (
 )
 
 func (tp *chip1softsharedev) getChipMemoryFromNodeLabel(nodeLabel map[string]string) (int, error) {
-	memLabel, ok := nodeLabel[util.NPUChipMemoryLabelKey]
+	memLabel, ok := util.GetLabelValue(nodeLabel, util.NPUChipMemoryLabelKey, util.NPUChipMemoryLabelKeyDeprecated)
 	if !ok {
 		return 0, errors.New("missing npu-chip-memory label")
 	}

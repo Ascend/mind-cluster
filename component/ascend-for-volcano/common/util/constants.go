@@ -173,8 +173,6 @@ const (
 
 // constants for scheduler-share
 const (
-	// NPUChipMemoryLabelKey label key for npu chip memory
-	NPUChipMemoryLabelKey = "mind-cluster/npu-chip-memory"
 	// MaxAicoreQuota max aicore quota
 	MaxAicoreQuota = 100
 	// MaxNodeScoreForSoftShareDev max node score for soft share dev
@@ -196,8 +194,6 @@ const (
 	SchedulerSoftShareDevPolicyKey = "huawei.com/scheduler.softShareDev.policy"
 	// SchedulerSoftShareDevVNPUIdKey decide scheduler soft share device vnpu id
 	SchedulerSoftShareDevVNPUIdKey = "huawei.com/scheduler.softShareDev.vnpuId"
-	// SchedulerSoftShareDevEnableNodeLabel node label for scheduler soft share dev
-	SchedulerSoftShareDevEnableNodeLabel = "huawei.com/scheduler.chip1softsharedev.enable"
 	// SoftShareDevPolicyFixedShare fixed share
 	SoftShareDevPolicyFixedShare = "fixed-share"
 	// SoftShareDevPolicyElastic elastic

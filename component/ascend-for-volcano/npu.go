@@ -542,7 +542,8 @@ func getNpuNum(ssn *framework.Session, tp *huaweiNPUPlugin, npuName string) int 
 		}
 		shareDevCount := 1
 		if node.Node != nil {
-			softShareDevEnable, softShareDevEnableExist := node.Node.Labels[util.SchedulerSoftShareDevEnableNodeLabel]
+			softShareDevEnable, softShareDevEnableExist := util.GetNodeLabel(node.Node,
+				util.SchedulerSoftShareDevEnableNodeLabel)
 			if softShareDevEnableExist && softShareDevEnable == "true" {
 				shareDevCount = util.SoftShareDevCount
 			}

@@ -55,9 +55,4 @@ const (
 	maxNodeNPUNum  = 16
 	maxCardNPUNum  = 2
 	constNPUWeight = 8.0
-
-	// InferCardKey the node label key of infer card
-	InferCardKey = "infer-card-type"
-	// A300IDuoLabel the value of the A300I Duo node label
-	A300IDuoLabel = "card-300i-duo"
 )

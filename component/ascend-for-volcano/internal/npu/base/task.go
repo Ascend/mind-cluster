@@ -64,7 +64,7 @@ func (tp *NPUHandler) SetNPUTopologyToPodFn(task *api.TaskInfo, top []int, node 
 	}
 	convertedTop := make([]int, len(top))
 	copy(convertedTop, top)
-	chipName, ok := node.Label[plugin.ChipTypeKey]
+	chipName, ok := util.GetLabelValue(node.Label, util.NPUChipNameLabel, util.ChipTypeKeyDeprecated)
 	if ok && strings.HasPrefix(chipName, plugin.Ascend950Prefix) {
 		if node.PhyIDToDeviceIDMap != nil && len(node.PhyIDToDeviceIDMap) > 0 {
 			for i, phyID := range top {

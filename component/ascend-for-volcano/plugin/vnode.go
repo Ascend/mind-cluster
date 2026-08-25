@@ -118,15 +118,17 @@ func (n *NPUNode) setChipPropertiesFromNPUNode() error {
 	}
 	n.VNode.ChipKind = chipKind
 
-	chipLabel, ok := n.Label[util.ServerType] // 2. set ServerType(like Ascend310P-10-dual/Ascend910-30)
+	serverType, ok := util.GetLabelValue(n.Label, util.NPUServerTypeLabel, util.ServerTypeDeprecated)
 	if !ok {
-		return fmt.Errorf("setNodeVNPUInfo node %s no node label <%s>", n.Name, util.ServerType)
+		return fmt.Errorf("setNodeVNPUInfo node %s no node label <%s>&<%s>", n.Name,
+			util.NPUServerTypeLabel, util.ServerTypeDeprecated)
 	}
-	n.VNode.ServerType = chipLabel
+	n.VNode.ServerType = serverType
 
-	chipType, ok := n.Label[ChipTypeKey]
+	chipType, ok := util.GetLabelValue(n.Label, util.NPUChipNameLabel, util.ChipTypeKeyDeprecated)
 	if !ok {
-		return fmt.Errorf("setNodeVNPUInfo node %s no node label <%s>", n.Name, ChipTypeKey)
+		return fmt.Errorf("setNodeVNPUInfo node %s no node label <%s>&<%s>", n.Name,
+			util.NPUChipNameLabel, util.ChipTypeKeyDeprecated)
 	}
 	n.VNode.ChipType = chipType
 
@@ -141,18 +143,55 @@ func (n *NPUNode) setChipPropertiesFromNPUNode() error {
 	return nil
 }
 
-// GetChipKindFromNpuNode input huawei-Ascend910 return Ascend910/Ascend310p/Ascend310
+// GetChipKindFromNpuNode derives chipKind from chip.name label first,
+// falling back to old accelerator label. Returns Ascend910/Ascend310p/Ascend310.
 func (n NPUNode) GetChipKindFromNpuNode() (string, error) {
-	tempVal, ok := n.Label[util.Accelerator]
+	// 1. Try deriving from chip.name label (new approach)
+	chipName, ok := util.GetLabelValue(n.Label, util.NPUChipNameLabel, util.ChipTypeKeyDeprecated)
+	if ok {
+		chipKind, success := deriveAcceleratorFromChipName(chipName)
+		if success && chipKind != "" {
+			return chipKind, nil
+		}
+	}
+	// 2. Fallback: read old accelerator label
+	tempVal, ok := util.GetLabelValue(n.Label, util.AcceleratorDeprecated)
 	if !ok {
-		return "", fmt.Errorf("getChipKindFromNpuNode label %s absent", util.Accelerator)
+		return "", fmt.Errorf("getChipKindFromNpuNode: chip.name and accelerator label both absent")
 	}
 	chipKind := strings.Split(tempVal, "-")
 	if len(chipKind) < util.NPUIndex2 {
-		return "", fmt.Errorf("getChipKindFromNpuNode label %s value %s %s", util.Accelerator,
+		return "", fmt.Errorf("getChipKindFromNpuNode label %s value %s %s", util.AcceleratorDeprecated,
 			chipKind, FormatIncorrectError)
 	}
 	return chipKind[1], nil
+}
+
+// deriveAcceleratorFromChipName derives accelerator from chipName, aligning with
+// GetDevType + acceleratorLabelMap logic. 910A/910B/910A3 all map to Ascend910.
+// Returns (result, derived). derived=false means unable to determine from chipName.
+func deriveAcceleratorFromChipName(chipName string) (string, bool) {
+	if chipName == "" {
+		return "", false
+	}
+	// A5: Is910A5Chip checks prefix "Ascend950"
+	if strings.HasPrefix(chipName, Ascend950Prefix) {
+		return util.NPULowerCase, true
+	}
+	// Match GetDeviceTypeByChipName logic, map through acceleratorLabelMap
+	if strings.Contains(chipName, chipNameAscend310P) { // 310P → Ascend310P → Accelerator310PLabel
+		return util.Ascend310P, true
+	}
+	if strings.Contains(chipName, chipNameAscend310B) { // 310B → NOT in acceleratorLabelMap
+		return "", true
+	}
+	if strings.Contains(chipName, chipNameAscend310) { // 310 → Accelerator310Label
+		return util.Ascend310, true
+	}
+	if strings.Contains(chipName, chipNameAscend910) { // 910A/910B/910A3 → Accelerator910Label
+		return util.Ascend910, true
+	}
+	return "", false
 }
 
 // setTotalResAndChipNumByTemplates set totalRes, totalChipNum and serverType

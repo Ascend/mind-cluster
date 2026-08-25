@@ -233,7 +233,8 @@ func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfo k8s.Nod
 		return errors.New(util.ArgumentError)
 	}
 	n.Name = npuNode.Name
-	n.BaseDeviceInfo = npuNode.Node.Annotations[util.BaseDeviceInfoKey]
+	n.BaseDeviceInfo, _ = util.GetAnnotationValue(npuNode.Node.Annotations,
+		util.NPUBaseDevInfosAnnotation, util.BaseDeviceInfoKeyDeprecated)
 	n.Allocate = npuNode.Allocatable.ScalarResources
 	n.Idle = npuNode.Idle.ScalarResources
 	n.Label = npuNode.Node.Labels
@@ -242,7 +243,12 @@ func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfo k8s.Nod
 	n.syncAnnotation(npuNode, nodeInfoOfNodeD, switchInfo)
 	capability := npuNode.Capacity.ScalarResources
 	// serverIndex key of node annotations for A5
-	n.ServerIndex = npuNode.Node.Annotations[util.ServerIndexKey]
+	// Prefer topotree.serverid label, fallback to serverIndex annotation
+	var ok bool
+	n.ServerIndex, ok = util.GetLabelValue(npuNode.Node.Labels, util.TopoLabelServerId)
+	if !ok {
+		n.ServerIndex, _ = util.GetNodeAnnotation(npuNode.Node, util.ServerIndexKeyDeprecated)
+	}
 	if capability == nil {
 		return fmt.Errorf("node %s capability is invalid", npuNode.Name)
 	}
@@ -250,7 +256,7 @@ func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfo k8s.Nod
 	if !util.IsMapHasNPUResource(capability, util.HwPreName) {
 		return fmt.Errorf("node %s npu resource is not enable", npuNode.Name)
 	}
-	chipName, ok := n.Label[ChipTypeKey]
+	chipName, ok := util.GetLabelValue(n.Label, util.NPUChipNameLabel, util.ChipTypeKeyDeprecated)
 	// build PhyIdToDeviceIdMap in Ascend 950
 	if ok && strings.HasPrefix(chipName, Ascend950Prefix) {
 		if err := n.buildPhyIdToDeviceIdMap(); err != nil {
@@ -311,7 +317,7 @@ func (n *NPUNode) getUsedResourceQuotaMap(topStrArray []string) map[string]softS
 }
 
 func (n *NPUNode) getChipMemoryFromNodeLabel() int {
-	chipMemory, ok := n.Label[util.NPUChipMemoryLabelKey]
+	chipMemory, ok := util.GetLabelValue(n.Label, util.NPUChipMemoryLabelKey, util.NPUChipMemoryLabelKeyDeprecated)
 	if !ok {
 		return 0
 	}

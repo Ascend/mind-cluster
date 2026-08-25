@@ -55,10 +55,5 @@ const (
 )
 
 const (
-	// nPUChipMemoryKey key of npu chip memory in node labels
-	nPUChipMemoryKey = "mind-cluster/npu-chip-memory"
-)
-
-const (
 	jobGroupIDLabelKey = "jobID"
 )

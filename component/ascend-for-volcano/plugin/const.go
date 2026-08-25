@@ -93,7 +93,6 @@ const (
 )
 
 const (
-	ChipTypeKey = "node.kubernetes.io/npu.chip.name"
 	// ChipTypeB1 chip type 910B1
 	ChipTypeB1 = util.ChipKind + "B1"
 	// ChipTypeB2C chip type 910B2C
@@ -167,4 +166,16 @@ const (
 const (
 	// configResourceLevelConfig multilevel resource tree config
 	configResourceLevelConfig = "resource-level-config"
+)
+
+// chip name
+const (
+	chipNameAscend310   = "310"
+	chipNameAscend310B  = "310B"
+	chipNameAscend310P  = "310P"
+	chipNameAscend910   = "910"
+	chipNameAscend910A  = "910A"
+	chipNameAscend910B  = "910B"
+	chipNameAscend910A3 = "Ascend910"
+	chipNameAscend950   = "Ascend950"
 )
