@@ -18,6 +18,7 @@ import (
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/device"
+	"clusterd/pkg/domain/dpu"
 	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/switchinfo"
@@ -30,6 +31,7 @@ var (
 	atLeastReportCycle        = int64(5)
 	currentClusterDeviceCmNum = 0
 	currentClusterSwitchCmNum = 0
+	currentClusterDpuCmNum    = 0
 	initTime                  int64
 	updateChan                = make(chan int, 5)
 	reportTime                int64
@@ -74,12 +76,16 @@ func Report(ctx context.Context) {
 			case constant.SwitchProcessType:
 				switchArr := switchinfo.GetSafeData(faultmanager.QuerySwitchInfoToReport())
 				updateSwitchInfoCm(switchArr)
+			case constant.DpuProcessType:
+				dpuArr := dpu.GetSafeData(faultmanager.QueryDpuInfoToReport())
+				updateDpuInfoCm(dpuArr)
 			case constant.AllProcessType:
 				deviceArr := device.GetSafeData(faultdomain.AdvanceFaultMapToOriginalFaultMap[*constant.DeviceInfo](
 					faultmanager.QueryDeviceInfoToReport()))
 				nodeArr := node.GetData(faultmanager.QueryNodeInfoToReport())
 				switchArr := switchinfo.GetSafeData(faultmanager.QuerySwitchInfoToReport())
-				updateAllCm(deviceArr, nodeArr, switchArr)
+				dpuArr := dpu.GetSafeData(faultmanager.QueryDpuInfoToReport())
+				updateAllCm(deviceArr, nodeArr, switchArr, dpuArr)
 			default:
 				hwlog.RunLog.Errorf("unhandled type %d", whichToReport)
 			}
@@ -133,10 +139,11 @@ func StopReport() {
 	}
 }
 
-func updateAllCm(deviceArr, nodeArr, switchArr []string) {
+func updateAllCm(deviceArr, nodeArr, switchArr, dpuArr []string) {
 	updateSwitchInfoCm(switchArr)
 	updateNodeInfoCm(nodeArr)
 	updateDeviceInfoCm(deviceArr)
+	updateDpuInfoCm(dpuArr)
 }
 
 func updateSwitchInfoCm(switchArr []string) {
@@ -175,6 +182,20 @@ func updateDeviceInfoCm(deviceArr []string) {
 		cmContent := ""
 		if i < len(deviceArr) {
 			cmContent = deviceArr[i]
+		}
+		updateConfig(cmName, cmContent)
+	}
+}
+
+func updateDpuInfoCm(dpuArr []string) {
+	if currentClusterDpuCmNum < len(dpuArr) {
+		currentClusterDpuCmNum = len(dpuArr)
+	}
+	for i := 0; i < len(dpuArr) || i < currentClusterDpuCmNum; i++ {
+		cmName := constant.ClusterDpuInfo + strconv.Itoa(i)
+		cmContent := ""
+		if i < len(dpuArr) {
+			cmContent = dpuArr[i]
 		}
 		updateConfig(cmName, cmContent)
 	}

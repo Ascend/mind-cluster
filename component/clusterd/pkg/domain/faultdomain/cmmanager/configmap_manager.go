@@ -19,6 +19,7 @@ type ConfigMap[T constant.ConfigMapInterface] struct {
 var DeviceCenterCmManager *FaultCenterCmManager[*constant.AdvanceDeviceFaultCm]
 var SwitchCenterCmManager *FaultCenterCmManager[*constant.SwitchInfo]
 var NodeCenterCmManager *FaultCenterCmManager[*constant.NodeInfo]
+var DpuCenterCmManager *FaultCenterCmManager[*constant.DpuInfo]
 
 type FaultCenterCmManager[T constant.ConfigMapInterface] struct {
 	mutex       sync.RWMutex
@@ -46,6 +47,12 @@ func init() {
 		originalCm:  ConfigMap[*constant.NodeInfo]{Data: make(map[string]*constant.NodeInfo)},
 		processedCm: ConfigMap[*constant.NodeInfo]{Data: make(map[string]*constant.NodeInfo)},
 		cmBuffer:    collector.NodeCmCollectBuffer,
+	}
+	DpuCenterCmManager = &FaultCenterCmManager[*constant.DpuInfo]{
+		mutex:       sync.RWMutex{},
+		originalCm:  ConfigMap[*constant.DpuInfo]{Data: make(map[string]*constant.DpuInfo)},
+		processedCm: ConfigMap[*constant.DpuInfo]{Data: make(map[string]*constant.DpuInfo)},
+		cmBuffer:    collector.DpuCmCollectBuffer,
 	}
 }
 
