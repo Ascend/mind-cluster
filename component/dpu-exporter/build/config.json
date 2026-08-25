@@ -1,0 +1,6 @@
+{
+  "hinicadm5CollectorInterval": 60,
+  "sysfsCollectorInterval": 30,
+  "dpuListRefreshInterval": 60,
+  "metricWhiteList": []
+}
