@@ -50,6 +50,8 @@ const (
 	Ascend910BRingsNumTrain = 8
 	// Ascend910A3RingsNum indicates the number of 910A3 associated npu
 	Ascend910A3RingsNum = 2
+	// Ascend910A5RingsNum indicates the number of 910A5 devices in ring
+	Ascend910A5RingsNum = 1
 	// NoRingNum indicates the number of associated npu without ring
 	NoRingNum = 1
 	// OtherCardIncrease 910A3 related card increase factor

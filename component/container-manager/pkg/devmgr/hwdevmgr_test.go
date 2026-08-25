@@ -36,10 +36,6 @@ func TestHwDevMgrBasicMethod(t *testing.T) {
 		devType := mockDevMgr.GetDevType()
 		convey.So(devType, convey.ShouldEqual, mockDevMgr.devType)
 	})
-	convey.Convey("test method 'GetDevUsage' success", t, func() {
-		devUsage := mockDevMgr.GetDevUsage()
-		convey.So(devUsage, convey.ShouldEqual, mockDevMgr.devUsage)
-	})
 	convey.Convey("test method 'GetDevNum' success", t, func() {
 		devNum := mockDevMgr.GetDevNum()
 		convey.So(devNum, convey.ShouldEqual, len(mockDevMgr.npuInfos))
@@ -50,36 +46,6 @@ func TestHwDevMgrBasicMethod(t *testing.T) {
 		expPhyIds := []int32{dev0, dev1, dev2, dev3, dev4, dev5, dev6, dev7}
 		sort.Slice(expPhyIds, func(i, j int) bool { return expPhyIds[i] < expPhyIds[j] })
 		convey.So(phyIds, convey.ShouldResemble, expPhyIds)
-	})
-}
-
-func TestSetDeviceUsage(t *testing.T) {
-	resetDevMgr()
-	convey.Convey("test method 'setDeviceUsage' success, devType is 310", t, func() {
-		mockDevMgr.devType = api.Ascend310
-		err := mockDevMgr.setDeviceUsage(0)
-		convey.So(err, convey.ShouldBeNil)
-		convey.So(mockDevMgr.devUsage, convey.ShouldEqual, common.Infer)
-	})
-	convey.Convey("test method 'setDeviceUsage' success, usage is infer", t, func() {
-		mockDevMgr.devType = api.Ascend910B
-		mockDevMgr.boardId = common.A800IA2NoneHccsBoardIdOld
-		err := mockDevMgr.setDeviceUsage(0)
-		convey.So(err, convey.ShouldBeNil)
-		convey.So(mockDevMgr.devUsage, convey.ShouldEqual, common.Infer)
-
-		mockDevMgr.devType = api.Ascend910
-		err = mockDevMgr.setDeviceUsage(0)
-		convey.So(err, convey.ShouldBeNil)
-		convey.So(mockDevMgr.devUsage, convey.ShouldEqual, common.Train)
-	})
-	convey.Convey("test method 'setDeviceUsage' failed, get board id error", t, func() {
-		var patches = gomonkey.ApplyMethodReturn(&HwDevMgr{}, "GetBoardId", uint32(0), testErr)
-		defer patches.Reset()
-		mockDevMgr.devType = api.Ascend910
-		err := mockDevMgr.setDeviceUsage(0)
-		expErr := fmt.Errorf("get board id failed")
-		convey.So(err, convey.ShouldResemble, expErr)
 	})
 }
 

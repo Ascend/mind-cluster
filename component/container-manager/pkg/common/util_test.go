@@ -345,7 +345,7 @@ func TestGetDevStatus(t *testing.T) {
 func TestGetDevNumPerRing(t *testing.T) {
 	for _, tt := range buildGetDevNumPerRingTestCase() {
 		t.Run(tt.name, func(t *testing.T) {
-			result := GetDevNumPerRing(tt.devType, tt.devUsage, tt.deviceNum, tt.boardId)
+			result := GetDevNumPerRing(tt.devType, tt.deviceNum, tt.boardId)
 			if result != tt.expected {
 				t.Errorf("GetDevNumPerRing() = %v, want %v", result, tt.expected)
 			}
@@ -370,23 +370,20 @@ func buildGetDevNumPerRingTestCase() []getDevNumPerRingTC {
 			expected: Ascend910RingsNum,
 		},
 		{
-			name:     "02 910B+infer, no hccs",
+			name:     "02 910B, no hccs",
 			devType:  api.Ascend910B,
-			devUsage: Infer,
 			boardId:  A800IA2NoneHccsBoardId,
 			expected: NoRingNum,
 		},
 		{
-			name:     "03 910B+infer, has hccs",
+			name:     "03 910B, has hccs",
 			devType:  api.Ascend910B,
-			devUsage: Infer,
 			boardId:  EmptyBoardId,
 			expected: Ascend910BRingsNumTrain,
 		},
 		{
 			name:     "04 910B+train",
 			devType:  api.Ascend910B,
-			devUsage: Train,
 			expected: Ascend910BRingsNumTrain,
 		},
 		{
@@ -399,6 +396,17 @@ func buildGetDevNumPerRingTestCase() []getDevNumPerRingTC {
 			name:     "06 invalid devType",
 			devType:  "unknown devType",
 			expected: NoRingNum,
+		},
+		{
+			name:      "07 910B+train+A200TA2",
+			devType:   api.Ascend910B,
+			deviceNum: 16,
+			expected:  A200TA2RingsNum,
+		},
+		{
+			name:     "08 A5 device, return device num",
+			devType:  api.Ascend910A5,
+			expected: Ascend910A5RingsNum,
 		},
 	}
 }

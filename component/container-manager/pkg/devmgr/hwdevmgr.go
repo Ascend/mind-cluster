@@ -57,11 +57,6 @@ func (hdm *HwDevMgr) GetDevType() string {
 	return hdm.devType
 }
 
-// GetDevUsage get device usage
-func (hdm *HwDevMgr) GetDevUsage() string {
-	return hdm.devUsage
-}
-
 // GetDevNum get device number
 func (hdm *HwDevMgr) GetDevNum() int {
 	return len(hdm.npuInfos)
@@ -74,29 +69,6 @@ func (hdm *HwDevMgr) GetPhyIds() []int32 {
 		ids = append(ids, id)
 	}
 	return ids
-}
-
-func (hdm *HwDevMgr) setDeviceUsage(phyId int32) error {
-	if strings.HasPrefix(hdm.devType, api.Ascend310) {
-		hdm.devUsage = common.Infer
-		return nil
-	}
-
-	boardId, err := hdm.GetBoardId(phyId)
-	if err != nil {
-		hwlog.RunLog.Errorf("get board id failed, error: %v", err)
-		return fmt.Errorf("get board id failed")
-	}
-
-	// A800IA2 without hccs can be auto set usage as infer
-	if hdm.devType == api.Ascend910B && (boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId ||
-		boardId == common.A800IA2NoneHccsBoardId || boardId == common.A800IA2NoneHccsBoardIdOld) {
-		hdm.devUsage = common.Infer
-		return nil
-	}
-
-	hdm.devUsage = common.Train
-	return nil
 }
 
 func (hdm *HwDevMgr) setRingInfo() error {
@@ -158,7 +130,7 @@ func (hdm *HwDevMgr) GetDevNumPerRing(phyID int32) (int, error) {
 		hwlog.RunLog.Errorf("get board id failed: %v", err)
 		return 0, errors.New("get board id failed")
 	}
-	return common.GetDevNumPerRing(hdm.GetDevType(), hdm.GetDevUsage(), hdm.GetDevNum(), boardId), nil
+	return common.GetDevNumPerRing(hdm.GetDevType(), hdm.GetDevNum(), boardId), nil
 }
 
 func (hdm *HwDevMgr) setBoardId(logicId int32) error {
@@ -203,13 +175,13 @@ func (hdm *HwDevMgr) getPhyIdOn910A3Ring(phyId, logicID int32) ([]int32, error) 
 	}
 	logicID0, err := hdm.GetDmgr().GetDeviceLogicID(associatedCardID, common.Device910A3Id0)
 	if err != nil {
-		hwlog.RunLog.Errorf("get logicID faild by cardID %v deviceID %v, err: %v",
+		hwlog.RunLog.Errorf("get logicID failed by cardID %v deviceID %v, err: %v",
 			associatedCardID, common.Device910A3Id0, err)
 		return nil, err
 	}
 	logicID1, err := hdm.GetDmgr().GetDeviceLogicID(associatedCardID, common.Device910A3Id1)
 	if err != nil {
-		hwlog.RunLog.Errorf("get logicID faild by cardID %v deviceID %v, err: %v",
+		hwlog.RunLog.Errorf("get logicID failed by cardID %v deviceID %v, err: %v",
 			associatedCardID, common.Device910A3Id1, err)
 		return nil, err
 	}
@@ -222,7 +194,7 @@ func (hdm *HwDevMgr) getPhyIdOn910A3Ring(phyId, logicID int32) ([]int32, error) 
 	otherDeviceId := (deviceId + common.OtherCardIncrease) % common.Ascend910A3RingsNum
 	ringDevLogic, err := hdm.GetDmgr().GetDeviceLogicID(cardId, otherDeviceId)
 	if err != nil {
-		hwlog.RunLog.Errorf("get logicID faild by cardID %v deviceID %v, err: %v",
+		hwlog.RunLog.Errorf("get logicID failed by cardID %v deviceID %v, err: %v",
 			cardId, otherDeviceId, err)
 		return nil, err
 	}
@@ -269,7 +241,7 @@ func (hdm *HwDevMgr) constructNPUInfo(logicID int32) (common.NPUInfo, error) {
 		return common.NPUInfo{}, err
 	}
 	cardID, deviceID, err := hdm.dmgr.GetCardIDDeviceID(logicID)
-	if err != nil && hdm.GetDevType() != api.Ascend910A5 {
+	if err != nil && hdm.dmgr.GetDevType() != api.Ascend910A5 {
 		return common.NPUInfo{}, err
 	}
 	ip, err := hdm.getDeviceIP(logicID)

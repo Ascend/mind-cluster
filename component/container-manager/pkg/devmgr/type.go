@@ -25,7 +25,6 @@ type HwDevMgr struct {
 	// node dimension
 	devType  string
 	boardId  uint32
-	devUsage string
 	workMode string
 	// device dimension
 	npuInfos map[int32]*common.NPUInfo // key: phy id; value: npu info

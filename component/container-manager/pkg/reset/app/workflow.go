@@ -31,7 +31,7 @@ const (
 	lastingToHandlePeriodInSeconds = 60
 	resetMgrCycleInterval          = time.Second
 	cooldownPeriod                 = time.Second * 30
-	defaultWaitDeviceResetTime     = time.Second * 150
+	defaultWaitDeviceResetTime     = time.Second * 180
 )
 
 var (

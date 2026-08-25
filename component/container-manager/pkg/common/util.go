@@ -36,33 +36,28 @@ func NewSignWatcher(osSigns ...os.Signal) chan os.Signal {
 }
 
 // GetDevNumPerRing get reset device num at a time.
-// 910 and 910A2 device reset by ring, 910A3 reset related devices
-func GetDevNumPerRing(devType string, devUsage string, deviceNum int, boardId uint32) int {
-	var devNumPerRing = NoRingNum
+// 910 and 910A2 device reset by ring, 910A3 reset related devices, 910A5 reset single device.
+func GetDevNumPerRing(devType string, deviceNum int, boardId uint32) int {
 	switch devType {
 	case api.Ascend910A:
-		devNumPerRing = Ascend910RingsNum
+		return Ascend910RingsNum
 	case api.Ascend910B:
-		if devUsage == Infer {
-			if boardId == A300IA2BoardId || boardId == A300IA2GB64BoardId ||
-				boardId == A800IA2NoneHccsBoardId || boardId == A800IA2NoneHccsBoardIdOld {
-				devNumPerRing = NoRingNum
-			} else {
-				devNumPerRing = Ascend910BRingsNumTrain
-			}
+		if boardId == A300IA2BoardId || boardId == A300IA2GB64BoardId ||
+			boardId == A800IA2NoneHccsBoardId || boardId == A800IA2NoneHccsBoardIdOld {
+			return NoRingNum
 		}
-		if devUsage == Train {
-			devNumPerRing = Ascend910BRingsNumTrain
-			if deviceNum > Ascend910BRingsNumTrain {
-				devNumPerRing = A200TA2RingsNum
-			}
+		if deviceNum > Ascend910BRingsNumTrain {
+			return A200TA2RingsNum
 		}
+		return Ascend910BRingsNumTrain
 	case api.Ascend910A3:
-		devNumPerRing = Ascend910A3RingsNum
+		return Ascend910A3RingsNum
+	case api.Ascend910A5:
+		return Ascend910A5RingsNum
 	default:
 		// use initial value, do nothing
 	}
-	return devNumPerRing
+	return NoRingNum
 }
 
 // GetNeedPauseCtrFaultLevels need pause ctr fault levels

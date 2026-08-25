@@ -112,12 +112,13 @@ func (d *DockerClient) doGetUsedDevs(cs types.Container) ([]int32, error) {
 func getUsedDevsWithoutAscendRuntimeForDocker(resources container.Resources) ([]int32, error) {
 	phyIds := make([]int32, 0, sliceLen16)
 	for _, dev := range resources.Devices {
-		path := strings.TrimPrefix(dev.PathInContainer, "/dev/")
-		id := strings.TrimPrefix(path, "davinci")
-		if strings.Contains(id, "_") {
+		// only match /dev/davinciX, where X is one or more digits,
+		// and ignore other devices like /dev/ummu, /dev/uburma, /dev/davinci_manager
+		matches := davinciDevRegex.FindStringSubmatch(dev.PathInContainer)
+		if matches == nil {
 			continue
 		}
-		phyId, err := strconv.Atoi(id)
+		phyId, err := strconv.Atoi(matches[1])
 		if err != nil {
 			return nil, fmt.Errorf("get container %s device id failed, error: %v", resources.Devices, err)
 		}
