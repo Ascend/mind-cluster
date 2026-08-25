@@ -167,11 +167,15 @@ func (l *serverTypeLabeler) Write(labels map[string]string, ctx *label.NodeConte
 		serverTypeValue := api.AscendMinuxPrefix + strconv.Itoa(int(common.ParamOption.AiCoreCount))
 		writeValue(labels, serverTypeValue, label.NPUServerTypeLabel, label.NPUServerTypeLabelDeprecated)
 	} else {
-		_, ok := label.GetNodeLabel(ctx.Node, label.NPUServerTypeLabel)
-		_, okOld := label.GetNodeLabel(ctx.Node, label.NPUServerTypeLabelDeprecated)
-		if !ok || !okOld {
+		newVal, ok := label.GetNodeLabel(ctx.Node, label.NPUServerTypeLabel)
+		oldVal, okOld := label.GetNodeLabel(ctx.Node, label.NPUServerTypeLabelDeprecated)
+		if !ok && !okOld {
 			value := customname.ReplaceDevicePublicName(l.hdm.RunMode, cardType)
 			writeValue(labels, value, label.NPUServerTypeLabel, label.NPUServerTypeLabelDeprecated)
+		} else if !ok {
+			writeValue(labels, oldVal, label.NPUServerTypeLabel)
+		} else if !okOld {
+			writeValue(labels, newVal, label.NPUServerTypeLabelDeprecated)
 		}
 
 	}

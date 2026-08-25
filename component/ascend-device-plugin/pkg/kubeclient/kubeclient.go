@@ -131,7 +131,7 @@ func (ki *ClientK8s) AddAnnotations(annotations map[string]string) error {
 		escapedKey := strings.ReplaceAll(key, "~", "~0")
 		escapedKey = strings.ReplaceAll(escapedKey, "/", "~1")
 		patchList = append(patchList, map[string]string{
-			"op":    common2.ReplaceOP,
+			"op":    common2.AddOP,
 			"path":  common2.PathForAnnotations + escapedKey,
 			"value": value,
 		})
