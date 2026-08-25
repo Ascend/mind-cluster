@@ -25,8 +25,8 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"ascend-common/common-utils/hwlog"
 	"ascend-common/cdi/mount"
+	"ascend-common/common-utils/hwlog"
 
 	cdispec "tags.cncf.io/container-device-interface/specs-go"
 )
@@ -92,16 +92,6 @@ func (m *mockDirEntry) Name() string               { return m.name }
 func (m *mockDirEntry) IsDir() bool                { return m.isDir }
 func (m *mockDirEntry) Type() os.FileMode          { return 0 }
 func (m *mockDirEntry) Info() (os.FileInfo, error) { return &mockFileInfo{name: m.name}, nil }
-
-// mockMountProvider implements mount.Provider for tests.
-type mockMountProvider struct {
-	mounts []*cdispec.Mount
-	err    error
-}
-
-func (m *mockMountProvider) GetMounts() ([]*cdispec.Mount, error) {
-	return m.mounts, m.err
-}
 
 // ---------------------------------------------------------------------------
 // Mock function implementations (portable — no unix imports)
@@ -202,7 +192,6 @@ func setupMocks() func() {
 // ---------------------------------------------------------------------------
 // Assert helpers
 // ---------------------------------------------------------------------------
-
 func assertDevicesContain(t *testing.T, devices []*cdispec.DeviceNode, expected ...string) {
 	t.Helper()
 	devicePaths := make(map[string]bool, len(devices))
@@ -228,7 +217,6 @@ func assertNoDevice(devices []*cdispec.DeviceNode, path string) error {
 // ---------------------------------------------------------------------------
 // HCCL topology helpers
 // ---------------------------------------------------------------------------
-
 func saveRestoreHCCLItems() func() {
 	orig := make([]mount.TopologyItem, len(mount.TopologyItems))
 	copy(orig, mount.TopologyItems)
@@ -239,21 +227,44 @@ func saveRestoreHCCLItems() func() {
 // Shorthand helpers
 // ---------------------------------------------------------------------------
 
-// writeClaimSpec calls GenerateClaimSpec with the standard Ascend910 device
-// type and a mock provider.  It is a shorthand to reduce test boilerplate.
-func writeClaimSpec(t *testing.T, claimUID string, deviceIDs []int, productType string, provider mount.Provider) (string, []string) {
+// testMountSource returns a MountConfig pointing at a fresh temp dir without
+// any .list files, i.e. a config that yields zero mounts.
+func testMountSource(t *testing.T) mount.MountConfig {
 	t.Helper()
-	specName, ids, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: deviceIDs, DevType: "Ascend910", ProductType: productType}, Provider: provider}, claimUID)
+	return mount.MountConfig{Dir: t.TempDir(), IsAscendDockerRuntime: true}
+}
+
+// writeBaseList writes base.list into dir containing the given host paths.
+// The paths must already exist on the filesystem (as in real usage) for the
+// generated mounts to pass the existence checks.
+func writeBaseList(t *testing.T, dir string, paths ...string) {
+	t.Helper()
+	content := strings.Join(paths, "\n")
+	if len(paths) > 0 {
+		content += "\n"
+	}
+	if err := os.WriteFile(filepath.Join(dir, "base.list"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// stubMountBuildFn overrides the buildMountsFn seam for the duration of the
+// test and returns a restore function. Used to capture BuildSpec's mount
+// arguments or inject mount errors.
+func stubMountBuildFn(fn func(cfg mount.MountConfig, devType string) ([]*cdispec.Mount, error)) func() {
+	orig := buildMountsFn
+	buildMountsFn = fn
+	return func() { buildMountsFn = orig }
+}
+
+// writeClaimSpec calls GenerateClaimSpec with the standard Ascend910 device
+// type and a mount source without .list files (zero mounts).  It is a
+// shorthand to reduce test boilerplate.
+func writeClaimSpec(t *testing.T, claimUID string, deviceIDs []int, productType string) (string, []string) {
+	t.Helper()
+	specName, ids, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: deviceIDs, DevType: "Ascend910", ProductType: productType}, MountConfig: testMountSource(t)}, claimUID)
 	if err != nil {
 		t.Fatalf("GenerateClaimSpec: %v", err)
 	}
 	return specName, ids
-}
-
-func newMockProvider(mounts []*cdispec.Mount) *mockMountProvider {
-	return &mockMountProvider{mounts: mounts}
-}
-
-func newMockProviderWithErr(err error) *mockMountProvider {
-	return &mockMountProvider{err: err}
 }

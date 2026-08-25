@@ -14,16 +14,156 @@
 
 // Package mount — mount_test.go
 //
-// Tests for the glob expansion and symlink-ownership helpers used by the
-// build pipeline.
+// Tests for the Build entry point, HCCL topology injection, and the glob
+// expansion and symlink-ownership helpers used by the build pipeline.
 package mount
 
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
+
+	cdispec "tags.cncf.io/container-device-interface/specs-go"
 )
+
+func TestBuild_ReadError(t *testing.T) {
+	// A malformed mounts.json must surface as a Build error.
+	dir := t.TempDir()
+	mustWriteFile(t, filepath.Join(dir, "mounts.json"), "{not json")
+	_, err := Build(MountConfig{Dir: dir}, "")
+	if err == nil {
+		t.Fatal("expected error from the JSON reader")
+	}
+	if !strings.Contains(err.Error(), "mounts.json") {
+		t.Errorf("error should mention mounts.json, got: %v", err)
+	}
+}
+
+func TestBuild_HostRootPrefixesTopology(t *testing.T) {
+	// Topology injection is list-mode-only (JSON mode is data-driven from
+	// mounts.json; see TestBuildJSON_NoTopologyInjection).
+	hostRoot := t.TempDir()
+	topoFile := filepath.Join(hostRoot, "etc", "hccl_rootinfo.json")
+	if err := os.MkdirAll(filepath.Dir(topoFile), 0755); err != nil {
+		t.Fatal(err)
+	}
+	mustWriteFile(t, topoFile, `{"version":"1.0"}`)
+
+	orig := TopologyItems
+	defer func() { TopologyItems = orig }()
+	TopologyItems = []TopologyItem{{HostPath: "/etc/hccl_rootinfo.json", Options: []string{"rbind", "rprivate", "ro"}}}
+
+	// Empty source (no .list mounts); only the topology item should be emitted.
+	mounts, err := Build(MountConfig{Dir: t.TempDir(), IsAscendDockerRuntime: true, HostRoot: hostRoot}, "")
+	if err != nil {
+		t.Fatalf("Build returned error: %v", err)
+	}
+	if len(mounts) != 1 {
+		t.Fatalf("expected 1 topology mount, got %d", len(mounts))
+	}
+	// HostPath must carry the original host path, without the hostRoot prefix.
+	if mounts[0].HostPath != "/etc/hccl_rootinfo.json" {
+		t.Errorf("HostPath = %q, want /etc/hccl_rootinfo.json", mounts[0].HostPath)
+	}
+}
+
+// TestBuild_TopologyListModeOnly proves the IsAscendDockerRuntime dispatch:
+// list mode (true) appends the HCCL topology mounts, JSON mode (false) does
+// not, even when a topology item exists on the host.
+func TestBuild_TopologyListModeOnly(t *testing.T) {
+	hostRoot := t.TempDir()
+	topoFile := filepath.Join(hostRoot, "etc", "hccl_rootinfo.json")
+	if err := os.MkdirAll(filepath.Dir(topoFile), 0755); err != nil {
+		t.Fatal(err)
+	}
+	mustWriteFile(t, topoFile, `{"version":"1.0"}`)
+
+	orig := TopologyItems
+	defer func() { TopologyItems = orig }()
+	TopologyItems = []TopologyItem{{HostPath: "/etc/hccl_rootinfo.json", Options: []string{"rbind", "rprivate", "ro"}}}
+
+	// List mode: topology item appended after the (empty) entry list.
+	listMounts, err := Build(MountConfig{Dir: t.TempDir(), IsAscendDockerRuntime: true, HostRoot: hostRoot}, "")
+	if err != nil {
+		t.Fatalf("Build returned error: %v", err)
+	}
+	if len(listMounts) != 1 || listMounts[0].HostPath != "/etc/hccl_rootinfo.json" {
+		t.Fatalf("list mode: expected 1 topology mount, got %v", listMounts)
+	}
+
+	// JSON mode (zero-value IsAscendDockerRuntime): no entries and no topology.
+	jsonMounts, err := Build(MountConfig{Dir: t.TempDir(), HostRoot: hostRoot}, "")
+	if err != nil {
+		t.Fatalf("Build returned error: %v", err)
+	}
+	if len(jsonMounts) != 0 {
+		t.Fatalf("json mode: expected 0 mounts (no topology injection), got %v", jsonMounts)
+	}
+}
+
+func TestBuild_UBDriverForcesAllowLink(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	baseFile := filepath.Join(tmpDir, "base_lib.so")
+	mustWriteFile(t, baseFile, "")
+	writeListFile(t, tmpDir, "base", baseFile+"\n")
+	// A plain-file ub_driver.list entry suffices to assert the "force" side
+	// effect: ubIncluded must be true whenever ub_driver.list is present,
+	// regardless of file ownership.
+	ubFile := filepath.Join(tmpDir, "ub_plain.so")
+	mustWriteFile(t, ubFile, "")
+	writeListFile(t, tmpDir, "ub_driver", ubFile+"\n")
+
+	entries, ubIncluded, err := readListEntries(tmpDir, "", false)
+	if err != nil {
+		t.Fatalf("readListEntries returned error: %v", err)
+	}
+	if !ubIncluded {
+		t.Error("ubIncluded must be true when ub_driver.list is present")
+	}
+	if len(entries) != 2 {
+		t.Fatalf("expected 2 entries (base + ub_driver), got %v", entries)
+	}
+
+	if os.Geteuid() != 0 {
+		return
+	}
+
+	// Root only: end-to-end check that a root-owned symlink entry in
+	// ub_driver.list is mounted thanks to the forced allow-link.
+	ubTarget := filepath.Join(tmpDir, "ub_lib.so")
+	mustWriteFile(t, ubTarget, "")
+	ubLink := filepath.Join(tmpDir, "ub_link.so")
+	if err := os.Symlink(ubTarget, ubLink); err != nil {
+		t.Fatal(err)
+	}
+	writeListFile(t, tmpDir, "ub_driver", ubLink+"\n")
+
+	linkMounts, err := buildListMounts(t, MountConfig{Dir: tmpDir, IsAscendDockerRuntime: true})
+	if err != nil {
+		t.Fatalf("buildListMounts returned error: %v", err)
+	}
+	if len(linkMounts) != 2 {
+		t.Fatalf("expected 2 mounts (base + ub_driver symlink), got %v", linkMounts)
+	}
+	got := map[string]bool{linkMounts[0].HostPath: true, linkMounts[1].HostPath: true}
+	if !got[baseFile] || !got[ubLink] {
+		t.Errorf("expected mounts for base and ub_driver symlink, got %v", got)
+	}
+}
+
+// buildListMounts runs the full Build pipeline for a list-mode config with
+// HCCL topology injection disabled, so mount counts match the pre-refactor
+// list-mount behavior.
+func buildListMounts(t *testing.T, cfg MountConfig) ([]*cdispec.Mount, error) {
+	t.Helper()
+	orig := TopologyItems
+	TopologyItems = nil
+	defer func() { TopologyItems = orig }()
+	return Build(cfg, "")
+}
 
 // fakeFileInfo is a minimal os.FileInfo whose Sys() returns nil, simulating
 // a platform where *syscall.Stat_t is not available.

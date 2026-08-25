@@ -24,6 +24,8 @@ import (
 
 	"golang.org/x/sys/unix"
 	cdispec "tags.cncf.io/container-device-interface/specs-go"
+
+	"ascend-common/api"
 )
 
 // ascend310BSpecialPaths mirrors ascend310BManagerDevices with /dev/ prefix.
@@ -69,7 +71,7 @@ func TestGenerateSharedNodes_Ascend910(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
 
-	nodes, err := GenerateSharedNodes(Ascend910, "")
+	nodes, err := GenerateSharedNodes(api.Ascend910, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -89,7 +91,7 @@ func TestGenerateSharedNodes_Ascend310B(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
 
-	nodes, err := GenerateSharedNodes(Ascend310B, "")
+	nodes, err := GenerateSharedNodes(api.Ascend310B, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -113,7 +115,7 @@ func TestGenerateSharedNodes_Ascend910A5(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
 
-	nodes, err := GenerateSharedNodes(Ascend910A5, "")
+	nodes, err := GenerateSharedNodes(api.Ascend910A5, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -138,7 +140,7 @@ func TestGenerateSharedNodes_Atlas200(t *testing.T) {
 			cleanup := setupMocks()
 			defer cleanup()
 
-			nodes, err := GenerateSharedNodes(Ascend910, pt)
+			nodes, err := GenerateSharedNodes(api.Ascend910, pt)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -167,7 +169,7 @@ func TestGenerateSharedNodes_UBDevicesPresent(t *testing.T) {
 	osReadDir = mockReadDirWithUB
 	defer func() { osReadDir = origReadDir }()
 
-	nodes, err := GenerateSharedNodes(Ascend910, "")
+	nodes, err := GenerateSharedNodes(api.Ascend910, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -197,7 +199,7 @@ func TestGenerateSharedNodes_ManagerError(t *testing.T) {
 	}
 	defer func() { unixStat = origStat }()
 
-	_, err := GenerateSharedNodes(Ascend910, "")
+	_, err := GenerateSharedNodes(api.Ascend910, "")
 	if err == nil {
 		t.Fatal("expected error from resolveDavinciManager via GenerateSharedNodes")
 	}

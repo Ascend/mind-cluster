@@ -31,7 +31,7 @@ func TestClaimSpec_Lifecycle(t *testing.T) {
 	defer cleanup()
 
 	// Create.
-	specName, ids := writeClaimSpec(t, "claim-1", []int{0, 1}, "", newMockProvider(nil))
+	specName, ids := writeClaimSpec(t, "claim-1", []int{0, 1}, "")
 	if specName == "" {
 		t.Error("specName must not be empty")
 	}
@@ -40,7 +40,7 @@ func TestClaimSpec_Lifecycle(t *testing.T) {
 	}
 
 	// Overwrite with more devices works atomically.
-	specName2, ids2 := writeClaimSpec(t, "claim-1", []int{0, 1, 2}, "", newMockProvider(nil))
+	specName2, ids2 := writeClaimSpec(t, "claim-1", []int{0, 1, 2}, "")
 	if specName2 == "" || len(ids2) != 3 {
 		t.Errorf("overwrite failed: %q %v", specName2, ids2)
 	}
@@ -53,19 +53,7 @@ func TestClaimSpec_Lifecycle(t *testing.T) {
 
 func TestClaimSpec_Errors(t *testing.T) {
 	t.Run("empty claimUID", func(t *testing.T) {
-		_, _, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "Ascend910"}, Provider: newMockProvider(nil)}, "")
-		if err == nil {
-			t.Fatal("expected error")
-		}
-	})
-	t.Run("invalid devType", func(t *testing.T) {
-		_, _, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "Unknown"}, Provider: newMockProvider(nil)}, "c")
-		if err == nil {
-			t.Fatal("expected error")
-		}
-	})
-	t.Run("case-sensitive devType", func(t *testing.T) {
-		_, _, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "ascend910"}, Provider: newMockProvider(nil)}, "c")
+		_, _, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: "Ascend910"}, MountConfig: testMountSource(t)}, "")
 		if err == nil {
 			t.Fatal("expected error")
 		}
@@ -73,7 +61,7 @@ func TestClaimSpec_Errors(t *testing.T) {
 }
 
 func TestClaimSpec_EmptyLogicIDs(t *testing.T) {
-	_, ids, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{}, DevType: "Ascend910"}, Provider: newMockProvider(nil)}, "claim-empty")
+	_, ids, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{}, DevType: "Ascend910"}, MountConfig: testMountSource(t)}, "claim-empty")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,7 +75,7 @@ func TestClaimSpec_AutoCreateDir(t *testing.T) {
 	defer cleanup()
 
 	// Directory creation is now managed by the CDI library's default cache.
-	specName, ids := writeClaimSpec(t, "claim-dir", []int{0}, "", newMockProvider(nil))
+	specName, ids := writeClaimSpec(t, "claim-dir", []int{0}, "")
 	if specName == "" || len(ids) != 1 {
 		t.Fatalf("unexpected result: specName=%q ids=%v", specName, ids)
 	}
@@ -105,7 +93,3 @@ func TestDeleteClaimSpec_EdgeCases(t *testing.T) {
 		}
 	})
 }
-
-// =============================================================================
-// GenerateClaimSpec — WriteSpec failure
-// =============================================================================

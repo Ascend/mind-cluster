@@ -18,14 +18,45 @@
 package mount
 
 import (
+	"context"
 	"path/filepath"
+	"reflect"
 	"testing"
+
+	"ascend-common/common-utils/hwlog"
 )
+
+func init() {
+	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
+}
 
 // writeListFile writes a .list file under dir with the given content.
 func writeListFile(t *testing.T, dir, name, content string) {
 	t.Helper()
 	mustWriteFile(t, filepath.Join(dir, name+".list"), content)
+}
+
+// TestParseMountNames verifies comma-separated name parsing, trimming, and
+// deduplication (repeated names like "base,base" collapse to one entry).
+func TestParseMountNames(t *testing.T) {
+	tests := []struct {
+		input string
+		want  []string
+	}{
+		{"", []string{"base"}},
+		{"custom", []string{"custom"}},
+		{"a,b,c", []string{"a", "b", "c"}},
+		{" x , y ", []string{"x", "y"}},
+		{"a,,b", []string{"a", "b"}},
+		{"base,base", []string{"base"}},
+		{"a,a,b,b", []string{"a", "b"}},
+		{"base, base", []string{"base"}},
+	}
+	for _, tt := range tests {
+		if got := parseMountNames(tt.input); !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("parseMountNames(%q) = %v, want %v", tt.input, got, tt.want)
+		}
+	}
 }
 
 func TestParseListFile_OpenError(t *testing.T) {
@@ -93,6 +124,15 @@ func TestReadListEntries_UbIncludedFlag(t *testing.T) {
 	}
 	if len(entries) != 0 {
 		t.Fatalf("expected 0 entries, got %d", len(entries))
+	}
+
+	// names explicitly containing ub_driver: ub_driver.list is read once only.
+	entries, _, err = readListEntries(tmpDir, "ub_driver", false)
+	if err != nil {
+		t.Fatalf("readListEntries returned error: %v", err)
+	}
+	if len(entries) != 1 || entries[0].Paths[0] != ubFile {
+		t.Fatalf("expected 1 ub entry (deduplicated), got %v", entries)
 	}
 }
 

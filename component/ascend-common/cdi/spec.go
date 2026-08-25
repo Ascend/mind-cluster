@@ -40,7 +40,7 @@ type DeviceConfig struct {
 	DeviceIDs []int
 
 	// DevType identifies the Ascend hardware variant.
-	// Must be one of: "Ascend310", "Ascend310B", "Ascend310P", "Ascend910", "Ascend910A5",
+	// Examples: "Ascend310", "Ascend310B", "Ascend310P", "Ascend910", "Ascend910A5",
 	// "Atlas 200I SoC A1", "Atlas 200 Model 3000".
 	DevType string
 
@@ -48,31 +48,22 @@ type DeviceConfig struct {
 	// Used to skip common manager devices (devmm_svm, hisi_hdc) for Atlas200 products.
 	// May be empty for non-Atlas200 hardware.
 	ProductType string
+
+	// UseVirtual toggles vdavinci device naming for virtual NPU support.
+	// When true, device HostPath uses "vdavinci" prefix while ContainerPath uses "davinci".
+	UseVirtual bool
 }
 
 // BuildSpecConfig holds all configuration for BuildSpec.
 type BuildSpecConfig struct {
 	DeviceConfig // embed shared device fields
 
-	// UseVirtual toggles vdavinci device naming for virtual NPU support.
-	// When true, device HostPath uses "vdavinci" prefix while ContainerPath uses "davinci".
-	UseVirtual bool
-
-	// DisableMounts skips mount generation when true (NODRV mode).
-	// LD_LIBRARY_PATH and device nodes are still generated.
-	DisableMounts bool
-
-	// Provider supplies the mount configuration for ContainerEdits.
-	// Use &mount.FileProvider{Dir: "/etc/ascend-docker-runtime.d"} for runtime CDI.
-	Provider mount.Provider
-
-	// HostRoot is the path where the host root filesystem is mounted inside
-	// the container (e.g. "/host"). When non-empty, existence checks for
-	// non-/dev paths are performed against <HostRoot><path> (mounts, HCCL
-	// topology, and driver library paths). An empty HostRoot disables
-	// prefixing, which is the behavior for ascend-docker-runtime running on
-	// the host filesystem directly.
-	HostRoot string
+	// MountConfig holds the mount-generation configuration passed to Build.
+	// Use mount.MountConfig{Dir: "/etc/ascend-docker-runtime.d",
+	// IsAscendDockerRuntime: true} for runtime CDI (list mode), or
+	// mount.MountConfig{Dir: "/etc/ascend-dra/mounts"} for the JSON mount
+	// profile written by DRA (default JSON mode).
+	mount.MountConfig
 
 	// Version is the CDI spec version. Empty falls back to the package
 	// default (cdiVersion).
@@ -92,17 +83,6 @@ const (
 	cdiKind    = "ascend.com/npu"
 )
 
-// validDevTypes enumerates known device type strings for input validation.
-var validDevTypes = map[string]bool{
-	Ascend310:    true,
-	Ascend310B:   true,
-	Ascend310P:   true,
-	Ascend910:    true,
-	Ascend910A5:  true,
-	Atlas200ISoc: true,
-	Atlas200:     true,
-}
-
 // ---------------------------------------------------------------------------
 // Ascend driver library paths
 // ---------------------------------------------------------------------------
@@ -113,6 +93,7 @@ var validDevTypes = map[string]bool{
 var ascendDriverLibPaths = []string{
 	"/usr/local/Ascend/driver/lib64/common",
 	"/usr/local/Ascend/driver/lib64/driver",
+	"/usr/lib64", // UB driver user-space library dir; mirrors legacy runtime/process/process.go
 }
 
 const ldLibraryPathKey = "LD_LIBRARY_PATH"
@@ -134,6 +115,17 @@ func collectAscendLibPaths(hostRoot string) []string {
 // BuildSpec
 // ---------------------------------------------------------------------------
 
+// PrepareMountConfigFile writes the builtin mount profile to <dir>/mounts.json.
+// DRA calls this at startup so CDI can read the JSON when generating specs.
+func PrepareMountConfigFile(dir string) error {
+	return mount.WriteMountProfile(dir, mount.DefaultMountProfile())
+}
+
+// buildMountsFn is the seam through which BuildSpec generates container
+// mounts. Tests override it to capture arguments or inject failures; the
+// default is mount.Build.
+var buildMountsFn = mount.Build
+
 // BuildSpec constructs a CDI v0.8.0 Spec.  Per-device davinci nodes go into
 // Device[i].ContainerEdits; shared manager/UB nodes, mounts, and HCCL
 // topology go into Spec.ContainerEdits.
@@ -149,24 +141,17 @@ func BuildSpec(cfg BuildSpecConfig) (*cdispec.Spec, error) {
 		kind = cdiKind
 	}
 
-	var mounts []*cdispec.Mount
-	if !cfg.DisableMounts {
-		var err error
-		mounts, err = mount.Build(cfg.Provider, cfg.HostRoot)
-		if err != nil {
-			return nil, err
-		}
+	mounts, err := buildMountsFn(cfg.MountConfig, cfg.DevType)
+	if err != nil {
+		return nil, err
 	}
 	specEdits := cdispec.ContainerEdits{Mounts: mounts}
-	if libPaths := collectAscendLibPaths(cfg.HostRoot); len(libPaths) > 0 {
+	if libPaths := collectAscendLibPaths(cfg.MountConfig.HostRoot); len(libPaths) > 0 {
 		specEdits.Env = append(specEdits.Env, ldLibraryPathKey+"="+strings.Join(libPaths, ":"))
 	}
 
 	if len(cfg.DeviceIDs) == 0 {
 		return &cdispec.Spec{Version: version, Kind: kind, ContainerEdits: specEdits}, nil
-	}
-	if !validDevTypes[cfg.DevType] {
-		return nil, fmt.Errorf("cdi: unknown device type %q", cfg.DevType)
 	}
 
 	devices, err := GeneratePerDeviceNodes(cfg.DeviceIDs, cfg.UseVirtual)
