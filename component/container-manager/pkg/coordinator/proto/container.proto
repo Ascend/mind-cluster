@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+option go_package = ".;proto";
+
+// ============ Basic Types ============
+
+// Simple container info (reported only by distributed task containers)
+message ContainerInfo {
+  string container_id = 1;       // Container ID
+  string status = 2;             // Container status (running/paused/stopped)
+  repeated int32 phy_ids = 3;    // List of NPU physical IDs in use
+  string job_id = 4;             // Identifier of the distributed job it belongs to
+  int32 job_replica = 5;         // Total number of replicas (0 means not configured)
+  bool enable_recover = 6;       // Whether recovery is enabled (always false when ctrStrategy=never)
+  string paused_by_peer = 7;     // Node that initiated the pause (empty means not paused by a remote node; used by the leader for initiator validation)
+}
+
+// ============ Request/Response ============
+
+// Data sync request (regular node -> leader)
+message SyncDataReq {
+  string uuid = 1;                          // Unique request ID
+  string node_id = 2;                       // hostname of the requesting node
+  repeated ContainerInfo containers = 3;    // All distributed task containers (up to 128)
+  int64 sync_time = 4;                      // Sync timestamp
+}
+
+// Coordinate request (faulty node -> leader; also used for broadcast push)
+message CoordinateReq {
+  string uuid = 1;                          // Unique request ID (used for idempotency/deduplication)
+  string node_id = 2;                       // hostname of the initiator node
+  repeated string job_ids = 3;              // List of distributed job IDs (a card/ring may host multiple jobs)
+  string action = 4;                        // stop/start
+}
+
+// Generic response
+message Response {
+  string uuid = 1;                          // Corresponding request ID
+  uint32 code = 2;                          // 0=success, others=error codes
+  string message = 3;                       // Description
+}
+
+// ============ Service Definition ============
+
+service ContainerService {
+  // Data sync (regular node -> leader)
+  rpc SyncData(SyncDataReq) returns (Response);
+
+  // Coordinate request (faulty node -> leader; synchronously waits for broadcast responses from all nodes)
+  rpc Coordinate(CoordinateReq) returns (Response);
+
+  // Establish a broadcast stream (regular node -> leader, bidirectional stream)
+  // The node initiates the stream; the leader pushes CoordinateReq over it, and the node returns Response over it
+  rpc InitBroadcastStream(stream Response) returns (stream CoordinateReq);
+}
