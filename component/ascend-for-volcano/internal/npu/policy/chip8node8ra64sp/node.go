@@ -26,6 +26,7 @@ import (
 	"k8s.io/klog/v2"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -106,6 +107,15 @@ func (tp *chip8node8ra64sp) checkNodeNPUNums(task *api.TaskInfo, node plugin.NPU
 			// Filter network unhealthy cards for multi SuperPod strategy
 			networkUnhealthyTop := util.ChangeTopToIntArray(networkUnhealthyTopStr, tp.GetAnnoPreVal(tp.ReqNPUName))
 			nodeTop = util.RemoveCommonElement(nodeTop, networkUnhealthyTop)
+		}
+	}
+
+	if util.IsRdmaTask(task, node.Annotation) {
+		dpuAffectedNPU := k8s.GetDpuFaultAffectedNPU(node.Annotation)
+		if len(dpuAffectedNPU) > 0 {
+			nodeTop = util.RemoveCommonElement(nodeTop, dpuAffectedNPU)
+			klog.V(util.LogInfoLev).Infof("task %s is rdma task, remove dpu affected npu %v from nodeTop, left %v",
+				task.Name, dpuAffectedNPU, nodeTop)
 		}
 	}
 

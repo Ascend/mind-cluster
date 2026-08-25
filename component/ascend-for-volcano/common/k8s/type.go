@@ -26,6 +26,7 @@ type ClusterInfoWitchCm struct {
 	deviceInfos       *DeviceInfosWithMutex
 	nodeInfosFromCm   *NodeInfosFromCmWithMutex   // NodeInfos is get from kube-system/node-info- configmap
 	switchInfosFromCm *SwitchInfosFromCmWithMutex // switchInfosFromCm is get from mindx-dl/device-info- configmap
+	dpuInfosFromCm    *DpuInfosWithMutex          // dpuInfosFromCm is get from dpuinfo- configmap
 }
 
 // DeviceInfosWithMutex information for the current plugin
@@ -44,6 +45,55 @@ type NodeInfosFromCmWithMutex struct {
 type SwitchInfosFromCmWithMutex struct {
 	sync.Mutex
 	Switches map[string]SwitchFaultInfo
+}
+
+// DpuInfosWithMutex dpu info with mutex
+type DpuInfosWithMutex struct {
+	sync.Mutex
+	Dpus map[string]DpuInfoWithNode
+}
+
+// DpuInfoWithNode is the dpu information reported by cm with cache update time
+type DpuInfoWithNode struct {
+	DpuInfoCfg
+	CacheUpdateTime int64
+}
+
+// DpuInfoCfg represents the DPU information configuration structure, aligned with dpu-dp cm
+type DpuInfoCfg struct {
+	DPUInfo    DPUInfoBody `json:"DPUInfo"`
+	UpdateTime int64       `json:"UpdateTime"`
+}
+
+// DPUInfoBody is the body of DPU info, containing DPU list and node event
+type DPUInfoBody struct {
+	DPUList   []DPUItem     `json:"DPUList"`
+	NodeEvent *DpuNodeEvent `json:"NodeEvent"`
+}
+
+// DPUItem represents a single DPU device information
+type DPUItem struct {
+	HcaName     string           `json:"HcaName"`
+	EthName     string           `json:"EthName"`
+	IpAddr      string           `json:"IpAddr,omitempty"`
+	DeviceID    string           `json:"DeviceID"`
+	VendorID    string           `json:"VendorID"`
+	FaultList   []DpuFaultDetail `json:"FaultList"`
+	AffectedNPU []int            `json:"AffectedNPU"`
+}
+
+// DpuNodeEvent represents node-level dpu fault events (e.g. dpu card drop)
+type DpuNodeEvent struct {
+	NodeName  string           `json:"NodeName"`
+	FaultList []DpuFaultDetail `json:"FaultList"`
+}
+
+// DpuFaultDetail represents detailed information about a dpu fault
+type DpuFaultDetail struct {
+	FaultCode   string `json:"FaultCode"`
+	Time        int64  `json:"Time"`
+	Description string `json:"Description"`
+	FaultLevel  string `json:"FaultLevel"`
 }
 
 // NodeDeviceInfo like node annotation.
@@ -111,6 +161,10 @@ func NewClusterInfoWitchCm() ClusterInfoWitchCm {
 		switchInfosFromCm: &SwitchInfosFromCmWithMutex{
 			Mutex:    sync.Mutex{},
 			Switches: map[string]SwitchFaultInfo{},
+		},
+		dpuInfosFromCm: &DpuInfosWithMutex{
+			Mutex: sync.Mutex{},
+			Dpus:  map[string]DpuInfoWithNode{},
 		},
 	}
 }

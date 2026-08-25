@@ -26,6 +26,7 @@ import (
 
 	"k8s.io/klog/v2"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -148,6 +149,38 @@ func (fNode *FaultNode) updateFaultNodesFromDeviceInfo(node *plugin.NPUNode) {
 	}
 	fNode.setFaultDeviceList(deviceFaultReason)
 	fNode.setNodeHasCardSubHealthFault()
+}
+
+// updateFaultNodesFromDpuInfo update FaultNode from dpu info (annotation huawei.com/dpu.infos)
+func (fNode *FaultNode) updateFaultNodesFromDpuInfo(node *plugin.NPUNode) {
+	if node == nil {
+		return
+	}
+	klog.V(util.LogDebugLev).Infof("update dpu info for node %s", node.Name)
+	fNode.updateFaultDpuFromAnnotation(node)
+}
+
+// updateFaultDpuFromAnnotation extract faulty dpu from node annotation into FaultNode
+func (fNode *FaultNode) updateFaultDpuFromAnnotation(node *plugin.NPUNode) {
+	fNode.FaultDpuList = nil
+	fNode.DpuNodeEvent = nil
+	dpuInfo, err := k8s.GetDpuInfoFromAnno(node.Annotation)
+	if err != nil {
+		klog.V(util.LogWarningLev).Infof("get dpu info from annotation failed for node %s: %s", node.Name, err)
+		return
+	}
+	for _, dpu := range dpuInfo.DPUInfo.DPUList {
+		if len(dpu.FaultList) > 0 {
+			fNode.FaultDpuList = append(fNode.FaultDpuList, dpu)
+		}
+	}
+	if dpuInfo.DPUInfo.NodeEvent != nil && len(dpuInfo.DPUInfo.NodeEvent.FaultList) > 0 {
+		fNode.DpuNodeEvent = dpuInfo.DPUInfo.NodeEvent
+	}
+	if len(fNode.FaultDpuList) > 0 || fNode.DpuNodeEvent != nil {
+		klog.V(util.LogInfoLev).Infof("node %s has faulty dpu, dpuList len: %d, hasNodeEvent: %v",
+			node.Name, len(fNode.FaultDpuList), fNode.DpuNodeEvent != nil)
+	}
 }
 
 // getNodeDeviceFaultFromDeviceInfo get device fault from device info

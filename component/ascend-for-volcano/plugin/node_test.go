@@ -575,3 +575,46 @@ func TestGetNeedInitNodeList(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdateNPUNodeDpuInfos(t *testing.T) {
+	t.Run("01-skip when dpu info update time is zero", func(t *testing.T) {
+		node := &NPUNode{CommonNode: CommonNode{Annotation: map[string]string{}}}
+		node.updateNPUNodeDpuInfos(k8s.DpuInfoWithNode{})
+		if _, ok := node.Annotation[util.DpuInfoAnnoKey]; ok {
+			t.Errorf("updateNPUNodeDpuInfos() should not set annotation when update time is zero")
+		}
+	})
+
+	t.Run("02-set dpu info annotation when update time is valid", func(t *testing.T) {
+		node := &NPUNode{CommonNode: CommonNode{Annotation: map[string]string{}}}
+		dpuInfo := k8s.DpuInfoWithNode{
+			DpuInfoCfg: k8s.DpuInfoCfg{
+				DPUInfo: k8s.DPUInfoBody{
+					DPUList: []k8s.DPUItem{{HcaName: "mlx5_0"}},
+				},
+				UpdateTime: 1234567890,
+			},
+		}
+		node.updateNPUNodeDpuInfos(dpuInfo)
+		dpuData, ok := node.Annotation[util.DpuInfoAnnoKey]
+		if !ok {
+			t.Errorf("updateNPUNodeDpuInfos() should set dpu info annotation")
+		}
+		if len(dpuData) == 0 {
+			t.Errorf("updateNPUNodeDpuInfos() annotation should not be empty")
+		}
+	})
+
+	t.Run("03-init annotation map when nil", func(t *testing.T) {
+		node := &NPUNode{CommonNode: CommonNode{Annotation: nil}}
+		node.updateNPUNodeDpuInfos(k8s.DpuInfoWithNode{
+			DpuInfoCfg: k8s.DpuInfoCfg{UpdateTime: 100},
+		})
+		if node.Annotation == nil {
+			t.Errorf("updateNPUNodeDpuInfos() should init annotation map")
+		}
+		if _, ok := node.Annotation[util.DpuInfoAnnoKey]; !ok {
+			t.Errorf("updateNPUNodeDpuInfos() should set dpu info key")
+		}
+	})
+}

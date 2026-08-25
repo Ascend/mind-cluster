@@ -265,6 +265,13 @@ func TestInformerConfigmapFilter(t *testing.T) {
 			}},
 			want: true,
 		},
+		{
+			name: "05-InformerConfigmapFilter dpu info",
+			args: args{obj: &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{Namespace: util.DevInfoNameSpace, Name: util.DpuInfoPreName},
+			}},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

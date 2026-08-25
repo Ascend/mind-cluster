@@ -80,7 +80,7 @@ func InitCmInformer(k8sClient kubernetes.Interface, useClusterD bool) {
 		cmManager.initClusterCmInformer(k8sClient, stopCh)
 		return
 	}
-	cmManager.initDeviceAndNodeDCmInformer(k8sClient, stopCh)
+	cmManager.initDeviceNodeDAndDPUCmInformer(k8sClient, stopCh)
 }
 
 func getDataFromCM[T any](cmData *v1.ConfigMap, key string) (T, error) {
@@ -122,7 +122,7 @@ func (cmMgr *ClusterInfoWitchCm) initClusterCmInformer(k8sClient kubernetes.Inte
 	informerFactory.WaitForCacheSync(stopCh)
 }
 
-func (cmMgr *ClusterInfoWitchCm) initDeviceAndNodeDCmInformer(k8sClient kubernetes.Interface, stopCh <-chan struct{}) {
+func (cmMgr *ClusterInfoWitchCm) initDeviceNodeDAndDPUCmInformer(k8sClient kubernetes.Interface, stopCh <-chan struct{}) {
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(k8sClient, 0,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.LabelSelector = util.NormalCmConsumer + "=" + util.CmConsumerValue
@@ -186,6 +186,18 @@ func (cmMgr *ClusterInfoWitchCm) updateConfigMap(obj interface{}, operator strin
 			delete(cmMgr.nodeInfosFromCm.Nodes, nodeName)
 			cmMgr.nodeInfosFromCm.Unlock()
 		}
+		return
+	}
+	if CheckConfigMapIsDpuInfo(cm) {
+		if operator == util.AddOperator || operator == util.UpdateOperator {
+			cmMgr.createOrUpdateDpuInfo(cm)
+		} else if operator == util.DeleteOperator {
+			klog.V(util.LogDebugLev).Info("Del DpuInfo from cache")
+			nodeName := strings.TrimPrefix(cm.Name, util.DpuInfoPreName)
+			cmMgr.dpuInfosFromCm.Lock()
+			delete(cmMgr.dpuInfosFromCm.Dpus, nodeName)
+			cmMgr.dpuInfosFromCm.Unlock()
+		}
 	}
 }
 
@@ -208,6 +220,7 @@ func (cmMgr *ClusterInfoWitchCm) updateConfigMapCluster(obj interface{}, operato
 	cmMgr.dealClusterDeviceInfo(cm, operator)
 	cmMgr.dealClusterNodeInfo(cm, operator)
 	cmMgr.dealClusterSwitchInfo(cm, operator)
+	cmMgr.dealClusterDpuInfo(cm, operator)
 }
 
 func (cmMgr *ClusterInfoWitchCm) dealClusterDeviceInfo(cm *v1.ConfigMap, operator string) {
@@ -279,6 +292,29 @@ func (cmMgr *ClusterInfoWitchCm) dealClusterSwitchInfo(cm *v1.ConfigMap, operato
 	cmMgr.switchInfosFromCm.Unlock()
 }
 
+// dealClusterDpuInfo aggregate dpu info from clusterd configmap (cluster-info-dpu-<index>).
+func (cmMgr *ClusterInfoWitchCm) dealClusterDpuInfo(cm *v1.ConfigMap, operator string) {
+	if !strings.HasPrefix(cm.Name, util.ClusterDpuInfo) {
+		return
+	}
+	dpuInfoMap, err := getDataFromCM[map[string]DpuInfoWithNode](cm, cm.Name)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("get dpu info from cluster cm failed :%v", err)
+		return
+	}
+	cmMgr.dpuInfosFromCm.Lock()
+	defer cmMgr.dpuInfosFromCm.Unlock()
+	for dpuCmName, dpuInfo := range dpuInfoMap {
+		nodeName := strings.TrimPrefix(dpuCmName, util.DpuInfoPreName)
+		if operator == util.AddOperator || operator == util.UpdateOperator {
+			dpuInfo.CacheUpdateTime = time.Now().Unix()
+			cmMgr.dpuInfosFromCm.Dpus[nodeName] = dpuInfo
+		} else if operator == util.DeleteOperator {
+			delete(cmMgr.dpuInfosFromCm.Dpus, nodeName)
+		}
+	}
+}
+
 func (cmMgr *ClusterInfoWitchCm) createOrUpdateDeviceInfo(cm *v1.ConfigMap) {
 	devInfo, err := getDataFromCM[*NodeDeviceInfoWithDevPlugin](cm, util.DevInfoCMKey)
 	if err != nil {
@@ -328,6 +364,91 @@ func (cmMgr *ClusterInfoWitchCm) createOrUpdateNodeInfo(cm *v1.ConfigMap) {
 	cmMgr.nodeInfosFromCm.Lock()
 	cmMgr.nodeInfosFromCm.Nodes[nodeName] = nodeInfo.NodeInfo
 	cmMgr.nodeInfosFromCm.Unlock()
+}
+
+// createOrUpdateDpuInfo update dpu info from dpu-dp configmap (dpuinfo-<nodeName>)
+func (cmMgr *ClusterInfoWitchCm) createOrUpdateDpuInfo(cm *v1.ConfigMap) {
+	dpuInfo, err := getDataFromCM[DpuInfoCfg](cm, util.DpuInfoCMKey)
+	if err != nil {
+		klog.V(util.LogWarningLev).Infof("get dpu info failed:%s", err)
+		return
+	}
+	nodeName := strings.TrimPrefix(cm.Name, util.DpuInfoPreName)
+	cmMgr.dpuInfosFromCm.Lock()
+	cmMgr.dpuInfosFromCm.Dpus[nodeName] = DpuInfoWithNode{
+		DpuInfoCfg:      dpuInfo,
+		CacheUpdateTime: time.Now().Unix(),
+	}
+	cmMgr.dpuInfosFromCm.Unlock()
+}
+
+// GetDpuInfos get a copy of dpu info which is get from configmap of dpu-dp or clusterd
+func GetDpuInfos(nodeList []*api.NodeInfo) map[string]DpuInfoWithNode {
+	dpuInfos := make(map[string]DpuInfoWithNode, util.MapInitNum)
+	cmManager.dpuInfosFromCm.Lock()
+	for _, nodeInfo := range nodeList {
+		dpuInfos[nodeInfo.Name] = cmManager.dpuInfosFromCm.Dpus[nodeInfo.Name]
+	}
+	cmManager.dpuInfosFromCm.Unlock()
+	return dpuInfos
+}
+
+// GetDpuInfoFromAnno unmarshal dpu info from node annotation, returns empty cfg if not exist
+func GetDpuInfoFromAnno(annotation map[string]string) (DpuInfoCfg, error) {
+	dpuData, ok := annotation[util.DpuInfoAnnoKey]
+	if !ok {
+		return DpuInfoCfg{}, nil
+	}
+	var dpuInfo DpuInfoCfg
+	if err := json.Unmarshal([]byte(dpuData), &dpuInfo); err != nil {
+		klog.V(util.LogWarningLev).Infof("unmarshal dpu info from annotation failed: %s", util.SafePrint(err))
+		return DpuInfoCfg{}, err
+	}
+	return dpuInfo, nil
+}
+
+// GetDpuFaultAffectedNPU returns NPU IDs affected by isolate-level faulty DPUs.
+func GetDpuFaultAffectedNPU(annotation map[string]string) []int {
+	if len(annotation) == 0 {
+		return nil
+	}
+	dpuInfo, err := GetDpuInfoFromAnno(annotation)
+	if err != nil {
+		klog.V(util.LogWarningLev).Infof("GetDpuFaultAffectedNPU unmarshal err: %s", util.SafePrint(err))
+		return nil
+	}
+	if len(dpuInfo.DPUInfo.DPUList) == 0 {
+		return nil
+	}
+	var isSeparateFault = func(dpu DPUItem) bool {
+		for _, fault := range dpu.FaultList {
+			switch fault.FaultLevel {
+			case util.NotHandleFault, util.SubHealthFault:
+				continue
+			default:
+				return true
+			}
+		}
+		return false
+	}
+	affectedNPUSet := make(map[int]struct{})
+	for _, dpu := range dpuInfo.DPUInfo.DPUList {
+		if !isSeparateFault(dpu) {
+			continue
+		}
+		for _, npuID := range dpu.AffectedNPU {
+			affectedNPUSet[npuID] = struct{}{}
+		}
+	}
+	if len(affectedNPUSet) == 0 {
+		return nil
+	}
+	result := make([]int, 0, len(affectedNPUSet))
+	for npuID := range affectedNPUSet {
+		result = append(result, npuID)
+	}
+	sort.Ints(result)
+	return result
 }
 
 // GetDeviceInfosAndSetInformerStart get device Infos and check Informer health state

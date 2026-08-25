@@ -130,7 +130,7 @@ func InformerConfigmapFilter(obj interface{}) bool {
 		klog.V(util.LogErrorLev).Infof("Cannot convert to ConfigMap:%#v", obj)
 		return false
 	}
-	return CheckConfigMapIsDeviceInfo(cm) || CheckConfigMapIsNodeInfo(cm)
+	return CheckConfigMapIsDeviceInfo(cm) || CheckConfigMapIsNodeInfo(cm) || CheckConfigMapIsDpuInfo(cm)
 }
 
 // CheckConfigMapIsDeviceInfo check configmap is device info
@@ -141,4 +141,9 @@ func CheckConfigMapIsDeviceInfo(cm *v1.ConfigMap) bool {
 // CheckConfigMapIsNodeInfo check whether the configmap is kube-system/node-info-
 func CheckConfigMapIsNodeInfo(cm *v1.ConfigMap) bool {
 	return cm.Namespace == util.MindXDlNameSpace && strings.HasPrefix(cm.Name, util.NodeDCmInfoNamePrefix)
+}
+
+// CheckConfigMapIsDpuInfo check configmap is dpu info, written by dpu-dp as dpuinfo-<nodeName>
+func CheckConfigMapIsDpuInfo(cm *v1.ConfigMap) bool {
+	return cm.Namespace == util.DevInfoNameSpace && strings.HasPrefix(cm.Name, util.DpuInfoPreName)
 }

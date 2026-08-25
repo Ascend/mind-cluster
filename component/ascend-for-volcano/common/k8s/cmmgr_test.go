@@ -116,6 +116,20 @@ func buildUpdateConfigMapTestCases() []UpdateConfigMapTestCase {
 			operator:  util.AddOperator,
 			want:      &cmManager,
 		},
+		{
+			name:      "07 will return cm mgr when cm is dpu info and operator is add",
+			cmManager: &cmManager,
+			obj:       FakeDpuInfoCMData("node0", FakeDpuInfoCfg()),
+			operator:  util.AddOperator,
+			want:      &cmManager,
+		},
+		{
+			name:      "08 will return cm mgr when cm is dpu info and operator is delete",
+			cmManager: &cmManager,
+			obj:       FakeDpuInfoCMData("node0", FakeDpuInfoCfg()),
+			operator:  util.DeleteOperator,
+			want:      &cmManager,
+		},
 	}
 }
 
@@ -198,6 +212,20 @@ func buildUpdateConfigMapClusterTestCases02() []UpdateConfigMapTestCase {
 			operator:  util.AddOperator,
 			want:      &cmManager,
 		},
+		{
+			name:      "10 obj is cluster dpu info add test",
+			cmManager: &cmManager,
+			obj:       fakeClusterInfoCm[DpuInfoWithNode](util.ClusterDpuInfo),
+			operator:  util.AddOperator,
+			want:      &cmManager,
+		},
+		{
+			name:      "11 obj is cluster dpu info delete test",
+			cmManager: &cmManager,
+			obj:       fakeClusterInfoCm[DpuInfoWithNode](util.ClusterDpuInfo),
+			operator:  util.DeleteOperator,
+			want:      &cmManager,
+		},
 	}
 }
 
@@ -238,6 +266,74 @@ func TestGetCmInfos(t *testing.T) {
 	t.Run("Get device info test, get empty device info without use clusterD", func(t *testing.T) {
 		if got := GetDeviceInfosAndSetInformerStart(nodeList, false, true); !reflect.DeepEqual(got, tmpDeviceInfos) {
 			t.Errorf("Get device info = %v, want %v", got, tmpDeviceInfos)
+		}
+	})
+
+	t.Run("GetDpuInfos test, get empty dpu info", func(t *testing.T) {
+		if got := GetDpuInfos(nodeList); !reflect.DeepEqual(got, map[string]DpuInfoWithNode{testName: {}}) {
+			t.Errorf("GetDpuInfos() = %v, want %v", got, map[string]DpuInfoWithNode{testName: {}})
+		}
+	})
+}
+
+func TestGetDpuInfoFromAnno(t *testing.T) {
+	t.Run("01 return empty cfg when annotation has no dpu info key", func(t *testing.T) {
+		got, err := GetDpuInfoFromAnno(map[string]string{})
+		if err != nil {
+			t.Errorf("GetDpuInfoFromAnno() error = %v, wantErr %v", err, false)
+		}
+		if !reflect.DeepEqual(got, DpuInfoCfg{}) {
+			t.Errorf("GetDpuInfoFromAnno() = %v, want %v", got, DpuInfoCfg{})
+		}
+	})
+
+	t.Run("02 return cfg when annotation has valid dpu info", func(t *testing.T) {
+		dpuCfg := FakeDpuInfoCfg()
+		data, _ := json.Marshal(dpuCfg)
+		got, err := GetDpuInfoFromAnno(map[string]string{util.DpuInfoAnnoKey: string(data)})
+		if err != nil {
+			t.Errorf("GetDpuInfoFromAnno() error = %v, wantErr %v", err, false)
+		}
+		if len(got.DPUInfo.DPUList) != 1 {
+			t.Errorf("GetDpuInfoFromAnno() DPUList len = %v, want 1", len(got.DPUInfo.DPUList))
+		}
+	})
+
+	t.Run("03 return error when annotation has invalid dpu info", func(t *testing.T) {
+		_, err := GetDpuInfoFromAnno(map[string]string{util.DpuInfoAnnoKey: "invalid json"})
+		if err == nil {
+			t.Errorf("GetDpuInfoFromAnno() error = nil, wantErr true")
+		}
+	})
+}
+
+func TestGetDpuFaultAffectedNPU(t *testing.T) {
+	t.Run("01 return nil when annotation is nil", func(t *testing.T) {
+		if got := GetDpuFaultAffectedNPU(nil); got != nil {
+			t.Errorf("GetDpuFaultAffectedNPU() = %v, want nil", got)
+		}
+	})
+
+	t.Run("02 return nil when dpu has only sub-health fault", func(t *testing.T) {
+		dpuCfg := DpuInfoCfg{
+			DPUInfo: DPUInfoBody{
+				DPUList: []DPUItem{{
+					AffectedNPU: []int{0, 1},
+					FaultList:   []DpuFaultDetail{{FaultLevel: util.SubHealthFault}},
+				}},
+			},
+		}
+		data, _ := json.Marshal(dpuCfg)
+		if got := GetDpuFaultAffectedNPU(map[string]string{util.DpuInfoAnnoKey: string(data)}); got != nil {
+			t.Errorf("GetDpuFaultAffectedNPU() = %v, want nil", got)
+		}
+	})
+
+	t.Run("03 return affected NPU when dpu has isolate fault", func(t *testing.T) {
+		data, _ := json.Marshal(FakeDpuInfoCfg())
+		got := GetDpuFaultAffectedNPU(map[string]string{util.DpuInfoAnnoKey: string(data)})
+		if !reflect.DeepEqual(got, []int{0, 1}) {
+			t.Errorf("GetDpuFaultAffectedNPU() = %v, want [0 1]", got)
 		}
 	})
 }

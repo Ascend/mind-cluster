@@ -226,7 +226,7 @@ func (n *NPUNode) buildPhyIdToDeviceIdMap() error {
 
 // initNPUNodeByNodeInf init NPU node from node info and cm.
 func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfo k8s.NodeDeviceInfoWithID,
-	nodeInfoOfNodeD k8s.NodeDNodeInfo, switchInfo k8s.SwitchFaultInfo,
+	nodeInfoOfNodeD k8s.NodeDNodeInfo, switchInfo k8s.SwitchFaultInfo, dpuInfo k8s.DpuInfoWithNode,
 	vJobTemplate map[string]map[string]util.VResource) error {
 	if n == nil || npuNode == nil {
 		klog.V(util.LogInfoLev).Infof("InitNPUNodeByNodeInf failed: %s.", util.ArgumentError)
@@ -261,6 +261,7 @@ func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfo k8s.Nod
 		return fmt.Errorf("node %s device info or clusterd info is not enable", npuNode.Name)
 	}
 	n.updateNPUNodeDeviceInfos(deviceInfo)
+	n.updateNPUNodeDpuInfos(dpuInfo)
 
 	if setVNPUErr := n.setNodeVNPUInfo(npuNode, vJobTemplate); setVNPUErr != nil {
 		klog.V(util.LogDebugLev).Infof("setNodeVNPUInfo %s %s", npuNode.Name, setVNPUErr)
@@ -398,6 +399,24 @@ func (n NPUNode) checkNPUResourceStable(vcJob SchedulerJob) error {
 			int(cNum/util.NPUHexKilo), int(iNum/util.NPUHexKilo))
 	}
 	return nil
+}
+
+// updateNPUNodeDeviceInfos return true if device info was updated, else return false
+func (n *NPUNode) updateNPUNodeDpuInfos(dpuInfo k8s.DpuInfoWithNode) {
+	if dpuInfo.UpdateTime == 0 {
+		klog.V(util.LogDebugLev).Infof("node %s dpu info is empty, skip", n.Name)
+		return
+	}
+	dpuData, err := json.Marshal(dpuInfo.DpuInfoCfg)
+	if err != nil {
+		klog.V(util.LogWarningLev).Infof("marshal dpu info for node %s failed: %s", n.Name, err)
+		return
+	}
+	if n.Annotation == nil {
+		n.Annotation = make(map[string]string)
+	}
+	n.Annotation[util.DpuInfoAnnoKey] = string(dpuData)
+	klog.V(util.LogDebugLev).Infof("update dpu info for node<%s>, updateTime: %d", n.Name, dpuInfo.UpdateTime)
 }
 
 // updateNPUNodeDeviceInfos return true if device info was updated, else return false
@@ -563,6 +582,8 @@ func (sHandle *ScheduleHandler) initNodesFromSsn(nodeList []*api.NodeInfo) {
 	nodeInfosOfNodeD := k8s.GetNodeDInfos(nodeList)
 	// 3. obtain switch infos of switch configmap
 	switchInfos := k8s.GetSwitchInfos(nodeList)
+	// 4. obtain dpu infos of dpu-dp or clusterd configmap
+	dpuInfos := k8s.GetDpuInfos(nodeList)
 
 	newNodes := make(map[string]NPUNode)
 	// apiNode: type is *api.NodeInfo
@@ -571,7 +592,7 @@ func (sHandle *ScheduleHandler) initNodesFromSsn(nodeList []*api.NodeInfo) {
 		// get npu node in map sHandle.Nodes, if exist get old node, if not exist get NPUNode{} for new node init
 		node := sHandle.Nodes[apiNode.Name]
 		if err := node.initNPUNodeByNodeInf(apiNode, deviceInfos[apiNode.Name], nodeInfosOfNodeD[apiNode.Name],
-			switchInfos[apiNode.Name], sHandle.FrameAttr.VJobTemplate); err != nil &&
+			switchInfos[apiNode.Name], dpuInfos[apiNode.Name], sHandle.FrameAttr.VJobTemplate); err != nil &&
 			!strings.Contains(err.Error(), noneResourceErr) {
 			klog.V(util.LogErrorLev).Infof("InitNodesFromSsn %s %s, not put in nodes.", apiNode.Name, err)
 			continue

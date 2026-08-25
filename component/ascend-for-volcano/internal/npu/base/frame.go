@@ -28,6 +28,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -147,6 +148,14 @@ func (tp *NPUHandler) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("task %s CheckNodeNPUByTask err: %s", task.Name, err.Error())
 		return err
+	}
+	if util.IsRdmaTask(task, node.Annotation) {
+		dpuAffectedNPU := k8s.GetDpuFaultAffectedNPU(node.Annotation)
+		if len(dpuAffectedNPU) > 0 {
+			nodeTop = util.RemoveCommonElement(nodeTop, dpuAffectedNPU)
+			klog.V(util.LogInfoLev).Infof("task %s is rdma task, remove dpu affected npu %v from nodeTop, left %v",
+				task.Name, dpuAffectedNPU, nodeTop)
+		}
 	}
 	if err := tp.JudgeNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
 		klog.V(util.LogDebugLev).Infof("task %s CheckNodeNPUByTask err: %s", task.Name, err.Error())
@@ -295,6 +304,14 @@ func (tp *NPUHandler) SelectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode)
 	nodeTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum > 1)
 	if err != nil {
 		return nil, fmt.Errorf("selectNPUFromNode err: %s", err.Error())
+	}
+	if util.IsRdmaTask(task, node.Annotation) {
+		dpuAffectedNPU := k8s.GetDpuFaultAffectedNPU(node.Annotation)
+		if len(dpuAffectedNPU) > 0 {
+			nodeTop = util.RemoveCommonElement(nodeTop, dpuAffectedNPU)
+			klog.V(util.LogInfoLev).Infof("task %s is rdma task, remove dpu affected npu %v from nodeTop, left %v",
+				task.Name, dpuAffectedNPU, nodeTop)
+		}
 	}
 	if len(nodeTop) < taskNPUNum {
 		return nil, fmt.Errorf("%s selectNPUFromNode node<%s> top<%v> not meet task req<%d>",

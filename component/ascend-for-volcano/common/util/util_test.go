@@ -1309,3 +1309,33 @@ func generateDeviceList(count int) string {
 	}
 	return strings.Join(devices, ",")
 }
+
+func TestIsRdmaTask(t *testing.T) {
+	const res1 = "huawei.com/ub_rdma_1"
+	const res2 = "huawei.com/ub_rdma_2"
+	rdmaTask := func(name string) *api.TaskInfo {
+		return &api.TaskInfo{Resreq: &api.Resource{
+			ScalarResources: map[v1.ResourceName]float64{v1.ResourceName(name): 1}}}
+	}
+	multiAnno := map[string]string{DpuResourceNameKey: res1 + "," + res2}
+	tests := []struct {
+		name string
+		task *api.TaskInfo
+		anno map[string]string
+		want bool
+	}{
+		{"nil task", nil, multiAnno, false},
+		{"single resource matches", rdmaTask(res1),
+			map[string]string{DpuResourceNameKey: res1}, true},
+		{"multi-anno matches first", rdmaTask(res1), multiAnno, true},
+		{"multi-anno matches second", rdmaTask(res2), multiAnno, true},
+		{"multi-anno no match", rdmaTask("other"), multiAnno, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsRdmaTask(tt.task, tt.anno); got != tt.want {
+				t.Errorf("IsRdmaTask() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

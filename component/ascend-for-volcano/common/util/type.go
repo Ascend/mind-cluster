@@ -276,6 +276,20 @@ const (
 	ProcessRecoverPause = "pause"
 	// BaseDeviceInfoKey base device info key
 	BaseDeviceInfoKey = "baseDeviceInfos"
+	// DpuResourceNameKey node annotation key for DPU resource name, written by dpu-dp
+	DpuResourceNameKey = "huawei.com/dpu.resource.name"
+	// DpuInfoAnnoKey node annotation key for DPU info (serialized DpuInfoCfg), written by volcano from dpu cm
+	DpuInfoAnnoKey = "huawei.com/dpu.infos"
+	// DpuInfoPreName dpu-dp configmap name prefix, e.g. dpuinfo-<nodeName>
+	DpuInfoPreName = "dpuinfo-"
+	// ClusterDpuInfo clusterd aggregated dpu configmap name prefix
+	ClusterDpuInfo = "cluster-info-dpu-"
+	// DpuInfoCMKey dpu info configmap data key
+	DpuInfoCMKey = "DpuInfoCfg"
+	// NotHandleFault dpu fault level: not handle
+	NotHandleFault = "NotHandleFault"
+	// SubHealthFault dpu fault level: sub-health
+	SubHealthFault = "SubHealthFault"
 	// TorAffinityKey the key of tor affinity
 	TorAffinityKey = "tor-affinity"
 	// LargeModelTag the value of large model
