@@ -1,5 +1,5 @@
 {
-  "periodicUpdateInterval": 300,
+  "periodicUpdateInterval": 30,
   "faultDetectPeriod": 5,
   "configList": [
     {

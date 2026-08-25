@@ -379,7 +379,8 @@ func checkDpuCardDrop(hca string) (string, string) {
 // StartFaultDetection starts the fault detection loop
 // It periodically runs fault checks and sends results to the faultResultChan for reporting
 // getHcaList is called on startup and whenever rediscoverCh signals to refresh the cached HCA list
-func StartFaultDetection(ctx context.Context, getHcaList func() []string, rediscoverCh <-chan struct{}, faultDetectPeriod int) {
+func StartFaultDetection(ctx context.Context, getHcaList func() []string, rediscoverCh <-chan struct{},
+	faultDetectPeriod int, healthCallback func(hcaNames []string)) {
 	ticker := time.NewTicker(time.Duration(faultDetectPeriod) * time.Second)
 	defer ticker.Stop()
 
@@ -404,6 +405,22 @@ func StartFaultDetection(ctx context.Context, getHcaList func() []string, redisc
 
 			results := RunFaultChecks(config, hcaList)
 			dpuCfg := BuildDPUInfoCfg(results)
+			if healthCallback != nil {
+				unhealthyHcas := make([]string, 0)
+				for _, result := range results {
+					if result.Result != "true" || result.Hca == "" {
+						continue
+					}
+					level := result.Fault.FaultLevel
+					if level == NotHandleFault || level == SubHealthFault {
+						continue
+					}
+					hwlog.RunLog.Warnf("Fault on HCA %s (code=%s, level=%s) added to unhealthy batch",
+						result.Hca, result.Fault.FaultCode, level)
+					unhealthyHcas = append(unhealthyHcas, result.Hca)
+				}
+				healthCallback(unhealthyHcas)
+			}
 			select {
 			case faultResultChan <- dpuCfg:
 			default:

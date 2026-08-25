@@ -37,6 +37,7 @@ const (
 	cmNamePrefix           = "dpuinfo-"
 	dpuInfoCfgKey          = "DpuInfoCfg"
 	cmLabelKey             = "huawei.com/consumer.clusterd"
+	cmLabelKeyCIM          = "mx-consumer-cim"
 	cmLabelValue           = "true"
 	forceUpdateInterval    = 5 * time.Minute
 )
@@ -85,8 +86,11 @@ func ReportToConfigMap(dpuCfg DpuInfoCfg) error {
 func CreateOrUpdateConfigMap(cmName, cfgJSONStr string) error {
 	cm := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   cmName,
-			Labels: map[string]string{cmLabelKey: cmLabelValue},
+			Name: cmName,
+			Labels: map[string]string{
+				cmLabelKey:    cmLabelValue,
+				cmLabelKeyCIM: cmLabelValue,
+			},
 		},
 		Data: map[string]string{dpuInfoCfgKey: cfgJSONStr},
 	}
@@ -139,8 +143,11 @@ func isDPUItemEqual(a, b *DPUItem) bool {
 		a.VendorID != b.VendorID {
 		return false
 	}
+	if !reflect.DeepEqual(a.FaultList, b.FaultList) {
+		return false
+	}
 
-	return reflect.DeepEqual(a.FaultList, b.FaultList)
+	return reflect.DeepEqual(a.AffectedNPU, b.AffectedNPU)
 }
 
 // updateLastReportedData updates the cached last reported DPU information

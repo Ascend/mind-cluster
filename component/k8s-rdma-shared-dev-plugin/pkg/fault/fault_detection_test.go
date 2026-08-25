@@ -944,7 +944,7 @@ func TestStartFaultDetectionContextCancel(t *testing.T) {
 
 	convey.Convey("When context is cancelled before start", t, func() {
 		cancel()
-		StartFaultDetection(ctx, getHcaList, rediscoverCh, 10)
+		StartFaultDetection(ctx, getHcaList, rediscoverCh, 10, nil)
 		convey.So(true, convey.ShouldBeTrue)
 	})
 }
@@ -964,7 +964,7 @@ func TestStartFaultDetectionRediscover(t *testing.T) {
 
 	convey.Convey("When rediscover signal is received", t, func() {
 		rediscoverCh <- struct{}{}
-		StartFaultDetection(ctx, getHcaList, rediscoverCh, 10)
+		StartFaultDetection(ctx, getHcaList, rediscoverCh, 10, nil)
 		convey.So(true, convey.ShouldBeTrue)
 	})
 }
@@ -992,7 +992,7 @@ func TestStartFaultDetectionLoadConfigError(t *testing.T) {
 	})
 
 	convey.Convey("When LoadFaultConfig returns error on ticker", t, func() {
-		StartFaultDetection(ctx, getHcaList, rediscoverCh, 10)
+		StartFaultDetection(ctx, getHcaList, rediscoverCh, 10, nil)
 		convey.So(true, convey.ShouldBeTrue)
 	})
 }
@@ -1033,7 +1033,7 @@ func TestStartFaultDetectionSuccess(t *testing.T) {
 	})
 
 	convey.Convey("When fault detection runs successfully", t, func() {
-		StartFaultDetection(ctx, getHcaList, rediscoverCh, 10)
+		StartFaultDetection(ctx, getHcaList, rediscoverCh, 10, nil)
 		convey.So(true, convey.ShouldBeTrue)
 	})
 
@@ -1081,8 +1081,57 @@ func TestStartFaultDetectionChannelFull(t *testing.T) {
 	})
 
 	convey.Convey("When fault result channel is full", t, func() {
-		StartFaultDetection(ctx, getHcaList, rediscoverCh, 10)
+		StartFaultDetection(ctx, getHcaList, rediscoverCh, 10, nil)
 		convey.So(true, convey.ShouldBeTrue)
+	})
+
+	select {
+	case <-faultResultChan:
+	default:
+	}
+}
+
+func TestStartFaultDetectionWithHealthCallback(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	getHcaList := func() []string { return []string{"mlx5_0", "mlx5_1"} }
+	rediscoverCh := make(chan struct{}, 1)
+	config := &FaultConfigList{
+		Faults: []FaultConfig{
+			{Name: "ub_port_down", CheckMethod: CheckUbPort, FaultCode: "21000022", FaultLevel: "SeparateDPU"},
+		},
+	}
+	captured := make([]string, 0)
+	healthCallback := func(hcaNames []string) {
+		captured = append(captured, hcaNames...)
+		cancel()
+	}
+
+	patches := gomonkey.ApplyFunc(LoadFaultConfig, func() (*FaultConfigList, error) {
+		return config, nil
+	})
+	patches.ApplyFunc(RunFaultChecks, func(_ *FaultConfigList, _ []string) []FaultResult {
+		return []FaultResult{
+			{Fault: FaultConfig{FaultCode: "21000022", FaultLevel: "SeparateDPU"},
+				Hca: "mlx5_0", Result: "true", Details: "port down"},
+			{Fault: FaultConfig{FaultCode: "21000026", FaultLevel: "SeparateDPU"},
+				Hca: "mlx5_0", Result: "false", Details: "no fault"},
+		}
+	})
+	patches.ApplyFunc(BuildDPUInfoCfg, func(_ []FaultResult) DpuInfoCfg { return DpuInfoCfg{} })
+	ticker := time.NewTicker(10 * time.Millisecond)
+	patches.ApplyFunc(time.NewTicker, func(d time.Duration) *time.Ticker { return ticker })
+	defer patches.Reset()
+
+	select {
+	case <-faultResultChan:
+	default:
+	}
+
+	convey.Convey("When healthCallback is set, only actionable SeparateDPU HCA is forwarded", t, func() {
+		StartFaultDetection(ctx, getHcaList, rediscoverCh, 10, healthCallback)
+		convey.So(len(captured), convey.ShouldEqual, 1)
+		convey.So(captured[0], convey.ShouldEqual, "mlx5_0")
 	})
 
 	select {

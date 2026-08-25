@@ -34,6 +34,7 @@ import (
 	registerapi "k8s.io/kubelet/pkg/apis/pluginregistration/v1"
 
 	"ascend-common/common-utils/hwlog"
+
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/cdi"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
@@ -43,6 +44,7 @@ import (
 type UbResourceServer interface {
 	types.ResourceServer
 	// Additional UB-specific methods can be added here
+	MarkDevicesUnhealthy(hcaNames []string) int
 }
 
 // ubResourceServer implements UbResourceServer interface
@@ -83,7 +85,7 @@ func NewUbResourceServer(config *types.UserConfig, devices []types.Device, watch
 	}
 
 	deviceSpec := getUbDevicesSpec(devices)
-	devs := createUbVirtualDevices(config.RdmaHcaMax, deviceSpec, config.ResourceName)
+	devs := createUbVirtualDevices(len(devices), deviceSpec, config.ResourceName)
 
 	sockDir := common.DeprecatedSockDir
 	if watcherMode {
@@ -114,20 +116,51 @@ func NewUbResourceServer(config *types.UserConfig, devices []types.Device, watch
 	}, nil
 }
 
-func createUbVirtualDevices(rdmaHcaMax int, deviceSpec []*pluginapi.DeviceSpec, resourceName string) []*pluginapi.Device {
+func createUbVirtualDevices(deviceCount int, deviceSpec []*pluginapi.DeviceSpec, resourceName string) []*pluginapi.Device {
 	if len(deviceSpec) == 0 {
 		hwlog.RunLog.Warnf("no devicesSpec, create empty resource server for %s", resourceName)
 		return []*pluginapi.Device{}
 	}
 
-	devs := make([]*pluginapi.Device, 0, rdmaHcaMax)
-	for n := 0; n < rdmaHcaMax; n++ {
+	devs := make([]*pluginapi.Device, 0, deviceCount)
+	for n := 0; n < deviceCount; n++ {
 		devs = append(devs, &pluginapi.Device{
 			ID:     strconv.Itoa(n),
 			Health: pluginapi.Healthy,
 		})
 	}
 	return devs
+}
+
+// reconcileDevs adjusts the virtual device list to match the real device list while
+// preserving the Health state of devices that are still present.
+func (rs *ubResourceServer) reconcileDevs(newDevices []types.Device) []*pluginapi.Device {
+	oldHealth := make(map[string]string, len(rs.ubDevices))
+	for i, dev := range rs.ubDevices {
+		if i >= len(rs.devs) {
+			break
+		}
+		ubDev, ok := dev.(types.UbDevice)
+		if !ok {
+			continue
+		}
+		oldHealth[ubDev.GetDeviceName()] = rs.devs[i].Health
+	}
+
+	newDevs := make([]*pluginapi.Device, 0, len(newDevices))
+	for i, dev := range newDevices {
+		health := pluginapi.Healthy
+		if ubDev, ok := dev.(types.UbDevice); ok {
+			if h, exist := oldHealth[ubDev.GetDeviceName()]; exist {
+				health = h
+			}
+		}
+		newDevs = append(newDevs, &pluginapi.Device{
+			ID:     strconv.Itoa(i),
+			Health: health,
+		})
+	}
+	return newDevs
 }
 
 // Start starts the UB device server
@@ -265,7 +298,7 @@ func (rs *ubResourceServer) UpdateDevices(devices []types.Device) {
 	if common.DevicesChanged(rs.deviceSpec, newDeviceSpec) {
 		rs.deviceSpec = newDeviceSpec
 		// Recreate devs when device spec changes (e.g., device becomes available after startup)
-		rs.devs = createUbVirtualDevices(rs.rdmaHcaMax, newDeviceSpec, rs.resourceName)
+		rs.devs = rs.reconcileDevs(devices)
 		needUpdate = true
 	}
 
@@ -300,6 +333,16 @@ func (rs *ubResourceServer) ListAndWatch(e *pluginapi.Empty, s pluginapi.DeviceP
 				return err
 			}
 			hwlog.RunLog.Infof("exposing \"%d\" devices", len(devs))
+			rs.mutex.RUnlock()
+		case <-rs.health:
+			rs.mutex.RLock()
+			devs = rs.devs
+			hwlog.RunLog.Warnf("Health update triggered for %s, pushing %d devices snapshot",
+				rs.resourceName, len(devs))
+			if err := s.Send(&pluginapi.ListAndWatchResponse{Devices: devs}); err != nil {
+				rs.mutex.RUnlock()
+				return err
+			}
 			rs.mutex.RUnlock()
 		case <-s.Context().Done():
 			hwlog.RunLog.Infof("ListAndWatch stream closed for: %s", rs.resourceName)
@@ -384,6 +427,53 @@ func getUbDevicesSpec(devices []types.Device) []*pluginapi.DeviceSpec {
 		devicesSpec = append(devicesSpec, rdmaDeviceSpec...)
 	}
 	return devicesSpec
+}
+
+// MarkDevicesUnhealthy marks virtual devices as Unhealthy and triggers ListAndWatch refresh via the health channel.
+func (rs *ubResourceServer) MarkDevicesUnhealthy(hcaNames []string) int {
+	rs.mutex.Lock()
+	defer rs.mutex.Unlock()
+
+	faultySet := make(map[string]bool, len(hcaNames))
+	for _, hca := range hcaNames {
+		faultySet[hca] = true
+	}
+
+	changed := 0
+	for i, dev := range rs.ubDevices {
+		ubDev, ok := dev.(types.UbDevice)
+		if !ok {
+			continue
+		}
+		isFaulty := faultySet[ubDev.GetDeviceName()]
+		if isFaulty {
+			if rs.devs[i].Health != pluginapi.Unhealthy {
+				rs.devs[i].Health = pluginapi.Unhealthy
+				changed++
+				hwlog.RunLog.Warnf("Device %s marked as Unhealthy for resource %s (HCA=%s)",
+					rs.devs[i].ID, rs.resourceName, ubDev.GetDeviceName())
+			}
+		} else {
+			if rs.devs[i].Health != pluginapi.Healthy {
+				rs.devs[i].Health = pluginapi.Healthy
+				changed++
+				hwlog.RunLog.Infof("Device %s restored to Healthy for resource %s (HCA=%s)",
+					rs.devs[i].ID, rs.resourceName, ubDev.GetDeviceName())
+			}
+		}
+	}
+
+	if changed == 0 {
+		return 0
+	}
+
+	select {
+	case rs.health <- &pluginapi.Device{}:
+		hwlog.RunLog.Warnf("ListAndWatch refresh signaled for %d device state changes", changed)
+	default:
+		hwlog.RunLog.Warn("Health channel full, batched state already visible to next ListAndWatch refresh")
+	}
+	return changed
 }
 
 // GetServer listener methods for resourcesServerPort

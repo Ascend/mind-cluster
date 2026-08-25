@@ -28,6 +28,28 @@ subjects:
     name: rdma-shared-dp-sa
     namespace: kube-system
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: rdma-shared-dp-node-role
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rdma-shared-dp-node-rb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: rdma-shared-dp-node-role
+subjects:
+  - kind: ServiceAccount
+    name: rdma-shared-dp-sa
+    namespace: kube-system
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -36,7 +58,7 @@ metadata:
 data:
   config.json: |
     {
-      "periodicUpdateInterval": 300,
+      "periodicUpdateInterval": 30,
       "faultDetectPeriod": 5,
       "configList": [
         {

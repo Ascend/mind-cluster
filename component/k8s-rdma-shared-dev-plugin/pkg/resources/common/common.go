@@ -27,4 +27,5 @@ const (
 	KubeEndPoint                = "kubelet.sock"
 	MinFaultDetectionPeriod     = 1
 	InvalidFaultDetectionPeriod = 0
+	DPUResourceAnnotationKey    = "huawei.com/dpu.resource.name"
 )
