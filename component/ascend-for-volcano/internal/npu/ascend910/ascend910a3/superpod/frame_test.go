@@ -933,13 +933,15 @@ func TestGetVPodID(t *testing.T) {
 }
 
 type selectNodesForSoftStrategyTest struct {
-	name        string
-	recorder    *vPodIdRecorder
-	totalNode   int
-	superPods   []superPod
-	selectNodes map[string][]plugin.SuperNode
-	wantTotal   int
-	wantLen     int
+	name             string
+	recorder         *vPodIdRecorder
+	totalNode        int
+	superPods        []superPod
+	selectNodes      map[string][]plugin.SuperNode
+	wantTotal        int
+	wantLen          int
+	wantSelectedNum  int
+	wantFirstPodSize int
 }
 
 func buildSelectNodesForSoftStrategyTestCases() []selectNodesForSoftStrategyTest {
@@ -955,9 +957,12 @@ func buildSelectNodesForSoftStrategyTestCases() []selectNodesForSoftStrategyTest
 				"node2": {CommonNode: plugin.CommonNode{Name: "node2"}}},
 				{"node3": {CommonNode: plugin.CommonNode{Name: "node3"}}},
 			},
-			selectNodes: make(map[string][]plugin.SuperNode),
-			wantTotal:   0,
-			wantLen:     util.NPUIndex2,
+			selectNodes:     make(map[string][]plugin.SuperNode),
+			wantTotal:       0,
+			wantLen:         util.NPUIndex2,
+			wantSelectedNum: util.NPUIndex2,
+			// first superPod is selected until empty (fixed behavior)
+			wantFirstPodSize: 0,
 		},
 		{
 			name: "02 edge case - empty superPods",
@@ -981,9 +986,45 @@ func buildSelectNodesForSoftStrategyTestCases() []selectNodesForSoftStrategyTest
 			superPods: []superPod{
 				{"node1": {CommonNode: plugin.CommonNode{Name: "node1"}}},
 			},
-			selectNodes: make(map[string][]plugin.SuperNode),
-			wantTotal:   0,
-			wantLen:     1,
+			selectNodes:      make(map[string][]plugin.SuperNode),
+			wantTotal:        0,
+			wantLen:          1,
+			wantSelectedNum:  0,
+			wantFirstPodSize: 1,
+		},
+		{
+			name: "04 one superPod with multiple blocks will be selected until empty",
+			recorder: &vPodIdRecorder{
+				unReadyId: []string{"pod1"},
+				leftIndex: 0,
+			},
+			totalNode: util.NPUIndex3,
+			superPods: []superPod{{"node1": {CommonNode: plugin.CommonNode{Name: "node1"}},
+				"node2": {CommonNode: plugin.CommonNode{Name: "node2"}},
+				"node3": {CommonNode: plugin.CommonNode{Name: "node3"}}}},
+			selectNodes:      make(map[string][]plugin.SuperNode),
+			wantTotal:        0,
+			wantLen:          1,
+			wantSelectedNum:  util.NPUIndex3,
+			wantFirstPodSize: 0,
+		},
+		{
+			name: "05 big superPod selected continuously before next superPod",
+			recorder: &vPodIdRecorder{
+				unReadyId: []string{"pod1", "pod2"},
+				leftIndex: 1,
+			},
+			totalNode: util.NPUIndex3,
+			superPods: []superPod{{"node1": {CommonNode: plugin.CommonNode{Name: "node1"}},
+				"node2": {CommonNode: plugin.CommonNode{Name: "node2"}},
+				"node3": {CommonNode: plugin.CommonNode{Name: "node3"}},
+				"node4": {CommonNode: plugin.CommonNode{Name: "node4"}}},
+				{"node5": {CommonNode: plugin.CommonNode{Name: "node5"}}}},
+			selectNodes:      make(map[string][]plugin.SuperNode),
+			wantTotal:        0,
+			wantLen:          util.NPUIndex2,
+			wantSelectedNum:  util.NPUIndex3,
+			wantFirstPodSize: 1,
 		},
 	}
 }
@@ -998,6 +1039,218 @@ func TestSelectNodesForSoftStrategy(t *testing.T) {
 			}
 			if len(got) != tt.wantLen {
 				t.Errorf("selectNodesForSoftStrategy() len = %v, want %v", len(got), tt.wantLen)
+			}
+			if gotNum := countSelectedNodes(tt.selectNodes); gotNum != tt.wantSelectedNum {
+				t.Errorf("selectNodesForSoftStrategy() selected nodes = %v, want %v", gotNum, tt.wantSelectedNum)
+			}
+			if len(got) > 0 && len(got[0]) != tt.wantFirstPodSize {
+				t.Errorf("selectNodesForSoftStrategy() first superPod len = %v, want %v", len(got[0]),
+					tt.wantFirstPodSize)
+			}
+		})
+	}
+}
+
+func countSelectedNodes(selectNodes map[string][]plugin.SuperNode) int {
+	count := 0
+	for _, nodes := range selectNodes {
+		count += len(nodes)
+	}
+	return count
+}
+
+type selectNodesFromSuperPodsTest struct {
+	name          string
+	unReadyID     []string
+	totalCount    int
+	superPods     []superPod
+	selectNodes   map[string][]plugin.SuperNode
+	spBlock       int
+	wantCount     int
+	wantSelected  int
+	wantFirstSize int
+}
+
+func buildSelectNodesFromSuperPodsTestCases() []selectNodesFromSuperPodsTest {
+	return []selectNodesFromSuperPodsTest{
+		{
+			name:       "01 one superPod with multiple blocks will be selected until less than spBlock",
+			unReadyID:  []string{"pod1", "pod2"},
+			totalCount: util.NPUIndex2,
+			superPods: []superPod{{"node1": {CommonNode: plugin.CommonNode{Name: "node1"}},
+				"node2": {CommonNode: plugin.CommonNode{Name: "node2"}},
+				"node3": {CommonNode: plugin.CommonNode{Name: "node3"}},
+				"node4": {CommonNode: plugin.CommonNode{Name: "node4"}}}},
+			selectNodes:   make(map[string][]plugin.SuperNode),
+			spBlock:       spBlockNum2,
+			wantCount:     0,
+			wantSelected:  util.NPUIndex4,
+			wantFirstSize: 0,
+		},
+		{
+			name:       "02 multiple superPods each with one block will be selected",
+			unReadyID:  []string{"pod1", "pod2"},
+			totalCount: util.NPUIndex2,
+			superPods: []superPod{{"node1": {CommonNode: plugin.CommonNode{Name: "node1"}},
+				"node2": {CommonNode: plugin.CommonNode{Name: "node2"}}},
+				{"node3": {CommonNode: plugin.CommonNode{Name: "node3"}},
+					"node4": {CommonNode: plugin.CommonNode{Name: "node4"}}}},
+			selectNodes:  make(map[string][]plugin.SuperNode),
+			spBlock:      spBlockNum2,
+			wantCount:    0,
+			wantSelected: util.NPUIndex4,
+		},
+		{
+			name:         "03 edge case - empty superPods",
+			unReadyID:    []string{"pod1", "pod2"},
+			totalCount:   util.NPUIndex2,
+			superPods:    []superPod{},
+			selectNodes:  make(map[string][]plugin.SuperNode),
+			spBlock:      spBlockNum2,
+			wantCount:    util.NPUIndex2,
+			wantSelected: 0,
+		},
+		{
+			name:          "04 edge case - zero totalCount",
+			unReadyID:     []string{"pod1", "pod2"},
+			totalCount:    0,
+			superPods:     []superPod{{"node1": {CommonNode: plugin.CommonNode{Name: "node1"}}}},
+			selectNodes:   make(map[string][]plugin.SuperNode),
+			spBlock:       spBlockNum2,
+			wantCount:     0,
+			wantSelected:  0,
+			wantFirstSize: 1,
+		},
+	}
+}
+
+func TestSelectNodesFromSuperPods(t *testing.T) {
+	patch := gomonkey.ApplyFunc(rescheduling.GetReSchedulerCache,
+		func() *rescheduling.DealReSchedulerCache { return nil })
+	defer patch.Reset()
+	for _, tt := range buildSelectNodesFromSuperPodsTestCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := &module910SuperPod{spBlock: tt.spBlock}
+			got := tp.selectNodesFromSuperPods(tt.unReadyID, &tt.totalCount, tt.superPods, tt.selectNodes)
+			if tt.totalCount != tt.wantCount {
+				t.Errorf("selectNodesFromSuperPods() totalCount = %v, want %v", tt.totalCount, tt.wantCount)
+			}
+			if gotNum := countSelectedNodes(tt.selectNodes); gotNum != tt.wantSelected {
+				t.Errorf("selectNodesFromSuperPods() selected nodes = %v, want %v", gotNum, tt.wantSelected)
+			}
+			if len(got) > 0 && len(got[0]) != tt.wantFirstSize {
+				t.Errorf("selectNodesFromSuperPods() first superPod len = %v, want %v", len(got[0]),
+					tt.wantFirstSize)
+			}
+			if tt.name == "01 one superPod with multiple blocks will be selected until less than spBlock" {
+				if len(tt.selectNodes["pod2"]) != spBlockNum2 || len(tt.selectNodes["pod1"]) != spBlockNum2 {
+					t.Errorf("selectNodesFromSuperPods() vid distribution = pod2:%d, pod1:%d, want each %d",
+						len(tt.selectNodes["pod2"]), len(tt.selectNodes["pod1"]), spBlockNum2)
+				}
+			}
+		})
+	}
+}
+
+func newSuperPod(n int, spID int32) superPod {
+	sp := make(superPod)
+	for i := 0; i < n; i++ {
+		nodeName := "node" + strconv.Itoa(int(spID)) + "-" + strconv.Itoa(i)
+		sp[nodeName] = newNPUNodeWithSuperPodID(nodeName, spID)
+	}
+	return sp
+}
+
+func collectSuperPodsFromFirstLevel(spi superPodInfo) []superPod {
+	var all []superPod
+	for i := range spi.firstLevel {
+		for j := range spi.firstLevel[i] {
+			all = append(all, spi.firstLevel[i][j]...)
+		}
+	}
+	return all
+}
+
+type classifySuperPodTest struct {
+	name           string
+	totalNodes     map[int32]superPod
+	wantCount      int
+	wantTotalInTop int
+	wantColumn     int
+	wantRemainder  int
+}
+
+func buildClassifySuperPodTestCases() []classifySuperPodTest {
+	return []classifySuperPodTest{
+		{
+			name: "01 superPod over super-pod-size will be skipped",
+			totalNodes: map[int32]superPod{
+				util.NPUIndex1: newSuperPod(util.NPUIndex11, util.NPUIndex1),
+				superPodId2:    newSuperPod(superPodSize10, superPodId2),
+			},
+			wantCount:      5,
+			wantTotalInTop: 1,
+			wantColumn:     4,
+			wantRemainder:  0,
+		},
+		{
+			name: "02 all superPods over super-pod-size will be skipped",
+			totalNodes: map[int32]superPod{
+				util.NPUIndex1: newSuperPod(util.NPUIndex12, util.NPUIndex1),
+				superPodId2:    newSuperPod(util.NPUIndex11, superPodId2),
+			},
+			wantCount:      0,
+			wantTotalInTop: 0,
+		},
+		{
+			name: "03 superPod size equals super-pod-size will be classified",
+			totalNodes: map[int32]superPod{
+				util.NPUIndex1: newSuperPod(superPodSize10, util.NPUIndex1),
+			},
+			wantCount:      5,
+			wantTotalInTop: 1,
+			wantColumn:     4,
+			wantRemainder:  0,
+		},
+		{
+			name: "04 superPod not multiple of spBlock will be classified by remainder",
+			totalNodes: map[int32]superPod{
+				util.NPUIndex1: newSuperPod(util.NPUIndex9, util.NPUIndex1),
+			},
+			wantCount:      4,
+			wantTotalInTop: 1,
+			wantColumn:     3,
+			wantRemainder:  1,
+		},
+	}
+}
+
+func TestClassifySuperPod(t *testing.T) {
+	for _, tt := range buildClassifySuperPodTestCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := &module910SuperPod{spBlock: spBlockNum2}
+			tp.FrameAttr = plugin.VolcanoFrame{
+				ConfigParameters: plugin.ConfigParameters{DynamicParameters: plugin.DynamicParameters{
+					SuperPodSize:   superPodSize10,
+					ReservePodSize: reservePodSize2,
+				}}}
+			spi := tp.classifySuperPod(tt.totalNodes)
+			if spi.countVSuperPod != tt.wantCount {
+				t.Errorf("classifySuperPod() countVSuperPod = %v, want %v", spi.countVSuperPod, tt.wantCount)
+			}
+			all := collectSuperPodsFromFirstLevel(spi)
+			if len(all) != tt.wantTotalInTop {
+				t.Errorf("classifySuperPod() superPods in first level = %v, want %v", len(all), tt.wantTotalInTop)
+			}
+			for _, sp := range all {
+				if len(sp) > superPodSize10 {
+					t.Errorf("classifySuperPod() superPod with %d nodes over super-pod-size should be skipped",
+						len(sp))
+				}
+			}
+			if tt.wantTotalInTop > 0 && len(spi.firstLevel[tt.wantRemainder][tt.wantColumn]) != 1 {
+				t.Errorf("classifySuperPod() firstLevel[%d][%d] = %v, want 1 superPod",
+					tt.wantRemainder, tt.wantColumn, len(spi.firstLevel[tt.wantRemainder][tt.wantColumn]))
 			}
 		})
 	}
