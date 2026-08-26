@@ -16,7 +16,7 @@
 # ==============================================================================
 
 from enum import Enum, auto
-from typing import Tuple
+from typing import List, Tuple
 
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.utils import helpers
@@ -42,9 +42,17 @@ class Threshold(JsonObj):
         ThresholdStatus.NOT_EQUAL_THRESHOLD_ALARM: "{}实际值：{}，不等于期望阈值：{}",
     }
 
-    def __init__(self, low_threshold_alarm: str = "", high_threshold_alarm: str = "", low_threshold_warn: str = "",
-                 high_threshold_warn: str = "", normal_value_alarm: str = "", normal_value_warn: str = "",
-                 desc="", unit=""):
+    def __init__(
+        self,
+        low_threshold_alarm: str = "",
+        high_threshold_alarm: str = "",
+        low_threshold_warn: str = "",
+        high_threshold_warn: str = "",
+        normal_value_alarm: str = "",
+        normal_value_warn: str = "",
+        desc="",
+        unit="",
+    ):
         self.low_alarm_th = low_threshold_alarm
         self._has_low_alarm_th, self._low_alarm_th_f = helpers.to_float(low_threshold_alarm)
         self.high_alarm_th = high_threshold_alarm
@@ -57,6 +65,21 @@ class Threshold(JsonObj):
         self.normal_warn_th = normal_value_warn  # 正常阈值（警告级别）
         self.desc = desc
         self.unit = unit
+
+    def merged(self, **overrides) -> "Threshold":
+        """基于当前阈值生成新实例，仅覆盖 overrides 中给出的字段，其余字段保持不变"""
+        kwargs = {
+            "low_threshold_alarm": self.low_alarm_th,
+            "high_threshold_alarm": self.high_alarm_th,
+            "low_threshold_warn": self.low_warn_th,
+            "high_threshold_warn": self.high_warn_th,
+            "normal_value_alarm": self.normal_alarm_th,
+            "normal_value_warn": self.normal_warn_th,
+            "desc": self.desc,
+            "unit": self.unit,
+        }
+        kwargs.update(overrides)
+        return Threshold(**kwargs)
 
     def check_value(self, value: str) -> Tuple[ThresholdStatus, str]:
         # 首先尝试数值比较
@@ -91,3 +114,37 @@ class Threshold(JsonObj):
             desc = self._STR_MAPPING[th_type].format(self.desc, value, th_value)
             return f"{desc}，单位：{self.unit}" if self.unit else desc
         return ""
+
+    def check_lane_diff_desc(self, lane_value_list: List[List[str]], value_type: str = "") -> List[str]:
+        """检查lane间两两差值是否超过阈值，返回超阈值的差值描述列表
+
+        :param lane_value_list: lane数据列表，元素为[lane_id, 值字符串]，无法转数值的 lane 会被跳过
+        :param value_type: 值类型描述（如"Host SNR"、"tx"），用于区分不同类型lane值的检查结果，为空时不加前缀
+        :return: 超阈值差值描述列表
+        """
+        th_valid, th_float = helpers.to_float(self.high_alarm_th)
+        if not th_valid:
+            return []
+        check_list = []
+        for lane_id, value in lane_value_list:
+            success, value_float = helpers.to_float(value)
+            if success:
+                check_list.append([lane_id, value_float])
+        prefix = f"{value_type}" if value_type else ""
+        diff_desc_list = []
+        for i in range(len(check_list)):
+            for j in range(i + 1, len(check_list)):
+                lane_id_a, value_a = check_list[i]
+                lane_id_b, value_b = check_list[j]
+                if abs(value_a - value_b) <= th_float:
+                    continue
+                if value_a < value_b:
+                    low_lane_id, low_value, high_lane_id, high_value = lane_id_a, value_a, lane_id_b, value_b
+                else:
+                    low_lane_id, low_value, high_lane_id, high_value = lane_id_b, value_b, lane_id_a, value_a
+                diff_desc_list.append(
+                    f"{prefix} {self.desc}：Lane{low_lane_id}和Lane{high_lane_id}差值大于{self.high_alarm_th}{self.unit}，"
+                    f"Lane{low_lane_id}：{low_value}{self.unit}，"
+                    f"Lane{high_lane_id}：{high_value}{self.unit}"
+                )
+        return diff_desc_list

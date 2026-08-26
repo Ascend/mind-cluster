@@ -131,11 +131,13 @@ class DiagResult(JsonObj):
         fault_info: str = "",
         suggestion: str = "",
         err_code: str = "",
+        fault_time: str = "",
     ):
         self.domain = domain
         self.fault_info = fault_info
         self.suggestion = suggestion
         self.err_code = err_code
+        self.fault_time = fault_time
 
     @property
     def fault_type(self) -> str:
@@ -154,6 +156,7 @@ class DiagResult(JsonObj):
         return {
             "故障域": str(self.get_domain_desc()),
             "故障码": self.err_code,
+            "故障时间": self.fault_time,
             "故障信息": self.fault_info,
             "处理建议": self.suggestion,
             "故障类型": self.fault_type,

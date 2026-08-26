@@ -16,7 +16,7 @@
 # ==============================================================================
 
 import re
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from ascend_fd_tk.core.common.constants import (
     NPU_LINK_DOWN,
@@ -25,6 +25,7 @@ from ascend_fd_tk.core.common.constants import (
     HIGH_POWER_ENABLE,
     OP_PRESENT,
     OP_TX_DISABLE_STATUS,
+    ONE_DAY,
 )
 from ascend_fd_tk.core.common.diag_enum import TimeFormat, PowerUnitType
 from ascend_fd_tk.core.common.json_obj import JsonObj
@@ -224,6 +225,31 @@ class HCCNLinkStatInfo(JsonObj):
             return True
         return False
 
+    def link_down_within_24h(self) -> Tuple[int, List[str]]:
+        """24h滑动窗口内最大down次数及窗口内down的原始时间列表
+
+        :return: (最大down次数, 窗口内down事件原始时间列表)，无down事件时为(0, [])
+        """
+        down_records = [
+            (DateObj(link_history.time, TimeFormat.NPU_LINK_STAT_TIME.value), link_history.time)
+            for link_history in self.link_history
+            if link_history.link_status == NPU_LINK_DOWN
+        ]
+        if not down_records:
+            return 0, []
+        down_records.sort(key=lambda record: record[0].timestamp)
+        max_count = 0
+        left = 0
+        best_left, best_right = 0, 0
+        for right in range(len(down_records)):
+            while down_records[right][0].diff_seconds(down_records[left][0]) > ONE_DAY:
+                left += 1
+            if right - left + 1 > max_count:
+                max_count = right - left + 1
+                best_left, best_right = left, right
+        down_times = [down_records[i][1] for i in range(best_left, best_right + 1)]
+        return max_count, down_times
+
 
 class HCCNLLDPInfo(JsonObj):
     def __init__(self, port_id_tlv="", system_name_tlv=""):
@@ -343,6 +369,15 @@ class CdrSnrInfo(JsonObj):
             if desc:
                 snr_abnormal_desc.append(f"{name} {desc}")
         return "\n".join(snr_abnormal_desc)
+
+    def get_lane_diff_desc(self, threshold: Threshold) -> str:
+        diff_desc_list = []
+        for snr_type in ("host", "media"):
+            snr_list = [[name.split("lane")[-1], value] for name, value in vars(self).items() if snr_type in name]
+            diff_desc_list.extend(threshold.check_lane_diff_desc(snr_list, snr_type))
+        if not diff_desc_list:
+            return ""
+        return "CDR SNR Lane间差值异常：\n" + "\n".join(diff_desc_list)
 
 
 class HCCNStatExtraInfo(JsonObj):
