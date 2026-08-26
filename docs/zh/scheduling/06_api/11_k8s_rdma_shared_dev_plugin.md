@@ -77,7 +77,7 @@ K8s RDMA Shared Dev Plugin通过`-config-file`参数指定的JSON配置文件配
 |------|---------|------|--------|------|
 | resourceName | 是 | string | - | 设备资源名称，在resourcePrefix作用域内必须唯一，仅支持大小写字母、数字和下划线。最终上报给K8s的资源名称格式为`<resourcePrefix>/<resourceName>`。 |
 | resourcePrefix | 否 | string | rdma | 设备资源前缀，需为合法DNS子域名（仅支持小写字母、数字、连字符和点）。 |
-| rdmaHcaMax | 是 | int | - | 设备插件可提供的RDMA资源最大数量，取值不能小于0。 |
+| rdmaHcaMax | 是 | int | - | 设备插件可提供的RDMA资源最大数量，取值不能小于0。UB场景下该字段不生效，可提供的RDMA资源数量由实际发现的UB设备数量决定。|
 | selectors | 否 | object | - | 设备选择器，用于过滤目标设备，字段说明详见[表5](#table_selectors_k8s_rdma_shared_dev_plugin)。 |
 
 **表 5**  selectors选择器字段<a name="table_selectors_k8s_rdma_shared_dev_plugin"></a>
@@ -124,6 +124,7 @@ ConfigMap中Data字段的Key为`DpuInfoCfg`，Value为JSON格式的DPU故障信�
 |DeviceID|字符串|设备ID，十六进制格式。|
 |VendorID|字符串|厂商ID，十六进制格式。|
 |FaultList|列表|该DPU设备上的故障明细列表。数组中的每个元素描述一条故障信息，详细说明请参见[表9](#table_faultdetail_k8s_rdma_shared_dev_plugin)。|
+|AffectedNPU|列表|受该设备故障影响的NPU设备ID列表，仅包含以当前UB网卡作为主网卡的NPU设备ID。|
 
 **表 8**  NodeEvent字段说明
 <a name="table_nodeevent_k8s_rdma_shared_dev_plugin"></a>

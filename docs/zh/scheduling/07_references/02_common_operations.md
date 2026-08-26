@@ -472,6 +472,19 @@ m为从0开始递增的整数。集群规模每增加2000个节点，则会新�
 |UpdateTime|ConfigMap更新时间。|
 |NodeStatus|<p>当前节点状态。</p><ul><li>Healthy：节点健康。</li><li>SubHealthy：节点预隔离，当前任务不做处理，后续任务不再调度该节点。</li><li>UnHealthy：节点不健康，隔离节点，进行任务重调度。</li></ul>|
 
+**UB网卡故障<a name="section208771421688"></a>**
+
+m为从0开始递增的整数。集群规模每增加1000个节点，则会新增一个ConfigMap文件cluster-info-dpu-$\{m\}。
+
+查询命令：
+**kubectl describe cm -n mindx-dl cluster-info-dpu-$**_\{m\}_
+
+以Atlas 950 SuperPoD 超节点为例，回显示例如下；不同设备的回显参数可能不同，以实际为准，关键参数说明请参见[ConfigMap说明](../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_configmap_k8s_rdma_shared_dev_plugin)。
+
+```ColdFusion
+{"dpuinfo-<nodename>":{"DPUInfo":{"DPUList":[{"HcaName":"hrn5_0","EthName":"ens0f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[0]},{"HcaName":"hrn5_1","EthName":"ens0f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[2]},{"HcaName":"hrn5_2","EthName":"ens0f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[4]},{"HcaName":"hrn5_3","EthName":"ens0f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[6]},{"HcaName":"hrn5_4","EthName":"ens1f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[1]},{"HcaName":"hrn5_5","EthName":"ens1f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[3]},{"HcaName":"hrn5_6","EthName":"ens1f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[5]},{"HcaName":"hrn5_7","EthName":"ens1f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[7]}],"NodeEvent":{"NodeName":"<nodename>","FaultList":null}},"UpdateTime":1787715568988}}
+```
+
 ### NodeD<a name="ZH-CN_TOPIC_0000002511427003"></a>
 
 NodeD收集了节点故障信息和节点健康状态信息，将其作为对外的信息放在K8s的ConfigMap中，以供外部查询和使用。
@@ -490,6 +503,26 @@ NodeInfo:
 ----
 {"NodeInfo":{"FaultDevList":[{"DeviceType":"CPU","DeviceId":1,"FaultCode":["00000011"],"FaultLevel":"SeparateFault"}],"NodeStatus":"UnHealthy"},"CheckCode":"3a2934c3cb875f2256c770c75a6fdf24594fcf64481ac6cd0d0f74b8fea88855"}
 Events:  <none>
+```
+
+### K8s RDMA Shared Dev Plugin<a name="ZH-CN_TOPIC_0000002511347042"></a>
+
+K8s RDMA Shared Dev Plugin收集了节点UB网卡的故障信息，将其作为对外的信息放在K8s的ConfigMap中，以供外部查询和使用。
+
+查询命令为**kubectl describe cm dpuinfo-**<i>\<nodename\></i> **-n kube-system**，命令回显示例如下，关键参数说明请参见[ConfigMap说明](../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_configmap_k8s_rdma_shared_dev_plugin)。
+
+```ColdFusion
+Name:         dpuinfo-<nodename>
+Namespace:    kube-system
+Labels:       huawei.com/consumer.clusterd=true
+              mx-consumer-cim=true
+Annotations:  <none>
+
+Data
+====
+DpuInfoCfg:
+----
+{"DPUInfo":{"DPUList":[{"HcaName":"hrn5_0","EthName":"ens0f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[0]},{"HcaName":"hrn5_1","EthName":"ens0f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[2]},{"HcaName":"hrn5_2","EthName":"ens0f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[4]},{"HcaName":"hrn5_3","EthName":"ens0f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[6]},{"HcaName":"hrn5_4","EthName":"ens1f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[1]},{"HcaName":"hrn5_5","EthName":"ens1f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[3]},{"HcaName":"hrn5_6","EthName":"ens1f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[5]},{"HcaName":"hrn5_7","EthName":"ens1f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[7]}],"NodeEvent":{"NodeName":"<nodename>","FaultList":[]}},"UpdateTime":1787724959094}
 ```
 
 ## 制作镜像<a name="ZH-CN_TOPIC_0000002479227114"></a>
