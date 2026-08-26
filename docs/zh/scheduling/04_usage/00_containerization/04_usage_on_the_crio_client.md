@@ -16,7 +16,7 @@
     "name": "npu-pod",
     "namespace": "default"
   },
-  "logDirectory": "/tmp",
+  "log_directory": "/tmp",
   "linux": {
     "security_context": {
       "namespace_options": {
@@ -32,7 +32,7 @@
 
 - 示例1：启动容器时，挂载物理芯片ID为0的芯片。
 
-    在container-config.json的`env`中通过指定`ASCEND_VISIBLE_DEVICES`挂载0号NPU：
+    在container-config.json的`envs`中通过指定`ASCEND_VISIBLE_DEVICES`挂载0号NPU：
 
     ```json
     {
@@ -42,10 +42,17 @@
       "image": {
         "image": "{image-name:tag}"
       },
-      "command": ["bash"],
-      "env": {
-        "ASCEND_VISIBLE_DEVICES": "0"
-      },
+      "command": [
+        "/bin/bash",
+        "-c",
+        "# Replace with your custom business program here"
+      ],
+      "envs": [
+        {
+          "key": "ASCEND_VISIBLE_DEVICES",
+          "value": "0"
+        }
+      ],
       "linux": {
         "security_context": {
           "namespace_options": {
@@ -65,7 +72,7 @@
 
 - 示例2：启动容器时，仅挂载NPU设备和管理设备，不挂载驱动相关目录。
 
-    在`env`中追加`ASCEND_RUNTIME_OPTIONS=NODRV`：
+    在`envs`中追加`ASCEND_RUNTIME_OPTIONS=NODRV`：
 
     ```json
     {
@@ -75,11 +82,21 @@
       "image": {
         "image": "{image-name:tag}"
       },
-      "command": ["bash"],
-      "env": {
-        "ASCEND_VISIBLE_DEVICES": "0",
-        "ASCEND_RUNTIME_OPTIONS": "NODRV"
-      },
+      "command": [
+        "/bin/bash",
+        "-c",
+        "# Replace with your custom business program here"
+      ],
+      "envs": [
+        {
+          "key": "ASCEND_VISIBLE_DEVICES",
+          "value": "0"
+        },
+        {
+          "key": "ASCEND_RUNTIME_OPTIONS",
+          "value": "NODRV"
+        }
+      ],
       "linux": {
         "security_context": {
           "namespace_options": {
@@ -97,7 +114,7 @@
 
 - 示例3：启动容器时，挂载物理芯片ID为0的芯片，读取自定义配置文件hostlog中的挂载内容。
 
-    在`env`中追加`ASCEND_RUNTIME_MOUNTS=hostlog`：
+    在`envs`中追加`ASCEND_RUNTIME_MOUNTS=hostlog`：
 
     ```json
     {
@@ -107,11 +124,21 @@
       "image": {
         "image": "{image-name:tag}"
       },
-      "command": ["bash"],
-      "env": {
-        "ASCEND_VISIBLE_DEVICES": "0",
-        "ASCEND_RUNTIME_MOUNTS": "hostlog"
-      },
+      "command": [
+        "/bin/bash",
+        "-c",
+        "# Replace with your custom business program here"
+      ],
+      "envs": [
+        {
+          "key": "ASCEND_VISIBLE_DEVICES",
+          "value": "0"
+        },
+        {
+          "key": "ASCEND_RUNTIME_MOUNTS",
+          "value": "hostlog"
+        }
+      ],
       "linux": {
         "security_context": {
           "namespace_options": {
@@ -139,11 +166,21 @@
       "image": {
         "image": "{image-name:tag}"
       },
-      "command": ["bash"],
-      "env": {
-        "ASCEND_VISIBLE_DEVICES": "100",
-        "ASCEND_RUNTIME_OPTIONS": "VIRTUAL"
-      },
+      "command": [
+        "/bin/bash",
+        "-c",
+        "# Replace with your custom business program here"
+      ],
+      "envs": [
+        {
+          "key": "ASCEND_VISIBLE_DEVICES",
+          "value": "100"
+        },
+        {
+          "key": "ASCEND_RUNTIME_OPTIONS",
+          "value": "VIRTUAL"
+        }
+      ],
       "linux": {
         "security_context": {
           "namespace_options": {
@@ -169,11 +206,21 @@
       "image": {
         "image": "{image-name:tag}"
       },
-      "command": ["bash"],
-      "env": {
-        "ASCEND_VISIBLE_DEVICES": "0",
-        "ASCEND_VNPU_SPECS": "vir04"
-      },
+      "command": [
+        "/bin/bash",
+        "-c",
+        "# Replace with your custom business program here"
+      ],
+      "envs": [
+        {
+          "key": "ASCEND_VISIBLE_DEVICES",
+          "value": "0"
+        },
+        {
+          "key": "ASCEND_VNPU_SPECS",
+          "value": "vir04"
+        }
+      ],
       "linux": {
         "security_context": {
           "namespace_options": {
@@ -199,11 +246,21 @@
       "image": {
         "image": "{image-name:tag}"
       },
-      "command": ["bash"],
-      "env": {
-        "ASCEND_VISIBLE_DEVICES": "0",
-        "ASCEND_ALLOW_LINK": "True"
-      },
+      "command": [
+        "/bin/bash",
+        "-c",
+        "# Replace with your custom business program here"
+      ],
+      "envs": [
+        {
+          "key": "ASCEND_VISIBLE_DEVICES",
+          "value": "0"
+        },
+        {
+          "key": "ASCEND_ALLOW_LINK",
+          "value": "True"
+        }
+      ],
       "linux": {
         "security_context": {
           "namespace_options": {
