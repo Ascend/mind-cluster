@@ -2,6 +2,7 @@
 
 - [容器化支持特性指南](./00_containerization/menu_containerization.md)
 - [资源监测特性指南](./01_resource_monitoring/menu_resource_monitoring.md)
+- [故障检测特性指南](./11_fault_detection_and_diagnosis/menu_fault_detection_and_diagnosis.md)
 - [虚拟化实例特性指南](./02_virtual_instance/menu_virtual_instance.md)
 - [调度特性指南](./03_basic_scheduling/menu_basic_scheduling.md)
 - [断点续训特性指南](./04_resumable_training/menu_resumable_training.md)
