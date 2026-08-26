@@ -37,15 +37,35 @@ var (
 // DefaultWhitelistPatterns is the built-in default whitelist for DPU metrics.
 // These patterns use prefix matching (trailing * means "match any suffix").
 // The parsed metric names are lowercased, e.g. "roce_cmdq_ctr_ext_cmd".
+// Only metrics matching ERR/DROP/ECN/CNP/PSN criteria are included.
 var DefaultWhitelistPatterns = []string{
-	"roce_rx_*",
-	"roce_tx_*",
-	"roce_cmdq_*",
-	"roce_cq_*",
-	"roce_qp_*",
-	"roce_mr_*",
-	"roce_srq_*",
-	"roce_ext_*",
+	// ERR metrics: bulk prefix patterns
+	"roce_err_ctr_*",
+	"roce_warn_ctr_*",
+
+	// ERR metrics: CMDQ category (ERR appears in category, not metric name)
+	"roce_cmdq_ctr_roce_cmd_2err_qp",
+	"roce_cmdq_ctr_roce_cmd_sqerr2rts_qp",
+	"roce_cmdq_ctr_roce_data_cqe_ro_enable",
+	"roce_cmdq_ctr_roce_rq_cqe_128_enable",
+	"roce_cmdq_ctr_roce_sq_cqe_128_enable",
+	"roce_cmdq_ctr_shadow_function_invalid",
+
+	// ERR metrics: DP category (ERR appears in category, not metric name)
+	"roce_dp_ctr_ccp_token_not_enough",
+	"roce_dp_ctr_db_mtu_error_cnt",
+	"roce_dp_ctr_sq_datalen_over_limit_cnt",
+
+	// ECN metrics
+	"roce_dp_ctr_rr_ecn_rx",
+	"roce_dp_ctr_sw_ecn_rx",
+
+	// CNP metrics
+	"roce_dp_ctr_cnp_rx_entry",
+	"roce_dp_ctr_cnp_tx_entry",
+	"roce_dp_ctr_fast_cnp_event_entry",
+	"roce_dp_ctr_port_cnp_rx_entry",
+	"roce_dp_ctr_port_cnp_tx_entry",
 }
 
 // GetWhitelist returns the singleton WhitelistManager instance with default whitelist loaded

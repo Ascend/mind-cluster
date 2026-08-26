@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -95,11 +96,24 @@ func resolveConfigPath() string {
 	return defaultConfigFile
 }
 
+// validateConfigPath checks that the resolved symlink target is under the config directory.
+func validateConfigPath(resolvedPath string) bool {
+	abs, err := filepath.Abs(resolvedPath)
+	if err != nil {
+		return false
+	}
+	configDir, err := filepath.Abs(filepath.Dir(resolveConfigPath()))
+	if err != nil {
+		return false
+	}
+	return abs == configDir || strings.HasPrefix(abs, configDir+string(os.PathSeparator))
+}
+
 // LoadConfig reads and parses the config file, returning an error on failure.
 func LoadConfig() error {
 	configFilePath = resolveConfigPath()
 
-	data, err := utils.ReadLimitBytes(configFilePath, utils.Size10M)
+	data, err := utils.ReadLimitBytesWithSymlink(configFilePath, utils.Size10M, validateConfigPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			logger.Warnf("config file %s not found, using defaults", configFilePath)
@@ -208,7 +222,7 @@ func shouldReload(event fsnotify.Event) bool {
 // doReloadConfig reloads the config file and invokes registered reload hooks.
 // It compares the file content hash to skip no-op reloads.
 func doReloadConfig() {
-	data, err := utils.ReadLimitBytes(configFilePath, utils.Size10M)
+	data, err := utils.ReadLimitBytesWithSymlink(configFilePath, utils.Size10M, validateConfigPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			logger.Warn("config file removed, keeping current config")

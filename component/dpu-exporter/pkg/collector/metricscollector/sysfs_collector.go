@@ -35,6 +35,13 @@ const sysfsNetBase = "/sys/class/net"
 // These are NOT under the statistics/ subdirectory.
 var sysfsIfaceFiles = []string{"carrier", "carrier_changes", "operstate"}
 
+// sysfsGaugeMetrics are interface metrics that represent current state (gauge type),
+// not cumulative counters.
+var sysfsGaugeMetrics = map[string]struct{}{
+	"carrier":   {},
+	"operstate": {},
+}
+
 // SysfsCollector collects interface-level metrics from /sys/class/net/.
 // It reads:
 //   - /sys/class/net/<interface>/{carrier, carrier_changes, operstate}
@@ -62,7 +69,11 @@ func (c *SysfsCollector) UpdatePrometheus(ch chan<- prometheus.Metric, ctx Colle
 					fmt.Sprintf("interface metric: %s", name),
 					DpuIfaceLabels, nil,
 				)
-				ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, val,
+				metricType := prometheus.CounterValue
+				if _, ok := sysfsGaugeMetrics[name]; ok {
+					metricType = prometheus.GaugeValue
+				}
+				ch <- prometheus.MustNewConstMetric(desc, metricType, val,
 					dpuList[i].CardName, dpuList[i].Interfaces[j].EthName)
 			}
 		}
