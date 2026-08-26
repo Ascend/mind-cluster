@@ -36,6 +36,8 @@ import (
 	"ascend-common/common-utils/agreement"
 	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/report"
+	ver "ascend-common/common-utils/version"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/controllers/v1"
 )
@@ -92,9 +94,10 @@ func main() {
 		"Query the verison of the program")
 
 	flag.Parse()
-
+	info := ver.Get()
 	if version {
-		fmt.Printf("%s version: %s\n", api.OperatorName, BuildVersion)
+		fmt.Printf("version=%s commit=%s branch=%s os=%s arch=%s goVersion= %s\n",
+			info.Version, info.GitCommit, info.GitBranch, info.BuildOS, info.BuildArch, info.GoVersion)
 		return
 	}
 
@@ -125,7 +128,7 @@ func main() {
 		hwlog.RunLog.Errorf("unable to create operator-controller err: %s", err)
 		return
 	}
-
+	report.ReportVersionToConfigMap(mgr.GetClient(), ctx, info, "ascend-operator")
 	hwlog.RunLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		hwlog.RunLog.Errorf("problem running manager, err: %s", err)

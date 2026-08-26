@@ -17,6 +17,7 @@
 """
 build config
 """
+
 import os
 import stat
 import glob
@@ -31,10 +32,13 @@ cache_folder = ('taskd.egg-info', '_package_output')
 pwd = os.path.dirname(os.path.relpath(__file__))
 pkg_dir = os.path.join(pwd, "build/lib")
 version = os.getenv("BUILD_VERSION", "v7.0.RC1")
+commit_id = os.getenv("GIT_COMMIT", "")
+branch = os.getenv("GIT_BRANCH", "")
 
 
 def _write_version(file):
     file.write(f"__version__ = '{version}'\n")
+    file.write(f"git_version = '{commit_id}_{branch}'\n")
 
 
 def build_dependencies():
@@ -70,13 +74,12 @@ build_dependencies()
 required_packages = get_required_packages()
 
 package_data = {
-    '':
-        [
-            'api/**',
-            'python/**',
-            '*.yaml',
-            'python/cython_api/libs/*.so',
-        ]
+    '': [
+        'api/**',
+        'python/**',
+        '*.yaml',
+        'python/cython_api/libs/*.so',
+    ]
 }
 
 setup(
@@ -84,7 +87,7 @@ setup(
     version=version,
     license='Apache 2.0',
     url="https://gitcode.com/ascend/mind-cluster",
-    platforms=['linux', ],
+    platforms=['linux'],
     description='Ascend MindCluster taskd is a new library for training management',
     python_requires='>=3.7',
     install_requires=required_packages,
@@ -94,7 +97,7 @@ setup(
     include_package_data=True,
     cmdclass={
         'build_py': build_py,
-    }
+    },
 )
 
 clean()

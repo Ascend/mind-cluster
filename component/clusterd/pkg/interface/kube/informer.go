@@ -4,6 +4,9 @@
 package kube
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -23,6 +26,7 @@ import (
 	ascendv1 "ascend-common/api/ascend-operator/apis/batch/v1"
 	ascendexternalversions "ascend-common/api/ascend-operator/client/informers/externalversions"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/version"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/device"
@@ -309,6 +313,57 @@ func initClusterDevice() {
 		}
 		superpod.SaveNode(superPodID, nodeDevice)
 	}
+}
+
+// UpdateVersionSummary update component version summary
+func UpdateVersionSummary(lastHash map[string]string) {
+	summary := buildVersionSummary()
+	// Change detection: calculate hash, skip if no changes
+	for compName, data := range summary {
+		hashByte := sha256.Sum256([]byte(data))
+		hash := hex.EncodeToString(hashByte[:])
+		if hash == lastHash[compName] {
+			continue // No changes, skip this component
+		}
+		// Only update ConfigMap for components with changed content
+		cm, err := GetConfigMap(api.VersionName, api.DLNamespace)
+		if err != nil {
+			hwlog.RunLog.Errorf("get cm failed, err is %v", err)
+			return
+		}
+		cm.Data[compName] = data
+		_, err = PatchCMData(api.VersionName, api.DLNamespace, cm.Data)
+		if err != nil {
+			hwlog.RunLog.Errorf("update configmap for %s failed: %v", compName, err)
+			continue
+		}
+		lastHash[compName] = hash
+	}
+}
+
+func buildVersionSummary() map[string]string {
+	result := make(map[string]string)
+	targetComponents := []string{"device-plugin", "k8s-rdma-shared-dp", "noded"}
+	nodes := getNodesFromInformer()
+	for _, componentName := range targetComponents {
+		distribution := make(map[string]int) // version -> nodeCount (only store count, not node list)
+		annKey := api.ResourceNamePrefix + componentName + ".version"
+		for _, n := range nodes {
+			if val, ok := n.Annotations[annKey]; ok {
+				var info version.Info
+				json.Unmarshal([]byte(val), &info)
+				distribution[info.Version]++
+			}
+		}
+		summary := version.VersionSummary{
+			Type:         "DaemonSet",
+			Versions:     distribution, // Only store version -> node count, avoid bloating ConfigMap
+			TotalNodes:   len(nodes),
+			QueryCommand: fmt.Sprintf("kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, version: .metadata.annotations.\"%s\"}'", annKey),
+		}
+		result[componentName] = version.ToJSON(summary)
+	}
+	return result
 }
 
 func getNodesFromInformer() []*v1.Node {

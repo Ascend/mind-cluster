@@ -37,6 +37,10 @@ readonly LOG_SIZE_THRESHOLD=$((20*1024*1024))
 readonly PACKAGE_VERSION=REPLACE_VERSION
 readonly UNIFIED_BUS_DIR="/sys/class/unified_bus"
 
+readonly PACKAGE_COMMIT=REPLACE_COMMIT
+readonly PACKAGE_BRANCH=REPLACE_BRANCH
+readonly PACKAGE_GO=REPLACE_GO
+
 umask 027
 
 function check_log {
@@ -174,6 +178,9 @@ function save_install_args() {
       echo -e "version=v${PACKAGE_VERSION}"
       echo -e "arch=$(uname -m)"
       echo -e "os=linux"
+      echo -e "gitCommit=${PACKAGE_COMMIT}"
+      echo -e "gitBranch=${PACKAGE_BRANCH}"
+      echo -e "goVersion=${PACKAGE_GO}"
       echo -e "path=${INSTALL_PATH}"
       echo -e "build=${RT_FIRST_CASE}_${PACKAGE_VERSION}-$(uname -m)"
       echo -e "a500=${a500}"

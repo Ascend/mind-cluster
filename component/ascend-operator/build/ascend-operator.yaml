@@ -115,7 +115,7 @@ rules:
     verbs: [ "create", "list", "watch", "delete", "get" ]
   - apiGroups: [ "" ]
     resources: [ "configmaps" ]
-    verbs: [ "create", "list", "watch", "delete", "get", "update" ]
+    verbs: [ "create", "list", "watch", "delete", "get", "patch", "update" ]
   - apiGroups: [ "scheduling.volcano.sh" ]
     resources: [ "podgroups"]
     verbs: [ "create", "list", "watch", "delete", "get", "update" ]

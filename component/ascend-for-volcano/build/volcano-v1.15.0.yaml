@@ -4735,7 +4735,7 @@ rules:
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["get", "list", "watch", "create", "delete", "update"]
+    verbs: ["get", "list", "watch", "create", "delete", "update", "patch"]
   - apiGroups: ["apps"]
     resources: ["daemonsets", "replicasets", "statefulsets"]
     verbs: ["list", "watch", "get"]

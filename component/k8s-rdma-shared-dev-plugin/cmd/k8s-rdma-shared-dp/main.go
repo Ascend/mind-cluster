@@ -37,17 +37,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"strings"
 	"syscall"
-
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-
-	"ascend-common/common-utils/healthz"
-	"ascend-common/common-utils/hwlog"
+	"time"
 
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/fault"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources"
@@ -56,6 +52,15 @@ import (
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/ub_device"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/utils"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	patchType "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+
+	"ascend-common/api"
+	"ascend-common/common-utils/healthz"
+	"ascend-common/common-utils/hwlog"
+	ver "ascend-common/common-utils/version"
 )
 
 const (
@@ -69,6 +74,7 @@ const (
 	defaultLogLevel      = 0
 	defaultLogMaxBackups = 3
 	defaultLogMaxAge     = 7
+	retryTime            = 3
 )
 
 var (
@@ -163,10 +169,11 @@ func main() {
 
 	// Parse command line arguments
 	flag.Parse()
-
+	info := ver.Get()
 	// Show version information (single variable for both -version and -v)
 	if versionOpt {
-		fmt.Printf("%s\n", printVersionString())
+		fmt.Printf("version=%s commit=%s branch=%s os=%s arch=%s goVersion=%s\n",
+			info.Version, info.GitCommit, info.GitBranch, info.BuildOS, info.BuildArch, info.GoVersion)
 		return
 	}
 
@@ -259,7 +266,7 @@ func main() {
 	}
 
 	hwlog.RunLog.Info("Enabled servers started.")
-
+	addVersionToNodeAnnotation(info, "k8s-rdma-shared-dp")
 	hwlog.RunLog.Info("Listening for term signals")
 	hwlog.RunLog.Info("Starting OS watcher.")
 	signalsNotifier := resources.NewSignalNotifier(syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
@@ -369,4 +376,56 @@ func startFaultDetection(ctx context.Context, ubRm ub_device.UbResourceManager, 
 		return ubRm.GetHcaNames()
 	}, ubRm.GetHcaDiscoverChan(), faultDetectPeriod, healthCallback)
 	go fault.StartFaultReporting(ctx, k8sClient)
+}
+
+func addVersionToNodeAnnotation(info ver.Info, componentName string) {
+	k8sConfig, err := rest.InClusterConfig()
+	if err != nil {
+		hwlog.RunLog.Errorf("Failed to get in-cluster config for fault reporting: %v", err)
+		return
+	}
+	k8sClient, err := kubernetes.NewForConfig(k8sConfig)
+	if err != nil {
+		hwlog.RunLog.Errorf("Failed to create k8s client for fault reporting: %v", err)
+		return
+	}
+	if err := ver.ReportVersionToNodeAnnotation(clientsetAnnotationAdder{k8sClient}, info, componentName); err != nil {
+		hwlog.RunLog.Error(err)
+	}
+}
+
+// clientsetAnnotationAdder adapts *kubernetes.Clientset to the
+// ver.AnnotationAdder interface so the shared version reporter can be used with a raw clientset.
+type clientsetAnnotationAdder struct{ clientset *kubernetes.Clientset }
+
+// AddAnnotation add annotation with clientset
+func (a clientsetAnnotationAdder) AddAnnotation(key, value string) error {
+	return AddAnnotation(a.clientset, key, value)
+}
+
+// AddAnnotation add annotation
+func AddAnnotation(clientset *kubernetes.Clientset, key, value string) error {
+	escapedKey := strings.ReplaceAll(key, "~", "~0")
+	escapedKey = strings.ReplaceAll(escapedKey, "/", "~1")
+	patchMap := map[string]string{
+		"op":    "replace",
+		"path":  "/metadata/annotations/" + escapedKey,
+		"value": value,
+	}
+	patchMapByte, err := json.Marshal([]interface{}{patchMap})
+	if err != nil {
+		hwlog.RunLog.Errorf("marshal patchMap failed, err is %v", err)
+		return err
+	}
+	for i := 0; i < retryTime; i++ {
+		_, err = clientset.CoreV1().Nodes().Patch(context.TODO(), os.Getenv(api.NodeNameEnv),
+			patchType.JSONPatchType, patchMapByte, metav1.PatchOptions{})
+		if err != nil {
+			hwlog.RunLog.Errorf("patch node annotation failed, err is %v", err)
+			time.Sleep(time.Second)
+			continue
+		}
+		break
+	}
+	return err
 }

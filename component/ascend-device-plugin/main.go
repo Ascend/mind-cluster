@@ -34,6 +34,7 @@ import (
 	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+	ver "ascend-common/common-utils/version"
 )
 
 const (
@@ -286,8 +287,10 @@ func init() {
 
 func main() {
 	flag.Parse()
+	info := ver.Get()
 	if *version {
-		fmt.Printf("%s version: %s\n", BuildName, BuildVersion)
+		fmt.Printf("version=%s commit=%s branch=%s os=%s arch=%s goVersion=%s\n",
+			info.Version, info.GitCommit, info.GitBranch, info.BuildOS, info.BuildArch, info.GoVersion)
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -313,6 +316,7 @@ func main() {
 	go hdm.ListenDevice(ctx)
 	// start goroutine to dump topo of rack A5 for ras
 	go topology.RasTopoWriteTask(ctx, hdm)
+	hdm.AddVersionToNodeAnnotation(info, "device-plugin")
 	duplicatedetector.CheckDuplicateDevices(ctx, &types.DetectorConfig{
 		CriEndpoint: "",
 		RuntimeType: hdm.ContainerRuntime,

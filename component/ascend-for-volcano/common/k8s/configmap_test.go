@@ -21,6 +21,7 @@ package k8s
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"testing"
@@ -306,6 +307,61 @@ func TestMakeDataHash(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := util.MakeDataHash(tt.args.data); got != tt.want {
 				t.Errorf("MakeDataHash() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPatchCMData(t *testing.T) {
+	tests := []struct {
+		name          string
+		client        kubernetes.Interface
+		namespace     string
+		cmName        string
+		mockCm        *v1.ConfigMap
+		data          map[string]string
+		mockMarshalFn func(v interface{}) ([]byte, error)
+		wantErr       bool
+	}{
+		{
+			name:      "01-PatchCMData will succeed when cm exists in fake client",
+			client:    fake.NewSimpleClientset(),
+			namespace: testNamespace,
+			cmName:    testName,
+			mockCm: &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{Name: testName, Namespace: testNamespace}},
+			data:    map[string]string{"key": "value"},
+			wantErr: false,
+		},
+		{
+			name:      "02-PatchCMData will return error when json.Marshal fails",
+			client:    fake.NewSimpleClientset(),
+			namespace: testNamespace,
+			cmName:    testName,
+			data:      map[string]string{"key": "value"},
+			mockMarshalFn: func(v interface{}) ([]byte, error) {
+				return nil, fmt.Errorf("mock marshal error")
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mockMarshalFn != nil {
+				patch := gomonkey.ApplyFunc(json.Marshal, tt.mockMarshalFn)
+				defer patch.Reset()
+			}
+			if tt.mockCm != nil {
+				tt.client.CoreV1().ConfigMaps(tt.namespace).Create(
+					context.TODO(), tt.mockCm, metav1.CreateOptions{})
+			}
+			got, err := PatchCMData(tt.client, tt.cmName, tt.namespace, tt.data)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("PatchCMData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && got == nil {
+				t.Errorf("PatchCMData() got = nil, want non-nil cm")
 			}
 		})
 	}

@@ -42,6 +42,7 @@ import (
 	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
+	ver "ascend-common/common-utils/version"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
@@ -126,8 +127,10 @@ const (
 
 func main() {
 	flag.Parse()
+	info := ver.Get()
 	if version {
-		fmt.Printf("NPU-exporter version: %s \n", versions.BuildVersion)
+		fmt.Printf("version=%s commit=%s branch=%s os=%s arch=%s goVersion=%s\n",
+			info.Version, info.GitCommit, info.GitBranch, info.BuildOS, info.BuildArch, info.GoVersion)
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())

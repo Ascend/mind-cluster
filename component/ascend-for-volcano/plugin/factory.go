@@ -26,10 +26,12 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	k8serror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
@@ -41,6 +43,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/version"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/config"
 )
 
@@ -60,6 +63,7 @@ func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
 	}
 	sHandle.PredicatedNodes = make(map[api.JobID]sets.String)
 	sHandle.InitVolcanoFrameFromSsn(ssn)
+	sHandle.reportVersion()
 	sHandle.initCmInformer()
 	sHandle.InitNodesFromSsn(ssn)
 	sHandle.InitJobsFromSsn(ssn)
@@ -286,6 +290,46 @@ func (sHandle *ScheduleHandler) initDynamicParameters(configs map[string]string)
 	sHandle.FrameAttr.ResourceLevelsInfo = initResourceLevels(configs)
 	sHandle.FrameAttr.PreferPreviousNode = getPreferPreviousNodeConfig(configs)
 
+}
+
+// initStaticParameters
+func (sHandle *ScheduleHandler) reportVersion() {
+	sHandle.FrameAttr.VersionOnceInit.Do(func() {
+		info := version.Get()
+		sHandle.reportVersionToConfigMap(info, "ascend-for-volcano")
+	})
+}
+
+func (sHandle *ScheduleHandler) reportVersionToConfigMap(info version.Info, componentName string) {
+	cmData := map[string]string{componentName: version.ToJSON(info)}
+	newCM := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      util.VersionName,
+			Namespace: util.MindXDlNameSpace,
+		},
+		Data: cmData,
+	}
+
+	backoff := 1 * time.Second
+	for attempt := 0; attempt < 3; attempt++ {
+		_, err := k8s.CreateConfigMap(sHandle.FrameAttr.KubeClient, newCM)
+		if err == nil {
+			return
+		}
+		if !k8serror.IsAlreadyExists(err) {
+			klog.V(util.LogErrorLev).Infof("create cm failed, err is %v", err)
+			break
+		}
+
+		_, err = k8s.PatchCMData(sHandle.FrameAttr.KubeClient, util.VersionName, util.MindXDlNameSpace, cmData)
+		if err == nil {
+			return
+		}
+		klog.V(util.LogErrorLev).Infof("patch cm data failed, err is %v", err)
+		time.Sleep(backoff)
+		backoff *= 2
+	}
+	klog.V(util.LogErrorLev).Infof("failed to report %s version to configmap after 3 attempts", componentName)
 }
 
 func initResourceLevels(configs map[string]string) map[string][]util.ResourceTreeLevel {

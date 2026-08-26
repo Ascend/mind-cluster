@@ -173,6 +173,7 @@ type ConfigParameters struct {
 // StaticParameters volcano scheduler static parameters
 type StaticParameters struct {
 	OnceInit              *sync.Once
+	VersionOnceInit       *sync.Once
 	UseClusterD           bool
 	SelfMaintainAvailCard bool
 	NslbVersion           string
@@ -328,8 +329,9 @@ func NewVolcanoFrame() VolcanoFrame {
 	return VolcanoFrame{
 		ConfigParameters: ConfigParameters{
 			StaticParameters: StaticParameters{
-				OnceInit:       &sync.Once{},
-				IsFirstSession: util.PtrInit(true),
+				OnceInit:        &sync.Once{},
+				VersionOnceInit: &sync.Once{},
+				IsFirstSession:  util.PtrInit(true),
 			},
 		},
 	}
