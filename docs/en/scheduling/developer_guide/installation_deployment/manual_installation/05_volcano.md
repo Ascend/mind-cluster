@@ -376,7 +376,7 @@ This chapter provides installation guidance for the Volcano components (vc-sched
     <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p125626567516"><a name="p125626567516"></a><a name="p125626567516"></a>2</p>
     </td>
     <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p25637568515"><a name="p25637568515"></a><a name="p25637568515"></a>Number of reserved nodes in one SuperPoD of <span id="ph915032251212"><a name="ph915032251212"></a><a name="ph915032251212"></a>Atlas 900 A3 SuperPoD</span>.</p>
-    <div class="note" id="note1514175285210"><a name="note1514175285210"></a><a name="note1514175285210"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p96481321115510"><a name="p96481321115510"></a><a name="p96481321115510"></a>If the configured reserve-nodes is greater than super-pod-size, the following scenarios exist.</p>
+    <div class="note" id="note1514175285210"><a name="note1514175285210"></a><a name="note1514175285210"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p96481321115510"><a name="p96481321115510"></a><a name="p96481321115510"></a>If the configured reserve-nodes is greater than or equal to super-pod-size, the following scenarios exist.</p>
     <a name="ul13842528165510"></a><a name="ul13842528165510"></a><ul id="ul13842528165510"><li>If super-pod-size is greater than 2, reserve-nodes is reset to 2 by default.</li><li>If super-pod-size is less than or equal to 2, reserve-nodes is reset to 0 by default.</li></ul>
     </div></div>
     </td>
