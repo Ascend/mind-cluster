@@ -134,6 +134,46 @@ UB PORT link状态变化（UP -> DOWN）；UBOE PORT link状态变化 (UP -> DOW
 |110001024|参数面路由不可收敛。       |PreSeparateNPUCodes：预隔离NPU故障。|
 |110000002|参数面路由可收敛设备亚健康。|SubHealthFaultCodes：亚健康故障。|
 
+## UB网卡故障<a name="ZH-CN_TOPIC_0000002511426421"></a>
+
+UB网卡故障是针对Atlas950 SuperPoD 超节点、Atlas 850E 超节点和Atlas 650E 服务器中使用的UB网卡的故障。
+
+### 检测原理
+
+UB网卡故障检测由K8s RDMA Shared Dev Plugin组件负责，以固定周期对节点上的每个HCA设备执行一轮检测。检测流程如下：
+
+1. K8s RDMA Shared Dev Plugin读取故障配置文件，获取需要检测的故障项及对应的检测方法。
+2. 对每个设备依次执行各故障项检测，通过读取sysfs设备状态和调用`hinicadm5`工具查询主机拓扑信息。
+3. 将检测到的故障按级别写入`dpuinfo-<nodename>` ConfigMap中进行上报。
+
+### 故障上报机制
+
+K8s RDMA Shared Dev Plugin采用轮询模式检测UB网卡故障。检测到故障后，将故障信息写入`dpuinfo-<nodename>` ConfigMap中上报给K8s。ConfigMap中各字段的说明，请参见[DpuInfoCfg](../../../06_api/11_k8s_rdma_shared_dev_plugin.md#table_dpuconfigmap_k8s_rdma_shared_dev_plugin)表。
+
+### 所需组件
+
+为保证UB网卡故障检测功能的正常使用，需要安装以下组件：K8s RDMA Shared Dev Plugin
+
+### 支持的故障处理类型
+
+Job级别重调度、Pod级别重调度；SubHealthFault级别的故障不触发断点续训。
+
+### 使用约束
+
+- 本功能仅支持在以下产品型号中使用：Atlas 950 SuperPoD 超节点、Atlas 850E 超节点和Atlas 650E 服务器。
+- 若要使用DPU故障触发断点续训的能力，则分布式训练任务需申请节点上的全部NPU资源和每个NPU资源对应的DPU资源。
+- 仅支持主机网络。
+
+### 已支持的UB网卡故障
+
+|故障码|故障等级|故障事件名称|故障说明
+|--|--|--|--|
+|21000022|SeparateDPU|ub_port_down|RoCE设备不可用，需切换NIC和IP。|
+|21000023|SubHealthFault|ub_lane_down|UB通道降lane，无需切换NIC或IP。|
+|21000024|SeparateDPU|hca_port_down|HCA端口故障，故障发生后需切换IP。|
+|22000025|SubHealthFault|bond_member_down|Bond场景下单成员故障，带宽减半可继续运行。|
+|22000026|SeparateDPU|dpu_card_drop|DPU卡掉卡故障。|
+
 ## 相关操作
 
 - [配置网络故障](../03_configuration/04_network_faults.md)
