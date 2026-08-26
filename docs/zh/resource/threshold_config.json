@@ -1,0 +1,31 @@
+{
+    "CDR_HOST_SNR_DB": {"threshold": {"low_value_alarm": "20", "desc": "cdr host snr", "unit": "dB"}},
+    "CDR_MEDIA_SNR_DB": {"threshold": {"low_value_alarm": "20", "desc": "cdr media snr", "unit": "dB"}},
+    "CHIP_CPU_PORT_SNR_LINE": {"threshold": {"low_value_alarm": "290000", "desc": "CPU与L1间端口 snr", "unit": ""}},
+    "CHIP_NPU_PORT_SNR_LINE": {"threshold": {"low_value_alarm": "400000", "desc": "NPU与L1间端口 snr", "unit": ""}},
+    "SWITCH_PORT_SNR_LINE": {"threshold": {"low_value_alarm": "400000", "desc": "L1与L2间端口 snr", "unit": ""}},
+
+    "DUPLEX_THRESHOLD": {"threshold": {"normal_value_alarm": "Full", "desc": "duplex mode", "unit": ""}},
+    "NET_HEALTH_THRESHOLD": {"threshold": {"normal_value_alarm": "Success", "desc": "network health", "unit": ""}},
+    "LINK_STATUS_THRESHOLD": {"threshold": {"normal_value_alarm": "UP", "desc": "link status", "unit": ""}},
+    "OPTICAL_PRESENT_THRESHOLD": {"threshold": {"normal_value_alarm": "present", "desc": "optical module status", "unit": ""}},
+
+    "SNR_LANE_DIFF_DB": {"threshold": {"high_value_alarm": "3", "desc": "snr lane diff", "unit": "dB"}},
+    "POWER_LANE_DIFF_DB": {"threshold": {"high_value_alarm": "3", "desc": "power lane diff", "unit": "dBm"}},
+    "HCCN_LINK_DOWN_CNT": {"threshold": {"high_value_warn": "3", "high_value_alarm": "5", "desc": "24h内link down次数", "unit": "次"}},
+
+    "TX_POWER_MW": {"threshold": {"low_value_alarm": "0.2", "high_value_alarm": "2.5", "desc": "tx power", "unit": "mW"}},
+    "RX_POWER_MW": {"threshold": {"low_value_alarm": "0.1445", "low_value_warn": "0.6", "high_value_alarm": "2.3", "desc": "rx power", "unit": "mW"}},
+    "TX_POWER_DBM": {"threshold": {"low_value_alarm": "-9.60", "low_value_warn": "-7.00", "high_value_alarm": "7.00", "high_value_warn": "5.50", "desc": "tx power", "unit": "dBm"}},
+    "RX_POWER_DBM": {"threshold": {"low_value_alarm": "-10.00", "low_value_warn": "-6.50", "high_value_alarm": "7.00", "high_value_warn": "5.50", "desc": "rx power", "unit": "dBm"}},
+    "TX_BIAS_MA": {"threshold": {"low_value_alarm": "6", "high_value_alarm": "10", "desc": "tx bias", "unit": "mA"}},
+    "HOST_SNR_DB": {"threshold": {"low_value_warn": "20", "low_value_alarm": "18", "desc": "host snr", "unit": "dB"}},
+    "MEDIA_SNR_DB": {"threshold": {"low_value_warn": "20", "low_value_alarm": "18", "desc": "media snr", "unit": "dB"}},
+
+    "NIC_TX_BIAS_MA": {"threshold": {"low_value_alarm": "0.5", "low_value_warn": "1", "high_value_alarm": "12", "high_value_warn": "11", "desc": "nic bias", "unit": "mA"}},
+    "NIC_TX_POWER_DBM": {"threshold": {"low_value_alarm": "-7.5995", "low_value_warn": "-4.6005", "high_value_alarm": "7", "high_value_warn": "5.5", "desc": "nic tx power", "unit": "dBm"}},
+    "NIC_RX_POWER_DBM": {"threshold": {"low_value_alarm": "-9.4006", "low_value_warn": "-6.3997", "high_value_alarm": "7", "high_value_warn": "5.5", "desc": "nic rx power", "unit": "dBm"}},
+    "NIC_HOST_SNR_DB": {"threshold": {"low_value_warn": "20", "low_value_alarm": "18", "desc": "nic host snr", "unit": "dB"}},
+    "NIC_MEDIA_SNR_DB": {"threshold": {"low_value_warn": "20", "low_value_alarm": "18", "desc": "nic media snr", "unit": "dB"}},
+    "NIC_LANE_FLAG": {"threshold": {"normal_value_alarm": "0", "desc": "nic lane flag", "unit": ""}}
+}
