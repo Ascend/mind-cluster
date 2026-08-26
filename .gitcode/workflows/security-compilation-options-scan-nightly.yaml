@@ -1,0 +1,96 @@
+name: security-compilation-options-scan-nightly
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * * ?'
+
+jobs:
+  scan:
+    runs-on: default
+    steps:
+      - name: Checkout
+        uses: checkout
+
+      # ===== 按执行机架构过滤待下载/扫描的包清单 =====
+      - name: generate-artifact-list
+        id: gen-list
+        run: |
+          set -euo pipefail
+          # 按执行机实际架构自动探测：x86_64 → x86，aarch64 → arm，其他 → all
+          case "$(uname -m)" in
+            x86_64)  ARCH=x86 ;;
+            aarch64) ARCH=arm ;;
+            *)       ARCH=all ;;
+          esac
+
+          # 全部候选包，与 OBS 桶 version_snapshot/latest/mind-cluster/ 下保持一致
+          ALL_PACKAGES=(
+            Ascend-mindxdl-infer-operator_26.2.0_linux-x86_64.zip
+            Ascend-mindxdl-noded_26.2.0_linux-aarch64.zip
+            Ascend-mindxdl-npu-exporter_26.2.0_linux-x86_64.zip
+            Ascend-mindxdl-infer-operator_26.2.0_linux-aarch64.zip
+            Ascend-mindxdl-device-plugin_26.2.0_linux-aarch64.zip
+            Ascend-mindxdl-npu-exporter_26.2.0_linux-aarch64.zip
+            Ascend-mindxdl-k8s-rdma-shared-dev-plugin_26.2.0_linux-aarch64.zip
+            Ascend-mindxdl-k8s-rdma-shared-dev-plugin_26.2.0_linux-x86_64.zip
+            Ascend-mindxdl-faultdiag_26.2.0_linux-x86_64.zip
+            Ascend-mindxdl-noded_26.2.0_linux-x86_64.zip
+            Ascend-mindxdl-ascend-operator_26.2.0_linux-x86_64.zip
+            Ascend-mindxdl-taskd_26.2.0_linux-aarch64.zip
+            Ascend-mindxdl-device-plugin_26.2.0_linux-x86_64.zip
+            Ascend-mindxdl-volcano_26.2.0_linux-x86_64.zip
+            Ascend-docker-runtime_26.2.0_linux-aarch64.run
+            Ascend-mindxdl-mindio_26.2.0_linux-aarch64.zip
+            Ascend-helm-deploy-tool_26.2.0_linux.zip
+            Ascend-mindxdl-volcano_26.2.0_linux-aarch64.zip
+            Ascend-mindxdl-faultdiag_26.2.0_linux-aarch64.zip
+            Ascend-mindxdl-ascend-operator_26.2.0_linux-aarch64.zip
+            Ascend-mindxdl-clusterd_26.2.0_linux-aarch64.zip
+            Ascend-mindxdl-container-manager_26.2.0_linux-x86_64.zip
+            Ascend-mindxdl-clusterd_26.2.0_linux-x86_64.zip
+            Ascend-mindxdl-taskd_26.2.0_linux-x86_64.zip
+            Ascend-docker-runtime_26.2.0_linux-x86_64.run
+            Ascend-mindxdl-mindio_26.2.0_linux-x86_64.zip
+            Ascend-mindxdl-container-manager_26.2.0_linux-aarch64.zip
+          )
+
+          # 过滤：x86 跳过 aarch64 包、arm 跳过 x86_64 包；无架构标识的包（如 helm 工具）始终保留
+          PKGS=()
+          for pkg in "${ALL_PACKAGES[@]}"; do
+            case "$ARCH:$pkg" in
+              x86:*_linux-aarch64.*|arm:*_linux-x86_64.*) continue ;;
+            esac
+            PKGS+=("$pkg")
+          done
+
+          # 多行步骤输出：keys 供 obs-download 下载，paths 供扫描插件精确指定
+          {
+            echo "keys<<EOF"
+            printf 'version_snapshot/latest/mind-cluster/%s\n' "${PKGS[@]}"
+            echo "EOF"
+            echo "paths<<EOF"
+            printf './artifacts/%s\n' "${PKGS[@]}"
+            echo "EOF"
+          } >> "$ATOMGIT_OUTPUT"
+
+      # ===== 批量下载 mind-cluster 版本快照产物（按 ARCH 过滤） =====
+      - name: download-artifacts
+        uses: obs-download
+        with:
+          endpoint: "obs.cn-north-4.myhuaweicloud.com"
+          bucket: "mindcluster"
+          key: ${{ steps.gen-list.outputs.keys }}
+          path: "./artifacts/"
+          file-concurrency: "2"
+
+      # ===== 扫描指定产物并上传结果（按 ARCH 过滤） =====
+      # artifact-path 精确指定只扫描清单内的包，避免误扫目录中其他产物
+      # artifact-download-url 以 / 结尾视为URL前缀，插件自动拼接产物文件名
+      - name: security-compilation-options-scan
+        uses: openlibing/security-compilation-options-action@master
+        with:
+          artifact-path: ${{ steps.gen-list.outputs.paths }}
+          artifact-download-url: "https://mindcluster.obs.cn-north-4.myhuaweicloud.com/version_snapshot/latest/mind-cluster/"
+          apig_app_key: ${{ secrets.OPENLIBING_KEY }}
+          apig_app_secret: ${{ secrets.OPENLIBING_SECRET }}
