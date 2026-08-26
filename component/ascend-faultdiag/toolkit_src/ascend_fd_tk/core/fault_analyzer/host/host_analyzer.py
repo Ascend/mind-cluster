@@ -26,6 +26,7 @@ from ascend_fd_tk.core.model.diag_result import DiagResult, HostDomain
 from ascend_fd_tk.core.model.host import HostInfo, NpuChipInfo, UncorrCwCntInfo, RfLfPcsLinkInfo
 from ascend_fd_tk.core.model.optical_module import OpticalModuleInfo
 from ascend_fd_tk.utils.date_tool import DateObj
+from ascend_fd_tk.utils.helpers import to_int
 
 
 @register_analyzer
@@ -105,6 +106,7 @@ class HostAnalyzer(Analyzer):
             )
             diag_results.extend(self._analyze_optical_status(domain, npu_chip_info))
             diag_results.extend(self._analyze_cdr(domain, npu_chip_info))
+            diag_results.extend(self._analyze_link_stat(domain, npu_chip_info))
             diag_results.extend(self._analyze_uncorr_cw_cnt_fault(domain, uncorr_cw_cnt_infos, npu_chip_info))
 
             optical_info = npu_chip_info.get_optical_module_info()
@@ -134,11 +136,10 @@ class HostAnalyzer(Analyzer):
             fault_info = f"光模块SNR异常：\n{abn_snr_infos}"
             suggestion = "建议更换交换机侧光模块"
             diag_results.append(DiagResult(domain=domain, fault_info=fault_info, suggestion=suggestion))
-        diff_value_desc = optical_info.get_lane_diff_desc()
+        diff_value_desc = optical_info.get_lane_diff_desc(self._threshold.SNR_LANE_DIFF_DB)
         if diff_value_desc:
-            fault_info = f"光模块SNR LANE间差值异常：{diff_value_desc}"
-            suggestion = "光模块SNR LANE间差值异常，优先排查SNR异常的LANE"
-            diag_results.append(DiagResult(domain=domain, fault_info=fault_info, suggestion=suggestion))
+            suggestion = "光模块SNR Lane间差值异常，优先排查SNR异常的LANE"
+            diag_results.append(DiagResult(domain=domain, fault_info=diff_value_desc, suggestion=suggestion))
         return diag_results
 
     def _analyze_cdr(self, domain: HostDomain, npu_chip_info: NpuChipInfo) -> List[DiagResult]:
@@ -149,11 +150,32 @@ class HostAnalyzer(Analyzer):
         fault_info = cdr_snr_info.get_snr_abnormal_desc(
             self._threshold.CDR_HOST_SNR_DB, self._threshold.CDR_MEDIA_SNR_DB
         )
-        if not fault_info:
-            return diag_results
-        suggestion = "CDR SNR异常，请根据SNR异常排查NPU侧或者光模块"
-        diag_results.append(DiagResult(domain=domain, fault_info=fault_info, suggestion=suggestion))
+        if fault_info:
+            suggestion = "CDR SNR异常，请根据SNR异常排查NPU侧或者光模块"
+            diag_results.append(DiagResult(domain=domain, fault_info=fault_info, suggestion=suggestion))
+        diff_value_desc = cdr_snr_info.get_lane_diff_desc(self._threshold.SNR_LANE_DIFF_DB)
+        if diff_value_desc:
+            suggestion = "CDR SNR Lane间差值异常，优先排查SNR异常的Lane"
+            diag_results.append(DiagResult(domain=domain, fault_info=diff_value_desc, suggestion=suggestion))
         return diag_results
+
+    def _analyze_link_stat(self, domain: HostDomain, npu_chip_info: NpuChipInfo) -> List[DiagResult]:
+        results = []
+        link_stat_info = npu_chip_info.hccn_link_stat_info
+        if not link_stat_info or not link_stat_info.link_history:
+            return results
+        down_count, down_times = link_stat_info.link_down_within_24h()
+        threshold = self._threshold.HCCN_LINK_DOWN_CNT
+        down_time_desc = "、".join(down_times)
+        if down_count >= to_int(threshold.high_alarm_th):
+            fault_info = f"链路异常：{threshold.desc}为{down_count}次，down时间：{down_time_desc}"
+            suggestion = "链路频繁down，建议立即排查光模块、光纤及对端交换机端口"
+            return [DiagResult(domain=domain, fault_info=fault_info, suggestion=suggestion)]
+        if down_count >= to_int(threshold.high_warn_th):
+            fault_info = f"链路亚健康：{threshold.desc}为{down_count}次，down时间：{down_time_desc}"
+            suggestion = "链路偶发down，建议业务空档期排查光模块、光纤及对端交换机端口"
+            return [DiagResult(domain=domain, fault_info=fault_info, suggestion=suggestion)]
+        return results
 
     def _analyze_uncorr_cw_cnt_fault(
         self, domain: HostDomain, uncorr_cw_cnt_infos: List[FindResult], npu_chip_info: NpuChipInfo

@@ -32,7 +32,11 @@ from ascend_fd_tk.core.root_cause.constants import (
     LINK_STATUS_ABNORMAL,
     RULE_L1_200G_HILINK,
     RULE_L1_400G_HILINK,
+    RULE_L1_OPTICAL_HOST,
+    RULE_L1_OPTICAL_MEDIA,
     RULE_L2_200G_HILINK,
+    RULE_L2_OPTICAL_HOST,
+    RULE_L2_OPTICAL_MEDIA,
     CPU,
     NPU,
     TYPE_HOST_SNR,
@@ -331,10 +335,12 @@ class LinkBuilder:
         optical = interface.get_optical_module_info() if interface else None
         if not optical:
             return
+        host_rule = RULE_L1_OPTICAL_HOST if prefix == "l1" else RULE_L2_OPTICAL_HOST
+        media_rule = RULE_L1_OPTICAL_MEDIA if prefix == "l1" else RULE_L2_OPTICAL_MEDIA
         if self._snr_checker.check_optical_host_snr_abnormal(optical):
-            triggered_rules.append(f"{prefix}_optical_host")
+            triggered_rules.append(host_rule)
         if self._snr_checker.check_optical_media_snr_abnormal(optical):
-            triggered_rules.append(f"{prefix}_optical_media")
+            triggered_rules.append(media_rule)
 
     # ================================================================
     # 辅助方法

@@ -47,7 +47,7 @@ class BmcOpticalAnalyzer(Analyzer):
                 if not optical_module_info or not optical_module_info.lane_power_infos:
                     continue
                 # 此处仅记录linkdown数据, 所以有光模块信息即可认为存在故障
-                res_list = [f"NPU存在linkdown，记录时间{optical_module_info.log_time}，可能为闪断或硬件故障"]
+                res_list = ["NPU存在linkdown，可能为闪断或硬件故障"]
                 for lane_power_info in optical_module_info.lane_power_infos:
                     res_list.extend(self._check_lane_power_info(lane_power_info))
                 res_list.append(self._check_lox(optical_module_info.tx_los, "Tx", "los"))
@@ -62,15 +62,16 @@ class BmcOpticalAnalyzer(Analyzer):
                             chip_phy_id=bmc_npu_info.chip_phy_id or "",
                         ),
                         fault_info=fault_info,
-                        suggestion="请检查端口是否存在脏污",
+                        suggestion="可能为闪断或硬件故障，请排查光模块链路，检查端口是否存在脏污",
+                        fault_time=optical_module_info.log_time,
                     )
                 )
         return results
 
     def _check_lane_power_info(self, lane_power_info: LanePowerInfo) -> List[str]:
         res_list = [
-            self.threshold.TX_POWER_THRESHOLD_CONFIG_MW.check_value_str(lane_power_info.tx_power),
-            self.threshold.RX_POWER_THRESHOLD_CONFIG_MW.check_value_str(lane_power_info.rx_power),
+            self.threshold.TX_POWER_MW.check_value_str(lane_power_info.tx_power),
+            self.threshold.RX_POWER_MW.check_value_str(lane_power_info.rx_power),
             self.threshold.TX_BIAS_MA.check_value_str(lane_power_info.bias),
             self.threshold.HOST_SNR_DB.check_value_str(lane_power_info.host_snr),
             self.threshold.MEDIA_SNR_DB.check_value_str(lane_power_info.media_snr),

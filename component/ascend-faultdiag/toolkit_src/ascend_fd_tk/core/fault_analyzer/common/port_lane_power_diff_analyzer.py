@@ -17,23 +17,21 @@
 
 from typing import List
 
-from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
+from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.diag_result import DiagResult, HostDomain, SwitchDomain, BmcDomain
 from ascend_fd_tk.core.model.optical_module import LanePowerInfo
-from ascend_fd_tk.utils import helpers
 
 
 @register_analyzer
 class PortLanePowerDiffAnalyzer(Analyzer):
-    """
-    端口lane间power差检查, 不得大于3db
-    """
-
-    _LANE_POWER_DIFF_FAULT = "{}端口Lane最大值和最小值差值大于{}dB，实际最大值lane{}：{}{}，最小值lane{}：{}{}"
     _NA_POWER = "NA"
+
+    def __init__(self, cluster_info: ClusterInfoCache):
+        super().__init__(cluster_info)
+        self._threshold = cluster_info.get_threshold()
 
     def analyse(self) -> List[DiagResult]:
         swi_results = self._analyse_swi_lane_power_diff()
@@ -46,6 +44,7 @@ class PortLanePowerDiffAnalyzer(Analyzer):
         for host_info in self.cluster_info.hosts_info.values():
             for npu_chip_info in host_info.npu_chip_info.values():
                 optical_module_info = npu_chip_info.get_optical_module_info()
+                # pylint: disable=duplicate-code
                 if not optical_module_info:
                     continue
                 domain = HostDomain(
@@ -98,36 +97,17 @@ class PortLanePowerDiffAnalyzer(Analyzer):
         ]
         if not any(check_results):
             return None
-        fault_info = "\n".join(check_results)
-        return DiagResult(domain=domain, fault_info=fault_info, suggestion="请检查端口")
+        fault_info = "光模块功率 Lane间差值异常：" + "\n".join(check_results)
+        return DiagResult(
+            domain=domain, fault_info=fault_info, suggestion="光模块功率 Lane间差值异常，请排查光模块，检查端口"
+        )
 
     def _check_lane_power_diff(self, lane_power_infos: List[LanePowerInfo], attr: str, port_type: str) -> str:
         origin_attr = attr.replace("_dbm", "")
-        lane_power_infos = [
-            lane_power_info
+        lane_value_list = [
+            [lane_power_info.lane_id, getattr(lane_power_info, attr)]
             for lane_power_info in lane_power_infos
             if getattr(lane_power_info, origin_attr) != self._NA_POWER
         ]
-        if not lane_power_infos:
-            return ""
-        max_power_info = max(lane_power_infos, key=lambda x: helpers.to_float(getattr(x, attr))[1])
-        min_power_info = min(lane_power_infos, key=lambda x: helpers.to_float(getattr(x, attr))[1])
-        max_power_str = getattr(max_power_info, attr)
-        min_power_str = getattr(min_power_info, attr)
-        is_max_power_float, max_power_float = helpers.to_float(max_power_str)
-        is_min_power_float, min_power_float = helpers.to_float(min_power_str)
-        if not is_max_power_float or not is_min_power_float:
-            return ""
-        if max_power_float - min_power_float <= constants.POWER_LANE_DIFF_THRESHOLD:
-            return ""
-        msg = self._LANE_POWER_DIFF_FAULT.format(
-            port_type,
-            constants.POWER_LANE_DIFF_THRESHOLD,
-            max_power_info.lane_id,
-            getattr(max_power_info, origin_attr),
-            max_power_info.power_unit_type.value,
-            min_power_info.lane_id,
-            getattr(min_power_info, origin_attr),
-            min_power_info.power_unit_type.value,
-        )
-        return msg
+        diff_desc_list = self._threshold.POWER_LANE_DIFF_DB.check_lane_diff_desc(lane_value_list, port_type)
+        return "\n".join(diff_desc_list)

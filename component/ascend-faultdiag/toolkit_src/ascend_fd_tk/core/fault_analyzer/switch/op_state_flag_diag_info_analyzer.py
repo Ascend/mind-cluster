@@ -62,7 +62,7 @@ class OpStateFlagDiagInfoAnalyzer(Analyzer):
                         optical_id=op_model.optical_id,
                     ),
                     fault_info=fault_info,
-                    suggestion="请检查端口",
+                    suggestion="端口State-flag信息异常，请检查端口",
                 )
                 results.append(result)
         return results

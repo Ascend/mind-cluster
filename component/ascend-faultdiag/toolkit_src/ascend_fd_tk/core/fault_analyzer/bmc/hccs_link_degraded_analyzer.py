@@ -31,11 +31,12 @@ from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
 
 
 class CpuBoardUbcInfo(JsonObj):
-    def __init__(self, cpu_id="", ubc_id="", macro_id="", cud_board_id=""):
+    def __init__(self, cpu_id="", ubc_id="", macro_id="", cud_board_id="", event_time=""):
         self.cpu_id = cpu_id
         self.ubc_id = ubc_id
         self.macro_id = macro_id
         self.cud_board_id = cud_board_id
+        self.event_time = event_time
 
 
 @register_analyzer
@@ -82,6 +83,7 @@ class HccsLinkDegradedAnalyzer(Analyzer):
                 f"CPU board {event_info.cud_board_id}与L1端口之间发生故障",
                 suggestion="建议检查L1端口或cpu板抽屉",
                 err_code=self._ERROR_CODE,
+                fault_time=event_info.event_time,
             )
             result.append(diag_result)
         # 板级别的分析
@@ -110,5 +112,6 @@ class HccsLinkDegradedAnalyzer(Analyzer):
             search = self._HCCS_LINK_DEGRADED_PATTERN.search(event.event_description)
             if search:
                 info = CpuBoardUbcInfo.from_dict(search.groupdict())
+                info.event_time = event.event_time
                 host_error_event_infos.append(info)
         return host_error_event_infos

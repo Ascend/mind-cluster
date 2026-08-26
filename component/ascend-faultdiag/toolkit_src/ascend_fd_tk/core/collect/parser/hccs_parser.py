@@ -17,7 +17,7 @@
 import re
 from typing import List
 
-from ascend_fd_tk.core.common import diag_enum, constants
+from ascend_fd_tk.core.common import diag_enum
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.config import port_mapping_config
 from ascend_fd_tk.core.model.hccs import (
@@ -55,11 +55,6 @@ class HccsParser:
         diag_enum.HCCSProxyModule.RP.value: [diag_enum.HccsPackErrorCnt.RP_PACK_STUACK.value],
         diag_enum.HCCSProxyModule.LP.value: [diag_enum.HccsPackErrorCnt.LP_PACK_STUACK.value],
         diag_enum.HCCSProxyModule.VOQ.value: [diag_enum.HccsPackErrorCnt.VOQ_PACK_DROP.value],
-    }
-
-    _XPU_SNR_LIMIT_MAP = {
-        diag_enum.XPU.CPU.value: constants.CHIP_CPU_PORT_SNR_LIMIT,
-        diag_enum.XPU.NPU.value: constants.CHIP_NPU_PORT_SNR_LIMIT,
     }
 
     _PORT_STATISTIC_PATTERN = re.compile(

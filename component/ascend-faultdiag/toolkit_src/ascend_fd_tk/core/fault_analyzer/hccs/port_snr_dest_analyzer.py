@@ -16,7 +16,7 @@
 # ==============================================================================
 from typing import List
 
-from ascend_fd_tk.core.common import diag_enum, constants
+from ascend_fd_tk.core.common import diag_enum
 from ascend_fd_tk.core.config import port_mapping_config
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
@@ -26,34 +26,36 @@ from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
 
 @register_analyzer
 class PortSnrDestAnalyzer(Analyzer):
-    _XPU_SNR_LIMIT_MAP = {
-        diag_enum.XPU.CPU.value: constants.CHIP_CPU_PORT_SNR_LIMIT,
-        diag_enum.XPU.NPU.value: constants.CHIP_NPU_PORT_SNR_LIMIT,
-    }
-
     def __init__(self, cluster_info: ClusterInfoCache):
         super().__init__(cluster_info)
         self.swis_info = {k: v for k, v in cluster_info.swis_info.items() if v.hccs_info}
+        # pylint: disable=duplicate-code
+        self.port_mapping_config_instance = port_mapping_config.get_port_mapping_config_instance()
+        self.threshold = cluster_info.get_threshold()
+        self.xpu_snr_limit_map = {
+            diag_enum.XPU.CPU.value: self.threshold.CHIP_CPU_PORT_SNR_LINE,
+            diag_enum.XPU.NPU.value: self.threshold.CHIP_NPU_PORT_SNR_LINE,
+        }
 
     def analyse(self) -> List[DiagResult]:
         diag_results = []
-        port_mapping_config_instance = port_mapping_config.get_port_mapping_config_instance()
         for swi in self.swis_info.values():
             for port_snr in swi.hccs_info.hccs_chip_port_snr_list:
-                port_mapping = port_mapping_config_instance.find_swi_port(port_snr.swi_chip_id, port_snr.port_id)
+                port_mapping = self.port_mapping_config_instance.find_swi_port(port_snr.swi_chip_id, port_snr.port_id)
                 if not port_mapping:
                     continue
-                check_res = self.cluster_info.get_threshold().CDR_HOST_SNR_LINE.check_value_str(port_snr.snr)
+                th = self.xpu_snr_limit_map.get(port_snr.xpu, self.threshold.SWITCH_PORT_SNR_LINE)
+                check_res = th.check_value_str(port_snr.snr)
                 if not check_res:
                     continue
                 peer_port = ""
                 if port_snr.xpu and port_mapping.xpu_id:
-                    peer_port = f"对端{port_snr.xpu}{port_mapping.xpu_id}端口，"
+                    peer_port = f"（对端{port_snr.xpu}{port_mapping.xpu_id}）"
 
                 diag_res = DiagResult(
                     domain=SwitchDomain(swi_id=swi.swi_id, interface=port_mapping.swi_port),
-                    fault_info=f"{peer_port}lane {port_snr.lane_id} {check_res}",
-                    suggestion="请检查端口是否脏污",
+                    fault_info=f"交换板ID：{port_snr.swi_chip_id}，交换板端口：{port_snr.port_id}，lane {port_snr.lane_id} Serdes SNR 异常{peer_port}：\n{check_res}",
+                    suggestion="请对链路进行排查，并检查端口是否脏污",
                 )
                 diag_results.append(diag_res)
         return diag_results

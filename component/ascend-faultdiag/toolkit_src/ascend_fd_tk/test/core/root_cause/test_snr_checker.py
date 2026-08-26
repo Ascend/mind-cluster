@@ -4,7 +4,7 @@
 # Licensed under the Apache License, Version 2.0
 
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from ascend_fd_tk.core.root_cause.constants import PORT_SPEED_200G, PORT_SPEED_400G
 from ascend_fd_tk.core.root_cause.snr_checker import SnrChecker
@@ -23,14 +23,18 @@ class TestSnrChecker(unittest.TestCase):
         swi = MagicMock(hccs_info=None)
         self.assertEqual(checker.check_hilink_snr_abnormal(swi, "200G-1"), (False, False))
         # 200G异常
-        mock_threshold.CDR_HOST_SNR_LINE.check_value_str.return_value = True
+        mock_threshold.SWITCH_PORT_SNR_LINE.check_value_str.return_value = True
         swi2 = MagicMock()
         swi2.hccs_info = MagicMock()
         swi2.hccs_info.interface_snr_list = [
             MagicMock(interface_name="200G-1", abnormal_lane_snr=[MagicMock(snr_value="12.5")])
         ]
         swi2.hccs_info.hccs_chip_port_snr_list = []
-        self.assertEqual(checker.check_hilink_snr_abnormal(swi2, "200G-1"), (True, False))
+        with patch(
+            "ascend_fd_tk.core.root_cause.snr_checker.port_mapping_config.get_port_mapping_config_instance"
+        ) as mock_get:
+            mock_get.return_value.find_port_mapping_by_name.return_value = MagicMock(xpu="")
+            self.assertEqual(checker.check_hilink_snr_abnormal(swi2, "200G-1"), (True, False))
 
     def test_check_optical_snr_abnormal(self):
         mock_threshold = MagicMock()

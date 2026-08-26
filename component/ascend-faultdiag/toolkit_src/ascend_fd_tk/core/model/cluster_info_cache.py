@@ -15,11 +15,11 @@
 # limitations under the License.
 # ==============================================================================
 
-from typing import Dict, Tuple, Type, Union
+from typing import Dict, Tuple, Union
 
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.config import port_mapping_config
-from ascend_fd_tk.core.config.threshold_config import OpticalModuleThreshold
+from ascend_fd_tk.core.config.threshold_loader import get_threshold_cls
 from ascend_fd_tk.core.model.bmc import BmcInfo
 from ascend_fd_tk.core.model.cluster_mapping import ChassisMapping, L1SwiServerMapping
 from ascend_fd_tk.core.model.host import HostInfo
@@ -44,8 +44,6 @@ class ClusterInfoCache(JsonObj):
         # 交换机名字和交换机信息映射关系
         self.swi_info_name_map = {}
         self._chassis_mappings: ChassisMapping = None
-        # 后续通过客户类型修改阈值
-        self._threshold: Type[OpticalModuleThreshold] = OpticalModuleThreshold
 
     def sort_info(self):
         self.hosts_info = dict(sorted(self.hosts_info.items(), key=lambda info: info[1].host_id))
@@ -66,7 +64,8 @@ class ClusterInfoCache(JsonObj):
         self.swi_info_name_map = {swi_info.name: swi_info for swi_info in self.swis_info.values()}
 
     def get_threshold(self):
-        return self._threshold
+        # 按集群代际返回对应阈值Profile类（A3/A5/...），未写入代际时按 A3 处理
+        return get_threshold_cls(self.chip_generation)
 
     def get_chassis_mappings(self):
         return self._chassis_mappings

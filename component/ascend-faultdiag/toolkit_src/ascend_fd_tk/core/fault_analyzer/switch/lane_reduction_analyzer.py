@@ -53,7 +53,7 @@ class LaneReductionAnalyzer(Analyzer):
                 res = DiagResult(
                     domain=SwitchDomain(swi_id=swi_info.swi_id, interface=if_name),
                     fault_info=fault_desc,
-                    suggestion="请检查端口",
+                    suggestion="端口发生降lane，请检查端口",
                     err_code=alarm_info.alarm_id,
                 )
                 result.append(res)
