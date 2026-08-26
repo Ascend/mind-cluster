@@ -208,12 +208,12 @@ func (hdm *HwDevManager) initMarkerGroups() {
 	)
 
 	hdm.annotationGroup = annotation.NewAnnotationGroup(
+		&cardTypeAnnotator{hdm: hdm},
 		&baseInfoAnnotator{hdm: hdm},
 		&vdieDdieAnnotator{hdm: hdm},
 		&serialNumberAnnotator{hdm: hdm},
 		&serverTypeAnnotator{hdm: hdm},
 		&superPodInfoAnnotator{hdm: hdm},
-		&cardTypeAnnotator{hdm: hdm},
 	)
 }
 
@@ -631,8 +631,8 @@ func (hdm *HwDevManager) doUpdateNodeAnnotations() {
 	for i := 0; i < common.RetryUpdateCount; i++ {
 		// Dual-write old + new standardized key in a single API call
 		if err = hdm.manager.GetKubeClient().AddAnnotations(map[string]string{
-			annotation.BaseDevInfoAnnoDeprecated: sanitizeLabelValue(string(mashaledNpuInfo)),
-			annotation.NPUBaseDevInfosAnnotation: sanitizeLabelValue(string(mashaledNpuInfo)),
+			annotation.BaseDevInfoAnnoDeprecated: string(mashaledNpuInfo),
+			annotation.NPUBaseDevInfosAnnotation: string(mashaledNpuInfo),
 		}); err == nil {
 			hwlog.RunLog.Info("update node annotations success")
 			hdm.baseNPUInfo = newBaseInfo

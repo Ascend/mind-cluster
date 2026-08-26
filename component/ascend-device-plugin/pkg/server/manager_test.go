@@ -1570,6 +1570,20 @@ func TestUpdateNodeAnnotations(t *testing.T) {
 			hdm.doUpdateNodeAnnotations()
 			convey.So(hdm.baseNPUInfo, convey.ShouldResemble, preBaseInfo)
 		})
+		convey.Convey("03-verify annotation values are raw JSON (not sanitized)", func() {
+			var capturedDeprecated, capturedStandard string
+			patch3 := gomonkey.ApplyMethod(client, "AddAnnotations",
+				func(_ *kubeclient.ClientK8s, annotations map[string]string) error {
+					capturedDeprecated = annotations[annotation.BaseDevInfoAnnoDeprecated]
+					capturedStandard = annotations[annotation.NPUBaseDevInfosAnnotation]
+					return nil
+				})
+			defer patch3.Reset()
+			hdm.doUpdateNodeAnnotations()
+			expectedJSON := `{"Ascend910-0":{"IP":"127.0.1.1","SuperDeviceID":0}}`
+			convey.So(capturedDeprecated, convey.ShouldEqual, expectedJSON)
+			convey.So(capturedStandard, convey.ShouldEqual, expectedJSON)
+		})
 		convey.Convey("04-update node annotations succeed will refresh cache", func() {
 			patch3 := gomonkey.ApplyMethodReturn(client, "AddAnnotations", nil)
 			defer patch3.Reset()
