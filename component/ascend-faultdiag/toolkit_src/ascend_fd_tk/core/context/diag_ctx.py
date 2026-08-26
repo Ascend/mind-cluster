@@ -29,6 +29,7 @@ from ascend_fd_tk.core.common.path import CommonPath, ConfigPath
 from ascend_fd_tk.core.config.conn_config import DeviceConfigParser
 from ascend_fd_tk.core.config.dump_log_dir_config import DumpLogDirConfig
 from ascend_fd_tk.core.config.location_config import LocationConfig, LldConfigReader
+from ascend_fd_tk.core.config.threshold_loader import ThresholdConfigLoader
 from ascend_fd_tk.core.config.tool_config import ToolConfig
 from ascend_fd_tk.core.crypto.crypto import RootKeyCrypto
 from ascend_fd_tk.core.crypto.key_generator import KeyGenerator
@@ -46,6 +47,7 @@ class DiagCtx:
         self.dump_log_dir_config = DumpLogDirConfig()
         self.location_config = LocationConfig()
         self.tool_config = ToolConfig()
+        self.threshold_loader = ThresholdConfigLoader()
         self.host_fetchers: Dict[str, HostFetcher] = {}
         self.switch_fetchers: Dict[str, SwitchFetcher] = {}
         self.bmcs_fetchers: Dict[str, BmcFetcher] = {}
@@ -102,3 +104,5 @@ class DiagCtx:
         config = LldConfigReader().read_from_dir(dir_path)
         if config is not None:
             self.location_config = config
+        # 阈值配置文件可选；此处仅解析暂存，待诊断启动、代际确定后延迟应用
+        self.threshold_loader.parse(dir_path)

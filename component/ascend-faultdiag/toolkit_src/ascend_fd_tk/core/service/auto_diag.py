@@ -26,5 +26,7 @@ class AutoDiag(DiagService):
         # cache 中 chip_generation 存为字符串，未写入时按 A3 处理
         gen_str = self.diag_ctx.cache.chip_generation
         generation = NpuType(gen_str) if gen_str else NpuType.A3
+        # 代际确定后应用阈值覆盖配置（set_config_dir 时解析暂存，此处延迟应用）
+        self.diag_ctx.threshold_loader.apply(gen_str)
         for cls in get_analyzers(generation):
             self.diag_ctx.diag_result.extend(cls(self.diag_ctx.cache).analyse())

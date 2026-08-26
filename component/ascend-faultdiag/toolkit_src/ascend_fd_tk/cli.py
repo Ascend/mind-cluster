@@ -49,14 +49,15 @@ class DiagToolCLI:
         cmd = parts[0].lower()
         args = parts[1:] if len(parts) > 1 else []
         if not self.cli_ctx.is_cmd_valid(cmd):
-            _CONSOLE_LOGGER.info(f"未知命令：{cmd}")
+            _CONSOLE_LOGGER.info("未知命令：%s", cmd)
             _CONSOLE_LOGGER.info("使用 'help' 查看可用命令")
             return
         try:
             _CONSOLE_LOGGER.info(self.cli_ctx.run_cmd(cmd, *args))
         except Exception as e:
-            _CONSOLE_LOGGER.info(f"执行异常：{e}")
+            _CONSOLE_LOGGER.info("执行异常：%s", str(e))
             import traceback
+
             traceback.print_exc()
 
     def run(self):
@@ -83,40 +84,46 @@ class DiagToolCLI:
                 if choice == 'y':
                     break
             except Exception as e:
-                _CONSOLE_LOGGER.info(f"程序错误：{e}")
+                _CONSOLE_LOGGER.info("程序错误：%s", str(e))
                 continue
 
 
 class ExecutorCLI:
-    def __init__(self, cli_model: CliModel, param: Optional[str]):
+    def __init__(self, cli_model: CliModel, params: Optional[List[str]]):
         self.cli_model = cli_model
-        self.param = param
+        self.params = params or []
 
     def execute_task(self) -> str:
-        return self.cli_model.run(self.param)
+        return self.cli_model.run(*self.params)
 
 
 def run_parser(cli: DiagToolCLI, args):
     executor_list = []
     len_args = len(args)
-    not_support_arges = {i: arg for i, arg in enumerate(args)}
+    not_support_arges = dict(enumerate(args))
     for k, cli_model in cli.cli_ctx.cli_model_map.items():
         for i, arg in enumerate(args):
             if arg != k:
                 continue
             not_support_arges.pop(i)
-            param = None
+            params = []
             next_arg = args[i + 1] if i + 1 < len_args else ""
-            if not next_arg or next_arg in cli.cli_ctx.cli_model_map:
-                executor_list.append(ExecutorCLI(cli_model=cli_model, param=param))
-                break
-            if cli_model.is_support_param() or next_arg in ("?", "？"):
-                param = args[i + 1]
+            if next_arg in ("?", "？"):
+                params = [next_arg]
                 not_support_arges.pop(i + 1)
-            executor_list.append(ExecutorCLI(cli_model=cli_model, param=param))
+            elif cli_model.is_support_param():
+                # 按命令最大参数个数依次消费参数，遇到其他命令则停止
+                j = i + 1
+                while j < len_args and len(params) < cli_model.max_param_count():
+                    if args[j] in cli.cli_ctx.cli_model_map:
+                        break
+                    params.append(args[j])
+                    not_support_arges.pop(j)
+                    j += 1
+            executor_list.append(ExecutorCLI(cli_model=cli_model, params=params))
             break
     if not_support_arges:
-        _CONSOLE_LOGGER.info(f"Unsupported arguments: {', '.join(list(not_support_arges.values()))}")
+        _CONSOLE_LOGGER.info("Unsupported arguments: %s", ', '.join(list(not_support_arges.values())))
     else:
         for executor in executor_list:
             _CONSOLE_LOGGER.info(executor.execute_task())

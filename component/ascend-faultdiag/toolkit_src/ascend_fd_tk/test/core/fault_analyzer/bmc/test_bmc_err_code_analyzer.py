@@ -43,7 +43,8 @@ class TestBmcErrCodeAnalyzer(unittest.TestCase):
         self.assertIn("服务器server-1", result.fault_info)
         self.assertIn("系统异常下电告警，主板有电压跌落（V_AVDD12_HVCC）", result.fault_info)
         self.assertIn("NPU Board2 NPU2-1 V_AVDD12_HVCC abnormal", result.fault_info)
-        self.assertIn("2026-06-01 10:00:00", result.fault_info)
+        self.assertNotIn("故障发生时间", result.fault_info)
+        self.assertEqual(result.fault_time, "2026-06-01 10:00:00")
 
     def test_analyse_ignores_unknown_code_and_keyword_mismatch(self):
         mismatch_keyword = build_sel_event(

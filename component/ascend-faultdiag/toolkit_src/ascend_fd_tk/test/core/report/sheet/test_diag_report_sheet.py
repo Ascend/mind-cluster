@@ -37,8 +37,8 @@ class TestDiagReportSheetSort(unittest.TestCase):
         # HostReportData 默认 optical_id=""，但模拟 A3 反序列化场景显式置 None
         data = HostReportData(host_id="host1", npu_id="0", optical_id=None, fault_domain="d1")
         key = DiagReportSheetGenerator._get_sort_key(data, FAULT_TYPE_HOST)
-        # 6 个实体排序属性 + fault_domain = 7 个元素
-        self.assertEqual(key, ("host1", "0", "", "", "", "", "d1"))
+        # 6 个实体排序属性 + fault_domain + fault_time = 8 个元素
+        self.assertEqual(key, ("host1", "0", "", "", "", "", "d1", ""))
 
     def test_sort_with_none_value_no_typeerror(self):
         """排序含 None 的数据不应报 TypeError。"""
@@ -51,6 +51,21 @@ class TestDiagReportSheetSort(unittest.TestCase):
         # host1 在前（含 optical_id="" 和 "0"），host2 在后
         self.assertEqual(sorted_data[0].host_id, "host1")
         self.assertEqual(sorted_data[-1].host_id, "host2")
+
+    def test_sort_with_fault_time_ascending(self):
+        """同实体+故障域内多条记录按故障时间升序排列（时间早的在前）。"""
+        data_list = [
+            HostReportData(host_id="host1", npu_id="0", fault_domain="d1", fault_time="2026-06-01 09:00:00"),
+            HostReportData(host_id="host1", npu_id="0", fault_domain="d1", fault_time="2026-06-01 08:00:00"),
+            HostReportData(host_id="host1", npu_id="0", fault_domain="d1", fault_time=""),
+            HostReportData(host_id="host1", npu_id="1", fault_domain="d1", fault_time="2026-06-01 10:00:00"),
+        ]
+        sorted_data = sorted(data_list, key=lambda x: DiagReportSheetGenerator._get_sort_key(x, FAULT_TYPE_HOST))
+        # host1/npu0/d1 组内按故障时间升序：空串最早，08:00 次之，09:00 最后
+        self.assertEqual(
+            [d.fault_time for d in sorted_data],
+            ["", "2026-06-01 08:00:00", "2026-06-01 09:00:00", "2026-06-01 10:00:00"],
+        )
 
     def test_compute_col_merge_ranges_none_grouping(self):
         """_compute_col_merge_ranges 对 None 属性分组合并，不报错。

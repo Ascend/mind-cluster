@@ -61,15 +61,35 @@ class SwitchAnalyzer(Analyzer):
     def __init__(self, cluster_info: ClusterInfoCache):
         super().__init__(cluster_info)
         self.analyzed_switch_names: Set[str] = set()
+        self._threshold = cluster_info.get_threshold()
         # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
         self.fault_check = OpticalFaultChecker(cluster_info.get_threshold())
 
     def analyse(self) -> List[DiagResult]:
         diag_results = []
-        # 交换机端口间光模块故障分析
         for switch_info in self.cluster_info.swis_info.values():
+            # 交换机端口间光模块故障分析
             diag_results.extend(self.inter_switch_fault_analyze(switch_info))
+            # 交换机端口光模块SNR lane间差值分析
+            diag_results.extend(self.lane_diff_analyze(switch_info))
         return diag_results
+
+    def lane_diff_analyze(self, switch_info: SwitchInfo) -> List[DiagResult]:
+        res_list = []
+        for interface, full_info in switch_info.interface_full_infos.items():
+            optical_module_info = full_info.get_optical_module_info()
+            if not optical_module_info:
+                continue
+            diff_desc = optical_module_info.get_lane_diff_desc(self._threshold.SNR_LANE_DIFF_DB)
+            if not diff_desc:
+                continue
+            domain = SwitchDomain(swi_id=switch_info.swi_id, interface=interface)
+            res_list.append(
+                DiagResult(
+                    domain=domain, fault_info=diff_desc, suggestion="光模块SNR Lane间差值异常，优先排查SNR异常的LANE"
+                )
+            )
+        return res_list
 
     def inter_switch_fault_analyze(self, switch_info: SwitchInfo):
         # 获取交换机端口名称和对端交换机信息映射关系

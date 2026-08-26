@@ -36,6 +36,7 @@ class DiagReportData:
 
     fault_domain: str = ""  # 故障域
     fault_code: str = ""  # 故障码
+    fault_time: str = ""  # 故障时间
     fault_info: str = ""  # 故障信息
     solution: str = ""  # 处理建议
     root_cause_status: str = ""  # 是否链路故障根因
@@ -103,7 +104,7 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
     }
 
     # 故障列属性（不参与实体合并）
-    _FAULT_ATTRS = {"fault_code", "fault_info", "solution", "root_cause_status"}
+    _FAULT_ATTRS = {"fault_code", "fault_time", "fault_info", "solution", "root_cause_status"}
     # 第二级合并的故障列属性（在实体组内合并 solution / root_cause_status）
     _FAULT_MERGE_ATTRS = ["solution", "root_cause_status"]
 
@@ -155,6 +156,7 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         """
         base_mapping = {
             "fault_code": "故障码",
+            "fault_time": "故障时间",
             "fault_info": "故障信息",
             "solution": "处理建议",
             "root_cause_status": "是否链路故障根因",
@@ -199,13 +201,17 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
 
     @classmethod
     def _get_sort_key(cls, data: Union[HostReportData, BmcReportData, SwitchReportData], sheet_type: str) -> Tuple:
-        """获取排序键：实体属性 + fault_domain
+        """获取排序键：实体属性 + fault_domain + 故障时间
 
+        同实体+故障域内的多条记录按故障时间升序排列（时间早的在前）。
         注意：getattr 的默认值仅在属性不存在时生效；属性存在但值为 None 时仍返回 None，
         会导致 sorted 比较时 None 与 str 报 TypeError。因此用 `or ""` 把 None 统一转为空串。
         """
         sort_attrs = cls._ENTITY_SORT_ATTRS.get(sheet_type, [])
-        return tuple(getattr(data, attr, "") or "" for attr in sort_attrs) + (data.fault_domain or "",)
+        return tuple(getattr(data, attr, "") or "" for attr in sort_attrs) + (
+            data.fault_domain or "",
+            data.fault_time or "",
+        )
 
     def generate_sheet(self) -> None:
         """
@@ -267,6 +273,7 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
             data.fault_domain = diag_result.get_domain_desc()
             data.fault_info = diag_result.fault_info
             data.fault_code = diag_result.err_code
+            data.fault_time = diag_result.fault_time
             data.solution = diag_result.suggestion
             data.root_cause_status = UNKNOWN_ROOT_CAUSE
             if self._root_cause_filter:

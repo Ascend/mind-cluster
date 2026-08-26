@@ -17,14 +17,12 @@
 
 from typing import List
 
-from ascend_fd_tk.core.common.constants import SNR_LANE_DIFF_THRESHOLD
 from ascend_fd_tk.core.common.diag_enum import NpuType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
 from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.diag_result import DiagResult, HostDomain
 from ascend_fd_tk.core.model.host_a5 import HostInfoA5, NpuChipInfoA5, HCCNOpticalInfoA5
-from ascend_fd_tk.utils import helpers
 
 
 @register_analyzer(generation=[NpuType.A5])
@@ -58,33 +56,13 @@ class HostAnalyzerA5(Analyzer):
                 )
         return res
 
-    @staticmethod
-    def _analyse_snr_lane_diff(snr_list, domain: HostDomain, snr_type: str) -> List[DiagResult]:
-        diag_results = []
-        if len(snr_list) <= 1:
-            return diag_results
-        snr_list.sort(key=lambda x: x[1])
-        min_lane, min_snr = snr_list[0]
-        max_lane, max_snr = snr_list[-1]
-        if max_snr - min_snr > SNR_LANE_DIFF_THRESHOLD:
-            diag_results.append(
-                DiagResult(
-                    domain=domain,
-                    fault_info=(
-                        f"光模块 {snr_type} SNR Lane间差值异常：Lane最大值和最小值差值大于{SNR_LANE_DIFF_THRESHOLD}db，"
-                        f"实际最大值lane{max_lane}：{max_snr}db，最小值lane{min_lane}：{min_snr}db"
-                    ),
-                    suggestion=f"光模块 {snr_type} SNR Lane间差值异常，优先排查SNR异常的Lane",
-                )
-            )
-        return diag_results
-
     def _analyze_optical_status(self, host_info: HostInfoA5, npu_chip_info: NpuChipInfoA5) -> List[DiagResult]:
         res = []
         optical_info_dict = npu_chip_info.hccn_optical_info
         if not optical_info_dict:
             return res
         for optical_id, optical_info in optical_info_dict.items():
+            # pylint: disable=duplicate-code
             if not optical_info:
                 continue
             domain = HostDomain(
@@ -102,7 +80,7 @@ class HostAnalyzerA5(Analyzer):
     def _analyze_bias(self, domain: HostDomain, optical_info: HCCNOpticalInfoA5) -> List[DiagResult]:
         if not optical_info or not optical_info.monitor_item:
             return []
-        th = self._threshold.A5_TX_BIAS_MA
+        th = self._threshold.TX_BIAS_MA
         abnormal_infos = []
         for item in optical_info.monitor_item:
             items_name = item.items or ""
@@ -126,12 +104,12 @@ class HostAnalyzerA5(Analyzer):
             items_name = item.items or ""
             if items_name.startswith("TxPower Lane"):
                 lane_id = items_name.replace("TxPower Lane", "").split("(")[0]
-                desc = self._threshold.A5_TX_POWER_DBM.check_value_str(item.value)
+                desc = self._threshold.TX_POWER_DBM.check_value_str(item.value)
                 if desc:
                     abn_tx_infos.append(f"Lane{lane_id} {desc}")
             elif items_name.startswith("RxPower Lane"):
                 lane_id = items_name.replace("RxPower Lane", "").split("(")[0]
-                desc = self._threshold.A5_RX_POWER_DBM.check_value_str(item.value)
+                desc = self._threshold.RX_POWER_DBM.check_value_str(item.value)
                 if desc:
                     abn_rx_infos.append(f"Lane{lane_id} {desc}")
         if not abn_tx_infos and not abn_rx_infos:
@@ -151,30 +129,35 @@ class HostAnalyzerA5(Analyzer):
             items_name = item.items or ""
             if items_name.startswith(self.HOST_SNR_TYPE):
                 lane_id = items_name.replace(self.HOST_SNR_TYPE, "").split("(")[0]
-                desc = self._threshold.A5_HOST_SNR_DB.check_value_str(item.value)
+                desc = self._threshold.HOST_SNR_DB.check_value_str(item.value)
                 if desc:
                     abnormal_host_snr_infos.append(f"Lane{lane_id} {desc}")
-                success, snr_f = helpers.to_float(item.value)
-                if success:
-                    host_snr_list.append((lane_id, snr_f))
+                host_snr_list.append([lane_id, item.value])
                 continue
             if items_name.startswith(self.MEDIA_SNR_TYPE):
                 lane_id = items_name.replace(self.MEDIA_SNR_TYPE, "").split("(")[0]
-                desc = self._threshold.A5_MEDIA_SNR_DB.check_value_str(item.value)
+                desc = self._threshold.MEDIA_SNR_DB.check_value_str(item.value)
                 if desc:
                     abnormal_media_snr_infos.append(f"Lane{lane_id} {desc}")
-                success, snr_f = helpers.to_float(item.value)
-                if success:
-                    media_snr_list.append((lane_id, snr_f))
+                media_snr_list.append([lane_id, item.value])
         if abnormal_media_snr_infos:
             fault_info = "光模块Media SNR异常：\n" + "\n".join(abnormal_media_snr_infos)
             diag_results.append(DiagResult(domain=domain, fault_info=fault_info, suggestion="建议更换交换机侧光模块"))
         if abnormal_host_snr_infos:
             fault_info = "光模块Host SNR异常：\n" + "\n".join(abnormal_host_snr_infos)
             diag_results.append(DiagResult(domain=domain, fault_info=fault_info, suggestion="建议更换本端光模块"))
-        diag_results.extend(self._analyse_snr_lane_diff(media_snr_list, domain, self.MEDIA_SNR_TYPE))
-        diag_results.extend(self._analyse_snr_lane_diff(host_snr_list, domain, self.HOST_SNR_TYPE))
+        diag_results.extend(self._analyse_snr_lane_diff(media_snr_list, host_snr_list, domain))
         return diag_results
+
+    def _analyse_snr_lane_diff(self, media_snr_list, host_snr_list, domain: HostDomain) -> List[DiagResult]:
+        diff_desc_list = []
+        for snr_list, value_type in ((media_snr_list, "Media SNR"), (host_snr_list, "Host SNR")):
+            diff_desc_list.extend(self._threshold.SNR_LANE_DIFF_DB.check_lane_diff_desc(snr_list, value_type))
+        if not diff_desc_list:
+            return []
+        fault_info = "光模块SNR Lane间差值异常：\n" + "\n".join(diff_desc_list)
+        suggestion = "光模块SNR Lane间差值异常，优先排查SNR异常的Lane"
+        return [DiagResult(domain=domain, fault_info=fault_info, suggestion=suggestion)]
 
     def analyse(self) -> List[DiagResult]:
         hosts_info = self.cluster_info.hosts_info

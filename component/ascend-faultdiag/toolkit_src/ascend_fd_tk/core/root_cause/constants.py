@@ -43,6 +43,7 @@ RULE_L1_400G_HILINK = "l1_400g_hilink"
 RULE_L1_OPTICAL_HOST = "l1_optical_host"
 RULE_L1_OPTICAL_MEDIA = "l1_optical_media"
 RULE_L2_200G_HILINK = "l2_200g_hilink"
+RULE_L2_OPTICAL_HOST = "l2_optical_host"
 RULE_L2_OPTICAL_MEDIA = "l2_optical_media"
 
 # 信噪比类型

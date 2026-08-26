@@ -26,21 +26,40 @@
 
 from typing import List, Dict, Tuple, Optional
 
+from ascend_fd_tk.core.model.threshold import Threshold, ThresholdStatus
+from ascend_fd_tk.core.root_cause.constants import (
+    LINK_STATUS_NORMAL,
+    RULE_L1_200G_HILINK,
+    RULE_L1_400G_HILINK,
+    RULE_L1_OPTICAL_HOST,
+    RULE_L1_OPTICAL_MEDIA,
+    RULE_L2_200G_HILINK,
+    RULE_L2_OPTICAL_HOST,
+    RULE_L2_OPTICAL_MEDIA,
+)
 from ascend_fd_tk.core.root_cause.filter import (
     RootCauseFilter,
     HostToL1LinkData,
     L1ToL2LinkData,
 )
 from ascend_fd_tk.core.report.sheet.base import BaseSheetGenerator
-from ascend_fd_tk.core.report.threshold_report import create_threshold_report, generate_threshold_excel
+from ascend_fd_tk.core.report.threshold_report import (
+    create_threshold_report,
+    generate_threshold_excel,
+    ThresholdConfig,
+)
 
 
 class SignalLinkMappingSheetGenerator(BaseSheetGenerator):
     _TWO_ROW = 2
 
-    def __init__(self, cluster_info, excel_gen=None, root_cause_filter: Optional[RootCauseFilter] = None):
+    def __init__(
+        self, cluster_info, excel_gen=None, root_cause_filter: Optional[RootCauseFilter] = None, link_filter=None
+    ):
         super().__init__(cluster_info, excel_gen)
         self._root_cause_filter = root_cause_filter
+        # 可选的链路过滤函数：仅保留属于指定链路的数据行（单链路诊断场景）
+        self._link_filter = link_filter
 
     @staticmethod
     def _create_downstream_header_config() -> Dict[str, str]:
@@ -124,12 +143,58 @@ class SignalLinkMappingSheetGenerator(BaseSheetGenerator):
     def _upstream_group_key(data: L1ToL2LinkData) -> Tuple[str, str]:
         return data.l1_switch_id, data.l1_switch_chip_id
 
+    @staticmethod
+    def _rule_config(field_name: str, rule: str) -> ThresholdConfig:
+        """基于链路构建期规则触发结果的着色配置：规则触发标红，未触发标绿"""
+
+        def check(link_data, value: str):
+            if rule in link_data.triggered_rules:
+                return ThresholdStatus.NOT_EQUAL_THRESHOLD_ALARM, ""
+            return ThresholdStatus.NORMAL, ""
+
+        return ThresholdConfig(
+            field_name=field_name,
+            value_checker=check,
+            show_comparator=False,
+        )
+
+    def _create_downstream_threshold_configs(self) -> List[ThresholdConfig]:
+        """下行链路sheet阈值着色配置（复用链路构建期的规则触发结果）"""
+        return [
+            self._rule_config("l1_hilink_snr", RULE_L1_200G_HILINK),
+            ThresholdConfig(
+                field_name="link_status",
+                threshold=Threshold(normal_value_alarm=LINK_STATUS_NORMAL),
+                show_comparator=False,
+            ),
+        ]
+
+    def _create_upstream_threshold_configs(self) -> List[ThresholdConfig]:
+        """上行链路sheet阈值着色配置（复用链路构建期的规则触发结果）"""
+        return [
+            self._rule_config("l1_hilink_snr", RULE_L1_400G_HILINK),
+            self._rule_config("l1_host_snr", RULE_L1_OPTICAL_HOST),
+            self._rule_config("l1_media_snr", RULE_L1_OPTICAL_MEDIA),
+            self._rule_config("l2_hilink_snr", RULE_L2_200G_HILINK),
+            self._rule_config("l2_host_snr", RULE_L2_OPTICAL_HOST),
+            self._rule_config("l2_media_snr", RULE_L2_OPTICAL_MEDIA),
+            ThresholdConfig(
+                field_name="link_status",
+                threshold=Threshold(normal_value_alarm=LINK_STATUS_NORMAL),
+                show_comparator=False,
+            ),
+        ]
+
     def generate_sheet(self) -> None:
         if not self._root_cause_filter:
             return
 
         downstream_data = list(self._root_cause_filter.host_to_l1_links)
         upstream_data = list(self._root_cause_filter.l1_to_l2_links)
+        if self._link_filter is not None:
+            # 单链路诊断：仅保留属于指定链路的数据行
+            downstream_data = [data for data in downstream_data if self._link_filter(data)]
+            upstream_data = [data for data in upstream_data if self._link_filter(data)]
 
         sheets = []
 
@@ -145,7 +210,7 @@ class SignalLinkMappingSheetGenerator(BaseSheetGenerator):
                     sheet_name="NPU&CPU到L1链路分析",
                     data_list=downstream_data,
                     header_mapping=header_mapping,
-                    threshold_configs=[],
+                    threshold_configs=self._create_downstream_threshold_configs(),
                     na_rep="-",
                     merge_cells=merge_cells,
                     tab_color=_TAB_COLOR_LINK,
@@ -161,7 +226,7 @@ class SignalLinkMappingSheetGenerator(BaseSheetGenerator):
                     sheet_name="L1到L2链路分析",
                     data_list=upstream_data,
                     header_mapping=header_mapping,
-                    threshold_configs=[],
+                    threshold_configs=self._create_upstream_threshold_configs(),
                     na_rep="-",
                     merge_cells=merge_cells,
                     tab_color=_TAB_COLOR_LINK,

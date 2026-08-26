@@ -29,6 +29,12 @@ from ascend_fd_tk.core.report.sheet.switch_optical_module_sheet import SwitchOpt
 
 
 class GenerateDiagReport(DiagService):
+    def __init__(self, diag_ctx, link_filter=None):
+        super().__init__(diag_ctx)
+        # 可选的链路过滤函数：仅保留属于指定链路的数据行（单链路诊断场景），
+        # 过滤结果展示类Sheet（链路分析、光模块信息）
+        self.link_filter = link_filter
+
     @staticmethod
     def _open_excel_windows(file_path):
         """在 Windows 系统上打开 Excel 文件"""
@@ -59,7 +65,10 @@ class GenerateDiagReport(DiagService):
         try:
             DIAG_LOGGER.info("正在生成链路分析Sheet...")
             signal_link_mapping_sheet = SignalLinkMappingSheetGenerator(
-                cluster_info=self.diag_ctx.cache, excel_gen=excel_gen, root_cause_filter=self.diag_ctx.root_cause_filter
+                cluster_info=self.diag_ctx.cache,
+                excel_gen=excel_gen,
+                root_cause_filter=self.diag_ctx.root_cause_filter,
+                link_filter=self.link_filter,
             )
             signal_link_mapping_sheet.generate_sheet()
 
@@ -76,6 +85,7 @@ class GenerateDiagReport(DiagService):
             optical_module_sheet = HostToSwitchOpticalModuleSheetGenerator(
                 cluster_info=self.diag_ctx.cache,
                 excel_gen=excel_gen,
+                link_filter=self.link_filter,
             )
             optical_module_sheet.generate_sheet()
 
@@ -83,6 +93,7 @@ class GenerateDiagReport(DiagService):
             switch_optical_module_sheet = SwitchOpticalModuleSheetGenerator(
                 cluster_info=self.diag_ctx.cache,
                 excel_gen=excel_gen,
+                link_filter=self.link_filter,
             )
             switch_optical_module_sheet.generate_sheet()
 

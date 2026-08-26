@@ -21,17 +21,16 @@ from ascend_fd_tk.core.collect.parser.bmc_parser import BmcParser
 
 
 class TestBmcParser(unittest.TestCase):
-
     def test_trans_sel_results(self):
-        # 测试trans_sel_results方法
-        cmd_res = """ID          Generation Time    Severity    Event Code    Status    Event Description
-1           2026-02-01 10:00:00    Critical    1001          Active    Test Event
-2           2026-02-01 11:00:00    Warning     1002          Inactive  Another Event"""
+        # 测试trans_sel_results方法：仅保留 status 为 Asserted 的记录
+        cmd_res = """ID          Generation Time      Severity     Event Code    Status      Event Description
+1           2026-02-01 10:00:00  Critical     1001          Asserted    Test Event
+2           2026-02-01 11:00:00  Warning      1002          Deasserted  Another Event"""
         result = BmcParser.trans_sel_results(cmd_res)
-        self.assertEqual(len(result), 2)
+        self.assertEqual(len(result), 1)
         self.assertEqual(result[0].sel_id, "1")
         self.assertEqual(result[0].severity, "Critical")
-        self.assertEqual(result[1].event_code, "1002")
+        self.assertEqual(result[0].event_code, "1001")
 
     def test_trans_sensor_results(self):
         # 测试trans_sensor_results方法

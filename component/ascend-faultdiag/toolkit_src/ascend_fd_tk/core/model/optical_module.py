@@ -17,10 +17,9 @@
 import abc
 from typing import List
 
-from ascend_fd_tk.core.common.constants import SNR_LANE_DIFF_THRESHOLD
 from ascend_fd_tk.core.common.diag_enum import PowerUnitType
 from ascend_fd_tk.core.common.json_obj import JsonObj
-from ascend_fd_tk.core.config.threshold_config import OpticalModuleThreshold
+from ascend_fd_tk.core.config.threshold_config import BaseThreshold
 from ascend_fd_tk.core.model.threshold import Threshold
 from ascend_fd_tk.utils import helpers
 
@@ -72,24 +71,19 @@ class OpticalModuleInfo(JsonObj):
         self.log_time = log_time
         self.optical_id = optical_id
 
-    def get_lane_diff_desc(self) -> str:
-        check_snr_list = []
-        for info in self.lane_power_infos:
-            success, media_snr_float = helpers.to_float(info.media_snr)
-            if success:
-                check_snr_list.append([info.lane_id, media_snr_float])
-        if len(check_snr_list) <= 1:
+    def get_lane_diff_desc(self, th: Threshold) -> str:
+        diff_desc_list = []
+        for snr_attr in ("host", "media"):
+            snr_attr = f"{snr_attr}_snr"  # media_snr/host_snr
+            check_snr_list = [
+                [info.lane_id, getattr(info, snr_attr)] for info in self.lane_power_infos if getattr(info, snr_attr)
+            ]
+            if len(check_snr_list) <= 1:
+                continue
+            diff_desc_list.extend(th.check_lane_diff_desc(check_snr_list, snr_attr))
+        if not diff_desc_list:
             return ""
-        check_snr_list.sort(key=lambda x: x[1])
-        min_lane_id, min_media_snr = check_snr_list[0]
-        max_lane_id, max_media_snr = check_snr_list[-1]
-        if max_media_snr - min_media_snr > SNR_LANE_DIFF_THRESHOLD:
-            return (
-                f"Lane最大值和最小值差值大于{SNR_LANE_DIFF_THRESHOLD}db，"
-                f"实际最大值lane{max_lane_id}：{max_media_snr}db，"
-                f"最小值lane{min_lane_id}：{min_media_snr}db"
-            )
-        return ""
+        return "光模块SNR Lane间差值异常：\n" + "\n".join(diff_desc_list)
 
     def get_abnormal_snr_infos(self, host_th: Threshold, media_th: Threshold):
         abnormal_snr_list = []
@@ -110,15 +104,15 @@ class OpticalModuleInfo(JsonObj):
                 abnormal_bias_list.append(f"Lane{info.lane_id} {desc}")
         return "\n".join(abnormal_bias_list)
 
-    def get_abnormal_power_infos(self, th: OpticalModuleThreshold):
+    def get_abnormal_power_infos(self, th: BaseThreshold):
         abnormal_rx_power_list = []
         abnormal_tx_power_list = []
-        th_tx = th.TX_POWER_THRESHOLD_CONFIG_DBM
-        th_rx = th.RX_POWER_THRESHOLD_CONFIG_DBM
+        th_tx = th.TX_POWER_DBM
+        th_rx = th.RX_POWER_DBM
         for info in self.lane_power_infos:
             if info.power_unit_type == PowerUnitType.MW:
-                th_tx = th.TX_POWER_THRESHOLD_CONFIG_MW
-                th_rx = th.RX_POWER_THRESHOLD_CONFIG_MW
+                th_tx = th.TX_POWER_MW
+                th_rx = th.RX_POWER_MW
             desc_tx = th_tx.check_value_str(info.tx_power)
             if desc_tx:
                 abnormal_tx_power_list.append(f"Lane{info.lane_id} {desc_tx}")

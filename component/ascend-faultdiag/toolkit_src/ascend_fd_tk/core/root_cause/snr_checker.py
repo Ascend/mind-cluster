@@ -16,11 +16,12 @@
 # ==============================================================================
 from typing import List, Optional, Tuple, Type
 
+from ascend_fd_tk.core.common import diag_enum
+from ascend_fd_tk.core.config import port_mapping_config
 from ascend_fd_tk.core.config.port_mapping_config import L1InterfacePortMapping, get_port_mapping_config_instance
-from ascend_fd_tk.core.config.threshold_config import OpticalModuleThreshold
+from ascend_fd_tk.core.config.threshold_config import BaseThreshold
 from ascend_fd_tk.core.model.optical_module import OpticalModuleInfo
 from ascend_fd_tk.core.model.switch import SwitchInfo
-
 from ascend_fd_tk.core.root_cause.constants import PORT_SPEED_200G, PORT_SPEED_400G
 
 
@@ -36,8 +37,12 @@ class SnrChecker:
         对各SNR值进行越界检测
     """
 
-    def __init__(self, threshold: Type[OpticalModuleThreshold]):
+    def __init__(self, threshold: Type[BaseThreshold]):
         self._threshold = threshold
+        self.xpu_snr_limit_map = {
+            diag_enum.XPU.CPU.value: self._threshold.CHIP_CPU_PORT_SNR_LINE,
+            diag_enum.XPU.NPU.value: self._threshold.CHIP_NPU_PORT_SNR_LINE,
+        }
 
     # ================================================================
     # 异常判定
@@ -77,11 +82,16 @@ class SnrChecker:
         遍历 hccs_info.interface_snr_list，匹配目标接口名，
         对每个异常通道SNR值进行阈值检测
         """
+        port_mapping_config_instance = port_mapping_config.get_port_mapping_config_instance()
         for interface_snr in swi_info.hccs_info.interface_snr_list:
             if interface_snr.interface_name != interface_name:
                 continue
+            port_mapping = port_mapping_config_instance.find_port_mapping_by_name(interface_name)
+            if not port_mapping:
+                continue
+            th = self.xpu_snr_limit_map.get(port_mapping.xpu, self._threshold.SWITCH_PORT_SNR_LINE)
             for lane_snr in interface_snr.abnormal_lane_snr:
-                if self._threshold.CDR_HOST_SNR_LINE.check_value_str(lane_snr.snr_value):
+                if th.check_value_str(lane_snr.snr_value):
                     return True
             break
         return False
@@ -104,7 +114,8 @@ class SnrChecker:
             port_mapping = self._find_port_mapping(chip_port_snr.switch_chip_id, chip_port_snr.port_id)
             if port_mapping and port_mapping.swi_port != interface_name:
                 continue
-            if self._threshold.CDR_HOST_SNR_LINE.check_value_str(chip_port_snr.snr):
+            th = self.xpu_snr_limit_map.get(port_mapping.xpu, self._threshold.SWITCH_PORT_SNR_LINE)
+            if th.check_value_str(chip_port_snr.snr):
                 return port_speed
             break
         return None

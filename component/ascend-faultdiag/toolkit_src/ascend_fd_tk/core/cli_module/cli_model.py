@@ -28,6 +28,7 @@ from ascend_fd_tk.core.common.path import CommonPath
 from ascend_fd_tk.core.context.diag_ctx import DiagCtx
 from ascend_fd_tk.examples.auto_diag.auto_collect import AutoCollect
 from ascend_fd_tk.examples.auto_diag.auto_diag import AutoDiagCluster
+from ascend_fd_tk.examples.auto_diag.auto_single_diag import AutoSingleDiag
 from ascend_fd_tk.examples.auto_diag.collect_bmc_log import CollectBmcLog
 from ascend_fd_tk.examples.inspection.inspection import Inspection
 from ascend_fd_tk.utils import logger
@@ -173,6 +174,10 @@ class SetConfigDirCliModel(DetailedCliModel):
         1. 机房位置配置文件：LLD.xlsx
            - "灵衢L1网络对应关系" Sheet：包含列 服务器、机房名称、机柜编号、主机SN、L1名称、L1_IP、L1_SN
            - "灵衢L2网络对应关系" Sheet：包含列 设备名、机房名称、机柜编号、管理IP配置、SN
+
+        2. 阈值覆盖配置文件：threshold_config.json
+           - JSON对象：键为阈值名，值为 {"threshold": {要覆盖的阈值字段}}，未配置的阈值或字段保持默认值
+           - 支持字段：low_value_alarm、high_value_alarm、low_value_warn、high_value_warn、normal_value_alarm、normal_value_warn等
 
         通过 " %s <目录路径> " 设置后，工具会自动扫描目录中的配置文件并加载
         """ % self.get_key()
@@ -461,6 +466,78 @@ class AutoDiagCliModel(DetailedCliModel):
         except GenerateCsvPermissionErr as e:
             _CONSOLE_LOGGER.info(e)
             return f"生成报告失败，解除占用后，可使用 ' {self.get_key()} ' 重新生成报告。"
+
+
+class AutoSingleDiagCliModel(DetailedCliModel):
+    @staticmethod
+    def is_support_param():
+        return True
+
+    @classmethod
+    def max_param_count(cls) -> int:
+        return 2
+
+    @classmethod
+    def get_key(cls) -> str:
+        return "auto_single_diag"
+
+    def get_help(self) -> str:
+        return ('指定单条链路进行诊断，支持 " %s <ip> <id> " 指定设备IP和端口id，或 " %s ? " 查看详情') % (
+            self.get_key(),
+            self.get_key(),
+        )
+
+    def get_detail(self) -> str:
+        return """
+        指定单条链路进行诊断，IP自动识别设备类型（host/switch/bmc），端口id含义随设备类型不同：
+
+        1. host：端口id为NPU ID（npu_id，取值0~7）
+        2. switch：端口id为交换机端口名（如400GE1/0/1:10）
+        3. bmc：端口id为关联主机的NPU ID（npu_id，取值0~7）
+
+        执行全量诊断与根因分析，结果展示时仅保留该链路（本端或对端命中IP+端口id）的诊断结果：
+        指定host端口id时，交换机侧对应该端口id的故障（携带对端信息）也会展示，反之亦然。
+
+        使用 " %s <ip> <id> " 启动单链路诊断，示例：
+        %s 1.1.1.1 5              # 诊断主机1.1.1.1的NPU端口5链路
+        %s 1.1.1.3 400GE1/0/1:10  # 诊断交换机1.1.1.3的端口400GE1/0/1:10链路
+        %s 1.1.1.2 5              # 诊断BMC 1.1.1.2关联主机NPU端口5链路
+
+        执行前需确保缓存目录中存在结构化数据（通过 " %s " 或 " %s " 采集生成）
+        """ % (
+            self.get_key(),
+            self.get_key(),
+            self.get_key(),
+            self.get_key(),
+            AutoCollectCliModel.get_key(),
+            AutoCollectDiagCliModel.get_key(),
+        )
+
+    def add_arguments(self, parser):
+        parser.add_argument("ip", help="设备IP地址（host/switch/bmc）")
+        parser.add_argument(
+            "id", help="端口id：host/bmc为NPU端口号npu_id（0~7），switch为交换机端口名（如400GE1/0/1:10）"
+        )
+
+    def run_task(self, *args) -> str:
+        if len(args) < 2:
+            return (
+                f"参数不足，用法：{self.get_key()} <ip> <id>，"
+                f"ip为host/switch/bmc设备IP，id为端口id（host/bmc为npu_id 0~7，switch为交换机端口名），"
+                f"使用 ' {self.get_key()} ? ' 查看详情"
+            )
+        ip, port = args[0], args[1]
+        try:
+            auto_single_diag = AutoSingleDiag(self.diag_ctx, ip, port)
+            asyncio.run(auto_single_diag.main())
+            if auto_single_diag.error_msg:
+                return auto_single_diag.error_msg
+            fault_count = len(self.diag_ctx.diag_result)
+            return f"单链路诊断完成，共发现 {fault_count} 条故障，诊断结果仅展示该链路"
+        except GenerateCsvPermissionErr as e:
+            _CONSOLE_LOGGER.info(e)
+            retry_cmd = f"{self.get_key()} {ip} {port}"
+            return f"生成报告失败，解除占用后，可使用 ' {retry_cmd} ' 重新生成报告。"
 
 
 class AutoCollectDiagCliModel(CliModel):

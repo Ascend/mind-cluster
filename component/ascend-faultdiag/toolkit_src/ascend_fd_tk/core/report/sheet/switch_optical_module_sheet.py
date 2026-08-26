@@ -92,6 +92,11 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
 
     TABLE_COLOR = "A9D18E"
 
+    def __init__(self, cluster_info, excel_gen=None, link_filter=None):
+        super().__init__(cluster_info, excel_gen)
+        # 可选的链路过滤函数：仅保留属于指定链路的数据行（单链路诊断场景）
+        self._link_filter = link_filter
+
     @staticmethod
     def _get_optical_module_data(interface_full_info) -> Dict[str, str]:
         """
@@ -252,6 +257,9 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
         # 收集光模块数据
         # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
         optical_module_data_list = self._collect_optical_module_data()
+        if self._link_filter is not None:
+            # 单链路诊断：仅保留属于指定链路的数据行
+            optical_module_data_list = [data for data in optical_module_data_list if self._link_filter(data)]
 
         # 如果没有数据，跳过生成Sheet
         if not optical_module_data_list:
@@ -407,43 +415,43 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             # 本端TX Power阈值（dBm）
             ThresholdConfig(
                 field_name="local_tx_power0",
-                threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.TX_POWER_DBM,
                 display_name="本端TX Power Lane 0",
             ),
             ThresholdConfig(
                 field_name="local_tx_power1",
-                threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.TX_POWER_DBM,
                 display_name="本端TX Power Lane 1",
             ),
             ThresholdConfig(
                 field_name="local_tx_power2",
-                threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.TX_POWER_DBM,
                 display_name="本端TX Power Lane 2",
             ),
             ThresholdConfig(
                 field_name="local_tx_power3",
-                threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.TX_POWER_DBM,
                 display_name="本端TX Power Lane 3",
             ),
             # 本端RX Power阈值（dBm）
             ThresholdConfig(
                 field_name="local_rx_power0",
-                threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.RX_POWER_DBM,
                 display_name="本端RX Power Lane 0",
             ),
             ThresholdConfig(
                 field_name="local_rx_power1",
-                threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.RX_POWER_DBM,
                 display_name="本端RX Power Lane 1",
             ),
             ThresholdConfig(
                 field_name="local_rx_power2",
-                threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.RX_POWER_DBM,
                 display_name="本端RX Power Lane 2",
             ),
             ThresholdConfig(
                 field_name="local_rx_power3",
-                threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.RX_POWER_DBM,
                 display_name="本端RX Power Lane 3",
             ),
             # 本端SNR阈值（dB）
@@ -462,43 +470,43 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             # 对端TX Power阈值（dBm）
             ThresholdConfig(
                 field_name="peer_tx_power0",
-                threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.TX_POWER_DBM,
                 display_name="对端TX Power Lane 0",
             ),
             ThresholdConfig(
                 field_name="peer_tx_power1",
-                threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.TX_POWER_DBM,
                 display_name="对端TX Power Lane 1",
             ),
             ThresholdConfig(
                 field_name="peer_tx_power2",
-                threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.TX_POWER_DBM,
                 display_name="对端TX Power Lane 2",
             ),
             ThresholdConfig(
                 field_name="peer_tx_power3",
-                threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.TX_POWER_DBM,
                 display_name="对端TX Power Lane 3",
             ),
             # 对端RX Power阈值（dBm）
             ThresholdConfig(
                 field_name="peer_rx_power0",
-                threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.RX_POWER_DBM,
                 display_name="对端RX Power Lane 0",
             ),
             ThresholdConfig(
                 field_name="peer_rx_power1",
-                threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.RX_POWER_DBM,
                 display_name="对端RX Power Lane 1",
             ),
             ThresholdConfig(
                 field_name="peer_rx_power2",
-                threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.RX_POWER_DBM,
                 display_name="对端RX Power Lane 2",
             ),
             ThresholdConfig(
                 field_name="peer_rx_power3",
-                threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
+                threshold=threshold_cls.RX_POWER_DBM,
                 display_name="对端RX Power Lane 3",
             ),
             # 对端SNR阈值（dB）

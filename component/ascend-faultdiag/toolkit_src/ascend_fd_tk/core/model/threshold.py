@@ -44,23 +44,23 @@ class Threshold(JsonObj):
 
     def __init__(
         self,
-        low_threshold_alarm: str = "",
-        high_threshold_alarm: str = "",
-        low_threshold_warn: str = "",
-        high_threshold_warn: str = "",
+        low_value_alarm: str = "",
+        high_value_alarm: str = "",
+        low_value_warn: str = "",
+        high_value_warn: str = "",
         normal_value_alarm: str = "",
         normal_value_warn: str = "",
         desc="",
         unit="",
     ):
-        self.low_alarm_th = low_threshold_alarm
-        self._has_low_alarm_th, self._low_alarm_th_f = helpers.to_float(low_threshold_alarm)
-        self.high_alarm_th = high_threshold_alarm
-        self._has_high_alarm_th, self._high_alarm_th_f = helpers.to_float(high_threshold_alarm)
-        self.low_warn_th = low_threshold_warn
-        self._has_low_warn_th, self._low_warn_th_f = helpers.to_float(low_threshold_warn)
-        self.high_warn_th = high_threshold_warn
-        self._has_high_warn_th, self._high_warn_th_f = helpers.to_float(high_threshold_warn)
+        self.low_alarm_th = low_value_alarm
+        self._has_low_alarm_th, self._low_alarm_th_f = helpers.to_float(low_value_alarm)
+        self.high_alarm_th = high_value_alarm
+        self._has_high_alarm_th, self._high_alarm_th_f = helpers.to_float(high_value_alarm)
+        self.low_warn_th = low_value_warn
+        self._has_low_warn_th, self._low_warn_th_f = helpers.to_float(low_value_warn)
+        self.high_warn_th = high_value_warn
+        self._has_high_warn_th, self._high_warn_th_f = helpers.to_float(high_value_warn)
         self.normal_alarm_th = normal_value_alarm  # 正常阈值（异常级别）
         self.normal_warn_th = normal_value_warn  # 正常阈值（警告级别）
         self.desc = desc
@@ -69,10 +69,10 @@ class Threshold(JsonObj):
     def merged(self, **overrides) -> "Threshold":
         """基于当前阈值生成新实例，仅覆盖 overrides 中给出的字段，其余字段保持不变"""
         kwargs = {
-            "low_threshold_alarm": self.low_alarm_th,
-            "high_threshold_alarm": self.high_alarm_th,
-            "low_threshold_warn": self.low_warn_th,
-            "high_threshold_warn": self.high_warn_th,
+            "low_value_alarm": self.low_alarm_th,
+            "high_value_alarm": self.high_alarm_th,
+            "low_value_warn": self.low_warn_th,
+            "high_value_warn": self.high_warn_th,
             "normal_value_alarm": self.normal_alarm_th,
             "normal_value_warn": self.normal_warn_th,
             "desc": self.desc,

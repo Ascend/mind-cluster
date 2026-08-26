@@ -42,8 +42,8 @@ class CliCtx:
         if not cli_model:
             return ""
         if cli_model.is_support_param():
-            if len(args) > 1:
-                return f"Unsupported arguments: {', '.join(args[1:])}"
+            if len(args) > cli_model.max_param_count():
+                return f"Unsupported arguments: {', '.join(args[cli_model.max_param_count() :])}"
         else:
             if args and args[0] not in ("?", "？"):
                 return f"Unsupported arguments: {', '.join(args)}"
@@ -57,7 +57,6 @@ class CliCtx:
 
 
 class CliModel(abc.ABC):
-
     def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
         self.diag_ctx = diag_ctx
         self.cli_ctx = cli_ctx
@@ -65,6 +64,11 @@ class CliModel(abc.ABC):
     @staticmethod
     def is_support_param():
         return False
+
+    @classmethod
+    def max_param_count(cls) -> int:
+        """命令支持的最大业务参数个数（不含?帮助标识），默认单参数"""
+        return 1 if cls.is_support_param() else 0
 
     @staticmethod
     def check_input_path(*args) -> str:
@@ -95,8 +99,14 @@ class CliModel(abc.ABC):
 
     # 添加命令行参数
     def add_arguments(self, parser):
-        parser.add_argument("action", metavar='actions', nargs='?', choices=['?', '？'], default=None,
-                            help=f"?(？)=查看{self.get_key()}详细信息；无参数={self.get_help()}")
+        parser.add_argument(
+            "action",
+            metavar='actions',
+            nargs='?',
+            choices=['?', '？'],
+            default=None,
+            help=f"?(？)=查看{self.get_key()}详细信息；无参数={self.get_help()}",
+        )
 
     def run(self, *args) -> str:
         args = list(filter(bool, args))
@@ -110,7 +120,6 @@ class CliModel(abc.ABC):
 
 
 class DetailedCliModel(CliModel, abc.ABC):
-
     @abc.abstractmethod
     def get_detail(self) -> str:
         return self.get_help()

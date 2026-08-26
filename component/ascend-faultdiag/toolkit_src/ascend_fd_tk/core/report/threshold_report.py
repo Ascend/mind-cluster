@@ -42,18 +42,14 @@ class ThresholdConfig:
     """阈值配置类，用于配置某个字段的阈值信息"""
 
     field_name: str  # 对象中的字段名
-    threshold: Threshold  # 对应的阈值对象
+    threshold: Optional[Threshold] = None  # 对应的阈值对象（与value_checker二选一）
     display_name: Optional[str] = None  # 显示在Excel中的列名
     value_converter: Optional[callable] = str  # 值转换器，将对象字段值转换为字符串
     desc: Optional[str] = None  # 字段描述
-
-    @property
-    def column_name(self) -> str:
-        """获取列名"""
-        base_name = self.display_name or self.field_name
-        if self.threshold and self.threshold.unit:
-            return f"{base_name} ({self.threshold.unit})"
-        return base_name
+    show_comparator: bool = True  # 异常时是否追加"| 比较符 阈值"文本
+    value_checker: Optional[callable] = (
+        None  # 自定义检查函数，入参(数据对象, 单元格值)，返回(ThresholdStatus, 阈值)，优先于threshold检查
+    )
 
 
 @dataclass
@@ -85,6 +81,8 @@ class ReportSheet(Generic[T]):
         for config in self.threshold_configs:
             if config.field_name not in self.header_mapping:
                 raise ValueError(f"threshold_configs中的{config.field_name}不在{self.header_mapping.keys()}中")
+            if config.threshold is None and config.value_checker is None:
+                raise ValueError(f"threshold_configs中的{config.field_name}未配置threshold或value_checker")
 
         # 更新header_mapping以包含单位信息
         new_header_mapping = {}
@@ -195,14 +193,19 @@ class ReportGenerator:
         else:
             return self.excel_gen
 
-    def _build_styled_cell(self, value, config: ThresholdConfig, na_rep: str) -> StyledCell:
+    def _build_styled_cell(self, obj, value, config: ThresholdConfig, na_rep: str) -> StyledCell:
         value_str = config.value_converter(value) if value is not None else na_rep
         if not value_str or value_str == na_rep:
             return StyledCell(value_str)
-        th_status, th_value = config.threshold.check_value(value_str)
+        if config.value_checker:
+            # 自定义检查函数存在
+            th_status, th_value = config.value_checker(obj, value_str)
+        else:
+            # 不存在自定义检查函数，走通用比较逻辑
+            th_status, th_value = config.threshold.check_value(value_str)
         color = ThresholdColorMap[th_status.name].value
         display_value = value_str
-        if th_status != ThresholdStatus.NORMAL and th_value:
+        if config.show_comparator and th_status != ThresholdStatus.NORMAL and th_value:
             comparator = self._get_comparator(th_status)
             display_value = f"{value_str} | {comparator} {th_value}"
         return StyledCell(display_value, CellStyle(bg_color=color))
@@ -216,7 +219,7 @@ class ReportGenerator:
                 value = self._get_field_value(obj, field_name)
                 if field_name in threshold_config_map:
                     row_data[header_name] = self._build_styled_cell(
-                        value, threshold_config_map[field_name], sheet.na_rep
+                        obj, value, threshold_config_map[field_name], sheet.na_rep
                     )
                 else:
                     row_data[header_name] = value if value is not None else sheet.na_rep
