@@ -43,6 +43,8 @@ import (
 	"ascend-common/common-utils/agreement"
 	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/report"
+	ver "ascend-common/common-utils/version"
 	"infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
 	util "infer-operator/pkg/common/client-go"
@@ -137,8 +139,10 @@ func parseFlags() {
 
 func main() {
 	parseFlags()
+	info := ver.Get()
 	if version {
-		fmt.Printf("%s version: %s\n", BuildName, BuildVersion)
+		fmt.Printf("version=%s commit=%s branch=%s os=%s arch=%s goVersion=%s\n",
+			info.Version, info.GitCommit, info.GitBranch, info.BuildOS, info.BuildArch, info.GoVersion)
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -199,6 +203,7 @@ func main() {
 	if err := setUpSnapshotControllers(ctx, mgr); err != nil {
 		os.Exit(1)
 	}
+	report.ReportVersionToConfigMap(mgr.GetClient(), ctx, info, "infer-operator")
 	hwlog.RunLog.Info("starting infer-controller manager")
 	if err := mgr.Start(ctx); err != nil {
 		hwlog.RunLog.Errorf("failed to start infer-controller manager: %v", err)

@@ -29,6 +29,10 @@ if  [ -f "$version_file" ]; then
   build_version="v"${line#*=}
 fi
 
+GIT_COMMIT=$(git rev-parse --verify HEAD 2>/dev/null || echo "unknown")
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+GO_VERSION=$(go version | awk '{print $3}')
+
 output_name="device-plugin"
 build_scene="center"
 os_type=$(arch)
@@ -57,6 +61,12 @@ function build_plugin() {
     go build -mod=mod -buildmode=pie -ldflags "-X main.BuildName=${output_name} \
             -X main.BuildScene=${build_scene} \
             -X main.BuildVersion=${build_version}_linux-${os_type} \
+            -X ascend-common/common-utils/version.Version=${build_version} \
+            -X ascend-common/common-utils/version.GitCommit=${GIT_COMMIT} \
+            -X ascend-common/common-utils/version.GitBranch=${GIT_BRANCH} \
+            -X ascend-common/common-utils/version.BuildOS=linux \
+            -X ascend-common/common-utils/version.BuildArch=${os_type} \
+            -X ascend-common/common-utils/version.GoVersion=${GO_VERSION} \
             -buildid none     \
             -s   \
             -extldflags=-Wl,-z,relro,-z,now,-z,noexecstack" \

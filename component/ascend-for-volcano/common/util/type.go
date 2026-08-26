@@ -187,6 +187,9 @@ const (
 	// ClusterSwitchInfo the name of cluster switch info configmap
 	ClusterSwitchInfo = "cluster-info-switch-"
 
+	//VersionName version info configmap name
+	VersionName = "component-versions"
+
 	// PodPredicateTime set pod PodPredicateTime for using by device-plugin.
 	PodPredicateTime = "predicate-time"
 	// NodeNotMeetTopologyWarning node not satisfy the schedulable topology warning.

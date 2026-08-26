@@ -62,6 +62,10 @@ if  [ -f "$version_file" ]; then
   VERSION=${line#*=}
 fi
 
+GIT_COMMIT=$(git rev-parse --verify HEAD 2>/dev/null || echo "unknown")
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+GO_VERSION=$(go version | awk '{print $3}')
+
 CPUARCH=$(uname -m)
 
 function build_bin()
@@ -149,6 +153,9 @@ function copy_file_output()
     RUN_PKG_NAME="${PACKAGENAME}_${VERSION}_linux-${CPUARCH}.run"
     DATE=$(date -u "+%Y-%m-%d")
     sed -i "s/REPLACE_VERSION/${VERSION}/g" run_pkg/run_main.sh
+    sed -i "s/REPLACE_COMMIT/${GIT_COMMIT}/g" run_pkg/run_main.sh
+    sed -i "s/REPLACE_BRANCH/${GIT_BRANCH}/g" run_pkg/run_main.sh
+    sed -i "s/REPLACE_GO/${GO_VERSION}/g" run_pkg/run_main.sh
     /bin/cp -f makeself-header/makeself-header.sh ${OPENSRC}/makeself-release-2.4.2
     bash ${OPENSRC}/makeself-release-2.4.2/makeself.sh --sha256 --nomd5 --nocrc --help-header scripts/help.info --packaging-date ${DATE} \
     --tar-extra "--mtime=${DATE}" run_pkg "${RUN_PKG_NAME}" ${RT_LOWER_CASE} ./run_main.sh

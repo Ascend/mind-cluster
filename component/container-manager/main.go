@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"ascend-common/common-utils/agreement"
+	ver "ascend-common/common-utils/version"
 	"container-manager/pkg/command"
 )
 
@@ -136,8 +137,10 @@ func dealOptionFlag() {
 		printCmdUsage()
 		return
 	}
+	info := ver.Get()
 	if v || version {
-		fmt.Printf("%s version: %s\n", BuildName, BuildVersion)
+		fmt.Printf("version=%s commit=%s branch=%s os=%s arch=%s goVersion= %s\n",
+			info.Version, info.GitCommit, info.GitBranch, info.BuildOS, info.BuildArch, info.GoVersion)
 		return
 	}
 }

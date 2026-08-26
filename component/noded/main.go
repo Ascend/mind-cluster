@@ -28,6 +28,7 @@ import (
 	"ascend-common/common-utils/agreement"
 	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
+	ver "ascend-common/common-utils/version"
 	fdol "ascend-faultdiag-online"
 	"nodeD/pkg/common"
 	snapshot "nodeD/pkg/containersnapshot"
@@ -91,9 +92,10 @@ var (
 
 func main() {
 	flag.Parse()
-
+	info := ver.Get()
 	if version {
-		fmt.Printf("%s version: %s \n", BuildName, BuildVersion)
+		fmt.Printf("version=%s commit=%s branch=%s os=%s arch=%s goVersion=%s\n",
+			info.Version, info.GitCommit, info.GitBranch, info.BuildOS, info.BuildArch, info.GoVersion)
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -122,6 +124,9 @@ func main() {
 	go monitorManager.Run(ctx)
 	go configmap.GetCmWatcher().Watch(ctx.Done())
 	initPodInformer()
+	if err := ver.ReportVersionToNodeAnnotation(kubeclient.GetK8sClient(), info, "noded"); err != nil {
+		hwlog.RunLog.Error(err)
+	}
 	if pingmeshManager != nil {
 		go pingmeshManager.Run(ctx)
 	}

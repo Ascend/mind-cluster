@@ -13,10 +13,15 @@ import (
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/agreement"
 	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
+	ver "ascend-common/common-utils/version"
 	"clusterd/pkg/application/conf"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/fdapi"
@@ -99,6 +104,23 @@ func startInformer(ctx context.Context) {
 	go jobv2.Checker(ctx)
 	go resource.Report(ctx)
 	dealPubFault(ctx)
+
+	go startVersionSummaryTicker(ctx)
+}
+
+func startVersionSummaryTicker(ctx context.Context) {
+	lastHash := make(map[string]string)
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+	kube.UpdateVersionSummary(lastHash)
+	for {
+		select {
+		case <-ticker.C:
+			kube.UpdateVersionSummary(lastHash)
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
 func dealPubFault(ctx context.Context) {
@@ -143,8 +165,10 @@ func addFuncAfterInformer() {
 
 func main() {
 	flag.Parse()
+	info := ver.Get()
 	if version {
-		fmt.Printf("%s version: %s \n", BuildName, BuildVersion)
+		fmt.Printf("version=%s commit=%s branch=%s os=%s arch=%s goVersion= %s\n",
+			info.Version, info.GitCommit, info.GitBranch, info.BuildOS, info.BuildArch, info.GoVersion)
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -174,6 +198,7 @@ func main() {
 	startInformer(ctx)
 	initStatisticModule(ctx)
 	go job.RefreshFaultJobInfo(ctx)
+	reportVersionToConfigMap(info, "clusterd")
 	hwlog.RunLog.Info("clusterd starts to serve")
 	signalCatch(cancel)
 }
@@ -280,4 +305,36 @@ func initLogger(ctx context.Context) error {
 		return fmt.Errorf("grpc event log init failed, error is %v", err)
 	}
 	return nil
+}
+
+func reportVersionToConfigMap(info ver.Info, componentName string) {
+	cmData := map[string]string{componentName: ver.ToJSON(info)}
+	newCM := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      api.VersionName,
+			Namespace: api.DLNamespace,
+		},
+		Data: cmData,
+	}
+
+	backoff := 1 * time.Second
+	for attempt := 0; attempt < 3; attempt++ {
+		_, err := kube.CreateConfigMap(newCM)
+		if err == nil {
+			return
+		}
+		if !errors.IsAlreadyExists(err) {
+			hwlog.RunLog.Errorf("create cm failed, err is %v", err)
+			break
+		}
+
+		_, err = kube.PatchCMData(api.VersionName, api.DLNamespace, cmData)
+		if err == nil {
+			return
+		}
+		hwlog.RunLog.Errorf("patch cm data failed, err is %v", err)
+		time.Sleep(backoff)
+		backoff *= 2
+	}
+	hwlog.RunLog.Errorf("failed to report %s version to configmap after 3 attempts", componentName)
 }

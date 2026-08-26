@@ -20,12 +20,14 @@ Package plugin is using for HuaWei Ascend pin affinity schedule.
 package plugin
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"strconv"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	v1 "k8s.io/api/core/v1"
@@ -43,6 +45,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/version"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
 )
 
@@ -216,6 +219,11 @@ func TestInitNPUSession(t *testing.T) {
 	tests := buildInitNPUSessionTest()
 	patch1 := PatchGetCm(TorNodeCMName, "kube-system", test.FakeTorNodeData())
 	defer patch1.Reset()
+	patch2 := gomonkey.ApplyFunc(k8s.CreateConfigMap,
+		func(k8s kubernetes.Interface, cm *v1.ConfigMap) (*v1.ConfigMap, error) {
+			return &v1.ConfigMap{}, nil
+		})
+	defer patch2.Reset()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.sHandler.InitNPUSession(tt.args.ssn); (err != nil) != tt.wantErr {
@@ -546,6 +554,7 @@ func newDefaultHandler() *ScheduleHandler {
 	}
 
 	scheduleHandler.FrameAttr.OnceInit = &sync.Once{}
+	scheduleHandler.FrameAttr.VersionOnceInit = &sync.Once{}
 	scheduleHandler.PolicyBuilder = func() SchedulerPluginNeed {
 		return New(util.NPU910CardName)
 	}
@@ -1888,6 +1897,92 @@ func TestInitJobsPlugin(t *testing.T) {
 							jobID, handler.initCalled, wantCalled)
 					}
 				}
+			}
+		})
+	}
+}
+
+type reportVersionToConfigMapTest struct {
+	name        string
+	sHandle     *ScheduleHandler
+	presetCm    *v1.ConfigMap
+	mockPatch   func(kubernetes.Interface, string, string, map[string]string) (*v1.ConfigMap, error)
+	wantExist   bool
+	wantDataKey string
+}
+
+func buildReportVersionToConfigMapTest() []reportVersionToConfigMapTest {
+	componentName := "ascend-volcano-plugin"
+
+	return []reportVersionToConfigMapTest{
+		{
+			name: "01-reportVersionToConfigMap will create the cm when it does not exist",
+			sHandle: &ScheduleHandler{
+				ScheduleEnv: ScheduleEnv{
+					FrameAttr: VolcanoFrame{KubeClient: fake.NewSimpleClientset()},
+				}},
+			wantExist:   true,
+			wantDataKey: componentName,
+		},
+		{
+			name: "02-reportVersionToConfigMap will patch the existing cm and preserve other keys",
+			sHandle: &ScheduleHandler{
+				ScheduleEnv: ScheduleEnv{
+					FrameAttr: VolcanoFrame{KubeClient: fake.NewSimpleClientset(&v1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{Name: util.VersionName, Namespace: util.MindXDlNameSpace},
+						Data:       map[string]string{"other-component": "old-value"},
+					})}},
+			},
+			wantExist:   true,
+			wantDataKey: componentName,
+		},
+		{
+			name: "03-reportVersionToConfigMap will exhaust retries when patch keeps failing",
+			sHandle: &ScheduleHandler{
+				ScheduleEnv: ScheduleEnv{
+					FrameAttr: VolcanoFrame{KubeClient: fake.NewSimpleClientset(&v1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{Name: util.VersionName, Namespace: util.MindXDlNameSpace},
+						Data:       map[string]string{"": ""},
+					})}},
+			},
+			mockPatch: func(_ kubernetes.Interface, _, _ string, _ map[string]string) (*v1.ConfigMap, error) {
+				return nil, errors.New("patch error")
+			},
+			wantExist: true,
+		},
+	}
+}
+
+func TestReportVersionToConfigMap(t *testing.T) {
+	// Avoid real waiting between retries.
+	sleepPatches := gomonkey.ApplyFunc(time.Sleep, func(_ time.Duration) {})
+	defer sleepPatches.Reset()
+
+	componentName := "ascend-volcano-plugin"
+	info := version.Info{
+		GitCommit: "abc123", GoVersion: "go1.21", BuildArch: "linux/amd64",
+	}
+
+	for _, tt := range buildReportVersionToConfigMapTest() {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mockPatch != nil {
+				patchPatches := gomonkey.ApplyFunc(k8s.PatchCMData, tt.mockPatch)
+				defer patchPatches.Reset()
+			}
+
+			tt.sHandle.reportVersionToConfigMap(info, componentName)
+
+			got, err := tt.sHandle.FrameAttr.KubeClient.CoreV1().ConfigMaps(util.MindXDlNameSpace).Get(
+				context.TODO(), util.VersionName, metav1.GetOptions{})
+			if tt.wantExist {
+				if err != nil {
+					t.Fatalf("expected configmap to exist, got err: %v", err)
+				}
+				if _, ok := got.Data[tt.wantDataKey]; !ok {
+					t.Errorf("expected configmap data to contain %q, got %v", tt.wantDataKey, got.Data)
+				}
+			} else if err == nil {
+				t.Errorf("expected configmap not to exist, but it does: %v", got)
 			}
 		})
 	}

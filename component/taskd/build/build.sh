@@ -36,6 +36,11 @@ fi
 export BUILD_VERSION=${build_version}
 echo "build version is ${BUILD_VERSION}"
 
+git_commit=$(git rev-parse --verify HEAD 2>/dev/null || echo "unknown")
+git_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+export GIT_COMMIT=${git_commit}
+export GIT_BRANCH=${git_branch}
+
 bash "$BUILD_DIR"/build_backend.sh
 
 function log_base() {

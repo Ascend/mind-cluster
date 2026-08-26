@@ -21,6 +21,7 @@ package k8s
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -29,6 +30,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 
@@ -60,6 +62,11 @@ func GetConfigMap(client kubernetes.Interface, namespace, cmName string) (*v1.Co
 		return nil, err
 	}
 	return cm, nil
+}
+
+// CreateConfigMap  Create config map from k8s.
+func CreateConfigMap(client kubernetes.Interface, cm *v1.ConfigMap) (*v1.ConfigMap, error) {
+	return client.CoreV1().ConfigMaps(cm.ObjectMeta.Namespace).Create(context.TODO(), cm, metav1.CreateOptions{})
 }
 
 // IsConfigMapChanged judge the cm wither is same. true is no change.
@@ -96,6 +103,19 @@ func CreateOrUpdateConfigMap(k8s kubernetes.Interface, cm *v1.ConfigMap, cmName,
 		}
 	}
 	return nil
+}
+
+// PatchCMData path configmap data
+func PatchCMData(k8s kubernetes.Interface, name, namespace string, data map[string]string) (*v1.ConfigMap, error) {
+	dataFormat := `{"data":%s}`
+	dataByte, err := json.Marshal(data)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("marshal cm data failed, error: %v", err)
+		return nil, fmt.Errorf("marshal cm data failed")
+	}
+	patchBody := fmt.Sprintf(dataFormat, dataByte)
+	return k8s.CoreV1().ConfigMaps(namespace).Patch(context.TODO(),
+		name, types.MergePatchType, []byte(patchBody), metav1.PatchOptions{})
 }
 
 // UpdateConfigmapIncrementally update configmap Map data but keep the key value pair that new data does not have

@@ -56,6 +56,11 @@ REL_VERSION=$(parse_version)
 REL_ARCH=$(parse_arch)
 REL_NPU_PLUGIN=volcano-npu_${REL_VERSION}
 
+CLUSTER_PATH=/workspace/mind-cluster/component/ascend-for-volcano
+GIT_COMMIT=$(git -C "$CLUSTER_PATH" rev-parse --verify HEAD 2>/dev/null || echo "unknown")
+GIT_BRANCH=$(git -C "$CLUSTER_PATH" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+GO_VERSION=$(go version | awk '{print $3}')
+
 function clean_dir() {
     local OUTPUT_DIR=$1
     rm -f "${OUTPUT_DIR}"/vc-controller-manager
@@ -181,7 +186,13 @@ function build_workflow() {
       -o vc-scheduler "${CMD_PATH}"/scheduler
 
     go build -mod=mod -buildmode=plugin -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now
-      -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin.PluginName=${REL_NPU_PLUGIN}" \
+      -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin.PluginName=${REL_NPU_PLUGIN} \
+      -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/version.Version=${REL_VERSION} \
+      -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/version.GitCommit=${GIT_COMMIT} \
+      -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/version.GitBranch=${GIT_BRANCH} \
+      -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/version.BuildOS=linux \
+      -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/version.BuildArch=${REL_ARCH} \
+      -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/version.GoVersion=${GO_VERSION}" \
       -o "${REL_NPU_PLUGIN}".so "${GOPATH}"/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/
 
     if [ ! -f "${OUTPUT_DIR}/${REL_NPU_PLUGIN}.so" ]

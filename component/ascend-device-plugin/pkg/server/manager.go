@@ -49,6 +49,7 @@ import (
 	"ascend-common/api/label"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+	"ascend-common/common-utils/version"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
 	"ascend-common/devmanager/dcmi"
@@ -639,6 +640,17 @@ func (hdm *HwDevManager) doUpdateNodeAnnotations() {
 		}
 		hwlog.RunLog.Warnf("failed to patch annotations to node, err: %s, retry count: %d", err.Error(), i+1)
 		time.Sleep(time.Second)
+	}
+}
+
+// AddVersionToNodeAnnotation add version to node annotation
+func (hdm *HwDevManager) AddVersionToNodeAnnotation(info version.Info, componentName string) {
+	if hdm == nil {
+		hwlog.RunLog.Error("illegal input, hdm is nil")
+		return
+	}
+	if err := version.ReportVersionToNodeAnnotation(hdm.manager.GetKubeClient(), info, componentName); err != nil {
+		hwlog.RunLog.Error(err)
 	}
 }
 

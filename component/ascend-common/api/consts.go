@@ -25,11 +25,12 @@ const (
 	MsLocalWorkerEnv = "MS_LOCAL_WORKER"
 )
 
-// NameSpace
+// NameSpace and CM Name
 const (
 	DLNamespace = "mindx-dl"
 	ClusterNS   = "cluster-system"
 	KubeNS      = "kube-system"
+	VersionName = "component-versions"
 )
 
 // Pod
