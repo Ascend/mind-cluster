@@ -114,12 +114,18 @@ func (c *Hinicadm5Collector) collectForCard(
 }
 
 // parseHinicadm5CounterOutput parses the text output of `hinicadm5 counter` command.
-// Input format per value line:
 //
-//	ID-0x1902::0000:ROCE_CMDQ_CTR_EXT_CMD: 2
+// The hinicadm5 output has two line types per metric:
 //
-// We extract the metric name part (ROCE_CMDQ_CTR_EXT_CMD), lowercase it,
-// and strip parentheses for Prometheus compatibility → roce_cmdq_ctr_ext_cmd
+//  1. Header line:  ROCE_ERR_CTR_SQA_NAK_PSN_ERR(ROCE|ERR|ERR):
+//     → metric exists, value defaults to 0
+//
+//  2. Value line:   ID-0x1926::0000:ROCE_CMDQ_CTR_ROCE_UPDATE_GID: 2
+//     → updates the metric value to 2
+//
+// A metric may have only the header line (value stays 0) or both lines
+// (header sets 0, then value line overwrites with the actual number).
+// We extract the metric name, lowercase it for Prometheus compatibility.
 func parseHinicadm5CounterOutput(output string) map[string]float64 {
 	metrics := make(map[string]float64)
 	lines := strings.Split(output, "\n")
@@ -134,13 +140,16 @@ func parseHinicadm5CounterOutput(output string) map[string]float64 {
 			continue
 		}
 
-		// Skip header lines like: ROCE_CMDQ_CTR_EXT_CMD(ROCE|CMDQ|INFO):
-		// These have parentheses and no numeric value
+		// Header line: METRIC_NAME(CATEGORY): → register metric with value 0
 		if strings.Contains(line, "(") && strings.Contains(line, ")") {
+			metricName := extractMetricNameFromHeader(line)
+			if metricName != "" {
+				metrics[metricName] = 0
+			}
 			continue
 		}
 
-		// Parse value lines: ID-0x1902::0000:ROCE_CMDQ_CTR_EXT_CMD: 2
+		// Value line: ID-0x1902::0000:ROCE_CMDQ_CTR_EXT_CMD: 2
 		parts := strings.Fields(line)
 		if len(parts) < 2 {
 			continue
@@ -152,17 +161,35 @@ func parseHinicadm5CounterOutput(output string) map[string]float64 {
 			continue
 		}
 
-		// Extract metric name from the ID field
-		// Format: ID-<hex>::<instance>:<METRIC_NAME>:
 		idField := parts[0]
 		metricName := extractMetricName(idField)
 		if metricName == "" {
 			continue
 		}
 
+		// Overwrite the 0 from header line with the actual value
 		metrics[metricName] = val
 	}
 	return metrics
+}
+
+// extractMetricNameFromHeader extracts the metric name from a header line.
+// Input:  "ROCE_ERR_CTR_SQA_NAK_PSN_ERR(ROCE|ERR|ERR):"
+// Output: "roce_err_ctr_sqa_nak_psn_err" (lowercased, parentheses and category stripped)
+func extractMetricNameFromHeader(line string) string {
+	// Find the opening parenthesis and take everything before it
+	idx := strings.Index(line, "(")
+	if idx <= 0 {
+		return ""
+	}
+	name := strings.TrimSpace(line[:idx])
+	// Strip trailing colon if present
+	name = strings.TrimSuffix(name, ":")
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return ""
+	}
+	return strings.ToLower(name)
 }
 
 // extractMetricName extracts the clean metric name from an ID field.
@@ -194,11 +221,11 @@ func (c *Hinicadm5Collector) UpdatePrometheus(ch chan<- prometheus.Metric, ctx C
 		metrics := ctx.GetCache().GetDpuMetrics(dpuList[i].CardName)
 		for name, val := range metrics {
 			desc := prometheus.NewDesc(
-				fmt.Sprintf("dpu_hinicadm5_%s", name),
+				fmt.Sprintf("dpu_%s", name),
 				fmt.Sprintf("hinicadm5 metric: %s", name),
 				DpuCardLabels, nil,
 			)
-			ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, val,
+			ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, val,
 				dpuList[i].CardName, dpuList[i].CardType)
 		}
 	}
