@@ -18,6 +18,7 @@
 from typing import List, Dict
 
 from ascend_fd_tk.core.common.constants import OP_PRESENT, HIGH_POWER_ENABLE_A5
+from ascend_fd_tk.core.common.diag_enum import PowerUnitType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.log_parser.base import FindResult
 from ascend_fd_tk.core.context.host_registry import register_host_info
@@ -272,7 +273,7 @@ class NpuChipInfoA5(JsonObj):
                     break
             if not lane_id or not field:
                 continue
-            lane_info = lane_map.setdefault(lane_id, LanePowerInfo(lane_id=lane_id))
+            lane_info = lane_map.setdefault(lane_id, LanePowerInfo(lane_id=lane_id, power_unit_type=PowerUnitType.DBM))
             setattr(lane_info, field, value)
         if not lane_map:
             return None
