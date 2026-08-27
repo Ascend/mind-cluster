@@ -1773,7 +1773,7 @@ func (hdm *HwDevManager) getDieIDAnnotations() map[dcmi.DieType]map[string]strin
 		if dieID == "" {
 			continue
 		}
-		ret[dieType][strconv.Itoa(int(dev.LogicID))] = dieID
+		ret[dieType][strconv.Itoa(int(dev.PhyID))] = dieID
 	}
 	return ret
 }
@@ -1796,21 +1796,30 @@ func (hdm *HwDevManager) getDieID(logicID int32, dieType dcmi.DieType) string {
 // getChipSerialNumbers returns chip serial numbers from elabel for all cards.
 func (hdm *HwDevManager) getChipSerialNumbers() map[string]string {
 	serialNumbers := make(map[string]string)
-	cardIDs := make(map[int32]bool)
+	existIDs := make(map[int32]bool)
 
 	for _, dev := range hdm.allInfo.AllDevs {
-		if cardIDs[dev.CardID] {
+		var id int32
+		var idType string
+		if dev.CardID != -1 {
+			id = dev.CardID
+			idType = "cardID"
+		} else {
+			id = dev.LogicID
+			idType = "logicID"
+		}
+		if existIDs[id] {
 			continue
 		}
-		cardIDs[dev.CardID] = true
+		existIDs[id] = true
 
-		elabelInfo, err := hdm.manager.GetDmgr().GetCardElabelV2(dev.CardID)
+		elabelInfo, err := hdm.manager.GetDmgr().GetCardElabelV2(id)
 		if err != nil {
-			hwlog.RunLog.Warnf("failed to get elabel for cardID %d, err: %v", dev.CardID, err)
+			hwlog.RunLog.Warnf("failed to get elabel by %s %d, err: %v", idType, id, err)
 			continue
 		}
 		if elabelInfo.SerialNumber != "" && elabelInfo.SerialNumber != "NA" {
-			serialNumbers[strconv.Itoa(int(dev.LogicID))] = elabelInfo.SerialNumber
+			serialNumbers[strconv.Itoa(int(dev.PhyID))] = elabelInfo.SerialNumber
 		}
 	}
 

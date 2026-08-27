@@ -20,6 +20,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strconv"
 
 	"Ascend-device-plugin/pkg/common"
@@ -122,7 +123,7 @@ func (l *chipProductTypeLabeler) Write(labels map[string]string, ctx *label.Node
 		hwlog.RunLog.Warnf("product type is empty or NA, skip chip.product-type label")
 		return nil
 	}
-	writeValue(labels, productType, label.NPUChipProductTypeLabel)
+	writeValue(labels, sanitizeLabelValue(productType), label.NPUChipProductTypeLabel)
 	if common.IsContainAll300IDuo() {
 		writeValue(labels, api.A300IDuoLabel, label.NPUChipProductTypeLabelDeprecated)
 	}
@@ -378,4 +379,13 @@ func writeValue(m map[string]string, value string, keys ...string) {
 	for _, key := range keys {
 		m[key] = value
 	}
+}
+
+// sanitizeLabelValue sanitizes a label value to conform to K8s label value regex.
+func sanitizeLabelValue(value string) string {
+	invalidRegex := regexp.MustCompile(common.LabelSanitizeRegex)
+	sanitized := invalidRegex.ReplaceAllString(value, "")
+	spaceRegex := regexp.MustCompile(` +`)
+	sanitized = spaceRegex.ReplaceAllString(sanitized, "-")
+	return sanitized
 }

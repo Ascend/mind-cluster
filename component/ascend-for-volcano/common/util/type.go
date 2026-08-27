@@ -396,6 +396,8 @@ const (
 
 // values for node labels
 const (
+	// labelSanitizeRegex the regex for sanitizing node labels
+	labelSanitizeRegex = `[^A-Za-z0-9\-_. ]`
 	// Atlas300IDuoLabel the value of the A300I Duo node label
 	Atlas300IDuoLabel = "Atlas 300I Duo"
 

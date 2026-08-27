@@ -106,9 +106,10 @@ func (tp *chip310px2) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode
 	}
 
 	// New key and old key have different values, judge by priority: new key first
+	// label value has been sanitized with SanitizeLabelValue
 	newLabel, ok := util.GetLabelValue(node.Label, util.NPUChipProductTypeLabel)
 	if ok {
-		if newLabel != util.Atlas300IDuoLabel {
+		if newLabel != util.SanitizeLabelValue(util.Atlas300IDuoLabel) {
 			return fmt.Errorf("judgeNodeLabel node card label not right, is %s", newLabel)
 		}
 	} else {

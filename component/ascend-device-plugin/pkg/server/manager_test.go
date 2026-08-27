@@ -2274,3 +2274,154 @@ func TestRegisterSoftSharePodDeleteHandler(t *testing.T) {
 		}
 	})
 }
+
+func TestGetChipSerialNumbers(t *testing.T) {
+	const (
+		serialNum       = "SN123456"
+		serialNumSecond = "SN789012"
+		naValue         = "NA"
+		cardIDZero      = int32(0)
+		cardIDOne       = int32(1)
+		phyIDZero       = int32(0)
+		phyIDOne        = int32(1)
+		phyIDTwo        = int32(2)
+		logicIDZero     = int32(0)
+		cardIDNeg       = int32(-1)
+	)
+
+	type testCase struct {
+		name      string
+		devices   []common.NpuDevice
+		setupMock func(*gomonkey.Patches, *HwDevManager)
+		want      map[string]string
+	}
+
+	tests := []testCase{
+		{
+			name: "should return serial numbers when all cards have valid serial numbers",
+			devices: []common.NpuDevice{
+				{CardID: cardIDZero, PhyID: phyIDZero},
+				{CardID: cardIDOne, PhyID: phyIDOne},
+			},
+			setupMock: func(p *gomonkey.Patches, hdm *HwDevManager) {
+				p.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{})
+				p.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardElabelV2",
+					npuCommon.ElabelInfo{SerialNumber: serialNum}, nil)
+			},
+			want: map[string]string{"0": serialNum, "1": serialNum},
+		},
+		{
+			name: "should skip card when GetCardElabelV2 returns error",
+			devices: []common.NpuDevice{
+				{CardID: cardIDZero, PhyID: phyIDZero},
+				{CardID: cardIDOne, PhyID: phyIDOne},
+			},
+			setupMock: func(p *gomonkey.Patches, hdm *HwDevManager) {
+				p.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{})
+				callCount := 0
+				p.ApplyMethod(hdm.manager.GetDmgr(), "GetCardElabelV2",
+					func(_ *devmanager.DeviceManager, cardID int32) (npuCommon.ElabelInfo, error) {
+						callCount++
+						if callCount == 1 {
+							return npuCommon.ElabelInfo{}, errors.New("get elabel failed")
+						}
+						return npuCommon.ElabelInfo{SerialNumber: serialNum}, nil
+					})
+			},
+			want: map[string]string{"1": serialNum},
+		},
+		{
+			name: "should skip card when serial number is empty",
+			devices: []common.NpuDevice{
+				{CardID: cardIDZero, PhyID: phyIDZero},
+			},
+			setupMock: func(p *gomonkey.Patches, hdm *HwDevManager) {
+				p.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{})
+				p.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardElabelV2",
+					npuCommon.ElabelInfo{SerialNumber: ""}, nil)
+			},
+			want: map[string]string{},
+		},
+		{
+			name: "should skip card when serial number is NA",
+			devices: []common.NpuDevice{
+				{CardID: cardIDZero, PhyID: phyIDZero},
+			},
+			setupMock: func(p *gomonkey.Patches, hdm *HwDevManager) {
+				p.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{})
+				p.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardElabelV2",
+					npuCommon.ElabelInfo{SerialNumber: naValue}, nil)
+			},
+			want: map[string]string{},
+		},
+		{
+			name: "should deduplicate by card ID when multiple devices share same card",
+			devices: []common.NpuDevice{
+				{CardID: cardIDZero, PhyID: phyIDZero},
+				{CardID: cardIDZero, PhyID: phyIDOne},
+				{CardID: cardIDOne, PhyID: phyIDTwo},
+			},
+			setupMock: func(p *gomonkey.Patches, hdm *HwDevManager) {
+				p.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{})
+				callCount := 0
+				p.ApplyMethod(hdm.manager.GetDmgr(), "GetCardElabelV2",
+					func(_ *devmanager.DeviceManager, cardID int32) (npuCommon.ElabelInfo, error) {
+						callCount++
+						if callCount == 1 {
+							return npuCommon.ElabelInfo{SerialNumber: serialNum}, nil
+						}
+						return npuCommon.ElabelInfo{SerialNumber: serialNumSecond}, nil
+					})
+			},
+			want: map[string]string{"0": serialNum, "2": serialNumSecond},
+		},
+		{
+			name: "should use LogicID when CardID is -1",
+			devices: []common.NpuDevice{
+				{CardID: cardIDNeg, LogicID: logicIDZero, PhyID: phyIDZero},
+			},
+			setupMock: func(p *gomonkey.Patches, hdm *HwDevManager) {
+				p.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{})
+				p.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardElabelV2",
+					npuCommon.ElabelInfo{SerialNumber: serialNum}, nil)
+			},
+			want: map[string]string{"0": serialNum},
+		},
+		{
+			name:    "should return empty map when no devices",
+			devices: []common.NpuDevice{},
+			setupMock: func(p *gomonkey.Patches, hdm *HwDevManager) {
+				p.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{})
+			},
+			want: map[string]string{},
+		},
+		{
+			name: "should return empty map when all GetCardElabelV2 fail",
+			devices: []common.NpuDevice{
+				{CardID: cardIDZero, PhyID: phyIDZero},
+				{CardID: cardIDOne, PhyID: phyIDOne},
+			},
+			setupMock: func(p *gomonkey.Patches, hdm *HwDevManager) {
+				p.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{})
+				p.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardElabelV2",
+					npuCommon.ElabelInfo{}, errors.New("get elabel failed"))
+			},
+			want: map[string]string{},
+		},
+	}
+
+	for _, tt := range tests {
+		convey.Convey(tt.name, t, func() {
+			hdm := &HwDevManager{
+				allInfo: common.NpuAllInfo{AllDevs: tt.devices},
+				manager: device.NewHwAscend910Manager(),
+			}
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			tt.setupMock(patches, hdm)
+
+			got := hdm.getChipSerialNumbers()
+			convey.So(got, convey.ShouldResemble, tt.want)
+		})
+	}
+}
