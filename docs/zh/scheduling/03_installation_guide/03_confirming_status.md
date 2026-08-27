@@ -750,3 +750,92 @@
     [INFO]     2025/11/25 22:46:59.315101 378     devmgr/hwdevmgr.go:365    subscribe device fault event success
     ...
     ```
+
+## DPU Exporter<a name="ZH-CN_TOPIC_0000002511346364"></a>
+
+本章节以对接Prometheus，上报Prometheus数据为例，确认DPU Exporter组件是否正常运行。
+
+**DPU Exporter使用镜像部署<a name="section1595201114127"></a>**
+
+请在任意节点执行以下步骤验证DPU Exporter的安装状态。
+
+1. 通过如下命令查看K8s集群中DPU Exporter的Pod，需要满足Pod的STATUS为Running，READY为1/1。如果集群中有多个节点安装了DPU Exporter，需要逐个确认。
+
+    ```shell
+    kubectl get pods -n dpu-exporter -o wide | grep dpu-exporter
+    ```
+
+   回显示例：
+
+    ```ColdFusion
+    dpu-exporter-4ln8w   1/1     Running   0          36m   192.0.2.x   ubuntu       <none>           <none>
+    ```
+
+2. 通过如下命令查看K8s集群中DPU Exporter的日志。
+
+    ```shell
+    kubectl logs -n dpu-exporter {dpu-exporter组件的Pod名字}
+    ```
+
+   回显示例：
+
+    ```ColdFusion
+    [2026-08-26 11:46:23.543462][INFO]     1       hwlog/api.go:164    dpu-exporter.log's logger init success
+    [2026-08-26 11:46:23.543612][INFO]     1       logger/logger.go:59    starting dpu-exporter
+    [2026-08-26 11:46:23.571542][INFO]     1       logger/logger.go:79    config loaded from /etc/dpu-exporter/config.json
+    [2026-08-26 11:46:23.603552][INFO]     1       logger/logger.go:79    discovered 4 DPU cards
+    [2026-08-26 11:46:23.603624][INFO]     1       logger/logger.go:79    huawei dpu manager initialized, dpu count: 4
+    [2026-08-26 11:46:23.603658][INFO]     1       logger/logger.go:59    collector chains initialized
+    [2026-08-26 11:46:23.603746][INFO]     1       logger/logger.go:79    config hot-reload watching /etc/dpu-exporter
+    [2026-08-26 11:46:23.603801][INFO]     1       logger/logger.go:79    refresh dpu list, count: 4, time cost: 230ns
+    [2026-08-26 11:46:23.603843][INFO]     1       logger/logger.go:79    dpu-exporter started, serving metrics on port 8080
+    [2026-08-26 11:46:23.603963][INFO]     454     logger/logger.go:79    refresh dpu list, count: 4, time cost: 860ns
+    [2026-08-26 11:46:23.604187][INFO]     460     logger/logger.go:79    starting prometheus metrics server on :8080
+    ```
+
+**DPU Exporter使用二进制部署<a name="zh-cn_topic_0000002511346365"></a>**
+
+请在安装DPU Exporter的节点执行以下步骤验证组件的安装状态。
+
+1. 登录部署DPU Exporter的节点，使用如下命令，查看组件服务的状态，需要满足组件状态为active \(running\)。
+
+    ```shell
+    systemctl status dpu-exporter
+    ```
+
+   回显示例：
+
+    ```ColdFusion
+    root@ubuntu:~# systemctl status dpu-exporter
+    ● dpu-exporter.service - Ascend dpu exporter
+       Loaded: loaded (/etc/systemd/system/dpu-exporter.service; enabled; vendor preset: enabled)
+       Active: active (running) since Tue 2026-08-26 11:46:23 CST; 3 days ago
+     Main PID: 25121 (dpu-exporter)
+        Tasks: 8 (limit: 7372)
+       CGroup: /system.slice/dpu-exporter.service
+               └─25121 /usr/local/bin/dpu-exporter -config=/etc/dpu-exporter/config.json -port=8080
+    ...
+    ```
+
+2. 查看组件日志。
+
+    ```shell
+    cat /var/log/mindx-dl/dpu-exporter/dpu-exporter.log
+    ```
+
+   回显示例：
+
+    ```ColdFusion
+    [2026-08-26 11:46:23.543462][INFO]     1       hwlog/api.go:164    dpu-exporter.log's logger init success
+    [2026-08-26 11:46:23.543612][INFO]     1       logger/logger.go:59    starting dpu-exporter
+    [2026-08-26 11:46:23.571542][INFO]     1       logger/logger.go:79    config loaded from /etc/dpu-exporter/config.json
+    [2026-08-26 11:46:23.603552][INFO]     1       logger/logger.go:79    discovered 4 DPU cards
+    [2026-08-26 11:46:23.603624][INFO]     1       logger/logger.go:79    huawei dpu manager initialized, dpu count: 4
+    [2026-08-26 11:46:23.603658][INFO]     1       logger/logger.go:59    collector chains initialized
+    [2026-08-26 11:46:23.603746][INFO]     1       logger/logger.go:79    config hot-reload watching /etc/dpu-exporter
+    [2026-08-26 11:46:23.603801][INFO]     1       logger/logger.go:79    refresh dpu list, count: 4, time cost: 230ns
+    [2026-08-26 11:46:23.603843][INFO]     1       logger/logger.go:79    dpu-exporter started, serving metrics on port 8080
+    [2026-08-26 11:46:23.603963][INFO]     454     logger/logger.go:79    refresh dpu list, count: 4, time cost: 860ns
+    [2026-08-26 11:46:23.604187][INFO]     460     logger/logger.go:79    starting prometheus metrics server on :8080
+    ...
+    ```

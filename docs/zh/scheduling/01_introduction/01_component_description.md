@@ -385,3 +385,24 @@ Kubernetes需要感知RDMA网络设备资源信息来实现资源调度。为了
 2. 上报RDMA设备的类型、数量和状态给kubelet。
 3. 根据配置文件中的选择器信息，筛选需要注册的RDMA设备，支持通过buses选择器指定UB设备。
 4. 在容器创建时，将选中的RDMA设备挂载到容器内部。
+
+## DPU Exporter<a name="ZH-CN_TOPIC_0000002479226948"></a>
+
+**应用场景<a name="section15761025111720"></a>**
+
+在任务运行过程中，DPU的健康状态直接影响任务的稳定性。MindCluster提供DPU Exporter组件用于监测DPU的运行状态与统计指标。
+
+**组件功能<a name="section388944161719"></a>**
+
+- 从网卡管理工具与文件接口获取DPU的运行状态与统计指标。
+- 提供Prometheus指标接口，用于监控DPU的运行状态与统计指标。
+
+**组件上下游依赖<a name="section4941922192110"></a>**
+
+**图 17**  组件上下游依赖<a name="fig129782047111818"></a>
+
+![](../../figures/scheduling/组件上下游依赖-9.png "组件上下游依赖-9")
+
+1. 从网卡管理工具和文件接口分别获取DPU全局指标和interface级指标。
+2. 将获取到的指标转换为Prometheus指标格式。
+3. 提供Prometheus指标接口，用于监控DPU的运行状态与统计指标。
