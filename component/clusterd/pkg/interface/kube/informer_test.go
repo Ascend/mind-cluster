@@ -4,7 +4,9 @@
 package kube
 
 import (
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"reflect"
 	"testing"
 
@@ -610,3 +612,155 @@ func (m *mockIndexer) Delete(obj interface{}) error              { return nil }
 func (m *mockIndexer) AddIndexers(indexers cache.Indexers) error { return nil }
 func (m *mockIndexer) GetIndexers() cache.Indexers               { return nil }
 func (m *mockIndexer) Resync() error                             { return nil }
+
+func TestBuildVersionSummary(t *testing.T) {
+	convey.Convey("Test buildVersionSummary function", t, func() {
+		convey.Convey("When no nodes exist, should return empty summary", func() {
+			p1 := gomonkey.ApplyFuncReturn(getNodesFromInformer, nil)
+			defer p1.Reset()
+
+			result := buildVersionSummary()
+			convey.So(len(result), convey.ShouldEqual, 3)
+			for _, compName := range []string{"device-plugin", "k8s-rdma-shared-dp", "noded"} {
+				convey.So(result[compName], convey.ShouldNotBeEmpty)
+			}
+		})
+
+		convey.Convey("When nodes exist with version annotations, should build correct summary", func() {
+			testNodes := []*v1.Node{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "node1",
+						Annotations: map[string]string{
+							"huawei.com/device-plugin.version": `{"version":"v1.0.0"}`,
+							"huawei.com/noded.version":         `{"version":"v2.0.0"}`,
+						},
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "node2",
+						Annotations: map[string]string{
+							"huawei.com/device-plugin.version":      `{"version":"v1.0.0"}`,
+							"huawei.com/k8s-rdma-shared-dp.version": `{"version":"v1.1.0"}`,
+						},
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "node3",
+						Annotations: map[string]string{
+							"huawei.com/device-plugin.version": `{"version":"v1.1.0"}`,
+						},
+					},
+				},
+			}
+
+			p1 := gomonkey.ApplyFuncReturn(getNodesFromInformer, testNodes)
+			defer p1.Reset()
+
+			result := buildVersionSummary()
+			convey.So(len(result), convey.ShouldEqual, 3)
+			convey.So(result["device-plugin"], convey.ShouldNotBeEmpty)
+			convey.So(result["k8s-rdma-shared-dp"], convey.ShouldNotBeEmpty)
+			convey.So(result["noded"], convey.ShouldNotBeEmpty)
+		})
+
+		convey.Convey("When JSON unmarshal fails, should handle gracefully", func() {
+			testNodes := []*v1.Node{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "node1",
+						Annotations: map[string]string{
+							"huawei.com/device-plugin.version": "invalid-json",
+						},
+					},
+				},
+			}
+
+			p1 := gomonkey.ApplyFuncReturn(getNodesFromInformer, testNodes)
+			defer p1.Reset()
+
+			result := buildVersionSummary()
+			convey.So(len(result), convey.ShouldEqual, 3)
+		})
+	})
+}
+
+func TestUpdateVersionSummary(t *testing.T) {
+	convey.Convey("Test UpdateVersionSummary function", t, func() {
+		convey.Convey("When no changes, should skip updating", func() {
+			lastHash := make(map[string]string)
+			testSummary := map[string]string{
+				"device-plugin": `{"type":"DaemonSet","versions":{"v1.0.0":2},"totalNodes":2}`,
+			}
+			lastHash["device-plugin"] = "test-hash"
+
+			p1 := gomonkey.ApplyFuncReturn(buildVersionSummary, testSummary)
+			defer p1.Reset()
+
+			p2 := gomonkey.ApplyFunc(hex.EncodeToString, func(src []byte) string {
+				return "test-hash"
+			})
+			defer p2.Reset()
+
+			UpdateVersionSummary(lastHash)
+			convey.So(lastHash["device-plugin"], convey.ShouldEqual, "test-hash")
+		})
+
+		convey.Convey("When GetConfigMap fails, should log error and return", func() {
+			lastHash := make(map[string]string)
+			testSummary := map[string]string{
+				"device-plugin": `{"type":"DaemonSet","versions":{"v1.0.0":2},"totalNodes":2}`,
+			}
+
+			p1 := gomonkey.ApplyFuncReturn(buildVersionSummary, testSummary)
+			defer p1.Reset()
+
+			p2 := gomonkey.ApplyFunc(hex.EncodeToString, func(src []byte) string {
+				return "test-hash"
+			})
+			defer p2.Reset()
+
+			p3 := gomonkey.ApplyFuncReturn(GetConfigMap, nil, errors.New("get cm error"))
+			defer p3.Reset()
+
+			UpdateVersionSummary(lastHash)
+			convey.So(lastHash["device-plugin"], convey.ShouldEqual, "")
+		})
+
+		convey.Convey("When PatchCMData fails, should log error and continue", func() {
+			lastHash := make(map[string]string)
+			testSummary := map[string]string{
+				"device-plugin": `{"type":"DaemonSet","versions":{"v1.0.0":2},"totalNodes":2}`,
+			}
+
+			testCm := &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      api.VersionName,
+					Namespace: api.DLNamespace,
+				},
+				Data: make(map[string]string),
+			}
+
+			p1 := gomonkey.ApplyFuncReturn(buildVersionSummary, testSummary)
+			defer p1.Reset()
+
+			p2 := gomonkey.ApplyFunc(hex.EncodeToString, func(src []byte) string {
+				return "test-hash"
+			})
+			defer p2.Reset()
+
+			p3 := gomonkey.ApplyFuncReturn(GetConfigMap, testCm, nil)
+			defer p3.Reset()
+
+			p4 := gomonkey.ApplyFunc(PatchCMData, func(name, namespace string, data map[string]string) (*v1.ConfigMap, error) {
+				return nil, errors.New("patch error")
+			})
+			defer p4.Reset()
+
+			UpdateVersionSummary(lastHash)
+			convey.So(lastHash["device-plugin"], convey.ShouldEqual, "")
+		})
+	})
+}

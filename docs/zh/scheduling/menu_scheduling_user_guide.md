@@ -169,6 +169,7 @@
     - [借轨回切接口](./06_api/04_clusterd/08_link_failover_and_switchback_apis.md)
     - [在线压测接口](./06_api/04_clusterd/09_online_stress_testing_apis.md)
     - [健康探针接口](./06_api/04_clusterd/10_health_probe.md)
+    - [集群版本信息](./06_api/04_clusterd/11_cluster_version.md)
   - [Ascend Operator](./06_api/05_ascend_operator.md)
   - [Elastic-Agent（断点续训相关接口）](./06_api/06_elastic_agent.md)
   - [TaskD](./06_api/07_taskd/menu_taskd.md)
