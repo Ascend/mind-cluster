@@ -114,7 +114,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="p26141489467"><a name="p26141489467"></a><a name="p26141489467"></a>false</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p5614648134615"><a name="p5614648134615"></a><a name="p5614648134615"></a>查询<span id="ph1950137183918"><a name="ph1950137183918"></a><a name="ph1950137183918"></a>ClusterD</span>版本号。</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p5614648134615"><a name="p5614648134615"></a><a name="p5614648134615"></a>查询<span id="ph1950137183918"><a name="ph1950137183918"></a><a name="ph1950137183918"></a>ClusterD</span>版本号与commit ID等详细信息。</p>
 <a name="ul178554235168"></a><a name="ul178554235168"></a><ul id="ul178554235168"><li>true：查询。</li><li>false：不查询。</li></ul>
 </td>
 </tr>

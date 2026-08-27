@@ -80,7 +80,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p1962732833612"><a name="p1962732833612"></a><a name="p1962732833612"></a>false</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p146279281369"><a name="p146279281369"></a><a name="p146279281369"></a>查询当前K8s RDMA Shared Dev Plugin的版本号，该参数为标志位，无需跟值。使用示例：./k8s-rdma-shared-dp -version或./k8s-rdma-shared-dp -v</p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p146279281369"><a name="p146279281369"></a><a name="p146279281369"></a>查询当前K8s RDMA Shared Dev Plugin的版本号与commit ID等详细信息，该参数为标志位，无需跟值。使用示例：./k8s-rdma-shared-dp -version或./k8s-rdma-shared-dp -v</p>
 </td>
 </tr>
 <tr id="row15627928153619"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1627328103617"><a name="p1627328103617"></a><a name="p1627328103617"></a>-logLevel</p>

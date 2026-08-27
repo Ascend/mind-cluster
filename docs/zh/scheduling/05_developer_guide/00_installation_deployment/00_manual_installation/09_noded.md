@@ -143,7 +143,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p176271728143613"><a name="p176271728143613"></a><a name="p176271728143613"></a>false</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p146279281367"><a name="p146279281367"></a><a name="p146279281367"></a>是否查询当前<span id="ph1437310218483"><a name="ph1437310218483"></a><a name="ph1437310218483"></a>NodeD</span>的版本号。</p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p146279281367"><a name="p146279281367"></a><a name="p146279281367"></a>是否查询当前<span id="ph1437310218483"><a name="ph1437310218483"></a><a name="ph1437310218483"></a>NodeD</span>的版本号与commit ID等详细信息。</p>
 <a name="ul178554235168"></a><a name="ul178554235168"></a><ul id="ul178554235168"><li>true：查询。</li><li>false：不查询。</li></ul>
 </td>
 </tr>
