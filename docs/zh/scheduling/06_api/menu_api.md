@@ -12,6 +12,7 @@
 - [MindIO](./09_mindio/menu_mindio.md)
 - [Infer Operator](./10_infer_operator.md)
 - [K8s RDMA Shared Dev Plugin](11_k8s_rdma_shared_dev_plugin.md)
+- [DPU Exporter](16_dpu_exporter.md)
 - [K8s原生对象说明](12_k8s.md)
 - [环境变量说明](13_environment_variable_description.md)
 - [hccl.json文件说明](14_hccl.json_file_description.md)
