@@ -3,7 +3,7 @@
 ## 使用前必读<a name="ZH-CN_TOPIC_0000002479227148"></a>
 
 >[!NOTE]
->本章节描述的是基于Resilience Controller组件的弹性训练，该组件已经日落，相关资料将于2026年9月30日的版本删除。最新的弹性训练能力请参见[弹性训练](../04_usage/04_resumable_training/01_solutions_principles.md#弹性训练)。
+>本章节描述的是基于Resilience Controller组件的弹性训练，该组件已经日落，相关资料将于2026年9月30日的版本删除。最新的弹性训练能力请参见[弹性训练](../04_usage/04_resumable_training/01_solutions_principles/01_fault_handling.md#弹性训练)。
 
 当出现硬件故障，且无备用设备时，集群调度组件将对故障节点进行隔离，并根据任务预设的规模和当前集群中可用的节点数，重新设置任务副本数，然后进行重调度和重训练（需进行脚本适配）。
 

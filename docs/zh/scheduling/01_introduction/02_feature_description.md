@@ -33,6 +33,21 @@ NPU Exporter
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[资源监测](../04_usage/01_resource_monitoring/00_before_you_start.md)章节进行操作。
 
+## 故障检测<a name="ZH-CN_TOPIC_FAULT_DETECTION"></a>
+
+**功能特点<a name="section_fault_detection_features"></a>**
+
+故障检测能力用于获取集群和训练业务的故障状态，供断点续训、推理故障重调度等下游特性根据检测结果进行故障处理。当前，故障检测特性主要提供昇腾硬件故障、训练业务故障和其他故障发送方故障的检测能力。
+
+**所需组件<a name="section_fault_detection_components"></a>**
+
+不同故障类型所需组件不同，详细说明请参见[故障检测特性指南](../04_usage/11_fault_detection_and_diagnosis/00_feature_description.md)。
+
+**使用说明<a name="section_fault_detection_usage"></a>**
+
+1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
+2. 特性使用指导请参见[故障检测特性指南](../04_usage/11_fault_detection_and_diagnosis/00_feature_description.md)章节进行操作。
+
 ## 虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855"></a>
 
 虚拟化实例可将一张NPU切分成多份，分给不同的任务使用。按照切分的方式，分为基于HDK的虚拟化实例和基于vCANN-RT的虚拟化实例。
@@ -175,9 +190,9 @@ NPU Exporter
 
 **功能特点<a name="section1788818281655"></a>**
 
-当训练任务出现故障时，将任务重调度到健康设备上继续训练或者对故障芯片进行自动恢复。
+当训练任务出现故障时，断点续训依赖故障检测特性提供的故障事件、故障级别和资源状态，将任务重调度到健康设备上继续训练或者对故障芯片进行自动恢复。
 
-- **故障检测**：通过Ascend Device Plugin、Volcano、ClusterD和NodeD四个组件，发现任务故障。
+- **故障检测（前置依赖）**：通过故障检测特性获取任务故障，详细说明请参见[故障检测特性指南](../04_usage/11_fault_detection_and_diagnosis/00_feature_description.md)。
 - **故障处理**：故障发生后，根据上报的故障信息进行故障处理。分为以下两种模式。
   - **重调度模式**：故障发生后将任务重调度到其他健康设备上继续运行。
   - **优雅容错模式**：当训练时芯片出现故障后，系统将尝试对故障芯片进行自动恢复。
@@ -200,7 +215,7 @@ NPU Exporter
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[断点续训](../04_usage/04_resumable_training/00_feature_description.md)章节进行操作。
-3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/04_resumable_training/04_using_resumable_training_on_the_cli.md#制作镜像)章节。
+3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/04_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#制作镜像)章节。
 4. MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](../07_references/01_optimizing_saving_and_loading_checkpoints/01_product_description.md)章节。
 5. MindIO TFT的详细介绍及安装步骤请参见[故障恢复加速](../07_references/00_fault_recovery_acceleration/01_product_description.md)。
 
