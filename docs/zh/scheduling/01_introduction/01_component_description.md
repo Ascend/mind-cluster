@@ -180,7 +180,7 @@
 ## Resilience Controller<a name="ZH-CN_TOPIC_0000002511426827"></a>
 
 >[!NOTE]
->Resilience Controller组件已经日落，相关内容将于2026年9月30日的版本删除。最新的弹性训练能力请参见[弹性训练](../04_usage/04_resumable_training/01_solutions_principles.md#弹性训练)。
+>Resilience Controller组件已经日落，相关内容将于2026年9月30日的版本删除。最新的弹性训练能力请参见[弹性训练](../04_usage/04_resumable_training/01_solutions_principles/01_fault_handling.md#弹性训练)。
 
 **应用场景<a name="section15761025111720"></a>**
 

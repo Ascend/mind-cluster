@@ -2,7 +2,7 @@
 
 - 使用整卡调度、静态vNPU调度、动态vNPU调度、推理卡故障恢复、推理卡故障重调度、断点续训或弹性训练时，必须安装NodeD。
 - 仅使用容器化支持和资源监测的用户，可以不安装NodeD，请直接跳过本章节。
-- 使用慢节点&慢网络故障功能前，需安装NodeD，详细说明请参见[慢节点&慢网络故障](../../../04_usage/04_resumable_training/01_solutions_principles.md#慢节点慢网络故障)。
+- 使用慢节点&慢网络故障功能前，需安装NodeD，详细说明请参见[慢节点&慢网络故障](../../../04_usage/11_fault_detection_and_diagnosis/02_fault_types/05_performance_degradation.md#慢节点慢网络故障)。
 
 ## 操作步骤<a name="section135381552125414"></a>
 
@@ -48,7 +48,7 @@
     >- 当K8s APIServer请求压力变大时，可根据实际情况增大间隔时间，以减轻APIServer压力。
 
 5. 在管理节点的YAML所在路径，执行以下命令，启动NodeD。
-    - 不使用[共享存储故障检测](../../../04_usage/04_resumable_training/01_solutions_principles.md#节点故障)功能，请执行以下命令。
+    - 不使用[共享存储故障检测](../../../04_usage/11_fault_detection_and_diagnosis/02_fault_types/01_node_faults.md#节点故障)功能，请执行以下命令。
 
         ```shell
         kubectl apply -f noded-v{version}.yaml

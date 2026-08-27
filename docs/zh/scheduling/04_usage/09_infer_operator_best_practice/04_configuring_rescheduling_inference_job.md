@@ -1,6 +1,6 @@
 # 配置推理任务实例级重调度
 
-当Infer Operator推理任务中出现节点、芯片或其他故障时，MindCluster集群调度组件可以对故障资源进行隔离并自动进行实例级重调度。如需了解故障的检测原理，请参见[故障检测](../04_resumable_training/01_solutions_principles.md#故障检测)章节。
+当Infer Operator推理任务中出现节点、芯片或其他故障时，MindCluster集群调度组件可以对故障资源进行隔离并自动进行实例级重调度。如需了解故障的检测原理，请参见[故障检测](../11_fault_detection_and_diagnosis/01_working_principle.md#故障检测整体架构)章节。
 
 ## 前提条件
 

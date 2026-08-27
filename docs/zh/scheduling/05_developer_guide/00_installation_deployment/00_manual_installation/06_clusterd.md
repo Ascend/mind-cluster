@@ -4,7 +4,7 @@
 - 在安装ClusterD时，建议提前安装Volcano。若ClusterD先于Volcano安装，ClusterD所在的Pod可能会CrashLoopBackOff，需等待Volcano的Pod启动后，ClusterD才会恢复正常。
 - 仅使用容器化支持和资源监测的用户，可以不安装ClusterD，请直接跳过本章节。
 - 启动ClusterD之前，需要先启动Ascend Operator。ClusterD需要感知Ascend Job资源。
-- 使用慢节点&慢网络故障功能前，需安装ClusterD，详细说明请参见[慢节点&慢网络故障](../../../04_usage/04_resumable_training/01_solutions_principles.md#慢节点慢网络故障)。
+- 使用慢节点&慢网络故障功能前，需安装ClusterD，详细说明请参见[慢节点&慢网络故障](../../../04_usage/11_fault_detection_and_diagnosis/02_fault_types/05_performance_degradation.md#慢节点慢网络故障)。
 
 ## 操作步骤<a name="section20114193212615"></a>
 
