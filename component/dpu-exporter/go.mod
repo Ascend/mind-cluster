@@ -4,6 +4,7 @@ go 1.26
 
 require (
 	ascend-common v0.0.0
+	github.com/agiledragon/gomonkey/v2 v2.8.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/prometheus/client_golang v1.19.1
 )
