@@ -26,6 +26,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -522,4 +523,13 @@ func GetNodeAnnotation(node *v1.Node, keys ...string) (string, bool) {
 		return "", false
 	}
 	return GetAnnotationValue(node.Annotations, keys...)
+}
+
+// SanitizeLabelValue sanitizes a label value to conform to K8s label value regex.
+func SanitizeLabelValue(value string) string {
+	invalidRegex := regexp.MustCompile(labelSanitizeRegex)
+	sanitized := invalidRegex.ReplaceAllString(value, "")
+	spaceRegex := regexp.MustCompile(` +`)
+	sanitized = spaceRegex.ReplaceAllString(sanitized, "-")
+	return sanitized
 }

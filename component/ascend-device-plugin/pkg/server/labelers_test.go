@@ -531,3 +531,18 @@ func TestWriteValue(t *testing.T) {
 		convey.So(m["key2"], convey.ShouldEqual, "val")
 	})
 }
+
+func TestSanitizeLabelValue(t *testing.T) {
+	convey.Convey("should keep valid label value unchanged", t, func() {
+		result := sanitizeLabelValue("valid-label.value_123")
+		convey.So(result, convey.ShouldEqual, "valid-label.value_123")
+	})
+	convey.Convey("should remove invalid characters", t, func() {
+		result := sanitizeLabelValue("test@#$label")
+		convey.So(result, convey.ShouldEqual, "testlabel")
+	})
+	convey.Convey("should replace multiple spaces with single dash", t, func() {
+		result := sanitizeLabelValue("test  label  value")
+		convey.So(result, convey.ShouldEqual, "test-label-value")
+	})
+}
