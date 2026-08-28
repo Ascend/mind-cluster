@@ -43,7 +43,7 @@ type IpmiEventMonitor struct {
 // NewIpmiEventMonitor create ipmi monitor
 func NewIpmiEventMonitor() *IpmiEventMonitor {
 	return &IpmiEventMonitor{
-		ipmiTool:     &ipmi.IPMI{},
+		ipmiTool:     nil,
 		faultManager: manager.NewFaultManager(),
 		stopChan:     make(chan struct{}, 1),
 	}
@@ -69,26 +69,18 @@ func (i *IpmiEventMonitor) Monitoring() {
 	}
 }
 
-// Init initialize ipmi tool and get fault device list
+// Init initialize ipmi monitor, the ipmi device is opened lazily in the Monitoring loop
+// so that a temporarily unavailable BMC can be recovered without restarting noded.
 func (i *IpmiEventMonitor) Init() error {
-	ipmiTool, err := ipmi.Open(0)
-	if err != nil {
-		hwlog.RunLog.Errorf("open ipmi device failed, error: %v", err)
-		return err
-	}
-	i.ipmiTool = ipmiTool
-	if err := i.UpdateFaultDevList(); err != nil {
-		hwlog.RunLog.Errorf("ipmi monitor update fault device list failed, please check bmc version and server type, "+
-			"error: %v", err)
-		return err
-	}
 	return nil
 }
 
 // Stop terminate working loop
 func (i *IpmiEventMonitor) Stop() {
-	if err := i.ipmiTool.Close(); err != nil {
-		hwlog.RunLog.Errorf("ipmi tool close device failed, err is %v", err)
+	if i.ipmiTool != nil {
+		if err := i.ipmiTool.Close(); err != nil {
+			hwlog.RunLog.Errorf("ipmi tool close device failed, err is %v", err)
+		}
 	}
 	i.stopChan <- struct{}{}
 }
@@ -108,9 +100,21 @@ func (i *IpmiEventMonitor) GetMonitorData() *common.FaultAndConfigInfo {
 
 // UpdateFaultDevList update fault device list
 func (i *IpmiEventMonitor) UpdateFaultDevList() error {
+	if i.ipmiTool == nil {
+		ipmiTool, err := ipmi.Open(0)
+		if err != nil {
+			hwlog.RunLog.Errorf("open ipmi device failed, error: %v", err)
+			return err
+		}
+		i.ipmiTool = ipmiTool
+	}
 	currentAlarmFaultEvents, err := i.GetCurrentAlarmFaultEvents()
 	if err != nil {
 		hwlog.RunLog.Errorf("get current alarm fault events failed, error: %v", err)
+		if closeErr := i.ipmiTool.Close(); closeErr != nil {
+			hwlog.RunLog.Errorf("ipmi tool close device failed, err is %v", closeErr)
+		}
+		i.ipmiTool = nil
 		return errors.New("get current alarm fault events failed")
 	}
 	printFaultEvents(currentAlarmFaultEvents)
