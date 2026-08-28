@@ -131,6 +131,16 @@ function patch_all_source() {
         s/case len(nodes) == 1:.*\n.*\n.*/            default:/
     }' "$REPLACE_FILE"
 
+    # Evict data race patch: SchedulerCache.Evict hands the shared pod object
+    # to an async evictor goroutine, which races with the scheduler goroutine.
+    # Deep copy the pod before handing it to the evictor.
+    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/cache/cache.go"
+    if ! grep -q "p := task.Pod.DeepCopy()" "$REPLACE_FILE"; then
+      sed -i '/func (sc \*SchedulerCache) Evict/,/^}/s/^\([[:space:]]*\)p := task.Pod$/\1p := task.Pod.DeepCopy()/' "$REPLACE_FILE"
+      if ! grep -q "p := task.Pod.DeepCopy()" "$REPLACE_FILE"; then
+        echo "WARNING: Evict deepcopy patch failed on ${REPLACE_FILE}"
+      fi
+    fi
     echo "===== Source patch finished ====="
     echo ""
 }

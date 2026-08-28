@@ -118,7 +118,7 @@ func buildEvictJobByTaskTestCase02() EvictJobByTaskTest {
 
 func buildEvictJobByTaskTestCase03() EvictJobByTaskTest {
 	test03 := EvictJobByTaskTest{
-		name:   "03-EvictJobByTaskTest will return err when ssn is nil",
+		name:   "03-EvictJobByTaskTest will return err when task not found in session",
 		asTask: &NPUTask{ReqNPUNum: 1, Name: "task01"},
 		ssn: &framework.Session{Jobs: map[api.JobID]*api.JobInfo{"job01": {Tasks: map[api.TaskID]*api.TaskInfo{
 			"task01": {Name: "task01",
@@ -131,11 +131,28 @@ func buildEvictJobByTaskTestCase03() EvictJobByTaskTest {
 	return test03
 }
 
+func buildEvictJobByTaskTestCase04() EvictJobByTaskTest {
+	test04 := EvictJobByTaskTest{
+		name:   "04-EvictJobByTaskTest will return nil when Evict success",
+		asTask: &NPUTask{ReqNPUNum: 1, Name: "task01", NameSpace: "default"},
+		ssn: &framework.Session{Jobs: map[api.JobID]*api.JobInfo{"job01": {Tasks: map[api.TaskID]*api.TaskInfo{
+			"task01": {Name: "task01",
+				Namespace: "default",
+				Pod: &v1.Pod{Status: v1.PodStatus{
+					Conditions: []v1.PodCondition{{Message: "PodCondition-message"}}}}}}}}},
+		taskName: "task01",
+		reason:   "mock-reason",
+		wantErr:  false,
+	}
+	return test04
+}
+
 func buildEvictJobByTaskTestCase() []EvictJobByTaskTest {
 	tests := []EvictJobByTaskTest{
 		buildEvictJobByTaskTestCase01(),
 		buildEvictJobByTaskTestCase02(),
 		buildEvictJobByTaskTestCase03(),
+		buildEvictJobByTaskTestCase04(),
 	}
 	return tests
 }
@@ -145,8 +162,8 @@ func TestEvictJobByTask(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			patch := gomonkey.ApplyMethod(reflect.TypeOf(tt.ssn),
-				"Evict", func(*framework.Session, *api.TaskInfo, string) error {
-					return errors.New("mock error Evict")
+				"Evict", func(_ *framework.Session, _ *api.TaskInfo, _ string) error {
+					return nil
 				})
 
 			defer patch.Reset()
