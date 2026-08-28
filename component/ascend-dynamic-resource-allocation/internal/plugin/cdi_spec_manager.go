@@ -58,11 +58,15 @@ type cdiSpecManager struct {
 	productTypes []string
 }
 
-// mountConfigDir is the host directory where the JSON mount profile
-// (mounts.json) is written by PrepareMountConfigFile and read by CDI when
-// generating per-claim specs. It is backed by a hostPath volume (see
-// build/ascend-dra-driver.yaml).
-const mountConfigDir = "/etc/ascend-dra/mounts"
+const (
+	// mountConfigDir is the host directory where the JSON mount profile
+	// (mounts.json) is written by PrepareMountProfileFile and read by CDI when
+	// generating per-claim specs. It is backed by a hostPath volume (see
+	// build/ascend-dra-driver.yaml).
+	mountConfigDir = "/etc/ascend-dra/mounts"
+	// defaultHostRoot is the host directory where the plugin container mounts /usr /etc .etc
+	defaultHostRoot = "/hostRoot"
+)
 
 // NewCDISpecManager constructs a cdiSpecManager. devType and productTypes
 // come from the generation once it has been handed a device manager.
@@ -122,7 +126,8 @@ func (m *cdiSpecManager) WriteClaimSpec(claimUID string, deviceNames []string) (
 			ProductType: productType,
 		},
 		MountConfig: mount.MountConfig{
-			Dir: mountConfigDir,
+			Dir:      mountConfigDir,
+			HostRoot: defaultHostRoot,
 		},
 	}, claimUID)
 	if err != nil {

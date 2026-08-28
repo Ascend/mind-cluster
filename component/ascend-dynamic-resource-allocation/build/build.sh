@@ -19,7 +19,7 @@ set -e
 CUR_DIR=$(dirname "$(readlink -f "$0")")
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
 
-build_version="v0.1.0"
+build_version="v6.0.0"
 
 dra_name="ascend-dra"
 build_type=build
@@ -58,6 +58,8 @@ function build_plugin() {
 function mv_file() {
     mv "${TOP_DIR}/${dra_name}"   "${TOP_DIR}"/output
     cp "${TOP_DIR}/build/Dockerfile"   "${TOP_DIR}"/output
+    cp "${TOP_DIR}/build/ascend-dra-driver.yaml"   "${TOP_DIR}"/output
+    cp "${TOP_DIR}/build/agreement.txt"   "${TOP_DIR}"/output
 }
 
 function change_mod() {
