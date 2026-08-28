@@ -22,7 +22,6 @@ package util
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -119,50 +118,21 @@ func (asTask *NPUTask) EvictJobByTask(ssn *framework.Session, reason string, tas
 	taskInfo, getErr := GetTaskInfoByNameFromSSN(ssn, taskName, asTask.NameSpace)
 	if getErr != nil {
 		klog.V(LogErrorLev).Infof("%s GetTaskInfoByNameFromSSN: %s", taskName, SafePrint(getErr))
+		return getErr
 	}
 	err := ssn.Evict(taskInfo, reason)
 	if err != nil {
 		klog.V(LogErrorLev).Infof("Failed to restart %s : %s", taskName, SafePrint(err))
-		if updateErr := asTask.UpdatePodPendingReason(taskInfo, err.Error()); updateErr != nil {
-			return updateErr
-		}
 		return err
 	}
 	klog.V(LogInfoLev).Infof("Evict %s : %s", taskName, SafePrint(taskInfo.UID))
-	if updateErr := asTask.UpdatePodPendingReason(taskInfo, reason); updateErr != nil {
-		return updateErr
-	}
-	return nil
-}
-
-// UpdatePodPendingReason update pod pending reason.
-func (asTask *NPUTask) UpdatePodPendingReason(taskInfo *api.TaskInfo, reasonTmp string) error {
-	if asTask == nil || taskInfo == nil {
-		klog.V(LogErrorLev).Infof("UpdatePodPendingReason failed: %s.", ArgumentError)
-		return fmt.Errorf(ArgumentError)
-	}
-	if asTask.Name != taskInfo.Name {
-		return fmt.Errorf("NPUTask %s and TaskInfo %s does not match", asTask.Name, taskInfo.Name)
-	}
-	condition := v1.PodCondition{
-		Type:    v1.PodScheduled,
-		Status:  v1.ConditionFalse,
-		Reason:  v1.PodReasonUnschedulable,
-		Message: reasonTmp,
-	}
-	for _, tmp := range taskInfo.Pod.Status.Conditions {
-		if reflect.DeepEqual(tmp, condition) {
-			return nil
-		}
-	}
-	taskInfo.Pod.Status.Conditions = append(taskInfo.Pod.Status.Conditions, condition)
 	return nil
 }
 
 // GetTaskInfoByNameFromSSN get corresponding api.TaskInfo object by given taskName
 func GetTaskInfoByNameFromSSN(ssn *framework.Session, taskName, taskNamespace string) (*api.TaskInfo, error) {
 	if ssn == nil {
-		klog.V(LogErrorLev).Infof("UpdatePodPendingReason failed: %s.", ArgumentError)
+		klog.V(LogErrorLev).Infof("GetTaskInfoByNameFromSSN failed: %s.", ArgumentError)
 		return nil, fmt.Errorf(ArgumentError)
 	}
 	if len(taskName) == 0 {
