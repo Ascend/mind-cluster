@@ -83,10 +83,10 @@ func appendTopology(mounts []*cdispec.Mount, hostRoot string) []*cdispec.Mount {
 
 // readListEntries reads <name>.list files from dir. Each non-comment,
 // non-blank line is treated as a host path. Empty names defaults to ["base"];
-// when disableUBMounts is false and ub_driver.list exists, the ub_driver
+// when mountUBDrv is true and ub_driver.list exists, the ub_driver
 // collection is appended and ubIncluded is set (the caller forces allow-link
 // in that case, since UB driver files are symlinks).
-func readListEntries(dir, names string, disableUBMounts bool) ([]MountEntry, bool, error) {
+func readListEntries(dir, names string, mountUBDrv bool) ([]MountEntry, bool, error) {
 	dirInfo, err := os.Stat(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -103,7 +103,7 @@ func readListEntries(dir, names string, disableUBMounts bool) ([]MountEntry, boo
 
 	nameList := parseMountNames(names)
 	ubIncluded := false
-	if !disableUBMounts {
+	if mountUBDrv {
 		ubListFile := filepath.Join(dir, ubDriverConfig+".list")
 		if _, err := os.Stat(ubListFile); err == nil {
 			if !slices.Contains(nameList, ubDriverConfig) {

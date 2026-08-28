@@ -126,8 +126,10 @@ func (m *cdiSpecManager) WriteClaimSpec(claimUID string, deviceNames []string) (
 			ProductType: productType,
 		},
 		MountConfig: mount.MountConfig{
-			Dir:      mountConfigDir,
-			HostRoot: defaultHostRoot,
+			Dir:        mountConfigDir,
+			HostRoot:   defaultHostRoot,
+			// Mount UB driver files by default for Ascend 950-generation devices.
+			MountUBDrv: true,
 		},
 	}, claimUID)
 	if err != nil {

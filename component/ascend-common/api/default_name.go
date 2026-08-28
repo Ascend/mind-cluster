@@ -160,8 +160,12 @@ const (
 	AscendRuntimeMountsEnv = "ASCEND_RUNTIME_MOUNTS"
 	// AscendAllowLinkEnv env variable
 	AscendAllowLinkEnv = "ASCEND_ALLOW_LINK"
-	// DisableUBMountEnv env variable, set to True to disable UB driver files mounting
-	DisableUBMountEnv = "DISABLE_UB_MOUNT"
+	// AscendUBDrvMountEnv env variable, set to True or empty to mount UB driver files
+	AscendUBDrvMountEnv = "ASCEND_UB_DRV_MOUNT"
+	// EnableUBDrvMount enable UB driver mount
+	EnableUBDrvMount = "True"
+	// DisableUBDrvMount disable UB driver mount
+	DisableUBDrvMount = "False"
 	// AscendVnpuSpescEnv env variable
 	AscendVnpuSpescEnv = "ASCEND_VNPU_SPECS"
 

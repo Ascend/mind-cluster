@@ -52,8 +52,8 @@ type MountConfig struct {
 	// DisableMounts skips mount generation when true (NODRV mode).
 	DisableMounts bool
 
-	// DisableUBMounts suppresses UB user-space files.
-	DisableUBMounts bool
+	// MountUBDrv mounts UB user-space files when true.
+	MountUBDrv bool
 
 	// AllowLink permits symlink entries.
 	AllowLink bool
@@ -76,7 +76,7 @@ type MountConfig struct {
 }
 
 // ubType marks a mount entry group as UB user-space driver files, gated by
-// the external DisableUBMounts option.
+// the external MountUBDrv option.
 const ubType = "UB"
 
 // MountEntry is a normalized group of mount entries read from a mount source,
@@ -86,7 +86,7 @@ type MountEntry struct {
 	// contain wildcard characters (*?[).
 	Paths []string `json:"path"`
 	// Type marks the group; "UB" for UB user-space files (gated by
-	// DisableUBMounts), empty otherwise.
+	// MountUBDrv), empty otherwise.
 	Type string `json:"type,omitempty"`
 }
 
@@ -95,7 +95,7 @@ type MountEntry struct {
 // the container mounts, and — for list mode only — appends the HCCL topology
 // mounts (JSON mode carries the topology paths data-driven in mounts.json).
 // DisableMounts skips mount generation entirely (NODRV mode, handled here so
-// callers can pass the full config unconditionally); DisableUBMounts suppresses
+// callers can pass the full config unconditionally); MountUBDrv mounts
 // UB user-space files; AllowLink permits symlink entries; HostRoot, when
 // non-empty, prefixes the stat target for non-/dev paths (see StatHostPath).
 func Build(cfg MountConfig, devType string) ([]*cdispec.Mount, error) {
@@ -108,9 +108,9 @@ func Build(cfg MountConfig, devType string) ([]*cdispec.Mount, error) {
 		err        error
 	)
 	if cfg.IsAscendDockerRuntime {
-		entries, ubIncluded, err = readListEntries(cfg.Dir, cfg.Names, cfg.DisableUBMounts)
+		entries, ubIncluded, err = readListEntries(cfg.Dir, cfg.Names, cfg.MountUBDrv)
 	} else {
-		entries, ubIncluded, err = readProfileEntries(cfg.Dir, devType, cfg.DisableUBMounts)
+		entries, ubIncluded, err = readProfileEntries(cfg.Dir, devType, cfg.MountUBDrv)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("cdi: get mounts: %w", err)

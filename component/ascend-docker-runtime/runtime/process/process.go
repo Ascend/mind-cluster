@@ -539,6 +539,18 @@ func parseBoolOption(value string) (bool, error) {
 	}
 }
 
+// parseUBDrvMountOption parses the UB driver mount option encoded as "True"/"False"/"".
+func parseUBDrvMountOption(value string) (bool, error) {
+	switch value {
+	case api.EnableUBDrvMount, "":
+		return true, nil
+	case api.DisableUBDrvMount:
+		return false, nil
+	default:
+		return false, fmt.Errorf("invalid UB driver mount option %q", value)
+	}
+}
+
 func getValueByDeviceKey(data []string) string {
 	res := ""
 	for i := len(data) - 1; i >= 0; i-- {
@@ -920,9 +932,9 @@ func processDevicesCDI(spec *specs.Spec, devices []int) error {
 		}
 	}
 
-	disableUBMount, err := parseBoolOption(getValueByKey(spec.Process.Env, api.DisableUBMountEnv))
+	mountUBDrv, err := parseUBDrvMountOption(getValueByKey(spec.Process.Env, api.AscendUBDrvMountEnv))
 	if err != nil {
-		return fmt.Errorf("failed to parse disable UB mount option: %#v", err)
+		return fmt.Errorf("failed to parse UB driver mount option: %#v", err)
 	}
 	allowLink, err := parseBoolOption(getValueByKey(spec.Process.Env, api.AscendAllowLinkEnv))
 	if err != nil {
@@ -937,7 +949,7 @@ func processDevicesCDI(spec *specs.Spec, devices []int) error {
 		},
 		MountConfig: cdimount.MountConfig{
 			DisableMounts:         hasNODRV,
-			DisableUBMounts:       disableUBMount,
+			MountUBDrv:            mountUBDrv,
 			AllowLink:             allowLink,
 			Dir:                   api.RunTimeDConfigPath,
 			Names:                 getValueByKey(spec.Process.Env, api.AscendRuntimeMountsEnv),

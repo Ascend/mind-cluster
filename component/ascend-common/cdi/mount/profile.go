@@ -57,8 +57,8 @@ type MountProfile map[string][]MountEntry
 //   - "default" holds the base driver paths shared by all generations.
 //   - "Ascend950" holds the base driver paths (except /var/queue_schedule,
 //     which the 950 generation does not need), the HCCL topology paths, and
-//     the UB user-space files (marked Type: ubType so DisableUBMounts
-//     suppresses them).
+//     the UB user-space files (marked Type: ubType, controlled by
+//     MountUBDrv).
 func DefaultMountProfile() MountProfile {
 	defaultPaths := []string{
 		"/usr/local/Ascend/driver/lib64",
@@ -153,11 +153,11 @@ func loadMountProfile(dir string) (*MountProfile, error) {
 // readProfileEntries reads mounts.json from dir and returns the generation's full
 // mount list: the entry keyed by the DevType's generation key (falling back to
 // "default" when it has no dedicated entry). Entries marked Type ubType are
-// dropped when disableUBMounts is true; ubIncluded reports whether any UB
+// dropped when mountUBDrv is false; ubIncluded reports whether any UB
 // entry survived (so the engine forces allow-link for the symlink entries). A
 // missing mounts.json yields empty entries without error (mirrors the list
 // mode missing-directory behavior).
-func readProfileEntries(dir, devType string, disableUBMounts bool) ([]MountEntry, bool, error) {
+func readProfileEntries(dir, devType string, mountUBDrv bool) ([]MountEntry, bool, error) {
 	cfg, err := loadMountProfile(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -175,7 +175,7 @@ func readProfileEntries(dir, devType string, disableUBMounts bool) ([]MountEntry
 	result := make([]MountEntry, 0, len(entries))
 	ubIncluded := false
 	for _, e := range entries {
-		if e.Type == ubType && disableUBMounts {
+		if e.Type == ubType && !mountUBDrv {
 			continue
 		}
 		result = append(result, e)

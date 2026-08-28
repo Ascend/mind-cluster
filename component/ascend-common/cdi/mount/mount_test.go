@@ -116,7 +116,7 @@ func TestBuild_UBDriverForcesAllowLink(t *testing.T) {
 	mustWriteFile(t, ubFile, "")
 	writeListFile(t, tmpDir, "ub_driver", ubFile+"\n")
 
-	entries, ubIncluded, err := readListEntries(tmpDir, "", false)
+	entries, ubIncluded, err := readListEntries(tmpDir, "", true)
 	if err != nil {
 		t.Fatalf("readListEntries returned error: %v", err)
 	}
@@ -141,7 +141,7 @@ func TestBuild_UBDriverForcesAllowLink(t *testing.T) {
 	}
 	writeListFile(t, tmpDir, "ub_driver", ubLink+"\n")
 
-	linkMounts, err := buildListMounts(t, MountConfig{Dir: tmpDir, IsAscendDockerRuntime: true})
+	linkMounts, err := buildListMounts(t, MountConfig{Dir: tmpDir, IsAscendDockerRuntime: true, MountUBDrv: true})
 	if err != nil {
 		t.Fatalf("buildListMounts returned error: %v", err)
 	}
