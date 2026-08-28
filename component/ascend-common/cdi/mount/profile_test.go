@@ -123,7 +123,7 @@ func TestWriteMountProfile_CreatesDir(t *testing.T) {
 }
 
 func TestReadProfileEntries_MissingFile(t *testing.T) {
-	entries, ubIncluded, err := readProfileEntries(t.TempDir(), "Ascend910A5", false)
+	entries, ubIncluded, err := readProfileEntries(t.TempDir(), "Ascend910A5", true)
 	if err != nil {
 		t.Fatalf("missing mounts.json must not be an error, got: %v", err)
 	}
@@ -149,7 +149,7 @@ func TestReadProfileEntries_GenerationLookup(t *testing.T) {
 	}
 
 	// Ascend910A5 → Ascend950 generation: full list (g1+g2), ubIncluded=true.
-	entries, ubIncluded, err := readProfileEntries(dir, "Ascend910A5", false)
+	entries, ubIncluded, err := readProfileEntries(dir, "Ascend910A5", true)
 	if err != nil {
 		t.Fatalf("readProfileEntries returned error: %v", err)
 	}
@@ -163,8 +163,8 @@ func TestReadProfileEntries_GenerationLookup(t *testing.T) {
 		t.Errorf("unexpected entries: %v", entries)
 	}
 
-	// disableUBMounts=true → the UB-marked entry is dropped.
-	entries, ubIncluded, err = readProfileEntries(dir, "Ascend910A5", true)
+	// mountUBDrv=false → the UB-marked entry is dropped.
+	entries, ubIncluded, err = readProfileEntries(dir, "Ascend910A5", false)
 	if err != nil {
 		t.Fatalf("readProfileEntries returned error: %v", err)
 	}
@@ -176,7 +176,7 @@ func TestReadProfileEntries_GenerationLookup(t *testing.T) {
 	}
 
 	// Unknown devType → fallback to the "default" entry.
-	entries, ubIncluded, err = readProfileEntries(dir, "Ascend310P", false)
+	entries, ubIncluded, err = readProfileEntries(dir, "Ascend310P", true)
 	if err != nil {
 		t.Fatalf("readProfileEntries returned error: %v", err)
 	}
@@ -207,7 +207,7 @@ func TestGenerationKey(t *testing.T) {
 func TestReadProfileEntries_InvalidJSON(t *testing.T) {
 	dir := t.TempDir()
 	mustWriteFile(t, filepath.Join(dir, "mounts.json"), "{not json")
-	if _, _, err := readProfileEntries(dir, "Ascend910A5", false); err == nil {
+	if _, _, err := readProfileEntries(dir, "Ascend910A5", true); err == nil {
 		t.Fatal("expected error for invalid mounts.json")
 	}
 }

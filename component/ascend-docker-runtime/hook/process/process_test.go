@@ -135,20 +135,20 @@ func TestDoPrestartHookPatch1(t *testing.T) {
 		patches := gomonkey.ApplyFuncReturn(getContainerConfig, ctrCfg, nil).
 			ApplyFuncReturn(getValueByKey, testStr).
 			ApplyFuncReturn(parseMounts, []string{testStr}).
-			ApplyFuncReturn(parseDisableUBMount, false, nil).
+			ApplyFuncReturn(parseUBDrvMount, true, nil).
 			ApplyFuncReturn(os.Stat, fileInfoMock{}, nil).
 			ApplyFuncReturn(readConfigsOfDir, []string{testStr}, []string{testStr}, nil).
 			ApplyFunc(addUBMount, func(fileMountList []string, dirMountList []string) ([]string, []string) {
 				return fileMountList, dirMountList
 			})
 		defer patches.Reset()
-		convey.Convey("01-parseDisableUBMount error, should return error", func() {
-			patch := gomonkey.ApplyFuncReturn(parseDisableUBMount, false, testError)
+		convey.Convey("01-parseUBDrvMount error, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(parseUBDrvMount, true, testError)
 			defer patch.Reset()
 			err := DoPrestartHook()
 			convey.So(err, convey.ShouldBeError)
 		})
-		patches.ApplyFuncReturn(parseDisableUBMount, false, nil)
+		patches.ApplyFuncReturn(parseUBDrvMount, true, nil)
 		convey.Convey("02-readConfigsOfDir error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(readConfigsOfDir, []string{}, []string{}, testError)
 			defer patch.Reset()
@@ -208,7 +208,7 @@ func TestDoPrestartHookPatch2(t *testing.T) {
 		patches := gomonkey.ApplyFuncReturn(getContainerConfig, ctrCfg, nil).
 			ApplyFuncReturn(getValueByKey, testStr).
 			ApplyFuncReturn(parseMounts, []string{testStr}).
-			ApplyFuncReturn(parseDisableUBMount, false, nil).
+			ApplyFuncReturn(parseUBDrvMount, true, nil).
 			ApplyFuncReturn(readConfigsOfDir, []string{testStr}, []string{testStr}, nil).
 			ApplyFunc(addUBMount, func(fileMountList []string, dirMountList []string) ([]string, []string) {
 				return fileMountList, dirMountList
@@ -232,7 +232,7 @@ func TestDoPrestartHookPatch2(t *testing.T) {
 			err := DoPrestartHook()
 			convey.So(err, convey.ShouldBeNil)
 		})
-		convey.Convey("08-allowLink forced to True when allowLink=False and disableUBMount=False", func() {
+		convey.Convey("08-allowLink forced to True when allowLink=False and mountUBDrv=True", func() {
 			var capturedAllowLink string
 			patchSoftLink := gomonkey.ApplyFuncReturn(parseSoftLinkMode, "False", nil)
 			defer patchSoftLink.Reset()
@@ -821,25 +821,25 @@ func TestReadMountConfig(t *testing.T) {
 	})
 }
 
-func TestParseDisableUBMount(t *testing.T) {
-	convey.Convey("test parseDisableUBMount", t, func() {
+func TestParseUBDrvMount(t *testing.T) {
+	convey.Convey("test parseUBDrvMount", t, func() {
 		convey.Convey("should return True for 'True' input", func() {
-			result, err := parseDisableUBMount("True")
+			result, err := parseUBDrvMount("True")
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(result, convey.ShouldBeTrue)
 		})
 		convey.Convey("should return False for 'False' input", func() {
-			result, err := parseDisableUBMount("False")
+			result, err := parseUBDrvMount("False")
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(result, convey.ShouldBeFalse)
 		})
-		convey.Convey("should return False for empty input", func() {
-			result, err := parseDisableUBMount("")
+		convey.Convey("should return True for empty input", func() {
+			result, err := parseUBDrvMount("")
 			convey.So(err, convey.ShouldBeNil)
-			convey.So(result, convey.ShouldBeFalse)
+			convey.So(result, convey.ShouldBeTrue)
 		})
 		convey.Convey("should return error for invalid input", func() {
-			_, err := parseDisableUBMount("invalid")
+			_, err := parseUBDrvMount("invalid")
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
@@ -848,26 +848,26 @@ func TestParseDisableUBMount(t *testing.T) {
 // TestShouldMountUBDriverFiles tests shouldMountUBDriverFiles
 func TestShouldMountUBDriverFiles(t *testing.T) {
 	convey.Convey("test shouldMountUBDriverFiles", t, func() {
-		convey.Convey("should return false when disableUBMount is True", func() {
-			result := shouldMountUBDriverFiles(true)
+		convey.Convey("should return false when mountUBDrv is False", func() {
+			result := shouldMountUBDriverFiles(false)
 			convey.So(result, convey.ShouldBeFalse)
 		})
 		convey.Convey("should return true when UB config file exists", func() {
 			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
 			defer patches.Reset()
-			result := shouldMountUBDriverFiles(false)
+			result := shouldMountUBDriverFiles(true)
 			convey.So(result, convey.ShouldBeTrue)
 		})
 		convey.Convey("should return false when UB config file does not exist", func() {
 			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, os.ErrNotExist)
 			defer patches.Reset()
-			result := shouldMountUBDriverFiles(false)
+			result := shouldMountUBDriverFiles(true)
 			convey.So(result, convey.ShouldBeFalse)
 		})
 		convey.Convey("should return false when stat returns other error", func() {
 			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, os.ErrPermission)
 			defer patches.Reset()
-			result := shouldMountUBDriverFiles(false)
+			result := shouldMountUBDriverFiles(true)
 			convey.So(result, convey.ShouldBeFalse)
 		})
 	})

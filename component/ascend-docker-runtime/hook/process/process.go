@@ -163,15 +163,15 @@ func parseSoftLinkMode(allowLink string) (string, error) {
 	return "", fmt.Errorf("invalid soft link option")
 }
 
-func parseDisableUBMount(disableUBMount string) (bool, error) {
-	if disableUBMount == "True" {
+func parseUBDrvMount(value string) (bool, error) {
+	if value == api.EnableUBDrvMount || value == "" {
 		return true, nil
 	}
-	if disableUBMount == "" || disableUBMount == "False" {
+	if value == api.DisableUBDrvMount {
 		return false, nil
 	}
 
-	return false, fmt.Errorf("invalid disable UB mount option")
+	return false, fmt.Errorf("invalid UB driver mount option")
 }
 
 func parseOciSpecFile(file string) (*specs.Spec, error) {
@@ -426,8 +426,8 @@ func getArgs(cliPath string, containerConfig *containerConfig, fileMountList []s
 	return args
 }
 
-func shouldMountUBDriverFiles(disableUBMount bool) bool {
-	if disableUBMount {
+func shouldMountUBDriverFiles(mountUBDrv bool) bool {
+	if !mountUBDrv {
 		return false
 	}
 	_, err := os.Stat(ubConfigFilePath)
@@ -455,11 +455,11 @@ func DoPrestartHook() error {
 
 	mountConfigs := parseMounts(getValueByKey(containerConfig.Env, ascendRuntimeMounts))
 
-	disableUBMount, err := parseDisableUBMount(getValueByKey(containerConfig.Env, api.DisableUBMountEnv))
+	mountUBDrv, err := parseUBDrvMount(getValueByKey(containerConfig.Env, api.AscendUBDrvMountEnv))
 	if err != nil {
-		return fmt.Errorf("failed to parse disable UB mount option: %#v", err)
+		return fmt.Errorf("failed to parse UB driver mount option: %#v", err)
 	}
-	if shouldMountUBDriverFiles(disableUBMount) {
+	if shouldMountUBDriverFiles(mountUBDrv) {
 		mountConfigs = append(mountConfigs, ubDriverConfig)
 	}
 
@@ -482,7 +482,7 @@ func DoPrestartHook() error {
 		return fmt.Errorf("failed to parse soft link mode: %#v", err)
 	}
 
-	if allowLink == "False" && shouldMountUBDriverFiles(disableUBMount) {
+	if allowLink == "False" && shouldMountUBDriverFiles(mountUBDrv) {
 		hwlog.RunLog.Warnf("need UB driver files mounting, but allow link is False, will set allow link to True")
 		allowLink = "True"
 	}

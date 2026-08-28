@@ -102,8 +102,8 @@ func TestReadListEntries_UbIncludedFlag(t *testing.T) {
 	mustWriteFile(t, ubFile, "")
 	writeListFile(t, tmpDir, "ub_driver", ubFile+"\n")
 
-	// disableUBMounts=false + ub_driver.list present → ubIncluded=true.
-	entries, ubIncluded, err := readListEntries(tmpDir, "", false)
+	// mountUBDrv=true + ub_driver.list present → ubIncluded=true.
+	entries, ubIncluded, err := readListEntries(tmpDir, "", true)
 	if err != nil {
 		t.Fatalf("readListEntries returned error: %v", err)
 	}
@@ -114,8 +114,8 @@ func TestReadListEntries_UbIncludedFlag(t *testing.T) {
 		t.Fatalf("expected 1 ub entry, got %v", entries)
 	}
 
-	// disableUBMounts=true → ub_driver.list ignored; no base.list → 0 entries.
-	entries, ubIncluded, err = readListEntries(tmpDir, "", true)
+	// mountUBDrv=false → ub_driver.list ignored; no base.list → 0 entries.
+	entries, ubIncluded, err = readListEntries(tmpDir, "", false)
 	if err != nil {
 		t.Fatalf("readListEntries returned error: %v", err)
 	}
@@ -127,7 +127,7 @@ func TestReadListEntries_UbIncludedFlag(t *testing.T) {
 	}
 
 	// names explicitly containing ub_driver: ub_driver.list is read once only.
-	entries, _, err = readListEntries(tmpDir, "ub_driver", false)
+	entries, _, err = readListEntries(tmpDir, "ub_driver", true)
 	if err != nil {
 		t.Fatalf("readListEntries returned error: %v", err)
 	}
@@ -137,7 +137,7 @@ func TestReadListEntries_UbIncludedFlag(t *testing.T) {
 }
 
 func TestReadListEntries_MissingDir(t *testing.T) {
-	entries, _, err := readListEntries("/nonexistent/directory/for/test", "", false)
+	entries, _, err := readListEntries("/nonexistent/directory/for/test", "", true)
 	if err != nil {
 		t.Fatalf("missing dir must not be an error, got: %v", err)
 	}
@@ -151,7 +151,7 @@ func TestReadListEntries_DirIsFile(t *testing.T) {
 	file := filepath.Join(dir, "not-a-dir")
 	mustWriteFile(t, file, "")
 
-	entries, _, err := readListEntries(file, "", false)
+	entries, _, err := readListEntries(file, "", true)
 	if err != nil {
 		t.Fatalf("file-as-dir must not be an error, got: %v", err)
 	}
@@ -166,7 +166,7 @@ func TestReadListEntries_BaseList(t *testing.T) {
 	mustWriteFile(t, lib, "")
 	writeListFile(t, dir, "base", lib+"\n")
 
-	entries, ubIncluded, err := readListEntries(dir, "", false)
+	entries, ubIncluded, err := readListEntries(dir, "", true)
 	if err != nil {
 		t.Fatalf("readListEntries returned error: %v", err)
 	}
