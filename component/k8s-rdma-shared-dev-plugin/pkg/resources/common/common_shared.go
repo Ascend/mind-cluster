@@ -16,7 +16,7 @@
 package common
 
 var (
-	RequiredRdmaDevices = []string{"rdma_cm", "umad", "uverbs"}
+	RequiredRdmaDevices = []string{"rdma_cm", "uverbs"} // remove umad, RoCEv2 not need any more
 	DeprecatedSockDir   = "/var/lib/kubelet/device-plugins"
 	ActiveSockDir       = "/var/lib/kubelet/plugins_registry"
 )
