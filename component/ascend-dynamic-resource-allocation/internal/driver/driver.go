@@ -18,6 +18,7 @@ package driver
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	resourceapi "k8s.io/api/resource/v1"
 	"k8s.io/dynamic-resource-allocation/resourceslice"
@@ -120,7 +121,7 @@ func (d *AscendDraDriver) buildDriverResources() resourceslice.DriverResources {
 	devices := make([]resourceapi.Device, 0, len(d.allInfo.AllDevs))
 	for _, dev := range d.allInfo.AllDevs {
 		devices = append(devices, resourceapi.Device{
-			Name:       dev.DeviceName,
+			Name:       strings.ToLower(dev.DeviceName),
 			Attributes: d.generation.DeviceAttributes(*dev),
 		})
 	}
@@ -229,9 +230,7 @@ func NewAscendDraManager(
 }
 
 // autoSetDraDriver wires a concrete generation to the shared driver. dmgr is
-// handed to the generation and never crosses into the driver. A future
-// registry (suggestion 1) would replace this switch with a map lookup; for
-// now the switch keeps the change minimal and visible.
+// handed to the generation and never crosses into the driver.
 func (adm *AscendDraManager) autoSetDraDriver(
 	cancel context.CancelCauseFunc,
 	dmgr devmanager.DeviceInterface,
