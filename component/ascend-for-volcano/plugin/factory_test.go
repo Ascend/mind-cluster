@@ -411,7 +411,7 @@ func getDefaultVolcanoFrameCasesOfSuperPodSizeFormatError(superPodSizeKey,
 	reserveNodesKey string) []initVolcanoFrameFromSsnTestCase {
 	return []initVolcanoFrameFromSsnTestCase{
 		{
-			name: "01-GetSizeOfSuperPod failed, set default super-pod-size: 48, reserve-nodes not configured, " +
+			name: "01-GetSizeOfSuperPod failed, set default super-pod-size: 128, reserve-nodes not configured, " +
 				"set default reserve-nodes: 2",
 			configs: []conf.Configuration{
 				{
@@ -427,7 +427,7 @@ func getDefaultVolcanoFrameCasesOfSuperPodSizeFormatError(superPodSizeKey,
 				}}},
 		},
 		{
-			name: "02-GetSizeOfSuperPod failed, set default super-pod-size: 48",
+			name: "02-GetSizeOfSuperPod failed, set default super-pod-size: 128",
 			configs: []conf.Configuration{
 				{
 					Name: util.CMInitParamKey,
@@ -450,7 +450,7 @@ func getDefaultVolcanoFrameCasesOfSuperPodSizeValueError(superPodSizeKey,
 	reserveNodesKey string) []initVolcanoFrameFromSsnTestCase {
 	return []initVolcanoFrameFromSsnTestCase{
 		{
-			name: "03-GetSizeOfSuperPod failed, set default super-pod-size: 48",
+			name: "03-GetSizeOfSuperPod failed, set default super-pod-size: 128",
 			configs: []conf.Configuration{
 				{
 					Name: util.CMInitParamKey,
@@ -467,7 +467,7 @@ func getDefaultVolcanoFrameCasesOfSuperPodSizeValueError(superPodSizeKey,
 				}}},
 		},
 		{
-			name: "04-GetSizeOfSuperPod failed, set default super-pod-size: 48",
+			name: "04-GetSizeOfSuperPod failed, set default super-pod-size: 128",
 			configs: []conf.Configuration{
 				{
 					Name: util.CMInitParamKey,

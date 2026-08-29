@@ -300,7 +300,7 @@ This chapter provides installation guidance for the Volcano components (vc-sched
     ...
         configurations:
           - name: init-params
-            arguments: {<strong>"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2","useClusterInfoManager":"false","self-maintain-available-card":"true","super-pod-size": "48","reserve-nodes": "2","forceEnqueue":"true"</strong>}
+            arguments: {<strong>"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2","useClusterInfoManager":"false","self-maintain-available-card":"true","super-pod-size": "128","reserve-nodes": "2","forceEnqueue":"true"</strong>}
     ...</pre>
 
     **Table 3**  Parameter description
@@ -366,7 +366,7 @@ This chapter provides installation guidance for the Volcano components (vc-sched
     </tr>
     <tr id="row4612538250"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p26130381510"><a name="p26130381510"></a><a name="p26130381510"></a>super-pod-size</p>
     </td>
-    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p6613173818516"><a name="p6613173818516"></a><a name="p6613173818516"></a>48</p>
+    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p6613173818516"><a name="p6613173818516"></a><a name="p6613173818516"></a>128</p>
     </td>
     <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p461323812519"><a name="p461323812519"></a><a name="p461323812519"></a>Number of nodes in one SuperPoD of <span id="ph128111331314"><a name="ph128111331314"></a><a name="ph128111331314"></a>Atlas 900 A3 SuperPoD</span>.</p>
     </td>
@@ -376,6 +376,7 @@ This chapter provides installation guidance for the Volcano components (vc-sched
     <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p125626567516"><a name="p125626567516"></a><a name="p125626567516"></a>2</p>
     </td>
     <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p25637568515"><a name="p25637568515"></a><a name="p25637568515"></a>Number of reserved nodes in one SuperPoD of <span id="ph915032251212"><a name="ph915032251212"></a><a name="ph915032251212"></a>Atlas 900 A3 SuperPoD</span>.</p>
+    <p id="p1704246153100"><a name="p1704246153100"></a><a name="p1704246153100"></a>Value range: greater than or equal to 0; in the Atlas 900 A3 SuperPoD scenario, 0 to 47. A value of 0 means no nodes are reserved.</p>
     <div class="note" id="note1514175285210"><a name="note1514175285210"></a><a name="note1514175285210"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p96481321115510"><a name="p96481321115510"></a><a name="p96481321115510"></a>If the configured reserve-nodes is greater than or equal to super-pod-size, the following scenarios exist.</p>
     <a name="ul13842528165510"></a><a name="ul13842528165510"></a><ul id="ul13842528165510"><li>If super-pod-size is greater than 2, reserve-nodes is reset to 2 by default.</li><li>If super-pod-size is less than or equal to 2, reserve-nodes is reset to 0 by default.</li></ul>
     </div></div>
@@ -871,7 +872,7 @@ The cluster scheduling Volcano compomet adds NPU scheduling-related features on 
                    - name: binpack
                 <strong>configurations:           # Add the following bold fields, which are Volcano configuration fields</strong>
                   <strong>- name: init-params</strong>
-                    <strong>arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2","useClusterInfoManager":"false","super-pod-size": "48","reserve-nodes": "2"}</strong>
+                    <strong>arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2","useClusterInfoManager":"false","super-pod-size": "128","reserve-nodes": "2"}</strong>
             ...
             kind: Deployment
             apiVersion: apps/v1
