@@ -1131,9 +1131,11 @@ func (d *DcV2Manager) DcGetVDeviceInfo(logicID int32) (common.VirtualDevInfo, er
 		dcmiVDevInfo.VDevInfo = append(dcmiVDevInfo.VDevInfo, cgoVDevQueryStru)
 		vDevActivityInfo, err := d.DcGetVDevActivityInfo(logicID, vDevID)
 		if err != nil {
-			hwlog.RunLog.Warnf("get cur vDev's activity info failed, err: %s", err)
+			hwlog.RunLog.ErrorfWithLimit("DcGetVDevActivityInfo", logicID,
+				"get cur vDev's activity info failed, err: %s", err)
 			continue
 		}
+		hwlog.ResetErrCnt("DcGetVDevActivityInfo", logicID)
 		vDevActivityInfo.VDevAiCore = float64(cgoVDevQueryStru.QueryInfo.Computing.Aic)
 		dcmiVDevInfo.VDevActivityInfo = append(dcmiVDevInfo.VDevActivityInfo, vDevActivityInfo)
 	}

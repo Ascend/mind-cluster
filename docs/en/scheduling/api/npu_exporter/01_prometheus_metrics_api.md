@@ -417,7 +417,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="10.43%" headers="mcps1.2.7.1.5 "><p id="p1835917279917"><a name="p1835917279917"></a><a name="p1835917279917"></a>Unit: %</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="20.18%" headers="mcps1.2.7.1.6 "><p id="p735982715917"><a name="p735982715917"></a><a name="p735982715917"></a><span id="ph19590185162111"><a name="ph19590185162111"></a><a name="ph19590185162111"></a>Atlas Inference Series Products</span></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="20.18%" headers="mcps1.2.7.1.6 "><ul><li>Atlas Inference Series Products</li><li>Atlas A2 Training Series Products</li><li>Atlas A3 Training Series Products</li><li>Atlas A2 Inference Series Products</li><li>Atlas A3 Inference Series Products</li></ul>
 </td>
 </tr>
 <tr id="row17703155715411"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p136032717910"><a name="p136032717910"></a><a name="p136032717910"></a>vNPU</p>
