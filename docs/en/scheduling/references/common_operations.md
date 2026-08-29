@@ -1681,8 +1681,7 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
                     tar -mzxf "/tmp/${UMDK_PKG}" -C /tmp/umdk_pkgs; \
                     rpm -ivh /tmp/umdk_pkgs/*.rpm; \
                 else \
-                    echo "warning: umdk package not provided, install from yum"; \
-                    yum install -y umdk-urma-bin umdk-urma-devel umdk-urma-lib umdk-urma-tools; \
+                    echo "note: umdk package not provided, it is necessary for unified bus scenario only"; \
                 fi && \
                 yum clean all && \
                 rm -rf /var/cache/yum && \
@@ -1706,8 +1705,7 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
                    tar -mzxf "/tmp/${UMDK_PKG}" -C /tmp/umdk_pkgs ; \
                    dpkg -i /tmp/umdk_pkgs/*.deb; \
                else \
-                   echo "error: umdk package not provided"; \
-                   exit 1; \
+                   echo "note: umdk package not provided, it is necessary for unified bus scenario only"; \
               fi && \
               apt-get clean && \
               rm -rf /var/lib/apt/lists/* && \
