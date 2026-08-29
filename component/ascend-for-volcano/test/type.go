@@ -66,7 +66,7 @@ const (
 	useClusterInfoManagerKey   = "useClusterInfoManager"
 	useClusterInfoManagerValue = "true"
 	superPodSizeKey            = "super-pod-size"
-	superPodSizeValue          = "48"
+	superPodSizeValue          = "128"
 	reserveNodesKey            = "reserve-nodes"
 	reserveNodesValue          = "2"
 	fakeResourceNum            = "8000"
