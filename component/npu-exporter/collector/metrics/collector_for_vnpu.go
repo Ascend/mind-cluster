@@ -22,7 +22,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"ascend-common/api"
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
@@ -33,12 +32,6 @@ var (
 	podAiCoreUtilizationRate *prometheus.Desc = nil
 	podTotalMemory           *prometheus.Desc = nil
 	podUsedMemory            *prometheus.Desc = nil
-)
-
-var (
-	supportedVnpuDevices = map[string]bool{
-		api.Ascend310P: true,
-	}
 )
 
 const (
@@ -71,7 +64,7 @@ type VnpuCollector struct {
 
 // IsSupported check whether the collector is supported
 func (c *VnpuCollector) IsSupported(n *colcommon.NpuCollector) bool {
-	isSupport := supportedVnpuDevices[n.Dmgr.GetDevType()]
+	isSupport := colcommon.SupportedVnpuDevices[n.Dmgr.GetDevType()]
 	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c), "")
 	return isSupport
 }

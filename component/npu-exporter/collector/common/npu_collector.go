@@ -33,6 +33,13 @@ import (
 	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
+// SupportedVnpuDevices device types that support vnpu metrics collection
+var SupportedVnpuDevices = map[string]bool{
+	api.Ascend310P:  true,
+	api.Ascend910B:  true,
+	api.Ascend910A3: true,
+}
+
 var (
 	npuContainerInfoInit sync.Once
 	npuChipInfoInit      sync.Once
@@ -517,13 +524,16 @@ func setProductType(chip *HuaWeiAIChip, dmgr devmanager.DeviceInterface) {
 
 func assemblevNPUInfo(dmgr devmanager.DeviceInterface, logicID int32, baseChipInfo *HuaWeiAIChip) {
 	devType := dmgr.GetDevType()
-	if devType != api.Ascend310P {
+	if !SupportedVnpuDevices[devType] {
 		return
 	}
 	vDevInfos, err := dmgr.GetVirtualDeviceInfo(logicID)
 	if err != nil {
-		logger.Warnf("failed to get virtual device info,logicID(%d),err: %v", logicID, err)
+		hwlog.RunLog.ErrorfWithLimit("GetVirtualDeviceInfo", logicID,
+			"failed to get virtual device info,logicID(%d),err: %v", logicID, err)
 		baseChipInfo.VDevInfos = nil
+	} else {
+		hwlog.ResetErrCnt("GetVirtualDeviceInfo", logicID)
 	}
 	if vDevInfos.TotalResource.VDevNum == 0 {
 		baseChipInfo.VDevInfos = &common.VirtualDevInfo{}
@@ -538,7 +548,7 @@ func GetChipListWithVNPU(n *NpuCollector) []HuaWeiAIChip {
 	devType := n.Dmgr.GetDevType()
 
 	for _, chipInfo := range chips {
-		isNeedHandleVnpu := devType == api.Ascend310P && chipInfo.VDevInfos != nil &&
+		isNeedHandleVnpu := SupportedVnpuDevices[devType] && chipInfo.VDevInfos != nil &&
 			len(chipInfo.VDevInfos.VDevActivityInfo) > 0
 
 		if !isNeedHandleVnpu {

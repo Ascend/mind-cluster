@@ -298,11 +298,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="12.55125512551255%" headers="mcps1.2.6.1.4 "><p id="p480452542116"><a name="p480452542116"></a><a name="p480452542116"></a>Unit: %</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="23.642364236423642%" headers="mcps1.2.6.1.5 "><p id="p553617193312"><a name="p553617193312"></a><a name="p553617193312"></a><span id="ph19590185162111"><a name="ph19590185162111"></a><a name="ph19590185162111"></a>Atlas Inference Series Products</span></p>
-<p id="p5979185811548"><a name="p5979185811548"></a><a name="p5979185811548"></a></p>
-<p id="p1272129165519"><a name="p1272129165519"></a><a name="p1272129165519"></a></p>
-<p id="p1666712017555"><a name="p1666712017555"></a><a name="p1666712017555"></a></p>
-<p id="p17841125753817"><a name="p17841125753817"></a><a name="p17841125753817"></a></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="23.642364236423642%" headers="mcps1.2.6.1.5 "><ul><li>Atlas Inference Series Products</li><li>Atlas A2 Training Series Products</li><li>Atlas A3 Training Series Products</li><li>Atlas A2 Inference Series Products</li><li>Atlas A3 Inference Series Products</li></ul>
 </td>
 </tr>
 <tr id="row17703155715411"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p7804152519214"><a name="p7804152519214"></a><a name="p7804152519214"></a>vNPU</p>
