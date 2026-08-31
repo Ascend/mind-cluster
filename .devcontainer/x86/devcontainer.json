@@ -1,9 +1,6 @@
 {
-    "name": "MindCluster Build Env",
-    "build": {
-        "dockerfile": "Dockerfile",
-        "context": ".."
-    },
+    "name": "MindCluster Build Env (x86)",
+    "image": "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindcluster_x86:20260831",
     "customizations": {
         "vscode": {
             "extensions": [
