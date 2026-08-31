@@ -17,3 +17,4 @@
 - [环境变量说明](13_environment_variable_description.md)
 - [hccl.json文件说明](14_hccl.json_file_description.md)
 - [任务YAML配置说明](15_yaml_configuration.md)
+- [UB Host Device Cni](17_ub_host_device_cni.md)
