@@ -54,6 +54,7 @@ cd "$TOP_DIR"/component
 CUR_DIR=$(dirname $(readlink -f $0))
 mind_cluster=(
     "ascend-device-plugin"
+    "ascend-dynamic-resource-allocation"
     "ascend-docker-runtime"
     "ascend-for-volcano"
     "ascend-operator"
@@ -64,6 +65,9 @@ mind_cluster=(
     "mindio"
     "noded"
     "npu-exporter"
+    "dpu-exporter"
+    "k8s-rdma-shared-dev-plugin"
+    "ub-host-device-cni"
     "taskd"
 )
 cd "$TOP_DIR"/build
