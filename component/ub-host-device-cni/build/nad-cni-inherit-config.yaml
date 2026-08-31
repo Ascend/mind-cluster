@@ -1,0 +1,17 @@
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: roce-network
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: "huawei.com/ub_rdma"
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "roce-network",
+      "type": "ub-host-device",
+      "ubMode": true,
+      "inheritHostIP": true，
+      "capabilities": { "deviceID": true }
+    }

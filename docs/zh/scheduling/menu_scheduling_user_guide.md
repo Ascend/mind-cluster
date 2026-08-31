@@ -192,6 +192,7 @@
   - [Infer Operator](./06_api/10_infer_operator.md)
   - [K8s RDMA Shared Dev Plugin](./06_api/11_k8s_rdma_shared_dev_plugin.md)
   - [DPU Exporter](./06_api/16_dpu_exporter.md)
+  - [UB Host Device CNI](06_api/17_ub_host_device_cni.md)
   - [K8s原生对象说明](./06_api/12_k8s.md)
   - [环境变量说明](./06_api/13_environment_variable_description.md)
   - [hccl.json文件说明](./06_api/14_hccl.json_file_description.md)
