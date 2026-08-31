@@ -22,7 +22,7 @@ import (
 	"sync"
 
 	"ascend-common/common-utils/hwlog"
-	ascutils "ascend-common/common-utils/utils"
+	"ascend-common/common-utils/utils"
 )
 
 const (
@@ -53,44 +53,27 @@ type ProductMapping struct {
 var (
 	dpuToNpuOnce sync.Once
 	dpuToNpuIDs  map[string][]int
+
+	npuNicMappingCache *NpuNicMapping
+	npuNicMappingErr   error
+	npuNicMappingOnce  sync.Once
 )
 
 // InitNpuNicMapping loads npu-nic-mapping.json once and builds reverse index.
 func InitNpuNicMapping() {
 	dpuToNpuOnce.Do(func() {
-		realPath, err := ascutils.RealFileChecker(npuNicMappingConfigPath, false, false, npuNicMappingMaxSize)
+		mapping, err := loadNpuNicMapping()
 		if err != nil {
-			hwlog.RunLog.Warnf("check npu-nic-mapping config failed: %v, AffectedNPU will be empty", err)
+			hwlog.RunLog.Errorf("load npu-nic-mapping config failed: %v, AffectedNPU will be empty", err)
 			return
 		}
-		data, err := os.ReadFile(realPath)
-		if err != nil {
-			hwlog.RunLog.Warnf("read npu-nic-mapping config failed: %v, AffectedNPU will be empty", err)
+		if mapping == nil {
+			hwlog.RunLog.Warnf("npu-nic-mapping config not found, AffectedNPU will be empty")
 			return
 		}
-
-		var products []ProductMapping
-		if err = json.Unmarshal(data, &products); err == nil {
-			index, form, ferr := selectByForm(products)
-			if ferr != nil {
-				hwlog.RunLog.Errorf("select npu-nic-mapping by form failed: %v", ferr)
-				return
-			}
-			dpuToNpuIDs = index
-			hwlog.RunLog.Infof("npu-nic-mapping loaded for form %q, primary-DPU reverse index size: %d",
-				form, len(index))
-			return
-		}
-
-		var mapping NpuNicMapping
-		if err = json.Unmarshal(data, &mapping); err != nil {
-			hwlog.RunLog.Errorf("parse npu-nic-mapping config failed: %v", err)
-			return
-		}
-
 		dpuToNpuIDs = buildReverseIndex(mapping.NpuNics)
-		hwlog.RunLog.Infof("npu-nic-mapping loaded as customize, "+
-			"primary-DPU reverse index size: %d", len(dpuToNpuIDs))
+		hwlog.RunLog.Infof("npu-nic-mapping loaded, primary-DPU reverse index size: %d",
+			len(dpuToNpuIDs))
 	})
 }
 
@@ -115,6 +98,7 @@ func machineType() (string, error) {
 	var others []os.DirEntry
 	for _, dir := range dirs {
 		if strings.HasPrefix(dir.Name(), "ens") {
+			hwlog.RunLog.Debugf("Found net device %s", dir.Name())
 			if mt, ok := cardTypeOf(dir.Name()); ok {
 				return mt, nil
 			}
@@ -155,12 +139,13 @@ func readCardType(ifName string) (string, bool) {
 		fmt.Sprintf("%s/%s/device/card_type", sysClassNetPath, ifName),
 		fmt.Sprintf("%s/%s/card_type", sysClassNetPath, ifName),
 	} {
-		data, err := ascutils.ReadLimitBytesWithSymlink(path, 1024, validateSysfsPath)
+		data, err := os.ReadFile(path)
 		if err != nil {
-			hwlog.RunLog.Warnf("read card_type failed for %s: %v", path, err)
 			continue
 		}
-		return strings.TrimSpace(string(data)), true
+		if cardType := strings.TrimSpace(string(data)); cardType != "" {
+			return cardType, true
+		}
 	}
 	return "", false
 }
@@ -190,4 +175,76 @@ func buildReverseIndex(items []NpuNicItem) map[string][]int {
 		index[primaryDpu] = append(index[primaryDpu], item.NpuId)
 	}
 	return index
+}
+
+// loadNpuNicMapping reads the NPU-NIC mapping config baked into the image.
+func loadNpuNicMapping() (*NpuNicMapping, error) {
+	data, err := utils.LoadFile(npuNicMappingConfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("read config file error: %v", err)
+	}
+	// LoadFile returns empty data when the file does not exist.
+	if len(data) == 0 {
+		hwlog.RunLog.Warnf("npu-nic-mapping config file not found: %s", npuNicMappingConfigPath)
+		return nil, nil
+	}
+
+	// The config may group mappings by machine form (server/pod), try it first.
+	var products []ProductMapping
+	if err = json.Unmarshal(data, &products); err == nil {
+		form, err := machineType()
+		if err != nil {
+			return nil, fmt.Errorf("detect machine form failed: %w", err)
+		}
+		for _, p := range products {
+			if strings.EqualFold(p.ProductType, form) {
+				return &NpuNicMapping{NpuNics: p.NpuNics}, nil
+			}
+		}
+		return nil, fmt.Errorf("machine form %q not found in npu-nic-mapping", form)
+	}
+
+	var mapping NpuNicMapping
+	if err = json.Unmarshal(data, &mapping); err != nil {
+		return nil, fmt.Errorf("parse config file error: %v", err)
+	}
+
+	return &mapping, nil
+}
+
+// getNpuNicMappingCache returns the NPU-NIC mapping config.
+func getNpuNicMappingCache() (*NpuNicMapping, error) {
+	npuNicMappingOnce.Do(func() {
+		mapping, err := loadNpuNicMapping()
+		if err != nil {
+			npuNicMappingErr = err
+			return
+		}
+		npuNicMappingCache = mapping
+		if mapping != nil {
+			hwlog.RunLog.Infof("npu-nic-mapping config loaded: %v", mapping)
+		}
+	})
+
+	return npuNicMappingCache, npuNicMappingErr
+}
+
+// GetNicNames returns the NIC names mapped to the given NPU ID
+func GetNicNames(npuId int) ([]string, error) {
+	mapping, err := getNpuNicMappingCache()
+	if err != nil {
+		return nil, err
+	}
+
+	if mapping == nil {
+		return nil, fmt.Errorf("npu-nic-mapping config not found")
+	}
+
+	for _, item := range mapping.NpuNics {
+		if item.NpuId == npuId {
+			return item.NicNames, nil
+		}
+	}
+
+	return nil, fmt.Errorf("npuId %d not found in mapping", npuId)
 }

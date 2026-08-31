@@ -12,7 +12,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["get", "create", "update", "delete", "list", "watch"]
+    verbs: ["create", "update"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -28,6 +28,30 @@ subjects:
     name: rdma-shared-dp-sa
     namespace: kube-system
 ---
+# Cluster-scoped permission to write allocated DPU IDs into pod annotations;
+# pod discovery uses the local kubelet /pods endpoint, so no get/list/watch.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: rdma-shared-dp-pod-reader
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rdma-shared-dp-pod-reader-rb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: rdma-shared-dp-pod-reader
+subjects:
+  - kind: ServiceAccount
+    name: rdma-shared-dp-sa
+    namespace: kube-system
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -35,7 +59,12 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["nodes"]
-    verbs: ["get", "patch", "update"]
+    verbs: ["patch"]
+  # nodes/proxy get is required for the kubelet /pods endpoint under webhook
+  # authz; v1.33+ fine-grained authz maps /pods to nodes/pods, else falls back.
+  - apiGroups: [""]
+    resources: ["nodes/proxy"]
+    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -151,6 +180,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
       volumes:
         - name: device-plugin
           hostPath:

@@ -30,6 +30,7 @@ import (
 
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"k8s.io/client-go/kubernetes"
 	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 	registerapi "k8s.io/kubelet/pkg/apis/pluginregistration/v1"
 
@@ -40,7 +41,7 @@ import (
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
 )
 
-// UbResourceServer is gRPC server implements K8s device plugin api for UB devices
+// UbResourceServer implements the K8s device plugin API for UB devices
 type UbResourceServer interface {
 	types.ResourceServer
 	// Additional UB-specific methods can be added here
@@ -66,6 +67,9 @@ type ubResourceServer struct {
 	useCdi          bool
 	cdi             cdi.CDI
 	cdiResourceName string
+	exclMode        bool
+	// k8sClient queries pod info for NPU-based DPU allocation
+	k8sClient *kubernetes.Clientset
 }
 
 // resourcesServerPort implements types.ResourceServerPort interface
@@ -75,7 +79,7 @@ type resourcesServerPort struct {
 
 // NewUbResourceServer returns an initialized UB device server
 func NewUbResourceServer(config *types.UserConfig, devices []types.Device, watcherMode bool,
-	socketSuffix string, useCdi bool) (UbResourceServer, error) {
+	socketSuffix string, useCdi bool, exclMode bool, k8sClient *kubernetes.Clientset) (UbResourceServer, error) {
 
 	if config.RdmaHcaMax < 0 {
 		return nil, fmt.Errorf("invalid value for rdmaHcaMax < 0: %d", config.RdmaHcaMax)
@@ -85,7 +89,13 @@ func NewUbResourceServer(config *types.UserConfig, devices []types.Device, watch
 	}
 
 	deviceSpec := getUbDevicesSpec(devices)
-	devs := createUbVirtualDevices(len(devices), deviceSpec, config.ResourceName)
+
+	var devs []*pluginapi.Device
+	if exclMode {
+		devs = createUbExclDevices(devices)
+	} else {
+		devs = createUbVirtualDevices(len(devices), deviceSpec, config.ResourceName)
+	}
 
 	sockDir := common.DeprecatedSockDir
 	if watcherMode {
@@ -113,6 +123,8 @@ func NewUbResourceServer(config *types.UserConfig, devices []types.Device, watch
 		useCdi:          useCdi,
 		cdi:             cdi.New(),
 		cdiResourceName: config.ResourceName,
+		exclMode:        exclMode,
+		k8sClient:       k8sClient,
 	}, nil
 }
 
@@ -129,6 +141,19 @@ func createUbVirtualDevices(deviceCount int, deviceSpec []*pluginapi.DeviceSpec,
 			Health: pluginapi.Healthy,
 		})
 	}
+	return devs
+}
+
+// createUbExclDevices creates devices for exclusive mode.
+func createUbExclDevices(devices []types.Device) []*pluginapi.Device {
+	devs := make([]*pluginapi.Device, 0, len(devices))
+	for _, dev := range devices {
+		devs = append(devs, &pluginapi.Device{
+			ID:     dev.GetName(),
+			Health: pluginapi.Healthy,
+		})
+	}
+	hwlog.RunLog.Infof("exclusive mode: created %d devices from real UB devices", len(devs))
 	return devs
 }
 
@@ -297,15 +322,17 @@ func (rs *ubResourceServer) UpdateDevices(devices []types.Device) {
 	newDeviceSpec := getUbDevicesSpec(devices)
 	if common.DevicesChanged(rs.deviceSpec, newDeviceSpec) {
 		rs.deviceSpec = newDeviceSpec
-		// Recreate devs when device spec changes (e.g., device becomes available after startup)
-		rs.devs = rs.reconcileDevs(devices)
+		// Recreate devs when device spec changes
+		if rs.exclMode {
+			rs.devs = createUbExclDevices(devices)
+		} else {
+			rs.devs = rs.reconcileDevs(devices)
+		}
 		needUpdate = true
 	}
 
 	rs.ubDevices = devices
 }
-
-// gRPC Device Plugin API implementations
 
 // ListAndWatch lists available UB devices and watches for changes
 func (rs *ubResourceServer) ListAndWatch(e *pluginapi.Empty, s pluginapi.DevicePlugin_ListAndWatchServer) error {
@@ -354,29 +381,75 @@ func (rs *ubResourceServer) ListAndWatch(e *pluginapi.Empty, s pluginapi.DeviceP
 // GetDevicePluginOptions returns plugin options
 func (rs *ubResourceServer) GetDevicePluginOptions(ctx context.Context, e *pluginapi.Empty) (*pluginapi.DevicePluginOptions, error) {
 	return &pluginapi.DevicePluginOptions{
-		PreStartRequired: false,
+		PreStartRequired:                false,
+		GetPreferredAllocationAvailable: rs.exclMode,
 	}, nil
 }
 
 // Allocate allocates UB devices to pods
 func (rs *ubResourceServer) Allocate(ctx context.Context, reqs *pluginapi.AllocateRequest) (*pluginapi.AllocateResponse, error) {
+	// Write lock prevents concurrent annotation updates by allocateByNpu.
+	rs.mutex.Lock()
+	defer rs.mutex.Unlock()
+
 	responses := pluginapi.AllocateResponse{}
-
-	rs.mutex.RLock()
-	defer rs.mutex.RUnlock()
-
-	for _, _ = range reqs.ContainerRequests {
-		response := pluginapi.ContainerAllocateResponse{
-			Envs: map[string]string{},
+	if rs.exclMode {
+		// Validate devices exist before recording, so a failed Allocate leaves no stale state.
+		for _, container := range reqs.ContainerRequests {
+			for _, id := range container.DevicesIDs {
+				if _, ok := rs.deviceSpecByID(id); !ok {
+					return nil, fmt.Errorf("device %q not found in %s devices", id, rs.resourceName)
+				}
+			}
 		}
-
-		// Add RDMA device specs
-		response.Devices = append(response.Devices, rs.deviceSpec...)
-
-		responses.ContainerResponses = append(responses.ContainerResponses, &response)
+		// Record the allocation, then mount exactly the devices kubelet assigned.
+		if err := rs.allocateByNpu(ctx, allRequestedDeviceIDs(reqs)); err != nil {
+			return nil, err
+		}
+		for _, container := range reqs.ContainerRequests {
+			response, err := rs.allocateExclContainer(container)
+			if err != nil {
+				return nil, err
+			}
+			responses.ContainerResponses = append(responses.ContainerResponses, response)
+		}
+	} else {
+		// shared mode: mount all devices
+		for range reqs.ContainerRequests {
+			responses.ContainerResponses = append(responses.ContainerResponses, rs.allocateSharedContainer())
+		}
 	}
-
 	return &responses, nil
+}
+
+// allRequestedDeviceIDs collects the device IDs kubelet assigned to the containers
+// of this Allocate request.
+func allRequestedDeviceIDs(reqs *pluginapi.AllocateRequest) []string {
+	var ids []string
+	for _, container := range reqs.ContainerRequests {
+		ids = append(ids, container.DevicesIDs...)
+	}
+	return ids
+}
+
+// allocateExclContainer allocates the DPU devices for one container in exclusive mode.
+func (rs *ubResourceServer) allocateExclContainer(container *pluginapi.ContainerAllocateRequest) (*pluginapi.ContainerAllocateResponse, error) {
+	response := &pluginapi.ContainerAllocateResponse{Envs: map[string]string{}}
+	for _, id := range container.DevicesIDs {
+		specs, ok := rs.deviceSpecByID(id)
+		if !ok {
+			return nil, fmt.Errorf("device %q not found in %s devices", id, rs.resourceName)
+		}
+		response.Devices = append(response.Devices, specs...)
+	}
+	return response, nil
+}
+
+// allocateSharedContainer mounts all UB devices to one container in shared mode
+func (rs *ubResourceServer) allocateSharedContainer() *pluginapi.ContainerAllocateResponse {
+	response := &pluginapi.ContainerAllocateResponse{Envs: map[string]string{}}
+	response.Devices = append(response.Devices, rs.deviceSpec...)
+	return response
 }
 
 // PreStartContainer performs pre-start operations on containers (not used for UB devices)
@@ -384,9 +457,22 @@ func (rs *ubResourceServer) PreStartContainer(ctx context.Context, _ *pluginapi.
 	return &pluginapi.PreStartContainerResponse{}, nil
 }
 
-// GetPreferredAllocation returns preferred allocation of UB devices
-func (rs *ubResourceServer) GetPreferredAllocation(ctx context.Context, _ *pluginapi.PreferredAllocationRequest) (*pluginapi.PreferredAllocationResponse, error) {
-	return &pluginapi.PreferredAllocationResponse{}, nil
+// GetPreferredAllocation returns the preferred DPU device IDs to allocate for each container.
+func (rs *ubResourceServer) GetPreferredAllocation(ctx context.Context, reqs *pluginapi.PreferredAllocationRequest) (*pluginapi.PreferredAllocationResponse, error) {
+	rs.mutex.RLock()
+	defer rs.mutex.RUnlock()
+
+	response := &pluginapi.PreferredAllocationResponse{}
+	for _, req := range reqs.ContainerRequests {
+		ids, err := rs.preferredDeviceIDs(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		response.ContainerResponses = append(response.ContainerResponses, &pluginapi.ContainerPreferredAllocationResponse{
+			DeviceIDs: ids,
+		})
+	}
+	return response, nil
 }
 
 // gRPC Plugin Registration API implementations (for watch mode)

@@ -53,7 +53,7 @@ func newTestUbResourceManager() *ubResourceManager {
 
 func TestNewUbResourceManager(t *testing.T) {
 	convey.Convey("Given NewUbResourceManager", t, func() {
-		rm := NewUbResourceManager("test.json", false).(*ubResourceManager)
+		rm := NewUbResourceManager("test.json", false, false, nil).(*ubResourceManager)
 
 		convey.Convey("Then fields should be initialized correctly", func() {
 			convey.So(rm, convey.ShouldNotBeNil)
