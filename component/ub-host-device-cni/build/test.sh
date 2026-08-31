@@ -37,14 +37,6 @@ function filter_cov_by_tested_pkgs() {
 }
 
 function execute_test() {
-  local tested_pkgs
-  tested_pkgs=$(go list -buildvcs=false -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}' "${TOP_DIR}"/...)
-  if [[ -z "$tested_pkgs" ]]; then
-    echo "no test files found, skip test execution"
-    : > "$file_detail_output"
-    exit 0
-  fi
-
   # -gcflags=all=-l disables inlining so gomonkey patches take effect.
   if ! gotestsum --junitfile unit-tests.xml --jsonfile test.jsonl \
     -- -mod=mod -count=1 -gcflags=all=-l -v -coverprofile cov.out "${TOP_DIR}"/...; then
@@ -61,11 +53,11 @@ function execute_test() {
   coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
                                         else print ($1 == int($1)) ? int($1) : int($1)}')
 
-  if [[ $coverage -ge 0 ]]; then
+  if [[ $coverage -ge 8 ]]; then
     echo "coverage passed: $coverage%"
     exit 0
   else
-    echo "coverage failed: $coverage%, it needs to be greater than 60%."
+    echo "coverage failed: $coverage%, it needs to be greater than 8%."
     exit 1
   fi
 }
