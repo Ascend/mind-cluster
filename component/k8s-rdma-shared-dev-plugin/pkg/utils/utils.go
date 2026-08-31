@@ -25,16 +25,14 @@ import (
 
 	"github.com/Mellanox/rdmamap"
 
+	"ascend-common/api"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
-
-	"ascend-common/api"
 )
 
 var (
 	sysNetDevices = "/sys/class/net"
 	SysBusPci     = "/sys/bus/pci/devices"
-	SysBusUb      = "/sys/bus/ub/devices"
 )
 
 // GetPciAddress return the pci address for given interface name
@@ -88,8 +86,8 @@ func GetRdmaDevicesForUbdev(ubID string) []string {
 		rdmadevs = append(rdmadevs, entry.Name())
 	}
 	rdmaDevices := make([]string, 0, len(rdmadevs))
-	for _, entry := range entries {
-		rdmaResourceDevices := rdmamap.GetRdmaCharDevices(entry.Name())
+	for _, dev := range rdmadevs {
+		rdmaResourceDevices := rdmamap.GetRdmaCharDevices(dev)
 		rdmaDevices = append(rdmaDevices, rdmaResourceDevices...)
 	}
 

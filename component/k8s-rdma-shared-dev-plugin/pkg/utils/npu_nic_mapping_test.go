@@ -16,137 +16,186 @@
 package utils
 
 import (
-	"encoding/json"
+	"context"
 	"errors"
 	"os"
 	"sync"
 	"testing"
 
-	ascutils "ascend-common/common-utils/utils"
-
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 )
 
-func resetMappingState() *gomonkey.Patches {
-	p := gomonkey.NewPatches()
-	p.ApplyGlobalVar(&dpuToNpuOnce, sync.Once{})
-	dpuToNpuIDs = nil
-	return p
+func init() {
+	_ = hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
 }
 
-func TestInitNpuNicMappingFileErrorAndSuccess(t *testing.T) {
-	convey.Convey("When os.ReadFile fails, mapping stays empty and GetAffectedNPU returns empty slice", t, func() {
-		resetPatches := resetMappingState()
-		defer resetPatches.Reset()
+func resetNpuNicMappingCache() {
+	npuNicMappingCache = nil
+	npuNicMappingErr = nil
+	npuNicMappingOnce = sync.Once{}
+}
 
-		patches := gomonkey.ApplyFunc(ascutils.RealFileChecker,
-			func(_ string, _, _ bool, _ int64) (string, error) {
-				return "", errors.New("file not exist")
-			})
-		defer patches.Reset()
-
-		InitNpuNicMapping()
-		convey.So(GetAffectedNPU("enp0s1"), convey.ShouldBeEmpty)
+func TestLoadNpuNicMappingSuccess(t *testing.T) {
+	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+		return []byte(`{"npuNics":[{"npuId":0,"nicNames":["ens2f0","ens0f2","ens1f0"]}]}`), nil
 	})
+	defer patches.Reset()
 
-	convey.Convey("When config parses, primary DPU reverse index is built", t, func() {
-		resetPatches := resetMappingState()
-		defer resetPatches.Reset()
-
-		data := []byte(`{"npuNics":[{"npuId":0,"nicNames":["enp0s1","enp0s2"]},{"npuId":1,"nicNames":["enp0s3"]}]}`)
-		patches := gomonkey.ApplyFunc(ascutils.RealFileChecker,
-			func(_ string, _, _ bool, _ int64) (string, error) {
-				return npuNicMappingConfigPath, nil
-			})
-		defer patches.Reset()
-		rfPatches := gomonkey.ApplyFunc(os.ReadFile, func(_ string) ([]byte, error) {
-			return data, nil
+	convey.Convey("Given a valid mapping file on disk", t, func() {
+		mapping, err := loadNpuNicMapping()
+		convey.Convey("Then mapping should be parsed without error", func() {
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(mapping, convey.ShouldNotBeNil)
+			convey.So(len(mapping.NpuNics), convey.ShouldEqual, 1)
+			convey.So(mapping.NpuNics[0].NpuId, convey.ShouldEqual, 0)
+			convey.So(mapping.NpuNics[0].NicNames, convey.ShouldResemble, []string{"ens2f0", "ens0f2", "ens1f0"})
 		})
-		defer rfPatches.Reset()
-
-		InitNpuNicMapping()
-		convey.So(GetAffectedNPU("enp0s1"), convey.ShouldResemble, []int{0})
-		convey.So(GetAffectedNPU("enp0s3"), convey.ShouldResemble, []int{1})
-		convey.So(GetAffectedNPU("enp0s2"), convey.ShouldBeEmpty)
 	})
 }
 
-func TestInitNpuNicMappingArrayFormatSelectByForm(t *testing.T) {
-	convey.Convey("When config is array format and card_type is A5Server, "+
-		"Server entry is selected and reverse index built", t, func() {
-		resetPatches := resetMappingState()
-		defer resetPatches.Reset()
+func TestLoadNpuNicMappingNotFound(t *testing.T) {
+	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+		return nil, nil
+	})
+	defer patches.Reset()
 
-		cfg := []byte(`[
-			{"productType":"PoD","npuNics":[{"npuId":0,"nicNames":["ens0f0","ens0f2"]}]},
-			{"productType":"Server","npuNics":[
-				{"npuId":0,"nicNames":["ens0f0"]},
-				{"npuId":4,"nicNames":["ens2f0"]}
-			]}
-		]`)
-		patches := gomonkey.ApplyFunc(ascutils.RealFileChecker,
-			func(_ string, _, _ bool, _ int64) (string, error) {
-				return npuNicMappingConfigPath, nil
-			})
-		defer patches.Reset()
-		rfPatches := gomonkey.ApplyFunc(os.ReadFile, func(path string) ([]byte, error) {
-			if path == npuNicMappingConfigPath {
-				return cfg, nil
-			}
-			return nil, errors.New("unexpected read: " + path)
+	convey.Convey("Given the mapping file does not exist", t, func() {
+		mapping, err := loadNpuNicMapping()
+		convey.Convey("Then nil mapping and nil error should be returned", func() {
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(mapping, convey.ShouldBeNil)
 		})
-		defer rfPatches.Reset()
-		rlbPatches := gomonkey.ApplyFunc(ascutils.ReadLimitBytesWithSymlink,
-			func(_ string, _ int, _ func(string) bool) ([]byte, error) {
-				return []byte("A5Server"), nil
-			})
-		defer rlbPatches.Reset()
-
-		InitNpuNicMapping()
-		convey.So(GetAffectedNPU("ens0f0"), convey.ShouldResemble, []int{0})
-		convey.So(GetAffectedNPU("ens2f0"), convey.ShouldResemble, []int{4})
-		convey.So(GetAffectedNPU("ens0f2"), convey.ShouldBeEmpty)
 	})
 }
 
-func TestInitNpuNicMappingParseErrorAndEmptyEth(t *testing.T) {
-	convey.Convey("When JSON is invalid, mapping stays empty", t, func() {
-		resetPatches := resetMappingState()
-		defer resetPatches.Reset()
-
-		patches := gomonkey.ApplyFunc(ascutils.RealFileChecker,
-			func(_ string, _, _ bool, _ int64) (string, error) {
-				return npuNicMappingConfigPath, nil
-			})
-		defer patches.Reset()
-		rfPatches := gomonkey.ApplyFunc(os.ReadFile, func(_ string) ([]byte, error) {
-			return []byte("{invalid json"), nil
-		})
-		defer rfPatches.Reset()
-
-		InitNpuNicMapping()
-		convey.So(GetAffectedNPU("enp0s1"), convey.ShouldBeEmpty)
+func TestLoadNpuNicMappingReadError(t *testing.T) {
+	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+		return nil, errors.New("read error")
 	})
+	defer patches.Reset()
 
-	convey.Convey("When ethName is empty or unknown, GetAffectedNPU returns empty slice", t, func() {
-		resetPatches := resetMappingState()
-		defer resetPatches.Reset()
-
-		data, _ := json.Marshal(NpuNicMapping{
-			NpuNics: []NpuNicItem{{NpuId: 2, NicNames: []string{"enp0s9"}}},
+	convey.Convey("Given reading the mapping file fails", t, func() {
+		_, err := loadNpuNicMapping()
+		convey.Convey("Then an error should be returned", func() {
+			convey.So(err, convey.ShouldNotBeNil)
 		})
-		patches := gomonkey.ApplyFunc(ascutils.RealFileChecker,
-			func(_ string, _, _ bool, _ int64) (string, error) {
-				return npuNicMappingConfigPath, nil
-			})
-		defer patches.Reset()
-		rfPatches := gomonkey.ApplyFunc(os.ReadFile, func(_ string) ([]byte, error) { return data, nil })
-		defer rfPatches.Reset()
+	})
+}
 
-		InitNpuNicMapping()
-		convey.So(GetAffectedNPU(""), convey.ShouldResemble, []int{})
-		convey.So(GetAffectedNPU("unknown-eth"), convey.ShouldResemble, []int{})
-		convey.So(GetAffectedNPU("enp0s9"), convey.ShouldResemble, []int{2})
+func TestLoadNpuNicMappingParseError(t *testing.T) {
+	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+		return []byte(`invalid json`), nil
+	})
+	defer patches.Reset()
+
+	convey.Convey("Given the mapping file contains invalid JSON", t, func() {
+		_, err := loadNpuNicMapping()
+		convey.Convey("Then a parse error should be returned", func() {
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestGetNicNamesConfigNotFound(t *testing.T) {
+	resetNpuNicMappingCache()
+
+	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+		return nil, nil
+	})
+	defer patches.Reset()
+
+	convey.Convey("Given the mapping config file does not exist", t, func() {
+		_, err := GetNicNames(0)
+		convey.Convey("Then an error should be returned", func() {
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestReadCardType(t *testing.T) {
+	convey.Convey("Given /sys/class/net paths for a NIC", t, func() {
+		convey.Convey("When device/card_type exists, it should be used", func() {
+			patches := gomonkey.ApplyFunc(os.ReadFile, func(name string) ([]byte, error) {
+				convey.So(name, convey.ShouldEqual, "/sys/class/net/ens0f0/device/card_type")
+				return []byte("A5Server\n"), nil
+			})
+			defer patches.Reset()
+
+			cardType, ok := readCardType("ens0f0")
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(cardType, convey.ShouldEqual, "A5Server")
+		})
+
+		convey.Convey("When device/card_type is missing but card_type exists, it should fall back", func() {
+			calls := 0
+			patches := gomonkey.ApplyFunc(os.ReadFile, func(name string) ([]byte, error) {
+				calls++
+				if calls == 1 {
+					return nil, errors.New("no such file")
+				}
+				convey.So(name, convey.ShouldEqual, "/sys/class/net/ens0f0/card_type")
+				return []byte("A5Pod200G\n"), nil
+			})
+			defer patches.Reset()
+
+			cardType, ok := readCardType("ens0f0")
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(cardType, convey.ShouldEqual, "A5Pod200G")
+		})
+
+		convey.Convey("When both paths fail, ok should be false", func() {
+			patches := gomonkey.ApplyFunc(os.ReadFile, func(name string) ([]byte, error) {
+				return nil, errors.New("no such file")
+			})
+			defer patches.Reset()
+
+			_, ok := readCardType("ens0f0")
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestLoadNpuNicMappingByForm(t *testing.T) {
+	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+		return []byte(`[
+			{"productType":"Server","npuNics":[{"npuId":0,"nicNames":["ens2f0","ens0f2"]}]},
+			{"productType":"PoD","npuNics":[{"npuId":1,"nicNames":["ens2f1","ens0f0"]}]}
+		]`), nil
+	}).ApplyFunc(machineType, func() (string, error) {
+		return "Server", nil
+	})
+	defer patches.Reset()
+
+	convey.Convey("Given a per-form mapping config", t, func() {
+		convey.Convey("When the current machine type matches a product", func() {
+			mapping, err := loadNpuNicMapping()
+			convey.Convey("Then the mapping of the matching form should be returned", func() {
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(mapping, convey.ShouldNotBeNil)
+				convey.So(len(mapping.NpuNics), convey.ShouldEqual, 1)
+				convey.So(mapping.NpuNics[0].NpuId, convey.ShouldEqual, 0)
+				convey.So(mapping.NpuNics[0].NicNames, convey.ShouldResemble, []string{"ens2f0", "ens0f2"})
+			})
+		})
+	})
+}
+
+func TestLoadNpuNicMappingFormNotFound(t *testing.T) {
+	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+		return []byte(`[{"productType":"PoD","npuNics":[{"npuId":1,"nicNames":["ens2f1"]}]}]`), nil
+	}).ApplyFunc(machineType, func() (string, error) {
+		return "Server", nil
+	})
+	defer patches.Reset()
+
+	convey.Convey("Given a per-form mapping config without the current machine type", t, func() {
+		convey.Convey("Then an error should be returned", func() {
+			_, err := loadNpuNicMapping()
+			convey.So(err, convey.ShouldNotBeNil)
+		})
 	})
 }

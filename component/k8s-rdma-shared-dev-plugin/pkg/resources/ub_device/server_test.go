@@ -28,6 +28,7 @@ import (
 	registerapi "k8s.io/kubelet/pkg/apis/pluginregistration/v1"
 
 	"ascend-common/common-utils/hwlog"
+
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
 )
@@ -87,7 +88,7 @@ func TestNewUbResourceServerInvalidRdmaHcaMax(t *testing.T) {
 	config := &types.UserConfig{RdmaHcaMax: -1}
 
 	convey.Convey("When rdmaHcaMax is negative", t, func() {
-		_, err := NewUbResourceServer(config, nil, false, "sock", false)
+		_, err := NewUbResourceServer(config, nil, false, "sock", false, false, nil)
 		convey.Convey("Then an error should be returned", func() {
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(err.Error(), convey.ShouldContainSubstring, "rdmaHcaMax")
@@ -99,7 +100,7 @@ func TestNewUbResourceServerEmptyResourcePrefix(t *testing.T) {
 	config := &types.UserConfig{RdmaHcaMax: 100, ResourcePrefix: ""}
 
 	convey.Convey("When resourcePrefix is empty", t, func() {
-		_, err := NewUbResourceServer(config, nil, false, "sock", false)
+		_, err := NewUbResourceServer(config, nil, false, "sock", false, false, nil)
 		convey.Convey("Then an error should be returned", func() {
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(err.Error(), convey.ShouldContainSubstring, "resourcePrefix")
@@ -124,7 +125,7 @@ func TestNewUbResourceServerSuccess(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("When valid config is provided", t, func() {
-		rs, err := NewUbResourceServer(config, devices, false, "sock", false)
+		rs, err := NewUbResourceServer(config, devices, false, "sock", false, false, nil)
 		convey.Convey("Then server should be created successfully", func() {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(rs, convey.ShouldNotBeNil)
@@ -146,7 +147,7 @@ func TestNewUbResourceServerWatchMode(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("When watchMode is true", t, func() {
-		rs, err := NewUbResourceServer(config, nil, true, "sock", false)
+		rs, err := NewUbResourceServer(config, nil, true, "sock", false, false, nil)
 		convey.Convey("Then server should be created in watch mode", func() {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(rs, convey.ShouldNotBeNil)
@@ -168,7 +169,7 @@ func TestNewUbResourceServerWithCDI(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("When useCdi is true", t, func() {
-		rs, err := NewUbResourceServer(config, nil, false, "sock", true)
+		rs, err := NewUbResourceServer(config, nil, false, "sock", true, false, nil)
 		convey.Convey("Then server should be created with CDI enabled", func() {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(rs, convey.ShouldNotBeNil)
@@ -523,93 +524,151 @@ func TestGetUbDevicesSpecWithRdmaSpec(t *testing.T) {
 	})
 }
 
-// ---------- reconcileDevs ----------
+func TestCreateUbExclDevices(t *testing.T) {
+	devices := []types.Device{
+		&ubDevice{ubID: "ub0", ifName: "enp0s1"},
+		&ubDevice{ubID: "ub1", ifName: "enp0s2"},
+	}
 
-func TestReconcileDevsPreservesHealthByDeviceName(t *testing.T) {
+	convey.Convey("When creating exclusive devices", t, func() {
+		devs := createUbExclDevices(devices)
+		convey.Convey("Then devices should use the raw UB device IDs", func() {
+			convey.So(len(devs), convey.ShouldEqual, 2)
+			convey.So(devs[0].ID, convey.ShouldEqual, "ub0")
+			convey.So(devs[1].ID, convey.ShouldEqual, "ub1")
+			convey.So(devs[0].Health, convey.ShouldEqual, pluginapi.Healthy)
+		})
+	})
+}
+
+func TestCreateUbExclDevicesEmpty(t *testing.T) {
+	convey.Convey("When creating exclusive devices with empty list", t, func() {
+		devs := createUbExclDevices([]types.Device{})
+		convey.Convey("Then empty device slice should be returned", func() {
+			convey.So(len(devs), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+func TestUbResourceServerAllocateExclMode(t *testing.T) {
 	rs := newTestUbServer()
+	rs.exclMode = true
 	rs.ubDevices = []types.Device{
-		&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
-		&ubDevice{ubID: "ub1", deviceName: "mlx5_1", ifName: "enp0s2"},
-	}
-	rs.devs = []*pluginapi.Device{
-		{ID: "0", Health: pluginapi.Unhealthy},
-		{ID: "1", Health: pluginapi.Healthy},
+		&ubDevice{ubID: "ub0", rdmaSpec: []*pluginapi.DeviceSpec{
+			{HostPath: "/dev/ub0", ContainerPath: "/dev/ub0", Permissions: "rw"},
+		}},
+		&ubDevice{ubID: "ub1", rdmaSpec: []*pluginapi.DeviceSpec{
+			{HostPath: "/dev/ub1", ContainerPath: "/dev/ub1", Permissions: "rw"},
+		}},
 	}
 
-	convey.Convey("When device order changes, Health is preserved by deviceName", t, func() {
-		newDevices := []types.Device{
-			&ubDevice{ubID: "ub1", deviceName: "mlx5_1", ifName: "enp0s2"},
-			&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
+	patches := gomonkey.ApplyPrivateMethod((*ubResourceServer)(nil), "allocateByNpu",
+		func(rs *ubResourceServer, ctx context.Context, deviceIDs []string) error {
+			return nil
+		})
+	defer patches.Reset()
+
+	convey.Convey("When Allocate is called in exclusive mode", t, func() {
+		reqs := &pluginapi.AllocateRequest{
+			ContainerRequests: []*pluginapi.ContainerAllocateRequest{
+				{DevicesIDs: []string{"ub0"}},
+			},
 		}
-		result := rs.reconcileDevs(newDevices)
-		convey.So(len(result), convey.ShouldEqual, 2)
-		convey.So(result[0].Health, convey.ShouldEqual, pluginapi.Healthy)
-		convey.So(result[1].Health, convey.ShouldEqual, pluginapi.Unhealthy)
+		resp, err := rs.Allocate(context.Background(), reqs)
+		convey.Convey("Then only mapped devices should be allocated", func() {
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(resp.ContainerResponses), convey.ShouldEqual, 1)
+			convey.So(len(resp.ContainerResponses[0].Devices), convey.ShouldEqual, 1)
+			convey.So(resp.ContainerResponses[0].Devices[0].HostPath, convey.ShouldEqual, "/dev/ub0")
+		})
 	})
 }
 
-func TestReconcileDevsNewDeviceDefaultsHealthy(t *testing.T) {
+func TestUbResourceServerAllocateExclModeMultipleDevices(t *testing.T) {
 	rs := newTestUbServer()
+	rs.exclMode = true
 	rs.ubDevices = []types.Device{
-		&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
+		&ubDevice{ubID: "ub0", rdmaSpec: []*pluginapi.DeviceSpec{
+			{HostPath: "/dev/ub0", ContainerPath: "/dev/ub0", Permissions: "rw"},
+		}},
+		&ubDevice{ubID: "ub1", rdmaSpec: []*pluginapi.DeviceSpec{
+			{HostPath: "/dev/ub1", ContainerPath: "/dev/ub1", Permissions: "rw"},
+		}},
 	}
-	rs.devs = []*pluginapi.Device{{ID: "0", Health: pluginapi.Unhealthy}}
 
-	convey.Convey("When a new device appears, it defaults to Healthy", t, func() {
-		newDevices := []types.Device{
-			&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
-			&ubDevice{ubID: "ub1", deviceName: "mlx5_1", ifName: "enp0s2"},
+	patches := gomonkey.ApplyPrivateMethod((*ubResourceServer)(nil), "allocateByNpu",
+		func(rs *ubResourceServer, ctx context.Context, deviceIDs []string) error {
+			return nil
+		})
+	defer patches.Reset()
+
+	convey.Convey("When Allocate requests multiple devices in exclusive mode", t, func() {
+		reqs := &pluginapi.AllocateRequest{
+			ContainerRequests: []*pluginapi.ContainerAllocateRequest{
+				{DevicesIDs: []string{"ub0", "ub1"}},
+			},
 		}
-		result := rs.reconcileDevs(newDevices)
-		convey.So(len(result), convey.ShouldEqual, 2)
-		convey.So(result[0].Health, convey.ShouldEqual, pluginapi.Unhealthy)
-		convey.So(result[1].Health, convey.ShouldEqual, pluginapi.Healthy)
+		resp, err := rs.Allocate(context.Background(), reqs)
+		convey.Convey("Then all mapped devices should be allocated", func() {
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(resp.ContainerResponses), convey.ShouldEqual, 1)
+			convey.So(len(resp.ContainerResponses[0].Devices), convey.ShouldEqual, 2)
+		})
 	})
 }
 
-// ---------- MarkDevicesUnhealthy ----------
-
-func TestMarkDevicesUnhealthyMarksFaultyAndRestoresHealthy(t *testing.T) {
+func TestUbResourceServerAllocateExclModeNoFallback(t *testing.T) {
 	rs := newTestUbServer()
+	rs.exclMode = true
 	rs.ubDevices = []types.Device{
-		&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
-		&ubDevice{ubID: "ub1", deviceName: "mlx5_1", ifName: "enp0s2"},
+		&ubDevice{ubID: "ub0", rdmaSpec: []*pluginapi.DeviceSpec{
+			{HostPath: "/dev/ub0", ContainerPath: "/dev/ub0", Permissions: "rw"},
+		}},
 	}
-	rs.devs = []*pluginapi.Device{
-		{ID: "0", Health: pluginapi.Healthy},
-		{ID: "1", Health: pluginapi.Unhealthy},
-	}
-	rs.health = make(chan *pluginapi.Device, 1)
 
-	convey.Convey("When marking mlx5_0 faulty and mlx5_1 restored", t, func() {
-		changed := rs.MarkDevicesUnhealthy([]string{"mlx5_0"})
-		convey.So(changed, convey.ShouldEqual, 2)
-		convey.So(rs.devs[0].Health, convey.ShouldEqual, pluginapi.Unhealthy)
-		convey.So(rs.devs[1].Health, convey.ShouldEqual, pluginapi.Healthy)
+	patches := gomonkey.ApplyPrivateMethod((*ubResourceServer)(nil), "allocateByNpu",
+		func(rs *ubResourceServer, ctx context.Context, deviceIDs []string) error {
+			return errors.New("NPU mapping failed")
+		})
+	defer patches.Reset()
+
+	convey.Convey("When NPU mapping allocation fails in exclusive mode", t, func() {
+		reqs := &pluginapi.AllocateRequest{
+			ContainerRequests: []*pluginapi.ContainerAllocateRequest{
+				{DevicesIDs: []string{"ub0"}},
+			},
+		}
+		resp, err := rs.Allocate(context.Background(), reqs)
+		convey.Convey("Then Allocate should fail without fallback to device IDs", func() {
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "NPU mapping failed")
+			convey.So(resp, convey.ShouldBeNil)
+		})
 	})
 }
 
-func TestMarkDevicesUnhealthyNoChangeReturnsZero(t *testing.T) {
-	rs := newTestUbServer()
-	rs.ubDevices = []types.Device{
-		&ubDevice{ubID: "ub0", deviceName: "mlx5_0", ifName: "enp0s1"},
+func TestNewUbResourceServerExclMode(t *testing.T) {
+	config := &types.UserConfig{
+		ResourceName:   "ub_dev",
+		ResourcePrefix: "mindx.com",
+		RdmaHcaMax:     100,
 	}
-	rs.devs = []*pluginapi.Device{{ID: "0", Health: pluginapi.Unhealthy}}
-	rs.health = make(chan *pluginapi.Device, 1)
+	devices := []types.Device{
+		&ubDevice{ubID: "ub0", ifName: "enp0s1"},
+		&ubDevice{ubID: "ub1", ifName: "enp0s2"},
+	}
 
-	convey.Convey("When device already Unhealthy and marked faulty again", t, func() {
-		changed := rs.MarkDevicesUnhealthy([]string{"mlx5_0"})
-		convey.So(changed, convey.ShouldEqual, 0)
-		convey.So(rs.devs[0].Health, convey.ShouldEqual, pluginapi.Unhealthy)
-	})
-}
+	patches := gomonkey.ApplyFunc(getUbDevicesSpec,
+		func(devices []types.Device) []*pluginapi.DeviceSpec {
+			return []*pluginapi.DeviceSpec{}
+		})
+	defer patches.Reset()
 
-func TestMarkDevicesUnhealthyEmptyListReturnsZero(t *testing.T) {
-	rs := newTestUbServer()
-	rs.health = make(chan *pluginapi.Device, 1)
-
-	convey.Convey("When hcaNames is empty", t, func() {
-		changed := rs.MarkDevicesUnhealthy([]string{})
-		convey.So(changed, convey.ShouldEqual, 0)
+	convey.Convey("When valid config is provided with exclusive mode", t, func() {
+		rs, err := NewUbResourceServer(config, devices, false, "sock", false, true, nil)
+		convey.Convey("Then server should be created with exclusive devices", func() {
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(rs, convey.ShouldNotBeNil)
+		})
 	})
 }

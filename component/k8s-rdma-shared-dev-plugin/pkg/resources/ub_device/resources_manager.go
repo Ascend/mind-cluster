@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/vishvananda/netlink"
+	"k8s.io/client-go/kubernetes"
 
 	"ascend-common/common-utils/hwlog"
 
@@ -60,6 +61,8 @@ type ubResourceManager struct {
 	rediscoverCh   chan struct{}
 	cachedHcaNames []string
 	hcaNamesMu     sync.RWMutex
+	exclMode       bool
+	k8sClient      *kubernetes.Clientset
 }
 
 // UbDeviceInfo holds information about a UB device
@@ -74,7 +77,7 @@ type UbDeviceInfo struct {
 }
 
 // NewUbResourceManager returns a new instance of UbResourceManager
-func NewUbResourceManager(configFile string, useCdi bool) UbResourceManager {
+func NewUbResourceManager(configFile string, useCdi bool, exclMode bool, k8sClient *kubernetes.Clientset) UbResourceManager {
 	coreManager := core.NewCoreResourceManager(configFile, rdmaUbResourcePrefix, socketSuffix, useCdi)
 	util.InitNpuNicMapping()
 
@@ -84,6 +87,8 @@ func NewUbResourceManager(configFile string, useCdi bool) UbResourceManager {
 		netlinkManager:      &netlinkManager{},
 		rds:                 newUbRdmaDeviceSpec(common.RequiredRdmaDevices),
 		rediscoverCh:        make(chan struct{}, 1),
+		exclMode:            exclMode,
+		k8sClient:           k8sClient,
 	}
 }
 
@@ -258,7 +263,7 @@ func (rm *ubResourceManager) InitServers() error {
 			}
 		}
 
-		rs, err := NewUbResourceServer(config, filteredDevices, false, socketSuffix, rm.GetUseCdi())
+		rs, err := NewUbResourceServer(config, filteredDevices, false, socketSuffix, rm.GetUseCdi(), rm.exclMode, rm.k8sClient)
 		if err != nil {
 			return err
 		}

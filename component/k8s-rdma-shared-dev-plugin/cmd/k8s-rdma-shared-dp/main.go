@@ -84,6 +84,7 @@ var (
 	// Other flag variables
 	configFilePath string
 	useCdi         bool
+	ubExclMode     bool
 	logLevel       int
 	logMaxBackups  int
 	logMaxAge      int
@@ -116,6 +117,7 @@ func initFlags() {
 	// Other command line flags using value variables
 	flag.StringVar(&configFilePath, "config-file", common.DefaultConfigFilePath, "Path to device plugin config file")
 	flag.BoolVar(&useCdi, "use-cdi", false, "Use Container Device Interface to expose devices in containers")
+	flag.BoolVar(&ubExclMode, "ub-excl-mode", false, "Use exclusive mode for UB devices (default: shared mode)")
 
 	// Log related flags
 	flag.IntVar(&logLevel, "logLevel", defaultLogLevel, "Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical (default 0)")
@@ -244,14 +246,17 @@ func main() {
 
 	// Initialize and start UB device manager if enabled
 	if enableUb {
-		rm, stopPeriodicUpdate = initAndStartDevices("UB", func() types.ResourceManager {
-			return ub_device.NewUbResourceManager(configFilePath, useCdi)
-		})
+		hwlog.RunLog.Infof("UB device mode: excl=%v", ubExclMode)
 
+		// Create k8s client for NPU-based device allocation in exclusive mode
 		k8sClient, err := createK8sClient()
 		if err != nil {
 			hwlog.RunLog.Errorf("Failed to create k8s client: %v", err)
 		}
+
+		rm, stopPeriodicUpdate = initAndStartDevices("UB", func() types.ResourceManager {
+			return ub_device.NewUbResourceManager(configFilePath, useCdi, ubExclMode, k8sClient)
+		})
 
 		if ubRm, ok := rm.(ub_device.UbResourceManager); ok {
 			if k8sClient != nil {
