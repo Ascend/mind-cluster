@@ -216,7 +216,7 @@ const (
 	NetworkSuccess = 0
 
 	// MaxProcNum process number in device side
-	MaxProcNum = 32
+	MaxProcNum = 64
 	// UnitMB MB
 	UnitMB float64 = 1024 * 1024
 
