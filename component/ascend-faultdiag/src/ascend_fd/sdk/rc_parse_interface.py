@@ -172,8 +172,6 @@ def multiprocess_log_lines(pid_data_list: list, rc_parser_list: list):
     :param rc_parser_list: list or RootClusterParser
     :return: a list of pid parser for each server and failed details
     """
-    if not rc_parser_list:
-        return [], {}
     task_id = init_sdk_task()
     multiprocess_job = MultiProcessJob(
         "ROOT_CLUSTER_PARSE_INTERFACE", pool_size=len(rc_parser_list), task_id=task_id, failed_raise=False

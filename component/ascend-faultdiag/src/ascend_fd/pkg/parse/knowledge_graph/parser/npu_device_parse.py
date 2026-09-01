@@ -74,9 +74,6 @@ class BaseNpuLogParser(FileParser):
         """
         events_list = []
         kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
-        if not file_source_list:
-            kg_logger.info("No %s files matched, skip the %s log parse job.", self.SOURCE_FILE, self.SOURCE_FILE)
-            return [], {}
         if self.is_sdk_input:
             results = dict()
             for idx, file_source in enumerate(file_source_list):
@@ -88,6 +85,9 @@ class BaseNpuLogParser(FileParser):
                     }
                 )
         else:
+            if not file_source_list:
+                kg_logger.info("No %s files matched, skip the %s log parse job.", self.SOURCE_FILE, self.SOURCE_FILE)
+                return [], {}
             multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_source_list), task_id=task_id)
             for idx, file_source in enumerate(file_source_list):
                 multiprocess_job.add_security_job(
