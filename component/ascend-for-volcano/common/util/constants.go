@@ -244,6 +244,11 @@ const (
 )
 
 const (
+	// ParameterPlaneUnhealthyToleranceAnnoKey annotation key for tolerating parameter plane unhealthy NPU
+	ParameterPlaneUnhealthyToleranceAnnoKey = "huawei.com/parameterplane.unhealthy-tolerance"
+)
+
+const (
 	// ProcessRecoverExternalModeKey indicate the pod which is deleted by external platform in the process recover
 	ProcessRecoverExternalModeKey = "ProcessRecoverStrategy"
 )

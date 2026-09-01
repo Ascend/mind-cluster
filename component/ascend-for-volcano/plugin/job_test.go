@@ -1848,3 +1848,105 @@ func TestIsCachedSuperPodsValid(t *testing.T) {
 		})
 	}
 }
+
+// TestSetParameterPlaneUnhealthyTolerance tests that setParameterPlaneUnhealthyTolerance correctly
+// populates NPUJob.ParameterPlaneUnhealthyTolerance from annotation.
+// Effective for huawei.com/Ascend910 and huawei.com/npu resource types.
+func TestSetParameterPlaneUnhealthyTolerance(t *testing.T) {
+	tests := []struct {
+		name        string
+		reqNPUName  string
+		annotation  map[string]string
+		npuJobNil   bool
+		wantIgnored bool
+	}{
+		{
+			name:        "01-Ascend910 with annotation=true should set true",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "true"},
+			wantIgnored: true,
+		},
+		{
+			name:        "02-Ascend910 with annotation=false should set false",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "false"},
+			wantIgnored: false,
+		},
+		{
+			name:        "03-Ascend910 with annotation missing should set false",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{},
+			wantIgnored: false,
+		},
+		{
+			name:        "04-Ascend910 with annotation nil should set false",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  nil,
+			wantIgnored: false,
+		},
+		{
+			name:        "05-Ascend910 with invalid value should set false",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "yes"},
+			wantIgnored: false,
+		},
+		{
+			name:        "06-Ascend910 with case-sensitive value True should set false",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "True"},
+			wantIgnored: false,
+		},
+		{
+			name:        "07-huawei.com/npu with annotation=true should set true",
+			reqNPUName:  util.NPUCardName,
+			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "true"},
+			wantIgnored: true,
+		},
+		{
+			name:        "08-huawei.com/npu with annotation=false should set false",
+			reqNPUName:  util.NPUCardName,
+			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "false"},
+			wantIgnored: false,
+		},
+		{
+			name:        "09-Ascend310P with annotation=true should keep false (not supported)",
+			reqNPUName:  util.NPU310PCardName,
+			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "true"},
+			wantIgnored: false,
+		},
+		{
+			name:        "10-NPUJob nil should not panic and keep false",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "true"},
+			npuJobNil:   true,
+			wantIgnored: false,
+		},
+		{
+			name:        "11-Ascend910 with annotation=true and other keys should set true",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "true", "other-key": "val"},
+			wantIgnored: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sJob := &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					ComJob: util.ComJob{Annotation: tt.annotation},
+				},
+			}
+			if !tt.npuJobNil {
+				sJob.NPUJob = &util.NPUJob{ReqNPUName: tt.reqNPUName}
+			}
+			sJob.setParameterPlaneUnhealthyTolerance()
+			got := false
+			if sJob.NPUJob != nil {
+				got = sJob.NPUJob.ParameterPlaneUnhealthyTolerance
+			}
+			if got != tt.wantIgnored {
+				t.Errorf("setParameterPlaneUnhealthyTolerance() got=%v, want=%v", got, tt.wantIgnored)
+			}
+		})
+	}
+}

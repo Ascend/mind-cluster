@@ -219,7 +219,7 @@ func isNPUSchedulableByPreemption(tp *huaweiNPUPlugin, taskInfo *api.TaskInfo,
 	}
 	_, total, _ := vcNode.GetChipCount(v1.ResourceName(vcTask.ReqNPUName))
 	// for distributed job, need to remove the net unhealthy npu from total
-	if vcJob.NPUJob.NPUTaskNum > 1 {
+	if vcJob.NPUJob.NPUTaskNum > 1 && !vcJob.NPUJob.ParameterPlaneUnhealthyTolerance {
 		total = subtractNetUnhealthyNPU(vcNode, vcTask.ReqNPUName, total)
 	}
 	result := vcTask.ReqNPUNum <= total

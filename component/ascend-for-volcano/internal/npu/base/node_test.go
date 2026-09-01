@@ -219,3 +219,58 @@ func TestGetUnhealthyNPU(t *testing.T) {
 		})
 	}
 }
+
+type testCaseForNodeParameterPlaneUnhealthyTolerance struct {
+	name               string
+	disFlag            bool
+	isNetworkFault     bool
+	parameterPlaneUnhealthyTolerance bool
+	want               []int
+}
+
+func TestGetUsableTopFromNodeParameterPlaneUnhealthyTolerance(t *testing.T) {
+	const annoName = util.NPU910CardName
+	nodeAnno := map[string]string{
+		annoName:            "Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7",
+		networkUnhealthy910: "Ascend910-0,Ascend910-1",
+	}
+
+	tests := []testCaseForNodeParameterPlaneUnhealthyTolerance{
+		{name: "01-disFlag=true, networkFault=true, ignore=true: skip filter, return all 8",
+			disFlag: true, isNetworkFault: true, parameterPlaneUnhealthyTolerance: true,
+			want: []int{0, 1, 2, 3, 4, 5, 6, 7}},
+		{name: "02-disFlag=true, networkFault=true, ignore=false: filter out 0,1, return 6",
+			disFlag: true, isNetworkFault: true, parameterPlaneUnhealthyTolerance: false,
+			want: []int{2, 3, 4, 5, 6, 7}},
+		{name: "03-disFlag=false, networkFault=true, ignore=true: skip filter (disFlag short-circuit)",
+			disFlag: false, isNetworkFault: true, parameterPlaneUnhealthyTolerance: true,
+			want: []int{0, 1, 2, 3, 4, 5, 6, 7}},
+		{name: "04-disFlag=true, networkFault=false, ignore=true: skip filter (networkFault short-circuit)",
+			disFlag: true, isNetworkFault: false, parameterPlaneUnhealthyTolerance: true,
+			want: []int{0, 1, 2, 3, 4, 5, 6, 7}},
+		{name: "05-disFlag=true, networkFault=false, ignore=false: skip filter (networkFault short-circuit)",
+			disFlag: true, isNetworkFault: false, parameterPlaneUnhealthyTolerance: false,
+			want: []int{0, 1, 2, 3, 4, 5, 6, 7}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := createNPUHandler()
+			tp.SetPluginName("test-plugin")
+			tp.SetAnnoName(util.NPU910CardName)
+			tp.SetAnnoPreVal(util.NPU910CardNamePre)
+			tp.ReqNPUName = util.NPU910CardName
+			tp.IsNetworkFaultAttention = tt.isNetworkFault
+			tp.MaxNodeNPUNum = 8
+			tp.NPUJob.ParameterPlaneUnhealthyTolerance = tt.parameterPlaneUnhealthyTolerance
+
+			got, err := tp.GetUsableTopFromNode(createTestNode(nodeAnno), tt.disFlag)
+			if err != nil {
+				t.Fatalf("GetUsableTopFromNode() unexpected err: %v", err)
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetUsableTopFromNode() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

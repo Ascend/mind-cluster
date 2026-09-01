@@ -46,7 +46,7 @@ func (tp *NPUHandler) GetUsableTopFromNode(node plugin.NPUNode, disFlag bool) ([
 		klog.V(util.LogDebugLev).Infof("%s GetUsableTopFromNode err: %s", tp.GetPluginName(), err.Error())
 		return nil, err
 	}
-	if !disFlag || !tp.IsNetworkFaultAttention {
+	if !disFlag || !tp.IsNetworkFaultAttention || tp.ParameterPlaneUnhealthyTolerance {
 		sort.Ints(nodeTop)
 		return nodeTop, nil
 	}
