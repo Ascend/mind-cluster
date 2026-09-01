@@ -1,6 +1,6 @@
-﻿# NodeD<a name="ZH-CN_TOPIC_0000002479226406"></a>
+# NodeD<a name="ZH-CN_TOPIC_0000002479226406"></a>
 
-- 使用整卡调度、静态vNPU调度、动态vNPU调度、推理卡故障恢复、推理卡故障重调度、断点续训或弹性训练时，必须安装NodeD。
+- 使用整卡调度、静态vNPU调度、动态vNPU调度、芯片故障恢复、重调度、断点续训或弹性训练时，必须安装NodeD。
 - 仅使用容器化支持和资源监测的用户，可以不安装NodeD，请直接跳过本章节。
 - 使用慢节点&慢网络故障功能前，需安装NodeD，详细说明请参见[慢节点&慢网络故障](../../../04_usage/11_fault_detection_and_diagnosis/02_fault_types/05_performance_degradation.md#慢节点慢网络故障)。
 

@@ -1,6 +1,6 @@
-﻿# ClusterD<a name="ZH-CN_TOPIC_0000002511346341"></a>
+# ClusterD<a name="ZH-CN_TOPIC_0000002511346341"></a>
 
-- 使用整卡调度、静态vNPU调度、动态vNPU调度、断点续训、弹性训练、推理卡故障恢复或推理卡故障重调度的用户，必须安装ClusterD。集群中同时存在Ascend Device Plugin和NodeD组件时，ClusterD才能提供全量的信息收集服务。
+- 使用整卡调度、静态vNPU调度、动态vNPU调度、断点续训、弹性训练、芯片故障恢复或重调度的用户，必须安装ClusterD。集群中同时存在Ascend Device Plugin和NodeD组件时，ClusterD才能提供全量的信息收集服务。
 - 在安装ClusterD时，建议提前安装Volcano。若ClusterD先于Volcano安装，ClusterD所在的Pod可能会CrashLoopBackOff，需等待Volcano的Pod启动后，ClusterD才会恢复正常。
 - 仅使用容器化支持和资源监测的用户，可以不安装ClusterD，请直接跳过本章节。
 - 启动ClusterD之前，需要先启动Ascend Operator。ClusterD需要感知Ascend Job资源。

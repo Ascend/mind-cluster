@@ -7,7 +7,7 @@
 **前提条件<a name="zh-cn_topic_0000002194466236_section138036504533"></a>**
 
 - 在相应节点上完成以下组件的安装：Ascend Docker Runtime、Ascend Operator、ClusterD、Ascend Device Plugin和Volcano（以上MindCluster组件版本均需与TaskD配套），详细安装步骤请参见[安装部署](../../../03_installation_guide/02_installation/00_helm_installation.md)。
-- 在容器内安装TorchNPU（7.1.RC1及以上版本）、CANN（8.2.RC1及以上版本）、TaskD和MindIO（7.2.RC1及以上版本），详情请参见[制作MindSpeed-LLM训练镜像（PyTorch框架）](../../04_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)。
+- 在容器内安装TorchNPU（7.1.RC1及以上版本）、CANN（8.2.RC1及以上版本）、TaskD和MindIO（7.2.RC1及以上版本），详情请参见[制作MindSpeed-LLM训练镜像（PyTorch框架）](../../04_fault_recovery/01_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)。
 
 **操作步骤<a name="section188080175496"></a>**
 
@@ -149,7 +149,7 @@
 **前提条件<a name="zh-cn_topic_0000002194466236_section138036504533-duplicate-2"></a>**
 
 - 在相应节点上完成以下组件的安装：Ascend Docker Runtime、Ascend Operator、ClusterD、Ascend Device Plugin和Volcano（以上MindCluster组件版本均需与TaskD配套），详细安装步骤请参见[安装部署](../../../03_installation_guide/02_installation/00_helm_installation.md)。
-- 在容器内安装MindSpore（2.7.0及以上版本）、CANN（8.2.RC1及以上版本）、TaskD和MindIO（7.2.RC1及以上版本），详情请参见[制作MindFormers训练镜像（MindSpore框架）](../../04_resumable_training/04_examples_and_verification/02_mindspore_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469-mindspore)。
+- 在容器内安装MindSpore（2.7.0及以上版本）、CANN（8.2.RC1及以上版本）、TaskD和MindIO（7.2.RC1及以上版本），详情请参见[制作MindFormers训练镜像（MindSpore框架）](../../04_fault_recovery/01_resumable_training/04_examples_and_verification/02_mindspore_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469-mindspore)。
 
 **操作步骤<a name="section9479182019317"></a>**
 

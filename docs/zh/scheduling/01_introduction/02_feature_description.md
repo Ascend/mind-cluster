@@ -37,7 +37,7 @@ NPU Exporter
 
 **功能特点<a name="section_fault_detection_features"></a>**
 
-故障检测能力用于获取集群和训练业务的故障状态，供断点续训、推理故障重调度等下游特性根据检测结果进行故障处理。当前，故障检测特性主要提供昇腾硬件故障、训练业务故障和其他故障发送方故障的检测能力。
+故障检测能力用于获取集群和训练或推理业务的故障状态，供断点续训、芯片故障恢复、重调度等下游特性根据检测结果进行故障处理。当前，故障检测特性主要提供昇腾硬件故障、训练业务故障和其他故障发送方故障的检测能力。
 
 **所需组件<a name="section_fault_detection_components"></a>**
 
@@ -146,7 +146,7 @@ NPU Exporter
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[多级调度](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md)章节进行操作。
 
-### 推理卡故障恢复<a name="ZH-CN_TOPIC_0000002479226952"></a>
+### 芯片故障恢复<a name="ZH-CN_TOPIC_0000002479226952"></a>
 
 **功能特点<a name="section113779818313"></a>**
 
@@ -163,13 +163,13 @@ NPU Exporter
 **使用说明<a name="section74221327111220"></a>**
 
 - 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-- 特性使用指导请参见[推理卡故障恢复](../04_usage/03_basic_scheduling/06_recovery_of_inference_card_faults.md)章节进行操作。
+- 特性使用指导请参见[芯片故障恢复](../04_usage/04_fault_recovery/00_chip_fault_recovery.md)章节进行操作。
 
-### 推理卡故障重调度<a name="ZH-CN_TOPIC_0000002511346875"></a>
+### 重调度<a name="ZH-CN_TOPIC_0000002511346875"></a>
 
 **功能特点<a name="section119259203315"></a>**
 
-集群调度组件管理的推理NPU资源出现故障后，集群调度组件将对故障资源（对应NPU）进行隔离并自动进行重调度。
+集群调度组件管理的NPU资源出现故障后，集群调度组件将对故障资源（对应NPU）进行隔离并自动进行重调度。
 
 **所需组件<a name="section15655185785119"></a>**
 
@@ -184,7 +184,7 @@ NPU Exporter
 **使用说明<a name="section18894171918127"></a>**
 
 - 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-- 特性使用指导请参见[推理卡故障重调度](../04_usage/03_basic_scheduling/05_rescheduling_upon_inference_card_faults.md)章节进行操作。
+- 特性使用指导请参见[重调度](../04_usage/03_basic_scheduling/05_rescheduling.md)章节进行操作。
 
 ## 断点续训<a name="ZH-CN_TOPIC_0000002511346867"></a>
 
@@ -214,8 +214,8 @@ NPU Exporter
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-2. 特性使用指导请参见[断点续训](../04_usage/04_resumable_training/00_feature_description.md)章节进行操作。
-3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/04_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#制作镜像)章节。
+2. 特性使用指导请参见[断点续训](../04_usage/04_fault_recovery/01_resumable_training/00_feature_description.md)章节进行操作。
+3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/04_fault_recovery/01_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#制作镜像)章节。
 4. MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](../07_references/01_optimizing_saving_and_loading_checkpoints/01_product_description.md)章节。
 5. MindIO TFT的详细介绍及安装步骤请参见[故障恢复加速](../07_references/00_fault_recovery_acceleration/01_product_description.md)。
 

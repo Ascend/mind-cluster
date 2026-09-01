@@ -9,9 +9,10 @@
 - Volcano
 - Ascend Device Plugin
 - Ascend Docker Runtime
-- Ascend Operator
+- Ascend Operator（使用AscendJob必须安装）
 - ClusterD
 - NodeD
+- Infer Operator（使用InferServiceSet任务必须安装）
 
 **使用方式<a name="section179431435174811duoji"></a>**
 

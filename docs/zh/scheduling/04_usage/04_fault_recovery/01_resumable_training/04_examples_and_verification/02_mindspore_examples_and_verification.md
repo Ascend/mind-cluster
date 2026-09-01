@@ -6,7 +6,7 @@
 
 [MindSpore Transformers文档](https://www.mindspore.cn/mindformers/docs/zh-CN/r1.3.0/start/overview.html)的快速入门包括了安装与快速启动章节，可以在镜像制作时参考。
 
-训练镜像可以基于基础训练镜像，结合MindFormers文档自行制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（MindSpore）](../../../07_references/02_common_operations.md#使用dockerfile构建容器镜像mindspore)章节进行操作。
+训练镜像可以基于基础训练镜像，结合MindFormers文档自行制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（MindSpore）](../../../../07_references/02_common_operations.md#使用dockerfile构建容器镜像mindspore)章节进行操作。
 
 本章节结合基础训练镜像的制作步骤，展示基于Ubuntu 20.04来构建训练镜像。
 
@@ -154,7 +154,7 @@
 
 为了防止软件包在传递过程中或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
 
-taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md#section51703441649)小节。其余软件包下载之后，请参见《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请不要使用该软件包，先联系华为技术支持工程师解决。
+taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md#section51703441649)小节。其余软件包下载之后，请参见《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请不要使用该软件包，先联系华为技术支持工程师解决。
 
 使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
 
@@ -331,7 +331,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../05_
 
 **图 1**  脚本适配流程<a name="fig88341718121515-mindspore"></a>
 
-![](../../../../figures/scheduling/脚本适配流程.png "脚本适配流程")
+![](../../../../../figures/scheduling/脚本适配流程.png "脚本适配流程")
 
 ### 适配示例<a name="ZH-CN_TOPIC_0000002511346445-mindspore"></a>
 
@@ -340,7 +340,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../05_
 >[!NOTE]
 >
 >- 为保证优雅容错与进程级在线恢复功能的正常使用，请将K8s集群master节点与worker节点的时钟保持一致。
->- 断点续训展示的组件代码为开源代码，其中涉及到相关安全说明请参见[安全说明](../../../07_references/05_appendix.md#安全说明)。
+>- 断点续训展示的组件代码为开源代码，其中涉及到相关安全说明请参见[安全说明](../../../../07_references/05_appendix.md#安全说明)。
 >- 下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
 >- 模型的参数配置，根据模型仓的模型配置以实际情况来写。若修改不当，可能会引发不可预知的问题。
 >- 若训练过程中出现“Failed to bind the IP port. Reason: The IP address and port have been bound already”报错，可以按照如下进行配置，详情请参见《CANN HCCL集合通信库》中的“[HCCL_HOST_SOCKET_PORT_RANGE](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/commlib/hcclug/docs/zh/user_guide/hccl_env/HCCL_HOST_SOCKET_PORT_RANGE.md)”章节。
@@ -441,7 +441,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../05_
             ```
 
             >[!NOTE]
-            >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
+            >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
 
         2. 在训练脚本中增加以下代码拉起TaskD Manager。在以下代码中，前两条语句的作用是将安装TaskD后libtaskd.so的路径配置到环境变量LD\_PRELOAD中。如果这两条语句配置不成功，可通过手动执行pip show taskd命令获取Location的值拼接上/taskd/python/cython\_api/libs/libtaskd.so，然后通过export设置。
 
@@ -684,7 +684,7 @@ kubectl logs default-test-mindspore-worker-0 -n default -f
 
 回显示例如下，出现loss即表示任务正常运行。
 
-![](../../../../figures/scheduling/unnaming-71.png)
+![](../../../../../figures/scheduling/unnaming-71.png)
 
 **查看是否存在CKPT文件<a name="section979416428371-mindspore"></a>**
 
@@ -938,7 +938,7 @@ Events:  <none>
 
     回显示例如下，此时表示训练进程占用片上内存，正常训练中。
 
-    ![](../../../../figures/scheduling/1-13.png)
+    ![](../../../../../figures/scheduling/1-13.png)
 
 2. 故障发生后，执行以下命令查看芯片信息。
 
@@ -948,7 +948,7 @@ Events:  <none>
 
     回显示例如下，此时表示训练进程已退出，释放片上内存。
 
-    ![](../../../../figures/scheduling/2.png)
+    ![](../../../../../figures/scheduling/2.png)
 
 3. 故障恢复后，执行以下命令查看芯片信息。
 
@@ -958,7 +958,7 @@ Events:  <none>
 
     回显示例如下，此时表示训练进程已重新拉起占用片上内存，正常训练中。
 
-    ![](../../../../figures/scheduling/3.png)
+    ![](../../../../../figures/scheduling/3.png)
 
 ## 构造故障并验证故障处理
 

@@ -49,7 +49,7 @@
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>支持K8s的机制，如亲和性等。</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>支持芯片故障和节点故障的重调度。具体参考<a href="../../03_basic_scheduling/06_recovery_of_inference_card_faults.md">推理卡故障恢复</a>和<a href="../../03_basic_scheduling/05_rescheduling_upon_inference_card_faults.md">推理卡故障重调度</a>章节。</p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>支持芯片故障和节点故障的重调度。具体参考<a href="../../03_basic_scheduling/05_rescheduling.md">重调度</a>章节。</p>
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>支持集群中软切分虚拟化功能和非软切分虚拟化功能混合部署的场景。</p>

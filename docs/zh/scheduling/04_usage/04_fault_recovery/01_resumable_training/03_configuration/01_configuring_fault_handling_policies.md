@@ -2,9 +2,9 @@
 
 ## 故障处理行为说明
 
-断点续训消费故障检测特性提供的故障级别和资源状态，并结合任务YAML中启用的故障处理能力，确定对应的处理行为。公共故障级别、故障码、检测阈值和检测条件请参见[配置故障级别](../../11_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md)，本节不重复配置。
+断点续训消费故障检测特性提供的故障级别和资源状态，并结合任务YAML中启用的故障处理能力，确定对应的处理行为。公共故障级别、故障码、检测阈值和检测条件请参见[配置故障级别](../../../11_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md)，本节不重复配置。
 
-在线压测属于故障检测与诊断配置，发现故障后可触发断点续训，详细配置请参见[配置在线压测](../../11_fault_detection_and_diagnosis/03_configuration/07_online_stress_testing.md)。
+在线压测属于故障检测与诊断配置，发现故障后可触发断点续训，详细配置请参见[配置在线压测](../../../11_fault_detection_and_diagnosis/03_configuration/07_online_stress_testing.md)。
 
 ### 故障类型与处理行为
 
@@ -12,14 +12,14 @@
 
 | 故障类型 | 故障输入 | 关键任务YAML配置 | 处理行为 |
 | ---- | ---- | ---- | ---- |
-| 硬件故障 | 故障检测特性上报的非亚健康硬件故障。具体故障级别及含义请参见[故障级别及处理说明](../../11_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md#table103716651410)。 | `fault-scheduling`、`recover-strategy`、`pod-rescheduling` | 系统从任务已配置且当前故障支持的恢复措施中决策处理措施。配置了适用的进程级恢复能力时，优先执行进程级恢复；仅开启Pod级别重调度时，优先执行Pod级别重调度；未开启细粒度恢复能力时，执行Job级别重调度。 |
+| 硬件故障 | 故障检测特性上报的非亚健康硬件故障。具体故障级别及含义请参见[故障级别及处理说明](../../../11_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md#table103716651410)。 | `fault-scheduling`、`recover-strategy`、`pod-rescheduling` | 系统从任务已配置且当前故障支持的恢复措施中决策处理措施。配置了适用的进程级恢复能力时，优先执行进程级恢复；仅开启Pod级别重调度时，优先执行Pod级别重调度；未开启细粒度恢复能力时，执行Job级别重调度。 |
 | 硬件亚健康 | 故障级别为`SubHealthFault`。 | `subHealthyStrategy` | 根据`subHealthyStrategy`取值执行继续训练、优雅退出后重调度、直接退出后重调度或亚健康热切。详细说明请参见[配置亚健康故障处理策略](#配置亚健康故障处理策略)。 |
 | 软件故障 | 集群调度组件未检测到对应硬件故障，但训练进程异常导致容器退出，Pod状态变为`Failed`。 | `fault-retry-times`以及任务已配置的重调度粒度 | 当剩余无条件重试次数大于0时执行任务重调度。开启Pod级别重调度时，优先重调度故障Pod；否则执行Job级别重调度。 |
 
 - `fault-scheduling`用于开启断点续训及选择Pod删除方式。
 - `recover-strategy`用于配置任务允许使用的进程级在线恢复、进程级别重调度、进程级原地恢复、弹性训练、保存临终遗言或退出训练等策略。系统结合故障类型和训练侧支持能力选择首个适用策略，不以策略在字段中的书写顺序作为执行顺序。
 - `fault-retry-times`用于配置软件故障的无条件重试次数。成功重调度后，任务可重试次数减1；当可重试次数为0时，不再触发无条件重试。
-- 相关字段的完整取值、适用产品和配套参数请参见[参数说明](#参数说明)和[YAML配置说明](../../../06_api/15_yaml_configuration.md#yaml_configuration)。
+- 相关字段的完整取值、适用产品和配套参数请参见[参数说明](#参数说明)和[YAML配置说明](../../../../06_api/15_yaml_configuration.md#yaml_configuration)。
 
 ### 恢复措施自动回退
 
@@ -42,7 +42,7 @@ spec:
         huawei.com/recover_policy_path: pod
 ```
 
-参数说明请参见[YAML配置说明](../../../06_api/15_yaml_configuration.md#yaml_configuration)。
+参数说明请参见[YAML配置说明](../../../../06_api/15_yaml_configuration.md#yaml_configuration)。
 
 ### 配置亚健康故障处理策略
 
@@ -69,7 +69,7 @@ metadata:
     subHealthyStrategy: "ignore"
 ```
 
-`subHealthyStrategy`的参数定义请参见[YAML配置说明](../../../06_api/15_yaml_configuration.md#yaml_configuration)。
+`subHealthyStrategy`的参数定义请参见[YAML配置说明](../../../../06_api/15_yaml_configuration.md#yaml_configuration)。
 
 #### 相关配置入口
 
@@ -80,8 +80,8 @@ metadata:
 
 ### 配置关联故障和任务卡死后的训练行为
 
-- 关联故障的匹配条件、关联故障码和时间窗配置请参见[配置关联故障](../../11_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#关联故障)。匹配成功后的任务处理策略取值为：`Separate`表示任务隔离，`SubHealth`表示任务亚健康。
-- 任务卡死的检测开关、指标阈值和故障级别配置请参见[配置任务卡死故障检测](../../11_fault_detection_and_diagnosis/03_configuration/05_task_hang_detection.md#zh-cn_topic_0000002479387566_section_custom_hangfaultlevel)。检测完成后，断点续训根据任务卡死故障级别及任务YAML配置确定对应的处理行为，详细请参见[故障类型与处理行为](#故障类型与处理行为)。
+- 关联故障的匹配条件、关联故障码和时间窗配置请参见[配置关联故障](../../../11_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#关联故障)。匹配成功后的任务处理策略取值为：`Separate`表示任务隔离，`SubHealth`表示任务亚健康。
+- 任务卡死的检测开关、指标阈值和故障级别配置请参见[配置任务卡死故障检测](../../../11_fault_detection_and_diagnosis/03_configuration/05_task_hang_detection.md#zh-cn_topic_0000002479387566_section_custom_hangfaultlevel)。检测完成后，断点续训根据任务卡死故障级别及任务YAML配置确定对应的处理行为，详细请参见[故障类型与处理行为](#故障类型与处理行为)。
 
 ## 配置重调度恢复
 
@@ -172,7 +172,7 @@ metadata:
         ```
 
         >[!NOTE]
-        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
+        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
 
     2. 在训练脚本（例如train\_start.sh）中增加以下代码，拉起TaskD Manager。在以下代码中：
 
@@ -278,7 +278,7 @@ metadata:
         ```
 
         >[!NOTE]
-        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
+        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
 
     2. 在训练脚本（例如train\_start.sh）中增加以下代码，拉起TaskD Manager。在以下代码中，TASKD\_SO\_PATH和export LD\_PRELOAD两条语句的作用是将安装TaskD后libtaskd.so的路径配置到环境变量LD\_PRELOAD中。如果这两条语句配置不成功，可通过手动执行pip show taskd命令获取Location的值拼接上/taskd/python/cython\_api/libs/libtaskd.so，然后通过export设置。
 
@@ -363,7 +363,7 @@ metadata:
     ```
 
     >[!NOTE]
-    >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
+    >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
 
 2. 在训练脚本中增加以下代码拉起TaskD Manager。
 
@@ -532,7 +532,7 @@ context:
         ```
 
         >[!NOTE]
-        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
+        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
 
     2. 在训练脚本（例如train\_start.sh）中增加以下代码，拉起TaskD Manager。在以下代码中，TASKD\_SO\_PATH和export LD\_PRELOAD两条语句的作用是将安装TaskD后libtaskd.so的路径配置到环境变量LD\_PRELOAD中。如果这两条语句配置不成功，可通过手动执行pip show taskd命令获取Location的值拼接上/taskd/python/cython\_api/libs/libtaskd.so，然后通过export设置。
 
@@ -588,7 +588,7 @@ context:
 
 **前提条件<a name="zh-cn_topic_0000002194466236_section138036504533"></a>**
 
-- 在相应节点上完成以下组件的安装：Ascend Docker Runtime、Ascend Operator、ClusterD、Ascend Device Plugin和Volcano（以上MindCluster组件版本均需与TaskD配套），详细安装步骤请参见[安装部署](../../../03_installation_guide/02_installation/00_helm_installation.md)。
+- 在相应节点上完成以下组件的安装：Ascend Docker Runtime、Ascend Operator、ClusterD、Ascend Device Plugin和Volcano（以上MindCluster组件版本均需与TaskD配套），详细安装步骤请参见[安装部署](../../../../03_installation_guide/02_installation/00_helm_installation.md)。
 - 在容器内安装TorchNPU（7.1.RC1及以上版本）、CANN（8.2.RC1及以上版本）、TaskD和MindIO（7.1.RC1及以上版本），详情请参见[制作MindSpeed-LLM训练镜像（PyTorch框架）](../04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)。
 
 **操作步骤<a name="section188080175496"></a>**
@@ -611,7 +611,7 @@ context:
             ```
 
             >[!NOTE]
-            >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
+            >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
 
         2. 在训练脚本中增加以下代码，拉起TaskD Manager。
 
@@ -666,7 +666,7 @@ context:
     >     ```
 
 2. 修改训练框架代码。
-    1. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../../07_references/05_appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3”目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。
+    1. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../../../07_references/05_appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3”目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。
 
         ```text
         root@ubuntu:/data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/scripts#
@@ -746,7 +746,7 @@ context:
 
 **前提条件<a name="zh-cn_topic_0000002194466236_section138036504533-duplicate-2"></a>**
 
-- 在相应节点上完成以下组件的安装：Ascend Docker Runtime、Ascend Operator、ClusterD、Ascend Device Plugin和Volcano（以上MindCluster组件版本均需与TaskD配套），详细安装步骤请参见[安装部署](../../../03_installation_guide/02_installation/00_helm_installation.md)。
+- 在相应节点上完成以下组件的安装：Ascend Docker Runtime、Ascend Operator、ClusterD、Ascend Device Plugin和Volcano（以上MindCluster组件版本均需与TaskD配套），详细安装步骤请参见[安装部署](../../../../03_installation_guide/02_installation/00_helm_installation.md)。
 - 在容器内安装MindSpore（2.7.0及以上版本）、CANN（8.2.RC1及以上版本）、TaskD和MindIO（7.1.RC1及以上版本），详情请参见[制作MindFormers训练镜像（MindSpore框架）](../04_examples_and_verification/02_mindspore_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469-mindspore)。
 
 **操作步骤<a name="section9479182019317"></a>**
@@ -768,7 +768,7 @@ context:
             ```
 
             >[!NOTE]
-            >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
+            >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
 
         2. 在训练脚本中增加以下代码拉起TaskD Manager。
 
@@ -904,7 +904,7 @@ context:
 
 **前提条件<a name="zh-cn_topic_0000002194466236_section138036504533-duplicate-3"></a>**
 
-- 在相应节点上完成以下组件的安装：Ascend Docker Runtime、Ascend Operator、ClusterD、Ascend Device Plugin和Volcano（以上MindCluster组件版本均需与TaskD配套），详细安装步骤请参见[安装部署](../../../03_installation_guide/02_installation/00_helm_installation.md)。
+- 在相应节点上完成以下组件的安装：Ascend Docker Runtime、Ascend Operator、ClusterD、Ascend Device Plugin和Volcano（以上MindCluster组件版本均需与TaskD配套），详细安装步骤请参见[安装部署](../../../../03_installation_guide/02_installation/00_helm_installation.md)。
 - 在容器内安装TorchNPU（7.1.RC1及以上版本）、CANN（8.2.RC1及以上版本）、TaskD和MindIO（7.2.RC1及以上版本），详情请参见[制作MindSpeed-LLM训练镜像（PyTorch框架）](../04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)。
 
 **操作步骤<a name="section188080175496-duplicate-2"></a>**
@@ -925,7 +925,7 @@ context:
         ```
 
         >[!NOTE]
-        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
+        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../../06_api/07_taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
 
     2. 在训练脚本中增加以下代码，拉起TaskD Manager。
 
@@ -1004,7 +1004,7 @@ context:
 
 3. 修改训练框架代码。
 
-    进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../../07_references/05_appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3”目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。
+    进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../../../07_references/05_appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3”目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。
 
     ```text
     root@ubuntu:/data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/scripts#
@@ -1444,4 +1444,4 @@ export MS_ENABLE_TFT="{RSC:1}"      # MindSpore场景下配置此字段开启优
 </tbody>
 </table>
 
-任务YAML中故障处理参数的详细说明请参见[YAML配置说明](../../../06_api/15_yaml_configuration.md#yaml_configuration)。
+任务YAML中故障处理参数的详细说明请参见[YAML配置说明](../../../../06_api/15_yaml_configuration.md#yaml_configuration)。

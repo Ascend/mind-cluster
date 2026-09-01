@@ -6,7 +6,7 @@
 
 **图 1**  故障恢复阶段<a name="zh-cn_topic_0000002003001306_fig13371418134510"></a>
 
-![](../../../../figures/scheduling/故障恢复阶段.png "故障恢复阶段")
+![](../../../../../figures/scheduling/故障恢复阶段.png "故障恢复阶段")
 
 - T0：训练回滚损失时间
 
@@ -35,7 +35,7 @@
 >[!NOTE]
 >其中每部分时间与参数规模和集群规模相关，网络与存储性能也会影响总训练损失时间。
 
-watchdog用于缩短T<sub>1</sub>中的故障检测时间，配置仍位于独立的[配置watchdog故障检测](../../11_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#配置watchdog故障检测)指南。断点续训现有恢复加速能力仍作用于T<sub>0</sub>、T<sub>2</sub>、T<sub>3</sub>和T<sub>4</sub>。
+watchdog用于缩短T<sub>1</sub>中的故障检测时间，配置仍位于独立的[配置watchdog故障检测](../../../11_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#配置watchdog故障检测)指南。断点续训现有恢复加速能力仍作用于T<sub>0</sub>、T<sub>2</sub>、T<sub>3</sub>和T<sub>4</sub>。
 
 ## 减少训练状态回滚
 
@@ -49,7 +49,7 @@ watchdog用于缩短T<sub>1</sub>中的故障检测时间，配置仍位于独�
 
 **图 2**  周期性CKPT保存频率推荐<a name="fig41241253101"></a>
 
-![](../../../../figures/scheduling/周期性CKPT保存频率推荐.png "周期性CKPT保存频率推荐")
+![](../../../../../figures/scheduling/周期性CKPT保存频率推荐.png "周期性CKPT保存频率推荐")
 
 使用周期性CKPT恢复能力，训练恢复后将丢失上一次周期保存点到故障点这一时间段的训练状态。因此，如果想要降低每次故障导致的训练状态损失，需要降低周期性保存的间隔。但是，每次保存需要中断训练后将CKPT从设备侧落盘到存储侧，这浪费了大量的训练时间。如果降低周期性保存的间隔，将导致训练时间的浪费，从而也会带来训练时间的损失。综上所述，如果单次保存时间恒定，通常需要作出保存损失和故障损失的综合权衡。
 
@@ -69,7 +69,7 @@ MindIO ACP提供异步保存周期性CKPT的能力。未使用MindIO ACP时，�
 
 MindCluster MindIO Try To Persist（下文简称MindIO TTP）提供临终CKPT能力，帮助用户在故障时刻保存临终时刻CKPT。
 
-了解临终CKPT保存的详细介绍，请参见[故障恢复加速](../../../07_references/00_fault_recovery_acceleration/01_product_description.md)。
+了解临终CKPT保存的详细介绍，请参见[故障恢复加速](../../../../07_references/00_fault_recovery_acceleration/01_product_description.md)。
 
 了解临终CKPT保存的配置步骤，请参见[配置临终CKPT保存](../03_configuration/02_configuring_training_recovery.md#配置临终ckpt保存)。
 
@@ -94,7 +94,7 @@ MindCluster MindIO Try To Persist（下文简称MindIO TTP）提供临终CKPT能
 </td>
 <td class="cellrowborder" valign="top" width="50.51505150515051%" headers="mcps1.2.4.1.2 "><p id="p5821185419518"><a name="p5821185419518"></a>训练框架初始化时拉起MindIO服务。</p>
 </td>
-<td class="cellrowborder" rowspan="7" valign="top" width="28.852885288528853%" headers="mcps1.2.4.1.3 "><p id="p7146223174212"><a name="p7146223174212"></a><a href="../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
+<td class="cellrowborder" rowspan="7" valign="top" width="28.852885288528853%" headers="mcps1.2.4.1.3 "><p id="p7146223174212"><a name="p7146223174212"></a><a href="../../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
 </td>
 </tr>
 <tr id="row1793717157396"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p6821754125118"><a name="p6821754125118"></a>上报优化器更新状态</p>
