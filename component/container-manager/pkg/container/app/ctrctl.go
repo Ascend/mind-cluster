@@ -22,10 +22,13 @@ import (
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/namespaces"
 	"github.com/docker/docker/api/types"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"container-manager/pkg/common"
+	ctrdomain "container-manager/pkg/container/domain"
+	"container-manager/pkg/coordinator/proto"
 	"container-manager/pkg/devmgr"
 	"container-manager/pkg/fault/domain"
 	resetdomain "container-manager/pkg/reset/domain"
@@ -64,7 +67,8 @@ func (cm *CtrCtl) updateForContainerd(cs map[string][]containerd.Container) []st
 			} else {
 				hwlog.RunLog.Debugf("container %s,%s used devs: %v", ns, containerObj.ID(), usedDevs)
 			}
-			cm.setCtrRelatedInfo(containerObj.ID(), ns, usedDevs)
+			job := cm.client.getJobInfo(containerObj, ctx)
+			cm.setCtrRelatedInfo(containerObj.ID(), ns, usedDevs, job)
 		}
 	}
 	return ctrIds
@@ -93,7 +97,8 @@ func (cm *CtrCtl) updateCtrRelatedInfo() error {
 			} else {
 				hwlog.RunLog.Debugf("container %s used devs: %v", containerObj.ID, usedDevs)
 			}
-			cm.setCtrRelatedInfo(containerObj.ID, "default", usedDevs)
+			job := cm.client.getJobInfo(containerObj, nil)
+			cm.setCtrRelatedInfo(containerObj.ID, "default", usedDevs, job)
 		}
 	default:
 		return nil
@@ -145,8 +150,8 @@ func (cm *CtrCtl) isSingleDevNeedPause(id int32) bool {
 	return false
 }
 
-func (cm *CtrCtl) setCtrRelatedInfo(ctrId, ns string, usedDevs []int32) {
-	cm.ctrInfoMap.SetCtrInfo(ctrId, ns, usedDevs)
+func (cm *CtrCtl) setCtrRelatedInfo(ctrId, ns string, usedDevs []int32, job ctrdomain.JobInfo) {
+	cm.ctrInfoMap.SetCtrInfo(ctrId, ns, usedDevs, job)
 	cm.devInfoMap.SetCtrRelatedInfo(ctrId, usedDevs)
 }
 
@@ -176,10 +181,55 @@ func (cm *CtrCtl) initRingInfo() error {
 }
 
 func (cm *CtrCtl) pauseCtr(onRing bool) {
-	ctrNeedPaused := cm.devInfoMap.GetNeedPausedCtr(onRing)
-	ctrHasPaused := cm.ctrInfoMap.GetCtrsByStatus(common.StatusPaused)
-	needPaused := utils.RemoveEleSli(ctrNeedPaused, ctrHasPaused)
-	for _, id := range needPaused {
+	pausedCtrList := cm.ctrInfoMap.GetCtrsByStatus(map[string]struct{}{common.StatusPaused: {}})
+	pausedCtrs := sets.NewString(pausedCtrList...)
+
+	// pause ctrs that are gated by a peer and still need pausing
+	ctrsPauseByPeer := cm.ctrInfoMap.GetCtrsByPeerGate().Pause
+	ctrsPauseByPeer = utils.RemoveEleSli(ctrsPauseByPeer, pausedCtrList)
+	if len(ctrsPauseByPeer) > 0 {
+		hwlog.RunLog.Infof("pause ctrs by peer: %v", ctrsPauseByPeer)
+		cm.doPauseCtrs(ctrsPauseByPeer)
+		pausedCtrs.Insert(ctrsPauseByPeer...)
+	}
+
+	// find ctr groups that need pause, grouped by faulted device (or its ring)
+	ctrGroups := cm.devInfoMap.GetNeedPausedCtr(onRing)
+	hwlog.RunLog.Debugf("need pause ctr groups: %v", ctrGroups)
+	// pause groups one by one, deduping across groups within one cycle
+	for _, ctrs := range ctrGroups {
+		var ctrNeedPause []string
+		for _, ctrId := range ctrs {
+			if pausedCtrs.Has(ctrId) {
+				continue
+			}
+			ctrNeedPause = append(ctrNeedPause, ctrId)
+		}
+		if len(ctrNeedPause) == 0 || !cm.ctrInfoMap.IsCtrsRecoverable(ctrNeedPause) {
+			hwlog.RunLog.Infof("ctrs %v are not recoverable, skip pausing group", ctrNeedPause)
+			continue
+		}
+		if !cm.pauseCtrsInGroups(ctrNeedPause) {
+			continue
+		}
+		pausedCtrs.Insert(ctrNeedPause...)
+	}
+}
+
+func (cm *CtrCtl) pauseCtrsInGroups(ctrsRelated []string) bool {
+	_, distCtrs, jobs := cm.partitionCtrs(ctrsRelated)
+	if len(jobs) > 0 {
+		if err := cm.coord.RequestStopJobs(jobs, distCtrs); err != nil {
+			hwlog.RunLog.Errorf("RequestStop for jobs %v failed: %v", jobs, err)
+			return false
+		}
+	}
+	cm.doPauseCtrs(ctrsRelated)
+	return true
+}
+
+func (cm *CtrCtl) doPauseCtrs(ids []string) {
+	for _, id := range ids {
 		hwlog.RunLog.Infof("start pausing container: %s", id)
 		cm.ctrInfoMap.SetCtrsStatus(id, common.StatusPausing)
 		ns := cm.ctrInfoMap.GetCtrNs(id)
@@ -196,36 +246,72 @@ func (cm *CtrCtl) pauseCtr(onRing bool) {
 	}
 }
 
+func (cm *CtrCtl) getNeedResumeCtrInGroups(id string, onRing bool) []string {
+	if !onRing {
+		if cm.isDevsNeedPause(cm.ctrInfoMap.GetCtrUsedDevs(id)) {
+			return nil
+		}
+		return []string{id}
+	}
+	ctrsOnRings := cm.ctrInfoMap.GetCtrsOnRing(id)
+	// can all containers on the ring be resumed.
+	// as long as one of the cards used by the containers on the ring does not meet the condition,
+	// the entire container on the ring cannot be resumed
+	ringCtrsUsedDevs := cm.ctrInfoMap.GetCtrRelatedDevs(ctrsOnRings)
+	if cm.isDevsNeedPause(cm.devInfoMap.GetDevsOnRing(ringCtrsUsedDevs)) {
+		return nil
+	}
+	return ctrsOnRings
+}
+
 func (cm *CtrCtl) resumeCtr(onRing bool) {
-	ctrHasPaused := cm.ctrInfoMap.GetCtrsByStatus(common.StatusPaused)
-	var ctrNeedResume []string
+	ctrHasPaused := cm.ctrInfoMap.GetCtrsByStatus(map[string]struct{}{common.StatusPaused: {}, common.StatusResuming: {}})
+	gate := cm.ctrInfoMap.GetCtrsByPeerGate()
+	excludeCtrs := sets.NewString(gate.Pause...)
+
 	for _, id := range ctrHasPaused {
-		if !onRing {
-			if cm.isDevsNeedPause(cm.ctrInfoMap.GetCtrUsedDevs(id)) {
-				continue
+		if excludeCtrs.Has(id) {
+			continue
+		}
+		ctrNeedResume := cm.getNeedResumeCtrInGroups(id, onRing)
+		var newCtrNeedResume []string
+		for _, ctrId := range ctrNeedResume {
+			if !excludeCtrs.Has(ctrId) && utils.Contains(ctrHasPaused, ctrId) {
+				newCtrNeedResume = append(newCtrNeedResume, ctrId)
 			}
-			ctrNeedResume = append(ctrNeedResume, id)
+		}
+		if len(newCtrNeedResume) == 0 {
 			continue
 		}
-		if utils.Contains(ctrNeedResume, id) {
-			continue
-		}
-		ctrsOnRings := cm.ctrInfoMap.GetCtrsOnRing(id)
-		// can all containers on the ring be resumed.
-		// as long as one of the cards used by the containers on the ring does not meet the condition,
-		// the entire container on the ring cannot be resumed
-		ringCtrsUsedDevs := cm.ctrInfoMap.GetCtrRelatedDevs(ctrsOnRings)
-		if cm.isDevsNeedPause(cm.devInfoMap.GetDevsOnRing(ringCtrsUsedDevs)) {
-			continue
-		}
-		for _, ctrId := range ctrsOnRings {
-			if utils.Contains(ctrHasPaused, ctrId) {
-				ctrNeedResume = append(ctrNeedResume, ctrId)
-			}
+		cm.resumeCtrsInGroups(newCtrNeedResume, gate)
+		excludeCtrs.Insert(newCtrNeedResume...)
+	}
+}
+
+func (cm *CtrCtl) resumeCtrsInGroups(ctrNeedResume []string, gate *ctrdomain.PeerGateGroups) {
+	localCtrs, distCtrs, jobs := cm.partitionCtrs(ctrNeedResume)
+
+	var distCtrsNeedReq, jobNeedReq []string
+	for _, ctrId := range distCtrs {
+		if utils.Contains(gate.None, ctrId) {
+			distCtrsNeedReq = append(distCtrsNeedReq, ctrId)
+			jobNeedReq = append(jobNeedReq, cm.ctrInfoMap.GetJobInfo(ctrId).JobID)
 		}
 	}
 
-	for _, id := range utils.RemoveDuplicates(ctrNeedResume) {
+	if len(jobNeedReq) > 0 {
+		if err := cm.coord.RequestStartJobs(jobNeedReq, distCtrsNeedReq); err != nil {
+			hwlog.RunLog.Errorf("RequestStart for jobs %v failed: %v; distributed containers skipped this cycle", jobs, err)
+		} else {
+			cm.doResumeCtrs(distCtrsNeedReq)
+		}
+	}
+	cm.doResumeCtrs(utils.RemoveEleSli(distCtrs, distCtrsNeedReq))
+	cm.doResumeCtrs(localCtrs)
+}
+
+func (cm *CtrCtl) doResumeCtrs(ids []string) {
+	for _, id := range ids {
 		hwlog.RunLog.Infof("start resuming container: %s", id)
 		cm.ctrInfoMap.SetCtrsStatus(id, common.StatusResuming)
 		ns := cm.ctrInfoMap.GetCtrNs(id)
@@ -239,5 +325,96 @@ func (cm *CtrCtl) resumeCtr(onRing bool) {
 		}
 		hwlog.RunLog.Infof("successfully resume container: %s", id)
 		cm.ctrInfoMap.SetCtrsStatus(id, common.StatusRunning)
+		cm.ctrInfoMap.UpdateCtrPeerMark(id, "", ctrdomain.PeerActionNone)
 	}
+}
+
+func (cm *CtrCtl) partitionCtrs(ctrIds []string) ([]string, []string, []string) {
+	var (
+		localCtrId       []string
+		distributedCtrId []string
+		jobs             []string
+	)
+	for _, ctrId := range utils.RemoveDuplicates(ctrIds) {
+		jobInfo := cm.ctrInfoMap.GetJobInfo(ctrId)
+		if jobInfo == nil {
+			continue
+		}
+		// if JobID is empty or JobReplica is 1, it is a local container.
+		// JobReplica is not mandatory, this field may be 0 for all distributed ctr
+		// and still requires a request coordinator
+		if jobInfo.JobID == "" || jobInfo.JobReplica == 1 {
+			localCtrId = append(localCtrId, ctrId)
+			continue
+		}
+		distributedCtrId = append(distributedCtrId, ctrId)
+		jobs = append(jobs, jobInfo.JobID)
+	}
+	return localCtrId, distributedCtrId, utils.RemoveDuplicates(jobs)
+}
+
+// GetLocalContainers implements coordinator.ContainerOps.
+func (cm *CtrCtl) GetLocalContainers() []*proto.ContainerInfo {
+	return cm.ctrInfoMap.GetDistributedSnapshots()
+}
+
+// HasDataChanged implements coordinator.ContainerOps.
+func (cm *CtrCtl) HasDataChanged() bool {
+	return cm.ctrInfoMap.HasDataChanged()
+}
+
+// PauseJobContainers gates all local containers of the given jobs by the initiating peer
+func (cm *CtrCtl) PauseJobContainers(jobIDs, faultCtrIds []string, peerNodeID string) error {
+	ctrIds := cm.ctrInfoMap.GetCtrsByJob(jobIDs)
+	validCtrs := make([]string, 0, len(ctrIds))
+	for _, ctrId := range ctrIds {
+		if utils.Contains(faultCtrIds, ctrId) {
+			hwlog.RunLog.Infof("container %s is faulted, skip update peer mark", ctrId)
+			continue
+		}
+		gate := cm.ctrInfoMap.GetCtrPausedByPeer(ctrId)
+		if gate != "" && gate != peerNodeID {
+			return fmt.Errorf("stop initiator %s does not match stop initiator %s (container %s)", peerNodeID, gate, ctrId)
+		}
+		status, _ := cm.ctrInfoMap.GetCtrStatusAndStartTime(ctrId)
+		if status == common.StatusResuming {
+			return fmt.Errorf("container %s is resuming, stop by %s conflicts; retry next cycle", ctrId, peerNodeID)
+		}
+		validCtrs = append(validCtrs, ctrId)
+	}
+	for _, ctrId := range validCtrs {
+		cm.ctrInfoMap.UpdateCtrPeerMark(ctrId, peerNodeID, ctrdomain.PeerActionPause)
+	}
+	return nil
+}
+
+// ResumeJobContainers releases the peer gate on all local containers of the given jobs
+func (cm *CtrCtl) ResumeJobContainers(jobIDs, faultCtrIds []string, peerNodeID string) error {
+	ctrIds := cm.ctrInfoMap.GetCtrsByJob(jobIDs)
+	validCtrs := make([]string, 0, len(ctrIds))
+	for _, ctrId := range ctrIds {
+		if utils.Contains(faultCtrIds, ctrId) {
+			hwlog.RunLog.Infof("container %s is faulted, skip update peer mark", ctrId)
+			continue
+		}
+		gate := cm.ctrInfoMap.GetCtrPausedByPeer(ctrId)
+		if gate != "" && gate != peerNodeID {
+			return fmt.Errorf("start initiator %s does not match stop initiator %s (container %s)", peerNodeID, gate, ctrId)
+		}
+		status, _ := cm.ctrInfoMap.GetCtrStatusAndStartTime(ctrId)
+		switch status {
+		case common.StatusPaused:
+			if gate == "" {
+				hwlog.RunLog.Warnf("container %s paused without peer gate, follow peer %s to resume", ctrId, peerNodeID)
+			}
+			validCtrs = append(validCtrs, ctrId)
+		case common.StatusRunning, common.StatusResuming:
+		default:
+			return fmt.Errorf("container %s not paused yet (status %s), stop by %s has not completed", ctrId, status, gate)
+		}
+	}
+	for _, ctrId := range validCtrs {
+		cm.ctrInfoMap.UpdateCtrPeerMark(ctrId, peerNodeID, ctrdomain.PeerActionResume)
+	}
+	return nil
 }

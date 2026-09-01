@@ -46,10 +46,15 @@ var (
 
 // Option option param
 type Option struct {
-	RuntimeType  string
-	CtrStrategy  string
-	SockPath     string
-	FaultCfgPath string
+	RuntimeType           string
+	CtrStrategy           string
+	SockPath              string
+	FaultCfgPath          string
+	ListenAddr            string
+	LocalNodeID           string
+	LeaderAddrs           []string
+	EventSyncInterval     int
+	ScheduledSyncInterval int
 }
 
 // CtrStatusInfo container status info for displaying

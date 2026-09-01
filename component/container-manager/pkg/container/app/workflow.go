@@ -23,6 +23,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"container-manager/pkg/common"
 	"container-manager/pkg/container/domain"
+	"container-manager/pkg/coordinator"
 	"container-manager/pkg/devmgr"
 	domain2 "container-manager/pkg/fault/domain"
 )
@@ -34,6 +35,13 @@ type CtrCtl struct {
 	client     ContainerClient
 	ctrInfoMap *domain.CtrCache // key: ctr id (used dev ctr); value: ctr info
 	devInfoMap *domain.DevCache // key: dev phy id; value: ctr id
+	coord      coordinator.DistributedCoord
+}
+
+// BindCoordinator injects the distributed coordinator. Called from run.go
+// after both CtrCtl and coordinator are constructed.
+func (cm *CtrCtl) BindCoordinator(coord coordinator.DistributedCoord) {
+	cm.coord = coord
 }
 
 // NewCtrCtl new container controller

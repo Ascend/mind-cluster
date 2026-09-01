@@ -29,6 +29,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"container-manager/pkg/common"
+	"container-manager/pkg/container/domain"
 )
 
 // DockerClient docker client
@@ -80,6 +81,14 @@ func (d *DockerClient) getUsedDevs(containerObj interface{}, ctx context.Context
 	default:
 		return nil, nil
 	}
+}
+
+func (d *DockerClient) getJobInfo(containerObj interface{}, ctx context.Context) domain.JobInfo {
+	cs, ok := containerObj.(types.Container)
+	if !ok {
+		return domain.JobInfo{}
+	}
+	return parseJobLabels(cs.Labels)
 }
 
 func (d *DockerClient) doGetUsedDevs(cs types.Container) ([]int32, error) {

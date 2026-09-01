@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -408,5 +409,122 @@ func buildGetDevNumPerRingTestCase() []getDevNumPerRingTC {
 			devType:  api.Ascend910A5,
 			expected: Ascend910A5RingsNum,
 		},
+	}
+}
+
+func TestParseAddrs(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		want    []string
+		wantErr bool
+	}{
+		{
+			name:  " string",
+			input: "",
+			want:  []string{},
+		},
+		{
+			name:  "whitespace only",
+			input: "   ",
+			want:  []string{},
+		},
+		{
+			name:  "multiple valid addrs",
+			input: "1.2.3.4:8080,5.6.7.8:9090",
+			want:  []string{"1.2.3.4:8080", "5.6.7.8:9090"},
+		},
+		{
+			name:  "min port boundary",
+			input: "1.2.3.4:1024",
+			want:  []string{"1.2.3.4:1024"},
+		},
+		{
+			name:    "invalid ip",
+			input:   "abc:8080",
+			wantErr: true,
+		},
+		{
+			name:    "invalid port",
+			input:   "1.2.3.4:abc",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ParseAddrs(tt.input)
+			if tt.wantErr && err == nil {
+				t.Errorf("ParseAddrs(%q) expected error, got none", tt.input)
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Errorf("ParseAddrs(%q) = %v, want %v", tt.input, got, tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestGetNodeId(t *testing.T) {
+	hostName, err := os.Hostname()
+	if err != nil {
+		t.Fatalf("os.Hostname() failed: %v", err)
+	}
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "node id with whitespace",
+			input: "  node-1  ",
+			want:  "node-1",
+		},
+		{
+			name:  "whitespace only returns hostname",
+			input: "   ",
+			want:  strings.TrimSpace(hostName),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetNodeId(tt.input)
+			if err != nil {
+				t.Errorf("GetNodeId(%q) unexpected error = %v", tt.input, err)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("GetNodeId(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetListenAddr(t *testing.T) {
+	tests := []struct {
+		name string
+		ip   string
+		port string
+		want string
+	}{
+		{
+			name: "empty ip returns empty",
+			ip:   "",
+			port: "8080",
+			want: "",
+		},
+		{
+			name: "empty port uses default port",
+			ip:   "1.2.3.4",
+			port: "",
+			want: "1.2.3.4:8890",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetListenAddr(tt.ip, tt.port); got != tt.want {
+				t.Errorf("GetListenAddr(%q, %q) = %q, want %q", tt.ip, tt.port, got, tt.want)
+			}
+		})
 	}
 }
