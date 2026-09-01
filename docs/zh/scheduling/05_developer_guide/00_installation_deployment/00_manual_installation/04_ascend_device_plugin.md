@@ -1,8 +1,11 @@
-﻿# Ascend Device Plugin<a name="ZH-CN_TOPIC_0000002511426341"></a>
+# Ascend Device Plugin<a name="ZH-CN_TOPIC_0000002511426341"></a>
 
 - 使用整卡调度、静态vNPU调度、动态vNPU调度、断点续训、弹性训练、芯片故障恢复或重调度的用户，必须在计算节点安装Ascend Device Plugin。
 - 仅使用容器化支持和资源监测的用户，可以不安装Ascend Device Plugin，请直接跳过本章节。
 - 若用户需要Ascend Docker Runtime组件，需要先安装Ascend Docker Runtime，再安装Ascend Device Plugin。
+
+> [!NOTE]
+> Ascend Device Plugin与Ascend DRA组件是两种不同的设备接入方式。使用Device Plugin方式时，节点上无需同时部署Ascend DRA组件。
 
 ## 使用约束<a name="section1362795652416"></a>
 
