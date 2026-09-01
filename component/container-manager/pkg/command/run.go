@@ -28,6 +28,7 @@ import (
 	"ascend-common/common-utils/utils"
 	"container-manager/pkg/common"
 	app2 "container-manager/pkg/container/app"
+	coordapp "container-manager/pkg/coordinator/app"
 	"container-manager/pkg/devmgr"
 	"container-manager/pkg/fault/app"
 	app3 "container-manager/pkg/reset/app"
@@ -263,12 +264,15 @@ func (cmd *runCmd) Execute(ctx context.Context) error {
 		return errors.New("new container controller failed")
 	}
 	resetMgr := app3.NewResetMgr()
+	coordinator := coordapp.NewCoordinator(ctx, ctrCtl)
+	ctrCtl.BindCoordinator(coordinator) // for CtrCtl to call RequestStop/Start
 
 	moduleMgr := workflow.NewModuleMgr()
 	moduleMgr.Register(devmgr.DevMgr)
 	moduleMgr.Register(faultMgr)
 	moduleMgr.Register(ctrCtl)
 	moduleMgr.Register(resetMgr)
+	moduleMgr.Register(coordinator)
 
 	if err = moduleMgr.Init(); err != nil {
 		return err

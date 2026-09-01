@@ -201,6 +201,31 @@ func (s *serverEndpoint) routeResp(nodeID string, resp *proto.Response) {
 	}
 }
 
+// SyncData applies an ordinary node's container snapshot to the store.
+func (s *serverEndpoint) SyncData(ctx context.Context, req *proto.SyncDataReq) (*proto.Response, error) {
+	hwlog.RunLog.Infof("receive sync data req %s from node %s: %d containers", req.Uuid, req.NodeId, len(req.Containers))
+	if err := validateSyncDataReq(req); err != nil {
+		hwlog.RunLog.Errorf("validate sync data req %s from node %s failed: %v", req.Uuid, req.NodeId, err)
+		return &proto.Response{Uuid: req.Uuid, Code: 1, Message: err.Error()}, nil
+	}
+	s.coord.containerStore.ApplySync(req)
+	return &proto.Response{Uuid: req.Uuid, Code: 0}, nil
+}
+
+// Coordinate handles a stop/start request from an ordinary node.
+func (s *serverEndpoint) Coordinate(ctx context.Context, req *proto.CoordinateReq) (*proto.Response, error) {
+	hwlog.RunLog.Infof("receive coordinate req %s", req.String())
+	if err := validateCoordinateReq(req); err != nil {
+		hwlog.RunLog.Errorf("validate coordinate req %s failed: %v", req.String(), err)
+		return &proto.Response{Uuid: req.Uuid, Code: 1, Message: err.Error()}, nil
+	}
+	if err := s.coord.broadcastToOrdinary(req); err != nil {
+		hwlog.RunLog.Errorf("broadcast req %s to ordinary node failed: %v", req.String(), err)
+		return &proto.Response{Uuid: req.Uuid, Code: 1, Message: err.Error()}, nil
+	}
+	return &proto.Response{Uuid: req.Uuid, Code: 0}, nil
+}
+
 // InitBroadcastStream handles the bidirectional stream from an ordinary node.
 func (s *serverEndpoint) InitBroadcastStream(stream proto.ContainerService_InitBroadcastStreamServer) error {
 	nodeID, err := extractNodeID(stream)

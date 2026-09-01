@@ -30,7 +30,8 @@ message CoordinateReq {
   string uuid = 1;                          // Unique request ID (used for idempotency/deduplication)
   string node_id = 2;                       // hostname of the initiator node
   repeated string job_ids = 3;              // List of distributed job IDs (a card/ring may host multiple jobs)
-  string action = 4;                        // stop/start
+  repeated string ctr_ids = 4;              // List of ctr IDs that initiated the request
+  string action = 5;                        // stop/start
 }
 
 // Generic response
