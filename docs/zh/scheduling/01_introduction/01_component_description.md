@@ -441,3 +441,28 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 1. 从网卡管理工具和文件接口分别获取DPU全局指标和interface级指标。
 2. 将获取到的指标转换为Prometheus指标格式。
 3. 提供Prometheus指标接口，用于监控DPU的运行状态与统计指标。
+
+## Ascend Dynamic Resource Allocation<a name="ZH-CN_TOPIC_0000002524312670"></a>
+
+**应用场景<a name="section15761025111720"></a>**
+
+Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（Dynamic Resource Allocation，DRA）驱动插件。组件在节点上自动发现昇腾NPU设备，并以ResourceSlice的形式上报至集群，业务通过ResourceClaim申报所需资源后，调度器根据设备上报信息完成匹配与分配，并通过CDI（Container Device Interface）机制将设备注入业务容器，实现从资源申报到设备使用的全流程自动化。
+
+**组件功能<a name="section1112014512117"></a>**
+
+- 基于K8s的DRA机制，将昇腾芯片的设备属性信息上报至集群，支持按芯片属性选择资源。
+- 通过实现DRA机制的PrepareResourceClaims接口，接收调度器的芯片分配结果，完成昇腾芯片的分配。
+- 通过实现DRA机制的UnprepareResourceClaims接口，在任务结束后完成昇腾芯片的释放。
+- 通过CDI机制，将分配到的昇腾芯片设备注入到业务容器中。
+
+**组件上下游依赖<a name="section4941922192110"></a>**
+
+**图 18**  组件上下游依赖<a name="fig18917163118166"></a>
+
+![](../../figures/scheduling/组件上下游依赖-10.png "组件上下游依赖-10")
+
+1. 从DCMI中获取昇腾芯片的类型、物理ID、逻辑ID等信息，完成设备发现。
+2. 通过kubelet插件机制完成注册。
+3. 将昇腾芯片的设备信息以ResourceSlice的形式上报给K8s，供调度器感知和选择。
+4. 从ResourceClaim中读取调度器的芯片分配结果，完成设备的分配与释放。
+5. 通过CDI机制将设备注入信息传递给容器运行时，完成设备注入。
