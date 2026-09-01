@@ -37,13 +37,15 @@ MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）训练�
 | 资源监测特性                   | [资源监测特性](./docs/zh/scheduling/04_usage/01_resource_monitoring/00_before_you_start.md) | ✅        |
 | 虚拟化实例特性                 | [虚拟化实例特性](./docs/zh/scheduling/04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md) | ✅        |
 | 基础调度特性                   | [基础调度特性](./docs/zh/scheduling/04_usage/03_basic_scheduling/00_feature_description.md) | ✅        |
-| 断点续训特性                   | [断点续训特性](./docs/zh/scheduling/04_usage/04_resumable_training/00_feature_description.md) | ✅        |
+| 故障检测特性                   | [故障检测特性](./docs/zh/scheduling/04_usage/11_fault_detection_and_diagnosis/00_feature_description.md) | ✅        |
+| 断点续训特性                   | [断点续训特性](docs/zh/scheduling/04_usage/04_fault_recovery/01_resumable_training/00_feature_description.md) | ✅        |
 | 一体机特性                     | [一体机特性](./docs/zh/scheduling/04_usage/05_appliance/01_npu_hardware_fault_detection_and_rectification.md) | ✅        |
 | MindIE Motor推理任务最佳实践   | [MindIE Motor推理任务最佳实践](./docs/zh/scheduling/04_usage/06_mindie_motor_best_practice/00_before_you_start.md) | ✅        |
 | SGLang推理任务最佳实践         | [SGLang推理任务最佳实践](./docs/zh/scheduling/04_usage/07_sglang_best_practice/00_before_you_start.md) | ✅        |
 | vLLM推理任务最佳实践           | [vLLM推理任务最佳实践](./docs/zh/scheduling/04_usage/08_vllm_best_practice/00_before_you_start.md) | ✅        |
 | Infer Operator推理任务最佳实践 | [Infer Operator推理任务最佳实践](./docs/zh/scheduling/04_usage/09_infer_operator_best_practice/00_before_you_start.md) | ✅        |
 | 潮汐调度最佳实践               | [潮汐调度最佳实践](./docs/zh/scheduling/04_usage/10_tidal_scheduling/00_before_you_start.md) | ✅        |
+| verl强化学习任务最佳实践               | [verl强化学习任务最佳实践](./docs/zh/scheduling/04_usage/12_verl_best_practice/00_before_you_start.md) | ✅        |
 
 **故障诊断**
 

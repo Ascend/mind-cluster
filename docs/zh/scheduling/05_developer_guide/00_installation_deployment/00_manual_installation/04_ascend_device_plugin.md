@@ -1,6 +1,6 @@
 ﻿# Ascend Device Plugin<a name="ZH-CN_TOPIC_0000002511426341"></a>
 
-- 使用整卡调度、静态vNPU调度、动态vNPU调度、断点续训、弹性训练、推理卡故障恢复或推理卡故障重调度的用户，必须在计算节点安装Ascend Device Plugin。
+- 使用整卡调度、静态vNPU调度、动态vNPU调度、断点续训、弹性训练、芯片故障恢复或重调度的用户，必须在计算节点安装Ascend Device Plugin。
 - 仅使用容器化支持和资源监测的用户，可以不安装Ascend Device Plugin，请直接跳过本章节。
 - 若用户需要Ascend Docker Runtime组件，需要先安装Ascend Docker Runtime，再安装Ascend Device Plugin。
 
@@ -195,7 +195,7 @@
               readOnlyRootFilesystem: true
     ...</pre>
 
-6. <a name="li_config_hotreset" id="li_config_hotreset"></a>（可选）使用推理卡故障恢复时，需要配置热复位功能。
+6. <a name="li_config_hotreset" id="li_config_hotreset"></a>（可选）使用芯片故障恢复时，需要配置热复位功能。
 
     <pre codetype="yaml">
           containers:
@@ -211,7 +211,7 @@
             command: [ "/bin/bash", "-c", "--"]
             args: [ "device-plugin
     ...
-                     <strong>-hotReset=0 # 使用硬件故障恢复时，开启热复位功能</strong>
+                     <strong>-hotReset=0 # 使用芯片故障恢复时，开启热复位功能</strong>
                      -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log
                      -logLevel=0" ]
     ...</pre>
@@ -354,7 +354,7 @@
 |参数|类型|默认值|说明|
 |--|--|--|--|
 |-fdFlag|bool|false|边缘场景标志，是否使用FusionDirector系统来管理设备。<ul><li>true：使用FusionDirector。</li><li>false：不使用FusionDirector。</li></ul>|
-|-shareDevCount|uint|1|共享设备特性开关，取值范围为1~100。<ul><li>默认值为1，代表不开启共享设备；取值为2~100，表示单颗芯片虚拟化出来的共享设备个数。</li><li>当开启软切分功能，即-softShareDevConfigDir不为空时，该参数取值必须为100。</li></ul><p>支持以下设备，其余设备该参数无效，不影响组件正常启动。</p><ul><li>Atlas 500 A2 智能小站</li><li>Atlas 200I A2 加速模块</li><li>Atlas 200I DK A2 开发者套件</li><li>Atlas 300I Pro 推理卡</li><li>Atlas 300V 视频解析卡</li><li>Atlas 300V Pro 视频解析卡</li></ul><p>若用户使用的是以上支持的<term>Atlas 推理系列产品</term>，需要注意以下问题：</p><ul><li>不支持在使用静态vNPU调度、动态vNPU调度、推理卡故障恢复和推理卡故障重调度等特性下使用共享设备功能。</li><li>单任务的请求资源数必须为1，不支持分配多芯片和跨芯片使用的场景。</li><li>依赖驱动开启共享模式，设置device-share为true，详细操作步骤和说明请参见《Atlas 中心推理卡 npu-smi 命令参考》中的“[设置指定设备的指定芯片的容器共享模式](https://support.huawei.com/enterprise/zh/doc/EDOC1100591774/237da426)”章节。</li></ul>|
+|-shareDevCount|uint|1|共享设备特性开关，取值范围为1~100。<ul><li>默认值为1，代表不开启共享设备；取值为2~100，表示单颗芯片虚拟化出来的共享设备个数。</li><li>当开启软切分功能，即-softShareDevConfigDir不为空时，该参数取值必须为100。</li></ul><p>支持以下设备，其余设备该参数无效，不影响组件正常启动。</p><ul><li>Atlas 500 A2 智能小站</li><li>Atlas 200I A2 加速模块</li><li>Atlas 200I DK A2 开发者套件</li><li>Atlas 300I Pro 推理卡</li><li>Atlas 300V 视频解析卡</li><li>Atlas 300V Pro 视频解析卡</li></ul><p>若用户使用的是以上支持的<term>Atlas 推理系列产品</term>，需要注意以下问题：</p><ul><li>不支持在使用静态vNPU调度、动态vNPU调度、芯片故障恢复和重调度等特性下使用共享设备功能。</li><li>单任务的请求资源数必须为1，不支持分配多芯片和跨芯片使用的场景。</li><li>依赖驱动开启共享模式，设置device-share为true，详细操作步骤和说明请参见《Atlas 中心推理卡 npu-smi 命令参考》中的“[设置指定设备的指定芯片的容器共享模式](https://support.huawei.com/enterprise/zh/doc/EDOC1100591774/237da426)”章节。</li></ul>|
 |-edgeLogFile|string|/var/alog/AtlasEdge_log/devicePlugin.log|边缘场景日志文件。fdFlag设置为true时生效。<p>单个日志文件超过20 MB时会触发自动转储功能，文件大小上限不支持修改。</p>|
 |-use310PMixedInsert|bool|false|是否使用混插模式。<ul><li>true：使用混插模式。</li><li>false：不使用混插模式。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>仅支持服务器混插Atlas 300I Pro 推理卡、Atlas 300V 视频解析卡、Atlas 300V Pro 视频解析卡。</li><li>服务器混插模式下不支持Volcano调度模式。</li><li>服务器混插模式不支持虚拟化实例。</li><li>服务器混插模式不支持故障重调度场景。</li><li>服务器混插模式不支持Ascend Docker Runtime。</li><li>非混插模式下，上报给K8s资源名称不变。<ul><li>非混插模式上报的资源名称格式为huawei.com/Ascend310P。</li><li>混插模式上报的资源名称格式为：huawei.com/Ascend310P-V、huawei.com/Ascend310P-VPro和huawei.com/Ascend310P-IPro。</li></ul></li></ul></div></div>|
 |-volcanoType|bool|false|是否使用Volcano进行调度，当前已支持<term>Atlas 训练系列产品</term>、<term>Atlas A2 训练系列产品</term>、<term>Atlas 推理系列产品</term>和推理服务器（插Atlas 300I 推理卡）芯片。<ul><li>true：使用Volcano。</li><li>false：不使用Volcano。</li></ul>|
@@ -365,7 +365,7 @@
 |-logLevel|int|0|日志级别：<ul><li>-1：debug</li><li>0：info</li><li>1：warning</li><li>2：error</li><li>3：critical</li></ul></div></div>|
 |-maxAge|int|7|日志备份时间限制，取值范围为7~700，单位为天。|
 |-logFile|string|/var/log/mindx-dl/devicePlugin/devicePlugin.log|非边缘场景日志文件。fdFlag设置为false时生效。<p>单个日志文件超过20 MB时会触发自动转储功能，文件大小上限不支持修改。转储后文件的命名格式为：devicePlugin-触发转储的时间.log，如：devicePlugin-2023-10-07T03-38-24.402.log。</p>|
-|-hotReset|int|-1|设备热复位功能参数。开启此功能，芯片发生故障后，Ascend Device Plugin会进行热复位操作，使芯片恢复健康。<ul><li>-1：关闭芯片复位功能</li><li>0：开启推理设备复位功能</li><li>1：开启训练设备在线复位功能</li><li>2：开启训练/推理设备离线复位功能</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>取值为1对应的功能已经日落，请配置其他取值。</p></div></div><p>该参数支持的设备：</p><ul><li>Atlas 800 训练服务器（型号 9000）（NPU满配）</li><li>Atlas 800 训练服务器（型号 9010）（NPU满配）</li><li>Atlas 900T PoD Lite</li><li>Atlas 900 PoD（型号 9000）</li><li>Atlas 800T A2 训练服务器</li><li>Atlas 900 A2 PoD 集群基础单元</li><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li><li>Atlas 850E 超节点</li><li>Atlas 650E 服务器</li><li>Atlas 950 SuperPoD 超节点</li><li>Atlas 350 加速卡</li><li>Atlas 300I Pro 推理卡</li><li>Atlas 300V 视频解析卡</li><li>Atlas 300V Pro 视频解析卡</li><li>Atlas 300I Duo 推理卡</li><li>Atlas 300I 推理卡（型号 3000）（整卡）</li><li>Atlas 300I 推理卡（型号 3010）</li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li>Atlas 800I A3 超节点服务器</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>针对Atlas 300I Duo 推理卡形态硬件，仅支持按卡复位，即两颗芯片会同时复位。</li><li>Atlas 800I A2 推理服务器存在以下两种热复位方式，一台Atlas 800I A2 推理服务器只能使用一种热复位方式，由集群调度组件自动识别使用哪种热复位方式。<ul><li>方式一：若设备上不存在HCCS环，执行推理任务中，当NPU出现故障，Ascend Device Plugin等待该NPU空闲后，对该NPU进行复位操作。</li><li>方式二：若设备上存在HCCS环，执行推理任务中，当服务器出现一个或多个故障NPU，Ascend Device Plugin等待环上的NPU全部空闲后，一次性复位环上所有的NPU。</li></ul></li><li>热复位恢复无法覆盖所有故障，部分故障可能恢复失败，例如，故障导致掉卡，device OS挂死等故障。</li></ul></div></div>|
+|-hotReset|int|-1|设备热复位功能参数。开启此功能，芯片发生故障后，Ascend Device Plugin会进行热复位操作，使芯片恢复健康。<ul><li>-1：关闭芯片复位功能</li><li>0：开启推理设备复位功能</li><li>1：开启训练设备在线复位功能</li><li>2：开启训练/推理设备离线复位功能</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>取值为1对应的功能已经日落，请配置其他取值。</p></div></div><p>该参数支持的设备：</p><ul><li>Atlas 800 训练服务器（型号 9000）（NPU满配）</li><li>Atlas 800 训练服务器（型号 9010）（NPU满配）</li><li>Atlas 900T PoD Lite</li><li>Atlas 900 PoD（型号 9000）</li><li>Atlas 800T A2 训练服务器</li><li>Atlas 900 A2 PoD 集群基础单元</li><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li><li>Atlas 850E 超节点</li><li>Atlas 650E 服务器</li><li>Atlas 950 SuperPoD 超节点</li><li>Atlas 350 加速卡</li><li>Atlas 300I Pro 推理卡</li><li>Atlas 300V 视频解析卡</li><li>Atlas 300V Pro 视频解析卡</li><li>Atlas 300I Duo 推理卡</li><li>Atlas 300I 推理卡（型号 3000）（整卡）</li><li>Atlas 300I 推理卡（型号 3010）</li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li>Atlas 800I A3 超节点服务器</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>针对Atlas 300I Duo 推理卡形态硬件，仅支持按卡复位，即两颗芯片会同时复位。</li><li>Atlas 800I A2 推理服务器存在以下两种热复位方式，一台Atlas 800I A2 推理服务器只能使用一种热复位方式，由集群调度组件自动识别使用哪种热复位方式。<ul><li>方式一：若设备上不存在HCCS环，执行推理任务中，当NPU出现故障，Ascend Device Plugin等待该NPU空闲后，对该NPU进行复位操作。</li><li>方式二：若设备上存在HCCS环，执行推理任务中，当服务器出现一个或多个故障NPU，Ascend Device Plugin等待环上的NPU全部空闲后，一次性复位环上所有的NPU。</li></ul></li><li>对于Atlas 9000 A3 SuperPoD 集群算力系统会复位指定芯片所在的NPU模组；对于Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点、Atlas 800I A3 系列硬件产品、A200T A3 Box8 系列硬件产品会复位指定芯片所在的NPU模组及与其具备网口互助关系的NPU模组。</li><li>热复位恢复无法覆盖所有故障，部分故障可能恢复失败，例如，故障导致掉卡，device OS挂死等故障。</li></ul></div></div>|
 |-linkdownTimeout|int|30|网络linkdown超时时间，单位秒，取值范围为1~30。<p>该参数取值建议与用户在训练脚本中配置的HCCL_RDMA_TIMEOUT时间一致。如果是多任务，建议设置为多任务中HCCL_RDMA_TIMEOUT的最小值。</p>|
 |-enableSlowNode|bool|false|是否启用慢节点检测（劣化诊断）功能。<ul><li>true：开启。</li><li>false：关闭。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>关于劣化诊断的详细说明请参见《iMaster CCAE 产品文档》的“[劣化诊断](https://support.huawei.com/hedex/hdx.do?docid=EDOC1100445519&amp;id=ZH-CN_TOPIC_0000002147436540)”章节。</p></div></div>|
 |-dealWatchHandler|bool|false|当informer链接因异常结束时，是否需要刷新本地的Pod informer缓存。<ul><li>true：刷新Pod informer缓存。</li><li>false：不刷新Pod informer缓存。</li></ul>|

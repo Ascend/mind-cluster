@@ -4,13 +4,13 @@
 
 在故障检测完成后，针对每一种故障模式，断点续训通过故障处理或故障容错来恢复训练业务。断点续训特性根据恢复粒度由粗到细提供Job级别重调度、Pod级别重调度、进程级别重调度、弹性训练、进程级在线恢复、算子级在线恢复多层故障处理系统。用户可根据实际情况选择使用对应的子特性。
 
-故障检测的详细原理和公共故障级别定义请参见[故障检测特性指南](../../11_fault_detection_and_diagnosis/01_working_principle.md)。
+故障检测的详细原理和公共故障级别定义请参见[故障检测特性指南](../../../11_fault_detection_and_diagnosis/01_working_principle.md)。
 
 ## 故障处理策略选择
 
 **图 1**  故障决策说明<a name="fig2639326192019"></a>
 
-![](../../../../figures/scheduling/故障决策说明.png "故障决策说明")
+![](../../../../../figures/scheduling/故障决策说明.png "故障决策说明")
 
 上图中，容错速度代表故障发生到故障恢复的速度，成功率代表故障发生后故障完成恢复的成功率，易用性代表用户使用或集成的成本。
 
@@ -20,7 +20,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 **图 2**  恢复失败说明<a name="fig477415371217"></a>
 
-![](../../../../figures/scheduling/恢复失败说明.png "恢复失败说明")
+![](../../../../../figures/scheduling/恢复失败说明.png "恢复失败说明")
 
 ### 重调度模式<a name="zh-cn_topic_0000002198051753_section1536115719358"></a>
 
@@ -56,11 +56,11 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 |重调度策略|说明|支持的故障类型|
 |--|--|--|
 |直接重调度|系统将故障的节点或芯片进行隔离，然后直接对任务进行重调度。|已知的节点故障或重调度处理级别芯片故障。|
-|无条件重试|<p>系统对配置了无条件重试次数的任务，进行指定次数内的重调度。</p><p>成功重调度后，任务可重试次数将减1，当可重试次数为0时无法再次触发重调度。</p><p>如需使用无条件重试功能，需在YAML中配置fault-retry-times参数，详细参数说明请参见[YAML配置说明](../../../06_api/15_yaml_configuration.md#yaml_configuration)。</p>|由于参数面网络故障或者训练相关软件故障等，导致任务异常退出，Pod的Status变为Failed状态的相关故障。|
+|无条件重试|<p>系统对配置了无条件重试次数的任务，进行指定次数内的重调度。</p><p>成功重调度后，任务可重试次数将减1，当可重试次数为0时无法再次触发重调度。</p><p>如需使用无条件重试功能，需在YAML中配置fault-retry-times参数，详细参数说明请参见[YAML配置说明](../../../../06_api/15_yaml_configuration.md#yaml_configuration)。</p>|由于参数面网络故障或者训练相关软件故障等，导致任务异常退出，Pod的Status变为Failed状态的相关故障。|
 
 ### 故障级别与训练行为
 
-故障级别及其对应的重调度处理、优雅容错处理说明，请参见[故障级别及处理说明](../../11_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md#table103716651410)。
+故障级别及其对应的重调度处理、优雅容错处理说明，请参见[故障级别及处理说明](../../../11_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md#table103716651410)。
 
 ### 亚健康故障处理策略
 
@@ -99,7 +99,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 **图 3**  原理图<a name="fig18343114924113"></a>
 
-![](../../../../figures/scheduling/原理图.png "原理图")
+![](../../../../../figures/scheduling/原理图.png "原理图")
 
 在以上原理图中，各个步骤的说明如下。
 
@@ -119,6 +119,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 - 在大集群训练任务中使用**Pod级别重调度**时，建议设置open files参数（可以打开的最大文件数目）足够大，设置过小可能导致Pod重调度出现异常。例如执行**ulimit -n 100000**命令，将open files参数设置为100000。
 - 当训练任务的annotation中hccl/rankIndex字段为0的Pod发生故障时，不触发Pod级别重调度和进程级别重调度，直接触发Job级别重调度。
 - 请勿使用ConfigMap挂载RankTable文件，否则可能会导致任务重调度失败。
+- 若开启了soft软亲和特性（即任务的super-pod-affinity参数值配置为soft，超节点任务在集群资源不满足超节点亲和性时，支持使用集群中碎片资源继续调度），不支持Pod级别重调度。
 
 **支持的产品型号和AI框架<a name="zh-cn_topic_0000002003034876_section48174410591"></a>**
 
@@ -219,7 +220,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 - 不支持在保存Checkpoint期间触发进程级别重调度。
 - Atlas A3 训练系列产品场景下，若发生NPU掉卡类、OS断连类的故障，可导致进程级别重调度失败。
 - 当故障发生在HCCL建链阶段时，会导致进程级别重调度失败。如果除训练初始化的HCCL建链外，还存在其他训练阶段的HCCL建链，可参考[配置HCCL主动触发建链](../03_configuration/02_configuring_training_recovery.md#配置hccl主动触发建链)章节进行提前建链，防止故障出现在HCCL建链阶段。
-- 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
+- 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
 
 **支持的产品型号和AI框架<a name="zh-cn_topic_0000002039353153_section136131584164"></a>**
 
@@ -267,7 +268,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 **图 4**  进程级别重调度原理示意图<a name="fig1373016583373"></a>
 
-![](../../../../figures/scheduling/进程级别重调度原理示意图.png "进程级别重调度原理示意图")
+![](../../../../../figures/scheduling/进程级别重调度原理示意图.png "进程级别重调度原理示意图")
 
 在以上原理图中，各个步骤的说明如下。
 
@@ -304,7 +305,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 </td>
 <td class="cellrowborder" rowspan="9" valign="top" width="18.13181318131813%" headers="mcps1.2.5.1.3 "><p id="p5119132211596"><a name="p5119132211596"></a>分布式训练框架</p>
 </td>
-<td class="cellrowborder" rowspan="9" valign="top" width="21.862186218621858%" headers="mcps1.2.5.1.4 "><p id="p252632095917"><a name="p252632095917"></a><a href="../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
+<td class="cellrowborder" rowspan="9" valign="top" width="21.862186218621858%" headers="mcps1.2.5.1.4 "><p id="p252632095917"><a name="p252632095917"></a><a href="../../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
 </td>
 </tr>
 <tr id="row1793717157396"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1122104645414"><a name="p1122104645414"></a>上报优化器更新状态</p>
@@ -396,7 +397,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 - 配置亚健康热切策略后，会自动增加进程级恢复开关，若发生非亚健康故障，将触发进程级恢复流程。
 - 无备节点场景下，无法完成热切流程，任务亚健康处理策略降级为ignore，不再处理亚健康故障。
-- 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
+- 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
 
 **支持的产品型号和AI框架<a name="zh-cn_topic_0000002039194017_section140112935318-duplicate-2"></a>**
 
@@ -433,7 +434,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 **图 9**  原理图<a name="fig1770171514241"></a>
 
-![](../../../../figures/scheduling/原理图-11.png "原理图-11")
+![](../../../../../figures/scheduling/原理图-11.png "原理图-11")
 
 在以上原理图中，各个步骤的说明如下。
 
@@ -472,7 +473,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 </td>
 <td class="cellrowborder" rowspan="9" valign="top" width="19.670000000000005%" headers="mcps1.2.5.1.3 "><p id="p444112643720"><a name="p444112643720"></a>分布式训练框架</p>
 </td>
-<td class="cellrowborder" rowspan="9" valign="top" width="22.800000000000004%" headers="mcps1.2.5.1.4 "><p id="p7146223174212"><a name="p7146223174212-duplicate-3"></a><a href="../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
+<td class="cellrowborder" rowspan="9" valign="top" width="22.800000000000004%" headers="mcps1.2.5.1.4 "><p id="p7146223174212"><a name="p7146223174212-duplicate-3"></a><a href="../../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
 </td>
 </tr>
 <tr id="row1793717157396"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1598625612366"><a name="p1598625612366"></a>上报优化器更新状态</p>
@@ -586,7 +587,7 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 
 **图 5**  原理图<a name="fig151851746103612"></a>
 
-![](../../../../figures/scheduling/原理图-8.png "原理图-8")
+![](../../../../../figures/scheduling/原理图-8.png "原理图-8")
 
 在以上原理图中，各个步骤的说明如下。
 
@@ -633,7 +634,7 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 - 不支持MC2开启场景。
 - 不支持开启watchdog功能。
 - 当故障发生在HCCL建链阶段时，会导致进程级在线恢复失败。如果除训练初始化的HCCL建链外，还存在其他训练阶段的HCCL建链，可参考[配置HCCL主动触发建链](../03_configuration/02_configuring_training_recovery.md#配置hccl主动触发建链)章节进行提前建链，防止故障出现在HCCL建链阶段。
-- 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
+- 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
 
 **支持的产品型号及AI框架<a name="zh-cn_topic_0000002003193196_section108582044132214"></a>**
 
@@ -710,7 +711,7 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 
 **图 6**  进程级在线恢复原理<a name="fig37536398327"></a>
 
-![](../../../../figures/scheduling/进程级在线恢复原理.png "进程级在线恢复原理")
+![](../../../../../figures/scheduling/进程级在线恢复原理.png "进程级在线恢复原理")
 
 在以上原理图中，各个步骤的说明如下。
 
@@ -745,7 +746,7 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 </td>
 <td class="cellrowborder" rowspan="5" valign="top" width="17.981798179817982%" headers="mcps1.2.5.1.3 "><p id="p12303135518715"><a name="p12303135518715"></a>分布式训练框架</p>
 </td>
-<td class="cellrowborder" rowspan="5" valign="top" width="26.68266826682668%" headers="mcps1.2.5.1.4 "><p id="p1878873515913"><a name="p1878873515913"></a><a href="../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
+<td class="cellrowborder" rowspan="5" valign="top" width="26.68266826682668%" headers="mcps1.2.5.1.4 "><p id="p1878873515913"><a name="p1878873515913"></a><a href="../../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
 </td>
 </tr>
 <tr id="row149661916713"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1947943212711"><a name="p1947943212711"></a>上报优化器更新状态</p>
@@ -806,7 +807,7 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 </td>
 <td class="cellrowborder" rowspan="9" valign="top" width="17.43%" headers="mcps1.2.5.1.3 "><p id="p9527145711216"><a name="p9527145711216"></a>分布式训练框架</p>
 </td>
-<td class="cellrowborder" rowspan="9" valign="top" width="26.68%" headers="mcps1.2.5.1.4 "><p id="p7146223174212"><a name="p7146223174212"></a><a href="../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
+<td class="cellrowborder" rowspan="9" valign="top" width="26.68%" headers="mcps1.2.5.1.4 "><p id="p7146223174212"><a name="p7146223174212"></a><a href="../../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
 </td>
 </tr>
 <tr id="row566215364551"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p23923716123"><a name="p23923716123"></a>上报优化器更新状态</p>
@@ -878,7 +879,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 
 了解借轨通信任务暂停与回切功能的详细配置方法，请参见[配置借轨通信任务暂停与回切](../03_configuration/01_configuring_fault_handling_policies.md#配置借轨通信任务暂停与回切)。
 
-- 调用[借轨回切接口](../../../06_api/04_clusterd/08_link_failover_and_switchback_apis.md)执行借轨回切动作前，请先了解NPU芯片组网关系，保证目标NPU的网络链路正常，如果目标NPU为linkdown状态会导致操作失败。
+- 调用[借轨回切接口](../../../../06_api/04_clusterd/08_link_failover_and_switchback_apis.md)执行借轨回切动作前，请先了解NPU芯片组网关系，保证目标NPU的网络链路正常，如果目标NPU为linkdown状态会导致操作失败。
 - 以上述组网指南中的接口对接关系为例，对于以下几种情况，调用SwitchNicTrack接口时，指定的dev与op如下：
     1. 若将device0，device8从QDD8借轨切到QDD7，传参dev为\[device0，device8\]，op为\[true，true\]
     2. 若将device0，device8从QDD7回切到QDD8，传参dev为\[device0，device8\]，op为\[false，false\]
@@ -889,7 +890,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 
     **图 7**  接口对接关系<a name="fig111354543222"></a>
 
-    ![](../../../../figures/scheduling/接口对接关系.png "接口对接关系")
+    ![](../../../../../figures/scheduling/接口对接关系.png "接口对接关系")
 
 **使用场景<a name="section14336140104818"></a>**
 
@@ -903,7 +904,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 - 请在训练正常迭代后，再进行借轨或回切指令的下发。
 - 确保已开启进程级恢复相关功能特性。
 - 仅支持Pod间为Roce通信的场景。
-- 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
+- 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
 
 **支持的产品型号和AI框架<a name="zh-cn_topic_0000002098609234_section4771115416256"></a>**
 
@@ -933,7 +934,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 
 **图 8**  原理图<a name="fig9336113210132"></a>
 
-![](../../../../figures/scheduling/原理图-9.png "原理图-9")
+![](../../../../../figures/scheduling/原理图-9.png "原理图-9")
 
 在以上原理图中，各个步骤的说明如下。
 
@@ -968,7 +969,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 </td>
 <td class="cellrowborder" rowspan="3" valign="top" width="14.719999999999999%" headers="mcps1.2.5.1.3 "><p id="p922524114255"><a name="p922524114255"></a>分布式训练框架</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="22.99%" headers="mcps1.2.5.1.4 "><p id="p7146223174212"><a name="p7146223174212-duplicate-2"></a><a href="../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="22.99%" headers="mcps1.2.5.1.4 "><p id="p7146223174212"><a name="p7146223174212-duplicate-2"></a><a href="../../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
 </td>
 </tr>
 <tr id="row1793717157396"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p9871924102517"><a name="p9871924102517"></a>上报优化器更新状态</p>
@@ -1012,7 +1013,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 
     增加内存大小计算公式：增加内存最大值（MB）= HCCL\_BUFFSIZE \* 2 \* 9，其中，HCCL\_BUFFSIZE默认为200MB，HCCL\_BUFFSIZE的说明详细请参见《CANN HCCL集合通信库》中的“[HCCL_BUFFSIZE](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/commlib/hcclug/docs/zh/user_guide/hccl_env/HCCL_BUFFSIZE.md)”章节。
 
-- 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
+- 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
 
 更多使用约束可参考[MindSpeed-LLM弹性训练功能使用约束](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/docs/pytorch/features/high_availability.md)。
 
@@ -1051,7 +1052,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 
 **图 10**  原理图<a name="fig130013397201"></a>
 
-![](../../../../figures/scheduling/原理图-12.png "原理图-12")
+![](../../../../../figures/scheduling/原理图-12.png "原理图-12")
 
 以上示意图仅以缩容1个DP域为例，实际弹性训练过程中可能会一次缩容多个DP域。图中每个方格代表一个rank。
 
@@ -1061,7 +1062,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 
 **图 11**  流程图<a name="fig7783192415293"></a>
 
-![](../../../../figures/scheduling/流程图.png "流程图")
+![](../../../../../figures/scheduling/流程图.png "流程图")
 
 在以上流程图中，各个步骤的说明如下。
 
@@ -1108,7 +1109,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 </td>
 <td class="cellrowborder" rowspan="16" valign="top" width="18.190000000000005%" headers="mcps1.2.6.1.4 "><p id="p444112643720"><a name="p444112643720-duplicate-2"></a>分布式训练框架</p>
 </td>
-<td class="cellrowborder" rowspan="6" valign="top" width="21.090000000000003%" headers="mcps1.2.6.1.5 "><p id="p7146223174212"><a name="p7146223174212-duplicate-4"></a><a href="../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">表2</a></p>
+<td class="cellrowborder" rowspan="6" valign="top" width="21.090000000000003%" headers="mcps1.2.6.1.5 "><p id="p7146223174212"><a name="p7146223174212-duplicate-4"></a><a href="../../../../07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接非mindspeed-llm框架">表2</a></p>
 </td>
 </tr>
 <tr id="row1793717157396"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p106371759163113"><a name="p106371759163113"></a>2</p>
@@ -1384,10 +1385,10 @@ Ascend Device Plugin负责故障的上报以及设备的恢复，管理进程（
 
 **图 12**  获取故障信息<a name="zh-cn_topic_0000002098609234_fig135111361314"></a>
 
-![](../../../../figures/scheduling/获取故障信息.png "获取故障信息")
+![](../../../../../figures/scheduling/获取故障信息.png "获取故障信息")
 
 优雅容错模式将故障区分为以下四类，**无需处理**、**重新执行业务**、**需要复位芯片**和**需要重调度**，对于每类故障的处理如[图13](#zh-cn_topic_0000002098609234_fig12620181591012)所示。
 
 **图 13**  优雅容错故障处理流程<a name="zh-cn_topic_0000002098609234_fig12620181591012"></a>
 
-![](../../../../figures/scheduling/优雅容错故障处理流程.png "优雅容错故障处理流程")
+![](../../../../../figures/scheduling/优雅容错故障处理流程.png "优雅容错故障处理流程")

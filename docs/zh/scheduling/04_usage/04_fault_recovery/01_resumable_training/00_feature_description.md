@@ -16,7 +16,7 @@
 
 |功能名称|说明|配置步骤|
 |--|--|--|
-|故障检测（前置依赖）|<p>断点续训依赖故障检测特性提供集群和训练业务的故障事件、故障级别和资源状态。</p><p>详细功能及原理介绍请参见[故障检测特性指南](../11_fault_detection_and_diagnosis/00_feature_description.md)。</p>|[配置故障检测](../11_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md)|
+|故障检测（前置依赖）|<p>断点续训依赖故障检测特性提供集群和训练业务的故障事件、故障级别和资源状态。</p><p>详细功能及原理介绍请参见[故障检测特性指南](../../11_fault_detection_and_diagnosis/00_feature_description.md)。</p>|[配置故障检测](../../11_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md)|
 |故障处理|<p>断点续训具有故障处理功能，出现故障后不需要人工介入就可自动隔离故障设备。</p><p>详细功能及原理介绍请参见[故障处理](./01_solutions_principles/01_fault_handling.md)。</p>|[配置故障处理](./03_configuration/01_configuring_fault_handling_policies.md)|
 |恢复加速|<p>断点续训具有加速训练恢复的功能，用户可自定义加速的策略，降低训练拉起时间。</p><p>详细功能及原理介绍请参见[恢复加速](./01_solutions_principles/02_recovery_acceleration.md)。</p>|[配置恢复加速](./03_configuration/02_configuring_training_recovery.md)|
 
@@ -43,7 +43,7 @@
 
 **图 1**  整体架构<a name="fig1285977919"></a>
 
-![](../../../figures/scheduling/整体架构.png "整体架构")
+![](../../../../figures/scheduling/整体架构.png "整体架构")
 
 其中各个部分的能力如下：
 
@@ -62,7 +62,7 @@
 
 **图 2**  端到端流程<a name="fig1968122593112"></a>
 
-![](../../../figures/scheduling/端到端流程.png "端到端流程")
+![](../../../../figures/scheduling/端到端流程.png "端到端流程")
 
 各步骤说明如下：
 
@@ -86,7 +86,7 @@
 
 **图 3**  架构原理<a name="fig1710473818543"></a>
 
-![](../../../figures/scheduling/架构原理.png "架构原理")
+![](../../../../figures/scheduling/架构原理.png "架构原理")
 
 各步骤说明如下：
 
@@ -103,11 +103,11 @@
 
 **使用条件<a name="section179221342141518"></a>**
 
-- 使用断点续训功能需要安装的组件详见[所需组件](../../01_introduction/02_feature_description.md#断点续训)章节。
+- 使用断点续训功能需要安装的组件详见[所需组件](../../../01_introduction/02_feature_description.md#断点续训)章节。
 
 - 断点续训特性是基于MindCluster集群调度组件的高阶特性，结合昇腾软硬件全栈实现训练故障恢复，使用断点续训特性前需要满足以下前置条件。
 
-  - 完成K8s集群基础性能调优，详情请参见[K8s集群基础性能调优](../../07_references/05_appendix.md#k8s集群基础性能调优)。
+  - 完成K8s集群基础性能调优，详情请参见[K8s集群基础性能调优](../../../07_references/05_appendix.md#k8s集群基础性能调优)。
 
   - 具备共享存储系统
 
@@ -161,8 +161,8 @@
 
 **图 4**  3B模型时间指标<a name="zh-cn_topic_0000002003001306_fig175521679432"></a>
 
-![](../../../figures/scheduling/3B模型时间指标.png "3B模型时间指标")
+![](../../../../figures/scheduling/3B模型时间指标.png "3B模型时间指标")
 
 **图 5**  15B模型时间指标<a name="zh-cn_topic_0000002003001306_fig10995142020518"></a>
 
-![](../../../figures/scheduling/15B模型时间指标.png "15B模型时间指标")
+![](../../../../figures/scheduling/15B模型时间指标.png "15B模型时间指标")

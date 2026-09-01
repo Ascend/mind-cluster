@@ -1,8 +1,8 @@
-﻿# Ascend Operator<a name="ZH-CN_TOPIC_0000002479386415"></a>
+# Ascend Operator<a name="ZH-CN_TOPIC_0000002479386415"></a>
 
 - 使用整卡调度（训练）、静态vNPU调度（训练）、断点续训或弹性训练的用户，必须安装Ascend Operator组件。如果使用Volcano组件作为调度器，需要先安装Volcano组件，否则Ascend Operator会启动失败。
-- 使用整卡调度（推理）和推理卡故障重调度特性，下发acjob类型的分布式推理任务，必须安装Ascend Operator。
-- 仅使用容器化支持和资源监测、推理卡故障恢复或推理卡故障重调度（单机任务）的用户，可以不安装Ascend Operator，请直接跳过本章节。
+- 使用整卡调度（推理）和重调度特性，下发acjob类型的分布式推理任务，必须安装Ascend Operator。
+- 仅使用容器化支持和资源监测、芯片故障恢复或重调度（单机任务）的用户，可以不安装Ascend Operator，请直接跳过本章节。
 - 启动Ascend Operator之前，需要先启动Volcano。Ascend Operator需要感知PodGroup资源。
 - Ascend Operator组件允许创建的单个AscendJob任务的最大副本数量为20000。
 

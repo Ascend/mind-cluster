@@ -20,3 +20,4 @@
 - [自定义指标开发](./01_custom_metrics_development.md)
 - [DP热复位插件开发](./02_dp_hot_reset_plugin_development.md)
 - [公共故障上报](./03_clusterd_fault_awareness.md)
+- [开发与编译环境搭建](./04_development_environment.md)

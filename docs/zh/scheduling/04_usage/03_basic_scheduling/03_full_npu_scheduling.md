@@ -8,9 +8,10 @@
     - 调度器（Volcano或其他调度器）
     - Ascend Device Plugin
     - Ascend Docker Runtime
-    - Ascend Operator
+    - Ascend Operator（使用AscendJob必须安装）
     - ClusterD
     - NodeD
+    - Infer Operator（使用InferServiceSet任务必须安装）
 - 针对故障恢复场景，需要确保每个节点都有任务运行所需的模型脚本信息，建议使用共享存储方案，比如NFS（Network File System），用户可以参见[安装NFS](../../07_references/02_common_operations.md#安装nfs)。
 - 针对训练场景：对于超大规模集群调度场景，支持批量创建Pod和批量调度功能。
    - 若要使用批量创建Pod功能，安装Ascend Operator组件时需使用openFuyao定制Kubernetes组件。

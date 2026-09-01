@@ -7,7 +7,7 @@
 #### 前提条件<a name="zh-cn_topic_0000002194466236_section138036504533"></a>
 
 - （可选）已安装[ClusterD](../../../05_developer_guide/00_installation_deployment/00_manual_installation/06_clusterd.md)、[Ascend Device Plugin](../../../05_developer_guide/00_installation_deployment/00_manual_installation/04_ascend_device_plugin.md)和[Volcano](../../../05_developer_guide/00_installation_deployment/00_manual_installation/05_volcano.md)（以上MindCluster组件版本均需与TaskD配套）
-- 在容器内安装[TorchNPU](../../04_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)（**可选**，PyTorch场景需安装、版本号≥7.1.RC1）、MindSpore（**可选**，MindSpore场景需安装、版本号≥2.7.0）、[CANN](../../04_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)（**必选**，版本号≥8.2.RC1）、[TaskD](../../04_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)（**必选**）
+- 在容器内安装[TorchNPU](../../04_fault_recovery/01_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)（**可选**，PyTorch场景需安装、版本号≥7.1.RC1）、MindSpore（**可选**，MindSpore场景需安装、版本号≥2.7.0）、[CANN](../../04_fault_recovery/01_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)（**必选**，版本号≥8.2.RC1）、[TaskD](../../04_fault_recovery/01_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)（**必选**）
 
 #### 准备软件包<a name="zh-cn_topic_0000002194466236_section8281518121516"></a>
 
@@ -367,7 +367,7 @@
 #### 前提条件<a name="zh-cn_topic_0000002194466236_section138036504533-duplicate-2"></a>
 
 - （可选）已安装[ClusterD](../../../05_developer_guide/00_installation_deployment/00_manual_installation/06_clusterd.md)、[Ascend Device Plugin](../../../05_developer_guide/00_installation_deployment/00_manual_installation/04_ascend_device_plugin.md)和[Volcano](../../../05_developer_guide/00_installation_deployment/00_manual_installation/05_volcano.md)（以上MindCluster组件版本均需与TaskD配套）
-- 在容器内安装[TorchNPU](../../04_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)（**可选**，PyTorch场景需安装、版本号≥7.0.0）、MindSpore（**可选**，MindSpore场景需安装、版本号≥2.6.RC1）、[CANN](../../04_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)（**必选**，版本号≥8.1.RC1）、[TaskD](../../04_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)（**必选**，版本号≥7.0.RC1）
+- 在容器内安装[TorchNPU](../../04_fault_recovery/01_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)（**可选**，PyTorch场景需安装、版本号≥7.0.0）、MindSpore（**可选**，MindSpore场景需安装、版本号≥2.6.RC1）、[CANN](../../04_fault_recovery/01_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)（**必选**，版本号≥8.1.RC1）、[TaskD](../../04_fault_recovery/01_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#ZH-CN_TOPIC_0000002511426469)（**必选**，版本号≥7.0.RC1）
 
 #### 准备软件包<a name="zh-cn_topic_0000002194466236_section8281518121516-duplicate-2"></a>
 
