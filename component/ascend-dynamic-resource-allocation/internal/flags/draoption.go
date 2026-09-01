@@ -45,7 +45,7 @@ func (d *DRAOption) RegisterFlags() {
 
 	flag.StringVar(&d.CdiRoot,
 		"cdi-root",
-		"/var/run/cdi",
+		consts.DefaultCDIRoot,
 		"Absolute path to the directory where CDI files will be generated.")
 
 	flag.StringVar(&d.KubeletRegistrarDirectoryPath,

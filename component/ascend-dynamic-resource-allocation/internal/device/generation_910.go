@@ -46,11 +46,6 @@ func NewAscend910Generation() *Ascend910Generation {
 	return &Ascend910Generation{}
 }
 
-// GetReleasedName returns the released name for Ascend 910.
-func (g *Ascend910Generation) GetReleasedName() string {
-	return consts.Ascend910ReleasedName
-}
-
 // ListNpuDevices enumerates all 910 devices via dmgr.GetDeviceList and
 // assembles each one. The driver sees only the resulting list.
 func (g *Ascend910Generation) ListNpuDevices() ([]NpuDevice, error) {
@@ -88,8 +83,9 @@ func (g *Ascend910Generation) buildNpuDevice(logicID int32) (NpuDevice, error) {
 		ip = ""
 	}
 	return NpuDevice{
-		DevType:    g.dmgr.GetDevType(),
-		DeviceName: fmt.Sprintf("%s-%d", g.GetReleasedName(), phyID),
+		DevType: g.dmgr.GetDevType(),
+		// DeviceName follows the unified "<NPUNamePrefix>-<phyID>" convention across all generations.
+		DeviceName: fmt.Sprintf("%s-%d", consts.NPUNamePrefix, phyID),
 		IP:         ip,
 		LogicID:    logicID,
 		PhyID:      phyID,
@@ -98,12 +94,19 @@ func (g *Ascend910Generation) buildNpuDevice(logicID int32) (NpuDevice, error) {
 	}, nil
 }
 
-// DeviceAttributes publishes the deviceType and physicId for 910 devices.
+// DeviceAttributes publishes the type, physicId and chipName for 910 devices.
 func (g *Ascend910Generation) DeviceAttributes(dev NpuDevice) map[resourceapi.QualifiedName]resourceapi.DeviceAttribute {
 	return map[resourceapi.QualifiedName]resourceapi.DeviceAttribute{
-		attrKeyDeviceType: {StringValue: ptr.To(dev.DevType)},
-		attrKeyPhysicID:   {IntValue: ptr.To(int64(dev.PhyID))},
+		attrKeyType:     {StringValue: ptr.To(consts.NPUNamePrefix)},
+		attrKeyPhysicID: {IntValue: ptr.To(int64(dev.PhyID))},
+		attrKeyChipName: {StringValue: ptr.To(g.getChipName(dev.LogicID))},
 	}
+}
+
+// PhyIDToMountID is a no-op on 910 generations where devices mount by phyID,
+// so the input is returned unchanged as the mount ID.
+func (g *Ascend910Generation) PhyIDToMountID(phyID int32) (int32, error) {
+	return phyID, nil
 }
 
 // getDeviceIP returns the first non-link-local device IP, preferring IPv4.

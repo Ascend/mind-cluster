@@ -30,10 +30,11 @@ import (
 // CdiSpecInterface abstracts per-claim CDI spec generation and removal.
 //
 // The plugin only knows a claim UID and the allocated device names reported
-// by the scheduler. Translating those names into NPU logical IDs and
-// hardware-type metadata requires device knowledge that lives in the driver
-// layer (DraGenerationInterface + cdi public library), so the plugin depends
-// on this interface and lets the driver supply the implementation.
+// by the scheduler. Translating those names into the /dev device IDs CDI must
+// expose and hardware-type metadata requires device knowledge that lives in
+// the driver layer (DraGenerationInterface + cdi public library), so the
+// plugin depends on this interface and lets the driver supply the
+// implementation.
 type CdiSpecInterface interface {
 	// WriteClaimSpec generates and persists a CDI spec file for the claim
 	// and returns the fully-qualified CDI device IDs to be injected into
@@ -50,12 +51,16 @@ type CdiSpecInterface interface {
 // (which only knows claim UIDs and allocated device names) and the cdi
 // library (which needs NPU device IDs, devType and productType).
 //
-// Device names follow the "<releasedName>-<id>" convention (e.g.
-// "Ascend910-0"), so the numeric suffix is the device ID. No allInfo
-// lookup is needed.
+// Device names follow the "npu-<id>" convention (e.g. "npu-0"), so the
+// numeric suffix is the physical device ID. The CDI spec generator must
+// expose the same /dev node the container actually mounts, so toMountID
+// (supplied per-generation) is invoked on every
+// WriteClaimSpec to honor runtime device-state changes. A nil toMountID
+// means the mount ID equals the phyID and no conversion is performed.
 type cdiSpecManager struct {
 	devType      string
 	productTypes []string
+	toMountID    func(int32) (int32, error)
 }
 
 const (
@@ -71,11 +76,14 @@ const (
 // NewCDISpecManager constructs a cdiSpecManager. devType and productTypes
 // come from the generation once it has been handed a device manager.
 // cdiRoot configures the default CDI cache's Spec directory so
-// GenerateClaimSpec writes files there.
+// GenerateClaimSpec writes files there. toMountID converts the physical ID
+// (parsed from a device name) to the ID of the /dev node CDI must expose;
+// pass nil when the mount ID equals the phyID for this generation.
 func NewCDISpecManager(
 	devType string,
 	productTypes []string,
 	cdiRoot string,
+	toMountID func(int32) (int32, error),
 ) *cdiSpecManager {
 	// The cdi public library uses the global default cache; configure its
 	// Spec directory once at construction time. Safe to call before the
@@ -91,24 +99,34 @@ func NewCDISpecManager(
 	return &cdiSpecManager{
 		devType:      devType,
 		productTypes: productTypes,
+		toMountID:    toMountID,
 	}
 }
 
 // Compile-time check: cdiSpecManager satisfies CdiSpecInterface.
 var _ CdiSpecInterface = (*cdiSpecManager)(nil)
 
-// WriteClaimSpec parses the numeric suffix from each device name, then asks
-// the cdi public library to build and persist a CDI spec file for the claim.
-// Returns the fully-qualified CDI device IDs so the plugin can fill them
-// into the prepared devices handed back to kubelet.
+// WriteClaimSpec parses the numeric suffix from each device name, converts
+// the physical ID to the mount ID via the generation-supplied toMountID (so
+// the latest device state is consulted), then asks the cdi public library to
+// build and persist a CDI spec file for the claim. Returns the
+// fully-qualified CDI device IDs so the plugin can fill them into the prepared
+// devices handed back to kubelet.
 func (m *cdiSpecManager) WriteClaimSpec(claimUID string, deviceNames []string) ([]string, error) {
 	ids := make([]int, 0, len(deviceNames))
 	for _, name := range deviceNames {
-		id, err := parseDeviceIDSuffix(name)
+		phyID, err := parseDeviceIDSuffix(name)
 		if err != nil {
 			return nil, fmt.Errorf("cdi: parse device ID for %q: %w", name, err)
 		}
-		ids = append(ids, id)
+		if m.toMountID != nil {
+			mountID, err := m.toMountID(int32(phyID))
+			if err != nil {
+				return nil, fmt.Errorf("cdi: convert phyID %d to mountID for %q: %w", phyID, name, err)
+			}
+			phyID = int(mountID)
+		}
+		ids = append(ids, phyID)
 	}
 
 	// cdi.DeviceConfig.ProductType is a single string; it is only used to
@@ -126,8 +144,8 @@ func (m *cdiSpecManager) WriteClaimSpec(claimUID string, deviceNames []string) (
 			ProductType: productType,
 		},
 		MountConfig: mount.MountConfig{
-			Dir:        mountConfigDir,
-			HostRoot:   defaultHostRoot,
+			Dir:      mountConfigDir,
+			HostRoot: defaultHostRoot,
 			// Mount UB driver files by default for Ascend 950-generation devices.
 			MountUBDrv: true,
 		},
@@ -146,7 +164,7 @@ func (m *cdiSpecManager) DeleteClaimSpec(claimUID string) error {
 }
 
 // parseDeviceIDSuffix splits a "<name>-<id>" device name and returns the
-// trailing integer. e.g. "Ascend910-12" -> 12, nil.
+// trailing integer. e.g. "npu-12" -> 12, nil.
 func parseDeviceIDSuffix(name string) (int, error) {
 	idx := strings.LastIndex(name, "-")
 	if idx < 0 || idx == len(name)-1 {

@@ -49,13 +49,14 @@ type DraGenerationInterface interface {
 	// ResourceSlice for a device. Centralising this here keeps publish
 	// logic free of generation-specific attribute names.
 	DeviceAttributes(dev device.NpuDevice) map[resourceapi.QualifiedName]resourceapi.DeviceAttribute
-	// GetReleasedName returns the public released product name for this
-	// generation (e.g. Ascend910ReleasedName). Used to build DeviceName and
-	// any user-facing identifier; centralising it avoids per-generation
-	// string constants leaking into driver common code.
-	GetReleasedName() string
 	GetDevType() string
 	GetProductTypes() []string
+	// PhyIDToMountID converts the physical device ID (parsed from the device
+	// name suffix) to the ID used by the actual /dev device node that CDI
+	// must expose to the container. Each generation decides whether a
+	// conversion is needed (e.g. A5 mounts by logicID while others mount by
+	// phyID) so the common base never branches on chip type.
+	PhyIDToMountID(phyID int32) (int32, error)
 }
 
 // DraDriverInterface is the lifecycle surface every concrete driver fills.
@@ -137,7 +138,8 @@ func (d *AscendDraDriver) buildDriverResources() resourceslice.DriverResources {
 }
 
 // Start runs the driver startup sequence: pull devices, register service,
-// publish ResourceSlice, start healthz.
+// publish ResourceSlice. healthz is started in main before AutoInit so the
+// kubelet liveness probe passes during slow device-manager init.
 func (d *AscendDraDriver) Start(ctx context.Context) error {
 	hwlog.RunLog.Info("starting ascend dra driver")
 	// 1. pull npu info from generation
@@ -153,16 +155,8 @@ func (d *AscendDraDriver) Start(ctx context.Context) error {
 	if err := d.publishResources(ctx); err != nil {
 		return err
 	}
-	// 5. start healthz
-	if err := d.startHealthCheck(ctx); err != nil {
-		return err
-	}
 	hwlog.RunLog.Info("ascend dra driver started")
 	return nil
-}
-
-func (d *AscendDraDriver) startHealthCheck(ctx context.Context) error {
-	return d.ascendDraPlugin.StartHealthyCheck(ctx)
 }
 
 // Stop tears down the driver by stopping the underlying kubelet plugin.
@@ -253,6 +247,7 @@ func (adm *AscendDraManager) autoSetDraDriver(
 		generation.GetDevType(),
 		generation.GetProductTypes(),
 		draConfig.DraOption.CdiRoot,
+		generation.PhyIDToMountID,
 	)
 
 	ascendDraPlugin, err := plugin.NewAscendDraPlugin(draConfig, cancel, specMgr)

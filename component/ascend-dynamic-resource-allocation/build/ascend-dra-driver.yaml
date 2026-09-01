@@ -74,6 +74,9 @@ spec:
         args:
         - |
           set -e
+          mkdir -p /var/log/mindx-dl
+          chmod 755 /var/log/mindx-dl
+          chown root:root /var/log/mindx-dl
           mkdir -p /var/log/mindx-dl/ascend-dra
           chmod 750 /var/log/mindx-dl/ascend-dra
           chown root:root /var/log/mindx-dl/ascend-dra
@@ -82,7 +85,7 @@ spec:
           runAsNonRoot: false
         volumeMounts:
         - name: dra-log
-          mountPath: /var/log/mindx-dl/ascend-dra
+          mountPath: /var/log
       containers:
       - name: plugin
         securityContext:
@@ -91,7 +94,7 @@ spec:
             add: [ "SYS_PTRACE" ]
         image: ascend-dra:v6.0.0
         imagePullPolicy: IfNotPresent
-        command: ["/bin/bash", "-c", "exec ascend-dra --enable-healthz --healthz-address=11251"]
+        command: ["/bin/bash", "-c", "exec ascend-dra -logLevel=0 --enable-healthz --healthz-address=11251"]
         resources:
           {}
 
@@ -99,6 +102,7 @@ spec:
           httpGet:
             path: /
             port: 11251
+          initialDelaySeconds: 30
           failureThreshold: 3
           periodSeconds: 10
 
@@ -124,6 +128,7 @@ spec:
           mountPath: /var/run/cdi
         - name: dra-log
           mountPath: /var/log/mindx-dl/ascend-dra
+          subPath: mindx-dl/ascend-dra
           readOnly: false
         - name: ascend-dra-mounts
           mountPath: /etc/ascend-dra/mounts
@@ -159,8 +164,8 @@ spec:
           path: /var/run/cdi
       - name: dra-log
         hostPath:
-          path: /var/log/mindx-dl/ascend-dra
-          type: DirectoryOrCreate
+          path: /var/log
+          type: Directory
       - name: ascend-dra-mounts
         hostPath:
           path: /etc/ascend-dra/mounts

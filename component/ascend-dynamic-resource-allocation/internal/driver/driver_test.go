@@ -39,7 +39,6 @@ import (
 //   - pullNPUInfo fails
 //   - startService fails
 //   - publishResources fails
-//   - startHealthCheck fails
 //   - happy path
 type startCase struct {
 	name        string
@@ -47,7 +46,6 @@ type startCase struct {
 	devices     []device.NpuDevice
 	registerErr error
 	publishErr  error
-	healthErr   error
 	expectErr   bool
 }
 
@@ -55,25 +53,19 @@ var startCases = []startCase{
 	{name: "pullNPUInfo fails", listErr: errSentinel, expectErr: true},
 	{
 		name:        "startService fails",
-		devices:     []device.NpuDevice{{DevType: "Ascend910", DeviceName: "Ascend910-0", PhyID: 0}},
+		devices:     []device.NpuDevice{{DevType: "Ascend910", DeviceName: "npu-0", PhyID: 0}},
 		registerErr: errSentinel,
 		expectErr:   true,
 	},
 	{
 		name:       "publishResources fails",
-		devices:    []device.NpuDevice{{DevType: "Ascend910", DeviceName: "Ascend910-0", PhyID: 0}},
+		devices:    []device.NpuDevice{{DevType: "Ascend910", DeviceName: "npu-0", PhyID: 0}},
 		publishErr: errSentinel,
 		expectErr:  true,
 	},
 	{
-		name:      "startHealthCheck fails",
-		devices:   []device.NpuDevice{{DevType: "Ascend910", DeviceName: "Ascend910-0", PhyID: 0}},
-		healthErr: errSentinel,
-		expectErr: true,
-	},
-	{
 		name:      "happy path",
-		devices:   []device.NpuDevice{{DevType: "Ascend910", DeviceName: "Ascend910-0", PhyID: 0}},
+		devices:   []device.NpuDevice{{DevType: "Ascend910", DeviceName: "npu-0", PhyID: 0}},
 		expectErr: false,
 	},
 }
@@ -96,15 +88,15 @@ var pullNPUInfoCases = []pullNPUInfoCase{
 	{name: "empty device list", devices: nil, expectErr: true},
 	{
 		name:      "single device single type",
-		devices:   []device.NpuDevice{{DevType: "Ascend910", DeviceName: "Ascend910-0", PhyID: 0}},
+		devices:   []device.NpuDevice{{DevType: "Ascend910", DeviceName: "npu-0", PhyID: 0}},
 		expectErr: false,
 		expectDev: 1,
 	},
 	{
 		name: "duplicate types collapse to one group",
 		devices: []device.NpuDevice{
-			{DevType: "Ascend910", DeviceName: "Ascend910-0", PhyID: 0},
-			{DevType: "Ascend910", DeviceName: "Ascend910-1", PhyID: 1},
+			{DevType: "Ascend910", DeviceName: "npu-0", PhyID: 0},
+			{DevType: "Ascend910", DeviceName: "npu-1", PhyID: 1},
 		},
 		expectErr: false,
 		expectDev: 2,
@@ -112,8 +104,8 @@ var pullNPUInfoCases = []pullNPUInfoCase{
 	{
 		name: "two distinct types",
 		devices: []device.NpuDevice{
-			{DevType: "Ascend910", DeviceName: "Ascend910-0", PhyID: 0},
-			{DevType: "Ascend910B", DeviceName: "Ascend910B-0", PhyID: 1},
+			{DevType: "Ascend910", DeviceName: "npu-0", PhyID: 0},
+			{DevType: "Ascend910B", DeviceName: "npu-1", PhyID: 1},
 		},
 		expectErr: false,
 		expectDev: 2,
@@ -133,8 +125,8 @@ var buildDriverResourcesCases = []buildDriverResourcesCase{
 	{
 		name: "two devices",
 		allDevs: []*device.NpuDevice{
-			{DevType: "Ascend910", DeviceName: "Ascend910-0", PhyID: 0},
-			{DevType: "Ascend910", DeviceName: "Ascend910-1", PhyID: 1},
+			{DevType: "Ascend910", DeviceName: "npu-0", PhyID: 0},
+			{DevType: "Ascend910", DeviceName: "npu-1", PhyID: 1},
 		},
 		expectPools: 1,
 		expectDevs:  2,
@@ -204,7 +196,7 @@ func TestAscendDraDriver_Start(t *testing.T) {
 				d, _ := newDriverWithFake(gen)
 				stopCalled := false
 				patches := &pluginMethodPatches{}
-				patchPluginMethods(patches, tc.registerErr, tc.publishErr, tc.healthErr, &stopCalled)
+				patchPluginMethods(patches, tc.registerErr, tc.publishErr, &stopCalled)
 				defer patches.Reset()
 				err := d.Start(context.Background())
 				if tc.expectErr {
@@ -267,7 +259,7 @@ func TestAscendDraDriver_Stop(t *testing.T) {
 		d, _ := newDriverWithFake(gen)
 		stopCalled := false
 		patches := &pluginMethodPatches{}
-		patchPluginMethods(patches, nil, nil, nil, &stopCalled)
+		patchPluginMethods(patches, nil, nil, &stopCalled)
 		defer patches.Reset()
 		d.Stop()
 		So(stopCalled, ShouldBeTrue)
@@ -341,7 +333,7 @@ func TestAscendDraManager_Stop(t *testing.T) {
 		d, _ := newDriverWithFake(gen)
 		stopCalled := false
 		patches := &pluginMethodPatches{}
-		patchPluginMethods(patches, nil, nil, nil, &stopCalled)
+		patchPluginMethods(patches, nil, nil, &stopCalled)
 		defer patches.Reset()
 		mgr := &AscendDraManager{draDriver: d}
 		mgr.Stop()

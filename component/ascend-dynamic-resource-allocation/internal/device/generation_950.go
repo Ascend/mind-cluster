@@ -16,13 +16,13 @@
 package device
 
 import (
+	"ascend-dynamic-resource-allocation/pkg/consts"
 	"fmt"
 
 	resourceapi "k8s.io/api/resource/v1"
 	"k8s.io/utils/ptr"
 
 	"ascend-common/common-utils/hwlog"
-	"ascend-dynamic-resource-allocation/pkg/consts"
 )
 
 // Ascend950Generation embeds AscendCommonGeneration for the shared dmgr field
@@ -35,11 +35,6 @@ type Ascend950Generation struct {
 // NewAscend950Generation creates an Ascend950 generation instance.
 func NewAscend950Generation() *Ascend950Generation {
 	return &Ascend950Generation{}
-}
-
-// GetReleasedName returns the released name for Ascend 950.
-func (g *Ascend950Generation) GetReleasedName() string {
-	return consts.Ascend950ReleasedName
 }
 
 // ListNpuDevices enumerates all 950 devices via dmgr.GetDeviceList and
@@ -69,17 +64,27 @@ func (g *Ascend950Generation) buildNpuDevice(logicID int32) (NpuDevice, error) {
 		return NpuDevice{}, err
 	}
 	return NpuDevice{
-		DevType:    g.dmgr.GetDevType(),
-		DeviceName: fmt.Sprintf("%s-%d", g.GetReleasedName(), phyID),
+		DevType: g.dmgr.GetDevType(),
+		// DeviceName follows the unified "<NPUNamePrefix>-<phyID>" convention across all generations.
+		DeviceName: fmt.Sprintf("%s-%d", consts.NPUNamePrefix, phyID),
 		LogicID:    logicID,
 		PhyID:      phyID,
 	}, nil
 }
 
-// DeviceAttributes publishes the deviceType and physicId for 950 devices.
+// DeviceAttributes publishes the type, physicId and chipName for 950 devices.
 func (g *Ascend950Generation) DeviceAttributes(dev NpuDevice) map[resourceapi.QualifiedName]resourceapi.DeviceAttribute {
 	return map[resourceapi.QualifiedName]resourceapi.DeviceAttribute{
-		attrKeyDeviceType: {StringValue: ptr.To(dev.DevType)},
-		attrKeyPhysicID:   {IntValue: ptr.To(int64(dev.PhyID))},
+		attrKeyType:     {StringValue: ptr.To(consts.NPUNamePrefix)},
+		attrKeyPhysicID: {IntValue: ptr.To(int64(dev.PhyID))},
+		attrKeyChipName: {StringValue: ptr.To(g.getChipName(dev.LogicID))},
 	}
+}
+
+// PhyIDToMountID queries the device manager on every call so a 950 (A5) node
+// picks up the latest phyID->logicID mapping even if device state changes after
+// driver startup. On A5 the device node is keyed by logicID, so the mount ID is
+// the logicID returned here.
+func (g *Ascend950Generation) PhyIDToMountID(phyID int32) (int32, error) {
+	return g.dmgr.GetLogicIDFromPhysicID(phyID)
 }
