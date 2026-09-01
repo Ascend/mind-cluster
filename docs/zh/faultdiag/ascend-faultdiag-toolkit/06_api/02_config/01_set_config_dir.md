@@ -51,33 +51,33 @@
 
 阈值配置项含义：
 
-| 配置项 | 含义 | 单位 |
-|--------|------|------|
-| `CDR_HOST_SNR_DB` | CDR（时钟数据恢复）主机侧信噪比 | dB |
-| `CDR_MEDIA_SNR_DB` | CDR（时钟数据恢复）介质侧信噪比 | dB |
+| 配置项 | 含义                               | 单位 |
+|--------|----------------------------------|------|
+| `CDR_HOST_SNR_DB` | CDR（时钟数据恢复）主机侧信噪比                | dB |
+| `CDR_MEDIA_SNR_DB` | CDR（时钟数据恢复）介质侧信噪比                | dB |
 | `CHIP_CPU_PORT_SNR_LINE` | CPU 与 L1 交换机间端口 SNR（线性值，约 56 dB） | - |
-| `CHIP_NPU_PORT_SNR_LINE` | NPU 与 L1 交换机间端口 SNR（线性值） | - |
-| `SWITCH_PORT_SNR_LINE` | L1 与 L2 交换机间端口 SNR（线性值） | - |
-| `DUPLEX_THRESHOLD` | 端口双工模式，正常值 `Full` | - |
-| `NET_HEALTH_THRESHOLD` | 网络健康检查结果，正常值 `Success` | - |
-| `LINK_STATUS_THRESHOLD` | 链路状态，正常值 `UP` | - |
-| `OPTICAL_PRESENT_THRESHOLD` | 光模块在位状态，正常值 `present` | - |
-| `SNR_LANE_DIFF_DB` | 光模块各 lane 间 SNR 的最大差值 | dB |
-| `POWER_LANE_DIFF_DB` | 光模块各 lane 间光功率的最大差值 | dBm |
-| `HCCN_LINK_DOWN_CNT` | 24 小时内 HCCN 链路 down 次数 | 次 |
-| `TX_POWER_MW` | 光模块发射光功率（mW 口径） | mW |
-| `RX_POWER_MW` | 光模块接收光功率（mW 口径） | mW |
-| `TX_POWER_DBM` | 光模块发射光功率（dBm 口径） | dBm |
-| `RX_POWER_DBM` | 光模块接收光功率（dBm 口径） | dBm |
-| `TX_BIAS_MA` | 光模块发射偏置电流 | mA |
-| `HOST_SNR_DB` | 光模块主机侧信噪比（电口/芯片侧） | dB |
-| `MEDIA_SNR_DB` | 光模块介质侧信噪比（光口/线缆侧） | dB |
-| `NIC_TX_BIAS_MA` | 网卡（NIC SFP）光模块发射偏置电流 | mA |
-| `NIC_TX_POWER_DBM` | 网卡（NIC SFP）光模块发射光功率 | dBm |
-| `NIC_RX_POWER_DBM` | 网卡（NIC SFP）光模块接收光功率 | dBm |
-| `NIC_HOST_SNR_DB` | 网卡（NIC SFP）光模块主机侧信噪比 | dB |
-| `NIC_MEDIA_SNR_DB` | 网卡（NIC SFP）光模块介质侧信噪比 | dB |
-| `NIC_LANE_FLAG` | 网卡 lane 异常标志，正常值 `0` | - |
+| `CHIP_NPU_PORT_SNR_LINE` | NPU 与 L1 交换机间端口 SNR（线性值）         | - |
+| `SWITCH_PORT_SNR_LINE` | L1 与 L2 交换机间端口 SNR（线性值）          | - |
+| `DUPLEX_THRESHOLD` | 端口双工模式，正常值 `Full`                | - |
+| `NET_HEALTH_THRESHOLD` | 网络健康检查结果，正常值 `Success`           | - |
+| `LINK_STATUS_THRESHOLD` | 链路状态，正常值 `UP`                    | - |
+| `OPTICAL_PRESENT_THRESHOLD` | 光模块在位状态，正常值 `present`            | - |
+| `SNR_LANE_DIFF_DB` | 光模块各 lane 间 SNR 的最大差值            | dB |
+| `POWER_LANE_DIFF_DB` | 光模块各 lane 间光功率的最大差值              | dBm |
+| `HCCN_LINK_DOWN_CNT` | 24 小时内 HCCN 链路 down 次数           | 次 |
+| `TX_POWER_MW` | host侧光模块发射光功率（mW 口径）             | mW |
+| `RX_POWER_MW` | host侧光模块接收光功率（mW 口径）             | mW |
+| `TX_POWER_DBM` | switch侧光模块发射光功率（dBm 口径）          | dBm |
+| `RX_POWER_DBM` | switch侧光模块接收光功率（dBm 口径）            | dBm |
+| `TX_BIAS_MA` | 光模块发射偏置电流                        | mA |
+| `HOST_SNR_DB` | 光模块主机侧信噪比（电口/芯片侧）                | dB |
+| `MEDIA_SNR_DB` | 光模块介质侧信噪比（光口/线缆侧）                | dB |
+| `NIC_TX_BIAS_MA` | 网卡（NIC SFP）光模块发射偏置电流             | mA |
+| `NIC_TX_POWER_DBM` | 网卡（NIC SFP）光模块发射光功率              | dBm |
+| `NIC_RX_POWER_DBM` | 网卡（NIC SFP）光模块接收光功率              | dBm |
+| `NIC_HOST_SNR_DB` | 网卡（NIC SFP）光模块主机侧信噪比             | dB |
+| `NIC_MEDIA_SNR_DB` | 网卡（NIC SFP）光模块介质侧信噪比             | dB |
+| `NIC_LANE_FLAG` | 网卡 lane 异常标志，正常值 `0`             | - |
 
 说明：
 
