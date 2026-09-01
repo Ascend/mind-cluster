@@ -110,6 +110,8 @@ NPU Exporter
 
 支持Preempt（抢占）和Reclaim Action（回收）操作。Preempt用于同一个队列中任务之间的资源抢占，当高优先级任务需要资源时，可以抢占低优先级任务的资源；Reclaim用于不同队列之间的资源回收，当某个队列中的任务需要资源且该队列资源未超用时，可以从其他可回收队列中回收资源。两者均可实现资源的动态调整和优化分配。关于Preempt和Reclaim Action的详细说明，请参见[Volcano官方网站相关信息](https://volcano.sh/zh/docs/Scheduler/Actions)。
 
+支持通过Ascend Dynamic Resource Allocation组件，以K8s动态资源分配（Dynamic Resource Allocation，DRA）机制申请整张NPU卡，业务容器通过ResourceClaim申请NPU资源。DRA机制调度时暂不支持亲和性调度、动态虚拟化等高级调度特性，仅支持基于K8s和Volcano 1.15的基础整卡调度。
+
 **所需组件<a name="section15655185785119"></a>**
 
 - Volcano
@@ -125,6 +127,7 @@ NPU Exporter
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[整卡调度](../04_usage/03_basic_scheduling/03_full_npu_scheduling.md)章节进行操作。
 3. Preempt和Reclaim Action的使用样例请参见[潮汐调度最佳实践](../04_usage/10_tidal_scheduling/00_before_you_start.md)章节进行操作。
+4. DRA机制调度的使用样例请参见[DRA调度最佳实践](../04_usage/13_ascend_dynamic_resource_allocation_best_practice/00_before_you_start.md)章节进行操作。
 
 ### 多级调度<a name="ZH-CN_TOPIC_0000002511346873"></a>
 

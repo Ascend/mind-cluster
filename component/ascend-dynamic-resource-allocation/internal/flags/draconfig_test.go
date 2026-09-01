@@ -48,7 +48,7 @@ var draConfigFlagNames = []string{
 	// HWLoggingConfig
 	"logFile", "logLevel", "maxAge", "maxBackups",
 	// DRAOption
-	"node-name", "cdi-root", "kubelet-registrar-directory-path",
+	"cdi-root", "kubelet-registrar-directory-path",
 	"kubelet-plugins-directory-path", api.DeviceResetTimeout,
 	// KubeClientConfig
 	"kubeconfig", "kube-api-qps", "kube-api-burst",
@@ -184,7 +184,6 @@ func overrideArgs() []string {
 		"-logLevel=3",
 		"-maxAge=30",
 		"-maxBackups=10",
-		"-node-name=ut-node",
 		"-cdi-root=/tmp/ut-cdi",
 		"-kubelet-registrar-directory-path=/tmp/ut-registrar",
 		"-kubelet-plugins-directory-path=/tmp/ut-plugins",
@@ -258,7 +257,6 @@ func hwLoggingOverrideChecks(cfg *DRAConfig) []flagCheck {
 // draOptionOverrideChecks builds DRAOption override assertions.
 func draOptionOverrideChecks(cfg *DRAConfig) []flagCheck {
 	return []flagCheck{
-		{"node-name", cfg.DraOption.NodeName, "ut-node"},
 		{"cdi-root", cfg.DraOption.CdiRoot, "/tmp/ut-cdi"},
 		{
 			"kubelet-registrar-directory-path",

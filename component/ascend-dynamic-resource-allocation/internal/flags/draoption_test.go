@@ -30,7 +30,7 @@ import (
 
 // draOptionFlagNames lists every flag registered by DRAOption.RegisterFlags.
 var draOptionFlagNames = []string{
-	"node-name", "cdi-root", "kubelet-registrar-directory-path",
+	"cdi-root", "kubelet-registrar-directory-path",
 	"kubelet-plugins-directory-path", api.DeviceResetTimeout,
 }
 
@@ -76,7 +76,6 @@ func TestDRAOption_RegisterFlagsParsesOverrides(t *testing.T) {
 	opt.RegisterFlags()
 
 	args := []string{
-		"-node-name=ut-node",
 		"-cdi-root=/tmp/ut-cdi",
 		"-kubelet-registrar-directory-path=/tmp/ut-registrar",
 		"-kubelet-plugins-directory-path=/tmp/ut-plugins",
@@ -89,17 +88,14 @@ func TestDRAOption_RegisterFlagsParsesOverrides(t *testing.T) {
 	runFlagChecks(t, optionOverrideChecks(opt))
 }
 
-// TestDRAOption_NodeNameDefaultFromEnv verifies that the node-name flag
-// default value follows the NODE_NAME environment variable.
+// TestDRAOption_NodeNameDefaultFromEnv verifies that NodeName follows the
+// NODE_NAME environment variable instead of a command-line flag.
 func TestDRAOption_NodeNameDefaultFromEnv(t *testing.T) {
 	withFreshFlagSet(t)
 	t.Setenv(consts.NodeNameEnv, "node-from-env")
 
 	opt := &DRAOption{}
 	opt.RegisterFlags()
-	if err := flag.CommandLine.Parse([]string{}); err != nil {
-		t.Fatalf("Parse() error = %v, want nil", err)
-	}
 	if opt.NodeName != "node-from-env" {
 		t.Errorf("NodeName = %q, want %q", opt.NodeName, "node-from-env")
 	}
@@ -109,11 +105,11 @@ func TestDRAOption_NodeNameDefaultFromEnv(t *testing.T) {
 
 	opt = &DRAOption{}
 	opt.RegisterFlags()
-	if err := flag.CommandLine.Parse([]string{}); err != nil {
-		t.Fatalf("Parse() error = %v, want nil", err)
-	}
 	if opt.NodeName != "" {
 		t.Errorf("NodeName = %q, want empty string when env unset", opt.NodeName)
+	}
+	if flag.Lookup("node-name") != nil {
+		t.Errorf("flag %q is registered on flag.CommandLine, want unregistered", "node-name")
 	}
 }
 
@@ -137,7 +133,6 @@ func optionDefaultChecks(opt *DRAOption, nodeName string) []flagCheck {
 // optionOverrideChecks builds DRAOption override assertions.
 func optionOverrideChecks(opt *DRAOption) []flagCheck {
 	return []flagCheck{
-		{"node-name", opt.NodeName, "ut-node"},
 		{"cdi-root", opt.CdiRoot, "/tmp/ut-cdi"},
 		{"kubelet-registrar-directory-path", opt.KubeletRegistrarDirectoryPath, "/tmp/ut-registrar"},
 		{"kubelet-plugins-directory-path", opt.KubeletPluginsDirectoryPath, "/tmp/ut-plugins"},

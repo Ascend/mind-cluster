@@ -27,6 +27,7 @@
 |K8s RDMA Shared Dev Plugin|Ascend-mindxdl-k8s-rdma-shared-dev-plugin\_<i>{version}</i>\_linux-<i>{arch}</i>.zip| K8s RDMA Shared Dev Plugin软件包。                                                                                                                                                                                                                                                                                                                                                           |[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0)|
 |Resilience Controller|Ascend-mindxdl-resilience-controller\_<i>{version}</i>\_linux-<i>{arch}</i>.zip| Resilience Controller软件包。                                                                                                                                                                                                                                                                                                                                                                |[获取链接](https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann)|
 |Elastic Agent|Ascend-mindxdl-elastic\_<i>{version}</i>\_linux-<i>{arch}</i>.zip| Elastic Agent软件包。                                                                                                                                                                                                                                                                                                                                                                        |[获取链接](https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann)|
+|Ascend Dynamic Resource Allocation|Ascend-mindxdl-ascend-dynamic-resource-allocation\_<i>{version}</i>\_linux-<i>{arch}</i>.zip| Ascend Dynamic Resource Allocation软件包。||
 
 >[!NOTE]
 >Resilience Controller和Elastic Agent组件已经在7.3.0版本日落，请获取7.3.0之前版本的软件包。
@@ -61,7 +62,7 @@
 
 ## 开源组件源码<a name="section149534517468"></a>
 
-集群调度提供Ascend Docker Runtime、NPU Exporter、Ascend Device Plugin、K8s RDMA Shared Dev Plugin、Volcano、Ascend Operator、NodeD和ClusterD等开源组件。如果用户需要了解源码或定制开发组件，则可根据[表2](#table978944123012)获取相应组件源码。
+集群调度提供Ascend Docker Runtime、NPU Exporter、Ascend Device Plugin、K8s RDMA Shared Dev Plugin、Volcano、Ascend Operator、NodeD、ClusterD和Ascend Dynamic Resource Allocation等开源组件。如果用户需要了解源码或定制开发组件，则可根据[表2](#table978944123012)获取相应组件源码。
 
 **表 2**  获取组件源码
 
@@ -81,3 +82,4 @@
 |Infer Operator|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/infer-operator>|
 |MindIO|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/mindio>|
 |K8s RDMA Shared Dev Plugin|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/k8s-rdma-shared-dev-plugin>|
+|Ascend Dynamic Resource Allocation|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-dynamic-resource-allocation>|

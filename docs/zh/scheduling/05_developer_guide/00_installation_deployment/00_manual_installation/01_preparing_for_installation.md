@@ -52,15 +52,18 @@
 </tr>
 <tr id="zh-cn_topic_0299839362_row1064121764612"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0299839362_p16641317134612"><a name="zh-cn_topic_0299839362_p16641317134612"></a><a name="zh-cn_topic_0299839362_p16641317134612"></a><span id="ph522114212719"><a name="ph522114212719"></a><a name="ph522114212719"></a>Ascend Device Plugin</span></p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p53735269103"><a name="p53735269103"></a><a name="p53735269103"></a>root</p>
+<td class="cellrowborder" rowspan="4" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p53735269103"><a name="p53735269103"></a><a name="p53735269103"></a>root</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p29286561106"><a name="p29286561106"></a><a name="p29286561106"></a>需要使用特权容器。</p>
+<td class="cellrowborder" rowspan="4" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p29286561106"><a name="p29286561106"></a><a name="p29286561106"></a>需要使用特权容器。</p>
 </td>
 </tr>
 <tr id="row10935147171519"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1935947181513"><a name="p1935947181513"></a><a name="p1935947181513"></a><span id="ph5551115391513"><a name="ph5551115391513"></a><a name="ph5551115391513"></a>NodeD</span></p>
 </td>
 </tr>
 <tr id="row2597060117201"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1597060117201"><a name="p1597060117201"></a><a name="p1597060117201"></a><span id="ph2597060117201"><a name="ph2597060117201"></a><a name="ph2597060117201"></a>K8s RDMA Shared Dev Plugin</span></p>
+</td>
+</tr>
+<tr id="row3597060117201"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p3597060117201"><a name="p3597060117201"></a><a name="p3597060117201"></a><span id="ph3597060117201"><a name="ph3597060117201"></a><a name="ph3597060117201"></a>Ascend Dynamic Resource Allocation</span></p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0299839362_row664817164615"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0299839362_p0649177466"><a name="zh-cn_topic_0299839362_p0649177466"></a><a name="zh-cn_topic_0299839362_p0649177466"></a><span id="ph175881448132716"><a name="ph175881448132716"></a><a name="ph175881448132716"></a>Volcano</span></p>
@@ -137,9 +140,9 @@ Elastic Agent、TaskD、Resilience Controller之外的其他组件安装可跳�
     <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1657216638"><a name="screen1657216638"></a><a name="screen1657216638"></a>mkdir -m 750 /var/log/mindx-dl/devicePlugin
    chown root:root /var/log/mindx-dl/devicePlugin</pre>
     </td>
-    <td class="cellrowborder" rowspan="6" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p11572661536"><a name="p11572661536"></a><a name="p11572661536"></a>计算节点</p>
+    <td class="cellrowborder" rowspan="7" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p11572661536"><a name="p11572661536"></a><a name="p11572661536"></a>计算节点</p>
     </td>
-    <td class="cellrowborder" rowspan="4" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p557592110325"><a name="p557592110325"></a><a name="p557592110325"></a>-</p>
+    <td class="cellrowborder" rowspan="5" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p557592110325"><a name="p557592110325"></a><a name="p557592110325"></a>-</p>
     </td>
     </tr>
     <tr id="row95721761536"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p125721269315"><a name="p125721269315"></a><a name="p125721269315"></a><span id="ph14572161034"><a name="ph14572161034"></a><a name="ph14572161034"></a>NPU Exporter</span></p>
@@ -158,6 +161,12 @@ Elastic Agent、TaskD、Resilience Controller之外的其他组件安装可跳�
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen2597060117202"><a name="screen2597060117202"></a><a name="screen2597060117202"></a>mkdir -m 750 /var/log/mindx-dl/k8s-rdma-shared-dp
    chown root:root /var/log/mindx-dl/k8s-rdma-shared-dp</pre>
+    </td>
+    </tr>
+    <tr id="row3597060117202"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p3597060117202"><a name="p3597060117202"></a><a name="p3597060117202"></a><span id="ph3597060117202"><a name="ph3597060117202"></a><a name="ph3597060117202"></a>Ascend Dynamic Resource Allocation</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen3597060117202"><a name="screen3597060117202"></a><a name="screen3597060117202"></a>mkdir -m 750 /var/log/mindx-dl/ascend-dra
+   chown root:root /var/log/mindx-dl/ascend-dra</pre>
     </td>
     </tr>
     <tr id="row55731961237"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p15573961314"><a name="p15573961314"></a><a name="p15573961314"></a><span id="ph13573106431"><a name="ph13573106431"></a><a name="ph13573106431"></a>Elastic Agent</span></p>
@@ -304,7 +313,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     kubectl create ns cluster-system
     ```
 
-- NPU Exporter的命名空间为npu-exporter；Volcano的命名空间为volcano-system；Ascend Device Plugin和K8s RDMA Shared Dev Plugin的命名空间为kube-system，上述组件的命名空间由系统创建，用户无需再次创建。
+- NPU Exporter的命名空间为npu-exporter；Volcano的命名空间为volcano-system；Ascend Device Plugin、K8s RDMA Shared Dev Plugin和Ascend Dynamic Resource Allocation的命名空间为kube-system，上述组件的命名空间由系统创建，用户无需再次创建。
 
 ## 准备镜像<a name="ZH-CN_TOPIC_0000002479226488"></a>
 
@@ -423,7 +432,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     </td>
     <td class="cellrowborder" valign="top" width="54.76547654765477%" headers="mcps1.2.5.1.3 "><ul><li>基础镜像为Ubuntu的Ascend Device Plugin镜像制作命令。<pre class="screen" id="screen3237730141519"><a name="screen3237730141519"></a><a name="screen3237730141519"></a>docker build --no-cache -t ascend-k8sdeviceplugin:<em id="i02419301157"><a name="i02419301157"></a><a name="i02419301157"></a>{</em><em id="i133991029173612"><a name="i133991029173612"></a><a name="i133991029173612"></a>tag}</em> ./</pre></li><li>基础镜像为openEuler的Ascend Device Plugin镜像制作命令。<pre class="screen">docker build --no-cache -t ascend-k8sdeviceplugin:<em>{</em><em>tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
     </td>
-    <td class="cellrowborder" rowspan="13" valign="top" width="19.21192119211921%" headers="mcps1.2.5.1.4 "><p id="p10280193431010"><a name="p10280193431010"></a><a name="p10280193431010"></a><em id="i472612293915"><a name="i472612293915"></a><a name="i472612293915"></a>{tag}</em>需要参考软件包上的版本。如：软件包上版本为<span id="ph18653133316811"><a name="ph18653133316811"></a><a name="ph18653133316811"></a>26.1.0</span>，则<em id="i1572610273910"><a name="i1572610273910"></a><a name="i1572610273910"></a>{tag}</em>为v<span id="ph205239348813"><a name="ph205239348813"></a><a name="ph205239348813"></a>26.1.0</span>。</p>
+    <td class="cellrowborder" rowspan="15" valign="top" width="19.21192119211921%" headers="mcps1.2.5.1.4 "><p id="p10280193431010"><a name="p10280193431010"></a><a name="p10280193431010"></a><em id="i472612293915"><a name="i472612293915"></a><a name="i472612293915"></a>{tag}</em>需要参考软件包上的版本。如：软件包上版本为<span id="ph18653133316811"><a name="ph18653133316811"></a><a name="ph18653133316811"></a>26.1.0</span>，则<em id="i1572610273910"><a name="i1572610273910"></a><a name="i1572610273910"></a>{tag}</em>为v<span id="ph205239348813"><a name="ph205239348813"></a><a name="ph205239348813"></a>26.1.0</span>。</p>
     <div class="note" id="note1217913258443"><a name="note1217913258443"></a><a name="note1217913258443"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p11793259444"><a name="p11793259444"></a><a name="p11793259444"></a>请确保Dockerfile-310P-1usoc中HwDmUser和HwBaseUser的<span id="ph18833164913291"><a name="ph18833164913291"></a><a name="ph18833164913291"></a>GID</span>和<span id="ph5530185193011"><a name="ph5530185193011"></a><a name="ph5530185193011"></a>UID</span>与物理机上的保持一致。</p>
     </div></div>
     <p id="p7733142881719"><a name="p7733142881719"></a><a name="p7733142881719"></a></p>
@@ -466,6 +475,18 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142918"></a><a name="p1519601142918"></a><span id="ph138789131472"><a name="ph138789131472"></a><a name="ph138789131472"></a>Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t noded:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>UMDK_PKG参数取值为UMDK软件包文件名，需要从<a href="https://mirrors.huaweicloud.com/ascend/">华为云镜像仓地址</a>的archive目录下载。当前UMDK软件包仅支持aarch64架构。</p>
+    </td>
+    </tr>
+    <tr id="row3597060117204"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p3597060117204"><a name="p3597060117204"></a><a name="p3597060117204"></a>其他产品</p>
+    </td>
+    <td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.5.1.2 "><p id="p3597060117205"><a name="p3597060117205"></a><a name="p3597060117205"></a><span id="ph3597060117205"><a name="ph3597060117205"></a><a name="ph3597060117205"></a>Ascend Dynamic Resource Allocation</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><ul><li>基础镜像为Ubuntu的Ascend Dynamic Resource Allocation镜像制作命令。<pre class="screen" id="screen3597060117204"><a name="screen3597060117204"></a><a name="screen3597060117204"></a>docker build --no-cache -t ascend-dra:<em id="i3597060117204"><a name="i3597060117204"></a><a name="i3597060117204"></a>{</em><em id="i3597060117205"><a name="i3597060117205"></a><a name="i3597060117205"></a>tag}</em> ./</pre></li><li>基础镜像为openEuler的Ascend Dynamic Resource Allocation镜像制作命令。<pre class="screen">docker build --no-cache -t ascend-dra:<em>{</em><em>tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p3597060117206"></a><a name="p3597060117206"></a><span id="ph3597060117206"><a name="ph3597060117206"></a><a name="ph3597060117206"></a>Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t ascend-dra:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>UMDK_PKG参数取值为UMDK软件包文件名，需要从<a href="https://mirrors.huaweicloud.com/ascend/">华为云镜像仓地址</a>的archive目录下载。当前UMDK软件包仅支持aarch64架构。</p>
     </td>
     </tr>
     <tr id="row16602529173910"><td class="cellrowborder" rowspan="6" valign="top" headers="mcps1.2.5.1.1 "><p id="p119247391094"><a name="p119247391094"></a><a name="p119247391094"></a>其他产品</p>

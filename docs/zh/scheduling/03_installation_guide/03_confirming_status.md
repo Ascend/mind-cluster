@@ -839,3 +839,64 @@
     [2026-08-26 11:46:23.604187][INFO]     460     logger/logger.go:79    starting prometheus metrics server on :8080
     ...
     ```
+
+## Ascend Dynamic Resource Allocation<a name="ZH-CN_TOPIC_0000002511426342"></a>
+
+使用K8s动态资源分配（Dynamic Resource Allocation，DRA）机制申请NPU资源的用户，才需要安装Ascend Dynamic Resource Allocation组件（以下简称DRA驱动）。请在任意节点执行以下步骤验证DRA驱动的安装状态。
+
+**操作步骤<a name="section-dra-confirm-status"></a>**
+
+1. 通过如下命令查看K8s集群中DRA驱动的Pod，需要满足Pod的STATUS为Running，READY为1/1。如果集群中有多个计算节点安装了DRA驱动，每一个节点都需要确认。
+
+    ```shell
+    kubectl get pods -n kube-system -o wide | grep ascend-dra-driver
+    ```
+
+   回显示例：
+
+    ```ColdFusion
+    NAME                                        READY   STATUS    RESTARTS   AGE     IP            NODE       NOMINATED NODE   READINESS GATES
+    ascend-dra-driver-kubeletplugin-5m2xv       1/1     Running   0          74s     192.168.1.10  node1      <none>           <none>
+    ```
+
+   >[!NOTE]
+   >如果Pod状态不为Running，可参考[组件Pod状态不为Running](https://gitcode.com/Ascend/mind-cluster/issues/342)章节进行处理。如果Pod状态为ContainerCreating，可参考[集群调度组件Pod处于ContainerCreating状态](https://gitcode.com/Ascend/mind-cluster/issues/343)章节进行处理。
+
+2. 通过如下命令查看DRA驱动的日志。
+
+    ```shell
+    kubectl logs -n kube-system {DRA驱动组件的Pod名字}
+    ```
+
+   回显示例如下，表示组件正常运行。
+
+    ```ColdFusion
+    root@ubuntu:~# kubectl logs -n kube-system ascend-dra-driver-kubeletplugin-5m2xv
+    [INFO]     2026/08/30 10:20:15.123456 1       hwlog/api.go:158    ascend-dra.log's logger init success
+    [INFO]     2026/08/30 10:20:15.123567 1       main.go:44    init log module successfully.
+    [INFO]     2026/08/30 10:20:15.124001 1       main.go:50    validate dra option successfully.
+    [INFO]     2026/08/30 10:20:15.130221 1       main.go:57    auto-init device manager successfully.
+    [INFO]     2026/08/30 10:20:15.135008 1       device/generation_910.go:69    Ascend910 enumerated 8 devices
+    [INFO]     2026/08/30 10:20:15.140021 1       driver/driver.go:105    publishing ResourceSlice
+    [INFO]     2026/08/30 10:20:15.141112 1       plugin/plugin.go:80    kubelet plugin registered, node=node1, driver=npu.huawei.com
+    [INFO]     2026/08/30 10:20:15.142530 1       plugin/health.go:53    healthz server started, addr=11251
+    [INFO]     2026/08/30 10:20:15.143008 1       main.go:71    ascend dra manager started successfully.
+    ...
+    ```
+
+3. 执行以下命令，验证NPU资源是否上报成功。若能查询到名为“npu.huawei.com”的DeviceClass，且每个计算节点存在对应的ResourceSlice，表示资源上报成功，组件运行正常。
+
+    ```shell
+    kubectl get deviceclass npu.huawei.com
+    kubectl get resourceslices
+    ```
+
+   回显示例如下，节点上芯片个数请以实际为准。
+
+    ```ColdFusion
+    NAME            AGE
+    npu.huawei.com  2m
+
+    NAME                                  POOLNAME     DEVICECOUNT   AGE
+    npu.huawei.com-node1-1a2b3c           node1        8             2m
+    ```
