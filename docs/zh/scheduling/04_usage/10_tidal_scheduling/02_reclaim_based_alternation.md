@@ -88,7 +88,7 @@ sequenceDiagram
        configurations:
          - name: init-params
            arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2",
-       "useClusterInfoManager":"true","self-maintain-available-card":"true","super-pod-size": "48", "reserve-nodes": "2",
+       "useClusterInfoManager":"true","self-maintain-available-card":"true","super-pod-size": "128", "reserve-nodes": "2",
        "forceEnqueue": "true", "prefer-previous-node": "true"}
    ```
 

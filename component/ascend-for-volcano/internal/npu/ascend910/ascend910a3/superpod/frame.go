@@ -914,6 +914,11 @@ func (tp *module910SuperPod) classifySuperPod(totalNodes map[int32]superPod) sup
 		if len(sp) < tp.spBlock && tp.Label[superPodAffinity] != softRequire {
 			continue
 		}
+		if len(sp) > tp.FrameAttr.SuperPodSize {
+			klog.V(util.LogWarningLev).Infof("super-pod %d has %d node which is more than super-pod-size %d", index,
+				len(sp), tp.FrameAttr.SuperPodSize)
+			continue
+		}
 		countVSuperPod += len(sp) / tp.spBlock
 		nodesExceptReserve := len(sp) - tp.FrameAttr.ReservePodSize
 		if nodesExceptReserve < 0 {
@@ -1074,7 +1079,6 @@ func (tp *module910SuperPod) selectNodesForSoftStrategy(recorder *vPodIdRecorder
 		nodeNum := len(superPods[k])
 		superPods[k] = tp.selectNodesFromSuperPod(recorder.getVPodID(), superPods[k], selectNodes)
 		*totalNode = *totalNode - nodeNum + len(superPods[k])
-		k++
 	}
 }
 
@@ -1099,7 +1103,6 @@ func (tp *module910SuperPod) selectNodesFromSuperPods(unReadyID []string, totalC
 		}
 		superPods[k] = tp.selectNodesFromSuperPod(unReadyID[*totalCount-1], superPods[k], selectNodes)
 		*totalCount--
-		k++
 	}
 }
 

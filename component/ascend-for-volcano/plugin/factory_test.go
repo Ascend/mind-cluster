@@ -20,14 +20,12 @@ Package plugin is using for HuaWei Ascend pin affinity schedule.
 package plugin
 
 import (
-	"context"
 	"errors"
 	"reflect"
 	"strconv"
 	"strings"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	v1 "k8s.io/api/core/v1"
@@ -45,7 +43,6 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/version"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
 )
 
@@ -419,8 +416,8 @@ func getDefaultVolcanoFrameCasesOfSuperPodSizeFormatError(superPodSizeKey,
 	reserveNodesKey string) []initVolcanoFrameFromSsnTestCase {
 	return []initVolcanoFrameFromSsnTestCase{
 		{
-			name: "01-GetSizeOfSuperPod and GetReserveNodes failed, set default super-pod-size: 48, " +
-				"default reserve-nodes: 2",
+			name: "01-GetSizeOfSuperPod failed, set default super-pod-size: 128, reserve-nodes not configured, " +
+				"set default reserve-nodes: 2",
 			configs: []conf.Configuration{
 				{
 					Name:      util.CMInitParamKey,
@@ -435,7 +432,7 @@ func getDefaultVolcanoFrameCasesOfSuperPodSizeFormatError(superPodSizeKey,
 				}}},
 		},
 		{
-			name: "02-GetSizeOfSuperPod failed, set default super-pod-size: 48",
+			name: "02-GetSizeOfSuperPod failed, set default super-pod-size: 128",
 			configs: []conf.Configuration{
 				{
 					Name: util.CMInitParamKey,
@@ -458,7 +455,7 @@ func getDefaultVolcanoFrameCasesOfSuperPodSizeValueError(superPodSizeKey,
 	reserveNodesKey string) []initVolcanoFrameFromSsnTestCase {
 	return []initVolcanoFrameFromSsnTestCase{
 		{
-			name: "03-GetSizeOfSuperPod failed, set default super-pod-size: 48",
+			name: "03-GetSizeOfSuperPod failed, set default super-pod-size: 128",
 			configs: []conf.Configuration{
 				{
 					Name: util.CMInitParamKey,
@@ -475,7 +472,7 @@ func getDefaultVolcanoFrameCasesOfSuperPodSizeValueError(superPodSizeKey,
 				}}},
 		},
 		{
-			name: "04-GetSizeOfSuperPod failed, set default super-pod-size: 48",
+			name: "04-GetSizeOfSuperPod failed, set default super-pod-size: 128",
 			configs: []conf.Configuration{
 				{
 					Name: util.CMInitParamKey,
@@ -554,7 +551,6 @@ func newDefaultHandler() *ScheduleHandler {
 	}
 
 	scheduleHandler.FrameAttr.OnceInit = &sync.Once{}
-	scheduleHandler.FrameAttr.VersionOnceInit = &sync.Once{}
 	scheduleHandler.PolicyBuilder = func() SchedulerPluginNeed {
 		return New(util.NPU910CardName)
 	}
@@ -1902,87 +1898,191 @@ func TestInitJobsPlugin(t *testing.T) {
 	}
 }
 
-type reportVersionToConfigMapTest struct {
-	name        string
-	sHandle     *ScheduleHandler
-	presetCm    *v1.ConfigMap
-	mockPatch   func(kubernetes.Interface, string, string, map[string]string) (*v1.ConfigMap, error)
-	wantExist   bool
-	wantDataKey string
+type reserveNodesFnArgs struct {
+	configurations map[string]string
+	superPodSize   int
 }
 
-func buildReportVersionToConfigMapTest() []reportVersionToConfigMapTest {
-	componentName := "ascend-volcano-plugin"
+type reserveNodesFnTest struct {
+	name string
+	args reserveNodesFnArgs
+	want int
+}
 
-	return []reportVersionToConfigMapTest{
+func buildGetReserveNodesCases() []reserveNodesFnTest {
+	return []reserveNodesFnTest{
 		{
-			name: "01-reportVersionToConfigMap will create the cm when it does not exist",
-			sHandle: &ScheduleHandler{
-				ScheduleEnv: ScheduleEnv{
-					FrameAttr: VolcanoFrame{KubeClient: fake.NewSimpleClientset()},
-				}},
-			wantExist:   true,
-			wantDataKey: componentName,
+			name: "01-configurations is nil, set default reserve-nodes: 2",
+			args: reserveNodesFnArgs{
+				configurations: nil,
+				superPodSize:   48,
+			},
+			want: defaultReserveNodes,
 		},
 		{
-			name: "02-reportVersionToConfigMap will patch the existing cm and preserve other keys",
-			sHandle: &ScheduleHandler{
-				ScheduleEnv: ScheduleEnv{
-					FrameAttr: VolcanoFrame{KubeClient: fake.NewSimpleClientset(&v1.ConfigMap{
-						ObjectMeta: metav1.ObjectMeta{Name: util.VersionName, Namespace: util.MindXDlNameSpace},
-						Data:       map[string]string{"other-component": "old-value"},
-					})}},
+			name: "02-reserve-nodes key not exist, set default reserve-nodes: 2",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{"super-pod-size": "48"},
+				superPodSize:   48,
 			},
-			wantExist:   true,
-			wantDataKey: componentName,
+			want: defaultReserveNodes,
 		},
 		{
-			name: "03-reportVersionToConfigMap will exhaust retries when patch keeps failing",
-			sHandle: &ScheduleHandler{
-				ScheduleEnv: ScheduleEnv{
-					FrameAttr: VolcanoFrame{KubeClient: fake.NewSimpleClientset(&v1.ConfigMap{
-						ObjectMeta: metav1.ObjectMeta{Name: util.VersionName, Namespace: util.MindXDlNameSpace},
-						Data:       map[string]string{"": ""},
-					})}},
+			name: "03-reserve-nodes is 0, return 0",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "0"},
+				superPodSize:   48,
 			},
-			mockPatch: func(_ kubernetes.Interface, _, _ string, _ map[string]string) (*v1.ConfigMap, error) {
-				return nil, errors.New("patch error")
+			want: 0,
+		},
+		{
+			name: "04-reserve-nodes is negative, set default reserve-nodes: 2",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "-1"},
+				superPodSize:   48,
 			},
-			wantExist: true,
+			want: defaultReserveNodes,
+		},
+		{
+			name: "05-reserve-nodes is not a number, set default reserve-nodes: 2",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "abc"},
+				superPodSize:   48,
+			},
+			want: defaultReserveNodes,
+		},
+		{
+			name: "06-reserve-nodes less than super-pod-size, return reserve-nodes",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "2"},
+				superPodSize:   48,
+			},
+			want: 2,
+		},
+		{
+			name: "07-reserve-nodes equal to super-pod-size, set default reserve-nodes: 2",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "48"},
+				superPodSize:   48,
+			},
+			want: defaultReserveNodes,
+		},
+		{
+			name: "08-reserve-nodes bigger than super-pod-size, set default reserve-nodes: 2",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "50"},
+				superPodSize:   48,
+			},
+			want: defaultReserveNodes,
+		},
+		{
+			name: "09-reserve-nodes bigger than super-pod-size and super-pod-size less than default, return 0",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "2"},
+				superPodSize:   1,
+			},
+			want: 0,
+		},
+		{
+			name: "10-reserve-nodes equal to super-pod-size and super-pod-size equal to default, return 0",
+			args: reserveNodesFnArgs{
+				configurations: map[string]string{reserveNodesKey: "2"},
+				superPodSize:   2,
+			},
+			want: 0,
 		},
 	}
 }
 
-func TestReportVersionToConfigMap(t *testing.T) {
-	// Avoid real waiting between retries.
-	sleepPatches := gomonkey.ApplyFunc(time.Sleep, func(_ time.Duration) {})
-	defer sleepPatches.Reset()
-
-	componentName := "ascend-volcano-plugin"
-	info := version.Info{
-		GitCommit: "abc123", GoVersion: "go1.21", BuildArch: "linux/amd64",
-	}
-
-	for _, tt := range buildReportVersionToConfigMapTest() {
+// TestGetReserveNodes test getReserveNodes
+func TestGetReserveNodes(t *testing.T) {
+	for _, tt := range buildGetReserveNodesCases() {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.mockPatch != nil {
-				patchPatches := gomonkey.ApplyFunc(k8s.PatchCMData, tt.mockPatch)
-				defer patchPatches.Reset()
+			if got := getReserveNodes(tt.args.configurations, tt.args.superPodSize); got != tt.want {
+				t.Errorf("getReserveNodes() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
 
-			tt.sHandle.reportVersionToConfigMap(info, componentName)
+type superPodInfoFromConfigFnArgs struct {
+	key            string
+	configurations map[string]string
+}
 
-			got, err := tt.sHandle.FrameAttr.KubeClient.CoreV1().ConfigMaps(util.MindXDlNameSpace).Get(
-				context.TODO(), util.VersionName, metav1.GetOptions{})
-			if tt.wantExist {
-				if err != nil {
-					t.Fatalf("expected configmap to exist, got err: %v", err)
-				}
-				if _, ok := got.Data[tt.wantDataKey]; !ok {
-					t.Errorf("expected configmap data to contain %q, got %v", tt.wantDataKey, got.Data)
-				}
-			} else if err == nil {
-				t.Errorf("expected configmap not to exist, but it does: %v", got)
+type superPodInfoFromConfigFnTest struct {
+	name    string
+	args    superPodInfoFromConfigFnArgs
+	want    int
+	wantErr bool
+}
+
+func buildGetSuperPodInfoFromConfigCases() []superPodInfoFromConfigFnTest {
+	return []superPodInfoFromConfigFnTest{
+		{
+			name: "01-configurations is nil, return error",
+			args: superPodInfoFromConfigFnArgs{
+				key:            reserveNodesKey,
+				configurations: nil,
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "02-key not exist, return error",
+			args: superPodInfoFromConfigFnArgs{
+				key:            reserveNodesKey,
+				configurations: map[string]string{"super-pod-size": "48"},
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "03-configuration is 0, return 0",
+			args: superPodInfoFromConfigFnArgs{
+				key:            reserveNodesKey,
+				configurations: map[string]string{reserveNodesKey: "0"},
+			},
+			want:    0,
+			wantErr: false,
+		},
+		{
+			name: "04-configuration is valid, return the value",
+			args: superPodInfoFromConfigFnArgs{
+				key:            reserveNodesKey,
+				configurations: map[string]string{reserveNodesKey: "5"},
+			},
+			want:    5,
+			wantErr: false,
+		},
+		{
+			name: "05-configuration is negative, return error",
+			args: superPodInfoFromConfigFnArgs{
+				key:            reserveNodesKey,
+				configurations: map[string]string{reserveNodesKey: "-1"},
+			},
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "06-configuration is not a number, return error",
+			args: superPodInfoFromConfigFnArgs{
+				key:            reserveNodesKey,
+				configurations: map[string]string{reserveNodesKey: "abc"},
+			},
+			want:    0,
+			wantErr: true,
+		},
+	}
+}
+
+// TestGetSuperPodInfoFromConfig test getSuperPodInfoFromConfig
+func TestGetSuperPodInfoFromConfig(t *testing.T) {
+	for _, tt := range buildGetSuperPodInfoFromConfigCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getSuperPodInfoFromConfig(tt.args.key, tt.args.configurations)
+			if got != tt.want || (err != nil) != tt.wantErr {
+				t.Errorf("getSuperPodInfoFromConfig() = %v, err %v, want %v, wantErr %v", got, err, tt.want, tt.wantErr)
 			}
 		})
 	}
