@@ -14,7 +14,8 @@
 
 ## 使用说明<a name="section44381612353"></a>
 
-资源监测可以和训练场景下的所有特性一起使用，也可以和推理场景的所有特性一起使用。
+- 资源监测可以和训练场景下的所有特性一起使用，也可以和推理场景的所有特性一起使用。
+- NPU Exporter组件通过调用驱动接口等方式从底层获取指标，可能会占用部分资源，用户可以根据自身关注的指标，关闭其他无关指标，参考[NPU Exporter安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/03_npu_exporter.md)。
 
 ## 支持的产品形态<a name="section169961844182917"></a>
 
