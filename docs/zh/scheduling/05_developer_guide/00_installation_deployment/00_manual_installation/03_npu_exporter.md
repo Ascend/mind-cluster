@@ -154,7 +154,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
 
         |参数|说明|
         |---|---|
-        |metricsGroup|默认指标组名称。<ul><li>通过DCMI采集：<ul><li>version：版本数据信息</li><li>utilization：利用率数据信息</li><li>npu：NPU数据信息</li><li>ddr：DDR数据信息</li><li>sio：SIO数据信息</li><li>hbm：片上内存数据信息</li><li>hccs：HCCS数据信息</li><li>pcie：PCIe数据信息</li><li>vnpu：vNPU数据信息</li><li>nodeBase：节点基本信息</li></ul></li><li>通过hccn_tool采集：<ul><li>roce：RoCE数据信息</li><li>optical：光模块数据信息</li><li>network：Network数据信息</li><li>ub：NPU UB数据信息</li></ul></li></ul>|
+        |metricsGroup|默认指标组名称。<ul><li>通过DCMI采集：<ul><li>version：版本数据信息</li><li>utilization：利用率数据信息</li><li>npu：NPU数据信息</li><li>ddr：DDR数据信息</li><li>sio：SIO数据信息</li><li>hbm：片上内存数据信息</li><li>hccs：HCCS数据信息</li><li>pcie：PCIe数据信息</li><li>vnpu：vNPU数据信息</li><li>nodeBase：节点基本信息</li><li>ub：NPU UB数据信息</li></ul></li><li>通过hccn_tool采集：<ul><li>roce：RoCE数据信息</li><li>optical：光模块数据信息</li><li>network：Network数据信息</li></ul></li></ul>|
         |state|指标组采集和上报的开关。默认值为ON。<ul><li>ON：表示开启。开启对应指标组的开关后，会采集和上报该指标组的指标。</li><li>OFF：表示关闭。关闭对应指标组的开关后，不会采集和上报该指标组的指标。</li></ul>|
         |intervalSeconds|指标组采集周期，单位为秒。<ul><li>必须配置为整数值。</li><li>取值范围为-1、1~86400秒。</li><li>若缺失该配置项，使用默认值60秒。</li><li>若配置为-1，表示该指标组只采集一次，不再重复采集。</li></ul>|
 
@@ -432,7 +432,7 @@ NPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 
         |参数|说明|
         |---|---|
-        |metricsGroup|默认指标组名称。<ul><li>通过DCMI采集：<ul><li>version：版本数据信息</li><li>utilization：利用率数据信息</li><li>npu：NPU数据信息</li><li>ddr：DDR数据信息</li><li>sio：SIO数据信息</li><li>hbm：片上内存数据信息</li><li>hccs：HCCS数据信息</li><li>pcie：PCIe数据信息</li><li>vnpu：vNPU数据信息</li><li>nodeBase：节点基本信息</li></ul></li><li>通过hccn_tool采集：<ul><li>roce：RoCE数据信息</li><li>optical：光模块数据信息</li><li>network：Network数据信息</li><li>ub：NPU UB数据信息</li></ul></li></ul>|
+        |metricsGroup|默认指标组名称。<ul><li>通过DCMI采集：<ul><li>version：版本数据信息</li><li>utilization：利用率数据信息</li><li>npu：NPU数据信息</li><li>ddr：DDR数据信息</li><li>sio：SIO数据信息</li><li>hbm：片上内存数据信息</li><li>hccs：HCCS数据信息</li><li>pcie：PCIe数据信息</li><li>vnpu：vNPU数据信息</li><li>nodeBase：节点基本信息</li><li>ub：NPU UB数据信息</li></ul></li><li>通过hccn_tool采集：<ul><li>roce：RoCE数据信息</li><li>optical：光模块数据信息</li><li>network：Network数据信息</li></ul></li></ul>|
         |state|指标组采集和上报的开关。默认值为ON。<ul><li>ON：表示开启。开启对应指标组的开关后，会采集和上报该指标组的指标。</li><li>OFF：表示关闭。关闭对应指标组的开关后，不会采集和上报该指标组的指标。</li></ul>|
         |intervalSeconds|指标组采集周期，单位为秒。<ul><li>必须配置为整数值。</li><li>取值范围为-1、1~86400秒。</li><li>若缺失该配置项，使用默认值60秒。</li><li>若配置为-1，表示该指标组只采集一次，不再重复采集。</li></ul>|
 
