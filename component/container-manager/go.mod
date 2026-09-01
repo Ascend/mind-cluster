@@ -7,8 +7,10 @@ require (
 	github.com/agiledragon/gomonkey/v2 v2.14.0
 	github.com/containerd/containerd v1.7.33
 	github.com/docker/docker v25.0.16+incompatible
+	github.com/golang/protobuf v1.5.4
 	github.com/smartystreets/goconvey v1.6.4
 	golang.org/x/time v0.12.0
+	google.golang.org/grpc v1.67.0
 	k8s.io/apimachinery v0.28.15
 )
 
@@ -73,7 +75,6 @@ require (
 	golang.org/x/text v0.31.0 // indirect
 	google.golang.org/genproto v0.0.0-20231211222908-989df2bf70f3 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
-	google.golang.org/grpc v1.67.0 // indirect
 	google.golang.org/protobuf v1.35.2 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

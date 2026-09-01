@@ -20,7 +20,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net"
 	"os"
+	"strconv"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -40,14 +42,20 @@ const (
 )
 
 type runCmd struct {
-	logPath       string
-	logLevel      int
-	logMaxAge     int
-	logMaxBackups int
-	ctrStrategy   string
-	sockPath      string
-	runtimeType   string
-	faultCfgPath  string
+	logPath               string
+	logLevel              int
+	logMaxAge             int
+	logMaxBackups         int
+	ctrStrategy           string
+	sockPath              string
+	runtimeType           string
+	faultCfgPath          string
+	leaderIp              string
+	leaderPort            int
+	nodeID                string
+	leaderAddrs           string
+	eventSyncInterval     int
+	scheduledSyncInterval int
 }
 
 // RunCmd cmd 'run'
@@ -76,6 +84,12 @@ func (cmd *runCmd) BindFlag() bool {
 	flag.StringVar(&cmd.sockPath, "sockPath", defaultSockPath, "Container Runtime sock file path")
 	flag.StringVar(&cmd.ctrStrategy, "ctrStrategy", common.NeverStrategy, "Retracting strategy for faulty containers")
 	flag.StringVar(&cmd.faultCfgPath, "faultConfigPath", "", "Custom fault config file path")
+	flag.StringVar(&cmd.leaderIp, "leaderIp", "", "IP address this node's leader gRPC server binds to. Non-empty starts this node as a leader")
+	flag.IntVar(&cmd.leaderPort, "leaderPort", common.DefaultPort, "Port this node's leader gRPC server listens on")
+	flag.StringVar(&cmd.nodeID, "nodeID", "", "Unique node identifier. Defaults to hostname when empty")
+	flag.StringVar(&cmd.leaderAddrs, "leaderAddrs", "", "Comma-separated list of leader ip:port, at most 2. Empty disables the coordinator")
+	flag.IntVar(&cmd.eventSyncInterval, "eventSyncInterval", common.ChangedInterval, "Interval in seconds for event-driven data sync checks")
+	flag.IntVar(&cmd.scheduledSyncInterval, "scheduledSyncInterval", common.SyncInterval, "Interval in seconds for scheduled full data sync")
 	return true
 }
 
@@ -87,18 +101,30 @@ func (cmd *runCmd) CheckParam() error {
 
 func newRunCmdArgsChecker(cmd runCmd) *runCmdArgsChecker {
 	return &runCmdArgsChecker{
-		runtimeType:  cmd.runtimeType,
-		sockPath:     cmd.sockPath,
-		ctrStrategy:  cmd.ctrStrategy,
-		faultCfgPath: cmd.faultCfgPath,
+		runtimeType:           cmd.runtimeType,
+		sockPath:              cmd.sockPath,
+		ctrStrategy:           cmd.ctrStrategy,
+		faultCfgPath:          cmd.faultCfgPath,
+		leaderIp:              cmd.leaderIp,
+		leaderPort:            cmd.leaderPort,
+		nodeID:                cmd.nodeID,
+		leaderAddrs:           cmd.leaderAddrs,
+		eventSyncInterval:     cmd.eventSyncInterval,
+		scheduledSyncInterval: cmd.scheduledSyncInterval,
 	}
 }
 
 type runCmdArgsChecker struct {
-	runtimeType  string
-	sockPath     string
-	ctrStrategy  string
-	faultCfgPath string
+	runtimeType           string
+	sockPath              string
+	ctrStrategy           string
+	faultCfgPath          string
+	leaderIp              string
+	leaderPort            int
+	nodeID                string
+	leaderAddrs           string
+	eventSyncInterval     int
+	scheduledSyncInterval int
 }
 
 // Check param checker
@@ -108,11 +134,60 @@ func (c *runCmdArgsChecker) Check() error {
 		c.checkSockPath,
 		c.checkCtrStrategy,
 		c.checkFaultConfigPath,
+		c.checkLeaderIP,
+		c.checkLeaderPort,
+		c.checkLeaderAddrs,
+		c.checkInterval,
+		c.checkNodeID,
 	}
 	for _, checkFun := range checkFuncs {
 		if err := checkFun(); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (c *runCmdArgsChecker) checkLeaderIP() error {
+	if c.leaderIp != "" && net.ParseIP(c.leaderIp) == nil {
+		return fmt.Errorf("invalid leaderIp: %s", c.leaderIp)
+	}
+	return nil
+}
+
+func (c *runCmdArgsChecker) checkLeaderPort() error {
+	if c.leaderPort < common.MinPort || c.leaderPort > common.MaxPort {
+		return fmt.Errorf("leaderPort must be in [%d, %d], got %d", common.MinPort, common.MaxPort, c.leaderPort)
+	}
+	return nil
+}
+
+func (c *runCmdArgsChecker) checkNodeID() error {
+	if _, err := common.GetNodeId(c.nodeID); err != nil {
+		return fmt.Errorf("invalid nodeID, error %v", err)
+	}
+	return nil
+}
+
+func (c *runCmdArgsChecker) checkInterval() error {
+	if c.eventSyncInterval < common.MinChangedInterval || c.eventSyncInterval > common.MaxChangedInterval {
+		return fmt.Errorf("eventSyncInterval must be in [%d, %d], got %d",
+			common.MinChangedInterval, common.MaxChangedInterval, c.eventSyncInterval)
+	}
+	if c.scheduledSyncInterval < common.MinSyncInterval || c.scheduledSyncInterval > common.MaxSyncInterval {
+		return fmt.Errorf("scheduledSyncInterval must be in [%d, %d], got %d",
+			common.MinSyncInterval, common.MaxSyncInterval, c.scheduledSyncInterval)
+	}
+	return nil
+}
+
+func (c *runCmdArgsChecker) checkLeaderAddrs() error {
+	addrs, err := common.ParseAddrs(c.leaderAddrs)
+	if err != nil {
+		return fmt.Errorf("leaderAddrs error %v", err)
+	}
+	if len(addrs) > common.MaxLeaderNum {
+		return fmt.Errorf("leaderAddrs must have at most %d addresses, got %d", common.MaxLeaderNum, len(addrs))
 	}
 	return nil
 }
@@ -194,6 +269,7 @@ func (cmd *runCmd) Execute(ctx context.Context) error {
 	moduleMgr.Register(faultMgr)
 	moduleMgr.Register(ctrCtl)
 	moduleMgr.Register(resetMgr)
+
 	if err = moduleMgr.Init(); err != nil {
 		return err
 	}
@@ -204,9 +280,14 @@ func (cmd *runCmd) Execute(ctx context.Context) error {
 
 func (cmd *runCmd) setParameters() {
 	common.ParamOption = common.Option{
-		RuntimeType:  cmd.runtimeType,
-		SockPath:     cmd.sockPath,
-		CtrStrategy:  cmd.ctrStrategy,
-		FaultCfgPath: cmd.faultCfgPath,
+		RuntimeType:           cmd.runtimeType,
+		SockPath:              cmd.sockPath,
+		CtrStrategy:           cmd.ctrStrategy,
+		FaultCfgPath:          cmd.faultCfgPath,
+		ListenAddr:            common.GetListenAddr(cmd.leaderIp, strconv.Itoa(cmd.leaderPort)),
+		EventSyncInterval:     cmd.eventSyncInterval,
+		ScheduledSyncInterval: cmd.scheduledSyncInterval,
 	}
+	common.ParamOption.LocalNodeID, _ = common.GetNodeId(cmd.nodeID)
+	common.ParamOption.LeaderAddrs, _ = common.ParseAddrs(cmd.leaderAddrs)
 }

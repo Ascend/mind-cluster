@@ -34,6 +34,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"container-manager/pkg/common"
+	"container-manager/pkg/container/domain"
 )
 
 const (
@@ -149,6 +150,19 @@ func (c *ContainerdClient) getUsedDevs(containerObj interface{}, ctx context.Con
 	default:
 		return nil, nil
 	}
+}
+
+func (c *ContainerdClient) getJobInfo(containerObj interface{}, ctx context.Context) domain.JobInfo {
+	cs, ok := containerObj.(containerd.Container)
+	if !ok {
+		return domain.JobInfo{}
+	}
+	labels, err := cs.Labels(ctx)
+	if err != nil {
+		hwlog.RunLog.Errorf("get container %s labels failed, error: %v", cs.ID(), err)
+		return domain.JobInfo{}
+	}
+	return parseJobLabels(labels)
 }
 
 func (c *ContainerdClient) doGetUsedDevs(cs containerd.Container, ctx context.Context) ([]int32, error) {

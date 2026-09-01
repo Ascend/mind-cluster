@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"sort"
 	"sync"
 	"testing"
 
@@ -128,6 +129,20 @@ func TestUpdateDevStatus(t *testing.T) {
 	})
 }
 
+// sortCtrs sorts the ctr ids for a deterministic comparison.
+func sortCtrs(ctrs []string) []string {
+	sort.Strings(ctrs)
+	return ctrs
+}
+
+// singleGroup returns the only group in the map; used when there is exactly one group.
+func singleGroup(groups map[int32][]string) []string {
+	for _, ctrs := range groups {
+		return ctrs
+	}
+	return nil
+}
+
 func TestGetNeedPausedCtr(t *testing.T) {
 	convey.Convey("test method 'GetNeedPausedCtr'", t, func() {
 		resetDevCache()
@@ -141,10 +156,16 @@ func TestGetNeedPausedCtr(t *testing.T) {
 		mockDevCache.SetCtrRelatedInfo(ctrId0, []int32{devId0, devId1, devId2})
 		mockDevCache.SetCtrRelatedInfo(ctrId1, []int32{devId1})
 		mockDevCache.SetCtrRelatedInfo(ctrId2, []int32{devId2})
+
+		// non-ring: only the containers of the faulted device are returned
 		ctrs := mockDevCache.GetNeedPausedCtr(false)
-		convey.So(ctrs, convey.ShouldResemble, []string{ctrId0})
+		convey.So(ctrs, convey.ShouldHaveLength, 1)
+		convey.So(sortCtrs(singleGroup(ctrs)), convey.ShouldResemble, []string{ctrId0})
+
+		// ring: the containers of the whole faulted ring ({devId0, devId1}) are returned
 		ctrs = mockDevCache.GetNeedPausedCtr(true)
-		convey.So(ctrs, convey.ShouldResemble, []string{ctrId0, ctrId1})
+		convey.So(ctrs, convey.ShouldHaveLength, 1)
+		convey.So(sortCtrs(singleGroup(ctrs)), convey.ShouldResemble, []string{ctrId0, ctrId1})
 	})
 }
 

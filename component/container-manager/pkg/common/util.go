@@ -18,8 +18,12 @@ package common
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
+	"net"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/utils"
@@ -91,4 +95,54 @@ func DeepCopy(dst, src interface{}) error {
 		return err
 	}
 	return gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
+}
+
+// ParseAddrs parse addrs
+func ParseAddrs(s string) ([]string, error) {
+	var addrs []string
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return addrs, nil
+	}
+	for _, hostPort := range strings.Split(s, ",") {
+		host, port, err := net.SplitHostPort(hostPort)
+		if err != nil {
+			return nil, fmt.Errorf("leaderAddrs contains invalid address %s: %v", hostPort, err)
+		}
+		if net.ParseIP(host) == nil {
+			return nil, fmt.Errorf("leaderAddrs contains invalid IP in %s", hostPort)
+		}
+		portInt, err := strconv.Atoi(port)
+		if err != nil || portInt < MinPort || portInt > MaxPort {
+			return nil, fmt.Errorf("leaderAddrs contains invalid port in %s: %v", hostPort, err)
+		}
+		addrs = append(addrs, host+":"+port)
+	}
+	return addrs, nil
+}
+
+// GetNodeId get node id, if nodeId is empty, return hostname
+func GetNodeId(nodeId string) (string, error) {
+	nodeId = strings.TrimSpace(nodeId)
+	if nodeId != "" {
+		return nodeId, nil
+	}
+	hostName, err := os.Hostname()
+	if err != nil {
+		return "", fmt.Errorf("get hostname failed: %v", err)
+	}
+	return strings.TrimSpace(hostName), nil
+}
+
+// GetListenAddr get listen addr, if ip is empty, return ""
+func GetListenAddr(ip, port string) string {
+	ip = strings.TrimSpace(ip)
+	port = strings.TrimSpace(port)
+	if ip == "" {
+		return ""
+	}
+	if port == "" {
+		port = DefaultPortStr
+	}
+	return ip + ":" + port
 }

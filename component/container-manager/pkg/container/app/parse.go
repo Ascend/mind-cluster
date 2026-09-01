@@ -29,6 +29,8 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+	"container-manager/pkg/common"
+	"container-manager/pkg/container/domain"
 )
 
 const (
@@ -206,4 +208,19 @@ func getNPUMajorId() ([]string, error) {
 		majorId = append(majorId, fields[0])
 	}
 	return majorId, nil
+}
+
+func parseJobLabels(labels map[string]string) domain.JobInfo {
+	info := domain.JobInfo{JobID: labels[common.JobLabelID]}
+	if r, err := strconv.Atoi(labels[common.JobLabelReplica]); err != nil || r < 0 {
+		hwlog.RunLog.Debugf("invalid job replica %s, set to 0, error: %v", labels[common.JobLabelReplica], err)
+		info.JobReplica = 0
+	} else {
+		info.JobReplica = int32(r)
+	}
+	info.EnableRecover = true
+	if v, ok := labels[common.JobLabelEnableRecover]; ok {
+		info.EnableRecover = v != "false"
+	}
+	return info
 }

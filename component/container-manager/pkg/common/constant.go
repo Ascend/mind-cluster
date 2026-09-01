@@ -131,7 +131,7 @@ const (
 const (
 	// StatusIgnorePause device ignore pause
 	StatusIgnorePause = "ignore"
-	// StatusNeedPause device need pause
+	// StatusNeedPause container/device need pause
 	StatusNeedPause = "needPause"
 )
 
@@ -139,4 +139,46 @@ const (
 const (
 	DockerType     = "docker"
 	ContainerDType = "containerd"
+)
+
+// coordinator (distributed NPU self-healing) related
+const (
+	// JobLabelID docker/containerd label marking the distributed job id
+	JobLabelID = "huawei.com/job.id"
+	// JobLabelReplica label marking the job replica count
+	JobLabelReplica = "huawei.com/job.replica"
+	// JobLabelEnableRecover label marking whether the job participates in recovery
+	JobLabelEnableRecover = "huawei.com/job.enableRecover"
+
+	// ActionStop broadcast action: stop containers
+	ActionStop = "stop"
+	// ActionStart broadcast action: start containers
+	ActionStart = "start"
+
+	// DefaultPort default gRPC port for the leader coordinator service
+	DefaultPort    = 8890
+	DefaultPortStr = "8890"
+
+	// MinChangedInterval min interval in seconds for event-driven data sync checks
+	MinChangedInterval = 1
+	// MaxChangedInterval max interval in seconds for event-driven data sync checks
+	MaxChangedInterval = 30
+	// ChangedInterval default interval in seconds for event-driven data sync checks
+	ChangedInterval = 5
+
+	// MinSyncInterval min interval in seconds for scheduled full data sync
+	MinSyncInterval = 600
+	// MaxSyncInterval max interval in seconds for scheduled full data sync
+	MaxSyncInterval = 86400
+	// SyncInterval default interval in seconds for scheduled full data sync
+	SyncInterval = 3600
+
+	// MaxLeaderNum max number of leader nodes enforced at param check time
+	MaxLeaderNum = 2
+	// MaxNodeNum max number of nodes a leader accepts (RFC: 100-node cluster)
+	MaxNodeNum = 100
+	// MinPort min port number
+	MinPort = 1024
+	// MaxPort max port number
+	MaxPort = 65535
 )

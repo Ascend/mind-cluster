@@ -55,10 +55,16 @@ func testValidParam() {
 	var p1 = gomonkey.ApplyFuncReturn(utils.IsExist, true).ApplyFuncReturn(utils.CheckPath, nil, nil)
 	defer p1.Reset()
 	stCmd := runCmd{
-		ctrStrategy:  common.NeverStrategy,
-		sockPath:     defaultSockPath,
-		runtimeType:  common.ContainerDType,
-		faultCfgPath: "",
+		ctrStrategy:           common.NeverStrategy,
+		sockPath:              defaultSockPath,
+		runtimeType:           common.ContainerDType,
+		faultCfgPath:          "",
+		leaderIp:              "10.0.0.1",
+		leaderPort:            common.DefaultPort,
+		nodeID:                "",
+		leaderAddrs:           "10.0.0.1:8890",
+		eventSyncInterval:     common.ChangedInterval,
+		scheduledSyncInterval: common.SyncInterval,
 	}
 	convey.So(stCmd.CheckParam(), convey.ShouldBeNil)
 }

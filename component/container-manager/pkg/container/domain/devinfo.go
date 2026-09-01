@@ -109,30 +109,33 @@ func (dc *DevCache) UpdateDevStatus(faultCache map[int32][]*common.DevFaultInfo)
 	}
 }
 
-// GetNeedPausedCtr get ctrs used L2-L5 level fault devs
-func (dc *DevCache) GetNeedPausedCtr(onRing bool) []string {
+// GetNeedPausedCtr get ctrs used L2-L5 level fault devs, grouped by faulted device (or its ring)
+func (dc *DevCache) GetNeedPausedCtr(onRing bool) map[int32][]string {
 	dc.mutex.Lock()
 	defer dc.mutex.Unlock()
-	var needPaused []string
-	for _, info := range dc.devInfoMap {
-		if info.Status != common.StatusNeedPause {
+	needPaused := make(map[int32][]string)
+	var visitedDevs []int32
+	for id, info := range dc.devInfoMap {
+		if info.Status != common.StatusNeedPause || utils.Contains(visitedDevs, id) {
 			continue
 		}
-
 		if !onRing {
-			needPaused = append(needPaused, info.CtrIds...)
+			needPaused[id] = append(needPaused[id], info.CtrIds...)
 			continue
 		}
+		var ctrsOnRing []string
 		for _, idOnRing := range info.DevsOnRing {
 			ringDevInfo, ok := dc.devInfoMap[idOnRing]
 			if !ok {
 				// unreached branch
 				continue
 			}
-			needPaused = append(needPaused, ringDevInfo.CtrIds...)
+			ctrsOnRing = append(ctrsOnRing, ringDevInfo.CtrIds...)
 		}
+		visitedDevs = append(visitedDevs, info.DevsOnRing...)
+		needPaused[id] = append(needPaused[id], utils.RemoveDuplicates(ctrsOnRing)...)
 	}
-	return utils.RemoveDuplicates(needPaused)
+	return needPaused
 }
 
 // SetDevStatus set dev status

@@ -31,7 +31,7 @@ func resetCtrCache() {
 	ctrMap[ctrId3].UsedDevs = []int32{devId2, devId3}
 	mockCtrCache = &CtrCache{
 		ctrInfoMap: ctrMap,
-		mutex:      sync.Mutex{},
+		mutex:      sync.RWMutex{},
 	}
 }
 
@@ -52,11 +52,11 @@ func TestSetCtrsStatus(t *testing.T) {
 		convey.So(mockCtrCache.ctrInfoMap[ctrId0].Status, convey.ShouldEqual, common.StatusPaused)
 		status, _ := mockCtrCache.GetCtrStatusAndStartTime(ctrId0)
 		convey.So(status, convey.ShouldEqual, common.StatusPaused)
-		res := mockCtrCache.GetCtrsByStatus(common.StatusPaused)
+		res := mockCtrCache.GetCtrsByStatus(map[string]struct{}{common.StatusPaused: {}})
 		convey.So(res, convey.ShouldResemble, []string{ctrId0})
 
 		mockCtrCache.SetCtrsStatus(ctrId4, common.StatusPaused)
-		res = mockCtrCache.GetCtrsByStatus(common.StatusPaused)
+		res = mockCtrCache.GetCtrsByStatus(map[string]struct{}{common.StatusPaused: {}})
 		convey.So(res, convey.ShouldResemble, []string{ctrId0})
 	})
 }
@@ -78,7 +78,7 @@ func TestSetCtrInfo(t *testing.T) {
 	convey.Convey("test method 'SetCtrInfo'", t, func() {
 		resetCtrCache()
 		usedDevs := []int32{devId0, devId1}
-		mockCtrCache.SetCtrInfo(ctrId4, testCtrNs, usedDevs)
+		mockCtrCache.SetCtrInfo(ctrId4, testCtrNs, usedDevs, JobInfo{})
 		convey.So(mockCtrCache.GetCtrUsedDevs(ctrId4), convey.ShouldResemble, usedDevs)
 		convey.So(mockCtrCache.GetCtrNs(ctrId4), convey.ShouldEqual, testCtrNs)
 		convey.So(mockCtrCache.GetCtrNs(""), convey.ShouldEqual, "")

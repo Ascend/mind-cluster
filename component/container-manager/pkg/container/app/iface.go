@@ -17,6 +17,8 @@ package app
 
 import (
 	"context"
+
+	"container-manager/pkg/container/domain"
 )
 
 // ContainerClient  interface ContainerClient
@@ -27,4 +29,5 @@ type ContainerClient interface {
 	doStop(containerID, ns string) error
 	getAllContainers() (interface{}, error)
 	getUsedDevs(containerObj interface{}, ctx context.Context) ([]int32, error)
+	getJobInfo(containerObj interface{}, ctx context.Context) domain.JobInfo
 }
