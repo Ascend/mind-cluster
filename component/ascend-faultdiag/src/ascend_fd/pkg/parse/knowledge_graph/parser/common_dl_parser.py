@@ -49,9 +49,6 @@ class CommonDlParser(FileParser):
         self.is_sdk_input = parse_ctx.is_sdk_input
         kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
         file_source_list = self._path_preprocessing(parse_ctx.parse_file_path)
-        if not file_source_list:
-            kg_logger.info("No %s files matched, skip the common dl log parse job.", self.SOURCE_FILE)
-            return [], {}
         if self.is_sdk_input:
             results = dict()
             for idx, file_source in enumerate(file_source_list):
@@ -59,6 +56,9 @@ class CommonDlParser(FileParser):
                     {f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_file(file_source)}
                 )
         else:
+            if not file_source_list:
+                kg_logger.info("No %s files matched, skip the common dl log parse job.", self.SOURCE_FILE)
+                return [], {}
             multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_source_list), task_id=task_id)
             for idx, file_source in enumerate(file_source_list):
                 multiprocess_job.add_security_job(

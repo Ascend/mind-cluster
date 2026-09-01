@@ -48,8 +48,6 @@ def diag_knowledge_graph(input_log_list: list):
     except ParamError as err:
         err_msg_list.append(f"All validation failed, the reason is: {err}")
         return results, err_msg_list
-    if not filtered_input_list:
-        return results, err_msg_list
     err_msg_list.extend(input_validation_err)
     task_id = init_sdk_task()
     multiprocess_job = MultiProcessJob(

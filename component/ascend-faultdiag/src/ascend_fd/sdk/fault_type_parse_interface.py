@@ -94,8 +94,6 @@ def parse_fault_type(input_log_list: list):
     except ParamError as e:
         err_msg_list.append(f"Parse failed, the reason is: [{e}]")
         return results, err_msg_list
-    if not filtered_input_list:
-        return results, err_msg_list
     task_id = init_sdk_task()
     multiprocess_job = MultiProcessJob(
         "PARSE_INTERFACE", pool_size=len(filtered_input_list), task_id=task_id, daemon=False, failed_raise=False
