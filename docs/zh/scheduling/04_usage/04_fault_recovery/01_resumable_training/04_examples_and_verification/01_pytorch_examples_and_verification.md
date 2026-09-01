@@ -9,7 +9,13 @@
 本章节结合基础训练镜像的制作步骤，展示基于Ubuntu 20.04来构建训练镜像。
 
 >[!NOTE]
->以下示例使用MindSpeed-LLM  26.1.0版本。
+>
+>- 以下示例使用MindSpeed-LLM  26.1.0版本。
+>- Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点等存在UB总线的产品形态下，训练镜像内需要增加UB驱动相关文件。支持如下两种方式：
+>   - 从<a href="https://mirrors.huaweicloud.com/ascend/">华为云镜像仓地址</a>的archive目录下载，然后安装到训练镜像中。
+>   - 安装Ascend Docker Runtime，默认挂载ub\_driver.list中的UB驱动相关内容。ub\_driver.list中的文件依赖宿主机的glibc版本，目前支持的OS版本和glibc版本如下：
+>     - 宿主机：openEuler24.03（glibc2.38）
+>     - 容器内：openEuler24.03（glibc2.38）、Ubuntu24.04（glibc2.39）。
 
 **准备软件包<a name="zh-cn_topic_0000002039339945_section18254161612586"></a>**
 
