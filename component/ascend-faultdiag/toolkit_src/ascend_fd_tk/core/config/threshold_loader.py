@@ -123,14 +123,10 @@ class ThresholdConfigLoader:
         for name, fields in self._overrides.items():
             cls, attr_name = self._resolve_target(name, chip_generation)
             if cls is None:
-                DIAG_LOGGER.warning(
-                    "阈值配置项 %s 不是有效的阈值名（代际：%s），已忽略", name, chip_generation or NpuType.A3.value
-                )
+                DIAG_LOGGER.warning("阈值配置项 %s 不是有效的阈值名，已忽略", name)
                 continue
             setattr(cls, attr_name, getattr(cls, attr_name).merged(**fields))
-            DIAG_LOGGER.info(
-                "阈值 %s -> %s.%s 已按 %s 覆盖: %s", name, cls.__name__, attr_name, self._config_path, fields
-            )
+            DIAG_LOGGER.info("阈值 %s 已按照配置文件覆盖为: %s", name, fields)
 
     @staticmethod
     def _reset_profile(th_cls: Type[BaseThreshold], defaults: Dict[str, Threshold]) -> None:
