@@ -15,13 +15,20 @@
 
 package device
 
-import "ascend-common/devmanager"
+import (
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager"
+)
 
 const (
-	// attrKeyDeviceType is the ResourceSlice attribute key for device type.
-	attrKeyDeviceType = "deviceType"
+	// attrKeyType is the ResourceSlice attribute key for the device type,
+	// which is always npu for NPU devices.
+	attrKeyType = "type"
 	// attrKeyPhysicID is the ResourceSlice attribute key for physical device ID.
 	attrKeyPhysicID = "physicId"
+	// attrKeyChipName is the ResourceSlice attribute key for the chip name
+	// reported by dmgr.GetChipInfo.
+	attrKeyChipName = "chipName"
 )
 
 // AscendCommonGeneration holds the device manager shared by every generation.
@@ -46,4 +53,16 @@ func (c *AscendCommonGeneration) GetDevType() string {
 // GetProductTypes returns the product type array reported by the device manager.
 func (c *AscendCommonGeneration) GetProductTypes() []string {
 	return c.dmgr.GetProductTypeArray()
+}
+
+// getChipName returns the chip name reported by dmgr.GetChipInfo for the given
+// logic ID. On error or nil info it returns the empty string so DeviceAttributes
+// always publishes a stable chipName attribute.
+func (c *AscendCommonGeneration) getChipName(logicID int32) string {
+	info, err := c.dmgr.GetChipInfo(logicID)
+	if err != nil || info == nil {
+		hwlog.RunLog.Warnf("get chip info failed, logicID=%d, err=%v, infoNil=%v", logicID, err, info == nil)
+		return ""
+	}
+	return info.Name
 }

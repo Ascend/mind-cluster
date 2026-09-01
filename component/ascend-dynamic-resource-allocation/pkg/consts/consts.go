@@ -25,26 +25,18 @@ const (
 	DriverName = "npu.huawei.com"
 	// DefaultCDIRoot is the default directory where CDI spec files are generated.
 	DefaultCDIRoot = "/var/run/cdi"
+	// NPUNamePrefix is the unified prefix for DeviceName across all generations.
+	// The full name is formatted as "<NPUNamePrefix>-<phyID>" (e.g. "npu-0").
+	NPUNamePrefix = "npu"
 )
 
 // Path and Environment related constants.
-const(
-	// DevPath is the host device directory.
-	DevPath = "/dev"
+const (
 	// DefaultDirMode is the default permission for created directories.
 	DefaultDirMode = os.FileMode(0750)
 	// NodeNameEnv is the environment variable holding the node name.
 	NodeNameEnv = "NODE_NAME"
 )
-
-// AscendProductName is the product name for Ascend devices.
-const (
-	// Ascend910ReleasedName is the public released product name for Ascend 910.
-	Ascend910ReleasedName = "Ascend910"
-	// Ascend950ReleasedName is the released name for Ascend 950.
-	Ascend950ReleasedName = "npu"
-)
-
 
 // KubeClientConfig related constants.
 const (

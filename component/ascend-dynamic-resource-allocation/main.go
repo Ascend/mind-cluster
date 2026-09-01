@@ -49,6 +49,12 @@ func main() {
 	}
 	hwlog.RunLog.Info("validate dra option successfully.")
 
+	if err := draConfig.DraHealthzConfig.Serve(ctx); err != nil {
+		hwlog.RunLog.Errorf("start healthz server failed: %v", err)
+		return
+	}
+	hwlog.RunLog.Info("healthz server started successfully.")
+
 	dmgr, err := devmanager.AutoInit("", draConfig.DraOption.DeviceResetTimeout)
 	if err != nil {
 		hwlog.RunLog.Errorf("auto-init device manager failed: %v", err)

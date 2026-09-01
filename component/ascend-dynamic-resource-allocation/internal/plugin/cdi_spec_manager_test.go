@@ -17,6 +17,7 @@ package plugin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -85,7 +86,7 @@ func TestNewCDISpecManager(t *testing.T) {
 	devType := "Ascend910"
 	productTypes := []string{"Atlas 200 Model 3000"}
 
-	m := NewCDISpecManager(devType, productTypes, t.TempDir())
+	m := NewCDISpecManager(devType, productTypes, t.TempDir(), nil)
 
 	if m == nil {
 		t.Fatal("NewCDISpecManager() = nil, want non-nil manager")
@@ -119,12 +120,10 @@ func TestWriteClaimSpec_Errors(t *testing.T) {
 			[]string{"Ascend910-x"}, "is not an integer"},
 		{"empty claim UID", "Ascend910", "",
 			[]string{"Ascend910-0"}, "claimUID must not be empty"},
-		{"unknown device type", "Bogus910", "ut-claim",
-			[]string{"Ascend910-0"}, "unknown device type"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := NewCDISpecManager(tt.devType, nil, t.TempDir())
+			m := NewCDISpecManager(tt.devType, nil, t.TempDir(), nil)
 
 			ids, err := m.WriteClaimSpec(tt.claimUID, tt.deviceNames)
 			if err == nil {
@@ -137,10 +136,32 @@ func TestWriteClaimSpec_Errors(t *testing.T) {
 	}
 }
 
+// TestWriteClaimSpec_ToMountID verifies WriteClaimSpec invokes the supplied
+// toMountID converter with the parsed physical ID and surfaces a converter
+// error before reaching the cdi library. The success path requires real /dev
+// device nodes and is covered by driver-layer integration tests, mirroring
+// TestWriteClaimSpec_Errors above.
+func TestWriteClaimSpec_ToMountID(t *testing.T) {
+	convErr := errors.New("phyID not found")
+	conv := func(int32) (int32, error) { return 0, convErr }
+	m := NewCDISpecManager("Ascend910", nil, t.TempDir(), conv)
+
+	_, err := m.WriteClaimSpec("ut-claim", []string{"npu-7"})
+	if err == nil {
+		t.Fatal("WriteClaimSpec() = nil, want error from toMountID")
+	}
+	if !strings.Contains(err.Error(), "convert phyID 7 to mountID") {
+		t.Errorf("WriteClaimSpec() err = %v, want containing 'convert phyID 7 to mountID'", err)
+	}
+	if !errors.Is(err, convErr) {
+		t.Errorf("WriteClaimSpec() err = %v, want wrapping %v", err, convErr)
+	}
+}
+
 // TestDeleteClaimSpec verifies DeleteClaimSpec is idempotent: removing a
 // spec that was never written returns nil rather than an error.
 func TestDeleteClaimSpec(t *testing.T) {
-	m := NewCDISpecManager("Ascend910", nil, t.TempDir())
+	m := NewCDISpecManager("Ascend910", nil, t.TempDir(), nil)
 
 	if err := m.DeleteClaimSpec("ut-claim-not-written"); err != nil {
 		t.Errorf("DeleteClaimSpec() for missing spec = %v, want nil", err)

@@ -16,6 +16,7 @@
 package device
 
 import (
+	"ascend-dynamic-resource-allocation/pkg/consts"
 	"fmt"
 	"reflect"
 	"testing"
@@ -28,8 +29,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/devmanager"
-
-	"ascend-dynamic-resource-allocation/pkg/consts"
+	"ascend-common/devmanager/common"
 )
 
 // =============================================================================
@@ -153,21 +153,8 @@ type deviceAttrCase struct {
 }
 
 var deviceAttrCases = []deviceAttrCase{
-	{name: "populated device", dev: NpuDevice{DevType: "Ascend910", PhyID: 7}},
+	{name: "populated device", dev: NpuDevice{DevType: "Ascend910", PhyID: 7, LogicID: 3}},
 	{name: "zero-value device", dev: NpuDevice{}},
-}
-
-// releasedNameCase covers GetReleasedName for both generations. The runner
-// calls GetReleasedName on the named generation and compares to Expect.
-type releasedNameCase struct {
-	name   string
-	gen    string // "910" | "950"
-	expect string
-}
-
-var releasedNameCases = []releasedNameCase{
-	{name: "910 released name", gen: "910", expect: consts.Ascend910ReleasedName},
-	{name: "950 released name", gen: "950", expect: consts.Ascend950ReleasedName},
 }
 
 // commonGenCase covers AscendCommonGeneration SetDmgr/GetDevType/GetProductTypes.
@@ -203,6 +190,14 @@ func patchGetDeviceList(p *gomonkey.Patches, devNum int32, devList []int32, err 
 func patchGetProductTypeArray(p *gomonkey.Patches, products []string) {
 	p.ApplyMethod(dmmType, "GetProductTypeArray",
 		func(_ *devmanager.DeviceManagerMock) []string { return products })
+}
+
+// patchGetChipInfoErr stubs DeviceManagerMock.GetChipInfo to fail.
+func patchGetChipInfoErr(p *gomonkey.Patches) {
+	p.ApplyMethod(dmmType, "GetChipInfo",
+		func(_ *devmanager.DeviceManagerMock, _ int32) (*common.ChipInfo, error) {
+			return nil, errSentinel
+		})
 }
 
 // patchGetDevType stubs DeviceManagerMock.GetDevType.
@@ -276,25 +271,6 @@ func TestAscendCommonGeneration(t *testing.T) {
 				g.SetDmgr(mock)
 				So(g.GetDevType(), ShouldEqual, tc.expectDevType)
 				So(len(g.GetProductTypes()), ShouldEqual, tc.expectProducts)
-			})
-		}
-	})
-}
-
-func TestGetReleasedName(t *testing.T) {
-	Convey("GetReleasedName returns the released product name", t, func() {
-		for idx, tc := range releasedNameCases {
-			Convey(fmt.Sprintf("case#%d %s", idx, tc.name), func() {
-				var got string
-				switch tc.gen {
-				case "910":
-					g, _ := new910WithMock()
-					got = g.GetReleasedName()
-				case "950":
-					g, _ := new950WithMock()
-					got = g.GetReleasedName()
-				}
-				So(got, ShouldEqual, tc.expect)
 			})
 		}
 	})
@@ -375,18 +351,28 @@ func TestAscend910Generation_getDeviceIP(t *testing.T) {
 }
 
 func TestAscend910Generation_DeviceAttributes(t *testing.T) {
-	Convey("Ascend910 DeviceAttributes reports deviceType and physicId", t, func() {
+	Convey("Ascend910 DeviceAttributes reports deviceType, physicId and chipName", t, func() {
 		g, _ := new910WithMock()
 		for idx, tc := range deviceAttrCases {
 			Convey(fmt.Sprintf("case#%d %s", idx, tc.name), func() {
 				attrs := g.DeviceAttributes(tc.dev)
-				So(len(attrs), ShouldEqual, 2)
-				So(attrs[attrKeyDeviceType], ShouldResemble,
-					resourceapi.DeviceAttribute{StringValue: ptr.To(tc.dev.DevType)})
+				So(len(attrs), ShouldEqual, 3)
+				So(attrs[attrKeyType], ShouldResemble,
+					resourceapi.DeviceAttribute{StringValue: ptr.To(consts.NPUNamePrefix)})
 				So(attrs[attrKeyPhysicID], ShouldResemble,
 					resourceapi.DeviceAttribute{IntValue: ptr.To(int64(tc.dev.PhyID))})
+				So(attrs[attrKeyChipName], ShouldResemble,
+					resourceapi.DeviceAttribute{StringValue: ptr.To(common.Chip910)})
 			})
 		}
+		Convey("GetChipInfo error yields empty chipName", func() {
+			p := gomonkey.NewPatches()
+			defer p.Reset()
+			patchGetChipInfoErr(p)
+			attrs := g.DeviceAttributes(NpuDevice{LogicID: 1})
+			So(attrs[attrKeyChipName], ShouldResemble,
+				resourceapi.DeviceAttribute{StringValue: ptr.To("")})
+		})
 	})
 }
 
@@ -446,7 +432,7 @@ func TestAscend950Generation_buildNpuDevice(t *testing.T) {
 					So(dev.PhyID, ShouldEqual, 5)
 					So(dev.LogicID, ShouldEqual, tc.logicID)
 					So(dev.DevType, ShouldEqual, api.Ascend910A5)
-					So(dev.DeviceName, ShouldEqual, fmt.Sprintf("%s-%d", g.GetReleasedName(), 5))
+					So(dev.DeviceName, ShouldEqual, "npu-5")
 				}
 			})
 		}
@@ -454,17 +440,27 @@ func TestAscend950Generation_buildNpuDevice(t *testing.T) {
 }
 
 func TestAscend950Generation_DeviceAttributes(t *testing.T) {
-	Convey("Ascend950 DeviceAttributes reports deviceType and physicId", t, func() {
+	Convey("Ascend950 DeviceAttributes reports deviceType, physicId and chipName", t, func() {
 		g, _ := new950WithMock()
 		for idx, tc := range deviceAttrCases {
 			Convey(fmt.Sprintf("case#%d %s", idx, tc.name), func() {
 				attrs := g.DeviceAttributes(tc.dev)
-				So(len(attrs), ShouldEqual, 2)
-				So(attrs[attrKeyDeviceType], ShouldResemble,
-					resourceapi.DeviceAttribute{StringValue: ptr.To(tc.dev.DevType)})
+				So(len(attrs), ShouldEqual, 3)
+				So(attrs[attrKeyType], ShouldResemble,
+					resourceapi.DeviceAttribute{StringValue: ptr.To(consts.NPUNamePrefix)})
 				So(attrs[attrKeyPhysicID], ShouldResemble,
 					resourceapi.DeviceAttribute{IntValue: ptr.To(int64(tc.dev.PhyID))})
+				So(attrs[attrKeyChipName], ShouldResemble,
+					resourceapi.DeviceAttribute{StringValue: ptr.To(common.Chip910)})
 			})
 		}
+		Convey("GetChipInfo error yields empty chipName", func() {
+			p := gomonkey.NewPatches()
+			defer p.Reset()
+			patchGetChipInfoErr(p)
+			attrs := g.DeviceAttributes(NpuDevice{LogicID: 1})
+			So(attrs[attrKeyChipName], ShouldResemble,
+				resourceapi.DeviceAttribute{StringValue: ptr.To("")})
+		})
 	})
 }

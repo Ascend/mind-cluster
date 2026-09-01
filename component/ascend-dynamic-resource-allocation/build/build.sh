@@ -58,6 +58,7 @@ function build_plugin() {
 function mv_file() {
     mv "${TOP_DIR}/${dra_name}"   "${TOP_DIR}"/output
     cp "${TOP_DIR}/build/Dockerfile"   "${TOP_DIR}"/output
+    cp "${TOP_DIR}/build/Dockerfile.openeuler"   "${TOP_DIR}"/output
     cp "${TOP_DIR}/build/ascend-dra-driver.yaml"   "${TOP_DIR}"/output
     cp "${TOP_DIR}/build/agreement.txt"   "${TOP_DIR}"/output
 }

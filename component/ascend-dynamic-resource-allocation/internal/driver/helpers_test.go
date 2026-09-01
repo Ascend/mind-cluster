@@ -32,6 +32,7 @@ import (
 	"ascend-dynamic-resource-allocation/internal/device"
 	draFlags "ascend-dynamic-resource-allocation/internal/flags"
 	"ascend-dynamic-resource-allocation/internal/plugin"
+	"ascend-dynamic-resource-allocation/pkg/consts"
 )
 
 // initLog initialises hwlog so driver code that logs does not panic on a nil
@@ -55,7 +56,6 @@ type fakeGeneration struct {
 	listErr      error
 	devType      string
 	productTypes []string
-	releasedName string
 }
 
 func (f *fakeGeneration) SetDmgr(devmanager.DeviceInterface) {}
@@ -66,14 +66,19 @@ func (f *fakeGeneration) ListNpuDevices() ([]device.NpuDevice, error) {
 
 func (f *fakeGeneration) DeviceAttributes(dev device.NpuDevice) map[resourceapi.QualifiedName]resourceapi.DeviceAttribute {
 	return map[resourceapi.QualifiedName]resourceapi.DeviceAttribute{
-		"deviceType": {StringValue: ptr.To(dev.DevType)},
-		"physicId":   {IntValue: ptr.To(int64(dev.PhyID))},
+		"type":     {StringValue: ptr.To(consts.NPUNamePrefix)},
+		"physicId": {IntValue: ptr.To(int64(dev.PhyID))},
 	}
 }
 
-func (f *fakeGeneration) GetReleasedName() string   { return f.releasedName }
 func (f *fakeGeneration) GetDevType() string        { return f.devType }
 func (f *fakeGeneration) GetProductTypes() []string { return f.productTypes }
+
+// PhyIDToMountID is a passthrough stub: tests cover non-A5 flows where the
+// mount ID equals the phyID.
+func (f *fakeGeneration) PhyIDToMountID(phyID int32) (int32, error) {
+	return phyID, nil
+}
 
 // newDriverWithFake builds an AscendDraDriver wired to a fakeGeneration and a
 // minimal, non-nil plugin so promoted methods can dispatch. The returned
@@ -89,12 +94,11 @@ func newDriverWithFake(gen *fakeGeneration) (*AscendDraDriver, *plugin.AscendDra
 	return NewAscendDraDriver(cfg, gen, adp), adp
 }
 
-// pluginMethodPatches holds the four boundary-method patches the driver tests
+// pluginMethodPatches holds the three boundary-method patches the driver tests
 // reuse. Each field may be nil when the test does not need to stub that method.
 type pluginMethodPatches struct {
 	registerService  *gomonkey.Patches
 	publishResources *gomonkey.Patches
-	startHealthCheck *gomonkey.Patches
 	stop             *gomonkey.Patches
 }
 
@@ -105,19 +109,17 @@ func (p *pluginMethodPatches) Reset() {
 	if p.publishResources != nil {
 		p.publishResources.Reset()
 	}
-	if p.startHealthCheck != nil {
-		p.startHealthCheck.Reset()
-	}
 	if p.stop != nil {
 		p.stop.Reset()
 	}
 }
 
-// patchPluginMethods stubs the four plugin boundary methods. The error
-// arguments (which may be nil) are returned by the patched RegisterService,
-// PublishResources and StartHealthyCheck; stopCalled records whether Stop was
-// invoked. All four methods are always patched.
-func patchPluginMethods(p *pluginMethodPatches, registerErr, publishErr, healthErr error, stopCalled *bool) {
+// patchPluginMethods stubs the three plugin boundary methods. The error
+// arguments (which may be nil) are returned by the patched RegisterService and
+// PublishResources; stopCalled records whether Stop was invoked. All three
+// methods are always patched. healthz is started in main, not in Start, so it
+// is not patched here.
+func patchPluginMethods(p *pluginMethodPatches, registerErr, publishErr error, stopCalled *bool) {
 	p.registerService = gomonkey.ApplyMethod(
 		reflect.TypeOf(&plugin.AscendDraPlugin{}), "RegisterService",
 		func(_ *plugin.AscendDraPlugin, _ context.Context, _ *draFlags.DRAConfig) error {
@@ -127,11 +129,6 @@ func patchPluginMethods(p *pluginMethodPatches, registerErr, publishErr, healthE
 		reflect.TypeOf(&plugin.ResourcePublisher{}), "PublishResources",
 		func(_ *plugin.ResourcePublisher, _ context.Context, _ resourceslice.DriverResources) error {
 			return publishErr
-		})
-	p.startHealthCheck = gomonkey.ApplyMethod(
-		reflect.TypeOf(&plugin.DraHealthManager{}), "StartHealthyCheck",
-		func(_ *plugin.DraHealthManager, _ context.Context) error {
-			return healthErr
 		})
 	p.stop = gomonkey.ApplyMethod(
 		reflect.TypeOf(&kubeletplugin.Helper{}), "Stop",
