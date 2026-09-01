@@ -99,12 +99,12 @@ var ascendDriverLibPaths = []string{
 const ldLibraryPathKey = "LD_LIBRARY_PATH"
 
 // collectAscendLibPaths returns the subset of ascendDriverLibPaths that
-// exist on the filesystem. hostRoot, when non-empty, prefixes the stat
+// exist on the filesystem. hostFsPrefix, when non-empty, prefixes the stat
 // target for non-/dev paths (see mount.StatHostPath).
-func collectAscendLibPaths(hostRoot string) []string {
+func collectAscendLibPaths(hostFsPrefix string) []string {
 	var paths []string
 	for _, libPath := range ascendDriverLibPaths {
-		if err := mount.StatHostPath(hostRoot, libPath); err == nil {
+		if err := mount.StatHostPath(hostFsPrefix, libPath); err == nil {
 			paths = append(paths, libPath)
 		}
 	}
@@ -146,7 +146,7 @@ func BuildSpec(cfg BuildSpecConfig) (*cdispec.Spec, error) {
 		return nil, err
 	}
 	specEdits := cdispec.ContainerEdits{Mounts: mounts}
-	if libPaths := collectAscendLibPaths(cfg.MountConfig.HostRoot); len(libPaths) > 0 {
+	if libPaths := collectAscendLibPaths(cfg.MountConfig.HostFsPrefix); len(libPaths) > 0 {
 		specEdits.Env = append(specEdits.Env, ldLibraryPathKey+"="+strings.Join(libPaths, ":"))
 	}
 

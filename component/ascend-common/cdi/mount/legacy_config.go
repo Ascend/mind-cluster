@@ -66,9 +66,9 @@ type TopologyItem struct {
 
 // appendTopology appends bind-mounts for HCCL topology artifacts when they
 // exist on the host. List mode only.
-func appendTopology(mounts []*cdispec.Mount, hostRoot string) []*cdispec.Mount {
+func appendTopology(mounts []*cdispec.Mount, hostFsPrefix string) []*cdispec.Mount {
 	for _, item := range TopologyItems {
-		if err := StatHostPath(hostRoot, item.HostPath); err != nil {
+		if err := StatHostPath(hostFsPrefix, item.HostPath); err != nil {
 			continue
 		}
 		mounts = append(mounts, &cdispec.Mount{
