@@ -51,7 +51,7 @@ const (
 	vcTaskIndex  = "VC_TASK_INDEX"
 	cmNameSpace  = "volcano-system"
 
-	defaultSuperPodSize = 48
+	defaultSuperPodSize = 128
 	defaultReserveNodes = 2
 	// PodRankIndexKey rank index key
 	PodRankIndexKey = "hccl/rankIndex"
