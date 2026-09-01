@@ -93,10 +93,16 @@ spec:
           capabilities:
             add: [ "SYS_PTRACE" ]
         image: ascend-dra:v6.0.0
+
         imagePullPolicy: IfNotPresent
         command: ["/bin/bash", "-c", "exec ascend-dra -logLevel=0 --enable-healthz --healthz-address=11251"]
         resources:
-          {}
+          requests:
+            memory: 500Mi
+            cpu: 500m
+          limits:
+            memory: 500Mi
+            cpu: 500m
 
         livenessProbe:
           httpGet:

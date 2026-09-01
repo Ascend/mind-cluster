@@ -13,3 +13,4 @@
 - [Infer Operator推理任务最佳实践](./09_infer_operator_best_practice/menu_infer_operator_best_practice.md)
 - [潮汐调度最佳实践](./10_tidal_scheduling/menu_tidal_scheduling.md)
 - [verl强化学习任务最佳实践](./12_verl_best_practice/menu_verl_best_practice.md)
+- [Ascend DRA组件最佳实践](./13_ascend_dynamic_resource_allocation_best_practice/menu_ascend_dynamic_resource_allocation_best_practice.md)
