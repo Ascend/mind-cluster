@@ -168,6 +168,13 @@ func (r *ASJobReconciler) getOrCreateSvc(job *mindxdlv1.AscendJob) (*corev1.Serv
 	name := common.GenGeneralName(job.GetName(), strings.ToLower(string(rtype)), "0")
 	svc, err := r.getSvcFromApiserver(name, job.GetNamespace())
 	if err == nil {
+		if !isSvcOwnedByJob(svc, job) {
+			hwlog.RunLog.Errorf("service %s/%s is not owned by job<%s/%s>, it may belong to a stale job with "+
+				"the same name, wait for it to be deleted and recreated", job.GetNamespace(), name,
+				job.GetNamespace(), job.GetName())
+			return nil, fmt.Errorf("service %s/%s is not owned by job<%s/%s>", job.GetNamespace(), name,
+				job.GetNamespace(), job.GetName())
+		}
 		hwlog.RunLog.Debugf("get service %s/%s success", job.GetNamespace(), name)
 		return svc, nil
 	}

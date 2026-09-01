@@ -20,6 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
 
 	mindxdlv1 "ascend-operator/pkg/api/v1"
@@ -170,10 +171,10 @@ func TestGetOrCreateSvc(t *testing.T) {
 		job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
 			mindxdlv1.PytorchReplicaTypeMaster: {},
 		}
-		convey.Convey("01-get svc from api-server success should return svc", func() {
+		convey.Convey("01-get svc owned by current job should return svc", func() {
 			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getSvcFromApiserver", func(_,
 				_ string) (*corev1.Service, error) {
-				return &corev1.Service{}, nil
+				return newSvcWithControllerOwner(job.UID), nil
 			})
 			defer patch.Reset()
 			svc, err := rc.getOrCreateSvc(job)
@@ -200,6 +201,24 @@ func TestGetOrCreateSvc(t *testing.T) {
 				return nil, errors.New("gen svc failed")
 			})
 			defer patch2.Reset()
+			_, err := rc.getOrCreateSvc(job)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("04-get svc owned by stale job with same name should return error", func() {
+			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getSvcFromApiserver", func(_,
+				_ string) (*corev1.Service, error) {
+				return newSvcWithControllerOwner("2222"), nil
+			})
+			defer patch.Reset()
+			_, err := rc.getOrCreateSvc(job)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("05-get svc without controller owner should return error", func() {
+			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "getSvcFromApiserver", func(_,
+				_ string) (*corev1.Service, error) {
+				return &corev1.Service{}, nil
+			})
+			defer patch.Reset()
 			_, err := rc.getOrCreateSvc(job)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
@@ -244,6 +263,23 @@ func TestGetOrCreateSvc02(t *testing.T) {
 
 type notFoundError struct {
 	err string
+}
+
+// newSvcWithControllerOwner builds a service whose controller owner has the given uid,
+// used to mock the service returned from the api-server.
+func newSvcWithControllerOwner(uid types.UID) *corev1.Service {
+	isController := true
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			OwnerReferences: []metav1.OwnerReference{{
+				Kind:       "AscendJob",
+				APIVersion: acJobApiversion,
+				Name:       "ascendjob-test",
+				UID:        uid,
+				Controller: &isController,
+			}},
+		},
+	}
 }
 
 func (ne *notFoundError) Error() string {
