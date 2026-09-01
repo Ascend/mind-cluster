@@ -65,6 +65,7 @@ type DeviceState struct {
 	sync.Mutex
 	specs             CdiSpecInterface
 	checkpointManager checkpointmanager.CheckpointManager
+	checkpoint        *Checkpoint
 	draOption         *flags.DRAOption
 }
 
@@ -72,7 +73,7 @@ type DeviceState struct {
 func NewDeviceState(draOption *flags.DRAOption, specs CdiSpecInterface) (*DeviceState, error) {
 	checkpointManager, err := checkpointmanager.NewCheckpointManager(draOption.DriverPluginPath())
 	if err != nil {
-		return nil, fmt.Errorf("unable to create checkpoint manager: %v", err)
+		return nil, fmt.Errorf("unable to create checkpoint manager: %w", err)
 	}
 
 	state := &DeviceState{
@@ -83,22 +84,53 @@ func NewDeviceState(draOption *flags.DRAOption, specs CdiSpecInterface) (*Device
 
 	checkpoints, err := state.checkpointManager.ListCheckpoints()
 	if err != nil {
-		return nil, fmt.Errorf("unable to list checkpoints: %v", err)
+		return nil, fmt.Errorf("unable to list checkpoints: %w", err)
 	}
 	hwlog.RunLog.Debugf("[Checkpoints]: %v", checkpoints)
+	checkpointExists := false
 	for _, c := range checkpoints {
 		if c == consts.DriverPluginCheckpointFile {
-			hwlog.RunLog.Info("checkpoint already exists, reusing")
-			return state, nil
+			checkpointExists = true
+			break
 		}
 	}
 
-	checkpoint := newCheckpoint()
-	if err := state.checkpointManager.CreateCheckpoint(consts.DriverPluginCheckpointFile, checkpoint); err != nil {
-		return nil, fmt.Errorf("unable to sync to checkpoint: %v", err)
+	if !checkpointExists {
+		checkpoint := newCheckpoint()
+		if err := state.checkpointManager.CreateCheckpoint(consts.DriverPluginCheckpointFile, checkpoint); err != nil {
+			return nil, fmt.Errorf("unable to sync to checkpoint: %w", err)
+		}
+		hwlog.RunLog.Info("checkpoint initialized")
+	} else {
+		hwlog.RunLog.Info("checkpoint already exists, reusing")
 	}
-	hwlog.RunLog.Info("checkpoint initialized")
+
+	if err := state.LoadCheckpoint(); err != nil {
+		return nil, err
+	}
 	return state, nil
+}
+
+// LoadCheckpoint reads the durable prepared-claim state into memory. It is
+// called before the plugin is registered with kubelet so a corrupted
+// checkpoint prevents the driver from serving requests.
+func (s *DeviceState) LoadCheckpoint() error {
+	s.Lock()
+	defer s.Unlock()
+
+	checkpoint := newCheckpoint()
+	if err := s.checkpointManager.GetCheckpoint(consts.DriverPluginCheckpointFile, checkpoint); err != nil {
+		return fmt.Errorf("unable to sync from checkpoint: %w", err)
+	}
+	if checkpoint.V1 == nil {
+		return errors.New("checkpoint v1 payload is missing")
+	}
+	if checkpoint.V1.PreparedClaims == nil {
+		checkpoint.V1.PreparedClaims = make(PreparedClaims)
+	}
+	s.checkpoint = checkpoint
+	hwlog.RunLog.Infof("checkpoint loaded, preparedClaims=%d", len(checkpoint.V1.PreparedClaims))
+	return nil
 }
 
 // Prepare allocates devices for a claim. Idempotent: a previously prepared
@@ -110,13 +142,11 @@ func (s *DeviceState) Prepare(claim *resourceapi.ResourceClaim) ([]*drapbv1.Devi
 
 	claimUID := string(claim.UID)
 
-	checkpoint := newCheckpoint()
-	if err := s.checkpointManager.GetCheckpoint(consts.DriverPluginCheckpointFile, checkpoint); err != nil {
-		return nil, fmt.Errorf("unable to sync from checkpoint: %v", err)
+	if s.checkpoint == nil || s.checkpoint.V1 == nil {
+		return nil, errors.New("checkpoint is not loaded")
 	}
-	preparedClaims := checkpoint.V1.PreparedClaims
+	preparedClaims := s.checkpoint.V1.PreparedClaims
 
-	// 是否已经分配过，checkpoint.V1.PreparedClaims保存了当前的分配信息，为了实现幂等
 	if preparedClaims[claimUID] != nil {
 		hwlog.RunLog.Debugf("claim %v already prepared, reusing", claimUID)
 		return preparedClaims[claimUID].GetDevices(), nil
@@ -124,20 +154,24 @@ func (s *DeviceState) Prepare(claim *resourceapi.ResourceClaim) ([]*drapbv1.Devi
 
 	preparedDevices, err := s.prepareDevices(claim)
 	if err != nil {
-		return nil, fmt.Errorf("prepare failed: %v", err)
+		return nil, fmt.Errorf("prepare failed: %w", err)
 	}
 
 	cdiDeviceIDs, err := s.specs.WriteClaimSpec(claimUID, preparedDevices.DeviceNames())
 	if err != nil {
-		return nil, fmt.Errorf("unable to create CDI spec file for claim: %v", err)
+		return nil, fmt.Errorf("unable to create CDI spec file for claim: %w", err)
 	}
 	for _, pd := range preparedDevices {
 		pd.CdiDeviceIds = cdiDeviceIDs
 	}
 
 	preparedClaims[claimUID] = preparedDevices
-	if err := s.checkpointManager.CreateCheckpoint(consts.DriverPluginCheckpointFile, checkpoint); err != nil {
-		return nil, fmt.Errorf("unable to sync to checkpoint: %v", err)
+	if err := s.checkpointManager.CreateCheckpoint(consts.DriverPluginCheckpointFile, s.checkpoint); err != nil {
+		delete(preparedClaims, claimUID)
+		if cleanupErr := s.specs.DeleteClaimSpec(claimUID); cleanupErr != nil {
+			hwlog.RunLog.Warnf("rollback CDI spec for claim %v failed: %v", claimUID, cleanupErr)
+		}
+		return nil, fmt.Errorf("unable to sync to checkpoint: %w", err)
 	}
 
 	hwlog.RunLog.Infof("devices prepared for claim %v, count=%d, cdiIDs=%v",
@@ -145,34 +179,44 @@ func (s *DeviceState) Prepare(claim *resourceapi.ResourceClaim) ([]*drapbv1.Devi
 	return preparedClaims[claimUID].GetDevices(), nil
 }
 
-// Unprepare releases devices for a claim. Idempotent: a missing claim is a no-op.
+// Unprepare releases devices for a claim. Idempotent: for a claim missing
+// from the checkpoint it still removes any leftover CDI spec, healing the
+// orphan left behind when a previous Unprepare failed after the checkpoint
+// was already persisted.
 func (s *DeviceState) Unprepare(claimUID string) error {
 	s.Lock()
 	defer s.Unlock()
 
-	checkpoint := newCheckpoint()
-	if err := s.checkpointManager.GetCheckpoint(consts.DriverPluginCheckpointFile, checkpoint); err != nil {
-		return fmt.Errorf("unable to sync from checkpoint: %v", err)
+	if s.checkpoint == nil || s.checkpoint.V1 == nil {
+		return errors.New("checkpoint is not loaded")
 	}
-	preparedClaims := checkpoint.V1.PreparedClaims
+	preparedClaims := s.checkpoint.V1.PreparedClaims
 
 	if preparedClaims[claimUID] == nil {
-		hwlog.RunLog.Debugf("claim %v not found in checkpoint, nothing to unprepare", claimUID)
+		hwlog.RunLog.Debugf("claim %v not found in checkpoint, cleaning up leftover CDI spec", claimUID)
+		// Deleting an absent spec is a no-op, so unknown claims stay harmless;
+		// an orphaned one gets removed on kubelet's retry.
+		if err := s.specs.DeleteClaimSpec(claimUID); err != nil {
+			return fmt.Errorf("unable to delete CDI spec file for claim: %w", err)
+		}
 		return nil
 	}
 
-	if err := s.unprepareDevices(claimUID, preparedClaims[claimUID]); err != nil {
-		return fmt.Errorf("unprepare failed: %v", err)
+	devices := preparedClaims[claimUID]
+	if err := s.unprepareDevices(claimUID, devices); err != nil {
+		return fmt.Errorf("unprepare failed: %w", err)
 	}
 
-	err := s.specs.DeleteClaimSpec(claimUID)
-	if err != nil {
-		return fmt.Errorf("unable to delete CDI spec file for claim: %v", err)
-	}
-
+	// Persist the checkpoint first: on failure the CDI spec stays untouched,
+	// so a retry can replay the full Unprepare flow.
 	delete(preparedClaims, claimUID)
-	if err := s.checkpointManager.CreateCheckpoint(consts.DriverPluginCheckpointFile, checkpoint); err != nil {
-		return fmt.Errorf("unable to sync to checkpoint: %v", err)
+	if err := s.checkpointManager.CreateCheckpoint(consts.DriverPluginCheckpointFile, s.checkpoint); err != nil {
+		preparedClaims[claimUID] = devices
+		return fmt.Errorf("unable to sync to checkpoint: %w", err)
+	}
+
+	if err := s.specs.DeleteClaimSpec(claimUID); err != nil {
+		return fmt.Errorf("unable to delete CDI spec file for claim: %w", err)
 	}
 
 	hwlog.RunLog.Infof("devices unprepared for claim %v", claimUID)

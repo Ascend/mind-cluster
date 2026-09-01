@@ -146,7 +146,10 @@ func (d *AscendDraDriver) Start(ctx context.Context) error {
 	if err := d.pullNPUInfo(); err != nil {
 		return err
 	}
-	// 2. load ckpt
+	// 2. load checkpoint into memory and verify it before accepting requests.
+	if err := d.ascendDraPlugin.LoadCheckpoint(); err != nil {
+		return fmt.Errorf("load checkpoint: %w", err)
+	}
 	// 3. start dra service
 	if err := d.startService(ctx); err != nil {
 		return err

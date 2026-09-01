@@ -29,19 +29,6 @@ import (
 // defaultHealthzAddress is the default listen port used by the healthz package.
 const defaultHealthzAddress = "11251"
 
-// withFreshFlagSet replaces the global flag.CommandLine with an empty FlagSet
-// for the duration of the test. All flag registrations in the flags package
-// target flag.CommandLine, so this prevents "flag redefined" panics when
-// several tests register the same flags within one test binary.
-func withFreshFlagSet(t *testing.T) {
-	t.Helper()
-	orig := flag.CommandLine
-	flag.CommandLine = flag.NewFlagSet(t.Name(), flag.ContinueOnError)
-	t.Cleanup(func() {
-		flag.CommandLine = orig
-	})
-}
-
 // draConfigFlagNames lists every flag registered by NewDraConfig (healthz
 // section) and DRAConfig.RegisterFlags (all other sections).
 var draConfigFlagNames = []string{
@@ -105,23 +92,6 @@ func TestDRAConfig_RegisterFlags(t *testing.T) {
 	for _, name := range draConfigFlagNames {
 		if flag.Lookup(name) == nil {
 			t.Errorf("flag %q is not registered on flag.CommandLine", name)
-		}
-	}
-}
-
-// flagCheck is a single named equality assertion on a config field.
-type flagCheck struct {
-	name string
-	got  interface{}
-	want interface{}
-}
-
-// runFlagChecks asserts every check and reports mismatches with check names.
-func runFlagChecks(t *testing.T, checks []flagCheck) {
-	t.Helper()
-	for _, c := range checks {
-		if c.got != c.want {
-			t.Errorf("%s = %v, want %v", c.name, c.got, c.want)
 		}
 	}
 }
