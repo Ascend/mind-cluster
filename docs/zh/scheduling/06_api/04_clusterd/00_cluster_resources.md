@@ -5,8 +5,8 @@
 ClusterD启动后，会创建如下ConfigMap：
 
 - cluster-info-node-cm，详细说明请参见[表1](#table25031946405)。
-- cluster-info-device-$\{m\}，详细说明请参见[表2](#table915714719368)。m为从0开始递增的整数。集群规模每增加1000个节点，则会新增一个该ConfigMap文件。
-- cluster-info-switch-$\{x\}，详细说明请参见[表3](#table9246232250)。x为从0开始递增的整数。集群规模每增加2000个节点，则会新增一个该ConfigMap文件。
+- cluster-info-device-$\{m\}，详细说明请参见[表2](#table915714719368)。m为从0开始递增的整数。随着集群规模增加，cluster-info-device会按照不超过800KB大小划分成多个configmap。
+- cluster-info-switch-$\{x\}，详细说明请参见[表3](#table9246232250)。x为从0开始递增的整数。集随着集群规模增加，cluster-info-switch会按照不超过800KB大小划分成多个configmap。
 
 **表 1**  cluster-info-node-cm
 
