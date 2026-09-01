@@ -166,6 +166,26 @@ func TestNewAscendDraPlugin(t *testing.T) {
 	})
 }
 
+// TestAscendDraPlugin_LoadCheckpoint verifies the plugin facade rejects a nil
+// state and delegates loading to an initialized state.
+func TestAscendDraPlugin_LoadCheckpoint(t *testing.T) {
+	t.Run("nil state", func(t *testing.T) {
+		adp := &AscendDraPlugin{}
+
+		if err := adp.LoadCheckpoint(); err == nil {
+			t.Error("LoadCheckpoint() = nil error, want error for nil state")
+		}
+	})
+
+	t.Run("delegates to state", func(t *testing.T) {
+		adp := &AscendDraPlugin{state: newTestDeviceState(t, &fakeCdiSpec{})}
+
+		if err := adp.LoadCheckpoint(); err != nil {
+			t.Errorf("LoadCheckpoint() error = %v, want nil", err)
+		}
+	})
+}
+
 // TestPrepareResourceClaims_Errors verifies preparing no claims and an
 // unallocated claim.
 func TestPrepareResourceClaims_Errors(t *testing.T) {

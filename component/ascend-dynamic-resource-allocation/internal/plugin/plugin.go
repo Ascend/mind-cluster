@@ -82,6 +82,15 @@ func (adp *AscendDraPlugin) RegisterService(ctx context.Context, draConfig *draF
 	return err
 }
 
+// LoadCheckpoint loads and verifies the prepared-claim state before the
+// plugin is registered with kubelet.
+func (adp *AscendDraPlugin) LoadCheckpoint() error {
+	if adp.state == nil {
+		return errors.New("device state is not initialized")
+	}
+	return adp.state.LoadCheckpoint()
+}
+
 // PrepareResourceClaims is the kubelet DRA callback for allocating devices
 // for one or more claims. It is idempotent: a previously prepared claim
 // returns the same prepared devices from the checkpoint.

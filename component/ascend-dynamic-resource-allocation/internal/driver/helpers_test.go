@@ -97,12 +97,16 @@ func newDriverWithFake(gen *fakeGeneration) (*AscendDraDriver, *plugin.AscendDra
 // pluginMethodPatches holds the three boundary-method patches the driver tests
 // reuse. Each field may be nil when the test does not need to stub that method.
 type pluginMethodPatches struct {
+	loadCheckpoint   *gomonkey.Patches
 	registerService  *gomonkey.Patches
 	publishResources *gomonkey.Patches
 	stop             *gomonkey.Patches
 }
 
 func (p *pluginMethodPatches) Reset() {
+	if p.loadCheckpoint != nil {
+		p.loadCheckpoint.Reset()
+	}
 	if p.registerService != nil {
 		p.registerService.Reset()
 	}
@@ -114,12 +118,12 @@ func (p *pluginMethodPatches) Reset() {
 	}
 }
 
-// patchPluginMethods stubs the three plugin boundary methods. The error
-// arguments (which may be nil) are returned by the patched RegisterService and
-// PublishResources; stopCalled records whether Stop was invoked. All three
-// methods are always patched. healthz is started in main, not in Start, so it
-// is not patched here.
-func patchPluginMethods(p *pluginMethodPatches, registerErr, publishErr error, stopCalled *bool) {
+func patchPluginMethods(p *pluginMethodPatches, loadErr, registerErr, publishErr error, stopCalled *bool) {
+	p.loadCheckpoint = gomonkey.ApplyMethod(
+		reflect.TypeOf(&plugin.AscendDraPlugin{}), "LoadCheckpoint",
+		func(_ *plugin.AscendDraPlugin) error {
+			return loadErr
+		})
 	p.registerService = gomonkey.ApplyMethod(
 		reflect.TypeOf(&plugin.AscendDraPlugin{}), "RegisterService",
 		func(_ *plugin.AscendDraPlugin, _ context.Context, _ *draFlags.DRAConfig) error {

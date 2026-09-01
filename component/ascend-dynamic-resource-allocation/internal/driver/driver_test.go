@@ -37,6 +37,7 @@ import (
 
 // startCase drives AscendDraDriver.Start through every branch:
 //   - pullNPUInfo fails
+//   - loadCheckpoint fails
 //   - startService fails
 //   - publishResources fails
 //   - happy path
@@ -44,6 +45,7 @@ type startCase struct {
 	name        string
 	listErr     error // error returned by fakeGeneration.ListNpuDevices
 	devices     []device.NpuDevice
+	loadErr     error
 	registerErr error
 	publishErr  error
 	expectErr   bool
@@ -51,6 +53,11 @@ type startCase struct {
 
 var startCases = []startCase{
 	{name: "pullNPUInfo fails", listErr: errSentinel, expectErr: true},
+	{
+		name:    "loadCheckpoint fails",
+		devices: []device.NpuDevice{{DevType: "Ascend910", DeviceName: "npu-0", PhyID: 0}},
+		loadErr: errSentinel, expectErr: true,
+	},
 	{
 		name:        "startService fails",
 		devices:     []device.NpuDevice{{DevType: "Ascend910", DeviceName: "npu-0", PhyID: 0}},
@@ -196,7 +203,7 @@ func TestAscendDraDriver_Start(t *testing.T) {
 				d, _ := newDriverWithFake(gen)
 				stopCalled := false
 				patches := &pluginMethodPatches{}
-				patchPluginMethods(patches, tc.registerErr, tc.publishErr, &stopCalled)
+				patchPluginMethods(patches, tc.loadErr, tc.registerErr, tc.publishErr, &stopCalled)
 				defer patches.Reset()
 				err := d.Start(context.Background())
 				if tc.expectErr {
@@ -259,7 +266,7 @@ func TestAscendDraDriver_Stop(t *testing.T) {
 		d, _ := newDriverWithFake(gen)
 		stopCalled := false
 		patches := &pluginMethodPatches{}
-		patchPluginMethods(patches, nil, nil, &stopCalled)
+		patchPluginMethods(patches, nil, nil, nil, &stopCalled)
 		defer patches.Reset()
 		d.Stop()
 		So(stopCalled, ShouldBeTrue)
@@ -333,7 +340,7 @@ func TestAscendDraManager_Stop(t *testing.T) {
 		d, _ := newDriverWithFake(gen)
 		stopCalled := false
 		patches := &pluginMethodPatches{}
-		patchPluginMethods(patches, nil, nil, &stopCalled)
+		patchPluginMethods(patches, nil, nil, nil, &stopCalled)
 		defer patches.Reset()
 		mgr := &AscendDraManager{draDriver: d}
 		mgr.Stop()
