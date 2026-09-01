@@ -245,7 +245,8 @@ function check_eula()
 function prepare_ub_driver_list()
 {
     if [[ -d "${UNIFIED_BUS_DIR}" ]]; then
-        echo "[INFO] unified bus dir ${UNIFIED_BUS_DIR} exists"
+        log "[INFO] unified bus dir ${UNIFIED_BUS_DIR} exists, will mount the ub_driver.list content"
+        echo -e "\033[31m[WARNING] mounting the ub_driver.list content may involve glibc version compatibility between the host and the container. Please ensure the host glibc version is compatible with the glibc version in the container to avoid runtime failures. To skip mounting the ub_driver.list content, set ASCEND_UB_DRV_MOUNT=False.\033[0m"
         check_path ${ASCEND_RUNTIME_CONFIG_DIR}/ub_driver.list
         if [[ $? != 0 ]]; then
             log "[ERROR]" "check failed, ${ASCEND_RUNTIME_CONFIG_DIR}/ub_driver.list is invalid"
