@@ -20,6 +20,12 @@ CUR_DIR=$(dirname "$(readlink -f "$0")")
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
 
 build_version="v6.0.0"
+version_file="${TOP_DIR}"/service_config.ini
+if  [ -f "$version_file" ]; then
+  line=$(sed -n '1p' "$version_file" 2>&1)
+  #cut the chars after ':' and add char 'v', the final example is v3.0.0
+  build_version="v"${line#*=}
+fi
 
 dra_name="ascend-dra"
 build_type=build

@@ -29,6 +29,8 @@ import (
 
 // DRAOption is the option struct for DRA plugin.
 type DRAOption struct {
+	// NodeName follows the NODE_NAME environment variable, set by the
+	// deployment YAML via spec.nodeName fieldRef.
 	NodeName                      string
 	CdiRoot                       string
 	KubeletRegistrarDirectoryPath string
@@ -38,10 +40,7 @@ type DRAOption struct {
 
 // RegisterFlags registers DRA options flags using standard library flag package
 func (d *DRAOption) RegisterFlags() {
-	flag.StringVar(&d.NodeName,
-		"node-name",
-		os.Getenv("NODE_NAME"),
-		"The name of the node to be worked on.")
+	d.NodeName = os.Getenv(consts.NodeNameEnv)
 
 	flag.StringVar(&d.CdiRoot,
 		"cdi-root",

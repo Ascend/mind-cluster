@@ -14,5 +14,7 @@
   - [Resilience Controller（已日落）](./00_manual_installation/10_resilience_controller.md)
   - [Container Manager](./00_manual_installation/11_container-manager.md)
   - [K8s RDMA Shared Dev Plugin](./00_manual_installation/12_k8s_rdma_shared_dev_plugin.md)
+  - [DPU Exporter](./00_manual_installation/13_dpu_exporter.md)
+  - [Ascend Dynamic Resource Allocation](./00_manual_installation/14_ascend_dynamic_resource_allocation.md)
 - [升级](01_upgrade.md)
 - [卸载](02_uninstallation.md)

@@ -1,9 +1,8 @@
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: ascend-dra-driver-service-account
-  namespace: ascend-dra-driver
+  namespace: kube-system
   labels:
     app.kubernetes.io/name: ascend-dra-driver
     app.kubernetes.io/instance: ascend-dra-driver
@@ -12,7 +11,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: ascend-dra-driver-role
-  namespace: ascend-dra-driver
 rules:
 - apiGroups: ["resource.k8s.io"]
   resources: ["resourceclaims"]
@@ -28,11 +26,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: ascend-dra-driver-role-binding
-  namespace: ascend-dra-driver
 subjects:
 - kind: ServiceAccount
   name: ascend-dra-driver-service-account
-  namespace: ascend-dra-driver
+  namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: ascend-dra-driver-role
@@ -42,7 +39,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: ascend-dra-driver-kubeletplugin
-  namespace: ascend-dra-driver
+  namespace: kube-system
   labels:
     app.kubernetes.io/name: ascend-dra-driver
     app.kubernetes.io/instance: ascend-dra-driver
@@ -64,10 +61,9 @@ spec:
     spec:
       priorityClassName: system-node-critical
       serviceAccountName: ascend-dra-driver-service-account
-      securityContext:
-        {}
+      securityContext: {}
       initContainers:
-      - name: init-setup
+      - name: init-log-setup
         image: ascend-dra:v6.0.0
         imagePullPolicy: IfNotPresent
         command: ['/bin/bash', '-c']
@@ -93,7 +89,6 @@ spec:
           capabilities:
             add: [ "SYS_PTRACE" ]
         image: ascend-dra:v6.0.0
-
         imagePullPolicy: IfNotPresent
         command: ["/bin/bash", "-c", "exec ascend-dra -logLevel=0 --enable-healthz --healthz-address=11251"]
         resources:
@@ -103,7 +98,6 @@ spec:
           limits:
             memory: 500Mi
             cpu: 500m
-
         livenessProbe:
           httpGet:
             path: /
@@ -111,7 +105,6 @@ spec:
           initialDelaySeconds: 30
           failureThreshold: 3
           periodSeconds: 10
-
         env:
         - name: KUBELET_REGISTRAR_DIRECTORY_PATH
           value: "/var/lib/kubelet/plugins_registry"
@@ -139,21 +132,17 @@ spec:
         - name: ascend-dra-mounts
           mountPath: /etc/ascend-dra/mounts
           readOnly: false
-        - name: host-root
+        - name: host-dev
           mountPath: /hostRoot/dev
-          subPath: dev
           readOnly: true
-        - name: host-root
+        - name: host-usr
           mountPath: /hostRoot/usr
-          subPath: usr
           readOnly: true
-        - name: host-root
+        - name: host-var
           mountPath: /hostRoot/var
-          subPath: var
           readOnly: true
-        - name: host-root
+        - name: host-etc
           mountPath: /hostRoot/etc
-          subPath: etc
           readOnly: true
         - name: hiai-driver
           mountPath: /usr/local/Ascend/driver
@@ -176,10 +165,18 @@ spec:
         hostPath:
           path: /etc/ascend-dra/mounts
           type: DirectoryOrCreate
-      - name: host-root
+      - name: host-dev
         hostPath:
-          path: /
-          type: Directory
+          path: /dev
+      - name: host-usr
+        hostPath:
+          path: /usr
+      - name: host-var
+        hostPath:
+          path: /var
+      - name: host-etc
+        hostPath:
+          path: /etc
       - name: hiai-driver
         hostPath:
           path: /usr/local/Ascend/driver
@@ -208,7 +205,7 @@ spec:
   matchConditions:
   - name: isRestrictedUser
     expression: >-
-      request.userInfo.username == "system:serviceaccount:ascend-dra-driver:ascend-dra-driver-service-account"
+      request.userInfo.username == "system:serviceaccount:kube-system:ascend-dra-driver-service-account"
   variables:
   - name: userNodeName
     expression: >-

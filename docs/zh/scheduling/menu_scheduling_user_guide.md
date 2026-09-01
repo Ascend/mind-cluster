@@ -150,6 +150,7 @@
       - [Container Manager](./05_developer_guide/00_installation_deployment/00_manual_installation/11_container-manager.md)
       - [K8s RDMA Shared Dev Plugin](./05_developer_guide/00_installation_deployment/00_manual_installation/12_k8s_rdma_shared_dev_plugin.md)
       - [DPU Exporter](./05_developer_guide/00_installation_deployment/00_manual_installation/13_dpu_exporter.md)
+      - [Ascend Dynamic Resource Allocation](./05_developer_guide/00_installation_deployment/00_manual_installation/14_ascend_dynamic_resource_allocation.md)
     - [升级](./05_developer_guide/00_installation_deployment/01_upgrade.md)
     - [卸载](./05_developer_guide/00_installation_deployment/02_uninstallation.md)
   - [自定义指标开发](./05_developer_guide/01_custom_metrics_development.md)
