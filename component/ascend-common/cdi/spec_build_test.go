@@ -261,15 +261,15 @@ func TestBuildSpec_HCCLTopologyFilesMissing(t *testing.T) {
 	}
 }
 
-// BuildSpec — HostRoot prefixing for driver library paths
-func TestBuildSpec_HostRootPrefixesLibPaths(t *testing.T) {
+// BuildSpec — HostFsPrefix prefixing for driver library paths
+func TestBuildSpec_HostFsPrefixAppliesLibPaths(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
 
-	hostRoot := t.TempDir()
-	// Simulate driver libraries mounted under HostRoot.
+	hostFsPrefix := t.TempDir()
+	// Simulate driver libraries mounted under HostFsPrefix.
 	for _, sub := range []string{"common", "driver"} {
-		p := filepath.Join(hostRoot, "usr", "local", "Ascend", "driver", "lib64", sub)
+		p := filepath.Join(hostFsPrefix, "usr", "local", "Ascend", "driver", "lib64", sub)
 		if err := os.MkdirAll(p, 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -277,7 +277,7 @@ func TestBuildSpec_HostRootPrefixesLibPaths(t *testing.T) {
 
 	spec, err := BuildSpec(BuildSpecConfig{
 		DeviceConfig: DeviceConfig{DeviceIDs: []int{0}, DevType: api.Ascend910},
-		MountConfig:  mount.MountConfig{Dir: t.TempDir(), IsAscendDockerRuntime: true, HostRoot: hostRoot},
+		MountConfig:  mount.MountConfig{Dir: t.TempDir(), IsAscendDockerRuntime: true, HostFsPrefix: hostFsPrefix},
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

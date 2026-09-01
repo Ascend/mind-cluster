@@ -69,8 +69,8 @@ const (
 	// generating per-claim specs. It is backed by a hostPath volume (see
 	// build/ascend-dra-driver.yaml).
 	mountConfigDir = "/etc/ascend-dra/mounts"
-	// defaultHostRoot is the host directory where the plugin container mounts /usr /etc .etc
-	defaultHostRoot = "/hostRoot"
+	// defaultHostFsPrefix is the host directory where the plugin container mounts /usr /etc .etc
+	defaultHostFsPrefix = "/hostRoot"
 )
 
 // NewCDISpecManager constructs a cdiSpecManager. devType and productTypes
@@ -144,8 +144,8 @@ func (m *cdiSpecManager) WriteClaimSpec(claimUID string, deviceNames []string) (
 			ProductType: productType,
 		},
 		MountConfig: mount.MountConfig{
-			Dir:      mountConfigDir,
-			HostRoot: defaultHostRoot,
+			Dir:        mountConfigDir,
+			HostFsPrefix:   defaultHostFsPrefix,
 			// Mount UB driver files by default for Ascend 950-generation devices.
 			MountUBDrv: true,
 		},

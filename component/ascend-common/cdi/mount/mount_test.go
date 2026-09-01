@@ -41,11 +41,11 @@ func TestBuild_ReadError(t *testing.T) {
 	}
 }
 
-func TestBuild_HostRootPrefixesTopology(t *testing.T) {
+func TestBuild_HostFsPrefixAppliesTopology(t *testing.T) {
 	// Topology injection is list-mode-only (JSON mode is data-driven from
 	// mounts.json; see TestBuildJSON_NoTopologyInjection).
-	hostRoot := t.TempDir()
-	topoFile := filepath.Join(hostRoot, "etc", "hccl_rootinfo.json")
+	hostFsPrefix := t.TempDir()
+	topoFile := filepath.Join(hostFsPrefix, "etc", "hccl_rootinfo.json")
 	if err := os.MkdirAll(filepath.Dir(topoFile), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -56,14 +56,14 @@ func TestBuild_HostRootPrefixesTopology(t *testing.T) {
 	TopologyItems = []TopologyItem{{HostPath: "/etc/hccl_rootinfo.json", Options: []string{"rbind", "rprivate", "ro"}}}
 
 	// Empty source (no .list mounts); only the topology item should be emitted.
-	mounts, err := Build(MountConfig{Dir: t.TempDir(), IsAscendDockerRuntime: true, HostRoot: hostRoot}, "")
+	mounts, err := Build(MountConfig{Dir: t.TempDir(), IsAscendDockerRuntime: true, HostFsPrefix: hostFsPrefix}, "")
 	if err != nil {
 		t.Fatalf("Build returned error: %v", err)
 	}
 	if len(mounts) != 1 {
 		t.Fatalf("expected 1 topology mount, got %d", len(mounts))
 	}
-	// HostPath must carry the original host path, without the hostRoot prefix.
+	// HostPath must carry the original host path, without the hostFsPrefix.
 	if mounts[0].HostPath != "/etc/hccl_rootinfo.json" {
 		t.Errorf("HostPath = %q, want /etc/hccl_rootinfo.json", mounts[0].HostPath)
 	}
@@ -73,8 +73,8 @@ func TestBuild_HostRootPrefixesTopology(t *testing.T) {
 // list mode (true) appends the HCCL topology mounts, JSON mode (false) does
 // not, even when a topology item exists on the host.
 func TestBuild_TopologyListModeOnly(t *testing.T) {
-	hostRoot := t.TempDir()
-	topoFile := filepath.Join(hostRoot, "etc", "hccl_rootinfo.json")
+	hostFsPrefix := t.TempDir()
+	topoFile := filepath.Join(hostFsPrefix, "etc", "hccl_rootinfo.json")
 	if err := os.MkdirAll(filepath.Dir(topoFile), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +85,7 @@ func TestBuild_TopologyListModeOnly(t *testing.T) {
 	TopologyItems = []TopologyItem{{HostPath: "/etc/hccl_rootinfo.json", Options: []string{"rbind", "rprivate", "ro"}}}
 
 	// List mode: topology item appended after the (empty) entry list.
-	listMounts, err := Build(MountConfig{Dir: t.TempDir(), IsAscendDockerRuntime: true, HostRoot: hostRoot}, "")
+	listMounts, err := Build(MountConfig{Dir: t.TempDir(), IsAscendDockerRuntime: true, HostFsPrefix: hostFsPrefix}, "")
 	if err != nil {
 		t.Fatalf("Build returned error: %v", err)
 	}
@@ -94,7 +94,7 @@ func TestBuild_TopologyListModeOnly(t *testing.T) {
 	}
 
 	// JSON mode (zero-value IsAscendDockerRuntime): no entries and no topology.
-	jsonMounts, err := Build(MountConfig{Dir: t.TempDir(), HostRoot: hostRoot}, "")
+	jsonMounts, err := Build(MountConfig{Dir: t.TempDir(), HostFsPrefix: hostFsPrefix}, "")
 	if err != nil {
 		t.Fatalf("Build returned error: %v", err)
 	}
@@ -221,6 +221,74 @@ func TestExpandGlobPath(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// TestExpandGlobPath_HostFsPrefix verifies glob expansion resolves under hostFsPrefix
+// (the host filesystem mount point inside the container) but returns the
+// un-prefixed host paths, mirroring the HostPath/ContainerPath emitted by
+// buildMounts.
+func TestExpandGlobPath_HostFsPrefix(t *testing.T) {
+	hostFsPrefix := t.TempDir()
+	libDir := filepath.Join(hostFsPrefix, "usr", "lib64")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	mustWriteFile(t, filepath.Join(libDir, "libummu.so.1"), "")
+	mustWriteFile(t, filepath.Join(libDir, "libummu.so.2"), "")
+
+	paths := expandGlobPath("/usr/lib64/libummu*", true, hostFsPrefix)
+	want := map[string]bool{
+		"/usr/lib64/libummu.so.1": true,
+		"/usr/lib64/libummu.so.2": true,
+	}
+	if len(paths) != len(want) {
+		t.Fatalf("expected %d matches, got %d: %v", len(want), len(paths), paths)
+	}
+	for _, p := range paths {
+		if !want[p] {
+			t.Errorf("unexpected match %q", p)
+		}
+	}
+}
+
+// TestResolveSymlinkTarget_HostFsPrefix verifies that absolute and relative
+// symlink targets resolve in the host filesystem namespace when hostFsPrefix is
+// set: both resolve to the host path (not the container's own filesystem path).
+func TestResolveSymlinkTarget_HostFsPrefix(t *testing.T) {
+	hostFsPrefix := t.TempDir()
+	libDir := filepath.Join(hostFsPrefix, "usr", "lib64")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Real file created under hostFsPrefix; its host path is what must be returned.
+	mustWriteFile(t, filepath.Join(libDir, "libummu.so.1"), "")
+	const hostReal = "/usr/lib64/libummu.so.1"
+
+	// Absolute target: must resolve to the host path without error.
+	absLink := filepath.Join(libDir, "libabs.so")
+	if err := os.Symlink(hostReal, absLink); err != nil {
+		t.Fatal(err)
+	}
+	got, err := resolveSymlinkTarget(hostFsPrefix, absLink)
+	if err != nil {
+		t.Fatalf("resolveSymlinkTarget(abs) error: %v", err)
+	}
+	if got != hostReal {
+		t.Errorf("resolveSymlinkTarget(abs) = %q, want %q", got, hostReal)
+	}
+
+	// Relative target: must resolve within the host namespace to the host path.
+	relLink := filepath.Join(libDir, "librel.so")
+	if err := os.Symlink("libummu.so.1", relLink); err != nil {
+		t.Fatal(err)
+	}
+	got, err = resolveSymlinkTarget(hostFsPrefix, relLink)
+	if err != nil {
+		t.Fatalf("resolveSymlinkTarget(rel) error: %v", err)
+	}
+	if got != hostReal {
+		t.Errorf("resolveSymlinkTarget(rel) = %q, want %q", got, hostReal)
 	}
 }
 
