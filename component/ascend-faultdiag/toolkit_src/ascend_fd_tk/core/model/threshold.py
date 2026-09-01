@@ -93,19 +93,19 @@ class Threshold(JsonObj):
                 return ThresholdStatus.LOW_THRESHOLD_ALARM, self.low_alarm_th
             if self._has_low_warn_th and self._low_warn_th_f > value_f:
                 return ThresholdStatus.LOW_THRESHOLD_WARN, self.low_warn_th
-        else:
-            # 数值转换失败，尝试字符串相等比较（忽略大小写）
-            # 逻辑：只有等于normal_alarm_th或normal_warn_th才是正常，其他均为异常
-            # 优先级：异常级别高于警告级别
-            if value:
-                # 检查是否设置了异常级别的正常阈值
-                if self.normal_alarm_th:
-                    if value.strip().lower() != self.normal_alarm_th.strip().lower():
-                        return ThresholdStatus.NOT_EQUAL_THRESHOLD_ALARM, self.normal_alarm_th
-                # 检查是否设置了警告级别的正常阈值
-                elif self.normal_warn_th:
-                    if value.strip().lower() != self.normal_warn_th.strip().lower():
-                        return ThresholdStatus.NOT_EQUAL_THRESHOLD_WARN, self.normal_warn_th
+
+        # 尝试字符串相等比较（忽略大小写）
+        # 逻辑：只有等于normal_alarm_th或normal_warn_th才是正常，其他均为异常
+        # 优先级：异常级别高于警告级别
+        if value:
+            # 检查是否设置了异常级别的正常阈值
+            if self.normal_alarm_th:
+                if value.strip().lower() != self.normal_alarm_th.strip().lower():
+                    return ThresholdStatus.NOT_EQUAL_THRESHOLD_ALARM, self.normal_alarm_th
+            # 检查是否设置了警告级别的正常阈值
+            elif self.normal_warn_th:
+                if value.strip().lower() != self.normal_warn_th.strip().lower():
+                    return ThresholdStatus.NOT_EQUAL_THRESHOLD_WARN, self.normal_warn_th
         return ThresholdStatus.NORMAL, ""
 
     def check_value_str(self, value: str) -> str:

@@ -139,7 +139,7 @@
 >[!NOTE]
 > Host 日志 V1/V2/V3 版本详情请参考 [host 离线日志采集](../05_usage/02_log_collection.md#host-offline-log)。
 
-### Ascend 950 铲平主机侧额外诊断
+### Ascend 950 产品主机侧额外诊断
 
 Ascend 950 产品的主机侧诊断项与 Atlas A3 对应项的诊断逻辑一致，但光模块诊断命令变更为按光模块编号逐个采集：`hccn_tool -g -optical -i {npu_id} -optical_id {optical_id}`。此外，Ascend 950 新增网卡（NIC）SFP lane 级诊断，命令来源为 `hinicadm5 sfp -i {card_name} -p {port_id}`。
 
