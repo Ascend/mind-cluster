@@ -24,5 +24,5 @@ Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/e
     ```
 
     >[!NOTE]
-    >ASCEND\_VISIBLE\_DEVICES和ASCEND\_RUNTIME\_MOUNTS参数说明，请参见[表1](./02_usage_on_the_docker_client.md#参数说明)。
-    >ub_driver.list属于UB驱动的挂载配置文件，目前仅支持宿主机OS为openEuler系统。
+    >- ub_driver.list属于UB驱动的挂载配置文件，仅当UB总线场景下，才会默认挂载ub_driver.list中的内容，用户若不需要挂载ub_driver.list中的内容，可以通过ASCEND_UB_DRV_MOUNT参数中指定"False"。不建议用户通过ASCEND_RUNTIME_MOUNTS参数挂载ub_driver.list中的内容。
+    >- ASCEND\_VISIBLE\_DEVICES、ASCEND\_RUNTIME\_MOUNTS和ASCEND\_UB\_DRV\_MOUNT参数说明，请参见[表1](./02_usage_on_the_docker_client.md#参数说明)。
