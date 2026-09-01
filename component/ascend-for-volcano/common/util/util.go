@@ -456,7 +456,7 @@ func IsStrategyInSubHealthyStrategs(subHealthyStrategy string) bool {
 	return CheckStrInSlice(subHealthyStrategy, subHealthyStrategs)
 }
 
-// IsRdmaTask check whether the task requests rdma resources.
+// IsRdmaTask check whether the task requests rdma resources and full dpu cards.
 func IsRdmaTask(nT *api.TaskInfo, nodeAnnotation map[string]string) bool {
 	if nT == nil || nT.Resreq == nil || nodeAnnotation == nil {
 		return false
@@ -471,8 +471,8 @@ func IsRdmaTask(nT *api.TaskInfo, nodeAnnotation map[string]string) bool {
 			rdmaResSet[name] = true
 		}
 	}
-	for k := range nT.Resreq.ScalarResources {
-		if rdmaResSet[string(k)] {
+	for k, v := range nT.Resreq.ScalarResources {
+		if rdmaResSet[string(k)] && int(v/NPUHexKilo) == DpuFullCardNum {
 			return true
 		}
 	}

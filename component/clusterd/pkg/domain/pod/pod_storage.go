@@ -154,10 +154,17 @@ func GetSimplePodByJobId(jobKey string) map[string]*constant.SimplePodInfo {
 	for uid, pod := range localPodMap {
 		// podRank may be empty string
 		podRank := pod.Annotations[api.PodRankIndexAnno]
+		reqTotal := make(map[string]int64)
+		for _, container := range pod.Spec.Containers {
+			for resName, quantity := range container.Resources.Requests {
+				reqTotal[string(resName)] += quantity.Value()
+			}
+		}
 		result[uid] = &constant.SimplePodInfo{
-			PodUid:   uid,
-			PodRank:  podRank,
-			NodeName: pod.Spec.NodeName,
+			PodUid:           uid,
+			PodRank:          podRank,
+			NodeName:         pod.Spec.NodeName,
+			ResourceRequests: reqTotal,
 		}
 	}
 	return result

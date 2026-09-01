@@ -1316,7 +1316,11 @@ func TestIsRdmaTask(t *testing.T) {
 	const res2 = "huawei.com/ub_rdma_2"
 	rdmaTask := func(name string) *api.TaskInfo {
 		return &api.TaskInfo{Resreq: &api.Resource{
-			ScalarResources: map[v1.ResourceName]float64{v1.ResourceName(name): 1}}}
+			ScalarResources: map[v1.ResourceName]float64{v1.ResourceName(name): float64(DpuFullCardNum * NPUHexKilo)}}}
+	}
+	rdmaTaskNotFull := func(name string) *api.TaskInfo {
+		return &api.TaskInfo{Resreq: &api.Resource{
+			ScalarResources: map[v1.ResourceName]float64{v1.ResourceName(name): float64(NPUHexKilo)}}}
 	}
 	multiAnno := map[string]string{DpuResourceNameKey: res1 + "," + res2}
 	tests := []struct {
@@ -1326,11 +1330,12 @@ func TestIsRdmaTask(t *testing.T) {
 		want bool
 	}{
 		{"nil task", nil, multiAnno, false},
-		{"single resource matches", rdmaTask(res1),
+		{"single resource matches full card", rdmaTask(res1),
 			map[string]string{DpuResourceNameKey: res1}, true},
-		{"multi-anno matches first", rdmaTask(res1), multiAnno, true},
-		{"multi-anno matches second", rdmaTask(res2), multiAnno, true},
+		{"multi-anno matches first full card", rdmaTask(res1), multiAnno, true},
+		{"multi-anno matches second full card", rdmaTask(res2), multiAnno, true},
 		{"multi-anno no match", rdmaTask("other"), multiAnno, false},
+		{"not full card should return false", rdmaTaskNotFull(res1), multiAnno, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

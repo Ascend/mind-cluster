@@ -245,6 +245,8 @@ const (
 	PreSeparateFault = "PreSeparateFault"
 	// SeparateFault separate fault
 	SeparateFault = "SeparateFault"
+	// SeparateDPU separate DPU fault level, reported by dpu-dp
+	SeparateDPU = "SeparateDPU"
 )
 
 // switch fault level

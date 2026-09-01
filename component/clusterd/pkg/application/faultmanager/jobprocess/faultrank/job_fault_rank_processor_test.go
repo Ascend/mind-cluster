@@ -747,3 +747,166 @@ func TestGetFaultListInfoByRelationFault(t *testing.T) {
 		})
 	})
 }
+
+func TestMatchNpu(t *testing.T) {
+	convey.Convey("Test matchNpu compares device DeviceID with affected NPU index", t, func() {
+		convey.Convey("empty device id returns false", func() {
+			convey.So(matchNpu(constant.Device{DeviceID: ""}, 0), convey.ShouldBeFalse)
+		})
+		convey.Convey("matched id returns true, unmatched returns false", func() {
+			convey.So(matchNpu(constant.Device{DeviceID: "1"}, 1), convey.ShouldBeTrue)
+			convey.So(matchNpu(constant.Device{DeviceID: "1"}, 2), convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestMapDpuFaultLevel(t *testing.T) {
+	convey.Convey("Test mapDpuFaultLevel maps DPU fault level to clusterd level", t, func() {
+		convey.Convey("SubHealthFault and NotHandleFault pass through", func() {
+			convey.So(mapDpuFaultLevel(constant.SubHealthFault), convey.ShouldEqual, constant.SubHealthFault)
+			convey.So(mapDpuFaultLevel(constant.NotHandleFault), convey.ShouldEqual, constant.NotHandleFault)
+		})
+		convey.Convey("SeparateDPU maps to SeparateNPU, unknown level maps to NotHandleFault", func() {
+			convey.So(mapDpuFaultLevel(constant.SeparateDPU), convey.ShouldEqual, constant.SeparateNPU)
+			convey.So(mapDpuFaultLevel("UnknownLevel"), convey.ShouldEqual, constant.NotHandleFault)
+		})
+	})
+}
+
+func TestGetDpuFaultRankAndDevice0(t *testing.T) {
+	convey.Convey("Test getDpuFaultRankAndDevice filters by RDMA and nil dpuInfos", t, func() {
+		server := constant.ServerHccl{
+			ServerName: nodeName,
+			ServerSN:   "nodeSN",
+			ServerID:   "nodeID",
+			DeviceList: []constant.Device{
+				{DeviceID: "0", RankID: "0"},
+				{DeviceID: "1", RankID: "1"},
+			},
+		}
+		info := &jobPodInfoMap{
+			podOfRank:      map[string]*constant.SimplePodInfo{"0": {PodUid: podUid, PodRank: "0"}},
+			deviceNumOfPod: deviceNumOfPod,
+			jobId:          jobId,
+		}
+		dpuInfos := map[string]*constant.DpuInfo{
+			constant.DpuInfoPrefix + nodeName: {
+				DpuInfoCfg: constant.DpuInfoCfg{
+					DPUInfo: constant.DpuInfoBody{
+						DPUList: []constant.DpuItem{
+							{DeviceID: "0x8200", AffectedNPU: []int{0, 1},
+								FaultList: []constant.DpuFaultDetail{
+									{FaultCode: "21000023", FaultLevel: constant.SubHealthFault},
+								}},
+						},
+					},
+				},
+			},
+		}
+
+		convey.Convey("job not using RDMA returns empty", func() {
+			patches := gomonkey.ApplyFunc(isJobUseRdmaOnNode, func(n string, node *v1.Node, i *jobPodInfoMap) bool { return false })
+			defer patches.Reset()
+			ranks, devices := getDpuFaultRankAndDevice(jobId, nodeName, nil, server, info, dpuInfos)
+			convey.So(ranks, convey.ShouldBeEmpty)
+			convey.So(devices, convey.ShouldBeEmpty)
+		})
+
+		convey.Convey("dpuInfos nil returns empty even if job uses RDMA", func() {
+			patches := gomonkey.ApplyFunc(isJobUseRdmaOnNode, func(n string, node *v1.Node, i *jobPodInfoMap) bool { return true })
+			defer patches.Reset()
+			ranks, devices := getDpuFaultRankAndDevice(jobId, nodeName, nil, server, info, nil)
+			convey.So(ranks, convey.ShouldBeEmpty)
+			convey.So(devices, convey.ShouldBeEmpty)
+		})
+	})
+}
+
+func TestGetDpuFaultRankAndDevice01(t *testing.T) {
+	convey.Convey("Test getDpuFaultRankAndDevice maps DPU faults to affected NPUs", t, func() {
+		server := constant.ServerHccl{
+			ServerName: nodeName,
+			ServerSN:   "nodeSN",
+			ServerID:   "nodeID",
+			DeviceList: []constant.Device{
+				{DeviceID: "0", RankID: "0"},
+				{DeviceID: "1", RankID: "1"},
+			},
+		}
+		info := &jobPodInfoMap{
+			podOfRank:      map[string]*constant.SimplePodInfo{"0": {PodUid: podUid, PodRank: "0"}},
+			deviceNumOfPod: deviceNumOfPod,
+			jobId:          jobId,
+		}
+		dpuInfos := map[string]*constant.DpuInfo{
+			constant.DpuInfoPrefix + nodeName: {
+				DpuInfoCfg: constant.DpuInfoCfg{
+					DPUInfo: constant.DpuInfoBody{
+						DPUList: []constant.DpuItem{
+							{DeviceID: "0x8200", AffectedNPU: []int{0, 1},
+								FaultList: []constant.DpuFaultDetail{
+									{FaultCode: "21000023", FaultLevel: constant.SubHealthFault},
+									{FaultCode: "21000024", FaultLevel: constant.SeparateDPU},
+								}},
+						},
+					},
+				},
+			},
+		}
+		patches := gomonkey.ApplyFunc(isJobUseRdmaOnNode, func(n string, node *v1.Node, i *jobPodInfoMap) bool { return true })
+		defer patches.Reset()
+
+		ranks, devices := getDpuFaultRankAndDevice(jobId, nodeName, nil, server, info, dpuInfos)
+		// 2 NPUs * 2 faults = 4 FaultRank entries
+		convey.So(ranks, convey.ShouldHaveLength, 4)
+		convey.So(devices, convey.ShouldHaveLength, 4)
+		// verify sub-health mapped to SubHealthFault, separate mapped to SeparateNPU
+		levelSet := map[string]bool{}
+		for _, r := range ranks {
+			levelSet[r.FaultLevel] = true
+		}
+		convey.So(levelSet[constant.SubHealthFault], convey.ShouldBeTrue)
+		convey.So(levelSet[constant.SeparateNPU], convey.ShouldBeTrue)
+	})
+}
+
+func TestIsJobUseRdmaOnNode(t *testing.T) {
+	convey.Convey("Test isJobUseRdmaOnNode checks node annotation and pod resource requests", t, func() {
+		// node with rdma resource annotation
+		rdmaNode := &v1.Node{}
+		rdmaNode.Name = nodeName
+		rdmaNode.Annotations = map[string]string{constant.DpuResourceNameKey: "huawei.com/ub_rdma"}
+		// helper to build jobPodInfoMap with given resource requests
+		buildInfo := func(requests map[string]int64) *jobPodInfoMap {
+			return &jobPodInfoMap{
+				podOfRank: map[string]*constant.SimplePodInfo{
+					"0": {NodeName: nodeName, ResourceRequests: requests},
+				},
+				jobId: jobId,
+			}
+		}
+
+		convey.Convey("node is nil returns false", func() {
+			convey.So(isJobUseRdmaOnNode(nodeName, nil, buildInfo(nil)), convey.ShouldBeFalse)
+		})
+
+		convey.Convey("node without rdma annotation returns false", func() {
+			noAnnoNode := &v1.Node{}
+			noAnnoNode.Name = nodeName
+			convey.So(isJobUseRdmaOnNode(nodeName, noAnnoNode,
+				buildInfo(map[string]int64{"huawei.com/ub_rdma": int64(constant.DpuFullCardNum)})),
+				convey.ShouldBeFalse)
+		})
+
+		convey.Convey("pod requests less than full cards returns false, full cards returns true", func() {
+			// less than full cards
+			convey.So(isJobUseRdmaOnNode(nodeName, rdmaNode,
+				buildInfo(map[string]int64{"huawei.com/ub_rdma": int64(constant.DpuFullCardNum - 1)})),
+				convey.ShouldBeFalse)
+			// full cards
+			convey.So(isJobUseRdmaOnNode(nodeName, rdmaNode,
+				buildInfo(map[string]int64{"huawei.com/ub_rdma": int64(constant.DpuFullCardNum)})),
+				convey.ShouldBeTrue)
+		})
+	})
+}

@@ -142,6 +142,41 @@ func TestHasDpuNodeSeparateFault(t *testing.T) {
 	}
 }
 
+func TestHasDpuNodeSubHealthFault(t *testing.T) {
+	tests := []struct {
+		name        string
+		faultDpuList []k8s.DPUItem
+		wantResult  bool
+	}{
+		{
+			name:        "01 return false when faultDpuList is empty",
+			faultDpuList: nil,
+			wantResult:  false,
+		},
+		{
+			name: "02 return false when fault level is isolate",
+			faultDpuList: []k8s.DPUItem{
+				{FaultList: []k8s.DpuFaultDetail{{FaultLevel: SeparateDPU}}},
+			},
+			wantResult: false,
+		},
+		{
+			name: "03 return true when fault level is sub-health",
+			faultDpuList: []k8s.DPUItem{
+				{FaultList: []k8s.DpuFaultDetail{{FaultLevel: SubHealthFault}}},
+			},
+			wantResult: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := hasDpuNodeSubHealthFault(tt.faultDpuList); got != tt.wantResult {
+				t.Errorf("hasDpuNodeSubHealthFault() = %v, want %v", got, tt.wantResult)
+			}
+		})
+	}
+}
+
 func TestIsDpuSeparateFault(t *testing.T) {
 	tests := []struct {
 		name       string
