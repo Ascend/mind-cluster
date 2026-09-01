@@ -149,6 +149,15 @@
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
 </tr>
+<tr id="row_ignore_roce_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_ignore_roce_1"><a name="p_ignore_roce_1"></a><a name="p_ignore_roce_1"></a>huawei.com/parameterplane.unhealthy-tolerance</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>配置分布式Ascend910/Ascend950任务在调度时忽略参数面网络不健康NPU。仅对huawei.com/Ascend910和huawei.com/npu资源类型生效。</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>"true"：忽略参数面网络不健康NPU，允许调度到网络不健康NPU。</li><li>不设置或其他值：过滤参数面网络不健康NPU，不允许调度到网络不健康NPU。</li></ul><p>默认不设置，即过滤网络不健康NPU。</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -355,6 +364,15 @@
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>当MinResources中未配置NPU资源时，通过此annotation声明任务使用的NPU类型，使Volcano仍然按NPU亲和性调度规则进行调度。</p>
 </td>
 <td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>取值为NPU类型名称，例如：Ascend910、Ascend310P、Ascend310。</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_ignore_roce_2"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_ignore_roce_2"><a name="p_ignore_roce_2"></a><a name="p_ignore_roce_2"></a>huawei.com/parameterplane.unhealthy-tolerance</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>配置分布式Ascend910/Ascend950任务在调度时忽略参数面网络不健康NPU。仅对huawei.com/Ascend910和huawei.com/npu资源类型生效。</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>"true"：忽略参数面网络不健康NPU，允许调度到网络不健康NPU。</li><li>不设置或其他值：过滤参数面网络不健康NPU，不允许调度到网络不健康NPU。</li></ul><p>默认不设置，即过滤网络不健康NPU。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>

@@ -106,6 +106,7 @@ var (
 		util.RecoverPolicyPathKey,
 		util.InferServiceScheduleAnnoKey,
 		util.AffinityConfig,
+		util.ParameterPlaneUnhealthyToleranceAnnoKey,
 	}
 )
 

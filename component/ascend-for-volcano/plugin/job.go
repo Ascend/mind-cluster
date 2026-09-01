@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
@@ -578,7 +578,24 @@ func (sJob *SchedulerJob) initNPUJob(vcJob *api.JobInfo, npuName string, npuNum 
 	sJob.setNPUTaskNumInJob()
 	sJob.setSchedulingTaskNum(vcJob)
 	sJob.setMultiLevelTaskSchedulingConfig(vcJob)
+	sJob.setParameterPlaneUnhealthyTolerance()
 	sJob.initVTasks(vcJob)
+}
+
+// setParameterPlaneUnhealthyTolerance reads the huawei.com/parameterplane.unhealthy-tolerance annotation
+// and populates NPUJob.ParameterPlaneUnhealthyTolerance.
+// Effective for huawei.com/Ascend910 and huawei.com/npu resource types.
+func (sJob *SchedulerJob) setParameterPlaneUnhealthyTolerance() {
+	if sJob == nil || sJob.NPUJob == nil {
+		return
+	}
+	if sJob.NPUJob.ReqNPUName != util.NPU910CardName && sJob.NPUJob.ReqNPUName != util.NPUCardName {
+		return
+	}
+	val, ok := sJob.Annotation[util.ParameterPlaneUnhealthyToleranceAnnoKey]
+	if ok && val == "true" {
+		sJob.NPUJob.ParameterPlaneUnhealthyTolerance = true
+	}
 }
 
 // setNPUTaskNumInJob set the NPU task number in one job. for some task has no NPU.

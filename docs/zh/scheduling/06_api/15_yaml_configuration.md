@@ -27,6 +27,7 @@
 |metadata.labels.tor-affinity|字符串 (string)|-|<p>默认值为null，表示不使用交换机亲和性调度。</p><ul><li>large-model-schema：大模型任务或填充任务</li><li>normal-schema：普通任务</li><li>null：不使用交换机亲和性调度</li></ul><span class="notetitle">[!NOTE] 说明</span><div class="notebody">用户需要根据任务副本数，选择任务类型。任务副本数小于4为填充任务。任务副本数大于或等于4为大模型任务。普通任务不限制任务副本数。</div><p>用户需要根据任务类型进行配置。</p><ul><li>交换机亲和性调度1.0版本支持<term>Atlas 训练系列产品</term>和<term>Atlas A2 训练系列产品</term>；支持PyTorch和MindSpore框架。</li><li>交换机亲和性调度2.0版本支持<term>Atlas A2 训练系列产品</term>；支持PyTorch框架。</li><li>只支持整卡进行交换机亲和性调度，不支持静态vNPU进行交换机亲和性调度。</li></ul>|
 |metadata.annotations['sp-block']|字符串 (string)|-|<p>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。若用户未指定该字段，调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</p><ul><li>单机时需要和任务请求的芯片数量一致。</li><li>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</li></ul><p>了解详细说明请参见[灵衢总线设备节点网络说明](../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点)。</p><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>仅支持在Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器、Atlas 800I A3 超节点服务器、Atlas 850E 超节点、Atlas 950 SuperPoD 超节点中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：[任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败](https://gitcode.com/Ascend/mind-cluster/issues/377)</li></ul></div>|
 |metadata.annotations['ra-block']|字符串 (string)|-|<p>框亲和性调度的标识符。指定ra-block字段，在支持动态配比的前提下，单框64卡被分为4个OS，每个OS在K8s集群中被认为是一个节点，框内通信时延比框间通信时延低，配置此字段用于训练任务的框亲和性调度。</p><p>取值范围是0~64且必须是2的幂次方。</p><p>穷举可得ra-block的取值为{1，2，4，8，16，32，64}。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">仅支持在Atlas 950 SuperPoD 超节点中使用该字段。</div></div>|
+|metadata.annotations['huawei.com/parameterplane.unhealthy-tolerance']|字符串 (string)|-|<p>配置分布式Ascend910/Ascend950任务在调度时忽略参数面网络不健康NPU。</p><ul><li>"true"：忽略参数面网络不健康NPU，允许调度到网络不健康NPU。</li><li>不设置或其他值：过滤参数面网络不健康NPU，不允许调度到网络不健康NPU。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>默认不设置，即过滤网络不健康NPU。</li><li>该注解仅对分布式任务（NPUTaskNum &gt; 1）生效，单机任务不受影响。</li><li>该注解仅对huawei.com/Ascend910和huawei.com/npu资源类型生效，其他资源类型不受影响。</li></ul></div></div>|
 |metadata.annotations.huawei.com/schedule_policy|字符串 (string)|-|配置任务需要调度的AI芯片布局形态。Volcano会根据该字段选择合适的调度策略。目前支持[huawei.com/schedule_policy配置说明](#huaweicomschedule_policy配置说明)中的配置。|
 |huawei.com/affinity-config|字符串 (string)|-|<p>配置任务的多级调度的亲和性层级。</p><p>取值为：level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p><p>要求满足格式为leveli=ni样式的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>|
 |spec|对象 (object)|-|AscendJob期望状态的规格描述。必填字段：replicaSpecs。|
@@ -181,6 +182,14 @@
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p930320315500"><a name="p930320315500"></a><a name="p930320315500"></a>目前支持<a href="#schedule_policy">huawei.com/schedule_policy配置说明</a>中的配置。</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p153031739509"><a name="p153031739509"></a><a name="p153031739509"></a>配置任务需要调度的AI芯片布局形态。<span id="zh-cn_topic_0000002511347099_ph204811934163414"><a name="zh-cn_topic_0000002511347099_ph204811934163414"></a><a name="zh-cn_topic_0000002511347099_ph204811934163414"></a>Volcano</span>会根据该字段选择合适的调度策略。</p>
+</td>
+</tr>
+<tr id="row_ignore_roce_vcjob"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p_ignore_roce_vcjob"><a name="p_ignore_roce_vcjob"></a><a name="p_ignore_roce_vcjob"></a>metadata.annotations['huawei.com/parameterplane.unhealthy-tolerance']</p>
+</td>
+<td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p_ignore_roce_vcjob_val"><a name="p_ignore_roce_vcjob_val"></a><a name="p_ignore_roce_vcjob_val"></a><ul><li>"true"：忽略参数面网络不健康NPU</li><li>不设置或其他值：过滤网络不健康NPU</li></ul></p>
+</td>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p_ignore_roce_vcjob_desc"><a name="p_ignore_roce_vcjob_desc"></a><a name="p_ignore_roce_vcjob_desc"></a>配置分布式Ascend910/Ascend950任务在调度时忽略参数面网络不健康NPU。默认不设置，即过滤网络不健康NPU。</p>
+<div class="note" id="note_ignore_roce_vcjob"><a name="note_ignore_roce_vcjob"></a><a name="note_ignore_roce_vcjob"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>该注解仅对分布式任务（NPUTaskNum > 1）生效，单机任务不受影响。</li><li>该注解仅对huawei.com/Ascend910和huawei.com/npu资源类型生效，其他资源类型不受影响。</li></ul></div></div>
 </td>
 </tr>
 <tr><td>servertype</td><td><ul><li>npu-{aicore核数}</li><li>soc</li><li>Ascend910-{aicore核数}</li><li>Ascend310P-{aicore核数}</li></ul></td><td class="cellrowborder" valign="top" width="37.71377137713771%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001609074213_p202093166576"><a name="zh-cn_topic_0000001609074213_p202093166576"></a><a name="zh-cn_topic_0000001609074213_p202093166576"></a>服务器类型。</p>
@@ -680,6 +689,14 @@
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p175075613422"><a name="p175075613422"></a><a name="p175075613422"></a>指定ra-block字段，在支持动态配比的前提下，单框64卡被分为4个OS，每个OS在K8s集群中被认为是一个节点，框内通信时延比框间通信时延低，配置此字段用于训练任务的框亲和性调度。</p><p id="p175075613422"><a name="p175075613422"></a><a name="ul1150756144219"></a><a name="ul1150756144219"></a>取值范围是0-64且必须是2的幂次方。</p><p id="p175075613422"><a name="p175075613422"></a><a name="ul1150756144219"></a><a name="ul1150756144219"></a>穷举可得 ra-block 取值为 {1，2，4，8，16，32，64}。</p>
 <div class="note" id="note550714615429"><a name="note550714615429"></a><a name="note550714615429"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a>仅支持在Atlas 950 SuperPoD 超节点中使用该字段。
 </div></div>
+</td>
+</tr>
+<tr id="row_ignore_roce_deploy"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p_ignore_roce_deploy"><a name="p_ignore_roce_deploy"></a><a name="p_ignore_roce_deploy"></a>metadata.annotations['huawei.com/parameterplane.unhealthy-tolerance']</p>
+</td>
+<td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p_ignore_roce_deploy_val"><a name="p_ignore_roce_deploy_val"></a><a name="p_ignore_roce_deploy_val"></a><ul><li>"true"：忽略参数面网络不健康NPU</li><li>不设置或其他值：过滤网络不健康NPU</li></ul></p>
+</td>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p_ignore_roce_deploy_desc"><a name="p_ignore_roce_deploy_desc"></a><a name="p_ignore_roce_deploy_desc"></a>配置分布式Ascend910/Ascend950任务在调度时忽略参数面网络不健康NPU。默认不设置，即过滤网络不健康NPU。</p>
+<div class="note" id="note_ignore_roce_deploy"><a name="note_ignore_roce_deploy"></a><a name="note_ignore_roce_deploy"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>该注解仅对分布式任务（NPUTaskNum &gt; 1）生效，单机任务不受影响。</li><li>该注解仅对huawei.com/Ascend910和huawei.com/npu资源类型生效，其他资源类型不受影响。</li></ul></div></div>
 </td>
 </tr>
 <tr id="row14747131720228"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p10781181822210"><a name="p10781181822210"></a><a name="p10781181822210"></a>metadata.annotations['huawei.com/Ascend<em id="i103895254475"><a name="i103895254475"></a><a name="i103895254475"></a>XXX</em>']</p>

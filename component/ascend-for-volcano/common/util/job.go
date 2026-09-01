@@ -39,6 +39,8 @@ type NPUJob struct {
 	SpBlockNPUNum      int
 	TpBlockNPUNum      int
 	SubHealthyStrategy string
+	// ParameterPlaneUnhealthyTolerance indicates whether the job tolerates parameter plane unhealthy NPU.
+	ParameterPlaneUnhealthyTolerance bool
 
 	AffinityBlocks map[string]int
 }
