@@ -123,6 +123,16 @@ func (r *ASJobReconciler) getMangerSvc(services []*corev1.Service) *corev1.Servi
 	return nil
 }
 
+// isSvcOwnedByJob checks whether the existing service is controlled by the given job. The controller
+// owner uid must be equal to the job uid, so that a stale service left by a deleted job with the same
+// name will not be reused by the recreated job.
+func isSvcOwnedByJob(svc *corev1.Service, job *mindxdlv1.AscendJob) bool {
+	if svc == nil {
+		return false
+	}
+	return metav1.IsControlledBy(svc, job)
+}
+
 func (r *ASJobReconciler) getSvcFromApiserver(svcName, svcNamespace string) (*corev1.Service, error) {
 	return r.KubeClientSet.CoreV1().Services(svcNamespace).Get(context.Background(), svcName, metav1.GetOptions{})
 }
