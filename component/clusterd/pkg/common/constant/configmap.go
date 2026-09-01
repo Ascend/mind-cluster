@@ -30,6 +30,10 @@ const (
 	DpuInfoPrefix = "dpuinfo-"
 	// ClusterDpuInfo the name of cluster dpu info config map
 	ClusterDpuInfo = "cluster-info-dpu-"
+	// DpuResourceNameKey node annotation key for DPU resource name, written by dpu-dp.
+	DpuResourceNameKey = "huawei.com/dpu.resource.name"
+	// DpuFullCardNum indicates the number of DPU cards on a full-card node.
+	DpuFullCardNum = 8
 )
 
 const (

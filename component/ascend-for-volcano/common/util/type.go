@@ -273,6 +273,8 @@ const (
 	ProcessRecoverPause = "pause"
 	// DpuResourceNameKey node annotation key for DPU resource name, written by dpu-dp
 	DpuResourceNameKey = "huawei.com/dpu.resource.name"
+	// DpuFullCardNum indicates the number of DPU cards on a full-card node
+	DpuFullCardNum = 8
 	// DpuInfoAnnoKey node annotation key for DPU info (serialized DpuInfoCfg), written by volcano from dpu cm
 	DpuInfoAnnoKey = "huawei.com/dpu.infos"
 	// DpuInfoPreName dpu-dp configmap name prefix, e.g. dpuinfo-<nodeName>

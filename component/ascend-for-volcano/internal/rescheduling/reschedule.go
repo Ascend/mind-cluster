@@ -873,6 +873,12 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode *plugin.NPUNode, 
 			"switchSubHealthy=%v, but sub-healthy strategy is %v", fNode.HasCardSubHealthFault,
 			fNode.HasSwitchSubHealthFault, schedulerJob.SubHealthyStrategy)
 	}
+	if util.IsRdmaTask(task, vcNode.Annotation) && hasDpuNodeSubHealthFault(fNode.FaultDpuList) &&
+		schedulerJob.SubHealthyStrategy != util.SubHealthyIgnore {
+		klog.V(util.LogWarningLev).Infof("node %s has dpu subhealth fault, not suitable for rdma full card"+
+			" task %s with strategy %s", vcNode.Name, task.Name, schedulerJob.SubHealthyStrategy)
+		return fmt.Errorf("node has dpu subhealth fault, not suitable for rdma full card task")
+	}
 	if util.IsRdmaTask(task, vcNode.Annotation) && hasDpuNodeSeparateFault(fNode.DpuNodeEvent) {
 		klog.V(util.LogWarningLev).Infof("node %s has dpu card drop fault, not suitable for rdma task %s",
 			vcNode.Name, task.Name)

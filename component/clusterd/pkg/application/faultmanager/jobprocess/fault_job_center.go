@@ -48,6 +48,7 @@ func (fJobCenter *faultJobProcessCenter) Process() {
 		DeviceCm: cmprocess.DeviceCenter.GetProcessedCm(),
 		SwitchCm: cmprocess.SwitchCenter.GetProcessedCm(),
 		NodeCm:   cmprocess.NodeCenter.GetProcessedCm(),
+		DpuCm:    cmprocess.DpuCenter.GetProcessedCm(),
 	}
 	for _, processor := range fJobCenter.processorList {
 		processor.Process(content)

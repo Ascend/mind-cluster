@@ -378,6 +378,7 @@ type AllConfigmapContent struct {
 	DeviceCm map[string]*AdvanceDeviceFaultCm
 	SwitchCm map[string]*SwitchInfo
 	NodeCm   map[string]*NodeInfo
+	DpuCm    map[string]*DpuInfo
 }
 
 // ConfigMapInterface configmap interface
@@ -605,9 +606,10 @@ type NetFaultInfo struct {
 
 // SimplePodInfo of Pod
 type SimplePodInfo struct {
-	PodUid   string
-	PodRank  string
-	NodeName string
+	PodUid           string
+	PodRank          string
+	NodeName         string
+	ResourceRequests map[string]int64
 }
 
 // faultLevelStatus fault level and node status

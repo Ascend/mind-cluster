@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/common-utils/hwlog"
@@ -264,8 +265,8 @@ func (processor *jobRankFaultInfoProcessor) Process(info any) any {
 			HealthyState: constant.HealthyState,
 		}
 		hwlog.RunLog.Debugf("jobId:%s,serverList: %d", jobId, len(serverList))
-		faultList, nodeStatusList, faultDeviceList := processor.findNodeDeviceAndSwitchFault(serverList,
-			allConfigmap.NodeCm, allConfigmap.SwitchCm, allConfigmap.DeviceCm, jobId)
+		faultList, nodeStatusList, faultDeviceList := processor.findNodeDeviceSwitchAndDpuFault(serverList,
+			allConfigmap.NodeCm, allConfigmap.SwitchCm, allConfigmap.DeviceCm, allConfigmap.DpuCm, jobId)
 
 		// serverList for tasks that do not require NPU resources is empty,
 		// and it needs to be actively constructed to generate job fault device list
@@ -285,8 +286,8 @@ func (processor *jobRankFaultInfoProcessor) Process(info any) any {
 		if len(delDeviceCm) == 0 && len(delSwitchCm) == 0 {
 			continue
 		}
-		_, _, deletedFaultDeviceList := processor.findNodeDeviceAndSwitchFault(serverList,
-			allConfigmap.NodeCm, delSwitchCm, delDeviceCm, jobId)
+		_, _, deletedFaultDeviceList := processor.findNodeDeviceSwitchAndDpuFault(serverList,
+			allConfigmap.NodeCm, delSwitchCm, delDeviceCm, nil, jobId)
 		deletedJobFaultDeviceMap[jobId] = deletedFaultDeviceList
 	}
 	processor.setJobFaultRankInfos(jobFaultInfos)
@@ -310,9 +311,10 @@ func (processor *jobRankFaultInfoProcessor) findFaultDeviceListForEmptyServerLis
 	return faultDeviceList
 }
 
-func (processor *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(
+func (processor *jobRankFaultInfoProcessor) findNodeDeviceSwitchAndDpuFault(
 	serverList map[string]constant.ServerHccl, nodeInfos map[string]*constant.NodeInfo,
 	switchInfos map[string]*constant.SwitchInfo, deviceCmForNodeMap map[string]*constant.AdvanceDeviceFaultCm,
+	dpuInfos map[string]*constant.DpuInfo,
 	jobId string) ([]constant.FaultRank, []string, []constant.FaultDevice) {
 	faultList := make([]constant.FaultRank, 0)
 	faultDeviceList := make([]constant.FaultDevice, 0)
@@ -354,8 +356,65 @@ func (processor *jobRankFaultInfoProcessor) findNodeDeviceAndSwitchFault(
 		faultDeviceList = append(faultDeviceList, getFautDeviceInfoByFaultRank(&server, faultRankList)...)
 		faultDeviceList = append(faultDeviceList, getFaultDeviceInfoByRelationFault(jobId, nodeName, &server)...)
 		faultList = append(faultList, getFaultListInfoByRelationFault(jobId, nodeName, &server, info)...)
+		// DPU fault: only jobs that have requested full Dpu resources on this node are affected.
+		if dpuInfos == nil {
+			continue
+		}
+		dpuFaultRanks, dpuFaultDevices := getDpuFaultRankAndDevice(jobId, nodeName, node, server, info, dpuInfos)
+		faultList = append(faultList, dpuFaultRanks...)
+		faultDeviceList = append(faultDeviceList, dpuFaultDevices...)
 	}
 	return faultList, nodeStatusList, faultDeviceList
+}
+
+// getDpuFaultRankAndDevice aggregates DPU faults for the job on the given node. It filters by
+// RDMA resource request (isJobUseRdmaOnNode), then maps each DPU fault's AffectedNPU to the
+// job's NPU devices (server.DeviceList) and generates FaultRank entries with mapped fault level.
+func getDpuFaultRankAndDevice(jobId, nodeName string, node *v1.Node, server constant.ServerHccl,
+	info *jobPodInfoMap, dpuInfos map[string]*constant.DpuInfo) ([]constant.FaultRank,
+	[]constant.FaultDevice) {
+	faultRanks := make([]constant.FaultRank, 0)
+	faultDevices := make([]constant.FaultDevice, 0)
+	if !isJobUseRdmaOnNode(nodeName, node, info) {
+		return faultRanks, faultDevices
+	}
+	dpuInfo, ok := dpuInfos[constant.DpuInfoPrefix+nodeName]
+	if !ok || dpuInfo == nil {
+		return faultRanks, faultDevices
+	}
+	for _, dpuItem := range dpuInfo.DPUInfo.DPUList {
+		if len(dpuItem.FaultList) == 0 || len(dpuItem.AffectedNPU) == 0 {
+			continue
+		}
+		for _, fault := range dpuItem.FaultList {
+			mappedLevel := mapDpuFaultLevel(fault.FaultLevel)
+			for _, affectedNpuIdx := range dpuItem.AffectedNPU {
+				for _, device := range server.DeviceList {
+					if !matchNpu(device, affectedNpuIdx) {
+						continue
+					}
+					podUid, podRank, err := info.getPodUidAndRankByCardRank(device.RankID)
+					if err != nil {
+						hwlog.RunLog.Errorf("dpu fault map to npu failed, jobId=%s, nodeName=%s, "+
+							"deviceId=%s, rankId=%s, err=%v", jobId, nodeName, device.DeviceID,
+							device.RankID, err)
+						continue
+					}
+					faultRanks = append(faultRanks, constant.FaultRank{
+						RankId:     device.RankID,
+						PodUid:     podUid,
+						PodRank:    podRank,
+						FaultCode:  fault.FaultCode,
+						FaultLevel: mappedLevel,
+						DeviceId:   device.DeviceID,
+					})
+					faultDevices = append(faultDevices, convertToFaultDevice(&server, fault.FaultCode,
+						mappedLevel, device.DeviceID, constant.FaultTypeNPU))
+				}
+			}
+		}
+	}
+	return faultRanks, faultDevices
 }
 
 func getFaultDeviceInfoByRelationFault(jobId, nodeName string, server *constant.ServerHccl) []constant.FaultDevice {
@@ -631,4 +690,62 @@ func getUnhealthyDevicesSet(advanceDeviceInfo *constant.AdvanceDeviceFaultCm) se
 	unHealthDevSet := sets.NewString(advanceDeviceInfo.CardUnHealthy...)
 	unHealthDevSet.Insert(advanceDeviceInfo.NetworkUnhealthy...)
 	return unHealthDevSet
+}
+
+// isJobUseRdmaOnNode checks whether the job requests full DPU resources on the given node.
+func isJobUseRdmaOnNode(nodeName string, node *v1.Node, info *jobPodInfoMap) bool {
+	if node == nil || info == nil {
+		return false
+	}
+	rdmaResName, ok := node.Annotations[constant.DpuResourceNameKey]
+	if !ok || rdmaResName == "" {
+		return false
+	}
+	rdmaResSet := make(map[string]bool)
+	for _, name := range strings.Split(rdmaResName, constant.Comma) {
+		if name = strings.TrimSpace(name); name != "" {
+			rdmaResSet[name] = true
+		}
+	}
+	if len(rdmaResSet) == 0 {
+		return false
+	}
+	for _, podInfo := range info.podOfRank {
+		if podInfo.NodeName != nodeName {
+			continue
+		}
+		for resName, total := range podInfo.ResourceRequests {
+			if rdmaResSet[resName] && int(total) == constant.DpuFullCardNum {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// mapDpuFaultLevel maps a DPU fault level string (reported by dpu-dp) to the clusterd
+// FaultLevel constant used by getHealthState. DPU sub-health faults are mapped to
+// SubHealthFault ; DPU other faults fall through to SeparateNPU.
+func mapDpuFaultLevel(dpuFaultLevel string) string {
+	switch dpuFaultLevel {
+	case constant.SubHealthFault, constant.NotHandleFault:
+		return dpuFaultLevel
+	case constant.SeparateDPU:
+		return constant.SeparateNPU
+	default:
+		// unknown DPU fault level return NotHandleFault
+		return constant.NotHandleFault
+	}
+}
+
+// matchNpu checks whether the server device corresponds to the given affected NPU index.
+func matchNpu(device constant.Device, affectedNpuIdx int) bool {
+	if device.DeviceID == "" {
+		return false
+	}
+	idx, err := strconv.Atoi(device.DeviceID)
+	if err != nil {
+		return false
+	}
+	return idx == affectedNpuIdx
 }

@@ -212,6 +212,18 @@ func hasDpuNodeSeparateFault(nodeEvent *k8s.DpuNodeEvent) bool {
 	return false
 }
 
+// hasDpuNodeSubHealthFault checks whether node has dpu subhealth-level fault.
+func hasDpuNodeSubHealthFault(faultDpuList []k8s.DPUItem) bool {
+	for _, dpu := range faultDpuList {
+		for _, fault := range dpu.FaultList {
+			if fault.FaultLevel == SubHealthFault {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // IsDpuSeparateFault checks whether dpu has isolate-level fault.
 func IsDpuSeparateFault(dpu k8s.DPUItem) bool {
 	for _, fault := range dpu.FaultList {
