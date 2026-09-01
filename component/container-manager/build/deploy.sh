@@ -41,6 +41,14 @@ readonly DEFAULT_LOG_FILE="${INSTALL_LOG_DIR}/${COMPONENT_NAME}.log"
 readonly DEFAULT_MAX_AGE=7
 readonly DEFAULT_MAX_BACKUPS=30
 
+# Coordinator & data-sync defaults (aligned with code defaults)
+readonly DEFAULT_LEADER_IP=""
+readonly DEFAULT_LEADER_PORT=8890
+readonly DEFAULT_NODE_ID=""
+readonly DEFAULT_LEADER_ADDRS=""
+readonly DEFAULT_EVENT_SYNC_INTERVAL=5
+readonly DEFAULT_SCHEDULED_SYNC_INTERVAL=3600
+
 # Timer default
 readonly DEFAULT_TIMER_DELAY="60s"
 
@@ -134,6 +142,99 @@ validate_timer_delay() {
     fi
 }
 
+# is_valid_port checks whether the given string is a valid TCP/UDP port
+is_valid_port() {
+    local port="$1"
+    [[ "${port}" =~ ^[0-9]+$ ]] && [ "${port}" -ge 1024 ] && [ "${port}" -le 65535 ]
+}
+
+# validate_ip checks whether the given string is a valid IPv4 or IPv6 address
+validate_ip() {
+    local ip="$1"
+    # IPv4: four octets, each in [0, 255]
+    if [[ "${ip}" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]]; then
+        local IFS='.' octet
+        for octet in ${ip}; do
+            if [ "${octet}" -gt 255 ]; then
+                return 1
+            fi
+        done
+        return 0
+    fi
+    # IPv6: full or compressed notation
+    local ipv6_full='^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$'
+    local ipv6_comp='^(([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))$'
+    if [[ "${ip}" =~ ${ipv6_full} ]] || [[ "${ip}" =~ ${ipv6_comp} ]]; then
+        return 0
+    fi
+    return 1
+}
+
+validate_leader_ip() {
+    local ip="$1"
+    if [ -n "${ip}" ] && ! validate_ip "${ip}"; then
+        log_error "Invalid leaderIp: ${ip}, must be a valid IPv4 or IPv6 address"
+        exit 1
+    fi
+}
+
+validate_leader_port() {
+    local port="$1"
+    if ! is_valid_port "${port}"; then
+        log_error "Invalid leaderPort: ${port}, must be in range [1024, 65535]"
+        exit 1
+    fi
+}
+
+validate_leader_addrs() {
+    local addrs="$1"
+    if [ -z "${addrs}" ]; then
+        return 0
+    fi
+    # Reject leading/trailing/double commas (i.e. empty entries), e.g. ",ip:1" or "ip:1," or "ip:1,,ip:2"
+    if ! [[ "${addrs}" =~ ^[^,]+(,[^,]+)*$ ]]; then
+        log_error "Invalid leaderAddrs: ${addrs}, must be <ip>:<port> separated by commas"
+        exit 1
+    fi
+    local IFS=',' item host port
+    for item in ${addrs}; do
+        item=$(echo "${item}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+        if [[ "${item}" =~ ^\[.*\]:[0-9]+$ ]]; then
+            # bracketed IPv6 form, e.g. [2001:db8::1]:8080
+            host="${item%%]:*}"
+            host="${host#\[}"
+            port="${item##*:}"
+        elif [[ "${item}" =~ ^[^:]+:[0-9]+$ ]]; then
+            # IPv4 form, e.g. 192.168.1.1:8080
+            host="${item%:*}"
+            port="${item##*:}"
+        else
+            log_error "Invalid leaderAddrs entry: ${item}, must be <ip>:<port> separated by commas"
+            exit 1
+        fi
+        if ! validate_ip "${host}" || ! is_valid_port "${port}"; then
+            log_error "Invalid leaderAddrs entry: ${item}, must be <ip>:<port> separated by commas"
+            exit 1
+        fi
+    done
+}
+
+validate_event_sync_interval() {
+    local interval="$1"
+    if ! [[ "${interval}" =~ ^[0-9]+$ ]] || [ "${interval}" -lt 1 ] || [ "${interval}" -gt 30 ]; then
+        log_error "Invalid eventSyncInterval: ${interval}, must be in range [1, 30]"
+        exit 1
+    fi
+}
+
+validate_scheduled_sync_interval() {
+    local interval="$1"
+    if ! [[ "${interval}" =~ ^[0-9]+$ ]] || [ "${interval}" -lt 600 ] || [ "${interval}" -gt 86400 ]; then
+        log_error "Invalid scheduledSyncInterval: ${interval}, must be in range [600, 86400]"
+        exit 1
+    fi
+}
+
 validate_fault_config() {
     local path="$1"
     if [ ! -f "${path}" ]; then
@@ -160,6 +261,12 @@ generate_service_file() {
     local max_backups="${6:-${DEFAULT_MAX_BACKUPS}}"
     local fault_cfg_path="${7:-}"
     local log_path="${8:-${DEFAULT_LOG_FILE}}"
+    local leader_ip="${9:-${DEFAULT_LEADER_IP}}"
+    local leader_port="${10:-${DEFAULT_LEADER_PORT}}"
+    local node_id="${11:-${DEFAULT_NODE_ID}}"
+    local leader_addrs="${12:-${DEFAULT_LEADER_ADDRS}}"
+    local event_sync_interval="${13:-${DEFAULT_EVENT_SYNC_INTERVAL}}"
+    local scheduled_sync_interval="${14:-${DEFAULT_SCHEDULED_SYNC_INTERVAL}}"
 
     local exec_args="run"
     exec_args+=" -ctrStrategy=${ctr_strategy}"
@@ -181,6 +288,24 @@ generate_service_file() {
     fi
     if [ -n "${fault_cfg_path}" ]; then
         exec_args+=" -faultConfigPath=${fault_cfg_path}"
+    fi
+    if [ -n "${leader_ip}" ]; then
+        exec_args+=" -leaderIp=${leader_ip}"
+    fi
+    if [ "${leader_port}" != "${DEFAULT_LEADER_PORT}" ]; then
+        exec_args+=" -leaderPort=${leader_port}"
+    fi
+    if [ -n "${node_id}" ]; then
+        exec_args+=" -nodeID=${node_id}"
+    fi
+    if [ -n "${leader_addrs}" ]; then
+        exec_args+=" -leaderAddrs=${leader_addrs}"
+    fi
+    if [ "${event_sync_interval}" != "${DEFAULT_EVENT_SYNC_INTERVAL}" ]; then
+        exec_args+=" -eventSyncInterval=${event_sync_interval}"
+    fi
+    if [ "${scheduled_sync_interval}" != "${DEFAULT_SCHEDULED_SYNC_INTERVAL}" ]; then
+        exec_args+=" -scheduledSyncInterval=${scheduled_sync_interval}"
     fi
 
     # Aligned with installation guide service config
@@ -234,6 +359,12 @@ do_install() {
     local fault_cfg_path=""
     local log_path="${DEFAULT_LOG_FILE}"
     local timer_delay="${DEFAULT_TIMER_DELAY}"
+    local leader_ip="${DEFAULT_LEADER_IP}"
+    local leader_port="${DEFAULT_LEADER_PORT}"
+    local node_id="${DEFAULT_NODE_ID}"
+    local leader_addrs="${DEFAULT_LEADER_ADDRS}"
+    local event_sync_interval="${DEFAULT_EVENT_SYNC_INTERVAL}"
+    local scheduled_sync_interval="${DEFAULT_SCHEDULED_SYNC_INTERVAL}"
     local skip_confirm=false
 
     # Parse install arguments
@@ -275,6 +406,30 @@ do_install() {
                 timer_delay="${1#*=}"
                 shift
                 ;;
+            --leaderIp=*)
+                leader_ip="${1#*=}"
+                shift
+                ;;
+            --leaderPort=*)
+                leader_port="${1#*=}"
+                shift
+                ;;
+            --nodeID=*)
+                node_id="${1#*=}"
+                shift
+                ;;
+            --leaderAddrs=*)
+                leader_addrs="${1#*=}"
+                shift
+                ;;
+            --eventSyncInterval=*)
+                event_sync_interval="${1#*=}"
+                shift
+                ;;
+            --scheduledSyncInterval=*)
+                scheduled_sync_interval="${1#*=}"
+                shift
+                ;;
             -y|--yes)
                 skip_confirm=true
                 shift
@@ -309,6 +464,11 @@ do_install() {
         validate_path_safe_for_unit "${fault_cfg_path}" "faultConfig"
     fi
     validate_timer_delay "${timer_delay}"
+    validate_leader_ip "${leader_ip}"
+    validate_leader_port "${leader_port}"
+    validate_leader_addrs "${leader_addrs}"
+    validate_event_sync_interval "${event_sync_interval}"
+    validate_scheduled_sync_interval "${scheduled_sync_interval}"
 
     # If runtime is containerd and sock_path is still docker default, auto-switch
     if [[ "${runtime_type}" == "containerd" && "${sock_path}" == "${DEFAULT_SOCK_PATH}" ]]; then
@@ -355,6 +515,18 @@ do_install() {
     if [ -n "${fault_cfg_path}" ]; then
         log_info "  Fault config : ${fault_cfg_path}"
     fi
+    if [ -n "${leader_ip}" ]; then
+        log_info "  Leader IP    : ${leader_ip}"
+    fi
+    log_info "  Leader port  : ${leader_port}"
+    if [ -n "${node_id}" ]; then
+        log_info "  Node ID      : ${node_id}"
+    fi
+    if [ -n "${leader_addrs}" ]; then
+        log_info "  Leader addrs : ${leader_addrs}"
+    fi
+    log_info "  Event sync   : ${event_sync_interval}s"
+    log_info "  Scheduled sync: ${scheduled_sync_interval}s"
 
     # Check prerequisites
     check_binary
@@ -395,6 +567,8 @@ do_install() {
     log_info "Generating systemd service unit..."
     generate_service_file "${runtime_type}" "${sock_path}" "${ctr_strategy}" \
         "${log_level}" "${max_age}" "${max_backups}" "${fault_cfg_path}" "${log_path}" \
+        "${leader_ip}" "${leader_port}" "${node_id}" "${leader_addrs}" \
+        "${event_sync_interval}" "${scheduled_sync_interval}" \
         > "${SYSTEMD_UNIT_DIR}/${SERVICE_NAME}.service"
     chmod 0640 "${SYSTEMD_UNIT_DIR}/${SERVICE_NAME}.service"
 
@@ -634,6 +808,16 @@ Options:
                             Single log file rotates when exceeding 20MB
   --timerDelay=<duration>   Boot timer delay duration (default: ${DEFAULT_TIMER_DELAY})
                             Ensures NPU devices are ready before service starts
+  --leaderIp=<ip>           Leader gRPC bind IP; non-empty starts this node as leader (default: none)
+                            Must be a valid IP address
+  --leaderPort=<port>       Leader gRPC listen port (default: ${DEFAULT_LEADER_PORT}, range: [1024, 65535])
+  --nodeID=<id>             Unique node identifier (default: hostname when empty)
+  --leaderAddrs=<addr,...>  Comma-separated leader ip:port list, at most 2 (default: none)
+                            Empty disables the coordinator
+  --eventSyncInterval=<sec> Event-driven data sync check interval
+                            (default: ${DEFAULT_EVENT_SYNC_INTERVAL}, range: [1, 30])
+  --scheduledSyncInterval=<sec>  Scheduled full data sync interval
+                            (default: ${DEFAULT_SCHEDULED_SYNC_INTERVAL}, range: [600, 86400])
   -y, --yes                 Skip confirmation prompt (for scripted/automated use)
 
 Examples:
@@ -642,6 +826,12 @@ Examples:
 
   # Install with containerd and single recover strategy
   $(basename "$0") install --runtimeType=containerd --ctrStrategy=singleRecover
+
+  # Install as a leader node
+  $(basename "$0") install --ctrStrategy=singleRecover --leaderIp=192.168.1.10 --leaderPort=8890
+
+  # Install as a follower node with the coordinator enabled
+  $(basename "$0") install --ctrStrategy=singleRecover --leaderAddrs=192.168.1.10:8890,192.168.1.11:8890 --nodeID=node-1
 
   # Install with timer (60s delay after boot), custom fault config and log path
   $(basename "$0") install --ctrStrategy=ringRecover --timerDelay=60s --faultConfig=/path/to/faultCode.json --logPath=/var/log/mindx-dl/container-manager/container-manager.log

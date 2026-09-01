@@ -23,11 +23,14 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"container-manager/pkg/common"
 	"container-manager/pkg/coordinator"
+	"container-manager/pkg/coordinator/domain"
 )
 
 // Coordinator is the top-level coordinator Module.
 type Coordinator struct {
 	ops coordinator.ContainerOps
+	// Shared domain state.
+	containerStore *domain.ContainerStore
 	// Role endpoints.
 	server *serverEndpoint // leader: owns gRPC server + broadcast fan-out
 	client *clientEndpoint // ordinary: owns leader conns + broadcast streams + fail-over
@@ -41,7 +44,8 @@ type Coordinator struct {
 // NewCoordinator constructs a Coordinator with the given config.
 func NewCoordinator(ctx context.Context, ops coordinator.ContainerOps) *Coordinator {
 	c := &Coordinator{
-		ops: ops,
+		ops:            ops,
+		containerStore: domain.NewContainerStore(),
 	}
 	c.ctx, c.cancel = context.WithCancel(ctx)
 	return c
@@ -77,6 +81,11 @@ func (c *Coordinator) Work(ctx context.Context) {
 	if !c.enabled() {
 		return
 	}
+	c.wg.Add(1)
+	go func() {
+		defer c.wg.Done()
+		c.dataSyncLoop(c.ctx)
+	}()
 }
 
 // ShutDown implements workflow.Module.
