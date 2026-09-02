@@ -258,6 +258,9 @@ func injectMetricSelectorLabels(hpaSpec *autoscalingv2.HorizontalPodAutoscalerSp
 		if external.Metric.Selector.MatchLabels == nil {
 			external.Metric.Selector.MatchLabels = make(map[string]string)
 		}
+		if len(external.Metric.Selector.MatchLabels) > 0 {
+			continue
+		}
 		for k, v := range autoLabels {
 			if _, exists := external.Metric.Selector.MatchLabels[k]; !exists {
 				external.Metric.Selector.MatchLabels[k] = v
