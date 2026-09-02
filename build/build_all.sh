@@ -14,7 +14,9 @@
 # ============================================================================
 
 set -e
-GOPATH=$1
+if [ -n "$1" ]; then
+    GOPATH=$1
+fi
 NEW_GOPATH="/usr1/gopath"
 
 if [ -z "$GOPATH" ]; then
