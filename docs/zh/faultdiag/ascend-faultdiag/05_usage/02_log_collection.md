@@ -43,13 +43,21 @@ LCNE 组件日志为 LCNE 组件运行时产生的日志。
         └── mindie_cluster_log  # MindIE Pod 日志
 |-- amct_log             # AMCT 组件日志
 |-- lcne_log             # LCNE 组件日志
-    |-- log.log
-    |-- log_1_*.log
     |-- diag_display_info.txt
     └── diagnostic_information
-        └── slot_1
-            └── tempdir
-                └── devm_bddrvadp.log
+        |-- diag
+            └── slot_{槽位号}
+                |-- diag.log
+                └── diaglog_{槽位号}_{时间戳}.log
+        |-- log
+            └── slot_{槽位号}
+                |-- log.log
+                └── log_{槽位号}_{时间戳}.log
+        |-- varlog
+            └── slot_{槽位号}
+                └── varlog
+                    |-- cpdt_checkcc.log
+                    └── devm_bddrvadp.log
 |-- environment_check    # 环境检查日志，NPU 网口、状态、资源信息
     |-- npu_smi_0_details.csv   # NPU 状态监测
     |-- npu_0_details.csv       # NPU 网口统计
@@ -418,18 +426,35 @@ MindIO 组件运行时，每个进程会产生一个 `ttp_log.log.*` 日志文�
 cp -r ~/ttp_log {采集目录}/dl_log/ttp_log
 ```
 
-### LCNE 日志（原 Bus 日志）
+### LCNE 日志（Bus 日志 / UBM 日志）
 
 训练或推理结束后，需要采集 LCNE 组件日志。
 
 **<term>Ascend 950 系列产品</term>**
 
-Ascend 950 系列产品 LCNE 组件运行时，会产生相关日志文件 `log.log` 。
+Ascend 950 系列产品 LCNE 组件运行时，需要将日志解压至 `采集目录/lcne_log/` 下。可按照以下方式进行采集：
 
-将 `log.log` 日志复制至 `采集目录/lcne_log/` 下。可按照以下方式进行采集：
+- server 形态
+  1. 进入 <term>Ascend 950 系列产品</term> 1213 前台，执行 **collect diagnostic information** 命令采集日志。
+  2. 进入 <term>Ascend 950 系列产品</term> 1213 后台的 `/opt/vrpv8/home/` 目录下获取 `diagnostic_information_*.zip` 压缩日志文件。需要手动解压所有压缩日志。
 
-1. 进入 <term>Ascend 950 系列产品</term> 1213 后台，在 `/opt/vrpv8/home/logfile` 目录下获取 `log.log` 日志。
-2. 进入 <term>Ascend 950 系列产品</term> 1213 前台，执行 **collect diagnostic information** 命令采集日志后，从 <term>Ascend 950 系列产品</term> 1213 后台的 `/opt/vrpv8/home/logfile` 目录下获取 `diagnostic_information_*.zip` 压缩日志文件。需要手动解压所有压缩日志。
+- pod 形态
+  1. 登录 PoDManager 一键收集 UBM 日志，需要手动解压所有压缩日志。日志结构如下：
+
+  ```text
+  |--LCNE采集日志
+      |--slot_014
+          └──debug
+              └──ubm_slot014_debug_{时间戳}
+                  └──diagnostic_information
+                      └──...
+      |--slot_015
+          └──debug
+              └──ubm_slot015_debug_{时间戳}
+                  └──diagnostic_information
+                      └──...
+      └──…
+  ```
 
 **<term>Atlas A3 训练系列产品</term>、<term>Atlas A3 推理系列产品</term>**
 
