@@ -601,7 +601,7 @@ func TestInjectMetricSelectorLabels(t *testing.T) {
 			convey.So(hpaSpec.Metrics[0].External, convey.ShouldBeNil)
 		})
 
-		convey.Convey("preserve existing selector labels", func() {
+		convey.Convey("skip injection when external metric already has selector labels", func() {
 			hpaSpec := &autoscalingv2.HorizontalPodAutoscalerSpec{
 				Metrics: []autoscalingv2.MetricSpec{
 					{
@@ -626,6 +626,33 @@ func TestInjectMetricSelectorLabels(t *testing.T) {
 			}
 			injectMetricSelectorLabels(hpaSpec, instanceSet)
 			convey.So(hpaSpec.Metrics[0].External.Metric.Selector.MatchLabels[common.InferServiceNameLabelKey], convey.ShouldEqual, "existing-value")
+			_, exists := hpaSpec.Metrics[0].External.Metric.Selector.MatchLabels[common.RoleNameLabelKey]
+			convey.So(exists, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("inject labels when external metric has empty selector labels", func() {
+			hpaSpec := &autoscalingv2.HorizontalPodAutoscalerSpec{
+				Metrics: []autoscalingv2.MetricSpec{
+					{
+						Type: autoscalingv2.ExternalMetricSourceType,
+						External: &autoscalingv2.ExternalMetricSource{
+							Metric: autoscalingv2.MetricIdentifier{
+								Name: "qps",
+								Selector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{},
+								},
+							},
+						},
+					},
+				},
+			}
+			instanceSet := buildTestInstanceSet("test", "default", nil)
+			instanceSet.Labels = map[string]string{
+				common.InferServiceNameLabelKey: "myservice-0",
+				common.InstanceSetNameLabelKey:  "role1",
+			}
+			injectMetricSelectorLabels(hpaSpec, instanceSet)
+			convey.So(hpaSpec.Metrics[0].External.Metric.Selector.MatchLabels[common.InferServiceNameLabelKey], convey.ShouldEqual, "myservice-0")
 			convey.So(hpaSpec.Metrics[0].External.Metric.Selector.MatchLabels[common.RoleNameLabelKey], convey.ShouldEqual, "role1")
 		})
 	})
