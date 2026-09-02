@@ -29,6 +29,14 @@ const (
 	ctrId3 = "ctr3"
 	ctrId4 = "ctr4" // not exist
 
+	jobId0 = "job0"
+	jobId1 = "job1"
+	jobId2 = "job2"
+	jobId4 = "job4" // not exist
+
+	peerNode1 = "peer1"
+	peerNode2 = "peer2"
+
 	testCtrNs = "moby"
 )
 
