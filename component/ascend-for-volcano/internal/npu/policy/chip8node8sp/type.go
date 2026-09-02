@@ -53,7 +53,6 @@ const (
 	InferSchedulerName = "huawei.com/Ascend910" + AcceleratorType
 	// TrainSchedulerName name of train scheduler
 	TrainSchedulerName  = "huawei.com/Ascend910" + AcceleratorTypeTrain
-	nodeNPUNumber       = 8
 	networkUnhealthyNPU = "huawei.com/npu-NetworkUnhealthy"
 
 	jobCheckFailedReason       = "npu num is invalid"
@@ -66,8 +65,18 @@ const (
 	superPodAffinity           = "super-pod-affinity"
 	softRequire                = "soft"
 
-	// SchedulePolicy8Px8Sp the label 8p-8-sp
+	// SchedulePolicy8Px8Sp the label 8p-8-sp: 8 NPUs form a ring, 8 NPUs per node (one ring per node)
 	SchedulePolicy8Px8Sp = "8p-8-sp"
+	// SchedulePolicy8Px16Sp the label 8p-16-sp: 8 NPUs form a ring, 16 NPUs per node (two rings per node)
+	SchedulePolicy8Px16Sp = "8p-16-sp"
+
+	// cardsNumPerRing is the fixed "chip8" ring size: 8 NPUs form one interconnect ring.
+	// It stays fixed for both policies; only the NPU count per node differs.
+	cardsNumPerRing = 8
+	// maxNodeNPUNumX8 max NPU num of one node for 8p-8-sp
+	maxNodeNPUNumX8 = 8
+	// maxNodeNPUNumX16 max NPU num of one node for 8p-16-sp
+	maxNodeNPUNumX16 = 16
 )
 
 type superPodInfo struct {

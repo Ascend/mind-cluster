@@ -123,7 +123,8 @@ const (
 	Chip4Node16        = "chip4-node16"        // 350-Atlas-4p-16
 	Chip1Node8         = "chip1-node8"         // 350-Atlas-8
 	Chip1Node16        = "chip1-node16"        // 350-Atlas-16
-	Chip8Node8Sp       = "chip8-node8-sp"      // 850-SuperPod-Atlas-8
+	Chip8Node8Sp       = "chip8-node8-sp"      // 850-SuperPod-Atlas-8, 8 npu per node
+	Chip8Node16Sp      = "chip8-node16-sp"     // 950-SuperPod-Flex, 16 npu per node
 	Chip8Node8Ra64Sp   = "chip8-node8-ra64-sp" // 950-SuperPod-Atlas-8
 	Chip1ShareShareDev = "chip1-softShareDev"  // soft share dev
 	MultiLevel         = "multilevel"          // multiple topology network

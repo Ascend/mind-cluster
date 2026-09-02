@@ -381,6 +381,15 @@ func TestIsSuperPodJob(t *testing.T) {
 				t.Errorf("isSuperPodJob() err, want false while return true")
 			}
 		})
+	t.Run("14-isSuperPodJob true, when schedule-policy is chip8-node16-sp",
+		func(t *testing.T) {
+			attr := SchedulerJobAttr{ComJob: ComJob{Annotation: map[string]string{
+				SchedulePolicyAnnoKey: Chip8Node16Sp,
+			}}}
+			if !attr.IsSuperPodJob() {
+				t.Errorf("isSuperPodJob() err, want true while return false")
+			}
+		})
 }
 
 type countBackupTasksCase struct {
