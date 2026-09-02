@@ -1,4 +1,4 @@
-﻿# Container Manager<a name="ZH-CN_TOPIC_0000002524428759"></a>
+# Container Manager<a name="ZH-CN_TOPIC_0000002524428759"></a>
 
 > [!NOTE]
 > Container Manager仅适用于无K8s的场景。在K8s场景下，故障检测与恢复功能由ClusterD、Ascend Device Plugin、Volcano等组件协同提供，无需安装Container Manager。
@@ -15,6 +15,9 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 - <term>Atlas 推理系列产品</term>
 - <term>Atlas A2 推理系列产品</term>
 - <term>Atlas A3 推理系列产品</term>
+- Atlas 850E 超节点
+- Atlas 650E 服务器
+- Atlas 350 加速卡
 
 ## 操作步骤
 
@@ -126,6 +129,28 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
             --maxBackups=10
         ```
 
+    - 多机分布式协调场景（背靠背一体机）：集群中需部署Leader节点与普通节点。故障节点上分布式任务容器的启停由Leader节点统一跨节点协调，保证整个分布式任务一致性恢复。
+
+        Leader节点（本机同时作为Leader和普通节点，参与容器数据上报与广播执行）示例：
+
+        ```shell
+        bash deploy.sh install \
+            --ctrStrategy=ringRecover \
+            --leaderIp=192.168.1.10 \
+            --leaderPort=8890 \
+            --leaderAddrs=192.168.1.10:8890,192.168.1.11:8890
+        ```
+
+        普通节点（仅上报数据、接收广播执行启停）示例：
+
+        ```shell
+        bash deploy.sh install \
+            --ctrStrategy=ringRecover \
+            --leaderAddrs=192.168.1.10:8890,192.168.1.11:8890
+        ```
+
+        更多分布式协调原理及分布式任务容器启动方式请参见[分布式任务恢复](../../../04_usage/05_appliance/01_npu_hardware_fault_detection_and_rectification.md#分布式任务恢复)。
+
 ## 参数说明<a name="section2042611570392"></a>
 
 **表 1** deploy.sh脚本命令
@@ -143,7 +168,7 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 </th>
 </tr>
 </thead>
-<tbody><tr id="row_deploy_install_runtime_type"><td class="cellrowborder" rowspan="10" valign="top" width="10.801080108010803%" headers="mcps1.2.6.1.1 "><p id="p_deploy_install_name"><a name="p_deploy_install_name"></a><a name="p_deploy_install_name"></a>install</p>
+<tbody><tr id="row_deploy_install_runtime_type"><td class="cellrowborder" rowspan="16" valign="top" width="10.801080108010803%" headers="mcps1.2.6.1.1 "><p id="p_deploy_install_name"><a name="p_deploy_install_name"></a><a name="p_deploy_install_name"></a>install</p>
 </td>
 <td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_runtime_type_param"><a name="p_deploy_install_runtime_type_param"></a><a name="p_deploy_install_runtime_type_param"></a>--runtimeType</p>
 </td>
@@ -226,6 +251,60 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 <td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_timer_delay_desc"><a name="p_deploy_install_timer_delay_desc"></a><a name="p_deploy_install_timer_delay_desc"></a>系统启动后延时启动Container Manager的时间，确保NPU设备就位后再启动服务。支持格式如60s、2min、1h等。</p>
 </td>
 </tr>
+<tr id="row_deploy_install_leader_ip"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_leader_ip_param"><a name="p_deploy_install_leader_ip_param"></a><a name="p_deploy_install_leader_ip_param"></a>--leaderIp</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_leader_ip_type"><a name="p_deploy_install_leader_ip_type"></a><a name="p_deploy_install_leader_ip_type"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_leader_ip_default"><a name="p_deploy_install_leader_ip_default"></a><a name="p_deploy_install_leader_ip_default"></a>""（空）</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_leader_ip_desc"><a name="p_deploy_install_leader_ip_desc"></a><a name="p_deploy_install_leader_ip_desc"></a>Leader节点gRPC服务绑定IP，非空表示本机作为Leader节点。对应二进制启动参数<em>-leaderIp</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_leader_port"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_leader_port_param"><a name="p_deploy_install_leader_port_param"></a><a name="p_deploy_install_leader_port_param"></a>--leaderPort</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_leader_port_type"><a name="p_deploy_install_leader_port_type"></a><a name="p_deploy_install_leader_port_type"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_leader_port_default"><a name="p_deploy_install_leader_port_default"></a><a name="p_deploy_install_leader_port_default"></a>8890</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_leader_port_desc"><a name="p_deploy_install_leader_port_desc"></a><a name="p_deploy_install_leader_port_desc"></a>Leader节点gRPC服务监听端口，取值范围为[1024, 65535]。对应二进制启动参数<em>-leaderPort</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_node_id"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_node_id_param"><a name="p_deploy_install_node_id_param"></a><a name="p_deploy_install_node_id_param"></a>--nodeID</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_node_id_type"><a name="p_deploy_install_node_id_type"></a><a name="p_deploy_install_node_id_type"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_node_id_default"><a name="p_deploy_install_node_id_default"></a><a name="p_deploy_install_node_id_default"></a>""（空）</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_node_id_desc"><a name="p_deploy_install_node_id_desc"></a><a name="p_deploy_install_node_id_desc"></a>节点唯一标识，不配置时默认为主机名（多节点场景，用户需自行保证主机名的唯一性）。配置了<em>-leaderAddrs</em>后生效。对应二进制启动参数<em>-nodeID</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_leader_addrs"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_leader_addrs_param"><a name="p_deploy_install_leader_addrs_param"></a><a name="p_deploy_install_leader_addrs_param"></a>--leaderAddrs</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_leader_addrs_type"><a name="p_deploy_install_leader_addrs_type"></a><a name="p_deploy_install_leader_addrs_type"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_leader_addrs_default"><a name="p_deploy_install_leader_addrs_default"></a><a name="p_deploy_install_leader_addrs_default"></a>""（空）</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_leader_addrs_desc"><a name="p_deploy_install_leader_addrs_desc"></a><a name="p_deploy_install_leader_addrs_desc"></a>Leader节点地址列表，格式为"ip:port,ip:port"，多个地址使用英文逗号分隔，最多配置2个。对应二进制启动参数<em>-leaderAddrs</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_event_sync_interval"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_event_sync_interval_param"><a name="p_deploy_install_event_sync_interval_param"></a><a name="p_deploy_install_event_sync_interval_param"></a>--eventSyncInterval</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_event_sync_interval_type"><a name="p_deploy_install_event_sync_interval_type"></a><a name="p_deploy_install_event_sync_interval_type"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_event_sync_interval_default"><a name="p_deploy_install_event_sync_interval_default"></a><a name="p_deploy_install_event_sync_interval_default"></a>5</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_event_sync_interval_desc"><a name="p_deploy_install_event_sync_interval_desc"></a><a name="p_deploy_install_event_sync_interval_desc"></a>事件驱动数据同步检查周期，取值范围为[1, 30]，单位为秒。配置了<em>-leaderAddrs</em>后生效。对应二进制启动参数<em>-eventSyncInterval</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_scheduled_sync_interval"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_scheduled_sync_interval_param"><a name="p_deploy_install_scheduled_sync_interval_param"></a><a name="p_deploy_install_scheduled_sync_interval_param"></a>--scheduledSyncInterval</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_scheduled_sync_interval_type"><a name="p_deploy_install_scheduled_sync_interval_type"></a><a name="p_deploy_install_scheduled_sync_interval_type"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_scheduled_sync_interval_default"><a name="p_deploy_install_scheduled_sync_interval_default"></a><a name="p_deploy_install_scheduled_sync_interval_default"></a>3600</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_scheduled_sync_interval_desc"><a name="p_deploy_install_scheduled_sync_interval_desc"></a><a name="p_deploy_install_scheduled_sync_interval_desc"></a>定时全量容器数据同步周期，取值范围为[600, 86400]，单位为秒。配置了<em>-leaderAddrs</em>后生效。对应二进制启动参数<em>-scheduledSyncInterval</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+</td>
+</tr>
 <tr id="row_deploy_install_yes"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_yes_param"><a name="p_deploy_install_yes_param"></a><a name="p_deploy_install_yes_param"></a>-y, --yes</p>
 </td>
 <td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_yes_type"><a name="p_deploy_install_yes_type"></a><a name="p_deploy_install_yes_type"></a>-</p>
@@ -299,7 +378,7 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 <td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p129421643102918"><a name="p129421643102918"></a><a name="p129421643102918"></a>查看<span id="ph1220617322468"><a name="ph1220617322468"></a><a name="ph1220617322468"></a>Container Manager</span>的版本信息与commit ID等详细信息。</p>
 </td>
 </tr>
-<tr id="row19151746182920"><td class="cellrowborder" rowspan="8" valign="top" width="10.801080108010803%" headers="mcps1.2.6.1.1 "><p id="p215164602914"><a name="p215164602914"></a><a name="p215164602914"></a>run</p>
+<tr id="row19151746182920"><td class="cellrowborder" rowspan="14" valign="top" width="10.801080108010803%" headers="mcps1.2.6.1.1 "><p id="p215164602914"><a name="p215164602914"></a><a name="p215164602914"></a>run</p>
 </td>
 <td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p41514652911"><a name="p41514652911"></a><a name="p41514652911"></a>-logPath</p>
 </td>
@@ -378,8 +457,63 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p3949155543819"><a name="p3949155543819"></a><a name="p3949155543819"></a>""</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p16458189133819"><a name="p16458189133819"></a><a name="p16458189133819"></a>自定义故障配置文件路径。若不配置，则使用默认的故障码配置。自定义故障配置文件详情请参见<a href="../../../04_usage/05_appliance/01_npu_hardware_fault_detection_and_rectification.md#ZH-CN_TOPIC_0000002518737701">故障级别配置</a>。</p>
-<div class="note" id="note116910214413"><a name="note116910214413"></a><a name="note116910214413"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul1246612216016"></a><a name="ul1246612216016"></a><ul id="ul1246612216016"><li>该路径不允许为软链接。</li><li>该文件权限需不高于640。</li></ul>
+<div class="note" id="note116910214413"><a name="note116910214413"></a><a name="note116910214413"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul1246612216016"></a><a name="ul1246612216016"></a><ul id="ul1246612216016"><li>该路径不允许为软链接。</li><li>该文件权限需不高于640。</li>
+</ul>
 </div></div>
+</td>
+</tr>
+<tr id="row_deploy_run_leader_ip"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p_deploy_run_leader_ip_param"><a name="p_deploy_run_leader_ip_param"></a><a name="p_deploy_run_leader_ip_param"></a>-leaderIp</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p_deploy_run_leader_ip_type"><a name="p_deploy_run_leader_ip_type"></a><a name="p_deploy_run_leader_ip_type"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p_deploy_run_leader_ip_default"><a name="p_deploy_run_leader_ip_default"></a><a name="p_deploy_run_leader_ip_default"></a>""</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p_deploy_run_leader_ip_desc">Leader节点gRPC服务绑定IP，非空表示本机作为Leader节点并启动gRPC服务，需为合法的IP地址。</p><div class="note" id="note116910214414"><a name="note116910214414"></a><a name="note116910214414"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul1246612216017"></a><a name="ul1246612216017"></a><ul id="ul1246612216017"><li><em>-leaderIp</em>和<em>-leaderAddrs</em>均不为空时，本机即作为Leader节点，又可以连接其他Leader节点。</li><li><em>-leaderIp</em>为空时，本机为普通节点。</li></ul></div></div>
+</td>
+</tr>
+<tr id="row_deploy_run_leader_port"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p_deploy_run_leader_port_param"><a name="p_deploy_run_leader_port_param"></a><a name="p_deploy_run_leader_port_param"></a>-leaderPort</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p_deploy_run_leader_port_type"><a name="p_deploy_run_leader_port_type"></a><a name="p_deploy_run_leader_port_type"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p_deploy_run_leader_port_default"><a name="p_deploy_run_leader_port_default"></a><a name="p_deploy_run_leader_port_default"></a>8890</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p_deploy_run_leader_port_desc">Leader节点gRPC服务监听端口，取值范围为[1024, 65535]。</p>
+</td>
+</tr>
+<tr id="row_deploy_run_node_id"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p_deploy_run_node_id_param"><a name="p_deploy_run_node_id_param"></a><a name="p_deploy_run_node_id_param"></a>-nodeID</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p_deploy_run_node_id_type"><a name="p_deploy_run_node_id_type"></a><a name="p_deploy_run_node_id_type"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p_deploy_run_node_id_default"><a name="p_deploy_run_node_id_default"></a><a name="p_deploy_run_node_id_default"></a>""</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p_deploy_run_node_id_desc"><a name="p_deploy_run_node_id_desc"></a><a name="p_deploy_run_node_id_desc"></a>节点唯一标识，不配置时默认为主机名。集群内各节点的节点标识需唯一。</p>
+</td>
+</tr>
+<tr id="row_deploy_run_leader_addrs"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p_deploy_run_leader_addrs_param"><a name="p_deploy_run_leader_addrs_param"></a><a name="p_deploy_run_leader_addrs_param"></a>-leaderAddrs</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p_deploy_run_leader_addrs_type"><a name="p_deploy_run_leader_addrs_type"></a><a name="p_deploy_run_leader_addrs_type"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p_deploy_run_leader_addrs_default"><a name="p_deploy_run_leader_addrs_default"></a><a name="p_deploy_run_leader_addrs_default"></a>""</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p_deploy_run_leader_addrs_desc"><a name="p_deploy_run_leader_addrs_desc"></a><a name="p_deploy_run_leader_addrs_desc"></a>Leader节点地址列表，地址格式为"leaderIp:leaderPort"（即Leader节点gRPC服务监听地址）。</p><div class="note" id="note116910214415"><a name="note116910214415"></a><a name="note116910214415"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul1246612216018"></a><a name="ul1246612216018"></a><ul id="ul1246612216018"><li>多个地址使用英文逗号分隔，最多配置2个。</li><li>配置为空表示不连接Leader节点。</li><li>配置不为空时，节点会自行连接列表中的Leader节点地址，若连接失败，则指数退避重连，最长等待重连时长30秒。</li><li>当本机为Leader节点（-leaderIp不为空）且此配置中包含本机监听地址时，本机不会通过gRPC连接自身，协调请求使用本地调用方式处理。</li></ul></div></div>
+</td>
+</tr>
+<tr id="row_deploy_run_event_sync_interval"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p_deploy_run_event_sync_interval_param"><a name="p_deploy_run_event_sync_interval_param"></a><a name="p_deploy_run_event_sync_interval_param"></a>-eventSyncInterval</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p_deploy_run_event_sync_interval_type"><a name="p_deploy_run_event_sync_interval_type"></a><a name="p_deploy_run_event_sync_interval_type"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p_deploy_run_event_sync_interval_default"><a name="p_deploy_run_event_sync_interval_default"></a><a name="p_deploy_run_event_sync_interval_default"></a>5</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p_deploy_run_event_sync_interval_desc"><a name="p_deploy_run_event_sync_interval_desc"></a><a name="p_deploy_run_event_sync_interval_desc"></a>事件驱动数据同步检查周期，取值范围为[1, 30]，单位为秒。该周期内若本地分布式任务容器信息发生变化，则向Leader节点上报容器信息。</p>
+</td>
+</tr>
+<tr id="row_deploy_run_scheduled_sync_interval"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p_deploy_run_scheduled_sync_interval_param"><a name="p_deploy_run_scheduled_sync_interval_param"></a><a name="p_deploy_run_scheduled_sync_interval_param"></a>-scheduledSyncInterval</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p_deploy_run_scheduled_sync_interval_type"><a name="p_deploy_run_scheduled_sync_interval_type"></a><a name="p_deploy_run_scheduled_sync_interval_type"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p_deploy_run_scheduled_sync_interval_default"><a name="p_deploy_run_scheduled_sync_interval_default"></a><a name="p_deploy_run_scheduled_sync_interval_default"></a>3600</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p_deploy_run_scheduled_sync_interval_desc"><a name="p_deploy_run_scheduled_sync_interval_desc"></a><a name="p_deploy_run_scheduled_sync_interval_desc"></a>定时全量数据同步周期，取值范围为[600, 86400]，单位为秒。该周期内无论本地分布式任务容器信息是否变化，均向Leader节点全量上报一次容器信息，作为数据同步的兜底保障。</p>
 </td>
 </tr>
 <tr id="row441711302328"><td class="cellrowborder" valign="top" width="10.801080108010803%" headers="mcps1.2.6.1.1 "><p id="p0417030143218"><a name="p0417030143218"></a><a name="p0417030143218"></a>status</p>
