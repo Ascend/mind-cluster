@@ -37,17 +37,38 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-// New return npu plugin
+// New return npu plugin.
+// The ring size (8 NPUs per ring, the "chip8" dimension) is fixed; the NPU count per node
+// is selected by the schedule policy name: 8p-8-sp has 8 NPUs per node (one ring),
+// 8p-16-sp has 16 NPUs per node (two rings).
 func New(name string) base.AscendHandler {
 	m := &chip8node8sp{}
 	m.SetPluginName(name)
 	m.SetAnnoName(util.NPUCardName)
 	m.SetAnnoPreVal(util.NPUCardNamePre)
-	m.SetMaxNodeNPUNum(nodeNPUNumber)
+	m.SetMaxNodeNPUNum(getNodeNPUNumByHandler(name))
+	m.SetMaxCardNPUNum(cardsNumPerRing)
 	m.SetIsNetworkFaultAttention(true)
 	m.netUnhealthyKey = networkUnhealthyNPU
 	m.nodeVPodId = map[string]string{}
 	return m
+}
+
+// getNodeNPUNumByHandler returns the max NPU number per node for the schedule policy.
+// The ring size (8 NPUs per ring) is fixed; only the node card count differs:
+//   - 8p-8-sp : 8 NPUs per node  (one 8-card ring per node)
+//   - 8p-16-sp: 16 NPUs per node (two 8-card rings per node)
+func getNodeNPUNumByHandler(name string) int {
+	switch name {
+	case SchedulePolicy8Px16Sp:
+		return maxNodeNPUNumX16
+	case SchedulePolicy8Px8Sp:
+		return maxNodeNPUNumX8
+	default:
+		klog.V(util.LogWarningLev).Infof("unsupported handler name %s, node npu num fallback to %d",
+			name, maxNodeNPUNumX8)
+		return maxNodeNPUNumX8
+	}
 }
 
 // ValidNPUJob verify the validity of job parameters
@@ -66,26 +87,27 @@ func (tp *chip8node8sp) checkSpBlock() *api.ValidateResult {
 			Message: fmt.Sprintf("sp-block(%d) is invalid", tp.SpBlockNPUNum),
 		}
 	}
-	if tp.SpBlockNPUNum < nodeNPUNumber {
-		klog.V(util.LogWarningLev).Info("sp-block less than 8, set default value 1")
+	if tp.SpBlockNPUNum < tp.MaxNodeNPUNum {
+		klog.V(util.LogWarningLev).Infof("sp-block less than node npu num(%d), set default value 1",
+			tp.MaxNodeNPUNum)
 		tp.spBlock = 1
 	} else {
-		if tp.SpBlockNPUNum%nodeNPUNumber != 0 {
+		if tp.SpBlockNPUNum%tp.MaxNodeNPUNum != 0 {
 			return &api.ValidateResult{
 				Pass:    false,
 				Reason:  spBlockInvalidReason,
-				Message: fmt.Sprintf("sp-block(%d) is not mutiple of node npu (%d)", tp.SpBlockNPUNum, nodeNPUNumber),
+				Message: fmt.Sprintf("sp-block(%d) is not mutiple of node npu (%d)", tp.SpBlockNPUNum, tp.MaxNodeNPUNum),
 			}
 		}
-		tp.spBlock = tp.SpBlockNPUNum / nodeNPUNumber
+		tp.spBlock = tp.SpBlockNPUNum / tp.MaxNodeNPUNum
 	}
 
 	if tp.spBlock > tp.FrameAttr.SuperPodSize {
 		return &api.ValidateResult{
 			Pass:   false,
 			Reason: spBlockInvalidReason,
-			Message: fmt.Sprintf("sp-block(%d/8=%d) is bigger than size of super-pod(%d)",
-				tp.SpBlockNPUNum, tp.spBlock, tp.FrameAttr.SuperPodSize),
+			Message: fmt.Sprintf("sp-block(%d/%d=%d) is bigger than size of super-pod(%d)",
+				tp.SpBlockNPUNum, tp.MaxNodeNPUNum, tp.spBlock, tp.FrameAttr.SuperPodSize),
 		}
 	}
 	return nil
@@ -93,7 +115,7 @@ func (tp *chip8node8sp) checkSpBlock() *api.ValidateResult {
 
 func (tp *chip8node8sp) checkRequireNPU() *api.ValidateResult {
 	if tp.NPUTaskNum == 1 {
-		if tp.ReqNPUNum == 1 || tp.ReqNPUNum <= nodeNPUNumber {
+		if tp.ReqNPUNum == 1 || tp.ReqNPUNum <= tp.MaxNodeNPUNum {
 			if tp.ReqNPUNum != tp.SpBlockNPUNum {
 				return &api.ValidateResult{
 					Pass:    false,
@@ -125,11 +147,12 @@ func (tp *chip8node8sp) checkRequireNPU() *api.ValidateResult {
 func (tp *chip8node8sp) checkReqNPUEqualNodeNPU() *api.ValidateResult {
 	for _, task := range tp.Tasks {
 		// npu num required by task in distributed job must be node npu num
-		if task.ReqNPUNum != nodeNPUNumber {
+		if task.ReqNPUNum != tp.MaxNodeNPUNum {
 			return &api.ValidateResult{
-				Pass:    false,
-				Reason:  jobCheckFailedReason,
-				Message: fmt.Sprintf("distributed super-pod job require npu 8*n, instead of %d", task.ReqNPUNum),
+				Pass:   false,
+				Reason: jobCheckFailedReason,
+				Message: fmt.Sprintf("distributed super-pod job require npu %d*n, instead of %d",
+					tp.MaxNodeNPUNum, task.ReqNPUNum),
 			}
 		}
 	}
@@ -1196,7 +1219,7 @@ func (tp *chip8node8sp) selectNPUFromNode(task *api.TaskInfo, node plugin.NPUNod
 		}
 	}
 	if tp.NPUTaskNum > 1 {
-		if len(npuTop) == nodeNPUNumber {
+		if len(npuTop) == tp.MaxNodeNPUNum {
 			return npuTop, nil
 		}
 		return nil, fmt.Errorf("node<%s> top<%v> can not meet task req<%d>", node.Name, len(npuTop), taskNPUNum)

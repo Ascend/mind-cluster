@@ -51,13 +51,13 @@
 </tr>
 <tr>
 <td>（可选）huawei.com/schedule_policy</td>
-<td>该字段取值需要参考实际的硬件型号与芯片布局：<ul><li>Atlas 350 加速卡，单节点8卡，卡间无UB互联: chip1-node8</li><li>Atlas 350 加速卡，单节点8卡，每4卡UB互联: chip4-node8</li><li>Atlas 350 加速卡，单节点16卡，卡间无UB互联: chip1-node16</li><li>Atlas 350 加速卡，单节点16卡，每4卡UB互联: chip4-node16</li><li>Atlas 650E 服务器: chip8-node8</li><li>Atlas 850E 超节点: chip8-node8-sp</li><li>Atlas 950 SuperPoD 超节点: chip8-node8-ra64-sp</li></ul>关于该字段的详细说明可参考：<a href="../../06_api/01_volcano.md#podgroup">参数说明</a>中表3对huawei.com/schedule_policy字段的说明</td>
+<td>该字段取值需要参考实际的硬件型号与芯片布局：<ul><li>Atlas 350 加速卡，单节点8卡，卡间无UB互联: chip1-node8</li><li>Atlas 350 加速卡，单节点8卡，每4卡UB互联: chip4-node8</li><li>Atlas 350 加速卡，单节点16卡，卡间无UB互联: chip1-node16</li><li>Atlas 350 加速卡，单节点16卡，每4卡UB互联: chip4-node16</li><li>Atlas 650E 服务器: chip8-node8</li><li>Atlas 850E 超节点: chip8-node8-sp</li><li>Atlas 950 SuperPoD 超节点: chip8-node8-ra64-sp</li><li>Atlas 950 SuperPoD Flex: chip8-node16-sp</li></ul>关于该字段的详细说明可参考：<a href="../../06_api/01_volcano.md#podgroup">参数说明</a>中表3对huawei.com/schedule_policy字段的说明</td>
 <td>配置任务需要调度的AI芯片布局形态，使用Volcano调度时可选配置该字段。Volcano会根据该字段选择合适的调度策略。</td>
 </tr>
 <tr>
 <td>（可选）sp-block</td>
 <td>指定逻辑超节点芯片数量。<p>单机时需要和任务请求的芯片数量一致。</p><p>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</p></td>
-<td>仅在升级到Atlas 850E 超节点与Atlas 950 SuperPoD 超节点时需要保留或配置该字段。指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的逻辑超节点亲和性调度。若用户未指定该字段，Volcano调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。<br/> 了解详细说明请参见<a href="../../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a></td>
+<td>仅在升级到Atlas 850E 超节点、Atlas 950 SuperPoD 超节点与Atlas 950 SuperPoD Flex时需要保留或配置该字段。指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的逻辑超节点亲和性调度。若用户未指定该字段，Volcano调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。<br/> 了解详细说明请参见<a href="../../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a></td>
 </tr>
 <tr>
 <td>（可选）ra-block</td>
@@ -66,7 +66,7 @@
 </tr>
 <tr>
 <td>requests/limits</td>
-<td><ul><li><term>Atlas A3 推理系列产品</term>/<term>Atlas A3 训练系列产品</term>资源名统一取值为huawei.com/Ascend910，请求资源的取值范围为1～16。</li><li><term>Ascend 950 系列产品</term>资源名需修改为huawei.com/npu。请求资源的取值范围：<ul><li>Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点：1～8。</li><li>Atlas 350 加速卡由实际单机的NPU数量确定。</li></ul></li></ul></td>
+<td><ul><li><term>Atlas A3 推理系列产品</term>/<term>Atlas A3 训练系列产品</term>资源名统一取值为huawei.com/Ascend910，请求资源的取值范围为1～16。</li><li><term>Ascend 950 系列产品</term>资源名需修改为huawei.com/npu。请求资源的取值范围：<ul><li>Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点：1～8。</li><li>Atlas 950 SuperPoD Flex：1～16，分布式任务每个Worker需申请满节点16卡。</li><li>Atlas 350 加速卡由实际单机的NPU数量确定。</li></ul></li></ul></td>
 <td>相比于<term>Atlas A3 推理系列产品</term>/<term>Atlas A3 训练系列产品</term>，<term>Ascend 950 系列产品</term>在芯片资源名称上存在变更，且<term>Ascend 950 系列产品</term>单机NPU数视实际硬件型号存在差异。</td>
 </tr>
 <tr>

@@ -1070,11 +1070,13 @@ type checkRequireNPUTest struct {
 
 func TestCheckReqNPUEqualNodeNPU(t *testing.T) {
 	module1 := chip8node8sp{}
+	module1.MaxNodeNPUNum = 8
 	module1.NPUJob = &util.NPUJob{
 		Tasks: map[api.TaskID]util.NPUTask{api.TaskID(strconv.Itoa(1)): {
 			ReqNPUNum: 8,
 		}}}
 	module2 := chip8node8sp{}
+	module2.MaxNodeNPUNum = 8
 	module2.NPUJob = &util.NPUJob{
 		Tasks: map[api.TaskID]util.NPUTask{api.TaskID(strconv.Itoa(1)): {
 			ReqNPUNum: 3,
@@ -1126,6 +1128,7 @@ func getCheckRequireNPUTestParam2() []checkRequireNPUTest {
 		SpBlockNPUNum: 8,
 	}
 	module5 := chip8node8sp{}
+	module5.MaxNodeNPUNum = 8
 	module5.NPUJob = &util.NPUJob{
 		NPUTaskNum:    2,
 		ReqNPUNum:     16,
@@ -1167,6 +1170,7 @@ func getCheckRequireNPUTestParam1() []checkRequireNPUTest {
 		SpBlockNPUNum: 1,
 	}
 	module3 := chip8node8sp{}
+	module3.MaxNodeNPUNum = 8
 	module3.NPUJob = &util.NPUJob{
 		NPUTaskNum: 1,
 		ReqNPUNum:  9,
@@ -1259,6 +1263,7 @@ func TestSelectNPUFromNodePart2(t *testing.T) {
 		module1 := &chip8node8sp{
 			spBlock: 1,
 		}
+		module1.MaxNodeNPUNum = 8
 		module1.NPUJob = &util.NPUJob{
 			NPUTaskNum: 2,
 		}
@@ -1283,6 +1288,7 @@ func TestSelectNPUFromNodePart2(t *testing.T) {
 		module1 := &chip8node8sp{
 			spBlock: 1,
 		}
+		module1.MaxNodeNPUNum = 8
 		module1.NPUJob = &util.NPUJob{
 			NPUTaskNum: 2,
 		}

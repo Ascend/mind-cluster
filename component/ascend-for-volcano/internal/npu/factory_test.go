@@ -105,6 +105,7 @@ func TestInit910CardPolicyHandler(t *testing.T) {
 		util.Chip8Node16,
 		util.Chip2Node16,
 		util.Chip2Node16Sp,
+		util.Chip8Node16Sp,
 		util.Chip4Node8,
 		util.Chip4Node16,
 		util.Chip1Node8,

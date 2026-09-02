@@ -913,5 +913,6 @@
 |chip1-node16|1个节点16张卡，每张卡之间无互联。|Atlas 350 加速卡共16张卡，每张卡之间无互联|
 |chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。|Atlas 850E 超节点|
 |chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。|Atlas 950 SuperPoD 超节点|
+|chip8-node16-sp|1个节点16张卡，每8张卡在1个互联环上，多个服务器形成超节点。|Atlas 950 SuperPoD Flex|
 |chip1-softShareDev|软切分虚拟化专用调度策略。|Atlas 800I A2，Atlas 800I A3，Atlas 350 加速卡|
 |multilevel|多级调度场景使用，多级调度的详细使用方法请参见[多级调度](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md)。|Atlas 900 A3 SuperPoD 超节点，Atlas 950 SuperPoD 超节点|
