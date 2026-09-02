@@ -502,7 +502,7 @@ func TestSetupWithManager(t *testing.T) {
 		})
 		defer patch.Reset()
 		convey.Convey("01-New controller failed should return error", func() {
-			r := NewReconciler(mgr, true)
+			r := NewReconciler(mgr, true, 0)
 			err := r.SetupWithManager(mgr)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
@@ -514,7 +514,7 @@ func TestSetupWithManager(t *testing.T) {
 				func(*ASJobReconciler, controller.Controller, ctrl.Manager) error { return nil })
 		defer patches.Reset()
 		convey.Convey("02-New controller success should return nil", func() {
-			r := NewReconciler(mgr, true)
+			r := NewReconciler(mgr, true, 0)
 			err := r.SetupWithManager(mgr)
 			convey.So(err, convey.ShouldBeNil)
 		})

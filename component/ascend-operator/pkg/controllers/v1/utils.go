@@ -334,3 +334,10 @@ func getSchedulerName(replicas map[commonv1.ReplicaType]*commonv1.ReplicaSpec) s
 	}
 	return ""
 }
+
+func getJobScanInterval(jobScanInterval int) int {
+	if jobScanInterval < DefaultAcjobScanInterval || jobScanInterval > MaxAcjobScanInterval {
+		return DefaultAcjobScanInterval
+	}
+	return jobScanInterval
+}

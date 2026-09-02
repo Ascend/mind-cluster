@@ -39,7 +39,7 @@ import (
 	"ascend-common/common-utils/report"
 	ver "ascend-common/common-utils/version"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
-	"ascend-operator/pkg/controllers/v1"
+	v1 "ascend-operator/pkg/controllers/v1"
 )
 
 const (
@@ -54,6 +54,7 @@ var (
 	hwLogConfig          = &hwlog.LogConfig{LogFileName: api.OperatorLogFilePath}
 	version              bool
 	enableGangScheduling bool
+	jobScanInterval      int
 	// BuildVersion is the version of build package
 	BuildVersion string
 	// QPS to use while talking with kubernetes api-server
@@ -88,6 +89,8 @@ func main() {
 		"Maximum number of backup log files")
 	flag.BoolVar(&enableGangScheduling, "enableGangScheduling", true,
 		"Set true to enable gang scheduling")
+	flag.IntVar(&jobScanInterval, "jobScanInterval", v1.DefaultAcjobScanInterval,
+		"Scan interval for cleaning completed acjob")
 	flag.Float64Var(&QPS, "kubeApiQps", defaultQPS, "QPS to use while talking with kubernetes api-server")
 	flag.IntVar(&Burst, "kubeApiBurst", defaultBurst, "Burst to use while talking with kubernetes api-server")
 	flag.BoolVar(&version, "version", false,
@@ -124,7 +127,7 @@ func main() {
 		return
 	}
 
-	if err = v1.NewReconciler(mgr, enableGangScheduling).SetupWithManager(mgr); err != nil {
+	if err = v1.NewReconciler(mgr, enableGangScheduling, jobScanInterval).SetupWithManager(mgr); err != nil {
 		hwlog.RunLog.Errorf("unable to create operator-controller err: %s", err)
 		return
 	}

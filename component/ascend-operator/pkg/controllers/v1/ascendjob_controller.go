@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
@@ -70,15 +71,17 @@ import (
 )
 
 // NewReconciler new reconciler for AscendJob
-func NewReconciler(mgr manager.Manager, enableGangScheduling bool) *ASJobReconciler {
+func NewReconciler(mgr manager.Manager, enableGangScheduling bool, jobScanInterval int) *ASJobReconciler {
 	r := &ASJobReconciler{
-		Client:        mgr.GetClient(),
-		Scheme:        mgr.GetScheme(),
-		apiReader:     mgr.GetAPIReader(),
-		recorder:      mgr.GetEventRecorderFor(api.ControllerName),
-		versions:      make(map[types.UID]int32),
-		backoffLimits: make(map[types.UID]int32),
-		rtGenerators:  make(map[types.UID]generator.RankTableGenerator),
+		Client:          mgr.GetClient(),
+		Scheme:          mgr.GetScheme(),
+		apiReader:       mgr.GetAPIReader(),
+		recorder:        mgr.GetEventRecorderFor(api.ControllerName),
+		versions:        make(map[types.UID]int32),
+		backoffLimits:   make(map[types.UID]int32),
+		rtGenerators:    make(map[types.UID]generator.RankTableGenerator),
+		jobScanInterval: getJobScanInterval(jobScanInterval),
+		ttlRequeues:     sync.Map{},
 	}
 
 	cfg := mgr.GetConfig()
@@ -120,6 +123,10 @@ type ASJobReconciler struct {
 	backoffLimits map[types.UID]int32
 	rtGenerators  map[types.UID]generator.RankTableGenerator
 	batchMgr      batchCreateManager
+	// jobScanInterval is the scan interval for cleaning up completed job info (in seconds).
+	jobScanInterval int
+	// ttlRequeues carries per-job TTL requeue durations keyed by job key
+	ttlRequeues sync.Map
 }
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -173,7 +180,49 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		hwlog.RunLog.Warnf("Reconcile Job<%s> failed err: %s", req.NamespacedName, err)
 		return ctrl.Result{}, err
 	}
+	if value, ok := r.ttlRequeues.LoadAndDelete(req.NamespacedName.String()); ok {
+		requeueAfter := value.(time.Duration)
+		if requeueAfter > 0 {
+			hwlog.RunLog.Infof("Job<%s> TTL requeue after %v", req.NamespacedName, requeueAfter)
+			return ctrl.Result{RequeueAfter: requeueAfter}, nil
+		}
+	}
 	return ctrl.Result{}, nil
+}
+
+// StartTTLCleanupScanner periodically scans all finished AscendJobs and deletes
+// those whose TTLSecondsAfterFinished has expired.
+func (r *ASJobReconciler) StartTTLCleanupScanner(ctx context.Context) error {
+	wait.UntilWithContext(ctx, func(ctx context.Context) {
+		r.scanExpiredTTLJobs(ctx)
+	}, time.Duration(r.jobScanInterval)*time.Second)
+	return nil
+}
+
+func (r *ASJobReconciler) scanExpiredTTLJobs(ctx context.Context) {
+	jobList := &mindxdlv1.AscendJobList{}
+	if err := r.List(ctx, jobList); err != nil {
+		hwlog.RunLog.Warnf("failed to list AscendJobs in TTL scanner: %v", err)
+		return
+	}
+
+	for i := range jobList.Items {
+		job := &jobList.Items[i]
+		hwlog.RunLog.Debugf("start to scan expired TTL jobs, job: %s/%s", job.Namespace, job.Name)
+		if !util.IsSucceeded(job.Status) && !util.IsFailed(job.Status) {
+			continue
+		}
+		expireTime, ok := ttlExpireTime(&job.Spec.RunPolicy, &job.Status)
+		if !ok || time.Now().Before(expireTime) {
+			hwlog.RunLog.Infof("Job %s/%s TTL expires in %v", job.Namespace, job.Name, time.Until(expireTime))
+			continue
+		}
+		if err := r.Delete(ctx, job); err != nil {
+			hwlog.RunLog.Warnf("TTL scanner failed to delete expired job<%s/%s>: %v", job.Namespace, job.Name, err)
+			continue
+		}
+		hwlog.RunLog.Infof("Job %s/%s TTL expired, deleting job", job.Namespace, job.Name)
+	}
 }
 
 func (r *ASJobReconciler) isJobDecorator(ctx context.Context, req ctrl.Request) bool {
@@ -226,6 +275,10 @@ func (r *ASJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		),
 	})
 	if err != nil {
+		return err
+	}
+
+	if err := mgr.Add(manager.RunnableFunc(r.StartTTLCleanupScanner)); err != nil {
 		return err
 	}
 

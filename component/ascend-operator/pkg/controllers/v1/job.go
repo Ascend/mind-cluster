@@ -15,6 +15,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"github.com/kubeflow/common/pkg/controller.v1/common"
@@ -23,6 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/api"
@@ -367,7 +369,7 @@ func (r *ASJobReconciler) handleFinishedJob(ji *jobInfo, needUpdateCond bool, co
 		return err
 	}
 
-	if err := r.CleanupJob(ji.runPolicy, *ji.status, ji.job); err != nil {
+	if err := r.checkTTLAndCleanup(ji); err != nil {
 		hwlog.RunLog.Errorf("clean up job<%s> failed, err: %s", ji.name, err)
 		return err
 	}
@@ -399,6 +401,56 @@ func (r *ASJobReconciler) handleFinishedJob(ji *jobInfo, needUpdateCond bool, co
 			ji.status.ReplicaStatuses[rtype].Succeeded += ji.status.ReplicaStatuses[rtype].Active
 			ji.status.ReplicaStatuses[rtype].Active = 0
 		}
+	}
+	return nil
+}
+
+func ttlExpireTime(runPolicy *commonv1.RunPolicy, status *commonv1.JobStatus) (time.Time, bool) {
+	if runPolicy == nil || status == nil || status.CompletionTime == nil {
+		return time.Time{}, false
+	}
+	ttl := runPolicy.TTLSecondsAfterFinished
+	if ttl == nil || *ttl <= 0 {
+		return time.Time{}, false
+	}
+	return status.CompletionTime.Add(time.Duration(*ttl) * time.Second), true
+}
+
+func (r *ASJobReconciler) checkTTLAndCleanup(ji *jobInfo) error {
+	if ji == nil || ji.runPolicy == nil {
+		return nil
+	}
+	hwlog.RunLog.Infof("check TTL for job %s", ji.name)
+	ttl := ji.runPolicy.TTLSecondsAfterFinished
+	if ttl == nil || *ttl <= 0 {
+		hwlog.RunLog.Warnf("Job %s has TTL set but TTL value is not positive, skip", ji.name)
+		return nil
+	}
+	if ji.status == nil || ji.status.CompletionTime == nil {
+		hwlog.RunLog.Warnf("Job %s has TTL set but completionTime is nil, skip", ji.name)
+		return nil
+	}
+
+	expireTime, ok := ttlExpireTime(ji.runPolicy, ji.status)
+	if !ok {
+		hwlog.RunLog.Warnf("Job %s has TTL set but TTL expiration time calculation failed, skip", ji.name)
+		return nil
+	}
+	if time.Now().Before(expireTime) {
+		requeueAfter := time.Until(expireTime)
+		r.ttlRequeues.Store(ji.jobKey, requeueAfter)
+		hwlog.RunLog.Infof("Job %s TTL expires in %v", ji.name, requeueAfter)
+		return nil
+	}
+
+	hwlog.RunLog.Infof("Job %s TTL expired, deleting job", ji.name)
+	obj, ok := ji.job.(client.Object)
+	if !ok {
+		hwlog.RunLog.Errorf("job %s is not a client.Object, cannot delete by TTL", ji.name)
+		return nil
+	}
+	if err := r.Delete(context.Background(), obj); err != nil {
+		return err
 	}
 	return nil
 }

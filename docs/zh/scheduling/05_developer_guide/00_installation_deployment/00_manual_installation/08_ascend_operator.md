@@ -204,6 +204,15 @@
 <td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p172054590444"><a name="p172054590444"></a><a name="p172054590444"></a>与K8s通信时使用的QPS（每秒请求率）。取值范围为（0,10000]，不在取值范围内使用默认值50。</p>
 </td>
 </tr>
+<tr id="row182053596443"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="p4205165917448"><a name="p4205165917448"></a><a name="p4205165917448"></a>-jobScanInterval</p>
+</td>
+<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p42051059174420"><a name="p42051059174420"></a><a name="p42051059174420"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="p17205159154413"><a name="p17205159154413"></a><a name="p17205159154413"></a>300</p>
+</td>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p172054590445"><a name="p172054590445"></a><a name="p172054590445"></a>清除已完成acjob的扫描间隔，单位秒。取值范围为[300,86400]，不在取值范围内使用默认值300。</p>
+</td>
+</tr>
 <tr id="rowhz001-ascend-operator"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz001-ascend-operator"><a name="phz001-ascend-operator"></a><a name="phz001-ascend-operator"></a>--enable-healthz</p>
 </td>
 <td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz001b-ascend-operator"><a name="phz001b-ascend-operator"></a><a name="phz001b-ascend-operator"></a>bool</p>

@@ -393,6 +393,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     spec:
       schedulerName: volcano   # work when enableGangScheduling is true
       runPolicy:
+        ttlSecondsAfterFinished: 30 # 作业完成后的TTL（生存时间）。
         schedulingPolicy:      # work when enableGangScheduling is true
           minAvailable: 1
           queue: default
