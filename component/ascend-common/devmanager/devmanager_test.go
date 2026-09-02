@@ -756,3 +756,89 @@ func TestGetDeviceUtilizationRateCommon(t *testing.T) {
 		})
 	}
 }
+
+// TestDeviceManagerGetNodeTopo covers the device-type-driven topology lookup: A2 (910B)
+// reads boardTopoTable by boardId, all other models read mainBoardTopoTable by mainBoardId.
+func TestDeviceManagerGetNodeTopo(t *testing.T) {
+	convey.Convey("returns mainBoardTopo for non-910B when mainBoardId hits", t, func() {
+		dm := &DeviceManager{DcMgr: &dcmi.DcManager{}}
+		mgr := &deviceCommonInitManager{DeviceManager: *dm}
+		p := gomonkey.NewPatches().
+			ApplyMethodReturn(dm.DcMgr, "DcGetCardList", mockCardNum, mockCardList, nil).
+			ApplyMethodReturn(dm.DcMgr, "DcGetDeviceNumInCard", mockDeviceNumInCard, nil).
+			ApplyMethodReturn(dm.DcMgr, "DcGetDeviceMainBoardInfo", uint32(common.A900A3SuperPodMainBoardId1), nil)
+		defer p.Reset()
+
+		err := mgr.SetValidMainBoardInfo()
+
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(mgr.GetMainBoardId(), convey.ShouldEqual, common.A900A3SuperPodMainBoardId1)
+		convey.So(mgr.GetNodeTopo(), convey.ShouldEqual,
+			common.GetMainBoardTopo(common.A900A3SuperPodMainBoardId1))
+	})
+
+	convey.Convey("returns empty for non-910B when mainBoardId misses", t, func() {
+		dm := &DeviceManager{DcMgr: &dcmi.DcManager{}}
+		mgr := &deviceCommonInitManager{DeviceManager: *dm}
+		p := gomonkey.NewPatches().
+			ApplyMethodReturn(dm.DcMgr, "DcGetCardList", mockCardNum, mockCardList, nil).
+			ApplyMethodReturn(dm.DcMgr, "DcGetDeviceNumInCard", mockDeviceNumInCard, nil).
+			ApplyMethodReturn(dm.DcMgr, "DcGetDeviceMainBoardInfo", mockMainBoardId, nil)
+		defer p.Reset()
+
+		err := mgr.SetValidMainBoardInfo()
+
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(mgr.GetMainBoardId(), convey.ShouldEqual, mockMainBoardId)
+		convey.So(mgr.GetNodeTopo(), convey.ShouldBeEmpty)
+	})
+
+	convey.Convey("returns empty for 910B even when dcmi reports an A3 mainBoardId", t, func() {
+		// an A2 device whose mainBoardId collides with an A3 mainBoardTopoTable key never
+		// reads that table: 910B goes straight to the boardId table (empty here)
+		dm := &DeviceManager{DcMgr: &dcmi.DcManager{}}
+		mgr := &deviceCommonInitManager{DeviceManager: *dm}
+		p := gomonkey.NewPatches().
+			ApplyMethodReturn(dm.DcMgr, "DcGetCardList", mockCardNum, mockCardList, nil).
+			ApplyMethodReturn(dm.DcMgr, "DcGetDeviceNumInCard", mockDeviceNumInCard, nil).
+			ApplyMethodReturn(dm.DcMgr, "DcGetDeviceMainBoardInfo", uint32(common.A900A3SuperPodMainBoardId1), nil)
+		defer p.Reset()
+
+		err := mgr.SetValidMainBoardInfo()
+
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(mgr.GetMainBoardId(), convey.ShouldEqual, common.A900A3SuperPodMainBoardId1)
+		mgr.SetDevType(api.Ascend910B)
+		convey.So(mgr.GetNodeTopo(), convey.ShouldBeEmpty)
+	})
+
+	convey.Convey("returns boardTopo for 910B when boardId hits", t, func() {
+		mgr := &deviceCommonInitManager{DeviceManager: DeviceManager{}}
+		mgr.SetDevType(api.Ascend910B)
+		mgr.SetValidBoardTopo(common.A300IA2BoardId)
+		convey.So(mgr.GetNodeTopo(), convey.ShouldEqual, common.TopoDefault8Chip)
+	})
+
+	convey.Convey("returns empty for 910B when boardId misses boardTopoTable", t, func() {
+		mgr := &deviceCommonInitManager{DeviceManager: DeviceManager{}}
+		mgr.SetDevType(api.Ascend910B)
+		mgr.SetValidBoardTopo(0xDEAD)
+		convey.So(mgr.GetNodeTopo(), convey.ShouldBeEmpty)
+	})
+
+	convey.Convey("returns empty for 910B with InvalidID boardId", t, func() {
+		mgr := &deviceCommonInitManager{DeviceManager: DeviceManager{}}
+		mgr.SetDevType(api.Ascend910B)
+		mgr.SetValidBoardTopo(common.InvalidID)
+		convey.So(mgr.GetNodeTopo(), convey.ShouldBeEmpty)
+	})
+
+	convey.Convey("returns empty for non-910B even when boardId hits boardTopoTable", t, func() {
+		// a non-910B device never reads the A2 board table, even if its boardId collides
+		// with an A2 entry and its mainBoardId misses the mainBoard table
+		mgr := &deviceCommonInitManager{DeviceManager: DeviceManager{}}
+		mgr.SetDevType(api.Ascend910A3)
+		mgr.SetValidBoardTopo(common.A300IA2BoardId)
+		convey.So(mgr.GetNodeTopo(), convey.ShouldBeEmpty)
+	})
+}

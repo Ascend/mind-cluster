@@ -351,6 +351,39 @@ func (a *superPodInfoAnnotator) Write(annotations map[string]string, ctx *label.
 	return nil
 }
 
+// topologyAnnotator writes the chip topology looked up from the static table to the
+// npu.topology annotation, consumed by the chip-topology scheduling plugin. The lookup
+// is device-type driven (GetNodeTopo): A2 (910B) reads the boardId table, all other
+// models read the mainBoardId table. The annotation is written once at device-plugin
+// startup as part of the annotationGroup (the periodic update loop never touches
+// annotationGroup). It is skipped for heterogeneous nodes, when the node already has
+// the annotation, or when the lookup misses.
+type topologyAnnotator struct {
+	hdm *HwDevManager
+}
+
+func (a *topologyAnnotator) Write(annotations map[string]string, ctx *label.NodeContext) error {
+	if ctx.Node == nil {
+		return nil
+	}
+	if ctx.IsHeterogeneous {
+		return nil
+	}
+	if topo, exist := ctx.Node.Annotations[annotation.NPUTopologyAnnotation]; exist {
+		hwlog.RunLog.Infof("node already has npu.topology annotation <%s>, skip writing", topo)
+		return nil
+	}
+	// GetNodeTopo is device-type driven: A2 (910B) reads the boardId table, all other models
+	// read the mainBoardId table, so the two ID namespaces never mix.
+	topo := a.hdm.manager.GetDmgr().GetNodeTopo()
+	if topo == "" {
+		hwlog.RunLog.Warnf("npu-topo not found by mainBoardId/boardId, skip npu.topology annotation")
+		return nil
+	}
+	writeValue(annotations, topo, annotation.NPUTopologyAnnotation)
+	return nil
+}
+
 // cardTypeAnnotator writes cardType annotation (Phase 1: keep writing, Will be removed in Phase 2).
 type cardTypeAnnotator struct {
 	hdm *HwDevManager

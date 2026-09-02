@@ -31,6 +31,8 @@ const (
 	NPUBaseDevInfosAnnotation = api.ResourceNamePrefix + "npu.base-device-infos"
 	// NPUResetInfoAnnotation annotation value is reset info (standardized key)
 	NPUResetInfoAnnotation = api.ResourceNamePrefix + "npu.reset-info"
+	// NPUTopologyAnnotation node NPU chip topology declaration (NPU ID multi-level array).
+	NPUTopologyAnnotation = api.ResourceNamePrefix + "npu.topology"
 )
 
 // Old annotation keys (deprecated, dual-write in Phase 1, Will be removed in Phase 2)

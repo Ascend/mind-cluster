@@ -46,6 +46,8 @@ type DeviceManagerV2 struct {
 	dcmiApiVersion string
 	// mainBoardId used to distinguish different products
 	mainBoardId uint32
+	// boardId identifies the model for A2 (910B), where dcmi provides no usable mainBoardId
+	boardId uint32
 	// utilizationFuncCache manages utilization function cache
 	utilizationFuncCache utilizationFuncCache
 	// unsupportedDeviceTypeCache manages unsupported device types
@@ -94,6 +96,14 @@ func (d *deviceCommonInitManagerV2) SetValidMainBoardInfo() error {
 		return nil
 	}
 	return errors.New("cannot get main board id")
+}
+
+// SetValidBoardTopo records the boardId used for the A2 (910B) npu.topology lookup.
+// A2 has no usable mainBoardId; boardId is obtained once via GetValidBoardInfo in
+// AutoInit and passed in to avoid an extra dcmi call. A table miss leaves GetNodeTopo
+// empty, and the annotation is skipped (best-effort, never blocks init).
+func (d *deviceCommonInitManagerV2) SetValidBoardTopo(boardId uint32) {
+	d.boardId = boardId
 }
 
 // SetDcManger set DcManager
@@ -254,6 +264,15 @@ func (d *DeviceManagerV2) IsTrainingCard() bool {
 // GetMainBoardId get main board id
 func (d *DeviceManagerV2) GetMainBoardId() uint32 {
 	return d.mainBoardId
+}
+
+// GetNodeTopo returns the npu.topology for this device by device type: A2 (910B) reads the
+// boardId table, all other models read the mainBoardId table; "" when not found.
+func (d *DeviceManagerV2) GetNodeTopo() string {
+	if d.DevType == api.Ascend910B {
+		return common.GetBoardTopo(d.boardId)
+	}
+	return common.GetMainBoardTopo(d.mainBoardId)
 }
 
 // GetAffinityCpuInfo get affinity cpu info for npu by logicID

@@ -220,6 +220,10 @@ const (
 	Atlas850MainBoardID3 = 0x27
 	// UbxMainBoardID board id of UBX training card MainBoard
 	UbxMainBoardID = 0x44
+	// Atlas950FlexMainBoardID1 board id of PC168P training card MainBoard
+	Atlas950FlexMainBoardID1 = 0x2d
+	// Atlas950FlexMainBoardID2 board id of PC168P training card MainBoard
+	Atlas950FlexMainBoardID2 = 0x2f
 )
 
 const (
