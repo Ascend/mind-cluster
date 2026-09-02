@@ -174,6 +174,13 @@ function check_platform {
 }
 
 function save_install_args() {
+    # default injection-mode to legacy when not explicitly specified,
+    # so the install.info records "injection-mode=legacy" instead of an
+    # empty value when --injection-mode is omitted.
+    if [[ -z "${INJECTION_MODE}" ]]; then
+        log "[INFO]" "injection-mode not specified, defaulting to legacy"
+        INJECTION_MODE=legacy
+    fi
     {
       echo -e "version=v${PACKAGE_VERSION}"
       echo -e "arch=$(uname -m)"
