@@ -95,6 +95,9 @@ type DeviceInterface interface {
 	GetHccsStatisticInfo(logicID int32) (*common.HccsStatisticInfo, error)
 	GetHccsStatisticInfoInU64(logicID int32) (*common.HccsStatisticInfo, error)
 	GetMainBoardId() uint32
+	// GetNodeTopo returns the npu.topology for this device: A2 (910B) reads the boardId table,
+	// all other models read the mainBoardId table; "" when not found.
+	GetNodeTopo() string
 	GetAffinityCpuInfo(logicID int32) (string, error)
 	GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error)
 
@@ -159,6 +162,8 @@ type DeviceManager struct {
 	dcmiApiVersion string
 	// mainBoardId used to distinguish between A900A3SuperPod and A9000A3SuperPod
 	mainBoardId uint32
+	// boardId identifies the model for A2 (910B), where dcmi provides no usable mainBoardId
+	boardId uint32
 	// utilizationFuncCache manages utilization function cache
 	utilizationFuncCache utilizationFuncCache
 	// unsupportedDeviceTypeCache manages unsupported device types
@@ -216,6 +221,14 @@ func (d *deviceCommonInitManager) SetValidMainBoardInfo() error {
 		}
 	}
 	return errors.New("cannot get main board id")
+}
+
+// SetValidBoardTopo records the boardId used for the A2 (910B) npu.topology lookup.
+// A2 has no usable mainBoardId; boardId is obtained once via GetValidBoardInfo in
+// AutoInit and passed in to avoid an extra dcmi call. A table miss leaves GetNodeTopo
+// empty, and the annotation is skipped (best-effort, never blocks init).
+func (d *deviceCommonInitManager) SetValidBoardTopo(boardId uint32) {
+	d.boardId = boardId
 }
 
 // SetDcManger set DcManager
@@ -1166,6 +1179,15 @@ func (d *DeviceManager) GetDcmiVersion() string {
 // GetMainBoardId  get mainBoardId
 func (d *DeviceManager) GetMainBoardId() uint32 {
 	return d.mainBoardId
+}
+
+// GetNodeTopo returns the npu.topology for this device by device type: A2 (910B) reads the
+// boardId table, all other models read the mainBoardId table; "" when not found.
+func (d *DeviceManager) GetNodeTopo() string {
+	if d.DevType == api.Ascend910B {
+		return common.GetBoardTopo(d.boardId)
+	}
+	return common.GetMainBoardTopo(d.mainBoardId)
 }
 
 // GetAffinityCpuInfo get affinity cpu info for npu by logicID

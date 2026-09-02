@@ -29,6 +29,8 @@ import (
 type DeviceCommonSetInterface interface {
 	DeviceInterface
 	SetValidMainBoardInfo() error
+	// SetValidBoardTopo records the boardId used for the A2 (910B) npu.topology lookup (best-effort)
+	SetValidBoardTopo(boardId uint32)
 	SetDcManger(dcMgr interface{}) error
 	SetDevType(devType string)
 	GetDcManager() DeviceInterface
@@ -126,6 +128,10 @@ func AutoInit(dType string, resetTimeout int) (DeviceInterface, error) {
 		// Non-blocking when the main board ID is not found
 		hwlog.RunLog.Warn(err)
 	}
+	// A2 (910B) has no usable mainBoardId; reuse the boardInfo.BoardId obtained above so
+	// GetNodeTopo can look up the board topology (best-effort: a lookup miss leaves it
+	// empty, and the annotation is skipped).
+	devCommonSetMgr.SetValidBoardTopo(boardInfo.BoardId)
 	var devType = common.GetDevType(chipInfo.Name, boardInfo.BoardId)
 	switch devType {
 	case api.Ascend910A5:

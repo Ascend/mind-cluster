@@ -23,6 +23,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
@@ -483,6 +484,57 @@ func TestSuperPodInfoAnnotator(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(annotations[annotation.SuperPodIDKeyDeprecated], convey.ShouldEqual, "1")
 		convey.So(annotations[annotation.ServerIndexKeyDeprecated], convey.ShouldEqual, "2")
+	})
+}
+
+func TestTopologyAnnotator(t *testing.T) {
+	hdm := newTestHwDevManager()
+	patch := setupDMgrStub()
+	defer patch.Reset()
+	anno := &topologyAnnotator{hdm: hdm}
+
+	convey.Convey("skips heterogeneous nodes", t, func() {
+		stub := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+			"GetNodeTopo", npuCommon.TopoDefault8Chip)
+		defer stub.Reset()
+		annotations := make(map[string]string)
+		err := anno.Write(annotations, &label.NodeContext{Node: &v1.Node{}, IsHeterogeneous: true})
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(annotations, convey.ShouldBeEmpty)
+	})
+
+	convey.Convey("keeps an existing manually-set npu.topology untouched", t, func() {
+		stub := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+			"GetNodeTopo", npuCommon.TopoDefault8Chip)
+		defer stub.Reset()
+		annotations := make(map[string]string)
+		ctx := &label.NodeContext{Node: &v1.Node{ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{annotation.NPUTopologyAnnotation: "[[0,1]]"},
+		}}}
+		err := anno.Write(annotations, ctx)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(annotations, convey.ShouldBeEmpty)
+		convey.So(ctx.Node.Annotations[annotation.NPUTopologyAnnotation], convey.ShouldEqual, "[[0,1]]")
+	})
+
+	convey.Convey("writes npu.topology on lookup hit", t, func() {
+		stub := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+			"GetNodeTopo", npuCommon.TopoDefault8Chip)
+		defer stub.Reset()
+		annotations := make(map[string]string)
+		err := anno.Write(annotations, &label.NodeContext{Node: &v1.Node{}})
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(annotations[annotation.NPUTopologyAnnotation], convey.ShouldEqual, npuCommon.TopoDefault8Chip)
+	})
+
+	convey.Convey("skips when the topo lookup misses", t, func() {
+		stub := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+			"GetNodeTopo", "")
+		defer stub.Reset()
+		annotations := make(map[string]string)
+		err := anno.Write(annotations, &label.NodeContext{Node: &v1.Node{}})
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(annotations, convey.ShouldBeEmpty)
 	})
 }
 

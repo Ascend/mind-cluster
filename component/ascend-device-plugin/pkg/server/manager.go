@@ -214,6 +214,7 @@ func (hdm *HwDevManager) initMarkerGroups() {
 		&serialNumberAnnotator{hdm: hdm},
 		&serverTypeAnnotator{hdm: hdm},
 		&superPodInfoAnnotator{hdm: hdm},
+		&topologyAnnotator{hdm: hdm},
 	)
 }
 

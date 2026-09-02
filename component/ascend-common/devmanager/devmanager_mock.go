@@ -388,6 +388,11 @@ func (d *DeviceManagerMock) GetMainBoardId() uint32 {
 	return 0
 }
 
+// GetNodeTopo get node topo
+func (d *DeviceManagerMock) GetNodeTopo() string {
+	return ""
+}
+
 // GetHccsBandwidthInfo get hccs statistic info
 func (d *DeviceManagerMock) GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error) {
 	return &common.HccsBandwidthInfo{}, nil

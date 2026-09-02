@@ -229,6 +229,18 @@ const (
 	// A300IA2GB64BoardId board id of A300I A2 64GB
 	A300IA2GB64BoardId = 0x29
 
+	// A800IA2NoneHccsBoardIdOld board id of Atlas 800I A2 server without HCCS (old id)
+	A800IA2NoneHccsBoardIdOld = 0x33
+	// A800IA2NoneHccsBoardId board id of Atlas 800I A2 server without HCCS.
+	// 0x33 changed to 0x3c and both stay valid for compatibility (since 2024.9.4).
+	A800IA2NoneHccsBoardId = 0x3c
+	// Atlas200TA2BoardId1 board id of Atlas 200T A2 BOX
+	Atlas200TA2BoardId1 = 0x51
+	// Atlas200TA2BoardId2 board id of Atlas 200T A2 BOX
+	Atlas200TA2BoardId2 = 0x53
+	// Atlas200TA2BoardId3 board id of Atlas 200T A2 BOX
+	Atlas200TA2BoardId3 = 0x54
+
 	// A900A3SuperPodBin1BoardId board id of A900/A9000 A3 SuperPod Bin1
 	A900A3SuperPodBin1BoardId = 0xb0
 
