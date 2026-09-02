@@ -200,6 +200,7 @@
   - [DPU Exporter](./06_api/16_dpu_exporter.md)
   - [UB Host Device CNI](06_api/17_ub_host_device_cni.md)
   - [Ascend DRA](./06_api/17_ascend_dynamic_resource_allocation_.md)
+  - [Container Manager](./06_api/17_container-manager.md)
   - [K8s原生对象说明](./06_api/12_k8s.md)
   - [环境变量说明](./06_api/13_environment_variable_description.md)
   - [hccl.json文件说明](./06_api/14_hccl.json_file_description.md)

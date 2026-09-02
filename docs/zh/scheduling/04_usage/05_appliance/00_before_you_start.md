@@ -25,3 +25,6 @@
 - <term>Atlas 推理系列产品</term>
 - <term>Atlas A2 推理系列产品</term>
 - <term>Atlas A3 推理系列产品</term>
+- Atlas 850E 超节点
+- Atlas 650E 服务器
+- Atlas 350 加速卡

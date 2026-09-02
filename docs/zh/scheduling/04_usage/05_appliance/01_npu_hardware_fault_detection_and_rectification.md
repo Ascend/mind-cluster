@@ -10,7 +10,7 @@
 |--|--|--|
 |故障检测|该特性具有故障检测功能，支持实时监测350+硬件类故障的故障检测。|[故障检测](#故障检测)|
 |故障处理|该特性具有故障处理功能，针对故障级别配置为RestartRequestCodes、RestartBusinessCodes、FreeRestartNPUCodes和RestartNPUCodes的故障，故障发生后不需要人工介入就可自动恢复故障设备。|[故障处理](#故障处理)|
-|容器恢复|该特性具有容器恢复功能，用户可配置容器启停的策略，针对故障级别配置为RestartRequestCodes、RestartBusinessCodes、FreeRestartNPUCodes和RestartNPUCodes的故障，故障发生时将容器停止，故障恢复后重新将容器拉起。|[容器恢复](#容器恢复)|
+|容器恢复|该特性具有容器恢复功能，用户可配置容器启停的策略，针对故障级别配置为RestartRequestCodes、RestartBusinessCodes、FreeRestartNPUCodes和RestartNPUCodes的故障，故障发生时将容器停止，故障恢复后重新将容器拉起。对于分布式任务容器，可通过`-leaderIp`和`-leaderAddrs`等启动参数配置Leader节点和普通节点，实现跨节点一致性恢复。|[容器恢复](#容器恢复)|
 
 >[!NOTE]
 >本特性不适用于算力虚拟化场景，不支持共享设备特性及混插模式。特权容器需通过设备配置或ASCEND_VISIBLE_DEVICES环境变量显式挂载NPU才会被管理。
@@ -215,6 +215,11 @@ Container Manager在RestartRequest和RestartBusiness故障持续60秒，或者�
 
 Container Manager在感知到芯片处于RestartRequest、RestartBusiness、FreeRestartNPU和RestartNPU类型故障时，会按照命令run的启动参数“-ctrStrategy”配置的重启策略，进行容器停止与恢复。具体的容器停止与恢复的范围请参见[表2 Container Manager启动参数](../../05_developer_guide/00_installation_deployment/00_manual_installation/11_container-manager.md#参数说明)。
 
+按容器是否属于分布式任务，容器恢复分为普通容器恢复和分布式任务容器恢复：
+
+- 普通容器恢复：适用于未参与分布式任务的容器。由本节点的Container Manager单独完成容器停止与恢复，不涉及跨节点协调。
+- 分布式任务容器恢复：适用于任务包含多个容器，需要开启分布式协调，进行同步启停的场景。由Leader节点的Container Manager跨节点统一协调任务的启停，保证整个分布式任务的一致性恢复。支持分布式任务容器恢复时，需通过`-leaderIp`和`-leaderAddrs`等启动参数配置Leader节点和普通节点，详细说明参见[分布式任务容器恢复](#分布式任务恢复)。
+
 容器启停过程中，会发生状态变化：
 
 - 当容器正在停止时，容器状态为pausing。当容器状态为pausing，且状态持续时间超过30s时，通过status命令查询到的容器描述信息为"Container pause may fail. Please manually delete the container"。
@@ -228,3 +233,66 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
 >- 上述涉及到的容器启停过程中的容器状态，仅为Container Manager自定义，非容器运行时给出的官方定义。
 >- 在containerd场景下，如果容器的task不存在，则会停止失败。
 >- 容器恢复通过设备配置或ASCEND_VISIBLE_DEVICES环境变量识别NPU挂载，容器拉起时必须显式配置。
+
+### 普通容器恢复<a name="普通容器恢复"></a>
+
+未配置任务标识`huawei.com/job.id`，或`huawei.com/job.replica`配置为1的容器为普通容器。芯片故障后，本节点的Container Manager按照启动参数`-ctrStrategy`配置的策略以及普通容器label`huawei.com/job.enableRecover`配置的恢复开关，直接停止并恢复本节点上挂载故障芯片的普通容器。普通容器启停过程中的状态变化参见本文档[容器恢复](#ZH-CN_TOPIC_0000002486578214)。容器label的详细说明请参见[Container Manager任务信息](../../06_api/17_container-manager.md#section_cm_task_info)。
+
+### 分布式任务容器恢复<a name="分布式任务恢复"></a>
+
+分布式任务存在多个容器，分布在不同节点上，当其中某个节点上的芯片发生故障时，仅停止故障节点上的容器会导致整个分布式任务中断，因此需要跨节点统一协调任务的启停，保证整个分布式任务的一致性恢复。在无K8s场景下，该能力由Container Manager的分布式协调功能提供。
+
+**协调机制**
+
+- 集群中部署了Container Manager组件的节点被分为Leader节点和普通节点。Leader节点维护集群内所有节点的分布式任务容器信息，普通节点定期向Leader节点上报本节点的分布式任务容器信息（数据同步）。
+- 启用分布式协调需配置启动参数`-leaderAddrs`。Leader节点通过启动参数`-leaderIp`、`-leaderPort`启动gRPC服务。相关启动参数说明请参见[Container Manager启动参数](../../05_developer_guide/00_installation_deployment/00_manual_installation/11_container-manager.md#参数说明)。
+- 普通节点与每个非本机Leader节点之间维护常驻的gRPC广播流，连接断开后自动重连。集群最多可配置2个Leader节点，任一Leader节点故障后，普通节点可自动切换到其他Leader节点继续协调。
+- 容器可通过容器label标识其所属的分布式任务：`huawei.com/job.id`（任务标识）、`huawei.com/job.replica`（任务副本数）、`huawei.com/job.enableRecover`（是否参与恢复），各label的详细说明请参见[Container Manager任务信息](../../06_api/17_container-manager.md#section_cm_task_info)。
+
+**分布式任务容器启动方式**
+
+启动分布式任务容器时，需通过容器label声明任务属性，示例如下，示例中的image-name:tag为镜像名称与标签，containerID为容器ID。
+
+```shell
+# docker
+docker run -it -e ASCEND_VISIBLE_DEVICES=0 \
+  --label huawei.com/job.id=job-123 \
+  --label huawei.com/job.replica=2 \
+  --label huawei.com/job.enableRecover=true \
+  {image-name:tag} /bin/bash
+# containerd
+ctr run -t --env ASCEND_VISIBLE_DEVICES=0 \
+  --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime \
+  --label huawei.com/job.id=job-123 \
+  --label huawei.com/job.replica=2 \
+  --label huawei.com/job.enableRecover=true \
+  {image-name:tag} {containerID} bash
+```
+
+>[!NOTE]
+>
+>- 当`huawei.com/job.replica`配置为1时，该容器按普通容器对待，不参与分布式协调，不会向Leader节点发起协调请求。
+
+**故障停止流程**
+
+1. 节点感知到芯片故障后，将本节点上挂载故障芯片的分布式任务容器加入待停止列表，并向Leader节点发起停止（stop）协调请求。
+2. Leader节点校验该任务下所有容器的恢复开关均已开启，然后校验各节点上报的容器数量与任务副本数一致，校验通过后将停止请求通过广播流下发给该任务关联的所有节点（包括发起节点自身）。
+3. 各节点收到停止请求后，为其余容容器打上停止标识，并在本节点的故障处理周期中停止这些容器。
+4. 所有节点执行完成后，Leader节点汇总各节点执行结果并返回给发起节点。若任一节点执行失败，本次协调失败，发起节点将在下一个周期重试。
+若停止（stop）协调请求在全部Leader节点上均协调失败，则本次协调失败，本周期不停止任何容器（包括分布式任务容器和普通容器），发起节点将在下一个周期重试。
+
+**故障恢复启动流程**
+
+1. 故障芯片复位成功后，发起节点向Leader节点发起启动（start）协调请求。
+2. Leader节点校验该任务下所有容器均已停止，且启动发起节点与停止发起节点一致，校验通过后将启动请求通过广播流下发给该任务关联的所有节点。
+3. 各节点收到启动请求后，校验停止协调请求与启动协调请求为同一节点发起，然后清除停止标记，并在本节点的恢复周期中启动这些容器。
+4. 所有节点执行完成后，Leader节点汇总各节点执行结果并返回给发起节点。
+若启动（start）协调请求在全部Leader节点上均协调失败，则本次协调失败，本周期不启动需要协调的分布式任务容器，但普通容器仍会正常启动。
+
+>[!NOTE]
+>
+>- 任务容器的启停仍遵循启动参数`-ctrStrategy`配置的容器启停策略，当策略为never时，不进行容器启停，分布式协调不生效。
+>- 分布式协调依赖各节点之间的网络连通性，请确保各节点可以访问Leader节点的gRPC服务端口。
+>- 当节点为Leader节点（`-leaderIp`不为空）且`-leaderAddrs`中配置了本节点的监听地址时，该节点不会通过gRPC连接自身，协调请求使用本地调用方式处理。
+>- 分布式任务容器启停过程中涉及的状态变化与单机场景一致，请参见本文档[容器恢复](#ZH-CN_TOPIC_0000002486578214)。
+>- 分布式协调使用的gRPC接口说明请参见[Container Manager](../../06_api/17_container-manager.md)。
