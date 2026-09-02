@@ -47,17 +47,17 @@ const (
 
 	statusPodIPDownwardAPI = "status.podIP"
 
-	cmRetryTime               = 3
-	rankIndexPatchRetryTimes  = 3
-	rankIndexPatchRetrySleep  = 100 * time.Millisecond
-	configmapPrefix           = "rings-config-"
-	rankTableName    = "ranktable"
-	vcjobKind        = "Job"
-	vcjobLabelKey    = "volcano.sh/job-name"
-	deployKind       = "Deployment"
-	deployLabelKey   = "deploy-name"
-	configmapKey     = "hccl.json"
-	configmapVersion = "version"
+	cmRetryTime              = 3
+	rankIndexPatchRetryTimes = 3
+	rankIndexPatchRetrySleep = 100 * time.Millisecond
+	configmapPrefix          = "rings-config-"
+	rankTableName            = "ranktable"
+	vcjobKind                = "Job"
+	vcjobLabelKey            = "volcano.sh/job-name"
+	deployKind               = "Deployment"
+	deployLabelKey           = "deploy-name"
+	configmapKey             = "hccl.json"
+	configmapVersion         = "version"
 	// the status of mount chips for non-worker Pods
 	nonWorkerPodMountChipStatus = "nonWorkerPodMountChipStatus"
 )
@@ -162,4 +162,11 @@ const (
 	podGroupPendingReason        = "PodGroupPending"
 	syncServiceFailedReason      = "SyncServiceFailed"
 	podCreateFailedReason        = "PodCreateFailed"
+)
+
+const (
+	// DefaultAcjobScanInterval is the default scan interval for cleaning up completed job info (in seconds).
+	DefaultAcjobScanInterval = 300
+	// MaxAcjobScanInterval is the max scan interval for cleaning up completed job info (in seconds).
+	MaxAcjobScanInterval = 86400
 )

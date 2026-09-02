@@ -94,6 +94,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
     spec:
       schedulerName: volcano   # Ascend Operator启用“gang”调度时所选择的调度器
       runPolicy:
+        ttlSecondsAfterFinished: 30 # 作业完成后的TTL（生存时间）。
         schedulingPolicy:      # Ascend Operator启用“gang”调度生效且调度器为Volcano时，本字段才生效
           minAvailable: 1      # 任务运行总副本数
           queue: default
@@ -146,6 +147,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
     spec:
       schedulerName: volcano   # Ascend Operator启用“gang”调度时所选择的调度器
       runPolicy:
+        ttlSecondsAfterFinished: 30 # 作业完成后的TTL（生存时间）。
         schedulingPolicy:      # Ascend Operator启用“gang”调度生效且调度器为Volcano时，本字段才生效
           minAvailable: 2      # 任务运行总副本数
           queue: default
@@ -175,6 +177,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
     spec:
       schedulerName: volcano   # Ascend Operator启用“gang”调度时所选择的调度器
       runPolicy:
+        ttlSecondsAfterFinished: 30 # 作业完成后的TTL（生存时间）。
         schedulingPolicy:      # Ascend Operator启用“gang”调度生效且调度器为Volcano时，本字段才生效
           minAvailable: 2      # 任务运行总副本数
           queue: default
@@ -235,6 +238,7 @@ metadata:
 spec:
   schedulerName: volcano   # Ascend Operator启用“gang”调度时所选择的调度器
   runPolicy:
+    ttlSecondsAfterFinished: 30 # 作业完成后的TTL（生存时间）。
     schedulingPolicy:      # Ascend Operator启用“gang”调度生效时且调度器为Volcano时，本字段才生效
       minAvailable: 2      # 任务运行总副本数
       queue: default

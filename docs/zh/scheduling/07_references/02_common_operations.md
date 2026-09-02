@@ -52,6 +52,7 @@ Volcano组件支持K8s原生调度，可以使用nodeAffinity进行调度。以�
     spec:
       schedulerName: volcano
       runPolicy:
+        ttlSecondsAfterFinished: 30
         schedulingPolicy:
           minAvailable: 2
           queue: default

@@ -923,6 +923,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
         spec:
           schedulerName: volcano  # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
           runPolicy:
+            ttlSecondsAfterFinished: 30 # 作业完成后的TTL（生存时间）。
             schedulingPolicy:    # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
               minAvailable: 1     # 任务总副本数
               queue: default  # 任务所属队列
@@ -1305,6 +1306,7 @@ xx "xxx" deleted
    spec:
    schedulerName: volcano        # 使用其他调度器时，删除该字段
    runPolicy:                    # 使用其他调度器时，删除该字段
+     ttlSecondsAfterFinished: 30 # 作业完成后的TTL（生存时间）。
      schedulingPolicy:
        minAvailable: 1
        queue: default

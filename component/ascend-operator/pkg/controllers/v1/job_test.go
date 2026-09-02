@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
@@ -515,8 +516,8 @@ func TestHandleFinishedJob(t *testing.T) {
 			convey.So(err, convey.ShouldResemble, errors.New("delete pods and service failed"))
 		})
 		convey.Convey("02-clean up job failed, should return err", func() {
-			patch := gomonkey.ApplyMethod(new(common.JobController), "CleanupJob",
-				func(_ *common.JobController, _ *commonv1.RunPolicy, _ commonv1.JobStatus, _ interface{}) error {
+			patch := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "checkTTLAndCleanup",
+				func(_ *ASJobReconciler, _ *jobInfo) error {
 					return errors.New("clean up job failed")
 				})
 			defer patch.Reset()
@@ -865,4 +866,219 @@ func TestGetSubHealthyStrategy(t *testing.T) {
 			convey.So(result, convey.ShouldEqual, tc.expectedResult)
 		})
 	}
+}
+
+// TestTTLExpireTime tests the ttlExpireTime helper.
+func TestTTLExpireTime(t *testing.T) {
+	now := metav1.Now()
+	ttl := int32(10)
+	completionTime := metav1.NewTime(now.Add(-10 * time.Minute))
+
+	convey.Convey("ttlExpireTime", t, func() {
+		convey.Convey("01-runPolicy is nil, should return ok=false", func() {
+			_, ok := ttlExpireTime(nil, &commonv1.JobStatus{CompletionTime: &completionTime})
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+		convey.Convey("02-status is nil, should return ok=false", func() {
+			_, ok := ttlExpireTime(&commonv1.RunPolicy{TTLSecondsAfterFinished: &ttl}, nil)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+		convey.Convey("03-completionTime is nil, should return ok=false", func() {
+			_, ok := ttlExpireTime(&commonv1.RunPolicy{TTLSecondsAfterFinished: &ttl},
+				&commonv1.JobStatus{})
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+		convey.Convey("04-TTL not set, should return ok=false", func() {
+			_, ok := ttlExpireTime(&commonv1.RunPolicy{},
+				&commonv1.JobStatus{CompletionTime: &completionTime})
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+		convey.Convey("05-TTL is not positive, should return ok=false", func() {
+			nonPositiveTTL := int32(0)
+			_, ok := ttlExpireTime(&commonv1.RunPolicy{TTLSecondsAfterFinished: &nonPositiveTTL},
+				&commonv1.JobStatus{CompletionTime: &completionTime})
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+		convey.Convey("06-valid TTL, should return the expire time", func() {
+			expireTime, ok := ttlExpireTime(&commonv1.RunPolicy{TTLSecondsAfterFinished: &ttl},
+				&commonv1.JobStatus{CompletionTime: &completionTime})
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(expireTime, convey.ShouldResemble, completionTime.Add(10*time.Second))
+		})
+	})
+}
+
+// TestCheckTTLAndCleanup tests the checkTTLAndCleanup method.
+func TestCheckTTLAndCleanup(t *testing.T) {
+	rc := newCommonReconciler()
+	now := metav1.Now()
+	ttl := int32(10)
+	past := metav1.NewTime(now.Add(-time.Hour))
+	future := metav1.NewTime(now.Add(time.Hour))
+
+	const jobKey = "default/ascendjob-test"
+
+	newJI := func(completionTime *metav1.Time) *jobInfo {
+		return &jobInfo{
+			job:    newCommonAscendJob(),
+			jobKey: jobKey,
+			status: &commonv1.JobStatus{CompletionTime: completionTime},
+			runPolicy: &commonv1.RunPolicy{
+				TTLSecondsAfterFinished: &ttl,
+			},
+		}
+	}
+
+	loadRequeue := func() time.Duration {
+		value, ok := rc.ttlRequeues.Load(jobKey)
+		if !ok {
+			return 0
+		}
+		return value.(time.Duration)
+	}
+
+	convey.Convey("checkTTLAndCleanup", t, func() {
+		convey.Convey("01-nil jobInfo, should return no-op", func() {
+			rc.ttlRequeues.Delete(jobKey)
+			err := rc.checkTTLAndCleanup(nil)
+			convey.So(loadRequeue(), convey.ShouldEqual, 0)
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("02-TTL not set, should return no-op", func() {
+			rc.ttlRequeues.Delete(jobKey)
+			err := rc.checkTTLAndCleanup(&jobInfo{
+				job:       newCommonAscendJob(),
+				jobKey:    jobKey,
+				runPolicy: &commonv1.RunPolicy{},
+			})
+			convey.So(loadRequeue(), convey.ShouldEqual, 0)
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("03-completionTime is nil, should skip without error", func() {
+			rc.ttlRequeues.Delete(jobKey)
+			err := rc.checkTTLAndCleanup(newJI(nil))
+			convey.So(loadRequeue(), convey.ShouldEqual, 0)
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("04-TTL not expired yet, should requeue after remaining time", func() {
+			rc.ttlRequeues.Delete(jobKey)
+			err := rc.checkTTLAndCleanup(newJI(&future))
+			convey.So(loadRequeue(), convey.ShouldBeGreaterThan, 0)
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("05-TTL expired, should delete the job", func() {
+			rc.ttlRequeues.Delete(jobKey)
+			err := rc.checkTTLAndCleanup(newJI(&past))
+			convey.So(loadRequeue(), convey.ShouldEqual, 0)
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("06-TTL expired but delete failed, should return err", func() {
+			rc.ttlRequeues.Delete(jobKey)
+			patch := gomonkey.ApplyMethod(reflect.TypeOf(&fakeClient{}), "Delete",
+				func(_ *fakeClient, _ context.Context, _ client.Object, _ ...client.DeleteOption) error {
+					return errors.New("delete job failed")
+				})
+			defer patch.Reset()
+			err := rc.checkTTLAndCleanup(newJI(&past))
+			convey.So(err, convey.ShouldResemble, errors.New("delete job failed"))
+		})
+	})
+}
+
+// TestScanExpiredTTLJobs tests the scanExpiredTTLJobs backup scanner.
+func TestScanExpiredTTLJobs(t *testing.T) {
+	rc := newCommonReconciler()
+	ttl := int32(10)
+	now := metav1.Now()
+	expiredJob := &mindxdlv1.AscendJob{
+		ObjectMeta: metav1.ObjectMeta{Name: "expired", Namespace: "default"},
+		Spec: mindxdlv1.AscendJobSpec{
+			RunPolicy: commonv1.RunPolicy{TTLSecondsAfterFinished: &ttl},
+		},
+		Status: commonv1.JobStatus{
+			Conditions: []commonv1.JobCondition{{
+				Type:   commonv1.JobSucceeded,
+				Status: corev1.ConditionTrue,
+			}},
+			CompletionTime: &metav1.Time{Time: now.Add(-time.Hour)},
+		},
+	}
+	notExpiredJob := &mindxdlv1.AscendJob{
+		ObjectMeta: metav1.ObjectMeta{Name: "not-expired", Namespace: "default"},
+		Spec: mindxdlv1.AscendJobSpec{
+			RunPolicy: commonv1.RunPolicy{TTLSecondsAfterFinished: &ttl},
+		},
+		Status: commonv1.JobStatus{
+			Conditions: []commonv1.JobCondition{{
+				Type:   commonv1.JobSucceeded,
+				Status: corev1.ConditionTrue,
+			}},
+			CompletionTime: &metav1.Time{Time: now.Add(time.Hour)},
+		},
+	}
+	unfinishedJob := &mindxdlv1.AscendJob{
+		ObjectMeta: metav1.ObjectMeta{Name: "unfinished", Namespace: "default"},
+		Spec: mindxdlv1.AscendJobSpec{
+			RunPolicy: commonv1.RunPolicy{TTLSecondsAfterFinished: &ttl},
+		},
+		Status: commonv1.JobStatus{
+			Conditions: []commonv1.JobCondition{{
+				Type:   commonv1.JobRunning,
+				Status: corev1.ConditionTrue,
+			}},
+			CompletionTime: &metav1.Time{Time: now.Add(-time.Hour)},
+		},
+	}
+
+	listPatch := func(items []mindxdlv1.AscendJob) *gomonkey.Patches {
+		return gomonkey.ApplyMethod(reflect.TypeOf(&fakeClient{}), "List",
+			func(_ *fakeClient, _ context.Context, list client.ObjectList, _ ...client.ListOption) error {
+				if l, ok := list.(*mindxdlv1.AscendJobList); ok {
+					l.Items = items
+				}
+				return nil
+			})
+	}
+	deletePatch := func(deleted *bool) *gomonkey.Patches {
+		return gomonkey.ApplyMethod(reflect.TypeOf(&fakeClient{}), "Delete",
+			func(_ *fakeClient, _ context.Context, _ client.Object, _ ...client.DeleteOption) error {
+				*deleted = true
+				return nil
+			})
+	}
+
+	convey.Convey("scanExpiredTTLJobs", t, func() {
+		convey.Convey("01-empty list, should do nothing", func() {
+			patch := listPatch(nil)
+			defer patch.Reset()
+			rc.scanExpiredTTLJobs(context.Background())
+		})
+		convey.Convey("02-list contains expired job, should delete it", func() {
+			deleted := false
+			patch1 := listPatch([]mindxdlv1.AscendJob{*expiredJob})
+			defer patch1.Reset()
+			patch2 := deletePatch(&deleted)
+			defer patch2.Reset()
+			rc.scanExpiredTTLJobs(context.Background())
+			convey.So(deleted, convey.ShouldBeTrue)
+		})
+		convey.Convey("03-list contains not expired job, should not delete", func() {
+			deleted := false
+			patch1 := listPatch([]mindxdlv1.AscendJob{*notExpiredJob})
+			defer patch1.Reset()
+			patch2 := deletePatch(&deleted)
+			defer patch2.Reset()
+			rc.scanExpiredTTLJobs(context.Background())
+			convey.So(deleted, convey.ShouldBeFalse)
+		})
+		convey.Convey("04-list contains unfinished job, should not delete", func() {
+			deleted := false
+			patch1 := listPatch([]mindxdlv1.AscendJob{*unfinishedJob})
+			defer patch1.Reset()
+			patch2 := deletePatch(&deleted)
+			defer patch2.Reset()
+			rc.scanExpiredTTLJobs(context.Background())
+			convey.So(deleted, convey.ShouldBeFalse)
+		})
+	})
 }

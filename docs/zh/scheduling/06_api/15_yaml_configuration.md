@@ -50,7 +50,7 @@
 |spec.runPolicy.backoffLimit|整数 (integer)|int32|作业失败前允许的重试次数（可选）。<ul><li>0 &lt; backoffLimit：任务重调度次数。任务故障时，可以重调度的次数，当已经重调度次数与backoffLimit取值相同时，任务将不再进行重调度。</li><li>无（无backoffLimit）或backoffLimit ≤ 0：不限制总重调度次数。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>同时配置了backoffLimit和fault-retry-times参数时，当已经重调度次数与backoffLimit或fault-retry-times取值有一个相同时，将不再进行重调度。</p><p>若不配置backoffLimit，但是配置了fault-retry-times参数，则使用fault-retry-times的重调度次数。</p></div></div>|
 |spec.runPolicy.activeDeadlineSeconds|整数 (integer)|int64|作业保持活动的最长时间（秒），值必须为正整数。当前无意义，后续版本将会删除。|
 |spec.runPolicy.cleanPodPolicy|字符串 (string)|-|作业完成后清理Pod的策略。默认值为Running。当前无意义，后续版本将会删除。|
-|spec.runPolicy.ttlSecondsAfterFinished|整数 (integer)|int32|作业完成后的TTL（生存时间）。默认为无限，实际删除可能延迟。当前无意义，后续版本将会删除。|
+|spec.runPolicy.ttlSecondsAfterFinished|整数 (integer)|int32|作业完成后的TTL（生存时间），未设置或设置为0，则不会被自动删除。|
 |spec.runPolicy.schedulingPolicy|对象 (object)|-|调度策略（如gang-scheduling）。|
 |spec.runPolicy.schedulingPolicy.minAvailable|整数 (integer)|int32|最小可用资源数，默认值为任务总副本数。Ascend Operator启用"gang"调度生效，且调度器为Volcano时，任务运行总副本数。|
 |spec.runPolicy.schedulingPolicy.minResources|对象 (object)|-|按资源名称分配的最小资源集合（支持整数或字符串格式）。|

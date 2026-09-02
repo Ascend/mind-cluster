@@ -303,6 +303,7 @@ metadata:
 spec:
   schedulerName: volcano  # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
   runPolicy:
+    ttlSecondsAfterFinished: 30 # 作业完成后的TTL（生存时间）。
     schedulingPolicy:    # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
       minAvailable: 8     # 任务总副本数
       queue: default  # 任务所属队列

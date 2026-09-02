@@ -25,6 +25,7 @@ metadata:
 spec:
   schedulerName: volcano   # work when enableGangScheduling is true
   runPolicy:
+    ttlSecondsAfterFinished: 30 # 作业完成后的TTL（生存时间）。
     schedulingPolicy:      # work when enableGangScheduling is true
       minAvailable: 2
       queue: default

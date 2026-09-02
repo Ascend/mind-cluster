@@ -42,6 +42,7 @@ metadata:
 spec:
   schedulerName: volcano   # Ascend Operator启用“gang”调度时所选择的调度器
   runPolicy:
+    ttlSecondsAfterFinished: 30 # 作业完成后的TTL（生存时间）。
     schedulingPolicy:      # Ascend Operator启用“gang”调度生效，且调度器为Volcano时，本字段才生效
       minAvailable: 2      # 任务运行总副本数
       queue: default
@@ -148,6 +149,7 @@ metadata:
 spec:
   schedulerName: volcano   # Ascend Operator启用“gang”调度时所选择的调度器
   runPolicy:
+    ttlSecondsAfterFinished: 30 # 作业完成后的TTL（生存时间）。
     schedulingPolicy:      # Ascend Operator启用“gang”调度生效，且调度器为Volcano时，本字段才生效
       <strong>minAvailable: 2      # 任务运行总副本数</strong>
       queue: default
