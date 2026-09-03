@@ -48,9 +48,4 @@ const (
 	TaskSpecAnno = "volcano.sh/task-spec"
 	// SchedulerType the type of Scheduler for mindspore
 	SchedulerType string = "scheduler"
-
-	// SkipAscendPluginAnno if the annotation value is enabled, will skip the ascend plugin
-	SkipAscendPluginAnno = "huawei.com/skip-ascend-plugin"
-	// SkipEnabled is the value of SkipAscendPluginAnno, skip the ascend plugin
-	SkipEnabled = "enabled"
 )

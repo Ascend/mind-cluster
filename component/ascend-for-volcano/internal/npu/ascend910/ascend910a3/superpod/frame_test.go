@@ -95,12 +95,11 @@ func buildTestCheckTaskNPU() []checkTestNPUCase {
 			wantPass: true,
 		},
 		{
-			name: "02 Invalid task with zero NPUs but no special annotations",
+			name: "02 Valid task with zero NPUs and no annotations",
 			tasks: map[api.TaskID]util.NPUTask{
 				"task1": {ReqNPUNum: 0, Annotation: map[string]string{}},
 			},
-			wantPass:   false,
-			wantErrMsg: "expected: distributed super-pod job require npu(0) should be equal to node npu(16), actual: task<> req npu: 0, ",
+			wantPass: true,
 		},
 		{
 			name: "03 Mixed valid and invalid tasks",
@@ -113,12 +112,19 @@ func buildTestCheckTaskNPU() []checkTestNPUCase {
 				"actual: task<task2> req npu: 8, ",
 		},
 		{
-			name: "04 Task with 0 NPUs and both annotations should pass",
+			name: "04 Task with 0 NPUs and scheduler annotation should pass",
 			tasks: map[api.TaskID]util.NPUTask{
 				"task1": {ReqNPUNum: 0, Annotation: map[string]string{
-					ascend910a3.TaskSpecAnno:         ascend910a3.SchedulerType,
-					ascend910a3.SkipAscendPluginAnno: ascend910a3.SkipEnabled,
+					ascend910a3.TaskSpecAnno: ascend910a3.SchedulerType,
 				}},
+			},
+			wantPass: true,
+		},
+		{
+			name: "05 Mixed full-node task and zero-NPU task without annotations should pass",
+			tasks: map[api.TaskID]util.NPUTask{
+				"task1": {ReqNPUNum: 16, TaskSpecKey: "task1"},
+				"task2": {ReqNPUNum: 0, TaskSpecKey: "task2"},
 			},
 			wantPass: true,
 		},

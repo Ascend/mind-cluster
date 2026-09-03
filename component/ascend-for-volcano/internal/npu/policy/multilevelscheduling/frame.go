@@ -55,10 +55,8 @@ func New(name string) base.AscendHandler {
 
 // ValidNPUJob verify the validity of job parameters
 func (mh *MultilevelHandler) ValidNPUJob() *api.ValidateResult {
-	res := mh.checkTaskNPU()
-	if res != nil {
-		return res
-	}
+	// non-NPU task (requests 0 npu) is valid without any annotation,
+	// so only the multilevel topology needs to be validated here.
 	return mh.checkLevels()
 }
 
@@ -73,25 +71,6 @@ func (mh *MultilevelHandler) checkLevels() *api.ValidateResult {
 		}
 	}
 	mh.taskLevels = taskLevels
-	return nil
-}
-
-// checkTaskNPU check the distributed job require npu num must equal node npu num
-func (mh *MultilevelHandler) checkTaskNPU() *api.ValidateResult {
-	for _, task := range mh.Tasks {
-		if task.ReqNPUNum != 0 {
-			continue
-		}
-		if task.ReqNPUNum == 0 && (task.Annotation[util.TaskSpecAnno] == util.SchedulerType ||
-			task.Annotation[util.SkipAscendPluginAnno] == util.SkipEnabled) {
-			continue
-		}
-		return &api.ValidateResult{
-			Pass:    false,
-			Reason:  jobCheckFailedReason,
-			Message: fmt.Sprintf("distributed job require full node npu, instead of %d", task.ReqNPUNum),
-		}
-	}
 	return nil
 }
 

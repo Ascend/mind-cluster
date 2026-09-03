@@ -354,6 +354,8 @@
 <tr id="row16233175083617"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p5523142033819"><a name="p5523142033819"></a><a name="p5523142033819"></a>huawei.com/skip-ascend-plugin</p>
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>允许一些特殊任务（如不需要NPU资源的任务）绕过 Ascend-for-volcano的默认检查逻辑。</p>
+<div class="note" id="note_skip_ascend_plugin"><a name="note_skip_ascend_plugin"></a><a name="note_skip_ascend_plugin"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p_skip_ascend_plugin"><a name="p_skip_ascend_plugin"></a><a name="p_skip_ascend_plugin"></a>本参数将日落，后续非NPU Pod不配置本参数也可正常调度。</p>
+</div></div>
 </td>
 <td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>不设置或者设置为"enabled"</p>
 </td>

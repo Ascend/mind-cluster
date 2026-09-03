@@ -236,10 +236,6 @@ const (
 	TaskSpecAnno = "volcano.sh/task-spec"
 	// SchedulerType the type of Scheduler for mindspore
 	SchedulerType = "scheduler"
-	// SkipAscendPluginAnno if the annotation value is enabled, will skip the ascend plugin
-	SkipAscendPluginAnno = "huawei.com/skip-ascend-plugin"
-	// SkipEnabled is the value of SkipAscendPluginAnno, skip the ascend plugin
-	SkipEnabled = "enabled"
 	// PodTypeKey pod type annotation key used to identify backup pods in hot-switch
 	PodTypeKey = "podType"
 	// PodTypeBackup pod type value for backup pods in hot-switch
