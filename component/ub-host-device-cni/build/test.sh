@@ -53,11 +53,11 @@ function execute_test() {
   coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
                                         else print ($1 == int($1)) ? int($1) : int($1)}')
 
-  if [[ $coverage -ge 8 ]]; then
+  if [[ $coverage -ge 80 ]]; then
     echo "coverage passed: $coverage%"
     exit 0
   else
-    echo "coverage failed: $coverage%, it needs to be greater than 8%."
+    echo "coverage failed: $coverage%, it needs to be greater than 80%."
     exit 1
   fi
 }
