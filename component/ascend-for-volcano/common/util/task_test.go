@@ -593,3 +593,52 @@ func TestGetVTaskUsePhysicsNamesByInfo(t *testing.T) {
 		})
 	}
 }
+
+func TestGetNPURequestFromTask(t *testing.T) {
+	tests := []struct {
+		name     string
+		task     *api.TaskInfo
+		wantName string
+		wantNum  int
+	}{
+		{
+			name: "nil task",
+			task: nil,
+		},
+		{
+			name: "nil resreq",
+			task: &api.TaskInfo{},
+		},
+		{
+			name: "910 request of 6",
+			task: &api.TaskInfo{Resreq: &api.Resource{ScalarResources: map[v1.ResourceName]float64{
+				v1.ResourceName(HwPreName + Ascend910): 6000,
+			}}},
+			wantName: HwPreName + Ascend910,
+			wantNum:  6,
+		},
+		{
+			name: "fraction floors to whole npus",
+			task: &api.TaskInfo{Resreq: &api.Resource{ScalarResources: map[v1.ResourceName]float64{
+				v1.ResourceName(HwPreName + Ascend910): 6500,
+			}}},
+			wantName: HwPreName + Ascend910,
+			wantNum:  6,
+		},
+		{
+			name: "non-npu key ignored",
+			task: &api.TaskInfo{Resreq: &api.Resource{ScalarResources: map[v1.ResourceName]float64{
+				v1.ResourceName("cpu"): 4,
+			}}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotName, gotNum := GetNPURequestFromTask(tt.task)
+			if gotName != tt.wantName || gotNum != tt.wantNum {
+				t.Errorf("GetNPURequestFromTask() = (%q, %d), want (%q, %d)",
+					gotName, gotNum, tt.wantName, tt.wantNum)
+			}
+		})
+	}
+}

@@ -1950,3 +1950,28 @@ func TestSetParameterPlaneUnhealthyTolerance(t *testing.T) {
 		})
 	}
 }
+
+func TestSetScheduleMode(t *testing.T) {
+	tests := []struct {
+		name string
+		ann  map[string]string
+		want util.ScheduleMode
+	}{
+		{"absent annotation defaults soft", map[string]string{}, util.SoftScheduleMode},
+		{"hard", map[string]string{util.ScheduleModeAnnoKey: "hard"}, util.HardScheduleMode},
+		{"soft explicit", map[string]string{util.ScheduleModeAnnoKey: "soft"}, util.SoftScheduleMode},
+		{"invalid value defaults soft", map[string]string{util.ScheduleModeAnnoKey: "weird"}, util.SoftScheduleMode},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			job := &SchedulerJob{SchedulerJobAttr: util.SchedulerJobAttr{
+				NPUJob: &util.NPUJob{},
+				ComJob: util.ComJob{Annotation: tt.ann},
+			}}
+			job.setScheduleMode()
+			if job.ScheduleMode != tt.want {
+				t.Errorf("setScheduleMode() = %q, want %q", job.ScheduleMode, tt.want)
+			}
+		})
+	}
+}

@@ -1497,3 +1497,42 @@ func TestGetNodeAnnotation_Util(t *testing.T) {
 		convey.So(val, convey.ShouldEqual, utilLabelValue1)
 	})
 }
+
+func TestParseDevList(t *testing.T) {
+	tests := []struct {
+		name   string
+		devStr string
+		prefix string
+		want   map[int]struct{}
+	}{
+		{
+			name: "empty string",
+			want: map[int]struct{}{},
+		},
+		{
+			name:   "plain comma separated",
+			devStr: "0,1,2",
+			prefix: "Ascend910-",
+			want:   map[int]struct{}{0: {}, 1: {}, 2: {}},
+		},
+		{
+			name:   "spaces around ids trimmed",
+			devStr: " 1 , 3 ",
+			prefix: "Ascend910-",
+			want:   map[int]struct{}{1: {}, 3: {}},
+		},
+		{
+			name:   "prefixed names",
+			devStr: "Ascend910-0,Ascend910-4",
+			prefix: "Ascend910-",
+			want:   map[int]struct{}{0: {}, 4: {}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ParseDevList(tt.devStr, tt.prefix); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ParseDevList(%q, %q) = %v, want %v", tt.devStr, tt.prefix, got, tt.want)
+			}
+		})
+	}
+}

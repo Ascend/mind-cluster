@@ -23,6 +23,7 @@ import (
 	"reflect"
 	"testing"
 	"time"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/affinity/chip/topo"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -617,4 +618,116 @@ func TestUpdateNPUNodeDpuInfos(t *testing.T) {
 			t.Errorf("updateNPUNodeDpuInfos() should set dpu info key")
 		}
 	})
+}
+
+const nested16TopoAnno = "[[[0,1],[2,3],[4,5],[6,7]],[[8,9],[10,11],[12,13],[14,15]]]"
+
+func TestGetNPUCapacity(t *testing.T) {
+	node910 := &api.NodeInfo{
+		Capacity: &api.Resource{ScalarResources: map[v1.ResourceName]float64{
+			v1.ResourceName(util.HwPreName + util.Ascend910): 8000,
+		}},
+	}
+	if got := getNPUCapacity(node910); got != 8 {
+		t.Errorf("getNPUCapacity(910) = %d, want 8", got)
+	}
+
+	nodeElastic := &api.NodeInfo{
+		Capacity: &api.Resource{ScalarResources: map[v1.ResourceName]float64{
+			v1.ResourceName(util.NPUCardName): 4000,
+		}},
+	}
+	if got := getNPUCapacity(nodeElastic); got != 4 {
+		t.Errorf("getNPUCapacity(elastic) = %d, want 4", got)
+	}
+
+	nodeEmpty := &api.NodeInfo{Capacity: &api.Resource{}}
+	if got := getNPUCapacity(nodeEmpty); got != 0 {
+		t.Errorf("getNPUCapacity(empty) = %d, want 0", got)
+	}
+}
+
+func TestCardAnnoNpuPre(t *testing.T) {
+	tests := []struct {
+		key     string
+		wantPre string
+		wantOK  bool
+	}{
+		{"huawei.com/Ascend910-Unhealthy", util.NPU910CardNamePre, true},
+		{"huawei.com/Ascend910b-NetworkUnhealthy", util.NPU910CardNamePre, true},
+		{"huawei.com/Ascend310P-Unhealthy", util.NPU310PCardNamePre, true},
+		{"huawei.com/Ascend310-NetworkUnhealthy", util.NPU310CardNamePre, true},
+		{"huawei.com/npu-Unhealthy", util.NPUCardNamePre, true},
+		{"huawei.com/unknown-key", "", false},
+		{"totally-unrelated", "", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.key, func(t *testing.T) {
+			pre, ok := cardAnnoNpuPre(tt.key)
+			if pre != tt.wantPre || ok != tt.wantOK {
+				t.Errorf("cardAnnoNpuPre(%q) = (%q, %v), want (%q, %v)", tt.key, pre, ok, tt.wantPre, tt.wantOK)
+			}
+		})
+	}
+}
+
+func TestChipTopoOversize(t *testing.T) {
+	// nested16 topo's max chip id is 15: a node owning card 16 is abnormal
+	root := topo.ParseTopology(nested16TopoAnno)
+	n := &NPUNode{CommonNode: CommonNode{Name: "n", ChipTopo: root}}
+	if !n.chipTopoOversize(16) {
+		t.Error("chipTopoOversize(16) should be true with max id 15")
+	}
+	if n.chipTopoOversize(15) {
+		t.Error("chipTopoOversize(15) should be false with max id 15")
+	}
+	if n.chipTopoOversize(0) {
+		t.Error("chipTopoOversize(0) should be false with max id 15")
+	}
+}
+
+func TestParseChipTopology(t *testing.T) {
+	// no topology annotation and no capacity -> BuildFlatTopology(0)="" ->
+	// ParseTopology returns nil -> ChipTopo stays nil, method must not panic.
+	n := &NPUNode{CommonNode: CommonNode{Name: "n", Annotation: map[string]string{}}}
+	n.ParseChipTopology(&api.NodeInfo{Capacity: &api.Resource{}})
+	if n.ChipTopo != nil {
+		t.Errorf("no-annotation ParseChipTopology should leave ChipTopo nil, got %v", n.ChipTopo)
+	}
+
+	// explicit topo annotation -> real tree built, Raw preserved
+	n2 := &NPUNode{CommonNode: CommonNode{Name: "n", Annotation: map[string]string{
+		util.TopologyAnnoKey: nested16TopoAnno,
+	}}}
+	n2.ParseChipTopology(&api.NodeInfo{Capacity: &api.Resource{}})
+	if n2.ChipTopo == nil {
+		t.Fatal("explicit topo annotation should build a tree")
+	}
+	if n2.ChipTopo.Raw != nested16TopoAnno {
+		t.Errorf("Raw = %q, want %q", n2.ChipTopo.Raw, nested16TopoAnno)
+	}
+	if got := n2.ChipTopo.MaxChipID(); got != 15 {
+		t.Errorf("MaxChipID = %d, want 15", got)
+	}
+}
+
+func TestParseChipTopologyCarvesFaults(t *testing.T) {
+	// faulty-annotation cards (0,1) are excluded from the built tree's usable
+	// pool, which the subsequent scheduling reads through SelectChips.
+	n := &NPUNode{CommonNode: CommonNode{
+		Name: "n",
+		Annotation: map[string]string{
+			util.TopologyAnnoKey: topo.BuildFlatTopology(8),
+			util.HwPreName + util.Ascend910 + util.NPUUnhealthySuffix: "Ascend910-0,Ascend910-1",
+		},
+	}}
+	n.ParseChipTopology(&api.NodeInfo{Capacity: &api.Resource{}})
+	if n.ChipTopo == nil {
+		t.Fatal("ParseChipTopology should build a tree")
+	}
+	got := n.ChipTopo.SelectChips(&util.Request{ReqNPUNum: 6, Mode: util.SoftScheduleMode})
+	want := []int{2, 3, 4, 5, 6, 7}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("selection with faulty 0,1 = %v, want %v", got, want)
+	}
 }
