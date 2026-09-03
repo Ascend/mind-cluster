@@ -1,0 +1,36 @@
+FROM ubuntu:22.04 AS build
+
+ARG VERSION=26.2.0
+ARG TARGETPLATFORM
+
+RUN apt update && apt install -y wget unzip &&\
+    apt-get clean &&\
+    rm -rf /var/lib/apt/lists/* &&\
+    rm -rf /var/tmp/* &&\
+    rm -rf /tmp/* &&\
+    ARCH=$(case "${TARGETPLATFORM}" in \
+        "linux/amd64") echo "x86_64" ;; \
+        "linux/arm64") echo "aarch64" ;; \
+        *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+    esac) &&\
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-ascend-dynamic-resource-allocation_${VERSION}_linux-${ARCH}.zip &&\
+    unzip Ascend-mindxdl-ascend-dynamic-resource-allocation_${VERSION}_linux-${ARCH}.zip -d /build
+
+FROM ubuntu:22.04
+
+RUN groupadd -g 1000 HwHiAiUser && useradd -u 1000 -g HwHiAiUser -d /home/HwHiAiUser -m HwHiAiUser &&\
+    usermod root -s /usr/sbin/nologin
+
+ENV LD_LIBRARY_PATH /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common
+
+COPY --from=build /build/ascend-dra /usr/local/bin/
+COPY --from=build /build/agreement.txt /usr/local/
+
+RUN chmod 550 /usr/local/bin/ascend-dra &&\
+    chmod 550 /usr/local/bin &&\
+    chmod 440 /usr/local/agreement.txt &&\
+    chmod 750 /home/HwHiAiUser &&\
+    echo 'umask 027' >> /etc/profile &&\
+    echo 'source /etc/profile' >> ~/.bashrc
+
+ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /bin/bash"]

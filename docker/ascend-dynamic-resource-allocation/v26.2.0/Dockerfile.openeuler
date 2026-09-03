@@ -1,0 +1,55 @@
+FROM openeuler/openeuler:24.03-lts AS build
+
+ARG VERSION=26.2.0
+ARG TARGETPLATFORM
+
+RUN yum update -y && \
+    yum install -y wget unzip && \
+    yum clean all && rm -rf /var/cache/yum /tmp/* && \
+    mkdir -p /build && rm -rf /build/* && \
+    ARCH=$(case "${TARGETPLATFORM}" in \
+        "linux/amd64") echo "x86_64" ;; \
+        "linux/arm64") echo "aarch64" ;; \
+        *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+    esac) && \
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-ascend-dynamic-resource-allocation_${VERSION}_linux-${ARCH}.zip && \
+    unzip -o Ascend-mindxdl-ascend-dynamic-resource-allocation_${VERSION}_linux-${ARCH}.zip -d /build && \
+    wget https://mirrors.huaweicloud.com/ascend/archive/rpm/unifiedbus/common/umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz && \
+    cp umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz /build
+
+FROM openeuler/openeuler:24.03-lts
+
+ARG TARGETPLATFORM
+ARG UMDK_PKG=umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz
+
+COPY --from=build /build/${UMDK_PKG} /tmp/${UMDK_PKG}
+
+RUN yum install -y shadow-utils libnl3 libnl3-devel ca-certificates bash glibc sqlite-devel gcc gcc-c++ make cmake git  jq curl numactl-devel && \
+    yum clean all && rm -rf /var/cache/yum && \
+    if [ "${TARGETPLATFORM}" = "linux/arm64" ] && [ -n "${UMDK_PKG}" ] && [ -f "/tmp/${UMDK_PKG}" ]; then \
+        echo "INFO: Install umdk from /tmp/${UMDK_PKG}"; \
+        mkdir -p /tmp/umdk_pkgs; \
+        tar -mzxf "/tmp/${UMDK_PKG}" -C /tmp/umdk_pkgs; \
+        rpm -ivh /tmp/umdk_pkgs/*.rpm; \
+    elif [ "${TARGETPLATFORM}" = "linux/amd64" ]; then \
+        echo "INFO: amd64 platform skip local umdk rpm install"; \
+    else \
+        echo "WARN: umdk package not supported in platform ${TARGETPLATFORM}"; \
+    fi && \
+    rm -rf /tmp/* && \
+    groupadd -g 1000 HwHiAiUser && useradd -u 1000 -g HwHiAiUser -d /home/HwHiAiUser -m HwHiAiUser && \
+    usermod root -s /bin/false
+
+ENV LD_LIBRARY_PATH /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common
+
+COPY --from=build /build/ascend-dra /usr/local/bin/
+COPY --from=build /build/agreement.txt /usr/local/
+
+RUN chmod 550 /usr/local/bin/ascend-dra && \
+    chmod 550 /usr/local/bin && \
+    chmod 440 /usr/local/agreement.txt && \
+    chmod 750 /home/HwHiAiUser && \
+    echo 'umask 027' >> /etc/profile && \
+    echo 'source /etc/profile' >> ~/.bashrc
+
+ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /bin/bash"]
