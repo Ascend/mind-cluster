@@ -22,19 +22,22 @@ K8s RDMA 共享设备插件是一个 Kubernetes 设备插件，用于以共享�
 
 ### 功能特性
 
-- 管理 Kubernetes 节点上的 RDMA 设备
+- 管理 Kubernetes 节点上的 RDMA 设备，支持 UB 设备类型
 - 支持多个容器之间的设备共享
-- 支持基于供应商、设备 ID、驱动程序和接口名称的设备选择
+- 支持基于总线（buses）、供应商、设备 ID、驱动程序和接口名称的设备选择
+- 支持共享与独占两种工作模式，独占模式下按 NPU 与 DPU 的映射关系分配设备
 - 与 Kubernetes 设备插件框架集成
-- 支持容器设备接口（CDI）
-- 支持 UB 设备故障检测
+- 支持 UB 设备故障检测，并将故障信息写入 ConfigMap
+- 向节点写入 DPU 资源注解，向 Pod 写入设备状态注解
 
 ### 上下游依赖
 
 1. 检测计算节点上的 RDMA 设备，并执行周期性故障检测
 2. 向 Kubernetes kubelet 设备插件框架注册
 3. 向 Kubernetes 调度器报告设备可用性
-4. 以 configMap 形式向 Kubernetes 写入故障检测信息
+4. 以 ConfigMap 形式向 Kubernetes 写入故障检测信息
+5. 向节点写入 DPU 资源注解 `huawei.com/dpu.resource.name`
+6. 独占模式下按 NPU 与 DPU 的映射关系为 Pod 分配设备，并将结果写入 `k8s.v1.cni.cncf.io/device-status` 注解供 Multus CNI 使用
 
 ---
 
@@ -86,7 +89,7 @@ K8s RDMA 共享设备插件是一个 Kubernetes 设备插件，用于以共享�
 
 1. 获取对应架构的 Dockerfile
 
-   前往支持的 Tags 及 Dockerfile 链接章节，打开目标版本对应的 Dockerfile.ubuntu 链接，保存文件至 aarch64 架构环境的本地目录。
+   前往支持的 Tags 及 Dockerfile 链接章节（如 [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.1.0/Dockerfile.ubuntu)），打开目标版本对应的 Dockerfile.ubuntu 链接，保存文件至 aarch64 架构环境的本地目录。
 
 2. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
 
@@ -94,8 +97,9 @@ K8s RDMA 共享设备插件是一个 Kubernetes 设备插件，用于以共享�
    docker build --no-cache -t k8s-rdma-shared-dev-plugin:v26.1.0 ./ -f Dockerfile.ubuntu
    ```
 
-> **重要注意事项**
-> 若 Docker 版本低于 18.09，或未手动开启 BuildKit，构建镜像时将无法读取 TARGETPLATFORM 变量，会造成镜像构建失败。
+> [!NOTE]
+>
+>若 Docker 版本低于 18.09，或未手动开启 BuildKit，构建镜像时将无法读取 TARGETPLATFORM 变量，会造成镜像构建失败。
 >
 > 1. TARGETPLATFORM 为 Docker BuildKit 内置全局变量，用于识别当前构建目标平台，示例：linux/amd64、linux/arm64。
 > 2. 该变量仅在 BuildKit 启用后自动注入；老旧 Docker 环境、默认关闭 BuildKit 的环境无法使用此参数。
@@ -139,29 +143,71 @@ K8s RDMA 共享设备插件是一个 Kubernetes 设备插件，用于以共享�
 
 ## 配置说明
 
+### 启动参数
+
+K8s RDMA 共享设备插件支持以下启动参数：
+
+| 参数                | 描述                                              | 默认值                                                              |
+|-------------------|-------------------------------------------------|------------------------------------------------------------------|
+| `--config-file`   | 配置文件路径                                          | `/k8s-rdma-shared-dev-plugin/config.json`                        |
+| `--use-cdi`       | 使用 CDI 将设备暴露到容器中（UB 设备不支持 CDI）                  | `false`                                                           |
+| `--ub-excl-mode`  | 开启 UB 设备独占模式（默认共享模式）                            | `false`                                                           |
+| `--logLevel`      | 日志级别，`-1` 调试、`0` 信息、`1` 警告、`2` 错误、`3` 严重     | `0`                                                               |
+| `--maxBackups`    | 备份日志文件的最大数量，范围 `(0, 180]`                       | `3`                                                               |
+| `--maxAge`        | 备份日志文件的保留天数，范围 `[7, 700]`                      | `7`                                                               |
+| `--logFile`       | 日志文件路径，文件大小超过 20MB 时自动轮转                         | `/var/log/mindx-dl/k8s-rdma-shared-dp/k8s-rdma-shared-dp.log`    |
+| `--version`/`-v`  | 显示应用版本信息                                        | -                                                                |
+
+### 配置文件参数
+
 K8s RDMA 共享设备插件支持以下配置参数：
 
-| 参数                       | 类型     | 描述                              | 默认值        |
-|--------------------------|--------|---------------------------------|------------|
-| `periodicUpdateInterval` | int    | 定期设备更新间隔（秒）                     | 0（禁用）      |
-| `faultDetectPeriod`      | int    | 定期故障检测间隔（秒）                     | 5（最小配置为1）  |
-| `configList`             | array  | 设备配置列表                          | []         |
-| `resourceName`           | string | 设备插件的资源名称                       | rdma       |
-| `resourcePrefix`         | string | 资源前缀                            | huawei.com |
-| `rdmaHcaMax`             | int    | RDMA HCA 设备的最大数量                | 1000       |
-| `devices`                | array  | 要包含的设备名称列表                      | []         |
-| `selectors.buses`        | array  | 用于过滤设备的总线类型（例如，"ub" 用于启用 UB 设备） | []         |
-| `selectors.vendors`      | array  | 用于过滤设备的供应商 ID                   | []         |
-| `selectors.deviceIDs`    | array  | 用于过滤设备的设备 ID                    | []         |
-| `selectors.drivers`      | array  | 用于过滤设备的驱动程序名称                   | []         |
-| `selectors.ifNames`      | array  | 用于过滤设备的接口名称                     | []         |
-| `selectors.linkTypes`    | array  | 用于过滤设备的链路类型                     | []         |
+| 参数                       | 类型     | 描述                                  | 默认值                  |
+|--------------------------|--------|-------------------------------------|----------------------|
+| `periodicUpdateInterval` | int    | 定期设备更新间隔（秒），未配置时默认 60 秒，设置为 0 时禁用 | 60                   |
+| `faultDetectPeriod`      | int    | 定期故障检测间隔（秒），未配置时禁用故障检测，配置时最小为 1   | 0（禁用）               |
+| `configList`             | array  | 设备配置列表                              | []                   |
+| `resourceName`           | string | 设备插件的资源名称                           | rdma                 |
+| `resourcePrefix`         | string | 资源前缀                                | rdma-ub |
+| `rdmaHcaMax`             | int    | RDMA HCA 设备的最大数量                    | 1000                 |
+| `devices`                | array  | 要包含的设备名称列表（已废弃，推荐使用 `selectors.ifNames`） | []                   |
+| `selectors.buses`        | array  | 用于过滤设备的总线类型（例如，`ub` 用于启用 UB 设备）      | []                   |
+| `selectors.vendors`      | array  | 用于过滤设备的供应商 ID                       | []                   |
+| `selectors.deviceIDs`    | array  | 用于过滤设备的设备 ID                        | []                   |
+| `selectors.drivers`      | array  | 用于过滤设备的驱动程序名称                       | []                   |
+| `selectors.ifNames`      | array  | 用于过滤设备的接口名称                         | []                   |
+| `selectors.linkTypes`    | array  | 用于过滤设备的链路类型                         | []                   |
+
+配置示例：
+
+```json
+{
+  "periodicUpdateInterval": 300,
+  "faultDetectPeriod": 5,
+  "configList": [
+    {
+      "resourceName": "rdma-ub-devices",
+      "rdmaHcaMax": 1000,
+      "selectors": {
+        "buses": ["ub"]
+      }
+    }
+  ]
+}
+```
+
+### 工作模式
+
+- **共享模式（默认）**：集群内所有 Pod 共享节点上的全部 RDMA 设备。共享模式下根据 `rdmaHcaMax` 参数创建虚拟设备并上报给 kubelet，Pod 请求该资源后即可使用任一设备。
+- **独占模式**：每个 NPU 与特定的 DPU 设备一一对应，通过 NPU-NIC 映射关系完成设备分配。独占模式下上报节点上真实发现的 UB 设备，Pod 申请资源时，组件根据 Pod 申请的 NPU，通过映射文件（`/etc/rdma-plugin/npu-nic-mapping.json`）查找对应的 DPU 设备并挂载到容器，实现设备级隔离。
+  - **使能方式**：启动组件时添加 `--ub-excl-mode` 参数开启独占模式。
+  - **分配结果**：独占模式下组件将分配的 DPU 设备写入 Pod 的 `k8s.v1.cni.cncf.io/device-status` 注解，Multus CNI 通过该注解获取设备并传递给 UB Host Device CNI 完成设备挂载。
 
 ---
 
 ## 支持的硬件
 
-PCI和UB类型的DPU网卡
+支持 UB 类型的 RDMA 网卡
 
 ---
 

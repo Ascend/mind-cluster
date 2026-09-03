@@ -1,184 +1,68 @@
 # k8s-rdma-shared-dev-plugin
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-[![Go Report Card](https://goreportcard.com/badge/github.com/Mellanox/k8s-rdma-shared-dev-plugin)](https://goreportcard.com/report/github.com/Mellanox/rdma-cni)
-[![Coverage Status](https://coveralls.io/repos/github/Mellanox/k8s-rdma-shared-dev-plugin/badge.svg)](https://coveralls.io/github/Mellanox/k8s-rdma-shared-dev-plugin)
+# 支持的产品形态
 
-(<https://hub.docker.com/r/mellanox/k8s-rdma-shared-dev-plugin>)
+支持以下设备使用资源监测
 
-This is simple rdma device plugin that support IB and RoCE HCA. This plugin runs as daemonset. Its container image is
-available at mellanox/k8s-rdma-shared-dev-plugin.
+- UB 类型的 RDMA 网卡
 
-# How to use device plugin
+# 组件介绍
 
-**1.** Use CNI plugin such as Contiv, Calico, Cluster
+设备管理插件拥有以下功能：
 
-Make sure to configure ib0 or appropriate IPoIB netdevice as the parent netdevice for creating overlay/virtual
-netdevices.
+- 设备发现：支持发现计算节点上的 UB RDMA 设备，将发现的设备上报到 Kubernetes 系统中。支持共享与独占两种工作模式，共享模式下将节点上的 RDMA 设备作为共享资源上报；独占模式下按 NPU 与 DPU 的映射关系为 Pod 分配节点上发现的真实 UB 设备。
+- 健康检查：支持检测 UB 设备的健康状态，当设备处于不健康状态时，将故障信息写入 Kubernetes ConfigMap，不健康设备不会被分配给 Pod。故障检测周期可通过 `faultDetectPeriod` 参数配置。
+- 设备分配：支持在 Kubernetes 系统中分配 RDMA 设备；独占模式下按 NPU 与 DPU 的映射关系为 Pod 分配设备，并将分配结果写入 `k8s.v1.cni.cncf.io/device-status` 注解，供 Multus CNI 与 UB Host Device CNI 使用完成设备挂载。
 
-**2.** Create ConfigMap and deploy Device Plugin
+# 编译
 
-Deploy device plugin and create config map to describe mode as "hca" mode. This is per node configuration.
+1. 通过git拉取源码，并切换master分支，获得k8s-rdma-shared-dev-plugin。
 
-```bash
-cd deployment/k8s/base
-kubectl apply -k .
-```
+    示例：源码放在/home/mind-cluster/component/k8s-rdma-shared-dev-plugin目录下
 
-**3.** Create Test pod
+2. 执行以下命令，进入构建目录，执行构建脚本，在“output”目录下生成二进制组件包、yaml文件、Dockerfile等文件。
 
-Create test pod which requests 1 vhca resource.
+    **cd** _/home/mind-cluster/component/_**k8s-rdma-shared-dev-plugin/build/**
 
-```bash
-kubectl create -f example/test-hca-pod.yaml
-```
+    ```bash
+    chmod +x build.sh
+    ./build.sh
+    ```
 
-## Deploy the device plugin with CDI support
+3. 执行以下命令，查看**output**生成的软件列表。
 
-To use the device plugin with [CDI](https://github.com/cncf-tags/container-device-interface) support, do the following:
+    **ll** _/home/mind-cluster/component/_**k8s-rdma-shared-dev-plugin/output**
 
-```bash
-cd deployment/k8s/base/overlay
-kubectl apply -k .
-```
+    ```text
+    k8s-rdma-shared-dp
+    k8s-rdma-shared-dp-v26.1.0.yaml
+    config.json
+    Dockerfile
+    Dockerfile.openeuler
+    agreement.txt
+    fault_code.json
+    fault_detection.sh
+    npu-nic-mapping.json
+    ```
 
-# How to use device plugin for RDMA
+4. 执行以下命令，根据基础镜像选择对应的Dockerfile构建设备插件镜像（在**output**目录下执行）。
 
-The device plugin can be used with macvlan for RDMA, to do the following steps:
-
-**1.** use macvlan cni
-
-```bash
-# cat > /etc/cni/net.d/00-macvlan.conf <<EOF
-{
-    "cniVersion": "0.3.1",
-    "name": "mynet",
-    "type": "macvlan",
-     "master": "enp0s0f0",
-        "ipam": {
-                "type": "host-local",
-                "subnet": "10.56.217.0/24",
-                "rangeStart": "10.56.217.171",
-                "rangeEnd": "10.56.217.181",
-                "routes": [
-                        { "dst": "0.0.0.0/0" }
-                ],
-                "gateway": "10.56.217.1"
-        }
-}
-
-EOF
-```
-
-**2.** Follow the steps in the previous section to deploy the device plugin
-
-**3.** Deploy RDMA pod application
-
-```bash
-kubectl create -f <rdma-app.yaml>
-```
-
-# RDMA Shared Device Plugin Configurations
-
-The plugin has several configuration fields, this section explains each field usage
-
-```json
-{
-  "periodicUpdateInterval": 300,
-  "configList": [{
-      "resourceName": "hca_shared_devices_a",
-      "resourcePrefix": "example_prefix",
-      "rdmaHcaMax": 1000,
-      "devices": ["ib0", "ib1"]
-    },
-    {
-      "resourceName": "hca_shared_devices_b",
-      "rdmaHcaMax": 500,
-      "selectors": {
-        "vendors": ["15b3"],
-        "deviceIDs": ["1017"],
-        "ifNames": ["ib3", "ib4"]
-      }
-    }
-  ]
-}
-```
-
-`periodicUpdateInterval` is the time interval in seconds to update the resources according to host devices in case of
-changes. Notes:
-
-- if `periodicUpdateInterval` is 0 then periodic update for host devices will be disabled.
-- if `periodicUpdateInterval` is not set then default periodic update interval of 60 seconds will be used.
-
-`"configList"` should contain a list of config objects. Each config object may consist of following fields:
-
-| Field            | Required | Description                                                                                                                       |     Type         | Default value | Example                                                 |
-|------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------|------------------|---------------|---------------------------------------------------------|
-| "resourceName"   | Y        | Endpoint resource name. Should not contain special characters, must be unique in the scope of the resource prefix                 | string           | -             | "hca_shared_devices_a"                                  |
-| "resourcePrefix" | N        | Endpoint resource prefix. Should not contain special characters                                                                   | string           | "rdma"        | "example_prefix"                                        |
-| "rdmaHcaMax"     | Y        | Maximum number of RDMA resources that can be provided by the device plugin resource                                               | Integer          | -             | 1000                                                    |
-| "selectors"      | N        | A map of device selectors for filtering the devices. refer to [Device Selectors](#devices-selectors) section for more information | json object      | -             | selectors": {"vendors": ["15b3"],"deviceIDs": ["1017"]} |
-| "devices"        | N        | A list of devices names to be selected, same as "ifNames" selector                                                                | `string` list    | -             | ["ib0", "ib1"]                                          |
-
-Note: Either `selectors` or `devices` must be specified for a given resource, "selectors" is recommended.
-
-## Devices Selectors
-
-The following selectors are used for filtering the desired devices.
-
-|    Field    |                          Description                           |     Type      |         Example          |
-|-------------|----------------------------------------------------------------|---------------|--------------------------|
-| "vendors"   | Target device's vendor Hex code as string                      | `string` list | "vendors": ["15b3"]      |
-| "deviceIDs" | Target device's device Hex code as string                      | `string` list | "devices": ["1017"]      |
-| "drivers"   | Target device driver names as string                           | `string` list | "drivers": ["mlx5_core"] |
-| "ifNames"   | Target device name                                             | `string` list | "ifNames": ["enp2s2f0"]  |
-| "linkTypes" | The link type of the net device associated with the PCI device | `string` list | "linkTypes": ["ether"]   |
-
-[//]: # (The tables above generated using: https://ozh.github.io/ascii-tables/)
-
-## Selectors Matching Process
-
-The device plugin filters the host devices based on the provided selectors, if there are any missing selectors, the
-device plugin ignores them. Device plugin performs logical OR between elements of a specific selector and logical AND is
-performed between selectors.
-
-# RDMA shared device plugin deployment with node labels
-
-RDMA shared device plugin should be deployed on nodes that:
-
-1. Have RDMA capable hardware
-2. RDMA kernel stack is loaded
-
-   To allow proper node selection [Node Feature Discovery (NFD)](https://github.com/kubernetes-sigs/node-feature-discovery)
-   can be used to discover the node capabilities, and expose them as node labels.
-
-3. Deploy NFD, release `v0.6.0` or new newer
+   - 使用Ubuntu 22.04基础镜像
 
       ```bash
-      # export NFD_VERSION=v0.6.0
-      # kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/node-feature-discovery/$NFD_VERSION/nfd-master.yaml.template
-      # kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/node-feature-discovery/$NFD_VERSION/nfd-worker-daemonset.yaml.template
+      docker build -f Dockerfile -t k8s-rdma-shared-dev-plugin:ubuntu22.04 .
       ```
 
-4. Check the new labels added to the node
+   - 使用openEuler 24.03基础镜像
 
       ```bash
-      # kubectl get nodes --show-labels
+      docker build -f Dockerfile.openeuler -t k8s-rdma-shared-dev-plugin:openeuler24.03 .
       ```
 
-   RDMA device plugin can then be deployed on nodes with `feature.node.kubernetes.io/custom-rdma.available=true`, which
-   indicates that the node is RDMA capable and RDMA modules are loaded.
+   **说明：**
+        1、Dockerfile 使用 Ubuntu 22.04 基础镜像，Dockerfile.openeuler 使用 openEuler 24.03 基础镜像。
+        2、镜像构建前需先执行build.sh，生成k8s-rdma-shared-dp文件。
 
-# Docker image
+# 说明
 
-RDMA shared device plugin uses `alpine` base image by default. To build RDMA shared device plugin with another base
-image you need to pass `BASE_IMAGE` argument:
-
-```bash
-docker build -t k8s-rdma-shared-dev-plugin \
---build-arg BASE_IMAGE=registry.access.redhat.com/ubi8/ubi-minimal:latest \
-.
-```
-
-> __Note:__ Building image with alpine v3.14.x requires Docker 20.10.0 or newer. for more information refer to
-[Alpine 3.14.0 Release Notes](https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.14.0#faccessat2)
+当前容器方式部署本组件，本组件的认证鉴权方式为ServiceAccount，该认证鉴权方式为ServiceAccount的token明文显示，建议用户自行进行安全加强。
