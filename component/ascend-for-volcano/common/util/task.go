@@ -73,6 +73,24 @@ type NPUTask struct {
 	*VTask
 }
 
+// GetNPURequestFromTask extracts the NPU resource name and request count
+// from the task's resource requirements.
+func GetNPURequestFromTask(task *api.TaskInfo) (string, int) {
+	if task == nil || task.Resreq == nil {
+		klog.V(LogInfoLev).Infof("getVCTaskReqNPUTypeFromTaskInfo nil job's parameter.")
+		return "", 0
+	}
+	for k, v := range task.Resreq.ScalarResources {
+		// must contain "huawei.com/"
+		if strings.Contains(string(k), HwPreName) {
+			return string(k), int(v / NPUHexKilo)
+		}
+		continue
+	}
+	klog.V(LogInfoLev).Infof("getVCTaskReqNPUTypeFromTaskInfo %+v.", task.Resreq.ScalarResources)
+	return "", 0
+}
+
 // DeleteRealPodByTask generally used by force deletion
 func (asTask *NPUTask) DeleteRealPodByTask(ssn *framework.Session, waitTime int64) error {
 	if asTask == nil {

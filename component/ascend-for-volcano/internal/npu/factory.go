@@ -25,6 +25,7 @@ import (
 	"k8s.io/klog/v2"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/affinity/chip"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend310/card310x4"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend310/chip310x4"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend310p/card310px2"
@@ -80,8 +81,7 @@ const (
 )
 
 const (
-	duoKeyLabel = "duo"
-	trueStr     = "true"
+	trueStr = "true"
 )
 
 const (
@@ -127,6 +127,7 @@ func initCard910Factory() {
 	card910Factory[chip8node8sp.SchedulePolicy8Px16Sp] = func() base.AscendHandler { return chip8node8sp.New(chip8node8sp.SchedulePolicy8Px16Sp) }
 	card910Factory[chip8node8ra64sp.SchedulePolicy8Px8Ra64Sp] = func() base.AscendHandler { return chip8node8ra64sp.New(chip8node8ra64sp.SchedulePolicy8Px8Ra64Sp) }
 	card910Factory[chip1softsharedev.SchedulePolicySoftShareDev] = func() base.AscendHandler { return chip1softsharedev.New(chip1softsharedev.SchedulePolicySoftShareDev) }
+	card910Factory[chip.PolicyName] = func() base.AscendHandler { return chip.New() }
 	card910Factory[multilevelscheduling.MultiLevelHandlerName] = func() base.AscendHandler {
 		return multilevelscheduling.New(multilevelscheduling.MultiLevelHandlerName)
 	}
@@ -221,9 +222,6 @@ func init910CardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPlugi
 
 func get910CardHandlerName(attr util.SchedulerJobAttr) string {
 	policy, ok := attr.Annotation[util.SchedulePolicyAnnoKey]
-	if attr.ReqNPUName == util.NPUCardName && !ok {
-		return ""
-	}
 	if ok {
 		handlerName, ok := policy910HandlerMap[policy]
 		if ok {
@@ -234,6 +232,10 @@ func get910CardHandlerName(attr util.SchedulerJobAttr) string {
 	// if only field sp-block is specified, set schedule policy to atlas 900 super-pod as default
 	if _, ok := attr.Annotation[util.SuperPodAnnoKey]; ok {
 		return getA3HandlerNameWithSpBlock(attr)
+	}
+	// (schedule_policy / accelerator-type)
+	if chip.ShouldUseAffinity(attr.Annotation, attr.Selector) {
+		return chip.PolicyName
 	}
 	v, ok := attr.Selector[util.AcceleratorTypeKeyDeprecated]
 	if !ok {
@@ -268,10 +270,10 @@ func init310PCardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPlug
 }
 
 func get310PCardHandlerName(attr util.SchedulerJobAttr) string {
-	duo := attr.Label[duoKeyLabel]
+	duo := attr.Label[util.DuoKeyLabel]
 	if duo == trueStr {
 		klog.V(util.LogInfoLev).Info("Detected as 300I duo configuration")
-		duo = duoKeyLabel
+		duo = util.DuoKeyLabel
 	}
 	v, ok := attr.Label[util.Accelerator310Key]
 	if !ok {

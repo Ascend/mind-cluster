@@ -36,6 +36,21 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 )
 
+// ParseDevList
+func ParseDevList(devStr, prefix string) map[int]struct{} {
+	res := make(map[int]struct{})
+	if len(devStr) == 0 {
+		return res
+	}
+	for _, name := range strings.Split(devStr, ",") {
+		ids := ChangeTopToIntArray(strings.TrimSpace(name), prefix)
+		for _, id := range ids {
+			res[id] = struct{}{}
+		}
+	}
+	return res
+}
+
 // ChangeTopToIntArray Change npu card ids from string to int array.
 func ChangeTopToIntArray(topStr string, npuCardPreName string) []int {
 	topInt := make([]int, 0)

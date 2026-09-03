@@ -23,7 +23,9 @@ const (
 	// ChipKind is the prefix of npu resource.
 	ChipKind = "910"
 	// HwPreName is the prefix of npu resource.
-	HwPreName = "huawei.com/"
+	HwPreName           = "huawei.com/"
+	NPUUnhealthySuffix  = "-Unhealthy"
+	NPUNetworkUnhealthy = "-NetworkUnhealthy"
 	// NPUCardName for judge npu resource.
 	NPUCardName = "huawei.com/npu"
 	// NPU910CardName for judge 910 npu resource.
@@ -87,6 +89,15 @@ const (
 	SchedulePolicyAnnoKey = "huawei.com/schedule_policy"
 	// SchedulePolicyA3x16 schedule policy for a3-16 server
 	SchedulePolicyA3x16 = "module-a3-16"
+)
+
+const (
+	// TopologyAnnoKey key of node npu topology annotation
+	TopologyAnnoKey = "huawei.com/npu.topology"
+	// ScheduleModeAnnoKey key of job schedule mode
+	ScheduleModeAnnoKey = "huawei.com/schedule.mode"
+	// DuoKeyLabel type of 310P device
+	DuoKeyLabel = "duo"
 )
 
 // constants for ome inference service

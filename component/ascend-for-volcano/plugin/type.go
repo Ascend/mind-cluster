@@ -76,9 +76,8 @@ const (
 	// VNPUTempVir08  vir08 only 910
 	VNPUTempVir08 = "vir08"
 	// VNPUTempVir16  vir16 only 910
-	VNPUTempVir16       = "vir16"
-	cardHealthySuffix   = ""
-	unhealthyCardSuffix = "-Unhealthy"
+	VNPUTempVir16     = "vir16"
+	cardHealthySuffix = ""
 	// ResetInfoCMNamePrefix for reset configmap name prefix
 	ResetInfoCMNamePrefix = "reset-config-"
 	// ResetInfoCMDataKey for reset configmap data key
