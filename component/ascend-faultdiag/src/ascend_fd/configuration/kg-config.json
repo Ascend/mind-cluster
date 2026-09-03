@@ -25905,6 +25905,359 @@
             "regex": {
                 "in": ["Unknown instruction ignored"]
             }
+        },
+        "0x8C484E00": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "PROCESS",
+                "cause_zh": "MAMI管控进程心跳检测异常",
+                "description_zh": "【故障解释】：\n进程拉起失败(权限不足，资源不足等)、异常退出(资源不足等)或无法响应(资源不足等)；\n【可能原因】：\n通常是软件问题",
+                "suggestion_zh": [
+                    "1. 如果AI任务已执行，无需操作",
+                    "2. 如果AI任务未执行则建议复位SOC",
+                    "3. 如果故障持续建议返厂送修"
+                ],
+                "cause_en": "MAMI management process heartbeat detection error",
+                "description_en": "The process fails to start (due to insufficient permissions or resources), exits abnormally (due to insufficient resources), or fails to respond (due to insufficient resources). Usually a software issue.",
+                "suggestion_en": [
+                    "1. If the AI task has been executed, no action is required.",
+                    "2. If the AI task has not been executed, reset the SoC.",
+                    "3. If the fault persists, send the device back to the factory for repair."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["Event id=0x8c484e00"],
+                    ["event_id:  [0x8c484e00]"]
+                ]
+            }
+
+        },
+        "0x8C4C4E00": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "PROCESS",
+                "cause_zh": "UB配置进程心跳检测异常",
+                "description_zh": "【故障解释】：\n进程拉起失败(权限不足，资源不足等)、异常退出(资源不足等)或无法响应(资源不足等)；\n【可能原因】：\n通常是软件问题",
+                "suggestion_zh": [
+                    "1. 如果UB初始化配置已下发，无需操作",
+                    "2. 如果UB初始化配置未下发则建议复位SOC重试",
+                    "3. 如果故障持续建议返厂送修"
+                ],
+                "cause_en": "UB configuration process heartbeat detection error",
+                "description_en": "The process fails to start (due to insufficient permissions or resources), exits abnormally (due to insufficient resources), or fails to respond (due to insufficient resources). Usually a software issue.",
+                "suggestion_en": [
+                    "1. If the UB initialization configuration has been delivered, no action is required.",
+                    "2. If the UB initialization configuration has not been delivered, reset the SoC and try again.",
+                    "3. If the fault persists, send the device back to the factory for repair."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["Event id=0x8c4c4e00"],
+                    ["event_id:  [0x8c4c4e00]"]
+                ]
+            }
+
+        },
+        "0x8C4DA000": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "PROCESS",
+                "cause_zh": "UB初始化异常",
+                "description_zh": "【故障解释】：\n1.UB初始化配置文件异常(名称、路径、内容)；\n2.调用MAMI API下发UB初始化配置失败。\n【可能原因】：\n通常是软件或硬件问题。大多是软件问题。",
+                "suggestion_zh": [
+                    "1. 建议复位SOC重执行AI任务",
+                    "2. 若AI任务重新执行异常建议检查版本配置文件",
+                    "3. 如果故障持续建议返厂送修"
+                ],
+                "cause_en": "UB initialization error",
+                "description_en": "1. The UB initialization configuration file is abnormal (name, path, or content).\n2. Calling the MAMI API to deliver the UB initialization configuration fails.\nUsually a software or hardware issue. In most cases, it is a software issue.",
+                "suggestion_en": [
+                    "1. Reset the SoC and rerun the AI task.",
+                    "2. If the AI task is abnormal after being rerun, check the version configuration file.",
+                    "3. If the fault persists, send the device back to the factory for repair."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["Event id=0x8c4da000"],
+                    ["event_id:  [0x8c4da000]"]
+                ]
+            }
+
+        },
+        "0x81AFAA05": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "UB远端资源空间同步访问异常",
+                "description_zh": "【故障解释】：\n1.UB初始化配置文件异常(名称、路径、内容)；\n2.调用MAMI API下发UB初始化配置失败。\n【可能原因】：\n通常是软件或硬件问题。大多是软件问题。",
+                "suggestion_zh": [
+                    "1. 建议重执行AI任务",
+                    "2. 若AI任务重新执行故障持续，建议排查远端UB设备故障原因"
+                ],
+                "cause_en": "Abnormal synchronous access to the UB remote resource space",
+                "description_en": "1. The UB initialization configuration file is abnormal (name, path, or content).\n2. Calling the MAMI API to deliver the UB initialization configuration fails.\nUsually a software or hardware issue. In most cases, it is a software issue.",
+                "suggestion_en": [
+                    "1. Rerun the AI task.",
+                    "2. If the fault persists after the AI task is rerun, check the fault cause on the remote UB device."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["Event id=0x81afaa05"],
+                    ["event_id:  [0x81afaa05]"]
+                ]
+            }
+
+        },
+        "0x81AFAA02": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "UB远端内存同步访问发生网络超时",
+                "description_zh": "【故障解释】：\nUB远端内存同步访问发生网络超时。\n【可能原因】：\n通常是软件|硬件问题。大多是硬件问题。",
+                "suggestion_zh": [
+                    "1. 建议重执行AI任务",
+                    "2. 如果故障持续，建议检测路由表、UB memory decoder表、portlink状态。"
+                ],
+                "cause_en": "Network timeout during synchronous access to the UB remote memory",
+                "description_en": "A network timeout occurs during synchronous access to the UB remote memory.\nUsually a software or hardware issue. In most cases, it is a hardware issue.",
+                "suggestion_en": [
+                    "1. Rerun the AI task.",
+                    "2. If the fault persists, check the routing table, UB memory decoder table, and port link status."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["Event id=0x81afaa02"],
+                    ["event_id:  [0x81afaa02]"]
+                ]
+            }
+
+        },
+        "0x81AFAA03": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "UB远端内存同步访问发生远端配置错误",
+                "description_zh": "【故障解释】：\nUB远端内存同步访问发生远端配置错误。\n【可能原因】：\n通常是软件问题。",
+                "suggestion_zh": [
+                    "1. 建议重执行AI任务",
+                    "2. 如果故障持续，建议排查远端节点UMMU页表配置。"
+                ],
+                "cause_en": "Remote-side configuration error during synchronous access to the UB remote memory",
+                "description_en": "A remote-side configuration error occurs during synchronous access to the UB remote memory.\nUsually a software issue.",
+                "suggestion_en": [
+                    "1. Rerun the AI task.",
+                    "2. If the fault persists, check the UMMU page table configuration of the remote node."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["Event id=0x81afaa03"],
+                    ["event_id:  [0x81afaa03]"]
+                ]
+            }
+
+        },
+        "0x81AFAA04": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "UB远端内存同步访问发生本端配置错误",
+                "description_zh": "【故障解释】：\nUB远端内存同步访问发生本端配置错误。\n【可能原因】：\n通常是软件问题。",
+                "suggestion_zh": [
+                    "建议排查本地UB memory decoder表配置"
+                ],
+                "cause_en": "Local-side configuration error during synchronous access to the UB remote memory",
+                "description_en": "A local-side configuration error occurs during synchronous access to the UB remote memory.\nUsually a software issue.",
+                "suggestion_en": [
+                    "Check the local UB memory decoder table configuration."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["Event id=0x81afaa04"],
+                    ["event_id:  [0x81afaa04]"]
+                ]
+            }
+
+        },
+        "0x81AFAA06": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "UB远端内存同步访问发生网络异常",
+                "description_zh": "【故障解释】：\nUB远端内存同步访问发生网络异常。\n【可能原因】：\n通常是硬件问题。",
+                "suggestion_zh": [
+                    "由“停止UB Memory流量修改UB Memory注入路由表”放置芯片问题挂死诉求触发，无需额外处理"
+                ],
+                "cause_en": "Network anomaly during synchronous access to the UB remote memory",
+                "description_en": "A network anomaly occurs during synchronous access to the UB remote memory.\nUsually a hardware issue.",
+                "suggestion_en": [
+                    "This fault is triggered by the chip hang appeal generated by stopping UB memory traffic and modifying the UB memory injection routing table. No additional action is required."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["Event id=0x81afaa06"],
+                    ["event_id:  [0x81afaa06]"]
+                ]
+            }
+
+        },
+        "0x81AFAA01": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "UB远端内存同步访问发生端口异常",
+                "description_zh": "【故障解释】：\nUB远端内存同步访问发生端口异常。\n【可能原因】：\n通常是软件|硬件问题。大多是硬件问题",
+                "suggestion_zh": [
+                    "1.建议重新执行AI任务",
+                    "2.如果故障持续，建议检测环境port的link状态和本节点|路由配置问题。"
+                ],
+                "cause_en": "Port anomaly during synchronous access to the UB remote memory",
+                "description_en": "A port anomaly occurs during synchronous access to the UB remote memory.\nUsually a software or hardware issue. In most cases, it is a hardware issue.",
+                "suggestion_en": [
+                    "1. Rerun the AI task.",
+                    "2. If the fault persists, check the link status of the environment port and the routing configuration of the local node."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["Event id=0x81afaa01"],
+                    ["event_id:  [0x81afaa01]"]
+                ]
+            }
+
+        },
+        "0x81AFAA00": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "UB远端内存同步访问发生远端数据异常",
+                "description_zh": "【故障解释】：\nUB远端内存同步访问发生远端数据异常。\n【可能原因】：\n通常是硬件问题。",
+                "suggestion_zh": [
+                    "1.建议重新执行AI任务",
+                    "2.若AI任务重新执行异常则建议检测远端节点硬件问题"
+                ],
+                "cause_en": "Remote-side data anomaly during synchronous access to the UB remote memory",
+                "description_en": "A remote-side data anomaly occurs during synchronous access to the UB remote memory.\nUsually a hardware issue.",
+                "suggestion_en": [
+                    "1. Rerun the AI task.",
+                    "2. If the AI task is abnormal after being rerun, check the hardware of the remote node."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["Event id=0x81afaa00"],
+                    ["event_id:  [0x81afaa00]"]
+                ]
+            }
+
+        },
+        "0x81078607": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "PORT",
+                "cause_zh": "成员网口Link状态变化，Up->Down",
+                "description_zh": "【故障解释】：\nA5 UBoE Bonding场景，成员网络的硬件链路或线路故障导致异常。\n【可能原因】：\n通常是硬件问题。",
+                "suggestion_zh": [
+                    "1.若AI任务业务中断，则隔离设备，重试AI任务",
+                    "2.建议检查成员网口线路状态"
+                ],
+                "cause_en": "Member network port link status changes from Up to Down",
+                "description_en": "In the A5 UBoE bonding scenario, the hardware link or cable fault of the member network causes the exception.\nUsually a hardware issue.",
+                "suggestion_en": [
+                    "1. If the AI task service is interrupted, isolate the device and retry the AI task.",
+                    "2. Check the link status of the member network port."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["Event id=0x81078607"],
+                    ["event_id:  [0x81078607]"]
+                ]
+            }
+
+        },
+        "0x4C4BA00C": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "DRV",
+                "cause_zh": "host驱动内核软件故障",
+                "description_zh": "【故障解释】：\n1.内核驱动软件初始化异常，进入不可使用状态\n2.内核驱动软件运行时出现不可恢复的异常，比如主动的资源泄露。\n【可能原因】：\n通常是软件问题。",
+                "suggestion_zh": [
+                    "1.建议找华为工程师定位解决软件问题",
+                    "2.如需要继续使用环境建议复位host后重执行AI任务"
+                ],
+                "cause_en": "host driver kernel software fault",
+                "description_en": "1. The kernel driver software is incorrectly initialized and enters an unusable state.\n2. An unrecoverable exception occurs when the kernel driver software is running, such as a proactive resource leak.\nUsually a software issue.",
+                "suggestion_en": [
+                    "1. Contact a Huawei engineer to locate and resolve the software issue.",
+                    "2. If you need to continue using the environment, reset the host and rerun the AI task."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["Event id=0x4c4ba00c"],
+                    ["event_id:  [0x4c4ba00c]"]
+                ]
+            }
+
+        },
+        "0x8C4BA00C": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "DRV",
+                "cause_zh": "device驱动内核软件故障",
+                "description_zh": "【故障解释】：\n1.内核驱动软件初始化异常，进入不可使用状态\n2.内核驱动软件运行时出现不可恢复的异常，比如主动的资源泄露。\n【可能原因】：\n通常是软件问题。",
+                "suggestion_zh": [
+                    "1.建议找华为工程师定位解决软件问题",
+                    "2.建议复位SOC后重执行AI任务"
+                ],
+                "cause_en": "device driver kernel software fault",
+                "description_en": "1. The kernel driver software is incorrectly initialized and enters an unusable state.\n2. An unrecoverable exception occurs when the kernel driver software is running, such as a proactive resource leak.\nUsually a software issue.",
+                "suggestion_en": [
+                    "1. Contact a Huawei engineer to locate and resolve the software issue.",
+                    "2. Reset the SoC and rerun the AI task."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["Event id=0x8c4ba00c"],
+                    ["event_id:  [0x8c4ba00c]"]
+                ]
+            }
+
         }
     }
 }
