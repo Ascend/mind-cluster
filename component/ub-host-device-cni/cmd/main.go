@@ -437,8 +437,7 @@ func ubAddressForInterfaceName(ifName string) (string, error) {
 
 // setupUBDevice mounts one UB device, allocating IPs before the move.
 func setupUBDevice(cfg *NetConf, args *skel.CmdArgs, containerNs ns.NetNS, deviceID string, result *current.Result) (err error) {
-	// UB mode must either allocate IPs via IPAM or inherit the host IPs,
-	// otherwise applyUBIPAM would receive a nil result and panic.
+	// UB mode must allocate IPs via IPAM or inherit host IPs, else applyUBIPAM panics.
 	if cfg.IPAM.Type == "" && !cfg.InheritHostIP {
 		return fmt.Errorf("ubMode requires either ipam or inheritHostIP")
 	}
