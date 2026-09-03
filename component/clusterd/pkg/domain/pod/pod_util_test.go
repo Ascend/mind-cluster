@@ -338,6 +338,62 @@ func TestGetUsedDevicesByNodeName(t *testing.T) {
 	})
 }
 
+func TestHasVolcanoTaskOnNode(t *testing.T) {
+	convey.Convey("test HasVolcanoTaskOnNode", t, func() {
+		convey.Convey("when no pod is on the node, result should be false", func() {
+			convey.So(HasVolcanoTaskOnNode(nodeName1), convey.ShouldBeFalse)
+		})
+		convey.Convey("when pod has no podgroup annotation, result should be false", func() {
+			podDemo := createAndSavePod(podCreateParam{
+				podName:       podName1,
+				podNameSpace:  podNameSpace1,
+				podUid:        podUid1,
+				nodeName:      nodeName1,
+				podStatus:     v1.PodRunning,
+				podAnnotation: map[string]string{},
+			})
+			defer DeletePod(podDemo)
+			convey.So(HasVolcanoTaskOnNode(nodeName1), convey.ShouldBeFalse)
+		})
+		convey.Convey("when pod is on another node, result should be false", func() {
+			podDemo := createAndSavePod(podCreateParam{
+				podName:       podName1,
+				podNameSpace:  podNameSpace1,
+				podUid:        podUid1,
+				nodeName:      nodeName1,
+				podStatus:     v1.PodRunning,
+				podAnnotation: map[string]string{podGroupKey: pgName1},
+			})
+			defer DeletePod(podDemo)
+			convey.So(HasVolcanoTaskOnNode(nodeName2), convey.ShouldBeFalse)
+		})
+		convey.Convey("when pod has podgroup annotation and is running, result should be true", func() {
+			podDemo := createAndSavePod(podCreateParam{
+				podName:       podName1,
+				podNameSpace:  podNameSpace1,
+				podUid:        podUid1,
+				nodeName:      nodeName1,
+				podStatus:     v1.PodRunning,
+				podAnnotation: map[string]string{podGroupKey: pgName1},
+			})
+			defer DeletePod(podDemo)
+			convey.So(HasVolcanoTaskOnNode(nodeName1), convey.ShouldBeTrue)
+		})
+		convey.Convey("when pod has podgroup annotation but is failed, result should be false", func() {
+			podDemo := createAndSavePod(podCreateParam{
+				podName:       podName1,
+				podNameSpace:  podNameSpace1,
+				podUid:        podUid1,
+				nodeName:      nodeName1,
+				podStatus:     v1.PodFailed,
+				podAnnotation: map[string]string{podGroupKey: pgName1},
+			})
+			defer DeletePod(podDemo)
+			convey.So(HasVolcanoTaskOnNode(nodeName1), convey.ShouldBeFalse)
+		})
+	})
+}
+
 func createAndSavePod(param podCreateParam) *v1.Pod {
 	pod := getDemoPod(param.podName, param.podNameSpace, param.podUid)
 	pod.Spec.NodeName = param.nodeName

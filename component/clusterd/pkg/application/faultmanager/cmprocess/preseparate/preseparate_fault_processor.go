@@ -30,10 +30,14 @@ import (
 // PreSeparateFaultProcessor is used to process preseparate faults
 var PreSeparateFaultProcessor *preSeparateFaultProcessor
 
-type preSeparateFaultProcessor struct{}
+type preSeparateFaultProcessor struct {
+	nodeStatusMap map[string]string
+}
 
 func init() {
-	PreSeparateFaultProcessor = &preSeparateFaultProcessor{}
+	PreSeparateFaultProcessor = &preSeparateFaultProcessor{
+		nodeStatusMap: make(map[string]string),
+	}
 }
 
 // Process is used to process preseparate faults
@@ -48,15 +52,27 @@ func (processor *preSeparateFaultProcessor) Process(info any) any {
 		for cmName, switchInfo := range switchContent.AllConfigmap {
 			processor.updateNodeStatusBySwitchInfo(cmName, switchInfo)
 		}
+		cleanNodeStatusMap(processor.nodeStatusMap, switchContent.UpdateConfigmap)
 		return switchContent
 	}
 	if nodeContent, ok := info.(constant.OneConfigmapContent[*constant.NodeInfo]); ok {
 		for cmName, nodeInfo := range nodeContent.AllConfigmap {
 			processor.updateNodeStatusByNodeInfo(cmName, nodeInfo)
 		}
+		cleanNodeStatusMap(processor.nodeStatusMap, nodeContent.UpdateConfigmap)
 		return nodeContent
 	}
 	return info
+}
+
+// cleanNodeStatusMap deletes the node status in nodeStatusMap when the configmap is deleted
+func cleanNodeStatusMap[T constant.ConfigMapInterface](nodeStatusMap map[string]string,
+	updateItems []constant.InformerCmItem[T]) {
+	for _, item := range updateItems {
+		if !item.IsAdd {
+			delete(nodeStatusMap, item.Data.GetCmName())
+		}
+	}
 }
 
 func (processor *preSeparateFaultProcessor) processDeviceFaultCm(
@@ -99,11 +115,15 @@ func (processor *preSeparateFaultProcessor) updateNodeStatusBySwitchInfo(cmName 
 	if faultCm.FaultLevel != constant.PreSeparateFaultLevelStr {
 		return
 	}
-	if usedDevices := pod.GetUsedDevicesByNodeName(nodeName); usedDevices.Len() > 0 {
+	usedDevices := pod.GetUsedDevicesByNodeName(nodeName)
+	hasVolcanoTask := pod.HasVolcanoTaskOnNode(nodeName)
+	if usedDevices.Len() > 0 || hasVolcanoTask {
 		faultCm.NodeStatus = constant.HealthyState
-		return
+	} else {
+		faultCm.NodeStatus = constant.UnHealthyState
 	}
-	faultCm.NodeStatus = constant.UnHealthyState
+	processor.logNodeStatusChanged(cmName, nodeName, faultCm.NodeStatus, faultCm.FaultLevel,
+		usedDevices.Len(), hasVolcanoTask)
 }
 
 func (processor *preSeparateFaultProcessor) updateNodeStatusByNodeInfo(cmName string, faultCm *constant.NodeInfo) {
@@ -122,9 +142,28 @@ func (processor *preSeparateFaultProcessor) updateNodeStatusByNodeInfo(cmName st
 	}
 
 	usedDevices := pod.GetUsedDevicesByNodeName(nodeName)
-	if usedDevices.Len() > 0 {
+	hasVolcanoTask := pod.HasVolcanoTaskOnNode(nodeName)
+	if usedDevices.Len() > 0 || hasVolcanoTask {
 		faultCm.NodeStatus = constant.HealthyState
 	} else {
 		faultCm.NodeStatus = constant.UnHealthyState
 	}
+	processor.logNodeStatusChanged(cmName, nodeName, faultCm.NodeStatus, mostSeriousLevel, usedDevices.Len(),
+		hasVolcanoTask)
+}
+
+// logNodeStatusChanged logs the node status transition only when the status changes,
+// to avoid log flooding caused by the periodic processing of the same configmap.
+func (processor *preSeparateFaultProcessor) logNodeStatusChanged(cmName, nodeName, newStatus, faultLevel string,
+	usedDevicesNum int, hasVolcanoTask bool) {
+	if processor.nodeStatusMap == nil {
+		processor.nodeStatusMap = make(map[string]string)
+	}
+	oldStatus, exist := processor.nodeStatusMap[cmName]
+	if exist && oldStatus == newStatus {
+		return
+	}
+	processor.nodeStatusMap[cmName] = newStatus
+	hwlog.RunLog.Infof("node %s nodeStatus %s -> %s (level: %s) usedDevices:%d volcanoTask:%t",
+		nodeName, oldStatus, newStatus, faultLevel, usedDevicesNum, hasVolcanoTask)
 }
