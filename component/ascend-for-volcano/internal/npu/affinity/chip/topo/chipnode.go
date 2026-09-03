@@ -315,7 +315,7 @@ func (n *ChipNode) usableLeaf(allowNetUnh bool) bool {
 	return n.allocated == 0 && n.evictLeaf(allowNetUnh)
 }
 
-func (n *ChipNode) countUsable(allowNetUnh bool) int {
+func (n *ChipNode) CountUsable(allowNetUnh bool) int {
 	if len(n.children) == 0 {
 		if n.usableLeaf(allowNetUnh) {
 			return 1
@@ -324,7 +324,7 @@ func (n *ChipNode) countUsable(allowNetUnh bool) int {
 	}
 	s := 0
 	for _, c := range n.children {
-		s += c.countUsable(allowNetUnh)
+		s += c.CountUsable(allowNetUnh)
 	}
 	return s
 }
@@ -343,7 +343,7 @@ func (n *ChipNode) countEvict(allowNetUnh bool) int {
 	return s
 }
 
-func (n *ChipNode) countEvictSet(allowNetUnh bool, reclaimable map[int]struct{}) int {
+func (n *ChipNode) CountEvictSet(allowNetUnh bool, reclaimable map[int]struct{}) int {
 	if len(n.children) == 0 {
 		if n.faulty == 1 {
 			return 0
@@ -360,7 +360,7 @@ func (n *ChipNode) countEvictSet(allowNetUnh bool, reclaimable map[int]struct{})
 	}
 	s := 0
 	for _, c := range n.children {
-		s += c.countEvictSet(allowNetUnh, reclaimable)
+		s += c.CountEvictSet(allowNetUnh, reclaimable)
 	}
 	return s
 }
@@ -399,7 +399,7 @@ func (n *ChipNode) Fit(req *util.Request) FitClass {
 	reqNum := req.ReqNPUNum
 	allowNetUnh := req.AllowNetUnhealthy
 	if req.Mode == util.SoftScheduleMode {
-		if n.countUsable(allowNetUnh) >= reqNum {
+		if n.CountUsable(allowNetUnh) >= reqNum {
 			return FitNormal
 		}
 		if n.countEvict(allowNetUnh) >= reqNum {
@@ -422,9 +422,9 @@ func (n *ChipNode) canFitHardCheck(req int, allowNetUnh bool, reclaimable map[in
 		if reclaimable == nil {
 			return x.countEvict(allowNetUnh)
 		}
-		return x.countEvictSet(allowNetUnh, reclaimable)
+		return x.CountEvictSet(allowNetUnh, reclaimable)
 	}
-	usable := n.countUsable(allowNetUnh)
+	usable := n.CountUsable(allowNetUnh)
 	// A leaf, or a group whose direct children are leaves, is a single
 	// allocation domain: decide from its usable / evictable totals.
 	if len(n.children) == 0 || len(n.children[0].children) == 0 {
@@ -458,7 +458,7 @@ func (n *ChipNode) canFitHardCheck(req int, allowNetUnh bool, reclaimable map[in
 		if k := req / g; k >= util.NPUIndex2 && k < len(n.children) {
 			usableG, evictG := 0, 0
 			for _, c := range n.children {
-				if c.countUsable(allowNetUnh) == g {
+				if c.CountUsable(allowNetUnh) == g {
 					usableG++
 				}
 				if evict(c) == g {
@@ -476,6 +476,67 @@ func (n *ChipNode) canFitHardCheck(req int, allowNetUnh bool, reclaimable map[in
 	return best
 }
 
+// CanFitHardFor reports hard-fit feasibility after evicting the chips held by
+// tenants in the reclaimable set
+func (n *ChipNode) CanFitHardFor(req int, allowNetUnh bool, reclaimable map[int]struct{}) FitClass {
+	return n.canFitHardCheck(req, allowNetUnh, reclaimable)
+}
+
+// Total returns the total number of leaf chips in the node (group/tree), i.e.
+// its capacity. Eviction selection uses per-group capacity to decide whether a
+// single group can host req.
+func (n *ChipNode) Total() int {
+	if n == nil {
+		return 0
+	}
+	return n.total
+}
+
+// LeafGroups
+func (n *ChipNode) LeafGroups(allowNetUnh bool) []*ChipNode {
+	if n == nil {
+		return []*ChipNode{}
+	}
+	return n.sortedLeafGroups(allowNetUnh)
+}
+
+// Children returns the direct child nodes (leaf chips or sub-groups).
+func (n *ChipNode) Children() []*ChipNode {
+	if n == nil {
+		return nil
+	}
+	return n.children
+}
+
+// CollectNodes appends every node of the subtree to out in pre-order. Used by
+// eviction selection to walk the intermediate groups that canFitHardCheck
+// considers for whole-subtree fill / whole-group composition.
+func (n *ChipNode) CollectNodes(out *[]*ChipNode) {
+	if n == nil {
+		return
+	}
+	*out = append(*out, n)
+	for _, c := range n.children {
+		c.CollectNodes(out)
+	}
+}
+
+// ChipIDs returns all leaf chipIDs covered by the node (subtree). Used to map a
+// preemptee's chips back into their leaf groups, so in-group eviction can pass
+// the reclaimed chip set as the reclaimable argument to CountEvictSet.
+func (n *ChipNode) ChipIDs() map[int]struct{} {
+	if n == nil {
+		return map[int]struct{}{}
+	}
+	leaves := make(map[int]*ChipNode, n.total)
+	n.collectLeaves(leaves)
+	res := make(map[int]struct{}, len(leaves))
+	for id := range leaves {
+		res[id] = struct{}{}
+	}
+	return res
+}
+
 // SelectChips picks req.ReqNPUNum chips for the request. Strict topology locality
 // (req.Mode == hard) and parameter-plane unhealthy tolerance
 // (req.AllowNetUnhealthy) are taken from the request. Soft mode still prefers
@@ -488,10 +549,10 @@ func (n *ChipNode) SelectChips(req *util.Request) []int {
 	num := req.ReqNPUNum
 	hard := req.Mode == util.HardScheduleMode
 	allowNetUnh := req.AllowNetUnhealthy
-	if n.countUsable(allowNetUnh) < num {
+	if n.CountUsable(allowNetUnh) < num {
 		return nil
 	}
-	if num == n.total && n.countUsable(allowNetUnh) == n.total {
+	if num == n.total && n.CountUsable(allowNetUnh) == n.total {
 		return n.allUsableChips(allowNetUnh)
 	}
 	if hard {
@@ -503,11 +564,8 @@ func (n *ChipNode) SelectChips(req *util.Request) []int {
 	return n.allocSoft(num, allowNetUnh)
 }
 
-// allUsableChips / collectUsable / allocSoft / allocHard /
-// sortedLeafGroups / collectLeafGroups / usableChipsAsc
-
 func (n *ChipNode) allUsableChips(allowNetUnh bool) []int {
-	res := make([]int, 0, n.countUsable(allowNetUnh))
+	res := make([]int, 0, n.CountUsable(allowNetUnh))
 	n.collectUsable(&res, allowNetUnh)
 	return res
 }
@@ -564,7 +622,7 @@ func (n *ChipNode) allocHard(req int, allowNetUnh bool) []int {
 		return n.groupLess(cands[i], cands[j], allowNetUnh)
 	})
 	for _, c := range cands {
-		if req == c.total && c.countUsable(allowNetUnh) == c.total {
+		if req == c.total && c.CountUsable(allowNetUnh) == c.total {
 			return c.allUsableChips(allowNetUnh)
 		}
 		if got := c.allocHard(req, allowNetUnh); got != nil {
@@ -575,7 +633,7 @@ func (n *ChipNode) allocHard(req int, allowNetUnh bool) []int {
 		if k := req / g; k >= util.NPUIndex2 && k < len(n.children) {
 			whole := make([]*ChipNode, 0, len(n.children))
 			for _, c := range n.children {
-				if c.countUsable(allowNetUnh) == g {
+				if c.CountUsable(allowNetUnh) == g {
 					whole = append(whole, c)
 				}
 			}
@@ -620,12 +678,12 @@ func (n *ChipNode) collectLeafGroups(out *[]*ChipNode) {
 }
 
 func (n *ChipNode) groupLess(a, b *ChipNode, allowNetUnh bool) bool {
-	ha, hb := a.countUsable(false), b.countUsable(false)
+	ha, hb := a.CountUsable(false), b.CountUsable(false)
 	if ha != hb {
 		return ha < hb
 	}
 	if allowNetUnh {
-		na, nb := a.countUsable(true)-ha, b.countUsable(true)-hb
+		na, nb := a.CountUsable(true)-ha, b.CountUsable(true)-hb
 		if na != nb {
 			return na > nb
 		}

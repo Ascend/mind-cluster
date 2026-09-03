@@ -315,7 +315,7 @@ func (n *NPUNode) ParseChipTopology(node *api.NodeInfo) {
 		if !util.IsNPUTask(ti) || ti.Pod == nil {
 			continue
 		}
-		for _, chipID := range getAllocatedChipIDsFromPod(ti.Pod, n) {
+		for _, chipID := range util.GetAllocatedChipIDsFromPod(ti.Pod) {
 			if n.ChipPods[chipID] == nil {
 				n.ChipPods[chipID] = make(map[string]*v1.Pod, util.MapInitNum)
 			}
@@ -531,6 +531,7 @@ func (n NPUNode) checkNPUResourceStable(vcJob SchedulerJob) error {
 	return nil
 }
 
+// updateNPUNodeDeviceInfos return true if device info was updated, else return false
 func (n *NPUNode) updateNPUNodeDpuInfos(dpuInfo k8s.DpuInfoWithNode) {
 	if dpuInfo.UpdateTime == 0 {
 		klog.V(util.LogDebugLev).Infof("node %s dpu info is empty, skip", n.Name)

@@ -38,6 +38,7 @@ import (
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/affinity/chip"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -106,6 +107,9 @@ func (tp *huaweiNPUPlugin) OnSessionOpen(ssn *framework.Session) {
 	addPreemptableFn(ssn, tp)
 
 	addReclaimableFn(ssn, tp)
+
+	addSimulateFns(ssn, tp)
+	chip.TopologyAwarePreemptActive = topologyAwarePreemptActive(ssn)
 
 	ssn.AddJobReadyFn(tp.Name(), func(obj interface{}) bool {
 		return jobReady(obj, tp)
