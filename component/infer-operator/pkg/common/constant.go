@@ -187,6 +187,14 @@ const (
 	ExternalForceReschedulingValue = "external-force"
 	// ExternalGraceReschedulingValue describe external grace rescheduling mode
 	ExternalGraceReschedulingValue = "external-grace"
+	// ExternalForcePodFailedReschedulingValue describe external force pod-failed rescheduling mode.
+	// Only handle pod-failed (business fault), skip hardware fault
+	ExternalForcePodFailedReschedulingValue = "external-force-pod-failed"
+	// PodReschedulingLabelKey is the label key of pod-level rescheduling.
+	// Value "on" means pod-level, other values mean instance-level
+	PodReschedulingLabelKey = "pod-rescheduling"
+	// PodReschedulingOn is the value indicating pod-level rescheduling is enabled
+	PodReschedulingOn = "on"
 	// DefaultTerminationGracePeriodSeconds is the Kubernetes default grace period for pod termination
 	DefaultTerminationGracePeriodSeconds = 30
 	// PodStatusAnnotationKey describe pod status of infer service

@@ -25,6 +25,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
@@ -124,13 +125,23 @@ func (r *Rescheduler) handlePodUpdate(oldObj, newObj interface{}) {
 // pods with DeletionTimestamp set. A single STS/Deployment's replicas together
 // form one inference instance (a communication domain), so losing any pod
 // requires rebuilding that pod's workload. Other workloads under the same
-// instanceSet are unaffected.
+// instanceSet are unaffected. When pod-level rescheduling is enabled on the
+// instanceSet, the deleted pod is rebuilt by K8s controllers instead.
 func (r *Rescheduler) handlePodDelete(obj interface{}) {
 	pod, ok := obj.(*corev1.Pod)
 	if !ok {
 		return
 	}
 	if !r.isValidInferPod(pod) {
+		return
+	}
+	// pod-level rescheduling: the deleted pod is rebuilt by K8s controllers
+	// (StatefulSet/Deployment), and the fault retry counter must only be
+	// consumed by fault events, so skip re-entering the rescheduling flow on
+	// pod delete events to avoid double-decrementing faultRetryTimesMap.
+	if r.isPodLevelRescheduling(pod) {
+		hwlog.RunLog.Infof("pod %s/%s deleted, pod-level rescheduling is enabled, "+
+			"k8s controller will rebuild it, skip workload rebuild", pod.Namespace, pod.Name)
 		return
 	}
 	// only trigger workload rebuild when gang scheduling is configured on the
@@ -230,7 +241,13 @@ func (r *Rescheduler) isValidInferPod(pod *corev1.Pod) bool {
 func (r *Rescheduler) processFaultEvent(pod *corev1.Pod) error {
 	// 1. get workload name and instance set name from pod
 	workLoadName, instanceSetName := r.getWorkLoadNameAndInstanceSetName(pod)
-	// 2. record fault for workload
+	// 2. read the pod-rescheduling label to decide deletion granularity
+	isPodLevel := r.isPodLevelRescheduling(pod)
+	if isPodLevel {
+		// pod-level deletion: check FaultRetryTimes, delete the fault pod, decrement counter
+		return r.processPodLevelRescheduling(pod, workLoadName, instanceSetName)
+	}
+	// 3. instance-level deletion: keep original logic (record fault + delete workload)
 	done := r.recordWorkLoadFault(pod, workLoadName, instanceSetName)
 	if done {
 		return nil
@@ -246,13 +263,143 @@ func (r *Rescheduler) processFaultEvent(pod *corev1.Pod) error {
 		return fmt.Errorf("failed to get instance set %s/%s: %v, rescheduling may not work",
 			instanceSetNamespacedName.Namespace, instanceSetNamespacedName.Name, err)
 	}
-	// 3. trigger instanceSet reconcile
+	// 4. trigger instanceSet reconcile
 	err = r.triggerInstanceSetReconcile(ctx, &instanceSet, pod, workLoadName)
 	if err != nil {
 		return fmt.Errorf("failed to trigger instance set reconcile for pod %s/%s: %v, rescheduling may not work",
 			pod.Namespace, pod.Name, err)
 	}
 	return nil
+}
+
+// processPodLevelRescheduling handles pod-level rescheduling: check FaultRetryTimes,
+// delete the fault pod only, and decrement the retry counter after each deletion.
+func (r *Rescheduler) processPodLevelRescheduling(pod *corev1.Pod,
+	workLoadName, instanceSetName string) error {
+	workLoadNamespacedName := types.NamespacedName{
+		Namespace: pod.Namespace,
+		Name:      workLoadName,
+	}
+	currentFaultWorkLoad := faultWorkLoad{
+		NamespacedName:  workLoadNamespacedName,
+		instanceSetName: instanceSetName,
+	}
+	r.Lock()
+	// retry times only apply to business faults (pod-failed); hardware faults delete
+	// the fault pod directly without consuming the retry budget.
+	if faultReason := pod.Annotations[common.PodStatusAnnotationKey]; strings.HasSuffix(faultReason, common.PodFailed) {
+		// record initial retry times on the first fault
+		if _, exists := r.faultRetryTimesMap[currentFaultWorkLoad]; !exists {
+			retryTimes, err := strconv.Atoi(pod.Labels[common.FaultRetryTimesLabelKey])
+			if err != nil {
+				hwlog.RunLog.Errorf("pod-level rescheduling: invalid fault-retry-times label %q for workload %s/%s: %v",
+					pod.Labels[common.FaultRetryTimesLabelKey], workLoadNamespacedName.Namespace, workLoadName, err)
+				retryTimes = 0
+			}
+			r.faultRetryTimesMap[currentFaultWorkLoad] = retryTimes
+		}
+		// skip when retry times are exhausted
+		if r.faultRetryTimesMap[currentFaultWorkLoad] <= 0 {
+			r.Unlock()
+			hwlog.RunLog.Infof("pod-level rescheduling: workload %s/%s retry times exhausted, skip",
+				workLoadNamespacedName.Namespace, workLoadName)
+			return nil
+		}
+		// decrement retry times before deleting the fault pod
+		r.faultRetryTimesMap[currentFaultWorkLoad]--
+	}
+	r.Unlock()
+	return r.deleteFaultPod(pod)
+}
+
+// isPodLevelRescheduling checks whether pod-level rescheduling is enabled on the
+// pod via the pod-rescheduling label. The label lives on the pod template in the
+// InferService, consistent with fault-scheduling and fault-retry-times which are
+// also read from the pod.
+func (r *Rescheduler) isPodLevelRescheduling(pod *corev1.Pod) bool {
+	enabled := pod.Labels[common.PodReschedulingLabelKey] == common.PodReschedulingOn
+	hwlog.RunLog.Infof("pod %s/%s pod-rescheduling label=%s, enabled=%t",
+		pod.Namespace, pod.Name, pod.Labels[common.PodReschedulingLabelKey], enabled)
+	return enabled
+}
+
+// deleteFaultPod deletes a single fault pod, supporting force/grace deletion modes.
+// The mode is decided by the fault-scheduling label on the pod, keeping the same
+// semantics as the instance-level deletePodsForExternalRescheduling:
+//   - external-force / external-force-pod-failed: immediately force delete
+//   - external-grace (default): graceful delete, force delete after grace timeout
+func (r *Rescheduler) deleteFaultPod(pod *corev1.Pod) error {
+	ctx := context.Background()
+	mode := pod.Labels[common.FaultSchedulingLabelKey]
+	ns, name := pod.Namespace, pod.Name
+	hwlog.RunLog.Infof("pod-level rescheduling: deleting pod %s/%s with mode %s", ns, name, mode)
+	switch mode {
+	case common.ExternalForceReschedulingValue,
+		common.ExternalForcePodFailedReschedulingValue:
+		// force: delete immediately with GracePeriodSeconds(0), NotFound means already deleted
+		if err := r.client.Delete(ctx, pod, client.GracePeriodSeconds(0)); err != nil &&
+			!errors.IsNotFound(err) {
+			return fmt.Errorf("failed to force delete fault pod %s/%s: %v", ns, name, err)
+		}
+		hwlog.RunLog.Infof("pod-level rescheduling: force deleted pod %s/%s", ns, name)
+		return nil
+	default:
+		// grace: graceful delete first, force delete after timeout as fallback
+		return r.gracefulDeleteFaultPod(ctx, pod)
+	}
+}
+
+// gracefulDeleteFaultPod gracefully deletes the fault pod and starts an async
+// force-delete fallback after the grace period expires.
+func (r *Rescheduler) gracefulDeleteFaultPod(ctx context.Context, pod *corev1.Pod) error {
+	ns, name := pod.Namespace, pod.Name
+	waitSeconds := int64(common.DefaultTerminationGracePeriodSeconds)
+	if grace := pod.Spec.TerminationGracePeriodSeconds; grace != nil && *grace > 0 {
+		waitSeconds = *grace
+	}
+	if err := r.client.Delete(ctx, pod); err != nil && !errors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete fault pod %s/%s: %v", ns, name, err)
+	}
+	hwlog.RunLog.Infof("pod-level rescheduling: waiting %d seconds for graceful deletion of "+
+		"pod %s/%s, will force delete after timeout", waitSeconds, ns, name)
+	// wait asynchronously for the grace period, force delete the pod if it still exists
+	go r.forceDeleteFaultPodAfterGrace(context.WithoutCancel(ctx), ns, name, pod.UID, waitSeconds)
+	return nil
+}
+
+// forceDeleteFaultPodAfterGrace force-deletes the pod if it still exists after
+// the grace period. It is the single-pod variant of forceDeletePodsAfterGrace
+// (List degrades to Get for one pod).
+func (r *Rescheduler) forceDeleteFaultPodAfterGrace(ctx context.Context,
+	ns, name string, uid types.UID, waitSeconds int64) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			hwlog.RunLog.Errorf("panic in force-delete goroutine for pod %s/%s: %v", ns, name, rec)
+		}
+	}()
+	time.Sleep(time.Duration(waitSeconds) * time.Second)
+	var remainPod corev1.Pod
+	if err := r.client.Get(ctx, types.NamespacedName{Namespace: ns, Name: name}, &remainPod); err != nil {
+		// pod has been gracefully deleted, no fallback needed
+		if errors.IsNotFound(err) {
+			return
+		}
+		hwlog.RunLog.Errorf("failed to get pod %s/%s on force-delete fallback: %v", ns, name, err)
+		return
+	}
+	if remainPod.UID != uid {
+		// a pod with the same name has been recreated, skip to avoid deleting the healthy pod
+		hwlog.RunLog.Infof("pod %s/%s has been recreated (uid changed), skip force delete", ns, name)
+		return
+	}
+	if err := r.client.Delete(ctx, &remainPod, client.GracePeriodSeconds(0)); err != nil &&
+		!errors.IsNotFound(err) {
+		hwlog.RunLog.Errorf("failed to force delete remaining pod %s/%s after grace period: %v",
+			ns, name, err)
+		return
+	}
+	hwlog.RunLog.Infof("pod-level rescheduling: force deleted remaining pod %s/%s after "+
+		"grace period", ns, name)
 }
 
 func (r *Rescheduler) recordWorkLoadFault(pod *corev1.Pod, workLoadName string, instanceSetName string) bool {
