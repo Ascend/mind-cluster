@@ -70,7 +70,7 @@ metadata:
   labels:
     ...
     fault-scheduling: "grace"      # 可以根据实际情况选择force或者grace，配置为force时Pod不建议使用主机网络，配置force时可能存在重调度失败并触发多次重调度直到成功的现象。
-    fault-retry-times: 100         # 配置无条件尝试次数，软件故障场景需要配置。
+    fault-retry-times: "100"         # 配置无条件尝试次数，软件故障场景需要配置。
 ```
 
 fault-scheduling配置项取值含义如下。
