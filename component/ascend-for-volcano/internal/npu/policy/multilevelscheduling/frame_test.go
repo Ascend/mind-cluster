@@ -115,27 +115,6 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestCheckTaskNPU(t *testing.T) {
-	cases := []struct {
-		name    string
-		task    util.NPUTask
-		wantErr bool
-	}{
-		{"valid", util.NPUTask{Name: testTaskName, ReqNPUNum: 8}, false},
-		{"zero_req", util.NPUTask{Name: testTaskName, ReqNPUNum: 0}, true},
-		{"skip_anno", util.NPUTask{ReqNPUNum: 0, Annotation: map[string]string{util.TaskSpecAnno: util.SchedulerType}}, false},
-		{"skip_plugin", util.NPUTask{ReqNPUNum: 0, Annotation: map[string]string{util.SkipAscendPluginAnno: util.SkipEnabled}}, false},
-	}
-	for _, tc := range cases {
-		mh := newTestHandler()
-		mh.NPUJob.Tasks["task1"] = tc.task
-		res := mh.checkTaskNPU()
-		if (res != nil) != tc.wantErr {
-			t.Errorf("%s: got err=%v, wantErr=%v", tc.name, res, tc.wantErr)
-		}
-	}
-}
-
 func TestCheckLevels(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -166,9 +145,15 @@ func TestCheckLevels(t *testing.T) {
 
 func TestValidNPUJob(t *testing.T) {
 	mh := newTestHandler()
+	// non-NPU task (requests 0 npu) no longer fails job validation without any annotation
 	mh.NPUJob.Tasks["task1"] = util.NPUTask{Name: testTaskName, ReqNPUNum: 0}
-	if res := mh.ValidNPUJob(); res == nil {
-		t.Error("ValidNPUJob() should return error for zero req npu")
+	patch := gomonkey.ApplyFunc(util.GetTaskTreeLevels,
+		func(map[string]int, int) ([]util.TaskTreeLevel, error) {
+			return []util.TaskTreeLevel{{Name: "level", ReqNode: 2}}, nil
+		})
+	defer patch.Reset()
+	if res := mh.ValidNPUJob(); res != nil {
+		t.Errorf("ValidNPUJob() = %v, want pass for zero req npu task", res)
 	}
 }
 

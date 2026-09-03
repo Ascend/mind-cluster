@@ -96,15 +96,18 @@ func (tp *module910SuperPod) checkRequireNPU() *api.ValidateResult {
 func (tp *module910SuperPod) CheckTaskNPU() *api.ValidateResult {
 	helper := util.NewTaskValidateHelper()
 	for _, task := range tp.Tasks {
+		// same task-spec only need to be validated once
 		if helper.HasTask(task.TaskSpecKey) {
 			continue
 		}
-		if task.ReqNPUNum == tp.MaxNodeNPUNum {
+		// non-NPU pod requests no NPU, pass directly without any annotations
+		if task.ReqNPUNum == 0 {
+			klog.V(util.LogInfoLev).Infof("CheckTaskNPU: task<%s> requests 0 npu", task.Name)
 			helper.AddValidateTask(task.TaskSpecKey)
 			continue
 		}
-		if task.ReqNPUNum == 0 && (task.Annotation[ascend910a3.TaskSpecAnno] == ascend910a3.SchedulerType ||
-			task.Annotation[ascend910a3.SkipAscendPluginAnno] == ascend910a3.SkipEnabled) {
+		// NPU pod must request the whole node npu num
+		if task.ReqNPUNum == tp.MaxNodeNPUNum {
 			helper.AddValidateTask(task.TaskSpecKey)
 			continue
 		}

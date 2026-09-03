@@ -157,14 +157,14 @@ func buildSingleJobTestCases() []testcase {
 func buildDistributedJobTestCases() []testcase {
 	return []testcase{
 		{
-			name:       "05- not distributed job, want not pass when request 2*0 npu",
+			name:       "05- not distributed job, want pass when request 2*0 npu",
 			NPUTaskNum: 0,
 			ReqNPUNum:  0,
 			Task: map[api.TaskID]util.NPUTask{workerTrainingID: {ReqNPUNum: 0, TaskSpecKey: workerTrainingID},
 				masterTrainingID: {ReqNPUNum: 0, TaskSpecKey: masterTrainingID,
 					Annotation: map[string]string{ascend910a3.TaskSpecAnno: ascend910a3.SchedulerType}},
 			},
-			pass: false,
+			pass: true,
 		},
 		{
 			name:       "06- not distributed job, want not pass when request 1*0+1*1 npu",
@@ -201,6 +201,15 @@ func buildDistributedJobTestCases() []testcase {
 				masterTrainingID: {ReqNPUNum: 0, Annotation: map[string]string{ascend910a3.TaskSpecAnno: ascend910a3.SchedulerType}},
 			},
 			pass: false,
+		},
+		{
+			name:       "09a- distributed job, want pass when request 1*0 (no annotation)+1*2 npu",
+			NPUTaskNum: taskNum1,
+			ReqNPUNum:  npuNum2,
+			Task: map[api.TaskID]util.NPUTask{workerTrainingID: {ReqNPUNum: npuNum2},
+				masterTrainingID: {ReqNPUNum: 0},
+			},
+			pass: true,
 		},
 	}
 }

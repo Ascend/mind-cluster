@@ -67,7 +67,6 @@ const (
 	MultiLevelHandlerName = "multilevel"
 
 	nodeNpuNotMatchError      = "node usable npu not match task npu num"
-	jobCheckFailedReason      = "npu num is invalid"
 	blockInvalidReason        = "block config is invalid"
 	scoreForNode              = 100000000
 	maxNodeNpu                = 16
