@@ -295,7 +295,7 @@ func InitJobNPUTasks(vcJob *api.JobInfo) map[api.TaskID]util.NPUTask {
 	terminatingPodNum := 0
 	for taskID, taskInf := range vcJob.Tasks {
 		initNormalJobIndex(taskInf, usedRanks)
-		name, num := getVCTaskReqNPUTypeFromTaskInfo(taskInf)
+		name, num := util.GetNPURequestFromTask(taskInf)
 		resultMap[taskID] = util.NPUTask{
 			Name:        taskInf.Name,
 			NameSpace:   taskInf.Namespace,
@@ -579,7 +579,19 @@ func (sJob *SchedulerJob) initNPUJob(vcJob *api.JobInfo, npuName string, npuNum 
 	sJob.setSchedulingTaskNum(vcJob)
 	sJob.setMultiLevelTaskSchedulingConfig(vcJob)
 	sJob.setParameterPlaneUnhealthyTolerance()
+	sJob.setScheduleMode()
 	sJob.initVTasks(vcJob)
+}
+
+// setScheduleMode resolves the job's NPU topology schedule mode from the
+// huawei.com/schedule.mode annotation and populates NPUJob.ScheduleMode.
+func (sJob *SchedulerJob) setScheduleMode() {
+	mode, exist := sJob.Annotation[util.ScheduleModeAnnoKey]
+	if !exist {
+		sJob.ScheduleMode = util.SoftScheduleMode
+	} else {
+		sJob.ScheduleMode = util.ParseScheduleMode(mode)
+	}
 }
 
 // setParameterPlaneUnhealthyTolerance reads the huawei.com/parameterplane.unhealthy-tolerance annotation
@@ -988,12 +1000,12 @@ func GetJobInfoAllocatedTaskNum(jobInfo *api.JobInfo) int32 {
 
 func validVirtualDevJob(job *api.JobInfo) *api.ValidateResult {
 	for _, task := range job.Tasks {
-		npuName, rNpuNum := getVCTaskReqNPUTypeFromTaskInfo(task)
+		npuName, rNpuNum := util.GetNPURequestFromTask(task)
 		if (ascend910VirtualDevNameReg.MatchString(npuName) || ascend310VirtualDevNameReg.MatchString(npuName)) &&
 			(rNpuNum > util.NPUIndex1) {
 			err := fmt.Errorf("job %s task num is <%v>, request vnpu num <%v> more than 1 virtual device"+
 				", keep job pending ", job.Name, len(job.Tasks), rNpuNum)
-			klog.V(util.LogDebugLev).Infof(err.Error())
+			klog.V(util.LogDebugLev).Info(err.Error())
 			return &api.ValidateResult{Pass: false, Reason: util.InvalidResourceRequestReason, Message: err.Error()}
 		}
 	}

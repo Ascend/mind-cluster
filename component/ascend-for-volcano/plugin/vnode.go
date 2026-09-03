@@ -274,7 +274,7 @@ func (n NPUNode) createNodeNewVChips(chipTotalRes util.VResource) error {
 }
 
 func (n *NPUNode) setUnhealthyChipIds() error {
-	unhealthyCardIDs, getErr := n.getCardIDsFromNodeAndDeviceInfo(unhealthyCardSuffix)
+	unhealthyCardIDs, getErr := n.getCardIDsFromNodeAndDeviceInfo(util.NPUUnhealthySuffix)
 	if getErr != nil {
 		return fmt.Errorf("getFreeCardIDsFromDeviceInfo %s", getErr)
 	}

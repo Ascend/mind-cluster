@@ -311,7 +311,6 @@ func judgeLasTimeTaskIsHealthy(fJob *rescheduling.FaultJob, nodeName string) boo
 
 func judgeSatisfiedRackAffinity(fJob *rescheduling.FaultJob, nodeName string, tpBlock int) bool {
 	if tpBlock <= tpBlock1 {
-		// 未开启框亲和性或者还没到整框调度阶段，返回 true
 		return true
 	}
 	for _, task := range fJob.FaultTasks {

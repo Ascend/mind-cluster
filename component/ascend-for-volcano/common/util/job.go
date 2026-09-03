@@ -39,6 +39,10 @@ type NPUJob struct {
 	SpBlockNPUNum      int
 	TpBlockNPUNum      int
 	SubHealthyStrategy string
+	// ScheduleMode is the job's NPU topology scheduling mode (hard or soft).
+	// Resolved once at job init from the huawei.com/schedule.mode annotation,
+	// with precedence pod > podgroup > owner workload; absent/invalid defaults to soft.
+	ScheduleMode ScheduleMode
 	// ParameterPlaneUnhealthyTolerance indicates whether the job tolerates parameter plane unhealthy NPU.
 	ParameterPlaneUnhealthyTolerance bool
 

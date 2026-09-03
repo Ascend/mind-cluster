@@ -35,6 +35,7 @@ import (
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/affinity/chip/topo"
 )
 
 // NPUNode the plugin define node info.
@@ -55,6 +56,8 @@ type CommonNode struct {
 	Allocate       map[v1.ResourceName]float64
 	Idle           map[v1.ResourceName]float64
 	Tasks          map[api.TaskID]*api.TaskInfo
+	ChipTopo       *topo.ChipNode
+	ChipPods       map[int]map[string]*v1.Pod
 	BaseDeviceInfo string
 	// convert phy id to device id at ascend950
 	PhyIDToDeviceIDMap map[int32]int32
@@ -150,11 +153,20 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 		return nil
 	}
 
+	return sHandle.NodePredicateOnVCNode(taskInfo, vcNode)
+}
+
+// NodePredicateOnVCNode
+func (sHandle *ScheduleHandler) NodePredicateOnVCNode(taskInfo *api.TaskInfo, vcNode NPUNode) error {
+	if sHandle == nil || taskInfo == nil {
+		return fmt.Errorf("got null parameter(s)")
+	}
+
 	// Bypass DRA tasks before fault check: DRA pods are allocated by the DRA
 	// driver, they should never be rejected by NPU fault handling.
 	if util.IsDRATask(taskInfo) {
 		klog.V(util.LogInfoLev).Infof("NodePredicate bypass DRA task <%s> on node <%s>.",
-			taskInfo.Name, nodeInfo.Name)
+			taskInfo.Name, vcNode.Name)
 		return nil
 	}
 
@@ -167,8 +179,8 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 	if !util.IsNPUTask(taskInfo) {
 		return nil
 	}
-	klog.V(util.LogDebugLev).Infof("enter node(%s) predicate", nodeInfo.Name)
-	defer klog.V(util.LogDebugLev).Infof("leave node(%s) predicate", nodeInfo.Name)
+	klog.V(util.LogDebugLev).Infof("enter node(%s) predicate", vcNode.Name)
+	defer klog.V(util.LogDebugLev).Infof("leave node(%s) predicate", vcNode.Name)
 	vcJob, ok := sHandle.Jobs[taskInfo.Job]
 	if !ok {
 		klog.V(util.LogDebugLev).Infof("NodePredicate not support job:%s.", util.SafePrint(taskInfo.Job))
@@ -272,8 +284,120 @@ func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfo k8s.Nod
 	if setVNPUErr := n.setNodeVNPUInfo(npuNode, vJobTemplate); setVNPUErr != nil {
 		klog.V(util.LogDebugLev).Infof("setNodeVNPUInfo %s %s", npuNode.Name, setVNPUErr)
 	}
+	n.ParseChipTopology(npuNode)
 	klog.V(util.LogDebugLev).Infof("initNPUNodeByNodeInf <%s> success %#v", npuNode.Name, n.CommonNode)
 	return nil
+}
+
+func getNPUCapacity(node *api.NodeInfo) int {
+	for name, res := range node.Capacity.ScalarResources {
+		if name == util.HwPreName+util.Ascend910 || name == util.NPUCardName {
+			return int(res / util.NPUHexKilo)
+		}
+	}
+	return 0
+}
+
+// ParseChipTopology parse node huawei.com/npu.topology annotation
+func (n *NPUNode) ParseChipTopology(node *api.NodeInfo) {
+	raw, exist := n.Annotation[util.TopologyAnnoKey]
+	if !exist {
+		raw = topo.BuildFlatTopology(getNPUCapacity(node))
+	}
+	if n.ChipTopo == nil || n.ChipTopo.Raw != raw {
+		n.ChipTopo = topo.ParseTopology(raw)
+	}
+	if n.ChipTopo == nil {
+		return
+	}
+	n.ChipPods = make(map[int]map[string]*v1.Pod)
+	for _, ti := range node.Tasks {
+		if !util.IsNPUTask(ti) || ti.Pod == nil {
+			continue
+		}
+		for _, chipID := range getAllocatedChipIDsFromPod(ti.Pod, n) {
+			if n.ChipPods[chipID] == nil {
+				n.ChipPods[chipID] = make(map[string]*v1.Pod, util.MapInitNum)
+			}
+			n.ChipPods[chipID][string(ti.Pod.UID)] = ti.Pod
+		}
+	}
+
+	var faulty, netUnh map[int]struct{}
+	maxCardID := 0
+	for key, val := range n.Annotation {
+		pre, ok := cardAnnoNpuPre(key)
+		if !ok {
+			continue
+		}
+		for id := range util.ParseDevList(val, pre) {
+			if id > maxCardID {
+				maxCardID = id
+			}
+			switch {
+			case strings.HasSuffix(key, util.NPUUnhealthySuffix):
+				if faulty == nil {
+					faulty = make(map[int]struct{})
+				}
+				faulty[id] = struct{}{}
+			case strings.HasSuffix(key, util.NPUNetworkUnhealthy):
+				if netUnh == nil {
+					netUnh = make(map[int]struct{})
+				}
+				netUnh[id] = struct{}{}
+			}
+		}
+	}
+	for id := range n.ChipPods {
+		if id > maxCardID {
+			maxCardID = id
+		}
+	}
+	if n.chipTopoOversize(maxCardID) {
+		n.ChipTopo = nil
+		return
+	}
+	owners := make(map[string][]int)
+	for id, pods := range n.ChipPods {
+		for uid, pod := range pods {
+			if pod != nil && pod.Status.Phase != v1.PodFailed && pod.Status.Phase != v1.PodSucceeded {
+				owners[uid] = append(owners[uid], id)
+			}
+		}
+	}
+	n.ChipTopo.Init(faulty, netUnh, owners)
+}
+
+// cardAnnoNpuPre
+func cardAnnoNpuPre(key string) (string, bool) {
+	family := strings.TrimPrefix(key, util.HwPreName)
+	family = strings.TrimSuffix(family, util.NPUUnhealthySuffix)
+	family = strings.TrimSuffix(family, util.NPUNetworkUnhealthy)
+	switch family {
+	case "Ascend910", "Ascend910b":
+		return util.NPU910CardNamePre, true
+	case "Ascend310P":
+		return util.NPU310PCardNamePre, true
+	case "Ascend310":
+		return util.NPU310CardNamePre, true
+	case "npu":
+		return util.NPUCardNamePre, true
+	}
+	return "", false
+}
+
+// chipTopoOversize reports whether the node owns a card whose id exceeds the
+// topology's max chip id. maxCardID is recorded once in ParseChipTopology while
+// the annotations are already being walked, instead of re-parsing every card id here.
+func (n *NPUNode) chipTopoOversize(maxCardID int) bool {
+	maxID := n.ChipTopo.MaxChipID()
+	if maxCardID > maxID {
+		klog.V(util.LogErrorLev).Infof(
+			"node<%s> topo<%s> abnormal: node card id<%d> exceeds topo max chip id<%d>, init failed",
+			n.Name, n.ChipTopo.Raw, maxCardID, maxID)
+		return true
+	}
+	return false
 }
 
 // getNPUNodeAddress get npu node address
@@ -407,7 +531,6 @@ func (n NPUNode) checkNPUResourceStable(vcJob SchedulerJob) error {
 	return nil
 }
 
-// updateNPUNodeDeviceInfos return true if device info was updated, else return false
 func (n *NPUNode) updateNPUNodeDpuInfos(dpuInfo k8s.DpuInfoWithNode) {
 	if dpuInfo.UpdateTime == 0 {
 		klog.V(util.LogDebugLev).Infof("node %s dpu info is empty, skip", n.Name)
@@ -443,7 +566,7 @@ func (n *NPUNode) updateNPUNodeDeviceInfos(data k8s.NodeDeviceInfoWithID) {
 func (n *NPUNode) updateNPUNodeDeviceInfosWithVolcanoCache(data k8s.NodeDeviceInfoWithID, updateTime int64) {
 	unhealthyCard := ""
 	for k, v := range n.Annotation {
-		if strings.HasSuffix(k, unhealthyCardSuffix) {
+		if strings.HasSuffix(k, util.NPUUnhealthySuffix) {
 			unhealthyCard = v
 			break
 		}

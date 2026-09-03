@@ -200,8 +200,10 @@ const (
 	RankIdNotExistError = "rank id does not exist"
 	// TopoTreeLabelError topology label does not match config
 	TopoTreeLabelError = "topology label does not match config"
-	// NPUResourceShortageError node don't have enough npu resource
+	// NPUResourceShortageError node don't have enough idle npu resource, but may be satisfied by eviction
 	NPUResourceShortageError = "NPUResourceShortage:"
+	// NPUResourceUnavailableError node's all healthy npu chips (including occupied) cannot satisfy the request
+	NPUResourceUnavailableError = "NPUResourceUnavailable:"
 	// JobKindKey for define the Job kind:ascend-310P, ascend-910
 	JobKindKey = "ring-controller.atlas"
 	// DistributedJobKey flag for distributed job
