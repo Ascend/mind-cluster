@@ -548,3 +548,26 @@ func SanitizeLabelValue(value string) string {
 	sanitized = spaceRegex.ReplaceAllString(sanitized, "-")
 	return sanitized
 }
+
+func GetAllocatedChipIDsFromPod(pod *v1.Pod) []int {
+	chipIDs := make([]int, 0)
+	if pod == nil || pod.Annotations == nil {
+		return chipIDs
+	}
+	annoPrefixToNpuPre := map[string]string{
+		NPU910CardName:  NPU910CardNamePre,
+		NPU310PCardName: NPU310PCardNamePre,
+		NPU310CardName:  NPU310CardNamePre,
+		Ascend910bName:  NPU910CardNamePre,
+		NPUCardName:     NPUCardNamePre,
+	}
+	for annoKey, npuPre := range annoPrefixToNpuPre {
+		if topStr, ok := pod.Annotations[annoKey]; ok && topStr != "" {
+			chipIDs = ChangeTopToIntArray(topStr, npuPre)
+			if len(chipIDs) > 0 {
+				return chipIDs
+			}
+		}
+	}
+	return chipIDs
+}

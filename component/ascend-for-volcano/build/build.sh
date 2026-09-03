@@ -16,12 +16,31 @@
 # ============================================================================
 
 set -e
+set -x
 
 # BASE_VER supports v1.9.0, and 1.10+
 if [ ! -n "$1" ]; then
     BASE_VER=v1.12.0
 else
     BASE_VER=$1
+fi
+
+function ver_at_least() {
+    local ver="${1#v}"
+    local major minor floor_major=$2 floor_minor=$3
+    IFS='.' read -r major minor _ <<< "${ver}"
+    if [ "${major:-0}" -gt ${floor_major} ] || { [ "${major:-0}" -eq ${floor_major} ] && [ "${minor:-0}" -ge ${floor_minor} ]; }; then
+        return 0 # ver >= floor
+    fi
+    return 1 # ver < floor
+}
+
+if ver_at_least "${BASE_VER}" 1 15; then
+    GO_BUILD_TAGS="-tags volcano_v115"
+    echo ">> ${BASE_VER} >= v1.15.0: build with ${GO_BUILD_TAGS}"
+else
+    GO_BUILD_TAGS=""
+    echo ">> ${BASE_VER} < v1.15.0: pre-v1.15 build (no build tags)"
 fi
 
 echo "===== Start Dual Build Mode ====="
@@ -171,7 +190,6 @@ function build_workflow() {
     export PATH=$GOPATH/bin:$PATH
 
     cd "${TOP_DIR}"
-    go mod tidy
 
     cd "${OUTPUT_DIR}"
 
@@ -186,16 +204,16 @@ function build_workflow() {
     fi
 
     export CGO_ENABLED=0
-    go build -mod=mod -buildmode=pie -ldflags "-s -bindnow
+    go build -mod=mod ${GO_BUILD_TAGS} -buildmode=pie -ldflags "-s -bindnow
       -X '${PKG_PATH}/version.Built=${DATE}' -X '${PKG_PATH}/version.Version=${BASE_VER}'" \
       -o vc-controller-manager "${CMD_PATH}"/controller-manager
 
     export CGO_ENABLED=1
-    go build -mod=mod -buildmode=pie -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now
+    go build -mod=mod ${GO_BUILD_TAGS} -buildmode=pie -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now
       -X '${PKG_PATH}/version.Built=${DATE}' -X '${PKG_PATH}/version.Version=${BASE_VER}'" \
       -o vc-scheduler "${CMD_PATH}"/scheduler
 
-    go build -mod=mod -buildmode=plugin -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now
+    go build -mod=mod ${GO_BUILD_TAGS} -buildmode=plugin -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now
       -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin.PluginName=${REL_NPU_PLUGIN} \
       -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/version.Version=${REL_VERSION} \
       -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/version.GitCommit=${GIT_COMMIT} \

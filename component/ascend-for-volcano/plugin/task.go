@@ -225,7 +225,7 @@ func (sHandle *ScheduleHandler) updateChipCountAfterAllocate(task *api.TaskInfo,
 	if sHandle == nil || task == nil || vcNode == nil {
 		return
 	}
-	chipIDs := getAllocatedChipIDsFromPod(task.Pod, vcNode)
+	chipIDs := util.GetAllocatedChipIDsFromPod(task.Pod)
 	for _, chipID := range chipIDs {
 		chip, ok := vcNode.Chips[chipID]
 		if !ok {
@@ -249,7 +249,7 @@ func (sHandle *ScheduleHandler) updateChipCountAfterDeallocate(task *api.TaskInf
 	if !ok {
 		return
 	}
-	chipIDs := getAllocatedChipIDsFromPod(task.Pod, &vcNode)
+	chipIDs := util.GetAllocatedChipIDsFromPod(task.Pod)
 	podUID := string(task.Pod.UID)
 	for _, chipID := range chipIDs {
 		chip, chipOK := vcNode.Chips[chipID]
@@ -264,29 +264,6 @@ func (sHandle *ScheduleHandler) updateChipCountAfterDeallocate(task *api.TaskInf
 		}
 	}
 	sHandle.Nodes[nodeName] = vcNode
-}
-
-func getAllocatedChipIDsFromPod(pod *v1.Pod, vcNode *NPUNode) []int {
-	chipIDs := make([]int, 0)
-	if pod == nil || vcNode == nil || pod.Annotations == nil {
-		return chipIDs
-	}
-	annoPrefixToNpuPre := map[string]string{
-		util.NPU910CardName:  util.NPU910CardNamePre,
-		util.NPU310PCardName: util.NPU310PCardNamePre,
-		util.NPU310CardName:  util.NPU310CardNamePre,
-		util.Ascend910bName:  util.NPU910CardNamePre,
-		util.NPUCardName:     util.NPUCardNamePre,
-	}
-	for annoKey, npuPre := range annoPrefixToNpuPre {
-		if topStr, ok := pod.Annotations[annoKey]; ok && topStr != "" {
-			chipIDs = util.ChangeTopToIntArray(topStr, npuPre)
-			if len(chipIDs) > 0 {
-				return chipIDs
-			}
-		}
-	}
-	return chipIDs
 }
 
 // CalcCardFreeCount calculates free chip count per card after preempting the given preemptees.
@@ -321,7 +298,7 @@ func CalcCardFreeCount(vcNode *NPUNode, preemptees []*api.TaskInfo, maxCardNPUNu
 			continue
 		}
 		_, isPE := preempteeSet[string(t.Pod.UID)]
-		for _, cid := range getAllocatedChipIDsFromPod(t.Pod, vcNode) {
+		for _, cid := range util.GetAllocatedChipIDsFromPod(t.Pod) {
 			allSchedulableChips[cid] = struct{}{}
 			if !isPE {
 				nonPreempteeChips[cid] = struct{}{}
@@ -356,7 +333,7 @@ func FilterPreempteesByFeasibleCards(vcNode *NPUNode, preemptees []*api.TaskInfo
 	}
 	var filtered []*api.TaskInfo
 	for _, pe := range preemptees {
-		chipIDs := getAllocatedChipIDsFromPod(pe.Pod, vcNode)
+		chipIDs := util.GetAllocatedChipIDsFromPod(pe.Pod)
 		onFeasibleCard := false
 		for _, cid := range chipIDs {
 			if _, ok := feasibleCards[cid/maxCardNPUNum]; ok {

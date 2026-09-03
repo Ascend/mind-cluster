@@ -300,7 +300,6 @@ func buildNPUDeallocateFuncTest() []npuDeallocateFuncTest {
 // TestGetAllocatedChipIDsFromPod covers nil pod, nil annotations and
 // multiple card-name annotations (910 / 310P / npu).
 func TestGetAllocatedChipIDsFromPod(t *testing.T) {
-	node := &NPUNode{}
 	tests := []struct {
 		name      string
 		podName   string
@@ -319,13 +318,13 @@ func TestGetAllocatedChipIDsFromPod(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.podName == "" {
-				if got := getAllocatedChipIDsFromPod(nil, node); len(got) != 0 {
+				if got := util.GetAllocatedChipIDsFromPod(nil); len(got) != 0 {
 					t.Errorf("got=%v want empty", got)
 				}
 				return
 			}
 			task := test.BuildTestTaskWithAnnotation(tt.npuName, "1", tt.annoVal)
-			got := getAllocatedChipIDsFromPod(task.Pod, node)
+			got := util.GetAllocatedChipIDsFromPod(task.Pod)
 			if len(got) != tt.wantLen {
 				t.Errorf("got=%v wantLen=%d", got, tt.wantLen)
 				return

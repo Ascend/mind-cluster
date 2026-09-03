@@ -41,6 +41,7 @@ func New() base.AscendHandler {
 	h := &chipHandler{}
 	h.SetPluginName(PolicyName)
 	h.SetMaxNodeNPUNum(maxNodeNPUNum)
+	h.SetMaxCardNPUNum(1)
 	return h
 }
 
