@@ -10,6 +10,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -1424,5 +1425,244 @@ func TestRescheduler_ProcessPriorityWithLowPriority(t *testing.T) {
 		result, err := rescheduler.processPrioritySetting(context.Background(), instanceSet, createMockWorkLoadHandler())
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(result, convey.ShouldNotBeNil)
+	})
+}
+
+// createFaultPodWithMode creates a fault pod carrying only the fault-scheduling label.
+func createFaultPodWithMode(mode string) *corev1.Pod {
+	return createTestPod("test-pod", "default", nil, map[string]string{
+		common.FaultSchedulingLabelKey: mode,
+	})
+}
+
+// isPodDeleted returns true when the pod no longer exists in the cluster.
+func isPodDeleted(c client.Client, name string) bool {
+	err := c.Get(context.Background(),
+		types.NamespacedName{Namespace: "default", Name: name}, &corev1.Pod{})
+	return apierrors.IsNotFound(err)
+}
+
+func TestRescheduler_isPodLevelRescheduling(t *testing.T) {
+	convey.Convey("Test isPodLevelRescheduling", t, func() {
+		rescheduler := NewRescheduler(newFakeClient(), common.FaultRetryTimesCleanupInterval)
+		convey.Convey("Should return true when pod has pod-rescheduling=on label", func() {
+			pod := createTestPod("test-pod", "default", nil, map[string]string{
+				common.InferServiceNameLabelKey: "test-service",
+				common.InstanceSetNameLabelKey:  "test-role",
+				common.InstanceIndexLabelKey:    "0",
+				common.PodReschedulingLabelKey:  common.PodReschedulingOn,
+			})
+			convey.So(rescheduler.isPodLevelRescheduling(pod), convey.ShouldBeTrue)
+		})
+		convey.Convey("Should return false when pod has no pod-rescheduling label", func() {
+			pod := createTestPod("test-pod", "default", nil, map[string]string{
+				common.InferServiceNameLabelKey: "test-service",
+				common.InstanceSetNameLabelKey:  "test-role",
+				common.InstanceIndexLabelKey:    "0",
+			})
+			convey.So(rescheduler.isPodLevelRescheduling(pod), convey.ShouldBeFalse)
+		})
+		convey.Convey("Should return false when pod has non-on pod-rescheduling label", func() {
+			pod := createTestPod("test-pod", "default", nil, map[string]string{
+				common.InferServiceNameLabelKey: "test-service",
+				common.InstanceSetNameLabelKey:  "test-role",
+				common.InstanceIndexLabelKey:    "0",
+				common.PodReschedulingLabelKey:  "off",
+			})
+			convey.So(rescheduler.isPodLevelRescheduling(pod), convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestRescheduler_processPodLevelRescheduling(t *testing.T) {
+	convey.Convey("Test processPodLevelRescheduling", t, func() {
+		workLoadName, instanceSetName := "test-service-test-role-0", "test-service-test-role"
+		faultKey := faultWorkLoad{
+			NamespacedName:  types.NamespacedName{Namespace: "default", Name: workLoadName},
+			instanceSetName: instanceSetName,
+		}
+		convey.Convey("Should init and decrement retry times for pod-failed fault then delete", func() {
+			pod := createFaultPodWithMode(common.ExternalForcePodFailedReschedulingValue)
+			pod.Annotations = map[string]string{common.PodStatusAnnotationKey: common.CommonUnhealthyStatus + "-" + common.PodFailed}
+			pod.Labels[common.FaultRetryTimesLabelKey] = "2"
+			rescheduler := NewRescheduler(newFakeClient(pod), common.FaultRetryTimesCleanupInterval)
+			err := rescheduler.processPodLevelRescheduling(pod, workLoadName, instanceSetName)
+			convey.So(err, convey.ShouldBeNil)
+			rescheduler.Lock()
+			convey.So(rescheduler.faultRetryTimesMap[faultKey], convey.ShouldEqual, 1)
+			rescheduler.Unlock()
+			convey.So(isPodDeleted(rescheduler.client, "test-pod"), convey.ShouldBeTrue)
+		})
+		convey.Convey("Should skip deletion when retry times are exhausted for pod-failed fault", func() {
+			pod := createFaultPodWithMode(common.ExternalForceReschedulingValue)
+			pod.Annotations = map[string]string{common.PodStatusAnnotationKey: common.CommonUnhealthyStatus + "-" + common.PodFailed}
+			rescheduler := NewRescheduler(newFakeClient(pod), common.FaultRetryTimesCleanupInterval)
+			rescheduler.faultRetryTimesMap[faultKey] = 0
+			err := rescheduler.processPodLevelRescheduling(pod, workLoadName, instanceSetName)
+			convey.So(err, convey.ShouldBeNil)
+			rescheduler.Lock()
+			convey.So(rescheduler.faultRetryTimesMap[faultKey], convey.ShouldEqual, 0)
+			rescheduler.Unlock()
+			convey.So(isPodDeleted(rescheduler.client, "test-pod"), convey.ShouldBeFalse)
+		})
+		convey.Convey("Should delete fault pod without consuming retry times for hardware fault", func() {
+			pod := createFaultPodWithMode(common.ExternalForceReschedulingValue)
+			pod.Annotations = map[string]string{common.PodStatusAnnotationKey: common.CommonUnhealthyStatus}
+			rescheduler := NewRescheduler(newFakeClient(pod), common.FaultRetryTimesCleanupInterval)
+			rescheduler.faultRetryTimesMap[faultKey] = 2
+			err := rescheduler.processPodLevelRescheduling(pod, workLoadName, instanceSetName)
+			convey.So(err, convey.ShouldBeNil)
+			rescheduler.Lock()
+			convey.So(rescheduler.faultRetryTimesMap[faultKey], convey.ShouldEqual, 2)
+			rescheduler.Unlock()
+			convey.So(isPodDeleted(rescheduler.client, "test-pod"), convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestRescheduler_deleteFaultPod(t *testing.T) {
+	convey.Convey("Test deleteFaultPod", t, func() {
+		convey.Convey("Should force delete pod immediately with external-force-pod-failed", func() {
+			pod := createFaultPodWithMode(common.ExternalForcePodFailedReschedulingValue)
+			rescheduler := NewRescheduler(newFakeClient(pod), common.FaultRetryTimesCleanupInterval)
+			convey.So(rescheduler.deleteFaultPod(pod), convey.ShouldBeNil)
+			convey.So(isPodDeleted(rescheduler.client, "test-pod"), convey.ShouldBeTrue)
+		})
+		convey.Convey("Should dispatch to graceful deletion with external-grace", func() {
+			pod := createFaultPodWithMode(common.ExternalGraceReschedulingValue)
+			grace := int64(1)
+			pod.Spec.TerminationGracePeriodSeconds = &grace
+			rescheduler := NewRescheduler(newFakeClient(pod), common.FaultRetryTimesCleanupInterval)
+			convey.So(rescheduler.deleteFaultPod(pod), convey.ShouldBeNil)
+			convey.So(isPodDeleted(rescheduler.client, "test-pod"), convey.ShouldBeTrue)
+		})
+		convey.Convey("Should tolerate NotFound when pod is already deleted", func() {
+			pod := createFaultPodWithMode(common.ExternalForceReschedulingValue)
+			rescheduler := NewRescheduler(newFakeClient(), common.FaultRetryTimesCleanupInterval)
+			convey.So(rescheduler.deleteFaultPod(pod), convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestRescheduler_gracefulDeleteFaultPod(t *testing.T) {
+	convey.Convey("Test gracefulDeleteFaultPod", t, func() {
+		convey.Convey("Should delete pod and return nil", func() {
+			pod := createTestPod("test-pod", "default", nil, nil)
+			grace := int64(1)
+			pod.Spec.TerminationGracePeriodSeconds = &grace
+			rescheduler := NewRescheduler(newFakeClient(pod), common.FaultRetryTimesCleanupInterval)
+			convey.So(rescheduler.gracefulDeleteFaultPod(context.Background(), pod), convey.ShouldBeNil)
+			convey.So(isPodDeleted(rescheduler.client, "test-pod"), convey.ShouldBeTrue)
+		})
+		convey.Convey("Should tolerate NotFound when pod does not exist", func() {
+			pod := createTestPod("test-pod", "default", nil, nil)
+			grace := int64(1)
+			pod.Spec.TerminationGracePeriodSeconds = &grace
+			rescheduler := NewRescheduler(newFakeClient(), common.FaultRetryTimesCleanupInterval)
+			convey.So(rescheduler.gracefulDeleteFaultPod(context.Background(), pod), convey.ShouldBeNil)
+		})
+		convey.Convey("Should return error when delete fails", func() {
+			pod := createTestPod("test-pod", "default", nil, nil)
+			fakeClient := newFakeClient()
+			rescheduler := NewRescheduler(fakeClient, common.FaultRetryTimesCleanupInterval)
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "Delete", fmt.Errorf("delete failed"))
+			defer patches.Reset()
+			err := rescheduler.gracefulDeleteFaultPod(context.Background(), pod)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "failed to delete fault pod")
+		})
+	})
+}
+
+func TestRescheduler_forceDeleteFaultPodAfterGrace(t *testing.T) {
+	convey.Convey("Test forceDeleteFaultPodAfterGrace", t, func() {
+		convey.Convey("Should force delete remaining pod when uid matches", func() {
+			pod := createTestPod("test-pod", "default", nil, nil)
+			pod.UID = types.UID("test-uid-1")
+			rescheduler := NewRescheduler(newFakeClient(pod), common.FaultRetryTimesCleanupInterval)
+			var slept time.Duration
+			patches := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) { slept = d })
+			defer patches.Reset()
+			rescheduler.forceDeleteFaultPodAfterGrace(context.Background(), "default", "test-pod", pod.UID, 5)
+			convey.So(slept, convey.ShouldEqual, 5*time.Second)
+			convey.So(isPodDeleted(rescheduler.client, "test-pod"), convey.ShouldBeTrue)
+		})
+		convey.Convey("Should skip force delete when pod recreated with different uid", func() {
+			pod := createTestPod("test-pod", "default", nil, nil)
+			pod.UID = types.UID("new-uid")
+			rescheduler := NewRescheduler(newFakeClient(pod), common.FaultRetryTimesCleanupInterval)
+			var slept time.Duration
+			patches := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) { slept = d })
+			defer patches.Reset()
+			rescheduler.forceDeleteFaultPodAfterGrace(context.Background(), "default", "test-pod", types.UID("old-uid"), 5)
+			convey.So(slept, convey.ShouldEqual, 5*time.Second)
+			convey.So(isPodDeleted(rescheduler.client, "test-pod"), convey.ShouldBeFalse)
+		})
+		convey.Convey("Should skip force delete when pod is already gracefully deleted", func() {
+			rescheduler := NewRescheduler(newFakeClient(), common.FaultRetryTimesCleanupInterval)
+			rescheduler.forceDeleteFaultPodAfterGrace(context.Background(), "default", "test-pod", types.UID("test-uid-1"), 0)
+			convey.So(isPodDeleted(rescheduler.client, "test-pod"), convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestRescheduler_handlePodDeleteWithPodLevelRescheduling(t *testing.T) {
+	convey.Convey("Test handlePodDelete with pod-level rescheduling enabled", t, func() {
+		pod := createTestPod("test-pod", "default", nil, map[string]string{
+			common.OperatorNameKey:          common.TrueBool,
+			common.InferServiceNameLabelKey: "test-service",
+			common.InstanceSetNameLabelKey:  "test-role",
+			common.InstanceIndexLabelKey:    "0",
+			common.PodReschedulingLabelKey:  common.PodReschedulingOn,
+		})
+		convey.Convey("Should skip workload rebuild and not consume retry times", func() {
+			instanceSet := createTestInstanceSet("test-service-test-role", "default", nil)
+			instanceSet.Labels[common.GangScheduleLabelKey] = common.TrueBool
+			rescheduler := NewRescheduler(newFakeClient(instanceSet), common.FaultRetryTimesCleanupInterval)
+			faultKey := faultWorkLoad{
+				NamespacedName:  types.NamespacedName{Namespace: "default", Name: "test-service-test-role-0"},
+				instanceSetName: "test-service-test-role",
+			}
+			rescheduler.faultRetryTimesMap[faultKey] = 2
+			rescheduler.handlePodDelete(pod)
+			rescheduler.Lock()
+			_, recorded := rescheduler.faultWorkLoadMap[faultKey]
+			retryTimes := rescheduler.faultRetryTimesMap[faultKey]
+			rescheduler.Unlock()
+			convey.So(recorded, convey.ShouldBeFalse)
+			convey.So(retryTimes, convey.ShouldEqual, 2)
+		})
+	})
+}
+
+func TestRescheduler_processFaultEventPodLevel(t *testing.T) {
+	convey.Convey("Test processFaultEvent with pod-level rescheduling", t, func() {
+		convey.Convey("Should delete fault pod only without recording workload fault", func() {
+			pod := createTestPod("test-pod", "default", nil, map[string]string{
+				common.OperatorNameKey:          common.TrueBool,
+				common.InferServiceNameLabelKey: "test-service",
+				common.InstanceSetNameLabelKey:  "test-role",
+				common.InstanceIndexLabelKey:    "0",
+				common.FaultSchedulingLabelKey:  common.ExternalForcePodFailedReschedulingValue,
+				common.FaultRetryTimesLabelKey:  "2",
+				common.PodReschedulingLabelKey:  common.PodReschedulingOn,
+			})
+			pod.Annotations = map[string]string{common.PodStatusAnnotationKey: common.CommonUnhealthyStatus + "-" + common.PodFailed}
+			instanceSet := createTestInstanceSet("test-service-test-role", "default", nil)
+			rescheduler := NewRescheduler(newFakeClient(instanceSet, pod), common.FaultRetryTimesCleanupInterval)
+			err := rescheduler.processFaultEvent(pod)
+			convey.So(err, convey.ShouldBeNil)
+			faultKey := faultWorkLoad{
+				NamespacedName:  types.NamespacedName{Namespace: "default", Name: "test-service-test-role-0"},
+				instanceSetName: "test-service-test-role",
+			}
+			rescheduler.Lock()
+			_, recorded := rescheduler.faultWorkLoadMap[faultKey]
+			retryTimes := rescheduler.faultRetryTimesMap[faultKey]
+			rescheduler.Unlock()
+			convey.So(recorded, convey.ShouldBeFalse)
+			convey.So(retryTimes, convey.ShouldEqual, 1)
+			convey.So(isPodDeleted(rescheduler.client, "test-pod"), convey.ShouldBeTrue)
+		})
 	})
 }
