@@ -609,7 +609,7 @@ Ascend Docker Runtime安装后，会在安装目录生成可执行工具，涉�
 </td>
 </tr>
 
-<tr id="zh-cn_topic_0000001538744718_row146209438117"><td class="cellrowborder" rowspan="2" valign="top" width="19.97%" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000001538744718_p19762345867"><a name="zh-cn_topic_0000001538744718_p19762345867"></a><a name="zh-cn_topic_0000001538744718_p19762345867"></a>ascend-docker-runtime</p>
+<tr id="zh-cn_topic_0000001538744718_row146209438117"><td class="cellrowborder" rowspan="5" valign="top" width="19.97%" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000001538744718_p19762345867"><a name="zh-cn_topic_0000001538744718_p19762345867"></a><a name="zh-cn_topic_0000001538744718_p19762345867"></a>ascend-docker-runtime</p>
 <p id="zh-cn_topic_0000001538744718_p156203435115"><a name="zh-cn_topic_0000001538744718_p156203435115"></a><a name="zh-cn_topic_0000001538744718_p156203435115"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="20.03%" headers="mcps1.2.6.1.2 "><p id="zh-cn_topic_0000001538744718_p13620243516"><a name="zh-cn_topic_0000001538744718_p13620243516"></a><a name="zh-cn_topic_0000001538744718_p13620243516"></a>0</p>
@@ -624,6 +624,33 @@ Ascend Docker Runtime安装后，会在安装目录生成可执行工具，涉�
 <tr id="zh-cn_topic_0000001538744718_row26206433119"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000001538744718_p16620143414"><a name="zh-cn_topic_0000001538744718_p16620143414"></a><a name="zh-cn_topic_0000001538744718_p16620143414"></a>b</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="zh-cn_topic_0000001538744718_p154110591664"><a name="zh-cn_topic_0000001538744718_p154110591664"></a><a name="zh-cn_topic_0000001538744718_p154110591664"></a>bundle</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="zh-cn_topic_0000001538744718_p5620104318116"><a name="zh-cn_topic_0000001538744718_p5620104318116"></a><a name="zh-cn_topic_0000001538744718_p5620104318116"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="zh-cn_topic_0000001538744718_p1862034312117"><a name="zh-cn_topic_0000001538744718_p1862034312117"></a><a name="zh-cn_topic_0000001538744718_p1862034312117"></a>-</p>
+</td>
+</tr>
+<tr id="zh-cn_topic_0000001538744718_row26206433119"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000001538744718_p16620143414"><a name="zh-cn_topic_0000001538744718_p16620143414"></a><a name="zh-cn_topic_0000001538744718_p16620143414"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="zh-cn_topic_0000001538744718_p154110591664"><a name="zh-cn_topic_0000001538744718_p154110591664"></a><a name="zh-cn_topic_0000001538744718_p154110591664"></a>start</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="zh-cn_topic_0000001538744718_p5620104318116"><a name="zh-cn_topic_0000001538744718_p5620104318116"></a><a name="zh-cn_topic_0000001538744718_p5620104318116"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="zh-cn_topic_0000001538744718_p1862034312117"><a name="zh-cn_topic_0000001538744718_p1862034312117"></a><a name="zh-cn_topic_0000001538744718_p1862034312117"></a>-</p>
+</td>
+</tr>
+<tr id="zh-cn_topic_0000001538744718_row26206433119"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000001538744718_p16620143414"><a name="zh-cn_topic_0000001538744718_p16620143414"></a><a name="zh-cn_topic_0000001538744718_p16620143414"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="zh-cn_topic_0000001538744718_p154110591664"><a name="zh-cn_topic_0000001538744718_p154110591664"></a><a name="zh-cn_topic_0000001538744718_p154110591664"></a>checkpoint</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="zh-cn_topic_0000001538744718_p5620104318116"><a name="zh-cn_topic_0000001538744718_p5620104318116"></a><a name="zh-cn_topic_0000001538744718_p5620104318116"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="zh-cn_topic_0000001538744718_p1862034312117"><a name="zh-cn_topic_0000001538744718_p1862034312117"></a><a name="zh-cn_topic_0000001538744718_p1862034312117"></a>-</p>
+</td>
+</tr>
+<tr id="zh-cn_topic_0000001538744718_row26206433119"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000001538744718_p16620143414"><a name="zh-cn_topic_0000001538744718_p16620143414"></a><a name="zh-cn_topic_0000001538744718_p16620143414"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="zh-cn_topic_0000001538744718_p154110591664"><a name="zh-cn_topic_0000001538744718_p154110591664"></a><a name="zh-cn_topic_0000001538744718_p154110591664"></a>resume</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="zh-cn_topic_0000001538744718_p5620104318116"><a name="zh-cn_topic_0000001538744718_p5620104318116"></a><a name="zh-cn_topic_0000001538744718_p5620104318116"></a>-</p>
 </td>
@@ -1026,7 +1053,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 
 ## K8s集群基础性能调优<a name="ZH-CN_TOPIC_0000002511346319"></a>
 
-MindCluster集群调度组件是基于K8s生态的功能组件，因此训练任务调度基于K8s平台时才支持使用断点续训。断点续训支持的K8s版本与MindCluster集群调度组件一致，当前为1.17.x\~1.36.x（推荐使用1.19.x及以上版本）。
+MindCluster集群调度组件是基于K8s生态的功能组件，因此训练任务调度基于K8s平台时才支持使用断点续训。断点续训支持的K8s版本与MindCluster集群调度组件一致，当前为1.17.x\~1.36.x（推荐使用1.21.x及以上版本）。
 
 >[!NOTE]
 >以下配置为万卡集群的推荐配置，实际配置时，请根据集群的规模进行调整。
@@ -1152,7 +1179,7 @@ MindCluster集群调度组件是基于K8s生态的功能组件，因此训练任
 
 - 安装Docker，支持18.09.x\~28.5.1版本，具体操作请参见[安装Docker](https://docs.docker.com/engine/install/)。
 - 安装Containerd，支持1.4.x\~2.3.3版本，具体操作请参见[安装Containerd](https://github.com/containerd/containerd/blob/main/docs/getting-started.md)。
-- 安装Kubernetes，支持1.17.x\~1.36.x版本（推荐使用1.19.x及以上版本），具体操作请参见[安装Kubernetes](https://kubernetes.io/zh/docs/setup/production-environment/tools/)，推荐[使用Kubeadm创建集群](https://kubernetes.io/zh-cn/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/)，集群初始化过程中的部分问题可参考[初始化Kubernetes失败](https://gitcode.com/Ascend/mind-cluster/issues/338)。如需解除管理节点隔离，命令示例如下。
+- 安装Kubernetes，支持1.17.x\~1.36.x版本（推荐使用1.21.x及以上版本），具体操作请参见[安装Kubernetes](https://kubernetes.io/zh/docs/setup/production-environment/tools/)，推荐[使用Kubeadm创建集群](https://kubernetes.io/zh-cn/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/)，集群初始化过程中的部分问题可参考[初始化Kubernetes失败](https://gitcode.com/Ascend/mind-cluster/issues/338)。如需解除管理节点隔离，命令示例如下。
 
     - Kubernetes 1.24之前版本
         - 解除单节点隔离。

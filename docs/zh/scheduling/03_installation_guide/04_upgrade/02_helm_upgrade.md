@@ -19,6 +19,7 @@
     - [Infer Operator](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426821)
     - [K8s RDMA Shared Dev Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312660)
 - 升级[Ascend Docker Runtime](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426843)、[Container Manager](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312655)、[TaskD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386914)和[MindIO](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226942)组件请参考[手动升级](../../05_developer_guide/00_installation_deployment/01_upgrade.md#ZH-CN_TOPIC_0000002479226452)章节操作。
+- 升级26.0.0及之前版本的Infer Operator组件到最新版本时，需删除日志目录重建为root权限或修改日志目录及日志文件权限为root。
 
 ## 升级前准备<a name="section_helm_upgrade_prepare"></a>
 

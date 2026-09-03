@@ -2,6 +2,8 @@
 
 本特性实现推理服务的容器快照能力，支持大模型推理服务快速启动和故障场景下的快速恢复。通过MindCluster的Infer Operator、NodeD和Ascend Docker Runtime组件协作，在推理任务完成warm up后生成Host和Device侧快照，在异常删除Pod后通过快照快速恢复服务，将推理服务启动时间从30分钟以上缩短至分钟级。
 
+此外，容器快照支持弹性扩缩容场景，扩容时可从快照拉起容器并启动实例，配置请参见[配置基于负载的弹性扩缩容](./05_configuring_elastic_scaling.md)。
+
 ## 使用前必读
 
 **环境要求**
