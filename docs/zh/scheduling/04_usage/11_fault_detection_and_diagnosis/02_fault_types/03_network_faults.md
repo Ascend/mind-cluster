@@ -156,7 +156,7 @@ K8s RDMA Shared Dev Plugin采用轮询模式检测UB网卡故障。检测到故�
 
 ### 支持的故障处理类型
 
-Job级别重调度、Pod级别重调度；SubHealthFault级别的故障不触发断点续训。
+Job级别重调度、Pod级别重调度
 
 ### 使用约束
 
@@ -168,7 +168,7 @@ Job级别重调度、Pod级别重调度；SubHealthFault级别的故障不触发
 
 |故障码|故障等级|故障事件名称|故障说明
 |--|--|--|--|
-|21000022|SeparateDPU|ub_port_down|RoCE设备不可用，需切换NIC和IP。|
+|21000022|SubHealthFault|ub_port_down|RoCE设备不可用，需切换NIC和IP。|
 |21000023|SubHealthFault|ub_lane_down|UB通道降lane，无需切换NIC或IP。|
 |21000024|SeparateDPU|hca_port_down|HCA端口故障，故障发生后需切换IP。|
 |22000025|SubHealthFault|bond_member_down|Bond场景下单成员故障，带宽减半可继续运行。|
