@@ -22,6 +22,7 @@ package npu
 import (
 	"fmt"
 	"testing"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/affinity/chip"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3/superpod"
@@ -166,5 +167,25 @@ func TestGetA3AcceleratorType(t *testing.T) {
 				t.Errorf("Expect handler name to be %s, got %s", config.wantHandler, handlerName)
 			}
 		})
+	}
+}
+
+func TestChipAffinityRegistered(t *testing.T) {
+	factory := card910Factory[chip.PolicyName]
+	if factory == nil {
+		t.Fatalf("chip.PolicyName(%q) not registered in card910Factory", chip.PolicyName)
+	}
+	if h := factory(); h == nil {
+		t.Fatal("chip factory returned nil handler")
+	}
+}
+
+func TestGet910CardHandlerNameRoutesToChipAffinity(t *testing.T) {
+	attr := util.SchedulerJobAttr{
+		NPUJob: &util.NPUJob{ReqNPUName: util.NPU910CardName},
+		ComJob: util.ComJob{Annotation: map[string]string{}, Selector: map[string]string{}},
+	}
+	if got := get910CardHandlerName(attr); got != chip.PolicyName {
+		t.Errorf("default 910 routing = %q, want %q", got, chip.PolicyName)
 	}
 }
