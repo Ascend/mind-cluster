@@ -104,6 +104,20 @@ func TestProcess(t *testing.T) {
 		result := processor.Process(unknownInput)
 		convey.So(result, convey.ShouldResemble, unknownInput)
 	})
+	convey.Convey("Test processing deleted switch info cleans node status map", t, func() {
+		processor := &preSeparateFaultProcessor{
+			nodeStatusMap: map[string]string{constant.SwitchInfoPrefix + nodeName1: constant.HealthyState},
+		}
+		switchContent := constant.OneConfigmapContent[*constant.SwitchInfo]{
+			AllConfigmap: map[string]*constant.SwitchInfo{},
+			UpdateConfigmap: []constant.InformerCmItem[*constant.SwitchInfo]{
+				{IsAdd: false, Data: &constant.SwitchInfo{CmName: constant.SwitchInfoPrefix + nodeName1}},
+			},
+		}
+		result := processor.Process(switchContent)
+		convey.So(result, convey.ShouldResemble, switchContent)
+		convey.So(len(processor.nodeStatusMap), convey.ShouldEqual, 0)
+	})
 }
 
 func TestProcessDeviceFaultCm(t *testing.T) {
@@ -170,6 +184,41 @@ func TestUpdateNodeStatusBySwitchInfo(t *testing.T) {
 			processor.updateNodeStatusBySwitchInfo(cmName, switchInfo)
 			convey.So(switchInfo.NodeStatus, convey.ShouldEqual, constant.HealthyState)
 		})
+
+		convey.Convey("When fault level matches and has volcano task but no used devices", func() {
+			switchInfo.FaultLevel = constant.PreSeparateFaultLevelStr
+			npuPatches := gomonkey.ApplyFuncReturn(pod.GetUsedDevicesByNodeName, sets.String{})
+			defer npuPatches.Reset()
+			volcanoPatches := gomonkey.ApplyFuncReturn(pod.HasVolcanoTaskOnNode, true)
+			defer volcanoPatches.Reset()
+
+			processor.updateNodeStatusBySwitchInfo(cmName, switchInfo)
+			convey.So(switchInfo.NodeStatus, convey.ShouldEqual, constant.HealthyState)
+		})
+
+		convey.Convey("When node status keeps same, log is not printed repeatedly", func() {
+			logCount := 0
+			logPatches := gomonkey.ApplyMethodFunc(hwlog.RunLog, "Infof",
+				func(format string, args ...interface{}) { logCount++ })
+			defer logPatches.Reset()
+
+			processor := &preSeparateFaultProcessor{}
+			cm := &constant.SwitchInfo{
+				SwitchFaultInfo: constant.SwitchFaultInfo{
+					FaultLevel: constant.PreSeparateFaultLevelStr,
+				},
+			}
+			cmName := constant.SwitchInfoPrefix + nodeName1
+			npuPatches := gomonkey.ApplyFuncReturn(pod.GetUsedDevicesByNodeName, sets.String{deviceName1: {}})
+			defer npuPatches.Reset()
+
+			// simulate two periods, the cm is re-parsed each time with empty node status
+			processor.updateNodeStatusBySwitchInfo(cmName, cm)
+			cm.NodeStatus = ""
+			processor.updateNodeStatusBySwitchInfo(cmName, cm)
+			convey.So(logCount, convey.ShouldEqual, 1)
+			convey.So(cm.NodeStatus, convey.ShouldEqual, constant.HealthyState)
+		})
 	})
 }
 
@@ -196,11 +245,125 @@ func TestUpdateNodeStatusByNodeInfo(t *testing.T) {
 			convey.So(nodeInfo.NodeStatus, convey.ShouldEqual, constant.UnHealthyState)
 		})
 
+		convey.Convey("When no used devices but has volcano task", func() {
+			podPatches := gomonkey.ApplyFuncReturn(pod.GetUsedDevicesByNodeName, sets.String{})
+			defer podPatches.Reset()
+			volcanoPatches := gomonkey.ApplyFuncReturn(pod.HasVolcanoTaskOnNode, true)
+			defer volcanoPatches.Reset()
+			processor.updateNodeStatusByNodeInfo(cmName, nodeInfo)
+			convey.So(nodeInfo.NodeStatus, convey.ShouldEqual, constant.HealthyState)
+		})
+
 		convey.Convey("When most serious level does not match", func() {
 			levelPatches := gomonkey.ApplyFuncReturn(faultdomain.GetNodeMostSeriousFaultLevel, constant.NotHandleFault)
 			defer levelPatches.Reset()
 			processor.updateNodeStatusByNodeInfo(cmName, nodeInfo)
 			convey.So(nodeInfo.NodeStatus, convey.ShouldBeEmpty)
+		})
+
+		convey.Convey("When node status keeps same, log is not printed repeatedly", func() {
+			logCount := 0
+			logPatches := gomonkey.ApplyMethodFunc(hwlog.RunLog, "Infof",
+				func(format string, args ...interface{}) { logCount++ })
+			defer logPatches.Reset()
+
+			processor := &preSeparateFaultProcessor{}
+			cm := &constant.NodeInfo{
+				NodeInfoNoName: constant.NodeInfoNoName{
+					FaultDevList: []*constant.FaultDev{
+						{FaultLevel: constant.PreSeparateFault},
+					},
+				},
+			}
+			cmName := constant.NodeInfoPrefix + nodeName1
+			podPatches := gomonkey.ApplyFuncReturn(pod.GetUsedDevicesByNodeName, sets.String{deviceName1: {}})
+			defer podPatches.Reset()
+			volcanoPatches := gomonkey.ApplyFuncReturn(pod.HasVolcanoTaskOnNode, false)
+			defer volcanoPatches.Reset()
+
+			processor.updateNodeStatusByNodeInfo(cmName, cm)
+			cm.NodeStatus = ""
+			processor.updateNodeStatusByNodeInfo(cmName, cm)
+			convey.So(logCount, convey.ShouldEqual, 1)
+			convey.So(cm.NodeStatus, convey.ShouldEqual, constant.HealthyState)
+		})
+	})
+}
+
+func TestLogNodeStatusChanged(t *testing.T) {
+	convey.Convey("Test logNodeStatusChanged function", t, func() {
+		convey.Convey("When node status changes, log is printed and status recorded", func() {
+			logCount := 0
+			logPatches := gomonkey.ApplyMethodFunc(hwlog.RunLog, "Infof",
+				func(format string, args ...interface{}) { logCount++ })
+			defer logPatches.Reset()
+			processor := &preSeparateFaultProcessor{}
+			cmName := constant.SwitchInfoPrefix + nodeName1
+
+			processor.logNodeStatusChanged(cmName, nodeName1, constant.HealthyState,
+				constant.PreSeparateFaultLevelStr, 1, true)
+			convey.So(logCount, convey.ShouldEqual, 1)
+			convey.So(processor.nodeStatusMap[cmName], convey.ShouldEqual, constant.HealthyState)
+		})
+
+		convey.Convey("When node status keeps same, log is not printed", func() {
+			logCount := 0
+			logPatches := gomonkey.ApplyMethodFunc(hwlog.RunLog, "Infof",
+				func(format string, args ...interface{}) { logCount++ })
+			defer logPatches.Reset()
+			processor := &preSeparateFaultProcessor{nodeStatusMap: map[string]string{}}
+			cmName := constant.SwitchInfoPrefix + nodeName1
+			processor.nodeStatusMap[cmName] = constant.HealthyState
+
+			processor.logNodeStatusChanged(cmName, nodeName1, constant.HealthyState,
+				constant.PreSeparateFaultLevelStr, 1, true)
+			convey.So(logCount, convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("When node status changes to unhealthy, log is printed", func() {
+			logCount := 0
+			logPatches := gomonkey.ApplyMethodFunc(hwlog.RunLog, "Infof",
+				func(format string, args ...interface{}) { logCount++ })
+			defer logPatches.Reset()
+			processor := &preSeparateFaultProcessor{nodeStatusMap: map[string]string{}}
+			cmName := constant.SwitchInfoPrefix + nodeName1
+			processor.nodeStatusMap[cmName] = constant.HealthyState
+
+			processor.logNodeStatusChanged(cmName, nodeName1, constant.UnHealthyState,
+				constant.PreSeparateFaultLevelStr, 0, false)
+			convey.So(logCount, convey.ShouldEqual, 1)
+			convey.So(processor.nodeStatusMap[cmName], convey.ShouldEqual, constant.UnHealthyState)
+		})
+	})
+}
+
+func TestCleanNodeStatusMap(t *testing.T) {
+	convey.Convey("Test cleanNodeStatusMap function", t, func() {
+		convey.Convey("When configmap is deleted, node status is deleted", func() {
+			processor := &preSeparateFaultProcessor{
+				nodeStatusMap: map[string]string{constant.SwitchInfoPrefix + nodeName1: constant.HealthyState},
+			}
+			updateItems := []constant.InformerCmItem[*constant.SwitchInfo]{
+				{IsAdd: false, Data: &constant.SwitchInfo{SwitchFaultInfo: constant.SwitchFaultInfo{
+					FaultLevel: constant.PreSeparateFaultLevelStr,
+				}, CmName: constant.SwitchInfoPrefix + nodeName1}},
+			}
+			cleanNodeStatusMap(processor.nodeStatusMap, updateItems)
+			convey.So(len(processor.nodeStatusMap), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("When configmap is added, node status is kept", func() {
+			processor := &preSeparateFaultProcessor{
+				nodeStatusMap: map[string]string{constant.SwitchInfoPrefix + nodeName1: constant.HealthyState},
+			}
+			updateItems := []constant.InformerCmItem[*constant.SwitchInfo]{
+				{IsAdd: true, Data: &constant.SwitchInfo{SwitchFaultInfo: constant.SwitchFaultInfo{
+					FaultLevel: constant.PreSeparateFaultLevelStr,
+				}, CmName: constant.SwitchInfoPrefix + nodeName1}},
+			}
+			cleanNodeStatusMap(processor.nodeStatusMap, updateItems)
+			convey.So(processor.nodeStatusMap[constant.SwitchInfoPrefix+nodeName1], convey.ShouldEqual,
+				constant.HealthyState)
 		})
 	})
 }

@@ -475,6 +475,28 @@ func GetUsedDevicesByNodeName(nodeName string) sets.String {
 	return usedDevice
 }
 
+// HasVolcanoTaskOnNode is used to judge whether the node has volcano scheduled tasks
+func HasVolcanoTaskOnNode(nodeName string) bool {
+	podManager.podMapMutex.RLock()
+	defer podManager.podMapMutex.RUnlock()
+
+	if podManager.nodePodMap == nil {
+		return false
+	}
+	if _, exist := podManager.nodePodMap[nodeName]; !exist {
+		return false
+	}
+	for _, pod := range podManager.nodePodMap[nodeName] {
+		if pod.Status.Phase == v1.PodFailed || pod.Status.Phase == v1.PodSucceeded {
+			continue
+		}
+		if pgName, exist := pod.Annotations[podGroupKey]; exist && pgName != "" {
+			return true
+		}
+	}
+	return false
+}
+
 // GetPodByRankIndexInPods get pod by rank index in pods
 func GetPodByRankIndexInPods(podRank string, podsInJob map[string]v1.Pod) v1.Pod {
 	for _, pod := range podsInJob {
