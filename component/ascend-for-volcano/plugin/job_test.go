@@ -1850,82 +1850,167 @@ func TestIsCachedSuperPodsValid(t *testing.T) {
 }
 
 // TestSetParameterPlaneUnhealthyTolerance tests that setParameterPlaneUnhealthyTolerance correctly
-// populates NPUJob.ParameterPlaneUnhealthyTolerance from annotation.
+// populates NPUJob.ParameterPlaneUnhealthyTolerance from annotation, or unconditionally for
+// zero/single-task jobs (NPUTaskNum <= 1).
 // Effective for huawei.com/Ascend910 and huawei.com/npu resource types.
 func TestSetParameterPlaneUnhealthyTolerance(t *testing.T) {
 	tests := []struct {
 		name        string
 		reqNPUName  string
 		annotation  map[string]string
+		npuTaskNum  int
 		npuJobNil   bool
 		wantIgnored bool
 	}{
 		{
-			name:        "01-Ascend910 with annotation=true should set true",
+			name:        "01-Ascend910 multi-task annotation=true should set true",
 			reqNPUName:  util.NPU910CardName,
 			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "true"},
+			npuTaskNum:  2,
 			wantIgnored: true,
 		},
 		{
-			name:        "02-Ascend910 with annotation=false should set false",
+			name:        "02-Ascend910 multi-task annotation=false should set false",
 			reqNPUName:  util.NPU910CardName,
 			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "false"},
+			npuTaskNum:  2,
 			wantIgnored: false,
 		},
 		{
-			name:        "03-Ascend910 with annotation missing should set false",
+			name:        "03-Ascend910 multi-task annotation missing should set false",
 			reqNPUName:  util.NPU910CardName,
 			annotation:  map[string]string{},
+			npuTaskNum:  2,
 			wantIgnored: false,
 		},
 		{
-			name:        "04-Ascend910 with annotation nil should set false",
+			name:        "04-Ascend910 multi-task annotation nil should set false",
 			reqNPUName:  util.NPU910CardName,
 			annotation:  nil,
+			npuTaskNum:  2,
 			wantIgnored: false,
 		},
 		{
-			name:        "05-Ascend910 with invalid value should set false",
+			name:        "05-Ascend910 multi-task invalid annotation should set false",
 			reqNPUName:  util.NPU910CardName,
 			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "yes"},
+			npuTaskNum:  2,
 			wantIgnored: false,
 		},
 		{
-			name:        "06-Ascend910 with case-sensitive value True should set false",
+			name:        "06-Ascend910 multi-task case-sensitive True should set false",
 			reqNPUName:  util.NPU910CardName,
 			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "True"},
+			npuTaskNum:  2,
 			wantIgnored: false,
 		},
 		{
-			name:        "07-huawei.com/npu with annotation=true should set true",
+			name:        "07-huawei.com/npu multi-task annotation=true should set true",
 			reqNPUName:  util.NPUCardName,
 			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "true"},
+			npuTaskNum:  2,
 			wantIgnored: true,
 		},
 		{
-			name:        "08-huawei.com/npu with annotation=false should set false",
+			name:        "08-huawei.com/npu multi-task annotation=false should set false",
 			reqNPUName:  util.NPUCardName,
 			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "false"},
+			npuTaskNum:  2,
 			wantIgnored: false,
 		},
 		{
-			name:        "09-Ascend310P with annotation=true should keep false (not supported)",
+			name:        "09-Ascend310P multi-task annotation=true should keep false (not supported)",
 			reqNPUName:  util.NPU310PCardName,
 			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "true"},
+			npuTaskNum:  2,
 			wantIgnored: false,
 		},
 		{
 			name:        "10-NPUJob nil should not panic and keep false",
 			reqNPUName:  util.NPU910CardName,
 			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "true"},
+			npuTaskNum:  2,
 			npuJobNil:   true,
 			wantIgnored: false,
 		},
 		{
-			name:        "11-Ascend910 with annotation=true and other keys should set true",
+			name:        "11-Ascend910 multi-task annotation=true and other keys should set true",
 			reqNPUName:  util.NPU910CardName,
 			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "true", "other-key": "val"},
+			npuTaskNum:  2,
 			wantIgnored: true,
+		},
+		{
+			// NPUTaskNum <= 1 (无任务/单任务，无参数面) tolerates parameter plane unhealthy regardless of annotation.
+			name:        "12-Ascend910 single-task (1) no annotation should set true",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{},
+			npuTaskNum:  1,
+			wantIgnored: true,
+		},
+		{
+			name:        "13-Ascend910 single-task (1) nil annotation should set true",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  nil,
+			npuTaskNum:  1,
+			wantIgnored: true,
+		},
+		{
+			name:        "14-Ascend910 single-task (1) annotation=false should set true",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "false"},
+			npuTaskNum:  1,
+			wantIgnored: true,
+		},
+		{
+			name:        "15-Ascend910 single-task (1) invalid annotation should set true",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "yes"},
+			npuTaskNum:  1,
+			wantIgnored: true,
+		},
+		{
+			name:        "16-Ascend910 single-task (1) annotation=true should set true",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "true"},
+			npuTaskNum:  1,
+			wantIgnored: true,
+		},
+		{
+			name:        "17-huawei.com/npu single-task (1) no annotation should set true",
+			reqNPUName:  util.NPUCardName,
+			annotation:  map[string]string{},
+			npuTaskNum:  1,
+			wantIgnored: true,
+		},
+		{
+			name:        "18-Ascend910 zero-task (0) no annotation should set true",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{},
+			npuTaskNum:  0,
+			wantIgnored: true,
+		},
+		{
+			name:        "19-Ascend910 zero-task (0) annotation=false should set true",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{util.ParameterPlaneUnhealthyToleranceAnnoKey: "false"},
+			npuTaskNum:  0,
+			wantIgnored: true,
+		},
+		{
+			name:        "20-Ascend310P single-task (1) no annotation should keep false",
+			reqNPUName:  util.NPU310PCardName,
+			annotation:  map[string]string{},
+			npuTaskNum:  1,
+			wantIgnored: false,
+		},
+		{
+			name:        "21-Ascend910 single-task (1) nil NPUJob should not panic",
+			reqNPUName:  util.NPU910CardName,
+			annotation:  map[string]string{},
+			npuTaskNum:  1,
+			npuJobNil:   true,
+			wantIgnored: false,
 		},
 	}
 
@@ -1937,7 +2022,7 @@ func TestSetParameterPlaneUnhealthyTolerance(t *testing.T) {
 				},
 			}
 			if !tt.npuJobNil {
-				sJob.NPUJob = &util.NPUJob{ReqNPUName: tt.reqNPUName}
+				sJob.NPUJob = &util.NPUJob{ReqNPUName: tt.reqNPUName, NPUTaskNum: tt.npuTaskNum}
 			}
 			sJob.setParameterPlaneUnhealthyTolerance()
 			got := false
