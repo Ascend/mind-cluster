@@ -123,6 +123,22 @@ func TestGetJobAnnotationFromJobInfo(t *testing.T) {
 				"task1": {Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{"sp-block": "16"}}}}},
 			}}, want: map[string]string{"sp-block": "16"},
 		},
+		{
+			name: "06-getJobAnnotationFromJobInfo fallback schedule.mode from task pod annotation",
+			args: args{job: &api.JobInfo{Tasks: map[api.TaskID]*api.TaskInfo{
+				"task1": {Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{util.ScheduleModeAnnoKey: "hard"}}}}},
+			}}, want: map[string]string{util.ScheduleModeAnnoKey: "hard"},
+		},
+		{
+			name: "07-getJobAnnotationFromJobInfo podgroup schedule.mode takes precedence over pod",
+			args: args{job: &api.JobInfo{
+				PodGroup: &api.PodGroup{PodGroup: scheduling.PodGroup{
+					ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{util.ScheduleModeAnnoKey: "soft"}}}},
+				Tasks: map[api.TaskID]*api.TaskInfo{
+					"task1": {Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{util.ScheduleModeAnnoKey: "hard"}}}},
+				},
+			}}, want: map[string]string{util.ScheduleModeAnnoKey: "soft"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

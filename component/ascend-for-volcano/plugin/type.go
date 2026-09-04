@@ -106,6 +106,7 @@ var (
 		util.InferServiceScheduleAnnoKey,
 		util.AffinityConfig,
 		util.ParameterPlaneUnhealthyToleranceAnnoKey,
+		util.ScheduleModeAnnoKey,
 	}
 )
 
