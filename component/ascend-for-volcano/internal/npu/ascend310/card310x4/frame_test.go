@@ -141,7 +141,7 @@ func buildCheckNodeNPUByTaskTestCases() []checkNodeNPUByTaskTestCase {
 			Task: test.FakeTaskWithResReq(MockPodZeroName, util.NPU310CardName, util.NPUIndex3),
 			Node: initNode(MockNodeOneName, util.NPU310CardName, "Ascend310-0, Ascend310-1"),
 			WantErr: fmt.Errorf("checkNodeNPUByTask %s : %v", util.NodeNotMeetTopologyWarning,
-				fmt.Errorf("req npu(%d) illegal not meet node top<%v>", util.NPUIndex3, []int{})),
+				fmt.Errorf("req npu(%d) illegal not meet node top<%v>", util.NPUIndex3, []int{0})),
 		},
 		{
 			Name: "05-CheckNodeNPUByTask return err when node has no req npu",
@@ -222,7 +222,7 @@ func buildScoreBestNPUNodesTestCases() []scoreBestNPUNodesTestCase {
 			Task:     test.FakeTaskWithResReq("pod0", util.NPU310CardName, MockResourceNumOne),
 			Nodes:    []*api.NodeInfo{{Name: "node1"}, {Name: "node2"}, {Name: "node3"}, {Name: "node5"}},
 			ScoreMap: map[string]float64{"node1": 0, "node2": 0, "node3": 0, "node5": 0},
-			WantSMap: map[string]float64{"node1": score32, "node2": score16, "node3": score24, "node5": 0},
+			WantSMap: map[string]float64{"node1": score32, "node2": score16, "node3": score24, "node5": score32},
 			WantErr:  nil,
 		},
 		{

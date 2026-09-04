@@ -68,7 +68,7 @@ func ChangeTopToIntArray(topStr string, npuCardPreName string) []int {
 		cardInt, err := strconv.Atoi(v)
 		if err != nil {
 			klog.V(LogErrorLev).Infof("ChangeTopToIntArray conv failed %v.", err)
-			return nil
+			continue
 		}
 
 		topInt = append(topInt, cardInt)

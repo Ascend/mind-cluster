@@ -76,7 +76,7 @@ func TestChangeTopToIntArray(t *testing.T) {
 				topStr:         fmt.Sprintf("%s0ab", NPU310PCardNamePre),
 				npuCardPreName: NPU310PCardNamePre,
 			},
-			want: nil,
+			want: []int{},
 		},
 		{
 			name: "04-ChangeTopToIntArray get int array",
@@ -86,6 +86,14 @@ func TestChangeTopToIntArray(t *testing.T) {
 				npuCardPreName: NPU310PCardNamePre,
 			},
 			want: []int{0, 1, two, three, four, five},
+		},
+		{
+			name: "05-ChangeTopToIntArray skip vnpu card",
+			args: args{
+				topStr:         "Ascend910-0,Ascend910-2c-100-0,Ascend910-2",
+				npuCardPreName: NPU910CardNamePre,
+			},
+			want: []int{0, 2},
 		},
 	}
 	for _, tt := range tests {

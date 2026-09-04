@@ -220,7 +220,7 @@ func buildCheckNodeNPUByTaskTestCase4() checkNodeNPUByTaskTestCase {
 				Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0, Ascend310P-1"},
 			},
 		},
-		WantErr: fmt.Errorf("%s node don't have enough resource, req<2>, idle<0>", util.NPUResourceShortageError),
+		WantErr: fmt.Errorf("%s node don't have enough resource, req<2>, idle<1>", util.NPUResourceShortageError),
 	}
 }
 
