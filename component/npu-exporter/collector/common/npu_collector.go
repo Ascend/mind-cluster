@@ -192,14 +192,14 @@ func startCollectForMultiGoroutine(group *sync.WaitGroup, ctx context.Context, n
 					logger.Infof("received the stop signal, stop collect network info of npu(%d)", chip.LogicID)
 				},
 				runDueCollectors: func(dueCollectors []MetricsCollector) {
-					logger.Debug("start to collect npu info by hccn_tool, phyID: %v, collectors: %v",
+					logger.Debugf("start to collect npu info in multi goroutine, phyID: %v, collectors: %v",
 						chip.PhyId, getCollectorNames(dueCollectors))
 					begin := time.Now()
 					singleChipSlice := []HuaWeiAIChip{chip}
 					for _, c := range dueCollectors {
 						c.CollectToCache(n, singleChipSlice)
 					}
-					logger.Infof("end to collect npu info by hccn_tool, phyID: %v, collectors: %v, time cost: %v",
+					logger.Infof("end to collect npu info in multi goroutine, phyID: %v, collectors: %v, time cost: %v",
 						chip.PhyId, getCollectorNames(dueCollectors), time.Since(begin))
 				},
 			})
@@ -233,13 +233,13 @@ func startCollectSingleGoroutine(group *sync.WaitGroup, ctx context.Context, n *
 				logger.Info("received the stop signal, stop npu base info collect")
 			},
 			runDueCollectors: func(dueCollectors []MetricsCollector) {
-				logger.Debugf("start to collect npu info by dcmi, collectors: %v", getCollectorNames(dueCollectors))
+				logger.Debugf("start to collect npu info in single goroutine, collectors: %v", getCollectorNames(dueCollectors))
 				begin := time.Now()
 				chipList := getChipListCache(n)
 				for _, c := range dueCollectors {
 					c.CollectToCache(n, chipList)
 				}
-				logger.Infof("end to collect npu info by dcmi, collectors: %v, time cost: %v",
+				logger.Infof("end to collect npu info in single goroutine, collectors: %v, time cost: %v",
 					getCollectorNames(dueCollectors), time.Since(begin))
 			},
 		})
