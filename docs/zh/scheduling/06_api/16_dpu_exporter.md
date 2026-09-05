@@ -52,7 +52,7 @@ dpu_roce_cmdq_ctr_roce_cc_resource_drain{card="hinic0",card_type="CAL_2X400G_UB_
 
 |指标名|说明|Labels|类型|
 |------|----|------|----|
-|dpu_interface_carrier|物理链路载波状态（1=up, 0=down）|card, interface|gauge|
+|dpu_interface_carrier|物理链路载波状态（1=up, 0=down, -1=unknown）|card, interface|gauge|
 |dpu_interface_carrier_changes|物理链路载波状态发生改变的累计次数|card, interface|counter|
 |dpu_interface_operstate|网络接口的当前操作状态（1=up, 0=down, -1=other）|card, interface|gauge|
 |dpu_interface_collisions|发送时检测到的数据包冲突数|card, interface|counter|

@@ -112,6 +112,9 @@ func (c *SysfsCollector) collectForInterface(dmgr device.DeviceManager, iface de
 		path := filepath.Join(sysfsNetBase, iface.EthName, fileName)
 		raw, err := dmgr.ReadSysfs(path)
 		if err != nil {
+			if fileName == "carrier" {
+				metrics[fileName] = -1
+			}
 			continue
 		}
 		val, parseErr := parseSysfsValue(fileName, raw)
@@ -162,6 +165,17 @@ func parseSysfsValue(fileName, raw string) (float64, error) {
 			return 0, nil
 		default:
 			return -1, nil // unknown state
+		}
+	}
+	// carrier is boolean: report 0/1 as-is, anything else as -1 (unknown)
+	if fileName == "carrier" {
+		switch raw {
+		case "1":
+			return 1, nil
+		case "0":
+			return 0, nil
+		default:
+			return -1, nil
 		}
 	}
 	return strconv.ParseFloat(raw, 64)

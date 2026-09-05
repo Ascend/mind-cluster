@@ -34,8 +34,10 @@ func TestParseSysfsValue(t *testing.T) {
 		{"operstate", "unknown", -1, false},
 		{"carrier", "1", 1, false},
 		{"carrier", "0", 0, false},
+		{"carrier", "abc", -1, false},
+		{"carrier", "2", -1, false},
 		{"carrier_changes", "5", 5, false},
-		{"carrier", "abc", 0, true},
+		{"carrier_changes", "abc", 0, true},
 	}
 	for _, tt := range tests {
 		got, err := parseSysfsValue(tt.file, tt.raw)
