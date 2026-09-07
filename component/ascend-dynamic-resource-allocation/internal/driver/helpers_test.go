@@ -91,7 +91,7 @@ func newDriverWithFake(gen *fakeGeneration) (*AscendDraDriver, *plugin.AscendDra
 		ResourcePublisher: &plugin.ResourcePublisher{Helper: &kubeletplugin.Helper{}},
 		DraHealthManager:  &plugin.DraHealthManager{},
 	}
-	return NewAscendDraDriver(cfg, gen, adp), adp
+	return NewAscendDraDriver(cfg, gen, adp, nil), adp
 }
 
 // pluginMethodPatches holds the three boundary-method patches the driver tests

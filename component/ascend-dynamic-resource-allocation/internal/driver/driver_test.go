@@ -18,6 +18,7 @@ package driver
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -26,8 +27,10 @@ import (
 	"ascend-common/api"
 	"ascend-common/cdi"
 	"ascend-common/devmanager"
+	ver "ascend-common/common-utils/version"
 	"ascend-dynamic-resource-allocation/internal/device"
 	draFlags "ascend-dynamic-resource-allocation/internal/flags"
+	"ascend-dynamic-resource-allocation/internal/kubeclient"
 	"ascend-dynamic-resource-allocation/internal/plugin"
 )
 
@@ -184,10 +187,49 @@ func TestNewAscendDraDriver(t *testing.T) {
 		cfg := &draFlags.DRAConfig{DraOption: &draFlags.DRAOption{NodeName: "n1"}}
 		gen := &fakeGeneration{devType: "Ascend910"}
 		adp := &plugin.AscendDraPlugin{}
-		d := NewAscendDraDriver(cfg, gen, adp)
+		kubeClient := &kubeclient.ClientK8s{NodeName: "n1"}
+		d := NewAscendDraDriver(cfg, gen, adp, kubeClient)
 		So(d.draConfig, ShouldEqual, cfg)
 		So(d.generation, ShouldEqual, gen)
 		So(d.ascendDraPlugin, ShouldEqual, adp)
+		So(d.kubeClient, ShouldEqual, kubeClient)
+	})
+}
+
+// TestAscendDraDriver_ReportVersion covers the three paths of ReportVersion:
+// nil client (skip), kubeclient success, and kubeclient failure. The kubeclient
+// call itself is patched because it hits the API server.
+func TestAscendDraDriver_ReportVersion(t *testing.T) {
+	newDriver := func(kubeClient *kubeclient.ClientK8s) *AscendDraDriver {
+		cfg := &draFlags.DRAConfig{DraOption: &draFlags.DRAOption{NodeName: "n1"}}
+		return NewAscendDraDriver(cfg, &fakeGeneration{devType: "Ascend910"}, &plugin.AscendDraPlugin{}, kubeClient)
+	}
+
+	Convey("AscendDraDriver.ReportVersion", t, func() {
+		Convey("skips silently when the kube client is nil", func() {
+			d := newDriver(nil)
+			So(func() { d.ReportVersion() }, ShouldNotPanic)
+		})
+
+		Convey("delegates to kubeclient and swallows its success", func() {
+			d := newDriver(&kubeclient.ClientK8s{NodeName: "n1"})
+			patch := gomonkey.ApplyMethod(
+				reflect.TypeOf(&kubeclient.ClientK8s{}), "ReportVersion",
+				func(_ *kubeclient.ClientK8s, _ ver.Info, _ string) error { return nil })
+			defer patch.Reset()
+			So(func() { d.ReportVersion() }, ShouldNotPanic)
+		})
+
+		Convey("delegates to kubeclient and swallows its failure", func() {
+			d := newDriver(&kubeclient.ClientK8s{NodeName: "n1"})
+			patch := gomonkey.ApplyMethod(
+				reflect.TypeOf(&kubeclient.ClientK8s{}), "ReportVersion",
+				func(_ *kubeclient.ClientK8s, _ ver.Info, _ string) error {
+					return fmt.Errorf("patch denied")
+				})
+			defer patch.Reset()
+			So(func() { d.ReportVersion() }, ShouldNotPanic)
+		})
 	})
 }
 
@@ -301,6 +343,12 @@ func TestNewAscendDraManager(t *testing.T) {
 				// not write to /etc during tests.
 				p.ApplyFunc(cdi.PrepareMountConfigFile,
 					func(_ string) error { return nil })
+				// Stub kubeclient.NewClientK8s so no real kubeconfig / API
+				// server path is touched (cfg.KubeClientConfig is nil here).
+				p.ApplyFunc(kubeclient.NewClientK8s,
+					func(_ *draFlags.KubeClientConfig, _ string) (*kubeclient.ClientK8s, error) {
+						return nil, nil
+					})
 				// Stub NewAscendDraPlugin to either succeed or fail per case.
 				if tc.pluginErr {
 					p.ApplyFunc(plugin.NewAscendDraPlugin,

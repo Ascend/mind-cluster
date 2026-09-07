@@ -24,6 +24,7 @@ import (
 	"syscall"
 
 	"ascend-common/common-utils/hwlog"
+	ver "ascend-common/common-utils/version"
 	"ascend-common/devmanager"
 	draDriver "ascend-dynamic-resource-allocation/internal/driver"
 	draFlags "ascend-dynamic-resource-allocation/internal/flags"
@@ -33,6 +34,13 @@ func main() {
 	draConfig := draFlags.NewDraConfig()
 	draConfig.RegisterFlags()
 	flag.Parse()
+
+	if draConfig.DraOption.Version {
+		info := ver.Get()
+		fmt.Printf("version=%s commit=%s branch=%s os=%s arch=%s goVersion=%s\n",
+			info.Version, info.GitCommit, info.GitBranch, info.BuildOS, info.BuildArch, info.GoVersion)
+		return
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -75,6 +83,9 @@ func main() {
 		return
 	}
 	hwlog.RunLog.Info("ascend dra manager started successfully.")
+
+	// Report the component version to the node annotation so ClusterD can aggregate it.
+	ascendDraManager.ReportVersion()
 
 	<-ctx.Done()
 	stop()
