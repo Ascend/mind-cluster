@@ -55,6 +55,9 @@ from ascend_fd.utils.tool import (
     decompress_zip,
     decompress_tar_gz,
 )
+from ascend_fd.utils.constant.dev_log_const import HISI_LOG_DIR, SLOG_DIR, BEFORE_TASK_DIR, AFTER_TASK_DIR
+from ascend_fd.utils.constant.ub_const import UB_INFO_DIR, UBCTL_DIR, UBCTL_LOG_FILE, SIDE_BEFORE, SIDE_AFTER
+
 
 logger = logging.getLogger("FAULT_DIAG")
 
@@ -787,6 +790,12 @@ class LCNELogSaver(BaseLogSaver):
     BUS_DUMP_LOG_PATTERN = re.compile(r"^log_\d{1,3}_\d{14}.log(.zip)?")
     LOG_LOG = "log.log"
     LOG_ZIP = "log.zip"
+    # diaglog 源日志：diagnostic_information/diag/slot_x/ 下的 diag.zip 解压后为 diag.log
+    # diaglog_<id>_<ts>.zip 解压后为diaglog_<id>_<ts>.log
+    DIAG_ZIP = "diag.zip"
+    DIAGLOG_ZIP_PATTERN = re.compile(r"^diaglog_\d{1,3}_\d{14}.log(.zip)?")
+    DIAG_LOG_FILE = "diag.log"
+    DIAG_LOG_PATTERN = r'diaglog_1_\d{13,15}\.log$'
 
     def __init__(self):
         """
@@ -828,6 +837,15 @@ class LCNELogSaver(BaseLogSaver):
                 if file_name == self.DIAG_DISPLAY_INFO_KEY:
                     self.diag_display_info_files.append(file_path)
                     continue
+                if file_name == self.DIAG_ZIP or self.DIAGLOG_ZIP_PATTERN.fullmatch(file_name):
+                    # diag 目录源日志（diag.zip / diaglog_*.zip），解压取 log 并入 lcne_log_list
+                    self.collect_diag_log(file_path)
+                    continue
+                if file_name == self.DIAG_LOG_FILE or re.fullmatch(self.DIAG_LOG_PATTERN, file_name):
+                    # 未压缩的 diag.log / diaglog_<id>_<ts>.log（已是解压产物或直接以 .log 存在）
+                    if file_path not in self.lcne_log_list:
+                        self.lcne_log_list.append(file_path)
+                    continue
                 if file_name.endswith(self.LOG_LOG) or re.fullmatch(self.LOG_PATTERN, file_name):
                     self.lcne_log_list.append(file_path)
                 if (
@@ -853,6 +871,26 @@ class LCNELogSaver(BaseLogSaver):
                 if name == self.CPDT_CHECKCC_LOG:
                     self.cpdt_checkcc_log = os.path.join(root, name)
                     return
+
+    def collect_diag_log(self, zip_file_path: str):
+        """
+        Decompress diag.zip / diaglog_*.zip under diag/slot_x and collect the log files inside:
+          - diag.zip 解压后为 diag.log
+          - diaglog_<id>_<ts>.zip 解压后为 diaglog_<id>_<ts>.log
+        :param zip_file_path: diag.zip / diaglog_*.zip file path
+        """
+        if not zip_file_path:
+            return
+        output_dir = decompress_zip(zip_file_path)
+        if not output_dir:
+            return
+        for root, _, files in safe_walk(output_dir):
+            for name in files:
+                if name != self.DIAG_LOG_FILE and not re.fullmatch(self.DIAG_LOG_PATTERN, name):
+                    continue
+                diag_log_path = os.path.join(root, name)
+                if diag_log_path not in self.lcne_log_list:
+                    self.lcne_log_list.append(diag_log_path)
 
     def get_cpdt_checkcc_log(self) -> str:
         return self.cpdt_checkcc_log
@@ -880,6 +918,7 @@ class DevLogSaver(BaseLogSaver):
         ('bbox', 'os', 'os_info.txt'),
         ('mntn', 'hbm.txt'),
     )
+    LEGACY_MODE = "legacy"
 
     def __init__(self):
         """
@@ -889,25 +928,136 @@ class DevLogSaver(BaseLogSaver):
         self.slog_dict = dict()
         self.hisi_logs_list = []
         self.slog_host_list = []
+        # ubctl：单字段兜底（ubctl_log.txt 文件路径）+ before/after 双槽（文件路径，组装在 saver）
+        self.ubctl_log_list = []
+        self.ubctl_before_list = []
+        self.ubctl_after_list = []
+
+    def resolve_device_log_mode(self, device_log_root: str) -> str:
+        """
+        --device_log 双模式判定：
+        同时存在 before_task 与 after_task → "paired"（新结构）
+        否则 → "legacy"（旧结构，目录平级挂 device_log 下）
+        """
+        if not device_log_root or not os.path.isdir(device_log_root):
+            return self.LEGACY_MODE
+
+        before_dir = os.path.join(device_log_root, BEFORE_TASK_DIR)
+        after_dir = os.path.join(device_log_root, AFTER_TASK_DIR)
+        if os.path.isdir(before_dir) and os.path.isdir(after_dir):
+            return "paired"
+
+        return self.LEGACY_MODE
 
     def filter_log(self, file_dir: str):
         """
-        Filter device log
+        Filter device log（--device_log 双模式适配，目录名固定不修改）
+        legacy：device_log/{hisi_logs, slog, ub_info}
+        paired：device_log/before_task/{hisi_logs, slog, ub_info}
+                device_log/after_task/{hisi_logs, slog, ub_info}
         :param file_dir: the device log root dir
         :return: slog and hisi_logs filter result
         """
         if not file_dir or not os.path.isdir(file_dir):
             return
-        hisi_log_path, slog_path = "", ""
-        for root, dirs, _ in safe_walk(file_dir):
-            if not hisi_log_path and "hisi_logs" in dirs:
-                hisi_log_path = os.path.join(root, "hisi_logs")
+
+        mode = self.resolve_device_log_mode(file_dir)
+        if mode == self.LEGACY_MODE:
+            # legacy：单份，统一进 after 槽
+            self._scan_categories(file_dir, side=SIDE_AFTER)
+            return
+
+        # paired 模式处理：before_task 仅扫描 ub_info，hisi_logs/slog 从 after_task 解析
+        self._scan_categories(os.path.join(file_dir, BEFORE_TASK_DIR), side=SIDE_BEFORE, categories=[UB_INFO_DIR])
+        # after_task：hisi_logs/slog/ub_info 全扫
+        self._scan_categories(os.path.join(file_dir, AFTER_TASK_DIR), side=SIDE_AFTER)
+
+    def _scan_categories(self, root_dir: str, side: str, categories=None):
+        """
+        单次遍历 root_dir，收集指定类别的目录（目录名固定不修改）。
+        before 侧（paired）只收 ub_info → 传 categories=[UB_INFO_DIR]；
+        after / legacy 侧不传 → 默认收全量（hisi_logs/slog/ub_info 等，新类别在此按同模式扩展）。
+        :param root_dir: 待扫描根（legacy=file_dir，paired=before_task/after_task）
+        :param side: before / after（ubctl 双槽用）
+        :param categories: 本次要收集的目录类别；None 表示全部
+        """
+        if not root_dir or not os.path.isdir(root_dir):
+            return
+
+        if categories is None:
+            categories = [HISI_LOG_DIR, SLOG_DIR, UB_INFO_DIR]
+
+        for root, dirs, _ in safe_walk(root_dir):
+            if HISI_LOG_DIR in categories and HISI_LOG_DIR in dirs:
+                hisi_log_path = os.path.join(root, HISI_LOG_DIR)
                 self._filter_hisi_logs(hisi_log_path)
-            if not slog_path and "slog" in dirs:
-                slog_path = os.path.join(root, "slog")
+                categories.remove(HISI_LOG_DIR)
+            if SLOG_DIR in categories and SLOG_DIR in dirs:
+                slog_path = os.path.join(root, SLOG_DIR)
                 self._filter_slog(slog_path)
-            if hisi_log_path and slog_path:
+                categories.remove(SLOG_DIR)
+            if UB_INFO_DIR in categories and UB_INFO_DIR in dirs:
+                self._filter_ub_info_fixed(os.path.join(root, UB_INFO_DIR), side=side)
+                categories.remove(UB_INFO_DIR)
+
+            # break 条件按本次要收集的类别计算
+            if len(categories) == 0:
                 break
+
+    def _filter_ub_info_fixed(self, ub_info_root: str, side: str):
+        """
+        ub_info 固定层级的路径组装，全部在 saver 完成（对齐 hisi_logs_list/slog_dict）：
+            ub_info_root / <dev-os-X（前缀=DEV_OS_INFO）> / ubctl / <时间戳目录> / ubctl_log.txt
+        产出（都是 ubctl_log.txt 文件路径）：
+          - ubctl_before_list / ubctl_after_list：before/after 槽的文件路径（UbctlLogParser 只做内存筛选）
+          - ubctl_log_list：全部文件路径（single 字段兜底 / SDK 场景）
+        :param ub_info_root: ub_info 目录本体（由 filter_log 外层 "ub_info" in dirs 锁定）
+        :param side: before / after
+        """
+        if not ub_info_root or not os.path.isdir(ub_info_root):
+            return
+        dev_os_prefix = regular_table.DEV_OS_INFO  # = "dev-os-"（与 slog 过滤统一前缀，regular_table.L132）
+
+        # 第1层：ub_info 下 dev-os-X 目录
+        for dev_os_dir_name in safe_list_dir(ub_info_root):
+            if not dev_os_dir_name.startswith(dev_os_prefix):
+                continue
+            # 第2层：dev-os-X / ubctl（固定子目录名）
+            ubctl_root = os.path.join(ub_info_root, dev_os_dir_name, UBCTL_DIR)
+            if not os.path.isdir(ubctl_root):
+                continue
+            # 第3层：ubctl / <时间戳目录>（目录名不校验格式，可能多份，全收）
+            for ts_dir_name in safe_list_dir(ubctl_root):
+                # 第4层：时间戳目录 / ubctl_log.txt（固定文件名）
+                target_file = os.path.join(ubctl_root, ts_dir_name, UBCTL_LOG_FILE)
+                if not os.path.isfile(target_file):
+                    continue
+                # 单字段：全部文件（legacy 兜底 / SDK）
+                self.ubctl_log_list.append(target_file)
+                # 双槽：按 before/after 收集文件路径（供 UbctlLogParser 内存筛选）
+                if side == SIDE_BEFORE:
+                    if target_file not in self.ubctl_before_list:
+                        self.ubctl_before_list.append(target_file)
+                elif target_file not in self.ubctl_after_list:
+                    self.ubctl_after_list.append(target_file)
+
+    def get_ubctl_log_list(self):
+        """单字段兜底：before/after 双槽为空时，UbctlLogParser.find_log(ubctl_log_path) 直接取文件"""
+        return self.ubctl_log_list if not self.is_sdk_input else self.log_map.get(regular_table.NPU_UBCTL_SOURCE, [])
+
+    def get_ubctl_before_files(self):
+        """paired 模式 before_task 的 ubctl_log.txt 文件路径列表（UbctlLogParser 内存筛选）"""
+        if not self.is_sdk_input:
+            return self.ubctl_before_list
+        # SDK 场景无 before/after 之分，整体回 ubctl 源
+        return self.log_map.get(regular_table.NPU_UBCTL_SOURCE, [])
+
+    def get_ubctl_after_files(self):
+        """paired 模式 after_task / legacy 的 ubctl_log.txt 文件路径列表（UbctlLogParser 内存筛选）"""
+        if not self.is_sdk_input:
+            return self.ubctl_after_list
+        # SDK 场景无 before/after 之分，整体回 ubctl 源
+        return self.log_map.get(regular_table.NPU_UBCTL_SOURCE, [])
 
     def get_hisi_logs_list(self):
         """

@@ -14,15 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-import logging
-import re
 from datetime import datetime
 from itertools import chain
+import logging
+import re
 
 from ascend_fd.model.context import KGParseCtx
-from ascend_fd.utils.tool import MultiProcessJob, check_and_format_time_str
-from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import FileParser, EventStorage
+from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import (
+    EventStorage,
+    FileParser,
+)
+from ascend_fd.utils.constant.ub_const import (
+    AGE_PERIOD_KEYWORD,
+    PRECHECK_UBMEM_TIMEOUT,
+    UBMEM_TIMEOUT_KEYWORD,
+)
 from ascend_fd.utils.regular_table import COMPOSITE_SWITCH_CHIP_SOURCE
+from ascend_fd.utils.tool import MultiProcessJob, check_and_format_time_str
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 
@@ -31,13 +39,19 @@ class LCNEParser(FileParser):
     _type = "lcne"
     TARGET_FILE_PATTERNS = "lcne_log_path"
     SOURCE_FILE = "LCNELog"
+
+    # 行示例: "... set ubmem timeout xxxxxxxx age_period = 40000, ..."，单位微秒
+    AGE_PERIOD_PATTERN = re.compile(rf"{AGE_PERIOD_KEYWORD} = (?P<{AGE_PERIOD_KEYWORD}>\d+)")
     TIME_FORMATS = [
         # 格式1: 'May 27 2025 11:25:00+08:00'
-        (re.compile(r'\b[A-Z][a-z]{2}\s{0,3}\d{1,2}\s{0,3}\d{4}\s{0,3}\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}\b'),
-         "%b %d %Y %H:%M:%S%z"),
+        (
+            re.compile(r'\b[A-Z][a-z]{2}\s{0,3}\d{1,2}\s{0,3}\d{4}\s{0,3}\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}\b'),
+            "%b %d %Y %H:%M:%S%z",
+        ),
         # 格式2: 'May 27 2025 11:25:00'
-        (re.compile(r'\b[A-Z][a-z]{2}\s{0,3}\d{1,2}\s{0,3}\d{4}\s{0,3}\d{2}:\d{2}:\d{2}\b'),
-         '%b %d %Y %H:%M:%S')
+        (re.compile(r'\b[A-Z][a-z]{2}\s{0,3}\d{1,2}\s{0,3}\d{4}\s{0,3}\d{2}:\d{2}:\d{2}\b'), '%b %d %Y %H:%M:%S'),
+        # 格式3: '2025-05-26 17:25:42.348'
+        (re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}'), '%Y-%m-%d %H:%M:%S.%f'),
     ]
     TIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
     MAX_TIME = "9999-12-31 23:59:59.999999"
@@ -63,14 +77,15 @@ class LCNEParser(FileParser):
         if self.is_sdk_input:
             results = dict()
             for idx, file_source in enumerate(file_list):
-                results.update({
-                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_file(file_source)
-                })
+                results.update(
+                    {f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_file(file_source)}
+                )
         else:
             multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_list), task_id=task_id)
             for idx, file_source in enumerate(file_list):
-                multiprocess_job.add_security_job(f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}",
-                                                  self._parse_file, file_source)
+                multiprocess_job.add_security_job(
+                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}", self._parse_file, file_source
+                )
             results, _ = multiprocess_job.join_and_get_results()
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
         return list(chain(*results.values())), {}
@@ -102,8 +117,31 @@ class LCNEParser(FileParser):
         for log_line in self._yield_log(file_source):
             event_dict = self.parse_single_line(log_line)
             if not event_dict:
+                # 配置库未命中时，尝试匹配 PRECHECK 行
+                event_dict = self._match_precheck_line(log_line)
+            if not event_dict:
                 continue
             occur_time = self._filter_lcne_time(log_line) or self.MAX_TIME
             self.supplement_common_info(event_dict, file_source, occur_time)
             event_storage.record_event(event_dict)
         return event_storage.generate_event_list()
+
+    def _match_precheck_line(self, log_line: str):
+        """
+        Match the ubmem timeout line in diaglog and generate a PRECHECK event.
+        It does not depend on the fault repository in kg-config.json.
+        Line sample: "... set ubmem timeout xxxxxxxx age_period = 40000, ..."
+        :param log_line: single line in raw log
+        :return: PRECHECK event dict or {}
+        """
+        if UBMEM_TIMEOUT_KEYWORD not in log_line or AGE_PERIOD_KEYWORD not in log_line:
+            return {}
+        match = self.AGE_PERIOD_PATTERN.search(log_line)
+        if not match:
+            return {}
+        return {
+            "event_code": PRECHECK_UBMEM_TIMEOUT,
+            "key_info": log_line,
+            "attribute": {AGE_PERIOD_KEYWORD: match.group(AGE_PERIOD_KEYWORD)},
+            "is_custom_event": False,
+        }

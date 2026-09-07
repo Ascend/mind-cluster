@@ -235,6 +235,10 @@ class KGParseFilePath(JsonObj):
         bus_log_path: List = None,
         custom_log_list: List = None,
         pymotor_vllm_log_path: List = None,
+        # 新增（NPU侧 device_log/ub_info 下 ubctl_log.txt，单字段兼容当前；双字段留设计文档双模式）
+        ubctl_log_path: List = None,
+        ubctl_before_files: List = None,
+        ubctl_after_files: List = None,
     ):
         self.plog_path = plog_path or {}
         self.device_log_path = device_log_path or {}
@@ -265,6 +269,10 @@ class KGParseFilePath(JsonObj):
         self.bus_log_path = bus_log_path or []
         self.custom_log_list = custom_log_list or []
         self.pymotor_vllm_log_path = pymotor_vllm_log_path or []
+        # 新增（NPU侧 device_log/ub_info 下 ubctl_log.txt，单字段兼容当前；双字段留设计文档双模式）
+        self.ubctl_log_path = ubctl_log_path or []
+        self.ubctl_before_files = ubctl_before_files or []
+        self.ubctl_after_files = ubctl_after_files or []
 
     def get_all_path(self):
         all_path_list = []

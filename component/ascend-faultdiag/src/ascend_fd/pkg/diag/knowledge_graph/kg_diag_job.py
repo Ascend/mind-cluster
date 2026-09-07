@@ -17,6 +17,7 @@
 import logging
 import os
 
+from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
 from ascend_fd.model.node_info import FaultFilterTime
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.kg_engine_main import kg_engine_analyze
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.model.package_data import PackageData
@@ -28,6 +29,7 @@ from ascend_fd.pkg.diag.message import (
     FAULT_CHAINS_MAX_NOTE,
 )
 from ascend_fd.utils.constant.str_const import SUPER_POD_SCENE
+from ascend_fd.utils.constant.ub_const import PRECHECK_PREFIX
 from ascend_fd.utils.fault_code import (
     KG_DIAGNOSIS_NORMAL,
     HCCL_FAULT_LIST,
@@ -63,7 +65,6 @@ from ascend_fd.utils.tool import (
     get_parse_json,
     collect_parse_results,
 )
-from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 MAX_WORKER_CHAIN_NUM = 3
@@ -338,6 +339,8 @@ def _get_pre_response(root_device_causes, job_name, fault_filter_time=FaultFilte
         all_events_dict = device_cause.get("root_causes", {})
         oom_cann_faults = set(all_events_dict.keys()) & set(OOM_CANN_FAULT_LIST)
         for code, event in all_events_dict.items():
+            if code.startswith(PRECHECK_PREFIX):
+                continue
             # if the fault of the current device don't contain any of OOM_CANN_FAULT_LIST, skip AISW_CANN_MEMORY_INFO
             if code == AISW_CANN_MEMORY_INFO and not oom_cann_faults:
                 continue

@@ -99,6 +99,10 @@ class SaverCollector:
             bus_log_path=self.safe_get("lcne_log_saver", "get_bus_log_dict", default={}),
             custom_log_list=self.safe_get("custom_log_saver", "get_custom_log_list", default=[]),
             pymotor_vllm_log_path=self.safe_get("pymotor_vllm_log_saver", "get_pymotor_vllm_log_list", default=[]),
+            # 新增（与 hisi_logs_path/slog_path 同层，从 dev_log_saver 拿 getter 返回值）
+            ubctl_log_path=self.safe_get("dev_log_saver", "get_ubctl_log_list", default=[]),
+            ubctl_before_files=self.safe_get("dev_log_saver", "get_ubctl_before_files", default=[]),
+            ubctl_after_files=self.safe_get("dev_log_saver", "get_ubctl_after_files", default=[]),
         )
         # sdk断点续训时间属性需要在self.plog_dict后。（先要plog解析时间）
         self.parse_ctx = KGParseCtx(
