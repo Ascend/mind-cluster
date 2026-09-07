@@ -32,6 +32,7 @@ import (
 var draOptionFlagNames = []string{
 	"cdi-root", "kubelet-registrar-directory-path",
 	"kubelet-plugins-directory-path", api.DeviceResetTimeout,
+	"version", "v",
 }
 
 // TestDRAOption_RegisterFlags verifies that DRAOption.RegisterFlags registers
@@ -80,6 +81,7 @@ func TestDRAOption_RegisterFlagsParsesOverrides(t *testing.T) {
 		"-kubelet-registrar-directory-path=/tmp/ut-registrar",
 		"-kubelet-plugins-directory-path=/tmp/ut-plugins",
 		"-" + api.DeviceResetTimeout + "=60",
+		"-v=true",
 	}
 	if err := flag.CommandLine.Parse(args); err != nil {
 		t.Fatalf("Parse(%v) error = %v, want nil", args, err)
@@ -127,6 +129,7 @@ func optionDefaultChecks(opt *DRAOption, nodeName string) []flagCheck {
 			opt.KubeletPluginsDirectoryPath, kubeletplugin.KubeletPluginsDir,
 		},
 		{"deviceResetTimeout default", opt.DeviceResetTimeout, api.DefaultDeviceResetTimeout},
+		{"version default", opt.Version, false},
 	}
 }
 
@@ -137,6 +140,7 @@ func optionOverrideChecks(opt *DRAOption) []flagCheck {
 		{"kubelet-registrar-directory-path", opt.KubeletRegistrarDirectoryPath, "/tmp/ut-registrar"},
 		{"kubelet-plugins-directory-path", opt.KubeletPluginsDirectoryPath, "/tmp/ut-plugins"},
 		{"deviceResetTimeout", opt.DeviceResetTimeout, 60},
+		{"version set via -v", opt.Version, true},
 	}
 }
 

@@ -36,11 +36,15 @@ type DRAOption struct {
 	KubeletRegistrarDirectoryPath string
 	KubeletPluginsDirectoryPath   string
 	DeviceResetTimeout            int
+	Version bool
 }
 
 // RegisterFlags registers DRA options flags using standard library flag package
 func (d *DRAOption) RegisterFlags() {
 	d.NodeName = os.Getenv(consts.NodeNameEnv)
+
+	flag.BoolVar(&d.Version, "version", false, "Show application version")
+	flag.BoolVar(&d.Version, "v", false, "Show application version")
 
 	flag.StringVar(&d.CdiRoot,
 		"cdi-root",

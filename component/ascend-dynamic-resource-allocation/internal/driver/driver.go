@@ -25,9 +25,11 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	ver "ascend-common/common-utils/version"
 	"ascend-common/devmanager"
 	"ascend-dynamic-resource-allocation/internal/device"
 	draFlags "ascend-dynamic-resource-allocation/internal/flags"
+	"ascend-dynamic-resource-allocation/internal/kubeclient"
 	"ascend-dynamic-resource-allocation/internal/plugin"
 )
 
@@ -66,6 +68,7 @@ type DraGenerationInterface interface {
 type DraDriverInterface interface {
 	Start(ctx context.Context) error
 	Stop()
+	ReportVersion()
 }
 
 // AscendDraDriver is the single shared driver skeleton. It wires a generation
@@ -77,8 +80,9 @@ type AscendDraDriver struct {
 	generation      DraGenerationInterface
 	ascendDraPlugin *plugin.AscendDraPlugin
 	draConfig       *draFlags.DRAConfig
-	groupDevice     map[string][]*device.NpuDevice
-	allInfo         device.NpuAllInfo
+	kubeClient  *kubeclient.ClientK8s
+	groupDevice map[string][]*device.NpuDevice
+	allInfo     device.NpuAllInfo
 }
 
 // NewAscendDraDriver is the only construction path. Replaces the previous
@@ -89,11 +93,13 @@ func NewAscendDraDriver(
 	draConfig *draFlags.DRAConfig,
 	generation DraGenerationInterface,
 	ascendDraPlugin *plugin.AscendDraPlugin,
+	kubeClient *kubeclient.ClientK8s,
 ) *AscendDraDriver {
 	return &AscendDraDriver{
 		draConfig:       draConfig,
 		generation:      generation,
 		ascendDraPlugin: ascendDraPlugin,
+		kubeClient:      kubeClient,
 	}
 }
 
@@ -166,6 +172,18 @@ func (d *AscendDraDriver) Start(ctx context.Context) error {
 func (d *AscendDraDriver) Stop() {
 	hwlog.RunLog.Info("stopping ascend dra driver")
 	d.ascendDraPlugin.Stop()
+}
+
+// ReportVersion reports the component version to the node annotation through
+// the kubeclient package. Failures are logged and never fail the driver.
+func (d *AscendDraDriver) ReportVersion() {
+	if d.kubeClient == nil {
+		hwlog.RunLog.Error("kube client is nil, skip version reporting")
+		return
+	}
+	if err := d.kubeClient.ReportVersion(ver.Get(), "ascend-dra"); err != nil {
+		hwlog.RunLog.Error(err)
+	}
 }
 
 // pullNPUInfo is generation-agnostic: ask the generation for the device list,
@@ -257,7 +275,14 @@ func (adm *AscendDraManager) autoSetDraDriver(
 	if err != nil {
 		return fmt.Errorf("new dra plugin err:%v", err)
 	}
-	adm.draDriver = NewAscendDraDriver(draConfig, generation, ascendDraPlugin)
+
+	// The node-level k8s client is built here once and owned by the driver.
+	// A kubeconfig problem is logged and never blocks startup.
+	kubeClient, err := kubeclient.NewClientK8s(draConfig.KubeClientConfig, draConfig.DraOption.NodeName)
+	if err != nil {
+		hwlog.RunLog.Errorf("create k8s client for node operations failed: %v", err)
+	}
+	adm.draDriver = NewAscendDraDriver(draConfig, generation, ascendDraPlugin, kubeClient)
 	return nil
 }
 
@@ -269,4 +294,9 @@ func (adm *AscendDraManager) Start(ctx context.Context) error {
 // Stop stops the underlying driver.
 func (adm *AscendDraManager) Stop() {
 	adm.draDriver.Stop()
+}
+
+// ReportVersion reports the component version through the underlying driver.
+func (adm *AscendDraManager) ReportVersion() {
+	adm.draDriver.ReportVersion()
 }

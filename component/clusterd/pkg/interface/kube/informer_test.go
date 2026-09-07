@@ -620,8 +620,8 @@ func TestBuildVersionSummary(t *testing.T) {
 			defer p1.Reset()
 
 			result := buildVersionSummary()
-			convey.So(len(result), convey.ShouldEqual, 3)
-			for _, compName := range []string{"device-plugin", "k8s-rdma-shared-dp", "noded"} {
+			convey.So(len(result), convey.ShouldEqual, 4)
+			for _, compName := range []string{"ascend-dra", "device-plugin", "k8s-rdma-shared-dp", "noded"} {
 				convey.So(result[compName], convey.ShouldNotBeEmpty)
 			}
 		})
@@ -660,7 +660,8 @@ func TestBuildVersionSummary(t *testing.T) {
 			defer p1.Reset()
 
 			result := buildVersionSummary()
-			convey.So(len(result), convey.ShouldEqual, 3)
+			convey.So(len(result), convey.ShouldEqual, 4)
+			convey.So(result["ascend-dra"], convey.ShouldNotBeEmpty)
 			convey.So(result["device-plugin"], convey.ShouldNotBeEmpty)
 			convey.So(result["k8s-rdma-shared-dp"], convey.ShouldNotBeEmpty)
 			convey.So(result["noded"], convey.ShouldNotBeEmpty)
@@ -682,7 +683,7 @@ func TestBuildVersionSummary(t *testing.T) {
 			defer p1.Reset()
 
 			result := buildVersionSummary()
-			convey.So(len(result), convey.ShouldEqual, 3)
+			convey.So(len(result), convey.ShouldEqual, 4)
 		})
 	})
 }

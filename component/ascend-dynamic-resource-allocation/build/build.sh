@@ -27,6 +27,11 @@ if  [ -f "$version_file" ]; then
   build_version="v"${line#*=}
 fi
 
+GIT_COMMIT=$(git rev-parse --verify HEAD 2>/dev/null || echo "unknown")
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+GO_VERSION=$(go version | awk '{print $3}')
+os_type=$(arch)
+
 dra_name="ascend-dra"
 build_type=build
 
@@ -50,8 +55,12 @@ function build_plugin() {
     export CGO_ENABLED=1
     export CGO_CFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
     export CGO_CPPFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
-    go build -mod=mod -buildmode=pie -v -gcflags="all=-N -l" -ldflags "-X main.BuildName=${dra_name} \
-        -X main.BuildVersion=${build_version}_linux-${os_type} \
+    go build -mod=mod -buildmode=pie -v -gcflags="all=-N -l" -ldflags "-X ascend-common/common-utils/version.Version=${build_version} \
+        -X ascend-common/common-utils/version.GitCommit=${GIT_COMMIT} \
+        -X ascend-common/common-utils/version.GitBranch=${GIT_BRANCH} \
+        -X ascend-common/common-utils/version.BuildOS=linux \
+        -X ascend-common/common-utils/version.BuildArch=${os_type} \
+        -X ascend-common/common-utils/version.GoVersion=${GO_VERSION} \
         -buildid none" \
         -o ascend-dra  ${TOP_DIR}
     ls "${dra_name}"

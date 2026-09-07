@@ -343,7 +343,7 @@ func UpdateVersionSummary(lastHash map[string]string) {
 
 func buildVersionSummary() map[string]string {
 	result := make(map[string]string)
-	targetComponents := []string{"device-plugin", "k8s-rdma-shared-dp", "noded"}
+	targetComponents := []string{"ascend-dra", "device-plugin", "k8s-rdma-shared-dp", "noded"}
 	nodes := getNodesFromInformer()
 	for _, componentName := range targetComponents {
 		distribution := make(map[string]int) // version -> nodeCount (only store count, not node list)

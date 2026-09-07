@@ -287,5 +287,14 @@
 <td class="cellrowborder" valign="top" width="35%" headers="mcps1.2.5.1.4 "><p id="p0414dra240098"><a name="p0414dra240098"></a><a name="p0414dra240098"></a>健康检查服务启用HTTPS时使用的TLS私钥文件路径，需与-tls-cert-file同时配置。</p>
 </td>
 </tr>
+<tr id="row0414dra240099"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="p0414dra240099"><a name="p0414dra240099"></a><a name="p0414dra240099"></a>-version / -v</p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.2.5.1.2 "><p id="p0414dra240100"><a name="p0414dra240100"></a><a name="p0414dra240100"></a>bool</p>
+</td>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p0414dra240101"><a name="p0414dra240101"></a><a name="p0414dra240101"></a>false</p>
+</td>
+<td class="cellrowborder" valign="top" width="35%" headers="mcps1.2.5.1.4 "><p id="p0414dra240102"><a name="p0414dra240102"></a><a name="p0414dra240102"></a>查询当前Ascend DRA的版本号与commit ID等详细信息，该参数为标志位，无需跟值。使用示例：./ascend-dra -version或./ascend-dra -v</p>
+</td>
+</tr>
 </tbody>
 </table>
