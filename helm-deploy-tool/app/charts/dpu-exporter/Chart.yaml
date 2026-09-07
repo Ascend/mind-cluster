@@ -1,0 +1,6 @@
+apiVersion: v2
+name: dpu-exporter
+description: MindCluster dpu-exporter Deploy Tool
+type: application
+version: 26.1.0
+appVersion: "26.1.0"

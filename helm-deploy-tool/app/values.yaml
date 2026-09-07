@@ -21,6 +21,13 @@ npu-exporter:
     tag: "v26.1.0-openeuler24.03"
     pullPolicy: "IfNotPresent"
 
+dpu-exporter:
+  enabled: true
+  image:
+    repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/dpu-exporter"
+    tag: "v26.1.0-openeuler24.03"
+    pullPolicy: "IfNotPresent"
+
 ascend-operator:
   enabled: true
   image:

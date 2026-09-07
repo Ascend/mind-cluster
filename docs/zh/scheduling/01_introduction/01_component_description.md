@@ -421,7 +421,7 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 3. 根据获取的设备ID查询具体的网卡设备。
 4. 通过IPAM插件为挂载的网卡分配IP地址。
 
-## DPU Exporter<a name="ZH-CN_TOPIC_0000002479226948"></a>
+## DPU Exporter<a name="ZH-CN_TOPIC_0000002524312665"></a>
 
 **应用场景<a name="section15761025111720"></a>**
 

@@ -95,6 +95,7 @@ declare -A COMPONENT_YAML_PREFIX=(
     ["noded"]="noded"
     ["ascend-operator"]="ascend-operator"
     ["npu-exporter"]="npu-exporter"
+    ["dpu-exporter"]="dpu-exporter"
     ["ascend-for-volcano"]="volcano"
     ["k8s-rdma-shared-dev-plugin"]="k8s-rdma-shared-dp"
 )

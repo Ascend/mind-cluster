@@ -10,6 +10,7 @@ MindCluster Helm 部署工具用于将 MindCluster 集群调度组件以 Helm Ch
 - ClusterD
 - NodeD
 - NPU Exporter
+- DPU Exporter
 - Infer Operator
 - K8s RDMA Shared Dev Plugin
 
@@ -116,6 +117,7 @@ helm-deploy-tool/
 │       │       └── main.yaml         # 通过 .Files.Glob 渲染 yamls/ 下的资源
 │       ├── noded/
 │       ├── npu-exporter/
+│       ├── dpu-exporter/
 │       ├── ascend-operator/
 │       ├── ascend-for-volcano/
 │       ├── infer-operator/

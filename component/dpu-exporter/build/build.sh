@@ -27,6 +27,10 @@ if [ -f "$VER_FILE" ]; then
   build_version="v"${line#*=}
 fi
 
+GIT_COMMIT=$(git rev-parse --verify HEAD 2>/dev/null || echo "unknown")
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+GO_VERSION=$(go version | awk '{print $3}')
+
 arch=$(arch 2>&1)
 echo "Build Architecture is" "${arch}"
 
@@ -42,7 +46,13 @@ function build() {
   cd "${TOP_DIR}/cmd/dpu-exporter"
   CGO_CFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
   CGO_CPPFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
-  go build -mod=mod -buildmode=pie -ldflags "-s -extldflags=-Wl,-z,now  -X huawei.com/dpu-exporter/versions.BuildVersion=${build_version}_linux-${arch}" \
+  go build -mod=mod -buildmode=pie -ldflags "-s -extldflags=-Wl,-z,now  -X huawei.com/dpu-exporter/versions.BuildVersion=${build_version}_linux-${arch} \
+            -X ascend-common/common-utils/version.Version=${build_version} \
+            -X ascend-common/common-utils/version.GitCommit=${GIT_COMMIT} \
+            -X ascend-common/common-utils/version.GitBranch=${GIT_BRANCH} \
+            -X ascend-common/common-utils/version.BuildOS=linux \
+            -X ascend-common/common-utils/version.BuildArch=${arch} \
+            -X ascend-common/common-utils/version.GoVersion=${GO_VERSION}" \
     -o ${OUTPUT_NAME}
   ls ${OUTPUT_NAME}
   if [ $? -ne 0 ]; then
@@ -57,6 +67,7 @@ function mv_file() {
   cp "${TOP_DIR}"/build/config.json "${TOP_DIR}"/output/
   sed -i "s/dpu-exporter:.*/dpu-exporter:${build_version}/" "${TOP_DIR}"/output/dpu-exporter-"${build_version}".yaml
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output
+  cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME}.openeuler "${TOP_DIR}"/output
   chmod 400 "${TOP_DIR}"/output/*
   chmod 500 "${TOP_DIR}"/output/${OUTPUT_NAME}
 }

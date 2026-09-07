@@ -26,6 +26,8 @@ import (
 	"syscall"
 	"time"
 
+	ver "ascend-common/common-utils/version"
+
 	"huawei.com/dpu-exporter/pkg/collector/dpucollector"
 	"huawei.com/dpu-exporter/pkg/collector/metricscollector"
 	"huawei.com/dpu-exporter/pkg/configmanager"
@@ -43,10 +45,18 @@ func main() {
 	configFile := flag.String("config", "", "path to config file (default: /etc/dpu-exporter/config.json)")
 	port := flag.Int("port", 8080, "HTTP port for metrics server")
 	cardType := flag.String("cardType", device.CardTypeHuawei, "DPU card type (e.g. 'huawei', currently only 'huawei' is supported)")
+	version := flag.Bool("version", false, "If true, query the version of the program (default false)")
 	flag.IntVar(&logger.HwLogConfig.LogLevel, "logLevel", 0, "log level (-1-debug, 0-info, 1-warning, 2-error 3-critical)")
 	flag.IntVar(&logger.HwLogConfig.MaxAge, "maxAge", logger.HwLogConfig.MaxAge, "max age of backup logs in days, range is [7, 700]")
 	flag.IntVar(&logger.HwLogConfig.MaxBackups, "maxBackups", logger.HwLogConfig.MaxBackups, "max number of backup log files, range is (0, 180]")
 	flag.Parse()
+
+	info := ver.Get()
+	if *version {
+		fmt.Printf("version=%s commit=%s branch=%s os=%s arch=%s goVersion=%s\n",
+			info.Version, info.GitCommit, info.GitBranch, info.BuildOS, info.BuildArch, info.GoVersion)
+		return
+	}
 
 	httpPort := *port
 	// Override config file path if provided via CLI

@@ -23,6 +23,10 @@ dependencies:
     version: 26.1.0
     repository: ""
     condition: npu-exporter.enabled
+  - name: dpu-exporter
+    version: 26.1.0
+    repository: ""
+    condition: dpu-exporter.enabled
   - name: ascend-operator
     version: 26.1.0
     repository: ""

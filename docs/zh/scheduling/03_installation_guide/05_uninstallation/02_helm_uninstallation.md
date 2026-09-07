@@ -14,6 +14,7 @@
   - ClusterD
   - NodeD
   - NPU Exporter
+  - DPU Exporter
   - Infer Operator
   - K8s RDMA Shared Dev Plugin
 - 卸载Ascend Docker Runtime和Container Manager组件请参照[手动卸载](../../05_developer_guide/00_installation_deployment/02_uninstallation.md#ZH-CN_TOPIC_0000002511426389)章节操作。
