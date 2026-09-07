@@ -119,7 +119,7 @@ class Threshold(JsonObj):
         """检查lane间两两差值是否超过阈值，返回超阈值的差值描述列表
 
         :param lane_value_list: lane数据列表，元素为[lane_id, 值字符串]，无法转数值的 lane 会被跳过
-        :param value_type: 值类型描述（如"Host SNR"、"tx"），用于区分不同类型lane值的检查结果，为空时不加前缀
+        :param value_type: 值类型描述（如"host"、"tx"），用于区分不同类型lane值的检查结果，为空时不加前缀
         :return: 超阈值差值描述列表
         """
         th_valid, th_float = helpers.to_float(self.high_alarm_th)

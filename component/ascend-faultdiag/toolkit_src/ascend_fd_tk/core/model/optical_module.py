@@ -73,14 +73,14 @@ class OpticalModuleInfo(JsonObj):
 
     def get_lane_diff_desc(self, th: Threshold) -> str:
         diff_desc_list = []
-        for snr_attr in ("host", "media"):
-            snr_attr = f"{snr_attr}_snr"  # media_snr/host_snr
+        for value_type in ("host", "media"):
+            snr_attr = f"{value_type}_snr"  # media_snr/host_snr
             check_snr_list = [
                 [info.lane_id, getattr(info, snr_attr)] for info in self.lane_power_infos if getattr(info, snr_attr)
             ]
             if len(check_snr_list) <= 1:
                 continue
-            diff_desc_list.extend(th.check_lane_diff_desc(check_snr_list, snr_attr))
+            diff_desc_list.extend(th.check_lane_diff_desc(check_snr_list, value_type))
         if not diff_desc_list:
             return ""
         return "光模块SNR Lane间差值异常：\n" + "\n".join(diff_desc_list)

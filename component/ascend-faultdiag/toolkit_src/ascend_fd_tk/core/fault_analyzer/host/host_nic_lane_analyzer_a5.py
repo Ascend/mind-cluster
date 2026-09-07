@@ -75,7 +75,7 @@ class HostNicLaneAnalyzerA5(Analyzer):
                     results.append(
                         DiagResult(
                             domain=domain,
-                            fault_info=f"网卡端口 Lane{lane_idx + 1} {flag_name} 异常：实际值 {lane_val}（正常值 0）",
+                            fault_info=f"网卡端口 Lane{lane_idx + 1} {flag_name} 异常：{desc}",
                             suggestion=f"请检查网卡端口 Lane{lane_idx + 1} {flag_name} 指标",
                         )
                     )
