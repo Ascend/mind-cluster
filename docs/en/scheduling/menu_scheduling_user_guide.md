@@ -7,7 +7,7 @@
   - [Component Description](./introduction/01_component_description.md)
   - [Feature Description](./introduction/02_feature_description.md)
   - [Supported Product Models and OS List](./introduction/03_supported_product_models_and_os.md)
-- [Quick Start](./quick_start)
+- [Quick Start](./quick_start/quick_start.md)
 - [Installation and Deployment Guide](./installation_guide/menu_installation_guide.md)
   - [Prerequisites](./installation_guide/00_before_you_start.md)
   - [Environment Dependencies](./installation_guide/01_environment_dependencies.md)

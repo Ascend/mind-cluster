@@ -89,7 +89,7 @@ default          mindie-server-master-0                     1/1     Running   0 
 ...
 ```
 
-### 查看推理卡故障重调度结果<a name="ZH-CN_TOPIC_0000002511347069"></a>
+### 查看硬件故障重调度结果<a name="ZH-CN_TOPIC_0000002511347069"></a>
 
 当推理任务运行中出现故障时(可以通过业务代码主动触发报错)，Volcano会将该任务调度到其他NPU上。
 
@@ -196,7 +196,7 @@ default          mindie-coordinator-worker-1                1/1     Running   0 
 ...
 ```
 
-### 查看推理卡故障重调度结果<a name="ZH-CN_TOPIC_0000002511347069"></a>
+### 查看硬件故障重调度结果<a name="ZH-CN_TOPIC_0000002511347069"></a>
 
 当推理任务运行中某个Pod出现故障时(可以通过业务代码主动触发报错)，Volcano会将该Pod调度到其他NPU上。
 

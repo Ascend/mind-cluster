@@ -314,7 +314,7 @@ For detailed instructions on the above steps, see the "Cluster Service Deploymen
 
 ClusterD listens to the information of the MS Controller and MS Coordinator job pods and the changes of the ConfigMap corresponding to each `hccl.json` file, and generates `global-ranktable` in real time. Some fields in `global-ranktable` are consistent with those in the `hccl.json` file. For details about hccl.json, see [hccl.json File Description](../../api/hccl.json_file_description.md).
 
-- <term>global-ranktable example of Atlas A2 training series products</term>
+- global-ranktable example of the <term>Atlas A2 training series products</term>
 
     ```ColdFusion
     {
@@ -344,7 +344,7 @@ ClusterD listens to the information of the MS Controller and MS Coordinator job 
     }
     ```
 
-- <term>global-ranktable example of the Atlas A3 training series</term> products
+- global-ranktable example of the <term>Atlas A3 training series products</term>
 
     ```ColdFusion
     {
@@ -401,7 +401,7 @@ ClusterD listens to the information of the MS Controller and MS Coordinator job 
 |server_ip|Pod IP|
 |device_id|NPU device ID|
 |device_ip|NPU device IP|
-|super_device_id|Unique identifier of the NPU within the <span><term>Atlas A3 Training Series</term></span> (SuperPoD)|
+|super_device_id|Unique identifier of the NPU within the <span><term>Atlas A3 Training Series Products</term></span> (SuperPoD)|
 |rank_id|Training rank ID corresponding to the NPU|
 |device_logical_id|Logical ID of the NPU|
 |super_pod_list|SuperPoD list|

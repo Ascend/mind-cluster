@@ -1,4 +1,4 @@
-﻿# Container Manager<a name="ZH-CN_TOPIC_0000002524428759"></a>
+# Container Manager<a name="ZH-CN_TOPIC_0000002524428759"></a>
 
 > [!NOTE]
 > Container Manager仅适用于无K8s的场景。在K8s场景下，故障检测与恢复功能由ClusterD、Ascend Device Plugin、Volcano等组件协同提供，无需安装Container Manager。
@@ -7,13 +7,14 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 
 ## 支持的产品形态<a name="section_supported_products"></a>
 
-- 支持以下产品使用故障管理和故障容器的自动恢复功能：
-    - <term>Atlas 训练系列产品</term>
-    - <term>Atlas A2 训练系列产品</term>
-    - <term>Atlas A3 训练系列产品</term>
-    - <term>Atlas 推理系列产品</term>
-    - <term>Atlas A2 推理系列产品</term>
-    - <term>Atlas A3 推理系列产品</term>
+支持以下产品使用故障管理和故障容器的自动恢复功能：
+
+- <term>Atlas 训练系列产品</term>
+- <term>Atlas A2 训练系列产品</term>
+- <term>Atlas A3 训练系列产品</term>
+- <term>Atlas 推理系列产品</term>
+- <term>Atlas A2 推理系列产品</term>
+- <term>Atlas A3 推理系列产品</term>
 
 ## 操作步骤
 

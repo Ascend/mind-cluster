@@ -1,11 +1,11 @@
-﻿# 快速入门<a name="ZH-CN_TOPIC_0000002511346939"></a>
+# 快速入门<a name="ZH-CN_TOPIC_0000002511346939"></a>
 
-本文档提供两种快速入门场景，帮助您快速上手Ascend NPU集群调度：
+本文档提供两种快速入门场景，帮助用户快速上手Ascend NPU集群调度：
 
 - **10分钟快速入门**：仅部署Ascend Device Plugin和Ascend Docker Runtime，使用Kubernetes原生调度器调度普通Pod，快速验证NPU资源调度能力，适合初学者快速体验。
 - **训练业务快速入门**：部署完整的集群调度组件（NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator），以PyTorch训练任务为例，体验端到端的训练流程。
 
-您可以根据实际需求选择合适的入门路径。
+用户可以根据实际需求选择合适的入门路径。
 
 ## 环境准备<a name="section159013591917"></a>
 
@@ -19,12 +19,12 @@
 
   >[!NOTE]
   >
-  >- 参见[《Ascend Training Solution 版本配套表》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software)，确认固件与驱动的版本与集群调度组件是否配套。
+  >- 参见《[Ascend Training Solution 版本配套表](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software)》，确认固件与驱动的版本与集群调度组件是否配套。
   >- NPU驱动和固件版本可通过**npu-smi info -t board -i** <i>NPU ID</i>命令查询。回显信息中的“Software Version”字段值表示NPU驱动版本，“Firmware Version”字段值表示NPU固件版本。
 
 ## 10分钟快速入门
 
-本教程将指导您在 **10分钟内** 完成最简化的Ascend NPU集群调度环境搭建，仅使用：
+本教程将指导用户在 **10分钟内** 完成最简化的Ascend NPU集群调度环境搭建，仅使用：
 
 - **Ascend Device Plugin**：NPU设备发现与资源上报
 - **Ascend Docker Runtime**：NPU设备等资源挂载能力
@@ -111,7 +111,7 @@
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-device-plugin_${VERSION}_linux-aarch64.zip
         unzip Ascend-mindxdl-device-plugin_${VERSION}_linux-aarch64.zip
 
-        # 部署Device Plugin，若VERSION低于26.1.0版本，yaml文件为device-plugin-910-v${VERSION}.yaml
+        # 部署Ascend Device Plugin，若VERSION低于26.1.0版本，YAML文件为device-plugin-910-v${VERSION}.yaml
         kubectl apply -f device-plugin-v${VERSION}.yaml
         ```
 
@@ -170,13 +170,15 @@
     kubectl apply -f npu-test-pod.yaml
     ```
 
-3. 验证Pod调度。
+3. 查看Pod状态。
 
     ```shell
-    # 查看Pod状态
     kubectl get pods npu-test -o wide
+    ```
 
-    # 预期输出（STATUS为Running表示调度成功）
+    回显示例如下，STATUS字段为Running表示调度成功。
+
+    ```output
     NAME      READY   STATUS    RESTARTS   AGE   IP           NODE      NOMINATED NODE
     npu-test  1/1     Running   0          10s   10.244.1.2   worker01  <none>
     ```
@@ -220,8 +222,8 @@
 
 |操作步骤|操作说明|更多参考|
 |--|--|--|
-|[安装组件](#section1837511531098)|以Atlas 800T A2 训练服务器为例，手把手带您在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参考[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节。|
-|[下发训练任务](#section106493419399)|以一个简单的PyTorch训练任务为例，让您快速了解训练任务下发的操作流程。|更多下发训练任务的参数说明和操作步骤，请参考[基础调度](../04_usage/03_basic_scheduling/00_feature_description.md)章节。|
+|[安装组件](#section1837511531098)|以Atlas 800T A2 训练服务器为例，手把手指导用户在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节。|
+|[下发训练任务](#section106493419399)|以一个简单的PyTorch训练任务为例，让用户快速了解训练任务下发的操作流程。|更多下发训练任务的参数说明和操作步骤，请参见[基础调度](../04_usage/03_basic_scheduling/00_feature_description.md)章节。|
 
 ### 安装组件<a name="section1837511531098"></a>
 
@@ -238,7 +240,7 @@
 2. 安装组件。以AArch64架构为例，用户需根据实际情况下载对应架构的软件包。
     >[!NOTE]
     >
-    >快速入门以Helm快捷部署为例，要求MindCluster版本为26.1.0及以上，可以参考安装部署章节的[使用Helm安装](../03_installation_guide/02_installation/00_helm_installation.md)。
+    >快速入门以Helm快捷部署为例，要求MindCluster版本为26.1.0及以上，详细请参见[使用Helm安装](../03_installation_guide/02_installation/00_helm_installation.md)。
 
     1. 安装Ascend Docker Runtime。
 
@@ -294,7 +296,7 @@
 
         回显示例如下，表示NodeD组件运行正常。
 
-        ```shell
+        ```output
         NAME                                  READY   STATUS    RESTARTS   AGE
         ...
         noded-694474f599-54w6b                1/1     Running   0          11s
@@ -343,10 +345,10 @@
         wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/pytorch_standalone_acjob_quickstart.yaml
         ```
 
-    4. （可选）准备数据集。pytorch_standalone_acjob_quickstart.yaml中默认设置了`--dummy`参数，能自动为训练任务生成随机数据集，无需真实数据集即可启动训练任务。若用户需要使用真实数据集，请删掉此yaml文件中的`--dummy`参数，然后自行准备ResNet-50对应的数据集，使用时请遵守对应规范，将数据集上传到”/data/atlas_dls/public/dataset/resnet50/imagenet“。
+    4. （可选）准备数据集。pytorch_standalone_acjob_quickstart.yaml中默认设置了`--dummy`参数，能自动为训练任务生成随机数据集，无需真实数据集即可启动训练任务。若用户需要使用真实数据集，请删除该YAML文件中的`--dummy`参数，然后自行准备ResNet-50对应的数据集，使用时请遵守对应规范，将数据集上传到“/data/atlas_dls/public/dataset/resnet50/imagenet”。
 
         ```shell
-        mkdir /data/atlas_dls/public/dataset/resnet50/imagenet
+        mkdir -p /data/atlas_dls/public/dataset/resnet50/imagenet
         cd /data/atlas_dls/public/dataset/resnet50/imagenet
         ```
 

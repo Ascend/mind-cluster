@@ -1,4 +1,4 @@
-﻿# NPU Exporter<a name="ZH-CN_TOPIC_0000002511426331"></a>
+# NPU Exporter<a name="ZH-CN_TOPIC_0000002511426331"></a>
 
 - 使用**资源监测**时，必须安装NPU Exporter，该组件支持对接Prometheus或Telegraf。
     - 对接Prometheus时，支持通过镜像和二进制两种方式部署NPU Exporter，部署差异可参考[镜像和二进制部署差异](../../../07_references/05_appendix.md#镜像和二进制部署差异)。

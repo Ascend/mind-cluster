@@ -1,4 +1,4 @@
-﻿# 手动卸载<a name="ZH-CN_TOPIC_0000002511426389"></a>
+# 手动卸载<a name="ZH-CN_TOPIC_0000002511426389"></a>
 
 - 卸载Ascend Docker Runtime组件，请参见[卸载Ascend Docker Runtime](#section6134163311244)进行操作。
 - 卸载Container Manager组件，请参见[卸载Container Manager组件](#section1461059103619)进行操作。

@@ -22,21 +22,20 @@
 
 ## 升级前准备<a name="section_helm_upgrade_prepare"></a>
 
-1. 在管理节点安装Helm 命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在Helm 3.x版本，可以跳过此步骤。
-   - 安装Helm前请参考[Helm版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询Helm与K8s间的版本兼容性，根据实际情况选择Helm版本。
-   - 请参考[Helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装Helm命令。
+1. 在管理节点安装Helm命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在Helm 3.x版本，可以跳过此步骤。
+   1. 安装Helm前请参考[Helm版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询Helm与K8s间的版本兼容性，根据实际情况选择Helm版本。
+   2. 请参考[Helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装Helm命令。
+   3. 安装成功后，执行如下命令检查Helm版本。
 
-   安装成功后，执行如下命令检查Helm版本：
+        ```bash
+        helm version
+        ```
 
-   ```bash
-   helm version
-   ```
+        回显示例如下：
 
-   回显示例如下：
-
-   ```ColdFusion
-   version.BuildInfo{Version:"v3.17.0", GitCommit:"065003584b62a79f329070a946936374936021d6", GitTreeState:"clean",    GoVersion:"go1.19.5"}
-   ```
+        ```ColdFusion
+        version.BuildInfo{Version:"v3.17.0", GitCommit:"065003584b62a79f329070a946936374936021d6", GitTreeState:"clean",    GoVersion:"go1.19.5"}
+        ```
 
 2. 确认组件是否通过Helm管理<a name="section_check_helm_upgrade"></a>。在执行升级前，需先确认待升级的组件是否已通过Helm管理，以选择对应的升级方式。
    1. 登录K8s管理节点，执行以下命令，查看当前集群中通过Helm管理的Release列表。
@@ -64,7 +63,7 @@
 
 若组件是通过kubectl手动安装的，尚未纳入Helm管理，可参照如下步骤将组件升级到新版本。
 
-1. <a name="li1471945063444_helm_download"></a>下载并解压部署工具：
+1. <a name="li1471945063444_helm_download"></a>下载并解压部署工具。
 
     ```bash
     # 请用户自行将命令中的{version}替换为对应版本号，如26.1.0
@@ -105,10 +104,10 @@
       > [!NOTE]
     >- 以下三个组件包含CRD：Ascend Operator、Volcano和Infer Operator。若用户不需要升级这三个组件，可跳过此步骤。
     >- 若组件升级前后两个版本的CRD定义有变更：
-    >   1. 需先升级CRD，再升级应用组件;
-    >   2. 可能会导致工作负载中断，请用户在升级前确认。
+    >   - 需先升级CRD，再升级应用组件;
+    >   - 可能会导致工作负载中断，请用户在升级前确认。
     >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式进行操作即可。
-   - **默认配置安装**：若[crd默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)符合用户需求，可执行如下命令。
+   - **默认配置安装**：若[CRD默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)符合用户需求，可执行如下命令。
 
        ```bash
        #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
@@ -117,7 +116,7 @@
        helm install mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz
        ```
 
-   - **自定义配置安装**：若[crd默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)不符合用户需求，请创建crds-values.yaml文件，将[crd默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)的YAML文件内容复制到crds-values.yaml文件中，修改相关配置后执行如下命令。
+   - **自定义配置安装**：若[CRD默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)不符合用户需求，请创建crds-values.yaml文件，将[CRD默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)的YAML文件内容复制到crds-values.yaml文件中，修改相关配置后执行如下命令。
 
        ```bash
        #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
@@ -288,7 +287,7 @@
 
 ## 版本回退<a name="section_helm_rollback"></a>
 
-若升级后组件运行异常，可通过helm的回退功能恢复到升级前的版本。版本回退仅适用于通过helm upgrade升级过的Release实例，helm会记录每次升级的Revision历史。
+若升级后组件运行异常，可通过Helm的回退功能恢复到升级前的版本。版本回退仅适用于通过helm upgrade升级过的Release实例，Helm会记录每次升级的Revision历史。
 
 1. 执行以下命令，查看Release实例的升级历史。
     - 查看应用组件Release实例的升级历史：
