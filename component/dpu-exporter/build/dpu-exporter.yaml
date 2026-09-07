@@ -11,12 +11,10 @@ metadata:
 data:
   config.json: |
     {
-      "hinicadm5CollectorInterval": 60,
-      "sysfsCollectorInterval": 30,
+      "hinicadm5CollectorInterval": 40,
+      "sysfsCollectorInterval": 20,
       "dpuListRefreshInterval": 60,
-      "metricWhiteList": [],
-      "port": 8080,
-      "logLevel": "info"
+      "metricWhiteList": []
     }
 ---
 apiVersion: apps/v1
@@ -30,17 +28,24 @@ spec:
       app: dpu-exporter
   template:
     metadata:
+      ##### For Kubernetes versions lower than 1.19, seccomp is used with annotations.
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: runtime/default
       labels:
         app: dpu-exporter
     spec:
+      ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
+#      securityContext:
+#        seccompProfile:
+#          type: RuntimeDefault
       automountServiceAccountToken: false
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       nodeSelector:
         workerselector: dls-worker-node
       initContainers:
       - name: init-log-setup
-        image: dpu-exporter:v6.0.0
+        image: dpu-exporter:v26.2.0
         command: ['sh', '-c', 'mkdir -p /var/log/mindx-dl && chmod 755 /var/log/mindx-dl && chown root:root /var/log/mindx-dl && mkdir -p /var/log/mindx-dl/dpu-exporter && chmod 750 /var/log/mindx-dl/dpu-exporter && chown root:root /var/log/mindx-dl/dpu-exporter']
         securityContext:
           runAsUser: 0
@@ -50,12 +55,11 @@ spec:
             mountPath: /var/log
       containers:
       - name: dpu-exporter
-        image: dpu-exporter:v6.0.0
+        image: dpu-exporter:v26.2.0
         imagePullPolicy: Never
-        command: ["/usr/local/bin/dpu-exporter"]
-        args:
-          - "-config=/etc/dpu-exporter/config.json"
-          - "-cardType=huawei"
+        command: [ "/bin/bash", "-c", "--"]
+        args: [ "umask 027;dpu-exporter -config=/etc/dpu-exporter/config.json
+                 -cardType=huawei" ]
         ports:
           - name: http
             containerPort: 8080
@@ -80,11 +84,11 @@ spec:
           failureThreshold: 3
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "500m"
+            memory: 256Mi
+            cpu: 500m
           limits:
-            memory: "512Mi"
-            cpu: "1000m"
+            memory: 512Mi
+            cpu: 1000m
         securityContext:
           privileged: true
           readOnlyRootFilesystem: true
@@ -97,23 +101,14 @@ spec:
           - name: localtime
             mountPath: /etc/localtime
             readOnly: true
-          - name: sysfs
-            mountPath: /sys
-            readOnly: true
           - name: tmp
             mountPath: /tmp
           - name: logdir
             mountPath: /var/log/mindx-dl/dpu-exporter
           - name: hiniclogdir
             mountPath: /var/log/hinic5
-          - name: usrsbin
-            mountPath: /usr/sbin
-            readOnly: true
-          - name: usrlib64
-            mountPath: /usr/lib64
-            readOnly: true
-          - name: lib
-            mountPath: /lib
+          - name: hinicadm5-bin
+            mountPath: /usr/sbin/hinicadm5
             readOnly: true
       volumes:
         - name: log-dpu-exporter
@@ -129,12 +124,9 @@ spec:
         - name: localtime
           hostPath:
             path: /etc/localtime
-        - name: sysfs
-          hostPath:
-            path: /sys
+            type: File
         - name: tmp
-          hostPath:
-            path: /tmp
+          emptyDir: {}
         - name: logdir
           hostPath:
             path: /var/log/mindx-dl/dpu-exporter
@@ -143,15 +135,10 @@ spec:
           hostPath:
             path: /var/log/hinic5
             type: DirectoryOrCreate
-        - name: usrsbin
+        - name: hinicadm5-bin
           hostPath:
-            path: /usr/sbin
-        - name: usrlib64
-          hostPath:
-            path: /usr/lib64
-        - name: lib
-          hostPath:
-            path: /lib
+            path: /usr/sbin/hinicadm5
+            type: File
 ---
 apiVersion: v1
 kind: Service

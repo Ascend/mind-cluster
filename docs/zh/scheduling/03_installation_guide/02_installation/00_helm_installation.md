@@ -14,6 +14,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     - [ClusterD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511346859)
     - [NodeD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386924)
     - [NPU Exporter](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226948)
+    - [DPU Exporter](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312665)
     - [Infer Operator](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426821)
     - [K8s RDMA Shared Dev Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312660)
 - 安装[Container Manager](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312655)组件请参考[手动安装 Container Manager](../../05_developer_guide/00_installation_deployment/00_manual_installation/11_container-manager.md#ZH-CN_TOPIC_0000002524428759) 章节。
@@ -200,7 +201,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 
 - 应用组件默认配置<a name="default_app_yaml_install_config"></a>。
     > [!NOTE]
-    >- 默认安装的组件包括：Ascend Device Plugin、Ascend Operator、Volcano、ClusterD、NodeD、NPU Exporter和Infer Operator，Volcano版本为v1.9.0。
+    >- 默认安装的组件包括：Ascend Device Plugin、Ascend Operator、Volcano、ClusterD、NodeD、NPU Exporter、DPU Exporter和Infer Operator，Volcano版本为v1.9.0。
     >- 默认不安装的组件包括：K8s RDMA Shared Dev Plugin。
     >- 参数说明可参见[表2](#table15274931175242)和[表3](#table15274931175243)，其中[表3](#table15274931175243)中的参数未在下方YAML配置中展示，用户可根据实际情况新增或修改。
     >- 26.1.0版本中，tag字段默认值为`v26.1.0`，不带`-openeuler24.03`、`-ubuntu22.04`或`-alpinelatest`后缀，与昇腾镜像仓库中的镜像tag不一致，直接使用默认值可能导致镜像拉取失败。可将其配置为`v26.1.0-openeuler24.03`、`v26.1.0-ubuntu22.04`、`v1.9.0-v26.1.0-alpinelatest`等带后缀的tag。
@@ -232,6 +233,14 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
        # 昇腾镜像仓库镜像tag为"v26.1.0-openeuler24.03"或"v26.1.0-ubuntu22.04"
        tag: "v26.1.0"                                                      # NPU Exporter组件镜像标签，请根据实际情况修改，以后版本（包括补丁版本）会加上后缀："-openeuler24.03"和"-ubuntu22.04"
        pullPolicy: "IfNotPresent"                                          # NPU Exporter组件镜像拉取策略，请根据实际情况修改
+
+   dpu-exporter:
+     enabled: true                                                         # 安装DPU Exporter组件
+     image:
+       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/dpu-exporter" # DPU Exporter组件镜像名，请根据实际情况修改
+       # 昇腾镜像仓库镜像tag为"v26.1.0-openeuler24.03"或"v26.1.0-ubuntu22.04"
+       tag: "v26.1.0"                                                      # DPU Exporter组件镜像标签，请根据实际情况修改，以后版本（包括补丁版本）会加上后缀："-openeuler24.03"和"-ubuntu22.04"
+       pullPolicy: "IfNotPresent"                                          # DPU Exporter组件镜像拉取策略，请根据实际情况修改
 
    ascend-operator:
      enabled: true                                                         # 安装Ascend Operator组件
@@ -365,6 +374,12 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示产品为Atlas 200I SoC A1 核心板。</p></td>
   </tr>
   <tr>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>DPU Exporter</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>dpu-exporter.enabled</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用DPU Exporter组件。</p></td>
+  </tr>
+  <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>Ascend Operator</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-operator.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
@@ -467,7 +482,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 </table>
 
 >[!NOTE]
-> 表3中`<component>`取值为：clusterd、noded、npu-exporter、ascend-operator、**ascend-for-volcano.scheduler**、**ascend-for-volcano.controller**、infer-operator、ascend-device-plugin、k8s-rdma-shared-dev-plugin。以 clusterd 为例，`<component>.image.repository` 替换为 `clusterd.image.repository`，依此类推。
+> 表3中`<component>`取值为：clusterd、noded、npu-exporter、dpu-exporter、ascend-operator、**ascend-for-volcano.scheduler**、**ascend-for-volcano.controller**、infer-operator、ascend-device-plugin、k8s-rdma-shared-dev-plugin。以 clusterd 为例，`<component>.image.repository` 替换为 `clusterd.image.repository`，依此类推。
 
 **表 4**  Helm部署工具压缩包文件列表说明
 <a name="table15274931175244"></a>

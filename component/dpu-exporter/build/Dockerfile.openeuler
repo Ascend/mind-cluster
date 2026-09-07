@@ -1,11 +1,12 @@
-FROM ubuntu:22.04
+FROM openeuler/openeuler:24.03-lts
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends libmnl0 && \
-    rm -rf /var/lib/apt/lists/*
+RUN yum update -y && \
+    yum install -y shadow-utils ca-certificates bash glibc libmnl && \
+    yum clean all && \
+    rm -rf /var/cache/yum
 
-RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /usr/sbin/nologin HwHiAiUser &&\
-    usermod root -s /usr/sbin/nologin
+RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/false HwHiAiUser &&\
+    usermod root -s /bin/false
 
 COPY ./dpu-exporter /usr/local/bin/
 COPY ./config.json  /etc/dpu-exporter/config.json

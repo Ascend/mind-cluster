@@ -16,6 +16,7 @@
     - [ClusterD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511346859)
     - [NodeD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386924)
     - [NPU Exporter](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226948)
+    - [DPU Exporter](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312665)
     - [Infer Operator](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426821)
     - [K8s RDMA Shared Dev Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312660)
 - 升级[Ascend Docker Runtime](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426843)、[Container Manager](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312655)、[TaskD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386914)和[MindIO](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226942)组件请参考[手动升级](../../05_developer_guide/00_installation_deployment/01_upgrade.md#ZH-CN_TOPIC_0000002479226452)章节操作。
