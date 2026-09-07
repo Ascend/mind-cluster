@@ -266,7 +266,7 @@ func buildPriorityQueueCases() []buildPriorityQueueCase {
 func TestBuildPriorityQueue(t *testing.T) {
 	for _, tt := range buildPriorityQueueCases() {
 		t.Run(tt.name, func(t *testing.T) {
-			pq := buildPriorityQueue(tt.top, tt.sameSPs, tt.spBlock)
+			pq := BuildPriorityQueue(tt.top, tt.sameSPs, tt.spBlock)
 			got := map[int]int{}
 			for pq.Len() > 0 {
 				item := heap.Pop(pq).(*PQItem)

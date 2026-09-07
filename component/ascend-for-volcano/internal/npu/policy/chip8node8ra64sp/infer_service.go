@@ -24,6 +24,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -200,6 +201,22 @@ func (tp *chip8node8ra64sp) selectNodesForInferService(
 		return nil, fmt.Errorf("invalid spBlock %d for infer service job", tp.spBlock)
 	}
 
+	// pod-level rescheduling check (chip8 isPodLevelRescheduling: pod-rescheduling
+	// label check, IsMasterFault exclusion, PendingSessionNum fallback to job level)
+	rescheduleCache := rescheduling.GetReSchedulerCache()
+	if rescheduleCache == nil {
+		klog.V(util.LogInfoLev).Infof("infer service job %s: reschedule cache is nil, skip pod-level", tp.Name)
+	} else {
+		fJob := rescheduleCache.FaultJobs[task.Job]
+		isFaultJob := fJob != nil && fJob.IsFaultJob
+		isPodLevel := isFaultJob && tp.isPodLevelRescheduling(fJob)
+		klog.V(util.LogInfoLev).Infof("infer service job %s: pod-level check taskJob=%s, fJobFound=%t, isFaultJob=%t, isPodLevel=%t",
+			tp.Name, task.Job, fJob != nil, isFaultJob, isPodLevel)
+		if isPodLevel {
+			return tp.selectNodesForInferServicePodLevel(task, nodes, fJob)
+		}
+	}
+
 	superPodMap := getSuperPodMap(tp.Nodes, nodes, tp.GetPluginName(), tp.uBMemRackNum)
 
 	sameRacks, sameSPs := tp.getInferServiceScheduledInfo()
@@ -239,31 +256,12 @@ func (tp *chip8node8ra64sp) selectNodesForInferService(
 			break
 		}
 
-		sp := superPodMap[item.superPodID]
-		rackGroup := transferSuperPodToRackIdMap(sp)
-		nodesInRack := rackGroup[item.rackID]
-
 		spIndex := strconv.Itoa(i)
 		klog.V(util.LogInfoLev).Infof("infer service job %s: select spBlock[%d/%d], superPodID=%d, rackID=%d, group=%d, freeNodes=%d",
 			tp.Name, i+1, spBlockCount, item.superPodID, item.rackID, item.group, item.freeNodes)
-		selectedNodes[spIndex] = make([]plugin.SuperNode, 0, tp.spBlock)
-		for j := 0; j < tp.spBlock; j++ {
-			selectedNodes[spIndex] = append(selectedNodes[spIndex], plugin.SuperNode{
-				Name:       nodesInRack[j].name,
-				SuperPodID: nodesInRack[j].superPodID,
-				RackID:     nodesInRack[j].rackID,
-			})
-			delete(sp, nodesInRack[j].name)
-		}
+		selectedNodes[spIndex] = tp.selectNodesFromRack(item, superPodMap)
 
-		sameRacks[rackKey(item.superPodID, item.rackID)] = &inferServiceRackInfo{
-			rackID:     item.rackID,
-			superPodID: item.superPodID,
-		}
-		sameSPs[item.superPodID] = &inferServiceSPInfo{
-			superPodID: item.superPodID,
-		}
-		tp.enrichRackAndSPInfo(superPodMap, sameRacks, sameSPs)
+		tp.updateInferServiceAffinity(item, superPodMap, sameRacks, sameSPs)
 		pq = tp.buildInferServicePriorityQueue(superPodMap, sameRacks, sameSPs)
 	}
 
@@ -375,4 +373,143 @@ func countSPMetrics(rackGroup map[int32][]nodeBaseInfo) (int, int) {
 		}
 	}
 	return idleRackNum, totalFree
+}
+
+// selectNodesFromRack picks spBlock nodes from the rack selected by the given PQ item,
+// removes them from the super pod, and returns them as super nodes (with RackID).
+func (tp *chip8node8ra64sp) selectNodesFromRack(item *inferServicePQItem,
+	superPodMap map[int32]superPod) []plugin.SuperNode {
+	sp := superPodMap[item.superPodID]
+	nodesInRack := transferSuperPodToRackIdMap(sp)[item.rackID]
+	nodes := make([]plugin.SuperNode, 0, tp.spBlock)
+	for j := 0; j < tp.spBlock; j++ {
+		nodes = append(nodes, plugin.SuperNode{
+			Name:       nodesInRack[j].name,
+			SuperPodID: nodesInRack[j].superPodID,
+			RackID:     nodesInRack[j].rackID,
+		})
+		delete(sp, nodesInRack[j].name)
+	}
+	return nodes
+}
+
+// updateInferServiceAffinity records the selected rack/SP as same-service affinity
+// info and refreshes the free-node metrics for the next PQ rebuild.
+func (tp *chip8node8ra64sp) updateInferServiceAffinity(item *inferServicePQItem,
+	superPodMap map[int32]superPod, sameRacks map[int64]*inferServiceRackInfo,
+	sameSPs map[int32]*inferServiceSPInfo) {
+	sameRacks[rackKey(item.superPodID, item.rackID)] = &inferServiceRackInfo{
+		rackID:     item.rackID,
+		superPodID: item.superPodID,
+	}
+	sameSPs[item.superPodID] = &inferServiceSPInfo{superPodID: item.superPodID}
+	tp.enrichRackAndSPInfo(superPodMap, sameRacks, sameSPs)
+}
+
+// selectNodesForInferServicePodLevel selects nodes for a fault infer service job in
+// pod-level rescheduling mode. It reuses the own Stage 1-3 sub-functions of the
+// fault-job upgrading chain (keep healthy spBlock with rack affinity check ->
+// same rack replace / cross rack whole frame) and falls back to the chip8
+// three-level priority queue in Stage 4.
+func (tp *chip8node8ra64sp) selectNodesForInferServicePodLevel(task *api.TaskInfo,
+	nodes []*api.NodeInfo, fJob *rescheduling.FaultJob) (map[string][]plugin.SuperNode, error) {
+	superPodMap := getSuperPodMap(tp.Nodes, nodes, tp.GetPluginName(), tp.uBMemRackNum)
+	spBlockCount := tp.ReqNPUNum / tp.SpBlockNPUNum
+	spBlockIDs := make(map[string]bool, spBlockCount)
+	for i := 0; i < spBlockCount; i++ {
+		spBlockIDs[strconv.Itoa(i)] = false
+	}
+	selectNodes := make(map[string][]plugin.SuperNode)
+	klog.V(util.LogInfoLev).Infof("infer service pod-level: job %s start selecting, spBlock=%d, spBlockCount=%d, spBlockMap=%d, faultSP=%d",
+		tp.Name, tp.spBlock, spBlockCount, len(superPodMap), len(fJob.SuperPods))
+
+	// refuse rescheduling till grace deletion finished (same as selectNodesForFaultJob)
+	for _, fTask := range fJob.FaultTasks {
+		if fTask.IsBeingGracefulDeleted {
+			klog.V(util.LogWarningLev).Infof("rescheduling: pod <%s> is being graceful delete, "+
+				"unable to reschedule", fTask.TaskName)
+			return nil, fmt.Errorf("pod <%s> is being graceful delete, unable to reschedule",
+				fTask.TaskName)
+		}
+	}
+
+	// Stage 1: keep healthy spBlock (with rack affinity check), return not-ready spBlocks
+	notReadySpBlock := tp.selectNodeFromOriginSpBlock(fJob, selectNodes, superPodMap, spBlockIDs)
+
+	// Stage 2/3: PendingSessionNum < tpRescheduleStage replaces fault nodes within
+	// the same rack, otherwise selects the whole frame across racks
+	if fJob.PendingSessionNum < spRescheduleStage {
+		if err := tp.selectNodesByRack(fJob, notReadySpBlock, superPodMap, spBlockIDs, selectNodes); err != nil {
+			return nil, err
+		}
+	}
+
+	var unReadyID []string
+	for id, ready := range spBlockIDs {
+		if !ready {
+			unReadyID = append(unReadyID, id)
+		}
+	}
+	if len(unReadyID) == 0 {
+		klog.V(util.LogInfoLev).Infof("infer service pod-level: job %s all sp-blocks ready after stage 1-3", tp.Name)
+		return selectNodes, nil
+	}
+	util.SortByNumericValue(unReadyID)
+	klog.V(util.LogInfoLev).Infof("infer service pod-level: job %s stage 4 fallback for unready sp-blocks %v",
+		tp.Name, unReadyID)
+
+	// Stage 4: chip8 three-level PQ (sameRack > sameSP > otherSP)
+	if err := tp.selectInferServiceSPForPodLevel(unReadyID, superPodMap, selectNodes); err != nil {
+		return nil, err
+	}
+	return selectNodes, nil
+}
+
+// selectInferServiceSPForPodLevel selects sp-blocks for unready logical sp-blocks
+// with the chip8 three-level priority queue (sameRack > sameSP > otherSP). The
+// priority queue is rebuilt inside the loop: after each selection the chosen nodes
+// are deducted from superPodMap, and newly selected rack/SP join sameRacks/sameSPs
+// to strengthen the affinity of the following rounds.
+func (tp *chip8node8ra64sp) selectInferServiceSPForPodLevel(unReadyID []string,
+	superPodMap map[int32]superPod, selectNodes map[string][]plugin.SuperNode) error {
+	sameRacks, sameSPs := tp.getInferServiceScheduledInfo()
+	tp.enrichRackAndSPInfo(superPodMap, sameRacks, sameSPs)
+	klog.V(util.LogInfoLev).Infof("infer service pod-level: job %s stage 4 PQ, unready=%v, sameRack=%d, sameSP=%d",
+		tp.Name, unReadyID, len(sameRacks), len(sameSPs))
+	for _, id := range unReadyID {
+		pq := tp.buildInferServicePriorityQueue(superPodMap, sameRacks, sameSPs)
+		item := tp.popValidInferServiceSPItem(pq, superPodMap)
+		if item == nil {
+			klog.V(util.LogWarningLev).Infof("infer service pod-level: job %s no valid sp-block for %s", tp.Name, id)
+			return fmt.Errorf("infer service pod-level: no valid sp-block for %s", id)
+		}
+		klog.V(util.LogInfoLev).Infof("infer service pod-level: select sp-block %s, superPodID=%d, rackID=%d",
+			id, item.superPodID, item.rackID)
+		selectNodes[id] = tp.selectNodesFromRack(item, superPodMap)
+		// update rack/SP affinity info for the next round PQ rebuild
+		tp.updateInferServiceAffinity(item, superPodMap, sameRacks, sameSPs)
+	}
+	return nil
+}
+
+// popValidInferServiceSPItem pops and validates the top item of the three-level PQ.
+// It skips items whose SP is missing, whose SP has insufficient nodes, or whose
+// rack has insufficient nodes. Returns nil when no valid item remains.
+func (tp *chip8node8ra64sp) popValidInferServiceSPItem(pq *inferServicePQ,
+	superPodMap map[int32]superPod) *inferServicePQItem {
+	for pq.Len() > 0 {
+		item := heap.Pop(pq).(*inferServicePQItem)
+		sp, ok := superPodMap[item.superPodID]
+		if !ok || len(sp) < tp.spBlock {
+			klog.V(util.LogInfoLev).Infof("infer service pod-level: skip superPodID=%d, freeNodes=%d", item.superPodID, len(sp))
+			continue
+		}
+		rackGroup := transferSuperPodToRackIdMap(sp)
+		if nodesInRack, rackOk := rackGroup[item.rackID]; !rackOk || len(nodesInRack) < tp.spBlock {
+			klog.V(util.LogInfoLev).Infof("infer service pod-level: skip rackID=%d, freeNodes=%d", item.rackID, len(nodesInRack))
+			continue
+		}
+		return item
+	}
+	return nil
 }
