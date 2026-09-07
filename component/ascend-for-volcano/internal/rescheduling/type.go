@@ -53,6 +53,10 @@ const (
 	JobExternalForceReschedulingPrefix = "external-force"
 	// JobExternalGraceReschedulingPrefix Grace delete reschedule job with external rescheduling
 	JobExternalGraceReschedulingPrefix = "external-grace"
+	// JobExternalForcePodFailedReschedulingPrefix Force delete reschedule job with external
+	// rescheduling, only handle pod-failed (business fault),
+	// skip hardware fault (cardUnhealthy, networkUnhealthy, etc.)
+	JobExternalForcePodFailedReschedulingPrefix = "external-force-pod-failed"
 	// JobOffRescheduleLabelValue not delete reschedule job, possible value of re-scheduling configuration
 	JobOffRescheduleLabelValue = "off"
 	// GraceOverTimeKey for GraceOverTime config by user

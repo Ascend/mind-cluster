@@ -189,16 +189,16 @@ func SelectNodesForInferService(req InferServiceReq) (map[string][]plugin.SuperN
 	EnrichSPInfo(req.SuperPodTop, sameSPs)
 	spBlockCount := req.ReqNPUNum / req.SpBlockNPUNum
 	selectedNodes := make(map[string][]plugin.SuperNode)
-	pq := buildPriorityQueue(req.SuperPodTop, sameSPs, req.SpBlock)
+	pq := BuildPriorityQueue(req.SuperPodTop, sameSPs, req.SpBlock)
 	for i := 0; i < spBlockCount; i++ {
-		item := popValidSP(pq, req.SuperPodTop, req.SpBlock)
+		item := PopValidSP(pq, req.SuperPodTop, req.SpBlock)
 		if item == nil {
 			break
 		}
-		selectNodesFromSP(req.SuperPodTop[item.SuperPodID], i, req.SpBlock, selectedNodes)
+		SelectNodesFromSP(req.SuperPodTop[item.SuperPodID], strconv.Itoa(i), req.SpBlock, selectedNodes)
 		sameSPs[item.SuperPodID] = &SPInfo{SuperPodID: item.SuperPodID}
 		EnrichSPInfo(req.SuperPodTop, sameSPs)
-		pq = buildPriorityQueue(req.SuperPodTop, sameSPs, req.SpBlock)
+		pq = BuildPriorityQueue(req.SuperPodTop, sameSPs, req.SpBlock)
 	}
 	if len(selectedNodes) < spBlockCount {
 		return nil, fmt.Errorf("infer service schedule failed, required %d sp-block, got %d",
@@ -209,9 +209,9 @@ func SelectNodesForInferService(req InferServiceReq) (map[string][]plugin.SuperN
 	return selectedNodes, nil
 }
 
-// popValidSP pops the highest priority super pod that still has enough free nodes
+// PopValidSP pops the highest priority super pod that still has enough free nodes
 // for one sp-block. Returns nil when no super pod in the queue satisfies it.
-func popValidSP(pq *PQ, superPodTop map[int32]plugin.SuperPod, spBlock int) *PQItem {
+func PopValidSP(pq *PQ, superPodTop map[int32]plugin.SuperPod, spBlock int) *PQItem {
 	for pq.Len() > 0 {
 		item, ok := heap.Pop(pq).(*PQItem)
 		if !ok {
@@ -226,17 +226,17 @@ func popValidSP(pq *PQ, superPodTop map[int32]plugin.SuperPod, spBlock int) *PQI
 	return nil
 }
 
-// selectNodesFromSP picks up to spBlock nodes from the given super pod and records
+// SelectNodesFromSP picks up to spBlock nodes from the given super pod and records
 // them under the spIndex key. Selected nodes are removed from the super pod topology.
-func selectNodesFromSP(sp plugin.SuperPod, spIndex, spBlock int, selectedNodes map[string][]plugin.SuperNode) {
-	spIndexKey := strconv.Itoa(spIndex)
-	selectedNodes[spIndexKey] = make([]plugin.SuperNode, 0, spBlock)
+func SelectNodesFromSP(sp plugin.SuperPod, spIndex string, spBlock int,
+	selectedNodes map[string][]plugin.SuperNode) {
+	selectedNodes[spIndex] = make([]plugin.SuperNode, 0, spBlock)
 	nodeCount := 0
 	for nodeName, nNode := range sp {
 		if nodeCount >= spBlock {
 			break
 		}
-		selectedNodes[spIndexKey] = append(selectedNodes[spIndexKey], plugin.SuperNode{
+		selectedNodes[spIndex] = append(selectedNodes[spIndex], plugin.SuperNode{
 			Name:       nodeName,
 			SuperPodID: nNode.SuperPodID,
 		})
@@ -245,11 +245,11 @@ func selectNodesFromSP(sp plugin.SuperPod, spIndex, spBlock int, selectedNodes m
 	}
 }
 
-// buildPriorityQueue builds a two-level priority queue: same-super-pod items
+// BuildPriorityQueue builds a two-level priority queue: same-super-pod items
 // (Group=GroupSameSP, already hosting the same inferServiceID) come first,
 // other-super-pod items (Group=GroupOtherSP) come second. Within the same group,
 // items with more free nodes come first.
-func buildPriorityQueue(superPodTop map[int32]plugin.SuperPod, sameSPs map[int32]*SPInfo,
+func BuildPriorityQueue(superPodTop map[int32]plugin.SuperPod, sameSPs map[int32]*SPInfo,
 	spBlock int) *PQ {
 	pq := make(PQ, 0)
 	heap.Init(&pq)
@@ -278,4 +278,34 @@ func buildPriorityQueue(superPodTop map[int32]plugin.SuperPod, sameSPs map[int32
 		})
 	}
 	return &pq
+}
+
+// SelectInferServiceSPForPodLevel fills unready logical super pods for pod-level
+// rescheduling using the infer service priority queue (same-service SP first, others
+// as fallback). The priority queue is rebuilt inside the loop: after each selection
+// the chosen SP is deducted from totalNodes, and newly selected SPs join sameSPs to
+// strengthen the affinity of the following rounds, matching SelectNodesForInferService.
+func SelectInferServiceSPForPodLevel(jobs map[api.JobID]plugin.SchedulerJob, jobName api.JobID,
+	inferServiceID string, spBlock int, unReadyID []string,
+	totalNodes map[int32]plugin.SuperPod, selectNodes map[string][]plugin.SuperNode,
+	vSuperPodID map[string]bool) error {
+	sameSPs := CollectScheduledSPs(jobs, jobName, inferServiceID)
+	EnrichSPInfo(totalNodes, sameSPs)
+	klog.V(util.LogInfoLev).Infof("infer service pod-level: job %s stage 4 PQ, unready=%v, sameSP=%d",
+		jobName, unReadyID, len(sameSPs))
+	for _, id := range unReadyID {
+		pq := BuildPriorityQueue(totalNodes, sameSPs, spBlock)
+		item := PopValidSP(pq, totalNodes, spBlock)
+		if item == nil {
+			klog.V(util.LogWarningLev).Infof("infer service pod-level: job %s no available SP for %s", jobName, id)
+			return fmt.Errorf("inferService pod-level: no available SP for %s", id)
+		}
+		SelectNodesFromSP(totalNodes[item.SuperPodID], id, spBlock, selectNodes)
+		vSuperPodID[id] = true
+		klog.V(util.LogInfoLev).Infof("infer service pod-level: job %s select sp-block %s from superPodID=%d, freeNodes=%d",
+			jobName, id, item.SuperPodID, item.FreeNodes)
+		sameSPs[item.SuperPodID] = &SPInfo{SuperPodID: item.SuperPodID}
+		EnrichSPInfo(totalNodes, sameSPs)
+	}
+	return nil
 }

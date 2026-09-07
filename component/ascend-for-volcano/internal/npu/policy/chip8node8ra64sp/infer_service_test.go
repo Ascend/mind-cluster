@@ -16,11 +16,14 @@ package chip8node8ra64sp
 
 import (
 	"container/heap"
+	"fmt"
+	"strconv"
 	"testing"
 
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -595,6 +598,224 @@ func TestSelectNodesForInferService_EmptyPQ(t *testing.T) {
 	if item != nil {
 		t.Errorf("expected item to be nil when priority queue is empty")
 	}
+}
+
+// buildPodLevelNodes builds npu nodes and api nodes for pod-level rescheduling tests:
+// spNodeCount nodes on one super pod, rack of each node is i/rackNodeNum.
+func buildPodLevelNodes(spNodeCount int) (map[string]plugin.NPUNode, []*api.NodeInfo) {
+	npuNodes := make(map[string]plugin.NPUNode)
+	apiNodes := make([]*api.NodeInfo, 0, spNodeCount)
+	for i := 0; i < spNodeCount; i++ {
+		name := fmt.Sprintf("node-0-%d", i)
+		npuNodes[name] = plugin.NPUNode{
+			CommonNode: plugin.CommonNode{
+				Name:       name,
+				SuperPodID: 0,
+				RackID:     int32(i / rackNodeNum),
+			},
+		}
+		apiNodes = append(apiNodes, &api.NodeInfo{Name: name})
+	}
+	return npuNodes, apiNodes
+}
+
+func TestPopValidInferServiceSPItem(t *testing.T) {
+	t.Run("valid item is returned", func(t *testing.T) {
+		tp := &chip8node8ra64sp{}
+		tp.spBlock = 4
+		superPodMap := buildSuperPodsByParams(map[int32]int32{0: 16})
+		pq := tp.buildInferServicePriorityQueue(superPodMap,
+			map[int64]*inferServiceRackInfo{}, map[int32]*inferServiceSPInfo{})
+		item := tp.popValidInferServiceSPItem(pq, superPodMap)
+		if item == nil {
+			t.Fatalf("expected valid item, got nil")
+		}
+		if item.superPodID != 0 {
+			t.Errorf("expected superPodID=0, got %d", item.superPodID)
+		}
+	})
+	t.Run("item with missing super pod is skipped", func(t *testing.T) {
+		tp := &chip8node8ra64sp{}
+		tp.spBlock = 4
+		superPodMap := buildSuperPodsByParams(map[int32]int32{0: 16})
+		pq := tp.buildInferServicePriorityQueue(superPodMap,
+			map[int64]*inferServiceRackInfo{}, map[int32]*inferServiceSPInfo{})
+		heap.Push(pq, &inferServicePQItem{superPodID: 9, rackID: 0,
+			freeNodes: 100, group: inferServiceGroupOtherSP})
+		item := tp.popValidInferServiceSPItem(pq, superPodMap)
+		if item == nil {
+			t.Fatalf("expected fallback item, got nil")
+		}
+		if item.superPodID != 0 {
+			t.Errorf("expected superPodID=0 after skipping missing SP, got %d", item.superPodID)
+		}
+	})
+	t.Run("empty queue returns nil", func(t *testing.T) {
+		tp := &chip8node8ra64sp{}
+		tp.spBlock = 4
+		pq := make(inferServicePQ, 0)
+		if item := tp.popValidInferServiceSPItem(&pq, map[int32]superPod{}); item != nil {
+			t.Errorf("expected nil for empty queue, got %+v", item)
+		}
+	})
+}
+
+func TestSelectNodesFromRack(t *testing.T) {
+	tp := &chip8node8ra64sp{}
+	tp.spBlock = 4
+	superPodMap := buildSuperPodsByParams(map[int32]int32{0: 16})
+	item := &inferServicePQItem{superPodID: 0, rackID: 0}
+
+	nodes := tp.selectNodesFromRack(item, superPodMap)
+
+	if len(nodes) != tp.spBlock {
+		t.Fatalf("expected %d nodes, got %d", tp.spBlock, len(nodes))
+	}
+	if got := len(superPodMap[0]); got != 12 {
+		t.Errorf("expected 12 nodes remaining after selection, got %d", got)
+	}
+	for i, n := range nodes {
+		if n.SuperPodID != 0 {
+			t.Errorf("node %d: expected superPodID=0, got %d", i, n.SuperPodID)
+		}
+		if n.RackID != 0 {
+			t.Errorf("node %d: expected RackID=0, got %d", i, n.RackID)
+		}
+	}
+}
+
+func TestUpdateInferServiceAffinity(t *testing.T) {
+	tp := &chip8node8ra64sp{}
+	tp.spBlock = 4
+	superPodMap := buildSuperPodsByParams(map[int32]int32{0: 16})
+	sameRacks := map[int64]*inferServiceRackInfo{}
+	sameSPs := map[int32]*inferServiceSPInfo{}
+	item := &inferServicePQItem{superPodID: 0, rackID: 0}
+
+	tp.updateInferServiceAffinity(item, superPodMap, sameRacks, sameSPs)
+
+	info := sameRacks[rackKey(0, 0)]
+	if info == nil {
+		t.Fatalf("expected sameRacks[rackKey(0,0)] to be recorded")
+	}
+	if info.rackID != 0 || info.superPodID != 0 {
+		t.Errorf("expected rackID=0 superPodID=0, got rackID=%d superPodID=%d", info.rackID, info.superPodID)
+	}
+	if info.freeNodes != 8 {
+		t.Errorf("expected freeNodes=8 for full rack 0, got %d", info.freeNodes)
+	}
+	if sp := sameSPs[0]; sp == nil || sp.superPodID != 0 {
+		t.Errorf("expected sameSPs[0].superPodID=0, got %+v", sp)
+	}
+}
+
+func TestSelectInferServiceSPForPodLevel(t *testing.T) {
+	t.Run("selects nodes for unready sp blocks", func(t *testing.T) {
+		tp := &chip8node8ra64sp{}
+		tp.spBlock = 4
+		tp.Name = "my-job"
+		superPodMap := buildSuperPodsByParams(map[int32]int32{0: 16})
+		selectNodes := make(map[string][]plugin.SuperNode)
+		err := tp.selectInferServiceSPForPodLevel([]string{"0", "1"}, superPodMap, selectNodes)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		for _, id := range []string{"0", "1"} {
+			if len(selectNodes[id]) != tp.spBlock {
+				t.Errorf("sp block %s: expected %d nodes, got %d", id, tp.spBlock, len(selectNodes[id]))
+			}
+		}
+		if got := len(superPodMap[0]); got != 8 {
+			t.Errorf("expected 8 free nodes left after selection, got %d", got)
+		}
+	})
+	t.Run("no valid sp block returns error", func(t *testing.T) {
+		tp := &chip8node8ra64sp{}
+		tp.spBlock = 4
+		tp.Name = "my-job"
+		superPodMap := buildSuperPodsByParams(map[int32]int32{})
+		err := tp.selectInferServiceSPForPodLevel([]string{"0"}, superPodMap,
+			make(map[string][]plugin.SuperNode))
+		if err == nil {
+			t.Errorf("expected error when no valid sp block exists")
+		}
+	})
+}
+
+// newRa64PodLevelEnv builds a chip8node8ra64sp handler and its api nodes for
+// pod-level rescheduling tests: one super pod with 16 nodes, spBlock 4.
+func newRa64PodLevelEnv() (*chip8node8ra64sp, []*api.NodeInfo) {
+	tp := &chip8node8ra64sp{}
+	tp.spBlock = 4
+	tp.uBMemRackNum = uBMemRackNumber
+	tp.NPUJob = &util.NPUJob{ReqNPUNum: 32, SpBlockNPUNum: 32}
+	npuNodes, apiNodes := buildPodLevelNodes(16)
+	tp.Nodes = npuNodes
+	return tp, apiNodes
+}
+
+// buildRa64FaultJob builds a fault job with the given super pod blocks and a
+// pending session number large enough to skip rack stage 2/3.
+func buildRa64FaultJob(spBlocks map[string][]plugin.SuperNode) *rescheduling.FaultJob {
+	return &rescheduling.FaultJob{JobUID: "my-job", PendingSessionNum: 8, SuperPods: spBlocks}
+}
+
+// buildRa64HealthySpBlock builds a healthy sp block of spBlock nodes on super pod 0 rack 0.
+func buildRa64HealthySpBlock(spBlock int) []plugin.SuperNode {
+	healthyNodes := make([]plugin.SuperNode, 0, spBlock)
+	for i := 0; i < spBlock; i++ {
+		healthyNodes = append(healthyNodes, plugin.SuperNode{
+			Name: "node-0-" + strconv.Itoa(i), SuperPodID: 0, RackID: 0})
+	}
+	return healthyNodes
+}
+
+func TestSelectNodesForInferServicePodLevel(t *testing.T) {
+	t.Run("graceful deletion in progress refuses rescheduling", func(t *testing.T) {
+		tp, apiNodes := newRa64PodLevelEnv()
+		fJob := buildRa64FaultJob(map[string][]plugin.SuperNode{})
+		fJob.FaultTasks = []rescheduling.FaultTask{
+			{TaskName: "task0", NodeName: "node-0-0",
+				FaultTaskA5Field: rescheduling.FaultTaskA5Field{IsBeingGracefulDeleted: true}}}
+		_, err := tp.selectNodesForInferServicePodLevel(&api.TaskInfo{}, apiNodes, fJob)
+		if err == nil {
+			t.Errorf("expected error when fault task is being graceful deleted")
+		}
+	})
+	t.Run("unready sp blocks fall back to stage 4 priority queue", func(t *testing.T) {
+		tp, apiNodes := newRa64PodLevelEnv()
+		selectNodes, err := tp.selectNodesForInferServicePodLevel(&api.TaskInfo{Job: "my-job"},
+			apiNodes, buildRa64FaultJob(map[string][]plugin.SuperNode{}))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(selectNodes["0"]) != tp.spBlock {
+			t.Errorf("expected %d nodes for sp block 0, got %d", tp.spBlock, len(selectNodes["0"]))
+		}
+		for _, sn := range selectNodes["0"] {
+			if sn.SuperPodID != 0 {
+				t.Errorf("expected superPodID=0, got %d", sn.SuperPodID)
+			}
+		}
+	})
+	t.Run("healthy sp block is kept in stage 1", func(t *testing.T) {
+		tp, apiNodes := newRa64PodLevelEnv()
+		want := buildRa64HealthySpBlock(tp.spBlock)
+		selectNodes, err := tp.selectNodesForInferServicePodLevel(&api.TaskInfo{Job: "my-job"},
+			apiNodes, buildRa64FaultJob(map[string][]plugin.SuperNode{"0": want}))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		got := selectNodes["0"]
+		if len(got) != len(want) {
+			t.Fatalf("expected %d kept nodes, got %d", len(want), len(got))
+		}
+		for idx, sn := range got {
+			if sn.Name != want[idx].Name {
+				t.Errorf("kept node mismatch: expected %s, got %s", want[idx].Name, sn.Name)
+			}
+		}
+	})
 }
 
 func TestSelectNodesForInferService_AllItemsSkipped(t *testing.T) {

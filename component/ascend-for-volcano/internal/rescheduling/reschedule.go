@@ -72,7 +72,8 @@ func (reScheduler *ReScheduler) createFaultTaskHandler(job *api.JobInfo, cardNam
 		if err != nil {
 			klog.V(util.LogDebugLev).Infof("setTaskCardHealthCode task %s err %s", task.Name, util.SafePrint(err))
 		}
-		isFaultTask, healthState := reScheduler.getTaskHealthState(&faultTask, task, faultJob.SubHealthyStrategy)
+		isFaultTask, healthState := reScheduler.getTaskHealthState(&faultTask, task,
+			faultJob.SubHealthyStrategy, faultJob.ReScheduleKey)
 		klog.V(util.LogDebugLev).Infof("task %s is fault task: %v, health state: %s", task.Name, isFaultTask,
 			healthState)
 		faultTask.setIsFaultTask(isFaultTask)
@@ -1054,12 +1055,25 @@ func (reScheduler ReScheduler) updateJobHealthCode(fJob *FaultJob) {
 }
 
 // getTaskHealthState return true when unhealthy
+// reScheduleKey is the job-level fault-scheduling policy, used to filter fault types:
+// external-force-pod-failed only handles PodFailed (business fault) and skips hardware faults.
 func (reScheduler ReScheduler) getTaskHealthState(fTask *FaultTask, task *api.TaskInfo,
-	subHealthyStrategy string) (bool, string) {
+	subHealthyStrategy string, reScheduleKey string) (bool, string) {
 	klog.V(util.LogDebugLev).Infof("task %s getTaskHealthState", fTask.TaskName)
 
 	if fTask.NodeName == "" {
 		return false, NodeHealthy // tasks has not yet been scheduled
+	}
+
+	// fast path for external-force-pod-failed: only handle PodFailed (business fault),
+	// skip all hardware faults (cardUnhealthy, networkUnhealthy, etc.).
+	// IsFaultRetryEnable is still gated by job FaultRetryTimes: when it is false,
+	// the fault task is not marked, so the whole rescheduling flow is not triggered.
+	if reScheduleKey == JobExternalForcePodFailedReschedulingPrefix {
+		if isFailedTask(task) && fTask.IsFaultRetryEnable {
+			return true, PodFailed
+		}
+		return false, PodHealthy
 	}
 
 	if isFault, state := reScheduler.getTaskHealthStateByNode(fTask); isFault {

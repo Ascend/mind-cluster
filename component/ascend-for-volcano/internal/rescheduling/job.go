@@ -720,7 +720,8 @@ func (fJob *FaultJob) restartSingleFaultJob(ssn *framework.Session,
 	switch fJob.ReScheduleKey {
 	case JobForceRescheduleLabelValue, JobGraceRescheduleLabelValue:
 		deleteErr = fJob.deleteJobWithLabels(ssn, reschedule, schedulerJob, env)
-	case JobExternalForceReschedulingPrefix, JobExternalGraceReschedulingPrefix:
+	case JobExternalForceReschedulingPrefix, JobExternalGraceReschedulingPrefix,
+		JobExternalForcePodFailedReschedulingPrefix:
 		deleteErr = fJob.addPodStatusAnnotationForFaultTask(env)
 	case JobOffRescheduleLabelValue:
 		deleteErr = fmt.Errorf("job reschedule %s", fJob.ReScheduleKey)
