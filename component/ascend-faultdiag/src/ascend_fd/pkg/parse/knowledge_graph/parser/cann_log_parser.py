@@ -31,6 +31,7 @@ from ascend_fd.utils.fault_code import RUNTIME_AICORE_EXECUTE_FAULT, AISW_CANN_M
 from ascend_fd.utils.regular_table import CANN_PLOG_SOURCE, CANN_DEVICE_SOURCE
 from ascend_fd.utils.comm_valid import process_device_id
 from ascend_fd.utils.constant.str_const import DEVICE_LOGIC_ID, DEV_PHY_ID, LOGIC_DEV_ID, PHY_DEV_ID, UNKNOWN_DEVICE_ID
+from ascend_fd.utils.constant.ub_const import HCOMM_TA_CTP_UB_TIMEOUT, PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 DEFAULT_EXEC_TIMEOUT = 1800
@@ -222,6 +223,7 @@ class CANNLogParser(FileParser):
         blacklist_manager = BlackListManager()
         aicore_errcode_record = ""
         memory_info_parser = MemoryInfoParser()
+        env_read_parser = PrecheckEnvParser()
         for file_source in file_list:
             if not self.is_sdk_input and not os.path.isfile(file_source):
                 continue
@@ -250,6 +252,8 @@ class CANNLogParser(FileParser):
                 # if the line startswith "[ERROR]", it may be an error msg and need to check
                 if not line.startswith(regular_table.ERROR_ALL):
                     memory_info_parser.parse_line(line, file_source)
+                    if self.SOURCE_FILE == CANN_PLOG_SOURCE:
+                        env_read_parser.parse_line(line, file_source)
                     continue
                 # check if it is on the blacklist
                 if blacklist_manager.is_log_line_need_ignore(line):
@@ -270,7 +274,12 @@ class CANNLogParser(FileParser):
         device_id = self._verify_device_id(device_id, phy_device_id, logic_device_id, sdk_device_id)
         event_storage.add_device_id(device_id)
         memory_info_parser.device_id = device_id
-        event_list = event_storage.generate_event_list() + memory_info_parser.get_memory_event()
+        env_read_parser.device_id = device_id
+        event_list = (
+            event_storage.generate_event_list()
+            + memory_info_parser.get_memory_event()
+            + env_read_parser.get_precheck_event()
+        )
         return event_list, (start_time, end_time), (pid, device_id)
 
 
@@ -343,6 +352,60 @@ class MemoryInfoParser:
             }
         )
         return memory_events
+
+
+class PrecheckEnvParser:
+    # env_value取值时用到
+    ENV_HCOMM_TA_CTP_UB_TIMEOUT_PATTERN = re.compile(rf"{HCOMM_TA_CTP_UB_TIMEOUT} set by \S+ to \[(?P<env_value>\d+)\]")
+
+    def __init__(self):
+        self.source_file = ""
+        self.device_id = ""
+        # env_name -> {"occur_time": ..., "env_value": ..., "raw_line": ...}
+        self.env_info_dict = dict()
+
+    def parse_line(self, line: str, file_source):
+        """
+        Parse the plog line, find the env value info
+        :param line: log line
+        :param file_source: log file path or item info saver
+        """
+        if HCOMM_TA_CTP_UB_TIMEOUT not in line:
+            return
+        match = self.ENV_HCOMM_TA_CTP_UB_TIMEOUT_PATTERN.search(line)
+        if not match:
+            return
+        self.source_file = self.source_file or (
+            os.path.basename(file_source) if isinstance(file_source, str) else file_source.path
+        )
+        self.env_info_dict[HCOMM_TA_CTP_UB_TIMEOUT] = {
+            "occur_time": CANNLogParser.get_time(line),
+            "env_value": match.group("env_value"),
+            "raw_line": line,
+        }
+
+    def get_precheck_event(self):
+        """
+        Get the PRECHECK event which carries the parsed env info
+        :return: PRECHECK event list
+        """
+        if not self.env_info_dict:
+            return []
+        raw_lines = [info["raw_line"] for info in self.env_info_dict.values()]
+        occur_time = next((info["occur_time"] for info in self.env_info_dict.values() if info["occur_time"]), "")
+        attribute = {env_name: info["env_value"] for env_name, info in self.env_info_dict.items()}
+        return [
+            {
+                "event_code": PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT,
+                "source_device": self.device_id or "Unknown",
+                "occur_time": occur_time,
+                "is_custom_event": False,
+                "type": CANN_PLOG_SOURCE,
+                "source_file": self.source_file,
+                "key_info": "\n".join(raw_lines),
+                "attribute": attribute,
+            }
+        ]
 
 
 class CANNPlogParser(CANNLogParser):
