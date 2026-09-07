@@ -184,6 +184,17 @@ component_k8s-rdma-shared-dev-plugin() {
     add_helm_meta daemonset rdma-shared-dp-ds kube-system
 }
 
+component_ascend-dynamic-resource-allocation() {
+    echo "========== ascend-dynamic-resource-allocation =========="
+    add_helm_meta sa ascend-dra-driver-service-account kube-system
+    add_helm_meta clusterrole ascend-dra-driver-role
+    add_helm_meta clusterrolebinding ascend-dra-driver-role-binding
+    add_helm_meta daemonset ascend-dra-driver-kubeletplugin kube-system
+    add_helm_meta deviceclass npu.huawei.com
+    add_helm_meta validatingadmissionpolicy resourceslices-policy-ascend-dra-driver
+    add_helm_meta validatingadmissionpolicybinding resourceslices-policy-ascend-dra-driver
+}
+
 all_namespace() {
     echo "========== namespace mindx-dl and cluster-system =========="
     add_helm_meta namespace mindx-dl
@@ -229,6 +240,7 @@ add_helm_meta_all() {
     component_ascend-device-plugin
     component_ascend-for-volcano
     component_k8s-rdma-shared-dev-plugin
+    component_ascend-dynamic-resource-allocation
 }
 
 usage() {
@@ -247,6 +259,7 @@ usage() {
     echo "  --ascend-device-plugin      Only add helm meta for ascend-device-plugin component"
     echo "  --ascend-for-volcano        Only add helm meta for ascend-for-volcano component"
     echo "  --k8s-rdma-shared-dev-plugin Only add helm meta for k8s-rdma-shared-dev-plugin component"
+    echo "  --ascend-dynamic-resource-allocation Only add helm meta for ascend-dynamic-resource-allocation component"
     echo "  -h, --help                  Show this help message"
     echo ""
     echo "Multiple options can be combined, e.g.:"
@@ -298,6 +311,9 @@ main() {
                 ;;
             --k8s-rdma-shared-dev-plugin)
                 component_k8s-rdma-shared-dev-plugin
+                ;;
+            --ascend-dynamic-resource-allocation)
+                component_ascend-dynamic-resource-allocation
                 ;;
             -h|--help)
                 usage

@@ -17,6 +17,7 @@
   - DPU Exporter
   - Infer Operator
   - K8s RDMA Shared Dev Plugin
+  - Ascend Dynamic Resource Allocation
 - 卸载Ascend Docker Runtime和Container Manager组件请参照[手动卸载](../../05_developer_guide/00_installation_deployment/02_uninstallation.md#ZH-CN_TOPIC_0000002511426389)章节操作。
 - TaskD和MindIO安装在业务容器中，不在本章节涉及的组件范围内。
 

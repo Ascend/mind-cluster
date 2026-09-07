@@ -98,6 +98,7 @@ declare -A COMPONENT_YAML_PREFIX=(
     ["dpu-exporter"]="dpu-exporter"
     ["ascend-for-volcano"]="volcano"
     ["k8s-rdma-shared-dev-plugin"]="k8s-rdma-shared-dp"
+    ["ascend-dynamic-resource-allocation"]="ascend-dra-driver"
 )
 
 for component in "${!COMPONENT_YAML_PREFIX[@]}"; do

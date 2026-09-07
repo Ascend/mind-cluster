@@ -71,3 +71,10 @@ k8s-rdma-shared-dev-plugin:
     repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dp"
     tag: "v26.1.0-openeuler24.03"
     pullPolicy: "IfNotPresent"
+
+ascend-dynamic-resource-allocation:
+  enabled: false # Requires Kubernetes 1.34+ with DRA support (resource.k8s.io/v1)
+  image:
+    repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-dra"
+    tag: "v26.2.0-openeuler24.03"
+    pullPolicy: "IfNotPresent"
