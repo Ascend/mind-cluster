@@ -17,14 +17,20 @@
 import json
 import logging
 
+from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.graph.graph_builder import GraphBuilder
-from ascend_fd.utils.load_kg_config import Schema
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.model.package_data import PackageData
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.model.response import Response
-from ascend_fd.utils.tool import safe_write_open, get_version, get_build_time, merge_occurrence, \
-    safe_generate_or_merge_json_file
-from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
+from ascend_fd.pkg.parse.knowledge_graph.prechecker.merge_precheck_cause import MergePrecheckCause
 from ascend_fd.utils.i18n import LANG
+from ascend_fd.utils.load_kg_config import Schema
+from ascend_fd.utils.tool import (
+    safe_write_open,
+    get_version,
+    get_build_time,
+    merge_occurrence,
+    safe_generate_or_merge_json_file,
+)
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 
@@ -33,13 +39,17 @@ class DataDescriptor:
     """
     Data Descriptor
     """
+
     VERSION_INFO = "VERSION_INFO"
 
     def __init__(self):
         self.data = dict()
         self.version_info = dict()
+        # dev_id -> PRECHECK event list，同一device多个PRECHECK事件累积存放
+        self.precheck_info = dict()
         self.devices = {"Unknown"}
         self.files_parse_info = None
+        self.schema = None
 
     @staticmethod
     def write_to_json_file(file_path: str, save_data: dict):
@@ -94,8 +104,9 @@ class DataDescriptor:
                 if event.get("occur_time", "") < store_event.get("occur_time", ""):
                     merge_occurrence(event, store_event)
                     store_event.update(event)
-                if (event.get("occur_time", "") == store_event.get("occur_time", "") and
-                        event.get("source_file", "") < store_event.get("source_file", "")):
+                if event.get("occur_time", "") == store_event.get("occur_time", "") and event.get(
+                    "source_file", ""
+                ) < store_event.get("source_file", ""):
                     merge_occurrence(event, store_event)
                     store_event.update(event)
                 is_contain = True
@@ -116,9 +127,12 @@ class DataDescriptor:
                 self.version_info = {key: value for key, value in entities[0].items() if key != "event_code"}
                 continue
             for event in entities:
-                self.devices.add(event.get("source_device", "Unknown"))
+                dev_id = event.get("source_device", "Unknown")
+                self.devices.add(dev_id)
                 event["event_id"] = f"key{count}"
                 count += 1
+                # 记录device和event的映射，同一device的多个event事件按出现顺序累积
+                self.precheck_info.setdefault(dev_id, []).append(event)
 
     def single_worker_fault_analysis(self, file_path: str):
         """
@@ -150,10 +164,14 @@ class DataDescriptor:
         resp = Response()
         package_data = PackageData([source_device])
         package_data.load_events(self.data)
+        schema = (
+            Schema([DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF])
+            if parse_conf is None
+            else Schema([DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF], sdk_config_repo=parse_conf)
+        )
+        self.schema = schema
         if not package_data.event_map:
             return resp
-        schema = Schema([DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF]) if parse_conf is None \
-            else Schema([DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF], sdk_config_repo=parse_conf)
         graph = GraphBuilder(schema, package_data).build_graph()
         return resp.get_information(graph)
 
@@ -170,22 +188,39 @@ class DataDescriptor:
             resp.error = error
             resp.analyze_success = False
         if not resp.root_causes:
+            # 该设备仅有 PRECHECK 事件时，不依赖故障推理，直接将其放进 root_causes
+            device_causes = {}
+            self._merge_precheck_and_causes(source_device, device_causes)
+            if device_causes:
+                return {
+                    source_device: {
+                        "analyze_success": True,
+                        "error": str(resp.error),
+                        "root_causes": device_causes,
+                    }
+                }
             return {}
         device_causes = {}
         for code, event in resp.root_causes.items():
             self.filter_entity_attributes(event.entities_attribute)
-            device_causes.update({
-                code: {
-                    "code": event.code,
-                    "entities_attribute": event.entities_attribute,
-                    "events_attribute": event.events_attribute,
-                    "chains": event.chains
+            device_causes.update(
+                {
+                    code: {
+                        "code": event.code,
+                        "entities_attribute": event.entities_attribute,
+                        "events_attribute": event.events_attribute,
+                        "chains": event.chains,
+                    }
                 }
-            })
+            )
+        # 合并 PRECHECK 事件和原始推理结果
+        self._merge_precheck_and_causes(source_device, device_causes)
         response = {
-            source_device: {"analyze_success": resp.analyze_success,
-                            "error": str(resp.error),
-                            "root_causes": device_causes}
+            source_device: {
+                "analyze_success": resp.analyze_success,
+                "error": str(resp.error),
+                "root_causes": device_causes,
+            }
         }
         return response
 
@@ -210,3 +245,13 @@ class DataDescriptor:
         if not self.files_parse_info:
             return
         safe_generate_or_merge_json_file(file_path, self.files_parse_info.trans_parse_info())
+
+    def _merge_precheck_and_causes(self, source_device: str, device_causes: dict):
+        """
+        Pre-analyze the fault of each device in the current worker
+        :param source_device: source device name
+        :param device_causes: device inference result
+        """
+        # 提前检查端口指标数据是否符合规则要求
+        checker = MergePrecheckCause(self.schema, self.precheck_info)
+        checker.single_device_analyze(source_device, device_causes)
