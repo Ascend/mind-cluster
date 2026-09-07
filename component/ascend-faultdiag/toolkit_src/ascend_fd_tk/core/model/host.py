@@ -23,12 +23,12 @@ from ascend_fd_tk.core.common.constants import (
     NPU_LONG_DOWN_TIME,
     NPU_LINK_UP,
     HIGH_POWER_ENABLE,
-    OP_PRESENT,
     OP_TX_DISABLE_STATUS,
     ONE_DAY,
 )
 from ascend_fd_tk.core.common.diag_enum import TimeFormat, PowerUnitType
 from ascend_fd_tk.core.common.json_obj import JsonObj
+from ascend_fd_tk.core.config.threshold_config import BaseThreshold
 
 # 代际注册表基础设施（独立模块，避免与 host_a5.py 循环导入）
 from ascend_fd_tk.core.context.host_registry import register_host_info
@@ -167,8 +167,8 @@ class HCCNOpticalInfo(JsonObj):
     def is_high_power_enable(self) -> bool:
         return self.high_power_enable_reg == HIGH_POWER_ENABLE
 
-    def is_optical_present(self) -> bool:
-        return self.present == OP_PRESENT
+    def is_optical_present(self, th: BaseThreshold) -> bool:
+        return self.present == th.OPTICAL_PRESENT_THRESHOLD.normal_alarm_th
 
 
 class HCCNLinkHistory(JsonObj):

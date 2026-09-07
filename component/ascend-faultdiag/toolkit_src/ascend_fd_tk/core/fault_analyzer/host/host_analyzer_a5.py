@@ -33,11 +33,10 @@ class HostAnalyzerA5(Analyzer):
         super().__init__(cluster_info)
         self._threshold = cluster_info.get_threshold()
 
-    @staticmethod
-    def _analyze_hardware_attr(domain: HostDomain, optical_info: HCCNOpticalInfoA5):
+    def _analyze_hardware_attr(self, domain: HostDomain, optical_info: HCCNOpticalInfoA5):
         res = []
         for hard_info in optical_info.hardware_attr:
-            if not hard_info.is_optical_present():
+            if not hard_info.is_optical_present(self._threshold):
                 res.append(
                     DiagResult(
                         domain=domain,
