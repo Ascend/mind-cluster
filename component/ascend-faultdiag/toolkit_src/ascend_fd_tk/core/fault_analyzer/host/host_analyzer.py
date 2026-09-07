@@ -37,12 +37,11 @@ class HostAnalyzer(Analyzer):
         super().__init__(cluster_info)
         self._threshold = cluster_info.get_threshold()
 
-    @staticmethod
-    def _analyze_optical_status(domain: HostDomain, npu_chip_info: NpuChipInfo) -> List[DiagResult]:
+    def _analyze_optical_status(self, domain: HostDomain, npu_chip_info: NpuChipInfo) -> List[DiagResult]:
         optical_info = npu_chip_info.hccn_optical_info
         if not optical_info:
             return []
-        if not optical_info.is_optical_present():
+        if not optical_info.is_optical_present(self._threshold):
             return [
                 DiagResult(
                     domain=domain,

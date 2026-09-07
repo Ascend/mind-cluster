@@ -17,7 +17,7 @@
 
 from typing import List, Dict
 
-from ascend_fd_tk.core.common.constants import OP_PRESENT, HIGH_POWER_ENABLE_A5
+from ascend_fd_tk.core.common.constants import HIGH_POWER_ENABLE_A5
 from ascend_fd_tk.core.common.diag_enum import PowerUnitType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.log_parser.base import FindResult
@@ -61,8 +61,8 @@ class OpticalModuleHardwareAttr(JsonObj):
             "revision": "Revision",
         }
 
-    def is_optical_present(self) -> bool:
-        return self.present == OP_PRESENT
+    def is_optical_present(self, th) -> bool:
+        return self.present == th.OPTICAL_PRESENT_THRESHOLD.normal_alarm_th
 
     def is_high_power(self) -> bool:
         return self.high_power == HIGH_POWER_ENABLE_A5
