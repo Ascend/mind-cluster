@@ -7611,6 +7611,11 @@
                     "2. If the AI training task fails to be executed again, it is recommended to reset the SoC. If the fault persists, contact Huawei technical support."
                 ]
             },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
@@ -7682,6 +7687,11 @@
                     "2. It is advised to reset the corresponding UB port. If the fault persists, contact Huawei technical support."
                 ]
             },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
@@ -25933,7 +25943,6 @@
                     ["event_id:  [0x8c484e00]"]
                 ]
             }
-
         },
         "0x8C4C4E00": {
             "attribute": {
@@ -25962,7 +25971,6 @@
                     ["event_id:  [0x8c4c4e00]"]
                 ]
             }
-
         },
         "0x8C4DA000": {
             "attribute": {
@@ -25991,7 +25999,6 @@
                     ["event_id:  [0x8c4da000]"]
                 ]
             }
-
         },
         "0x81AFAA05": {
             "attribute": {
@@ -26018,7 +26025,6 @@
                     ["event_id:  [0x81afaa05]"]
                 ]
             }
-
         },
         "0x81AFAA02": {
             "attribute": {
@@ -26045,7 +26051,6 @@
                     ["event_id:  [0x81afaa02]"]
                 ]
             }
-
         },
         "0x81AFAA03": {
             "attribute": {
@@ -26072,7 +26077,6 @@
                     ["event_id:  [0x81afaa03]"]
                 ]
             }
-
         },
         "0x81AFAA04": {
             "attribute": {
@@ -26097,7 +26101,6 @@
                     ["event_id:  [0x81afaa04]"]
                 ]
             }
-
         },
         "0x81AFAA06": {
             "attribute": {
@@ -26122,7 +26125,6 @@
                     ["event_id:  [0x81afaa06]"]
                 ]
             }
-
         },
         "0x81AFAA01": {
             "attribute": {
@@ -26149,7 +26151,6 @@
                     ["event_id:  [0x81afaa01]"]
                 ]
             }
-
         },
         "0x81AFAA00": {
             "attribute": {
@@ -26176,7 +26177,6 @@
                     ["event_id:  [0x81afaa00]"]
                 ]
             }
-
         },
         "0x81078607": {
             "attribute": {
@@ -26203,7 +26203,6 @@
                     ["event_id:  [0x81078607]"]
                 ]
             }
-
         },
         "0x4C4BA00C": {
             "attribute": {
@@ -26230,7 +26229,6 @@
                     ["event_id:  [0x4c4ba00c]"]
                 ]
             }
-
         },
         "0x8C4BA00C": {
             "attribute": {
@@ -26257,7 +26255,752 @@
                     ["event_id:  [0x8c4ba00c]"]
                 ]
             }
-
+        },
+        "Comp_Custom_CQE0x2_RC_NOT_ENOUGH": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "RC不足",
+                "description_zh": "rc_full_queue_cnt存在值，表示RC不足",
+                "suggestion_zh": [
+                    "收集NPU日志，联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "Insufficient RC",
+                "description_en": "The rc_full_queue_cnt has a value, indicating insufficient RC.",
+                "suggestion_en": [
+                    "Collect NPU logs and contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x2_RC_QUEUE_NOT_ENOUGH": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "缺少可用的RC队列",
+                "description_zh": "tp_rrp_err_flg_0指标值对应二进制第28位为1，表示缺少可用的RC队列",
+                "suggestion_zh": [
+                    "收集NPU日志，联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "No available RC queue",
+                "description_en": "The 28th bit of the tp_rrp_err_flg_0 metric value is 1, indicating that no RC queue is available.",
+                "suggestion_en": [
+                    "Collect NPU logs and contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x2_TP_PSN_ERROR": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "tp中psn配置错误",
+                "description_zh": "内核日志上报了\"udma....ae....event type is 2....sub type is 3\"描述且twp_ae_dfx指标值对应二进制第3位为1，表示tp中psn配置错误",
+                "suggestion_zh": [
+                    "收集NPU日志，联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "PSN configuration error in TP",
+                "description_en": "The kernel log reports \"udma....ae....event type is 2....sub type is 3\" and the 3rd bit of the twp_ae_dfx metric value is 1, indicating a PSN configuration error in TP.",
+                "suggestion_en": [
+                    "Collect NPU logs and contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x2_NO_ROUTER": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "路由未配置",
+                "description_zh": "1.tai_compact_alarm指标值对应二进制第2位为1\n2.lqc_tai_dfx_alarm指标值对应二进制第4,5位为1\n3.dam_intf_alarm指标值对应二进制第0,1位为1\n满足以上三个条件其中之一表示路由未配置或配置错误",
+                "suggestion_zh": [
+                    "收集NPU日志，联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "Route not configured",
+                "description_en": "1. The 2nd bit of the tai_compact_alarm metric value is 1.\n2. The 4th and 5th bits of the lqc_tai_dfx_alarm metric value are 1.\n3. The 0th and 1st bits of the dam_intf_alarm metric value are 1.\nIf any of the preceding three conditions is met, the route is not configured or is configured incorrectly.",
+                "suggestion_en": [
+                    "Collect NPU logs and contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x2_CTP_NO_CLOSE": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "ctp的拥塞为关闭",
+                "description_zh": "tain_compact_top_alarm指标值对应二进制第6位为1，表示ctp的拥塞为关闭",
+                "suggestion_zh": [
+                    "收集NPU日志，联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "CTP congestion control is disabled",
+                "description_en": "The 6th bit of the tain_compact_top_alarm metric value is 1, indicating that CTP congestion control is disabled.",
+                "suggestion_en": [
+                    "Collect NPU logs and contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_CANN_HCCL_Custom_CQE0x2": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "软件故障",
+                "description_zh": "无RAS告警且HCCL通信上报CQE ERROR 0x2",
+                "suggestion_zh": [
+                    "收集NPU日志，联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "Software fault",
+                "description_en": "No RAS alarm is reported, and HCCL communication reports CQE ERROR 0x2.",
+                "suggestion_en": [
+                    "Collect NPU logs and contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                 "in": [
+                    ["cqe error status[2]"]
+                ]
+            }
+        },
+        "Comp_CANN_HCCL_Custom_CQE0x3": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "软件故障",
+                "description_zh": "无RAS告警且HCCL通信上报CQE ERROR 0x3",
+                "suggestion_zh": [
+                    "收集NPU日志，联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "Software fault",
+                "description_en": "No RAS alarm is reported, and HCCL communication reports CQE ERROR 0x3.",
+                "suggestion_en": [
+                    "Collect NPU logs and contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                 "in": [
+                    ["cqe error status[3]"]
+                ]
+            }
+        },
+        "Comp_Custom_UBMEM_TIMEOUT_LOW": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "网络超时",
+                "description_zh": "UBMEM超时时间设置过低，默认4秒，如果LCNE修改此调小配置，有可能出现超时情况",
+                "suggestion_zh": [
+                    "1.调大UBMEM超时复现确认是否出现",
+                    "2.确认窝包故障点"
+                ],
+                "cause_en": "Network timeout",
+                "description_en": "The UBMEM timeout is set too low. The default value is 4 seconds. If LCNE modifies the configuration to a smaller value, timeouts may occur.",
+                "suggestion_en": [
+                    "1. Increase the UBMEM timeout and reproduce the issue to confirm whether a timeout occurs.",
+                    "2. Confirm the packet congestion point."
+                ]
+            },
+            "source_file": "LCNELog",
+            "regex": {}
+        },
+        "Comp_Custom_UBMEM_TIMEOUT_RETRAINING": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "网络超时",
+                "description_zh": "链路质量较差，链路反复retraining，导致窝包超时。根据US的IMP日志确认1秒内大于5次retraining。",
+                "suggestion_zh": [
+                    "进行链路码流压测，确认链路质量是否正常。打流工具和操作方法见https://www.hiascend.com/document/detail/zh/mindcluster/latest/toolbox/toolboxug/toolboxug_0244.html"
+                ],
+                "cause_en": "Network timeout",
+                "description_en": "Poor link quality causes repeated link retraining, resulting in packet congestion timeout. According to the US IMP log, retraining occurs more than 5 times within 1 second.",
+                "suggestion_en": [
+                    "Perform a link bitstream stress test to check whether the link quality is normal. For the traffic generation tool and operation method, see https://www.hiascend.com/document/detail/en/mindcluster/latest/toolbox/toolboxug/toolboxug_0244.html"
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_UBMEM_TIMEOUT_LOST_PKG": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "网络超时",
+                "description_zh": "链路丢包",
+                "suggestion_zh": [
+                    "收集NPU、交换设备的丢包统计信息，确认丢包位置"
+                ],
+                "cause_en": "Network timeout",
+                "description_en": "Packet loss on the link.",
+                "suggestion_en": [
+                    "Collect packet loss statistics from the NPU and switch devices to confirm the packet loss location."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x5_LOST_PKG": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "网络超时",
+                "description_zh": "链路丢包",
+                "suggestion_zh": [
+                    "收集NPU、交换设备的丢包统计信息，确认丢包位置"
+                ],
+                "cause_en": "Network timeout",
+                "description_en": "Packet loss on the link.",
+                "suggestion_en": [
+                    "Collect packet loss statistics from the NPU and switch devices to confirm the packet loss location."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x5_TIMEOUT_TA_CTP_LOW": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "网络超时",
+                "description_zh": "TA超时时间设置过低",
+                "suggestion_zh": [
+                    "根据plog日志，确认UB网络超时间是否有修改，配置改短，CTP默认档位为8表示4秒时间。若修改配置建议调大超时配置重试任务"
+                ],
+                "cause_en": "Network timeout",
+                "description_en": "The TA timeout is set too low.",
+                "suggestion_en": [
+                    "Check the plog to confirm whether the UB network timeout has been modified. The configuration is shortened, and CTP level 8 indicates 4 seconds by default. If the configuration was modified, increase the timeout configuration and retry the task."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x5_TIMEOUT_RETRAINING": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "网络超时",
+                "description_zh": "链路质量较差，链路反复retraining，导致窝包超时。根据US的IMP日志确认1秒内大于5次retraining。",
+                "suggestion_zh": [
+                    "进行链路码流压测，确认链路质量是否正常。打流工具和操作方法见https://www.hiascend.com/document/detail/zh/mindcluster/latest/toolbox/toolboxug/toolboxug_0244.html"
+                ],
+                "cause_en": "Network timeout",
+                "description_en": "Poor link quality causes repeated link retraining, resulting in packet congestion timeout. According to the US IMP log, retraining occurs more than 5 times within 1 second.",
+                "suggestion_en": [
+                    "Perform a link bitstream stress test to check whether the link quality is normal. For the traffic generation tool and operation method, see https://www.hiascend.com/document/detail/en/mindcluster/latest/toolbox/toolboxug/toolboxug_0244.html"
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x5_ABN_PKT_SSN": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "异常报文",
+                "description_zh": "taack_abnorm_ssn异常，对应寄存器计数有增加",
+                "suggestion_zh": [
+                    "联系华为工程师进一步定位TA报文异常原因"
+                ],
+                "cause_en": "Abnormal packet",
+                "description_en": "taack_abnorm_ssn is abnormal, and the corresponding register count increases.",
+                "suggestion_en": [
+                    "Contact Huawei engineers for further analysis of the TA packet abnormality."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x5_ABN_PKT_HEADER": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "异常报文",
+                "description_zh": "taack_abnorm_header异常，对应寄存器计数有增加",
+                "suggestion_zh": [
+                    "联系华为工程师进一步定位TA报文异常原因"
+                ],
+                "cause_en": "Abnormal packet",
+                "description_en": "taack_abnorm_header is abnormal, and the corresponding register count increases.",
+                "suggestion_en": [
+                    "Contact Huawei engineers for further analysis of the TA packet abnormality."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x5_RQE_NOT_ENOUGH": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "RQE不足",
+                "description_zh": "tp_rrp_err_flg_0指标值对应二进制第25位为1，表示RQE不足",
+                "suggestion_zh": [
+                    "收集NPU日志，联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "Insufficient RQE",
+                "description_en": "The 25th bit of the tp_rrp_err_flg_0 metric value is 1, indicating insufficient RQE.",
+                "suggestion_en": [
+                    "Collect NPU logs and contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x5_RC_NOT_ENOUGH": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "RC不足",
+                "description_zh": "tp_rrp_err_flg_0指标值对应二进制第27,28位为1，表示RC不足",
+                "suggestion_zh": [
+                    "收集NPU日志，联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "Insufficient RC",
+                "description_en": "The 27th and 28th bits of the tp_rrp_err_flg_0 metric value are 1, indicating insufficient RC.",
+                "suggestion_en": [
+                    "Collect NPU logs and contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x5_FLOW_CFG_ERR": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "流控配置异常",
+                "description_zh": "dfx_tm_crd_ctrl的值不为1，表示流控未关闭，是异常",
+                "suggestion_zh": [
+                    "收集NPU日志，联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "Abnormal flow control configuration",
+                "description_en": "The value of dfx_tm_crd_ctrl is not 1, indicating that flow control is not disabled, which is abnormal.",
+                "suggestion_en": [
+                    "Collect NPU logs and contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x5_TPM_CFG_ERR": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "TPM表配置异常",
+                "description_zh": "lqc_tai_dfx_alarm指标值对应二进制第4,5位为1，表示TPM表配置异常",
+                "suggestion_zh": [
+                    "收集NPU日志，联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "Abnormal TPM table configuration",
+                "description_en": "The 4th and 5th bits of the lqc_tai_dfx_alarm metric value are 1, indicating an abnormal TPM table configuration.",
+                "suggestion_en": [
+                    "Collect NPU logs and contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_CANN_HCCL_Custom_CQE0x5": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "软件故障",
+                "description_zh": "无RAS告警且HCCL通信上报CQE ERROR 0x5",
+                "suggestion_zh": [
+                    "收集NPU日志，联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "Software fault",
+                "description_en": "No RAS alarm is reported, and HCCL communication reports CQE ERROR 0x5.",
+                "suggestion_en": [
+                    "Collect NPU logs and contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                 "in": [
+                    ["cqe error status[5]"]
+                ]
+            }
+        },
+        "0x08520006": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "接口状态为ERROR DOWN",
+                "description_zh": "具体报错原因可根据故障原始信息中\"Cause=\"的值，结合文档\"https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/aa27ae3b?idPath=23710424|251366513|22892968|263594706#ZH-CN_ALARMREF_0000002601566845\"进行定位",
+                "suggestion_zh": [
+                    "在查找报错原因的文档中按照对应原因的处理建议进行操作"
+                ],
+                "cause_en": "Interface status is ERROR DOWN",
+                "description_en": "The specific error cause can be located based on the \"Cause=\" value in the original fault information and the document \"https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/aa27ae3b?idPath=23710424|251366513|22892968|263594706#ZH-CN_ALARMREF_0000002601566845\".",
+                "suggestion_en": [
+                    "Follow the processing suggestions corresponding to the cause in the document that explains the error cause."
+                ]
+            },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
+            "regex": {
+                 "in": [
+                    ["0x08520006", "Error-down occurred"],
+                    ["0x8520006", "Error-down occurred"]
+                ]
+            }
+        },
+        "0x081320C6": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "本端接口故障",
+                "description_zh": "远端接口到本端接口之间链路产生故障，如接收光纤瞬断、本端接口所在子卡故障或光模块异常等",
+                "suggestion_zh": [
+                    "1. 检查发送光纤是否故障。\n如果是，请更换光纤。\n如果不是，请执行步骤2。\n2. 检查本端接口和远端接口的光模块是否故障。\n如果是，请更换光模块。\n如果不是，请执行步骤3。\n3. 检查本端设备和远端设备单板是否故障。\n如果是，请更换单板。\n如果不是，请执行步骤4。\n4. 请收集告警信息、日志信息和配置信息，并联系技术支持人员。"
+                ],
+                "cause_en": "Local interface fault",
+                "description_en": "A fault occurs on the link between the remote interface and the local interface, such as transient disconnection of the receive optical fiber, a fault on the subcard where the local interface resides, or an abnormal optical module.",
+                "suggestion_en": [
+                    "1. Check whether the transmit optical fiber is faulty.\nIf yes, replace the optical fiber.\nIf no, go to step 2.\n2. Check whether the optical modules of the local and remote interfaces are faulty.\nIf yes, replace the optical modules.\nIf no, go to step 3.\n3. Check whether the boards of the local and remote devices are faulty.\nIf yes, replace the board.\nIf no, go to step 4.\n4. Collect the alarms, logs, and configurations and contact technical support."
+                ]
+            },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
+            "regex": {
+                 "in": [
+                    ["0x081320C6", "The local fault alarm has occurred"],
+                    ["0x81320C6", "The local fault alarm has occurred"]
+                ]
+            }
+        },
+        "0x081320C7": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "远端故障告警",
+                "description_zh": "本端到远端的发送链路产生故障，例如拔掉本端的发送光纤，导致远端无法接收，则本端（仅支持10GE以上速率端口的设备）会上报该告警。",
+                "suggestion_zh": [
+                    "1.检查发送光纤是否故障，更换光纤后，检查告警是否恢复。\n如果是，结束。\n如果否，进入步骤2.\n2.检查本端和远端的光模块是否故障，更换光模块后，检查告警是否恢复。\n如果是，结束。\n如果否，进入步骤3.\n3.检查远端单板是否故障，更换单板后，检查告警是否恢复。\n如果是，结束。\n如果否，进入步骤4.\n4.请收集告警信息、日志信息和配置信息，联系华为工程师进行处理。"
+                ],
+                "cause_en": "Remote fault alarm",
+                "description_en": "A fault occurs on the transmit link from the local end to the remote end. For example, if the transmit optical fiber of the local end is removed, the remote end cannot receive data, and the local end (only for devices that support ports at rates higher than 10GE) reports this alarm.",
+                "suggestion_en": [
+                    "1. Check whether the transmit optical fiber is faulty. After replacing the optical fiber, check whether the alarm is cleared.\nIf yes, end the procedure.\nIf no, go to step 2.\n2. Check whether the optical modules of the local and remote ends are faulty. After replacing the optical modules, check whether the alarm is cleared.\nIf yes, end the procedure.\nIf no, go to step 3.\n3. Check whether the remote board is faulty. After replacing the board, check whether the alarm is cleared.\nIf yes, end the procedure.\nIf no, go to step 4.\n4. Collect the alarms, logs, and configurations and contact Huawei engineers for processing."
+                ]
+            },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
+            "regex": {
+                 "in": [
+                    ["0x081320C7", "The remote fault alarm has occurred"],
+                    ["0x81320C7", "The remote fault alarm has occurred"]
+                ]
+            }
+        },
+        "0x08132247": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "电口SNR值异常，网线质量差",
+                "description_zh": "网线质量不好或存在信号干扰",
+                "suggestion_zh": [
+                    "1.更换高质量网线，如Cat6A网线或屏蔽网线。",
+                    "2.降低电口的工作速率。",
+                    "3.请联系技术支持人员。"
+                ],
+                "cause_en": "Abnormal electrical port SNR value; poor network cable quality",
+                "description_en": "The network cable quality is poor or signal interference exists.",
+                "suggestion_en": [
+                    "1. Replace with high-quality network cables, such as Cat6A or shielded cables.",
+                    "2. Reduce the working rate of the electrical port.",
+                    "3. Contact technical support."
+                ]
+            },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
+            "regex": {
+                 "in": [
+                    ["0x08132247", "electrical port is abnormal", "Ethernet cable is poor"],
+                    ["0x8132247", "electrical port is abnormal", "Ethernet cable is poor"]
+                ]
+            }
+        },
+        "0x08130054": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "单板局部功能失效",
+                "description_zh": "具体报错原因可根据故障原始信息中\"Reason=\"的值，结合文档\"https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/5f604ea7?idPath=23710424|251366513|22892968|263594706\"进行定位",
+                "suggestion_zh": [
+                    "在查找报错原因的文档中按照对应原因的处理建议进行操作"
+                ],
+                "cause_en": "Partial function failure of a board",
+                "description_en": "The specific error cause can be located based on the \"Reason=\" value in the original fault information and the document \"https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/5f604ea7?idPath=23710424|251366513|22892968|263594706\".",
+                "suggestion_en": [
+                    "Follow the processing suggestions corresponding to the cause in the document that explains the error cause."
+                ]
+            },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
+            "regex": {
+                 "in": [
+                    ["0x08130054", "The board partially failed"],
+                    ["0x8130054", "The board partially failed"]
+                ]
+            }
+        },
+        "0x0813002E": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "单板整体功能失效",
+                "description_zh": "具体报错原因可根据故障原始信息中\"Reason=\"的值，结合文档\"https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/fb46a5c6?idPath=23710424|251366513|22892968|263594706\"进行定位",
+                "suggestion_zh": [
+                    "在查找报错原因的文档中按照对应原因的处理建议进行操作"
+                ],
+                "cause_en": "Overall function failure of a board",
+                "description_en": "The specific error cause can be located based on the \"Reason=\" value in the original fault information and the document \"https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/fb46a5c6?idPath=23710424|251366513|22892968|263594706\".",
+                "suggestion_en": [
+                    "Follow the processing suggestions corresponding to the cause in the document that explains the error cause."
+                ]
+            },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
+            "regex": {
+                 "in": [
+                    ["0x0813002E", "The board totally failed"],
+                    ["0x813002E", "The board totally failed"]
+                ]
+            }
+        },
+        "0x00F103B0": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "转发引擎整体功能失效",
+                "description_zh": "原因1：Internal fatal fault of the forwarding chip.（转发芯片内部致命故障。）\n原因2：The PCIE interface of the forwarding chip failed.（转发芯片PCIE接口故障。）\n原因3：The forwarding register was unstable.（转发寄存器不稳定。）",
+                "suggestion_zh": [
+                    "请收集告警信息、日志信息和配置信息，并联系技术支持人员"
+                ],
+                "cause_en": "Overall function failure of the forwarding engine",
+                "description_en": "Cause 1: Internal fatal fault of the forwarding chip.\nCause 2: The PCIE interface of the forwarding chip failed.\nCause 3: The forwarding register was unstable.",
+                "suggestion_en": [
+                    "Collect the alarms, logs, and configurations and contact technical support."
+                ]
+            },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
+            "regex": {
+                 "in": [
+                    ["0x00F103B0", "The forwarding engine completely failed"],
+                    ["0xF103B0", "The forwarding engine completely failed"]
+                ]
+            }
+        },
+        "0x08130056": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "子卡局部功能失效",
+                "description_zh": "原因1：Failed to check the voltage of the card.（子卡电压检查失败）\n原因2：The sensor on the subcard was faulty.（子卡传感器故障。）\n原因3：The soft-start mos was over temperature.（软启动mos温度过高。）",
+                "suggestion_zh": [
+                    "请收集告警信息、日志信息和配置信息，并联系技术支持人员。"
+                ],
+                "cause_en": "Partial function failure of a subcard",
+                "description_en": "Cause 1: Failed to check the voltage of the card.\nCause 2: The sensor on the subcard was faulty.\nCause 3: The soft-start mos was over temperature.",
+                "suggestion_en": [
+                    "Collect the alarms, logs, and configurations and contact technical support."
+                ]
+            },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
+            "regex": {
+                 "in": [
+                    ["0x08130056", "The card partially failed"],
+                    ["0x8130056", "The card partially failed"]
+                ]
+            }
+        },
+        "0x00F1FEF5": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "转发引擎端口功能失效",
+                "description_zh": "原因1：Port failure on the forwarding chip.（转发芯片端口失效故障。）\n原因2：Unstable port fault on the forwarding chip.（转发芯片端口不稳定故障。）\n原因3：Invalid packet fault on the port of the forwarding chip.（转发芯片端口非法报文故障。）",
+                "suggestion_zh": [
+                    "请收集告警信息、日志信息和配置信息，并联系技术支持人员。"
+                ],
+                "cause_en": "Port function failure of the forwarding engine",
+                "description_en": "Cause 1: Port failure on the forwarding chip.\nCause 2: Unstable port fault on the forwarding chip.\nCause 3: Invalid packet fault on the port of the forwarding chip.",
+                "suggestion_en": [
+                    "Collect the alarms, logs, and configurations and contact technical support."
+                ]
+            },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
+            "regex": {
+                 "in": [
+                    ["0x00F1FEF5", "The forwarding engine port function failed"],
+                    ["0xF1FEF5", "The forwarding engine port function failed"]
+                ]
+            }
+        },
+        "0x08520003": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "接口状态改变",
+                "description_zh": "具体报错原因可根据故障原始信息中“Reason=”的值，结合文档“https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/c26113fc?idPath=23710424|251366513|22892968|263594706”进行定位",
+                "suggestion_zh": [
+                    "在查找报错原因的文档中按照对应原因的处理建议进行操作"
+                ],
+                "cause_en": "Interface status change",
+                "description_en": "The specific error cause can be located based on the \"Reason=\" value in the original fault information and the document \"https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/c26113fc?idPath=23710424|251366513|22892968|263594706\".",
+                "suggestion_en": [
+                    "Follow the processing suggestions corresponding to the cause in the document that explains the error cause."
+                ]
+            },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
+            "regex": {
+                 "in": [
+                    ["0x08520003", "The interface status changes"],
+                    ["0x8520003", "The interface status changes"]
+                ]
+            }
+        },
+        "0x08130059": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "光模块异常",
+                "description_zh": "具体报错原因可根据故障原始信息中“Reason=”的值，结合文档“https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/eabd511e?idPath=23710424|251366513|22892968|263594706”进行定位",
+                "suggestion_zh": [
+                    "在查找报错原因的文档中按照对应原因的处理建议进行操作"
+                ],
+                "cause_en": "Abnormal optical module",
+                "description_en": "The specific error cause can be located based on the \"Reason=\" value in the original fault information and the document \"https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/eabd511e?idPath=23710424|251366513|22892968|263594706\".",
+                "suggestion_en": [
+                    "Follow the processing suggestions corresponding to the cause in the document that explains the error cause."
+                ]
+            },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
+            "regex": {
+                 "in": [
+                    ["0x08130059", "Optical Module is invalid"],
+                    ["0x8130059", "Optical Module is invalid"]
+                ]
+            }
+        },
+        "0x08520004": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "接口IPv6状态改变",
+                "description_zh": "具体报错原因可根据故障原始信息中“Reason=”的值，结合文档“https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/2cc877d0?idPath=23710424|251366513|22892968|263594706”进行定位",
+                "suggestion_zh": [
+                    "在查找报错原因的文档中按照对应原因的处理建议进行操作"
+                ],
+                "cause_en": "Interface IPv6 status change",
+                "description_en": "The specific error cause can be located based on the \"Reason=\" value in the original fault information and the document \"https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/2cc877d0?idPath=23710424|251366513|22892968|263594706\".",
+                "suggestion_en": [
+                    "Follow the processing suggestions corresponding to the cause in the document that explains the error cause."
+                ]
+            },
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
+            "regex": {
+                 "in": [
+                    ["0x08520004", "The IPv6 status changes"],
+                    ["0x8520004", "The IPv6 status changes"]
+                ]
+            }
         }
     }
 }
