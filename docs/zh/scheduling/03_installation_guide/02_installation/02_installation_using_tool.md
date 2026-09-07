@@ -2,20 +2,20 @@
 
 借助Ascend Deployer工具可以批量安装集群调度组件，大幅度简化手动安装过程中繁琐的配置操作，简化安装流程，适用于集群场景下批量安装组件。
 
-**工具安装关键步骤**
+## 关键步骤
 
-1. 确认硬件产品和 OS 是否在 Ascend Deployer 支持列表中。
-2. 部署 Ascend Deployer 工具，确保工具版本与集群调度组件版本一致。
-3. 按 Ascend Deployer 工具指引配置安装参数，批量执行组件安装，步骤包括：
-   - 远程连接服务器（可选）
-   - 配置服务器安装部署参数
-   - 执行安装命令
-   - 检查安装结果
-   - 配置环境变量
+1. 确认硬件产品和OS是否在Ascend Deployer支持列表中。
+2. 部署Ascend Deployer工具，确保工具版本与集群调度组件版本一致。
+3. 按Ascend Deployer工具指引配置安装参数，批量执行组件安装，步骤包括：
+   1. 远程连接服务器（可选）
+   2. 配置服务器安装部署参数
+   3. 执行安装命令
+   4. 检查安装结果
+   5. 配置环境变量
 
 Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见《MindCluster Ascend Deployer 用户指南》中的“[支持的产品和OS清单](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.1.0/docs/zh/01_introduction/02_supported_product_and_os.md)“章节，请根据"支持部署"列的支持情况，选择是否使用Ascend Deployer工具。
 
-如需使用Ascend Deployer工具安装，请参考《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.1.0/docs/zh/05_installation_and_upgrade/02_install_softwares.md)”章节。
+如需使用Ascend Deployer工具安装，请参见《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.1.0/docs/zh/05_installation_and_upgrade/02_install_softwares.md)”章节。
 
 >[!NOTE]
 >

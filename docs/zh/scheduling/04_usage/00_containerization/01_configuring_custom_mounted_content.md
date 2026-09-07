@@ -23,5 +23,4 @@ Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/e
     docker run --rm -it -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_RUNTIME_MOUNTS=hostlog {image-name:tag} /bin/bash
     ```
 
-    >[!NOTE]
-    >ASCEND\_VISIBLE\_DEVICES和ASCEND\_RUNTIME\_MOUNTS参数说明，请参见[表1](./02_usage_on_the_docker_client.md#参数说明)。
+    示例中的\{image-name:tag\}为镜像名称与标签，其他参数说明请参见[表1](./02_usage_on_the_docker_client.md#参数说明)。

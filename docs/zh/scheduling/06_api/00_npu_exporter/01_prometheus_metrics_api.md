@@ -540,7 +540,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx_X_Y</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时接收速率。该指标使用的hccn_tool采集命令中,-time参数为100，测量带宽时间段为100毫秒。其中，X为Udie ID，Y为Port ID。</p>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时接收速率。该指标使用的hccn_tool采集命令中，-time参数为100，测量带宽时间段为100毫秒。其中，X为Udie ID，Y为Port ID。</p>
 </td>
 <td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
 </td>
@@ -551,7 +551,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx_X_Y</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时发送速率。该指标使用的hccn_tool采集命令中,-time参数为100，测量带宽时间段为100毫秒。其中，X为Udie ID，Y为Port ID。</p>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时发送速率。该指标使用的hccn_tool采集命令中，-time参数为100，测量带宽时间段为100毫秒。其中，X为Udie ID，Y为Port ID。</p>
 </td>
 <td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
 </td>
@@ -586,7 +586,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时接收速率。该指标使用的hccn_tool采集命令中,-time参数为100，测量带宽时间段为100毫秒。</p>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时接收速率。该指标使用的hccn_tool采集命令中，-time参数为100，测量带宽时间段为100毫秒。</p>
 </td>
 <td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
 </td>
@@ -597,7 +597,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时发送速率。该指标使用的hccn_tool采集命令中,-time参数为100，测量带宽时间段为100毫秒。</p>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时发送速率。该指标使用的hccn_tool采集命令中，-time参数为100，测量带宽时间段为100毫秒。</p>
 </td>
 <td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
 </td>

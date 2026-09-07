@@ -784,11 +784,11 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../05_dev
 
 **构建镜像**
 
-详细请参见[Verl官网文档-构建镜像](https://github.com/verl-project/verl/blob/main/docs/ascend_tutorial/get_start/dockerfile_build_guidance.rst)。vLLM和Megatron分别作为推理和训练后端。
+详细请参见[Verl官网文档-构建镜像](https://github.com/verl-project/verl/blob/b97ebfd5062223337ae065c2250f8ab5c0e08e5e/docs/ascend_tutorial/dockerfile_build_guidance.rst)。vLLM和Megatron分别作为推理和训练后端。
 
 **安装软件**
 
-详细请参见[Verl官网文档-安装软件](https://github.com/verl-project/verl/blob/main/docs/ascend_tutorial/get_start/install_guidance.rst)。
+详细请参见[Verl官网文档-安装软件](https://github.com/verl-project/verl/blob/b97ebfd5062223337ae065c2250f8ab5c0e08e5e/docs/ascend_tutorial/ascend_quick_start.rst)。
 
 >[!NOTE]
 >若需使用Pod重调度功能，建议MindSpeed版本不早于commit id为6390a8ee2f0e59ae237753cce51289a3fe490905的版本。

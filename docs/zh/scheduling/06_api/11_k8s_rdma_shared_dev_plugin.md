@@ -192,36 +192,34 @@ spec:
 > 业务容器使用1825 DPU设备时，除了需要组件挂载外，还需要：
 >
 > - 配置主机网络 `hostNetwork: true`
-> - 配置用户态驱动，两种方式任选其一：
->   1. 在镜像中安装1825 DPU的OFED驱动
->   2. 启动容器后从主机挂载1825 DPU的OFED驱动
+> - 配置用户态驱动，以下两种方式任选其一：
+>   - 在镜像中安装1825 DPU的OFED驱动
+>   - 启动容器后从主机挂载1825 DPU的OFED驱动
 
-1. **查看Pod状态**
+执行以下命令，查看业务Pod是否创建成功：
 
-   执行以下命令，查看业务Pod是否创建成功：
+```shell
+kubectl get pod rdma-app -o wide
+```
 
-    ```shell
-    kubectl get pod rdma-app -o wide
-    ```
+回显示例如下，出现**Running**表示Pod创建成功：
 
-   回显示例如下，出现 **Running** 表示Pod创建成功：
-
-    ```ColdFusion
-    NAME       READY   STATUS    RESTARTS   AGE   IP            NODE
-    rdma-app   1/1     Running   0          10s   10.244.1.*   compute-node-1
-    ```
+```ColdFusion
+NAME       READY   STATUS    RESTARTS   AGE   IP            NODE
+rdma-app   1/1     Running   0          10s   10.244.1.*   compute-node-1
+```
 
 ### Pod内RDMA设备验证<a name="ZH-CN_TOPIC_biz_pod_rdma_verify"></a>
 
 业务Pod创建成功后，可以通过以下步骤验证RDMA设备是否被组件正确挂载：
 
-1. **进入Pod内部**
+1. 进入Pod内部
 
     ```shell
     kubectl exec -it rdma-app -- /bin/bash
     ```
 
-2. **检查RDMA设备节点**
+2. 检查RDMA设备节点
 
     ```shell
     ls -la /dev/infiniband/
@@ -231,7 +229,7 @@ spec:
 
 业务Pod创建成功后，还需检查RDMA网卡设备及对应的网络接口挂载情况：
 
-1**检查Infiniband设备信息**
+1. 检查Infiniband设备信息
 
     ```shell
     ls -la /sys/class/infiniband/
@@ -239,10 +237,10 @@ spec:
 
    正常情况下应显示当前节点上的RDMA网卡设备，如`hrn5_0`、`hrn5_1`。
 
-2**检查网络接口信息**
+2. 检查网络接口信息
 
-     ```shell
-     ls -la /sys/class/net/
-     ```
+   ```shell
+   ls -la /sys/class/net/
+   ```
 
-   正常情况下应显示节点上的网络接口设备，包括RDMA网卡对应的网络接口（如`ens***`）。如果网络没出现在Pod内，需要检查hostNetwork是否配置为true。
+   正常情况下应显示节点上的网络接口设备，包括RDMA网卡对应的网络接口（如`ens***`）。如果网络没出现在Pod内，需要检查hostNetwork是否配置为`true`。

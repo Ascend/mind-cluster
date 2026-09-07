@@ -26,20 +26,19 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
    - 请参照[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002511426307)章节，在所有安装了该组件的节点上确认Ascend Docker Runtime的状态。
 
 2. 在管理节点安装Helm命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在Helm 3.x版本，可以跳过此步骤。
-   - 安装Helm前请参考[Helm 版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询Helm与K8s间的版本兼容性，根据实际情况选择Helm版本。
-   - 请参考[Helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装Helm命令。
+   1. 安装Helm前请参考[Helm 版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询Helm与K8s间的版本兼容性，根据实际情况选择Helm版本。
+   2. 请参考[Helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装Helm命令。
+   3. 安装成功后，执行如下命令检查Helm版本：
 
-   安装成功后，执行如下命令检查Helm版本：
+      ```bash
+      helm version
+      ```
 
-   ```bash
-   helm version
-   ```
+      回显示例如下：
 
-   回显示例如下：
-
-   ```ColdFusion
-   version.BuildInfo{Version:"v3.17.0", GitCommit:"065003584b62a79f329070a946936374936021d6", GitTreeState:"clean",    GoVersion:"go1.19.5"}
-   ```
+      ```ColdFusion
+      version.BuildInfo{Version:"v3.17.0", GitCommit:"065003584b62a79f329070a946936374936021d6", GitTreeState:"clean",    GoVersion:"go1.19.5"}
+      ```
 
 ## 执行安装<a name="ZH-CN_centerIC_0000002511346381_install_exec"></a>
 
@@ -48,7 +47,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 1. 参考[创建节点标签](../../05_developer_guide/00_installation_deployment/00_manual_installation/01_preparing_for_installation.md#ZH-CN_TOPIC_0000002511426279)小节，给节点打标签。
 
    >[!NOTE]
-   >- 默认日志路径无需用户手动创建，组件yaml文件initContainer命令会自动创建，默认日志路径可参考[集群调度组件日志路径列表](../../05_developer_guide/00_installation_deployment/00_manual_installation/01_preparing_for_installation.md#table957112617314)。
+   >- 默认日志路径无需用户手动创建，组件YAML文件initContainer命令会自动创建，默认日志路径可参考[集群调度组件日志路径列表](../../05_developer_guide/00_installation_deployment/00_manual_installation/01_preparing_for_installation.md#table957112617314)。
    >- 宿主机上可不新创建用户，只需要保证没有其他用户占用UID为9000的情况即可，用户信息可参考[创建用户](../../05_developer_guide/00_installation_deployment/00_manual_installation/01_preparing_for_installation.md#ZH-CN_TOPIC_0000002511346353)。
 
 2. 获取MindCluster Helm部署工具。
@@ -174,12 +173,13 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 
 5. 参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节确认组件安装状态。
 6. 若组件状态异常，请确认检查安装配置是否正确，排查异常原因后重新安装。
-   - 重新安装前执行如下命令卸载相关资源。
 
-     ```bash
-     helm uninstall mindcluster-crds # 卸载CRD
-     helm uninstall mindcluster      # 卸载应用组件
-     ```
+   重新安装前执行如下命令卸载相关资源。
+
+    ```bash
+    helm uninstall mindcluster-crds # 卸载CRD
+    helm uninstall mindcluster      # 卸载应用组件
+    ```
 
 ## 默认配置
 
@@ -206,7 +206,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     >- 26.1.0版本中，tag字段默认值为`v26.1.0`，不带`-openeuler24.03`、`-ubuntu22.04`或`-alpinelatest`后缀，与昇腾镜像仓库中的镜像tag不一致，直接使用默认值可能导致镜像拉取失败。可将其配置为`v26.1.0-openeuler24.03`、`v26.1.0-ubuntu22.04`、`v1.9.0-v26.1.0-alpinelatest`等带后缀的tag。
 
    ```yaml
-   # 安装应用组件时的默认yaml配置如下
+   # 安装应用组件时的默认YAML配置如下
    clusterd:
      enabled: true                                                         # 安装ClusterD组件
      image:
@@ -268,7 +268,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
    ascend-device-plugin:
      enabled: true                                                         # 安装Ascend Device Plugin组件
      is310P1usoc: false                                                    # false表示产品不是Atlas 200I SoC A1 核心板
-     volcanoType: true                                                     # true表示使用volcano进行调度，请根据实际情况修改
+     volcanoType: true                                                     # true表示使用Volcano进行调度，请根据实际情况修改
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin" # Ascend Device Plugin组件镜像名，请根据实际情况修改
        # 昇腾镜像仓库镜像tag为"v26.1.0-openeuler24.03"或"v26.1.0-ubuntu22.04"
@@ -379,7 +379,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano.volcanoVersion</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string</p><p>取值包括：<ul><li>v1.7.0</li><li>v1.9.0</li><li>v1.12.0</li></ul></p><p>默认值为v1.9.0</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>选择启用的volcano版本。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>选择启用的Volcano版本。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>Infer Operator</p></td>
@@ -401,7 +401,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-device-plugin.volcanoType</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示使用volcano进行调度。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示使用Volcano进行调度。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>K8s RDMA Shared Dev Plugin</p></td>
@@ -426,7 +426,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>&lt;component&gt;.args</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string array</p><p>不设置或设置为""则使用组件默认启动命令。</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>表示组件的启动命令。</p><p>若用户为开启组件某些功能需要修改启动命令（如ascend-device-plugin开启热复位等），请自行设置此参数。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>表示组件的启动命令。</p><p>若用户为开启组件某些功能需要修改启动命令（如Ascend Device Plugin开启热复位等），请自行设置此参数。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>&lt;component&gt;.image.repository</p></td>
@@ -482,17 +482,17 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 <tbody>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>mindcluster-crds-deploy-tool-{chart_version}.tgz</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>Helm Chart打包文件，用于在K8s集群中部署和管理MindCluster各组件所需的CRD的部署工具。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>Helm Chart打包文件，用于在K8s集群中部署和管理MindCluster各组件所需的CRD部署工具。</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>用户可配置的安装参数说明可参见<a href="#table15274931175241">表1</a>。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>mindcluster-deploy-tool-{chart_version}.tgz</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>Helm Chart打包文件，用于在K8s集群中部署和管理MindCluster项目各组件的部署工具。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>Helm Chart打包文件，用于在K8s集群中部署和管理MindCluster各组件的部署工具。</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>用户可配置的安装参数说明可参见<a href="#table15274931175242">表2</a>和<a href="#table15274931175243">表3</a>。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>helm_tool.sh</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>作用包括：<ul><li><p>给各组件资源添加Helm元数据的脚本。</p></li><li>删除Ascend Device Plugin组件26.1.0版本前的DaemonSet资源</li></ul></p><p>仅在升级时使用。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>作用包括：<ul><li><p>给各组件资源添加Helm元数据的脚本。</p></li><li>删除Ascend Device Plugin组件26.1.0版本前的DaemonSet资源。</li></ul></p><p>仅在升级时使用。</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 ">脚本会为以下资源打上Helm元数据，包括：<ul><li>Ascend Operator组件相关资源</li><li>Ascend Device Plugin组件相关资源</li><li>Volcano组件相关资源</li><li>ClusterD组件相关资源</li><li>NodeD组件相关资源</li><li>NPU Exporter组件相关资源</li><li>Infer Operator组件相关资源</li><li>K8s RDMA Shared Dev Plugin组件相关资源</li><li>命名空间，包括"mindx-dl"和"cluster-system"</li></ul></td>
   </tr>
 </tbody>
