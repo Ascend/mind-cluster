@@ -150,7 +150,7 @@ class HostAnalyzerA5(Analyzer):
 
     def _analyse_snr_lane_diff(self, media_snr_list, host_snr_list, domain: HostDomain) -> List[DiagResult]:
         diff_desc_list = []
-        for snr_list, value_type in ((media_snr_list, "Media SNR"), (host_snr_list, "Host SNR")):
+        for snr_list, value_type in ((media_snr_list, "media"), (host_snr_list, "host")):
             diff_desc_list.extend(self._threshold.SNR_LANE_DIFF_DB.check_lane_diff_desc(snr_list, value_type))
         if not diff_desc_list:
             return []

@@ -84,6 +84,8 @@ class SwitchAnalyzer(Analyzer):
             if not diff_desc:
                 continue
             domain = SwitchDomain(swi_id=switch_info.swi_id, interface=interface)
+            if optical_module_info.optical_id:
+                domain.optical_id = optical_module_info.optical_id
             res_list.append(
                 DiagResult(
                     domain=domain, fault_info=diff_desc, suggestion="光模块SNR Lane间差值异常，优先排查SNR异常的LANE"
@@ -128,11 +130,9 @@ class SwitchAnalyzer(Analyzer):
         local_switch: SwitchInfo,
         local_optical_id: str = "",
     ):
-        domain = SwitchDomain(
-            swi_id=local_switch.swi_id,
-            interface=local_interface_name,
-            optical_id=local_optical_id,
-        )
+        domain = SwitchDomain(swi_id=local_switch.swi_id, interface=local_interface_name)
+        if local_optical_id:
+            domain.optical_id = local_optical_id
         remove_device = interface_mapping_by_name.get(local_interface_name)
         if not remove_device:
             _DIAG_LOGGER.warning("未收集到交换机[%s]端口[%s]的对端信息", local_switch.name, local_interface_name)
