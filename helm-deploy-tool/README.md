@@ -13,6 +13,7 @@ MindCluster Helm 部署工具用于将 MindCluster 集群调度组件以 Helm Ch
 - DPU Exporter
 - Infer Operator
 - K8s RDMA Shared Dev Plugin
+- Ascend Dynamic Resource Allocation
 
 工具产出两个独立的 Chart 包：
 
@@ -122,7 +123,8 @@ helm-deploy-tool/
 │       ├── ascend-for-volcano/
 │       ├── infer-operator/
 │       ├── ascend-device-plugin/
-│       └── k8s-rdma-shared-dev-plugin/
+│       ├── k8s-rdma-shared-dev-plugin/
+│       └── ascend-dynamic-resource-allocation/
 ├── app-crds/                         # CRD Chart（独立发布，便于单独管理 CRD 生命周期）
 │   ├── Chart.yaml
 │   ├── values.yaml

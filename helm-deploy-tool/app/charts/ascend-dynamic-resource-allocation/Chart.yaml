@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ascend-dynamic-resource-allocation
+description: MindCluster ascend-dynamic-resource-allocation Deploy Tool
+type: application
+version: 26.1.0
+appVersion: "26.1.0"

@@ -17,8 +17,10 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     - [DPU Exporter](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312665)
     - [Infer Operator](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426821)
     - [K8s RDMA Shared Dev Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312660)
+    - [Ascend Dynamic Resource Allocation](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312670)
 - 安装[Container Manager](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312655)组件请参考[手动安装 Container Manager](../../05_developer_guide/00_installation_deployment/00_manual_installation/11_container-manager.md#ZH-CN_TOPIC_0000002524428759) 章节。
 - [TaskD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386914)和[MindIO](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226942) 安装在业务容器中，不在本章节涉及的组件范围内。
+- [Ascend Dynamic Resource Allocation](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312670)组件与[Ascend Device Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226928)组件功能等价，均提供昇腾NPU设备的发现上报、分配与挂载能力，区别在于前者基于K8s动态资源分配机制，后者基于K8s设备插件机制，部署其中一种即可。默认安装Ascend Device Plugin组件，不安装Ascend Dynamic Resource Allocation组件；使用Ascend Dynamic Resource Allocation组件时，建议关闭Ascend Device Plugin组件。
 
 ## 安装前准备<a name="ZH-CN_centerIC_0000002511346381_install_prepare"></a>
 
@@ -202,7 +204,8 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 - 应用组件默认配置<a name="default_app_yaml_install_config"></a>。
     > [!NOTE]
     >- 默认安装的组件包括：Ascend Device Plugin、Ascend Operator、Volcano、ClusterD、NodeD、NPU Exporter、DPU Exporter和Infer Operator，Volcano版本为v1.9.0。
-    >- 默认不安装的组件包括：K8s RDMA Shared Dev Plugin。
+    >- 默认不安装的组件包括：K8s RDMA Shared Dev Plugin和Ascend Dynamic Resource Allocation。
+    >- Ascend Dynamic Resource Allocation组件与Ascend Device Plugin组件功能等价，均提供昇腾NPU设备的发现上报、分配与挂载能力，部署其中一种即可，因此默认安装Ascend Device Plugin组件、不安装Ascend Dynamic Resource Allocation组件。该组件要求K8s版本为1.34.x~1.36.x，低版本K8s集群请勿开启。若需要使用动态资源分配功能，请通过自定义配置将该组件的enabled设置为true，并建议同时将Ascend Device Plugin组件的enabled设置为false。
     >- 参数说明可参见[表2](#table15274931175242)和[表3](#table15274931175243)，其中[表3](#table15274931175243)中的参数未在下方YAML配置中展示，用户可根据实际情况新增或修改。
     >- 26.1.0版本中，tag字段默认值为`v26.1.0`，不带`-openeuler24.03`、`-ubuntu22.04`或`-alpinelatest`后缀，与昇腾镜像仓库中的镜像tag不一致，直接使用默认值可能导致镜像拉取失败。可将其配置为`v26.1.0-openeuler24.03`、`v26.1.0-ubuntu22.04`、`v1.9.0-v26.1.0-alpinelatest`等带后缀的tag。
 
@@ -291,6 +294,14 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
        # 昇腾镜像仓库镜像tag为"v26.1.0-openeuler24.03"或"v26.1.0-ubuntu22.04"
        tag: "v26.1.0"                                                              # K8s RDMA Shared Dev Plugin组件镜像标签，请根据实际情况修改，以后版本（包括补丁版本）会加上后缀："-openeuler24.03"和"-ubuntu22.04"
        pullPolicy: "IfNotPresent"                                                  # K8s RDMA Shared Dev Plugin组件镜像拉取策略，请根据实际情况修改
+
+   ascend-dynamic-resource-allocation:
+     enabled: false                                                          # false表示不安装Ascend Dynamic Resource Allocation组件，该组件要求K8s版本为1.34.x~1.36.x
+     image:
+       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-dra"   # Ascend Dynamic Resource Allocation组件镜像名，请根据实际情况修改
+       # 昇腾镜像仓库镜像tag为"v26.2.0-openeuler24.03"或"v26.2.0-ubuntu22.04"
+       tag: "v26.2.0-openeuler24.03"                                                        # Ascend Dynamic Resource Allocation组件镜像标签，请根据实际情况修改，需根据节点操作系统选择带对应后缀的tag
+       pullPolicy: "IfNotPresent"                                            # Ascend Dynamic Resource Allocation组件镜像拉取策略，请根据实际情况修改
    ```
 
 ## 参数说明
@@ -424,6 +435,12 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为false</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用K8s RDMA Shared Dev Plugin组件。</p></td>
   </tr>
+  <tr>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>Ascend Dynamic Resource Allocation</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-dynamic-resource-allocation.enabled</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为false</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用Ascend Dynamic Resource Allocation组件。该组件要求K8s版本为1.34.x~1.36.x，低版本K8s集群请勿开启。</p></td>
+  </tr>
 </tbody>
 </table>
 
@@ -508,7 +525,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>helm_tool.sh</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>作用包括：<ul><li><p>给各组件资源添加Helm元数据的脚本。</p></li><li>删除Ascend Device Plugin组件26.1.0版本前的DaemonSet资源</li></ul></p><p>仅在升级时使用。</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 ">脚本会为以下资源打上Helm元数据，包括：<ul><li>Ascend Operator组件相关资源</li><li>Ascend Device Plugin组件相关资源</li><li>Volcano组件相关资源</li><li>ClusterD组件相关资源</li><li>NodeD组件相关资源</li><li>NPU Exporter组件相关资源</li><li>Infer Operator组件相关资源</li><li>K8s RDMA Shared Dev Plugin组件相关资源</li><li>命名空间，包括"mindx-dl"和"cluster-system"</li></ul></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 ">脚本会为以下资源打上Helm元数据，包括：<ul><li>Ascend Operator组件相关资源</li><li>Ascend Device Plugin组件相关资源</li><li>Volcano组件相关资源</li><li>ClusterD组件相关资源</li><li>NodeD组件相关资源</li><li>NPU Exporter组件相关资源</li><li>Infer Operator组件相关资源</li><li>K8s RDMA Shared Dev Plugin组件相关资源</li><li>Ascend Dynamic Resource Allocation组件相关资源</li><li>命名空间，包括"mindx-dl"和"cluster-system"</li></ul></td>
   </tr>
 </tbody>
 </table>

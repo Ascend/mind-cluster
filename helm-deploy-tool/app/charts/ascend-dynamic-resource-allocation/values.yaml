@@ -1,0 +1,15 @@
+# User-configurable parameters
+image:
+  repository: ""
+  tag: ""
+  pullPolicy: ""
+
+resources:
+  requests:
+    memory: ""
+    cpu: ""
+  limits:
+    memory: ""
+    cpu: ""
+
+command: ""

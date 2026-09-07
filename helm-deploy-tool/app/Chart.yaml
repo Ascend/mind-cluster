@@ -47,3 +47,7 @@ dependencies:
     version: 26.1.0
     repository: ""
     condition: k8s-rdma-shared-dev-plugin.enabled
+  - name: ascend-dynamic-resource-allocation
+    version: 26.1.0
+    repository: ""
+    condition: ascend-dynamic-resource-allocation.enabled
