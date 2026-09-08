@@ -233,84 +233,185 @@ dmidecode > {采集目录}/dmidecode.txt
 
 ### Device 侧日志
 
-训练或推理结束后，执行以下命令采集 Device 侧日志：
+- ascend-fd组件在26.2.0及之后版本，增强了Unified Bus（UB）链路诊断能力。日志收集方式与之前版本有差异，差异为在任务启动前，结束后，需要收取Device侧UB统一总线的维测信息。用户可不使用这部分增强能力，继续使用之前的日志收集方式。ascend-fd已做兼容，会根据`device_log`目录下内容自动识别是新的还是以前的日志收集方式。以前版本请参见[ascend-fd组件26.1.0及之前版本Device侧日志收集](#fd-log-collect-old)，新版本使用的Device侧日志按如下方式收集：
 
-```shell
-msnpureport
-```
+    1. 创建任务启动前、结束后日志归档目录，新方式要求这两个目录必须同时存在（以前版本无before_task和after_task目录），只要这两个目录存在就一定会识别为新的日志采集方式。
 
-执行完成后，会在当前目录生成以时间戳命名的日志数据，执行以下命令复制日志到采集目录：
+        ```shell
+        mkdir -p {采集目录}/device_log/before_task
+        mkdir -p {采集目录}/device_log/after_task
+        ```
 
-```shell
-cp -r {时间戳目录}/slog {采集目录}/device_log
-cp -r {时间戳目录}/hisi_logs {采集目录}/device_log
-```
+    2. 训练或推理任务结束后，使用以下命令收取 Device 侧系统类和部分维测信息日志。
+
+        ```shell
+        msnpureport
+        ```
+
+    3. 将第2步中收集到的日志复制到after_task目录。
+
+        ```shell
+        cp -r {步骤1收取日志的时间戳目录}/slog {采集目录}/device_log/after_task
+        cp -r {步骤1收取日志的时间戳目录}/hisi_logs {采集目录}/device_log/after_task
+        ```
+
+    4. 任务前、后的Device 侧Unified Bus统一总线的维测信息日志（ub_info目录）需要使用以下命令单独收取。
+
+        ```shell
+        msnpureport report -t 6
+        ```
+
+    5. 将任务前、后收集的Unified Bus 统一总线维测信息日志复制到采集目录。
+
+        ```shell
+        # 任务前的放到before_task目录
+        cp -r {步骤4收取日志的时间戳目录}/ub_info {采集目录}/device_log/before_task
+
+        # 任务后的放到after_task目录
+        cp -r {步骤4收取日志的时间戳目录}/ub_info {采集目录}/device_log/after_task
+        ```
+
+<a id="fd-log-collect-old"></a>
+
+- ascend-fd组件26.1.0及之前版本，使用的Device侧日志可以按如下方式收取：
+
+    1. 训练或推理结束后，执行以下命令收取 Device 侧系统类和部分维测信息日志：
+
+        ```shell
+        msnpureport
+        ```
+
+    2. 执行完成后，会在当前目录生成以时间戳命名的日志数据，执行以下命令复制日志到采集目录，按照此方式放置的日志，ascend-fd会自动识别为任务结束后的日志，并按照此种类别进行处理，整体组件功能不变。
+
+        ```shell
+        cp -r {时间戳目录}/slog {采集目录}/device_log
+        cp -r {时间戳目录}/hisi_logs {采集目录}/device_log
+        ```
+
+    3. 可以参考新版本的方法收集UB统一总线的维测信息日志（`ub_info`），放到`{采集目录}/device_log`下，但仅能识别少部分UB链路问题。
 
 目录结构：
 
-- Ascend HDK 23.0.RC3 版本
+- 当ascend-fd是26.2.0及以后版本时，NPU驱动需要同步配套
 
-```text
-|--device_log
-    |-- slog
-        |-- dev-os-3
-            |-- debug
-                |--device-os
-                    └── device-os_{time}.log # Device 侧 Control CPU 上的系统类日志
-            |-- run
-                |--device-os
-                    └── device-os_{time}.log # Device 侧 Control CPU 上的系统类日志
-            |--device-0
-                └──device-0_{time}.log   # Device 侧非 Control CPU 上的系统类日志
-            |--device-2
-            |--…
-            |--slogd
-            └──device_sys_init_ext.log
-        |-- dev-os-7
-        |-- …
-    └──hisi_logs
-        |-- device-0
-            |-- …
-            └── history.log     # 黑匣子日志
-        |-- device-2
-        |-- …
-        └── device_info.txt
-```
+    ```text
+    |--device_log
+        |-- before_task
+            └── ub_info
+                |--device-os-0
+                    |--…
+                    └──ubctl
+                        └──2026_09_01_10_22_12
+                            └──ubctl_log.txt
+                |--device-os-1
+                    |--…
+                └──…
+        └──after_task
+            |-- ub_info
+                |--device-os-0
+                    |--…
+                    └──ubctl
+                        └──2026_09_01_14_22_12
+                            └──ubctl_log.txt
+                |--device-os-1
+                    |--…
+                └──…
+            |-- slog
+                |-- dev-os-3
+                    |-- debug
+                        |--device-os
+                            |-- device-os_{time}.log # Device 侧 Control CPU 上的系统类日志
+                        |--device-0
+                            |--device-0_{time}.log   # Device 侧非 Control CPU 上的系统类日志
+                        |--device-2
+                        |--…
+                    |-- run
+                        |--device-os
+                            └── device-os_{time}.log # Device 侧 Control CPU 上的系统类日志
+                        └──event
+                            └── event_{time}.log # Device Control CPU 的 EVENT 级别系统日志
+                    |--…
+                    |--slogd
+                    └──device_sys_init_ext.log
+                |-- dev-os-7
+                └── …
+            └──hisi_logs
+                └── device-0
+                    |-- …
+                    |-- history.log                  # 黑匣子日志
+                    |-- {time}/log/kernel.log        # NPU 芯片内核日志
+                    |-- {time}/bbox/os/os_info.txt   # Device 侧 OS 基本信息
+                    └── {time}/mntn/hbm.txt          # Device 侧片上内存日志
+                |-- device-2
+                |-- …
+                └── device_info.txt
+    ```
 
-- Ascend HDK 23.0.3 及以上版本
+- 当ascend-fd是26.1.0及之前版本时
 
-```text
-|--device_log
-    |-- slog
-        |-- dev-os-3
-            |-- debug
-                |--device-os
-                    |-- device-os_{time}.log # Device 侧 Control CPU 上的系统类日志
-                |--device-0
-                    |--device-0_{time}.log   # Device 侧非 Control CPU 上的系统类日志
-                |--device-2
-                |--…
-            |-- run
-                |--device-os
-                    └── device-os_{time}.log # Device 侧 Control CPU 上的系统类日志
-                └──event
-                    └── event_{time}.log # Device Control CPU 的 EVENT 级别系统日志
-            |--…
-            |--slogd
-            └──device_sys_init_ext.log
-        |-- dev-os-7
-        └── …
-    └──hisi_logs
-        └── device-0
-            |-- …
-            |-- history.log                  # 黑匣子日志
-            |-- {time}/log/kernel.log        # NPU 芯片内核日志
-            |-- {time}/bbox/os/os_info.txt   # Device 侧 OS 基本信息
-            └── {time}/mntn/hbm.txt          # Device 侧片上内存日志
-        |-- device-2
-        |-- …
-        └── device_info.txt
-```
+    - Ascend HDK 23.0.RC3 版本
+
+        ```text
+        |--device_log
+            |-- slog
+                |-- dev-os-3
+                    |-- debug
+                        |--device-os
+                            └── device-os_{time}.log # Device 侧 Control CPU 上的系统类日志
+                    |-- run
+                        |--device-os
+                            └── device-os_{time}.log # Device 侧 Control CPU 上的系统类日志
+                    |--device-0
+                        └──device-0_{time}.log   # Device 侧非 Control CPU 上的系统类日志
+                    |--device-2
+                    |--…
+                    |--slogd
+                    └──device_sys_init_ext.log
+                |-- dev-os-7
+                |-- …
+            └──hisi_logs
+                |-- device-0
+                    |-- …
+                    └── history.log     # 黑匣子日志
+                |-- device-2
+                |-- …
+                └── device_info.txt
+        ```
+
+    - Ascend HDK 23.0.3 及以上版本
+
+        ```text
+        |--device_log
+            |-- slog
+                |-- dev-os-3
+                    |-- debug
+                        |--device-os
+                            |-- device-os_{time}.log # Device 侧 Control CPU 上的系统类日志
+                        |--device-0
+                            |--device-0_{time}.log   # Device 侧非 Control CPU 上的系统类日志
+                        |--device-2
+                        |--…
+                    |-- run
+                        |--device-os
+                            └── device-os_{time}.log # Device 侧 Control CPU 上的系统类日志
+                        └──event
+                            └── event_{time}.log # Device Control CPU 的 EVENT 级别系统日志
+                    |--…
+                    |--slogd
+                    └──device_sys_init_ext.log
+                |-- dev-os-7
+                └── …
+            └──hisi_logs
+                └── device-0
+                    |-- …
+                    |-- history.log                  # 黑匣子日志
+                    |-- {time}/log/kernel.log        # NPU 芯片内核日志
+                    |-- {time}/bbox/os/os_info.txt   # Device 侧 OS 基本信息
+                    └── {time}/mntn/hbm.txt          # Device 侧片上内存日志
+                |-- device-2
+                |-- …
+                └── device_info.txt
+        ```
 
 ### MindCluster 组件日志
 
@@ -428,7 +529,7 @@ cp -r ~/ttp_log {采集目录}/dl_log/ttp_log
 
 ### LCNE 日志（Bus 日志 / UBM 日志）
 
-训练或推理结束后，需要采集 LCNE 组件日志。
+训练或推理结束后，需要采集 LCNE 组件日志。ascend-fd组件26.2.0及之后版本，增强了Unified Bus（UB）链路诊断能力，如果希望使用该增强能力，请务必采集LCNE日志。
 
 **<term>Ascend 950 系列产品</term>**
 
