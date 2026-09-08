@@ -34,16 +34,18 @@ import (
 // It uses the workload's own identifying labels (inferServiceName, instanceSetName, instanceSetIndex)
 // to accurately locate pods owned by this specific workload.
 //
-// - external-force: immediately force-deletes pods with GracePeriodSeconds(0).
-// - external-grace: reads the Pod's own TerminationGracePeriodSeconds, starts a timer,
-//   and force-deletes any remaining pods after the grace period expires.
+//   - external-force / external-force-pod-failed: immediately force-deletes pods with
+//     GracePeriodSeconds(0).
+//   - external-grace: reads the Pod's own TerminationGracePeriodSeconds, starts a timer,
+//     and force-deletes any remaining pods after the grace period expires.
 func deletePodsForExternalRescheduling(ctx context.Context, cli client.Client,
 	workload WorkLoadInterface) error {
 	meta := workload.GetWorkLoadObjMeta()
 	mode := meta.Labels[common.FaultSchedulingLabelKey]
 
 	if mode != common.ExternalForceReschedulingValue &&
-		mode != common.ExternalGraceReschedulingValue {
+		mode != common.ExternalGraceReschedulingValue &&
+		mode != common.ExternalForcePodFailedReschedulingValue {
 		return nil
 	}
 
@@ -63,7 +65,8 @@ func deletePodsForExternalRescheduling(ctx context.Context, cli client.Client,
 	}
 
 	switch mode {
-	case common.ExternalForceReschedulingValue:
+	case common.ExternalForceReschedulingValue,
+		common.ExternalForcePodFailedReschedulingValue:
 		forceDeletePodList(ctx, cli, podList.Items)
 
 	default:
