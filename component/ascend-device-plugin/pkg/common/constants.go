@@ -859,6 +859,11 @@ const (
 	NetworkQueryRateLimit = 1
 )
 
+// RecoverNetworkQueryBackoff is the escalating re-check interval (in seconds) applied when the parameter
+// plane link is down, so recovery is detected promptly at first and progressively less frequently. Once the
+// ladder is exhausted the re-check converges to the original five-minute cadence (EveryNetworkQueryDuration).
+var RecoverNetworkQueryBackoff = []int64{5, 10, 15, 20, 30, 40, 60, 80, 100, 130, 160, 190, 230, 270}
+
 const (
 	ChipFaultKey           = "Chip"
 	ParameterPlaneFaultKey = "ParameterPlane"

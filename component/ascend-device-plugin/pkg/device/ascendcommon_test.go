@@ -593,6 +593,279 @@ func TestInitialChipFaultReconciliationQueriesOnce(t *testing.T) {
 	})
 }
 
+// TestParameterPlaneShortIntervalReached for test parameterPlaneShortIntervalReached
+func TestParameterPlaneShortIntervalReached(t *testing.T) {
+	convey.Convey("test parameterPlaneShortIntervalReached", t, func() {
+		// 01-no last check record, should reach the short interval immediately
+		parameterPlaneRecoverProbeBackoff = make(map[int32]*recoverBackoff, common.GeneralMapSize)
+		convey.So(parameterPlaneShortIntervalReached(1), convey.ShouldBeTrue)
+
+		// 02-just checked, should not reach the short interval
+		parameterPlaneRecoverProbeBackoff[1] = &recoverBackoff{lastCheck: time.Now()}
+		convey.So(parameterPlaneShortIntervalReached(1), convey.ShouldBeFalse)
+
+		// 03-first backoff step uses the shortest interval, should reach once it elapses
+		parameterPlaneRecoverProbeBackoff[1] = &recoverBackoff{
+			step:      0,
+			lastCheck: time.Now().Add(-time.Duration(common.RecoverNetworkQueryBackoff[0]+1) * time.Second),
+		}
+		convey.So(parameterPlaneShortIntervalReached(1), convey.ShouldBeTrue)
+
+		// 04-a later backoff step uses a longer interval
+		stepInterval := time.Duration(common.RecoverNetworkQueryBackoff[3]) * time.Second
+		parameterPlaneRecoverProbeBackoff[1] = &recoverBackoff{
+			step:      3,
+			lastCheck: time.Now().Add(-(stepInterval - time.Second)),
+		}
+		convey.So(parameterPlaneShortIntervalReached(1), convey.ShouldBeFalse)
+		parameterPlaneRecoverProbeBackoff[1].lastCheck = time.Now().Add(-(stepInterval + time.Second))
+		convey.So(parameterPlaneShortIntervalReached(1), convey.ShouldBeTrue)
+
+		// 05-step beyond the ladder falls back to the five-minute cadence
+		parameterPlaneRecoverProbeBackoff[1] = &recoverBackoff{
+			step:      len(common.RecoverNetworkQueryBackoff),
+			lastCheck: time.Now().Add(-(common.EveryNetworkQueryDuration*time.Minute - time.Minute)),
+		}
+		convey.So(parameterPlaneShortIntervalReached(1), convey.ShouldBeFalse)
+		parameterPlaneRecoverProbeBackoff[1].lastCheck = time.Now().Add(-(common.EveryNetworkQueryDuration*time.Minute + time.Minute))
+		convey.So(parameterPlaneShortIntervalReached(1), convey.ShouldBeTrue)
+	})
+}
+
+// TestParameterPlaneDownQueryAllowed for test parameterPlaneDownQueryAllowed
+func TestParameterPlaneDownQueryAllowed(t *testing.T) {
+	convey.Convey("test parameterPlaneDownQueryAllowed", t, func() {
+		// 01-no record, should allow and advance the backoff step
+		parameterPlaneDownQueryBackoff = make(map[int32]*recoverBackoff, common.GeneralMapSize)
+		convey.So(parameterPlaneDownQueryAllowed(1), convey.ShouldBeTrue)
+		convey.So(parameterPlaneDownQueryBackoff[1].step, convey.ShouldEqual, 1)
+
+		// 02-queried just now, should not allow
+		parameterPlaneDownQueryBackoff[1] = &recoverBackoff{lastCheck: time.Now()}
+		convey.So(parameterPlaneDownQueryAllowed(1), convey.ShouldBeFalse)
+
+		// 03-queried longer than the current backoff interval ago, should allow and advance the step
+		parameterPlaneDownQueryBackoff[1] = &recoverBackoff{
+			step:      0,
+			lastCheck: time.Now().Add(-time.Duration(common.RecoverNetworkQueryBackoff[0]+1) * time.Second),
+		}
+		convey.So(parameterPlaneDownQueryAllowed(1), convey.ShouldBeTrue)
+		convey.So(parameterPlaneDownQueryBackoff[1].step, convey.ShouldEqual, 1)
+	})
+}
+
+// TestAllowParameterPlaneStatusQuery for test allowParameterPlaneStatusQuery
+func TestAllowParameterPlaneStatusQuery(t *testing.T) {
+	tool := mockAscendTools()
+	convey.Convey("test allowParameterPlaneStatusQuery", t, func() {
+		// 01-known down RoCE (non-A5) link is queried at most once per short recover interval
+		resetNetWorkLimiter()
+		downCache := networkPlaneStatus{status: npuCommon.NPUNetworkLinkDownStatus}
+		convey.So(tool.allowParameterPlaneStatusQuery(1, downCache, true), convey.ShouldBeTrue)
+		convey.So(tool.allowParameterPlaneStatusQuery(1, downCache, true), convey.ShouldBeFalse)
+		convey.So(len(parameterPlaneDownQueryBackoff), convey.ShouldEqual, 1)
+
+		// 02-first query without cache initializes the limiter and is allowed
+		resetNetWorkLimiter()
+		convey.So(tool.allowParameterPlaneStatusQuery(1, networkPlaneStatus{}, false), convey.ShouldBeTrue)
+		convey.So(parameterPlaneLimiterMap[1] != nil, convey.ShouldBeTrue)
+
+		// 03-known down A5/UBOE link keeps the five-minute rate limit instead of the short interval
+		toolA5 := AscendTools{dmgr: &devmanager.DeviceManagerMock{DevType: api.Ascend910A5}}
+		resetNetWorkLimiter()
+		convey.So(toolA5.allowParameterPlaneStatusQuery(1, downCache, true), convey.ShouldBeTrue)
+		convey.So(toolA5.allowParameterPlaneStatusQuery(1, downCache, true), convey.ShouldBeFalse)
+		convey.So(len(parameterPlaneDownQueryBackoff), convey.ShouldEqual, 0)
+		convey.So(parameterPlaneLimiterMap[1] != nil, convey.ShouldBeTrue)
+	})
+}
+
+// TestHandleLostNetworkFaultEventsForLinkDownShortInterval verifies that the short recover interval is
+// only triggered by LinkDownFaultCode (81078603), not by other parameter plane network fault codes.
+// The short interval is intentionally scoped to the RoCE parameter plane; A5/UBOE parameter plane
+// (UBOEPortDownCode 81078607) keeps the five-minute cadence and is not covered by this mechanism.
+func TestHandleLostNetworkFaultEventsForLinkDownShortInterval(t *testing.T) {
+	convey.Convey("test HandleLostNetworkFaultEvents short interval gate", t, func() {
+		parameterPlaneRecoverProbeBackoff = make(map[int32]*recoverBackoff, common.GeneralMapSize)
+
+		convey.Convey("01-linkdown exists and short interval reached, should trigger handling", func() {
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			patches.ApplyGlobalVar(&isFirstFlushFault, false)
+			patches.ApplyGlobalVar(&common.SubscribeFailed, false)
+			called := false
+			patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
+				"generateNetworkFaultEventsBasedOnFaultCacheChange",
+				func(_ *AscendTools, _ *common.NpuDevice) {
+					called = true
+				})
+			device := &common.NpuDevice{LogicID: 1, NetworkFaultCodes: []int64{common.LinkDownFaultCode}}
+			tool := AscendTools{}
+			tool.HandleLostNetworkFaultEvents(device, nil)
+			convey.So(called, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("02-linkdown exists but short interval not yet reached, should not trigger handling", func() {
+			parameterPlaneRecoverProbeBackoff[1] = &recoverBackoff{lastCheck: time.Now()}
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			patches.ApplyGlobalVar(&isFirstFlushFault, false)
+			patches.ApplyGlobalVar(&common.SubscribeFailed, false)
+			called := false
+			patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
+				"generateNetworkFaultEventsBasedOnFaultCacheChange",
+				func(_ *AscendTools, _ *common.NpuDevice) {
+					called = true
+				})
+			device := &common.NpuDevice{LogicID: 1, PhyID: 1, NetworkFaultCodes: []int64{common.LinkDownFaultCode}}
+			tool := AscendTools{}
+			tool.HandleLostNetworkFaultEvents(device, nil)
+			convey.So(called, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("03-other network fault code (UBOE/A5) exists, should not trigger handling", func() {
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			patches.ApplyGlobalVar(&isFirstFlushFault, false)
+			patches.ApplyGlobalVar(&common.SubscribeFailed, false)
+			called := false
+			patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
+				"generateNetworkFaultEventsBasedOnFaultCacheChange",
+				func(_ *AscendTools, _ *common.NpuDevice) {
+					called = true
+				})
+			// A5/UBOE parameter plane produces UBOEPortDownCode rather than LinkDownFaultCode, so a down link on
+			// A5 is intentionally excluded from the short recover interval and keeps the five-minute cadence.
+			device := &common.NpuDevice{LogicID: 1, NetworkFaultCodes: []int64{common.UBOEPortDownCode}}
+			tool := AscendTools{}
+			tool.HandleLostNetworkFaultEvents(device, nil)
+			convey.So(called, convey.ShouldBeFalse)
+		})
+	})
+}
+
+// TestGenerateNetworkFaultEventsRefreshShortInterval verifies that the short recover interval timer is
+// advanced only when a LinkDown recovery probe queries successfully, not on failed or non-LinkDown triggers.
+func TestGenerateNetworkFaultEventsRefreshShortInterval(t *testing.T) {
+	convey.Convey("test generateNetworkFaultEventsBasedOnFaultCacheChange short interval refresh", t, func() {
+		convey.Convey("01-linkdown probe succeeds, timer should advance", func() {
+			resetNetWorkLimiter()
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {})
+			tool := AscendTools{dmgr: &faultCodeDeviceManagerMock{
+				getDeviceAllErrorCode: func(_ int32) (int32, []int64, error) {
+					return 1, []int64{common.LinkDownFaultCode}, nil
+				},
+			}}
+			device := &common.NpuDevice{LogicID: 1, NetworkFaultCodes: []int64{common.LinkDownFaultCode}}
+			tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+			backoff, ok := parameterPlaneRecoverProbeBackoff[device.PhyID]
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(backoff.step, convey.ShouldEqual, 1)
+		})
+
+		convey.Convey("02-query fails, timer should not advance", func() {
+			resetNetWorkLimiter()
+			tool := AscendTools{dmgr: &faultCodeDeviceManagerMock{
+				getDeviceAllErrorCode: func(_ int32) (int32, []int64, error) {
+					return 1, nil, errors.New("mock failure")
+				},
+			}}
+			device := &common.NpuDevice{LogicID: 1, NetworkFaultCodes: []int64{common.LinkDownFaultCode}}
+			tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+			_, ok := parameterPlaneRecoverProbeBackoff[device.PhyID]
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("03-linkdown newly detected by active query, timer should be seeded", func() {
+			resetNetWorkLimiter()
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {})
+			tool := AscendTools{dmgr: &faultCodeDeviceManagerMock{
+				getDeviceAllErrorCode: func(_ int32) (int32, []int64, error) {
+					return 1, []int64{common.LinkDownFaultCode}, nil
+				},
+			}}
+			device := &common.NpuDevice{LogicID: 1, NetworkFaultCodes: []int64{}}
+			tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+			backoff, ok := parameterPlaneRecoverProbeBackoff[device.PhyID]
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(backoff.step, convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("04-non-linkdown result, timer should not advance", func() {
+			resetNetWorkLimiter()
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {})
+			tool := AscendTools{dmgr: &faultCodeDeviceManagerMock{
+				getDeviceAllErrorCode: func(_ int32) (int32, []int64, error) {
+					return 1, []int64{}, nil
+				},
+			}}
+			patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
+				"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+					return networkPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+						downPortsNum: npuCommon.PortNoDownCount}
+				})
+			device := &common.NpuDevice{LogicID: 1, NetworkFaultCodes: []int64{}}
+			tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+			_, ok := parameterPlaneRecoverProbeBackoff[device.PhyID]
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+	})
+}
+
+// TestGetParameterPlaneStatusCacheResetDownQueryBackoffOnRecovery tests the down-query backoff is reset on recovery.
+func TestGetParameterPlaneStatusCacheResetDownQueryBackoffOnRecovery(t *testing.T) {
+	convey.Convey("test getParameterPlaneStatusCache resets down query backoff on recovery", t, func() {
+		resetNetWorkLimiter()
+		// Simulate a down link whose throttle backoff has already escalated to a later step.
+		parameterPlaneStatusCache[1] = networkPlaneStatus{status: npuCommon.NPUNetworkLinkDownStatus}
+		parameterPlaneDownQueryBackoff[1] = &recoverBackoff{step: 5, lastCheck: time.Now().Add(-time.Hour)}
+
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyFunc(getRoceParameterPlaneStatus, func(_ int32) networkPlaneStatus {
+			return networkPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus}
+		})
+
+		tool := mockAscendTools()
+		status := tool.getParameterPlaneStatusCache(1)
+		convey.So(status.status, convey.ShouldEqual, npuCommon.NPUNetworkLinkUpStatus)
+		_, ok := parameterPlaneDownQueryBackoff[1]
+		convey.So(ok, convey.ShouldBeFalse)
+	})
+}
+
+// TestGenerateNetworkFaultEventsResetRecoverBackoffOnRecovery tests the recover backoff is reset on recovery.
+func TestGenerateNetworkFaultEventsResetRecoverBackoffOnRecovery(t *testing.T) {
+	convey.Convey("test generateNetworkFaultEventsBasedOnFaultCacheChange resets recover backoff on recovery", t, func() {
+		resetNetWorkLimiter()
+		parameterPlaneRecoverProbeBackoff[1] = &recoverBackoff{step: 3, lastCheck: time.Now().Add(-time.Hour)}
+
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {})
+		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
+			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+				return networkPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+					downPortsNum: npuCommon.PortNoDownCount}
+			})
+		tool := AscendTools{dmgr: &faultCodeDeviceManagerMock{
+			getDeviceAllErrorCode: func(_ int32) (int32, []int64, error) {
+				return 1, []int64{}, nil
+			},
+		}}
+		device := &common.NpuDevice{LogicID: 1, PhyID: 1, NetworkFaultCodes: []int64{common.LinkDownFaultCode}}
+		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+		_, ok := parameterPlaneRecoverProbeBackoff[1]
+		convey.So(ok, convey.ShouldBeFalse)
+	})
+}
+
 // TestHandleLostNetworkFaultEvents for test HandleLostNetworkFaultEvents
 func TestHandleLostNetworkFaultEvents(t *testing.T) {
 	convey.Convey("test HandleLostNetworkFaultEvents", t, func() {
@@ -1359,6 +1632,8 @@ func initTestObjects() (*AscendTools, *common.NpuDevice) {
 func resetNetWorkLimiter() {
 	parameterPlaneLimiterMap = make(map[int32]*rate.Limiter, common.GeneralMapSize)
 	parameterPlaneStatusCache = make(map[int32]networkPlaneStatus, common.GeneralMapSize)
+	parameterPlaneRecoverProbeBackoff = make(map[int32]*recoverBackoff, common.GeneralMapSize)
+	parameterPlaneDownQueryBackoff = make(map[int32]*recoverBackoff, common.GeneralMapSize)
 }
 
 // testGetDeviceFaultFailed returns closure for get device fault failed scenario

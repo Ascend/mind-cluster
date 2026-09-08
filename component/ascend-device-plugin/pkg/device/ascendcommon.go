@@ -66,6 +66,16 @@ var (
 	allFaultInfo           = make(chan npuCommon.DevFaultInfo, common.WriteEventChanLenLimit)
 	faultEventLimiter      = rate.NewLimiter(
 		rate.Every(time.Minute/common.WriteEventRateLimit), common.WriteEventRateLimit)
+
+	// The parameter-plane / hyper-plane status maps below (parameterPlaneRecoverProbeBackoff, parameterPlaneDownQueryBackoff,
+	// parameterPlaneLimiterMap, parameterPlaneStatusCache) are only accessed serially on the single
+	// mendSubscribeFaultEvents call path, so no lock is required. Do not access them concurrently; add a lock or
+	// switch to sync.Map if that call path ever becomes concurrent.
+	// parameterPlaneRecoverProbeBackoff tracks the outer short-recovery probe backoff per device
+	parameterPlaneRecoverProbeBackoff = make(map[int32]*recoverBackoff, common.GeneralMapSize)
+	// parameterPlaneDownQueryBackoff tracks the inner known-down query throttle backoff per device
+	parameterPlaneDownQueryBackoff = make(map[int32]*recoverBackoff, common.GeneralMapSize)
+	// parameterPlaneLimiterMap records the rate limiter for each device to check parameter plane fault codes
 	parameterPlaneLimiterMap   = make(map[int32]*rate.Limiter, common.GeneralMapSize)
 	parameterPlaneStatusCache  = make(map[int32]networkPlaneStatus, common.GeneralMapSize)
 	hyperPlaneLimiterMap       = make(map[int32]*rate.Limiter, common.GeneralMapSize)
@@ -1388,6 +1398,85 @@ func networkMoreThanFiveMin(device *common.NpuDevice) bool {
 	return time.Now().UnixMilli()-device.NetworkAlarmRaisedTime > subscribeToPollingTime
 }
 
+// recoverBackoff tracks the escalating step and last check time for a link-down recovery probe.
+type recoverBackoff struct {
+	step      int
+	lastCheck time.Time
+}
+
+// interval returns the re-check interval for the current backoff step. Steps within the ladder use its
+// escalating seconds; once the ladder is exhausted the interval converges to the original five-minute
+// cadence (EveryNetworkQueryDuration).
+func (b *recoverBackoff) interval() time.Duration {
+	step := b.step
+	if step < 0 {
+		step = 0
+	}
+	if step >= len(common.RecoverNetworkQueryBackoff) {
+		return common.EveryNetworkQueryDuration * time.Minute
+	}
+	return time.Duration(common.RecoverNetworkQueryBackoff[step]) * time.Second
+}
+
+// elapsed reports whether the re-check interval has elapsed since the last check. A zero lastCheck (no
+// prior record) is treated as already elapsed so the first probe runs immediately.
+func (b *recoverBackoff) elapsed(now time.Time) bool {
+	return b.lastCheck.IsZero() || now.Sub(b.lastCheck) >= b.interval()
+}
+
+func (b *recoverBackoff) advance(now time.Time) {
+	b.step++
+	b.lastCheck = now
+}
+
+// markChecked records a check without stepping the ladder, used to seed the down-state throttle.
+func (b *recoverBackoff) markChecked(now time.Time) {
+	b.lastCheck = now
+}
+
+func parameterPlaneRecoverProbeBackoffFor(phyID int32) *recoverBackoff {
+	backoff := parameterPlaneRecoverProbeBackoff[phyID]
+	if backoff == nil {
+		backoff = &recoverBackoff{}
+		parameterPlaneRecoverProbeBackoff[phyID] = backoff
+	}
+	return backoff
+}
+
+func parameterPlaneDownQueryBackoffFor(phyID int32) *recoverBackoff {
+	backoff := parameterPlaneDownQueryBackoff[phyID]
+	if backoff == nil {
+		backoff = &recoverBackoff{}
+		parameterPlaneDownQueryBackoff[phyID] = backoff
+	}
+	return backoff
+}
+
+// parameterPlaneShortIntervalReached reports whether the short recover-check interval has elapsed for the
+// given device, escalating according to the recovery backoff ladder with each successive check.
+func parameterPlaneShortIntervalReached(phyID int32) bool {
+	backoff, ok := parameterPlaneRecoverProbeBackoff[phyID]
+	if !ok {
+		// No prior check record (e.g. a LinkDown delivered directly by the fault subscription): treat the short
+		// interval as already reached so the first recovery probe runs immediately. The backoff step and check
+		// time are then advanced by generateNetworkFaultEventsBasedOnFaultCacheChange.
+		return true
+	}
+	return backoff.elapsed(time.Now())
+}
+
+// parameterPlaneDownQueryAllowed reports whether a known-down link may be actively queried again, enforcing
+// the short recover interval so non-short-interval trigger paths cannot bypass the five-minute rate limit.
+func parameterPlaneDownQueryAllowed(phyID int32) bool {
+	now := time.Now()
+	backoff := parameterPlaneDownQueryBackoffFor(phyID)
+	if !backoff.elapsed(now) {
+		return false
+	}
+	backoff.advance(now)
+	return true
+}
+
 // LogFaultModeChange print logs when fault mode changed
 func (tool *AscendTools) LogFaultModeChange(device *common.NpuDevice, initLogicIDs []int32, newMode string) {
 	if device == nil {
@@ -1755,9 +1844,14 @@ func (tool *AscendTools) HandleLostNetworkFaultEvents(device *common.NpuDevice, 
 	if device == nil {
 		return
 	}
+	// The short recover-check interval is intentionally scoped to the RoCE parameter plane only
+	// (LinkDownFaultCode 0x81078603). A5/UBOE parameter plane produces UBOEPortDownCode (0x81078607) instead,
+	// so on A5 devices a down parameter plane link keeps the original five-minute cadence and does not enter
+	// this fast-recovery branch. See generateOriginalFaultCodeFromParameterPlaneStatus for the code split.
 	needHandleLostNetworkFaultCondition := isFirstFlushFault || (common.Int32Tool.Contains(initLogicIDs,
 		device.LogicID)) || common.SubscribeFailed || (device.NetworkHealth == v1beta1.Unhealthy &&
-		networkMoreThanFiveMin(device))
+		networkMoreThanFiveMin(device)) || (common.Int64Tool.Contains(device.NetworkFaultCodes,
+		common.LinkDownFaultCode) && parameterPlaneShortIntervalReached(device.PhyID))
 	if !needHandleLostNetworkFaultCondition {
 		return
 	}
@@ -1772,6 +1866,8 @@ func (tool *AscendTools) generateNetworkFaultEventsBasedOnFaultCacheChange(devic
 		hwlog.RunLog.Errorf("get device fault failed logic: %d, err: %v", device.LogicID, err)
 		return
 	}
+	wasLinkDown := common.Int64Tool.Contains(device.NetworkFaultCodes, common.LinkDownFaultCode)
+
 	networkFaultCodes := make([]int64, 0, npuCommon.MaxErrorCodeCount)
 	for _, faultCode := range errCodes {
 		if !common.NetworkFaultCodes.Has(faultCode) {
@@ -1779,14 +1875,31 @@ func (tool *AscendTools) generateNetworkFaultEventsBasedOnFaultCacheChange(devic
 		}
 		networkFaultCodes = append(networkFaultCodes, faultCode)
 	}
-
 	networkFaultCodes = tool.queryParameterPlaneStatusWithoutFaultCode(networkFaultCodes, device)
+
+	nowLinkDown := common.Int64Tool.Contains(networkFaultCodes, common.LinkDownFaultCode)
+	reconcileLinkDownRecoverBackoff(device.PhyID, wasLinkDown, nowLinkDown)
 	originalNetworkFaultCodes := getOriginalNetworkFaultCodes(device.NetworkFaultCodes)
 	networkFaultEvents := common.GetChangedDevFaultInfo(device, originalNetworkFaultCodes, networkFaultCodes)
 	for _, networkFaultEvent := range networkFaultEvents {
 		hwlog.RunLog.Infof("device %d generate network fault event %v based"+
 			" on network fault cache change", device.PhyID, networkFaultEvent)
 		common.DoSaveDevFaultInfo(networkFaultEvent, false)
+	}
+}
+
+// reconcileLinkDownRecoverBackoff updates the outer recovery backoff for phyID based on the LinkDown fault's
+// before/after state: newly down seeds from the shortest interval, still down escalates to the next interval,
+// and recovered resets it. It is a no-op when there is no LinkDown before or after, so non-LinkDown trigger
+// paths never disturb the backoff.
+func reconcileLinkDownRecoverBackoff(phyID int32, wasLinkDown, nowLinkDown bool) {
+	switch {
+	case !wasLinkDown && nowLinkDown:
+		parameterPlaneRecoverProbeBackoff[phyID] = &recoverBackoff{lastCheck: time.Now()}
+	case wasLinkDown && nowLinkDown:
+		parameterPlaneRecoverProbeBackoffFor(phyID).advance(time.Now())
+	case wasLinkDown && !nowLinkDown:
+		delete(parameterPlaneRecoverProbeBackoff, phyID)
 	}
 }
 
@@ -1894,6 +2007,41 @@ func (tool *AscendTools) generateOriginalFaultCodeFromParameterPlaneStatus(netwo
 }
 
 func (tool *AscendTools) getParameterPlaneStatusCache(phyID int32) networkPlaneStatus {
+	linkStatusCache, ok := parameterPlaneStatusCache[phyID]
+	// wasDown records whether the cached status was already down before this query. When the down-state
+	// throttle inside allowParameterPlaneStatusQuery allows and runs, it already seeds the down backoff via
+	// parameterPlaneDownQueryAllowed; only a fresh query that newly detects down (the cache was empty or up)
+	// needs to seed it here, otherwise lastCheck would be written twice in the same poll.
+	wasDown := ok && linkStatusCache.status == npuCommon.NPUNetworkLinkDownStatus
+	if !tool.allowParameterPlaneStatusQuery(phyID, linkStatusCache, ok) {
+		return linkStatusCache
+	}
+	var status networkPlaneStatus
+	if tool.dmgr.GetDevType() == api.Ascend910A5 {
+		status = getUboeParameterPlaneStatus(phyID)
+	} else {
+		status = getRoceParameterPlaneStatus(phyID)
+	}
+	if status.status == npuCommon.NPUNetworkLinkDownStatus && !wasDown {
+		parameterPlaneDownQueryBackoffFor(phyID).markChecked(time.Now())
+	}
+	// When the link recovers from down back to up, reset the down-query throttle backoff so the next down
+	// period starts a fresh escalation from the shortest interval instead of continuing the stale ladder.
+	if wasDown && status.status == npuCommon.NPUNetworkLinkUpStatus {
+		delete(parameterPlaneDownQueryBackoff, phyID)
+	}
+	return status
+}
+
+// allowParameterPlaneStatusQuery decides whether to actively query the parameter plane link status. A
+// known-down RoCE parameter plane link (non-A5) is queried at most once per short recover interval so
+// that recovery is detected promptly; for A5/UBOE devices and all other cases the five-minute rate
+// limit applies, keeping the short recover interval scoped to the RoCE parameter plane only.
+func (tool *AscendTools) allowParameterPlaneStatusQuery(phyID int32, cache networkPlaneStatus, cached bool) bool {
+	if cached && cache.status == npuCommon.NPUNetworkLinkDownStatus &&
+		tool.dmgr.GetDevType() != api.Ascend910A5 {
+		return parameterPlaneDownQueryAllowed(phyID)
+	}
 	networkLimiter, ok := parameterPlaneLimiterMap[phyID]
 	if !ok {
 		hwlog.RunLog.Infof("init device %d network limiter", phyID)
@@ -1902,14 +2050,7 @@ func (tool *AscendTools) getParameterPlaneStatusCache(phyID int32) networkPlaneS
 			common.NetworkQueryRateLimit)
 		parameterPlaneLimiterMap[phyID] = networkLimiter
 	}
-	linkStatusCache, ok := parameterPlaneStatusCache[phyID]
-	if !networkLimiter.Allow() && ok {
-		return linkStatusCache
-	}
-	if tool.dmgr.GetDevType() == api.Ascend910A5 {
-		return getUboeParameterPlaneStatus(phyID)
-	}
-	return getRoceParameterPlaneStatus(phyID)
+	return networkLimiter.Allow()
 }
 
 func getRoceParameterPlaneStatus(phyID int32) networkPlaneStatus {
