@@ -663,7 +663,7 @@
 
 **reset-config-<任务名称\><a name="section3394547123916"></a>**
 
-MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写入reset-config-<任务名称\> ConfigMap中，并映射到容器内。Elastic Agent读取后进行相应的故障检测与处理。
+MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写入reset-config-<任务名称\> ConfigMap中，并映射到容器内。TaskD读取后进行相应的故障检测与处理。
 
 **表 3**  reset-config-_<job-name\>_
 
@@ -757,20 +757,20 @@ MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写
 </tr>
 <tr id="row45409251618"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1254115251666"><a name="p1254115251666"></a><a name="p1254115251666"></a>FaultFlushing</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p7541192512618"><a name="p7541192512618"></a><a name="p7541192512618"></a>告知<span id="ph14256162281217"><a name="ph14256162281217"></a><a name="ph14256162281217"></a>Elastic Agent</span>当前是否有故障正在刷新</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p7541192512618"><a name="p7541192512618"></a><a name="p7541192512618"></a>告知<span id="ph14256162281217"><a name="ph14256162281217"></a><a name="ph14256162281217"></a>TaskD</span>当前是否有故障正在刷新</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p13813147101216"><a name="p13813147101216"></a><a name="p13813147101216"></a>取值为true或false</p>
 <a name="ul1563191521213"></a><a name="ul1563191521213"></a><ul id="ul1563191521213"><li>true：表示有故障正在刷新</li><li>false表示当前无故障刷新</li></ul>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p19951631131314"><a name="p19951631131314"></a><a name="p19951631131314"></a><span id="ph952618296564"><a name="ph952618296564"></a><a name="ph952618296564"></a>Elastic Agent</span>需要等待该字段为false且故障RankList无本节点故障时才会拉起训练进程</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p19951631131314"><a name="p19951631131314"></a><a name="p19951631131314"></a><span id="ph952618296564"><a name="ph952618296564"></a><a name="ph952618296564"></a>TaskD</span>需要等待该字段为false且故障RankList无本节点故障时才会拉起训练进程</p>
 </td>
 </tr>
 <tr id="row141375594377"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p64521951162319"><a name="p64521951162319"></a><a name="p64521951162319"></a><span>RestartFaultProcess</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p17453851172311"><a name="p17453851172311"></a><a name="p17453851172311"></a><span>告知</span><span id="ph262783362516"><a name="ph262783362516"></a><a name="ph262783362516"></a>Elastic Agent</span><span>当前是否仅重启本节点故障进程</span></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p17453851172311"><a name="p17453851172311"></a><a name="p17453851172311"></a><span>告知</span><span id="ph262783362516"><a name="ph262783362516"></a><a name="ph262783362516"></a>TaskD</span><span>当前是否仅重启本节点故障进程</span></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p2012431813258"><a name="p2012431813258"></a><a name="p2012431813258"></a><span>取值true或false</span></p>
-<a name="ul14729113619013"></a><a name="ul14729113619013"></a><ul id="ul14729113619013"><li><span>true：当本节点有故障时，仅重启本节点故障进程</span></li><li><span>false：当本节点有故障时，退出本节点所有进程且退出</span><span id="ph205211257104"><a name="ph205211257104"></a><a name="ph205211257104"></a>Elastic Agent</span></li></ul>
+<a name="ul14729113619013"></a><a name="ul14729113619013"></a><ul id="ul14729113619013"><li><span>true：当本节点有故障时，仅重启本节点故障进程</span></li><li><span>false：当本节点有故障时，退出本节点所有进程且退出</span><span id="ph205211257104"><a name="ph205211257104"></a><a name="ph205211257104"></a>TaskD</span></li></ul>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p94534513233"><a name="p94534513233"></a><a name="p94534513233"></a>当故障RankList有本节点故障时此字段才生效</p>
 </td>
