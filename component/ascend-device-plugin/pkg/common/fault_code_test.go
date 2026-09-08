@@ -497,7 +497,7 @@ func TestSetHyperPlaneNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
 			convey.So(device.FaultCodes, convey.ShouldBeEmpty)
 		})
-		convey.Convey("A950 card type occur, should add precise fault code", func() {
+		convey.Convey("A950 card type occur, should only add port down code, not separate fault code", func() {
 			ParamOption.RealCardType = Ascend910A5
 			defer func() { ParamOption = Option{} }()
 			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
@@ -508,8 +508,8 @@ func TestSetHyperPlaneNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			device := &NpuDevice{LogicID: logicID}
 			classified := ClassifyFaultInfos(faultInfos)
 			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
-			convey.So(device.FaultCodes, convey.ShouldContain, UBSeparateFaultCode)
 			convey.So(device.FaultCodes, convey.ShouldContain, UBPortDownCode)
+			convey.So(device.FaultCodes, convey.ShouldNotContain, UBSeparateFaultCode)
 		})
 		convey.Convey("A950 card type recover, should remove precise fault codes when no port down", func() {
 			ParamOption.RealCardType = Ascend910A5
@@ -550,6 +550,127 @@ func TestSetHyperPlaneNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
 			convey.So(device.FaultCodes, convey.ShouldContain, UBSeparateFaultCode)
 			convey.So(device.FaultCodes, convey.ShouldContain, UBPortDownCode)
+		})
+	})
+}
+
+// TestA950HyperPlaneNewOverallFaultModify for test a950HyperPlaneNewOverallFaultModify
+func TestA950HyperPlaneNewOverallFaultModify(t *testing.T) {
+	convey.Convey("test a950HyperPlaneNewOverallFaultModify", t, func() {
+		convey.Convey("first cycle with partial devices having the fault, should keep pending "+
+			"and not report separate fault", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			// simulate 8 cards, only 4 cards' 8603 fault is processed in the first cycle
+			curTime := time.Now().UnixMilli()
+			devices := make([]*NpuDevice, 0, 8)
+			for i := 0; i < 4; i++ {
+				devices = append(devices, &NpuDevice{
+					LogicID:      int32(i),
+					FaultCodes:   []int64{UBPortDownCode},
+					FaultTimeMap: map[int64]int64{UBPortDownCode: curTime},
+				})
+			}
+			for i := 4; i < 8; i++ {
+				devices = append(devices, &NpuDevice{LogicID: int32(i)})
+			}
+			a950HyperPlaneNewOverallFaultModify(devices)
+			for i := 0; i < 4; i++ {
+				convey.So(devices[i].FaultCodes, convey.ShouldNotContain, UBSeparateFaultCode)
+				convey.So(devices[i].FaultCodes, convey.ShouldNotContain, UBSubHealFaultCode)
+			}
+		})
+		convey.Convey("second cycle with still not all devices having the fault, should promote "+
+			"to separate fault", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			curTime := time.Now().UnixMilli()
+			devices := []*NpuDevice{
+				{
+					LogicID:      0,
+					FaultCodes:   []int64{UBPortDownCode},
+					FaultTimeMap: map[int64]int64{UBPortDownCode: curTime},
+				},
+				{LogicID: 1},
+			}
+			// first cycle: only records the fault
+			a950HyperPlaneNewOverallFaultModify(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldNotContain, UBSeparateFaultCode)
+			// second cycle: the fault was already reported in the previous cycle, promote it
+			a950HyperPlaneNewOverallFaultModify(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldContain, UBSeparateFaultCode)
+			convey.So(devices[0].FaultCodes, convey.ShouldNotContain, UBSubHealFaultCode)
+		})
+		convey.Convey("all devices have the fault, should convert to sub heal fault", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			curTime := time.Now().UnixMilli()
+			devices := make([]*NpuDevice, 0, 8)
+			for i := 0; i < 8; i++ {
+				devices = append(devices, &NpuDevice{
+					LogicID:      int32(i),
+					FaultCodes:   []int64{UBPortDownCode},
+					FaultTimeMap: map[int64]int64{UBPortDownCode: curTime},
+				})
+			}
+			a950HyperPlaneNewOverallFaultModify(devices)
+			for _, device := range devices {
+				convey.So(device.FaultCodes, convey.ShouldContain, UBSubHealFaultCode)
+				convey.So(device.FaultCodes, convey.ShouldNotContain, UBSeparateFaultCode)
+			}
+		})
+		convey.Convey("fault recovered then re-occurred, should also be delayed by one cycle", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			curTime := time.Now().UnixMilli()
+			devices := []*NpuDevice{
+				{
+					LogicID:      0,
+					FaultCodes:   []int64{UBPortDownCode},
+					FaultTimeMap: map[int64]int64{UBPortDownCode: curTime},
+				},
+				{LogicID: 1},
+			}
+			// first cycle: records the fault
+			a950HyperPlaneNewOverallFaultModify(devices)
+			// fault recovered, the confirm flag should be cleared
+			devices[0].FaultCodes = []int64{}
+			a950HyperPlaneNewOverallFaultModify(devices)
+			convey.So(ubPortDownConfirmedMap[devices[0].LogicID], convey.ShouldBeFalse)
+			// fault re-occurred, should be delayed by one cycle again
+			devices[0].FaultCodes = []int64{UBPortDownCode}
+			a950HyperPlaneNewOverallFaultModify(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldNotContain, UBSeparateFaultCode)
+			a950HyperPlaneNewOverallFaultModify(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldContain, UBSeparateFaultCode)
+		})
+		convey.Convey("already promoted separate fault should convert to sub heal fault when all "+
+			"devices have the fault", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			curTime := time.Now().UnixMilli()
+			devices := make([]*NpuDevice, 0, 8)
+			for i := 0; i < 8; i++ {
+				faultCodes := []int64{UBPortDownCode}
+				if i == 0 {
+					faultCodes = append(faultCodes, UBSeparateFaultCode)
+				}
+				devices = append(devices, &NpuDevice{
+					LogicID:      int32(i),
+					FaultCodes:   faultCodes,
+					FaultTimeMap: map[int64]int64{UBPortDownCode: curTime},
+				})
+			}
+			a950HyperPlaneNewOverallFaultModify(devices)
+			for _, device := range devices {
+				convey.So(device.FaultCodes, convey.ShouldContain, UBSubHealFaultCode)
+				convey.So(device.FaultCodes, convey.ShouldNotContain, UBSeparateFaultCode)
+			}
 		})
 	})
 }

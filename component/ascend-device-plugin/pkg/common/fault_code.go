@@ -191,6 +191,9 @@ var (
 	UBPreciseFaultCodesMap = map[int64]sets.Int64{
 		UBPortDownCode: sets.NewInt64(UBPortDownCode, UBSeparateFaultCode, UBSubHealFaultCode),
 	}
+	// ubPortDownConfirmedMap records the devices whose UB port down fault was already seen
+	// in a previous processing cycle
+	ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
 )
 
 // FormatFaultCodeHex formats fault code as hex string with correct leading zeros based on config
@@ -1702,8 +1705,13 @@ func a950HyperPlaneFaultRecover(logicID int32, hyperPlaneFaultInfos []common.Dev
 			handleA950HyperPlaneFaultRecover(logicID, device, faultInfo)
 			if snapshot.UBDownCnt != common.PortNoDownCount {
 				tmpFaultInfo := faultInfo
-				tmpFaultInfo.Assertion = common.FaultOccur
-				a950HyperPlaneFaultOccur([]common.DevFaultInfo{tmpFaultInfo}, device)
+				tmpFaultInfo.EventID = UBSeparateFaultCode
+				updateDeviceFaultTimeMap(device, tmpFaultInfo, true)
+				hwlog.RunLog.Infof("UB separate fault still exist after hyper plane fault recover, "+
+					"devFaultInfo: %#v, hex code: %v", tmpFaultInfo, FormatFaultCodeHex(tmpFaultInfo.EventID))
+				device.FaultCodes = append(device.FaultCodes, UBSeparateFaultCode)
+				updateDeviceFaultTimeMap(device, faultInfo, true)
+				device.FaultCodes = append(device.FaultCodes, faultInfo.EventID)
 			}
 		}
 		if faultInfo.Assertion == common.FaultOnce {
@@ -1736,13 +1744,6 @@ func handleA950HyperPlaneFaultRecover(logicID int32, device *NpuDevice, faultInf
 func a950HyperPlaneFaultOccur(hyperPlaneFaultInfos []common.DevFaultInfo, device *NpuDevice) {
 	for _, faultInfo := range hyperPlaneFaultInfos {
 		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
-			preciseFaultCode := UBSeparateFaultCode
-			tmpFaultInfo := faultInfo
-			tmpFaultInfo.EventID = preciseFaultCode
-			updateDeviceFaultTimeMap(device, tmpFaultInfo, true)
-			hwlog.RunLog.Infof("generate UB separate fault, devFaultInfo: %#v, hex code: %v",
-				tmpFaultInfo, FormatFaultCodeHex(tmpFaultInfo.EventID))
-			device.FaultCodes = append(device.FaultCodes, preciseFaultCode)
 			updateDeviceFaultTimeMap(device, faultInfo, true)
 			device.FaultCodes = append(device.FaultCodes, faultInfo.EventID)
 		}
@@ -1783,6 +1784,44 @@ func a950HyperPlaneNewOverallFaultModify(devices []*NpuDevice) {
 				device.FaultCodes = append(device.FaultCodes, UBSubHealFaultCode)
 			}
 		}
+		return
+	}
+	delayReportUBSeparateFault(devices)
+}
+
+// delayUBSeparateFault generates the UB separate fault code for the device whose UB port down
+// fault was already reported in a previous cycle. The delayed promotion is to avoid a transient
+// false separate fault report when the faults of all devices arrive in different processing cycles.
+func delayReportUBSeparateFault(devices []*NpuDevice) {
+	for _, device := range devices {
+		if !Int64Tool.Contains(device.FaultCodes, UBPortDownCode) {
+			// clear the confirm flag when the fault is recovered, so a re-occurred fault
+			// is also delayed by one cycle before promotion
+			if _, ok := ubPortDownConfirmedMap[device.LogicID]; ok {
+				delete(ubPortDownConfirmedMap, device.LogicID)
+			}
+			continue
+		}
+		if Int64Tool.Contains(device.FaultCodes, UBSeparateFaultCode) ||
+			Int64Tool.Contains(device.FaultCodes, UBSubHealFaultCode) {
+			continue
+		}
+		if !ubPortDownConfirmedMap[device.LogicID] {
+			ubPortDownConfirmedMap[device.LogicID] = true
+			hwlog.RunLog.Infof("delay UB separate fault for device: %d", device.LogicID)
+			continue
+		}
+		faultTime := device.FaultTimeMap[UBPortDownCode]
+		tmpFaultInfo := common.DevFaultInfo{
+			EventID:         UBSeparateFaultCode,
+			LogicID:         device.LogicID,
+			Assertion:       common.FaultOccur,
+			AlarmRaisedTime: faultTime,
+		}
+		updateDeviceFaultTimeMap(device, tmpFaultInfo, true)
+		hwlog.RunLog.Infof("generate UB separate fault, devFaultInfo: %#v, hex code: %v",
+			tmpFaultInfo, FormatFaultCodeHex(tmpFaultInfo.EventID))
+		device.FaultCodes = append(device.FaultCodes, UBSeparateFaultCode)
 	}
 }
 
