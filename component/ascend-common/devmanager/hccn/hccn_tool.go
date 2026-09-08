@@ -109,6 +109,7 @@ func GetNPULinkStatus(phyID int32) (string, error) {
 	args := []string{"-i", strconv.Itoa(int(phyID)), "-link", "-g"}
 	// command example: hccn_tool -i 0 -link -g
 	// success result example is: link status: DOWN
+	hwlog.RunLog.Debugf("hccn_tool command: %v", args)
 	outStr, err := getInfoFromHccnTool(args...)
 	hwlog.RunLog.Debugf("hccn_tool command exec result: %v", outStr)
 	if err != nil {
