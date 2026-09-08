@@ -28,7 +28,7 @@
 |名称|作用|取值|使用组件|
 |--|--|--|--|
 |ring-controller.atlas|标识Atlas的Pod|<ul><li>ascend-npu</li><li>ascend-910</li><li>ascend-<span><em>{xxx}</em></span>b</li></ul>|Ascend Device Plugin、Ascend Operator、Volcano|
-|fault-scheduling|任务故障重调度开关|grace、force、off|Volcano|
+|fault-scheduling|任务故障重调度开关|grace、force、off、external-force、external-grace、external-force-pod-failed|Volcano|
 |fault-retry-times|任务发生业务面故障可以重调度的次数|0-100|Volcano、Ascend Operator|
 |tor-affinity|交换机亲和性策略|<ul><li>normal-schema</li><li>large-model-schema</li><li>null</li></ul>|Volcano|
 |inferserviceid|推理服务亲和性调度标识，表征当前任务属于哪个推理服务。取值相同的任务会被优先调度至同一框或同一超节点。|字符串，由用户自定义或Infer Operator自动注入|Volcano、Infer Operator|
@@ -213,9 +213,9 @@
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p935815502914"><a name="p935815502914"></a><a name="p935815502914"></a>任务故障重调度开关</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p5358950291"><a name="p5358950291"></a><a name="p5358950291"></a>grace、force、off</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p5358950291"><a name="p5358950291"></a><a name="p5358950291"></a>grace、force、off、external-force、external-grace、external-force-pod-failed</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p10358105012913"><a name="p10358105012913"></a><a name="p10358105012913"></a><span id="ph635812501497"><a name="ph635812501497"></a><a name="ph635812501497"></a>Volcano</span>、<span id="ph183581350898"><a name="ph183581350898"></a><a name="ph183581350898"></a>Resilience Controller</span></p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p10358105012913"><a name="p10358105012913"></a><a name="p10358105012913"></a><span id="ph635812501497"><a name="ph635812501497"></a><a name="ph635812501497"></a>Volcano</span>、<span id="ph183581350898"><a name="ph183581350898"></a><a name="ph183581350898"></a>Resilience Controller</span>、<span id="ph701238115"><a name="ph701238115"></a><a name="ph701238115"></a>Infer Operator</span></p>
 </td>
 </tr>
 <tr id="row103614504912"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p6361950695"><a name="p6361950695"></a><a name="p6361950695"></a>fault-retry-times</p>
@@ -251,7 +251,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul186101614131"></a><a name="ul186101614131"></a><ul id="ul186101614131"><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p1372045172812"><a name="p1372045172812"></a><a name="p1372045172812"></a><span id="ph2072005192818"><a name="ph2072005192818"></a><a name="ph2072005192818"></a>Volcano</span></p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p1372045172812"><a name="p1372045172812"></a><a name="p1372045172812"></a><span id="ph2072005192818"><a name="ph2072005192818"></a><a name="ph2072005192818"></a>Volcano</span>、<span id="ph852146219"><a name="ph852146219"></a><a name="ph852146219"></a>Infer Operator</span></p>
 </td>
 </tr>
 <tr id="row209101813153710"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p2417162275410"><a name="p2417162275410"></a><a name="p2417162275410"></a>process-recover-enable</p>

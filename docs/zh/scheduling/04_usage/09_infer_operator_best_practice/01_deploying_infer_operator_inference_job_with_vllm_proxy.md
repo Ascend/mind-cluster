@@ -228,7 +228,7 @@ spec:
 <div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点需将参数名称修改为huawei.com/npu。</div></div>
 </td>
 </tr>
-<tr ><td class="cellrowborder" rowspan="7" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >fault-scheduling</p>
+<tr ><td class="cellrowborder" rowspan="8" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >fault-scheduling</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p >grace</p>
 </td>
@@ -242,12 +242,17 @@ spec:
 </tr>
 <tr ><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p >external-grace</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p >配置任务开启实例级重调度。Infer Operator先删除workload，K8s级联删除Pod（遵循Pod自身<code>terminationGracePeriodSeconds</code>），Infer Operator按Pod的<code>terminationGracePeriodSeconds</code>启动定时器，超时后强删残留Pod（GracePeriodSeconds=0）。若Pod未配置<code>terminationGracePeriodSeconds</code>，默认等待30秒。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p >配置任务开启重调度。Infer Operator先删除workload或者故障Pod，K8s级联删除Pod（遵循Pod自身<code>terminationGracePeriodSeconds</code>），Infer Operator按Pod的<code>terminationGracePeriodSeconds</code>启动定时器，超时后强删残留Pod（GracePeriodSeconds=0）。若Pod未配置<code>terminationGracePeriodSeconds</code>，默认等待30秒。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p >external-force</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p >配置任务开启实例级重调度。Infer Operator立即强删workload及Pod（GracePeriodSeconds=0）。<code>terminationGracePeriodSeconds</code>不生效。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p >配置任务开启重调度。Infer Operator立即强删workload及Pod（GracePeriodSeconds=0）。<code>terminationGracePeriodSeconds</code>不生效。</p>
+</td>
+</tr>
+<tr ><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p >external-force-pod-failed</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p >配置任务开启重调度。Infer Operator仅处理业务面故障（Pod内进程非零退出），立即强删workload或者故障Pod（GracePeriodSeconds=0），硬件故障时不删除故障节点Pod。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p >off</p>

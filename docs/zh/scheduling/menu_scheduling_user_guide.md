@@ -92,6 +92,8 @@
       - [示例与验证](./04_usage/04_fault_recovery/01_resumable_training/04_examples_and_verification/menu_examples_and_verification.md)
         - [PyTorch场景示例](./04_usage/04_fault_recovery/01_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md)
         - [MindSpore场景示例](./04_usage/04_fault_recovery/01_resumable_training/04_examples_and_verification/02_mindspore_examples_and_verification.md)
+    - [推理故障恢复特性指南](./04_usage/04_fault_recovery/02_resumable_inference/menu_resumable_inference.md)
+      - [配置推理任务Pod级重调度](./04_usage/04_fault_recovery/02_resumable_inference/01_configuring_infer_pod_rescheduling.md)
     - [芯片故障恢复](./04_usage/04_fault_recovery/00_chip_fault_recovery.md)
   - [一体机特性指南](./04_usage/05_appliance/menu_appliance.md)
     - [使用前必读](./04_usage/05_appliance/00_before_you_start.md)

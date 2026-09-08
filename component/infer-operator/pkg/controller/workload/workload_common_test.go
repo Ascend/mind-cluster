@@ -344,6 +344,34 @@ func TestDeletePodsForExternalRescheduling(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 		})
 
+		// ------ external-force-pod-failed mode tests ------
+
+		convey.Convey("Should force delete pods when external-force-pod-failed mode with matching pods", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Labels[common.FaultSchedulingLabelKey] = common.ExternalForcePodFailedReschedulingValue
+			workload := &DeploymentWorkLoad{Deployment: deployment}
+			pod := &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					Labels: map[string]string{
+						common.InferServiceNameLabelKey: "test-service",
+						common.InstanceSetNameLabelKey:  "test-role",
+						common.InstanceIndexLabelKey:    "0",
+					},
+				},
+			}
+			fakeClient := NewFakeClient().WithObjects(deployment, pod).Build()
+
+			err := deletePodsForExternalRescheduling(context.Background(), fakeClient, workload)
+
+			convey.So(err, convey.ShouldBeNil)
+			gotPod := &corev1.Pod{}
+			getErr := fakeClient.Get(context.Background(),
+				client.ObjectKey{Namespace: "default", Name: "test-pod"}, gotPod)
+			convey.So(apierrors.IsNotFound(getErr), convey.ShouldBeTrue)
+		})
+
 		// ------ external-grace mode tests ------
 
 		convey.Convey("Should return nil (start timer, not block) when external-grace mode with matching pods", func() {
