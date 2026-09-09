@@ -14,10 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from ascend_fd.utils.constant.str_const import UNKNOWN_DEVICE_ID
 from ascend_fd.utils.constant.ub_const import PRECHECK_PREFIX
 
 
 def get_device_precheck_event(precheck_info, source_device: str):
     precheck = precheck_info.get(source_device, [])
-    # 多个PRECHECK事件以各自的event_code为key，全部放入root_causes
-    return {event.get("event_code"): event for event in precheck if event.get("event_code").startswith(PRECHECK_PREFIX)}
+    events = {}
+    for event in precheck:
+        if event.get("event_code", "").startswith(PRECHECK_PREFIX) or source_device == UNKNOWN_DEVICE_ID:
+            events[event.get("event_code")] = event
+
+    # 多个event事件以各自的event_code为key，全部放入root_causes
+    # 如果不是unknown设备，只取PRECHECK_开头的故障事件
+    return events
