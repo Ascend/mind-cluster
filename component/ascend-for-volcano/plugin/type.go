@@ -255,6 +255,10 @@ type ScheduleHandler struct {
 	FaultHandle     FaultHandler
 	PredicatedNodes map[api.JobID]sets.String
 	AffinityCache   *cache.PodNodeAffinityCache
+	// ScoreWeight scales the ascend plugin's node scores so they stay
+	// comparable with other plugins.
+	ScoreWeight  float64
+	scorePlugins []ScorePluginWithWeight
 	ScheduleEnv
 	CheckResult
 }

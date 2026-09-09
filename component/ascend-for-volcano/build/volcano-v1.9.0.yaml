@@ -3933,6 +3933,8 @@ data:
       - name: conformance
         enableNodeOrder: false
       - name: volcano-npu_v6.0.RC1_linux-x86_64
+        arguments:
+          ascend.scoreWeight: 100
     - plugins:
       - name: drf
         enableNodeOrder: false

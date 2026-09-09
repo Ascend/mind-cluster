@@ -441,6 +441,12 @@ func (sHandle *ScheduleHandler) initCache() {
 // initAffinityCache initializes the pod-to-node affinity cache.
 // The cache is created only once and survives across scheduler sessions.
 //
+// Bounded to PreferPreviousNode: PrefNodeMap is consumed only by the previousNode
+// dimension's on-branch and the legacy addPreferPreviousNodeScore/TaskOrderFn
+// (both self-gated). The rescheduler-only off-branch sources previous fault
+// landings from the fault snapshot (ScorePreviousFaultNodes) instead, so the
+// cache never needs to exist while the feature is disabled.
+//
 // On first creation (cold start after scheduler restart), the cache is seeded
 // from the current pod→node assignments of all active jobs. Subsequent sessions
 // only refresh timestamps and evict expired entries — cache content is maintained
@@ -783,6 +789,10 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 		klog.V(util.LogDebugLev).Infof("BatchNodeOrderFn vc-job:%#v is not npu job.", vcJob)
 		return nil, nil
 	}
+
+	if v, ok := vcJob.policyHandler.(ScoreFrameworkAware); ok && v.ScoreFrameworkAware() {
+		return sHandle.batchNodeOrderByFramework(task, nodes, vcJob)
+	}
 	// 1. Policy-level mandatory scoring (super pod, multi-level, normal topology constraints)
 	errGet := vcJob.policyHandler.ScoreBestNPUNodes(task, nodes, scoreMap)
 
@@ -795,7 +805,7 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 	}
 
 	for nodeName := range scoreMap {
-		scoreMap[nodeName] *= scoreWeight
+		scoreMap[nodeName] *= sHandle.ScoreWeight
 	}
 	if errGet != nil {
 		// get suitable node failed
