@@ -40,6 +40,11 @@ func resetNpuNicMappingCache() {
 	npuNicMappingOnce = sync.Once{}
 }
 
+func resetDpuToNpuIndex() {
+	dpuToNpuOnce = sync.Once{}
+	dpuToNpuIDs = nil
+}
+
 func TestLoadNpuNicMappingSuccess(t *testing.T) {
 	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
 		return []byte(`{"npuNics":[{"npuId":0,"nicNames":["ens2f0","ens0f2","ens1f0"]}]}`), nil
@@ -97,6 +102,84 @@ func TestLoadNpuNicMappingParseError(t *testing.T) {
 	convey.Convey("Given the mapping file contains invalid JSON", t, func() {
 		_, err := loadNpuNicMapping()
 		convey.Convey("Then a parse error should be returned", func() {
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+// TestLoadNpuNicMappingMachineTypeFail tests loadNpuNicMapping when per-form config exists but machine detection fails.
+func TestLoadNpuNicMappingMachineTypeFail(t *testing.T) {
+	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+		return []byte(`[{"productType":"Server","npuNics":[{"npuId":0,"nicNames":["ens2f0"]}]}]`), nil
+	}).ApplyFunc(machineType, func() (string, error) {
+		return "", errors.New("read net class dir failed")
+	})
+	defer patches.Reset()
+
+	convey.Convey("Given a per-form mapping config and a machine type detection failure", t, func() {
+		_, err := loadNpuNicMapping()
+		convey.Convey("Then an error should be returned", func() {
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+// TestInitNpuNicMapping tests InitNpuNicMapping building the reverse index once for success, error and missing config.
+func TestInitNpuNicMapping(t *testing.T) {
+	convey.Convey("Given a valid mapping config, the reverse index is built", t, func() {
+		resetDpuToNpuIndex()
+		patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+			return []byte(`{"npuNics":[{"npuId":0,"nicNames":["ens2f0","ens0f2"]}]}`), nil
+		})
+		convey.Convey("Then affected NPUs are resolved from the primary NIC", func() {
+			InitNpuNicMapping()
+			convey.So(GetAffectedNPU("ens2f0"), convey.ShouldResemble, []int{0})
+			convey.So(GetAffectedNPU("ens0f2"), convey.ShouldBeEmpty)
+		})
+		convey.Convey("Then repeated calls do not reload the config", func() {
+			InitNpuNicMapping()
+			InitNpuNicMapping()
+			convey.So(GetAffectedNPU("ens2f0"), convey.ShouldResemble, []int{0})
+		})
+		patches.Reset()
+		resetDpuToNpuIndex()
+	})
+	convey.Convey("Given a config read failure, the reverse index stays empty", t, func() {
+		resetDpuToNpuIndex()
+		patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+			return nil, errors.New("read error")
+		})
+		defer patches.Reset()
+		defer resetDpuToNpuIndex()
+
+		InitNpuNicMapping()
+		convey.So(GetAffectedNPU("ens2f0"), convey.ShouldBeEmpty)
+	})
+	convey.Convey("Given the config file does not exist, the reverse index stays empty", t, func() {
+		resetDpuToNpuIndex()
+		patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+			return nil, nil
+		})
+		defer patches.Reset()
+		defer resetDpuToNpuIndex()
+
+		InitNpuNicMapping()
+		convey.So(GetAffectedNPU("ens2f0"), convey.ShouldBeEmpty)
+	})
+}
+
+// TestGetNicNamesLoadError tests GetNicNames when the config load fails on first access.
+func TestGetNicNamesLoadError(t *testing.T) {
+	resetNpuNicMappingCache()
+
+	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+		return nil, errors.New("read error")
+	})
+	defer patches.Reset()
+
+	convey.Convey("Given a config load failure", t, func() {
+		_, err := GetNicNames(0)
+		convey.Convey("Then an error should be returned", func() {
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})

@@ -371,6 +371,11 @@ func TestSameDeviceSet(t *testing.T) {
 			convey.So(sameDeviceSet(`{"c":["ub0"]}`, []string{"ub0", "ub1"}), convey.ShouldBeFalse)
 		})
 	})
+	convey.Convey("Given an invalid annotation and no requested ids", t, func() {
+		convey.Convey("Then both sets are empty and match", func() {
+			convey.So(sameDeviceSet("not-json", []string{}), convey.ShouldBeTrue)
+		})
+	})
 }
 
 func TestDeviceStatusSet(t *testing.T) {
@@ -523,6 +528,27 @@ func TestPreferredDeviceIDs(t *testing.T) {
 		_, err := rs.preferredDeviceIDs(context.Background(), req)
 		convey.So(err, convey.ShouldNotBeNil)
 	})
+	convey.Convey("Given a nil k8s client, only the requested ids are returned", t, func() {
+		rsNoClient := &ubResourceServer{resourceName: testResourceName, ubDevices: []types.Device{&ubDevice{ubID: "ub0", ifName: "enp0s1"}}}
+		req := &pluginapi.ContainerPreferredAllocationRequest{AllocationSize: 2, MustIncludeDeviceIDs: []string{"x"}, AvailableDeviceIDs: []string{"a"}}
+		ids, err := rsNoClient.preferredDeviceIDs(context.Background(), req)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(ids, convey.ShouldResemble, []string{"x", "a"})
+	})
+	convey.Convey("Given an allocation size smaller than the id pool, the result is truncated", t, func() {
+		mockPreferredEnv(t, nil, nil, false)
+		req := &pluginapi.ContainerPreferredAllocationRequest{AllocationSize: 1, MustIncludeDeviceIDs: []string{"x"}, AvailableDeviceIDs: []string{"a", "b"}}
+		ids, err := rs.preferredDeviceIDs(context.Background(), req)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(ids, convey.ShouldResemble, []string{"x"})
+	})
+	convey.Convey("Given a preferred id already in the must-include list, it is not duplicated", t, func() {
+		mockPreferredEnv(t, []string{"enp0s1"}, nil, true)
+		req := &pluginapi.ContainerPreferredAllocationRequest{AllocationSize: 2, MustIncludeDeviceIDs: []string{"ub0"}, AvailableDeviceIDs: []string{"ub0", "a"}}
+		ids, err := rs.preferredDeviceIDs(context.Background(), req)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(ids, convey.ShouldResemble, []string{"ub0", "a"})
+	})
 }
 
 func TestStringSet(t *testing.T) {
@@ -602,6 +628,21 @@ func TestAllocateByNpu(t *testing.T) {
 		convey.So(json.Unmarshal([]byte(got.Annotations[deviceStatusAnnotation]), &status), convey.ShouldBeNil)
 		convey.So(status[testContainer], convey.ShouldResemble, []string{"ub0"})
 	})
+	convey.Convey("Given multiple pending pods with NPU annotations, only the oldest pod is recorded", t, func() {
+		older := newNpuPod(map[string]string{podPredicateTimeAnnotation: "10", api.HuaweiNPU: "0"})
+		older.Name = "pod-older"
+		younger := newNpuPod(map[string]string{podPredicateTimeAnnotation: "20", api.HuaweiNPU: "1"})
+		younger.Name = "pod-younger"
+		f := fake.NewSimpleClientset(&older, &younger)
+		mockAllocateEnv(t, []v1.Pod{younger, older}, f)
+		convey.So(newNpuServer(nil).allocateByNpu(context.Background(), []string{"ub0"}), convey.ShouldBeNil)
+		got, getErr := f.CoreV1().Pods("default").Get(context.Background(), "pod-older", metav1.GetOptions{})
+		convey.So(getErr, convey.ShouldBeNil)
+		convey.So(got.Annotations[deviceStatusAnnotation], convey.ShouldNotBeEmpty)
+		noAllocation, getErr := f.CoreV1().Pods("default").Get(context.Background(), "pod-younger", metav1.GetOptions{})
+		convey.So(getErr, convey.ShouldBeNil)
+		convey.So(noAllocation.Annotations[deviceStatusAnnotation], convey.ShouldBeEmpty)
+	})
 }
 
 var errTest = errors.New("test error")
@@ -659,4 +700,29 @@ func mockAllocateEnv(t *testing.T, pods []v1.Pod, clientset kubernetes.Interface
 		patches.ApplyMethodReturn((*kubernetes.Clientset)(nil), "CoreV1", clientset.CoreV1())
 	}
 	t.Cleanup(patches.Reset)
+}
+
+// TestStripNpuIdPrefix tests stripNpuIdPrefix for known prefixes and passthrough values.
+func TestStripNpuIdPrefix(t *testing.T) {
+	convey.Convey("Given values with known or unknown prefixes", t, func() {
+		tests := []struct {
+			value    string
+			expected string
+		}{
+			{"npu-3", "3"},
+			{"Ascend910-5", "5"},
+			{"7", "7"},
+			{"Ascend310-1", "Ascend310-1"},
+		}
+		for _, tt := range tests {
+			convey.So(stripNpuIdPrefix(tt.value), convey.ShouldEqual, tt.expected)
+		}
+	})
+}
+
+// TestNpuAnnotationKeys tests npuAnnotationKeys returning only the huawei.com/npu key.
+func TestNpuAnnotationKeys(t *testing.T) {
+	convey.Convey("Given a pod, only the huawei.com/npu annotation key is returned", t, func() {
+		convey.So(npuAnnotationKeys(&v1.Pod{}), convey.ShouldResemble, []string{api.HuaweiNPU})
+	})
 }
