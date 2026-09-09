@@ -265,16 +265,19 @@ func (c *PluginInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *c
  containerMap map[int32][]container.DevicesInfo, chips []common.HuaWeiAIChip) {
     logger.Debug("PluginInfoCollector UpdatePrometheus")
     // get metric from cache
-    pluginCache, _ := c.Cache.Load(pluginInfoKey)
-    npuPluginCache, _ := c.Cache.Load(npuPluginInfoKey)
+    pluginCache, pluginOk := c.Cache.Load(pluginInfoKey)
+    npuPluginCache, npuPluginOk := c.Cache.Load(npuPluginInfoKey)
     // update plugin info
-    ch <- prometheus.NewMetricWithTimestamp(time.Now(),
-     prometheus.MustNewConstMetric(PluginInfoDesc, prometheus.GaugeValue, pluginCache.(float64), pluginLabel))
+    if pluginOk {
+      ch <- prometheus.NewMetricWithTimestamp(time.Now(),
+        prometheus.MustNewConstMetric(PluginInfoDesc, prometheus.GaugeValue, pluginCache.(float64), pluginLabel))
+    }
     // update npu plugin info
-    value := float64(npuPluginCache.(int32))
-    ch <- prometheus.NewMetricWithTimestamp(time.Now(),
-     prometheus.MustNewConstMetric(PluginNpuInfoDesc, prometheus.GaugeValue, value, npuPluginLabel))
-
+    if npuPluginOk {
+      value := float64(npuPluginCache.(int32))
+      ch <- prometheus.NewMetricWithTimestamp(time.Now(),
+        prometheus.MustNewConstMetric(PluginNpuInfoDesc, prometheus.GaugeValue, value, npuPluginLabel))
+    }
 }
 
 // UpdateTelegraf update telegraf metric
