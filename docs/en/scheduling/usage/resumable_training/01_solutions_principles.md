@@ -1814,6 +1814,7 @@ For key configuration procedures of process-level online recovery, see [Configur
 - Multimodal models are not supported.
 - MC2 enabled scenarios are not supported.
 - The watchdog function is not supported.
+- Multiple network faults and on-chip memory faults (more than once) in the same step are not supported.
 - If a fault occurs during the HCCL link establishment phase, process-level online recovery will fail. If there are HCCL link setup phases in other training stages besides the initial training one, refer to the [Configuring Proactive HCCL Link Setup](./05_configuring_training_recovery.md#configuring-proactive-hccl-link-setup) section to establish links in advance, preventing faults from occurring during the HCCL link setup phase.
 - IPv6 scenarios are not supported yet.
 
