@@ -1,0 +1,14 @@
+# whl 打包产物
+dist/
+package/
+Ascend-mindxdl-ascend-clusterops-agent_*.zip
+common/diagproto/build/
+common/diagproto/*.egg-info/
+agent-core/build/
+agent-core/*.egg-info/
+node-collector/build/
+node-collector/*.egg-info/
+
+# Python
+__pycache__/
+*.py[cod]
