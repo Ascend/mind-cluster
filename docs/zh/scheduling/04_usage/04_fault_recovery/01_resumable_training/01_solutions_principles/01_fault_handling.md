@@ -633,6 +633,7 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 - 不支持多模态模型。
 - 不支持MC2开启场景。
 - 不支持开启watchdog功能。
+- 不支持在同一Step中多次（1次以上）出现网络故障和片上内存故障。
 - 当故障发生在HCCL建链阶段时，会导致进程级在线恢复失败。如果除训练初始化的HCCL建链外，还存在其他训练阶段的HCCL建链，可参考[配置HCCL主动触发建链](../03_configuration/02_configuring_training_recovery.md#配置hccl主动触发建链)章节进行提前建链，防止故障出现在HCCL建链阶段。
 - 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
 
