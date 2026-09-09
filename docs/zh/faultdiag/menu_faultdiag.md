@@ -78,6 +78,7 @@
       - [auto_collect](./ascend-faultdiag-toolkit/06_api/04_parse_diagnosis/01_auto_collect.md)
       - [auto_diag](./ascend-faultdiag-toolkit/06_api/04_parse_diagnosis/02_auto_diag.md)
       - [auto_collect_diag](./ascend-faultdiag-toolkit/06_api/04_parse_diagnosis/03_auto_collect_diag.md)
+      - [auto_single_diag](./ascend-faultdiag-toolkit/06_api/04_parse_diagnosis/04_auto_single_diag.md)
     - [巡检命令](./ascend-faultdiag-toolkit/06_api/05_inspection/auto_inspection.md)
     - [维护命令](./ascend-faultdiag-toolkit/06_api/06_maintenance/clear_cache.md)
   - [参考](./ascend-faultdiag-toolkit/07_references/01_faq.md)

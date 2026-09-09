@@ -263,7 +263,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     ./Ascend-docker-runtime_{version}_linux-{arch}.run --check
     ```
 
-4. 执行以下命令安装Ascend Docker Runtime，CRI-O场景须指定`--install-scene=crio`。
+4. 执行以下命令安装Ascend Docker Runtime，CRI-O场景需指定`--install-scene=crio`。
 
     - 安装到默认路径下。
 
@@ -392,7 +392,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     [INFO] ascend-docker-runtime install success
     ```
 
-4. 如需将节点上的容器运行时从其他容器运行时更改为CRI-O，需要修改节点上kubelet的配置文件kubeadm-flags.env。可参考[K8s官方文档](https://kubernetes.io/docs/tasks/administer-cluster/migrating-from-dockershim/change-runtime-containerd/)中"Docker切换至containerd"的方法，该方法对切换至CRI-O同样适用，仅需将容器运行时相关配置项替换为CRI-O即可。
+4. 如需将节点上的容器运行时从其他容器运行时更改为CRI-O，需要修改节点上kubelet的配置文件kubeadm-flags.env。可参考[K8s官方文档](https://kubernetes.io/docs/tasks/administer-cluster/migrating-from-dockershim/change-runtime-containerd/)中“Docker切换至containerd”的方法，该方法对切换至CRI-O同样适用，仅需将容器运行时相关配置项替换为CRI-O即可。
 
 5. 执行命令，重启CRI-O和kubelet，示例如下。
 

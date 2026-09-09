@@ -6,7 +6,7 @@
 
 ### 方式一：使用官方开发容器
 
-项目根目录的`.devcontainer`目录下已提供`Dockerfile`与`devcontainer.json`，预装了Go、Python、gcc、cmake、musl、swig及 volcano 源码等，并配置好了`GOPROXY`、`GOTOOLCHAIN`、`TZ`等环境变量，开箱即用。
+项目根目录的`.devcontainer`目录下已提供`Dockerfile`与`devcontainer.json`，预装了Go、Python、gcc、cmake、musl、swig及volcano源码等，并配置好了`GOPROXY`、`GOTOOLCHAIN`、`TZ`等环境变量，开箱即用。
 
 1. 本地安装Docker，并在VS Code中安装`Dev Containers`插件。
 2. 打开项目根目录，选择打开方式为“在容器中重新打开（Reopen in Container）”。
@@ -18,7 +18,7 @@
 
 ### 方式二：手动准备环境
 
-以openEuler 24.03 LTS系统为例，手动安装基础工具链、Go、Python组件依赖、yq、Helm打包工具等，请参阅[openeuler从零构建环境准备](https://gitcode.com/Ascend/mind-cluster/blob/master/build/README.md#openeuler%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87)。
+以openEuler 24.03 LTS系统为例，手动安装基础工具链、Go、Python组件依赖、yq、Helm打包工具等，详细请参见[openEuler从零构建环境准备](https://gitcode.com/Ascend/mind-cluster/blob/master/build/README.md#openeuler%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87)。
 
 ## 编译
 
@@ -35,4 +35,4 @@
 
 ### 编译单个组件
 
-各组件的详细编译步骤，请参考`component/<组件>/`（如`component/ascend-device-plugin/`）目录下的README.md。
+各组件的详细编译步骤，请参见`component/<组件>/`（如`component/ascend-device-plugin/`）目录下的README.md。

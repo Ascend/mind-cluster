@@ -136,11 +136,11 @@ UB PORT link状态变化（UP -> DOWN）；UBOE PORT link状态变化 (UP -> DOW
 
 ## UB网卡故障<a name="ZH-CN_TOPIC_0000002511426421"></a>
 
-UB网卡故障是针对Atlas950 SuperPoD 超节点、Atlas 850E 超节点和Atlas 650E 服务器中使用的UB网卡的故障。
+UB（Unified Bus）网卡故障是针对Atlas 950 SuperPoD 超节点、Atlas 850E 超节点和Atlas 650E 服务器中使用的UB网卡的故障。
 
 ### 检测原理
 
-UB网卡故障检测由K8s RDMA Shared Dev Plugin组件负责，以固定周期对节点上的每个HCA设备执行一轮检测。检测流程如下：
+UB网卡故障由K8s RDMA Shared Dev Plugin组件负责检测，以固定周期对节点上的每个HCA设备执行一轮检测。检测流程如下：
 
 1. K8s RDMA Shared Dev Plugin读取故障配置文件，获取需要检测的故障项及对应的检测方法。
 2. 对每个设备依次执行各故障项检测，通过读取sysfs设备状态和调用`hinicadm5`工具查询主机拓扑信息。
@@ -148,7 +148,7 @@ UB网卡故障检测由K8s RDMA Shared Dev Plugin组件负责，以固定周期�
 
 ### 故障上报机制
 
-K8s RDMA Shared Dev Plugin采用轮询模式检测UB网卡故障。检测到故障后，将故障信息写入`dpuinfo-<nodename>` ConfigMap中上报给K8s。ConfigMap中各字段的说明，请参见[DpuInfoCfg](../../../06_api/11_k8s_rdma_shared_dev_plugin.md#table_dpuconfigmap_k8s_rdma_shared_dev_plugin)表。
+K8s RDMA Shared Dev Plugin采用轮询模式检测UB网卡故障。检测到故障后，将故障信息写入`dpuinfo-<nodename>` ConfigMap中上报给K8s。ConfigMap中各字段的说明，请参见[ConfigMap说明](../../../06_api/11_k8s_rdma_shared_dev_plugin.md#table_dpuconfigmap_k8s_rdma_shared_dev_plugin)。
 
 ### 所需组件
 

@@ -7,14 +7,15 @@
 
 **前提条件<a name="section166381652174516"></a>**
 
-- 使用重调度特性，需要确保已经安装如下组件。若没有安装，可以参考[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-    - Volcano（本特性只支持使用Volcano作为调度器，不支持使用其他调度器。）
-    - Ascend Device Plugin
-    - Ascend Docker Runtime
-    - Ascend Operator（使用AscendJob必须安装）
-    - ClusterD
-    - NodeD
-    - Infer Operator（使用InferServiceSet任务必须安装）
+使用重调度特性，需要确保已经安装如下组件。若没有安装，可以参考[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
+
+- Volcano（本特性只支持使用Volcano作为调度器，不支持使用其他调度器。）
+- Ascend Device Plugin
+- Ascend Docker Runtime
+- Ascend Operator（使用AscendJob必须安装）
+- ClusterD
+- NodeD
+- Infer Operator（使用InferServiceSet任务必须安装）
 
 **使用约束<a name="section1178044918127"></a>**
 

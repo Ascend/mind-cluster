@@ -115,7 +115,7 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1192418295016"></a><a name="ul1192418295016"></a><ul id="ul1192418295016"><li>openEuler 22.03 LTS SP4 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>Ubuntu 24.04 LTS for aarch64</li><li>BC-Linux_21.10 U4 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>
 </tr>
-<tr id="row153141923154210"><td class="cellrowborder" rowspan="2" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p931415234425"><a name="p931415234425"></a><a name="p931415234425"></a><span id="ph531432344210"><a name="ph531432344210"></a><a name="ph531432344210"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span></p>
+<tr id="row153141923154210"><td class="cellrowborder" rowspan="3" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p931415234425"><a name="p931415234425"></a><a name="p931415234425"></a><span id="ph531432344210"><a name="ph531432344210"></a><a name="ph531432344210"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span></p>
 <p id="p153141423174218"><a name="p153141423174218"></a><a name="p153141423174218"></a></p>
 <p id="p73152023194218"><a name="p73152023194218"></a><a name="p73152023194218"></a></p>
 </td>
@@ -129,9 +129,7 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul19518634212"></a><a name="ul19518634212"></a><ul id="ul19518634212"><li>openEuler 22.03 LTS SP4 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>CUlinux 3.0 for aarch64</li><li>CUlinux 4.0 for aarch64</li><li>HCE 2.0.2506 for aarch64</li><li>Velinux 2.0 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>
 </tr>
-<tr id="row16507172322215"><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p3927183818221"><a name="p3927183818221"></a><a name="p3927183818221"></a><span id="ph1692713816224"><a name="ph1692713816224"></a><a name="ph1692713816224"></a>A200T A3 Box8 超节点服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p166420278225"><a name="p166420278225"></a><a name="p166420278225"></a><span id="ph064214271224"><a name="ph064214271224"></a><a name="ph064214271224"></a>A200T A3 Box8 超节点服务器</span></p>
+<tr id="row16507172322215"><td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p166420278225"><a name="p166420278225"></a><a name="p166420278225"></a><span id="ph064214271224"><a name="ph064214271224"></a><a name="ph064214271224"></a>A200T A3 Box8 超节点服务器</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul164242719228"></a><a name="ul164242719228"></a><ul id="ul164242719228"><li>Tlinux 3.1 for x86_64</li><li>Tlinux 4.0 for x86_64 (6.6.80-29.tl4.x86_64 kernel) </li><li>Velinux 1.4 for x86_64</li></ul>
 </td>

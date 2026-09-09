@@ -56,11 +56,11 @@ NPU Exporter
 
 **功能介绍<a name="section1337420477275"></a>**
 
-基于HDK的虚拟化实例功能是指通过资源虚拟化的方式将物理机或虚拟机配置的NPU（昇腾AI处理器）切分成若干份vNPU（虚拟NPU）挂载到容器中使用，虚拟化管理方式能够实现不同规格资源的分配和回收处理，满足多用户反复申请/释放的资源操作请求。
+基于HDK的虚拟化实例功能是指通过资源虚拟化的方式将物理机或虚拟机配置的NPU（昇腾AI处理器）切分成若干份vNPU（虚拟NPU）挂载到容器中使用，虚拟化管理方式能够实现不同规格资源的分配和回收处理，满足多用户反复申请/释放资源的操作请求。
 
 **所需组件<a name="ZH-CN_TOPIC_0000002479226932"></a>**
 
-- 静态虚拟化：通过npu-smi工具**手动**创建多个vNPU。基于固定大小、固定数量的vNPU进行调度
+- 静态虚拟化：通过npu-smi工具**手动**创建多个vNPU。基于固定大小、固定数量的vNPU进行调度。
 - 动态虚拟化：通过Volcano和Ascend Device Plugin配合，动态地**自动**创建vNPU，容器销毁前，自动销毁vNPU。
 
 静态虚拟化实例所需组件：
@@ -76,8 +76,8 @@ NPU Exporter
 
 **使用说明<a name="section1350915844811"></a>**
 
-- 安装请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-- 特性使用指导请参见[基于HDK的虚拟化实例](../04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md)章节进行操作。
+1. 安装请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
+2. 特性使用指导请参见[基于HDK的虚拟化实例](../04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md)章节进行操作。
 
 ### 基于vCANN-RT的虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855vcann"></a>
 
@@ -108,7 +108,7 @@ NPU Exporter
 
 芯片间的网络拓扑越复杂，调度逻辑越复杂，详细可以参见[亲和性调度](../04_usage/03_basic_scheduling/01_affinity_scheduling/00_solution_description.md)。
 
-支持Preempt（抢占）和Reclaim Action（回收）操作。Preempt用于同一个队列中任务之间的资源抢占，当高优先级任务需要资源时，可以抢占低优先级任务的资源；Reclaim用于不同队列之间的资源回收，当某个队列中的任务需要资源且该队列资源未超用时，可以从其他可回收队列中回收资源。两者均可实现资源的动态调整和优化分配。关于Preempt和Reclaim Action的详细说明，请参见[Volcano官方网站相关信息](https://volcano.sh/zh/docs/Scheduler/Actions)。
+支持Preempt（抢占）和Reclaim Action（回收）操作。Preempt用于同一个队列中任务之间的资源抢占，当高优先级任务需要资源时，可以抢占低优先级任务的资源；Reclaim用于不同队列之间的资源回收，当某个队列中的任务需要资源且该队列资源未超用时，可以从其他可回收队列中回收资源。两者均可实现资源的动态调整和优化分配。关于Preempt和Reclaim Action的详细说明，请参见[Volcano官方文档](https://volcano.sh/zh/docs/Scheduler/Actions)。
 
 支持通过Ascend Dynamic Resource Allocation组件，以K8s动态资源分配（Dynamic Resource Allocation，DRA）机制申请整张NPU卡，业务容器通过ResourceClaim申请NPU资源。DRA机制调度时暂不支持亲和性调度、动态虚拟化等高级调度特性，仅支持基于K8s和Volcano 1.15的基础整卡调度。
 
@@ -133,7 +133,7 @@ NPU Exporter
 
 **功能特点<a name="section1788818281655"></a>**
 
-多级调度是ascend-for-volcano插件中的一种高级调度策略，专为具有复杂网络拓扑的NPU集群设计。多级调度是整卡调度的一种特殊场景，它根据NPU的网络拓扑层级关系将集群资源抽象为多层级结构，为NPU集群提供高效、灵活、可靠的调度能力。用户运行训练任务时，根据网络拓扑选择合适的NPU设备，最大化发挥NPU性能，实现训练任务的NPU卡调度的最佳分配。
+多级调度是ascend-for-volcano插件中的一种高级调度策略，专为具有复杂网络拓扑的NPU集群设计。多级调度是整卡调度的一种特殊场景，它根据NPU的网络拓扑层级关系将集群资源抽象为多层级结构。用户运行训练任务时，根据网络拓扑选择合适的NPU设备，最大化发挥NPU性能，实现训练任务的NPU卡调度的最佳分配。
 
 **所需组件<a name="section15655185785119"></a>**
 
@@ -165,8 +165,8 @@ NPU Exporter
 
 **使用说明<a name="section74221327111220"></a>**
 
-- 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-- 特性使用指导请参见[芯片故障恢复](../04_usage/04_fault_recovery/00_chip_fault_recovery.md)章节进行操作。
+1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
+2. 特性使用指导请参见[芯片故障恢复](../04_usage/04_fault_recovery/00_chip_fault_recovery.md)章节进行操作。
 
 ### 重调度<a name="ZH-CN_TOPIC_0000002511346875"></a>
 
@@ -186,8 +186,8 @@ NPU Exporter
 
 **使用说明<a name="section18894171918127"></a>**
 
-- 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-- 特性使用指导请参见[重调度](../04_usage/03_basic_scheduling/05_rescheduling.md)章节进行操作。
+1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
+2. 特性使用指导请参见[重调度](../04_usage/03_basic_scheduling/05_rescheduling.md)章节进行操作。
 
 ## 断点续训<a name="ZH-CN_TOPIC_0000002511346867"></a>
 
@@ -239,7 +239,7 @@ Container Manager
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[一体机特性指南](../04_usage/05_appliance/01_npu_hardware_fault_detection_and_rectification.md)章节进行操作。
+2. 特性使用指导请参见[一体机特性指南](../04_usage/05_appliance/00_before_you_start.md)章节进行操作。
 
 ## 容器快照<a name="ZH-CN_TOPIC_0000002511346881"></a>
 

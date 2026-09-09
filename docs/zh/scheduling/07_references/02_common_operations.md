@@ -475,10 +475,10 @@ m为从0开始递增的整数。集群规模每增加2000个节点，则会新�
 
 **UB网卡故障<a name="section208771421688"></a>**
 
-m为从0开始递增的整数。集群规模每增加1000个节点，则会新增一个ConfigMap文件cluster-info-dpu-$\{m\}。
-
 查询命令：
 **kubectl describe cm -n mindx-dl cluster-info-dpu-$**_\{m\}_
+
+m为从0开始递增的整数。集群规模每增加1000个节点，则会新增一个ConfigMap文件cluster-info-dpu-$\{m\}。
 
 以Atlas 950 SuperPoD 超节点为例，回显示例如下；不同设备的回显参数可能不同，以实际为准，关键参数说明请参见[ConfigMap说明](../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_configmap_k8s_rdma_shared_dev_plugin)。
 

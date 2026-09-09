@@ -39,6 +39,7 @@
     - [auto_collect](06_api/04_parse_diagnosis/01_auto_collect.md)
     - [auto_diag](06_api/04_parse_diagnosis/02_auto_diag.md)
     - [auto_collect_diag](06_api/04_parse_diagnosis/03_auto_collect_diag.md)
+    - [auto_single_diag](06_api/04_parse_diagnosis/04_auto_single_diag.md)
   - [巡检命令](06_api/05_inspection/auto_inspection.md)
   - [维护命令](06_api/06_maintenance/clear_cache.md)
 - [参考](07_references/menu_references.md)
