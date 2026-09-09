@@ -1,0 +1,338 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright 2026 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
+"""Agent central relationship cache: task->pod->{node, poduid, rank}."""
+
+# pylint: disable=duplicate-code  # watch/GC lifecycle mirrors pathmap
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+import threading
+import time
+from collections.abc import Iterable
+
+from kubernetes import client, watch
+
+from agent_core.constants import POD_TTL
+from agent_core.k8s import (
+    K8s,
+    controller_owner,
+    load_task_crds_config,
+    mark_dirty,
+    run_change_driven_sync,
+    watch_events,
+)
+
+logger = logging.getLogger(__name__)
+
+RELCACHE_CM_NAME = os.environ.get("RELCACHE_CM_NAME", "agent-core-relcache")
+RELCACHE_CM_NS = os.environ.get("RELCACHE_CM_NS", "cluster-system")
+
+
+def _rank_of(pod) -> str:
+    ann = getattr(pod.metadata, "annotations", None) or {}
+    return ann.get("ascend/job-rank", "") or ann.get("rank", "")
+
+
+class RelationshipCache:
+    """task->pod->{node, poduid, rank} relationship cache (metadata-level).
+
+    Threading model: start() launches background threads (pod watch + TTL GC + CM sync).
+    apply_pod/apply_pod_deleted can be called directly by tests; no real cluster needed.
+    """
+
+    def __init__(self):
+        crds = [e for e in (load_task_crds_config().get("task_crds") or []) if e.get("kind")]
+        self._task_kinds = {e["kind"] for e in crds}
+        logger.info(
+            "task CRs supported by agent-core: %s",
+            json.dumps([f"{e.get('api_version', '')}/{e['kind']}" for e in crds], ensure_ascii=False)
+            or "(none configured)",
+        )
+        # pod_uid -> {name,ns,node,rank,owner_name,owner_uid,deleted_at}
+        self._pods: dict[str, dict] = {}
+        # (ns, owner_name) -> {pod_uid: entry}
+        self._by_job: dict[tuple[str, str], dict[str, dict]] = {}
+        self._lock = threading.RLock()
+        self._cond = threading.Condition(self._lock)
+        self._dirty: list[int] = [0]  # pending-change counter box (see k8s.mark_dirty / run_change_driven_sync)
+        self._stop = threading.Event()
+        self._threads: list[threading.Thread] = []
+        self._v1 = None  # lazy init (tests can avoid touching k8s)
+
+    # ---- Event application (pure logic, callable directly by tests) ---- #
+    def apply_pod(self, pod) -> None:
+        owner = controller_owner(getattr(pod.metadata, "owner_references", None) or [])
+        if owner is None:
+            return
+        owner_uid, owner_name, owner_kind = owner
+        if self._task_kinds and owner_kind not in self._task_kinds:
+            return  # ignore pods not managed by a configured task CR
+        ns = pod.metadata.namespace or "default"
+        uid = pod.metadata.uid
+        pod_name = pod.metadata.name
+        node = getattr(pod.spec, "node_name", "") or ""
+        rank = _rank_of(pod)
+        phase = getattr(pod.status, "phase", "") or ""
+        entry = {
+            "pod_name": pod_name,
+            "pod_uid": uid,
+            "namespace": ns,
+            "node": node,
+            "rank": rank,
+            "owner_name": owner_name,
+            "owner_uid": owner_uid,
+            "deleted_at": None,
+            "phase": phase,
+        }
+        with self._lock:
+            old = self._pods.get(uid)
+            if old and old.get("deleted_at"):
+                entry["deleted_at"] = None  # rescheduled back, clear the deleted marker
+            # Unify add / reschedule / node change as "detected new task pod"
+            if old is None or old.get("deleted_at") or old.get("node") != node:
+                logger.info(
+                    "relcache detected new task pod: job=%s ns=%s pod=%s node=%s rank=%s phase=%s",
+                    owner_name,
+                    ns,
+                    pod_name,
+                    node,
+                    rank,
+                    phase,
+                )
+            else:
+                old_phase = old.get("phase")
+                if phase in ("Succeeded", "Failed") and old_phase not in ("Succeeded", "Failed"):
+                    logger.info(
+                        "relcache task pod completed: job=%s ns=%s pod=%s phase=%s",
+                        owner_name,
+                        ns,
+                        pod_name,
+                        phase,
+                    )
+            self._pods[uid] = entry
+            self._by_job.setdefault((ns, owner_name), {})[uid] = entry
+            mark_dirty(self._cond, self._dirty)  # schedule an immediate CM sync (change-driven)
+
+    def apply_pod_deleted(self, pod_uid: str, ts: float | None = None) -> None:
+        ts = ts if ts is not None else time.time()
+        with self._lock:
+            e = self._pods.get(pod_uid)
+            if e and not e.get("deleted_at"):
+                e["deleted_at"] = ts
+                logger.info(
+                    "relcache task pod deleted: job=%s ns=%s pod=%s node=%s",
+                    e.get("owner_name"),
+                    e.get("namespace"),
+                    e.get("pod_name"),
+                    e.get("node"),
+                )
+                mark_dirty(self._cond, self._dirty)  # schedule an immediate CM sync (change-driven)
+
+    # ---- Query ---- #
+    def lookup(self, jobname: str, namespace: str = "default") -> list[dict]:
+        """Look up all pods of a job by jobname -> [{pod_name, pod_uid, node, rank, namespace, phase, deleted_at}].
+
+        Includes pods deleted within TTL (their logs still remain on nodes); entries
+        expired beyond POD_TTL are pruned on access (lazy GC) and synced to the CM.
+        ``deleted_at`` is the deletion timestamp (None for a live pod), used by the
+        dispatcher to keep only the latest instance of a rescheduled pod.
+        """
+        now = time.time()
+        with self._lock:
+            m = self._by_job.get((namespace, jobname), {})
+            pruned = False
+            out: list[dict] = []
+            for uid, e in list(m.items()):
+                if e.get("deleted_at") and now - e["deleted_at"] > POD_TTL:
+                    del m[uid]
+                    self._pods.pop(uid, None)
+                    pruned = True
+                else:
+                    out.append(
+                        {
+                            "pod_name": e["pod_name"],
+                            "pod_uid": e["pod_uid"],
+                            "node": e["node"],
+                            "rank": e["rank"],
+                            "namespace": e["namespace"],
+                            "phase": e.get("phase", ""),
+                            "deleted_at": e.get("deleted_at"),
+                        }
+                    )
+            if not m:
+                self._by_job.pop((namespace, jobname), None)
+            if pruned:
+                mark_dirty(self._cond, self._dirty)  # sync the CM without the pruned entries
+            return out
+
+    # ---- TTL GC ---- #
+    def _gc(self, now: float | None = None) -> None:
+        now = now if now is not None else time.time()
+        changed = False
+        with self._lock:
+            for uid in list(self._pods):
+                e = self._pods[uid]
+                if e.get("deleted_at") and now - e["deleted_at"] > POD_TTL:
+                    owner_key = (e["namespace"], e["owner_name"])
+                    m = self._by_job.get(owner_key)
+                    if m and uid in m:
+                        del m[uid]
+                        if not m:
+                            self._by_job.pop(owner_key, None)
+                    self._pods.pop(uid, None)
+                    changed = True
+        if changed:
+            mark_dirty(self._cond, self._dirty)  # schedule an immediate CM sync (change-driven)
+
+    def _gc_loop(self) -> None:
+        while not self._stop.wait(600):
+            try:
+                self._gc()
+            except Exception:  # noqa: BLE001  # GC is best-effort
+                logger.exception("relcache GC error")
+
+    # ---- CM snapshot ---- #
+    def _snapshot(self) -> str:
+        with self._lock:
+            return json.dumps({"pods": list(self._pods.values())}, ensure_ascii=False, default=str)
+
+    def _load_snapshot(self) -> None:
+        try:
+            v1 = self._v1 or K8s.core()
+            cm = v1.read_namespaced_config_map(RELCACHE_CM_NAME, RELCACHE_CM_NS)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("failed to read relcache snapshot CM (start with empty cache): %s", e)
+            return  # snapshot missing/no permission -> start with empty cache, informer rebuilds
+        self._apply_snapshot((cm.data or {}).get("snapshot"))
+
+    def _apply_snapshot(self, raw: str | None) -> None:
+        """Parse a snapshot JSON string into the in-memory cache (pure logic, callable by tests)."""
+        if not raw:
+            return
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            return
+        with self._lock:
+            for e in data.get("pods", []):
+                self._pods[e["pod_uid"]] = e
+                self._by_job.setdefault((e["namespace"], e["owner_name"]), {})[e["pod_uid"]] = e
+
+    def _save_snapshot(self) -> bool:
+        """Sync the in-memory snapshot to the global CM; returns True on success (best-effort, never raises)."""
+        snap = self._snapshot()
+        try:
+            v1 = self._v1 or K8s.core()
+            try:
+                v1.read_namespaced_config_map(RELCACHE_CM_NAME, RELCACHE_CM_NS)
+                v1.patch_namespaced_config_map(RELCACHE_CM_NAME, RELCACHE_CM_NS, {"data": {"snapshot": snap}})
+            except client.ApiException as e:
+                if e.status != 404:
+                    raise
+                v1.create_namespaced_config_map(
+                    RELCACHE_CM_NS,
+                    client.V1ConfigMap(
+                        api_version="v1",
+                        kind="ConfigMap",
+                        metadata=client.V1ObjectMeta(name=RELCACHE_CM_NAME),
+                        data={"snapshot": snap},
+                    ),
+                )
+            return True
+        except Exception as e:  # noqa: BLE001  # snapshot failure must not block diagnosis
+            logger.warning(
+                "failed to save relcache snapshot (diagnosis unaffected): %s", e
+            )  # snapshot failure does not block diagnosis; in-memory cache remains usable
+            return False
+
+    def _sync_loop(self) -> None:
+        """Change-driven CM sync: syncs as soon as in-memory pod data changed (shared impl in k8s)."""
+        run_change_driven_sync(self._cond, self._dirty, self._stop, self._save_snapshot)
+
+    # ---- watch loop ---- #
+    def _pod_watch_loop(self) -> None:
+        """CoreV1 list+watch pods via the shared k8s.watch_events (automatic reconnection)."""
+
+        def stream() -> Iterable[dict]:
+            return watch.Watch().stream(
+                (self._v1 or K8s.core()).list_pod_for_all_namespaces,
+                timeout_seconds=300,
+                _request_timeout=320,
+            )
+
+        def on_event(typ: str, obj) -> None:
+            if typ == "DELETED":
+                self.apply_pod_deleted(obj.metadata.uid)
+            else:  # ADDED / MODIFIED
+                self.apply_pod(obj)
+
+        watch_events(stream, on_event, self._stop, "relcache pod")
+
+    # ---- Lifecycle ---- #
+    def start(self) -> None:
+        self._load_snapshot()
+        for target, name in (
+            (self._pod_watch_loop, "relcache-pod-watch"),
+            (self._gc_loop, "relcache-gc"),
+            (self._sync_loop, "relcache-sync"),
+        ):
+            t = threading.Thread(target=target, name=name, daemon=True)
+            t.start()
+            self._threads.append(t)
+        logger.info("relcache started: threads=%s", [t.name for t in self._threads])
+
+    def stop(self) -> None:
+        self._stop.set()
+        for t in self._threads:
+            t.join(timeout=5)
+        self._threads.clear()
+        self._stop = threading.Event()
+        logger.info("relcache stopped")
+
+
+# Process-level singleton (started by main.py lifespan; reused by tools.py)
+_cache: RelationshipCache | None = None
+
+
+def get_cache() -> RelationshipCache:
+    global _cache
+    if _cache is None:
+        _cache = RelationshipCache()
+    return _cache
+
+
+def init_cache() -> RelationshipCache:
+    """main.py lifespan: start and return the singleton."""
+    c = get_cache()
+    c.start()
+    return c
+
+
+def shutdown_cache() -> None:
+    if _cache is not None:
+        _cache.stop()
+
+
+def lookup(jobname: str, namespace: str = "default") -> list[dict]:
+    """Entry point called by tools.diagnose; returns [] when the cache is not initialized."""
+    if _cache is None:
+        return []
+    return _cache.lookup(jobname, namespace)
