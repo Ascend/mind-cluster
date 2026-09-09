@@ -99,7 +99,7 @@ class MergePrecheckCause:
         self.precheck_info = precheck_info
         # 本节点某个设备的PRECHECK事件
         self.single_device_precheck_event = {}
-        self.unkonwn_device_event = {}
+        self.unknown_device_event = {}
 
     # ---------- 辅助工具 ----------
     @staticmethod
@@ -353,7 +353,7 @@ class MergePrecheckCause:
             }
 
     def _check_hcomm_ta_ctp_ub_timeout(self):
-        hcomm_timeout = self.unkonwn_device_event.get(PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT, {})
+        hcomm_timeout = self.unknown_device_event.get(PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT, {})
         if not hcomm_timeout:
             return
 
@@ -388,7 +388,7 @@ class MergePrecheckCause:
 
         self.rule_flags[RULE_UBMEM_TIMEOUT_LOW] = {
             "value": True,
-            "line": f"{AGE_PERIOD_KEYWORD}: {_val})",
+            "line": f"{AGE_PERIOD_KEYWORD}: {_val}",
         }
 
     def _prepare_ubctl_log_rule(self):
@@ -454,11 +454,12 @@ class MergePrecheckCause:
         # 1. 所有PRECHECK规则的预计算，得到是否违反规则 ----------
         # ubctl_log.txt中数据的指标预检查
         self.single_device_precheck_event = get_device_precheck_event(self.precheck_info, source_device)
-        device_causes.update(self.single_device_precheck_event)
+        if source_device != UNKNOWN_DEVICE_ID:
+            device_causes.update(self.single_device_precheck_event)
         self._prepare_ubctl_log_rule()
         self._check_ubmem_timeout_low()
 
-        self.unkonwn_device_event = get_device_precheck_event(self.precheck_info, UNKNOWN_DEVICE_ID)
+        self.unknown_device_event = get_device_precheck_event(self.precheck_info, UNKNOWN_DEVICE_ID)
         # unknown_device预检查
         self._prepare_unknown_device_rule()
 

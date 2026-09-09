@@ -61,7 +61,7 @@ class Checker(ABC):
         self.rule_flags = merge_obj.rule_flags
         # 本节点某个设备的PRECHECK事件
         self.single_device_precheck_event = merge_obj.single_device_precheck_event
-        self.unknown_device_event = merge_obj.unkonwn_device_event
+        self.unknown_device_event = merge_obj.unknown_device_event
 
     @staticmethod
     def _format_link_key(event_name, event_code):
