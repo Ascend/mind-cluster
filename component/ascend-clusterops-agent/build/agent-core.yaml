@@ -1,0 +1,257 @@
+# --- 任务 CR GVK 配置 ConfigMap ---
+# agent-core-task-crds: 任务 CR GVK 清单, agent-core 启动时经 K8s API 读取一次
+# (见下方 RBAC agent-core-task-crds), 据此过滤 pod ownerRef, 并打印当前支持检测的任务类型。
+# 现场增补/修改任务类型: 更新本 ConfigMap, 同时在下方 ClusterRole 为该 CR 增补 get 权限,
+# 然后重启 agent-core 生效。
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-core-task-crds
+  namespace: cluster-system
+data:
+  task_crds.yaml: |
+    # 任务 CR GVK 清单: 用于过滤 pod 的 controller ownerReference (只跟踪这些 CR 管理的 pod)。
+    task_crds:
+      - api_version: mindxdl.gitee.com/v1   # AscendJob
+        kind: AscendJob
+      - api_version: mindcluster.huawei.com/v1  # InferServiceSet (推理任务)
+        kind: InferServiceSet
+---
+# --- RBAC: agent-core (namespace: mindx-dl) ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agent-core
+  namespace: mindx-dl
+---
+# agent-core 经 API 读取任务 CR 配置 CM (agent-core-task-crds, cluster-system)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agent-core-task-crds
+  namespace: cluster-system
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["agent-core-task-crds"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agent-core-task-crds
+  namespace: cluster-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agent-core-task-crds
+subjects:
+  - kind: ServiceAccount
+    name: agent-core
+    namespace: mindx-dl
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: agent-core
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]            # pod metadata informer (中心关系缓存)
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes"]           # _collector_pod_ip 按 node 找 collector pod
+    verbs: ["get", "list"]
+  - apiGroups: ["mindxdl.gitee.com"]
+    resources: ["ascendjobs"]      # task_state: 诊断后查任务 CR status 判定是否停止(决定是否缓存)
+    verbs: ["get"]
+  - apiGroups: ["mindcluster.huawei.com"]
+    resources: ["inferservicesets"]  # task_state: 推理任务 InferServiceSet 状态判定
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: agent-core
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: agent-core
+subjects:
+  - kind: ServiceAccount
+    name: agent-core
+    namespace: mindx-dl
+---
+# relcache 快照 CM (agent-core-relcache, cluster-system) 读写, 命名空间级最小权限
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agent-core-relcache
+  namespace: cluster-system
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["agent-core-relcache"]
+    verbs: ["get", "update", "patch"]
+  # create 无法按 resourceNames 校验 (名称在请求体而非 URL path), 需独立 rule; 仅可创建, 不可读写其他 CM
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agent-core-relcache
+  namespace: cluster-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agent-core-relcache
+subjects:
+  - kind: ServiceAccount
+    name: agent-core
+    namespace: mindx-dl
+---
+# pathmap 全局 CM (clusterops-pathmap, cluster-system) 读写 (agent-core 不再读取采集契约 CM):
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agent-core-pathmap
+  namespace: cluster-system
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["clusterops-pathmap"]
+    verbs: ["get", "update", "patch"]
+  # create 无法按 resourceNames 校验, 需独立 rule (同上)
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agent-core-pathmap
+  namespace: cluster-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agent-core-pathmap
+subjects:
+  - kind: ServiceAccount
+    name: agent-core
+    namespace: mindx-dl
+---
+# llm-secret 读取 + 实时 watch (LLM 配置实时生效, 无需重启 agent-core):
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agent-core-llm
+  namespace: mindx-dl
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["llm-secret"]
+    verbs: ["get"]
+  # list/watch 无法按 resourceNames 约束 (列表请求不含资源名), 需独立 rule;
+  # 仅放行本命名空间 (mindx-dl) 内 secrets 的 list/watch 以支持 llm-secret 实时 watch
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agent-core-llm
+  namespace: mindx-dl
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agent-core-llm
+subjects:
+  - kind: ServiceAccount
+    name: agent-core
+    namespace: mindx-dl
+---
+# --- agent Deployment (SA agent-core 见上方 RBAC) ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-core
+  namespace: mindx-dl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-core
+  template:
+    metadata:
+      labels:
+        app: agent-core
+    spec:
+      serviceAccountName: agent-core
+      containers:
+      - name: agent-core
+        image: ascend-clusterops-agent:v26.2.0
+        ports:
+        - containerPort: 9700 # HTTP (kubectl 插件 / CLI)
+        - containerPort: 9710 # gRPC 上报 (node-collector → agent)
+        env:
+        - name: SERVICE # 合并镜像后按角色启动 (deploy/Dockerfile)
+          value: agent-core
+        - name: AGENT_PORT # HTTP 服务端口
+          value: "9700"
+        - name: AGENT_GRPC_PORT # 接收 node-collector 上报的 gRPC 端口
+          value: "9710"
+        # LLM 可选: 配置经 k8s API 读取 llm-secret 实时生效 (见 agent_core/llm.py), 无需重启 pod;
+        # 不再通过 env secretKeyRef 注入 (env 在启动时固定, 无法实时更新)
+        - name: PYTHONDONTWRITEBYTECODE
+          value: "1"
+        - name: PYTHONPYCACHEPREFIX
+          value: /tmp/pycache
+        - name: HOME # ascend-fd 需写 $HOME/.ascend_faultdiag; 根文件系统只读, 落到可写 /tmp (与 node-collector 一致)
+          value: /tmp
+        # agent 不碰 NPU/驱动, 非特权, 最小权限。
+        # 运行用户沿用镜像默认 hwMindX(9000, Dockerfile USER); work-root/日志宿主目录已 chown 9000;
+        # 不显式指定 runAs*, 与 clusterd 的 securityContext 写法一致。
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ ALL ]
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: log-agent-core # 日志落盘 /var/log/mindx-dl/agent-core (宿主导出, 仅该子目录可写)
+          mountPath: /var/log/mindx-dl/agent-core
+          subPath: mindx-dl/agent-core
+        - name: work-root # 诊断产物/缓存落盘 /user/clusterops/agent-core (宿主导出, 需预先创建并 chown 9000, 见 README 部署)
+          mountPath: /user/clusterops/agent-core
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: log-agent-core
+        hostPath:
+          path: /var/log
+          type: Directory
+      - name: work-root
+        hostPath:
+          path: /user/clusterops/agent-core
+          type: Directory
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-core
+  namespace: mindx-dl
+spec:
+  selector:
+    app: agent-core
+  ports:
+  - name: http # kubectl 插件 / CLI (9700)
+    port: 9700
+    targetPort: 9700
+  - name: grpc # node-collector → agent 上报 (9710)
+    port: 9710
+    targetPort: 9710

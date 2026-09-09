@@ -1,0 +1,53 @@
+// diag.proto - the collect protocol between agent and node-collector (async report model).
+//
+// For large clusters (hundreds of nodes, single-node collect+cleanup ~10 min):
+//   1. agent --TriggerCollect--> collector   short-lived connection, returns accepted immediately, no keep-alive;
+//   2. collector collects + parses in the background, then --UploadResult--> agent, actively reporting the tar.gz.
+// The agent aggregates event-driven: centralized diagnosis starts when all nodes report (or on timeout).
+syntax = "proto3";
+
+package diag;
+
+// Collector-side service: receives collect triggers (one per node on the DaemonSet).
+service Collector {
+  // Trigger one node's collect: returns accepted immediately; the collector executes asynchronously in the background and reports the result.
+  rpc TriggerCollect(CollectRequest) returns (CollectAck);
+}
+
+// Agent-side service: receives collection results reported by the collector.
+service Uploader {
+  // Report a collection result: client-streaming chunks the tar.gz.
+  // The first chunk carries node/job/ok/error metadata + the first data chunk; later chunks carry only data.
+  rpc UploadResult(stream UploadRequest) returns (UploadAck);
+}
+
+// Reference to a single pod to be collected (no host_paths: the collector's local pathmap resolves them).
+message PodRef {
+  string ns = 1;
+  string name = 2;
+  string pod_uid = 3;
+}
+
+message CollectRequest {
+  string node = 1;            // target node name
+  string job = 2;             // job identifier (correlated on report; the agent aggregates by it)
+  repeated PodRef pods = 3;   // pods to collect on this node
+}
+
+message CollectAck {
+  bool accepted = 1;          // whether accepted
+  string message = 2;         // accept note / rejection reason
+}
+
+message UploadRequest {
+  string node = 1;            // reporting node (first chunk only)
+  string job = 2;             // job identifier (first chunk only)
+  bool ok = 3;                // whether the collect succeeded (first chunk only)
+  string error = 4;           // failure reason (when ok=false)
+  bytes data = 5;             // tar.gz chunk
+  string namespace = 6;       // task namespace (first chunk only; the agent organizes storage by ns_job)
+}
+
+message UploadAck {
+  bool received = 1;          // whether received successfully
+}

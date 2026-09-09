@@ -1,0 +1,195 @@
+# --- RBAC: node-collector (namespace: mindx-dl) ---
+# collector: 不直接 watch pod, 挂载路径由 agent-core 写全局 CM, collector watch CM 缓存
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: node-collector
+  namespace: mindx-dl
+---
+# collector watch 采集契约 CM (collect-manifest, cluster-system) 实时感知覆盖,
+# 默认值来自镜像内置 /home/hwMindX/collect_manifest.yaml; 命名空间级最小权限 (get/list/watch 该单 CM, 不挂载)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: node-collector-manifest
+  namespace: cluster-system
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["collect-manifest"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: node-collector-manifest
+  namespace: cluster-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: node-collector-manifest
+subjects:
+  - kind: ServiceAccount
+    name: node-collector
+    namespace: mindx-dl
+---
+# collector watch 全局 pathmap CM (clusterops-pathmap, cluster-system) 供数,
+# 命名空间级最小权限 (list+watch 该单 CM, 不读其他 CM)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: node-collector-pathmap
+  namespace: cluster-system
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["clusterops-pathmap"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: node-collector-pathmap
+  namespace: cluster-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: node-collector-pathmap
+subjects:
+  - kind: ServiceAccount
+    name: node-collector
+    namespace: mindx-dl
+---
+# --- collector DaemonSet (每 NPU 节点一份) ---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-collector
+  namespace: mindx-dl
+spec:
+  selector:
+    matchLabels:
+      app: node-collector
+  template:
+    metadata:
+      labels:
+        app: node-collector
+    spec:
+      serviceAccountName: node-collector # 只读集群 CM (采集契约 collect-manifest / pathmap)
+      automountServiceAccountToken: true
+      nodeSelector:
+        workerselector: dls-worker-node # 与 device-plugin selector 保持一致；NPU 节点已有此 label
+      tolerations:
+      - operator: Exists # 容忍所有污点，确保上计算节点
+      # 不用 hostNetwork: agent 走 pod IP (CNI pod-to-pod), 不占宿主网络命名空间
+      containers:
+      - name: node-collector
+        image: ascend-clusterops-agent:v26.2.0
+        # 权限最小化: privileged 仅因 npu-smi/驱动访问/msnpureport 需要 (与 npu-exporter/device-plugin
+        # 一致, 仓库内 Ascend DaemonSet 均如此; 进一步降级见 RFC 风险节)。其余全部收紧:
+        # seccomp=RuntimeDefault, 只读根文件系统, 只读挂载宿主日志/驱动。
+        # 注意: privileged=true 时 allowPrivilegeEscalation 必须为 true (不能设 false)。
+        # SA token 挂载 (只读 CM 权限)。
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          privileged: true
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+        ports:
+        - containerPort: 9720 # gRPC 采集服务 (agent 下发 TriggerCollect)
+        env:
+        - name: SERVICE # 合并镜像后按角色启动 (deploy/Dockerfile)
+          value: node-collector
+        - name: AGENT_ADDR # agent 上报服务 (service.namespace:9710, 集群内 DNS 域名)
+          value: agent-core.mindx-dl:9710
+        - name: COLLECTOR_PORT # 本采集服务 gRPC 端口
+          value: "9720"
+        - name: COLLECT_MANIFEST
+          value: /home/hwMindX/collect_manifest.yaml
+        - name: ASCEND_FD_BIN
+          value: ascend-fd
+        - name: LD_LIBRARY_PATH # msnpureport 运行需 Ascend 驱动库 (与 npu-exporter 一致)
+          value: /usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common
+        - name: PYTHONDONTWRITEBYTECODE # 只读根文件系统下禁 pycache
+          value: "1"
+        - name: PYTHONPYCACHEPREFIX
+          value: /tmp/pycache
+        - name: HOME # joblib 等缓存落到 /tmp
+          value: /tmp
+        volumeMounts:
+        - name: hostlog
+          mountPath: /var/log/ascend
+          readOnly: true
+        - name: hostsyslog
+          mountPath: /var/log
+          readOnly: true
+        - name: log-node-collector # 日志落盘 /var/log/mindx-dl/node-collector (宿主导出, 可写)
+          mountPath: /var/log/mindx-dl/node-collector
+          subPath: mindx-dl/node-collector
+        - name: ascend-root # Ascend 全量 (driver/toolkit 及 msnpureport 运行依赖, 只读)
+          mountPath: /usr/local/Ascend
+          readOnly: true
+        - name: msnpureport # 单文件挂载: device_log 需执行 /usr/bin/msnpureport --docker
+          mountPath: /usr/bin/msnpureport
+          readOnly: true
+        - name: dmesg # 单文件挂载: host_log 需执行宿主机 dmesg (宿主 /bin/dmesg 挂到 /usr/bin/dmesg)
+          mountPath: /usr/bin/dmesg
+          readOnly: true
+        - name: ascend-dcmi
+          mountPath: /usr/local/dcmi
+          readOnly: true
+        - name: tmp # 可写 scratch (parse 输出/缓存)
+          mountPath: /tmp
+        - name: work-root # collect/parse artifacts under /user/clusterops/node-collector (宿主导出, 需预先创建, 见 README 部署)
+          mountPath: /user/clusterops/node-collector
+      volumes:
+      - name: hostlog
+        hostPath:
+          path: /var/log/ascend
+          type: Directory
+      - name: hostsyslog
+        hostPath:
+          path: /var/log
+          type: Directory
+      - name: log-node-collector
+        hostPath:
+          path: /var/log
+          type: Directory
+      - name: ascend-root
+        hostPath:
+          path: /usr/local/Ascend
+          type: Directory
+      - name: msnpureport
+        hostPath:
+          path: /usr/bin/msnpureport
+          type: File
+      - name: dmesg
+        hostPath:
+          path: /bin/dmesg
+          type: File
+      - name: ascend-dcmi
+        hostPath:
+          path: /usr/local/dcmi
+          type: Directory
+      - name: tmp
+        emptyDir: {}
+      - name: work-root
+        hostPath:
+          path: /user/clusterops/node-collector
+          type: Directory
+---
+# agent 代码里直接 list pod 拿 podIP，不强制依赖此 service）
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-collector
+  namespace: mindx-dl
+spec:
+  clusterIP: None
+  selector:
+    app: node-collector
+  ports:
+  - port: 9720
+    targetPort: 9720
