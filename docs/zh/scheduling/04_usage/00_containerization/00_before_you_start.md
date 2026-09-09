@@ -33,6 +33,7 @@
 - Atlas 850E 超节点
 - Atlas 650E 服务器
 - Atlas 950 SuperPoD 超节点
+- Atlas 950 SuperPoD Flex
 
 ## 使用场景<a name="section124697813416"></a>
 

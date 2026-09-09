@@ -31,3 +31,4 @@
 - Atlas 800I A3 超节点服务器
 - Atlas 350 加速卡
 - Atlas 950 SuperPoD 超节点
+- Atlas 950 SuperPoD Flex
