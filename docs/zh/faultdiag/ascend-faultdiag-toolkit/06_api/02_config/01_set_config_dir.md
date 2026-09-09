@@ -17,7 +17,7 @@
 |------|-----|------|---------------------------------------------------------------------|
 | `<目录路径>` | string | 是 | 配置文件所在目录路径。目录内需包含 `LLD.xlsx`、`threshold_config.json`。 |
 
-## LLD.xlsx 文件结构
+## LLD.xlsx文件说明
 
 需要提供 `LLD.xlsx` 文件，样例文件可参考：[LLD.xlsx](../../../../resource/LLD.xlsx)。该文件需包含两个 Sheet：
 
@@ -26,9 +26,9 @@
 | 灵衢L1网络对应关系 | 服务器、机房名称、机柜编号、主机 SN、L1 名称、L1_IP、L1_SN | 描述主机与 L1 交换机的对应关系 |
 | 灵衢L2网络对应关系 | 设备名、机房名称、机柜编号、管理 IP 配置、SN | 描述 L2 交换机的机房位置信息 |
 
-## 阈值配置文件说明
+## threshold_config.json文件说明
 
-阈值配置文件 `threshold_config.json` 用于覆盖各诊断项的默认阈值，便于根据实际环境调整判障标准。该文件需放置在 `set_config_dir` 设置的配置目录下，工具加载配置时自动读取；未放置该文件时使用代码内置默认阈值。完整示例文件可参考[threshold_config.json](../../../../resource/threshold_config.json)。
+阈值配置文件 `threshold_config.json` 用于覆盖各诊断项的默认阈值，便于根据实际环境调整判障标准。该文件需放置在 `set_config_dir` 设置的配置目录下，工具加载配置时自动读取；未放置该文件时使用代码内置默认阈值。完整示例文件请参见[threshold_config.json](../../../../resource/threshold_config.json)。
 
 配置文件为 JSON 对象，每个配置项对应一个阈值名称，阈值字段统一嵌套在 `threshold` 子对象内，例：
 
@@ -82,15 +82,15 @@
 说明：
 
 - `DUPLEX_THRESHOLD`、`NET_HEALTH_THRESHOLD`、`LINK_STATUS_THRESHOLD`、`OPTICAL_PRESENT_THRESHOLD`、`NIC_LANE_FLAG` 为字符串正常值判定：仅当实际值等于配置的正常值时判定为正常，其余均判定为异常。
-- `HCCN_LINK_DOWN_CNT` 超过预警阈值判定亚健康，超过告警（故障）阈值判定异常。
-- 网卡（NIC）相关阈值仅 Ascend 950系列产品使用。
+- `HCCN_LINK_DOWN_CNT` 超过预警阈值判定为亚健康，超过告警（故障）阈值判定为异常。
+- 网卡（NIC）相关阈值仅<term>Ascend 950 系列产品</term>使用。
 
 配置校验规则：
 
-- 未配置的字段保持代码内置默认值；值为空（`null` 或空白字符串）时同样视为未配置，使用默认值。
+- 未配置的字段保持默认值；值为空（`null` 或空白字符串）时表示未配置，使用默认值。
 - 数值字段（`low_value_alarm` 等）必须为合法数值类字符串，否则该字段被忽略。
 - `desc`/`unit`/`normal_value_alarm` 必须为字符串，非字符串时该字段被忽略。
-- `desc` 超过 128 字符、`unit` 超过 16 字符时该字段被忽略。不建议修改`desc`和`unit`，因为会影响判断和结果展示。
+- `desc` 超过128字符、`unit` 超过16字符时该字段被忽略。不建议修改`desc`和`unit`，否则会影响判断和结果展示。
 - 未知字段名、非对象配置项等非法内容会被忽略并记录告警日志，不影响其他配置生效。
 
 >[!NOTE]

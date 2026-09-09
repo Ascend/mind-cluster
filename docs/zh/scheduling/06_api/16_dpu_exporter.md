@@ -17,7 +17,7 @@
 
 ## 响应说明<a name="section_dpu_metrics_response"></a>
 
-按照Prometheus的专用格式返回数据，仅供参考，以实际回显为准。DPU Exporter采集两类指标：
+按照Prometheus的专用格式返回数据，仅供参考，以实际回显为准。DPU Exporter采集以下两类指标：
 
 - [全局指标（DPU卡级）](#section_global_metrics)
 - [Interface级指标](#section_interface_metrics)

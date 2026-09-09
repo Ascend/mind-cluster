@@ -1,4 +1,4 @@
-﻿# 快速入门<a name="ZH-CN_TOPIC_0000002511346939"></a>
+# 快速入门<a name="ZH-CN_TOPIC_0000002511346939"></a>
 
 本文档提供两种快速入门场景，帮助用户快速上手Ascend NPU集群调度：
 
@@ -19,7 +19,7 @@
 
     >[!NOTE]
     >
-    >- 参见[《Ascend Training Solution 版本配套表》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software)，确认固件与驱动的版本与集群调度组件是否配套。
+    >- 参见《[Ascend Training Solution 版本配套表](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software)》，确认固件与驱动的版本与集群调度组件是否配套。
     >- NPU驱动和固件版本可通过**npu-smi info -t board -i** <i>NPU ID</i>命令查询。回显信息中的“Software Version”字段值表示NPU驱动版本，“Firmware Version”字段值表示NPU固件版本。
 
 ## 10分钟快速入门
@@ -110,7 +110,7 @@
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-device-plugin_${VERSION}_linux-aarch64.zip
         unzip Ascend-mindxdl-device-plugin_${VERSION}_linux-aarch64.zip
 
-        # 部署Device Plugin，若VERSION低于26.1.0版本，yaml文件为device-plugin-910-v${VERSION}.yaml
+        # 部署Ascend Device Plugin，若VERSION低于26.1.0版本，YAML文件为device-plugin-910-v${VERSION}.yaml
         kubectl apply -f device-plugin-v${VERSION}.yaml
         ```
 
@@ -344,7 +344,7 @@
         wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/pytorch_standalone_acjob_quickstart.yaml
         ```
 
-    4. （可选）准备数据集。pytorch_standalone_acjob_quickstart.yaml中默认设置了`--dummy`参数，能自动为训练任务生成随机数据集，无需真实数据集即可启动训练任务。若用户需要使用真实数据集，请删掉此yaml文件中的`--dummy`参数，然后自行准备ResNet-50对应的数据集，使用时请遵守对应规范，将数据集上传到”/data/atlas_dls/public/dataset/resnet50/imagenet“。
+    4. （可选）准备数据集。pytorch_standalone_acjob_quickstart.yaml中默认设置了`--dummy`参数，能自动为训练任务生成随机数据集，无需真实数据集即可启动训练任务。若用户需要使用真实数据集，请删除该YAML文件中的`--dummy`参数，然后自行准备ResNet-50对应的数据集，使用时请遵守对应规范，将数据集上传到“/data/atlas_dls/public/dataset/resnet50/imagenet”。
 
         ```shell
         mkdir -p /data/atlas_dls/public/dataset/resnet50/imagenet

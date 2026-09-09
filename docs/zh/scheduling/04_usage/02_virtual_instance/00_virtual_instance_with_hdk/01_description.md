@@ -167,8 +167,8 @@
 ## 使用说明<a name="section1296713336303"></a>
 
 - 静态虚拟化、动态虚拟化基于HDK实现，通过HDK接口将芯片切分成vNPU后，挂载到容器中使用。
-- 如果使用动态虚拟化功能，请直接参见[动态vNPU调度(推理)](./05_dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md)章节，不需要提前使用npu-smi命令创建vNPU。
-- 如果使用静态虚拟化功能，需要先参见[创建vNPU](./04_static_vnpu_scheduling/01_creating_vnpu.md)，再进行挂载到容器操作。
+- 如果使用动态虚拟化功能，请直接参见[动态vNPU调度](./05_dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md)章节，不需要提前使用npu-smi命令创建vNPU。
+- 如果使用静态虚拟化功能，需要先[创建vNPU](./04_static_vnpu_scheduling/01_creating_vnpu.md)，再进行挂载到容器操作。
 - npu-smi工具相关命令的详细说明请参见《Atlas A3 中心推理和训练硬件 npu-smi 命令参考》中的“[昇腾虚拟化实例（AVI）相关命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100591789/2577eeb3)”章节。
 
 ## 使用约束<a name="section911013420264"></a>
@@ -176,8 +176,8 @@
 - 物理NPU虚拟化出vNPU后，不支持再将该物理NPU挂载到容器使用，也不支持再将该物理NPU直通到虚拟机使用。
 - 一个vNPU只能被一个任务容器使用，不支持多个任务容器使用同一个vNPU。
 - Atlas 300I Duo 推理卡上两个芯片的工作模式必须一致。即均使用虚拟化实例功能，或均整卡使用。请根据业务自行规划。
-- 虚拟化实例模板用于对整台服务器上所有NPU进行资源切分，不支持不同规格的标卡混插。例如：Atlas 300V Pro 视频解析卡支持24GB和48GB内存规格，不支持这两种内存规格的卡混插进行虚拟化；不支持30个AICore的Atlas训练系列产品和32个AICore的Atlas训练系列产品混插。
-- 当服务器为Atlas训练系列产品时，仅NPU芯片工作在AMP模式下支持虚拟化功能，不支持SMP模式。查询和设置NPU芯片工作模式的操作步骤如下（确保服务器操作系统处于下电状态）：
+- 虚拟化实例模板用于对整台服务器上所有NPU进行资源切分，不支持不同规格的标卡混插。例如：Atlas 300V Pro 视频解析卡支持24GB和48GB内存规格，不支持这两种内存规格的卡混插进行虚拟化；不支持30个AICore的<term>Atlas 训练系列产品</term>和32个AICore的<term>Atlas 训练系列产品</term>混插。
+- 当服务器为<term>Atlas 训练系列产品</term>时，仅NPU芯片工作在AMP模式下支持虚拟化功能，不支持SMP模式。查询和设置NPU芯片工作模式的操作步骤如下（确保服务器操作系统处于下电状态）：
 
     1. 登录iBMC命令行。
     2. 执行**ipmcget -d npuworkmode**命令查询NPU芯片的工作模式，若为AMP模式，则无需切换。

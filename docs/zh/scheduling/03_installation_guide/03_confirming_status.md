@@ -79,7 +79,7 @@
      执行以下命令，挂载物理芯片。
 
        ```shell
-       ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 docker.io/library/ubuntu:22.04 containerID
+       ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 docker.io/library/ubuntu:22.04 {containerID}
        ```
 
    >[!NOTE]

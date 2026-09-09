@@ -14,7 +14,7 @@
     <tr>
         <td><term>Atlas 训练系列产品</term>（30或32个AICore）</td>
         <td>虚拟化实例模板包括：vir02、vir04、vir08、vir16。</td>
-        <td><ul><li>vir后面的数字表示AICore数量。</li></ul></td>
+        <td>vir后面的数字表示AICore数量。</td>
     </tr>
     <tr>
         <td><term>Atlas 推理系列产品</term>（8个AICore）</td>

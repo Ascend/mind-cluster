@@ -361,9 +361,9 @@ Kubernetes需要感知RDMA网络设备资源信息来实现资源调度。为了
 > 业务容器使用1825 DPU设备时，除了需要组件挂载外，还需要：
 >
 > - 配置主机网络 `hostNetwork: true`
-> - 配置用户态驱动，两种方式任选其一：
->   1. 在镜像中安装1825 DPU的OFED驱动
->   2. 启动容器后从主机挂载1825 DPU的OFED驱动
+> - 配置用户态驱动，以下两种方式任选其一：
+>   - 在镜像中安装1825 DPU的OFED驱动
+>   - 启动容器后从主机挂载1825 DPU的OFED驱动
 
 **工作模式<a name="section15761025111720"></a>**
 
@@ -438,7 +438,7 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 
 ![](../../figures/scheduling/组件上下游依赖-9.png "组件上下游依赖-9")
 
-1. 从网卡管理工具和文件接口分别获取DPU全局指标和interface级指标。
+1. 从网卡管理工具和文件接口分别获取DPU全局指标和Interface级指标。
 2. 将获取到的指标转换为Prometheus指标格式。
 3. 提供Prometheus指标接口，用于监控DPU的运行状态与统计指标。
 

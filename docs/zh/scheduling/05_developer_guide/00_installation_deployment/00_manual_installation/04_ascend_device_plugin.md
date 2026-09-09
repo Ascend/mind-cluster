@@ -115,9 +115,9 @@
 
     - 其他类型节点，修改对应启动YAML文件中Ascend Device Plugin的启动参数。
 
-4. <a name="step_npu_nic_mapping"></a>（A5可选）若计算节点存在1825网卡（DPU），Ascend Device Plugin通过`npu-nic-mapping.json`读取NPU与1825网卡的连接关系，用于生成A5设备的RoCE通信地址。软件包内的默认配置不一定匹配节点实际拓扑，建议按节点实际情况自行创建映射文件并挂载到容器内。
+4. <a name="step_npu_nic_mapping"></a>（<term>Ascend 950 系列产品</term>可选）若计算节点存在1825网卡（DPU），Ascend Device Plugin通过`npu-nic-mapping.json`读取NPU与1825网卡的连接关系，用于生成<term>Ascend 950 系列产品</term>的RoCE通信地址。软件包内的默认配置不一定匹配节点实际拓扑，建议按节点实际情况自行创建映射文件并挂载到容器内。
 
-    - 从驱动侧获取NPU与1825网卡的物理连接关系。
+    1. 从驱动侧获取NPU与1825网卡的物理连接关系。
 
         1825网卡为UB网络设备，在系统中以以太网接口形式存在，执行以下命令可查询各RDMA设备对应的以太网接口名称（例如ens0f0）。
 
@@ -125,7 +125,7 @@
         ls /sys/class/infiniband/*/device/net/
         ```
 
-    - 创建本节点的`npu-nic-mapping.json`，按获取的连接关系填写，文件格式如下所示。
+    2. 创建本节点的`npu-nic-mapping.json`，按获取的连接关系填写，文件格式如下所示。
 
         ```json
         {
@@ -144,10 +144,10 @@
 
         字段说明：
         - `npuNics`：NPU与网卡的映射列表。
-        - `npuId`：NPU的物理ID，节点上每颗NPU均需配置一条对应记录。
+        - `npuId`：NPU的物理ID，节点上每个NPU均需配置一条对应记录。
         - `nicNames`：与该NPU连接的1825网卡接口名称列表，按优先级从高到低排列。组件将依次遍历该列表，使用第一个存在有效IP地址的网卡生成RoCE通信地址。
 
-    - 在Ascend Device Plugin的YAML中增加以下挂载声明，将创建的文件挂载到容器内固定路径`/user/mindx-dl/npu/npu-nic-mapping.json`（该路径不可修改）。
+    3. 在Ascend Device Plugin的YAML中增加以下挂载声明，将创建的文件挂载到容器内固定路径`/user/mindx-dl/npu/npu-nic-mapping.json`（该路径不可修改）。
 
         ```yaml
         volumeMounts:
@@ -368,7 +368,7 @@
 |-logLevel|int|0|日志级别：<ul><li>-1：debug</li><li>0：info</li><li>1：warning</li><li>2：error</li><li>3：critical</li></ul></div></div>|
 |-maxAge|int|7|日志备份时间限制，取值范围为7~700，单位为天。|
 |-logFile|string|/var/log/mindx-dl/devicePlugin/devicePlugin.log|非边缘场景日志文件。fdFlag设置为false时生效。<p>单个日志文件超过20 MB时会触发自动转储功能，文件大小上限不支持修改。转储后文件的命名格式为：devicePlugin-触发转储的时间.log，如：devicePlugin-2023-10-07T03-38-24.402.log。</p>|
-|-hotReset|int|-1|设备热复位功能参数。开启此功能，芯片发生故障后，Ascend Device Plugin会进行热复位操作，使芯片恢复健康。<ul><li>-1：关闭芯片复位功能</li><li>0：开启推理设备复位功能</li><li>1：开启训练设备在线复位功能</li><li>2：开启训练/推理设备离线复位功能</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>取值为1对应的功能已经日落，请配置其他取值。</p></div></div><p>该参数支持的设备：</p><ul><li>Atlas 800 训练服务器（型号 9000）（NPU满配）</li><li>Atlas 800 训练服务器（型号 9010）（NPU满配）</li><li>Atlas 900T PoD Lite</li><li>Atlas 900 PoD（型号 9000）</li><li>Atlas 800T A2 训练服务器</li><li>Atlas 900 A2 PoD 集群基础单元</li><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li><li>Atlas 850E 超节点</li><li>Atlas 650E 服务器</li><li>Atlas 950 SuperPoD 超节点</li><li>Atlas 350 加速卡</li><li>Atlas 300I Pro 推理卡</li><li>Atlas 300V 视频解析卡</li><li>Atlas 300V Pro 视频解析卡</li><li>Atlas 300I Duo 推理卡</li><li>Atlas 300I 推理卡（型号 3000）（整卡）</li><li>Atlas 300I 推理卡（型号 3010）</li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li>Atlas 800I A3 超节点服务器</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>针对Atlas 300I Duo 推理卡形态硬件，仅支持按卡复位，即两颗芯片会同时复位。</li><li>Atlas 800I A2 推理服务器存在以下两种热复位方式，一台Atlas 800I A2 推理服务器只能使用一种热复位方式，由集群调度组件自动识别使用哪种热复位方式。<ul><li>方式一：若设备上不存在HCCS环，执行推理任务中，当NPU出现故障，Ascend Device Plugin等待该NPU空闲后，对该NPU进行复位操作。</li><li>方式二：若设备上存在HCCS环，执行推理任务中，当服务器出现一个或多个故障NPU，Ascend Device Plugin等待环上的NPU全部空闲后，一次性复位环上所有的NPU。</li></ul></li><li>Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器、Atlas 800I A3 超节点服务器上执行热复位时会复位指定芯片所在的NPU模组及与其具备网口互助关系的NPU模组。</li><li>热复位恢复无法覆盖所有故障，部分故障可能恢复失败，例如，故障导致掉卡，device OS挂死等故障。</li></ul></div></div>|
+|-hotReset|int|-1|设备热复位功能参数。开启此功能，芯片发生故障后，Ascend Device Plugin会进行热复位操作，使芯片恢复健康。<ul><li>-1：关闭芯片复位功能</li><li>0：开启推理设备复位功能</li><li>1：开启训练设备在线复位功能</li><li>2：开启训练/推理设备离线复位功能</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>取值为1对应的功能已经日落，请配置其他取值。</p></div></div><p>该参数支持的设备：</p><ul><li>Atlas 800 训练服务器（型号 9000）（NPU满配）</li><li>Atlas 800 训练服务器（型号 9010）（NPU满配）</li><li>Atlas 900T PoD Lite</li><li>Atlas 900 PoD（型号 9000）</li><li>Atlas 800T A2 训练服务器</li><li>Atlas 900 A2 PoD 集群基础单元</li><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li><li>Atlas 850E 超节点</li><li>Atlas 650E 服务器</li><li>Atlas 950 SuperPoD 超节点</li><li>Atlas 350 加速卡</li><li>Atlas 300I Pro 推理卡</li><li>Atlas 300V 视频解析卡</li><li>Atlas 300V Pro 视频解析卡</li><li>Atlas 300I Duo 推理卡</li><li>Atlas 300I 推理卡（型号 3000）（整卡）</li><li>Atlas 300I 推理卡（型号 3010）</li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li>Atlas 800I A3 超节点服务器</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>针对Atlas 300I Duo 推理卡形态硬件，仅支持按卡复位，即两颗芯片会同时复位。</li><li>Atlas 800I A2 推理服务器存在以下两种热复位方式，一台Atlas 800I A2 推理服务器只能使用一种热复位方式，由集群调度组件自动识别使用哪种热复位方式。<ul><li>方式一：若设备上不存在HCCS环，执行推理任务中，当NPU出现故障，Ascend Device Plugin等待该NPU空闲后，对该NPU进行复位操作。</li><li>方式二：若设备上存在HCCS环，执行推理任务中，当服务器出现一个或多个故障NPU，Ascend Device Plugin等待环上的NPU全部空闲后，一次性复位环上所有的NPU。</li></ul></li><li>Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器、Atlas 800I A3 超节点服务器上执行热复位时会复位指定芯片所在的NPU模组及与其具备网口互助关系的NPU模组。</li><li>热复位恢复无法覆盖所有故障，部分故障可能恢复失败，例如，故障导致掉卡，device OS卡死等故障。</li></ul></div></div>|
 |-linkdownTimeout|int|30|网络linkdown超时时间，单位秒，取值范围为1~30。<p>该参数取值建议与用户在训练脚本中配置的HCCL_RDMA_TIMEOUT时间一致。如果是多任务，建议设置为多任务中HCCL_RDMA_TIMEOUT的最小值。</p>|
 |-enableSlowNode|bool|false|是否启用慢节点检测（劣化诊断）功能。<ul><li>true：开启。</li><li>false：关闭。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>关于劣化诊断的详细说明请参见《iMaster CCAE 产品文档》的“[劣化诊断](https://support.huawei.com/hedex/hdx.do?docid=EDOC1100445519&amp;id=ZH-CN_TOPIC_0000002147436540)”章节。</p></div></div>|
 |-dealWatchHandler|bool|false|当informer链接因异常结束时，是否需要刷新本地的Pod informer缓存。<ul><li>true：刷新Pod informer缓存。</li><li>false：不刷新Pod informer缓存。</li></ul>|

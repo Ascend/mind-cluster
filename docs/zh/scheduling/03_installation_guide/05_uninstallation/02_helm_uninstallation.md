@@ -24,20 +24,19 @@
 ## 卸载前准备<a name="section_helm_upgrade_prepare"></a>
 
 1. 在管理节点安装Helm命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在Helm 3.x版本，可以跳过此步骤。
-   - 安装Helm前请参考[Helm版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询Helm与K8s间的版本兼容性，根据实际情况选择Helm版本。
-   - 请参考[Helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装Helm命令。
+   1. 安装Helm前请参考[Helm版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询Helm与K8s间的版本兼容性，根据实际情况选择Helm版本。
+   2. 请参考[Helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装Helm命令。
+   3. 安装成功后，执行如下命令检查Helm版本：
 
-   安装成功后，执行如下命令检查Helm版本：
+        ```bash
+        helm version
+        ```
 
-   ```bash
-   helm version
-   ```
+        回显示例如下：
 
-   回显示例如下：
-
-   ```ColdFusion
-   version.BuildInfo{Version:"v3.17.0", GitCommit:"065003584b62a79f329070a946936374936021d6", GitTreeState:"clean",    GoVersion:"go1.19.5"}
-   ```
+        ```ColdFusion
+        version.BuildInfo{Version:"v3.17.0", GitCommit:"065003584b62a79f329070a946936374936021d6", GitTreeState:"clean",    GoVersion:"go1.19.5"}
+        ```
 
 2. 确认组件是否通过Helm管理<a name="section_check_helm"></a>。
    1. 登录K8s管理节点，执行以下命令，查看当前集群中通过Helm管理的Release列表。
@@ -56,7 +55,7 @@
 
    2. 根据回显结果判断组件是否通过Helm管理。
        - 若回显中存在名称为**mindcluster**和**mindcluster-crds**的Release，且STATUS为**deployed**，表示组件已通过Helm管理，可继续执行Helm卸载操作。
-       - 若回显中不存在上述Release，表示组件未通过Helm管理，请参照[手动卸载](../../05_developer_guide/00_installation_deployment/02_uninstallation.md#ZH-CN_TOPIC_0000002511426389)进行卸载。
+       - 若回显中不存在上述Release，表示组件未通过Helm管理，请参考[手动卸载](../../05_developer_guide/00_installation_deployment/02_uninstallation.md#ZH-CN_TOPIC_0000002511426389)进行卸载。
 
 ## 执行卸载<a name="section_exec_uninstall"></a>
 
@@ -104,7 +103,7 @@
     release "mindcluster-crds" uninstalled
     ```
 
-4. （可选）删除命名空间。若mindx-dl和cluster-system命名空间下已无其他资源，可执行如下命令删除命名空间。删除命名空间会删除该namespace下的所有资源，请确认后再执行。
+4. （可选）删除命名空间。若mindx-dl和cluster-system命名空间下已无其他资源，可执行如下命令删除命名空间。删除命名空间会删除该命名空间下的所有资源，请确认后再执行。
 
     ```bash
     kubectl delete ns mindx-dl cluster-system

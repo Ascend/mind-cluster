@@ -535,12 +535,13 @@ cp -r ~/ttp_log {采集目录}/dl_log/ttp_log
 
 Ascend 950 系列产品 LCNE 组件运行时，需要将日志解压至 `采集目录/lcne_log/` 下。可按照以下方式进行采集：
 
-- server 形态
+- 服务器形态
   1. 进入 <term>Ascend 950 系列产品</term> 1213 前台，执行 **collect diagnostic information** 命令采集日志。
   2. 进入 <term>Ascend 950 系列产品</term> 1213 后台的 `/opt/vrpv8/home/` 目录下获取 `diagnostic_information_*.zip` 压缩日志文件。需要手动解压所有压缩日志。
 
-- pod 形态
-  1. 登录 PoDManager 一键收集 UBM 日志，需要手动解压所有压缩日志。日志结构如下：
+- PoD形态
+
+   登录 PoDManager 一键收集 UBM 日志，需要手动解压所有压缩日志。日志结构如下：
 
   ```text
   |--LCNE采集日志

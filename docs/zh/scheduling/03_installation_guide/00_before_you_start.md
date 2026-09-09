@@ -23,7 +23,7 @@ Elastic Agent、TaskD和MindIO组件需部署在容器内，详细安装步骤�
 
 >[!NOTE]
 >MindCluster提供Volcano组件，该组件在开源Volcano上集成了昇腾插件Ascend-volcano-plugin。
->MindCluster提供K8s Rdma Shared Dev Plugin组件，该组件在开源K8s Rdma Shared Dev Plugin上适配了华为UB RDMA DPU设备发现及故障检测。
+>MindCluster提供K8s RDMA Shared Dev Plugin组件，该组件在开源K8s RDMA Shared Dev Plugin上适配了华为UB RDMA DPU设备发现及故障检测。
 
 ## 日志路径说明<a name="section4837236204914"></a>
 

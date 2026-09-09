@@ -1,6 +1,6 @@
 # 诊断项参考
 
-诊断项按设备类型分类，每个诊断项均明确了其在线命令来源和离线日志路径。同一设备可能涉及多个诊断项，每个诊断项对应一个或多个在线命令与离线日志。工具共内置 **50 项** 诊断项，覆盖主机、BMC、交换机、HCCS 及通用维度。其中 Ascend 950 产品新增 10 项诊断项（6 项光模块 + 4 项 NIC）。
+诊断项按设备类型分类，每个诊断项均明确了其在线命令来源和离线日志路径。同一设备可能涉及多个诊断项，每个诊断项对应一个或多个在线命令与离线日志。工具共内置 **50 项** 诊断项，覆盖主机、BMC、交换机、HCCS 及通用维度。其中Ascend 950 系列产品新增 10 项诊断项（6 项光模块 + 4 项 NIC）。
 
 ## 诊断项索引
 
@@ -139,9 +139,9 @@
 >[!NOTE]
 > Host 日志 V1/V2/V3 版本详情请参考 [host 离线日志采集](../05_usage/02_log_collection.md#host-offline-log)。
 
-### Ascend 950 产品主机侧额外诊断
+### Ascend 950 系列产品主机侧额外诊断
 
-Ascend 950 产品的主机侧诊断项与 Atlas A3 对应项的诊断逻辑一致，但光模块诊断命令变更为按光模块编号逐个采集：`hccn_tool -g -optical -i {npu_id} -optical_id {optical_id}`。此外，Ascend 950 新增网卡（NIC）SFP lane 级诊断，命令来源为 `hinicadm5 sfp -i {card_name} -p {port_id}`。
+Ascend 950 系列产品的主机侧诊断项与 Atlas A3 系列产品对应项的诊断逻辑一致，但光模块诊断命令变更为按光模块编号逐个采集：`hccn_tool -g -optical -i {npu_id} -optical_id {optical_id}`。此外，Ascend 950 系列产品新增网卡（NIC）SFP lane 级诊断，命令来源为 `hinicadm5 sfp -i {card_name} -p {port_id}`。
 
 <table>
 <thead>

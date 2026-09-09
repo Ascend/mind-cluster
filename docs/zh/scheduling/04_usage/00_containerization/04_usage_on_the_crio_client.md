@@ -8,7 +8,7 @@
 
 ## 使用示例<a name="section148905517123"></a>
 
-示例中的image-name:tag为镜像名称与标签，如“ascend-pytorch:pytorch\_TAG”。crictl是CRI-O的标准客户端，启动容器需要先准备Pod Sandbox配置文件（如pod-config.json）和容器配置文件（如container-config.json），再通过`crictl run`命令基于这两个配置文件创建并启动容器。以下示例中Pod Sandbox配置可复用，内容如下：
+crictl是CRI-O的标准客户端，启动容器需要先准备Pod Sandbox配置文件（如pod-config.json）和容器配置文件（如container-config.json），再通过`crictl run`命令基于这两个配置文件创建并启动容器。以下示例中Pod Sandbox配置可复用，内容如下：
 
 ```json
 {
@@ -28,7 +28,9 @@
 ```
 
 > [!NOTE]
-> 非k8s场景下，Pod Sandbox配置中`linux.security_context.namespace_options.pid`设为`1`（CONTAINER）表示容器使用独立PID namespace，避免依赖pause容器；CRI-O默认开启`drop_infra_ctr`会丢弃pause容器，若`linux.security_context.namespace_options.pid`取缺省值`0`（POD，共享pause容器的PID namespace）可能导致容器创建失败。关于CRI-O配置详情请参考[CRI-O官方文档](https://github.com/cri-o/cri-o/blob/main/docs/crio.conf.5.md)。
+> 非K8s场景下，Pod Sandbox配置中`linux.security_context.namespace_options.pid`设置为`1`（CONTAINER）表示容器使用独立PID namespace，避免依赖pause容器；CRI-O默认开启`drop_infra_ctr`会丢弃pause容器，若`linux.security_context.namespace_options.pid`为缺省值`0`（POD，共享pause容器的PID namespace），可能会导致容器创建失败。关于CRI-O配置详情请参见[CRI-O官方文档](https://github.com/cri-o/cri-o/blob/main/docs/crio.conf.5.md)。
+
+以下示例中的\{image-name:tag\}为镜像名称与标签，如“ascend-pytorch:pytorch\_TAG”。
 
 - 示例1：启动容器时，挂载物理芯片ID为0的芯片。
 
@@ -107,6 +109,8 @@
     }
     ```
 
+    拉取镜像并启动容器：
+
     ```shell
     crictl pull {image-name:tag}
     crictl run container-config.json pod-config.json
@@ -148,6 +152,8 @@
       }
     }
     ```
+
+    拉取镜像并启动容器：
 
     ```shell
     crictl pull {image-name:tag}
@@ -191,6 +197,8 @@
     }
     ```
 
+    拉取镜像并启动容器：
+
     ```shell
     crictl pull {image-name:tag}
     crictl run container-config.json pod-config.json
@@ -230,6 +238,8 @@
       }
     }
     ```
+
+    拉取镜像并启动容器：
 
     ```shell
     crictl pull {image-name:tag}
@@ -271,6 +281,8 @@
     }
     ```
 
+    拉取镜像并启动容器：
+
     ```shell
     crictl pull {image-name:tag}
     crictl run container-config.json pod-config.json
@@ -278,7 +290,7 @@
 
 容器配置环境变量说明如[表1](#table5134121862415)所示。
 
-容器启动后，可执行以下命令检查相应设备和驱动是否挂载成功，每台机型具体的挂载目录参考[Ascend Docker Runtime默认挂载内容](../../07_references/05_appendix.md#ascend-docker-runtime默认挂载内容)。命令示例如下：
+容器启动后，可执行以下命令检查相应设备和驱动是否挂载成功，每台机型具体的挂载目录请参见[Ascend Docker Runtime默认挂载内容](../../07_references/05_appendix.md#ascend-docker-runtime默认挂载内容)。命令示例如下：
 
 ```shell
 ls /dev | grep davinci* && ls /dev | grep devmm_svm && ls /dev | grep hisi_hdc && ls /usr/local/Ascend/driver && ls /usr/local/ |grep dcmi && ls /usr/local/bin
@@ -306,9 +318,9 @@ npu-smi
 
 |参数|说明|举例|
 |--|--|--|
-|ASCEND_VISIBLE_DEVICES|<ul><li>如果任务不需要使用NPU设备，可以设置ASCEND_VISIBLE_DEVICES环境变量的取值为void或为空。</li><li>如果任务需要使用NPU设备，必须使用ASCEND_VISIBLE_DEVICES指定被挂载至容器中的NPU设备，否则挂载NPU设备失败。使用设备序号指定设备时，支持单个和范围指定且支持混用；使用芯片名称指定设备时，支持同时指定多个同类型的芯片名称。</li></ul>|<ul><li>ASCEND_VISIBLE_DEVICES=void表示不使用Ascend Docker Runtime的挂载功能，不挂载NPU设备、驱动和文件目录。相关挂载参数也会失效。</li><li>挂载物理芯片（NPU）<ul><li>ASCEND_VISIBLE_DEVICES=0时，表示将0号NPU设备（/dev/davinci0）挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=1,3时，表示将1、3号NPU设备挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=0-2时，表示将0号至2号NPU设备（包含0号和2号）挂载入容器中，效果同-e ASCEND_VISIBLE_DEVICES=0,1,2。</li><li>ASCEND_VISIBLE_DEVICES=0-2,4时，表示将0号至2号以及4号NPU设备挂载入容器，效果同-e ASCEND_VISIBLE_DEVICES=0,1,2,4。</li><li>ASCEND_VISIBLE_DEVICES=XXX-Y，其中XXX表示NPU设备，支持的取值为npu、Ascend910、Ascend310、Ascend310B和Ascend310P；Y表示物理NPU设备ID。<ul><li>ASCEND_VISIBLE_DEVICES=npu-1，表示把1号NPU设备挂载进容器。</li><li>ASCEND_VISIBLE_DEVICES=npu-1,npu-3，表示把1号NPU和3号NPU挂载进容器。</li></ul></li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>使用芯片名称指定设备时，建议统一取值npu。</li><li>不支持在一个参数里既指定设备序号又指定NPU名称，即不支持ASCEND_VISIBLE_DEVICES=0，npu-1。</li></ul></div></div></li><li>挂载虚拟芯片（vNPU）<ul><li>**静态虚拟化**：和物理芯片使用方式相同，只需要把物理芯片ID换成虚拟芯片ID（vNPU ID）即可。</li><li>**动态虚拟化**：ASCEND_VISIBLE_DEVICES=0表示从0号NPU设备中划分出一定数量的AICore。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>一条动态虚拟化的命令只能指定一个物理NPU的ID进行动态虚拟化。</li><li>必须搭配ASCEND_VNPU_SPECS，表示在指定的NPU上划分出的AICore数量。</li><li>可以搭配ASCEND_RUNTIME_OPTIONS，但是只能取值为NODRV，表示不挂载驱动相关目录。</li></ul></div></div></li></ul></li></ul>|
+|ASCEND_VISIBLE_DEVICES|<ul><li>如果任务不需要使用NPU设备，可以设置ASCEND_VISIBLE_DEVICES环境变量的取值为void或为空。</li><li>如果任务需要使用NPU设备，必须使用ASCEND_VISIBLE_DEVICES指定被挂载至容器中的NPU设备，否则挂载NPU设备失败。使用设备序号指定设备时，支持单个和范围指定且支持混用；使用芯片名称指定设备时，支持同时指定多个同类型的芯片名称。</li></ul>|<ul><li>ASCEND_VISIBLE_DEVICES=void表示不使用Ascend Docker Runtime的挂载功能，不挂载NPU设备、驱动和文件目录。相关挂载参数也会失效。</li><li>挂载物理芯片（NPU）<ul><li>ASCEND_VISIBLE_DEVICES=0时，表示将0号NPU设备（/dev/davinci0）挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=1,3时，表示将1、3号NPU设备挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=0-2时，表示将0号至2号NPU设备（包含0号和2号）挂载入容器中，效果同-e ASCEND_VISIBLE_DEVICES=0,1,2。</li><li>ASCEND_VISIBLE_DEVICES=0-2,4时，表示将0号至2号以及4号NPU设备挂载入容器，效果同-e ASCEND_VISIBLE_DEVICES=0,1,2,4。</li><li>ASCEND_VISIBLE_DEVICES=XXX-Y，其中XXX表示NPU设备，支持的取值为npu、Ascend910、Ascend310、Ascend310B和Ascend310P；Y表示物理NPU设备ID。<ul><li>ASCEND_VISIBLE_DEVICES=npu-1，表示把1号NPU设备挂载进容器。</li><li>ASCEND_VISIBLE_DEVICES=npu-1,npu-3，表示把1号NPU和3号NPU挂载进容器。</li></ul></li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>使用芯片名称指定设备时，建议统一取值npu。</li><li>不支持在一个参数里既指定设备序号又指定NPU名称，即不支持ASCEND_VISIBLE_DEVICES=0,npu-1。</li></ul></div></div></li><li>挂载虚拟芯片（vNPU）<ul><li>**静态虚拟化**：和物理芯片使用方式相同，只需要把物理芯片ID换成虚拟芯片ID（vNPU ID）即可。</li><li>**动态虚拟化**：ASCEND_VISIBLE_DEVICES=0表示从0号NPU设备中划分出一定数量的AICore。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>一条动态虚拟化的命令只能指定一个物理NPU的ID进行动态虚拟化。</li><li>必须搭配ASCEND_VNPU_SPECS，表示在指定的NPU上划分出的AICore数量。</li><li>可以搭配ASCEND_RUNTIME_OPTIONS，但是只能取值为NODRV，表示不挂载驱动相关目录。</li></ul></div></div></li></ul></li></ul>|
 |ASCEND_ALLOW_LINK|是否允许挂载的文件或目录中存在软链接，在Atlas 500 A2 智能小站、Atlas 200I A2 AI加速模块和Atlas 200I DK A2 开发者套件场景下需要指定该参数。<p>其他设备如<term>Atlas 训练系列产品</term>、<term>Atlas A2 训练系列产品</term>和Atlas 200I SoC A1 核心板等产品可以使用该参数，但因其默认挂载内容中不存在软链接，所以无需额外指定该参数。</p>|<ul><li>ASCEND_ALLOW_LINK=True，表示在Atlas 500 A2 智能小站、Atlas 200I A2 AI加速模块和Atlas 200I DK A2 开发者套件场景下允许挂载带有软链接的驱动文件。</li><li>ASCEND_ALLOW_LINK=False或者不指定该参数，Atlas 500 A2 智能小站、Atlas 200I A2 AI加速模块和Atlas 200I DK A2 开发者套件将无法使用Ascend Docker Runtime。</li></ul>|
-|ASCEND_UB_DRV_MOUNT|是否挂载UnifiedBus驱动相关文件功能，在Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点等需要支持UnifiedBus通信协议的场景下，通过指定该参数决定是否挂载宿主机的UnifiedBus驱动相关文件到容器的功能。<p>其他设备如<term>Atlas 训练系列产品</term>、<term>Atlas A2 训练系列产品</term>和<term>Atlas A3 训练系列产品</term>等可以使用该参数，但因其不依赖UnifiedBus驱动相关文件的场景，所以无需额外指定该参数。</p>|<ul><li>ASCEND_UB_DRV_MOUNT=False，表示在Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点场景下不挂载UnifiedBus驱动相关文件，此时可通过在容器内安装UnifiedBus驱动用户态软件包的方式支持相关功能。</li><li>ASCEND_UB_DRV_MOUNT=True或者不指定该参数，Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点将挂载UnifiedBus驱动相关文件。由于UnifiedBus驱动相关文件存在软链接，为了成功挂载，会自动跳过软链接校验，无需指定ASCEND_ALLOW_LINK=True环境变量，需要挂载ub_driver.list的场景，指定ASCEND_ALLOW_LINK=False会无效。</li></ul>|
+|ASCEND_UB_DRV_MOUNT|是否挂载UnifiedBus驱动相关文件功能，在Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点等需要支持UnifiedBus通信协议的场景下，通过指定该参数决定是否挂载宿主机的UnifiedBus驱动相关文件到容器的功能。<p>其他设备如<term>Atlas 训练系列产品</term>、<term>Atlas A2 训练系列产品</term>和<term>Atlas A3 训练系列产品</term>等可以使用该参数，但因其不依赖UnifiedBus驱动相关文件，所以无需额外指定该参数。</p>|<ul><li>ASCEND_UB_DRV_MOUNT=False，表示在Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点场景下不挂载UnifiedBus驱动相关文件，此时可通过在容器内安装UnifiedBus驱动用户态软件包的方式支持相关功能。</li><li>ASCEND_UB_DRV_MOUNT=True或者不指定该参数，Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点将挂载UnifiedBus驱动相关文件。由于UnifiedBus驱动相关文件存在软链接，为了成功挂载，会自动跳过软链接校验，无需指定ASCEND_ALLOW_LINK=True环境变量。需要挂载ub_driver.list的场景，指定ASCEND_ALLOW_LINK=False会无效。</li></ul>|
 |ASCEND_RUNTIME_OPTIONS|对参数ASCEND_VISIBLE_DEVICES中指定的芯片ID作出限制：<ul><li>NODRV：表示不挂载驱动相关目录。</li><li>VIRTUAL：表示挂载的是虚拟芯片。</li><li>NODRV,VIRTUAL：表示挂载的是虚拟芯片，并且不挂载驱动相关目录。</li></ul>|<ul><li>ASCEND_RUNTIME_OPTIONS=NODRV</li><li>ASCEND_RUNTIME_OPTIONS=VIRTUAL</li><li>ASCEND_RUNTIME_OPTIONS=NODRV,VIRTUAL</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>静态虚拟化场景下，ASCEND_RUNTIME_OPTIONS为必选参数，且取值必须包含VIRTUAL。</li><li>动态虚拟化场景下，若使用ASCEND_RUNTIME_OPTIONS参数，则其取值不能包含VIRTUAL。</li></ul></div></div>|
 |ASCEND_RUNTIME_MOUNTS|待挂载内容的配置文件名，该文件中可配置需要挂载到容器内的文件及目录。|<ul><li>ASCEND_RUNTIME_MOUNTS=base</li><li>ASCEND_RUNTIME_MOUNTS=hostlog</li><li>ASCEND_RUNTIME_MOUNTS=hostlog,hostlog1,hostlog2</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>默认读取/etc/ascend-docker-runtime.d/base.list配置文件。</li><li>hostlog.list请根据实际自定义配置文件名修改。</li><li>支持读取多个自定义配置文件。</li><li>文件名必须小写，不能包含大写字母。</li></ul></div></div>|
 |ASCEND_VNPU_SPECS|从物理NPU设备中切分出一定数量的AICore，指定为虚拟设备。支持的取值请参见[虚拟化模板](../02_virtual_instance/00_virtual_instance_with_hdk/03_virtualization_templates.md)中表1的“虚拟化实例模板”列。<ul><li>只有支持动态虚拟化的产品形态，才能使用该参数。</li><li>需配合参数“ASCEND_VISIBLE_DEVICES”一起使用，参数“ASCEND_VISIBLE_DEVICES”指定用于虚拟化的物理NPU设备。</li></ul>|ASCEND_VNPU_SPECS=vir04表示切分4个AICore作为虚拟设备，挂载至容器中。|

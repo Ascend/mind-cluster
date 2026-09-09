@@ -84,7 +84,7 @@ DPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
 
     4. 按"Esc"键，输入:wq!保存并退出。
 
-    5. 将修改后的config.json文件所在的目录挂载到容器中，路径为`/etc/dpu-exporter/config.json`。或挂载至容器中的其他路径，则需要修改YAML中DPU Exporter的-config启动参数（详见[参数说明](#参数说明)）。
+    5. 将修改后的config.json文件所在目录挂载到容器中，路径为`/etc/dpu-exporter/config.json`。若挂载至容器中的其他路径，则需要修改YAML中DPU Exporter的-config启动参数（详见[参数说明](#参数说明)）。
 
 3. （可选）配置文件挂载。
 
@@ -159,19 +159,19 @@ DPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
     >- DPU Exporter以镜像方式运行时，请确保"/sys"目录、"/usr/sbin"目录（hinicadm5工具）、"/usr/lib64"、"/lib"目录（动态链接库）和"/var/log/hinic5"目录（hinicadm5日志）已通过hostPath挂载至DPU Exporter容器中。YAML中已默认配置这些挂载。
     >- 安装组件后，组件的Pod状态不为Running，可查看Pod日志定位问题：
     >
-    > ```bash
-    > kubectl logs -n dpu-exporter <pod-name>
-    > ```
+    >   ```bash
+    >   kubectl logs -n dpu-exporter <pod-name>
+    >   ```
 
 9. 验证指标采集是否正常。
 
-    在任意节点执行以下命令，访问metrics接口。其中&lt;node-ip&gt;为部署DPU Exporter的节点IP。
+    在任意节点执行以下命令，访问Metrics接口。其中&lt;node-ip&gt;为部署DPU Exporter的节点IP。
 
     ```shell
     curl http://<node-ip>:8080/metrics
     ```
 
-    正常时应能看到以`dpu_`和`dpu_interface_`为前缀的指标。
+    正常情况下应能看到以`dpu_`和`dpu_interface_`为前缀的指标。
 
 ## 二进制方式运行<a name="section103551921135918"></a>
 
@@ -227,7 +227,7 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
     4. <a name="li18459954104719"></a>按"Esc"键，输入:wq!保存并退出。
 
 5. 创建并编辑dpu-exporter.service文件。
-    1. 执行以下命令，创建dpu-exporter.service文件。
+    1. 创建dpu-exporter.service文件。
 
         ```shell
         vi /home/ascend-dpu-exporter/dpu-exporter.service
@@ -260,7 +260,7 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
     3. 按"Esc"键，输入:wq!保存并退出。
 
 6. 创建并编辑dpu-exporter.timer文件。通过配置timer延时启动，可保证DPU Exporter启动时DPU卡已就位。
-    1. 执行以下命令，创建dpu-exporter.timer文件。
+    1. 创建dpu-exporter.timer文件。
 
         ```shell
          vi /home/ascend-dpu-exporter/dpu-exporter.timer
@@ -310,7 +310,7 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
     curl http://127.0.0.1:8080/metrics
     ```
 
-    正常时应能看到以`dpu_`和`dpu_interface_`为前缀的指标。
+    正常情况下应能看到以`dpu_`和`dpu_interface_`为前缀的指标。
 
 ## 参数说明<a name="section2042611570393"></a>
 
@@ -383,23 +383,24 @@ DPU Exporter支持动态加载配置文件，无需重启组件即可使配置�
 
 DPU Exporter的YAML默认使用ConfigMap方式挂载配置文件。ConfigMap在YAML中已定义，包含`config.json`键。
 
-1. 更新ConfigMap中的配置。
+更新ConfigMap中的配置。
 
-    ```bash
-    kubectl edit cm -n dpu-exporter dpu-exporter-config
-    ```
+```bash
+kubectl edit cm -n dpu-exporter dpu-exporter-config
+```
 
-    或直接重新部署YAML：
+或直接重新部署YAML：
 
-    ```bash
-    kubectl apply -f dpu-exporter-v6.0.0.yaml
-    ```
+```bash
+kubectl apply -f dpu-exporter-v6.0.0.yaml
+```
 
-    >[!NOTICE]
-    >
-    > 必须直接挂载ConfigMap到目录，**不能使用`subPath`**：
-    > - 使用`subPath`会导致ConfigMap更新后无法自动同步到容器内，需要重启才能生效。
-    > - 修改ConfigMap后，容器内文件不能实时更新，需要等待一定时间（K8s机制，最长约10分钟）才能感知到文件变化。
+>[!NOTICE]
+>
+>必须直接挂载ConfigMap到目录，**不能使用`subPath`**：
+>
+> - 使用`subPath`会导致ConfigMap更新后无法自动同步到容器内，需要重启才能生效。
+> - 修改ConfigMap后，容器内文件不能实时更新，需要等待一定时间（K8s机制，最长约10分钟）才能感知到文件变化。
 
 更新ConfigMap后，K8s会自动更新容器中的配置文件，DPU Exporter会自动检测并重新加载配置。
 
