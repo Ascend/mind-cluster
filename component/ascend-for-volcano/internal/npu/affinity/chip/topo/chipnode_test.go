@@ -404,10 +404,10 @@ func TestScore(t *testing.T) {
 		req  int
 		want float64
 	}{
-		{"flat fit", flatTopo(t, 8), 4, affinityTopScore},
-		{"flat fit all", flatTopo(t, 8), 8, affinityTopScore},
-		{"nested whole-group", initTopo(t, nested16Topo, nil, nil, nil), 6, affinityTopScore},
-		{"nested whole superpod", initTopo(t, nested16Topo, nil, nil, nil), 8, affinityTopScore},
+		{"flat fit", flatTopo(t, 8), 4, 1},
+		{"flat fit all", flatTopo(t, 8), 8, 1},
+		{"nested whole-group", initTopo(t, nested16Topo, nil, nil, nil), 6, 1},
+		{"nested whole superpod", initTopo(t, nested16Topo, nil, nil, nil), 8, 1},
 		{"nested odd req can't fit hard", initTopo(t, nested16Topo, nil, nil, nil), 7, 0},
 		{"flat too small", flatTopo(t, 2), 8, 0},
 	}

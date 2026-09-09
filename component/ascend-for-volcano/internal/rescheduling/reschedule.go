@@ -785,6 +785,55 @@ func (reScheduler *ReScheduler) ScoreBestNPUNodes(task *api.TaskInfo, scoreMap m
 	return
 }
 
+// ScorePreviousFaultNodes writes 0 into scoreMap for the nodes where this job's
+// fault tasks previously landed. It reads the same fault-job snapshot as
+// ScoreBestNPUNodes (getFaultNodeNameByFaultJob), so recovered nodes are still
+// recognized. Used by the previousNode dimension's rescheduler-only off-branch:
+// previous fault landings get 0 (avoid), all other (normal) entries keep their
+// base value 1.
+func (reScheduler *ReScheduler) ScorePreviousFaultNodes(task *api.TaskInfo, scoreMap map[string]float64) {
+	if reScheduler == nil || task == nil || len(scoreMap) == 0 {
+		klog.V(util.LogErrorLev).Infof("ScorePreviousFaultNodes: %s, nil reScheduler or task or scoreMap",
+			util.ArgumentError)
+		return
+	}
+	fJob := reScheduler.FaultJobs[task.Job]
+	if fJob == nil {
+		klog.V(util.LogInfoLev).Infof("ScorePreviousFaultNodes: task %s is not in rescheduler cache", task.Name)
+		return
+	}
+	if !fJob.IsFaultJob {
+		klog.V(util.LogDebugLev).Infof("ScorePreviousFaultNodes: task %s belongs to job %s which is not a fault job",
+			task.Name, fJob.JobName)
+		return
+	}
+	faultNodeNames := reScheduler.getFaultNodeNameByFaultJob(fJob)
+	for _, faultNodeName := range faultNodeNames {
+		if _, ok := scoreMap[faultNodeName]; ok {
+			klog.V(util.LogDebugLev).Infof("ScorePreviousFaultNodes: previous fault node<%s> avoided", faultNodeName)
+			scoreMap[faultNodeName] = 0
+		}
+	}
+}
+
+// ScoreSubHealthGrade writes the binary subHealth segment value in place: any
+// switch/card sub-healthy FaultNode gets 0, healthy nodes keep the caller's
+// predate base (default 1). A nil scoreMap returns directly.
+func (reScheduler *ReScheduler) ScoreSubHealthGrade(scoreMap map[string]float64) {
+	if reScheduler == nil || len(scoreMap) == 0 {
+		klog.V(util.LogErrorLev).Infof("ScoreSubHealthGrade: %s, nil reScheduler or scoreMap",
+			util.ArgumentError)
+		return
+	}
+	for nodeName := range scoreMap {
+		fNode, exist := reScheduler.FaultNodes[nodeName]
+		if !exist || (!fNode.HasCardSubHealthFault && !fNode.HasSwitchSubHealthFault) {
+			continue
+		}
+		scoreMap[nodeName] = 0
+	}
+}
+
 // UseAnnotation add task annotation is reschedule in place
 func (reScheduler *ReScheduler) UseAnnotation(task *api.TaskInfo) {
 	if reScheduler == nil || task == nil {

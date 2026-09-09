@@ -1289,11 +1289,13 @@ type fakeFaultHandle struct {
 	isNodeFaultFn func(string) bool
 }
 
-func (f *fakeFaultHandle) Execute(*ScheduleEnv, *framework.Session) error      { return nil }
-func (f *fakeFaultHandle) CheckNodeNPUByTask(*api.TaskInfo, *NPUNode) error    { return nil }
-func (f *fakeFaultHandle) ScoreBestNPUNodes(*api.TaskInfo, map[string]float64) {}
-func (f *fakeFaultHandle) UseAnnotation(*api.TaskInfo)                         {}
-func (f *fakeFaultHandle) PreStopAction(*ScheduleEnv) error                    { return nil }
+func (f *fakeFaultHandle) Execute(*ScheduleEnv, *framework.Session) error            { return nil }
+func (f *fakeFaultHandle) CheckNodeNPUByTask(*api.TaskInfo, *NPUNode) error          { return nil }
+func (f *fakeFaultHandle) ScoreBestNPUNodes(*api.TaskInfo, map[string]float64)       {}
+func (f *fakeFaultHandle) ScoreSubHealthGrade(map[string]float64)                    {}
+func (f *fakeFaultHandle) ScorePreviousFaultNodes(*api.TaskInfo, map[string]float64) {}
+func (f *fakeFaultHandle) UseAnnotation(*api.TaskInfo)                               {}
+func (f *fakeFaultHandle) PreStopAction(*ScheduleEnv) error                          { return nil }
 func (f *fakeFaultHandle) IsNodeFault(nodeName string) bool {
 	if f.isNodeFaultFn != nil {
 		return f.isNodeFaultFn(nodeName)
@@ -1734,12 +1736,15 @@ type mockFaultHandler struct {
 	faultByRank bool
 }
 
-func (m *mockFaultHandler) Execute(*ScheduleEnv, *framework.Session) error      { return nil }
-func (m *mockFaultHandler) CheckNodeNPUByTask(*api.TaskInfo, *NPUNode) error    { return nil }
-func (m *mockFaultHandler) ScoreBestNPUNodes(*api.TaskInfo, map[string]float64) {}
-func (m *mockFaultHandler) UseAnnotation(*api.TaskInfo)                         {}
-func (m *mockFaultHandler) PreStopAction(*ScheduleEnv) error                    { return nil }
-func (m *mockFaultHandler) IsNodeFault(nodeName string) bool                    { return false }
+func (m *mockFaultHandler) Execute(*ScheduleEnv, *framework.Session) error            { return nil }
+func (m *mockFaultHandler) CheckNodeNPUByTask(*api.TaskInfo, *NPUNode) error          { return nil }
+func (m *mockFaultHandler) ScoreBestNPUNodes(*api.TaskInfo, map[string]float64)       {}
+func (m *mockFaultHandler) ScoreLastFaultNode(*api.TaskInfo, map[string]float64)      {}
+func (m *mockFaultHandler) ScoreSubHealthGrade(map[string]float64)                    {}
+func (m *mockFaultHandler) ScorePreviousFaultNodes(*api.TaskInfo, map[string]float64) {}
+func (m *mockFaultHandler) UseAnnotation(*api.TaskInfo)                               {}
+func (m *mockFaultHandler) PreStopAction(*ScheduleEnv) error                          { return nil }
+func (m *mockFaultHandler) IsNodeFault(nodeName string) bool                          { return false }
 func (m *mockFaultHandler) IsFaultTaskByRank(jobID api.JobID, rankIndex string) bool {
 	return m.faultByRank
 }

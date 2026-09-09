@@ -54,6 +54,7 @@ func HandlerStart() *plugin.ScheduleHandler {
 	scheduleHandler := &plugin.ScheduleHandler{
 		NPUPlugins:  sets.String{util.NPUCardName: {}, util.NPU910CardName: {}, util.NPU310CardName: {}, util.NPU310PCardName: {}},
 		FaultHandle: rescheduling.NewHandler(),
+		ScoreWeight: defaultScoreWeight,
 		ScheduleEnv: plugin.ScheduleEnv{
 			FrameAttr:               plugin.NewVolcanoFrame(),
 			JobScheduleInfoRecorder: plugin.NewJobScheduleInfoRecorder(),
@@ -61,11 +62,24 @@ func HandlerStart() *plugin.ScheduleHandler {
 		},
 	}
 	scheduleHandler.PolicyBuilder = internal.New
+	scheduleHandler.InitScorePlugins()
 	return scheduleHandler
 }
 
 // New return npu plugin.
 func New(arguments framework.Arguments) framework.Plugin {
+	if raw, ok := arguments[ScoreWeightArg]; ok {
+		// ScoreWeight is a uniform positive scaling factor (see common/util/score_weights.go):
+		// a non-positive value (0 or negative) breaks the strict-priority ordering of the
+		// scoring framework, and a non-numeric value is invalid too. All fall back to the default.
+		if v, err := strconv.ParseFloat(fmt.Sprintf("%v", raw), 64); err == nil && v > 0 {
+			klog.V(util.LogInfoLev).Infof("set score weight %v", v)
+			sHandler.ScoreWeight = v
+		} else {
+			klog.V(util.LogWarningLev).Infof("invalid ascend.scoreWeight %v, use default %v", raw, defaultScoreWeight)
+			sHandler.ScoreWeight = defaultScoreWeight
+		}
+	}
 	return &huaweiNPUPlugin{Scheduler: sHandler, Arguments: arguments}
 }
 
@@ -768,3 +782,12 @@ func (tp *huaweiNPUPlugin) addJobEnqueueFailedCondition(job *api.JobInfo, ssn *f
 
 	addPodGroupCondition(job, ssn.UID, util.JobEnqueueFailedReason, enqueueError.Error())
 }
+
+const (
+	// ScoreWeightArg is the plugin argument key for node scores,
+	// e.g. `ascend.scoreWeight: 10` in volcano-scheduler-configmap.
+	ScoreWeightArg = "ascend.scoreWeight"
+
+	// defaultScoreWeight default ScoreWeight for the new scoring framework.
+	defaultScoreWeight = 100
+)

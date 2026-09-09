@@ -57,6 +57,19 @@ func (c *Controller) SetPolicyHandler(attr util.SchedulerJobAttr, env plugin.Sch
 	}
 }
 
+// ScoreFrameworkAware factory of score-framework aware
+func (c *Controller) ScoreFrameworkAware() bool {
+	if c == nil {
+		return false
+	}
+	for _, handler := range c.PolicyHandler {
+		if v, ok := handler.(plugin.ScoreFrameworkAware); ok && v.ScoreFrameworkAware() {
+			return true
+		}
+	}
+	return false
+}
+
 // PreStartAction pre-processing actions for all policy handler
 func (c *Controller) PreStartAction(ssn *framework.Session) error {
 	if c == nil {

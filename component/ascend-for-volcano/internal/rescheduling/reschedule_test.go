@@ -1339,6 +1339,104 @@ func TestGetNewCacheJobs(t *testing.T) {
 		})
 }
 
+// TestReduceForSubHealthyNodes sub-health soft-degrade: nodes with any sub-health kind are
+// uniformly docked util.AffScore1(=1), truncated at 0; unregistered nodes / nodes with no
+// sub-health kind are untouched.
+func TestReduceForSubHealthyNodes(t *testing.T) {
+	reScheduler := &ReScheduler{DealReSchedulerCache: &DealReSchedulerCache{
+		FaultNodes: map[string]*FaultNode{
+			"card":    {NodeName: "card", HasCardSubHealthFault: true},
+			"switch":  {NodeName: "switch", HasSwitchSubHealthFault: true},
+			"both":    {NodeName: "both", HasCardSubHealthFault: true, HasSwitchSubHealthFault: true},
+			"floor":   {NodeName: "floor", HasCardSubHealthFault: true},
+			"healthy": {NodeName: "healthy"},
+		},
+	}}
+	smp := map[string]float64{
+		"card":    100.0,
+		"switch":  100.0,
+		"both":    100.0,
+		"floor":   0.0,   // 0-score sub-health → max(0, -1) stays 0 (truncate branch)
+		"cardLow": 30.0,  // not in FaultNodes → untouched (missing-node branch)
+		"healthy": 100.0, // registered but no sub-health kind → untouched
+	}
+	want := map[string]float64{
+		"card":    99.0,
+		"switch":  99.0,
+		"both":    99.0,
+		"floor":   0.0,
+		"cardLow": 30.0,
+		"healthy": 100.0,
+	}
+	reScheduler.reduceForSubHealthyNodes(smp)
+	if !reflect.DeepEqual(smp, want) {
+		t.Errorf("reduceForSubHealthyNodes() = %v, want %v", smp, want)
+	}
+}
+
+// TestScoreSubHealthGradeEntries subHealth dimension entry (plugin.FaultHandler contract):
+// ScoreSubHealthGrade writes the binary segment value 0 for any sub-healthy FaultNode (switch
+// or card, either alone or coexisting); healthy nodes are not written (caller's predate default
+// 1 kept). It is separate from the legacy reduceForSubHealthyNodes; a nil scoreMap returns
+// directly.
+func TestScoreSubHealthGradeEntries(t *testing.T) {
+	reScheduler := &ReScheduler{DealReSchedulerCache: &DealReSchedulerCache{
+		FaultNodes: map[string]*FaultNode{
+			"card":   {NodeName: "card", HasCardSubHealthFault: true},
+			"switch": {NodeName: "switch", HasSwitchSubHealthFault: true},
+			"both":   {NodeName: "both", HasCardSubHealthFault: true, HasSwitchSubHealthFault: true},
+		},
+	}}
+	reScheduler.ScoreSubHealthGrade(nil) // nil guard: does not panic
+	smp := map[string]float64{"card": 1.0, "switch": 1.0, "both": 1.0, "ok": 1.0}
+	reScheduler.ScoreSubHealthGrade(smp)
+	for name, w := range map[string]float64{"card": 0.0, "switch": 0.0, "both": 0.0, "ok": 1.0} {
+		if smp[name] != w {
+			t.Errorf("ScoreSubHealthGrade() %s = %v, want %v (any sub-health → 0, healthy kept)", name, smp[name], w)
+		}
+	}
+}
+
+// TestScorePreviousFaultNodes previousNode dimension off-branch entry
+// (plugin.FaultHandler contract): ScorePreviousFaultNodes writes 0 in place for
+// the nodes where this job's fault tasks previously landed; non-fault tasks of
+// the job are not treated as landings; a missing job or nil scoreMap returns
+// directly. Used by the rescheduler-only scenario (prefer-previous-node off),
+// modeling the snapshot read of ScoreBestNPUNodes.
+func TestScorePreviousFaultNodes(t *testing.T) {
+	reScheduler := &ReScheduler{DealReSchedulerCache: &DealReSchedulerCache{
+		FaultJobs: map[api.JobID]*FaultJob{
+			"job1": {JobUID: "job1", JobName: "j1", IsFaultJob: true, FaultTasks: []FaultTask{
+				{IsFaultTask: true, NodeName: "node1"},
+				{IsFaultTask: true, NodeName: "node2"},
+				{IsFaultTask: false, NodeName: "node3"},
+			}},
+			"job2": {JobUID: "job2", JobName: "j2", IsFaultJob: false, FaultTasks: []FaultTask{
+				{IsFaultTask: true, NodeName: "node5"},
+			}},
+		},
+	}}
+	taskMissing := &api.TaskInfo{Job: "missing"}
+	reScheduler.ScorePreviousFaultNodes(taskMissing, nil) // nil guards: must not panic
+	smp := map[string]float64{"node1": 1, "node2": 1, "node3": 1, "node9": 1}
+	reScheduler.ScorePreviousFaultNodes(taskMissing, smp)
+	want := map[string]float64{"node1": 1, "node2": 1, "node3": 1, "node9": 1}
+	if !reflect.DeepEqual(smp, want) {
+		t.Errorf("ScorePreviousFaultNodes() missing job = %v, want %v (untouched)", smp, want)
+	}
+	smp = map[string]float64{"node1": 1, "node2": 1, "node3": 1, "node9": 1}
+	reScheduler.ScorePreviousFaultNodes(&api.TaskInfo{Job: "job1"}, smp)
+	want = map[string]float64{"node1": 0, "node2": 0, "node3": 1, "node9": 1}
+	if !reflect.DeepEqual(smp, want) {
+		t.Errorf("ScorePreviousFaultNodes() fault job = %v, want %v (fault landings → 0, others kept)", smp, want)
+	}
+	reScheduler.ScorePreviousFaultNodes(&api.TaskInfo{Job: "job2"}, smp)
+	want = map[string]float64{"node1": 0, "node2": 0, "node3": 1, "node9": 1}
+	if !reflect.DeepEqual(smp, want) {
+		t.Errorf("ScorePreviousFaultNodes() non-fault job = %v, want %v (untouched)", smp, want)
+	}
+}
+
 func TestScoreBestNPUNodes(t *testing.T) {
 	reScheduler := fakeTestTTReScheduler(TestReScheduler{})
 	reScheduler.DealReSchedulerCache = fakeCacheWithFJobReSchedulerAddFaultJobWithSession()

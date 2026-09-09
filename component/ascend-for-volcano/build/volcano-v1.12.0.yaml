@@ -4391,6 +4391,8 @@ data:
       - name: volcano-npu_v6.0.RC1_linux-x86_64
         enablePreemptable: true
         enableReclaimable: true
+        arguments:
+          ascend.scoreWeight: 100
       - name: priority
         enableNodeOrder: false
       - name: conformance

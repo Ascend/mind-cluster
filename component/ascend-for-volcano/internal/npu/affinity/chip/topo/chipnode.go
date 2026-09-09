@@ -716,8 +716,8 @@ func (n *ChipNode) usableChipsAsc(allowNetUnh bool) []int {
 	return append(nh, h...)
 }
 
-const affinityTopScore = 1000.0
-
+// Score returns the topo-segment value for the scoring framework: 1 for FitNormal,
+// 0 otherwise (see common/util/score_weights.go).
 func (n *ChipNode) Score(req int, allowNetUnh bool) float64 {
 	if n == nil || req <= 0 {
 		return 0
@@ -727,7 +727,7 @@ func (n *ChipNode) Score(req int, allowNetUnh bool) float64 {
 		Mode:              util.HardScheduleMode,
 		AllowNetUnhealthy: allowNetUnh,
 	}) == FitNormal {
-		return affinityTopScore
+		return 1
 	}
 	return 0
 }

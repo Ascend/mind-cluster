@@ -406,6 +406,15 @@
     <a name="ul_prefer_previous_node_affinity"></a><a name="ul_prefer_previous_node_affinity"></a><ul id="ul_prefer_previous_node_affinity"><li>非故障重调度场景下（例如被驱逐后重新调度），若上次运行的所有节点仍然可用，每个Pod调度回原节点继续运行。</li><li>故障重调度场景下，调度器按照原有调度逻辑进行节点替换，各调度策略的详细重调度策略请参见<a href="../../../04_usage/03_basic_scheduling/01_affinity_scheduling/04_node_based_affinity.md">基于节点的亲和性</a>章节。</li></ul>
     </td>
     </tr>
+    <tr id="row_ascend_score_weight"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p_ascend_score_weight_name"><a name="p_ascend_score_weight_name"></a><a name="p_ascend_score_weight_name"></a>ascend.scoreWeight</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p_ascend_score_weight_default"><a name="p_ascend_score_weight_default"></a><a name="p_ascend_score_weight_default"></a>100</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p_ascend_score_weight_desc"><a name="p_ascend_score_weight_desc"></a><a name="p_ascend_score_weight_desc"></a>NPU任务调度节点打分时Ascend插件的统一缩放权重。该权重为统一的正比例缩放因子，仅改变各节点分数的量级，不改变节点间的相对顺序。同量级下权重越大，Ascend插件打分对调度结果的影响越大。</p>
+    <p>取值范围：大于0。若配置为0、负数或非数字，则按配置错误处理，使用默认值100。</p>
+    <p>该参数配置在volcano-scheduler.conf中volcano-npu插件的arguments下，示例：<code>ascend.scoreWeight: 100</code>。</p>
+    </td>
+    </tr>
     </tbody>
     </table>
 

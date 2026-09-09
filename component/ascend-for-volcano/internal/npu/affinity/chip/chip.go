@@ -173,3 +173,6 @@ func (tp *chipHandler) ReleaseAnnotation(task *api.TaskInfo, node plugin.NPUNode
 	}
 	return &node
 }
+
+// ScoreFrameworkAware label chip-affinity score nodes by score-framework
+func (tp *chipHandler) ScoreFrameworkAware() bool { return true }

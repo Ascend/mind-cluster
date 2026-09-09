@@ -74,6 +74,10 @@ type FaultHandler interface {
 	Execute(*ScheduleEnv, *framework.Session) error
 	CheckNodeNPUByTask(*api.TaskInfo, *NPUNode) error
 	ScoreBestNPUNodes(*api.TaskInfo, map[string]float64)
+	// ScoreSubHealthGrade writes the binary subHealth segment value in place: any
+	// switch/card sub-healthy node gets 0; healthy nodes are not written, so they keep the
+	// dimension predate default of 1.
+	ScoreSubHealthGrade(map[string]float64)
 	UseAnnotation(*api.TaskInfo)
 	PreStopAction(*ScheduleEnv) error
 	// IsNodeFault returns true if the node has any registered fault
@@ -83,6 +87,13 @@ type FaultHandler interface {
 	// task in the fault job cache. Uses the fault snapshot rather than
 	// real-time node health.
 	IsFaultTaskByRank(jobID api.JobID, rankIndex string) bool
+	// ScorePreviousFaultNodes writes 0 into scoreMap for the nodes where this
+	// job's fault tasks previously landed, mirroring the ScoreBestNPUNodes
+	// snapshot read. Used by the previousNode dimension when
+	// prefer-previous-node is disabled, so the rescheduler-only scenario still
+	// avoids previous fault landings (0) while all other entries keep their
+	// base value (1 = normal candidate).
+	ScorePreviousFaultNodes(*api.TaskInfo, map[string]float64)
 }
 
 // SchedulerBaseAttr for all volcano-npu plugin.
