@@ -1,0 +1,38 @@
+# agent-core: diagnosis agent (Deployment).
+# Build wheel: python -m pip wheel --no-deps --wheel-dir dist .
+# Entry points after install:
+#   HTTP : uvicorn agent_core.main:app --host 0.0.0.0 --port <port>
+#   CLI  : ascend-agent-core --job <jobname> [-n namespace]
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-core"
+version = "26.2.0"
+description = "ascend-clusterops-agent: diagnosis agent (agent-core)"
+requires-python = ">=3.11"
+dependencies = [
+  "grpcio>=1.60.0",
+  "protobuf>=4.25",
+  "pyyaml>=6.0",
+  "kubernetes>=29.0.0",
+  "fastapi>=0.110.0",
+  "uvicorn>=0.29.0",
+  "langgraph>=0.2.0",
+  "langchain-openai>=0.2.0",
+]
+
+[project.scripts]
+ascend-agent-core = "agent_core.main:main"
+
+[tool.setuptools]
+packages = ["agent_core", "clusterops_common", "diagproto"]
+
+[tool.setuptools.package-dir]
+# The source directory name (agent-core/) contains a hyphen and cannot be a Python package
+# name; the project root is the package root, mapped to the valid package name agent_core.
+agent_core = "."
+# Shared common code (logging etc.) and gRPC stubs are embedded into the component wheel.
+clusterops_common = "../common"
+diagproto = "../common/diagproto"
