@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright 2026 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
+"""kubectl plugin: unified cluster operations entry (kubectl clusterops).
+
+Usage:
+    kubectl clusterops --create-llm-config [--base-url U] [--model M]
+    kubectl clusterops --clear-llm-config
+
+Create/clear the LLM Secret (llm-secret, namespace from env ASCEND_CLUSTEROPS_NS, default mindx-dl)
+consumed by agent-core (consistent with the scripts/ops/create-llm-secret.sh contract).
+"""
+
+from __future__ import annotations
+
+import argparse
+import base64
+import getpass
+import json
+import os
+import shutil
+import subprocess
+import sys
+
+DEFAULT_NS = os.environ.get("ASCEND_CLUSTEROPS_NS", "mindx-dl")
+SECRET_NAME = "llm-secret"  # nosec B105 - k8s resource name, not a hardcoded credential
+SECRET_KEYS = ("api-key", "base-url", "model")  # consistent with the env references in agent-core.yaml
+# defaults for interactive base-url/model input (same defaults as agent-core llm.py; see scripts/ops/create-llm-secret.sh)
+DEFAULT_BASE_URL = "https://open.bigmodel.cn/api/paas/v4"
+DEFAULT_MODEL = "glm-4-plus"
+
+
+def _kubectl() -> str | None:
+    return shutil.which("kubectl") or shutil.which("kubectl.exe")
+
+
+def create_llm_config(args: argparse.Namespace) -> int:
+    """Configure llm-secret: build the manifest in memory (base64 data) and apply via stdin; nothing is written to disk and the key never enters argv."""
+    kubectl = _kubectl()
+    if not kubectl:
+        print("error: kubectl not found on PATH", file=sys.stderr)
+        return 127
+
+    # prompt interactively when not provided via args/env; api-key is required, base-url/model default on Enter
+    api_key = os.environ.get("LLM_API_KEY") or getpass.getpass("LLM API Key: ")
+    base_url = (
+        args.base_url
+        or os.environ.get("LLM_BASE_URL")
+        or input(f"LLM Base URL (Enter for default {DEFAULT_BASE_URL}): ")
+    ) or DEFAULT_BASE_URL
+    model = (
+        args.model
+        or os.environ.get("LLM_MODEL")
+        or input(f"LLM Model (Enter for default {DEFAULT_MODEL}): ")
+        or DEFAULT_MODEL
+    )
+    if not api_key:
+        print("error: missing api-key", file=sys.stderr)
+        return 2
+
+    # build the Secret manifest in memory (base64 data) and apply via stdin; nothing written to disk, key never enters argv
+    manifest = {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {"name": SECRET_NAME, "namespace": DEFAULT_NS},
+        "type": "Opaque",
+        "data": {
+            k: base64.b64encode(v.encode("utf-8")).decode("ascii")
+            for k, v in zip(SECRET_KEYS, (api_key, base_url, model))
+        },
+    }
+    try:
+        applied = subprocess.run(
+            [kubectl, "apply", "-f", "-"],
+            input=json.dumps(manifest),
+            capture_output=True,
+            text=True,
+            check=True,
+            shell=False,
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"error: failed to apply llm-secret: {e.stderr.strip()}", file=sys.stderr)
+        return 1
+
+    print(applied.stdout.strip())
+    # agent-core reads llm-secret via the k8s API on every call, taking effect immediately without a pod restart
+    print("llm-secret updated, effective immediately")
+    return 0
+
+
+def clear_llm_config(args: argparse.Namespace) -> int:
+    """Clear all LLM configuration: delete llm-secret (api-key/base-url/model removed together), effective immediately."""
+    kubectl = _kubectl()
+    if not kubectl:
+        print("error: kubectl not found on PATH", file=sys.stderr)
+        return 127
+    try:
+        deleted = subprocess.run(
+            [kubectl, "-n", DEFAULT_NS, "delete", "secret", SECRET_NAME, "--ignore-not-found"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"error: failed to delete llm-secret: {e.stderr.strip()}", file=sys.stderr)
+        return 1
+
+    print(deleted.stdout.strip() or f"{SECRET_NAME} does not exist, no LLM config to clear")
+    # agent-core reads llm-secret via the k8s API on every call; once the secret is deleted it falls back to deterministic diagnosis
+    print("LLM config cleared, effective immediately")
+    return 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(prog="kubectl-clusterops", description="cluster operations kubectl plugin")
+    ap.add_argument("--create-llm-config", action="store_true", help="configure the LLM Secret (llm-secret)")
+    ap.add_argument(
+        "--clear-llm-config",
+        action="store_true",
+        help="clear all LLM config (delete llm-secret, effective immediately)",
+    )
+    ap.add_argument("--base-url", default=None, help="LLM Base URL (prompted; or env LLM_BASE_URL)")
+    ap.add_argument("--model", default=None, help="LLM model name (prompted; or env LLM_MODEL)")
+    args = ap.parse_args()
+    if args.create_llm_config and args.clear_llm_config:
+        ap.error("--create-llm-config and --clear-llm-config are mutually exclusive")
+    if args.clear_llm_config:
+        return clear_llm_config(args)
+    if args.create_llm_config:
+        return create_llm_config(args)
+    ap.print_help()
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())
