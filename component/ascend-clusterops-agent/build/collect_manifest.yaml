@@ -1,0 +1,55 @@
+# 采集契约清单 v3 —— 字段优先级: env > paths = commands > mount_keywords
+#
+# 每个 entity 的采集方式 (配置了高优先级字段且采集成功时, 不再执行低优先级字段):
+#   env           : 最高优先级。agent-core 在 pod 存活时把该 env 值记录进 pathmap CM (TTL 内保留,
+#                   pod 删除后仍可用); node-collector 读 pathmap 中的 env 值 (容器内路径) ->
+#                   经挂载对反查宿主路径 -> 采集; env 采集成功时跳过 paths/commands/mount_keywords,
+#                   未记录/反查失败时回退低优先级字段
+#   paths         : 与 commands 同级。容器内路径 -> 匹配任务 pod 的全部挂载对(容器侧前缀) -> 复制;
+#                   无匹配挂载对时直接读宿主机同名路径; dl_log 为特例: paths 是宿主机路径, 直接读取
+#                   (保留 basename 子目录), 不走任务 pod 挂载对匹配; host_log 为节点宿主路径, 直接读取
+#   commands      : 与 paths 同级。在临时目录执行(shell) -> 生成文件全量复制到 {采集目录}/name ->
+#                   清理临时目录; 无 > 重定向的命令, stdout/stderr 捕获为 {name}_stdout.txt;
+#                   整个命令串必须精确匹配白名单 (见 node-collector/collector.py ALLOWED_COMMANDS),
+#                   篡改串 (如 dmesg && rm -rf /) 无法匹配, 会被拒绝执行
+#   mount_keywords : 最低优先级兜底 (仅当未配置 paths 时执行)。匹配任务 pod 全部挂载对中
+#                   host/container 含关键词的 (第一个命中为准), 无直接命中则扫挂载宿主路径子目录找含关键词的子目录
+#
+# 更新方式: kubectl ascend_diag --collect-manifest <path>.yaml 写入集群 ConfigMap 即可, 无需重打镜像。
+manifest_version: 3
+
+entities:
+  - name: process_log            # CANN plog, 容器挂载文件日志
+    env: ASCEND_PROCESS_LOG_PATH  # agent-core 记录进 pathmap; node-collector 读取反查宿主路径; 未记录/反查失败回退 mount_keywords
+    mount_keywords: [plog]        # 兜底: 按 plog 关键词匹配全部挂载对/宿主子目录
+
+  - name: dl_log                 # MindCluster 组件日志 (宿主机路径, 直接读取, 保留目录结构)
+    paths:
+      - "/var/log/mindx-dl/devicePlugin"
+      - "/var/log/mindx-dl/noded"
+      - "/var/log/ascend-docker-runtime"
+      - "/var/log/mindx-dl/volcano-scheduler"
+      - "/var/log/mindx-dl/volcano-controller"
+      - "/var/log/mindx-dl/npu-exporter"
+
+  - name: host_log               # 主机 OS 日志 (paths 为节点宿主路径, 直接读取)
+    commands:
+      - "/usr/bin/dmesg -T | tail -n 100000 > dmesg"
+      - "/usr/sbin/dmidecode > dmidecode.txt"
+    paths:
+      - "/var/log/messages*"
+      - "/var/log/sysmonitor.log"
+
+  - name: device_log             # Device 侧日志 (现场命令生成)
+    commands:
+      - "/usr/bin/msnpureport --docker"
+
+# diag 阶段产物文件名契约（agent assemble 时校验，不变）
+diag_artifacts:
+  - "plog-parser-{pid}-{0|1}.log"
+  - "ascend-rc-parser.json"
+  - "ascend-kg-parser.json"
+  - "ascend-kg-analyzer.json"
+  - "device_ip_info.json"
+  - "server-info.json"          # diag 识别 worker 目录的标志
+  - "mindie-cluster-info.json"
