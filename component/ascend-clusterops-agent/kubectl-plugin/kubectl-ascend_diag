@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright 2026 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
+"""
+Usage:
+    kubectl ascend_diag --job job-x [-n ns]
+    kubectl ascend_diag --job job-x --json           # full JSON output
+    kubectl ascend_diag --collect-manifest <path>.yaml   # write a local collect manifest into the cluster ConfigMap
+
+How it works (default): start a temporary port-forward from the local kubeconfig to the agent-core Service and call /diag.
+--collect-manifest: writes the local collect_manifest.yaml into the ConfigMap
+collect-manifest (cluster-system); node-collector reads this CM on every collection,
+so no image rebuild / restart is needed.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import shutil
+import socket
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+
+DEFAULT_SVC = os.environ.get("ASCEND_CLUSTEROPS_AGENT_SVC", "agent-core.mindx-dl:9700")
+AGENT_CORE_PORT = 9700
+# collect manifest CM (consistent with node-collector's MANIFEST_CM contract)
+MANIFEST_CM = os.environ.get("ASCEND_CLUSTEROPS_AGENT_COLLECT_MANIFEST_CM", "collect-manifest")
+MANIFEST_NS = os.environ.get("ASCEND_CLUSTEROPS_AGENT_COLLECT_MANIFEST_NS", "cluster-system")
+MANIFEST_KEY = "collect_manifest.yaml"
+
+
+class _PluginError(Exception):
+    """Plugin error carrying a user-readable reason; only the message is printed, never a python traceback."""
+
+
+def _update_collect_manifest(path: str) -> int:
+    """Write a local collect_manifest.yaml into the cluster ConfigMap (create-or-replace, idempotent).
+
+    Rendered via kubectl create --dry-run=client then applied; no extra Python library needed;
+    the current kubeconfig needs create/apply permission on the ConfigMap's namespace.
+    """
+    kubectl = shutil.which("kubectl") or shutil.which("kubectl.exe")
+    if not kubectl:
+        print("error: kubectl not found, make sure it is installed and on PATH", file=sys.stderr)
+        return 127
+    if not os.path.isfile(path):
+        print(f"error: collect manifest file does not exist: {path}", file=sys.stderr)
+        return 1
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
+    if not content.strip():
+        print(f"error: collect manifest file is empty: {path}", file=sys.stderr)
+        return 1
+    render = [
+        kubectl,
+        "create",
+        "configmap",
+        MANIFEST_CM,
+        "-n",
+        MANIFEST_NS,
+        f"--from-file={MANIFEST_KEY}={path}",
+        "--dry-run=client",
+        "-o",
+        "yaml",
+    ]
+    r = subprocess.run(render, capture_output=True, text=True, check=False)
+    if r.returncode != 0:
+        print(f"error: failed to render collect manifest ConfigMap: {r.stderr.strip()}", file=sys.stderr)
+        return 1
+    apply_ = subprocess.run([kubectl, "apply", "-f", "-"], input=r.stdout, capture_output=True, text=True, check=False)
+    if apply_.returncode != 0:
+        print(f"error: failed to apply collect manifest ConfigMap: {apply_.stderr.strip()}", file=sys.stderr)
+        return 1
+    print(f"collect manifest written to ConfigMap {MANIFEST_CM}/{MANIFEST_NS}: {path}")
+    print(
+        "subsequent diagnostics will use the updated collect manifest "
+        "(node-collector re-reads this CM on every collection, no restart needed)"
+    )
+    return 0
+
+
+def _free_port() -> int:
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    p = s.getsockname()[1]
+    s.close()
+    return p
+
+
+def _wait_port_forward(proc: subprocess.Popen, local: int, timeout: int = 30) -> bool:
+    """Read port-forward stderr until the local port is reachable."""
+    end = time.time() + timeout
+    while time.time() < end:
+        if proc.poll() is not None:
+            return False
+        with socket.socket() as p:
+            p.settimeout(0.5)
+            try:
+                p.connect(("127.0.0.1", local))
+                return True
+            except OSError:
+                time.sleep(0.3)
+    return False
+
+
+def _post_diag(local: int, job: str, namespace: str, refresh: bool = False) -> dict:
+    """Call agent-core /diag; any transport/parse failure is wrapped in _PluginError, never shown as a python traceback."""
+    url = f"http://127.0.0.1:{local}/diag"
+    body = json.dumps({"job": job, "namespace": namespace, "refresh": refresh}).encode()
+    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=1200) as resp:
+            return json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        raise _PluginError(f"agent-core returned HTTP {e.code}, check the agent-core logs") from e
+    except urllib.error.URLError as e:
+        raise _PluginError(
+            f"cannot connect to the agent-core service, check that it is deployed and healthy ({e.reason})"
+        ) from e
+    except (TimeoutError, socket.timeout):
+        raise _PluginError("connection to agent-core timed out, please retry later") from None
+    except json.JSONDecodeError:
+        raise _PluginError("agent-core returned invalid JSON, check the agent-core logs") from None
+    except Exception as e:  # noqa: BLE001  # never leak a raw python traceback to the user
+        raise _PluginError(f"failed to call agent-core, check the agent-core logs ({e})") from e
+
+
+def _run_remote(args: argparse.Namespace) -> int:
+    kubectl = shutil.which("kubectl") or shutil.which("kubectl.exe")
+    if not kubectl:
+        print("error: kubectl not found on PATH", file=sys.stderr)
+        return 127
+
+    svc = args.agent_core_service or DEFAULT_SVC
+    if "." in svc:
+        svc_name, ns = svc.split(".", 1)
+        if ":" in ns:
+            ns, _ = ns.split(":", 1)
+    else:
+        svc_name, ns = svc, "mindx-dl"
+    local = _free_port()
+    cmd = [kubectl, "port-forward", "-n", ns, f"svc/{svc_name}", f"{local}:{AGENT_CORE_PORT}"]
+    # Popen lifetime is managed manually (finally terminate+wait): 'with' only waits and port-forward would hang
+    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)  # pylint: disable=consider-using-with
+    try:
+        if not _wait_port_forward(proc, local):
+            err = proc.stderr.read() if proc.stderr else ""
+            print(
+                f"diagnosis error, port-forward setup failed, check the agent-core service and kubeconfig ({err.strip()})",
+                file=sys.stderr,
+            )
+            return 1
+        result = _post_diag(local, args.job, args.namespace, refresh=args.refresh)
+    except _PluginError as e:
+        print(f"diagnosis error, {e}", file=sys.stderr)
+        return 1
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+
+    if args.json:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        if result.get("error"):
+            print(
+                result["error"], file=sys.stderr
+            )  # agent-core already wraps it as a readable error (diagnosis error / job not found, etc.)
+        else:
+            if result.get("cached"):
+                print(
+                    result.get("cached_note") or "result from cache, use --refresh for the latest diagnosis",
+                    file=sys.stderr,
+                )
+            print(result.get("final_text") or "(no output)")
+    return 0 if not result.get("error") else 1
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(prog="kubectl-ascend_diag", description="Ascend fault diagnosis kubectl plugin")
+    ap.add_argument("--job", help="job name (job CR name)")
+    ap.add_argument("-n", "--namespace", default="default", help="namespace")
+    ap.add_argument("--agent-core-service", help="agent-core Service, format svc.ns:9700")
+    ap.add_argument("--refresh", action="store_true", help="ignore the cache, force rerun and refresh the cache")
+    ap.add_argument("--json", action="store_true", help="print the full JSON response")
+    ap.add_argument(
+        "--collect-manifest",
+        metavar="PATH",
+        help="write a local collect_manifest.yaml into the cluster ConfigMap and exit",
+    )
+    args = ap.parse_args()
+    if args.collect_manifest:
+        return _update_collect_manifest(args.collect_manifest)
+    if not args.job:
+        ap.print_help()
+        return 2
+    return _run_remote(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,10 @@
+# 诊断 Agent 运行时依赖
+langgraph>=0.2.0
+langchain-openai>=0.2.0       # 接 glm 的 OpenAI 兼容端点
+kubernetes>=29.0.0            # in-cluster APIServer 访问
+pyyaml>=6.0                   # 读 collect_manifest.yaml
+grpcio>=1.60.0                # agent↔collector gRPC (含流式 tar 回传)
+protobuf>=4.25                # diag.proto 生成的协议桩运行时
+fastapi>=0.110.0              # agent 对外 HTTP 入口 (/diag, CLI 用)
+uvicorn>=0.29.0
+# ascend-fd 本身通过镜像安装（非 pip 依赖），见 deploy/Dockerfile
