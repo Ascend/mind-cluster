@@ -144,6 +144,96 @@ ConfigMap中Data字段的Key为`DpuInfoCfg`，Value为JSON格式的DPU故障信�
 | Description |字符串|故障描述信息。|
 | FaultLevel  |字符串|故障等级。|
 
+## 容器场景配置
+
+业务需要在容器内使用UB网卡时，需挂载RoCE设备和驱动，否则容器内无法初始化UB网卡。UB网卡场景下容器内所需资源示例请参见[表10](#table1011k8srdmashareddevplugin)。
+
+**表 10**  容器内使用UB网卡所需的资源
+<a name="table1011k8srdmashareddevplugin"></a>
+
+| 资源路径 | 类型 |
+|---------|------|
+| /dev/infiniband/rdma_cm | 字符设备 |
+| /dev/infiniband/uverbs{N} | 字符设备（N为设备编号） |
+| /etc/libibverbs.d/hrn5.driver | 驱动配置文件 |
+| /usr/lib64/libhrn5-rdmav34.so | 动态库 |
+| /usr/lib64/libhrn5-rdmav.so | 动态库 |
+| /usr/lib64/libibv_extend.so | 动态库 |
+| /usr/lib64/libibv_extend.so.4 | 动态库 |
+| /usr/lib64/libibv_extend.so.4.2.0 | 动态库 |
+
+各资源的获取方式：
+
+- **字符设备**：无需配置挂载。组件的DaemonSet已挂载宿主机`/dev`目录，通过宿主机sysfs发现UB设备；业务Pod申请`<resourcePrefix>/<resourceName>`资源后，kubelet会根据组件返回的设备信息，在创建容器时自动注入`/dev/infiniband/rdma_cm`和对应的`uverbs{N}`字符设备。
+- **驱动配置文件和动态库**：组件不会自动挂载，需要业务镜像自带，或通过hostPath从宿主机挂载，建议在业务镜像内预先安装好。若使用非UB网卡，请咨询网卡提供商确认需要挂载的文件。
+
+通过hostPath挂载驱动配置文件和动态库的配置示例如下（Pod其余配置请参见[业务Pod使用及挂载资源说明](#ZH-CN_TOPIC_biz_pod_check_k8s_rdma_shared_dev_plugin)）：
+
+```yaml
+apiVersion: v1
+kind: AscendJob
+metadata:
+   name: rdma-test
+spec:
+   restartPolicy: OnFailure
+   hostNetwork: true
+   containers:
+      - image: rdma-test:latest
+        name: ub-rdma-test-ctr
+        imagePullPolicy: IfNotPresent
+        securityContext:
+           capabilities:
+              add: [ "IPC_LOCK" ]
+        resources:
+           requests:
+              huawei.com/ub_rdma: '1'
+           limits:
+              huawei.com/ub_rdma: '1'
+        volumeMounts:
+           - name: hrn5-driver-config
+             mountPath: /etc/libibverbs.d/hrn5.driver
+           - name: hrn5-rdmav34
+             mountPath: /usr/lib64/libhrn5-rdmav34.so
+           - name: hrn5-rdmav
+             mountPath: /usr/lib64/libhrn5-rdmav.so
+           - name: ibv-extend
+             mountPath: /usr/lib64/libibv_extend.so
+           - name: ibv-extend-4
+             mountPath: /usr/lib64/libibv_extend.so.4
+           - name: ibv-extend-4-2-0
+             mountPath: /usr/lib64/libibv_extend.so.4.2.0
+   volumes:
+      - name: hrn5-driver-config
+        hostPath:
+           path: /etc/libibverbs.d/hrn5.driver
+           type: File
+      - name: hrn5-rdmav34
+        hostPath:
+           path: /usr/lib64/libhrn5-rdmav34.so
+           type: File
+      - name: hrn5-rdmav
+        hostPath:
+           path: /usr/lib64/libhrn5-rdmav.so
+           type: File
+      - name: ibv-extend
+        hostPath:
+           path: /usr/lib64/libibv_extend.so
+           type: File
+      - name: ibv-extend-4
+        hostPath:
+           path: /usr/lib64/libibv_extend.so.4
+           type: File
+      - name: ibv-extend-4-2-0
+        hostPath:
+           path: /usr/lib64/libibv_extend.so.4.2.0
+           type: File
+```
+
+> [!NOTE]
+>
+> - 挂载动态库时，容器内挂载路径必须与宿主机路径保持一致（如`/usr/lib64`），否则动态库之间可能因依赖关系无法互相找到。
+> - 表10及上述示例中的文件路径和版本号（如`libibv_extend.so.4.2.0`）仅为UB网卡场景下的示例，随着驱动版本升级，动态库的小版本号可能变化，请以宿主机实际安装的驱动文件为准。
+
 ## 业务Pod使用及挂载资源说明<a name="ZH-CN_TOPIC_biz_pod_check_k8s_rdma_shared_dev_plugin"></a>
 
 业务Pod使用RDMA共享设备时，K8s RDMA Shared Dev Plugin会自动将所有RDMA设备挂载到Pod中。以下步骤用于验证业务Pod的资源申请和设备挂载状态。
@@ -194,7 +284,7 @@ spec:
 > - 配置主机网络`hostNetwork: true`
 > - 配置用户态驱动，两种方式任选其一：
 >   - 在镜像中安装1825 DPU的OFED驱动
->   - 启动容器后从主机挂载1825 DPU的OFED驱动
+>   - 启动容器后从主机挂载1825 DPU的OFED驱动（挂载方式参见[容器场景配置](#容器场景配置)）
 
 执行以下命令，查看业务Pod是否创建成功：
 
