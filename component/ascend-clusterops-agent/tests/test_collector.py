@@ -110,10 +110,16 @@ def test_run_commands_captures_stdout_without_redirect(tmp_path, client, command
     assert "DMIDECODE-OUT" in (dst / "device_log_stdout.txt").read_text()
 
 
-def test_run_commands_swallows_errors(tmp_path, client, command_stubs, monkeypatch):
-    # whitelisted command fails with no output -> silently skipped, no files produced
-    _install_stub(tmp_path, monkeypatch, "msnpureport", "exit 1")
+def test_run_commands_swallows_errors(tmp_path, client, monkeypatch):
+    # whitelisted command returns no output -> silently skipped, no files produced
     monkeypatch.setattr(collector, "ALLOWED_COMMANDS", frozenset({"msnpureport --bad"}))
+    # stub subprocess.run: a failed command with empty stdout/stderr must not emit a file.
+    # Real shell execution is prone to process-level stderr noise (e.g. crashpad), so mock it here.
+    monkeypatch.setattr(
+        collector.subprocess,
+        "run",
+        lambda *a, **k: SimpleNamespace(returncode=1, stdout="", stderr=""),
+    )
     dst = tmp_path / "device_log"
     dst.mkdir()
     client._run_commands(dst, ["msnpureport --bad"], "device_log")

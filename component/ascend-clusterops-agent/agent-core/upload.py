@@ -56,6 +56,28 @@ def _result(
     return {"node": node, "ok": ok, "error": error, "artifacts_tar": artifacts_tar, "worker_dir": worker_dir}
 
 
+def _extractall_safe(tf: tarfile.TarFile, dest) -> None:
+    """Safely extract tar members, rejecting path traversal / symlink / device members.
+
+    Prefer the built-in tar ``filter="data"`` (Python 3.12+); on older runtimes the same
+    rejection rules are enforced manually member-by-member so the guarantee also holds on 3.9+.
+    """
+    if hasattr(tarfile, "data_filter"):
+        tf.extractall(dest, filter="data")
+        return
+    dest_real = os.path.realpath(os.fspath(dest))
+    for member in tf.getmembers():
+        if member.issym() or member.islnk() or member.ischr() or member.isblk() or member.isfifo():
+            raise ValueError(f"unsafe tar member rejected: {member.name}")
+        name = member.name.replace("\\", "/")
+        if os.path.isabs(name) or ".." in name.split("/"):
+            raise ValueError(f"unsafe tar member rejected: {member.name}")
+        target = os.path.realpath(os.path.join(dest_real, name))
+        if target != dest_real and not target.startswith(dest_real + os.sep):
+            raise ValueError(f"unsafe tar member rejected: {member.name}")
+    tf.extractall(dest)
+
+
 class UploaderServicer(diag_pb2_grpc.UploaderServicer):
     """Accept collector client-streaming uploads and update the JobTracker in real time."""
 
@@ -95,7 +117,7 @@ class UploaderServicer(diag_pb2_grpc.UploaderServicer):
             worker_dir.mkdir(parents=True, exist_ok=True)
             with tarfile.open(tar_path, mode="r:gz") as tf:
                 # Reject path-traversal, symlink, and device members in untrusted uploads.
-                tf.extractall(worker_dir, filter="data")
+                _extractall_safe(tf, worker_dir)
             logger.info("upload succeeded and stored: job=%s node=%s tar=%s", first.job, first.node, tar_path)
             tracker.complete(
                 first.job,

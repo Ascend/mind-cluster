@@ -28,6 +28,7 @@ from __future__ import annotations
 import json
 import logging
 from contextlib import asynccontextmanager
+from typing import Optional
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -65,8 +66,8 @@ app = FastAPI(lifespan=lifespan)
 
 class DiagReq(BaseModel):
     job: str  # jobname (task CR name), required
-    namespace: str | None = "default"
-    refresh: bool | None = False  # True: ignore cache, force re-run and refresh
+    namespace: Optional[str] = "default"
+    refresh: Optional[bool] = False  # True: ignore cache, force re-run and refresh
 
 
 @app.post("/diag")
