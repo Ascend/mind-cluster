@@ -16,5 +16,8 @@
   - [K8s RDMA Shared Dev Plugin](./00_manual_installation/12_k8s_rdma_shared_dev_plugin.md)
   - [DPU Exporter](./00_manual_installation/13_dpu_exporter.md)
   - [Ascend Dynamic Resource Allocation](./00_manual_installation/14_ascend_dynamic_resource_allocation.md)
+  - [Kubectl Plugin](./00_manual_installation/15_kubectl_plugin.md)
+  - [Agent Core](./00_manual_installation/16_agent_core.md)
+  - [Node Collector](./00_manual_installation/17_node_collector.md)
 - [升级](01_upgrade.md)
 - [卸载](02_uninstallation.md)

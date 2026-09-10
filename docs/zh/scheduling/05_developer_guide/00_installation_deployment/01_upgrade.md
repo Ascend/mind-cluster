@@ -392,13 +392,51 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
     详细步骤请参见[手动安装Ascend Device Plugin](00_manual_installation/04_ascend_device_plugin.md)。
 
+## 升级Kubectl Plugin<a name="ZH-CN_TOPIC_0000002524428763"></a>
+
+**前提条件<a name="section176591058124516"></a>**
+
+已完成[升级环境检查](#升级说明)。
+
+**注意事项**
+
+- Kubectl Plugin为客户端命令行工具，通过安装脚本（install.sh）安装到用户机的 /usr/local/bin目录，不以YAML方式部署在K8s集群中，升级时使用新版本软件包重新安装插件文件即可，无需操作K8s集群资源。
+- Kubectl Plugin升级不影响集群中已部署的Agent Core和Node Collector服务。
+
+**升级步骤<a name="section2097025262414"></a>**
+
+1. 参考[获取软件包](00_manual_installation/00_obtaining_software_packages.md)章节，下载新版本Ascend ClusterOps Agent软件包并解压。
+
+2. <a name="li2097025262414"></a>以root用户登录用户机，进入新版本软件包解压目录的kubectl-plugin目录，执行以下命令重新安装插件。
+
+    ```shell
+    cd kubectl-plugin
+    bash install.sh
+    ```
+
+    回显示例如下，表示升级成功。
+
+    ```ColdFusion
+    installed. 验证:
+    OK: kubectl ascend-diag / kubectl clusterops 可用
+    ```
+
+3. 执行以下命令验证插件升级是否成功。
+
+    ```shell
+    kubectl ascend-diag --help
+    kubectl clusterops --help
+    ```
+
+4. （可选）回退旧版本。使用旧版本软件包，重新执行[步骤2](#li2097025262414)即可。
+
 ## 升级其他组件<a name="ZH-CN_TOPIC_0000002511346401"></a>
 
 **前提条件<a name="section176591058124515"></a>**
 
 - 已完成[升级环境检查](#升级说明)。
 
-- 如需升级NPU Exporter、Volcano、K8s Rdma Shared Dev Plugin、ClusterD、Ascend Operator、Infer Operator和NodeD组件，需卸载旧版本后，再执行新版本的安装步骤。
+- 如需升级 NPU Exporter、Volcano、K8s Rdma Shared Dev Plugin、ClusterD、Ascend Operator、Infer Operator、NodeD、Agent Core和Node Collector组件，需卸载旧版本后，再执行新版本的安装步骤。
 
 **注意事项**
 

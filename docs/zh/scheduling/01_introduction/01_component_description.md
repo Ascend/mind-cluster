@@ -466,3 +466,80 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 3. 将昇腾芯片的设备信息以ResourceSlice的形式上报给K8s，供调度器感知和选择。
 4. 从ResourceClaim中读取调度器的芯片分配结果，完成设备的分配与释放。
 5. 通过CDI机制将设备注入信息传递给容器运行时，完成设备注入。
+
+## Agent Core<a name="ZH-CN_TOPIC_0000002524312670"></a>
+
+**应用场景<a name="section15761025111720"></a>**
+
+训练或推理任务在运行过程中出现故障时，需要快速定位故障根因。任务通常分布在多个节点，故障相关日志（系统日志、设备日志、业务日志）分散在各节点的宿主机上，人工排查成本高、效率低。MindCluster提供Agent Core组件，作为故障诊断的集中控制中心，按任务维度自动完成节点采集调度、日志清洗与集中诊断。
+
+**组件功能<a name="section1112014512117"></a>**
+
+- 维护任务Pod的中心关系缓存（relcache）：全量监听Pod，记录任务（Job）与Pod、节点、Pod UID、Rank的映射关系，并实时同步到ConfigMap（agent-core-relcache）。
+- 维护Pod挂载关系表（pathmap）：监听任务Pod的hostPath挂载对，写入全局ConfigMap（clusterops-pathmap），供Node Collector本地缓存与查询。
+- 接收诊断请求，按任务名和命名空间查询中心关系表，向各计算节点的Node Collector下发采集指令，并聚合各节点上报的采集结果。
+- 将各节点采集并清洗后的日志组装为诊断输入目录，调用ascend-fd diag命令执行集中诊断，生成诊断报告。
+- 支持诊断结果缓存：任务处于停止状态时缓存诊断结果，重复诊断直接返回缓存，可通过 --refresh强制刷新。
+- 可选对接LLM服务，对诊断报告进行智能总结，输出根因报告。
+
+**组件上下游依赖<a name="section4941922192110"></a>**
+
+**图19** Agent Core组件上下游依赖<a name="fig117818118589"></a>
+
+![](../../figures/scheduling/组件上下游依赖-11.png "组件上下游依赖-11")
+
+1. 通过K8s API全量监听任务Pod，维护诊断任务与Pod的中心关系缓存，并实时同步到agent-core-relcache ConfigMap。
+2. 通过K8s API监听Pod的hostPath挂载对，写入clusterops-pathmap ConfigMap。
+3. 按任务名查询中心关系表，向各节点的Node Collector下发采集指令。
+4. 接收Node Collector通过UploadResult主动上报的采集结果（tar.gz）。
+5. 调用ascend-fd diag对聚合的日志执行集中诊断，生成诊断报告。
+6. 可选调用LLM服务对诊断报告进行总结。
+7. 训练/推理任务运行于各计算节点的K8s Pod（容器）中，Agent Core以这些任务容器为诊断对象，完成集群运维Agent。
+
+## Node Collector<a name="ZH-CN_TOPIC_0000002524312671"></a>
+
+**应用场景<a name="section15761025111720"></a>**
+
+任务日志分散在集群各计算节点的宿主机上，诊断时需要从各节点采集任务日志并完成本地清洗。MindCluster提供Node Collector组件，以DaemonSet方式部署在每个计算节点，负责按采集契约从宿主机采集任务日志并完成本地清洗。
+
+**组件功能<a name="section1112014512117"></a>**
+
+- 监听全局ConfigMap（clusterops-pathmap），在本地缓存任务Pod的hostPath挂载对和env信息。
+- 接收Agent Core下发的采集指令，立即返回受理结果，并在后台异步执行采集。
+- 按采集契约（collect_manifest.yaml）执行采集，支持env、paths、mount_keywords、commands等多种实体类型：
+  - env：读取任务Pod的env值（容器内路径），经挂载对反查宿主机路径后采集。
+  - paths：按容器路径前缀匹配任务Pod的挂载对，反查宿主机路径后采集。
+  - mount_keywords：按关键词匹配挂载对或扫描宿主机路径子目录，定位日志目录。
+  - commands：仅允许执行白名单内的采集命令（如dmesg、dmidecode、msnpureport）。
+- 本地调用ascend-fd parse对采集的日志进行清洗，并将清洗结果打包为tar.gz，并通过gRPC接口主动上报给Agent Core。
+
+**组件上下游依赖<a name="section4941922192110"></a>**
+
+**图20** Node Collector组件上下游依赖<a name="fig117818118590"></a>
+
+![](../../figures/scheduling/组件上下游依赖-12.png "组件上下游依赖-12")
+
+1. 监听clusterops-pathmap ConfigMap，获取任务Pod的hostPath挂载对和env信息。
+2. 接收Agent Core下 发的gRPC采集指令。
+3. 从宿主机读取任务日志（经挂载对反查宿主路径）。
+4. 调用ascend-fd parse对采集的日志进行本地清洗。
+5. 将清洗结果打包为tar.gz，通过UploadResult主动上报给Agent Core。
+6. 训练/推理业务容器的日志经hostPath挂载落盘至宿主机后，Node Collector从宿主机路径采集这些容器日志。
+
+## Kubectl Plugin<a name="ZH-CN_TOPIC_0000002524312672"></a>
+
+**应用场景<a name="section15761025111720"></a>**
+
+用户需要按任务维度快速触发集群运维Agent，同时要求调用方式简便、安全。MindCluster提供Kubectl Plugin，将故障诊断能力封装为kubectl命令，用户无需登录各节点即可通过 `kubectl ascend_diag` 命令一键触发诊断，并可通过 `kubectl clusterops` 命令管理LLM服务配置。
+
+**组件功能<a name="section1112014512117"></a>**
+
+- kubectl ascend_diag：按任务名触发集群运维Agent，支持 --refresh参数强制刷新诊断结果，支持 --json参数输出完整JSON响应，支持 --collect-manifest参数更新集群采集契约。
+- kubectl clusterops：支持创建和清除LLM服务配置（--create-llm-config / --clear-llm-config）。
+- 复用本机kubeconfig鉴权，通过kubectl port-forward访问Agent Core服务，无需单独暴露入口或下发密钥。
+- 纯标准库实现，无需pip安装，执行安装脚本即可使用。
+
+**组件上下游依赖<a name="section4941922192110"></a>**
+
+1. 用户执行 `kubectl ascend_diag` 命令，插件复用本机kubeconfig通过port-forward将诊断请求转发至Agent Core的/diag接口。
+2. Agent Core按任务维度完成节点采集调度、日志清洗与集中诊断后，返回诊断报告，插件在终端展示结果。

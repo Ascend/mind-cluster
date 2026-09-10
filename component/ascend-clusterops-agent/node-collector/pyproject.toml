@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 name = "node-collector"
 version = "26.2.0"
 description = "ascend-clusterops-agent: node-collector (DaemonSet)"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dependencies = [
   "grpcio>=1.60.0",
   "protobuf>=4.25",

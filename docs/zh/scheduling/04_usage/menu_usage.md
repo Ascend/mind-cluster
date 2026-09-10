@@ -14,3 +14,4 @@
 - [潮汐调度最佳实践](./10_tidal_scheduling/menu_tidal_scheduling.md)
 - [verl强化学习任务最佳实践](./12_verl_best_practice/menu_verl_best_practice.md)
 - [Ascend DRA组件最佳实践](./13_ascend_dynamic_resource_allocation_best_practice/menu_ascend_dynamic_resource_allocation_best_practice.md)
+- [集群运维Agent特性指南](./14_clusterops_agent/menu_fault_diagnosis.md)
