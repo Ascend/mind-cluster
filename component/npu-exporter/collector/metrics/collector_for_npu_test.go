@@ -23,12 +23,14 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-common/api"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
+	"huawei.com/npu-exporter/v6/collector/container"
 )
 
 const (
@@ -515,4 +517,113 @@ func TestUpdatePrometheusMachineHealthMetrics(t *testing.T) {
 			convey.So(values["machine_unknown_npu_nums"], convey.ShouldEqual, tt.expectUnknown)
 		})
 	}
+}
+
+func readMetricLabelsAndValue(m prometheus.Metric) (labels map[string]string, value float64) {
+	pb := &dto.Metric{}
+	if err := m.Write(pb); err != nil {
+		return nil, 0
+	}
+	labels = make(map[string]string, len(pb.GetLabel()))
+	for _, pair := range pb.GetLabel() {
+		labels[pair.GetName()] = pair.GetValue()
+	}
+	if gauge := pb.GetGauge(); gauge != nil {
+		value = gauge.GetValue()
+	}
+	return labels, value
+}
+
+func TestGetDefaultProcessLabel(t *testing.T) {
+	cardLabel := []string{"0", "npu", "die", "pcie", "ns", "pod", "container"}
+
+	convey.Convey("TestGetDefaultProcessLabel", t, func() {
+		convey.Convey("should fill joined container name and container ID", func() {
+			info := container.DevicesInfo{ID: "c1", Name: "ns1_pod1_container1"}
+			labels, id := getDefaultProcessLabel(cardLabel, info)
+			convey.So(id, convey.ShouldEqual, "c1")
+			convey.So(labels[:4], convey.ShouldResemble, []string{"0", "npu", "die", "pcie"})
+			convey.So(labels[4:], convey.ShouldResemble, []string{"ns", "pod", "ns1_pod1_container1"})
+		})
+
+		convey.Convey("should keep empty name and ID when name does not split into 3 parts", func() {
+			info := container.DevicesInfo{ID: "c1", Name: "short"}
+			labels, id := getDefaultProcessLabel(cardLabel, info)
+			convey.So(id, convey.ShouldEqual, "")
+			convey.So(labels[6], convey.ShouldEqual, "")
+		})
+
+		convey.Convey("should keep empty name and ID for zero-value container info", func() {
+			labels, id := getDefaultProcessLabel(cardLabel, container.DevicesInfo{})
+			convey.So(id, convey.ShouldEqual, "")
+			convey.So(labels[6], convey.ShouldEqual, "")
+		})
+	})
+}
+
+func TestUpdateProcessInfoForPrometheusNoProcess(t *testing.T) {
+	cardLabel := []string{"0", "npu", "die", "pcie", "ns", "pod", "container"}
+
+	convey.Convey("TestUpdateProcessInfoForPrometheusNoProcess", t, func() {
+		convey.Convey("should report zero process info with the default container ID", func() {
+			chip := &chipCache{DevProcessInfo: &common.DevProcessInfo{ProcNum: 0}}
+			containerInfos := []container.DevicesInfo{{ID: "c1", Name: "ns1_pod1_container1"}}
+
+			ch := make(chan prometheus.Metric, 4)
+			go func() {
+				defer close(ch)
+				updateProcessInfoForPrometheus(ch, chip, containerInfos, time.Now(), cardLabel)
+			}()
+
+			var labels map[string]string
+			var value float64
+			for m := range ch {
+				if m.Desc() == descDevProcessInfo {
+					labels, value = readMetricLabelsAndValue(m)
+				}
+			}
+
+			convey.So(labels, convey.ShouldHaveLength, 9)
+			convey.So(labels["id"], convey.ShouldEqual, "0")
+			convey.So(labels["model_name"], convey.ShouldEqual, "npu")
+			convey.So(labels["vdie_id"], convey.ShouldEqual, "die")
+			convey.So(labels["pcie_bus_info"], convey.ShouldEqual, "pcie")
+			convey.So(labels["namespace"], convey.ShouldEqual, "ns")
+			convey.So(labels["pod_name"], convey.ShouldEqual, "pod")
+			convey.So(labels["container_name"], convey.ShouldEqual, "ns1_pod1_container1")
+			convey.So(labels["process_id"], convey.ShouldEqual, "")
+			convey.So(labels["container_id"], convey.ShouldEqual, "c1")
+			convey.So(value, convey.ShouldEqual, float64(0))
+		})
+
+		convey.Convey("should report zero process info without container ID when no container", func() {
+			chip := &chipCache{DevProcessInfo: &common.DevProcessInfo{ProcNum: 0}}
+
+			ch := make(chan prometheus.Metric, 4)
+			go func() {
+				defer close(ch)
+				updateProcessInfoForPrometheus(ch, chip, nil, time.Now(), cardLabel)
+			}()
+
+			var labels map[string]string
+			var value float64
+			for m := range ch {
+				if m.Desc() == descDevProcessInfo {
+					labels, value = readMetricLabelsAndValue(m)
+				}
+			}
+
+			convey.So(labels, convey.ShouldHaveLength, 9)
+			convey.So(labels["id"], convey.ShouldEqual, "0")
+			convey.So(labels["model_name"], convey.ShouldEqual, "npu")
+			convey.So(labels["vdie_id"], convey.ShouldEqual, "die")
+			convey.So(labels["pcie_bus_info"], convey.ShouldEqual, "pcie")
+			convey.So(labels["namespace"], convey.ShouldEqual, "ns")
+			convey.So(labels["pod_name"], convey.ShouldEqual, "pod")
+			convey.So(labels["container_name"], convey.ShouldEqual, "")
+			convey.So(labels["process_id"], convey.ShouldEqual, "")
+			convey.So(labels["container_id"], convey.ShouldEqual, "")
+			convey.So(value, convey.ShouldEqual, float64(0))
+		})
+	})
 }

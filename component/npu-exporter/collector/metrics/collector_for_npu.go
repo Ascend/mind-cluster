@@ -38,8 +38,8 @@ import (
 const (
 	containerNameIndexOffsetInCardLabel = 1
 	podNameIndexOffsetInCardLabel       = 2
-	namespaceIndexOffsetInCardLabel     = 3
-	cardLabelWihtContainerInfoLen       = 3
+	namespaceIndexOffsetInCardLabel = 3
+	cardLabelWithContainerInfoLen   = 3
 	// hexBase is the base for formatting error codes as hexadecimal strings
 	hexBase = 16
 )
@@ -350,14 +350,23 @@ func updateProcessInfoForPrometheus(ch chan<- prometheus.Metric, chip *chipCache
 		return
 	}
 	doUpdateMetric(ch, timestamp, devProcessInfo.ProcNum, cardLabel, descDevProcessNum)
+	if devProcessInfo.ProcNum == 0 {
+		var defaultInfo container.DevicesInfo
+		if len(containerInfos) > 0 {
+			defaultInfo = containerInfos[0]
+		}
+		processCardLabel, containerID := getDefaultProcessLabel(cardLabel, defaultInfo)
+		doUpdateMetric(ch, timestamp, 0, append(processCardLabel, "", containerID), descDevProcessInfo)
+		return
+	}
 	for i := int32(0); i < devProcessInfo.ProcNum; i++ {
 		containerID := ""
 		newCardLabel := make([]string, len(cardLabel))
-		if len(cardLabel) > cardLabelWihtContainerInfoLen {
+		if len(cardLabel) > cardLabelWithContainerInfoLen {
 			copy(newCardLabel, cardLabel)
-			newCardLabel[len(newCardLabel)-1] = ""
-			newCardLabel[len(newCardLabel)-2] = ""
-			newCardLabel[len(newCardLabel)-3] = ""
+			newCardLabel[len(newCardLabel)-containerNameIndexOffsetInCardLabel] = ""
+			newCardLabel[len(newCardLabel)-podNameIndexOffsetInCardLabel] = ""
+			newCardLabel[len(newCardLabel)-namespaceIndexOffsetInCardLabel] = ""
 		}
 		procInfo := devProcessInfo.DevProcArray[i]
 		if containerInfo, ok := findContainerForPID(procInfo.Pid, containerInfos); ok {
@@ -381,7 +390,7 @@ func getDefaultProcessLabel(cardLabel []string, containerInfo container.DevicesI
 	newCardLabel := make([]string, len(cardLabel))
 	copy(newCardLabel, cardLabel)
 	// containerName in process info is namespace_podName_containerName
-	newCardLabel[len(newCardLabel)-1] = containerName
+	newCardLabel[len(newCardLabel)-containerNameIndexOffsetInCardLabel] = containerName
 	return newCardLabel, containerID
 }
 
@@ -396,7 +405,7 @@ func buildProcessCardLabel(cardLabel []string, containerInfo container.DevicesIn
 	namespaceValue := cNameArray[colcommon.NameSpaceIdx]
 	podNameValue := cNameArray[colcommon.PodNameIdx]
 	containerName := cNameArray[colcommon.ConNameIdx]
-	if len(cardLabel) > cardLabelWihtContainerInfoLen {
+	if len(cardLabel) > cardLabelWithContainerInfoLen {
 		// containerName in process info is namespace_podName_containerName
 		cardLabel[len(cardLabel)-containerNameIndexOffsetInCardLabel] = strings.Join(
 			[]string{namespaceValue, podNameValue, containerName}, "_")
