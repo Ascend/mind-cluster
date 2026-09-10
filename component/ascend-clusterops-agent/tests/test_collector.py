@@ -533,6 +533,22 @@ def test_run_and_upload_reports_failure(tmp_path, monkeypatch):
     assert "parse boom" in captured["error"]
 
 
+def test_run_and_upload_reports_upload_failure(tmp_path, monkeypatch):
+    """upload_result returns False -> report failure so agent-core does not wait for the collect timeout."""
+    captured = {}
+    monkeypatch.setattr(collector.collector_client, "work_root", tmp_path)
+    monkeypatch.setattr(collector.collector_client, "collect", lambda node, ns, job, pods: b"fake-data")
+    monkeypatch.setattr(collector.collector_client, "upload_result", lambda meta, data: False)
+    monkeypatch.setattr(
+        collector.collector_client, "upload_failure", lambda meta, error: captured.update(meta=meta, error=error)
+    )
+
+    req = diag_pb2.CollectRequest(node="node-a", job="job-x", pods=[])
+    collector.collector_client.run_and_upload(req)
+    assert captured["meta"] == {"node": "node-a", "job": "job-x", "namespace": "default"}
+    assert captured["error"] == "upload failed after retries"
+
+
 # --------------------------------------------------------------------------- #
 # upload path E2E: collector.upload_result -> agent.upload.UploaderServicer
 # (real loopback gRPC, tar.gz stored and extracted, JobTracker aggregates)
@@ -557,6 +573,9 @@ def test_upload_result_end_to_end(tmp_path, monkeypatch):
 
     job, node = "job-e2e", "node-a"
     tracker.register(job, [node])
+    from agent_core import tools
+
+    tools._active_diags[("testns", job)] = time.time()
     server = _start_upload_server(tmp_path, monkeypatch)
     try:
         buf = io.BytesIO()
@@ -587,11 +606,61 @@ def test_upload_failure_records_error(tmp_path, monkeypatch):
 
     job, node = "job-fail", "node-b"
     tracker.register(job, [node])
+    from agent_core import tools
+
+    tools._active_diags[("default", job)] = time.time()
     server = _start_upload_server(tmp_path, monkeypatch)
     try:
         collector.collector_client.upload_failure({"node": node, "job": job}, "parse boom")
         res = tracker.get(job)["results"][node]
         assert res["ok"] is False
         assert "parse boom" in res["error"]
+    finally:
+        server.stop(0)
+
+
+def test_upload_rejects_non_active_job(tmp_path, monkeypatch):
+    from diagproto import diag_pb2_grpc
+
+    server = _start_upload_server(tmp_path, monkeypatch)
+    try:
+        with pytest.raises(grpc.RpcError) as exc:
+            with grpc.insecure_channel(collector.collector_client.agent_addr) as ch:
+                diag_pb2_grpc.UploaderStub(ch).UploadResult(
+                    collector.collector_client._upload_stream(
+                        {"node": "node-c", "job": "job-ghost", "namespace": "testns", "ok": True}, b"data"
+                    ),
+                    timeout=5,
+                )
+        assert exc.value.code() == grpc.StatusCode.PERMISSION_DENIED
+    finally:
+        server.stop(0)
+
+
+def test_upload_rejects_path_traversal(tmp_path, monkeypatch):
+    from agent_core import tools
+    from diagproto import diag_pb2_grpc
+
+    job, node = "job-trav", "node-d"
+    tools._active_diags[("testns", job)] = time.time()
+    server = _start_upload_server(tmp_path, monkeypatch)
+    try:
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode="w:gz") as tf:
+            info = tarfile.TarInfo("../evil.txt")
+            payload = b"evil"
+            info.size = len(payload)
+            tf.addfile(info, io.BytesIO(payload))
+        buf.seek(0)
+        with pytest.raises(grpc.RpcError) as exc:
+            with grpc.insecure_channel(collector.collector_client.agent_addr) as ch:
+                diag_pb2_grpc.UploaderStub(ch).UploadResult(
+                    collector.collector_client._upload_stream(
+                        {"node": node, "job": job, "namespace": "testns", "ok": True}, buf.read()
+                    ),
+                    timeout=5,
+                )
+        assert exc.value.code() == grpc.StatusCode.INTERNAL
+        assert not (tmp_path.parent / "evil.txt").exists()
     finally:
         server.stop(0)

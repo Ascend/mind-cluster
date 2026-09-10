@@ -47,8 +47,6 @@ from agent_core.k8s import K8s, watch_events
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_BASE_URL = "https://open.bigmodel.cn/api/paas/v4"
-DEFAULT_MODEL = "glm-4-plus"
 # llm-secret name matches the kubectl-clusterops contract (keys: api-key/base-url/model)
 LLM_SECRET_NAME = "llm-secret"  # nosec B105
 
@@ -86,9 +84,9 @@ class LLMManager:
     def _env_config() -> tuple[str, str, str]:
         """Fallback LLM config read from environment variables (local debugging / k8s API unavailable)."""
         return (
-            os.environ.get("LLM_BASE_URL", DEFAULT_BASE_URL),
+            os.environ.get("LLM_BASE_URL", ""),
             os.environ.get("LLM_API_KEY", ""),
-            os.environ.get("LLM_MODEL", DEFAULT_MODEL),
+            os.environ.get("LLM_MODEL", ""),
         )
 
     @staticmethod
@@ -96,9 +94,9 @@ class LLMManager:
         """Extract (base_url, api_key, model) from a V1Secret (its data is base64)."""
         data = secret.data or {}
         return (
-            LLMManager._dec(data.get("base-url", "")) or DEFAULT_BASE_URL,
+            LLMManager._dec(data.get("base-url", "")),
             LLMManager._dec(data.get("api-key", "")),
-            LLMManager._dec(data.get("model", "")) or DEFAULT_MODEL,
+            LLMManager._dec(data.get("model", "")),
         )
 
     # ---- Config read / cache ---- #
@@ -148,13 +146,14 @@ class LLMManager:
     def get_llm(self) -> ChatOpenAI | None:
         """Return the cached LLM client, rebuilding it when the LLM config changed.
 
-        Without an api-key returns None (the main flow degrades to deterministic mode).
+        Without a complete config (api-key/base-url/model are all required, no defaults)
+        returns None (the main flow degrades to deterministic mode).
         """
         base_url, api_key, model = self._read_llm_config()
         with self._lock:
-            if not api_key:
+            if not (base_url and api_key and model):
                 if self._llm is not None:
-                    logger.info("LLM config cleared (no api key): falling back to deterministic mode")
+                    logger.info("LLM config incomplete (api-key/base-url/model): falling back to deterministic mode")
                 self._llm = None
                 self._cache_base_url = self._cache_api_key = self._cache_model = None
                 return None

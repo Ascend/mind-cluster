@@ -1,0 +1,33 @@
+# node-collector: node collector (DaemonSet).
+# Build wheel: python -m pip wheel --no-deps --wheel-dir dist .
+# Entry point after install:
+#   CLI  : ascend-node-collector (equivalent to python -m node_collector.collector, gRPC :9720)
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "node-collector"
+version = "26.2.0"
+description = "ascend-clusterops-agent: node-collector (DaemonSet)"
+requires-python = ">=3.11"
+dependencies = [
+  "grpcio>=1.60.0",
+  "protobuf>=4.25",
+  "pyyaml>=6.0",
+  "kubernetes>=29.0.0",
+]
+
+[project.scripts]
+ascend-node-collector = "node_collector.collector:serve"
+
+[tool.setuptools]
+packages = ["node_collector", "clusterops_common", "diagproto"]
+
+[tool.setuptools.package-dir]
+# The source directory name (node-collector/) contains a hyphen and cannot be a Python package
+# name; the project root is the package root, mapped to the valid package name node_collector.
+node_collector = "."
+# Shared common code (logging etc.) and gRPC stubs are embedded into the component wheel.
+clusterops_common = "../common"
+diagproto = "../common/diagproto"
