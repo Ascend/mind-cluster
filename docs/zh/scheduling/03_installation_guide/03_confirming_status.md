@@ -900,3 +900,107 @@
     NAME                                  POOLNAME     DEVICECOUNT   AGE
     npu.huawei.com-node1-1a2b3c           node1        8             2m
     ```
+
+## Agent Core<a name="ZH-CN_TOPIC_0000002524428761"></a>
+
+请在任意节点执行以下步骤验证Agent Core的安装状态。
+
+**操作步骤<a name="section-agent-core-confirm-status"></a>**
+
+1. 通过如下命令查看K8s集群中Agent Core的Pod，需要满足Pod的数量为1，STATUS为Running，READY为1/1。
+
+    ```shell
+    kubectl get pods -n mindx-dl -o wide | grep agent-core
+    ```
+
+   回显示例：
+
+    ```ColdFusion
+    agent-core-7844cb867d-fwcj7   1/1     Running   0          2m14s   <none>   node133   <none>           <none>
+    ```
+
+2. 通过如下命令查看K8s集群中Agent Core的日志，出现“agent-core started”日志表示组件正常运行。
+
+    ```shell
+    kubectl logs -n mindx-dl {Agent Core组件的Pod名字}
+    ```
+
+   回显示例如下：
+
+    ```ColdFusion
+    [2026-09-09 10:20:15,123] INFO   [agent_core.main][Process MainProcess:1][main.py:53] agent-core started: relcache + pathmap-writer + llm-secret-watch + upload gRPC :9710
+    [2026-09-09 10:20:15,130] INFO   [agent_core.relcache][Process MainProcess:1][relcache.py:64] task CRs supported by agent-core: ["mindxdl.gitee.com/v1/AscendJob", "mindcluster.huawei.com/v1/InferServiceSet"]
+    ...
+    ```
+
+## Node Collector<a name="ZH-CN_TOPIC_0000002524428762"></a>
+
+请在任意节点执行以下步骤验证Node Collector的安装状态。
+
+**操作步骤<a name="section-node-collector-confirm-status"></a>**
+
+1. 通过如下命令查看K8s集群中Node Collector的Pod，需要满足每个计算节点均有一个Pod，且STATUS为Running，READY为1/1。
+
+    ```shell
+    kubectl get pods -n mindx-dl -o wide | grep node-collector
+    ```
+
+   回显示例：
+
+    ```ColdFusion
+    node-collector-8j4kq   1/1     Running   0          45s   <none>   node1   <none>           <none>
+    node-collector-m4j4r   1/1     Running   0          45s   <none>   node2   <none>           <none>
+    ```
+
+2. 通过如下命令查看K8s集群中Node Collector的日志，出现“diag node-collector gRPC listening”日志表示组件正常运行。
+
+    ```shell
+    kubectl logs -n mindx-dl {Node Collector组件的Pod名字}
+    ```
+
+   回显示例如下：
+
+    ```ColdFusion
+    [2026-09-09 10:20:15,123] INFO   [node_collector.collector][Process MainProcess:1][collector.py:639] diag node-collector gRPC listening on :9720
+    [2026-09-09 10:20:15,130] INFO   [node_collector.pathmap][Process MainProcess:1][pathmap.py:176] collect-manifest watch started: CM cluster-system/collect-manifest (fallback file /home/hwMindX/collect_manifest.yaml)
+    ...
+    ```
+
+## Kubectl Plugin<a name="ZH-CN_TOPIC_0000002524428760"></a>
+
+Kubectl Plugin为安装在用户机上的客户端命令行工具，不包含Pod。请在用户机执行以下步骤验证Kubectl Plugin的安装状态。
+
+**操作步骤<a name="section-kubectl-plugin-confirm-status"></a>**
+
+1. 执行以下命令，查看插件是否可用。命令正常回显帮助信息，表示插件安装成功。
+
+    ```shell
+    kubectl ascend_diag --help
+    kubectl clusterops --help
+    ```
+
+   回显示例如下：
+
+    ```ColdFusion
+    usage: kubectl-ascend_diag [-h] [--job JOB] [-n NAMESPACE] [--agent-core-service AGENT_CORE_SERVICE] [--refresh] [--json] [--collect-manifest PATH]
+
+    Ascend fault diagnosis kubectl plugin
+
+    options:
+      -h, --help            show this help message and exit
+      --job JOB             job name (job CR name)
+      -n NAMESPACE, --namespace NAMESPACE
+                            namespace
+      --agent-core-service AGENT_CORE_SERVICE
+                            agent-core Service, format svc.ns:9700
+      --refresh             ignore the cache, force rerun and refresh the cache
+      --json                print the full JSON response
+      --collect-manifest PATH
+                            write a local collect_manifest.yaml into the cluster ConfigMap and exit
+    ```
+
+2. （可选）执行以下命令，触发一次集群运维Agent，确认诊断链路正常。
+
+    ```shell
+    kubectl ascend_diag --job {job_name}
+    ```

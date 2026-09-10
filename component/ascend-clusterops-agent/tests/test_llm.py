@@ -53,6 +53,16 @@ def test_get_llm_none_without_key(monkeypatch):
         importlib.reload(llm)
 
 
+def test_get_llm_none_without_base_url_or_model(monkeypatch):
+    # no defaults: missing base-url/model (even with api-key) -> deterministic mode (None)
+    importlib.reload(llm)
+    monkeypatch.setattr(llm._manager, "_read_llm_config", lambda: ("", "sk-test", ""))
+    try:
+        assert llm.get_llm() is None
+    finally:
+        importlib.reload(llm)
+
+
 def test_get_llm_built_with_key(monkeypatch):
     importlib.reload(llm)
     monkeypatch.setattr(
@@ -150,11 +160,11 @@ def test_read_llm_config_from_secret(monkeypatch):
     assert llm._manager._read_llm_config() == ("https://example.invalid/v1", "sk-test", "test-model")
 
 
-def test_read_llm_config_defaults_when_fields_missing(monkeypatch):
-    # base-url/model missing -> use defaults
+def test_read_llm_config_no_defaults_when_fields_missing(monkeypatch):
+    # base-url/model missing -> empty (no defaults), get_llm degrades to deterministic mode
     secret = SimpleNamespace(data={"api-key": base64.b64encode(b"sk").decode()})
     _mock_core(monkeypatch, secret)
-    assert llm._manager._read_llm_config() == (llm.DEFAULT_BASE_URL, "sk", llm.DEFAULT_MODEL)
+    assert llm._manager._read_llm_config() == ("", "sk", "")
 
 
 def test_read_llm_config_secret_missing_404(monkeypatch):
