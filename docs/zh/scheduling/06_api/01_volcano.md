@@ -71,6 +71,16 @@
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p197214711249"><a name="p197214711249"></a><a name="p197214711249"></a><span id="ph972477246"><a name="ph972477246"></a><a name="ph972477246"></a>Volcano</span></p>
 </td>
 </tr>
+<tr id="row_schedule_mode_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_schedule_mode_1"><a name="p_schedule_mode_1"></a><a name="p_schedule_mode_1"></a>huawei.com/schedule.mode</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_schedule_mode_2"><a name="p_schedule_mode_2"></a><a name="p_schedule_mode_2"></a>配置芯片亲和性调度的严格程度。</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>hard：严格拓扑亲和调度，任务申请的芯片必须放入同一紧密互联域内，节点无法满足时任务Pending，等待资源充足后再调度。</li><li>soft：软亲和调度（默认），优先尝试严格拓扑亲和调度；节点无法满足时，允许将任务申请的芯片分散到多个亲和域（使用跨域碎片资源）调度。</li></ul>
+<p id="p_schedule_mode_3"><a name="p_schedule_mode_3"></a><a name="p_schedule_mode_3"></a>未配置该注解或取值非法时，默认按soft调度。</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_schedule_mode_4"><a name="p_schedule_mode_4"></a><a name="p_schedule_mode_4"></a><span id="ph_schedule_mode_volcano"><a name="ph_schedule_mode_volcano"></a><a name="ph_schedule_mode_volcano"></a>Volcano</span></p>
+</td>
+</tr>
 <tr id="row572178247"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p13765229182617"><a name="p13765229182617"></a><a name="p13765229182617"></a>sp-fit</p>
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p1276582913269"><a name="p1276582913269"></a><a name="p1276582913269"></a>超节点调度策略。</p>
@@ -313,6 +323,16 @@
 <td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p1389015013273"><a name="p1389015013273"></a><a name="p1389015013273"></a>目前支持<a href="#table1120511613153">表3</a>中的配置。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p197214711249"><a name="p197214711249"></a><a name="p197214711249"></a><span id="ph972477246"><a name="ph972477246"></a><a name="ph972477246"></a>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_schedule_mode_pod"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_schedule_mode_pod_1"><a name="p_schedule_mode_pod_1"></a><a name="p_schedule_mode_pod_1"></a>huawei.com/schedule.mode</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_schedule_mode_pod_2"><a name="p_schedule_mode_pod_2"></a><a name="p_schedule_mode_pod_2"></a>配置芯片亲和性调度的严格程度。</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>hard：严格拓扑亲和调度，任务申请的芯片必须放入同一紧密互联域内，节点无法满足时任务Pending，等待资源充足后再调度。</li><li>soft：软亲和调度（默认），优先尝试严格拓扑亲和调度；节点无法满足时，允许将任务申请的芯片分散到多个亲和域（使用跨域碎片资源）调度。</li></ul>
+<p id="p_schedule_mode_pod_3"><a name="p_schedule_mode_pod_3"></a><a name="p_schedule_mode_pod_3"></a>未配置该注解或取值非法时，默认按soft调度。</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_schedule_mode_pod_4"><a name="p_schedule_mode_pod_4"></a><a name="p_schedule_mode_pod_4"></a><span id="ph_schedule_mode_pod_volcano"><a name="ph_schedule_mode_pod_volcano"></a><a name="ph_schedule_mode_pod_volcano"></a>Volcano</span></p>
 </td>
 </tr>
 <tr id="row572178247"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p13765229182617"><a name="p13765229182617"></a><a name="p13765229182617"></a>sp-fit</p>

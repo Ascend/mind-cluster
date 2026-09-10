@@ -86,6 +86,41 @@ npu-310-strategy参数取值说明如下：
 |npu-310-strategy|chip|<ul><li>card：按推理卡调度，request请求的昇腾AI处理器个数不超过2，使用同一张Atlas 300I Duo 推理卡上的昇腾AI处理器。</li><li>chip：按昇腾AI处理器调度，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul>|
 |distributed|false|<ul><li>true：分布式推理调度策略。使用chip模式时，必须将任务调度到整张Atlas 300I Duo 推理卡。若任务需要的昇腾AI处理器数量为单数时，使用单个昇腾AI处理器的部分，将优先调度到剩余昇腾AI处理器数量为1的Atlas 300I Duo 推理卡。</li><li>false：非分布式推理调度策略。使用chip模式时，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul>无论是否为分布式推理，card模式的调度策略不变。|
 
+## 芯片亲和性调度策略（chip-affinity）<a name="section_chip_affinity_scheduling_strategy"></a>
+
+芯片亲和性调度策略是Volcano默认的NPU节点内芯片亲和调度策略。任务YAML未配置`huawei.com/schedule_policy`注解，也未配置已废弃的`accelerator-type`标签时，Volcano对申请`huawei.com/Ascend910`或`huawei.com/npu`资源的任务，默认采用芯片亲和性调度策略。该策略根据节点内芯片的互联（亲和）拓扑，尽量将任务申请的芯片分配到互联更紧密的域内，降低跨芯片通信开销。
+
+### 前提条件<a name="section_chip_affinity_precondition"></a>
+
+使用芯片亲和性调度策略，节点需要具备芯片互联拓扑信息。节点通过注解`huawei.com/npu.topology`声明节点内芯片间的互联（亲和）拓扑，该注解由Ascend Device Plugin在启动时写入。注解取值为JSON嵌套整型数组，同一子数组内的芯片属于同一个更紧密的互联域（如同一HCCS环），嵌套越深，互联越紧密；节点未配置该注解时，Volcano按节点芯片数量构造平铺拓扑（无分组，即不做芯片拓扑亲和）。关于该注解的格式、合法取值及自配置规则的详细说明，请参见[K8s原生对象说明](../../../06_api/12_k8s.md)中的“npu.topology注解说明”章节。
+
+### 兼容性说明<a name="section_chip_affinity_compatibility"></a>
+
+- 任务配置了`huawei.com/schedule_policy`注解或已废弃的`accelerator-type`标签时，芯片亲和性调度策略不生效，任务按原有策略调度。
+- 任务未配置上述注解或标签，且节点未声明`huawei.com/npu.topology`注解时，在<term>Atlas 训练系列产品</term>中，芯片亲和性调度策略对任务请求的芯片数量没有限制，只要节点可用芯片数足够即可调度。
+
+### 调度原则<a name="section_chip_affinity_strategy_principle"></a>
+
+芯片亲和性调度策略的调度原则如下：
+
+- **紧密互联域优先**：优先将任务申请的芯片放入互联最紧密的亲和域内（拓扑嵌套最深的分组）；最紧密的亲和域无法满足时，再逐级扩展到更大范围的互联域。
+- **节点优选**：对节点进行打分，能严格满足任务芯片拓扑请求的节点得分最高，优先选择该节点；仅能通过软亲和分配或驱逐满足的节点得分较低。
+- **芯片级驱逐**：节点可用芯片无法满足高优先级任务的请求时，可驱逐该节点上占用芯片的可被抢占任务（如低优先级任务），释放芯片后，再满足高优先级任务调度。
+
+### 调度模式<a name="section_chip_affinity_schedule_mode"></a>
+
+任务可通过注解`huawei.com/schedule.mode`配置芯片亲和性调度的严格程度。该注解的取值及默认行为说明，请参见[PodGroup](../../../06_api/01_volcano.md#podgroup)与[Pod](../../../06_api/01_volcano.md#pod)的annotations表中的“huawei.com/schedule.mode”行。
+
+### 单机调度场景<a name="section_chip_affinity_single_node_scene"></a>
+
+单机调度场景下，任务无需配置`huawei.com/schedule_policy`注解，Volcano默认采用芯片亲和性调度策略。例如，Atlas 950 SuperPoD Flex（单节点16张昇腾AI处理器，每8张卡在1个互联环上）的单机任务，只需申请`huawei.com/npu`资源，无需配置`huawei.com/schedule_policy`，Volcano会按芯片亲和性调度策略将任务申请的芯片优先放入互联更紧密的同一互联环内，降低跨环通信开销。
+
+### 使用约束<a name="section_chip_affinity_constraint"></a>
+
+- 任务申请的芯片数量不能大于节点芯片总数，单节点最多支持64个芯片。
+- 节点上存在参数面网络不健康的芯片时，可通过注解`huawei.com/parameterplane.unhealthy-tolerance`配置是否容忍调度到该芯片：配置为`true`时，允许调度到参数面网络不健康的芯片；不配置或配置为其他值时，过滤参数面网络不健康的芯片。
+- 节点声明了`huawei.com/npu.topology`注解且取值为超规模（最大芯片ID超过节点物理卡数）时，该节点在芯片亲和调度路径上不可调度。
+
 ## 单机场景亲和性策略<a name="ZH-CN_TOPIC_0000002511346873"></a>
 
 ### <term>Atlas 训练系列产品</term><a name="ZH-CN_TOPIC_0000002479226924"></a>

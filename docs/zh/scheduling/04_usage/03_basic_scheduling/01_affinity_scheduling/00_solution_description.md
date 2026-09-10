@@ -15,8 +15,8 @@ Volcano可实现以下2个方面的亲和性调度：基于昇腾AI处理器的�
 
 ## 基于昇腾AI处理器的亲和性<a name="section18208162194419"></a>
 
-本文档详细介绍了<term>Atlas 训练系列产品</term>、Atlas 200T A2 Box16 异构子框、A200T A3 Box8 超节点服务器、Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点等产品的昇腾AI处理器亲和性规则，以及在此基础上研发的Volcano组件调度规则方案。
+本文档详细介绍了<term>Atlas 训练系列产品</term>、Atlas 200T A2 Box16 异构子框、A200T A3 Box8 超节点服务器、Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点、Atlas 950 SuperPoD Flex等产品的昇腾AI处理器亲和性规则，以及在此基础上研发的Volcano组件调度规则方案。
 
 ## 基于节点的亲和性<a name="section654613453444"></a>
 
-本文档同时介绍了基于<term>Atlas 训练系列产品</term>、<term>Atlas A2 训练系列产品</term>、Atlas 900 A3 SuperPoD 超节点、Atlas 950 SuperPoD 超节点等产品的亲和性规则，即交换机的节点调度规则；对<term>Spine-Leaf</term>网络架构模式下，选择调用哪个交换机下的节点进行了详细介绍。
+本文档同时介绍了基于<term>Atlas 训练系列产品</term>、<term>Atlas A2 训练系列产品</term>、Atlas 900 A3 SuperPoD 超节点、Atlas 950 SuperPoD 超节点、Atlas 950 SuperPoD Flex等产品的亲和性规则，即交换机的节点调度规则；对<term>Spine-Leaf</term>网络架构模式下，选择调用哪个交换机下的节点进行了详细介绍。
