@@ -102,6 +102,27 @@
 <tr id="row1674814434406"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p97491434407"><a name="p97491434407"></a><a name="p97491434407"></a><span id="ph1566531814589"><a name="ph1566531814589"></a><a name="ph1566531814589"></a>Infer Operator</span></p>
 </td>
 </tr>
+<tr id="row_agent_core"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p_agent_core"><a name="p_agent_core"></a><a name="p_agent_core"></a><span id="span_agent_core"><a name="span_agent_core"></a><a name="span_agent_core"></a>Agent Core</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p_agent_core_user"><a name="p_agent_core_user"></a><a name="p_agent_core_user"></a>hwMindX</p>
+</td>
+<td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p_agent_core_priv"><a name="p_agent_core_priv"></a><a name="p_agent_core_priv"></a>不涉及。</p>
+</td>
+</tr>
+<tr id="row_node_collector"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p_node_collector"><a name="p_node_collector"></a><a name="p_node_collector"></a><span id="span_node_collector"><a name="span_node_collector"></a><a name="span_node_collector"></a>Node Collector</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p_node_collector_user"><a name="p_node_collector_user"></a><a name="p_node_collector_user"></a>root</p>
+</td>
+<td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p_node_collector_priv"><a name="p_node_collector_priv"></a><a name="p_node_collector_priv"></a>需要使用特权容器。</p>
+</td>
+</tr>
+<tr id="row_kubectl_plugin"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p_kubectl_plugin"><a name="p_kubectl_plugin"></a><a name="p_kubectl_plugin"></a><span id="span_kubectl_plugin"><a name="span_kubectl_plugin"></a><a name="span_kubectl_plugin"></a>kubectl plugin</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p_kubectl_plugin_user"><a name="p_kubectl_plugin_user"></a><a name="p_kubectl_plugin_user"></a>由用户自行决定。</p>
+</td>
+<td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p_kubectl_plugin_priv"><a name="p_kubectl_plugin_priv"></a><a name="p_kubectl_plugin_priv"></a>不涉及。</p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -233,6 +254,30 @@ Elastic Agent、TaskD、Resilience Controller之外的其他组件安装可跳�
     <td class="cellrowborder" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p1518124119135"><a name="p1518124119135"></a><a name="p1518124119135"></a>-</p>
     </td>
     </tr>
+    <tr id="row15240277142119"><td class="cellrowborder" valign="top" width="21.93%" headers="mcps1.2.5.1.1 "><p id="p142813122113"><a name="p142813122113"></a><a name="p142813122113"></a><span id="ph19341812117"><a name="ph19341812117"></a><a name="ph19341812117"></a>Agent Core</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen14281121213"><a name="screen14281121213"></a><a name="screen14281121213"></a>mkdir -m 750 /var/log/mindx-dl/agent-core
+   chown hwMindX:hwMindX /var/log/mindx-dl/agent-core
+   mkdir -m 750 /user/clusterops/agent-core
+   chown hwMindX:hwMindX /user/clusterops/agent-core</pre>
+    </td>
+    <td class="cellrowborder" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p121012411212"><a name="p121012411212"></a><a name="p121012411212"></a>管理节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p828125121211"><a name="p828125121211"></a><a name="p828125121211"></a>/user/clusterops/agent-core目录用于存放采集日志、诊断产物和结果缓存。</p>
+    </td>
+    </tr>
+    <tr id="row94125171218"><td class="cellrowborder" valign="top" width="21.93%" headers="mcps1.2.5.1.1 "><p id="p4121114121211"><a name="p4121114121211"></a><a name="p4121114121211"></a><span id="ph5121101211214"><a name="ph5121101211214"></a><a name="ph5121101211214"></a>Node Collector</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen812141221219"><a name="screen812141221219"></a><a name="screen812141221219"></a>mkdir -m 750 /var/log/mindx-dl/node-collector
+   chown root:root /var/log/mindx-dl/node-collector
+   mkdir -m 750 /user/clusterops/node-collector
+   chown root:root /user/clusterops/node-collector</pre>
+    </td>
+    <td class="cellrowborder" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p5121412101214"><a name="p5121412101214"></a><a name="p5121412101214"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p1412122121119"><a name="p1412122121119"></a><a name="p1412122121119"></a>/user/clusterops/node-collector目录用于存放日志采集和清洗产物。</p>
+    </td>
+    </tr>
     </tbody>
     </table>
 
@@ -301,7 +346,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 
 ## 创建命名空间<a name="ZH-CN_TOPIC_0000002479226384"></a>
 
-- 集群调度的NodeD、Resilience Controller、ClusterD、Infer Operator和Ascend Operator组件会运行在K8s的mindx-dl命名空间下，请在K8s的管理节点执行如下命令，创建对应的命名空间。
+- 集群调度的NodeD、Resilience Controller、ClusterD、Infer Operator、Ascend Operator、Agent Core、Node Collector组件会运行在K8s的mindx-dl命名空间下，请在K8s的管理节点执行如下命令，创建对应的命名空间。
 
     ```shell
     kubectl create ns mindx-dl
@@ -325,6 +370,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 
 >[!NOTE]
 >
+>- Agent Core和Node Collector共用同一个镜像ascend-clusterops-agent，镜像内同时包含两个组件，通过SERVICE环境变量区分启动角色。
 >- 拉取或者制作镜像完成后，请及时进行安全加固，如修复基础镜像的漏洞、安装第三方依赖导致的漏洞等。
 >- 在K8s所使用的容器运行时中导入镜像。如K8s  1.24以上版本默认使用Containerd作为容器运行时，拉取或者制作完镜像后需要将镜像导入到Containerd中。
 >- NPU Exporter和Ascend Device Plugin的运行用户为root，在对应的Dockerfile中配置了LD\_LIBRARY\_PATH环境变量，其中的值包含了驱动库的相关路径。组件运行时会使用到其中的文件，建议驱动安装时指定的运行用户为root，避免用户不一致带来的提权风险。
@@ -373,6 +419,12 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
         alpine            latest              a24bb4013296        2 years ago         5.57MB
         ```
 
+    - 如果需要安装Agent Core和Node Collector，则需要检查python镜像是否存在。Agent Core和Node Collector共用同一个镜像ascend-clusterops-agent，该镜像以python:3.13-slim为基础镜像构建。执行 **docker images | grep python** 命令检查python镜像是否存在。
+
+        ```ColdFusion
+        python            3.13-slim           1f9d5b4f2b5a        2 years ago         123MB
+        ```
+
     若上述基础镜像不存在，使用[表1](#table17241135718196)中相关命令拉取基础镜像（拉取镜像需要服务器能访问互联网）。
 
     **表 1**  获取基础镜像命令
@@ -406,6 +458,13 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
    docker tag arm64v8/alpine:latest alpine:latest</pre></li></ul>
     </td>
     <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.3 "><p>-</p>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1"><p>python:3.13-slim</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.2 "><pre class="screen">docker pull python:3.13-slim</pre>
+    </td>
+    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.3 "><p>Agent Core和Node Collector共用镜像的基础镜像，拉取时自动识别系统架构。</p>
     </td>
     </tr>
     </tbody>
@@ -489,7 +548,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t ascend-dra:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>UMDK_PKG参数取值为UMDK软件包文件名，需要从<a href="https://mirrors.huaweicloud.com/ascend/">华为云镜像仓地址</a>的archive目录下载。当前UMDK软件包仅支持aarch64架构。</p>
     </td>
     </tr>
-    <tr id="row16602529173910"><td class="cellrowborder" rowspan="6" valign="top" headers="mcps1.2.5.1.1 "><p id="p119247391094"><a name="p119247391094"></a><a name="p119247391094"></a>其他产品</p>
+    <tr id="row16602529173910"><td class="cellrowborder" rowspan="7" valign="top" headers="mcps1.2.5.1.1 "><p id="p119247391094"><a name="p119247391094"></a><a name="p119247391094"></a>其他产品</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p4603162993920"><a name="p4603162993920"></a><a name="p4603162993920"></a><span id="ph2247144612408"><a name="ph2247144612408"></a><a name="ph2247144612408"></a>Ascend Operator</span></p>
     </td>
@@ -524,6 +583,15 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>低版本 Docker 出于安全管控会限制`clone`系统调用，但其拦截策略过于严苛，会误拦截正常线程创建行为。Volcano 内部 CGO 程序依赖原生线程能力，一旦线程创建被拦截将直接引发进程崩溃。因此，使用 openEuler 作为基础镜像构建 Volcano 组件镜像时，Docker 版本需不低于 <b>20.10.10</b>。</p></div></div>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p966311264620"><a name="p966311264620"></a><a name="p966311264620"></a>-</p>
+    </td>
+    </tr>
+    <tr id="row141082412331"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1410824123311"><a name="p1410824123311"></a><a name="p1410824123311"></a><span id="ph1410824123312"><a name="ph1410824123312"></a><a name="ph1410824123312"></a>Agent Core/Node Collector</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Agent Core和Node Collector共用同一个镜像ascend-clusterops-agent，一个镜像即可满足两个组件的部署。在软件包解压目录执行以下命令。</p>
+    <pre class="screen" id="screen141082412331"><a name="screen141082412331"></a><a name="screen141082412331"></a>docker build --no-cache -t ascend-clusterops-agent:<em id="i141082412331"><a name="i141082412331"></a><a name="i141082412331"></a>{tag}</em> .</pre>
+    <div class="note" id="note141082412331"><a name="note141082412331"></a><a name="note141082412331"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>构建命令在软件包解压目录执行（组件whl与Dockerfile同层）。该镜像以python:3.13-slim为基础镜像，构建前请提前下载<a href="https://gitcode.com/Ascend/mind-cluster/releases">Ascend-mindxdl-faultdiag_<i>{version}</i>_linux-<i>{arch}</i>.zip</a>，解压后仅提取其中ascend_faultdiag-*.whl，放到软件包解压目录（与Dockerfile同目录），否则镜像内无法安装ascend-fd，诊断功能不可用。</p>
+    <p>Agent Core和Node Collector的组件包为通用架构，构建镜像时还需服务器能访问互联网，镜像内pip会自动安装运行依赖。软件包解压目录（与Dockerfile同目录）中需放置ascend_faultdiag-*.whl，构建时Dockerfile会自动挑选与目标架构匹配的wheel（默认x86_64，检测到aarch64时选aarch64架构），匹配架构的wheel缺失时镜像构建会直接报错。</p>
+    </div></div>
     </td>
     </tr>
     </tbody>
@@ -668,6 +736,15 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.1.0-openeuler24.03</p><p>v26.1.0-ubuntu22.04</p>
     </td>
     </tr>
+    <tr id="row141082412329"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p24129111236"><a name="p24129111236"></a><a name="p24129111236"></a><span id="ph84128121239"><a name="ph84128121239"></a><a name="ph84128121239"></a>Agent Core/Node Collector</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p941210912311"><a name="p941210912311"></a><a name="p941210912311"></a>ascend-clusterops-agent</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.2.0</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.4 "><p id="p941212012312"><a name="p941212012312"></a><a name="p941212012312"></a>Agent Core在管理节点，Node Collector在计算节点</p>
+    </td>
+    </tr>
     </tbody>
     </table>
 
@@ -695,6 +772,8 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.1.0-openeuler24.03 noded:v26.1.0
 
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.1.0-openeuler24.03 clusterd:v26.1.0
+
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-clusterops-agent:v26.2.0 ascend-clusterops-agent:v26.2.0
         ```
 
     2. （可选）执行以下命令，删除原始名字镜像（用户需根据所使用的组件，选取对应命令执行）。
@@ -712,6 +791,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.1.0-openeuler24.03
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.1.0-openeuler24.03
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-clusterops-agent:v26.2.0
         ```
 
 4. （可选）导入离线镜像到Containerd中。本步骤适用于容器运行时为Containerd场景，其他场景下可跳过。

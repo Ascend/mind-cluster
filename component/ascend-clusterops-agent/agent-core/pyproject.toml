@@ -11,7 +11,7 @@ build-backend = "setuptools.build_meta"
 name = "agent-core"
 version = "26.2.0"
 description = "ascend-clusterops-agent: diagnosis agent (agent-core)"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dependencies = [
   "grpcio>=1.60.0",
   "protobuf>=4.25",

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # ============================================================================
-# 构建 agent-core / node-collector 为 whl 包, 并与部署/构建文件打包为 zip 交付物
+# 构建 agent-core / node-collector 为 whl 包, 并组装部署/构建文件到 output/ 目录
 #
 # 运行后产物:
-#   build/dist/                                         两个组件 whl (agent_core / node_collector)
-#   <组件根目录>/Ascend-mindxdl-ascend-clusterops-agent_<ver>_linux.zip   交付包
+#   build/dist/         两个组件 whl (agent_core / node_collector)
+#   <组件根目录>/output/  交付物目录, 由流水线 build_package.sh 统一打包 zip
 #
-# 交付包 (zip) 内容:
+# output/ 内容:
 #   agent_core-*.whl
 #   node_collector-*.whl
 #   agent-core.yaml
@@ -29,23 +29,19 @@ PY="${PY:-python3}"
 
 VER_FILE="${COMPONENT_DIR}"/service_config.ini
 build_version="v26.2.0"
-output_name="Ascend-mindxdl-ascend-clusterops-agent"
 if [ -f "$VER_FILE" ]; then
   line=$(sed -n '1p' "$VER_FILE" 2>&1)
   # 取 '=' 后的内容作为版本号, 最终形如 v26.2.0
   build_version="v"${line#*=}
 fi
-# zip 包名规范: Ascend-mindxdl-<name>_<ver>_linux.zip (linux 平台族, 不细分架构)
-zip_name="${output_name}_${build_version#v}_linux.zip"
-
-# whl 中间产物目录 (打包进 zip)
+# whl 中间产物目录 (复制进 output/)
 WHL_DIR="${CUR_DIR}/dist"
-# zip 打包暂存目录
-PACK_DIR="${CUR_DIR}/package"
+# 交付物输出目录 (流水线 build_package.sh 约定: component/<name>/output/)
+OUTPUT_DIR="${COMPONENT_DIR}/output"
 
 function clean() {
-    rm -rf "${PACK_DIR}"
-    mkdir -p "${PACK_DIR}"
+    rm -rf "${OUTPUT_DIR}"
+    mkdir -p "${OUTPUT_DIR}"
 }
 
 # 检查 ascend-fd 安装包是否已提前就绪 (build.sh 不下载, 见 README.md 下载地址)
@@ -88,39 +84,28 @@ function build_whl() {
 
 function package() {
     # 组件 whl (具体以编译产物为准)
-    cp "${WHL_DIR}"/agent_core-*.whl "${PACK_DIR}"/
-    cp "${WHL_DIR}"/node_collector-*.whl "${PACK_DIR}"/
+    cp "${WHL_DIR}"/agent_core-*.whl "${OUTPUT_DIR}"/
+    cp "${WHL_DIR}"/node_collector-*.whl "${OUTPUT_DIR}"/
 
     # 部署/构建文件
-    cp "${CUR_DIR}"/agent-core.yaml "${PACK_DIR}"/
-    cp "${CUR_DIR}"/node-collector.yaml "${PACK_DIR}"/
-    cp "${CUR_DIR}"/Dockerfile "${PACK_DIR}"/
-    cp "${CUR_DIR}"/collect_manifest.yaml "${PACK_DIR}"/
+    cp "${CUR_DIR}"/agent-core.yaml "${OUTPUT_DIR}"/
+    cp "${CUR_DIR}"/node-collector.yaml "${OUTPUT_DIR}"/
+    cp "${CUR_DIR}"/Dockerfile "${OUTPUT_DIR}"/
+    cp "${CUR_DIR}"/collect_manifest.yaml "${OUTPUT_DIR}"/
 
     # kubectl 插件 (kubectl-plugin/ 子目录; install.sh 源在 build/, 打包时并入)
-    cp -r "${COMPONENT_DIR}"/kubectl-plugin "${PACK_DIR}"/
-    cp "${CUR_DIR}"/install.sh "${PACK_DIR}"/kubectl-plugin/install.sh
-    chmod +x "${PACK_DIR}"/kubectl-plugin/install.sh \
-        "${PACK_DIR}"/kubectl-plugin/kubectl-ascend_diag \
-        "${PACK_DIR}"/kubectl-plugin/kubectl-clusterops
-
-    # 打 zip (交付包); 保留 kubectl-plugin/ 子目录结构 (故不用 -j 全扁平)
-    cd "${PACK_DIR}"
-    rm -f "${COMPONENT_DIR}/${zip_name}"
-    zip "${COMPONENT_DIR}/${zip_name}" \
-        agent_core-*.whl \
-        node_collector-*.whl \
-        agent-core.yaml \
-        node-collector.yaml \
-        Dockerfile \
-        collect_manifest.yaml \
-        kubectl-plugin/install.sh \
-        kubectl-plugin/kubectl-ascend_diag \
-        kubectl-plugin/kubectl-clusterops
+    mkdir -p "${OUTPUT_DIR}"/kubectl-plugin
+    cp "${COMPONENT_DIR}"/kubectl-plugin/kubectl-ascend_diag "${OUTPUT_DIR}"/kubectl-plugin/
+    cp "${COMPONENT_DIR}"/kubectl-plugin/kubectl-clusterops "${OUTPUT_DIR}"/kubectl-plugin/
+    cp "${CUR_DIR}"/install.sh "${OUTPUT_DIR}"/kubectl-plugin/install.sh
+    chmod +x "${OUTPUT_DIR}"/kubectl-plugin/install.sh \
+        "${OUTPUT_DIR}"/kubectl-plugin/kubectl-ascend_diag \
+        "${OUTPUT_DIR}"/kubectl-plugin/kubectl-clusterops
 
     echo
-    echo "==> 交付包: ${COMPONENT_DIR}/${zip_name} =="
-    unzip -l "${COMPONENT_DIR}/${zip_name}"
+    echo "==> 交付物目录: ${OUTPUT_DIR} =="
+    ls -1 "${OUTPUT_DIR}"
+    ls -1 "${OUTPUT_DIR}"/kubectl-plugin
 }
 
 function main() {

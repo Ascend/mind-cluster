@@ -287,3 +287,29 @@ Container Manager
 3. MindIE Motor推理任务最佳实践请参见[MindIE Motor推理任务最佳实践](../04_usage/06_mindie_motor_best_practice/00_before_you_start.md)章节进行操作。
 4. SGLang推理任务最佳实践请参见[SGLang推理任务最佳实践](../04_usage/07_sglang_best_practice/00_before_you_start.md)章节进行操作。
 5. vLLM推理任务最佳实践请参见[vLLM推理任务最佳实践](../04_usage/08_vllm_best_practice/00_before_you_start.md)章节进行操作。
+
+## 集群运维Agent<a name="ZH-CN_TOPIC_0000002524312690"></a>
+
+**功能特点<a name="section1788818281655"></a>**
+
+训练或推理任务在运行过程中出现故障时，需要快速定位故障根因。任务通常分布在多个节点，故障相关日志（系统日志、设备日志、业务日志，plog等）分散在各节点的宿主机上，人工排查成本高、效率低。MindCluster提供集群运维Agent特性，通过kubectl ascend-diag命令按任务维度一键触发诊断，自动完成节点日志采集、日志清洗、集中诊断的全流程，帮助用户快速定位任务故障根因。
+
+- **一键诊断**：通过kubectl ascend-diag命令按任务维度触发诊断，无需登录各节点手动采集日志。
+- **自动采集调度**：Agent Core作为故障诊断的集中控制中心，自动维护任务与Pod的映射关系，并向各计算节点的Node Collector下发采集指令。
+- **本地清洗上报**：Node Collector按采集契约从宿主机采集任务日志，本地调用ascend-fd parse完成日志清洗，并将清洗结果打包上报给Agent Core。
+- **集中诊断**：Agent Core聚合各节点上报的清洗结果，组装为诊断输入目录，调用ascend-fd diag执行集中诊断，生成诊断报告。
+- **结果缓存**：任务完成之后缓存诊断结果，重复诊断直接返回缓存，支持通过 --refresh参数强制刷新。
+- **智能总结**：可选对接LLM服务，对诊断报告进行智能总结，输出根因报告。
+
+**所需组件<a name="section15655185785119"></a>**
+
+- Agent Core
+- Node Collector
+- Kubectl Plugin（kubectl-ascend_diag， kubectl-clusterops）
+- ascend-faultdiag
+- LLM服务（可选）
+
+**使用说明<a name="section1245612501584"></a>**
+
+1. 安装组件请参见[手动安装](../03_installation_guide/02_installation/01_manual_installation.md)章节进行操作。
+2. 特性使用指导请参见[集群运维Agent](../04_usage/14_clusterops_agent/00_before_you_start.md)章节进行操作。

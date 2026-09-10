@@ -2,7 +2,8 @@
 
 - 卸载Ascend Docker Runtime组件，请参见[卸载Ascend Docker Runtime](#section6134163311244)进行操作。
 - 卸载Container Manager组件，请参见[卸载Container Manager组件](#section1461059103619)进行操作。
-- 卸载NPU Exporter、Ascend Device Plugin、K8s RDMA Shared Dev Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD和Resilience Controller，请参见[卸载其他组件](#section6361146202520)。
+- 卸载Kubectl Plugin、请参见[卸载Kubectl Plugin](#section1664298135126)进行操作。
+- 卸载NPU Exporter、Ascend Device Plugin、K8s RDMA Shared Dev Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD、Resilience Controller、Agent Core和Node Collector，请参见[卸载其他组件](#section6361146202520)。
 
 ## 卸载Ascend Docker Runtime<a name="section6134163311244"></a>
 
@@ -178,6 +179,20 @@
     ```shell
     rm -rf /var/log/mindx-dl/container-manager
     ```
+
+## 卸载Kubectl Plugin<a name="section1664298135126"></a>
+
+Kubectl Plugin为客户端命令行工具，通过安装脚本（install.sh）安装到 `/usr/local/bin` 目录，卸载时删除插件文件即可。
+
+在安装Kubectl Plugin的用户机上，执行以下命令删除插件文件。
+
+```shell
+rm -f /usr/local/bin/kubectl-ascend_diag /usr/local/bin/kubectl-clusterops
+```
+
+>[!NOTE]
+>
+> - 卸载Kubectl Plugin不影响集群中已部署的Agent Core和Node Collector服务。
 
 ## 卸载其他组件<a name="section6361146202520"></a>
 

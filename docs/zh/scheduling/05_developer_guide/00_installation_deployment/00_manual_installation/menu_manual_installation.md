@@ -15,3 +15,6 @@
 - [K8s RDMA Shared Dev Plugin](./12_k8s_rdma_shared_dev_plugin.md)
 - [DPU Exporter](./13_dpu_exporter.md)
 - [Ascend Dynamic Resource Allocation](./14_ascend_dynamic_resource_allocation.md)
+- [Kubectl Plugin](./15_kubectl_plugin.md)
+- [Agent Core](./16_agent_core.md)
+- [Node Collector](./17_node_collector.md)
