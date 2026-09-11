@@ -810,6 +810,68 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p9141413194710"><a name="p9141413194710"></a><a name="p9141413194710"></a>可申请NPU的数目为2、4、6、8、10、12、14、16。若为逻辑超节点亲和任务，即任务YAML中的sp-block字段配置了逻辑超节点大小，则申请NPU的数目只能为16。</p>
 </td>
 </tr>
+<tr id="row91009103501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009103501"><a name="p91009103501"></a><a name="p91009103501"></a><span id="ph91009103501"><a name="ph91009103501"></a><a name="ph91009103501"></a>Atlas 350 加速卡</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009103502"><a name="p91009103502"></a><a name="p91009103502"></a>单机场景</p>
+</td>
+<td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p91009103503"><a name="p91009103503"></a><a name="p91009103503"></a>根据Atlas 350 加速卡在服务器内的互联拓扑不同，可申请NPU的数目如下：</p>
+<a name="ul91009103501"></a><a name="ul91009103501"></a><ul id="ul91009103501"><li>无互联节点内8卡：可申请NPU的数目为1、2、3、4、5、6、7、8。</li><li>无互联节点内16卡：可申请NPU的数目为1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16。</li><li>4P mesh 8卡：满足亲和性时，可申请NPU的数目为1、2、3、4、8；不保证亲和性时，可申请NPU的数目为5、6、7。</li><li>4P mesh 16卡：满足亲和性时，可申请NPU的数目为1、2、3、4、8、12、16；不保证亲和性时，可申请NPU的数目为5、6、7、9、10、11、13、14、15。</li></ul>
+</td>
+</tr>
+<tr id="row91009103502"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p91009103504"><a name="p91009103504"></a><a name="p91009103504"></a>分布式场景</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p91009103505"><a name="p91009103505"></a><a name="p91009103505"></a>根据Atlas 350 加速卡在服务器内的互联拓扑不同，可申请NPU的数目如下（N表示节点个数，其中每个节点的NPU调度约束同单机场景）：</p>
+<a name="ul91009103502"></a><a name="ul91009103502"></a><ul id="ul91009103502"><li>无互联节点内8卡：可申请NPU的数目为1N、2N、3N、4N、5N、6N、7N、8N。</li><li>无互联节点内16卡：可申请NPU的数目为1N、2N、3N、4N、5N、6N、7N、8N、9N、10N、11N、12N、13N、14N、15N、16N。</li><li>4P mesh 8卡：满足亲和性时，可申请NPU的数目为1N、2N、3N、4N、8N；不保证亲和性时，可申请NPU的数目为5N、6N、7N。</li><li>4P mesh 16卡：满足亲和性时，可申请NPU的数目为1N、2N、3N、4N、8N、12N、16N；不保证亲和性时，可申请NPU的数目为5N、6N、7N、9N、10N、11N、13N、14N、15N。</li></ul>
+</td>
+</tr>
+<tr id="row91009106501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009106501"><a name="p91009106501"></a><a name="p91009106501"></a><span id="ph91009106501"><a name="ph91009106501"></a><a name="ph91009106501"></a>Atlas 650E 服务器</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009106502"><a name="p91009106502"></a><a name="p91009106502"></a>单机场景</p>
+</td>
+<td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p91009106503"><a name="p91009106503"></a><a name="p91009106503"></a>可申请NPU的数目为1、2、3、4、5、6、7、8。服务器内8个NPU为全互联，任意数目的NPU组合均满足亲和性约束。</p>
+</td>
+</tr>
+<tr id="row91009106502"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p91009106504"><a name="p91009106504"></a><a name="p91009106504"></a>分布式场景</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p91009106505"><a name="p91009106505"></a><a name="p91009106505"></a>可申请NPU的数目为1N、2N、3N、4N、5N、6N、7N、8N。N表示节点个数，其中每个节点的NPU调度约束同单机场景。</p>
+</td>
+</tr>
+<tr id="row91009108501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009108501"><a name="p91009108501"></a><a name="p91009108501"></a><span id="ph91009108501"><a name="ph91009108501"></a><a name="ph91009108501"></a>Atlas 850E 超节点</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009108502"><a name="p91009108502"></a><a name="p91009108502"></a>单机场景</p>
+</td>
+<td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p91009108503"><a name="p91009108503"></a><a name="p91009108503"></a>可申请NPU的数目为1、2、4、8。若任务YAML中的sp-block字段配置了逻辑超节点大小，则sp-block参数取值需与申请NPU的数目保持一致。</p>
+</td>
+</tr>
+<tr id="row91009108502"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p91009108504"><a name="p91009108504"></a><a name="p91009108504"></a>分布式场景</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p91009108505"><a name="p91009108505"></a><a name="p91009108505"></a>分布式任务每个节点固定申请8卡，即可申请NPU的数目为8N。N表示节点个数。若为逻辑超节点亲和任务，即任务YAML中的sp-block字段配置了逻辑超节点大小，则sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小。</p>
+</td>
+</tr>
+<tr id="row91009109501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009109501"><a name="p91009109501"></a><a name="p91009109501"></a><span id="ph91009109501"><a name="ph91009109501"></a><a name="ph91009109501"></a>Atlas 950 SuperPoD 超节点</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009109502"><a name="p91009109502"></a><a name="p91009109502"></a>单机场景</p>
+</td>
+<td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p91009109503"><a name="p91009109503"></a><a name="p91009109503"></a>可申请NPU的数目为1、2、3、4、5、6、7、8。若任务YAML中的sp-block字段配置了逻辑超节点大小，则sp-block参数取值需与申请NPU的数目保持一致。</p>
+</td>
+</tr>
+<tr id="row91009109502"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p91009109504"><a name="p91009109504"></a><a name="p91009109504"></a>分布式场景</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p91009109505"><a name="p91009109505"></a><a name="p91009109505"></a>分布式任务每个节点固定申请8卡，即可申请NPU的数目为8N。N表示节点个数。若为逻辑超节点亲和任务，即任务YAML中的sp-block字段配置了逻辑超节点大小，则sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小。</p>
+</td>
+</tr>
+<tr id="row91009109511"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009109511"><a name="p91009109511"></a><a name="p91009109511"></a><span id="ph91009109511"><a name="ph91009109511"></a><a name="ph91009109511"></a>Atlas 950 SuperPoD Flex</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009109512"><a name="p91009109512"></a><a name="p91009109512"></a>单机场景</p>
+</td>
+<td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p91009109513"><a name="p91009109513"></a><a name="p91009109513"></a>可申请NPU的数目为1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16。若任务YAML中的sp-block字段配置了逻辑超节点大小，则sp-block参数取值需与申请NPU的数目保持一致。</p>
+</td>
+</tr>
+<tr id="row91009109512"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p91009109514"><a name="p91009109514"></a><a name="p91009109514"></a>分布式场景</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p91009109515"><a name="p91009109515"></a><a name="p91009109515"></a>分布式任务每个节点固定申请16卡，即可申请NPU的数目为16N。N表示节点个数。若为逻辑超节点亲和任务，即任务YAML中的sp-block字段配置了逻辑超节点大小，则sp-block参数取值需为16或16的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小。</p>
+</td>
+</tr>
 <tr id="row22120464408"><td class="cellrowborder" colspan="3" valign="top" headers="mcps1.2.4.1.1 mcps1.2.4.1.2 mcps1.2.4.1.3 "><p id="p1889218054115"><a name="p1889218054115"></a><a name="p1889218054115"></a>注：</p>
 <p id="p4703164155014"><a name="p4703164155014"></a><a name="p4703164155014"></a>对不使用NPU的Pod，不做NPU数量的要求。</p>
 </td>
