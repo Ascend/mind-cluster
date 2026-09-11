@@ -69,15 +69,17 @@ func (g *Ascend950Generation) buildNpuDevice(logicID int32) (NpuDevice, error) {
 		DeviceName: fmt.Sprintf("%s-%d", consts.NPUNamePrefix, phyID),
 		LogicID:    logicID,
 		PhyID:      phyID,
+		Kind:       PhysicalDevice,
 	}, nil
 }
 
 // DeviceAttributes publishes the type, physicId and chipName for 950 devices.
 func (g *Ascend950Generation) DeviceAttributes(dev NpuDevice) map[resourceapi.QualifiedName]resourceapi.DeviceAttribute {
 	return map[resourceapi.QualifiedName]resourceapi.DeviceAttribute{
-		attrKeyType:     {StringValue: ptr.To(consts.NPUNamePrefix)},
-		attrKeyPhysicID: {IntValue: ptr.To(int64(dev.PhyID))},
-		attrKeyChipName: {StringValue: ptr.To(g.getChipName(dev.LogicID))},
+		attrKeyType:       {StringValue: ptr.To(consts.NPUNamePrefix)},
+		attrKeyPhysicID:   {IntValue: ptr.To(int64(dev.PhyID))},
+		attrKeyChipName:   {StringValue: ptr.To(g.getChipName(dev.LogicID))},
+		attrKeyDeviceKind: {StringValue: ptr.To(string(dev.Kind))},
 	}
 }
 

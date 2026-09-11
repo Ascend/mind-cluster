@@ -16,7 +16,6 @@
 package device
 
 import (
-	"ascend-dynamic-resource-allocation/pkg/consts"
 	"fmt"
 	"reflect"
 	"testing"
@@ -30,6 +29,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
+	"ascend-dynamic-resource-allocation/pkg/consts"
 )
 
 // =============================================================================
@@ -206,6 +206,34 @@ func patchGetDevType(p *gomonkey.Patches, devType string) {
 		func(_ *devmanager.DeviceManagerMock) string { return devType })
 }
 
+func patchGetVirtualDeviceInfo(p *gomonkey.Patches, info common.VirtualDevInfo, err error) {
+	p.ApplyMethod(dmmType, "GetVirtualDeviceInfo",
+		func(_ *devmanager.DeviceManagerMock, _ int32) (common.VirtualDevInfo, error) {
+			return info, err
+		})
+}
+
+func patchGetVirtualDeviceInfoByLogicID(p *gomonkey.Patches,
+	getInfo func(int32) (common.VirtualDevInfo, error)) {
+	p.ApplyMethod(dmmType, "GetVirtualDeviceInfo",
+		func(_ *devmanager.DeviceManagerMock, logicID int32) (common.VirtualDevInfo, error) {
+			return getInfo(logicID)
+		})
+}
+
+func newStaticVNPUInfo(vDevID uint32, template string, aiCore float32) common.VirtualDevInfo {
+	return common.VirtualDevInfo{
+		TotalResource: common.CgoSocTotalResource{VDevNum: 1},
+		VDevInfo: []common.CgoVDevQueryStru{{
+			VDevID: vDevID,
+			QueryInfo: common.CgoVDevQueryInfo{
+				Name:      template,
+				Computing: common.CgoComputingResource{Aic: aiCore},
+			},
+		}},
+	}
+}
+
 // patch910IPScenario stubs GetDeviceIPAddress for the named IP scenario. The
 // double dispatches on ipType so a single stub serves both the v4 and v6
 // fallback call paths that getDeviceIP performs.
@@ -351,18 +379,20 @@ func TestAscend910Generation_getDeviceIP(t *testing.T) {
 }
 
 func TestAscend910Generation_DeviceAttributes(t *testing.T) {
-	Convey("Ascend910 DeviceAttributes reports deviceType, physicId and chipName", t, func() {
+	Convey("Ascend910 DeviceAttributes reports physical identity", t, func() {
 		g, _ := new910WithMock()
 		for idx, tc := range deviceAttrCases {
 			Convey(fmt.Sprintf("case#%d %s", idx, tc.name), func() {
 				attrs := g.DeviceAttributes(tc.dev)
-				So(len(attrs), ShouldEqual, 3)
+				So(len(attrs), ShouldEqual, 4)
 				So(attrs[attrKeyType], ShouldResemble,
 					resourceapi.DeviceAttribute{StringValue: ptr.To(consts.NPUNamePrefix)})
 				So(attrs[attrKeyPhysicID], ShouldResemble,
 					resourceapi.DeviceAttribute{IntValue: ptr.To(int64(tc.dev.PhyID))})
 				So(attrs[attrKeyChipName], ShouldResemble,
 					resourceapi.DeviceAttribute{StringValue: ptr.To(common.Chip910)})
+				So(attrs[attrKeyDeviceKind], ShouldResemble,
+					resourceapi.DeviceAttribute{StringValue: ptr.To(string(tc.dev.Kind))})
 			})
 		}
 		Convey("GetChipInfo error yields empty chipName", func() {
@@ -440,18 +470,20 @@ func TestAscend950Generation_buildNpuDevice(t *testing.T) {
 }
 
 func TestAscend950Generation_DeviceAttributes(t *testing.T) {
-	Convey("Ascend950 DeviceAttributes reports deviceType, physicId and chipName", t, func() {
+	Convey("Ascend950 DeviceAttributes reports physical identity", t, func() {
 		g, _ := new950WithMock()
 		for idx, tc := range deviceAttrCases {
 			Convey(fmt.Sprintf("case#%d %s", idx, tc.name), func() {
 				attrs := g.DeviceAttributes(tc.dev)
-				So(len(attrs), ShouldEqual, 3)
+				So(len(attrs), ShouldEqual, 4)
 				So(attrs[attrKeyType], ShouldResemble,
 					resourceapi.DeviceAttribute{StringValue: ptr.To(consts.NPUNamePrefix)})
 				So(attrs[attrKeyPhysicID], ShouldResemble,
 					resourceapi.DeviceAttribute{IntValue: ptr.To(int64(tc.dev.PhyID))})
 				So(attrs[attrKeyChipName], ShouldResemble,
 					resourceapi.DeviceAttribute{StringValue: ptr.To(common.Chip910)})
+				So(attrs[attrKeyDeviceKind], ShouldResemble,
+					resourceapi.DeviceAttribute{StringValue: ptr.To(string(tc.dev.Kind))})
 			})
 		}
 		Convey("GetChipInfo error yields empty chipName", func() {
@@ -462,5 +494,140 @@ func TestAscend950Generation_DeviceAttributes(t *testing.T) {
 			So(attrs[attrKeyChipName], ShouldResemble,
 				resourceapi.DeviceAttribute{StringValue: ptr.To("")})
 		})
+	})
+}
+
+func TestAscend910Generation_ListStaticVNPUDevices(t *testing.T) {
+	tests := []struct {
+		name, devType, template, expectedType string
+		aiCore                               float32
+	}{
+		{"910A", api.Ascend910A, common.Vir02, api.Ascend910 + common.Minus + common.Core2, 2},
+		{"910B/A2", api.Ascend910B, common.Vir05C1G16,
+			api.Ascend910 + common.Minus + common.Core5Cpu1Gb16, 5},
+		{"910A3", api.Ascend910A3, common.Vir05C1G16,
+			api.Ascend910 + common.Minus + common.Core5Cpu1Gb16, 5},
+	}
+	for _, tt := range tests {
+		Convey(tt.name+" discovers a selectable static vNPU", t, func() {
+			g, _ := new910WithMock()
+			p := gomonkey.NewPatches()
+			defer p.Reset()
+			patchGetDeviceList(p, 1, []int32{0}, nil)
+			setup910BuildScenario(p, "ipv4Ok")
+			patchGetDevType(p, tt.devType)
+			patchGetVirtualDeviceInfo(p, newStaticVNPUInfo(common.MinVDevID, tt.template, tt.aiCore), nil)
+			devices, err := g.ListNpuDevices()
+			So(err, ShouldBeNil)
+			So(devices, ShouldHaveLength, 1)
+			So(devices[0].Kind, ShouldEqual, StaticVNPUDevice)
+			expectedName := fmt.Sprintf("%s%s%d%s%d", consts.StaticVNPUDeviceKind, common.Minus,
+				common.MinVDevID, common.Minus, 1)
+			So(devices[0].DeviceName, ShouldEqual, expectedName)
+			So(devices[0].VDevID, ShouldEqual, uint32(common.MinVDevID))
+			So(devices[0].TemplateName, ShouldEqual, tt.template)
+			So(devices[0].VNPUType, ShouldEqual, tt.expectedType)
+			So(devices[0].AICore, ShouldEqual, int64(tt.aiCore))
+		})
+	}
+}
+
+func TestAscend910Generation_StaticVNPUDiscoveryBranches(t *testing.T) {
+	Convey("supported device without vNPU publishes physical device", t, func() {
+		g, _ := new910WithMock()
+		p := gomonkey.NewPatches()
+		defer p.Reset()
+		patchGetDeviceList(p, 1, []int32{0}, nil)
+		setup910BuildScenario(p, "ipv4Ok")
+		patchGetDevType(p, api.Ascend910B)
+		patchGetVirtualDeviceInfo(p, common.VirtualDevInfo{}, nil)
+		devices, err := g.ListNpuDevices()
+		So(err, ShouldBeNil)
+		So(devices, ShouldHaveLength, 1)
+		So(devices[0].Kind, ShouldEqual, PhysicalDevice)
+	})
+	Convey("vNPU query error keeps the physical device available", t, func() {
+		g, _ := new910WithMock()
+		p := gomonkey.NewPatches()
+		defer p.Reset()
+		patchGetDeviceList(p, 1, []int32{0}, nil)
+		setup910BuildScenario(p, "ipv4Ok")
+		patchGetDevType(p, api.Ascend910B)
+		patchGetVirtualDeviceInfo(p, common.VirtualDevInfo{}, errSentinel)
+		devices, err := g.ListNpuDevices()
+		So(err, ShouldBeNil)
+		So(devices, ShouldHaveLength, 1)
+		So(devices[0].Kind, ShouldEqual, PhysicalDevice)
+	})
+	Convey("one vNPU query error does not stop enumeration of other cards", t, func() {
+		g, _ := new910WithMock()
+		p := gomonkey.NewPatches()
+		defer p.Reset()
+		patchGetDeviceList(p, 2, []int32{0, 1}, nil)
+		setup910BuildScenario(p, "ipv4Ok")
+		patchGetDevType(p, api.Ascend910B)
+		patchGetVirtualDeviceInfoByLogicID(p, func(logicID int32) (common.VirtualDevInfo, error) {
+			if logicID == 0 {
+				return common.VirtualDevInfo{}, errSentinel
+			}
+			return newStaticVNPUInfo(common.MinVDevID, common.Vir05C1G16, 5), nil
+		})
+		devices, err := g.ListNpuDevices()
+		So(err, ShouldBeNil)
+		So(devices, ShouldHaveLength, 2)
+		So(devices[0].Kind, ShouldEqual, PhysicalDevice)
+		So(devices[1].Kind, ShouldEqual, StaticVNPUDevice)
+	})
+}
+
+func TestAscend910Generation_buildStaticVNPUDevices(t *testing.T) {
+	physical := NpuDevice{LogicID: 0, PhyID: 7, DevType: api.Ascend910B, Kind: PhysicalDevice}
+	tests := []struct {
+		name      string
+		info      common.VirtualDevInfo
+		wantCount int
+	}{
+		{"valid vNPU", newStaticVNPUInfo(common.MinVDevID, common.Vir05C1G16, 5), 1},
+		{"count mismatch", common.VirtualDevInfo{TotalResource: common.CgoSocTotalResource{VDevNum: 1}}, 0},
+		{"invalid vDev ID", newStaticVNPUInfo(common.MinVDevID-1, common.Vir05C1G16, 5), 0},
+		{"unsupported template", newStaticVNPUInfo(common.MinVDevID, common.Vir02, 2), 0},
+		{"invalid AI core", newStaticVNPUInfo(common.MinVDevID, common.Vir05C1G16, 0), 0},
+		{"invalid entry does not hide a valid sibling", common.VirtualDevInfo{
+			TotalResource: common.CgoSocTotalResource{VDevNum: 2},
+			VDevInfo: []common.CgoVDevQueryStru{
+				{
+					VDevID: common.MinVDevID - 1,
+					QueryInfo: common.CgoVDevQueryInfo{
+						Name:      common.Vir05C1G16,
+						Computing: common.CgoComputingResource{Aic: 5},
+					},
+				},
+				{
+					VDevID: common.MinVDevID,
+					QueryInfo: common.CgoVDevQueryInfo{
+						Name:      common.Vir05C1G16,
+						Computing: common.CgoComputingResource{Aic: 5},
+					},
+				},
+			},
+		}, 1},
+	}
+	for _, tt := range tests {
+		Convey(tt.name, t, func() {
+			devices := NewAscend910Generation().buildStaticVNPUDevices(physical, tt.info)
+			So(devices, ShouldHaveLength, tt.wantCount)
+			if tt.wantCount == 1 {
+				expectedName := fmt.Sprintf("%s%s%d%s%d", consts.StaticVNPUDeviceKind, common.Minus,
+					common.MinVDevID, common.Minus, physical.PhyID)
+				So(devices[0].DeviceName, ShouldEqual, expectedName)
+			}
+		})
+	}
+}
+
+func TestNpuDeviceKindValues(t *testing.T) {
+	Convey("DRA device kind values match DeviceClass selectors", t, func() {
+		So(string(PhysicalDevice), ShouldEqual, consts.PhysicalNPUDeviceKind)
+		So(string(StaticVNPUDevice), ShouldEqual, consts.StaticVNPUDeviceKind)
 	})
 }

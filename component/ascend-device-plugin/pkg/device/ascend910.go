@@ -32,6 +32,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/api/label"
 	"ascend-common/common-utils/hwlog"
+	npuCommon "ascend-common/devmanager/common"
 )
 
 const (
@@ -765,7 +766,7 @@ func (hnm *HwAscend910Manager) getPatchLabel(chips sets.String) string {
 
 	var ascendLabel = make([]string, 0)
 	for devName := range chips {
-		devTypeAndID := strings.Split(devName, common.MiddelLine)
+		devTypeAndID := strings.Split(devName, npuCommon.Minus)
 		if len(devTypeAndID) != common.LabelDeviceLen {
 			continue
 		}

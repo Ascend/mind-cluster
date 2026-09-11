@@ -23,6 +23,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"ascend-common/common-utils/hwlog"
+	devcommon "ascend-common/devmanager/common"
 	"ascend-dynamic-resource-allocation/pkg/consts"
 )
 
@@ -46,8 +47,7 @@ func NewAscend910Generation() *Ascend910Generation {
 	return &Ascend910Generation{}
 }
 
-// ListNpuDevices enumerates all 910 devices via dmgr.GetDeviceList and
-// assembles each one. The driver sees only the resulting list.
+// ListNpuDevices publishes physical devices or their pre-created static vNPUs.
 func (g *Ascend910Generation) ListNpuDevices() ([]NpuDevice, error) {
 	devNum, devList, err := g.dmgr.GetDeviceList()
 	if err != nil {
@@ -55,14 +55,62 @@ func (g *Ascend910Generation) ListNpuDevices() ([]NpuDevice, error) {
 	}
 	devs := make([]NpuDevice, 0, devNum)
 	for i := int32(0); i < devNum; i++ {
-		dev, err := g.buildNpuDevice(devList[i])
+		physical, err := g.buildNpuDevice(devList[i])
 		if err != nil {
 			return nil, err
 		}
-		devs = append(devs, dev)
+		vDevInfo, err := g.dmgr.GetVirtualDeviceInfo(devList[i])
+		if err != nil {
+			hwlog.RunLog.Warnf("The virtual device is considered not exist, please check the error: %v", err)
+			devs = append(devs, physical)
+			continue
+		}
+		if vDevInfo.TotalResource.VDevNum == 0 {
+			devs = append(devs, physical)
+			continue
+		}
+		virtualDevices := g.buildStaticVNPUDevices(physical, vDevInfo)
+		devs = append(devs, virtualDevices...)
 	}
 	hwlog.RunLog.Infof("Ascend910 enumerated %d devices", len(devs))
 	return devs, nil
+}
+
+func (g *Ascend910Generation) buildStaticVNPUDevices(
+	physical NpuDevice, info devcommon.VirtualDevInfo) []NpuDevice {
+	if int(info.TotalResource.VDevNum) != len(info.VDevInfo) {
+		hwlog.RunLog.Warnf("logicID %d reports %d static vNPUs but returns %d details",
+			physical.LogicID, info.TotalResource.VDevNum, len(info.VDevInfo))
+	}
+	devices := make([]NpuDevice, 0, len(info.VDevInfo))
+	for _, vDev := range info.VDevInfo {
+		if !devcommon.IsValidVDevID(vDev.VDevID) {
+			hwlog.RunLog.Warnf("skip static vNPU on physical device %d with invalid vDevID %d",
+				physical.PhyID, vDev.VDevID)
+			continue
+		}
+		vnpuType, err := devcommon.GetVNPUTypeByTemplate(physical.DevType, vDev.QueryInfo.Name)
+		if err != nil {
+			hwlog.RunLog.Warnf("skip static vNPU %d on physical device %d: resolve type failed: %v",
+				vDev.VDevID, physical.PhyID, err)
+			continue
+		}
+		if vDev.QueryInfo.Computing.Aic <= 0 {
+			hwlog.RunLog.Warnf("skip static vNPU %d on physical device %d with invalid AI core count %v",
+				vDev.VDevID, physical.PhyID, vDev.QueryInfo.Computing.Aic)
+			continue
+		}
+		device := physical
+		device.Kind = StaticVNPUDevice
+		device.VDevID = vDev.VDevID
+		device.TemplateName = vDev.QueryInfo.Name
+		device.VNPUType = vnpuType
+		device.AICore = int64(vDev.QueryInfo.Computing.Aic)
+		device.DeviceName = fmt.Sprintf("%s%s%d%s%d", StaticVNPUDevice, devcommon.Minus,
+			vDev.VDevID, devcommon.Minus, physical.PhyID)
+		devices = append(devices, device)
+	}
+	return devices
 }
 
 // buildNpuDevice fills the full 910 device shape, including IP, CardID and
@@ -91,16 +139,25 @@ func (g *Ascend910Generation) buildNpuDevice(logicID int32) (NpuDevice, error) {
 		PhyID:      phyID,
 		CardID:     cardID,
 		DeviceID:   deviceID,
+		Kind:       PhysicalDevice,
 	}, nil
 }
 
-// DeviceAttributes publishes the type, physicId and chipName for 910 devices.
+// DeviceAttributes publishes physical identity and static-vNPU metadata.
 func (g *Ascend910Generation) DeviceAttributes(dev NpuDevice) map[resourceapi.QualifiedName]resourceapi.DeviceAttribute {
-	return map[resourceapi.QualifiedName]resourceapi.DeviceAttribute{
-		attrKeyType:     {StringValue: ptr.To(consts.NPUNamePrefix)},
-		attrKeyPhysicID: {IntValue: ptr.To(int64(dev.PhyID))},
-		attrKeyChipName: {StringValue: ptr.To(g.getChipName(dev.LogicID))},
+	attributes := map[resourceapi.QualifiedName]resourceapi.DeviceAttribute{
+		attrKeyType:       {StringValue: ptr.To(consts.NPUNamePrefix)},
+		attrKeyPhysicID:   {IntValue: ptr.To(int64(dev.PhyID))},
+		attrKeyChipName:   {StringValue: ptr.To(g.getChipName(dev.LogicID))},
+		attrKeyDeviceKind: {StringValue: ptr.To(string(dev.Kind))},
 	}
+	if dev.Kind == StaticVNPUDevice {
+		attributes[attrKeyVDevID] = resourceapi.DeviceAttribute{IntValue: ptr.To(int64(dev.VDevID))}
+		attributes[attrKeyTemplate] = resourceapi.DeviceAttribute{StringValue: ptr.To(dev.TemplateName)}
+		attributes[attrKeyVNPUType] = resourceapi.DeviceAttribute{StringValue: ptr.To(dev.VNPUType)}
+		attributes[attrKeyAICore] = resourceapi.DeviceAttribute{IntValue: ptr.To(dev.AICore)}
+	}
+	return attributes
 }
 
 // PhyIDToMountID is a no-op on 910 generations where devices mount by phyID,

@@ -29,6 +29,16 @@ const (
 	// attrKeyChipName is the ResourceSlice attribute key for the chip name
 	// reported by dmgr.GetChipInfo.
 	attrKeyChipName = "chipName"
+	// attrKeyDeviceKind distinguishes physical NPUs from pre-created static vNPUs.
+	attrKeyDeviceKind = "deviceKind"
+	// attrKeyVDevID is the DCMI virtual-device ID.
+	attrKeyVDevID = "vdevId"
+	// attrKeyTemplate is the original DCMI template name.
+	attrKeyTemplate = "template"
+	// attrKeyVNPUType is the public type selected by ResourceClaims.
+	attrKeyVNPUType = "vnpuType"
+	// attrKeyAICore is the number of AI cores in a static vNPU.
+	attrKeyAICore = "aiCore"
 )
 
 // AscendCommonGeneration holds the device manager shared by every generation.

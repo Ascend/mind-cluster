@@ -181,3 +181,44 @@ func TestGetDevTypeAndA3BoardIds(t *testing.T) {
 		})
 	})
 }
+
+func TestGetVNPUTypeByTemplate(t *testing.T) {
+	tests := []struct {
+		name     string
+		devType  string
+		template string
+		want     string
+		wantErr  bool
+	}{
+		{name: "910A", devType: api.Ascend910A, template: Vir16,
+			want: api.Ascend910 + Minus + Core16},
+		{name: "910B A2", devType: api.Ascend910B, template: Vir05C1G16,
+			want: api.Ascend910 + Minus + Core5Cpu1Gb16},
+		{name: "910A3", devType: api.Ascend910A3, template: Vir06C1G16,
+			want: api.Ascend910 + Minus + Core6Cpu1Gb16},
+		{name: "310P", devType: api.Ascend310P, template: Vir04C3,
+			want: api.Ascend310P + Minus + Core4Cpu3},
+		{name: "invalid template", devType: api.Ascend910B, template: "invalid", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetVNPUTypeByTemplate(tt.devType, tt.template)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("GetVNPUTypeByTemplate() error = %v, wantErr = %v", err, tt.wantErr)
+			}
+			if got != tt.want {
+				t.Errorf("GetVNPUTypeByTemplate() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetTemplateName2DeviceTypeMapReturnsCopy(t *testing.T) {
+	mapping := GetTemplateName2DeviceTypeMap()
+	mapping[Vir16] = "changed"
+
+	if got := GetTemplateName2DeviceTypeMap()[Vir16]; got != Core16 {
+		t.Errorf("template mapping was mutated through returned map: got %q, want %q", got, Core16)
+	}
+}

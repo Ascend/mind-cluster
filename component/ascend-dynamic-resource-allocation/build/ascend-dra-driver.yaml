@@ -188,7 +188,20 @@ metadata:
 spec:
   selectors:
   - cel:
-      expression: "device.driver == 'npu.huawei.com'"
+      expression: >-
+        device.driver == 'npu.huawei.com' &&
+        device.attributes['npu.huawei.com'].deviceKind == 'physical-npu'
+---
+apiVersion: resource.k8s.io/v1
+kind: DeviceClass
+metadata:
+  name: static-vnpu.huawei.com
+spec:
+  selectors:
+  - cel:
+      expression: >-
+        device.driver == 'npu.huawei.com' &&
+        device.attributes['npu.huawei.com'].deviceKind == 'static-vnpu'
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
