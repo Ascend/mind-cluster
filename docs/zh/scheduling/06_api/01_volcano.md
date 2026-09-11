@@ -225,7 +225,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p5358950291"><a name="p5358950291"></a><a name="p5358950291"></a>grace、force、off、external-force、external-grace、external-force-pod-failed</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p10358105012913"><a name="p10358105012913"></a><a name="p10358105012913"></a><span id="ph635812501497"><a name="ph635812501497"></a><a name="ph635812501497"></a>Volcano</span>、<span id="ph183581350898"><a name="ph183581350898"></a><a name="ph183581350898"></a>Resilience Controller</span>、<span id="ph701238115"><a name="ph701238115"></a><a name="ph701238115"></a>Infer Operator</span></p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p10358105012913"><a name="p10358105012913"></a><a name="p10358105012913"></a><span id="ph635812501497"><a name="ph635812501497"></a><a name="ph635812501497"></a>Volcano</span>、<span id="ph701238115"><a name="ph701238115"></a><a name="ph701238115"></a>Infer Operator</span></p>
 </td>
 </tr>
 <tr id="row103614504912"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p6361950695"><a name="p6361950695"></a><a name="p6361950695"></a>fault-retry-times</p>

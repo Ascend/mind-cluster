@@ -3,7 +3,7 @@
 - 卸载Ascend Docker Runtime组件，请参见[卸载Ascend Docker Runtime](#section6134163311244)进行操作。
 - 卸载Container Manager组件，请参见[卸载Container Manager组件](#section1461059103619)进行操作。
 - 卸载Kubectl Plugin、请参见[卸载Kubectl Plugin](#section1664298135126)进行操作。
-- 卸载NPU Exporter、Ascend Device Plugin、K8s RDMA Shared Dev Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD、Resilience Controller、Agent Core和Node Collector，请参见[卸载其他组件](#section6361146202520)。
+- 卸载NPU Exporter、Ascend Device Plugin、K8s RDMA Shared Dev Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD、Agent Core和Node Collector，请参见[卸载其他组件](#section6361146202520)。
 
 ## 卸载Ascend Docker Runtime<a name="section6134163311244"></a>
 
@@ -277,10 +277,4 @@ rm -f /usr/local/bin/kubectl-ascend_diag /usr/local/bin/kubectl-clusterops
 
     ```shell
     rm -rf /var/log/mindx-dl/clusterd
-    ```
-
-5. （可选）卸载Resilience Controller时，若导入了证书和KubeConfig文件，则需要删除证书和KubeConfig文件，请确认后再删除。
-
-    ```shell
-    rm -rf /etc/mindx-dl/resilience-controller
     ```

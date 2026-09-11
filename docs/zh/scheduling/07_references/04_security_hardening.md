@@ -291,7 +291,7 @@ seccomp配置可约束容器的系统调用，减少容器对系统的影响面�
 
 在Kubernetes的1.19以下的版本中，seccomp使用的是annotations\[seccomp.security.alpha.kubernetes.io/pod\]注解方式。在1.19及以上的版本，seccomp特性已经GA。1.19及以上版本推荐使用securityContext.seccompProfile进行配置，并且1.27版本开始注解方式不再生效，具体参见：[Kubernetes Removals and Major Changes In v1.27](https://kubernetes.io/blog/2023/03/17/upcoming-changes-in-kubernetes-v1-27/#support-for-deprecated-seccomp-annotations)。所以用户需要根据不同的Kubernetes版本与容器安全需求，自行修改seccomp配置。
 
-需要修改启动配置文件的MindCluster组件中已经提供了两种不同的配置方式。以下是Resilience Controller的seccomp配置，其他组件都预留了相关的配置。
+需要修改启动配置文件的MindCluster组件中已经提供了两种不同的配置方式。以下是clusterD的seccomp配置，其他组件都预留了相关的配置。
 
 >[!NOTE]
 >
@@ -300,12 +300,12 @@ seccomp配置可约束容器的系统调用，减少容器对系统的影响面�
 ```Yaml
     metadata:
       labels:
-        app: resilience-controller
+        app: clusterd
       ##### For Kubernetes versions lower than 1.19, seccomp is used with annotations.
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: runtime/default
     spec:
-      ##### For Kubernetes versions 1.19 and above, seccomp is used with securityContext.
+      ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
 #      securityContext:
 #        seccompProfile:
 #          type: RuntimeDefault

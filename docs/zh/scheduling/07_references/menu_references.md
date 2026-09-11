@@ -6,4 +6,3 @@
 - [FAQ](03_faq.md)
 - [安全加固](04_security_hardening.md)
 - [附录](05_appendix.md)
-- [弹性训练](06_elastic_training.md)

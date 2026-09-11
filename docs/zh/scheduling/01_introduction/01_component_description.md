@@ -177,35 +177,6 @@
 2. 从共享存储客户端中获取共享存储异常信息。
 3. 将异常信息上报给ClusterD。
 
-## Resilience Controller<a name="ZH-CN_TOPIC_0000002511426827"></a>
-
->[!NOTE]
->Resilience Controller组件已经日落，相关内容将于2026年9月30日的版本删除。最新的弹性训练能力请参见[弹性训练](../04_usage/04_fault_recovery/01_resumable_training/01_solutions_principles/01_fault_handling.md#弹性训练)。
-
-**应用场景<a name="section15761025111720"></a>**
-
-训练任务遇到故障，且无充足的健康资源替换故障资源时，可使用动态缩容的方式保证训练任务继续进行，待资源充足后，再通过动态扩容的方式恢复训练任务。集群调度提供了Resilience Controller组件，用于训练任务过程中的动态扩缩容。
-
-**组件功能<a name="section1112014512117"></a>**
-
-提供弹性缩容训练服务。在训练任务使用的硬件发生故障时，剔除该硬件并继续训练。
-
-**组件上下游依赖<a name="section4941922192110"></a>**
-
-Resilience Controller组件属于Kubernetes插件，需要安装到K8s集群中。Resilience Controller仅支持VolcanoJob类型的任务，需要集群中同时安装Volcano。Resilience Controller运行过程中仅与K8s交互，相关交互如下图所示。
-
-**图 8** Resilience Controller组件上下游依赖<a name="fig11643146182015"></a>
-
-![](../../figures/scheduling/Resilience-Controller组件上下游依赖.png "Resilience-Controller组件上下游依赖")
-
-- MindCluster集群调度组件通过K8s将NPU设备、节点状态以及调度配置等信息写入ConfigMap中。
-- Resilience Controller读取mindx-dl命名空间下，name前缀为"mindx-dl-nodeinfo-"ConfigMap中的“**NodeInfo**”字段，获取节点心跳情况。
-- Resilience Controller读取kube-system命名空间下，name前缀为"mindx-dl-deviceinfo-"的ConfigMap，读取其中“**DeviceInfoCfg**”字段，获取NPU设备健康状态。
-- Resilience Controller读取volcano-system命名空间下，名为volcano-scheduler-configmap的ConfigMap，读取其中“**grace-over-time**”字段，获取重调度pod优雅删除超时配置。
-- Resilience Controller获取集群中所有vcjob对应的pod，读取“**huawei.com/AscendReal**”获取pod实际使用的NPU列表。
-- Resilience Controller读取Volcano Job，获取“**fault-scheduling**”、“**elastic-scheduling**”、“**minReplicas**”、“**phase**”等字段，确定该Volcano Job是否可以进行弹性训练。
-- 当设备和节点发生故障时，Resilience Controller根据原有Volcano Job的副本数和集群资源情况，创建NPU需求减半的Volcano Job。
-
 ## Elastic Agent<a name="ZH-CN_TOPIC_0000002479386918"></a>
 
 >[!NOTE]

@@ -62,7 +62,7 @@
 
         该YAML包含DPC和DTFS两种共享存储的故障检测。若节点只有DPC客户端，则删除“dtfsstatus”及其子项。若节点只有DTFS客户端，则删除“dpcstatus”及其子项
 
-        ```ColdFusion
+        ```Yaml
       volumes:
         ...
         - name: dpcstatus
@@ -71,6 +71,40 @@
         - name: dtfsstatus
           hostPath:
             path: /proc/dtfs
+        ```
+
+    - 如果需要使用[容器快照](../../../04_usage/09_infer_operator_best_practice/06_container_snapshot_usage.md#)功能，则执行以下命令，启动NodeD。
+
+        ```shell
+        kubectl apply -f noded-container-snapshot-v{version}.yaml
+        ```
+
+        快照路径`/user/snapshot`须根据实际情况配置，且为共享存储路径。此外，若宿主机上Ascend Docker Runtime和驱动等组件未安装在默认路径，请将yaml挂载项中`/usr/local/Ascend/driver`和`/usr/local/Ascend/Ascend-Docker-Runtime`等路径一并修改为正确的安装路径，容器内的挂载路径无需修改。
+
+        ```Yaml
+      ...
+          volumeMounts:
+      ...
+            - name: image-path
+              mountPath: /user/snapshot # 容器内快照存取路径
+      ...
+      volumes:
+      ...
+        - name: image-path
+          hostPath:
+            path: /user/snapshot # 宿主机上快照路径
+            type: Directory
+        - name: ascend-docker-runtime
+          hostPath:
+            path: /usr/local/Ascend/Ascend-Docker-Runtime # 宿主机上Ascend Docker Runtime路径
+            type: Directory
+        - name: hiai-driver
+          hostPath:
+            path: /usr/local/Ascend/driver # 宿主机上Ascend驱动路径
+        - name: ascend-driver-include
+          hostPath:
+            path: /usr/local/Ascend/driver/include
+      ...
         ```
 
         启动示例如下：

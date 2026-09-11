@@ -157,7 +157,6 @@
       - [Infer Operator](./05_developer_guide/00_installation_deployment/00_manual_installation/07_infer_operator.md)
       - [Ascend Operator](./05_developer_guide/00_installation_deployment/00_manual_installation/08_ascend_operator.md)
       - [NodeD](./05_developer_guide/00_installation_deployment/00_manual_installation/09_noded.md)
-      - [Resilience Controller（已日落）](./05_developer_guide/00_installation_deployment/00_manual_installation/10_resilience_controller.md)
       - [Container Manager](./05_developer_guide/00_installation_deployment/00_manual_installation/11_container-manager.md)
       - [K8s RDMA Shared Dev Plugin](./05_developer_guide/00_installation_deployment/00_manual_installation/12_k8s_rdma_shared_dev_plugin.md)
       - [DPU Exporter](./05_developer_guide/00_installation_deployment/00_manual_installation/13_dpu_exporter.md)
@@ -240,4 +239,3 @@
   - [FAQ](07_references/03_faq.md)
   - [安全加固](07_references/04_security_hardening.md)
   - [附录](07_references/05_appendix.md)
-  - [弹性训练](07_references/06_elastic_training.md)

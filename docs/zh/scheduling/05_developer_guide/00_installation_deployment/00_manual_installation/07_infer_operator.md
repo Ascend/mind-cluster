@@ -1,6 +1,7 @@
 # Infer Operator<a name="ZH-CN_TOPIC_0000002479386414"></a>
 
-下发InferServiceSet类型的推理任务，必须安装Infer Operator。
+- 下发InferServiceSet类型的推理任务，必须安装Infer Operator。
+- 安装Infer Operator前，建议先安装Volcano。否则Infer Operator将不支持gang调度，此时若任务开启了gang调度（`infer.huawei.com/gang-schedule`配置为'true'），Infer Operator会报错，任务无法正常拉起。
 
 ## 操作步骤<a name="section209273712583"></a>
 

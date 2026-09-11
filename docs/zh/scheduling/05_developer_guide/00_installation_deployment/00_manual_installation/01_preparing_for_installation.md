@@ -68,15 +68,12 @@
 </tr>
 <tr id="zh-cn_topic_0299839362_row664817164615"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0299839362_p0649177466"><a name="zh-cn_topic_0299839362_p0649177466"></a><a name="zh-cn_topic_0299839362_p0649177466"></a><span id="ph175881448132716"><a name="ph175881448132716"></a><a name="ph175881448132716"></a>Volcano</span></p>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p153424813128"><a name="p153424813128"></a><a name="p153424813128"></a>hwMindX</p>
+<td class="cellrowborder" rowspan="3" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p153424813128"><a name="p153424813128"></a><a name="p153424813128"></a>hwMindX</p>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p17327314131212"><a name="p17327314131212"></a><a name="p17327314131212"></a>不涉及。</p>
+<td class="cellrowborder" rowspan="3" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p17327314131212"><a name="p17327314131212"></a><a name="p17327314131212"></a>不涉及。</p>
 </td>
 </tr>
 <tr id="row24141825191817"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1941515259187"><a name="p1941515259187"></a><a name="p1941515259187"></a><span id="ph16899408574"><a name="ph16899408574"></a><a name="ph16899408574"></a>ClusterD</span></p>
-</td>
-</tr>
-<tr id="row29051413163917"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p390551333913"><a name="p390551333913"></a><a name="p390551333913"></a><span id="ph829115811272"><a name="ph829115811272"></a><a name="ph829115811272"></a>Resilience Controller</span></p>
 </td>
 </tr>
 <tr id="row1674814434406"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p97491434407"><a name="p97491434407"></a><a name="p97491434407"></a><span id="ph1566531814589"><a name="ph1566531814589"></a><a name="ph1566531814589"></a>Ascend Operator</span></p>
@@ -128,7 +125,7 @@
 
 ## （可选）创建日志目录<a name="ZH-CN_TOPIC_0000002511346417"></a>
 
-Elastic Agent、TaskD、Resilience Controller之外的其他组件安装可跳过本章节。
+Elastic Agent、TaskD之外的其他组件安装可跳过本章节。
 
 在对应节点创建组件日志父目录和各组件的日志目录，并设置目录对应属主和权限。
 
@@ -211,21 +208,15 @@ Elastic Agent、TaskD、Resilience Controller之外的其他组件安装可跳�
     <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen05746613313"><a name="screen05746613313"></a><a name="screen05746613313"></a>mkdir -m 750 /var/log/mindx-dl/ascend-operator
    chown hwMindX:hwMindX /var/log/mindx-dl/ascend-operator</pre>
     </td>
-    <td class="cellrowborder" rowspan="6" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p65611868135"><a name="p65611868135"></a><a name="p65611868135"></a>管理节点</p>
+    <td class="cellrowborder" rowspan="5" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p65611868135"><a name="p65611868135"></a><a name="p65611868135"></a>管理节点</p>
     </td>
-    <td class="cellrowborder" rowspan="6" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p11355115061313"><a name="p11355115061313"></a><a name="p11355115061313"></a>-</p>
+    <td class="cellrowborder" rowspan="5" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p11355115061313"><a name="p11355115061313"></a><a name="p11355115061313"></a>-</p>
     </td>
     </tr>
     <tr id="row45741461130"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p18574466314"><a name="p18574466314"></a><a name="p18574466314"></a><span id="ph13574176736"><a name="ph13574176736"></a><a name="ph13574176736"></a>Infer Operator</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1574064313"><a name="screen1574064313"></a><a name="screen1574064313"></a>mkdir -m 750 /var/log/mindx-dl/infer-operator
    chown root:root /var/log/mindx-dl/infer-operator</pre>
-    </td>
-    </tr>
-    <tr id="row45741461130"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p18574466314"><a name="p18574466314"></a><a name="p18574466314"></a><span id="ph13574176736"><a name="ph13574176736"></a><a name="ph13574176736"></a>Resilience Controller</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1574064313"><a name="screen1574064313"></a><a name="screen1574064313"></a>mkdir -m 750 /var/log/mindx-dl/resilience-controller
-   chown hwMindX:hwMindX /var/log/mindx-dl/resilience-controller</pre>
     </td>
     </tr>
     <tr id="row68981954111810"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p28991454191811"><a name="p28991454191811"></a><a name="p28991454191811"></a><span id="ph16899408574"><a name="ph16899408574"></a><a name="ph16899408574"></a>ClusterD</span></p>
@@ -346,7 +337,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 
 ## 创建命名空间<a name="ZH-CN_TOPIC_0000002479226384"></a>
 
-- 集群调度的NodeD、Resilience Controller、ClusterD、Infer Operator、Ascend Operator、Agent Core、Node Collector组件会运行在K8s的mindx-dl命名空间下，请在K8s的管理节点执行如下命令，创建对应的命名空间。
+- 集群调度的NodeD、ClusterD、Infer Operator、Ascend Operator、Agent Core、Node Collector组件会运行在K8s的mindx-dl命名空间下，请在K8s的管理节点执行如下命令，创建对应的命名空间。
 
     ```shell
     kubectl create ns mindx-dl
@@ -491,7 +482,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     </td>
     <td class="cellrowborder" valign="top" width="54.76547654765477%" headers="mcps1.2.5.1.3 "><ul><li>基础镜像为Ubuntu的Ascend Device Plugin镜像制作命令。<pre class="screen" id="screen3237730141519"><a name="screen3237730141519"></a><a name="screen3237730141519"></a>docker build --no-cache -t ascend-k8sdeviceplugin:<em id="i02419301157"><a name="i02419301157"></a><a name="i02419301157"></a>{</em><em id="i133991029173612"><a name="i133991029173612"></a><a name="i133991029173612"></a>tag}</em> ./</pre></li><li>基础镜像为openEuler的Ascend Device Plugin镜像制作命令。<pre class="screen">docker build --no-cache -t ascend-k8sdeviceplugin:<em>{</em><em>tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
     </td>
-    <td class="cellrowborder" rowspan="15" valign="top" width="19.21192119211921%" headers="mcps1.2.5.1.4 "><p id="p10280193431010"><a name="p10280193431010"></a><a name="p10280193431010"></a><em id="i472612293915"><a name="i472612293915"></a><a name="i472612293915"></a>{tag}</em>需要参考软件包上的版本。如：软件包上版本为<span id="ph18653133316811"><a name="ph18653133316811"></a><a name="ph18653133316811"></a>26.1.0</span>，则<em id="i1572610273910"><a name="i1572610273910"></a><a name="i1572610273910"></a>{tag}</em>为v<span id="ph205239348813"><a name="ph205239348813"></a><a name="ph205239348813"></a>26.1.0</span>。</p>
+    <td class="cellrowborder" rowspan="16" valign="top" width="19.21192119211921%" headers="mcps1.2.5.1.4 "><p id="p10280193431010"><a name="p10280193431010"></a><a name="p10280193431010"></a><em id="i472612293915"><a name="i472612293915"></a><a name="i472612293915"></a>{tag}</em>需要参考软件包上的版本。如：软件包上版本为<span id="ph18653133316811"><a name="ph18653133316811"></a><a name="ph18653133316811"></a>26.1.0</span>，则<em id="i1572610273910"><a name="i1572610273910"></a><a name="i1572610273910"></a>{tag}</em>为v<span id="ph205239348813"><a name="ph205239348813"></a><a name="ph205239348813"></a>26.1.0</span>。</p>
     <div class="note" id="note1217913258443"><a name="note1217913258443"></a><a name="note1217913258443"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p11793259444"><a name="p11793259444"></a><a name="p11793259444"></a>请确保Dockerfile-310P-1usoc中HwDmUser和HwBaseUser的<span id="ph18833164913291"><a name="ph18833164913291"></a><a name="ph18833164913291"></a>GID</span>和<span id="ph5530185193011"><a name="ph5530185193011"></a><a name="ph5530185193011"></a>UID</span>与物理机上的保持一致。</p>
     </div></div>
     <p id="p7733142881719"><a name="p7733142881719"></a><a name="p7733142881719"></a></p>
@@ -560,11 +551,6 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><ul><li>基础镜像为Ubuntu的Infer Operator镜像制作命令。<pre class="screen" id="screen2020115813153"><a name="screen2020115813153"></a><a name="screen2020115813153"></a>docker build --no-cache -t infer-operator:<em id="i1078611616374"><a name="i1078611616374"></a><a name="i1078611616374"></a>{tag}</em> ./</pre></li><li>基础镜像为openEuler的Infer Operator镜像制作命令。<pre class="screen">docker build --no-cache -t infer-operator:<em>{tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
     </td>
     </tr>
-    <tr id="row17988246152414"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1741731972511"><a name="p1741731972511"></a><a name="p1741731972511"></a><span id="ph16157133165316"><a name="ph16157133165316"></a><a name="ph16157133165316"></a>Resilience Controller</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen2020115813153"><a name="screen2020115813153"></a><a name="screen2020115813153"></a>docker build --no-cache -t resilience-controller:<em id="i1078611616374"><a name="i1078611616374"></a><a name="i1078611616374"></a>{tag}</em> ./</pre>
-    </td>
-    </tr>
     <tr id="row2597060117203"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1597060117203"><a name="p1597060117203"></a><a name="p1597060117203"></a><span id="ph2597060117203"><a name="ph2597060117203"></a><a name="ph2597060117203"></a>K8s RDMA Shared Dev Plugin</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><ul><li>基础镜像为Ubuntu的K8s RDMA Shared Dev Plugin镜像制作命令。<pre class="screen" id="screen2597060117203"><a name="screen2597060117203"></a><a name="screen2597060117203"></a>docker build --no-cache -t k8s-rdma-shared-dp:<em id="i2597060117203"><a name="i2597060117203"></a><a name="i2597060117203"></a>{tag}</em> ./</pre></li><li>基础镜像为openEuler的K8s RDMA Shared Dev Plugin镜像制作命令。<pre class="screen">docker build --no-cache -t k8s-rdma-shared-dp:<em>{tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
@@ -581,8 +567,6 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <a name="ul1193395714453"></a><a name="ul1193395714453"></a><pre class="screen" id="screen73221362140"><a name="screen73221362140"></a><a name="screen73221362140"></a>docker build --no-cache -t volcanosh/vc-scheduler:<em id="i73221362140"><a name="i73221362140"></a><a name="i73221362140"></a>{version}</em>-<em id="i73221362140"><a name="i73221362140"></a><a name="i73221362140"></a>{tag}</em> ./ -f ./Dockerfile-scheduler
    docker build --no-cache -t volcanosh/vc-controller-manager:<em id="i73221362140"><a name="i73221362140"></a><a name="i73221362140"></a>{version}</em>-<em id="i73221362141"><a name="i73221362141"></a><a name="i73221362141"></a>{tag}</em> ./ -f ./Dockerfile-controller</pre>
     <div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>低版本 Docker 出于安全管控会限制`clone`系统调用，但其拦截策略过于严苛，会误拦截正常线程创建行为。Volcano 内部 CGO 程序依赖原生线程能力，一旦线程创建被拦截将直接引发进程崩溃。因此，使用 openEuler 作为基础镜像构建 Volcano 组件镜像时，Docker 版本需不低于 <b>20.10.10</b>。</p></div></div>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p966311264620"><a name="p966311264620"></a><a name="p966311264620"></a>-</p>
     </td>
     </tr>
     <tr id="row141082412331"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1410824123311"><a name="p1410824123311"></a><a name="p1410824123311"></a><span id="ph1410824123312"><a name="ph1410824123312"></a><a name="ph1410824123312"></a>Agent Core/Node Collector</span></p>

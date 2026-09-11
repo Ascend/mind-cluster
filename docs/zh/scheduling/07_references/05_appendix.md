@@ -707,15 +707,6 @@ Ascend Docker Runtime安装后，会在安装目录生成可执行工具，涉�
 |二进制|<ul><li>以系统服务的方式部署在物理机上。</li><li>配置Capability之后可以使用普通用户（hwMindX）运行。</li></ul>|
 |镜像|K8s作为调度管理平台，需要使用特权容器和root用户。|
 
-## 使用ServiceAccount和KubeConfig差异<a name="ZH-CN_TOPIC_0000002511346357"></a>
-
-<a name="zh-cn_topic_0000001497205377_table75257815113"></a>
-
-|认证凭据|组件|差异|
-|--|--|--|
-|ServiceAccount|<ul><li>Ascend Operator</li><li>Ascend Device Plugin</li><li>NodeD</li><li>Volcano</li><li>ClusterD</li></ul>|ServiceAccount的token文件内容会明文挂载到物理机上，有暴露风险。|
-|导入的KubeConfig文件|Resilience Controller|通过集群调度组件提供的加密工具导入后为密文落盘，工具不提供解密导出功能，安全性较高。如果既配置了ServiceAccount，也导入了KubeConfig文件，后者优先级更高。|
-
 ## 高可用集群中的调度组件<a name="ZH-CN_TOPIC_0000002479226440"></a>
 
 生产环境中，Kubernetes集群通常会部署多个管理节点，以避免单个管理节点故障导致整个集群不可用。Kubernetes官方提供了两种高可用的集群搭建方案，请参见[Kubernetes文档](https://kubernetes.io/zh/docs/setup/production-environment/tools/kubeadm/ha-topology/)中高可用拓扑选项。集群调度组件基于官方“**Stacked etcd topology**”方案进行验证，各组件能够在多个管理节点场景下正常运行，且功能正常。
@@ -1085,7 +1076,6 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 |ascend-device-plugin-sa-310p|用YAML启动服务，将会在K8s中创建该用户，不同型号的设备使用的账号名不同。|
 |ascend-device-plugin-sa-310|用YAML启动服务，将会在K8s中创建该用户，不同型号的设备使用的账号名不同。|
 |ascend-operator-manager|用YAML启动服务，将会在K8s中创建该用户，如：ascend-operator-v{version}.yaml。|
-|resilience-controller|建议安全加固启动，使用带without-token的YAML启动服务，在K8s中创建并使用resilience-controller账号，同时为该账号授予适当权限。|
 |noded|用YAML启动服务，将会在K8s中创建该用户，如：noded-v{version}.yaml。|
 |clusterd|用YAML启动服务，将会在K8s中创建该用户，如：clusterd-v{version}.yaml。|
 |default|MindCluster组件或开源Volcano部署时，会在K8s中自动创建的用户。|
