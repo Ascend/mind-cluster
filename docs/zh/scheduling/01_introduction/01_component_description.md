@@ -488,13 +488,11 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 
 ![](../../figures/scheduling/组件上下游依赖-11.png "组件上下游依赖-11")
 
-1. 通过K8s API全量监听任务Pod，维护诊断任务与Pod的中心关系缓存，并实时同步到agent-core-relcache ConfigMap。
-2. 通过K8s API监听Pod的hostPath挂载对，写入clusterops-pathmap ConfigMap。
-3. 按任务名查询中心关系表，向各节点的Node Collector下发采集指令。
-4. 接收Node Collector通过UploadResult主动上报的采集结果（tar.gz）。
-5. 调用ascend-fd diag对聚合的日志执行集中诊断，生成诊断报告。
-6. 可选调用LLM服务对诊断报告进行总结。
-7. 训练/推理任务运行于各计算节点的K8s Pod（容器）中，Agent Core以这些任务容器为诊断对象，完成集群运维Agent。
+1. 从K8s API Server获取任务请求
+2. 从ConfigMap中获取任务缓存信息、训练/推理任务的挂载对和env信息。
+3. 从训练/推理任务容器中获取挂载信息、env信息和元数据。
+4. 发送采集指令给Node Collector。
+5. 从Node Collector接收采集结果。
 
 ## Node Collector<a name="ZH-CN_TOPIC_0000002524312671"></a>
 
@@ -519,12 +517,10 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 
 ![](../../figures/scheduling/组件上下游依赖-12.png "组件上下游依赖-12")
 
-1. 监听clusterops-pathmap ConfigMap，获取任务Pod的hostPath挂载对和env信息。
-2. 接收Agent Core下 发的gRPC采集指令。
-3. 从宿主机读取任务日志（经挂载对反查宿主路径）。
-4. 调用ascend-fd parse对采集的日志进行本地清洗。
-5. 将清洗结果打包为tar.gz，通过UploadResult主动上报给Agent Core。
-6. 训练/推理业务容器的日志经hostPath挂载落盘至宿主机后，Node Collector从宿主机路径采集这些容器日志。
+1. 从ConfigMap中获取训练/推理任务的挂载对和env信息。
+2. 从Agent Core接收采集和清洗指令。
+3. 按照采集契约，在宿主机中执行相关的数据采集。
+4. 将清洗后的数据打包发送给Agent Core。
 
 ## Kubectl Plugin<a name="ZH-CN_TOPIC_0000002524312672"></a>
 
