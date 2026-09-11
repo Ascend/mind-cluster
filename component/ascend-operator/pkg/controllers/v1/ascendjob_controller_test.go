@@ -753,3 +753,28 @@ func TestHandleNewPodDeleted2(t *testing.T) {
 		convey.So(true, convey.ShouldBeTrue)
 	})
 }
+
+func TestGetAndCleanRequeueAfter(t *testing.T) {
+	convey.Convey("getAndCleanRequeueAfter", t, func() {
+		r := newCommonReconciler()
+		job := newCommonAscendJob()
+		req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "ascendjob-test"}}
+		jobKey, _ := common.KeyFunc(job)
+
+		convey.Convey("01-no entry should return 0", func() {
+			convey.So(r.getAndCleanRequeueAfter(job, req), convey.ShouldEqual, time.Duration(0))
+		})
+		convey.Convey("02-entry with positive duration should return it and be cleaned", func() {
+			r.ttlRequeues.Store(jobKey, 5*time.Second)
+			convey.So(r.getAndCleanRequeueAfter(job, req), convey.ShouldEqual, 5*time.Second)
+			_, ok := r.ttlRequeues.Load(jobKey)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+		convey.Convey("03-entry with non-positive duration should return 0 and be cleaned", func() {
+			r.ttlRequeues.Store(jobKey, time.Duration(0))
+			convey.So(r.getAndCleanRequeueAfter(job, req), convey.ShouldEqual, time.Duration(0))
+			_, ok := r.ttlRequeues.Load(jobKey)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+	})
+}
