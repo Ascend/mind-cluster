@@ -23,7 +23,7 @@ ClusterD启动后，会创建或更新名为component-versions的ConfigMap，详
 | - queryCommand          | 查询节点annotation中对应组件版本详细信息命令，使用该命令时需去除其中转义字符 /       |
 | noded              | 由ClusterD聚合的集群NodeD组件版本详细信息，详细字段说明同上                     |
 | k8s-rdma-shared-dp | 由ClusterD聚合的集群K8s RDMA Shared Dev Plugin组件版本详细信息，详细字段说明同上 |
-| ascend-dra         | 由ClusterD聚合的集群Ascend DRA组件版本详细信息                |
+| ascend-dra         | 由ClusterD聚合的集群Ascend DRA组件版本详细信息，详细字段说明同上                |
 
 >[!NOTE]
 >
