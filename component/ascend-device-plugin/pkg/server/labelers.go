@@ -29,6 +29,7 @@ import (
 	"ascend-common/api/annotation"
 	"ascend-common/api/label"
 	"ascend-common/common-utils/hwlog"
+	npuCommon "ascend-common/devmanager/common"
 	"ascend-common/devmanager/dcmi"
 )
 
@@ -161,7 +162,7 @@ type serverTypeLabeler struct {
 }
 
 func (l *serverTypeLabeler) Write(labels map[string]string, ctx *label.NodeContext) error {
-	cardType := common.ParamOption.RealCardType + common.MiddelLine +
+	cardType := common.ParamOption.RealCardType + npuCommon.Minus +
 		strconv.Itoa(int(common.ParamOption.AiCoreCount))
 	if !customname.IsOldDeviceType(common.ParamOption.RealCardType) {
 		serverTypeValue := api.AscendMinuxPrefix + strconv.Itoa(int(common.ParamOption.AiCoreCount))

@@ -38,6 +38,7 @@ import (
 	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	npuCommon "ascend-common/devmanager/common"
 	"ascend-common/devmanager/dcmi"
 )
 
@@ -402,9 +403,9 @@ func (ps *PluginServer) checkAllocateRequest(requests *v1beta1.AllocateRequest) 
 			if len(deviceName) > common.MaxDeviceNameLen {
 				return fmt.Errorf("length of device name %d is invalid", len(deviceName))
 			}
-			if common.IsSupportSoftShareDevice() && strings.Count(deviceName, common.MiddelLine) > 1 {
-				deviceNameSlice := strings.Split(deviceName, common.MiddelLine)
-				deviceName = deviceNameSlice[0] + common.MiddelLine + deviceNameSlice[1]
+			if common.IsSupportSoftShareDevice() && strings.Count(deviceName, npuCommon.Minus) > 1 {
+				deviceNameSlice := strings.Split(deviceName, npuCommon.Minus)
+				deviceName = deviceNameSlice[0] + npuCommon.Minus + deviceNameSlice[1]
 			}
 			if !ps.deviceExists(deviceName) {
 				return fmt.Errorf("plugin doesn't have device %s", deviceName)
@@ -637,14 +638,14 @@ func (ps *PluginServer) convertLogicIDToPhyID(logicIDNameList []string) []string
 	ps.cachedLock.RLock()
 	defer ps.cachedLock.RUnlock()
 	for _, logicIDName := range logicIDNameList {
-		idArr := strings.Split(logicIDName, common.MiddelLine)
+		idArr := strings.Split(logicIDName, npuCommon.Minus)
 		if len(idArr) != common.KeySliceLength {
 			hwlog.RunLog.Warnf("id name is not in a-b format, which is %s", logicIDName)
 			return logicIDNameList
 		}
 		for _, dev := range ps.cachedDevices {
 			if dev.DevType == idArr[0] && strconv.Itoa(int(dev.LogicID)) == idArr[1] {
-				phyIDList = append(phyIDList, fmt.Sprintf("%s%s%d", dev.DevType, common.MiddelLine, dev.PhyID))
+				phyIDList = append(phyIDList, fmt.Sprintf("%s%s%d", dev.DevType, npuCommon.Minus, dev.PhyID))
 			}
 		}
 	}
@@ -795,7 +796,7 @@ func checkAnnotationAllocateValid(requestDevices []string, deviceType string, po
 		hwlog.RunLog.Warn(err)
 		return false
 	}
-	deviceInfos := strings.Split(annotation, common.MiddelLine)
+	deviceInfos := strings.Split(annotation, npuCommon.Minus)
 	// for vnpu, like huawei.com/npu-core:0-vir02
 	if len(deviceInfos) > 1 {
 		_, template, err := common.GetVNPUSegmentInfo(deviceInfos)
@@ -827,7 +828,7 @@ func (ps *PluginServer) getAICoreFromPodAnnotation(pod *v1.Pod, deviceType strin
 	if err != nil {
 		return nil, err
 	}
-	deviceInfos := strings.Split(annotation, common.MiddelLine)
+	deviceInfos := strings.Split(annotation, npuCommon.Minus)
 	if len(deviceInfos) > 1 {
 		phyID, templateName, err := common.GetVNPUSegmentInfo(deviceInfos)
 		if err != nil {

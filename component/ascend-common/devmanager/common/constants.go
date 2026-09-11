@@ -86,6 +86,92 @@ var (
 	AICoreCurrentFreq = DeviceType{Code: 7, Name: "AICore Current"}
 )
 
+// Shared NPU and vNPU naming constants.
+const (
+	// Minus separates the fields of an NPU device name.
+	Minus = "-"
+)
+
+// Public vNPU type suffixes shared by device-plugin and DRA.
+const (
+	// Core1 represents a one-core vNPU type.
+	Core1 = "1c"
+	// Core2 represents a two-core vNPU type.
+	Core2 = "2c"
+	// Core2Cpu1 represents a two-core, one-CPU vNPU type.
+	Core2Cpu1 = "2c.1cpu"
+	// Core3Cpu1Gb8 represents a three-core, one-CPU, 8-GB vNPU type.
+	Core3Cpu1Gb8 = "3c.1cpu.8g"
+	// Core4 represents a four-core vNPU type.
+	Core4 = "4c"
+	// Core4Cpu3 represents a four-core, three-CPU vNPU type.
+	Core4Cpu3 = "4c.3cpu"
+	// Core4Cpu3Ndvpp represents a four-core, three-CPU vNPU type without DVPP.
+	Core4Cpu3Ndvpp = "4c.3cpu.ndvpp"
+	// Core4Cpu4Dvpp represents a four-core, four-CPU vNPU type with DVPP.
+	Core4Cpu4Dvpp = "4c.4cpu.dvpp"
+	// Core5Cpu1Gb8 represents a five-core, one-CPU, 8-GB vNPU type.
+	Core5Cpu1Gb8 = "5c.1cpu.8g"
+	// Core5Cpu1Gb16 represents a five-core, one-CPU, 16-GB vNPU type.
+	Core5Cpu1Gb16 = "5c.1cpu.16g"
+	// Core6Cpu1Gb16 represents a six-core, one-CPU, 16-GB vNPU type.
+	Core6Cpu1Gb16 = "6c.1cpu.16g"
+	// Core8 represents an eight-core vNPU type.
+	Core8 = "8c"
+	// Core10Cpu3Gb16 represents a ten-core, three-CPU, 16-GB vNPU type.
+	Core10Cpu3Gb16 = "10c.3cpu.16g"
+	// Core10Cpu3Gb16Ndvpp represents a ten-core, three-CPU, 16-GB vNPU type without DVPP.
+	Core10Cpu3Gb16Ndvpp = "10c.3cpu.16g.ndvpp"
+	// Core10Cpu3Gb32 represents a ten-core, three-CPU, 32-GB vNPU type.
+	Core10Cpu3Gb32 = "10c.3cpu.32g"
+	// Core10Cpu4Gb16Dvpp represents a ten-core, four-CPU, 16-GB vNPU type with DVPP.
+	Core10Cpu4Gb16Dvpp = "10c.4cpu.16g.dvpp"
+	// Core12Cpu3Gb32 represents a twelve-core, three-CPU, 32-GB vNPU type.
+	Core12Cpu3Gb32 = "12c.3cpu.32g"
+	// Core16 represents a sixteen-core vNPU type.
+	Core16 = "16c"
+)
+
+// DCMI vNPU template names shared by device-plugin and DRA.
+const (
+	// Vir01 is the vir01 DCMI template.
+	Vir01 = "vir01"
+	// Vir02 is the vir02 DCMI template.
+	Vir02 = "vir02"
+	// Vir02C1 is the vir02_1c DCMI template.
+	Vir02C1 = "vir02_1c"
+	// Vir03C1G8 is the vir03_1c_8g DCMI template.
+	Vir03C1G8 = "vir03_1c_8g"
+	// Vir04 is the vir04 DCMI template.
+	Vir04 = "vir04"
+	// Vir04C3 is the vir04_3c DCMI template.
+	Vir04C3 = "vir04_3c"
+	// Vir04C3Ndvpp is the vir04_3c_ndvpp DCMI template.
+	Vir04C3Ndvpp = "vir04_3c_ndvpp"
+	// Vir04C4Dvpp is the vir04_4c_dvpp DCMI template.
+	Vir04C4Dvpp = "vir04_4c_dvpp"
+	// Vir05C1G8 is the vir05_1c_8g DCMI template.
+	Vir05C1G8 = "vir05_1c_8g"
+	// Vir05C1G16 is the vir05_1c_16g DCMI template.
+	Vir05C1G16 = "vir05_1c_16g"
+	// Vir06C1G16 is the vir06_1c_16g DCMI template.
+	Vir06C1G16 = "vir06_1c_16g"
+	// Vir08 is the vir08 DCMI template.
+	Vir08 = "vir08"
+	// Vir10C3G16 is the vir10_3c_16g DCMI template.
+	Vir10C3G16 = "vir10_3c_16g"
+	// Vir10C3G16NM is the vir10_3c_16g_nm DCMI template.
+	Vir10C3G16NM = "vir10_3c_16g_nm"
+	// Vir10C3G32 is the vir10_3c_32g DCMI template.
+	Vir10C3G32 = "vir10_3c_32g"
+	// Vir10C4G16M is the vir10_4c_16g_m DCMI template.
+	Vir10C4G16M = "vir10_4c_16g_m"
+	// Vir12C3G32 is the vir12_3c_32g DCMI template.
+	Vir12C3G32 = "vir12_3c_32g"
+	// Vir16 is the vir16 DCMI template.
+	Vir16 = "vir16"
+)
+
 const (
 	// Success for interface return code
 	Success = 0

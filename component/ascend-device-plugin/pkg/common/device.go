@@ -77,12 +77,12 @@ var (
 func GetDeviceID(deviceName string, ascendRuntimeOptions string) (int, int, error) {
 	// share mode of ascend310 ascend310P:davinci-devID-index, like Ascend310P-0-99
 	if ShareDev() {
-		deviceName = deviceName[:strings.LastIndex(deviceName, MiddelLine)]
+		deviceName = deviceName[:strings.LastIndex(deviceName, common.Minus)]
 	}
 	// hiAIAscend310Prefix: davinci-mini
 	// vnpu: davinci-coreNum-vid-devID, like Ascend910-2c-111-0
 	// ascend310:  davinci-mini0
-	idSplit := strings.Split(deviceName, MiddelLine)
+	idSplit := strings.Split(deviceName, common.Minus)
 
 	if len(idSplit) < PhyDeviceLen {
 		return 0, 0, fmt.Errorf("id: %s is invalid", deviceName)
@@ -415,26 +415,7 @@ func FakeAiCoreDevice(dev DavinCiDev, aiCoreDevices *[]*NpuDevice) {
 
 // GetTemplateName2DeviceTypeMap get virtual device type by template
 func GetTemplateName2DeviceTypeMap() map[string]string {
-	return map[string]string{
-		Vir16:        Core16,
-		Vir08:        Core8,
-		Vir04:        Core4,
-		Vir02:        Core2,
-		Vir01:        Core1,
-		Vir02C1:      Core2Cpu1,
-		Vir04C3:      Core4Cpu3,
-		Vir03C1G8:    Core3Cpu1Gb8,
-		Vir04C4Dvpp:  Core4Cpu4Dvpp,
-		Vir04C3Ndvpp: Core4Cpu3Ndvpp,
-		Vir05C1G8:    Core5Cpu1Gb8,
-		Vir05C1G16:   Core5Cpu1Gb16,
-		Vir06C1G16:   Core6Cpu1Gb16,
-		Vir10C3G16:   Core10Cpu3Gb16,
-		Vir10C3G16NM: Core10Cpu3Gb16Ndvpp,
-		Vir10C3G32:   Core10Cpu3Gb32,
-		Vir10C4G16M:  Core10Cpu4Gb16Dvpp,
-		Vir12C3G32:   Core12Cpu3Gb32,
-	}
+	return common.GetTemplateName2DeviceTypeMap()
 }
 
 // GetVNPUSegmentInfo get vpu segment info

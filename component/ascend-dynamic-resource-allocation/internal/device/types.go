@@ -15,6 +15,18 @@
 
 package device
 
+import "ascend-dynamic-resource-allocation/pkg/consts"
+
+// NpuDeviceKind identifies how a device is exposed to Kubernetes.
+type NpuDeviceKind string
+
+const (
+	// PhysicalDevice is a complete physical NPU.
+	PhysicalDevice NpuDeviceKind = consts.PhysicalNPUDeviceKind
+	// StaticVNPUDevice was created before the DRA driver started.
+	StaticVNPUDevice NpuDeviceKind = consts.StaticVNPUDeviceKind
+)
+
 // NpuAllInfo aggregates all discovered NPU devices and their distinct types.
 type NpuAllInfo struct {
 	AllDevTypes []string
@@ -24,11 +36,16 @@ type NpuAllInfo struct {
 
 // NpuDevice is the in-memory representation of a single Ascend device.
 type NpuDevice struct {
-	DevType    string
-	DeviceName string
-	IP         string
-	LogicID    int32
-	PhyID      int32
-	CardID     int32
-	DeviceID   int32
+	DevType      string
+	DeviceName   string
+	IP           string
+	LogicID      int32
+	PhyID        int32
+	CardID       int32
+	DeviceID     int32
+	Kind         NpuDeviceKind
+	VDevID       uint32
+	TemplateName string
+	VNPUType     string
+	AICore       int64
 }

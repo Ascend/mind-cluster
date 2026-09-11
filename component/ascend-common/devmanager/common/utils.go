@@ -33,20 +33,40 @@ var (
 	reg310P           = regexp.MustCompile(api.Ascend310PPattern)
 	templateNameLists = map[string]sets.String{
 		api.Ascend310P: sets.NewString(
-			"vir04", "vir02", "vir01", "vir04_3c",
-			"vir02_1c", "vir04_4c_dvpp", "vir04_3c_ndvpp",
+			Vir04, Vir02, Vir01, Vir04C3,
+			Vir02C1, Vir04C4Dvpp, Vir04C3Ndvpp,
 		),
 		api.Ascend910A: sets.NewString(
-			"vir16", "vir08", "vir04", "vir02", "vir01",
+			Vir16, Vir08, Vir04, Vir02, Vir01,
 		),
 		api.Ascend910B: sets.NewString(
-			"vir03_1c_8g", "vir05_1c_8g", "vir05_1c_16g",
-			"vir06_1c_16g", "vir10_3c_16g", "vir10_3c_16g_nm",
-			"vir10_3c_32g", "vir10_4c_16g_m", "vir12_3c_32g",
+			Vir03C1G8, Vir05C1G8, Vir05C1G16,
+			Vir06C1G16, Vir10C3G16, Vir10C3G16NM,
+			Vir10C3G32, Vir10C4G16M, Vir12C3G32,
 		),
 		api.Ascend910A3: sets.NewString(
-			"vir12_3c_32g", "vir06_1c_16g", "vir05_1c_16g", "vir10_3c_32g",
+			Vir12C3G32, Vir06C1G16, Vir05C1G16, Vir10C3G32,
 		),
+	}
+	templateName2DeviceType = map[string]string{
+		Vir01:          Core1,
+		Vir02:          Core2,
+		Vir02C1:        Core2Cpu1,
+		Vir03C1G8:      Core3Cpu1Gb8,
+		Vir04:          Core4,
+		Vir04C3:        Core4Cpu3,
+		Vir04C3Ndvpp:   Core4Cpu3Ndvpp,
+		Vir04C4Dvpp:    Core4Cpu4Dvpp,
+		Vir05C1G8:      Core5Cpu1Gb8,
+		Vir05C1G16:     Core5Cpu1Gb16,
+		Vir06C1G16:     Core6Cpu1Gb16,
+		Vir08:          Core8,
+		Vir10C3G16:     Core10Cpu3Gb16,
+		Vir10C3G16NM:   Core10Cpu3Gb16Ndvpp,
+		Vir10C3G32:     Core10Cpu3Gb32,
+		Vir10C4G16M:    Core10Cpu4Gb16Dvpp,
+		Vir12C3G32:     Core12Cpu3Gb32,
+		Vir16:          Core16,
 	}
 )
 
@@ -183,6 +203,37 @@ func IsValidTemplateName(devType, templateName string) bool {
 		_, isTemplateNameValid = templateNames[templateName]
 	}
 	return isTemplateNameValid
+}
+
+// GetTemplateName2DeviceTypeMap returns a copy of the public vNPU type suffix map.
+func GetTemplateName2DeviceTypeMap() map[string]string {
+	result := make(map[string]string, len(templateName2DeviceType))
+	for templateName, deviceType := range templateName2DeviceType {
+		result[templateName] = deviceType
+	}
+	return result
+}
+
+// GetVNPUTypeByTemplate converts a DCMI template into the public type used by DRA selectors.
+func GetVNPUTypeByTemplate(devType, templateName string) (string, error) {
+	if !IsValidTemplateName(devType, templateName) {
+		return "", fmt.Errorf("template %q is not supported by device type %q", templateName, devType)
+	}
+	suffix, ok := templateName2DeviceType[templateName]
+	if !ok {
+		return "", fmt.Errorf("template %q has no public vNPU type mapping", templateName)
+	}
+
+	var releasedType string
+	switch devType {
+	case api.Ascend310P:
+		releasedType = api.Ascend310P
+	case api.Ascend910A, api.Ascend910B, api.Ascend910A3:
+		releasedType = api.Ascend910
+	default:
+		return "", fmt.Errorf("device type %q does not support a public vNPU type", devType)
+	}
+	return releasedType + Minus + suffix, nil
 }
 
 // RemoveDuplicate remove duplicate device

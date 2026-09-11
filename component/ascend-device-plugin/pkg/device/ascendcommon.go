@@ -1234,7 +1234,7 @@ func (tool *AscendTools) CheckDeviceTypeLabel() error {
 	if !exist {
 		return fmt.Errorf("label of [%s]&[%s]not exist", label.NPUServerTypeLabel, label.NPUServerTypeLabelDeprecated)
 	}
-	deviceTypeInfos := strings.Split(deviceType, common.MiddelLine)
+	deviceTypeInfos := strings.Split(deviceType, npuCommon.Minus)
 	if len(deviceTypeInfos) < common.ServerTypeInfoMinLen {
 		return fmt.Errorf("length of device type info %d is invalid", len(deviceTypeInfos))
 	}

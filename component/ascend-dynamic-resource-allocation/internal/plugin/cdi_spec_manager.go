@@ -25,6 +25,8 @@ import (
 	"ascend-common/cdi"
 	"ascend-common/cdi/mount"
 	"ascend-common/common-utils/hwlog"
+	devcommon "ascend-common/devmanager/common"
+	"ascend-dynamic-resource-allocation/pkg/consts"
 )
 
 // CdiSpecInterface abstracts per-claim CDI spec generation and removal.
@@ -106,27 +108,32 @@ func NewCDISpecManager(
 // Compile-time check: cdiSpecManager satisfies CdiSpecInterface.
 var _ CdiSpecInterface = (*cdiSpecManager)(nil)
 
-// WriteClaimSpec parses the numeric suffix from each device name, converts
-// the physical ID to the mount ID via the generation-supplied toMountID (so
-// the latest device state is consulted), then asks the cdi public library to
-// build and persist a CDI spec file for the claim. Returns the
+// WriteClaimSpec resolves physical and static-vNPU device names, then asks the
+// CDI public library to build and persist a CDI spec file. Returns the
 // fully-qualified CDI device IDs so the plugin can fill them into the prepared
 // devices handed back to kubelet.
 func (m *cdiSpecManager) WriteClaimSpec(claimUID string, deviceNames []string) ([]string, error) {
+	if len(deviceNames) == 0 {
+		return nil, fmt.Errorf("cdi: claim %s has no devices", claimUID)
+	}
+	useVirtual := strings.HasPrefix(deviceNames[0], staticVNPUNamePrefix)
 	ids := make([]int, 0, len(deviceNames))
 	for _, name := range deviceNames {
-		phyID, err := parseDeviceIDSuffix(name)
+		deviceID, virtual, err := parseCDIDeviceName(name)
 		if err != nil {
 			return nil, fmt.Errorf("cdi: parse device ID for %q: %w", name, err)
 		}
-		if m.toMountID != nil {
-			mountID, err := m.toMountID(int32(phyID))
-			if err != nil {
-				return nil, fmt.Errorf("cdi: convert phyID %d to mountID for %q: %w", phyID, name, err)
-			}
-			phyID = int(mountID)
+		if virtual != useVirtual {
+			return nil, fmt.Errorf("cdi: physical and virtual devices cannot share one claim spec")
 		}
-		ids = append(ids, phyID)
+		if !useVirtual && m.toMountID != nil {
+			mountID, err := m.toMountID(int32(deviceID))
+			if err != nil {
+				return nil, fmt.Errorf("cdi: convert phyID %d to mountID: %w", deviceID, err)
+			}
+			deviceID = int(mountID)
+		}
+		ids = append(ids, deviceID)
 	}
 
 	// cdi.DeviceConfig.ProductType is a single string; it is only used to
@@ -142,9 +149,10 @@ func (m *cdiSpecManager) WriteClaimSpec(claimUID string, deviceNames []string) (
 			DeviceIDs:   ids,
 			DevType:     m.devType,
 			ProductType: productType,
+			UseVirtual:  useVirtual,
 		},
 		MountConfig: mount.MountConfig{
-			Dir:        mountConfigDir,
+			Dir:            mountConfigDir,
 			HostFsPrefix:   defaultHostFsPrefix,
 			// Mount UB driver files by default for Ascend 950-generation devices.
 			MountUBDrv: true,
@@ -163,16 +171,39 @@ func (m *cdiSpecManager) DeleteClaimSpec(claimUID string) error {
 	return cdi.DeleteClaimSpec("", claimUID)
 }
 
-// parseDeviceIDSuffix splits a "<name>-<id>" device name and returns the
-// trailing integer. e.g. "npu-12" -> 12, nil.
+const (
+	staticVNPUNamePrefix       = consts.StaticVNPUDeviceKind + devcommon.Minus
+	staticVNPUNameSegmentCount = 4
+	staticVNPUVDevIDSegment    = 2
+)
+
+func parseCDIDeviceName(name string) (int, bool, error) {
+	if !strings.HasPrefix(name, staticVNPUNamePrefix) {
+		id, err := parseDeviceIDSuffix(name)
+		return id, false, err
+	}
+	parts := strings.Split(name, devcommon.Minus)
+	if len(parts) != staticVNPUNameSegmentCount {
+		return 0, true, fmt.Errorf("invalid static vNPU device name %q", name)
+	}
+	id, err := strconv.Atoi(parts[staticVNPUVDevIDSegment])
+	if err != nil {
+		return 0, true, fmt.Errorf("vDevID %q in %q is not an integer: %w",
+			parts[staticVNPUVDevIDSegment], name, err)
+	}
+	return id, true, nil
+}
+
+// parseDeviceIDSuffix returns the trailing integer from a physical device name.
 func parseDeviceIDSuffix(name string) (int, error) {
-	idx := strings.LastIndex(name, "-")
-	if idx < 0 || idx == len(name)-1 {
+	idx := strings.LastIndex(name, devcommon.Minus)
+	if idx < 0 || idx+len(devcommon.Minus) == len(name) {
 		return 0, fmt.Errorf("no '-' separator or empty suffix in %q", name)
 	}
-	id, err := strconv.Atoi(name[idx+1:])
+	suffix := name[idx+len(devcommon.Minus):]
+	id, err := strconv.Atoi(suffix)
 	if err != nil {
-		return 0, fmt.Errorf("suffix %q in %q is not an integer: %w", name[idx+1:], name, err)
+		return 0, fmt.Errorf("suffix %q in %q is not an integer: %w", suffix, name, err)
 	}
 	return id, nil
 }

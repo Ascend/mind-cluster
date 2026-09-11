@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"ascend-common/api"
+	npuCommon "ascend-common/devmanager/common"
 )
 
 const (
@@ -177,49 +178,49 @@ const (
 	// Ascend310PIPro 310P-IPro
 	Ascend310PIPro = api.Ascend310P + "-IPro"
 	// Ascend310Pc1 Ascend310P 1 core
-	Ascend310Pc1 = api.Ascend310P + "-" + Core1
+	Ascend310Pc1 = api.Ascend310P + npuCommon.Minus + npuCommon.Core1
 	// Ascend310Pc2 Ascend310P 2 core
-	Ascend310Pc2 = api.Ascend310P + "-" + Core2
+	Ascend310Pc2 = api.Ascend310P + npuCommon.Minus + npuCommon.Core2
 	// Ascend310Pc4 Ascend310P 4 core
-	Ascend310Pc4 = api.Ascend310P + "-" + Core4
+	Ascend310Pc4 = api.Ascend310P + npuCommon.Minus + npuCommon.Core4
 	// Ascend310Pc4Cpu3 Ascend310P 4core 3cpu
-	Ascend310Pc4Cpu3 = api.Ascend310P + "-" + Core4Cpu3
+	Ascend310Pc4Cpu3 = api.Ascend310P + npuCommon.Minus + npuCommon.Core4Cpu3
 	// Ascend310Pc2Cpu1 Ascend310P 2core 1cpu
-	Ascend310Pc2Cpu1 = api.Ascend310P + "-" + Core2Cpu1
+	Ascend310Pc2Cpu1 = api.Ascend310P + npuCommon.Minus + npuCommon.Core2Cpu1
 	// Ascend310Pc4Cpu4Dvpp Ascend310P 4core 4cpu dvpp
-	Ascend310Pc4Cpu4Dvpp = api.Ascend310P + "-" + Core4Cpu4Dvpp
+	Ascend310Pc4Cpu4Dvpp = api.Ascend310P + npuCommon.Minus + npuCommon.Core4Cpu4Dvpp
 	// Ascend310Pc4Cpu3Ndvpp Ascend310P 4core 3cpu ndvpp
-	Ascend310Pc4Cpu3Ndvpp = api.Ascend310P + "-" + Core4Cpu3Ndvpp
+	Ascend310Pc4Cpu3Ndvpp = api.Ascend310P + npuCommon.Minus + npuCommon.Core4Cpu3Ndvpp
 
 	// Ascend910vir2  Ascend910 2core
-	Ascend910vir2 = api.Ascend910 + "-" + Core2
+	Ascend910vir2 = api.Ascend910 + npuCommon.Minus + npuCommon.Core2
 	// Ascend910vir4 Ascend910 4core
-	Ascend910vir4 = api.Ascend910 + "-" + Core4
+	Ascend910vir4 = api.Ascend910 + npuCommon.Minus + npuCommon.Core4
 	// Ascend910vir8 Ascend910 8core
-	Ascend910vir8 = api.Ascend910 + "-" + Core8
+	Ascend910vir8 = api.Ascend910 + npuCommon.Minus + npuCommon.Core8
 	// Ascend910vir16 Ascend910 16core
-	Ascend910vir16 = api.Ascend910 + "-" + Core16
+	Ascend910vir16 = api.Ascend910 + npuCommon.Minus + npuCommon.Core16
 	// Ascend910vir5Cpu1Gb8 Ascend910 5core 1cpu 8 Gb memory
-	Ascend910vir5Cpu1Gb8 = api.Ascend910 + "-" + Core5Cpu1Gb8
+	Ascend910vir5Cpu1Gb8 = api.Ascend910 + npuCommon.Minus + npuCommon.Core5Cpu1Gb8
 	// Ascend910vir5Cpu1Gb16 Ascend910 5core 1cpu 16Gb memory
-	Ascend910vir5Cpu1Gb16 = api.Ascend910 + "-" + Core5Cpu1Gb16
+	Ascend910vir5Cpu1Gb16 = api.Ascend910 + npuCommon.Minus + npuCommon.Core5Cpu1Gb16
 	// Ascend910vir6Cpu1Gb16 Ascend910 6core 1cpu 16Gb memory
-	Ascend910vir6Cpu1Gb16 = api.Ascend910 + "-" + Core6Cpu1Gb16
+	Ascend910vir6Cpu1Gb16 = api.Ascend910 + npuCommon.Minus + npuCommon.Core6Cpu1Gb16
 	// Ascend910vir10Cpu3Gb16 Ascend910 10core 3cpu 16Gb memory
-	Ascend910vir10Cpu3Gb16 = api.Ascend910 + "-" + Core10Cpu3Gb16
+	Ascend910vir10Cpu3Gb16 = api.Ascend910 + npuCommon.Minus + npuCommon.Core10Cpu3Gb16
 
 	// Ascend910vir10Cpu3Gb16Ndvpp Ascend910 10core 3cpu 16Gb memory ndvpp
-	Ascend910vir10Cpu3Gb16Ndvpp = api.Ascend910 + "-" + Core10Cpu3Gb16Ndvpp
+	Ascend910vir10Cpu3Gb16Ndvpp = api.Ascend910 + npuCommon.Minus + npuCommon.Core10Cpu3Gb16Ndvpp
 	// Ascend910vir10Cpu3Gb32 Ascend910 10core 3cpu 32Gb memory
-	Ascend910vir10Cpu3Gb32 = api.Ascend910 + "-" + Core10Cpu3Gb32
+	Ascend910vir10Cpu3Gb32 = api.Ascend910 + npuCommon.Minus + npuCommon.Core10Cpu3Gb32
 	// Ascend910vir10Cpu4Gb16Dvpp Ascend910 10core 4cpu 16Gb memory dvpp
-	Ascend910vir10Cpu4Gb16Dvpp = api.Ascend910 + "-" + Core10Cpu4Gb16Dvpp
+	Ascend910vir10Cpu4Gb16Dvpp = api.Ascend910 + npuCommon.Minus + npuCommon.Core10Cpu4Gb16Dvpp
 
 	// Ascend910vir12Cpu3Gb32 Ascend910 12core 3cpu 32Gb memory
-	Ascend910vir12Cpu3Gb32 = api.Ascend910 + "-" + Core12Cpu3Gb32
+	Ascend910vir12Cpu3Gb32 = api.Ascend910 + npuCommon.Minus + npuCommon.Core12Cpu3Gb32
 
 	// Ascend910vir3Cpu1Gb8 Ascend910 3core 1cpu 8Gb memory
-	Ascend910vir3Cpu1Gb8 = api.Ascend910 + "-" + Core3Cpu1Gb8
+	Ascend910vir3Cpu1Gb8 = api.Ascend910 + npuCommon.Minus + npuCommon.Core3Cpu1Gb8
 
 	// AscendfdPrefix use in fd
 	AscendfdPrefix = "davinci-mini"
@@ -241,86 +242,6 @@ const (
 
 	// AiCoreResourceName resource name for virtual device
 	AiCoreResourceName = "npu-core"
-
-	// Core1 1 core
-	Core1 = "1c"
-	// Core2 2 core
-	Core2 = "2c"
-	// Core2Cpu1 2core 1cpu
-	Core2Cpu1 = "2c.1cpu"
-
-	// Core3Cpu1Gb8 3 core, 1 cpu and 8GB memory
-	Core3Cpu1Gb8 = "3c.1cpu.8g"
-	// Core4 4 core
-	Core4 = "4c"
-	// Core4Cpu3 4core 3cpu
-	Core4Cpu3 = "4c.3cpu"
-	// Core4Cpu3Ndvpp 4core 3cpu ndvpp
-	Core4Cpu3Ndvpp = "4c.3cpu.ndvpp"
-	// Core4Cpu4Dvpp 4core 4cpu dvpp
-	Core4Cpu4Dvpp = "4c.4cpu.dvpp"
-	// Core5Cpu1Gb8 5 core, 1 cpu and 8GB memory
-	Core5Cpu1Gb8 = "5c.1cpu.8g"
-	// Core5Cpu1Gb16 5 core, 1 cpu and 16GB memory
-	Core5Cpu1Gb16 = "5c.1cpu.16g"
-
-	// Core6Cpu1Gb16 6 core, 1 cpu and 16GB memory
-	Core6Cpu1Gb16 = "6c.1cpu.16g"
-
-	// Core8 8 core
-	Core8 = "8c"
-	// Core10Cpu3Gb16 10 core, 3 cpu and 16Gb memory
-	Core10Cpu3Gb16 = "10c.3cpu.16g"
-
-	// Core10Cpu3Gb16Ndvpp 10 core, 3 cpu, 16Gb memory and ndvpp
-	Core10Cpu3Gb16Ndvpp = "10c.3cpu.16g.ndvpp"
-	// Core10Cpu3Gb32 10 core, 3 cpu and 32GB memory
-	Core10Cpu3Gb32 = "10c.3cpu.32g"
-	// Core10Cpu4Gb16Dvpp 10 core, 4 cpu, 16Gb memory and dvpp
-	Core10Cpu4Gb16Dvpp = "10c.4cpu.16g.dvpp"
-
-	// Core12Cpu3Gb32 12 core, 3 cpu and 32GB memory
-	Core12Cpu3Gb32 = "12c.3cpu.32g"
-
-	// Core16 16 core
-	Core16 = "16c"
-
-	// Vir01 template name vir01
-	Vir01 = "vir01"
-	// Vir02 template name vir02
-	Vir02 = "vir02"
-	// Vir02C1 template name vir02_1c
-	Vir02C1 = "vir02_1c"
-	// Vir03C1G8 template name vir03_1c_8g
-	Vir03C1G8 = "vir03_1c_8g"
-	// Vir04 template name vir04
-	Vir04 = "vir04"
-	// Vir04C3 template name vir04_3c
-	Vir04C3 = "vir04_3c"
-	// Vir04C4Dvpp template name vir04_4c_dvpp
-	Vir04C4Dvpp = "vir04_4c_dvpp"
-	// Vir04C3Ndvpp template name vir04_3c_ndvpp
-	Vir04C3Ndvpp = "vir04_3c_ndvpp"
-	// Vir05C1G8 template name vir05_1c_8g
-	Vir05C1G8 = "vir05_1c_8g"
-	// Vir05C1G16 template name vir05_1c_16g
-	Vir05C1G16 = "vir05_1c_16g"
-	// Vir06C1G16 template name vir06_1c_16g
-	Vir06C1G16 = "vir06_1c_16g"
-	// Vir08 template name vir08
-	Vir08 = "vir08"
-	// Vir10C3G16 template name vir10_3c_16g
-	Vir10C3G16 = "vir10_3c_16g"
-	// Vir10C3G16NM template name vir10_3c_16g_nm
-	Vir10C3G16NM = "vir10_3c_16g_nm"
-	// Vir10C3G32 template name vir10_3c_32g
-	Vir10C3G32 = "vir10_3c_32g"
-	// Vir10C4G16M template name vir10_4c_16g_m
-	Vir10C4G16M = "vir10_4c_16g_m"
-	// Vir12C3G32 template name vir12_3c_32g
-	Vir12C3G32 = "vir12_3c_32g"
-	// Vir16 template name vir16
-	Vir16 = "vir16"
 
 	// VirMark the mark of virtual device
 	VirMark = "vir"
@@ -430,8 +351,6 @@ const (
 
 	// CommaSepDev if the separator between devices on annotation
 	CommaSepDev = ","
-	// MiddelLine if the separator between devices for split id
-	MiddelLine = "-"
 	// UnderLine the separator between ids
 	UnderLine = "_"
 

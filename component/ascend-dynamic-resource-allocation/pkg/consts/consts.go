@@ -28,6 +28,10 @@ const (
 	// NPUNamePrefix is the unified prefix for DeviceName across all generations.
 	// The full name is formatted as "<NPUNamePrefix>-<phyID>" (e.g. "npu-0").
 	NPUNamePrefix = "npu"
+	// PhysicalNPUDeviceKind identifies a complete physical NPU in DRA metadata.
+	PhysicalNPUDeviceKind = "physical-npu"
+	// StaticVNPUDeviceKind identifies a pre-created static vNPU in DRA metadata and device names.
+	StaticVNPUDeviceKind = "static-vnpu"
 )
 
 // Path and Environment related constants.

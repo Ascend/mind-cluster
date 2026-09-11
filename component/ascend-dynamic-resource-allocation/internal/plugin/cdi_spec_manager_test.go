@@ -79,6 +79,34 @@ func TestParseDeviceIDSuffix(t *testing.T) {
 	}
 }
 
+func TestParseCDIDeviceName(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		wantID      int
+		wantVirtual bool
+		wantErr     bool
+	}{
+		{"physical device", "npu-7", 7, false, false},
+		{"static vNPU uses vDev ID", "static-vnpu-100-7", 100, true, false},
+		{"invalid static shape", "static-vnpu-100", 0, true, true},
+		{"too many static segments", "static-vnpu-100-7-extra", 0, true, true},
+		{"invalid static vDev ID", "static-vnpu-x-7", 0, true, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			id, virtual, err := parseCDIDeviceName(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("parseCDIDeviceName(%q) error = %v, wantErr=%v", tt.input, err, tt.wantErr)
+			}
+			if id != tt.wantID || virtual != tt.wantVirtual {
+				t.Errorf("parseCDIDeviceName(%q) = (%d, %v), want (%d, %v)",
+					tt.input, id, virtual, tt.wantID, tt.wantVirtual)
+			}
+		})
+	}
+}
+
 // TestNewCDISpecManager verifies the constructor stores devType and
 // productTypes and configures the default CDI cache spec directory without
 // panicking.
@@ -112,6 +140,8 @@ func TestWriteClaimSpec_Errors(t *testing.T) {
 		deviceNames []string
 		errContains string
 	}{
+		{"empty device list", "Ascend910", "ut-claim",
+			nil, "has no devices"},
 		{"no separator in name", "Ascend910", "ut-claim",
 			[]string{"Ascend910"}, "no '-' separator or empty suffix"},
 		{"empty suffix in name", "Ascend910", "ut-claim",
@@ -120,6 +150,8 @@ func TestWriteClaimSpec_Errors(t *testing.T) {
 			[]string{"Ascend910-x"}, "is not an integer"},
 		{"empty claim UID", "Ascend910", "",
 			[]string{"Ascend910-0"}, "claimUID must not be empty"},
+		{"mixed physical and static devices", "Ascend910", "ut-claim",
+			[]string{"npu-0", "static-vnpu-100-0"}, "physical and virtual devices cannot share"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
