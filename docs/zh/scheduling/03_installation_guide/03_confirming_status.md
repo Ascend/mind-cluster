@@ -649,45 +649,6 @@
     ...
     ```
 
-## Resilience Controller<a name="ZH-CN_TOPIC_0000002511426295"></a>
-
->[!NOTICE]
->Resilience Controller 组件已经日落，相关内容将于2026年9月30日的版本删除。以下内容仅适用于仍在使用该组件的旧版本用户。
-
-请在任意节点执行以下步骤验证Resilience Controller的安装状态。
-
-1. 通过如下命令查看K8s集群中Resilience Controller的Pod，需要满足Pod的STATUS为Running，READY为1/1。
-
-    ```shell
-    kubectl get pods -n mindx-dl -o wide | grep resilience-controller
-    ```
-
-   回显示例：
-
-    ```ColdFusion
-    resilience-controller-76f4476bb5-fs986         1/1     Running   0          6m52s   192.168.102.67   ubuntu       <none>           <none>
-    ```
-
-2. 通过如下命令查看K8s集群中Resilience Controller的日志。
-
-    ```shell
-    kubectl logs -n mindx-dl {Resilience组件的Pod名字}
-    ```
-
-   回显示例如下，表示组件正常运行。
-
-    ```ColdFusion
-    root@ubuntu:~# kubectl logs -n mindx-dl resilience-controller-76f4476bb5-fs986
-    [INFO]     2022/11/17 17:18:46.697010 1       hwlog@v0.0.0/api.go:96    run.log's logger init success
-    [INFO]     2022/11/17 17:18:46.697139 1       cmd/main.go:57    resilience-controller starting and the version is xxx_linux-x86_64
-    [INFO]     2022/11/17 17:18:47.227913 1       K8stool@v0.0.0/self_K8s_client.go:116    start to decrypt cfg
-    [INFO]     2022/11/17 17:18:47.297559 1       K8stool@v0.0.0/self_K8s_client.go:125    Config loaded from file: ****tc/mindx-dl/resilience-controller/.config/config6
-    [INFO]     2022/11/17 17:18:47.300066 1       elastic/controller.go:45    Setting up elastic event handlers
-    [INFO]     2022/11/17 17:18:47.300179 1       elastic/controller.go:63    Starting elastic controller, waiting for informer caches to sync
-    [INFO]     2022/11/17 17:18:47.401246 1       cmd/main.go:80    elastic controller started
-    ...
-    ```
-
 ## Container Manager<a name="ZH-CN_TOPIC_0000002492269056"></a>
 
 请在Container Manager组件部署的节点上执行以下步骤验证Container Manager组件的安装状态。

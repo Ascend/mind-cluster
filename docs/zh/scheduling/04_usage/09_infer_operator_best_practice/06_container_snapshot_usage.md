@@ -28,7 +28,7 @@
 - 若没有安装，可以参考[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作，其中NodeD、Infer Operator需要修改部分安装步骤。
 
   - NodeD
-     - 需要使用如下的Dockerfile制作NodeD镜像，其中http_proxy、https_proxy配置为能够访问公网的代理
+    - 需要使用如下的Dockerfile制作NodeD镜像，其中http_proxy、https_proxy配置为能够访问公网的代理
 
         ```Dockerfile
         FROM openeuler-24.03-lts-sp2:latest
@@ -57,17 +57,23 @@
             echo 'source /etc/profile' >> ~/.bashrc
         ```
 
-     - NodeD的启动yaml需使用组件软件包中容器快照特性对应的noded-container-snapshot.yaml，其中快照路径/user/snapshot根据实际情况配置并为共享存储
+    - NodeD的启动yaml需使用组件软件包中容器快照特性对应的`noded-container-snapshot.yaml`，其中快照路径`/user/snapshot`须根据实际情况配置，且为共享存储路径。
 
         ```Yaml
-           - name: image-path
-             mountPath: /user/snapshot
-
-           - name: image-path
-             hostPath:
-               path: /user/snapshot
-               type: Directory
-       ```
+      ...
+          volumeMounts:
+      ...
+            - name: image-path
+              mountPath: /user/snapshot
+      ...
+      volumes:
+      ...
+        - name: image-path
+          hostPath:
+            path: /user/snapshot
+            type: Directory
+      ...
+        ```
 
   - Infer Operator
      - Infer Operator的启动yaml中添加快照路径挂载项，其中mountPath与hostPath根据实际情况配置并与NodeD的快照路径相同，此外还可配置快照超时参数（>= 1，单位为分钟）snapshotTimeout，默认60分钟
