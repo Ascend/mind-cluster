@@ -180,14 +180,27 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		hwlog.RunLog.Warnf("Reconcile Job<%s> failed err: %s", req.NamespacedName, err)
 		return ctrl.Result{}, err
 	}
-	if value, ok := r.ttlRequeues.LoadAndDelete(req.NamespacedName.String()); ok {
+	if requeueAfter := r.getAndCleanRequeueAfter(ascendjob, req); requeueAfter > 0 {
+		return ctrl.Result{RequeueAfter: requeueAfter}, nil
+	}
+	return ctrl.Result{}, nil
+}
+
+func (r *ASJobReconciler) getAndCleanRequeueAfter(ascendjob *mindxdlv1.AscendJob, req ctrl.Request) time.Duration {
+	jobKey, err := common.KeyFunc(ascendjob)
+	if err != nil {
+		hwlog.RunLog.Errorf("couldn't get key for job<%s/%s> object: %v", ascendjob.GetNamespace(),
+			ascendjob.GetName(), err)
+		return 0
+	}
+	if value, ok := r.ttlRequeues.LoadAndDelete(jobKey); ok {
 		requeueAfter := value.(time.Duration)
 		if requeueAfter > 0 {
 			hwlog.RunLog.Infof("Job<%s> TTL requeue after %v", req.NamespacedName, requeueAfter)
-			return ctrl.Result{RequeueAfter: requeueAfter}, nil
+			return requeueAfter
 		}
 	}
-	return ctrl.Result{}, nil
+	return 0
 }
 
 // StartTTLCleanupScanner periodically scans all finished AscendJobs and deletes
