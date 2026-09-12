@@ -18009,11 +18009,10 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "DL_DevicePlugin | LCNELog",
+            "source_file": "DL_DevicePlugin",
             "regex": {
                 "in": [
-                    ["WARN","[0x00f103b0,155907,na,na]","Assertion"],
-                    ["alarmID=0x00f103b0"]
+                    ["WARN","[0x00f103b0,155907,na,na]","Assertion"]
                 ]
             }
         },
@@ -18177,11 +18176,10 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "DL_DevicePlugin | LCNELog",
+            "source_file": "DL_DevicePlugin",
             "regex": {
                 "in": [
-                    ["WARN","[0x00f103b0,155904,na,na]","Assertion"],
-                    ["alarmID=0x00f103b0"]
+                    ["WARN","[0x00f103b0,155904,na,na]","Assertion"]
                 ]
             }
         },
@@ -18345,11 +18343,10 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "DL_DevicePlugin | LCNELog",
+            "source_file": "DL_DevicePlugin",
             "regex": {
                 "in": [
-                    ["WARN","[0x00f103b0,155649,na,na]","Assertion"],
-                    ["alarmID=0x00f103b0"]
+                    ["WARN","[0x00f103b0,155649,na,na]","Assertion"]
                 ]
             }
         },
@@ -18369,11 +18366,10 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "DL_DevicePlugin | LCNELog",
+            "source_file": "DL_DevicePlugin",
             "regex": {
                 "in": [
-                    ["WARN","[0x08520003,,cpu,na]","Assertion"],
-                    ["alarmID=0x08520003"]
+                    ["WARN","[0x08520003,,cpu,na]","Assertion"]
                 ]
             }
         },
@@ -18393,11 +18389,10 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "DL_DevicePlugin | LCNELog",
+            "source_file": "DL_DevicePlugin",
             "regex": {
                 "in": [
-                    ["WARN","[0x08520003,,npu,na]","Assertion"],
-                    ["alarmID=0x08520003"]
+                    ["WARN","[0x08520003,,npu,na]","Assertion"]
                 ]
             }
         },
@@ -18417,11 +18412,10 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "DL_DevicePlugin | LCNELog",
+            "source_file": "DL_DevicePlugin",
             "regex": {
                 "in": [
-                    ["WARN","[0x08520003,,L2,na]","Assertion"],
-                    ["alarmID=0x08520003"]
+                    ["WARN","[0x08520003,,L2,na]","Assertion"]
                 ]
             }
         },
@@ -18596,22 +18590,30 @@
         "Net_Param_Dev_Switch_02": {
             "attribute": {
                 "class": "Hardware",
-                "component": "LCNE",
-                "module": "NPU Board",
-                "cause_zh": "David互连的接口down",
-                "description_zh": "端口链路状态变为Down。",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "接口状态改变",
+                "description_zh": "具体报错原因可根据故障原始信息中“Reason=”的值，结合文档“https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/c26113fc?idPath=23710424|251366513|22892968|263594706”进行定位",
                 "suggestion_zh": [
-                    "1. 参考《灵衢计算网络指南》处理；"
+                    "在查找报错原因的文档中按照对应原因的处理建议进行操作"
                 ],
-                "cause_en": "David interconnection interface is down",
-                "description_en": "Port link status changed to Down.",
+                "cause_en": "Interface status change",
+                "description_en": "The specific error cause can be located based on the \"Reason=\" value in the original fault information and the document \"https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/c26113fc?idPath=23710424|251366513|22892968|263594706\".",
                 "suggestion_en": [
-                    "1. Refer to the LingQu Computing Network Guide for problem solving."
+                    "Follow the processing suggestions corresponding to the cause in the document that explains the error cause."
                 ]
             },
-            "source_file": "LCNE_LOG",
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
             "regex": {
-                "in": ["linkDown_active", "The interface status changes"]
+                "in": [
+                  ["linkDown_active", "0x08520003", "The interface status changes"],
+                  ["linkDown_active", "0x8520003", "The interface status changes"]
+                ]
             }
         },
         "Net_Param_Dev_Switch_16": {
@@ -18827,43 +18829,60 @@
         "Net_Param_Dev_david_Chip_01": {
             "attribute": {
                 "class": "Hardware",
-                "component": "LCNE",
-                "module": "David Chip",
-                "cause_zh": "UCMI故障",
-                "description_zh": "转发引擎整体功能失效。UCMI连通性存在问题，如断链、读写错误等。",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "转发引擎整体功能失效",
+                "description_zh": "原因1：Internal fatal fault of the forwarding chip.（转发芯片内部致命故障。）\n原因2：The PCIE interface of the forwarding chip failed.（转发芯片PCIE接口故障。）\n原因3：The forwarding register was unstable.（转发寄存器不稳定。）",
                 "suggestion_zh": [
-                    "1. 参考《灵衢计算网络指南》处理；"
+                    "请收集告警信息、日志信息和配置信息，并联系技术支持人员"
                 ],
-                "cause_en": "UCMI fault",
-                "description_en": "Forwarding engine overall function failure. UCMI connectivity issues exist, such as link disconnection, read/write errors, etc.",
+                "cause_en": "Overall function failure of the forwarding engine",
+                "description_en": "Cause 1: Internal fatal fault of the forwarding chip.\nCause 2: The PCIE interface of the forwarding chip failed.\nCause 3: The forwarding register was unstable.",
                 "suggestion_en": [
-                    "1. Refer to the LingQu Computing Network Guide for problem solving."
+                    "Collect the alarms, logs, and configurations and contact technical support."
                 ]
             },
-            "source_file": "LCNE_LOG",
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
             "regex": {
-                "in": ["hwForwardEngineInvalid_active", "The forwarding engine completely failed"]
+                "in": [
+                  ["hwForwardEngineInvalid_active", "0x00f103b0", "The forwarding engine completely failed"],
+                  ["hwForwardEngineInvalid_active", "0xf103b0", "The forwarding engine completely failed"]
+                ]
+
             }
         },
         "Net_Param_Dev_5808_Chip_02": {
             "attribute": {
                 "class": "Hardware",
-                "component": "LCNE",
-                "module": "5808 Chip",
-                "cause_zh": "端口级多bit ECC故障",
-                "description_zh": "转发引擎端口功能失效。辐射、电磁干扰、物理失效等导致的异常。",
+                "component": "UB Switch",
+                "module": "UB",
+                "cause_zh": "转发引擎端口功能失效",
+                "description_zh": "原因1：Port failure on the forwarding chip.（转发芯片端口失效故障。）\n原因2：Unstable port fault on the forwarding chip.（转发芯片端口不稳定故障。）\n原因3：Invalid packet fault on the port of the forwarding chip.（转发芯片端口非法报文故障。）",
                 "suggestion_zh": [
-                    "1. 参考《灵衢计算网络指南》处理；"
+                    "请收集告警信息、日志信息和配置信息，并联系技术支持人员。"
                 ],
-                "cause_en": "Port-level multi-bit ECC failure",
-                "description_en": "Forwarding engine port function failure. Abnormalities caused by radiation, electromagnetic interference, physical failure, etc.",
+                "cause_en": "Port function failure of the forwarding engine",
+                "description_en": "Cause 1: Port failure on the forwarding chip.\nCause 2: Unstable port fault on the forwarding chip.\nCause 3: Invalid packet fault on the port of the forwarding chip.",
                 "suggestion_en": [
-                    "1. Refer to the LingQu Computing Network Guide for problem solving."
+                    "Collect the alarms, logs, and configurations and contact technical support."
                 ]
             },
-            "source_file": "LCNE_LOG",
+            "rule": [
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
+                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
+            ],
+            "source_file": "LCNELog",
             "regex": {
-                "in": ["hwForwardEnginePortFail_active", "The forwarding engine port function failed"]
+                "in": [
+                  ["hwForwardEnginePortFail_active", "0x00f1fef5", "The forwarding engine port function failed"],
+                  ["hwForwardEnginePortFail_active", "0xf1fef5", "The forwarding engine port function failed"]
+                ]
             }
         },
         "Net_Param_Dev_5808_Chip_05": {
@@ -26841,35 +26860,6 @@
                 ]
             }
         },
-        "0x00F103B0": {
-            "attribute": {
-                "class": "Hardware",
-                "component": "UB Switch",
-                "module": "UB",
-                "cause_zh": "转发引擎整体功能失效",
-                "description_zh": "原因1：Internal fatal fault of the forwarding chip.（转发芯片内部致命故障。）\n原因2：The PCIE interface of the forwarding chip failed.（转发芯片PCIE接口故障。）\n原因3：The forwarding register was unstable.（转发寄存器不稳定。）",
-                "suggestion_zh": [
-                    "请收集告警信息、日志信息和配置信息，并联系技术支持人员"
-                ],
-                "cause_en": "Overall function failure of the forwarding engine",
-                "description_en": "Cause 1: Internal fatal fault of the forwarding chip.\nCause 2: The PCIE interface of the forwarding chip failed.\nCause 3: The forwarding register was unstable.",
-                "suggestion_en": [
-                    "Collect the alarms, logs, and configurations and contact technical support."
-                ]
-            },
-            "rule": [
-                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
-                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
-                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
-            ],
-            "source_file": "LCNELog",
-            "regex": {
-                 "in": [
-                    ["0x00F103B0", "The forwarding engine completely failed"],
-                    ["0xF103B0", "The forwarding engine completely failed"]
-                ]
-            }
-        },
         "0x08130056": {
             "attribute": {
                 "class": "Hardware",
@@ -26896,64 +26886,6 @@
                  "in": [
                     ["0x08130056", "The card partially failed"],
                     ["0x8130056", "The card partially failed"]
-                ]
-            }
-        },
-        "0x00F1FEF5": {
-            "attribute": {
-                "class": "Hardware",
-                "component": "UB Switch",
-                "module": "UB",
-                "cause_zh": "转发引擎端口功能失效",
-                "description_zh": "原因1：Port failure on the forwarding chip.（转发芯片端口失效故障。）\n原因2：Unstable port fault on the forwarding chip.（转发芯片端口不稳定故障。）\n原因3：Invalid packet fault on the port of the forwarding chip.（转发芯片端口非法报文故障。）",
-                "suggestion_zh": [
-                    "请收集告警信息、日志信息和配置信息，并联系技术支持人员。"
-                ],
-                "cause_en": "Port function failure of the forwarding engine",
-                "description_en": "Cause 1: Port failure on the forwarding chip.\nCause 2: Unstable port fault on the forwarding chip.\nCause 3: Invalid packet fault on the port of the forwarding chip.",
-                "suggestion_en": [
-                    "Collect the alarms, logs, and configurations and contact technical support."
-                ]
-            },
-            "rule": [
-                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
-                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
-                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
-            ],
-            "source_file": "LCNELog",
-            "regex": {
-                 "in": [
-                    ["0x00F1FEF5", "The forwarding engine port function failed"],
-                    ["0xF1FEF5", "The forwarding engine port function failed"]
-                ]
-            }
-        },
-        "0x08520003": {
-            "attribute": {
-                "class": "Hardware",
-                "component": "UB Switch",
-                "module": "UB",
-                "cause_zh": "接口状态改变",
-                "description_zh": "具体报错原因可根据故障原始信息中“Reason=”的值，结合文档“https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/c26113fc?idPath=23710424|251366513|22892968|263594706”进行定位",
-                "suggestion_zh": [
-                    "在查找报错原因的文档中按照对应原因的处理建议进行操作"
-                ],
-                "cause_en": "Interface status change",
-                "description_en": "The specific error cause can be located based on the \"Reason=\" value in the original fault information and the document \"https://support.huawei.com/enterprise/zh/doc/EDOC1100591431/c26113fc?idPath=23710424|251366513|22892968|263594706\".",
-                "suggestion_en": [
-                    "Follow the processing suggestions corresponding to the cause in the document that explains the error cause."
-                ]
-            },
-            "rule": [
-                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x2"},
-                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x3"},
-                {"dst_code": "Comp_CANN_HCCL_Custom_CQE0x5"}
-            ],
-            "source_file": "LCNELog",
-            "regex": {
-                 "in": [
-                    ["0x08520003", "The interface status changes"],
-                    ["0x8520003", "The interface status changes"]
                 ]
             }
         },
