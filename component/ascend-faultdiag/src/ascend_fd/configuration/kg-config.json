@@ -25940,7 +25940,8 @@
             "regex": {
                 "in": [
                     ["Event id=0x8c484e00"],
-                    ["event_id:  [0x8c484e00]"]
+                    ["event_id:  [0x8c484e00]"],
+                    ["event_id=0x8c484e00"]
                 ]
             }
         },
@@ -25968,7 +25969,8 @@
             "regex": {
                 "in": [
                     ["Event id=0x8c4c4e00"],
-                    ["event_id:  [0x8c4c4e00]"]
+                    ["event_id:  [0x8c4c4e00]"],
+                    ["event_id=0x8c4c4e00"]
                 ]
             }
         },
@@ -25996,7 +25998,8 @@
             "regex": {
                 "in": [
                     ["Event id=0x8c4da000"],
-                    ["event_id:  [0x8c4da000]"]
+                    ["event_id:  [0x8c4da000]"],
+                    ["event_id=0x8c4da000"]
                 ]
             }
         },
@@ -26022,7 +26025,8 @@
             "regex": {
                 "in": [
                     ["Event id=0x81afaa05"],
-                    ["event_id:  [0x81afaa05]"]
+                    ["event_id:  [0x81afaa05]"],
+                    ["event_id=0x81afaa05"]
                 ]
             }
         },
@@ -26048,7 +26052,8 @@
             "regex": {
                 "in": [
                     ["Event id=0x81afaa02"],
-                    ["event_id:  [0x81afaa02]"]
+                    ["event_id:  [0x81afaa02]"],
+                    ["event_id=0x81afaa02"]
                 ]
             }
         },
@@ -26074,7 +26079,8 @@
             "regex": {
                 "in": [
                     ["Event id=0x81afaa03"],
-                    ["event_id:  [0x81afaa03]"]
+                    ["event_id:  [0x81afaa03]"],
+                    ["event_id=0x81afaa03"]
                 ]
             }
         },
@@ -26098,7 +26104,8 @@
             "regex": {
                 "in": [
                     ["Event id=0x81afaa04"],
-                    ["event_id:  [0x81afaa04]"]
+                    ["event_id:  [0x81afaa04]"],
+                    ["event_id=0x81afaa04"]
                 ]
             }
         },
@@ -26122,7 +26129,8 @@
             "regex": {
                 "in": [
                     ["Event id=0x81afaa06"],
-                    ["event_id:  [0x81afaa06]"]
+                    ["event_id:  [0x81afaa06]"],
+                    ["event_id=0x81afaa06"]
                 ]
             }
         },
@@ -26148,7 +26156,8 @@
             "regex": {
                 "in": [
                     ["Event id=0x81afaa01"],
-                    ["event_id:  [0x81afaa01]"]
+                    ["event_id:  [0x81afaa01]"],
+                    ["event_id=0x81afaa01"]
                 ]
             }
         },
@@ -26174,7 +26183,8 @@
             "regex": {
                 "in": [
                     ["Event id=0x81afaa00"],
-                    ["event_id:  [0x81afaa00]"]
+                    ["event_id:  [0x81afaa00]"],
+                    ["event_id=0x81afaa00"]
                 ]
             }
         },
@@ -26200,7 +26210,8 @@
             "regex": {
                 "in": [
                     ["Event id=0x81078607"],
-                    ["event_id:  [0x81078607]"]
+                    ["event_id:  [0x81078607]"],
+                    ["event_id=0x81078607"]
                 ]
             }
         },
@@ -26226,7 +26237,8 @@
             "regex": {
                 "in": [
                     ["Event id=0x4c4ba00c"],
-                    ["event_id:  [0x4c4ba00c]"]
+                    ["event_id:  [0x4c4ba00c]"],
+                    ["event_id=0x4c4ba00c"]
                 ]
             }
         },
@@ -26252,7 +26264,8 @@
             "regex": {
                 "in": [
                     ["Event id=0x8c4ba00c"],
-                    ["event_id:  [0x8c4ba00c]"]
+                    ["event_id:  [0x8c4ba00c]"],
+                    ["event_id=0x8c4ba00c"]
                 ]
             }
         },
