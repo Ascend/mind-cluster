@@ -26,7 +26,7 @@ import (
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
-    "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -647,39 +647,62 @@ func TestJobOrderFn(t *testing.T) {
 }
 
 type testUpdatePgAnnotationType struct {
-	name  string
-	job   *api.JobInfo
-	mocks func() *gomonkey.Patches
-	want  map[string]string
+	name             string
+	job              *api.JobInfo
+	mocks            func() *gomonkey.Patches
+	want             map[string]string
+	wantConditionLen int
 }
 
 func mockUpdatePgAnnotationTestCase() []testUpdatePgAnnotationType {
 	return []testUpdatePgAnnotationType{
 		{
+			name: "Unenable dequeue, should not update annotation",
+			job: mockJobWithAnnotation(map[string]string{
+				util.EnqueueTimeAnnoKey:   "1234",
+				util.EnableDequeueAnnoKey: "off",
+			}, "job1", util.PodGroupInqueue),
+			want: map[string]string{
+				util.EnqueueTimeAnnoKey:   "1234",
+				util.EnableDequeueAnnoKey: "off"},
+			wantConditionLen: 0,
+		},
+		{
 			name: "Inqueue job with annotation, should not update annotation",
 			job: mockJobWithAnnotation(map[string]string{
-				util.EnqueueTimeAnnoKey: "1234",
+				util.EnqueueTimeAnnoKey:   "1234",
+				util.EnableDequeueAnnoKey: "on",
 			}, "job1", util.PodGroupInqueue),
-			want: map[string]string{util.EnqueueTimeAnnoKey: "1234"},
+			want: map[string]string{
+				util.EnqueueTimeAnnoKey:   "1234",
+				util.EnableDequeueAnnoKey: "on"},
+			wantConditionLen: 0,
 		},
 		{
 			name: "Inqueue job without annotation, should add annotation",
-			job:  mockJobWithAnnotation(nil, "job2", util.PodGroupInqueue),
+			job: mockJobWithAnnotation(map[string]string{
+				util.EnableDequeueAnnoKey: "on",
+			}, "job2", util.PodGroupInqueue),
 			mocks: func() *gomonkey.Patches {
 				return gomonkey.ApplyFunc(strconv.FormatInt,
 					func(i int64, base int) string {
 						return "1234"
 					})
 			},
-			want: map[string]string{util.EnqueueTimeAnnoKey: "1234"},
+			want: map[string]string{
+				util.EnqueueTimeAnnoKey:   "1234",
+				util.EnableDequeueAnnoKey: "on"},
+			wantConditionLen: 1,
 		},
 		{
 			name: "running job with annotations, should delete annotations",
 			job: mockJobWithAnnotation(map[string]string{
 				util.EnqueueTimeAnnoKey:      "1234",
 				util.DequeueFrequencyAnnoKey: "11",
+				util.EnableDequeueAnnoKey:    "on",
 			}, "job3", util.PodGroupRunning),
-			want: map[string]string{},
+			want:             map[string]string{util.EnableDequeueAnnoKey: "on"},
+			wantConditionLen: 1,
 		},
 	}
 }
@@ -701,6 +724,10 @@ func TestUpdatePgAnnotation(t *testing.T) {
 			got := tt.job.PodGroup.Annotations[util.DequeueFrequencyAnnoKey]
 			if !reflect.DeepEqual(tt.job.PodGroup.Annotations, tt.want) {
 				t.Errorf("updatePgAnnotation got %v, want %v", got, tt.job.PodGroup.Annotations)
+			}
+			gotLen := len(tt.job.PodGroup.Status.Conditions)
+			if gotLen != tt.wantConditionLen {
+				t.Errorf("updatePgAnnotation condition length, got %v, want %v", gotLen, tt.wantConditionLen)
 			}
 		})
 	}
@@ -812,6 +839,10 @@ func TestExecJobDequeue(t *testing.T) {
 			if got != tt.expectedDequeueTimes {
 				t.Errorf("jobEnqueueable got %v, want %v", got, tt.expectedDequeueTimes)
 			}
+			gotLen := len(tt.job.PodGroup.Status.Conditions)
+			if gotLen != 1 {
+				t.Errorf("execJobDequeue condition length, got %v, want %v", gotLen, 1)
+			}
 		})
 	}
 }
@@ -862,7 +893,7 @@ func TestAddPodGroupCondition(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			addPodGroupCondition(tt.job, tt.sessionID, tt.reason, tt.message)
+			addPodGroupCondition(tt.job, tt.sessionID, scheduling.PodGroupUnschedulableType, tt.reason, tt.message)
 			conditions := tt.job.PodGroup.Status.Conditions
 			if len(conditions) != tt.expectedLength {
 				t.Errorf("addPodGroupCondition expected: %d，actual: %d", tt.expectedLength, len(conditions))
@@ -983,6 +1014,28 @@ func TestAddJobValidAndEnqueueFailedCondition(t *testing.T) {
 	conditions = job.PodGroup.Status.Conditions
 	if len(conditions) != 1 || conditions[0].Reason != util.JobEnqueueFailedReason {
 		t.Errorf("EnqueueFailed conditon have not been added")
+	}
+}
+
+func TestAddJobDirtyConditionWhenAnnoChanged(t *testing.T) {
+	job := &api.JobInfo{
+		UID: "test-job",
+		PodGroup: &api.PodGroup{
+			PodGroup: scheduling.PodGroup{
+				Status: scheduling.PodGroupStatus{
+					Conditions: []scheduling.PodGroupCondition{},
+				},
+			},
+		},
+	}
+	ssn := &framework.Session{UID: "session-1"}
+	addJobDirtyConditionWhenAnnoChanged(job, ssn, "fake condition changed")
+	conditions := job.PodGroup.Status.Conditions
+	if len(conditions) != 1 {
+		t.Fatalf("num of condition not match，expected: 1，asctual: %d", len(conditions))
+	}
+	if conditions[0].Reason != annoChanged {
+		t.Errorf("Reason not match，expected: %s，asctual: %s", annoChanged, conditions[0].Reason)
 	}
 }
 

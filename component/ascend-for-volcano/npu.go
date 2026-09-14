@@ -651,14 +651,19 @@ func updatePgAnnotation(ssn *framework.Session) {
 			annoMap = make(map[string]string)
 			jobInfo.PodGroup.Annotations = annoMap
 		}
+		if val, exist := jobInfo.PodGroup.Annotations[util.EnableDequeueAnnoKey]; !exist || val != util.EnableDequeueOnVal {
+			continue
+		}
 		if jobInfo.PodGroup.Status.Phase == util.PodGroupInqueue {
 			if _, exist := annoMap[util.EnqueueTimeAnnoKey]; !exist {
 				annoMap[util.EnqueueTimeAnnoKey] = strconv.FormatInt(time.Now().UnixMilli(), util.Base10)
+				addJobDirtyConditionWhenAnnoChanged(jobInfo, ssn, "PodGroup Inqueue")
 			}
 			continue
 		} else if !jobInfo.IsPending() {
 			delete(annoMap, util.EnqueueTimeAnnoKey)
 			delete(annoMap, util.DequeueFrequencyAnnoKey)
+			addJobDirtyConditionWhenAnnoChanged(jobInfo, ssn, "delete enqueue or dequeue anno")
 		}
 	}
 }
@@ -691,6 +696,7 @@ func jobDequeueForTimeout(vcjob *api.JobInfo, ssn *framework.Session) {
 
 func execJobDequeue(ssn *framework.Session, job *api.JobInfo) {
 	klog.V(util.LogInfoLev).Infof(" <%s> dequeue", job.Name)
+	defer func() { addJobDirtyConditionWhenAnnoChanged(job, ssn, "PodGroup dequeued for timeout") }()
 	job.PodGroup.Status.Phase = ""
 	delete(job.PodGroup.Annotations, util.EnqueueTimeAnnoKey)
 	ssn.Jobs[job.UID] = job
@@ -709,9 +715,9 @@ func execJobDequeue(ssn *framework.Session, job *api.JobInfo) {
 	}
 }
 
-func addPodGroupCondition(job *api.JobInfo, sessionID types.UID, reason, message string) {
+func addPodGroupCondition(job *api.JobInfo, sessionID types.UID, condType scheduling.PodGroupConditionType, reason, message string) {
 	jc := scheduling.PodGroupCondition{
-		Type:               scheduling.PodGroupUnschedulableType,
+		Type:               condType,
 		Status:             v1.ConditionTrue,
 		TransitionID:       string(sessionID),
 		LastTransitionTime: metav1.Time{Time: time.Now()},
@@ -721,7 +727,7 @@ func addPodGroupCondition(job *api.JobInfo, sessionID types.UID, reason, message
 
 	index := -1
 	for i, cond := range job.PodGroup.Status.Conditions {
-		if cond.Type == scheduling.PodGroupUnschedulableType && cond.Reason == reason {
+		if cond.Type == condType && cond.Reason == reason {
 			index = i
 			break
 		}
@@ -739,7 +745,7 @@ func (tp *huaweiNPUPlugin) addBatchOrderFailedCondition(job *api.JobInfo, ssn *f
 	if !ok {
 		return
 	}
-	addPodGroupCondition(job, ssn.UID, util.BatchOrderFailedReason, batchOrderError.Error())
+	addPodGroupCondition(job, ssn.UID, scheduling.PodGroupUnschedulableType, util.BatchOrderFailedReason, batchOrderError.Error())
 }
 
 func (tp *huaweiNPUPlugin) addNodePredicateFailedCondition(job *api.JobInfo, ssn *framework.Session) {
@@ -763,7 +769,7 @@ func (tp *huaweiNPUPlugin) addNodePredicateFailedCondition(job *api.JobInfo, ssn
 		return
 	}
 
-	addPodGroupCondition(job, ssn.UID, util.NodePredicateFailedReason, message)
+	addPodGroupCondition(job, ssn.UID, scheduling.PodGroupUnschedulableType, util.NodePredicateFailedReason, message)
 }
 
 func (tp *huaweiNPUPlugin) addJobValidFailedCondition(job *api.JobInfo, ssn *framework.Session) {
@@ -771,7 +777,7 @@ func (tp *huaweiNPUPlugin) addJobValidFailedCondition(job *api.JobInfo, ssn *fra
 	if !ok {
 		return
 	}
-	addPodGroupCondition(job, ssn.UID, util.JobValidateFailedReason, fmt.Sprintf("%s: %s", result.Reason, result.Message))
+	addPodGroupCondition(job, ssn.UID, scheduling.PodGroupUnschedulableType, util.JobValidateFailedReason, fmt.Sprintf("%s: %s", result.Reason, result.Message))
 }
 
 func (tp *huaweiNPUPlugin) addJobEnqueueFailedCondition(job *api.JobInfo, ssn *framework.Session) {
@@ -780,7 +786,13 @@ func (tp *huaweiNPUPlugin) addJobEnqueueFailedCondition(job *api.JobInfo, ssn *f
 		return
 	}
 
-	addPodGroupCondition(job, ssn.UID, util.JobEnqueueFailedReason, enqueueError.Error())
+	addPodGroupCondition(job, ssn.UID, scheduling.PodGroupUnschedulableType, util.JobEnqueueFailedReason, enqueueError.Error())
+}
+
+// When the pg annotation changes, the condition needs to be updated to trigger the update of job information on the API server.
+// Otherwise, the annotation may not be written to the API server (for Volcano versions 1.9.0 and above)
+func addJobDirtyConditionWhenAnnoChanged(job *api.JobInfo, ssn *framework.Session, message string) {
+	addPodGroupCondition(job, ssn.UID, jobDirtyKey, annoChanged, message)
 }
 
 const (
@@ -790,4 +802,9 @@ const (
 
 	// defaultScoreWeight default ScoreWeight for the new scoring framework.
 	defaultScoreWeight = 100
+)
+
+const (
+	jobDirtyKey = "JobDirty"
+	annoChanged = "annotation changed"
 )
