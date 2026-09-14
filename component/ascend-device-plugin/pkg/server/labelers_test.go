@@ -278,7 +278,7 @@ func TestDriverVersionLabeler(t *testing.T) {
 	labeler := &driverVersionLabeler{hdm: hdm}
 	convey.Convey("should skip when driver version is empty", t, func() {
 		stub := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
-			"GetDcmiVersion", "")
+			"GetDriverVersion", "")
 		defer stub.Reset()
 		labels := make(map[string]string)
 		err := labeler.Write(labels, &label.NodeContext{})
@@ -287,7 +287,7 @@ func TestDriverVersionLabeler(t *testing.T) {
 	})
 	convey.Convey("should write driver version labels when succeeds", t, func() {
 		stub := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
-			"GetDcmiVersion", labDriverVersion)
+			"GetDriverVersion", labDriverVersion)
 		defer stub.Reset()
 		labels := make(map[string]string)
 		err := labeler.Write(labels, &label.NodeContext{})

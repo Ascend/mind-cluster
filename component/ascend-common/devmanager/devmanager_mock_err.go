@@ -329,6 +329,11 @@ func (d *DeviceManagerMockErr) GetDcmiVersion() string {
 	return ""
 }
 
+// GetDriverVersion get driver version failed
+func (d *DeviceManagerMockErr) GetDriverVersion() string {
+	return ""
+}
+
 // GetValidChipInfo get valid chip info from all npu
 func (d *DeviceManagerMockErr) GetValidChipInfo() (common.ChipInfo, error) {
 	return common.ChipInfo{}, errors.New("failed to find chip info")

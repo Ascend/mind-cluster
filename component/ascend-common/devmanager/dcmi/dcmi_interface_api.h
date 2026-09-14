@@ -688,6 +688,8 @@ extern "C"
 
     DCMIDLLEXPORT int dcmi_get_dcmi_version(char *dcmi_ver, int buf_size);
 
+    DCMIDLLEXPORT int dcmi_get_driver_version(char *driver_ver, unsigned int len);
+
     DCMIDLLEXPORT int dcmi_get_mainboard_id(int card_id, int device_id, unsigned int *mainboard_id);
 
     DCMIDLLEXPORT int dcmi_get_affinity_cpu_info_by_device_id(int card_id, int device_id, char *affinity_cpu,

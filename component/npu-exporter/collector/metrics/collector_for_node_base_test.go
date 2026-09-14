@@ -35,6 +35,7 @@ import (
 const (
 	mockExporterVersion = "v26.1.0"
 	mockDriverVersion   = "26.0.3"
+	mockDcmiVersion     = "24.0.rc2"
 	goroutineCount      = 10
 )
 
@@ -84,6 +85,7 @@ type collectToCacheTestCase struct {
 	setupPatches      func(*devmanager.DeviceManager) *gomonkey.Patches
 	expectExporterVer string
 	expectDriverVer   string
+	expectDcmiVer     string
 }
 
 func buildCollectToCacheTestCases() []collectToCacheTestCase {
@@ -93,22 +95,26 @@ func buildCollectToCacheTestCases() []collectToCacheTestCase {
 			setupPatches: func(dmgr *devmanager.DeviceManager) *gomonkey.Patches {
 				patches := gomonkey.NewPatches()
 				patches.ApplyGlobalVar(&versions.BuildVersion, mockExporterVersion)
-				patches.ApplyMethodReturn(dmgr, "GetDcmiVersion", mockDriverVersion)
+				patches.ApplyMethodReturn(dmgr, "GetDriverVersion", mockDriverVersion)
+				patches.ApplyMethodReturn(dmgr, "GetDcmiVersion", mockDcmiVersion)
 				return patches
 			},
 			expectExporterVer: mockExporterVersion,
 			expectDriverVer:   mockDriverVersion,
+			expectDcmiVer:     mockDcmiVersion,
 		},
 		{
-			name: "should store cache with empty driverVersion when GetDcmiVersion returns empty",
+			name: "should store cache with empty driverVersion when GetDriverVersion returns empty",
 			setupPatches: func(dmgr *devmanager.DeviceManager) *gomonkey.Patches {
 				patches := gomonkey.NewPatches()
 				patches.ApplyGlobalVar(&versions.BuildVersion, mockExporterVersion)
-				patches.ApplyMethodReturn(dmgr, "GetDcmiVersion", "")
+				patches.ApplyMethodReturn(dmgr, "GetDriverVersion", "")
+				patches.ApplyMethodReturn(dmgr, "GetDcmiVersion", mockDcmiVersion)
 				return patches
 			},
 			expectExporterVer: mockExporterVersion,
 			expectDriverVer:   "",
+			expectDcmiVer:     mockDcmiVersion,
 		},
 	}
 }
@@ -131,6 +137,7 @@ func TestNodeBaseCollectorCollectToCache(t *testing.T) {
 			convey.So(typeOk, convey.ShouldBeTrue)
 			convey.So(cache.exporterVersion, convey.ShouldEqual, tt.expectExporterVer)
 			convey.So(cache.driverVersion, convey.ShouldEqual, tt.expectDriverVer)
+			convey.So(cache.dcmiVersion, convey.ShouldEqual, tt.expectDcmiVer)
 			convey.So(cache.timestamp, convey.ShouldHappenBefore, time.Now())
 		})
 	}
@@ -151,6 +158,7 @@ func buildUpdatePromTestCases() []updatePromTestCase {
 					timestamp:       time.Now(),
 					exporterVersion: mockExporterVersion,
 					driverVersion:   mockDriverVersion,
+					dcmiVersion:     mockDcmiVersion,
 				})
 			},
 			expectCall: true,
@@ -206,12 +214,14 @@ func buildUpdateTelegrafTestCases() []updateTelegrafTestCase {
 					timestamp:       time.Now(),
 					exporterVersion: mockExporterVersion,
 					driverVersion:   mockDriverVersion,
+					dcmiVersion:     mockDcmiVersion,
 				})
 			},
 			expectData: true,
 			expectLabels: map[string]string{
 				exporterVersionLabel: mockExporterVersion,
 				driverVersionLabel:   mockDriverVersion,
+				dcmiVersionLabel:     mockDcmiVersion,
 			},
 		},
 		{
@@ -299,7 +309,8 @@ func TestNodeBaseCollectorConcurrentCollect(t *testing.T) {
 			dmgr := &devmanager.DeviceManager{}
 			patches := gomonkey.NewPatches()
 			patches.ApplyGlobalVar(&versions.BuildVersion, mockExporterVersion)
-			patches.ApplyMethodReturn(dmgr, "GetDcmiVersion", mockDriverVersion)
+			patches.ApplyMethodReturn(dmgr, "GetDriverVersion", mockDriverVersion)
+			patches.ApplyMethodReturn(dmgr, "GetDcmiVersion", mockDcmiVersion)
 			defer patches.Reset()
 
 			n := mockNpuCollector()

@@ -37,6 +37,7 @@ type DeviceCommonSetInterface interface {
 	SetAllProductType() error
 	GetDcmiApiVersion() string
 	SetDcmiVersion()
+	SetDriverVersion()
 }
 
 const (
@@ -122,7 +123,9 @@ func AutoInit(dType string, resetTimeout int) (DeviceInterface, error) {
 		return nil, fmt.Errorf("auto init failed when get device info, err: %s", err)
 	}
 	devCommonSetMgr.SetDcmiVersion()
-	hwlog.RunLog.Infof("the dcmi version is %s", devMgr.GetDcmiVersion())
+	devCommonSetMgr.SetDriverVersion()
+	hwlog.RunLog.Infof("the dcmi version is %s, the driver version is %s",
+		devMgr.GetDcmiVersion(), devMgr.GetDriverVersion())
 	err = devCommonSetMgr.SetValidMainBoardInfo()
 	if err != nil {
 		// Non-blocking when the main board ID is not found

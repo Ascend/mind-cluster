@@ -349,6 +349,11 @@ func (d *DeviceManagerMock) GetDcmiVersion() string {
 	return "v1"
 }
 
+// GetDriverVersion get driver version
+func (d *DeviceManagerMock) GetDriverVersion() string {
+	return "v1"
+}
+
 // GetValidChipInfo get valid chip info from all npu
 func (d *DeviceManagerMock) GetValidChipInfo() (common.ChipInfo, error) {
 	return common.ChipInfo{}, nil

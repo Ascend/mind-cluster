@@ -29,12 +29,13 @@ import (
 
 var (
 	nodeInfoDesc = common.BuildDescWithLabel("node_base_info", "the common information of this node",
-		[]string{exporterVersionLabel, driverVersionLabel})
+		[]string{exporterVersionLabel, driverVersionLabel, dcmiVersionLabel})
 )
 
 const (
 	exporterVersionLabel = "exporterVersion"
 	driverVersionLabel   = "driverVersion"
+	dcmiVersionLabel     = "dcmiVersion"
 )
 
 // NodeBaseCollector collect node base info
@@ -46,6 +47,7 @@ type nodeBaseInfoCache struct {
 	timestamp       time.Time
 	exporterVersion string
 	driverVersion   string
+	dcmiVersion     string
 }
 
 // Describe description of the metric
@@ -58,7 +60,8 @@ func (c *NodeBaseCollector) CollectToCache(n *common.NpuCollector, chipList []co
 	c.LocalCache.Store(common.GetCacheKey(c), nodeBaseInfoCache{
 		timestamp:       time.Now(),
 		exporterVersion: versions.BuildVersion,
-		driverVersion:   n.Dmgr.GetDcmiVersion(),
+		driverVersion:   n.Dmgr.GetDriverVersion(),
+		dcmiVersion:     n.Dmgr.GetDcmiVersion(),
 	})
 }
 
@@ -75,7 +78,8 @@ func (c *NodeBaseCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *com
 		logger.Error("cache type mismatch")
 		return
 	}
-	doUpdateMetric(ch, cache.timestamp, 1, []string{cache.exporterVersion, cache.driverVersion}, nodeInfoDesc)
+	doUpdateMetric(ch, cache.timestamp, 1, []string{cache.exporterVersion, cache.driverVersion, cache.dcmiVersion},
+		nodeInfoDesc)
 }
 
 // UpdateTelegraf update telegraf metric
@@ -96,6 +100,7 @@ func (c *NodeBaseCollector) UpdateTelegraf(ch chan<- common.TelegrafMetric, n *c
 	metric.Labels = map[string]string{
 		exporterVersionLabel: cache.exporterVersion,
 		driverVersionLabel:   cache.driverVersion,
+		dcmiVersionLabel:     cache.dcmiVersion,
 	}
 	metric.Fields[utils.GetDescName(nodeInfoDesc)] = 1
 	metric.Timestamp = cache.timestamp

@@ -303,6 +303,11 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
     CALL_FUNC(dcmi_get_dcmi_version,dcmi_ver,buf_size)
    }
 
+   static int (*dcmi_get_driver_version_func)(char *driver_ver, unsigned int len);
+   int dcmi_get_driver_version(char *driver_ver, unsigned int len){
+    CALL_FUNC(dcmi_get_driver_version,driver_ver,len)
+   }
+
    static int (*dcmi_get_device_ecc_info_func)(int card_id, int device_id, enum dcmi_device_type input_type,
     struct dcmi_ecc_info *device_ecc_info);
    int dcmi_get_device_ecc_info(int card_id, int device_id, enum dcmi_device_type input_type,
@@ -510,6 +515,8 @@ unsigned int *state){
 
     dcmi_get_dcmi_version_func = dlsym(dcmiHandle,"dcmi_get_dcmi_version");
 
+	dcmi_get_driver_version_func = dlsym(dcmiHandle,"dcmi_get_driver_version");
+
 	dcmi_get_device_ecc_info_func = dlsym(dcmiHandle,"dcmi_get_device_ecc_info");
 
     dcmi_get_mainboard_id_func = dlsym(dcmiHandle, "dcmi_get_mainboard_id");
@@ -588,6 +595,7 @@ type DcDriverInterface interface {
 	DcShutDown() error
 
 	DcGetDcmiVersion() (string, error)
+	DcGetDriverVersion() (string, error)
 	DcGetAllDeviceCount() (int32, error)
 	DcGetLogicIDList() (int32, []int32, error)
 	DcGetDeviceHealth(int32, int32) (int32, error)
@@ -2271,6 +2279,16 @@ func (d *DcManager) DcGetDcmiVersion() (string, error) {
 		return "", fmt.Errorf("get dcmi version failed, errCode: %d", int32(retCode))
 	}
 	return C.GoString(cDcmiVer), nil
+}
+
+// DcGetDriverVersion return driver version
+func (d *DcManager) DcGetDriverVersion() (string, error) {
+	cDriverVer := C.CString(string(make([]byte, DriverVersionLen)))
+	defer C.free(unsafe.Pointer(cDriverVer))
+	if retCode := C.dcmi_get_driver_version((*C.char)(cDriverVer), DriverVersionLen); int32(retCode) != common.Success {
+		return "", fmt.Errorf("get driver version failed, errCode: %d", int32(retCode))
+	}
+	return C.GoString(cDriverVer), nil
 }
 
 // DcGetDeviceEccInfo get ECC info

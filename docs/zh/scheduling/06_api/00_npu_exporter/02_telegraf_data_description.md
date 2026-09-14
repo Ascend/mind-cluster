@@ -66,7 +66,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 
 |类别|数据信息名称|数据信息说明|单位|支持的产品形态|
 |------|-------------|-------------|------|---------------|
-|nodeBase|node_base_info|节点基本信息，包括：<ul><li>exporterVersion：当前NPU Exporter版本信息</li><li>driverVersion：驱动版本信息</li></ul>| 1：占位字符，无实际含义 |<ul><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li>推理服务器（插Atlas 300I 推理卡）</li><li><term>Atlas 推理系列产品</term></li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li>Atlas 350 加速卡</li><li>Atlas 850E 超节点</li><li>Atlas 650E 服务器</li><li>Atlas 950 SuperPoD 超节点</li><li>Atlas 950 SuperPoD Flex</li></ul>|
+|nodeBase|node_base_info|节点基本信息，包括：<ul><li>exporterVersion：当前NPU Exporter版本信息</li><li>driverVersion：驱动版本信息</li><li>dcmiVersion：DCMI版本信息</li></ul>| 1：占位字符，无实际含义 |<ul><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li>推理服务器（插Atlas 300I 推理卡）</li><li><term>Atlas 推理系列产品</term></li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li>Atlas 350 加速卡</li><li>Atlas 850E 超节点</li><li>Atlas 650E 服务器</li><li>Atlas 950 SuperPoD 超节点</li><li>Atlas 950 SuperPoD Flex</li></ul>|
 
 ## NPU数据信息<a name="section1442282202316"></a>
 

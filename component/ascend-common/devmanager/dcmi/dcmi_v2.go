@@ -209,6 +209,11 @@ package dcmi
         CALL_FUNC(dcmiv2_get_dcmi_version,dcmi_ver,buf_size)
     }
 
+    static int (*dcmiv2_get_driver_version_func)(char *driver_ver, unsigned int len);
+    static int dcmiv2_get_driver_version(char *driver_ver, unsigned int len){
+        CALL_FUNC(dcmiv2_get_driver_version,driver_ver,len)
+    }
+
     static int (*dcmiv2_get_device_ecc_info_func)(int dev_id, enum dcmi_device_type input_type,
         struct dcmi_ecc_info *device_ecc_info);
     static int dcmiv2_get_device_ecc_info(int dev_id, enum dcmi_device_type input_type,
@@ -312,6 +317,7 @@ package dcmi
         dcmiv2_get_device_board_info_func = dlsym(dcmiHandle, "dcmiv2_get_device_board_info");
         dcmiv2_get_pcie_link_bandwidth_info_func = dlsym(dcmiHandle, "dcmiv2_get_pcie_link_bandwidth_info");
         dcmiv2_get_dcmi_version_func = dlsym(dcmiHandle,"dcmiv2_get_dcmi_version");
+        dcmiv2_get_driver_version_func = dlsym(dcmiHandle,"dcmiv2_get_driver_version");
         dcmiv2_get_device_ecc_info_func = dlsym(dcmiHandle,"dcmiv2_get_device_ecc_info");
         dcmiv2_get_mainboard_id_func = dlsym(dcmiHandle, "dcmiv2_get_mainboard_id");
         dcmiv2_get_affinity_cpu_info_by_dev_id_func = dlsym(dcmiHandle, "dcmiv2_get_affinity_cpu_info_by_dev_id");
@@ -352,6 +358,7 @@ type DcV2DriverInterface interface {
 	DcInit() error
 	DcShutDown() error
 	DcGetDcmiVersion() (string, error)
+	DcGetDriverVersion() (string, error)
 	DcGetAllDeviceCount() (int32, error)
 	DcGetDeviceHealth(logicID int32) (int32, error)
 	DcGetDeviceNetWorkHealth(logicID int32) (uint32, error)
@@ -448,6 +455,16 @@ func (d *DcV2Manager) DcGetDcmiVersion() (string, error) {
 		return "", fmt.Errorf("get dcmi version failed, errCode: %d", int32(retCode))
 	}
 	return C.GoString(cDcmiVer), nil
+}
+
+// DcGetDriverVersion return driver version
+func (d *DcV2Manager) DcGetDriverVersion() (string, error) {
+	cDriverVer := C.CString(string(make([]byte, DriverVersionLen)))
+	defer C.free(unsafe.Pointer(cDriverVer))
+	if retCode := C.dcmiv2_get_driver_version(cDriverVer, DriverVersionLen); int32(retCode) != common.Success {
+		return "", fmt.Errorf("get driver version failed, errCode: %d", int32(retCode))
+	}
+	return C.GoString(cDriverVer), nil
 }
 
 // DcGetAllDeviceCount get all device count
