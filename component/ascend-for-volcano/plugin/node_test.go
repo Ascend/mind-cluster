@@ -209,6 +209,100 @@ func TestSNodePredicate(t *testing.T) {
 	}
 }
 
+func TestRejectWholeCardOnSoftShareNode(t *testing.T) {
+	task := test.FakeTaskWithResReq("task1", util.NPU910CardName, util.NPUIndex1)
+	softShareJob := SchedulerJob{
+		SchedulerJobAttr: util.SchedulerJobAttr{
+			ComJob: util.ComJob{
+				Label:      map[string]string{util.SchedulerSoftShareDevPolicyKey: util.SoftShareDevPolicyFixedShare},
+				Annotation: map[string]string{util.SchedulePolicyAnnoKey: util.Chip1ShareShareDev},
+			},
+		},
+	}
+	wholeCardJob := SchedulerJob{
+		SchedulerJobAttr: util.SchedulerJobAttr{
+			ComJob: util.ComJob{Annotation: map[string]string{util.SchedulePolicyAnnoKey: "whole-card-policy"}},
+		},
+	}
+	// annotation chip1-softShareDev but missing the soft-share policy label is
+	// still treated as a whole-card task.
+	annotationOnlyJob := SchedulerJob{
+		SchedulerJobAttr: util.SchedulerJobAttr{
+			ComJob: util.ComJob{Annotation: map[string]string{util.SchedulePolicyAnnoKey: util.Chip1ShareShareDev}},
+		},
+	}
+	noAnnotationJob := SchedulerJob{}
+
+	tests := []struct {
+		name    string
+		job     SchedulerJob
+		task    *api.TaskInfo
+		node    NPUNode
+		wantErr bool
+	}{
+		{
+			name: "01-node without soft share label is allowed",
+			job:  wholeCardJob, task: task,
+			node:    NPUNode{CommonNode: CommonNode{Name: "node1", Label: map[string]string{}}},
+			wantErr: false,
+		},
+		{
+			name: "02-node with soft share label false is allowed",
+			job:  wholeCardJob, task: task,
+			node: NPUNode{CommonNode: CommonNode{
+				Name:  "node1",
+				Label: map[string]string{util.SchedulerSoftShareDevEnableNodeLabel: "false"},
+			}},
+			wantErr: false,
+		},
+		{
+			name: "03-soft share node allows soft share task",
+			job:  softShareJob, task: task,
+			node: NPUNode{CommonNode: CommonNode{
+				Name:  "node1",
+				Label: map[string]string{util.SchedulerSoftShareDevEnableNodeLabel: "true"},
+			}},
+			wantErr: false,
+		},
+		{
+			name: "04-soft share node rejects whole-card task",
+			job:  wholeCardJob, task: task,
+			node: NPUNode{CommonNode: CommonNode{
+				Name:  "node1",
+				Label: map[string]string{util.SchedulerSoftShareDevEnableNodeLabel: "true"},
+			}},
+			wantErr: true,
+		},
+		{
+			name: "05-soft share node rejects task without schedule policy",
+			job:  noAnnotationJob, task: task,
+			node: NPUNode{CommonNode: CommonNode{
+				Name:  "node1",
+				Label: map[string]string{util.SchedulerSoftShareDevEnableNodeLabel: "true"},
+			}},
+			wantErr: true,
+		},
+		{
+			name: "06-soft share node rejects task missing policy label",
+			job:  annotationOnlyJob, task: task,
+			node: NPUNode{CommonNode: CommonNode{
+				Name:  "node1",
+				Label: map[string]string{util.SchedulerSoftShareDevEnableNodeLabel: "true"},
+			}},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.job.rejectWholeCardOnSoftShareNode(tt.task, tt.node)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("rejectWholeCardOnSoftShareNode() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 type nPUNodeGetNewNPUNodeAnnotationTest struct {
 	name            string
 	usedTop         []int
