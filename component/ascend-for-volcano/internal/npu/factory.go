@@ -225,6 +225,13 @@ func get910CardHandlerName(attr util.SchedulerJobAttr) string {
 	if ok {
 		handlerName, ok := policy910HandlerMap[policy]
 		if ok {
+			// single-node (one NPU task) jobs under the 8p-16-sp policy
+			// have no cross-node super-pod block, so reuse chip-affinity directly.
+			if attr.NPUTaskNum == 1 && policy == util.Chip8Node16Sp {
+				klog.V(util.LogInfoLev).Infof("single task job<%s> route schedule policy %s to %s",
+					attr.Name, policy, chip.PolicyName)
+				return chip.PolicyName
+			}
 			klog.V(util.LogInfoLev).Infof("get handler name for schedule policy %s success", policy)
 			return handlerName
 		}
