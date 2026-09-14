@@ -22,7 +22,9 @@ package npu
 import (
 	"fmt"
 	"testing"
+
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/affinity/chip"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/policy/chip8node8sp"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3/superpod"
@@ -187,5 +189,69 @@ func TestGet910CardHandlerNameRoutesToChipAffinity(t *testing.T) {
 	}
 	if got := get910CardHandlerName(attr); got != chip.PolicyName {
 		t.Errorf("default 910 routing = %q, want %q", got, chip.PolicyName)
+	}
+}
+
+// TestGet910CardHandlerNameSingleTaskRoutesToChip verifies that a single-node
+// (NPUTaskNum==1) job under the 8p-16-sp schedule policy is routed to
+// chip-affinity, while single-task 8p-8-sp and all multi-task jobs keep their
+// super-pod handler.
+func TestGet910CardHandlerNameSingleTaskRoutesToChip(t *testing.T) {
+	tests := []struct {
+		name        string
+		policy      string
+		npuTaskNum  int
+		wantHandler string
+	}{
+		{
+			name:        "single task 8p-8-sp keeps super-pod handler",
+			policy:      util.Chip8Node8Sp,
+			npuTaskNum:  1,
+			wantHandler: chip8node8sp.SchedulePolicy8Px8Sp,
+		},
+		{
+			name:        "single task 8p-16-sp routes to chip",
+			policy:      util.Chip8Node16Sp,
+			npuTaskNum:  1,
+			wantHandler: chip.PolicyName,
+		},
+		{
+			name:        "multi task 8p-8-sp keeps super-pod handler",
+			policy:      util.Chip8Node8Sp,
+			npuTaskNum:  8,
+			wantHandler: chip8node8sp.SchedulePolicy8Px8Sp,
+		},
+		{
+			name:        "multi task 8p-16-sp keeps super-pod handler",
+			policy:      util.Chip8Node16Sp,
+			npuTaskNum:  16,
+			wantHandler: chip8node8sp.SchedulePolicy8Px16Sp,
+		},
+		{
+			name:        "single task non-super-pod policy keeps own handler",
+			policy:      util.Chip8Node16,
+			npuTaskNum:  1,
+			wantHandler: policy910HandlerMap[util.Chip8Node16],
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			attr := util.SchedulerJobAttr{
+				NPUJob: &util.NPUJob{
+					ReqNPUName: util.NPU910CardName,
+					NPUTaskNum: tt.npuTaskNum,
+				},
+				ComJob: util.ComJob{
+					Annotation: map[string]string{
+						util.SchedulePolicyAnnoKey: tt.policy,
+					},
+				},
+			}
+			got := get910CardHandlerName(attr)
+			if got != tt.wantHandler {
+				t.Errorf("handler = %q, want %q", got, tt.wantHandler)
+			}
+		})
 	}
 }
