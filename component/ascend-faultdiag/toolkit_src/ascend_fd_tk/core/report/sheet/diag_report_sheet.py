@@ -72,7 +72,8 @@ class BmcReportData(DiagReportData):
 class SwitchReportData(DiagReportData):
     """Switch sheet 诊断报告信息"""
 
-    swi_id: str = ""  # 交换机ID
+    swi_id: str = ""  # 交换机/PoDManager ID
+    slot_id: str = ""  # 槽位号
     sn_num: str = ""  # 交换机SN
     swi_name: str = ""  # 交换机名
     interface: str = ""  # 交换机端口
@@ -100,13 +101,28 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
     _ENTITY_SORT_ATTRS: Dict[str, List[str]] = {
         constants.FAULT_TYPE_HOST: ["host_id", "npu_id", "chip_phy_id", "optical_id", "nic_id", "port_id"],
         constants.FAULT_TYPE_BMC: ["bmc_id", "npu_id", "chip_phy_id"],
-        constants.FAULT_TYPE_SWITCH: ["swi_id", "interface", "optical_id"],
+        constants.FAULT_TYPE_SWITCH: ["swi_id", "slot_id", "interface", "optical_id"],
     }
 
     # 故障列属性（不参与实体合并）
     _FAULT_ATTRS = {"fault_code", "fault_time", "fault_info", "solution", "root_cause_status"}
     # 第二级合并的故障列属性（在实体组内合并 solution / root_cause_status）
     _FAULT_MERGE_ATTRS = ["solution", "root_cause_status"]
+
+    # 非实体排序属性默认按首个实体属性(level=1)合并；
+    # switch sheet 中同一 PoDManager 下不同槽位是独立逻辑交换机（名称/SN/机房/机柜按槽位区分），
+    # 故 swi_id/swi_name/sn_num/room_name/cabinet_id 需按 swi_id+slot_id 合并，
+    # 同 IP 不同槽位的行各自独立显示，避免跨槽位错误合并。
+    # _ATTR_MERGE_LEVEL 的取值优先于排序属性在 _ENTITY_SORT_ATTRS 中的位置层级。
+    _ATTR_MERGE_LEVEL: Dict[str, Dict[str, int]] = {
+        constants.FAULT_TYPE_SWITCH: {
+            "swi_id": 2,
+            "swi_name": 2,
+            "sn_num": 2,
+            "room_name": 2,
+            "cabinet_id": 2,
+        },
+    }
 
     # 二级合并的实体分组键：solution/root_cause_status 在此键相同的相邻行间合并。
     # 与 fault_domain 显示字符串解耦，避免 get_domain_desc() 变化影响合并逻辑。
@@ -116,7 +132,7 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
     _FAULT_MERGE_KEY_ATTRS: Dict[str, List[str]] = {
         constants.FAULT_TYPE_HOST: ["host_id", "npu_id", "chip_phy_id", "nic_id", "port_id"],
         constants.FAULT_TYPE_BMC: ["bmc_id", "npu_id", "chip_phy_id"],
-        constants.FAULT_TYPE_SWITCH: ["swi_id", "interface", "optical_id"],
+        constants.FAULT_TYPE_SWITCH: ["swi_id", "slot_id", "interface", "optical_id"],
     }
 
     def __init__(
@@ -187,7 +203,8 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         elif sheet_type == constants.FAULT_TYPE_SWITCH:
             header_mapping = {
                 "swi_name": "交换机名称",
-                "swi_id": "交换机ID",
+                "swi_id": "交换机/PoDManager ID",
+                "slot_id": "槽位号",
                 "sn_num": "SN",
                 "room_name": "机房名称",
                 "cabinet_id": "机柜编号",
@@ -313,9 +330,10 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         data = SwitchReportData()
         domain = diag_result.domain
         data.swi_id = domain.swi_id
+        data.slot_id = domain.slot_id
         data.interface = domain.interface
         data.optical_id = domain.optical_id
-        swi_info = self.cluster_info.swis_info.get(data.swi_id)
+        swi_info = self.cluster_info.find_switch_info(domain.swi_id, domain.slot_id)
         if swi_info:
             data.sn_num = swi_info.sn
             data.swi_name = swi_info.name
@@ -334,7 +352,9 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         一级合并（实体列）：每个实体列按自己的层级键（_ENTITY_SORT_ATTRS 的前 N 个属性）分组相邻行合并。
             - 排序属性（host_id/npu_id/chip_phy_id/optical_id/nic_id/port_id 等）按其在 _ENTITY_SORT_ATTRS
               中的位置取层级
-            - 非排序属性（hostname/sn_num/room_name/cabinet_id 等）归到 level=1，与首个排序属性同级
+            - 非排序属性（hostname/sn_num/room_name/cabinet_id 等）默认归到 level=1，与首个排序属性同级；
+              个别属性可通过 _ATTR_MERGE_LEVEL 指定更高层级（如 switch sheet 的交换机名称按
+              swi_id+slot_id 合并，避免 PoDManager 场景下跨槽位显示首个槽位值）
             例：host 列按 host_id 合并；npu_id 按 host_id+npu_id 合并；optical_id/nic_id/port_id 按各自层级合并
 
         二级合并（故障列）：solution / root_cause_status 按 _FAULT_MERGE_KEY_ATTRS + solution + root_cause_status
@@ -357,7 +377,9 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         for attr, title in header_mapping.items():
             if attr in self._FAULT_ATTRS or title not in title_to_col:
                 continue
-            level = sort_attrs.index(attr) + 1 if attr in sort_attrs else 1
+            level = self._ATTR_MERGE_LEVEL.get(sheet_type, {}).get(attr)
+            if level is None:
+                level = sort_attrs.index(attr) + 1 if attr in sort_attrs else 1
             key_attrs = sort_attrs[:level]
             merge_ranges.extend(self._compute_col_merge_ranges(data_list, title_to_col[title], key_attrs))
 

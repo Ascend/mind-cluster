@@ -26,6 +26,6 @@ def create_host_collector(fetcher: HostFetcher) -> HostCollector:
     # 触发 A5 collector 模块导入，确保其装饰器完成注册
     import ascend_fd_tk.core.collect.collector.host_collector_a5  # noqa: F401
 
-    generation = getattr(fetcher, 'chip_generation', NpuType.A3)
+    generation = getattr(fetcher, 'generation', NpuType.A3)
     cls = HOST_COLLECTOR_REGISTRY.get(generation, HostCollector)
     return cls(fetcher)

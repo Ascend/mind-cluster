@@ -39,9 +39,9 @@ THRESHOLD_REGISTRY: Dict[str, Type[BaseThreshold]] = {
 }
 
 
-def get_threshold_cls(chip_generation: str = None) -> Type[BaseThreshold]:
+def get_threshold_cls(generation: str = None) -> Type[BaseThreshold]:
     """按芯片代际取对应阈值Profile类，未知代际或未指定时按 A3 处理"""
-    return THRESHOLD_REGISTRY.get(chip_generation or NpuType.A3.value, BaseThreshold)
+    return THRESHOLD_REGISTRY.get(generation or NpuType.A3.value, BaseThreshold)
 
 
 # 阈值配置文件名（放在 set_config_dir 设置的配置目录下）
@@ -112,16 +112,16 @@ class ThresholdConfigLoader:
         self._overrides = self._load_overrides(config_dir)
         return self._overrides
 
-    def apply(self, chip_generation: str = None) -> None:
+    def apply(self, generation: str = None) -> None:
         """按代际应用暂存的阈值覆盖配置：配置的字段覆盖默认值，未配置的保持默认值
 
         先将全部Profile类重置为代码内默认值再应用覆盖（支持多次诊断、更换配置目录的场景）。
-        :param chip_generation: 本次诊断的芯片代际（如 "A3"/"A5"），None 按 A3 处理
+        :param generation: 本次诊断的芯片代际（如 "A3"/"A5"），None 按 A3 处理
         """
         for cls, defaults in _DEFAULT_THRESHOLDS.items():
             self._reset_profile(cls, defaults)
         for name, fields in self._overrides.items():
-            cls, attr_name = self._resolve_target(name, chip_generation)
+            cls, attr_name = self._resolve_target(name, generation)
             if cls is None:
                 DIAG_LOGGER.warning("阈值配置项 %s 不是有效的阈值名，已忽略", name)
                 continue
@@ -203,13 +203,13 @@ class ThresholdConfigLoader:
         return str_value
 
     @staticmethod
-    def _resolve_target(name: str, chip_generation: str) -> Tuple[Optional[Type[BaseThreshold]], Optional[str]]:
+    def _resolve_target(name: str, generation: str) -> Tuple[Optional[Type[BaseThreshold]], Optional[str]]:
         """解析配置键归属：返回 (Profile类, 属性名)，无法解析返回 (None, None)
 
         归属由类结构决定，不做名称推断：全部配置键按名在本次诊断代际的 Profile 类上解析
         （getattr 走继承链，含 A5 新增网卡类别的 NIC_ 前缀阈值名）。
         """
-        cls, attr = get_threshold_cls(chip_generation), name
+        cls, attr = get_threshold_cls(generation), name
         if isinstance(getattr(cls, attr, None), Threshold):
             return cls, attr
         return None, None

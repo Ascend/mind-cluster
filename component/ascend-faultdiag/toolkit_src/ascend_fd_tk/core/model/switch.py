@@ -377,9 +377,11 @@ class SwitchInfo(JsonObj):
         self,
         name: str,
         swi_id: str,
+        slot_id="",
         sn="",
         room_name="",
         cabinet_id="",
+        generation: str = "",
         optical_models: List[SwiOpticalModel] = None,
         interface_briefs: List[InterfaceBrief] = None,
         interface_mapping: List[InterfaceMapping] = None,
@@ -394,6 +396,8 @@ class SwitchInfo(JsonObj):
         self.sn = sn
         self.name = name
         self.swi_id = swi_id  # 设备的唯一标志, 可以是IP, 名称, SN号
+        self.slot_id = slot_id
+        self.generation = generation  # 设备代际（"A5"），PoDManager 采集时写入，用于阈值与 analyzer 分流
         self.room_name = room_name
         self.cabinet_id = cabinet_id
         self.optical_models = optical_models or []

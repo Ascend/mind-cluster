@@ -41,6 +41,9 @@ class SwiCliOutputFetcher(SwitchFetcher):
     async def init_fetcher(self):
         pass
 
+    async def last_quit(self):
+        pass
+
     async def fetch_serial_num(self) -> str:
         return self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.LICENSE_ESN.name)
 

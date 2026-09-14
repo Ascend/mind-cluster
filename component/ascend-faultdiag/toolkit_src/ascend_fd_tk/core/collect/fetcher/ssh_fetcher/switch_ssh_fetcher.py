@@ -31,9 +31,15 @@ from ascend_fd_tk.utils.table_parser import TableParser
 
 class SwiSshFetcher(SshFetcher, SwitchFetcher):
     async def init_fetcher(self):
+        # pylint: disable=duplicate-code
         await self.executor.run_cmd(CmdTask("n", timeout=1))
         await self.executor.run_cmd(CmdTask("sys", timeout=1))
         await self.executor.run_cmd(CmdTask("diag", timeout=1))
+
+    async def last_quit(self):
+        # pylint: disable=duplicate-code
+        await self.executor.run_cmd(CmdTask("quit", timeout=1))
+        await self.executor.run_cmd(CmdTask("quit", timeout=1))
 
     async def fetch_id(self):
         return self.executor.host

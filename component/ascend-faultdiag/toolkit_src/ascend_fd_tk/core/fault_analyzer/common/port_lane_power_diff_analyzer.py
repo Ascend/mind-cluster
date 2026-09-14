@@ -65,7 +65,9 @@ class PortLanePowerDiffAnalyzer(Analyzer):
                 optical_module_info = interface_full_info.get_optical_module_info()
                 if not optical_module_info:
                     continue
-                domain = SwitchDomain(swi_id=swi_info.swi_id, interface=interface_full_info.interface)
+                domain = SwitchDomain(
+                    swi_id=swi_info.swi_id, slot_id=swi_info.slot_id, interface=interface_full_info.interface
+                )
                 res = self._generate_diag_result(domain, optical_module_info.lane_power_infos)
                 if not res:
                     continue

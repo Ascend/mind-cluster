@@ -83,7 +83,7 @@ class SwitchAnalyzer(Analyzer):
             diff_desc = optical_module_info.get_lane_diff_desc(self._threshold.SNR_LANE_DIFF_DB)
             if not diff_desc:
                 continue
-            domain = SwitchDomain(swi_id=switch_info.swi_id, interface=interface)
+            domain = SwitchDomain(swi_id=switch_info.swi_id, slot_id=switch_info.slot_id, interface=interface)
             if optical_module_info.optical_id:
                 domain.optical_id = optical_module_info.optical_id
             res_list.append(
@@ -130,7 +130,7 @@ class SwitchAnalyzer(Analyzer):
         local_switch: SwitchInfo,
         local_optical_id: str = "",
     ):
-        domain = SwitchDomain(swi_id=local_switch.swi_id, interface=local_interface_name)
+        domain = SwitchDomain(swi_id=local_switch.swi_id, slot_id=local_switch.slot_id, interface=local_interface_name)
         if local_optical_id:
             domain.optical_id = local_optical_id
         remove_device = interface_mapping_by_name.get(local_interface_name)

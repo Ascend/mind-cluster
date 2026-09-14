@@ -23,6 +23,7 @@ from typing import List, Dict, Callable, Optional
 
 from ascend_fd_tk.core.collect.fetcher.bmc_fetcher import BmcFetcher
 from ascend_fd_tk.core.collect.fetcher.host_fetcher import HostFetcher
+from ascend_fd_tk.core.collect.fetcher.podmanager_fetcher import PoDManagerFetcher
 from ascend_fd_tk.core.collect.fetcher.switch_fetcher import SwitchFetcher
 from ascend_fd_tk.core.common.constants import CPU_UTILIZATION_RATIO
 from ascend_fd_tk.core.common.path import CommonPath, ConfigPath
@@ -35,6 +36,7 @@ from ascend_fd_tk.core.crypto.crypto import RootKeyCrypto
 from ascend_fd_tk.core.crypto.key_generator import KeyGenerator
 from ascend_fd_tk.core.log_parser.base import LogParsePattern
 from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
+from ascend_fd_tk.core.model.conn_key import ConnKey
 from ascend_fd_tk.core.model.diag_result import DiagResult
 from ascend_fd_tk.core.model.inspection import InspectionErrorItem
 from ascend_fd_tk.core.root_cause.filter import RootCauseFilter
@@ -51,6 +53,7 @@ class DiagCtx:
         self.host_fetchers: Dict[str, HostFetcher] = {}
         self.switch_fetchers: Dict[str, SwitchFetcher] = {}
         self.bmcs_fetchers: Dict[str, BmcFetcher] = {}
+        self.pod_manager_fetchers: Dict[ConnKey, PoDManagerFetcher] = {}
         self.parse_log_result_map: Dict[str, List[LogParsePattern]] = defaultdict(list)
         self.cache = ClusterInfoCache()
         self.diag_result: List[DiagResult] = []

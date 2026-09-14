@@ -15,13 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 
-"""HostCollectorA5 单元测试。
-
-覆盖本次改动：
-- @register_host_collector(NpuType.A5) 代际注册
-- collect() 多光模块采集流程：每个 NPU 遍历 optical_top_headline，逐个采集光模块信息
-- collect_nic_info() 多网卡多端口遍历
-"""
+"""HostCollectorA5 单元测试：A5 代际注册、多光模块与多网卡多端口采集。"""
 
 import asyncio
 import unittest
@@ -41,7 +35,6 @@ from ascend_fd_tk.core.model.host_a5 import (
 def _build_mock_fetcher():
     """构造 mock fetcher，预设各 fetch 方法返回值。"""
     fetcher = MagicMock()
-
     # 基础信息
     fetcher.fetch_id = AsyncMock(return_value="host1")
     fetcher.fetch_hostname = AsyncMock(return_value="node-1")
@@ -49,7 +42,6 @@ def _build_mock_fetcher():
     fetcher.fetch_msnpureport_log = AsyncMock(return_value=[])
     fetcher.fetch_npu_type = AsyncMock(return_value="910B5")
     fetcher.fetch_npu_mapping = AsyncMock(return_value={"0": {"chip_phy_id": "0"}})
-
     # 光模块顶部标题：NPU 0 有 2 个光模块（id 0 和 1）
     fetcher.fetch_optical_top_headline = AsyncMock(
         return_value=[
@@ -59,7 +51,6 @@ def _build_mock_fetcher():
     )
     # 每个光模块信息采集返回非空字符串，由 parser 解析
     fetcher.fetch_optical_info_a5 = AsyncMock(return_value="optical_info_raw")
-
     # 网卡：返回 1 张网卡名，端口数 "2"
     fetcher.fetch_nic_info = AsyncMock(return_value="nic_list_raw")
     fetcher.fetch_nic_port_num = AsyncMock(return_value="port_num_raw")
@@ -102,7 +93,7 @@ class TestHostCollectorA5Collect(unittest.TestCase):
         self.assertEqual(host_info.host_id, "host1")
         self.assertEqual(host_info.hostname, "node-1")
         self.assertEqual(host_info.sn_num, "SN12345")
-        self.assertEqual(host_info.chip_generation, "A5")
+        self.assertEqual(host_info.generation, "A5")
         # NPU 0 下有 2 个光模块
         self.assertIn("0", host_info.npu_chip_info)
         chip_info = host_info.npu_chip_info["0"]

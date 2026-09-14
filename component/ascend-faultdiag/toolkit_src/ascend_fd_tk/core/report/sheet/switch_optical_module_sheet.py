@@ -22,6 +22,7 @@
 from dataclasses import dataclass
 from typing import List, Dict, Tuple
 
+from ascend_fd_tk.core.common.diag_enum import NpuType, InterfaceSpeed
 from ascend_fd_tk.core.report.sheet.base import BaseSheetGenerator
 from ascend_fd_tk.core.report.threshold_report import ThresholdConfig, create_threshold_report, generate_threshold_excel
 
@@ -35,6 +36,7 @@ class SwitchOpticalModuleData:
     local_switch_id: str
     local_switch_sn: str
     local_interface: str
+    local_switch_slot_id: str = ""  # 本端交换机槽位号（PoDManager 多槽位共用 IP 时用于区分逻辑交换机）
     local_room_name: str = ""
     local_cabinet_id: str = ""
 
@@ -61,6 +63,7 @@ class SwitchOpticalModuleData:
     # 对端交换机信息
     peer_switch_name: str = ""
     peer_switch_id: str = ""
+    peer_switch_slot_id: str = ""  # 对端交换机槽位号
     peer_switch_sn: str = ""
     peer_interface: str = ""
     peer_room_name: str = ""
@@ -145,6 +148,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             # 本端交换机信息
             "local_switch_name": "本端交换机名称",
             "local_switch_id": "本端交换机ID",
+            "local_switch_slot_id": "本端交换机槽位号",
             "local_switch_sn": "本端交换机SN",
             "local_interface": "本端端口",
             "local_room_name": "本端机房名称",
@@ -170,6 +174,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             # 对端交换机信息
             "peer_switch_name": "对端交换机名称",
             "peer_switch_id": "对端交换机ID",
+            "peer_switch_slot_id": "对端交换机槽位号",
             "peer_switch_sn": "对端交换机SN",
             "peer_interface": "对端端口",
             "peer_room_name": "对端机房名称",
@@ -200,6 +205,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                 "本端交换机侧": [
                     "本端交换机名称",
                     "本端交换机ID",
+                    "本端交换机槽位号",
                     "本端交换机SN",
                     "本端端口",
                     "机房名称",
@@ -224,6 +230,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                 "对端交换机侧": [
                     "对端交换机名称",
                     "对端交换机ID",
+                    "对端交换机槽位号",
                     "对端交换机SN",
                     "对端端口",
                     "对端机房名称",
@@ -305,6 +312,11 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     continue
 
                 local_interface = interface_mapping.local_interface_name
+                # A5 的电口有本端和对端关系，但是没有光模块指标信息。需过滤掉电口
+                if switch_info.generation == NpuType.A5.value and local_interface.startswith(
+                    InterfaceSpeed.G_400.value
+                ):
+                    continue
                 peer_switch_name = interface_mapping.remote_device_interface.device_name
                 peer_interface = interface_mapping.remote_device_interface.interface
 
@@ -349,6 +361,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     # 本端交换机信息
                     local_switch_name=switch_info.name,
                     local_switch_id=switch_info.swi_id,
+                    local_switch_slot_id=switch_info.slot_id or "",
                     local_switch_sn=switch_info.sn,
                     local_interface=local_interface,
                     local_room_name=switch_info.room_name or "",
@@ -374,6 +387,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     # 对端交换机信息
                     peer_switch_name=peer_switch.name if peer_switch else peer_switch_name,
                     peer_switch_id=peer_switch.swi_id if peer_switch else "",
+                    peer_switch_slot_id=peer_switch.slot_id if peer_switch else "",
                     peer_switch_sn=peer_switch.sn if peer_switch else "",
                     peer_interface=peer_interface,
                     peer_room_name=peer_switch.room_name if peer_switch else "",

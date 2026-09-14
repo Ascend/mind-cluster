@@ -58,6 +58,7 @@ class OpStateFlagDiagInfoAnalyzer(Analyzer):
                 result = DiagResult(
                     domain=SwitchDomain(
                         swi_id=swi_info.swi_id,
+                        slot_id=swi_info.slot_id,
                         interface=op_model.interface_name,
                         optical_id=op_model.optical_id,
                     ),

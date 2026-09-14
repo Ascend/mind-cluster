@@ -30,7 +30,7 @@ def parse_npu_mapping_and_generation(stdout: str) -> Tuple[NpuType, Dict[str, De
         0        0         0               0             Ascend910
 
         NPU ID   Slot ID   Chip ID   Chip Phy-ID  Chip Name
-        0        0         0               0      Ascend950
+        0        0        0               0      Ascend950
 
     Args:
         stdout: ``npu-smi info -m`` 命令的完整回显文本

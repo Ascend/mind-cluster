@@ -30,17 +30,17 @@ from ascend_fd_tk.core.model.switch import SwitchInfo, InterfaceFullInfo
 class ClusterInfoCache(JsonObj):
     def __init__(
         self,
-        # A3 集群存 HostInfo，A5 集群存 HostInfoA5；诊断阶段按 chip_generation 分流，不跨代际访问
+        # A3 集群存 HostInfo，A5 集群存 HostInfoA5；诊断阶段按 generation 分流，不跨代际访问
         hosts_info: Dict[str, Union[HostInfo, HostInfoA5]] = None,
         bmcs_info: Dict[str, BmcInfo] = None,
         swis_info: Dict[str, SwitchInfo] = None,
-        chip_generation: str = None,
+        generation: str = None,
     ):
         self.hosts_info: Dict[str, Union[HostInfo, HostInfoA5]] = hosts_info or {}
         self.bmcs_info: Dict[str, BmcInfo] = bmcs_info or {}
         self.swis_info: Dict[str, SwitchInfo] = swis_info or {}
         # 芯片代际（"A3"/"A5"），清洗阶段写入，诊断阶段用于分流 analyzer；默认 None 兼容旧 cache，未写入时按 A3 处理
-        self.chip_generation: str = chip_generation
+        self.generation: str = generation
         # 交换机名字和交换机信息映射关系
         self.swi_info_name_map = {}
         self._chassis_mappings: ChassisMapping = None
@@ -55,8 +55,8 @@ class ClusterInfoCache(JsonObj):
         self.bmcs_info.update(cache.bmcs_info)
         self.swis_info.update(cache.swis_info)
         # 代际以最新探测结果为准（集群默认同代际，后写入覆盖前者）
-        if cache.chip_generation is not None:
-            self.chip_generation = cache.chip_generation
+        if cache.generation is not None:
+            self.generation = cache.generation
 
     def init_diag_data(self):
         l1_swi_server_mappings = self._build_l1_swi_server_mappings()
@@ -65,7 +65,7 @@ class ClusterInfoCache(JsonObj):
 
     def get_threshold(self):
         # 按集群代际返回对应阈值Profile类（A3/A5/...），未写入代际时按 A3 处理
-        return get_threshold_cls(self.chip_generation)
+        return get_threshold_cls(self.generation)
 
     def get_chassis_mappings(self):
         return self._chassis_mappings
@@ -92,6 +92,16 @@ class ClusterInfoCache(JsonObj):
     # 找对端交换机
     def find_peer_swi(self, peer_device: str) -> SwitchInfo:
         return self.swi_info_name_map.get(peer_device)
+
+    # 按 swi_id 查找交换机信息；PoDManager 多槽位时同一 swi_id 对应多台逻辑交换机
+    # （cache key 为 {swi_id}_{slot_id}），结合 slot_id 定位具体槽位的交换机
+    def find_switch_info(self, swi_id: str, slot_id: str = "") -> SwitchInfo:
+        swi_info = self.swis_info.get(swi_id)
+        if swi_info:
+            return swi_info
+        if not slot_id:
+            return None
+        return self.swis_info.get(f"{swi_id}_{slot_id}")
 
     # 找对端端口信息
     def find_peer_swi_interface_info(

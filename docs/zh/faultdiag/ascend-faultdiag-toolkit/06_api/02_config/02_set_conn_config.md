@@ -32,6 +32,10 @@
 # 支持ip1-ip2 ip段方式填写(需保证账号密码相同), 通过step设置步长
 1.1.1.4-1.1.1.10 step=2 username="root" password="<your_password>"
 
+[pod_manager]
+# PoDManager 为 Ascend 950 SuperPoD 超节点的设备统一管理入口，登录后会切换到各个槽位号采集信息
+1.1.1.11 username="root" password="<your_password>"
+
 [config]
 # 支持设置全局的私钥文件
 private_key="~/.ssh/your_private_key"
@@ -44,6 +48,7 @@ private_key="~/.ssh/your_private_key"
 - 支持密钥方式登录。`private_key` 配置为私钥路径配置，可在每行单独配置，也可以在 `config` 选项框中为集群所有的环境配置。
 - 其中 `ip` 支持单 IP 配置，也支持 IP 范围配置（`step` 配置：step 默认为 1；确保用户名和密码相同）。
 - 其中 1620 前台等交换设备也视为交换机，请填写到 `switch` 选项框中。
+- 其中 PoDManager 是 Ascend 950 SuperPoD 超节点的设备统一管理入口，请填写到 `pod_manager` 选项框中。配置后工具会登录 PoDManager，按内置槽位表逐槽位切换采集各槽位对应的信息。
 
 [!NOTICE]
 > `conn.ini` 中包含设备登录凭据，属于敏感信息。建议：

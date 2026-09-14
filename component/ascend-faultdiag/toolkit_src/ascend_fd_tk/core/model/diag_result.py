@@ -91,12 +91,14 @@ class SwitchDomain(JsonObj):
     def __init__(
         self,
         swi_id: str = "",
+        slot_id: str = "",
         interface: str = "",
         optical_id: str = "",
         peer_switch_id: str = "",
         peer_switch_interface: str = "",
     ):
         self.swi_id = swi_id
+        self.slot_id = slot_id
         self.interface = interface
         self.optical_id = optical_id
         self.peer_switch_id = peer_switch_id
@@ -109,6 +111,8 @@ class SwitchDomain(JsonObj):
         parts = []
         if self.swi_id:
             parts.append(f"交换机:{self.swi_id}")
+        if self.slot_id:
+            parts.append(f"槽位:{self.slot_id}")
         if self.interface:
             parts.append(f"交换机端口:{self.interface}")
         if self.optical_id:

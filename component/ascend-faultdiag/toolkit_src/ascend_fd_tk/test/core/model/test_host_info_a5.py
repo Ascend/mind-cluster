@@ -19,7 +19,7 @@
 
 覆盖本次改动：
 - @register_host_info("A5") 代际注册
-- chip_generation 默认 "A5"
+- generation 默认 "A5"
 - 与 A3 完全独立（不继承 HostInfo）
 - get_msn_logs_by_type 过滤
 """
@@ -47,10 +47,10 @@ class TestHostInfoA5Registration(unittest.TestCase):
 
 
 class TestHostInfoA5Defaults(unittest.TestCase):
-    def test_default_chip_generation(self):
-        """HostInfoA5 默认 chip_generation 为 'A5'。"""
+    def test_default_generation(self):
+        """HostInfoA5 默认 generation 为 'A5'。"""
         info = HostInfoA5(host_id="h1", sn_num="SN1")
-        self.assertEqual(info.chip_generation, "A5")
+        self.assertEqual(info.generation, "A5")
         # 可选字段默认值
         self.assertEqual(info.hostname, "")
         self.assertEqual(info.npu_chip_info, {})

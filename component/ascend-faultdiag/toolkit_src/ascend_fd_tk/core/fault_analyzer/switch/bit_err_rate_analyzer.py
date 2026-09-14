@@ -35,7 +35,7 @@ class BitErrRateAnalyzer(Analyzer):
                     continue
                 diag_results.append(
                     DiagResult(
-                        domain=SwitchDomain(swi_id=swi.swi_id, interface=data.interface_name),
+                        domain=SwitchDomain(swi_id=swi.swi_id, slot_id=swi.slot_id, interface=data.interface_name),
                         fault_info=f"BER误码率{data.bit_err_rate}大于阈值{BIT_ERROR_RATE_LIMIT}。",
                         suggestion="BER误码率异常，请排查光模块，检查端口是否脏污",
                     )

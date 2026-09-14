@@ -20,6 +20,7 @@ import json
 import os.path
 from typing import Callable, Dict, Type
 
+from ascend_fd_tk.core.common.diag_enum import NpuType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.common.path import CommonPath
 from ascend_fd_tk.core.context.host_registry import HOST_INFO_REGISTRY
@@ -42,7 +43,7 @@ class LoadCache(DiagService):
 
         Args:
             class_resolver: 可选，根据 JSON 内容决定实际反序列化类。
-                            host cache 用此参数按 chip_generation 在 HostInfo/HostInfoA5 间选择。
+                            host cache 用此参数按 generation 在 HostInfo/HostInfoA5 间选择。
         """
         cache_dir = convert_log_path(cache_dir)
         if not cache_dir:
@@ -68,12 +69,12 @@ class LoadCache(DiagService):
 
     @staticmethod
     def _resolve_host_class(json_dict: dict) -> Type[JsonObj]:
-        """按 chip_generation 选择 host 反序列化类。
+        """按 generation 选择 host 反序列化类。
 
         通过 HOST_INFO_REGISTRY 注册表查找，新增代际无需修改本方法。
         """
-        chip_generation = json_dict.get("chip_generation", "A3")
-        return HOST_INFO_REGISTRY.get(chip_generation, HostInfo)
+        generation = json_dict.get("generation", NpuType.A3.value)
+        return HOST_INFO_REGISTRY.get(generation, HostInfo)
 
     async def run(self):
         cache = self.diag_ctx.cache
@@ -82,9 +83,15 @@ class LoadCache(DiagService):
         self._load_cache(CommonPath.COLLECT_HOST_CACHE_DIR, HostInfo, cache.hosts_info, self._resolve_host_class)
         # 排序，屏蔽系统原生读取顺序差异，也保证后续分析有序
         cache.sort_info()
-        # 从首个 HostInfo 提取代际（集群默认同代际），供诊断阶段分流 analyzer。旧 cache 无 chip_generation 字段时为空串，默认 A3
+        # 从首个 HostInfo 提取代际（集群默认同代际），供诊断阶段分流 analyzer。旧 cache 无 generation 字段时为空串，默认 A3
         for host_info in cache.hosts_info.values():
-            if host_info.chip_generation:
-                cache.chip_generation = host_info.chip_generation
+            if host_info.generation:
+                cache.generation = host_info.generation
                 break
+        # host 未采集时回退：PoDManager 采集的交换机带 generation（PoDManager 登录即 A5），以其代际为准
+        if not cache.generation:
+            for switch_info in cache.swis_info.values():
+                if switch_info.generation:
+                    cache.generation = switch_info.generation
+                    break
         cache.init_diag_data()
