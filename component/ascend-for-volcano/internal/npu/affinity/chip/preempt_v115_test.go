@@ -19,74 +19,13 @@ limitations under the License.
 package chip
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/affinity/chip/topo"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
-
-func newTwoGroupTree(owners map[string][]int) *topo.ChipNode {
-	root := topo.ParseTopology("[[0,1,2,3],[4,5,6,7]]")
-	if root == nil {
-		panic("parse [[0,1,2,3],[4,5,6,7]] failed")
-	}
-	root.Init(nil, nil, owners)
-	return root
-}
-
-func newTestNode(root *topo.ChipNode) *plugin.NPUNode {
-	return &plugin.NPUNode{CommonNode: plugin.CommonNode{Name: "node-1", ChipTopo: root}}
-}
-
-func newPeTask(id int, chips ...int) *api.TaskInfo {
-	names := make([]string, 0, len(chips))
-	for _, c := range chips {
-		names = append(names, fmt.Sprintf("%s%d", util.NPU910CardNamePre, c))
-	}
-	pod := &v1.Pod{ObjectMeta: metav1.ObjectMeta{
-		UID:         types.UID(fmt.Sprintf("uid-%d", id)),
-		Annotations: map[string]string{util.NPU910CardName: strings.Join(names, ",")},
-	}}
-	return &api.TaskInfo{
-		UID:  api.TaskID(fmt.Sprintf("uid-%d", id)),
-		Name: fmt.Sprintf("pod-%d", id),
-		Pod:  pod,
-	}
-}
-
-func newPreemptorTask(req int, mode string) *api.TaskInfo {
-	anno := map[string]string{}
-	if mode != "" {
-		anno[util.ScheduleModeAnnoKey] = mode
-	}
-	return &api.TaskInfo{
-		UID:  "uid-preemptor",
-		Name: "preemptor",
-		Pod:  &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "preemptor", UID: "uid-preemptor", Annotations: anno}},
-		Resreq: &api.Resource{ScalarResources: map[v1.ResourceName]float64{
-			v1.ResourceName(util.HwPreName + "Ascend910"): float64(req * util.NPUHexKilo),
-		}},
-	}
-}
-
-func newNames(tasks []*api.TaskInfo) []string {
-	var out []string
-	for _, t := range tasks {
-		if t == nil {
-			continue
-		}
-		out = append(out, t.Name)
-	}
-	return out
-}
 
 func TestPreemptOrReclaimNilGuards(t *testing.T) {
 	tp := &chipHandler{}
@@ -105,12 +44,6 @@ func TestPreemptOrReclaimNilGuards(t *testing.T) {
 			t.Fatalf("%s: want (nil,false), got selected=%v ok=%v", name, newNames(sel), ok)
 		}
 	}
-}
-
-func enableTopoAware(t *testing.T) {
-	t.Helper()
-	TopologyAwarePreemptActive = true
-	t.Cleanup(func() { TopologyAwarePreemptActive = false })
 }
 
 func TestPreemptOrReclaimSoftZeroEviction(t *testing.T) {
@@ -214,8 +147,7 @@ func TestPreemptOrReclaimReclaimableIDs(t *testing.T) {
 }
 
 func TestRouteEvictionParamRouting(t *testing.T) {
-	orig := TopologyAwarePreemptActive
-	defer func() { TopologyAwarePreemptActive = orig }()
+	t.Cleanup(func() { TopologyAwarePreemptActive = false })
 
 	tp := newTestHandler()
 	tp.NPUJob.ScheduleMode = util.HardScheduleMode
@@ -250,6 +182,7 @@ func TestRouteEvictionParamRouting(t *testing.T) {
 // use the topology-aware full-candidate set (used by TestRouteEvictionParamRouting
 // to prove the routing differs), reclaim must always pick the minimal group.
 func TestReclaimableAlwaysSelective(t *testing.T) {
+	t.Cleanup(func() { TopologyAwarePreemptActive = false })
 	for _, aware := range []bool{true, false} {
 		TopologyAwarePreemptActive = aware
 		tp := newTestHandler()
@@ -268,5 +201,4 @@ func TestReclaimableAlwaysSelective(t *testing.T) {
 			t.Fatalf("aware=%v: want 4 victims from one group (selective), got %v", aware, newNames(sel))
 		}
 	}
-	TopologyAwarePreemptActive = false
 }

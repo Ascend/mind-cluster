@@ -317,6 +317,7 @@ func (n *NPUNode) ParseChipTopology(node *api.NodeInfo) {
 		n.ChipTopo = topo.ParseTopology(raw)
 	}
 	if n.ChipTopo == nil {
+		klog.V(util.LogWarningLev).Infof("ParseChipTopology node<%s> topology parse failed, raw: %s", n.Name, raw)
 		return
 	}
 	n.ChipPods = make(map[int]map[string]*v1.Pod)
