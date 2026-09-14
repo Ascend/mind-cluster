@@ -731,3 +731,38 @@ func (n *ChipNode) Score(req int, allowNetUnh bool) float64 {
 	}
 	return 0
 }
+
+// State returns a compact per-chip snapshot of the topology for logging, one
+// entry per leaf ordered by ascending chip id: "id:free" (free healthy),
+// "id:F" (faulty), "id:n" (net-unhealthy) or "id:a(owner)" (allocated).
+// A nil tree prints "<nil>", an uninitialized tree prints "".
+func (n *ChipNode) State() string {
+	if n == nil {
+		return "<nil>"
+	}
+	leaves := make(map[int]*ChipNode)
+	n.collectLeaves(leaves)
+	if len(leaves) == 0 {
+		return ""
+	}
+	ids := make([]int, 0, len(leaves))
+	for id := range leaves {
+		ids = append(ids, id)
+	}
+	sort.Ints(ids)
+	parts := make([]string, 0, len(ids))
+	for _, id := range ids {
+		leaf := leaves[id]
+		switch {
+		case leaf.faulty > 0:
+			parts = append(parts, fmt.Sprintf("%d:F", id))
+		case leaf.netUnhealthy > 0:
+			parts = append(parts, fmt.Sprintf("%d:n", id))
+		case len(leaf.ownedBy) > 0:
+			parts = append(parts, fmt.Sprintf("%d:a(%s)", id, leaf.ownedBy[0]))
+		default:
+			parts = append(parts, fmt.Sprintf("%d:free", id))
+		}
+	}
+	return strings.Join(parts, " ")
+}

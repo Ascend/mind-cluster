@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
@@ -76,7 +76,8 @@ func (tp *chipHandler) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNod
 	if root == nil {
 		return fmt.Errorf("%s node<%s> has no topology tree", util.NPUResourceUnavailableError, node.Name)
 	}
-
+	klog.V(util.LogDebugLev).Infof("%s CheckNodeNPUByTask task<%s> node<%s> req<%d> mode<%v> chips[%s]",
+		tp.GetPluginName(), task.Name, node.Name, reqNum, tp.ScheduleMode, root.State())
 	result := root.Fit(&util.Request{
 		ReqNPUName:        reqName,
 		ReqNPUNum:         reqNum,
@@ -106,6 +107,8 @@ func (tp *chipHandler) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeIn
 	}
 	// job-level tolerance: promoted from the embedded NPUJob attr, mirrors chip.go.
 	allow := tp.ParameterPlaneUnhealthyTolerance
+	klog.V(util.LogDebugLev).Infof("%s ScoreBestNPUNodes task<%s> req<%d> nodes<%d>",
+		tp.GetPluginName(), task.Name, req, len(nodes))
 	for _, node := range nodes {
 		if node == nil {
 			continue
@@ -118,6 +121,8 @@ func (tp *chipHandler) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeIn
 		if root == nil {
 			continue
 		}
+		klog.V(util.LogDebugLev).Infof("%s ScoreBestNPUNodes node<%s> chips[%s]",
+			tp.GetPluginName(), node.Name, root.State())
 		scoreMap[node.Name] = root.Score(req, allow)
 	}
 	return nil
@@ -135,6 +140,8 @@ func (tp *chipHandler) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *p
 			tp.GetPluginName(), task.Name, node.Name)
 		return nil
 	}
+	klog.V(util.LogDebugLev).Infof("%s UseAnnotation task<%s> node<%s> req<%d> mode<%v> chips[%s]",
+		tp.GetPluginName(), task.Name, node.Name, req, tp.ScheduleMode, root.State())
 	selected := root.SelectChips(&util.Request{
 		ReqNPUNum:         req,
 		Mode:              tp.ScheduleMode,
@@ -145,7 +152,7 @@ func (tp *chipHandler) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *p
 			tp.GetPluginName(), task.Name, node.Name, req)
 		return nil
 	}
-	klog.V(util.LogInfoLev).Infof("%s UseAnnotation task<%s> select %v", tp.GetPluginName(), task.Name, selected)
+	klog.V(util.LogDebugLev).Infof("%s UseAnnotation task<%s> select %v", tp.GetPluginName(), task.Name, selected)
 	if err := root.TryAllocate(string(task.Pod.UID), selected); err != nil {
 		klog.V(util.LogErrorLev).Infof("%s UseAnnotation task<%s> node<%s> register chips %v: %v",
 			tp.GetPluginName(), task.Name, node.Name, selected, err)
@@ -162,6 +169,8 @@ func (tp *chipHandler) ReleaseAnnotation(task *api.TaskInfo, node plugin.NPUNode
 		klog.V(util.LogErrorLev).Infof("%s ReleaseAnnotation err: %s.", tp.GetPluginName(), util.ArgumentError)
 		return nil
 	}
+	klog.V(util.LogDebugLev).Infof("%s ReleaseAnnotation task<%s> node<%s> chips[%s]",
+		tp.GetPluginName(), task.Name, node.Name, node.ChipTopo.State())
 	if node.ChipTopo == nil {
 		klog.V(util.LogWarningLev).Infof("%s ReleaseAnnotation task<%s> node<%s> has no topology tree",
 			tp.GetPluginName(), task.Name, node.Name)
