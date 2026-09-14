@@ -41,11 +41,12 @@ var (
 	testHdm  *HwDevManager
 	err      error
 
-	mockDcmiVersion       = "24.0.rc2"
-	mockDeviceNum   int32 = 8
-	mockDeviceList        = []int32{0, 1, 2, 3, 4, 5, 6, 7}
-	mockErr               = errors.New("test error")
-	mockChipInfo          = &devcommon.ChipInfo{
+	mockDcmiVersion         = "24.0.rc2"
+	mockDriverVersion       = "24.0.rc2"
+	mockDeviceNum     int32 = 8
+	mockDeviceList          = []int32{0, 1, 2, 3, 4, 5, 6, 7}
+	mockErr                 = errors.New("test error")
+	mockChipInfo            = &devcommon.ChipInfo{
 		Type:    "Ascend",
 		Name:    "Ascend950PR",
 		Version: "V1",
@@ -85,6 +86,7 @@ func setDcmiPatch() *gomonkey.Patches {
 	patch := gomonkey.ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcInit", nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcShutDown", nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDcmiVersion", mockDcmiVersion, nil).
+		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDriverVersion", mockDriverVersion, nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDeviceList", mockDeviceNum, mockDeviceList, nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetAllDeviceCount", mockDeviceNum, nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetChipInfo", mockChipInfo, nil).

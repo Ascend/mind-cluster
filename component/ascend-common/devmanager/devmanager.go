@@ -35,6 +35,7 @@ type DeviceInterface interface {
 	Init() error
 	ShutDown() error
 	GetDcmiVersion() string
+	GetDriverVersion() string
 	GetAllDeviceCount() (int32, error)
 	GetCardList() (int32, []int32, error)
 	GetDeviceNumInCard(cardID int32) (int32, error)
@@ -158,6 +159,7 @@ type DeviceManager struct {
 	// isTrainingCard whether the device is used for training
 	isTrainingCard bool
 	dcmiVersion    string
+	driverVersion  string
 	// dcmiApiVersion dcmi interface api version, v1 or empty for dcmi_xxx, v2 for dcmiv2_xxx api
 	dcmiApiVersion string
 	// mainBoardId used to distinguish between A900A3SuperPod and A9000A3SuperPod
@@ -181,6 +183,15 @@ func (d *deviceCommonInitManager) SetDcmiVersion() {
 		hwlog.RunLog.Warnf("deviceManager get dcmi version failed, err: %v", err)
 	}
 	d.dcmiVersion = dcmiVersion
+}
+
+// SetDriverVersion set driver version
+func (d *deviceCommonInitManager) SetDriverVersion() {
+	driverVersion, err := d.DcMgr.DcGetDriverVersion()
+	if err != nil {
+		hwlog.RunLog.Warnf("deviceManager get driver version failed, err: %v", err)
+	}
+	d.driverVersion = driverVersion
 }
 
 func (d *deviceCommonInitManager) GetDcmiApiVersion() string {
@@ -342,8 +353,13 @@ func GetDeviceManager(resetTimeout int) (*DeviceManager, error) {
 		if err != nil {
 			hwlog.RunLog.Warnf("deviceManager get dcmi version failed, err: %v", err)
 		}
-		hwlog.RunLog.Infof("the dcmi version is %s", dcmiVer)
+		driverVer, err := dcMgr.DcGetDriverVersion()
+		if err != nil {
+			hwlog.RunLog.Warnf("deviceManager get driver version failed, err: %v", err)
+		}
+		hwlog.RunLog.Infof("the dcmi version is %s, the driver version is %s", dcmiVer, driverVer)
 		devManager.dcmiVersion = dcmiVer
+		devManager.driverVersion = driverVer
 	})
 	if devManager == nil {
 		return nil, errors.New("device Manager is nil, may encounter an exception during initialization. " +
@@ -1174,6 +1190,11 @@ func (d *DeviceManager) IsTrainingCard() bool {
 // GetDcmiVersion  get dcmi version
 func (d *DeviceManager) GetDcmiVersion() string {
 	return d.dcmiVersion
+}
+
+// GetDriverVersion  get driver version
+func (d *DeviceManager) GetDriverVersion() string {
+	return d.driverVersion
 }
 
 // GetMainBoardId  get mainBoardId

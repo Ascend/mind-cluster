@@ -97,6 +97,8 @@ extern "C"
 
     DCMIDLLEXPORT int dcmiv2_get_dcmi_version(char *dcmi_ver, int buf_size);
 
+    DCMIDLLEXPORT int dcmiv2_get_driver_version(char *driver_ver, unsigned int len);
+
     DCMIDLLEXPORT int dcmiv2_get_mainboard_id(int dev_id, unsigned int *mainboard_id);
 
     DCMIDLLEXPORT int dcmiv2_get_affinity_cpu_info_by_dev_id(int dev_id, char *affinity_cpu, int *len);

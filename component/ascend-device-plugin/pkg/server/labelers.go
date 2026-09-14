@@ -46,7 +46,7 @@ func (l *chipNameLabeler) Write(labels map[string]string, ctx *label.NodeContext
 	}
 	chipInfo, err := l.hdm.manager.GetDmgr().GetValidChipInfo()
 	if err != nil {
-		hwlog.RunLog.Warnf("failed to get valid chip info for chip.name, skip chip.name label, err: %v", err)
+		hwlog.RunLog.Warnf("failed to get valid chip info, skip %s label, err: %v", label.NPUChipNameLabel, err)
 		return err
 	}
 	writeValue(labels, chipInfo.Name, label.NPUChipNameLabel, label.NPUChipNameLabelDeprecated)
@@ -64,16 +64,17 @@ func (l *chipMemoryLabeler) Write(labels map[string]string, ctx *label.NodeConte
 		return nil
 	}
 	if !common.HasOnChipMemory() {
-		hwlog.RunLog.Debugf("current device does't have high bandwidth memory , skip chip.memory label")
+		hwlog.RunLog.Debugf("current device does't have high bandwidth memory, skip %s label", label.NPUChipMemoryLabel)
 		return nil
 	}
 	if len(l.hdm.allInfo.AllDevs) == 0 {
-		hwlog.RunLog.Warnf("no devices found, skip chip.memory label")
+		hwlog.RunLog.Warnf("no devices found, skip %s label", label.NPUChipMemoryLabel)
 		return nil
 	}
 	hbmInfo, err := l.hdm.manager.GetDmgr().GetDeviceHbmInfo(l.hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
 	if err != nil {
-		hwlog.RunLog.Warnf("failed to get node on-chip-memory info, skip chip.memory label, err: %s", err)
+		hwlog.RunLog.Warnf("failed to get node on-chip-memory info, skip %s label, err: %s",
+			label.NPUChipMemoryLabel, err)
 		return nil
 	}
 	memoryValue := fmt.Sprintf("%dG", hbmInfo.MemorySize/memoryRadix)
@@ -92,16 +93,16 @@ func (l *chipBoardIDLabeler) Write(labels map[string]string, ctx *label.NodeCont
 		return nil
 	}
 	if len(l.hdm.allInfo.AllDevs) == 0 {
-		hwlog.RunLog.Warnf("no devices found, skip chip.boardid label")
+		hwlog.RunLog.Warnf("no devices found, skip %s label", label.NPUChipBoardIDLabel)
 		return nil
 	}
 	boardInfo, err := l.hdm.manager.GetDmgr().GetBoardInfo(l.hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
 	if err != nil {
-		hwlog.RunLog.Warnf("failed to get board info for chip.boardid, skip chip.boardid label, err: %s", err)
+		hwlog.RunLog.Warnf("failed to get board info, skip %s label, err: %s", label.NPUChipBoardIDLabel, err)
 		return nil
 	}
 	if boardInfo.BoardId == common.EmptyBoardId {
-		hwlog.RunLog.Warnf("board id is empty, skip chip.boardid label")
+		hwlog.RunLog.Warnf("board id is empty, skip %s label", label.NPUChipBoardIDLabel)
 		return nil
 	}
 	boardIDValue := fmt.Sprintf("0x%02x", boardInfo.BoardId)
@@ -121,7 +122,7 @@ func (l *chipProductTypeLabeler) Write(labels map[string]string, ctx *label.Node
 	}
 	productType := l.hdm.getProductType()
 	if productType == "" || productType == "NA" {
-		hwlog.RunLog.Warnf("product type is empty or NA, skip chip.product-type label")
+		hwlog.RunLog.Warnf("product type is empty or NA, skip %s label", label.NPUChipProductTypeLabel)
 		return nil
 	}
 	writeValue(labels, sanitizeLabelValue(productType), label.NPUChipProductTypeLabel)
@@ -142,12 +143,12 @@ func (l *acceleratorTypeLabeler) Write(labels map[string]string, ctx *label.Node
 		return nil
 	}
 	if len(l.hdm.allInfo.AllDevs) == 0 {
-		hwlog.RunLog.Warnf("no devices found, skip accelerator-type label")
+		hwlog.RunLog.Warnf("no devices found, skip %s label", label.AcceleratorTypeKeyDeprecated)
 		return nil
 	}
 	boardInfo, err := l.hdm.manager.GetDmgr().GetBoardInfo(l.hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
 	if err != nil {
-		hwlog.RunLog.Warnf("failed to get board info for accelerator-type, skip accelerator-type label, err: %s", err)
+		hwlog.RunLog.Warnf("failed to get board info, skip %s label, err: %s", label.AcceleratorTypeKeyDeprecated, err)
 		return nil
 	}
 	if boardInfo.BoardId == common.A300IA2BoardId || boardInfo.BoardId == common.A300IA2GB64BoardId {
@@ -189,9 +190,9 @@ type driverVersionLabeler struct {
 }
 
 func (l *driverVersionLabeler) Write(labels map[string]string, ctx *label.NodeContext) error {
-	driverVersion := l.hdm.manager.GetDmgr().GetDcmiVersion()
+	driverVersion := l.hdm.manager.GetDmgr().GetDriverVersion()
 	if driverVersion == "" {
-		hwlog.RunLog.Warnf("failed to get dcmi driver version, skip driver.version label")
+		hwlog.RunLog.Warnf("failed to get driver version, skip %s label", label.NPUDriverVersionLabel)
 		return nil
 	}
 	writeValue(labels, driverVersion, label.NPUDriverVersionLabel, label.NPUDriverVersionLabelDeprecated)
@@ -223,7 +224,7 @@ func (l *topologyLabeler) Write(labels map[string]string, ctx *label.NodeContext
 			hwlog.RunLog.Infof("A3 device add superid label: %d", superPodId)
 			writeValue(labels, strconv.Itoa(int(superPodId)), label.TopoLabelSuperPodId)
 		} else {
-			hwlog.RunLog.Warnf("A3 device superPodId is invalid: %d, skip topotree.superpodid label", superPodId)
+			hwlog.RunLog.Warnf("A3 device superPodId is invalid: %d, skip %s label", superPodId, label.TopoLabelSuperPodId)
 		}
 	}
 	if common.ParamOption.RealCardType == api.Ascend910A5 {
@@ -232,7 +233,7 @@ func (l *topologyLabeler) Write(labels map[string]string, ctx *label.NodeContext
 			hwlog.RunLog.Infof("npu device add superid label: %d", superPodId)
 			writeValue(labels, strconv.Itoa(int(superPodId)), label.TopoLabelSuperPodId)
 		} else {
-			hwlog.RunLog.Warnf("npu device superPodId is invalid: %d, skip topotree.superpodid label", superPodId)
+			hwlog.RunLog.Warnf("npu device superPodId is invalid: %d, skip %s label", superPodId, label.TopoLabelSuperPodId)
 		}
 		superPodType := l.hdm.manager.GetSuperPodType()
 		if superPodType == common.ProductType1D || superPodType == common.ProductType2D {
@@ -241,7 +242,7 @@ func (l *topologyLabeler) Write(labels map[string]string, ctx *label.NodeContext
 				hwlog.RunLog.Infof("npu device add rackid label: %d", rackId)
 				writeValue(labels, strconv.Itoa(int(rackId)), label.TopoLabelRackId)
 			} else {
-				hwlog.RunLog.Warnf("npu device rackId is invalid: %d, skip topotree.rackid label", rackId)
+				hwlog.RunLog.Warnf("npu device rackId is invalid: %d, skip %s label", rackId, label.TopoLabelRackId)
 			}
 		}
 		serverIndex := l.hdm.manager.GetServerIndex()
@@ -249,7 +250,7 @@ func (l *topologyLabeler) Write(labels map[string]string, ctx *label.NodeContext
 			hwlog.RunLog.Infof("npu device add serverid label: %d", serverIndex)
 			writeValue(labels, strconv.Itoa(int(serverIndex)), label.TopoLabelServerId)
 		} else {
-			hwlog.RunLog.Warnf("npu device serverIndex is invalid: %d, skip topotree.serverid label", serverIndex)
+			hwlog.RunLog.Warnf("npu device serverIndex is invalid: %d, skip %s label", serverIndex, label.TopoLabelServerId)
 		}
 	}
 	return nil
@@ -266,7 +267,8 @@ func (a *baseInfoAnnotator) Write(annotations map[string]string, ctx *label.Node
 	baseInfo := a.hdm.getNpuBaseInfo()
 	mashaledNpuInfo, err := json.Marshal(baseInfo)
 	if err != nil {
-		hwlog.RunLog.Warnf("failed to marshal base device info, skip baseDeviceInfos annotation, err: %v", err)
+		hwlog.RunLog.Warnf("failed to marshal base device info, skip %s annotation, err: %v",
+			annotation.NPUBaseDevInfosAnnotation, err)
 		return fmt.Errorf("failed to marshal device ip map: %w", err)
 	}
 	a.hdm.baseNPUInfo = baseInfo
@@ -288,7 +290,8 @@ func (a *vdieDdieAnnotator) Write(annotations map[string]string, ctx *label.Node
 	if len(vdieIDs) > 0 {
 		vdieJSON, err := json.Marshal(vdieIDs)
 		if err != nil {
-			hwlog.RunLog.Warnf("failed to marshal vdie-ids, skip vdie-ids annotation, err: %v", err)
+			hwlog.RunLog.Warnf("failed to marshal vdie-ids, skip %s annotation, err: %v",
+				annotation.NPUChipVdieIDsAnnotation, err)
 		} else {
 			writeValue(annotations, string(vdieJSON), annotation.NPUChipVdieIDsAnnotation)
 		}
@@ -296,7 +299,8 @@ func (a *vdieDdieAnnotator) Write(annotations map[string]string, ctx *label.Node
 	if len(ddieIDs) > 0 {
 		ddieJSON, err := json.Marshal(ddieIDs)
 		if err != nil {
-			hwlog.RunLog.Warnf("failed to marshal ddie-ids, skip ddie-ids annotation, err: %v", err)
+			hwlog.RunLog.Warnf("failed to marshal ddie-ids, skip %s annotation, err: %v",
+				annotation.NPUChipDdieIDsAnnotation, err)
 		} else {
 			writeValue(annotations, string(ddieJSON), annotation.NPUChipDdieIDsAnnotation)
 		}
@@ -312,12 +316,14 @@ type serialNumberAnnotator struct {
 func (a *serialNumberAnnotator) Write(annotations map[string]string, ctx *label.NodeContext) error {
 	serialNumbers := a.hdm.getChipSerialNumbers()
 	if len(serialNumbers) == 0 {
-		hwlog.RunLog.Warnf("no chip serial numbers found, skip chip.serial-number annotation")
+		hwlog.RunLog.Warnf("no chip serial numbers found, skip %s annotation",
+			annotation.NPUChipSerialNumberAnnotation)
 		return nil
 	}
 	snJSON, err := json.Marshal(serialNumbers)
 	if err != nil {
-		hwlog.RunLog.Warnf("failed to marshal chip serial numbers, skip chip.serial-number annotation, err: %v", err)
+		hwlog.RunLog.Warnf("failed to marshal chip serial numbers, skip %s annotation, err: %v",
+			annotation.NPUChipSerialNumberAnnotation, err)
 		return nil
 	}
 	writeValue(annotations, string(snJSON), annotation.NPUChipSerialNumberAnnotation)
@@ -378,7 +384,8 @@ func (a *topologyAnnotator) Write(annotations map[string]string, ctx *label.Node
 	// read the mainBoardId table, so the two ID namespaces never mix.
 	topo := a.hdm.manager.GetDmgr().GetNodeTopo()
 	if topo == "" {
-		hwlog.RunLog.Warnf("npu-topo not found by mainBoardId/boardId, skip npu.topology annotation")
+		hwlog.RunLog.Warnf("npu-topo not found by mainBoardId/boardId, skip %s annotation",
+			annotation.NPUTopologyAnnotation)
 		return nil
 	}
 	writeValue(annotations, topo, annotation.NPUTopologyAnnotation)
@@ -399,7 +406,7 @@ func (a *cardTypeAnnotator) Write(annotations map[string]string, ctx *label.Node
 		common.ParamOption.CardType = cardType
 		writeValue(annotations, common.ParamOption.CardType, annotation.CardTypeKeyDeprecated)
 	} else {
-		hwlog.RunLog.Warnf("card type is empty, skip cardType annotation")
+		hwlog.RunLog.Warnf("card type is empty, skip %s annotation", annotation.CardTypeKeyDeprecated)
 	}
 	return nil
 }

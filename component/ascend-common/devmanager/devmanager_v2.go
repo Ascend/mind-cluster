@@ -42,6 +42,8 @@ type DeviceManagerV2 struct {
 	isTrainingCard bool
 	// dcmiVersion for dcmi driver product version
 	dcmiVersion string
+	// driverVersion for dcmi driver version
+	driverVersion string
 	// dcmiApiVersion dcmi interface api version, v1 or empty for dcmi_xxx, v2 for dcmiv2_xxx api
 	dcmiApiVersion string
 	// mainBoardId used to distinguish different products
@@ -65,6 +67,15 @@ func (d *deviceCommonInitManagerV2) SetDcmiVersion() {
 		hwlog.RunLog.Warnf("deviceManagerV2 get dcmi version failed, err: %v", err)
 	}
 	d.dcmiVersion = dcmiVersion
+}
+
+// SetDriverVersion set driver version
+func (d *deviceCommonInitManagerV2) SetDriverVersion() {
+	driverVersion, err := d.DcMgr.DcGetDriverVersion()
+	if err != nil {
+		hwlog.RunLog.Warnf("deviceManagerV2 get driver version failed, err: %v", err)
+	}
+	d.driverVersion = driverVersion
 }
 
 func (d *deviceCommonInitManagerV2) GetDcmiApiVersion() string {
@@ -146,6 +157,11 @@ func (d *DeviceManagerV2) ShutDown() error {
 // GetDcmiVersion  get dcmi version
 func (d *DeviceManagerV2) GetDcmiVersion() string {
 	return d.dcmiVersion
+}
+
+// GetDriverVersion get driver version
+func (d *DeviceManagerV2) GetDriverVersion() string {
+	return d.driverVersion
 }
 
 // GetDeviceCount get npu device count

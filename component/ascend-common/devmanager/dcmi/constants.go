@@ -37,9 +37,14 @@ const (
 	// dcmiHccsMaxPcsNum max pcs number for hccs
 	dcmiHccsMaxPcsNum = 16
 
+	// MaxChipNameLen max length of chip name
 	MaxChipNameLen = 32
 	productTypeLen = 64
+	// DcmiVersionLen length of DCMI version string
 	DcmiVersionLen = 32
+	// DriverVersionLen length of driver version string
+	DriverVersionLen = 64
+	// TopoInfoMaxLen max length of topology info
 	TopoInfoMaxLen = 32
 
 	// MainCmdChipInf main cmd chip inf
