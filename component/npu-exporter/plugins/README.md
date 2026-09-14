@@ -11,15 +11,14 @@
     - IsSupporterd：检测当前环境，判断是否支持当前设备的检测。
     - PreCollect：正式开始采集前执行一次，可用于设备初始化。可以为空。
     - PostCollect：采集结束后执行一次，可用于数据的回收。可以为空。
-- `register.go`，提供插件注册函数，在npu-exporter启动时完成插件注册并完成dcmi接口初始化，**RegisterPlugin函数签名不要修改**，在RegisterPlugin函数中通过`registerPlugin(插件名称, &插件类{})`完成注册，指标名称需要与`pluginConfiguration.json`中的指标组名称保持一致
-
-对于插件指标组内定义的指标名称，不要与现有代码中已定义的插件指标（当前NPU指标、插件指标）重名
-
-自定义插件采集时间超过10s后，npu-exporter会打印日志，提示插件采集时间过长，执行下一个插件采集。
+- `register.go`，提供插件注册函数，在NPU Exporter启动时完成插件注册并完成dcmi接口初始化，**RegisterPlugin函数签名不要修改**，在RegisterPlugin函数中通过`registerPlugin(插件名称, &插件类{})`完成注册，指标名称需要与`pluginConfiguration.json`中的指标组名称保持一致
+- 插件指标组内定义的指标名称，不要与已有的插件指标（当前NPU指标、插件指标）重名。
+- 插件指标组内定义的指标名称、指标label仅支持使用字母、数字、下划线，且不能以数字开头。
+- 自定义插件采集时间超过10s后，NPU Exporter会打印日志，提示插件采集时间过长，执行下一个插件采集。
 
 ## 编译部署
 
-插件开发完后，执行Npu-exporter代码目录下的`build/build.sh`完成编译，需要提前准备go开发环境。
+插件开发完后，执行NPU Exporter代码目录下的`build/build.sh`完成编译，需要提前准备go开发环境。
 
 编译完成后，会在output目录下生成新的二进制文件与相关配置文件，根据需要打开或关闭相应开关，根据安装部署章节的安装指导，重新作镜像部署即可
 
