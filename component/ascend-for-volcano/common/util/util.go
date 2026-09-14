@@ -445,6 +445,11 @@ func IsNPUTask(nT *api.TaskInfo) bool {
 	return false
 }
 
+// IsNPUResource check the resource is npu or not
+func IsNPUResource(res v1.ResourceName) bool {
+	return res == NPUCardName || res == NPU310CardName || res == NPU910CardName || res == NPU310PCardName
+}
+
 // IsDRATask reports whether the task requests devices through Kubernetes Dynamic Resource Allocation.
 func IsDRATask(nT *api.TaskInfo) bool {
 	if nT == nil || nT.Pod == nil {
