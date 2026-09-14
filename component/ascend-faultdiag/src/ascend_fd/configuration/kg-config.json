@@ -26735,8 +26735,8 @@
             "source_file": "LCNELog",
             "regex": {
                  "in": [
-                    ["0x081320C6", "The local fault alarm has occurred"],
-                    ["0x81320C6", "The local fault alarm has occurred"]
+                    ["0x081320c6", "The local fault alarm has occurred"],
+                    ["0x81320c6", "The local fault alarm has occurred"]
                 ]
             }
         },
@@ -26764,8 +26764,8 @@
             "source_file": "LCNELog",
             "regex": {
                  "in": [
-                    ["0x081320C7", "The remote fault alarm has occurred"],
-                    ["0x81320C7", "The remote fault alarm has occurred"]
+                    ["0x081320c7", "The remote fault alarm has occurred"],
+                    ["0x81320c7", "The remote fault alarm has occurred"]
                 ]
             }
         },
@@ -26855,8 +26855,8 @@
             "source_file": "LCNELog",
             "regex": {
                  "in": [
-                    ["0x0813002E", "The board totally failed"],
-                    ["0x813002E", "The board totally failed"]
+                    ["0x0813002e", "The board totally failed"],
+                    ["0x813002e", "The board totally failed"]
                 ]
             }
         },
