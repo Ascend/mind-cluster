@@ -31,14 +31,17 @@ class Conn(JsonObj):
 
 
 class ConnConfig(JsonObj):
-    def __init__(self, host_conn: List[Conn], bmc_conn: List[Conn], switch_conn: List[Conn]):
+    def __init__(
+        self, host_conn: List[Conn], bmc_conn: List[Conn], switch_conn: List[Conn], pod_manager_conn: List[Conn] = None
+    ):
         self.host_conn = host_conn or []
         self.bmc_conn = bmc_conn or []
         self.switch_conn = switch_conn or []
+        self.pod_manager_conn = pod_manager_conn or []
 
 
 class DeviceConfigParser:
-    _DEFAULT_GROUPS = ("host", "switch", "bmc", "config")
+    _DEFAULT_GROUPS = ("host", "switch", "bmc", "pod_manager", "config")
 
     def __init__(self, config_data: str):
         self._raw_lines = config_data.split("\n")  # 读取原始文本行
@@ -67,7 +70,12 @@ class DeviceConfigParser:
     def parse(self) -> ConnConfig:
         """解析所有分组，返回ConnConfig对象"""
         self._parse_comm_config()
-        return ConnConfig(self._get_group_conns("host"), self._get_group_conns("bmc"), self._get_group_conns("switch"))
+        return ConnConfig(
+            self._get_group_conns("host"),
+            self._get_group_conns("bmc"),
+            self._get_group_conns("switch"),
+            self._get_group_conns("pod_manager"),
+        )
 
     def _parse_groups(self) -> Dict[str, List[str]]:
         """手动解析分组（[host] [bmc] [switch] [config]），将行归类到对应分组"""
@@ -110,7 +118,7 @@ class DeviceConfigParser:
             if value.startswith(('"', "'")) and value.endswith(('"', "'")):
                 value = value[1:-1].strip()
             # 转换端口/步长为整数
-            if key == port_str or key == step_str:
+            if key in (port_str, step_str):
                 try:
                     value = int(value)
                 except ValueError as e:
@@ -124,15 +132,17 @@ class DeviceConfigParser:
 
         conn_dict = {}
         for ip in self._generate_ips_from_range(line, ip_range, params[step_str]):
-            conn_dict.update({
-                ip: Conn(
-                    host=ip,
-                    port=params[port_str],
-                    username=params["username"],
-                    password=params.get("password", ""),
-                    private_key=params.get("private_key", "") or self._comm_config.get("private_key", "")
-                )
-            })
+            conn_dict.update(
+                {
+                    ip: Conn(
+                        host=ip,
+                        port=params[port_str],
+                        username=params["username"],
+                        password=params.get("password", ""),
+                        private_key=params.get("private_key", "") or self._comm_config.get("private_key", ""),
+                    )
+                }
+            )
         return conn_dict
 
     def _generate_ips_from_range(self, line: str, ip_range: str, step: int = 1) -> List[str]:
@@ -172,7 +182,7 @@ class DeviceConfigParser:
     def _parse_comm_config(self):
         for line in self._groups.get("config", []):
             if line.startswith("private_key="):
-                key_path = line[len("private_key="):]
+                key_path = line[len("private_key=") :]
                 if key_path.startswith(('"', "'")) and key_path.endswith(('"', "'")):
                     key_path = key_path[1:-1].strip()
                 self._comm_config.update({"private_key": key_path})

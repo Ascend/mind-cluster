@@ -27,7 +27,7 @@ from ascend_fd_tk.core.model.cluster_mapping import DEFAULT_NPU_MAPPING
 
 class HostFetcher(Fetcher):
     # 芯片代际，默认 A3；SSH fetcher 在 init 阶段探测后覆盖
-    chip_generation: NpuType = NpuType.A3
+    generation: NpuType = NpuType.A3
 
     @abc.abstractmethod
     async def fetch_hostname(self) -> str:

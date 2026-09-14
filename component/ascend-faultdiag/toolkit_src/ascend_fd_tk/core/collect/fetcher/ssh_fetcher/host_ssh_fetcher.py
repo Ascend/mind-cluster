@@ -42,7 +42,7 @@ class HostSshFetcher(SshFetcher, HostFetcher):
         super().__init__(executor)
         # 默认 A3 命令提供者，保持向后兼容；上层可按代际注入
         self.cmd_provider: HostBaseProvider = HostCmdProvider()
-        self.chip_generation: NpuType = NpuType.A3
+        self.generation: NpuType = NpuType.A3
         # 代际探测阶段已执行过 npu-smi info -m，缓存其 npu_mapping 避免重复采集
         self._npu_mapping_cache = npu_mapping_cache
 

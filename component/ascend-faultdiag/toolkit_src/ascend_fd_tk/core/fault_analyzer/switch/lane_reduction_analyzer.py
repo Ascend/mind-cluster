@@ -51,7 +51,7 @@ class LaneReductionAnalyzer(Analyzer):
                 if peer_info:
                     fault_desc += f"，对端端口信息：{peer_info.get_inspection_interface_info()}"
                 res = DiagResult(
-                    domain=SwitchDomain(swi_id=swi_info.swi_id, interface=if_name),
+                    domain=SwitchDomain(swi_id=swi_info.swi_id, slot_id=swi_info.slot_id, interface=if_name),
                     fault_info=fault_desc,
                     suggestion="端口发生降lane，请检查端口",
                     err_code=alarm_info.alarm_id,

@@ -27,7 +27,7 @@ class HostSshFetcherA5(HostSshFetcher):
     def __init__(self, executor, npu_mapping_cache: dict = None):
         super().__init__(executor, npu_mapping_cache)
         self.cmd_provider: HostCmdProviderA5 = HostCmdProviderA5()
-        self.chip_generation: NpuType = NpuType.A5
+        self.generation: NpuType = NpuType.A5
 
     async def fetch_optical_top_headline(self, npu_id: str) -> str:
         cmd_res = await self.executor.run_cmd(CmdTask(self.cmd_provider.optical_top_headline(npu_id)))

@@ -63,6 +63,12 @@ class NpuType(Enum):
     A5 = "A5"
 
 
+class InterfaceSpeed(Enum):
+    G_200 = "200G"
+    G_400 = "400G"
+    G_800 = "800G"
+
+
 # 设备状态枚举
 class DeviceStatus(Enum):
     NORMAL = auto()

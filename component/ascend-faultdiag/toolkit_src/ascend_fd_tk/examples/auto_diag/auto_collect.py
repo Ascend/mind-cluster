@@ -21,13 +21,13 @@ from ascend_fd_tk.core.context.diag_ctx import DiagCtx
 from ascend_fd_tk.core.service.collect_bmc_info import CollectBmcsInfo
 from ascend_fd_tk.core.service.collect_host_info import CollectHostsInfo
 from ascend_fd_tk.core.service.collect_l1_hccs_info import CollectL1HccsInfo
+from ascend_fd_tk.core.service.collect_podmanager_info import CollectPoDManagerInfo
 from ascend_fd_tk.core.service.collect_swi_info import CollectSwiInfo
 from ascend_fd_tk.core.service.init_fetcher import InitFetcher
 from ascend_fd_tk.core.service.output_cache import OutputCache
 
 
 class AutoCollect:
-
     def __init__(self, diag_ctx=DiagCtx()):
         self.diag_ctx = diag_ctx
 
@@ -36,7 +36,8 @@ class AutoCollect:
         await asyncio.gather(
             CollectHostsInfo(self.diag_ctx).run(),
             CollectBmcsInfo(self.diag_ctx).run(),
-            self.collect_swi_info()
+            self.collect_swi_info(),
+            CollectPoDManagerInfo(self.diag_ctx).run(),
         )
         await OutputCache(self.diag_ctx).run()
 

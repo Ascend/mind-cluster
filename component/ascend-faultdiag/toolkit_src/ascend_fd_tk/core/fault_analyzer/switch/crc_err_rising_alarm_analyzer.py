@@ -68,7 +68,11 @@ class CrcRisingCheckItem(Analyzer):
                     fault_info += f"，对端设备{peer_interface_info.device_id}，对端端口{peer_interface_info.interface}"
                 result.append(
                     DiagResult(
-                        domain=SwitchDomain(swi_id=local_if_info.device_id, interface=local_if_info.interface),
+                        domain=SwitchDomain(
+                            swi_id=local_if_info.device_id,
+                            slot_id=swi_info.slot_id,
+                            interface=local_if_info.interface,
+                        ),
                         fault_info=fault_info,
                         suggestion="端口CRC快速增长，请检查端口",
                         err_code=alarm_info.alarm_id,

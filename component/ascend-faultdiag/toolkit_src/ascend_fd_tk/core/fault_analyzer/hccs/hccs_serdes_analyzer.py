@@ -40,6 +40,6 @@ class HccsSerdesAnalyzer(Analyzer):
                 if not fault_desc_list:
                     continue
                 fault_desc = f"交换芯片：{info.chip_id}，端口：{info.port_id}" + ",".join(fault_desc_list)
-                domain = SwitchDomain(swi_id=swi_info.swi_id, interface=info.swi_port_id)
+                domain = SwitchDomain(swi_id=swi_info.swi_id, slot_id=swi_info.slot_id, interface=info.swi_port_id)
                 results.append(DiagResult(domain=domain, fault_info=fault_desc, suggestion="请检查端口故障"))
         return results

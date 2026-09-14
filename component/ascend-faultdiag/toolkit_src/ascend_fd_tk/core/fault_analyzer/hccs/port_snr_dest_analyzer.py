@@ -53,7 +53,7 @@ class PortSnrDestAnalyzer(Analyzer):
                     peer_port = f"（对端{port_snr.xpu}{port_mapping.xpu_id}）"
 
                 diag_res = DiagResult(
-                    domain=SwitchDomain(swi_id=swi.swi_id, interface=port_mapping.swi_port),
+                    domain=SwitchDomain(swi_id=swi.swi_id, slot_id=swi.slot_id, interface=port_mapping.swi_port),
                     fault_info=f"交换板ID：{port_snr.swi_chip_id}，交换板端口：{port_snr.port_id}，lane {port_snr.lane_id} Serdes SNR 异常{peer_port}：\n{check_res}",
                     suggestion="请对链路进行排查，并检查端口是否脏污",
                 )

@@ -34,6 +34,6 @@ class CollectHostsInfo(DiagService):
             host_info = await task
             self.diag_ctx.location_config.enrich_host_info(host_info)
             # 代际写入 HostInfo，随 JSON 落盘；诊断阶段 LoadCache 读回后聚合到 cache
-            generation = getattr(fetcher, 'chip_generation', NpuType.A3)
-            host_info.chip_generation = generation.value if generation else NpuType.A3.value
+            generation = getattr(fetcher, 'generation', NpuType.A3)
+            host_info.generation = generation.value if generation else NpuType.A3.value
             self.diag_ctx.cache.hosts_info.update({host_info.host_id: host_info})

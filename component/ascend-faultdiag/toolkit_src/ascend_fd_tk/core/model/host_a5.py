@@ -370,7 +370,7 @@ class HostInfoA5(JsonObj):
         cabinet_id="",
         server_superpod_id="",
         server_index="",
-        chip_generation: str = "A5",
+        generation: str = "A5",
         msnpureport_log: List[FindResult] = None,
         npu_chip_info: Dict[str, NpuChipInfoA5] = None,
         nic_info_list: List[NICInfoA5] = None,
@@ -383,7 +383,7 @@ class HostInfoA5(JsonObj):
         self.cabinet_id = cabinet_id
         self.server_superpod_id = server_superpod_id
         self.server_index = server_index
-        self.chip_generation = chip_generation
+        self.generation = generation
         self.msnpureport_log = msnpureport_log or []
         self.npu_chip_info = npu_chip_info or {}
         self.nic_info_list = nic_info_list or []

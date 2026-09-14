@@ -37,12 +37,14 @@ from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.bmc_ssh_fetcher import BmcSsh
 from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.generation_probe.factory import create_generation_probe
 from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.host_ssh_fetcher import HostSshFetcher
 from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.host_ssh_fetcher_factory import create_host_ssh_fetcher
+from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.podmanager_ssh_fetcher import PoDManagerSshFetcher
 from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.switch_ssh_fetcher import SwiSshFetcher
 from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import CollectType
 from ascend_fd_tk.core.common.path import CommonPath
 from ascend_fd_tk.core.config.conn_config import Conn
 from ascend_fd_tk.core.context.diag_ctx import DiagCtx
+from ascend_fd_tk.core.model.conn_key import ConnKey
 from ascend_fd_tk.core.service.base import DiagService
 from ascend_fd_tk.utils import file_tool
 from ascend_fd_tk.utils.compress_tool import CompressTool
@@ -69,7 +71,50 @@ class InitFetcher(DiagService):
             self._add_fetcher_tasks.append(self._add_fetcher_task_map[self.collect_type])
 
     @staticmethod
-    async def _check_and_add_executor(conn, fetchers_map, fetcher_type):
+    async def _add_pod_manager_executors(conn, fetchers_map):
+        """PoDManager 按分片建连接：槽位均分到有限个连接，连接内串行切换槽位执行。
+
+        建连失败的连接不丢弃其负责的槽位：按成功连接数重新轮询分片，
+        保证每个槽位都被剩余连接接管，避免漏采。
+        """
+        slot_ids = constants.POD_MANAGER_SWITCH_SLOT_IDS
+        conn_num = min(constants.POD_MANAGER_SWITCH_CONN_NUM, len(slot_ids))
+
+        async def _create(conn_idx):
+            executor = AsyncSSHExecutor(conn.host, conn.port, conn.username, conn.password, conn.private_key)
+            await asyncio.get_running_loop().run_in_executor(None, executor.ensure_shell_session)
+            return conn_idx, executor
+
+        created = await asyncio.gather(*(_create(i) for i in range(conn_num)))
+        ok_executors = []
+        for conn_idx, executor in created:
+            if not executor.shell_channel:
+                DIAG_LOGGER.warning(
+                    "PoDManager %s 第 %s 个连接建立 SSH 连接失败，其槽位由其余连接接管", conn.host, conn_idx
+                )
+                continue
+            ok_executors.append((conn_idx, executor))
+        if not ok_executors:
+            DIAG_LOGGER.warning("PoDManager %s 所有连接建立失败，跳过该设备采集", conn.host)
+            return
+        # 重新轮询分片：槽位均分到成功连接，连接内串行切换
+        ok_conn_num = len(ok_executors)
+        for offset, (conn_idx, executor) in enumerate(ok_executors):
+            fetcher_slots = slot_ids[offset::ok_conn_num]
+            fetcher = PoDManagerSshFetcher(executor, fetcher_slots)
+            fetchers_map[ConnKey(executor.host, conn_idx)] = fetcher
+        DIAG_LOGGER.info(
+            "PoDManager %s 初始化成功：共创建 %s 个连接，槽位分片：%s",
+            conn.host,
+            ok_conn_num,
+            {conn_idx: slot_ids[offset::ok_conn_num] for offset, (conn_idx, _) in enumerate(ok_executors)},
+        )
+
+    async def _check_and_add_executor(self, conn, fetchers_map, fetcher_type):
+        # PoDManager 一个 IP 按内置 slot 表建立多个 SSH 连接
+        if fetcher_type is PoDManagerSshFetcher:
+            await self._add_pod_manager_executors(conn, fetchers_map)
+            return
         executor = AsyncSSHExecutor(conn.host, conn.port, conn.username, conn.password, conn.private_key)
         executor.ensure_shell_session()
         if not executor.shell_channel:
@@ -101,6 +146,9 @@ class InitFetcher(DiagService):
             *self._ping_ssh_conn(self.diag_ctx.conn_config.switch_conn, self.diag_ctx.switch_fetchers, SwiSshFetcher),
             *self._ping_ssh_conn(self.diag_ctx.conn_config.host_conn, self.diag_ctx.host_fetchers, HostSshFetcher),
             *self._ping_ssh_conn(self.diag_ctx.conn_config.bmc_conn, self.diag_ctx.bmcs_fetchers, BmcSshFetcher),
+            *self._ping_ssh_conn(
+                self.diag_ctx.conn_config.pod_manager_conn, self.diag_ctx.pod_manager_fetchers, PoDManagerSshFetcher
+            ),
         ]
         async_tasks = []
         for conn, future, fetchers_map, fetcher_type in futures:

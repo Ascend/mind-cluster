@@ -15,13 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 
-"""HostSshFetcherA5 单元测试。
-
-覆盖本次改动：
-- @register_host_fetcher(NpuType.A5) 代际注册
-- A5 新增 fetch 方法（fetch_optical_top_headline / fetch_optical_info_a5 / fetch_nic_*）
-- chip_generation = NpuType.A5
-"""
+"""HostSshFetcherA5 单元测试。"""
 
 import asyncio
 import unittest
@@ -46,10 +40,10 @@ class TestHostSshFetcherA5(unittest.TestCase):
         """A5 fetcher 应注册到 HOST_FETCHER_REGISTRY。"""
         self.assertIs(HOST_FETCHER_REGISTRY[NpuType.A5], HostSshFetcherA5)
 
-    def test_chip_generation_is_a5(self):
-        """A5 fetcher 的 chip_generation 应为 NpuType.A5。"""
+    def test_generation_is_a5(self):
+        """A5 fetcher 的 generation 应为 NpuType.A5。"""
         fetcher = HostSshFetcherA5(_make_executor())
-        self.assertEqual(fetcher.chip_generation, NpuType.A5)
+        self.assertEqual(fetcher.generation, NpuType.A5)
 
     def test_fetch_optical_top_headline_success(self):
         """fetch_optical_top_headline 成功时返回 stdout。"""

@@ -17,6 +17,7 @@
 from typing import List, Dict
 
 from ascend_fd_tk.core.collect.base import Collector, log_collect_async_event
+from ascend_fd_tk.core.collect.fetcher.podmanager_fetcher import PoDManagerFetcher
 from ascend_fd_tk.core.collect.fetcher.switch_fetcher import SwitchFetcher
 from ascend_fd_tk.core.collect.parser.switch_parser import SwitchParser
 from ascend_fd_tk.core.model.switch import (
@@ -32,7 +33,7 @@ from ascend_fd_tk.core.model.switch import (
 
 
 class SwitchCollector(Collector):
-    def __init__(self, fetcher: SwitchFetcher):
+    def __init__(self, fetcher: SwitchFetcher | PoDManagerFetcher):
         self.fetcher = fetcher
         self.parser = SwitchParser()
 
@@ -51,6 +52,7 @@ class SwitchCollector(Collector):
         date_time = await self.coll_datetime()
         bit_error_rate_list = await self.coll_bit_error_rate()
         transceiver_infos = await self.coll_transceiver_info()
+        await self.fetcher.last_quit()
         switch_info = SwitchInfo(
             switch_name,
             switch_ip,
@@ -78,10 +80,14 @@ class SwitchCollector(Collector):
         interface_brief_str = await self.fetcher.fetch_interface_brief()
         return self.parser.parse_interface_brief(interface_brief_str)
 
+    async def get_optical_interface(self, interface_briefs: List[InterfaceBrief]) -> List[InterfaceBrief]:
+        return interface_briefs
+
     async def coll_optical_module_info(self, interface_briefs: List[InterfaceBrief]) -> List[SwiOpticalModel]:
+        interface_briefs = await self.get_optical_interface(interface_briefs)
         # 在线
         opt_module_info = await self.fetcher.fetch_optical_module_info(interface_briefs)
-        table_parse_list = self.parser.parse_opt_module_info_from_table(opt_module_info, interface_briefs)
+        table_parse_list = self.parser.parse_opt_module_info_from_table(opt_module_info)
         # 离线
         switch_log_info = await self.fetcher.fetch_switch_log_info()
         port_mapping = await self.coll_port_mapping()

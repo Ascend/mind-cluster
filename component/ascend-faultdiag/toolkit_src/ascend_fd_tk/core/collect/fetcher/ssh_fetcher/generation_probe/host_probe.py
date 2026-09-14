@@ -18,7 +18,7 @@
 from typing import Dict, Tuple
 
 from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.generation_probe.base import GenerationProbe
-from ascend_fd_tk.core.common.chip_generation import parse_npu_mapping_and_generation
+from ascend_fd_tk.core.common.generation import parse_npu_mapping_and_generation
 from ascend_fd_tk.core.common.diag_enum import NpuType
 from ascend_fd_tk.utils import logger
 from ascend_fd_tk.utils.executors import CmdTask

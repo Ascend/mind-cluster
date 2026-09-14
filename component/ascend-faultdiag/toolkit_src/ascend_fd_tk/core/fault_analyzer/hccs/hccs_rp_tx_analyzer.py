@@ -159,7 +159,9 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
         if self.check_long_link_down(swi_info.date_time, lcne_info):
             diag_results.append(
                 DiagResult(
-                    domain=SwitchDomain(swi_id=swi_info.swi_id, interface=lcne_info.interface),
+                    domain=SwitchDomain(
+                        swi_id=swi_info.swi_id, slot_id=swi_info.slot_id, interface=lcne_info.interface
+                    ),
                     fault_info="交换机端口长期down",
                     suggestion="排查交换机端口link状态信息",
                 )
@@ -168,7 +170,9 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
         if self.check_link_up_down():
             diag_results.append(
                 DiagResult(
-                    domain=SwitchDomain(swi_id=swi_info.swi_id, interface=lcne_info.interface),
+                    domain=SwitchDomain(
+                        swi_id=swi_info.swi_id, slot_id=swi_info.slot_id, interface=lcne_info.interface
+                    ),
                     fault_info="交换机端口闪断",
                     suggestion="排查交换机端口link状态信息",
                 )
@@ -176,17 +180,21 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
         if lcne_info.is_rp_pack_block():
             diag_results.append(
                 DiagResult(
-                    domain=SwitchDomain(swi_id=swi_info.swi_id, interface=lcne_info.interface),
+                    domain=SwitchDomain(
+                        swi_id=swi_info.swi_id, slot_id=swi_info.slot_id, interface=lcne_info.interface
+                    ),
                     fault_info=f"[{str(lcne_info)}]rp窝包",
-                    suggestion="排查否存在信仰证反压异常",
+                    suggestion="排查是否存在信用证反压异常",
                 )
             )
         elif lcne_info.is_voq_pack_block():
             diag_results.append(
                 DiagResult(
-                    domain=SwitchDomain(swi_id=swi_info.swi_id, interface=lcne_info.interface),
+                    domain=SwitchDomain(
+                        swi_id=swi_info.swi_id, slot_id=swi_info.slot_id, interface=lcne_info.interface
+                    ),
                     fault_info=f"[{str(lcne_info)}]voq窝包",
-                    suggestion="排查否存在信仰证反压异常",
+                    suggestion="排查是否存在信用证反压异常",
                 )
             )
         return diag_results
@@ -202,7 +210,9 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
             if remote_lcne_info.is_lp_route_miss():
                 diag_results.append(
                     DiagResult(
-                        domain=SwitchDomain(swi_id=swi_info.swi_id, interface=remote_lcne_info.interface),
+                        domain=SwitchDomain(
+                            swi_id=swi_info.swi_id, slot_id=swi_info.slot_id, interface=remote_lcne_info.interface
+                        ),
                         fault_info=f"[{str(remote_lcne_info)}] lp方向路由miss",
                         suggestion=f"[{str(remote_lcne_info)}] -> [{str(local_lcne_info)}]",
                     )
@@ -210,7 +220,9 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
             if remote_lcne_info.is_lp_pack_block():
                 diag_results.append(
                     DiagResult(
-                        domain=SwitchDomain(swi_id=swi_info.swi_id, interface=remote_lcne_info.interface),
+                        domain=SwitchDomain(
+                            swi_id=swi_info.swi_id, slot_id=swi_info.slot_id, interface=remote_lcne_info.interface
+                        ),
                         fault_info=f"[{str(remote_lcne_info)}]lp窝包",
                         suggestion=f"[{str(remote_lcne_info)}] -> [{str(local_lcne_info)}]",
                     )
@@ -218,7 +230,9 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
             elif remote_lcne_info.is_voq_pack_block():
                 diag_results.append(
                     DiagResult(
-                        domain=SwitchDomain(swi_id=swi_info.swi_id, interface=remote_lcne_info.interface),
+                        domain=SwitchDomain(
+                            swi_id=swi_info.swi_id, slot_id=swi_info.slot_id, interface=remote_lcne_info.interface
+                        ),
                         fault_info=f"[{str(remote_lcne_info)}]voq窝包",
                         suggestion=f"[{str(remote_lcne_info)}] -> [{str(local_lcne_info)}]",
                     )
@@ -250,7 +264,9 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
         for swi_info in self.swis_info.values():
             for proxy_timeout in swi_info.hccs_info.proxy_timeout_statis:
                 if proxy_timeout.is_rp_tx_timeout_happend():
-                    domain = SwitchDomain(swi_id=swi_info.swi_id, interface=proxy_timeout.interface)
+                    domain = SwitchDomain(
+                        swi_id=swi_info.swi_id, slot_id=swi_info.slot_id, interface=proxy_timeout.interface
+                    )
                     fault_info = f"HCCS RP TX超时，超时次数：{proxy_timeout.rp_tx}"
                     suggestion = "交换机端口长期down、端口闪断、窝包或者路由miss"
                     diag_results.append(DiagResult(domain=domain, fault_info=fault_info, suggestion=suggestion))

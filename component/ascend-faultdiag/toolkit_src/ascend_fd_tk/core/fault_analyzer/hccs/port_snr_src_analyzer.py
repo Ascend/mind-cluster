@@ -59,7 +59,7 @@ class PortSnrSrcAnalyzer(Analyzer):
                     continue
                 diag_results.append(
                     DiagResult(
-                        domain=SwitchDomain(swi_id=swi.swi_id, interface=port_snr.interface_name),
+                        domain=SwitchDomain(swi_id=swi.swi_id, slot_id=swi.slot_id, interface=port_snr.interface_name),
                         fault_info="\n".join(fault_info_list),
                         suggestion="请对链路进行排查，并检查端口是否脏污",
                     )

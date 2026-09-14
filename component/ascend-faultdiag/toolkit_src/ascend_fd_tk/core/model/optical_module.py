@@ -94,7 +94,7 @@ class OpticalModuleInfo(JsonObj):
             media_desc = media_th.check_value_str(info.media_snr)
             if media_desc:
                 abnormal_snr_list.append(f"Lane{info.lane_id} {media_desc}")
-        return "\n".join(abnormal_snr_list)
+        return "\n  ".join(abnormal_snr_list)
 
     def get_abnormal_bias_infos(self, th: Threshold = None):
         abnormal_bias_list = []
@@ -102,7 +102,7 @@ class OpticalModuleInfo(JsonObj):
             desc = th.check_value_str(info.bias)
             if desc:
                 abnormal_bias_list.append(f"Lane{info.lane_id} {desc}")
-        return "\n".join(abnormal_bias_list)
+        return "\n  ".join(abnormal_bias_list)
 
     def get_abnormal_power_infos(self, th: BaseThreshold):
         abnormal_rx_power_list = []

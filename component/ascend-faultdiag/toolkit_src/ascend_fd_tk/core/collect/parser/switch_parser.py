@@ -39,7 +39,6 @@ from ascend_fd_tk.utils.helpers import split_str, to_int
 from ascend_fd_tk.utils.table_parser import TableParser
 
 _DIAG_LOGGER = logger.DIAG_LOGGER
-TWO_HUNDRED_GE = "(200GE)"
 INTERFACE_STR = "interface"
 
 
@@ -283,22 +282,23 @@ class SwitchParser:
             interface_name = data.get(INTERFACE_STR)
             if not interface_name:
                 continue
-            if TWO_HUNDRED_GE in interface_name:
-                data[INTERFACE_STR] = interface_name.replace(TWO_HUNDRED_GE, "")
+            # 处理端口回显eg："800GE1/0/128:4(200GE)"
+            if '(' in interface_name:
+                data[INTERFACE_STR] = interface_name.split('(')[0].strip()
             interface_instance = InterfaceBrief.from_dict(data)
             interface_info_list.append(interface_instance)
         return interface_info_list
 
     @classmethod
-    def parse_opt_module_info_from_table(
-        cls, cmd_res: str, interface_briefs: List[InterfaceBrief]
-    ) -> List[SwiOpticalModel]:
+    def parse_opt_module_info_from_table(cls, cmd_res: str) -> List[SwiOpticalModel]:
         cmd_res_list = split_str(cmd_res, "dis optical-module interface")
         optical_model_list = []
-        for cmd_res_str, interface_brief in zip(cmd_res_list, interface_briefs):
+        for cmd_res_str in cmd_res_list:
             block_list = split_str(cmd_res_str, "diagnostic information")
             for block_text in block_list:
                 optical_id = cls.extract_optical_module_id(block_text)
+                first_line = block_text.splitlines()[0].strip()
+                interface = first_line.split()[0]
                 table_list = split_str(block_text, "==============")
                 base_info, diag_flag_info = [], []
                 for table_str in table_list:
@@ -308,7 +308,7 @@ class SwitchParser:
                         diag_flag_info = cls.parse_op_state_flag_diag_info(table_str)
                 if not base_info and not diag_flag_info:
                     continue
-                optical_model = SwiOpticalModel(interface_brief.interface, optical_id, base_info, diag_flag_info)
+                optical_model = SwiOpticalModel(interface, optical_id, base_info, diag_flag_info)
                 optical_model_list.append(optical_model)
         return optical_model_list
 

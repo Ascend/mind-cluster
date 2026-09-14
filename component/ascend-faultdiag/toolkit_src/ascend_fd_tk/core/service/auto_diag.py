@@ -23,8 +23,8 @@ from ascend_fd_tk.core.service.base import DiagService
 class AutoDiag(DiagService):
     async def run(self):
         recursive_scan_and_register("ascend_fd_tk.core.fault_analyzer")
-        # cache 中 chip_generation 存为字符串，未写入时按 A3 处理
-        gen_str = self.diag_ctx.cache.chip_generation
+        # cache 中 generation 存为字符串，未写入时按 A3 处理
+        gen_str = self.diag_ctx.cache.generation
         generation = NpuType(gen_str) if gen_str else NpuType.A3
         # 代际确定后应用阈值覆盖配置（set_config_dir 时解析暂存，此处延迟应用）
         self.diag_ctx.threshold_loader.apply(gen_str)

@@ -31,6 +31,10 @@ class SwitchFetcher(Fetcher):
         pass
 
     @abc.abstractmethod
+    async def last_quit(self):
+        pass
+
+    @abc.abstractmethod
     async def fetch_serial_num(self):
         return ""
 

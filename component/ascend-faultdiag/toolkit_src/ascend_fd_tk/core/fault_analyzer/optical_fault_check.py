@@ -105,7 +105,7 @@ class OpticalFaultChecker:
         description, suggest = self._check_single_power_value(bool(abn_rx_power_infos), bool(abn_tx_power_infos))
         if not description or not suggest:
             return []
-        abn_power_infos = "\n ".join(abn_rx_power_infos + abn_tx_power_infos)
+        abn_power_infos = "\n  ".join(abn_rx_power_infos + abn_tx_power_infos)
         fault_info = f"光模块光功率异常：{description}{self.get_single_description(domain, abn_power_infos)}"
         return [DiagResult(domain=domain, fault_info=fault_info, suggestion=suggest)]
 

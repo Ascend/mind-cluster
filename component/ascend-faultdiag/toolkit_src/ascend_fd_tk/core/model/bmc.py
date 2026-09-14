@@ -228,6 +228,7 @@ class BmcInfo(JsonObj):
         self,
         bmc_id: str,
         sn_num: str,
+        slot_id="",
         bmc_sel_list: List[BmcSelInfo] = None,
         sensor_info_list: List[BmcSensorInfo] = None,
         health_events: List[BmcHealthEvents] = None,
@@ -236,6 +237,7 @@ class BmcInfo(JsonObj):
     ):
         self.bmc_id = bmc_id
         self.sn_num = sn_num
+        self.slot_id = slot_id
         self.bmc_sel_list = bmc_sel_list or []
         self.sensor_info_list = sensor_info_list or []
         self.health_events = health_events or []
