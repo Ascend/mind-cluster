@@ -912,24 +912,24 @@ func processDevicesAndHooks(spec *specs.Spec) error {
 
 // processDevicesCDI handles the CDI injection path.
 func processDevicesCDI(spec *specs.Spec, devices []int) error {
+	if len(devices) == 0 {
+		return nil
+	}
+
 	runtimeOpts := getValueByKey(spec.Process.Env, ascendRuntimeOptions)
 	hasNODRV := strings.Contains(runtimeOpts, "NODRV")
 
-	var devType, productType string
-	var useVirtual bool
-	if len(devices) != 0 {
-		npuWorker, err := dcmi.GetMatchingNpuWorker()
-		if err != nil {
-			return err
-		}
-		devices, useVirtual, err = resolveVDevice(spec, npuWorker, devices)
-		if err != nil {
-			return err
-		}
-		devType, productType, err = resolveDeviceTypes(npuWorker)
-		if err != nil {
-			return err
-		}
+	npuWorker, err := dcmi.GetMatchingNpuWorker()
+	if err != nil {
+		return err
+	}
+	devices, useVirtual, err := resolveVDevice(spec, npuWorker, devices)
+	if err != nil {
+		return err
+	}
+	devType, productType, err := resolveDeviceTypes(npuWorker)
+	if err != nil {
+		return err
 	}
 
 	mountUBDrv, err := parseUBDrvMountOption(getValueByKey(spec.Process.Env, api.AscendUBDrvMountEnv))

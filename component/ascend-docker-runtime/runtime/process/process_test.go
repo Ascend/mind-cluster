@@ -682,6 +682,32 @@ func TestProcessDevicesAndHooks_CDI(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(capturedMountNames, convey.ShouldEqual, "base,custom")
 		})
+
+		convey.Convey("09-CDI mode with no Ascend devices, should skip CDI injection", func() {
+			buildSpecCalled := false
+			injectEditsCalled := false
+			libPathCalled := false
+			patches := gomonkey.ApplyFuncReturn(loadConfig, &Config{InjectionMode: "cdi"}).
+				ApplyFuncReturn(checkVisibleDevice, []int{}, nil).
+				ApplyFunc(cdi.BuildSpec, func(cfg cdi.BuildSpecConfig) (*cdispec.Spec, error) {
+					buildSpecCalled = true
+					return mockSpec, nil
+				}).
+				ApplyFunc(InjectEdits, func(spec *specs.Spec, cdidSpec *cdispec.Spec) error {
+					injectEditsCalled = true
+					return nil
+				}).
+				ApplyFunc(addAscendDockerEnv, func(spec *specs.Spec) {}).
+				ApplyFunc(addAscendLibraryPath, func(spec *specs.Spec) { libPathCalled = true }).
+				ApplyFuncReturn(isMountByRuntimeForDP, false)
+			defer patches.Reset()
+
+			err := processDevicesAndHooks(baseSpec)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(buildSpecCalled, convey.ShouldBeFalse)
+			convey.So(injectEditsCalled, convey.ShouldBeFalse)
+			convey.So(libPathCalled, convey.ShouldBeFalse)
+		})
 	})
 }
 
