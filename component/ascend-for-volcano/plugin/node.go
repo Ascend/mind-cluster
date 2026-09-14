@@ -192,6 +192,15 @@ func (sHandle *ScheduleHandler) NodePredicateOnVCNode(taskInfo *api.TaskInfo, vc
 		return nil
 	}
 
+	// Reject whole-card tasks on chip soft-share nodes: once the node enables
+	// chip soft-split (VCANN-RT), its physical cards are virtualized into
+	// soft-share slices and can only serve soft-share (chip1softsharedev)
+	// tasks, not exclusive whole-card requests.
+	if err := vcJob.rejectWholeCardOnSoftShareNode(taskInfo, vcNode); err != nil {
+		klog.V(util.LogDebugLev).Infof("NodePredicateOnVCNode err: %v", err)
+		return err
+	}
+
 	if err := vcJob.preCheckNodePredicate(taskInfo, vcNode); err != nil {
 		return err
 	}

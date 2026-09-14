@@ -767,6 +767,26 @@ func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
 	return nil
 }
 
+// rejectWholeCardOnSoftShareNode rejects a whole-card task when the node enables
+// chip soft-share (VCANN-RT): after soft-split, the physical card is virtualized
+// into soft-share slices and can only serve soft-share (chip1softsharedev) tasks.
+//
+// A soft-share task is identified by BOTH the soft-share policy label
+// (huawei.com/scheduler.softShareDev.policy) and the schedule policy annotation
+// set to chip1-softShareDev. A whole-card task has neither, so it must be
+// rejected on a soft-share node.
+func (sJob SchedulerJob) rejectWholeCardOnSoftShareNode(task *api.TaskInfo, node NPUNode) error {
+	if node.Label[util.SchedulerSoftShareDevEnableNodeLabel] != "true" {
+		return nil
+	}
+	_, hasSoftSharePolicyLabel := sJob.Label[util.SchedulerSoftShareDevPolicyKey]
+	if hasSoftSharePolicyLabel && sJob.Annotation[util.SchedulePolicyAnnoKey] == util.Chip1ShareShareDev {
+		return nil
+	}
+	return fmt.Errorf("node %s enables chip soft share dev, whole-card task %s is not allowed",
+		node.Name, task.Name)
+}
+
 // PreCheckNodePredicate PreCheck Predicate nodes.
 func (sJob SchedulerJob) preCheckNodePredicate(taskInfo *api.TaskInfo, vcNode NPUNode) error {
 	if err := vcNode.checkNPUResourceStable(sJob); err != nil {
