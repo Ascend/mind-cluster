@@ -33,12 +33,12 @@ var errCoordNotReady = errors.New("coordinator not initialized")
 
 // RequestStopJobs implements coordinator.DistributedCoord.
 func (c *Coordinator) RequestStopJobs(jobIDs []string, ctrIds []string) error {
-	return c.requestJobs(jobIDs, ctrIds, common.ActionStop)
+	return c.requestJobs(utils.RemoveDuplicates(jobIDs), utils.RemoveDuplicates(ctrIds), common.ActionStop)
 }
 
 // RequestStartJobs implements coordinator.DistributedCoord.
 func (c *Coordinator) RequestStartJobs(jobIDs []string, ctrIds []string) error {
-	return c.requestJobs(jobIDs, ctrIds, common.ActionStart)
+	return c.requestJobs(utils.RemoveDuplicates(jobIDs), utils.RemoveDuplicates(ctrIds), common.ActionStart)
 }
 
 // requestJobs builds a CoordinateReq and routes it to the leader path or the

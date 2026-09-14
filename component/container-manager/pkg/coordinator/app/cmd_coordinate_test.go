@@ -45,6 +45,18 @@ func testRequestActions() {
 	// both wrappers forward to requestJobs; empty job ids short-circuit to nil
 	convey.So(c.RequestStopJobs(nil, nil), convey.ShouldBeNil)
 	convey.So(c.RequestStartJobs(nil, nil), convey.ShouldBeNil)
+
+	var tmpJobIDs []string
+	var p1 = gomonkey.ApplyPrivateMethod(&Coordinator{}, "requestJobs",
+		func(_ *Coordinator, jobIDs, ctrIds []string, action string) error { tmpJobIDs = jobIDs; return nil })
+	defer p1.Reset()
+	err := c.RequestStopJobs([]string{testJobID, testJobID}, []string{testCtrID, testCtrID})
+	convey.So(err, convey.ShouldBeNil)
+	convey.So(tmpJobIDs, convey.ShouldResemble, []string{testJobID})
+
+	err = c.RequestStopJobs([]string{testJobID, testJobID, testJobID}, nil)
+	convey.So(err, convey.ShouldBeNil)
+	convey.So(tmpJobIDs, convey.ShouldResemble, []string{testJobID})
 }
 
 func testRequestJobs() {

@@ -211,17 +211,18 @@ func testCoordinateHandler() {
 	s := newMockServerEndpoint(c)
 
 	convey.Convey("valid coordinate request", func() {
-		req := &proto.CoordinateReq{Uuid: testUUID, NodeId: testNodeID, JobIds: []string{testJobID}, Action: common.ActionStop}
+		req := &proto.CoordinateReq{Uuid: testUUID, NodeId: testNodeID, JobIds: []string{testJobID, testJobID}, Action: common.ActionStop}
 		var p1 = gomonkey.ApplyPrivateMethod(&Coordinator{}, "broadcastToOrdinary",
 			func(_ *Coordinator, _ *proto.CoordinateReq) error { return nil })
 		defer p1.Reset()
 		resp, err := s.Coordinate(context.Background(), req)
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(resp.Code, convey.ShouldEqual, 0)
+		convey.So(req.JobIds, convey.ShouldResemble, []string{testJobID})
 	})
 
 	convey.Convey("broadcast fails", func() {
-		req := &proto.CoordinateReq{Uuid: testUUID, NodeId: testNodeID, JobIds: []string{testJobID}, Action: common.ActionStop}
+		req := &proto.CoordinateReq{Uuid: testUUID, NodeId: testNodeID, JobIds: []string{testJobID, testJobID}, Action: common.ActionStop}
 		var p1 = gomonkey.ApplyPrivateMethod(&Coordinator{}, "broadcastToOrdinary",
 			func(_ *Coordinator, _ *proto.CoordinateReq) error { return testErr })
 		defer p1.Reset()
