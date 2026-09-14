@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	"container-manager/pkg/common"
 	"container-manager/pkg/coordinator/proto"
 
@@ -219,6 +220,8 @@ func (s *serverEndpoint) Coordinate(ctx context.Context, req *proto.CoordinateRe
 		hwlog.RunLog.Errorf("validate coordinate req %s failed: %v", req.String(), err)
 		return &proto.Response{Uuid: req.Uuid, Code: 1, Message: err.Error()}, nil
 	}
+	req.JobIds = utils.RemoveDuplicates(req.JobIds)
+	req.CtrIds = utils.RemoveDuplicates(req.CtrIds)
 	if err := s.coord.broadcastToOrdinary(req); err != nil {
 		hwlog.RunLog.Errorf("broadcast req %s to ordinary node failed: %v", req.String(), err)
 		return &proto.Response{Uuid: req.Uuid, Code: 1, Message: err.Error()}, nil

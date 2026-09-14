@@ -205,7 +205,11 @@ func (cm *CtrCtl) pauseCtr(onRing bool) {
 			}
 			ctrNeedPause = append(ctrNeedPause, ctrId)
 		}
-		if len(ctrNeedPause) == 0 || !cm.ctrInfoMap.IsCtrsRecoverable(ctrNeedPause) {
+		if len(ctrNeedPause) == 0 {
+			hwlog.RunLog.Debugf("no ctr need pause in group: %v", ctrs)
+			continue
+		}
+		if !cm.ctrInfoMap.IsCtrsRecoverable(ctrNeedPause) {
 			hwlog.RunLog.Infof("ctrs %v are not recoverable, skip pausing group", ctrNeedPause)
 			continue
 		}
@@ -298,7 +302,7 @@ func (cm *CtrCtl) resumeCtrsInGroups(ctrNeedResume []string, gate *ctrdomain.Pee
 			jobNeedReq = append(jobNeedReq, cm.ctrInfoMap.GetJobInfo(ctrId).JobID)
 		}
 	}
-
+	jobNeedReq = utils.RemoveDuplicates(jobNeedReq)
 	if len(jobNeedReq) > 0 {
 		if err := cm.coord.RequestStartJobs(jobNeedReq, distCtrsNeedReq); err != nil {
 			hwlog.RunLog.Errorf("RequestStart for jobs %v failed: %v; distributed containers skipped this cycle", jobs, err)
@@ -368,7 +372,7 @@ func (cm *CtrCtl) PauseJobContainers(jobIDs, faultCtrIds []string, peerNodeID st
 	ctrIds := cm.ctrInfoMap.GetCtrsByJob(jobIDs)
 	validCtrs := make([]string, 0, len(ctrIds))
 	for _, ctrId := range ctrIds {
-		if utils.Contains(faultCtrIds, ctrId) {
+		if common.ParamOption.LocalNodeID == peerNodeID && utils.Contains(faultCtrIds, ctrId) {
 			hwlog.RunLog.Infof("container %s is faulted, skip update peer mark", ctrId)
 			continue
 		}
@@ -393,7 +397,7 @@ func (cm *CtrCtl) ResumeJobContainers(jobIDs, faultCtrIds []string, peerNodeID s
 	ctrIds := cm.ctrInfoMap.GetCtrsByJob(jobIDs)
 	validCtrs := make([]string, 0, len(ctrIds))
 	for _, ctrId := range ctrIds {
-		if utils.Contains(faultCtrIds, ctrId) {
+		if common.ParamOption.LocalNodeID == peerNodeID && utils.Contains(faultCtrIds, ctrId) {
 			hwlog.RunLog.Infof("container %s is faulted, skip update peer mark", ctrId)
 			continue
 		}
