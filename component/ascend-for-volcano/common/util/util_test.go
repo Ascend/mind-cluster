@@ -1544,3 +1544,32 @@ func TestParseDevList(t *testing.T) {
 		})
 	}
 }
+
+func TestIsNPUResource(t *testing.T) {
+	tests := []struct {
+		name string
+		res  v1.ResourceName
+		want bool
+	}{
+		{"01 canonical generic npu card", NPUCardName, true},
+		{"02 canonical Ascend910 card", NPU910CardName, true},
+		{"03 canonical Ascend310 card", NPU310CardName, true},
+		{"04 canonical Ascend310P card", NPU310PCardName, true},
+		{"05 Ascend910b not in the canonical resource list", Ascend910bName, false},
+		{"06 virtual device Ascend910-2c is not an NPU resource", v1.ResourceName(HwPreName + Ascend910 + "-2c"), false},
+		{"07 virtual device Ascend910-16c is not an NPU resource", v1.ResourceName(HwPreName + Ascend910 + "-16c"), false},
+		{"08 virtual device Ascend310P-1c is not an NPU resource", v1.ResourceName(HwPreName + Ascend310P + "-1c"), false},
+		{"09 sub-resource npu-core is not a card", v1.ResourceName(NPUCardName + "-core"), false},
+		{"10 unhealthy suffix is not a request name", v1.ResourceName(NPU910CardName + "-Unhealthy"), false},
+		{"11 network-unhealthy suffix is not a request name", v1.ResourceName(NPUCardName + "-NetworkUnhealthy"), false},
+		{"12 unrelated huawei key is not a request name", v1.ResourceName(HwPreName + "AscendReal"), false},
+		{"13 dirty card-name prefix is not a request name", v1.ResourceName(NPU310PCardNamePre), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsNPUResource(tt.res); got != tt.want {
+				t.Errorf("IsNPUResource(%q) = %v, want %v", tt.res, got, tt.want)
+			}
+		})
+	}
+}

@@ -424,6 +424,76 @@ func TestSyncAnnotation(t *testing.T) {
 			t.Errorf("syncnodeInfo is not equal")
 		}
 	})
+	t.Run("test syncAnnotation, stale topology not carried from last session", func(t *testing.T) {
+		cNode := NPUNode{CommonNode: CommonNode{Annotation: map[string]string{
+			util.TopologyAnnoKey: "last-session-topology",
+			util.NPU910CardName:  "Ascend910-0",
+			"volcano-npu-cache":  "some-cache",
+		}}}
+		nodeNew := &api.NodeInfo{
+			Node: &v1.Node{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}},
+		}
+		cNode.syncAnnotation(nodeNew, k8s.NodeDNodeInfo{}, k8s.SwitchFaultInfo{})
+		if _, exist := cNode.Annotation[util.TopologyAnnoKey]; exist {
+			t.Errorf("stale topology annotation %q should not be carried from last session, "+
+				"got %q", util.TopologyAnnoKey, cNode.Annotation[util.TopologyAnnoKey])
+		}
+		if _, exist := cNode.Annotation[util.NPU910CardName]; !exist {
+			t.Errorf("device annotation %q should be carried from last session, got %#v",
+				util.NPU910CardName, cNode.Annotation)
+		}
+		if _, exist := cNode.Annotation["volcano-npu-cache"]; exist {
+			t.Errorf("non-huawei cache annotation should be dropped, got %#v", cNode.Annotation)
+		}
+	})
+	t.Run("test syncAnnotation, topology from node annotations", func(t *testing.T) {
+		cNode := NPUNode{CommonNode: CommonNode{Annotation: map[string]string{}}}
+		nodeNew := &api.NodeInfo{
+			Node: &v1.Node{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				util.TopologyAnnoKey: "topology-from-node",
+			}}},
+		}
+		cNode.syncAnnotation(nodeNew, k8s.NodeDNodeInfo{}, k8s.SwitchFaultInfo{})
+		if got := cNode.Annotation[util.TopologyAnnoKey]; got != "topology-from-node" {
+			t.Errorf("topology annotation should come from node annotations, got %q", got)
+		}
+	})
+	t.Run("test syncAnnotation, node healthy by noded", func(t *testing.T) {
+		cNode := NPUNode{CommonNode: CommonNode{Annotation: map[string]string{}}}
+		nodeNew := &api.NodeInfo{
+			Node: &v1.Node{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}},
+		}
+		cNode.syncAnnotation(nodeNew, k8s.NodeDNodeInfo{}, k8s.SwitchFaultInfo{})
+		if got := cNode.Annotation[util.NodeHealthyStatusKey]; got != util.NodeHealthyByNodeD {
+			t.Errorf("node healthy status should default to %q, got %q", util.NodeHealthyByNodeD, got)
+		}
+	})
+	t.Run("test syncAnnotation, last session keeps only exact npu card keys", func(t *testing.T) {
+		cNode := NPUNode{CommonNode: CommonNode{Annotation: map[string]string{
+			util.NPU910CardName:       "Ascend910-0",
+			util.NPU310CardName:       "Ascend310-0",
+			util.NPU310PCardName:      "Ascend310P-0",
+			util.NPUCardName:          "Ascend-0",
+			util.Ascend910bName:       "Ascend910b-0", // not in the 4-card list -> dropped
+			util.TopologyAnnoKey:      "last-session-topology",
+			"huawei.com/Ascend910-2c": "virtual-device", // prefix matches but not exact -> dropped
+			"volcano-npu-cache":       "some-cache",
+		}}}
+		nodeNew := &api.NodeInfo{
+			Node: &v1.Node{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}},
+		}
+		cNode.syncAnnotation(nodeNew, k8s.NodeDNodeInfo{}, k8s.SwitchFaultInfo{})
+		for _, keep := range []string{util.NPU910CardName, util.NPU310CardName, util.NPU310PCardName, util.NPUCardName} {
+			if _, exist := cNode.Annotation[keep]; !exist {
+				t.Errorf("card annotation %q should be carried from last session, got %#v", keep, cNode.Annotation)
+			}
+		}
+		for _, drop := range []string{util.Ascend910bName, util.TopologyAnnoKey, "huawei.com/Ascend910-2c", "volcano-npu-cache"} {
+			if _, exist := cNode.Annotation[drop]; exist {
+				t.Errorf("annotation %q should be dropped, got %#v", drop, cNode.Annotation)
+			}
+		}
+	})
 }
 
 func TestUpdateNPUNodeDeviceInfos(t *testing.T) {
