@@ -86,7 +86,7 @@ npu-310-strategy参数取值说明如下：
 |npu-310-strategy|chip|<ul><li>card：按推理卡调度，request请求的昇腾AI处理器个数不超过2，使用同一张Atlas 300I Duo 推理卡上的昇腾AI处理器。</li><li>chip：按昇腾AI处理器调度，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul>|
 |distributed|false|<ul><li>true：分布式推理调度策略。使用chip模式时，必须将任务调度到整张Atlas 300I Duo 推理卡。若任务需要的昇腾AI处理器数量为单数时，使用单个昇腾AI处理器的部分，将优先调度到剩余昇腾AI处理器数量为1的Atlas 300I Duo 推理卡。</li><li>false：非分布式推理调度策略。使用chip模式时，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul>无论是否为分布式推理，card模式的调度策略不变。|
 
-## 芯片亲和性调度策略（chip-affinity）<a name="section_chip_affinity_scheduling_strategy"></a>
+## 节点内通用亲和性调度策略<a name="section_in_node_general_affinity_scheduling_strategy"></a>
 
 芯片亲和性调度策略是Volcano默认的NPU节点内芯片亲和调度策略。任务YAML未配置`huawei.com/schedule_policy`注解，也未配置已废弃的`accelerator-type`标签时，Volcano对申请`huawei.com/Ascend910`或`huawei.com/npu`资源的任务，默认采用芯片亲和性调度策略。该策略根据节点内芯片的互联（亲和）拓扑，尽量将任务申请的芯片分配到互联更紧密的域内，降低跨芯片通信开销。
 
