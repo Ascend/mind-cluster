@@ -74,8 +74,8 @@ func testServerClose() {
 	s.streams["n1"] = ss
 	s.acks["k"] = make(chan *proto.Response, 1)
 	s.close()
-	convey.So(s.streams, convey.ShouldBeNil)
-	convey.So(s.acks, convey.ShouldBeNil)
+	convey.So(s.streams, convey.ShouldHaveLength, 0)
+	convey.So(s.acks, convey.ShouldHaveLength, 0)
 }
 
 func testAddStream() {
@@ -367,9 +367,10 @@ func testValidators() {
 	convey.So(validateSyncDataReq(&proto.SyncDataReq{NodeId: testNodeID}), convey.ShouldBeNil)
 
 	convey.So(validateCoordinateReq(&proto.CoordinateReq{NodeId: ""}), convey.ShouldResemble, errEmptyNodeID)
-	convey.So(validateCoordinateReq(&proto.CoordinateReq{NodeId: testNodeID, Action: testBogusAction}), convey.ShouldResemble, errInvalidAction)
-	convey.So(validateCoordinateReq(&proto.CoordinateReq{NodeId: testNodeID, Action: common.ActionStop}), convey.ShouldBeNil)
-	convey.So(validateCoordinateReq(&proto.CoordinateReq{NodeId: testNodeID, Action: common.ActionStart}), convey.ShouldBeNil)
+	convey.So(validateCoordinateReq(&proto.CoordinateReq{NodeId: testNodeID}), convey.ShouldResemble, errEmptyJobIDs)
+	convey.So(validateCoordinateReq(&proto.CoordinateReq{NodeId: testNodeID, JobIds: []string{testJobID}, Action: testBogusAction}), convey.ShouldResemble, errInvalidAction)
+	convey.So(validateCoordinateReq(&proto.CoordinateReq{NodeId: testNodeID, JobIds: []string{testJobID}, Action: common.ActionStop}), convey.ShouldBeNil)
+	convey.So(validateCoordinateReq(&proto.CoordinateReq{NodeId: testNodeID, JobIds: []string{testJobID}, Action: common.ActionStart}), convey.ShouldBeNil)
 }
 
 func testLimitQPS() {

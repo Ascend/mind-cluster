@@ -37,6 +37,7 @@ const (
 	reconnectBackoffFactor = 2
 	nodeIDMetadataKey      = "node-id"
 	responseTimeout        = 10 * time.Second
+	syncDataTimeout        = 10 * time.Second
 	routeTimeout           = 3 * time.Second
 )
 
@@ -70,10 +71,12 @@ func (l *leaderEntry) sendRespWithTimeout(resp *proto.Response) error {
 		done <- l.stream.Send(resp)
 	}()
 
+	timer := time.NewTimer(responseTimeout)
+	defer timer.Stop()
 	select {
 	case err := <-done:
 		return err
-	case <-time.After(responseTimeout):
+	case <-timer.C:
 		return errors.New("send ack time out")
 	}
 }
@@ -130,6 +133,7 @@ func (c *clientEndpoint) streamWorker(ctx context.Context, leaderAddr string) {
 				backoff(ctx, &delay)
 				continue
 			}
+			addSyncMark()
 			delay = reconnectInitDelay
 			if err := c.handleLeaderStream(leaderAddr); err != nil {
 				hwlog.RunLog.Warnf("recv from %s failed: %v", leaderAddr, err)
@@ -253,7 +257,9 @@ func (c *clientEndpoint) callLeaderForSyncData(ctx context.Context, addr string,
 	if !ok || e == nil || e.client == nil {
 		return fmt.Errorf("%w: %s", errNoActiveClient, addr)
 	}
-	resp, err := e.client.SyncData(ctx, req)
+	rpcCtx, cancel := context.WithTimeout(ctx, syncDataTimeout)
+	defer cancel()
+	resp, err := e.client.SyncData(rpcCtx, req)
 	if err != nil {
 		return err
 	}

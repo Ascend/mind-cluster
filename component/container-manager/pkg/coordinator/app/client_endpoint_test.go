@@ -65,14 +65,10 @@ func testSendRespWithTimeout() {
 	convey.Convey("send times out", func() {
 		stream := &blockingStream{release: make(chan struct{})}
 		entry := &leaderEntry{stream: stream}
-		// time.After is inlined into sendRespWithTimeout as NewTimer(d).C, so
-		// patch NewTimer to return an already-fired timer instead of patching
-		// time.After (which the inlined call site never hits). This works both
-		// with inlining enabled and disabled.
+		realNewTimer := time.NewTimer
+		firedTimer := realNewTimer(0)
 		var p1 = gomonkey.ApplyFunc(time.NewTimer, func(_ time.Duration) *time.Timer {
-			ch := make(chan time.Time, 1)
-			ch <- time.Time{}
-			return &time.Timer{C: ch}
+			return firedTimer
 		})
 		defer p1.Reset()
 		err := entry.sendRespWithTimeout(&proto.Response{Uuid: testUUID, Code: 0})

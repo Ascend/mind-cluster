@@ -174,6 +174,7 @@ func (s *Coordinator) validateJobsForCoord(req *proto.CoordinateReq) error {
 	if len(infos) == 0 {
 		return fmt.Errorf("no container info found for jobs %v", req.JobIds)
 	}
+	hwlog.RunLog.Debugf("query jobs %v, return containers %v", req.JobIds, infos)
 	byJob := make(map[string][]*proto.ContainerInfo)
 	for _, c := range infos {
 		if !c.EnableRecover {
@@ -191,13 +192,17 @@ func (s *Coordinator) validateJobsForCoord(req *proto.CoordinateReq) error {
 		byJob[c.JobId] = append(byJob[c.JobId], c)
 	}
 	for jobID, cs := range byJob {
-		replica := int(cs[0].JobReplica)
-		if replica <= 0 {
-			// replica not configured on the reported containers: skip the strict count check
-			continue
-		}
-		if len(cs) != replica {
-			return fmt.Errorf("job %s container count %d does not match replica %d", jobID, len(cs), replica)
+		for _, c := range cs {
+			replica := int(c.JobReplica)
+			if replica <= 0 {
+				// replica not configured on the reported container: skip the strict count check
+				continue
+			}
+			if len(cs) != replica {
+				return fmt.Errorf("job %s container count %d does not match replica %d, container:%s, "+
+					"possible reasons: 1. duplicate hostname across nodes; 2. incorrect replica configuration; "+
+					"3. extra distributed containers started", jobID, len(cs), replica, c.ContainerId)
+			}
 		}
 	}
 	return nil

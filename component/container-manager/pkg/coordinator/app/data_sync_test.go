@@ -124,3 +124,13 @@ func testDataSyncLoop() {
 		convey.So(len(calls), convey.ShouldBeGreaterThanOrEqualTo, 1)
 	})
 }
+
+func TestSyncDataNotify(t *testing.T) {
+	convey.Convey("test notify/checkAndSweepSyncMark", t, func() {
+		syncDataMark.Store(false)
+		addSyncMark()
+		convey.So(checkAndSweepSyncMark(), convey.ShouldBeTrue)
+		convey.So(checkAndSweepSyncMark(), convey.ShouldBeFalse)
+		syncDataMark.Store(false)
+	})
+}

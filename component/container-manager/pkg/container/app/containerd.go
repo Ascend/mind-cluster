@@ -155,12 +155,13 @@ func (c *ContainerdClient) getUsedDevs(containerObj interface{}, ctx context.Con
 func (c *ContainerdClient) getJobInfo(containerObj interface{}, ctx context.Context) domain.JobInfo {
 	cs, ok := containerObj.(containerd.Container)
 	if !ok {
-		return domain.JobInfo{}
+		hwlog.RunLog.Errorf("container object %+v is not containerd container", containerObj)
+		return domain.JobInfo{EnableRecover: true}
 	}
 	labels, err := cs.Labels(ctx)
 	if err != nil {
 		hwlog.RunLog.Errorf("get container %s labels failed, error: %v", cs.ID(), err)
-		return domain.JobInfo{}
+		return domain.JobInfo{EnableRecover: true}
 	}
 	return parseJobLabels(labels)
 }
