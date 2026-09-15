@@ -96,42 +96,30 @@
 </thead>
 <tbody>
 <tr>
-<td rowspan="6">训练</td>
-<td rowspan="2">Ascend Job</td>
-<td rowspan="2">Atlas 950 SuperPoD 超节点</td>
+<td rowspan="3">训练</td>
+<td>Ascend Job</td>
+<td>Atlas 950 SuperPoD 超节点</td>
 <td>PyTorch</td>
 <td>pytorch_multinodes_acjob_950.yaml</td>
 <td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/train/basic-training/without-ranktable/pytorch/pytorch_multinodes_acjob_950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
 </tr>
+
 <tr>
-<td>MindSpore</td>
-<td>mindspore_multinodes_acjob_950.yaml</td>
-<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/train/basic-training/without-ranktable/mindspore/mindspore_multinodes_acjob_950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
-</tr>
-<tr>
-<td rowspan="2">Volcano Job</td>
-<td rowspan="2">Atlas 950 SuperPoD 超节点 <br/> Atlas 850E 超节点 <br/> Atlas 350 加速卡</td>
+<td>Volcano Job</td>
+<td>Atlas 950 SuperPoD 超节点 <br/> Atlas 850E 超节点 <br/> Atlas 350 加速卡</td>
 <td>PyTorch</td>
 <td>a950_superpod_pytorch_vcjob.yaml</td>
 <td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/train/basic-training/ranktable/yaml/950/a950_superpod_pytorch_vcjob.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
 </tr>
+
 <tr>
-<td>MindSpore</td>
-<td>a950_superpod_mindspore_vcjob.yaml</td>
-<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/train/basic-training/ranktable/yaml/950/a950_superpod_mindspore_vcjob.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
-</tr>
-<tr>
-<td rowspan="2">Deployment</td>
-<td rowspan="2">Atlas 950 SuperPoD 超节点 <br/> Atlas 850E 超节点 <br/> Atlas 350 加速卡</td>
+<td>Deployment</td>
+<td>Atlas 950 SuperPoD 超节点 <br/> Atlas 850E 超节点 <br/> Atlas 350 加速卡</td>
 <td>PyTorch</td>
 <td>a950_superpod_pytorch_deployment.yaml</td>
 <td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/train/basic-training/ranktable/yaml/950/a950_superpod_pytorch_deployment.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
 </tr>
-<tr>
-<td>MindSpore</td>
-<td>a950_superpod_mindspore_deployment.yaml</td>
-<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/train/basic-training/ranktable/yaml/950/a950_superpod_mindspore_deployment.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
-</tr>
+
 <tr>
 <td rowspan="3">推理</td>
 <td>Ascend Job</td>
