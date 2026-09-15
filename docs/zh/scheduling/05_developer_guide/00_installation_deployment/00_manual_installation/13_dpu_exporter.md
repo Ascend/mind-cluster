@@ -19,7 +19,7 @@
 <tbody><tr id="row115077513272"><td class="cellrowborder" valign="top" width="29.970000000000002%" headers="mcps1.2.3.1.1 "><p id="p17925222412"><a name="p17925222412"></a><a name="p17925222412"></a>DPU驱动与工具</p>
 </td>
 <td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><p id="p450745142713"><a name="p450745142713"></a><a name="p450745142713"></a><span id="ph10112356112714"><a name="ph10112356112714"></a><a name="ph10112356112714"></a>DPU Exporter</span>会周期性调用<code>hinicadm5</code>工具查询DPU全局指标，并读取<code>/sys/class/net/</code>下的sysfs接口获取Interface级指标。如果要升级驱动或工具，请先停止业务任务，再停止<span id="ph154413248376"><a name="ph154413248376"></a><a name="ph154413248376"></a>DPU Exporter</span>服务。</p>
-<div class="note" id="note1993172317416"><a name="note1993172317416"></a><a name="note1993172317416"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><div class="p" id="zh-cn_topic_0000002479226379_p18934232419"><a name="zh-cn_topic_0000002479226379_p18934232419"></a><a name="zh-cn_topic_0000002479226379_p18934232419"></a>镜像部署时，需确保宿主机上<code>hinicadm5</code>位于<code>/usr/sbin/</code>目录下，且其依赖的动态链接库位于<code>/usr/lib64/</code>和<code>/lib/</code>目录下。YAML中已通过hostPath将这些目录挂载至容器中。</div>
+<div class="note" id="note1993172317416"><a name="note1993172317416"></a><a name="note1993172317416"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><div class="p" id="zh-cn_topic_0000002479226379_p18934232419"><a name="zh-cn_topic_0000002479226379_p18934232419"></a><a name="zh-cn_topic_0000002479226379_p18934232419"></a>镜像部署时，需确保宿主机上<code>hinicadm5</code>位于<code>/usr/sbin/</code>目录下，YAML中已通过hostPath将该文件挂载至容器中。<code>hinicadm5</code>依赖的动态链接库（如<code>libmnl</code>）已在构建镜像时安装至镜像内。</div>
 </div></div>
 </td>
 </tr>
@@ -35,7 +35,7 @@
 </tr>
 <tr id="row_dpu_sysfs"><td class="cellrowborder" valign="top" width="29.970000000000002%" headers="mcps1.2.3.1.1 "><p id="p_dpu_sysfs_cat">sysfs文件接口</p>
 </td>
-<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><p id="p_dpu_sysfs_desc">DPU Exporter通过读取<code>/sys/class/net/&lt;interface_name&gt;/</code>目录下的文件获取Interface级指标（carrier、carrier_changes、operstate及statistics目录下所有统计项），需保证DPU-Exporter运行用户对该目录有读取权限。镜像部署时，YAML中已通过hostPath将<code>/sys</code>挂载至容器中（readOnly: true）。</p>
+<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><p id="p_dpu_sysfs_desc">DPU Exporter通过读取<code>/sys/class/net/&lt;interface_name&gt;/</code>目录下的文件获取Interface级指标（carrier、carrier_changes、operstate及statistics目录下所有统计项），需保证DPU-Exporter运行用户对该目录有读取权限。镜像部署时，容器以<code>hostNetwork: true</code>方式运行，容器内的<code>/sys/class/net/</code>即为宿主机网卡信息。</p>
 </td>
 </tr>
 </tbody>
@@ -52,48 +52,34 @@ DPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
 
 1. 以root用户登录各计算节点。
 
-2. （可选）修改config.json配置文件，配置采集周期和指标白名单。
-    1. 进入DPU Exporter软件包解压目录。
-    2. <a name="li11364381195"></a>打开config.json文件。
+2. （可选）配置采集周期和指标白名单。
 
-        ```shell
-        vi config.json
-        ```
+    配置文件（config.json）内容示例如下：
 
-    3. 按"i"进入编辑模式，根据实际需要配置采集周期和指标白名单。
+    ```json
+    {
+        "hinicadm5CollectorInterval": 40,
+        "sysfsCollectorInterval": 20,
+        "dpuListRefreshInterval": 60,
+        "metricWhiteList": []
+    }
+    ```
 
-        配置文件示例如下：
+    <a name="table192202574407"></a>
 
-        ```json
-        {
-            "hinicadm5CollectorInterval": 40,
-            "sysfsCollectorInterval": 20,
-            "dpuListRefreshInterval": 60,
-            "metricWhiteList": []
-        }
-        ```
+    |参数|说明|
+    |---|---|
+    |hinicadm5CollectorInterval|全局指标（hinicadm5 counter）采集周期，单位为秒。取值范围为1~86400，默认值40。|
+    |sysfsCollectorInterval|Interface级指标（sysfs文件接口）采集周期，单位为秒。取值范围为1~86400，默认值20。|
+    |dpuListRefreshInterval|DPU设备列表刷新周期，单位为秒。取值范围为1~86400，默认值60。|
+    |metricWhiteList|自定义指标白名单，支持前缀匹配（以`*`结尾）。为空时使用[默认白名单](../../../06_api/16_dpu_exporter.md#默认白名单)。|
 
-        <a name="table192202574407"></a>
+    配置文件挂载方式有如下两种，修改配置的方法取决于所选择的挂载方式，具体的配置方法请参考[动态配置加载说明](#动态配置加载说明)章节。
 
-        |参数|说明|
-        |---|---|
-        |hinicadm5CollectorInterval|全局指标（hinicadm5 counter）采集周期，单位为秒。取值范围为1~86400，默认值40。|
-        |sysfsCollectorInterval|Interface级指标（sysfs文件接口）采集周期，单位为秒。取值范围为1~86400，默认值20。|
-        |dpuListRefreshInterval|DPU设备列表刷新周期，单位为秒。取值范围为1~86400，默认值60。|
-        |metricWhiteList|自定义指标白名单，支持前缀匹配（以`*`结尾）。为空时使用[默认白名单](../../../06_api/16_dpu_exporter.md#默认白名单)。|
+    - **默认情况（ConfigMap挂载）**：配置文件通过ConfigMap挂载到容器中，使用YAML中定义的默认配置。如需修改配置，请直接修改YAML中ConfigMap定义的`config.json`内容，或部署后通过**kubectl edit cm -n dpu-exporter dpu-exporter-config**更新ConfigMap，修改后动态生效。
+    - **HostPath挂载**：将宿主机上的配置文件挂载到容器中，容器内路径为`/etc/dpu-exporter/config.json`。此方式下请修改宿主机上的config.json文件，支持每个节点独立配置，也可通过共享目录实现全局统一配置。若挂载至容器中的其他路径，则需要修改YAML中DPU Exporter的-config启动参数（详见[参数说明](#参数说明)）。
 
-    4. 按"Esc"键，输入:wq!保存并退出。
-
-    5. 将修改后的config.json文件所在目录挂载到容器中，路径为`/etc/dpu-exporter/config.json`。若挂载至容器中的其他路径，则需要修改YAML中DPU Exporter的-config启动参数（详见[参数说明](#参数说明)）。
-
-3. （可选）配置文件挂载。
-
-    配置文件挂载情况有如下两种，具体的配置方法请参考[动态配置加载说明](#动态配置加载说明)章节。
-
-    - **默认情况**：配置文件通过ConfigMap挂载到容器中，使用YAML中定义的默认配置，支持通过修改ConfigMap实现动态配置修改。
-    - **HostPath挂载**：将宿主机上的配置文件挂载到容器中，路径为`/etc/dpu-exporter/config.json`。此方式支持每个节点独立配置，也可通过共享目录实现全局统一配置。
-
-4. 请根据实际使用的容器运行时，查看DPU Exporter镜像是否存在、名称和版本号是否正确。
+3. 请根据实际使用的容器运行时，查看DPU Exporter镜像是否存在、名称和版本号是否正确。
 
     - **Docker场景**：执行如下命令。
 
@@ -113,13 +99,13 @@ DPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
         ctr -n k8s.io c ls | grep dpu-exporter
         ```
 
-    若镜像存在且名称和版本号均正确，执行[步骤5](#li0640635114212)。若镜像不存在，请参见[准备镜像](./01_preparing_for_installation.md#准备镜像)，完成镜像制作和分发。
+    若镜像存在且名称和版本号均正确，执行[步骤4](#li0640635114212)。若镜像不存在，请参见[准备镜像](./01_preparing_for_installation.md#准备镜像)，完成镜像制作和分发。
 
-5. <a name="li0640635114212"></a>将DPU Exporter软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
+4. <a name="li0640635114212"></a>将DPU Exporter软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
 
-6. 如不修改组件的其他启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中DPU Exporter的启动参数。启动参数如[表2](#table872410431915)所示，也可执行<b>./dpu-exporter -h</b>查看参数说明。
+5. 如不修改组件的其他启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中DPU Exporter的启动参数。启动参数如[表2](#table872410431915)所示，也可执行<b>./dpu-exporter -h</b>查看参数说明。
 
-7. 在管理节点的YAML所在路径，执行以下命令，启动DPU Exporter。
+6. 在管理节点的YAML所在路径，执行以下命令，启动DPU Exporter。
 
     ```shell
     kubectl apply -f dpu-exporter-v26.2.0.yaml
@@ -141,7 +127,7 @@ DPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
     >kubectl create ns dpu-exporter
     >```
 
-8. 在任意节点执行以下命令，查看组件是否启动成功。
+7. 在任意节点执行以下命令，查看组件是否启动成功。
 
     ```shell
     kubectl get pod -n dpu-exporter
@@ -156,14 +142,14 @@ DPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
 
     >[!NOTE]
     >
-    >- DPU Exporter以镜像方式运行时，请确保"/sys"目录、"/usr/sbin"目录（hinicadm5工具）、"/usr/lib64"、"/lib"目录（动态链接库）和"/var/log/hinic5"目录（hinicadm5日志）已通过hostPath挂载至DPU Exporter容器中。YAML中已默认配置这些挂载。
+    >- DPU Exporter以镜像方式运行时，YAML中已默认通过hostPath将宿主机上的"/usr/sbin/hinicadm5"（hinicadm5工具）和"/var/log/hinic5"目录（hinicadm5日志）挂载至容器中。hinicadm5依赖的动态链接库（如libmnl）已在构建镜像时安装至镜像内。
     >- 安装组件后，组件的Pod状态不为Running，可查看Pod日志定位问题：
     >
     >   ```bash
     >   kubectl logs -n dpu-exporter <pod-name>
     >   ```
 
-9. 验证指标采集是否正常。
+8. 验证指标采集是否正常。
 
     在任意节点执行以下命令，访问Metrics接口。其中&lt;node-ip&gt;为部署DPU Exporter的节点IP。
 
@@ -179,9 +165,8 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 
 >[!NOTE]
 >
->- 以二进制方式部署DPU Exporter时，可以使用非root用户（例如hwMindX）进行部署。请将日志目录权限修改为hwMindX，命令示例如下：**chown <i>hwMindX:hwMindX</i> /var/log/mindx-dl/dpu-exporter**。
->- 下文步骤中的用户均为hwMindX。
->- 以非root用户运行时，需确保`hinicadm5`工具对运行用户可执行。由于代码启动时会校验`hinicadm5`文件属主与当前进程用户的一致性，建议通过设置SUID权限解决：**chmod 4755 /usr/sbin/hinicadm5**，或直接以root用户运行。
+>- 二进制方式部署DPU Exporter时，组件需以root用户运行：代码启动时会校验`hinicadm5`文件属主与当前进程用户的一致性，且`hinicadm5`作为DPU驱动的管理工具本身即需root权限执行。
+>- 下文步骤中的命令均以root用户执行。
 
 1. 使用root用户登录服务器。
 
@@ -190,6 +175,7 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 3. （可选）创建配置文件目录并将配置文件拷贝到该目录下。
 
     ```shell
+    cd /home/ascend-dpu-exporter
     mkdir -p /etc/dpu-exporter
     cp config.json /etc/dpu-exporter/
     ```
@@ -249,13 +235,11 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
         Environment="GOMAXPROCS=2"
         Environment="GODEBUG=madvdontneed=1"
         Type=forking
-        User=hwMindX
-        Group=hwMindX
 
         [Install]
         WantedBy=multi-user.target</pre>
 
-        DPU Exporter默认侦听端口8080，可通过修改启动参数"-port"和"dpu-exporter.service"文件的"ExecStart"字段修改侦听端口。
+        DPU Exporter默认侦听端口8080，可通过修改"dpu-exporter.service"文件的"ExecStart"字段中的启动参数"-port"修改侦听端口。
 
     3. 按"Esc"键，输入:wq!保存并退出。
 
@@ -273,7 +257,8 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
         Description=Timer for DPU Exporter Service
 
         [Timer]
-        OnBootSec=60s            # 设置DPU Exporter延时启动时间，请根据实际情况调整
+        # 设置DPU Exporter延时启动时间，请根据实际情况调整
+        OnBootSec=60s
         Unit=dpu-exporter.service
 
         [Install]
@@ -292,10 +277,7 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
     cp dpu-exporter.timer /etc/systemd/system
     chattr +i /etc/systemd/system/dpu-exporter.timer
     chmod 500 /usr/local/bin/dpu-exporter
-    chown hwMindX:hwMindX /usr/local/bin/dpu-exporter
     chattr +i /usr/local/bin/dpu-exporter
-    chown hwMindX:hwMindX /var/log/mindx-dl/dpu-exporter
-    chmod 4755 /usr/sbin/hinicadm5
     systemctl enable dpu-exporter.timer
     systemctl start dpu-exporter
     systemctl start dpu-exporter.timer
@@ -321,7 +303,7 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 |参数|类型|默认值|说明|
 |--|--|--|--|
 |-config|string|/etc/dpu-exporter/config.json|配置文件路径。配置文件为JSON格式，包含采集周期和指标白名单等配置项，详见[配置文件说明](#table192202574407)。|
-|-port|int|8080|侦听端口，取值范围为1025~65535。|
+|-port|int|8080|侦听端口，取值范围为1025~40000。|
 |-cardType|string|huawei|DPU卡类型。目前仅支持<code>huawei</code>。|
 |-logLevel|int|0|日志级别：<ul><li>-1：debug</li><li>0：info</li><li>1：warning</li><li>2：error</li><li>3：critical</li></ul>|
 |-maxAge|int|7|日志备份时间，取值范围为7~700，单位为天。|
@@ -348,9 +330,10 @@ DPU Exporter支持动态加载配置文件，无需重启组件即可使配置�
 
 在部署YAML中配置HostPath挂载，将宿主机上的配置文件挂载到容器的`/etc/dpu-exporter`路径：
 
-1. 在每个节点上准备配置文件。
+1. 在每个节点上准备配置文件（进入软件包解压后的目录执行，如"/home/ascend-dpu-exporter"）。
 
     ```bash
+    cd /home/ascend-dpu-exporter
     mkdir -p /etc/dpu-exporter
     cp config.json /etc/dpu-exporter/
     ```
@@ -389,7 +372,7 @@ DPU Exporter的YAML默认使用ConfigMap方式挂载配置文件。ConfigMap在Y
 kubectl edit cm -n dpu-exporter dpu-exporter-config
 ```
 
-或直接重新部署YAML：
+或修改YAML中的配置值后直接重新部署：
 
 ```bash
 kubectl apply -f dpu-exporter-v6.0.0.yaml
@@ -419,8 +402,10 @@ kubectl logs -n dpu-exporter <pod-name> --tail=100
 成功加载配置会打印类似如下日志：
 
 ```text
-config hot-reload: config file modified, reloading...
+reloading config...
+config loaded from /etc/dpu-exporter/config.json
 collector chains rebuilt after config reload
+config reload completed
 ```
 
 ## 白名单配置说明<a name="白名单配置说明"></a>

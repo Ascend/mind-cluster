@@ -396,12 +396,15 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 
 **应用场景<a name="section15761025111720"></a>**
 
-在任务运行过程中，DPU的健康状态直接影响任务的稳定性。MindCluster提供DPU Exporter组件用于监测DPU的运行状态与统计指标。
+在任务运行过程中，DPU的健康状态直接影响任务的稳定性。MindCluster提供DPU Exporter组件用于监测DPU的运行状态与各项统计指标。当前提供的指标可分为两类：
+
+- **全局指标**：涵盖RoCE错包、丢包、接收ECN、发送/接收CNP及PSN异常重传等统计指标。
+- **interface级指标**：涵盖每个网卡端口的链路运行状态、收发流量与异常错误状态等指标。
 
 **组件功能<a name="section388944161719"></a>**
 
-- 从网卡管理工具与文件接口获取DPU的运行状态与统计指标。
-- 提供Prometheus指标接口，用于监控DPU的运行状态与统计指标。
+- 从网卡管理工具与文件系统接口分别获取DPU的全局指标与interface级指标。
+- 提供Prometheus指标接口，用于监控DPU的运行状态与各项统计指标。
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
@@ -409,9 +412,9 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 
 ![](../../figures/scheduling/组件上下游依赖-9.png "组件上下游依赖-9")
 
-1. 从网卡管理工具和文件接口分别获取DPU全局指标和Interface级指标。
-2. 将获取到的指标转换为Prometheus指标格式。
-3. 提供Prometheus指标接口，用于监控DPU的运行状态与统计指标。
+1. 从网卡管理工具hinicadm5获取DPU全局指标，放入缓存。
+2. 从sysfs文件系统获取interface级指标，放入缓存。
+3. 实现Prometheus的指标接口，供其周期性获取缓存中的数据信息。
 
 ## Ascend Dynamic Resource Allocation<a name="ZH-CN_TOPIC_0000002524312670"></a>
 

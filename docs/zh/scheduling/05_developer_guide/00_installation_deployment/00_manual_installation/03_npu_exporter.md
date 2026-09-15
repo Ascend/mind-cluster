@@ -2,7 +2,7 @@
 
 - 使用**资源监测**时，必须安装NPU Exporter，该组件支持对接Prometheus或Telegraf。
     - 对接Prometheus时，支持通过镜像和二进制两种方式部署NPU Exporter，部署差异可参考[镜像和二进制部署差异](../../../07_references/05_appendix.md#镜像和二进制部署差异)。
-    - 对接Telegraf时，参考[通过Telegraf使用](../../../04_usage/01_resource_monitoring/03_working_with_telegraf.md)章节，安装NPU Exporter和Telegraf。
+    - 对接Telegraf时，参考[通过Telegraf使用](../../../04_usage/01_resource_monitoring/00_npu_resource_monitoring/03_working_with_telegraf.md)章节，安装NPU Exporter和Telegraf。
 
 - 不使用**资源监测**的用户，可以不安装NPU Exporter，请直接跳过本章节。
 

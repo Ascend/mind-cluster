@@ -1,6 +1,6 @@
 # 通过Telegraf使用<a name="ZH-CN_TOPIC_0000002479227042"></a>
 
-本章节指导用户安装部署Telegraf软件，并通过Telegraf查看资源监测的相关数据信息，数据信息的相关说明可参见[Telegraf数据信息说明](../../06_api/00_npu_exporter/02_telegraf_data_description.md)章节。
+本章节指导用户安装部署Telegraf软件，并通过Telegraf查看资源监测的相关数据信息，数据信息的相关说明可参见[Telegraf数据信息说明](../../../06_api/00_npu_exporter/02_telegraf_data_description.md)章节。
 
 ## 二进制集成Telegraf<a name="section31082142614"></a>
 
@@ -35,14 +35,14 @@
    |-platform|string|Prometheus| 指定对接平台，取值如下：<ul><li>Prometheus：对接Prometheus</li><li>Telegraf：对接Telegraf</li></ul>                                                                                                                                                                                                  |是|
    |-poll_interval|duration(int)|1s| Telegraf数据上报的间隔时间，此参数在对接Telegraf平台时才起作用，即需要指定-platform=Telegraf时才生效，否则该参数不生效。                                                                                                                                                                                                      |否|
    |-hccsBWProfilingTime|int|200| HCCS链路带宽采样时长，取值范围[1，1000]，单位为毫秒。                                                                                                                                                                                                                                                   |否|
-   |-updateTime|int|无| **即将日落，不推荐使用**。全局配置指标更新周期，取值范围为1～60秒。推荐按分组配置指标更新周期，详见[配置文件](../../05_developer_guide/00_installation_deployment/00_manual_installation/03_npu_exporter.md#section103551921135917)。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">如果配置了updateTime参数，该参数仍然有效，且优先级高于metricConfiguration.json/pluginConfiguration.json配置文件中的intervalSeconds。</div></div>|否|
+   |-updateTime|int|无| **即将日落，不推荐使用**。全局配置指标更新周期，取值范围为1～60秒。推荐按分组配置指标更新周期，详见[配置文件](../../../05_developer_guide/00_installation_deployment/00_manual_installation/03_npu_exporter.md#section103551921135917)。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">如果配置了updateTime参数，该参数仍然有效，且优先级高于metricConfiguration.json/pluginConfiguration.json配置文件中的intervalSeconds。</div></div>|否|
    |-logLevel|int|0| 日志级别：<ul><li>-1：debug</li><li>0：info</li><li>1：warning</li><li>2：error</li><li>3：critical</li></ul>                                                                                                                                                                                |否|
    |-maxAge|int|7| 日志备份时间，取值范围为7～700，单位为天。                                                                                                                                                                                                                                                            |否|
    |-logFile|string|/var/log/mindx-dl/npu-exporter/npu-exporter.log| 日志文件。单个日志文件超过20MB时会触发自动转储功能，文件大小上限不支持修改。                                                                                                                                                                                                                                          |否|
    |-maxBackups|int|30| 转储后日志文件保留个数上限，取值范围为1～180，单位为个。                                                                                                                                                                                                                                                      |否|
    |-profilingTime|int|200| 配置采集PCIe带宽时间，单位为毫秒，取值范围为1～2000。                                                                                                                                                                                                                                                    |否|
    |-deviceResetTimeout|int|600| 组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10～600。<ul><li><term>Atlas A2 训练系列产品</term>、Atlas 800I A2 推理服务器、A200I A2 Box 异构组件：建议配置为150秒。</li><li><term>Atlas A3 训练系列产品</term>、A200T A3 Box8 超节点服务器、Atlas 800I A3 超节点服务器：建议配置为360秒。</li><li>Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点：建议配置为600秒。</li></ul> |否|
-   |-textMetricsFilePath|string|无| 指定自定义指标文件的路径，其约束说明详细请参见[约束说明](../../06_api/00_npu_exporter/03_custom_metrics_file.md#约束说明)。                                                                                                                                                                                           |否|
+   |-textMetricsFilePath|string|无| 指定自定义指标文件的路径，其约束说明详细请参见[约束说明](../../../06_api/00_npu_exporter/03_custom_metrics_file.md#约束说明)。                                                                                                                                                                                           |否|
 
 3. （可选）如果没有安装Telegraf，需执行以下步骤安装Telegraf。
     - **离线安装（推荐）**
@@ -63,7 +63,7 @@
 
             **图 1**  下载Telegraf<a name="fig131640329479"></a>
 
-            ![下载Telegraf下载页示意图](../../../figures/scheduling/下载Telegraf.png "下载Telegraf")
+            ![下载Telegraf下载页示意图](../../../../figures/scheduling/下载Telegraf.png "下载Telegraf")
 
         3. 拷贝弹框中的安装命令到待安装设备上，执行命令，完成安装。
 

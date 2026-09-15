@@ -34,7 +34,7 @@ MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）训练�
 | 特性名称                       | 介绍                                                         | Released |
 | ------------------------------ | ------------------------------------------------------------ | -------- |
 | 容器化支持特性                 | [容器化支持特性](./docs/zh/scheduling/04_usage/00_containerization/00_before_you_start.md) | ✅        |
-| 资源监测特性                   | [资源监测特性](./docs/zh/scheduling/04_usage/01_resource_monitoring/00_before_you_start.md) | ✅        |
+| 资源监测特性                   | [资源监测特性](./docs/zh/scheduling/04_usage/01_resource_monitoring/menu_resource_monitoring.md) | ✅        |
 | 虚拟化实例特性                 | [虚拟化实例特性](./docs/zh/scheduling/04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md) | ✅        |
 | 基础调度特性                   | [基础调度特性](./docs/zh/scheduling/04_usage/03_basic_scheduling/00_feature_description.md) | ✅        |
 | 故障检测特性                   | [故障检测特性](./docs/zh/scheduling/04_usage/11_fault_detection_and_diagnosis/00_feature_description.md) | ✅        |
