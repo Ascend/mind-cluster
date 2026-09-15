@@ -51,10 +51,24 @@ function replace_yaml_value() {
   python3 ${TOP_DIR}/build/replace_yaml_values.py -v ${build_version}
 }
 
+function to_semver() {
+  local v="${1#v}"
+  if [[ "$v" =~ ^([0-9]+\.[0-9]+\.[0-9]+)\.(.+)$ ]]; then
+    printf '%s' "${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
+  else
+    printf '%s' "$v"
+  fi
+}
+
 function helm_package() {
   local ver="${build_version#v}"
-  sed -i "s/26.1.0/${ver}/g" "${TOP_DIR}"/app*/charts/*/Chart.yaml
-  sed -i "s/26.1.0/${ver}/g" "${TOP_DIR}"/app*/Chart.yaml
+  local semver_ver
+  semver_ver=$(to_semver "${ver}")
+
+  sed -i -E "s/^([[:space:]]*version:[[:space:]]*)26\.1\.0/\1${semver_ver}/" "${TOP_DIR}"/app*/charts/*/Chart.yaml
+  sed -i -E "s/^([[:space:]]*version:[[:space:]]*)26\.1\.0/\1${semver_ver}/" "${TOP_DIR}"/app*/Chart.yaml
+  sed -i -E "s/^([[:space:]]*appVersion:[[:space:]]*\"?)26\.1\.0/\1${ver}/" "${TOP_DIR}"/app*/charts/*/Chart.yaml
+  sed -i -E "s/^([[:space:]]*appVersion:[[:space:]]*\"?)26\.1\.0/\1${ver}/" "${TOP_DIR}"/app*/Chart.yaml
   sed -i "s/26.1.0/${ver}/g" "${TOP_DIR}"/app/values.yaml
 
   helm package "${TOP_DIR}"/app
