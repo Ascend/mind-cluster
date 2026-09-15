@@ -15,7 +15,7 @@ MindCluster MindIO Training Fault Tolerance（MindIO TFT）包括临终保存Che
 
 - Controller模块：负责分布式任务的协同，内部维护状态机，状态机支持不同场景的流程控制；实时收集各个训练进程的训练状态，当训练发生异常后，结合异常类型，触发状态机运作，将状态机对应的Action发送到Processor模块执行。
 - Processor模块：负责与训练框架交互，获取训练进程的训练状态，向Controller汇报，同时负责执行Controller模块下发的对应Action动作。
-- [Adaptor模块](https://gitcode.com/Ascend/MindSpeed-LLM/tree/master/mindspeed_llm/core/high_availability)：负责完成训练框架对MindIO TTP、MindIO UCE、MindIO ARF特性的适配。目前MindIO TFT已完成对[MindSpeed-LLM](../../../docs/zh/scheduling/07_references/fault_recovery_acceleration/03_usage_guidance.md#对接mindspeed-llm框架)训练框架的适配。对于其他训练框架，需用户参考并自行适配。
+- [Adaptor模块](https://gitcode.com/Ascend/MindSpeed-LLM/tree/master/mindspeed_llm/core/high_availability)：负责完成训练框架对MindIO TTP、MindIO UCE、MindIO ARF特性的适配。目前MindIO TFT已完成对[MindSpeed-LLM](../../../docs/zh/scheduling/07_references/00_fault_recovery_acceleration/03_usage_guidance.md#对接mindspeed-llm框架)训练框架的适配。对于其他训练框架，需用户参考并自行适配。
 
 ### 约束限制
 
@@ -28,6 +28,7 @@ MindCluster MindIO Training Fault Tolerance（MindIO TFT）包括临终保存Che
 - MindIO UCE / MindIO ARF功能
   - 若要实现从当前Step恢复训练，对DP Size限制与MindIO TTP功能一致。
   - 对于显存有限，不做副本的情况，即DP Size = 1，此时若发生UCE或者节点故障，支持在线从周期性CheckPoint中加载模型权重和优化器参数恢复训练，损失当前Step到上次周期性CheckPoint的Step之间的训练成本。
+  - 当前UCE快恢功能支持以下内存空间范围出现UCE故障：（1）模型参数 （2）优化器参数
 
 ## 编译
 

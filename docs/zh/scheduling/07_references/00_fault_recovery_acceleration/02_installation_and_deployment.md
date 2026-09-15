@@ -32,6 +32,7 @@
 - MindIO TTP不使用MindIO ACP（Async Checkpoint Persistence，异步Checkpoint保存）功能。MindIO TTP完成临终Checkpoint保存后会结束训练进程。为确保在进程退出前，临终Checkpoint已经保存到持久化存储，约束MindIO TTP写数据不使用异步Checkpoint保存方式，而是直接写入到持久化存储。
 - MindIO TFT目前不支持级联故障场景。例如：当MindIO TTP正在保存时，如果出现其他故障，就会保存失败。
 - MindIO TFT会增加显存占用，详情请参见[表1 原生优化器与开启故障快速恢复特性后优化器参数的理论数值变化](./03_usage_guidance.md#table_tft_03)。
+- MindIO TFT的UCE快恢功能支持以下内存空间范围出现UCE故障：（1）模型参数 （2）优化器参数
 - 默认开启TLS（Transport Layer Security，传输层安全性协议）安全特性，关闭可能导致伪造Controller连接影响训练进程。
 - MindIO ARF需要多个节点（≥2），不支持Controller节点发生故障，不支持级联故障；MindIO ARF修复失败后，由MindCluster控制后续流程。
 - 日志保存路径默认在运行脚本同级目录下“logs/ttp\_log.log”文件，可在运行脚本里自行配置，默认日志级别为“INFO”，单日志文件大小限制为10MB，写方式为单个追加写，单日志文件达到大小上限后会新建滚动日志文件，滚动日志文件数量限制为5个，多个文件循环写覆盖旧文件。
