@@ -49,16 +49,6 @@ func resetDevCache() {
 	}
 }
 
-func TestResetDevStatus(t *testing.T) {
-	convey.Convey("test method 'ResetDevStatus'", t, func() {
-		resetDevCache()
-		mockDevCache.ResetDevStatus()
-		for _, info := range mockDevCache.devInfoMap {
-			convey.So(info.Status, convey.ShouldEqual, common.StatusIgnorePause)
-		}
-	})
-}
-
 func TestSetCtrRelatedInfo(t *testing.T) {
 	convey.Convey("test method 'SetCtrRelatedInfo'", t, func() {
 		resetDevCache()

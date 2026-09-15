@@ -47,6 +47,7 @@ var (
 	errTooManyContainers = errors.New("too many containers in sync request")
 	errInvalidAction     = errors.New("action must be stop or start")
 	errNoStream          = errors.New("no active broadcast stream for node")
+	errEmptyJobIDs       = errors.New("jobIDs is required")
 )
 
 // limiter limits the QPS of gRPC requests.
@@ -137,8 +138,8 @@ func (s *serverEndpoint) close() {
 	for _, ss := range s.streams {
 		ss.close()
 	}
-	s.streams = nil
-	s.acks = nil
+	s.streams = make(map[string]*serverStream)
+	s.acks = make(map[string]chan *proto.Response)
 }
 
 // addStream records an inbound broadcast stream from nodeID.
@@ -313,6 +314,9 @@ func validateSyncDataReq(req *proto.SyncDataReq) error {
 func validateCoordinateReq(req *proto.CoordinateReq) error {
 	if req.NodeId == "" {
 		return errEmptyNodeID
+	}
+	if len(req.JobIds) == 0 {
+		return errEmptyJobIDs
 	}
 	if req.Action != common.ActionStop && req.Action != common.ActionStart {
 		return errInvalidAction

@@ -57,15 +57,6 @@ func GetDevCache() *DevCache {
 	return devCache
 }
 
-// ResetDevStatus reset dev status
-func (dc *DevCache) ResetDevStatus() {
-	dc.mutex.Lock()
-	defer dc.mutex.Unlock()
-	for _, info := range dc.devInfoMap {
-		info.Status = common.StatusIgnorePause
-	}
-}
-
 // SetCtrRelatedInfo set ctr related info
 func (dc *DevCache) SetCtrRelatedInfo(ctrId string, usedDevs []int32) {
 	dc.mutex.Lock()

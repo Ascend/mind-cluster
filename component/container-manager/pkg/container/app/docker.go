@@ -86,7 +86,8 @@ func (d *DockerClient) getUsedDevs(containerObj interface{}, ctx context.Context
 func (d *DockerClient) getJobInfo(containerObj interface{}, ctx context.Context) domain.JobInfo {
 	cs, ok := containerObj.(types.Container)
 	if !ok {
-		return domain.JobInfo{}
+		hwlog.RunLog.Errorf("container object %+v is not docker container", containerObj)
+		return domain.JobInfo{EnableRecover: true}
 	}
 	return parseJobLabels(cs.Labels)
 }

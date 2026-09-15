@@ -16,7 +16,9 @@ package app
 
 import (
 	"context"
+	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"ascend-common/common-utils/hwlog"
@@ -24,6 +26,8 @@ import (
 	"container-manager/pkg/common"
 	"container-manager/pkg/coordinator/proto"
 )
+
+var syncDataMark atomic.Bool
 
 // dataSyncLoop pushes the local container snapshot to the leader(s)
 func (c *Coordinator) dataSyncLoop(ctx context.Context) {
@@ -41,7 +45,9 @@ func (c *Coordinator) dataSyncLoop(ctx context.Context) {
 			hwlog.RunLog.Infof("dataSync stopped")
 			return
 		case <-checkTick.C:
-			if c.ops.HasDataChanged() {
+			dataChanged := c.ops.HasDataChanged()
+			markChanged := checkAndSweepSyncMark()
+			if dataChanged || markChanged {
 				c.syncOnce("changed")
 			}
 		case <-fullTick.C:
@@ -70,7 +76,7 @@ func (c *Coordinator) syncOnce(trigger string) {
 		SyncTime:   time.Now().Unix(),
 	}
 	c.syncDataToAllLeaders(req)
-	hwlog.RunLog.Infof("syncData (%s, %d containers) ok", trigger, len(containers))
+	hwlog.RunLog.Infof("syncData (%s, %s, %d containers) ok", trigger, req.Uuid, len(containers))
 }
 
 // syncDataToAllLeaders sends a SyncDataReq to ALL leaders concurrently.
@@ -90,9 +96,20 @@ func (c *Coordinator) syncDataToAllLeaders(req *proto.SyncDataReq) {
 				err := c.client.callLeaderForSyncData(c.ctx, leaderAddr, req)
 				if err != nil {
 					hwlog.RunLog.Warnf("sync data to leader %s failed: %v", leaderAddr, err)
+					if !errors.Is(err, errNoActiveClient) {
+						addSyncMark()
+					}
 				}
 			}
 		}(addr)
 	}
 	wg.Wait()
+}
+
+func addSyncMark() {
+	syncDataMark.Store(true)
+}
+
+func checkAndSweepSyncMark() bool {
+	return syncDataMark.Swap(false)
 }

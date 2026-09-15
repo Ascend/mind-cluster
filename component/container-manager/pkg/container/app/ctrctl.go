@@ -47,7 +47,6 @@ func (cm *CtrCtl) initAndControl() {
 		hwlog.RunLog.Warnf("init ring info failed, error: %v", err)
 	}
 	cm.ctrControl()
-	cm.devInfoMap.ResetDevStatus()
 }
 
 func (cm *CtrCtl) updateForContainerd(cs map[string][]containerd.Container) []string {
@@ -140,11 +139,14 @@ func (cm *CtrCtl) isDevsNeedPause(usedDevs []int32) bool {
 func (cm *CtrCtl) isSingleDevNeedPause(id int32) bool {
 	// if device is in resetting, need pause
 	if resetdomain.GetNpuInResetCache().IsNpuInReset(id) {
+		hwlog.RunLog.Debugf("dev %d is in resetting, need pause", id)
 		return true
 	}
 	// if device have any fault, or get fault failed, need pause
 	_, codes, err := devmgr.DevMgr.GetDeviceErrCode(id)
-	if err != nil || utils.Contains(common.GetNeedPauseCtrFaultLevels(), domain.GetFaultLevelByCode(codes)) {
+	faultLevel := domain.GetFaultLevelByCode(codes)
+	hwlog.RunLog.Debugf("dev %d error code: %v, fault level: %v, err: %v", id, codes, faultLevel, err)
+	if err != nil || utils.Contains(common.GetNeedPauseCtrFaultLevels(), faultLevel) {
 		return true
 	}
 	return false
