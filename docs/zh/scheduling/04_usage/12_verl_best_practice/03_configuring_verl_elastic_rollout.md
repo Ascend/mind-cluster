@@ -146,7 +146,7 @@
 
 ### 步骤2：执行任务YAML脚本
 
-1. 获取verl弹性推理容错示例（任务YAML、容器启动脚本、训练脚本），根据实际场景修改镜像、模型路径、数据路径和挂载目录。
+1. 获取verl弹性推理容错示例（任务YAML、容器启动脚本、训练脚本），根据实际场景修改镜像、模型路径、数据路径和挂载目录。相关样例可参考[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/reinforcement-learning/verl/elastic-rollout)仓库的“samples/reinforcement-learning/verl/elastic-rollout”目录。
 2. 确认任务YAML包含以下标注，用于开启故障检测与Pod重调度：NPU卡故障、推理Pod级故障时由重调度重建推理实例（不涉及Job级重调度），详细配置请参见[配置强化学习任务Pod重调度](./02_configuring_rescheduling_reinforcement_learning_job.md)。
 
     ```yaml
