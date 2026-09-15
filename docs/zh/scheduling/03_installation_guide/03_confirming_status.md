@@ -799,12 +799,15 @@
     ```ColdFusion
     root@ubuntu:~# systemctl status dpu-exporter
     ● dpu-exporter.service - Ascend dpu exporter
-       Loaded: loaded (/etc/systemd/system/dpu-exporter.service; enabled; vendor preset: enabled)
-       Active: active (running) since Tue 2026-08-26 11:46:23 CST; 3 days ago
-     Main PID: 25121 (dpu-exporter)
-        Tasks: 8 (limit: 7372)
-       CGroup: /system.slice/dpu-exporter.service
-               └─25121 /usr/local/bin/dpu-exporter -config=/etc/dpu-exporter/config.json -port=8080
+         Loaded: loaded (/etc/systemd/system/dpu-exporter.service; disabled; preset: disabled)
+         Active: active (running) since Tue 2026-09-15 15:36:07 CST; 12min ago
+    TriggeredBy: ● dpu-exporter.timer
+         Process: 102249 ExecStart=/bin/bash -c /usr/local/bin/dpu-exporter -config=/etc/dpu-exporter/config.json -port=8080 >/dev/null 2>&1 & (code=exited, status=0/SUCCESS)
+       Main PID: 102252 (dpu-exporter)
+          Tasks: 8 (limit: 3355442)
+         Memory: 9.7M
+         CGroup: /system.slice/dpu-exporter.service
+                 └─102252 /usr/local/bin/dpu-exporter -config=/etc/dpu-exporter/config.json -port=8080
     ...
     ```
 

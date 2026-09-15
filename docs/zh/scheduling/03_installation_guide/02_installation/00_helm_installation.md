@@ -238,11 +238,11 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
        pullPolicy: "IfNotPresent"                                          # NPU Exporter组件镜像拉取策略，请根据实际情况修改
 
    dpu-exporter:
-     enabled: true                                                         # 安装DPU Exporter组件
+     enabled: false                                                         # false表示不安装DPU Exporter
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/dpu-exporter" # DPU Exporter组件镜像名，请根据实际情况修改
-       # 昇腾镜像仓库镜像tag为"v26.1.0-openeuler24.03"或"v26.1.0-ubuntu22.04"
-       tag: "v26.1.0"                                                      # DPU Exporter组件镜像标签，请根据实际情况修改，以后版本（包括补丁版本）会加上后缀："-openeuler24.03"和"-ubuntu22.04"
+       # 昇腾镜像仓库镜像tag为"v26.2.0-openeuler24.03"或"v26.2.0-ubuntu22.04"
+       tag: "v26.2.0-openeuler24.03"                                       # DPU Exporter组件镜像标签，请根据实际情况修改
        pullPolicy: "IfNotPresent"                                          # DPU Exporter组件镜像拉取策略，请根据实际情况修改
 
    ascend-operator:
@@ -387,7 +387,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>DPU Exporter</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>dpu-exporter.enabled</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为false</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用DPU Exporter组件。</p></td>
   </tr>
   <tr>
@@ -525,7 +525,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>helm_tool.sh</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>作用包括：<ul><li><p>给各组件资源添加Helm元数据的脚本。</p></li><li>删除Ascend Device Plugin组件26.1.0版本前的DaemonSet资源</li></ul></p><p>仅在升级时使用。</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 ">脚本会为以下资源打上Helm元数据，包括：<ul><li>Ascend Operator组件相关资源</li><li>Ascend Device Plugin组件相关资源</li><li>Volcano组件相关资源</li><li>ClusterD组件相关资源</li><li>NodeD组件相关资源</li><li>NPU Exporter组件相关资源</li><li>Infer Operator组件相关资源</li><li>K8s RDMA Shared Dev Plugin组件相关资源</li><li>Ascend Dynamic Resource Allocation组件相关资源</li><li>命名空间，包括"mindx-dl"和"cluster-system"</li></ul></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 ">脚本会为以下资源打上Helm元数据，包括：<ul><li>Ascend Operator组件相关资源</li><li>Ascend Device Plugin组件相关资源</li><li>Volcano组件相关资源</li><li>ClusterD组件相关资源</li><li>NodeD组件相关资源</li><li>NPU Exporter组件相关资源</li><li>DPU Exporter组件相关资源</li><li>Infer Operator组件相关资源</li><li>K8s RDMA Shared Dev Plugin组件相关资源</li><li>Ascend Dynamic Resource Allocation组件相关资源</li><li>命名空间，包括"mindx-dl"和"cluster-system"</li></ul></td>
   </tr>
 </tbody>
 </table>

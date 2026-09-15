@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
+
 	"huawei.com/dpu-exporter/utils/logger"
 )
 
@@ -68,20 +70,140 @@ func TestLoadConfigFromBytes_InvalidJSON(t *testing.T) {
 }
 
 func TestShouldReload(t *testing.T) {
-	configFilePath = "/tmp/test_config.json"
+	configFilePath = filepath.Join(os.TempDir(), "test_config.json")
 	defer func() { configFilePath = "" }()
 
 	tests := []struct {
 		name  string
-		event struct{ Op uint32 }
+		event fsnotify.Event
 		want  bool
 	}{
-		{"write", struct{ Op uint32 }{0x2}, true},  // fsnotify.Write
-		{"chmod", struct{ Op uint32 }{0x1}, false}, // fsnotify.Chmod
+		{"write to config", fsnotify.Event{Name: configFilePath, Op: fsnotify.Write}, true},
+		{"create config", fsnotify.Event{Name: configFilePath, Op: fsnotify.Create}, true},
+		{"remove config", fsnotify.Event{Name: configFilePath, Op: fsnotify.Remove}, true},
+		{"rename config", fsnotify.Event{Name: configFilePath, Op: fsnotify.Rename}, true},
+		{"chmod config", fsnotify.Event{Name: configFilePath, Op: fsnotify.Chmod}, false},
+		{"write other file", fsnotify.Event{Name: filepath.Join(os.TempDir(), "other.json"), Op: fsnotify.Write}, false},
 	}
 	for _, tt := range tests {
-		// We only test the op matching logic; name matching needs real event
-		_ = tt
+		if got := shouldReload(tt.event); got != tt.want {
+			t.Errorf("shouldReload(%s) = %v, want %v", tt.name, got, tt.want)
+		}
+	}
+}
+
+// TestDoReloadConfig covers the hot-reload flow: successful reload with hook
+// invocation and subscriber notification, hash-based skip, file removal and
+// invalid JSON handling.
+func TestDoReloadConfig(t *testing.T) {
+	dir := t.TempDir()
+	fp := filepath.Join(dir, "config.json")
+
+	configFilePath = fp
+	defer func() { configFilePath = "" }()
+
+	whitelistOnce = sync.Once{}
+	whitelistInstance = nil
+
+	writeCfg := func(interval int) {
+		cfg := &Config{IntervalConfig: IntervalConfig{
+			Hinicadm5CollectorInterval: interval,
+			SysfsCollectorInterval:     15,
+			DpuListRefreshInterval:     60,
+		}}
+		data, err := json.Marshal(cfg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(fp, data, 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	writeCfg(30)
+	if err := LoadConfig(); err != nil {
+		t.Fatalf("initial LoadConfig failed: %v", err)
+	}
+
+	hookCalls := 0
+	RegisterReloadHook(func() { hookCalls++ })
+
+	ch := SubscribeReload()
+	defer UnsubscribeReload(ch)
+
+	// 1. change file content → reload succeeds, hook + notification fire
+	writeCfg(35)
+	doReloadConfig()
+	if got := GetConfig().Hinicadm5CollectorInterval; got != 35 {
+		t.Errorf("interval after reload = %d, want 35", got)
+	}
+	if hookCalls != 1 {
+		t.Errorf("reload hook called %d times, want 1", hookCalls)
+	}
+	select {
+	case <-ch:
+	default:
+		t.Error("reload notification not sent to subscriber")
+	}
+
+	// 2. unchanged content → hash equal, reload skipped
+	doReloadConfig()
+	if hookCalls != 1 {
+		t.Errorf("reload hook called %d times after no-op reload, want 1", hookCalls)
+	}
+
+	// 3. file removed → current config retained
+	if err := os.Remove(fp); err != nil {
+		t.Fatal(err)
+	}
+	doReloadConfig()
+	if got := GetConfig().Hinicadm5CollectorInterval; got != 35 {
+		t.Errorf("interval after file removal = %d, want 35 (config retained)", got)
+	}
+
+	// 4. invalid JSON → reload fails, current config retained
+	if err := os.WriteFile(fp, []byte("not json"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	doReloadConfig()
+	if got := GetConfig().Hinicadm5CollectorInterval; got != 35 {
+		t.Errorf("interval after invalid JSON = %d, want 35 (config retained)", got)
+	}
+}
+
+// TestResolveConfigPath covers default path resolution and explicit override.
+func TestResolveConfigPath(t *testing.T) {
+	configFilePath = ""
+	if got := resolveConfigPath(); got != defaultConfigFile {
+		t.Errorf("resolveConfigPath() = %q, want %q", got, defaultConfigFile)
+	}
+
+	configFilePath = "/custom/config.json"
+	defer func() { configFilePath = "" }()
+	if got := resolveConfigPath(); got != "/custom/config.json" {
+		t.Errorf("resolveConfigPath() = %q, want /custom/config.json", got)
+	}
+}
+
+// TestNotifyConfigReload_ChannelFull verifies a full subscriber channel does
+// not block notification (signal is dropped instead).
+func TestNotifyConfigReload_ChannelFull(t *testing.T) {
+	ch := SubscribeReload()
+	defer UnsubscribeReload(ch)
+
+	NotifyConfigReload() // fills the channel buffer
+	NotifyConfigReload() // dropped, must not block
+
+	select {
+	case <-ch:
+	default:
+		t.Fatal("first reload signal missing")
+	}
+	select {
+	case <-ch:
+		t.Error("second reload signal should have been dropped")
+	default:
+		// ok
 	}
 }
 

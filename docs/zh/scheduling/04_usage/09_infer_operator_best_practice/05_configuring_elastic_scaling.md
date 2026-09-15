@@ -99,7 +99,7 @@ Prometheus Adapter → K8s API Server → HPA Informer → 副本数调整）完
 
 1. **部署业务实例并上报指标**：业务实例需将Prometheus格式的负载指标上报到Prometheus。
 2. **部署Prometheus**
-   ：用于采集并存储业务实例上报的负载指标，Prometheus的部署及配置方式请参见[使用Prometheus](../01_resource_monitoring/02_working_with_prometheus.md)。
+   ：用于采集并存储业务实例上报的负载指标，Prometheus的部署及配置方式请参见[使用Prometheus](../01_resource_monitoring/00_npu_resource_monitoring/02_working_with_prometheus.md)。
 
    若MindIE上报的指标未被Prometheus成功采集，可向mindie-motor-coordinator-obs服务添加Prometheus服务发现annotations，添加后Prometheus会自动通过Kubernetes服务发现（kubernetes_sd_configs）抓取该服务（MindIE）的endpoints，从而成功获取指标。示例annotations如下：
 

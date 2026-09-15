@@ -17,6 +17,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -39,11 +40,14 @@ import (
 const (
 	// shutdownTimeout is the max time to wait for graceful shutdown
 	shutdownTimeout = 5 * time.Second
+	// valid range of the HTTP port for the metrics server
+	portLeft  = 1025
+	portRight = 40000
 )
 
 func main() {
 	configFile := flag.String("config", "", "path to config file (default: /etc/dpu-exporter/config.json)")
-	port := flag.Int("port", 8080, "HTTP port for metrics server")
+	port := flag.Int("port", 8080, "The server port of the http service, range [1025-40000]")
 	cardType := flag.String("cardType", device.CardTypeHuawei, "DPU card type (e.g. 'huawei', currently only 'huawei' is supported)")
 	version := flag.Bool("version", false, "If true, query the version of the program (default false)")
 	flag.IntVar(&logger.HwLogConfig.LogLevel, "logLevel", 0, "log level (-1-debug, 0-info, 1-warning, 2-error 3-critical)")
@@ -59,6 +63,10 @@ func main() {
 	}
 
 	httpPort := *port
+	if err := checkPort(httpPort); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to check port %d: %v\n", httpPort, err)
+		os.Exit(1)
+	}
 	// Override config file path if provided via CLI
 	if *configFile != "" {
 		configmanager.SetConfigFilePath(*configFile)
@@ -162,6 +170,14 @@ func main() {
 	}
 
 	logger.Info("dpu-exporter stopped")
+}
+
+// checkPort validates the metrics server port.
+func checkPort(port int) error {
+	if port < portLeft || port > portRight {
+		return errors.New("the port is invalid")
+	}
+	return nil
 }
 
 // initChains builds the initial collector chains based on the current config.

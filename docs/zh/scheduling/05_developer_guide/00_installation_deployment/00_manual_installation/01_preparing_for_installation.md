@@ -50,6 +50,13 @@
 <td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><a name="ul8401830195518"></a><a name="ul8401830195518"></a><ul id="ul8401830195518"><li>二进制运行：不涉及。</li><li>容器运行：需要使用特权容器，建议用户使用二进制运行。</li></ul>
 </td>
 </tr>
+<tr id="row_dpu_exporter_user"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p_dpu_exporter_user"><span id="span_dpu_exporter_user">DPU Exporter</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><ul id="ul_dpu_exporter_user"><li>二进制运行：hwMindX</li><li>容器运行：root</li></ul>
+</td>
+<td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><ul id="ul_dpu_exporter_priv"><li>二进制运行：不涉及。</li><li>容器运行：需要使用特权容器，建议用户使用二进制运行。</li></ul>
+</td>
+</tr>
 <tr id="zh-cn_topic_0299839362_row1064121764612"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0299839362_p16641317134612"><a name="zh-cn_topic_0299839362_p16641317134612"></a><a name="zh-cn_topic_0299839362_p16641317134612"></a><span id="ph522114212719"><a name="ph522114212719"></a><a name="ph522114212719"></a>Ascend Device Plugin</span></p>
 </td>
 <td class="cellrowborder" rowspan="4" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p53735269103"><a name="p53735269103"></a><a name="p53735269103"></a>root</p>
@@ -158,15 +165,21 @@ Elastic Agent、TaskD之外的其他组件安装可跳过本章节。
     <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1657216638"><a name="screen1657216638"></a><a name="screen1657216638"></a>mkdir -m 750 /var/log/mindx-dl/devicePlugin
    chown root:root /var/log/mindx-dl/devicePlugin</pre>
     </td>
-    <td class="cellrowborder" rowspan="7" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p11572661536"><a name="p11572661536"></a><a name="p11572661536"></a>计算节点</p>
+    <td class="cellrowborder" rowspan="8" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p11572661536"><a name="p11572661536"></a><a name="p11572661536"></a>计算节点</p>
     </td>
-    <td class="cellrowborder" rowspan="5" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p557592110325"><a name="p557592110325"></a><a name="p557592110325"></a>-</p>
+    <td class="cellrowborder" rowspan="6" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p557592110325"><a name="p557592110325"></a><a name="p557592110325"></a>-</p>
     </td>
     </tr>
     <tr id="row95721761536"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p125721269315"><a name="p125721269315"></a><a name="p125721269315"></a><span id="ph14572161034"><a name="ph14572161034"></a><a name="ph14572161034"></a>NPU Exporter</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen457213611313"><a name="screen457213611313"></a><a name="screen457213611313"></a>mkdir -m 750 /var/log/mindx-dl/npu-exporter
    chown root:root /var/log/mindx-dl/npu-exporter</pre>
+    </td>
+    </tr>
+    <tr id="row_dpu_exporter_log"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p_dpu_exporter_log"><span id="ph_dpu_exporter_log">DPU Exporter</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen_dpu_exporter_log">mkdir -m 750 /var/log/mindx-dl/dpu-exporter
+   chown root:root /var/log/mindx-dl/dpu-exporter</pre>
     </td>
     </tr>
     <tr id="row105739620318"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p195731868318"><a name="p195731868318"></a><a name="p195731868318"></a><span id="ph11573862310"><a name="ph11573862310"></a><a name="ph11573862310"></a>NodeD</span></p>
@@ -349,7 +362,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     kubectl create ns cluster-system
     ```
 
-- NPU Exporter的命名空间为npu-exporter；Volcano的命名空间为volcano-system；Ascend Device Plugin、K8s RDMA Shared Dev Plugin和Ascend Dynamic Resource Allocation的命名空间为kube-system，上述组件的命名空间由系统创建，用户无需再次创建。
+- NPU Exporter的命名空间为npu-exporter；DPU Exporter的命名空间为dpu-exporter；Volcano的命名空间为volcano-system；Ascend Device Plugin、K8s RDMA Shared Dev Plugin和Ascend Dynamic Resource Allocation的命名空间为kube-system，上述组件的命名空间由系统创建，用户无需再次创建。
 
 ## 准备镜像<a name="ZH-CN_TOPIC_0000002479226488"></a>
 
@@ -513,6 +526,13 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142917"></a><a name="p1519601142917"></a><span id="ph138789131471"><a name="ph138789131471"></a><a name="ph138789131471"></a>Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t npu-exporter:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>UMDK_PKG参数取值为UMDK软件包文件名，需要从<a href="https://mirrors.huaweicloud.com/ascend/">华为云镜像仓地址</a>的archive目录下载。当前UMDK软件包仅支持aarch64架构。</p>
+    </td>
+    </tr>
+    <tr id="row_dpu_exporter_build"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p_dpu_exporter_build_node">其他产品</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p_dpu_exporter_build"><span id="ph_dpu_exporter_build">DPU Exporter</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><ul><li>基础镜像为Ubuntu的DPU Exporter镜像制作命令。<pre class="screen" id="screen_dpu_exporter_build_ubuntu">docker build --no-cache -t dpu-exporter:<em>{</em><em>tag}</em> ./</pre></li><li>基础镜像为openEuler的DPU Exporter镜像制作命令。<pre class="screen" id="screen_dpu_exporter_build_openeuler">docker build --no-cache -t dpu-exporter:<em>{</em><em>tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
     </td>
     </tr>
     <tr id="row098844612416"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p3927139182818"><a name="p3927139182818"></a><a name="p3927139182818"></a>其他产品</p>
@@ -696,7 +716,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     </td>
     <td class="cellrowborder" valign="top" width="17.21%" headers="mcps1.2.5.1.3 "><p>v26.1.0-openeuler24.03</p><p>v26.1.0-ubuntu22.04</p>
     </td>
-    <td class="cellrowborder" rowspan="4" valign="top" width="19.67%" headers="mcps1.2.5.1.4 "><p id="p128156248413"><a name="p128156248413"></a><a name="p128156248413"></a>计算节点</p>
+    <td class="cellrowborder" rowspan="5" valign="top" width="19.67%" headers="mcps1.2.5.1.4 "><p id="p128156248413"><a name="p128156248413"></a><a name="p128156248413"></a>计算节点</p>
     </td>
     </tr>
     <tr id="row08151024548"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p281518242412"><a name="p281518242412"></a><a name="p281518242412"></a><span id="ph481514241548"><a name="ph481514241548"></a><a name="ph481514241548"></a>NPU Exporter</span></p>
@@ -704,6 +724,13 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p481512243413"><a name="p481512243413"></a><a name="p481512243413"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/1b1a8c3cc1ff4710bdb0222514a8a7a3" target="_blank" rel="noopener noreferrer">npu-exporter</a></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.1.0-openeuler24.03</p><p>v26.1.0-ubuntu22.04</p>
+    </td>
+    </tr>
+    <tr id="row_dpu_exporter_image"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p_dpu_exporter_image"><span id="ph_dpu_exporter_image">DPU Exporter</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p_dpu_exporter_image_name">dpu-exporter</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.2.0-openeuler24.03</p><p>v26.2.0-ubuntu22.04</p>
     </td>
     </tr>
     <tr id="row1781532410415"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p78163241644"><a name="p78163241644"></a><a name="p78163241644"></a><span id="ph148168241849"><a name="ph148168241849"></a><a name="ph148168241849"></a>Ascend Device Plugin</span></p>
@@ -747,6 +774,8 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.1.0-openeuler24.03 npu-exporter:v26.1.0
 
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/dpu-exporter:v26.2.0-openeuler24.03 dpu-exporter:v26.2.0
+
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.1.0-openeuler24.03 ascend-k8sdeviceplugin:v26.1.0
 
         # 根据实际使用的Volcano版本，将{version}替换为对应版本号（如v1.7.0、v1.9.0、v1.12.0）
@@ -768,6 +797,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.1.0-openeuler24.03
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.1.0-openeuler24.03
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.1.0-openeuler24.03
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/dpu-exporter:v26.2.0-openeuler24.03
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.1.0-openeuler24.03
         # 根据实际使用的Volcano版本，将{version}替换为对应版本号（如v1.7.0、v1.9.0、v1.12.0）
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{version}-v26.1.0-openeuler24.03

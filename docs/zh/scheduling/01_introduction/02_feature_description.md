@@ -21,17 +21,29 @@ Ascend Docker Runtime
 
 **功能特点<a name="section1788818281655"></a>**
 
+NPU资源监测
+
 - 支持在执行训练或者推理任务时，对昇腾AI处理器资源各种数据信息的实时监测，可实时获取昇腾AI处理器利用率、温度、电压、内存，以及昇腾AI处理器在容器中的分配状况等信息，实现资源的实时监测。
 - 支持通过自定义插件上报其他指标。
 
+DPU资源监测
+
+- 支持监测DPU的运行状态与各项统计指标。包括RoCE错包、丢包、接收ECN、发送/接收CNP及PSN异常重传等DPU全局指标以及每个网卡端口的链路运行状态、收发流量与异常错误状态等interface级指标。
+
 **所需组件<a name="section15655185785119"></a>**
 
-NPU Exporter
+NPU资源监测所需组件：
+
+- NPU Exporter
+
+DPU资源监测所需组件：
+
+- DPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-2. 特性使用指导请参见[资源监测](../04_usage/01_resource_monitoring/00_before_you_start.md)章节进行操作。
+2. 特性使用指导请参见[资源监测特性指南](../04_usage/01_resource_monitoring/menu_resource_monitoring.md)章节进行操作。
 
 ## 故障检测<a name="ZH-CN_TOPIC_FAULT_DETECTION"></a>
 
