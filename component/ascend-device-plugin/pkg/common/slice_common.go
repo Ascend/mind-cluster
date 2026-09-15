@@ -130,6 +130,7 @@ func (s stringTool) HexStringToInt(sources []string) []int64 {
 		num, err := strconv.ParseInt(source, Hex, 0)
 		if err != nil {
 			hwlog.RunLog.Errorf("parse hex int failed and skip it, string: %s", source)
+			intSlice = append(intSlice, 0)
 			continue
 		}
 		intSlice = append(intSlice, num)
