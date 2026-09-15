@@ -37,8 +37,22 @@
                    BinaryName = "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime"
        ```
 
+   - CRI-O（或K8s集成CRI-O场景）。
+
+       ```shell
+       cat /etc/crio/crio.conf.d/99-ascend-runtime.conf | grep ascend
+       ```
+
+     回显示例如下，表示修改成功。
+
+        ```ColdFusion
+        default_runtime = "ascend"
+            [crio.runtime.runtimes.ascend]
+                runtime_path = "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime"
+        ```
+
    >[!NOTE]
-   >Docker或Containerd的配置文件路径如果与用户实际路径不符，请自行修改。
+   >Docker、Containerd或CRI-O的配置文件路径如果与用户实际路径不符，请自行修改。
 
 2. 执行以下命令，查看是否存在基础镜像。
 
@@ -66,6 +80,18 @@
        docker.io/library/ubuntu:22.04    application/vnd.docker.distribution.manifest.v2+json sha256:555f8bd7441bb97303961a52ec7dec94d755f9f39077801de3e11c706c9ee7dc 68.5 MiB  linux/arm64 io.cri-containerd.image=managed
        ```
 
+   - CRI-O（或K8s集成CRI-O场景）
+
+       ```shell
+       crictl images | grep ubuntu
+       ```
+
+     回显示例如下，表示存在基础镜像ubuntu:22.04。若不存在基础镜像，可以执行**crictl pull docker.io/library/ubuntu:22.04**命令，拉取基础镜像。
+
+       ```ColdFusion
+       docker.io/library/ubuntu:22.04     22.04              ec1c05cc9451e       246MB
+
+
 3. 执行以下命令，使用Ascend Docker Runtime挂载物理芯片ID为0的芯片。
 
    - Docker（或K8s集成Docker场景）。
@@ -81,6 +107,10 @@
        ```shell
        ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 docker.io/library/ubuntu:22.04 {containerID}
        ```
+
+   - CRI-O（或K8s集成CRI-O场景）。
+
+     CRI-O场景使用方法可参见：[CRI-O场景使用方法](../04_usage/00_containerization/04_usage_on_the_crio_client.md)
 
    >[!NOTE]
    >- ASCEND\_VISIBLE\_DEVICES参数表示挂载的芯片ID。
