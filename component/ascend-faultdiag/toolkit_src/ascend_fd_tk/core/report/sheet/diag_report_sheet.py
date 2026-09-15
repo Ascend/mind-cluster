@@ -51,9 +51,10 @@ class HostReportData(DiagReportData):
     sn_num: str = ""  # 主机SN
     npu_id: str = ""  # NPU ID
     chip_phy_id: str = ""  # 物理芯片ID
-    optical_id: str = ""  # 光模块ID
+    udie_id: str = ""  # UDie ID
+    npu_port_id: str = ""  # NPU侧UB端口
     nic_id: str = ""  # 网卡名
-    port_id: str = ""  # 网卡端口
+    nic_port_id: str = ""  # 网卡侧UB端口
     room_name: str = ""  # 机房名称
     cabinet_id: str = ""  # 机柜编号
 
@@ -95,11 +96,19 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
     }
 
     # 每种sheet类型的实体排序属性（同时也是最细粒度实体分组键）
-    # host 包含 optical_id/nic_id/port_id：A5 同一 NPU 下多光模块、同一主机多网卡端口的故障
-    # 需分别按光模块/网卡端口分组，避免对应列被错误合并；
-    # 层级合并逻辑见 _compute_merge_ranges，A3 的 optical_id/nic_id/port_id 恒为空串，行为保持不变。
+    # host 包含 udie_id/npu_port_id/nic_id/nic_port_id：A5 同一 NPU 下多光模块（按 UDie+NPU端口定位）、
+    # 同一主机多网卡端口的故障需分别按光模块/网卡端口分组，避免对应列被错误合并；
+    # 层级合并逻辑见 _compute_merge_ranges，A3 的 udie_id/npu_port_id/nic_id/nic_port_id 恒为空串，行为保持不变。
     _ENTITY_SORT_ATTRS: Dict[str, List[str]] = {
-        constants.FAULT_TYPE_HOST: ["host_id", "npu_id", "chip_phy_id", "optical_id", "nic_id", "port_id"],
+        constants.FAULT_TYPE_HOST: [
+            "host_id",
+            "npu_id",
+            "chip_phy_id",
+            "udie_id",
+            "npu_port_id",
+            "nic_id",
+            "nic_port_id",
+        ],
         constants.FAULT_TYPE_BMC: ["bmc_id", "npu_id", "chip_phy_id"],
         constants.FAULT_TYPE_SWITCH: ["swi_id", "slot_id", "interface", "optical_id"],
     }
@@ -127,10 +136,10 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
     # 二级合并的实体分组键：solution/root_cause_status 在此键相同的相邻行间合并。
     # 与 fault_domain 显示字符串解耦，避免 get_domain_desc() 变化影响合并逻辑。
     # - host_id/npu_id/chip_phy_id：NPU 侧实体定位（光模块故障时同一 NPU 下不同光模块可合并）
-    # - nic_id/port_id：NIC 侧实体定位（不同网卡/端口不合并，同端口可合并）
-    # - optical_id 不在此列：同一 NPU 下不同光模块的相同建议/根因应合并
+    # - nic_id/nic_port_id：NIC 侧实体定位（不同网卡/端口不合并，同端口可合并）
+    # - udie_id/npu_port_id 不在此列：同一 NPU 下不同光模块的相同建议/根因应合并
     _FAULT_MERGE_KEY_ATTRS: Dict[str, List[str]] = {
-        constants.FAULT_TYPE_HOST: ["host_id", "npu_id", "chip_phy_id", "nic_id", "port_id"],
+        constants.FAULT_TYPE_HOST: ["host_id", "npu_id", "chip_phy_id", "nic_id", "nic_port_id"],
         constants.FAULT_TYPE_BMC: ["bmc_id", "npu_id", "chip_phy_id"],
         constants.FAULT_TYPE_SWITCH: ["swi_id", "slot_id", "interface", "optical_id"],
     }
@@ -187,9 +196,10 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
                 "cabinet_id": "机柜编号",
                 "npu_id": "NPU ID",
                 "chip_phy_id": "物理芯片ID",
-                "optical_id": "光模块ID",
+                "udie_id": "UDie ID",
+                "npu_port_id": "NPU端口",
                 "nic_id": "网卡名",
-                "port_id": "网卡端口",
+                "nic_port_id": "网卡端口",
                 **base_mapping,
             }
         elif sheet_type == constants.FAULT_TYPE_BMC:
@@ -304,9 +314,10 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         data.host_id = domain.host_id
         data.npu_id = domain.npu_id
         data.chip_phy_id = domain.chip_phy_id
-        data.optical_id = domain.optical_id
+        data.udie_id = domain.udie_id
+        data.npu_port_id = domain.npu_port_id
         data.nic_id = domain.nic_id
-        data.port_id = domain.port_id
+        data.nic_port_id = domain.nic_port_id
         host_info = self.cluster_info.hosts_info.get(data.host_id)
         if host_info:
             data.hostname = host_info.hostname
@@ -350,18 +361,18 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         """计算诊断报告的合并区域（两级合并）
 
         一级合并（实体列）：每个实体列按自己的层级键（_ENTITY_SORT_ATTRS 的前 N 个属性）分组相邻行合并。
-            - 排序属性（host_id/npu_id/chip_phy_id/optical_id/nic_id/port_id 等）按其在 _ENTITY_SORT_ATTRS
-              中的位置取层级
-            - 非排序属性（hostname/sn_num/room_name/cabinet_id 等）默认归到 level=1，与首个排序属性同级；
+            - 排序属性（host_id/npu_id/chip_phy_id/udie_id/npu_port_id/nic_id/nic_port_id 等）按其在
+              _ENTITY_SORT_ATTRS 中的位置取层级
+            - 非排序属性（hostname/sn_num/room_name/cabinet_id 等）归到 level=1，与首个排序属性同级
               个别属性可通过 _ATTR_MERGE_LEVEL 指定更高层级（如 switch sheet 的交换机名称按
               swi_id+slot_id 合并，避免 PoDManager 场景下跨槽位显示首个槽位值）
-            例：host 列按 host_id 合并；npu_id 按 host_id+npu_id 合并；optical_id/nic_id/port_id 按各自层级合并
+            例：host 列按 host_id 合并；npu_id 按 host_id+npu_id 合并；udie_id/nic_id/nic_port_id 按各自层级合并
 
         二级合并（故障列）：solution / root_cause_status 按 _FAULT_MERGE_KEY_ATTRS + solution + root_cause_status
             三者相同的相邻行合并。
             - 分组键为显式实体属性列表，与 fault_domain 显示字符串解耦
-            - _FAULT_MERGE_KEY_ATTRS 不含 optical_id：同一 NPU 下不同光模块的相同建议/根因会合并
-            - _FAULT_MERGE_KEY_ATTRS 含 nic_id/port_id：不同网卡/端口的建议/根因不会合并
+            - _FAULT_MERGE_KEY_ATTRS 不含 udie_id/npu_port_id：同一 NPU 下不同光模块的相同建议/根因会合并
+            - _FAULT_MERGE_KEY_ATTRS 含 nic_id/nic_port_id：不同网卡/端口的建议/根因不会合并
 
         扩展性：新增实体列只需更新 _ENTITY_SORT_ATTRS（一级合并自动适配）和 _FAULT_MERGE_KEY_ATTRS
             （二级合并按需配置）；修改 get_domain_desc() 显示不影响合并逻辑。

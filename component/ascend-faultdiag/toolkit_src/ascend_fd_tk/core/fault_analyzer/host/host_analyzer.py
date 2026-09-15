@@ -108,9 +108,10 @@ class HostAnalyzer(Analyzer):
             diag_results.extend(self._analyze_link_stat(domain, npu_chip_info))
             diag_results.extend(self._analyze_uncorr_cw_cnt_fault(domain, uncorr_cw_cnt_infos, npu_chip_info))
 
-            optical_info = npu_chip_info.get_optical_module_info()
-            diag_results.extend(self._analyze_power(domain, optical_info))
-            diag_results.extend(self._analyze_optical_snr(domain, optical_info))
+            # A3 单 NPU 一个光模块，A5 可能有多个，统一按列表循环
+            for optical_info in npu_chip_info.get_optical_module_info():
+                diag_results.extend(self._analyze_power(domain, optical_info))
+                diag_results.extend(self._analyze_optical_snr(domain, optical_info))
 
         diag_results.extend(self._analyze_iic_fault(host_info))
         return diag_results
@@ -130,12 +131,12 @@ class HostAnalyzer(Analyzer):
         diag_results = []
         if not optical_info:
             return diag_results
-        abn_snr_infos = optical_info.get_abnormal_snr_infos(self._threshold.HOST_SNR_DB, self._threshold.MEDIA_SNR_DB)
+        abn_snr_infos = optical_info.get_abnormal_snr_infos(self._threshold)
         if abn_snr_infos:
             fault_info = f"光模块SNR异常：\n{abn_snr_infos}"
             suggestion = "建议更换交换机侧光模块"
             diag_results.append(DiagResult(domain=domain, fault_info=fault_info, suggestion=suggestion))
-        diff_value_desc = optical_info.get_lane_diff_desc(self._threshold.SNR_LANE_DIFF_DB)
+        diff_value_desc = optical_info.get_lane_diff_desc(self._threshold)
         if diff_value_desc:
             suggestion = "光模块SNR Lane间差值异常，优先排查SNR异常的LANE"
             diag_results.append(DiagResult(domain=domain, fault_info=diff_value_desc, suggestion=suggestion))

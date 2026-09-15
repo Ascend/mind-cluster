@@ -29,10 +29,11 @@ from ascend_fd_tk.core.report.sheet.diag_report_sheet import (
 
 class TestDiagReportSheetSort(unittest.TestCase):
     def test_sort_with_none_optical_id(self):
-        """A3 代际 optical_id=None 在排序键中按空串处理，不报 TypeError。"""
-        data = HostReportData(host_id="host1", npu_id="0", optical_id=None, fault_domain="d1")
+        """A3 代际实体属性为 None（如 optical_id 定位属性）在排序键中按空串处理，不报 TypeError。"""
+        data = HostReportData(host_id="host1", npu_id="0", chip_phy_id=None, udie_id=None, fault_domain="d1")
         self.assertEqual(
-            DiagReportSheetGenerator._get_sort_key(data, FAULT_TYPE_HOST), ("host1", "0", "", "", "", "", "d1", "")
+            DiagReportSheetGenerator._get_sort_key(data, FAULT_TYPE_HOST),
+            ("host1", "0", "", "", "", "", "", "d1", ""),
         )
 
     def test_sort_with_fault_time_ascending(self):
@@ -53,9 +54,9 @@ class TestDiagReportSheetSort(unittest.TestCase):
         """_compute_col_merge_ranges 对 None 属性分组合并不报错。"""
         gen = DiagReportSheetGenerator.__new__(DiagReportSheetGenerator)
         data_list = [
-            HostReportData(host_id="h1", optical_id=None),
-            HostReportData(host_id="h1", optical_id=None),
-            HostReportData(host_id="h2", optical_id="0"),
+            HostReportData(host_id="h1", udie_id=None),
+            HostReportData(host_id="h1", udie_id=None),
+            HostReportData(host_id="h2", udie_id="0"),
         ]
         ranges = gen._compute_col_merge_ranges(data_list, col_idx=0, key_attrs=["host_id"])
         self.assertEqual(ranges, [(2, 0, 3, 0)])

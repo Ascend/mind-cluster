@@ -78,12 +78,17 @@
 | `NIC_HOST_SNR_DB` | 网卡（NIC SFP）光模块主机侧信噪比             | dB |
 | `NIC_MEDIA_SNR_DB` | 网卡（NIC SFP）光模块介质侧信噪比             | dB |
 | `NIC_LANE_FLAG` | 网卡 lane 异常标志，正常值 `0`             | - |
+| `LPO_TX_BIAS_MA` | LPO 光模块发射偏置电流（仅<term>Ascend 950 系列产品</term>）      | mA |
+| `LPO_TX_POWER_DBM` | LPO 光模块发射光功率（仅<term>Ascend 950 系列产品</term>）        | dBm |
+| `LPO_RX_POWER_DBM` | LPO 光模块接收光功率（仅<term>Ascend 950 系列产品</term>）        | dBm |
+| `LPO_POWER_LANE_DIFF_DB` | LPO 光模块各 lane 间光功率的最大差值（仅<term>Ascend 950 系列产品</term>） | dBm |
 
 说明：
 
 - `DUPLEX_THRESHOLD`、`NET_HEALTH_THRESHOLD`、`LINK_STATUS_THRESHOLD`、`OPTICAL_PRESENT_THRESHOLD`、`NIC_LANE_FLAG` 为字符串正常值判定：仅当实际值等于配置的正常值时判定为正常，其余均判定为异常。
 - `HCCN_LINK_DOWN_CNT` 超过预警阈值判定为亚健康，超过告警（故障）阈值判定为异常。
 - 网卡（NIC）相关阈值仅<term>Ascend 950 系列产品</term>使用。
+- 光模块阈值按模块类型区分：支持 ODSP/LPO 两种光模块，未识别到光模块类型时，默认ODSP 类型。
 
 配置校验规则：
 

@@ -17,12 +17,12 @@
 
 from typing import List
 
-from ascend_fd_tk.core.common.diag_enum import NpuType
+from ascend_fd_tk.core.common.diag_enum import NpuType, OpticalModuleType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
 from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
-from ascend_fd_tk.core.model.switch import SwiOpticalModel
+from ascend_fd_tk.core.model.switch import SwitchInfo, SwiOpticalModel
 
 
 class CheckItemInfo(JsonObj):
@@ -50,7 +50,7 @@ class OpStateFlagDiagInfoAnalyzer(Analyzer):
         results = []
         for swi_info in self.cluster_info.swis_info.values():
             for op_model in swi_info.optical_models:
-                fault_info_list = self._collect_fault_info(op_model)
+                fault_info_list = self._collect_fault_info(swi_info, op_model)
                 if not fault_info_list:
                     continue
                 lane_fault_info = '\n'.join(fault_info_list)
@@ -68,9 +68,21 @@ class OpStateFlagDiagInfoAnalyzer(Analyzer):
                 results.append(result)
         return results
 
-    def _collect_fault_info(self, op_model: SwiOpticalModel) -> List[str]:
+    @staticmethod
+    def _get_optical_type(swi_info: SwitchInfo, op_model: SwiOpticalModel) -> str:
+        """光模块类型取自同接口的 transceiver_info（按 transceiver_type 后缀推导），无信息时为空"""
+        for transceiver in getattr(swi_info, "transceiver_infos", None) or []:
+            if transceiver.interface == op_model.interface_name and transceiver.common_information:
+                return transceiver.common_information.get_optical_type()
+        return ""
+
+    def _collect_fault_info(self, swi_info: SwitchInfo, op_model: SwiOpticalModel) -> List[str]:
+        # LPO 光模块不支持 TxLOL/RxLOL 标志，跳过检查避免无效值误报
+        is_lpo = self._get_optical_type(swi_info, op_model) == OpticalModuleType.LPO.value
         fault_info_list = []
         for diag_info in op_model.state_flag_diag_infos:
+            if is_lpo and str(diag_info.items).strip().upper().endswith("LOL FLAG"):
+                continue
             for check_item in self._CHECK_ITEMS:
                 if not diag_info.items.endswith(check_item.subfix):
                     continue

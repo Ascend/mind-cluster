@@ -22,12 +22,13 @@ import unittest
 from unittest.mock import AsyncMock, MagicMock
 
 from ascend_fd_tk.core.common.diag_enum import NpuType
+from ascend_fd_tk.core.common.constants import OPTICAL_FLAG
 from ascend_fd_tk.core.context.register import HOST_COLLECTOR_REGISTRY
 from ascend_fd_tk.core.collect.collector.host_collector_a5 import HostCollectorA5
 from ascend_fd_tk.core.model.host_a5 import (
     HostInfoA5,
     NpuChipInfoA5,
-    OpticalTopHeadline,
+    DevInfo,
     NICInfoA5,
 )
 
@@ -42,15 +43,12 @@ def _build_mock_fetcher():
     fetcher.fetch_msnpureport_log = AsyncMock(return_value=[])
     fetcher.fetch_npu_type = AsyncMock(return_value="910B5")
     fetcher.fetch_npu_mapping = AsyncMock(return_value={"0": {"chip_phy_id": "0"}})
-    # 光模块顶部标题：NPU 0 有 2 个光模块（id 0 和 1）
-    fetcher.fetch_optical_top_headline = AsyncMock(
-        return_value=[
-            OpticalTopHeadline(npu_id="0", optical_silk_screen_num="1", optical_id="0"),
-            OpticalTopHeadline(npu_id="0", optical_silk_screen_num="2", optical_id="1"),
-        ]
-    )
-    # 每个光模块信息采集返回非空字符串，由 parser 解析
-    fetcher.fetch_optical_info_a5 = AsyncMock(return_value="optical_info_raw")
+    # 设备信息原始回显，由 parser 解析
+    fetcher.fetch_dev_info = AsyncMock(return_value="dev_info_raw")
+    # 端口状态回显（含光模块类型），由 parser 解析
+    fetcher.fetch_port_state_info = AsyncMock(return_value="port_state_raw")
+    # 每个光模块端口信息采集返回非空字符串，由 parser 解析
+    fetcher.fetch_optical_port_info = AsyncMock(return_value="optical_info_raw")
     # 网卡：返回 1 张网卡名，端口数 "2"
     fetcher.fetch_nic_info = AsyncMock(return_value="nic_list_raw")
     fetcher.fetch_nic_port_num = AsyncMock(return_value="port_num_raw")
@@ -71,22 +69,25 @@ class TestHostCollectorA5Collect(unittest.TestCase):
         # mock parser 以隔离采集流程
         self.collector.parser = MagicMock()
         self.collector.parser.parse_npu_type = MagicMock(return_value="A5")
-        # 顶部标题：NPU 0 有 2 个光模块
-        self.collector.parser.parse_optical_top_headline = MagicMock(
+        # 设备信息：NPU 0 下 UDie 0 有 3 个端口，其中 2 个 Optical、1 个非 Optical
+        self.collector.parser.parse_dev_info = MagicMock(
             return_value=[
-                OpticalTopHeadline(npu_id="0", optical_silk_screen_num="1", optical_id="0"),
-                OpticalTopHeadline(npu_id="0", optical_silk_screen_num="2", optical_id="1"),
+                DevInfo(udie_id="0", port_id="0", media_type=OPTICAL_FLAG),
+                DevInfo(udie_id="0", port_id="1", media_type=OPTICAL_FLAG),
+                DevInfo(udie_id="0", port_id="2", media_type="Copper"),
             ]
         )
+        # 端口状态信息（media_type 用于填充光模块类型）
+        self.collector.parser.parse_port_state_info = MagicMock(return_value=MagicMock(media_type="400G_OCP"))
         # 光模块信息（返回非 None）
-        self.collector.parser.parse_optical_info_a5 = MagicMock(return_value=MagicMock(spec=[]))
+        self.collector.parser.parse_optical_info_port = MagicMock(return_value=MagicMock(spec=[]))
         # 网卡解析
         self.collector.parser.parse_nic_card_names = MagicMock(return_value=["eth0"])
         self.collector.parser.parse_nic_port_num = MagicMock(return_value="2")
         self.collector.parser.parse_nic_sfp_info = MagicMock(return_value=MagicMock(spec=[]))
 
     def test_collect_multi_optical_modules(self):
-        """collect 应遍历每个光模块并填充 npu_chip_info。"""
+        """collect 应遍历每个 Optical 端口并填充 npu_chip_info。"""
         host_info = asyncio.run(self.collector.collect())
 
         self.assertIsInstance(host_info, HostInfoA5)
@@ -99,8 +100,11 @@ class TestHostCollectorA5Collect(unittest.TestCase):
         chip_info = host_info.npu_chip_info["0"]
         self.assertIsInstance(chip_info, NpuChipInfoA5)
         self.assertEqual(len(chip_info.hccn_optical_info), 2)
-        # fetch_optical_info_a5 应被调用 2 次（每个光模块一次）
-        self.assertEqual(self.fetcher.fetch_optical_info_a5.call_count, 2)
+        # fetch_optical_port_info 应被调用 2 次（每个 Optical 端口一次）
+        self.assertEqual(self.fetcher.fetch_optical_port_info.call_count, 2)
+        # 调用参数按 UDie + Port 传递
+        self.collector.parser.parse_optical_info_port.assert_any_call("optical_info_raw", "0", "0")
+        self.collector.parser.parse_optical_info_port.assert_any_call("optical_info_raw", "0", "1")
 
     def test_collect_nic_info_multi_ports(self):
         """collect 应遍历每张网卡的每个端口采集 SFP 信息。"""

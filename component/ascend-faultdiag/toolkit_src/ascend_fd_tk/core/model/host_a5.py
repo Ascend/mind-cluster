@@ -17,89 +17,11 @@
 
 from typing import List, Dict
 
-from ascend_fd_tk.core.common.constants import HIGH_POWER_ENABLE_A5
 from ascend_fd_tk.core.common.diag_enum import PowerUnitType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.log_parser.base import FindResult
 from ascend_fd_tk.core.context.host_registry import register_host_info
 from ascend_fd_tk.core.model.optical_module import OpticalModuleInfo, LanePowerInfo
-
-
-class OpticalModuleHardwareAttr(JsonObj):
-    """光模块硬件属性实体"""
-
-    def __init__(
-        self,
-        npu_id: str = "",
-        optical_id: str = "",
-        present: str = "",
-        high_power: str = "",
-        identifier: str = "",
-        wave_len: str = "",
-        phy_code: str = "",
-        revision: str = "",
-    ):
-        self.npu_id = npu_id
-        self.optical_id = optical_id
-        self.present = present
-        self.high_power = high_power
-        self.identifier = identifier
-        self.wave_len = wave_len
-        self.phy_code = phy_code
-        self.revision = revision
-
-    @classmethod
-    def parse_title_dict(cls) -> Dict[str, str]:
-        return {
-            "npu_id": "NPU",
-            "optical_id": "Optical",
-            "present": "Present",
-            "high_power": "High_power",
-            "identifier": "Identifier",
-            "wave_len": "Wave_len",
-            "phy_code": "Phy_code",
-            "revision": "Revision",
-        }
-
-    def is_optical_present(self, th) -> bool:
-        return self.present == th.OPTICAL_PRESENT_THRESHOLD.normal_alarm_th
-
-    def is_high_power(self) -> bool:
-        return self.high_power == HIGH_POWER_ENABLE_A5
-
-
-class OpticalModuleSerialInfo(JsonObj):
-    """光模块生产序列号信息实体"""
-
-    def __init__(
-        self,
-        npu_id: str = "",
-        optical_id: str = "",
-        manufacture_name: str = "",
-        part_number: str = "",
-        serial_number: str = "",
-        org_unique_id: str = "",
-        manufacture_date: str = "",
-    ):
-        self.npu_id = npu_id
-        self.optical_id = optical_id
-        self.manufacture_name = manufacture_name
-        self.part_number = part_number
-        self.serial_number = serial_number
-        self.org_unique_id = org_unique_id
-        self.manufacture_date = manufacture_date
-
-    @classmethod
-    def parse_title_dict(cls) -> Dict[str, str]:
-        return {
-            "npu_id": "NPU",
-            "optical_id": "Optical",
-            "manufacture_name": "Name",
-            "part_number": "Part_number",
-            "serial_number": "Serial_number",
-            "org_unique_id": "Org_unique_id",
-            "manufacture_date": "Manufact_date",
-        }
 
 
 class OpticalStateFlag(JsonObj):
@@ -113,11 +35,15 @@ class OpticalStateFlag(JsonObj):
         self,
         npu_id: str = "",
         optical_id: str = "",
+        udie_id: str = "",
+        port_id: str = "",
         items: str = "",
         lanes: List[str] = None,
     ):
         self.npu_id = npu_id
         self.optical_id = optical_id
+        self.udie_id = udie_id
+        self.port_id = port_id
         self.items = items
         self.lanes = lanes or []
 
@@ -131,6 +57,17 @@ class OpticalStateFlag(JsonObj):
             "lanes": "Lane",
         }
 
+    @classmethod
+    def parse_title_port_dict(cls) -> Dict[str, str]:
+        """返回固定核心字段标题；Lane 列由 parser 扫描回显动态补全。"""
+        return {
+            "npu_id": "NPU",
+            "udie_id": "UDie",
+            "port_id": "Port",
+            "items": "Items",
+            "lanes": "Lane",
+        }
+
 
 class OpticalModuleMonitorItem(JsonObj):
     """光模块阈值告警监测项"""
@@ -139,6 +76,8 @@ class OpticalModuleMonitorItem(JsonObj):
         self,
         npu_id: str = "",
         optical_id: str = "",
+        udie_id: str = "",
+        port_id: str = "",
         items: str = "",
         value: str = "",
         high_alarm: str = "",
@@ -150,6 +89,8 @@ class OpticalModuleMonitorItem(JsonObj):
     ):
         self.npu_id = npu_id
         self.optical_id = optical_id
+        self.udie_id = udie_id
+        self.port_id = port_id
         self.items = items
         self.value = value
         self.high_alarm = high_alarm
@@ -174,33 +115,42 @@ class OpticalModuleMonitorItem(JsonObj):
             "used_by": "Used_by",
         }
 
+    @classmethod
+    def parse_title_port_dict(cls) -> Dict[str, str]:
+        return {
+            "npu_id": "NPU",
+            "udie_id": "UDie",
+            "port_id": "Port",
+            "items": "Items",
+            "value": "Value",
+            "high_alarm": "HighAlarm",
+            "high_warn": "HighWarn",
+            "low_warn": "LowWarn",
+            "low_alarm": "LowAlarm",
+            "status": "Status",
+            "used_by": "Optical_use",
+        }
 
-class OpticalLaneInfo(JsonObj):
-    """光模块阈值告警监测项"""
 
-    def __init__(
-        self,
-        lane_id: str = "",
-    ):
-        self.npu_id = lane_id
+class PortStateInfo(JsonObj):
+    def __init__(self, media_type: str = ""):
+        self.media_type = media_type
 
 
 class HCCNOpticalInfoA5(JsonObj):
-    """A5 光模块信息"""
+    """A5 光模块信息（按 UDie + Port 定位光模块）"""
 
     def __init__(
         self,
-        npu_id: str = "",
-        optical_id: str = "",
-        hardware_attr: List[OpticalModuleHardwareAttr] = None,
-        serial_info: List[OpticalModuleSerialInfo] = None,
+        udie_id: str = "",
+        port_id: str = "",
+        optical_type: str = "",
         state_flag: List[OpticalStateFlag] = None,
         monitor_item: List[OpticalModuleMonitorItem] = None,
     ):
-        self.npu_id = npu_id
-        self.optical_id = optical_id
-        self.hardware_attr = hardware_attr or []
-        self.serial_info = serial_info or []
+        self.udie_id = udie_id
+        self.port_id = port_id
+        self.optical_type = optical_type
         self.state_flag = state_flag or []
         self.monitor_item = monitor_item or []
 
@@ -209,32 +159,16 @@ class NpuChipInfoA5(JsonObj):
     def __init__(
         self,
         npu_id="",
-        chip_id="",
-        chip_phy_id="",
         npu_type="",
-        hccn_optical_info: Dict[str, HCCNOpticalInfoA5] = None,
+        hccn_optical_info: List[HCCNOpticalInfoA5] = None,
     ):
-        # pylint: disable=R0801
-        self.hccn_optical_info = hccn_optical_info
-        self._optical_module_info: OpticalModuleInfo = None
-        # 关系属性
         self.npu_type = npu_type
         self.npu_id = npu_id  # 0-7
-        self.chip_id = chip_id  # 0-1
-        self.chip_phy_id = chip_phy_id  # 0-15
+        # pylint: disable=R0801
+        self.hccn_optical_info = hccn_optical_info or []
 
-    def get_optical_module_info(self) -> OpticalModuleInfo:
-        """返回第一个光模块信息（向后兼容 A3 接口）。"""
-        if self._optical_module_info:
-            return self._optical_module_info
-        infos = self.get_optical_module_infos()
-        if not infos:
-            return None
-        self._optical_module_info = infos[0]
-        return self._optical_module_info
-
-    def get_optical_module_infos(self) -> List[OpticalModuleInfo]:
-        """返回所有光模块信息（A5 单 NPU 可能有多光模块）。
+    def get_optical_module_info(self) -> List[OpticalModuleInfo]:
+        """返回所有光模块信息列表（A3 单 NPU 仅一个元素，A5 单 NPU 可能有多光模块）。
 
         从每个光模块的 monitor_item 中按 lane 号解析
         TxPower/RxPower/Bias/HostSNR/MediaSNR，汇总为 LanePowerInfo 列表；
@@ -243,7 +177,7 @@ class NpuChipInfoA5(JsonObj):
         results: List[OpticalModuleInfo] = []
         if not self.hccn_optical_info:
             return results
-        for optical_info in self.hccn_optical_info.values():
+        for optical_info in self.hccn_optical_info:
             if not optical_info or not optical_info.monitor_item:
                 continue
             module_info = self._parse_optical_info_to_module_info(optical_info)
@@ -279,14 +213,11 @@ class NpuChipInfoA5(JsonObj):
             return None
         # 按 lane 号升序排序
         lane_power_infos = [lane_map[k] for k in sorted(lane_map.keys(), key=lambda x: int(x) if x.isdigit() else 0)]
-        # 光模块 SN 取 serial_info 第一条
-        sn = ""
-        if optical_info.serial_info:
-            sn = optical_info.serial_info[0].serial_number or ""
         return OpticalModuleInfo(
             lane_power_infos=lane_power_infos,
-            sn=sn,
-            optical_id=optical_info.optical_id or "",
+            udie_id=optical_info.udie_id or "",
+            port_id=optical_info.port_id or "",
+            optical_type=optical_info.optical_type or "",
         )
 
 
@@ -304,6 +235,24 @@ class OpticalTopHeadline(JsonObj):
         self.optical_id = optical_id
         self.speed = speed
         self.used_for = used_for
+
+
+class DevInfo(JsonObj):
+    def __init__(
+        self,
+        udie_id: str,
+        port_id: str,
+        speed="",
+        port_type="",
+        link_status="",
+        media_type="",
+    ):
+        self.udie_id = udie_id
+        self.port_id = port_id
+        self.speed = speed
+        self.port_type = port_type
+        self.link_status = link_status
+        self.media_type = media_type
 
 
 class NICPortLaneInfoA5(JsonObj):

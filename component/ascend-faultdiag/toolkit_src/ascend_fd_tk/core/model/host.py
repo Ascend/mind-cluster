@@ -584,11 +584,12 @@ class NpuChipInfo(JsonObj, OpticalModule):
         self.chip_id = chip_id  # 0-1
         self.chip_phy_id = chip_phy_id  # 0-15
 
-    def get_optical_module_info(self) -> OpticalModuleInfo:
+    def get_optical_module_info(self) -> List[OpticalModuleInfo]:
+        """返回光模块信息列表（A3 单 NPU 仅一个元素，与 A5 接口对齐）。"""
         if self._optical_module_info:
-            return self._optical_module_info
+            return [self._optical_module_info]
         if not self.hccn_optical_info:
-            return None
+            return []
         op_info = self.hccn_optical_info
         lane_power_infos = [
             LanePowerInfo(
@@ -630,7 +631,7 @@ class NpuChipInfo(JsonObj, OpticalModule):
         ]
         self._optical_module_info = OpticalModuleInfo(lane_power_infos, op_info.vendor_serial_number)
 
-        return self._optical_module_info
+        return [self._optical_module_info]
 
 
 class NpuChipLoopBackInfo(JsonObj):

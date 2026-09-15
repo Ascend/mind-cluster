@@ -45,6 +45,7 @@ class SwitchOpticalModuleData:
     local_optical_model: str = ""
     local_optical_sn: str = ""
     local_optical_temp: str = ""
+    local_optical_type: str = ""  # 本端光模块类型（ODSP/LPO；按类型选阈值并展示）
 
     # 本端Lane信息
     local_tx_power0: str = ""
@@ -74,6 +75,7 @@ class SwitchOpticalModuleData:
     peer_optical_model: str = ""
     peer_optical_sn: str = ""
     peer_optical_temp: str = ""
+    peer_optical_type: str = ""  # 对端光模块类型（ODSP/LPO；按类型选阈值并展示）
 
     # 对端Lane信息
     peer_tx_power0: str = ""
@@ -94,6 +96,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
     """交换机间端口连接光模块信息报告Sheet生成器"""
 
     TABLE_COLOR = "A9D18E"
+    LANE_NUM = 4
 
     def __init__(self, cluster_info, excel_gen=None, link_filter=None):
         super().__init__(cluster_info, excel_gen)
@@ -119,14 +122,16 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                 data["optical_model"] = getattr(manu_info, 'manu_part_num', "")
                 data["optical_sn"] = getattr(manu_info, 'manu_serial_number', "")
 
-        # 获取光模块温度
+        # 获取光模块温度（SwiOpticalModel 无 temperature 属性，从 DDM base_info 中解析）
         if hasattr(interface_full_info, 'swi_optical_model') and interface_full_info.swi_optical_model:
             swi_optical_model = interface_full_info.swi_optical_model
-            data["optical_temp"] = getattr(swi_optical_model, 'temperature', "")
+            data["optical_temp"] = swi_optical_model.get_temperature()
 
         # 获取光模块Lane信息
         optical_module_info = interface_full_info.get_optical_module_info()
         if optical_module_info:
+            # 光模块类型（按 transceiver_type 后缀推导），供阈值着色按类型选阈值
+            data["optical_type"] = getattr(optical_module_info, 'optical_type', "") or ""
             lane_infos = optical_module_info.lane_power_infos or []
             for i in range(8):
                 if i < len(lane_infos):
@@ -157,6 +162,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "local_optical_vendor": "本端光模块厂商",
             "local_optical_model": "本端光模块型号",
             "local_optical_sn": "本端光模块SN",
+            "local_optical_type": "本端光模块类型",
             "local_optical_temp": "本端光模块温度",
             # 本端Lane信息
             "local_tx_power0": "本端TX Power Lane 0",
@@ -183,6 +189,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "peer_optical_vendor": "对端光模块厂商",
             "peer_optical_model": "对端光模块型号",
             "peer_optical_sn": "对端光模块SN",
+            "peer_optical_type": "对端光模块类型",
             "peer_optical_temp": "对端光模块温度",
             # 对端Lane信息
             "peer_tx_power0": "对端TX Power Lane 0",
@@ -208,11 +215,12 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     "本端交换机槽位号",
                     "本端交换机SN",
                     "本端端口",
-                    "机房名称",
-                    "机柜编号",
+                    "本端机房名称",
+                    "本端机柜编号",
                     "本端光模块厂商",
                     "本端光模块型号",
                     "本端光模块SN",
+                    "本端光模块类型",
                     "本端光模块温度",
                     "本端TX Power Lane 0",
                     "本端RX Power Lane 0",
@@ -238,6 +246,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     "对端光模块厂商",
                     "对端光模块型号",
                     "对端光模块SN",
+                    "对端光模块类型",
                     "对端光模块温度",
                     "对端TX Power Lane 0",
                     "对端RX Power Lane 0",
@@ -371,6 +380,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     local_optical_model=local_optical_data.get("optical_model", ""),
                     local_optical_sn=local_optical_data.get("optical_sn", ""),
                     local_optical_temp=local_optical_data.get("optical_temp", ""),
+                    local_optical_type=local_optical_data.get("optical_type", ""),
                     # 本端Lane信息
                     local_tx_power0=local_optical_data.get("tx_power0", ""),
                     local_rx_power0=local_optical_data.get("rx_power0", ""),
@@ -397,6 +407,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     peer_optical_model=peer_optical_data.get("optical_model", ""),
                     peer_optical_sn=peer_optical_data.get("optical_sn", ""),
                     peer_optical_temp=peer_optical_data.get("optical_temp", ""),
+                    peer_optical_type=peer_optical_data.get("optical_type", ""),
                     # 对端Lane信息
                     peer_tx_power0=peer_optical_data.get("tx_power0", ""),
                     peer_rx_power0=peer_optical_data.get("rx_power0", ""),
@@ -424,116 +435,46 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
         :return: 阈值配置列表
         """
         threshold_cls = self.cluster_info.get_threshold()
-
-        return [
-            # 本端TX Power阈值（dBm）
-            ThresholdConfig(
-                field_name="local_tx_power0",
-                threshold=threshold_cls.TX_POWER_DBM,
-                display_name="本端TX Power Lane 0",
-            ),
-            ThresholdConfig(
-                field_name="local_tx_power1",
-                threshold=threshold_cls.TX_POWER_DBM,
-                display_name="本端TX Power Lane 1",
-            ),
-            ThresholdConfig(
-                field_name="local_tx_power2",
-                threshold=threshold_cls.TX_POWER_DBM,
-                display_name="本端TX Power Lane 2",
-            ),
-            ThresholdConfig(
-                field_name="local_tx_power3",
-                threshold=threshold_cls.TX_POWER_DBM,
-                display_name="本端TX Power Lane 3",
-            ),
-            # 本端RX Power阈值（dBm）
-            ThresholdConfig(
-                field_name="local_rx_power0",
-                threshold=threshold_cls.RX_POWER_DBM,
-                display_name="本端RX Power Lane 0",
-            ),
-            ThresholdConfig(
-                field_name="local_rx_power1",
-                threshold=threshold_cls.RX_POWER_DBM,
-                display_name="本端RX Power Lane 1",
-            ),
-            ThresholdConfig(
-                field_name="local_rx_power2",
-                threshold=threshold_cls.RX_POWER_DBM,
-                display_name="本端RX Power Lane 2",
-            ),
-            ThresholdConfig(
-                field_name="local_rx_power3",
-                threshold=threshold_cls.RX_POWER_DBM,
-                display_name="本端RX Power Lane 3",
-            ),
-            # 本端SNR阈值（dB）
-            ThresholdConfig(
-                field_name="local_snr_lane0", threshold=threshold_cls.HOST_SNR_DB, display_name="本端SNR Lane 0"
-            ),
-            ThresholdConfig(
-                field_name="local_snr_lane1", threshold=threshold_cls.HOST_SNR_DB, display_name="本端SNR Lane 1"
-            ),
-            ThresholdConfig(
-                field_name="local_snr_lane2", threshold=threshold_cls.HOST_SNR_DB, display_name="本端SNR Lane 2"
-            ),
-            ThresholdConfig(
-                field_name="local_snr_lane3", threshold=threshold_cls.HOST_SNR_DB, display_name="本端SNR Lane 3"
-            ),
-            # 对端TX Power阈值（dBm）
-            ThresholdConfig(
-                field_name="peer_tx_power0",
-                threshold=threshold_cls.TX_POWER_DBM,
-                display_name="对端TX Power Lane 0",
-            ),
-            ThresholdConfig(
-                field_name="peer_tx_power1",
-                threshold=threshold_cls.TX_POWER_DBM,
-                display_name="对端TX Power Lane 1",
-            ),
-            ThresholdConfig(
-                field_name="peer_tx_power2",
-                threshold=threshold_cls.TX_POWER_DBM,
-                display_name="对端TX Power Lane 2",
-            ),
-            ThresholdConfig(
-                field_name="peer_tx_power3",
-                threshold=threshold_cls.TX_POWER_DBM,
-                display_name="对端TX Power Lane 3",
-            ),
-            # 对端RX Power阈值（dBm）
-            ThresholdConfig(
-                field_name="peer_rx_power0",
-                threshold=threshold_cls.RX_POWER_DBM,
-                display_name="对端RX Power Lane 0",
-            ),
-            ThresholdConfig(
-                field_name="peer_rx_power1",
-                threshold=threshold_cls.RX_POWER_DBM,
-                display_name="对端RX Power Lane 1",
-            ),
-            ThresholdConfig(
-                field_name="peer_rx_power2",
-                threshold=threshold_cls.RX_POWER_DBM,
-                display_name="对端RX Power Lane 2",
-            ),
-            ThresholdConfig(
-                field_name="peer_rx_power3",
-                threshold=threshold_cls.RX_POWER_DBM,
-                display_name="对端RX Power Lane 3",
-            ),
-            # 对端SNR阈值（dB）
-            ThresholdConfig(
-                field_name="peer_snr_lane0", threshold=threshold_cls.HOST_SNR_DB, display_name="对端SNR Lane 0"
-            ),
-            ThresholdConfig(
-                field_name="peer_snr_lane1", threshold=threshold_cls.HOST_SNR_DB, display_name="对端SNR Lane 1"
-            ),
-            ThresholdConfig(
-                field_name="peer_snr_lane2", threshold=threshold_cls.HOST_SNR_DB, display_name="对端SNR Lane 2"
-            ),
-            ThresholdConfig(
-                field_name="peer_snr_lane3", threshold=threshold_cls.HOST_SNR_DB, display_name="对端SNR Lane 3"
-            ),
-        ]
+        # 光模块指标列按行各自 optical_type 动态选阈值（LPO_{METRIC} 优先，回退基础阈值即 ODSP 值）：
+        # for_optical_metric 详见 threshold_report.ThresholdConfig
+        configs = []
+        for lane in range(self.LANE_NUM):
+            configs.extend(
+                [
+                    # 本端TX/RX Power阈值（dBm）
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls, "TX_POWER_DBM", f"local_tx_power{lane}", f"本端TX Power Lane {lane}"
+                    ),
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls, "RX_POWER_DBM", f"local_rx_power{lane}", f"本端RX Power Lane {lane}"
+                    ),
+                    # 本端SNR阈值（dB）
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls, "HOST_SNR_DB", f"local_snr_lane{lane}", f"本端SNR Lane {lane}"
+                    ),
+                    # 对端TX/RX Power阈值（dBm），按对端类型选阈值
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls,
+                        "TX_POWER_DBM",
+                        f"peer_tx_power{lane}",
+                        f"对端TX Power Lane {lane}",
+                        type_field="peer_optical_type",
+                    ),
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls,
+                        "RX_POWER_DBM",
+                        f"peer_rx_power{lane}",
+                        f"对端RX Power Lane {lane}",
+                        type_field="peer_optical_type",
+                    ),
+                    # 对端SNR阈值（dB），按对端类型选阈值
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls,
+                        "HOST_SNR_DB",
+                        f"peer_snr_lane{lane}",
+                        f"对端SNR Lane {lane}",
+                        type_field="peer_optical_type",
+                    ),
+                ]
+            )
+        return configs

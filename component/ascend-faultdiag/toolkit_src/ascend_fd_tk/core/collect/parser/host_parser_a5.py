@@ -20,15 +20,16 @@ from typing import List, Type, Dict
 import re
 
 from ascend_fd_tk.core.collect.parser.host_parser import HostParser
+from ascend_fd_tk.core.common.constants import OPTICAL_FLAG
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.model.host_a5 import (
     HCCNOpticalInfoA5,
     NICPortLaneInfoA5,
-    OpticalModuleHardwareAttr,
     OpticalModuleMonitorItem,
-    OpticalModuleSerialInfo,
     OpticalStateFlag,
     OpticalTopHeadline,
+    DevInfo,
+    PortStateInfo,
 )
 from ascend_fd_tk.utils.helpers import split_multiline
 from ascend_fd_tk.utils.form_parser import FormParser
@@ -55,6 +56,54 @@ class HostParserA5(HostParser):
     _NIC_CARD_NAME_RE = re.compile(r"\|----(\w{1,10})\(")
 
     @classmethod
+    def parse_dev_info(cls, cmd_res: str) -> List[DevInfo]:
+        if not cmd_res or not cmd_res.strip():
+            return []
+        cmd_res_list = split_multiline(cmd_res, ["+-", "+-"])
+        if not cmd_res_list:
+            return []
+        titles_dict = {
+            "udie_id": "UDie ID",
+            "port_id": "Port ID",
+            "speed": "Speed Ability(Gbps)",
+            "port_type": "Port Type",
+            "link_status": "Link Status",
+            "media_type": "Media Type",
+        }
+        end_sign = "+-----"
+        parse_data_list = TableParser.parse(
+            cmd_res_list[0], titles_dict, separate_title_content_lines_num=1, end_sign=end_sign, col_separator="|"
+        )
+        results = [DevInfo.from_dict(parse_data) for parse_data in parse_data_list]
+        return results
+
+    @classmethod
+    def parse_port_state_info(cls, cmd_res: str) -> PortStateInfo:
+        if not cmd_res or not cmd_res.strip():
+            return None
+        data_dict = FormParser().parse(cmd_res)
+        media_type = data_dict.get("media_type", "")
+        if OPTICAL_FLAG in media_type:
+            data_dict["media_type"] = media_type.replace(OPTICAL_FLAG, "").strip()
+        return PortStateInfo.from_dict(data_dict)
+
+    @classmethod
+    def parse_optical_info_port(cls, cmd_res: str, udie_id: str, port_id: str) -> HCCNOpticalInfoA5:
+        """解析 `hccn_tool -g -optical -i <npu> -u <udie> -p <port>` 回显，按 UDie + Port 定位光模块。"""
+        if not cmd_res or not cmd_res.strip():
+            return None
+        cmd_res_list = split_multiline(cmd_res, ["+-", "+-"])
+        if len(cmd_res_list) < 2:
+            return None
+        state_flag = cls._parse_state_flag_table(cmd_res_list[0], OpticalStateFlag.parse_title_port_dict())
+        monitor_item = cls._parse_table(
+            cmd_res_list[1], OpticalModuleMonitorItem.parse_title_port_dict(), OpticalModuleMonitorItem
+        )
+        return HCCNOpticalInfoA5(
+            udie_id=udie_id, port_id=port_id, state_flag=state_flag, monitor_item=monitor_item or []
+        )
+
+    @classmethod
     def parse_optical_top_headline(cls, cmd_res: str) -> List[OpticalTopHeadline]:
         titles_dict = {
             "npu_id": "NPU",
@@ -69,34 +118,6 @@ class HostParserA5(HostParser):
         )
         results = [OpticalTopHeadline.from_dict(parse_data) for parse_data in parse_data_list]
         return results
-
-    @classmethod
-    def parse_optical_info_a5(cls, cmd_res: str, npu_id, optical_id) -> HCCNOpticalInfoA5:
-        """解析 A5 光模块多表信息。"""
-        if not cmd_res or not cmd_res.strip():
-            return None
-        cmd_res_list = split_multiline(cmd_res, ["+-", "+-"])
-        cls_list = [
-            OpticalModuleHardwareAttr,
-            OpticalModuleSerialInfo,
-            OpticalStateFlag,
-            OpticalModuleMonitorItem,
-        ]
-        parsed: dict = {}
-        for segment, model_cls in zip(cmd_res_list, cls_list):
-            if model_cls is OpticalStateFlag:
-                parsed[model_cls] = cls._parse_state_flag_table(segment, model_cls.parse_title_dict())
-            else:
-                parsed[model_cls] = cls._parse_table(segment, model_cls.parse_title_dict(), model_cls)
-
-        return HCCNOpticalInfoA5(
-            npu_id=npu_id,
-            optical_id=optical_id,
-            hardware_attr=parsed.get(OpticalModuleHardwareAttr, []),
-            serial_info=parsed.get(OpticalModuleSerialInfo, []),
-            state_flag=parsed.get(OpticalStateFlag, []),
-            monitor_item=parsed.get(OpticalModuleMonitorItem, []),
-        )
 
     @classmethod
     def _parse_table(cls, segment: str, titles_dict: Dict[str, str], model_cls: Type[JsonObj]) -> List[JsonObj]:

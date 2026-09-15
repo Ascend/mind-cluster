@@ -43,19 +43,22 @@ class PortLanePowerDiffAnalyzer(Analyzer):
         results = []
         for host_info in self.cluster_info.hosts_info.values():
             for npu_chip_info in host_info.npu_chip_info.values():
-                optical_module_info = npu_chip_info.get_optical_module_info()
+                optical_module_infos = npu_chip_info.get_optical_module_info()
                 # pylint: disable=duplicate-code
-                if not optical_module_info:
+                if not optical_module_infos:
                     continue
                 domain = HostDomain(
                     host_id=host_info.host_id,
                     npu_id=npu_chip_info.npu_id,
                     chip_phy_id=npu_chip_info.chip_phy_id,
                 )
-                res = self._generate_diag_result(domain, optical_module_info.lane_power_infos)
-                if not res:
-                    continue
-                results.append(res)
+                for optical_module_info in optical_module_infos:
+                    res = self._generate_diag_result(
+                        domain, optical_module_info.lane_power_infos, optical_module_info.optical_type
+                    )
+                    if not res:
+                        continue
+                    results.append(res)
         return results
 
     def _analyse_swi_lane_power_diff(self) -> List[DiagResult]:
@@ -68,7 +71,9 @@ class PortLanePowerDiffAnalyzer(Analyzer):
                 domain = SwitchDomain(
                     swi_id=swi_info.swi_id, slot_id=swi_info.slot_id, interface=interface_full_info.interface
                 )
-                res = self._generate_diag_result(domain, optical_module_info.lane_power_infos)
+                res = self._generate_diag_result(
+                    domain, optical_module_info.lane_power_infos, optical_module_info.optical_type
+                )
                 if not res:
                     continue
                 results.append(res)
@@ -86,16 +91,20 @@ class PortLanePowerDiffAnalyzer(Analyzer):
                     npu_id=bmc_npu_info.npu_id,
                     chip_phy_id=bmc_npu_info.chip_phy_id or "",
                 )
-                res = self._generate_diag_result(domain, optical_module_info.lane_power_infos)
+                res = self._generate_diag_result(
+                    domain, optical_module_info.lane_power_infos, optical_module_info.optical_type
+                )
                 if not res:
                     continue
                 results.append(res)
         return results
 
-    def _generate_diag_result(self, domain, lane_power_infos: List[LanePowerInfo]) -> DiagResult:
+    def _generate_diag_result(
+        self, domain, lane_power_infos: List[LanePowerInfo], optical_type: str = ""
+    ) -> DiagResult:
         check_results = [
-            self._check_lane_power_diff(lane_power_infos, "tx_power_dbm", DeviceType.TX_PORT.value),
-            self._check_lane_power_diff(lane_power_infos, "rx_power_dbm", DeviceType.RX_PORT.value),
+            self._check_lane_power_diff(lane_power_infos, "tx_power_dbm", DeviceType.TX_PORT.value, optical_type),
+            self._check_lane_power_diff(lane_power_infos, "rx_power_dbm", DeviceType.RX_PORT.value, optical_type),
         ]
         if not any(check_results):
             return None
@@ -104,12 +113,16 @@ class PortLanePowerDiffAnalyzer(Analyzer):
             domain=domain, fault_info=fault_info, suggestion="光模块功率 Lane间差值异常，请排查光模块，检查端口"
         )
 
-    def _check_lane_power_diff(self, lane_power_infos: List[LanePowerInfo], attr: str, port_type: str) -> str:
+    def _check_lane_power_diff(
+        self, lane_power_infos: List[LanePowerInfo], attr: str, port_type: str, optical_type: str = ""
+    ) -> str:
         origin_attr = attr.replace("_dbm", "")
         lane_value_list = [
             [lane_power_info.lane_id, getattr(lane_power_info, attr)]
             for lane_power_info in lane_power_infos
             if getattr(lane_power_info, origin_attr) != self._NA_POWER
         ]
-        diff_desc_list = self._threshold.POWER_LANE_DIFF_DB.check_lane_diff_desc(lane_value_list, port_type)
+        # 阈值按光模块类型（ODSP/LPO）选择，交换机/BMC侧无类型信息自然回退基础阈值
+        th = self._threshold.get_optical_view(optical_type).POWER_LANE_DIFF_DB
+        diff_desc_list = th.check_lane_diff_desc(lane_value_list, port_type)
         return "\n".join(diff_desc_list)

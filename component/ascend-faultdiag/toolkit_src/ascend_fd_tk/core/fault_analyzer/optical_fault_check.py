@@ -112,7 +112,7 @@ class OpticalFaultChecker:
     def snr_analyze_single_ended(
         self, domain: Union[HostDomain, SwitchDomain], info: OpticalModuleInfo
     ) -> List[DiagResult]:
-        abnormal_snr_infos = info.get_abnormal_snr_infos(self._threshold.HOST_SNR_DB, self._threshold.MEDIA_SNR_DB)
+        abnormal_snr_infos = info.get_abnormal_snr_infos(self._threshold)
         if abnormal_snr_infos:
             fault_info = (
                 f"本端信噪比SNR异常，未收集到对端信息。{self.get_single_description(domain, abnormal_snr_infos)}"
@@ -124,7 +124,7 @@ class OpticalFaultChecker:
     def bias_analyze_single_ended(
         self, domain: Union[HostDomain, SwitchDomain], info: OpticalModuleInfo
     ) -> List[DiagResult]:
-        abnormal_bias_infos = info.get_abnormal_bias_infos(self._threshold.TX_BIAS_MA)
+        abnormal_bias_infos = info.get_abnormal_bias_infos(self._threshold)
         if abnormal_bias_infos:
             fault_info = f"本端电流异常，未收集到对端信息。{self.get_single_description(domain, abnormal_bias_infos)}"
             suggest = "建议更换本端光模块或者收集对端信息并排查。"
@@ -153,12 +153,8 @@ class OpticalFaultChecker:
     def snr_analyze(
         self, domain: Union[HostDomain, SwitchDomain], local_info: OpticalModuleInfo, remote_info: OpticalModuleInfo
     ) -> List[DiagResult]:
-        local_abn_snr_infos = local_info.get_abnormal_snr_infos(
-            self._threshold.HOST_SNR_DB, self._threshold.MEDIA_SNR_DB
-        )
-        remote_abn_snr_infos = remote_info.get_abnormal_snr_infos(
-            self._threshold.HOST_SNR_DB, self._threshold.MEDIA_SNR_DB
-        )
+        local_abn_snr_infos = local_info.get_abnormal_snr_infos(self._threshold)
+        remote_abn_snr_infos = remote_info.get_abnormal_snr_infos(self._threshold)
         description, suggest = self._check_snr_value(bool(local_abn_snr_infos), bool(remote_abn_snr_infos))
         if not description or not suggest:
             return []
@@ -168,8 +164,8 @@ class OpticalFaultChecker:
     def bias_analyze(
         self, domain: Union[HostDomain, SwitchDomain], local_info: OpticalModuleInfo, remote_info: OpticalModuleInfo
     ) -> List[DiagResult]:
-        local_abn_bias_infos = local_info.get_abnormal_bias_infos(self._threshold.TX_BIAS_MA)
-        remote_abn_bias_infos = remote_info.get_abnormal_bias_infos(self._threshold.TX_BIAS_MA)
+        local_abn_bias_infos = local_info.get_abnormal_bias_infos(self._threshold)
+        remote_abn_bias_infos = remote_info.get_abnormal_bias_infos(self._threshold)
         description, suggest = self._check_bias_value(bool(local_abn_bias_infos), bool(remote_abn_bias_infos))
         if not description or not suggest:
             return []

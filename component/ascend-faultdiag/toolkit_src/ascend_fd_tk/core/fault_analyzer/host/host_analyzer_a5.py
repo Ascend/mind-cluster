@@ -33,44 +33,21 @@ class HostAnalyzerA5(Analyzer):
         super().__init__(cluster_info)
         self._threshold = cluster_info.get_threshold()
 
-    def _analyze_hardware_attr(self, domain: HostDomain, optical_info: HCCNOpticalInfoA5):
-        res = []
-        for hard_info in optical_info.hardware_attr:
-            if not hard_info.is_optical_present(self._threshold):
-                res.append(
-                    DiagResult(
-                        domain=domain,
-                        fault_info=f"光模块未在位，状态：{hard_info.present or 'NA'}",
-                        suggestion="光模块可能松动，请重新插拔光模块",
-                    )
-                )
-                continue
-            if not hard_info.is_high_power():
-                res.append(
-                    DiagResult(
-                        domain=domain,
-                        fault_info=f"光模块处于低功率模式，high power enable reg:{hard_info.high_power}",
-                        suggestion="光模块处于低功率模式，建议打开高功率模式",
-                    )
-                )
-        return res
-
     def _analyze_optical_status(self, host_info: HostInfoA5, npu_chip_info: NpuChipInfoA5) -> List[DiagResult]:
         res = []
-        optical_info_dict = npu_chip_info.hccn_optical_info
-        if not optical_info_dict:
+        optical_info_list = npu_chip_info.hccn_optical_info
+        if not optical_info_list:
             return res
-        for optical_id, optical_info in optical_info_dict.items():
+        for optical_info in optical_info_list:
             # pylint: disable=duplicate-code
             if not optical_info:
                 continue
             domain = HostDomain(
                 host_id=host_info.host_id,
                 npu_id=npu_chip_info.npu_id,
-                chip_phy_id=npu_chip_info.chip_phy_id,
-                optical_id=optical_id,
+                udie_id=optical_info.udie_id,
+                npu_port_id=optical_info.port_id,
             )
-            res.extend(self._analyze_hardware_attr(domain, optical_info))
             res.extend(self._analyze_bias(domain, optical_info))
             res.extend(self._analyze_power(domain, optical_info))
             res.extend(self._analyze_optical_snr(domain, optical_info))
@@ -79,7 +56,7 @@ class HostAnalyzerA5(Analyzer):
     def _analyze_bias(self, domain: HostDomain, optical_info: HCCNOpticalInfoA5) -> List[DiagResult]:
         if not optical_info or not optical_info.monitor_item:
             return []
-        th = self._threshold.TX_BIAS_MA
+        th = self._threshold.get_optical_view(optical_info.optical_type).TX_BIAS_MA
         abnormal_infos = []
         for item in optical_info.monitor_item:
             items_name = item.items or ""
@@ -99,16 +76,17 @@ class HostAnalyzerA5(Analyzer):
             return []
         abn_tx_infos = []
         abn_rx_infos = []
+        th_view = self._threshold.get_optical_view(optical_info.optical_type)
         for item in optical_info.monitor_item:
             items_name = item.items or ""
             if items_name.startswith("TxPower Lane"):
                 lane_id = items_name.replace("TxPower Lane", "").split("(")[0]
-                desc = self._threshold.TX_POWER_DBM.check_value_str(item.value)
+                desc = th_view.TX_POWER_DBM.check_value_str(item.value)
                 if desc:
                     abn_tx_infos.append(f"Lane{lane_id} {desc}")
             elif items_name.startswith("RxPower Lane"):
                 lane_id = items_name.replace("RxPower Lane", "").split("(")[0]
-                desc = self._threshold.RX_POWER_DBM.check_value_str(item.value)
+                desc = th_view.RX_POWER_DBM.check_value_str(item.value)
                 if desc:
                     abn_rx_infos.append(f"Lane{lane_id} {desc}")
         if not abn_tx_infos and not abn_rx_infos:
@@ -123,19 +101,19 @@ class HostAnalyzerA5(Analyzer):
             return diag_results
         abnormal_host_snr_infos, abnormal_media_snr_infos = [], []
         host_snr_list, media_snr_list = [], []
-
+        th_view = self._threshold.get_optical_view(optical_info.optical_type)
         for item in optical_info.monitor_item:
             items_name = item.items or ""
             if items_name.startswith(self.HOST_SNR_TYPE):
                 lane_id = items_name.replace(self.HOST_SNR_TYPE, "").split("(")[0]
-                desc = self._threshold.HOST_SNR_DB.check_value_str(item.value)
+                desc = th_view.HOST_SNR_DB.check_value_str(item.value)
                 if desc:
                     abnormal_host_snr_infos.append(f"Lane{lane_id} {desc}")
                 host_snr_list.append([lane_id, item.value])
                 continue
             if items_name.startswith(self.MEDIA_SNR_TYPE):
                 lane_id = items_name.replace(self.MEDIA_SNR_TYPE, "").split("(")[0]
-                desc = self._threshold.MEDIA_SNR_DB.check_value_str(item.value)
+                desc = th_view.MEDIA_SNR_DB.check_value_str(item.value)
                 if desc:
                     abnormal_media_snr_infos.append(f"Lane{lane_id} {desc}")
                 media_snr_list.append([lane_id, item.value])
@@ -145,13 +123,13 @@ class HostAnalyzerA5(Analyzer):
         if abnormal_host_snr_infos:
             fault_info = "光模块Host SNR异常：\n" + "\n".join(abnormal_host_snr_infos)
             diag_results.append(DiagResult(domain=domain, fault_info=fault_info, suggestion="建议更换本端光模块"))
-        diag_results.extend(self._analyse_snr_lane_diff(media_snr_list, host_snr_list, domain))
+        diag_results.extend(self._analyse_snr_lane_diff(media_snr_list, host_snr_list, domain, th_view))
         return diag_results
 
-    def _analyse_snr_lane_diff(self, media_snr_list, host_snr_list, domain: HostDomain) -> List[DiagResult]:
+    def _analyse_snr_lane_diff(self, media_snr_list, host_snr_list, domain: HostDomain, th_view) -> List[DiagResult]:
         diff_desc_list = []
         for snr_list, value_type in ((media_snr_list, "media"), (host_snr_list, "host")):
-            diff_desc_list.extend(self._threshold.SNR_LANE_DIFF_DB.check_lane_diff_desc(snr_list, value_type))
+            diff_desc_list.extend(th_view.SNR_LANE_DIFF_DB.check_lane_diff_desc(snr_list, value_type))
         if not diff_desc_list:
             return []
         fault_info = "光模块SNR Lane间差值异常：\n" + "\n".join(diff_desc_list)

@@ -24,7 +24,6 @@ from ascend_fd_tk.utils import helpers
 
 
 class JsonObj(metaclass=abc.ABCMeta):
-
     def __str__(self):
         return self.to_json()
 
@@ -36,20 +35,24 @@ class JsonObj(metaclass=abc.ABCMeta):
 
     @staticmethod
     def _is_json_obj_in_typing_list(instance, sign_class):
-        return isinstance(instance, list) and \
-            hasattr(sign_class, "__args__") and \
-            isinstance(getattr(sign_class, "__args__"), tuple) and \
-            len(sign_class.__args__) == 1 and \
-            issubclass(sign_class.__args__[0], JsonObj)
+        return (
+            isinstance(instance, list)
+            and hasattr(sign_class, "__args__")
+            and isinstance(getattr(sign_class, "__args__"), tuple)
+            and len(sign_class.__args__) == 1
+            and issubclass(sign_class.__args__[0], JsonObj)
+        )
 
     @staticmethod
     def _is_json_obj_in_typing_dict(instance, sign_class):
-        return isinstance(instance, dict) and \
-            hasattr(sign_class, "__args__") and \
-            isinstance(getattr(sign_class, "__args__"), tuple) and \
-            len(sign_class.__args__) == 2 and \
-            inspect.isclass(sign_class.__args__[1]) and \
-            issubclass(sign_class.__args__[1], JsonObj)
+        return (
+            isinstance(instance, dict)
+            and hasattr(sign_class, "__args__")
+            and isinstance(getattr(sign_class, "__args__"), tuple)
+            and len(sign_class.__args__) == 2
+            and inspect.isclass(sign_class.__args__[1])
+            and issubclass(sign_class.__args__[1], JsonObj)
+        )
 
     @staticmethod
     def _convert_json_keys(data):
@@ -81,7 +84,8 @@ class JsonObj(metaclass=abc.ABCMeta):
             if isinstance(sign_class, type) and issubclass(sign_class, JsonObj):
                 value = sign_class.from_dict(value, check_parameter)
             elif cls._is_json_obj_in_typing_list(value, sign_class):
-                value = [sign_class.__args__[0].from_dict(item, check_parameter) for item in value]
+                # 列表中的 nul 跳过，避免 from_dict(None) 报错
+                value = [sign_class.__args__[0].from_dict(item, check_parameter) for item in value if item is not None]
             elif cls._is_json_obj_in_typing_dict(value, sign_class):
                 value = {key: sign_class.__args__[1].from_dict(val, check_parameter) for key, val in value.items()}
             args.append(value)

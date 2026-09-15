@@ -19,8 +19,7 @@ from typing import List
 
 from ascend_fd_tk.core.common.diag_enum import PowerUnitType
 from ascend_fd_tk.core.common.json_obj import JsonObj
-from ascend_fd_tk.core.config.threshold_config import BaseThreshold
-from ascend_fd_tk.core.model.threshold import Threshold
+from ascend_fd_tk.core.config.threshold_config import BaseThreshold, OpticalThresholdView
 from ascend_fd_tk.utils import helpers
 
 
@@ -62,6 +61,9 @@ class OpticalModuleInfo(JsonObj):
         rx_los="",
         log_time="",
         optical_id="",
+        udie_id="",
+        port_id="",
+        optical_type="",
     ):
         self.lane_power_infos: List[LanePowerInfo] = lane_power_infos or []
         self.sn = sn
@@ -70,8 +72,18 @@ class OpticalModuleInfo(JsonObj):
         self.rx_los = rx_los
         self.log_time = log_time
         self.optical_id = optical_id
+        self.udie_id = udie_id
+        self.port_id = port_id
+        # 光模块类型（ODSP/LPO）：A5 采集上报，交换机侧由 transceiver_type 后缀推导；A3 为空
+        # 诊断时据此选择 {TYPE}_{METRIC} 阈值，非 LPO 或为空时回退基础阈值（即 ODSP 阈值）
+        self.optical_type = optical_type
 
-    def get_lane_diff_desc(self, th: Threshold) -> str:
+    def _threshold_view(self, profile: BaseThreshold) -> "OpticalThresholdView":
+        """按本模块 optical_type 取阈值视图；类型为空或非 LPO 时回退基础阈值（即 ODSP 阈值）"""
+        return profile.get_optical_view(self.optical_type)
+
+    def get_lane_diff_desc(self, profile: BaseThreshold) -> str:
+        th = self._threshold_view(profile).SNR_LANE_DIFF_DB
         diff_desc_list = []
         for value_type in ("host", "media"):
             snr_attr = f"{value_type}_snr"  # media_snr/host_snr
@@ -85,18 +97,20 @@ class OpticalModuleInfo(JsonObj):
             return ""
         return "光模块SNR Lane间差值异常：\n" + "\n".join(diff_desc_list)
 
-    def get_abnormal_snr_infos(self, host_th: Threshold, media_th: Threshold):
+    def get_abnormal_snr_infos(self, profile: BaseThreshold):
+        view = self._threshold_view(profile)
         abnormal_snr_list = []
         for info in self.lane_power_infos:
-            host_desc = host_th.check_value_str(info.host_snr)
+            host_desc = view.HOST_SNR_DB.check_value_str(info.host_snr)
             if host_desc:
                 abnormal_snr_list.append(f"Lane{info.lane_id} {host_desc}")
-            media_desc = media_th.check_value_str(info.media_snr)
+            media_desc = view.MEDIA_SNR_DB.check_value_str(info.media_snr)
             if media_desc:
                 abnormal_snr_list.append(f"Lane{info.lane_id} {media_desc}")
         return "\n  ".join(abnormal_snr_list)
 
-    def get_abnormal_bias_infos(self, th: Threshold = None):
+    def get_abnormal_bias_infos(self, profile: BaseThreshold):
+        th = self._threshold_view(profile).TX_BIAS_MA
         abnormal_bias_list = []
         for info in self.lane_power_infos:
             desc = th.check_value_str(info.bias)
@@ -104,15 +118,16 @@ class OpticalModuleInfo(JsonObj):
                 abnormal_bias_list.append(f"Lane{info.lane_id} {desc}")
         return "\n  ".join(abnormal_bias_list)
 
-    def get_abnormal_power_infos(self, th: BaseThreshold):
+    def get_abnormal_power_infos(self, profile: BaseThreshold):
+        view = self._threshold_view(profile)
         abnormal_rx_power_list = []
         abnormal_tx_power_list = []
-        th_tx = th.TX_POWER_DBM
-        th_rx = th.RX_POWER_DBM
+        th_tx = view.TX_POWER_DBM
+        th_rx = view.RX_POWER_DBM
         for info in self.lane_power_infos:
             if info.power_unit_type == PowerUnitType.MW:
-                th_tx = th.TX_POWER_MW
-                th_rx = th.RX_POWER_MW
+                th_tx = view.TX_POWER_MW
+                th_rx = view.RX_POWER_MW
             desc_tx = th_tx.check_value_str(info.tx_power)
             if desc_tx:
                 abnormal_tx_power_list.append(f"Lane{info.lane_id} {desc_tx}")

@@ -69,6 +69,15 @@ class InterfaceSpeed(Enum):
     G_800 = "800G"
 
 
+# 光模块类型枚举：A5 主机侧由驱动上报，交换机侧按 transceiver_type 后缀推导
+class OpticalModuleType(Enum):
+    ODSP = "ODSP"
+    LPO = "LPO"
+
+    def __str__(self):
+        return self.value
+
+
 # 设备状态枚举
 class DeviceStatus(Enum):
     NORMAL = auto()

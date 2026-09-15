@@ -129,18 +129,41 @@ class TestHostAnalyzers(unittest.TestCase):
 
     def test_host_los_lol_a5_reports_only_abnormal_supported_flags(self):
         optical = SimpleNamespace(
+            udie_id="1",
+            port_id="0",
+            optical_type="",
             state_flag=[
                 SimpleNamespace(items="RxLos Flag", lanes=["Normal", "Alarm", "", "Normal"]),
                 SimpleNamespace(items="Temperature", lanes=["Alarm"]),
-            ]
+            ],
         )
-        chip = SimpleNamespace(npu_id="0", chip_phy_id="4", hccn_optical_info={"1": optical})
+        chip = SimpleNamespace(npu_id="0", hccn_optical_info=[optical])
 
         results = HostOpticalLosLoLAnalyzerA5._check_optical_indicator("host-01", chip, chip.hccn_optical_info)
 
         self.assertEqual(len(results), 1)
         self.assertIn("Lane1：Alarm", results[0].fault_info)
-        self.assertEqual(results[0].domain.optical_id, "1")
+        self.assertEqual(results[0].domain.udie_id, "1")
+        self.assertEqual(results[0].domain.npu_port_id, "0")
+
+    def test_host_los_lol_a5_skips_lol_flags_for_lpo_module(self):
+        optical = SimpleNamespace(
+            udie_id="1",
+            port_id="0",
+            optical_type="LPO",
+            state_flag=[
+                # LPO 不支持 Lol 标志，即使值异常也不应上报
+                SimpleNamespace(items="TxLol Flag", lanes=["Alarm", "Alarm"]),
+                SimpleNamespace(items="RxLos Flag", lanes=["Normal", "Alarm"]),
+            ],
+        )
+        chip = SimpleNamespace(npu_id="0", hccn_optical_info=[optical])
+
+        results = HostOpticalLosLoLAnalyzerA5._check_optical_indicator("host-01", chip, chip.hccn_optical_info)
+
+        self.assertEqual(len(results), 1)
+        self.assertIn("RxLos Flag", results[0].fault_info)
+        self.assertNotIn("Lol", results[0].fault_info)
 
     def test_host_optical_status_reports_peer_details(self):
         threshold = SimpleNamespace(
@@ -178,7 +201,8 @@ class TestHostAnalyzers(unittest.TestCase):
             chip_phy_id="4",
             chip_id="0",
         )
-        chip.get_optical_module_info.return_value = optical
+        # 本分支 get_optical_module_info 返回列表（A5 单 NPU 多光模块）
+        chip.get_optical_module_info.return_value = [optical]
         host = SimpleNamespace(host_id="host-01", npu_chip_info={"4": chip})
         cluster = _cluster(host_info=host)
         analyzer = InterHostFaultAnalyzer(cluster)
@@ -199,7 +223,8 @@ class TestHostAnalyzers(unittest.TestCase):
         abnormal.check_value_str.return_value = "异常"
         lane_diff = MagicMock()
         lane_diff.check_lane_diff_desc.return_value = ["lane0-lane1差值异常"]
-        threshold = SimpleNamespace(
+        # 本分支按光模块类型取阈值视图（LPO 优先，其他回退 ODSP）
+        threshold_view = SimpleNamespace(
             TX_BIAS_MA=abnormal,
             TX_POWER_DBM=abnormal,
             RX_POWER_DBM=abnormal,
@@ -207,22 +232,26 @@ class TestHostAnalyzers(unittest.TestCase):
             MEDIA_SNR_DB=abnormal,
             SNR_LANE_DIFF_DB=lane_diff,
         )
+        threshold = MagicMock()
+        threshold.get_optical_view.return_value = threshold_view
         analyzer = HostAnalyzerA5.__new__(HostAnalyzerA5)
         analyzer._threshold = threshold
-        domain = HostDomain(host_id="host-01", npu_id="0", chip_phy_id="4", optical_id="1")
+        domain = HostDomain(host_id="host-01", npu_id="0", udie_id="1", npu_port_id="0")
         optical = SimpleNamespace(
+            optical_type="",
             monitor_item=[
                 SimpleNamespace(items="Bias Lane0(mA)", value="20"),
                 SimpleNamespace(items="TxPower Lane0(dBm)", value="3"),
                 SimpleNamespace(items="RxPower Lane0(dBm)", value="-20"),
                 SimpleNamespace(items="HostSNR Lane0(dB)", value="10"),
                 SimpleNamespace(items="MediaSNR Lane0(dB)", value="10"),
-            ]
+            ],
         )
 
         self.assertEqual(len(analyzer._analyze_bias(domain, optical)), 1)
         self.assertEqual(len(analyzer._analyze_power(domain, optical)), 1)
         self.assertEqual(len(analyzer._analyze_optical_snr(domain, optical)), 3)
+        threshold.get_optical_view.assert_called_with("")
 
     def test_host_nic_lane_a5_skips_placeholders_and_reports_flags_and_numeric_values(self):
         flag_threshold = MagicMock()
