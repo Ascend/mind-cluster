@@ -21,7 +21,7 @@
 
 **组件功能<a name="section586382712395"></a>**
 
-- 提供极简的Docker或Containerd的昇腾容器化支持。
+- 提供极简的Docker、Containerd及CRI-O的昇腾容器化支持。
 - 部分硬件形态支持输入vNPU信息，完成vNPU的自动创建和销毁。
 
 **组件上下游依赖<a name="section10767161681"></a>**
@@ -30,7 +30,7 @@
 
 ![](../../figures/scheduling/01_introduction/01_component_description/ascend_docker_runtime.png "组件上下游依赖")
 
-1. install模块：部署时，修改docker/containerd的配置文件，将容器运行时改为昇腾容器运行时。
+1. install模块：部署时，修改docker/containerd/cri-o的配置文件，将容器运行时改为昇腾容器运行时。
 2. runtime模块：修改容器配置文件，使能hook、destroy钩子函数。并做好vNPU切分，芯片设备文件解析等挂载前的准备工作。
 3. hook&&cli：容器创建前被调用，负责整理芯片设备文件、驱动文件、用户自定义文件，并将其挂载到容器中。
 4. destroy：容器销毁前被调用，负责销毁创建出来的vNPU。

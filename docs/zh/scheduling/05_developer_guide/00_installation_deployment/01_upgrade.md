@@ -143,6 +143,12 @@
         systemctl daemon-reload && systemctl restart containerd
         ```
 
+    - CRI-O场景（或K8s集成CRI-O场景）
+
+        ```shell
+        systemctl daemon-reload && systemctl restart crio
+        ```
+
 5. <a name="li76002022113215"></a>参考[组件状态确认](../../03_installation_guide/03_confirming_status.md)章节，检查新版本Ascend Docker Runtime是否升级成功状态。
 6. （可选）恢复旧版本。下载旧版本安装包，依次重新执行[步骤2](#li12599722163212)到[步骤5](#li76002022113215)。
 

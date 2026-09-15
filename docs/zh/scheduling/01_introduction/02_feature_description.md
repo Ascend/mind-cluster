@@ -6,7 +6,7 @@
 
 - 为所有的训练或推理作业提供NPU容器化支持，自动挂载所需文件和设备依赖，简化容器拉起命令。
 - 支持vNPU的自动创建和挂载。
-- 支持Docker及Containerd。
+- 支持Docker、Containerd及CRI-O。
 
 **所需组件<a name="section15655185785119"></a>**
 
