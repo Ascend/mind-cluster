@@ -74,6 +74,10 @@ func (reScheduler *ReScheduler) createFaultTaskHandler(job *api.JobInfo, cardNam
 		}
 		isFaultTask, healthState := reScheduler.getTaskHealthState(&faultTask, task,
 			faultJob.SubHealthyStrategy, faultJob.ReScheduleKey)
+		if isFaultTask {
+			klog.V(util.LogInfoLev).Infof("task %s is fault task: %v, health state: %s", task.Name, isFaultTask,
+				healthState)
+		}
 		klog.V(util.LogDebugLev).Infof("task %s is fault task: %v, health state: %s", task.Name, isFaultTask,
 			healthState)
 		faultTask.setIsFaultTask(isFaultTask)
