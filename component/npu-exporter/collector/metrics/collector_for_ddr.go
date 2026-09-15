@@ -103,8 +103,7 @@ func (c *DdrCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 		if vDevActivityInfo != nil && common.IsValidVDevID(vDevActivityInfo.VDevID) {
 			return
 		}
-		if !c.Is910Series &&
-			cardLabel[len(cardLabel)-1] != "" && cardLabel[len(cardLabel)-1] != colcommon.NotDisplayedForMultiPod {
+		if !c.Is910Series && len(cardLabel) > 0 && cardLabel[len(cardLabel)-1] != "" {
 			doUpdateMetric(ch, cache.timestamp, memorySize, cardLabel, npuCtrTotalMemory)
 			doUpdateMetric(ch, cache.timestamp, memorySize-memoryAvailable, cardLabel, npuCtrUsedMemory)
 		}

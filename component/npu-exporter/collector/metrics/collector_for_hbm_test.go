@@ -70,6 +70,31 @@ func TestUpdateHbmInfo(t *testing.T) {
 	}
 }
 
+func TestUpdateHbmInfoMultiContainer(t *testing.T) {
+	collector := HbmCollector{}
+	collector.Is910Series = true
+	ch := make(chan int, maxMetrics)
+	defer close(ch)
+	cache := buildHbmCache()
+	chipWithVnpu := &colcommon.HuaWeiAIChip{}
+
+	patch := gomonkey.NewPatches()
+	patch.ApplyFunc(doUpdateMetric, func(_ chan<- prometheus.Metric, _ time.Time, _ interface{}, _ []string,
+		desc *prometheus.Desc) {
+		ch <- 0
+	})
+	defer patch.Reset()
+
+	// multi-container sharing one card: namespace/pod_name/container_name use NotDisplayedForMultiPod
+	cardLabel := []string{"0", "", "", "",
+		colcommon.NotDisplayedForMultiPod, colcommon.NotDisplayedForMultiPod, colcommon.NotDisplayedForMultiPod}
+
+	convey.Convey("should report container memory metrics in multi-container soft-share scenario", t, func() {
+		collector.updateHbmInfo(nil, cache, cardLabel, nil, *chipWithVnpu)
+		convey.So(len(ch), convey.ShouldEqual, expectMetricLen6)
+	})
+}
+
 func buildTestCases(collector *HbmCollector, chipWithVnpu *colcommon.HuaWeiAIChip, cache *hbmCache) []TestCase {
 	cases := []TestCase{
 		{name: "when npu is not 910 series ", initFunc: func() {}, expectMetricLen: expectMetricLen4},

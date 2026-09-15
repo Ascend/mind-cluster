@@ -219,8 +219,7 @@ func (c *HbmCollector) updateHbmInfo(ch chan<- prometheus.Metric, cache hbmCache
 		return
 	}
 
-	if c.Is910Series &&
-		cardLabel[len(cardLabel)-1] != "" && cardLabel[len(cardLabel)-1] != colcommon.NotDisplayedForMultiPod {
+	if c.Is910Series && len(cardLabel) > 0 && cardLabel[len(cardLabel)-1] != "" {
 		doUpdateMetric(ch, timestamp, hbmInfo.MemorySize, cardLabel, npuCtrTotalMemory)
 		doUpdateMetric(ch, timestamp, hbmInfo.Usage, cardLabel, npuCtrUsedMemory)
 	}

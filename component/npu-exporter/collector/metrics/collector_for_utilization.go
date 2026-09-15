@@ -116,7 +116,7 @@ func (c *UtilizationCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *
 	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache chipUtilizationCache, cardLabel []string) {
 		containerInfos := geenContainerInfos(&chipWithVnpu, containerMap)
 		var containerInfo container.DevicesInfo
-		if len(containerInfos) == 1 {
+		if len(containerInfos) >= 1 {
 			containerInfo = containerInfos[0]
 		}
 		timestamp := cache.timestamp
@@ -137,7 +137,6 @@ func updateContainerUtilization(ch chan<- prometheus.Metric, containerInfo conta
 	if len(containerName) != colcommon.ContainerNameLen {
 		return
 	}
-
 	// vnpu not support this metrics
 	vDevActivityInfo := chipWithVnpu.VDevActivityInfo
 	if vDevActivityInfo != nil && common.IsValidVDevID(vDevActivityInfo.VDevID) {

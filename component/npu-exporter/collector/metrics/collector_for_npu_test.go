@@ -561,6 +561,30 @@ func TestGetDefaultProcessLabel(t *testing.T) {
 	})
 }
 
+func TestBuildProcessCardLabel(t *testing.T) {
+	cardLabel := []string{"0", "npu", "die", "pcie", "ns", "pod", "container"}
+
+	convey.Convey("TestBuildProcessCardLabel", t, func() {
+		convey.Convey("should fill real namespace/pod/container values without mutating the input", func() {
+			info := container.DevicesInfo{ID: "c1", Name: "ns1_pod1_container1"}
+			labels, id := buildProcessCardLabel(cardLabel, info)
+			convey.So(id, convey.ShouldEqual, "c1")
+			convey.So(labels[:4], convey.ShouldResemble, []string{"0", "npu", "die", "pcie"})
+			convey.So(labels[4:], convey.ShouldResemble, []string{"ns1", "pod1", "ns1_pod1_container1"})
+			// the original cardLabel should stay unchanged
+			convey.So(cardLabel, convey.ShouldResemble, []string{"0", "npu", "die", "pcie", "ns", "pod", "container"})
+		})
+
+		convey.Convey("should return an untouched copy with the container ID when name does not split into 3 parts", func() {
+			info := container.DevicesInfo{ID: "c1", Name: "short"}
+			labels, id := buildProcessCardLabel(cardLabel, info)
+			convey.So(id, convey.ShouldEqual, "c1")
+			convey.So(labels, convey.ShouldResemble, cardLabel)
+			convey.So(cardLabel, convey.ShouldResemble, []string{"0", "npu", "die", "pcie", "ns", "pod", "container"})
+		})
+	})
+}
+
 func TestUpdateProcessInfoForPrometheusNoProcess(t *testing.T) {
 	cardLabel := []string{"0", "npu", "die", "pcie", "ns", "pod", "container"}
 
@@ -626,4 +650,85 @@ func TestUpdateProcessInfoForPrometheusNoProcess(t *testing.T) {
 			convey.So(value, convey.ShouldEqual, float64(0))
 		})
 	})
+}
+
+func TestUpdateContainerInfo(t *testing.T) {
+	cardLabel := []string{"0", "npu", "die", "pcie", "ns", "pod", "container"}
+
+	convey.Convey("TestUpdateContainerInfo", t, func() {
+		convey.Convey("should report a single metric for one container", func() {
+			chip := &chipCache{timestamp: time.Now()}
+			containerInfos := []container.DevicesInfo{{ID: "c1", Name: "ns1_pod1_container1"}}
+
+			metrics := collectContainerInfoMetrics(chip, containerInfos, cardLabel)
+
+			convey.So(metrics, convey.ShouldHaveLength, 1)
+			labels, value := readMetricLabelsAndValue(metrics[0])
+			convey.So(labels["containerID"], convey.ShouldEqual, "c1")
+			convey.So(labels["containerName"], convey.ShouldEqual, "ns1_pod1_container1")
+			convey.So(labels["namespace"], convey.ShouldEqual, "ns1")
+			convey.So(labels["pod_name"], convey.ShouldEqual, "pod1")
+			convey.So(labels["container_name"], convey.ShouldEqual, "container1")
+			convey.So(value, convey.ShouldEqual, float64(1))
+		})
+
+		convey.Convey("should report real namespace/pod_name/container_name per container in the "+
+			"soft-share multi-container scenario", func() {
+			chip := &chipCache{timestamp: time.Now()}
+			containerInfos := []container.DevicesInfo{
+				{ID: "c1", Name: "ns1_pod1_container1"},
+				{ID: "c2", Name: "ns2_pod2_container2"},
+			}
+
+			metrics := collectContainerInfoMetrics(chip, containerInfos, cardLabel)
+
+			convey.So(metrics, convey.ShouldHaveLength, 2)
+			gotByID := make(map[string]map[string]string)
+			for _, m := range metrics {
+				labels, value := readMetricLabelsAndValue(m)
+				convey.So(value, convey.ShouldEqual, float64(1))
+				gotByID[labels["containerID"]] = labels
+			}
+			convey.So(gotByID["c1"], convey.ShouldNotBeNil)
+			convey.So(gotByID["c1"]["namespace"], convey.ShouldEqual, "ns1")
+			convey.So(gotByID["c1"]["pod_name"], convey.ShouldEqual, "pod1")
+			convey.So(gotByID["c1"]["container_name"], convey.ShouldEqual, "container1")
+			convey.So(gotByID["c2"], convey.ShouldNotBeNil)
+			convey.So(gotByID["c2"]["namespace"], convey.ShouldEqual, "ns2")
+			convey.So(gotByID["c2"]["pod_name"], convey.ShouldEqual, "pod2")
+			convey.So(gotByID["c2"]["container_name"], convey.ShouldEqual, "container2")
+		})
+
+		convey.Convey("should skip containers whose name does not split into 3 parts", func() {
+			chip := &chipCache{timestamp: time.Now()}
+			containerInfos := []container.DevicesInfo{
+				{ID: "bad1", Name: "short"},
+				{ID: "bad2", Name: ""},
+				{ID: "c3", Name: "ns3_pod3_container3"},
+			}
+
+			metrics := collectContainerInfoMetrics(chip, containerInfos, cardLabel)
+
+			convey.So(metrics, convey.ShouldHaveLength, 1)
+			labels, value := readMetricLabelsAndValue(metrics[0])
+			convey.So(labels["containerID"], convey.ShouldEqual, "c3")
+			convey.So(value, convey.ShouldEqual, float64(1))
+		})
+	})
+}
+
+func collectContainerInfoMetrics(chip *chipCache, containerInfos []container.DevicesInfo,
+	cardLabel []string) []prometheus.Metric {
+	ch := make(chan prometheus.Metric, len(containerInfos)+1)
+	go func() {
+		defer close(ch)
+		updateContainerInfo(ch, containerInfos, cardLabel, chip, colcommon.HuaWeiAIChip{})
+	}()
+	metrics := make([]prometheus.Metric, 0, len(containerInfos))
+	for m := range ch {
+		if m.Desc() == npuCtrInfo {
+			metrics = append(metrics, m)
+		}
+	}
+	return metrics
 }

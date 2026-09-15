@@ -18,12 +18,16 @@ package metrics
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
+	colcommon "huawei.com/npu-exporter/v6/collector/common"
+	"huawei.com/npu-exporter/v6/collector/container"
 )
 
 func TestBuildDefaultMultiUtilInfo(t *testing.T) {
@@ -250,4 +254,78 @@ func TestCollectUtilCommon(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestUpdateContainerUtilization(t *testing.T) {
+	cardLabel := []string{"0", "npu", "die", "pcie", "ns", "pod", "container"}
+
+	convey.Convey("TestUpdateContainerUtilization", t, func() {
+		convey.Convey("should report a single metric when container name splits into 3 parts", func() {
+			chip := &chipUtilizationCache{Utilization: 80, timestamp: time.Now()}
+			containerInfo := container.DevicesInfo{ID: "c1", Name: "ns1_pod1_container1"}
+
+			metrics := collectContainerUtilizationMetrics(chip, containerInfo, cardLabel, colcommon.HuaWeiAIChip{})
+
+			convey.So(metrics, convey.ShouldHaveLength, 1)
+			labels, value := readMetricLabelsAndValue(metrics[0])
+			convey.So(labels["namespace"], convey.ShouldEqual, "ns")
+			convey.So(labels["pod_name"], convey.ShouldEqual, "pod")
+			convey.So(labels["container_name"], convey.ShouldEqual, "container")
+			convey.So(value, convey.ShouldEqual, float64(80))
+		})
+
+		convey.Convey("should not report when container name does not split into 3 parts", func() {
+			chip := &chipUtilizationCache{Utilization: 80, timestamp: time.Now()}
+			containerInfo := container.DevicesInfo{ID: "c1", Name: "short"}
+
+			metrics := collectContainerUtilizationMetrics(chip, containerInfo, cardLabel, colcommon.HuaWeiAIChip{})
+
+			convey.So(metrics, convey.ShouldHaveLength, 0)
+		})
+
+		convey.Convey("should not report when container name is empty", func() {
+			chip := &chipUtilizationCache{Utilization: 80, timestamp: time.Now()}
+			containerInfo := container.DevicesInfo{}
+
+			metrics := collectContainerUtilizationMetrics(chip, containerInfo, cardLabel, colcommon.HuaWeiAIChip{})
+
+			convey.So(metrics, convey.ShouldHaveLength, 0)
+		})
+
+		convey.Convey("should not report when utilization value is invalid", func() {
+			chip := &chipUtilizationCache{Utilization: -1, timestamp: time.Now()}
+			containerInfo := container.DevicesInfo{ID: "c1", Name: "ns1_pod1_container1"}
+
+			metrics := collectContainerUtilizationMetrics(chip, containerInfo, cardLabel, colcommon.HuaWeiAIChip{})
+
+			convey.So(metrics, convey.ShouldHaveLength, 0)
+		})
+
+		convey.Convey("should not report for vnpu virtual device", func() {
+			chip := &chipUtilizationCache{Utilization: 80, timestamp: time.Now()}
+			containerInfo := container.DevicesInfo{ID: "c1", Name: "ns1_pod1_container1"}
+
+			metrics := collectContainerUtilizationMetrics(chip, containerInfo, cardLabel, colcommon.HuaWeiAIChip{
+				VDevActivityInfo: &common.VDevActivityInfo{VDevID: 100, IsVirtualDev: true},
+			})
+
+			convey.So(metrics, convey.ShouldHaveLength, 0)
+		})
+	})
+}
+
+func collectContainerUtilizationMetrics(chip *chipUtilizationCache, containerInfo container.DevicesInfo,
+	cardLabel []string, chipWithVnpu colcommon.HuaWeiAIChip) []prometheus.Metric {
+	ch := make(chan prometheus.Metric, 1)
+	go func() {
+		defer close(ch)
+		updateContainerUtilization(ch, containerInfo, cardLabel, chip, chipWithVnpu)
+	}()
+	metrics := make([]prometheus.Metric, 0, 1)
+	for m := range ch {
+		if m.Desc() == npuCtrUtilization {
+			metrics = append(metrics, m)
+		}
+	}
+	return metrics
 }

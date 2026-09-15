@@ -38,8 +38,8 @@ import (
 const (
 	containerNameIndexOffsetInCardLabel = 1
 	podNameIndexOffsetInCardLabel       = 2
-	namespaceIndexOffsetInCardLabel = 3
-	cardLabelWithContainerInfoLen   = 3
+	namespaceIndexOffsetInCardLabel     = 3
+	cardLabelWithContainerInfoLen       = 3
 	// hexBase is the base for formatting error codes as hexadecimal strings
 	hexBase = 16
 )
@@ -270,10 +270,6 @@ func (c *BaseInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *col
 
 	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache chipCache, cardLabel []string) {
 		containerInfos := geenContainerInfos(&chipWithVnpu, containerMap)
-		var containerInfo container.DevicesInfo
-		if len(containerInfos) == 1 {
-			containerInfo = containerInfos[0]
-		}
 		timestamp := cache.timestamp
 		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.Power), cardLabel, descPower)
 		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.Voltage), cardLabel, descVoltage)
@@ -286,7 +282,7 @@ func (c *BaseInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *col
 				cardLabel, descNetworkStatus)
 		}
 
-		updateContainerInfo(ch, containerInfo, cardLabel, &cache, chipWithVnpu)
+		updateContainerInfo(ch, containerInfos, cardLabel, &cache, chipWithVnpu)
 
 		updateProcessInfoForPrometheus(ch, &cache, containerInfos, timestamp, cardLabel)
 		updateErrorCodesInfo(ch, &cache, timestamp, cardLabel)
@@ -322,15 +318,25 @@ func updateMachineInfoCardMetric(ch chan<- prometheus.Metric, localCache *sync.M
 	ch <- prometheus.MustNewConstMetric(machineInfoCardDesc, prometheus.GaugeValue, float64(cardNum))
 }
 
-func updateContainerInfo(ch chan<- prometheus.Metric, containerInfo container.DevicesInfo,
+func updateContainerInfo(ch chan<- prometheus.Metric, containerInfos []container.DevicesInfo,
 	cardLabel []string, chip *chipCache, chipWithVnpu colcommon.HuaWeiAIChip) {
-	containerName := getContainerNameArray(containerInfo)
-	if len(containerName) != colcommon.ContainerNameLen {
-		return
+	for _, containerInfo := range containerInfos {
+		containerNameArray := getContainerNameArray(containerInfo)
+		if len(containerNameArray) != colcommon.ContainerNameLen {
+			continue
+		}
+		// In the soft-share multi-container scenario the incoming cardLabel carries
+		// not_displayed_for_multi_pod for namespace/pod_name/container_name. Fill each
+		// slot with the real per-container values on a copy to keep the shared cardLabel untouched.
+		containerLabel := make([]string, len(cardLabel))
+		copy(containerLabel, cardLabel)
+		containerLabel[len(containerLabel)-containerNameIndexOffsetInCardLabel] = containerNameArray[colcommon.ConNameIdx]
+		containerLabel[len(containerLabel)-podNameIndexOffsetInCardLabel] = containerNameArray[colcommon.PodNameIdx]
+		containerLabel[len(containerLabel)-namespaceIndexOffsetInCardLabel] = containerNameArray[colcommon.NameSpaceIdx]
+		// container_name in npu_container_info is namespace_podName_containerName
+		doUpdateMetric(ch, chip.timestamp, 1,
+			append(containerLabel, containerInfo.ID, strings.Join(containerNameArray, "_")), npuCtrInfo)
 	}
-	// based on chipType , container_npu_total_memory、container_npu_used_memory reported in hbm or ddr group
-	doUpdateMetric(ch, chip.timestamp, 1, append(cardLabel, containerInfo.ID, strings.Join(containerName, "_")),
-		npuCtrInfo)
 }
 
 func updateErrorCodesInfo(ch chan<- prometheus.Metric, chip *chipCache, timestamp time.Time, cardLabel []string) {
@@ -398,22 +404,23 @@ func getDefaultProcessLabel(cardLabel []string, containerInfo container.DevicesI
 // matched to a container, filling the namespace/podName/containerName slots with the
 // matched container's values, and returns the matched container ID.
 func buildProcessCardLabel(cardLabel []string, containerInfo container.DevicesInfo) ([]string, string) {
+	newCardLabel := make([]string, len(cardLabel))
+	copy(newCardLabel, cardLabel)
 	cNameArray := getContainerNameArray(containerInfo)
 	if len(cNameArray) != colcommon.ContainerNameLen {
-		return cardLabel, containerInfo.ID
+		return newCardLabel, containerInfo.ID
 	}
 	namespaceValue := cNameArray[colcommon.NameSpaceIdx]
 	podNameValue := cNameArray[colcommon.PodNameIdx]
 	containerName := cNameArray[colcommon.ConNameIdx]
-	if len(cardLabel) > cardLabelWithContainerInfoLen {
+	if len(newCardLabel) > cardLabelWithContainerInfoLen {
 		// containerName in process info is namespace_podName_containerName
-		cardLabel[len(cardLabel)-containerNameIndexOffsetInCardLabel] = strings.Join(
+		newCardLabel[len(newCardLabel)-containerNameIndexOffsetInCardLabel] = strings.Join(
 			[]string{namespaceValue, podNameValue, containerName}, "_")
-		cardLabel[len(cardLabel)-podNameIndexOffsetInCardLabel] = podNameValue
-		cardLabel[len(cardLabel)-namespaceIndexOffsetInCardLabel] = namespaceValue
-
+		newCardLabel[len(newCardLabel)-podNameIndexOffsetInCardLabel] = podNameValue
+		newCardLabel[len(newCardLabel)-namespaceIndexOffsetInCardLabel] = namespaceValue
 	}
-	return cardLabel, containerInfo.ID
+	return newCardLabel, containerInfo.ID
 }
 
 // findContainerForPID matches the given chip process PID to a container. It first
