@@ -148,7 +148,8 @@ func checkParam() bool {
 		checkLinkdownTimeout,
 		checkThirdPartyScanDelay,
 		checkDeviceResetTimeout,
-		checkSoftShareDevParam,
+		checkShareDevFeatureParam,
+		checkSoftShareDevFeatureParam,
 	}
 	for _, check := range checks {
 		if !check() {
@@ -198,27 +199,6 @@ func checkPresetWithShareDevCount() bool {
 	return true
 }
 
-func checkSoftShareDevConfigDir() bool {
-	if *softShareDevConfigDir == "" {
-		return true
-	}
-	if *shareDevCount != common.MaxShareDevCount {
-		hwlog.RunLog.Errorf("shareDevCount should be %d when softShareDevConfigDir is set",
-			common.MaxShareDevCount)
-		return false
-	}
-	if !filepath.IsAbs(*softShareDevConfigDir) {
-		hwlog.RunLog.Errorf("softShareDevConfigDir: %s is not absolute path", *softShareDevConfigDir)
-		return false
-	}
-	_, err := utils.RealDirChecker(filepath.Dir(*softShareDevConfigDir), true, false)
-	if err != nil {
-		hwlog.RunLog.Errorf("check softShareDevConfigDir: %s failed, error is %v", *softShareDevConfigDir, err)
-		return false
-	}
-	return true
-}
-
 func checkHotResetMode() bool {
 	switch *hotReset {
 	case common.HotResetClose, common.HotResetInfer, common.HotResetTrainOffLine:
@@ -262,20 +242,46 @@ func checkDeviceResetTimeout() bool {
 	return true
 }
 
-func checkShareDevCount() bool {
+// checkShareDevFeatureParam validates the shared device feature, which is controlled by
+// shareDevCount: a value greater than 1 enables it. The value must be within
+// [1, MaxShareDevCount], and when shared device is enabled without soft share
+// virtualization (softShareDevConfigDir empty), volcanoType must be false.
+func checkShareDevFeatureParam() bool {
 	if *shareDevCount < 1 || *shareDevCount > common.MaxShareDevCount {
 		hwlog.RunLog.Error("share device function params invalid")
+		return false
+	}
+	if *shareDevCount > 1 && *softShareDevConfigDir == "" && *volcanoType {
+		hwlog.RunLog.Error("shared device feature without soft share virtualization " +
+			"requires volcanoType to be false")
 		return false
 	}
 	return true
 }
 
-func checkSoftShareDevParam() bool {
-	if !checkShareDevCount() || !checkSoftShareDevConfigDir() {
+// checkSoftShareDevFeatureParam validates the soft share virtualization feature, which is
+// controlled by softShareDevConfigDir: a non-empty value enables it. Once enabled,
+// shareDevCount must be 100, the config dir must be a valid absolute path, and
+// volcanoType must be true.
+func checkSoftShareDevFeatureParam() bool {
+	if *softShareDevConfigDir == "" {
+		return true
+	}
+	if *shareDevCount != common.MaxShareDevCount {
+		hwlog.RunLog.Errorf("shareDevCount should be %d when softShareDevConfigDir is set",
+			common.MaxShareDevCount)
 		return false
 	}
-	if *shareDevCount == common.MaxShareDevCount && *softShareDevConfigDir != "" && *volcanoType == false {
-		hwlog.RunLog.Error("soft share device is enabled, but volcanoType must be true")
+	if !filepath.IsAbs(*softShareDevConfigDir) {
+		hwlog.RunLog.Errorf("softShareDevConfigDir: %s is not absolute path", *softShareDevConfigDir)
+		return false
+	}
+	if _, err := utils.RealDirChecker(filepath.Dir(*softShareDevConfigDir), true, false); err != nil {
+		hwlog.RunLog.Errorf("check softShareDevConfigDir: %s failed, error is %v", *softShareDevConfigDir, err)
+		return false
+	}
+	if !*volcanoType {
+		hwlog.RunLog.Error("soft share virtualization is enabled, volcanoType must be true")
 		return false
 	}
 	return true
