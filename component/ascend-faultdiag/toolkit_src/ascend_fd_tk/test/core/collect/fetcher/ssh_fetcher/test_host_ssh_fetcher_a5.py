@@ -51,11 +51,12 @@ class TestHostSshFetcherA5(unittest.TestCase):
         result = asyncio.run(fetcher.fetch_optical_top_headline("0"))
         self.assertEqual(result, "optical headline")
 
-    def test_fetch_optical_info_a5_empty_input(self):
-        """npu_id 或 optical_id 为空时应返回空串，不执行命令。"""
+    def test_fetch_optical_port_info_empty_input(self):
+        """npu_id/udie_id/port_id 任一为空时应返回空串，不执行命令。"""
         fetcher = HostSshFetcherA5(_make_executor(stdout="should_not_reach"))
-        self.assertEqual(asyncio.run(fetcher.fetch_optical_info_a5("", "0")), "")
-        self.assertEqual(asyncio.run(fetcher.fetch_optical_info_a5("0", "")), "")
+        self.assertEqual(asyncio.run(fetcher.fetch_optical_port_info("", "0", "0")), "")
+        self.assertEqual(asyncio.run(fetcher.fetch_optical_port_info("0", "", "0")), "")
+        self.assertEqual(asyncio.run(fetcher.fetch_optical_port_info("0", "0", "")), "")
         fetcher.executor.run_cmd.assert_not_called()
 
     def test_fetch_nic_sfp_info_empty_card(self):

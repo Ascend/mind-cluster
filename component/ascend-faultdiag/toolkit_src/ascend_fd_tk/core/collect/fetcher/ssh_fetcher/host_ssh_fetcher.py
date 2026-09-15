@@ -21,7 +21,6 @@ from typing import List
 from ascend_fd_tk.core.collect.fetcher.host_fetcher import HostFetcher
 from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.base import SshFetcher
 from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.cmd_provider.host_provider import HostCmdProvider
-from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.cmd_provider.host_base import HostBaseProvider
 from ascend_fd_tk.core.common.diag_enum import NpuType
 from ascend_fd_tk.core.context.register import register_host_fetcher
 from ascend_fd_tk.core.log_parser.base import FindResult
@@ -41,7 +40,7 @@ class HostSshFetcher(SshFetcher, HostFetcher):
     def __init__(self, executor, npu_mapping_cache: dict = None):
         super().__init__(executor)
         # 默认 A3 命令提供者，保持向后兼容；上层可按代际注入
-        self.cmd_provider: HostBaseProvider = HostCmdProvider()
+        self.cmd_provider: HostCmdProvider = HostCmdProvider()
         self.generation: NpuType = NpuType.A3
         # 代际探测阶段已执行过 npu-smi info -m，缓存其 npu_mapping 避免重复采集
         self._npu_mapping_cache = npu_mapping_cache
@@ -94,7 +93,6 @@ class HostSshFetcher(SshFetcher, HostFetcher):
         return npu_mapping
 
     async def fetch_optical_info(self, chip_phy_id) -> str:
-        # A3 单端口光模块采集；A5 需遍历 optical_id，由子类重写。
         command_res = await self.executor.run_cmd(CmdTask(self.cmd_provider.optical_cmd(chip_phy_id)))
         if command_res.is_success():
             return command_res.stdout

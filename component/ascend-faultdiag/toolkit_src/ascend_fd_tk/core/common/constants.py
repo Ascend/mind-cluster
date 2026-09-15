@@ -39,6 +39,9 @@ HIGH_POWER_ENABLE_A5 = "enable"
 # 光模块开光状态
 OP_TX_DISABLE_STATUS = "0x0"
 
+# hccn_tool 回显中光口固定标识 "Optical"：media_type 取值前缀、光模块信息回显列名
+OPTICAL_FLAG = "Optical"
+
 # npu长时down间隔
 NPU_LONG_DOWN_TIME = 28
 L1_CHIP_NUM = 7

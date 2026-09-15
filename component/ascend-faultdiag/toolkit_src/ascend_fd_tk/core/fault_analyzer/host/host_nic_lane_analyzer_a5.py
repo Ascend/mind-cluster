@@ -45,7 +45,7 @@ class HostNicLaneAnalyzerA5(Analyzer):
         results = []
         if not port_lane_info:
             return results
-        domain = HostDomain(host_id=host_id, nic_id=nic_info.card_name, port_id=port_lane_info.port_id)
+        domain = HostDomain(host_id=host_id, nic_id=nic_info.card_name, nic_port_id=port_lane_info.port_id)
         results.extend(self._check_flag_lanes(domain, port_lane_info))
         results.extend(self._check_numeric_lanes(domain, port_lane_info))
         return results

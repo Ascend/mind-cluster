@@ -6,6 +6,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+from ascend_fd_tk.core.config.threshold_config import A5Threshold, BaseThreshold
 from ascend_fd_tk.core.root_cause.constants import PORT_SPEED_200G, PORT_SPEED_400G
 from ascend_fd_tk.core.root_cause.snr_checker import SnrChecker
 
@@ -37,18 +38,23 @@ class TestSnrChecker(unittest.TestCase):
             self.assertEqual(checker.check_hilink_snr_abnormal(swi2, "200G-1"), (True, False))
 
     def test_check_optical_snr_abnormal(self):
-        mock_threshold = MagicMock()
-        checker = SnrChecker(mock_threshold)
+        checker = SnrChecker(BaseThreshold)
         # None
         self.assertFalse(checker.check_optical_host_snr_abnormal(None))
         # host异常
-        mock_threshold.HOST_SNR_DB.check_value_str.return_value = True
-        optical = MagicMock(lane_power_infos=[MagicMock(host_snr="8.0")])
+        optical = MagicMock(lane_power_infos=[MagicMock(host_snr="8.0")], optical_type="")
         self.assertTrue(checker.check_optical_host_snr_abnormal(optical))
         # media异常
-        mock_threshold.MEDIA_SNR_DB.check_value_str.return_value = True
-        optical2 = MagicMock(lane_power_infos=[MagicMock(media_snr="5.0")])
+        optical2 = MagicMock(lane_power_infos=[MagicMock(media_snr="5.0")], optical_type="")
         self.assertTrue(checker.check_optical_media_snr_abnormal(optical2))
+
+    def test_check_optical_snr_abnormal_by_optical_type(self):
+        """LPO 不支持 SNR（无 LPO_ 前缀 SNR 阈值），host SNR 一律回退基础阈值判定"""
+        checker = SnrChecker(A5Threshold)
+        optical_lpo = MagicMock(lane_power_infos=[MagicMock(host_snr="8.0")], optical_type="LPO")
+        self.assertTrue(checker.check_optical_host_snr_abnormal(optical_lpo))
+        optical_odsp = MagicMock(lane_power_infos=[MagicMock(host_snr="8.0")], optical_type="ODSP")
+        self.assertTrue(checker.check_optical_host_snr_abnormal(optical_odsp))
 
     def test_format_hilink_snr(self):
         self.assertEqual(SnrChecker.format_hilink_snr(MagicMock(hccs_info=None), "200G-1"), "")

@@ -24,7 +24,6 @@ TIME_STR = "time"
 
 
 class TestSwitchParser(unittest.TestCase):
-
     def test_parse_op_state_flag_diag_info(self):
         # 测试parse_op_state_flag_diag_info方法
         cmd_res = """Items   Status
@@ -62,7 +61,7 @@ RxPower  -11.5  -6.0       -8.0      -16.0     -13.0     Normal
             "items": "TxPower",
             "lane_id": "0",
             "mode": "",
-            TIME_STR: "2026-02-01 10:00:00"
+            TIME_STR: "2026-02-01 10:00:00",
         }
         mock_log_info2 = MagicMock()
         mock_log_info2.info_dict = {
@@ -71,7 +70,7 @@ RxPower  -11.5  -6.0       -8.0      -16.0     -13.0     Normal
             "items": "TxPower",
             "lane_id": "0",
             "mode": "",
-            TIME_STR: "2026-02-01 11:00:00"
+            TIME_STR: "2026-02-01 11:00:00",
         }
         result = SwitchParser.filter_opt_module_info([mock_log_info1, mock_log_info2])
         self.assertEqual(len(result), 1)
@@ -149,16 +148,17 @@ Timezone: UTC+8"""
 
     @patch('ascend_fd_tk.core.collect.parser.switch_parser.FormParser')
     def test_parse_transceiver_info(self, mock_form_parser):
-        # 测试parse_transceiver_info方法
+        # 测试parse_transceiver_info方法（新格式：{接口名} transceiver{N} information）
         mock_form = MagicMock()
         mock_form.parse.return_value = {
-            "transceiver information eth0": {"Vendor": "Huawei", "Part Number": "02310MNY"}
+            "eth0 transceiver0 information": {"Vendor": "Huawei", "Part Number": "02310MNY"}
         }
         mock_form_parser.return_value = mock_form
-        cmd_res = "transceiver information eth0\nVendor: Huawei\nPart Number: 02310MNY"
+        cmd_res = "eth0 transceiver0 information\nVendor: Huawei\nPart Number: 02310MNY"
         result = SwitchParser.parse_transceiver_info(cmd_res)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].interface, "eth0")
+        self.assertEqual(result[0].optical_id, "0")
         self.assertEqual(result[0].manufacture_information.manu_serial_number, "")  # 默认值
         # 注意：TransceiverInfo类没有直接的vendor属性，vendor信息应该在manufacture_information中
 

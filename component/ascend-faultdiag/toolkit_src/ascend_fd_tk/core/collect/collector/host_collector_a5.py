@@ -22,7 +22,8 @@ from ascend_fd_tk.core.context.register import register_host_collector
 from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.host_ssh_fetcher_a5 import HostSshFetcherA5
 from ascend_fd_tk.core.collect.parser.host_parser_a5 import HostParserA5
 from ascend_fd_tk.core.common.diag_enum import NpuType
-from ascend_fd_tk.core.model.host_a5 import HostInfoA5, OpticalTopHeadline, NpuChipInfoA5, NICInfoA5
+from ascend_fd_tk.core.common.constants import OPTICAL_FLAG
+from ascend_fd_tk.core.model.host_a5 import HostInfoA5, OpticalTopHeadline, NpuChipInfoA5, NICInfoA5, DevInfo
 
 
 @register_host_collector(NpuType.A5)
@@ -44,15 +45,21 @@ class HostCollectorA5(Collector):
         sn_num = await self.fetcher.fetch_sn_num()
         npu_chip_info = {}
         for npu_id in npu_mapping.keys():
-            optical_top_headline = await self.collect_optical_top_headline(npu_id)
-            optical_info_dict = {}
-            for top_info in optical_top_headline:
-                hccn_optical_info = await self.collect_optical_info(npu_id, top_info.optical_id)
-                optical_info_dict.update({top_info.optical_id: hccn_optical_info})
+            dev_info_list = await self.collect_dev_info(npu_id)
+            optical_infos = []
+            for dev_info in dev_info_list:
+                if dev_info.media_type != OPTICAL_FLAG:
+                    continue
+                port_state_info = await self.collect_port_state_info(npu_id, dev_info.udie_id, dev_info.port_id)
+                optical_type = port_state_info.media_type if port_state_info else ""
+                optical_info = await self.collect_optical_port_info(npu_id, dev_info.udie_id, dev_info.port_id)
+                if optical_info:
+                    optical_info.optical_type = optical_type
+                    optical_infos.append(optical_info)
             npu_chip_info[npu_id] = NpuChipInfoA5(
                 npu_id=npu_id,
                 npu_type=npu_type,
-                hccn_optical_info=optical_info_dict,
+                hccn_optical_info=optical_infos,
             )
 
         nic_info_list = await self.collect_nic_info()
@@ -78,9 +85,17 @@ class HostCollectorA5(Collector):
         recv = await self.fetcher.fetch_optical_top_headline(npu_id)
         return self.parser.parse_optical_top_headline(recv)
 
-    async def collect_optical_info(self, npu_id, optical_id):
-        recv = await self.fetcher.fetch_optical_info_a5(npu_id, optical_id)
-        return self.parser.parse_optical_info_a5(recv, npu_id, optical_id)
+    async def collect_dev_info(self, npu_id) -> List[DevInfo]:
+        recv = await self.fetcher.fetch_dev_info(npu_id)
+        return self.parser.parse_dev_info(recv)
+
+    async def collect_port_state_info(self, npu_id, udie_id, port_id):
+        recv = await self.fetcher.fetch_port_state_info(npu_id, udie_id, port_id)
+        return self.parser.parse_port_state_info(recv)
+
+    async def collect_optical_port_info(self, npu_id, udie_id, port_id):
+        recv = await self.fetcher.fetch_optical_port_info(npu_id, udie_id, port_id)
+        return self.parser.parse_optical_info_port(recv, udie_id, port_id)
 
     async def collect_nic_info(self) -> List[NICInfoA5]:
         """采集所有网卡信息：先查网卡列表，再查每张网卡端口数，最后遍历每个端口采集 SFP 信息"""

@@ -95,6 +95,10 @@ class HostToSwitchOpticalModuleData:
     room_name: str = ""  # 机房名称
     cabinet_id: str = ""  # 机柜编号
     host_port: str = ""  # 主机侧端口
+    udie_id: str = ""  # UDie ID（A5 光模块定位，A3 为空）
+    npu_port_id: str = ""  # NPU侧UB端口（A5 光模块定位，A3 为空）
+    optical_type: str = ""  # 主机侧光模块类型（ODSP/LPO；按类型选阈值并展示）
+    peer_optical_type: str = ""  # 对端交换机光模块类型（ODSP/LPO；按类型选阈值并展示）
 
     # 对端交换机信息
     peer_switch_name: str = ""  # 对端交换机名称
@@ -160,12 +164,16 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "chip_id": "芯片ID",
             "chip_phy_id": "物理芯片ID",
             "npu_type": "NPU类型",
+            # A5 光模块定位列（A3 恒为空）
+            "udie_id": "UDie ID",
+            "npu_port_id": "NPU端口",
             "host_port": "主机侧端口",
             # 主机侧光模块基本信息
             "host_optical_present": "主机侧光模块状态",
             "host_optical_vendor": "主机侧光模块厂商",
             "host_optical_model": "主机侧光模块型号",
             "host_optical_sn": "主机侧光模块SN",
+            "optical_type": "主机侧光模块类型",
             # 主机侧光模块性能指标
             "host_optical_temp": "主机侧光模块温度",
             "host_optical_vcc": "主机侧光模块供电电压",
@@ -215,6 +223,7 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "peer_switch_optical_vendor": "对端交换机光模块厂商",
             "peer_switch_optical_model": "对端交换机光模块型号",
             "peer_switch_optical_sn": "对端交换机光模块SN",
+            "peer_optical_type": "对端交换机光模块类型",
             "peer_switch_optical_temp": "对端交换机光模块温度",
             # 对端交换机光模块Lane信息
             "peer_switch_tx_power0": "对端交换机TX Power Lane 0",
@@ -244,11 +253,14 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     "芯片ID",
                     "物理芯片ID",
                     "NPU类型",
+                    "UDie ID",
+                    "NPU端口",
                     "主机侧端口",
                     "主机侧光模块状态",
                     "主机侧光模块厂商",
                     "主机侧光模块型号",
                     "主机侧光模块SN",
+                    "主机侧光模块类型",
                     "主机侧光模块温度",
                     "主机侧光模块供电电压",
                     "主机侧链路速度",
@@ -291,6 +303,7 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     "对端交换机光模块厂商",
                     "对端交换机光模块型号",
                     "对端交换机光模块SN",
+                    "对端交换机光模块类型",
                     "对端交换机光模块温度",
                     "对端交换机TX Power Lane 0",
                     "对端交换机RX Power Lane 0",
@@ -326,9 +339,14 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "room_name": host_info.room_name or "",
             "cabinet_id": host_info.cabinet_id or "",
             "npu_id": npu_chip_info.npu_id or "",
-            "chip_id": npu_chip_info.chip_id or "",
-            "chip_phy_id": npu_chip_info.chip_phy_id or "",
+            "chip_id": getattr(npu_chip_info, 'chip_id', ""),
+            "chip_phy_id": getattr(npu_chip_info, 'chip_phy_id', ""),
             "npu_type": npu_chip_info.npu_type or "",
+            # A5 按 UDie + NPU端口 定位光模块，A3 恒为空
+            "udie_id": getattr(optical_module_info, 'udie_id', "") or "",
+            "npu_port_id": getattr(optical_module_info, 'port_id', "") or "",
+            # 光模块类型（ODSP/LPO），供阈值着色按类型选阈值
+            "optical_type": getattr(optical_module_info, 'optical_type', "") or "",
             "host_port": local_port,
             "host_optical_present": getattr(optical_info, 'present', ""),
             "host_optical_vendor": getattr(optical_info, 'vendor_name', ""),
@@ -447,6 +465,8 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     peer_optical_sn = getattr(manu_info, 'manu_serial_number', "")
             if hasattr(peer_interface_info, 'swi_optical_model') and peer_interface_info.swi_optical_model:
                 peer_optical_temp = getattr(peer_interface_info.swi_optical_model, 'temperature', "")
+        # 对端光模块类型（按 transceiver_type 后缀推导），供阈值着色按类型选阈值
+        peer_optical_info = peer_interface_info.get_optical_module_info() if peer_interface_info else None
         return {
             "peer_switch_id": peer_switch_id,
             "peer_switch_sn": peer_switch_sn,
@@ -459,6 +479,7 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "peer_switch_optical_model": peer_optical_model,
             "peer_switch_optical_sn": peer_optical_sn,
             "peer_switch_optical_temp": peer_optical_temp,
+            "peer_optical_type": getattr(peer_optical_info, 'optical_type', "") or "",
             **peer_lane_data,
         }
 
@@ -487,11 +508,8 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             if not host_info.npu_chip_info:
                 continue
             for chip_id, npu_chip_info in host_info.npu_chip_info.items():
-                # A5 支持单 NPU 多光模块，每个光模块生成一行数据
-                if hasattr(npu_chip_info, 'get_optical_module_infos'):
-                    optical_module_infos = npu_chip_info.get_optical_module_infos()
-                else:
-                    optical_module_infos = [npu_chip_info.get_optical_module_info()]
+                # A3 单 NPU 一个光模块、A5 可能有多个，接口统一返回列表
+                optical_module_infos = npu_chip_info.get_optical_module_info()
                 if not optical_module_infos:
                     continue
                 # peer switch 信息与光模块无关，循环外取一次
@@ -526,173 +544,83 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
         # 主机侧功率单位随代际不同：A3 采集值为 mW，A5 为 dBm，按代际选择对应阈值；
         # 对端交换机侧功率始终为 dBm，固定使用 dBm 阈值
         if issubclass(threshold_cls, A5Threshold):
-            host_tx_power_th = threshold_cls.TX_POWER_DBM
-            host_rx_power_th = threshold_cls.RX_POWER_DBM
+            host_power_metric = ("TX_POWER_DBM", "RX_POWER_DBM")
         else:
-            host_tx_power_th = threshold_cls.TX_POWER_MW
-            host_rx_power_th = threshold_cls.RX_POWER_MW
+            host_power_metric = ("TX_POWER_MW", "RX_POWER_MW")
 
-        return [
-            # 主机侧发射功率阈值（A3 为 mW，A5 为 dBm）
-            ThresholdConfig(
-                field_name="host_tx_power0",
-                threshold=host_tx_power_th,
-                display_name="主机侧TX Power Lane 0",
-            ),
-            ThresholdConfig(
-                field_name="host_tx_power1",
-                threshold=host_tx_power_th,
-                display_name="主机侧TX Power Lane 1",
-            ),
-            ThresholdConfig(
-                field_name="host_tx_power2",
-                threshold=host_tx_power_th,
-                display_name="主机侧TX Power Lane 2",
-            ),
-            ThresholdConfig(
-                field_name="host_tx_power3",
-                threshold=host_tx_power_th,
-                display_name="主机侧TX Power Lane 3",
-            ),
-            # 主机侧接收功率阈值（A3 为 mW，A5 为 dBm）
-            ThresholdConfig(
-                field_name="host_rx_power0",
-                threshold=host_rx_power_th,
-                display_name="主机侧RX Power Lane 0",
-            ),
-            ThresholdConfig(
-                field_name="host_rx_power1",
-                threshold=host_rx_power_th,
-                display_name="主机侧RX Power Lane 1",
-            ),
-            ThresholdConfig(
-                field_name="host_rx_power2",
-                threshold=host_rx_power_th,
-                display_name="主机侧RX Power Lane 2",
-            ),
-            ThresholdConfig(
-                field_name="host_rx_power3",
-                threshold=host_rx_power_th,
-                display_name="主机侧RX Power Lane 3",
-            ),
-            # 主机侧电流阈值（mA）
-            ThresholdConfig(
-                field_name="host_tx_bias0", threshold=threshold_cls.TX_BIAS_MA, display_name="主机侧TX Bias Lane 0"
-            ),
-            ThresholdConfig(
-                field_name="host_tx_bias1", threshold=threshold_cls.TX_BIAS_MA, display_name="主机侧TX Bias Lane 1"
-            ),
-            ThresholdConfig(
-                field_name="host_tx_bias2", threshold=threshold_cls.TX_BIAS_MA, display_name="主机侧TX Bias Lane 2"
-            ),
-            ThresholdConfig(
-                field_name="host_tx_bias3", threshold=threshold_cls.TX_BIAS_MA, display_name="主机侧TX Bias Lane 3"
-            ),
-            # 主机侧Host SNR阈值（dB）
-            ThresholdConfig(
-                field_name="host_snr_lane0", threshold=threshold_cls.HOST_SNR_DB, display_name="主机侧Host SNR Lane 0"
-            ),
-            ThresholdConfig(
-                field_name="host_snr_lane1", threshold=threshold_cls.HOST_SNR_DB, display_name="主机侧Host SNR Lane 1"
-            ),
-            ThresholdConfig(
-                field_name="host_snr_lane2", threshold=threshold_cls.HOST_SNR_DB, display_name="主机侧Host SNR Lane 2"
-            ),
-            ThresholdConfig(
-                field_name="host_snr_lane3", threshold=threshold_cls.HOST_SNR_DB, display_name="主机侧Host SNR Lane 3"
-            ),
-            # 主机侧Media SNR阈值（dB）
-            ThresholdConfig(
-                field_name="host_media_snr_lane0",
-                threshold=threshold_cls.MEDIA_SNR_DB,
-                display_name="主机侧Media SNR Lane 0",
-            ),
-            ThresholdConfig(
-                field_name="host_media_snr_lane1",
-                threshold=threshold_cls.MEDIA_SNR_DB,
-                display_name="主机侧Media SNR Lane 1",
-            ),
-            ThresholdConfig(
-                field_name="host_media_snr_lane2",
-                threshold=threshold_cls.MEDIA_SNR_DB,
-                display_name="主机侧Media SNR Lane 2",
-            ),
-            ThresholdConfig(
-                field_name="host_media_snr_lane3",
-                threshold=threshold_cls.MEDIA_SNR_DB,
-                display_name="主机侧Media SNR Lane 3",
-            ),
-            # 主机侧网络状态阈值（字符串相等判断）
-            ThresholdConfig(
-                field_name="host_link_duplex", threshold=threshold_cls.DUPLEX_THRESHOLD, display_name="主机侧双工模式"
-            ),
-            ThresholdConfig(
-                field_name="host_net_health",
-                threshold=threshold_cls.NET_HEALTH_THRESHOLD,
-                display_name="主机侧网络健康",
-            ),
-            ThresholdConfig(
-                field_name="host_link_status",
-                threshold=threshold_cls.LINK_STATUS_THRESHOLD,
-                display_name="主机侧链路状态",
-            ),
-            ThresholdConfig(
-                field_name="host_optical_present",
-                threshold=threshold_cls.OPTICAL_PRESENT_THRESHOLD,
-                display_name="主机侧光模块状态",
-            ),
-            # 对端交换机光模块Lane功率阈值（dBm）- 复用主机端配置
-            ThresholdConfig(
-                field_name="peer_switch_tx_power0",
-                threshold=threshold_cls.TX_POWER_DBM,
-                display_name="对端TX Power Lane 0",
-            ),
-            ThresholdConfig(
-                field_name="peer_switch_tx_power1",
-                threshold=threshold_cls.TX_POWER_DBM,
-                display_name="对端TX Power Lane 1",
-            ),
-            ThresholdConfig(
-                field_name="peer_switch_tx_power2",
-                threshold=threshold_cls.TX_POWER_DBM,
-                display_name="对端TX Power Lane 2",
-            ),
-            ThresholdConfig(
-                field_name="peer_switch_tx_power3",
-                threshold=threshold_cls.TX_POWER_DBM,
-                display_name="对端TX Power Lane 3",
-            ),
-            ThresholdConfig(
-                field_name="peer_switch_rx_power0",
-                threshold=threshold_cls.RX_POWER_DBM,
-                display_name="对端RX Power Lane 0",
-            ),
-            ThresholdConfig(
-                field_name="peer_switch_rx_power1",
-                threshold=threshold_cls.RX_POWER_DBM,
-                display_name="对端RX Power Lane 1",
-            ),
-            ThresholdConfig(
-                field_name="peer_switch_rx_power2",
-                threshold=threshold_cls.RX_POWER_DBM,
-                display_name="对端RX Power Lane 2",
-            ),
-            ThresholdConfig(
-                field_name="peer_switch_rx_power3",
-                threshold=threshold_cls.RX_POWER_DBM,
-                display_name="对端RX Power Lane 3",
-            ),
-            # 对端交换机光模块Lane SNR阈值（dB）- 复用主机端配置
-            ThresholdConfig(
-                field_name="peer_switch_snr_lane0", threshold=threshold_cls.HOST_SNR_DB, display_name="对端SNR Lane 0"
-            ),
-            ThresholdConfig(
-                field_name="peer_switch_snr_lane1", threshold=threshold_cls.HOST_SNR_DB, display_name="对端SNR Lane 1"
-            ),
-            ThresholdConfig(
-                field_name="peer_switch_snr_lane2", threshold=threshold_cls.HOST_SNR_DB, display_name="对端SNR Lane 2"
-            ),
-            ThresholdConfig(
-                field_name="peer_switch_snr_lane3", threshold=threshold_cls.HOST_SNR_DB, display_name="对端SNR Lane 3"
-            ),
-        ]
+        # 光模块指标列按行 optical_type 动态选阈值（LPO_{METRIC} 优先，回退基础阈值即 ODSP 值）：
+        # for_optical_metric 详见 threshold_report.ThresholdConfig
+        configs = []
+        for lane in range(self.LANE_NUM):
+            configs.extend(
+                [
+                    # 主机侧发射/接收功率阈值（A3 为 mW，A5 为 dBm）
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls, host_power_metric[0], f"host_tx_power{lane}", f"主机侧TX Power Lane {lane}"
+                    ),
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls, host_power_metric[1], f"host_rx_power{lane}", f"主机侧RX Power Lane {lane}"
+                    ),
+                    # 主机侧电流阈值（mA）
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls, "TX_BIAS_MA", f"host_tx_bias{lane}", f"主机侧TX Bias Lane {lane}"
+                    ),
+                    # 主机侧Host/Media SNR阈值（dB）
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls, "HOST_SNR_DB", f"host_snr_lane{lane}", f"主机侧Host SNR Lane {lane}"
+                    ),
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls, "MEDIA_SNR_DB", f"host_media_snr_lane{lane}", f"主机侧Media SNR Lane {lane}"
+                    ),
+                    # 对端交换机光模块Lane功率阈值（dBm）- 复用主机端指标，按对端类型选阈值
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls,
+                        "TX_POWER_DBM",
+                        f"peer_switch_tx_power{lane}",
+                        f"对端TX Power Lane {lane}",
+                        type_field="peer_optical_type",
+                    ),
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls,
+                        "RX_POWER_DBM",
+                        f"peer_switch_rx_power{lane}",
+                        f"对端RX Power Lane {lane}",
+                        type_field="peer_optical_type",
+                    ),
+                    # 对端交换机光模块Lane SNR阈值（dB）- 复用主机端指标，按对端类型选阈值
+                    ThresholdConfig.for_optical_metric(
+                        threshold_cls,
+                        "HOST_SNR_DB",
+                        f"peer_switch_snr_lane{lane}",
+                        f"对端SNR Lane {lane}",
+                        type_field="peer_optical_type",
+                    ),
+                ]
+            )
+
+        # 主机侧网络状态阈值（字符串相等判断，与光模块类型无关）
+        configs.extend(
+            [
+                ThresholdConfig(
+                    field_name="host_link_duplex",
+                    threshold=threshold_cls.DUPLEX_THRESHOLD,
+                    display_name="主机侧双工模式",
+                ),
+                ThresholdConfig(
+                    field_name="host_net_health",
+                    threshold=threshold_cls.NET_HEALTH_THRESHOLD,
+                    display_name="主机侧网络健康",
+                ),
+                ThresholdConfig(
+                    field_name="host_link_status",
+                    threshold=threshold_cls.LINK_STATUS_THRESHOLD,
+                    display_name="主机侧链路状态",
+                ),
+                ThresholdConfig(
+                    field_name="host_optical_present",
+                    threshold=threshold_cls.OPTICAL_PRESENT_THRESHOLD,
+                    display_name="主机侧光模块状态",
+                ),
+            ]
+        )
+        return configs

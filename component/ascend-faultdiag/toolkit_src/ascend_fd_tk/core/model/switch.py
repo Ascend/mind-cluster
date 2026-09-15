@@ -17,7 +17,7 @@
 import re
 from typing import List, Dict, Tuple
 
-from ascend_fd_tk.core.common.diag_enum import PowerUnitType
+from ascend_fd_tk.core.common.diag_enum import OpticalModuleType, PowerUnitType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.model.hccs import HccsInfo
 from ascend_fd_tk.core.model.inspection import InspectionInterfaceInfo
@@ -99,6 +99,13 @@ class SwiOpticalModel(JsonObj):
         self.base_info: List[OpticalModelBaseInfo] = base_info or []
         self.state_flag_diag_infos: List[OpticalStateFlagDiagInfo] = state_flag_diag_infos or []
 
+    def get_temperature(self) -> str:
+        """从 DDM base_info 中取模块温度（items 含 Temperature 的项），无则返回空串"""
+        for info in self.base_info or []:
+            if "Temperature" in (info.items or ""):
+                return info.value or ""
+        return ""
+
     def get_lane_power_infos(self) -> List[LanePowerInfo]:
         if not self.base_info:
             return []
@@ -163,6 +170,21 @@ class AlarmInfo(JsonObj):
         return True
 
 
+class CommonInfo(JsonObj):
+    def __init__(self, transceiver_type: str = ""):
+        self.transceiver_type = transceiver_type
+
+    @classmethod
+    def _parse_to_py_key(cls):
+        return True
+
+    def get_optical_type(self) -> str:
+        """按 transceiver_type 推导光模块类型：后缀为 _LPO 即 LPO，否则默认 ODSP"""
+        if (self.transceiver_type or "").strip().upper().endswith(f"_{OpticalModuleType.LPO.value}"):
+            return OpticalModuleType.LPO.value
+        return OpticalModuleType.ODSP.value
+
+
 class ManufactureInfo(JsonObj):
     def __init__(self, manu_serial_number=""):
         self.manu_serial_number = manu_serial_number
@@ -198,12 +220,16 @@ class TransceiverInfo(JsonObj):
 
     def __init__(
         self,
-        interface="",
+        interface: str = "",
+        optical_id: str = "",
+        common_information: CommonInfo = CommonInfo(),
         manufacture_information: ManufactureInfo = ManufactureInfo(),
         diagnostic_information: TransceiverDiagInfo = None,
         diagnostic_enhanced_information: DiagEnhancedInfo = None,
     ):
         self.interface = interface
+        self.optical_id = optical_id
+        self.common_information = common_information
         self.manufacture_information = manufacture_information
         self.diagnostic_information = diagnostic_information
         self.diagnostic_enhanced_information = diagnostic_enhanced_information
@@ -312,8 +338,15 @@ class InterfaceFullInfo(JsonObj, OpticalModule):
             lane_power_infos,
             self.transceiver_info and self.transceiver_info.manufacture_information.manu_serial_number,
             optical_id=self.swi_optical_model and self.swi_optical_model.optical_id,
+            optical_type=self._get_optical_type(),
         )
         return self._optical_module_info
+
+    def _get_optical_type(self) -> str:
+        """光模块类型取自 transceiver_info.common_info（按 transceiver_type 后缀推导），无信息时为空"""
+        if not self.transceiver_info or not self.transceiver_info.common_information:
+            return ""
+        return self.transceiver_info.common_information.get_optical_type()
 
     def get_inspection_interface_info(self) -> InspectionInterfaceInfo:
         return InspectionInterfaceInfo(

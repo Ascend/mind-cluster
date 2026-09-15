@@ -51,6 +51,30 @@ class ThresholdConfig:
         None  # 自定义检查函数，入参(数据对象, 单元格值)，返回(ThresholdStatus, 阈值)，优先于threshold检查
     )
 
+    @staticmethod
+    def for_optical_metric(
+        threshold_cls, metric_name: str, field_name: str, display_name: str, type_field: str = "optical_type"
+    ) -> "ThresholdConfig":
+        """光模块指标列配置：按行数据的 type_field（光模块类型）动态选择阈值
+
+        阈值选择规则同 BaseThreshold.get_optical_metric：类型为 LPO 且定义了 LPO_{METRIC} 时优先，
+        否则回退基础阈值（即 ODSP 阈值），因此 A3/无类型数据行行为不变。
+        threshold 同时保留基础阈值，用于列名单位显示与构造校验。
+        """
+
+        # pylint: disable=unused-argument  # value_checker 固定入参签名，与threshold二选一
+        def _type_aware_checker(obj, value_str):
+            optical_type = getattr(obj, type_field, "") or ""
+            th = threshold_cls.get_optical_metric(metric_name, optical_type)
+            return th.check_value(value_str)
+
+        return ThresholdConfig(
+            field_name=field_name,
+            threshold=getattr(threshold_cls, metric_name),
+            display_name=display_name,
+            value_checker=_type_aware_checker,
+        )
+
 
 @dataclass
 class ReportSheet(Generic[T]):

@@ -44,16 +44,17 @@ class InterHostFaultAnalyzer(Analyzer):
             for _, chip_info in host_info.npu_chip_info.items():
                 if not chip_info.hccn_optical_info:
                     continue
-                # 本端光模块信息
-                optical_module_info = chip_info.get_optical_module_info()
                 remote_optical_module_info, domain = self._get_remote_optical_info(host_info.host_id, chip_info)
-                if not remote_optical_module_info:
-                    # 未找到对端信息，只分析本端信息
-                    diag_results.extend(self.fault_check.power_analyze_single_ended(domain, optical_module_info))
-                    diag_results.extend(self.fault_check.snr_analyze_single_ended(domain, optical_module_info))
-                    diag_results.extend(self.fault_check.bias_analyze_single_ended(domain, optical_module_info))
-                    continue
-                diag_results.extend(self.inter_host_analyzer(domain, optical_module_info, remote_optical_module_info))
+                for optical_module_info in chip_info.get_optical_module_info():
+                    if not remote_optical_module_info:
+                        # 未找到对端信息，只分析本端信息
+                        diag_results.extend(self.fault_check.power_analyze_single_ended(domain, optical_module_info))
+                        diag_results.extend(self.fault_check.snr_analyze_single_ended(domain, optical_module_info))
+                        diag_results.extend(self.fault_check.bias_analyze_single_ended(domain, optical_module_info))
+                        continue
+                    diag_results.extend(
+                        self.inter_host_analyzer(domain, optical_module_info, remote_optical_module_info)
+                    )
         return diag_results
 
     def _get_remote_optical_info(self, host_id: str, chip_info: NpuChipInfo):

@@ -23,9 +23,17 @@ class HostCmdProviderA5(HostBaseProvider):
         # 查询光模块的头版头条信息
         return f"hccn_tool -g -optical -i {npu_id}"
 
-    def optical_info_cmd(self, npu_id, optical_id) -> str:
+    def dev_info(self, npu_id) -> str:
+        # 查询NPU设备信息
+        return f"hccn_tool -g -dev_info -i {npu_id}"
+
+    def optical_port_info_cmd(self, npu_id, udie_id, port_id) -> str:
         # 查询光模块信息
-        return f"hccn_tool -g -optical -i {npu_id} -optical_id {optical_id}"
+        return f"hccn_tool -g -optical -i {npu_id} -u {udie_id} -p {port_id}"
+
+    def port_state_info_cmd(self, npu_id, udie_id, port_id) -> str:
+        # 查询端口状态信息
+        return f"hccn_tool -g -port_info -i {npu_id} -u {udie_id} -p {port_id}"
 
     def nic_info_cmd(self) -> str:
         # 查询所有 hinic 网卡列表

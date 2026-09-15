@@ -27,18 +27,22 @@ class HostDomain(JsonObj):
         host_id: str = "",
         npu_id: str = "",
         chip_phy_id: str = "",
-        optical_id: str = "",
+        udie_id: str = "",
+        npu_port_id: str = "",
         nic_id: str = "",
-        port_id: str = "",
+        nic_port_id: str = "",
         peer_switch_id: str = "",
         peer_interface: str = "",
     ):
         self.host_id = host_id
         self.npu_id = npu_id
         self.chip_phy_id = chip_phy_id
-        self.optical_id = optical_id
+        self.udie_id = udie_id
+        # NPU 侧 UB 端口，与 udie_id 配对定位光模块
+        self.npu_port_id = npu_port_id
         self.nic_id = nic_id
-        self.port_id = port_id
+        # 网卡侧 UB 端口
+        self.nic_port_id = nic_port_id
         self.peer_switch_id = peer_switch_id
         self.peer_interface = peer_interface
 
@@ -53,12 +57,14 @@ class HostDomain(JsonObj):
             parts.append(f"NPU:{self.npu_id}")
         if self.chip_phy_id:
             parts.append(f"chip:{self.chip_phy_id}")
-        if self.optical_id:
-            parts.append(f"光模块:{self.optical_id}")
+        if self.udie_id:
+            parts.append(f"UDie:{self.udie_id}")
+        if self.npu_port_id:
+            parts.append(f"NPU端口:{self.npu_port_id}")
         if self.nic_id:
             parts.append(f"网卡:{self.nic_id}")
-        if self.port_id:
-            parts.append(f"端口:{self.port_id}")
+        if self.nic_port_id:
+            parts.append(f"网卡端口:{self.nic_port_id}")
         return parts
 
     def get_peer_domain(self) -> List[str]:

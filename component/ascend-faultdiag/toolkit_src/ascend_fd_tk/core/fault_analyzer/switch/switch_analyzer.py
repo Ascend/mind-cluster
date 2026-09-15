@@ -80,7 +80,7 @@ class SwitchAnalyzer(Analyzer):
             optical_module_info = full_info.get_optical_module_info()
             if not optical_module_info:
                 continue
-            diff_desc = optical_module_info.get_lane_diff_desc(self._threshold.SNR_LANE_DIFF_DB)
+            diff_desc = optical_module_info.get_lane_diff_desc(self._threshold)
             if not diff_desc:
                 continue
             domain = SwitchDomain(swi_id=switch_info.swi_id, slot_id=switch_info.slot_id, interface=interface)

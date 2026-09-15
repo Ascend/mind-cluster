@@ -356,7 +356,7 @@ class LinkBuilder:
             return None
         for _, chip in host_info.npu_chip_info.items():
             if port_mapping.xpu.upper() == NPU:
-                if chip.npu_id == port_mapping.xpu_id and chip.chip_id == port_mapping.chip_id:
+                if chip.npu_id == port_mapping.xpu_id and getattr(chip, "chip_id", "") == port_mapping.chip_id:
                     return chip
             elif port_mapping.xpu.upper() == CPU:
                 if chip.npu_id == port_mapping.xpu_id:

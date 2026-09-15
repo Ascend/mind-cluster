@@ -43,6 +43,9 @@ INTERFACE_STR = "interface"
 
 
 class SwitchParser:
+    _TRANSCEIVER_PATTERN = r"(.{4,20}) transceiver(\d{0,3}) information"
+    _TRANSCEIVER_PATTERN_RE = re.compile(_TRANSCEIVER_PATTERN)
+
     @staticmethod
     def parse_op_state_flag_diag_info(cmd_res: str) -> List[OpticalStateFlagDiagInfo]:
         titles_dict = {"items": "Items", "status": "Status"}
@@ -177,15 +180,16 @@ class SwitchParser:
 
     @classmethod
     def parse_transceiver_info(cls, cmd_res: str) -> List[TransceiverInfo]:
-        transceiver_key = "transceiver information"
-        cmd_res_list = split_str(cmd_res, transceiver_key)
+        cmd_res_list = split_str(cmd_res, cls._TRANSCEIVER_PATTERN, regex=True)
         result = []
         for part in cmd_res_list:
             form = FormParser(append_multi_line=True, skip_sign="----------------------").parse(part)
             for interface, info in form.items():
                 transceiver_info = TransceiverInfo.from_dict(info)
-                interface = str(interface).replace(transceiver_key, "").strip()
-                transceiver_info.interface = interface
+                search_res = cls._TRANSCEIVER_PATTERN_RE.search(interface)
+                if search_res:
+                    transceiver_info.interface = search_res.group(1).strip()
+                    transceiver_info.optical_id = search_res.group(2)
                 result.append(transceiver_info)
         return result
 
