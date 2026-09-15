@@ -31,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
-
 	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -452,6 +451,8 @@ func jobReady(obj interface{}, tp *huaweiNPUPlugin) bool {
 	if !ok {
 		return true
 	}
+	klog.V(util.LogInfoLev).Infof("job<%s/%s> ready: %v, ready task num: %d, minAvailable: %d", job.NameSpace,
+		job.Name, *job.JobReadyTag, ji.ReadyTaskNum(), job.MinAvailable)
 	return *job.JobReadyTag && ji.ReadyTaskNum() >= job.MinAvailable
 }
 
