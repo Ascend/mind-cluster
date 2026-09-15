@@ -108,7 +108,7 @@ func TestHexStringToInt(t *testing.T) {
 			hexString := []string{"a"}
 			errHexString := []string{"xx"}
 			convey.So(tool.HexStringToInt(hexString)[0], convey.ShouldEqual, 10)
-			convey.So(len(tool.HexStringToInt(errHexString)), convey.ShouldEqual, 0)
+			convey.So(tool.HexStringToInt(errHexString)[0], convey.ShouldEqual, 0)
 		})
 	})
 }
