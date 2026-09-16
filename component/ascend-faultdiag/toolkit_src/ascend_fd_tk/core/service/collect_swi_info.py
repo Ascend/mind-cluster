@@ -28,8 +28,6 @@ class CollectSwiInfo(DiagService):
         for fetcher in self.diag_ctx.switch_fetchers.values():
             async_tasks.append(SwitchCollector(fetcher).collect())
         switch_info_list = await asyncio.gather(*async_tasks)
-        switch_info_dict = {}
         for switch_info in switch_info_list:
             self.diag_ctx.location_config.enrich_switch_info(switch_info)
-            switch_info_dict.update({switch_info.swi_id: switch_info})
-        self.diag_ctx.cache.swis_info = switch_info_dict
+            self.diag_ctx.cache.swis_info.update({switch_info.swi_id: switch_info})
