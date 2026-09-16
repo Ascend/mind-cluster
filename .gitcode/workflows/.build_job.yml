@@ -30,15 +30,15 @@ jobs:
   JOB_compile:
     name: JOB_compile
     select: selected_by_default
-    runs-on: [ dedicate-hosted, "${{ inputs.runs_on_arch }}", large ]
+    runs-on: [ self-hosted, "${{ inputs.runs_on_arch }}", cpu=32 ]
     container:
-      image: swr.cn-north-4.myhuaweicloud.com/ascend-mindx/${{ inputs.IMAGE_FLAG }}
+      image: ${{ inputs.IMAGE_FLAG }}
       options: --user root
     steps:
       - name: print env
         run: |
           echo "pr_id=${{ inputs.pr_id }}"
-          echo "IMAGE_FLAG=swr.cn-north-4.myhuaweicloud.com/ascend-mindx/${{ inputs.IMAGE_FLAG }}"
+          echo "IMAGE_FLAG=${{ inputs.IMAGE_FLAG }}"
           echo "REMOTE_URL=${{ inputs.REMOTE_URL }}"
           echo "inputs.REMOTE_URL: ${{ inputs.REMOTE_URL }}"
           echo "inputs.TARGET_BRANCH=${{ inputs.TARGET_BRANCH }}"
@@ -90,3 +90,10 @@ jobs:
             echo "ATOMGIT_WORKSPACE=${ATOMGIT_WORKSPACE}"
             ls -al ${ATOMGIT_WORKSPACE}/${{ inputs.servicename }}/
             cd ${ATOMGIT_WORKSPACE}/${{ inputs.servicename }}/.gitcode/workflows/scripts && bash +x build_job_compile.sh ${{ inputs.servicename }} ${{ inputs.TARGET_BRANCH }}
+      - name: Upload artifact
+        uses: upload-artifact
+        with:
+          name: ${{ atomgit.repository }}-${{ inputs.runs_on_arch }}
+          path: |
+            artifacts/
+          overwrite: true

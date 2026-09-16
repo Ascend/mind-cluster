@@ -71,6 +71,29 @@ EOF
         }
 EOF
         cp -rf ${package_name}.json ${WORKSPACE}/mind-cluster/$1/output/
+    elif [ "${serviceName}" == "ascend-clusterops-agent" ];then
+        cd ${WORKSPACE}/mind-cluster/component/$1/output/
+        package_name=Ascend-mindxdl-ascend-clusterops-agent_${version}_linux.zip
+        zip -r ${package_name} ./*
+		SHA256_PG=$(sha256sum ${package_name})
+		SHA256=(${SHA256_PG// / })
+        echo "${SHA256} ${package_name}" > ${package_name}.sha256sum
+		cd ${WORKSPACE}/mind-cluster/component/$1
+        branch=$(git rev-parse --abbrev-ref HEAD)
+        commit_id=$(git rev-parse HEAD)
+        touch ${package_name}.json
+        cat>${package_name}.json<<EOF
+        {
+            "sha256Sum": "${SHA256}",
+            "repoInfo": [{
+                "repoUrl": "http://gitcode.com/ascend/mind-cluster.git",
+                "repoBranch": "${branch}",
+                "commitId": "${commit_id}"
+                }],
+            "buildTime": "$(date +%Y%m%d%H%M%S)"
+        }
+EOF
+        cp -rf ${package_name}.json ${WORKSPACE}/mind-cluster/component/$1/output/
     elif [ "${serviceName}" == "ascend-deployer" ];then
         cd ${WORKSPACE}/$1/dist/
         package_name=${package_flag}_${version}_linux.zip

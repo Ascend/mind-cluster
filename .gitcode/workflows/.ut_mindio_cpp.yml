@@ -26,9 +26,9 @@ jobs:
   JOB_UT:
     name: JOB_UT
     select: selected_by_default
-    runs-on: [ 'dedicate-hosted', 'x64', 'large' ]
+    runs-on: [ self-hosted, "${{ inputs.runs_on_arch }}", cpu=32 ]
     container:
-      image: swr.cn-north-4.myhuaweicloud.com/ascend-mindx/${{ inputs.IMAGE_FLAG }}
+      image: ${{ inputs.IMAGE_FLAG }}
       options: --user root
     steps:
       - name: clone repo

@@ -18,10 +18,6 @@ on:
         required: false
         type: string
         default: ${{ atomgit.event.pull_request.base.ref }}
-      CMC_USERNAME:
-        required: false
-        type: string
-        default: "cn-north-4_0d336455b30091fa0f31c00317ab1240_788240de372e46a69b01788c5e7a05ac"
       runs_on_arch:
         required: true
         type: string
@@ -30,9 +26,9 @@ jobs:
   JOB_compile:
     name: JOB_compile
     select: selected_by_default
-    runs-on: [ 'dedicate-hosted', '${{ inputs.runs_on_arch }}', 'large' ]
+    runs-on: [ self-hosted, "${{ inputs.runs_on_arch }}", cpu=32 ]
     container:
-      image: swr.cn-north-4.myhuaweicloud.com/ascend-mindx/${{ inputs.IMAGE_FLAG }}
+      image: ${{ inputs.IMAGE_FLAG }}
       options: --user root
     steps:
       - name: clone repo
