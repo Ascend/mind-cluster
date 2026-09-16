@@ -441,16 +441,28 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
         for lane in range(self.LANE_NUM):
             configs.extend(
                 [
-                    # 本端TX/RX Power阈值（dBm）
+                    # 本端TX/RX Power阈值（dBm），按本端类型选阈值
                     ThresholdConfig.for_optical_metric(
-                        threshold_cls, "TX_POWER_DBM", f"local_tx_power{lane}", f"本端TX Power Lane {lane}"
+                        threshold_cls,
+                        "TX_POWER_DBM",
+                        f"local_tx_power{lane}",
+                        f"本端TX Power Lane {lane}",
+                        type_field="local_optical_type",
                     ),
                     ThresholdConfig.for_optical_metric(
-                        threshold_cls, "RX_POWER_DBM", f"local_rx_power{lane}", f"本端RX Power Lane {lane}"
+                        threshold_cls,
+                        "RX_POWER_DBM",
+                        f"local_rx_power{lane}",
+                        f"本端RX Power Lane {lane}",
+                        type_field="local_optical_type",
                     ),
-                    # 本端SNR阈值（dB）
+                    # 本端SNR阈值（dB），按本端类型选阈值
                     ThresholdConfig.for_optical_metric(
-                        threshold_cls, "HOST_SNR_DB", f"local_snr_lane{lane}", f"本端SNR Lane {lane}"
+                        threshold_cls,
+                        "HOST_SNR_DB",
+                        f"local_snr_lane{lane}",
+                        f"本端SNR Lane {lane}",
+                        type_field="local_optical_type",
                     ),
                     # 对端TX/RX Power阈值（dBm），按对端类型选阈值
                     ThresholdConfig.for_optical_metric(

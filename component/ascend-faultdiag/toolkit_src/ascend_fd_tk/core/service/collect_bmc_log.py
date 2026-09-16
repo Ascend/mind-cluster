@@ -18,16 +18,11 @@
 import asyncio
 
 from ascend_fd_tk.core.collect.collector.bmc_log_collector import BmcLogCollector
-from ascend_fd_tk.core.context.diag_ctx import DiagCtx
 from ascend_fd_tk.core.service.base import DiagService
 from ascend_fd_tk.utils.logger import DIAG_LOGGER
 
 
 class CollectBmcLogService(DiagService):
-
-    def __init__(self, diag_ctx: DiagCtx):
-        super().__init__(diag_ctx)
-
     async def run(self):
         if not self.diag_ctx.bmcs_fetchers:
             DIAG_LOGGER.error("收集BMC日志时，未获取到有用的设备信息")
