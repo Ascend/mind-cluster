@@ -1,4 +1,4 @@
-name: UT Job
+name: PreSmoke Job
 
 on:
   workflow_call:
@@ -11,9 +11,6 @@ on:
         required: false
         type: string
         default: ${{ atomgit.event.pull_request.number }}
-      IMAGE_FLAG:
-        required: true
-        type: string
       TARGET_BRANCH:
         required: false
         type: string
@@ -26,19 +23,15 @@ jobs:
   JOB_UT:
     name: JOB_UT
     select: selected_by_default
-    runs-on: [ self-hosted, "${{ inputs.runs_on_arch }}", cpu=32 ]
-    container:
-      image: ${{ inputs.IMAGE_FLAG }}
-      options: --user root
+    runs-on: [ self-hosted, presmoke, os=ubuntu ]
     steps:
       - name: clone repo
         run: |
           set -ex
           rm -rf ./* .git
-          # servicename_1=$(echo "${{ atomgit.repository }}" | cut -d '/' -f 2)
           git clone --no-tags --single-branch -b ${{ inputs.TARGET_BRANCH }} ${{ inputs.REMOTE_URL }} ${{ inputs.servicename }}
-          cd ${{ inputs.servicename }}
 
+          cd ${{ inputs.servicename }}
           git fetch origin ${{ inputs.TARGET_BRANCH }}
           git fetch --no-tags origin refs/merge-requests/${{ inputs.pr_id }}/head:pr_${{ inputs.pr_id }}
           git reset --hard "origin/${{ inputs.TARGET_BRANCH }}"
@@ -48,14 +41,19 @@ jobs:
           git merge --no-edit pr_${{ inputs.pr_id }}
           git diff-tree -r --name-only --no-commit-id origin/${{ inputs.TARGET_BRANCH }} HEAD > ${ATOMGIT_WORKSPACE}/change.txt
           cat ${ATOMGIT_WORKSPACE}/change.txt
-      - name: execute test
-        run: |
-          cd ${ATOMGIT_WORKSPACE}/${{ inputs.servicename }}/.gitcode/workflows/scripts && bash +x ut_go_execute.sh
-          ls -al ${ATOMGIT_WORKSPACE}/artifacts/
-      - name: Upload artifact
-        uses: upload-artifact
+
+      - name: Download build artifact
+        uses: download-artifact
         with:
-          name: ${{ atomgit.repository }}-ut
-          path: |
-            artifacts/
-          overwrite: true
+          name: ${{ atomgit.repository }}-arm
+          path: ./
+
+      - name: Download build artifact
+        uses: download-artifact
+        with:
+          name: ${{ atomgit.repository }}-x86
+          path: ./
+
+      - name: execute presmoke
+        run: |
+          cd ${ATOMGIT_WORKSPACE}/${{ inputs.servicename }}/.gitcode/workflows/scripts && bash +x presmoke_execute.sh

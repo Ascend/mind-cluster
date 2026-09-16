@@ -18,6 +18,14 @@ if grep -q "taskd" "${ATOMGIT_WORKSPACE}/$file_path"; then
     bash -x run_test.sh
 fi
 
+if grep -q "component/ascend-clusterops-agent" "${ATOMGIT_WORKSPACE}/$file_path"; then
+    echo "path1: ${PATH}"
+    pip3 install langgraph langchain-openai kubernetes pyyaml grpcio protobuf fastapi uvicorn
+    cd ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-clusterops-agent/tests/
+    dos2unix *.sh && chmod +x *
+    bash -x run_dt.sh
+fi
+
 if grep -q "component/mindio/acp/python_whl/mindio_acp/mindio_acp" "${ATOMGIT_WORKSPACE}/$file_path"; then
     echo "path: ${PATH}"
     pip3 install --upgrade pip

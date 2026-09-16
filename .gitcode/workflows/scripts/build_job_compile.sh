@@ -110,6 +110,27 @@ else
         pip3 install ply
 
         cd ${ATOMGIT_WORKSPACE}/${servicename}/build && dos2unix *.sh && chmod +x * && bash build_all.sh $GOPATH
+
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-device-plugin/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-dynamic-resource-allocation/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-docker-runtime/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-docker-runtime/output/*.run ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-for-volcano/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-operator/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-faultdiag/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-faultdiag/output/*.whl ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/clusterd/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/container-manager/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/infer-operator/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/mindio/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/mindio/output/*.whl ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/noded/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/npu-exporter/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/dpu-exporter/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/k8s-rdma-shared-dev-plugin/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ub-host-device-cni/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/taskd/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/taskd/output/*.whl ${ATOMGIT_WORKSPACE}/artifacts/
         cd ${ATOMGIT_WORKSPACE}/artifacts/ && zip -r artifacts_$(uname -m).zip .
         ls -al ${ATOMGIT_WORKSPACE}/artifacts/
     else
@@ -159,27 +180,29 @@ else
             cd ${ATOMGIT_WORKSPACE}
             mkdir -p src/volcano.sh
             cp -rf /opt/buildtools/volcano_opensource/volcano_1.9/volcano src/volcano.sh/
-            ls -la ./ &&  cp -rf mind-cluster/component/ascend-for-volcano src/volcano.sh/volcano/pkg/scheduler/plugins/
+            ls -la ./ && cp -rf mind-cluster/component/ascend-for-volcano src/volcano.sh/volcano/pkg/scheduler/plugins/
             cd src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ascend-for-volcano ascend-volcano-plugin
             ls -la ${ATOMGIT_WORKSPACE} && cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash +x ci_build.sh ${servicename} ${TARGET_BRANCH} ascend-for-volcano v1.9.0
             mkdir -p ${ATOMGIT_WORKSPACE}/output/volcano-v1.9.0 && cp -rf ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${ATOMGIT_WORKSPACE}/output/volcano-v1.9.0/
             ls -la ${ATOMGIT_WORKSPACE}/output/volcano-v1.9.0/
             rm -rf ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano
 
-            echo "***************start complie volcano 1.7***********************"
-            cp -rf /opt/buildtools/volcano_opensource/volcano_1.7/volcano ${ATOMGIT_WORKSPACE}/src/volcano.sh/
-            ls -la ./ &&  cp -rf ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/
-            cd ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ascend-for-volcano ascend-volcano-plugin
-            ls -la ${ATOMGIT_WORKSPACE} && cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash +x ci_build.sh ${servicename} ${TARGET_BRANCH} ascend-for-volcano v1.7.0
-            mkdir -p ${ATOMGIT_WORKSPACE}/output/volcano-v1.7.0 && cp -rf ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${ATOMGIT_WORKSPACE}/output/volcano-v1.7.0/
-
             echo "***************start complie volcano 1.12***********************"
             rm -rf ${ATOMGIT_WORKSPACE}/src/volcano.sh/*
             cp -rf /opt/buildtools/volcano_opensource/volcano_1.12/volcano ${ATOMGIT_WORKSPACE}/src/volcano.sh/
-            ls -la ./ &&  cp -rf ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/
+            ls -la ./ && cp -rf ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/
             cd ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ascend-for-volcano ascend-volcano-plugin
             ls -la ${ATOMGIT_WORKSPACE} && cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash +x ci_build.sh ${servicename} ${TARGET_BRANCH} ascend-for-volcano v1.12.0
             mkdir -p ${ATOMGIT_WORKSPACE}/output/volcano-v1.12.0 && cp -rf ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${ATOMGIT_WORKSPACE}/output/volcano-v1.12.0/
+
+            echo "***************start complie volcano 1.15***********************"
+            rm -rf ${ATOMGIT_WORKSPACE}/src/volcano.sh/*
+            cp -rf /opt/buildtools/volcano_opensource/volcano_1.15/volcano ${ATOMGIT_WORKSPACE}/src/volcano.sh/
+            ls -la ./ && cp -rf ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/
+            cd ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ascend-for-volcano ascend-volcano-plugin
+            ls -la ${ATOMGIT_WORKSPACE} && cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash +x ci_build.sh ${servicename} ${TARGET_BRANCH} ascend-for-volcano v1.15.0
+            mkdir -p ${ATOMGIT_WORKSPACE}/output/volcano-v1.15.0 && cp -rf ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${ATOMGIT_WORKSPACE}/output/volcano-v1.15.0/
+
             rm -rf ${ATOMGIT_WORKSPACE}/output/Dockerfile*
             cp -rf ${ATOMGIT_WORKSPACE}/output ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano/
             cd ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano/output && chmod 550 volcano-v1.7.0 && chmod 550 volcano-v1.9.0 && chmod 550 volcano-v1.12.0
@@ -195,6 +218,26 @@ else
             cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash +x ci_build.sh ${servicename} ${TARGET_BRANCH} noded
             cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash -x build_package.sh noded ${TARGET_BRANCH}
             cp -p -f -r ${ATOMGIT_WORKSPACE}/mind-cluster/component/noded/output/Ascend-mindxdl-noded_*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        fi
+        if grep -q "component/ub-host-device-cni" "${ATOMGIT_WORKSPACE}/$file_path"; then
+            cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash +x ci_build.sh ${servicename} ${TARGET_BRANCH} ub-host-device-cni
+            cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash -x build_package.sh ub-host-device-cni ${TARGET_BRANCH}
+            cp -p -f -r ${ATOMGIT_WORKSPACE}/mind-cluster/component/ub-host-device-cni/output/Ascend-mindxdl-ub-host-device-cni_*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        fi
+        if grep -q "component/ascend-dynamic-resource-allocation" "${ATOMGIT_WORKSPACE}/$file_path"; then
+            cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash +x ci_build.sh ${servicename} ${TARGET_BRANCH} ascend-dynamic-resource-allocation
+            cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash -x build_package.sh ascend-dynamic-resource-allocation ${TARGET_BRANCH}
+            cp -p -f -r ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-dynamic-resource-allocation/output/Ascend-mindxdl-ascend-dynamic-resource-allocation_*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        fi
+        if grep -q "component/dpu-exporter" "${ATOMGIT_WORKSPACE}/$file_path"; then
+            cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash +x ci_build.sh ${servicename} ${TARGET_BRANCH} dpu-exporter
+            cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash -x build_package.sh dpu-exporter ${TARGET_BRANCH}
+            cp -p -f -r ${ATOMGIT_WORKSPACE}/mind-cluster/component/dpu-exporter/output/Ascend-mindxdl-dpu-exporter_*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        fi
+        if grep -q "component/ascend-clusterops-agent" "${ATOMGIT_WORKSPACE}/$file_path"; then
+            cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash +x ci_build.sh ${servicename} ${TARGET_BRANCH} ascend-clusterops-agent
+            cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash -x build_package.sh ascend-clusterops-agent ${TARGET_BRANCH}
+            cp -p -f -r ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-clusterops-agent/output/Ascend-mindxdl-ascend-clusterops-agent_*.zip ${ATOMGIT_WORKSPACE}/artifacts/
         fi
         if grep -q "component/k8s-rdma-shared-dev-plugin" "${ATOMGIT_WORKSPACE}/$file_path"; then
             cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && bash +x ci_build.sh ${servicename} ${TARGET_BRANCH} k8s-rdma-shared-dev-plugin
