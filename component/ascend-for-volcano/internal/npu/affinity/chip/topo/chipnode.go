@@ -376,6 +376,33 @@ func (n *ChipNode) countAllocated() int {
 	return s
 }
 
+// Prune rebuilds a tree containing only the leaves whose chip id is present in
+// exist (the node's physically-existing cards reported by base-device-infos).
+// The branch structure and the Raw field are preserved, so the Raw-equality
+// caching in ParseChipTopology keeps working; returns nil when no leaf survives.
+func (n *ChipNode) Prune(exist map[int]struct{}) *ChipNode {
+	if n == nil {
+		return nil
+	}
+	if len(n.children) == 0 {
+		if _, ok := exist[n.chipID]; !ok {
+			return nil
+		}
+		return &ChipNode{chipID: n.chipID, total: 1}
+	}
+	pruned := &ChipNode{Raw: n.Raw}
+	for _, c := range n.children {
+		if kept := c.Prune(exist); kept != nil {
+			pruned.children = append(pruned.children, kept)
+			pruned.total += kept.total
+		}
+	}
+	if len(pruned.children) == 0 {
+		return nil
+	}
+	return pruned
+}
+
 func (n *ChipNode) MaxChipID() int {
 	if len(n.children) == 0 {
 		return n.chipID

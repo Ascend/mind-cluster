@@ -76,8 +76,9 @@ func (tp *chipHandler) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNod
 	if root == nil {
 		return fmt.Errorf("%s node<%s> has no topology tree", util.NPUResourceUnavailableError, node.Name)
 	}
-	klog.V(util.LogDebugLev).Infof("%s CheckNodeNPUByTask task<%s> node<%s> req<%d> mode<%v> chips[%s]",
-		tp.GetPluginName(), task.Name, node.Name, reqNum, tp.ScheduleMode, root.State())
+	klog.V(util.LogDebugLev).Infof("%s CheckNodeNPUByTask task<%s> node<%s> req<%d> mode<%v> allowNetUnhealthy"+
+		"<%v> chips[%s]", tp.GetPluginName(), task.Name, node.Name, reqNum, tp.ScheduleMode,
+		tp.ParameterPlaneUnhealthyTolerance, root.State())
 	result := root.Fit(&util.Request{
 		ReqNPUName:        reqName,
 		ReqNPUNum:         reqNum,
