@@ -196,12 +196,12 @@ func TestBuildSpec_HCCLTopologyFilesExist(t *testing.T) {
 	defer saveRestoreHCCLItems()()
 
 	tmpDir := t.TempDir()
-	tmpFile := filepath.Join(tmpDir, "hccl_rootinfo.json")
-	if err := os.WriteFile(tmpFile, []byte(`{"version":"1.0"}`), 0644); err != nil {
+	topoDir := filepath.Join(tmpDir, "topo")
+	if err := os.MkdirAll(topoDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	mount.TopologyItems = []mount.TopologyItem{
-		{HostPath: tmpFile, Options: []string{"rbind", "rprivate", "ro"}},
+		{HostPath: topoDir, Options: []string{"rbind", "rprivate", "ro"}},
 		{HostPath: filepath.Join(tmpDir, "no_such_dir"), Options: []string{"rbind", "rprivate", "ro"}},
 	}
 	libFile := filepath.Join(tmpDir, "libfoo.so")
@@ -220,10 +220,10 @@ func TestBuildSpec_HCCLTopologyFilesExist(t *testing.T) {
 	}
 	foundHCCL := false
 	for _, m := range edits.ContainerEdits.Mounts {
-		if m.ContainerPath == tmpFile {
+		if m.ContainerPath == topoDir {
 			foundHCCL = true
-			if m.HostPath != tmpFile {
-				t.Errorf("HCCL mount HostPath = %q, want %q", m.HostPath, tmpFile)
+			if m.HostPath != topoDir {
+				t.Errorf("HCCL mount HostPath = %q, want %q", m.HostPath, topoDir)
 			}
 			if m.Type != "bind" {
 				t.Errorf("HCCL mount type = %q, want bind", m.Type)
@@ -242,8 +242,8 @@ func TestBuildSpec_HCCLTopologyFilesMissing(t *testing.T) {
 	defer saveRestoreHCCLItems()()
 
 	mount.TopologyItems = []mount.TopologyItem{
-		{HostPath: "/nonexistent/hccl_rootinfo.json", Options: []string{"rbind", "rprivate", "ro"}},
 		{HostPath: "/nonexistent/topo", Options: []string{"rbind", "rprivate", "ro"}},
+		{HostPath: "/nonexistent/other", Options: []string{"rbind", "rprivate", "ro"}},
 	}
 	libFile := filepath.Join(t.TempDir(), "libfoo.so")
 	if err := os.WriteFile(libFile, nil, 0644); err != nil {

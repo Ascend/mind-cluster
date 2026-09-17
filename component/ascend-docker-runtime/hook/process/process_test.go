@@ -573,13 +573,13 @@ func TestAddUBMount(t *testing.T) {
 			convey.So(fileMountList, convey.ShouldBeEmpty)
 			convey.So(dirMountList, convey.ShouldBeEmpty)
 		})
-		convey.Convey("test addUBMount should append list when mount file and directory exist", func() {
+		convey.Convey("test addUBMount should append list when mount directory exists", func() {
 			var fileMountList []string
 			var dirMountList []string
 			mockStat := mockStat()
 			defer mockStat.Reset()
 			fileMountList, dirMountList = addUBMount(fileMountList, dirMountList)
-			convey.So(fileMountList, convey.ShouldNotBeEmpty)
+			convey.So(fileMountList, convey.ShouldBeEmpty)
 			convey.So(dirMountList, convey.ShouldNotBeEmpty)
 		})
 	})
@@ -888,8 +888,7 @@ func (m mockFileInfo) Sys() interface{}   { return m.sys }
 func mockStat() *gomonkey.Patches {
 	return gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
 		mockMountItemMap := map[string]mockFileInfo{
-			hcclRootInfo: {mode: os.ModeTemporary},
-			topoDirPath:  {mode: os.ModeDir},
+			topoDirPath: {mode: os.ModeDir},
 		}
 		return mockMountItemMap[name], nil
 	})

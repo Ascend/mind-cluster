@@ -56,8 +56,8 @@ type MountProfile map[string][]MountEntry
 //
 //   - "default" holds the base driver paths shared by all generations.
 //   - "Ascend950" holds the base driver paths (except /var/queue_schedule,
-//     which the 950 generation does not need), the HCCL topology paths, and
-//     the UB user-space files (marked Type: ubType, controlled by
+//     which the 950 generation does not need), the HCCL topology path,
+//     and the UB user-space files (marked Type: ubType, controlled by
 //     MountUBDrv).
 func DefaultMountProfile() MountProfile {
 	defaultPaths := []string{
@@ -79,13 +79,12 @@ func DefaultMountProfile() MountProfile {
 	}
 
 	// The 950 generation keeps the base driver paths but drops
-	// /var/queue_schedule and adds the HCCL topology paths.
+	// /var/queue_schedule and adds the HCCL topology path.
 	a950Paths := []string{
 		"/usr/local/Ascend/driver/lib64",
 		"/usr/local/Ascend/driver/include",
 		"/usr/local/dcmi",
 		"/usr/local/bin/npu-smi",
-		hcclRootInfoPath,
 		topoDirPath,
 	}
 

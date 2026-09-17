@@ -60,7 +60,7 @@ func TestDefaultMountProfile(t *testing.T) {
 			t.Errorf("ub entry %q missing from Ascend950 mounts", p)
 		}
 	}
-	for _, p := range []string{hcclRootInfoPath, topoDirPath} {
+	for _, p := range []string{topoDirPath} {
 		found := false
 		for _, e := range cfg[ascend950Gen] {
 			for _, ep := range e.Paths {
@@ -280,7 +280,7 @@ func TestBuildJSON_NoTopologyInjection(t *testing.T) {
 	mustWriteFile(t, real, "")
 	// A topology item whose host path exists: appendTopology would emit it if
 	// JSON-mode Build still called it.
-	topoFile := filepath.Join(filesDir, "hccl_rootinfo.json")
+	topoFile := filepath.Join(filesDir, "topo")
 	mustWriteFile(t, topoFile, "")
 	orig := TopologyItems
 	TopologyItems = []TopologyItem{{HostPath: topoFile, Options: []string{"rbind", "rprivate", "ro"}}}

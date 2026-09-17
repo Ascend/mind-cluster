@@ -46,15 +46,13 @@ const (
 // ---------------------------------------------------------------------------
 
 const (
-	hcclRootInfoPath = "/etc/hccl_rootinfo.json"
-	topoDirPath      = "/usr/local/Ascend/driver/topo"
+	topoDirPath = "/usr/local/Ascend/driver/topo"
 )
 
 // TopologyItems lists host paths that should be bind-mounted into the
 // container when present (list mode only). Exported so tests can substitute
 // temporary files.
 var TopologyItems = []TopologyItem{
-	{hcclRootInfoPath, []string{mountOptRBind, mountOptRPrivate, mountOptReadOnly}},
 	{topoDirPath, []string{mountOptRBind, mountOptRPrivate, mountOptReadOnly}},
 }
 
