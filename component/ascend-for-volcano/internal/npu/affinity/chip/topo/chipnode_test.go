@@ -397,6 +397,52 @@ func TestMaxChipID(t *testing.T) {
 	}
 }
 
+func TestPrune(t *testing.T) {
+	tests := []struct {
+		name  string
+		raw   string
+		exist map[int]struct{}
+		// wantTotal<0 means expect nil (no surviving chip)
+		wantTotal int
+		wantMaxID int
+		wantRaw   string
+	}{
+		{"flat keep all", "[0,1,2,3]", map[int]struct{}{0: {}, 1: {}, 2: {}, 3: {}}, 4, 3, "[0,1,2,3]"},
+		{"flat drop head", "[0,1,2,3]", map[int]struct{}{1: {}, 2: {}, 3: {}}, 3, 3, "[0,1,2,3]"},
+		{"flat drop middle", "[0,1,2,3]", map[int]struct{}{0: {}, 2: {}, 3: {}}, 3, 3, "[0,1,2,3]"},
+		{"nested reduce to 8", nested16Topo, map[int]struct{}{0: {}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}, 7: {}}, 8, 7, nested16Topo},
+		{"nothing survives", "[0,1]", map[int]struct{}{9: {}}, -1, -1, ""},
+		{"nil tree", "0", nil, -1, -1, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := ParseTopology(tt.raw)
+			if root == nil {
+				t.Fatalf("ParseTopology(%q) = nil", tt.raw)
+			}
+			got := root.Prune(tt.exist)
+			if tt.wantTotal < 0 {
+				if got != nil {
+					t.Errorf("Prune(%q) = tree, want nil", tt.raw)
+				}
+				return
+			}
+			if got == nil {
+				t.Fatalf("Prune(%q) = nil, want a tree with %d chips", tt.raw, tt.wantTotal)
+			}
+			if got.Total() != tt.wantTotal {
+				t.Errorf("Total = %d, want %d", got.Total(), tt.wantTotal)
+			}
+			if got.MaxChipID() != tt.wantMaxID {
+				t.Errorf("MaxChipID = %d, want %d", got.MaxChipID(), tt.wantMaxID)
+			}
+			if got.Raw != tt.wantRaw {
+				t.Errorf("Raw = %q, want %q", got.Raw, tt.wantRaw)
+			}
+		})
+	}
+}
+
 func TestScore(t *testing.T) {
 	reports := []struct {
 		name string

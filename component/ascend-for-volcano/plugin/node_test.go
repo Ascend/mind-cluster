@@ -895,3 +895,52 @@ func TestParseChipTopologyCarvesFaults(t *testing.T) {
 		t.Errorf("selection with faulty 0,1 = %v, want %v", got, want)
 	}
 }
+
+func TestParseChipTopologyPrunesGhostChips(t *testing.T) {
+	// The topology declares 16 chips but the node physically owns only cards
+	// 0..7 (base-device-infos): the extra leaves must be pruned so ghosts can
+	// never be selected or written back into pod annotations.
+	n := &NPUNode{CommonNode: CommonNode{
+		Name: "n",
+		Annotation: map[string]string{
+			util.TopologyAnnoKey: nested16TopoAnno,
+		},
+	}}
+	n.BaseDeviceInfo = `{"Ascend910-0":{},"Ascend910-1":{},"Ascend910-2":{},"Ascend910-3":{},` +
+		`"Ascend910-4":{},"Ascend910-5":{},"Ascend910-6":{},"Ascend910-7":{}}`
+	n.ParseChipTopology(&api.NodeInfo{Capacity: &api.Resource{}})
+	if n.ChipTopo == nil {
+		t.Fatal("ParseChipTopology with existing cards should build a pruned tree")
+	}
+	if n.ChipTopo.Raw != nested16TopoAnno {
+		t.Errorf("Raw = %q, want %q", n.ChipTopo.Raw, nested16TopoAnno)
+	}
+	if got := n.ChipTopo.MaxChipID(); got != 7 {
+		t.Errorf("MaxChipID = %d, want 7 (ghost chips 8..15 pruned)", got)
+	}
+	got := n.ChipTopo.SelectChips(&util.Request{ReqNPUNum: 8, Mode: util.SoftScheduleMode})
+	if len(got) != 8 {
+		t.Fatalf("SelectChips(8) = %v, want 8 ids", got)
+	}
+	for _, id := range got {
+		if id > 7 {
+			t.Errorf("SelectChips(8) returned ghost chip %d", id)
+		}
+	}
+}
+
+func TestParseChipTopologyPrunesAllGhosts(t *testing.T) {
+	// No announced card survives the base-device-info filter: the node must be
+	// marked with a nil ChipTopo (unschedulable on the chip-affinity path).
+	n := &NPUNode{CommonNode: CommonNode{
+		Name: "n",
+		Annotation: map[string]string{
+			util.TopologyAnnoKey: "[0,1,2,3]",
+		},
+	}}
+	n.BaseDeviceInfo = `{"Ascend910-8":{},"Ascend910-9":{}}`
+	n.ParseChipTopology(&api.NodeInfo{Capacity: &api.Resource{}})
+	if n.ChipTopo != nil {
+		t.Errorf("ChipTopo = %v, want nil", n.ChipTopo)
+	}
+}

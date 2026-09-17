@@ -307,12 +307,11 @@ func getNPUCapacity(node *api.NodeInfo) int {
 	return 0
 }
 
-// ParseChipTopology parse node huawei.com/npu.topology annotation
+// ParseChipTopology parses the node huawei.com/npu.topology annotation into
+// the chip tree: fallback raw, parse/prune, index allocated chips, apply
+// device health annotations, then initialize the tree with owners and states.
 func (n *NPUNode) ParseChipTopology(node *api.NodeInfo) {
-	raw, exist := n.Annotation[util.TopologyAnnoKey]
-	if !exist {
-		raw = topo.BuildFlatTopology(getNPUCapacity(node))
-	}
+	raw := n.topologyRaw(node)
 	if n.ChipTopo == nil || n.ChipTopo.Raw != raw {
 		n.ChipTopo = topo.ParseTopology(raw)
 	}
@@ -320,6 +319,50 @@ func (n *NPUNode) ParseChipTopology(node *api.NodeInfo) {
 		klog.V(util.LogWarningLev).Infof("ParseChipTopology node<%s> topology parse failed, raw: %s", n.Name, raw)
 		return
 	}
+	if !n.pruneChipTopology(raw) {
+		return
+	}
+	n.buildChipPods(node)
+	faulty, netUnh, maxCardID := n.parseDeviceHealthAnnotations()
+	if n.chipTopoOversize(maxCardID) {
+		n.ChipTopo = nil
+		return
+	}
+	n.ChipTopo.Init(faulty, netUnh, n.buildOwners())
+}
+
+// topologyRaw returns the raw chip topology value, falling back to a flat
+// topology built from the node's npu capacity when the annotation is absent.
+func (n *NPUNode) topologyRaw(node *api.NodeInfo) string {
+	raw, exist := n.Annotation[util.TopologyAnnoKey]
+	if !exist {
+		raw = topo.BuildFlatTopology(getNPUCapacity(node))
+	}
+	return raw
+}
+
+// pruneChipTopology rebuilds the tree with only the leaves that match the
+// physically-existing cards in base-device-infos, so a stale topology declaring
+// more chips than the node actually owns can never over-admit jobs. Returns
+// false and clears ChipTopo when no leaf survives; skipped when the annotation
+// is absent.
+func (n *NPUNode) pruneChipTopology(raw string) bool {
+	exist := n.realChipIDsFromBaseDeviceInfo()
+	if len(exist) == 0 {
+		return true
+	}
+	pruned := n.ChipTopo.Prune(exist)
+	if pruned == nil {
+		klog.V(util.LogErrorLev).Infof("ParseChipTopology node<%s> topology has no surviving chip, raw: %s", n.Name, raw)
+		n.ChipTopo = nil
+		return false
+	}
+	n.ChipTopo = pruned
+	return true
+}
+
+// buildChipPods indexes the node's npu tasks by their allocated chip ids.
+func (n *NPUNode) buildChipPods(node *api.NodeInfo) {
 	n.ChipPods = make(map[int]map[string]*v1.Pod)
 	for _, ti := range node.Tasks {
 		if !util.IsNPUTask(ti) || ti.Pod == nil {
@@ -332,9 +375,11 @@ func (n *NPUNode) ParseChipTopology(node *api.NodeInfo) {
 			n.ChipPods[chipID][string(ti.Pod.UID)] = ti.Pod
 		}
 	}
+}
 
-	var faulty, netUnh map[int]struct{}
-	maxCardID := 0
+// parseDeviceHealthAnnotations collects faulty and network-unhealthy card ids
+// from the card annotations, plus the highest referenced chip id.
+func (n *NPUNode) parseDeviceHealthAnnotations() (faulty, netUnh map[int]struct{}, maxCardID int) {
 	for key, val := range n.Annotation {
 		pre, ok := cardAnnoNpuPre(key)
 		if !ok {
@@ -363,10 +408,12 @@ func (n *NPUNode) ParseChipTopology(node *api.NodeInfo) {
 			maxCardID = id
 		}
 	}
-	if n.chipTopoOversize(maxCardID) {
-		n.ChipTopo = nil
-		return
-	}
+	return
+}
+
+// buildOwners maps each running pod's uid to its allocated chip ids; failed and
+// succeeded pods keep no ownership so their chips can be reclaimed.
+func (n *NPUNode) buildOwners() map[string][]int {
 	owners := make(map[string][]int)
 	for id, pods := range n.ChipPods {
 		for uid, pod := range pods {
@@ -375,7 +422,7 @@ func (n *NPUNode) ParseChipTopology(node *api.NodeInfo) {
 			}
 		}
 	}
-	n.ChipTopo.Init(faulty, netUnh, owners)
+	return owners
 }
 
 // cardAnnoNpuPre
@@ -408,6 +455,39 @@ func (n *NPUNode) chipTopoOversize(maxCardID int) bool {
 		return true
 	}
 	return false
+}
+
+// realChipIDsFromBaseDeviceInfo returns the set of physically-existing card ids
+// recorded in the huawei.com/npu.base-device-infos annotation. Device names are
+// "<cardType>-<id>" (e.g. "Ascend910-0", "Ascend950-<phyID>"); the id is the
+// last non-empty dash segment, mirroring buildPhyIdToDeviceIdMap. An empty map
+// is returned when the annotation is absent or unparsable, which makes callers
+// skip topology pruning.
+func (n *NPUNode) realChipIDsFromBaseDeviceInfo() map[int]struct{} {
+	ids := make(map[int]struct{})
+	if n == nil || len(n.BaseDeviceInfo) == 0 {
+		return ids
+	}
+	devInfoMap := make(map[string]util.NpuBaseInfo)
+	if err := json.Unmarshal([]byte(n.BaseDeviceInfo), &devInfoMap); err != nil {
+		klog.V(util.LogErrorLev).Infof("realChipIDsFromBaseDeviceInfo node<%s> unmarshal base device info failed: %v", n.Name, err)
+		return ids
+	}
+	for dev := range devInfoMap {
+		parts := strings.Split(dev, "-")
+		if len(parts) != SplitedLength {
+			klog.V(util.LogWarningLev).Infof("Node %s device <%s> is invalid because it is not composed of two"+
+				" parts separated by a hyphen (-)", n.Name, dev)
+			continue
+		}
+		id, err := strconv.Atoi(parts[1])
+		if err != nil {
+			klog.V(util.LogErrorLev).Infof("realChipIDsFromBaseDeviceInfo node<%s> parse device name %s failed: %v", n.Name, dev, err)
+			continue
+		}
+		ids[id] = struct{}{}
+	}
+	return ids
 }
 
 // getNPUNodeAddress get npu node address
