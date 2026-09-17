@@ -10,10 +10,10 @@
 
 使用容器快照特性的环境要求如下：
 
-| 名称   | 要求                                                                                                                                        |
-|------|-------------------------------------------------------------------------------------------------------------------------------------------|
-| OS   | EulerOS R15C10或HCE3.0, 安装CRIU版本3.19                                                                                                       |
-| 容器引擎   | containerd 1.6及以上，建议1.6                                                                                                                            |
+| 名称   | 要求                                               |
+|------|--------------------------------------------------|
+| OS   | openEuler 24.03 LTS SP1及以上版本或HCE3.0，安装3.19版本CRIU |
+| 容器引擎   | containerd 1.6及以上，建议1.6                          |
 
 **前提条件**
 
@@ -95,6 +95,21 @@
                        --enable-healthz=true --healthz-address=11254" ]
         ```
 
+**系统配置**
+
+使用如下命令检查系统iptables后端类型是否为legacy，
+
+```shell
+iptables-restore --version
+```
+
+如果为nf_tables需手动加载内核模块，初始化filter表映射：
+
+```shell
+modprobe ip6_tables
+modprobe ip6table_filter
+```
+
 **使用说明**
 
 - 容器快照只支持workload为StatefulSet类型任务，且需在该类任务中增加容器快照开启的标签“infer.huawei.com/container-snapshot”，并将其设置为“true”，此外还需在容器环境变量中配置与NodeD相同的快照路径，如下所示：
@@ -123,7 +138,8 @@
 
 支持以下产品使用容器快照。
 
-<term>Atlas A2 训练系列产品</term>
+- <term>Atlas A2 训练系列产品</term>
+- <term>Atlas A3 训练系列产品</term>
 
 ## 使用演示
 
