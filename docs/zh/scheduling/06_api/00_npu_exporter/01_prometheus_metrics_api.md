@@ -60,7 +60,8 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 - [NPU数据信息](#section1379685784314)
 - [利用率数据信息](#section1379685784315)
 - [vNPU数据信息](#section81411161343)
-- [Network数据信息](#section630155191018)
+- [network_bandwidth数据信息](#section630155191018)
+- [network_link数据信息](#section630155191019)
 - [DDR数据信息](#section11460736193116)
 - [片上内存数据信息](#section82014427452)
 - [HCCS数据信息](#section9741133815914)
@@ -456,9 +457,9 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </tbody>
 </table>
 
-## Network数据信息<a name="section630155191018"></a>
+## network_bandwidth数据信息<a name="section630155191018"></a>
 
-**表 6**  Network数据信息
+**表 6**  network_bandwidth数据信息
 
 <a name="table164281059191110"></a>
 <table><thead align="left"><tr id="row5428155912116"><th class="cellrowborder" valign="top" width="11.21%" id="mcps1.1.7.1.1"><p id="p2429195912115"><a name="p2429195912115"></a><a name="p2429195912115"></a>类别</p>
@@ -475,7 +476,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </th>
 </tr>
 </thead>
-<tbody><tr id="row0429155915119"><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p id="p547216401235"><a name="p547216401235"></a><a name="p547216401235"></a>Network</p>
+<tbody><tr id="row0429155915119"><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p id="p547216401235"><a name="p547216401235"></a><a name="p547216401235"></a>network_bandwidth</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p id="p847284010318"><a name="p847284010318"></a><a name="p847284010318"></a>npu_chip_info_bandwidth_rx</p>
 <p id="p184729405313"><a name="p184729405313"></a><a name="p184729405313"></a></p>
@@ -487,10 +488,8 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p id="p188904163413"><a name="p188904163413"></a><a name="p188904163413"></a>单位：MB/s</p>
 </td>
-<td class="cellrowborder" rowspan="5" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><a name="ul178907161943"></a><a name="ul178907161943"></a><ul id="ul178907161943"><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li><span id="ph57012578543"><a name="ph57012578543"></a><a name="ph57012578543"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph1518064711478"><a name="ph1518064711478"></a><a name="ph1518064711478"></a>A200I A2 Box 异构组件</span></li></ul>
-</td>
-</tr>
-<tr id="row11943132171414"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p163872531349"><a name="p163872531349"></a><a name="p163872531349"></a>Network</p>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><a name="ul178907161943"></a><a name="ul178907161943"></a><ul id="ul178907161943"><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li><span id="ph57012578543"><a name="ph57012578543"></a><a name="ph57012578543"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph1518064711478"><a name="ph1518064711478"></a><a name="ph1518064711478"></a>A200I A2 Box 异构组件</span></li></ul>
+</td></tr><tr id="row11943132171414"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p163872531349"><a name="p163872531349"></a><a name="p163872531349"></a>network_bandwidth</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.2 "><p id="p173871953046"><a name="p173871953046"></a><a name="p173871953046"></a>npu_chip_info_bandwidth_tx</p>
 </td>
@@ -501,8 +500,71 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.5 "><p id="p15556656691"><a name="p15556656691"></a><a name="p15556656691"></a>单位：MB/s</p>
 <p id="p1655613561890"><a name="p1655613561890"></a><a name="p1655613561890"></a></p>
 </td>
+</tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_bandwidth</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx_X_Y</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时接收速率。该指标使用的hccn_tool采集命令中，-time参数为100，测量带宽时间段为100毫秒。其中，X为Udie ID，Y为Port ID。</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">旧版本指标，仅支持Atlas 350 加速卡（4Pmesh互联）。
+</td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_bandwidth</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx_X_Y</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时发送速率。该指标使用的hccn_tool采集命令中，-time参数为100，测量带宽时间段为100毫秒。其中，X为Udie ID，Y为Port ID。</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
+</td>
+</tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_bandwidth</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时接收速率。该指标使用的hccn_tool采集命令中，-time参数为100，测量带宽时间段为100毫秒。</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><p><term>Ascend 950PR&950DT系列产品</term></p><p>其中，Atlas 350 加速卡仅支持4Pmesh互联</p>
+</td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_bandwidth</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时发送速率。该指标使用的hccn_tool采集命令中，-time参数为100，测量带宽时间段为100毫秒。</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
+</td>
+</tr></tbody>
+</table>
+
+## network_link数据信息<a name="section630155191019"></a>
+
+**表 7**  network_link数据信息
+
+<a name="table164281059191111"></a>
+<table><thead align="left"><tr id="row5428155912116"><th class="cellrowborder" valign="top" width="11.21%" id="mcps1.1.7.1.1"><p id="p2429195912115"><a name="p2429195912115"></a><a name="p2429195912115"></a>类别</p>
+</th>
+<th class="cellrowborder" valign="top" width="21.73%" id="mcps1.1.7.1.2"><p id="p64291159101114"><a name="p64291159101114"></a><a name="p64291159101114"></a>数据信息名称</p>
+</th>
+<th class="cellrowborder" valign="top" width="21.61%" id="mcps1.1.7.1.3"><p id="p5429759111115"><a name="p5429759111115"></a><a name="p5429759111115"></a>数据信息说明</p>
+</th>
+<th class="cellrowborder" valign="top" width="15.540000000000001%" id="mcps1.1.7.1.4"><p id="p942911590111"><a name="p942911590111"></a><a name="p942911590111"></a>数据信息标签字段</p>
+</th>
+<th class="cellrowborder" valign="top" width="10%" id="mcps1.1.7.1.5"><p id="p26148601218"><a name="p26148601218"></a><a name="p26148601218"></a>单位</p>
+</th>
+<th class="cellrowborder" valign="top" width="19.91%" id="mcps1.1.7.1.6"><p id="p1424452617302"><a name="p1424452617302"></a><a name="p1424452617302"></a>支持的产品形态</p>
+</th>
 </tr>
-<tr id="row2097471041420"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p5177695400"><a name="p5177695400"></a><a name="p5177695400"></a>Network</p>
+</thead>
+<tbody><tr id="row2097471041420"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p5177695400"><a name="p5177695400"></a><a name="p5177695400"></a>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.2 "><p id="p1469741634018"><a name="p1469741634018"></a><a name="p1469741634018"></a>npu_chip_info_link_status</p>
 </td>
@@ -513,8 +575,8 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.5 "><p id="p18658038144417"><a name="p18658038144417"></a><a name="p18658038144417"></a>取值为0、1或-1</p>
 <a name="ul136589389444"></a><a name="ul136589389444"></a><ul id="ul136589389444"><li>1：UP</li><li>0：DOWN</li><li>-1：未知(hccn_tool工具调用失败)</li></ul>
 </td>
-</tr>
-<tr id="row128958179146"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p1895101717145"><a name="p1895101717145"></a><a name="p1895101717145"></a>Network</p>
+<td class="cellrowborder" rowspan="3" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><a name="ul178907161943"></a><a name="ul178907161943"></a><ul id="ul178907161943"><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li><span id="ph57012578543"><a name="ph57012578543"></a><a name="ph57012578543"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph1518064711478"><a name="ph1518064711478"></a><a name="ph1518064711478"></a>A200I A2 Box 异构组件</span></li></ul>
+</td></tr><tr id="row128958179146"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p1895101717145"><a name="p1895101717145"></a><a name="p1895101717145"></a>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.2 "><p id="p116111121174615"><a name="p116111121174615"></a><a name="p116111121174615"></a>npu_chip_link_speed</p>
 </td>
@@ -524,8 +586,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.5 "><p id="p728312308482"><a name="p728312308482"></a><a name="p728312308482"></a>单位：MB/s</p>
 </td>
-</tr>
-<tr id="row1063192616140"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p12632265145"><a name="p12632265145"></a><a name="p12632265145"></a>Network</p>
+</tr><tr id="row1063192616140"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p12632265145"><a name="p12632265145"></a><a name="p12632265145"></a>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.2 "><p id="p460342419500"><a name="p460342419500"></a><a name="p460342419500"></a>npu_chip_link_up_num</p>
 </td>
@@ -535,8 +596,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.5 "><p id="p142831501527"><a name="p142831501527"></a><a name="p142831501527"></a>单位：次</p>
 </td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+</tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_status_X_Y</p>
 </td>
@@ -546,32 +606,8 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>取值为0、1或-1</p><ul><li>1：UP</li><li>0：DOWN</li><li>-1：未知(hccn_tool工具调用失败)</li></ul>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">旧版本指标，仅支持Atlas 350 加速卡（4Pmesh互联）。
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx_X_Y</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时接收速率。该指标使用的hccn_tool采集命令中，-time参数为100，测量带宽时间段为100毫秒。其中，X为Udie ID，Y为Port ID。</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
-</td>
-<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx_X_Y</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时发送速率。该指标使用的hccn_tool采集命令中，-time参数为100，测量带宽时间段为100毫秒。其中，X为Udie ID，Y为Port ID。</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
-</td>
-<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">旧版本指标，仅支持Atlas 350 加速卡（4Pmesh互联）。
+</td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_speed_X_Y</p>
 </td>
@@ -581,8 +617,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：G</p>
 </td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+</tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_status</p>
 </td>
@@ -592,32 +627,8 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>取值为0、1或-1</p><ul><li>1：UP</li><li>0：DOWN</li><li>-1：未知(hccn_tool工具调用失败)</li></ul>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><p><term>Ascend 950PR&950DT系列产品</term></p><p>其中，Atlas 350 加速卡仅支持4Pmesh互联</p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时接收速率。该指标使用的hccn_tool采集命令中，-time参数为100，测量带宽时间段为100毫秒。</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
-</td>
-<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时发送速率。该指标使用的hccn_tool采集命令中，-time参数为100，测量带宽时间段为100毫秒。</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
-</td>
-<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><p><term>Ascend 950PR&950DT系列产品</term></p><p>其中，Atlas 350 加速卡仅支持4Pmesh互联</p>
+</td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_speed</p>
 </td>
@@ -627,13 +638,12 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：G</p>
 </td>
-</tr>
-</tbody>
+</tr></tbody>
 </table>
 
 ## DDR数据信息<a name="section11460736193116"></a>
 
-**表 7**  DDR数据信息
+**表 8**  DDR数据信息
 
 <a name="table1251541123212"></a>
 <table><thead align="left"><tr id="row152510419324"><th class="cellrowborder" valign="top" width="9.460946094609461%" id="mcps1.2.7.1.1"><p id="p7637172411347"><a name="p7637172411347"></a><a name="p7637172411347"></a>类别</p>
@@ -679,7 +689,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 ## 片上内存数据信息<a name="section82014427452"></a>
 
-**表 8**  片上内存数据信息
+**表 9**  片上内存数据信息
 
 <a name="table1989710355466"></a>
 <table><thead align="left"><tr id="row10898113515468"><th class="cellrowborder" valign="top" width="7.370000000000002%" id="mcps1.2.7.1.1"><p id="p19552123871112"><a name="p19552123871112"></a><a name="p19552123871112"></a>类别</p>
@@ -854,7 +864,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 ## HCCS数据信息<a name="section9741133815914"></a>
 
-**表 9**  HCCS数据信息
+**表 10**  HCCS数据信息
 
 <a name="table812924831013"></a>
 <table><thead align="left"><tr id="row6130748141017"><th class="cellrowborder" valign="top" width="7.76%" id="mcps1.2.7.1.1"><p id="p93074164111"><a name="p93074164111"></a><a name="p93074164111"></a>类别</p>
@@ -973,7 +983,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 ## PCIe数据信息<a name="section124052024182413"></a>
 
-**表 10**  PCIe数据信息
+**表 11**  PCIe数据信息
 
 <a name="table1341911380255"></a>
 <table><thead align="left"><tr id="row941993842520"><th class="cellrowborder" valign="top" width="7.080000000000002%" id="mcps1.2.7.1.1"><p id="p3550823152717"><a name="p3550823152717"></a><a name="p3550823152717"></a>类别</p>
@@ -1068,7 +1078,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 ## RoCE数据信息<a name="section2080452819294"></a>
 
-**表 11**  RoCE数据信息
+**表 12**  RoCE数据信息
 
 <a name="table16943172263012"></a>
 <table><thead align="left"><tr id="row11943122133012"><th class="cellrowborder" valign="top" width="8.52%" id="mcps1.2.7.1.1"><p id="p14944105716305"><a name="p14944105716305"></a><a name="p14944105716305"></a>类别</p>
@@ -1335,7 +1345,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 ## SIO数据信息<a name="section1773315620217"></a>
 
-**表 12**  SIO数据信息
+**表 13**  SIO数据信息
 
 <a name="table128661257212"></a>
 <table><thead align="left"><tr id="row886614251216"><th class="cellrowborder" valign="top" width="8.16%" id="mcps1.2.7.1.1"><p id="p7564115242211"><a name="p7564115242211"></a><a name="p7564115242211"></a>类别</p>
@@ -1382,7 +1392,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 ## 光模块数据信息<a name="section1692536163118"></a>
 
-**表 13**  光模块数据信息
+**表 14**  光模块数据信息
 
 <a name="table1845716484313"></a>
 <table><thead align="left"><tr id="row17457848123120"><th class="cellrowborder" valign="top" width="8.150815081508151%" id="mcps1.2.7.1.1"><p id="p1360995513110"><a name="p1360995513110"></a><a name="p1360995513110"></a>类别</p>
@@ -1500,7 +1510,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 ## UB数据信息<a name="section9638996666653"></a>
 
-**表 14**  UB数据信息
+**表 15**  UB数据信息
 
 <a name="table9638996666653"></a>
 <table><thead align="left"><tr><th class="cellrowborder" valign="top" width="8.150815081508151%"><p>类别</p>
@@ -2584,7 +2594,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 关于以上表格中所用到的数据信息标签说明如下。
 
-**表 15**  数据信息标签
+**表 16**  数据信息标签
 
 <a name="table191895615241"></a>
 <table><thead align="left"><tr id="row8191356112418"><th class="cellrowborder" valign="top" width="9.43%" id="mcps1.2.4.1.1"><p id="p1919205692417"><a name="p1919205692417"></a><a name="p1919205692417"></a>名称</p>
@@ -2959,7 +2969,7 @@ NPU Exporter是通过调用底层的HDK接口，获取相应的信息。数据�
 
 ## 状态码<a name="zh-cn_topic_0000001446964912_section1287016166169"></a>
 
-**表 16**  状态码
+**表 17**  状态码
 
 <a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_table10702170191419"></a>
 

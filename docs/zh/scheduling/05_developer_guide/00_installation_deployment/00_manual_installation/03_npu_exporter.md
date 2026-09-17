@@ -108,6 +108,14 @@
   | 60s        | sio, hbm, hccs, pcie, vnpu, roce, optical, network, ub |
   | 86400s(一天) | nodeBase                                               |
 
+### 26.2.0兼容性说明
+
+- 指标组拆分：将原`network`指标组拆分为`network_bandwidth`和`network_link`两个指标组。
+    - `network_bandwidth`：包含带宽类指标（如`npu_chip_info_bandwidth_tx`、`npu_chip_info_bandwidth_rx`等），默认采集周期为60s。
+    - `network_link`：包含链路状态、速率、UP统计等指标（如`npu_chip_info_link_status`、`npu_chip_link_speed`、`npu_chip_link_up_num`等），默认采集周期为600s。
+- 兼容性：旧版本（26.1.0版本/补丁及其以前版本）的配置文件仍能够正常采集，原`network`指标组的采集器暂留以保证兼容。由于`network`与`network_bandwidth`、`network_link`采集的指标相同，不建议同时开启，避免重复采集造成性能浪费。
+- 默认采集频率变更：`optical`指标组默认采集周期由60s调整为600s；`network_bandwidth`指标组默认采集周期为60s；`network_link`指标组默认采集周期为600s。
+
 ## 操作步骤<a name="section83111543151612"></a>
 
 NPU Exporter支持两种安装方式，用户可根据实际情况选择其中一种进行安装。该组件仅提供HTTP服务，如需使用更为安全的HTTPS服务，请自行修改源码进行适配。
@@ -147,19 +155,23 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
                 {"metricsGroup": "nodeBase", "state": "ON", "intervalSeconds": 86400},
 
                 {"metricsGroup": "roce", "state": "ON", "intervalSeconds": 60},
-                {"metricsGroup": "optical", "state": "ON", "intervalSeconds": 60},
-                {"metricsGroup": "network", "state": "ON", "intervalSeconds": 60},
+                {"metricsGroup": "optical", "state": "ON", "intervalSeconds": 600},
+                {"metricsGroup": "network_bandwidth", "state": "ON", "intervalSeconds": 60},
+                {"metricsGroup": "network_link", "state": "ON", "intervalSeconds": 600},
                 {"metricsGroup": "ub", "state": "ON", "intervalSeconds": 60}
             ]
         ```
 
         <a name="table192202574406"></a>
 
-        |参数|说明|
-        |---|---|
-        |metricsGroup|默认指标组名称。<ul><li>通过DCMI采集：<ul><li>version：版本数据信息</li><li>utilization：利用率数据信息</li><li>npu：NPU数据信息</li><li>ddr：DDR数据信息</li><li>sio：SIO数据信息</li><li>hbm：片上内存数据信息</li><li>hccs：HCCS数据信息</li><li>pcie：PCIe数据信息</li><li>vnpu：vNPU数据信息</li><li>nodeBase：节点基本信息</li><li>ub：NPU UB数据信息</li></ul></li><li>通过hccn_tool采集：<ul><li>roce：RoCE数据信息</li><li>optical：光模块数据信息</li><li>network：Network数据信息</li></ul></li></ul>|
-        |state|指标组采集和上报的开关。默认值为ON。<ul><li>ON：表示开启。开启对应指标组的开关后，会采集和上报该指标组的指标。</li><li>OFF：表示关闭。关闭对应指标组的开关后，不会采集和上报该指标组的指标。</li></ul>|
-        |intervalSeconds|指标组采集周期，单位为秒。<ul><li>必须配置为整数值。</li><li>取值范围为-1、1~86400秒。</li><li>若缺失该配置项，使用默认值60秒。</li><li>若配置为-1，表示该指标组只采集一次，不再重复采集。</li></ul>|
+        | 参数              | 说明                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+        |-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+        | metricsGroup    | 默认指标组名称。<ul><li>通过DCMI采集：<ul><li>version：版本数据信息</li><li>utilization：利用率数据信息</li><li>npu：NPU数据信息</li><li>ddr：DDR数据信息</li><li>sio：SIO数据信息</li><li>hbm：片上内存数据信息</li><li>hccs：HCCS数据信息</li><li>pcie：PCIe数据信息</li><li>vnpu：vNPU数据信息</li><li>nodeBase：节点基本信息</li><li>ub：NPU UB数据信息</li></ul></li><li>通过hccn_tool采集：<ul><li>roce：RoCE数据信息</li><li>optical：光模块数据信息</li><li>network_bandwidth：Network带宽数据信息</li><li>network_link：Network link数据信息</li></ul></li></ul> |
+        | state           | 指标组采集和上报的开关。默认值为ON。<ul><li>ON：表示开启。开启对应指标组的开关后，会采集和上报该指标组的指标。</li><li>OFF：表示关闭。关闭对应指标组的开关后，不会采集和上报该指标组的指标。</li></ul>                                                                                                                                                                                                                                                                                                                                         |
+        | intervalSeconds | 指标组采集周期，单位为秒。<ul><li>必须配置为整数值。</li><li>取值范围为-1、1~86400秒。</li><li>若缺失该配置项，使用默认值60秒。</li><li>若配置为-1，表示该指标组只采集一次，不再重复采集。</li></ul>                                                                                                                                                                                                                                                                                                                              |
+
+        >[!NOTE]
+        > `network`指标组已拆分为`network_bandwidth`和`network_link`。`optical`指标组和`network_link`指标组的指标信息相对稳定，建议保持低频查询（如600s）。
 
     4. <a name="li151815494115"></a>按“Esc”键，输入:wq!保存并退出。
     5. 参考[2.b](#li11364381194)到[2.d](#li151815494115)，修改pluginConfiguration.json文件，根据实际需要配置自定义指标组的采集开关和采集周期。
@@ -428,19 +440,23 @@ NPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
                 {"metricsGroup": "nodeBase", "state": "ON", "intervalSeconds": 86400},
 
                 {"metricsGroup": "roce", "state": "ON", "intervalSeconds": 60},
-                {"metricsGroup": "optical", "state": "ON", "intervalSeconds": 60},
-                {"metricsGroup": "network", "state": "ON", "intervalSeconds": 60},
+                {"metricsGroup": "optical", "state": "ON", "intervalSeconds": 600},
+                {"metricsGroup": "network_bandwidth", "state": "ON", "intervalSeconds": 60},
+                {"metricsGroup": "network_link", "state": "ON", "intervalSeconds": 600},
                 {"metricsGroup": "ub", "state": "ON", "intervalSeconds": 60}
             ]
         ```
 
         <a name="zh-cn_topic_0000002511426331_table192202574406"></a>
 
-        |参数|说明|
-        |---|---|
-        |metricsGroup|默认指标组名称。<ul><li>通过DCMI采集：<ul><li>version：版本数据信息</li><li>utilization：利用率数据信息</li><li>npu：NPU数据信息</li><li>ddr：DDR数据信息</li><li>sio：SIO数据信息</li><li>hbm：片上内存数据信息</li><li>hccs：HCCS数据信息</li><li>pcie：PCIe数据信息</li><li>vnpu：vNPU数据信息</li><li>nodeBase：节点基本信息</li><li>ub：NPU UB数据信息</li></ul></li><li>通过hccn_tool采集：<ul><li>roce：RoCE数据信息</li><li>optical：光模块数据信息</li><li>network：Network数据信息</li></ul></li></ul>|
-        |state|指标组采集和上报的开关。默认值为ON。<ul><li>ON：表示开启。开启对应指标组的开关后，会采集和上报该指标组的指标。</li><li>OFF：表示关闭。关闭对应指标组的开关后，不会采集和上报该指标组的指标。</li></ul>|
-        |intervalSeconds|指标组采集周期，单位为秒。<ul><li>必须配置为整数值。</li><li>取值范围为-1、1~86400秒。</li><li>若缺失该配置项，使用默认值60秒。</li><li>若配置为-1，表示该指标组只采集一次，不再重复采集。</li></ul>|
+        | 参数              | 说明                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+        |-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+        | metricsGroup    | 默认指标组名称。<ul><li>通过DCMI采集：<ul><li>version：版本数据信息</li><li>utilization：利用率数据信息</li><li>npu：NPU数据信息</li><li>ddr：DDR数据信息</li><li>sio：SIO数据信息</li><li>hbm：片上内存数据信息</li><li>hccs：HCCS数据信息</li><li>pcie：PCIe数据信息</li><li>vnpu：vNPU数据信息</li><li>nodeBase：节点基本信息</li><li>ub：NPU UB数据信息</li></ul></li><li>通过hccn_tool采集：<ul><li>roce：RoCE数据信息</li><li>optical：光模块数据信息</li><li>network_bandwidth：Network带宽数据信息</li><li>network_link：Network link数据信息</li></ul></li></ul> |
+        | state           | 指标组采集和上报的开关。默认值为ON。<ul><li>ON：表示开启。开启对应指标组的开关后，会采集和上报该指标组的指标。</li><li>OFF：表示关闭。关闭对应指标组的开关后，不会采集和上报该指标组的指标。</li></ul>                                                                                                                                                                                                                                                                                                                                         |
+        | intervalSeconds | 指标组采集周期，单位为秒。<ul><li>必须配置为整数值。</li><li>取值范围为-1、1~86400秒。</li><li>若缺失该配置项，使用默认值60秒。</li><li>若配置为-1，表示该指标组只采集一次，不再重复采集。</li></ul>                                                                                                                                                                                                                                                                                                                              |
+
+        >[!NOTE]
+        > `network`指标组已拆分为`network_bandwidth`和`network_link`。`optical`指标组和`network_link`指标组的指标信息相对稳定，建议保持低频查询（如600s）。
 
     4. <a name="li18459954104718"></a>按“Esc”键，输入:wq!保存并退出。
     5. 参考[4.b](#li1445835411478)到[4.d](#li18459954104718)，修改pluginConfiguration.json文件，根据实际需要配置自定义指标组的采集开关和采集周期。
