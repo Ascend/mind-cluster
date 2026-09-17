@@ -16,7 +16,6 @@
 >
 >- 如需使用无条件重试功能，需在任务YAML中配置以下3个参数：fault-retry-times，restartPolicy及policies，详细参数说明请参见[YAML配置说明](../../../06_api/15_yaml_configuration.md#yaml_configuration)（policies是vcjob原生字段）。
 >- 在使用Ascend Operator的场景下，若希望任务所有Pod的Status在转变为Failed后仍发生重调度，可参考[使用Volcano和Ascend Operator组件场景下，业务面故障的任务所有Pod的Status全部变为Failed，任务无法触发无条件重试重调度](https://gitcode.com/Ascend/mind-cluster/issues/362)。
->- （可选）Job状态可以通过[ClusterD的任务接口](../../../06_api/04_clusterd/01_job_information.md)监控到任务状态变更，从而接入外部监控平台。业务面Pod非0退出，状态变成Failed后时，或者任务长时间处于Pending状态时，都能够通过任务信息接口获取到相关信息。
 
 ### watchdog故障检测<a name="section59641929143117"></a>
 
@@ -53,7 +52,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度、优雅容错�
    - AICore利用率：通过驱动接口获取NPU的AICore使用率。
    - HBM显存使用率：通过驱动接口获取NPU的HBM显存使用率。
    - 网络通信流量：
-     - 对于Ascend 950 系列产品场景，通过hccn_tool工具采集UB的tx_busi_flit_num和rx_busi_flit_num统计量；
+     - 对于<term>Ascend 950PR&950DT系列产品</term>场景，通过hccn_tool工具采集UB的tx_busi_flit_num和rx_busi_flit_num统计量；
      - 对于其他场景，通过hccn_tool工具采集RoCE的roce_tx_all_pkt_num和roce_rx_all_pkt_num统计量。
    - 进程CPU时间：通过读取/proc/{pid}/stat文件获取进程的utime和stime，计算所有NPU关联进程的CPU时间。
 3. 将当前轮次指标与上一轮次保存的指标进行对比，计算各项指标的增量值。

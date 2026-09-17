@@ -44,31 +44,11 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 **表 1**  在线压测支持的产品和框架
 
 <a name="zh-cn_topic_0000002039194017_table6198201175416_benchmark"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002039194017_row111997118547"><th class="cellrowborder" valign="top" width="25.172517251725168%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002039194017_p91998117543"><a name="zh-cn_topic_0000002039194017_p91998117543"></a>产品类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="43.834383438343835%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002039194017_p3199161115419"><a name="zh-cn_topic_0000002039194017_p3199161115419"></a>硬件形态</p>
-</th>
-<th class="cellrowborder" valign="top" width="30.993099309930994%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002039194017_p5199011125416"><a name="zh-cn_topic_0000002039194017_p5199011125416"></a>训练框架</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002039194017_row920001115417"><td class="cellrowborder" valign="top" width="25.172517251725168%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039194017_p192011311155411"><a name="zh-cn_topic_0000002039194017_p192011311155411"></a><span id="ph2314323124211"><a name="ph2314323124211"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span></p>
-<p id="p773278122616"><a name="p773278122616"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="43.834383438343835%" headers="mcps1.2.4.1.2 "><p id="p17354133423610"><a name="p17354133423610"></a><span id="ph14314162316427"><a name="ph14314162316427"></a>Atlas 800T A2 训练服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="30.993099309930994%" headers="mcps1.2.4.1.3 "><a name="ul15879359132214"></a><ul id="ul15879359132214"><li><span id="ph135835207394"><a name="ph135835207394"></a>MindSpore</span></li><li><span id="ph19425111582712"><a name="ph19425111582712"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039194017_row13204101125410"><td class="cellrowborder" valign="top" width="25.172517251725168%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039194017_p172044116542"><a name="zh-cn_topic_0000002039194017_p172044116542"></a><span id="ph531432344210"><a name="ph531432344210"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span></p>
-</td>
-<td class="cellrowborder" valign="top" width="43.834383438343835%" headers="mcps1.2.4.1.2 "><p id="p4897194703620"><a name="p4897194703620"></a><span id="ph077885871817"><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="30.993099309930994%" headers="mcps1.2.4.1.3 "><a name="ul13821123132320"></a><ul id="ul13821123132320"><li><span id="ph19127156230"><a name="ph19127156230"></a>MindSpore</span></li><li><span id="ph310231710274"><a name="ph310231710274"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+
+|产品类型|硬件形态|训练框架|
+|--|--|--|
+|Atlas A2 训练系列产品|Atlas 800T A2 训练服务器|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A3 训练系列产品|Atlas 900 A3 SuperPoD 超节点|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 
 ### 在线压测原理<a name="section56986212179"></a>
 

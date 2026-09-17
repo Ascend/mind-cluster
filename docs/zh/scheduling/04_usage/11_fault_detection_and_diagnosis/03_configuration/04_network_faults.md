@@ -9,7 +9,7 @@
 针对总线设备故障的不同级别进行分级处理时，Ascend Device Plugin组件会获取到当前故障的故障码，根据SwitchFaultCode.json中故障码配置的故障级别，对故障进行相应处理。SwitchFaultCode.json为系统配置文件，若用户无特殊需求，请勿随意修改。若用户需要修改故障码对应的故障级别，可以通过由faultCode.json和SwitchFaultCode.json创建的mindx-dl-fault-config文件实现。
 
 >[!NOTE]
->只有Atlas A3 训练系列产品存在**总线设备**，该设备的故障码可以查看SwitchFaultCode.json文件。
+>只有<term>Atlas A3 训练系列产品</term>存在**总线设备**，该设备的故障码可以查看SwitchFaultCode.json文件。
 
 故障检测特性针对**总线设备**故障的不同级别进行分级处理。若用户需要修改故障码的故障级别，操作指导请参见[（可选）配置总线设备故障级别](#可选配置总线设备故障级别)。
 
@@ -396,8 +396,8 @@ faultCode.json：配置参数面光链路成员端口故障的故障级别。
 
 ### （可选）参数面光链路成员端口故障<a name="zh-cn_topic_0000002479387566_section_custom_opticalportfaultlevel"></a>
 
-若用户需要对参数面光链路成员端口故障后的NPU进行放行或其他操作，可参照[使用faultCode.json配置故障级别](./03_chip_faults.md#zh-cn_topic_0000001951258609_section112139052513)小节修改此故障码的故障级别，修改后的mindx-dl-fault-config示例如下：
-自定义时需对需配置的机型的形态进行区分，当配置Atlas 850E 超节点和Atlas 650E 服务器中出uboe口的故障时，配置110001024和110000002。为其他及Atlas 950 SuperPoD 超节点形态时，配置020001002和020000002。
+若用户需要对参数面光链路成员端口故障后的NPU进行放行或其他操作，可参考[使用faultCode.json配置故障级别](./03_chip_faults.md#zh-cn_topic_0000001951258609_section112139052513)修改此故障码的故障级别，修改后的mindx-dl-fault-config示例如下：
+自定义时需对配置的机型形态进行区分，当配置Atlas 850E 超节点、Atlas 850 超节点、Atlas 650E 服务器、Atlas 650 服务器中出UBoE口的故障时，配置110001024和110000002；当为其他及Atlas 950 SuperPoD 超节点形态时，配置020001002和020000002。
 
 ```json
    ...

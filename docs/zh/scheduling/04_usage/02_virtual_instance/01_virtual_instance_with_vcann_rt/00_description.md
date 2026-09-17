@@ -31,19 +31,13 @@
 </thead>
 <tbody align="left">
 <tr>
-<td class="cellrowborder" valign="top" width="30%"><term>Atlas A2 训练系列产品</term></td>
-<td class="cellrowborder" rowspan="5" valign="center" width="40%"><p>在物理机生成软切分配置文件，挂载NPU和配置文件到容器</p></td>
-<td class="cellrowborder" rowspan="5" align="center" valign="center" width="15%"><p>软切分虚拟化</p></td>
-<td class="cellrowborder" rowspan="5" align="center" valign="center" width="10%"><p>是</p></td>
+<td class="cellrowborder" valign="top" width="30%"><term>Atlas A2系列产品</term></td>
+<td class="cellrowborder" rowspan="3" valign="center" width="40%"><p>在物理机生成软切分配置文件，挂载NPU和配置文件到容器</p></td>
+<td class="cellrowborder" rowspan="3" align="center" valign="center" width="15%"><p>软切分虚拟化</p></td>
+<td class="cellrowborder" rowspan="3" align="center" valign="center" width="10%"><p>是</p></td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" width="30%"><term>Atlas A2 推理系列产品</term></td>
-</tr>
-<tr>
-<td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 训练系列产品</term></td>
-</tr>
-<tr>
-<td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 推理系列产品</term></td>
+<td class="cellrowborder" valign="top" width="30%"><term>Atlas A3系列产品</term></td>
 </tr>
 <tr>
 <td class="cellrowborder" valign="top" width="30%">Atlas 350 加速卡</td>
@@ -65,7 +59,7 @@
 - 软切分虚拟化功能仅支持推理任务。
 - 在软切分虚拟化场景下，一个容器只能挂载一个NPU。
 - 任务YAML中requests对应的数据表示请求的NPU的AICore百分比，不是真实NPU卡数。
-- **Atlas A3 训练或推理系列产品**使用软切分虚拟化功能时，必须开启单die直通模式，即在Ascend Device Plugin的YAML中，增加启动参数-useSingleDieMode=true。
+- <term>Atlas A3系列产品</term>使用软切分虚拟化功能时，必须开启单die直通模式，即在Ascend Device Plugin的YAML中，增加启动参数-useSingleDieMode=true。
 - 物理NPU软切分虚拟化后，仅支持将物理NPU挂载到容器，不支持将该物理NPU直通到虚拟机。
 - 在软切分虚拟化场景下，如果所有容器都挂载了相同的物理NPU，则该物理NPU必须采用相同的软切分策略。
 - 由于硬件设备的限制(可以参考[使用约束](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/others/acldevg/aclcppdevg_000222.html))，建议vCANN-RT最大切分数量不超过单个device支持的最大用户进程数。

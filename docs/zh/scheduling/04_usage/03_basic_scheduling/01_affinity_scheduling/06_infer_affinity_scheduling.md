@@ -1,8 +1,8 @@
 # 推理服务亲和性调度
 
 在推理业务场景下，单个推理服务通常由多个推理实例构成，包含若干Prefill实例与若干Decode实例。
-对于Atlas 950 SuperPoD 超节点，同框内节点间网络通信时延最低、吞吐性能最优，同一超节点内不同框的节点之间通信性能次之；对于Atlas 850E 超节点、Atlas 900 A3 SuperPoD 超节点和Atlas 9000 A3 SuperPoD 集群算力系统，同一超节点内节点之间的网络通信表现最佳。
-基于上述网络特性，Ascend-for-volcano调度插件支持配置推理服务亲和性调度策略：对于Atlas 950 SuperPoD 超节点，优先将同一推理服务的全部实例调度至同一框内，无法满足时，优先将同服务实例调度至同一超节点；对于Atlas 850E 超节点、Atlas 900 A3 SuperPoD 超节点和Atlas 9000 A3 SuperPoD 集群算力系统，优先将同服务实例调度至同一超节点，无法满足时回退至其他超节点，以此充分发挥网络优势，整体提升推理服务运行性能。
+对于Atlas 950 SuperPoD 超节点，同框内节点间网络通信时延最低、吞吐性能最优，同一超节点内不同框的节点之间通信性能次之；对于Atlas 850E 超节点、Atlas 850 超节点、Atlas 900 A3 SuperPoD 超节点和Atlas 9000 A3 SuperPoD 集群算力系统，同一超节点内节点之间的网络通信表现最佳。
+基于上述网络特性，Ascend-for-volcano调度插件支持配置推理服务亲和性调度策略：对于Atlas 950 SuperPoD 超节点，优先将同一推理服务的全部实例调度至同一框内，无法满足时，优先将同服务实例调度至同一超节点；对于Atlas 850E 超节点、Atlas 850 超节点、Atlas 900 A3 SuperPoD 超节点和Atlas 9000 A3 SuperPoD 集群算力系统，优先将同服务实例调度至同一超节点，无法满足时回退至其他超节点，以此充分发挥网络优势，整体提升推理服务运行性能。
 
 ## 前置条件
 
@@ -12,6 +12,7 @@
 
 - Atlas 950 SuperPoD 超节点
 - Atlas 850E 超节点
+- Atlas 850 超节点
 - Atlas 900 A3 SuperPoD 超节点
 - Atlas 9000 A3 SuperPoD 集群算力系统
 
@@ -78,7 +79,7 @@ spec:
           path: /etc/localtime
 </pre>
 
-对于Atlas 850E 超节点、Atlas 900 A3 SuperPoD 超节点、Atlas 9000 A3 SuperPoD 集群算力系统，推理服务亲和性调度策略的配置与Atlas 950 SuperPoD 超节点类似，以Deployment资源、Atlas 850E 超节点为例，添加如下加粗部分内容：
+对于Atlas 850E 超节点、Atlas 850 超节点、Atlas 900 A3 SuperPoD 超节点、Atlas 9000 A3 SuperPoD 集群算力系统，推理服务亲和性调度策略的配置与Atlas 950 SuperPoD 超节点类似，以Deployment资源、Atlas 850E 超节点为例，添加如下加粗部分内容：
 
 <pre codetype="yaml">
 apiVersion: apps/v1

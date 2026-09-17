@@ -94,12 +94,12 @@
 
     虚拟化实例涉及修改相关参数的集群调度组件为Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 
-    1. 在device-plugin-volcano-v\{version\}.yaml中添加-shareDevCount=100 -softShareDevConfigDir=/share_device/，其中/share_device/由用户手动创建。当<b>Atlas A3 训练或推理系列产品</b>使用软切分虚拟化功能时，需额外增加启动参数-useSingleDieMode=true。
+    1. 在device-plugin-volcano-v\{version\}.yaml中添加-shareDevCount=100 -softShareDevConfigDir=/share_device/，其中/share_device/由用户手动创建。当<term>Atlas A3系列产品</term>使用软切分虚拟化功能时，需额外增加启动参数-useSingleDieMode=true。
     2. 在device-plugin-volcano-v\{version\}.yaml中volumeMounts和volumes增加名为enpu-config-dir和share-device-config-dir的挂载项，其中enpu-config-dir的路径固定为/etc/enpu/，用于存放生成的软切分虚拟化任务的配置文件npu_info.config，share-device-config-dir的路径需与-softShareDevConfigDir参数值保持一致，用于存放软切分虚拟化任务的共享内存配置文件。
 
        ```yaml
        ...
-               # 只有Atlas A3 训练或推理系列产品使用软切分虚拟化功能时，才需增加-useSingleDieMode=true
+               # 只有Atlas A3系列产品使用软切分虚拟化功能时，才需增加-useSingleDieMode=true
                args: [ "device-plugin -volcanoType=true -presetVirtualDevice=true
                  -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0 -shareDevCount=100 -softShareDevConfigDir=/share_device/ -useSingleDieMode=true" ]
              ...
@@ -131,7 +131,7 @@
        |--|--|--|--|
        |-shareDevCount|uint|1|使用软切分虚拟化功能时，值只能为100。|
        |-softShareDevConfigDir|string|""|软切分虚拟化场景配置目录。|
-       |-useSingleDieMode|bool|false|<b>Atlas A3 训练或推理系列产品</b>是否开启单die直通模式。<ul><li>true：开启单die直通模式。</li><li>false：关闭单die直通模式。</li></ul>使用软切分虚拟化功能时，该参数必须配置为true。|
+       |-useSingleDieMode|bool|false|<term>Atlas A3系列产品</term>是否开启单die直通模式。<ul><li>true：开启单die直通模式。</li><li>false：关闭单die直通模式。</li></ul>使用软切分虚拟化功能时，该参数必须配置为true。|
 
     3. （可选）针对软切分虚拟化功能和非软切分虚拟化功能混合部署场景，需要对Ascend Device Plugin的YAML进行如下修改。
 
@@ -243,9 +243,9 @@
 主机侧通过`npu-smi`工具开启容器共享模式，可支持多个容器挂载同一设备。若设备未开启容器共享模式，则只能挂载到单个容器。若配合MindCluster使用，要求整节点开启容器共享模式。
 
 ```shell
-# Atlas A2/A3 训练或推理系列产品：设置容器共享模式
+# Atlas A2/A3 系列产品：设置容器共享模式
 npu-smi set -t device-share -i ${id} -c ${chip_id} -d ${value}
-# Ascend 950PR 产品：设置容器共享模式
+# Ascend 950PR系列产品：设置容器共享模式
 npu-smi set -t device-share -i ${id} -d ${value}
 
 # 查询设备容器共享模式
@@ -260,7 +260,7 @@ npu-smi info -t device-share -i ${id}
 |chip_id|芯片ID。通过`npu-smi info -m`命令查询获取的Chip ID即为芯片ID。|
 |value|容器共享模式启动状态。<ul><li>0：关闭</li><li>1：开启</li></ul>默认为关闭状态。|
 
-以Ascend 950PR 产品为例：
+以Ascend 950PR系列产品为例：
 开启设备0上所有芯片的容器共享模式，查询设备0的容器共享模式。
 
   ```shell
@@ -339,7 +339,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     <tbody>
     <tr>
     <td class="cellrowborder" rowspan="2" align="center" valign="center" width="22%"><p>Ascend Job</p></td>
-    <td class="cellrowborder" valign="top" width="47%"><p><term>Atlas A2 训练系列产品</term></p><p><term>Atlas A2 推理系列产品</term></p><p><term>Atlas A3 训练系列产品</term></p><p><term>Atlas A3 推理系列产品</term></p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p><term>Atlas A2系列产品</term></p><p><term>Atlas A3系列产品</term></p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>pytorch_acjob_infer_910b_softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_acjob_infer_910b_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
@@ -350,7 +350,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     </tr>
     <tr>
     <td class="cellrowborder" rowspan="2" align="center" valign="center" width="22%"><p>Volcano Job</p></td>
-    <td class="cellrowborder" valign="top" width="47%"><p><term>Atlas A2 训练系列产品</term></p><p><term>Atlas A2 推理系列产品</term></p><p><term>Atlas A3 训练系列产品</term></p><p><term>Atlas A3 推理系列产品</term></p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p><term>Atlas A2系列产品</term></p><p><term>Atlas A3系列产品</term></p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-vcjob-910-softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-vcjob-910-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
@@ -361,7 +361,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     </tr>
     <tr>
     <td class="cellrowborder" rowspan="2" align="center" valign="center" width="22%"><p>Deployment</p></td>
-    <td class="cellrowborder" valign="top" width="47%"><p><term>Atlas A2 训练系列产品</term></p><p><term>Atlas A2 推理系列产品</term></p><p><term>Atlas A3 训练系列产品</term></p><p><term>Atlas A3 推理系列产品</term></p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p><term>Atlas A2系列产品</term></p><p><term>Atlas A3系列产品</term></p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-deploy-softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
@@ -461,7 +461,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     </pre>
 
 >[!NOTE]
->**Atlas A3 训练或推理系列产品**下发软切分虚拟化任务时，在任务容器中，/dev下实际只会挂载1个die（即1个davinci设备），但是执行<b>npu-smi info</b>命令查询会显示挂载了2个die，此为正常现象。回显示例如下：
+><term>Atlas A3系列产品</term>下发软切分虚拟化任务时，在任务容器中，/dev下实际只会挂载1个die（即1个davinci设备），但是执行<b>npu-smi info</b>命令查询会显示挂载了2个die，此为正常现象。回显示例如下：
 >
 > ```ColdFusion
 > +-----------------------------------------------------------------------------------------------+
@@ -508,7 +508,7 @@ ascendjob.mindxdl.gitee.com/default-infer-test-pytorch-910b created
 
 ### 查看任务进程<a name="ZH-CN_TOPIC_00000025113470710203"></a>
 
-下面以Atlas A2系列产品为例，说明查看任务进程的操作步骤。
+下面以<term>Atlas A2系列产品</term>为例，说明查看任务进程的操作步骤。
 
 **操作步骤**
 

@@ -419,7 +419,7 @@ Ascend Docker Runtime会根据实际环境情况默认以只读方式挂载以�
 </tbody>
 </table>
 
-**表 6**  默认挂载目录和文件（Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器及Atlas 950 SuperPoD 超节点）
+**表 6**  默认挂载目录和文件（<term>Ascend 950PR&950DT系列产品</term>）
 
 |路径|说明|
 |--|--|
@@ -815,7 +815,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <a name="ul91009103502"></a><a name="ul91009103502"></a><ul id="ul91009103502"><li>无互联节点内8卡：可申请NPU的数目为1N、2N、3N、4N、5N、6N、7N、8N。</li><li>无互联节点内16卡：可申请NPU的数目为1N、2N、3N、4N、5N、6N、7N、8N、9N、10N、11N、12N、13N、14N、15N、16N。</li><li>4P mesh 8卡：满足亲和性时，可申请NPU的数目为1N、2N、3N、4N、8N；不保证亲和性时，可申请NPU的数目为5N、6N、7N。</li><li>4P mesh 16卡：满足亲和性时，可申请NPU的数目为1N、2N、3N、4N、8N、12N、16N；不保证亲和性时，可申请NPU的数目为5N、6N、7N、9N、10N、11N、13N、14N、15N。</li></ul>
 </td>
 </tr>
-<tr id="row91009106501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009106501"><a name="p91009106501"></a><a name="p91009106501"></a><span id="ph91009106501"><a name="ph91009106501"></a><a name="ph91009106501"></a>Atlas 650E 服务器</span></p>
+<tr id="row91009106501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009106501"><a name="p91009106501"></a><a name="p91009106501"></a><span id="ph91009106501"><a name="ph91009106501"></a><a name="ph91009106501"></a>Atlas 650E 服务器或Atlas 650 服务器</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009106502"><a name="p91009106502"></a><a name="p91009106502"></a>单机场景</p>
 </td>
@@ -827,7 +827,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p91009106505"><a name="p91009106505"></a><a name="p91009106505"></a>可申请NPU的数目为1N、2N、3N、4N、5N、6N、7N、8N。N表示节点个数，其中每个节点的NPU调度约束同单机场景。</p>
 </td>
 </tr>
-<tr id="row91009108501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009108501"><a name="p91009108501"></a><a name="p91009108501"></a><span id="ph91009108501"><a name="ph91009108501"></a><a name="ph91009108501"></a>Atlas 850E 超节点</span></p>
+<tr id="row91009108501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009108501"><a name="p91009108501"></a><a name="p91009108501"></a><span id="ph91009108501"><a name="ph91009108501"></a><a name="ph91009108501"></a>Atlas 850E 超节点或Atlas 850 超节点</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009108502"><a name="p91009108502"></a><a name="p91009108502"></a>单机场景</p>
 </td>
@@ -897,12 +897,12 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 |产品形态|参考文档|
 |--|--|
 |<term>Atlas 训练系列产品</term>|<ul><li><span>《[Atlas 中心训练服务器 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591757)》</span></li><li><span>《[Atlas 中心训练服务器 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591764)》</span></li></ul>|
-|<term>Atlas A2 训练系列产品</term>|<ul><li><span>《[Atlas A2 中心推理和训练硬件 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591767)》</span></li><li><span>《[Atlas A2 中心推理和训练硬件 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591760)》</span></li></ul>|
-|<term>Atlas A3 训练系列产品</term>|<ul><li><span>《[Atlas A3 中心推理和训练硬件 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591769)》</span></li><li><span>《[Atlas A3 中心推理和训练硬件 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591758)》</span></li></ul>|
+|<term>Atlas A2系列产品</term>|<ul><li><span>《[Atlas A2 中心推理和训练硬件 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591767)》</span></li><li><span>《[Atlas A2 中心推理和训练硬件 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591760)》</span></li></ul>|
+|<term>Atlas A3系列产品</term>|<ul><li><span>《[Atlas A3 中心推理和训练硬件 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591769)》</span></li><li><span>《[Atlas A3 中心推理和训练硬件 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591758)》</span></li></ul>|
 |推理服务器（插Atlas 300I 推理卡）|<span>《[Atlas 300I 推理卡 黑匣子错误码信息列表（型号 3000, 3010）](https://support.huawei.com/enterprise/zh/doc/EDOC1100438311)》</span>|
 |Atlas 200I SoC A1 核心板|<ul><li><span>《[Atlas 200I SoC A1核心板 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100493983)》</span></li><li><span>《[Atlas 200I SoC A1核心板 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100493985)》</span></li></ul>|
 |<term>Atlas 推理系列产品</term>（不包含Atlas 200I SoC A1 核心板）|<ul><li><span>《[Atlas 中心推理卡 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591759)》</span></li><li><span>《[Atlas 中心推理卡 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591768)》</span></li></ul>|
-|<term>Ascend 950 系列产品</term>|<ul><li><span>《[健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100569783)》</span></li><li><span>《[黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100569782)》</span></li></ul>|
+|<term>Ascend 950PR&950DT系列产品</term>|<ul><li><span>《[健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100569783)》</span></li><li><span>《[黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100569782)》</span></li></ul>|
 
 ## 节点故障码参考文档<a name="ZH-CN_TOPIC_0000002479386430"></a>
 
@@ -952,7 +952,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 |huawei.com/Ascend310P-V|<term>Atlas 推理系列产品</term>混插模式：Atlas 300V 视频解析卡资源名称，非网址，不访问。|
 |huawei.com/Ascend310P-VPro|<term>Atlas 推理系列产品</term>混插模式：Atlas 300V Pro 视频解析卡资源名称，非网址，不访问。|
 |huawei.com/Ascend310P-IPro|<term>Atlas 推理系列产品</term>混插模式：Atlas 300I Pro 推理卡资源名称，非网址，不访问。|
-|huawei.com/npu|<term>Ascend 950 系列产品</term>资源名称，非网址，不访问。|
+|huawei.com/npu|<term>Ascend 950PR&950DT系列产品</term>资源名称，非网址，不访问。|
 
 ## 安全说明<a name="ZH-CN_TOPIC_0000002479386374"></a>
 

@@ -94,7 +94,7 @@ ascend-fd diag -i /tmp/parse_out -o /tmp/diag_out
     > [!NOTE]
     >
     > - 当未找到对端设备时，不同产品形态的根因节点链展示不同。
-    >   - <term>Ascend 950 系列产品</term>：展示对端设备 EID。
+    >   - <term>Ascend 950PR&950DT系列产品</term>：展示对端设备 EID。
     >   - 其他产品：展示对端设备 IP。
     > - 回显结果字段说明，请参考[诊断结果回显参数说明](#诊断结果回显参数说明)。
 

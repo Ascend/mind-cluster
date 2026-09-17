@@ -45,11 +45,9 @@ Ascend DRA组件的完整生命周期包含如下六个阶段：
 
 Ascend DRA组件支持的产品形态如下：
 
-- Atlas A2 训练系列产品
-- Atlas A2 推理系列产品
-- Atlas A3 训练系列产品
-- Atlas A3 推理系列产品
-- Ascend 950 系列产品
+- <term>Atlas A2系列产品</term>
+- <term>Atlas A3系列产品</term>
+- <term>Ascend 950PR&950DT系列产品</term>
 
 ## 使用方式<a name="section_dra_usage"></a>
 
