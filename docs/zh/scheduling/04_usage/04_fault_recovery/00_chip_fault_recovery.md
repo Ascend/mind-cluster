@@ -21,7 +21,9 @@
 - Atlas 900 A3 SuperPoD 超节点
 - Atlas 800T A3 超节点服务器
 - Atlas 850E 超节点
+- Atlas 850 超节点
 - Atlas 650E 服务器
+- Atlas 650 服务器
 - Atlas 950 SuperPoD 超节点
 - Atlas 350 加速卡
 - Atlas 300I Pro 推理卡

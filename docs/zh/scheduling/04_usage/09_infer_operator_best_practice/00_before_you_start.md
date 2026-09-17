@@ -21,7 +21,9 @@ MindCluster集群调度组件支持用户通过Infer Operator部署推理任务�
 - Atlas 800I A3 超节点服务器
 - Atlas 350 加速卡
 - Atlas 850E 超节点
+- Atlas 850 超节点
 - Atlas 650E 服务器
+- Atlas 650 服务器
 - Atlas 950 SuperPoD 超节点
 
 ## 使用方式

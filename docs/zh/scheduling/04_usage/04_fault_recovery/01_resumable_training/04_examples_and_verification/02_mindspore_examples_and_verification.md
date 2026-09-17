@@ -12,7 +12,7 @@
 
 >[!NOTE]
 >
->Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点等存在UB总线的产品形态下，训练镜像内需要增加UB驱动相关文件。支持如下两种方式：
+>Atlas 850E 超节点、Atlas 850 超节点、Atlas 650E 服务器、Atlas 650 服务器、Atlas 950 SuperPoD 超节点等存在UB总线的产品形态下，训练镜像内需要增加UB驱动相关文件。支持如下两种方式：
 >
 >- 从<a href="https://mirrors.huaweicloud.com/ascend/">华为云镜像仓地址</a>的archive目录下载，然后安装到训练镜像中。
 >- 安装Ascend Docker Runtime，默认挂载ub\_driver.list中的UB驱动相关内容。ub\_driver.list中的文件依赖宿主机的glibc版本，目前支持的OS版本和glibc版本如下：

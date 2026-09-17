@@ -35,11 +35,9 @@
 
 - <term>Atlas 推理系列产品</term>
 - <term>Atlas 训练系列产品</term>
-- <term>Atlas A2 推理系列产品</term>
-- <term>Atlas A2 训练系列产品</term>
-- <term>Atlas A3 推理系列产品</term>
-- <term>Atlas A3 训练系列产品</term>
-- <term>Ascend 950 系列产品</term>
+- <term>Atlas A2系列产品</term>
+- <term>Atlas A3系列产品</term>
+- <term>Ascend 950PR&950DT系列产品</term>
 
 **使用流程<a name="section5640184231810"></a>**
 
@@ -302,7 +300,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 >- 本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。
 >- 下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
 >- 以下MindSpore示例需使用CANN 8.5.0之前版本。
->- rank_table.sh不适用于<term>Ascend 950 系列产品</term>下的非acjob任务。
+>- rank_table.sh不适用于<term>Ascend 950PR&950DT系列产品</term>下的非acjob任务。
 
 **PyTorch<a name="zh-cn_topic_0000001558834798_section17760205783316"></a>**
 
@@ -408,7 +406,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 
 - 若当前环境使用的是<term>Atlas A3 训练系列产品</term>，选择[表3](#table57051049102614)获取相应的YAML示例。
 
-- 若当前环境使用的是<term>Ascend 950 系列产品</term>，选择[表4](#table5290157950yaml)获取相应的YAML示例。
+- 若当前环境使用的是<term>Ascend 950PR&950DT系列产品</term>，选择[表4](#table5290157950yaml)获取相应的YAML示例。
 
 **表 1** <term>Atlas A2 训练系列产品</term>支持的YAML
 
@@ -566,7 +564,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </tbody>
 </table>
 
-**表 4** <term>Ascend 950 系列产品</term>支持的YAML
+**表 4** <term>Ascend 950PR&950DT系列产品</term>支持的YAML
 <a name="table5290157950yaml"></a>
 <table>
     <thead align="left">
@@ -620,7 +618,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 350 加速卡</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 850 超节点</p><p>Atlas 350 加速卡</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-deploy-950.yaml</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 </td>
@@ -645,7 +643,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 350 加速卡</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 850 超节点</p><p>Atlas 350 加速卡</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-vcjob-950.yaml</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-vcjob-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 </td>
@@ -660,7 +658,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
     根据[表6](#table62591594016)获取示例YAML后，Atlas 800T A2 训练服务器、Atlas 200T A2 Box16 异构子框和A200T A3 Box8 超节点服务器可基于[YAML配置说明](../../06_api/15_yaml_configuration.md#yaml_configuration)给出的参数说明进行修改适配。
 
 - 若当前环境使用的是<term>Atlas 训练系列产品</term>，选择[表7](#table21811158146)获取相应的YAML示例。
-- 若当前环境使用的是<term>Ascend 950 系列产品</term>，选择[表8](#table950yaml)获取相应的YAML示例。
+- 若当前环境使用的是<term>Ascend 950PR&950DT系列产品</term>，选择[表8](#table950yaml)获取相应的YAML示例。
 
 **表 6** <term>Atlas A2 训练系列产品</term>支持的YAML
 
@@ -810,7 +808,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </tbody>
 </table>
 
-**表 8** <term>Ascend 950 系列产品</term>支持的YAML
+**表 8** <term>Ascend 950PR&950DT系列产品</term>支持的YAML
 <a name="table950yaml"></a>
 <table>
     <thead align="left">
@@ -826,7 +824,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
     <tbody>
         <tr>
             <td class="cellrowborder" rowspan="2" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Volcano Job</p></td>
-            <td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 350 加速卡</p></td>
+            <td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 850 超节点</p><p>Atlas 350 加速卡</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>atlas_950_pytorch_vcjob.yaml</p></td>
             <td class="cellrowborder" rowspan="4" valign="top" width="12.26%" headers="mcps1.2.7.1.5 "><p>示例默认为单机8卡任务。</p></td>
@@ -840,7 +838,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
         </tr>
         <tr>
             <td class="cellrowborder" rowspan="2" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Deployment</p></td>
-            <td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 350 加速卡</p></td>
+            <td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 850 超节点</p><p>Atlas 350 加速卡</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>atlas_950_pytorch_deployment.yaml</p></td>
         </tr>
@@ -885,7 +883,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 350 加速卡</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 850 超节点</p><p>Atlas 350 加速卡</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>pytorch_multinodes_acjob_infer_950_with_ranktable.yaml</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_950_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 </td>
@@ -1188,7 +1186,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 
         >[!NOTE]
         > - **Allocated resources** 重点关注 `huawei.com/XXX` 字段：
-        >   - `huawei.com/Ascend910` 代表服务器的类型为<term>Atlas 训练系列产品</term>、<term>Atlas A2 推理系列产品</term>、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 推理系列产品</term>、<term>Atlas A3 训练系列产品</term>。如果是<term>Ascend 950 系列产品</term>，则该字段为 `huawei.com/npu`。
+        >   - `huawei.com/Ascend910` 代表服务器的类型为<term>Atlas 训练系列产品</term>、<term>Atlas A2系列产品</term>、<term>Atlas A3系列产品</term>。如果是<term>Ascend 950PR&950DT系列产品</term>，则该字段为 `huawei.com/npu`。
         >   - `huawei.com/Ascend910` 对应的值是8，该值表示该节点上当前已被容器挂载的芯片数量。下发任务成功后，该值会增大，增加数量为任务使用的NPU芯片个数。
         > - 针对推理场景：
         >   - 如果使用的是<term>Atlas 推理系列产品</term>非混插模式，则上述字段显示为**Ascend310P**。
@@ -1421,8 +1419,8 @@ xx "xxx" deleted
                                 initContainerCommand([]string{"/bin/bash", "-c", "bash train_start.sh ..."}).  // 初始化容器启动命令，具体参数参考示例YAML
                                 initContainerArgs([]string{"/bin/bash", "-c", "bash train_start.sh ..."}).  // 初始化容器启动命令，具体参数参考示例YAML
                                 initContainerPorts(2222).                                                // 初始化容器端口
-                                initContainerLimits("huawei.com/Ascend910", "8").                        // 初始化任务资源，Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点需要修改参数名称为huawei.com/npu
-                                initContainerRequests("huawei.com/Ascend910", "8").                      // 初始化任务资源，Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点需要修改参数名称为huawei.com/npu
+                                initContainerLimits("huawei.com/Ascend910", "8").                        // 初始化任务资源，Ascend 950PR&950DT系列产品需要修改参数名称为huawei.com/npu
+                                initContainerRequests("huawei.com/Ascend910", "8").                      // 初始化任务资源，Ascend 950PR&950DT系列产品需要修改参数名称为huawei.com/npu
                                 initContainerVolumeMounts()).                                            // 初始化容器挂载项
                              initReplica()).
               addReplicaSpecs("Worker", newReplica(). // 初始化Worker副本
@@ -1445,8 +1443,8 @@ xx "xxx" deleted
                     initContainerCommand([]string{"/bin/bash", "-c", "bash train_start.sh ..."}). // 初始化容器启动命令，具体参数参考示例YAML
                     initContainerArgs([]string{"/bin/bash", "-c", "bash train_start.sh ..."}).    // 初始化容器启动命令，具体参数参考示例YAML
                     initContainerPorts(2222).                                                     // 初始化容器端口
-                    initContainerLimits("huawei.com/Ascend910", "8").                             // 初始化任务资源，Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点需要修改参数名称为huawei.com/npu
-                    initContainerRequests("huawei.com/Ascend910", "8").                           // 初始化任务资源，Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点需要修改参数名称为huawei.com/npu
+                    initContainerLimits("huawei.com/Ascend910", "8").                             // 初始化任务资源，Ascend 950PR&950DT系列产品需要修改参数名称为huawei.com/npu
+                    initContainerRequests("huawei.com/Ascend910", "8").                           // 初始化任务资源，Ascend 950PR&950DT系列产品需要修改参数名称为huawei.com/npu
                     initContainerVolumeMounts()).
                  initReplica())
            return v1.AscendJob(job)
@@ -1539,8 +1537,8 @@ xx "xxx" deleted
                         initContainerName("mindspore").                                             // 初始化容器名
                         initContainerImage("ms-arm:b120").                                          // 初始化镜像名
                         initContainerImagePullPolicy("IfNotPresent").                               // 初始化镜像拉取策略
-                        initContainerLimits("huawei.com/Ascend910", "8").                           // 初始化任务资源，Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点需要修改参数名称为huawei.com/npu
-                        initContainerRequests("huawei.com/Ascend910", "8").                         // 初始化任务资源，Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点需要修改参数名称为huawei.com/npu
+                        initContainerLimits("huawei.com/Ascend910", "8").                           // 初始化任务资源，Ascend 950PR&950DT系列产品需要修改参数名称为huawei.com/npu
+                        initContainerRequests("huawei.com/Ascend910", "8").                         // 初始化任务资源，Ascend 950PR&950DT系列产品需要修改参数名称为huawei.com/npu
                         initContainerVolumeMounts().                                                // 初始化容器挂载项
                         initContainerEnv("MindSpore").                                              // 初始化容器环境变量
                         initContainerCommand([]string{"/bin/bash", "-c", "bash train_start.sh ..."}))))) // 初始化容器启动命令，具体参数参考示例YAML

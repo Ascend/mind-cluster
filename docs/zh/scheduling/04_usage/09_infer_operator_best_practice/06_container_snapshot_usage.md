@@ -123,7 +123,7 @@
 
 支持以下产品使用容器快照。
 
-- <term>Atlas A2 训练系列产品</term>
+<term>Atlas A2 训练系列产品</term>
 
 ## 使用演示
 

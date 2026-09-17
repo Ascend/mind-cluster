@@ -531,13 +531,13 @@ cp -r ~/ttp_log {采集目录}/dl_log/ttp_log
 
 训练或推理结束后，需要采集 LCNE 组件日志。ascend-fd组件26.2.0及之后版本，增强了Unified Bus（UB）链路诊断能力，如果希望使用该增强能力，请务必采集LCNE日志。
 
-**<term>Ascend 950 系列产品</term>**
+**<term>Ascend 950PR&950DT系列产品</term>**
 
-Ascend 950 系列产品 LCNE 组件运行时，需要将日志解压至 `采集目录/lcne_log/` 下。可按照以下方式进行采集：
+<term>Ascend 950PR&950DT系列产品</term> LCNE 组件运行时，需要将日志解压至 `采集目录/lcne_log/` 下。可按照以下方式进行采集：
 
 - 服务器形态
-  1. 进入 <term>Ascend 950 系列产品</term> 1213 前台，执行 **collect diagnostic information** 命令采集日志。
-  2. 进入 <term>Ascend 950 系列产品</term> 1213 后台的 `/opt/vrpv8/home/` 目录下获取 `diagnostic_information_*.zip` 压缩日志文件。需要手动解压所有压缩日志。
+  1. 进入 <term>Ascend 950PR&950DT系列产品</term> 1213 前台，执行 **collect diagnostic information** 命令采集日志。
+  2. 进入 <term>Ascend 950PR&950DT系列产品</term> 1213 后台的 `/opt/vrpv8/home/` 目录下获取 `diagnostic_information_*.zip` 压缩日志文件。需要手动解压所有压缩日志。
 
 - PoD形态
 
@@ -558,7 +558,7 @@ Ascend 950 系列产品 LCNE 组件运行时，需要将日志解压至 `采集�
       └──…
   ```
 
-**<term>Atlas A3 训练系列产品</term>、<term>Atlas A3 推理系列产品</term>**
+**<term>Atlas A3系列产品</term>**
 
 直接将 SmartKit 或 CCAE 导出的 LCNE 组件日志递归解压后放置到 `采集目录/lcne_log/` 下。
 

@@ -300,13 +300,13 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 
         YAML启动说明如下：
 
-        - K8s集群中存在使用<term>Atlas 推理系列产品</term>节点、<term>Atlas 训练系列产品</term>、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>、<term>Atlas A2 推理系列产品</term>、<term>Atlas A3 推理系列产品</term>节点（Ascend Device Plugin独立工作，不配合Volcano和Ascend Operator使用）。
+        - K8s集群中存在使用<term>Atlas 推理系列产品</term>、<term>Atlas 训练系列产品</term>、<term>Atlas A2系列产品</term>、<term>Atlas A3系列产品</term>节点（Ascend Device Plugin独立工作，不配合Volcano和Ascend Operator使用）。
 
             ```shell
             kubectl apply -f device-plugin-v{version}.yaml
             ```
 
-        - K8s集群中存在使用<term>Atlas 推理系列产品</term>节点、<term>Atlas 训练系列产品</term>、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>、<term>Atlas A2 推理系列产品</term>、<term>Atlas A3 推理系列产品</term>节点（配合Volcano和Ascend Operator使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
+        - K8s集群中存在使用<term>Atlas 推理系列产品</term>、<term>Atlas 训练系列产品</term>、<term>Atlas A2系列产品</term>、<term>Atlas A3系列产品</term>节点（配合Volcano和Ascend Operator使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
 
             ```shell
             kubectl apply -f device-plugin-volcano-v{version}.yaml

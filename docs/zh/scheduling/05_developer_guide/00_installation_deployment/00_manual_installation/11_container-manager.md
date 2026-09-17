@@ -10,13 +10,13 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 支持以下产品使用故障管理和故障容器的自动恢复功能：
 
 - <term>Atlas 训练系列产品</term>
-- <term>Atlas A2 训练系列产品</term>
-- <term>Atlas A3 训练系列产品</term>
 - <term>Atlas 推理系列产品</term>
-- <term>Atlas A2 推理系列产品</term>
-- <term>Atlas A3 推理系列产品</term>
+- <term>Atlas A2系列产品</term>
+- <term>Atlas A3系列产品</term>
 - Atlas 850E 超节点
+- Atlas 850 超节点
 - Atlas 650E 服务器
+- Atlas 650 服务器
 - Atlas 350 加速卡
 
 ## 操作步骤

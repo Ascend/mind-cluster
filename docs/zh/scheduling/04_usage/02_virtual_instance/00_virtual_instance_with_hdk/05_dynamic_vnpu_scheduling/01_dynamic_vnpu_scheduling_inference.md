@@ -147,7 +147,7 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 <tr id="row11782173617479"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18782936144718"><a name="p18782936144718"></a><a name="p18782936144718"></a>默认需要容器以root用户启动，若需要以普通用户运行推理任务，需要参考<a href="https://gitcode.com/Ascend/mind-cluster/issues/359">使用动态虚拟化时，以普通用户运行推理业务容器失败</a>章节进行操作。</p>
 </td>
 </tr>
-<tr id="row117233216566"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18081933105617"><a name="p18081933105617"></a><a name="p18081933105617"></a>vNPU动态创建和销毁在<span id="ph20808153335610"><a name="ph20808153335610"></a><a name="ph20808153335610"></a><term>Atlas 推理系列产品</term>、<term>Atlas A2 推理系列产品</term>、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 推理系列产品</term>、<term>Atlas A3 训练系列产品</term></span>上有效，并且需要配套<span id="ph13808233145619"><a name="ph13808233145619"></a><a name="ph13808233145619"></a>Volcano</span>使用。</p>
+<tr id="row117233216566"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18081933105617"><a name="p18081933105617"></a><a name="p18081933105617"></a>vNPU动态创建和销毁在<span id="ph20808153335610"><a name="ph20808153335610"></a><a name="ph20808153335610"></a><term>Atlas 推理系列产品</term>、<term>Atlas A2系列产品</term>、<term>Atlas A3系列产品</term></span>上有效，并且需要配套<span id="ph13808233145619"><a name="ph13808233145619"></a><a name="ph13808233145619"></a>Volcano</span>使用。</p>
 </td>
 </tr>
 <tr id="row_dyn_switch"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p_dyn_switch">节点在动态虚拟化和非动态虚拟化之间切换时，需要将已有任务删除。</p>
@@ -246,7 +246,7 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9957636276"><a name="p9957636276"></a><a name="p9957636276"></a>Ascend310P-4c.4cpu.dvpp-100-0</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p><term>Atlas A2 推理系列产品</term>、<term>Atlas A2 训练系列产品</term></p><p>（20/24个AICore）</p></td>
+<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p><term>Atlas A2系列产品</term></p><p>（20/24个AICore）</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir05_1c_16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-5c.1cpu.16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-5c.1cpu.16g-100-0</p></td>
@@ -263,7 +263,7 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-12c.3cpu.32g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-12c.3cpu.32g-100-0</p></td>
 </tr>
-<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p><term>Atlas A3 推理系列产品</term>、<term>Atlas A3 训练系列产品</term></p><p>（40/48个AICore）</p></td>
+<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p><term>Atlas A3系列产品</term></p><p>（40/48个AICore）</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir05_1c_16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-5c.1cpu.16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-5c.1cpu.16g-100-0</p></td>
@@ -290,10 +290,8 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 #### 支持的产品形态<a name="section169961844182917"></a>
 
 - <term>Atlas 推理系列产品</term>
-- <term>Atlas A2 推理系列产品</term>
-- <term>Atlas A2 训练系列产品</term>
-- <term>Atlas A3 推理系列产品</term>
-- <term>Atlas A3 训练系列产品</term>
+- <term>Atlas A2系列产品</term>
+- <term>Atlas A3系列产品</term>
 
 #### 使用流程<a name="zh-cn_topic_0000001559979444_section246711128536"></a>
 
@@ -521,7 +519,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
     </tr>
     <tr id="row1762110285220"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p8621102882112"><a name="p8621102882112"></a><a name="p8621102882112"></a>ascend-910b</p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1762182892114"><a name="p1762182892114"></a><a name="p1762182892114"></a>任务使用<term>Atlas A2 推理系列产品</term>、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 推理系列产品</term>、<term>Atlas A3 训练系列产品</term>的标识。</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1762182892114"><a name="p1762182892114"></a><a name="p1762182892114"></a>任务使用<term>Atlas A2系列产品</term>、<term>Atlas A3系列产品</term>的标识。</p>
     </td>
     </tr>
     </tbody>

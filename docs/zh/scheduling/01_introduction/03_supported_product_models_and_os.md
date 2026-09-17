@@ -15,15 +15,13 @@
 **表 1**  支持的产品形态和OS
 
 <a name="tableAtlasGeneral"></a>
-<table><thead align="left"><tr id="rowAtlasGeneralH"><th class="cellrowborder" valign="top" width="15.93%" id="mcpsGen1.2.4.1.1"><p id="pGenSeries"><a name="pGenSeries"></a><a name="pGenSeries"></a>产品系列</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.67%" id="mcpsGen1.2.4.1.2"><p id="pGenName"><a name="pGenName"></a><a name="pGenName"></a>产品名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="50.4%" id="mcpsGen1.2.4.1.3"><p id="pGenOS"><a name="pGenOS"></a><a name="pGenOS"></a>操作系统</p>
-</th>
+<table><thead align="left"><tr>
+<th>产品系列</th>
+<th>产品名称</th>
+<th>操作系统</th>
 </tr>
 </thead>
-<tbody><tr id="rowAtlas950"><td class="cellrowborder" rowspan="5" valign="top" width="15.93%" headers="mcpsGen1.2.4.1.1 "><p id="pAtlas950"><a name="pAtlas950"></a><a name="pAtlas950"></a><span id="phAtlas950"><a name="phAtlas950"></a><a name="phAtlas950"></a><term>Ascend 950 系列产品</term></span></p>
+<tbody><tr id="rowAtlas950"><td class="cellrowborder" rowspan="7" valign="top" width="15.93%" headers="mcpsGen1.2.4.1.1 "><p id="pAtlas950"><a name="pAtlas950"></a><a name="pAtlas950"></a><span id="phAtlas950"><a name="phAtlas950"></a><a name="phAtlas950"></a>Ascend 950PR&950DT系列产品</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas950SuperPoD"><a name="pAtlas950SuperPoD"></a><a name="pAtlas950SuperPoD"></a><span id="phAtlas950SuperPoD"><a name="phAtlas950SuperPoD"></a><a name="phAtlas950SuperPoD"></a>Atlas 950 SuperPoD 超节点</span></p>
 </td>
@@ -40,7 +38,17 @@
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850ServerOS"><a name="pAtlas850ServerOS"></a><a name="pAtlas850ServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
 </td>
 </tr>
+<tr id="rowAtlas850"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850Server"><a name="pAtlas850Server"></a><a name="pAtlas850Server"></a><span id="phAtlas850Server"><a name="phAtlas850Server"></a><a name="phAtlas850Server"></a>Atlas 850 超节点</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850ServerOS"><a name="pAtlas850ServerOS"></a><a name="pAtlas850ServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
+</td>
+</tr>
 <tr id="rowAtlas850E"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850EServer"><a name="pAtlas850EServer"></a><a name="pAtlas850EServer"></a><span id="phAtlas850EServer"><a name="phAtlas850EServer"></a><a name="phAtlas850EServer"></a>Atlas 650E 服务器</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850EServerOS"><a name="pAtlas850EServerOS"></a><a name="pAtlas850EServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
+</td>
+</tr>
+<tr id="rowAtlas850E"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850EServer"><a name="pAtlas850EServer"></a><a name="pAtlas850EServer"></a><span id="phAtlas850EServer"><a name="phAtlas850EServer"></a><a name="phAtlas850EServer"></a>Atlas 650 服务器</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850EServerOS"><a name="pAtlas850EServerOS"></a><a name="pAtlas850EServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
 </td>
@@ -68,7 +76,7 @@
 </th>
 </tr>
 </thead>
-<tbody><tr id="row193141923124213"><td class="cellrowborder" rowspan="5" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p13314132394215"><a name="p13314132394215"></a><a name="p13314132394215"></a><span id="ph1331492318423"><a name="ph1331492318423"></a><a name="ph1331492318423"></a><term>Atlas 训练系列产品</term></span></p>
+<tbody><tr id="row193141923124213"><td class="cellrowborder" rowspan="5" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p13314132394215"><a name="p13314132394215"></a><a name="p13314132394215"></a><span id="ph1331492318423"><a name="ph1331492318423"></a><a name="ph1331492318423"></a>Atlas 训练系列产品</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p123141723124213"><a name="p123141723124213"></a><a name="p123141723124213"></a>训练服务器（插<span id="ph113141423144220"><a name="ph113141423144220"></a><a name="ph113141423144220"></a>Atlas 300T 训练卡（型号 9000）</span>）</p>
 </td>
@@ -95,7 +103,7 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1486510460560"></a><a name="ul1486510460560"></a><ul id="ul1486510460560"><li>CentOS 7.6 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>openEuler 20.03 for aarch64</li><li>openEuler 22.03 for aarch64</li><li>Ubuntu 20.04  for aarch64</li><li>UOS V20 1020e for aarch64</li></ul>
 </td>
 </tr>
-<tr id="row5314823154211"><td class="cellrowborder" rowspan="4" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p73141323184218"><a name="p73141323184218"></a><a name="p73141323184218"></a><span id="ph2314323124211"><a name="ph2314323124211"></a><a name="ph2314323124211"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span></p>
+<tr id="row5314823154211"><td class="cellrowborder" rowspan="4" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p73141323184218"><a name="p73141323184218"></a><a name="p73141323184218"></a><span id="ph2314323124211"><a name="ph2314323124211"></a><a name="ph2314323124211"></a>Atlas A2 训练系列产品</span></p>
 <p id="p231472304210"><a name="p231472304210"></a><a name="p231472304210"></a></p>
 <p id="p1531492319428"><a name="p1531492319428"></a><a name="p1531492319428"></a></p>
 <p id="p9314152374214"><a name="p9314152374214"></a><a name="p9314152374214"></a></p>
@@ -120,7 +128,7 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1192418295016"></a><a name="ul1192418295016"></a><ul id="ul1192418295016"><li>openEuler 22.03 LTS SP4 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>Ubuntu 24.04 LTS for aarch64</li><li>BC-Linux_21.10 U4 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>
 </tr>
-<tr id="row153141923154210"><td class="cellrowborder" rowspan="3" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p931415234425"><a name="p931415234425"></a><a name="p931415234425"></a><span id="ph531432344210"><a name="ph531432344210"></a><a name="ph531432344210"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span></p>
+<tr id="row153141923154210"><td class="cellrowborder" rowspan="3" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p931415234425"><a name="p931415234425"></a><a name="p931415234425"></a><span id="ph531432344210"><a name="ph531432344210"></a><a name="ph531432344210"></a>Atlas A3 训练系列产品</span></p>
 <p id="p153141423174218"><a name="p153141423174218"></a><a name="p153141423174218"></a></p>
 <p id="p73152023194218"><a name="p73152023194218"></a><a name="p73152023194218"></a></p>
 </td>
@@ -157,7 +165,7 @@
 </th>
 </tr>
 </thead>
-<tbody><tr id="row87471045632"><td class="cellrowborder" rowspan="9" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p174718453315"><a name="p174718453315"></a><a name="p174718453315"></a><span id="ph19590185162111"><a name="ph19590185162111"></a><a name="ph19590185162111"></a><term>Atlas 推理系列产品</term></span></p>
+<tbody><tr id="row87471045632"><td class="cellrowborder" rowspan="9" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p174718453315"><a name="p174718453315"></a><a name="p174718453315"></a><span id="ph19590185162111"><a name="ph19590185162111"></a><a name="ph19590185162111"></a>Atlas 推理系列产品</span></p>
 <p id="p374720458313"><a name="p374720458313"></a><a name="p374720458313"></a></p>
 <p id="p87473453312"><a name="p87473453312"></a><a name="p87473453312"></a></p>
 <p id="p167479451233"><a name="p167479451233"></a><a name="p167479451233"></a></p>
@@ -210,7 +218,7 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p143050517345"><a name="p143050517345"></a><a name="p143050517345"></a>openEuler 20.03 for aarch64</p>
 </td>
 </tr>
-<tr id="row12748144512318"><td class="cellrowborder" rowspan="3" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p19470381257"><a name="p19470381257"></a><a name="p19470381257"></a><span id="ph996833614580"><a name="ph996833614580"></a><a name="ph996833614580"></a><term id="zh-cn_topic_0000001094307702_term99602034117"><a name="zh-cn_topic_0000001094307702_term99602034117"></a><a name="zh-cn_topic_0000001094307702_term99602034117"></a>Atlas A2 推理系列产品</term></span></p>
+<tr id="row12748144512318"><td class="cellrowborder" rowspan="3" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p19470381257"><a name="p19470381257"></a><a name="p19470381257"></a><span id="ph996833614580"><a name="ph996833614580"></a><a name="ph996833614580"></a>Atlas A2 推理系列产品</span></p>
 <p id="p722736189"><a name="p722736189"></a><a name="p722736189"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p159463383518"><a name="p159463383518"></a><a name="p159463383518"></a><span id="ph16179151202"><a name="ph16179151202"></a><a name="ph16179151202"></a>Atlas 800I A2 推理服务器</span></p>
@@ -228,7 +236,7 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul147601946131620"></a><a name="ul147601946131620"></a><ul id="ul147601946131620"><li>Debian 10.0 for x86_64</li><li>Debian 11.7 (5.10.0-103-bili kernel)</li><li>Debian 12.0 (5.15.152.ve.10 kernel)</li><li>Ubuntu 20.04.1 for x86_64</li><li>Ubuntu 22.04 for x86_64</li><li>Ubuntu 22.04.1 for x86_64 (5.16.20-051620-generic kernel)</li><li>Tlinux 3.1 for x86_64</li><li>Tlinux 3.2 for x86_64</li><li>Tlinux 4.0 for x86_64 (6.6.80.29.tl4.x86_64 kernel)</li><li>openEuler 22.03 LTS SP4 for x86_64</li><li>openEuler 24.03 LTS for x86_64</li><li>openEuler 24.03 LTS SP1 for x86_64</li></ul>
 </td>
 </tr>
-<tr id="row15438111011218"><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p168412537204"><a name="p168412537204"></a><a name="p168412537204"></a><span id="ph791742714211"><a name="ph791742714211"></a><a name="ph791742714211"></a><term id="zh-cn_topic_0000001519959665_term176419491615"><a name="zh-cn_topic_0000001519959665_term176419491615"></a><a name="zh-cn_topic_0000001519959665_term176419491615"></a>Atlas A3 推理系列产品</term></span></p>
+<tr id="row15438111011218"><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p168412537204"><a name="p168412537204"></a><a name="p168412537204"></a><span id="ph791742714211"><a name="ph791742714211"></a><a name="ph791742714211"></a>Atlas A3 推理系列产品</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p143871017213"><a name="p143871017213"></a><a name="p143871017213"></a><span id="ph18760103420211"><a name="ph18760103420211"></a><a name="ph18760103420211"></a>Atlas 800I A3 超节点服务器</span></p>
 </td>
@@ -238,7 +246,7 @@
 <tr id="row64419316256"><td class="cellrowborder" colspan="3" valign="top" headers="mcps1.2.4.1.1 mcps1.2.4.1.2 mcps1.2.4.1.3 "><a name="ul17949191917256"></a><a name="ul17949191917256"></a><ul id="ul17949191917256"><li><strong id="b189491819122517"><a name="b189491819122517"></a><a name="b189491819122517"></a>单机场景下：以下硬件产品，仅支持安装<span id="ph10949131918259"><a name="ph10949131918259"></a><a name="ph10949131918259"></a>Ascend Docker Runtime</span>组件。</strong></li><li><strong id="b094919197251"><a name="b094919197251"></a><a name="b094919197251"></a>集群场景下：以下硬件产品，仅支持安装<span id="ph1294912191256"><a name="ph1294912191256"></a><a name="ph1294912191256"></a>Ascend Docker Runtime</span>、<span id="ph1794971919254"><a name="ph1794971919254"></a><a name="ph1794971919254"></a>Ascend Device Plugin</span>组件。</strong></li></ul>
 </td>
 </tr>
-<tr id="row1774814451831"><td class="cellrowborder" rowspan="4" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p19447381516"><a name="p19447381516"></a><a name="p19447381516"></a><span id="ph66631140182316"><a name="ph66631140182316"></a><a name="ph66631140182316"></a><term id="zh-cn_topic_0000001519959665_term169221139190"><a name="zh-cn_topic_0000001519959665_term169221139190"></a><a name="zh-cn_topic_0000001519959665_term169221139190"></a>Atlas 200/300/500 推理产品</term></span></p>
+<tr id="row1774814451831"><td class="cellrowborder" rowspan="4" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p19447381516"><a name="p19447381516"></a><a name="p19447381516"></a><span id="ph66631140182316"><a name="ph66631140182316"></a><a name="ph66631140182316"></a>Atlas 200/300/500 推理产品</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p18478175248"><a name="p18478175248"></a><a name="p18478175248"></a><span id="ph847101717244"><a name="ph847101717244"></a><a name="ph847101717244"></a>Atlas 200 AI加速模块（RC场景）</span></p>
 </td>
@@ -254,7 +262,7 @@
 <tr id="row137496452314"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p129244381458"><a name="p129244381458"></a><a name="p129244381458"></a><span id="ph11405839112417"><a name="ph11405839112417"></a><a name="ph11405839112417"></a>Atlas 500 智能小站（型号 3000）</span></p>
 </td>
 </tr>
-<tr id="row197496451832"><td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.4.1.1 "><p id="p69213381451"><a name="p69213381451"></a><a name="p69213381451"></a><span id="ph17875123113012"><a name="ph17875123113012"></a><a name="ph17875123113012"></a><term id="zh-cn_topic_0000001519959665_term7466858493"><a name="zh-cn_topic_0000001519959665_term7466858493"></a><a name="zh-cn_topic_0000001519959665_term7466858493"></a>Atlas 200I/500 A2 推理产品</term></span></p>
+<tr id="row197496451832"><td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.4.1.1 "><p id="p69213381451"><a name="p69213381451"></a><a name="p69213381451"></a><span id="ph17875123113012"><a name="ph17875123113012"></a><a name="ph17875123113012"></a>Atlas 200I/500 A2 推理产品</span></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p31781131153019"><a name="p31781131153019"></a><a name="p31781131153019"></a><span id="ph8178173117309"><a name="ph8178173117309"></a><a name="ph8178173117309"></a>Atlas 200I A2 加速模块</span></p>
 </td>

@@ -50,9 +50,9 @@
 | RoCE 速率 | `hccn_tool -i {chip_phy_id} -speed -g` | RoCE 速率 |
 | RoCE 双工 | `hccn_tool -i {chip_phy_id} -duplex -g` | RoCE 双工模式 |
 
-以上命令适用于Atlas A3 系列产品。Ascend 950 系列产品除上述命令外，还会额外采集光模块头版头条信息与网卡 SFP 信息，详细请参见下表。
+以上命令适用于<term>Atlas A3系列产品</term>。<term>Ascend 950PR&950DT系列产品</term>除上述命令外，还会额外采集光模块头版头条信息与网卡 SFP 信息，详细请参见下表。
 
-#### Ascend 950 系列产品额外采集命令
+#### <term>Ascend 950PR&950DT系列产品</term>额外采集命令
 
 | 类别 | 命令 | 用途                                                      |
 |------|------|---------------------------------------------------------|
