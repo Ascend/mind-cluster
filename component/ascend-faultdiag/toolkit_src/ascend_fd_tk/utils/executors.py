@@ -220,8 +220,9 @@ class AsyncSSHExecutor(AsyncExecutor):
         private_key: Optional[str] = None,
         passphrase: Optional[str] = None,
         timeout: float = 10.0,
-        look_for_keys: bool = True,
-        allow_agent: bool = True,
+        auth_timeout: float = 30.0,
+        look_for_keys: bool = False,
+        allow_agent: bool = False,
     ):
         """初始化SSH连接参数"""
         super().__init__(host)
@@ -229,7 +230,13 @@ class AsyncSSHExecutor(AsyncExecutor):
         self.port = port
         self.username = username
         self.password = password
-        self.timeout = timeout  # 连接超时时间
+        self.timeout = timeout  # TCP建连超时时间
+        # 认证/banner超时：交换机等嵌入式设备认证响应慢，需大于TCP连接超时。
+        # 注：paramiko 中不显式传 auth_timeout/banner_timeout 时，timeout 会同时作为认证超时，导致慢设备在认证阶段就抛 "Authentication timeout"
+        # 现在 TCP 建连仍走 timeout （10s，快的阶段），协议/认证阶段放宽到 30s。
+        self.auth_timeout = auth_timeout
+        # 是否允许 paramiko 额外尝试本机 ~/.ssh 密钥与 SSH agent
+        # 密码/密钥登录均默认关闭，密钥登录由工具自身的 _connect_with_key 优先策略控制，paramiko 内部无需再尝试，认证直接走配置的方式。
         self.look_for_keys = look_for_keys
         self.allow_agent = allow_agent
         # 私钥处理
@@ -452,6 +459,8 @@ class AsyncSSHExecutor(AsyncExecutor):
                 username=self.username,
                 pkey=self.private_key_obj,
                 timeout=self.timeout,
+                banner_timeout=self.auth_timeout,
+                auth_timeout=self.auth_timeout,
                 look_for_keys=self.look_for_keys,
                 allow_agent=self.allow_agent,
             )
@@ -473,7 +482,9 @@ class AsyncSSHExecutor(AsyncExecutor):
                 port=self.port,
                 username=self.username,
                 password=self.password,
-                timeout=self.timeout,
+                timeout=self.timeout,  # TCP socket 建连（三次握手）超时
+                banner_timeout=self.auth_timeout,  # TCP 建连后，等待服务器发来 SSH-2.0-... banner 的超时
+                auth_timeout=self.auth_timeout,  # banner 收到后，整个认证阶段（密钥交换 + 密码验证）的超时
                 look_for_keys=self.look_for_keys,
                 allow_agent=self.allow_agent,
             )
