@@ -353,7 +353,9 @@ class MergePrecheckCause:
             }
 
     def _check_hcomm_ta_ctp_ub_timeout(self):
-        hcomm_timeout = self.unknown_device_event.get(PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT, {})
+        hcomm_timeout = self.unknown_device_event.get(
+            PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT, {}
+        ) or self.single_device_precheck_event.get(PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT, {})
         if not hcomm_timeout:
             return
 
@@ -464,14 +466,7 @@ class MergePrecheckCause:
         self._prepare_unknown_device_rule()
 
         # 2.开始分析、合并PRECHECK和其他故障
-        checker_0x2 = Cqe0x2Checker(source_device, self)
-        checker_0x2.analyze(device_causes)
-
-        checker_0x3 = Cqe0x3Checker(source_device, self)
-        checker_0x3.analyze(device_causes)
-
-        ubmem_checker = UBMemChecker(source_device, self)
-        ubmem_checker.analyze(device_causes)
-
-        checker0x5 = Cqe0x5Checker(source_device, self)
-        checker0x5.analyze(device_causes)
+        checker_list = [Cqe0x2Checker, Cqe0x3Checker, UBMemChecker, Cqe0x5Checker]
+        for cls in checker_list:
+            checker = cls(source_device, self)
+            checker.analyze(device_causes)

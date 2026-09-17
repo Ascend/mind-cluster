@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+# pylint: disable=too-many-lines
 import re
 import os
 import logging
@@ -291,7 +292,7 @@ class BaseInfoParser:
             self._parse_root_init_info(line)
             return True
         rank_info_flag = regular_table.ENTRY_RANKS_INFO in line and regular_table.RANK_INFO in line
-        if regular_table.ROOT_INFO_DETECT in line or rank_info_flag:
+        if regular_table.ROOT_INFO_DETECT in line or regular_table.DETECT_RANKTABLE_IMPL in line or rank_info_flag:
             self._parse_a5_root_info(line)
             return True
         if regular_table.ENTRY_ROOT_INFO in line:
@@ -478,6 +479,9 @@ class BaseInfoParser:
         Log e.g:
         [RootInfoDetect] nRanks[16], rank[15] entry flat topo detect, rootinfo: host ip[192.168.0.1]
         port[30000] netMode[HrtNetworkMode::HDC] identifier[*], deviceLogicId[7], devPhyId[15]
+        或者新版本的
+        [DetectRankTableImpl] nRanks[16], rank[15] entry flat topo detect, rootinfo: host ip[192.168.0.1]
+        port[30000] netMode[HrtNetworkMode::HDC] identifier[*], deviceLogicId[7], devPhyId[15]
         A5 变更点: 从该行直接提取物理 id (devPhyId) 和逻辑 id (deviceLogicId)。
         如果有物理 id，则不需要下一步判断。
 
@@ -511,12 +515,16 @@ class BaseInfoParser:
 
         phy_device_id = filter_single_rank_info(line, regular_table.SOCKET_PHY_ID_INFO)
         phy_device_id = process_device_id(phy_device_id, line, DEV_PHY_ID, INVALID_ID, rc_logger)
-        # A5 plog: 同一 plog 可能含多卡 RootInfoDetect 行，不能复用旧卡的 phy_device_id。
+        # A5 plog: 同一 plog 可能含多卡 RootInfoDetect(新版本叫DetectRankTableImpl) 行，不能复用旧卡的 phy_device_id。
         # 本行 phy 无效时，用当前行 logic_device_id 就地从 device_info_map 反查；
         # 反查仍失败则置 Unknown 并告警，避免与旧 logic 脱钩。
         # 仅对 A5 (RootInfoDetect) 行生效; A2/A3 (Entry-HcclCommInitRootInfo) 无 devPhyId 字段,
         # phy 始终为空, 由 get_result 的 _resolve_phy_device_id 兜底。
-        if not phy_device_id and logic_device_id and regular_table.ROOT_INFO_DETECT in line:
+        if (
+            not phy_device_id
+            and logic_device_id
+            and (regular_table.ROOT_INFO_DETECT in line or regular_table.DETECT_RANKTABLE_IMPL in line)
+        ):
             phy_device_id = self.device_info_map.get(logic_device_id)
             if not phy_device_id:
                 rc_logger.warning(

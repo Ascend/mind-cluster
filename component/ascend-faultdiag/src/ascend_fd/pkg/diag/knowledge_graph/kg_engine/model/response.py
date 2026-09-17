@@ -19,8 +19,13 @@ import os
 from typing import List, Dict
 
 from ascend_fd.configuration.config import AICORE_ERRCODE_CONFIG
-from ascend_fd.utils.fault_code import CANN_ERRCODE_CUSTOM, PYTORCH_ERRCODE_COMMON, RUNTIME_AICORE_EXECUTE_FAULT, \
-    FAULT_WITH_COMPLEMENT_LIST, MINDIE_ERRCODE_COMMON
+from ascend_fd.utils.fault_code import (
+    CANN_ERRCODE_CUSTOM,
+    PYTORCH_ERRCODE_COMMON,
+    RUNTIME_AICORE_EXECUTE_FAULT,
+    FAULT_WITH_COMPLEMENT_LIST,
+    MINDIE_ERRCODE_COMMON,
+)
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.graph.graph import Graph
 from ascend_fd.pkg.diag.fault_entity import KG_DIAG_NORMAL_ENTITY
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.graph.vertex import Vertex
@@ -37,8 +42,9 @@ class RootCause:
     ERROR_CODE = "error_code"
     KERNEL_NAME = "kernel_name"
 
-    def __init__(self, code, entities_attribute: EntityAttribute, events_attribute: List[Dict] = None,
-                 chains: dict = None):
+    def __init__(
+        self, code, entities_attribute: EntityAttribute, events_attribute: List[Dict] = None, chains: dict = None
+    ):
         self.code = code
         self.entities_attribute = entities_attribute.to_json()
         self.events_attribute = events_attribute or []
@@ -63,13 +69,17 @@ class RootCause:
         """
         if vertex.code != self.code:
             return
-        if (vertex.code.startswith((PYTORCH_ERRCODE_COMMON, CANN_ERRCODE_CUSTOM, MINDIE_ERRCODE_COMMON))
-                or vertex.code in FAULT_WITH_COMPLEMENT_LIST):
+        if (
+            vertex.code.startswith((PYTORCH_ERRCODE_COMMON, CANN_ERRCODE_CUSTOM, MINDIE_ERRCODE_COMMON))
+            or vertex.code in FAULT_WITH_COMPLEMENT_LIST
+        ):
             self.entities_attribute[self.DESCRIPTION] = self._get_custom_event_info(
-                vertex.event_attribute.get(self.COMPLEMENT, [])) or self._get_event_default_description(vertex.code)
+                vertex.event_attribute.get(self.COMPLEMENT, [])
+            ) or self._get_event_default_description(vertex.code)
         if vertex.code == RUNTIME_AICORE_EXECUTE_FAULT:
             self.entities_attribute[self.DESCRIPTION] = self._get_custom_event_info(
-                self._get_aicore_fault_description_info(vertex))
+                self._get_aicore_fault_description_info(vertex)
+            )
         self.events_attribute.append(vertex.event_attribute)
 
     def _get_custom_event_info(self, complement: list) -> str:
@@ -95,10 +105,6 @@ class RootCause:
 
 
 class Response:
-    NORMAL_ROOT_CAUSES = {
-        KG_DIAG_NORMAL_ENTITY.code:
-            RootCause(KG_DIAG_NORMAL_ENTITY.code, EntityAttribute(KG_DIAG_NORMAL_ENTITY.attribute))
-    }
     MAX_LINK_DEPTH = 10
 
     def __init__(self):
@@ -115,6 +121,22 @@ class Response:
 
     def __str__(self):
         return self.__repr__()
+
+    @property
+    def NORMAL_ROOT_CAUSES(self) -> dict:
+        """
+        返回一份独立的“正常”根因。
+
+        NORMAL_ROOT_CAUSES 包含可变对象（dict/list），若作为类属性全局共享，
+        任何一处的原地修改（如 setdefault、chains update、events_attribute.extend）
+        都会影响到所有引用它的实例，导致不同 worker 的结果互相污染。
+        因此改为每次访问都新建，保证各实例之间引用隔离。
+        """
+        return {
+            KG_DIAG_NORMAL_ENTITY.code: RootCause(
+                KG_DIAG_NORMAL_ENTITY.code, EntityAttribute(KG_DIAG_NORMAL_ENTITY.attribute)
+            )
+        }
 
     @staticmethod
     def get_root_causes(graph: Graph) -> dict:
@@ -174,8 +196,11 @@ class Response:
             event_name = getattr(getattr(vertex_to_id, "entity_attribute"), f"cause_{LANG}", "")
             edges_list.append((self._format_link_key(event_name, event_code), vertex_to_id.src_dev))
         self.all_out_edges[
-            (self._format_link_key(getattr(getattr(vertex, "entity_attribute"),
-                                           f"cause_{LANG}", ""), vertex.code), vertex.src_dev)] = edges_list
+            (
+                self._format_link_key(getattr(getattr(vertex, "entity_attribute"), f"cause_{LANG}", ""), vertex.code),
+                vertex.src_dev,
+            )
+        ] = edges_list
 
     def _get_fault_link(self, root_keys: [], link_list: [], devices: [], max_depth=0):
         """
@@ -190,7 +215,7 @@ class Response:
             new_devices = devices + [src_dev]
             # root_code e.g. 'fault_code（fault_name）', need 'fault_code'
             root_code = new_link_list[0].split(lb.left_bracket)[0]
-            if root_code not in self.root_causes.keys():
+            if root_code not in self.root_causes:
                 continue
             out_edge_list = self.all_out_edges.get((root_key, src_dev), [])
             # if over max link depth, no recursive

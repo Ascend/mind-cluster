@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+import copy
 import logging
 import os
 
@@ -162,8 +163,9 @@ def single_diag_job(parsed_data, cfg):
     root_device_causes = parsed_data.get("response", {})
     response = _get_pre_response(root_device_causes, "SINGLE_DIAG_WORKER")
     if response.root_causes:
+        # deepcopy：外层 results 与本次分析结果解耦，避免后续原地修改通过引用穿透到 results
         result = {
-            "worker-local": {"worker_name": "worker-local", "root_causes": response.root_causes},
+            "worker-local": {"worker_name": "worker-local", "root_causes": copy.deepcopy(response.root_causes)},
             "version_info": get_component_version(parsed_data),
         }
         results.update(result)
@@ -264,7 +266,8 @@ def pre_analyze_job(worker_name, root_device_list, kg_analyzer_source, fault_fil
         failed_details.update({job_name: str(err)})
         kg_logger.error(str(err))
     if response.root_causes:
-        results = {job_name: {"worker_name": worker_name, "root_causes": response.root_causes}}
+        # deepcopy：外层 results 与本次分析结果解耦，避免后续原地修改通过引用穿透到 results
+        results = {job_name: {"worker_name": worker_name, "root_causes": copy.deepcopy(response.root_causes)}}
         if isinstance(kg_analyzer_source, str):
             parse_json = get_parse_json(kg_analyzer_source)
             version_info = get_component_version(parse_json)
@@ -423,7 +426,8 @@ def _kg_diag_job(worker_name, root_device_list, parsed_saver, job_name):
     else:
         response = kg_engine_analyze([DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF], package_data)
     _resp_check(response, worker_name)
-    return {"worker_name": worker_name, "root_causes": response.root_causes}
+    # deepcopy：外层 results 与本次分析结果解耦，避免后续原地修改通过引用穿透到 results
+    return {"worker_name": worker_name, "root_causes": copy.deepcopy(response.root_causes)}
 
 
 def _single_device_kg_diag(root_device_list, all_event_map, job_name):

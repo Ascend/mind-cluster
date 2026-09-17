@@ -48,6 +48,8 @@ LQC_TAI_DFX_ALARM = "lqc_tai_dfx_alarm"
 DAM_INTF_ALARM = "dam_intf_alarm"
 TAI_COMPACT_TOP_ALARM = "tai_compact_top_alarm"
 DFX_TM_CRD_CTRL = "dfx_tm_crd_ctrl"
+TAACK_ABNORM_SSN = "taack_abnorm_ssn"
+TAACK_ABNORM_HEADER = "taack_abnorm_header"
 
 PORT_ID = "port_id"
 LOST_PKG_UBMEM = "lost_pkg_ubmem"
@@ -55,8 +57,6 @@ LOST_PKG_0X5 = "lost_pkg_0x5"
 PHY_REINIT_CNT = "phy_reinit_cnt"
 UDIE_MAX_PORT_NUM = 9
 
-TAACK_ABNORM_SSN = "taack_abnorm_ssn"
-TAACK_ABNORM_HEADER = "taack_abnorm_header"
 RX_VL6_PKT_NUM = "rx_vl6_pkt_num"
 TX_VL6_PKT_NUM = "tx_vl6_pkt_num"
 RX_VL7_PKT_NUM = "rx_vl7_pkt_num"
@@ -82,6 +82,8 @@ ALL_UBCTL_KEYS = (
         TAI_COMPACT_TOP_ALARM,
         DFX_TM_CRD_CTRL,
         PHY_REINIT_CNT,
+        TAACK_ABNORM_SSN,
+        TAACK_ABNORM_HEADER,
     )
     + PKT_TX_RX_VL10_VL11_KEYS
     + PKT_TX_RX_VL6_VL7_KEYS
