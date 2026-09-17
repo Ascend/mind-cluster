@@ -85,7 +85,7 @@ class CANNLogParser(FileParser):
         :param line: log line
         :return: logic_device_id, phy_device_id
         """
-        if regular_table.ROOT_INFO_DETECT in line:
+        if regular_table.ROOT_INFO_DETECT in line or regular_table.DETECT_RANKTABLE_IMPL in line:
             logic_device_id = filter_single_rank_info(line, regular_table.ENTRY_DEVICE_INFO)
             phy_device_id = filter_single_rank_info(line, regular_table.SOCKET_PHY_ID_INFO)
             logic_id = process_device_id(logic_device_id, line, DEVICE_LOGIC_ID, NEGATIVE_ONE, kg_logger)

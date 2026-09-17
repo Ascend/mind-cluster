@@ -63,6 +63,9 @@ class Checker(ABC):
         self.single_device_precheck_event = merge_obj.single_device_precheck_event
         self.unknown_device_event = merge_obj.unknown_device_event
 
+    def analyze(self, device_causes):
+        pass
+
     @staticmethod
     def _format_link_key(event_name, event_code):
         """
@@ -97,12 +100,12 @@ class Checker(ABC):
         code_entity = self.schema.get_schema_entity(code)
         entities_attribute = code_entity.attribute.to_json()  # {'component':..., 'cause_zh':..., ...}
         link = self._build_link(code, base_code)
-        base_event = self.unknown_device_event.get(base_code, {})
+        base_event = self.unknown_device_event.get(base_code, {}) or device_causes.get(base_code, {})
         event_attribute = copy.deepcopy(base_event)
 
         tmp = self.single_device_precheck_event.get(event_key, {})
         precheck_event = copy.deepcopy(tmp)
-        if rule is not None:
+        if rule:
             precheck_event["key_info"] = rule.get("line", "")
             precheck_event["occurrence"] = [
                 [tmp.get("occur_time", datetime.min.strftime("%Y-%m-%d %H:%M:%S")), rule.get("line", "")]
@@ -125,8 +128,11 @@ class Cqe0x2Checker(Checker):
     base_code = Comp_CANN_HCCL_Custom_CQE0x2
 
     def analyze(self, device_causes):
-        # 基础码仅由 plog 解析归入 Unknown 设备，unknown_device_event 中无基础码则直接返回
-        if self.base_code not in self.unknown_device_event.keys():
+        fault_codes = list(
+            self.unknown_device_event.keys() | [] if not isinstance(device_causes, dict) else device_causes.keys()
+        )
+        # 基础码由 plog 解析，unknown_device_event或已识别的故障列表中无基础码则直接返回
+        if self.base_code not in fault_codes:
             return
 
         keep_cqe = [
@@ -143,7 +149,7 @@ class Cqe0x2Checker(Checker):
     def add_rc_not_enough_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x2_RC_NOT_ENOUGH"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         rule = self.rule_flags.get(RULE_RC_FULL_QUEUE_NONZERO, {})
         if not rule.get("value", False):
@@ -154,7 +160,7 @@ class Cqe0x2Checker(Checker):
     def add_rc_queue_not_enough_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x2_RC_QUEUE_NOT_ENOUGH"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         rule = self.rule_flags.get(RULE_TP_RRP_ERR_BIT28, {})
         if not rule.get("value", False):
@@ -165,7 +171,7 @@ class Cqe0x2Checker(Checker):
     def add_tp_psn_error_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x2_TP_PSN_ERROR"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         rule = self.rule_flags.get(RULE_TWP_AE_DFX_BIT3, {})
         ae_event = self.single_device_precheck_event.get(PRECHECK_KERNEL_AE_TYPE23, {})
@@ -177,7 +183,7 @@ class Cqe0x2Checker(Checker):
     def add_no_router_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x2_NO_ROUTER"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         rule = self.rule_flags.get(RULE_ROUTE_NO_CFG_BIT, {})
         if not rule.get("value", False):
@@ -188,7 +194,7 @@ class Cqe0x2Checker(Checker):
     def add_ctp_no_close_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x2_CTP_NO_CLOSE"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         rule = self.rule_flags.get(RULE_TAI_COMPACT_TOP_BIT6, {})
         if not rule.get("value", False):
@@ -199,7 +205,7 @@ class Cqe0x2Checker(Checker):
 
 class Cqe0x3Checker(Checker):
     def analyze(self, device_causes):
-        # Comp_CANN_HCCL_Custom_CQE0x3基础码仅由 plog 解析归入 Unknown 设备，device_causes 中无， 也不需要剔除，此处为后续预留
+        # 基础码由 plog 解析，unknown_device_event或已识别的故障列表中无基础码则直接返回，此处为后续预留
         return
 
 
@@ -219,7 +225,7 @@ class UBMemChecker(Checker):
 
         tmp = self.single_device_precheck_event.get(event_key, {})
         precheck_event = copy.deepcopy(tmp)
-        if rule is not None:
+        if rule:
             precheck_event["key_info"] = rule.get("line", "")
             precheck_event["occurrence"] = [
                 [tmp.get("occur_time", datetime.min.strftime("%Y-%m-%d %H:%M:%S")), rule.get("line", "")]
@@ -245,10 +251,10 @@ class UBMemChecker(Checker):
 
     def add_ubmem_timeout_low_causes(self, device_causes):
         code = "Comp_Custom_UBMEM_TIMEOUT_LOW"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return
 
-        if self.base_code not in device_causes.keys():
+        if self.base_code not in device_causes:
             return
 
         rule = self.rule_flags.get(RULE_VLAN10_11_BALANCE, {})
@@ -265,10 +271,10 @@ class UBMemChecker(Checker):
 
     def add_ubmem_timeout_retraining_causes(self, device_causes):
         code = "Comp_Custom_UBMEM_TIMEOUT_RETRAINING"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return
 
-        if self.base_code not in device_causes.keys():
+        if self.base_code not in device_causes:
             return
 
         rule_lost_pkt = self.rule_flags.get(RULE_VLAN10_11_BALANCE, {})
@@ -284,7 +290,7 @@ class UBMemChecker(Checker):
         self._build_ubmem_cause(device_causes, code, rule_reinit)
 
     def add_ubmem_ub_ras_causes(self, device_causes):
-        if self.base_code not in device_causes.keys():
+        if self.base_code not in device_causes:
             return
 
         # 没UB_RAS故障直接返回
@@ -305,10 +311,10 @@ class UBMemChecker(Checker):
 
     def add_ubmem_timeout_lost_pkg_causes(self, device_causes):
         code = "Comp_Custom_UBMEM_TIMEOUT_LOST_PKG"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return
 
-        if self.base_code not in device_causes.keys():
+        if self.base_code not in device_causes:
             return
 
         # 有UB_RAS故障直接返回,isdisjoint表示没有交集返回True
@@ -332,8 +338,11 @@ class Cqe0x5Checker(Checker):
     base_code = Comp_CANN_HCCL_Custom_CQE0x5
 
     def analyze(self, device_causes):
-        # 基础码仅由 plog 解析归入 Unknown 设备，unknown_device_event 中无基础码则直接返回
-        if self.base_code not in self.unknown_device_event.keys():
+        fault_codes = list(
+            self.unknown_device_event.keys() | [] if not isinstance(device_causes, dict) else device_causes.keys()
+        )
+        # 基础码由 plog 解析，unknown_device_event或已识别的故障列表中无基础码则直接返回
+        if self.base_code not in fault_codes:
             return
 
         keep_cqe = [
@@ -354,7 +363,7 @@ class Cqe0x5Checker(Checker):
     def add_cqe0x5_lost_pkg_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x5_LOST_PKG"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         rule = self.rule_flags.get(RULE_VLAN6_7_BALANCE, {})
         if not rule.get("value", False):
@@ -365,7 +374,7 @@ class Cqe0x5Checker(Checker):
     def add_cqe0x5_timeout_ta_ctp_low_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x5_TIMEOUT_TA_CTP_LOW"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         # 有UB_RAS故障直接返回,isdisjoint表示没有交集返回True
         if not set(UB_RAS_CODES).isdisjoint(device_causes.keys()):
@@ -383,7 +392,7 @@ class Cqe0x5Checker(Checker):
     def add_cqe0x5_timeout_retraining_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x5_TIMEOUT_RETRAINING"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         # 有UB_RAS故障直接返回,isdisjoint表示没有交集返回True
         if not set(UB_RAS_CODES).isdisjoint(device_causes.keys()):
@@ -402,7 +411,7 @@ class Cqe0x5Checker(Checker):
     def add_cqe0x5_abn_pkt_ssn_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x5_ABN_PKT_SSN"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         # 有UB_RAS故障直接返回,isdisjoint表示没有交集返回True
         if not set(UB_RAS_CODES).isdisjoint(device_causes.keys()):
@@ -420,7 +429,7 @@ class Cqe0x5Checker(Checker):
     def add_cqe0x5_abn_pkt_header_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x5_ABN_PKT_HEADER"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         # 有UB_RAS故障直接返回,isdisjoint表示没有交集返回True
         if not set(UB_RAS_CODES).isdisjoint(device_causes.keys()):
@@ -438,7 +447,7 @@ class Cqe0x5Checker(Checker):
     def add_cqe0x5_rqe_not_enough_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x5_RQE_NOT_ENOUGH"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         rule_flag = self.rule_flags.get(RULE_TP_RRP_ERR_BIT25, {})
         if not rule_flag.get("value", False):
@@ -449,7 +458,7 @@ class Cqe0x5Checker(Checker):
     def add_cqe0x5_rc_not_enough_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x5_RC_NOT_ENOUGH"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         rule_flag = self.rule_flags.get(RULE_TP_RRP_ERR_BIT27_28, {})
         if not rule_flag.get("value", False):
@@ -460,7 +469,7 @@ class Cqe0x5Checker(Checker):
     def add_cqe0x5_flow_cfg_err_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x5_FLOW_CFG_ERR"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         rule_flag = self.rule_flags.get(RULE_DFX_TM_CRD_CTRL_INVALID, {})
         if not rule_flag.get("value", False):
@@ -471,7 +480,7 @@ class Cqe0x5Checker(Checker):
     def add_cqe0x5_tpm_cfg_err_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
         code = "Comp_Custom_CQE0x5_TPM_CFG_ERR"
-        if device_causes.get(code, None):
+        if code in device_causes:
             return True
         rule_flag = self.rule_flags.get(RULE_LQC_TAI_DFX_ALARM_BIT45, {})
         if not rule_flag.get("value", False):
