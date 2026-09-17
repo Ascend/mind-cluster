@@ -32,20 +32,22 @@ import (
 var (
 	// candidateCollectors holds all preset collectors; split into single/multi maps at Register time.
 	candidateCollectors = map[string]common.MetricsCollector{
-		groupHccs:        &metrics.HccsCollector{},
-		groupNpu:         &metrics.BaseInfoCollector{},
-		groupUtilization: &metrics.UtilizationCollector{},
-		groupSio:         &metrics.SioCollector{},
-		groupVersion:     &metrics.VersionCollector{},
-		groupHbm:         &metrics.HbmCollector{},
-		groupDDR:         &metrics.DdrCollector{},
-		groupVnpu:        &metrics.VnpuCollector{},
-		groupPcie:        &metrics.PcieCollector{},
-		groupNodeBase:    &metrics.NodeBaseCollector{},
-		groupNetwork:     &metrics.NetworkCollector{},
-		groupRoce:        &metrics.RoceCollector{},
-		groupOptical:     &metrics.OpticalCollector{},
-		groupUb:          &metrics.UbCollector{},
+		groupHccs:             &metrics.HccsCollector{},
+		groupNpu:              &metrics.BaseInfoCollector{},
+		groupUtilization:      &metrics.UtilizationCollector{},
+		groupSio:              &metrics.SioCollector{},
+		groupVersion:          &metrics.VersionCollector{},
+		groupHbm:              &metrics.HbmCollector{},
+		groupDDR:              &metrics.DdrCollector{},
+		groupVnpu:             &metrics.VnpuCollector{},
+		groupPcie:             &metrics.PcieCollector{},
+		groupNodeBase:         &metrics.NodeBaseCollector{},
+		groupNetwork:          &metrics.NetworkCollector{},
+		groupNetworkBandwidth: &metrics.NetworkBandwidthCollector{},
+		groupNetworkLink:      &metrics.NetworkLinkCollector{},
+		groupRoce:             &metrics.RoceCollector{},
+		groupOptical:          &metrics.OpticalCollector{},
+		groupUb:               &metrics.UbCollector{},
 	}
 	// singleGoroutineMap filled by classifyCollectors; IsParallel=false collectors go here.
 	singleGoroutineMap = map[string]common.MetricsCollector{}
@@ -63,19 +65,22 @@ const (
 	intervalSeconds5       = 5
 	intervalSeconds10      = 10
 	intervalSeconds30      = 30
+	intervalSeconds600     = 600
 	maxIntervalSeconds     = 86400 // 1 day = 24 * 60 * 60 seconds
 
-	groupDDR     = "ddr"
-	groupHccs    = "hccs"
-	groupNpu     = "npu"
-	groupNetwork = "network"
-	groupPcie    = "pcie"
-	groupRoce    = "roce"
-	groupSio     = "sio"
-	groupVnpu    = "vnpu"
-	groupVersion = "version"
-	groupOptical = "optical"
-	groupHbm     = "hbm"
+	groupDDR              = "ddr"
+	groupHccs             = "hccs"
+	groupNpu              = "npu"
+	groupNetwork          = "network"
+	groupNetworkBandwidth = "network_bandwidth"
+	groupNetworkLink      = "network_link"
+	groupPcie             = "pcie"
+	groupRoce             = "roce"
+	groupSio              = "sio"
+	groupVnpu             = "vnpu"
+	groupVersion          = "version"
+	groupOptical          = "optical"
+	groupHbm              = "hbm"
 	// groupText represents text-based metrics collected by plugin collectors
 	groupText        = "text"
 	groupUb          = "ub"
@@ -101,8 +106,10 @@ var (
 		buildDefaultConfig(groupNodeBase, stateOn, maxIntervalSeconds),
 		// hccn_tool
 		buildDefaultConfig(groupRoce, stateOn, defaultIntervalSeconds),
-		buildDefaultConfig(groupOptical, stateOn, defaultIntervalSeconds),
-		buildDefaultConfig(groupNetwork, stateOn, defaultIntervalSeconds),
+		buildDefaultConfig(groupOptical, stateOn, intervalSeconds600),
+		// network group is deprecated, replaced by network_bandwidth and network_link
+		buildDefaultConfig(groupNetworkBandwidth, stateOn, defaultIntervalSeconds),
+		buildDefaultConfig(groupNetworkLink, stateOn, intervalSeconds600),
 		buildDefaultConfig(groupUb, stateOn, defaultIntervalSeconds),
 	}
 	defaultPluginConfigs = []MetricsGroupConfig{
