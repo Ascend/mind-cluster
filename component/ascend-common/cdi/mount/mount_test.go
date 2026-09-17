@@ -45,15 +45,14 @@ func TestBuild_HostFsPrefixAppliesTopology(t *testing.T) {
 	// Topology injection is list-mode-only (JSON mode is data-driven from
 	// mounts.json; see TestBuildJSON_NoTopologyInjection).
 	hostFsPrefix := t.TempDir()
-	topoFile := filepath.Join(hostFsPrefix, "etc", "hccl_rootinfo.json")
-	if err := os.MkdirAll(filepath.Dir(topoFile), 0755); err != nil {
+	topoDir := filepath.Join(hostFsPrefix, "usr", "local", "Ascend", "driver", "topo")
+	if err := os.MkdirAll(topoDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	mustWriteFile(t, topoFile, `{"version":"1.0"}`)
 
 	orig := TopologyItems
 	defer func() { TopologyItems = orig }()
-	TopologyItems = []TopologyItem{{HostPath: "/etc/hccl_rootinfo.json", Options: []string{"rbind", "rprivate", "ro"}}}
+	TopologyItems = []TopologyItem{{HostPath: "/usr/local/Ascend/driver/topo", Options: []string{"rbind", "rprivate", "ro"}}}
 
 	// Empty source (no .list mounts); only the topology item should be emitted.
 	mounts, err := Build(MountConfig{Dir: t.TempDir(), IsAscendDockerRuntime: true, HostFsPrefix: hostFsPrefix}, "")
@@ -64,8 +63,8 @@ func TestBuild_HostFsPrefixAppliesTopology(t *testing.T) {
 		t.Fatalf("expected 1 topology mount, got %d", len(mounts))
 	}
 	// HostPath must carry the original host path, without the hostFsPrefix.
-	if mounts[0].HostPath != "/etc/hccl_rootinfo.json" {
-		t.Errorf("HostPath = %q, want /etc/hccl_rootinfo.json", mounts[0].HostPath)
+	if mounts[0].HostPath != "/usr/local/Ascend/driver/topo" {
+		t.Errorf("HostPath = %q, want /usr/local/Ascend/driver/topo", mounts[0].HostPath)
 	}
 }
 
@@ -74,22 +73,21 @@ func TestBuild_HostFsPrefixAppliesTopology(t *testing.T) {
 // not, even when a topology item exists on the host.
 func TestBuild_TopologyListModeOnly(t *testing.T) {
 	hostFsPrefix := t.TempDir()
-	topoFile := filepath.Join(hostFsPrefix, "etc", "hccl_rootinfo.json")
-	if err := os.MkdirAll(filepath.Dir(topoFile), 0755); err != nil {
+	topoDir := filepath.Join(hostFsPrefix, "usr", "local", "Ascend", "driver", "topo")
+	if err := os.MkdirAll(topoDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	mustWriteFile(t, topoFile, `{"version":"1.0"}`)
 
 	orig := TopologyItems
 	defer func() { TopologyItems = orig }()
-	TopologyItems = []TopologyItem{{HostPath: "/etc/hccl_rootinfo.json", Options: []string{"rbind", "rprivate", "ro"}}}
+	TopologyItems = []TopologyItem{{HostPath: "/usr/local/Ascend/driver/topo", Options: []string{"rbind", "rprivate", "ro"}}}
 
 	// List mode: topology item appended after the (empty) entry list.
 	listMounts, err := Build(MountConfig{Dir: t.TempDir(), IsAscendDockerRuntime: true, HostFsPrefix: hostFsPrefix}, "")
 	if err != nil {
 		t.Fatalf("Build returned error: %v", err)
 	}
-	if len(listMounts) != 1 || listMounts[0].HostPath != "/etc/hccl_rootinfo.json" {
+	if len(listMounts) != 1 || listMounts[0].HostPath != "/usr/local/Ascend/driver/topo" {
 		t.Fatalf("list mode: expected 1 topology mount, got %v", listMounts)
 	}
 

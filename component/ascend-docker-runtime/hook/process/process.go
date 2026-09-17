@@ -49,7 +49,6 @@ const (
 	baseConfig             = "base"
 	ubDriverConfig         = "ub_driver"
 	configFileSuffix       = "list"
-	hcclRootInfo           = "/etc/hccl_rootinfo.json"
 	topoDirPath            = "/usr/local/Ascend/driver/topo"
 
 	kvPairSize = 2
@@ -515,7 +514,6 @@ func DoPrestartHook() error {
 
 func addUBMount(fileMountList []string, dirMountList []string) ([]string, []string) {
 	ubMountItems := []string{
-		hcclRootInfo,
 		topoDirPath,
 	}
 	for _, mountItem := range ubMountItems {
