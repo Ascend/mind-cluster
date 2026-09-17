@@ -27,7 +27,6 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
-
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 	"huawei.com/npu-exporter/v6/utils/logger"
@@ -76,6 +75,7 @@ type netInfoNPUCache struct {
 }
 
 // NetworkCollector collects the network info
+// Deprecated: use NetworkBandwidthCollector and NetworkLinkCollector instead.
 type NetworkCollector struct {
 	colcommon.MetricsCollectorAdapter
 }
@@ -152,8 +152,7 @@ func (c *NetworkCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colc
 	if colcommon.DevType == api.Ascend910A5 {
 		// Update Npu specific metrics
 		updateSingleChipNpu := func(chipWithVnpu colcommon.HuaWeiAIChip, cache netInfoNPUCache, cardLabel []string) {
-			timestamp := cache.timestamp
-			promUpdateNetInfo(ch, cache, timestamp, cardLabel)
+			promUpdateNetInfo(ch, cache, cardLabel)
 		}
 		updateFrame[netInfoNPUCache](colcommon.GetCacheKey(c), n, containerMap, chips, updateSingleChipNpu)
 		return
@@ -320,11 +319,12 @@ func collectNetworkNpuInfo(logicID int32) []*common.NpuNetInfo {
 	return newNetInfo
 }
 
-func promUpdateNetInfo(ch chan<- prometheus.Metric, cache netInfoNPUCache, timestamp time.Time, cardLabel []string) {
+func promUpdateNetInfo(ch chan<- prometheus.Metric, cache netInfoNPUCache, cardLabel []string) {
 	netInfo := cache.extInfo
 	if netInfo == nil {
 		return
 	}
+	timestamp := cache.timestamp
 	for i := 0; i < len(netInfo); i++ {
 		extendedLabel := append(cardLabel, strconv.Itoa(netInfo[i].Udie), strconv.Itoa(netInfo[i].Port))
 		promUpdateNetInfoNew(ch, timestamp, netInfo[i], extendedLabel)

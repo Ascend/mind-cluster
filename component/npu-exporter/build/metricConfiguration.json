@@ -11,7 +11,8 @@
   {"metricsGroup": "nodeBase", "state": "ON", "intervalSeconds": 86400},
 
   {"metricsGroup": "roce", "state": "ON", "intervalSeconds": 60},
-  {"metricsGroup": "optical", "state": "ON", "intervalSeconds": 60},
-  {"metricsGroup": "network", "state": "ON", "intervalSeconds": 60},
+  {"metricsGroup": "optical", "state": "ON", "intervalSeconds": 600},
+  {"metricsGroup": "network_bandwidth", "state": "ON", "intervalSeconds": 60},
+  {"metricsGroup": "network_link", "state": "ON", "intervalSeconds": 600},
   {"metricsGroup": "ub", "state": "ON", "intervalSeconds": 60}
 ]

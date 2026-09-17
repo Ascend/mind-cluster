@@ -287,6 +287,7 @@ type ECCInfo struct {
 }
 
 // NpuNetInfo network info of npu
+// Deprecated: use NpuNetBandwidthInfo and NpuNetStatusInfo instead.
 type NpuNetInfo struct {
 	// The optical info
 	OpticalInfo *OpticalInfo
@@ -298,6 +299,30 @@ type NpuNetInfo struct {
 	StatInfo *StatInfo
 	// Network port real-time bandwidth
 	BandwidthInfo *BandwidthInfo
+	// LinkStatusInfo refers to the link state
+	LinkStatusInfo *LinkStatusInfo
+	// Udie npu chip udie
+	Udie int
+	// Port npu chip port
+	Port int
+}
+
+// NpuNetBandwidthInfo network real-time bandwidth info of npu
+type NpuNetBandwidthInfo struct {
+	// Network port real-time bandwidth
+	BandwidthInfo *BandwidthInfo
+	// Udie npu chip udie
+	Udie int
+	// Port npu chip port
+	Port int
+}
+
+// NpuNetStatusInfo network status info of npu
+type NpuNetStatusInfo struct {
+	// The transfer rate of network port
+	LinkSpeedInfo *LinkSpeedInfo
+	// Historical link statistics of network ports
+	LinkStatInfo *LinkStatInfo
 	// LinkStatusInfo refers to the link state
 	LinkStatusInfo *LinkStatusInfo
 	// Udie npu chip udie
@@ -571,53 +596,53 @@ type OpticalNpuInfo struct {
 
 // PortPktStatsInfo holds UB port packet statistics from dcmiv2_get_port_pkt_stats_info.
 type PortPktStatsInfo struct {
-	PortMode             int
-	UbGlbIpv4PktCntRx    uint64
-	UbGlbIpv6PktCntRx    uint64
-	UnicIpv4PktCntRx     uint64
-	UnicIpv6PktCntRx     uint64
-	UbClanPktCntRx       uint64
-	UbUmocCtphCntRx      uint64
-	UbUmocNtphCntRx      uint64
-	UbMemPktCntRx        uint64
-	UnknownPktCntRx      uint64
-	DropIndCntRx         uint64
-	ErrIndCntRx          uint64
-	ToHostPktCntRx       uint64
-	ToImpPktCntRx        uint64
-	ToMarPktCntRx        uint64
-	ToLinkPktCntRx       uint64
-	ToNocPktCntRx        uint64
-	RouteErrCntRx        uint64
-	OutErrCntRx          uint64
-	LengthErrCntRx       uint64
-	RxBusiFlitNum        uint64
-	RxSendAckFlit        uint64
-	UbGlbIpv4PktCntTx    uint64
-	UbGlbIpv6PktCntTx    uint64
-	UnicIpv4PktCntTx     uint64
-	UnicIpv6PktCntTx     uint64
-	UbClanPktCntTx       uint64
-	UbUmocCtphCntTx      uint64
-	UbUmocNtphCntTx      uint64
-	UbMemPktCntTx        uint64
-	UnknownPktCntTx      uint64
-	DropIndCntTx         uint64
-	ErrIndCntTx          uint64
-	LpbkIndCntTx         uint64
-	OutErrCntTx          uint64
-	LengthErrCntTx       uint64
-	TxBusiFlitNum        uint64
-	TxRecvAckFlit        uint64
-	RetryReqSum          uint64
-	RetryAckSum          uint64
-	CrcErrorSum          uint64
-	CoreMibRxPausePkts   uint64
-	CoreMibTxPausePkts   uint64
-	CoreMibRxPfcPkts     uint64
-	CoreMibTxPfcPkts     uint64
-	CoreMibRxBadPkts     uint64
-	CoreMibTxBadPkts     uint64
-	CoreMibRxBadOctets   uint64
-	CoreMibTxBadOctets   uint64
+	PortMode           int
+	UbGlbIpv4PktCntRx  uint64
+	UbGlbIpv6PktCntRx  uint64
+	UnicIpv4PktCntRx   uint64
+	UnicIpv6PktCntRx   uint64
+	UbClanPktCntRx     uint64
+	UbUmocCtphCntRx    uint64
+	UbUmocNtphCntRx    uint64
+	UbMemPktCntRx      uint64
+	UnknownPktCntRx    uint64
+	DropIndCntRx       uint64
+	ErrIndCntRx        uint64
+	ToHostPktCntRx     uint64
+	ToImpPktCntRx      uint64
+	ToMarPktCntRx      uint64
+	ToLinkPktCntRx     uint64
+	ToNocPktCntRx      uint64
+	RouteErrCntRx      uint64
+	OutErrCntRx        uint64
+	LengthErrCntRx     uint64
+	RxBusiFlitNum      uint64
+	RxSendAckFlit      uint64
+	UbGlbIpv4PktCntTx  uint64
+	UbGlbIpv6PktCntTx  uint64
+	UnicIpv4PktCntTx   uint64
+	UnicIpv6PktCntTx   uint64
+	UbClanPktCntTx     uint64
+	UbUmocCtphCntTx    uint64
+	UbUmocNtphCntTx    uint64
+	UbMemPktCntTx      uint64
+	UnknownPktCntTx    uint64
+	DropIndCntTx       uint64
+	ErrIndCntTx        uint64
+	LpbkIndCntTx       uint64
+	OutErrCntTx        uint64
+	LengthErrCntTx     uint64
+	TxBusiFlitNum      uint64
+	TxRecvAckFlit      uint64
+	RetryReqSum        uint64
+	RetryAckSum        uint64
+	CrcErrorSum        uint64
+	CoreMibRxPausePkts uint64
+	CoreMibTxPausePkts uint64
+	CoreMibRxPfcPkts   uint64
+	CoreMibTxPfcPkts   uint64
+	CoreMibRxBadPkts   uint64
+	CoreMibTxBadPkts   uint64
+	CoreMibRxBadOctets uint64
+	CoreMibTxBadOctets uint64
 }

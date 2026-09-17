@@ -249,6 +249,10 @@ func TestCollectToCache(t *testing.T) {
 			convey.ShouldNotBeEmpty)
 		convey.So(colcommon.GetInfoFromCache[sioCache](n, colcommon.GetCacheKey(&SioCollector{})),
 			convey.ShouldNotBeEmpty)
+		convey.So(colcommon.GetInfoFromCache[netInfoBandwidthCache](n, colcommon.GetCacheKey(&NetworkBandwidthCollector{})),
+			convey.ShouldNotBeEmpty)
+		convey.So(colcommon.GetInfoFromCache[netInfoStatusCache](n, colcommon.GetCacheKey(&NetworkLinkCollector{})),
+			convey.ShouldNotBeEmpty)
 
 	})
 }
@@ -276,6 +280,8 @@ func TestUpdatePrometheus(t *testing.T) {
 		mockPcieCache(n, chips, colcommon.GetCacheKey(&PcieCollector{}))
 		mockRoceCache(n, chips, colcommon.GetCacheKey(&RoceCollector{}))
 		mockSioCache(n, chips, colcommon.GetCacheKey(&SioCollector{}))
+		mockNetBandwidthCache(n, chips, colcommon.GetCacheKey(&NetworkBandwidthCollector{}))
+		mockNetStatusCache(n, chips, colcommon.GetCacheKey(&NetworkLinkCollector{}))
 
 		for _, c := range collectorChain {
 			c.UpdatePrometheus(ch, n, containerInfos, chips)
@@ -307,6 +313,8 @@ func TestUpdateTelegraf(t *testing.T) {
 		mockPcieCache(n, chips, colcommon.GetCacheKey(&PcieCollector{}))
 		mockRoceCache(n, chips, colcommon.GetCacheKey(&RoceCollector{}))
 		mockSioCache(n, chips, colcommon.GetCacheKey(&SioCollector{}))
+		mockNetBandwidthCache(n, chips, colcommon.GetCacheKey(&NetworkBandwidthCollector{}))
+		mockNetStatusCache(n, chips, colcommon.GetCacheKey(&NetworkLinkCollector{}))
 
 		ch := make(chan colcommon.TelegrafMetric, chanCacheSizeForTest)
 		received := make([]colcommon.TelegrafMetric, 0)
@@ -485,6 +493,42 @@ func mockNetInfo() *common.NpuNetInfo {
 	}
 }
 
+func mockNetBandwidthInfo() *common.NpuNetBandwidthInfo {
+	return &common.NpuNetBandwidthInfo{
+		BandwidthInfo: &common.BandwidthInfo{RxValue: 0, TxValue: 0},
+		Udie:          0,
+		Port:          0,
+	}
+}
+
+func mockNetStatusInfo() *common.NpuNetStatusInfo {
+	return &common.NpuNetStatusInfo{
+		LinkStatusInfo: &common.LinkStatusInfo{LinkState: "0"},
+		LinkStatInfo:   &common.LinkStatInfo{LinkUPNum: 0},
+		LinkSpeedInfo:  &common.LinkSpeedInfo{Speed: 0},
+		Udie:           0,
+		Port:           0,
+	}
+}
+
+func mockNetBandwidthCache(n *colcommon.NpuCollector, chips []colcommon.HuaWeiAIChip, cacheKey string) {
+	localCache := sync.Map{}
+	for _, chip := range chips {
+		localCache.Store(chip.PhyId, netInfoBandwidthCache{chip: chip, timestamp: time.Now(),
+			extInfo: mockNetBandwidthInfo()})
+	}
+	colcommon.UpdateCache[netInfoBandwidthCache](n, cacheKey, &localCache)
+}
+
+func mockNetStatusCache(n *colcommon.NpuCollector, chips []colcommon.HuaWeiAIChip, cacheKey string) {
+	localCache := sync.Map{}
+	for _, chip := range chips {
+		localCache.Store(chip.PhyId, netInfoStatusCache{chip: chip, timestamp: time.Now(),
+			extInfo: mockNetStatusInfo()})
+	}
+	colcommon.UpdateCache[netInfoStatusCache](n, cacheKey, &localCache)
+}
+
 func mockChipCache(n *colcommon.NpuCollector, chips []colcommon.HuaWeiAIChip, cacheKey string) {
 	localCache := sync.Map{}
 	for _, chip := range chips {
@@ -620,6 +664,8 @@ func initChain() {
 		&VnpuCollector{},
 		&PcieCollector{},
 		&NetworkCollector{},
+		&NetworkBandwidthCollector{},
+		&NetworkLinkCollector{},
 		&RoceCollector{},
 		&OpticalCollector{},
 	}

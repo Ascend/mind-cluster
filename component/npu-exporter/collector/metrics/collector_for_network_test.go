@@ -120,7 +120,6 @@ func TestNetworkCollectorIsSupported2(t *testing.T) {
 func TestPromUpdateNetInfo(t *testing.T) {
 	convey.Convey("Given promUpdateNetInfo function", t, func() {
 		ch := make(chan prometheus.Metric, 100)
-		timestamp := time.Now()
 		cardLabel := []string{"card0"}
 		patches := gomonkey.ApplyFunc(validateNotNilForEveryElement, func(objs ...interface{}) bool {
 			return objs != nil
@@ -129,7 +128,7 @@ func TestPromUpdateNetInfo(t *testing.T) {
 
 		convey.Convey("When cache extInfo is nil", func() {
 			cache := netInfoNPUCache{extInfo: nil}
-			promUpdateNetInfo(ch, cache, timestamp, cardLabel)
+			promUpdateNetInfo(ch, cache, cardLabel)
 			convey.So(len(ch), convey.ShouldEqual, 0)
 		})
 
@@ -157,7 +156,7 @@ func TestPromUpdateNetInfo(t *testing.T) {
 				value float64, extInfo string) {
 				callTelCount++
 			})
-			promUpdateNetInfo(ch, cache, timestamp, cardLabel)
+			promUpdateNetInfo(ch, cache, cardLabel)
 			telegrafUpdateNetInfo(cache, mockFiledMap)
 			expectedCalls := colcommon.NpuDevPortInfos.GetCount() * ascend950NetworkMetricNum
 			convey.So(callCount, convey.ShouldEqual, expectedCalls)
