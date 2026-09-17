@@ -1413,7 +1413,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="11.96119611961196%" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><p>Atlas 850 Series Hardware Product</p>
+<td class="cellrowborder" rowspan="3" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 850 Series Hardware Product</li><li>Atlas 950 SuperPoD Flex</li></ul>
 </td>
 </tr>
 <tr id="row184616483311"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>Optical Module</p>

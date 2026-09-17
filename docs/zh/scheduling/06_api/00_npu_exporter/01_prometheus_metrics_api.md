@@ -1480,7 +1480,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="11.96119611961196%" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 850E 超节点</li><li>Atlas 850 超节点</li><li>Atlas 650E 服务器</li><li>Atlas 650 服务器</li></ul>
+<td class="cellrowborder" rowspan="3" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 850E 超节点</li><li>Atlas 850 超节点</li><li>Atlas 650E 服务器</li><li>Atlas 650 服务器</li><li>Atlas 950 SuperPoD Flex</li></ul>
 </td>
 </tr>
 <tr id="row184616483311"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>光模块</p>
