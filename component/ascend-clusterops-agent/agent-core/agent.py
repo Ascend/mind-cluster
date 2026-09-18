@@ -51,14 +51,14 @@ def _llm_error_hint(exc: Exception) -> str:
     """Map an LLM call failure to an actionable reason the user can understand and fix."""
     msg = str(exc) or exc.__class__.__name__
     if "UnsupportedProtocol" in msg or "missing an 'http://' or 'https://' protocol" in msg:
-        return "诊断错误，LLM 配置有误：base_url 缺少 http:// 或 https:// 前缀；请用 kubectl clusterops --create-llm-config --base-url http(s)://<url> 重新配置"
+        return "Diagnosis error, LLM mis-configured: base_url is missing an 'http://' or 'https://' prefix; reconfigure with: kubectl clusterops --create-llm-config --base-url http(s)://<url>"
     if "APIConnectionError" in msg or "Connection error" in msg or "timed out" in msg:
-        return "诊断错误，LLM 配置有误：无法连接 LLM 服务或请求超时；请检查网络与 LLM 服务是否可达，或用 kubectl clusterops --clear-llm-config 关闭 LLM"
+        return "Diagnosis error, LLM mis-configured: cannot connect to the LLM service or the request timed out; check network reachability to the LLM service, or disable LLM with: kubectl clusterops --clear-llm-config"
     if "authentication" in msg.lower() or "401" in msg:
-        return "诊断错误，LLM 配置有误：api-key 无效（认证失败 401）；请用 kubectl clusterops --create-llm-config 重新配置正确的 api-key"
+        return "Diagnosis error, LLM mis-configured: invalid api-key (authentication failed 401); reconfigure the correct api-key with: kubectl clusterops --create-llm-config"
     if "permission" in msg.lower() or "403" in msg:
-        return "诊断错误，LLM 配置有误：api-key 权限不足（403）；请检查 api-key 权限，或用 kubectl clusterops --clear-llm-config 关闭 LLM"
-    return f"诊断错误，LLM 调用失败：{msg[:200]}；可用 kubectl clusterops --clear-llm-config 关闭 LLM，回退确定性报告"
+        return "Diagnosis error, LLM mis-configured: insufficient api-key permissions (403); check the api-key permissions, or disable LLM with: kubectl clusterops --clear-llm-config"
+    return f"Diagnosis error, LLM call failed: {msg[:200]}; disable LLM with: kubectl clusterops --clear-llm-config to fall back to the deterministic report"
 
 
 @tool
@@ -103,43 +103,3 @@ def summarize_report(diag_report: dict) -> Optional[str]:
     except Exception as e:  # noqa: BLE001  # any LLM failure must never fail the deterministic diagnosis
         logger.warning("LLM report summarization failed (using deterministic report): %s", e)
         raise LLMSummaryError(_llm_error_hint(e)) from e
-
-
-def format_diag_report(diag_report: dict) -> str:
-    """Format diag_report.json into human-readable text (fallback when no LLM configured).
-
-    Field organization mirrors ascend-fd's PrintWrapper: root cause (Root_Cluster)
-    first, then each fault in Knowledge_Graph.fault with cause/description/suggestion
-    and a key log line per fault.
-    """
-    lines: list[str] = []
-    rc = diag_report.get("Root_Cluster") or {}
-    kg = diag_report.get("Knowledge_Graph") or {}
-    fd = rc.get("fault_description") or {}
-    if fd.get("string"):
-        lines.append(f"[Root Cause] {fd['string']}")
-    devices = rc.get("root_cause_device") or []
-    if devices:
-        lines.append(f"Root cause device: {', '.join(str(d) for d in devices)}")
-    note = rc.get("note") or kg.get("note")
-    if note:
-        lines.append(f"Note: {note}")
-    for i, fault in enumerate(kg.get("fault") or [], 1):
-        lines.append("")
-        lines.append(f"[{i}] Fault: {fault.get('code')}")
-        cls = " ".join(str(fault.get(k)) for k in ("class", "component", "module") if fault.get(k))
-        if cls:
-            lines.append(f"    Type: {cls}")
-        if fault.get("cause_zh"):
-            lines.append(f"    Name: {fault['cause_zh']}")
-        if fault.get("description_zh"):
-            lines.append(f"    Desc: {fault['description_zh']}")
-        for s in fault.get("suggestion_zh") or []:
-            lines.append(f"    Suggestion: {s}")
-        for events in (fault.get("event_attr") or {}).values():
-            for ev in events or []:
-                if ev.get("key_info"):
-                    lines.append(f"    Log: {ev['key_info'][:200]}")
-                    break
-            break  # one key log line per fault to keep output compact
-    return "\n".join(lines) or "(no fault detected)"

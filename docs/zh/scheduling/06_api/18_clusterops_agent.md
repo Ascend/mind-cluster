@@ -17,7 +17,7 @@ Agent Core启动后，会创建如下ConfigMap：
 
 <a name="tableclusteropspathmap"></a>
 
-该ConfigMap位于cluster-system命名空间，数据键为`pathmap.json`，用于记录任务Pod的挂载关系，供Node Collector反查宿主机路径采集日志。
+该ConfigMap位于cluster-system命名空间，数据键为`pathmap.json`，用于记录任务Pod的挂载对和env值，供Agent Core重启恢复关系数据，并在TriggerCollect采集指令中随Pod列表下发。快照按顺序填充分片写入（`clusterops-pathmap`、`clusterops-pathmap-1`…`clusterops-pathmap-N`，分片0写满后写分片1，依此类推；分片数固定为100），每个分片不超过ConfigMap的1MiB数据上限。
 
 |参数|说明|
 |--|--|
@@ -27,14 +27,11 @@ Agent Core启动后，会创建如下ConfigMap：
 |-env|任务Pod的字面env值（跳过valueFrom引用），用于解析env类采集实体（如`ASCEND_PROCESS_LOG_PATH`）。|
 |-deleted_at|Pod删除时间戳，存活Pod为null。|
 
->[!NOTE]
->Node Collector监听该ConfigMap并在本地缓存，采集时按采集契约的实体类型匹配挂载对、反查宿主机路径后读取日志。已删除Pod条目保留7天（POD_TTL），Pod删除后仍可据此反查宿主路径。采用变更驱动同步：内存表更新后立即同步，失败时自动退避重试。
-
 **表2**  agent-core-relcache
 
 <a name="tableagentcorerelcache"></a>
 
-该ConfigMap位于cluster-system命名空间，数据键为`snapshot`，用于保存任务与Pod的中心关系缓存快照，Agent Core重启时恢复关系数据。
+该ConfigMap位于cluster-system命名空间，数据键为`snapshot`，用于保存任务与Pod的中心关系缓存快照，Agent Core重启时恢复关系数据。快照按顺序填充分片写入（`agent-core-relcache`、`agent-core-relcache-1`…`agent-core-relcache-N`，分片0写满后写分片1，依此类推；分片数固定为100），每个分片不超过ConfigMap的1MiB数据上限。
 
 |参数|说明|
 |--|--|
@@ -49,7 +46,26 @@ Agent Core启动后，会创建如下ConfigMap：
 |-phase|Pod当前阶段（Running、Succeeded、Failed等）。|
 
 >[!NOTE]
->Agent Core启动时读取该快照恢复任务→Pod关系数据，诊断时按任务名查询该关系表获取Pod及所在节点，再向各节点Node Collector下发采集指令。已删除Pod条目保留7天（POD_TTL）。
+>Agent Core启动时读取该快照恢复任务→Pod关系数据，诊断时按任务名查询该关系表获取Pod及所在节点，再向各节点Node Collector下发采集指令。已删除Pod条目保留7天（POD_TTL）；内存表容量上限与分片快照总容量一致（100MiB），超出后按最老优先淘汰。
+
+### 容量与历史数据保留<a name="sectionascendclusteropscapacity"></a>
+
+relcache/pathmap快照按顺序填充分片存储，分片0写满后写分片1，依此类推，总容量=分片数×1MiB，分片数固定为100（100MiB）；本地内存表上限与快照容量一致，超出后按最老优先淘汰。
+
+按每任务8卡估算，100MiB容量可容纳的数据量如下：
+
+|任务Pod形态|单条记录大小|100MiB可存记录数|可容纳任务数|对应卡数|
+|--|--|--|--|--|
+|每任务1个Pod、每Pod8卡|约264B|约39.7万条|约39.7万个任务|约317万卡|
+|每任务8个Pod、每Pod1卡|约264B|约39.7万条|约5万个任务|约40万卡|
+
+- 昇腾单集群上限10万卡（约1.25万个节点）。按每任务8卡全满，一次集群全量任务约1.25万个任务Pod。
+- 默认100MiB容量可容纳约**4个10万卡集群的历史任务总量**（含删除后保留7天内的任务）。
+- 历史任务过期：已删除Pod条目默认保留**7天**（`POD_TTL`，可在agent-core.yaml中调整，单位秒），超期后由GC线程从内存表与分片快照中删除；内存占用超过容量上限时，按最老优先淘汰，均不阻塞诊断。
+
+> [!NOTE]
+>
+> - Agent Core对cluster-system命名空间的ConfigMap持有get/update/patch权限（分片CM数量随分片数变化，无法按名称枚举），仅限该命名空间。
 
 ## 相关ConfigMap/Secret说明<a name="sectionascendclusteropsrelated"></a>
 
@@ -62,6 +78,8 @@ Agent Core启动后，会创建如下ConfigMap：
 |agent-core-task-crds|cluster-system|用户|Agent Core|任务CR GVK配置，Agent Core启动时读取一次，仅跟踪这些任务CR管理的Pod。新增任务类型时需同时在该ConfigMap增补GVK并在ClusterRole中增补对应get权限，详见[配置任务类型](../04_usage/14_clusterops_agent/01_configuring_task_crds.md)。|
 |collect-manifest|cluster-system|Kubectl Plugin（`kubectl ascend_diag --collect-manifest`）|Node Collector|采集契约，Node Collector每次采集时读取，详见[配置日志采集](../04_usage/14_clusterops_agent/02_configuring_log_collection.md)。|
 |llm-secret|mindx-dl|Kubectl Plugin（`kubectl clusterops`）|Agent Core|LLM配置（api-key、base-url、model），Agent Core实时监听，详见[配置和清除LLM](../04_usage/14_clusterops_agent/04_configuring_llm.md)。|
+
+> 除上述ConfigMap外，表1、表2所述快照按Pod UID分片存储，Agent Core启动时会为每个分片创建对应ConfigMap（`clusterops-pathmap-N`、`agent-core-relcache-N`）。
 
 ## HTTP接口<a name="sectionascendclusteropshttp"></a>
 
@@ -107,11 +125,11 @@ Agent Core提供两级诊断结果缓存：近期结果缓存（内存）和持�
 
 **近期结果缓存（内存，10秒）**
 
-同一任务（ns, job）在10秒内重复诊断时，直接返回最近一次结果（标记cached并提示"这是缓存数据，需要实时数据，请加 --refresh"），不再重新采集。保留时长可通过环境变量DIAG_RECENT_TTL调整。
+同一任务（ns, job）在10秒内重复诊断时，直接返回最近一次结果（标记cached并提示"This is cached data; add --refresh for real-time data"），不再重新采集。保留时长可通过环境变量DIAG_RECENT_TTL调整。
 
 **持久结果缓存（磁盘）**
 
-任务处于停止状态时，诊断结果写入持久缓存文件；再次诊断同一任务时，若命中缓存且任务仍处于停止状态，直接返回缓存结果（提示"结果来自缓存，如需最新诊断，请执行 --refresh强制刷新"）。
+每次诊断成功后，诊断结果即写入持久缓存文件（任务运行中或停止均缓存）；再次诊断同一任务时，若命中缓存，直接返回缓存结果（提示"Result from cache; run --refresh for the latest diagnosis"）。
 
 **表7**  缓存文件说明
 
@@ -130,14 +148,11 @@ Agent Core提供两级诊断结果缓存：近期结果缓存（内存）和持�
 | final_text | 诊断报告文本（LLM智能总结或确定性诊断报告），LLM总结生成后写回缓存，命中缓存时直接返回，不重复调用LLM。 |
 | error | 错误信息。 |
 | cached_at | 缓存写入时间戳。 |
-| task_state | 缓存时任务状态（stopped）。 |
 
 **缓存条件**
 
-- 仅任务处于停止状态时缓存，运行中的任务不缓存。停止状态通过查询任务CR的`status.conditions`判定（大小写不敏感），终态包括JobSucceeded、JobFailed、Succeeded、Failed、Stopped、Complete、Completed、Terminated、Aborted。
-- 任务CR不存在（404，任务已删除）视为停止状态，结果可缓存。
-- 任务CR状态读取不到或滞后时，若任务的所有Pod均已达到终态（Succeeded/Failed），结果也可缓存。
-- 任务CR状态查询失败（RBAC权限缺失、网络异常等）时判定为unknown，此时不缓存（但不阻塞诊断）。
+- 每次诊断成功后均缓存诊断结果，不依赖任务CR状态；命中缓存时直接返回缓存结果，提示使用 --refresh强制刷新获取最新结果。
+- 任务CR不存在（404，任务已删除）时：若relcache中仍有该任务Pod记录（删除TTL内，日志仍保留在节点/共享盘上），仍可执行诊断并缓存；仅当relcache中也没有该任务记录时，直接返回任务不存在。
 
 >[!NOTE]
 >缓存与诊断产物存放在Agent Core的`WORK_ROOT`目录（默认`/user/clusterops/agent-core`，宿主导出）。若需在Pod重建（重调度）后仍保留缓存与产物，需要为Agent Core配置PVC挂载`WORK_ROOT`目录；hostPath挂载仅支持同一节点上的Pod重建保留。

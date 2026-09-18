@@ -49,7 +49,7 @@ def test_summarize_report_llm_error_raises_hint(monkeypatch):
     with pytest.raises(A.LLMSummaryError) as ei:
         A.summarize_report({"root": "n"})
     msg = str(ei.value)
-    assert "诊断错误" in msg
+    assert "Diagnosis error" in msg
     assert "base_url" in msg
     assert "UnsupportedProtocol" not in msg
 

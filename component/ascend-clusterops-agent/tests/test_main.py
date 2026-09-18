@@ -35,30 +35,50 @@ def test_diag_endpoint_with_summary(monkeypatch):
     resp = client.post("/diag", json={"job": "job-x", "namespace": "default"})
     assert resp.status_code == 200
     body = resp.json()
-    assert body["final_text"] == "中文报告"
+    assert body["final_text"].startswith("中文报告")
+    assert "--json" in body["final_text"]  # hint to print the full JSON response
     assert body["diag_report"] == {"root": "n"}
 
 
 def test_diag_endpoint_no_llm_formats_report(monkeypatch):
-    report = {
-        "Root_Cluster": {"fault_description": {"string": "no plog found"}, "root_cause_device": ["dev0"]},
-        "Knowledge_Graph": {
-            "fault": [{"code": "F1", "cause_zh": "cause", "description_zh": "desc", "suggestion_zh": ["fix it"]}]
-        },
-    }
+    report_text = "Mindcluster Fault-Diag Report\n[Root Cause] no plog found\n| F1 | Suggestion: fix it |"
     monkeypatch.setattr(
         tools,
         "diagnose_cached",
-        lambda job, namespace="default", refresh=False: {"diag_report": report, "error": None, "pods": []},
+        lambda job, namespace="default", refresh=False: {
+            "diag_report": {"Root_Cluster": {}},
+            "diag_report_text": report_text,
+            "error": None,
+            "pods": [],
+        },
     )
     monkeypatch.setattr(main, "summarize_report", lambda r: None)
     client = TestClient(main.app)
     resp = client.post("/diag", json={"job": "job-x"})
     assert resp.status_code == 200
     text = resp.json()["final_text"]
-    assert "[Root Cause] no plog found" in text
+    assert "no plog found" in text
     assert "F1" in text
     assert "Suggestion: fix it" in text
+
+
+def test_diag_endpoint_uses_diag_report_text(monkeypatch):
+    # diag stdout (pretty table) is preferred over the JSON reformat when present
+    monkeypatch.setattr(
+        tools,
+        "diagnose_cached",
+        lambda job, namespace="default", refresh=False: {
+            "diag_report": {"Root_Cluster": {}},
+            "diag_report_text": "Mindcluster Fault-Diag Report\n| Fault code |",
+            "error": None,
+            "pods": [],
+        },
+    )
+    monkeypatch.setattr(main, "summarize_report", lambda r: None)
+    client = TestClient(main.app)
+    resp = client.post("/diag", json={"job": "job-x"})
+    assert resp.status_code == 200
+    assert "Mindcluster Fault-Diag Report" in resp.json()["final_text"]
 
 
 def test_diag_endpoint_carries_error(monkeypatch):
@@ -77,16 +97,15 @@ def test_diag_endpoint_carries_error(monkeypatch):
 
 def test_diag_endpoint_captures_llm_error(monkeypatch):
     # LLM mis-configured -> no 500: returns the llm_error reason + deterministic report text
-    report = {
-        "Root_Cluster": {"fault_description": {"string": "no plog found"}, "root_cause_device": ["dev0"]},
-        "Knowledge_Graph": {
-            "fault": [{"code": "F1", "cause_zh": "cause", "description_zh": "desc", "suggestion_zh": ["fix it"]}]
-        },
-    }
     monkeypatch.setattr(
         tools,
         "diagnose_cached",
-        lambda job, namespace="default", refresh=False: {"diag_report": report, "error": None, "pods": []},
+        lambda job, namespace="default", refresh=False: {
+            "diag_report": {"Root_Cluster": {}},
+            "diag_report_text": "Mindcluster Fault-Diag Report\n[Root Cause] no plog found",
+            "error": None,
+            "pods": [],
+        },
     )
 
     def _boom(_r):
@@ -99,21 +118,20 @@ def test_diag_endpoint_captures_llm_error(monkeypatch):
     body = resp.json()
     assert body["llm_error"].startswith("LLM base_url 配置无效")
     assert "LLM base_url 配置无效" in body["final_text"]
-    assert "[Root Cause] no plog found" in body["final_text"]  # the deterministic report is still kept
+    assert "no plog found" in body["final_text"]  # the deterministic report is still kept
 
 
 def test_diag_endpoint_llm_unexpected_error_falls_back(monkeypatch):
     # summarize_report raises an unexpected (non-LLMSummaryError) exception -> still 200, fall back to the deterministic report
-    report = {
-        "Root_Cluster": {"fault_description": {"string": "no plog found"}, "root_cause_device": ["dev0"]},
-        "Knowledge_Graph": {
-            "fault": [{"code": "F1", "cause_zh": "cause", "description_zh": "desc", "suggestion_zh": ["fix it"]}]
-        },
-    }
     monkeypatch.setattr(
         tools,
         "diagnose_cached",
-        lambda job, namespace="default", refresh=False: {"diag_report": report, "error": None, "pods": []},
+        lambda job, namespace="default", refresh=False: {
+            "diag_report": {"Root_Cluster": {}},
+            "diag_report_text": "Mindcluster Fault-Diag Report\n[Root Cause] no plog found",
+            "error": None,
+            "pods": [],
+        },
     )
 
     def _boom(_r):
@@ -124,8 +142,8 @@ def test_diag_endpoint_llm_unexpected_error_falls_back(monkeypatch):
     resp = client.post("/diag", json={"job": "job-x"})
     assert resp.status_code == 200
     body = resp.json()
-    assert "报告总结过程发生异常" in body["llm_error"]
-    assert "[Root Cause] no plog found" in body["final_text"]
+    assert "report summarization" in body["llm_error"]
+    assert "no plog found" in body["final_text"]
 
 
 def test_diag_endpoint_reuses_cached_summary(monkeypatch):
@@ -147,7 +165,8 @@ def test_diag_endpoint_reuses_cached_summary(monkeypatch):
     client = TestClient(main.app)
     resp = client.post("/diag", json={"job": "job-x"})
     assert resp.status_code == 200
-    assert resp.json()["final_text"] == "cached LLM summary"
+    assert resp.json()["final_text"].startswith("cached LLM summary")
+    assert "--json" in resp.json()["final_text"]  # the --json hint is appended on cache hits too
     assert not called  # no LLM call
 
 
@@ -165,5 +184,7 @@ def test_diag_endpoint_writes_summary_to_cache(monkeypatch):
     client = TestClient(main.app)
     resp = client.post("/diag", json={"job": "job-x", "namespace": "train"})
     assert resp.status_code == 200
-    assert resp.json()["final_text"] == "fresh LLM summary"
-    assert written == {"job": "job-x", "ns": "train", "text": "fresh LLM summary"}
+    assert resp.json()["final_text"].startswith("fresh LLM summary")
+    assert "--json" in resp.json()["final_text"]  # the hint is cached together with the summary
+    assert written["job"] == "job-x" and written["ns"] == "train"
+    assert written["text"].startswith("fresh LLM summary")

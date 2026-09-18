@@ -12,16 +12,24 @@
 #                   清理临时目录; 无 > 重定向的命令, stdout/stderr 捕获为 {name}_stdout.txt;
 #                   整个命令串必须精确匹配白名单 (见 node-collector/collector.py ALLOWED_COMMANDS),
 #                   篡改串 (如 dmesg && rm -rf /) 无法匹配, 会被拒绝执行
-#   mount_keywords : 最低优先级兜底 (仅当未配置 paths 时执行)。匹配任务 pod 全部挂载对中
-#                   host/container 含关键词的 (第一个命中为准), 无直接命中则扫挂载宿主路径子目录找含关键词的子目录
+#   mount_keywords : 最低优先级兜底 (仅当未配置 paths 时执行)。先匹配任务 pod 全部挂载对中
+#                   host/container 含关键词的 (第一个命中为准), 无直接命中则扫挂载宿主路径子目录
+#                   找含关键词的子目录; 仍未命中时, 扫描静态挂载的共享盘 (/mnt/shared-storage,
+#                   协议不限: NFS/CephFS/云盘等, 由部署方挂载, 见 node-collector.yaml),
+#                   用 pod IP + 任务标识 (MINDX_TASK_ID) 过滤出属于该 pod 的日志子目录;
+#                   不限定前缀/后缀 (如 /job/code/logs/<task>/plogs/<ip>), 仅要求目录名
+#                   含关键词 (plogs/plog/plog_xxx) 且路径或子目录含 task 与 pod IP 特征,
+#                   不会采到同一共享盘下其他任务的日志, 任务 pod 删除后仍可采集
 #
 # 更新方式: kubectl ascend_diag --collect-manifest <path>.yaml 写入集群 ConfigMap 即可, 无需重打镜像。
 manifest_version: 3
 
 entities:
   - name: process_log            # CANN plog, 容器挂载文件日志
-    env: ASCEND_PROCESS_LOG_PATH  # agent-core 记录进 pathmap; node-collector 读取反查宿主路径; 未记录/反查失败回退 mount_keywords
-    mount_keywords: [plog]        # 兜底: 按 plog 关键词匹配全部挂载对/宿主子目录
+    env: ASCEND_PROCESS_LOG_PATH  # pod spec 显式配置时 agent-core 记录并随采集指令下发; node-collector 读取反查宿主路径
+    mount_keywords: [plogs]        # 兜底: 匹配挂载对/宿主子目录/共享盘静态挂载, 用 MINDX_TASK_ID+pod IP 过滤
+                                  # 宿主机与共享盘操作一致: 命中第一个 plogs 目录后, 取该目录下的
+                                  # run/debug/security 三个子目录(递归)复制到 process_log
 
   - name: dl_log                 # MindCluster 组件日志 (宿主机路径, 直接读取, 保留目录结构)
     paths:

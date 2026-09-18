@@ -1,8 +1,7 @@
 # --- 任务 CR GVK 配置 ConfigMap ---
 # agent-core-task-crds: 任务 CR GVK 清单, agent-core 启动时经 K8s API 读取一次
 # (见下方 RBAC agent-core-task-crds), 据此过滤 pod ownerRef, 并打印当前支持检测的任务类型。
-# 现场增补/修改任务类型: 更新本 ConfigMap, 同时在下方 ClusterRole 为该 CR 增补 get 权限,
-# 然后重启 agent-core 生效。
+# 现场增补/修改任务类型: 更新本 ConfigMap, 然后重启 agent-core 生效 (无需修改 ClusterRole)。
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -61,12 +60,6 @@ rules:
   - apiGroups: [""]
     resources: ["nodes"]           # _collector_pod_ip 按 node 找 collector pod
     verbs: ["get", "list"]
-  - apiGroups: ["mindxdl.gitee.com"]
-    resources: ["ascendjobs"]      # task_state: 诊断后查任务 CR status 判定是否停止(决定是否缓存)
-    verbs: ["get"]
-  - apiGroups: ["mindcluster.huawei.com"]
-    resources: ["inferservicesets"]  # task_state: 推理任务 InferServiceSet 状态判定
-    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -81,7 +74,7 @@ subjects:
     name: agent-core
     namespace: mindx-dl
 ---
-# relcache 快照 CM (agent-core-relcache, cluster-system) 读写, 命名空间级最小权限
+# relcache 快照 CM 分片 (agent-core-relcache, agent-core-relcache-1..N, cluster-system) 读写。
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -90,7 +83,6 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["configmaps"]
-    resourceNames: ["agent-core-relcache"]
     verbs: ["get", "update", "patch"]
   # create 无法按 resourceNames 校验 (名称在请求体而非 URL path), 需独立 rule; 仅可创建, 不可读写其他 CM
   - apiGroups: [""]
@@ -111,7 +103,9 @@ subjects:
     name: agent-core
     namespace: mindx-dl
 ---
-# pathmap 全局 CM (clusterops-pathmap, cluster-system) 读写 (agent-core 不再读取采集契约 CM):
+# pathmap 快照 CM 分片 (clusterops-pathmap, clusterops-pathmap-1..N, cluster-system) 读写。
+# 分片数固定为 100, 分片名无法在 resourceNames 中穷举,
+# 故 get/update/patch 放宽到 cluster-system 命名空间全部 ConfigMap, 仅限该命名空间。
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -120,7 +114,6 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["configmaps"]
-    resourceNames: ["clusterops-pathmap"]
     verbs: ["get", "update", "patch"]
   # create 无法按 resourceNames 校验, 需独立 rule (同上)
   - apiGroups: [""]
@@ -188,6 +181,8 @@ spec:
       labels:
         app: agent-core
     spec:
+      nodeSelector:
+        masterselector: dls-master-node # 与 调度到管理节点
       serviceAccountName: agent-core
       containers:
       - name: agent-core
@@ -195,6 +190,13 @@ spec:
         ports:
         - containerPort: 9700 # HTTP (kubectl 插件 / CLI)
         - containerPort: 9710 # gRPC 上报 (node-collector → agent)
+        resources: # 常态内存几十MB; 上限防 relcache/pathmap 大集群场景失控
+          requests:
+            memory: 512Mi
+            cpu: 500m
+          limits:
+            memory: 2Gi
+            cpu: "2"
         env:
         - name: SERVICE # 合并镜像后按角色启动 (deploy/Dockerfile)
           value: agent-core
@@ -202,6 +204,8 @@ spec:
           value: "9700"
         - name: AGENT_GRPC_PORT # 接收 node-collector 上报的 gRPC 端口
           value: "9710"
+        - name: POD_TTL # 已删除(历史)任务 Pod 的保留时长(秒), 默认 7 天 = 604800
+          value: "604800"
         # LLM 可选: 配置经 k8s API 读取 llm-secret 实时生效 (见 agent_core/llm.py), 无需重启 pod;
         # 不再通过 env secretKeyRef 注入 (env 在启动时固定, 无法实时更新)
         - name: PYTHONDONTWRITEBYTECODE

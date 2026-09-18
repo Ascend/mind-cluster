@@ -396,15 +396,12 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 
 **应用场景<a name="section15761025111720"></a>**
 
-在任务运行过程中，DPU的健康状态直接影响任务的稳定性。MindCluster提供DPU Exporter组件用于监测DPU的运行状态与各项统计指标。当前提供的指标可分为两类：
-
-- **全局指标**：涵盖RoCE错包、丢包、接收ECN、发送/接收CNP及PSN异常重传等统计指标。
-- **interface级指标**：涵盖每个网卡端口的链路运行状态、收发流量与异常错误状态等指标。
+在任务运行过程中，DPU的健康状态直接影响任务的稳定性。MindCluster提供DPU Exporter组件用于监测DPU的运行状态与统计指标。
 
 **组件功能<a name="section388944161719"></a>**
 
-- 从网卡管理工具与文件系统接口分别获取DPU的全局指标与interface级指标。
-- 提供Prometheus指标接口，用于监控DPU的运行状态与各项统计指标。
+- 从网卡管理工具与文件接口获取DPU的运行状态与统计指标。
+- 提供Prometheus指标接口，用于监控DPU的运行状态与统计指标。
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
@@ -412,9 +409,9 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 
 ![](../../figures/scheduling/组件上下游依赖-9.png "组件上下游依赖-9")
 
-1. 从网卡管理工具hinicadm5获取DPU全局指标，放入缓存。
-2. 从sysfs文件系统获取interface级指标，放入缓存。
-3. 实现Prometheus的指标接口，供其周期性获取缓存中的数据信息。
+1. 从网卡管理工具和文件接口分别获取DPU全局指标和Interface级指标。
+2. 将获取到的指标转换为Prometheus指标格式。
+3. 提供Prometheus指标接口，用于监控DPU的运行状态与统计指标。
 
 ## Ascend Dynamic Resource Allocation<a name="ZH-CN_TOPIC_0000002524312670"></a>
 
@@ -449,11 +446,11 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 
 **组件功能<a name="section1112014512117"></a>**
 
-- 维护任务Pod的中心关系缓存（relcache）：全量监听Pod，记录任务（Job）与Pod、节点、Pod UID、Rank的映射关系，并实时同步到ConfigMap（agent-core-relcache）。
-- 维护Pod挂载关系表（pathmap）：监听任务Pod的hostPath挂载对，写入全局ConfigMap（clusterops-pathmap），供Node Collector本地缓存与查询。
+- 维护任务Pod的中心关系缓存（relcache）：全量监听Pod，记录任务（Job）与Pod、节点、Pod UID、Rank的映射关系，快照按Pod UID分片同步到ConfigMap（agent-core-relcache、agent-core-relcache-1…N），内存容量与分片快照容量一致，超出后按最老优先淘汰。
+- 维护Pod挂载关系表（pathmap）：监听任务Pod的hostPath挂载对、字面env值和pod IP，快照分片同步到ConfigMap（clusterops-pathmap、clusterops-pathmap-1…N），并在TriggerCollect采集指令中随Pod列表下发挂载对/env/pod IP，供Node Collector按请求解析宿主路径、在静态挂载的共享盘上按MINDX_TASK_ID与pod IP过滤采集plog（任务Pod删除后仍可采集）。
 - 接收诊断请求，按任务名和命名空间查询中心关系表，向各计算节点的Node Collector下发采集指令，并聚合各节点上报的采集结果。
 - 将各节点采集并清洗后的日志组装为诊断输入目录，调用ascend-fd diag命令执行集中诊断，生成诊断报告。
-- 支持诊断结果缓存：任务处于停止状态时缓存诊断结果，重复诊断直接返回缓存，可通过 --refresh强制刷新。
+- 支持诊断结果缓存：每次诊断之后缓存诊断结果，重复诊断直接返回缓存，可通过 --refresh强制刷新。
 - 可选对接LLM服务，对诊断报告进行智能总结，输出根因报告。
 
 **组件上下游依赖<a name="section4941922192110"></a>**
@@ -476,12 +473,11 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 
 **组件功能<a name="section1112014512117"></a>**
 
-- 监听全局ConfigMap（clusterops-pathmap），在本地缓存任务Pod的hostPath挂载对和env信息。
-- 接收Agent Core下发的采集指令，立即返回受理结果，并在后台异步执行采集。
+- 接收Agent Core下发的采集指令（含本节点任务Pod的挂载对、env和pod IP），立即返回受理结果，并在后台异步执行采集。
 - 按采集契约（collect_manifest.yaml）执行采集，支持env、paths、mount_keywords、commands等多种实体类型：
   - env：读取任务Pod的env值（容器内路径），经挂载对反查宿主机路径后采集。
   - paths：按容器路径前缀匹配任务Pod的挂载对，反查宿主机路径后采集。
-  - mount_keywords：按关键词匹配挂载对或扫描宿主机路径子目录，定位日志目录。
+  - mount_keywords：按关键词匹配挂载对或扫描宿主机路径子目录定位日志目录；无命中时在静态挂载的共享盘（/mnt/shared-storage，协议不限）下用pod IP与MINDX_TASK_ID过滤出本Pod的日志目录后采集（任务Pod删除后仍可采集）。
   - commands：仅允许执行白名单内的采集命令（如dmesg、dmidecode、msnpureport）。
 - 本地调用ascend-fd parse对采集的日志进行清洗，并将清洗结果打包为tar.gz，并通过gRPC接口主动上报给Agent Core。
 
@@ -491,10 +487,9 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 
 ![](../../figures/scheduling/组件上下游依赖-12.png "组件上下游依赖-12")
 
-1. 从ConfigMap中获取训练/推理任务的挂载对和env信息。
-2. 从Agent Core接收采集和清洗指令。
-3. 按照采集契约，在宿主机中执行相关的数据采集。
-4. 将清洗后的数据打包发送给Agent Core。
+1. 从Agent Core接收采集和清洗指令。
+2. 按照采集契约，在宿主机中执行相关的数据采集。
+3. 将清洗后的数据打包发送给Agent Core。
 
 ## Kubectl Plugin<a name="ZH-CN_TOPIC_0000002524312672"></a>
 

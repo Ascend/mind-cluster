@@ -18,7 +18,6 @@
 """Diagnosis agent entry point.
 
 Usage:
-  CLI : python -m agent_core.main --job <jobname> [-n namespace]
   HTTP: uvicorn agent_core.main:app --host 0.0.0.0 --port 9700
         curl -X POST localhost:9700/diag -d '{"job":"job-x","namespace":"default"}'
 """
@@ -34,11 +33,14 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from agent_core import llm, pathmap, relcache, tools
-from agent_core.agent import LLMSummaryError, format_diag_report, summarize_report
+from agent_core.agent import LLMSummaryError, summarize_report
 from agent_core.upload import start_upload_server
 from clusterops_common.log import init_logging
 
 logger = logging.getLogger(__name__)
+
+# Hint appended after the report output: the kubectl plugin prints full JSON with --json
+_JSON_HINT = "\n\nTip: to output the full diagnosis JSON, add --json after the command"
 
 _upload_server = None
 
@@ -78,15 +80,22 @@ def diag(req: DiagReq) -> dict:
         r = tools.diagnose_cached(job=req.job, namespace=req.namespace or "default", refresh=bool(req.refresh))
     except Exception as e:  # noqa: BLE001  # fallback: turn any unexpected exception into a readable error, avoid bare 500
         logger.exception("/diag handling failed: job=%s ns=%s", req.job, req.namespace)
-        return {"error": f"诊断错误，诊断过程发生异常，请查看 agent-core 日志 ({e})", "pods": [], "diag_report": {}}
+        return {
+            "error": f"Diagnosis error: an exception occurred during diagnosis, please check the agent-core logs ({e})",
+            "pods": [],
+            "diag_report": {},
+        }
     if r.get("error"):
         # Diagnosis failed (task missing / collect failed / diag failed / timeout): use the reason as the final text
         r["final_text"] = r["error"]
         return r
     if r.get("final_text"):
-        # Cache hit with a cached LLM summary -> reuse it directly
+        # Cache hit with a cached LLM summary -> reuse it; append the --json hint exactly once
+        # (legacy cache files written by the old CLI may already carry the hint).
+        if not r["final_text"].endswith(_JSON_HINT):
+            r["final_text"] += _JSON_HINT
         return r
-    report_text = format_diag_report(r.get("diag_report") or {})
+    report_text = r.get("diag_report_text") or ""
     llm_error = None
     try:
         text = summarize_report(r.get("diag_report") or {})
@@ -96,55 +105,13 @@ def diag(req: DiagReq) -> dict:
         final_text = f"{e}\n\n{report_text}"
     except Exception as e:  # noqa: BLE001  # unexpected summarizer bug -> keep the deterministic report, never 500
         logger.exception("LLM report summarization crashed: %s", e)
-        llm_error = "诊断错误，报告总结过程发生异常，请查看 agent-core 日志"
+        llm_error = (
+            "Diagnosis error: an exception occurred during report summarization, please check the agent-core logs"
+        )
         final_text = report_text
-    r["final_text"] = final_text
+    r["final_text"] = final_text + _JSON_HINT
     if llm_error:
         r["llm_error"] = llm_error
     # Write back the LLM summary into the cache for later cache hits
     tools.cache_diag_final_text(req.job, req.namespace or "default", final_text)
     return r
-
-
-def main() -> None:
-    import argparse
-
-    ap = argparse.ArgumentParser(prog="agent_core.main", description="Ascend 故障诊断 (按 jobname 查中心关系表)")
-    ap.add_argument("--job", required=True, help="任务名 (jobname, 任务 CR 名)")
-    ap.add_argument("-n", "--namespace", default="default", help="命名空间")
-    ap.add_argument("--refresh", action="store_true", help="忽略缓存强制重跑并刷新")
-    args = ap.parse_args()
-    # CLI mode: logs to disk + start the relation cache locally (kubeconfig when debugging outside the cluster)
-    init_logging(log_dir="/var/log/mindx-dl/agent-core", log_file="agent-core.log")
-    relcache.init_cache()
-    try:
-        logger.info("CLI diagnosis started: job=%s ns=%s refresh=%s", args.job, args.namespace, args.refresh)
-        r = tools.diagnose_cached(job=args.job, namespace=args.namespace, refresh=args.refresh)
-        if r.get("error"):
-            # Diagnosis failed (task missing / collect failed / diag failed / timeout): log it
-            logger.error("CLI diagnosis failed: %s", r["error"])
-        else:
-            if r.get("final_text"):
-                text = r["final_text"]  # cache hit with a cached LLM summary -> reuse it
-            else:
-                report_text = format_diag_report(r.get("diag_report") or {})
-                try:
-                    text = summarize_report(r.get("diag_report") or {})
-                except (
-                    LLMSummaryError
-                ) as e:  # mis-configured/unreachable LLM -> show the reason, keep the deterministic report
-                    text = f"{e}\n\n{report_text}"
-                except Exception as e:  # noqa: BLE001  # unexpected summarizer bug -> keep the deterministic report
-                    logger.exception("LLM report summarization crashed: %s", e)
-                    text = report_text
-                tools.cache_diag_final_text(
-                    args.job, args.namespace, text
-                )  # write back the LLM summary for later cache hits
-            logger.info("CLI diagnosis result: %s", text or json.dumps(r, ensure_ascii=False, default=str)[:4000])
-        logger.info("CLI diagnosis finished: job=%s error=%s", args.job, r.get("error"))
-    finally:
-        relcache.shutdown_cache()
-
-
-if __name__ == "__main__":
-    main()
