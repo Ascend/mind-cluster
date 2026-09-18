@@ -4,8 +4,8 @@
 
 ## 模块介绍
 
-- **agent-core**（Deployment，`:9700` HTTP / `:9710` gRPC）：诊断主控。经 relcache 查任务 → pod → `{node, poduid, rank}`，并发向各节点下发采集（TriggerCollect），聚合各节点上传的清洗产物，调用 `ascend-fd diag` 生成诊断报告，并按需落缓存。
-- **node-collector**（DaemonSet，每 NPU 节点一份，`:9720` gRPC）：节点采集端。按 `collect_manifest.yaml` 的 entity（`env` 反查 / `paths` / `mount_keywords`）经 pathmap CM 匹配宿主路径，现场执行采集命令，本地 `ascend-fd parse` 清洗后回传产物。
+- **agent-core**（Deployment，`:9700` HTTP / `:9710` gRPC）：诊断主控。经 relcache 查任务 → pod → `{node, poduid, rank}`，并发向各节点下发采集（TriggerCollect），聚合各节点上传的清洗产物，调用 `ascend-fd diag` 生成诊断报告，并按需落缓存。relcache/pathmap 快照按 Pod UID 分片写入 ConfigMap（默认 100 分片 = 100MiB，含历史 7 天 TTL 数据），本地内存上限与快照容量一致，超出按最老淘汰。pathmap 记录任务 pod 的 hostPath 挂载对、字面 env 与 pod IP，随采集指令下发供 node-collector 定位共享盘上的 plog。
+- **node-collector**（DaemonSet，每 NPU 节点一份，`:9720` gRPC）：节点采集端。按 `collect_manifest.yaml` 的 entity（`env` 反查 / `paths` / `mount_keywords`）匹配 agent-core 随 TriggerCollect 请求下发的挂载对/env/pod IP，现场执行采集命令，本地 `ascend-fd parse` 清洗后回传产物。任务 plog 等共享日志通过**静态挂载**的共享盘读取（`/mnt/shared-storage`，协议不限：NFS/CephFS/云盘等，由部署方挂载，直接读挂载点无需 mount 命令），按 `MINDX_TASK_ID` 与 pod IP 过滤。不 watch 全局挂载 CM，内存与广播开销与集群规模无关。
 - **kubectl 插件**（`kubectl-ascend_diag` / `kubectl-clusterops`）：面向用户的入口。`ascend_diag` 经 port-forward 调用 agent-core；`clusterops` 管理 LLM 配置。纯标准库实现，无需 pip 安装。
 
 ## 三方依赖
@@ -18,7 +18,7 @@
 | | `pyyaml` | 读任务 CR 配置 CM（task_crds） |
 | | `langgraph` + `langchain-openai` | 可选 LLM agent 包装层 + 报告总结（OpenAI 兼容端点） |
 | node-collector (whl) | `grpcio` + `protobuf` | TriggerCollect / UploadResult（协议桩） |
-| | `kubernetes` | 读 pathmap / 采集契约 CM |
+| | `kubernetes` | 读采集契约 CM |
 | | `pyyaml` | 解析采集契约 |
 | 镜像内 | `ascend-fd` (ascend-faultdiag) | 节点端 `parse` + 集中端 `diag`（非 pip 依赖，镜像安装） |
 | | `dmidecode` | SMBIOS 采集（机型/SN） |
@@ -109,9 +109,10 @@ kubectl apply -f build/node-collector.yaml
 部署前按集群实际调整清单：
 
 - **镜像 tag**：`spec.template.spec.containers[].image`（agent-core 与 node-collector 各一处）。
-- **节点选择**：`nodeSelector.workerselector: dls-worker-node` 按实际 NPU 节点 label 调整。
-- **任务 CR GVK**：agent-core 启动时经 K8s API 读取一次 ConfigMap `agent-core-task-crds`（cluster-system）的 `task_crds.yaml`（需对应 RBAC），默认含 AscendJob + InferServiceSet；其他任务类型（如 Volcano Job）需自行在该 ConfigMap 增补任务 GVK，并在 ClusterRole 中为该 CR 增补 `get` 权限（否则状态判定为 unknown，结果不缓存），然后重启 agent-core 生效。启动日志会打印当前支持检测的任务类型。
-- **hostPath**：collector 需宿主 `/var/log`、`/var/log/ascend`、`/usr/local/Ascend`（全量，driver/toolkit 及 msnpureport 运行依赖）、`/usr/local/dcmi`、`/usr/bin/msnpureport`（单文件，device_log 采集命令）、`/bin/dmesg`（单文件，host_log 采集命令，挂在 `/usr/bin/dmesg`）；上一步已预创建的日志/产物目录不在此列。
+- **节点选择**：agent-core 的 `nodeSelector.masterselector: dls-master-node` 按实际管理节点 label 调整；node-collector 的 `nodeSelector.workerselector: dls-worker-node` 按实际 NPU 节点 label 调整。
+- **任务 CR GVK**：agent-core 启动时经 K8s API 读取一次 ConfigMap `agent-core-task-crds`（cluster-system）的 `task_crds.yaml`，默认含 AscendJob + InferServiceSet；其他任务类型（如 Volcano Job）需自行在该 ConfigMap 增补任务 GVK，然后重启 agent-core 生效（无需修改 ClusterRole）。启动日志会打印当前支持检测的任务类型。
+- **hostPath**：collector 需宿主 `/var/log`、`/usr/local/Ascend`（全量，driver/toolkit 及 msnpureport 运行依赖）、`/usr/local/dcmi`、`/usr/bin/msnpureport`（单文件，device_log 采集命令）、`/bin/dmesg`（单文件，host_log 采集命令，挂在 `/usr/bin/dmesg`）；上一步已预创建的日志/产物目录不在此列。
+- **共享盘挂载（必须）**：若任务 plog 等共享日志落在共享盘上（NFS/CephFS/云盘等，协议不限），**必须**把该共享盘静态挂载到 node-collector 的 `/mnt/shared-storage`（见 node-collector.yaml 中 `shared-storage` 的注释示例，按集群实际协议填 nfs 或 csi 参数并取消注释启用）。否则共享盘上的 plog 无法采集。共享盘由 kubelet/CSI 挂载，node-collector 直接读取挂载点，无需 mount 命令，且不依赖任务 pod 的 kubelet 卷挂载点（任务 pod 删除后仍可采集）。
 
 **5. 配置 LLM（可选，不配则报告回退原始 JSON）**
 
@@ -164,19 +165,13 @@ kubectl ascend_diag --collect-manifest ./collect_manifest.yaml
 
 node-collector 会 watch 该 CM（`get/list/watch` 权限，见 node-collector.yaml），一旦更新立即生效并把最新契约（`manifest_version` 与 `entities` 列表）打印到日志，便于确认覆盖内容；CM 删除后回退到镜像内置文件。
 
-agent-core 不再读取采集契约（pathmap 只存任务 pod 的挂载对与字面 env 值），因此更新契约只影响 node-collector 侧的采集匹配，不影响 pathmap 与已缓存的诊断结果。`env` 实体仍由 node-collector 解析：env 值由 agent-core 在 pod 存活时记录进 pathmap CM（TTL 内保留，pod 删除后仍可用），collector 从 pathmap 读取 env 值（容器内路径）→ 经挂载对反查宿主路径 → 采集；env 未记录或反查失败时回退 `mount_keywords`。
+agent-core 不再读取采集契约（挂载关系表只存任务 pod 的挂载对与字面 env 值），因此更新契约只影响 node-collector 侧的采集匹配，不影响挂载关系表与已缓存的诊断结果。`env` 实体仍由 node-collector 解析：env 值由 agent-core 在 pod 存活时记入中心挂载关系表（TTL 内保留，pod 删除后仍可用），并在 TriggerCollect 采集指令中随 Pod 列表下发，collector 按请求读取 env 值（容器内路径）→ 经挂载对反查宿主路径 → 采集；env 未记录或反查失败时回退 `mount_keywords`。
 
 **HTTP API（agent-core :9700）**
 
 ```bash
 curl -X POST localhost:9700/diag -H 'Content-Type: application/json' \
      -d '{"job":"job-x","namespace":"default","refresh":false}'
-```
-
-**CLI（本机直接诊断）**
-
-```bash
-python -m agent_core.main --job job-x -n default [--refresh]
 ```
 
 **kubectl 插件工作原理与访问模型**
@@ -194,9 +189,52 @@ python -m agent_core.main --job job-x -n default [--refresh]
 
 - **重复诊断防护**：同一 job 正在诊断中再次执行会提示"正在诊断中, 请勿重复执行"。
 - **产物目录**：agent-core 的采集/诊断产物按天与任务组织在 `{AGENT_WORK_ROOT}/{YYYYMMDD}/{ns}_{job}/`（默认 `/user/clusterops/agent-core/`）：tar 留存 `parse-result-{job}-{node}.tar.gz`、解压目录 `diag-input/worker-{node}/`（assemble 重命名为 `worker0..N`）、诊断输出 `diag-output/fault_diag_result/diag_report.json`；node-collector 的本地采集产物同样按 `{COLLECTOR_WORK_ROOT}/{YYYYMMDD}/{ns}_{job}/collect|parse-output` 组织，不同任务/命名空间互不覆盖。
-- **结果缓存**：仅任务处于停止状态时缓存到 `{AGENT_WORK_ROOT}/cache/<ns>_<job>.json`（默认 `/user/clusterops/agent-core/cache`，与 `{YYYYMMDD}` 产物目录同级、跨天可命中，可用 `AGENT_CACHE_DIR` 覆盖为固定目录）。停止状态判定（大小写不敏感）：任务 CR 终态 `JobSucceeded`/`JobFailed`/`Succeeded`/`Failed`/`Stopped`/`Complete(d)`/`Terminated`/`Aborted`，或 CR 不存在（404，任务已删除）；CR 状态查询失败（RBAC/网络等）判定 unknown，此时不缓存（但不阻塞诊断）；CR 状态读不到或滞后时，若任务 pod 全部到达终态（`Succeeded`/`Failed`）同样可缓存。running 状态不缓存。命中缓存会提示"(结果来自缓存)"。
-- **任务不存在**：job 不存在时立即返回"训练/推理任务不存在"并终止，不再执行诊断。
+- **结果缓存**：每次诊断成功后缓存结果到`{AGENT_WORK_ROOT}/cache/<ns>_<job>.json`（默认`/user/clusterops/agent-core/cache`，与`{YYYYMMDD}`产物目录同级、跨天可命中，可用`AGENT_CACHE_DIR`覆盖为固定目录），任务运行中或停止状态均缓存。再次诊断同一任务且未加`--refresh`时，若命中缓存，直接返回缓存结果并提示"Result from cache; run --refresh for the latest diagnosis"；`--refresh`忽略缓存强制重跑并刷新缓存。
+- **任务不存在**：任务 CR 已删除且 relcache 中也无该任务 pod 记录（超出删除 TTL）时，立即返回"Training/inference task not found"并终止，不再执行诊断；任务 CR 已删除但 relcache 中仍有该任务 pod 记录（删除 TTL 内，日志仍保留在节点/共享盘上），仍继续诊断。
 - **日志落盘**：agent-core → `/var/log/mindx-dl/agent-core/agent-core.log`；node-collector → `/var/log/mindx-dl/node-collector/node-collector.log`（hostPath 挂载，宿主持久；10MB × 10 轮转）。
+
+## 动态 plog 目录（共享盘静态挂载样例）
+
+任务 plog 常落在共享盘上（NFS/CephFS/云盘等，协议不限），且目录路径含 **动态 id**（任务标识与 pod IP 两级动态段，顺序不固定）。node-collector 以**静态挂载**方式读取共享盘：部署时把共享盘挂载到 `/mnt/shared-storage`（kubelet/CSI 挂载，见 node-collector.yaml 中 `shared-storage` 注释示例），采集时直接扫描挂载点、按 `mount_keywords`（如 `plog`）匹配关键字目录，再用任务的动态 id 两级过滤，仅保留属于本任务的 plog 目录后采集。不依赖任务 pod 的 kubelet 卷挂载点，任务 pod 删除后仍可采集。
+
+### 支持的动态 id
+
+采集时用于过滤共享盘上日志目录的动态 id 如下（全部由 agent-core 记录在 pathmap 并随采集指令下发，任务 pod 删除后仍可用）：
+
+| 动态 id | 来源 | 用途 |
+|---|---|---|
+| `MINDX_TASK_ID`（任务标识 env） | 任务 pod 环境变量 | 过滤同盘上其他任务的日志目录 |
+| pod IP（plog 键控 IP） | 任务 pod 状态（`status.host_ip` 优先，兜底 `status.pod_ip`） | 过滤同任务其他 pod 的日志子目录 |
+
+支持的 plog 目录布局：**不限定前缀/后缀**，共享盘上任意挂载路径（如 `/job/code/logs/...`）均可，仅要求目录名含 `mount_keywords` 关键词（如 `plogs`/`plog`/`plog_xxx`），且路径或关键词目录的子目录含两级动态 id（`task_id` 与 pod IP）：
+
+```yaml
+# 布局一: <任意前缀>/<task_id>/plogs/<pod_ip>
+#   共享盘上目录: .../job/code/logs/task-42/plogs/10.0.0.5/
+#   collector 过滤: 目录名含 "plog"(mount_keywords) 且路径含 task_id=task-42
+#                   → 下一级子目录名 == pod_ip=10.0.0.5 → 取该目录的 run/debug/security 子目录采集
+# 布局二: <任意前缀>/<pod_ip>/plogs/<task_id>
+#   共享盘上目录: .../job/code/logs/10.0.0.5/plogs/task-42/
+#   collector 过滤: 目录名含 "plog" 且路径含 pod_ip=10.0.0.5
+#                   → 路径已含 pod_ip → 取该目录的 run/debug/security 子目录采集
+# 布局三: <任意前缀>/plogs/<pod_ip>  (无 task_id, 仅 pod IP)
+#   共享盘上目录: .../job/code/logs/plogs/10.0.0.5/
+#   collector 过滤: 目录名含 "plog" → 下一级子目录名 == pod_ip → 取该目录的 run/debug/security 子目录采集
+# 布局四: 上述任一布局中, <pod_ip> 下再包一层任务名目录 (如 .../plogs/<pod_ip>/<jobname>/{run,debug,security})
+#   collector 自动剥掉这层单子目录, run/debug/security 仍直接落在 process_log 下
+# 目录名变体: plogs 换成 plog/plog_xxx 等含关键词的目录同样命中
+```
+
+```yaml
+# collect_manifest.yaml 中对应实体 (env 未记录或反查失败时走 mount_keywords 兜底)
+- name: process_log
+  env: ASCEND_PROCESS_LOG_PATH      # 容器内 plog 根路径 (存在则优先生效)
+  mount_keywords: ["plog"]          # 无 env 值时按关键字 + MINDX_TASK_ID/pod_ip 过滤共享盘采集
+```
+
+采集契约的 `mount_keywords` 匹配顺序：先在任务 pod 的 hostPath 挂载对中按关键字命中（首个命中生效）；无命中则扫描挂载宿主路径子目录；仍无命中则扫描静态挂载的共享盘（`/mnt/shared-storage`，未挂载则跳过）。共享盘上的 plog 定位只依赖 `mount_keywords` 关键词 + `MINDX_TASK_ID`/pod IP 两级动态 id 过滤，不需要任务 pod 的卷挂载信息。
+
+**plog 采集去重**：process_log 命中第一个 plog 目录后，只复制其**直接子目录**（CANN 标准结构 `run/`、`debug/`、`security/`，递归复制），顶层 `plog-*.log` 文件不复制（它们是 `run/plog` 与 `debug/plog` 的重复副本）。若命中目录下只有一个子目录（如任务名包装层），自动再往下钻一层，使 `run/debug/security` 直接落在 `process_log/` 下。共享盘扫描只取最外层第一个命中并剪枝，嵌套的 `run/plog`、`debug/plog` 不会作为独立命中重复采集。
 
 ## 本地调试 / 验证
 
@@ -204,9 +242,10 @@ python -m agent_core.main --job job-x -n default [--refresh]
 pip install -r requirements.txt
 # 主流程不依赖 LLM
 export KUBECONFIG=~/.kube/config
-python -m agent_core.main --job job-x -n default
-# 或
 uvicorn agent_core.main:app --port 9700
+# 另开终端触发诊断
+curl -X POST localhost:9700/diag -H 'Content-Type: application/json' \
+     -d '{"job":"job-x","namespace":"default"}'
 ```
 
 单元测试（无需真集群）：

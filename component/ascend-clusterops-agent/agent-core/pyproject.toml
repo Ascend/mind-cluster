@@ -1,8 +1,7 @@
 # agent-core: diagnosis agent (Deployment).
 # Build wheel: python -m pip wheel --no-deps --wheel-dir dist .
-# Entry points after install:
+# Entry point after install:
 #   HTTP : uvicorn agent_core.main:app --host 0.0.0.0 --port <port>
-#   CLI  : ascend-agent-core --job <jobname> [-n namespace]
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
@@ -22,9 +21,6 @@ dependencies = [
   "langgraph>=0.2.0",
   "langchain-openai>=0.2.0",
 ]
-
-[project.scripts]
-ascend-agent-core = "agent_core.main:main"
 
 [tool.setuptools]
 packages = ["agent_core", "clusterops_common", "diagproto"]

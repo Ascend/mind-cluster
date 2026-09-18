@@ -1,5 +1,5 @@
 # --- RBAC: node-collector (namespace: mindx-dl) ---
-# collector: 不直接 watch pod, 挂载路径由 agent-core 写全局 CM, collector watch CM 缓存
+# collector: 挂载对/env 由 agent-core 随 TriggerCollect 请求下发
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -28,33 +28,6 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: node-collector-manifest
-subjects:
-  - kind: ServiceAccount
-    name: node-collector
-    namespace: mindx-dl
----
-# collector watch 全局 pathmap CM (clusterops-pathmap, cluster-system) 供数,
-# 命名空间级最小权限 (list+watch 该单 CM, 不读其他 CM)
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: node-collector-pathmap
-  namespace: cluster-system
-rules:
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    resourceNames: ["clusterops-pathmap"]
-    verbs: ["get", "list", "watch"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: node-collector-pathmap
-  namespace: cluster-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: node-collector-pathmap
 subjects:
   - kind: ServiceAccount
     name: node-collector
@@ -99,6 +72,13 @@ spec:
             type: RuntimeDefault
         ports:
         - containerPort: 9720 # gRPC 采集服务 (agent 下发 TriggerCollect)
+        resources: # 常态内存几十MB; 采集/parse 子进程峰值高, 上限按并发采集上限(默认10)留余量
+          requests:
+            memory: 512Mi
+            cpu: 500m
+          limits:
+            memory: 4Gi
+            cpu: "4"
         env:
         - name: SERVICE # 合并镜像后按角色启动 (deploy/Dockerfile)
           value: node-collector
@@ -119,9 +99,6 @@ spec:
         - name: HOME # joblib 等缓存落到 /tmp
           value: /tmp
         volumeMounts:
-        - name: hostlog
-          mountPath: /var/log/ascend
-          readOnly: true
         - name: hostsyslog
           mountPath: /var/log
           readOnly: true
@@ -140,15 +117,17 @@ spec:
         - name: ascend-dcmi
           mountPath: /usr/local/dcmi
           readOnly: true
+        # 共享盘 (任务 plog 等共享日志的存储, 协议不限: NFS/CephFS/云盘等, 由用户按集群实际配置):
+        # 必须挂载到 /mnt/shared-storage, 否则共享盘上的 plog 无法采集。volume 声明见下方
+        # "shared-storage" 示例, 需用户自行按协议填好 nfs/csi 参数后取消注释启用 (volumeMount 与 volumes 需同步取消)。
+        # - name: shared-storage
+        #   mountPath: /mnt/shared-storage
+        #   readOnly: true
         - name: tmp # 可写 scratch (parse 输出/缓存)
           mountPath: /tmp
         - name: work-root # collect/parse artifacts under /user/clusterops/node-collector (宿主导出, 需预先创建, 见 README 部署)
           mountPath: /user/clusterops/node-collector
       volumes:
-      - name: hostlog
-        hostPath:
-          path: /var/log/ascend
-          type: Directory
       - name: hostsyslog
         hostPath:
           path: /var/log
@@ -179,6 +158,18 @@ spec:
         hostPath:
           path: /user/clusterops/node-collector
           type: Directory
+      # 共享盘 volume 示例 (与上方 volumeMount 同步取消注释启用; 协议不限, 按集群实际填写):
+      # NFS 示例:
+      # - name: shared-storage
+      #   nfs:
+      #     server: <NFS_SERVER>
+      #     path: /export/shared
+      # CSI 示例 (CephFS/云盘等):
+      # - name: shared-storage
+      #   csi:
+      #     driver: <CSI_DRIVER>
+      #     volumeHandle: <VOLUME_HANDLE>
+      #     readOnly: true
 ---
 # agent 代码里直接 list pod 拿 podIP，不强制依赖此 service）
 apiVersion: v1

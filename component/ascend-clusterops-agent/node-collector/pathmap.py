@@ -15,19 +15,18 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Collector-local pod -> host_paths table (RFC §3.3.5; data sourced from the global CM).
+"""Collector-local pod -> host_paths table (RFC §3.3.5; data shipped per collect request).
 
-agent-core's pathmap-writer scans all pods, parses host:container mount pairs, de-duplicates
-by fingerprint, and writes the single global CM `clusterops-pathmap` (cluster-system). The
-collector watches this CM and caches it in memory. After a pod dies, the agent side keeps
-deleted_at within POD_TTL (default 7d), and the collector mirrors it in memory.
+agent-core resolves task-pod host:container mount pairs and env values in its pathmap and
+ships them inside the TriggerCollect request (CollectRequest.mounts). The collector caches
+that per-request data locally by pod_uid; no global ConfigMap is watched, so cluster size
+does not drive per-node memory or API-server broadcast.
 """
 
 # pylint: disable=duplicate-code  # watch lifecycle mirrors relcache
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import threading
@@ -42,9 +41,6 @@ MANIFEST_PATH = os.environ.get("COLLECT_MANIFEST", "/home/hwMindX/collect_manife
 MANIFEST_CM_NAME = os.environ.get("MANIFEST_CM", "collect-manifest")
 MANIFEST_CM_NS = os.environ.get("MANIFEST_CM_NAMESPACE", "cluster-system")
 MANIFEST_CM_KEY = "collect_manifest.yaml"
-PATHMAP_CM_NAME = os.environ.get("PATHMAP_CM_NAME", "clusterops-pathmap")
-PATHMAP_CM_NS = os.environ.get("PATHMAP_CM_NS", "cluster-system")
-PATHMAP_CM_KEY = "pathmap.json"
 
 
 def _k8s_core():
@@ -209,41 +205,29 @@ def shutdown_manifest_watch() -> None:
 
 
 class PathMap:
-    """pod_uid -> all host:container mount pairs (data sourced from the global CM, cached locally only).
+    """Per-request pod -> {pairs, env, pod_ip} table (data shipped inside the TriggerCollect request).
 
-    _update_cache/_load can be called directly by tests; the collector matches manifest
-    entities against all_pairs (paths prefix / mount_keywords substring).
+    update_mounts merges the CollectRequest mounts (keyed by pod_uid); the collector matches
+    manifest entities against all_pairs (paths prefix / mount_keywords substring), pod_env
+    (env entity container->host reverse lookup) and pod_ip (shared-storage plog subpath
+    matching). Keyed by pod_uid, so concurrent collects of different jobs never overwrite
+    each other.
     """
 
     def __init__(self):
-        self._profiles: dict[str, dict] = {}  # profile_id -> {"pairs": [host:container, ...]}
-        self._pods: dict[str, dict] = {}  # pod_uid -> {profile, deleted_at}
+        # pod_uid -> {"pairs": [...], "env": {...}, "pod_ip": ""}
+        self._pods: dict[str, dict] = {}
         self._lock = threading.RLock()
-        self._stop = threading.Event()
-        self._threads: list[threading.Thread] = []
-        self._v1 = None  # injectable by tests
 
-    # ---- CM data application (pure logic, callable directly by tests) ---- #
-    def _update_cache(self, data: dict) -> None:
+    def update_mounts(self, mounts) -> None:
+        """Merge the pod mounts shipped in a CollectRequest into the local table."""
         with self._lock:
-            self._profiles = dict(data.get("profiles") or {})
-            self._pods = dict(data.get("pods") or {})
-
-    def _load(self) -> None:
-        try:
-            v1 = self._v1 or _k8s_core()
-            cm = v1.read_namespaced_config_map(PATHMAP_CM_NAME, PATHMAP_CM_NS)
-        except Exception as e:  # noqa: BLE001
-            logger.warning("failed to read pathmap CM (start with an empty table): %s", e)
-            return  # CM not ready -> start with an empty table, backfill from later watch events
-        raw = (cm.data or {}).get(PATHMAP_CM_KEY)
-        if not raw:
-            return
-        try:
-            data = json.loads(raw)
-        except json.JSONDecodeError:
-            return
-        self._update_cache(data)
+            for m in mounts:
+                self._pods[m.pod_uid] = {
+                    "pairs": list(m.pairs or []),
+                    "env": dict(m.env or {}),
+                    "pod_ip": getattr(m, "pod_ip", "") or "",
+                }
 
     # ---- Queries ---- #
     def all_pairs(self, pod_uid: str) -> list[str]:
@@ -256,80 +240,26 @@ class PathMap:
             pod = self._pods.get(pod_uid)
             if not pod:
                 return []
-            profile = self._profiles.get(pod.get("profile", ""), {})
-            return list(profile.get("pairs", []) or [])
+            return list(pod.get("pairs", []) or [])
 
     def pod_env(self, pod_uid: str, env_name: str) -> str | None:
-        """Return the pod's recorded env value from the pathmap CM (retained for deleted pods within TTL)."""
+        """Return the pod's env value shipped in the collect request (retained for deleted pods within TTL)."""
         with self._lock:
             pod = self._pods.get(pod_uid)
             if not pod:
                 return None
             return (pod.get("env") or {}).get(env_name)
 
-    # ---- CM watch ---- #
-    def _cm_watch_loop(self) -> None:
-        while not self._stop.is_set():
-            try:
-                v1 = self._v1 or _k8s_core()
-                w = watch.Watch()
-                for ev in w.stream(
-                    v1.list_namespaced_config_map,
-                    PATHMAP_CM_NS,
-                    field_selector=f"metadata.name={PATHMAP_CM_NAME}",
-                    timeout_seconds=300,
-                    _request_timeout=320,
-                ):
-                    if self._stop.is_set():
-                        break
-                    typ = ev["type"]
-                    if typ == "DELETED":
-                        logger.warning("pathmap CM deleted, cache cleared")
-                        self._update_cache({})
-                        continue
-                    raw = (ev["object"].data or {}).get(PATHMAP_CM_KEY)
-                    if not raw:
-                        logger.warning("pathmap CM event without data, skipping: type=%s", typ)
-                        continue
-                    try:
-                        data = json.loads(raw)
-                    except json.JSONDecodeError:
-                        logger.warning("pathmap CM event with unparseable data, skipping: type=%s", typ)
-                        continue
-                    with self._lock:
-                        changed = (data.get("profiles") or {}) != self._profiles or (
-                            data.get("pods") or {}
-                        ) != self._pods
-                    # Log only real updates (MODIFIED with content change); unchanged ADDED replays are silent.
-                    if typ == "MODIFIED" and changed:
-                        logger.info(
-                            "pathmap CM updated: type=MODIFIED profiles=%d pods=%d changed=True",
-                            len(data.get("profiles") or {}),
-                            len(data.get("pods") or {}),
-                        )
-                    self._update_cache(data)
-            except Exception:  # noqa: BLE001
-                if self._stop.wait(5):
-                    return
-                logger.warning("pathmap CM watch disconnected, reconnecting in 5s")
-
-    def start(self) -> None:
-        self._load()
-        t = threading.Thread(target=self._cm_watch_loop, name="pathmap-cm-watch", daemon=True)
-        t.start()
-        self._threads.append(t)
-        logger.info("pathmap started: CM watch %s/%s", PATHMAP_CM_NS, PATHMAP_CM_NAME)
-
-    def stop(self) -> None:
-        self._stop.set()
-        for t in self._threads:
-            t.join(timeout=5)
-        self._threads.clear()
-        self._stop = threading.Event()
-        logger.info("pathmap stopped")
+    def pod_ip(self, pod_uid: str) -> str:
+        """Return the pod's IP shipped in the collect request ('' for unknown pods)."""
+        with self._lock:
+            pod = self._pods.get(pod_uid)
+            if not pod:
+                return ""
+            return pod.get("pod_ip", "")
 
 
-# Singleton (started by collector serve)
+# Singleton (lazily created; data injected per TriggerCollect request)
 _pm: PathMap | None = None
 
 
@@ -341,14 +271,12 @@ def get_pathmap() -> PathMap:
 
 
 def init_pathmap() -> PathMap:
-    c = get_pathmap()
-    c.start()
-    return c
+    return get_pathmap()
 
 
 def shutdown_pathmap() -> None:
-    if _pm is not None:
-        _pm.stop()
+    global _pm
+    _pm = None
 
 
 def all_pairs(pod_uid: str) -> list[str]:
