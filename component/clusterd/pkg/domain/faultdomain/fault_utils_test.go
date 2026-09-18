@@ -11,7 +11,8 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -815,6 +816,37 @@ func TestIsL1Fault(t *testing.T) {
 			convey.So(IsL1Fault(constant.RestartRequest), convey.ShouldBeFalse)
 		})
 	})
+}
+
+func TestIsUnRecoverInPlaceFaultLevels(t *testing.T) {
+	testCases := []struct {
+		name                 string
+		faultLevels          []string
+		jobSubHealthStrategy string
+		want                 bool
+	}{
+		{
+			name: "recoverable fault levels and subhealth fault with ignore strategy should return false",
+			faultLevels: []string{
+				constant.NotHandleFault, constant.RestartRequest, constant.RestartBusiness, constant.PreSeparateNPU, constant.SubHealthFault,
+			},
+			jobSubHealthStrategy: constant.SubHealthyIngore,
+			want:                 false,
+		},
+		{
+			name:                 "unrecoverable fault other than subhealth should return true",
+			faultLevels:          []string{constant.SeparateNPU},
+			jobSubHealthStrategy: constant.SubHealthFaultStrategy,
+			want:                 true,
+		},
+	}
+
+	for _, tc := range testCases {
+		convey.Convey(tc.name, t, func() {
+			got := IsUnRecoverInPlaceFaultLevels(sets.NewString(tc.faultLevels...), tc.jobSubHealthStrategy)
+			convey.So(got, convey.ShouldEqual, tc.want)
+		})
+	}
 }
 
 type testCase struct {
