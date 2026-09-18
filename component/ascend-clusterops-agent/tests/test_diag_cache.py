@@ -15,7 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 
-"""diagnose_cached dedup + cache + task-state tests (mocks k8s, no real cluster needed)."""
+"""diagnose_cached dedup + cache tests (mocks k8s, no real cluster needed)."""
 
 from __future__ import annotations
 
@@ -23,9 +23,8 @@ import json
 import threading
 
 import pytest
-from kubernetes.client.exceptions import ApiException
 
-from agent_core import k8s, tools
+from agent_core import tools
 
 
 @pytest.fixture(autouse=True)
@@ -47,11 +46,6 @@ def _make_result(**kw):
     return base
 
 
-def _noop_kube_config(monkeypatch):
-    # job_exists/task_state load config via K8s.core(); mock it to avoid a real cluster
-    monkeypatch.setattr(k8s.K8s, "core", classmethod(lambda cls: None))
-
-
 # --------------------------------------------------------------------------- #
 # dedup: a concurrent diagnosis of the same task is rejected
 # --------------------------------------------------------------------------- #
@@ -64,8 +58,8 @@ def test_duplicate_diag_rejected(tmp_path, monkeypatch):
         release.wait(5)
         return _make_result()
 
+    monkeypatch.setattr(tools, "_cache_root", lambda: tmp_path)
     monkeypatch.setattr(tools, "diagnose", fake_diagnose)
-    monkeypatch.setattr(tools, "task_state", lambda job, ns: "running")
     monkeypatch.setattr(tools, "job_exists", lambda job, ns: True)
 
     first = {}
@@ -74,7 +68,7 @@ def test_duplicate_diag_rejected(tmp_path, monkeypatch):
     assert started.wait(2)
 
     dup = tools.diagnose_cached("job1", "default")
-    assert dup["error"] and "正在诊断中" in dup["error"]
+    assert dup["error"] and "is being diagnosed" in dup["error"]
 
     release.set()
     t.join(5)
@@ -85,35 +79,55 @@ def test_duplicate_diag_rejected(tmp_path, monkeypatch):
 
 
 # --------------------------------------------------------------------------- #
-# cache read: stopped + cache exists -> return directly, no re-collect
+# cache read: any cached result (task stopped or running) is returned directly, no re-collect
 # --------------------------------------------------------------------------- #
 def test_cache_hit_when_stopped(tmp_path, monkeypatch):
     monkeypatch.setattr(tools, "_cache_root", lambda: tmp_path)
     tools._write_diag_cache(  # pylint: disable=protected-access
         "job1", "default", {"pods": ["cached"], "diag_report": {"s": 1}, "error": None}
     )
-    monkeypatch.setattr(tools, "task_state", lambda job, ns: "stopped")
+    monkeypatch.setattr(tools, "job_exists", lambda job, ns: True)
     calls = []
     monkeypatch.setattr(tools, "diagnose", lambda job, ns: calls.append(job) or _make_result())
 
     r = tools.diagnose_cached("job1", "default")
     assert r["cached"] is True
+    assert "--refresh" in r["cached_note"]
     assert r["pods"] == ["cached"]
     assert not calls  # no re-collect
 
 
-def test_cache_not_hit_when_running(tmp_path, monkeypatch):
+def test_cache_hit_when_running(tmp_path, monkeypatch):
     monkeypatch.setattr(tools, "_cache_root", lambda: tmp_path)
     tools._write_diag_cache(  # pylint: disable=protected-access
         "job1", "default", {"pods": ["cached"], "diag_report": {}, "error": None}
     )
-    monkeypatch.setattr(tools, "task_state", lambda job, ns: "running")
     monkeypatch.setattr(tools, "job_exists", lambda job, ns: True)
-    monkeypatch.setattr(tools, "diagnose", lambda job, ns: _make_result())
+    calls = []
+    monkeypatch.setattr(tools, "diagnose", lambda job, ns: calls.append(job) or _make_result())
 
     r = tools.diagnose_cached("job1", "default")
+    assert r["cached"] is True  # running tasks are served from the cache too
+    assert "--refresh" in r["cached_note"]
+    assert r["pods"] == ["cached"]
+    assert not calls  # no re-collect
+
+
+def test_stale_cache_not_served_when_task_missing(tmp_path, monkeypatch):
+    # a cached result exists on disk, but relcache has no record of the task -> the stale
+    # cache must NOT be served; return "task not found" directly.
+    monkeypatch.setattr(tools, "_cache_root", lambda: tmp_path)
+    tools._write_diag_cache(  # pylint: disable=protected-access
+        "job1", "default", {"pods": ["cached"], "diag_report": {"s": 1}, "error": None}
+    )
+    monkeypatch.setattr(tools, "job_exists", lambda job, ns: False)
+    calls = []
+    monkeypatch.setattr(tools, "diagnose", lambda job, ns: calls.append(job) or _make_result())
+
+    r = tools.diagnose_cached("job1", "default")
+    assert "Training/inference task not found" in r["error"]
     assert r.get("cached") is not True
-    assert r["diag_report"] == {"summary": "ok"}  # running -> re-run, cache not hit
+    assert not calls  # no collect/diagnose steps
 
 
 def test_refresh_bypasses_cache(tmp_path, monkeypatch):
@@ -121,7 +135,6 @@ def test_refresh_bypasses_cache(tmp_path, monkeypatch):
     tools._write_diag_cache(  # pylint: disable=protected-access
         "job1", "default", {"pods": ["cached"], "diag_report": {}, "error": None}
     )
-    monkeypatch.setattr(tools, "task_state", lambda job, ns: "stopped")
     calls = []
     monkeypatch.setattr(tools, "job_exists", lambda job, ns: True)
     monkeypatch.setattr(tools, "diagnose", lambda job, ns: calls.append(job) or _make_result())
@@ -136,7 +149,6 @@ def test_refresh_bypasses_cache(tmp_path, monkeypatch):
 # --------------------------------------------------------------------------- #
 def test_recent_cache_hit_within_ttl(tmp_path, monkeypatch):
     monkeypatch.setattr(tools, "_cache_root", lambda: tmp_path)
-    monkeypatch.setattr(tools, "task_state", lambda job, ns: "running")
     monkeypatch.setattr(tools, "job_exists", lambda job, ns: True)
     calls = []
     monkeypatch.setattr(tools, "diagnose", lambda job, ns: calls.append(job) or _make_result())
@@ -149,23 +161,22 @@ def test_recent_cache_hit_within_ttl(tmp_path, monkeypatch):
     assert "--refresh" in second["cached_note"]
 
 
-def test_recent_cache_expired_reruns(tmp_path, monkeypatch):
+def test_recent_cache_expired_persistent_cache_hit(tmp_path, monkeypatch):
     monkeypatch.setattr(tools, "_cache_root", lambda: tmp_path)
-    monkeypatch.setattr(tools, "task_state", lambda job, ns: "running")
     monkeypatch.setattr(tools, "job_exists", lambda job, ns: True)
-    monkeypatch.setattr(tools, "RECENT_TTL", 0.0)  # expires immediately
+    monkeypatch.setattr(tools, "RECENT_TTL", 0.0)  # recent cache expires immediately
     calls = []
     monkeypatch.setattr(tools, "diagnose", lambda job, ns: calls.append(job) or _make_result())
 
     tools.diagnose_cached("job1", "default")
     second = tools.diagnose_cached("job1", "default")
-    assert calls == ["job1", "job1"]
-    assert second.get("cached") is not True
+    assert calls == ["job1"]  # second call is served by the persistent cache, no re-collect
+    assert second["cached"] is True
+    assert "--refresh" in second["cached_note"]
 
 
 def test_recent_cache_bypassed_by_refresh(tmp_path, monkeypatch):
     monkeypatch.setattr(tools, "_cache_root", lambda: tmp_path)
-    monkeypatch.setattr(tools, "task_state", lambda job, ns: "running")
     monkeypatch.setattr(tools, "job_exists", lambda job, ns: True)
     calls = []
     monkeypatch.setattr(tools, "diagnose", lambda job, ns: calls.append(job) or _make_result())
@@ -177,199 +188,47 @@ def test_recent_cache_bypassed_by_refresh(tmp_path, monkeypatch):
 
 
 # --------------------------------------------------------------------------- #
-# fallback: when the CR status is unreadable/lagged, pod terminal phase from relcache decides cacheability
+# cache write: every successful diagnosis is cached, failed ones are not
 # --------------------------------------------------------------------------- #
-def test_cache_written_when_pods_terminal_even_if_cr_unknown(tmp_path, monkeypatch):
-    import agent_core.relcache as rc
-
-    monkeypatch.setattr(tools, "_cache_root", lambda: tmp_path)
-    monkeypatch.setattr(tools, "task_state", lambda job, ns: "unknown")  # CR unreadable (missing RBAC etc.)
-    monkeypatch.setattr(tools, "job_exists", lambda job, ns: True)
-    monkeypatch.setattr(tools, "diagnose", lambda job, ns: _make_result())
-    monkeypatch.setattr(rc, "lookup", lambda job, ns: [{"pod_name": "p0", "phase": "Succeeded"}])
-
-    tools.diagnose_cached("job1", "default")
-    assert (tmp_path / "default_job1.json").exists()
-    r = tools.diagnose_cached("job1", "default")
-    assert r["cached"] is True
-
-
-def test_cache_not_written_when_pods_still_running(tmp_path, monkeypatch):
-    import agent_core.relcache as rc
-
-    monkeypatch.setattr(tools, "_cache_root", lambda: tmp_path)
-    monkeypatch.setattr(tools, "task_state", lambda job, ns: "unknown")
-    monkeypatch.setattr(tools, "job_exists", lambda job, ns: True)
-    monkeypatch.setattr(tools, "diagnose", lambda job, ns: _make_result())
-    monkeypatch.setattr(rc, "lookup", lambda job, ns: [{"pod_name": "p0", "phase": "Running"}])
-
-    tools.diagnose_cached("job1", "default")
-    assert not (tmp_path / "default_job1.json").exists()
-
-
-# --------------------------------------------------------------------------- #
-# cache write: only stopped tasks are cached, running ones are not
-# --------------------------------------------------------------------------- #
-def test_cache_written_only_when_stopped(tmp_path, monkeypatch):
+def test_cache_written_after_successful_diagnosis(tmp_path, monkeypatch):
     monkeypatch.setattr(tools, "_cache_root", lambda: tmp_path)
     monkeypatch.setattr(tools, "job_exists", lambda job, ns: True)
     monkeypatch.setattr(tools, "diagnose", lambda job, ns: _make_result())
 
-    monkeypatch.setattr(tools, "task_state", lambda job, ns: "running")
     tools.diagnose_cached("job1", "default")
-    assert not (tmp_path / "default_job1.json").exists()
-
-    monkeypatch.setattr(tools, "task_state", lambda job, ns: "stopped")
-    tools.diagnose_cached("job2", "default")
-    cached = tmp_path / "default_job2.json"
+    cached = tmp_path / "default_job1.json"
     assert cached.exists()
     assert cached.read_text(encoding="utf-8")  # parseable non-empty json
+    r = tools.diagnose_cached("job1", "default")
+    assert r["cached"] is True  # the persistent cache serves the repeat call
+
+
+def test_failed_diagnosis_not_cached(tmp_path, monkeypatch):
+    monkeypatch.setattr(tools, "_cache_root", lambda: tmp_path)
+    monkeypatch.setattr(tools, "job_exists", lambda job, ns: True)
+    monkeypatch.setattr(tools, "diagnose", lambda job, ns: _make_result(error="collect failed"))
+
+    tools.diagnose_cached("job1", "default")
+    assert not (tmp_path / "default_job1.json").exists()
 
 
 # --------------------------------------------------------------------------- #
-# task_state: determine the task CR status
+# job_exists: the task is diagnosable iff relcache still holds any of its pods
 # --------------------------------------------------------------------------- #
-class _FakeCustom:
-    """CustomObjectsApi stand-in returning a preset response."""
+def test_job_exists_true_when_relcache_has_pods(monkeypatch):
+    # live pods, or deleted-within-TTL pods whose logs remain on nodes / shared storage -> diagnosable
+    from agent_core import relcache
 
-    def __init__(self, response, captured=None):
-        self._resp = response
-        self._captured = captured
-
-    def get_namespaced_custom_object_status(self, **kw):
-        if self._captured is not None:
-            self._captured.update(kw)
-        if isinstance(self._resp, Exception):
-            raise self._resp
-        return self._resp
-
-
-def test_task_state_stopped_when_succeeded(monkeypatch):
-    obj = {
-        "status": {
-            "conditions": [
-                {"type": "JobRunning", "status": "True"},
-                {"type": "JobSucceeded", "status": "True"},
-            ]
-        }
-    }
-    monkeypatch.setattr(tools, "_load_task_crds", lambda: [("mindxdl.gitee.com", "v1", "AscendJob")])
-    monkeypatch.setattr(tools.client, "CustomObjectsApi", lambda: _FakeCustom(obj))
-    _noop_kube_config(monkeypatch)
-    assert tools.task_state("job1", "default") == "stopped"
-
-
-def test_task_state_running(monkeypatch):
-    obj = {"status": {"conditions": [{"type": "JobRunning", "status": "True"}]}}
-    monkeypatch.setattr(tools, "_load_task_crds", lambda: [("mindxdl.gitee.com", "v1", "AscendJob")])
-    monkeypatch.setattr(tools.client, "CustomObjectsApi", lambda: _FakeCustom(obj))
-    _noop_kube_config(monkeypatch)
-    assert tools.task_state("job1", "default") == "running"
-
-
-def test_task_state_stopped_when_volcano_completed(monkeypatch):
-    # Volcano Job terminal condition is "Completed"; it must be judged stopped to be cacheable
-    obj = {"status": {"conditions": [{"type": "Running", "status": "True"}, {"type": "Completed", "status": "True"}]}}
-    monkeypatch.setattr(tools, "_load_task_crds", lambda: [("batch.volcano.sh", "v1alpha1", "Job")])
-    monkeypatch.setattr(tools.client, "CustomObjectsApi", lambda: _FakeCustom(obj))
-    _noop_kube_config(monkeypatch)
-    assert tools.task_state("job1", "default") == "stopped"
-
-
-def test_task_state_terminal_aliases_and_case_insensitive(monkeypatch):
-    # bare Succeeded / stopped / case-insensitive matches must all be judged stopped
-    for cond_type, cond_status in (
-        ("Succeeded", "True"),
-        ("stopped", "True"),
-        ("succeeded", "true"),
-        ("FAILED", "true"),
-    ):
-        obj = {"status": {"conditions": [{"type": cond_type, "status": cond_status}]}}
-        monkeypatch.setattr(tools, "_load_task_crds", lambda: [("mindxdl.gitee.com", "v1", "AscendJob")])
-        monkeypatch.setattr(tools.client, "CustomObjectsApi", lambda obj=obj: _FakeCustom(obj))
-        _noop_kube_config(monkeypatch)
-        assert tools.task_state("job1", "default") == "stopped", f"{cond_type}={cond_status}"
-
-
-def test_task_state_missing_cr_stopped(monkeypatch):
-    def _custom_api():
-        return _FakeCustom(ApiException(status=404))
-
-    monkeypatch.setattr(tools, "_load_task_crds", lambda: [("mindxdl.gitee.com", "v1", "AscendJob")])
-    monkeypatch.setattr(tools.client, "CustomObjectsApi", _custom_api)
-    _noop_kube_config(monkeypatch)
-    assert tools.task_state("job1", "default") == "stopped"
-
-
-def test_task_state_uses_cr_params(monkeypatch):
-    captured = {}
-
-    class _Fake:
-        def get_namespaced_custom_object_status(self, **kw):
-            captured.update(kw)
-            return {"status": {"conditions": [{"type": "JobRunning", "status": "True"}]}}
-
-    monkeypatch.setattr(tools, "_load_task_crds", lambda: [("mindxdl.gitee.com", "v1", "AscendJob")])
-
-    def _custom_api():
-        return _Fake()
-
-    monkeypatch.setattr(tools.client, "CustomObjectsApi", _custom_api)
-    _noop_kube_config(monkeypatch)
-    assert tools.task_state("job1", "myns") == "running"
-    assert captured == {
-        "group": "mindxdl.gitee.com",
-        "version": "v1",
-        "namespace": "myns",
-        "plural": "ascendjobs",
-        "name": "job1",
-    }
-
-
-# --------------------------------------------------------------------------- #
-# job_exists: task CR existence check (short-circuits when the job name does not exist)
-# --------------------------------------------------------------------------- #
-class _FakeGet:
-    """get_namespaced_custom_object stand-in: preset response/exception."""
-
-    def __init__(self, response, captured=None):
-        self._resp = response
-        self._captured = captured
-
-    def get_namespaced_custom_object(self, **kw):
-        if self._captured is not None:
-            self._captured.update(kw)
-        if isinstance(self._resp, Exception):
-            raise self._resp
-        return self._resp
-
-
-def test_job_exists_true(monkeypatch):
-    monkeypatch.setattr(tools, "_load_task_crds", lambda: [("mindxdl.gitee.com", "v1", "AscendJob")])
-    monkeypatch.setattr(tools.client, "CustomObjectsApi", lambda: _FakeGet({}))
-    _noop_kube_config(monkeypatch)
+    monkeypatch.setattr(relcache, "lookup", lambda job, ns: [{"pod_name": "p0"}])
     assert tools.job_exists("job1", "default") is True
 
 
-def test_job_exists_false_on_404(monkeypatch):
-    def _custom_api():
-        return _FakeGet(ApiException(status=404))
+def test_job_exists_false_when_relcache_empty(monkeypatch):
+    # no pods -> wrong job name or the task's pods are all gone -> not found
+    from agent_core import relcache
 
-    monkeypatch.setattr(tools, "_load_task_crds", lambda: [("mindxdl.gitee.com", "v1", "AscendJob")])
-    monkeypatch.setattr(tools.client, "CustomObjectsApi", _custom_api)
-    _noop_kube_config(monkeypatch)
+    monkeypatch.setattr(relcache, "lookup", lambda job, ns: [])
     assert tools.job_exists("job1", "default") is False
-
-
-def test_job_exists_unknown_error_treated_as_exists(monkeypatch):
-    # non-404 errors (RBAC/network etc.) -> treat as existing, avoid a false "task not found"
-    def _custom_api():
-        return _FakeGet(ApiException(status=403))
-
-    monkeypatch.setattr(tools, "_load_task_crds", lambda: [("mindxdl.gitee.com", "v1", "AscendJob")])
-    monkeypatch.setattr(tools.client, "CustomObjectsApi", _custom_api)
-    _noop_kube_config(monkeypatch)
-    assert tools.job_exists("job1", "default") is True
 
 
 # --------------------------------------------------------------------------- #
@@ -382,14 +241,13 @@ def test_diag_missing_job_short_circuits(tmp_path, monkeypatch):
     monkeypatch.setattr(tools, "diagnose", lambda job, ns: calls.append(job) or _make_result())
 
     r = tools.diagnose_cached("nonexistent", "default")
-    assert "训练/推理任务不存在" in r["error"]
+    assert "Training/inference task not found" in r["error"]
     assert not calls  # no collect/diagnose steps
 
 
 def test_diag_job_exists_runs_diagnose(tmp_path, monkeypatch):
     monkeypatch.setattr(tools, "_cache_root", lambda: tmp_path)
     monkeypatch.setattr(tools, "job_exists", lambda job, ns: True)
-    monkeypatch.setattr(tools, "task_state", lambda job, ns: "running")
     monkeypatch.setattr(tools, "diagnose", lambda job, ns: _make_result())
 
     r = tools.diagnose_cached("job1", "default")
@@ -401,14 +259,13 @@ def test_diag_cached_catches_unexpected_error(tmp_path, monkeypatch):
     # unexpected error in the flow (k8s failure / file IO) -> wrapped as a readable error, not a 500
     monkeypatch.setattr(tools, "_cache_root", lambda: tmp_path)
     monkeypatch.setattr(tools, "job_exists", lambda job, ns: True)
-    monkeypatch.setattr(tools, "task_state", lambda job, ns: "running")
 
     def _boom(job, ns):
         raise RuntimeError("k8s api unavailable")
 
     monkeypatch.setattr(tools, "diagnose", _boom)
     r = tools.diagnose_cached("job1", "default")
-    assert "诊断错误" in r["error"]
+    assert "Diagnosis error" in r["error"]
     assert r["diag_report"] == {}
 
 

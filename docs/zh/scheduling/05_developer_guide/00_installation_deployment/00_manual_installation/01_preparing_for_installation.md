@@ -262,7 +262,7 @@ Elastic Agent、TaskD之外的其他组件安装可跳过本章节。
     </td>
     <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen14281121213"><a name="screen14281121213"></a><a name="screen14281121213"></a>mkdir -m 750 /var/log/mindx-dl/agent-core
    chown hwMindX:hwMindX /var/log/mindx-dl/agent-core
-   mkdir -m 750 /user/clusterops/agent-core
+   mkdir -m 750 -p /user/clusterops/agent-core
    chown hwMindX:hwMindX /user/clusterops/agent-core</pre>
     </td>
     <td class="cellrowborder" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p121012411212"><a name="p121012411212"></a><a name="p121012411212"></a>管理节点</p>
@@ -274,7 +274,7 @@ Elastic Agent、TaskD之外的其他组件安装可跳过本章节。
     </td>
     <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen812141221219"><a name="screen812141221219"></a><a name="screen812141221219"></a>mkdir -m 750 /var/log/mindx-dl/node-collector
    chown root:root /var/log/mindx-dl/node-collector
-   mkdir -m 750 /user/clusterops/node-collector
+   mkdir -m 750 -p /user/clusterops/node-collector
    chown root:root /user/clusterops/node-collector</pre>
     </td>
     <td class="cellrowborder" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p5121412101214"><a name="p5121412101214"></a><a name="p5121412101214"></a>计算节点</p>

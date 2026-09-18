@@ -18,7 +18,7 @@ _sym_db = _symbol_database.Default()
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
-    b'\n\ndiag.proto\x12\x04\x64iag"3\n\x06PodRef\x12\n\n\x02ns\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0f\n\x07pod_uid\x18\x03 \x01(\t"G\n\x0e\x43ollectRequest\x12\x0c\n\x04node\x18\x01 \x01(\t\x12\x0b\n\x03job\x18\x02 \x01(\t\x12\x1a\n\x04pods\x18\x03 \x03(\x0b\x32\x0c.diag.PodRef"/\n\nCollectAck\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t"f\n\rUploadRequest\x12\x0c\n\x04node\x18\x01 \x01(\t\x12\x0b\n\x03job\x18\x02 \x01(\t\x12\n\n\x02ok\x18\x03 \x01(\x08\x12\r\n\x05\x65rror\x18\x04 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x05 \x01(\x0c\x12\x11\n\tnamespace\x18\x06 \x01(\t"\x1d\n\tUploadAck\x12\x10\n\x08received\x18\x01 \x01(\x08\x32\x45\n\tCollector\x12\x38\n\x0eTriggerCollect\x12\x14.diag.CollectRequest\x1a\x10.diag.CollectAck2B\n\x08Uploader\x12\x36\n\x0cUploadResult\x12\x13.diag.UploadRequest\x1a\x0f.diag.UploadAck(\x01\x62\x06proto3'
+    b'\n\ndiag.proto\x12\x04\x64iag"3\n\x06PodRef\x12\n\n\x02ns\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0f\n\x07pod_uid\x18\x03 \x01(\t"\x8c\x01\n\x08PodMount\x12\x0f\n\x07pod_uid\x18\x01 \x01(\t\x12\r\n\x05pairs\x18\x02 \x03(\t\x12$\n\x03\x65nv\x18\x03 \x03(\x0b\x32\x17.diag.PodMount.EnvEntry\x12\x0e\n\x06pod_ip\x18\x04 \x01(\t\x1a*\n\x08\x45nvEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01"g\n\x0e\x43ollectRequest\x12\x0c\n\x04node\x18\x01 \x01(\t\x12\x0b\n\x03job\x18\x02 \x01(\t\x12\x1a\n\x04pods\x18\x03 \x03(\x0b\x32\x0c.diag.PodRef\x12\x1e\n\x06mounts\x18\x04 \x03(\x0b\x32\x0e.diag.PodMount"/\n\nCollectAck\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t"f\n\rUploadRequest\x12\x0c\n\x04node\x18\x01 \x01(\t\x12\x0b\n\x03job\x18\x02 \x01(\t\x12\n\n\x02ok\x18\x03 \x01(\x08\x12\r\n\x05\x65rror\x18\x04 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x05 \x01(\x0c\x12\x11\n\tnamespace\x18\x06 \x01(\t"\x1d\n\tUploadAck\x12\x10\n\x08received\x18\x01 \x01(\x08\x32\x45\n\tCollector\x12\x38\n\x0eTriggerCollect\x12\x14.diag.CollectRequest\x1a\x10.diag.CollectAck2B\n\x08Uploader\x12\x36\n\x0cUploadResult\x12\x13.diag.UploadRequest\x1a\x0f.diag.UploadAck(\x01\x62\x06proto3'
 )
 
 _globals = globals()
@@ -26,18 +26,24 @@ _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'diag_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
     DESCRIPTOR._loaded_options = None
+    _globals['_PODMOUNT_ENVENTRY']._loaded_options = None
+    _globals['_PODMOUNT_ENVENTRY']._serialized_options = b'8\001'
     _globals['_PODREF']._serialized_start = 20
     _globals['_PODREF']._serialized_end = 71
-    _globals['_COLLECTREQUEST']._serialized_start = 73
-    _globals['_COLLECTREQUEST']._serialized_end = 144
-    _globals['_COLLECTACK']._serialized_start = 146
-    _globals['_COLLECTACK']._serialized_end = 193
-    _globals['_UPLOADREQUEST']._serialized_start = 195
-    _globals['_UPLOADREQUEST']._serialized_end = 297
-    _globals['_UPLOADACK']._serialized_start = 299
-    _globals['_UPLOADACK']._serialized_end = 328
-    _globals['_COLLECTOR']._serialized_start = 330
-    _globals['_COLLECTOR']._serialized_end = 399
-    _globals['_UPLOADER']._serialized_start = 401
-    _globals['_UPLOADER']._serialized_end = 467
+    _globals['_PODMOUNT']._serialized_start = 74
+    _globals['_PODMOUNT']._serialized_end = 214
+    _globals['_PODMOUNT_ENVENTRY']._serialized_start = 172
+    _globals['_PODMOUNT_ENVENTRY']._serialized_end = 214
+    _globals['_COLLECTREQUEST']._serialized_start = 216
+    _globals['_COLLECTREQUEST']._serialized_end = 319
+    _globals['_COLLECTACK']._serialized_start = 321
+    _globals['_COLLECTACK']._serialized_end = 368
+    _globals['_UPLOADREQUEST']._serialized_start = 370
+    _globals['_UPLOADREQUEST']._serialized_end = 472
+    _globals['_UPLOADACK']._serialized_start = 474
+    _globals['_UPLOADACK']._serialized_end = 503
+    _globals['_COLLECTOR']._serialized_start = 505
+    _globals['_COLLECTOR']._serialized_end = 574
+    _globals['_UPLOADER']._serialized_start = 576
+    _globals['_UPLOADER']._serialized_end = 642
 # @@protoc_insertion_point(module_scope)

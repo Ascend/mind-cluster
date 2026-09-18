@@ -718,23 +718,23 @@ def test_collect_tar_produces_archive(tmp_path, monkeypatch):
     assert any("ascend-rc-parser.json" in n for n in names)
 
 
-# def test_trigger_collect_spawns_async(monkeypatch):
-#     """TriggerCollect returns accepted immediately; a background thread takes over collect + upload."""
-#     captured = {}
-#     monkeypatch.setattr(collector.collector_client, "run_and_upload", lambda req: captured.update(req=req))
-#     req = diag_pb2.CollectRequest(
-#         node="node-a",
-#         job="job-x",
-#         pods=[diag_pb2.PodRef(ns="default", name="p", pod_uid="u")],
-#     )
-#     ack = collector.CollectorServicer().TriggerCollect(req, _Ctx())
-#     assert ack.accepted is True
-#     for _ in range(50):
-#         if "req" in captured:
-#             break
-#         time.sleep(0.05)
-#     assert captured["req"].node == "node-a"
-#     assert captured["req"].job == "job-x"
+def test_trigger_collect_spawns_async(monkeypatch):
+    """TriggerCollect returns accepted immediately; a background thread takes over collect + upload."""
+    captured = {}
+    monkeypatch.setattr(collector.collector_client, "run_and_upload", lambda req: captured.update(req=req))
+    req = diag_pb2.CollectRequest(
+        node="node-a",
+        job="job-x",
+        pods=[diag_pb2.PodRef(ns="default", name="p", pod_uid="u")],
+    )
+    ack = collector.CollectorServicer().TriggerCollect(req, _Ctx())
+    assert ack.accepted is True
+    for _ in range(50):
+        if "req" in captured:
+            break
+        time.sleep(0.05)
+    assert captured["req"].node == "node-a"
+    assert captured["req"].job == "job-x"
 
 
 def test_run_and_upload_reports_failure(tmp_path, monkeypatch):

@@ -46,12 +46,10 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import grpc
-import yaml
-from kubernetes import client
-
-from agent_core.constants import TASK_CRDS_CM_KEY, TASK_CRDS_CM_NAME, TASK_CRDS_CM_NS, WORK_ROOT
+from agent_core.constants import WORK_ROOT
 from agent_core.jobs import tracker
 from agent_core.k8s import K8s
+from agent_core.pathmap import get_writer
 from clusterops_common import quota
 from diagproto import diag_pb2, diag_pb2_grpc
 
@@ -100,10 +98,18 @@ def _trigger_node(v1, node: str, job: str, refs: list[dict]) -> dict:
             "worker_dir": None,
         }
     addr = f"{pod_ip}:{COLLECTOR_PORT}"
+    # Ship the mount pairs + env of these pods inside the request, so the collector
+    # does not need a global pathmap CM cache (resolves host paths locally per request).
+    writer = get_writer()
+    mounts = []
+    for p in refs:
+        pairs, env, pod_ip = writer.pod_pairs_env(p["pod_uid"])
+        mounts.append(diag_pb2.PodMount(pod_uid=p["pod_uid"], pairs=pairs, env=env, pod_ip=pod_ip))
     req = diag_pb2.CollectRequest(
         node=node,
         job=job,
         pods=[diag_pb2.PodRef(ns=p.get("ns", "default"), name=p["name"], pod_uid=p["pod_uid"]) for p in refs],
+        mounts=mounts,
     )
     try:
         with grpc.insecure_channel(addr) as ch:
@@ -249,29 +255,36 @@ class _DiagError(Exception):
     """ascend-fd diag failed (carries a CLI stderr summary); turned into a readable error by diagnose."""
 
 
-def run_diag(diag_input_dir: str) -> tuple[str, dict]:
-    """Run `ascend-fd diag -i <diag_input> -o <out>`, return (out_dir, diag_report).
+def run_diag(diag_input_dir: str) -> tuple[str, dict, str]:
+    """Run `ascend-fd diag -i <diag_input> -o <out>`, return (out_dir, diag_report, report_text).
 
     The output goes to the sibling {WORK_ROOT}/{YYYYMMDD}/{ns}_{job}/diag-output of the
     input (diag_input = .../{ns}_{job}/diag-input, so one level up); on failure
     raise _DiagError carrying a stderr summary instead of a raw CalledProcessError.
+    report_text is the pretty report ascend-fd prints to stdout (same as a manual run);
+    falls back to "" when stdout is empty.
     """
     out_dir = Path(diag_input_dir).parent / "diag-output"
     shutil.rmtree(out_dir, ignore_errors=True)
     out_dir.mkdir(parents=True, exist_ok=True)
     cmd = [ASCEND_FD, "diag", "-i", diag_input_dir, "-o", str(out_dir)]
     try:
-        subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=1800)
+        proc = subprocess.run(cmd, check=True, capture_output=True, text=True, encoding="utf-8", timeout=1800)
+        report_text = (proc.stdout or "").strip()
     except subprocess.TimeoutExpired as e:
         logger.error("ascend-fd diag timed out: %s", e)
-        raise _DiagError("诊断错误，ascend-fd 诊断超时，请查看对应日志或稍后重试") from e
+        raise _DiagError(
+            "Diagnosis error: ascend-fd diagnosis timed out, please check the relevant logs or retry later"
+        ) from e
     except subprocess.CalledProcessError as e:
         detail = (e.stderr or e.stdout or "")[-2000:]
         logger.error("ascend-fd diag failed: %s", detail)
-        raise _DiagError(f"诊断错误，ascend-fd 执行诊断失败，请查看对应日志: {detail}") from e
+        raise _DiagError(
+            f"Diagnosis error: ascend-fd failed to run the diagnosis, please check the relevant logs: {detail}"
+        ) from e
     report = out_dir / "fault_diag_result" / "diag_report.json"
     data = json.loads(report.read_text(encoding="utf-8")) if report.exists() else {}
-    return str(out_dir), data
+    return str(out_dir), data, report_text
 
 
 # --------------------------------------------------------------------------- #
@@ -290,19 +303,22 @@ def diagnose(job: str, namespace: str = "default") -> dict:
     pods = relcache.lookup(job, namespace)
     if not pods:
         logger.warning("diagnosis failed: job=%s ns=%s no pods", job, namespace)
-        return {"error": f"诊断错误，任务 {job} 没有可诊断的 pod (ns={namespace})，请确认任务已正常拉起", "pods": []}
+        return {
+            "error": f"Diagnosis error: no diagnosable pod for task {job} (ns={namespace}), please confirm the task is running properly",
+            "pods": [],
+        }
     collected = dispatch_collect(job, pods)
     ok = [c for c in collected if c.get("ok")]
     if not ok:
         logger.warning("diagnosis failed: job=%s ns=%s no node collected successfully", job, namespace)
         return {
-            "error": "诊断错误，节点采集全部失败，请查看 agent-core 与 node-collector 日志",
+            "error": "Diagnosis error: all node collections failed, please check the agent-core and node-collector logs",
             "pods": pods,
             "collected": collected,
         }
     diag_input = assemble_diag_input(collected, job, namespace)
     try:
-        out_dir, report = run_diag(diag_input)
+        out_dir, report, report_text = run_diag(diag_input)
     except _DiagError as e:
         logger.error("diagnosis failed (ascend-fd diag): job=%s ns=%s err=%s", job, namespace, e)
         return {
@@ -322,18 +338,20 @@ def diagnose(job: str, namespace: str = "default") -> dict:
         "diag_input_dir": diag_input,
         "diag_output_dir": out_dir,
         "diag_report": report,
+        "diag_report_text": report_text,
         "error": None,
     }
 
 
 # --------------------------------------------------------------------------- #
-# Repeat-diagnosis guard + result cache (mutex for concurrent runs of the same task; only stopped tasks are cached)
+# Repeat-diagnosis guard + result cache (mutex for concurrent runs of the same task;
+# every successful diagnosis is cached; a cache hit prompts --refresh for real-time data)
 # --------------------------------------------------------------------------- #
 _active_lock = threading.Lock()
 _active_diags: dict[tuple[str, str], float] = {}  # (ns, job) -> start_ts; mutex within the single-replica process
 # Short-TTL in-memory recent-result cache: a repeated diagnosis of the same job within
 # RECENT_TTL (default 10s) returns the latest outcome directly (marked as cached) without
-# re-collecting; --refresh bypasses it. Independent of the persistent stopped-task cache.
+# re-collecting; --refresh bypasses it. Independent of the persistent result cache.
 _recent_results: dict[tuple[str, str], tuple[float, dict]] = {}  # (ns, job) -> (ts, result)
 RECENT_TTL = float(os.environ.get("DIAG_RECENT_TTL", "10"))
 
@@ -344,124 +362,16 @@ def is_diag_active(job: str, namespace: str = "default") -> bool:
         return _active_diags.get((namespace, job)) is not None
 
 
-_task_crds_cache: list[tuple[str, str, str]] | None = None
-
-
-def _load_task_crds() -> list[tuple[str, str, str]]:
-    """Read task CR config CM via the K8s API -> [(group, version, kind)] list (same source as relcache).
-
-    Read once and cached for the process lifetime.
-    """
-    global _task_crds_cache
-    if _task_crds_cache is not None:
-        return _task_crds_cache
-    try:
-        v1 = K8s.core()
-        cm = v1.read_namespaced_config_map(TASK_CRDS_CM_NAME, TASK_CRDS_CM_NS)
-        cfg = yaml.safe_load((cm.data or {}).get(TASK_CRDS_CM_KEY, "")) or {}
-    except Exception:  # noqa: BLE001  # config read failed -> no task CR, job_exists/task_state handled conservatively
-        return []  # not cached, retried on the next call
-    out: list[tuple[str, str, str]] = []
-    for e in cfg.get("task_crds") or []:
-        kind = e.get("kind")
-        if not kind:
-            continue
-        av = (e.get("api_version", "") or "").strip()
-        group, sep, version = av.rpartition("/")
-        if not sep:
-            group, version = "", av  # core group (task CRs are usually custom groups; fallback handling)
-        out.append((group, version, kind))
-    _task_crds_cache = out
-    return out
-
-
-def _cr_plural(kind: str) -> str:
-    """Simple pluralization rule for resources: AscendJob -> ascendjobs, InferServiceSet -> inferservicesets."""
-    if kind.endswith("y"):
-        return kind[:-1].lower() + "ies"
-    return kind.lower() + "s"
-
-
 def job_exists(job: str, namespace: str) -> bool:
-    """Return whether the task CR exists (not found means the task does not exist; short-circuits wrong user input).
+    """Return whether the task is diagnosable: the relation cache still holds any of the
+    job's pods (live, or deleted within the TTL whose logs remain on nodes / shared storage).
 
-    A failed CR query (RBAC/network etc.) is treated as existing to avoid a false
-    "task not found" blocking normal diagnosis. Multiple task CR types (e.g.
-    AscendJob + Volcano Job) are probed in order; any hit means it exists; only when
-    all types return 404 is the task considered non-existent.
+    relcache only records pods owned by the configured task CRs, so an empty lookup means
+    the job name is wrong or all its pods are gone -> report "task not found" immediately.
     """
-    K8s.core()  # load in-cluster/kubeconfig config so CustomObjectsApi works
-    custom = client.CustomObjectsApi()
-    crds = _load_task_crds()
-    if not crds:
-        return True  # no task CR config -> treat as existing, avoid false negative
-    for group, version, kind in crds:
-        try:
-            custom.get_namespaced_custom_object(
-                group=group, version=version, namespace=namespace, plural=_cr_plural(kind), name=job
-            )
-            return True
-        except client.exceptions.ApiException as e:
-            if e.status == 404:
-                continue  # this kind has no such task -> try the next kind
-            return True  # query for this kind failed (RBAC/network etc.) -> treat as existing, avoid false negative
-        except Exception:
-            return True
-    return False  # all configured kinds returned 404 -> task does not exist
+    from agent_core import relcache
 
-
-# Terminal condition types across task CR families (matched case-insensitively):
-# AscendJob: JobSucceeded/JobFailed; batch Job: Complete/Failed; Volcano Job:
-# Completed/Terminated/Aborted/Failed; plus generic Succeeded/Failed/Stopped aliases.
-_TERMINAL_CONDITION_TYPES = frozenset(
-    t.lower()
-    for t in (
-        "JobSucceeded",
-        "JobFailed",
-        "Succeeded",
-        "Failed",
-        "Stopped",
-        "Complete",
-        "Completed",
-        "Terminated",
-        "Aborted",
-    )
-)
-
-
-def task_state(job: str, namespace: str) -> str:
-    """Determine run state from the task CR status; returns running / stopped / unknown.
-
-    stopped: conditions contain a terminal state with status=True (type matched
-    case-insensitively, covering JobSucceeded/JobFailed/Succeeded/Failed/Stopped/
-    Complete(d)/Terminated/Aborted across AscendJob / batch Job / Volcano Job);
-    task CR missing (404, deleted) -> stopped (logs no longer change, cacheable);
-    query failure (RBAC/network etc.) -> unknown (does not block diagnosis, skips cache).
-    """
-    K8s.core()  # load in-cluster/kubeconfig config so CustomObjectsApi works
-    custom = client.CustomObjectsApi()
-    crds = _load_task_crds()
-    if not crds:
-        return "unknown"
-    for group, version, kind in crds:
-        try:
-            obj = custom.get_namespaced_custom_object_status(
-                group=group, version=version, namespace=namespace, plural=_cr_plural(kind), name=job
-            )
-        except client.exceptions.ApiException as e:
-            if e.status == 404:
-                continue  # this kind has no such task -> try the next kind
-            return "unknown"  # query failed (RBAC/network etc.) -> cannot determine, skip cache
-        except Exception:
-            return "unknown"
-        for c in (obj.get("status") or {}).get("conditions") or []:
-            if (
-                str(c.get("status") or "").lower() == "true"
-                and str(c.get("type") or "").lower() in _TERMINAL_CONDITION_TYPES
-            ):
-                return "stopped"
-        return "running"
-    return "stopped"  # all kinds returned 404 -> task deleted, logs no longer change, cacheable
+    return len(relcache.lookup(job, namespace)) > 0
 
 
 def _cache_file(job: str, namespace: str) -> Path:
@@ -479,9 +389,13 @@ def _read_diag_cache(job: str, namespace: str) -> dict | None:
 
 
 def _write_diag_cache(job: str, namespace: str, result: dict) -> None:
-    p = _cache_file(job, namespace)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(result, ensure_ascii=False, default=str), encoding="utf-8")
+    """Write the result cache; best-effort (a cache write failure must not fail the diagnosis)."""
+    try:
+        p = _cache_file(job, namespace)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(result, ensure_ascii=False, default=str), encoding="utf-8")
+    except Exception as e:  # noqa: BLE001  # cache write is best-effort
+        logger.warning("failed to write diag cache: job=%s ns=%s: %s", job, namespace, e)
 
 
 def cache_diag_final_text(job: str, namespace: str, final_text: str) -> None:
@@ -501,35 +415,20 @@ def cache_diag_final_text(job: str, namespace: str, final_text: str) -> None:
         logger.warning("failed to cache LLM summary for job=%s ns=%s: %s", job, namespace, e)
 
 
-def _task_effectively_stopped(job: str, namespace: str) -> bool:
-    """Cacheability check: is the task's result stable enough to cache?
-
-    True when the task CR status is stopped, or (when the CR status cannot be read,
-    e.g. missing RBAC / network, or lags) all the task's pods have reached a terminal
-    phase (Succeeded/Failed, matched case-insensitively) per the relcache — their logs
-    no longer change.
-    """
-    if task_state(job, namespace) == "stopped":
-        return True
-    from agent_core import relcache
-
-    pods = relcache.lookup(job, namespace)
-    return bool(pods) and all((p.get("phase") or "").lower() in ("succeeded", "failed") for p in pods)
-
-
 def diagnose_cached(job: str, namespace: str = "default", refresh: bool = False) -> dict:
     """End-to-end diagnosis entry with repeat-diagnosis guard + result cache.
 
+    - Task not found: no relcache record for the job (wrong job name, or the task and
+      its pods are gone) -> return "training/inference task not found" immediately,
+      before any cached result is served.
     - Recent cache: same (ns, job) diagnosed within RECENT_TTL (default 10s) and not
       refresh -> return the latest outcome directly (marked as cached, with a hint to use
       --refresh for real-time data), no re-collect.
     - Guard: same (ns, job) already being diagnosed -> return an "already diagnosing"
       error, no re-run.
-    - Task not found: task CR not found (wrong job name) -> return "training/inference
-      task not found", no collection.
-    - Cache: task stopped + cache exists and not refresh -> return the cache directly
-      (no collect/diagnose); otherwise re-run; after a successful diagnosis the cache is
-      written only when the task is stopped, running tasks are not cached.
+    - Cache: every successful diagnosis writes the persistent result cache (task running
+      or stopped); a cache hit without refresh returns the cached result with a hint to
+      use --refresh; refresh bypasses the cache, re-runs, then refreshes the cache.
     """
     key = (namespace, job)
     if not refresh:
@@ -539,7 +438,7 @@ def diagnose_cached(job: str, namespace: str = "default", refresh: bool = False)
             logger.info("recent cache hit: job=%s ns=%s (within %ss)", job, namespace, RECENT_TTL)
             out = dict(hit[1])
             out["cached"] = True
-            out["cached_note"] = "这是缓存数据，需要实时数据，请加 --refresh"
+            out["cached_note"] = "This is cached data; add --refresh for real-time data"
             return out
         # cheap sweep of expired recent entries
         for k in [k for k, (ts, _) in _recent_results.items() if now - ts >= RECENT_TTL]:
@@ -549,44 +448,51 @@ def diagnose_cached(job: str, namespace: str = "default", refresh: bool = False)
             started = _active_diags[key]
             logger.warning("job=%s ns=%s already diagnosing, rejecting duplicate run", job, namespace)
             return {
-                "error": f"job={job} 正在诊断中(开始于 "
-                f"{time.strftime('%H:%M:%S', time.localtime(started))}), 请勿重复执行",
+                "error": f"job={job} is being diagnosed (started at "
+                f"{time.strftime('%H:%M:%S', time.localtime(started))}), please do not run it again",
                 "pods": [],
                 "diag_report": {},
             }
         _active_diags[key] = time.time()
     try:
-        if not refresh:
-            cached = _read_diag_cache(job, namespace)
-            if cached is not None and _task_effectively_stopped(job, namespace):
-                logger.info("cache hit: job=%s ns=%s (task stopped)", job, namespace)
-                cached["cached"] = True
-                return cached
+        # Task existence is the primary gate: no relcache record -> the task (or all its
+        # pods) is gone; return "task not found" instead of serving a stale cached result.
         if not job_exists(job, namespace):
             logger.warning("task not found: job=%s ns=%s", job, namespace)
             return {
-                "error": f"训练/推理任务不存在: job={job} in ns={namespace}",
+                "error": f"Training/inference task not found: job={job} in ns={namespace}",
                 "pods": [],
                 "diag_report": {},
             }
+        if not refresh:
+            cached = _read_diag_cache(job, namespace)
+            if cached is not None:
+                logger.info("cache hit: job=%s ns=%s", job, namespace)
+                cached["cached"] = True
+                cached["cached_note"] = "Result from cache; run --refresh for the latest diagnosis"
+                return cached
         logger.info("starting diagnosis: job=%s ns=%s refresh=%s", job, namespace, refresh)
         result = diagnose(job, namespace)
         _recent_results[key] = (time.time(), result)  # remember the latest outcome for the recent cache
-        if not result.get("error") and _task_effectively_stopped(job, namespace):
+        if not result.get("error"):
             snapshot = {
                 "pods": result.get("pods"),
                 "diag_report": result.get("diag_report"),
+                "diag_report_text": result.get("diag_report_text"),
                 "error": result.get("error"),
                 "cached_at": time.time(),
-                "task_state": "stopped",
                 "cached": False,
             }
             _write_diag_cache(job, namespace, snapshot)
-            logger.info("diagnosis completed and task stopped, result cached: job=%s ns=%s", job, namespace)
+            logger.info("diagnosis completed, result cached: job=%s ns=%s", job, namespace)
         return result
     except Exception as e:  # noqa: BLE001  # never let an unexpected failure escape as a 500; surface a readable reason
         logger.exception("diagnosis crashed: job=%s ns=%s", job, namespace)
-        return {"error": f"诊断错误，诊断过程发生异常，请查看 agent-core 日志 ({e})", "pods": [], "diag_report": {}}
+        return {
+            "error": f"Diagnosis error: an exception occurred during diagnosis, please check the agent-core logs ({e})",
+            "pods": [],
+            "diag_report": {},
+        }
     finally:
         with _active_lock:
             _active_diags.pop(key, None)

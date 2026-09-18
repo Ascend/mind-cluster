@@ -1,6 +1,6 @@
 # 配置任务类型<a name="ZH-CN_TOPIC_00000026faultdiagnosis02"></a>
 
-Agent Core通过ConfigMap `agent-core-task-crds`（cluster-system命名空间）配置可检测的任务CR GVK清单。Agent Core启动时经K8s API读取一次该ConfigMap，仅跟踪这些任务CR所管理的Pod（用于任务存在性判定、任务状态判定和Pod采集调度）。
+Agent Core通过ConfigMap `agent-core-task-crds`（cluster-system命名空间）配置可检测的任务CR GVK清单。Agent Core启动时经K8s API读取一次该ConfigMap，仅跟踪这些任务CR所管理的Pod（用于任务存在性判定和Pod采集调度）。
 
 ## 默认支持的任务类型<a name="sectionfaultdiagnosisdefaultcr"></a>
 
@@ -29,41 +29,14 @@ task_crds:
     kind: Job
 ```
 
-**步骤2：修改`agent-core.yaml`中的ClusterRole `agent-core`**
-
-在`agent-core.yaml`的ClusterRole `agent-core`中新增对应API组的`get`权限。以上述Volcano Job为例：
-
-```yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: agent-core
-rules:
-  - apiGroups: [""]
-    resources: ["pods"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["nodes"]
-    verbs: ["get", "list"]
-  - apiGroups: ["mindxdl.gitee.com"]
-    resources: ["ascendjobs"]
-    verbs: ["get"]
-  - apiGroups: ["mindcluster.huawei.com"]
-    resources: ["inferservicesets"]
-    verbs: ["get"]
-  - apiGroups: ["batch.volcano.sh"]      # 新增: Volcano Job
-    resources: ["jobs"]
-    verbs: ["get"]
-```
-
-> [!NOTE]
-> 若任务CRD不止AscendJob和InferServiceSet，必须在ClusterRole中为该CR增补对应的`get`权限。否则Agent Core无法查询该任务的状态，任务状态判定为unknown，诊断结果不会被缓存（但诊断本身不受影响）。
-
-**步骤3：重启Agent Core使配置生效**
+**步骤2：重启Agent Core使配置生效**
 
 ```shell
 kubectl rollout restart deployment agent-core -n mindx-dl
 ```
+
+> [!NOTE]
+> 新增任务类型后无需修改ClusterRole。任务存在性检查与Pod采集调度均依赖relcache（中心关系缓存，按`agent-core-task-crds`过滤任务Pod），Agent Core不直接查询任务CR。
 
 ## 验证配置<a name="sectionfaultdiagnosisverify"></a>
 

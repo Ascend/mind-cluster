@@ -65,14 +65,15 @@ def test_run_diag_reads_report(tmp_path, monkeypatch):
         out = Path(cmd[cmd.index("-o") + 1])
         (out / "fault_diag_result").mkdir(parents=True, exist_ok=True)
         (out / "fault_diag_result" / "diag_report.json").write_text('{"root_cause":"n1","events":[]}')
-        return SimpleNamespace(returncode=0, stdout="", stderr="")
+        return SimpleNamespace(returncode=0, stdout="pretty table\n", stderr="")
 
     monkeypatch.setattr(subprocess, "run", fake_run)
 
     in_dir = tmp_path / "default_job1" / "diag-input"
     in_dir.mkdir(parents=True)
-    out, report = tools.run_diag(str(in_dir))
+    out, report, report_text = tools.run_diag(str(in_dir))
     assert report["root_cause"] == "n1"
+    assert report_text == "pretty table"
     assert Path(out).exists()
 
 
@@ -83,7 +84,7 @@ def test_run_diag_missing_report_returns_empty(tmp_path, monkeypatch):
     monkeypatch.setattr(subprocess, "run", lambda *a, **k: SimpleNamespace(returncode=0, stdout="", stderr=""))
     in_dir = tmp_path / "default_job1" / "diag-input"
     in_dir.mkdir(parents=True)
-    _out, report = tools.run_diag(str(in_dir))
+    _out, report, _report_text = tools.run_diag(str(in_dir))
     assert report == {}
 
 
@@ -101,7 +102,7 @@ def test_run_diag_timeout_raises_diagerror(tmp_path, monkeypatch):
     in_dir.mkdir(parents=True)
     with pytest.raises(tools._DiagError) as ei:  # pylint: disable=protected-access
         tools.run_diag(str(in_dir))
-    assert "诊断超时" in str(ei.value)
+    assert "diagnosis timed out" in str(ei.value)
 
 
 # --------------------------------------------------------------------------- #
@@ -191,7 +192,7 @@ def test_diagnose_no_pods(monkeypatch):
 
     monkeypatch.setattr(rc, "lookup", lambda job, namespace="default": [])
     r = tools.diagnose(job="x", namespace="default")
-    assert "没有可诊断的 pod" in r["error"]
+    assert "no diagnosable pod" in r["error"]
     assert r["pods"] == []
 
 
@@ -209,7 +210,7 @@ def test_diagnose_all_collect_fail(monkeypatch):
         tools, "dispatch_collect", lambda job, pods: [{"ok": False, "node": "n", "error": "boom", "worker_dir": None}]
     )
     r = tools.diagnose(job="x")
-    assert "节点采集全部失败" in r["error"]
+    assert "all node collections failed" in r["error"]
     assert r["pods"] and not r["collected"][0]["ok"]
 
 
@@ -229,9 +230,10 @@ def test_diagnose_ok(monkeypatch, tmp_path):
         ],
     )
     monkeypatch.setattr(tools, "WORK_ROOT", tmp_path)
-    monkeypatch.setattr(tools, "run_diag", lambda d: (str(tmp_path / "out"), {"root_cause": "n"}))
+    monkeypatch.setattr(tools, "run_diag", lambda d: (str(tmp_path / "out"), {"root_cause": "n"}, "pretty table"))
     r = tools.diagnose(job="x")
     assert r["error"] is None
     assert r["diag_report"] == {"root_cause": "n"}
+    assert r["diag_report_text"] == "pretty table"
     assert r["pods"] == pods
     assert Path(r["diag_input_dir"], "worker0", "server-info.json").exists()

@@ -2,6 +2,7 @@
 
 - 使用[集群运维Agent](../../../01_introduction/02_feature_description.md#ZH-CN_TOPIC_0000002524312690)特性的用户，必须安装Agent Core。
 - Agent Core以Deployment方式部署在管理节点，作为故障诊断的集中控制中心，负责接收诊断请求、按任务维度调度各节点采集日志并执行集中诊断。
+- Agent Core通过`nodeSelector`调度到带有`masterselector=dls-master-node`标签的管理节点上。节点标签的创建请参见[创建节点标签](./01_preparing_for_installation.md#创建节点标签)。
 - Agent Core和Node Collector共用同一个镜像ascend-clusterops-agent，镜像的获取（制作或拉取）请参见[准备镜像](./01_preparing_for_installation.md#准备镜像)。
 - 部署Agent Core前，需先完成[安装前准备](./01_preparing_for_installation.md)中的创建用户、创建日志目录和创建命名空间步骤。
 
