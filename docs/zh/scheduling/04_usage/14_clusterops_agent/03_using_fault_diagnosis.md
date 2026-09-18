@@ -55,14 +55,14 @@ kubectl ascend_diag --job job-x -n training --json
 
 ```text
 $ kubectl ascend_diag --job job-x -n training
-这是缓存数据，需要实时数据，请加 --refresh
+This is cached data; add --refresh for real-time data
 [Root Cause] HCCS链路异常，导致集合通信超时
 ```
 
 > [!NOTE]
 >
-> - 同一任务正在诊断中再次执行时，会提示`job=job-x正在诊断中(开始于HH:MM:SS), 请勿重复执行`，不会重复采集。
-> - 若任务不存在，会直接返回`训练/推理任务不存在: job=job-x in ns=training`并终止诊断。
+> - 同一任务正在诊断中再次执行时，会提示`job=job-x is being diagnosed (started at HH:MM:SS), please do not run it again`，不会重复采集。
+> - 若任务不存在（任务CR已删除且relcache中无该任务pod记录），会直接返回`Training/inference task not found: job=job-x in ns=training`并终止诊断；任务CR已删除但relcache中仍有该任务pod记录（删除TTL内，日志仍保留在节点/共享盘上），仍会继续诊断。
 > - 诊断结果缓存的详细说明请参见[诊断结果缓存](../../06_api/18_clusterops_agent.md#诊断结果缓存)章节。
 
 ## 数据落盘与空间回收<a name="sectionfaultdiagnosisstorage"></a>
@@ -93,7 +93,7 @@ Agent Core与Node Collector分别在各自的工作目录下按任务维度落�
 - `parse-result-{job}-{node}.tar.gz`：Node Collector按节点上报的采集归档。
 - `diag-input/worker{N}/`：各节点 `ascend-fd parse` 清洗产物，组装为集中诊断输入。
 - `diag-output/`：`ascend-fd diag` 生成的诊断报告目录。
-- `cache/{namespace}_{job}.json`：任务停止后缓存的诊断结果，用于后续查询直接返回。
+- `cache/{namespace}_{job}.json`：每次诊断成功后缓存的诊断结果，重复诊断直接返回，支持`--refresh`强制刷新。
 
 ### Node Collector落盘内容<a name="sectionfaultdiagnosiscollectorstorage"></a>
 

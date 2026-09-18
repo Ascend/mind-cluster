@@ -21,17 +21,27 @@ service Uploader {
   rpc UploadResult(stream UploadRequest) returns (UploadAck);
 }
 
-// Reference to a single pod to be collected (no host_paths: the collector's local pathmap resolves them).
+// Reference to a single pod to be collected.
 message PodRef {
   string ns = 1;
   string name = 2;
   string pod_uid = 3;
 }
 
+// Mount/env data of a single pod shipped inside the CollectRequest, so the collector
+// does not need a global pathmap CM cache (resolves host paths locally per request).
+message PodMount {
+  string pod_uid = 1;               // matches PodRef.pod_uid
+  repeated string pairs = 2;        // host:container mount pairs (mount_keywords matching / container->host path reverse lookup)
+  map<string, string> env = 3;      // literal container env values (env entity container->host path reverse lookup)
+  string pod_ip = 4;                // plog-keying IP (host IP first, falls back to pod IP), for shared-storage plog subpath matching
+}
+
 message CollectRequest {
   string node = 1;            // target node name
   string job = 2;             // job identifier (correlated on report; the agent aggregates by it)
   repeated PodRef pods = 3;   // pods to collect on this node
+  repeated PodMount mounts = 4; // mount/env data of the pods above (replaces the collector-side pathmap cache)
 }
 
 message CollectAck {

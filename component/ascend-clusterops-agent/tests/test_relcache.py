@@ -27,6 +27,8 @@ from __future__ import annotations
 import time
 from types import SimpleNamespace
 
+from kubernetes import client
+
 from agent_core import relcache as rc
 from conftest import make_pod_metadata
 
@@ -131,15 +133,73 @@ def test_lookup_keeps_within_ttl_entries():
 # --------------------------------------------------------------------------- #
 # snapshot round-trip: after save -> load the task relationships stay queryable (restart reload)
 # --------------------------------------------------------------------------- #
+def test_save_snapshot_skips_empty_shards():
+    # startup must not create CMs for empty shards: only the shard holding pod data is created
+    created = []
+
+    class FakeV1:  # noqa: N801  # minimal k8s CoreV1Api stand-in
+        def read_namespaced_config_map(self, name, ns):
+            raise client.ApiException(status=404)
+
+        def create_namespaced_config_map(self, ns, cm):
+            created.append(cm.metadata.name)
+
+    c = rc.RelationshipCache()
+    c._v1 = FakeV1()  # pylint: disable=protected-access
+    c.apply_pod(_make_pod(uid="u1", name="p1", node="node-a"))
+    assert c._save_snapshot()  # pylint: disable=protected-access
+    assert len(created) == 1  # only the filled shard (0), not all SNAPSHOT_SHARDS
+    assert created[0] == "agent-core-relcache"  # shard 0 keeps the legacy CM name
+
+
+def test_new_pods_fill_shards_sequentially(monkeypatch):
+    # sequential fill: new pods go to shard 0, advance to shard 1 once the fill limit is reached
+    monkeypatch.setattr(rc, "SNAPSHOT_SHARD_FILL_LIMIT", 1)  # every entry overflows the current shard
+    c = rc.RelationshipCache()
+    c.apply_pod(_make_pod(uid="u0", name="p0"))
+    c.apply_pod(_make_pod(uid="u1", name="p1"))
+    c.apply_pod(_make_pod(uid="u2", name="p2"))
+    shards = {int(c._pods[u]["shard"]) for u in ("u0", "u1", "u2")}  # pylint: disable=protected-access
+    assert shards == {0, 1, 2}  # 0 filled -> 1 -> 2
+
+
 def test_snapshot_roundtrip_after_restart():
     c = rc.RelationshipCache()
     c.apply_pod(_make_pod(uid="u1", name="p1", node="node-a"))
     c.apply_pod_deleted("u1", ts=time.time())
-    snap = c._snapshot()  # pylint: disable=protected-access
+    # sharded snapshots: merge all shards to reproduce the restart reload
+    snaps = [c._snapshot(shard) for shard in range(rc.SNAPSHOT_SHARDS)]  # pylint: disable=protected-access
 
     c2 = rc.RelationshipCache()
-    c2._apply_snapshot(snap)  # pylint: disable=protected-access
+    for snap in snaps:
+        c2._apply_snapshot(snap)  # pylint: disable=protected-access
     pods = c2.lookup("job1", "default")
     assert len(pods) == 1
     assert pods[0]["pod_name"] == "p1"
     assert pods[0]["node"] == "node-a"
+
+
+# --------------------------------------------------------------------------- #
+# in-memory cap: memory stays consistent with the sharded CM snapshot capacity
+# --------------------------------------------------------------------------- #
+def test_apply_pod_evicts_oldest_beyond_cap(monkeypatch):
+    c = rc.RelationshipCache()
+    for i in range(4):
+        c.apply_pod(_make_pod(uid=f"u{i}", name=f"p{i}"))
+    # tighten the byte cap below the current 4-entry size, then trigger eviction
+    monkeypatch.setattr(rc, "SNAPSHOT_MAX_BYTES", c._bytes - 1)  # pylint: disable=protected-access
+    c.apply_pod(_make_pod(uid="ux", name="px"))
+    assert len(c._pods) <= 3  # pylint: disable=protected-access
+    assert c.lookup("job1", "default")[0]["pod_name"] != "p0"  # u0 (oldest) was evicted
+
+
+def test_same_job_replaced_clears_old_pods():
+    # same ns+name job recreated (new owner UID): the old instance's pods are dropped
+    c = rc.RelationshipCache()
+    c.apply_pod(_make_pod(uid="ua", name="pa", job="job1"))  # owner_uid = job-uid-job1
+    p = _make_pod(uid="ub", name="pb", job="job1")
+    p.metadata.owner_references[0].uid = "job-uid-job1-v2"  # the task CR was recreated
+    c.apply_pod(p)
+    pods = c.lookup("job1", "default")
+    assert [x["pod_name"] for x in pods] == ["pb"]  # old pod replaced by the new instance
+    assert len(c._pods) == 1  # pylint: disable=protected-access
