@@ -185,6 +185,12 @@
 <td>光模块Host SNR异常：Lane1 Host SNR值7.2dB低于阈值8.0dB</td>
 </tr>
 <tr>
+<td>端口虚拟链路（VL）优先级Credit不足检测</td>
+<td><code>hccn_tool -g -credit -i {npu_id} -u {udie_id} -p {port_id}</code></td>
+<td>检查各优先级 Credit 的分配数量（link_alloc_vl_pri_credit）与使用数量（link_cur_used_pri_credit）相等且非 0（分配与使用均为 0 表示未启用该优先级，不视为异常）</td>
+<td>端口虚拟链路（VL）优先级Credit不足：vl1 分配数量=8 使用数量=8</td>
+</tr>
+<tr>
 <td>NIC光模块Los/LoL检测</td>
 <td rowspan="4"><code>hinicadm5 sfp -i {card_name} -p {port_id}</code></td>
 <td>检查网卡端口各 lane 的 TxLos / RxLos / TxCdrLol / RxCdrLol 状态值是否非 0</td>
@@ -452,6 +458,13 @@
 <td>双端光模块电流检测</td>
 <td>通过端口映射关系获取对端，对双端光模块偏置电流进行对比分析</td>
 <td>本端交换机偏置电流85mA，对端主机偏置电流105mA</td>
+</tr>
+<tr>
+<td>端口QoS Credit不足检测</td>
+<td><code>dis forward information enp slot {slot_id} chip {chip_id} "get oda table qos credit current" | no-more</code>（Ascend 950PR&950DT系列产品经 PoDManager 跳转 NPU 槽位执行）</td>
+<td>暂不支持</td>
+<td>检查各 VL 优先级维度的当前可用 Credit（current credit）为 0 且分配的 Credit（alloc credit）非 0（满足 alloc credit = used credit + current credit；分配为 0 表示未启用，不视为异常）</td>
+<td>chip15, port0 QoS Credit不足：vl1 分配数量=8 当前可用数量=0</td>
 </tr>
 </tbody>
 </table>

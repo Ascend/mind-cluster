@@ -54,12 +54,13 @@
 
 #### <term>Ascend 950PR&950DT系列产品</term>额外采集命令
 
-| 类别 | 命令 | 用途                                                      |
-|------|------|---------------------------------------------------------|
-| 光模块头版头条 | `hccn_tool -g -optical -i {npu_id}` | NPU 下所有光模块的编号、速率、用途等                                    |
-| 光模块详情 | `hccn_tool -g -optical -i {npu_id} -optical_id {optical_id}` | 单个光模块的硬件属性、序列号、状态标志、监控项（Bias/TxPower/RxPower/SNR）       |
-| 网卡列表 | `hinicadm5 info` | 所有网卡名称                                           |
-| 网卡端口数 | `hinicadm5 info -i {card_name}` | 指定网卡的端口数量                                               |
+| 类别 | 命令 | 用途                                                    |
+|------|------|-------------------------------------------------------|
+| 光模块头版头条 | `hccn_tool -g -optical -i {npu_id}` | NPU 下所有光模块的编号、速率、用途等                                  |
+| 光模块详情 | `hccn_tool -g -optical -i {npu_id} -optical_id {optical_id}` | 单个光模块的硬件属性、序列号、状态标志、监控项（Bias/TxPower/RxPower/SNR）     |
+| 端口 Credit 信息 | `hccn_tool -g -credit -i {npu_id} -u {udie_id} -p {port_id}` | 指定端口的共享 Credit 及虚拟链路（VL）优先级 Credit 的分配/使用数量 |
+| 网卡列表 | `hinicadm5 info` | 所有网卡名称                                         |
+| 网卡端口数 | `hinicadm5 info -i {card_name}` | 指定网卡的端口数量                                             |
 | 网卡 SFP 信息 | `hinicadm5 sfp -i {card_name} -p {port_id}` | 指定网卡指定端口的 SFP lane 信息（Bias/TxPower/RxPower/Los/Lol/SNR） |
 
 <a id="host-offline-log"></a>
