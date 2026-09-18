@@ -101,6 +101,8 @@
      - 优先使用非保留资源进行调度，若调度失败，则尝试使用保留资源进行调度。
      - 选择碎片分数最低的调度方案。
 
+  具体配置方法与调度效果参见[配置示例](#配置示例)。
+
 ## 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_0000002479227158duoji"></a>
 
 >[!NOTE]
@@ -230,6 +232,112 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
 >[!NOTE]
 >其他详细说明可以通过执行各个脚本的-h参数或者通过multilevel-label-tool目录下的README获取。
 
+### 配置示例<a name="section1674351750duoji"></a>
+
+多级调度需要在集群侧和任务侧分别配置level信息：集群侧通过节点标签描述网络层级（谁和谁离得近），任务侧通过注解声明Pod的层级需求（哪些Pod需要放得近），调度器负责将两者匹配。本节以8节点集群、四机训练任务（总副本数为4，每个Pod申请8个NPU）为例，分三步说明从配置到调度结果的全过程。
+
+**第1步：配置集群侧网络层级（节点标签与Volcano启动参数）**
+
+集群包含8个节点，划分为2个超节点层级（superpodid 0和superpodid 1），所有节点同属一个groupid（groupid 0）。假设节点标签如下：
+
+|节点|huawei.com/topotree|huawei.com/topotree.superpodid|huawei.com/topotree.groupid|
+|--|--|--|--|
+|node0~node3|default|0|0|
+|node4~node7|default|1|0|
+
+node0~node3同属superpodid 0，节点间通过第一层交换机直接互联，通信效率最高；node4~node7同属superpodid 1；两组节点间通信需经过上层交换机，通信效率较低。
+
+在“volcano-v<i>\{version\}</i>.yaml”中通过resource-level-config参数定义每一层网络对应的节点标签：
+
+```yaml
+...
+data:
+  volcano-scheduler.conf: |
+...
+    configurations:
+      - name: init-params
+        arguments: {"resource-level-config": '{"default":  {"level1": {"label": "huawei.com/topotree.superpodid", "reservedNode": 1}, "level2": {"label": "huawei.com/topotree.groupid"}}}'}
+...
+```
+
+- level1：离节点最近的网络层级，使用superpodid标签划分节点组。每个level1节点组中预留1个节点（reservedNode: 1），即node3和node7为保留节点，仅在其他资源不足时参与调度。
+- level2：更高一层的网络聚合，使用groupid标签划分节点组。
+
+>[!NOTE]
+>
+>level的数量应与集群实际组网深度一致，可以定义level1、level2、level3等多层，层级必须从level1开始连续。本例组网为两层，因此只配置两级。
+
+**第2步：配置任务侧层级需求（任务YAML注解）**
+
+四机任务（总副本数为4）的YAML注解配置如下：
+
+```yaml
+annotations:
+  huawei.com/schedule_policy: multilevel       # 配置调度策略为多级调度策略
+  huawei.com/affinity-config: level1=2,level2=4 # 按照任务实际需求配置不同层级的网络组大小
+```
+
+完整的任务YAML配置请参见[pytorch_multinodes_acjob_super_pod_multilevel.yaml](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/train/basic-training/multilevel/pytorch_multinodes_acjob_super_pod_multilevel.yaml)。
+
+affinity-config中，level后的数字表示网络层级序号，等号后的数字表示在该层级网络内每几个Pod分为一组。本例中：
+
+- level1=2：每2个Pod为一个紧密小组，小组内的Pod必须落在同一个superpodid下。
+- level2=4：4个Pod为一个大组，组内的Pod必须落在同一个groupid下。
+
+上述注解展开后的任务树如下，任务树描述的是作业的通信结构：同level1组的Pod通信最频繁，必须通过第一层交换机直连；跨level1组但同level2组的Pod通信次之，允许经过上层交换机。
+
+```text
+任务树（任务要什么）
+root（4个Pod）
+└── level2组（4个Pod，要求同groupid）
+    ├── level1组A（2个Pod，要求同superpodid）→ Pod 1, Pod 2
+    └── level1组B（2个Pod，要求同superpodid）→ Pod 3, Pod 4
+```
+
+另外，每个Pod申请的NPU资源需要与节点最大NPU数量一致（本例中为“huawei.com/Ascend910: 8”）。
+
+**第3步：调度器匹配任务树与资源树（调度结果）**
+
+调度器收集健康节点构建资源树，并在其上附加调度属性（可分配任务数、保留标记、碎片分数）形成调度树，调度树是调度算法的操作对象：
+
+```text
+资源树（集群有什么）
+root（default拓扑树，groupid=0，共8个节点）
+├── superpodid=0（level1节点组，4个节点）
+│   ├── node0（8 NPU，空闲）
+│   ├── node1（8 NPU，空闲）
+│   ├── node2（8 NPU，空闲）
+│   └── node3（8 NPU，空闲，保留节点）
+└── superpodid=1（level1节点组，4个节点）
+    ├── node4（8 NPU，空闲）
+    ├── node5（8 NPU，空闲）
+    ├── node6（8 NPU，空闲）
+    └── node7（8 NPU，空闲，保留节点）
+```
+
+调度器遍历调度树，找到能让任务树完整贴合的放置方案。本例任务树要求“4个Pod同属groupid 0，且每2个Pod同属一个superpodid”，满足约束的候选方案如下：
+
+|候选方案|Pod 1、Pod 2落点|Pod 3、Pod 4落点|
+|--|--|--|
+|方案1|node0、node1（superpodid 0）|node4、node5（superpodid 1）|
+|方案2|node0、node1（superpodid 0）|node4、node6（superpodid 1）|
+|方案3|node0、node2（superpodid 0）|node5、node6（superpodid 1）|
+|...|...|...|
+
+各候选方案调度后superpodid 0和superpodid 1均剩余2个空闲节点，碎片分数（衡量剩余资源零散程度）相同，调度器按节点优先级选择，最终Pod 1、Pod 2调度到node0、node1，Pod 3、Pod 4调度到node4、node5。
+
+若集群已被其他任务部分占用（如node1、node2已被占满），superpodid 0中空闲的非保留节点仅剩node0，无法单独容纳一个level1组（需要2个节点），因此一个level1组只能使用node0和保留节点node3完成调度；另一个level1组优先使用非保留节点node4和node5。只有当空闲的非保留节点数量不足时，调度器才会将保留节点纳入调度。
+
+若将注解修改为“level1=4,level2=4”，则任务树要求4个Pod同属一个superpodid，调度结果变为node0~node3，Pod间均通过第一层交换机直连，通信效率最高。用户可以根据任务对规模和通信性能的诉求，选择合适的层级配置。
+
+**配置校验失败示例**
+
+若任务总副本数为4，但配置“level1=1,level2=3”，由于任务总副本数量必须是所有层级值的整数倍（4不是3的整数倍），作业验证阶段会校验失败，调度器将拒绝该任务。用户可以根据调度器日志中的校验失败提示，检查affinity-config的层级配置是否满足以下要求：
+
+- 任务层级大于1层时，层级n的值必须是n-1的整数倍。
+- 任务总副本数量必须是所有层级的整数倍。
+- 任务层级配置必须从level1开始，从小到大连续。
+
 ### 准备任务YAML<a name="ZH-CN_TOPIC_000000296583duoji"></a>
 
 #### 选择YAML示例<a name="ZH-CN_TOPIC_0000002479duoji"></a>
@@ -282,7 +390,7 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
 |参数|取值|说明|
 |--|--|--|
 |huawei.com/schedule_policy|multilevel|多级调度任务需要指定该唯一调度策略。|
-|huawei.com/affinity-config|<p>level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p>|<p>配置任务的多级调度的亲和性层级。</p><p>要求满足格式为leveli=ni样式的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>|
+|huawei.com/affinity-config|<p>level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p>|<p>配置任务的多级调度的亲和性层级。取值含义及调度效果参见[配置示例](#配置示例)。</p><p>要求满足格式为leveli=ni样式的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>|
 
 #### 配置YAML<a name="ZH-CN_TOPIC_00000025113471duoji"></a>
 
