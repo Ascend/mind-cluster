@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/strings/slices"
 
@@ -488,7 +488,7 @@ func IsRecoverInPlaceFaultLevels(faultLevels sets.String, jobSubHealthStrategy s
 // IsUnRecoverInPlaceFaultLevels has unRecovery fault level
 func IsUnRecoverInPlaceFaultLevels(faultLevel sets.String, jobSubHealthStrategy string) bool {
 	tmpSet := faultLevel.Clone()
-	tmpSet.Delete(constant.NotHandleFault, constant.RestartRequest, constant.RestartBusiness)
+	tmpSet.Delete(constant.NotHandleFault, constant.RestartRequest, constant.RestartBusiness, constant.PreSeparateNPU)
 	return (tmpSet.Has(constant.SubHealthFault) && jobSubHealthStrategy != constant.SubHealthyIngore) ||
 		(!tmpSet.Has(constant.SubHealthFault) && tmpSet.Len() > 0)
 }
