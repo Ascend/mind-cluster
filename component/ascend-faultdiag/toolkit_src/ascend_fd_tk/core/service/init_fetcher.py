@@ -77,15 +77,13 @@ class InitFetcher(DiagService):
         建连失败的连接不丢弃其负责的槽位：按成功连接数重新轮询分片，
         保证每个槽位都被剩余连接接管，避免漏采。
         """
-        slot_ids = constants.POD_MANAGER_SWITCH_SLOT_IDS
-        conn_num = min(constants.POD_MANAGER_SWITCH_CONN_NUM, len(slot_ids))
 
         async def _create(conn_idx):
             executor = AsyncSSHExecutor(conn.host, conn.port, conn.username, conn.password, conn.private_key)
             await asyncio.get_running_loop().run_in_executor(None, executor.ensure_shell_session)
             return conn_idx, executor
 
-        created = await asyncio.gather(*(_create(i) for i in range(conn_num)))
+        created = await asyncio.gather(*(_create(i) for i in range(constants.POD_MANAGER_CONN_NUM)))
         ok_executors = []
         for conn_idx, executor in created:
             if not executor.shell_channel:
@@ -99,15 +97,19 @@ class InitFetcher(DiagService):
             return
         # 重新轮询分片：槽位均分到成功连接，连接内串行切换
         ok_conn_num = len(ok_executors)
+        npu_slot_ids = constants.POD_MANAGER_NPU_SLOT_IDS
+        sfu_slot_ids = constants.POD_MANAGER_SFU_SLOT_IDS
         for offset, (conn_idx, executor) in enumerate(ok_executors):
-            fetcher_slots = slot_ids[offset::ok_conn_num]
-            fetcher = PoDManagerSshFetcher(executor, fetcher_slots)
+            fetcher_slots = sfu_slot_ids[offset::ok_conn_num]
+            # A5 NPU 槽位同样按轮询分片到各连接，用于跳转 NPU 槽位采集 switch QoS credit
+            fetcher_npu_slots = npu_slot_ids[offset::ok_conn_num]
+            fetcher = PoDManagerSshFetcher(executor, fetcher_slots, fetcher_npu_slots)
             fetchers_map[ConnKey(executor.host, conn_idx)] = fetcher
         DIAG_LOGGER.info(
             "PoDManager %s 初始化成功：共创建 %s 个连接，槽位分片：%s",
             conn.host,
             ok_conn_num,
-            {conn_idx: slot_ids[offset::ok_conn_num] for offset, (conn_idx, _) in enumerate(ok_executors)},
+            {conn_idx: sfu_slot_ids[offset::ok_conn_num] for offset, (conn_idx, _) in enumerate(ok_executors)},
         )
 
     async def _check_and_add_executor(self, conn, fetchers_map, fetcher_type):

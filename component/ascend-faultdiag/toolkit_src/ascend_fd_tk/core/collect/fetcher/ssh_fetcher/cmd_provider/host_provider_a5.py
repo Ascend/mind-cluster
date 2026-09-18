@@ -27,6 +27,10 @@ class HostCmdProviderA5(HostBaseProvider):
         # 查询NPU设备信息
         return f"hccn_tool -g -dev_info -i {npu_id}"
 
+    def credit_info(self, npu_id, udie_id, port_id) -> str:
+        # 查询端口 Credit 信息（端口共享 Credit 及虚拟链路 VL 优先级 Credit 的分配/使用数量）
+        return f"hccn_tool -g -credit -i {npu_id} -u {udie_id} -p {port_id}"
+
     def optical_port_info_cmd(self, npu_id, udie_id, port_id) -> str:
         # 查询光模块信息
         return f"hccn_tool -g -optical -i {npu_id} -u {udie_id} -p {port_id}"

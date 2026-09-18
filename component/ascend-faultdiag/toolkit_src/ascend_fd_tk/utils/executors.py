@@ -246,6 +246,7 @@ class AsyncSSHExecutor(AsyncExecutor):
         self.shell_channel: Optional[paramiko.Channel] = None
         self._lock = threading.Lock()
         self.last_prompt = ""  # 记录上次命令提示符
+        self.slot_id = ""  # 当前槽位号（PoDManager 槽位切换时写入，供命令耗时日志打印）
 
     @staticmethod
     def _load_private_key(private_key, passphrase):
@@ -283,7 +284,16 @@ class AsyncSSHExecutor(AsyncExecutor):
 
         start_time = time.time()
         exit_code, stdout, stderr = await loop.run_in_executor(None, _run_sync)
-        DIAG_LOGGER.info("Host: %s, cmd: %s cost %.3f seconds", self.host, cmd_task.cmd, time.time() - start_time)
+        if self.slot_id:
+            DIAG_LOGGER.info(
+                "Host: %s, slot_id: %s, cmd: %s cost %.3f seconds",
+                self.host,
+                self.slot_id,
+                cmd_task.cmd,
+                time.time() - start_time,
+            )
+        else:
+            DIAG_LOGGER.info("Host: %s, cmd: %s cost %.3f seconds", self.host, cmd_task.cmd, time.time() - start_time)
         result = CommandResult(cmd=cmd_task.cmd, returncode=exit_code, stdout=stdout or "", stderr=stderr or "")
 
         # 执行回调

@@ -108,6 +108,10 @@ class SwiCliOutputFetcher(SwitchFetcher):
     async def fetch_port_credit_back_pressure_statistics(self) -> str:
         return self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.HCCS_PORT_CREDIT_BACK_PRESSURES_STATISTIC.name)
 
+    async def fetch_qos_credit(self, slot_id: str, chip_ids) -> str:
+        # dump 日志无法按 slot/chip 主动查询该命令，暂不采集
+        return ""
+
     async def has_hccs(self) -> bool:
         return bool(self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.HCCS_IF_SNR.name))
 

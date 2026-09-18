@@ -37,7 +37,7 @@ def _make_executor(host="10.1.1.1") -> MagicMock:
 class TestPoDManagerSshFetcher(unittest.TestCase):
     def setUp(self):
         self.executor = _make_executor()
-        self.fetcher = PoDManagerSshFetcher(self.executor, [61, 62, 63, 64])
+        self.fetcher = PoDManagerSshFetcher(self.executor, ["61", "62", "63", "64"], ["18", "19"])
 
     def test_mro_inherits_switch_and_podmanager_fetcher(self):
         """应同时具备 switch 命令能力与 PoDManager 槽位能力。"""
@@ -46,18 +46,18 @@ class TestPoDManagerSshFetcher(unittest.TestCase):
 
     def test_fetch_id_contains_host_and_current_slot(self):
         """初始 current_slot 为第一个槽位，fetch_id 返回 host_slot。"""
-        self.assertEqual(self.fetcher.current_slot, 61)
+        self.assertEqual(self.fetcher.current_slot, "61")
         self.assertEqual(asyncio.run(self.fetcher.fetch_id()), "10.1.1.1_61")
 
     def test_switch_slot_updates_current_slot(self):
         """switch_slot 后 current_slot 与 fetch_id 同步更新。"""
-        asyncio.run(self.fetcher.switch_slot(64))
-        self.assertEqual(self.fetcher.current_slot, 64)
+        asyncio.run(self.fetcher.switch_slot("64"))
+        self.assertEqual(self.fetcher.current_slot, "64")
         self.assertEqual(asyncio.run(self.fetcher.fetch_id()), "10.1.1.1_64")
 
     def test_init_fetcher_sends_ubm_login_sequence(self):
         """init_fetcher 应按当前槽位执行 loginUBM -slot {slot} 并进入 diag 视图。"""
-        asyncio.run(self.fetcher.switch_slot(63))
+        asyncio.run(self.fetcher.switch_slot("63"))
         asyncio.run(self.fetcher.init_fetcher())
         tasks = [call.args[0] for call in self.executor.run_cmd.await_args_list]
         self.assertEqual([task.cmd for task in tasks], ["loginUBM -slot 63", "n", "sys", "diag"])

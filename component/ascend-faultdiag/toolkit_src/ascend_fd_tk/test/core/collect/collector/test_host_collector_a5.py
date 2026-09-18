@@ -45,6 +45,8 @@ def _build_mock_fetcher():
     fetcher.fetch_npu_mapping = AsyncMock(return_value={"0": {"chip_phy_id": "0"}})
     # 设备信息原始回显，由 parser 解析
     fetcher.fetch_dev_info = AsyncMock(return_value="dev_info_raw")
+    # 端口 Credit 原始回显，由 parser 解析
+    fetcher.fetch_credit_info = AsyncMock(return_value="credit_info_raw")
     # 端口状态回显（含光模块类型），由 parser 解析
     fetcher.fetch_port_state_info = AsyncMock(return_value="port_state_raw")
     # 每个光模块端口信息采集返回非空字符串，由 parser 解析
@@ -105,6 +107,17 @@ class TestHostCollectorA5Collect(unittest.TestCase):
         # 调用参数按 UDie + Port 传递
         self.collector.parser.parse_optical_info_port.assert_any_call("optical_info_raw", "0", "0")
         self.collector.parser.parse_optical_info_port.assert_any_call("optical_info_raw", "0", "1")
+
+    def test_collect_credit_info_all_ports(self):
+        """collect 应遍历每个端口（含非 Optical 端口）采集 Credit 信息并填充 credit_info_list。"""
+        host_info = asyncio.run(self.collector.collect())
+        chip_info = host_info.npu_chip_info["0"]
+        # 3 个端口（2 个 Optical + 1 个非 Optical）均采集 Credit
+        self.assertEqual(self.fetcher.fetch_credit_info.call_count, 3)
+        self.collector.parser.parse_credit_info.assert_any_call("credit_info_raw", "0", "0")
+        self.collector.parser.parse_credit_info.assert_any_call("credit_info_raw", "0", "1")
+        self.collector.parser.parse_credit_info.assert_any_call("credit_info_raw", "0", "2")
+        self.assertEqual(len(chip_info.credit_info_list), 3)
 
     def test_collect_nic_info_multi_ports(self):
         """collect 应遍历每张网卡的每个端口采集 SFP 信息。"""

@@ -199,6 +199,77 @@ eth1         down   down        0.0%     0.0%      10          5"""
         self.assertEqual(result[1].interface, "eth1")
         self.assertEqual(result[1].in_errors, "10")
 
+    def test_parse_qos_credit(self):
+        # 测试parse_qos_credit方法：多芯片批量回显按命令行拆分，三张表对齐解析
+        header = "port  vl0     vl1     VNA     total"
+        cmd_res = "\n".join(
+            [
+                'dis forward information enp slot 20 chip 15 "get oda table qos credit current" | no-more',
+                "QOS ALLOC CREDIT TABLE: ",
+                header,
+                "0     28      28      188     496",
+                "1     28      0       700     1008",
+                "QOS USED CREDIT TABLE: ",
+                header,
+                "0     0       0       0       0",
+                "1     28      0       0       0",
+                "QOS CURRENT CREDIT TABLE: ",
+                header,
+                "0     28      28      188     496",
+                "1     0       0       700     1008",
+                'dis forward information enp slot 20 chip 0 "get oda table qos credit current" | no-more',
+                "QOS ALLOC CREDIT TABLE: ",
+                header,
+                "2     14      0       99      234",
+                "QOS USED CREDIT TABLE: ",
+                header,
+                "2     14      0       0       0",
+                "QOS CURRENT CREDIT TABLE: ",
+                header,
+                "2     0       0       99      234",
+            ]
+        )
+        result = SwitchParser.parse_qos_credit(cmd_res)
+        self.assertEqual(len(result), 2)
+        chip15 = next(info for info in result if info.chip_id == "15")
+        self.assertEqual((chip15.slot_id, len(chip15.ports)), ("20", 2))
+        port0, port1 = chip15.ports
+        self.assertEqual((port0.port_id, port0.vna_alloc, port0.total_current), ("0", "188", "496"))
+        self.assertEqual((port0.vl_alloc_credits, port0.vl_current_credits), (["28", "28"], ["28", "28"]))
+        self.assertEqual(port1.vl_alloc_credits, ["28", "0"])
+        self.assertEqual(port1.vl_used_credits, ["28", "0"])
+        self.assertEqual(port1.vl_current_credits, ["0", "0"])
+        chip0 = next(info for info in result if info.chip_id == "0")
+        self.assertEqual(chip0.ports[0].vl_current_credits, ["0", "0"])
+
+    def test_parse_qos_credit_skips_invalid_input(self):
+        # 空回显、无命令行回显、超长行与列数不齐行均不产生结果/不干扰解析
+        self.assertEqual(SwitchParser.parse_qos_credit(""), [])
+        self.assertEqual(SwitchParser.parse_qos_credit("QOS ALLOC CREDIT TABLE:"), [])
+        header = "port  vl0     VNA     total"
+        cmd_res = "\n".join(
+            [
+                'dis forward information enp slot 18 chip 3 "get oda table qos credit current" | no-more',
+                "QOS ALLOC CREDIT TABLE: ",
+                header,
+                "x" * 300,  # 超长攻击行，应被长度上限拦截
+                "0     28      188     496",  # 正常行
+                "7     28",  # 列数不齐，应跳过
+                "QOS USED CREDIT TABLE: ",
+                header,
+                "0     0       0       0",
+                "QOS CURRENT CREDIT TABLE: ",
+                header,
+                "0     28      188     496",
+            ]
+        )
+        result = SwitchParser.parse_qos_credit(cmd_res)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].slot_id, "18")
+        self.assertEqual(result[0].chip_id, "3")
+        self.assertEqual(len(result[0].ports), 1)
+        self.assertEqual(result[0].ports[0].port_id, "0")
+
 
 if __name__ == '__main__':
     unittest.main()

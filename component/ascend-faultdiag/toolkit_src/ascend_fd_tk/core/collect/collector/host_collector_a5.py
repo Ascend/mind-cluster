@@ -23,7 +23,14 @@ from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.host_ssh_fetcher_a5 import Ho
 from ascend_fd_tk.core.collect.parser.host_parser_a5 import HostParserA5
 from ascend_fd_tk.core.common.diag_enum import NpuType
 from ascend_fd_tk.core.common.constants import OPTICAL_FLAG
-from ascend_fd_tk.core.model.host_a5 import HostInfoA5, OpticalTopHeadline, NpuChipInfoA5, NICInfoA5, DevInfo
+from ascend_fd_tk.core.model.host_a5 import (
+    HostInfoA5,
+    OpticalTopHeadline,
+    NpuChipInfoA5,
+    NICInfoA5,
+    DevInfo,
+    CreditInfo,
+)
 
 
 @register_host_collector(NpuType.A5)
@@ -47,7 +54,10 @@ class HostCollectorA5(Collector):
         for npu_id in npu_mapping.keys():
             dev_info_list = await self.collect_dev_info(npu_id)
             optical_infos = []
+            credit_infos = []
             for dev_info in dev_info_list:
+                credit_info = await self.collect_credit_info(npu_id, dev_info.udie_id, dev_info.port_id)
+                credit_infos.append(credit_info)
                 if dev_info.media_type != OPTICAL_FLAG:
                     continue
                 port_state_info = await self.collect_port_state_info(npu_id, dev_info.udie_id, dev_info.port_id)
@@ -60,6 +70,7 @@ class HostCollectorA5(Collector):
                 npu_id=npu_id,
                 npu_type=npu_type,
                 hccn_optical_info=optical_infos,
+                credit_info_list=credit_infos,
             )
 
         nic_info_list = await self.collect_nic_info()
@@ -88,6 +99,10 @@ class HostCollectorA5(Collector):
     async def collect_dev_info(self, npu_id) -> List[DevInfo]:
         recv = await self.fetcher.fetch_dev_info(npu_id)
         return self.parser.parse_dev_info(recv)
+
+    async def collect_credit_info(self, npu_id, udie_id, port_id) -> CreditInfo:
+        recv = await self.fetcher.fetch_credit_info(npu_id, udie_id, port_id)
+        return self.parser.parse_credit_info(recv, udie_id, port_id)
 
     async def collect_port_state_info(self, npu_id, udie_id, port_id):
         recv = await self.fetcher.fetch_port_state_info(npu_id, udie_id, port_id)

@@ -137,6 +137,39 @@ class PortStateInfo(JsonObj):
         self.media_type = media_type
 
 
+class CreditInfo(JsonObj):
+    """A5 端口 Credit 信息（`hccn_tool -g -credit` 回显）。
+
+    字段说明：
+        link_alloc_port_share_credit    分配的端口共享 Credit 数量
+        link_cur_used_port_share_credit 当前使用的端口共享 Credit 数量
+        link_alloc_vl_pri_credits       虚拟链路（VL）优先级 Credit 分配数量（按优先级 0~N）
+        link_cur_used_pri_credits       虚拟链路（VL）优先级 Credit 使用数量（按优先级 0~N）
+
+    VL 优先级 credit 列表索引 0~15 对应回显 (0)~(15)，未采集到的优先级为空串。
+    """
+
+    def __init__(
+        self,
+        udie_id: str = "",
+        port_id: str = "",
+        link_alloc_port_share_credit: str = "",
+        link_cur_used_port_share_credit: str = "",
+        link_alloc_vl_pri_credits: List[str] = None,
+        link_cur_used_pri_credits: List[str] = None,
+    ):
+        self.udie_id = udie_id
+        self.port_id = port_id
+        # 分配的端口共享 Credit 数量
+        self.link_alloc_port_share_credit = link_alloc_port_share_credit
+        # 当前使用的端口共享 Credit 数量
+        self.link_cur_used_port_share_credit = link_cur_used_port_share_credit
+        # 虚拟链路（VL）优先级 Credit 分配数量
+        self.link_alloc_vl_pri_credits = link_alloc_vl_pri_credits or []
+        # 虚拟链路（VL）优先级 Credit 使用数量
+        self.link_cur_used_pri_credits = link_cur_used_pri_credits or []
+
+
 class HCCNOpticalInfoA5(JsonObj):
     """A5 光模块信息（按 UDie + Port 定位光模块）"""
 
@@ -161,11 +194,13 @@ class NpuChipInfoA5(JsonObj):
         npu_id="",
         npu_type="",
         hccn_optical_info: List[HCCNOpticalInfoA5] = None,
+        credit_info_list: List[CreditInfo] = None,
     ):
         self.npu_type = npu_type
         self.npu_id = npu_id  # 0-7
         # pylint: disable=R0801
         self.hccn_optical_info = hccn_optical_info or []
+        self.credit_info_list = credit_info_list or []
 
     def get_optical_module_info(self) -> List[OpticalModuleInfo]:
         """返回所有光模块信息列表（A3 单 NPU 仅一个元素，A5 单 NPU 可能有多光模块）。

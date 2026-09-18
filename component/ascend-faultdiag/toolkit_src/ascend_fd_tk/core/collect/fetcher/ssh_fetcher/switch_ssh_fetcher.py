@@ -149,6 +149,15 @@ class SwiSshFetcher(SshFetcher, SwitchFetcher):
         cmd_res = await self.executor.run_cmd(CmdTask("display qos port-credit back-pressure statistics | no-more"))
         return cmd_res.stdout
 
+    async def fetch_qos_credit(self, slot_id: str, chip_ids) -> str:
+        # 芯片端口QoS credit 查询：批量执行各芯片命令，回显含命令本身，解析时按命令行拆分段
+        all_cmd_list = [
+            f'dis forward information enp slot {slot_id} chip {chip_id} "get oda table qos credit current" | no-more'
+            for chip_id in chip_ids
+        ]
+        cmd_res = await self.executor.run_cmd(CmdTask("\n".join(all_cmd_list), timeout=8, timeout_once=0.4))
+        return cmd_res.stdout
+
     # 以下内容可能不会会被采集, 不必分离解析部分
     async def has_hccs(self) -> bool:
         cmd_res = await self.executor.run_cmd(CmdTask("display hccs eid ub-instance 0 | no-more"))

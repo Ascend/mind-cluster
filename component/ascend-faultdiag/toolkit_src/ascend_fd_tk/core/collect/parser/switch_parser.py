@@ -16,7 +16,7 @@
 # ==============================================================================
 
 import re
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from ascend_fd_tk.core.config import port_mapping_config
 from ascend_fd_tk.core.log_parser.base import FindResult
@@ -32,6 +32,9 @@ from ascend_fd_tk.core.model.switch import (
     TransceiverInfo,
     OpticalStateFlagDiagInfo,
     PortMapping,
+    QosCreditPortInfo,
+    QosCreditInfo,
+    QosCreditRow,
 )
 from ascend_fd_tk.utils import logger
 from ascend_fd_tk.utils.form_parser import FormParser
@@ -328,3 +331,96 @@ class SwitchParser:
             return ""
         num_str = line[idx1 + len(key) : idx2]
         return num_str if num_str.isdigit() else ""
+
+    # QoS credit 表 titles_dict：key 顺序即列作用域顺序（port | vl0...vlN | VNA | total）
+    _QOS_CREDIT_TITLES_DICT = {"port": "port", "vl_credits": "vl0", "vna": "VNA", "total": "total"}
+
+    @classmethod
+    def parse_qos_credit(cls, cmd_res: str) -> List[QosCreditInfo]:
+        """解析 NPU 槽位 switch 芯片 QoS credit 回显（批量命令输出按命令行拆分为各芯片段）。
+
+        每个芯片段包含三张表（列结构一致，列名：port vl0...vl15 VNA total）：
+            QOS ALLOC CREDIT TABLE:    分配的 Credit
+            QOS USED CREDIT TABLE:     已使用的 Credit
+            QOS CURRENT CREDIT TABLE:  当前可用的 Credit
+        满足 alloc credit = used credit + current credit。
+        """
+        results: List[QosCreditInfo] = []
+        if not cmd_res:
+            return results
+        for slot_id, chip_id, segment in cls._split_qos_credit_segments(cmd_res):
+            alloc_rows, used_rows, current_rows = cls._split_qos_credit_tables(segment)
+            if not alloc_rows:
+                continue
+            ports = []
+            for port_id, alloc in alloc_rows.items():
+                used = used_rows.get(port_id, {})
+                current = current_rows.get(port_id, {})
+                ports.append(
+                    QosCreditPortInfo(
+                        port_id=port_id,
+                        vl_alloc_credits=alloc.get("vl_credits", []),
+                        vl_used_credits=used.get("vl_credits", []),
+                        vl_current_credits=current.get("vl_credits", []),
+                        vna_alloc=alloc.get("vna", ""),
+                        vna_used=used.get("vna", ""),
+                        vna_current=current.get("vna", ""),
+                        total_alloc=alloc.get("total", ""),
+                        total_used=used.get("total", ""),
+                        total_current=current.get("total", ""),
+                    )
+                )
+            if ports:
+                results.append(QosCreditInfo(slot_id=slot_id, chip_id=chip_id, ports=ports))
+        return results
+
+    @classmethod
+    def _split_qos_credit_segments(cls, cmd_res: str) -> List[Tuple[str, str, str]]:
+        """按命令行拆分回显为各芯片段：返回 [(slot_id, chip_id, 段内容)]，无命令行时返回空列表。"""
+        segments = []
+        SLOT_ID_INDEX, CHIP_ID_INDEX, SPLIT_LEN = 5, 7, 8
+        for block in split_str(cmd_res, "dis forward information enp slot "):
+            lines = block.splitlines()
+            parts = lines[0].strip().split()
+            if len(parts) > SPLIT_LEN:
+                slot_id, chip_id = parts[SLOT_ID_INDEX], parts[CHIP_ID_INDEX]
+                segments.append((slot_id, chip_id, "\n".join(lines[1:])))
+        return segments
+
+    @classmethod
+    def _split_qos_credit_tables(
+        cls, segment: str
+    ) -> Tuple[Dict[str, QosCreditRow], Dict[str, QosCreditRow], Dict[str, QosCreditRow]]:
+        """按表标题后缀切分三张表并逐表解析：返回 (alloc_rows, used_rows, current_rows)。
+
+        按行内特征（三张表标题共有后缀 " CREDIT TABLE:"）切分，
+        每块以标题行开头，再按标题前缀归属到对应表；返回值为 {port_id: {"vl_credits", "vna", "total"}}。
+        """
+        alloc_rows, used_rows, current_rows = {}, {}, {}
+        for block in split_str(segment, " CREDIT TABLE:"):
+            if block.startswith("QOS ALLOC CREDIT TABLE:"):
+                alloc_rows = cls._parse_qos_credit_rows(block)
+            elif block.startswith("QOS USED CREDIT TABLE:"):
+                used_rows = cls._parse_qos_credit_rows(block)
+            elif block.startswith("QOS CURRENT CREDIT TABLE:"):
+                current_rows = cls._parse_qos_credit_rows(block)
+        return alloc_rows, used_rows, current_rows
+
+    @classmethod
+    def _parse_qos_credit_rows(cls, block: str) -> Dict[str, Dict[str, object]]:
+        """解析单张 QoS credit 表块（以标题行开头）：返回 {port_id: {"vl_credits": [...], "vna": str, "total": str}}。
+
+        处理动态 vl 列：以首列 vl0 定位 vl 块起始、VNA 定位终点，
+        TableParser 将 vl0 至 VNA 之间作为一个整体字符串取到 vl_credits 字段，再按空白拆分。
+        """
+        rows: Dict[str, Dict[str, object]] = {}
+        for item in TableParser.parse(block, cls._QOS_CREDIT_TITLES_DICT):
+            port_id = item.get("port", "")
+            vl_credits = item.get("vl_credits", "").split()
+            vna = item.get("vna", "")
+            total = item.get("total", "")
+            # 过滤非数据行（端口非数字）与列值缺失行（如超长异常行、列数不齐行）
+            if not port_id.isdigit() or not vl_credits or not vna or not total:
+                continue
+            rows[port_id] = {"vl_credits": vl_credits, "vna": vna, "total": total}
+        return rows
