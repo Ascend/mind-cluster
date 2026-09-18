@@ -22,7 +22,7 @@ ascend-fd-tk set_config_dir /path/to/your_config_path set_conn_config /path/to/c
 诊断完成
 ```
 
-> 设置配置文件路径命令 `set_config_dir` 为可选命令。
+设置配置文件路径命令 `set_config_dir` 为可选命令。
 
 ## 交互式命令执行（展示命令与回显）
 
