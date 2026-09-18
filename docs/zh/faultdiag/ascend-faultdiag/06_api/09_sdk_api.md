@@ -500,7 +500,7 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
 > [!NOTE]
 >
 > - 故障码（顶层 key）为用户自定义的故障码，不能与当前已支持的故障码相同，已支持故障码可参考[已支持故障](../07_references/04_appendix.md#已支持故障)。
-> - 详细字段定义请参考 [自定义故障实体](../06_api/05_command_entity.md#JSON-参数说明)。
+> - 详细字段定义请参考 [自定义故障实体](../06_api/05_command_entity.md#json-参数说明)。
 
 ##### 返回值表
 
@@ -564,13 +564,13 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
 
 | 字段                                                   | 类型         | 必返回 | 说明                                       |
 |--------------------------------------------------------|--------------|--------|--------------------------------------------|
-| `server`                                               | String       | 是     | 服务器 IP                                  |
+| `server`                                               | String       | 是     | 服务器IP                                  |
 | `fault`                                                | List[Object] | 是     | 故障分析结果列表（每个元素对应一次解析）   |
 | `fault[].parse_version`                                | String       | 是     | 解析器版本号                               |
-| `fault[].response`                                     | Object       | 是     | 各设备的故障事件分析，key 为 source_device |
+| `fault[].response`                                     | Object       | 是     | 各设备的故障事件分析，key为source_device |
 | `fault[].response.<source_device>.analyze_success`     | Boolean      | 是     | 是否分析成功。<ul><li>true：成功</li><li>false：失败</li></ul>        |
 | `fault[].response.<source_device>.error`               | String       | 是     | 错误信息（无错误时为 "None"）              |
-| `fault[].response.<source_device>.root_causes`         | Object       | 是     | 根因事件字典，key 为故障码 code            |
+| `fault[].response.<source_device>.root_causes`         | Object       | 是     | 根因事件字典，key为故障码            |
 | `root_causes.<code>.code`                              | String       | 是     | 故障码                                     |
 | `root_causes.<code>.entities_attribute`                | Object       | 是     | 故障实体属性                               |
 | `root_causes.<code>.entities_attribute.component`      | String       | 是     | 故障组件                                   |
