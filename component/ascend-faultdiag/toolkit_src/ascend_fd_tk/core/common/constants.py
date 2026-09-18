@@ -76,7 +76,11 @@ FAULT_TYPE_SWITCH = "switch"
 TOOL_BMC_LOG_COLLECT_DIR_NAME = "dump_info"
 
 # PoDManager 内置槽位表：一个 PoDManager IP 按分片建立多个 SSH 连接，连接内串行切换槽位执行命令
-# switch 类：SFU 槽位 61-64
-POD_MANAGER_SWITCH_SLOT_IDS = [61, 62, 63, 64]
-# switch 类连接数：槽位均分到各连接，连接内串行执行（可按环境调整）
-POD_MANAGER_SWITCH_CONN_NUM = 4
+# SFU 槽位 61-64
+POD_MANAGER_SFU_SLOT_IDS = ["61", "62", "63", "64"]
+# NPU 槽位
+POD_MANAGER_NPU_SLOT_IDS = ["18", "19", "20", "21", "23", "24", "25", "26"]
+# NPU 槽位内芯片数（chip_id 取值 0-15）
+POD_MANAGER_NPU_SLOT_CHIP_NUM = 16
+# PoDManager 连接数：槽位均分到各连接，连接内串行执行（可按环境调整）
+POD_MANAGER_CONN_NUM = 4

@@ -64,6 +64,59 @@ Media side SNR lane 1: 18.45 dB
         self.assertEqual(result.bias_lanes, [])
         self.assertEqual(result.tx_power_lanes, [])
 
+    def test_parse_credit_info(self):
+        """验证 credit 回显解析：标量字段 + VL 优先级 credit 按优先级号动态收集。"""
+        cmd_res = "\n".join(
+            [
+                "link_alloc_port_share_credit:100",
+                "link_cur_used_port_share_credit:36",
+                "link_alloc_vl_pri_credit(0):1",
+                "link_cur_used_pri_credit(0):2",
+                "link_alloc_vl_pri_credit(15):30",
+                "link_cur_used_pri_credit(15):40",
+            ]
+        )
+        result = HostParserA5.parse_credit_info(cmd_res, udie_id="0", port_id="5")
+        self.assertEqual(result.udie_id, "0")
+        self.assertEqual(result.port_id, "5")
+        self.assertEqual(result.link_alloc_port_share_credit, "100")
+        self.assertEqual(result.link_cur_used_port_share_credit, "36")
+        # 优先级 0~15，缺失的优先级填空串
+        self.assertEqual(len(result.link_alloc_vl_pri_credits), 16)
+        self.assertEqual(result.link_alloc_vl_pri_credits[0], "1")
+        self.assertEqual(result.link_alloc_vl_pri_credits[14], "")
+        self.assertEqual(result.link_alloc_vl_pri_credits[15], "30")
+        self.assertEqual(len(result.link_cur_used_pri_credits), 16)
+        self.assertEqual(result.link_cur_used_pri_credits[0], "2")
+        self.assertEqual(result.link_cur_used_pri_credits[15], "40")
+
+    def test_parse_credit_info_empty(self):
+        """空输入应返回空 credit 信息。"""
+        result = HostParserA5.parse_credit_info("", udie_id="0", port_id="5")
+        self.assertEqual(result.udie_id, "0")
+        self.assertEqual(result.port_id, "5")
+        self.assertEqual(result.link_alloc_port_share_credit, "")
+        self.assertEqual(result.link_cur_used_port_share_credit, "")
+        self.assertEqual(result.link_alloc_vl_pri_credits, [])
+        self.assertEqual(result.link_cur_used_pri_credits, [])
+
+    def test_parse_credit_info_skips_overlong_and_invalid_lines(self):
+        """超长行、非 link_ 前缀行应被跳过，不影响其余行解析。"""
+        cmd_res = "\n".join(
+            [
+                "link_alloc_port_share_credit:88",
+                "x" * 200,  # 超长攻击行，应被长度上限拦截
+                "link_" + "a" * 100 + ":1",  # 字段名超限，正则不匹配
+                "malicious_field:999",  # 非 link_ 前缀
+                "link_cur_used_port_share_credit:42",
+            ]
+        )
+        result = HostParserA5.parse_credit_info(cmd_res, udie_id="0", port_id="5")
+        self.assertEqual(result.link_alloc_port_share_credit, "88")
+        self.assertEqual(result.link_cur_used_port_share_credit, "42")
+        self.assertEqual(result.link_alloc_vl_pri_credits, [])
+        self.assertEqual(result.link_cur_used_pri_credits, [])
+
 
 if __name__ == "__main__":
     unittest.main()

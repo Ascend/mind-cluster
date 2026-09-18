@@ -41,6 +41,12 @@ class HostSshFetcherA5(HostSshFetcher):
             return cmd_res.stdout
         return ""
 
+    async def fetch_credit_info(self, npu_id: str, udie_id: str, port_id: str) -> str:
+        cmd_res = await self.executor.run_cmd(CmdTask(self.cmd_provider.credit_info(npu_id, udie_id, port_id)))
+        if cmd_res.is_success():
+            return cmd_res.stdout
+        return ""
+
     async def fetch_optical_port_info(self, npu_id: str, udie_id: str, port_id: str) -> str:
         if not npu_id or not udie_id or not port_id:
             return ""

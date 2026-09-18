@@ -21,6 +21,7 @@ from unittest.mock import ANY, MagicMock, call
 
 from ascend_fd_tk.core.fault_analyzer.host.host_analyzer import HostAnalyzer
 from ascend_fd_tk.core.fault_analyzer.host.host_analyzer_a5 import HostAnalyzerA5
+from ascend_fd_tk.core.fault_analyzer.host.host_credit_analyzer_a5 import HostCreditAnalyzerA5
 from ascend_fd_tk.core.fault_analyzer.host.host_loopback_analyzer import HostLoopbackAnalyzer
 from ascend_fd_tk.core.fault_analyzer.host.host_nic_lane_analyzer_a5 import HostNicLaneAnalyzerA5
 from ascend_fd_tk.core.fault_analyzer.host.host_op_los_lol_analyzer import HostOpticalLosLoLAnalyzer
@@ -288,6 +289,49 @@ class TestHostAnalyzers(unittest.TestCase):
         self.assertTrue(any("TxLos" in result.fault_info for result in results))
         self.assertTrue(any("bias" in result.fault_info for result in results))
         self.assertNotIn(call("-inf"), numeric_threshold.check_value_str.call_args_list)
+
+    def test_host_credit_a5_reports_exhausted_pri_credit(self):
+        """alloc == used 且非 0 的优先级应上报信用不足；alloc==used==0、alloc!=used、空值不报。"""
+        chip = SimpleNamespace(
+            npu_id="0",
+            credit_info_list=[
+                SimpleNamespace(
+                    udie_id="0",
+                    port_id="5",
+                    link_alloc_port_share_credit="100",
+                    link_cur_used_port_share_credit="36",
+                    link_alloc_vl_pri_credits=["0", "8", "16", "", "4"],
+                    link_cur_used_pri_credits=["0", "8", "10", "", "0"],
+                )
+            ],
+        )
+        host = SimpleNamespace(host_id="host-01", npu_chip_info={"0": chip})
+        results = HostCreditAnalyzerA5(_cluster(host_info=host)).analyse()
+        self.assertEqual(len(results), 1)
+        self.assertIn("vl1 分配数量=8 使用数量=8", results[0].fault_info)
+        self.assertNotIn("vl2", results[0].fault_info)
+        self.assertEqual(results[0].domain.udie_id, "0")
+        self.assertEqual(results[0].domain.npu_port_id, "5")
+
+    def test_host_credit_a5_no_result_when_all_normal(self):
+        """所有优先级均正常（未耗尽）时不应产生诊断结果。"""
+        chip = SimpleNamespace(
+            npu_id="0",
+            credit_info_list=[
+                SimpleNamespace(
+                    udie_id="0",
+                    port_id="5",
+                    link_alloc_port_share_credit="100",
+                    link_cur_used_port_share_credit="36",
+                    link_alloc_vl_pri_credits=["0", "8"],
+                    link_cur_used_pri_credits=["0", "4"],
+                ),
+                SimpleNamespace(udie_id="1", port_id="6", link_alloc_vl_pri_credits=[], link_cur_used_pri_credits=[]),
+            ],
+        )
+        host = SimpleNamespace(host_id="host-01", npu_chip_info={"0": chip})
+        results = HostCreditAnalyzerA5(_cluster(host_info=host)).analyse()
+        self.assertEqual(results, [])
 
 
 if __name__ == "__main__":

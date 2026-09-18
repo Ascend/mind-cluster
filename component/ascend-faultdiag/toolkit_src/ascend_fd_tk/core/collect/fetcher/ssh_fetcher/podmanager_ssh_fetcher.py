@@ -25,15 +25,16 @@ from ascend_fd_tk.utils.executors import CmdTask
 class PoDManagerSshFetcher(SwiSshFetcher, PoDManagerFetcher):
     """PoDManager SSH 采集器：loginUBM -slot 进入 UBM 视图后复用 SwiSshFetcher switch 命令。"""
 
-    def __init__(self, executor, slot_ids: List[int]):
+    def __init__(self, executor, sfu_slot_ids: List[str], npu_slot_ids: List[str]):
         SwiSshFetcher.__init__(self, executor)
-        PoDManagerFetcher.__init__(self, slot_ids)
+        PoDManagerFetcher.__init__(self, sfu_slot_ids, npu_slot_ids)
 
     async def fetch_id(self) -> str:
         return f"{self.executor.host}_{self.current_slot}"
 
-    async def switch_slot(self, slot_id: int):
-        self.current_slot = slot_id
+    async def switch_slot(self, slot_id: str):
+        await super().switch_slot(slot_id)
+        self.executor.slot_id = slot_id
 
     async def init_fetcher(self):
         # pylint: disable=duplicate-code

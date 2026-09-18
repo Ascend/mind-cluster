@@ -30,6 +30,7 @@ from ascend_fd_tk.core.model.host_a5 import (
     OpticalTopHeadline,
     DevInfo,
     PortStateInfo,
+    CreditInfo,
 )
 from ascend_fd_tk.utils.helpers import split_multiline
 from ascend_fd_tk.utils.form_parser import FormParser
@@ -55,6 +56,8 @@ class HostParserA5(HostParser):
     _NIC_MEDIA_SNR_RE = re.compile(r"Media side SNR lane\s{1,2}(\d{1,2}):\s{0,2}([\d.]{1,10})\s{0,10}dB")
     _NIC_CARD_NAME_RE = re.compile(r"\|----(\w{1,10})\(")
 
+    _CREDIT_LINE_RE = re.compile(r"^(link_[a-z_]{1,32})(?:\((\d{1,2})\))?\s{0,4}:\s{0,4}(\S{1,32})\s{0,4}$")
+
     @classmethod
     def parse_dev_info(cls, cmd_res: str) -> List[DevInfo]:
         if not cmd_res or not cmd_res.strip():
@@ -76,6 +79,58 @@ class HostParserA5(HostParser):
         )
         results = [DevInfo.from_dict(parse_data) for parse_data in parse_data_list]
         return results
+
+    @classmethod
+    def parse_credit_info(cls, cmd_res: str, udie_id: str, port_id: str) -> CreditInfo:
+        """解析 `hccn_tool -g -credit -i <npu> -u <udie> -p <port>` 回显，按 UDie + Port 定位端口 Credit。
+
+        回显字段说明：
+            link_alloc_port_share_credit    分配的端口共享 Credit 数量
+            link_cur_used_port_share_credit 当前使用的端口共享 Credit 数量
+            link_alloc_vl_pri_credit(N)     虚拟链路（VL）优先级 N 的 Credit 分配数量
+            link_cur_used_pri_credit(N)     虚拟链路（VL）优先级 N 的 Credit 使用数量
+
+        回显示例：
+            link_alloc_port_share_credit:0
+            link_cur_used_port_share_credit:0
+            link_alloc_vl_pri_credit(0):0
+            link_cur_used_pri_credit(0):0
+            ...
+            link_alloc_vl_pri_credit(15):0
+            link_cur_used_pri_credit(15):0
+        """
+        credit_info = CreditInfo(udie_id=udie_id, port_id=port_id)
+        if not cmd_res or not cmd_res.strip():
+            return credit_info
+        # 用字典收集 VL 优先级数据（key=优先级号字符串, value=值），不硬编码优先级数量
+        alloc_pri_credits: Dict[str, str] = {}
+        used_pri_credits: Dict[str, str] = {}
+        for line in cmd_res.splitlines():
+            line = line.strip()
+            match = cls._CREDIT_LINE_RE.match(line)
+            if not match:
+                continue
+            key, pri_id, value = match.group(1), match.group(2), match.group(3)
+            if pri_id is None:
+                if key == "link_alloc_port_share_credit":
+                    credit_info.link_alloc_port_share_credit = value
+                elif key == "link_cur_used_port_share_credit":
+                    credit_info.link_cur_used_port_share_credit = value
+            elif key == "link_alloc_vl_pri_credit":
+                alloc_pri_credits[pri_id] = value
+            elif key == "link_cur_used_pri_credit":
+                used_pri_credits[pri_id] = value
+
+        def to_pri_list(pri_dict: Dict[str, str]) -> List[str]:
+            if not pri_dict:
+                return []
+            # 优先级号从 0 连续到 max，缺失的填空串；int 仅用于计算列表长度，数据本身保持字符串
+            max_pri = max(int(pri) for pri in pri_dict)
+            return [pri_dict.get(str(pri), "") for pri in range(max_pri + 1)]
+
+        credit_info.link_alloc_vl_pri_credits = to_pri_list(alloc_pri_credits)
+        credit_info.link_cur_used_pri_credits = to_pri_list(used_pri_credits)
+        return credit_info
 
     @classmethod
     def parse_port_state_info(cls, cmd_res: str) -> PortStateInfo:

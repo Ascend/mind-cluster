@@ -15,7 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 import re
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, TypedDict
 
 from ascend_fd_tk.core.common.diag_enum import OpticalModuleType, PowerUnitType
 from ascend_fd_tk.core.common.json_obj import JsonObj
@@ -405,6 +405,63 @@ class PortDownStatus(JsonObj):
         self.lane_infos = lane_infos or []
 
 
+class QosCreditRow(TypedDict):
+    """单张 QoS credit 表的单行解析结果：vl 各优先级 Credit 列表 + VNA / total 标量列。"""
+
+    vl_credits: List[str]
+    vna: str
+    total: str
+
+
+class QosCreditPortInfo(JsonObj):
+    """NPU 槽位芯片 QoS Credit 单端口信息（QOS CREDIT TABLE 行）。
+
+    字段说明（alloc = used + current）：
+        vl_alloc_credits    虚拟链路（VL）各优先级分配的 Credit 数量（列表索引即优先级号）
+        vl_used_credits     虚拟链路（VL）各优先级已使用的 Credit 数量
+        vl_current_credits  虚拟链路（VL）各优先级当前可用的 Credit 数量
+        vna_alloc/used/current、total_alloc/used/current  VNA 列与 total 列对应值
+    """
+
+    def __init__(
+        self,
+        port_id: str = "",
+        vl_alloc_credits: List[str] = None,
+        vl_used_credits: List[str] = None,
+        vl_current_credits: List[str] = None,
+        vna_alloc: str = "",
+        vna_used: str = "",
+        vna_current: str = "",
+        total_alloc: str = "",
+        total_used: str = "",
+        total_current: str = "",
+    ):
+        self.port_id = port_id
+        self.vl_alloc_credits = vl_alloc_credits or []
+        self.vl_used_credits = vl_used_credits or []
+        self.vl_current_credits = vl_current_credits or []
+        self.vna_alloc = vna_alloc
+        self.vna_used = vna_used
+        self.vna_current = vna_current
+        self.total_alloc = total_alloc
+        self.total_used = total_used
+        self.total_current = total_current
+
+
+class QosCreditInfo(JsonObj):
+    """NPU 槽位 QoS Credit 信息。"""
+
+    def __init__(
+        self,
+        slot_id: str = "",
+        chip_id: str = "",
+        ports: List[QosCreditPortInfo] = None,
+    ):
+        self.slot_id = slot_id  # NPU 槽位号
+        self.chip_id = chip_id  # 槽位内芯片号（0-15）
+        self.ports = ports or []
+
+
 class SwitchInfo(JsonObj):
     def __init__(
         self,
@@ -425,6 +482,7 @@ class SwitchInfo(JsonObj):
         date_time: str = "",
         bit_error_rate: List[BitErrRate] = None,
         transceiver_infos: List[TransceiverInfo] = None,
+        qos_credit_infos: List[QosCreditInfo] = None,
     ):
         self.sn = sn
         self.name = name
@@ -443,6 +501,8 @@ class SwitchInfo(JsonObj):
         self.date_time = date_time
         self.bit_error_rate = bit_error_rate or []
         self.transceiver_infos = transceiver_infos or []
+        # NPU 槽位芯片 QoS Credit 信息，仅 A5 PoDManager NPU 槽位 SwitchInfo 有值
+        self.qos_credit_infos = qos_credit_infos or []
         self._interface_full_infos: Dict[str, InterfaceFullInfo] = {}
 
     @property
@@ -476,4 +536,4 @@ class SwitchInfo(JsonObj):
             )
             interface_full_info[interface] = full_info
         self._interface_full_infos = interface_full_info
-        return interface_full_info
+        return self._interface_full_infos

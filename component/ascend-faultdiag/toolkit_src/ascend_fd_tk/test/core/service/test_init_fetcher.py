@@ -40,9 +40,10 @@ class _FakeExecutor:
 class _FakeFetcher:
     """模拟 PoDManagerSshFetcher：记录分到的槽位列表。"""
 
-    def __init__(self, executor, slot_ids):
+    def __init__(self, executor, sfu_slot_ids, npu_slot_ids=None):
         self.host = executor.host
-        self.slot_ids = list(slot_ids)
+        self.sfu_slot_ids = list(sfu_slot_ids)
+        self.npu_slot_ids = list(npu_slot_ids or [])
 
 
 class TestInitFetcherPodManager(unittest.TestCase):
@@ -60,28 +61,28 @@ class TestInitFetcherPodManager(unittest.TestCase):
 
     def test_redistribute_slots_when_one_connection_fails(self):
         """建连失败时按成功连接数重新分片，所有槽位仍被覆盖。"""
-        all_slots = constants.POD_MANAGER_SWITCH_SLOT_IDS
+        all_slots = constants.POD_MANAGER_SFU_SLOT_IDS
         executors = [_FakeExecutor("10.1.1.1", ok=(i != 2)) for i in range(len(all_slots))]  # 第 2 个连接失败
         fetchers_map = self._run(executors)
         self.assertEqual(len(fetchers_map), len(all_slots) - 1)
         covered_slots = set()
         for fetcher in fetchers_map.values():
-            covered_slots.update(fetcher.slot_ids)
+            covered_slots.update(fetcher.sfu_slot_ids)
         self.assertEqual(covered_slots, set(all_slots))
         # 分片互不重叠
-        slot_lists = [f.slot_ids for f in fetchers_map.values()]
+        slot_lists = [f.sfu_slot_ids for f in fetchers_map.values()]
         for i in range(len(slot_lists)):
             for j in range(i + 1, len(slot_lists)):
                 self.assertEqual(set(slot_lists[i]) & set(slot_lists[j]), set())
 
     def test_all_connections_fail_skips_collection(self):
         """所有连接建连失败时直接返回，不注册任何 fetcher。"""
-        executors = [_FakeExecutor("10.1.1.1", ok=False) for _ in range(len(constants.POD_MANAGER_SWITCH_SLOT_IDS))]
+        executors = [_FakeExecutor("10.1.1.1", ok=False) for _ in range(len(constants.POD_MANAGER_SFU_SLOT_IDS))]
         self.assertEqual(self._run(executors), {})
 
     def test_info_log_initialized(self):
         """初始化成功应打印包含 IP 与连接数的 INFO 日志。"""
-        all_slots = constants.POD_MANAGER_SWITCH_SLOT_IDS
+        all_slots = constants.POD_MANAGER_SFU_SLOT_IDS
         executors = [_FakeExecutor("10.1.1.1", ok=(i != 2)) for i in range(len(all_slots))]
         fetchers_map = {}
         with (

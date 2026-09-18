@@ -25,11 +25,29 @@ from ascend_fd_tk.core.fault_analyzer.switch.crc_err_rising_alarm_analyzer impor
 from ascend_fd_tk.core.fault_analyzer.switch.lane_reduction_analyzer import LaneReductionAnalyzer
 from ascend_fd_tk.core.fault_analyzer.switch.op_los_alarm_analyzer import OpticalInvalidAnalyzer
 from ascend_fd_tk.core.fault_analyzer.switch.op_state_flag_diag_info_analyzer import OpStateFlagDiagInfoAnalyzer
+from ascend_fd_tk.core.fault_analyzer.switch.qos_credit_analyzer_a5 import QosCreditAnalyzerA5
 from ascend_fd_tk.core.fault_analyzer.switch.switch_analyzer import SwitchAnalyzer
+from ascend_fd_tk.core.model.switch import QosCreditPortInfo, SwitchInfo, QosCreditInfo
 
 
 def _cluster_with_switch(switch_info):
     return SimpleNamespace(swis_info={switch_info.swi_id: switch_info})
+
+
+def _qos_port(port_id, vl_alloc, vl_used, vl_current, vna, total):
+    """构造 QosCreditPortInfo：vna/total 均为 (alloc, used, current) 三元组。"""
+    return QosCreditPortInfo(
+        port_id=port_id,
+        vl_alloc_credits=vl_alloc,
+        vl_used_credits=vl_used,
+        vl_current_credits=vl_current,
+        vna_alloc=vna[0],
+        vna_used=vna[1],
+        vna_current=vna[2],
+        total_alloc=total[0],
+        total_used=total[1],
+        total_current=total[2],
+    )
 
 
 class TestSwitchAnalyzers(unittest.TestCase):
@@ -170,6 +188,55 @@ class TestSwitchAnalyzers(unittest.TestCase):
         analyzer.fault_check.snr_analyze_single_ended.assert_called_once()
         analyzer.fault_check.bias_analyze_single_ended.assert_called_once()
         self.assertEqual(analyzer.fault_check.power_analyze_single_ended.call_args.args[0].slot_id, "61")
+
+    def test_qos_credit_reports_only_current_zero_with_alloc_non_zero(self):
+        # NPU 槽位 SwitchInfo：QoS Credit 实体挂在 switch 属性 qos_credit_infos 上
+        ports = [
+            # 端口 0：vl1 current=0 且 alloc 非 0 → 命中；total current=0 但 alloc!=0，不再检查该维度
+            _qos_port("0", ["28", "8"], ["0", "8"], ["28", "0"], ("188", "0", "188"), ("496", "496", "0")),
+            # 端口 1：各维度 current 均非 0，正常
+            _qos_port("1", ["28", "28"], ["0", "0"], ["28", "28"], ("700", "0", "700"), ("1008", "0", "1008")),
+        ]
+        switch_info = SwitchInfo(
+            name="10.0.0.1_20",
+            swi_id="10.0.0.1",
+            slot_id="20",
+            qos_credit_infos=[QosCreditInfo(slot_id="20", chip_id="15", ports=ports)],
+        )
+        results = QosCreditAnalyzerA5(_cluster_with_switch(switch_info)).analyse()
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].domain.swi_id, "10.0.0.1")
+        self.assertEqual(results[0].domain.slot_id, "20")
+        self.assertIn("chip15, port0", results[0].fault_info)
+        self.assertIn("vl1 分配数量=8 当前可用数量=0", results[0].fault_info)
+        self.assertNotIn("vl0", results[0].fault_info)
+        self.assertNotIn("total", results[0].fault_info)
+
+    def test_qos_credit_skips_invalid_values(self):
+        ports = [
+            # current/alloc 为空串或非数值（未采集/异常回显）时应跳过
+            QosCreditPortInfo(
+                port_id="3",
+                vl_alloc_credits=["", "abc"],
+                vl_used_credits=["", ""],
+                vl_current_credits=["", "0"],
+                vna_alloc="",
+                vna_used="",
+                vna_current="",
+                total_alloc="496",
+                total_used="0",
+                total_current="496",
+            )
+        ]
+        switch_info = SwitchInfo(
+            name="10.0.0.1_20",
+            swi_id="10.0.0.1",
+            slot_id="20",
+            qos_credit_infos=[QosCreditInfo(slot_id="20", chip_id="15", ports=ports)],
+        )
+        cluster = SimpleNamespace(swis_info={f"{switch_info.swi_id}_{switch_info.slot_id}": switch_info})
+        results = QosCreditAnalyzerA5(cluster).analyse()
+        self.assertEqual(results, [])
 
 
 if __name__ == "__main__":

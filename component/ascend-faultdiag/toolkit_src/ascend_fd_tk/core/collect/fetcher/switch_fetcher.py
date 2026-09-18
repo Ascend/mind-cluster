@@ -115,6 +115,10 @@ class SwitchFetcher(Fetcher):
         return ""
 
     @abc.abstractmethod
+    async def fetch_qos_credit(self, slot_id: str, chip_ids) -> str:
+        return ""
+
+    @abc.abstractmethod
     async def has_hccs(self) -> bool:
         pass
 
