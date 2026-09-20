@@ -19,7 +19,6 @@ import (
 	"reflect"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -163,22 +162,8 @@ func UpdateCache[T any](n *NpuCollector, cacheKey string, localCache *sync.Map) 
 		return true
 	})
 
-	// Calculate cache TTL based on collector interval: TTL = interval * 2
-	interval := GetCollectorInterval(cacheKey, defaultGroupInterval)
-	var ttl time.Duration
-	if interval == collectOnceInterval {
-		// means never overdue
-		ttl = -1
-	} else {
-		ttl = interval * double
-	}
-
-	// set min cache ttl is 60s
-	if ttl != -1 && ttl < defaultGroupInterval {
-		ttl = defaultGroupInterval
-	}
-
-	err = n.cache.Set(cacheKey, cacheInfo, ttl)
+	// -1 Cache never expires.
+	err = n.cache.Set(cacheKey, cacheInfo, -1)
 	if noNeedToPrintUpdateLog[cacheKey] {
 		return
 	}

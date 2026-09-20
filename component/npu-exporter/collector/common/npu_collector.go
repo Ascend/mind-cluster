@@ -422,11 +422,11 @@ func setVdieID(chip *HuaWeiAIChip, dmgr devmanager.DeviceInterface) {
 
 func setPhyId(chip *HuaWeiAIChip, dmgr devmanager.DeviceInterface, deviceID int32) {
 	phyID, err := dmgr.GetPhysicIDFromLogicID(chip.LogicID)
+	chip.PhyId = phyID
 	if err != nil {
 		logSetError("phy ID", chip, deviceID, err, "get phy ID")
 		return
 	}
-	chip.PhyId = phyID
 
 	if chip.CardId == -1 {
 		chip.DeviceID = chip.LogicID
