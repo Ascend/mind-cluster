@@ -12,7 +12,7 @@
 
 ### 制作业务镜像
 
-推荐从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)根据用户的系统架构（ARM或者x86\_64）、训练/推理框架（PyTorch、MindSpore、MindIE）以及设备的芯片型号下载所需的训练/推理基础镜像。
+推荐从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)根据用户的系统架构（ARM或者x86\_64）、训练/推理框架（PyTorch、MindIE）以及设备的芯片型号下载所需的训练/推理基础镜像。
 
 >[!NOTE]
 >基础镜像中不包含推理模型、脚本等文件，因此，用户需要根据自己的需求进行定制化修改（如加入推理脚本代码、模型等）后才能使用。
