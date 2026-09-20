@@ -70,7 +70,7 @@ class HccsLinkDegradedAnalyzer(Analyzer):
             result.extend(self._port_fault_analyse(chassis_mapping, host_error_event_infos))
         return result
 
-    def _port_fault_analyse(self, chassis_mapping: L1SwiServerMapping, host_error_event_infos: list[CpuBoardUbcInfo]):
+    def _port_fault_analyse(self, chassis_mapping: L1SwiServerMapping, host_error_event_infos: List[CpuBoardUbcInfo]):
         result = []
         port_mappings = [self._find_cpu_peer_swi_port(event_info) for event_info in host_error_event_infos]
         # 端口级别的分析
