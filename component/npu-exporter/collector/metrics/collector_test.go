@@ -16,6 +16,7 @@
 package metrics
 
 import (
+	"fmt"
 	"strconv"
 	"sync"
 	"testing"
@@ -44,6 +45,15 @@ const (
 	yinHeMainBoardId           = 0x46
 	ubxMainBoardId             = 0x48
 	chanCacheSizeForTest       = 128
+
+	num10   = 10
+	num300  = 300
+	num400  = 400
+	num800  = 800
+	num1000 = 1000
+
+	float100 = 100.0
+	float200 = 200.0
 )
 
 var (
@@ -700,4 +710,199 @@ func drainUpdateTelegraf(collector colcommon.MetricsCollector, n *colcommon.NpuC
 	close(ch)
 	<-done
 	return received
+}
+
+// TestNetworkBandwidthCollectorIsSupported test NetworkBandwidthCollector and NetworkLinkCollector IsSupported
+func TestNetworkBandwidthCollectorIsSupported(t *testing.T) {
+	n := mockNewNpuCollector()
+	collectors := []colcommon.MetricsCollector{&NetworkBandwidthCollector{}, &NetworkLinkCollector{}}
+	cases := []struct {
+		name          string
+		devType       string
+		mainBoardID   uint32
+		isTrainCard   bool
+		expectedValue bool
+	}{
+		{name: "should support training card on non-NPU device", devType: api.Ascend910A3,
+			isTrainCard: true, expectedValue: true},
+		{name: "should not support non-training card on non-NPU device", devType: api.Ascend910A3,
+			isTrainCard: false, expectedValue: false},
+		{name: "should support supported board on NPU device", devType: api.Ascend910A5,
+			mainBoardID: api.Atlas9501DMainBoardID, isTrainCard: true, expectedValue: true},
+		{name: "should not support unsupported board on NPU device", devType: api.Ascend910A5,
+			mainBoardID: api.Atlas3501PMainBoardID, isTrainCard: true, expectedValue: false},
+	}
+	for _, collector := range collectors {
+		for _, c := range cases {
+			patches := gomonkey.NewPatches()
+			convey.Convey(fmt.Sprintf("%T: %s", collector, c.name), t, func() {
+				defer patches.Reset()
+				colcommon.DevType = c.devType
+				patches.ApplyMethodReturn(n.Dmgr, "GetMainBoardId", c.mainBoardID)
+				patches.ApplyMethodReturn(n.Dmgr, "IsTrainingCard", c.isTrainCard)
+				convey.So(collector.IsSupported(n), convey.ShouldEqual, c.expectedValue)
+			})
+		}
+	}
+}
+
+// TestNetworkBandwidthCollectorIsParallel test NetworkBandwidthCollector and NetworkLinkCollector IsParallel
+func TestNetworkBandwidthCollectorIsParallel(t *testing.T) {
+	n := mockNewNpuCollector()
+	convey.Convey("isParallel should return true for both collectors", t, func() {
+		bandwidthCollector := &NetworkBandwidthCollector{}
+		statusCollector := &NetworkLinkCollector{}
+		convey.So(bandwidthCollector.IsParallel(n), convey.ShouldBeTrue)
+		convey.So(bandwidthCollector.DcmiSupported, convey.ShouldBeFalse)
+		convey.So(statusCollector.IsParallel(n), convey.ShouldBeTrue)
+		convey.So(statusCollector.DcmiSupported, convey.ShouldBeFalse)
+	})
+}
+
+// TestCollectNetworkBandwidthInfo test collectNetworkBandwidthInfo
+func TestCollectNetworkBandwidthInfo(t *testing.T) {
+	convey.Convey("collectNetworkBandwidthInfo", t, func() {
+		convey.Convey("should return bandwidth info when hccn succeeds", func() {
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			patches.ApplyFuncReturn(hccn.GetNPUInterfaceTraffic, float100, float200, nil)
+			result := collectNetworkBandwidthInfo(0)
+			convey.So(result, convey.ShouldNotBeNil)
+			convey.So(result.BandwidthInfo, convey.ShouldNotBeNil)
+			convey.So(result.BandwidthInfo.TxValue, convey.ShouldEqual, float100)
+			convey.So(result.BandwidthInfo.RxValue, convey.ShouldEqual, float200)
+		})
+		convey.Convey("should return nil bandwidth info when hccn fails", func() {
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			patches.ApplyFuncReturn(hccn.GetNPUInterfaceTraffic, 0.0, 0.0, fmt.Errorf("mock error"))
+			result := collectNetworkBandwidthInfo(0)
+			convey.So(result, convey.ShouldNotBeNil)
+			convey.So(result.BandwidthInfo, convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestCollectNetworkStatusInfo test collectNetworkStatusInfo
+func TestCollectNetworkStatusInfo(t *testing.T) {
+	convey.Convey("collectNetworkStatusInfo", t, func() {
+		convey.Convey("should return status info when hccn succeeds", func() {
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			patches.ApplyFuncReturn(hccn.GetNPULinkStatus, "UP", nil)
+			patches.ApplyFuncReturn(hccn.GetNPULinkUpNum, num2, nil)
+			patches.ApplyFuncReturn(hccn.GetNPULinkSpeed, num1000, nil)
+			result := collectNetworkStatusInfo(0)
+			convey.So(result, convey.ShouldNotBeNil)
+			convey.So(result.LinkStatusInfo.LinkState, convey.ShouldEqual, "UP")
+			convey.So(result.LinkStatInfo.LinkUPNum, convey.ShouldEqual, float64(num2))
+			convey.So(result.LinkSpeedInfo.Speed, convey.ShouldEqual, float64(num1000))
+		})
+		convey.Convey("should handle errors from hccn", func() {
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			patches.ApplyFuncReturn(hccn.GetNPULinkStatus, "", fmt.Errorf("mock error"))
+			patches.ApplyFuncReturn(hccn.GetNPULinkUpNum, 0, fmt.Errorf("mock error"))
+			patches.ApplyFuncReturn(hccn.GetNPULinkSpeed, 0, fmt.Errorf("mock error"))
+			result := collectNetworkStatusInfo(0)
+			convey.So(result, convey.ShouldNotBeNil)
+			convey.So(result.LinkStatusInfo.LinkState, convey.ShouldEqual, colcommon.Unknown)
+			convey.So(result.LinkStatInfo, convey.ShouldBeNil)
+			convey.So(result.LinkSpeedInfo, convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestCollectNetworkNpuBandwidthInfo test collectNetworkNpuBandwidthInfo
+func TestCollectNetworkNpuBandwidthInfo(t *testing.T) {
+	convey.Convey("collectNetworkNpuBandwidthInfo", t, func() {
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyFuncReturn(hccn.GetNPUInterfaceTrafficNpu, float100, float200, nil)
+		result := collectNetworkNpuBandwidthInfo(0)
+		convey.So(len(result), convey.ShouldEqual, colcommon.NpuDevPortInfos.GetCount())
+		for _, item := range result {
+			convey.So(item.BandwidthInfo, convey.ShouldNotBeNil)
+			convey.So(item.BandwidthInfo.TxValue, convey.ShouldEqual, float100)
+			convey.So(item.BandwidthInfo.RxValue, convey.ShouldEqual, float200)
+		}
+	})
+}
+
+// TestCollectNetworkNpuStatusInfo test collectNetworkNpuStatusInfo
+func TestCollectNetworkNpuStatusInfo(t *testing.T) {
+	convey.Convey("collectNetworkNpuStatusInfo", t, func() {
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyFuncReturn(hccn.GetNPULinkStatusNpu, "up", nil)
+		patches.ApplyFuncReturn(hccn.GetNPULinkSpeedNpu, num1000, nil)
+		result := collectNetworkNpuStatusInfo(0)
+		convey.So(len(result), convey.ShouldEqual, colcommon.NpuDevPortInfos.GetCount())
+		for _, item := range result {
+			convey.So(item.LinkStatusInfo, convey.ShouldNotBeNil)
+			convey.So(item.LinkStatusInfo.LinkState, convey.ShouldEqual, "up")
+			convey.So(item.LinkSpeedInfo, convey.ShouldNotBeNil)
+			convey.So(item.LinkSpeedInfo.Speed, convey.ShouldEqual, float64(num1000))
+		}
+	})
+}
+
+// TestPromUpdateNetInfoBandwidth test promUpdateNetInfoBandwidth and telegrafUpdateNetInfoBandwidth
+func TestPromUpdateNetInfoBandwidth(t *testing.T) {
+	convey.Convey("promUpdateNetInfoBandwidth", t, func() {
+		colcommon.EnableLegacyMetrics = false
+		mockExtInfo := []*common.NpuNetBandwidthInfo{
+			{BandwidthInfo: &common.BandwidthInfo{TxValue: num100, RxValue: num100}, Udie: 0, Port: 1},
+			{BandwidthInfo: &common.BandwidthInfo{TxValue: num300, RxValue: num400}, Udie: 1, Port: num2},
+		}
+		cache := netInfoNPUBandwidthCache{timestamp: time.Now(), extInfo: mockExtInfo}
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		proCallCount, telCallCount := 0, 0
+		patches.ApplyFunc(doUpdateMetricWithValidateNum,
+			func(ch chan<- prometheus.Metric, ts time.Time, val float64, labels []string, desc *prometheus.Desc) {
+				proCallCount++
+			})
+		patches.ApplyFunc(doUpdateTelegrafWithValidateNum,
+			func(fieldMap map[string]interface{}, desc *prometheus.Desc, value float64, extInfo string) {
+				telCallCount++
+			})
+
+		promUpdateNetInfoBandwidth(make(chan prometheus.Metric, num10), cache, []string{"card0"})
+		telegrafUpdateNetInfoBandwidth(cache, make(map[string]interface{}))
+
+		convey.So(proCallCount, convey.ShouldEqual, len(mockExtInfo)*num2)
+		convey.So(telCallCount, convey.ShouldEqual, len(mockExtInfo)*num2)
+	})
+}
+
+// TestPromUpdateNetInfoStatus test promUpdateNetInfoStatus and telegrafUpdateNetInfoStatus
+func TestPromUpdateNetInfoStatus(t *testing.T) {
+	convey.Convey("promUpdateNetInfoStatus", t, func() {
+		colcommon.EnableLegacyMetrics = false
+		mockExtInfo := []*common.NpuNetStatusInfo{
+			{LinkStatusInfo: &common.LinkStatusInfo{LinkState: "UP"},
+				LinkSpeedInfo: &common.LinkSpeedInfo{Speed: num400}, Udie: 0, Port: num1},
+			{LinkStatusInfo: &common.LinkStatusInfo{LinkState: "DOWN"},
+				LinkSpeedInfo: &common.LinkSpeedInfo{Speed: num800}, Udie: num1, Port: num2},
+		}
+		cache := netInfoNPUStatusCache{timestamp: time.Now(), extInfo: mockExtInfo}
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		proCallCount, telCallCount := 0, 0
+		patches.ApplyFunc(doUpdateMetricWithValidateNum,
+			func(ch chan<- prometheus.Metric, ts time.Time, val float64, labels []string, desc *prometheus.Desc) {
+				proCallCount++
+			})
+		patches.ApplyFunc(doUpdateTelegrafWithValidateNum,
+			func(fieldMap map[string]interface{}, desc *prometheus.Desc, value float64, extInfo string) {
+				telCallCount++
+			})
+
+		promUpdateNetInfoStatus(make(chan prometheus.Metric, num10), cache, []string{"card0"})
+		telegrafUpdateNetInfoStatus(cache, make(map[string]interface{}))
+
+		convey.So(proCallCount, convey.ShouldEqual, len(mockExtInfo)*num2)
+		convey.So(telCallCount, convey.ShouldEqual, len(mockExtInfo)*num2)
+	})
 }

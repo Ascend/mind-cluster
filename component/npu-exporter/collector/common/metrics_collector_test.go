@@ -17,10 +17,10 @@ package common
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
@@ -120,52 +120,90 @@ func TestPreCollect(t *testing.T) {
 }
 
 type cacheCase struct {
-	name      string
-	cacheKey  string
-	preHandle func()
-	expected  int
+	name           string
+	cacheKey       string
+	preHandle      func()
+	localEntries   map[int32]string
+	invalidEntries map[int32]int
+	expected       int
 }
 
-func buildTestsForUpdateCache(expected int) []cacheCase {
-	tests := []cacheCase{
-		{name: "TestUpdateCache_save info to cache",
-			cacheKey:  "mockKey1",
-			preHandle: func() {},
-			expected:  expected,
+func buildTestsForUpdateCache() []cacheCase {
+	const (
+		testKey10         = int32(10)
+		testKey20         = int32(20)
+		testKey2          = int32(2)
+		testInvalidVal1   = 123
+		testInvalidVal2   = 456
+		testExpectedTwo   = 2
+		testExpectedThree = 3
+	)
+	return []cacheCase{
+		{name: "should save info to cache when no old cache",
+			cacheKey:     "mockKey1",
+			localEntries: map[int32]string{0: "mockValue"},
+			expected:     1,
 		},
-		{name: "TestUpdateCache_update old cache",
+		{name: "should update old cache and skip log when noNeedToPrintUpdateLog set",
 			cacheKey: "mockKey2",
 			preHandle: func() {
 				noNeedToPrintUpdateLog["mockKey2"] = true
 			},
-			expected: expected,
+			localEntries: map[int32]string{testKey10: "mockValue"},
+			expected:     testExpectedTwo,
 		},
-		{name: "TestUpdateCache_old cache is in incorrect type",
-			cacheKey:  "mockKey3",
-			preHandle: func() {},
-			expected:  expected,
+		{name: "should reset when old cache is in incorrect type",
+			cacheKey:     "mockKey3",
+			localEntries: map[int32]string{testKey20: "mockValue"},
+			expected:     1,
+		},
+		{name: "should merge multiple entries from localCache",
+			cacheKey:     "mockKey4",
+			localEntries: map[int32]string{0: "v0", 1: "v1", testKey2: "v2"},
+			expected:     testExpectedThree,
+		},
+		{name: "should skip invalid type entries in localCache",
+			cacheKey:       "mockKey5",
+			localEntries:   map[int32]string{0: "v0"},
+			invalidEntries: map[int32]int{1: testInvalidVal1, testKey2: testInvalidVal2},
+			expected:       1,
+		},
+		{name: "should handle empty localCache with no old cache",
+			cacheKey: "mockKey6",
+			expected: 0,
+		},
+		{name: "should overwrite old cache entry with new data",
+			cacheKey:     "mockKey7",
+			localEntries: map[int32]string{0: "newValue"},
+			expected:     1,
 		},
 	}
-	return tests
 }
 
 func TestUpdateCache(t *testing.T) {
-	const key = int32(0)
-	const expected = 1
-	tests := buildTestsForUpdateCache(expected)
+	const oldKey = int32(0)
 
 	n := mockNewNpuCollector()
-	// data init
-	n.cache.Set("mockKey2", map[int32]string{key: "0"}, n.cacheTime)
-	n.cache.Set("mockKey3", map[int32]int{key: 0}, n.cacheTime)
+	n.cache.Set("mockKey2", map[int32]string{oldKey: "oldValue"}, n.cacheTime)
+	n.cache.Set("mockKey3", map[int32]int{oldKey: 0}, n.cacheTime)
+	n.cache.Set("mockKey7", map[int32]string{oldKey: "oldValue"}, n.cacheTime)
+
+	tests := buildTestsForUpdateCache()
 
 	convey.Convey("TestUpdateCache", t, func() {
 
 		for _, tt := range tests {
 			convey.Convey(tt.name, func() {
 				localCache := sync.Map{}
-				localCache.Store(key, "mockValue")
-				tt.preHandle()
+				for k, v := range tt.localEntries {
+					localCache.Store(k, v)
+				}
+				for k, v := range tt.invalidEntries {
+					localCache.Store(k, v)
+				}
+				if tt.preHandle != nil {
+					tt.preHandle()
+				}
 				UpdateCache[string](n, tt.cacheKey, &localCache)
 
 				data, err := n.cache.Get(tt.cacheKey)
@@ -179,41 +217,17 @@ func TestUpdateCache(t *testing.T) {
 	})
 }
 
-const (
-	testCollectOnceKey   = "testCollectOnceKey"
-	testSmallIntervalKey = "testSmallIntervalKey"
-	testSmallInterval    = 1 * time.Second
-)
-
-func TestUpdateCacheTTLWithCollectOnce(t *testing.T) {
+func TestUpdateCacheSetError(t *testing.T) {
 	const key = int32(0)
-	tests := []struct {
-		name     string
-		cacheKey string
-		interval time.Duration
-	}{
-		{name: "should keep ttl -1 when interval is collectOnce",
-			cacheKey: testCollectOnceKey, interval: CollectOnceInterval()},
-		{name: "should set ttl to defaultGroupInterval when interval is small",
-			cacheKey: testSmallIntervalKey, interval: testSmallInterval},
-	}
-	convey.Convey("TestUpdateCacheTTLWithCollectOnce", t, func() {
-		n := mockNewNpuCollector()
-		for _, tt := range tests {
-			convey.Convey(tt.name, func() {
-				SetCollectorInterval(tt.cacheKey, tt.interval)
-				defer collectorIntervalMap.Delete(tt.cacheKey)
-				localCache := sync.Map{}
-				localCache.Store(key, "mockValue")
-				UpdateCache[string](n, tt.cacheKey, &localCache)
-				data, err := n.cache.Get(tt.cacheKey)
-				convey.So(err, convey.ShouldBeNil)
-				convey.So(data, convey.ShouldNotBeNil)
-				map2, ok := data.(map[int32]string)
-				convey.So(ok, convey.ShouldBeTrue)
-				convey.So(len(map2), convey.ShouldEqual, 1)
-			})
-		}
+	n := mockNewNpuCollector()
+
+	convey.Convey("should not panic when cache Set fails", t, func() {
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyMethodReturn(n.cache, "Set", errors.New("mock set error"))
+		localCache := sync.Map{}
+		localCache.Store(key, "mockValue")
+		UpdateCache[string](n, "mockKeySetErr", &localCache)
 	})
 }
 
