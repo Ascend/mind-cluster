@@ -1,6 +1,6 @@
 # 集群资源<a name="ZH-CN_TOPIC_0000002511346785"></a>
 
-## ConfigMap说明<a name="section17868183824213"></a>
+## cluster-info ConfigMap说明<a name="section17868183824213"></a>
 
 ClusterD启动后，会创建如下ConfigMap：
 

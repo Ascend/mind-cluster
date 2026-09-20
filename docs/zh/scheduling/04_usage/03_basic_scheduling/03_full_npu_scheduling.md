@@ -579,18 +579,14 @@ deploy任务原理图如[图4](#fig06571541566)所示。
     </thead>
     <tbody>
         <tr>
-            <td class="cellrowborder" rowspan="2" valign="top" width="8.799999999999999%" headers="mcps1.2.7.1.1 "><p>Ascend Job</p></td>
-            <td class="cellrowborder" rowspan="2" valign="top" width="15%" headers="mcps1.2.7.1.2 "><p><span>Atlas 950 SuperPoD 超节点</span></p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="8.799999999999999%" headers="mcps1.2.7.1.1 "><p>Ascend Job</p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="15%" headers="mcps1.2.7.1.2 "><p><span>Atlas 950 SuperPoD 超节点</span></p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>pytorch_standalone_acjob_950.yaml</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>示例默认为单机8卡任务。</p></td>
-            <td class="cellrowborder" rowspan="2" valign="top" width="15%" headers="mcps1.2.7.1.6 ">
+            <td class="cellrowborder" rowspan="1" valign="top" width="15%" headers="mcps1.2.7.1.6 ">
                 <p>选择相应的训练框架后，<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v26.1.0/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
             </td>
-        </tr>
-        <tr><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>MindSpore</p></td>
-            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>mindspore_standalone_acjob_950.yaml</p></td>
-            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>示例默认为单机单卡任务。</p></td>
         </tr>
     </tbody>
 </table>
@@ -823,28 +819,20 @@ deploy任务原理图如[图4](#fig06571541566)所示。
     </thead>
     <tbody>
         <tr>
-            <td class="cellrowborder" rowspan="2" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Volcano Job</p></td>
-            <td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 850 超节点</p><p>Atlas 350 加速卡</p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Volcano Job</p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 850 超节点</p><p>Atlas 350 加速卡</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>atlas_950_pytorch_vcjob.yaml</p></td>
-            <td class="cellrowborder" rowspan="4" valign="top" width="12.26%" headers="mcps1.2.7.1.5 "><p>示例默认为单机8卡任务。</p></td>
-            <td class="cellrowborder" rowspan="4" valign="top" width="15.02%" headers="mcps1.2.7.1.6 ">
+            <td class="cellrowborder" rowspan="2" valign="top" width="12.26%" headers="mcps1.2.7.1.5 "><p>示例默认为单机8卡任务。</p></td>
+            <td class="cellrowborder" rowspan="2" valign="top" width="15.02%" headers="mcps1.2.7.1.6 ">
                 <p><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v26.1.0/samples/train/basic-training/ranktable/yaml/950" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
             </td>
         </tr>
         <tr>
-            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>MindSpore</p></td>
-            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>atlas_950_mindspore_vcjob.yaml</p></td>
-        </tr>
-        <tr>
-            <td class="cellrowborder" rowspan="2" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Deployment</p></td>
-            <td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 850 超节点</p><p>Atlas 350 加速卡</p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Deployment</p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD 超节点</p><p>Atlas 850E 超节点</p><p>Atlas 850 超节点</p><p>Atlas 350 加速卡</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>atlas_950_pytorch_deployment.yaml</p></td>
-        </tr>
-        <tr>
-            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>MindSpore</p></td>
-            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>atlas_950_mindspore_deployment.yaml</p></td>
         </tr>
     </tbody>
 </table>

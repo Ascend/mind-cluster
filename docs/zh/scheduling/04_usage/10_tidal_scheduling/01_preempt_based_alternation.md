@@ -63,10 +63,10 @@ sequenceDiagram
 
    修改Volcano调度器的ConfigMap（`volcano-scheduler-configmap`），删除`enqueue` action，增加`preempt` action，并配置`gang`插件绕过gang保护：
 
-   ```yaml
+   <pre codetype="yaml">
    data:
      volcano-scheduler.conf: |
-       actions: "allocate, preempt, backfill"   # 需要删除enqueue action，并增加preempt action
+       <strong>actions: "allocate, preempt, backfill"   # 需要删除enqueue action，并在allocate action后面增加preempt action</strong>
        tiers:
        - plugins:
          - name: priority
@@ -92,11 +92,11 @@ sequenceDiagram
            arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2",
        "useClusterInfoManager":"true","self-maintain-available-card":"true","super-pod-size": "128", "reserve-nodes": "2",
        "forceEnqueue": "true", "prefer-previous-node": "true"}
-   ```
+   </pre>
 
 3. 部署训练任务。
 
-   ```yaml
+   <pre codetype="yaml">
    apiVersion: batch.volcano.sh/v1alpha1
    kind: Job
    metadata:
@@ -108,7 +108,7 @@ sequenceDiagram
    spec:
      queue: default
      schedulerName: volcano
-     priorityClassName: training-low
+     <strong>priorityClassName: training-low</strong>
      minAvailable: 2                  # 等于replicas，保证gang完整性
      policies:
      - event: PodEvicted
@@ -130,7 +130,7 @@ sequenceDiagram
                  huawei.com/Ascend910: 8
                requests:
                  huawei.com/Ascend910: 8
-   ```
+   </pre>
 
    执行以下命令部署训练任务及查看rankIndex对应的节点：
 
