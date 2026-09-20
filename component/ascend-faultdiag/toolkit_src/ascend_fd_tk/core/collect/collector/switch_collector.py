@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from typing import List, Dict
+from typing import List, Dict, Union
 
 from ascend_fd_tk.core.collect.base import Collector, log_collect_async_event
 from ascend_fd_tk.core.collect.fetcher.podmanager_fetcher import PoDManagerFetcher
@@ -33,7 +33,7 @@ from ascend_fd_tk.core.model.switch import (
 
 
 class SwitchCollector(Collector):
-    def __init__(self, fetcher: SwitchFetcher | PoDManagerFetcher):
+    def __init__(self, fetcher: Union[SwitchFetcher, PoDManagerFetcher]):
         self.fetcher = fetcher
         self.parser = SwitchParser()
 
