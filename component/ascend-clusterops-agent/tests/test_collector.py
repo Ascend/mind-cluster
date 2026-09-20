@@ -340,7 +340,7 @@ def test_collect_mount_keywords_shared_storage_reversed_layout(tmp_path, monkeyp
 
 def test_collect_mount_keywords_shared_storage_ip_only_layout(tmp_path, monkeypatch, client):
     # layout alllogs/plog/<ip>: only the pod ip occupies the directory below the keyword
-    # dir (no task id in the path) -> narrowed by the direct ip subdir
+    # dir (no task id in the path) -> narrowed by the direct ip subdir (ip fallback, no task id)
     shared = tmp_path / "shared-storage"
     other = shared / "job" / "code" / "alllogs" / "plog" / "9.9.9.9"
     mine = shared / "job" / "code" / "alllogs" / "plog" / "10.0.0.5"
@@ -349,6 +349,61 @@ def test_collect_mount_keywords_shared_storage_ip_only_layout(tmp_path, monkeypa
     (mine / "debug").mkdir()
     (mine / "security").mkdir()
     (other / "run" / "o.log").write_text("other-pod")
+    (mine / "run" / "p.log").write_text("my-plog")
+    monkeypatch.setattr(collector, "SHARED_STORAGE_ROOT", shared)
+    fake_pm = SimpleNamespace(
+        all_pairs=lambda uid: [],
+        pod_env=lambda uid, name: None,  # task id not recorded -> ip-only narrowing
+        pod_ip=lambda uid: "10.0.0.5" if uid == "u0" else "",
+    )
+    monkeypatch.setattr(collector, "get_pathmap", lambda: fake_pm)
+
+    dst = tmp_path / "process_log"
+    dst.mkdir()
+    entity = {"name": "process_log", "mount_keywords": ["plog"]}
+    pods = [collector.PodRef(ns="ns", name="p", pod_uid="u0")]
+    client._collect_mount_keywords(dst, entity, pods)
+    assert (dst / "run" / "p.log").read_text() == "my-plog"  # own pod plog collected
+    assert not (dst / "run" / "o.log").exists()  # another pod's plog skipped
+
+
+def test_collect_mount_keywords_shared_storage_scoped_by_task_id(tmp_path, monkeypatch, client):
+    # hostNetwork pods share the node ip across tasks: the ip subdir alone matches every
+    # task that ran on the node; with a known task id only this task's dir is collected
+    shared = tmp_path / "shared-storage"
+    mine = shared / "alllogs" / "task-42" / "plogs" / "10.0.0.5"
+    other = shared / "alllogs" / "task-OTHER" / "plogs" / "10.0.0.5"  # same ip, other task
+    (mine / "run").mkdir(parents=True)
+    (other / "run").mkdir(parents=True)
+    (mine / "debug").mkdir()
+    (mine / "security").mkdir()
+    (mine / "run" / "p.log").write_text("my-plog")
+    (other / "run" / "o.log").write_text("other-task")
+    monkeypatch.setattr(collector, "SHARED_STORAGE_ROOT", shared)
+    fake_pm = SimpleNamespace(
+        all_pairs=lambda uid: [],
+        pod_env=lambda uid, name: "task-42" if (uid, name) == ("u0", "MINDX_TASK_ID") else None,
+        pod_ip=lambda uid: "10.0.0.5" if uid == "u0" else "",
+    )
+    monkeypatch.setattr(collector, "get_pathmap", lambda: fake_pm)
+
+    dst = tmp_path / "process_log"
+    dst.mkdir()
+    entity = {"name": "process_log", "mount_keywords": ["plog"]}
+    pods = [collector.PodRef(ns="ns", name="p", pod_uid="u0")]
+    client._collect_mount_keywords(dst, entity, pods)
+    assert (dst / "run" / "p.log").read_text() == "my-plog"  # own task collected
+    assert not (dst / "run" / "o.log").exists()  # same-ip other-task dir excluded
+
+
+def test_collect_mount_keywords_shared_storage_single_candidate_ip_fallback(tmp_path, monkeypatch, client):
+    # task-less layout /job/code/plogs/<ip>: the task id appears nowhere; a single
+    # ip-narrowed candidate falls back to the ip (the site does not organize by task)
+    shared = tmp_path / "shared-storage"
+    mine = shared / "job" / "code" / "plogs" / "10.0.0.5"
+    (mine / "run").mkdir(parents=True)
+    (mine / "debug").mkdir()
+    (mine / "security").mkdir()
     (mine / "run" / "p.log").write_text("my-plog")
     monkeypatch.setattr(collector, "SHARED_STORAGE_ROOT", shared)
     fake_pm = SimpleNamespace(
@@ -363,8 +418,60 @@ def test_collect_mount_keywords_shared_storage_ip_only_layout(tmp_path, monkeypa
     entity = {"name": "process_log", "mount_keywords": ["plog"]}
     pods = [collector.PodRef(ns="ns", name="p", pod_uid="u0")]
     client._collect_mount_keywords(dst, entity, pods)
-    assert (dst / "run" / "p.log").read_text() == "my-plog"  # own pod plog collected
-    assert not (dst / "run" / "o.log").exists()  # another pod's plog skipped
+    assert (dst / "run" / "p.log").read_text() == "my-plog"  # single candidate collected by ip
+
+
+def test_collect_mount_keywords_shared_storage_bare_plog_dir(tmp_path, monkeypatch, client):
+    # bare layout /job/code/plogs/{run,debug,security}: no task/ip layer (the pod's own
+    # host mount, ip-isolated) -> the keyword dir itself is this pod's and collected
+    shared = tmp_path / "shared-storage"
+    mine = shared / "job" / "code" / "plogs"
+    (mine / "run").mkdir(parents=True)
+    (mine / "debug").mkdir()
+    (mine / "security").mkdir()
+    (mine / "run" / "p.log").write_text("my-plog")
+    monkeypatch.setattr(collector, "SHARED_STORAGE_ROOT", shared)
+    fake_pm = SimpleNamespace(
+        all_pairs=lambda uid: [],
+        pod_env=lambda uid, name: "task-42" if (uid, name) == ("u0", "MINDX_TASK_ID") else None,
+        pod_ip=lambda uid: "10.0.0.5" if uid == "u0" else "",
+    )
+    monkeypatch.setattr(collector, "get_pathmap", lambda: fake_pm)
+
+    dst = tmp_path / "process_log"
+    dst.mkdir()
+    entity = {"name": "process_log", "mount_keywords": ["plog"]}
+    pods = [collector.PodRef(ns="ns", name="p", pod_uid="u0")]
+    client._collect_mount_keywords(dst, entity, pods)
+    assert (dst / "run" / "p.log").read_text() == "my-plog"
+    assert (dst / "debug").is_dir()
+    assert (dst / "security").is_dir()
+
+
+def test_collect_mount_keywords_shared_storage_multi_candidate_no_match_noop(tmp_path, monkeypatch, client):
+    # multiple same-ip candidates under different task dirs and none carries our task id:
+    # ambiguous which task owns them -> nothing is collected
+    shared = tmp_path / "shared-storage"
+    a = shared / "alllogs" / "task-A" / "plogs" / "10.0.0.5"
+    b = shared / "alllogs" / "task-B" / "plogs" / "10.0.0.5"
+    (a / "run").mkdir(parents=True)
+    (b / "run").mkdir(parents=True)
+    (a / "run" / "a.log").write_text("task-a")
+    (b / "run" / "b.log").write_text("task-b")
+    monkeypatch.setattr(collector, "SHARED_STORAGE_ROOT", shared)
+    fake_pm = SimpleNamespace(
+        all_pairs=lambda uid: [],
+        pod_env=lambda uid, name: "task-42" if (uid, name) == ("u0", "MINDX_TASK_ID") else None,
+        pod_ip=lambda uid: "10.0.0.5" if uid == "u0" else "",
+    )
+    monkeypatch.setattr(collector, "get_pathmap", lambda: fake_pm)
+
+    dst = tmp_path / "process_log"
+    dst.mkdir()
+    entity = {"name": "process_log", "mount_keywords": ["plog"]}
+    pods = [collector.PodRef(ns="ns", name="p", pod_uid="u0")]
+    client._collect_mount_keywords(dst, entity, pods)
+    assert not list(dst.iterdir())  # ambiguous -> no plog collected
 
 
 def test_collect_mount_keywords_shared_storage_arbitrary_prefix(tmp_path, monkeypatch, client):
