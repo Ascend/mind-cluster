@@ -383,6 +383,7 @@ class CollectorClient:
         ip = getattr(pm, "pod_ip", lambda _uid: "")(pod.pod_uid)
         task_id = getattr(pm, "pod_env", lambda _uid, _name: None)(pod.pod_uid, TASK_ID_ENV)
         plog_entity = self._is_plog_entity(entity)
+        collected = False
         for hit in self._scan_nfs_volume(SHARED_STORAGE_ROOT, ip, task_id, keywords, first_only=plog_entity):
             logger.info(
                 "shared-storage keyword dir: entity=%s pod=%s dir=%s kw=%s",
@@ -440,6 +441,11 @@ class CollectorClient:
 
         With first_only (plog entities), the hit's subtree is pruned so nested keyword
         dirs (e.g. .../plogs/<ip>/run/plog) are not collected again as separate hits.
+        When the task id is known it scopes strictly: only dirs carrying it are returned
+        (the ip alone matches every task on the node for hostNetwork pods). No task-id
+        match falls back to a single ip-narrowed candidate and fails when several
+        candidates exist (ambiguous which task owns them). A bare keyword dir with no
+        task/ip layer is treated as this pod's own (e.g. its host mount, ip-isolated).
         """
         hits: list[str] = []
         for root, dirs, _files in os.walk(base, followlinks=False):
@@ -451,19 +457,40 @@ class CollectorClient:
                 continue
             # This pod's keyword dir: the path carries our task id / pod ip, or a direct
             # child subdir is named after the pod ip (e.g. .../plogs/<ip>).
-            if task_id and task_id not in root and not (ip and (ip in root or self._has_ip_subdir(root, ip))):
-                continue  # another task's dir under the shared NFS content
+            has_task = bool(task_id) and (task_id in root or self._has_task_subdir(root, task_id))
+            has_ip = bool(ip) and (ip in root or self._has_ip_subdir(root, ip))
+            if not (has_task or has_ip):
+                # bare keyword dir (no task/ip layer): this pod's own plog dir
+                hits.append(root)
+                if first_only:
+                    dirs[:] = []  # nested keyword dirs duplicate the hit's content
+                continue
             hit = self._narrow_pod_hit(root, ip)
             if hit:
                 hits.append(hit)
                 if first_only:
                     dirs[:] = []  # nested keyword dirs duplicate the hit's content
+        if task_id:
+            # strict task scoping: only this task's plog dirs
+            scoped = [h for h in hits if task_id in h or self._has_task_subdir(h, task_id)]
+            if scoped:
+                return scoped
+            # no dir carries the task id: the site layout has no task layer; a single
+            # ip-narrowed candidate is this pod's (task-less layout), multiple -> ambiguous
+            if len(hits) == 1:
+                return hits
+            return []
         return hits
 
     @staticmethod
     def _has_ip_subdir(root: str, ip: str) -> bool:
         """True when a direct child subdir of root is named after the pod ip (e.g. .../plogs/<ip>)."""
         return any(p.is_dir() and p.name == ip for p in Path(root).iterdir())
+
+    @staticmethod
+    def _has_task_subdir(root: str, task_id: str) -> bool:
+        """True when a direct child subdir of root is named after the task id (reversed layout)."""
+        return any(p.is_dir() and p.name == task_id for p in Path(root).iterdir())
 
     @staticmethod
     def _narrow_pod_hit(root: str, ip: str) -> str | None:
