@@ -26369,13 +26369,13 @@
                 "class": "Software",
                 "component": "UB Switch",
                 "module": "UB",
-                "cause_zh": "ctp的拥塞为关闭",
-                "description_zh": "tain_compact_top_alarm指标值对应二进制第6位为1，表示ctp的拥塞为关闭",
+                "cause_zh": "ctp的拥塞未关闭",
+                "description_zh": "tai_compact_top_alarm指标值对应二进制第6位为1，表示ctp的拥塞未关闭",
                 "suggestion_zh": [
                     "收集NPU日志，联系华为工程师进一步定位详细根因"
                 ],
-                "cause_en": "CTP congestion control is disabled",
-                "description_en": "The 6th bit of the tain_compact_top_alarm metric value is 1, indicating that CTP congestion control is disabled.",
+                "cause_en": "CTP congestion is not disabled",
+                "description_en": "The 6th bit of the tai_compact_top_alarm metric value is 1, indicating that CTP congestion is not disabled.",
                 "suggestion_en": [
                     "Collect NPU logs and contact Huawei engineers for further root cause analysis."
                 ]
@@ -26657,6 +26657,25 @@
                 ]
             },
             "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x5_RXDMA_ICRC_ERR": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "RDMA",
+                "cause_zh": "RX DMA ICRC错误计数增长",
+                "description_zh": "任务前后对比，hccn_tool工具查询端口的相关统计信息中rxdma_icrc_err_cnt_queue_id{0~3}任一计数出现增长（after > before），链路存在ICRC错误",
+                "suggestion_zh": [
+                    "通过hccl-test工具校验数据，结合链路二分排查对应的故障芯片位置。"
+                ],
+                "cause_en": "RX DMA ICRC error counter increased",
+                "description_en": "Compared before and after the task, any rxdma_icrc_err_cnt_queue_id{0~3} counter in hccn_tool tool query port statistics information increased (after > before), indicating ICRC errors on the link.",
+                "suggestion_en": [
+                    "Use the hccl-test tool to validate the data, and combine it with the link to narrow down the faulty chip position through bisection."
+                ]
+            },
+            "source_file": "NPU_Info",
             "regex": {}
         },
         "Comp_CANN_HCCL_Custom_CQE0x5": {

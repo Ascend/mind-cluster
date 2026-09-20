@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+import logging
 from typing import Any, Dict, List, Optional
 
 from ascend_fd.pkg.parse.knowledge_graph.prechecker.ub_cqe_checker import (
@@ -29,9 +30,11 @@ from ascend_fd.utils.constant.ub_const import (
     DAM_INTF_ALARM,
     DFX_TM_CRD_CTRL,
     HCOMM_TA_CTP_UB_TIMEOUT,
+    ICRC_ERR_COUNT_METRICS,
     LQC_TAI_DFX_ALARM,
     PHY_REINIT_CNT,
     PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT,
+    PRECHECK_RXDMA_ICRC_DATA,
     PRECHECK_UBCTL_DATA,
     PRECHECK_UBMEM_TIMEOUT,
     RC_FULL_QUEUE_CNT,
@@ -40,6 +43,7 @@ from ascend_fd.utils.constant.ub_const import (
     RULE_LQC_TAI_DFX_ALARM_BIT45,
     RULE_PHY_REINIT_CNT_EXCEED,
     RULE_RC_FULL_QUEUE_NONZERO,
+    RULE_RXDMA_ICRC_ERR_INCREASE,
     RULE_ROUTE_NO_CFG_BIT,
     RULE_TAACK_ABNORM_HEADER_INCREASE,
     RULE_TAACK_ABNORM_SSN_INCREASE,
@@ -66,6 +70,8 @@ from ascend_fd.utils.constant.ub_const import (
     TX_VL6_PKT_NUM,
     TX_VL7_PKT_NUM,
 )
+
+kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 
 reinit_max_cnt_persec = 5
 
@@ -436,6 +442,47 @@ class MergePrecheckCause:
         self._post_process_route_no_cfg_bit()
         self._post_process_vlan_balance()
 
+    def _prepare_icrc_rule(self):
+        """
+        对比 npu_info before/after 原始计数：任一 (udie, port) 的任一指标满足 after > before
+        即判定增长，置 RULE_RXDMA_ICRC_ERR_INCREASE flag（before 缺失的端口视为空、不判增长）。
+        """
+        if self.rule_flags.get(RULE_RXDMA_ICRC_ERR_INCREASE, {}):
+            return
+        data = self.single_device_precheck_event.get(PRECHECK_RXDMA_ICRC_DATA, {})
+        attribute = data.get("attribute", {})
+        before_tree = attribute.get("before", {})
+        after_tree = attribute.get("after", {})
+        if not after_tree:
+            return
+        source_device = data.get("source_device", "")
+        increased_lines = []
+        for udie, after_ports in after_tree.items():
+            before_ports = before_tree.get(udie, {})
+            for port, after_metrics in after_ports.items():
+                before_metrics = before_ports.get(port)
+                if not before_metrics:
+                    # before 侧缺失：视为空、无故障可判
+                    kg_logger.warning(
+                        "StatInfo: device %s udie %s port %s has no before stat data in npu_info, treated as no fault.",
+                        source_device,
+                        udie,
+                        port,
+                    )
+                    continue
+                for metric in ICRC_ERR_COUNT_METRICS:
+                    before_val = before_metrics.get(metric)
+                    after_val = after_metrics.get(metric)
+                    if before_val is None or after_val is None:
+                        continue
+                    if after_val > before_val:
+                        increased_lines.append(
+                            "device %s udie %s port %s: %s %s -> %s"
+                            % (source_device, udie, port, metric, before_val, after_val)
+                        )
+        if increased_lines:
+            self.rule_flags[RULE_RXDMA_ICRC_ERR_INCREASE] = {"value": True, "line": "; ".join(increased_lines)}
+
     def _prepare_unknown_device_rule(self):
         self._check_hcomm_ta_ctp_ub_timeout()
 
@@ -460,6 +507,7 @@ class MergePrecheckCause:
             device_causes.update(self.single_device_precheck_event)
         self._prepare_ubctl_log_rule()
         self._check_ubmem_timeout_low()
+        self._prepare_icrc_rule()
 
         self.unknown_device_event = get_device_precheck_event(self.precheck_info, UNKNOWN_DEVICE_ID)
         # unknown_device预检查

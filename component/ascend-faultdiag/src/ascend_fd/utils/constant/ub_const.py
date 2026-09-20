@@ -100,6 +100,12 @@ PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT = "PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT"
 PRECHECK_UBMEM_TIMEOUT = "PRECHECK_UBMEM_TIMEOUT"
 # PRECHECK 事件码：hisi kernel.log 中 UDMA AE 报错行，进 root_causes；不依赖 kg-config.json（按实际需求替换）
 PRECHECK_KERNEL_AE_TYPE23 = "PRECHECK_Hisi_log_kernel_ae_type23"
+# PRECHECK 事件码：A5 hccn_tool -g -stat 回显中 rxdma icrc 错误计数，仅承载 before/after 原始数据，
+# 由规则层 MergePrecheckCause 对比 before/after 判断增长并置 flag（不依赖 kg-config.json）
+PRECHECK_RXDMA_ICRC_DATA = "PRECHECK_RXDMA_ICRC_DATA"
+
+# A5 -stat 回显中待观测的 rxdma icrc 错误计数指标名
+ICRC_ERR_COUNT_METRICS = ["rxdma_icrc_err_cnt_queue_id%d" % i for i in range(4)]
 
 
 # rule_flags 的规则 key
@@ -120,6 +126,8 @@ RULE_LQC_TAI_DFX_ALARM_BIT45 = "lqc_tai_dfx_alarm_bit45"
 RULE_HCOMM_TA_CTP_UB_TIMEOUT = "hcomm_ta_ctp_ub_timeout_low"
 # PRECHECK ubmem 事件 age_period（微秒）换算秒后小于 4 秒
 RULE_UBMEM_TIMEOUT_LOW = "ubmem_timeout_low"
+# PRECHECK rxdma icrc 事件 before/after 原始计数对比，任一指标 after > before
+RULE_RXDMA_ICRC_ERR_INCREASE = "rxdma_icrc_err_increase"
 
 UB_RAS_CODES = [
     "0x81AF8009",

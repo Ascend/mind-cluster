@@ -46,6 +46,7 @@ from ascend_fd.utils.fault_code import (
     OPTICAL_MODULE_OUT_OF_LOCK_FAULT,
     NPU_DRIVER_FAULT,
 )
+from ascend_fd.utils.constant.ub_const import PRECHECK_RXDMA_ICRC_DATA
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 LOGIC_ID_CONFIG: Dict[Tuple[str, str], str] = dict()
@@ -616,6 +617,107 @@ class LinkInfoParse(GeneralInfoParser):
         return ""
 
 
+class HcclStatInfoParser(GeneralInfoParser):
+    """
+    解析 A5 `hccn_tool -g -stat -i <dev_id> -u <udie_id> -p <port_id>` 回显。
+
+    背景
+    ----
+    A5 硬件的每个 (device, udie, port) 会执行一次 hccn_tool -stat 命令，
+    一次回显中包含 4 个待观测计数：rxdma_icrc_err_cnt_queue_id{0~3}。
+    旧版 A3 的 `hccn_tool -i <dev> -stat -g` 此前未解析，本次不实现（预留扩展位）。
+
+    职责边界
+    ----
+    本解析器只负责把 before/after 两次回显的原始计数按 (device, udie, port) 落槽，
+    不做任何 before/after 对比判断：按设备把原始数据树放进
+    `PRECHECK_RXDMA_ICRC_DATA` 事件的 attribute（与 ubctl 的 PRECHECK_UBCTL_DATA 同模式）。
+    增长判断（after > before）与置 flag 由规则层 MergePrecheckCause 完成。
+    before/after 单侧缺失的数据视为空、按无故障处理（由规则层跳过，不判增长）。
+    """
+
+    # A5 命令形如：hccn_tool -g -stat -i 0 -u 1 -p 4，正则分组依次为 device/udie/port
+    A5_COMMAND_ID_REGEX = re.compile(r"hccn_tool -g -stat -i (\d{1,3}) -u (\d{1,2}) -p (\d{1,2})")
+
+    # 本次需要观测的指标
+    METRIC_VALUE_REGEX = re.compile(r"^\s*(rxdma_icrc_err_cnt_queue_id[0-3])\s*:\s*(\d+)", re.MULTILINE)
+
+    def __init__(self, end_time: str):
+        super().__init__(end_time)
+        # 数据容器（由基类 GeneralInfoParser.parse 驱动填充）：
+        #   self.info_dict[name][device_id][(udie_id, port_id)]
+        #     = {"metrics": {指标: 计数}, "key_info": [指标行原文, ...]}
+        #   其中 name 为 "before" / "after"
+
+    # ----------------- 解析阶段：逐条回显 -> 按端口存储原始数据 ----------------
+
+    def parse_info(self, name: str, event_message: str):
+        """解析一条 A5 -stat 回显，存到 (device, udie, port) 对应的 before/after 槽位。"""
+        cmd_match = self.A5_COMMAND_ID_REGEX.search(event_message)
+        if not cmd_match:
+            return  # 非 A5 -stat 回显（A3 预留扩展位）
+        metrics = self._extract_metrics(event_message)
+        if not metrics:
+            return  # 无指标数据的空回显（如 port 8 取不到数据）
+        port_stat = self._get_port_stat(name, cmd_match)
+        port_stat["metrics"] = metrics
+        port_stat["key_info"] = [line for line in event_message.splitlines() if self.METRIC_VALUE_REGEX.match(line)]
+
+    def _extract_metrics(self, event_message: str) -> dict:
+        """提取回显中的指标计数，返回 {指标名: 计数值}。"""
+        return {key: int(value) for key, value in self.METRIC_VALUE_REGEX.findall(event_message)}
+
+    def _get_port_stat(self, name: str, cmd_match) -> dict:
+        """定位 (before/after, device, udie, port) 对应的统计槽位并返回。"""
+        device_id = cmd_match.group(1)
+        port_key = (int(cmd_match.group(2)), int(cmd_match.group(3)))
+        return (
+            self.info_dict.setdefault(name, {})
+            .setdefault(device_id, {})
+            .setdefault(port_key, {"metrics": {}, "key_info": []})
+        )
+
+    # ----------------- 事件组装：按设备汇总原始数据，不做对比判断 ----------------
+
+    def processing_info(self) -> list:
+        """按设备汇总 before/after 原始计数，emit 每设备 1 个原始数据事件（不做对比判断）。"""
+        before_total = self.info_dict.get("before", {})
+        after_total = self.info_dict.get("after", {})
+        event_list = []
+        for device_id in set(before_total) | set(after_total):
+            event_list.append(
+                self._build_raw_data_event(
+                    device_id,
+                    before_total.get(device_id, {}),
+                    after_total.get(device_id, {}),
+                )
+            )
+        return event_list
+
+    def _group_by_udie(self, side: dict) -> dict:
+        """把 (udie_id, port_id) -> {"metrics": ...} 组装成 {udie: {port: 指标原始计数}} 数据树。"""
+        tree = {}
+        for (udie_id, port_id), port_stat in side.items():
+            tree.setdefault(str(udie_id), {})[str(port_id)] = port_stat["metrics"]
+        return tree
+
+    def _build_raw_data_event(self, device_id: str, before_ports: dict, after_ports: dict) -> dict:
+        """把任务前后原始计数汇总成 1 个 PRECHECK 原始数据事件，供规则层对比判断。"""
+        return {
+            "event_code": PRECHECK_RXDMA_ICRC_DATA,
+            "key_info": f"rxdma icrc before/after raw data for dev {device_id}",
+            "source_file": "npu_info_before/after.txt",
+            "source_device": device_id,
+            "occur_time": self.end_time,
+            "is_custom_event": False,
+            "occurrence": [],
+            "attribute": {
+                "before": self._group_by_udie(before_ports),
+                "after": self._group_by_udie(after_ports),
+            },
+        }
+
+
 class HealthInfoParser(GeneralInfoParser):
     HEALTH_CODE_PARSERS = NpuInfoLineParser(
         id_regex=r"npu-smi info -i (\d{1,3}) -c (\d)",
@@ -1147,6 +1249,7 @@ class NpuInfoParser(FileParser):
             OpticalInfoParser(end_time),
             FecModeParser(end_time),
             NetHealthInfoParser(end_time),
+            HcclStatInfoParser(end_time),
             VersionInfoParser(),
             NpuSmiInfoParser(end_time),
         ]:
