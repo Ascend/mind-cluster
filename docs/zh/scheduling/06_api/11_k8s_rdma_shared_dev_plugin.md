@@ -166,6 +166,9 @@ ConfigMap中Data字段的Key为`DpuInfoCfg`，Value为JSON格式的DPU故障信�
 
 - **字符设备**：无需配置挂载。组件的DaemonSet已挂载宿主机`/dev`目录，通过宿主机sysfs发现UB设备；业务Pod申请`<resourcePrefix>/<resourceName>`资源后，kubelet会根据组件返回的设备信息，在创建容器时自动注入`/dev/infiniband/rdma_cm`和对应的`uverbs{N}`字符设备。
 - **驱动配置文件和动态库**：组件不会自动挂载，需要业务镜像自带，或通过hostPath从宿主机挂载，建议在业务镜像内预先安装好。若使用非UB网卡，请咨询网卡提供商确认需要挂载的文件。
+- **rdma-core**：开源的RDMA用户态组件，提供libibverbs、librdmacm基础库和`ibv_devinfo`等工具。表10中UB网卡驱动提供的动态库（`libhrn5-*`、`libibv_extend*`）是libibverbs的厂商扩展，需在libibverbs基础上运行，需要确保训练镜像中已安装，或直接使用已预装rdma-core的训练镜像。
+
+容器场景下还需要为业务容器配置NET_ADMIN、SYS_ADMIN和IPC_LOCK权限，配置方式请参见下方YAML示例。
 
 通过hostPath挂载驱动配置文件和动态库的配置示例如下（Pod其余配置请参见[业务Pod使用及挂载资源说明](#ZH-CN_TOPIC_biz_pod_check_k8s_rdma_shared_dev_plugin)）：
 
@@ -183,7 +186,7 @@ spec:
         imagePullPolicy: IfNotPresent
         securityContext:
            capabilities:
-              add: [ "IPC_LOCK" ]
+              add: [ "NET_ADMIN", "SYS_ADMIN", "IPC_LOCK" ]
         resources:
            requests:
               huawei.com/ub_rdma: '1'
@@ -256,7 +259,7 @@ spec:
         imagePullPolicy: IfNotPresent
         securityContext:
            capabilities:
-              add: [ "IPC_LOCK" ]
+              add: [ "NET_ADMIN", "SYS_ADMIN", "IPC_LOCK" ]
         resources:
            requests:
               huawei.com/ub_rdma: '1'
