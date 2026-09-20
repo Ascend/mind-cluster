@@ -23,6 +23,7 @@ from ascend_fd.utils.constant.ub_const import (
     Comp_CANN_HCCL_Custom_CQE0x5,
     PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT,
     PRECHECK_KERNEL_AE_TYPE23,
+    PRECHECK_RXDMA_ICRC_DATA,
     PRECHECK_UBCTL_DATA,
     PRECHECK_UBMEM_TIMEOUT,
     REMOTE_MEM_ACCESS_NET_TIMEOUT,
@@ -32,6 +33,7 @@ from ascend_fd.utils.constant.ub_const import (
     RULE_PHY_REINIT_CNT_EXCEED,
     RULE_RC_FULL_QUEUE_NONZERO,
     RULE_ROUTE_NO_CFG_BIT,
+    RULE_RXDMA_ICRC_ERR_INCREASE,
     RULE_TAACK_ABNORM_HEADER_INCREASE,
     RULE_TAACK_ABNORM_SSN_INCREASE,
     RULE_TAI_COMPACT_TOP_BIT6,
@@ -355,6 +357,7 @@ class Cqe0x5Checker(Checker):
             self.add_cqe0x5_rc_not_enough_causes(device_causes),
             self.add_cqe0x5_flow_cfg_err_causes(device_causes),
             self.add_cqe0x5_tpm_cfg_err_causes(device_causes),
+            self.add_cqe0x5_icrc_err_causes(device_causes),
         ]
         if any(keep_cqe):
             # 有故障匹配成功，移除基础码，正常情况是没有的，做兜底
@@ -486,4 +489,16 @@ class Cqe0x5Checker(Checker):
         if not rule_flag.get("value", False):
             return False
         self._build_cqe_cause(device_causes, code, rule_flag)
+        return True
+
+    def add_cqe0x5_icrc_err_causes(self, device_causes):
+        """CQE0x5 场景下消费规则层 ICRC flag：npu_info before/after 原始计数出现增长（after > before）时输出细分故障码。"""
+        code = "Comp_Custom_CQE0x5_RXDMA_ICRC_ERR"
+        if code in device_causes:
+            return True
+        rule_flag = self.rule_flags.get(RULE_RXDMA_ICRC_ERR_INCREASE, {})
+        if not rule_flag.get("value", False):
+            return False
+        # 事件源为 npu_info 原始数据事件，rule line 为命中的增长明细（device/udie/port + before -> after）
+        self._build_cqe_cause(device_causes, code, rule_flag, event_key=PRECHECK_RXDMA_ICRC_DATA)
         return True
