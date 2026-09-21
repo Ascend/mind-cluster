@@ -26331,13 +26331,13 @@
                 "class": "Software",
                 "component": "UB Switch",
                 "module": "UB",
-                "cause_zh": "tp中psn配置错误",
-                "description_zh": "内核日志上报了\"udma....ae....event type is 2....sub type is 3\"描述且twp_ae_dfx指标值对应二进制第3位为1，表示tp中psn配置错误",
+                "cause_zh": "疑似tp中psn配置错误",
+                "description_zh": "内核日志上报了\"udma....ae....event type is 2....sub type is 3\"描述且twp_ae_dfx指标值对应二进制第3位为1，疑似tp中psn配置错误",
                 "suggestion_zh": [
                     "收集NPU日志，联系华为工程师进一步定位详细根因"
                 ],
-                "cause_en": "PSN configuration error in TP",
-                "description_en": "The kernel log reports \"udma....ae....event type is 2....sub type is 3\" and the 3rd bit of the twp_ae_dfx metric value is 1, indicating a PSN configuration error in TP.",
+                "cause_en": "Potential PSN configuration error in TP",
+                "description_en": "The kernel log reports \"udma....ae....event type is 2....sub type is 3\" and the 3rd bit of the twp_ae_dfx metric value is 1, indicating a potential PSN configuration error in TP.",
                 "suggestion_en": [
                     "Collect NPU logs and contact Huawei engineers for further root cause analysis."
                 ]

@@ -24,15 +24,18 @@ import os
 import re
 import shutil
 import subprocess
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, List, Type
-from abc import ABC, abstractmethod
 
 from ascend_fd.configuration.config import CUSTOM_CONFIG_PATH
 from ascend_fd.model.mindie_info import MindIEParseResult, MindIEDiagResult
 from ascend_fd.pkg.customize.custom_config.config_info import get_config_info, ConfigInfo, CustomFileInfo
 from ascend_fd.utils import regular_table
+from ascend_fd.utils.constant.dev_log_const import HISI_LOG_DIR, SLOG_DIR, BEFORE_TASK_DIR, AFTER_TASK_DIR
+from ascend_fd.utils.constant.dev_log_const import HIST_DEVICE_OS_PATH_ARRAY
 from ascend_fd.utils.constant.str_const import SUPER_POD_SCENE, SLOT_INFO
+from ascend_fd.utils.constant.ub_const import UB_INFO_DIR, UBCTL_DIR, UBCTL_LOG_FILE, SIDE_BEFORE, SIDE_AFTER
 from ascend_fd.utils.net_tools import IPAddress
 from ascend_fd.utils.regular_table import DEFAULT_GENERATION_SIGN, GENERATION_SIGN_A5, NPU_CPU_SLOT_ID_MAP
 from ascend_fd.utils.status import ParamError, InnerError, PathError, FileNotExistError
@@ -55,9 +58,6 @@ from ascend_fd.utils.tool import (
     decompress_zip,
     decompress_tar_gz,
 )
-from ascend_fd.utils.constant.dev_log_const import HISI_LOG_DIR, SLOG_DIR, BEFORE_TASK_DIR, AFTER_TASK_DIR
-from ascend_fd.utils.constant.ub_const import UB_INFO_DIR, UBCTL_DIR, UBCTL_LOG_FILE, SIDE_BEFORE, SIDE_AFTER
-
 
 logger = logging.getLogger("FAULT_DIAG")
 
@@ -917,6 +917,7 @@ class DevLogSaver(BaseLogSaver):
         ('log', 'kernel.log'),
         ('bbox', 'os', 'os_info.txt'),
         ('mntn', 'hbm.txt'),
+        HIST_DEVICE_OS_PATH_ARRAY,
     )
     LEGACY_MODE = "legacy"
 

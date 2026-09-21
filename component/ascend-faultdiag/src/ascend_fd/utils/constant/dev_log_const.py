@@ -20,3 +20,5 @@ SLOG_DIR = "slog"
 
 BEFORE_TASK_DIR = "before_task"
 AFTER_TASK_DIR = "after_task"
+
+HIST_DEVICE_OS_PATH_ARRAY = ("log", "slog", "debug", "device_os.log")
