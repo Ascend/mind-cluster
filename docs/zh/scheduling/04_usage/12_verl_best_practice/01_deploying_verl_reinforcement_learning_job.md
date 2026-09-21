@@ -65,15 +65,15 @@
 
     | 文件 | 作用 |
     | --- | --- |
-    | `verl-grpo.yaml` | verl任务定义 |
+    | `verl-grpo-910b.yaml` | verl任务定义 |
     | `start_grpo.sh` | 容器启动脚本，负责初始化ray集群并拉起训练任务 |
     | `run_grpo_qwen3_32b_a3b_megatron.sh` | 训练启动脚本，通过ray job submit提交verl任务 |
 
-    用户通过verl-grpo.yaml部署任务，YAML中配置了Pod启动后将调用`start_grpo.sh`初始化ray集群，在集群资源满足任务时，调用`run_grpo_qwen3_32b_a3b_megatron.sh`拉起verl任务。
+    用户通过verl-grpo-910b.yaml部署任务，YAML中配置了Pod启动后将调用`start_grpo.sh`初始化ray集群，在集群资源满足任务时，调用`run_grpo_qwen3_32b_a3b_megatron.sh`拉起verl任务。
 
     示例镜像已集成可用的`start_grpo.sh`与`run_grpo_qwen3_32b_a3b_megatron.sh`，位于容器/verl目录下，用于拉起A2场景的单节点Qwen3-32B模型的GRPO强化学习任务，用户可根据需要自行定制修改脚本。
 
-    **参考verl-grpo.yaml**
+    **参考verl-grpo-910b.yaml**
 
     ```yaml
     apiVersion: mindxdl.gitee.com/v1
@@ -88,12 +88,14 @@
         ring-controller.atlas: ascend-910b
         subHealthyStrategy: "ignore"
       annotations:
+        huawei.com/schedule_policy: "chip8-node8"   # 根据硬件形态设置调度策略
     spec:
       schedulerName: volcano
       runPolicy:
         schedulingPolicy:
           minAvailable: 2
           queue: default
+        ttlSecondsAfterFinished: 30    # 任务完成后自动清理Job资源
       successPolicy: AllWorkers
       replicaSpecs:
         Master:
@@ -114,7 +116,7 @@
                   # image name, modify according to actual situation
                   image: verl-sample:v26.2.0-fault-recover-cann9.0.0-torch_npu2.9.0.post2-910b-ubuntu22.04-py3.11-vllm
                   imagePullPolicy: IfNotPresent
-                  securityConext:
+                  securityContext:
                     privileged: true
                   command:
                     - /bin/bash
@@ -251,7 +253,7 @@
 
     **挂载关系**
 
-    `verl-grpo.yaml`当前挂载关系如下，用户可根据实际情况修改：
+    `verl-grpo-910b.yaml`当前挂载关系如下，用户可根据实际情况修改：
 
     **表 2**  挂载关系
 
@@ -266,13 +268,15 @@
 
     **其他关键参数说明**
 
-    **表 3**  verl-grpo.yaml参数说明
+    **表 3**  verl-grpo-910b.yaml参数说明
 
     | 参数 | 示例值 | 说明 |
     | --- | --- | --- |
     | `metadata.name` | `mindspeed-rl` | 任务名，决定Pod名前缀 |
+    | `huawei.com/schedule_policy` | `chip8-node8` | 调度策略，根据硬件形态设置 |
     | `image` | `verl-sample:v26.2.0-fault-recover-cann9.0.0-torch_npu2.9.0.post2-910b-ubuntu22.04-py3.11-vllm` | 训练镜像 |
     | `minAvailable` | `2` | gang scheduling最少可调度副本数 |
+    | `ttlSecondsAfterFinished` | `30` | 任务完成后自动清理Job资源 |
     | `Master.replicas` | `1` | Master副本数，必须为1 |
     | `Worker.replicas` | `1` | Worker副本数 |
     | `Worker.resources` | `huawei.com/Ascend910: 8` | Worker申请的NPU数量 |
@@ -291,7 +295,7 @@
     | `ServerPort` | `6666` | Ray Head端口 |
     | `DashboardPort` | `8888` | Ray Dashboard端口 |
     | `HCCL_HOST_SOCKET_PORT_RANGE` | `60000-60050` | HCCL在Host侧使用的通信端口范围 |
-    | `HCCL_NPU_SOCKET_PORT_RANGE` | `61000-60050` | HCCL在Host侧使用的通信端口范围 |
+    | `HCCL_NPU_SOCKET_PORT_RANGE` | `61000-61050` | HCCL在NPU侧使用的通信端口范围 |
     | `path_log_dir` | `/data/logs/$MINDX_TASK_ID/trainlog` | 训练日志目录 |
     | `NPU_PER_NODE` | `8` | 每节点NPU数，脚本根据`LOCAL_WORLD_SIZE`自动计算 |
     | `NNODES` | `2` | 节点数，脚本根据`WORLD_SIZE / LOCAL_WORLD_SIZE`自动计算 |
@@ -327,7 +331,7 @@
     1. 下发任务。
 
         ```shell
-        kubectl apply -f verl-grpo.yaml
+        kubectl apply -f verl-grpo-910b.yaml
         ```
 
     2. 查看Pod情况。
@@ -369,5 +373,5 @@
 6. （可选）删除任务。
 
       ```shell
-      kubectl delete -f verl-grpo.yaml
+      kubectl delete -f verl-grpo-910b.yaml
       ```
