@@ -1,10 +1,10 @@
 # 配置推理任务的弹性扩缩容<a name="ZH-CN_TOPIC_0000002479226430"></a>
 
-MindIE Motor推理任务中，用户可通过配置Job级别弹性扩缩容功能，在发生硬件或软件故障且当前资源不满足所有实例拉起时，降低运行的实例数量，尽量保证推理任务继续运行。在故障恢复或新的硬件加入时，等待拉起的Job实例会重新被调度。
+MindIE CMotor推理任务中，用户可通过配置Job级别弹性扩缩容功能，在发生硬件或软件故障且当前资源不满足所有实例拉起时，降低运行的实例数量，尽量保证推理任务继续运行。在故障恢复或新的硬件加入时，等待拉起的Job实例会重新被调度。
 
 ## 使用约束<a name="zh-cn_topic_0000002356673977_section270417201799"></a>
 
-当前仅支持MindIE Motor推理任务使用本功能。
+当前仅支持MindIE CMotor推理任务使用本功能。
 
 ## 支持的产品型号<a name="zh-cn_topic_0000002356673977_section618313391397"></a>
 
@@ -23,7 +23,7 @@ MindIE Motor推理任务中，用户可通过配置Job级别弹性扩缩容功�
 4. ClusterD将global-ranktable发送给MindIE Controller，关于global-ranktable的说明请参见[SubscribeRankTable](../../06_api/04_clusterd/05_service_configuration_apis.md#subscriberanktable)中“global-ranktable文件说明”表。
 5. MindIE Controller根据global-ranktable确定需要退出的实例，通知容器中的进程非0退出。
 6. Volcano-Scheduler感知到Pod异常后，将实例的所有Pod删除。
-7. Ascend Operator感知到Pod被删除后，会收集当前MindIE Motor对应scaling-rule下的所有实例运行情况。
+7. Ascend Operator感知到Pod被删除后，会收集当前MindIE CMotor对应scaling-rule下的所有实例运行情况。
 8. Ascend Operator根据scaling-rule确认当前实例是否需要创建Pod。
 9. 如果可以创建Pod，待Pod创建完成后，由调度器完成调度或处于Pending状态等待调度。
 10. 处于Pending状态的Pod待资源充足时，自动完成调度。

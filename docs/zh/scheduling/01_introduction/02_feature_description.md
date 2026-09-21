@@ -279,7 +279,7 @@ Container Manager
 
 推理高可用模块提供推理任务的最佳实践指导，涵盖多种推理引擎的部署、重调度、弹性扩缩容等场景，支持用户在生产环境中实现推理服务的高可用部署。主要功能包括：
 
-- **推理引擎支持**：支持vLLM、MindIE Motor、SGLang等多种推理引擎的最佳实践。
+- **推理引擎支持**：支持vLLM、MindIE CMotor、SGLang等多种推理引擎的最佳实践。
 - **调度能力**：支持推理任务的优先级调度配置和交换机亲和性配置。
 - **故障处理**：支持推理任务的故障重调度、弹性扩缩容和故障隔离。
 
@@ -296,7 +296,7 @@ Container Manager
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. Infer Operator推理任务最佳实践请参见[Infer Operator推理任务最佳实践](../04_usage/09_infer_operator_best_practice/00_before_you_start.md)章节进行操作。
-3. MindIE Motor推理任务最佳实践请参见[MindIE Motor推理任务最佳实践](../04_usage/06_mindie_motor_best_practice/00_before_you_start.md)章节进行操作。
+3. MindIE CMotor推理任务最佳实践（已日落）请参见[MindIE CMotor推理任务最佳实践（已日落）](../04_usage/06_mindie_motor_best_practice/00_before_you_start.md)章节进行操作。
 4. SGLang推理任务最佳实践请参见[SGLang推理任务最佳实践](../04_usage/07_sglang_best_practice/00_before_you_start.md)章节进行操作。
 5. vLLM推理任务最佳实践请参见[vLLM推理任务最佳实践](../04_usage/08_vllm_best_practice/00_before_you_start.md)章节进行操作。
 

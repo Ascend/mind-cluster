@@ -1,4 +1,4 @@
-# 部署MindIE Motor<a name="ZH-CN_TOPIC_0000002511346333"></a>
+# 部署MindIE CMotor<a name="ZH-CN_TOPIC_0000002511346333"></a>
 
 ## 实现原理<a name="ZH-CN_TOPIC_0000002511426301"></a>
 
@@ -34,15 +34,15 @@
 
 ### 流程说明<a name="ZH-CN_TOPIC_0000002511426315"></a>
 
-MindIE Motor包含两个部分，MindIE MS（MindIE Management Service）和MindIE Server。其中MindIE MS包含MS Controller和MS Coordinator，MindIE Server可以分为Prefill实例和Decode实例。其中MS Controller、MS Coordinator不需要使用NPU资源，MindIE Server需要NPU资源。
+MindIE CMotor包含两个部分，MindIE MS（MindIE Management Service）和MindIE Server。其中MindIE MS包含MS Controller和MS Coordinator，MindIE Server可以分为Prefill实例和Decode实例。其中MS Controller、MS Coordinator不需要使用NPU资源，MindIE Server需要NPU资源。
 
-MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Server组件分别运行在独立的Pod内。使用MindCluster集群调度组件进行MindIE Motor任务部署时，MS Controller、MS Coordinator以及MindIE Server中的每个实例分别以一个AscendJob进行部署，例如一个推理任务包含2个Prefill实例和1个Decode实例，则需要部署5个AscendJob。
+MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Server组件分别运行在独立的Pod内。使用MindCluster集群调度组件进行MindIE CMotor任务部署时，MS Controller、MS Coordinator以及MindIE Server中的每个实例分别以一个AscendJob进行部署，例如一个推理任务包含2个Prefill实例和1个Decode实例，则需要部署5个AscendJob。
 
 了解PD分离服务部署的详细说明可参考《MindIE LLM开发指南》中的“MindIE Motor CPP开发指南 \> 集群服务部署 \> [PD分离服务部署](https://www.hiascend.com/document/detail/zh/mindie/310/mindiellm/llmdev/mindie_motor_cpp/user_guide/service_deployment/pd_separation_service_deployment.md)”章节。
 
 **使用流程<a name="zh-cn_topic_0000002328850238_section5640184231810"></a>**
 
-通过命令行使用MindCluster集群调度组件部署MindIE Motor推理任务时，使用流程如下图所示。
+通过命令行使用MindCluster集群调度组件部署MindIE CMotor推理任务时，使用流程如下图所示。
 
 **图 1**  使用流程<a name="fig38991911205815"></a>
 
@@ -73,10 +73,10 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 
 **任务YAML说明<a name="zh-cn_topic_0000002362848597_section1870105118125"></a>**
 
-与普通Ascend Job任务相比，MindIE Motor推理任务需要额外增加以下两个label：app和jobID。MindIE Server使用NPU卡，用户需根据Prefill实例和Decode实例数，下发等量的AscendJob。
+与普通Ascend Job任务相比，MindIE CMotor推理任务需要额外增加以下两个label：app和jobID。MindIE Server使用NPU卡，用户需根据Prefill实例和Decode实例数，下发等量的AscendJob。
 
 >[!NOTE]
->关于等量AscendJob的说明如下：例如一个MindIE Motor推理任务包含1个controller、1个coordinator，x个P实例，y个D实例，则需要部署以下数量的AscendJob：1+1+x+y。
+>关于等量AscendJob的说明如下：例如一个MindIE CMotor推理任务包含1个controller、1个coordinator，x个P实例，y个D实例，则需要部署以下数量的AscendJob：1+1+x+y。
 
 - **MS Controller、MS Coordinator**不使用NPU卡，分别以一个AscendJob进行部署，支持多副本。MS Controller、MS Coordinator的YAML示例如下。
 
@@ -88,8 +88,8 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
       namespace: mindie
       labels:
         framework: pytorch
-        <strong>app: mindie-ms-controller   # 表示MindIE Motor在Ascend Job任务中的角色,不可修改</strong>
-        <strong>jobID: mindie-ms-test       # 当前MindIE Motor任务在集群中的唯一识别ID，用户可根据实际情况进行配置</strong>
+        <strong>app: mindie-ms-controller   # 表示MindIE CMotor在Ascend Job任务中的角色,不可修改</strong>
+        <strong>jobID: mindie-ms-test       # 当前MindIE CMotor任务在集群中的唯一识别ID，用户可根据实际情况进行配置</strong>
         ring-controller.atlas: ascend-910b
     spec:
       schedulerName: volcano   # Ascend Operator启用“gang”调度时所选择的调度器
@@ -109,9 +109,9 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 
 在以上示例中，关于app和jobID的参数说明如下。如果想了解其他参数的详细说明请参见[YAML参数说明](#yaml参数说明)。
 
-**app**：当前MindIE Motor在Ascend Job任务中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。
+**app**：当前MindIE CMotor在Ascend Job任务中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。
 
-**jobID**：当前MindIE Motor任务在集群中的唯一识别ID，用户可根据需要进行配置。
+**jobID**：当前MindIE CMotor任务在集群中的唯一识别ID，用户可根据需要进行配置。
 
 - **MindIE Server**的YAML示例如下。
 
@@ -138,8 +138,8 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
       namespace: mindie
       labels:
         framework: pytorch
-        <strong>app: mindie-ms-server        # 表示当前MindIE Motor在Ascend Job任务中的角色,不可修改</strong>
-        <strong>jobID: mindie-ms-test        # 当前MindIE Motor任务在集群中的唯一识别ID，用户可根据实际情况进行配置</strong>
+        <strong>app: mindie-ms-server        # 表示当前MindIE CMotor在Ascend Job任务中的角色,不可修改</strong>
+        <strong>jobID: mindie-ms-test        # 当前MindIE CMotor任务在集群中的唯一识别ID，用户可根据实际情况进行配置</strong>
         ring-controller.atlas: ascend-910b
       annotations:
         huawei.com/schedule.filter.faultCode: "8C1F8608,4C1F8608,80E01801"       # 增加该annotation，配置方法请参见YAML参数说明
@@ -166,7 +166,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
       labels:
         framework: pytorch
         app: mindie-ms-server        # 不可修改
-        jobID: mindie-ms-test        # MindIE Motor任务在集群中的唯一识别ID，用户可根据实际情况进行配置
+        jobID: mindie-ms-test        # MindIE CMotor任务在集群中的唯一识别ID，用户可根据实际情况进行配置
         ring-controller.atlas: ascend-910b
         fault-scheduling: force
       <strong>annotations:</strong>
@@ -198,7 +198,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 
 ### （可选）配置实例级亲和性调度<a name="ZH-CN_TOPIC_0000002511346349"></a>
 
-Atlas 800I A3 超节点服务器场景下，MindCluster集群调度组件支持MindIE Motor推理任务配置任务级别亲和性调度策略，可实现将MindIE Server实例尽量调度到同一个物理超节点中，充分利用HCCS网络，加速实例间的网络通信。
+Atlas 800I A3 超节点服务器场景下，MindCluster集群调度组件支持MindIE CMotor推理任务配置任务级别亲和性调度策略，可实现将MindIE Server实例尽量调度到同一个物理超节点中，充分利用HCCS网络，加速实例间的网络通信。
 
 关于逻辑超节点的亲和性调度规则的详细说明，请参见[灵衢总线设备节点网络说明](../03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点)章节。
 
@@ -208,7 +208,7 @@ Atlas 800I A3 超节点服务器场景下，MindCluster集群调度组件支持M
 
 **配置实例级亲和性调度<a name="zh-cn_topic_0000002362872425_section18872194156"></a>**
 
-在已完成镜像的准备工作后，用户在进行[准备任务YAML](#准备任务yaml)时，如需为MindIE Motor推理任务配置实例级亲和性调度策略，可同时进行如下配置。
+在已完成镜像的准备工作后，用户在进行[准备任务YAML](#准备任务yaml)时，如需为MindIE CMotor推理任务配置实例级亲和性调度策略，可同时进行如下配置。
 
 - 任务YAML中指定sp-block字段，sp-block的值必须和job芯片数量一致，保证整个Job调度到一个物理超节点中。
 
@@ -227,8 +227,8 @@ metadata:
   namespace: mindie
   labels:
     framework: pytorch
-    app: mindie-ms-server        # 表示MindIE Motor在Ascend Job任务中的角色,不可修改
-    jobID: mindie-ms-test        # 当前MindIE Motor任务在集群中的唯一识别ID，用户可根据实际情况进行配置
+    app: mindie-ms-server        # 表示MindIE CMotor在Ascend Job任务中的角色,不可修改
+    jobID: mindie-ms-test        # 当前MindIE CMotor任务在集群中的唯一识别ID，用户可根据实际情况进行配置
     ring-controller.atlas: ascend-910b
     fault-scheduling: force
   annotations:
@@ -272,13 +272,13 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 |参数|取值|说明|
 |---| ---| ---|
 |framework|<ul><li>mindspore</li><li>pytorch</li></ul>|-|
-|jobID|当前MindIE Motor推理任务在集群中的唯一识别ID，用户可根据实际情况进行配置。|该参数仅支持在Atlas 800I A2 推理服务器、Atlas 800I A3 超节点服务器上使用。|
-|app|表示当前MindIE Motor推理任务在Ascend Job任务中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。|<ul><li>acjob的任务YAML同时包含jobID和app这2个字段时，Ascend Operator组件会自动传入环境变量MINDX\_TASK\_ID、APP\_TYPE、MINDX\_SERVER\_IP及MINDX\_SERVER\_DOMAIN，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见[Ascend Operator注入的训练环境变量](../../06_api/13_environment_variable_description.md#ascend-operator环境变量说明)。</li><li>该参数仅支持在Atlas 800I A2 推理服务器、Atlas 800I A3 超节点服务器上使用。</li></ul>|
+|jobID|当前MindIE CMotor推理任务在集群中的唯一识别ID，用户可根据实际情况进行配置。|该参数仅支持在Atlas 800I A2 推理服务器、Atlas 800I A3 超节点服务器上使用。|
+|app|表示当前MindIE CMotor推理任务在Ascend Job任务中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。|<ul><li>acjob的任务YAML同时包含jobID和app这2个字段时，Ascend Operator组件会自动传入环境变量MINDX\_TASK\_ID、APP\_TYPE、MINDX\_SERVER\_IP及MINDX\_SERVER\_DOMAIN，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见[Ascend Operator注入的训练环境变量](../../06_api/13_environment_variable_description.md#ascend-operator环境变量说明)。</li><li>该参数仅支持在Atlas 800I A2 推理服务器、Atlas 800I A3 超节点服务器上使用。</li></ul>|
 |mx-consumer-cim|标记该ConfigMap是否会被ClusterD侦听。<p>true：是</p>|-|
-|mind-cluster/scaling-rule|标记扩缩容规则对应的ConfigMap名称。|仅支持MindIE Motor推理任务在Atlas 800I A2 推理服务器、Atlas 800I A3 超节点服务器上使用本参数。|
-|mind-cluster/group-name|标记扩缩容规则中对应的group名称。|仅支持MindIE Motor推理任务在Atlas 800I A2 推理服务器、Atlas 800I A3 超节点服务器上使用本参数。|
-|podAffinity|表示逻辑超节点会往具有更多亲和性Pod的物理超节点调度。|仅支持MindIE Motor推理任务Atlas 800I A3 超节点服务器上使用本参数。|
-|sp-fit|超节点调度策略。<ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul>|仅支持MindIE Motor推理任务Atlas 800I A3 超节点服务器上使用本参数。|
+|mind-cluster/scaling-rule|标记扩缩容规则对应的ConfigMap名称。|仅支持MindIE CMotor推理任务在Atlas 800I A2 推理服务器、Atlas 800I A3 超节点服务器上使用本参数。|
+|mind-cluster/group-name|标记扩缩容规则中对应的group名称。|仅支持MindIE CMotor推理任务在Atlas 800I A2 推理服务器、Atlas 800I A3 超节点服务器上使用本参数。|
+|podAffinity|表示逻辑超节点会往具有更多亲和性Pod的物理超节点调度。|仅支持MindIE CMotor推理任务Atlas 800I A3 超节点服务器上使用本参数。|
+|sp-fit|超节点调度策略。<ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul>|仅支持MindIE CMotor推理任务Atlas 800I A3 超节点服务器上使用本参数。|
 |ring-controller.atlas|<ul><li><term>Atlas A2 训练系列产品</term>、A200T A3 Box8 超节点服务器、Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器取值为：ascend-<i>{xxx}</i>b</li><li>Atlas 800 训练服务器、服务器（插Atlas 300T 训练卡）取值为：ascend-910</li></ul>|标识任务使用的芯片的产品类型。需要在ConfigMap和任务task中配置。|
 |schedulerName|默认值为“volcano”，用户需根据自身情况填写|Ascend Operator启用“gang”调度时所选择的调度器。|
 |minAvailable|默认值为任务总副本数|Ascend Operator启用“gang”调度生效，且调度器为Volcano时，任务运行总副本数。|

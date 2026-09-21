@@ -1,12 +1,15 @@
 # 使用前必读<a name="ZH-CN_TOPIC_0000002511346371"></a>
 
-MindCluster集群调度组件支持用户通过生成acjob推理任务的方式进行MindIE Motor的容器化部署、故障重调度和弹性扩缩容。
+>[!NOTE]
+>MindIE CMotor配合Ascend Operator使用的方式已经日落，本章节将于2027年9月30日的版本删除，当前推荐MindIE PyMotor配合Infer Operator使用的方式，参考[基于MindIE PyMotor部署Infer Operator推理任务](../../04_usage/09_infer_operator_best_practice/02_deploying_infer_operator_inference_job_with_mindie_pymotor.md)。
 
-本章节仅说明相关特性原理及对应配置示例，所提供的YAML示例不足以完成MindIE任务的部署。了解MindIE Motor的详细部署流程请参见《[MindIE Motor CPP开发指南](https://www.hiascend.com/document/detail/zh/mindie/310/mindiellm/llmdev/mindie_motor_cpp/user_guide/introduction.md)》。
+MindCluster集群调度组件支持用户通过生成acjob推理任务的方式进行MindIE CMotor的容器化部署、故障重调度和弹性扩缩容。
+
+本章节仅说明相关特性原理及对应配置示例，所提供的YAML示例不足以完成MindIE任务的部署。了解MindIE CMotor的详细部署流程请参见《[MindIE Motor CPP开发指南](https://www.hiascend.com/document/detail/zh/mindie/310/mindiellm/llmdev/mindie_motor_cpp/user_guide/introduction.md)》。
 
 ## 前提条件<a name="zh-cn_topic_0000002322062116_section52051339787"></a>
 
-在部署MindIE Motor前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
+在部署MindIE CMotor前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 
 - Volcano
 - Ascend Device Plugin
@@ -22,7 +25,7 @@ MindCluster集群调度组件支持用户通过生成acjob推理任务的方式�
 
 ## 使用方式<a name="zh-cn_topic_0000002322062116_section6771194616104"></a>
 
-MindCluster集群调度组件支持用户通过以下2种方式进行MindIE Motor的容器化部署、故障重调度和弹性扩缩容。本章节仅介绍通过命令行使用这种方式。
+MindCluster集群调度组件支持用户通过以下2种方式进行MindIE CMotor的容器化部署、故障重调度和弹性扩缩容。本章节仅介绍通过命令行使用这种方式。
 
 - [通过命令行使用](./01_deploying_mindie_motor.md#通过命令行使用)：通过配置的YAML文件部署任务。
 - 集成后使用：将集群调度组件集成到已有的第三方AI平台或者基于集群调度组件开发的AI平台。
