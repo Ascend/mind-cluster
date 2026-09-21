@@ -207,7 +207,7 @@ func (r *BaseGenerator) writeVersion() error {
 			return err
 		}
 		defer f.Close()
-		_, err = commonutils.CheckPath(r.path)
+		_, err = commonutils.CheckPath(versionPath)
 		if err != nil {
 			return err
 		}
