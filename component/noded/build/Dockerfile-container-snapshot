@@ -1,0 +1,25 @@
+FROM openeuler-24.03-lts-sp2:latest
+
+RUN sed -i 's/root:x:0:0:root:\/root:.*$/root:x:0:0:root:\/root:\/sbin\/nologin/' /etc/passwd
+
+RUN echo "sslverify=0" >> /etc/yum.conf
+RUN yum makecache
+RUN dnf install -y protobuf-c protobuf libmnl libnftnl libseccomp libnet libnl3 iptables
+
+ENV LD_LIBRARY_PATH /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common
+
+COPY ./noded /usr/local/bin
+COPY ./NodeDConfiguration.json /usr/local/
+COPY ./fdConfig.yaml /usr/local/fdConfig.yaml
+COPY ./agreement.txt /usr/local/
+COPY ./Dockerfile-container-snapshot /usr/local/
+
+RUN chmod 550 /usr/local/bin/noded &&\
+    chmod 550 /usr/local/bin &&\
+    chmod 440 /usr/local/NodeDConfiguration.json &&\
+    chmod 440 /usr/local/fdConfig.yaml &&\
+    chmod 440 /usr/local/agreement.txt &&\
+    echo 'umask 027' >> /etc/profile &&\
+    echo 'source /etc/profile' >> ~/.bashrc
+
+ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /bin/bash"]

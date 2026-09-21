@@ -157,6 +157,7 @@ const (
 	hdmi                 = "hdmi"
 	uburma               = "uburma"
 	ummu                 = "ummu"
+	lqdcmi               = "lqdcmi_pcidev"
 )
 
 // GetDeviceTypeByChipName get device type by chipName
@@ -711,6 +712,18 @@ func addManagerDevice(w dcmi.WorkerInterface, spec *specs.Spec) error {
 	return nil
 }
 
+func addDeviceForCntrSnap(spec *specs.Spec) error {
+	if getValueByKey(spec.Process.Env, common.GRUS_SNAPSHOT_IMAGE_PATH) == "" {
+		return nil
+	}
+	dPath := devicePath + lqdcmi
+	if err := addDeviceToSpec(spec, dPath, dPath); err != nil {
+		hwlog.RunLog.Errorf("add lqdcmi_pcidev to spec error: %v", err)
+		return nil
+	}
+	return nil
+}
+
 func addUBDevice(spec *specs.Spec) error {
 	uburmaPath := devicePath + uburma
 	if _, err := os.Stat(uburmaPath); err == nil {
@@ -797,6 +810,11 @@ func addDevice(w dcmi.WorkerInterface, spec *specs.Spec, deviceIdList []int) err
 	if err := addManagerDevice(w, spec); err != nil {
 		hwlog.RunLog.Errorf("failed to add manager device, error: %v", err)
 		return fmt.Errorf("failed to add Manager device to spec: %v", err)
+	}
+
+	if err := addDeviceForCntrSnap(spec); err != nil {
+		hwlog.RunLog.Errorf("failed to add device for container snapshot, error: %v", err)
+		return fmt.Errorf("failed to add device to spec for container snapshot: %v", err)
 	}
 
 	return nil
