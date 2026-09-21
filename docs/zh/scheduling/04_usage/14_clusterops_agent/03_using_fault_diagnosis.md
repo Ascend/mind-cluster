@@ -128,7 +128,7 @@ Agent Core与Node Collector分别在各自的工作目录下按任务维度落�
 │   └── {namespace}_{job}/
 │       ├── parse-result-{job}-{node}.tar.gz          # 各节点上报的采集归档
 │       ├── diag-input/
-│       │   └── worker{N}/                             # 各节点清洗产物（含 server-info.json 等）
+│       │   └── {host_ip}/                             # 各节点清洗产物，以机器IP命名（含 server-info.json 等）
 │       └── diag-output/
 │           └── fault_diag_result/
 │               └── diag_report.json                   # 集中诊断报告
@@ -137,7 +137,7 @@ Agent Core与Node Collector分别在各自的工作目录下按任务维度落�
 ```
 
 - `parse-result-{job}-{node}.tar.gz`：Node Collector按节点上报的采集归档。
-- `diag-input/worker{N}/`：各节点 `ascend-fd parse` 清洗产物，组装为集中诊断输入。
+- `diag-input/{host_ip}/`：各节点 `ascend-fd parse` 清洗产物，以机器IP命名（host_ip缺失时回退`worker{N}`），组装为集中诊断输入。
 - `diag-output/`：`ascend-fd diag` 生成的诊断报告目录。
 - `cache/{namespace}_{job}.json`：每次诊断成功后缓存的诊断结果，重复诊断直接返回，支持`--refresh`强制刷新。
 
