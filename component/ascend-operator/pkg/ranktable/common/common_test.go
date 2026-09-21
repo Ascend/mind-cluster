@@ -17,6 +17,8 @@ limitations under the License.
 package common
 
 import (
+	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 
@@ -24,6 +26,68 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
+
+func TestWriteVersion(t *testing.T) {
+	const timestamp = 1
+	tests := []struct {
+		name    string
+		prepare func(t *testing.T, dir string) error
+		wantErr bool
+		want    string
+	}{
+		{
+			name:    "01-write version into a regular file",
+			prepare: func(t *testing.T, dir string) error { return nil },
+			wantErr: false,
+			want:    "1",
+		},
+		{
+			name: "02-a symlinked version file should be rejected",
+			prepare: func(t *testing.T, dir string) error {
+				target := filepath.Join(t.TempDir(), versionFile)
+				if err := os.WriteFile(target, []byte("old"), defaultPerm); err != nil {
+					return err
+				}
+				return os.Symlink(target, filepath.Join(dir, versionFile))
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// resolve symlinks so that the temp dir itself will not be treated as a symlink path
+			dir, err := filepath.EvalSymlinks(t.TempDir())
+			if err != nil {
+				t.Fatalf("resolve temp dir failed: %v", err)
+			}
+			if err = tt.prepare(t, dir); err != nil {
+				t.Skipf("prepare test data failed: %v", err)
+			}
+
+			r := &BaseGenerator{
+				dir:       dir,
+				path:      filepath.Join(dir, rankTableFile),
+				timestamp: timestamp,
+			}
+			if err = r.writeVersion(); tt.wantErr {
+				if err == nil {
+					t.Fatalf("writeVersion() should return error for path: %s", filepath.Join(dir, versionFile))
+				}
+				return
+			} else if err != nil {
+				t.Fatalf("writeVersion() failed: %v", err)
+			}
+
+			content, err := os.ReadFile(filepath.Join(dir, versionFile))
+			if err != nil {
+				t.Fatalf("read version file failed: %v", err)
+			}
+			if string(content) != tt.want {
+				t.Errorf("version file content = %q, want %q", content, tt.want)
+			}
+		})
+	}
+}
 
 func TestPodUIDSetChanged(t *testing.T) {
 	tests := []struct {
