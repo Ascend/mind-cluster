@@ -1,0 +1,56 @@
+FROM ubuntu:22.04 AS build
+
+ARG VERSION=26.2.0
+ARG TARGETPLATFORM
+
+RUN apt update && apt install -y wget unzip &&\
+    apt-get clean &&\
+    rm -rf /var/lib/apt/lists/* &&\
+    rm -rf /var/tmp/* &&\
+    rm -rf /tmp/* &&\
+    ARCH=$(case "${TARGETPLATFORM}" in \
+        "linux/amd64") echo "x86_64" ;; \
+        "linux/arm64") echo "aarch64" ;; \
+        *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+    esac) &&\
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip &&\
+    unzip Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip -d /build
+
+FROM ubuntu:22.04
+
+RUN groupadd -g 1000 HwHiAiUser && useradd -u 1000 -g HwHiAiUser -d /home/HwHiAiUser -m HwHiAiUser &&\
+    groupadd -g 1101 HwDmUser && useradd -u 1101 -g HwDmUser -d /home/HwDmUser -m HwDmUser &&\
+    groupadd -g 1102 HwBaseUser && useradd -u 1102 -g HwBaseUser -d /home/HwBaseUser -m HwBaseUser &&\
+    usermod -a -G HwBaseUser HwHiAiUser &&\
+    usermod -a -G HwDmUser HwHiAiUser &&\
+    usermod -a -G HwBaseUser HwDmUser &&\
+    usermod -a -G HwHiAiUser HwDmUser &&\
+    usermod root -s /usr/sbin/nologin
+
+COPY --from=build /build/npu-exporter  /usr/local/bin/
+COPY --from=build /build/run_for_310P_1usoc.sh /
+COPY --from=build /build/metricConfiguration.json  /user/mind-cluster/npu-exporter-config/metricConfiguration.json
+COPY --from=build /build/pluginConfiguration.json  /user/mind-cluster/npu-exporter-config/pluginConfiguration.json
+COPY --from=build /build/agreement.txt /usr/local/
+
+RUN chown root:root /usr/local/bin/npu-exporter &&\
+    chmod 750 -R /home/HwHiAiUser &&\
+    chmod 500 /run_for_310P_1usoc.sh &&\
+    chmod 550 /usr/local/bin/ &&\
+    chmod 500 /usr/local/bin/npu-exporter &&\
+    chmod 440 /user/mind-cluster/npu-exporter-config/metricConfiguration.json &&\
+    chmod 440 /user/mind-cluster/npu-exporter-config/pluginConfiguration.json &&\
+    chmod 440 /usr/local/agreement.txt &&\
+    echo 'umask 027' >> /etc/profile && \
+    echo 'source /etc/profile' >> ~/.bashrc
+
+RUN ln -s /lib /lib64 2>&1 >> /dev/null &&\
+    mkdir -m 750 /var/driver -m 750 /var/dmp -m 750 /usr/slog -p -m 750 /home/drv/hdc_ppc &&\
+    chown HwDmUser:HwDmUser /var/dmp &&\
+    chown HwHiAiUser:HwHiAiUser /var/driver &&\
+    chown HwHiAiUser:HwHiAiUser /home/drv/hdc_ppc &&\
+    chown HwHiAiUser:HwHiAiUser /usr/slog
+
+ENV LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/add-ons:/usr/local/Ascend/driver/lib64:/usr/local/dcmi
+
+ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /bin/bash"]

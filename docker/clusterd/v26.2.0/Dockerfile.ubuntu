@@ -1,0 +1,46 @@
+FROM ubuntu:22.04 AS build
+
+ARG VERSION=26.2.0
+ARG TARGETPLATFORM
+
+RUN apt update && apt install -y wget unzip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/tmp/* \
+    && rm -rf /tmp/*
+
+RUN ARCH=$(case "${TARGETPLATFORM}" in \
+        "linux/amd64") echo "x86_64" ;; \
+        "linux/arm64") echo "aarch64" ;; \
+        *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+    esac) &&\
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-clusterd_${VERSION}_linux-${ARCH}.zip &&\
+    unzip Ascend-mindxdl-clusterd_${VERSION}_linux-${ARCH}.zip -d /build
+
+FROM ubuntu:22.04
+
+RUN useradd -d /home/hwMindX -u 9000 -m -s /usr/sbin/nologin hwMindX &&\
+    usermod root -s /usr/sbin/nologin
+
+COPY --from=build /build/clusterd /usr/local/bin/clusterd
+COPY --from=build /build/agreement.txt /usr/local/
+COPY --from=build /build/relationFaultCustomization.json \
+    /build/faultDuration.json \
+    /build/publicFaultConfiguration.json \
+    /build/fdConfig.yaml \
+    /home/hwMindX/
+
+RUN chown -R hwMindX:hwMindX /home/hwMindX /usr/local/agreement.txt &&\
+    chmod 555 /usr/local/bin/clusterd &&\
+    chmod 440 /usr/local/agreement.txt &&\
+    chmod 750 /home/hwMindX &&\
+    chmod 440 /home/hwMindX/relationFaultCustomization.json &&\
+    chmod 440 /home/hwMindX/faultDuration.json &&\
+    chmod 440 /home/hwMindX/publicFaultConfiguration.json &&\
+    chmod 440 /home/hwMindX/fdConfig.yaml &&\
+    echo 'umask 027' >> /etc/profile &&\
+    echo 'source /etc/profile' >> /home/hwMindX/.bashrc
+
+USER hwMindX
+
+ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /bin/bash"]
