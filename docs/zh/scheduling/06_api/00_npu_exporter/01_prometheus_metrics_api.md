@@ -533,7 +533,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>取值为0、1或-1</p><ul><li>1：UP</li><li>0：DOWN</li><li>-1：未知(hccn_tool工具调用失败)</li></ul>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">旧版本指标，仅支持Atlas 350 加速卡（4Pmesh互联）。</div></div>
+<td class="cellrowborder" rowspan="4" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">旧版本指标，仅支持Atlas 350 加速卡（4Pmesh互联）。
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
@@ -1514,7 +1514,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="11.96119611961196%" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
-<td class="cellrowborder" rowspan="48" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">旧版本指标，仅支持Atlas 350 加速卡（4Pmesh互联）。</div></div>
+<td class="cellrowborder" rowspan="48" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 ">旧版本指标，仅支持Atlas 350 加速卡（4Pmesh互联）。
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>

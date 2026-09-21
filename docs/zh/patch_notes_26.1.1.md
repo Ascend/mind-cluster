@@ -354,7 +354,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 ## 解决的问题
 
-**MindCluster基础组件**
+**MindCluster集群调度**
 
 - 修复Helm安装时镜像拉取失败的问题。
 - 修复在软切分场景下的ConfigMap激增问题。
