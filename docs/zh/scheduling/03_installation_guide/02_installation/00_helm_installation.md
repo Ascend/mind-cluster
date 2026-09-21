@@ -22,8 +22,8 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 ## 安装前准备<a name="ZH-CN_centerIC_0000002511346381_install_prepare"></a>
 
 1. 安装[Ascend Docker Runtime](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426843)<a name="zh-cn_centerIC_0000002511346381_install_prepare_docker_runtime"></a>。
-   - 若未安装过Ascend Docker Runtime，请参考[手动安装Ascend Docker Runtime](../../05_developer_guide/00_installation_deployment/00_manual_installation/02_ascend_docker_runtime.md#ZH-CN_TOPIC_0000002479226434)章节，在所有节点上安装此组件。
-   - 请参照[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002511426307)章节，在所有安装了该组件的节点上确认Ascend Docker Runtime的状态。
+   1. 若未安装过Ascend Docker Runtime，请参考[手动安装Ascend Docker Runtime](../../05_developer_guide/00_installation_deployment/00_manual_installation/02_ascend_docker_runtime.md#ZH-CN_TOPIC_0000002479226434)章节，在所有节点上安装此组件。
+   2. 请参照[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002511426307)章节，在所有安装了该组件的节点上确认Ascend Docker Runtime的状态。
 
 2. 在管理节点安装Helm命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在Helm 3.x版本，可以跳过此步骤。
    1. 安装Helm前请参考[Helm 版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询Helm与K8s间的版本兼容性，根据实际情况选择Helm版本。
@@ -79,9 +79,9 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       ```
 
       > [!NOTE]
-      > {version}表示MindCluster组件版本，如26.1.0。
-      > {chart_version}表示Helm Chart版本，与MindCluster组件版本保持一致。
-      > 解压后的文件用途请参考[表4](#table15274931175244)。
+      >- {version}表示MindCluster组件版本，如26.1.0。
+      >- {chart_version}表示Helm Chart版本，与MindCluster组件版本保持一致。
+      >- 解压后的文件用途请参考[表4](#table15274931175244)。
 
 3. 使用Helm安装MindCluster组件所需的CRD（Custom Resource Definition，自定义资源定义）的Release实例（Helm部署单元）。
     > [!NOTE]

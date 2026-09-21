@@ -23,6 +23,6 @@
 >
 >    - 方式二：若设备上存在HCCS环，执行推理任务中，当服务器出现一个或多个故障NPU，Ascend Device Plugin等待环上的NPU全部空闲后，一次性复位环上所有的NPU。
 >
->- 对于Atlas 9000 A3 SuperPoD 集群算力系统会复位指定芯片所在的NPU模组；对于Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点、Atlas 800I A3 系列硬件产品、A200T A3 Box8 系列硬件产品会复位指定芯片所在的NPU模组及与其具备网口互助关系的NPU模组。
+>- 对于Atlas 9000 A3 SuperPoD 集群算力系统会复位指定芯片所在的NPU模组；对于Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器、Atlas 800I A3 超节点服务器、A200T A3 Box8 超节点服务器会复位指定芯片所在的NPU模组及与其具备网口互助关系的NPU模组。
 >
 >- 热复位恢复无法覆盖所有故障，部分故障可能恢复失败，例如，故障导致掉卡，device OS挂死等故障。

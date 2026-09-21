@@ -454,7 +454,7 @@ ClusterD运行后，会启动gRPC服务端侦听训练容器内gRPC客户端的�
                      <strong>mountPath: /etc/nginx/conf.d/cert</strong>
                    <strong>- name: nginx-conf</strong>
                      <strong>mountPath: /etc/nginx/conf</strong>
-
+                     <br>
        # Deployment中的volumes项增加
                <strong>- name: nginx-cert</strong>
                  <strong>hostPath:</strong>
@@ -462,7 +462,7 @@ ClusterD运行后，会启动gRPC服务端侦听训练容器内gRPC客户端的�
                <strong>- name: nginx-conf</strong>
                  <strong>hostPath:</strong>
                    <strong>path: /{路径A}/conf       # nginx启动配置文件，请将路径A替换成步骤2中的文件路径</strong>
-
+                   <br>
        # Service中的ports项改为如下
            <strong>- protocol: TCP</strong>
              <strong>port: 8899</strong>
@@ -554,7 +554,7 @@ ClusterD运行后，会启动gRPC服务端侦听训练容器内gRPC客户端的�
         <pre codetype="yaml">
            # 新增启动参数 sleep 150
                 args: [ "<strong>sleep 150;</strong> /usr/local/bin/noded -logFile=/var/log/mindx-dl/noded/noded.log -logLevel=0" ]
-
+                <br>
            # containers项增加
                    <strong>- name: nginx</strong>
                      <strong>image: nginx:latest</strong>
@@ -566,7 +566,7 @@ ClusterD运行后，会启动gRPC服务端侦听训练容器内gRPC客户端的�
                          <strong>mountPath: /etc/nginx/conf.d/cert</strong>
                        <strong>- name: nginx-conf</strong>
                          <strong>mountPath: /etc/nginx/conf</strong>
-
+                         <br>
            # volumes项增加
                    <strong>- name: nginx-cert</strong>
                      <strong>hostPath:</strong>
