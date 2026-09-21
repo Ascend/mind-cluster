@@ -86,6 +86,10 @@ spec:
           value: agent-core.mindx-dl:9710
         - name: COLLECTOR_PORT # 本采集服务 gRPC 端口
           value: "9720"
+        - name: HOST_IP # 本机 IP (downward API, status.hostIP): 上报时用于 diag worker 按机器命名
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
         - name: COLLECT_MANIFEST
           value: /home/hwMindX/collect_manifest.yaml
         - name: ASCEND_FD_BIN

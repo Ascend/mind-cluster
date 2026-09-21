@@ -40,17 +40,28 @@ def test_assemble_diag_input_copies_ok_workers(tmp_path, monkeypatch):
     w2.mkdir()
     (w2 / "server-info.json").write_text("{}")
     collected = [
-        {"ok": True, "node": "node-a", "worker_dir": str(w1)},
-        {"ok": True, "node": "node-b", "worker_dir": str(w2)},
+        {"ok": True, "node": "node-a", "host_ip": "51.38.66.67", "worker_dir": str(w1)},
+        {"ok": True, "node": "node-b", "host_ip": "51.38.66.68", "worker_dir": str(w2)},
         {"ok": False, "node": "node-c", "worker_dir": None},
     ]
     diag_input = Path(tools.assemble_diag_input(collected, "job1", "default"))
-    assert (diag_input / "worker0" / "server-info.json").exists()
-    assert (diag_input / "worker0" / "ascend-rc-parser.json").exists()
-    assert (diag_input / "worker1" / "server-info.json").exists()
+    assert (diag_input / "51.38.66.67" / "server-info.json").exists()
+    assert (diag_input / "51.38.66.67" / "ascend-rc-parser.json").exists()
+    assert (diag_input / "51.38.66.68" / "server-info.json").exists()
     assert not (diag_input / "worker2").exists()
     assert not (diag_input / "worker-node-a").exists()  # not named by node anymore
     assert not w1.exists()  # rename moves, does not copy; the original dir is moved away
+
+
+def test_assemble_diag_input_falls_back_to_workern_without_host_ip(tmp_path, monkeypatch):
+    # workers without a host_ip keep the workerN naming so the report stays readable
+    monkeypatch.setattr(tools, "WORK_ROOT", tmp_path)
+    w1 = tmp_path / "w1"
+    w1.mkdir()
+    (w1 / "server-info.json").write_text("{}")
+    collected = [{"ok": True, "node": "node-a", "host_ip": "", "worker_dir": str(w1)}]
+    diag_input = Path(tools.assemble_diag_input(collected, "job1", "default"))
+    assert (diag_input / "worker0" / "server-info.json").exists()
 
 
 # --------------------------------------------------------------------------- #
@@ -217,7 +228,9 @@ def test_diagnose_all_collect_fail(monkeypatch):
 def test_diagnose_ok(monkeypatch, tmp_path):
     import agent_core.relcache as rc
 
-    pods = [{"pod_name": "p", "pod_uid": "u", "node": "n", "rank": "0", "namespace": "default"}]
+    pods = [
+        {"pod_name": "p", "pod_uid": "u", "node": "n", "host_ip": "51.38.66.67", "rank": "0", "namespace": "default"}
+    ]
     monkeypatch.setattr(rc, "lookup", lambda job, namespace="default": pods)
     worker_dir = tmp_path / "w"
     worker_dir.mkdir()
@@ -226,7 +239,14 @@ def test_diagnose_ok(monkeypatch, tmp_path):
         tools,
         "dispatch_collect",
         lambda job, pods: [
-            {"ok": True, "node": "n", "error": None, "worker_dir": str(worker_dir), "artifacts_tar": None}
+            {
+                "ok": True,
+                "node": "n",
+                "host_ip": "51.38.66.67",
+                "error": None,
+                "worker_dir": str(worker_dir),
+                "artifacts_tar": None,
+            }
         ],
     )
     monkeypatch.setattr(tools, "WORK_ROOT", tmp_path)
@@ -236,4 +256,4 @@ def test_diagnose_ok(monkeypatch, tmp_path):
     assert r["diag_report"] == {"root_cause": "n"}
     assert r["diag_report_text"] == "pretty table"
     assert r["pods"] == pods
-    assert Path(r["diag_input_dir"], "worker0", "server-info.json").exists()
+    assert Path(r["diag_input_dir"], "51.38.66.67", "server-info.json").exists()

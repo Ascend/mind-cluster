@@ -222,25 +222,27 @@ def dispatch_collect(job: str, pods: list[dict]) -> list[dict]:
 def assemble_diag_input(collected: list[dict], job: str, namespace: str) -> str:
     """Assemble diag input dir per ascend-fd diag 'multi-worker dump' contract.
 
-    Layout: {WORK_ROOT}/{YYYYMMDD}/{namespace}_{job}/diag-input/worker{idx}/
-    (idx = 0..N-1 in the order of successful collected nodes). Uploads are extracted
-    straight into diag-input/worker-<node>/ (see upload.py); here they are
-    renamed to workerN. Each worker subdir must contain server-info.json; ascend-fd
-    uses the subdir name as the worker name shown in the report (worker0, worker1, ...).
+    Layout: {WORK_ROOT}/{YYYYMMDD}/{namespace}_{job}/diag-input/{worker_name}/
+    (worker_name = the machine host_ip, e.g. 51.38.66.67, so the diag report shows
+    which machine each worker is on; falls back to workerN when host_ip is missing).
+    Uploads are extracted straight into diag-input/worker-<node>/ (see upload.py); here
+    they are renamed to the host_ip. Each worker subdir must contain server-info.json;
+    ascend-fd uses the subdir name as the worker name shown in the report.
     """
     ns_job = f"{namespace}_{job}"
     diag_input = WORK_ROOT / time.strftime("%Y%m%d") / ns_job / "diag-input"
     diag_input.mkdir(parents=True, exist_ok=True)
-    # clean stale workerN dirs, keep current worker-<node> staging
+    # clean stale worker dirs (named by host_ip or workerN), keep current worker-<node> staging
     for p in diag_input.iterdir():
-        if p.is_dir() and p.name.startswith("worker") and not p.name.startswith("worker-"):
+        if p.is_dir() and not p.name.startswith("worker-"):
             shutil.rmtree(p, ignore_errors=True)
     worker_idx = 0
     for r in collected:
         if not r["ok"] or not r["worker_dir"]:
             continue
         src = Path(r["worker_dir"])
-        dst = diag_input / f"worker{worker_idx}"
+        name = r.get("host_ip") or f"worker{worker_idx}"
+        dst = diag_input / name
         if src.is_dir():
             shutil.rmtree(dst, ignore_errors=True)
             shutil.move(str(src), str(dst))

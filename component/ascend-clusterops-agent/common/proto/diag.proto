@@ -56,6 +56,7 @@ message UploadRequest {
   string error = 4;           // failure reason (when ok=false)
   bytes data = 5;             // tar.gz chunk
   string namespace = 6;       // task namespace (first chunk only; the agent organizes storage by ns_job)
+  string host_ip = 7;         // the collector node's host IP (first chunk only; used to name diag workers)
 }
 
 message UploadAck {

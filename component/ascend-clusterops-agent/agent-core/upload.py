@@ -44,16 +44,28 @@ from diagproto import diag_pb2, diag_pb2_grpc
 logger = logging.getLogger(__name__)
 
 # Upload storage layout (root dir from agent_core.constants.WORK_ROOT):
-#   {ROOT}/{YYYYMMDD}/{ns}_{job}/parse-result-{job}-{node}.tar.gz   collected tar archive (per uploader node)
-#   {ROOT}/{YYYYMMDD}/{ns}_{job}/diag-input/worker-{node}/   extracted clean artifacts (per node; assemble renames to workerN)
+#   {ROOT}/{YYYYMMDD}/{ns}_{job}/parse-result-{ns}-{job}-{host_ip}.tar.gz   collected tar archive (per uploader node)
+#   {ROOT}/{YYYYMMDD}/{ns}_{job}/diag-input/worker-{node}/   extracted clean artifacts (per node; assemble renames to the host_ip)
 UPLOAD_PORT = int(os.environ.get("AGENT_GRPC_PORT", "9710"))
 _MAX_WORKERS = int(os.environ.get("AGENT_UPLOAD_WORKERS", "32"))
 
 
 def _result(
-    node: str, ok: bool, error: str | None = None, artifacts_tar: str | None = None, worker_dir: str | None = None
+    node: str,
+    ok: bool,
+    host_ip: str = "",
+    error: str | None = None,
+    artifacts_tar: str | None = None,
+    worker_dir: str | None = None,
 ) -> dict:
-    return {"node": node, "ok": ok, "error": error, "artifacts_tar": artifacts_tar, "worker_dir": worker_dir}
+    return {
+        "node": node,
+        "host_ip": host_ip,
+        "ok": ok,
+        "error": error,
+        "artifacts_tar": artifacts_tar,
+        "worker_dir": worker_dir,
+    }
 
 
 def _extractall_safe(tf: tarfile.TarFile, dest) -> None:
@@ -96,17 +108,21 @@ class UploaderServicer(diag_pb2_grpc.UploaderServicer):
 
         if not first.ok:
             logger.warning("upload failed: job=%s node=%s error=%s", first.job, first.node, first.error)
-            tracker.complete(first.job, first.node, _result(first.node, False, error=first.error or "collect failed"))
+            tracker.complete(
+                first.job, first.node, _result(first.node, False, first.host_ip, error=first.error or "collect failed")
+            )
             return diag_pb2.UploadAck(received=True)
 
         day_dir = WORK_ROOT / time.strftime("%Y%m%d")
         day_dir.mkdir(parents=True, exist_ok=True)
         job_dir = day_dir / f"{ns}_{first.job}"
         job_dir.mkdir(parents=True, exist_ok=True)
-        tar_path = job_dir / f"parse-result-{first.job}-{first.node}.tar.gz"  # archive: per uploader node, no collision
+        tar_path = (
+            job_dir / f"parse-result-{ns}-{first.job}-{first.host_ip or first.node}.tar.gz"
+        )  # archive: per uploader host, no collision (node name fallback for empty host_ip)
         worker_dir = (
             job_dir / "diag-input" / f"worker-{first.node}"
-        )  # extract straight into diag-input; assemble renames to workerN
+        )  # extract straight into diag-input; assemble renames to the host_ip
         try:
             with tar_path.open("wb") as f:
                 if first.data:
@@ -118,11 +134,23 @@ class UploaderServicer(diag_pb2_grpc.UploaderServicer):
             with tarfile.open(tar_path, mode="r:gz") as tf:
                 # Reject path-traversal, symlink, and device members in untrusted uploads.
                 _extractall_safe(tf, worker_dir)
-            logger.info("upload succeeded and stored: job=%s node=%s tar=%s", first.job, first.node, tar_path)
+            logger.info(
+                "upload succeeded and stored: job=%s node=%s host_ip=%s tar=%s",
+                first.job,
+                first.node,
+                first.host_ip,
+                tar_path,
+            )
             tracker.complete(
                 first.job,
                 first.node,
-                _result(first.node, True, artifacts_tar=str(tar_path), worker_dir=str(worker_dir)),
+                _result(
+                    first.node,
+                    True,
+                    first.host_ip,
+                    artifacts_tar=str(tar_path),
+                    worker_dir=str(worker_dir),
+                ),
             )
         except Exception as e:  # noqa: BLE001
             logger.exception("failed to store upload: job=%s node=%s", first.job, first.node)

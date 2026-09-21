@@ -188,7 +188,7 @@ curl -X POST localhost:9700/diag -H 'Content-Type: application/json' \
 ## 关键行为说明
 
 - **重复诊断防护**：同一 job 正在诊断中再次执行会提示"正在诊断中, 请勿重复执行"。
-- **产物目录**：agent-core 的采集/诊断产物按天与任务组织在 `{AGENT_WORK_ROOT}/{YYYYMMDD}/{ns}_{job}/`（默认 `/user/clusterops/agent-core/`）：tar 留存 `parse-result-{job}-{node}.tar.gz`、解压目录 `diag-input/worker-{node}/`（assemble 重命名为 `worker0..N`）、诊断输出 `diag-output/fault_diag_result/diag_report.json`；node-collector 的本地采集产物同样按 `{COLLECTOR_WORK_ROOT}/{YYYYMMDD}/{ns}_{job}/collect|parse-output` 组织，不同任务/命名空间互不覆盖。
+- **产物目录**：agent-core 的采集/诊断产物按天与任务组织在 `{AGENT_WORK_ROOT}/{YYYYMMDD}/{ns}_{job}/`（默认 `/user/clusterops/agent-core/`）：tar 留存 `parse-result-{ns}-{job}-{host_ip}.tar.gz`、解压目录 `diag-input/worker-{node}/`（assemble 重命名为 `worker0..N`）、诊断输出 `diag-output/fault_diag_result/diag_report.json`；node-collector 的本地采集产物同样按 `{COLLECTOR_WORK_ROOT}/{YYYYMMDD}/{ns}_{job}/collect|parse-output` 组织，不同任务/命名空间互不覆盖。
 - **结果缓存**：每次诊断成功后缓存结果到`{AGENT_WORK_ROOT}/cache/<ns>_<job>.json`（默认`/user/clusterops/agent-core/cache`，与`{YYYYMMDD}`产物目录同级、跨天可命中，可用`AGENT_CACHE_DIR`覆盖为固定目录），任务运行中或停止状态均缓存。再次诊断同一任务且未加`--refresh`时，若命中缓存，直接返回缓存结果并提示"Result from cache; run --refresh for the latest diagnosis"；`--refresh`忽略缓存强制重跑并刷新缓存。
 - **任务不存在**：任务 CR 已删除且 relcache 中也无该任务 pod 记录（超出删除 TTL）时，立即返回"Training/inference task not found"并终止，不再执行诊断；任务 CR 已删除但 relcache 中仍有该任务 pod 记录（删除 TTL 内，日志仍保留在节点/共享盘上），仍继续诊断。
 - **日志落盘**：agent-core → `/var/log/mindx-dl/agent-core/agent-core.log`；node-collector → `/var/log/mindx-dl/node-collector/node-collector.log`（hostPath 挂载，宿主持久；10MB × 10 轮转）。

@@ -716,6 +716,7 @@ class CollectorClient:
                 namespace=meta.get("namespace", ""),
                 ok=meta["ok"],
                 error=meta.get("error", ""),
+                host_ip=meta.get("host_ip", ""),
             )
             return
         yield diag_pb2.UploadRequest(
@@ -725,6 +726,7 @@ class CollectorClient:
             ok=True,
             error="",
             data=data[: self.upload_chunk],
+            host_ip=meta.get("host_ip", ""),
         )
         for i in range(self.upload_chunk, len(data), self.upload_chunk):
             yield diag_pb2.UploadRequest(data=data[i : i + self.upload_chunk])
@@ -757,7 +759,11 @@ class CollectorClient:
     def run_and_upload(self, request: diag_pb2.CollectRequest) -> None:
         """Background thread: collect + clean -> upload success tar / failure error."""
         ns = request.pods[0].ns if request.pods else "default"
-        meta = {"node": request.node, "job": request.job, "namespace": ns}
+        # The collector's own host IP: downward API env first (status.hostIP), falling back to
+        # the first non-empty pod_ip the agent dispatched (already host-IP-first). Used by the
+        # agent to name diag workers after the machine so users know which node each worker is on.
+        host_ip = os.environ.get("HOST_IP", "") or next((m.pod_ip for m in request.mounts if m.pod_ip), "")
+        meta = {"node": request.node, "job": request.job, "namespace": ns, "host_ip": host_ip}
         try:
             pods = [PodRef(ns=p.ns, name=p.name, pod_uid=p.pod_uid) for p in request.pods]
             data = self.collect(request.node, ns, request.job, pods)

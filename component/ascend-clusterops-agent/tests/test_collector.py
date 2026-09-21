@@ -17,7 +17,7 @@
 
 """node-collector + pathmap unit tests: resolver / pathmap / Collect gRPC (mocks ascend-fd)."""
 
-# pylint: disable=no-member,redefined-outer-name  # diag_pb2 dynamic members / pytest fixture names as params
+# pylint: disable=no-member,redefined-outer-name,too-many-lines  # diag_pb2 dynamic members / pytest fixture names as params / long E2E file
 
 from __future__ import annotations
 
@@ -860,8 +860,50 @@ def test_run_and_upload_reports_failure(tmp_path, monkeypatch):
 
     req = diag_pb2.CollectRequest(node="node-a", job="job-x", pods=[])
     collector.collector_client.run_and_upload(req)
-    assert captured["meta"] == {"node": "node-a", "job": "job-x", "namespace": "default"}
+    assert captured["meta"] == {"node": "node-a", "job": "job-x", "namespace": "default", "host_ip": ""}
     assert "parse boom" in captured["error"]
+
+
+def test_run_and_upload_meta_host_ip_from_env_and_mounts(tmp_path, monkeypatch):
+    """run_and_upload reports the collector host IP: HOST_IP env wins, mounts.pod_ip is the fallback."""
+    captured = {}
+    monkeypatch.setattr(collector.collector_client, "work_root", tmp_path)
+    monkeypatch.setattr(
+        collector.collector_client, "upload_failure", lambda meta, error: captured.update(meta=meta, error=error)
+    )
+    monkeypatch.setattr(
+        collector.subprocess,
+        "run",
+        lambda *a, **k: (_ for _ in ()).throw(
+            collector.subprocess.CalledProcessError(returncode=1, cmd=[], output="", stderr="boom")
+        ),
+    )
+    req = diag_pb2.CollectRequest(
+        node="node-a",
+        job="job-x",
+        pods=[],
+        mounts=[diag_pb2.PodMount(pod_uid="u", pod_ip="10.0.0.5")],
+    )
+    collector.collector_client.run_and_upload(req)
+    assert captured["meta"]["host_ip"] == "10.0.0.5"  # falls back to the dispatched mount pod_ip
+
+
+def test_run_and_upload_meta_host_ip_prefers_env(monkeypatch):
+    """When HOST_IP is injected via downward API, it beats the mount fallback."""
+    captured = {}
+    monkeypatch.setenv("HOST_IP", "172.16.0.9")
+    monkeypatch.setattr(collector.collector_client, "collect", lambda node, ns, job, pods: b"fake-data")
+    monkeypatch.setattr(
+        collector.collector_client, "upload_result", lambda meta, data: captured.update(meta=meta) or True
+    )
+    req = diag_pb2.CollectRequest(
+        node="node-a",
+        job="job-x",
+        pods=[],
+        mounts=[diag_pb2.PodMount(pod_uid="u", pod_ip="10.0.0.5")],
+    )
+    collector.collector_client.run_and_upload(req)
+    assert captured["meta"]["host_ip"] == "172.16.0.9"  # HOST_IP env wins over the mount fallback
 
 
 def test_run_and_upload_reports_upload_failure(tmp_path, monkeypatch):
@@ -876,7 +918,7 @@ def test_run_and_upload_reports_upload_failure(tmp_path, monkeypatch):
 
     req = diag_pb2.CollectRequest(node="node-a", job="job-x", pods=[])
     collector.collector_client.run_and_upload(req)
-    assert captured["meta"] == {"node": "node-a", "job": "job-x", "namespace": "default"}
+    assert captured["meta"] == {"node": "node-a", "job": "job-x", "namespace": "default", "host_ip": ""}
     assert captured["error"] == "upload failed after retries"
 
 
@@ -916,7 +958,9 @@ def test_upload_result_end_to_end(tmp_path, monkeypatch):
             info.size = len(payload)
             tf.addfile(info, io.BytesIO(payload))
         buf.seek(0)
-        ok = collector.collector_client.upload_result({"node": node, "job": job, "namespace": "testns"}, buf.read())
+        ok = collector.collector_client.upload_result(
+            {"node": node, "job": job, "namespace": "testns", "host_ip": "10.0.0.5"}, buf.read()
+        )
         assert ok is True
         st = tracker.get(job)
         res = st["results"][node]
@@ -927,7 +971,7 @@ def test_upload_result_end_to_end(tmp_path, monkeypatch):
         assert "testns_job-e2e" in worker.parts
         assert "diag-input" in worker.parts
         assert worker.name == "worker-node-a"
-        assert Path(res["artifacts_tar"]).name == "parse-result-job-e2e-node-a.tar.gz"
+        assert Path(res["artifacts_tar"]).name == "parse-result-testns-job-e2e-10.0.0.5.tar.gz"
     finally:
         server.stop(0)
 
