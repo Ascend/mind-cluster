@@ -151,14 +151,20 @@ def _run_remote(args: argparse.Namespace) -> int:
         return 127
 
     svc = args.agent_core_service or DEFAULT_SVC
-    if "." in svc:
-        svc_name, ns = svc.split(".", 1)
-        if ":" in ns:
-            ns, _ = ns.split(":", 1)
-    else:
-        svc_name, ns = svc, "mindx-dl"
+    svc_port = AGENT_CORE_PORT
+    try:
+        if "." in svc:
+            svc_name, ns = svc.split(".", 1)
+            if ":" in ns:
+                ns, port = ns.split(":", 1)
+                svc_port = int(port) if port else AGENT_CORE_PORT
+        else:
+            svc_name, ns = svc, "mindx-dl"
+    except ValueError as e:
+        print(f"diagnosis error, invalid agent-core service '{svc}' ({e})", file=sys.stderr)
+        return 1
     local = _free_port()
-    cmd = [kubectl, "port-forward", "-n", ns, f"svc/{svc_name}", f"{local}:{AGENT_CORE_PORT}"]
+    cmd = [kubectl, "port-forward", "-n", ns, f"svc/{svc_name}", f"{local}:{svc_port}"]
     # Popen lifetime is managed manually (finally terminate+wait): 'with' only waits and port-forward would hang
     proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)  # pylint: disable=consider-using-with
     try:
