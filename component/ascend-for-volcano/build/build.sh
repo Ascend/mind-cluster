@@ -117,12 +117,23 @@ function df_print_agreement() {
 # Source code patch, executed only once globally to avoid repeated execution
 function patch_all_source() {
     echo "===== Apply source patch once ====="
-    # Unified patch
     REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/controllers/job/state/running.go"
     SEARCH_STRING="Ignore"
-    if ! grep -q "$SEARCH_STRING" "$REPLACE_FILE";then
-      sed -i "s/switch action {/switch action { case \"Ignore\" : return nil/g" "$REPLACE_FILE"
+    if [[ "$BASE_VER" == "v1.9.0" ]];then
+      if ! grep -q "$SEARCH_STRING" "$REPLACE_FILE";then
+        sed -i "s/switch action {/switch action { case \"Ignore\" : return nil/g" "$REPLACE_FILE"
+      fi
+    else
+      if ! grep -q "$SEARCH_STRING" "$REPLACE_FILE";then
+        sed -i "s/switch action.Action {/switch action.Action { case \"Ignore\" : return nil/g" "$REPLACE_FILE"
+      fi
     fi
+    # check patch
+    if ! grep -q "$SEARCH_STRING" "$REPLACE_FILE";then
+      echo "ERROR: Failed to patch ${REPLACE_FILE}"
+      exit 1
+    fi
+
 
     # Version-differentiated predicate patch
     if [[ "$BASE_VER" == "v1.9.0" ]]; then
@@ -149,6 +160,11 @@ function patch_all_source() {
         N
         s/case len(nodes) == 1:.*\n.*\n.*/            default:/
     }' "$REPLACE_FILE"
+    # check patch
+    if ! grep -q "default:" "$REPLACE_FILE";then
+      echo "ERROR: Failed to patch ${REPLACE_FILE}"
+      exit 1
+    fi
 
     # Evict data race patch: SchedulerCache.Evict hands the shared pod object
     # to an async evictor goroutine, which races with the scheduler goroutine.
@@ -158,6 +174,7 @@ function patch_all_source() {
       sed -i '/func (sc \*SchedulerCache) Evict/,/^}/s/^\([[:space:]]*\)p := task.Pod$/\1p := task.Pod.DeepCopy()/' "$REPLACE_FILE"
       if ! grep -q "p := task.Pod.DeepCopy()" "$REPLACE_FILE"; then
         echo "WARNING: Evict deepcopy patch failed on ${REPLACE_FILE}"
+        exit 1
       fi
     fi
     echo "===== Source patch finished ====="
