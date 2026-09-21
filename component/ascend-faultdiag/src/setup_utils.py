@@ -80,7 +80,7 @@ def get_setup_config(mode, version):
         "python_requires": ">=3.7",
         "platforms": get_platform(),
         "packages": find_packages(),
-        "install_requires": ["ply>=3.11"],
+        "install_requires": [],
     }
 
     if mode == "en":

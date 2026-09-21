@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""手写递归下降解析器（已替换 ply），无需预生成解析表。"""
+
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.graph.expr.expr_parser import get_parser
 
 if __name__ == '__main__':
-    get_parser()  # initialize, to generate parse.out and parsetab.py
+    _ = get_parser()  # 验证解析器可正常创建

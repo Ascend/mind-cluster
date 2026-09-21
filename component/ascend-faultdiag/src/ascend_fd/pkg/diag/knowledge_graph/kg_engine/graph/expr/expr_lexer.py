@@ -15,121 +15,86 @@
 # limitations under the License.
 # ==============================================================================
 import logging
-
-import ply
+import re
+from typing import List
 
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.graph.expr.expr_token import Token, TokenType, NumberToken
 
 kg_logger = logging.getLogger("KG_ENGINE")
 
 
-class LexerError(Exception):
-    pass
+# 组合正则：按优先级顺序，长匹配优先
+_TOKEN_RE = re.compile(
+    r'(?P<SKIP>[ \t]+)'
+    r'|(?P<STRING>"(?:[^"\\]|\\.)*")'
+    r'|(?P<COP_P7>!contains|!in\b|contains|startWith|startwith|endWith|endwith|in\b|out\b|!=|==|=)'
+    r'|(?P<COP_P6><=|>=|<|>)'
+    r'|(?P<LOP_AND>&&|and(?=[\s)$"]))'
+    r'|(?P<LOP_OR>\|\||or(?=[\s)$"]))'
+    r'|(?P<LOP_NOT>!|not(?=[\s)$"(]))'
+    r'|(?P<BRACKET_OPEN>\()'
+    r'|(?P<BRACKET_CLOSE>\))'
+    r'|(?P<NUMBER>-?\d+(?:\.\d+)?[dDfFLl]?)'
+    r'|(?P<VARIABLE>(?:src|dest)\.[a-zA-Z0-9_]+)'
+    r'|(?P<VALUE>\w+)'
+)
 
 
-class ExprLexer:
-    tokens = [
-        'BRACKET_OPEN',
-        'BRACKET_CLOSE',
-        'LOP_NOT',
-        'COP_P6',
-        'COP_P7',
-        'LOP_AND',
-        'LOP_OR',
-        'NUMBER',
-        'VARIABLE',
-        'VALUE'
-    ]
+def _handle_string_token(value: str) -> str:
+    """去除双引号并处理转义字符。"""
+    inner = value[1:-1]
+    result = []
+    i = 0
+    while i < len(inner):
+        if inner[i] == '\\' and i + 1 < len(inner):
+            result.append(inner[i + 1])
+            i += 2
+        else:
+            result.append(inner[i])
+            i += 1
+    return ''.join(result)
 
-    states = (
-        ("doublequote", "exclusive"),
-    )
 
-    t_BRACKET_OPEN = r'\('
-    t_BRACKET_CLOSE = r'\)'
-    # 忽略空格和制表符
-    t_ignore = ' \t'
-    t_doublequote_ignore = ''
+_SKIP = "SKIP"
+_STRING = "STRING"
+_VALUE = "VALUE"
+_NUMBER = "NUMBER"
+_COP_P6 = "COP_P6"
+_COP_P7 = "COP_P7"
+_LOP_AND = "LOP_AND"
+_LOP_OR = "LOP_OR"
+_LOP_NOT = "LOP_NOT"
 
-    # 定义每个词的正则表达式
-    @staticmethod
-    def t_LOP_NOT(token):
-        r'\!|not(?=\s)'
-        return Token(token.value, token.type, TokenType.LOP)
 
-    @staticmethod
-    def t_COP_P6(token):
-        r'<=|<|>=|>'
-        return Token(token.value, token.type, TokenType.COP)
-
-    @staticmethod
-    def t_COP_P7(token):
-        r'!=|==|=|\!contains|contains|in|out|\!in|startWith|startwith|endWith|endwith'
-        return Token(token.value, token.type, TokenType.COP)
-
-    @staticmethod
-    def t_LOP_AND(token):
-        r'\&\&|and(?=\s)'
-        return Token(token.value, token.type, TokenType.LOP)
-
-    @staticmethod
-    def t_LOP_OR(token):
-        r'\|\||or(?=\s)'
-        return Token(token.value, token.type, TokenType.LOP)
-
-    @staticmethod
-    def t_NUMBER(token):
-        r'-?\d{1,200}(\.\d{1,200})?[dDfFLl]?'
-        return NumberToken(token.value, token.type, TokenType.VALUE)
-
-    @staticmethod
-    def t_VARIABLE(token):
-        r'(src|dest)\.[a-zA-Z0-9_]{1,200}'
-        return Token(token.value, token.type, TokenType.VALUE)
-
-    @staticmethod
-    def t_VALUE(token):
-        r'\w{1,200}'
-        return Token(token.value, token.type, TokenType.VALUE)
-
-    @staticmethod
-    def t_doublequote(token):
-        r'"'
-        token.lexer.push_state('doublequote')
-        token.lexer.string_start = token.lexer.lexpos
-        token.lexer.string_value = ''
-
-    @staticmethod
-    def t_doublequote_escape(token):
-        r'\\.'
-        token.lexer.string_value += token.value[1]
-
-    @staticmethod
-    def t_doublequote_content(token):
-        r'[^"\\]{1,200}'
-        token.lexer.string_value += token.value
-
-    @staticmethod
-    def t_doublequote_end(token):
-        r'"'
-        token.lexer.pop_state()
-        token.value = token.lexer.string_value
-        token.lexer.string_value = None
-        return Token(token.value, 'VALUE', TokenType.VALUE)
-
-    @staticmethod
-    def t_doublequote_error(token):
-        raise LexerError(
-            'Error on line %s, col %s while lexing backquoted operator: Unexpected character: %s ' % (
-                token.lexer.lineno, token.lexpos - token.lexer.latest_newline, token.value[0]))
-
-    # 可选的错误处理函数
-    @staticmethod
-    def t_error(token):
-        kg_logger.error("Lexer illegal character '%s'", token.value[0])
-        token.lexer.skip(1)
+def tokenize(text: str) -> List[Token]:
+    """将输入字符串解析为 Token 列表。"""
+    tokens = []
+    pos = 0
+    while pos < len(text):
+        m = _TOKEN_RE.match(text, pos)
+        if not m:
+            kg_logger.error("Lexer illegal character '%s'", text[pos])
+            pos += 1
+            continue
+        pos = m.end()
+        token_type = m.lastgroup
+        if token_type == _SKIP:
+            continue
+        value = m.group()
+        if token_type == _STRING:
+            value = _handle_string_token(value)
+            tokens.append(Token(value, _VALUE, TokenType.VALUE))
+        elif token_type == _NUMBER:
+            tokens.append(NumberToken(value, token_type, TokenType.VALUE))
+        elif token_type in (_COP_P6, _COP_P7):
+            tokens.append(Token(value, token_type, TokenType.COP))
+        elif token_type in (_LOP_AND, _LOP_OR, _LOP_NOT):
+            tokens.append(Token(value, token_type, TokenType.LOP))
+        else:
+            tokens.append(Token(value, token_type, TokenType.VALUE))
+    return tokens
 
 
 def get_lexer():
-    expr_lexer = ExprLexer()
-    return ply.lex.lex(object=expr_lexer)
+    """返回 tokenize 函数，兼容旧接口。"""
+    return tokenize

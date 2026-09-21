@@ -6,13 +6,13 @@
 - [环境部署](#环境部署)
 - [快速入门](#快速入门)
 - [特性介绍](#特性介绍)
-- [API参考](#API参考)
-- [FAQ](#FAQ)
+- [API参考](#api参考)
+- [FAQ](#faq)
 - [安全声明](#安全声明)
 - [分支维护策略](#分支维护策略)
 - [版本维护策略](#版本维护策略)
 - [免责声明](#免责声明)
-- [License](#License)
+- [License](#license)
 - [建议与交流](#建议与交流)
 
 ## 📢 变更通知
@@ -46,7 +46,6 @@ MindCluster Ascend FaultDiag支持的Python版本需≥3.7。在安装MindCluste
 - scikit-learn>=1.3.0
 - pandas>=1.3.5
 - numpy
-- ply>=3.11
 
 #### 构建
 

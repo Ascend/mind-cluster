@@ -16,15 +16,12 @@
 # ==============================================================================
 
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.graph.expr.expr_holder import Holder
-from ascend_fd.pkg.diag.knowledge_graph.kg_engine.graph.expr.expr_lexer import get_lexer
-from ascend_fd.pkg.diag.knowledge_graph.kg_engine.graph.expr.expr_parser import get_parser
+from ascend_fd.pkg.diag.knowledge_graph.kg_engine.graph.expr.expr_parser import Parser
 
 
 class ExprCompiler:
-
     def __init__(self):
-        self.lexer = get_lexer()
-        self.parser = get_parser()
+        self._parser = Parser()
 
-    def compile(self, expr) -> Holder:
-        return self.parser.parse(input=expr, lexer=self.lexer)
+    def compile(self, expr_str: str) -> Holder:
+        return self._parser.parse(input_str=expr_str)

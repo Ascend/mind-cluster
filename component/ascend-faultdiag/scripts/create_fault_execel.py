@@ -196,7 +196,6 @@ if __name__ == "__main__":
     # 生成资料故障诊断类型附件。
     # 1、表中code列是为了方便资料查找，归档时需提醒资料同事删除
     # 2、安装三方依赖：
-    #    pip3 install ply
     #    pip3 install openpyxl
     event_summary = EventSummary()
     event_summary.create_sheet("MindCluster 26.0.0 故障诊断类型.xlsx")
