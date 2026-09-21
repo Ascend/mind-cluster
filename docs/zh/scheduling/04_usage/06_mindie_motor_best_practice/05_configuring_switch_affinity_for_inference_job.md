@@ -80,4 +80,4 @@ metadata:
     ...
     ```
 
-对比步骤1获取的Pod IP与步骤2获取的basic-tor-node-cm，确认多个实例分布在同一个tor下，表示交换机亲和性功能运行成功。
+对比步骤2获取的Pod IP与步骤1获取的basic-tor-node-cm，确认多个实例分布在同一个tor下，表示交换机亲和性功能运行成功。

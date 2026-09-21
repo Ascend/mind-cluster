@@ -14,7 +14,7 @@
 - [K8s RDMA Shared Dev Plugin](11_k8s_rdma_shared_dev_plugin.md)
 - [DPU Exporter](16_dpu_exporter.md)
 - [UB Host Device Cni](17_ub_host_device_cni.md)
-- [Ascend Dynamic Resource Allocation](17_ascend_dynamic_resource_allocation_.md)
+- [Ascend Dynamic Resource Allocation](17_ascend_dynamic_resource_allocation.md)
 - [Container Manager](17_container-manager.md)
 - [K8s原生对象说明](12_k8s.md)
 - [环境变量说明](13_environment_variable_description.md)

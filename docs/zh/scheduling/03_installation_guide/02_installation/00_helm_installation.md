@@ -82,9 +82,9 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       ```
 
       > [!NOTE]
-      > {version}表示MindCluster组件版本，如26.1.0。
-      > {chart_version}表示Helm Chart版本，与MindCluster组件版本保持一致。
-      > 解压后的文件用途请参考[表4](#table15274931175244)。
+      >- {version}表示MindCluster组件版本，如26.1.0。
+      >- {chart_version}表示Helm Chart版本，与MindCluster组件版本保持一致。
+      >- 解压后的文件用途请参考[表4](#table15274931175244)。
 
 3. 使用Helm安装MindCluster组件所需的CRD（Custom Resource Definition，自定义资源定义）的Release实例（Helm部署单元）。
     > [!NOTE]
