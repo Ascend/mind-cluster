@@ -18,7 +18,7 @@
 |芯片故障|<p>DCMI接口上报的芯片故障和设备网络探测工具hccn_tool检测到的芯片网络故障。</p><p>故障码说明请参见[芯片故障码参考文档](../../07_references/05_appendix.md#芯片故障码参考文档)。</p>|
 |参数面网络故障|包括芯片网络相关故障和灵衢总线设备故障。<ul><li>芯片网络相关故障：芯片之间进行参数交换的专用网络出现故障，如NPU网口故障。</li><li>灵衢总线设备故障：<term>Atlas A3 训练系列产品</term>的灵衢总线设备发生故障。</li></ul>|
 |业务面故障|<p>训练任务异常退出，导致Pod的Status变为Failed状态。</p><p>可执行<strong>kubectl describe pod <em>{pod名称} </em>-n <em>\{NAMESPACE\}</em> \|grep Status:</strong>命令，查看当前Pod的Status是否为Failed状态。回显示例如下：<pre class="screen"><strong>Status:       Failed</strong></pre></p>|
-|公共故障|公共故障指的是其他故障发现者（非MindCluster组件）提供的故障，公共故障包括以下几种类型：NPU故障、节点故障、网络故障和存储故障。|
+|公共故障|公共故障指的是其他故障发送方（非MindCluster组件）提供的故障，公共故障包括以下几种类型：NPU故障、节点故障、网络故障和存储故障。|
 |pingmesh灵衢网络故障|灵衢网络故障是针对超节点内部（包括节点内和节点间）的HCCS网络提供的NPU网络故障检测。|
 |性能劣化故障|MindCluster结合MindStudio提供的profiling能力对集群中的性能劣化故障（慢节点）提供诊断功能。该功能提供动态启动打点和打点数据持久化功能、可动态启停，无需重启任务进行诊断，对训练无损耗。|
 |任务卡死故障|任务卡死故障是指NPU上有进程运行，但进程因计算卡死、内存卡死或通信卡死等原因长时间未取得实质性进展的异常状态。|

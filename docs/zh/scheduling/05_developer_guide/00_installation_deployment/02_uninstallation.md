@@ -215,7 +215,7 @@ rm -f /usr/local/bin/kubectl-ascend_diag /usr/local/bin/kubectl-clusterops
     - 通过镜像方式卸载。各组件卸载方法类似，均为进入该组件配置文件YAML所在目录，并执行删除操作实现，此操作需要在K8s的管理节点操作。以卸载Ascend Device Plugin为例说明，请用户自行完成其余组件卸载。
 
         1. 以root用户登录管理节点。
-        2. 进入Ascend Device PluginYAML配置文件所在目录（如：“/home/ascend-device-plugin”）。
+        2. 进入Ascend Device Plugin YAML配置文件所在目录（如：“/home/ascend-device-plugin”）。
 
             ```shell
             cd /home/ascend-device-plugin

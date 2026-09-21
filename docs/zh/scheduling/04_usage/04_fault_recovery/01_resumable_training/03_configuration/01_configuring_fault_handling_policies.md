@@ -177,7 +177,7 @@ metadata:
     2. 在训练脚本（例如train\_start.sh）中增加以下代码，拉起TaskD Manager。在以下代码中：
 
         - TASKD\_SO\_PATH和export LD\_PRELOAD两条语句的作用是将安装TaskD后libtaskd.so的路径配置到环境变量LD\_PRELOAD中。如果这两条语句配置不成功，可通过手动执行pip show taskd命令获取Location的值拼接上/taskd/python/cython\_api/libs/libtaskd.so，然后通过export设置。
-        - TASKD\_PROCESS\_ENABLE环境变量配置说明：若任务YAML中“recover-strategy”未配置恢复策略且未开启亚健康热切，需要配置**export TASKD\_PROCESS\_ENABLE="off"**；若“recover-strategy”配置了恢复策略或开启了亚健康热切，则无需配置**export TASKD\_PROCESS\_ENABLE="off"**。
+        - TASKD\_PROCESS\_ENABLE环境变量配置说明：若任务YAML中`recover-strategy`未配置恢复策略且未开启亚健康热切，需要配置**export TASKD\_PROCESS\_ENABLE="off"**；若`recover-strategy`配置了恢复策略或开启了亚健康热切，则无需配置**export TASKD\_PROCESS\_ENABLE="off"**。
 
         ```shell
         TASKD_SO_PATH="$(pip show taskd | awk '/^Location: / {print $2"/taskd/python/cython_api/libs/libtaskd.so"}')"
@@ -1078,7 +1078,7 @@ export MS_ENABLE_TFT="{RSC:1}"      # MindSpore场景下配置此字段开启优
 
 ## 参数说明<a name="ZH-CN_TOPIC_0000002511346491"></a>
 
-不同的故障处理模式需要配置的参数各不相同，如[表1](#table1247342123814)所示，每个参数所表示的含义及填写说明详见[表2](#zh-cn_topic_0000002163392281_table1474820818115)。Ascend Operator在进程级别重调度、进程级在线恢复、进程级原地恢复和弹性训练场景下，会根据用户配置的recover-strategy和pod-rescheduling注入不同的环境变量，自动给任务打上process-recover-enable=on标签开启进程级恢复开关，无需用户手动指定。具体注入的环境变量如[表3](#table10283161512105)所示。
+不同的故障处理模式需要配置的参数各不相同，如[表1](#table1247342123814)所示，每个参数所表示的含义及填写说明详见[表2](#zh-cn_topic_0000002163392281_table1474820818115)。Ascend Operator在进程级别重调度、进程级在线恢复、进程级原地恢复和弹性训练场景下，会根据用户配置的`recover-strategy`和`pod-rescheduling`注入不同的环境变量，自动给任务打上`process-recover-enable=on`标签开启进程级恢复开关，无需用户手动指定。具体注入的环境变量如[表3](#table10283161512105)所示。
 
 **表 1**  故障处理所需参数
 

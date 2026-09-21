@@ -89,14 +89,14 @@ kubectl describe cm -n cluster-system pingmesh-fault-<nodename>
     ![](../../../figures/scheduling/zh-cn_image_0000002477523808.png)
 
 2. 再使用<b>kubectl logs -n mindx-dl clusterd-7d5db546d8-kdslz | grep "got degradation, slow rank"</b>查询日志数据。
-3. 若日志中出现如下图所示，则表明出现节点劣化。
+3. 若日志中出现如下图所示数据，则表明出现节点劣化。
 
     ![](../../../figures/scheduling/zh-cn_image_0000002457147010.png)
 
 ### 方式二：通过落盘日志查询集群侧慢节点诊断日志
 
 1. 使用<b>cat /var/log/mindx-dl.clusterd.clusterd.log | grep "got degradation, slow rank"</b>命令查询日志数据。
-2. 若日志中出现如下图所示，则表明出现节点劣化。
+2. 若日志中出现如下图所示数据，则表明出现节点劣化。
 
     ![](../../../figures/scheduling/zh-cn_image_0000002490267057.png)
 
@@ -143,9 +143,9 @@ kubectl describe cm -n cluster-system pingmesh-fault-<nodename>
 
 ### 查看gRPC上报结果<a name="zh-cn_topic_0000002313236861_section28851054410"></a>
 
-慢网络诊断到故障，会通过gRPC上报至ClusterD的公共故障管理中心。
+慢网络诊断出故障，会通过gRPC上报至ClusterD的公共故障管理中心。
 
-ConfigMap文件会显示相关信息，5秒钟之后自动清除。
+ConfigMap文件会显示相关信息，5秒之后自动清除。
 
 ![](../../../figures/scheduling/zh-cn_image_0000002300581874.png)
 
