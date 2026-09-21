@@ -27,7 +27,7 @@ UB Host Device CNI通过`NetworkAttachmentDefinition`（NAD）中的`spec.config
 |------|---------|------|------|
 | type | 是 | string | 固定为`ub-host-device`。 |
 | ubMode | 否 | bool | 是否开启UB设备挂载逻辑。开启后只走UB路径，不做PCI归类及DPDK检测。默认值false。 |
-| device | 否 | string | 设备名，填写**宿主网卡名**（如`eth0`），非UB与UB模式语义一致。非UB模式按网卡名直接查找；UB模式按网卡名反查其所属的UB设备（扫描`/sys/bus/ub/devices`），详见[UB设备分配来源](#ZH-CN_TOPIC_ub_device_source)。 |
+| device | 否 | string | 设备名，填写**宿主网卡名**（如`eth0`），非UB模式与UB模式语义一致。非UB模式按网卡名直接查找；UB模式按网卡名反查其所属的UB设备（扫描`/sys/bus/ub/devices`），详见[UB设备分配来源](#ZH-CN_TOPIC_ub_device_source)。 |
 | inheritHostIP | 否 | bool | 挂载时沿用宿主网卡的IP/路由，而不是向IPAM重新申请。默认值false。 |
 | capabilities | 否 | object | 声明插件支持的运行时能力。配置`"deviceID": true`后，接收Multus CNI下发的`runtimeConfig.deviceID`作为UB设备挂载来源，详见[UB设备分配来源](#ZH-CN_TOPIC_ub_device_source)。 |
 | ipam | 否 | object | IPAM插件配置（如calico-ipam）。`inheritHostIP=true`时可不配置。 |

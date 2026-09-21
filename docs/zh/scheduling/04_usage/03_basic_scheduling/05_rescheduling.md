@@ -120,7 +120,7 @@ fault-scheduling配置项取值含义如下。
    监控该Job的Pod状态变化。
 
    ```bash
-   kubectl get pod -n <namespce> -o wide -w | grep <pod-name>
+   kubectl get pod -n <namespace> -o wide -w | grep <pod-name>
    ```
 
    该Job的Pod历史状态示例如下，观察加粗字段的变化可以发现该Job的Pod会经历Terminating→Pending→ContainerCreating→Running阶段，然后正常运行，表示Job重调度成功：

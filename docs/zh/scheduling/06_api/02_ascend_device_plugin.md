@@ -92,7 +92,7 @@ Ascend Device Plugin的ConfigMap中的描述信息如[表5](#table97108314503)�
 Ascend Device Plugin上报的NPU设备故障信息如[表6](#table68216761214)所示。对象名称是<device-plugin-pod-name\>.<上报时间\><故障芯片ID\>，对象类型为Event。
 
 >[!NOTE]
->下表仅展示与MindCluster业务相关的字段说明，更多字段的说明详细请参见[Event core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#event-v1-core)。
+>下表仅展示与MindCluster业务相关的字段说明，更多字段的详细说明请参见[Event core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#event-v1-core)。
 
 **表 6**  NPU设备故障信息
 

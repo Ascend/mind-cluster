@@ -120,10 +120,10 @@ spec:
 |参数|取值|说明|
 |---|---|---|
 |schedulerName|取值为“volcano”。|配置调度器为Volcano。|
-|sp-block|指定逻辑超节点芯片数量。<p>需要是节点芯片数量的整数倍，且P/D实例的总芯片数量是其整数倍。</p>|指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于任务的亲和性调度。若用户未指定该字段，Volcano调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。<ul><li>了解详细说明请参见[灵衢总线设备节点网络说明](../03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点)。</li><li>仅支持在Atlas 800I A3 超节点服务器中使用该字段。</li></ul>|
+|sp-block|指定逻辑超节点芯片数量。<p>需要是节点芯片数量的整数倍，且P/D实例的总芯片数量是其整数倍。</p>|指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于任务的亲和性调度。若用户未指定该字段，Volcano调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。<br/>详细说明请参见[灵衢总线设备节点网络说明](../03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点)。<ul><li>仅支持在Atlas 800I A3 超节点服务器中使用该字段。</li></ul>|
 |huawei.com/schedule\_minAvailable|整数|任务能够调度的最小副本数。在实例不跨机，即Deployment场景下必须指定该字段，根据该字段所属的P实例或者D实例，配置为engine或者decoder的生效副本数量。其他场景下不需要指定该字段。|
 |huawei.com/recover\_policy\_path|"pod"|pod-rescheduling为"on"时任务执行恢复的路径。设置为"pod"，表明Pod级重调度失败时，不升级到Job级重调度。对于OME任务，Deployment场景下PodGroup中的每一个Pod都是一个独立的实例，因此其故障处理不能扩散到其他实例；LeaderWorkerSet场景下单个PodGroup下任意Pod重启均会由LeaderWorkerSet Controller重启整个PodGroup触发实例重调度。|
-|pod-rescheduling|<ul><li>on：开启Pod级别重调度。</li><li>其他值或不使用该字段：关闭Pod级别重调度。</li></ul>|Pod级重调度，表示任务发生故障后，不会删除PodGroup内的所有任务Pod，而是将发生故障的Pod进行删除，由控制器重新创建新Pod后进行重调度。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">OME推理任务需要将此字段配置为“on”，MindCluster对发生故障的P/D实例进行重调度。</div></div>|
+|pod-rescheduling|<ul><li>on：开启Pod级别重调度。</li><li>其他值或不使用该字段：关闭Pod级别重调度。</li></ul>|Pod级重调度，表示任务发生故障后，不会删除PodGroup内的所有任务Pod，而是将发生故障的Pod进行删除，由控制器重新创建新Pod后进行重调度。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">OME推理任务需要将此字段配置为"on"，MindCluster对发生故障的P/D实例进行重调度。</div></div>|
 |huawei.com/Ascend910|<ul><li>Atlas 800I A2 推理服务器：8</li><li>Atlas 900 A3 SuperPoD 超节点、Atlas 800I A3 超节点服务器: 16</li></ul>|请求的NPU数量。当前仅支持整机调度，请根据实际硬件卡数进行修改。|
 |env\[name==ASCEND\_VISIBLE\_DEVICES\].valueFrom.fieldRef.fieldPath|取值为metadata.annotations\['huawei.com/Ascend910'\]，和环境上实际的芯片类型保持一致。| Ascend Docker Runtime会获取该参数值，用于给容器挂载相应类型的NPU。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">该参数只支持使用Volcano调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</div></div>|
 |fault-scheduling|<ul><li>grace：配置任务采用优雅删除模式，并在过程中先优雅删除原Pod，15分钟后若还未成功，使用强制删除原Pod。</li><li>force：配置任务采用强制删除模式，在过程中强制删除原Pod。</li><li>off、无（无fault-scheduling字段）或其他值：该推理任务不使用故障重调度特性。</li></ul>|-|
@@ -191,7 +191,7 @@ spec:
     2. 按“i”进入编辑模式，按实际情况修改文件中的字段。
     3. 按“Esc”键，输入`:wq!`，按“Enter”保存并退出编辑。
 
-6. （可选）创建任务命名空间。"xxx"为“config/isvc-config.yaml”设置的“app\_namespace”。如果“app\_namespace”为“default”或未设置，可以不创建命名空间。
+6. （可选）创建任务命名空间。“xxx”为“config/isvc-config.yaml”设置的“app\_namespace”。如果“app\_namespace”为“default”或未设置，可以不创建命名空间。
 
     ```shell
     kubectl create ns xxx

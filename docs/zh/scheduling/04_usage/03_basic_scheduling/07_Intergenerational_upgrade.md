@@ -57,12 +57,12 @@
 <tr>
 <td>（可选）sp-block</td>
 <td>指定逻辑超节点芯片数量。<p>单机时需要和任务请求的芯片数量一致。</p><p>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</p></td>
-<td>仅在升级到Atlas 850E 超节点、Atlas 850 超节点、Atlas 950 SuperPoD 超节点与Atlas 950 SuperPoD Flex时需要保留或配置该字段。指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的逻辑超节点亲和性调度。若用户未指定该字段，Volcano调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。<br/> 了解详细说明请参见<a href="../../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a></td>
+<td>仅在升级到Atlas 850E 超节点、Atlas 850 超节点、Atlas 950 SuperPoD 超节点与Atlas 950 SuperPoD Flex时需要保留或配置该字段。指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的逻辑超节点亲和性调度。若用户未指定该字段，Volcano调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。<br/> 详细说明请参见<a href="../../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a></td>
 </tr>
 <tr>
 <td>（可选）ra-block</td>
 <td>指定逻辑框芯片数量。<p>单机时需要和任务请求的芯片数量一致。</p><p>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</p></td>
-<td>仅在升级到Atlas 950 SuperPoD 超节点时需要配置该字段。ra-block用于指定逻辑框芯片数量，用于训练任务的逻辑框亲和性调度，若用户未指定该字段，Volcano调度时会将此任务的逻辑框大小指定为8，即不开启逻辑框亲和性调度。<br/> 了解详细说明请参见<a href="../../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a></td>
+<td>仅在升级到Atlas 950 SuperPoD 超节点时需要配置该字段。ra-block用于指定逻辑框芯片数量，用于训练任务的逻辑框亲和性调度，若用户未指定该字段，Volcano调度时会将此任务的逻辑框大小指定为8，即不开启逻辑框亲和性调度。<br/> 详细说明请参见<a href="../../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a></td>
 </tr>
 <tr>
 <td>requests/limits</td>

@@ -89,7 +89,7 @@ mindio_ttp.framework_ttp.tft_init_processor(rank: int, world_size: int, enable_l
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
-|rank|必选|当前执行训练任务NPU卡号。|int，[0, world_size)。|
+|rank|必选|当前执行训练任务的NPU卡号。|int，[0, world_size)。|
 |world_size|必选|参与训练任务的集群卡数。|int，[1, 100000]。|
 |enable_local_copy|必选|是否启用local copy。|<ul><li>False：关闭</li><li>True：启用</li></ul>|
 |enable_tls|可选|TLS加密传输开关。|<ul><li>False：关闭</li><li>True：启用</li></ul>默认为True。|
