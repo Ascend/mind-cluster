@@ -16,6 +16,7 @@
 >
 >- 如需使用无条件重试功能，需在任务YAML中配置以下3个参数：fault-retry-times，restartPolicy及policies，详细参数说明请参见[YAML配置说明](../../../06_api/15_yaml_configuration.md#yaml_configuration)（policies是vcjob原生字段）。
 >- 在使用Ascend Operator的场景下，若希望任务所有Pod的Status在转变为Failed后仍发生重调度，可参考[使用Volcano和Ascend Operator组件场景下，业务面故障的任务所有Pod的Status全部变为Failed，任务无法触发无条件重试重调度](https://gitcode.com/Ascend/mind-cluster/issues/362)。
+>- 任务状态可以接入外部监控平台，Job状态可以通过[ClusterD的任务接口](../../../06_api/04_clusterd/01_job_information.md)监控到任务状态变更。业务面Pod非0退出，状态变成Failed后时，或者任务长时间处于Pending状态时，都能够通过任务信息接口获取到相关信息。
 
 ### watchdog故障检测<a name="section59641929143117"></a>
 
