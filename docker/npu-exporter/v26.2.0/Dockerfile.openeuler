@@ -1,0 +1,76 @@
+FROM openeuler/openeuler:24.03-lts AS build
+
+ARG VERSION=26.2.0
+ARG TARGETPLATFORM
+
+RUN yum update -y && \
+    yum install -y wget unzip && \
+    yum clean all && rm -rf /var/cache/yum /tmp/* && \
+    mkdir -p /build && rm -rf /build/* && \
+    ARCH=$(case "${TARGETPLATFORM}" in \
+        "linux/amd64") echo "x86_64" ;; \
+        "linux/arm64") echo "aarch64" ;; \
+        *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+    esac) && \
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip && \
+    unzip Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip -d /build && \
+    wget https://mirrors.huaweicloud.com/ascend/archive/rpm/unifiedbus/common/umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz && \
+    cp umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz /build
+
+FROM openeuler/openeuler:24.03-lts
+
+ARG TARGETPLATFORM
+ARG UMDK_PKG=umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz
+
+COPY --from=build /build/${UMDK_PKG} /tmp/${UMDK_PKG}
+
+RUN yum install -y shadow-utils libnl3 libnl3-devel ca-certificates bash glibc sqlite-devel gcc gcc-c++ make cmake git  jq curl numactl-devel && \
+    yum clean all && rm -rf /var/cache/yum && \
+    if [ "${TARGETPLATFORM}" = "linux/arm64" ] && [ -n "${UMDK_PKG}" ] && [ -f "/tmp/${UMDK_PKG}" ]; then \
+        echo "INFO: Install umdk from /tmp/${UMDK_PKG}"; \
+        mkdir -p /tmp/umdk_pkgs; \
+        tar -mzxf "/tmp/${UMDK_PKG}" -C /tmp/umdk_pkgs; \
+        rpm -ivh /tmp/umdk_pkgs/*.rpm; \
+    elif [ "${TARGETPLATFORM}" = "linux/amd64" ]; then \
+        echo "INFO: amd64 platform skip local umdk rpm install"; \
+    else \
+        echo "WARN: umdk package not supported in platform ${TARGETPLATFORM}"; \
+    fi && \
+    rm -rf /tmp/*
+
+RUN groupadd -g 1000 HwHiAiUser && useradd -u 1000 -g HwHiAiUser -d /home/HwHiAiUser -m HwHiAiUser &&\
+    groupadd -g 1101 HwDmUser && useradd -u 1101 -g HwDmUser -d /home/HwDmUser -m HwDmUser &&\
+    groupadd -g 1102 HwBaseUser && useradd -u 1102 -g HwBaseUser -d /home/HwBaseUser -m HwBaseUser &&\
+    usermod -a -G HwBaseUser HwHiAiUser &&\
+    usermod -a -G HwDmUser HwHiAiUser &&\
+    usermod -a -G HwBaseUser HwDmUser &&\
+    usermod -a -G HwHiAiUser HwDmUser &&\
+    usermod root -s /bin/false
+
+COPY --from=build /build/npu-exporter  /usr/local/bin/
+COPY --from=build /build/run_for_310P_1usoc.sh /
+COPY --from=build /build/metricConfiguration.json  /user/mind-cluster/npu-exporter-config/metricConfiguration.json
+COPY --from=build /build/pluginConfiguration.json  /user/mind-cluster/npu-exporter-config/pluginConfiguration.json
+COPY --from=build /build/agreement.txt /usr/local/
+
+RUN chown root:root /usr/local/bin/npu-exporter &&\
+    chmod 750 -R /home/HwHiAiUser &&\
+    chmod 500 /run_for_310P_1usoc.sh &&\
+    chmod 550 /usr/local/bin/ &&\
+    chmod 500 /usr/local/bin/npu-exporter &&\
+    chmod 440 /user/mind-cluster/npu-exporter-config/metricConfiguration.json &&\
+    chmod 440 /user/mind-cluster/npu-exporter-config/pluginConfiguration.json &&\
+    chmod 440 /usr/local/agreement.txt &&\
+    echo 'umask 027' >> /etc/profile && \
+    echo 'source /etc/profile' >> ~/.bashrc
+
+RUN ln -s /lib /lib64 2>&1 >> /dev/null &&\
+    mkdir -m 750 /var/driver -m 750 /var/dmp -m 750 /usr/slog -p -m 750 /home/drv/hdc_ppc &&\
+    chown HwDmUser:HwDmUser /var/dmp &&\
+    chown HwHiAiUser:HwHiAiUser /var/driver &&\
+    chown HwHiAiUser:HwHiAiUser /home/drv/hdc_ppc &&\
+    chown HwHiAiUser:HwHiAiUser /usr/slog
+
+ENV LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/add-ons:/usr/local/Ascend/driver/lib64:/usr/local/dcmi
+
+ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /bin/bash"]
