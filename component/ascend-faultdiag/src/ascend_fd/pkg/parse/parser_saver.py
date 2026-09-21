@@ -793,7 +793,7 @@ class LCNELogSaver(BaseLogSaver):
     # diaglog 源日志：diagnostic_information/diag/slot_x/ 下的 diag.zip 解压后为 diag.log
     # diaglog_<id>_<ts>.zip 解压后为diaglog_<id>_<ts>.log
     DIAG_ZIP = "diag.zip"
-    DIAGLOG_ZIP_PATTERN = re.compile(r"^diaglog_\d{1,3}_\d{14}.log(.zip)?")
+    DIAGLOG_ZIP_PATTERN = re.compile(r"^diaglog_\d{1,3}_\d{14}.log.zip$")
     DIAG_LOG_FILE = "diag.log"
     DIAG_LOG_PATTERN = r'diaglog_1_\d{13,15}\.log$'
 

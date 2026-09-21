@@ -18,6 +18,7 @@ from abc import ABC
 import copy
 from datetime import datetime
 
+from ascend_fd.utils.constant.str_const import UNKNOWN_DEVICE_ID
 from ascend_fd.utils.constant.ub_const import (
     Comp_CANN_HCCL_Custom_CQE0x2,
     Comp_CANN_HCCL_Custom_CQE0x5,
@@ -61,9 +62,8 @@ class Checker(ABC):
         self.schema = merge_obj.schema
         # 使用描述性名称作为键
         self.rule_flags = merge_obj.rule_flags
-        # 本节点某个设备的PRECHECK事件
+        # 本节点某个设备的PRECHECK事件（已合并 Unknown 事件，基础码/未知数据统一从该 dict 取）
         self.single_device_precheck_event = merge_obj.single_device_precheck_event
-        self.unknown_device_event = merge_obj.unknown_device_event
 
     def analyze(self, device_causes):
         pass
@@ -102,7 +102,7 @@ class Checker(ABC):
         code_entity = self.schema.get_schema_entity(code)
         entities_attribute = code_entity.attribute.to_json()  # {'component':..., 'cause_zh':..., ...}
         link = self._build_link(code, base_code)
-        base_event = self.unknown_device_event.get(base_code, {}) or device_causes.get(base_code, {})
+        base_event = self.single_device_precheck_event.get(base_code, {}) or device_causes.get(base_code, {})
         event_attribute = copy.deepcopy(base_event)
 
         tmp = self.single_device_precheck_event.get(event_key, {})
@@ -131,9 +131,9 @@ class Cqe0x2Checker(Checker):
 
     def analyze(self, device_causes):
         fault_codes = list(
-            self.unknown_device_event.keys() | [] if not isinstance(device_causes, dict) else device_causes.keys()
+            self.single_device_precheck_event.keys() if not isinstance(device_causes, dict) else device_causes.keys()
         )
-        # 基础码由 plog 解析，unknown_device_event或已识别的故障列表中无基础码则直接返回
+        # 基础码由 plog 解析，single_device_precheck_event（含 Unknown）或已识别的故障列表中无基础码则直接返回
         if self.base_code not in fault_codes:
             return
 
@@ -207,7 +207,7 @@ class Cqe0x2Checker(Checker):
 
 class Cqe0x3Checker(Checker):
     def analyze(self, device_causes):
-        # 基础码由 plog 解析，unknown_device_event或已识别的故障列表中无基础码则直接返回，此处为后续预留
+        # 基础码由 plog 解析，single_device_precheck_event（含 Unknown）或已识别的故障列表中无基础码则直接返回，此处为后续预留
         return
 
 
@@ -227,6 +227,8 @@ class UBMemChecker(Checker):
 
         tmp = self.single_device_precheck_event.get(event_key, {})
         precheck_event = copy.deepcopy(tmp)
+        if precheck_event.get("source_device") == UNKNOWN_DEVICE_ID:
+            precheck_event["source_device"] = self.source_device
         if rule:
             precheck_event["key_info"] = rule.get("line", "")
             precheck_event["occurrence"] = [
@@ -246,87 +248,95 @@ class UBMemChecker(Checker):
         )
 
     def analyze(self, device_causes):
-        self.add_ubmem_ub_ras_causes(device_causes)
-        self.add_ubmem_timeout_low_causes(device_causes)
-        self.add_ubmem_timeout_retraining_causes(device_causes)
-        self.add_ubmem_timeout_lost_pkg_causes(device_causes)
+        keep_net_timeout = [
+            self.add_ubmem_ub_ras_causes(device_causes),
+            self.add_ubmem_timeout_low_causes(device_causes),
+            self.add_ubmem_timeout_retraining_causes(device_causes),
+            self.add_ubmem_timeout_lost_pkg_causes(device_causes),
+        ]
+        if any(keep_net_timeout):
+            # 有故障匹配成功，移除基础码
+            device_causes.pop(self.base_code, None)
 
     def add_ubmem_timeout_low_causes(self, device_causes):
         code = "Comp_Custom_UBMEM_TIMEOUT_LOW"
         if code in device_causes:
-            return
+            return True
 
         if self.base_code not in device_causes:
-            return
+            return False
 
         rule = self.rule_flags.get(RULE_VLAN10_11_BALANCE, {})
         # 有丢包
         if rule.get("value", False):
-            return
+            return False
 
         rule_timeout_low = self.rule_flags.get(RULE_UBMEM_TIMEOUT_LOW, {})
         # 规则层已按 age_period（微秒换算秒）小于 4 秒判定并置位
         if not rule_timeout_low.get("value", False):
-            return
+            return False
 
         self._build_ubmem_cause(device_causes, code, event_key=PRECHECK_UBMEM_TIMEOUT)
+        return True
 
     def add_ubmem_timeout_retraining_causes(self, device_causes):
         code = "Comp_Custom_UBMEM_TIMEOUT_RETRAINING"
         if code in device_causes:
-            return
+            return True
 
         if self.base_code not in device_causes:
-            return
+            return False
 
         rule_lost_pkt = self.rule_flags.get(RULE_VLAN10_11_BALANCE, {})
         # 有丢包
         if rule_lost_pkt.get("value", False):
-            return
+            return False
 
         rule_reinit = self.rule_flags.get(RULE_PHY_REINIT_CNT_EXCEED, {})
         # 1秒内没有多次retraining
         if not rule_reinit.get("value", False):
-            return
+            return False
 
         self._build_ubmem_cause(device_causes, code, rule_reinit)
+        return True
 
     def add_ubmem_ub_ras_causes(self, device_causes):
         if self.base_code not in device_causes:
-            return
+            return False
 
         # 没UB_RAS故障直接返回
         ras_code = list(set(UB_RAS_CODES) & device_causes.keys())
         if not ras_code:
-            return
+            return False
 
         rule_lost_pkt = self.rule_flags.get(RULE_VLAN10_11_BALANCE, {})
         # 没有丢包
         if not rule_lost_pkt.get("value", False):
-            return
+            return False
 
         for code in ras_code:
             # 一定存在cause
             cause = device_causes.get(code)
             link = self._build_link(code, self.base_code, "+lost package({})".format(rule_lost_pkt.get("line", "")))
             cause.get("chains").update({self.source_device: link})
+        return True
 
     def add_ubmem_timeout_lost_pkg_causes(self, device_causes):
         code = "Comp_Custom_UBMEM_TIMEOUT_LOST_PKG"
         if code in device_causes:
-            return
+            return True
 
         if self.base_code not in device_causes:
-            return
+            return False
 
         # 有UB_RAS故障直接返回,isdisjoint表示没有交集返回True
         if not set(UB_RAS_CODES).isdisjoint(device_causes.keys()):
-            return
+            return False
 
         rule_lost_pkt = self.rule_flags.get(RULE_VLAN10_11_BALANCE, {})
         # 没有丢包
         if not rule_lost_pkt.get("value", False):
-            return
+            return False
 
         self._build_ubmem_cause(
             device_causes,
@@ -334,6 +344,7 @@ class UBMemChecker(Checker):
             rule_lost_pkt,
             suffix="+lost package({})".format(rule_lost_pkt.get("line", "")),
         )
+        return True
 
 
 class Cqe0x5Checker(Checker):
@@ -341,9 +352,9 @@ class Cqe0x5Checker(Checker):
 
     def analyze(self, device_causes):
         fault_codes = list(
-            self.unknown_device_event.keys() | [] if not isinstance(device_causes, dict) else device_causes.keys()
+            self.single_device_precheck_event.keys() if not isinstance(device_causes, dict) else device_causes.keys()
         )
-        # 基础码由 plog 解析，unknown_device_event或已识别的故障列表中无基础码则直接返回
+        # 基础码由 plog 解析，single_device_precheck_event（含 Unknown）或已识别的故障列表中无基础码则直接返回
         if self.base_code not in fault_codes:
             return
 
