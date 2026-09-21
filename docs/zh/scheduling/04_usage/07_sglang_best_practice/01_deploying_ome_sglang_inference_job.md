@@ -26,7 +26,7 @@
 
 基于OME的SGLang推理任务包含Router Pod和推理实例Pod，推理实例Pod可以分为Prefill实例Pod和Decode实例Pod，其中Router Pod不需要使用NPU资源，OME根据不同的推理服务配置方式生成不同的工作负载，用于创建不同的推理实例，并由Router统一对外提供推理服务。MindCluster集群调度组件支持对Deployment和LeaderWorkerSet两种OME推理任务的工作负载进行调度。LeaderWorkerSet任务场景下需要开启LWS的组调度功能。
 
-关于OME任务部署的详细说明可参见[OME文档](https://ome-projects.github.io/ome/docs/)。LWS的组调度功能开启可以参考[LWS文档](https://github.com/kubernetes-sigs/lws/tree/main/docs/examples/sample/gang-scheduling)。
+关于OME任务部署的详细说明可参见[OME文档](https://ome-projects.github.io/ome/docs/)。LWS的组调度功能开启可以参考[LWS文档](https://github.com/kubernetes-sigs/lws/blob/v0.10.0/docs/examples/sample/gang-scheduling/README.md)。
 
 **使用流程<a name="section19644656124210"></a>**
 

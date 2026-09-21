@@ -56,4 +56,4 @@ MindCluster集群调度组件支持通过以下方式使用Ascend DRA组件：
 - [部署DRA组件并运行Prepare/Unprepare验证](./01_deploying_dra_and_running_task.md)：通过部署DRA组件并下发引用ResourceClaim的任务，验证完整的设备分配与释放流程。
 
 > [!NOTE]
-> 关于Ascend DRA组件上报的ResourceSlice格式与健康检查接口的详细说明，请参见[Ascend Dynamic Resource Allocation](../../06_api/17_ascend_dynamic_resource_allocation_.md)。
+> 关于Ascend DRA组件上报的ResourceSlice格式与健康检查接口的详细说明，请参见[Ascend Dynamic Resource Allocation](../../06_api/17_ascend_dynamic_resource_allocation.md)。

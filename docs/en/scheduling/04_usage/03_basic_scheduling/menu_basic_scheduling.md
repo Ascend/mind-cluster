@@ -1,0 +1,17 @@
+# Scheduling Feature Guide
+
+- [Feature Description](./00_feature_description.md)
+- [Affinity Scheduling](./01_affinity_scheduling/menu_affinity_scheduling.md)
+  - [Solution Introduction](./01_affinity_scheduling/00_solution_description.md)
+  - [Affinity Scheduling Interconnection](./01_affinity_scheduling/01_affinity_scheduling_interconnection.md)
+  - [Affinity Scheduling Description](./01_affinity_scheduling/02_affinity_scheduling_description.md)
+  - [Affinity Based on Ascend AI Processors](./01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md)
+  - [Node-Based Affinity](./01_affinity_scheduling/04_node_based_affinity.md)
+  - [Scheduling Algorithm Description of Ascend AI Processors](./01_affinity_scheduling/05_scheduling_algorithm_of_ascend_ai_processor.md)
+  - [Inference Affinity Scheduling](./01_affinity_scheduling/06_infer_affinity_scheduling.md)
+- [Scheduling Process of Ascend AI Processors](./02_scheduling_process_of_the_ascend_ai_processor.md)
+- [Full-NPU Scheduling](./03_full_npu_scheduling.md)
+- [Multi-Level Scheduling](./04_multi_level_scheduling.md)
+- [Rescheduling Upon Inference Card Faults](./05_rescheduling_upon_inference_card_faults.md)
+- [Recovery of Inference Card Faults](./06_recovery_of_inference_card_faults.md)
+- [Intergenerational Upgrade](./07_Intergenerational_upgrade.md)

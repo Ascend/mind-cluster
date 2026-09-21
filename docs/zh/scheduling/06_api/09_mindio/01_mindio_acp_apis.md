@@ -180,7 +180,7 @@ mindio_acp.load(path, open_way='memfs', map_location=None)
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
 |path|必选|加载路径。|有效文件路径。|
-|open_way|可选|加载方式。<ul><li>memfs：使用MindIO ACP的高性能MemFS保存数据。</li><li>fopen：调用C标准库中的文件操作函数保存数据，通常作为memfs方式的备份存在。</li></ul>默认值：memfs。|<ul><li>memfs</li><li>fopen</li></ul>|
+|open_way|可选|加载方式。<ul><li>memfs：使用MindIO ACP的高性能MemFS加载数据。</li><li>fopen：调用C标准库中的文件操作函数加载数据，通常作为memfs方式的备份存在。</li></ul>默认值：memfs。|<ul><li>memfs</li><li>fopen</li></ul>|
 |map_location|可选|加载时需要映射到的设备。默认值：None。|<ul><li>None</li><li>cpu</li></ul>|
 
 **使用样例**

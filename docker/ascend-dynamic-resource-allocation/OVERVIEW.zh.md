@@ -198,7 +198,7 @@ Ascend Dynamic Resource Allocation（Ascend DRA）是 MindCluster 集群调度�
    ```
 
 > 关于组件上报的 `ResourceSlice` 字段格式、设备属性语义、健康检查端点行为以及组件启动参数完整列表，
-> 请参考官方文档：[Ascend Dynamic Resource Allocation 接口说明](https://gitcode.com/Ascend/mind-cluster/blob/master/docs/zh/scheduling/06_api/17_ascend_dynamic_resource_allocation_.md)
+> 请参考官方文档：[Ascend Dynamic Resource Allocation 接口说明](https://gitcode.com/Ascend/mind-cluster/blob/master/docs/zh/scheduling/06_api/17_ascend_dynamic_resource_allocation.md)
 > 与[手动安装](https://gitcode.com/Ascend/mind-cluster/blob/master/docs/zh/scheduling/05_developer_guide/00_installation_deployment/00_manual_installation/14_ascend_dynamic_resource_allocation.md)。
 > 完整的 Prepare/Unprepare 工作流演示请参见
 > [DRA 最佳实践](https://gitcode.com/Ascend/mind-cluster/blob/master/docs/zh/scheduling/04_usage/13_ascend_dynamic_resource_allocation_best_practice/01_deploying_dra_and_running_task.md)。

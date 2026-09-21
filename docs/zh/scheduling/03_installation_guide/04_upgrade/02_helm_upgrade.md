@@ -82,6 +82,8 @@
     -rw-r--r-- 1 root root  2026 Mar 24 15:25 helm_tool.sh
     ```
 
+    其中，{version}表示MindCluster组件版本；{chart_version}表示Helm Chart版本。
+
 2. <a name="li1471945063445_add_meta"></a>执行以下命令，为已有资源添加Helm元数据。
 
     ```bash

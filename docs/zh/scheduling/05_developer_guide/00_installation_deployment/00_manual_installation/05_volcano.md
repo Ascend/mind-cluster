@@ -912,7 +912,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
                         <strong>- --plugins-dir=plugins       # 在volcano-scheduler启动命令中加载自定义插件</strong>
                         - -v=3
                         - 2>&1
-            ---
+                        <br>
             # Source: volcano/templates/scheduler.yaml
             kind: ClusterRole
             apiVersion: rbac.authorization.k8s.io/v1
