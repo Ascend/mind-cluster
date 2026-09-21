@@ -15,8 +15,6 @@
 # limitations under the License.
 # ==============================================================================
 
-from ply.lex import LexToken
-
 
 class TokenType:
     COP = 0
@@ -24,10 +22,8 @@ class TokenType:
     VALUE = 2
 
 
-class Token(LexToken):
-
+class Token:
     def __init__(self, value, lex_type, token_type):
-        super().__init__()
         self.value = value
         self.type = lex_type
         self.token_type = token_type
@@ -40,7 +36,6 @@ class Token(LexToken):
 
 
 class NumberToken(Token):
-
     def __init__(self, value, lex_type, token_type):
         super().__init__(value, lex_type, token_type)
         self.value = self._to_num(value)
