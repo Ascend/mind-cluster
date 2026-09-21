@@ -12087,7 +12087,11 @@
             },
             "source_file": "CANN_Plog",
             "regex": {
-                "in": ["Invalid para","va"]
+                "in": [
+                  ["Invalid para","va"],
+                  ["Addr cap is not support ipc create"],
+                  ["The address does not support IPC sharing"]
+                ]
             }
         },
         "AISW_CANN_DRV_SVM_015": {
