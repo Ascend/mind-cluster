@@ -28,6 +28,7 @@ import (
 	"ascend-common/common-utils/agreement"
 	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	ver "ascend-common/common-utils/version"
 	fdol "ascend-faultdiag-online"
 	"nodeD/pkg/common"
@@ -59,8 +60,9 @@ const (
 	// minMonitorPeriod is the min plugin monitor period
 	minMonitorPeriod = 60
 	// maxLineLength is max length of each log line
-	maxLineLength = 512
-	fdConfigPath  = "/usr/local/fdConfig.yaml"
+	maxLineLength          = 512
+	fdConfigPath           = "/usr/local/fdConfig.yaml"
+	containerSnapshotLabel = "/usr/local/Dockerfile-container-snapshot"
 )
 
 var (
@@ -112,6 +114,9 @@ func main() {
 		return
 	}
 	hwlog.RunLog.Infof("%s starting and the version is %s", BuildName, BuildVersion)
+	if utils.IsExist(containerSnapshotLabel) {
+		hwlog.RunLog.Info("dependent image build for container snapshot")
+	}
 	setParameters()
 	if err := createWorkers(); err != nil {
 		hwlog.RunLog.Errorf("create workers failed, err is %v", err)

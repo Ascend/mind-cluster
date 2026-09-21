@@ -1348,6 +1348,34 @@ func TestAddManagerDevice(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+// TestAddDeviceForCntrSnap tests the function addDeviceForCntrSnap
+func TestAddDeviceForCntrSnap(t *testing.T) {
+	devPath := "/dev/mockdevice"
+	statStub := gomonkey.ApplyFunc(oci.DeviceFromPath, func(dPath string) (*specs.LinuxDevice, error) {
+		return &specs.LinuxDevice{
+			Path: devPath,
+		}, nil
+	})
+	defer statStub.Reset()
+
+	spec := specs.Spec{
+		Linux: &specs.Linux{
+			Devices: []specs.LinuxDevice{},
+			Resources: &specs.LinuxResources{
+				Devices: []specs.LinuxDeviceCgroup{},
+			},
+		},
+		Process: &specs.Process{
+			Env: []string{"host_snapshot_path=/test"},
+		},
+	}
+	ctx, _ := context.WithCancel(context.Background())
+	err := InitLogModule(ctx)
+	assert.Nil(t, err)
+	err = addDeviceForCntrSnap(&spec)
+	assert.Nil(t, err)
+}
+
 // TestAddUBDevice tests the function addUBDevice
 func TestAddUBDevice(t *testing.T) {
 	specInstance := specs.Spec{

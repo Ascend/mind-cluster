@@ -28,36 +28,8 @@
 - 若没有安装，可以参考[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作，其中NodeD、Infer Operator需要修改部分安装步骤。
 
   - NodeD
-    - 需要使用如下的Dockerfile制作NodeD镜像，其中http_proxy、https_proxy配置为能够访问公网的代理
-
-        ```Dockerfile
-        FROM openeuler-24.03-lts-sp2:latest
-
-        RUN sed -i 's/root:x:0:0:root:\/root:.*$/root:x:0:0:root:\/root:\/sbin\/nologin/' /etc/passwd
-
-        ENV http_proxy=xxx
-        ENV https_proxy=xxx
-        RUN echo "sslverify=0" >> /etc/yum.conf
-        RUN yum makecache
-        RUN dnf install -y protobuf-c protobuf libmnl libnftnl libseccomp libnet libnl3 iptables
-        ENV http_proxy ""
-        ENV https_proxy ""
-
-        ENV LD_LIBRARY_PATH /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common
-
-        COPY ./noded /usr/local/bin
-        COPY ./NodeDConfiguration.json /usr/local/
-        COPY ./fdConfig.yaml /usr/local/fdConfig.yaml
-
-        RUN chmod 550 /usr/local/bin/noded &&\
-            chmod 550 /usr/local/bin &&\
-            chmod 440 /usr/local/NodeDConfiguration.json &&\
-            chmod 440 /usr/local/fdConfig.yaml &&\
-            echo 'umask 027' >> /etc/profile &&\
-            echo 'source /etc/profile' >> ~/.bashrc
-        ```
-
-    - NodeD的启动yaml需使用组件软件包中容器快照特性对应的`noded-container-snapshot.yaml`，其中快照路径`/user/snapshot`须根据实际情况配置，且为共享存储路径。
+    - 需要组件软件包中容器快照特性对应的`Dockerfile-container-snapshot`Dockerfile制作NodeD镜像。
+    - NodeD的启动yaml需使用组件软件包中容器快照特性对应的`noded-container-snapshot.yaml`，其中可根据实际快照大小修改CPU和内存资源请求与限制，此外快照路径`/user/snapshot`须根据实际情况配置，且为共享存储路径。
 
         ```Yaml
       ...
