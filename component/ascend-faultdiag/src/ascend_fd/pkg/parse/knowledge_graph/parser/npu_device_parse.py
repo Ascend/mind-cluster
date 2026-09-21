@@ -16,7 +16,7 @@
 # ==============================================================================
 # pylint: disable=duplicate-code
 import bisect
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import os
 from pathlib import Path
@@ -29,6 +29,7 @@ from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import (
     FileParser,
 )
 from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
+from ascend_fd.utils.constant.dev_log_const import HIST_DEVICE_OS_PATH_ARRAY
 from ascend_fd.utils.constant.str_const import UNKNOWN_DEVICE_ID
 from ascend_fd.utils.constant.ub_const import (
     ALL_UBCTL_KEYS,
@@ -48,7 +49,11 @@ from ascend_fd.utils.regular_table import (
     NPU_OS_SOURCE,
     NPU_UBCTL_SOURCE,
 )
-from ascend_fd.utils.tool import MultiProcessJob, check_and_format_time_str
+from ascend_fd.utils.tool import (
+    MultiProcessJob,
+    check_and_format_time_str,
+    safe_read_open,
+)
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 LOCAL_FAULT_FLAG = "1"
@@ -194,6 +199,23 @@ class NpuHistoryLogParser(BaseNpuLogParser):
 
     # 日志格式为UDMA xxxxxxxx ae xxxxx, event type is 2, sub type is 3
     KERNEL_AE_KEYWORDS = ("UDMA", "ae", "event type is 2", "sub type is 3")
+    # ---------- kernel.log 时间精确化：device_os.log 时间参照 ----------
+    # device_os.log 相对时间戳子目录路径：<子目录>/log/slog/debug/device_os.log
+    _DEVICE_OS_LOG_REL_PATH = os.path.join(*HIST_DEVICE_OS_PATH_ARRAY)
+    # 参照行必须以 [ERROR] KERNEL 开头，且只取第一条
+    _DEVICE_OS_REFERENCE_HEAD = "[ERROR] KERNEL"
+    # 参照行示例：[ERROR] KERNEL(3869,slogd):2026-09-20-12:45:34.644.410 [slogd_kernel_log.c:254][90032.054298] ...
+    # 提取 "KERNEL(pid,组):" 之后的实际时间（到空格为止），即参照实际时间 W0
+    _DEVICE_OS_REAL_TIME_PATTERN = re.compile(r"KERNEL\([^)]*\):\s*([^ ]+)")
+    # 提取方括号中的开机时长（形如 [90032.054298]，单位秒），即参照开机时长 T0
+    _DEVICE_OS_UPTIME_PATTERN = re.compile(r"\[(\d+\.\d+)\]")
+    # kernel.log 行首开机时长（形如 [95186.485753]）
+    _HISI_UPTIME_PATTERN = re.compile(r"^\d+(?:\.\d+)?$")
+
+    def __init__(self, params: dict):
+        super().__init__(params)
+        # 非 SDK 离线日志场景：{时间戳子目录: device_os.log 时间参照}，parse() 时构建
+        self.time_reference_map = {}
 
     @staticmethod
     def _get_occur_time(line, dir_name):
@@ -209,6 +231,109 @@ class NpuHistoryLogParser(BaseNpuLogParser):
             time_str = NpuHistoryLogParser._extract_timestamp_from_dir(dir_name)
             occur_time = check_and_format_time_str(time_str.strip())
         return occur_time
+
+    def _yield_log(self, file_source: Union[str, LogInfoSaver]):  # pylint: disable=arguments-differ
+        """
+        非 SDK（离线日志目录）场景解析 kernel.log 时：行首为开机时长且该子目录有时间参照，
+        先把行首的开机时长换算为实际时间再产出，使基类解析流程的 _get_occur_time 与
+        任务 [start, end] 窗口过滤基于精确时间生效；其余场景（SDK 输入、history.log 等）原样产出。
+        父类 FileParser._yield_log 为静态方法，此处需访问实例状态（is_sdk_input/time_reference_map），
+        因此覆盖为实例方法（self 在绑定调用中由实例提供，外部调用方式不变）。
+        """
+        if self.is_sdk_input or self._get_filename(file_source) != "kernel.log":
+            yield from super()._yield_log(file_source)
+            return
+        reference = self._get_kernel_file_reference(file_source)
+        for line in super()._yield_log(file_source):
+            yield self._convert_line_uptime(line, reference)
+
+    def _convert_line_uptime(self, line: str, reference: Optional[tuple]) -> str:
+        """
+        仅对命中 PRECHECK 关键字（KERNEL_AE_KEYWORDS）且行首为开机时长的 kernel.log 行，
+        把开机时长替换为换算后的实际时间；其余行原样返回，避免逐行转换。
+        :param line: log line
+        :param reference: 时间参照 (W0 实际时间, T0 开机时长) 或 None
+        """
+        if not reference or not self._is_ae_keyword_line(line):
+            return line
+        time_str = line[line.find("[") + 1 : line.find("]")].strip()
+        if not self._HISI_UPTIME_PATTERN.match(time_str):
+            return line
+        real_time = self._convert_uptime_to_real_time(reference, float(time_str))
+        return "[{}]{}".format(real_time, line[line.find("]") + 1 :])
+
+    @staticmethod
+    def _is_ae_keyword_line(line: str) -> bool:
+        """
+        判断行是否命中 PRECHECK 关键字（与 _match_precheck_line 的判定一致）。
+        :param line: log line
+        """
+        return all(keyword in line for keyword in NpuHistoryLogParser.KERNEL_AE_KEYWORDS)
+
+    def _get_kernel_file_reference(self, file_source) -> Optional[tuple]:
+        """
+        取 kernel.log 文件对应时间戳子目录的时间参照（(W0 实际时间, T0 开机时长)），没有则返回 None。
+        :param file_source: kernel.log 文件路径
+        """
+        return getattr(self, "time_reference_map", {}).get(os.path.dirname(os.path.dirname(file_source)))
+
+    @staticmethod
+    def _parse_time_reference(device_os_path: str) -> Optional[tuple]:
+        """
+        解析 device_os.log 第一条 [ERROR] KERNEL 行，得到时间参照：同一时刻的实际时间 W0 与开机时长 T0。
+        :param device_os_path: device_os.log 绝对路径
+        :return: (W0 实际时间 datetime, T0 开机时长)；文件缺失、无 [ERROR] KERNEL 行或解析失败返回 None
+        """
+        if not device_os_path or not os.path.isfile(device_os_path):
+            return None
+        try:
+            with safe_read_open(device_os_path, "r", encoding="UTF-8") as file_stream:
+                for raw_line in file_stream:
+                    line = raw_line.strip()
+                    if not line.startswith(NpuHistoryLogParser._DEVICE_OS_REFERENCE_HEAD):
+                        continue
+                    # 第一条 [ERROR] KERNEL 行解析 W0/T0，任一失败即视为参照不可用
+                    real_time_match = NpuHistoryLogParser._DEVICE_OS_REAL_TIME_PATTERN.search(line)
+                    uptime_match = NpuHistoryLogParser._DEVICE_OS_UPTIME_PATTERN.search(line)
+                    if not real_time_match or not uptime_match:
+                        return None
+                    real_time = check_and_format_time_str(real_time_match.group(1))
+                    if not real_time:
+                        return None
+                    real_dt = datetime.strptime(real_time, "%Y-%m-%d %H:%M:%S.%f")
+                    return real_dt, float(uptime_match.group(1))
+        except (OSError, ValueError):
+            return None
+        return None
+
+    @staticmethod
+    def _convert_uptime_to_real_time(reference: tuple, uptime: float) -> str:
+        """
+        把 kernel.log 行首的开机时长换算为实际时间：实际时间 = W0 + (本行开机时长 - T0)。
+        :param reference: _parse_time_reference 返回的时间参照 (W0 实际时间, T0 开机时长)
+        :param uptime: kernel.log 行首开机时长（秒）
+        :return: "%Y-%m-%d %H:%M:%S.%f" 格式的实际时间字符串
+        """
+        real_dt = reference[0] + timedelta(seconds=uptime - reference[1])
+        return real_dt.strftime("%Y-%m-%d %H:%M:%S.%f")
+
+    def _prepare_time_references(self, log_list: list) -> dict:
+        """
+        构建 {时间戳子目录: 时间参照} 映射，供 kernel.log 开机时长换算实际时间使用。
+        :param log_list: hisi_logs_path 全量文件列表（含 kernel.log / history.log / os_info.txt 等）
+        :return: {子目录绝对路径: (W0 实际时间, T0 开机时长) 或 None}
+        """
+        references = {}
+        for file_source in log_list:
+            log_path = file_source if isinstance(file_source, str) else getattr(file_source, "path", "")
+            if not log_path or os.path.basename(log_path) != "kernel.log":
+                continue
+            # <...>/device-X/<时间戳子目录>/log/kernel.log -> 时间戳子目录
+            sub_dir = os.path.dirname(os.path.dirname(log_path))
+            references.setdefault(
+                sub_dir, self._parse_time_reference(os.path.join(sub_dir, self._DEVICE_OS_LOG_REL_PATH))
+            )
+        return references
 
     @staticmethod
     def _extract_timestamp_from_dir(path: str) -> Optional[str]:
@@ -241,7 +366,12 @@ class NpuHistoryLogParser(BaseNpuLogParser):
         self.end_time = self.params.get("end_time")
         self.resuming_training_time = parse_ctx.resuming_training_time
         self.is_sdk_input = parse_ctx.is_sdk_input
-        return self.process_parse_file_list(self.find_log(parse_ctx.parse_file_path), task_id)
+        # 非 SDK（离线日志目录）场景：预构建 device_os.log 时间参照，供 kernel.log 开机时长换算实际时间；
+        # SDK 场景无本地目录，沿用原逻辑
+        parse_file_path = self.find_log(parse_ctx.parse_file_path)
+        if not self.is_sdk_input:
+            self.time_reference_map = self._prepare_time_references(parse_file_path)
+        return self.process_parse_file_list(parse_file_path, task_id)
 
     def _match_precheck_line(self, log_line: str) -> dict:
         """
