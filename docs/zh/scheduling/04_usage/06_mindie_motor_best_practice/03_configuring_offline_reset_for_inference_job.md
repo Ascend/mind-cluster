@@ -8,7 +8,7 @@
 
 ## 操作步骤
 
-开启MindIE Motor推理任务的离线复位功能只需要将Ascend Device Plugin的启动参数“-hotReset”取值设置为“0”或“2”。
+开启MindIE CMotor推理任务的离线复位功能只需要将Ascend Device Plugin的启动参数“-hotReset”取值设置为“0”或“2”。
 
 若Ascend Device Plugin未启动，则可以直接修改Ascend Device Plugin的YAML启动参数开启离线复位功能。若已经启动了Ascend Device Plugin，则可以使用如下的方式开启离线复位功能。
 

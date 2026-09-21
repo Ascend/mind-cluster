@@ -7,7 +7,7 @@
 - [故障检测特性指南](./11_fault_detection_and_diagnosis/menu_fault_detection_and_diagnosis.md)
 - [故障恢复特性指南](./04_fault_recovery/menu_fault_recovery.md)
 - [一体机特性指南](./05_appliance/menu_appliance.md)
-- [MindIE Motor推理任务最佳实践](./06_mindie_motor_best_practice/menu_mindie_motor_best_practice.md)
+- [MindIE CMotor推理任务最佳实践（已日落）](./06_mindie_motor_best_practice/menu_mindie_motor_best_practice.md)
 - [SGLang推理任务最佳实践](./07_sglang_best_practice/menu_sglang_best_practice.md)
 - [vLLM推理任务最佳实践](./08_vllm_best_practice/menu_vllm_best_practice.md)
 - [Infer Operator推理任务最佳实践](./09_infer_operator_best_practice/menu_infer_operator_best_practice.md)

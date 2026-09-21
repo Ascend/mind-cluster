@@ -4,7 +4,7 @@
 
 ## 前提条件<a name="zh-cn_topic_0000002356060805_section19119249163119"></a>
 
-已完成[部署MindIE Motor](./01_deploying_mindie_motor.md)。
+已完成[部署MindIE CMotor](./01_deploying_mindie_motor.md)。
 
 ## 支持的故障类型<a name="section121201333144919"></a>
 
@@ -34,8 +34,8 @@ metadata:
   namespace: mindie
   labels:
     framework: pytorch
-    app: mindie-ms-server        # 表示MindIE Motor在Ascend Job任务中的角色,不可修改
-    jobID: mindie-ms-test        # 当前MindIE Motor推理任务在集群中的唯一识别ID，用户可根据实际情况进行配置
+    app: mindie-ms-server        # 表示MindIE CMotor在Ascend Job任务中的角色,不可修改
+    jobID: mindie-ms-test        # 当前MindIE CMotor推理任务在集群中的唯一识别ID，用户可根据实际情况进行配置
     <strong>fault-scheduling: force      # 开启重调度功能</strong>
     fault-retry-times: "10000"     # 开启业务面故障重调度，值为业务面故障时的重调度次数
     ring-controller.atlas: ascend-910b
@@ -141,8 +141,8 @@ metadata:
   namespace: mindie
   labels:
     framework: pytorch
-    app: mindie-ms-coordinator        # 表示MindIE Motor在Ascend Job任务中的角色,不可修改
-    jobID: mindie-ms-test             # 当前MindIE Motor推理任务在集群中的唯一识别ID，用户可根据实际情况进行配置
+    app: mindie-ms-coordinator        # 表示MindIE CMotor在Ascend Job任务中的角色,不可修改
+    jobID: mindie-ms-test             # 当前MindIE CMotor推理任务在集群中的唯一识别ID，用户可根据实际情况进行配置
     <strong>fault-scheduling: force          # 开启重调度功能</strong>
     <strong>pod-rescheduling: "on"           # 开启Pod级别重调度</strong>
     ring-controller.atlas: ascend-910b

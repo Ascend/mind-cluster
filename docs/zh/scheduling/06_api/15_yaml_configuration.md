@@ -11,11 +11,11 @@
 |apiVersion|字符串 (string)|-|定义对象表示的版本化资源模式。服务器会转换为最新内部值，拒绝不识别的版本。更多信息请参见[Types](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds)。|
 |kind|字符串 (string)|-|表示此对象对应的REST资源类型。值通过端点推断，不可更新，采用驼峰命名。更多信息请参见[Resources](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources)。|
 |metadata|对象 (object)|-|Kubernetes元数据（如命名空间、标签等）。更多信息请参见[Metadata](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata)。|
-|metadata.labels.app|字符串 (string)|-|<p>表明MindIE Motor任务在Ascend Job中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。</p><ul><li>acjob的任务YAML同时包含jobID和app这2个字段时，Ascend Operator组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE、MINDX_SERVER_IP及MINDX_SERVER_DOMAIN，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见[Ascend Operator注入的训练环境变量](./13_environment_variable_description.md#ascend-operator环境变量说明)。</li><li>该参数仅支持在Atlas 800I A3 超节点服务器和Atlas 800I A2 推理服务器上使用。</li></ul>|
-|metadata.labels.mind-cluster/scaling-rule: scaling-rule|字符串 (string)|-|标记扩缩容规则对应的ConfigMap名称。仅支持MindIE Motor推理任务在Atlas 800I A3 超节点服务器和Atlas 800I A2 推理服务器上使用本参数。|
-|metadata.labels.mind-cluster/group-name: group0|字符串 (string)|-|标记扩缩容规则中对应的group名称。仅支持MindIE Motor推理任务在Atlas 800I A3 超节点服务器和Atlas 800I A2 推理服务器上使用本参数。|
+|metadata.labels.app|字符串 (string)|-|<p>表明MindIE CMotor任务在Ascend Job中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。</p><ul><li>acjob的任务YAML同时包含jobID和app这2个字段时，Ascend Operator组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE、MINDX_SERVER_IP及MINDX_SERVER_DOMAIN，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见[Ascend Operator注入的训练环境变量](./13_environment_variable_description.md#ascend-operator环境变量说明)。</li><li>该参数仅支持在Atlas 800I A3 超节点服务器和Atlas 800I A2 推理服务器上使用。</li></ul>|
+|metadata.labels.mind-cluster/scaling-rule: scaling-rule|字符串 (string)|-|标记扩缩容规则对应的ConfigMap名称。仅支持MindIE CMotor推理任务在Atlas 800I A3 超节点服务器和Atlas 800I A2 推理服务器上使用本参数。|
+|metadata.labels.mind-cluster/group-name: group0|字符串 (string)|-|标记扩缩容规则中对应的group名称。仅支持MindIE CMotor推理任务在Atlas 800I A3 超节点服务器和Atlas 800I A2 推理服务器上使用本参数。|
 |metadata.labels.framework|字符串 (string)|-|AI框架类型，取值为pytorch或mindspore。|
-|metadata.labels.jobID|字符串 (string)|-|当前MindIE Motor任务在集群中的唯一识别ID，用户可根据实际情况进行配置。该参数仅支持在Atlas 800I A3 超节点服务器和Atlas 800I A2 推理服务器上使用。|
+|metadata.labels.jobID|字符串 (string)|-|当前MindIE CMotor任务在集群中的唯一识别ID，用户可根据实际情况进行配置。该参数仅支持在Atlas 800I A3 超节点服务器和Atlas 800I A2 推理服务器上使用。|
 |metadata.labels.pod-rescheduling|字符串 (string)|-|<p>Pod级别重调度。表示任务发生故障后，不会删除所有任务Pod，而是将发生故障的Pod进行删除，重新创建新Pod后进行重调度。</p><ul><li>on：开启Pod级别重调度。</li><li>其他值或不使用该字段：关闭Pod级别重调度。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>重调度模式默认为任务级重调度，若需要开启Pod级别重调度，需要新增该字段。</li></ul></div></div>|
 |metadata.labels.process-recover-enable|字符串 (string)|-|<p>Ascend Operator会根据用户配置的recover-strategy自动给任务打上process-recover-enable=on标签，无需用户手动指定。</p><ul><li>on：开启进程级别重调度及进程级在线恢复。<p>进程级别重调度和优雅容错不能同时开启，若同时开启，断点续训将通过Job级别重调度恢复训练。</p></li><li>pause：暂时关闭进程级别重调度及进程级在线恢复。</li><li>off或不使用该字段：关闭进程级别重调度及进程级在线恢复。</li></ul>|
 |metadata.annotations.recover-strategy|字符串 (string)|-|<p>任务可用恢复策略。recover-strategy配置在任务YAML的annotations下，取值为6种策略的随意组合，策略之间由逗号分割。</p><ul><li>retry：进程级在线恢复。</li><li>recover：进程级别重调度。</li><li>recover-in-place：进程级原地恢复。</li><li>elastic-training：弹性训练。</li><li>dump：保存临终遗言。</li><li>exit：退出训练。</li></ul>|
@@ -84,8 +84,8 @@
 |huawei.com/scheduler.softShareDev.aicoreQuota|字符串 (string)|-|请求的AICore百分比，取值范围为[1, 100]。|
 |huawei.com/scheduler.softShareDev.hbmQuota|字符串 (string)|-|<p>请求的高带宽内存量，取值范围为[1, maxHBM]，单位为MB。</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|
 |huawei.com/scheduler.softShareDev.policy|字符串 (string)|-|<p>软切分策略，取值包括：</p><ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|
-|podAffinity|字符串 (string)|-|<p>表示逻辑超节点会往具有更多亲和性Pod的物理超节点调度。</p><p>仅支持MindIE Motor推理任务Atlas 800I A3 超节点服务器上使用本参数。</p>|
-|sp-fit|字符串 (string)|-|<p>超节点调度策略。仅支持MindIE Motor推理任务Atlas 800I A3 超节点服务器上使用本参数。</p><ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul>|
+|podAffinity|字符串 (string)|-|<p>表示逻辑超节点会往具有更多亲和性Pod的物理超节点调度。</p><p>仅支持MindIE CMotor推理任务Atlas 800I A3 超节点服务器上使用本参数。</p>|
+|sp-fit|字符串 (string)|-|<p>超节点调度策略。仅支持MindIE CMotor推理任务Atlas 800I A3 超节点服务器上使用本参数。</p><ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul>|
 |metadata.labels['duo']|字符串 (string)|-|<p>仅支持推理服务器（插Atlas 300I Duo 推理卡）的参数。</p><ul><li>true：使用Atlas300I Duo 推理卡。</li><li>false：不使用Atlas300I Duo 推理卡。</li></ul>|
 |metadata.labels['npu-310-strategy']|字符串 (string)|-|<p>仅支持推理服务器（插Atlas 300I Duo 推理卡）的参数。</p><ul><li>card：按推理卡调度，request请求的昇腾AI处理器个数不超过2，使用同一张Atlas 300I Duo 推理卡上的昇腾AI处理器。</li><li>chip：按昇腾AI处理器调度，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul>|
 |metadata.labels['distributed']|字符串 (string)|-|<p>是否使用分布式推理。仅支持推理服务器（插Atlas 300I Duo 推理卡）的参数。</p><ul><li>true：使用分布式推理。使用chip模式时，必须将任务调度到整张Atlas 300I Duo 推理卡。若任务需要的昇腾AI处理器数量为单数时，使用单个昇腾AI处理器的部分，将优先调度到剩余昇腾AI处理器数量为1的Atlas 300I Duo 推理卡上。</li><li>false：使用非分布式推理。使用chip模式时，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>无论是否为分布式推理，card模式的调度策略不变。</li><li>当distributed为true时，只支持单机多卡；当distributed为false时，只支持多机多卡。</li><li>当distributed为true时，不支持Deployment任务。</li></ul></div></div>|
