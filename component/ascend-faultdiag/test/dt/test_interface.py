@@ -23,6 +23,11 @@ from ascend_fd import parse_knowledge_graph
 from ascend_fd import parse_root_cluster
 from ascend_fd import diag_knowledge_graph
 from ascend_fd import diag_root_cluster
+from ascend_fd.model.cfg import DiagCFG
+from ascend_fd.model.mindie_info import MindIEParseResult
+from ascend_fd.pkg.parse.parser_saver import ParsedDataSaver
+from ascend_fd.pkg.diag.root_cluster.rc_diag_job import RCDiagWorker
+from ascend_fd.pkg.diag.root_cluster.mindie_diag_job import MindIEDiagWorker
 from ascend_fd.utils.regular_table import (
     MINDIE_SOURCE,
     CANN_PLOG_SOURCE,
@@ -1200,6 +1205,72 @@ class TestRootClusterDiagnosis(unittest.TestCase):
         ]
         for field in rc_diag_filed_list:
             self.assertIn(field, rc_diag_result.keys())
+
+    @staticmethod
+    def build_rc_parser(server_name, rank_id, rank_num=2, with_rank_map=True):
+        # build a single pid parse result for the sdk diag input
+        rank_map = {'group_x': {'rank_num': rank_num, 'rank_id': str(rank_id)}} if with_rank_map else {}
+        return {
+            'pid': str(100 + rank_id),
+            'base': {
+                'logic_device_id': str(rank_id),
+                'phy_device_id': str(rank_id),
+                'device_ip': f'10.0.0.{rank_id}',
+                'server_id': server_name,
+                'server_name': server_name,
+                'rank_map': rank_map,
+                'root_list': ['group_x'] if with_rank_map else [],
+                'timeout_param': {},
+            },
+            'error': {
+                'first_error_time': '2024-04-08-02:55:04.903511',
+                'first_error_module': 'HCCL',
+                'timeout_error_events_list': [],
+                'cqe_links': [],
+                'cluster_exception': {},
+            },
+            'show_logs': {'normal': [], 'error': []},
+            'plog_parsed_name': f'plog-parser-{100 + rank_id}-1.log',
+            'start_train_time': '2024-04-08-02:55:04.903511',
+            'end_train_time': '2024-04-08-02:55:04.903511',
+            'start_resumable_training_time': '0000-01-01-00:00:00.000000',
+            'recovery_success_time': '0000-01-01-00:00:00.000000',
+            'lagging_time': '0000-01-01-00:00:00.000000',
+        }
+
+    def test_all_rank_error_multi_workers(self):
+        # all ranks error: detect_workers_devices falls back to all workers instead of being empty
+        rc_parser_list = [
+            {'100': self.build_rc_parser('server-A', 0)},
+            {'100': self.build_rc_parser('server-B', 1)},
+        ]
+        rc_diag_result, err_msg_list = diag_root_cluster(rc_parser_list)
+        self.assertEqual(err_msg_list, [])
+        self.assertEqual(rc_diag_result.get("fault_description", {}).get("code", ""), 101)
+        self.assertEqual(rc_diag_result.get("root_cause_device", []), ["ALL Device"])
+
+    def test_invalid_device_fallback_to_all_workers(self):
+        # no valid rank_map: unknown root device falls back to all workers instead of being empty
+        rc_parser_list = [
+            {'100': self.build_rc_parser('server-A', 0, with_rank_map=False)},
+            {'100': self.build_rc_parser('server-B', 1, with_rank_map=False)},
+        ]
+        rc_diag_result, err_msg_list = diag_root_cluster(rc_parser_list)
+        self.assertEqual(err_msg_list, [])
+        self.assertEqual(rc_diag_result.get("fault_description", {}).get("code", ""), 114)
+
+    def test_sdk_mode_registers_workers_in_device_table(self):
+        # sdk input workers must be registered into device_table.worker_list
+        rc_parser_dict = {
+            'server-A': {'100': self.build_rc_parser('server-A', 0)},
+            'server-B': {'100': self.build_rc_parser('server-B', 1)},
+        }
+        diag_cfg = DiagCFG("", "", "", ParsedDataSaver("", {}))
+        rc_diagnosis = RCDiagWorker(diag_cfg, sdk_input=rc_parser_dict)
+        rc_diagnosis.cfg.parsed_saver.mindie_parse_result = MindIEParseResult()
+        MindIEDiagWorker(rc_diagnosis.cfg).start_job()
+        diag_result = rc_diagnosis.start_job()
+        self.assertEqual(diag_result.detect_workers_devices, {'server-A': [], 'server-B': []})
 
     def tearDown(self):
         pass

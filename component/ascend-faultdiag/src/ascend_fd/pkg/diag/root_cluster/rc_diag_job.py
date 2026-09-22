@@ -109,6 +109,10 @@ class RCDiagWorker:
         """
         if self.sdk_input_rc_parser:
             worker_parser_dict = self.sdk_input_rc_parser
+            # register sdk workers so detect_workers_devices can fall back to all workers
+            for worker_name in worker_parser_dict:
+                if worker_name not in self.device_table.worker_list:
+                    self.device_table.worker_list.append(worker_name)
         else:
             worker_parser_dict = self.assemble_rc_parser()
 
