@@ -2,9 +2,9 @@
 
 ## 故障处理行为说明
 
-断点续训消费故障检测特性提供的故障级别和资源状态，并结合任务YAML中启用的故障处理能力，确定对应的处理行为。公共故障级别、故障码、检测阈值和检测条件请参见[配置故障级别](../../../11_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md)，本节不重复配置。
+断点续训消费故障检测特性提供的故障级别和资源状态，并结合任务YAML中启用的故障处理能力，确定对应的处理行为。公共故障级别、故障码、检测阈值和检测条件请参见[配置故障级别](../../../04_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md)，本节不重复配置。
 
-在线压测属于故障检测与诊断配置，发现故障后可触发断点续训，详细配置请参见[配置在线压测](../../../11_fault_detection_and_diagnosis/03_configuration/07_online_stress_testing.md)。
+在线压测属于故障检测与诊断配置，发现故障后可触发断点续训，详细配置请参见[配置在线压测](../../../04_fault_detection_and_diagnosis/03_configuration/07_online_stress_testing.md)。
 
 ### 故障类型与处理行为
 
@@ -12,7 +12,7 @@
 
 | 故障类型 | 故障输入 | 关键任务YAML配置 | 处理行为 |
 | ---- | ---- | ---- | ---- |
-| 硬件故障 | 故障检测特性上报的非亚健康硬件故障。具体故障级别及含义请参见[故障级别及处理说明](../../../11_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md#table103716651410)。 | `fault-scheduling`、`recover-strategy`、`pod-rescheduling` | 系统从任务已配置且当前故障支持的恢复措施中决策处理措施。配置了适用的进程级恢复能力时，优先执行进程级恢复；仅开启Pod级别重调度时，优先执行Pod级别重调度；未开启细粒度恢复能力时，执行Job级别重调度。 |
+| 硬件故障 | 故障检测特性上报的非亚健康硬件故障。具体故障级别及含义请参见[故障级别及处理说明](../../../04_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md#table103716651410)。 | `fault-scheduling`、`recover-strategy`、`pod-rescheduling` | 系统从任务已配置且当前故障支持的恢复措施中决策处理措施。配置了适用的进程级恢复能力时，优先执行进程级恢复；仅开启Pod级别重调度时，优先执行Pod级别重调度；未开启细粒度恢复能力时，执行Job级别重调度。 |
 | 硬件亚健康 | 故障级别为`SubHealthFault`。 | `subHealthyStrategy` | 根据`subHealthyStrategy`取值执行继续训练、优雅退出后重调度、直接退出后重调度或亚健康热切。详细说明请参见[配置亚健康故障处理策略](#配置亚健康故障处理策略)。 |
 | 软件故障 | 集群调度组件未检测到对应硬件故障，但训练进程异常导致容器退出，Pod状态变为`Failed`。 | `fault-retry-times`以及任务已配置的重调度粒度 | 当剩余无条件重试次数大于0时执行任务重调度。开启Pod级别重调度时，优先重调度故障Pod；否则执行Job级别重调度。 |
 
@@ -80,8 +80,8 @@ metadata:
 
 ### 配置关联故障和任务卡死后的训练行为
 
-- 关联故障的匹配条件、关联故障码和时间窗配置请参见[配置关联故障](../../../11_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#关联故障)。匹配成功后的任务处理策略取值为：`Separate`表示任务隔离，`SubHealth`表示任务亚健康。
-- 任务卡死的检测开关、指标阈值和故障级别配置请参见[配置任务卡死故障检测](../../../11_fault_detection_and_diagnosis/03_configuration/05_task_hang_detection.md#zh-cn_topic_0000002479387566_section_custom_hangfaultlevel)。检测完成后，断点续训根据任务卡死故障级别及任务YAML配置确定对应的处理行为，详细请参见[故障类型与处理行为](#故障类型与处理行为)。
+- 关联故障的匹配条件、关联故障码和时间窗配置请参见[配置关联故障](../../../04_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#关联故障)。匹配成功后的任务处理策略取值为：`Separate`表示任务隔离，`SubHealth`表示任务亚健康。
+- 任务卡死的检测开关、指标阈值和故障级别配置请参见[配置任务卡死故障检测](../../../04_fault_detection_and_diagnosis/03_configuration/05_task_hang_detection.md#zh-cn_topic_0000002479387566_section_custom_hangfaultlevel)。检测完成后，断点续训根据任务卡死故障级别及任务YAML配置确定对应的处理行为，详细请参见[故障类型与处理行为](#故障类型与处理行为)。
 
 ## 配置重调度恢复
 

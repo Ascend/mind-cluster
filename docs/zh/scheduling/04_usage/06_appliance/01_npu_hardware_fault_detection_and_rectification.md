@@ -236,7 +236,7 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
 
 ### 普通容器恢复<a name="普通容器恢复"></a>
 
-未配置任务标识`huawei.com/job.id`，或`huawei.com/job.replica`配置为1的容器为普通容器。芯片故障后，本节点的Container Manager按照启动参数`-ctrStrategy`配置的策略以及普通容器label`huawei.com/job.enableRecover`配置的恢复开关，直接停止并恢复本节点上挂载故障芯片的普通容器。普通容器启停过程中的状态变化参见本文档[容器恢复](#ZH-CN_TOPIC_0000002486578214)。容器label的详细说明请参见[Container Manager任务信息](../../06_api/17_container-manager.md#section_cm_task_info)。
+未配置任务标识`huawei.com/job.id`，或`huawei.com/job.replica`配置为1的容器为普通容器。芯片故障后，本节点的Container Manager按照启动参数`-ctrStrategy`配置的策略以及普通容器label`huawei.com/job.enableRecover`配置的恢复开关，直接停止并恢复本节点上挂载故障芯片的普通容器。普通容器启停过程中的状态变化参见本文档[容器恢复](#ZH-CN_TOPIC_0000002486578214)。容器label的详细说明请参见[Container Manager任务信息](../../06_api/18_container-manager.md#section_cm_task_info)。
 
 ### 分布式任务容器恢复<a name="分布式任务恢复"></a>
 
@@ -247,7 +247,7 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
 - 集群中部署了Container Manager组件的节点被分为Leader节点和普通节点。Leader节点维护集群内所有节点的分布式任务容器信息，普通节点定期向Leader节点上报本节点的分布式任务容器信息（数据同步）。
 - 启用分布式协调需配置启动参数`-leaderAddrs`。Leader节点通过启动参数`-leaderIp`、`-leaderPort`启动gRPC服务。相关启动参数说明请参见[Container Manager启动参数](../../05_developer_guide/00_installation_deployment/00_manual_installation/11_container-manager.md#参数说明)。
 - 普通节点与每个非本机Leader节点之间维护常驻的gRPC广播流，连接断开后自动重连。集群最多可配置2个Leader节点，任一Leader节点故障后，普通节点可自动切换到其他Leader节点继续协调。
-- 容器可通过容器label标识其所属的分布式任务：`huawei.com/job.id`（任务标识）、`huawei.com/job.replica`（任务副本数）、`huawei.com/job.enableRecover`（是否参与恢复），各label的详细说明请参见[Container Manager任务信息](../../06_api/17_container-manager.md#section_cm_task_info)。
+- 容器可通过容器label标识其所属的分布式任务：`huawei.com/job.id`（任务标识）、`huawei.com/job.replica`（任务副本数）、`huawei.com/job.enableRecover`（是否参与恢复），各label的详细说明请参见[Container Manager任务信息](../../06_api/18_container-manager.md#section_cm_task_info)。
 
 **分布式任务容器启动方式**
 
@@ -295,4 +295,4 @@ ctr run -t --env ASCEND_VISIBLE_DEVICES=0 \
 >- 分布式协调依赖各节点之间的网络连通性，请确保各节点可以访问Leader节点的gRPC服务端口。
 >- 当节点为Leader节点（`-leaderIp`不为空）且`-leaderAddrs`中配置了本节点的监听地址时，该节点不会通过gRPC连接自身，协调请求使用本地调用方式处理。
 >- 分布式任务容器启停过程中涉及的状态变化与单机场景一致，请参见本文档[容器恢复](#ZH-CN_TOPIC_0000002486578214)。
->- 分布式协调使用的gRPC接口说明请参见[Container Manager](../../06_api/17_container-manager.md)。
+>- 分布式协调使用的gRPC接口说明请参见[Container Manager](../../06_api/18_container-manager.md)。

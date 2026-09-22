@@ -1,7 +1,7 @@
 # 使用前必读<a name="ZH-CN_TOPIC_0000002511346371"></a>
 
 >[!NOTE]
->MindIE CMotor配合Ascend Operator使用的方式已经日落，本章节将于2027年9月30日的版本删除，当前推荐MindIE PyMotor配合Infer Operator使用的方式，参考[基于MindIE PyMotor部署Infer Operator推理任务](../../04_usage/09_infer_operator_best_practice/02_deploying_infer_operator_inference_job_with_mindie_pymotor.md)。
+>MindIE CMotor配合Ascend Operator使用的方式已经日落，本章节将于2027年9月30日的版本删除，当前推荐MindIE PyMotor配合Infer Operator使用的方式，参考[基于MindIE PyMotor部署Infer Operator推理任务](../../04_usage/10_infer_operator_best_practice/02_deploying_infer_operator_inference_job_with_mindie_pymotor.md)。
 
 MindCluster集群调度组件支持用户通过生成acjob推理任务的方式进行MindIE CMotor的容器化部署、故障重调度和弹性扩缩容。
 

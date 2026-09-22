@@ -72,7 +72,7 @@
 |生成中断|推理过程中副本故障导致生成中断|请求失败或副本判死|基于持久化进度续推缺失尾部token（token续推）|否|
 
 >[!NOTE]
->本特性仅覆盖推理实例故障。训练侧Pod、节点/芯片级故障不属于本特性处理范围，由MindCluster断点续训与重调度体系处理，详细说明请参见[故障处理](../04_fault_recovery/01_resumable_training/01_solutions_principles/01_fault_handling.md)。
+>本特性仅覆盖推理实例故障。训练侧Pod、节点/芯片级故障不属于本特性处理范围，由MindCluster断点续训与重调度体系处理，详细说明请参见[故障处理](../05_fault_recovery/01_resumable_training/01_solutions_principles/01_fault_handling.md)。
 
 **降级与边界说明**
 

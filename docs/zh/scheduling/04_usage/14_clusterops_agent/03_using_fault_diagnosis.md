@@ -109,7 +109,7 @@ Tip: to output the full diagnosis JSON, add --json after the command
 >
 > - 同一任务正在诊断中再次执行时，会提示`job=job-x is being diagnosed (started at HH:MM:SS), please do not run it again`，不会重复采集。
 > - 若任务不存在（任务CR已删除且relcache中无该任务pod记录），会直接返回`Training/inference task not found: job=job-x in ns=training`并终止诊断；任务CR已删除但relcache中仍有该任务pod记录（删除TTL内，日志仍保留在节点/共享盘上），仍会继续诊断。
-> - 诊断结果缓存的详细说明请参见[诊断结果缓存](../../06_api/18_clusterops_agent.md#诊断结果缓存)章节。
+> - 诊断结果缓存的详细说明请参见[诊断结果缓存](../../06_api/20_clusterops_agent.md#诊断结果缓存)章节。
 
 ## 数据落盘与空间回收<a name="sectionfaultdiagnosisstorage"></a>
 

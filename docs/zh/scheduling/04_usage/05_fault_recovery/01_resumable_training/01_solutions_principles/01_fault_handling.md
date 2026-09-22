@@ -4,7 +4,7 @@
 
 在故障检测完成后，针对每一种故障模式，断点续训通过故障处理或故障容错来恢复训练业务。断点续训特性根据恢复粒度由粗到细提供Job级别重调度、Pod级别重调度、进程级别重调度、弹性训练、进程级在线恢复、算子级在线恢复多层故障处理系统。用户可根据实际情况选择使用对应的子特性。
 
-故障检测的详细原理和公共故障级别定义请参见[故障检测特性指南](../../../11_fault_detection_and_diagnosis/01_working_principle.md)。
+故障检测的详细原理和公共故障级别定义请参见[故障检测特性指南](../../../04_fault_detection_and_diagnosis/01_working_principle.md)。
 
 ## 故障处理策略选择
 
@@ -60,7 +60,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 ### 故障级别与训练行为
 
-故障级别及其对应的重调度处理、优雅容错处理说明，请参见[故障级别及处理说明](../../../11_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md#table103716651410)。
+故障级别及其对应的重调度处理、优雅容错处理说明，请参见[故障级别及处理说明](../../../04_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md#table103716651410)。
 
 ### 亚健康故障处理策略
 

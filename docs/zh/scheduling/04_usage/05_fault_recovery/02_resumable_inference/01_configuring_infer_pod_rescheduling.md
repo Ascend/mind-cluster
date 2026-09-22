@@ -1,12 +1,12 @@
 # 配置推理任务Pod级重调度
 
-当Infer Operator推理任务中出现节点、芯片或其他故障时，MindCluster集群调度组件可以对故障资源进行隔离并自动进行重调度。如需了解故障的检测原理，请参见[故障检测](../../11_fault_detection_and_diagnosis/01_working_principle.md#故障检测整体架构)章节。
+当Infer Operator推理任务中出现节点、芯片或其他故障时，MindCluster集群调度组件可以对故障资源进行隔离并自动进行重调度。如需了解故障的检测原理，请参见[故障检测](../../04_fault_detection_and_diagnosis/01_working_principle.md#故障检测整体架构)章节。
 
-与实例级重调度（重调度故障Pod对应的整个实例）不同，Pod级重调度在故障发生时仅删除并重新调度发生故障的Pod，实例内其他正常的Pod不受影响。Pod级重调度适用于业务面故障（Pod内进程非零退出）场景，硬件故障时不删除故障Pod，允许业务继续使用故障Pod内剩余可用的NPU卡运行。实例级重调度的配置方式请参见[配置推理任务实例级重调度](../../09_infer_operator_best_practice/04_configuring_rescheduling_inference_job.md)。
+与实例级重调度（重调度故障Pod对应的整个实例）不同，Pod级重调度在故障发生时仅删除并重新调度发生故障的Pod，实例内其他正常的Pod不受影响。Pod级重调度适用于业务面故障（Pod内进程非零退出）场景，硬件故障时不删除故障Pod，允许业务继续使用故障Pod内剩余可用的NPU卡运行。实例级重调度的配置方式请参见[配置推理任务实例级重调度](../../10_infer_operator_best_practice/04_configuring_rescheduling_inference_job.md)。
 
 ## 前提条件
 
-已完成Infer Operator服务部署，详细请参见[部署Infer Operator任务](../../09_infer_operator_best_practice/01_deploying_infer_operator_inference_job_with_vllm_proxy.md)。
+已完成Infer Operator服务部署，详细请参见[部署Infer Operator任务](../../10_infer_operator_best_practice/01_deploying_infer_operator_inference_job_with_vllm_proxy.md)。
 
 ## 重调度原理
 
@@ -20,7 +20,7 @@ Infer Operator在部署不同角色的实例时，会创建Deployment/StatefulSe
 
 ## 配置Pod级重调度
 
-Infer Operator任务配置Pod级重调度示例如下，需修改以下加粗部分配置。相关配置项说明请参见[YAML参数说明](../../09_infer_operator_best_practice/01_deploying_infer_operator_inference_job_with_vllm_proxy.md#YAML参数说明)。
+Infer Operator任务配置Pod级重调度示例如下，需修改以下加粗部分配置。相关配置项说明请参见[YAML参数说明](../../10_infer_operator_best_practice/01_deploying_infer_operator_inference_job_with_vllm_proxy.md#YAML参数说明)。
 
 <pre codetype="yaml">
 apiVersion: mindcluster.huawei.com/v1

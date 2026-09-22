@@ -2,7 +2,7 @@
 
 基础调度包含如下特性：
 
-- 训练任务：[整卡调度](../../01_introduction/02_feature_description.md#整卡调度)、[多级调度](../../01_introduction/02_feature_description.md#多级调度)、[重调度](../../01_introduction/02_feature_description.md#重调度)。若使用断点续训请参见[断点续训](../04_fault_recovery/01_resumable_training/00_feature_description.md)。
+- 训练任务：[整卡调度](../../01_introduction/02_feature_description.md#整卡调度)、[多级调度](../../01_introduction/02_feature_description.md#多级调度)、[重调度](../../01_introduction/02_feature_description.md#重调度)。若使用断点续训请参见[断点续训](../05_fault_recovery/01_resumable_training/00_feature_description.md)。
 - 推理任务：[整卡调度](../../01_introduction/02_feature_description.md#整卡调度)、[重调度](../../01_introduction/02_feature_description.md#重调度)。
 
     不同的特性依赖不同的组件，详细介绍请参见[基础调度](../../01_introduction/02_feature_description.md#基础调度)章节。

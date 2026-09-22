@@ -16,7 +16,7 @@
 
 |功能名称|说明|配置步骤|
 |--|--|--|
-|故障检测（前置依赖）|<p>断点续训依赖故障检测特性提供集群和训练业务的故障事件、故障级别和资源状态。</p><p>详细功能及原理介绍请参见[故障检测特性指南](../../11_fault_detection_and_diagnosis/00_feature_description.md)。</p>|[配置故障检测](../../11_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md)|
+|故障检测（前置依赖）|<p>断点续训依赖故障检测特性提供集群和训练业务的故障事件、故障级别和资源状态。</p><p>详细功能及原理介绍请参见[故障检测特性指南](../../04_fault_detection_and_diagnosis/00_feature_description.md)。</p>|[配置故障检测](../../04_fault_detection_and_diagnosis/03_configuration/01_fault_classification.md)|
 |故障处理|<p>断点续训具有故障处理功能，出现故障后不需要人工介入就可自动隔离故障设备。</p><p>详细功能及原理介绍请参见[故障处理](./01_solutions_principles/01_fault_handling.md)。</p>|[配置故障处理](./03_configuration/01_configuring_fault_handling_policies.md)|
 |恢复加速|<p>断点续训具有加速训练恢复的功能，用户可自定义加速的策略，降低训练拉起时间。</p><p>详细功能及原理介绍请参见[恢复加速](./01_solutions_principles/02_recovery_acceleration.md)。</p>|[配置恢复加速](./03_configuration/02_configuring_training_recovery.md)|
 

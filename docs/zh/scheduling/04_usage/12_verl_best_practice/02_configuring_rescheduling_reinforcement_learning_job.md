@@ -3,7 +3,7 @@
 
 当verl强化学习任务中出现节点、芯片或其他故障时，MindCluster集群调度组件可以对故障资源进行隔离并自动进行重调度。该功能需要verl框架侧配合，在故障发生时完成资源清理，并在新资源重调度后，继续执行强化学习任务。
 
-本示例通过verl-ascend-recipe中的fault_recover实现上述功能，该recipe面向RL训推同步共卡部署场景，即训练和推理角色部署在相同NPU资源上，RL算法仅支持GRPO。fault_recover在感知到软件或硬件故障后能够自动进行故障恢复并基于持久化数据续训，recipe详情请参见[verl-ascend-recipe/fault_recover](https://github.com/verl-project/verl-ascend-recipe/tree/main/fault_recover)。如需了解故障的检测原理，请参见[故障检测](../11_fault_detection_and_diagnosis/01_working_principle.md)章节。
+本示例通过verl-ascend-recipe中的fault_recover实现上述功能，该recipe面向RL训推同步共卡部署场景，即训练和推理角色部署在相同NPU资源上，RL算法仅支持GRPO。fault_recover在感知到软件或硬件故障后能够自动进行故障恢复并基于持久化数据续训，recipe详情请参见[verl-ascend-recipe/fault_recover](https://github.com/verl-project/verl-ascend-recipe/tree/main/fault_recover)。如需了解故障的检测原理，请参见[故障检测](../04_fault_detection_and_diagnosis/01_working_principle.md)章节。
 
 ## 前提条件<a name="zh-cn_topic_0000002356060805_section19119249163119"></a>
 

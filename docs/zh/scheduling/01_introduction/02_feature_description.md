@@ -53,12 +53,12 @@ DPU资源监测所需组件：
 
 **所需组件<a name="section_fault_detection_components"></a>**
 
-不同故障类型所需组件不同，详细说明请参见[故障检测特性指南](../04_usage/11_fault_detection_and_diagnosis/00_feature_description.md)。
+不同故障类型所需组件不同，详细说明请参见[故障检测特性指南](../04_usage/04_fault_detection_and_diagnosis/00_feature_description.md)。
 
 **使用说明<a name="section_fault_detection_usage"></a>**
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-2. 特性使用指导请参见[故障检测特性指南](../04_usage/11_fault_detection_and_diagnosis/00_feature_description.md)章节进行操作。
+2. 特性使用指导请参见[故障检测特性指南](../04_usage/04_fault_detection_and_diagnosis/00_feature_description.md)章节进行操作。
 
 ## 虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855"></a>
 
@@ -118,7 +118,7 @@ DPU资源监测所需组件：
 
 支持用户运行训练或者推理任务时，将训练或推理任务调度到节点的整张NPU卡上，独占整张卡执行训练或者推理任务。整卡调度特性借助Kubernetes（以下简称K8s）支持的基础调度功能，配合Volcano或者其他调度器，根据NPU设备物理拓扑，选择合适的NPU设备，最大化发挥NPU性能，实现训练或者推理任务的NPU卡的调度和其他资源的最佳分配。
 
-芯片间的网络拓扑越复杂，调度逻辑越复杂，详细可以参见[亲和性调度](../04_usage/03_basic_scheduling/01_affinity_scheduling/00_solution_description.md)。
+芯片间的网络拓扑越复杂，调度逻辑越复杂，详细信息可参见[亲和性调度](../04_usage/03_basic_scheduling/01_affinity_scheduling/00_solution_description.md)。
 
 支持Preempt（抢占）和Reclaim Action（回收）操作。Preempt用于同一个队列中任务之间的资源抢占，当高优先级任务需要资源时，可以抢占低优先级任务的资源；Reclaim用于不同队列之间的资源回收，当某个队列中的任务需要资源且该队列资源未超用时，可以从其他可回收队列中回收资源。两者均可实现资源的动态调整和优化分配。关于Preempt和Reclaim Action的详细说明，请参见[Volcano官方文档](https://volcano.sh/zh/docs/Scheduler/Actions)。
 
@@ -138,7 +138,7 @@ DPU资源监测所需组件：
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[整卡调度](../04_usage/03_basic_scheduling/03_full_npu_scheduling.md)章节进行操作。
-3. Preempt和Reclaim Action的使用样例请参见[潮汐调度最佳实践](../04_usage/10_tidal_scheduling/00_before_you_start.md)章节进行操作。
+3. Preempt和Reclaim Action的使用样例请参见[潮汐调度最佳实践](../04_usage/11_tidal_scheduling/00_before_you_start.md)章节进行操作。
 4. DRA机制调度的使用样例请参见[DRA调度最佳实践](../04_usage/13_ascend_dynamic_resource_allocation_best_practice/00_before_you_start.md)章节进行操作。
 
 ### 多级调度<a name="ZH-CN_TOPIC_0000002511346873"></a>
@@ -178,7 +178,7 @@ DPU资源监测所需组件：
 **使用说明<a name="section74221327111220"></a>**
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-2. 特性使用指导请参见[芯片故障恢复](../04_usage/04_fault_recovery/00_chip_fault_recovery.md)章节进行操作。
+2. 特性使用指导请参见[芯片故障恢复](../04_usage/05_fault_recovery/00_chip_fault_recovery.md)章节进行操作。
 
 ### 重调度<a name="ZH-CN_TOPIC_0000002511346875"></a>
 
@@ -207,7 +207,7 @@ DPU资源监测所需组件：
 
 当训练任务出现故障时，断点续训依赖故障检测特性提供的故障事件、故障级别和资源状态，将任务重调度到健康设备上继续训练或者对故障芯片进行自动恢复。
 
-- **故障检测（前置依赖）**：通过故障检测特性获取任务故障，详细说明请参见[故障检测特性指南](../04_usage/11_fault_detection_and_diagnosis/00_feature_description.md)。
+- **故障检测（前置依赖）**：通过故障检测特性获取任务故障，详细说明请参见[故障检测特性指南](../04_usage/04_fault_detection_and_diagnosis/00_feature_description.md)。
 - **故障处理**：故障发生后，根据上报的故障信息进行故障处理。分为以下两种模式。
   - **重调度模式**：故障发生后将任务重调度到其他健康设备上继续运行。
   - **优雅容错模式**：当训练时芯片出现故障后，系统将尝试对故障芯片进行自动恢复。
@@ -229,8 +229,8 @@ DPU资源监测所需组件：
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-2. 特性使用指导请参见[断点续训](../04_usage/04_fault_recovery/01_resumable_training/00_feature_description.md)章节进行操作。
-3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/04_fault_recovery/01_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#制作镜像)章节。
+2. 特性使用指导请参见[断点续训](../04_usage/05_fault_recovery/01_resumable_training/00_feature_description.md)章节进行操作。
+3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/05_fault_recovery/01_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#制作镜像)章节。
 4. MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](../07_references/01_optimizing_saving_and_loading_checkpoints/01_product_description.md)章节。
 5. MindIO TFT的详细介绍及安装步骤请参见[故障恢复加速](../07_references/00_fault_recovery_acceleration/01_product_description.md)。
 
@@ -251,7 +251,7 @@ Container Manager
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[一体机特性指南](../04_usage/05_appliance/00_before_you_start.md)章节进行操作。
+2. 特性使用指导请参见[一体机特性指南](../04_usage/06_appliance/00_before_you_start.md)章节进行操作。
 
 ## 容器快照<a name="ZH-CN_TOPIC_0000002511346881"></a>
 
@@ -271,7 +271,7 @@ Container Manager
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-2. 特性使用指导请参见[容器快照部署及使用](../04_usage/09_infer_operator_best_practice/06_container_snapshot_usage.md)章节进行操作。
+2. 特性使用指导请参见[容器快照部署及使用](../04_usage/10_infer_operator_best_practice/06_container_snapshot_usage.md)章节进行操作。
 
 ## 推理高可用<a name="ZH-CN_TOPIC_0000002511346885"></a>
 
@@ -295,10 +295,10 @@ Container Manager
 **使用说明<a name="section3245612501586"></a>**
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-2. Infer Operator推理任务最佳实践请参见[Infer Operator推理任务最佳实践](../04_usage/09_infer_operator_best_practice/00_before_you_start.md)章节进行操作。
-3. MindIE CMotor推理任务最佳实践（已日落）请参见[MindIE CMotor推理任务最佳实践（已日落）](../04_usage/06_mindie_motor_best_practice/00_before_you_start.md)章节进行操作。
-4. SGLang推理任务最佳实践请参见[SGLang推理任务最佳实践](../04_usage/07_sglang_best_practice/00_before_you_start.md)章节进行操作。
-5. vLLM推理任务最佳实践请参见[vLLM推理任务最佳实践](../04_usage/08_vllm_best_practice/00_before_you_start.md)章节进行操作。
+2. Infer Operator推理任务最佳实践请参见[Infer Operator推理任务最佳实践](../04_usage/10_infer_operator_best_practice/00_before_you_start.md)章节进行操作。
+3. MindIE CMotor推理任务最佳实践（已日落）请参见[MindIE CMotor推理任务最佳实践（已日落）](../04_usage/07_mindie_motor_best_practice/00_before_you_start.md)章节进行操作。
+4. SGLang推理任务最佳实践请参见[SGLang推理任务最佳实践](../04_usage/08_sglang_best_practice/00_before_you_start.md)章节进行操作。
+5. vLLM推理任务最佳实践请参见[vLLM推理任务最佳实践](../04_usage/09_vllm_best_practice/00_before_you_start.md)章节进行操作。
 
 ## 集群运维Agent<a name="ZH-CN_TOPIC_0000002524312690"></a>
 
