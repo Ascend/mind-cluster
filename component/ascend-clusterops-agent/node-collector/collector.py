@@ -134,6 +134,7 @@ AGENT_ADDR = os.environ.get("AGENT_ADDR", "agent-core.mindx-dl:9710")
 UPLOAD_CHUNK = 64 * 1024
 UPLOAD_TIMEOUT = float(os.environ.get("UPLOAD_TIMEOUT", "600"))
 UPLOAD_RETRIES = int(os.environ.get("UPLOAD_RETRIES", "3"))
+PARSE_TIMEOUT = 600
 
 _manifest: dict | None = None
 
@@ -695,10 +696,14 @@ class CollectorClient:
 
         cmd = [self.ascend_fd, "parse", "-i", str(collect_dir), "-o", str(out_dir)]
         try:
-            subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=1800)
+            proc = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=PARSE_TIMEOUT)
         except subprocess.CalledProcessError as e:
             logger.error("ascend-fd parse failed: node=%s err=%s", node, (e.stderr or e.stdout)[-2000:])
             raise _CollectError(f"ascend-fd parse failed: {(e.stderr or e.stdout)[-2000:]}") from e
+        if proc.stdout:
+            logger.info("ascend-fd parse stdout: node=%s\n%s", node, proc.stdout)
+        if proc.stderr:
+            logger.info("ascend-fd parse stderr: node=%s\n%s", node, proc.stderr)
         logger.info("collect + parse completed: node=%s", node)
 
         buf = io.BytesIO()
