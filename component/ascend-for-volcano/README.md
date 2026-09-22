@@ -1,320 +1,178 @@
-# NPU亲和性调度算法设计说明与开发指导
+# Ascend for Volcano
 
-<h2 id="Ascend-volcano-plugin介绍文档">Ascend-volcano-plugin介绍</h2>
+## 目录
 
-基于开源Volcano调度的插件机制，增加昇腾处理器的亲和性调度，虚拟设备调度等特性，最大化发挥昇腾处理器计算性能。
+- [简介](#简介)
+- [软件架构](#软件架构)
+  - [上下游依赖](#上下游依赖)
+  - [组件架构](#组件架构)
+- [亲和性调度方案介绍](#亲和性调度方案介绍)
+- [编译指南](#编译指南)
+  - [编译前准备](#编译前准备)
+  - [编译Volcano](#编译volcano)
+- [安装部署](#安装部署)
+- [使用指南](#使用指南)
+- [说明](#说明)
 
-<h2 id="亲和性策略说明文档">亲和性策略说明（以昇腾910 AI处理器为例）</h2>
+## 简介
 
-昇腾910 AI处理器是华为研发的一款高性能AI处理器。其内部的处理器之间采用HCCS方式连接。每台物理设备具备8颗处理器，两个HCCS。每个HCCS存在4颗处理器，同一HCCS内处理器可做数据交换，不同HCCS内处理器不能通信，即同一Pod分配的昇腾910 AI处理器（若小于等于4）必须在同一个HCCS环内，否则任务运行失败。昇腾910 AI处理器的互联拓扑图如[图1](#fig997414281914)所示。
+- Ascend for Volcano（Ascend-volcano-plugin）是基于开源Volcano调度框架的插件机制开发的昇腾NPU调度插件，为集群增加昇腾AI处理器的亲和性调度、虚拟设备调度、故障重调度等特性，最大化发挥昇腾AI处理器的计算性能。
+- 主要功能：
+  - 基于昇腾AI处理器的互联拓扑，实现芯片亲和性调度（HCCS亲和性、整卡调度、超节点调度、多级调度等）。
+  - 支持静态硬切分调度、动态硬切分调度与软切分调度。
+  - 感知硬件故障与软件故障信息，实现任务重调度。
 
-**图 1** Ascend 910 AI Processor  interconnection topology<a name="fig997414281914"></a>
-![](doc/figures/Ascend-910-AI-Processor-interconnection-topology.png "Ascend-910-AI-Processor-interconnection-topology")
+## 软件架构
 
->![](doc/figures/icon-note.gif) **说明：**
->图中A0\~A7为昇腾910 AI处理器。
+### 上下游依赖
 
-## 亲和性策略说明<a name="section1024522919366"></a>
+![](../../docs/zh/figures/scheduling/组件上下游依赖-2.png "组件上下游依赖")
 
-针对昇腾910 AI处理器的特征和资源利用的规则，制定昇腾910 AI处理器的亲和性策略如[表1](#table644103781119)所示。
+1. 从K8s的Node对象上获取芯片总数，从Pod对象上获取已使用芯片信息，从ClusterD中获取故障芯片信息，三者结合得到集群可用芯片信息。
+2. 接收任务配置，根据集群资源信息，选择最优资源调度。
+3. 向Ascend Device Plugin或者Ascend Docker Runtime传递具体的资源选中信息，完成设备挂载。
 
-**表 1** 昇腾910 AI处理器亲和性策略说明
+### 组件架构
 
-<a name="table644103781119"></a>
-<table><thead align="left"><tr id="row12441737121113"><th class="cellrowborder" valign="top" width="10.35103510351035%" id="mcps1.2.4.1.1"><p id="p583914346125"><a name="p583914346125"></a><a name="p583914346125"></a>优先级</p>
-</th>
-<th class="cellrowborder" valign="top" width="20.072007200720073%" id="mcps1.2.4.1.2"><p id="p9839163421215"><a name="p9839163421215"></a><a name="p9839163421215"></a>策略名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="69.57695769576956%" id="mcps1.2.4.1.3"><p id="p1183973414121"><a name="p1183973414121"></a><a name="p1183973414121"></a>详细内容</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row1544143719118"><td class="cellrowborder" valign="top" width="10.35103510351035%" headers="mcps1.2.4.1.1 "><p id="p65701144151214"><a name="p65701144151214"></a><a name="p65701144151214"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.072007200720073%" headers="mcps1.2.4.1.2 "><p id="p15708447120"><a name="p15708447120"></a><a name="p15708447120"></a>HCCS亲和性调度原则</p>
-</td>
-<td class="cellrowborder" valign="top" width="69.57695769576956%" headers="mcps1.2.4.1.3 "><a name="ul358513316613"></a><a name="ul358513316613"></a><ul id="ul358513316613"><li>如果申请<span id="ph102514522379"><a name="ph102514522379"></a><a name="ph102514522379"></a>昇腾910 AI处理器</span>个数为1，则选择同一HCCS，剩余可用的<span id="ph3545191818389"><a name="ph3545191818389"></a><a name="ph3545191818389"></a>昇腾910 AI处理器</span>数量为1个的最佳，其次是剩余3个的为次佳，然后是剩余2个，最后是剩余4个。</li><li>如果申请<span id="ph12846122720397"><a name="ph12846122720397"></a><a name="ph12846122720397"></a>昇腾910 AI处理器</span>个数为2，则选择同一HCCS剩余可用的<span id="ph673153064114"><a name="ph673153064114"></a><a name="ph673153064114"></a>昇腾910 AI处理器</span>数量2个的为最佳，其次是剩余4个，最后是剩余3个。</li><li>如果申请<span id="ph107551285403"><a name="ph107551285403"></a><a name="ph107551285403"></a>昇腾910 AI处理器</span>个数为4，则必须选择同一HCCS剩余可用的<span id="ph101010328402"><a name="ph101010328402"></a><a name="ph101010328402"></a>昇腾910 AI处理器</span>数量为4个。</li><li>如果申请<span id="ph7220141118409"><a name="ph7220141118409"></a><a name="ph7220141118409"></a>昇腾910 AI处理器</span>个数为8，则申请节点所有8个<span id="ph18561524104212"><a name="ph18561524104212"></a><a name="ph18561524104212"></a>昇腾910 AI处理器</span>。</li></ul>
-</td>
-</tr>
-<tr id="row134514378111"><td class="cellrowborder" valign="top" width="10.35103510351035%" headers="mcps1.2.4.1.1 "><p id="p95701244191213"><a name="p95701244191213"></a><a name="p95701244191213"></a>2</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.072007200720073%" headers="mcps1.2.4.1.2 "><p id="p25701844191218"><a name="p25701844191218"></a><a name="p25701844191218"></a>优先占满调度原则</p>
-</td>
-<td class="cellrowborder" valign="top" width="69.57695769576956%" headers="mcps1.2.4.1.3 "><p id="p257014461213"><a name="p257014461213"></a><a name="p257014461213"></a>优先分配已经分配过<span id="ph674816913476"><a name="ph674816913476"></a><a name="ph674816913476"></a>昇腾910 AI处理器</span>的AI服务器，减少碎片。</p>
-<a name="ul492757985"></a><a name="ul492757985"></a><ul id="ul492757985"><li>如果申请1个<span id="ph5472151794717"><a name="ph5472151794717"></a><a name="ph5472151794717"></a>昇腾910 AI处理器</span>，优先申请capacity为8，且HCCS剩余可用处理器数量为1的节点，然后是剩余可用数量为3个，2个，4个。</li><li>如果申请2个<span id="ph113619244488"><a name="ph113619244488"></a><a name="ph113619244488"></a>昇腾910 AI处理器</span>，优先申请capacity为8，且HCCS剩余可用处理器数量为2的节点，然后是剩余可用数量为4个，3个。</li><li>如果申请4个<span id="ph1227621912495"><a name="ph1227621912495"></a><a name="ph1227621912495"></a>昇腾910 AI处理器</span>，优先申请capacity为8，且剩余可用处理器数量为4的节点。</li><li>如果申请<span id="ph8889713185018"><a name="ph8889713185018"></a><a name="ph8889713185018"></a>昇腾910 AI处理器</span>为8的正整数倍数，申请capacity为8，且已使用0个处理器的节点。</li></ul>
-</td>
-</tr>
-<tr id="row645123716115"><td class="cellrowborder" valign="top" width="10.35103510351035%" headers="mcps1.2.4.1.1 "><p id="p1157004414125"><a name="p1157004414125"></a><a name="p1157004414125"></a>3</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.072007200720073%" headers="mcps1.2.4.1.2 "><p id="p5570154418121"><a name="p5570154418121"></a><a name="p5570154418121"></a>剩余偶数优先原则</p>
-</td>
-<td class="cellrowborder" valign="top" width="69.57695769576956%" headers="mcps1.2.4.1.3 "><p id="p175701445129"><a name="p175701445129"></a><a name="p175701445129"></a>优先选择满足1~3条件的HCCS，然后选择剩余处理器数量为偶数的HCCS。</p>
-</td>
-</tr>
-</tbody>
-</table>
+Ascend for Volcano以插件方式集成在Volcano调度器中，模块层级如下：
 
-## 资源申请约束<a name="section1103513532"></a>
+```mermaid
+flowchart TB
+    VC(["<b>Volcano 调度器</b><br/>加载 volcano-npu_*.so"])
+    K8S[("<b>Kubernetes API Server</b><br/>Node · Pod · PodGroup · ConfigMap")]
 
-根据业务模型，对训练任务的要求如下：
+    subgraph L1["① 框架接入层 · package main（npu.go / npu_simulate.go）"]
+        P1["<b>huaweiNPUPlugin</b><br/>实现 framework.Plugin 接口<br/>New / OnSessionOpen / OnSessionClose<br/>注册校验 · 入队 · 过滤 · 打分 · 抢占 · 回收回调"]
+        SIM["<b>Simulate 模拟回调</b>（v1.15+）<br/>模拟任务增删与节点过滤<br/>支撑拓扑感知抢占"]
+    end
 
-1. 当训练任务申请昇腾910 AI处理器数量不大于4个时，需要将所需的昇腾910 AI处理器调度到同一个HCCS内。
-2. 当训练任务申请的昇腾910 AI处理器数量为8个时，需要将节点的昇腾910 AI处理器分配给该任务。
-3. 当训练任务申请虚拟设备vNPU时，申请数量只能为1。
-4. 遵循Volcano开源部分的其他约束。
+    subgraph L2["② 调度处理层 · plugin 包"]
+        SH["<b>ScheduleHandler</b>（插件单例）<br/>InitNPUSession 构建集群缓存<br/>Jobs · Nodes · Tors · SuperPodInfo · AffinityCache<br/>实现各回调 + 设备选定 / 释放"]
+        SCORE["<b>评分框架</b>（scoring.go）<br/>仅 chip-affinity 通用芯片拓扑亲和策略使用<br/>previousNode · topology · subHealth · chipCount<br/>位域分段合成 × ScoreWeight"]
+    end
 
-<h2 id="调度算法设计说明文档">调度算法设计说明</h2>
+    subgraph L3["③ 策略编排层 · internal/controller.go"]
+        CTRL["<b>Controller</b>（每个 NPU 作业一个实例）<br/>聚合 NPU + NSLB 策略处理器<br/>统一分发校验 · 过滤 · 打分 · 设备选定 · 抢占 · 回收"]
+    end
 
-## 场景分类<a name="section17611254115419"></a>
+    subgraph L4["④ 策略工厂层 · internal/npu + internal/nslb"]
+        FNPU["<b>npu.InitPolicyHandler</b><br/>资源名 + schedule-policy / sp-block 注解<br/>+ accelerator-type 标签分派"]
+        FNSLB["<b>nslb.InitPolicyHandler</b><br/>仅处理 tor-affinity 标签作业<br/>按 TOR 层级 / nslb-version 分派"]
+    end
 
-根据亲和性策略和业务模型设计梳理出场景如[表1](#table34241172175)所示。
+    subgraph L5["⑤ 调度策略层 · internal/npu + internal/nslb"]
+        G1["<b>芯片拓扑亲和</b><br/>affinity/chip<br/>topo · preempt · evict"]
+        G2["<b>整卡调度</b><br/>module-a3-16 · chip8-node16<br/>chip4-node8 · chip1-node2 ......"]
+        G3["<b>超节点调度</b><br/>chip2-node16-sp · chip2-node8-sp<br/>chip8-node8-sp · chip8-node16-sp ......"]
+        G4["<b>多级调度</b><br/>multilevel"]
+        G5["<b>虚拟化特性调度</b><br/>vnpu（静态 / 动态）<br/>chip1softsharedev（软切分）"]
+        G6["<b>NSLB 网络亲和</b><br/>nslbv1 · nslbv2<br/>single_layer_tor"]
+        G7["......"]
+    end
 
->![](doc/figures/icon-note.gif) **说明：**
->
->- A\~D列4个分组，表示处理器选取时，满足处理器选取的四种HCCS情况。优先级逐次递减，即当A中不满足时，才会选择B，C，D。
->- 当组内满足HCCS时节点的情况。‘\~’左边为满足要求的HCCS，右边为另一个HCCS的处理器剩余情况。如对于1个处理器申请的A组情况：另一个HCCS可能为0、1、2、3、4五种处理器剩余情况。其代表的节点优先级也依次减小。
->- 8颗及其以上处理器适用于4颗及其以下的情况。且均放在A组，且需要全部占用。
+    subgraph L6["⑥ 故障重调度 · internal/rescheduling"]
+        RESCHED["<b>ReScheduler</b>（FaultHandler 实现）<br/>故障检测与作业重启 · 故障节点拦截<br/>故障 / 亚健康节点降分 · 故障缓存读写"]
+    end
 
-**表 1**  亲和性策略场景列表
+    COMMON(["<b>⑦ 公共能力层</b> · common + config<br/>cache 亲和缓存 · k8s ConfigMap / Informer<br/>util 工具与常量 · version · config"])
 
-<a name="table34241172175"></a>
-<table><thead align="left"><tr id="row164241173174"><th class="cellrowborder" valign="top" width="8.280000000000001%" id="mcps1.2.8.1.1"><p id="p152201253161715"><a name="p152201253161715"></a><a name="p152201253161715"></a><strong id="b12201553141713"><a name="b12201553141713"></a><a name="b12201553141713"></a>场景序号</strong></p>
-</th>
-<th class="cellrowborder" valign="top" width="11.72%" id="mcps1.2.8.1.2"><p id="p0220115391713"><a name="p0220115391713"></a><a name="p0220115391713"></a><strong id="b13220175311711"><a name="b13220175311711"></a><a name="b13220175311711"></a>任务申请芯片数</strong></p>
-</th>
-<th class="cellrowborder" valign="top" width="18.860000000000003%" id="mcps1.2.8.1.3"><p id="p152201953111710"><a name="p152201953111710"></a><a name="p152201953111710"></a><strong id="b32200535173"><a name="b32200535173"></a><a name="b32200535173"></a>A（节点中处理器剩余数）</strong></p>
-</th>
-<th class="cellrowborder" valign="top" width="15.400000000000002%" id="mcps1.2.8.1.4"><p id="p32211653191716"><a name="p32211653191716"></a><a name="p32211653191716"></a><strong id="b62211753161717"><a name="b62211753161717"></a><a name="b62211753161717"></a>B</strong></p>
-</th>
-<th class="cellrowborder" valign="top" width="13.770000000000001%" id="mcps1.2.8.1.5"><p id="p3221175312177"><a name="p3221175312177"></a><a name="p3221175312177"></a><strong id="b1222116535179"><a name="b1222116535179"></a><a name="b1222116535179"></a>C</strong></p>
-</th>
-<th class="cellrowborder" valign="top" width="15.970000000000004%" id="mcps1.2.8.1.6"><p id="p12221145371719"><a name="p12221145371719"></a><a name="p12221145371719"></a><strong id="b12221175317177"><a name="b12221175317177"></a><a name="b12221175317177"></a>D</strong></p>
-</th>
-<th class="cellrowborder" valign="top" width="16.000000000000004%" id="mcps1.2.8.1.7"><p id="p0221155316175"><a name="p0221155316175"></a><a name="p0221155316175"></a>备注</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row4424317151713"><td class="cellrowborder" valign="top" width="8.280000000000001%" headers="mcps1.2.8.1.1 "><p id="p1822165310172"><a name="p1822165310172"></a><a name="p1822165310172"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" width="11.72%" headers="mcps1.2.8.1.2 "><p id="p1122145319175"><a name="p1122145319175"></a><a name="p1122145319175"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" width="18.860000000000003%" headers="mcps1.2.8.1.3 "><p id="p18221195381715"><a name="p18221195381715"></a><a name="p18221195381715"></a>1~[0、1、2、3、4]</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.400000000000002%" headers="mcps1.2.8.1.4 "><p id="p5221105315174"><a name="p5221105315174"></a><a name="p5221105315174"></a>3~[0、2、3、4]</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.770000000000001%" headers="mcps1.2.8.1.5 "><p id="p122211353121711"><a name="p122211353121711"></a><a name="p122211353121711"></a>2~[0、2、4]</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.970000000000004%" headers="mcps1.2.8.1.6 "><p id="p152210538179"><a name="p152210538179"></a><a name="p152210538179"></a>4~[0、4]</p>
-</td>
-<td class="cellrowborder" rowspan="3" valign="top" width="16.000000000000004%" headers="mcps1.2.8.1.7 "><p id="p52212053191710"><a name="p52212053191710"></a><a name="p52212053191710"></a>然后选择capacity为7，坏的视为已使用，重复A~D</p>
-</td>
-</tr>
-<tr id="row8425141731712"><td class="cellrowborder" valign="top" headers="mcps1.2.8.1.1 "><p id="p5221185391719"><a name="p5221185391719"></a><a name="p5221185391719"></a>2</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.8.1.2 "><p id="p42221531172"><a name="p42221531172"></a><a name="p42221531172"></a>2</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.8.1.3 "><p id="p132224533174"><a name="p132224533174"></a><a name="p132224533174"></a>2~[0、1、2、3、4]</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.8.1.4 "><p id="p1422275316178"><a name="p1422275316178"></a><a name="p1422275316178"></a>4~[0、1、3、4]</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.8.1.5 "><p id="p3222553141720"><a name="p3222553141720"></a><a name="p3222553141720"></a>3~[0、1]</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.8.1.6 "><p id="p5222153181713"><a name="p5222153181713"></a><a name="p5222153181713"></a>-</p>
-</td>
-</tr>
-<tr id="row94251317191720"><td class="cellrowborder" valign="top" headers="mcps1.2.8.1.1 "><p id="p0222753121719"><a name="p0222753121719"></a><a name="p0222753121719"></a>3</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.8.1.2 "><p id="p1622285341715"><a name="p1622285341715"></a><a name="p1622285341715"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.8.1.3 "><p id="p622210534170"><a name="p622210534170"></a><a name="p622210534170"></a>4~[0、1、2、3、4]</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.8.1.4 "><p id="p142221653131719"><a name="p142221653131719"></a><a name="p142221653131719"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.8.1.5 "><p id="p022205310177"><a name="p022205310177"></a><a name="p022205310177"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.8.1.6 "><p id="p20222155312171"><a name="p20222155312171"></a><a name="p20222155312171"></a>-</p>
-</td>
-</tr>
-<tr id="row16425917201717"><td class="cellrowborder" valign="top" width="8.280000000000001%" headers="mcps1.2.8.1.1 "><p id="p822245351710"><a name="p822245351710"></a><a name="p822245351710"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" width="11.72%" headers="mcps1.2.8.1.2 "><p id="p1522295351713"><a name="p1522295351713"></a><a name="p1522295351713"></a>8</p>
-</td>
-<td class="cellrowborder" valign="top" width="18.860000000000003%" headers="mcps1.2.8.1.3 "><p id="p1522215532172"><a name="p1522215532172"></a><a name="p1522215532172"></a>8</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.400000000000002%" headers="mcps1.2.8.1.4 "><p id="p22221853111716"><a name="p22221853111716"></a><a name="p22221853111716"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.770000000000001%" headers="mcps1.2.8.1.5 "><p id="p5222145311710"><a name="p5222145311710"></a><a name="p5222145311710"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.970000000000004%" headers="mcps1.2.8.1.6 "><p id="p142221353191710"><a name="p142221353191710"></a><a name="p142221353191710"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="16.000000000000004%" headers="mcps1.2.8.1.7 "><p id="p1622255310172"><a name="p1622255310172"></a><a name="p1622255310172"></a>-</p>
-</td>
-</tr>
-<tr id="row10426171715174"><td class="cellrowborder" valign="top" width="8.280000000000001%" headers="mcps1.2.8.1.1 "><p id="p1122210533177"><a name="p1122210533177"></a><a name="p1122210533177"></a>5</p>
-</td>
-<td class="cellrowborder" valign="top" width="11.72%" headers="mcps1.2.8.1.2 "><p id="p52222535174"><a name="p52222535174"></a><a name="p52222535174"></a>8*N</p>
-</td>
-<td class="cellrowborder" valign="top" width="18.860000000000003%" headers="mcps1.2.8.1.3 "><p id="p32221753191714"><a name="p32221753191714"></a><a name="p32221753191714"></a>0（8个处理器全部被占用）</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.400000000000002%" headers="mcps1.2.8.1.4 "><p id="p422255312177"><a name="p422255312177"></a><a name="p422255312177"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.770000000000001%" headers="mcps1.2.8.1.5 "><p id="p2223135321712"><a name="p2223135321712"></a><a name="p2223135321712"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.970000000000004%" headers="mcps1.2.8.1.6 "><p id="p142231353121714"><a name="p142231353121714"></a><a name="p142231353121714"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="16.000000000000004%" headers="mcps1.2.8.1.7 "><p id="p192231753141710"><a name="p192231753141710"></a><a name="p192231753141710"></a>-</p>
-</td>
-</tr>
-</tbody>
-</table>
+    K8S -.->|"集群资源数据"| VC
+    VC ==>|"加载 .so 并实例化"| P1
+    P1 ==>|"会话开启 / 收尾"| SH
+    SIM -.->|"模拟回调"| SH
+    SH ==>|"按作业创建 Controller"| CTRL
+    CTRL ==>|"组装 NPU 处理器"| FNPU
+    CTRL ==>|"组装 NSLB 处理器"| FNSLB
+    FNPU --> G1 & G2 & G3 & G4 & G5 & G7
+    FNSLB --> G6
+    SH -.->|"故障检测 · 拦截 · 降分"| RESCHED
+    SH -.->|"① ~ ⑥ 层公共依赖"| COMMON
+    %% 隐形边：将主链路锚定到策略层中部，避免整体向右倾斜
+    SH ~~~ G2
+    CTRL ~~~ G2
 
-## 算法设计说明<a name="section95222037117"></a>
+    style VC fill:#eaf3fc,stroke:#7fb2e5,stroke-width:2px,color:#1e3a5f
+    style K8S fill:#fce8e4,stroke:#e07b5f,stroke-width:2px,color:#7c2d12
+    style L1 fill:#eaf3fc,stroke:#7fb2e5,stroke-width:1.5px,color:#1e3a5f
+    style L2 fill:#e3f4ec,stroke:#7ac9a3,stroke-width:1.5px,color:#14532d
+    style L3 fill:#fdf0dd,stroke:#e5b06e,stroke-width:1.5px,color:#7c2d12
+    style L4 fill:#e0f2f1,stroke:#5fc1b8,stroke-width:1.5px,color:#0b4a2c
+    style L5 fill:#f1e9fc,stroke:#b79ae0,stroke-width:1.5px,color:#4c1d95
+    style L6 fill:#fce8e4,stroke:#e07b5f,stroke-width:1.5px,color:#7c2d12
+    style COMMON fill:#f3f4f6,stroke:#9ca3af,stroke-width:1.5px,color:#374151
+```
 
-**图 1**  Affinity algorithm design process<a name="fig23092914208"></a>
-![](doc/figures/Affinity-algorithm-design-process-ch.png "Affinity-algorithm-design-process")
+各层功能简介：
 
-图中关键步骤说明如下：
+- **① 框架接入层**（package main）：实现 Volcano 插件接口，注册校验、入队、过滤、打分、抢占、回收等调度回调，管理会话生命周期。
+- **② 调度处理层**（plugin 包）：维护集群 / 作业 / 拓扑缓存，实现各回调处理逻辑与设备选定、释放，提供位域评分框架（当前仅 chip-affinity 通用芯片拓扑亲和策略使用）。
+- **③ 策略编排层**（internal/controller.go）：每个 NPU 作业一个 Controller 实例，聚合各策略处理器并统一分发调度动作。
+- **④ 策略工厂层**（internal/npu、internal/nslb）：按资源名、schedule-policy / sp-block 注解、accelerator-type / tor-affinity 标签为作业选择策略。
+- **⑤ 调度策略层**：实现芯片拓扑亲和、整卡、超节点、多级、虚拟化特性、NSLB 网络亲和等具体调度算法。
+- **⑥ 故障重调度**（internal/rescheduling）：故障检测与作业重启，过滤阶段拦截故障节点，打分阶段对故障 / 亚健康节点降分，故障信息经 ConfigMap 读写。
+- **⑦ 公共能力层**（common、config）：提供亲和缓存、ConfigMap 读写、通用工具及版本与配置管理，供以上各层使用。
 
-1. <a name="li2081354582012"></a>获取task的昇腾910 AI处理器申请数量。
-2. 根据请求的昇腾910 AI处理器数量，按照[资源申请约束](#亲和性策略说明)选出最优的节点。
-3. 从选出的节点中，选择符合要求的昇腾910 AI处理器。
-4. 对选出的结果进行保存。
-5. <a name="li205713218818"></a>对选出的节点进行加权操作。
+## 亲和性调度方案介绍
 
-    >![](doc/figures/icon-note.gif) **说明：**
-    >[1](#li2081354582012)\~[5](#li205713218818)都是在Volcano提供的注册函数batchNodeOrderFn中实现。
+昇腾AI处理器的亲和性调度（含基于昇腾AI处理器的亲和性与基于节点的亲和性）方案介绍详见 [亲和性调度方案介绍](../../docs/zh/scheduling/04_usage/03_basic_scheduling/01_affinity_scheduling/00_solution_description.md)。
 
-6. 对选出的节点进行资源分配管理。
+## 编译指南
 
-    >![](doc/figures/icon-note.gif) **说明：**
-    >该步骤是在Volcano的AddEventHandler函数中实现。该函数包含了节点资源的预分配allocate函数。
+### 编译前准备
 
-7. 完成以上的分配操作后，Volcano框架会将本轮分配结果提交给K8s的kubelet进行确认执行，本次分配结束。
-
-## 多节点处理原则<a name="section2038111412211"></a>
-
-该特性结合Volcano的集群设计，只需要利用框架在选取节点时对每个节点进行加权，取出最优者即可。
-
-两阶段的选取：先选出4个优选数组，再进行组内选取，最终实现多节点的整体考虑。
-
-## 并发处理原则<a name="section13270122213217"></a>
-
-由于Volcano未在allocate阶段的add方法中提供函数回调方法，故对于处理器的选取在节点筛选阶段就进行了。这样做的影响是：在任务并发执行时，可能存在芯片重复分配的情况。
-
-以下两种场景可能涉及重复分配：
-
-- 本session的不同任务间。当多个任务同时需要分配，且同一节点可以分给多个任务时。由于原生Volcano只是对数量进行分配，未对处理器编号进行分配。会造成处理器总数分配完成，出现某一处理器被分配多次的情况。
-
-    本程序使用Volcano框架提供的AddEventHandler函数来解决。在函数的allocate方法中，实现对节点处理器分配情况的管理。从而避免了重复分配的情况。
-
-- 不同session之间。在本次session分配处理器时，由于在加权阶段就进行了分配，若此时资源处于等待释放状态，即暂时不能分配，就会出现本次分配失败。但Volcano在本次session不会感知。下次session时，该处理器变为可分配状态，会分配给其他任务。导致两个任务分配到同一个处理器，其中一个任务失败。
-
-    解决该问题的方法之一：在加权阶段进行处理器分配时，判断资源是否处于待释放状态。若是，则本次不分配。
-
-<h2 id="调度算法实现说明文档">调度算法实现说明</h2>
-
-## 程序流程设计说明<a name="section7199282319"></a>
-
-**图 1**  Affinity program process \(Volcano part\)<a name="fig11310145516212"></a>
-![](doc/figures/Affinity-program-process-(Volcano-part)-ch.png "Affinity-program-process-(Volcano-part)")
-
-华为昇腾处理器的亲和性调度基于Volcano开源部分提供的的插件机制，实现了插件简化开发。过程中主要实现了volcano-schedule框架中的几个插件函数。当Volcano每次session运行时，实现的函数就会按照编写的规则运行，从而实现处理器的亲和性调度。亲和性调度插件主要实现的函数如下：
-
-- validJobFn：
-
-  该函数主要是拦截申请NPU资源的任务，但申请的数量需要满足亲和性策略。具体要求请参见[亲和性策略说明](#亲和性策略说明)。
-
-- AddPredicateFn：
-
-    该函数主要是过滤掉不满足亲和性要求的节点。比如task请求数量为2时，但节点的两个HCCS却各自拥有1个处理器。该节点满足数量要求，却不满足亲和性要求，需要排除。
-
-- AddBatchNodeOrderFn：
-
-    该函数主要是选出满足亲和性条件的节点和节点内的处理器，并将结果放入Pod中。
-
-- AddEventHandler：
-
-    该函数主要是将节点拥有的可用的昇腾910 AI处理器进行统一管理。防止并发情况下的分发错误。
-
-<h2 id="编译说明文档">编译说明</h2>
-
-## 编译前准备<a name="section2078393613277"></a>
-
-- 确保PC机连接至互联网，并已完成Git和Docker的安装。参见[Git安装](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)，[Docker-ce安装](https://docs.docker.com/engine/install/ubuntu/)。
-
-- 已完成Go语言环境的安装（版本\>=1.21，建议使用最新的bugfix版本）。参见[https://golang.org/](https://golang.org/)。
-- 完成musl的安装（版本\>=1.2.0）。参见[http://musl.libc.org/](http://musl.libc.org/)。
-- 根据所在网络环境配置Go代理地址，国内可使用**Goproxy China**，例如：
+- 确保PC机连接至互联网，并已完成Git和Docker的安装。参见 [Git安装](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)、[Docker-ce安装](https://docs.docker.com/engine/install/ubuntu/)。
+- 已完成Go语言环境的安装（版本 ≥ 1.21，建议使用最新的bugfix版本）。参见 [https://golang.org/](https://golang.org/)。
+- 完成musl的安装（版本 ≥ 1.2.0）。参见 [http://musl.libc.org/](http://musl.libc.org/)。
+- 根据所在网络环境配置Go代理地址，国内可使用Goproxy China，例如：
 
     ```bash
     go env -w GOPROXY=https://goproxy.cn,direct
     ```
 
-## 编译Volcano<a name="section1922947135013"></a>
+### 编译Volcano
 
-1. 执行以下命令，在“$GOPATH/src/volcano.sh/“目录下拉取Volcano v1.9.0版本官方开源代码。
+1. 执行以下命令，在 `$GOPATH/src/volcano.sh/` 目录下拉取Volcano官方开源代码。
 
-   **cd** **$GOPATH/src/volcano.sh/**\
-   **git clone -b release-1.9 <https://github.com/volcano-sh/volcano.git>**
+    **cd** **$GOPATH/src/volcano.sh/**
 
-2. 将代码目录“ascend-for-volcano“重命名为“ascend-volcano-plugin”拷贝至Volcano官方开源代码的插件路径下（“$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/“）。
-3. 执行以下命令，编译Volcano二进制文件和so文件。根据开源代码版本，为build.sh脚本选择对应的参数，如v1.9.0.
+    **git clone -b release-1.15 https://github.com/volcano-sh/volcano.git**
 
-   **cd** **$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/build**
+2. 将代码目录 `ascend-for-volcano` 重命名为 `ascend-volcano-plugin`，并拷贝至Volcano官方开源代码的插件路径下（`$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/`）。
 
-   **chmod +x build.sh**
+3. 执行以下命令，编译Volcano二进制文件和动态链接库（so文件）。根据开源代码版本，为build.sh脚本选择对应的参数（如v1.15.0）。
 
-   **./build.sh v1.9.0**
+    ```bash
+    cd $GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/build
+    chmod +x build.sh
+    ./build.sh v1.15.0
+    ```
 
-   编译出的二进制文件和动态链接库文件在“ascend-volcano-plugin/output“目录下，文件[表1](#table922124765019)所示。
+    编译产物在 `ascend-volcano-plugin/output` 目录下，文件列表如下表所示。
 
-   **表 1**  output路径下的文件列表
-   <a name="table922124765019"></a>
-    <table><thead align="left"><tr id="row92014710505"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p8201347165014"><a name="p8201347165014"></a><a name="p8201347165014"></a>文件名</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p820347205020"><a name="p820347205020"></a><a name="p820347205020"></a>说明</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="row10210471506"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p5211747145012"><a name="p5211747145012"></a><a name="p5211747145012"></a>volcano-npu_v6.0.0_linux-<em id="i58081714114017"><a name="i58081714114017"></a><a name="i58081714114017"></a>{arch}</em>.so</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p121447195011"><a name="p121447195011"></a><a name="p121447195011"></a>Volcano华为NPU调度插件动态链接库</p>
-    </td>
-    </tr>
-    <tr id="row12104705016"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1221104755017"><a name="p1221104755017"></a><a name="p1221104755017"></a>Dockerfile-scheduler</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1221647135015"><a name="p1221647135015"></a><a name="p1221647135015"></a>Volcano scheduler镜像构建文本文件</p>
-    </td>
-    </tr>
-    <tr id="row52114473504"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p52194711501"><a name="p52194711501"></a><a name="p52194711501"></a>Dockerfile-controller</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p02174775019"><a name="p02174775019"></a><a name="p02174775019"></a>Volcano controller镜像构建文本文件</p>
-    </td>
-    </tr>
-    <tr id="row921147185016"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p521124710503"><a name="p521124710503"></a><a name="p521124710503"></a>volcano-<em id="i1239692918402"><a name="i1239692918402"></a><a name="i1239692918402"></a>{version}</em>.yaml</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1821647145014"><a name="p1821647145014"></a><a name="p1821647145014"></a>Volcano的启动配置文件</p>
-    </td>
-    </tr>
-    <tr id="row9211847125011"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p921134775011"><a name="p921134775011"></a><a name="p921134775011"></a>vc-scheduler</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1021114765017"><a name="p1021114765017"></a><a name="p1021114765017"></a>Volcano scheduler组件二进制文件</p>
-    </td>
-    </tr>
-    <tr id="row622164717508"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p121144725014"><a name="p121144725014"></a><a name="p121144725014"></a>vc-controller-manager</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p152117472504"><a name="p152117472504"></a><a name="p152117472504"></a>Volcano controller组件二进制文件</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+| 文件名 | 说明 |
+| --- | --- |
+| volcano-npu_v26.1.0.so | Volcano昇腾NPU调度插件动态链接库 |
+| Dockerfile-scheduler | Volcano scheduler镜像构建文件 |
+| Dockerfile-controller | Volcano controller镜像构建文件 |
+| volcano-{version}.yaml | Volcano的启动配置文件 |
+| vc-scheduler | Volcano scheduler组件二进制文件 |
+| vc-controller-manager | Volcano controller组件二进制文件 |
 
-   >![](doc/figures/icon-note.gif) **说明：**\
-   >_\{__version__\}_：表示volcano框架版本号。取值为：v1.9.0、v1.12.0、v1.15.0。\
-   > _\{__arch__\}_：表示Volcano二进制文件架构。取值为：x86_64、aarch64。
-   >
-   >![](doc/figures/icon-note.gif) **说明：**\
-   > 执行build.sh脚本时会修改以下volcano开源代码，具体修改详见ascend-for-volcano/build/build.sh文件。\
-   > volcano.sh/volcano/pkg/controllers/job/state/running.go \
-   > volcano.sh/volcano/pkg/scheduler/actions/allocate/allocate.go \
-   > volcano.sh/volcano/go.mod
+> **说明：**
+>
+> - `{version}`：表示Volcano框架版本号，取值为v1.9.0、v1.12.0、v1.15.0。
+> - 执行build.sh脚本时会修改部分Volcano开源代码，具体修改详见 [build.sh](build/build.sh)。
+
+## 安装部署
+
+1. Helm安装，请参考 [MindCluster安装部署 - 使用Helm安装](../../docs/zh/scheduling/03_installation_guide/02_installation/00_helm_installation.md)。
+2. 手动安装与部署（包含安装前置检查、镜像准备、yaml部署及安装验证等），请参见 [MindCluster集群调度组件开发指南 - 手动安装 - Volcano](../../docs/zh/scheduling/05_developer_guide/00_installation_deployment/00_manual_installation/05_volcano.md)。
+
+## 使用指南
+
+Ascend for Volcano提供的调度特性的使用指导，请参见 [调度特性指南 - 特性说明](../../docs/zh/scheduling/04_usage/03_basic_scheduling/00_feature_description.md)。
+
+## 说明
+
+- 编译脚本会根据不同Volcano版本修改部分源代码，具体修改详见 [build.sh](build/build.sh)。
+- 当前容器方式部署本组件，本组件的认证鉴权方式为ServiceAccount，该认证鉴权方式为ServiceAccount的token明文显示，建议用户自行进行安全加强。
