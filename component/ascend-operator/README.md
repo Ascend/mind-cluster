@@ -177,7 +177,7 @@ Ascend Operator 承载昇腾分布式训练任务的部署与生命周期管理�
 - 训练任务的部署与整卡调度，请参见[整卡调度](../../docs/zh/scheduling/04_usage/03_basic_scheduling/03_full_npu_scheduling.md)。
 - 超节点等复杂网络拓扑场景的训练任务部署，请参见[多级调度](../../docs/zh/scheduling/04_usage/03_basic_scheduling/04_multi_level_scheduling.md)。
 - 基于 vCANN-RT 虚拟化实例的训练与推理任务部署，请参见[基于vCANN-RT的虚拟化实例](../../docs/zh/scheduling/04_usage/02_virtual_instance/01_virtual_instance_with_vcann_rt/00_description.md)。
-- 故障场景下的断点续训（故障检测、重调度、训练恢复），请参见[断点续训](../../docs/zh/scheduling/04_usage/04_fault_recovery/01_resumable_training/00_feature_description.md)。
+- 故障场景下的断点续训（故障检测、重调度、训练恢复），请参见[断点续训](../../docs/zh/scheduling/04_usage/05_fault_recovery/01_resumable_training/00_feature_description.md)。
 - VERL 强化学习任务的部署与弹性 rollout，请参见[VERL 强化学习最佳实践](../../docs/zh/scheduling/04_usage/12_verl_best_practice/00_before_you_start.md)。
 
 ## 说明

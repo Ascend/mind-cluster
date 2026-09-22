@@ -432,7 +432,7 @@ ClusterD收集了内部的节点故障、芯片故障和灵衢总线设备故障
 
 查询命令：**kubectl describe cm -n mindx-dl cluster-info-node-cm**
 
-以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准。关键参数说明请参见[表1 cluster-info-node-cm](../06_api/04_clusterd/00_cluster_resources.md#configmap说明)。
+以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准。关键参数说明请参见[表1 cluster-info-node-cm](../06_api/04_clusterd/00_cluster_resources.md#cluster-info-configmap说明)。
 
 ```ColdFusion
 {"mindx-dl-nodeinfo-kwok-node-0":{"FaultDevList":[],"NodeStatus":"Healthy","CmName":"mindx-dl-nodeinfo-kwok-node-0"},"mindx-dl-deviceinfo-kwok-node-1001":{"FaultDevList":[],"NodeStatus":"Healthy","CmName":"mindx-dl-nodeinfo-kwok-node-1001"}}
@@ -444,7 +444,7 @@ ClusterD收集了内部的节点故障、芯片故障和灵衢总线设备故障
 
 m为从0开始递增的整数。集群规模每增加1000个节点，则会新增一个ConfigMap文件cluster-info-device-$\{m\}。
 
-以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准，关键参数说明请参见[表2 cluster-info-device-$\{m\}](../06_api/04_clusterd/00_cluster_resources.md#configmap说明)。
+以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准，关键参数说明请参见[表2 cluster-info-device-$\{m\}](../06_api/04_clusterd/00_cluster_resources.md#cluster-info-configmap说明)。
 
 ```ColdFusion
 {"mindx-dl-deviceinfo-kwok-node-0":{"DeviceList":{"huawei.com/Ascend910":"Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7","huawei.com/Ascend910-NetworkUnhealthy":"","huawei.com/Ascend910-Unhealthy":""},"UpdateTime":1693899390,"CmName":"mindx-dl-deviceinfo-kwok-node-0","SuperPodID":0,"ServerIndex":0},"mindx-dl-deviceinfo-kwok-node-1001":{"DeviceList":{"huawei.com/Ascend910":"Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7","huawei.com/Ascend910-NetworkUnhealthy":"","huawei.com/Ascend910-Unhealthy":""},"UpdateTime":1693899390,"CmName":"mindx-dl-deviceinfo-kwok-node-1001","SuperPodID":0,"ServerIndex":0}}

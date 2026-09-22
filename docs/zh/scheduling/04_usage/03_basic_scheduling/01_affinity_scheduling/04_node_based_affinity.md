@@ -181,7 +181,7 @@
 
 **MindIE Service推理任务调度<a name="section243084619505"></a>**
 
-MindIE Service推理任务中，新增如下亲和性调度策略。如需了解该亲和性调度策略的详细配置说明，请参见[配置实例级亲和性调度](../../06_mindie_motor_best_practice/01_deploying_mindie_motor.md#可选配置实例级亲和性调度)章节。
+MindIE Service推理任务中，新增如下亲和性调度策略。如需了解该亲和性调度策略的详细配置说明，请参见[配置实例级亲和性调度](../../07_mindie_motor_best_practice/01_deploying_mindie_motor.md#可选配置实例级亲和性调度)章节。
 
 - 用户可在任务YAML中指定sp-block字段，sp-block的值必须和job芯片数量一致，保证整个job调度到一个物理超节点中。
 

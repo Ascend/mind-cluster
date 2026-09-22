@@ -35,7 +35,7 @@
 >[!NOTE]
 >其中每部分时间与参数规模和集群规模相关，网络与存储性能也会影响总训练损失时间。
 
-watchdog用于缩短T<sub>1</sub>中的故障检测时间，配置仍位于独立的[配置watchdog故障检测](../../../11_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#配置watchdog故障检测)指南。断点续训现有恢复加速能力仍作用于T<sub>0</sub>、T<sub>2</sub>、T<sub>3</sub>和T<sub>4</sub>。
+watchdog用于缩短T<sub>1</sub>中的故障检测时间，配置仍位于独立的[配置watchdog故障检测](../../../04_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#配置watchdog故障检测)指南。断点续训现有恢复加速能力仍作用于T<sub>0</sub>、T<sub>2</sub>、T<sub>3</sub>和T<sub>4</sub>。
 
 ## 减少训练状态回滚
 

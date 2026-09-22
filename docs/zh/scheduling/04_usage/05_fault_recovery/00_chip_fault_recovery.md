@@ -49,7 +49,7 @@
 
 ### 离线热复位流程
 
-1. Ascend Device Plugin启动后，会通过驱动的DCMI接口获取芯片健康状态，当芯片发生故障时能够从驱动接口获取到故障信息，详细请参见[芯片故障](../11_fault_detection_and_diagnosis/02_fault_types/02_chip_faults.md)。
+1. Ascend Device Plugin启动后，会通过驱动的DCMI接口获取芯片健康状态，当芯片发生故障时能够从驱动接口获取到故障信息，详细请参见[芯片故障](../04_fault_detection_and_diagnosis/02_fault_types/02_chip_faults.md)。
 
 2. Ascend Device Plugin根据获取到的故障信息，判断故障所属的故障级别，进而判断是否需要对芯片进行热复位操作。
 

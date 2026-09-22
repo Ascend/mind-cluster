@@ -1,6 +1,6 @@
 # Container Manager<a name="ZH-CN_TOPIC_0000002525600001"></a>
 
-Container Manager组件提供容器生命周期管理、故障检测与恢复功能。在无K8s场景下的多机分布式任务（背靠背一体机）场景中，Container Manager通过Leader/普通节点协同方式，对跨节点的分布式任务容器进行统一启停协调，保证整个分布式任务的一致性恢复。分布式协调的详细原理请参见[分布式任务恢复](../04_usage/05_appliance/01_npu_hardware_fault_detection_and_rectification.md#分布式任务恢复)。
+Container Manager组件提供容器生命周期管理、故障检测与恢复功能。在无K8s场景下的多机分布式任务（背靠背一体机）场景中，Container Manager通过Leader/普通节点协同方式，对跨节点的分布式任务容器进行统一启停协调，保证整个分布式任务的一致性恢复。分布式协调的详细原理请参见[分布式任务恢复](../04_usage/06_appliance/01_npu_hardware_fault_detection_and_rectification.md#分布式任务恢复)。
 
 ## 任务信息<a name="section_cm_task_info"></a>
 

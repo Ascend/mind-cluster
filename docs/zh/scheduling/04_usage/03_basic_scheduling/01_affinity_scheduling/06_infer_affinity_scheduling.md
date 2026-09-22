@@ -145,7 +145,7 @@ spec:
 > [!NOTE]
 >
 >- 推理服务亲和性调度策略仅支持超节点调度策略（取值以-sp结尾）。
->- 使用Infer Operator部署推理服务时，若调度策略为超节点调度策略，Infer Operator会自动为同一推理服务下的所有实例配置inferserviceid标签以开启推理服务亲和性调度，无需手动配置，详细请参见[配置推理服务亲和性调度](../../09_infer_operator_best_practice/07_configuring_infer_service_affinity_scheduling.md)。
+>- 使用Infer Operator部署推理服务时，若调度策略为超节点调度策略，Infer Operator会自动为同一推理服务下的所有实例配置inferserviceid标签以开启推理服务亲和性调度，无需手动配置，详细请参见[配置推理服务亲和性调度](../../10_infer_operator_best_practice/07_configuring_infer_service_affinity_scheduling.md)。
 >- 针对Atlas 950 SuperPoD 超节点，若开启推理服务亲和性调度特性，当前版本下该特性强制要求单个实例不得跨框调度。因此可能出现如下情况：多个框的空闲节点资源总和虽能满足某实例的需求，但这些空闲节点分属不同框，导致实例因无法跨框而处于Pending状态。若希望该实例能够成功调度，可删除labels中的inferserviceid标签以关闭推理亲和性，并将huawei.com/schedule_policy修改为chip8-node8-sp，从而确保单实例不跨超节点调度。
 >- 使用其他类型的K8s资源部署推理服务示例请参见[推理任务类型与硬件型号对应YAML文件](../03_full_npu_scheduling.md#准备任务yaml)，添加对应的label即可开启推理服务亲和性调度策略。
 >- 对于可以生成PodGroup的资源，在PodGroup上添加相应字段也可以实现推理服务亲和性调度。

@@ -1,6 +1,6 @@
 # 配置恢复加速<a name="ZH-CN_TOPIC_0000002479386506"></a>
 
-本章按训练回滚损失时间、故障发现和资源处理时间、集合通信时间、CKPT加载时间、编译和初始化时间组织恢复加速配置。watchdog用于缩短故障发现和资源处理时间中的故障检测时间，详细请参见[配置watchdog故障检测](../../../11_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#配置watchdog故障检测)。恢复加速原理请参见[恢复加速原理](../01_solutions_principles/02_recovery_acceleration.md)。
+本章按训练回滚损失时间、故障发现和资源处理时间、集合通信时间、CKPT加载时间、编译和初始化时间组织恢复加速配置。watchdog用于缩短故障发现和资源处理时间中的故障检测时间，详细请参见[配置watchdog故障检测](../../../04_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#配置watchdog故障检测)。恢复加速原理请参见[恢复加速原理](../01_solutions_principles/02_recovery_acceleration.md)。
 
 ## 配置减少训练状态回滚
 
@@ -423,7 +423,7 @@ spec:
 
 ## 配置缩短训练拉起时间
 
-以下配置分别用于缩短集合通信时间和编译及初始化时间。故障发现和资源处理时间中的故障检测时间优化请参见[配置watchdog故障检测](../../../11_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#配置watchdog故障检测)指南。对应原理请参见[缩短训练拉起时间](../01_solutions_principles/02_recovery_acceleration.md#缩短训练拉起时间)。
+以下配置分别用于缩短集合通信时间和编译及初始化时间。故障发现和资源处理时间中的故障检测时间优化请参见[配置watchdog故障检测](../../../04_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#配置watchdog故障检测)指南。对应原理请参见[缩短训练拉起时间](../01_solutions_principles/02_recovery_acceleration.md#缩短训练拉起时间)。
 
 ### 配置集合通信初始化优化（PyTorch）
 

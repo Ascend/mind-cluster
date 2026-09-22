@@ -193,7 +193,7 @@
 
 **组件上下游依赖<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section4941922192110"></a>**
 
-**图 9**  组件上下游依赖<a name="fig19841330125219"></a>
+**图 8**  组件上下游依赖<a name="fig19841330125219"></a>
 
 ![](../../figures/scheduling/组件上下游依赖-6.png "组件上下游依赖-6")
 
@@ -227,7 +227,7 @@
   - TaskD Manager通过ConfigMap获取当前训练容器所使用的设备状况和训练任务状态等信息。
   - TaskD Manager对接K8s集群控制中心，根据集群控制中心完成训练管理。
 
-  **图 10**  组件上下游依赖\_业务流**一**<a name="fig113811033154417"></a>
+  **图 9**  组件上下游依赖\_业务流**一**<a name="fig113811033154417"></a>
 
   ![](../../figures/scheduling/组件上下游依赖_业务流一.png "组件上下游依赖_业务流一")
 
@@ -236,7 +236,7 @@
   - TaskD Worker通过ConfigMap获取当前任务的训练检测功能开启指令。
   - TaskD Manager通过gRPC获取当前任务的训练检测功能开启指令。
 
-  **图 11**  组件上下游依赖\_业务流二<a name="fig1894945324911"></a>
+  **图 10**  组件上下游依赖\_业务流二<a name="fig1894945324911"></a>
 
   ![](../../figures/scheduling/组件上下游依赖_业务流二.png "组件上下游依赖_业务流二")
 
@@ -252,7 +252,7 @@ Checkpoint是模型中断训练后恢复的关键点，Checkpoint的密集程度
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 12** MindIO ACP<a name="fig117818118587"></a>
+**图 11** MindIO ACP<a name="fig117818118587"></a>
 
 ![](../../figures/scheduling/MindIO-ACP.png "MindIO-ACP")
 
@@ -272,7 +272,7 @@ MindIO TFT包括临终Checkpoint保存、进程级在线恢复和优雅容错等
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 13** MindIO TFT<a name="fig117818118588"></a>
+**图 12** MindIO TFT<a name="fig117818118588"></a>
 
 ![](../../figures/scheduling/MindIO-TFT.png "MindIO-TFT")
 
@@ -290,7 +290,7 @@ MindIO TFT包括临终Checkpoint保存、进程级在线恢复和优雅容错等
 
 **组件上下游依赖<a name="section16318132318112"></a>**
 
-**图 14**  组件上下游依赖<a name="fig107831859288"></a>
+**图 13**  组件上下游依赖<a name="fig107831859288"></a>
 
 ![](../../figures/scheduling/组件上下游依赖-7.png "组件上下游依赖-7")
 
@@ -313,7 +313,7 @@ MindCluster提供Infer Operator组件，根据推理服务的实例配置，批�
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 15**  组件上下游依赖<a name="fig107831859289"></a>
+**图 14**  组件上下游依赖<a name="fig107831859289"></a>
 
 ![](../../figures/scheduling/introduction_infer-operator.PNG "introduction_infer-operator")
 
@@ -356,7 +356,7 @@ Kubernetes需要感知RDMA网络设备资源信息来实现资源调度。为了
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 16**  组件上下游依赖<a name="fig18917163118164"></a>
+**图 15**  组件上下游依赖<a name="fig18917163118164"></a>
 
 ![](../../figures/scheduling/01_introduction/01_component_description/rdma-dp.png "组件上下游依赖-8")
 
@@ -383,7 +383,7 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 17**  组件上下游依赖<a name="fig18917163118167"></a>
+**图 16**  组件上下游依赖<a name="fig18917163118167"></a>
 
 ![](../../figures/scheduling/01_introduction/01_component_description/ub-host-device-cni.png "组件上下游依赖-9")
 
@@ -405,7 +405,7 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 18**  组件上下游依赖<a name="fig129782047111818"></a>
+**图 17**  组件上下游依赖<a name="fig129782047111819"></a>
 
 ![](../../figures/scheduling/组件上下游依赖-9.png "组件上下游依赖-9")
 
@@ -455,7 +455,7 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图19** Agent Core组件上下游依赖<a name="fig117818118589"></a>
+**图 19** Agent Core组件上下游依赖<a name="fig117818118589"></a>
 
 ![](../../figures/scheduling/组件上下游依赖-11.png "组件上下游依赖-11")
 
@@ -483,7 +483,7 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图20** Node Collector组件上下游依赖<a name="fig117818118590"></a>
+**图 20** Node Collector组件上下游依赖<a name="fig117818118590"></a>
 
 ![](../../figures/scheduling/组件上下游依赖-12.png "组件上下游依赖-12")
 

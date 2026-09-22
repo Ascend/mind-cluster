@@ -327,7 +327,7 @@ deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Pl
 >- 该ConfigMap由Ascend Device Plugin挂载到训练节点的/user/cluster-info/datatrace-config/命名空间.data-trace-任务名称/\*的文件夹下，文件名为profilingSwitch。
 >- 如用户未创建该ConfigMap，在首次调用gRPC接口ModifyTrainingDataTraceSwitch时，ClusterD将尝试自动创建该ConfigMap。
 >- 用户如需使用该功能，应将节点上的profilingSwitch文件，使用hostPath方式挂载进入容器内的/user/cluster-info/datatrace-config/目录。
->- 当前Step、SaveCheckpoint、FP、DataLoader为默认开启，且四类只能同步开启关闭，当五类数据全为off时关闭所有打点，否则默认开启上述四类，同时根据通信算子开关状态对其进行开启或关闭。
+>- 当前Step、SaveCheckpoint、FP、DataLoader为默认开启，且四类只能同步开启或关闭，当五类数据全为off时关闭所有打点，否则默认开启上述四类，同时根据通信算子开关状态对其进行开启或关闭。
 
 **steptime-dtpgroup<a name="section1146122513469"></a>**
 
@@ -346,7 +346,7 @@ deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Pl
 
 **faultCode.json中的故障级别<a name="section579455712489"></a>**
 
-断点续训针对芯片故障的不同级别进行分级处理。若用户需要修改故障码的故障级别，操作指导请参见[（可选）配置芯片故障级别](../04_usage/11_fault_detection_and_diagnosis/03_configuration/03_chip_faults.md#可选配置芯片故障级别)。
+断点续训针对芯片故障的不同级别进行分级处理。若用户需要修改故障码的故障级别，操作指导请参见[（可选）配置芯片故障级别](../04_usage/04_fault_detection_and_diagnosis/03_configuration/03_chip_faults.md#可选配置芯片故障级别)。
 
 Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对设备及业务的影响将故障划分为以下几种级别，详细说明请参见[表1](#table7618951152212)。
 
@@ -424,7 +424,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 </td>
 <td class="cellrowborder" valign="top" width="35.78%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002171521445_p1354813311915"><a name="zh-cn_topic_0000002171521445_p1354813311915"></a><a name="zh-cn_topic_0000002171521445_p1354813311915"></a>根据任务YAML中配置的subHealthyStrategy参数取值进行处理，详细请参见<a href="./15_yaml_configuration.md">表1 YAML参数说明</a>。</p>
 </td>
-<td class="cellrowborder" valign="top" width="20.349999999999998%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002171521445_p3352524125220"><a name="zh-cn_topic_0000002171521445_p3352524125220"></a><a name="zh-cn_topic_0000002171521445_p3352524125220"></a>当芯片出现亚健康故障时，需根据<a href="../04_usage/04_fault_recovery/01_resumable_training/03_configuration/01_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002511426471">配置亚健康热切</a>进行处理。</p>
+<td class="cellrowborder" valign="top" width="20.349999999999998%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002171521445_p3352524125220"><a name="zh-cn_topic_0000002171521445_p3352524125220"></a><a name="zh-cn_topic_0000002171521445_p3352524125220"></a>当芯片出现亚健康故障时，需根据<a href="../04_usage/05_fault_recovery/01_resumable_training/03_configuration/01_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002511426471">配置亚健康热切</a>进行处理。</p>
 
 <div class="note" id="zh-cn_topic_0000002171521445_note7936204710536"><a name="zh-cn_topic_0000002171521445_note7936204710536"></a><a name="zh-cn_topic_0000002171521445_note7936204710536"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002171521445_p15222114115810"><a name="zh-cn_topic_0000002171521445_p15222114115810"></a><a name="zh-cn_topic_0000002171521445_p15222114115810"></a>如果后续芯片出现其他级别故障，此时SubHealthFault</p>
 <p id="zh-cn_topic_0000002171521445_p109369476532"><a name="zh-cn_topic_0000002171521445_p109369476532"></a><a name="zh-cn_topic_0000002171521445_p109369476532"></a>处理策略不影响其他级别的故障处理。</p>
@@ -468,11 +468,11 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 >- 如果一个故障码同时配置了故障频率和故障超时策略，只有当故障超时后，故障才算发生，频次才会增加一次。故障恢复超过RecoverTimeout才算恢复，恢复后再次故障超时才能累积下一次计数。
 >- 故障ID为81078603的网络故障只支持配置为NotHandleFault、PreSeparateNPU或SeparateNPU三种故障处理策略，若配置为其他策略则使用默认配置NotHandleFault。
 >- 当Ascend Device Plugin从26.0.0之前版本升级到26.0.0及之后版本时，若Ascend Device Plugin的ConfigMap中已经包含了ManuallySeparateNPU键值，则其降级的时间窗为faultCustomization.json中最大的ReleaseTimeWindow值，若没有任何故障码配置ReleaseTimeWindow，则ConfigMap已有的ManuallySeparateNPU不降级。
->- 在修改/删除mindx-dl-fault-config中的策略后，支持已升级的故障处理策略也会随配置更新。但是ManuallySeparateNPU策略升级后，删除故障处理策略配置项不会被解除，需要遵循ManuallySeparateNPU的解除方式。并且，其他故障级别配置更新为ManuallySeparateNPU时，配置不生效或者不满足期望。
+>- 在修改/删除mindx-dl-fault-config中的策略后，已升级的故障处理策略也会随配置更新。但是ManuallySeparateNPU策略升级后，删除故障处理策略配置项不会被解除，需要遵循ManuallySeparateNPU的解除方式。并且，其他故障级别配置更新为ManuallySeparateNPU时，配置不生效或者不满足期望。
 
 ## 自定义灵衢设备故障<a name="ZH-CN_TOPIC_0000002511426735"></a>
 
-断点续训针对灵衢总线设备故障的不同级别进行分级处理。若用户需要修改故障码的故障级别，操作指导请参见[（可选）配置总线设备故障级别](../04_usage/11_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#可选配置总线设备故障级别)。
+断点续训针对灵衢总线设备故障的不同级别进行分级处理。若用户需要修改故障码的故障级别，操作指导请参见[（可选）配置总线设备故障级别](../04_usage/04_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#可选配置总线设备故障级别)。
 
 Ascend Device Plugin从驱动获取到故障码后，将根据故障码对设备及业务的影响将故障划分为以下五种级别并进行相应的重调度处理，详细说明请参见[表1](#table212253274720)。
 

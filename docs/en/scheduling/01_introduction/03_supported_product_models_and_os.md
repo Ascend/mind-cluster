@@ -44,7 +44,7 @@ In the single-server scenario, the product forms and operating systems supported
 </tr>
 <tr id="rowAtlas350"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas350Card"><a name="pAtlas350Card"></a><a name="pAtlas350Card"></a><span id="phAtlas350Card"><a name="phAtlas350Card"></a><a name="phAtlas350Card"></a>Atlas 350 accelerator card</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas350OS"><a name="pAtlas350OS"></a><a name="pAtlas350OS"></a>Determined by the management node</p>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas350OS"><a name="pAtlas350OS"></a><a name="pAtlas350OS"></a>Determined by the server type</p>
 </td>
 </tr>
 </tbody>
