@@ -139,22 +139,23 @@ var faultCodeTimeOutMap = make(map[string]int64)
 
 // FaultJob contain some fault info about a fault job
 type FaultJob struct {
-	InitTime            int64
-	IsA3Job             bool
-	NameSpace           string
-	PodNames            map[string]string
-	RelationFaults      []*constant.FaultInfo
-	TriggerFault        []constant.FaultInfo
-	processedFaultInfo  []constant.FaultInfo
-	TMOutTriggerFault   []constant.FaultInfo
-	TMOutRelationFaults []*constant.FaultInfo
-	FaultStrategy       constant.FaultStrategy
-	SeparateNodes       sets.String
-	AllFaultCode        sets.String
-	ProcessingFaultCode sets.String
-	PodStrategiesMaps   map[string]string
-	FindNPUUnderSwitch  bool
-	NodeFaultInfoMap    map[string][]*constant.FaultInfo
+	InitTime              int64
+	IsA3Job               bool
+	NameSpace             string
+	PodNames              map[string]string
+	RelationFaults        []*constant.FaultInfo
+	TriggerFault          []constant.FaultInfo
+	processedFaultInfo    []constant.FaultInfo
+	TMOutTriggerFault     []constant.FaultInfo
+	TMOutRelationFaults   []*constant.FaultInfo
+	ExpiredRelationFaults []*constant.FaultInfo
+	FaultStrategy         constant.FaultStrategy
+	SeparateNodes         sets.String
+	AllFaultCode          sets.String
+	ProcessingFaultCode   sets.String
+	PodStrategiesMaps     map[string]string
+	FindNPUUnderSwitch    bool
+	NodeFaultInfoMap      map[string][]*constant.FaultInfo
 }
 
 func getFaultCodeTimeOutMap() map[string]int64 {
@@ -272,15 +273,18 @@ func (fJob *FaultJob) preStartProcess() {
 		fJob.ProcessingFaultCode.Delete(fault.FaultUid)
 	}
 	now := time.Now().UnixMilli()
+	expiredRelationFaults := make([]*constant.FaultInfo, 0)
 	for _, fault := range fJob.TMOutRelationFaults {
 		if fault == nil {
 			continue
 		}
 		if now-fault.FaultTime > fault.DealMaxTime*constant.Kilo {
+			expiredRelationFaults = append(expiredRelationFaults, fault)
 			continue
 		}
 		tmpTMOutRelationFaults = append(tmpTMOutRelationFaults, fault)
 	}
+	fJob.ExpiredRelationFaults = expiredRelationFaults
 	fJob.RelationFaults = networkFaultInfo
 	fJob.TMOutRelationFaults = tmpTMOutRelationFaults
 	hwlog.RunLog.Debugf("after perstart precess, relation faults is %v", util.ObjToString(fJob.RelationFaults))
@@ -290,6 +294,7 @@ func (fJob *FaultJob) preStartProcess() {
 
 func (fJob *FaultJob) preStopProcess() {
 	fJob.clearProcessedAndTimeOutFault()
+	fJob.clearTimeOutRecoveredRelationFault()
 	fJob.processFaultStrategies()
 }
 
@@ -385,6 +390,24 @@ func (fJob *FaultJob) execDeviceFaultTMOut(fault *constant.FaultInfo) {
 		hwlog.RunLog.Infof("fault <%s> meet tmout trigger fault, will separate fault pod", fault.FaultUid)
 		fJob.updateNodeFaultInfoMap(&newFault)
 	}
+}
+
+// clearTimeOutRecoveredRelationFault handles the recovered link down fault of A3 job when
+// its deal max time is reached: the fault has already disappeared (moved into TMOutRelationFaults)
+// but is not yet timed out. The expired faults are recorded in preStartProcess and stored in
+// ExpiredRelationFaults. Only when it times out, check whether a cqe trigger fault appears within
+// its deal max time window, then decide separation. This keeps the A3 semantics that the cqe
+// relation is only triggered after the link down fault times out.
+func (fJob *FaultJob) clearTimeOutRecoveredRelationFault() {
+	for _, fault := range fJob.ExpiredRelationFaults {
+		if fault == nil {
+			continue
+		}
+		if fJob.IsA3Job && fault.FaultType == constant.DeviceFaultType {
+			fJob.addFaultStrategyForTimeOutCode(fault)
+		}
+	}
+	fJob.ExpiredRelationFaults = nil
 }
 
 func (fJob *FaultJob) isMeetTMOutTriggerFault(fault *constant.FaultInfo) bool {
