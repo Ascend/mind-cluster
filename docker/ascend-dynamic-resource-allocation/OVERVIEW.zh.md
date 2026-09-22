@@ -205,21 +205,6 @@ Ascend Dynamic Resource Allocation（Ascend DRA）是 MindCluster 集群调度�
 
 ---
 
-## 支持的硬件
-
-Ascend DRA 组件支持的产品形态如下：
-
-- Atlas A2 训练系列产品
-- Atlas A2 推理系列产品
-- Atlas A3 训练系列产品
-- Atlas A3 推理系列产品
-- Ascend 950 系列产品
-
-当前支持的昇腾硬件型号说明，请参考官方文档：
-[支持的产品形态和OS清单](https://gitcode.com/Ascend/mind-cluster/blob/master/docs/zh/scheduling/01_introduction/03_supported_product_models_and_os.md#%E6%94%AF%E6%8C%81%E7%9A%84%E4%BA%A7%E5%93%81%E5%BD%A2%E6%80%81%E5%92%8Cos%E6%B8%85%E5%8D%95)
-
----
-
 ## 许可证
 
 查看这些镜像中包含的 Mind 系列软件的[许可证信息](https://www.hiascend.com/zh/legal/softlicense)。

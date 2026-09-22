@@ -55,15 +55,18 @@ Tags follow this format:
 
 | Field     | Example       | Description                                                         |
 |-----------|---------------|---------------------------------------------------------------------|
-| `version` | `v26.1.0`     | Version Number of K8s RDMA Shared Device Plugin Component           |
+| `version` | `v26.1.1`     | Version Number of K8s RDMA Shared Device Plugin Component           |
 | `os`      | `ubuntu22.04` | Operating System for K8s RDMA Shared Device Plugin Component Images |
 
-### K8s RDMA Shared Device Plugin 26.1.0
+### K8s RDMA Shared Device Plugin Latest Version 26.1.1
+
+The following are all images of the latest released 26.1.1 version of K8s RDMA Shared Device Plugin. For all historical
+version Tags, please refer to [Supported Tags](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/supported_tags.md).
 
 | Tag                      | Dockerfile                                                                                                                                 | Image Content                                                       |
 |--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
-| `v26.1.0-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.1.0/Dockerfile.ubuntu)       | K8s RDMA Shared Device Plugin v26.1.0 (Base Image: Ubuntu 22.04)    |
-| `v26.1.0-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.1.0/Dockerfile.openeuler) | K8s RDMA Shared Device Plugin v26.1.0 (Base Image: openEuler 24.03) |
+| `v26.1.1-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.1.1/Dockerfile.ubuntu)       | K8s RDMA Shared Device Plugin v26.1.1 (Base Image: Ubuntu 22.04)    |
+| `v26.1.1-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.1.1/Dockerfile.openeuler) | K8s RDMA Shared Device Plugin v26.1.1 (Base Image: openEuler 24.03) |
 
 ---
 
@@ -87,20 +90,20 @@ Tags follow this format:
 
 ### Build Locally (Optional)
 
-Example: build an K8s RDMA Shared Device Plugin image of architecture linux-aarch64, version v26.1.0, based on Ubuntu
+Example: build an K8s RDMA Shared Device Plugin image of architecture linux-aarch64, version v26.1.1, based on Ubuntu
 22.04.
 
 1. Obtain the target Dockerfile
 
    Navigate to the chapter Supported Tags and Dockerfile Links (for example,
-   [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.1.0/Dockerfile.ubuntu)),
+   [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.1.1/Dockerfile.ubuntu)),
    open the Dockerfile.ubuntu link corresponding to your target version, and save the file to a local directory on your
    aarch64 environment.
 
 2. Build the Docker image locally (disable cache to ensure a clean build)
 
    ```bash
-   docker build --no-cache -t k8s-rdma-shared-dev-plugin:v26.1.0 ./ -f Dockerfile.ubuntu
+   docker build --no-cache -t k8s-rdma-shared-dev-plugin:v26.1.1 ./ -f Dockerfile.ubuntu
    ```
 
 > [!NOTE]
@@ -211,12 +214,6 @@ Configuration example:
 - **Exclusive mode**: Each NPU corresponds to a specific DPU device, and devices are allocated through the NPU-NIC mapping. In exclusive mode, the real UB devices discovered on the node are reported. When a Pod requests resources, the plugin looks up the corresponding DPU device via the mapping file (`/etc/rdma-plugin/npu-nic-mapping.json`) based on the NPUs requested by the Pod, and mounts it into the container, achieving device-level isolation.
   - **Enablement**: Start the component with the `--ub-excl-mode` parameter to enable exclusive mode.
   - **Allocation result**: In exclusive mode, the plugin writes the allocated DPU devices to the Pod's `k8s.v1.cni.cncf.io/device-status` annotation. Multus CNI reads this annotation to obtain the devices and passes them to UB Host Device CNI to complete device mounting.
-
----
-
-## Supported Hardware
-
-Supports UB type RDMA network cards
 
 ---
 
