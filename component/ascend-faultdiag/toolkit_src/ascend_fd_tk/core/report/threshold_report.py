@@ -53,19 +53,33 @@ class ThresholdConfig:
 
     @staticmethod
     def for_optical_metric(
-        threshold_cls, metric_name: str, field_name: str, display_name: str, type_field: str = "optical_type"
+        threshold_cls,
+        metric_name: str,
+        field_name: str,
+        display_name: str,
+        type_field: str = "optical_type",
+        interface_field: str = "",
     ) -> "ThresholdConfig":
-        """光模块指标列配置：按行数据的 type_field（光模块类型）动态选择阈值
+        """光模块指标列配置：按行数据的 type_field（光模块类型）/ interface_field（端口名）动态选择阈值
 
-        阈值选择规则同 BaseThreshold.get_optical_metric：类型为 LPO 且定义了 LPO_{METRIC} 时优先，
-        否则回退基础阈值（即 ODSP 阈值），因此 A3/无类型数据行行为不变。
+        阈值选择规则：
+        - interface_field 非空时按行数据的端口名选Profile类（含 800GUB/800GE → 800G光模块阈值，
+          否则默认阈值，见 threshold_loader.get_threshold_cls），端口名为空或未配置时回退 threshold_cls；
+        - 类型为 LPO 且定义了 LPO_{METRIC} 时优先，否则回退基础阈值（即 ODSP 阈值），
+          因此 A3/无类型数据行行为不变。
         threshold 同时保留基础阈值，用于列名单位显示与构造校验。
         """
+        from ascend_fd_tk.core.config.threshold_loader import get_threshold_cls
 
         # pylint: disable=unused-argument  # value_checker 固定入参签名，与threshold二选一
         def _type_aware_checker(obj, value_str):
+            if interface_field:
+                interface_name = getattr(obj, interface_field, "") or ""
+                row_cls = get_threshold_cls(interface_name) if interface_name else threshold_cls
+            else:
+                row_cls = threshold_cls
             optical_type = getattr(obj, type_field, "") or ""
-            th = threshold_cls.get_optical_metric(metric_name, optical_type)
+            th = row_cls.get_optical_metric(metric_name, optical_type)
             return th.check_value(value_str)
 
         return ThresholdConfig(

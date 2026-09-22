@@ -435,19 +435,21 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
         :return: 阈值配置列表
         """
         threshold_cls = self.cluster_info.get_threshold()
-        # 光模块指标列按行各自 optical_type 动态选阈值（LPO_{METRIC} 优先，回退基础阈值即 ODSP 值）：
-        # for_optical_metric 详见 threshold_report.ThresholdConfig
+        # 光模块指标列按行各自 optical_type/端口名动态选阈值：
+        # 端口含 800GUB/800GE 的行用800G光模块阈值，其余行用默认阈值（按端口速率选阈值）；
+        # LPO_{METRIC} 优先，回退基础阈值即 ODSP 值。for_optical_metric 详见 threshold_report.ThresholdConfig
         configs = []
         for lane in range(self.LANE_NUM):
             configs.extend(
                 [
-                    # 本端TX/RX Power阈值（dBm），按本端类型选阈值
+                    # 本端TX/RX Power阈值（dBm），按本端端口名/类型选阈值
                     ThresholdConfig.for_optical_metric(
                         threshold_cls,
                         "TX_POWER_DBM",
                         f"local_tx_power{lane}",
                         f"本端TX Power Lane {lane}",
                         type_field="local_optical_type",
+                        interface_field="local_interface",
                     ),
                     ThresholdConfig.for_optical_metric(
                         threshold_cls,
@@ -455,22 +457,25 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                         f"local_rx_power{lane}",
                         f"本端RX Power Lane {lane}",
                         type_field="local_optical_type",
+                        interface_field="local_interface",
                     ),
-                    # 本端SNR阈值（dB），按本端类型选阈值
+                    # 本端SNR阈值（dB），按本端端口名/类型选阈值
                     ThresholdConfig.for_optical_metric(
                         threshold_cls,
                         "HOST_SNR_DB",
                         f"local_snr_lane{lane}",
                         f"本端SNR Lane {lane}",
                         type_field="local_optical_type",
+                        interface_field="local_interface",
                     ),
-                    # 对端TX/RX Power阈值（dBm），按对端类型选阈值
+                    # 对端TX/RX Power阈值（dBm），按对端端口名/类型选阈值
                     ThresholdConfig.for_optical_metric(
                         threshold_cls,
                         "TX_POWER_DBM",
                         f"peer_tx_power{lane}",
                         f"对端TX Power Lane {lane}",
                         type_field="peer_optical_type",
+                        interface_field="peer_interface",
                     ),
                     ThresholdConfig.for_optical_metric(
                         threshold_cls,
@@ -478,14 +483,16 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                         f"peer_rx_power{lane}",
                         f"对端RX Power Lane {lane}",
                         type_field="peer_optical_type",
+                        interface_field="peer_interface",
                     ),
-                    # 对端SNR阈值（dB），按对端类型选阈值
+                    # 对端SNR阈值（dB），按对端端口名/类型选阈值
                     ThresholdConfig.for_optical_metric(
                         threshold_cls,
                         "HOST_SNR_DB",
                         f"peer_snr_lane{lane}",
                         f"对端SNR Lane {lane}",
                         type_field="peer_optical_type",
+                        interface_field="peer_interface",
                     ),
                 ]
             )

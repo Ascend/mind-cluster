@@ -128,26 +128,28 @@ class SnrChecker:
         except Exception:
             return None
 
-    def check_optical_host_snr_abnormal(self, optical_info: OpticalModuleInfo) -> bool:
+    def check_optical_host_snr_abnormal(self, optical_info: OpticalModuleInfo, threshold_cls=None) -> bool:
         """检测光模块host SNR是否异常
 
         遍历光模块的所有通道，任一通道的host_snr超过阈值即判定异常；
-        阈值按光模块类型（ODSP/LPO）选择，类型为空时回退基础阈值
+        阈值按光模块类型（ODSP/LPO）选择，类型为空时回退基础阈值；
+        threshold_cls 为按端口速率选取的Profile类，未传时回退构造时的Profile类
         """
         if not optical_info or not optical_info.lane_power_infos:
             return False
-        th = self._threshold.get_optical_view(optical_info.optical_type).HOST_SNR_DB
+        th = (threshold_cls or self._threshold).get_optical_view(optical_info.optical_type).HOST_SNR_DB
         return any(th.check_value_str(lane_info.host_snr) for lane_info in optical_info.lane_power_infos)
 
-    def check_optical_media_snr_abnormal(self, optical_info: OpticalModuleInfo) -> bool:
+    def check_optical_media_snr_abnormal(self, optical_info: OpticalModuleInfo, threshold_cls=None) -> bool:
         """检测光模块media SNR是否异常
 
         遍历光模块的所有通道，任一通道的media_snr超过阈值即判定异常；
-        阈值按光模块类型（ODSP/LPO）选择，类型为空时回退基础阈值
+        阈值按光模块类型（ODSP/LPO）选择，类型为空时回退基础阈值；
+        threshold_cls 为按端口速率选取的Profile类，未传时回退构造时的Profile类
         """
         if not optical_info or not optical_info.lane_power_infos:
             return False
-        th = self._threshold.get_optical_view(optical_info.optical_type).MEDIA_SNR_DB
+        th = (threshold_cls or self._threshold).get_optical_view(optical_info.optical_type).MEDIA_SNR_DB
         return any(th.check_value_str(lane_info.media_snr) for lane_info in optical_info.lane_power_infos)
 
     # ================================================================

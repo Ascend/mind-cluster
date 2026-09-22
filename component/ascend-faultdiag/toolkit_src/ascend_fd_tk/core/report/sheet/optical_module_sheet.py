@@ -23,7 +23,7 @@
 from dataclasses import dataclass
 from typing import List, Dict, Tuple
 
-from ascend_fd_tk.core.config.threshold_config import A5Threshold
+from ascend_fd_tk.core.config.threshold_config import OpticalThreshold800G
 from ascend_fd_tk.core.model.host import NpuChipInfo
 from ascend_fd_tk.core.model.optical_module import OpticalModuleInfo
 from ascend_fd_tk.core.report.sheet.base import BaseSheetGenerator
@@ -543,7 +543,7 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
         threshold_cls = self.cluster_info.get_threshold()
         # 主机侧功率单位随代际不同：A3 采集值为 mW，A5 为 dBm，按代际选择对应阈值；
         # 对端交换机侧功率始终为 dBm，固定使用 dBm 阈值
-        if issubclass(threshold_cls, A5Threshold):
+        if issubclass(threshold_cls, OpticalThreshold800G):
             host_power_metric = ("TX_POWER_DBM", "RX_POWER_DBM")
         else:
             host_power_metric = ("TX_POWER_MW", "RX_POWER_MW")
@@ -572,13 +572,15 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     ThresholdConfig.for_optical_metric(
                         threshold_cls, "MEDIA_SNR_DB", f"host_media_snr_lane{lane}", f"主机侧Media SNR Lane {lane}"
                     ),
-                    # 对端交换机光模块Lane功率阈值（dBm）- 复用主机端指标，按对端类型选阈值
+                    # 对端交换机光模块Lane功率阈值（dBm）- 复用主机端指标，按对端端口名/类型选阈值
+                    # （对端端口含 800GUB/800GE 时用800G光模块阈值，否则默认阈值）
                     ThresholdConfig.for_optical_metric(
                         threshold_cls,
                         "TX_POWER_DBM",
                         f"peer_switch_tx_power{lane}",
                         f"对端TX Power Lane {lane}",
                         type_field="peer_optical_type",
+                        interface_field="peer_switch_port",
                     ),
                     ThresholdConfig.for_optical_metric(
                         threshold_cls,
@@ -586,14 +588,16 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                         f"peer_switch_rx_power{lane}",
                         f"对端RX Power Lane {lane}",
                         type_field="peer_optical_type",
+                        interface_field="peer_switch_port",
                     ),
-                    # 对端交换机光模块Lane SNR阈值（dB）- 复用主机端指标，按对端类型选阈值
+                    # 对端交换机光模块Lane SNR阈值（dB）- 复用主机端指标，按对端端口名/类型选阈值
                     ThresholdConfig.for_optical_metric(
                         threshold_cls,
                         "HOST_SNR_DB",
                         f"peer_switch_snr_lane{lane}",
                         f"对端SNR Lane {lane}",
                         type_field="peer_optical_type",
+                        interface_field="peer_switch_port",
                     ),
                 ]
             )

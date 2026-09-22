@@ -26,7 +26,8 @@ class AutoDiag(DiagService):
         # cache 中 generation 存为字符串，未写入时按 A3 处理
         gen_str = self.diag_ctx.cache.generation
         generation = NpuType(gen_str) if gen_str else NpuType.A3
-        # 代际确定后应用阈值覆盖配置（set_config_dir 时解析暂存，此处延迟应用）
-        self.diag_ctx.threshold_loader.apply(gen_str)
+        # 诊断启动后应用阈值覆盖配置（set_config_dir 时解析暂存，此处延迟应用；
+        # 覆盖对父类/子类的同名阈值同时生效，与端口速率选择无关）
+        self.diag_ctx.threshold_loader.apply()
         for cls in get_analyzers(generation):
             self.diag_ctx.diag_result.extend(cls(self.diag_ctx.cache).analyse())

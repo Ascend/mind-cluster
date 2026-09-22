@@ -22,7 +22,7 @@ import dataclasses
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from ascend_fd_tk.core.config.threshold_config import A5Threshold
+from ascend_fd_tk.core.config.threshold_config import OpticalThreshold800G
 from ascend_fd_tk.core.cli_module.cli_model import AutoSingleDiagCliModel
 from ascend_fd_tk.core.model.diag_result import BmcDomain, DiagResult, HostDomain, SwitchDomain
 from ascend_fd_tk.core.report.sheet.optical_module_sheet import (
@@ -282,7 +282,7 @@ class TestSheetLinkFilter(unittest.TestCase):
     @staticmethod
     def _make_cluster_info():
         cluster_info = MagicMock()
-        cluster_info.get_threshold.return_value = A5Threshold
+        cluster_info.get_threshold.return_value = OpticalThreshold800G
         return cluster_info
 
     def test_signal_link_sheet_filters_rows(self):

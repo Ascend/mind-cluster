@@ -15,7 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 
-"""ThresholdConfigLoader 单元测试：阈值配置文件的解析校验与按代际应用
+"""ThresholdConfigLoader 单元测试：阈值配置文件的解析校验与应用
 
 覆盖本次新增的配置能力：
 - 嵌套 threshold 子对象格式解析
@@ -24,7 +24,8 @@
 - 字符串字段类型校验（desc/unit/normal_value_* 非字符串忽略）
 - desc/unit 长度上限校验
 - 数值字段合法性校验（含 JSON 数字类型透传）
-- 按代际（A3/A5）应用覆盖与重置
+- 子类父类同名阈值属性均被覆盖，仅在某一类定义的阈值只覆盖该类
+- 按端口速率（interface_name 含 800GUB/800GE）选择阈值Profile类
 """
 
 import json
@@ -33,11 +34,13 @@ import shutil
 import tempfile
 import unittest
 
-from ascend_fd_tk.core.config.threshold_config import A5Threshold, BaseThreshold
+from ascend_fd_tk.core.config.threshold_config import BaseThreshold, OpticalThreshold800G
 from ascend_fd_tk.core.config.threshold_loader import (
     ThresholdConfigLoader,
     DESC_MAX_LEN,
     UNIT_MAX_LEN,
+    get_threshold_cls,
+    get_threshold_cls_by_generation,
 )
 
 CONFIG_FILE = "threshold_config.json"
@@ -83,13 +86,14 @@ class TestValidateField(unittest.TestCase):
 class TestThresholdLoaderParse(unittest.TestCase):
     """配置文件解析与覆盖暂存"""
 
+    # pylint: disable=duplicate-code
     def setUp(self):
         self._tmp_dir = tempfile.mkdtemp()
         self._loader = ThresholdConfigLoader()
 
     def tearDown(self):
         # 恢复全部 Profile 为代码默认值，避免影响同进程内其他用例
-        ThresholdConfigLoader().apply("A3")
+        ThresholdConfigLoader().apply()
         shutil.rmtree(self._tmp_dir, ignore_errors=True)
 
     def _write_config(self, config):
@@ -103,9 +107,9 @@ class TestThresholdLoaderParse(unittest.TestCase):
         empty_dir = tempfile.mkdtemp()
         try:
             self.assertEqual(self._loader.parse(empty_dir), {})
-            self._loader.apply("A5")
-            self.assertEqual(A5Threshold.HOST_SNR_DB.desc, "host snr")
-            self.assertEqual(A5Threshold.HOST_SNR_DB.unit, "dB")
+            self._loader.apply()
+            self.assertEqual(OpticalThreshold800G.HOST_SNR_DB.desc, "host snr")
+            self.assertEqual(OpticalThreshold800G.HOST_SNR_DB.unit, "dB")
         finally:
             shutil.rmtree(empty_dir, ignore_errors=True)
 
@@ -173,14 +177,14 @@ class TestThresholdLoaderParse(unittest.TestCase):
 
 
 class TestThresholdLoaderApply(unittest.TestCase):
-    """覆盖应用与按代际行为"""
+    """覆盖应用：子类父类同名属性均覆盖，仅在某一类定义的只覆盖该类"""
 
     def setUp(self):
         self._tmp_dir = tempfile.mkdtemp()
         self._loader = ThresholdConfigLoader()
 
     def tearDown(self):
-        ThresholdConfigLoader().apply("A3")
+        ThresholdConfigLoader().apply()
         shutil.rmtree(self._tmp_dir, ignore_errors=True)
 
     def _write_config(self, config):
@@ -195,50 +199,89 @@ class TestThresholdLoaderApply(unittest.TestCase):
             {"HOST_SNR_DB": {"threshold": {"low_value_alarm": "18", "desc": "host snr custom", "unit": "dB"}}}
         )
         self._loader.parse(self._tmp_dir)
-        self._loader.apply("A5")
-        self.assertEqual(A5Threshold.HOST_SNR_DB.low_alarm_th, "18")
-        self.assertEqual(A5Threshold.HOST_SNR_DB.desc, "host snr custom")
-        self.assertEqual(A5Threshold.HOST_SNR_DB.unit, "dB")
+        self._loader.apply()
+        self.assertEqual(OpticalThreshold800G.HOST_SNR_DB.low_alarm_th, "18")
+        self.assertEqual(OpticalThreshold800G.HOST_SNR_DB.desc, "host snr custom")
+        self.assertEqual(OpticalThreshold800G.HOST_SNR_DB.unit, "dB")
         # 未配置项保持默认
-        self.assertEqual(A5Threshold.CDR_HOST_SNR_DB.desc, "cdr host snr")
+        self.assertEqual(OpticalThreshold800G.CDR_HOST_SNR_DB.desc, "cdr host snr")
 
-    def test_apply_to_both_generations(self):
-        """同一份配置分别覆盖 A3/A5 代际 Profile"""
-        self._write_config({"TX_BIAS_MA": {"threshold": {"low_value_alarm": "6", "unit": "mA"}}})
+    def test_apply_to_both_base_and_800g(self):
+        """子类父类同名阈值属性都校验并覆盖：HOST_SNR_DB 在父类与子类上均有定义，两处同时生效"""
+        self._write_config({"HOST_SNR_DB": {"threshold": {"low_value_alarm": "17", "unit": "dB"}}})
         self._loader.parse(self._tmp_dir)
-        self._loader.apply("A3")
-        self.assertEqual(BaseThreshold.TX_BIAS_MA.low_alarm_th, "6")
-        self._loader.apply("A5")
-        self.assertEqual(A5Threshold.TX_BIAS_MA.low_alarm_th, "6")
+        self._loader.apply()
+        self.assertEqual(BaseThreshold.HOST_SNR_DB.low_alarm_th, "17")
+        self.assertEqual(OpticalThreshold800G.HOST_SNR_DB.low_alarm_th, "17")
+
+    def test_apply_to_class_defining_the_threshold_only(self):
+        """仅在某一类定义的阈值只覆盖该类：LPO_TX_BIAS_MA 只在800G类定义，父类不受影响"""
+        self._write_config({"LPO_TX_BIAS_MA": {"threshold": {"low_value_alarm": "1"}}})
+        self._loader.parse(self._tmp_dir)
+        self._loader.apply()
+        self.assertEqual(OpticalThreshold800G.LPO_TX_BIAS_MA.low_alarm_th, "1")
+        self.assertNotIn("LPO_TX_BIAS_MA", vars(BaseThreshold))
 
     def test_numeric_json_number_accepted(self):
         """数值字段以 JSON 数字配置时正常应用"""
         self._write_config({"RX_POWER_DBM": {"threshold": {"low_value_alarm": -10.0}}})
         self._loader.parse(self._tmp_dir)
-        self._loader.apply("A5")
-        self.assertEqual(A5Threshold.RX_POWER_DBM.low_alarm_th, "-10.0")
-        self.assertEqual(A5Threshold.RX_POWER_DBM._low_alarm_th_f, -10.0)
+        self._loader.apply()
+        self.assertEqual(OpticalThreshold800G.RX_POWER_DBM.low_alarm_th, "-10.0")
+        self.assertEqual(OpticalThreshold800G.RX_POWER_DBM._low_alarm_th_f, -10.0)
 
     def test_invalid_key_ignored_at_apply(self):
         """配置键不是合法阈值名时应用阶段忽略"""
-        default = A5Threshold.HOST_SNR_DB.low_alarm_th
+        default = OpticalThreshold800G.HOST_SNR_DB.low_alarm_th
         self._write_config({"NOT_A_THRESHOLD": {"threshold": {"low_value_alarm": "1"}}})
         self._loader.parse(self._tmp_dir)
-        self._loader.apply("A5")  # 不抛异常，阈值保持不变
-        self.assertEqual(A5Threshold.HOST_SNR_DB.low_alarm_th, default)
+        self._loader.apply()  # 不抛异常，阈值保持不变
+        self.assertEqual(OpticalThreshold800G.HOST_SNR_DB.low_alarm_th, default)
 
     def test_apply_resets_previous_overrides(self):
         """重复 apply 先重置再应用，旧覆盖不残留"""
         self._write_config({"HOST_SNR_DB": {"threshold": {"low_value_alarm": "18"}}})
         self._loader.parse(self._tmp_dir)
-        self._loader.apply("A5")
-        self.assertEqual(A5Threshold.HOST_SNR_DB.low_alarm_th, "18")
+        self._loader.apply()
+        self.assertEqual(OpticalThreshold800G.HOST_SNR_DB.low_alarm_th, "18")
         self._write_config({"HOST_SNR_DB": {"threshold": {"low_value_alarm": "17"}}})
         self._loader.parse(self._tmp_dir)
-        self._loader.apply("A5")
-        self.assertEqual(A5Threshold.HOST_SNR_DB.low_alarm_th, "17")
+        self._loader.apply()
+        self.assertEqual(OpticalThreshold800G.HOST_SNR_DB.low_alarm_th, "17")
         # 未再配置的字段恢复默认
-        self.assertEqual(A5Threshold.HOST_SNR_DB.desc, "host snr")
+        self.assertEqual(OpticalThreshold800G.HOST_SNR_DB.desc, "host snr")
+
+
+class TestGetThresholdCls(unittest.TestCase):
+    """按端口速率选择阈值Profile类"""
+
+    def test_800gub_interface_returns_800g_profile(self):
+        """端口名含 800GUB 时返回800G光模块阈值（大小写不敏感）"""
+        self.assertIs(get_threshold_cls("800GUB_1-1"), OpticalThreshold800G)
+        self.assertIs(get_threshold_cls("800gub0/1/0"), OpticalThreshold800G)
+
+    def test_800ge_interface_returns_800g_profile(self):
+        """端口名含 800GE 时返回800G光模块阈值（大小写不敏感）"""
+        self.assertIs(get_threshold_cls("800GE0/0/1"), OpticalThreshold800G)
+        self.assertIs(get_threshold_cls("eth-800ge-2"), OpticalThreshold800G)
+
+    def test_other_interfaces_return_base_profile(self):
+        """200G/400G等端口名返回默认阈值"""
+        self.assertIs(get_threshold_cls("200G_1-1"), BaseThreshold)
+        self.assertIs(get_threshold_cls("400GE0/0/1"), BaseThreshold)
+        self.assertIs(get_threshold_cls("10GE0/0/1"), BaseThreshold)
+
+    def test_empty_interface_returns_base_profile(self):
+        """端口名未指定时返回默认阈值"""
+        self.assertIs(get_threshold_cls(None), BaseThreshold)
+        self.assertIs(get_threshold_cls(""), BaseThreshold)
+
+    def test_generation_fallback(self):
+        """无端口名上下文时按代际回退：A5 → 800G光模块阈值，A3/未知 → 默认阈值"""
+        self.assertIs(get_threshold_cls_by_generation("A5"), OpticalThreshold800G)
+        self.assertIs(get_threshold_cls_by_generation("A3"), BaseThreshold)
+        self.assertIs(get_threshold_cls_by_generation(None), BaseThreshold)
+        self.assertIs(get_threshold_cls_by_generation("UNKNOWN"), BaseThreshold)
 
 
 if __name__ == "__main__":

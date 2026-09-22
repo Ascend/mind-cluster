@@ -21,7 +21,7 @@ from ascend_fd_tk.core.model.threshold import Threshold
 class OpticalThresholdView:
     """光模块类型阈值视图：属性访问时按 {TYPE}_{METRIC} 优先解析，未定义时回退基础阈值
 
-    用法：诊断侧逐光模块选阈值，view = A5Threshold.get_optical_view(optical_type)，
+    用法：诊断侧逐光模块选阈值，view = OpticalThreshold800G.get_optical_view(optical_type)，
     之后 view.TX_POWER_DBM 等属性访问方式与 Profile 类一致，可直接传入原有检查逻辑。
     """
 
@@ -115,8 +115,12 @@ class BaseThreshold:
         return OpticalThresholdView(cls, optical_type)
 
 
-class A5Threshold(BaseThreshold):
-    """A5 代际阈值：仅覆盖与 A3 不同的项，相同的继承 BaseThreshold"""
+class OpticalThreshold800G(BaseThreshold):
+    """800G光模块阈值：仅覆盖与默认阈值不同的项，相同的继承 BaseThreshold
+
+    按端口速率（而非代际）选取：interface_name 含 800GUB/800GE 的端口使用本类，
+    其余端口使用 BaseThreshold（见 threshold_loader.get_threshold_cls）。
+    """
 
     TX_BIAS_MA = Threshold(
         low_value_alarm="4.00",
@@ -182,7 +186,7 @@ class A5Threshold(BaseThreshold):
     )
     LPO_POWER_LANE_DIFF_DB = Threshold(high_value_alarm="3", desc="lpo power lane diff", unit="dBm")
 
-    # ==================== A5 新增网卡（NIC SFP）阈值 ====================
+    # ==================== 800G 新增网卡（NIC SFP）阈值 ====================
     NIC_TX_BIAS_MA = Threshold(
         low_value_alarm="0.5",
         low_value_warn="1",

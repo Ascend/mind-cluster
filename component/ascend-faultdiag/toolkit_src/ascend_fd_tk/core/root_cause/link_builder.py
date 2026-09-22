@@ -335,11 +335,13 @@ class LinkBuilder:
         optical = interface.get_optical_module_info() if interface else None
         if not optical:
             return
+        # 阈值按端口速率选取：800G端口（800GUB/800GE）用800G光模块阈值，其余用默认阈值
+        threshold_cls = self._cluster_info.get_threshold(interface.interface if interface else "")
         host_rule = RULE_L1_OPTICAL_HOST if prefix == "l1" else RULE_L2_OPTICAL_HOST
         media_rule = RULE_L1_OPTICAL_MEDIA if prefix == "l1" else RULE_L2_OPTICAL_MEDIA
-        if self._snr_checker.check_optical_host_snr_abnormal(optical):
+        if self._snr_checker.check_optical_host_snr_abnormal(optical, threshold_cls):
             triggered_rules.append(host_rule)
-        if self._snr_checker.check_optical_media_snr_abnormal(optical):
+        if self._snr_checker.check_optical_media_snr_abnormal(optical, threshold_cls):
             triggered_rules.append(media_rule)
 
     # ================================================================

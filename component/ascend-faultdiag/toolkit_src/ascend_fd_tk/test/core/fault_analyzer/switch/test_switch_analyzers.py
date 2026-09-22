@@ -17,9 +17,10 @@
 
 import unittest
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from ascend_fd_tk.core.common.constants import BIT_ERROR_RATE_LIMIT
+from ascend_fd_tk.core.config.threshold_config import BaseThreshold
 from ascend_fd_tk.core.fault_analyzer.switch.bit_err_rate_analyzer import BitErrRateAnalyzer
 from ascend_fd_tk.core.fault_analyzer.switch.crc_err_rising_alarm_analyzer import CrcRisingCheckItem
 from ascend_fd_tk.core.fault_analyzer.switch.lane_reduction_analyzer import LaneReductionAnalyzer
@@ -174,20 +175,27 @@ class TestSwitchAnalyzers(unittest.TestCase):
             interface_full_infos={"100GE1/0/1": full_info},
         )
         cluster = _cluster_with_switch(switch_info)
-        cluster.get_threshold = MagicMock(return_value=SimpleNamespace(SNR_LANE_DIFF_DB=object()))
+        cluster.get_threshold = MagicMock(return_value=BaseThreshold)
         analyzer = SwitchAnalyzer(cluster)
-        analyzer.fault_check = MagicMock()
-        analyzer.fault_check.power_analyze_single_ended.return_value = ["power"]
-        analyzer.fault_check.snr_analyze_single_ended.return_value = ["snr"]
-        analyzer.fault_check.bias_analyze_single_ended.return_value = ["bias"]
+        fault_check = MagicMock()
+        fault_check.power_analyze_single_ended.return_value = ["power"]
+        fault_check.snr_analyze_single_ended.return_value = ["snr"]
+        fault_check.bias_analyze_single_ended.return_value = ["bias"]
 
-        results = analyzer.inter_switch_fault_analyze(switch_info)
+        # OpticalFaultChecker 在分析时按端口速率构造，patch 类以拦截单端检测委托
+        with patch(
+            "ascend_fd_tk.core.fault_analyzer.switch.switch_analyzer.OpticalFaultChecker",
+            return_value=fault_check,
+        ):
+            results = analyzer.inter_switch_fault_analyze(switch_info)
 
         self.assertEqual(results, ["power", "snr", "bias"])
-        analyzer.fault_check.power_analyze_single_ended.assert_called_once()
-        analyzer.fault_check.snr_analyze_single_ended.assert_called_once()
-        analyzer.fault_check.bias_analyze_single_ended.assert_called_once()
-        self.assertEqual(analyzer.fault_check.power_analyze_single_ended.call_args.args[0].slot_id, "61")
+        fault_check.power_analyze_single_ended.assert_called_once()
+        fault_check.snr_analyze_single_ended.assert_called_once()
+        fault_check.bias_analyze_single_ended.assert_called_once()
+        self.assertEqual(fault_check.power_analyze_single_ended.call_args.args[0].slot_id, "61")
+        # 阈值按端口速率选取：100GE 端口取默认阈值
+        cluster.get_threshold.assert_called_once_with("100GE1/0/1")
 
     def test_qos_credit_reports_only_current_zero_with_alloc_non_zero(self):
         # NPU 槽位 SwitchInfo：QoS Credit 实体挂在 switch 属性 qos_credit_infos 上

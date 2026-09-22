@@ -33,7 +33,7 @@ class HostNicLaneAnalyzerA5(Analyzer):
 
     def __init__(self, cluster_info):
         super().__init__(cluster_info)
-        # NIC_* 阈值定义在 A5Threshold 中（A5 代际新增网卡类别），A5 诊断时经 get_threshold() 取到
+        # NIC_* 阈值定义在 OpticalThreshold800G（800G光模块阈值）中，A5 主机侧无端口名上下文，经 get_threshold() 按代际回退取到
         self._threshold = cluster_info.get_threshold()
 
     def _check_nic_port_lanes(

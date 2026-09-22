@@ -19,7 +19,7 @@ from typing import Dict, Tuple, Union
 
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.config import port_mapping_config
-from ascend_fd_tk.core.config.threshold_loader import get_threshold_cls
+from ascend_fd_tk.core.config.threshold_loader import get_threshold_cls, get_threshold_cls_by_generation
 from ascend_fd_tk.core.model.bmc import BmcInfo
 from ascend_fd_tk.core.model.cluster_mapping import ChassisMapping, L1SwiServerMapping
 from ascend_fd_tk.core.model.host import HostInfo
@@ -63,9 +63,15 @@ class ClusterInfoCache(JsonObj):
         self._chassis_mappings = ChassisMapping(l1_swi_server_mappings)
         self.swi_info_name_map = {swi_info.name: swi_info for swi_info in self.swis_info.values()}
 
-    def get_threshold(self):
-        # 按集群代际返回对应阈值Profile类（A3/A5/...），未写入代际时按 A3 处理
-        return get_threshold_cls(self.generation)
+    def get_threshold(self, interface_name: str = None):
+        """返回阈值Profile类：优先按端口速率选取
+
+        有 interface_name 时按端口速率选（含 800GUB/800GE → 800G光模块阈值，否则默认阈值）；
+        无端口名上下文（主机侧等）时按集群代际回退（A5 → 800G光模块阈值，A3/未写入 → 默认阈值）。
+        """
+        if interface_name:
+            return get_threshold_cls(interface_name)
+        return get_threshold_cls_by_generation(self.generation)
 
     def get_chassis_mappings(self):
         return self._chassis_mappings

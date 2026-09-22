@@ -71,8 +71,12 @@ class PortLanePowerDiffAnalyzer(Analyzer):
                 domain = SwitchDomain(
                     swi_id=swi_info.swi_id, slot_id=swi_info.slot_id, interface=interface_full_info.interface
                 )
+                # 交换机侧阈值按端口速率选取：800G端口用800G光模块阈值，其余用默认阈值
                 res = self._generate_diag_result(
-                    domain, optical_module_info.lane_power_infos, optical_module_info.optical_type
+                    domain,
+                    optical_module_info.lane_power_infos,
+                    optical_module_info.optical_type,
+                    self.cluster_info.get_threshold(interface_full_info.interface),
                 )
                 if not res:
                     continue
@@ -100,11 +104,15 @@ class PortLanePowerDiffAnalyzer(Analyzer):
         return results
 
     def _generate_diag_result(
-        self, domain, lane_power_infos: List[LanePowerInfo], optical_type: str = ""
+        self, domain, lane_power_infos: List[LanePowerInfo], optical_type: str = "", threshold_cls=None
     ) -> DiagResult:
         check_results = [
-            self._check_lane_power_diff(lane_power_infos, "tx_power_dbm", DeviceType.TX_PORT.value, optical_type),
-            self._check_lane_power_diff(lane_power_infos, "rx_power_dbm", DeviceType.RX_PORT.value, optical_type),
+            self._check_lane_power_diff(
+                lane_power_infos, "tx_power_dbm", DeviceType.TX_PORT.value, optical_type, threshold_cls
+            ),
+            self._check_lane_power_diff(
+                lane_power_infos, "rx_power_dbm", DeviceType.RX_PORT.value, optical_type, threshold_cls
+            ),
         ]
         if not any(check_results):
             return None
@@ -114,7 +122,12 @@ class PortLanePowerDiffAnalyzer(Analyzer):
         )
 
     def _check_lane_power_diff(
-        self, lane_power_infos: List[LanePowerInfo], attr: str, port_type: str, optical_type: str = ""
+        self,
+        lane_power_infos: List[LanePowerInfo],
+        attr: str,
+        port_type: str,
+        optical_type: str = "",
+        threshold_cls=None,
     ) -> str:
         origin_attr = attr.replace("_dbm", "")
         lane_value_list = [
@@ -122,7 +135,6 @@ class PortLanePowerDiffAnalyzer(Analyzer):
             for lane_power_info in lane_power_infos
             if getattr(lane_power_info, origin_attr) != self._NA_POWER
         ]
-        # 阈值按光模块类型（ODSP/LPO）选择，交换机/BMC侧无类型信息自然回退基础阈值
-        th = self._threshold.get_optical_view(optical_type).POWER_LANE_DIFF_DB
-        diff_desc_list = th.check_lane_diff_desc(lane_value_list, port_type)
-        return "\n".join(diff_desc_list)
+        th = (threshold_cls or self._threshold).get_optical_view(optical_type).POWER_LANE_DIFF_DB
+        diff_descs = th.check_lane_diff_desc(lane_value_list, port_type)
+        return "\n".join(diff_descs) if diff_descs else ""
