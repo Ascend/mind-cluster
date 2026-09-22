@@ -52,19 +52,22 @@ Starting from version v26.1.0, tags follow the format below:
 
 | Field     | Example       | Description                              |
 |-----------|---------------|------------------------------------------|
-| `version` | `v26.1.0`     | Version Number of NPU Exporter           |
+| `version` | `v26.1.1`     | Version Number of NPU Exporter           |
 | `os`      | `ubuntu22.04` | Operating System for NPU Exporter Images |
 
-### NPU Exporter 26.1.0
+### NPU Exporter Latest Version 26.1.1
+
+The following are all images of the latest released 26.1.1 version of NPU Exporter. For all historical
+version Tags, please refer to [Supported Tags](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/npu-exporter/supported_tags.md).
 
 | Tag                      | Dockerfile                                                                                                                   | Image Content                                      |
 |--------------------------|------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|
-| `v26.1.0-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/npu-exporter/v26.1.0/Dockerfile.ubuntu)       | NPU Exporter v26.1.0 (Base Image: Ubuntu 22.04)    |
-| `v26.1.0-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/npu-exporter/v26.1.0/Dockerfile.openeuler) | NPU Exporter v26.1.0 (Base Image: openEuler 24.03) |
+| `v26.1.1-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/npu-exporter/v26.1.1/Dockerfile.ubuntu)       | NPU Exporter v26.1.1 (Base Image: Ubuntu 22.04)    |
+| `v26.1.1-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/npu-exporter/v26.1.1/Dockerfile.openeuler) | NPU Exporter v26.1.1 (Base Image: openEuler 24.03) |
 
 ---
 
-Tags for v26.0.0 and earlier versions follow the format below:
+The tags of versions before v26.1.0 follow the format below:
 
 ```text
 <version>
@@ -122,7 +125,7 @@ Tags for v26.0.0 and earlier versions follow the format below:
 
 #### Local Build Steps for v26.1.0 and Later Versions
 
-Example: build an NPU Exporter image of architecture linux-aarch64, version v26.1.0, based on Ubuntu 22.04.
+Example: build an NPU Exporter image of architecture linux-aarch64, version v26.1.1, based on Ubuntu 22.04.
 
 1. Obtain the target Dockerfile
 
@@ -132,7 +135,7 @@ Example: build an NPU Exporter image of architecture linux-aarch64, version v26.
 2. Build the Docker image locally (disable cache to ensure a clean build)
 
    ```bash
-   docker build --no-cache -t npu-exporter:v26.1.0 ./ -f Dockerfile.ubuntu
+   docker build --no-cache -t npu-exporter:v26.1.1 ./ -f Dockerfile.ubuntu
    ```
 
 > **Important Notes**
@@ -149,7 +152,7 @@ Example: build an NPU Exporter image of architecture linux-aarch64, version v26.
 > export DOCKER_BUILDKIT=1
 > ```
 
-#### Local Build Steps for v26.0.0 and Earlier Versions
+#### Local Image Build Process for Versions Before v26.1.0
 
 Example: Build an NPU Exporter image of architecture linux-aarch64, version v26.0.0, based on Ubuntu 22.04.
 
@@ -209,13 +212,6 @@ Example: Build an NPU Exporter image of architecture linux-aarch64, version v26.
    ```bash
    curl http://<pod-ip>:8082/metrics
    ```
-
----
-
-## Supported Hardware
-
-For descriptions of currently supported Atlas hardware models, please refer to the official documentation:
-[Supported Product Formats and OS List](https://gitcode.com/Ascend/mind-cluster/blob/master/docs/zh/scheduling/01_introduction/03_supported_product_models_and_os.md#%E6%94%AF%E6%8C%81%E7%9A%84%E4%BA%A7%E5%93%81%E5%BD%A2%E6%80%81%E5%92%8Cos%E6%B8%85%E5%8D%95)
 
 ---
 

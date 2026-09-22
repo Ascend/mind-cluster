@@ -51,19 +51,22 @@ ClusterD 是 MindCluster 集群调度组件之一，部署在管理节点上，�
 
 | 字段     | 示例值           | 说明              |
 |--------|---------------|-----------------|
-| `版本`   | `v26.1.0`     | ClusterD 版本号    |
+| `版本`   | `v26.1.1`     | ClusterD 版本号    |
 | `操作系统` | `ubuntu22.04` | ClusterD 镜像操作系统 |
 
-### ClusterD 26.1.0
+### ClusterD 最新版本 26.1.1
+
+如下所示是 ClusterD 最新发布的 26.1.1 版本的所有镜像，历史版本所有 Tag
+请参考 [Supported Tags](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/clusterd/supported_tags.md)。
 
 | Tag                      | Dockerfile                                                                                                               | 镜像内容                                    |
 |--------------------------|--------------------------------------------------------------------------------------------------------------------------|-----------------------------------------|
-| `v26.1.0-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/clusterd/v26.1.0/Dockerfile.ubuntu)       | ClusterD v26.1.0 (基础镜像 Ubuntu 22.04)    |
-| `v26.1.0-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/clusterd/v26.1.0/Dockerfile.openeuler) | ClusterD v26.1.0 (基础镜像 openEuler 24.03) |
+| `v26.1.1-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/clusterd/v26.1.1/Dockerfile.ubuntu)       | ClusterD v26.1.1 (基础镜像 Ubuntu 22.04)    |
+| `v26.1.1-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/clusterd/v26.1.1/Dockerfile.openeuler) | ClusterD v26.1.1 (基础镜像 openEuler 24.03) |
 
 ---
 
-v26.0.0及以前版本的 Tag 遵循以下格式：
+v26.1.0之前版本的 Tag 遵循以下格式：
 
 ```shell
 <版本>
@@ -122,7 +125,7 @@ v26.0.0及以前版本的 Tag 遵循以下格式：
 
 #### v26.1.0 及更高版本本地镜像构建流程
 
-示例场景：构建 linux-aarch64 架构、v26.1.0 版本、基于 Ubuntu 22.04 的 ClusterD 组件镜像。
+示例场景：构建 linux-aarch64 架构、v26.1.1 版本、基于 Ubuntu 22.04 的 ClusterD 组件镜像。
 
 1. 获取对应架构的 Dockerfile
 
@@ -131,7 +134,7 @@ v26.0.0及以前版本的 Tag 遵循以下格式：
 2. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
 
    ```bash
-   docker build --no-cache -t clusterd:v26.1.0 ./ -f Dockerfile.ubuntu
+   docker build --no-cache -t clusterd:v26.1.1 ./ -f Dockerfile.ubuntu
    ```
 
 > **重要注意事项**
@@ -145,7 +148,7 @@ v26.0.0及以前版本的 Tag 遵循以下格式：
 > export DOCKER_BUILDKIT=1
 > ```
 
-#### v26.0.0 及更早版本本地镜像构建流程
+#### v26.1.0 之前版本本地镜像构建流程
 
 示例场景：构建 linux-aarch64 架构、v26.0.0 版本、基于 Ubuntu 22.04 的 ClusterD 组件镜像。
 
@@ -190,13 +193,6 @@ kubectl get pods -A | grep clusterd
 ```
 
 预期结果：对应命名空间下的 clusterd 相关 Pod 状态为 Running。
-
----
-
-## 支持的硬件
-
-当前支持的昇腾硬件型号说明，请参考官方文档：
-[支持的产品形态和OS清单](https://gitcode.com/Ascend/mind-cluster/blob/master/docs/zh/scheduling/01_introduction/03_supported_product_models_and_os.md#%E6%94%AF%E6%8C%81%E7%9A%84%E4%BA%A7%E5%93%81%E5%BD%A2%E6%80%81%E5%92%8Cos%E6%B8%85%E5%8D%95)
 
 ---
 
