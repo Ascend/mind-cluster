@@ -1,9 +1,12 @@
 name: PR-pipeline_mindcluster
 
 on:
+  pr_comment:
+    types: [created]
+    keyword: '^compile$'
   pull_request_comment:
     types: [created]
-    branches: [ 'master', '26.1.0', '26.0.0', '7.3.0' ]
+    branches: [ 'master', '26.2.0', '26.1.0', '26.0.0' ]
     comments: [ 'compile' ]
   workflow_dispatch:
     inputs:
@@ -38,6 +41,8 @@ inputs:
 
 env:
   BUILD_SKIP: "no"
+  org_name: "Ascend"
+  repo_name: "mind-cluster"
   img_clone_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:only_obsutil"
   img_sca_x86: "swr.cn-north-4.myhuaweicloud.com/huawei-ascend/demo_mindx:mindxdl_20230912_1"
   img_antipoison_x86: "swr.cn-north-4.myhuaweicloud.com/huawei-ascend/demo_mindx:mindxdl_20230912_1"
@@ -57,16 +62,19 @@ env:
   img_presmoke_arm: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:SDK_20260112_1"
 
 permissions:
+  project: read
   repository: read
   id-token: write
+  pr: write
+  note: write
 
 stages:
   stage_0:
     name: CodeCheck
     select: selected_by_default
     jobs:
-      Only_doc_commit_check:
-        name: Only_doc_commit_check
+      Detect_file_changes:
+        name: Detect_file_changes
         runs-on: [ self-hosted, x86, cpu=32 ]
         container:
           image: swr.cn-north-4.myhuaweicloud.com/pytorch_images_x86/pytorchx86:v_03
@@ -85,7 +93,7 @@ stages:
               base: ${{ atomgit.event.pull_request.base.ref }}
               repo: ${{ atomgit.repository }}
               number: ${{ env.pr_id }}
-              token: ${{ atomgit.ATOMGIT_TOKEN }}
+              token: ${{ secrets.GIT_TOKEN }}
               list-files: json
               predicate-quantifier: every
               filters: |
@@ -113,15 +121,35 @@ stages:
               echo "${{ steps.filter.outputs.changed_files }}" | tr -d '[]" ' | tr ',' '\n' > modify_files.txt
               cat modify_files.txt
 
+      associate_pr_comment:
+        name: associate_pr_comment
+        select: selected_by_default
+        runs-on: [ self-hosted, x86, cpu=16 ]
+        container:
+          image: swr.cn-north-4.myhuaweicloud.com/atlas-ci/common:latest
+        steps:
+          - name: associate-pr-comment
+            uses: associate-pr-comment
+          - name: pre_pipeline
+            id: pre_pipeline
+            uses: cann/.gitcode/actions/pre-pipeline@689551d6b29a77d8c2a005b8f1b3883db24820ef
+            with:
+              owner: ${{ env.org_name }}
+              repo: ${{ env.repo_name }}
+              pr_number: ${{ atomgit.event.pull_request.number }}
+              token: ${{ secrets.GIT_TOKEN }}
+              apply_label: 'true'
+              run_url: https://gitcode.com/${{ env.org_name }}/${{ env.repo_name }}/actions/runs/${{ atomgit.workflow_run_id }}
+
   stage_1:
     name: Build
     select: selected_by_default
     jobs:
       pre-commit:
         name: pre-commit
-        runs-on: [ self-hosted, x86, cpu=32 ]
+        runs-on: [ self-hosted, x86, cpu=16 ]
         container:
-          image: swr.cn-north-4.myhuaweicloud.com/mindspore/mindspore_python3.11:v0.1
+          image: swr.cn-north-4.myhuaweicloud.com/atlas-ci/common:latest
           options: --user root
         steps:
           - name: checkout
@@ -141,9 +169,9 @@ stages:
 
       SCA:
         name: SCA
-        runs-on: [ self-hosted, x86, cpu=32 ]
+        runs-on: [ self-hosted, x86, cpu=8 ]
         container:
-          image: swr.cn-north-4.myhuaweicloud.com/mindspore/mindspore_python3.11:v0.1
+          image: swr.cn-north-4.myhuaweicloud.com/atlas-ci/common:latest
           options: --user root
         steps:
           - name: checkout
@@ -155,9 +183,9 @@ stages:
 
       malicious-scan:
         name: antipoison
-        runs-on: [ self-hosted, x86, cpu=32 ]
+        runs-on: [ self-hosted, x86, cpu=8 ]
         container:
-          image: swr.cn-north-4.myhuaweicloud.com/mindspore/mindspore_python3.11:v0.1
+          image: swr.cn-north-4.myhuaweicloud.com/atlas-ci/common:latest
           options: --user root
         steps:
           - name: Checkout
@@ -169,7 +197,7 @@ stages:
 
       Build_x86:
         name: Build_x86
-        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.build_job.yml
         with:
           IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindCluster_20260813"
@@ -177,7 +205,7 @@ stages:
 
       Build_arm:
         name: Build_arm
-        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.build_job.yml
         with:
           IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:mindCluster_20260813"
@@ -185,7 +213,7 @@ stages:
 
       Build_mindio_x86:
         name: Build_mindio_x86
-        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
+        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
         uses: .gitcode/workflows/.build_mindio.yml
         with:
           IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_20251203"
@@ -193,7 +221,7 @@ stages:
 
       Build_mindio_arm:
         name: Build_mindio_arm
-        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
+        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
         uses: .gitcode/workflows/.build_mindio.yml
         with:
           IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:mindxdl_go1207_20251202_1"
@@ -201,7 +229,7 @@ stages:
 
       Build_faultdiag_x86:
         name: Build_faultdiag_x86
-        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
+        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
         uses: .gitcode/workflows/.build_faultdiag.yml
         with:
           IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:SDK_20260113_1"
@@ -209,7 +237,7 @@ stages:
 
       Build_faultdiag_arm:
         name: Build_faultdiag_arm
-        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
+        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
         uses: .gitcode/workflows/.build_faultdiag.yml
         with:
           IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:SDK_20260113_1"
@@ -217,7 +245,7 @@ stages:
 
       UT_go:
         name: UT_go
-        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.ut_go.yml
         with:
           IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindCluster_20260813"
@@ -225,7 +253,7 @@ stages:
 
       UT_cpp:
         name: UT_cpp
-        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.ut_cpp.yml
         with:
           IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86_runtime_dt:mindxdl_DT_20240124"
@@ -233,7 +261,7 @@ stages:
 
       UT_python:
         name: UT_python
-        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.ut_python.yml
         with:
           IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_ub22_ut_20260421_cluster"
@@ -241,7 +269,7 @@ stages:
 
       UT_faultdiag_python:
         name: UT_faultdiag_python
-        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.ut_faultdiag_python.yml
         with:
           IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:SDK_20260113_1"
@@ -249,19 +277,37 @@ stages:
 
       UT_mindio_cpp:
         name: UT_mindio_cpp
-        if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
+        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.ut_mindio_cpp.yml
         with:
           IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_ub22_ut_20260421_cluster"
           runs_on_arch: "x86"
 
-  # stage_2:
-  #   name: Test
-  #   select: selected_by_default
-  #   jobs:
-  #     PreSmoke:
-  #       name: PreSmoke
-  #       if : ${{ jobs.Only_doc_commit_check.outputs.need_build == 'yes' }}
-  #       uses: .gitcode/workflows/.presmoke.yml
-  #       with:
-  #         runs_on_arch: "arm"
+  stage_2:
+    name: Test
+    select: selected_by_default
+    jobs:
+      PreSmoke:
+        name: PreSmoke
+        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
+        uses: .gitcode/workflows/.presmoke.yml
+        with:
+          runs_on_arch: "arm"
+
+post:
+  jobs:
+    query_pipeline:
+      runs-on: [ self-hosted, x86, cpu=16 ]
+      container:
+        image: swr.cn-north-4.myhuaweicloud.com/atlas-ci/common:latest
+      steps:
+        - name: query_pipeline
+          id: query_pipeline
+          uses: cann/.gitcode/actions/query-pipeline@689551d6b29a77d8c2a005b8f1b3883db24820ef
+          with:
+            owner: ${{ env.org_name }}
+            repo: ${{ env.repo_name }}
+            run_id: ${{ atomgit.workflow_run_id }}
+            token: ${{ secrets.GIT_TOKEN }}
+            pr_number: ${{ atomgit.event.pull_request.number }}
+            apply_label: 'true'
