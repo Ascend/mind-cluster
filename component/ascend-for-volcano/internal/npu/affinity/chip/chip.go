@@ -184,5 +184,38 @@ func (tp *chipHandler) ReleaseAnnotation(task *api.TaskInfo, node plugin.NPUNode
 	return &node
 }
 
+// RestoreAnnotation re-asserts an already-Running task's allocation on the node
+// without re-selecting chips (unevict rollback path), mirroring UseAnnotation:
+// the pod's existing chips, read from its own annotation, are re-registered on
+// the ChipTopo tree (TryAllocate) and re-subtracted from the node free-top
+// (UpdateNodeInfo). The paired ReleaseAnnotation already Rollback()-ed the chips
+// during the eviction, so they are free to be taken again.
+func (tp *chipHandler) RestoreAnnotation(task *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
+	if tp == nil || task == nil {
+		klog.V(util.LogErrorLev).Infof("%s RestoreAnnotation err: %s.", tp.GetPluginName(), util.ArgumentError)
+		return nil
+	}
+	root := node.ChipTopo
+	if root == nil {
+		klog.V(util.LogErrorLev).Infof("%s RestoreAnnotation task<%s> node<%s> has no topology tree",
+			tp.GetPluginName(), task.Name, node.Name)
+		return nil
+	}
+	chipIDs := util.GetAllocatedChipIDsFromPod(task.Pod)
+	if len(chipIDs) == 0 {
+		klog.V(util.LogDebugLev).Infof("%s RestoreAnnotation task<%s> has no chip annotation, skip.",
+			tp.GetPluginName(), task.Name)
+		return nil
+	}
+	klog.V(util.LogDebugLev).Infof("%s RestoreAnnotation task<%s> node<%s> restore chips %v",
+		tp.GetPluginName(), task.Name, node.Name, chipIDs)
+	if err := root.TryAllocate(string(task.Pod.UID), chipIDs); err != nil {
+		klog.V(util.LogWarningLev).Infof("%s RestoreAnnotation task<%s> node<%s> re-allocate chips %v: %v",
+			tp.GetPluginName(), task.Name, node.Name, chipIDs, err)
+		return nil
+	}
+	return tp.UpdateNodeInfo(node, chipIDs)
+}
+
 // ScoreFrameworkAware label chip-affinity score nodes by score-framework
 func (tp *chipHandler) ScoreFrameworkAware() bool { return true }

@@ -644,3 +644,43 @@ func TestValidNPUJobSimple(t *testing.T) {
 		})
 	}
 }
+
+func TestRestoreAnnotation(t *testing.T) {
+	npu := NPUHandler{}
+	npu.SetAnnoName(util.NPU910CardName)
+	npu.SetAnnoPreVal(util.NPU910CardNamePre)
+	npu.SetMaxNodeNPUNum(maxNodeNPUNum)
+	npu.SchedulerJobAttr.NPUJob = &util.NPUJob{ReqNPUName: util.NPU910CardName}
+
+	node := plugin.NPUNode{
+		CommonNode: plugin.CommonNode{
+			Name:       "node1",
+			Annotation: map[string]string{util.NPU910CardName: "Ascend910-4,Ascend910-3"},
+		},
+	}
+
+	// nil task -> nil
+	if got := npu.RestoreAnnotation(nil, node); got != nil {
+		t.Errorf("RestoreAnnotation(nil task) = %v, want nil", got)
+	}
+	// task without a chip annotation -> nil
+	noAnno := test.BuildTestTaskWithAnnotation(util.NPU910CardName, "1", "Ascend910-4")
+	delete(noAnno.Pod.Annotations, util.NPU910CardName)
+	if got := npu.RestoreAnnotation(noAnno, node); got != nil {
+		t.Errorf("RestoreAnnotation(no annotation task) = %v, want nil", got)
+	}
+
+	// a Running pod holding chip 4 is re-claimed on the node free-top: chip 4 is
+	// subtracted again, the pod annotation and the unallocated chips stay untouched.
+	rt := test.BuildTestTaskWithAnnotation(util.NPU910CardName, "1", "Ascend910-4")
+	got := npu.RestoreAnnotation(rt, node)
+	if got == nil {
+		t.Fatal("RestoreAnnotation = nil, want *NPUNode")
+	}
+	if left := got.Annotation[util.NPU910CardName]; left != "Ascend910-3" {
+		t.Errorf("RestoreAnnotation node free-top = %q, want %q", left, "Ascend910-3")
+	}
+	if anno := rt.Pod.Annotations[util.NPU910CardName]; anno != "Ascend910-4" {
+		t.Errorf("RestoreAnnotation must not touch pod annotation, got %q", anno)
+	}
+}

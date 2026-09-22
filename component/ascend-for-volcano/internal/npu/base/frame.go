@@ -209,6 +209,29 @@ func (tp *NPUHandler) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *pl
 	return tp.UpdateNodeInfo(node, selectedNPU)
 }
 
+// RestoreAnnotation re-asserts an already-Running task's allocation on the node
+// without re-selecting chips. A Running task reaches AllocateFunc only through
+// an unevict rollback after a discarded preempt/reclaim eviction: the pod is
+// still alive, so its own annotation is the authoritative chip list. This
+// mirrors UseAnnotation's node-side effect — subtracting the pod's chips from
+// the node free-top annotation again — but never calls SetNPUTopologyToPodFn
+// and never re-selects.
+func (tp *NPUHandler) RestoreAnnotation(task *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
+	if tp == nil || task == nil {
+		klog.V(util.LogErrorLev).Infof("%s RestoreAnnotation err: %s.", tp.GetPluginName(), util.ArgumentError)
+		return nil
+	}
+	chipIDs := util.GetAllocatedChipIDsFromPod(task.Pod)
+	if len(chipIDs) == 0 {
+		klog.V(util.LogDebugLev).Infof("%s RestoreAnnotation task<%s> has no chip annotation, skip.",
+			tp.GetPluginName(), task.Name)
+		return nil
+	}
+	klog.V(util.LogDebugLev).Infof("%s RestoreAnnotation task<%s> node<%s> restore chips %v",
+		tp.GetPluginName(), task.Name, node.Name, chipIDs)
+	return tp.UpdateNodeInfo(node, chipIDs)
+}
+
 // SetIsNetworkFaultAttention set network fault attention
 func (tp *NPUHandler) SetIsNetworkFaultAttention(value bool) {
 	tp.IsNetworkFaultAttention = value

@@ -33,19 +33,10 @@ import (
 
 // NPUAllocateFunc Allocate npu and called by volcano frame.
 func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
-	if task == nil {
-		klog.V(util.LogErrorLev).Infof("NPUAllocateFunc %s.", util.ArgumentError)
-		return
-	}
-	if util.IsDRATask(task) {
-		klog.V(util.LogInfoLev).Infof("NPUAllocateFunc bypass DRA task <%s>.", task.Name)
+	if !sHandle.isTaskNeedNPUAllocated(task) {
 		return
 	}
 
-	if !sHandle.isTaskNeedNPUAllocated(task) {
-		klog.V(util.LogDebugLev).Infof("NPUAllocateFunc %s no need to set pod annotation.", task.Name)
-		return
-	}
 	vcJob, ok := sHandle.Jobs[task.Job]
 	if !ok {
 		klog.V(util.LogDebugLev).Infof("NPUAllocateFunc %s not req npu.", task.Name)
@@ -62,41 +53,111 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 	nodeName := task.NodeName
 	node, found := sHandle.Nodes[nodeName]
 	if !found {
-		klog.V(util.LogWarningLev).Infof("%s npuAllocateFunc %s not exist.", PluginName, nodeName)
+		klog.V(util.LogWarningLev).Infof("%s npuAllocateFunc %s not exist.", PluginName, task.NodeName)
 		return
 	}
+
+	sHandle.markDistributionMode(task, vcJob)
+	newNode := sHandle.allocateOrRestoreNode(task, vcJob, node, nodeName)
+	sHandle.applyNodeAllocation(task, vcJob, nodeName, newNode)
+
+	// notify fault handler that the task is being (re-)allocated in place
+	if sHandle.FaultHandle != nil {
+		sHandle.FaultHandle.UseAnnotation(task)
+	}
+	// record pod-to-node mapping and keep SuperPods in sync on both paths
+	sHandle.postAllocateTask(task, &vcJob, nodeName)
+
+	klog.V(util.LogDebugLev).Infof("%s %s allocated on node [%s].", PluginName, util.SafePrint(task.Name), nodeName)
+}
+
+// isTaskNeedNPUAllocated reports whether the task needs the NPU allocate operation.
+// It returns false without side effects when the task is nil, managed by DRA, or
+// does not request NPU resources.
+func (sHandle ScheduleHandler) isTaskNeedNPUAllocated(task *api.TaskInfo) bool {
+	if task == nil {
+		klog.V(util.LogErrorLev).Infof("NPUAllocateFunc %s.", util.ArgumentError)
+		return false
+	}
+	if util.IsDRATask(task) {
+		klog.V(util.LogInfoLev).Infof("NPUAllocateFunc bypass DRA task <%s>.", task.Name)
+		return false
+	}
+	if !util.IsNPUTask(task) {
+		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s not npu task.", task.Name)
+		return false
+	}
+	return true
+}
+
+// markDistributionMode labels the pod as distributed or standalone according to the
+// job's task count. The value derives only from the fixed job shape, so the write
+// is idempotent on the running-restore path too.
+func (sHandle ScheduleHandler) markDistributionMode(task *api.TaskInfo, vcJob SchedulerJob) {
 	if vcJob.NPUTaskNum > 1 {
 		task.Pod.Annotations[util.DistributedJobKey] = util.DistributedJobValue
 	} else {
 		task.Pod.Annotations[util.DistributedJobKey] = util.StandaloneJobValue
 	}
-	vcNode := vcJob.policyHandler.UseAnnotation(task, node)
-	if vcNode != nil {
-		npuResName := v1.ResourceName(vcJob.ReqNPUName)
-		sHandle.updateChipCountAfterAllocate(task, vcNode, npuResName)
-		sHandle.Nodes[nodeName] = *vcNode
-	}
-	if sHandle.FaultHandle != nil {
-		sHandle.FaultHandle.UseAnnotation(task)
-	}
+	klog.V(util.LogDebugLev).Infof("%s %s job mode [%s].", PluginName, util.SafePrint(task.Name),
+		task.Pod.Annotations[util.DistributedJobKey])
+}
 
-	// Record pod-to-node mapping for "prefer previous node" scheduling.
-	// The cache internally saves the old Node as a rollback anchor (Previous field).
-	if sHandle.AffinityCache != nil && vcJob.Owner.UID != "" {
+// allocateOrRestoreNode produces the new node bookkeeping snapshot for the task.
+// A Running task reaches AllocateFunc only through statement rollback (unevict
+// after a discarded preempt/reclaim eviction): the pod is still alive and its
+// annotations are the authoritative device binding. Re-running UseAnnotation
+// would re-select chips and overwrite the in-flight allocation, so the node
+// free-top / chip tree are instead restored from the pod's existing annotation,
+// leaving the device-binding pod annotations untouched.
+func (sHandle ScheduleHandler) allocateOrRestoreNode(task *api.TaskInfo, vcJob SchedulerJob,
+	node NPUNode, nodeName string) *NPUNode {
+	if task.Status == api.Running {
+		hook, ok := vcJob.policyHandler.(RunningRestoreHook)
+		if !ok {
+			klog.V(util.LogWarningLev).Infof("%s %s running-restore on node [%s] but no RunningRestoreHook.",
+				PluginName, util.SafePrint(task.Name), nodeName)
+			return nil
+		}
+		klog.V(util.LogDebugLev).Infof("%s %s running-restore on node [%s], skip allocation annotation rewrite.",
+			PluginName, util.SafePrint(task.Name), nodeName)
+		return hook.RestoreAnnotation(task, node)
+	}
+	return vcJob.policyHandler.UseAnnotation(task, node)
+}
+
+// applyNodeAllocation writes back the node free-top / chip.PodMap bookkeeping
+// produced by UseAnnotation or RestoreAnnotation.
+func (sHandle ScheduleHandler) applyNodeAllocation(task *api.TaskInfo, vcJob SchedulerJob, nodeName string,
+	newNode *NPUNode) {
+	if newNode == nil {
+		return
+	}
+	npuResName := v1.ResourceName(vcJob.ReqNPUName)
+	sHandle.updateChipCountAfterAllocate(task, newNode, npuResName)
+	sHandle.Nodes[nodeName] = *newNode
+	klog.V(util.LogDebugLev).Infof("%s %s node [%s] bookkeeping updated.",
+		PluginName, util.SafePrint(task.Name), nodeName)
+}
+
+// postAllocateTask records the pod-to-node mapping in the "prefer previous node"
+// cache (the cache internally saves the old Node as a rollback anchor, Previous),
+// and, for hot-switch backup pods, notifies the policy handler so it can update
+// internal state (e.g. SuperPods) with the backup pod's node. Shared by the
+// first-time allocate path and the running-restore (unevict rollback) path: both
+// end with the pod on nodeName, so the affinity entry (and its TTL) must be
+// re-affirmed and SuperPods kept in sync.
+func (sHandle ScheduleHandler) postAllocateTask(task *api.TaskInfo, job *SchedulerJob, nodeName string) {
+	if sHandle.AffinityCache != nil && job.Owner.UID != "" {
 		if rankIndex, ok := task.Pod.Annotations[PodRankIndexKey]; ok && rankIndex != "" {
-			sHandle.AffinityCache.RecordAssignment(vcJob.Owner.UID, rankIndex, nodeName)
+			sHandle.AffinityCache.RecordAssignment(job.Owner.UID, rankIndex, nodeName)
 		}
 	}
-
-	// For hot-switch backup pods, notify the policy handler so it can update
-	// internal state (e.g. SuperPods) with the backup pod's new node.
 	if _, isBackup := task.Pod.Annotations[consts.BackupSourcePodNameKey]; isBackup {
-		if hook, ok := vcJob.policyHandler.(BackupPodAllocatedHook); ok {
-			hook.OnBackupPodAllocated(task, &vcJob, nodeName)
+		if hook, ok := job.policyHandler.(BackupPodAllocatedHook); ok {
+			hook.OnBackupPodAllocated(task, job, nodeName)
 		}
 	}
-
-	klog.V(util.LogDebugLev).Infof("%s %s useAnnotation node [%s]'s top.", PluginName, util.SafePrint(task.Name), nodeName)
 }
 
 // NPUDeallocateFunc Free assigned npu, if allocate failed by volcano frame.
@@ -146,15 +207,6 @@ func (sHandle *ScheduleHandler) NPUDeallocateFunc(task *api.TaskInfo) {
 		PluginName, util.SafePrint(task.Name), nodeName)
 }
 
-// isTaskNeedNPUAllocated to judge the task is static cut. true is dynamic cut.
-func (sHandle ScheduleHandler) isTaskNeedNPUAllocated(task *api.TaskInfo) bool {
-	if !util.IsNPUTask(task) {
-		klog.V(util.LogDebugLev).Infof("isTaskNeedNPUAllocated %s not npu task.", task.Name)
-		return false
-	}
-	return true
-}
-
 func (sHandle *ScheduleHandler) releaseAnnotation(task *api.TaskInfo, vcJob SchedulerJob, vcNode NPUNode) {
 	vcTask, ok := vcJob.Tasks[task.UID]
 	if !ok {
@@ -189,19 +241,15 @@ func (sHandle *ScheduleHandler) releaseAnnotation(task *api.TaskInfo, vcJob Sche
 	sHandle.Nodes[vcNode.Name] = vcNode
 	klog.V(util.LogDebugLev).Infof("%s releaseAnnotation %s's %s on %s,new top:[%s].", PluginName, task.Name,
 		reqStr, vcNode.Name, reqStr+","+value)
-	if task.Status == api.Pending {
-		delete(task.Pod.Annotations, util.AscendNPUPodRealUse)
-		delete(task.Pod.Annotations, vcTask.ReqNPUName)
-		delete(task.Pod.Annotations, util.Pod910DeviceKey)
-		return
-	}
 	tmpNode := vcJob.policyHandler.ReleaseAnnotation(task, vcNode)
 	if tmpNode != nil {
 		sHandle.Nodes[vcNode.Name] = *tmpNode
 	}
-	delete(task.Pod.Annotations, util.AscendNPUPodRealUse)
-	delete(task.Pod.Annotations, vcTask.ReqNPUName)
-	delete(task.Pod.Annotations, util.Pod910DeviceKey)
+	if task.Status == api.Pending {
+		delete(task.Pod.Annotations, util.AscendNPUPodRealUse)
+		delete(task.Pod.Annotations, vcTask.ReqNPUName)
+		delete(task.Pod.Annotations, util.Pod910DeviceKey)
+	}
 }
 
 func updatePodPendingReason(task *api.TaskInfo, reasonTmp string) {

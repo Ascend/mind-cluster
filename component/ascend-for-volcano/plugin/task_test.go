@@ -22,10 +22,14 @@ package plugin
 import (
 	"testing"
 
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
 )
 
@@ -48,12 +52,32 @@ func buildNPUAllocateFuncTest() []npuAllocateFuncTest {
 		Name: task.Name, NameSpace: task.Namespace, ReqNPUName: name,
 		ReqNPUNum: num,
 		Label:     getTaskLabels(task), VTask: &util.VTask{}}
+	// DRA-managed task: requests the NPU card but is guarded out by isTaskNeedNPUAllocated
+	// before any annotation / node bookkeeping is touched.
+	draTask := api.NewTaskInfo(test.BuildPodWithReqResource(util.NPU910CardName, "1"))
+	draTask.Pod.Spec.ResourceClaims = []v1.PodResourceClaim{{Name: "claim-1"}}
+	// Non-NPU task: only CPU requested, also rejected by the allocate guard.
+	plainTask := api.NewTaskInfo(test.BuildPodWithReqResource(v1.ResourceCPU, "1"))
 	tests := []npuAllocateFuncTest{
 		{
 			name:   "01-NPUAllocateFunc task nil test",
 			fields: fields{},
 			args:   npuAllocateFuncArgs{task: nil},
 			want:   "",
+		},
+		{
+			name: "05-NPUAllocateFunc DRA task test.",
+			fields: fields{NPUPlugins: make(sets.String),
+				ScheduleEnv: ScheduleEnv{ClusterCache: NewClusterCache()}},
+			args: npuAllocateFuncArgs{task: draTask},
+			want: "",
+		},
+		{
+			name: "06-NPUAllocateFunc non NPU task test.",
+			fields: fields{NPUPlugins: make(sets.String),
+				ScheduleEnv: ScheduleEnv{ClusterCache: NewClusterCache()}},
+			args: npuAllocateFuncArgs{task: plainTask},
+			want: "",
 		},
 		{
 			name: "02-NPUAllocateFunc no job test.",
@@ -114,6 +138,223 @@ func TestNPUAllocateFunc(t *testing.T) {
 				t.Errorf("NPUAllocateFunc() got = %v, want %v", value, tt.want)
 			}
 		})
+	}
+}
+
+// TestIsTaskNeedNPUAllocated covers the pure guard that decides whether a task
+// needs the NPU allocate operation. It only inspects the task itself (nil / DRA /
+// NPU resource request) and performs no side effects; the job and node context
+// resolution happens later in NPUAllocateFunc.
+func TestIsTaskNeedNPUAllocated(t *testing.T) {
+	draTask := api.NewTaskInfo(test.BuildPodWithReqResource(util.NPU910CardName, "1"))
+	draTask.Pod.Spec.ResourceClaims = []v1.PodResourceClaim{{Name: "claim-1"}}
+	plainTask := api.NewTaskInfo(test.BuildPodWithReqResource(v1.ResourceCPU, "1"))
+	npuTask := test.BuildTestTaskWithAnnotation(util.NPU910CardName, "1", "Ascend910-4")
+
+	var sHandle ScheduleHandler
+	tests := []struct {
+		name string
+		task *api.TaskInfo
+		want bool
+	}{
+		{"01-nil task not allocated", nil, false},
+		{"02-DRA task bypassed", draTask, false},
+		{"03-non NPU task rejected", plainTask, false},
+		{"04-NPU task admitted", npuTask, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := sHandle.isTaskNeedNPUAllocated(tt.task); got != tt.want {
+				t.Errorf("isTaskNeedNPUAllocated() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// recordPolicyHandler records which allocation hook runs. RestoreAnnotation
+// mirrors the production policy base semantics — re-claiming the Running pod's
+// chips on the node free-top from the pod's own annotation via the real
+// NPUNode.GetNewNPUNodeAnnotation primitive, without touching the pod
+// annotation. (The actual base.NPUHandler / chipHandler implementations live in
+// internal/npu/base and internal/npu/affinity/chip; this type cannot import
+// internal/npu/base because that package imports plugin.)
+type recordPolicyHandler struct {
+	ascendTest
+	useCalled     bool
+	restoreCalled bool
+	backupCalled  bool
+}
+
+func (m *recordPolicyHandler) UseAnnotation(*api.TaskInfo, NPUNode) *NPUNode {
+	m.useCalled = true
+	return nil
+}
+
+// OnBackupPodAllocated implements plugin.BackupPodAllocatedHook: the production
+// multilevel handler syncs job.SuperPods with the backup pod's node, which must
+// also happen on the running-restore (unevict) path.
+func (m *recordPolicyHandler) OnBackupPodAllocated(*api.TaskInfo, *SchedulerJob, string) {
+	m.backupCalled = true
+}
+
+func (m *recordPolicyHandler) RestoreAnnotation(task *api.TaskInfo, node NPUNode) *NPUNode {
+	m.restoreCalled = true
+	if task == nil || task.Pod == nil {
+		return nil
+	}
+	chipIDs := util.GetAllocatedChipIDsFromPod(task.Pod)
+	if len(chipIDs) == 0 {
+		return nil
+	}
+	newAnno, err := node.GetNewNPUNodeAnnotation(chipIDs, util.NPU910CardName, util.NPU910CardNamePre)
+	if err != nil {
+		return nil
+	}
+	node.Annotation[util.NPU910CardName] = newAnno
+	return &node
+}
+
+// TestNPUAllocateFuncRunningRollback covers the only path where a Running task
+// reaches NPUAllocateFunc: unevict restoring an evicted preempt/reclaim victim
+// after the statement is discarded. The pod is still alive, so the allocation
+// must not be re-selected (UseAnnotation skipped, being a no-op even if called)
+// and the authoritative pod annotation stays untouched; the node free-top
+// annotation — which the paired DeallocateFunc re-freed by prepending the pod's
+// chips — is re-claimed from the pod's existing annotation, and chip.PodMap
+// bookkeeping is restored.
+func TestNPUAllocateFuncRunningRollback(t *testing.T) {
+	rt := test.BuildTestTaskWithAnnotation(test.NPU910CardName, "1", "Ascend910-4")
+	rt.TransactionContext.Status = api.Running
+	rt.NodeName = "node0"
+	rt.Pod.Annotations[PodRankIndexKey] = "0"
+	tmpJobReadyTag := true
+	policy := &recordPolicyHandler{}
+
+	sHandle := ScheduleHandler{
+		NPUPlugins: make(sets.String),
+		ScheduleEnv: ScheduleEnv{
+			ClusterCache: ClusterCache{
+				Jobs: map[api.JobID]SchedulerJob{
+					rt.Job: {
+						JobReadyTag: &tmpJobReadyTag,
+						SchedulerJobAttr: util.SchedulerJobAttr{
+							NPUJob: &util.NPUJob{
+								Tasks: map[api.TaskID]util.NPUTask{
+									rt.UID: {ReqNPUName: test.NPU910CardName, ReqNPUNum: 1},
+								},
+								ReqNPUName: test.NPU910CardName,
+								ReqNPUNum:  1,
+							},
+						},
+						Owner:         OwnerInfo{OwnerReference: metav1.OwnerReference{UID: "owner-guid"}},
+						policyHandler: policy,
+					},
+				},
+				Nodes: map[string]NPUNode{
+					rt.NodeName: {
+						CommonNode: CommonNode{
+							// DeallocateFunc prepended the evicted pod's chip 4
+							// back onto the free top: "Ascend910-4,Ascend910-3".
+							Annotation: map[string]string{test.NPU910CardName: "Ascend910-4,Ascend910-3"},
+						},
+						VNode: VNode{
+							Chips: map[int]*VChip{
+								4: {PodMap: make(map[string]*v1.Pod)},
+							},
+						},
+					},
+				},
+			},
+		},
+		AffinityCache: cache.NewPodNodeAffinityCache(),
+	}
+
+	sHandle.NPUAllocateFunc(rt)
+
+	if got := rt.Pod.Annotations[test.NPU910CardName]; got != "Ascend910-4" {
+		t.Errorf("Running rollback: pod annotation got %q, want %q", got, "Ascend910-4")
+	}
+	if policy.useCalled {
+		t.Error("Running rollback: UseAnnotation must not be called")
+	}
+	if !policy.restoreCalled {
+		t.Error("Running rollback: RestoreAnnotation must be called")
+	}
+	node := sHandle.Nodes[rt.NodeName]
+	if got := node.Annotation[test.NPU910CardName]; got != "Ascend910-3" {
+		t.Errorf("Running rollback: node free-top got %q, want %q (chip 4 re-claimed)", got, "Ascend910-3")
+	}
+	if _, ok := node.Chips[4].PodMap[string(rt.Pod.UID)]; !ok {
+		t.Errorf("Running rollback: chip 4 PodMap does not contain pod %s", rt.Pod.UID)
+	}
+	// The restored pod is landing back on node0, so the "prefer previous node"
+	// cache must be re-affirmed on the running-restore path (RecordAssignment
+	// also refreshes the entry TTL).
+	if got := sHandle.AffinityCache.GetPreferredNode("owner-guid", "0"); got != rt.NodeName {
+		t.Errorf("Running rollback: affinity cache got %q, want %q (RecordAssignment ran)", got, rt.NodeName)
+	}
+}
+
+// TestNPUAllocateFuncRunningRollbackBackup verifies that a hot-switch backup pod
+// restored through the running path still fires BackupPodAllocatedHook, keeping
+// SuperPods in sync — while still skipping UseAnnotation / pod annotation
+// rewrites.
+func TestNPUAllocateFuncRunningRollbackBackup(t *testing.T) {
+	rt := test.BuildTestTaskWithAnnotation(test.NPU910CardName, "1", "Ascend910-4")
+	rt.TransactionContext.Status = api.Running
+	rt.NodeName = "node0"
+	rt.Pod.Annotations[consts.BackupSourcePodNameKey] = "fault-pod-uid"
+	tmpJobReadyTag := true
+	policy := &recordPolicyHandler{}
+
+	sHandle := ScheduleHandler{
+		NPUPlugins: make(sets.String),
+		ScheduleEnv: ScheduleEnv{
+			ClusterCache: ClusterCache{
+				Jobs: map[api.JobID]SchedulerJob{
+					rt.Job: {
+						JobReadyTag: &tmpJobReadyTag,
+						SchedulerJobAttr: util.SchedulerJobAttr{
+							NPUJob: &util.NPUJob{
+								Tasks: map[api.TaskID]util.NPUTask{
+									rt.UID: {ReqNPUName: test.NPU910CardName, ReqNPUNum: 1},
+								},
+								ReqNPUName: test.NPU910CardName,
+								ReqNPUNum:  1,
+							},
+						},
+						policyHandler: policy,
+					},
+				},
+				Nodes: map[string]NPUNode{
+					rt.NodeName: {
+						CommonNode: CommonNode{
+							Annotation: map[string]string{test.NPU910CardName: "Ascend910-4,Ascend910-3"},
+						},
+						VNode: VNode{
+							Chips: map[int]*VChip{
+								4: {PodMap: make(map[string]*v1.Pod)},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	sHandle.NPUAllocateFunc(rt)
+
+	if policy.useCalled {
+		t.Error("Running backup restore: UseAnnotation must not be called")
+	}
+	if !policy.restoreCalled {
+		t.Error("Running backup restore: RestoreAnnotation must be called")
+	}
+	if !policy.backupCalled {
+		t.Error("Running backup restore: OnBackupPodAllocated must be called for a backup pod")
+	}
+	if got := rt.Pod.Annotations[test.NPU910CardName]; got != "Ascend910-4" {
+		t.Errorf("Running backup restore: pod annotation got %q, want %q", got, "Ascend910-4")
 	}
 }
 
@@ -245,6 +486,9 @@ func makeNPUDeallocateFuncTest08(vTask *api.TaskInfo) npuDeallocateFuncTest {
 			Annotation: map[string]string{test.NPU910CardName: ""},
 		},
 	}
+	// The task built by BuildTestTaskWithAnnotation has a non-Pending status
+	// (Unknown), so after deallocation the pod annotations are retained to let
+	// a released pod be rescheduled back to reuse its chips.
 	return npuDeallocateFuncTest{
 		name: "08-NPUAllocateFunc node has empty annotation value test.",
 		fields: fields{NPUPlugins: make(sets.String),
@@ -253,7 +497,7 @@ func makeNPUDeallocateFuncTest08(vTask *api.TaskInfo) npuDeallocateFuncTest {
 					Jobs: map[api.JobID]SchedulerJob{vTask.Job: {SchedulerJobAttr: tmpSchedulerJobAttr,
 						policyHandler: New(testPluginName)}},
 					Nodes: map[string]NPUNode{vTask.NodeName: tmpNPUNode}}}},
-		args: npuDeallocateFuncArgs{task: vTask}, want: "",
+		args: npuDeallocateFuncArgs{task: vTask}, want: "Ascend910-4",
 	}
 }
 
@@ -277,7 +521,35 @@ func makeNPUDeallocateFuncTest09(vTask *api.TaskInfo) npuDeallocateFuncTest {
 					Jobs: map[api.JobID]SchedulerJob{vTask.Job: {SchedulerJobAttr: tmpSchedulerJobAttr,
 						policyHandler: New(testPluginName)}},
 					Nodes: map[string]NPUNode{vTask.NodeName: tmpNPUNode}}}},
-		args: npuDeallocateFuncArgs{task: vTask}, want: "",
+		args: npuDeallocateFuncArgs{task: vTask}, want: "Ascend910-4",
+	}
+}
+
+func makeNPUDeallocateFuncTest10(_ *api.TaskInfo) npuDeallocateFuncTest {
+	// A Pending task is an allocation rollback / unpipeline: the pod never ran
+	// on this node, so releaseAnnotation clears the pod annotations.
+	pTask := test.BuildTestTaskWithAnnotation(test.NPU910CardName, "1", "Ascend910-4")
+	pTask.TransactionContext.Status = api.Pending
+	tmpSchedulerJobAttr := util.SchedulerJobAttr{
+		NPUJob: &util.NPUJob{
+			Tasks: map[api.TaskID]util.NPUTask{
+				pTask.UID: {ReqNPUName: test.NPU910CardName, ReqNPUNum: 1}},
+		},
+	}
+	tmpNPUNode := NPUNode{
+		CommonNode: CommonNode{
+			Annotation: map[string]string{test.NPU910CardName: "Ascend910-3"},
+		},
+	}
+	return npuDeallocateFuncTest{
+		name: "10-NPUDeallocateFunc pending task rollback clears annotations test.",
+		fields: fields{NPUPlugins: make(sets.String),
+			ScheduleEnv: ScheduleEnv{
+				ClusterCache: ClusterCache{
+					Jobs: map[api.JobID]SchedulerJob{pTask.Job: {SchedulerJobAttr: tmpSchedulerJobAttr,
+						policyHandler: New(testPluginName)}},
+					Nodes: map[string]NPUNode{pTask.NodeName: tmpNPUNode}}}},
+		args: npuDeallocateFuncArgs{task: pTask}, want: "",
 	}
 }
 
@@ -293,6 +565,7 @@ func buildNPUDeallocateFuncTest() []npuDeallocateFuncTest {
 		makeNPUDeallocateFuncTest07(vTask),
 		makeNPUDeallocateFuncTest08(vTask),
 		makeNPUDeallocateFuncTest09(vTask),
+		makeNPUDeallocateFuncTest10(vTask),
 	}
 	return tests
 }

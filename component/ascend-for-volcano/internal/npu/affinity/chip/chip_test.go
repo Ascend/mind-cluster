@@ -23,6 +23,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
@@ -38,6 +39,20 @@ func mockChipTask(reqNum int) *api.TaskInfo {
 		Resreq: &api.Resource{
 			ScalarResources: map[v1.ResourceName]float64{
 				v1.ResourceName(util.HwPreName + util.Ascend910): float64(reqNum * util.NPUHexKilo),
+			},
+		},
+	}
+}
+
+// chipRunningTaskWithAnno builds a task whose pod already carries the given chip
+// allocation annotation, mimiking a still-running pod read back from apiserver.
+func chipRunningTaskWithAnno(uid, anno string) *api.TaskInfo {
+	return &api.TaskInfo{
+		Name: "running-task",
+		Pod: &v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				UID:         types.UID(uid),
+				Annotations: map[string]string{util.NPU910CardName: anno},
 			},
 		},
 	}
@@ -235,5 +250,47 @@ func TestReleaseAnnotation(t *testing.T) {
 	}
 	if fit := node.ChipTopo.Fit(&util.Request{ReqNPUNum: 8, Mode: util.SoftScheduleMode}); fit != topo.FitNormal {
 		t.Errorf("after release all 8 chips should be usable, Fit = %d, want FitNormal", fit)
+	}
+}
+
+func TestRestoreAnnotation(t *testing.T) {
+	tp := newTestHandler()
+	tp.ReqNPUName = util.NPU910CardName
+
+	// nil task -> nil
+	if got := tp.RestoreAnnotation(nil, flatNode("n1", 8)); got != nil {
+		t.Errorf("nil task RestoreAnnotation = %v, want nil", got)
+	}
+	// pod without a chip annotation -> nil
+	if got := tp.RestoreAnnotation(chipRunningTaskWithAnno("no-anno", ""), flatNode("n2", 8)); got != nil {
+		t.Errorf("no-annotation RestoreAnnotation = %v, want nil", got)
+	}
+	// node without a topology tree -> nil
+	if got := tp.RestoreAnnotation(chipRunningTaskWithAnno("no-topo", "Ascend910-4"),
+		mockChipNode("n3", nil)); got != nil {
+		t.Errorf("no-topo RestoreAnnotation = %v, want nil", got)
+	}
+
+	// a running pod already holds chips 4-7 on an 8-chip node: re-claim them
+	// after an eviction rollback — re-taken on the tree and subtracted from the
+	// free-top annotation, mirroring UseAnnotation but from the pod annotation.
+	node := flatNode("n", 8)
+	node.Annotation[util.NPU910CardName] = fullCardAnno(8)
+	running := chipRunningTaskWithAnno("uid-running", "Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7")
+	if got := tp.RestoreAnnotation(running, node); got == nil {
+		t.Fatal("RestoreAnnotation = nil, want *NPUNode")
+	}
+	left := node.Annotation[util.NPU910CardName]
+	for _, id := range []int{4, 5, 6, 7} {
+		if strings.Contains(left, util.NPU910CardNamePre+strconv.Itoa(id)) {
+			t.Errorf("leftover annotation still contains restored chip %d: %q", id, left)
+		}
+	}
+	if !strings.Contains(left, util.NPU910CardNamePre+"0") || !strings.Contains(left, util.NPU910CardNamePre+"3") {
+		t.Errorf("leftover annotation lost unallocated chips: %q", left)
+	}
+	// the same pod cannot be restored twice -> rejected
+	if got2 := tp.RestoreAnnotation(running, node); got2 != nil {
+		t.Errorf("duplicate RestoreAnnotation should be rejected, got %v", got2)
 	}
 }
