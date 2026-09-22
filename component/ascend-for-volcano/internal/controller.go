@@ -216,3 +216,27 @@ func (c *Controller) ReleaseAnnotation(task *api.TaskInfo, node plugin.NPUNode) 
 	}
 	return &node
 }
+
+// RestoreAnnotation restore a Running task's allocation on the node, delegating
+// to the inner policy handlers that implement plugin.RunningRestoreHook (the
+// NPU handlers all embed base.NPUHandler; nslb TorHandler does not participate
+// in node annotation management). Only reached through the unevict rollback
+// path, so unlike UseAnnotation it never re-selects chips nor rewrites the pod
+// annotation.
+func (c *Controller) RestoreAnnotation(task *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
+	if c == nil || task == nil || len(node.Annotation) == 0 {
+		err := errors.New(util.ArgumentError)
+		klog.V(util.LogErrorLev).Infof("RestoreAnnotation %s.", err.Error())
+		return nil
+	}
+	for _, handler := range c.PolicyHandler {
+		hook, ok := handler.(plugin.RunningRestoreHook)
+		if !ok {
+			continue
+		}
+		if newNode := hook.RestoreAnnotation(task, node); newNode != nil {
+			node = *newNode
+		}
+	}
+	return &node
+}

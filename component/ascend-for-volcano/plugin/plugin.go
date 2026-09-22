@@ -63,6 +63,15 @@ type BackupPodAllocatedHook interface {
 	OnBackupPodAllocated(task *api.TaskInfo, job *SchedulerJob, nodeName string)
 }
 
+// RunningRestoreHook is an optional capability for policy handlers to re-apply
+// an already-Running task's allocation on the node from the pod's existing
+// annotation (unevict rollback after a discarded preempt/reclaim eviction),
+// instead of re-selecting chips. The node free-top annotation and chip tree are
+// restored to the pre-eviction state; the pod annotation is left untouched.
+type RunningRestoreHook interface {
+	RestoreAnnotation(*api.TaskInfo, NPUNode) *NPUNode
+}
+
 // SchedulerPlugin for volcano-npu plugin has function.
 type SchedulerPlugin interface {
 	SchedulerPluginBase
