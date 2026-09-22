@@ -245,7 +245,7 @@ dmidecode > {采集目录}/dmidecode.txt
     2. 训练或推理任务结束后，使用以下命令收取 Device 侧系统类和部分维测信息日志。
 
         ```shell
-        msnpureport
+        msnpureport -f
         ```
 
     3. 将第2步中收集到的日志复制到after_task目录。
@@ -278,7 +278,7 @@ dmidecode > {采集目录}/dmidecode.txt
     1. 训练或推理结束后，执行以下命令收取 Device 侧系统类和部分维测信息日志：
 
         ```shell
-        msnpureport
+        msnpureport -f
         ```
 
     2. 执行完成后，会在当前目录生成以时间戳命名的日志数据，执行以下命令复制日志到采集目录，按照此方式放置的日志，ascend-fd会自动识别为任务结束后的日志，并按照此种类别进行处理，整体组件功能不变。
