@@ -61,9 +61,6 @@ class SwitchAnalyzer(Analyzer):
     def __init__(self, cluster_info: ClusterInfoCache):
         super().__init__(cluster_info)
         self.analyzed_switch_names: Set[str] = set()
-        self._threshold = cluster_info.get_threshold()
-        # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
-        self.fault_check = OpticalFaultChecker(cluster_info.get_threshold())
 
     def analyse(self) -> List[DiagResult]:
         diag_results = []
@@ -80,7 +77,8 @@ class SwitchAnalyzer(Analyzer):
             optical_module_info = full_info.get_optical_module_info()
             if not optical_module_info:
                 continue
-            diff_desc = optical_module_info.get_lane_diff_desc(self._threshold)
+            threshold = self.cluster_info.get_threshold(interface)
+            diff_desc = optical_module_info.get_lane_diff_desc(threshold)
             if not diff_desc:
                 continue
             domain = SwitchDomain(swi_id=switch_info.swi_id, slot_id=switch_info.slot_id, interface=interface)
@@ -108,6 +106,8 @@ class SwitchAnalyzer(Analyzer):
             if not optical_module_info:
                 continue
             self.analyzed_switch_names.add(analyzed_tag)
+            # 双端检测按本端端口速率选阈值（链路两端端口速率一致）
+            fault_check = OpticalFaultChecker(self.cluster_info.get_threshold(interface))
             # 获取对端信息（对端交换机信息+对端交换机端口光模块信息）
             remote_optical_module_info, domain = self.get_remote_info(
                 interface_mapping_by_name, interface, switch_info, optical_module_info.optical_id
@@ -117,10 +117,12 @@ class SwitchAnalyzer(Analyzer):
                 continue
             if remote_optical_module_info and domain:
                 res_list.extend(
-                    self.fault_analyze_double_ended(optical_module_info, remote_optical_module_info, domain)
+                    self.fault_analyze_double_ended(
+                        optical_module_info, remote_optical_module_info, domain, fault_check
+                    )
                 )
                 continue
-            res_list.extend(self.fault_analyze_single_ended(optical_module_info, domain))
+            res_list.extend(self.fault_analyze_single_ended(optical_module_info, domain, fault_check))
         return res_list
 
     def get_remote_info(
@@ -158,21 +160,26 @@ class SwitchAnalyzer(Analyzer):
             )
         return remote_optical_module_info, domain
 
+    @staticmethod
     def fault_analyze_single_ended(
-        self, optical_module_info: OpticalModuleInfo, domain: SwitchDomain
+        optical_module_info: OpticalModuleInfo, domain: SwitchDomain, fault_check: OpticalFaultChecker
     ) -> List[DiagResult]:
         res_list = []
-        res_list.extend(self.fault_check.power_analyze_single_ended(domain, optical_module_info))
-        res_list.extend(self.fault_check.snr_analyze_single_ended(domain, optical_module_info))
-        res_list.extend(self.fault_check.bias_analyze_single_ended(domain, optical_module_info))
+        res_list.extend(fault_check.power_analyze_single_ended(domain, optical_module_info))
+        res_list.extend(fault_check.snr_analyze_single_ended(domain, optical_module_info))
+        res_list.extend(fault_check.bias_analyze_single_ended(domain, optical_module_info))
         return res_list
 
+    @staticmethod
     def fault_analyze_double_ended(
-        self, local_info: OpticalModuleInfo, remote_info: OpticalModuleInfo, domain: SwitchDomain
+        local_info: OpticalModuleInfo,
+        remote_info: OpticalModuleInfo,
+        domain: SwitchDomain,
+        fault_check: OpticalFaultChecker,
     ) -> List[DiagResult]:
         # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
         res_list = []
-        res_list.extend(self.fault_check.power_analyze(domain, local_info, remote_info))
-        res_list.extend(self.fault_check.snr_analyze(domain, local_info, remote_info))
-        res_list.extend(self.fault_check.bias_analyze(domain, local_info, remote_info))
+        res_list.extend(fault_check.power_analyze(domain, local_info, remote_info))
+        res_list.extend(fault_check.snr_analyze(domain, local_info, remote_info))
+        res_list.extend(fault_check.bias_analyze(domain, local_info, remote_info))
         return res_list

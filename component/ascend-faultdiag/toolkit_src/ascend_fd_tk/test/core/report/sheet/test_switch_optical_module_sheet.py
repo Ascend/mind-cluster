@@ -20,7 +20,7 @@
 import unittest
 from types import SimpleNamespace
 
-from ascend_fd_tk.core.config.threshold_config import A5Threshold
+from ascend_fd_tk.core.config.threshold_config import BaseThreshold, OpticalThreshold800G
 from ascend_fd_tk.core.model.switch import (
     CommonInfo,
     DeviceInterface,
@@ -64,13 +64,13 @@ def _make_switch(name, iface, peer_name, peer_iface, transceiver_type, tx_power)
 
 class TestSwitchOpticalModuleSheetMixedTypes(unittest.TestCase):
     def setUp(self):
-        # sw1 端口 LPO 模块，sw2 端口 ODSP 模块，TX 均为 -6.0：
+        # sw1 端口 LPO 模块，sw2 端口 ODSP 模块，TX 均为 -6.0，端口均为800GE（按端口速率选800G光模块阈值）：
         # LPO_TX_POWER_DBM low_alarm=-5.70 → 本端应 ALARM；基础阈值 low_warn 高于 -6.0 → 对端应 WARN
-        sw1 = _make_switch("sw1", "100GE1/0/1", "sw2", "100GE1/0/2", "400G_LPO", "-6.0")
-        sw2 = _make_switch("sw2", "100GE1/0/2", "sw1", "100GE1/0/1", "400G_ODSP", "-6.0")
+        sw1 = _make_switch("sw1", "800GE1/0/1", "sw2", "800GE1/0/2", "800G_LPO", "-6.0")
+        sw2 = _make_switch("sw2", "800GE1/0/2", "sw1", "800GE1/0/1", "800G_ODSP", "-6.0")
         self.cluster_info = SimpleNamespace(
             swis_info={"sw1": sw1, "sw2": sw2},
-            get_threshold=lambda: A5Threshold,
+            get_threshold=lambda interface_name=None: OpticalThreshold800G,
         )
         self.gen = SwitchOpticalModuleSheetGenerator(self.cluster_info)
         self.rows = self.gen._collect_optical_module_data()
@@ -84,16 +84,35 @@ class TestSwitchOpticalModuleSheetMixedTypes(unittest.TestCase):
         self.assertEqual(row.peer_optical_type, "ODSP")
 
     def test_local_lpo_row_uses_lpo_threshold(self):
-        """本端 LPO 列按 LPO 阈值判定（-6.0 < LPO low_alarm -5.70 → ALARM）。"""
+        """本端800G端口 LPO 列按 LPO 阈值判定（-6.0 < LPO low_alarm -5.70 → ALARM）。"""
         status, th_value = self.configs["local_tx_power0"].value_checker(self.rows[0], "-6.0")
         self.assertEqual(status, ThresholdStatus.LOW_THRESHOLD_ALARM)
-        self.assertEqual(th_value, A5Threshold.LPO_TX_POWER_DBM.low_alarm_th)
+        self.assertEqual(th_value, OpticalThreshold800G.LPO_TX_POWER_DBM.low_alarm_th)
 
     def test_peer_odsp_row_uses_base_threshold(self):
-        """对端 ODSP 列按基础阈值判定（-6.0 介于 low_alarm 与 low_warn 之间 → WARN）。"""
+        """对端800G端口 ODSP 列按基础阈值判定（-6.0 介于 low_alarm 与 low_warn 之间 → WARN）。"""
         status, th_value = self.configs["peer_tx_power0"].value_checker(self.rows[0], "-6.0")
         self.assertEqual(status, ThresholdStatus.LOW_THRESHOLD_WARN)
-        self.assertEqual(th_value, A5Threshold.TX_POWER_DBM.low_warn_th)
+        self.assertEqual(th_value, OpticalThreshold800G.TX_POWER_DBM.low_warn_th)
+
+    def test_non_800g_port_uses_base_threshold(self):
+        """非800G端口（100GE）按默认阈值判定，即使光模块类型为 LPO 也回退基础阈值。
+
+        TX=-8.0 时 BaseThreshold（low_alarm -9.60 / low_warn -7.00）判定 WARN；
+        若误用800G阈值（low_alarm -7.60）则判定 ALARM，可区分两套阈值。
+        """
+        sw1 = _make_switch("sw1", "100GE1/0/1", "sw2", "100GE1/0/2", "400G_LPO", "-8.0")
+        sw2 = _make_switch("sw2", "100GE1/0/2", "sw1", "100GE1/0/1", "400G_ODSP", "-8.0")
+        cluster_info = SimpleNamespace(
+            swis_info={"sw1": sw1, "sw2": sw2},
+            get_threshold=lambda interface_name=None: OpticalThreshold800G,
+        )
+        gen = SwitchOpticalModuleSheetGenerator(cluster_info)
+        rows = gen._collect_optical_module_data()
+        configs = {cfg.field_name: cfg for cfg in gen._create_threshold_configs()}
+        status, th_value = configs["local_tx_power0"].value_checker(rows[0], "-8.0")
+        self.assertEqual(status, ThresholdStatus.LOW_THRESHOLD_WARN)
+        self.assertEqual(th_value, BaseThreshold.TX_POWER_DBM.low_warn_th)
 
 
 if __name__ == "__main__":
