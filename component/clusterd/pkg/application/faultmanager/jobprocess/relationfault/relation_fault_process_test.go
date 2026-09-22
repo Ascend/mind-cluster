@@ -891,3 +891,67 @@ func TestExecDeviceFaultTMOut(t *testing.T) {
 		})
 	})
 }
+
+func TestRecoveredLinkDownCQERelation(t *testing.T) {
+	convey.Convey("Test recovered linkdown triggers CQE relation after timeout", t, func() {
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyFunc(util.DeepCopy, func(dst, src interface{}) error { return nil })
+		patches.ApplyFunc(kube.RetryPatchPodLabels,
+			func(podName, namespace string, retryTimes int, labels map[string]string) error { return nil })
+
+		now := time.Now().UnixMilli()
+		linkDownCode := constant.LinkDownFaultCode
+		cqeCode := constant.DevCqeFaultCode
+
+		newRecoveredLinkDown := func(faultTime, dealMaxTime int64) *constant.FaultInfo {
+			return &constant.FaultInfo{
+				FaultUid:    node101 + "-" + npu1 + "-" + linkDownCode,
+				FaultType:   constant.DeviceFaultType,
+				NodeName:    node101,
+				NPUName:     npu1,
+				FaultCode:   linkDownCode,
+				FaultTime:   faultTime,
+				DealMaxTime: dealMaxTime,
+			}
+		}
+		newJob := func() *FaultJob {
+			return &FaultJob{
+				IsA3Job:             true,
+				AllFaultCode:        sets.NewString(),
+				ProcessingFaultCode: sets.NewString(),
+				NodeFaultInfoMap:    map[string][]*constant.FaultInfo{},
+				PodNames:            map[string]string{},
+				PodStrategiesMaps:   map[string]string{},
+			}
+		}
+
+		convey.Convey("recovered linkdown timed out with in-window CQE should separate", func() {
+			fJob := newJob()
+			fJob.TMOutRelationFaults = []*constant.FaultInfo{newRecoveredLinkDown(now-10000, 1)}
+			fJob.TMOutTriggerFault = []constant.FaultInfo{
+				{FaultUid: node101 + "-cqe", FaultType: constant.DeviceFaultType, FaultCode: cqeCode, FaultTime: now - 9500}}
+			fJob.Process()
+			convey.So(fJob.FaultStrategy.NodeLvList[node101], convey.ShouldEqual, constant.SeparateFaultStrategy)
+			convey.So(fJob.NodeFaultInfoMap[node101], convey.ShouldHaveLength, 1)
+			convey.So(len(fJob.TMOutTriggerFault), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("recovered linkdown timed out without CQE should not separate", func() {
+			fJob := newJob()
+			fJob.TMOutRelationFaults = []*constant.FaultInfo{newRecoveredLinkDown(now-10000, 1)}
+			fJob.Process()
+			convey.So(fJob.FaultStrategy.NodeLvList[node101], convey.ShouldEqual, "")
+		})
+
+		convey.Convey("recovered linkdown not yet timed out with CQE should not separate", func() {
+			fJob := newJob()
+			fJob.TMOutRelationFaults = []*constant.FaultInfo{newRecoveredLinkDown(now-100, 1)}
+			fJob.TMOutTriggerFault = []constant.FaultInfo{
+				{FaultUid: node101 + "-cqe", FaultType: constant.DeviceFaultType, FaultCode: cqeCode, FaultTime: now}}
+			fJob.Process()
+			convey.So(fJob.FaultStrategy.NodeLvList[node101], convey.ShouldEqual, "")
+			convey.So(len(fJob.TMOutTriggerFault), convey.ShouldEqual, 1)
+		})
+	})
+}
