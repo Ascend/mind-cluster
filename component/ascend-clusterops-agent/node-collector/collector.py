@@ -602,7 +602,7 @@ class CollectorClient:
             self._run_commands(dst, entity[KEY_COMMANDS], name)
 
     @staticmethod
-    def _collect_direct_host_paths(dst: Path, paths: list[str], name: str = ENTITY_DL_LOG) -> None:
+    def _collect_direct_host_paths(dst: Path, paths: list[str], name: str) -> None:
         """Read host paths directly (no pathmap matching), emitting a subdir per path basename.
 
         Used by dl_log: its paths are host paths of standalone DaemonSet/Deployment components
@@ -628,7 +628,7 @@ class CollectorClient:
         if not container_paths:
             return
         if name == ENTITY_DL_LOG:
-            self._collect_direct_host_paths(dst, container_paths)
+            self._collect_direct_host_paths(dst, container_paths, name)
             return
         matched_any = False
         for pod in pods:
@@ -654,7 +654,7 @@ class CollectorClient:
             name,
             container_paths,
         )
-        self._collect_direct_host_paths(dst, container_paths)
+        self._collect_direct_host_paths(dst, container_paths, name)
 
     def _gather(self, manifest: dict, collect_dir: Path, pods: list[PodRef]) -> None:
         """Execute collection per the v3 contract.
