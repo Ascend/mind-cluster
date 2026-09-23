@@ -154,7 +154,7 @@ function copy_file_output()
     DATE=$(date -u "+%Y-%m-%d")
     sed -i "s/REPLACE_VERSION/${VERSION}/g" run_pkg/run_main.sh
     sed -i "s/REPLACE_COMMIT/${GIT_COMMIT}/g" run_pkg/run_main.sh
-    sed -i "s/REPLACE_BRANCH/${GIT_BRANCH}/g" run_pkg/run_main.sh
+    sed -i "s#REPLACE_BRANCH#${GIT_BRANCH}#g" run_pkg/run_main.sh
     sed -i "s/REPLACE_GO/${GO_VERSION}/g" run_pkg/run_main.sh
     /bin/cp -f makeself-header/makeself-header.sh ${OPENSRC}/makeself-release-2.4.2
     bash ${OPENSRC}/makeself-release-2.4.2/makeself.sh --sha256 --nomd5 --nocrc --help-header scripts/help.info --packaging-date ${DATE} \
