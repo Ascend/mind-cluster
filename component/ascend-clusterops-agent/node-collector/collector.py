@@ -205,6 +205,23 @@ class CollectorClient:
         return base.rstrip("/") or "/"
 
     @staticmethod
+    def _warn_if_no_files(patterns: list[str], name: str) -> None:
+        """Warn when a configured host path pattern matches nothing or a matched dir holds no files."""
+        for pat in patterns:
+            matches = glob.glob(pat, recursive=True)
+            if not matches:
+                logger.warning("collect entity %s: configured path matches nothing on this node: %s", name, pat)
+                continue
+            for m in matches:
+                p = Path(m)
+                if p.is_file():
+                    break
+            else:
+                has_file = any(f.is_file() for f in p.rglob("*")) if p.is_dir() else False
+                if not has_file:
+                    logger.warning("collect entity %s: matched path contains no files: %s", name, pat)
+
+    @staticmethod
     def _collect_host_path(dst: Path, paths: list[str]) -> None:
         """Copy the whole host path tree (files + directories, empty dirs included) into dst.
 
@@ -575,6 +592,7 @@ class CollectorClient:
             self._run_commands(dst, entity[KEY_COMMANDS], ENTITY_HOST_LOG)
         if entity.get(KEY_PATHS):
             logger.info("collecting entity %s: reading host paths directly -> %s", ENTITY_HOST_LOG, entity[KEY_PATHS])
+            self._warn_if_no_files(entity[KEY_PATHS], ENTITY_HOST_LOG)
             self._collect_host_path(dst, entity[KEY_PATHS])
 
     def _run_entity_commands(self, dst: Path, name: str, entity: dict) -> None:
@@ -584,18 +602,20 @@ class CollectorClient:
             self._run_commands(dst, entity[KEY_COMMANDS], name)
 
     @staticmethod
-    def _collect_direct_host_paths(dst: Path, paths: list[str]) -> None:
+    def _collect_direct_host_paths(dst: Path, paths: list[str], name: str) -> None:
         """Read host paths directly (no pathmap matching), emitting a subdir per path basename.
 
         Used by dl_log: its paths are host paths of standalone DaemonSet/Deployment components
         (noded/devicePlugin/clusterd). The task pod does not mount them, and pathmap only records
         task-pod mount pairs, so matching against task pods is skipped entirely - a task pod that
         happens to mount the same container path would otherwise produce wrong dl_log content.
+        Also used as the no-mount-pair fallback of generic paths entities.
         """
         for pat in paths:
             base = Path(pat.rstrip("/")).name or "files"
             tgt = dst / base
             tgt.mkdir(parents=True, exist_ok=True)
+            CollectorClient._warn_if_no_files([pat], name)
             CollectorClient._collect_host_path(tgt, [str(Path(pat) / "**")])
 
     def _collect_paths(self, dst: Path, name: str, entity: dict, pods: list[PodRef]) -> None:
@@ -608,7 +628,7 @@ class CollectorClient:
         if not container_paths:
             return
         if name == ENTITY_DL_LOG:
-            self._collect_direct_host_paths(dst, container_paths)
+            self._collect_direct_host_paths(dst, container_paths, name)
             return
         matched_any = False
         for pod in pods:
@@ -634,7 +654,7 @@ class CollectorClient:
             name,
             container_paths,
         )
-        self._collect_direct_host_paths(dst, container_paths)
+        self._collect_direct_host_paths(dst, container_paths, name)
 
     def _gather(self, manifest: dict, collect_dir: Path, pods: list[PodRef]) -> None:
         """Execute collection per the v3 contract.
