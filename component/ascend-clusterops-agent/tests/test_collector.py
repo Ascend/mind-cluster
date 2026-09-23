@@ -22,6 +22,7 @@
 from __future__ import annotations
 
 import io
+import logging
 import os
 import tarfile
 import time
@@ -88,6 +89,21 @@ def test_collect_host_path_preserves_empty_dirs(tmp_path, client):
     assert (dst / "run" / "a.log").read_text() == "hello"
     assert (dst / "debug").is_dir()  # empty dirs are copied too
     assert (dst / "security").is_dir()  # empty dirs are copied too
+
+
+def test_warn_if_no_files(tmp_path, client, caplog):
+    # pattern matching nothing, matched dir without files, and normal file -> warnings for the first two only
+    existing = tmp_path / "messages"
+    existing.write_text("log")
+    empty_dir = tmp_path / "empty-component"
+    empty_dir.mkdir()
+    patterns = [str(tmp_path / "no-such-file*"), str(tmp_path / "empty-component"), str(existing)]
+    with caplog.at_level(logging.WARNING):
+        client._warn_if_no_files(patterns, "host_log")
+    warnings = [r.message for r in caplog.records if r.levelno == logging.WARNING]
+    assert any("matches nothing" in w and "no-such-file" in w for w in warnings)
+    assert any("contains no files" in w and "empty-component" in w for w in warnings)
+    assert not any(str(existing) in w for w in warnings)
 
 
 def test_run_commands_redirects_generated_file(tmp_path, client, command_stubs, monkeypatch):
