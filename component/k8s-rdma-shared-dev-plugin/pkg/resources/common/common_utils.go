@@ -17,19 +17,25 @@ package common
 
 import pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
-// DevicesChanged detect if original and new devices are different
+// hasHostPath reports whether any device in the list uses the given host path
+func hasHostPath(deviceList []*pluginapi.DeviceSpec, hostPath string) bool {
+	for _, dev := range deviceList {
+		if dev.HostPath == hostPath {
+			return true
+		}
+	}
+
+	return false
+}
+
+// DevicesChanged check whether the host path sets of the two device lists differ
 func DevicesChanged(deviceList, newDeviceList []*pluginapi.DeviceSpec) bool {
 	if len(deviceList) != len(newDeviceList) {
 		return true
 	}
 
-	deviceListMap := map[string]bool{}
-	for _, dev := range deviceList {
-		deviceListMap[dev.HostPath] = true
-	}
-
-	for _, dev := range newDeviceList {
-		if _, exists := deviceListMap[dev.HostPath]; !exists {
+	for _, oldDev := range deviceList {
+		if !hasHostPath(newDeviceList, oldDev.HostPath) {
 			return true
 		}
 	}
