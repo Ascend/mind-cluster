@@ -58,16 +58,15 @@ spec:
         image: dpu-exporter:v26.2.0
         imagePullPolicy: Never
         command: [ "/bin/bash", "-c", "--"]
-        args: [ "umask 027;dpu-exporter -config=/etc/dpu-exporter/config.json
-                 -cardType=huawei" ]
+        args: [ "umask 027;dpu-exporter -config=/etc/dpu-exporter/config.json" ]
         ports:
           - name: http
-            containerPort: 8080
+            containerPort: 8083
             protocol: TCP
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 8080
+            port: 8083
             scheme: HTTP
           initialDelaySeconds: 10
           periodSeconds: 15
@@ -76,7 +75,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /healthz
-            port: 8080
+            port: 8083
             scheme: HTTP
           initialDelaySeconds: 5
           periodSeconds: 10
@@ -152,8 +151,8 @@ spec:
   clusterIP: None
   ports:
     - name: http
-      port: 8080
-      targetPort: 8080
+      port: 8083
+      targetPort: 8083
       protocol: TCP
   selector:
     app: dpu-exporter

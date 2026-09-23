@@ -779,9 +779,9 @@
     [2026-08-26 11:46:23.603658][INFO]     1       logger/logger.go:59    collector chains initialized
     [2026-08-26 11:46:23.603746][INFO]     1       logger/logger.go:79    config hot-reload watching /etc/dpu-exporter
     [2026-08-26 11:46:23.603801][INFO]     1       logger/logger.go:79    refresh dpu list, count: 4, time cost: 230ns
-    [2026-08-26 11:46:23.603843][INFO]     1       logger/logger.go:79    dpu-exporter started, serving metrics on port 8080
+    [2026-08-26 11:46:23.603843][INFO]     1       logger/logger.go:79    dpu-exporter started, serving metrics on port 8083
     [2026-08-26 11:46:23.603963][INFO]     454     logger/logger.go:79    refresh dpu list, count: 4, time cost: 860ns
-    [2026-08-26 11:46:23.604187][INFO]     460     logger/logger.go:79    starting prometheus metrics server on :8080
+    [2026-08-26 11:46:23.604187][INFO]     460     logger/logger.go:79    starting prometheus metrics server on :8083
     ```
 
 **DPU Exporter使用二进制部署<a name="zh-cn_topic_0000002511346365"></a>**
@@ -802,12 +802,12 @@
          Loaded: loaded (/etc/systemd/system/dpu-exporter.service; disabled; preset: disabled)
          Active: active (running) since Tue 2026-09-15 15:36:07 CST; 12min ago
     TriggeredBy: ● dpu-exporter.timer
-         Process: 102249 ExecStart=/bin/bash -c /usr/local/bin/dpu-exporter -config=/etc/dpu-exporter/config.json -port=8080 >/dev/null 2>&1 & (code=exited, status=0/SUCCESS)
+         Process: 102249 ExecStart=/bin/bash -c /usr/local/bin/dpu-exporter -config=/etc/dpu-exporter/config.json -port=8083 >/dev/null 2>&1 & (code=exited, status=0/SUCCESS)
        Main PID: 102252 (dpu-exporter)
           Tasks: 8 (limit: 3355442)
          Memory: 9.7M
          CGroup: /system.slice/dpu-exporter.service
-                 └─102252 /usr/local/bin/dpu-exporter -config=/etc/dpu-exporter/config.json -port=8080
+                 └─102252 /usr/local/bin/dpu-exporter -config=/etc/dpu-exporter/config.json -port=8083
     ...
     ```
 
@@ -828,9 +828,9 @@
     [2026-08-26 11:46:23.603658][INFO]     1       logger/logger.go:59    collector chains initialized
     [2026-08-26 11:46:23.603746][INFO]     1       logger/logger.go:79    config hot-reload watching /etc/dpu-exporter
     [2026-08-26 11:46:23.603801][INFO]     1       logger/logger.go:79    refresh dpu list, count: 4, time cost: 230ns
-    [2026-08-26 11:46:23.603843][INFO]     1       logger/logger.go:79    dpu-exporter started, serving metrics on port 8080
+    [2026-08-26 11:46:23.603843][INFO]     1       logger/logger.go:79    dpu-exporter started, serving metrics on port 8083
     [2026-08-26 11:46:23.603963][INFO]     454     logger/logger.go:79    refresh dpu list, count: 4, time cost: 860ns
-    [2026-08-26 11:46:23.604187][INFO]     460     logger/logger.go:79    starting prometheus metrics server on :8080
+    [2026-08-26 11:46:23.604187][INFO]     460     logger/logger.go:79    starting prometheus metrics server on :8083
     ...
     ```
 
