@@ -154,7 +154,7 @@ DPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
     在任意节点执行以下命令，访问Metrics接口。其中&lt;node-ip&gt;为部署DPU Exporter的节点IP。
 
     ```shell
-    curl http://<node-ip>:8080/metrics
+    curl http://<node-ip>:8083/metrics
     ```
 
     正常情况下应能看到以`dpu_`和`dpu_interface_`为前缀的指标。
@@ -227,7 +227,7 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
         Documentation=hiascend.com
 
         [Service]
-        ExecStart=/bin/bash -c "/usr/local/bin/dpu-exporter -config=/etc/dpu-exporter/config.json -port=8080 >/dev/null 2>&1 &"
+        ExecStart=/bin/bash -c "/usr/local/bin/dpu-exporter -config=/etc/dpu-exporter/config.json -port=8083 >/dev/null 2>&1 &"
         Restart=always
         RestartSec=2
         KillMode=process
@@ -239,7 +239,7 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
         [Install]
         WantedBy=multi-user.target</pre>
 
-        DPU Exporter默认侦听端口8080，可通过修改"dpu-exporter.service"文件的"ExecStart"字段中的启动参数"-port"修改侦听端口。
+        DPU Exporter默认侦听端口8083，可通过修改"dpu-exporter.service"文件的"ExecStart"字段中的启动参数"-port"修改侦听端口。
 
     3. 按"Esc"键，输入:wq!保存并退出。
 
@@ -289,7 +289,7 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 8. 验证服务是否启动成功。
 
     ```shell
-    curl http://127.0.0.1:8080/metrics
+    curl http://127.0.0.1:8083/metrics
     ```
 
     正常情况下应能看到以`dpu_`和`dpu_interface_`为前缀的指标。
@@ -303,8 +303,7 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 |参数|类型|默认值|说明|
 |--|--|--|--|
 |-config|string|/etc/dpu-exporter/config.json|配置文件路径。配置文件为JSON格式，包含采集周期和指标白名单等配置项，详见[配置文件说明](#table192202574407)。|
-|-port|int|8080|侦听端口，取值范围为1025~40000。|
-|-cardType|string|huawei|DPU卡类型。目前仅支持<code>huawei</code>。|
+|-port|int|8083|侦听端口，取值范围为1025~40000。|
 |-logLevel|int|0|日志级别：<ul><li>-1：debug</li><li>0：info</li><li>1：warning</li><li>2：error</li><li>3：critical</li></ul>|
 |-maxAge|int|7|日志备份时间，取值范围为7~700，单位为天。|
 |-maxBackups|int|30|转储后日志文件保留个数上限，取值范围为1~180，单位为个。|

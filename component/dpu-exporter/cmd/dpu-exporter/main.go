@@ -47,8 +47,7 @@ const (
 
 func main() {
 	configFile := flag.String("config", "", "path to config file (default: /etc/dpu-exporter/config.json)")
-	port := flag.Int("port", 8080, "The server port of the http service, range [1025-40000]")
-	cardType := flag.String("cardType", device.CardTypeHuawei, "DPU card type (e.g. 'huawei', currently only 'huawei' is supported)")
+	port := flag.Int("port", 8083, "The server port of the http service, range [1025-40000]")
 	version := flag.Bool("version", false, "If true, query the version of the program (default false)")
 	flag.IntVar(&logger.HwLogConfig.LogLevel, "logLevel", 0, "log level (-1-debug, 0-info, 1-warning, 2-error 3-critical)")
 	flag.IntVar(&logger.HwLogConfig.MaxAge, "maxAge", logger.HwLogConfig.MaxAge, "max age of backup logs in days, range is [7, 700]")
@@ -85,8 +84,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Initialize device manager (card-type-specific)
-	dmgr, err := device.AutoInit(*cardType)
+	// Initialize device manager (currently only huawei DPU is supported)
+	cardType := device.CardTypeHuawei
+	dmgr, err := device.AutoInit(cardType)
 	if err != nil {
 		logger.Errorf("failed to init device manager: %v", err)
 		os.Exit(1)
