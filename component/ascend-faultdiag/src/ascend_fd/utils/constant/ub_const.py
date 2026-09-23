@@ -15,9 +15,6 @@
 # limitations under the License.
 # ==============================================================================
 
-# 十六进制常量
-HEX_BASE = 16
-
 PRECHECK_PREFIX = "PRECHECK_"
 
 # ubctl 日志目录/文件名
@@ -51,11 +48,13 @@ DFX_TM_CRD_CTRL = "dfx_tm_crd_ctrl"
 TAACK_ABNORM_SSN = "taack_abnorm_ssn"
 TAACK_ABNORM_HEADER = "taack_abnorm_header"
 
-PORT_ID = "port_id"
 LOST_PKG_UBMEM = "lost_pkg_ubmem"
 LOST_PKG_0X5 = "lost_pkg_0x5"
 PHY_REINIT_CNT = "phy_reinit_cnt"
 UDIE_MAX_PORT_NUM = 9
+
+# -m 参数：dump 为指标采集数据块；其他值表示新类型采集数据，dump 块已读完，整个文件不再解析
+UBCTL_DUMP_MODE = "dump"
 
 RX_VL6_PKT_NUM = "rx_vl6_pkt_num"
 TX_VL6_PKT_NUM = "tx_vl6_pkt_num"
