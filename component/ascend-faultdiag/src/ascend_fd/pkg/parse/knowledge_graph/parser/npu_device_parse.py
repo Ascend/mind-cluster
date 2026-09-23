@@ -33,12 +33,11 @@ from ascend_fd.utils.constant.dev_log_const import HIST_DEVICE_OS_PATH_ARRAY
 from ascend_fd.utils.constant.str_const import UNKNOWN_DEVICE_ID
 from ascend_fd.utils.constant.ub_const import (
     ALL_UBCTL_KEYS,
-    HEX_BASE,
-    PORT_ID,
     PRECHECK_KERNEL_AE_TYPE23,
     PRECHECK_UBCTL_DATA,
     SIDE_AFTER,
     SIDE_BEFORE,
+    UBCTL_DUMP_MODE,
     UDIE_MAX_PORT_NUM,
 )
 from ascend_fd.utils.fault_code import FIBER_OR_COPPER_LINK_FAULT
@@ -497,15 +496,25 @@ class UbctlLogParser(BaseNpuLogParser):
     # 目录名正则：ub_info/dev-os-x/ubctl/2026_08_23_13_22_44/ubctl_log.txt
     UBCTL_TIMESTAMP_DIR_PATTERN = re.compile(r"^(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})$")
 
+    # 数据块划分行正则：日志打印整行带双引号，参数顺序固定 -c -> -d -> -m -> -p（引号可选，兼容测试直接写字面）
+    #   "Command: ubctl -c 0 -d 1 -m dump -p 0"
+    #   -d 后 udie(0/1)；-m 后采集模式；-p 后 port(0~8)
+    UBCTL_COMMAND_PATTERN = re.compile(
+        r'^"?Command:\s*ubctl\s+-c\s+\S+\s+-d\s+(?P<udie>[01])\s+-m\s+(?P<mode>\S+)\s+-p\s+(?P<port>\d+)"?$'
+    )
+
     # 辅助解析记录丢包数据过程处理的类：每个 udie 的每个 port 都有一份全部指标
     class _CalcPkg:
         def __init__(self):
             # udie0/udie1 -> port(0~8) -> {指标: 原始16进制值字符串}，全量采集不过滤，重复则覆盖
+            # port 是否有数据取决于该 udie 实际使用的端口（部分 udie 并非 0~8 全用）
             self.udie0 = {port: dict() for port in range(UDIE_MAX_PORT_NUM)}
             self.udie1 = {port: dict() for port in range(UDIE_MAX_PORT_NUM)}
+            # 当前 Command 数据块归属的 udie/port（-d/-p 精确定位），未进入合法数据块时为 None
+            self.current_udie = None
             self.current_port = None
-            self.last_port = None
-            self.udie1_active = False
+            # 出现 -m 非 dump（新类型采集数据）后置位，整个文件不再继续读
+            self.parse_finished = False
 
     def __init__(self, params: dict):
         super().__init__(params)
@@ -718,6 +727,9 @@ class UbctlLogParser(BaseNpuLogParser):
         self.calc_pkg = UbctlLogParser._CalcPkg()
         for line in self._yield_log(ubctl_log_txt_path):
             self.feed_line(line)
+            if self.calc_pkg.parse_finished:
+                # -m 非 dump：采集的是新类型数据，不再继续往下读
+                break
         return dev_id, {
             "udie0": self.calc_pkg.udie0,
             "udie1": self.calc_pkg.udie1,
@@ -726,51 +738,42 @@ class UbctlLogParser(BaseNpuLogParser):
         }
 
     # ====================== 以下函数为解析ubctl_log.txt中指标数据的统计辅助函数 ======================
-    def _flush_current_port(self):
-        if self.calc_pkg.current_port is None:
-            return
-
-        # port >8：完全丢弃，不统计，不更新last_port
-        if self.calc_pkg.current_port > UDIE_MAX_PORT_NUM - 1:
-            self.calc_pkg.current_port = None
-            return
-
-        # 0‑8 flush完成都更新 last_port
-        self.calc_pkg.last_port = self.calc_pkg.current_port
-        self.calc_pkg.current_port = None
-
-    def _current_udie_data(self):
-        """当前所在的 udie 维度数据：udie1_active 时取 udie1，否则取 udie0"""
-        return self.calc_pkg.udie1 if self.calc_pkg.udie1_active else self.calc_pkg.udie0
-
     def feed_line(self, line: str):
-        """上层逐行调用，每次传入一行日志；通用提取：把所有指标全量采集进 data[udie][port][指标]"""
+        """
+        上层逐行调用，每次传入一行日志；日志按 "Command: ubctl ..." 行划分数据块：
+          同一块内（下一个 Command 行之前）的指标行归属该 Command 的 (udie, port)。
+        -m 非 dump 表示采集新类型数据：置 parse_finished，上层停止读整个文件。
+        """
         line = line.strip()
         if not line:
             return
 
-        if line.startswith(f"{PORT_ID}:"):
-            self._flush_current_port()
-            _, val_str = line.split(":", maxsplit=1)
-            port_val = int(val_str.strip(), HEX_BASE)
-            self.calc_pkg.current_port = port_val
-
-            # udie切换条件：新port=0，并且上一个port存在且不为0
-            if port_val == 0 and self.calc_pkg.last_port is not None and self.calc_pkg.last_port != 0:
-                self.calc_pkg.udie1_active = True
+        command_match = self.UBCTL_COMMAND_PATTERN.match(line)
+        if command_match:
+            if command_match.group("mode") != UBCTL_DUMP_MODE:
+                # 本次读到 -m 非 dump：dump 块已读完，采集的是新类型数据，不再继续往下读
+                self.calc_pkg.parse_finished = True
+                return
+            # 落盘数据块：以 Command 行的 -d/-p 精确定位 udie/port；port 越界则整块忽略
+            udie = int(command_match.group("udie"))
+            port = int(command_match.group("port"))
+            if 0 <= port < UDIE_MAX_PORT_NUM:
+                self.calc_pkg.current_udie = udie
+                self.calc_pkg.current_port = port
+            else:
+                self.calc_pkg.current_udie = None
+                self.calc_pkg.current_port = None
             return
 
-        if self.calc_pkg.current_port is None:
+        if self.calc_pkg.parse_finished or self.calc_pkg.current_port is None:
             return
+        udie_data = self.calc_pkg.udie0 if self.calc_pkg.current_udie == 0 else self.calc_pkg.udie1
         port = self.calc_pkg.current_port
-        if not (0 <= port < UDIE_MAX_PORT_NUM):
-            return
-
         # 通用提取：任一指标行，全量采集原始16进制值，同 udie 同 port 同指标覆盖赋值
         for key in ALL_UBCTL_KEYS:
             if line.startswith(f"{key}:"):
                 _, v_str = line.split(":", maxsplit=1)
-                self._current_udie_data()[port][key] = v_str.strip()
+                udie_data[port][key] = v_str.strip()
                 break
 
     def _assemble_precheck_events(self, parse_ctx: KGParseCtx, collect_before_result: dict, collect_after_result: dict):
