@@ -9,7 +9,7 @@
 `GET http://ip:port/metrics`
 
 >[!NOTE]
->DPU Exporter默认侦听端口8080，请求IP为部署节点IP。
+>DPU Exporter默认侦听端口8083，请求IP为部署节点IP。
 
 ## 请求参数<a name="section_dpu_metrics_params"></a>
 

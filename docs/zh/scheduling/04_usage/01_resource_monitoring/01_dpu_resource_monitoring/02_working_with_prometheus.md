@@ -19,7 +19,7 @@
     >- 获取镜像前，请确保能够正常访问互联网。
     >- 若不使用集群调度提供的prometheus.yaml，需要参考该YAML在相应位置加上app: prometheus字段，否则可能出现DPU Exporter连接超时。
 
-3. prometheus.yaml默认包含获取NPU-Exporter metrics的相关配置，用户需将其中的job替换为获取DPU-Exporter metrics的配置。以下为获取DPU-Exporter metrics的相关配置，DPU Exporter部署在dpu-exporter命名空间下，服务端口为8080。
+3. prometheus.yaml默认包含获取NPU-Exporter metrics的相关配置，用户需将其中的job替换为获取DPU-Exporter metrics的配置。以下为获取DPU-Exporter metrics的相关配置，DPU Exporter部署在dpu-exporter命名空间下，服务端口为8083。
 
     ```yaml
     ...
@@ -171,7 +171,7 @@
 4. <a name="li15822115020428"></a>DPU Exporter通过Prometheus Operator对接Prometheus。
     1. 创建dpu-exporter-svc.yaml和servicemonitor.yaml文件。
 
-        dpu-exporter-svc.yaml文件内容示例如下，DPU Exporter部署在dpu-exporter命名空间下，服务端口为8080。
+        dpu-exporter-svc.yaml文件内容示例如下，DPU Exporter部署在dpu-exporter命名空间下，服务端口为8083。
 
         ```yaml
         apiVersion: v1
@@ -184,8 +184,8 @@
         spec:
           type: ClusterIP
           ports:
-          - port: 8080             # DPU Exporter的服务端口号
-            targetPort: 8080
+          - port: 8083             # DPU Exporter的服务端口号
+            targetPort: 8083
           selector:
             app: dpu-exporter
         ```
@@ -203,7 +203,7 @@
         spec:
           endpoints:
           - interval: 10s
-            targetPort: 8080        # DPU Exporter的服务端口号
+            targetPort: 8083        # DPU Exporter的服务端口号
             path: /metrics
           namespaceSelector:
             matchNames:
@@ -247,7 +247,7 @@
         回显示例如下，表示DPU Exporter对接Prometheus Operator成功。
 
         ```ColdFusion
-        dpu-exporter   dpu-exporter          ClusterIP   10.98.xx.xx     <none>        8080/TCP                       31s
+        dpu-exporter   dpu-exporter          ClusterIP   10.98.xx.xx     <none>        8083/TCP                       31s
         ```
 
     5. 执行以下命令，查看Prometheus Operator对接Prometheus是否成功。
