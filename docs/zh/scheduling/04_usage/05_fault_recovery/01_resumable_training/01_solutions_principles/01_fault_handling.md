@@ -178,6 +178,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 - Atlas A3 训练系列产品场景下，若发生NPU掉卡类、OS断连类的故障，可导致进程级别重调度失败。
 - 当故障发生在HCCL建链阶段时，会导致进程级别重调度失败。如果除训练初始化的HCCL建链外，还存在其他训练阶段的HCCL建链，可参考[配置HCCL主动触发建链](../03_configuration/02_configuring_training_recovery.md#配置hccl主动触发建链)章节进行提前建链，防止故障出现在HCCL建链阶段。
 - 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
+- MindSpore 2.11.0版本不再支持该特性。
 
 **支持的产品型号和AI框架<a name="zh-cn_topic_0000002039353153_section136131584164"></a>**
 
@@ -327,6 +328,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 - 配置亚健康热切策略后，会自动增加进程级恢复开关，若发生非亚健康故障，将触发进程级恢复流程。
 - 无备节点场景下，无法完成热切流程，任务亚健康处理策略降级为ignore，不再处理亚健康故障。
 - 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
+- MindSpore 2.11.0版本不再支持该特性。
 
 **支持的产品型号和AI框架<a name="zh-cn_topic_0000002039194017_section140112935318-duplicate-2"></a>**
 
@@ -532,6 +534,7 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 - 不支持在同一Step中多次（1次以上）出现网络故障和片上内存故障。
 - 当故障发生在HCCL建链阶段时，会导致进程级在线恢复失败。如果除训练初始化的HCCL建链外，还存在其他训练阶段的HCCL建链，可参考[配置HCCL主动触发建链](../03_configuration/02_configuring_training_recovery.md#配置hccl主动触发建链)章节进行提前建链，防止故障出现在HCCL建链阶段。
 - 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
+- MindSpore 2.11.0版本不再支持该特性。
 
 **支持的产品型号及AI框架<a name="zh-cn_topic_0000002003193196_section108582044132214"></a>**
 
@@ -754,6 +757,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 - 确保已开启进程级恢复相关功能特性。
 - 仅支持Pod间为Roce通信的场景。
 - 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
+- MindSpore 2.11.0版本不再支持该特性。
 
 **支持的产品型号和AI框架<a name="zh-cn_topic_0000002098609234_section4771115416256"></a>**
 
