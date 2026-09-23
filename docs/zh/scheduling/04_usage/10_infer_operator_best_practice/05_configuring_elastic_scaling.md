@@ -4,7 +4,7 @@ Infer Operator支持给推理实例配置弹性扩缩容策略，从而实现基
 
 > [!NOTE]
 > 弹性扩缩容功能当前仅支持在MindIE场景下使用，即通过[基于MindIE PyMotor部署Infer Operator推理任务](./02_deploying_infer_operator_inference_job_with_mindie_pymotor.md)
-部署的推理实例支持配置弹性扩缩容。
+> 部署的推理实例支持配置弹性扩缩容。
 
 ## 前置准备
 
@@ -31,20 +31,7 @@ Adapter通过promQL将指标转换为HPA可识别的指标，HPA基于该指标�
 
 **图1 Prefill或Decode实例指标上报的弹性扩缩容原理（指标类型：Object）**
 
-```mermaid
-flowchart TB
-    P["Prefill或Decode实例的Pod（上报负载指标，例如请求队列长度）"]
-    PM["Prometheus（采集并存储指标）"]
-    PA["Prometheus Adapter（通过promQL将指标转换为HPA可识别的指标）"]
-    API["K8s API Server（提供custom.metrics.k8s.io接口）"]
-    HPA["HPA（由Infer Operator创建，以Object类型引用指标并计算期望副本数）"]
-    R["Prefill或Decode实例副本数（扩容/缩容）"]
-    P -->|上报指标| PM
-    PM -->|提供指标数据| PA
-    PA -->|指标查询| API
-    API -->|Informer监听指标| HPA
-    HPA -->|调整副本数| R
-```
+![](../../../figures/scheduling/Prefill或Decode实例指标上报的弹性扩缩容原理图.png "Prefill或Decode实例指标上报的弹性扩缩容原理图")
 
 图1说明：
 
@@ -59,20 +46,7 @@ flowchart TB
 
 **图2 Coordinator指标上报的弹性扩缩容原理（指标类型：External）**
 
-```mermaid
-flowchart TB
-    C["Coordinator的Pod（上报负载指标，例如请求处理时间）"]
-    PM["Prometheus（采集并存储指标）"]
-    PA["Prometheus Adapter（通过promQL将指标转换为HPA可识别的External指标）"]
-    API["K8s API Server（暴露external.metrics.k8s.io接口）"]
-    HPA["HPA（由Infer Operator创建，以External类型引用指标并计算期望副本数）"]
-    R["Prefill实例副本数（扩容/缩容）"]
-    C -->|上报指标| PM
-    PM -->|提供指标数据| PA
-    PA -->|External指标查询| API
-    API -->|Informer监听指标| HPA
-    HPA -->|调整副本数| R
-```
+![](../../../figures/scheduling/Coordinator指标上报的弹性扩缩容原理图.png "Coordinator指标上报的弹性扩缩容原理图")
 
 图2说明：
 
