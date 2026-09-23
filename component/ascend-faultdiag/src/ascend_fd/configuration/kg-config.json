@@ -935,7 +935,7 @@
                     "1. Run the timedatectl set-time command to set the system time correctly."
                 ]
             },
-            "source_file": "OS-sysmon",
+            "source_file": "OS-sysmon | OS",
             "regex": {
                 "in": ["Time has been changed"]
             }
