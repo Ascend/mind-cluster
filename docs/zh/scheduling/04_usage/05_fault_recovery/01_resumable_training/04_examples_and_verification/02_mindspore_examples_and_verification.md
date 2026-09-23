@@ -35,7 +35,8 @@
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4-mindspore "><p id="zh-cn_topic_0000002003180012_p3390131316172"><a name="zh-cn_topic_0000002003180012_p3390131316172"></a>git clone https://gitcode.com/mindspore/mindformers.git</p>
 <p id="zh-cn_topic_0000002003180012_p5390101317175"><a name="zh-cn_topic_0000002003180012_p5390101317175"></a>cd mindformers</p>
-<p id="zh-cn_topic_0000002003180012_p9390151318171"><a name="zh-cn_topic_0000002003180012_p9390151318171"></a>git checkout 14bc761a09b272657e28a5340efdf91737dfdf82</p>
+<p id="zh-cn_topic_0000002003180012_p9390151318171"><a name="zh-cn_topic_0000002003180012_p9390151318171"></a>git checkout v1.8.0</p>
+<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002003180012_p_mindformers_version_note"><a name="zh-cn_topic_0000002003180012_p_mindformers_version_note"></a>MindFormers版本需要与MindSpore版本保持配套，请参见<a href="https://gitcode.com/mindspore/mindformers" target="_blank" rel="noopener noreferrer">MindFormers</a>查看配套关系。</p></div></div>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002003180012_row_hyperparallel"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1-mindspore "><p id="zh-cn_topic_0000002003180012_p_hyperparallel_name"><a name="zh-cn_topic_0000002003180012_p_hyperparallel_name"></a>HyperParallel</p>
@@ -186,7 +187,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
     ARG MINDFORMERS=mindformers
     ARG HYPERPARALLEL=hyper-parallel
     ARG MINDSPORE_REQUIREMENTS=requirements.txt
-    ARG MINDSPORE_WHL=mindspore-2.5.0-cp310-cp310-linux_aarch64.whl
+    ARG MINDSPORE_WHL=mindspore-2.7.0-cp310-cp310-linux_aarch64.whl
     ARG TASKD_WHL=taskd-7.0.RC1-py3-none-linux_aarch64.whl
 
     RUN echo "nameserver 114.114.114.114" > /etc/resolv.conf
@@ -361,7 +362,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
     cd /data/atlas_dls/public/code
     git clone https://gitcode.com/mindspore/mindformers.git
     cd mindformers
-    git checkout 14bc761a09b272657e28a5340efdf91737dfdf82
+    git checkout v1.8.0
     cd ..
     git clone https://gitcode.com/mindspore/hyper-parallel.git
     cd hyper-parallel
@@ -595,7 +596,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
 </thead>
 <tbody><tr id="row91607510384-mindspore"><td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.1-mindspore "><p id="p89371529174019"><a name="p89371529174019"></a>Ascend Job</p>
 </td>
-<td class="cellrowborder" valign="top" width="16.173234646929384%" headers="mcps1.2.8.1.2-mindspore "><a name="ul393742934014"></a><ul id="ul393742934014"><li><span id="ph139426426441"><a name="ph139426426441"></a>Atlas 800T A2 训练服务器</span></li><li>Atlas 900 A2 PoD 集群基础单元</li></ul>
+<td class="cellrowborder" valign="top" width="16.173234646929384%" headers="mcps1.2.8.1.2-mindspore "><a name="ul393742934014"></a><ul id="ul393742934014"><li><span id="ph139426426441"><a name="ph139426426441"></a>Atlas 900 A3 SuperPoD 超节点</span></li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="8.521704340868173%" headers="mcps1.2.8.1.3-mindspore "><p id="p1319333422617"><a name="p1319333422617"></a>MindSpore</p>
 </td>
