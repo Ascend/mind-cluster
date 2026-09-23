@@ -204,6 +204,8 @@ type ScheduleCache struct {
 	// special, name, value
 	Names, Namespaces map[string]string
 	Data              map[string]map[string]string
+	// Labels labels of each cm keyed by the cm key
+	Labels map[string]map[string]string
 }
 
 // ScheduleEnv for job scheduler context.

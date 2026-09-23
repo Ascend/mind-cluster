@@ -1278,6 +1278,94 @@ func TestRestartFaultJobs(t *testing.T) {
 		})
 }
 
+func TestDoRestartJobSkipRescheduleReason(t *testing.T) {
+	// mock restartSingleFaultJob to run doRestartJob success branch
+	patch := gomonkey.ApplyPrivateMethod(reflect.TypeOf(&FaultJob{}), "restartSingleFaultJob",
+		func(_ *FaultJob, _ *framework.Session, _ *ReScheduler, _ *plugin.SchedulerJob, _ plugin.ScheduleEnv) error {
+			return nil
+		})
+	defer patch.Reset()
+
+	ssn := test.FakeNormalSSN(nil)
+	env := plugin.ScheduleEnv{}
+
+	fakeJob := fakeFaultJob(string(mockJobUID), mockJobName1, "")
+	fakeJob.PendingSessionNum = 0
+	fakeJob.ReScheduleKey = JobExternalForcePodFailedReschedulingPrefix
+	fakeJob.UUID = types.UID("test-job-real-uid")
+
+	t.Run("01-doRestartJob() skip recording reschedule reason for pod-level rescheduling "+
+		"under external-force-pod-failed", func(t *testing.T) {
+		reScheduler := &ReScheduler{
+			DealReSchedulerCache: &DealReSchedulerCache{
+				JobRecentRescheduleRecords: make(map[api.JobID]*RescheduleReason),
+			},
+		}
+		schedulerJob := plugin.SchedulerJob{}
+		schedulerJob.Label = map[string]string{util.SinglePodTag: util.EnableFunc}
+		reScheduler.doRestartJob(ssn, env, &fakeJob, schedulerJob)
+		if _, recorded := reScheduler.JobRecentRescheduleRecords[mockJobUID]; recorded {
+			t.Errorf("doRestartJob() should skip recording for pod-level rescheduling, but recorded")
+		}
+	})
+
+	t.Run("02-doRestartJob() record reschedule reason when fault-scheduling is not "+
+		"external-force-pod-failed", func(t *testing.T) {
+		reScheduler := &ReScheduler{
+			DealReSchedulerCache: &DealReSchedulerCache{
+				JobRecentRescheduleRecords: make(map[api.JobID]*RescheduleReason),
+			},
+		}
+		job := fakeJob
+		job.ReScheduleKey = "grace"
+		schedulerJob := plugin.SchedulerJob{}
+		schedulerJob.Label = map[string]string{util.SinglePodTag: util.EnableFunc}
+		reScheduler.doRestartJob(ssn, env, &job, schedulerJob)
+		reason, recorded := reScheduler.JobRecentRescheduleRecords[mockJobUID]
+		if !recorded {
+			t.Errorf("doRestartJob() should record for non-external-force-pod-failed rescheduling")
+			return
+		}
+		if reason.JobID != job.JobUID {
+			t.Errorf("doRestartJob() recorded JobID = %v, want %v", reason.JobID, job.JobUID)
+		}
+		if reason.JobUID != api.JobID(job.UUID) {
+			t.Errorf("doRestartJob() recorded JobUID = %v, want %v", reason.JobUID, api.JobID(job.UUID))
+		}
+	})
+
+	t.Run("03-doRestartJob() record reschedule reason when pod-rescheduling is not enabled",
+		func(t *testing.T) {
+			reScheduler := &ReScheduler{
+				DealReSchedulerCache: &DealReSchedulerCache{
+					JobRecentRescheduleRecords: make(map[api.JobID]*RescheduleReason),
+				},
+			}
+			schedulerJob := plugin.SchedulerJob{}
+			reScheduler.doRestartJob(ssn, env, &fakeJob, schedulerJob)
+			if _, recorded := reScheduler.JobRecentRescheduleRecords[mockJobUID]; !recorded {
+				t.Errorf("doRestartJob() should record for job-level rescheduling")
+			}
+		})
+
+	t.Run("04-doRestartJob() record reschedule reason after upgrading to job-level rescheduling",
+		func(t *testing.T) {
+			reScheduler := &ReScheduler{
+				DealReSchedulerCache: &DealReSchedulerCache{
+					JobRecentRescheduleRecords: make(map[api.JobID]*RescheduleReason),
+				},
+			}
+			job := fakeJob
+			job.PendingSessionNum = util.PendingTimes
+			schedulerJob := plugin.SchedulerJob{}
+			schedulerJob.Label = map[string]string{util.SinglePodTag: util.EnableFunc}
+			reScheduler.doRestartJob(ssn, env, &job, schedulerJob)
+			if _, recorded := reScheduler.JobRecentRescheduleRecords[mockJobUID]; !recorded {
+				t.Errorf("doRestartJob() should record after upgrading to job-level rescheduling")
+			}
+		})
+}
+
 func TestUpdateRescheduleReason(t *testing.T) {
 	t.Run("01-updateRescheduleReason() return nil when fJob is nil",
 		func(t *testing.T) {
@@ -1286,12 +1374,17 @@ func TestUpdateRescheduleReason(t *testing.T) {
 				t.Errorf("updateRescheduleReason() res = %v, wantRes is nil", res)
 			}
 		})
-	t.Run("02-updateRescheduleReason() return not nil when fJob is not nil",
+	t.Run("02-updateRescheduleReason() set JobUID to job UID when Reasons is nil",
 		func(t *testing.T) {
-			fJob := &FaultJob{UpdateTime: test.FakeUpdateTime}
+			jobUID := types.UID("test-job-real-uid")
+			fJob := &FaultJob{UpdateTime: test.FakeUpdateTime, UUID: jobUID}
 			res := updateRescheduleReason(nil, fJob)
 			if res == nil {
 				t.Errorf("updateRescheduleReason() res = %v, wantRes is not nil", res)
+				return
+			}
+			if res.JobUID != api.JobID(jobUID) {
+				t.Errorf("updateRescheduleReason() JobUID = %v, want %v", res.JobUID, api.JobID(jobUID))
 			}
 		})
 }
@@ -1324,6 +1417,36 @@ func TestConvertFaultTaskToRecords(t *testing.T) {
 			res := convertFaultTaskToRecords(&fJob)
 			if len(res) == 0 {
 				t.Errorf("convertFaultTaskToRecords() res = %v, wantRes is non-empty slice", res)
+			}
+		})
+	t.Run("04-convertFaultTaskToRecords() keep pod-failed when process-recover-enable is not on",
+		func(t *testing.T) {
+			fJob := FaultJob{
+				Labels:     map[string]string{},
+				FaultTasks: []FaultTask{{IsFaultTask: true, faultType: PodFailed, TaskName: "pod0"}},
+			}
+			res := convertFaultTaskToRecords(&fJob)
+			if len(res) != 1 {
+				t.Fatalf("convertFaultTaskToRecords() len = %d, want 1", len(res))
+			}
+			if res[0].RescheduleReason != PodFailed {
+				t.Errorf("convertFaultTaskToRecords() RescheduleReason = %v, want %v",
+					res[0].RescheduleReason, PodFailed)
+			}
+		})
+	t.Run("05-convertFaultTaskToRecords() keep non-pod-failed reason when process-recover-enable is on",
+		func(t *testing.T) {
+			fJob := FaultJob{
+				Labels:     map[string]string{util.ProcessRecoverEnable: util.EnableFunc},
+				FaultTasks: []FaultTask{{IsFaultTask: true, faultType: ProcessException, TaskName: "pod0"}},
+			}
+			res := convertFaultTaskToRecords(&fJob)
+			if len(res) != 1 {
+				t.Fatalf("convertFaultTaskToRecords() len = %d, want 1", len(res))
+			}
+			if res[0].RescheduleReason != ProcessException {
+				t.Errorf("convertFaultTaskToRecords() RescheduleReason = %v, want %v",
+					res[0].RescheduleReason, ProcessException)
 			}
 		})
 }

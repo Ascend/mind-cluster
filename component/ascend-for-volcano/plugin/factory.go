@@ -435,7 +435,8 @@ func (sHandle *ScheduleHandler) initCache() {
 	sHandle.OutputCache = ScheduleCache{
 		Names:      make(map[string]string, util.MapInitNum),
 		Namespaces: make(map[string]string, util.MapInitNum),
-		Data:       data}
+		Data:       data,
+		Labels:     make(map[string]map[string]string, util.MapInitNum)}
 }
 
 // initAffinityCache initializes the pod-to-node affinity cache.
@@ -543,6 +544,7 @@ func (sHandle *ScheduleHandler) saveCacheToCm() {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      cmName,
 				Namespace: nameSpace,
+				Labels:    sHandle.ScheduleEnv.OutputCache.Labels[spName],
 			},
 			Data: data,
 		}
