@@ -252,6 +252,10 @@ func (reCache *DealReSchedulerCache) WriteReSchedulerCacheToEnvCache(env *plugin
 func (reCache *DealReSchedulerCache) setRescheduleReasonToCache(env *plugin.ScheduleEnv) error {
 	env.OutputCache.Names[ReschedulingReasonKey] = RescheduleReasonCmName
 	env.OutputCache.Namespaces[ReschedulingReasonKey] = RescheduleReasonCmNamespace
+	if env.OutputCache.Labels == nil {
+		env.OutputCache.Labels = make(map[string]map[string]string, util.MapInitNum)
+	}
+	env.OutputCache.Labels[ReschedulingReasonKey] = map[string]string{util.NormalCmConsumer: util.CmConsumerValue}
 	jobRescheduleReasons, err := reCache.writeRescheduleReasonsToCMString()
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("writeRescheduleReasonsToCMString: %s", util.SafePrint(err))

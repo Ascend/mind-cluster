@@ -214,6 +214,8 @@ type DealReSchedulerCache struct {
 type RescheduleReason struct {
 	// JobID the job id of this record
 	JobID api.JobID
+	// JobUID the job uid of this record
+	JobUID api.JobID
 	// TotalRescheduleTimes to show how many times reschedule has happened since job created
 	TotalRescheduleTimes int
 	// RescheduleRecords keep recent MaxRescheduleRecordsNum records of rescheduling

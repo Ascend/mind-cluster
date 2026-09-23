@@ -623,8 +623,16 @@ func (reScheduler *ReScheduler) doRestartJob(ssn *framework.Session, env plugin.
 		}
 		restartFaultJob.recordFaultJobsToLogs()
 		// update rescheduling reason
-		reScheduler.JobRecentRescheduleRecords[restartFaultJob.JobUID] =
-			updateRescheduleReason(reScheduler.JobRecentRescheduleRecords[restartFaultJob.JobUID], restartFaultJob)
+		// skip recording reschedule reason when pod-level rescheduling is external-force-pod-failed
+		skipRecordReason := restartFaultJob.ReScheduleKey == JobExternalForcePodFailedReschedulingPrefix &&
+			restartFaultJob.IsJobSingleRescheduling(&schedulerJob)
+		if skipRecordReason {
+			klog.V(util.LogWarningLev).Infof("job<%s> skip recording reschedule reason to configmap, "+
+				"because pod-level rescheduling is external-force-pod-failed", restartFaultJob.JobUID)
+		} else {
+			reScheduler.JobRecentRescheduleRecords[restartFaultJob.JobUID] =
+				updateRescheduleReason(reScheduler.JobRecentRescheduleRecords[restartFaultJob.JobUID], restartFaultJob)
+		}
 		restartFaultJob.DeleteExecutedFlag = true
 		if restartFaultJob.faultReason == PodFailed {
 			reScheduler.JobRemainRetryTimes[restartFaultJob.JobUID].Times -= 1
@@ -642,7 +650,8 @@ func updateRescheduleReason(Reasons *RescheduleReason, fJob *FaultJob) *Reschedu
 	}
 	if Reasons == nil {
 		Reasons = &RescheduleReason{
-			JobID: fJob.JobUID,
+			JobID:  fJob.JobUID,
+			JobUID: api.JobID(fJob.UUID),
 		}
 	}
 	var rescheduleRecord RescheduleRecord
