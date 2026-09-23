@@ -21,7 +21,7 @@
    - 否，请参见[准备镜像](./01_preparing_for_installation.md#准备镜像)，完成镜像制作和分发。
 
 2. <a name="li26221441299"></a>将K8s RDMA Shared Dev Plugin软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
-3. 如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中K8s RDMA Shared Dev Plugin的启动参数。启动参数请参见[表1](#table1862682843615)，可执行<b>./k8s-rdma-shared-dp -h</b>查看参数说明。
+3. <a name="li26221441999"></a>如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中K8s RDMA Shared Dev Plugin的启动参数。启动参数请参见[表1](#table1862682843615)，可执行<b>./k8s-rdma-shared-dp -h</b>查看参数说明。
 4. 在管理节点的YAML所在路径，执行以下命令，启动K8s RDMA Shared Dev Plugin。
 
     ```shell
@@ -58,6 +58,18 @@
    Running，可参考[组件Pod状态不为Running](https://gitcode.com/Ascend/mind-cluster/issues/342)章节进行处理。
 >- 安装组件后，组件的Pod状态为
    ContainerCreating，可参考[集群调度组件Pod处于ContainerCreating状态](https://gitcode.com/Ascend/mind-cluster/issues/343)章节进行处理。
+
+## 独占模式配置（beta特性）<a name="section187410285361"></a>
+
+默认情况下组件工作在共享模式。如需独占模式，请在[步骤3](#li26221441999)中修改YAML文件，为组件增加`-ub-excl-mode`启动参数。独占模式下，组件根据业务Pod的NPU注解与NPU-DPU映射关系为Pod分配节点上发现的真实UB设备，并将分配结果写入Pod的`k8s.v1.cni.cncf.io/device-status`注解，供Multus CNI与UB Host Device CNI完成设备挂载。
+
+独占模式配置说明：
+
+1. 开启独占模式需为组件增加`-ub-excl-mode`启动参数，参数说明请参见[表1](#table1862682843615)。
+2. 组件通过镜像内置的配置文件`/etc/rdma-plugin/npu-nic-mapping.json`完成NPU ID到DPU设备的映射。
+3. 独占模式的设备分配基于UB类型的RDMA设备。
+
+开启独占模式后，组件在处理Pod的Allocate请求时，从业务Pod的`huawei.com/npu`注解（由Volcano调度时自动写入）获取NPU ID，经`npu-nic-mapping.json`映射为DPU设备并完成分配。
 
 ## 参数说明<a name="section1851191618363"></a>
 
@@ -137,6 +149,16 @@
 </td>
 <td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971514"><a name="p589551971514"></a><a name="p589551971514"></a><span id="ph4556742141520"><a name="ph4556742141520"></a><a name="ph4556742141520"></a>是否使用CDI（Container Device Interface）模式向容器注册设备，该参数为标志位，无需跟值。使用示例：./k8s-rdma-shared-dp -use-cdi</span></p>
 <div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>UB类型的RDMA设备不支持CDI模式，当检测到UB设备时会自动禁用CDI。</p></div></div>
+</td>
+</tr>
+<tr id="row68317556191"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p0894319101523"><a name="p0894319101523"></a><a name="p0894319101523"></a><span id="ph96781327191522"><a name="ph96781327191522"></a><a name="ph96781327191522"></a>-ub-excl-mode</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p108941719151519"><a name="p108941719151519"></a><a name="p108941719151519"></a><span id="ph1899563312158"><a name="ph1899563312158"></a><a name="ph1899563312158"></a>标志位</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p19894131961517"><a name="p19894131961517"></a><a name="p19894131961517"></a><span id="ph67327379156"><a name="ph67327379156"></a><a name="ph67327379156"></a>false</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971515"><a name="p589551971515"></a><a name="p589551971515"></a><span id="ph4556742141521"><a name="ph4556742141521"></a><a name="ph4556742141521"></a>是否开启UB设备的独占模式，该参数为标志位，无需跟值。开启后组件按NPU与DPU的映射关系为Pod分配真实UB设备，并将分配结果写入Pod的k8s.v1.cni.cncf.io/device-status注解。使用示例：./k8s-rdma-shared-dp -ub-excl-mode</span></p>
+<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>独占模式的配置方法请参见<a href="#section187410285361">独占模式配置</a>。</p></div></div>
 </td>
 </tr>
 <tr id="row10282191492319"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172319"><a name="p8283714172319"></a><a name="p8283714172319"></a>--enable-healthz</p>

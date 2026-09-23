@@ -358,21 +358,19 @@ Kubernetes需要感知RDMA网络设备资源信息来实现资源调度。为了
 
 **图 15**  组件上下游依赖<a name="fig18917163118164"></a>
 
-![](../../figures/scheduling/01_introduction/01_component_description/rdma-dp.png "组件上下游依赖-8")
+![](../../figures/scheduling/01_introduction/01_component_description/k8s-rdma-shared-dev-plugin.png "组件上下游依赖-8")
 
-1. 从系统中获取RDMA设备的类型、数量、健康状态信息，区分PCI和UB两种设备类型，本组件仅验证支持UB设备。
+1. 从设备目录读取设备信息。
 2. 上报RDMA设备的类型、数量和状态给kubelet。
-3. 根据配置文件中的选择器信息，筛选需要注册的RDMA设备，支持通过buses选择器指定UB设备。
-4. 在容器创建时，将选中的RDMA设备挂载到容器内部。
-5. 配置开启组件共享或独占分配模式。
-6. 独占模式按照组件NPU和DPU的映射逻辑，挂载NPU对应的DPU。
-7. RDMA设备故障检测与上报。
+3. 通过hinicadm5工具进行RDMA设备的故障检测。
+4. RDMA设备故障上报，通过ClusterD进行故障汇总。
+5. 独占模式从业务Pod获取Volcano写入的NPU卡信息。
 
 ## UB Host Device CNI<a name="ZH-CN_TOPIC_0000002524312661"></a>
 
 **应用场景<a name="section15761025111720"></a>**
 
-Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB（DPU）RDMA网络设备资源，但设备本身需要挂载进Pod后才能被容器使用。MindCluster提供UB Host Device CNI组件，以二进制方式部署在各work宿主机`/opt/cni/bin`下，用于将宿主机上的UB网络设备挂载到Pod的网络命名空间中，使容器能够通过UB设备进行RDMA高速通信。
+Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB RDMA网络设备资源，但设备本身需要挂载进Pod后才能被容器使用。MindCluster提供UB Host Device CNI组件，以二进制方式部署在各worker宿主机`/opt/cni/bin`下，用于将宿主机上的UB网络设备挂载到Pod的网络命名空间中，使容器能够通过UB设备进行RDMA高速通信。
 
 **组件功能<a name="section1112014512117"></a>**
 
@@ -387,10 +385,9 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 
 ![](../../figures/scheduling/01_introduction/01_component_description/ub-host-device-cni.png "组件上下游依赖-9")
 
-1. Multus CNI通过Kubernetes API读取Pod注解`k8s.v1.cni.cncf.io/device-status`，获取动态分配的UB设备。
-2. UB Host Device CNI从Multus CNI获取`runtimeConfig.deviceID`用于挂载设备。
-3. 根据获取的设备ID查询具体的网卡设备。
-4. 通过IPAM插件为挂载的网卡分配IP地址。
+1. 挂载设备来源之一： Multus CNI下发的`runtimeConfig.deviceID`。
+2. 根据获取的设备ID查询具体的网卡设备。
+3. 通过IPAM插件为挂载的网卡分配IP地址。
 
 ## DPU Exporter<a name="ZH-CN_TOPIC_0000002524312665"></a>
 
