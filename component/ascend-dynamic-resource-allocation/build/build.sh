@@ -74,8 +74,11 @@ function mv_file() {
     mv "${TOP_DIR}/${dra_name}"   "${TOP_DIR}"/output
     cp "${TOP_DIR}/build/Dockerfile"   "${TOP_DIR}"/output
     cp "${TOP_DIR}/build/Dockerfile.openeuler"   "${TOP_DIR}"/output
-    cp "${TOP_DIR}/build/ascend-dra-driver.yaml"   "${TOP_DIR}"/output
+    cp "${TOP_DIR}/build/ascend-dra-driver.yaml"   "${TOP_DIR}"/output/ascend-dra-driver-"${build_version}".yaml
+    sed -i "s/ascend-dra:.*/ascend-dra:${build_version}/" "${TOP_DIR}"/output/ascend-dra-driver-"${build_version}".yaml
     cp "${TOP_DIR}/build/agreement.txt"   "${TOP_DIR}"/output
+    sed -i "s/Ascend Dynamic Resource Allocation Version .*/Ascend Dynamic Resource Allocation Version ${build_version}/" \
+        "${TOP_DIR}"/output/agreement.txt
 }
 
 function change_mod() {
