@@ -43,7 +43,7 @@ const (
 	npuTaskNum8       = 8
 	miniTpBlockNum    = 1
 	rackNPUNumber     = 64
-	maxSuperPodNPUNum = 8192
+	maxSuperPodNPUNum = 1024
 	uBMemRackNumber   = 16
 
 	scoreForNode         = 100000000
