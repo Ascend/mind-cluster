@@ -35,7 +35,12 @@ MindCluster集群调度组件支持通过以下方式部署Infer Operator推理�
   - [通过MindCluster社区部署工具一键部署使用](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md#通过mindcluster社区部署工具一键部署使用)：通过自动化脚本参考设计部署任务。
 - [基于MindIE PyMotor部署Infer Operator推理任务](./02_deploying_infer_operator_inference_job_with_mindie_pymotor.md)。
 
-> [!NOTE]
+>[!NOTE]
+>如果用户未配置RoCE网络或者Roce网络不健康：
+>
+>- 在非超节点调度场景下，单机推理实例可以正常调度，但是推理实例间的KV传输可能异常，导致推理任务无法正常运行。
+>- 在超节点调度场景下，如果推理实例的逻辑超节点数量为1，推理实例可以正常调度，但是推理实例间的KV传输可能异常，导致推理任务无法正常运行。
+>
 > Infer Operator支持在同一个InferServiceSet中下发如下角色：
 >
 > - 请求NPU资源的推理角色（如Prefill、Decode）

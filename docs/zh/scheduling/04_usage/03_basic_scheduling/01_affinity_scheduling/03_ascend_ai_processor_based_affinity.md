@@ -118,7 +118,7 @@ npu-310-strategy参数取值说明如下：
 ### 使用约束<a name="section_chip_affinity_constraint"></a>
 
 - 任务申请的芯片数量不能大于节点芯片总数，单节点最多支持64个芯片。
-- 节点上存在参数面网络不健康的芯片时，可通过注解`huawei.com/parameterplane.unhealthy-tolerance`配置是否容忍调度到该芯片：配置为`true`时，允许调度到参数面网络不健康的芯片；不配置或配置为其他值时，过滤参数面网络不健康的芯片。
+- 节点上存在参数面网络不健康的芯片时，可通过注解`huawei.com/parameterplane.unhealthy-tolerance`配置是否容忍调度到该芯片：配置为`ignore`时，允许调度到参数面网络不健康的芯片；不配置或配置为其他值时，过滤参数面网络不健康的芯片。
 - 节点声明了`huawei.com/npu.topology`注解且取值为超规模（最大芯片ID超过节点物理卡数）时，该节点在芯片亲和调度路径上不可调度。
 
 ## 单机场景亲和性策略<a name="ZH-CN_TOPIC_0000002511346873"></a>
