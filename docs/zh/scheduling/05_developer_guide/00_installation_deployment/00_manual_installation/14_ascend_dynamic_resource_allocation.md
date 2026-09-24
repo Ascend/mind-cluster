@@ -76,7 +76,7 @@
           - name: plugin
             securityContext:
               privileged: true
-            image: ascend-dra:v6.0.0
+            image: ascend-dra:v26.2.0
             command: ["/bin/bash", "-c", "exec ascend-dra --enable-healthz --healthz-address=11251"]
     ...
     ```

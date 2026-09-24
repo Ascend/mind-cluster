@@ -121,7 +121,7 @@ DPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
     ```
 
     >[!NOTE]
-    >启动DPU Exporter时，若出现报错"Error from server (NotFound): error when creating "dpu-exporter-v6.0.0.yaml":namespaces "dpu-exporter" not found"，说明DPU Exporter的命名空间未创建成功，需执行以下命令手动创建。
+    >启动DPU Exporter时，若出现报错"Error from server (NotFound): error when creating "dpu-exporter-v26.2.0.yaml":namespaces "dpu-exporter" not found"，说明DPU Exporter的命名空间未创建成功，需执行以下命令手动创建。
     >
     >```shell
     >kubectl create ns dpu-exporter
@@ -374,7 +374,7 @@ kubectl edit cm -n dpu-exporter dpu-exporter-config
 或修改YAML中的配置值后直接重新部署：
 
 ```bash
-kubectl apply -f dpu-exporter-v6.0.0.yaml
+kubectl apply -f dpu-exporter-v26.2.0.yaml
 ```
 
 >[!NOTICE]
