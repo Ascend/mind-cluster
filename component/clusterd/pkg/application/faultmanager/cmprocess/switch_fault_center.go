@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
 
 // Package cmprocess contain cm processor
 package cmprocess
@@ -7,6 +7,7 @@ import (
 	"clusterd/pkg/application/faultmanager/cmprocess/custom"
 	"clusterd/pkg/application/faultmanager/cmprocess/preseparate"
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
+	"clusterd/pkg/application/silentfault"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain/cmmanager"
 )
@@ -23,6 +24,7 @@ func init() {
 		custom.CustomProcessor,
 		retry.RetryProcessor,
 		preseparate.PreSeparateFaultProcessor, // this processor process the preSeparate faults.
+		silentfault.FaultRecorderProcessor,    // this processor records hardware fault timeline.
 	})
 }
 

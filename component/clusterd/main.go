@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
 
 // Package main a series of main function
 package main
@@ -32,6 +32,7 @@ import (
 	"clusterd/pkg/application/publicfault"
 	"clusterd/pkg/application/resource"
 	"clusterd/pkg/application/schedulingexception"
+	"clusterd/pkg/application/silentfault"
 	"clusterd/pkg/application/statistics"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/logs"
@@ -85,6 +86,7 @@ func startInformer(ctx context.Context) {
 	addResourceFunc()
 	addJobFunc()
 	addEpRankTableFunc()
+	addSilentFaultFunc()
 	kube.AddNodeFunc(constant.PingMesh, pingmesh.NodeCollector)
 	kube.InitCMInformer()
 	kube.InitPubFaultCMInformer()
@@ -103,6 +105,8 @@ func startInformer(ctx context.Context) {
 	go jobv2.Handler(ctx)
 	go jobv2.Checker(ctx)
 	go resource.Report(ctx)
+	go silentfault.ProcessSilentFault(ctx)
+	go silentfault.StartFaultHardwareLogCleanup(ctx)
 	dealPubFault(ctx)
 
 	go startVersionSummaryTicker(ctx)
@@ -149,6 +153,10 @@ func addEpRankTableFunc() {
 	kube.AddCmRankTableFunc(constant.EpRankTable, epranktable.InformerHandler)
 }
 
+func addSilentFaultFunc() {
+	kube.AddCmRescheduleReasonFunc(constant.SilentFaultResource, silentfault.CmHandler)
+}
+
 func addResourceFunc() {
 	kube.AddCmSwitchFunc(constant.Resource, faultmanager.SwitchInfoCollector)
 	kube.AddCmNodeFunc(constant.Resource, faultmanager.NodeCollector)
@@ -190,6 +198,9 @@ func main() {
 	}
 	conf.TryLoadGlobalConfig()
 	go conf.WatchGlobalConfig(ctx)
+	// load the public fault config once before grpc/fault processing starts, so the
+	// code-level check inside silent fault detection sees a populated cache
+	publicfault.InitPubFaultCfg()
 	// deal manually separate npu fault must before fault processor center
 	dealManuallySeparateNPUFault(ctx)
 	initGrpcServer(ctx)
@@ -210,6 +221,7 @@ func initStatisticModule(ctx context.Context) {
 	// fault relation
 	go statistics.StatisticFault.UpdateFault(ctx)
 	statistics.StatisticFault.LoadFaultData()
+	silentfault.LoadSilentFaultCmInfo()
 	schedulingexception.CheckSchedulingException(ctx, &schedulingexception.Config{})
 }
 

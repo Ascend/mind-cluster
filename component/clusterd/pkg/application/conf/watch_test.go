@@ -198,3 +198,54 @@ func TestWatch(t *testing.T) {
 		convey.So(hasExecuted, convey.ShouldBeFalse)
 	})
 }
+
+func resetSilentConfig() {
+	conf.SetSilentFaultPolicy(conf.SilentFaultPolicy{})
+}
+
+func TestLoadSilentConfig(t *testing.T) {
+	const silentValid = `
+enabled: true
+detect:
+  min_task_cards: 16
+  consecutive_times: 3
+  hardware_fault_window_seconds: 30
+  window_seconds: 10800
+release:
+  fault_free_seconds: 172800
+`
+	const silentInvalid = `
+enabled: true
+detect:
+  min_task_cards: 0
+`
+
+	convey.Convey("load silent config valid", t, func() {
+		resetSilentConfig()
+		cm := &v1.ConfigMap{Data: map[string]string{constant.SilentFaultConfigKey: silentValid}}
+		loadSilentConfig(cm)
+		convey.So(conf.GetSilentFaultEnabled(), convey.ShouldBeTrue)
+		convey.So(conf.GetMinTaskCards(), convey.ShouldEqual, 16)
+	})
+
+	convey.Convey("load silent config unmarshal error", t, func() {
+		resetSilentConfig()
+		cm := &v1.ConfigMap{Data: map[string]string{constant.SilentFaultConfigKey: "invalid yaml"}}
+		loadSilentConfig(cm)
+		convey.So(conf.GetSilentFaultEnabled(), convey.ShouldBeFalse)
+	})
+
+	convey.Convey("load silent config check error", t, func() {
+		resetSilentConfig()
+		cm := &v1.ConfigMap{Data: map[string]string{constant.SilentFaultConfigKey: silentInvalid}}
+		loadSilentConfig(cm)
+		convey.So(conf.GetSilentFaultEnabled(), convey.ShouldBeFalse)
+	})
+
+	convey.Convey("load silent config missing key keeps disabled and cleans", t, func() {
+		resetSilentConfig()
+		cm := &v1.ConfigMap{Data: map[string]string{}}
+		loadSilentConfig(cm)
+		convey.So(conf.GetSilentFaultEnabled(), convey.ShouldBeFalse)
+	})
+}

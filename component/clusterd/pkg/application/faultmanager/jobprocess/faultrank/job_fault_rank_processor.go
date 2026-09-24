@@ -431,16 +431,15 @@ func getFaultDeviceInfoByRelationFault(jobId, nodeName string, server *constant.
 			faultDevice.SwitchFaultTime = strconv.FormatInt(fault.FaultTime, constant.FormatBase)
 			faultDevice.FaultTime = fault.FaultTime
 		} else if fault.FaultType == constant.DeviceFaultType {
-			targetLength := 2
-			if fields := strings.Split(fault.NPUName, constant.Minus); len(fields) == targetLength {
-				faultDevice = convertToFaultDevice(server, fault.FaultCode, fault.ExecutedStrategy,
-					fields[targetLength-1], constant.FaultTypeNPU)
-				faultDevice.FaultTime = fault.FaultTime
-			} else {
+			deviceId, err := faultdomain.GetDeviceIdByDeviceName(fault.NPUName)
+			if err != nil {
 				hwlog.RunLog.Errorf("jobId %s, node %s, npu name [%s] is invalid",
 					jobId, nodeName, fault.NPUName)
 				continue
 			}
+			faultDevice = convertToFaultDevice(server, fault.FaultCode, fault.ExecutedStrategy,
+				deviceId, constant.FaultTypeNPU)
+			faultDevice.FaultTime = fault.FaultTime
 		} else {
 			hwlog.RunLog.Warnf("relation fault type:[%s] is unknown", fault.FaultType)
 			continue
