@@ -55,13 +55,14 @@ function build_plugin() {
     export CGO_ENABLED=1
     export CGO_CFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
     export CGO_CPPFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
-    go build -mod=mod -buildmode=pie -v -gcflags="all=-N -l" -ldflags "-X ascend-common/common-utils/version.Version=${build_version} \
+    go build -mod=mod -buildmode=pie -v -ldflags "-bindnow -X ascend-common/common-utils/version.Version=${build_version} \
         -X ascend-common/common-utils/version.GitCommit=${GIT_COMMIT} \
         -X ascend-common/common-utils/version.GitBranch=${GIT_BRANCH} \
         -X ascend-common/common-utils/version.BuildOS=linux \
         -X ascend-common/common-utils/version.BuildArch=${os_type} \
         -X ascend-common/common-utils/version.GoVersion=${GO_VERSION} \
-        -buildid none" \
+        -buildid none \
+        -s" \
         -o ascend-dra  ${TOP_DIR}
     ls "${dra_name}"
     if [ $? -ne 0 ]; then
