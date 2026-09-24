@@ -193,8 +193,6 @@ type DynamicParameters struct {
 	// key is topo tree name, value is the hierarchical level definitions for that topo tree.
 	ResourceLevelsInfo map[string][]util.ResourceTreeLevel
 
-	// check the original value from configuration when schedule in a5
-	SuperPodSizeFromConf int
 	// PreferPreviousNode enables "prefer previous node" feature
 	PreferPreviousNode bool
 }

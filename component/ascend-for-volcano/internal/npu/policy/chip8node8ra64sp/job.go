@@ -67,26 +67,23 @@ func (tp *chip8node8ra64sp) checkSpBlock() *api.ValidateResult {
 }
 
 func (tp *chip8node8ra64sp) checkSuperPodSizeValid() *api.ValidateResult {
-	// getting super-pod-size in volcano.yaml instead of new value changed by process which is different with 910a3
-	SuperPodSizeFromConf := tp.FrameAttr.SuperPodSizeFromConf
-
-	//  Max(super-pod-size) * 8 <= 8192
-	if SuperPodSizeFromConf <= 0 || SuperPodSizeFromConf*tp.MaxNodeNPUNum > maxSuperPodNPUNum {
+	//  Max(super-pod-size) * 8 <= 1024
+	if tp.FrameAttr.SuperPodSize <= 0 || tp.FrameAttr.SuperPodSize*tp.MaxNodeNPUNum > maxSuperPodNPUNum {
 		return &api.ValidateResult{
 			Pass:   false,
 			Reason: superPodSizeInvalidReason,
 			Message: fmt.Sprintf("Parameter super-pod-size(%d) in volcano.yaml is invalid "+
-				"which should be in range [1,1024]",
-				SuperPodSizeFromConf),
+				"which should be in range [1,128] for schedule_policy of chip8-node8-ra64-sp",
+				tp.FrameAttr.SuperPodSize),
 		}
 	}
 
-	if tp.spBlock > tp.FrameAttr.SuperPodSizeFromConf {
+	if tp.spBlock > tp.FrameAttr.SuperPodSize {
 		return &api.ValidateResult{
 			Pass:   false,
 			Reason: superPodSizeInvalidReason,
 			Message: fmt.Sprintf("Parameter spBlock(%d/8=%d) is bigger than size of super-pod-size(%d)",
-				tp.SpBlockNPUNum, tp.spBlock, tp.FrameAttr.SuperPodSizeFromConf),
+				tp.SpBlockNPUNum, tp.spBlock, tp.FrameAttr.SuperPodSize),
 		}
 	}
 	return nil
