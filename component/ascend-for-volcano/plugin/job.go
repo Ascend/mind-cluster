@@ -605,7 +605,7 @@ func (sJob *SchedulerJob) setParameterPlaneUnhealthyTolerance() {
 		return
 	}
 	val, ok := sJob.Annotation[util.ParameterPlaneUnhealthyToleranceAnnoKey]
-	if ok && val == "true" || sJob.NPUTaskNum <= 1 {
+	if ok && val == util.ParameterPlaneUnhealthyToleranceIgnoreValue || sJob.NPUTaskNum <= 1 {
 		sJob.NPUJob.ParameterPlaneUnhealthyTolerance = true
 	}
 }

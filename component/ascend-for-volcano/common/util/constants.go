@@ -254,6 +254,8 @@ const (
 const (
 	// ParameterPlaneUnhealthyToleranceAnnoKey annotation key for tolerating parameter plane unhealthy NPU
 	ParameterPlaneUnhealthyToleranceAnnoKey = "huawei.com/parameterplane.unhealthy-tolerance"
+	// ParameterPlaneUnhealthyToleranceIgnoreValue annotation value for ignoring parameter plane unhealthy NPU
+	ParameterPlaneUnhealthyToleranceIgnoreValue = "ignore"
 )
 
 const (
