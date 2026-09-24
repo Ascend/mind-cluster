@@ -163,7 +163,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>配置分布式Ascend910/Ascend950任务在调度时忽略参数面网络不健康NPU。仅对huawei.com/Ascend910和huawei.com/npu资源类型生效。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>"true"：忽略参数面网络不健康NPU，允许调度到网络不健康NPU。</li><li>不设置或其他值：过滤参数面网络不健康NPU，不允许调度到网络不健康NPU。</li></ul><p>默认不设置，即过滤网络不健康NPU。</p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>"ignore"：忽略参数面网络不健康NPU，允许调度到网络不健康NPU。</li><li>不设置或其他值：过滤参数面网络不健康NPU，不允许调度到网络不健康NPU。</li></ul><p>默认不设置，即过滤网络不健康NPU。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
@@ -395,7 +395,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>配置分布式Ascend910/Ascend950任务在调度时忽略参数面网络不健康NPU。仅对huawei.com/Ascend910和huawei.com/npu资源类型生效。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>"true"：忽略参数面网络不健康NPU，允许调度到网络不健康NPU。</li><li>不设置或其他值：过滤参数面网络不健康NPU，不允许调度到网络不健康NPU。</li></ul><p>默认不设置，即过滤网络不健康NPU。</p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>"ignore"：忽略参数面网络不健康NPU，允许调度到网络不健康NPU。</li><li>不设置或其他值：过滤参数面网络不健康NPU，不允许调度到网络不健康NPU。</li></ul><p>默认不设置，即过滤网络不健康NPU。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
