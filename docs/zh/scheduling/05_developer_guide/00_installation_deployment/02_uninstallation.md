@@ -100,7 +100,7 @@
             - CRI-O场景
 
                 ```shell
-                uninstall.sh crio crio <crio.conf.d下drop-in文件路径>
+                ./uninstall.sh crio crio <crio.conf.d下drop-in文件路径>
                 ```
 
             >[!NOTE]

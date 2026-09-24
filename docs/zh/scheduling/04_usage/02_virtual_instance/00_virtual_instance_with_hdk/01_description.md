@@ -104,7 +104,7 @@
 </td>
 </tr>
 <tr id="row32781215162311"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p162786153239"><a name="p162786153239"></a><a name="p162786153239"></a><span id="ph151431757142112"><a name="ph151431757142112"></a><a name="ph151431757142112"></a>Atlas A2系列产品</span></p>
-<ul><li>Atlas A2 训练系列产品：<p>Atlas 800T A2 训练服务器（24个AICore）</p></li><li>Atlas A2 推理系列产品：<p>Atlas 800I A2 推理服务</p></li></ul>
+<ul><li>Atlas A2 训练系列产品：<p>Atlas 800T A2 训练服务器（24个AICore）</p></li><li>Atlas A2 推理系列产品：<p>Atlas 800I A2 推理服务器</p></li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="33.339999999999996%" headers="mcps1.2.5.1.2 "><p id="p366920193216"><a name="p366920193216"></a><a name="p366920193216"></a>在物理机划分vNPU，挂载vNPU到容器</p>
 </td>

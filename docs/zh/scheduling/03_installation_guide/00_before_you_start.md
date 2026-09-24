@@ -1,6 +1,6 @@
 # 安装前必读<a name="ZH-CN_TOPIC_0000002511426285"></a>
 
-在安装组件前，用户需详细阅读[简介](../01_introduction/00_overview.md)章节，了解集群调度各组件功能详细的说明，并根据要使用的特性选择安装相应的组件。
+在安装组件前，用户需详细阅读[简介](../01_introduction/00_overview.md)章节，了解集群调度各组件功能的详细说明，并根据要使用的特性选择安装相应的组件。
 
 Elastic Agent、TaskD和MindIO组件需部署在容器内，详细安装步骤请参见[制作镜像](../04_usage/05_fault_recovery/01_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#制作镜像)。
 
