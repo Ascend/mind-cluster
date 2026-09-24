@@ -46,7 +46,7 @@ function build() {
   cd "${TOP_DIR}/cmd/dpu-exporter"
   CGO_CFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
   CGO_CPPFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
-  go build -mod=mod -buildmode=pie -ldflags "-s -extldflags=-Wl,-z,now  -X huawei.com/dpu-exporter/versions.BuildVersion=${build_version}_linux-${arch} \
+  go build -mod=mod -buildmode=pie -ldflags "-s -bindnow -X huawei.com/dpu-exporter/versions.BuildVersion=${build_version}_linux-${arch} \
             -X ascend-common/common-utils/version.Version=${build_version} \
             -X ascend-common/common-utils/version.GitCommit=${GIT_COMMIT} \
             -X ascend-common/common-utils/version.GitBranch=${GIT_BRANCH} \
