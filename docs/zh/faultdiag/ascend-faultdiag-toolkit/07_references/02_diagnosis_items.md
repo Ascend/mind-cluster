@@ -7,9 +7,9 @@
 | 设备类型 | 诊断项数量 | 详细说明 |
 |----------|------------|----------|
 | 主机侧相关诊断 | 28 | [查看](#主机侧相关诊断) |
-| BMC 相关诊断 | 2 | [查看](#bmc-相关诊断) |
+| BMC相关诊断 | 2 | [查看](#bmc-相关诊断) |
 | 交换机相关诊断 | 11 | [查看](#交换机相关诊断) |
-| HCCS 相关诊断 | 8 | [查看](#hccs-相关诊断) |
+| HCCS相关诊断 | 8 | [查看](#hccs-相关诊断) |
 | 通用诊断 | 1 | [查看](#通用诊断) |
 
 ## 主机侧相关诊断
@@ -44,22 +44,22 @@
 </tr>
 <tr>
 <td>单端光模块光功率检测</td>
-<td>检查 TX/RX 功率值是否超出阈值范围</td>
+<td>检查TX/RX功率值是否超出阈值范围</td>
 <td>光模块光功率异常，RX功率-18.5dBm低于阈值-15dBm</td>
 </tr>
 <tr>
 <td>单端光模块SNR检测</td>
-<td>检查 Host SNR / Media SNR 值是否低于阈值</td>
+<td>检查Host SNR/Media SNR值是否低于阈值</td>
 <td>光模块SNR异常：lane0: Host SNR值7.2dB低于阈值8.0dB</td>
 </tr>
 <tr>
 <td>光模块SNR LANE间差值</td>
-<td>检查不同 lane 间的 SNR 差值是否超过阈值</td>
+<td>检查不同lane间的SNR差值是否超过阈值</td>
 <td>光模块SNR LANE间差值异常：LANE0与LANE3差值为4.2dB</td>
 </tr>
 <tr>
 <td>光模块Los/LoL检测</td>
-<td>检查 Rx Los、Tx Los、Rx LoL、Tx LoL 状态值是否大于 0</td>
+<td>检查Rx Los、Tx Los、Rx LoL、Tx LoL状态值是否大于 0</td>
 <td>光模块Rx Los指标异常，状态：1</td>
 </tr>
 <tr>
@@ -70,74 +70,74 @@
 <td>持续连续3次出现uncorr_cw_cnt > 10，发生时间：2025-10-01-14:30:00.123456，2025-10-01-14:30:01.234567，2025-10-01-14:30:02.345678</td>
 </tr>
 <tr>
-<td>光模块IIC 通信故障检测</td>
-<td>检测 IIC 通信异常事件</td>
+<td>光模块IIC通信故障检测</td>
+<td>检测IIC通信异常事件</td>
 <td>检测到IIC异常：trans status[0x40]，error status[0x10]，NPU板载光模块转接器可能存在故障</td>
 </tr>
 <tr>
 <td>光模块初始化开光状态检测</td>
 <td><code>hccn_tool -i {chip_phy_id} -dfx_cfg -g</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 暂不支持</td>
-<td>检查 TX Disable 状态是否为禁用</td>
+<td>检查TX Disable状态是否为禁用</td>
 <td>光模块处于关光状态，tx disable status：1</td>
 </tr>
 <tr>
 <td>光模块CDR SNR检测</td>
 <td><code>hccn_tool -i {chip_phy_id} -cdr_snr -g</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 暂不支持</td>
-<td>检查 CDR 的 Host SNR / Media SNR 值是否低于阈值</td>
+<td>检查CDR的Host SNR/Media SNR值是否低于阈值</td>
 <td>CDR SNR异常，Host SNR值为6.8dB低于阈值8.0dB</td>
 </tr>
 <tr>
 <td>光模块端口状态、网络健康状态、连接状态检测</td>
 <td><code>hccn_tool -i {chip_phy_id} -link -g</code>、<code>hccn_tool -i {chip_phy_id} -net_health -g</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: <code>optical.log</code>（net_health不支持）</td>
-<td>检查 NPU 端口的网络健康状态与连接状态是否偏离正常阈值，并附带对端交换机与端口信息</td>
+<td>检查NPU端口的网络健康状态与连接状态是否偏离正常阈值，并附带对端交换机与端口信息</td>
 <td>端口光模块状态异常，网络健康状态：abnormal，连接状态：down。 对端交换机：SWITCH-01，对端端口：10GE1/0/1。</td>
 </tr>
 <tr>
 <td>RoCE端口配置检测</td>
 <td><code>hccn_tool -i {chip_phy_id} -speed -g</code>、<code>hccn_tool -i {chip_phy_id} -duplex -g</code>、<code>hccn_tool -i {chip_phy_id} -lldp -g</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/net_conf.log</code><br>V3: <code>optical.log</code>/<code>lldp.log</code>（duplex不支持）</td>
-<td>通过 LLDP 信息定位对端交换机端口，对比两端速率与双工模式是否一致（任一端为 auto 时不告警）</td>
+<td>通过LLDP信息定位对端交换机端口，对比两端速率与双工模式是否一致（任一端为auto时不告警）</td>
 <td>NPU端口与对端交换机：SWITCH-01，ip：0.0.0.1，端口10GE1/0/1连接信息不相同，本端Speed：100G，Duplex：full。对端Speed：50G，Duplex：full</td>
 </tr>
 <tr>
-<td>NPU对端lldp信息缺失检测</td>
+<td>NPU对端LLDP信息缺失检测</td>
 <td><code>hccn_tool -i {chip_phy_id} -lldp -g</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: <code>lldp.log</code></td>
-<td>检查 NPU 光模块对端 lldp 信息是否采集到</td>
-<td>未采集到NPU光模块对端lldp信息</td>
+<td>检查NPU光模块对端LLDP信息是否采集到</td>
+<td>未采集到NPU光模块对端LLDP信息</td>
 </tr>
 <tr>
 <td>环回检测</td>
 <td><code>hccn_tool -i {npu_id} -optical -t {model}</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 暂不支持</td>
-<td>根据环回测试状态码判定故障位置：环回类型 1 后端口 down 判定为本端故障；环回类型 1 后端口 up 但环回类型 2 后端口 down 判定为本端端口光模块故障/脏污</td>
+<td>根据环回测试状态码判定故障位置：环回类型1后端口down判定为本端故障；环回类型1后端口up但环回类型2后端口down判定为本端端口光模块故障/脏污</td>
 <td>本端环回类型1后端口down，诊断为本端故障</td>
 </tr>
 <tr>
 <td>双端光模块光功率检测</td>
 <td rowspan="3"><code>hccn_tool -i {chip_phy_id} -optical -g</code>（主机）、<code>dis optical-module interface {interface}</code>（交换机）、<code>hccn_tool -i {chip_phy_id} -lldp -g</code>（主机）</td>
 <td rowspan="3">主机：V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: <code>optical.log</code>；交换机：<code>switch_cli_output.txt</code></td>
-<td>通过 LLDP 信息获取对端端口，对双端光模块 TX/RX 功率进行对比分析</td>
+<td>通过LLDP信息获取对端端口，对双端光模块 TX/RX 功率进行对比分析</td>
 <td>光模块光功率异常：本端RX功率-18.5dBm低于阈值-15dBm，对端交换机TX功率-12.0dBm正常</td>
 </tr>
 <tr>
 <td>双端光模块SNR检测</td>
-<td>通过 LLDP 信息获取对端端口，对双端光模块 Host SNR / Media SNR 进行对比分析</td>
+<td>通过LLDP信息获取对端端口，对双端光模块Host SNR/Media SNR进行对比分析</td>
 <td>本端SNR值为7.2dB低于阈值8.0dB，对端交换机SNR值为9.5dB正常</td>
 </tr>
 <tr>
 <td>双端光模块电流检测</td>
-<td>通过 LLDP 信息获取对端端口，对双端光模块偏置电流进行对比分析</td>
+<td>通过LLDP信息获取对端端口，对双端光模块偏置电流进行对比分析</td>
 <td>本端偏置电流85mA低于阈值90mA，对端交换机偏置电流105mA正常</td>
 </tr>
 </tbody>
 </table>
 
 >[!NOTE]
-> Host 日志 V1/V2/V3 版本详情请参考 [host 离线日志采集](../05_usage/02_log_collection.md#host-offline-log)。
+> Host日志V1/V2/V3版本详情请参考[host离线日志采集](../05_usage/02_log_collection.md#host-offline-log)。
 
 ### <term>Ascend 950PR&950DT系列产品</term>主机侧额外诊断
 
@@ -155,7 +155,7 @@
 <tbody>
 <tr>
 <td>光模块在位检测</td>
-<td rowspan="6"><code>hccn_tool -g -optical -i {npu_id} -optical_id {optical_id}</code></td>
+<td rowspan="6"><code>hccn_tool -g -optical -i {npu_id} -u {udie_id} -p {port_id}</code></td>
 <td>检查光模块是否在位</td>
 <td>光模块未在位，状态：NA</td>
 </tr>

@@ -248,11 +248,11 @@ dmidecode > {采集目录}/dmidecode.txt
         msnpureport -f
         ```
 
-    3. 将第2步中收集到的日志复制到after_task目录。
+    3. 将步骤2中收集到的日志复制到after_task目录。
 
         ```shell
-        cp -r {步骤1收取日志的时间戳目录}/slog {采集目录}/device_log/after_task
-        cp -r {步骤1收取日志的时间戳目录}/hisi_logs {采集目录}/device_log/after_task
+        cp -r {步骤2收取日志的时间戳目录}/slog {采集目录}/device_log/after_task
+        cp -r {步骤2收取日志的时间戳目录}/hisi_logs {采集目录}/device_log/after_task
         ```
 
     4. 任务前、后的Device 侧Unified Bus统一总线的维测信息日志（ub_info目录）需要使用以下命令单独收取。
@@ -292,7 +292,7 @@ dmidecode > {采集目录}/dmidecode.txt
 
 目录结构：
 
-- 当ascend-fd是26.2.0及以后版本时，NPU驱动需要同步配套
+- 当ascend-fd为26.2.0及之后版本时，NPU驱动需要同步配套
 
     ```text
     |--device_log
@@ -347,9 +347,9 @@ dmidecode > {采集目录}/dmidecode.txt
                 └── device_info.txt
     ```
 
-- 当ascend-fd是26.1.0及之前版本时
+- 当ascend-fd为26.1.0及之前版本时
 
-    - Ascend HDK 23.0.RC3 版本
+    - Ascend HDK 23.0.RC3版本
 
         ```text
         |--device_log
@@ -378,7 +378,7 @@ dmidecode > {采集目录}/dmidecode.txt
                 └── device_info.txt
         ```
 
-    - Ascend HDK 23.0.3 及以上版本
+    - Ascend HDK 23.0.3及之后版本
 
         ```text
         |--device_log
@@ -531,13 +531,13 @@ cp -r ~/ttp_log {采集目录}/dl_log/ttp_log
 
 训练或推理结束后，需要采集 LCNE 组件日志。ascend-fd组件26.2.0及之后版本，增强了Unified Bus（UB）链路诊断能力，如果希望使用该增强能力，请务必采集LCNE日志。
 
-**<term>Ascend 950PR&950DT系列产品</term>**
+**Ascend 950PR&950DT系列产品**
 
-<term>Ascend 950PR&950DT系列产品</term> LCNE 组件运行时，需要将日志解压至 `采集目录/lcne_log/` 下。可按照以下方式进行采集：
+<term>Ascend 950PR&950DT系列产品</term>LCNE组件运行时，需要将日志解压至`采集目录/lcne_log/`下。可按照以下方式进行采集：
 
 - 服务器形态
-  1. 进入 <term>Ascend 950PR&950DT系列产品</term> 1213 前台，执行 **collect diagnostic information** 命令采集日志。
-  2. 进入 <term>Ascend 950PR&950DT系列产品</term> 1213 后台的 `/opt/vrpv8/home/` 目录下获取 `diagnostic_information_*.zip` 压缩日志文件。需要手动解压所有压缩日志。
+  1. 进入<term>Ascend 950PR&950DT系列产品</term>1213前台，执行**collect diagnostic information**命令采集日志。
+  2. 进入<term>Ascend 950PR&950DT系列产品</term>1213后台的`/opt/vrpv8/home/`目录下获取`diagnostic_information_*.zip`压缩日志文件。需要手动解压所有压缩日志。
 
 - PoD形态
 
