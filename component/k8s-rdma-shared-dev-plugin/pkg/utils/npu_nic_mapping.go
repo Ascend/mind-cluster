@@ -15,11 +15,13 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -51,30 +53,55 @@ type ProductMapping struct {
 }
 
 var (
-	dpuToNpuOnce sync.Once
-	dpuToNpuIDs  map[string][]int
+	dpuToNpuMu  sync.RWMutex
+	dpuToNpuIDs map[string][]int
 
 	npuNicMappingCache *NpuNicMapping
 	npuNicMappingErr   error
 	npuNicMappingOnce  sync.Once
+
+	// npuNicMappingRetryInterval is the retry interval for loading npu-nic-mapping.json.
+	npuNicMappingRetryInterval = 30 * time.Second
 )
 
-// InitNpuNicMapping loads npu-nic-mapping.json once and builds reverse index.
-func InitNpuNicMapping() {
-	dpuToNpuOnce.Do(func() {
+// InitNpuNicMapping starts a goroutine that loads npu-nic-mapping.json with retries and builds the reverse index.
+// Callers must invoke it only once during process startup.
+func InitNpuNicMapping(ctx context.Context) {
+	go loadNpuNicMappingWithRetry(ctx)
+}
+
+// loadNpuNicMappingWithRetry retries loading npu-nic-mapping.json until success or ctx cancelled.
+func loadNpuNicMappingWithRetry(ctx context.Context) {
+	ticker := time.NewTicker(npuNicMappingRetryInterval)
+	defer ticker.Stop()
+
+	for {
 		mapping, err := loadNpuNicMapping()
-		if err != nil {
-			hwlog.RunLog.Errorf("load npu-nic-mapping config failed: %v, AffectedNPU will be empty", err)
+		switch {
+		case err != nil:
+			hwlog.RunLog.Debugf("load npu-nic-mapping config failed: %v, "+
+				"AffectedNPU will be empty until loaded, retry in %s",
+				err, npuNicMappingRetryInterval)
+		case mapping == nil:
+			hwlog.RunLog.Debugf("npu-nic-mapping config not found, "+
+				"AffectedNPU will be empty until loaded, retry in %s",
+				npuNicMappingRetryInterval)
+		default:
+			index := buildReverseIndex(mapping.NpuNics)
+			dpuToNpuMu.Lock()
+			dpuToNpuIDs = index
+			dpuToNpuMu.Unlock()
+			hwlog.RunLog.Infof("npu-nic-mapping loaded, primary-DPU "+
+				"reverse index size: %d", len(index))
 			return
 		}
-		if mapping == nil {
-			hwlog.RunLog.Warnf("npu-nic-mapping config not found, AffectedNPU will be empty")
+		select {
+		case <-ctx.Done():
+			hwlog.RunLog.Infof("npu-nic-mapping loading stopped: %v", ctx.Err())
 			return
+		case <-ticker.C:
 		}
-		dpuToNpuIDs = buildReverseIndex(mapping.NpuNics)
-		hwlog.RunLog.Infof("npu-nic-mapping loaded, primary-DPU reverse index size: %d",
-			len(dpuToNpuIDs))
-	})
+	}
 }
 
 // GetAffectedNPU returns affected NPU ids by HCA name from reverse index.
@@ -82,6 +109,8 @@ func GetAffectedNPU(ethName string) []int {
 	if ethName == "" {
 		return []int{}
 	}
+	dpuToNpuMu.RLock()
+	defer dpuToNpuMu.RUnlock()
 	if npuIds, ok := dpuToNpuIDs[ethName]; ok {
 		result := make([]int, len(npuIds))
 		copy(result, npuIds)
