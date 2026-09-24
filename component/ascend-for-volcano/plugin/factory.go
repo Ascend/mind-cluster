@@ -283,7 +283,7 @@ func (sHandle *ScheduleHandler) initDynamicParameters(configs map[string]string)
 		klog.V(util.LogInfoLev).Infof("InitCache failed: %s.", util.ArgumentError)
 		return
 	}
-	sHandle.FrameAttr.SuperPodSize, sHandle.FrameAttr.SuperPodSizeFromConf = getSizeOfSuperPod(configs)
+	sHandle.FrameAttr.SuperPodSize = getSizeOfSuperPod(configs)
 	sHandle.FrameAttr.ReservePodSize = getReserveNodes(configs, sHandle.FrameAttr.SuperPodSize)
 	sHandle.FrameAttr.GraceDeleteTime = getGraceDeleteTime(configs)
 	sHandle.FrameAttr.PresetVirtualDevice = getPresetVirtualDeviceConfig(configs)
@@ -1006,16 +1006,14 @@ func getConfigurationByKey(configurations []config.Configuration) map[string]str
 }
 
 // getSizeOfSuperPod get size of super pod
-func getSizeOfSuperPod(configurations map[string]string) (int, int) {
+func getSizeOfSuperPod(configurations map[string]string) int {
 	superPodSize, err := getSuperPodInfoFromConfig(sizeOfSuperPodKey, configurations)
-	// we need to cache the original value from configuration
-	superPodSizeFromConfig := superPodSize
 	if err != nil || superPodSize == 0 {
 		klog.V(util.LogWarningLev).Infof("get super-pod-size failed: %v, set default super-pod-size: %d",
 			err, defaultSuperPodSize)
 		superPodSize = defaultSuperPodSize
 	}
-	return superPodSize, superPodSizeFromConfig
+	return superPodSize
 }
 
 // getReserveNodes get reserve nodes

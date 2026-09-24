@@ -84,8 +84,7 @@ func setSuperPodSize(superpodSize int) plugin.VolcanoFrame {
 	return plugin.VolcanoFrame{
 		ConfigParameters: plugin.ConfigParameters{
 			DynamicParameters: plugin.DynamicParameters{
-				SuperPodSize:         superpodSize,
-				SuperPodSizeFromConf: superpodSize,
+				SuperPodSize: superpodSize,
 			},
 		},
 	}
@@ -139,7 +138,7 @@ func buildCheckSuperPodSizeValidCase() []ValidNPUJobTestCase {
 				Pass:   false,
 				Reason: superPodSizeInvalidReason,
 				Message: "Parameter super-pod-size(0) in volcano.yaml is invalid " +
-					"which should be in range [1,1024]",
+					"which should be in range [1,128] for schedule_policy of chip8-node8-ra64-sp",
 			},
 		},
 		{
