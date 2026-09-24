@@ -99,6 +99,7 @@ ENTITY_DL_LOG = "dl_log"
 PLOG_KEYWORD = "plog"
 PLOG_ENV = "ASCEND_PROCESS_LOG_PATH"
 PLOG_MAX_DEPTH = 8
+PLOG_SUBDIRS = ("run", "debug", "security")
 # Task plog is collected from the shared storage statically mounted at SHARED_STORAGE_ROOT
 # (the site MUST mount the shared volume — NFS or any CSI-backed protocol — at this fixed
 # path, see node-collector.yaml and the docs). The collector reads the mounted filesystem
@@ -256,17 +257,18 @@ class CollectorClient:
                     continue
 
     @staticmethod
-    def _collect_subdirs(dst: Path, root: str) -> None:
+    def _collect_subdirs(dst: Path, root: str) -> bool:
         """Copy the direct subdirectories of a plog dir into dst, skipping its top-level files.
 
         CANN plog dirs hold run/debug/security (optionally under one extra job-level dir);
         a single-subdir chain is descended so run/debug/security land directly under dst.
+        Returns True when run/debug/security plog data was found under root.
         """
         cur = Path(root)
         try:
             subdirs = [p for p in cur.iterdir() if p.is_dir()]
         except OSError:
-            return
+            return False
         depth = 0
         while len(subdirs) == 1 and depth < PLOG_MAX_DEPTH:
             cur = subdirs[0]
@@ -274,12 +276,23 @@ class CollectorClient:
             try:
                 subdirs = [p for p in cur.iterdir() if p.is_dir()]
             except OSError:
-                return
+                return False
         for sub in subdirs:
             try:
                 shutil.copytree(sub, dst / sub.name, dirs_exist_ok=True)
             except OSError:
                 continue
+        return any(sub.name in PLOG_SUBDIRS for sub in subdirs)
+
+    def _collect_plog_dir(self, dst: Path, root: str, entity: dict, pod: PodRef) -> None:
+        """Collect a matched plog dir; warn when it holds no run/debug/security plog data."""
+        if not self._collect_subdirs(dst, root):
+            logger.warning(
+                "no plog logs (run/debug/security) under the matched dir: entity=%s pod=%s dir=%s",
+                entity["name"],
+                pod.name,
+                root,
+            )
 
     @staticmethod
     def _is_plog_entity(entity: dict) -> bool:
@@ -359,6 +372,7 @@ class CollectorClient:
         storage (SHARED_STORAGE_ROOT, protocol-agnostic, works after pod deletion).
         """
         keywords = [k.lower() for k in entity.get("mount_keywords", [])]
+        plog_entity = self._is_plog_entity(entity)
         for pod in pods:
             pairs = get_pathmap().all_pairs(pod.pod_uid)
             collected = False
@@ -372,15 +386,21 @@ class CollectorClient:
                         chosen,
                         keywords,
                     )
-                    if self._is_plog_entity(entity):
-                        self._collect_subdirs(dst, chosen)
+                    if plog_entity:
+                        self._collect_plog_dir(dst, chosen, entity, pod)
                     else:
                         self._collect_host_path(dst, [str(Path(chosen) / "**")])
                     collected = True
                 else:
                     collected = self._subdir_keyword_match(dst, entity, pod, pairs, keywords)
             if not collected:
-                self._collect_shared_storage(dst, entity, pod)
+                collected = self._collect_shared_storage(dst, entity, pod)
+            if plog_entity and not collected:
+                logger.warning(
+                    "collect plog logs failed: entity=%s pod=%s no keyword dir matched",
+                    entity["name"],
+                    pod.name,
+                )
 
     def _collect_shared_storage(self, dst: Path, entity: dict, pod: PodRef) -> bool:
         """Collect the pod's plog from the statically mounted shared storage.
@@ -411,7 +431,7 @@ class CollectorClient:
                 keywords,
             )
             if plog_entity:
-                self._collect_subdirs(dst, hit)
+                self._collect_plog_dir(dst, hit, entity, pod)
             else:
                 self._collect_host_path(dst, [str(Path(hit) / "**")])
             collected = True
@@ -446,7 +466,7 @@ class CollectorClient:
                         keywords,
                     )
                     if self._is_plog_entity(entity):
-                        self._collect_subdirs(dst, str(sub))
+                        self._collect_plog_dir(dst, str(sub), entity, pod)
                     else:
                         self._collect_host_path(dst, [str(sub / "**")])
                     collected = True
@@ -579,7 +599,7 @@ class CollectorClient:
                 host,
             )
             if self._is_plog_entity(entity):
-                self._collect_subdirs(dst, host)
+                self._collect_plog_dir(dst, host, entity, pod)
             else:
                 self._collect_host_path(dst, [str(Path(host) / "**")])
             collected = True

@@ -181,6 +181,9 @@ def dispatch_collect(job: str, pods: list[dict]) -> list[dict]:
     if not nodes:
         logger.warning("job=%s has no valid nodes (pods not scheduled / no node)", job)
         return []
+    # node name -> host ip map (from the pod list): fills host_ip into failure
+    # records for nodes that never uploaded (trigger failed / timed out)
+    node_ips = {p["node"]: p["host_ip"] for p in pods if p.get("node") and p.get("host_ip")}
     v1 = K8s.core()
     logger.info("dispatching collect: job=%s nodes=%d pods=%d", job, len(nodes), len(pods))
     tracker.register(job, nodes)
@@ -190,6 +193,7 @@ def dispatch_collect(job: str, pods: list[dict]) -> list[dict]:
     def trigger(node: str) -> None:
         res = _trigger_node(v1, node, job, by_node[node])
         if not res["ok"]:  # trigger failed immediately: record the final result, stop waiting for upload
+            res["host_ip"] = node_ips.get(node)
             tracker.complete(job, node, res)
 
     with ThreadPoolExecutor(max_workers=min(64, len(nodes))) as ex:
@@ -204,6 +208,7 @@ def dispatch_collect(job: str, pods: list[dict]) -> list[dict]:
                 {
                     "node": node,
                     "ok": False,
+                    "host_ip": node_ips.get(node),
                     "error": "collect timeout (no upload)",
                     "artifacts_tar": None,
                     "worker_dir": None,
@@ -212,6 +217,18 @@ def dispatch_collect(job: str, pods: list[dict]) -> list[dict]:
     final = tracker.get(job)
     results = final["results"] if final else {}
     ok_nodes = [n for n in nodes if results.get(n, {}).get("ok")]
+    failed_nodes = [n for n in nodes if not results.get(n, {}).get("ok")]
+    if failed_nodes:
+        logger.warning(
+            "collect incomplete: job=%s nodes did not report collected data: %s (ok=%d/%d)",
+            job,
+            ", ".join(
+                f"{results.get(n, {}).get('host_ip') or n}({results.get(n, {}).get('error') or 'unknown'})"
+                for n in failed_nodes
+            ),
+            len(ok_nodes),
+            len(nodes),
+        )
     logger.info("collect result aggregated: job=%s ok=%d/%d", job, len(ok_nodes), len(nodes))
     return [results.get(n) for n in nodes]
 
@@ -219,11 +236,39 @@ def dispatch_collect(job: str, pods: list[dict]) -> list[dict]:
 # --------------------------------------------------------------------------- #
 # Assemble the diag input directory
 # --------------------------------------------------------------------------- #
+def _has_nonempty_file(root: str | Path) -> bool:
+    """True when the extracted worker dir holds at least one non-empty regular file.
+
+    node-collector reports ok=True even when every collect entity failed, so an
+    upload may legitimately carry an (almost) empty parse-output; such nodes are
+    treated as empty-data nodes rather than successful workers.
+    """
+    try:
+        for p in Path(root).rglob("*"):
+            if p.is_file() and p.stat().st_size > 0:
+                return True
+    except OSError:
+        return False
+    return False
+
+
+def nodes_note(incomplete_nodes: list[str], empty_nodes: list[str]) -> str:
+    """Single user-facing note merging not-reported and empty-data nodes; empty string when none."""
+    parts = []
+    if incomplete_nodes:
+        parts.append(f"the following nodes did not report collection/parsed data: {', '.join(incomplete_nodes)}")
+    if empty_nodes:
+        parts.append(f"the following nodes reported empty collection/parsed data: {', '.join(empty_nodes)}")
+    if not parts:
+        return ""
+    return f"Note: {'; '.join(parts)}. The diagnosis result is based on incomplete data and is for reference only."
+
+
 def assemble_diag_input(collected: list[dict], job: str, namespace: str) -> str:
     """Assemble diag input dir per ascend-fd diag 'multi-worker dump' contract.
 
     Layout: {WORK_ROOT}/{YYYYMMDD}/{namespace}_{job}/diag-input/{worker_name}/
-    (worker_name = the machine host_ip, e.g. 51.38.66.67, so the diag report shows
+    (worker_name = the machine host_ip, e.g. 192.168.1.10, so the diag report shows
     which machine each worker is on; falls back to workerN when host_ip is missing).
     Uploads are extracted straight into diag-input/worker-<node>/ (see upload.py); here
     they are renamed to the host_ip. Each worker subdir must contain server-info.json;
@@ -241,6 +286,8 @@ def assemble_diag_input(collected: list[dict], job: str, namespace: str) -> str:
         if not r["ok"] or not r["worker_dir"]:
             continue
         src = Path(r["worker_dir"])
+        if not _has_nonempty_file(src):
+            continue  # empty upload: contributes no worker dir to the diag input
         name = r.get("host_ip") or f"worker{worker_idx}"
         dst = diag_input / name
         if src.is_dir():
@@ -318,7 +365,21 @@ def diagnose(job: str, namespace: str = "default") -> dict:
             "pods": pods,
             "collected": collected,
         }
+    incomplete_nodes = [c.get("host_ip") or c["node"] for c in collected if not c.get("ok") and c.get("node")]
+    # detect empty uploads before assemble_diag_input: it moves worker dirs into the diag input
+    empty_nodes = [
+        c.get("host_ip") or c["node"]
+        for c in collected
+        if c.get("ok") and c.get("worker_dir") and not _has_nonempty_file(c["worker_dir"])
+    ]
     diag_input = assemble_diag_input(collected, job, namespace)
+    if empty_nodes:
+        logger.warning(
+            "collect empty: job=%s nodes reported empty collection/parsed data: %s",
+            job,
+            ", ".join(empty_nodes),
+        )
+    notes_text = nodes_note(incomplete_nodes, empty_nodes)
     try:
         out_dir, report, report_text = run_diag(diag_input)
     except _DiagError as e:
@@ -329,6 +390,8 @@ def diagnose(job: str, namespace: str = "default") -> dict:
             "diag_input_dir": diag_input,
             "diag_output_dir": None,
             "diag_report": {},
+            "incomplete_nodes": incomplete_nodes,
+            "empty_nodes": empty_nodes,
             "error": str(e),
         }
     logger.info(
@@ -340,7 +403,9 @@ def diagnose(job: str, namespace: str = "default") -> dict:
         "diag_input_dir": diag_input,
         "diag_output_dir": out_dir,
         "diag_report": report,
-        "diag_report_text": report_text,
+        "diag_report_text": (report_text + "\n\n" + notes_text).strip() if notes_text else report_text,
+        "incomplete_nodes": incomplete_nodes,
+        "empty_nodes": empty_nodes,
         "error": None,
     }
 
@@ -481,6 +546,8 @@ def diagnose_cached(job: str, namespace: str = "default", refresh: bool = False)
                 "pods": result.get("pods"),
                 "diag_report": result.get("diag_report"),
                 "diag_report_text": result.get("diag_report_text"),
+                "incomplete_nodes": result.get("incomplete_nodes", []),
+                "empty_nodes": result.get("empty_nodes", []),
                 "error": result.get("error"),
                 "cached_at": time.time(),
                 "cached": False,
