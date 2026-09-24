@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2025-2026. All rights reserved.
 
 // Package publicfault file utils for public fault
 package publicfault
@@ -30,6 +30,7 @@ type pubFaultCode struct {
 	SubHealthFaultCodes []string
 	SeparateNPUCodes    []string
 	PreSeparateNPUCodes []string
+	SilentFaultCodes    []string
 }
 
 type pubFaultCodeCache struct {
@@ -37,6 +38,7 @@ type pubFaultCodeCache struct {
 	SubHealthFaultCodes map[string]struct{}
 	SeparateNPUCodes    map[string]struct{}
 	PreSeparateNPUCodes map[string]struct{}
+	SilentFaultCodes    map[string]struct{}
 }
 
 func init() {
@@ -45,6 +47,7 @@ func init() {
 		SubHealthFaultCodes: make(map[string]struct{}),
 		SeparateNPUCodes:    make(map[string]struct{}),
 		PreSeparateNPUCodes: make(map[string]struct{}),
+		SilentFaultCodes:    make(map[string]struct{}),
 	}
 }
 
@@ -77,6 +80,9 @@ func LoadPubFaultCfgFromFile(filePath string) error {
 	for _, code := range util.RemoveDuplicates(pubFaultCfgFile.FaultCode.NotHandleFaultCodes) {
 		PubFaultCodeCfg.NotHandleFaultCodes[code] = struct{}{}
 	}
+	for _, code := range util.RemoveDuplicates(pubFaultCfgFile.FaultCode.SilentFaultCodes) {
+		PubFaultCodeCfg.SilentFaultCodes[code] = struct{}{}
+	}
 	hwlog.RunLog.Infof("load fault config from <%s> success", filepath.Base(filePath))
 	return nil
 }
@@ -86,4 +92,5 @@ func resetPubFaultCodeCache() {
 	PubFaultCodeCfg.SubHealthFaultCodes = make(map[string]struct{})
 	PubFaultCodeCfg.NotHandleFaultCodes = make(map[string]struct{})
 	PubFaultCodeCfg.PreSeparateNPUCodes = make(map[string]struct{})
+	PubFaultCodeCfg.SilentFaultCodes = make(map[string]struct{})
 }

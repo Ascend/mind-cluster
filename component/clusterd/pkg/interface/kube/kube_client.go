@@ -93,6 +93,40 @@ func UpdateOrCreateConfigMap(cmName, nameSpace string, data, label map[string]st
 	return cErr
 }
 
+// UpdateOrCreateConfigMapWithRV update or create configMap with optimistic concurrency:
+// the update carries resourceVersion, so a concurrent modification (e.g. a user deleting
+// entries) yields a conflict and this function skips the write instead of overwriting it.
+func UpdateOrCreateConfigMapWithRV(cmName, nameSpace string, data, label map[string]string, resourceVersion string) error {
+	cm := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            cmName,
+			Namespace:       nameSpace,
+			Labels:          label,
+			ResourceVersion: resourceVersion,
+		},
+		Data: data,
+	}
+	_, err := k8sClient.ClientSet.CoreV1().ConfigMaps(cm.ObjectMeta.Namespace).Update(context.TODO(),
+		cm, metav1.UpdateOptions{})
+	if err == nil {
+		return nil
+	}
+	if !errors.IsNotFound(err) {
+		// conflict or other update error: skip write to avoid overwriting a concurrent modification
+		hwlog.RunLog.Warnf("update cm %s/%s with resourceVersion failed, skip write: %v", nameSpace, cmName, err)
+		return fmt.Errorf("unable to update ConfigMap with resourceVersion: %v", err)
+	}
+	// cm does not exist yet: create it (resourceVersion must be empty on create)
+	cm.ObjectMeta.ResourceVersion = ""
+	_, cErr := k8sClient.ClientSet.CoreV1().ConfigMaps(cm.ObjectMeta.Namespace).Create(context.TODO(),
+		cm, metav1.CreateOptions{})
+	if cErr != nil {
+		hwlog.RunLog.Errorf("unable to create ConfigMap: %v", cErr)
+		return cErr
+	}
+	return nil
+}
+
 // UpdateConfigMap update device info, which is cm
 func UpdateConfigMap(cm *v1.ConfigMap) (*v1.ConfigMap, error) {
 	if cm == nil {
@@ -206,7 +240,7 @@ func GetJobEvent(namespace, name, jobType string) (*v1.EventList, error) {
 		FieldSelector: fieldSelector,
 	})
 	if err != nil {
-		hwlog.RunLog.Errorf("get events faild: %s", err)
+		hwlog.RunLog.Errorf("get events failed: %s", err)
 		return nil, err
 	}
 	return events, nil

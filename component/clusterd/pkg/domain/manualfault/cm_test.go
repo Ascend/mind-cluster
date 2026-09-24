@@ -16,7 +16,6 @@
 package manualfault
 
 import (
-	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -451,59 +450,54 @@ func testTryErrGetCm() {
 }
 
 func TestUpdateOrCreateManualCm(t *testing.T) {
-	convey.Convey("test func 'UpdateOrCreateManualCm' success", t, testUpdateOrCreateManualCm)
-	convey.Convey("test func 'UpdateOrCreateManualCm' success, marshal error", t, testMarshalErr)
-	convey.Convey("test func 'UpdateOrCreateManualCm' failed, update error", t, testUpdateErr)
-	convey.Convey("test func 'UpdateOrCreateManualCm' failed, deep copy error", t, testDeepCpErr)
-	convey.Convey("test func 'UpdateOrCreateManualCm' success, manual info is nil", t, testNilInfo)
+	convey.Convey("test func 'UpdateOrCreateManualCm' passes resourceVersion", t, func() {
+		var gotRV string
+		p1 := gomonkey.ApplyFunc(kube.UpdateOrCreateConfigMapWithRV,
+			func(_, _ string, _, _ map[string]string, rv string) error {
+				gotRV = rv
+				return nil
+			})
+		defer p1.Reset()
+		LastCmInfo = make(map[string]NodeCmInfo)
+		nodeInfo := getDemoNodeInfo()
+		UpdateOrCreateManualCm(nodeInfo, "12345")
+		convey.So(gotRV, convey.ShouldEqual, "12345")
+		convey.So(reflect.DeepEqual(LastCmInfo, nodeInfo), convey.ShouldBeTrue)
+	})
+
+	convey.Convey("test func 'UpdateOrCreateManualCm' write error keeps LastCmInfo", t, func() {
+		p1 := gomonkey.ApplyFuncReturn(kube.UpdateOrCreateConfigMapWithRV, testErr)
+		defer p1.Reset()
+		LastCmInfo = make(map[string]NodeCmInfo)
+		nodeInfo := getDemoNodeInfo()
+		UpdateOrCreateManualCm(nodeInfo, "12345")
+		convey.So(reflect.DeepEqual(LastCmInfo, nodeInfo), convey.ShouldBeFalse)
+	})
+
+	convey.Convey("test func 'UpdateOrCreateManualCm' empty info deletes cm", t, func() {
+		LastCmInfo = make(map[string]NodeCmInfo)
+		p1 := gomonkey.ApplyFuncReturn(kube.DeleteConfigMap, nil)
+		defer p1.Reset()
+		UpdateOrCreateManualCm(nil, "12345")
+		convey.So(len(LastCmInfo), convey.ShouldEqual, len0)
+	})
 }
 
-func testUpdateOrCreateManualCm() {
-	p1 := gomonkey.ApplyFuncReturn(kube.UpdateOrCreateConfigMap, nil)
-	defer p1.Reset()
-	LastCmInfo = make(map[string]NodeCmInfo)
-	nodeInfo := getDemoNodeInfo()
-	FaultCmInfo.SetNodeInfo(nodeInfo)
-	UpdateOrCreateManualCm()
-	convey.So(reflect.DeepEqual(LastCmInfo, nodeInfo), convey.ShouldBeTrue)
-}
-
-func testMarshalErr() {
-	p1 := gomonkey.ApplyFuncReturn(json.Marshal, nil, testErr).
-		ApplyFuncReturn(kube.UpdateOrCreateConfigMap, nil)
-	defer p1.Reset()
-	LastCmInfo = make(map[string]NodeCmInfo)
-	nodeInfo := getDemoNodeInfo()
-	FaultCmInfo.SetNodeInfo(nodeInfo)
-	UpdateOrCreateManualCm()
-	convey.So(len(LastCmInfo), convey.ShouldEqual, len0)
-}
-
-func testUpdateErr() {
-	p1 := gomonkey.ApplyFuncReturn(kube.UpdateOrCreateConfigMap, testErr)
-	defer p1.Reset()
-	LastCmInfo = make(map[string]NodeCmInfo)
-	nodeInfo := getDemoNodeInfo()
-	FaultCmInfo.SetNodeInfo(nodeInfo)
-	UpdateOrCreateManualCm()
-	convey.So(reflect.DeepEqual(LastCmInfo, nodeInfo), convey.ShouldBeFalse)
-}
-
-func testDeepCpErr() {
-	p1 := gomonkey.ApplyFuncReturn(util.DeepCopy, testErr)
-	defer p1.Reset()
-	LastCmInfo = make(map[string]NodeCmInfo)
-	nodeInfo := getDemoNodeInfo()
-	FaultCmInfo.SetNodeInfo(nodeInfo)
-	UpdateOrCreateManualCm()
-	convey.So(len(LastCmInfo), convey.ShouldEqual, len0)
-}
-
-func testNilInfo() {
-	LastCmInfo = make(map[string]NodeCmInfo)
-	FaultCmInfo.SetNodeInfo(nil)
-	p1 := gomonkey.ApplyFuncReturn(kube.DeleteConfigMap, nil)
-	defer p1.Reset()
-	UpdateOrCreateManualCm()
-	convey.So(len(LastCmInfo), convey.ShouldEqual, len0)
+func TestMergeNodeCmInfoMaps(t *testing.T) {
+	convey.Convey("test func 'MergeNodeCmInfoMaps' merge manual and silent entries", t, func() {
+		base := map[string]NodeCmInfo{
+			node1: {Total: []string{dev1}, Detail: map[string][]DevCmInfo{
+				dev1: {{FaultCode: code1, FaultLevel: constant.ManuallySeparateNPU}},
+			}},
+		}
+		extra := map[string]NodeCmInfo{
+			node1: {Total: []string{dev2}, Detail: map[string][]DevCmInfo{
+				dev2: {{FaultCode: code1, FaultLevel: constant.SilentFault}},
+			}},
+		}
+		MergeNodeCmInfoMaps(base, extra)
+		merged := base[node1]
+		convey.So(len(merged.Total), convey.ShouldEqual, len2)
+		convey.So(len(merged.Detail), convey.ShouldEqual, len2)
+	})
 }

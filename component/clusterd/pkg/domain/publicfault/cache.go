@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2025-2026. All rights reserved.
 
 // Package publicfault cache utils for public fault
 package publicfault
@@ -12,6 +12,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/conf"
 )
 
 // PubFaultCache public fault cache
@@ -141,10 +142,17 @@ func (pc *cache) GetPubFaultsForCM() (map[string][]constant.NodeFault, int) {
 	return pubFaults, pubFaultsNum
 }
 
-// LoadFaultToCache load public fault to cache
+// LoadFaultToCache load public fault to cache. Silent-level faults are skipped
+// when the silent fault switch is off, so restored entries keep consistent with
+// the switch state no matter which resource reported them
 func (pc *cache) LoadFaultToCache(faults map[string][]constant.NodeFault) {
 	for nodeName, nodeFaults := range faults {
 		for _, nodeFault := range nodeFaults {
+			if nodeFault.FaultLevel == constant.SilentFault && !conf.GetSilentFaultEnabled() {
+				hwlog.RunLog.Warnf("skip loading silent fault to cache: node %s, faultId %s, resource %s, "+
+					"silent fault switch is off", nodeName, nodeFault.FaultId, nodeFault.FaultResource)
+				continue
+			}
 			faultKey := nodeFault.FaultResource + nodeFault.FaultId
 			faultCache := &constant.PubFaultCache{
 				FaultDevIds: nodeFault.FaultDevIds,
