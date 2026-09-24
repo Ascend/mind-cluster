@@ -198,7 +198,7 @@ rpc HealthCheck(ClientInfo) returns (Status) {}
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<li>0：表示故障恢复流程正常。</li><li>其他值：表示故障恢复流程异常，并触发重调度。</li></p><p>**Status.info**：返回信息描述。</p>|
+|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<li>0：表示gRPC连接正常。</li><li>其他值：表示gRPC连接异常。</li></p><p>**Status.info**：返回信息描述。</p>|
 
 ## 对接第三方AI平台控制相关接口<a name="ZH-CN_TOPIC_0000002511346803"></a>
 
@@ -216,4 +216,4 @@ AI平台可通过Pod Group Annotation控制故障恢复的流程以及恢复策�
 |ProcessConfirmFault|string|ClusterD刷新后的故障键值对列表，格式为“id1:type1,id2:type2”的字符串。id表示全局rankId，type表示故障类型。type为0表示故障卡只有片上内存故障，1表示至少有一个非片上内存故障。|
 |ProcessResultFault|string|平台确认的故障键值对列表，格式为“id1:type1,id2:type2”的字符串。id表示全局rankId，type表示故障类型。type为0表示故障卡只有片上内存故障，1表示至少有一个非片上内存故障。|
 |RankTableReady|<ul><li>true</li><li>false或其他值</li><li>字段不存在</li></ul>|<ul><li>true：平台已生成RankTable</li><li>false或其他值：平台暂未生成RankTable</li><li>字段不存在：非RankTable模式</li></ul>|
-|ProcessRecoverStatus|<ul><li>retry-success</li><li>retry-failed</li><li>recover-success</li><li>recover-failed</li><li>dump-success</li><li>dump-failed</li><li>exit-completed</li><li>空值或其他值</li></ul>|<ul><li>retry-success：进程级在线恢复成功</li><li>retry-failed：进程级在线恢复失败</li><li>recover-success：在线恢复成功</li><li>recover-failed：在线恢复失败</li><li>dump-success：保存临终遗言成功</li><li>dump-failed：保存临终遗言失败</li><li>exit-completed</li><li>空值或其他值：未恢复完成</li></ul>|
+|ProcessRecoverStatus|<ul><li>retry-success</li><li>retry-failed</li><li>recover-success</li><li>recover-failed</li><li>dump-success</li><li>dump-failed</li><li>exit-completed</li><li>空值或其他值</li></ul>|<ul><li>retry-success：进程级在线恢复成功</li><li>retry-failed：进程级在线恢复失败</li><li>recover-success：在线恢复成功</li><li>recover-failed：在线恢复失败</li><li>dump-success：保存临终遗言成功</li><li>dump-failed：保存临终遗言失败</li><li>exit-completed：Pod重调度完成</li><li>空值或其他值：未恢复完成</li></ul>|

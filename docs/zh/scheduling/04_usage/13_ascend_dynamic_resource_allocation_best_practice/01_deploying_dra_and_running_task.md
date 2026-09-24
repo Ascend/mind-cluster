@@ -154,7 +154,7 @@ spec:
 
    ```yaml
    cdiVersion: 0.8.0
-   kind: [ascend.com/npu](https://ascend.com/npu)
+   kind: ascend.com/npu
    devices:
    - name: "0"
      containerEdits:

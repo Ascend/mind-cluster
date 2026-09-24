@@ -10,7 +10,7 @@
 
 ### 约束限制
 
-- 当前基于MindIO+MindSpeed-llm的高可用特性提供高可用示例以帮助用户快速体验改特性，当前仅完成了基础模型和基础训练特性的适配，暂未进行全量训练特性兼容，如用户对某个训练特性存在兼容需求，请在社区提出issue后我们将快速完成适配
+- 当前基于MindIO+MindSpeed-llm的高可用特性提供高可用示例以帮助用户快速体验该特性，当前仅完成了基础模型和基础训练特性的适配，暂未进行全量训练特性兼容，如用户对某个训练特性存在兼容需求，请在社区提出issue后我们将快速完成适配
 - MindIO提供TTP、UCE和ARF三种特性，其中MindIO TTP支持在Atlas 800 训练服务器（型号：9000）上使用，MindIO UCE和MindIO ARF不支持该型号设备。
 - 众多大模型框架都支持ZeRO（Zero Redundancy Optimizer，零冗余优化器）来减少对显存的使用，当前MindIO TFT仅支持开启ZeRO-1，支持DP（Data Parallelism，数据并行） Size为偶数，同时使用不同的功能对DP Size有不同的限制：
     - MindIO TTP功能
@@ -26,7 +26,7 @@
 
         增加副本对应增加的片上内存大小计算公式：增加片上内存总量（GB） = 模型参数量N（B） \* 12 \* 副本数。其中，模型参数量的单位为B（十亿），通过以上公式，计算出需要增加的片上内存，扩容后，再使用MindIO TFT。
 
-- 训练容错框架中有一个Active Controller与两个Backup Controller，为了保证Active Controller在内多张卡发生故障时，能够顺利切换到Backup Controller完成临终保存，需要状态正常的卡的数量大于world\_size的一半。
+- 训练容错框架中有一个Active Controller与两个Backup Controller，为了保证Active Controller在多张卡发生故障时，能够顺利切换到Backup Controller完成临终保存，需要状态正常的卡的数量大于world\_size的一半。
 - MindIO TFT会对优化器状态数据做副本。MindIO UCE或MindIO ARF修复时，寻找有效副本修复故障卡。当训练集群故障较多且通过副本仍无法拼凑出一个完整副本时，系统将从Step在线修复退化为在线加载周期Checkpoint修复。
 - MindIO TFT在生成临终Checkpoint数据时，除了考虑一个完整的数据副本，还要校验数据是否一致。如果发生故障后，存在一个OS（Optimizer State，优化器状态）数据Shard长期处于修改状态，或者OS数据不同Shard间训练迭代不一致，都认为是全局数据不一致，无法生成临终Checkpoint数据。
 - MindIO TTP不使用MindIO ACP（Async Checkpoint Persistence，异步Checkpoint保存）功能。MindIO TTP完成临终Checkpoint保存后会结束训练进程。为确保在进程退出前，临终Checkpoint已经保存到持久化存储，约束MindIO TTP写数据不使用异步Checkpoint保存方式，而是直接写入到持久化存储。
