@@ -254,6 +254,9 @@ func main() {
 			hwlog.RunLog.Errorf("Failed to create k8s client: %v", err)
 		}
 
+		// Load npu-nic-mapping.json with retries.
+		utils.InitNpuNicMapping(ctx)
+
 		rm, stopPeriodicUpdate = initAndStartDevices("UB", func() types.ResourceManager {
 			return ub_device.NewUbResourceManager(configFilePath, useCdi, ubExclMode, k8sClient)
 		})

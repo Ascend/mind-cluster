@@ -22,6 +22,7 @@ import (
 	"os"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
@@ -41,8 +42,9 @@ func resetNpuNicMappingCache() {
 }
 
 func resetDpuToNpuIndex() {
-	dpuToNpuOnce = sync.Once{}
+	dpuToNpuMu.Lock()
 	dpuToNpuIDs = nil
+	dpuToNpuMu.Unlock()
 }
 
 func TestLoadNpuNicMappingSuccess(t *testing.T) {
@@ -124,7 +126,22 @@ func TestLoadNpuNicMappingMachineTypeFail(t *testing.T) {
 	})
 }
 
-// TestInitNpuNicMapping tests InitNpuNicMapping building the reverse index once for success, error and missing config.
+// waitForDpuIndexLoaded polls until the async load completes or timeout.
+func waitForDpuIndexLoaded(timeout time.Duration) bool {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		dpuToNpuMu.RLock()
+		loaded := len(dpuToNpuIDs) > 0
+		dpuToNpuMu.RUnlock()
+		if loaded {
+			return true
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	return false
+}
+
+// TestInitNpuNicMapping tests InitNpuNicMapping: the reverse index is built from a valid config.
 func TestInitNpuNicMapping(t *testing.T) {
 	convey.Convey("Given a valid mapping config, the reverse index is built", t, func() {
 		resetDpuToNpuIndex()
@@ -132,18 +149,19 @@ func TestInitNpuNicMapping(t *testing.T) {
 			return []byte(`{"npuNics":[{"npuId":0,"nicNames":["ens2f0","ens0f2"]}]}`), nil
 		})
 		convey.Convey("Then affected NPUs are resolved from the primary NIC", func() {
-			InitNpuNicMapping()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			InitNpuNicMapping(ctx)
+			convey.So(waitForDpuIndexLoaded(2*time.Second), convey.ShouldBeTrue)
 			convey.So(GetAffectedNPU("ens2f0"), convey.ShouldResemble, []int{0})
 			convey.So(GetAffectedNPU("ens0f2"), convey.ShouldBeEmpty)
-		})
-		convey.Convey("Then repeated calls do not reload the config", func() {
-			InitNpuNicMapping()
-			InitNpuNicMapping()
-			convey.So(GetAffectedNPU("ens2f0"), convey.ShouldResemble, []int{0})
 		})
 		patches.Reset()
 		resetDpuToNpuIndex()
 	})
+}
+
+func TestInitNpuNicMapping2(t *testing.T) {
 	convey.Convey("Given a config read failure, the reverse index stays empty", t, func() {
 		resetDpuToNpuIndex()
 		patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
@@ -152,7 +170,9 @@ func TestInitNpuNicMapping(t *testing.T) {
 		defer patches.Reset()
 		defer resetDpuToNpuIndex()
 
-		InitNpuNicMapping()
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		InitNpuNicMapping(ctx)
 		convey.So(GetAffectedNPU("ens2f0"), convey.ShouldBeEmpty)
 	})
 	convey.Convey("Given the config file does not exist, the reverse index stays empty", t, func() {
@@ -163,8 +183,32 @@ func TestInitNpuNicMapping(t *testing.T) {
 		defer patches.Reset()
 		defer resetDpuToNpuIndex()
 
-		InitNpuNicMapping()
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		InitNpuNicMapping(ctx)
 		convey.So(GetAffectedNPU("ens2f0"), convey.ShouldBeEmpty)
+	})
+	convey.Convey("Given a transient failure, the mapping is loaded on retry", t, func() {
+		resetDpuToNpuIndex()
+		origInterval := npuNicMappingRetryInterval
+		npuNicMappingRetryInterval = 10 * time.Millisecond
+		defer func() { npuNicMappingRetryInterval = origInterval }()
+
+		start := time.Now()
+		patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+			if time.Since(start) < 20*time.Millisecond {
+				return nil, errors.New("transient read error")
+			}
+			return []byte(`{"npuNics":[{"npuId":0,"nicNames":["ens2f0"]}]}`), nil
+		})
+		defer patches.Reset()
+		defer resetDpuToNpuIndex()
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		InitNpuNicMapping(ctx)
+		convey.So(waitForDpuIndexLoaded(2*time.Second), convey.ShouldBeTrue)
+		convey.So(GetAffectedNPU("ens2f0"), convey.ShouldResemble, []int{0})
 	})
 }
 
