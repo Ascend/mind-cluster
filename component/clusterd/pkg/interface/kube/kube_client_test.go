@@ -13,8 +13,10 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/api"
@@ -40,8 +42,8 @@ const (
 )
 
 var (
-	cm  *v1.ConfigMap
-	pod *v1.Pod
+	cm  *corev1.ConfigMap
+	pod *corev1.Pod
 )
 
 func TestPatchCMData(t *testing.T) {
@@ -121,7 +123,7 @@ func TestCheckNodeExist(t *testing.T) {
 }
 
 func createCM(t *testing.T) {
-	cm = &v1.ConfigMap{
+	cm = &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      testCMName,
@@ -136,7 +138,7 @@ func createCM(t *testing.T) {
 }
 
 func TestCreateCM(t *testing.T) {
-	cm = &v1.ConfigMap{
+	cm = &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      testCMName,
@@ -210,8 +212,8 @@ func TestCreateOrUpdateCM(t *testing.T) {
 	})
 	convey.Convey("test func 'CreateOrUpdateConfigMap' failed. cm does not exist, create error", t, func() {
 		DeleteConfigMap(testCMName, testNS)
-		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().ConfigMaps(v1.NamespaceAll),
-			"Create", &v1.ConfigMap{}, testErr)
+		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().ConfigMaps(corev1.NamespaceAll),
+			"Create", &corev1.ConfigMap{}, testErr)
 		defer p1.Reset()
 		err := CreateOrUpdateConfigMap(testCMName, testNS, nil, nil)
 		expErr := fmt.Errorf("unable to create ConfigMap: %v", testErr)
@@ -227,7 +229,7 @@ func TestCreateOrUpdateCM(t *testing.T) {
 		DeleteConfigMap(testCMName, testNS)
 		createCM(t)
 		// first create, second update: configmaps "test-cm-name" already exists
-		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().ConfigMaps(v1.NamespaceAll),
+		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().ConfigMaps(corev1.NamespaceAll),
 			"Update", nil, testErr)
 		defer p1.Reset()
 		err := CreateOrUpdateConfigMap(testCMName, testNS, nil, nil)
@@ -245,7 +247,7 @@ func TestUpdateOrCreateCM(t *testing.T) {
 	convey.Convey("test func 'UpdateOrCreateConfigMap' failed. cm existed, update error", t, func() {
 		DeleteConfigMap(testCMName, testNS)
 		createCM(t)
-		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().ConfigMaps(v1.NamespaceAll),
+		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().ConfigMaps(corev1.NamespaceAll),
 			"Update", nil, testErr)
 		defer p1.Reset()
 		err := UpdateOrCreateConfigMap(testCMName, testNS, nil, nil)
@@ -259,23 +261,63 @@ func TestUpdateOrCreateCM(t *testing.T) {
 	})
 	convey.Convey("test func 'UpdateOrCreateConfigMap' failed. cm does not exist, create error", t, func() {
 		DeleteConfigMap(testCMName, testNS)
-		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().ConfigMaps(v1.NamespaceAll),
-			"Create", &v1.ConfigMap{}, testErr)
+		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().ConfigMaps(corev1.NamespaceAll),
+			"Create", &corev1.ConfigMap{}, testErr)
 		defer p1.Reset()
 		err := UpdateOrCreateConfigMap(testCMName, testNS, nil, nil)
 		convey.So(err, convey.ShouldResemble, testErr)
 	})
 }
 
+func TestUpdateOrCreateCMWithRV(t *testing.T) {
+	convey.Convey("test func 'UpdateOrCreateConfigMapWithRV' success, cm existed, update success", t, func() {
+		DeleteConfigMap(testCMName, testNS)
+		createCM(t)
+		curCM, err := GetConfigMap(testCMName, testNS)
+		convey.So(err, convey.ShouldBeNil)
+		err = UpdateOrCreateConfigMapWithRV(testCMName, testNS, map[string]string{testKey1: testValue1}, nil,
+			curCM.ResourceVersion)
+		convey.So(err, convey.ShouldBeNil)
+	})
+	convey.Convey("test func 'UpdateOrCreateConfigMapWithRV' conflict, skip write", t, func() {
+		DeleteConfigMap(testCMName, testNS)
+		createCM(t)
+		conflictErr := apierrors.NewConflict(schema.GroupResource{Resource: "configmaps"}, testCMName,
+			fmt.Errorf("the object has been modified"))
+		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().ConfigMaps(corev1.NamespaceAll),
+			"Update", nil, conflictErr)
+		defer p1.Reset()
+		err := UpdateOrCreateConfigMapWithRV(testCMName, testNS, map[string]string{testKey1: testValue1}, nil,
+			"stale-resource-version")
+		expErr := fmt.Errorf("unable to update ConfigMap with resourceVersion: %v", conflictErr)
+		convey.So(err, convey.ShouldResemble, expErr)
+	})
+	convey.Convey("test func 'UpdateOrCreateConfigMapWithRV' success, cm does not exist, create success", t, func() {
+		DeleteConfigMap(testCMName, testNS)
+		err := UpdateOrCreateConfigMapWithRV(testCMName, testNS, map[string]string{testKey1: testValue1}, nil,
+			"any-resource-version")
+		convey.So(err, convey.ShouldBeNil)
+	})
+	convey.Convey("test func 'UpdateOrCreateConfigMapWithRV' failed, cm does not exist, create error", t, func() {
+		DeleteConfigMap(testCMName, testNS)
+		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().ConfigMaps(corev1.NamespaceAll),
+			"Create", &corev1.ConfigMap{}, testErr)
+		defer p1.Reset()
+		err := UpdateOrCreateConfigMapWithRV(testCMName, testNS, map[string]string{testKey1: testValue1}, nil,
+			"any-resource-version")
+		convey.So(err, convey.ShouldResemble, testErr)
+	})
+}
+
 func createPod(t *testing.T) {
-	pod = &v1.Pod{
+	pod = &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      testPodName,
 			Namespace: testNS,
 		},
-		Spec:   v1.PodSpec{},
-		Status: v1.PodStatus{},
+		Spec:   corev1.PodSpec{},
+		Status: corev1.PodStatus{},
 	}
 	_, err := GetClientK8s().ClientSet.CoreV1().Pods(testNS).Create(context.TODO(), pod, metav1.CreateOptions{})
 	if err != nil {
@@ -336,14 +378,14 @@ func TestRetryPatchPodLabels(t *testing.T) {
 
 func TestGetJobEvent(t *testing.T) {
 	convey.Convey("get event error", t, func() {
-		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().Events(v1.NamespaceAll),
+		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().Events(corev1.NamespaceAll),
 			"List", nil, testErr)
 		defer p1.Reset()
 		_, err := GetJobEvent(testNS, testName, testJobType)
 		convey.So(err, convey.ShouldResemble, testErr)
 	})
 	convey.Convey("get event ok", t, func() {
-		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().Events(v1.NamespaceAll),
+		p1 := gomonkey.ApplyMethodReturn(GetClientK8s().ClientSet.CoreV1().Events(corev1.NamespaceAll),
 			"List", nil, nil)
 		defer p1.Reset()
 		_, err := GetJobEvent(testNS, testName, testJobType)
@@ -364,7 +406,7 @@ func TestFaultJobReleaseInfoConsumer(t *testing.T) {
 	go StartFaultJobReleaseInfoConsumer(ctx)
 	convey.Convey("test RecoverFaultJobInfoCm", t, func() {
 		called := false
-		patch1 := gomonkey.ApplyFunc(GetConfigMap, func(string, string) (*v1.ConfigMap, error) {
+		patch1 := gomonkey.ApplyFunc(GetConfigMap, func(string, string) (*corev1.ConfigMap, error) {
 			called = true
 			return nil, errors.New("fake error")
 		})
@@ -377,7 +419,7 @@ func TestFaultJobReleaseInfoConsumer(t *testing.T) {
 	})
 	convey.Convey("test RecoverFaultJobInfoCmWithSync", t, func() {
 		called := false
-		patch1 := gomonkey.ApplyFunc(GetConfigMap, func(string, string) (*v1.ConfigMap, error) {
+		patch1 := gomonkey.ApplyFunc(GetConfigMap, func(string, string) (*corev1.ConfigMap, error) {
 			called = true
 			return nil, errors.New("fake error")
 		})
@@ -393,7 +435,7 @@ func TestFaultJobReleaseInfoConsumer(t *testing.T) {
 func TestRunRecoverFaultJobInfoCmTask(t *testing.T) {
 	convey.Convey("test func 'UpdateFaultJobInfoCmWhenJobDelete' success", t, func() {
 		testJobId := "test-job-id"
-		testCm := &v1.ConfigMap{
+		testCm := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      api.FaultJobCmName,
 				Namespace: api.ClusterNS,
@@ -419,7 +461,7 @@ func TestRunRecoverFaultJobInfoCmTask(t *testing.T) {
 
 	convey.Convey("test func 'UpdateFaultJobInfoCmWhenJobDelete' with UpdateConfigMap error", t, func() {
 		testJobId := "test-job-id"
-		testCm := &v1.ConfigMap{
+		testCm := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      api.FaultJobCmName,
 				Namespace: api.ClusterNS,
@@ -446,7 +488,7 @@ func TestCreateOrUpdateSuperPodFaultInfo(t *testing.T) {
 			1: {FaultTimes: fakeTime},
 		}
 		convey.Convey("Should update existing configmap failed", func() {
-			testCm := &v1.ConfigMap{
+			testCm := &corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      api.FaultJobCmName,
 					Namespace: api.ClusterNS,

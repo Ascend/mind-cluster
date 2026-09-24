@@ -519,6 +519,8 @@ func GetMostSeriousFaultLevel(fautLevels []string) string {
 		return constant.SubHealthFault
 	} else if faultTypeSet.Has(constant.NotHandleFault) {
 		return constant.NotHandleFault
+	} else if faultTypeSet.Has(constant.SilentFault) {
+		return constant.SilentFault
 	}
 	return constant.NormalNPU
 }
@@ -644,13 +646,31 @@ func getSortedKeys[T any](m map[string]T) []string {
 	return keys
 }
 
-// GetDeviceIdByDeviceName get deviceId by deviceName
+// GetDeviceIdByDeviceName get deviceId by deviceName.
+// Normal names are "<DeviceType>-<id>"; when the device type is unavailable (e.g. DeviceCenter
+// not ready on restart) the name degrades to a bare "<id>", which is also accepted here.
 func GetDeviceIdByDeviceName(deviceName string) (string, error) {
 	fields := strings.Split(deviceName, constant.Minus)
+	if len(fields) == 1 && isPureDigits(fields[0]) {
+		return fields[0], nil
+	}
 	if len(fields) != constant.NPUNameLength {
 		return "", fmt.Errorf("npu name [%s] is invalid", deviceName)
 	}
 	return fields[len(fields)-1], nil
+}
+
+// isPureDigits reports whether s is a non-empty all-digit string (the bare-id fallback format).
+func isPureDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // GetNodeMostSeriousFaultLevel get node most serious fault level

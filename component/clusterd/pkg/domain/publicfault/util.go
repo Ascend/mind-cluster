@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2025-2026. All rights reserved.
 
 // Package publicfault utils for public fault
 package publicfault
@@ -71,6 +71,10 @@ func GetFaultLevelByCode(faultCode string) string {
 	_, ok = PubFaultCodeCfg.NotHandleFaultCodes[faultCode]
 	if ok {
 		return constant.NotHandleFault
+	}
+	_, ok = PubFaultCodeCfg.SilentFaultCodes[faultCode]
+	if ok {
+		return constant.SilentFault
 	}
 	return ""
 }

@@ -199,6 +199,19 @@ func TestMergeSameTypeDeviceFault(t *testing.T) {
 	})
 }
 
+// TestGetMostSeriousFaultLevelSilentFault ensures SilentFault keeps its level instead of being degraded to NormalNPU.
+func TestGetMostSeriousFaultLevelSilentFault(t *testing.T) {
+	if got := GetMostSeriousFaultLevel([]string{constant.SilentFault}); got != constant.SilentFault {
+		t.Errorf("GetMostSeriousFaultLevel(SilentFault) = %v, want %v", got, constant.SilentFault)
+	}
+	if got := GetMostSeriousFaultLevel([]string{constant.SilentFault, constant.PreSeparateNPU}); got != constant.PreSeparateNPU {
+		t.Errorf("GetMostSeriousFaultLevel(SilentFault, PreSeparateNPU) = %v, want %v", got, constant.PreSeparateNPU)
+	}
+	if got := GetMostSeriousFaultLevel([]string{constant.SilentFault, constant.NormalNPU}); got != constant.SilentFault {
+		t.Errorf("GetMostSeriousFaultLevel(SilentFault, NormalNPU) = %v, want %v", got, constant.SilentFault)
+	}
+}
+
 // TestMergeDifferentTypeDeviceFault should not be merged, when fault type isn't same
 func TestMergeDifferentTypeDeviceFault(t *testing.T) {
 	t.Run("Test_mergeDeviceFault", func(t *testing.T) {
@@ -888,6 +901,14 @@ func buildTestCases() []testCase {
 		{name: "Valid device name with Ascend310 prefix",
 			deviceName:  "Ascend310-7",
 			expectedId:  "7",
+			expectError: false},
+		{name: "Valid bare id fallback without device type",
+			deviceName:  "0",
+			expectedId:  "0",
+			expectError: false},
+		{name: "Valid legacy placeholder format",
+			deviceName:  "-0",
+			expectedId:  "0",
 			expectError: false},
 		{name: "Invalid device name with wrong format",
 			deviceName:  "Ascend910_0",

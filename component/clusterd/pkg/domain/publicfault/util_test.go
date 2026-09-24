@@ -77,6 +77,7 @@ func TestGetFaultLevelByCode(t *testing.T) {
 	PubFaultCodeCfg.SeparateNPUCodes["001"] = struct{}{}
 	PubFaultCodeCfg.SubHealthFaultCodes["002"] = struct{}{}
 	PubFaultCodeCfg.NotHandleFaultCodes["003"] = struct{}{}
+	PubFaultCodeCfg.SilentFaultCodes["004"] = struct{}{}
 	convey.Convey("test func GetFaultLevelByCode, type is SeparateNPU", t, func() {
 		level := GetFaultLevelByCode("001")
 		convey.So(level, convey.ShouldEqual, constant.SeparateNPU)
@@ -88,6 +89,10 @@ func TestGetFaultLevelByCode(t *testing.T) {
 	convey.Convey("test func GetFaultLevelByCode, type is NotHandle", t, func() {
 		level := GetFaultLevelByCode("003")
 		convey.So(level, convey.ShouldEqual, constant.NotHandleFault)
+	})
+	convey.Convey("test func GetFaultLevelByCode, type is SilentFault", t, func() {
+		level := GetFaultLevelByCode("004")
+		convey.So(level, convey.ShouldEqual, constant.SilentFault)
 	})
 	convey.Convey("test func GetFaultLevelByCode, code is not defined", t, func() {
 		level := GetFaultLevelByCode("")

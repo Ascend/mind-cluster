@@ -54,7 +54,9 @@ var (
 
 	// ping mesh configmap deal func
 	cmPingMeshCMFuncs = map[string][]func(constant.ConfigPingMesh, constant.ConfigPingMesh, string){}
-	indexers          = make(map[schema.GroupVersionKind]cache.Indexer)
+	// reschedule reason configmap deal func
+	cmRescheduleReasonFuncs = map[string][]func(*v1.ConfigMap, *v1.ConfigMap, string){}
+	indexers                = make(map[schema.GroupVersionKind]cache.Indexer)
 )
 
 // PodGVK pod groupVersionKind
@@ -130,6 +132,7 @@ func CleanFuncs() {
 	nodeFuncs = map[string][]func(*v1.Node, *v1.Node, string){}
 	cmRankTableFuncs = map[string][]func(interface{}, interface{}, string){}
 	cmPingMeshCMFuncs = map[string][]func(constant.ConfigPingMesh, constant.ConfigPingMesh, string){}
+	cmRescheduleReasonFuncs = map[string][]func(*v1.ConfigMap, *v1.ConfigMap, string){}
 }
 
 // AddACJobFunc add acJob func
@@ -220,6 +223,14 @@ func AddCmConfigPingMeshFunc(business string,
 		cmPingMeshCMFuncs[business] = []func(constant.ConfigPingMesh, constant.ConfigPingMesh, string){}
 	}
 	cmPingMeshCMFuncs[business] = append(cmPingMeshCMFuncs[business], func1...)
+}
+
+// AddCmRescheduleReasonFunc add reschedule reason cm deal func, map by business
+func AddCmRescheduleReasonFunc(business string, func1 ...func(*v1.ConfigMap, *v1.ConfigMap, string)) {
+	if _, ok := cmRescheduleReasonFuncs[business]; !ok {
+		cmRescheduleReasonFuncs[business] = []func(*v1.ConfigMap, *v1.ConfigMap, string){}
+	}
+	cmRescheduleReasonFuncs[business] = append(cmRescheduleReasonFuncs[business], func1...)
 }
 
 // AddCmPubFaultFunc add public fault deal func, map by business
@@ -508,6 +519,23 @@ func InitCMInformer() {
 			},
 		},
 	})
+
+	cmInformer.AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: checkConfigMapIsRescheduleReason,
+		Handler: cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				cmRescheduleReasonHandler(nil, obj, constant.AddOperator)
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				if !reflect.DeepEqual(oldObj, newObj) {
+					cmRescheduleReasonHandler(oldObj, newObj, constant.UpdateOperator)
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				cmRescheduleReasonHandler(nil, obj, constant.DeleteOperator)
+			},
+		},
+	})
 	AddRankTableEventHandler(&cmInformer)
 	addPingMeshConfigEventHandler(&cmInformer)
 	informerFactory.Start(informerCh)
@@ -534,6 +562,16 @@ func addPingMeshConfigEventHandler(cmInformer *cache.SharedIndexInformer) {
 
 func checkConfigMapIsPingMeshInfo(obj interface{}) bool {
 	return util.IsNSAndNameMatched(obj, constant.PingMeshCMNamespace, constant.PingMeshConfigCm)
+}
+
+// checkConfigMapIsRescheduleReason check if configmap is reschedule reason info
+func checkConfigMapIsRescheduleReason(obj interface{}) bool {
+	cm, ok := obj.(*v1.ConfigMap)
+	if !ok {
+		hwlog.RunLog.Error("cannot convert to ConfigMap")
+		return false
+	}
+	return cm.Namespace == constant.RescheduleReasonCmNamespace && cm.Name == constant.RescheduleReasonCmName
 }
 
 func cmPingMeshConfigHandler(oldObj interface{}, newObj interface{}, operator string) {
@@ -839,6 +877,28 @@ func cmPubFaultHandler(oldObj, newObj interface{}, operator string) {
 			cmFunc(oldPubFaultForBusiness, newPubFaultForBusiness, operator)
 		}
 		index++
+	}
+}
+
+func cmRescheduleReasonHandler(oldObj, newObj interface{}, operator string) {
+	var oldCm, newCm *v1.ConfigMap
+	var ok bool
+	if oldObj != nil {
+		if oldCm, ok = oldObj.(*v1.ConfigMap); !ok {
+			hwlog.RunLog.Error("oldObj not configmap")
+			return
+		}
+	}
+	if newObj != nil {
+		if newCm, ok = newObj.(*v1.ConfigMap); !ok {
+			hwlog.RunLog.Error("newObj not configmap")
+			return
+		}
+	}
+	for _, cmFuncs := range cmRescheduleReasonFuncs {
+		for _, cmFunc := range cmFuncs {
+			cmFunc(oldCm, newCm, operator)
+		}
 	}
 }
 

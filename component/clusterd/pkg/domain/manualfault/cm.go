@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"ascend-common/api"
@@ -305,29 +305,72 @@ func GetManualCm() (*v1.ConfigMap, error) {
 	return cm, nil
 }
 
-// UpdateOrCreateManualCm update manually separate npu info configmap. if currentCmInfo is empty, delete cm
-func UpdateOrCreateManualCm() {
-	currentCmInfo, err := FaultCmInfo.DeepCopy()
-	if err != nil {
-		hwlog.RunLog.Errorf("deep copy fault cm info failed, error: %v", err)
-		return
-	}
-
-	if len(currentCmInfo) == 0 {
+// UpdateOrCreateManualCm writes the merged cm info into the configmap. if cmInfo is empty, the cm
+// is deleted. The update carries the cm resourceVersion for optimistic concurrency, so a concurrent
+// user modification yields a conflict and the write is skipped.
+func UpdateOrCreateManualCm(cmInfo map[string]NodeCmInfo, resourceVersion string) {
+	if len(cmInfo) == 0 {
 		DeleteManualCm()
 		return
 	}
 
-	for _, info := range currentCmInfo {
+	for _, info := range cmInfo {
 		sort.Strings(info.Total)
 	}
-	data := ConvertNodeInfoToCmData(currentCmInfo)
-	if err := kube.UpdateOrCreateConfigMap(constant.ManualDevInfoCmName, api.ClusterNS, data, nil); err != nil {
-		hwlog.RunLog.Errorf("manually separate npu info is nil, update configmap err: %v", err)
+	data := ConvertNodeInfoToCmData(cmInfo)
+
+	var err error
+	if resourceVersion != "" {
+		err = kube.UpdateOrCreateConfigMapWithRV(constant.ManualDevInfoCmName, api.ClusterNS, data, nil, resourceVersion)
+	} else {
+		err = kube.UpdateOrCreateConfigMap(constant.ManualDevInfoCmName, api.ClusterNS, data, nil)
+	}
+	if err != nil {
+		hwlog.RunLog.Errorf("update configmap %s err: %v", constant.ManualDevInfoCmName, err)
 		return
 	}
 
-	LastCmInfo = currentCmInfo
+	LastCmInfo = cmInfo
+}
+
+// MergeNodeCmInfoMaps merge extra node cm info into dst by node. same node entries coexist by FaultLevel.
+func MergeNodeCmInfoMaps(dst, extra map[string]NodeCmInfo) {
+	if len(extra) == 0 {
+		return
+	}
+	for node, info := range extra {
+		existing, ok := dst[node]
+		if !ok {
+			dst[node] = info
+			continue
+		}
+		dst[node] = mergeNodeCmInfo(existing, info)
+	}
+}
+
+func mergeNodeCmInfo(base, extra NodeCmInfo) NodeCmInfo {
+	totalSet := make(map[string]struct{}, len(base.Total)+len(extra.Total))
+	for _, dev := range base.Total {
+		totalSet[dev] = struct{}{}
+	}
+	for _, dev := range extra.Total {
+		totalSet[dev] = struct{}{}
+	}
+	merged := NodeCmInfo{
+		Total:  make([]string, 0, len(totalSet)),
+		Detail: make(map[string][]DevCmInfo),
+	}
+	for dev := range totalSet {
+		merged.Total = append(merged.Total, dev)
+	}
+	sort.Strings(merged.Total)
+	for dev, list := range base.Detail {
+		merged.Detail[dev] = append([]DevCmInfo{}, list...)
+	}
+	for dev, list := range extra.Detail {
+		merged.Detail[dev] = append(merged.Detail[dev], list...)
+	}
+	return merged
 }
 
 // ConvertNodeInfoToCmData convert node info to cm data

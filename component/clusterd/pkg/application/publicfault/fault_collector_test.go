@@ -19,6 +19,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/api/annotation"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/conf"
 	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/publicfault"
 )
@@ -55,30 +56,52 @@ var (
 )
 
 func TestPubFaultCollector(t *testing.T) {
-	patches := gomonkey.ApplyFuncReturn(publicfault.LoadPubFaultCfgFromFile, nil).
-		ApplyFuncReturn(LimitByResource, nil).
+	patches := gomonkey.ApplyFuncReturn(LimitByResource, nil).
 		ApplyMethodReturn(&pubFaultInfoChecker{}, "CheckAndFlush", nil)
 	defer patches.Reset()
-	convey.Convey("test func PubFaultCollector success", t, testLoadCustomFile)
+	convey.Convey("test func PubFaultCollector success", t, testCollectSucc)
 	convey.Convey("test func PubFaultCollector failed, limit error", t, testErrLimit)
 	convey.Convey("test func PubFaultCollector failed, check error", t, testErrCheck)
 }
 
-func testLoadCustomFile() {
-	resetInitOnce()
+func testCollectSucc() {
 	err := PubFaultCollector(&faultInfo)
 	convey.So(err, convey.ShouldBeNil)
+}
 
-	resetInitOnce()
-	const time2 = 2
-	output := []gomonkey.OutputCell{
-		{Values: gomonkey.Params{testErr}, Times: time2},
-		{Values: gomonkey.Params{nil}},
-	}
-	p1 := gomonkey.ApplyFuncSeq(publicfault.LoadPubFaultCfgFromFile, output)
-	defer p1.Reset()
-	err = PubFaultCollector(&faultInfo)
-	convey.So(err, convey.ShouldBeNil)
+func TestInitPubFaultCfg(t *testing.T) {
+	convey.Convey("load public fault config exactly once", t, func() {
+		loadCount := 0
+		p1 := gomonkey.ApplyFunc(publicfault.LoadPubFaultCfgFromFile, func(string) error {
+			loadCount++
+			return nil
+		})
+		defer p1.Reset()
+
+		resetInitOnce()
+		InitPubFaultCfg()
+		InitPubFaultCfg()
+		convey.So(loadCount, convey.ShouldEqual, 1)
+	})
+
+	convey.Convey("fall back to default file when customization load fails", t, func() {
+		p1 := gomonkey.ApplyFunc(time.Sleep, func(time.Duration) {})
+		defer p1.Reset()
+
+		loadCount := 0
+		p2 := gomonkey.ApplyFunc(publicfault.LoadPubFaultCfgFromFile, func(string) error {
+			loadCount++
+			if loadCount <= 2 {
+				return testErr
+			}
+			return nil
+		})
+		defer p2.Reset()
+
+		resetInitOnce()
+		InitPubFaultCfg()
+		convey.So(loadCount, convey.ShouldEqual, 3)
+	})
 }
 
 func testErrLimit() {
@@ -240,4 +263,57 @@ func resetFaultCache() {
 	for nodeName := range publicfault.PubFaultCache.GetPubFault() {
 		delete(publicfault.PubFaultCache.GetPubFault(), nodeName)
 	}
+}
+
+func TestIsSilentFaultDisabled(t *testing.T) {
+	convey.Convey("test isSilentFaultDisabled switch on", t, func() {
+		p1 := gomonkey.ApplyFuncReturn(publicfault.GetFaultLevelByCode, constant.SilentFault)
+		defer p1.Reset()
+		p2 := gomonkey.ApplyFuncReturn(conf.GetSilentFaultEnabled, true)
+		defer p2.Reset()
+		convey.So(isSilentFaultDisabled("code"), convey.ShouldBeFalse)
+	})
+
+	convey.Convey("test isSilentFaultDisabled switch off", t, func() {
+		p1 := gomonkey.ApplyFuncReturn(publicfault.GetFaultLevelByCode, constant.SilentFault)
+		defer p1.Reset()
+		p2 := gomonkey.ApplyFuncReturn(conf.GetSilentFaultEnabled, false)
+		defer p2.Reset()
+		convey.So(isSilentFaultDisabled("code"), convey.ShouldBeTrue)
+	})
+
+	convey.Convey("test isSilentFaultDisabled non silent level", t, func() {
+		p1 := gomonkey.ApplyFuncReturn(publicfault.GetFaultLevelByCode, constant.SeparateNPU)
+		defer p1.Reset()
+		p2 := gomonkey.ApplyFuncReturn(conf.GetSilentFaultEnabled, false)
+		defer p2.Reset()
+		convey.So(isSilentFaultDisabled("code"), convey.ShouldBeFalse)
+	})
+}
+
+func TestRegisterSilentFaultHandler(t *testing.T) {
+	convey.Convey("test RegisterSilentFaultHandler and route silent fault message", t, func() {
+		silentFaultHandler = nil
+		var received SilentFaultEvent
+		RegisterSilentFaultHandler(func(event SilentFaultEvent) {
+			received = event
+		})
+		convey.So(silentFaultHandler, convey.ShouldNotBeNil)
+
+		p1 := gomonkey.ApplyFuncReturn(LimitByResource, nil).
+			ApplyMethodReturn(&pubFaultInfoChecker{}, "CheckAndFlush", nil).
+			ApplyFuncReturn(publicfault.GetFaultLevelByCode, constant.SilentFault).
+			ApplyFuncReturn(conf.GetSilentFaultEnabled, true)
+		defer p1.Reset()
+		resetFaultCache()
+
+		err := PubFaultCollector(&faultInfo)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(received.FaultId, convey.ShouldEqual, faultInfo.Faults[0].FaultId)
+		convey.So(received.Assertion, convey.ShouldEqual, constant.AssertionOccur)
+		convey.So(received.Resource, convey.ShouldEqual, faultInfo.Resource)
+
+		silentFaultHandler = nil
+		resetFaultCache()
+	})
 }
