@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2025-2026. All rights reserved.
 
 // Package constant a series of para
 package constant
@@ -70,6 +70,11 @@ func (cm *AdvanceDeviceFaultCm) AddFaultAndFix(addFault DeviceFault) {
 			hwlog.RunLog.Errorf("unrecognizable fault type %s", addFault.FaultType)
 		}
 	}
+}
+
+// AddFaultToList add fault only to FaultDeviceList, do not change chip healthy state
+func (cm *AdvanceDeviceFaultCm) AddFaultToList(addFault DeviceFault) {
+	cm.addFault(addFault)
 }
 
 func (cm *AdvanceDeviceFaultCm) delFault(delFault DeviceFault) bool {

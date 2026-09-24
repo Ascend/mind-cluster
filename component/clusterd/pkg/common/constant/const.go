@@ -460,3 +460,37 @@ const (
 	// MaxTimestampRecords max number of records in timestamp slices
 	MaxTimestampRecords = 1000
 )
+
+// silent fault detection
+const (
+	// SilentFault silent fault level
+	SilentFault = "SilentFault"
+	// SilentFaultCode silent fault code (9 digits, aligns with public fault code format)
+	SilentFaultCode = "130001001"
+	// SilentFaultResource silent fault resource in public fault
+	SilentFaultResource = "clusterd"
+	// SilentFaultIdPrefix silent fault id prefix, faultId = prefix + node name
+	SilentFaultIdPrefix = "silent-fault-"
+	// SilentFaultRecoverIdPrefix silent fault recover id prefix
+	SilentFaultRecoverIdPrefix = "silent-recover-"
+	// SilentFaultOccurMsgIdPrefix silent fault occur message id prefix, message id = prefix + node name + "-" + timestamp
+	SilentFaultOccurMsgIdPrefix = SilentFaultResource + "-" + SilentFaultIdPrefix
+	// SilentFaultRecoverMsgIdPrefix silent fault recover message id prefix, message id = prefix + node name + "-" + timestamp
+	SilentFaultRecoverMsgIdPrefix = SilentFaultResource + "-" + SilentFaultRecoverIdPrefix
+	// PubFaultVersion public fault message version
+	PubFaultVersion = "1.0"
+	// SilentFaultFirstFaultExtraRetentionSec extra retention seconds beyond detect window for first fault event cleanup (1 hour)
+	SilentFaultFirstFaultExtraRetentionSec = 3600
+	// SilentFaultFaultLogExtraRetentionSec extra retention seconds beyond 2*hardware fault window for fault time log cleanup (1 minute)
+	SilentFaultFaultLogExtraRetentionSec = 60
+	// RescheduleReasonCmName reschedule reason configmap name
+	RescheduleReasonCmName = "job-reschedule-reason"
+	// RescheduleReasonCmNamespace reschedule reason configmap namespace
+	RescheduleReasonCmNamespace = "mindx-dl"
+	// RescheduleReasonCmKey reschedule reason configmap data key
+	RescheduleReasonCmKey = "recent-reschedule-records"
+	// PodFailedReason pod proactive fault
+	PodFailedReason = "pod-failed"
+	// SilentFaultConfigKey silent fault policy key in clusterd-config-cm
+	SilentFaultConfigKey = "silent_fault_policy.conf"
+)
