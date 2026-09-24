@@ -220,6 +220,83 @@ func buildTestCase4() []struct {
 	}
 }
 
+func validSilentPolicy() SilentFaultPolicy {
+	p := SilentFaultPolicy{Enabled: true}
+	p.Detect.MinTaskCards = 16
+	p.Detect.ConsecutiveTimes = 3
+	p.Detect.HardwareFaultWindowSecond = 30
+	p.Detect.WindowSecond = 10800
+	p.Release.FaultFreeSecond = 172800
+	return p
+}
+
+// TestCheckSilentFault tests the CheckSilentFault function for SilentFaultPolicy
+func TestCheckSilentFault(t *testing.T) {
+	convey.Convey("test func CheckSilentFault", t, func() {
+		convey.Convey("valid", func() {
+			convey.So(CheckSilentFault(validSilentPolicy()), convey.ShouldBeNil)
+		})
+		convey.Convey("min_task_cards out of range", func() {
+			p := validSilentPolicy()
+			p.Detect.MinTaskCards = 0
+			convey.So(CheckSilentFault(p), convey.ShouldNotBeNil)
+		})
+		convey.Convey("consecutive_times out of range", func() {
+			p := validSilentPolicy()
+			p.Detect.ConsecutiveTimes = 0
+			convey.So(CheckSilentFault(p), convey.ShouldNotBeNil)
+		})
+		convey.Convey("hardware_fault_window_seconds out of range", func() {
+			p := validSilentPolicy()
+			p.Detect.HardwareFaultWindowSecond = 3
+			convey.So(CheckSilentFault(p), convey.ShouldNotBeNil)
+		})
+		convey.Convey("window_seconds out of range", func() {
+			p := validSilentPolicy()
+			p.Detect.WindowSecond = 30
+			convey.So(CheckSilentFault(p), convey.ShouldNotBeNil)
+		})
+		convey.Convey("fault_free_seconds not release", func() {
+			p := validSilentPolicy()
+			p.Release.FaultFreeSecond = SilentNotRelease
+			convey.So(CheckSilentFault(p), convey.ShouldBeNil)
+		})
+		convey.Convey("fault_free_seconds default", func() {
+			p := validSilentPolicy()
+			p.Release.FaultFreeSecond = 0
+			convey.So(CheckSilentFault(p), convey.ShouldBeNil)
+		})
+		convey.Convey("fault_free_seconds out of range", func() {
+			p := validSilentPolicy()
+			p.Release.FaultFreeSecond = -2
+			convey.So(CheckSilentFault(p), convey.ShouldNotBeNil)
+		})
+	})
+}
+
+// TestSetAndGetSilent tests the silent fault policy set and get functions
+func TestSetAndGetSilent(t *testing.T) {
+	convey.Convey("test func set and get silent", t, func() {
+		p := validSilentPolicy()
+		SetSilentFaultPolicy(p)
+
+		convey.So(GetSilentFaultEnabled(), convey.ShouldEqual, p.Enabled)
+		convey.So(GetMinTaskCards(), convey.ShouldEqual, p.Detect.MinTaskCards)
+		convey.So(GetConsecutiveTimes(), convey.ShouldEqual, p.Detect.ConsecutiveTimes)
+		convey.So(GetHwWindowSeconds(), convey.ShouldEqual, int64(p.Detect.HardwareFaultWindowSecond))
+		convey.So(GetWindowSeconds(), convey.ShouldEqual, int64(p.Detect.WindowSecond))
+		convey.So(GetSilentReleaseSeconds(), convey.ShouldEqual, int64(p.Release.FaultFreeSecond))
+		convey.So(GetDetectInterval(), convey.ShouldEqual, int64(DetectInterval))
+	})
+
+	convey.Convey("fault free seconds zero uses default 48 hours", t, func() {
+		p := validSilentPolicy()
+		p.Release.FaultFreeSecond = 0
+		SetSilentFaultPolicy(p)
+		convey.So(GetSilentReleaseSeconds(), convey.ShouldEqual, int64(DefaultSilentReleaseSeconds))
+	})
+}
+
 // TestSetAndGet tests the Set and Get functions
 func TestSetAndGet(t *testing.T) {
 	convey.Convey("test func set and get", t, func() {

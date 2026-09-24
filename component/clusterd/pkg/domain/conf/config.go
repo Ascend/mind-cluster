@@ -43,6 +43,7 @@ var config GlobalConfig
 // GlobalConfig global config
 type GlobalConfig struct {
 	ManuallySeparatePolicy
+	SilentFaultPolicy
 }
 
 // ManuallySeparatePolicy manually separate policy config
@@ -103,6 +104,114 @@ func Check(policy ManuallySeparatePolicy) error {
 	}
 	if policy.Release.FaultFreeHours < MinFaultFreeHours || policy.Release.FaultFreeHours > MaxFaultFreeHours {
 		return fmt.Errorf("fault_free_hours must be in [%d, %d] or %d", MinFaultFreeHours, MaxFaultFreeHours, NotRelease)
+	}
+	return nil
+}
+
+// silent fault detection config bound and defaults
+const (
+	// DetectInterval detect loop interval. unit: second
+	DetectInterval = 60
+
+	// MinSilentTaskCards min task cards lower bound (exclusive), valid value must be greater than this
+	MinSilentTaskCards = 0
+	// MinConsecutiveTimes min consecutive times lower bound (exclusive)
+	MinConsecutiveTimes = 0
+	// MinHwWindowSeconds min hardware fault window seconds lower bound (exclusive). unit: second
+	MinHwWindowSeconds = 3
+	// MinWindowSeconds min detect window seconds lower bound (exclusive). unit: second
+	MinWindowSeconds = 30
+	// SilentNotRelease silent fault not auto release
+	SilentNotRelease = -1
+	// DefaultSilentReleaseSeconds default silent fault release duration (48 hours). unit: second
+	DefaultSilentReleaseSeconds = 48 * 60 * 60
+)
+
+// SilentFaultPolicy silent fault policy config
+type SilentFaultPolicy struct {
+	Enabled bool `yaml:"enabled"`
+	Detect  struct {
+		MinTaskCards              int `yaml:"min_task_cards"`
+		ConsecutiveTimes          int `yaml:"consecutive_times"`
+		HardwareFaultWindowSecond int `yaml:"hardware_fault_window_seconds"`
+		WindowSecond              int `yaml:"window_seconds"`
+	} `yaml:"detect"`
+	Release struct {
+		FaultFreeSecond int `yaml:"fault_free_seconds"`
+	} `yaml:"release"`
+}
+
+// GetSilentFaultEnabled get silent fault detection enabled
+func GetSilentFaultEnabled() bool {
+	return config.SilentFaultPolicy.Enabled
+}
+
+// GetMinTaskCards get min task cards
+func GetMinTaskCards() int {
+	return config.SilentFaultPolicy.Detect.MinTaskCards
+}
+
+// GetConsecutiveTimes get consecutive times
+func GetConsecutiveTimes() int {
+	return config.SilentFaultPolicy.Detect.ConsecutiveTimes
+}
+
+// GetHwWindowSeconds get hardware fault window. unit: second
+func GetHwWindowSeconds() int64 {
+	return int64(config.SilentFaultPolicy.Detect.HardwareFaultWindowSecond)
+}
+
+// GetWindowSeconds get detect window. unit: second
+func GetWindowSeconds() int64 {
+	return int64(config.SilentFaultPolicy.Detect.WindowSecond)
+}
+
+// GetSilentReleaseSeconds get silent fault release duration. unit: second. -1 means no auto release, 0 means default 48 hours
+func GetSilentReleaseSeconds() int64 {
+	second := config.SilentFaultPolicy.Release.FaultFreeSecond
+	if second == 0 {
+		return DefaultSilentReleaseSeconds
+	}
+	return int64(second)
+}
+
+// GetDetectInterval get detect loop interval. unit: second
+func GetDetectInterval() int64 {
+	return DetectInterval
+}
+
+// SetSilentFaultPolicy set silent fault policy config
+func SetSilentFaultPolicy(policy SilentFaultPolicy) {
+	config.SilentFaultPolicy = policy
+}
+
+// SilentFaultDetectChanged reports whether the detection parameters (Detect) differ from the
+// currently loaded policy. Only the detection parameters affect judgment; the release config
+// (auto release) is ignored. Used to clear cached detection events on hot-reload.
+func SilentFaultDetectChanged(newPolicy SilentFaultPolicy) bool {
+	return config.SilentFaultPolicy.Detect != newPolicy.Detect
+}
+
+// CheckSilentFault check silent fault policy config
+func CheckSilentFault(policy SilentFaultPolicy) error {
+	if policy.Detect.MinTaskCards <= MinSilentTaskCards {
+		return fmt.Errorf("min_task_cards must be greater than %d", MinSilentTaskCards)
+	}
+	if policy.Detect.ConsecutiveTimes <= MinConsecutiveTimes {
+		return fmt.Errorf("consecutive_times must be greater than %d", MinConsecutiveTimes)
+	}
+	if policy.Detect.HardwareFaultWindowSecond <= MinHwWindowSeconds {
+		return fmt.Errorf("hardware_fault_window_seconds must be greater than %d", MinHwWindowSeconds)
+	}
+	if policy.Detect.WindowSecond <= MinWindowSeconds {
+		return fmt.Errorf("window_seconds must be greater than %d", MinWindowSeconds)
+	}
+	if policy.Release.FaultFreeSecond == SilentNotRelease {
+		return nil
+	}
+	// 0 means use default 48 hours; positive value means explicit release seconds
+	if policy.Release.FaultFreeSecond < 0 {
+		return fmt.Errorf("fault_free_seconds must be %d (no release) or a non-negative number, 0 means default 48 hours", SilentNotRelease)
 	}
 	return nil
 }

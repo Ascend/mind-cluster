@@ -126,6 +126,33 @@ func TestAdvanceDeviceFaultCmAddFaultAndFix2(t *testing.T) {
 	})
 }
 
+func TestAdvanceDeviceFaultCmAddFaultToList(t *testing.T) {
+	convey.Convey("Given an AdvanceDeviceFaultCm instance", t, func() {
+		cm := &AdvanceDeviceFaultCm{
+			FaultDeviceList:     make(map[string][]DeviceFault),
+			AvailableDeviceList: []string{"npu0", "npu1"},
+			CardUnHealthy:       []string{},
+			NetworkUnhealthy:    []string{},
+		}
+
+		convey.Convey("When adding a silent fault", func() {
+			silentFault := DeviceFault{
+				NPUName:    "npu0",
+				FaultType:  PublicFaultType,
+				FaultLevel: SilentFault,
+			}
+			cm.AddFaultToList(silentFault)
+
+			convey.Convey("It should add to FaultDeviceList but not change healthy status", func() {
+				convey.So(cm.FaultDeviceList["npu0"], convey.ShouldHaveLength, 1)
+				convey.So(cm.AvailableDeviceList, convey.ShouldContain, "npu0")
+				convey.So(cm.CardUnHealthy, convey.ShouldBeEmpty)
+				convey.So(cm.NetworkUnhealthy, convey.ShouldBeEmpty)
+			})
+		})
+	})
+}
+
 func TestAdvanceDeviceFaultCmDelFaultAndFix(t *testing.T) {
 	cm := &AdvanceDeviceFaultCm{
 		FaultDeviceList:  make(map[string][]DeviceFault),
