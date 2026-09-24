@@ -78,7 +78,7 @@ To ensure the proper functioning of the node fault detection feature, the follow
 **Constraints<a name="section16867482102"></a>**
 
 - The node hardware fault reporting capability of NodeD only supports the following products: Atlas 800T A2 training server, Atlas 900 A2 PoD cluster basic unit, Atlas 900 A3 SuperPoD.
-- Only iBMC versions V2 3.15.0.1 and later, or V2 3.10.02.55, with the IPMC driver installed, support the node hardware fault reporting capability of NodeD. If an earlier iBMC or IPMI version fails to obtain node fault information, only the node health status will be reported.
+- Only iBMC versions V2 3.15.0.1 and later, or V2 3.10.02.55, with the IPMI driver installed, support the node hardware fault reporting capability of NodeD. If an earlier iBMC or IPMI version fails to obtain node fault information, only the node health status will be reported.
 - To use the SuperPoD fault detection feature, iBMC V3 5.8.3.35 or later is required.
 - To use the DPC fault detection feature, Scale-Out Storage DPC 24.2.0 or later is required.
 

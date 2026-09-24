@@ -88,7 +88,7 @@ hccl.json:
 }
 ```
 
-## <term>Ascend 950PR&950DT系列产品</term><a name="section285395510348"></a>
+## <term>Ascend 950PR&950DT系列产品</term><a name="section285395514569"></a>
 
 hccl.json文件示例如下：
 

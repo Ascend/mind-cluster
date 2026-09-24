@@ -409,28 +409,28 @@
 </td>
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p_hangfault001_desc"><a name="p_hangfault001_desc-duplicate-2"></a>超平面光链路成员端口故障（路由可收敛）</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level-duplicate-2"></a>SubHealthFaultCodes</p>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level-duplicate-2"></a>SubHealthFault</p>
 </td>
 </tr>
 <tr id="row_hangfault001"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p_hangfault001_code"><a name="p_hangfault001_code-duplicate-3"></a>020001002</p>
 </td>
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p_hangfault001_desc"><a name="p_hangfault001_desc-duplicate-3"></a>超平面光链路成员端口故障（路由不可收敛）</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level-duplicate-3"></a>SeparateNPUCodes</p>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level-duplicate-3"></a>SeparateNPU</p>
 </td>
 </tr>
 <tr id="row_hangfault001"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p_hangfault001_code"><a name="p_hangfault001_code-duplicate-4"></a>110001024</p>
 </td>
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p_hangfault001_desc"><a name="p_hangfault001_desc-duplicate-4"></a>参数面光链路成员端口故障（UBOE故障，路由不可收敛）</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level-duplicate-4"></a>PreSeparateNPUCodes</p>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level-duplicate-4"></a>PreSeparateNPU</p>
 </td>
 </tr>
 <tr id="row_hangfault001"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p_hangfault001_code"><a name="p_hangfault001_code-duplicate-5"></a>110000002</p>
 </td>
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p_hangfault001_desc"><a name="p_hangfault001_desc-duplicate-5"></a>参数面光链路成员端口故障（UBOE故障，路由可收敛）</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level-duplicate-5"></a>SubHealthFaultCodes</p>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level-duplicate-5"></a>SubHealthFault</p>
 </td>
 </tr>
 </tbody>

@@ -13,7 +13,7 @@ NodeD组件的配置文件NodeDConfiguration.json为系统配置文件，若用�
 如果用户想要自定义故障级别，可以在集群中创建ConfigMap文件（mindx-dl-node-fault-config）。
 
 - 如果NodeD启动时，集群中已经存在该mindx-dl-node-fault-config，NodeD会优先按照已存在的mindx-dl-node-fault-config中配置的内容，作为当前故障处理依据。
-- 如果重新安装NodeD后，集群中已经存在mindx-dl-node-fault-config，NodeD的默认NodeDConfiguration.json将不会生效，使用集群中已经存在mindx-dl-node-fault-config。若想要使用NodeDConfiguration.json的默认配置，可以删除mindx-dl-node-fault-config，使NodeD读取默认的NodeDConfiguration.json文件。
+- 如果重新安装NodeD后，集群中已经存在mindx-dl-node-fault-config，NodeD的默认NodeDConfiguration.json将不会生效，使用集群中已经存在的mindx-dl-node-fault-config。若想要使用NodeDConfiguration.json的默认配置，可以删除mindx-dl-node-fault-config，使NodeD读取默认的NodeDConfiguration.json文件。
 - 如果mindx-dl-node-fault-config内容存在格式错误等问题，NodeD会默认读取镜像中内置的NodeDConfiguration.json文件的内容，作为当前故障处理依据。
 
 **操作步骤<a name="section25164134219"></a>**

@@ -166,7 +166,7 @@ Job级别重调度、Pod级别重调度
 
 ### 已支持的UB网卡故障
 
-|故障码|故障等级|故障事件名称|故障说明
+|故障码|故障等级|故障事件名称|故障说明|
 |--|--|--|--|
 |21000022|SubHealthFault|ub_port_down|RoCE设备不可用，需切换NIC和IP。|
 |21000023|SubHealthFault|ub_lane_down|UB通道降lane，无需切换NIC或IP。|

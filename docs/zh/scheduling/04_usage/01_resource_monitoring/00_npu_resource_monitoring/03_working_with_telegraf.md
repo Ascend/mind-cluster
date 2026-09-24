@@ -85,7 +85,8 @@
         ```ColdFusion
         2023-09-15T10:11:31Z I! Loading config file: ../npu_plugin.conf
         2023-09-15T10:11:31Z I! Starting Telegraf 1.34.4
-        2023-09-15T10:11:31Z I! Available plugins: 236 inputs, 9 aggregators, 27 processors, 22 parsers, 57 outputs, 2 secret-stores2023-09-15T10:11:31Z I! Loaded inputs: execd
+        2023-09-15T10:11:31Z I! Available plugins: 236 inputs, 9 aggregators, 27 processors, 22 parsers, 57 outputs, 2 secret-stores
+        2023-09-15T10:11:31Z I! Loaded inputs: execd
         2023-09-15T10:11:31Z I! Loaded aggregators:
         2023-09-15T10:11:31Z I! Loaded processors:
         2023-09-15T10:11:31Z I! Loaded secretstores:
