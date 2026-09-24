@@ -63,6 +63,29 @@ func (pc *cache) DeleteOccurFault(nodeName, faultKey string) {
 	delete(pc.faultCache[nodeName], faultKey)
 }
 
+// DeleteByLevel delete all fault entries of the given fault level, no matter
+// which resource reported them (used when the silent fault switch turns off)
+func (pc *cache) DeleteByLevel(level string) {
+	pc.mutex.Lock()
+	deleted := 0
+	for nodeName, faults := range pc.faultCache {
+		for faultKey, fault := range faults {
+			if fault.FaultLevel == level {
+				delete(faults, faultKey)
+				deleted++
+			}
+		}
+		if len(faults) == 0 {
+			delete(pc.faultCache, nodeName)
+		}
+	}
+	pc.mutex.Unlock()
+
+	if deleted > 0 {
+		hwlog.RunLog.Infof("delete public fault from cache by level %s, deleted %d entries", level, deleted)
+	}
+}
+
 // GetPubFault get public fault from cache
 func (pc *cache) GetPubFault() map[string]map[string]*constant.PubFaultCache {
 	pc.mutex.Lock()

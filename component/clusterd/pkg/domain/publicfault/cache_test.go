@@ -14,6 +14,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/conf"
 )
 
 const (
@@ -200,4 +201,45 @@ func testGetPubFaultNum() {
 	PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName1, faultKey2)
 	faultNum := PubFaultCache.GetPubFaultNum()
 	convey.So(faultNum, convey.ShouldEqual, expFaultNum)
+}
+
+func TestDeleteByLevel(t *testing.T) {
+	resetCache()
+	defer resetCache()
+	convey.Convey("test PubFaultCache method 'DeleteByLevel'", t, func() {
+		silentFault := testCacheData
+		silentFault.FaultLevel = constant.SilentFault
+		PubFaultCache.AddPubFaultToCache(&testCacheData, testNodeName1, faultKey1)
+		PubFaultCache.AddPubFaultToCache(&silentFault, testNodeName2, faultKey2)
+
+		PubFaultCache.DeleteByLevel(constant.SilentFault)
+
+		nodeFault, _ := PubFaultCache.GetPubFaultByNodeName(testNodeName2)
+		convey.So(len(nodeFault), convey.ShouldEqual, 0)
+		nodeFault1, _ := PubFaultCache.GetPubFaultByNodeName(testNodeName1)
+		convey.So(len(nodeFault1), convey.ShouldEqual, 1)
+	})
+}
+
+func TestLoadFaultToCacheSkipSilent(t *testing.T) {
+	resetCache()
+	defer resetCache()
+	convey.Convey("skip loading silent fault when switch off", t, func() {
+		p := gomonkey.ApplyFuncReturn(conf.GetSilentFaultEnabled, false)
+		defer p.Reset()
+
+		faults := map[string][]constant.NodeFault{
+			testNodeName1: {{
+				FaultResource: constant.PublicFaultType,
+				FaultDevIds:   []int32{0},
+				FaultId:       "f1",
+				FaultType:     constant.FaultTypeNPU,
+				FaultCode:     "code",
+				FaultLevel:    constant.SilentFault,
+				FaultTime:     100,
+			}},
+		}
+		PubFaultCache.LoadFaultToCache(faults)
+		convey.So(PubFaultCache.GetPubFaultNum(), convey.ShouldEqual, 0)
+	})
 }

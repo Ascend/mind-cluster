@@ -11,6 +11,15 @@ data:
       fault_threshold: 3
     release:
       fault_free_hours: 48
+  silent_fault_policy.conf: |
+    enabled: false
+    detect:
+      min_task_cards: 16
+      consecutive_times: 3
+      hardware_fault_window_seconds: 30
+      window_seconds: 10800
+    release:
+      fault_free_seconds: 172800
 ---
 apiVersion: v1
 kind: ServiceAccount
