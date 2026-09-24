@@ -96,6 +96,9 @@ def diag(req: DiagReq) -> dict:
             r["final_text"] += _JSON_HINT
         return r
     report_text = r.get("diag_report_text") or ""
+    notes_text = tools.nodes_note(r.get("incomplete_nodes") or [], r.get("empty_nodes") or [])
+    if notes_text and notes_text not in report_text:
+        report_text = (report_text + "\n\n" + notes_text).strip()
     llm_error = None
     try:
         text = summarize_report(r.get("diag_report") or {})
@@ -109,6 +112,8 @@ def diag(req: DiagReq) -> dict:
             "Diagnosis error: an exception occurred during report summarization, please check the agent-core logs"
         )
         final_text = report_text
+    if notes_text and notes_text not in final_text:
+        final_text = (final_text + "\n\n" + notes_text).strip()
     r["final_text"] = final_text + _JSON_HINT
     if llm_error:
         r["llm_error"] = llm_error
