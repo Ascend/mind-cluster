@@ -17,7 +17,7 @@
 | L2 交换机          | 灵衢网络第二层交换设备，完成跨机柜算力节点互联 |
 | LLD.xlsx        | 机房位置配置文件，含「灵衢L1网络对应关系」「灵衢L2网络对应关系」两个 Sheet |
 | NIC             | Network Interface Card，网卡。通过 hinicadm5 命令采集 NIC 端口 SFP 光模块 lane 级信息用于诊断 |
-| PoDManager      | Atlas 950 SuperPoD 超节点的设备统一管理入口。配置其 IP 后工具登录并按槽位逐台采集信息 |
+| PoDManager      | Atlas 950 SuperPoD超节点的设备统一管理入口。配置其 IP 后工具登录并按槽位逐台采集信息 |
 | PSIP            | Power Supply Integrated Package，NPU 供电集成模块（如 6A PSIP、20A PSIP），故障时需联系运维处理 |
 | PSU             | Power Supply Unit，电源模块，工具可检测 PSU 过温等告警 |
 | RoCE            | RDMA over Converged Ethernet，基于以太网的 RDMA 技术 |

@@ -39,7 +39,7 @@ ascend-fd 仅支持对**整机满卡**训练或推理任务提供故障诊断。
 | [日志清洗](03_log_parsing.md)                                    | 从原始日志中提取关键信息          |
 | [故障诊断](04_fault_diagnosis.md)                                | 分析根因节点和故障事件           |
 | [单机故障诊断](05_single_server_diagnosis.md)                    | 在单台设备上快速诊断            |
-| [超节点故障诊断](06_superpod_diagnosis.md)                       | 超节点内服务器、管理控制器、交换机故障诊断 |
+| [超节点故障诊断](06_superpod_diagnosis.md)                       | 超节点内服务器、基板管理控制器、交换机故障诊断 |
 | [自定义故障实体](07_custom_fault_entities.md)                    | 添加用户自定义的故障检测规则        |
 | [屏蔽故障日志](08_fault_log_masking.md)                          | 过滤不需要关注的日志信息          |
 | [自定义配置文件](09_custom_configuration.md)                     | 自定义日志清洗和诊断的行为         |
