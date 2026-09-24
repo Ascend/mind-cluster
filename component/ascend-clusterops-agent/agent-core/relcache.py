@@ -86,6 +86,7 @@ class RelationshipCache(SequentialShards):
         uid = pod.metadata.uid
         pod_name = pod.metadata.name
         node = getattr(pod.spec, "node_name", "") or ""
+        host_ip = getattr(pod.status, "host_ip", "") or ""
         rank = _rank_of(pod)
         phase = getattr(pod.status, "phase", "") or ""
         entry = {
@@ -93,6 +94,7 @@ class RelationshipCache(SequentialShards):
             "pod_uid": uid,
             "namespace": ns,
             "node": node,
+            "host_ip": host_ip,
             "rank": rank,
             "owner_name": owner_name,
             "owner_uid": owner_uid,
@@ -131,7 +133,7 @@ class RelationshipCache(SequentialShards):
 
     # ---- Query ---- #
     def lookup(self, jobname: str, namespace: str = "default") -> list[dict]:
-        """Look up all pods of a job by jobname -> [{pod_name, pod_uid, node, rank, namespace, phase, deleted_at}].
+        """Look up all pods of a job by jobname -> [{pod_name, pod_uid, node, host_ip, rank, namespace, phase, deleted_at}].
 
         Includes pods deleted within TTL (their logs still remain on nodes); entries
         expired beyond POD_TTL are pruned on access (lazy GC) and synced to the CM.
@@ -154,6 +156,7 @@ class RelationshipCache(SequentialShards):
                             "pod_name": e["pod_name"],
                             "pod_uid": e["pod_uid"],
                             "node": e["node"],
+                            "host_ip": e.get("host_ip", ""),
                             "rank": e["rank"],
                             "namespace": e["namespace"],
                             "phase": e.get("phase", ""),

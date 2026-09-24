@@ -33,14 +33,14 @@ from agent_core import relcache as rc
 from conftest import make_pod_metadata
 
 
-def _make_pod(uid, name="p", ns="default", node="n1", job="job1", phase="Running"):
+def _make_pod(uid, name="p", ns="default", node="n1", job="job1", phase="Running", host_ip=""):
     """Build the pod object needed by relcache (SimpleNamespace is enough, no real cluster needed)."""
     owner_refs = [SimpleNamespace(controller=True, uid=f"job-uid-{job}", name=job, kind="AscendJob")]
     metadata = make_pod_metadata(uid, name, ns, owner_refs)
     return SimpleNamespace(
         metadata=metadata,
         spec=SimpleNamespace(node_name=node),
-        status=SimpleNamespace(phase=phase),
+        status=SimpleNamespace(phase=phase, host_ip=host_ip),
     )
 
 
@@ -128,6 +128,14 @@ def test_lookup_keeps_within_ttl_entries():
     assert [p["pod_name"] for p in pods] == ["p1"]
     assert pods[0]["deleted_at"] is not None  # lookup exposes deleted_at for dedup of the newest instance
     assert c._dirty[0] == dirty_before  # pylint: disable=protected-access  # no expired entries, no sync
+
+
+def test_lookup_returns_host_ip():
+    # the node host ip from pod.status is carried through to the lookup result
+    c = rc.RelationshipCache()
+    c.apply_pod(_make_pod(uid="u1", name="p1", node="node-a", host_ip="192.168.1.10"))
+    pods = c.lookup("job1", "default")
+    assert pods[0]["host_ip"] == "192.168.1.10"
 
 
 # --------------------------------------------------------------------------- #
