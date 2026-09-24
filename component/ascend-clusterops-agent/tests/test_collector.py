@@ -647,11 +647,41 @@ def test_collect_subdirs_descends_single_subdir(tmp_path, client):
     (root / "run" / "p.log").write_text("x")
     dst = tmp_path / "process_log"
     dst.mkdir()
-    client._collect_subdirs(dst, str(tmp_path / "plog"))
+    assert client._collect_subdirs(dst, str(tmp_path / "plog")) is True
     assert (dst / "run" / "p.log").read_text() == "x"
     assert (dst / "debug").is_dir()
     assert (dst / "security").is_dir()
     assert not (dst / "jobname").exists()  # the extra level is stripped
+
+
+def test_collect_plog_dir_warns_when_matched_dir_empty(tmp_path, client, caplog):
+    # matched plog dir holds no run/debug/security -> warning names the dir
+    src = tmp_path / "plogs"
+    src.mkdir()
+    (src / "not-plog.txt").write_text("stray file")
+    dst = tmp_path / "process_log"
+    dst.mkdir()
+    entity = {"name": "process_log", "mount_keywords": ["plog"]}
+    pod = collector.PodRef(ns="ns", name="p", pod_uid="u0")
+    with caplog.at_level(logging.WARNING):
+        client._collect_plog_dir(dst, str(src), entity, pod)
+    assert any("no plog logs" in rec.message and str(src) in rec.message for rec in caplog.records)
+
+
+def test_collect_mount_keywords_plog_no_match_warns(tmp_path, monkeypatch, client, caplog):
+    # plog entity: no mount pair, no shared-storage hit -> collect-failed warning
+    shared = tmp_path / "shared-storage"
+    shared.mkdir()
+    monkeypatch.setattr(collector, "SHARED_STORAGE_ROOT", shared)
+    fake_pm = SimpleNamespace(all_pairs=lambda uid: [], pod_env=lambda uid, name: None, pod_ip=lambda uid: "")
+    monkeypatch.setattr(collector, "get_pathmap", lambda: fake_pm)
+    dst = tmp_path / "process_log"
+    dst.mkdir()
+    entity = {"name": "process_log", "mount_keywords": ["plog"]}
+    pods = [collector.PodRef(ns="ns", name="p", pod_uid="u0")]
+    with caplog.at_level(logging.WARNING):
+        client._collect_mount_keywords(dst, entity, pods)
+    assert any("collect plog logs failed" in rec.message for rec in caplog.records)
 
 
 def test_collect_mount_keywords_shared_storage_prunes_nested_plog(tmp_path, monkeypatch, client):

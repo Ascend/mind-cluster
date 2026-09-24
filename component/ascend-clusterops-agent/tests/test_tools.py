@@ -40,14 +40,14 @@ def test_assemble_diag_input_copies_ok_workers(tmp_path, monkeypatch):
     w2.mkdir()
     (w2 / "server-info.json").write_text("{}")
     collected = [
-        {"ok": True, "node": "node-a", "host_ip": "51.38.66.67", "worker_dir": str(w1)},
-        {"ok": True, "node": "node-b", "host_ip": "51.38.66.68", "worker_dir": str(w2)},
+        {"ok": True, "node": "node-a", "host_ip": "192.168.1.10", "worker_dir": str(w1)},
+        {"ok": True, "node": "node-b", "host_ip": "192.168.1.11", "worker_dir": str(w2)},
         {"ok": False, "node": "node-c", "worker_dir": None},
     ]
     diag_input = Path(tools.assemble_diag_input(collected, "job1", "default"))
-    assert (diag_input / "51.38.66.67" / "server-info.json").exists()
-    assert (diag_input / "51.38.66.67" / "ascend-rc-parser.json").exists()
-    assert (diag_input / "51.38.66.68" / "server-info.json").exists()
+    assert (diag_input / "192.168.1.10" / "server-info.json").exists()
+    assert (diag_input / "192.168.1.10" / "ascend-rc-parser.json").exists()
+    assert (diag_input / "192.168.1.11" / "server-info.json").exists()
     assert not (diag_input / "worker2").exists()
     assert not (diag_input / "worker-node-a").exists()  # not named by node anymore
     assert not w1.exists()  # rename moves, does not copy; the original dir is moved away
@@ -229,7 +229,7 @@ def test_diagnose_ok(monkeypatch, tmp_path):
     import agent_core.relcache as rc
 
     pods = [
-        {"pod_name": "p", "pod_uid": "u", "node": "n", "host_ip": "51.38.66.67", "rank": "0", "namespace": "default"}
+        {"pod_name": "p", "pod_uid": "u", "node": "n", "host_ip": "192.168.1.10", "rank": "0", "namespace": "default"}
     ]
     monkeypatch.setattr(rc, "lookup", lambda job, namespace="default": pods)
     worker_dir = tmp_path / "w"
@@ -242,7 +242,7 @@ def test_diagnose_ok(monkeypatch, tmp_path):
             {
                 "ok": True,
                 "node": "n",
-                "host_ip": "51.38.66.67",
+                "host_ip": "192.168.1.10",
                 "error": None,
                 "worker_dir": str(worker_dir),
                 "artifacts_tar": None,
@@ -256,4 +256,121 @@ def test_diagnose_ok(monkeypatch, tmp_path):
     assert r["diag_report"] == {"root_cause": "n"}
     assert r["diag_report_text"] == "pretty table"
     assert r["pods"] == pods
-    assert Path(r["diag_input_dir"], "51.38.66.67", "server-info.json").exists()
+    assert Path(r["diag_input_dir"], "192.168.1.10", "server-info.json").exists()
+
+
+def test_diagnose_partial_collect_warns_nodes(monkeypatch, tmp_path, caplog):
+    # one node ok + one node failed: result carries incomplete_nodes and a reference-only note
+    import agent_core.relcache as rc
+    import logging
+
+    pods = [
+        {"pod_name": "p1", "pod_uid": "u1", "node": "n1", "host_ip": "10.0.0.1", "rank": "0", "namespace": "default"},
+        {"pod_name": "p2", "pod_uid": "u2", "node": "n2", "host_ip": "10.0.0.2", "rank": "1", "namespace": "default"},
+    ]
+    monkeypatch.setattr(rc, "lookup", lambda job, namespace="default": pods)
+    worker_dir = tmp_path / "w"
+    worker_dir.mkdir()
+    (worker_dir / "server-info.json").write_text("{}")
+    monkeypatch.setattr(
+        tools,
+        "dispatch_collect",
+        lambda job, pods: [
+            {"ok": True, "node": "n1", "host_ip": "10.0.0.1", "error": None, "worker_dir": str(worker_dir)},
+            {
+                "ok": False,
+                "node": "n2",
+                "host_ip": "10.0.0.2",
+                "error": "collect timeout (no upload)",
+                "worker_dir": None,
+            },
+        ],
+    )
+    monkeypatch.setattr(tools, "WORK_ROOT", tmp_path)
+    monkeypatch.setattr(tools, "run_diag", lambda d: (str(tmp_path / "out"), {"root_cause": "n1"}, "pretty table"))
+    with caplog.at_level(logging.WARNING):
+        r = tools.diagnose(job="x")
+    assert r["error"] is None
+    assert r["incomplete_nodes"] == ["10.0.0.2"]
+    assert "10.0.0.2" in r["diag_report_text"]
+    assert "for reference only" in r["diag_report_text"]
+
+
+def test_diagnose_empty_collect_warns_nodes(monkeypatch, tmp_path, caplog):
+    # one node ok with data + one node ok but empty worker dir: result carries empty_nodes
+    # and a reference-only note distinct from the not-reported one
+    import agent_core.relcache as rc
+    import logging
+
+    pods = [
+        {"pod_name": "p1", "pod_uid": "u1", "node": "n1", "host_ip": "10.0.0.1", "rank": "0", "namespace": "default"},
+        {"pod_name": "p2", "pod_uid": "u2", "node": "n2", "host_ip": "10.0.0.2", "rank": "1", "namespace": "default"},
+    ]
+    monkeypatch.setattr(rc, "lookup", lambda job, namespace="default": pods)
+    worker_dir = tmp_path / "w"
+    worker_dir.mkdir()
+    (worker_dir / "server-info.json").write_text("{}")
+    empty_dir = tmp_path / "empty"
+    empty_dir.mkdir()
+    monkeypatch.setattr(
+        tools,
+        "dispatch_collect",
+        lambda job, pods: [
+            {"ok": True, "node": "n1", "host_ip": "10.0.0.1", "error": None, "worker_dir": str(worker_dir)},
+            {"ok": True, "node": "n2", "host_ip": "10.0.0.2", "error": None, "worker_dir": str(empty_dir)},
+        ],
+    )
+    monkeypatch.setattr(tools, "WORK_ROOT", tmp_path)
+    monkeypatch.setattr(tools, "run_diag", lambda d: (str(tmp_path / "out"), {"root_cause": "n1"}, "pretty table"))
+    with caplog.at_level(logging.WARNING):
+        r = tools.diagnose(job="x")
+    assert r["error"] is None
+    assert r["empty_nodes"] == ["10.0.0.2"]
+    assert r["incomplete_nodes"] == []
+    assert any("collect empty" in rec.message for rec in caplog.records)
+    assert "reported empty collection/parsed data" in r["diag_report_text"]
+    assert "did not report collection/parsed data" not in r["diag_report_text"]
+    assert "for reference only" in r["diag_report_text"]
+
+
+def test_diagnose_incomplete_and_empty_merge_single_note(monkeypatch, tmp_path):
+    # one node not reported + one node empty upload: both merged into a single Note
+    import agent_core.relcache as rc
+
+    pods = [
+        {"pod_name": "p1", "pod_uid": "u1", "node": "n1", "host_ip": "10.0.0.1", "rank": "0", "namespace": "default"},
+        {"pod_name": "p2", "pod_uid": "u2", "node": "n2", "host_ip": "10.0.0.2", "rank": "1", "namespace": "default"},
+        {"pod_name": "p3", "pod_uid": "u3", "node": "n3", "host_ip": "10.0.0.3", "rank": "2", "namespace": "default"},
+    ]
+    monkeypatch.setattr(rc, "lookup", lambda job, namespace="default": pods)
+    worker_dir = tmp_path / "w"
+    worker_dir.mkdir()
+    (worker_dir / "server-info.json").write_text("{}")
+    empty_dir = tmp_path / "empty"
+    empty_dir.mkdir()
+    monkeypatch.setattr(
+        tools,
+        "dispatch_collect",
+        lambda job, pods: [
+            {"ok": True, "node": "n1", "host_ip": "10.0.0.1", "error": None, "worker_dir": str(worker_dir)},
+            {
+                "ok": False,
+                "node": "n2",
+                "host_ip": "10.0.0.2",
+                "error": "collect timeout (no upload)",
+                "worker_dir": None,
+            },
+            {"ok": True, "node": "n3", "host_ip": "10.0.0.3", "error": None, "worker_dir": str(empty_dir)},
+        ],
+    )
+    monkeypatch.setattr(tools, "WORK_ROOT", tmp_path)
+    monkeypatch.setattr(tools, "run_diag", lambda d: (str(tmp_path / "out"), {"root_cause": "n1"}, "pretty table"))
+    r = tools.diagnose(job="x")
+    assert r["error"] is None
+    assert r["incomplete_nodes"] == ["10.0.0.2"]
+    assert r["empty_nodes"] == ["10.0.0.3"]
+    assert r["diag_report_text"].count("Note:") == 1
+    assert (
+        "did not report collection/parsed data: 10.0.0.2; the following nodes reported empty collection/parsed data: 10.0.0.3"
+        in r["diag_report_text"]
+    )
