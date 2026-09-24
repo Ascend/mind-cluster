@@ -32,7 +32,6 @@ import (
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/core"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
-	util "github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/utils"
 )
 
 const (
@@ -77,9 +76,9 @@ type UbDeviceInfo struct {
 }
 
 // NewUbResourceManager returns a new instance of UbResourceManager
-func NewUbResourceManager(configFile string, useCdi bool, exclMode bool, k8sClient *kubernetes.Clientset) UbResourceManager {
+func NewUbResourceManager(configFile string, useCdi bool, exclMode bool,
+	k8sClient *kubernetes.Clientset) UbResourceManager {
 	coreManager := core.NewCoreResourceManager(configFile, rdmaUbResourcePrefix, socketSuffix, useCdi)
-	util.InitNpuNicMapping()
 
 	return &ubResourceManager{
 		CoreResourceManager: coreManager,
