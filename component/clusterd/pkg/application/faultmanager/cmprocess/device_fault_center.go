@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
 
 // Package cmprocess contain cm processor
 package cmprocess
@@ -13,6 +13,7 @@ import (
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
 	"clusterd/pkg/application/faultmanager/cmprocess/stresstest"
 	"clusterd/pkg/application/faultmanager/cmprocess/uceaccompany"
+	"clusterd/pkg/application/silentfault"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain/cmmanager"
 )
@@ -41,5 +42,6 @@ func init() {
 		preseparate.PreSeparateFaultProcessor,  // this processor process the preSeparate faults.
 		incrementfault.IncrementFaultProcessor, // this processor process the increment faults.
 		manualfault.ManualFaultProcessor,       // this processor process the manually separate faults.
+		silentfault.FaultRecorderProcessor,              // this processor records hardware fault timeline (chain tail).
 	})
 }

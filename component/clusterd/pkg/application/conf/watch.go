@@ -24,9 +24,12 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"clusterd/pkg/application/silentfault"
+	"clusterd/pkg/application/statistics"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/conf"
 	"clusterd/pkg/domain/manualfault"
+	"clusterd/pkg/domain/publicfault"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -55,6 +58,11 @@ func loadGlobalConfig(cm *v1.ConfigMap) {
 		hwlog.RunLog.Errorf("cm <%s/%s> or its data is nil", api.ClusterNS, constant.ConfigCmName)
 		return
 	}
+	loadManualConfig(cm)
+	loadSilentConfig(cm)
+}
+
+func loadManualConfig(cm *v1.ConfigMap) {
 	data, ok := cm.Data[constant.ManuallySeparateNPUConfigKey]
 	if !ok {
 		hwlog.RunLog.Errorf("key %s is not found in cm <%s/%s>", constant.ManuallySeparateNPUConfigKey,
@@ -78,6 +86,35 @@ func loadGlobalConfig(cm *v1.ConfigMap) {
 		manualfault.InitFaultCmInfo()
 	}
 	hwlog.RunLog.Info("load manually separate policy config success")
+}
+
+func loadSilentConfig(cm *v1.ConfigMap) {
+	changed := false
+	if data, ok := cm.Data[constant.SilentFaultConfigKey]; ok {
+		var sp conf.SilentFaultPolicy
+		if err := yaml.Unmarshal([]byte(data), &sp); err != nil {
+			hwlog.RunLog.Errorf("unmarshal silent fault policy failed: %v", err)
+		} else if err := conf.CheckSilentFault(sp); err != nil {
+			hwlog.RunLog.Errorf("check silent fault policy failed: %v", err)
+		} else {
+			changed = conf.SilentFaultDetectChanged(sp)
+			conf.SetSilentFaultPolicy(sp)
+		}
+	}
+	// turn off silent fault: clear all silent-side data (detection cache + result cache + silent-level entries of all sources in the public fault cache)
+	if !conf.GetSilentFaultEnabled() {
+		hwlog.RunLog.Info("silent fault switch is off, clean all silent fault data: reset caches + delete silent entries in public fault cache + rewrite cm")
+		silentfault.ResetCache()
+		publicfault.PubFaultCache.DeleteByLevel(constant.SilentFault)
+		statistics.StatisticFault.Notify()
+		return
+	}
+	// config hot-reloaded while switch stays on: clear cached detection events so they are re-validated
+	// against the new config; already-determined silent faults (result cache) are kept.
+	if changed {
+		hwlog.RunLog.Info("silent fault config changed, clear cached detection events")
+		silentfault.ClearDetectionCache()
+	}
 }
 
 // TryLoadGlobalConfig try load global config from cm

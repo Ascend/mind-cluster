@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2025-2026. All rights reserved.
 
 // Package publicfault public fault processor
 package publicfault
@@ -77,7 +77,11 @@ func (p *pubFaultProcessor) faultJoin() {
 						FaultLevel: pubFaultCache.FaultLevel,
 					}},
 			}
-			p.devCMInfo.AddFaultAndFix(fault)
+			if pubFaultCache.FaultLevel == constant.SilentFault {
+				p.devCMInfo.AddFaultToList(fault)
+			} else {
+				p.devCMInfo.AddFaultAndFix(fault)
+			}
 			modified = true
 		}
 	}
