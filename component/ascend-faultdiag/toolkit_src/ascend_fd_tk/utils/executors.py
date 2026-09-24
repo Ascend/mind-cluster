@@ -235,8 +235,7 @@ class AsyncSSHExecutor(AsyncExecutor):
         # 注：paramiko 中不显式传 auth_timeout/banner_timeout 时，timeout 会同时作为认证超时，导致慢设备在认证阶段就抛 "Authentication timeout"
         # 现在 TCP 建连仍走 timeout （10s，快的阶段），协议/认证阶段放宽到 30s。
         self.auth_timeout = auth_timeout
-        # 是否允许 paramiko 额外尝试本机 ~/.ssh 密钥与 SSH agent
-        # 密码/密钥登录均默认关闭，密钥登录由工具自身的 _connect_with_key 优先策略控制，paramiko 内部无需再尝试，认证直接走配置的方式。
+        # 是否允许 paramiko 额外尝试本机 ~/.ssh 密钥与 SSH agent。
         self.look_for_keys = look_for_keys
         self.allow_agent = allow_agent
         # 私钥处理
@@ -255,14 +254,16 @@ class AsyncSSHExecutor(AsyncExecutor):
         if not private_key:
             return private_key_obj
         private_key_path = str(Path(private_key).expanduser().resolve())
-        if not private_key_path or not os.path.exists(private_key_path):
+        if not os.path.exists(private_key_path):
+            DIAG_LOGGER.warning("私钥文件不存在：%s，将回退到密码登录", private_key_path)
             return private_key_obj
         try:
             private_key_obj = paramiko.Ed25519Key.from_private_key_file(private_key_path, passphrase)
-        except (SSHException, NotImplementedError):
+        except (SSHException, NotImplementedError, ValueError):
+            # UnicodeDecodeError 等解析异常也一并兜底，避免非法/二进制密钥文件直接中断执行
             try:
                 private_key_obj = paramiko.RSAKey.from_private_key_file(private_key_path, passphrase)
-            except SSHException as err:
+            except (SSHException, ValueError) as err:
                 DIAG_LOGGER.warning("Ed25519密钥和RSA密钥加载失败[%s]：%s", private_key, str(err))
         return private_key_obj
 
@@ -487,6 +488,8 @@ class AsyncSSHExecutor(AsyncExecutor):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
+            # 密码分为两种：有密码（常规密码认证）；免密（未配置密码，启用本机 ~/.ssh 默认私钥与 ssh-agent 探测）
+            passwordless = not self.password
             ssh.connect(
                 hostname=self.host,
                 port=self.port,
@@ -495,8 +498,8 @@ class AsyncSSHExecutor(AsyncExecutor):
                 timeout=self.timeout,  # TCP socket 建连（三次握手）超时
                 banner_timeout=self.auth_timeout,  # TCP 建连后，等待服务器发来 SSH-2.0-... banner 的超时
                 auth_timeout=self.auth_timeout,  # banner 收到后，整个认证阶段（密钥交换 + 密码验证）的超时
-                look_for_keys=self.look_for_keys,
-                allow_agent=self.allow_agent,
+                look_for_keys=self.look_for_keys or passwordless,
+                allow_agent=self.allow_agent or passwordless,
             )
             return ssh
         except NoValidConnectionsError:
