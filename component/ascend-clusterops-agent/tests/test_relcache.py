@@ -160,6 +160,91 @@ def test_save_snapshot_skips_empty_shards():
     assert created[0] == "agent-core-relcache"  # shard 0 keeps the legacy CM name
 
 
+def test_gc_emptied_shards_deletes_all_cms():
+    # TTL GC empties every shard -> the next sync deletes every non-zero shard CM;
+    # shard 0 (legacy name) is kept and rewritten with the empty snapshot
+    import json as _json
+
+    class FakeV1:  # noqa: N801  # minimal k8s CoreV1Api stand-in with CM state
+        def __init__(self):
+            self.cms = {}
+
+        def read_namespaced_config_map(self, name, ns):
+            if name not in self.cms:
+                raise client.ApiException(status=404)
+            return self.cms[name]
+
+        def create_namespaced_config_map(self, ns, cm):
+            self.cms[cm.metadata.name] = cm
+
+        def patch_namespaced_config_map(self, name, ns, body):
+            self.cms[name].data = body["data"]
+
+        def delete_namespaced_config_map(self, name, ns):
+            del self.cms[name]
+
+    v1 = FakeV1()
+    c = rc.RelationshipCache()
+    c._v1 = v1  # pylint: disable=protected-access
+    c._fill_limit = 1  # pylint: disable=protected-access  # every pod lands in its own shard
+    for i in range(3):
+        c.apply_pod(_make_pod(uid=f"u{i}", name=f"p{i}", node="node-a"))
+    assert c._save_snapshot()  # pylint: disable=protected-access
+    assert set(v1.cms) == {"agent-core-relcache", "agent-core-relcache-1", "agent-core-relcache-2"}
+    # all pods deleted beyond POD_TTL -> GC empties every shard -> sync deletes non-zero CMs
+    for i in range(3):
+        c.apply_pod_deleted(f"u{i}", ts=time.time() - rc.POD_TTL - 1)
+    c._gc()  # pylint: disable=protected-access
+    assert c.lookup("job1", "default") == []
+    assert c._save_snapshot()  # pylint: disable=protected-access
+    assert set(v1.cms) == {"agent-core-relcache"}  # only shard 0 (legacy name) is kept
+    snap = _json.loads(v1.cms["agent-core-relcache"].data["snapshot"])
+    assert snap["pods"] == []  # the kept shard-0 CM carries no stale entries
+
+
+def test_gc_emptied_shard_deletes_cm_survivor_keeps_data():
+    # one shard emptied while another still holds pods -> the emptied non-zero shard's CM is
+    # deleted, the surviving shard is rewritten with its data; an emptied shard 0 is kept
+    import json as _json
+
+    class FakeV1:  # noqa: N801  # minimal k8s CoreV1Api stand-in with CM state
+        def __init__(self):
+            self.cms = {}
+
+        def read_namespaced_config_map(self, name, ns):
+            if name not in self.cms:
+                raise client.ApiException(status=404)
+            return self.cms[name]
+
+        def create_namespaced_config_map(self, ns, cm):
+            self.cms[cm.metadata.name] = cm
+
+        def patch_namespaced_config_map(self, name, ns, body):
+            self.cms[name].data = body["data"]
+
+        def delete_namespaced_config_map(self, name, ns):
+            del self.cms[name]
+
+    v1 = FakeV1()
+    c = rc.RelationshipCache()
+    c._v1 = v1  # pylint: disable=protected-access
+    c._fill_limit = 1  # pylint: disable=protected-access
+    c.apply_pod(_make_pod(uid="u0", name="p0", node="node-a", job="job1"))
+    c.apply_pod(_make_pod(uid="u1", name="p1", node="node-a", job="job2"))
+    assert c._save_snapshot()  # pylint: disable=protected-access
+    assert set(v1.cms) == {"agent-core-relcache", "agent-core-relcache-1"}
+    # job1's pod expires (shard 0 empties) while job2's pod stays in shard 1
+    c.apply_pod_deleted("u0", ts=time.time() - rc.POD_TTL - 1)
+    c._gc()  # pylint: disable=protected-access
+    assert c.lookup("job1", "default") == []
+    assert c._save_snapshot()  # pylint: disable=protected-access
+    assert set(v1.cms) == {"agent-core-relcache", "agent-core-relcache-1"}  # emptied shard 0 is kept
+    snap = _json.loads(v1.cms["agent-core-relcache"].data["snapshot"])
+    assert snap["pods"] == []  # the kept shard-0 CM carries no stale entries
+    pods = v1.cms["agent-core-relcache-1"].data["snapshot"]
+    assert "p1" in pods  # the surviving shard keeps its data
+
+
 def test_new_pods_fill_shards_sequentially(monkeypatch):
     # sequential fill: new pods go to shard 0, advance to shard 1 once the fill limit is reached
     monkeypatch.setattr(rc, "SNAPSHOT_SHARD_FILL_LIMIT", 1)  # every entry overflows the current shard
@@ -169,6 +254,52 @@ def test_new_pods_fill_shards_sequentially(monkeypatch):
     c.apply_pod(_make_pod(uid="u2", name="p2"))
     shards = {int(c._pods[u]["shard"]) for u in ("u0", "u1", "u2")}  # pylint: disable=protected-access
     assert shards == {0, 1, 2}  # 0 filled -> 1 -> 2
+
+
+def test_gc_emptied_cache_refills_from_default_shard(monkeypatch):
+    # after TTL GC empties every shard, new pods land in the default shard (the legacy
+    # CM name) and advance in order again
+    monkeypatch.setattr(rc, "SNAPSHOT_SHARD_FILL_LIMIT", 1)  # every entry overflows the current shard
+    c = rc.RelationshipCache()
+    for i in range(3):
+        c.apply_pod(_make_pod(uid=f"u{i}", name=f"p{i}"))
+    for i in range(3):
+        c.apply_pod_deleted(f"u{i}", ts=time.time() - rc.POD_TTL - 1)
+    c._gc()  # pylint: disable=protected-access
+    for i in range(2):
+        c.apply_pod(_make_pod(uid=f"n{i}", name=f"np{i}"))
+    shards = {int(c._pods[u]["shard"]) for u in ("n0", "n1")}  # pylint: disable=protected-access
+    assert shards == {0, 1}  # refill restarts from the default shard, then 1 in order
+
+
+def test_new_pod_purges_expired_entries_and_refills_default_shard(monkeypatch):
+    # expired entries still cached (background GC not ticked yet): a new pod purges them
+    # first, then lands in the default shard instead of advancing past the stale bytes
+    monkeypatch.setattr(rc, "SNAPSHOT_SHARD_FILL_LIMIT", 1)  # every entry overflows the current shard
+    c = rc.RelationshipCache()
+    for i in range(3):
+        c.apply_pod(_make_pod(uid=f"u{i}", name=f"p{i}"))
+    for i in range(3):
+        c.apply_pod_deleted(f"u{i}", ts=time.time() - rc.POD_TTL - 1)
+    # no _gc() call: the expired entries still occupy shards 0-2 with stale bytes
+    c.apply_pod(_make_pod(uid="n0", name="np0", job="job2"))
+    assert int(c._pods["n0"]["shard"]) == 0  # pylint: disable=protected-access
+    assert c.lookup("job1", "default") == []  # the expired entries were purged
+
+
+def test_resume_fill_position_prefers_lowest_free_shard():
+    # after a snapshot load, the fill position resumes at the lowest shard with free
+    # capacity: the default shard is filled first, then 1, 2, ... in order
+    c = rc.RelationshipCache()
+    c._fill_limit = 1  # pylint: disable=protected-access  # every entry overflows the current shard
+    c._apply_snapshot(None)
+    c._shard_bytes[9] = 1  # pylint: disable=protected-access  # restart loaded one full shard 9
+    c._resume_fill_position()  # pylint: disable=protected-access
+    assert c._active == 0  # pylint: disable=protected-access  # shard 0 is empty -> fill it first
+    c.apply_pod(_make_pod(uid="u0", name="p0"))
+    assert int(c._pods["u0"]["shard"]) == 0  # pylint: disable=protected-access
+    c.apply_pod(_make_pod(uid="u1", name="p1"))
+    assert int(c._pods["u1"]["shard"]) == 1  # pylint: disable=protected-access  # then 1 in order
 
 
 def test_snapshot_roundtrip_after_restart():

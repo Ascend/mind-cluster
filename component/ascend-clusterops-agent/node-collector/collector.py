@@ -367,34 +367,37 @@ class CollectorClient:
         return matched
 
     def _collect_mount_keywords(self, dst: Path, entity: dict, pods: list[PodRef]) -> None:
-        """mount_keywords entity: match the pod's mount pairs by keyword (first hit wins); if none,
-        scan the mount host path subdirectories; finally scan the statically mounted shared
-        storage (SHARED_STORAGE_ROOT, protocol-agnostic, works after pod deletion).
+        """mount_keywords entity: for plog entities scan the shared storage first (first hit
+        ends the scan); otherwise match the pod's mount pairs by keyword (first hit wins),
+        then scan the mount host path subdirectories, finally the shared storage.
         """
         keywords = [k.lower() for k in entity.get("mount_keywords", [])]
         plog_entity = self._is_plog_entity(entity)
         for pod in pods:
-            pairs = get_pathmap().all_pairs(pod.pod_uid)
             collected = False
-            if pairs:
-                chosen = self._pair_keyword_match(pairs, keywords)
-                if chosen:
-                    logger.info(
-                        "mount keyword matched: entity=%s pod=%s host=%s kw=%s",
-                        entity["name"],
-                        pod.name,
-                        chosen,
-                        keywords,
-                    )
-                    if plog_entity:
-                        self._collect_plog_dir(dst, chosen, entity, pod)
-                    else:
-                        self._collect_host_path(dst, [str(Path(chosen) / "**")])
-                    collected = True
-                else:
-                    collected = self._subdir_keyword_match(dst, entity, pod, pairs, keywords)
-            if not collected:
+            if plog_entity:
                 collected = self._collect_shared_storage(dst, entity, pod)
+            if not collected:
+                pairs = get_pathmap().all_pairs(pod.pod_uid)
+                if pairs:
+                    chosen = self._pair_keyword_match(pairs, keywords)
+                    if chosen:
+                        logger.info(
+                            "mount keyword matched: entity=%s pod=%s host=%s kw=%s",
+                            entity["name"],
+                            pod.name,
+                            chosen,
+                            keywords,
+                        )
+                        if plog_entity:
+                            self._collect_plog_dir(dst, chosen, entity, pod)
+                        else:
+                            self._collect_host_path(dst, [str(Path(chosen) / "**")])
+                        collected = True
+                    else:
+                        collected = self._subdir_keyword_match(dst, entity, pod, pairs, keywords)
+                if not collected and not plog_entity:
+                    collected = self._collect_shared_storage(dst, entity, pod)
             if plog_entity and not collected:
                 logger.warning(
                     "collect plog logs failed: entity=%s pod=%s no keyword dir matched",
@@ -432,8 +435,8 @@ class CollectorClient:
             )
             if plog_entity:
                 self._collect_plog_dir(dst, hit, entity, pod)
-            else:
-                self._collect_host_path(dst, [str(Path(hit) / "**")])
+                return True  # first plog hit ends the scan
+            self._collect_host_path(dst, [str(Path(hit) / "**")])
             collected = True
         return collected
 
@@ -449,7 +452,9 @@ class CollectorClient:
     def _subdir_keyword_match(
         self, dst: Path, entity: dict, pod: PodRef, pairs: list[str], keywords: list[str]
     ) -> bool:
-        """Scan each mount host path's subdirectories for one containing the keyword; returns whether anything was collected."""
+        """Scan each mount host path's subdirectories for one containing the keyword (first
+        hit ends the scan for plog entities); returns whether anything was collected.
+        """
         collected = False
         for pair in pairs:
             host, _ = pair.split(":", 1)
@@ -467,8 +472,8 @@ class CollectorClient:
                     )
                     if self._is_plog_entity(entity):
                         self._collect_plog_dir(dst, str(sub), entity, pod)
-                    else:
-                        self._collect_host_path(dst, [str(sub / "**")])
+                        return True
+                    self._collect_host_path(dst, [str(sub / "**")])
                     collected = True
         return collected
 
