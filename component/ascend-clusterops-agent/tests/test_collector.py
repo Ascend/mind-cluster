@@ -710,6 +710,61 @@ def test_collect_mount_keywords_shared_storage_prunes_nested_plog(tmp_path, monk
     assert not (dst / "p.log").exists()  # nested plog dir not flattened to the dst root
 
 
+def test_collect_mount_keywords_plog_prefers_shared_storage(tmp_path, monkeypatch, client):
+    # plog entity: shared storage is scanned first; when it has plog data the mount
+    # pair / subdir scans are skipped entirely
+    shared = tmp_path / "shared-storage"
+    mine = shared / "alllogs" / "task-42" / "plogs" / "10.0.0.5"
+    for d in ("run", "debug", "security"):
+        (mine / d).mkdir(parents=True)
+    (mine / "run" / "nfs.log").write_text("nfs-plog")
+    host_plog = tmp_path / "host" / "plog"
+    for d in ("run", "debug", "security"):
+        (host_plog / d).mkdir(parents=True)
+    (host_plog / "run" / "mount.log").write_text("mount-plog")
+    monkeypatch.setattr(collector, "SHARED_STORAGE_ROOT", shared)
+    fake_pm = SimpleNamespace(
+        all_pairs=lambda uid: [f"{tmp_path}/host:/var/log"],
+        pod_env=lambda uid, name: "task-42" if (uid, name) == ("u0", "MINDX_TASK_ID") else None,
+        pod_ip=lambda uid: "10.0.0.5" if uid == "u0" else "",
+    )
+    monkeypatch.setattr(collector, "get_pathmap", lambda: fake_pm)
+
+    dst = tmp_path / "process_log"
+    dst.mkdir()
+    entity = {"name": "process_log", "mount_keywords": ["plog"]}
+    pods = [collector.PodRef(ns="ns", name="p", pod_uid="u0")]
+    client._collect_mount_keywords(dst, entity, pods)
+    assert (dst / "run" / "nfs.log").read_text() == "nfs-plog"  # shared storage won
+    assert not (dst / "run" / "mount.log").exists()  # mount scan skipped
+
+
+def test_collect_subdirs_mount_first_hit_wins(tmp_path, monkeypatch, client):
+    # plog entity: two mounts each hold a plog dir; only the first hit is collected
+    p1 = tmp_path / "test1" / "plog"
+    p2 = tmp_path / "test2" / "plog"
+    for p in (p1, p2):
+        for d in ("run", "debug", "security"):
+            (p / d).mkdir(parents=True)
+    (p1 / "run" / "first.log").write_text("first")
+    (p2 / "run" / "second.log").write_text("second")
+    monkeypatch.setattr(collector, "SHARED_STORAGE_ROOT", tmp_path / "no-shared")  # not mounted
+    fake_pm = SimpleNamespace(
+        all_pairs=lambda uid: [f"{tmp_path}/test1:/m1", f"{tmp_path}/test2:/m2"],
+        pod_env=lambda uid, name: None,
+        pod_ip=lambda uid: "",
+    )
+    monkeypatch.setattr(collector, "get_pathmap", lambda: fake_pm)
+
+    dst = tmp_path / "process_log"
+    dst.mkdir()
+    entity = {"name": "process_log", "mount_keywords": ["plog"]}
+    pods = [collector.PodRef(ns="ns", name="p", pod_uid="u0")]
+    client._collect_mount_keywords(dst, entity, pods)
+    assert (dst / "run" / "first.log").read_text() == "first"  # first mount's plog dir
+    assert not (dst / "run" / "second.log").exists()  # second mount skipped
+
+
 def test_collect_env_entity_falls_back_when_no_value(tmp_path, monkeypatch, client):
     # pod env not recorded (e.g. task deleted) -> returns False (the caller falls back to mount_keywords)
     fake_pm = _fake_pm([f"{tmp_path}/host:/var/log"], env=None)

@@ -83,7 +83,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["get", "update", "patch"]
+    verbs: ["get", "update", "patch", "delete"]
   # create 无法按 resourceNames 校验 (名称在请求体而非 URL path), 需独立 rule; 仅可创建, 不可读写其他 CM
   - apiGroups: [""]
     resources: ["configmaps"]
@@ -105,7 +105,7 @@ subjects:
 ---
 # pathmap 快照 CM 分片 (clusterops-pathmap, clusterops-pathmap-1..N, cluster-system) 读写。
 # 分片数固定为 100, 分片名无法在 resourceNames 中穷举,
-# 故 get/update/patch 放宽到 cluster-system 命名空间全部 ConfigMap, 仅限该命名空间。
+# 故 get/update/patch/delete 放宽到 cluster-system 命名空间全部 ConfigMap, 仅限该命名空间。
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -114,7 +114,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["get", "update", "patch"]
+    verbs: ["get", "update", "patch", "delete"]
   # create 无法按 resourceNames 校验, 需独立 rule (同上)
   - apiGroups: [""]
     resources: ["configmaps"]

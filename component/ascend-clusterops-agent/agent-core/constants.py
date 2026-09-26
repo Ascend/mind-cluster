@@ -42,5 +42,6 @@ TASK_CRDS_CM_KEY = "task_crds.yaml"
 RELCACHE_CM_NAME = "agent-core-relcache"
 PATHMAP_CM_NAME = "clusterops-pathmap"
 SNAPSHOT_SHARDS = 100
+DEFAULT_SHARD = 0  # shard 0 keeps the legacy CM name (no numeric suffix) and is always kept
 SNAPSHOT_MAX_BYTES = SNAPSHOT_SHARDS * 1024 * 1024
 SNAPSHOT_SHARD_FILL_LIMIT = 1024 * 1024 - 16 * 1024
