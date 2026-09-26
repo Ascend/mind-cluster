@@ -37,7 +37,7 @@ from typing import Any, Callable
 import yaml
 from kubernetes import client, config, watch
 
-from agent_core.constants import CLUSTER_SYSTEM_NS, POD_TTL, TASK_CRDS_CM_KEY, TASK_CRDS_CM_NAME
+from agent_core.constants import CLUSTER_SYSTEM_NS, DEFAULT_SHARD, POD_TTL, TASK_CRDS_CM_KEY, TASK_CRDS_CM_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ def controller_owner(refs) -> tuple[str, str, str] | None:
 
 def shard_cm_name(base_name: str, shard: int) -> str:
     """Per-shard ConfigMap name (relcache/pathmap snapshots); shard 0 keeps the legacy name."""
-    return base_name if shard == 0 else f"{base_name}-{shard}"
+    return base_name if shard == DEFAULT_SHARD else f"{base_name}-{shard}"
 
 
 def serialized_bytes(entry: dict) -> int:
@@ -96,6 +96,7 @@ class SequentialShards:
     def __init__(self, fill_limit: int, shards: int):
         self._active = 0  # shard being filled sequentially (new pods land here)
         self._shard_bytes: dict[int, int] = {}  # per-shard accumulated entry bytes (fill-level probe)
+        self._has_deleted = False  # any cached entry carries deleted_at (triggers GC before routing a new pod)
         # Shared indexes.
         self._pods: dict[str, dict] = {}  # pod_uid -> entry
         self._order: deque[str] = deque()  # pod_uid insertion order for capacity eviction (FIFO)
@@ -125,7 +126,10 @@ class SequentialShards:
 
         An empty shard always accepts its entry (a single oversized entry overruns the
         fill limit instead of looping forever); only occupied shards are advanced past.
+        The fill position is first rewound to the lowest shard with room for the entry
+        (the default shard first, then 1, 2, ... in order).
         """
+        self._rewind_fill_position(size)
         while (
             self._shard_bytes.get(self._active, 0) and self._shard_bytes.get(self._active, 0) + size > self._fill_limit
         ):
@@ -197,6 +201,8 @@ class SequentialShards:
         if "shard" not in e:
             # legacy snapshot (hash-routed, no shard field): refill sequentially
             e["shard"] = self._route_new_shard(serialized_bytes(e))
+        if e.get("deleted_at"):
+            self._has_deleted = True
         self._pods[uid] = e
         size = serialized_bytes(e)
         self._bytes += size
@@ -207,10 +213,20 @@ class SequentialShards:
         if e.get("owner_uid"):
             self._job_uid[job] = e["owner_uid"]
 
+    def _rewind_fill_position(self, size: int = 0) -> None:
+        """Rewind the fill position to the lowest shard with room for one more entry of ``size``
+        bytes (the default shard first, then 1, 2, ... in order); left unchanged when every
+        shard is full.
+        """
+        for shard in range(self._shards):
+            used = self._shard_bytes.get(shard, 0)
+            if used == 0 or used + size <= self._fill_limit:
+                self._active = shard
+                return
+
     def _resume_fill_position(self) -> None:
-        """Resume the sequential fill position from the highest non-empty shard (after a snapshot load)."""
-        if self._shard_bytes:
-            self._active = max(self._shard_bytes)
+        """Resume the fill position from the lowest shard with free capacity (after a snapshot load)."""
+        self._rewind_fill_position()
 
     def _enforce_cap(self, max_bytes: int) -> None:
         """Evict oldest pod entries beyond max_bytes (kept consistent with the snapshot capacity)."""
@@ -247,7 +263,11 @@ class SequentialShards:
             self._order.append(uid)
         if old is not None:
             self._evict_index_only(uid, old)
-        # Sequential shard routing: new pods fill the active shard, then advance.
+        # Sequential shard routing: new pods fill the lowest shard with room (the default
+        # shard first, then 1, 2, ... in order); expired entries are purged first so they
+        # do not block the low shards with stale bytes.
+        if old is None and self._has_deleted:
+            self._gc()
         target = self._active if old is not None else self._route_new_shard(serialized_bytes(entry))
         entry["shard"] = target
         self._pods[uid] = entry
@@ -262,6 +282,7 @@ class SequentialShards:
             e = self._pods.get(pod_uid)
             if e and not e.get("deleted_at"):
                 e["deleted_at"] = ts
+                self._has_deleted = True
                 logger.info(
                     "%s task pod deleted: job=%s ns=%s pod=%s node=%s",
                     self._log_name,
@@ -277,13 +298,18 @@ class SequentialShards:
         now = now if now is not None else time.time()
         changed = False
         with self._lock:
+            retained_deleted = 0
             for uid in list(self._pods):
                 e = self._pods[uid]
-                if e.get("deleted_at") and now - e["deleted_at"] > POD_TTL:
-                    self._evict_pod(uid, e)
-                    changed = True
-        if changed:
-            mark_dirty(self._cond, self._dirty)  # schedule an immediate CM sync (change-driven)
+                if e.get("deleted_at"):
+                    if now - e["deleted_at"] > POD_TTL:
+                        self._evict_pod(uid, e)
+                        changed = True
+                    else:
+                        retained_deleted += 1
+            self._has_deleted = retained_deleted > 0
+            if changed:
+                mark_dirty(self._cond, self._dirty)  # schedule an immediate CM sync (change-driven)
 
     def _gc_loop(self) -> None:
         while not self._stop.wait(self._gc_interval):
@@ -308,22 +334,41 @@ class SequentialShards:
                     if e.status == 404:
                         continue  # shard CM not created yet -> empty shard
                     raise
-                self._apply_snapshot((cm.data or {}).get(self._cm_key))
+                raw = (cm.data or {}).get(self._cm_key)
+                self._last[shard] = raw  # loaded shard CMs are covered by the next full-rewrite sync
+                self._apply_snapshot(raw)
         except Exception as e:  # noqa: BLE001
             logger.warning("failed to read %s snapshot CM (start with empty cache): %s", self._log_name, e)
             return  # snapshot missing/no permission -> start with empty cache, rebuilt by watch
         self._reorder_from_pods()
 
     def _save_snapshot(self) -> bool:
-        """Sync each shard snapshot to its CM; writes only shards whose content changed. Best-effort, never raises."""
+        """Full rewrite on every sync: delete every non-zero shard CM this process wrote/loaded,
+        then create one CM per shard that holds pods; shard 0 (legacy name) is always kept and
+        rewritten with the empty snapshot when it holds no pods. Best-effort, never raises.
+
+        ``_last`` tracks shard CMs this process wrote/loaded so the delete pass covers
+        them; a failed delete (non-404) keeps its entry so the next sync retries it.
+        """
         v1 = self._v1 or K8s.core()
         ok = True
+        for shard in list(self._last):
+            if shard == DEFAULT_SHARD:
+                continue  # the default shard (legacy CM name) is always kept, even when empty
+            try:
+                v1.delete_namespaced_config_map(shard_cm_name(self._cm_name, shard), self._cm_ns)
+            except Exception as e:  # noqa: BLE001  # snapshot failure must not block diagnosis
+                if getattr(e, "status", None) != 404:
+                    logger.warning(
+                        "failed to delete %s shard %d CM (diagnosis unaffected): %s", self._log_name, shard, e
+                    )
+                    ok = False
+                    continue  # keep _last so the next sync retries the delete
+            del self._last[shard]
         for shard in range(self._shards):
             snap = self._snapshot(shard)
-            if not shard_has_pods(snap):
-                continue  # never create a CM for an empty shard
-            if self._last.get(shard) == snap:
-                continue
+            if not shard_has_pods(snap) and shard != DEFAULT_SHARD:
+                continue  # empty non-default shards never create a CM
             try:
                 name = shard_cm_name(self._cm_name, shard)
                 try:
