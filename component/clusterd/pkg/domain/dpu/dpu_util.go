@@ -71,8 +71,28 @@ func GetSafeData(dpuInfos map[string]*constant.DpuInfo) []string {
 func getReportDpuInfo(dpuInfoMap map[string]*constant.DpuInfo) map[string]*constant.DpuInfoCfg {
 	reportDpuInfo := make(map[string]*constant.DpuInfoCfg, len(dpuInfoMap))
 	for k, v := range dpuInfoMap {
-		cfg := v.DpuInfoCfg
-		reportDpuInfo[k] = &cfg
+		reportDpuInfo[k] = normalizeDpuInfoCfg(v)
 	}
 	return reportDpuInfo
+}
+
+// normalizeDpuInfoCfg returns a copy of the dpu info config with all nil slices replaced
+// by empty slices, so the serialized configmap uses [] instead of null when there is no fault.
+func normalizeDpuInfoCfg(v *constant.DpuInfo) *constant.DpuInfoCfg {
+	cfg := v.DpuInfoCfg
+	if cfg.DPUInfo.DPUList == nil {
+		cfg.DPUInfo.DPUList = []constant.DpuItem{}
+	}
+	for i := range cfg.DPUInfo.DPUList {
+		if cfg.DPUInfo.DPUList[i].FaultList == nil {
+			cfg.DPUInfo.DPUList[i].FaultList = []constant.DpuFaultDetail{}
+		}
+		if cfg.DPUInfo.DPUList[i].AffectedNPU == nil {
+			cfg.DPUInfo.DPUList[i].AffectedNPU = []int{}
+		}
+	}
+	if cfg.DPUInfo.NodeEvent != nil && cfg.DPUInfo.NodeEvent.FaultList == nil {
+		cfg.DPUInfo.NodeEvent.FaultList = []constant.DpuFaultDetail{}
+	}
+	return &cfg
 }

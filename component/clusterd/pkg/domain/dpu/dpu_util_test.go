@@ -6,6 +6,7 @@ package dpu
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
@@ -115,6 +116,56 @@ func TestGetSafeData(t *testing.T) {
 			result := GetSafeData(dpuInfos)
 			convey.So(len(result), convey.ShouldEqual, 1)
 			convey.So(len(result[0]) > 0, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestNormalizeDpuInfoCfg(t *testing.T) {
+	convey.Convey("test normalizeDpuInfoCfg", t, func() {
+		convey.Convey("nil slices replaced by empty slices", func() {
+			info := &constant.DpuInfo{
+				DpuInfoCfg: constant.DpuInfoCfg{
+					DPUInfo: constant.DpuInfoBody{
+						DPUList: []constant.DpuItem{
+							{DeviceID: "0x8200"},
+						},
+						NodeEvent: &constant.DpuNodeEvent{NodeName: "node1"},
+					},
+					UpdateTime: 100,
+				},
+			}
+			cfg := normalizeDpuInfoCfg(info)
+			convey.So(cfg.DPUInfo.DPUList, convey.ShouldNotBeNil)
+			convey.So(cfg.DPUInfo.DPUList[0].FaultList, convey.ShouldNotBeNil)
+			convey.So(len(cfg.DPUInfo.DPUList[0].FaultList), convey.ShouldEqual, 0)
+			convey.So(cfg.DPUInfo.DPUList[0].AffectedNPU, convey.ShouldNotBeNil)
+			convey.So(len(cfg.DPUInfo.DPUList[0].AffectedNPU), convey.ShouldEqual, 0)
+			convey.So(cfg.DPUInfo.NodeEvent.FaultList, convey.ShouldNotBeNil)
+			convey.So(len(cfg.DPUInfo.NodeEvent.FaultList), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("nil dpu list and nil nodeEvent", func() {
+			info := &constant.DpuInfo{
+				DpuInfoCfg: constant.DpuInfoCfg{
+					DPUInfo: constant.DpuInfoBody{},
+				},
+			}
+			cfg := normalizeDpuInfoCfg(info)
+			convey.So(cfg.DPUInfo.DPUList, convey.ShouldNotBeNil)
+			convey.So(len(cfg.DPUInfo.DPUList), convey.ShouldEqual, 0)
+			convey.So(cfg.DPUInfo.NodeEvent, convey.ShouldBeNil)
+		})
+
+		convey.Convey("serialized report has no null", func() {
+			info := &constant.DpuInfo{
+				DpuInfoCfg: constant.DpuInfoCfg{
+					DPUInfo: constant.DpuInfoBody{
+						NodeEvent: &constant.DpuNodeEvent{},
+					},
+				},
+			}
+			out := mustMarshal(getReportDpuInfo(map[string]*constant.DpuInfo{"dpuinfo-node1": info}))
+			convey.So(strings.Contains(out, "null"), convey.ShouldBeFalse)
 		})
 	})
 }
