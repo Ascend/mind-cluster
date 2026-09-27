@@ -367,16 +367,15 @@ class CollectorClient:
         return matched
 
     def _collect_mount_keywords(self, dst: Path, entity: dict, pods: list[PodRef]) -> None:
-        """mount_keywords entity: for plog entities scan the shared storage first (first hit
-        ends the scan); otherwise match the pod's mount pairs by keyword (first hit wins),
-        then scan the mount host path subdirectories, finally the shared storage.
+        """mount_keywords entity: scan the shared storage first (first hit ends the scan);
+        otherwise match the pod's mount pairs by keyword (first hit wins), then scan the
+        mount host path subdirectories. Plog entities collect the run/debug/security
+        layout and warn when nothing matched.
         """
         keywords = [k.lower() for k in entity.get("mount_keywords", [])]
         plog_entity = self._is_plog_entity(entity)
         for pod in pods:
-            collected = False
-            if plog_entity:
-                collected = self._collect_shared_storage(dst, entity, pod)
+            collected = self._collect_shared_storage(dst, entity, pod)
             if not collected:
                 pairs = get_pathmap().all_pairs(pod.pod_uid)
                 if pairs:
@@ -396,8 +395,6 @@ class CollectorClient:
                         collected = True
                     else:
                         collected = self._subdir_keyword_match(dst, entity, pod, pairs, keywords)
-                if not collected and not plog_entity:
-                    collected = self._collect_shared_storage(dst, entity, pod)
             if plog_entity and not collected:
                 logger.warning(
                     "collect plog logs failed: entity=%s pod=%s no keyword dir matched",
@@ -415,17 +412,16 @@ class CollectorClient:
         narrowed to this pod by task id + pod ip. Any path prefix is accepted; a keyword
         dir (plogs) must be present and the task id / pod ip must appear in the path or
         as a direct child subdir (e.g. /job/code/logs/<task_id>/plogs/<ip>).
-        Returns True when at least one plog dir was collected (skips the NFS dynamic fallback).
+        Returns True when a keyword dir was collected (first hit ends the scan).
         """
         if not SHARED_STORAGE_ROOT.is_dir():
-            return False  # shared storage not mounted on this node -> fall back to dynamic NFS
+            return False  # shared storage not mounted on this node -> fall back to mount pairs
         keywords = [k.lower() for k in entity.get("mount_keywords", [])]
         pm = get_pathmap()
         ip = getattr(pm, "pod_ip", lambda _uid: "")(pod.pod_uid)
         task_id = getattr(pm, "pod_env", lambda _uid, _name: None)(pod.pod_uid, TASK_ID_ENV)
         plog_entity = self._is_plog_entity(entity)
-        collected = False
-        for hit in self._scan_nfs_volume(SHARED_STORAGE_ROOT, ip, task_id, keywords, first_only=plog_entity):
+        for hit in self._scan_nfs_volume(SHARED_STORAGE_ROOT, ip, task_id, keywords, first_only=True):
             logger.info(
                 "shared-storage keyword dir: entity=%s pod=%s dir=%s kw=%s",
                 entity["name"],
@@ -435,10 +431,10 @@ class CollectorClient:
             )
             if plog_entity:
                 self._collect_plog_dir(dst, hit, entity, pod)
-                return True  # first plog hit ends the scan
-            self._collect_host_path(dst, [str(Path(hit) / "**")])
-            collected = True
-        return collected
+            else:
+                self._collect_host_path(dst, [str(Path(hit) / "**")])
+            return True  # first hit ends the scan
+        return False
 
     @staticmethod
     def _pair_keyword_match(pairs: list[str], keywords: list[str]) -> str | None:
