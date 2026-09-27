@@ -111,7 +111,7 @@ ConfigMap中Data字段的Key为`DpuInfoCfg`，Value为JSON格式的DPU故障信�
 |DPUInfo|对象|DPU设备故障信息。|
 |-DPUList|列表|DPU设备列表。数组中的每个元素描述一个DPU设备的故障信息，详细说明请参见[表7](#table_dpuitem_k8s_rdma_shared_dev_plugin)。|
 |-NodeEvent|对象|节点级故障事件，例如DPU卡脱落等。详细说明请参见[表8](#table_nodeevent_k8s_rdma_shared_dev_plugin)。|
-|UpdateTime|RFC 3339 格式时间戳|当前DPU信息的更新时间，用于标识故障信息的最新上报时间。|
+|UpdateTime|Unix毫秒时间戳|当前DPU信息的更新时间，用于标识故障信息的最新上报时间。|
 
 **表 7**  DPUList元素字段说明
 <a name="table_dpuitem_k8s_rdma_shared_dev_plugin"></a>

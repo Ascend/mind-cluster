@@ -103,13 +103,17 @@ func getReportSwitchInfo(switchInfoMap map[string]*constant.SwitchInfo) map[stri
 			}
 			reportFaultCodes = append(reportFaultCodes, string(faultBytes))
 		}
+		faultTimeAndLevelMap := v.FaultTimeAndLevelMap
+		if faultTimeAndLevelMap == nil {
+			faultTimeAndLevelMap = map[string]constant.FaultTimeAndLevel{}
+		}
 		reportSwitchInfo[k] = &constant.SwitchInfoFromCM{
 			SwitchFaultInfoFromCm: constant.SwitchFaultInfoFromCm{
 				FaultCode:            reportFaultCodes,
 				FaultLevel:           v.FaultLevel,
 				UpdateTime:           v.UpdateTime,
 				NodeStatus:           v.NodeStatus,
-				FaultTimeAndLevelMap: v.FaultTimeAndLevelMap,
+				FaultTimeAndLevelMap: faultTimeAndLevelMap,
 			},
 			CmName: v.CmName,
 		}
