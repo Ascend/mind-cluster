@@ -739,6 +739,33 @@ def test_collect_mount_keywords_plog_prefers_shared_storage(tmp_path, monkeypatc
     assert not (dst / "run" / "mount.log").exists()  # mount scan skipped
 
 
+def test_collect_mount_keywords_non_plog_prefers_shared_storage(tmp_path, monkeypatch, client):
+    # non-plog entity: shared storage is scanned first too (same order as plog); when it
+    # has a keyword dir the mount pair scan is skipped and only the first hit is collected
+    shared = tmp_path / "shared-storage"
+    mine = shared / "alllogs" / "task-42" / "applogs" / "10.0.0.5"
+    (mine / "logs").mkdir(parents=True)
+    (mine / "logs" / "nfs.log").write_text("nfs-log")
+    host_app = tmp_path / "host" / "applogs"
+    (host_app / "logs").mkdir(parents=True)
+    (host_app / "logs" / "mount.log").write_text("mount-log")
+    monkeypatch.setattr(collector, "SHARED_STORAGE_ROOT", shared)
+    fake_pm = SimpleNamespace(
+        all_pairs=lambda uid: [f"{tmp_path}/host:/var/log"],
+        pod_env=lambda uid, name: "task-42" if (uid, name) == ("u0", "MINDX_TASK_ID") else None,
+        pod_ip=lambda uid: "10.0.0.5" if uid == "u0" else "",
+    )
+    monkeypatch.setattr(collector, "get_pathmap", lambda: fake_pm)
+
+    dst = tmp_path / "app_log"
+    dst.mkdir()
+    entity = {"name": "app_log", "mount_keywords": ["app"]}
+    pods = [collector.PodRef(ns="ns", name="p", pod_uid="u0")]
+    client._collect_mount_keywords(dst, entity, pods)
+    assert (dst / "logs" / "nfs.log").read_text() == "nfs-log"  # shared storage won
+    assert not (dst / "logs" / "mount.log").exists()  # mount scan skipped
+
+
 def test_collect_subdirs_mount_first_hit_wins(tmp_path, monkeypatch, client):
     # plog entity: two mounts each hold a plog dir; only the first hit is collected
     p1 = tmp_path / "test1" / "plog"
