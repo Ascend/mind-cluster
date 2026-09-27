@@ -22,16 +22,20 @@ import (
 	"ascend-common/api"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
+
 	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 // Init init npu total ports num
 func (e *NpuDevPortsInfo) Init() {
 	totalPorts := 0
-	for _, v := range e.devPortMap {
-		totalPorts += len(v)
+	for _, diePortMap := range e.devPortMap {
+		for _, ports := range diePortMap {
+			totalPorts += len(ports)
+		}
 	}
 	e.totalPort = totalPorts
+	logger.Infof("[NpuDevPortInfos] Init succeeded, totalPort=%d", totalPorts)
 }
 
 // GetCount get npu total ports
@@ -39,20 +43,41 @@ func (e *NpuDevPortsInfo) GetCount() int {
 	return e.totalPort
 }
 
-// GetPortMap get npu ports info
-func (e *NpuDevPortsInfo) GetPortMap() map[int][]common.NpuDevPortInfo {
-	return e.devPortMap
+// GetPortMap get npu ports info for the specified logicID
+func (e *NpuDevPortsInfo) GetPortMap(logicID int32) map[int][]common.NpuDevPortInfo {
+	return e.devPortMap[logicID]
 }
 
-// SetPortMap init set npu ports info
-func (e *NpuDevPortsInfo) SetPortMap(devMap map[int][]common.NpuDevPortInfo) {
+// GetMergedPortMap returns the union of dieID->ports across all logicIDs.
+// Same-type chips share identical die/port structure, so this merged view is
+// used to build legacy metric descriptors which do not carry a logicID.
+func (e *NpuDevPortsInfo) GetMergedPortMap() map[int][]common.NpuDevPortInfo {
+	merged := make(map[int][]common.NpuDevPortInfo)
+	for _, diePortMap := range e.devPortMap {
+		for dieID, ports := range diePortMap {
+			merged[dieID] = ports
+		}
+	}
+	return merged
+}
+
+// SetPortMap init set npu ports info for the specified logicID
+func (e *NpuDevPortsInfo) SetPortMap(logicID int32, devMap map[int][]common.NpuDevPortInfo) {
+	if e.devPortMap == nil {
+		e.devPortMap = make(map[int32]map[int][]common.NpuDevPortInfo)
+	}
 	// Sort port list for each die to ensure consistent order
-	for _, ports := range devMap {
+	for dieID, ports := range devMap {
 		sort.Slice(ports, func(i, j int) bool {
 			return ports[i].PortID < ports[j].PortID
 		})
+		portIDs := make([]int, 0, len(ports))
+		for _, port := range ports {
+			portIDs = append(portIDs, port.PortID)
+		}
+		logger.Infof("[NpuDevPortInfos] set port map, logicID=%d, dieID=%d, portIDs=%v", logicID, dieID, portIDs)
 	}
-	e.devPortMap = devMap
+	e.devPortMap[logicID] = devMap
 }
 
 func getNpuDevNetPortInfos(n *NpuCollector) error {
@@ -64,11 +89,11 @@ func getNpuDevNetPortInfos(n *NpuCollector) error {
 	for _, logicID := range npuList {
 		devInfo, err := hccn.GetNpuDevNetPortInfo(logicID)
 		if err != nil {
+			logger.Warnf("[NpuDevPortInfos] get port info for logicID=%d failed: %v", logicID, err)
 			continue
 		}
-		NpuDevPortInfos.SetPortMap(devInfo)
+		NpuDevPortInfos.SetPortMap(logicID, devInfo)
 		isGetPortInfo = true
-		break
 	}
 	if !isGetPortInfo {
 		return fmt.Errorf("failed to detect any queryable NPU")
