@@ -10,7 +10,7 @@
 entities:
   - name: process_log            # CANN plog, 容器挂载文件日志
     env: ASCEND_PROCESS_LOG_PATH  # pod spec 显式配置时 agent-core 记录并随采集指令下发; node-collector 读取反查宿主路径
-    mount_keywords: [plog]        # 兜底: 匹配挂载对/宿主子目录/共享盘静态挂载, 用 pod IP+任务标识过滤
+    mount_keywords: [plog]        # 兜底: 优先扫描共享盘静态挂载, 再匹配挂载对/宿主子目录, 用 pod IP+任务标识过滤
 
   - name: dl_log                 # MindCluster 组件日志 (宿主机路径, 直接读取, 保留目录结构)
     paths:
@@ -44,7 +44,7 @@ entities:
 | `env` | 环境变量名，其值指向任务Pod内容器的日志目录（如 `ASCEND_PROCESS_LOG_PATH`） |
 | `paths` | 日志路径列表，指定需要采集的日志文件或目录 |
 | `commands` | 现场命令列表，指定在采集节点上执行、用于生成日志文件的命令 |
-| `mount_keywords` | 兜底关键词列表，按关键词匹配任务Pod的挂载对来定位日志；无挂载对命中时，按关键词匹配宿主机子目录或共享盘（/mnt/shared-storage）上的日志目录 |
+| `mount_keywords` | 兜底关键词列表，按关键词定位日志：优先扫描静态挂载的共享盘（/mnt/shared-storage），未命中时再匹配任务Pod的挂载对或宿主机子目录 |
 
 ## 采集契约处理逻辑<a name="sectionfaultdiagnosismanifestlogic"></a>
 
@@ -54,12 +54,12 @@ entities:
 |---|---|---|
 | 1 | `env` | 环境变量。Agent Core在Pod存活时将该env值和全部hostPath挂载对记入中心挂载关系表，并在采集指令（TriggerCollect）中随Pod列表下发，Node Collector读取env值（容器内路径）后，经挂载对反查宿主机路径进行采集。env采集成功时，不再执行 `paths`、`commands`、`mount_keywords`；env未记录或反查失败时，继续按低优先级字段处理 |
 | 2 | `paths` / `commands` | 同级字段，env未配置或采集失败时均会执行。`paths` 优先按容器内路径匹配任务Pod的挂载对，反查宿主机路径后复制（保留目录结构）；若任务Pod无匹配挂载对，则直接将配置的路径作为宿主机路径读取。`dl_log`、`host_log` 实体是特例，其 `paths` 始终作为宿主机路径直接读取，不经过任务Pod挂载对匹配。`commands` 在临时目录执行命令生成文件，并复制到采集目录；整个命令串必须精确匹配白名单，否则拒绝执行 |
-| 3 | `mount_keywords` | 关键词兜底。仅当未配置 `paths` 时执行；按关键词匹配任务Pod的全部挂载对（宿主机/容器路径含关键词即命中），无直接命中时扫描挂载宿主路径的子目录；仍未命中时，扫描静态挂载的共享盘（`/mnt/shared-storage`，协议不限：NFS/CephFS/云盘等，由部署方挂载），并用Pod IP与任务标识（`MINDX_TASK_ID`）过滤出属于该Pod的日志子目录 |
+| 3 | `mount_keywords` | 关键词兜底。仅当未配置 `paths` 时执行。**优先扫描静态挂载的共享盘**（`/mnt/shared-storage`，协议不限：NFS/CephFS/云盘等，由部署方挂载），并用Pod IP与任务标识（`MINDX_TASK_ID`）过滤出属于该Pod的日志子目录，首次命中即结束扫描；共享盘未命中时，按关键词匹配任务Pod的全部挂载对（宿主机/容器路径含关键词即命中），无直接命中时扫描挂载宿主路径的子目录 |
 
 > [!NOTE]
 >
 > - 采集字段的优先级为 `env` > `paths` = `commands` > `mount_keywords`。配置了高优先级字段且采集成功时，不再执行低优先级字段；`paths` 与 `commands` 同级，env未配置或采集失败时两者均会执行。
-> - `mount_keywords` 的共享盘扫描不依赖固定目录结构。目录名**只要包含任一关键词即可**（`mount_keywords` 为子串匹配，默认 `plog` 可命中 `plog`/`plogs`/`plog_xxx` 等），不限于示例中的 `plogs`；同时用任务标识与Pod IP两级动态段过滤（支持 `alllogs/<task_id>/plogs/<ip>` 与 `alllogs/<ip>/plogs/<task_id>` 两种布局，动态段顺序不固定），只采集属于该任务、该Pod的日志，不会采到同一共享盘下其他任务的日志。任务Pod删除（kubelet卷挂载点随之消失）后，共享盘挂载点仍挂在Node Collector上，仍可完成采集。
+> - `mount_keywords` 的共享盘扫描不依赖固定目录结构。目录名**只要包含任一关键词即可**（`mount_keywords` 为子串匹配，默认 `plog` 可命中 `plog`/`plogs`/`plog_xxx` 等），不限于示例中的 `plogs`；同时用任务标识与Pod IP两级动态段过滤（支持 `alllogs/<task_id>/plogs/<ip>` 与 `alllogs/<ip>/plogs/<task_id>` 两种布局，动态段顺序不固定），只采集属于该任务、该Pod的日志，不会采到同一共享盘下其他任务的日志。共享盘首次命中后即结束扫描，不再继续匹配宿主机挂载目录。任务Pod删除（kubelet卷挂载点随之消失）后，共享盘挂载点仍挂在Node Collector上，仍可完成采集。
 
 ## 各类日志实体配置<a name="sectionfaultdiagnosistentities"></a>
 
@@ -71,13 +71,13 @@ CANN plog是训练或推理进程的运行日志，包含昇腾算子、通信�
 entities:
   - name: process_log            # CANN plog, 容器挂载文件日志
     env: ASCEND_PROCESS_LOG_PATH  # pod spec 显式配置时 agent-core 记录并随采集指令下发; node-collector 读取反查宿主路径
-    mount_keywords: [plog]        # 兜底: 匹配挂载对/宿主子目录/共享盘静态挂载, 用 MINDX_TASK_ID+pod IP 过滤
+    mount_keywords: [plog]        # 兜底: 优先扫描共享盘静态挂载, 再匹配挂载对/宿主子目录, 用 MINDX_TASK_ID+pod IP 过滤
 ```
 
 plog实体配置了 `env` 和 `mount_keywords` 两个字段，采集时按以下逻辑找到plog日志：
 
 1. **env（首选）**：任务Pod在Pod spec中显式配置了 `ASCEND_PROCESS_LOG_PATH` 时使用。Agent Core将该Pod的字面env值和全部hostPath挂载对记录进中心挂载关系表（TTL内保留，Pod删除后仍可用），并在TriggerCollect采集指令中随Pod列表下发给对应节点的Node Collector。Node Collector读取该env值（容器内路径），经挂载对反查宿主机路径，再从宿主机读取plog日志。
-2. **mount_keywords（兜底）**：env未记录或反查失败（例如 `ASCEND_PROCESS_LOG_PATH` 由启动脚本export、不在Pod spec中）时，Node Collector按 `mount_keywords`（`plog`）依次匹配：任务Pod的挂载对、挂载宿主路径的子目录、以及静态挂载的共享盘（`/mnt/shared-storage`）。共享盘扫描用Pod IP与任务标识（`MINDX_TASK_ID`）过滤出属于该Pod的plog子目录。目录名只要包含关键词即可（子串匹配，`plog` 可命中 `plog`/`plogs`/`plog_xxx` 等），不依赖固定目录结构，兼容 `alllogs/<task_id>/plogs/<ip>` 与 `alllogs/<ip>/plogs/<task_id>` 两种布局（动态段顺序不固定），也不会采到同一共享盘下其他任务的日志。
+2. **mount_keywords（兜底）**：env未记录或反查失败（例如 `ASCEND_PROCESS_LOG_PATH` 由启动脚本export、不在Pod spec中）时，Node Collector按 `mount_keywords`（`plog`）依次匹配：**优先扫描静态挂载的共享盘**（`/mnt/shared-storage`，首次命中即结束扫描），未命中时再匹配任务Pod的挂载对、挂载宿主路径的子目录。共享盘扫描用Pod IP与任务标识（`MINDX_TASK_ID`）过滤出属于该Pod的plog子目录。目录名只要包含关键词即可（子串匹配，`plog` 可命中 `plog`/`plogs`/`plog_xxx` 等），不依赖固定目录结构，兼容 `alllogs/<task_id>/plogs/<ip>` 与 `alllogs/<ip>/plogs/<task_id>` 两种布局（动态段顺序不固定），也不会采到同一共享盘下其他任务的日志。该扫描顺序对全部实体一致（plog与非plog实体均共享盘优先）。
 
 #### 配置plog输出<a name="sectionfaultdiagnosisplogtask"></a>
 
