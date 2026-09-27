@@ -25,6 +25,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/devmanager/common"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 )
 
@@ -34,7 +35,7 @@ func buildLegacyDescMap(baseName string, help string) map[string]*prometheus.Des
 	descs := make(map[string]*prometheus.Desc)
 	dieIDs := []int{0, 1}
 	for _, dieID := range dieIDs {
-		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
+		portIDs, ok := colcommon.NpuDevPortInfos.GetMergedPortMap()[dieID]
 		if !ok || len(portIDs) == 0 {
 			continue
 		}
@@ -51,7 +52,7 @@ func buildLegacyDescSlice(baseName string, help string) []*prometheus.Desc {
 	var descs []*prometheus.Desc
 	dieIDs := []int{0, 1}
 	for _, dieID := range dieIDs {
-		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
+		portIDs, ok := colcommon.NpuDevPortInfos.GetMergedPortMap()[dieID]
 		if !ok || len(portIDs) == 0 {
 			continue
 		}
