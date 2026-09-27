@@ -16,7 +16,6 @@
 package metrics
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"testing"
@@ -30,16 +29,18 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
+	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 func init() {
-	hwLogConfig := hwlog.LogConfig{
+	logger.HwLogConfig = &hwlog.LogConfig{
 		OnlyToStdout: true,
 	}
-	hwlog.InitRunLogger(&hwLogConfig, context.Background())
+	logger.InitLogger("Prometheus")
 
-	colcommon.NpuDevPortInfos.SetPortMap(mockPorts)
+	colcommon.NpuDevPortInfos.SetPortMap(0, mockPorts)
 	colcommon.NpuDevPortInfos.Init()
 }
 

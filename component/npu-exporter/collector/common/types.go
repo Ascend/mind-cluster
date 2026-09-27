@@ -97,6 +97,6 @@ func NewGeneralMetric() TelegrafMetric {
 
 // NpuDevPortsInfo npu ports info data structure
 type NpuDevPortsInfo struct {
-	devPortMap map[int][]common.NpuDevPortInfo
+	devPortMap map[int32]map[int][]common.NpuDevPortInfo // logicID -> dieID -> ports
 	totalPort  int
 }

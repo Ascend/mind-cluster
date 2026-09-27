@@ -29,7 +29,9 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
+	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 const (
@@ -48,7 +50,12 @@ func newOpticalTestCase(name string, devType string, mainBoardId uint32, expecte
 }
 
 func init() {
-	colcommon.NpuDevPortInfos.SetPortMap(mockPorts)
+	logger.HwLogConfig = &hwlog.LogConfig{
+		OnlyToStdout: true,
+	}
+	logger.InitLogger("Prometheus")
+
+	colcommon.NpuDevPortInfos.SetPortMap(0, mockPorts)
 	colcommon.NpuDevPortInfos.Init()
 }
 
