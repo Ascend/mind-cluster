@@ -5,6 +5,7 @@ package switchinfo
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -92,6 +93,13 @@ func TestGetReportSwitchInfo(t *testing.T) {
 			FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{"code1": {}}}}}
 		map3 := getReportSwitchInfo(map2)
 		convey.So(util.ObjToString(map3) == util.ObjToString(map1), convey.ShouldBeTrue)
+		convey.Convey("nil FaultTimeAndLevelMap replaced by empty map", func() {
+			input := map[string]*constant.SwitchInfo{"job2": {SwitchFaultInfo: constant.SwitchFaultInfo{}}}
+			output := getReportSwitchInfo(input)
+			convey.So(output["job2"].FaultTimeAndLevelMap, convey.ShouldNotBeNil)
+			convey.So(len(output["job2"].FaultTimeAndLevelMap), convey.ShouldEqual, 0)
+			convey.So(strings.Contains(util.ObjToString(output), "null"), convey.ShouldBeFalse)
+		})
 	})
 
 }

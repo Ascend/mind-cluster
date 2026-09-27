@@ -7,6 +7,7 @@ ClusterD启动后，会创建如下ConfigMap：
 - cluster-info-node-cm，详细说明请参见[表1](#table25031946405)。
 - cluster-info-device-$\{m\}，详细说明请参见[表2](#table915714719368)。m为从0开始递增的整数。随着集群规模增加，cluster-info-device会按照不超过800KB大小划分成多个configmap。
 - cluster-info-switch-$\{x\}，详细说明请参见[表3](#table9246232250)。x为从0开始递增的整数。随着集群规模增加，cluster-info-switch会按照不超过800KB大小划分成多个configmap。
+- cluster-info-dpu-$\{n\}，详细说明请参见[表4](#table2511346791)。n为从0开始递增的整数。随着集群规模增加，cluster-info-dpu会按照不超过800KB大小划分成多个configmap。
 
 **表 1**  cluster-info-node-cm
 
@@ -68,11 +69,57 @@ ClusterD启动后，会创建如下ConfigMap：
 |-fault_time|故障发生时间。|
 |-fault_level|故障处理等级。|
 
+**表 4**  cluster-info-dpu-$\{n\}
+
+<a name="table2511346791"></a>
+
+|参数|说明|
+|--|--|
+|dpuinfo-*\<kwok-node-0\>*|前缀为固定的dpuinfo，kwok-node-0是节点名称，用于定位DPU信息所属的具体节点。|
+|DPUInfo|DPU设备信息。|
+|- DPUList|DPU设备列表。数组中的每个元素描述一个DPU设备的信息，详细说明请参见[表5](#table2511346792)。|
+|- NodeEvent|节点级故障事件，例如DPU卡脱落等。详细说明请参见[表6](#table2511346793)。|
+|UpdateTime|当前DPU信息的更新时间，格式为Unix毫秒时间戳，用于标识故障信息的最新上报时间。|
+
+**表 5**  DPUList元素字段说明
+
+<a name="table2511346792"></a>
+
+|参数|说明|
+|--|--|
+|HcaName|HCA设备名称，例如`hrn5_0`。|
+|EthName|关联的以太网接口名称。|
+|IpAddr|DPU设备的IP地址。|
+|DeviceID|设备ID，十六进制格式。|
+|VendorID|厂商ID，十六进制格式。|
+|FaultList|该DPU设备上的故障明细列表。数组中的每个元素描述一条故障信息，详细说明请参见[表7](#table2511346794)。|
+|AffectedNPU|受该设备故障影响的NPU设备ID列表，仅包含以当前UB网卡作为主网卡的NPU设备ID。|
+
+**表 6**  NodeEvent字段说明
+
+<a name="table2511346793"></a>
+
+|参数|说明|
+|--|--|
+|NodeName|节点名称。|
+|FaultList|节点级故障明细列表，详细说明请参见[表7](#table2511346794)。|
+
+**表 7**  FaultList字段说明
+
+<a name="table2511346794"></a>
+
+|参数|说明|
+|--|--|
+|FaultCode|故障码，用于标识故障类型。|
+|Time|故障首次检测时间，格式为Unix毫秒时间戳。|
+|Description|故障描述信息。|
+|FaultLevel|故障等级。|
+
 ## statistic-fault-info<a name="section1153232554520"></a>
 
 该ConfigMap位于用户创建的cluster-system命名空间下，Label为mc-statistic-fault=true。用于展示集群中的故障信息（当前仅展示公共故障信息）。
 
-**表 4**  Data数据信息说明
+**表 8**  Data数据信息说明
 
 |参数|说明|
 |--|--|
@@ -96,7 +143,7 @@ ClusterD启动后，会创建如下ConfigMap：
 
 该ConfigMap位于用户创建的cluster-system命名空间下，Label为app=pingmesh。
 
-**表 5**  super-pod-<super-pod-id\>
+**表 9**  super-pod-<super-pod-id\>
 
 |参数|说明|
 |--|--|
@@ -111,7 +158,7 @@ ClusterD启动后，会创建如下ConfigMap：
 
 该ConfigMap位于用户创建的cluster-system命名空间下。用于展示集群中需要强制释放通信资源的故障任务信息。仅在Atlas 900 A3 SuperPoD 超节点进行进程级别重调度时生效。
 
-**表 6**  fault-job-info
+**表 10**  fault-job-info
 
 |参数|说明|取值|
 |--|--|--|
@@ -141,7 +188,7 @@ localhost.localdomain:
 Events:  <none>
 ```
 
-**表 7**  clusterd-manual-info-cm
+**表 11**  clusterd-manual-info-cm
 
 |参数|说明|
 |--|--|
