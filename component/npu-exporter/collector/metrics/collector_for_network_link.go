@@ -193,7 +193,7 @@ func collectNetworkNpuStatusInfo(logicID int32) []*common.NpuNetStatusInfo {
 	// udie only has 0 and 1
 	dieIDs := []int{0, 1}
 	for _, dieID := range dieIDs {
-		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
+		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap(logicID)[dieID]
 		if !ok || len(portIDs) == 0 {
 			continue
 		}

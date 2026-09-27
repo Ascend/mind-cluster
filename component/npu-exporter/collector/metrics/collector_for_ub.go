@@ -27,6 +27,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 	"huawei.com/npu-exporter/v6/utils/logger"
@@ -229,7 +230,7 @@ func probeUbDcmi(n *colcommon.NpuCollector) (bool, time.Duration) {
 		}
 		return false, 0
 	}
-	portMap := colcommon.NpuDevPortInfos.GetPortMap()
+	portMap := colcommon.NpuDevPortInfos.GetPortMap(logicIDs[0])
 	for udie, ports := range portMap {
 		if len(ports) == 0 {
 			continue
@@ -582,7 +583,7 @@ func collectUbInfo(logicID int32, n *colcommon.NpuCollector, useDcmi bool) []*co
 	// udie only has 0 and 1, fixed order
 	dieIDs := []int{0, 1}
 	for _, dieID := range dieIDs {
-		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
+		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap(logicID)[dieID]
 		if !ok || len(portIDs) == 0 {
 			continue
 		}

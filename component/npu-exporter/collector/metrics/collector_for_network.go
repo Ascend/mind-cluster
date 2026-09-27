@@ -27,6 +27,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 	"huawei.com/npu-exporter/v6/utils/logger"
@@ -276,7 +277,7 @@ func collectNetworkNpuInfo(logicID int32) []*common.NpuNetInfo {
 	// udie only has 0 and 1
 	dieIDs := []int{0, 1}
 	for _, dieID := range dieIDs {
-		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
+		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap(logicID)[dieID]
 		if !ok || len(portIDs) == 0 {
 			continue
 		}

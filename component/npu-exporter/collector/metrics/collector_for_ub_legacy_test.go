@@ -42,7 +42,7 @@ func TestBuildLegacyDescMap(t *testing.T) {
 			0: {{PortID: 0}, {PortID: 1}},
 			1: {{PortID: 0}},
 		}
-		patches := gomonkey.ApplyFunc(colcommon.NpuDevPortInfos.GetPortMap, func() map[int][]common.NpuDevPortInfo {
+		patches := gomonkey.ApplyFunc(colcommon.NpuDevPortInfos.GetMergedPortMap, func() map[int][]common.NpuDevPortInfo {
 			return portMap
 		})
 		defer patches.Reset()
@@ -59,7 +59,7 @@ func TestBuildLegacyDescSlice(t *testing.T) {
 			0: {{PortID: 0}, {PortID: 1}},
 			1: {{PortID: 0}},
 		}
-		patches := gomonkey.ApplyFunc(colcommon.NpuDevPortInfos.GetPortMap, func() map[int][]common.NpuDevPortInfo {
+		patches := gomonkey.ApplyFunc(colcommon.NpuDevPortInfos.GetMergedPortMap, func() map[int][]common.NpuDevPortInfo {
 			return portMap
 		})
 		defer patches.Reset()
@@ -261,7 +261,7 @@ func TestAddUbLegacyMetricsDesc(t *testing.T) {
 			0: {{PortID: 0}, {PortID: 1}},
 			1: {{PortID: 0}},
 		}
-		patches := gomonkey.ApplyFunc(colcommon.NpuDevPortInfos.GetPortMap, func() map[int][]common.NpuDevPortInfo {
+		patches := gomonkey.ApplyFunc(colcommon.NpuDevPortInfos.GetMergedPortMap, func() map[int][]common.NpuDevPortInfo {
 			return portMap
 		})
 		defer patches.Reset()
