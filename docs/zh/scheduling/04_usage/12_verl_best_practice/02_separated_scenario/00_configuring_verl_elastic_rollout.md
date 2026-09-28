@@ -27,7 +27,7 @@
 
 弹性推理容错特性将RL任务拆分为训练层和弹性推理层，两层之间通过权重同步链路和采样请求链路交互。架构如下所示：
 
-![verl弹性推理容错架构](../../../figures/scheduling/verl弹性容错组件图.png "verl弹性容错组件图")
+![verl弹性推理容错架构](../../../../figures/scheduling/verl弹性容错组件图.png "verl弹性容错组件图")
 
 其中各个部分的能力如下：
 
@@ -72,7 +72,7 @@
 |生成中断|推理过程中副本故障导致生成中断|请求失败或副本判死|基于持久化进度续推缺失尾部token（token续推）|否|
 
 >[!NOTE]
->本特性仅覆盖推理实例故障。训练侧Pod、节点/芯片级故障不属于本特性处理范围，由MindCluster断点续训与重调度体系处理，详细说明请参见[故障处理](../05_fault_recovery/01_resumable_training/01_solutions_principles/01_fault_handling.md)。
+>本特性仅覆盖推理实例故障。训练侧Pod、节点/芯片级故障不属于本特性处理范围，由MindCluster断点续训与重调度体系处理，详细说明请参见[故障处理](../../05_fault_recovery/01_resumable_training/01_solutions_principles/01_fault_handling.md)。
 
 **降级与边界说明**
 
@@ -105,8 +105,8 @@
 
 ### 步骤1：准备环境
 
-1. 安装MindCluster集群调度组件（Volcano、Ascend Device Plugin、Ascend Docker Runtime、Ascend Operator、ClusterD），安装部署请参见[安装部署](../../05_developer_guide/00_installation_deployment/menu_installation_deployment.md)。
-2. 参照[部署verl强化学习任务](./01_deploying_verl_reinforcement_learning_job.md)操作步骤1~3准备镜像、模型和数据集，并额外创建共享存储目录（如`/home/rollout_progress`），用于token续推进度持久化。
+1. 安装MindCluster集群调度组件（Volcano、Ascend Device Plugin、Ascend Docker Runtime、Ascend Operator、ClusterD），安装部署请参见[安装部署](../../../05_developer_guide/00_installation_deployment/menu_installation_deployment.md)。
+2. 参照[部署verl强化学习任务](../01_colocated_scenario/01_deploying_verl_reinforcement_learning_job.md)操作步骤1~3准备镜像、模型和数据集，并额外创建共享存储目录（如`/home/rollout_progress`），用于token续推进度持久化。
 3. 安装指定版本verl（commit id为`dfc01f85`），支持以下两种方式：
 
     - 方式一：pip安装（推荐）
@@ -147,7 +147,7 @@
 ### 步骤2：执行任务YAML脚本
 
 1. 获取verl弹性推理容错示例（任务YAML、容器启动脚本、训练脚本），根据实际场景修改镜像、模型路径、数据路径和挂载目录。相关样例可参考[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/reinforcement-learning/verl/elastic-rollout)仓库的“samples/reinforcement-learning/verl/elastic-rollout”目录。
-2. 确认任务YAML包含以下标注，用于开启故障检测与Pod重调度：NPU卡故障、推理Pod级故障时由重调度重建推理实例（不涉及Job级重调度），详细配置请参见[配置强化学习任务Pod重调度](./02_configuring_rescheduling_reinforcement_learning_job.md)。
+2. 确认任务YAML包含以下标注，用于开启故障检测与Pod重调度：NPU卡故障、推理Pod级故障时由重调度重建推理实例（不涉及Job级重调度），详细配置请参见[配置强化学习任务Pod重调度](../01_colocated_scenario/02_configuring_rescheduling_reinforcement_learning_job.md)。
 
     ```yaml
     metadata:

@@ -122,7 +122,7 @@ Container Manager从驱动获取到芯片故障码后，根据故障码对设备
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="44.73%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p05771854113911"><a name="zh-cn_topic_0000002171521445_p05771854113911"></a><a name="zh-cn_topic_0000002171521445_p05771854113911"></a><span id="ph6926121810160"><a name="ph6926121810160"></a><a name="ph6926121810160"></a>Container Manager</span>在故障持续60秒后，将故障芯片和关联芯片加入到待复位芯片缓存中。芯片复位逻辑详细请参见<a href="#故障处理">故障处理</a>。</p>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="31.44%" headers="mcps1.2.4.1.3 "><p id="p11041540152412"><a name="p11041540152412"></a><a name="p11041540152412"></a>当命令run的启动参数<span class="parmname" id="parmname127339182715"><a name="parmname127339182715"></a><a name="parmname127339182715"></a>“-ctrStrategy”</span>配置为<span class="parmvalue" id="parmvalue058714462711"><a name="parmvalue058714462711"></a><a name="parmvalue058714462711"></a>“singleRecover”</span>或者<span class="parmvalue" id="parmvalue1923725032719"><a name="parmvalue1923725032719"></a><a name="parmvalue1923725032719"></a>“ringRecover”</span>时，开启容器启停功能。两个配置参数的差异请参见<a href="../../05_developer_guide/00_installation_deployment/00_manual_installation/11_container-manager.md#参数说明">表2 Container Manager启动参数</a>。</p>
+<td class="cellrowborder" rowspan="4" valign="top" width="31.44%" headers="mcps1.2.4.1.3 "><p id="p11041540152412"><a name="p11041540152412"></a><a name="p11041540152412"></a>当命令run的启动参数<span class="parmname" id="parmname127339182715"><a name="parmname127339182715"></a><a name="parmname127339182715"></a>“-ctrStrategy”</span>配置为<span class="parmvalue" id="parmvalue058714462711"><a name="parmvalue058714462711"></a><a name="parmvalue058714462711"></a>“singleRecover”</span>或者<span class="parmvalue" id="parmvalue1923725032719"><a name="parmvalue1923725032719"></a><a name="parmvalue1923725032719"></a>“ringRecover”</span>时，开启容器启停功能。两个配置参数的差异请参见<a href="../../05_developer_guide/00_installation_deployment/00_manual_installation/10_container-manager.md#参数说明">表2 Container Manager启动参数</a>。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002171521445_row14618105116225"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p15618851132212"><a name="zh-cn_topic_0000002171521445_p15618851132212"></a><a name="zh-cn_topic_0000002171521445_p15618851132212"></a>RestartBusiness</p>
@@ -213,7 +213,7 @@ Container Manager在RestartRequest和RestartBusiness故障持续60秒，或者�
 
 ## 容器恢复<a name="ZH-CN_TOPIC_0000002486578214"></a>
 
-Container Manager在感知到芯片处于RestartRequest、RestartBusiness、FreeRestartNPU和RestartNPU类型故障时，会按照命令run的启动参数“-ctrStrategy”配置的重启策略，进行容器停止与恢复。具体的容器停止与恢复的范围请参见[表2 Container Manager启动参数](../../05_developer_guide/00_installation_deployment/00_manual_installation/11_container-manager.md#参数说明)。
+Container Manager在感知到芯片处于RestartRequest、RestartBusiness、FreeRestartNPU和RestartNPU类型故障时，会按照命令run的启动参数“-ctrStrategy”配置的重启策略，进行容器停止与恢复。具体的容器停止与恢复的范围请参见[表2 Container Manager启动参数](../../05_developer_guide/00_installation_deployment/00_manual_installation/10_container-manager.md#参数说明)。
 
 按容器是否属于分布式任务，容器恢复分为普通容器恢复和分布式任务容器恢复：
 
@@ -245,7 +245,7 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
 **协调机制**
 
 - 集群中部署了Container Manager组件的节点被分为Leader节点和普通节点。Leader节点维护集群内所有节点的分布式任务容器信息，普通节点定期向Leader节点上报本节点的分布式任务容器信息（数据同步）。
-- 启用分布式协调需配置启动参数`-leaderAddrs`。Leader节点通过启动参数`-leaderIp`、`-leaderPort`启动gRPC服务。相关启动参数说明请参见[Container Manager启动参数](../../05_developer_guide/00_installation_deployment/00_manual_installation/11_container-manager.md#参数说明)。
+- 启用分布式协调需配置启动参数`-leaderAddrs`。Leader节点通过启动参数`-leaderIp`、`-leaderPort`启动gRPC服务。相关启动参数说明请参见[Container Manager启动参数](../../05_developer_guide/00_installation_deployment/00_manual_installation/10_container-manager.md#参数说明)。
 - 普通节点与每个非本机Leader节点之间维护常驻的gRPC广播流，连接断开后自动重连。集群最多可配置2个Leader节点，任一Leader节点故障后，普通节点可自动切换到其他Leader节点继续协调。
 - 容器可通过容器label标识其所属的分布式任务：`huawei.com/job.id`（任务标识）、`huawei.com/job.replica`（任务副本数）、`huawei.com/job.enableRecover`（是否参与恢复），各label的详细说明请参见[Container Manager任务信息](../../06_api/18_container-manager.md#section_cm_task_info)。
 

@@ -976,7 +976,7 @@ Events:  <none>
 
 **测试准备**
 
-在基础调度的任务YAML中，添加Job级别重调度的配置，配置说明可参考[配置Job级别重调度](../03_configuration/01_configuring_fault_handling_policies.md#配置job级别重调度)，原理可参考[Job级别重调度](../01_solutions_principles/01_fault_handling.md#job级别重调度)。
+在基础调度的任务YAML中，添加Job级别重调度的配置，配置说明可参考[配置Job级别重调度](../02_configuration/01_configuring_fault_handling_policies.md#配置job级别重调度)，原理可参考[Job级别重调度](../01_solutions_principles/01_fault_handling.md#job级别重调度)。
 
 **测试操作**
 
@@ -1115,7 +1115,7 @@ Events:  <none>
 
 **测试准备**
 
-在基础调度的任务YAML中，添加Pod级别重调度的配置，配置说明可参考[配置Pod级别重调度](../03_configuration/01_configuring_fault_handling_policies.md#配置pod级别重调度)，原理可参考[Pod级别重调度](../01_solutions_principles/01_fault_handling.md#pod级别重调度)。
+在基础调度的任务YAML中，添加Pod级别重调度的配置，配置说明可参考[配置Pod级别重调度](../02_configuration/01_configuring_fault_handling_policies.md#配置pod级别重调度)，原理可参考[Pod级别重调度](../01_solutions_principles/01_fault_handling.md#pod级别重调度)。
 
 **测试操作**
 
@@ -1240,7 +1240,7 @@ Events:  <none>
 
 **测试准备**
 
-在基础调度的任务YAML中，添加进程级别重调度的配置，配置说明可参考[配置进程级别重调度](../03_configuration/01_configuring_fault_handling_policies.md#配置进程级别重调度)，原理可参考[进程级别重调度](../01_solutions_principles/01_fault_handling.md#进程级别重调度)。
+在基础调度的任务YAML中，添加进程级别重调度的配置，配置说明可参考[配置进程级别重调度](../02_configuration/01_configuring_fault_handling_policies.md#配置进程级别重调度)，原理可参考[进程级别重调度](../01_solutions_principles/01_fault_handling.md#进程级别重调度)。
 
 **测试操作**
 
@@ -1446,7 +1446,7 @@ Events:  <none>
 ##### MindSpore场景适配示例（基于MindFormers）<a name="ZH-CN_TOPIC_0000002511346369"></a>
 
 1. 搭建训练环境，拉起训练，详细请参见[MindSpore场景适配示例（基于MindFormers）](#ZH-CN_TOPIC_0000002511346445-mindspore)。
-2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](../03_configuration/01_configuring_fault_handling_policies.md#配置进程级在线恢复)。
+2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](../02_configuration/01_configuring_fault_handling_policies.md#配置进程级在线恢复)。
 3. 在“QWEN3\_for\_MS\_code/mindformers/core/callback/callback.py”代码中增加如下加粗内容，打桩注入故障。
 
    <pre codetype="Python">
@@ -1494,7 +1494,7 @@ Events:  <none>
 
 **测试准备**
 
-- 在基础调度的任务 YAML 中，添加进程级在线恢复的配置，配置说明可参考[配置进程级在线恢复](../03_configuration/01_configuring_fault_handling_policies.md#配置进程级在线恢复)，原理可参考[进程级在线恢复](../01_solutions_principles/01_fault_handling.md#进程级在线恢复)。
+- 在基础调度的任务 YAML 中，添加进程级在线恢复的配置，配置说明可参考[配置进程级在线恢复](../02_configuration/01_configuring_fault_handling_policies.md#配置进程级在线恢复)，原理可参考[进程级在线恢复](../01_solutions_principles/01_fault_handling.md#进程级在线恢复)。
 - 已完成 MindCluster 适配和脚本适配；启动脚本中的 `RAISE_UCE_ERROR_STEP_AND_RANK` 与下文验证命令中的 rank、迭代步保持一致。
 
 **测试操作**

@@ -13,4 +13,4 @@
 - [整卡调度](./03_full_npu_scheduling.md)
 - [多级调度](./04_multi_level_scheduling.md)
 - [重调度](./05_rescheduling.md)
-- [代际升级适配指导](./07_Intergenerational_upgrade.md)
+- [代际升级适配指导](./06_Intergenerational_upgrade.md)

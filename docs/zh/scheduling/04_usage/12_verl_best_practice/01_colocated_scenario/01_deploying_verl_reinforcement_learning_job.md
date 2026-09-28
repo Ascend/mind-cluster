@@ -27,7 +27,7 @@
 
 通过命令行使用MindCluster集群调度组件部署verl强化学习任务时，使用流程如下所示：
 
-![verl使用流程](../../../figures/scheduling/verl使用流程.png)
+![verl使用流程](../../../../figures/scheduling/verl使用流程.png)
 
 ### 操作步骤
 

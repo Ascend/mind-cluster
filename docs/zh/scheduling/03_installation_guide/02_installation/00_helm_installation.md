@@ -18,7 +18,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     - [Infer Operator](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426821)
     - [K8s RDMA Shared Dev Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312660)
     - [Ascend Dynamic Resource Allocation](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312670)
-- 安装[Container Manager](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312655)组件请参考[手动安装 Container Manager](../../05_developer_guide/00_installation_deployment/00_manual_installation/11_container-manager.md#ZH-CN_TOPIC_0000002524428759) 章节。
+- 安装[Container Manager](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312655)组件请参考[手动安装 Container Manager](../../05_developer_guide/00_installation_deployment/00_manual_installation/10_container-manager.md#ZH-CN_TOPIC_0000002524428759) 章节。
 - [TaskD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386914)和[MindIO](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226942) 安装在业务容器中，不在本章节涉及的组件范围内。
 - [Ascend Dynamic Resource Allocation](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312670)组件与[Ascend Device Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226928)组件功能等价，均提供昇腾NPU设备的发现上报、分配与挂载能力，区别在于前者基于K8s动态资源分配机制，后者基于K8s设备插件机制，部署其中一种即可。默认安装Ascend Device Plugin组件，不安装Ascend Dynamic Resource Allocation组件；使用Ascend Dynamic Resource Allocation组件时，建议关闭Ascend Device Plugin组件。
 
