@@ -90,7 +90,7 @@ spec:
             add: [ "SYS_PTRACE" ]
         image: ascend-dra:v6.0.0
         imagePullPolicy: IfNotPresent
-        command: ["/bin/bash", "-c", "exec ascend-dra -logLevel=0 --enable-healthz --healthz-address=11251"]
+        command: ["/bin/bash", "-c", "exec ascend-dra -logLevel=0 --enable-healthz --healthz-address=11258"]
         resources:
           requests:
             memory: 500Mi
@@ -101,7 +101,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /
-            port: 11251
+            port: 11258
           initialDelaySeconds: 30
           failureThreshold: 3
           periodSeconds: 10

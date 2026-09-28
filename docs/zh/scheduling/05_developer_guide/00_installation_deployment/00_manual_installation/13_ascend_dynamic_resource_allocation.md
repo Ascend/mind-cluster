@@ -43,7 +43,7 @@
 </tr>
 <tr id="row0414dra240023"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240023"><a name="p0414dra240023"></a><a name="p0414dra240023"></a>健康检查端口</p>
 </td>
-<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240024"><a name="p0414dra240024"></a><a name="p0414dra240024"></a>组件默认启用健康检查服务并占用11251端口，请确保计算节点上该端口未被占用。若端口冲突，可修改YAML文件中“--healthz-address”参数以及livenessProbe中的端口号。</p>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240024"><a name="p0414dra240024"></a><a name="p0414dra240024"></a>组件默认启用健康检查服务并占用11258端口，请确保计算节点上该端口未被占用。若端口冲突，可修改YAML文件中“--healthz-address”参数以及livenessProbe中的端口号。</p>
 </td>
 </tr>
 </tbody>
@@ -77,7 +77,7 @@
             securityContext:
               privileged: true
             image: ascend-dra:v26.2.0
-            command: ["/bin/bash", "-c", "exec ascend-dra --enable-healthz --healthz-address=11251"]
+            command: ["/bin/bash", "-c", "exec ascend-dra --enable-healthz --healthz-address=11258"]
     ...
     ```
 
@@ -264,7 +264,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.2.5.1.2 "><p id="p0414dra240088"><a name="p0414dra240088"></a><a name="p0414dra240088"></a>string</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p0414dra240089"><a name="p0414dra240089"></a><a name="p0414dra240089"></a>11251</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p0414dra240089"><a name="p0414dra240089"></a><a name="p0414dra240089"></a>11258</p>
 </td>
 <td class="cellrowborder" valign="top" width="35%" headers="mcps1.2.5.1.4 "><p id="p0414dra240090"><a name="p0414dra240090"></a><a name="p0414dra240090"></a>健康检查服务的监听端口。修改该参数时，需同步修改YAML文件中livenessProbe配置的端口号。</p>
 </td>

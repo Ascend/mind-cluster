@@ -14,7 +14,7 @@ Ascend DRA启动内置的HTTP健康探针服务，用于K8s livenessProbe机制�
 |------|------|
 | 路径 | `/` |
 | 方法 | GET |
-| 默认端口 | 11251 |
+| 默认端口 | 11258 |
 | 协议 | HTTP（正确配置--tls-cert-file和--tls-private-key-file参数时为HTTPS） |
 | 请求限流 | 1 QPS，突发上限5；超限返回429 |
 
@@ -39,12 +39,12 @@ Ascend DRA内置一个健康检查回调`draHealthChecker`，只要插件进程�
 | 参数 | 含义 | 默认值 |
 |------|------|--------|
 | --enable-healthz | 是否启用健康检查服务 | false |
-| --healthz-address | 健康检查服务监听端口，取值范围[1025, 65535] | 11251 |
+| --healthz-address | 健康检查服务监听端口，取值范围[1025, 65535] | 11258 |
 | --tls-cert-file | HTTPS证书文件路径，需与--tls-private-key-file同时配置或同时留空 | 空 |
 | --tls-private-key-file | HTTPS私钥文件路径，需与--tls-cert-file同时配置或同时留空 | 空 |
 
 > [!NOTE]
-> --enable-healthz默认为false，镜像启动命令需显式开启。推荐配置为 `--enable-healthz --healthz-address=11251`。
+> --enable-healthz默认为false，镜像启动命令需显式开启。推荐配置为 `--enable-healthz --healthz-address=11258`。
 
 **K8s livenessProbe配置示例：**
 
@@ -52,7 +52,7 @@ Ascend DRA内置一个健康检查回调`draHealthChecker`，只要插件进程�
 livenessProbe:
   httpGet:
     path: /
-    port: 11251
+    port: 11258
     scheme: HTTP
   failureThreshold: 3
   periodSeconds: 10
