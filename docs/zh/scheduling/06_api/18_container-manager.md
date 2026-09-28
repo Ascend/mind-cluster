@@ -23,7 +23,7 @@ Container Manager启动时解析容器label，根据label信息将容器划分�
 
 ## 协调服务gRPC接口<a name="section_cm_grpc_desc"></a>
 
-启用分布式协调时，普通节点与Leader节点之间通过gRPC接口通信。Leader节点gRPC服务默认监听端口为8890，可通过启动参数`-leaderPort`修改，详细请参见[Container Manager启动参数](../05_developer_guide/00_installation_deployment/00_manual_installation/11_container-manager.md#参数说明)。gRPC服务接口说明请参见[表2](#zh-cn_topic_0000002525600001_table2)。
+启用分布式协调时，普通节点与Leader节点之间通过gRPC接口通信。Leader节点gRPC服务默认监听端口为8890，可通过启动参数`-leaderPort`修改，详细请参见[Container Manager启动参数](../05_developer_guide/00_installation_deployment/00_manual_installation/10_container-manager.md#参数说明)。gRPC服务接口说明请参见[表2](#zh-cn_topic_0000002525600001_table2)。
 
 **表 2**  gRPC服务接口
 

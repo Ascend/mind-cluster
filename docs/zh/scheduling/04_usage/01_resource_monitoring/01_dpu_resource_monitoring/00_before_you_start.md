@@ -11,14 +11,14 @@ DPU资源监测特性是一个基础特性，不区分训练或者推理场景�
 
 ## 前提条件<a name="section1672062465010"></a>
 
-- 在使用DPU资源监测特性前，需要确保DPU Exporter组件已经安装，若没有安装，可以参考[安装部署](../../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作；若以二进制方式部署，可以参考[DPU Exporter安装部署](../../../05_developer_guide/00_installation_deployment/00_manual_installation/13_dpu_exporter.md)章节进行操作。
+- 在使用DPU资源监测特性前，需要确保DPU Exporter组件已经安装，若没有安装，可以参考[安装部署](../../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作；若以二进制方式部署，可以参考[DPU Exporter安装部署](../../../05_developer_guide/00_installation_deployment/00_manual_installation/12_dpu_exporter.md)章节进行操作。
 - DPU Exporter启动前，请确保DPU卡在位。
 - 宿主机上已安装DPU驱动与网卡管理工具hinicadm5，且hinicadm5位于"/usr/sbin/"目录下。
 
 ## 使用说明<a name="section45381612353"></a>
 
 - DPU资源监测可以和训练场景下的所有特性一起使用，也可以和推理场景的所有特性一起使用。
-- DPU Exporter组件周期性调用hinicadm5工具并读取sysfs文件接口获取指标，用户可以根据自身关注的指标，通过配置文件中的metricWhiteList指标白名单控制采集范围，参考[DPU Exporter安装部署](../../../05_developer_guide/00_installation_deployment/00_manual_installation/13_dpu_exporter.md)章节。
+- DPU Exporter组件周期性调用hinicadm5工具并读取sysfs文件接口获取指标，用户可以根据自身关注的指标，通过配置文件中的metricWhiteList指标白名单控制采集范围，参考[DPU Exporter安装部署](../../../05_developer_guide/00_installation_deployment/00_manual_installation/12_dpu_exporter.md)章节。
 - 监测指标数据格式的相关说明，请参见[Prometheus Metrics接口](../../../06_api/16_dpu_exporter.md)章节。
 
 ## 支持的产品形态<a name="section170961844182917"></a>

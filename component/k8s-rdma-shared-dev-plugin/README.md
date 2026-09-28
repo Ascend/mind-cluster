@@ -142,11 +142,11 @@ flowchart TD
 组件以 DaemonSet 方式部署在集群的每个计算节点上
 
 1. Helm安装，请参考[MindCluster 安装部署 - 使用Helm安装](../../docs/zh/scheduling/03_installation_guide/02_installation/00_helm_installation.md)
-2. 手动安装与部署（包含安装前置检查、镜像准备、yaml 部署及安装验证等），请参见[MindCluster 集群调度组件开发指南 - 手动安装](../../docs/zh/scheduling/05_developer_guide/00_installation_deployment/00_manual_installation/12_k8s_rdma_shared_dev_plugin.md)
+2. 手动安装与部署（包含安装前置检查、镜像准备、yaml 部署及安装验证等），请参见[MindCluster 集群调度组件开发指南 - 手动安装](../../docs/zh/scheduling/05_developer_guide/00_installation_deployment/00_manual_installation/11_k8s_rdma_shared_dev_plugin.md)
 
 ## 使用指南
 
-组件的具体使用配置请参见[K8s RDMA Shared Dev Plugin 安装指导](../../docs/zh/scheduling/05_developer_guide/00_installation_deployment/00_manual_installation/12_k8s_rdma_shared_dev_plugin.md)。
+组件的具体使用配置请参见[K8s RDMA Shared Dev Plugin 安装指导](../../docs/zh/scheduling/05_developer_guide/00_installation_deployment/00_manual_installation/11_k8s_rdma_shared_dev_plugin.md)。
 
 ## 说明
 
