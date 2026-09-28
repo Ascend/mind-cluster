@@ -873,7 +873,7 @@
     [INFO]     2026/08/30 10:20:15.135008 1       device/generation_910.go:69    Ascend910 enumerated 8 devices
     [INFO]     2026/08/30 10:20:15.140021 1       driver/driver.go:105    publishing ResourceSlice
     [INFO]     2026/08/30 10:20:15.141112 1       plugin/plugin.go:80    kubelet plugin registered, node=node1, driver=npu.huawei.com
-    [INFO]     2026/08/30 10:20:15.142530 1       plugin/health.go:53    healthz server started, addr=11251
+    [INFO]     2026/08/30 10:20:15.142530 1       plugin/health.go:53    healthz server started, addr=11258
     [INFO]     2026/08/30 10:20:15.143008 1       main.go:71    ascend dra manager started successfully.
     ...
     ```
