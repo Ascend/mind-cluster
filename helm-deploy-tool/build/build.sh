@@ -65,11 +65,11 @@ function helm_package() {
   local semver_ver
   semver_ver=$(to_semver "${ver}")
 
-  sed -i -E "s/^([[:space:]]*version:[[:space:]]*)26\.1\.0/\1${semver_ver}/" "${TOP_DIR}"/app*/charts/*/Chart.yaml
-  sed -i -E "s/^([[:space:]]*version:[[:space:]]*)26\.1\.0/\1${semver_ver}/" "${TOP_DIR}"/app*/Chart.yaml
-  sed -i -E "s/^([[:space:]]*appVersion:[[:space:]]*\"?)26\.1\.0/\1${ver}/" "${TOP_DIR}"/app*/charts/*/Chart.yaml
-  sed -i -E "s/^([[:space:]]*appVersion:[[:space:]]*\"?)26\.1\.0/\1${ver}/" "${TOP_DIR}"/app*/Chart.yaml
-  sed -i "s/26.1.0/${ver}/g" "${TOP_DIR}"/app/values.yaml
+  sed -i -E "s/^([[:space:]]*version:[[:space:]]*)26\.2\.0/\1${semver_ver}/" "${TOP_DIR}"/app*/charts/*/Chart.yaml
+  sed -i -E "s/^([[:space:]]*version:[[:space:]]*)26\.2\.0/\1${semver_ver}/" "${TOP_DIR}"/app*/Chart.yaml
+  sed -i -E "s/^([[:space:]]*appVersion:[[:space:]]*\"?)26\.2\.0/\1${ver}/" "${TOP_DIR}"/app*/charts/*/Chart.yaml
+  sed -i -E "s/^([[:space:]]*appVersion:[[:space:]]*\"?)26\.2\.0/\1${ver}/" "${TOP_DIR}"/app*/Chart.yaml
+  sed -i "s/26.2.0/${ver}/g" "${TOP_DIR}"/app/values.yaml
 
   helm package "${TOP_DIR}"/app
   helm package "${TOP_DIR}"/app-crds

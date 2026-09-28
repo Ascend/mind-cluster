@@ -69,7 +69,7 @@
 1. <a name="li1471945063444_helm_download"></a>下载并解压部署工具。
 
     ```bash
-    # 请用户自行将命令中的{version}替换为对应版本号，如26.1.0
+    # 请用户自行将命令中的{version}替换为对应版本号，如26.2.0
     wget https://gitcode.com/Ascend/mind-cluster/releases/download/v{version}/Ascend-helm-deploy-tool_{version}_linux.zip
     unzip Ascend-helm-deploy-tool_{version}_linux.zip
     ```
@@ -95,7 +95,7 @@
     bash helm_tool.sh --add-helm-meta-all # 给资源添加helm元数据。
 
     #（可选）若当前集群中存在 v26.1.0 之前版本的 Ascend Device Plugin DaemonSet，请执行此命令清理旧资源；若不存在则可跳过
-    bash helm_tool.sh --delete-old-demonset
+    bash helm_tool.sh --delete-old-daemonset
     ```
 
     回显示例如下，表示添加Helm元数据成功：
@@ -192,7 +192,7 @@
 1. 下载并解压部署工具。
 
     ```bash
-    # 请用户自行将命令中的{version}替换为对应版本号，如26.1.0
+    # 请用户自行将命令中的{version}替换为对应版本号，如26.2.0
     wget https://gitcode.com/Ascend/mind-cluster/releases/download/v{version}/Ascend-helm-deploy-tool_{version}_linux.zip
     unzip Ascend-helm-deploy-tool_{version}_linux.zip
     ```
@@ -305,8 +305,8 @@
 
       ```ColdFusion
       REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
-      1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-26.0.0        26.0.0       Install complete
-      2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-26.1.0        26.1.0       Upgrade complete
+      1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-26.1.0        26.1.0       Install complete
+      2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-26.2.0        26.2.0       Upgrade complete
       ```
 
     - 查看组件CRD的Release实例的升级历史：
@@ -319,8 +319,8 @@
 
       ```ColdFusion
       REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
-      1         2026-03-24 15:30:00.000   superseded  mindcluster-crds-deploy-tool-26.0.0        26.0.0       Install complete
-      2         2026-03-25 10:00:00.000   deployed    mindcluster-crds-deploy-tool-26.1.0        26.1.0       Upgrade complete
+      1         2026-03-24 15:30:00.000   superseded  mindcluster-crds-deploy-tool-26.1.0        26.1.0       Install complete
+      2         2026-03-25 10:00:00.000   deployed    mindcluster-crds-deploy-tool-26.2.0        26.2.0       Upgrade complete
       ```
 
     >[!NOTE]

@@ -263,12 +263,12 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
     ```shell
     [INFO] Upgrading container-manager...
-    [INFO] Current version : container-manager version: v26.0.0_linux-x86-64
-    [INFO] Target version  : container-manager version: v26.1.0_linux-x86-64
+    [INFO] Current version : container-manager version: v26.1.0_linux-x86-64
+    [INFO] Target version  : container-manager version: v26.2.0_linux-x86-64
     [INFO] Stopping service...
     [INFO] Replacing binary...
     [INFO] Starting service...
-    [INFO] Binary upgraded to: container-manager version: v26.1.0_linux-x86-64
+    [INFO] Binary upgraded to: container-manager version: v26.2.0_linux-x86-64
     [INFO] Upgrade completed successfully
     ```
 

@@ -328,7 +328,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
               - name: priority
               - name: gang
               - name: conformance
-              - name: volcano-npu-v26.1.0_linux-aarch64    # 其中26.1.0为MindCluster的版本号，根据不同版本，该处取值不同
+              - name: volcano-npu-v26.2.0_linux-aarch64    # 其中26.2.0为MindCluster的版本号，根据不同版本，该处取值不同
             - plugins:
               - name: drf
               - name: predicates
