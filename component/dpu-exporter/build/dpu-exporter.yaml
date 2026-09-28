@@ -58,28 +58,19 @@ spec:
         image: dpu-exporter:v26.2.0
         imagePullPolicy: Never
         command: [ "/bin/bash", "-c", "--"]
-        args: [ "umask 027;dpu-exporter -config=/etc/dpu-exporter/config.json" ]
+        args: [ "umask 027;dpu-exporter -config=/etc/dpu-exporter/config.json --enable-healthz=true --healthz-address=11259" ]
         ports:
           - name: http
             containerPort: 8083
             protocol: TCP
         livenessProbe:
           httpGet:
-            path: /healthz
-            port: 8083
+            path: /
+            port: 11259
             scheme: HTTP
           initialDelaySeconds: 10
           periodSeconds: 15
           timeoutSeconds: 5
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /healthz
-            port: 8083
-            scheme: HTTP
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          timeoutSeconds: 3
           failureThreshold: 3
         resources:
           requests:
@@ -100,6 +91,12 @@ spec:
           - name: localtime
             mountPath: /etc/localtime
             readOnly: true
+          - name: sys-class-net
+            mountPath: /sys/class/net
+            readOnly: true
+          - name: sys-devices
+            mountPath: /sys/devices
+            readOnly: true
           - name: tmp
             mountPath: /tmp
           - name: logdir
@@ -109,6 +106,8 @@ spec:
           - name: hinicadm5-bin
             mountPath: /usr/sbin/hinicadm5
             readOnly: true
+          - name: dev
+            mountPath: /dev
       volumes:
         - name: log-dpu-exporter
           hostPath:
@@ -124,6 +123,12 @@ spec:
           hostPath:
             path: /etc/localtime
             type: File
+        - name: sys-class-net
+          hostPath:
+            path: /sys/class/net
+        - name: sys-devices
+          hostPath:
+            path: /sys/devices
         - name: tmp
           emptyDir: {}
         - name: logdir
@@ -138,6 +143,10 @@ spec:
           hostPath:
             path: /usr/sbin/hinicadm5
             type: File
+        - name: dev
+          hostPath:
+            path: /dev
+            type: Directory
 ---
 apiVersion: v1
 kind: Service
