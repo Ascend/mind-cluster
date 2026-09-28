@@ -155,7 +155,7 @@
     ```ColdFusion
     [INFO]     2023/12/08 07:38:56.551173 1       hwlog/api.go:108    npu-exporter.log's logger init success
     [INFO]     2023/12/08 07:38:56.551275 1       npu-exporter/main.go:205    listen on: 0.0.0.0
-    [INFO]     2023/12/08 07:38:56.551369 1       npu-exporter/main.go:325    npu exporter starting and the version is v26.1.0_linux-x86_64
+    [INFO]     2023/12/08 07:38:56.551369 1       npu-exporter/main.go:325    npu exporter starting and the version is v26.2.0_linux-x86_64
     [WARN]     2023/12/08 07:38:56.684424 1       npu-exporter/main.go:339    enable unsafe http server
     [WARN]     2023/12/08 07:39:01.686205 98      container/runtime_ops.go:150    failed to get OCI connection: context deadline exceeded
     [WARN]     2023/12/08 07:39:01.686311 98      container/runtime_ops.go:152    use backup address to try again
@@ -208,7 +208,7 @@
     ```ColdFusion
     [INFO]     2023/12/08 07:38:56.551173 1       hwlog/api.go:108    npu-exporter.log's logger init success
     [INFO]     2023/12/08 07:38:56.551275 1       npu-exporter/main.go:205    listen on: 0.0.0.0
-    [INFO]     2023/12/08 07:38:56.551369 1       npu-exporter/main.go:325    npu exporter starting and the version is v26.1.0_linux-x86_64
+    [INFO]     2023/12/08 07:38:56.551369 1       npu-exporter/main.go:325    npu exporter starting and the version is v26.2.0_linux-x86_64
     [WARN]     2023/12/08 07:38:56.684424 1       npu-exporter/main.go:339    enable unsafe http server
     [WARN]     2023/12/08 07:39:01.686205 98      container/runtime_ops.go:150    failed to get OCI connection: context deadline exceeded
     [WARN]     2023/12/08 07:39:01.686311 98      container/runtime_ops.go:152    use backup address to try again
@@ -241,7 +241,7 @@
    回显示例：
 
     ```ColdFusion
-    ascend-device-plugin-daemonset-910-85p9v   1/1     Running   0          19h     192.168.185.251   ubuntu       <none>           <none>
+    ascend-device-plugin-daemonset-910-85p9v   1/1     Running   0          19h     192.168.x.x   ubuntu       <none>           <none>
     ```
 
 2. 通过如下命令查看K8s集群中Ascend Device Plugin的日志。
@@ -491,8 +491,8 @@
    回显示例：
 
     ```ColdFusion
-    volcano-controllers-758b6d8bdd-b7g89   1/1     Running   2          166m   192.168.102.69   ubuntu       <none>           <none>
-    volcano-scheduler-86775f88f-w649w      1/1     Running   2          166m   192.168.102.91   ubuntu       <none>           <none>
+    volcano-controllers-758b6d8bdd-b7g89   1/1     Running   2          166m   192.168.x.x   ubuntu       <none>           <none>
+    volcano-scheduler-86775f88f-w649w      1/1     Running   2          166m   192.168.x.x     ubuntu       <none>           <none>
     ```
 
 2. 登录Volcano Pod运行的节点，使用如下命令查看Volcano组件日志。
@@ -585,7 +585,7 @@
    回显示例：
 
     ```ColdFusion
-    ascend-operator-manager-b59774f7-8l5gn         1/1     Running   0          6m52s   192.168.102.67   ubuntu       <none>           <none>
+    ascend-operator-manager-b59774f7-8l5gn         1/1     Running   0          6m52s   192.168.x.x   ubuntu       <none>           <none>
     ```
 
 2. 通过如下命令查看K8s集群中Ascend Operator的日志。
@@ -617,7 +617,7 @@
    回显示例：
 
     ```ColdFusion
-    infer-operator-manager-6bf95f6956-sdkbd         1/1     Running   0          6m52s   192.168.2.166   ubuntu       <none>           <none>
+    infer-operator-manager-6bf95f6956-sdkbd         1/1     Running   0          6m52s   192.168.x.x   ubuntu       <none>           <none>
     ```
 
 2. 通过如下命令查看K8s集群中Infer Operator的日志。
@@ -647,7 +647,7 @@
    回显示例：
 
     ```ColdFusion
-    noded-bnmwt                        1/1     Running   10         40d    192.168.41.28     ubuntu       <none>           <none>
+    noded-bnmwt                        1/1     Running   10         40d    192.168.x.x     ubuntu       <none>           <none>
     ```
 
 2. 通过如下命令查看NodeD组件日志。
@@ -660,7 +660,7 @@
 
     ```ColdFusion
     [INFO] 2025/05/25 15:24:19.897280 1 hwlog/api.go:108 noded.log's logger init success
-    [INFO] 2025/05/25 15:24:19.897392 1 noded/main.go:93 noded starting and the version is v26.1.0_linux-x86_64
+    [INFO] 2025/05/25 15:24:19.897392 1 noded/main.go:93 noded starting and the version is v26.2.0_linux-x86_64
     W0525 15:24:19.897410 1 client_config.go:617] Neither --kubeconfig nor --master was specified. Using the inClusterConfig. This might not work.
     [INFO] 2025/05/25 15:24:19.994306 1 devmanager/devmanager.go:123 the dcmi version is 24.1.rc3.b060
     [INFO] 2025/05/25 15:24:19.994360 1 devmanager/devmanager.go:1071 get chip base info, cardID: 0, deviceID: 0, logicID: 0, physicID: 0
@@ -850,7 +850,7 @@
 
     ```ColdFusion
     NAME                                        READY   STATUS    RESTARTS   AGE     IP            NODE       NOMINATED NODE   READINESS GATES
-    ascend-dra-driver-kubeletplugin-5m2xv       1/1     Running   0          74s     192.168.1.10  node1      <none>           <none>
+    ascend-dra-driver-kubeletplugin-5m2xv       1/1     Running   0          74s     192.168.x.x  node1      <none>           <none>
     ```
 
    >[!NOTE]

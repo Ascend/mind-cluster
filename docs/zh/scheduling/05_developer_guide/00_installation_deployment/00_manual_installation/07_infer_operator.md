@@ -14,7 +14,7 @@
     回显示例如下：
 
     ```ColdFusion
-    infer-operator                      v26.1.0              c7221984e8ae        About an hour ago         140MB
+    infer-operator                      v26.2.0              c7221984e8ae        About an hour ago         140MB
     ```
 
     - 是，执行[步骤2](#li19793191914420)。

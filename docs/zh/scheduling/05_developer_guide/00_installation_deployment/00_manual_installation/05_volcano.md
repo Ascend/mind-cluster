@@ -194,7 +194,7 @@
             enableNodeOrder: false
           - name: conformance
             enableNodeOrder: false
-          - name: volcano-npu_v26.1.0_linux-aarch64   # 其中v26.1.0为MindCluster的版本号，根据不同版本，该处取值不同
+          - name: volcano-npu_v26.2.0_linux-aarch64   # 其中v26.2.0为MindCluster的版本号，根据不同版本，该处取值不同
         - plugins:
           - name: drf
             enableNodeOrder: false
@@ -226,7 +226,7 @@
       template:
     ...
             - name: volcano-scheduler
-              image: volcanosh/vc-scheduler:v1.9.0-v26.1.0   # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
+              image: volcanosh/vc-scheduler:v1.9.0-v26.2.0   # 从MindCluster v26.1.0版本开始，tag需包含volcano版本号
               args: [ ...
                   ...
                   <strong>--enable-healthz=true   # 为保证可正常访问Volcano健康检查端口，本参数取值需为"true"</strong>
@@ -440,7 +440,7 @@
     ...
           containers:
             - name: volcano-scheduler
-              image: volcanosh/vc-scheduler:v1.9.0-v26.1.0   # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
+              image: volcanosh/vc-scheduler:v1.9.0-v26.2.0   # 从MindCluster v26.1.0版本开始，tag需包含volcano版本号
               command: ["/bin/ash"]
               args: ["-c", "umask 027; <strong>GOMEMLIMIT=15000000000 GOGC=off</strong> /vc-scheduler      <strong># 新增GOMEMLIMIT=15000000000和GOGC=off字段</strong>
                       --scheduler-conf=/volcano.scheduler/volcano-scheduler.conf
@@ -808,8 +808,8 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
         1. 执行以下命令，制作Volcano镜像。根据开源代码版本，为镜像选择对应的参数，如v1.9.0。
 
             ```shell
-            # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
-            docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0-v26.1.0 ./ -f ./Dockerfile-scheduler
+            # 从MindCluster v26.1.0版本开始，tag需包含volcano版本号
+            docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0-v26.2.0 ./ -f ./Dockerfile-scheduler
             ```
 
         2. 执行以下命令，启动volcano-scheduler组件。
@@ -858,8 +858,8 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 
             ```shell
             cd $GOPATH/src/volcano.sh/volcano
-            # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
-            docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0-v26.1.0 ./ -f installer/dockerfile/scheduler/Dockerfile
+            # 从MindCluster v26.1.0版本开始，tag需包含volcano版本号
+            docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0-v26.2.0 ./ -f installer/dockerfile/scheduler/Dockerfile
             ```
 
         3. 修改volcano-development.yaml，该文件路径为“$GOPATH/src/volcano.sh/volcano/installer/volcano-development.yaml”。
@@ -879,7 +879,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
                    - name: gang
                      enablePreemptable: false
                    - name: conformance
-                   <strong>- name: volcano-npu_v26.1.0_linux-x86_64    # 在ConfigMap中的新增自定义调度插件，请注意保持组件的版本配套关系</strong>
+                   <strong>- name: volcano-npu_v26.2.0_linux-x86_64    # 在ConfigMap中的新增自定义调度插件，请注意保持组件的版本配套关系</strong>
                  - plugins:
                    - name: overcommit
                    - name: drf
@@ -904,7 +904,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
               template:
             ...
                     - name: volcano-scheduler
-                      image: volcanosh/vc-scheduler:v1.9.0-v26.1.0   # 从MindCluster v26.1.0版本开始，tag需包含相应版本号
+                      image: volcanosh/vc-scheduler:v1.9.0-v26.2.0   # 从MindCluster v26.1.0版本开始，tag需包含volcano版本号
                       args:
                         - --logtostderr
                         - --scheduler-conf=/volcano.scheduler/volcano-scheduler.conf

@@ -2,7 +2,7 @@
 
 ## 制作镜像<a name="ZH-CN_TOPIC_0000002511426469"></a>
 
-[MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/26.1.0)作为昇腾大模型训练框架，旨在为昇腾芯片提供端到端的大语言模型训练方案，包含分布式预训练、分布式指令微调、分布式偏好对齐以及对应的开发工具链。[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/1.0.0/docs/USER_GUIDE.md)包括了仓库拉取、环境搭建与大模型训练等章节，制作MindSpeed-LLM训练框架镜像可以结合本章节和[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/1.0.0/docs/USER_GUIDE.md)。
+[MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/26.2.0)作为昇腾大模型训练框架，旨在为昇腾芯片提供端到端的大语言模型训练方案，包含分布式预训练、分布式指令微调、分布式偏好对齐以及对应的开发工具链。[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/1.0.0/docs/USER_GUIDE.md)包括了仓库拉取、环境搭建与大模型训练等章节，制作MindSpeed-LLM训练框架镜像可以结合本章节和[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/1.0.0/docs/USER_GUIDE.md)。
 
 断点续训可以基于基础训练镜像制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（PyTorch）](../../../../07_references/02_common_operations.md#使用dockerfile构建容器镜像pytorch)章节进行操作。
 
@@ -10,7 +10,7 @@
 
 >[!NOTE]
 >
->- 以下示例使用MindSpeed-LLM  26.1.0版本。
+>- 以下示例使用MindSpeed-LLM  26.2.0版本。
 >- Atlas 850E 超节点、Atlas 850 超节点、Atlas 650E 服务器、Atlas 650 服务器、Atlas 950 SuperPoD 超节点等存在UB总线的产品形态下，训练镜像内需要增加UB驱动相关文件。支持如下两种方式：
 >   - 从<a href="https://mirrors.huaweicloud.com/ascend/">华为云镜像仓地址</a>的archive目录下载，然后安装到训练镜像中。
 >   - 安装Ascend Docker Runtime，默认挂载ub\_driver.list中的UB驱动相关内容。ub\_driver.list中的文件依赖宿主机的glibc版本，目前支持的OS版本和glibc版本如下：
@@ -377,7 +377,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
 >
 >- 若使用TaskD组件且训练容器使用Host网络，则先通过`sysctl net.ipv4.ip_local_reserved_ports`查询当前预留端口配置后，通过`sysctl -w net.ipv4.ip_local_reserved_ports="xxx,9601,9602"`新增预留端口9601、9602（其中xxx指的是前面查出来已配置的端口，若无则省略）。
 
-训练代码与数据集准备，可以参考[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.1.0/docs/zh/pytorch/training/pretrain/mcore/pretrain.md)。下面以两台Atlas 800T A2 训练服务器为例，说明具体操作步骤。
+训练代码与数据集准备，可以参考[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.2.0/docs/zh/pytorch/training/pretrain/mcore/pretrain.md)。下面以两台Atlas 800T A2 训练服务器为例，说明具体操作步骤。
 
 1. 拉取训练代码。
 
@@ -565,7 +565,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
 </td>
 <td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5 "><p id="p893610293406"><a name="p893610293406"></a>pytorch_multinodes_acjob_910b.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml" target="_blank" rel="noopener noreferrer">pytorch_multinodes_acjob_910b.yaml</a></p>
+<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml" target="_blank" rel="noopener noreferrer">pytorch_multinodes_acjob_910b.yaml</a></p>
 </td>
 <td class="cellrowborder" valign="top" width="15.413082616523303%" headers="mcps1.2.8.1.7 "><p id="p8936152964011"><a name="p8936152964011"></a>示例默认使用2*8卡任务</p>
 </td>
@@ -1353,7 +1353,7 @@ Events:  <none>
     cd /data/atlas_dls/public/code
     git clone https://gitcode.com/Ascend/mind-cluster.git
     cd ./mind-cluster/component/clusterd
-    git checkout branch_v26.1.0   # branch_v26.1.0是代码仓版本分支，请自行切换到目标分支
+    git checkout release/v26.2.0   # release/v26.2.0是代码仓版本分支，请自行切换到目标分支
     ```
 
 2. 修改ClusterD代码。
@@ -1395,7 +1395,7 @@ Events:  <none>
    ```shell
    cd ./build/
    chmod +x build.sh && dos2unix build.sh
-   sed -i 's|build_version="v[^"]\+"|build_version="xxx"|g' build.sh  # xxx替换为版本号，如v26.1.0
+   sed -i 's|build_version="v[^"]\+"|build_version="xxx"|g' build.sh  # xxx替换为版本号，如v26.2.0
    sed -i 's|export CGO_ENABLED=0|export CGO_ENABLED=1|g' build.sh  # 开启CGO功能
    ./build.sh # 编译ClusterD，需要提前安装好Go sdk，具体版本以ClusterD组件代码的go.mod文件内容为准
    ```
@@ -1410,7 +1410,7 @@ Events:  <none>
 
    ```bash
    -r-x------. 1 root root 45891128 Aug 13 10:52 clusterd
-   -r--------. 1 root root     4021 Aug 13 10:52 clusterd-v26.1.0.yaml
+   -r--------. 1 root root     4021 Aug 13 10:52 clusterd-v26.2.0.yaml
    -r--------. 1 root root      946 Aug 13 10:52 Dockerfile
    -r--------. 1 root root      209 Aug 13 10:52 faultDuration.json
    -r--------. 1 root root      207 Aug 13 10:52 fdConfig.yaml

@@ -211,19 +211,19 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
         回显示例如下。
 
         ```ColdFusion
-        npu-exporter                         v26.1.0              20185c45f1bc        About an hour ago         90.1MB
+        npu-exporter                         v26.2.0              20185c45f1bc        About an hour ago         90.1MB
         ```
 
     - **Containerd场景**：执行如下命令。
 
         ```shell
-        ctr -n k8s.io c ls | grep npu-exporter
+        ctr -n k8s.io i ls | grep npu-exporter
         ```
 
         回显示例如下。
 
         ```ColdFusion
-        docker.io/library/npu-exporter:v26.1.0                                                         application/vnd.docker.distribution.manifest.v2+json      sha256:38fd69ee9f5753e73a55a216d039f6ed4ea8a5de15c0e6b3bb503022db470c7b 91.5 MiB  linux/arm64
+        docker.io/library/npu-exporter:v26.2.0                                                         application/vnd.docker.distribution.manifest.v2+json      sha256:38fd69ee9f5753e73a55a216d039f6ed4ea8a5de15c0e6b3bb503022db470c7b 91.5 MiB  linux/arm64
         ```
 
     - 是，执行[步骤5](#li0640635114211)。

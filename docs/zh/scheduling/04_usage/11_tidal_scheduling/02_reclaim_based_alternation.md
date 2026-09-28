@@ -74,7 +74,7 @@ sequenceDiagram
            enableReclaimable: false       # 绕过gang保护，允许回收任意训练Pod，例如训练任务的pod
          - name: conformance
            enableNodeOrder: false
-         - name: volcano-npu_v26.1.0_linux-x86_64
+         - name: volcano-npu_v26.2.0_linux-x86_64
        - plugins:
          - name: drf
            enableNodeOrder: false
