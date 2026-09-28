@@ -80,6 +80,7 @@ func (tp *NPUHandler) SetNPUTopologyToPodFn(task *api.TaskInfo, top []int, node 
 	task.Pod.Annotations[util.PodPredicateTime] = tmp
 	klog.V(util.LogDebugLev).Infof("%s setNPUTopologyToPod %s==%v top:%s, topReal:%s.", tp.GetPluginName(),
 		task.Name, tmp, topologyStr, topologyRealStr)
+	tp.setDowngradedToPod(task)
 	tp.setRealUsedNpuToPod(task, top, topologyRealStr, node)
 	tp.setRankIndex(task)
 	tp.setSchedulerShareAnnoToPod(task, node)
