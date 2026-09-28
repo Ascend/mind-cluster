@@ -84,7 +84,7 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
           Service       : active (running)
           Auto-start    : enabled
           Timer         : active
-          Binary        : /usr/local/bin/container-manager  (v26.1.0)
+          Binary        : /usr/local/bin/container-manager  (v26.2.0)
 
           ✓ All checks passed
 

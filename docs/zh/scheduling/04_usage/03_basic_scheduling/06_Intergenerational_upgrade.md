@@ -101,7 +101,7 @@
 <td>Atlas 950 SuperPoD 超节点</td>
 <td>PyTorch</td>
 <td>pytorch_multinodes_acjob_950.yaml</td>
-<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/train/basic-training/without-ranktable/pytorch/pytorch_multinodes_acjob_950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
+<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/train/basic-training/without-ranktable/pytorch/pytorch_multinodes_acjob_950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
 </tr>
 
 <tr>
@@ -109,7 +109,7 @@
 <td>Atlas 950 SuperPoD 超节点 <br/> Atlas 850E 超节点 <br/> Atlas 850 超节点 <br/> Atlas 350 加速卡</td>
 <td>PyTorch</td>
 <td>a950_superpod_pytorch_vcjob.yaml</td>
-<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/train/basic-training/ranktable/yaml/950/a950_superpod_pytorch_vcjob.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
+<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/train/basic-training/ranktable/yaml/950/a950_superpod_pytorch_vcjob.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
 </tr>
 
 <tr>
@@ -117,7 +117,7 @@
 <td>Atlas 950 SuperPoD 超节点 <br/> Atlas 850E 超节点 <br/> Atlas 850 超节点 <br/> Atlas 350 加速卡</td>
 <td>PyTorch</td>
 <td>a950_superpod_pytorch_deployment.yaml</td>
-<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/train/basic-training/ranktable/yaml/950/a950_superpod_pytorch_deployment.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
+<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/train/basic-training/ranktable/yaml/950/a950_superpod_pytorch_deployment.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
 </tr>
 
 <tr>
@@ -126,21 +126,21 @@
 <td>Atlas 950 SuperPoD 超节点 <br/> Atlas 850E 超节点 <br/> Atlas 850 超节点 <br/> Atlas 350 加速卡</td>
 <td>-</td>
 <td>pytorch_multinodes_acjob_infer_950_with_ranktable.yaml</td>
-<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_950_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
+<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_950_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
 </tr>
 <tr>
 <td>Volcano Job</td>
 <td>Atlas 950 SuperPoD 超节点 <br/> Atlas 850E 超节点 <br/> Atlas 850 超节点 <br/> Atlas 350 加速卡</td>
 <td>-</td>
 <td>infer-vcjob-950.yaml</td>
-<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-vcjob-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
+<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/inference/volcano/infer-vcjob-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
 </tr>
 <tr>
 <td>Deployment</td>
 <td>Atlas 950 SuperPoD 超节点 <br/> Atlas 850E 超节点 <br/> Atlas 850 超节点 <br/> Atlas 350 加速卡</td>
 <td>-</td>
 <td>infer-deploy-950.yaml</td>
-<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
+<td><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/inference/volcano/infer-deploy-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></td>
 </tr>
 </tbody>
 </table>

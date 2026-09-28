@@ -1091,6 +1091,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 
 |MindCluster版本|mindcluster-deploy仓配套分支|
 |--|--|
+|26.2.0|release/v26.2.0|
 |26.1.0|branch_v26.1.0|
 |26.0.0|branch_v26.0.0|
 |7.3.0|branch_v7.3.0|
