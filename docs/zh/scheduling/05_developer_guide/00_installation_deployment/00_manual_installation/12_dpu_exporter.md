@@ -304,6 +304,11 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 |--|--|--|--|
 |-config|string|/etc/dpu-exporter/config.json|配置文件路径。配置文件为JSON格式，包含采集周期和指标白名单等配置项，详见[配置文件说明](#table192202574407)。|
 |-port|int|8083|侦听端口，取值范围为1025~40000。|
+|-version|bool|false| 是否查询DPU Exporter版本号与commit ID等详细信息。<ul><li>true：查询。</li><li>false：不查询。</li></ul>|
+|--enable-healthz|bool|false|是否启用健康检查服务。K8s部署时由组件YAML配置启用（true）。<ul><li>true：启用。</li><li>false：禁用。</li></ul>|
+|--healthz-address|string|11251|健康检查服务侦听端口号，取值范围为1025~65535。K8s部署时由组件YAML配置为11259。若指定端口被占用，组件启动失败。健康探针接口说明详见[健康探针](../../../06_api/16_dpu_exporter.md#健康探针)。|
+|--tls-cert-file|string|""|HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。|
+|--tls-private-key-file|string|""|HTTPS私钥文件路径。为空则使用HTTP协议。与--tls-cert-file必须同时配置或同时为空。|
 |-logLevel|int|0|日志级别：<ul><li>-1：debug</li><li>0：info</li><li>1：warning</li><li>2：error</li><li>3：critical</li></ul>|
 |-maxAge|int|7|日志备份时间，取值范围为7~700，单位为天。|
 |-maxBackups|int|30|转储后日志文件保留个数上限，取值范围为1~180，单位为个。|

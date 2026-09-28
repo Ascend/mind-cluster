@@ -87,10 +87,6 @@ func StartPrometheus(port string, collector *PrometheusCollector) error {
 
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
-	})
 
 	addr := ":" + port
 	logger.Infof("starting prometheus metrics server on %s", addr)
