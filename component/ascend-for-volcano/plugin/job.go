@@ -764,7 +764,22 @@ func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
 		return result
 	}
 	klog.V(util.LogInfoLev).Infof("%s valid ok.", sJob.Name)
+	sJob.downgradeConstraintAfterValid()
 	return nil
+}
+
+// downgradeConstraintAfterValid settles the constraint downgrade right after the
+// validation passes, so every stage of the session (predicate, scoring,
+// binding) sees one constraint instead of a mid-scoring constraint change. The
+// validation runs once per scheduling action, the policy entry derives the level
+// from the session-start snapshot, so the repeated invocations settle one constraint.
+func (sJob SchedulerJob) downgradeConstraintAfterValid() {
+	if !sJob.isSchedulerDowngradeEnabled() {
+		return
+	}
+	if downgradeHook, ok := sJob.policyHandler.(DowngradeConstraintHook); ok {
+		downgradeHook.DowngradeConstraint(sJob.Name)
+	}
 }
 
 // rejectWholeCardOnSoftShareNode rejects a whole-card task when the node enables
@@ -955,8 +970,37 @@ func (sHandle *ScheduleHandler) JobValid(obj interface{}) *api.ValidateResult {
 		return nil
 	}
 
+	if result = vcJob.validDowngradeCompatibility(); result != nil {
+		return result
+	}
+
 	result = vcJob.validJobFn()
 	return result
+}
+
+// isSchedulerDowngradeEnabled returns true when the job enables the scheduler
+// downgrade, disabled by default.
+func (sJob SchedulerJob) isSchedulerDowngradeEnabled() bool {
+	return sJob.Annotation[util.SchedulerDowngradeAnnoKey] == "true"
+}
+
+// validDowngradeCompatibility rejects the job enabling the scheduler downgrade
+// together with pod-level or process-level rescheduling.
+func (sJob *SchedulerJob) validDowngradeCompatibility() *api.ValidateResult {
+	if sJob == nil || !sJob.isSchedulerDowngradeEnabled() {
+		return nil
+	}
+	if sJob.Label[util.SinglePodTag] == util.EnableFunc {
+		return &api.ValidateResult{Pass: false, Reason: util.InvalidArgumentReason,
+			Message: "job enables scheduler downgrade and pod rescheduling at the same time, " +
+				"the scheduler downgrade only supports job-level rescheduling"}
+	}
+	if sJob.Label[util.ProcessRecoverEnable] == util.EnableFunc {
+		return &api.ValidateResult{Pass: false, Reason: util.InvalidArgumentReason,
+			Message: "job enables scheduler downgrade and process recover at the same time, " +
+				"the scheduler downgrade only supports job-level rescheduling"}
+	}
+	return nil
 }
 
 // SetJobPendReasonByNodesCase In nodes select case, set node failed and add failed reason.

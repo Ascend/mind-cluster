@@ -70,6 +70,19 @@ func (c *Controller) ScoreFrameworkAware() bool {
 	return false
 }
 
+// DowngradeConstraint forwards the constraint downgrade to the policy handlers
+// implementing the hook, invoked right after the job validation passes.
+func (c *Controller) DowngradeConstraint(jobID api.JobID) {
+	if c == nil {
+		return
+	}
+	for _, handler := range c.PolicyHandler {
+		if v, ok := handler.(plugin.DowngradeConstraintHook); ok {
+			v.DowngradeConstraint(jobID)
+		}
+	}
+}
+
 // PreStartAction pre-processing actions for all policy handler
 func (c *Controller) PreStartAction(ssn *framework.Session) error {
 	if c == nil {
