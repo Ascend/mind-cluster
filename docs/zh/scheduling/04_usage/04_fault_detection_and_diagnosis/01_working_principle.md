@@ -8,10 +8,10 @@ MindCluster集群调度组件Ascend Device Plugin提供NPU芯片故障检测能�
 
 1. 计算服务器上的Ascend Device Plugin通过驱动获取NPU芯片故障以及参数面网络故障后，将故障信息上报到管理服务器。
 2. 计算服务器上的NodeD通过驱动获取服务器节点故障、共享存储故障和灵衢慢网络故障信息后，将故障信息上报到管理服务器。
-3. 计算服务器上的K8s监测训练容器状态，训练容器异常后上报到K8s中，管理服务器上的Volcano通过K8s获取训练容器的故障信息。
-4. 管理服务器上的ClusterD通过公共故障接口获取公共故障后，将接收到的信息进行汇总写入cluster-info-device-cm。
-5. （可选）管理服务器上的ClusterD汇总集群内所有Ascend Device Plugin和NodeD上报的故障信息。
-6. 计算服务器上的K8s RDMA Shared Dev Plugin通过hinicadm5命令获取UB网卡故障信息后，将故障信息上报到管理服务器。
+3. 计算服务器上的K8s RDMA Shared Dev Plugin通过hinicadm5命令获取UB网卡故障信息后，将故障信息上报到管理服务器。
+4. 计算服务器上的K8s监测训练容器状态，训练容器异常后上报到K8s中，管理服务器上的Volcano通过K8s获取训练容器的故障信息。
+5. 管理服务器上的ClusterD通过公共故障接口获取公共故障后，将接收到的信息进行汇总写入cluster-info-device-cm。
+6. （可选）管理服务器上的ClusterD汇总集群内所有Ascend Device Plugin和NodeD上报的故障信息。
 
 ## ConfigMap说明
 
