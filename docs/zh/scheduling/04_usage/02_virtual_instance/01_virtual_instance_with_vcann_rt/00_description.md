@@ -57,6 +57,7 @@
 ## 使用约束<a name="section911013420264vcann"></a>
 
 - 软切分虚拟化功能仅支持推理任务。
+- 软切分虚拟化场景下不支持并发下发任务，仅支持串行下发；需等待前一个任务完成拉起后，方可下发新的软切分任务。
 - 在软切分虚拟化场景下，一个容器只能挂载一个NPU。
 - 任务YAML中requests对应的数据表示请求的NPU的AICore百分比，不是真实NPU卡数。
 - <term>Atlas A3系列产品</term>使用软切分虚拟化功能时，必须开启单die直通模式，即在Ascend Device Plugin的YAML中，增加启动参数-useSingleDieMode=true。
