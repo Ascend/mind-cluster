@@ -316,8 +316,8 @@ func GetNodeDevListFromAnno(nodeInfo *api.NodeInfo) ([]string, bool, error) {
 	baseInfo, ok := GetAnnotationValue(nodeInfo.Node.Annotations, NPUBaseDevInfosAnnotation, BaseDeviceInfoKeyDeprecated)
 	if !ok {
 		str := fmt.Sprintf("node annotation[%s]&[%s] does not exist", NPUBaseDevInfosAnnotation, BaseDeviceInfoKeyDeprecated)
-		klog.V(LogErrorLev).Infof(str)
-		return nil, false, fmt.Errorf(str)
+		klog.V(LogErrorLev).Infof("%s", str)
+		return nil, false, fmt.Errorf("%s", str)
 	}
 	devIpMap := make(map[string]NpuBaseInfo)
 	if err := json.Unmarshal([]byte(baseInfo), &devIpMap); err != nil {

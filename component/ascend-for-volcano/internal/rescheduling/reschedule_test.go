@@ -1462,7 +1462,7 @@ func TestGetNewCacheJobs(t *testing.T) {
 		})
 }
 
-// TestReduceForSubHealthyNodes sub-health soft-degrade: nodes with any sub-health kind are
+// TestReduceForSubHealthyNodes sub-health soft-downgrade: nodes with any sub-health kind are
 // uniformly docked util.AffScore1(=1), truncated at 0; unregistered nodes / nodes with no
 // sub-health kind are untouched.
 func TestReduceForSubHealthyNodes(t *testing.T) {
