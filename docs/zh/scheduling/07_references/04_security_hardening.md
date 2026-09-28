@@ -831,6 +831,7 @@ Elastic Agent的安全加固请参见[TaskD安全加固](#taskd安全加固)章�
     | NodeD | 11255 |
     | NPU Exporter | 11256 |
     | K8s RDMA Shared Dev Plugin | 11257 |
+    | Ascend Dynamic Resource Allocation | 11258 |
 
 ## 查看命令行操作记录<a name="ZH-CN_TOPIC_0000002524473029"></a>
 
