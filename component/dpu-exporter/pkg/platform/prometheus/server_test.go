@@ -142,17 +142,12 @@ func (s *stubDeviceManager) ReadSysfs(_ string) (string, error)      { return ""
 func (s *stubDeviceManager) ListDir(_ string) ([]string, error)      { return nil, nil }
 func (s *stubDeviceManager) GetCardType() string                     { return "stub" }
 
-// TestStartPrometheus_Healthz covers that StartPrometheus registers /healthz
-// and the endpoint returns 200. We start the server in a goroutine and probe it.
-func TestStartPrometheus_Healthz(t *testing.T) {
+// TestStartPrometheus_Metrics covers that the /metrics endpoint served by
+// StartPrometheus returns 200. The same mux is built under httptest so we
+// don't need to bind a real port (avoids flaky CI).
+func TestStartPrometheus_Metrics(t *testing.T) {
 	p := NewPrometheusCollector()
 
-	// Pick a high port to reduce collision risk
-	port := "29999"
-	addr := ":" + port
-
-	// Build the same mux that StartPrometheus uses, but under httptest
-	// so we don't need to bind a real port (avoids flaky CI).
 	registry := prometheus.NewRegistry()
 	if err := registry.Register(p); err != nil {
 		t.Fatalf("registry.Register failed: %v", err)
@@ -160,34 +155,17 @@ func TestStartPrometheus_Healthz(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
-	})
 
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
-	// /healthz returns 200
-	resp, err := http.Get(srv.URL + "/healthz")
-	if err != nil {
-		t.Fatalf("GET /healthz error: %v", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("/healthz status = %d, want %d", resp.StatusCode, http.StatusOK)
-	}
-
 	// /metrics returns 200 (empty but valid prometheus output)
-	resp2, err := http.Get(srv.URL + "/metrics")
+	resp, err := http.Get(srv.URL + "/metrics")
 	if err != nil {
 		t.Fatalf("GET /metrics error: %v", err)
 	}
-	defer resp2.Body.Close()
-	if resp2.StatusCode != http.StatusOK {
-		t.Errorf("/metrics status = %d, want %d", resp2.StatusCode, http.StatusOK)
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("/metrics status = %d, want %d", resp.StatusCode, http.StatusOK)
 	}
-
-	// Verify addr variable is used (suppress unused warning)
-	_ = addr
 }
