@@ -43,7 +43,7 @@ Ascend Dynamic Resource Allocation（Ascend DRA）是 MindCluster 集群调度�
 - **多代际支持**：设备相关逻辑通过 `DraGenerationInterface` 隔离，每代芯片（Ascend 910、Ascend 950）
   独立实现枚举、属性上报和 ID 转换；新增芯片代际只需新增一代实现，无需修改公共代码。
 
-- **健康检查**：暴露 HTTP `healthz` 端点（默认 `:11251`，路径 `/`），供 kubelet liveness 探针使用。
+- **健康检查**：暴露 HTTP `healthz` 端点（默认 `:11258`，路径 `/`），供 kubelet liveness 探针使用。
   服务与业务逻辑解耦，支持 HTTP 与 HTTPS，限流 1 QPS、突发上限 5。
 
 > [!NOTE]
