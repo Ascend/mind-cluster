@@ -407,6 +407,13 @@
     <a name="ul_prefer_previous_node_affinity"></a><a name="ul_prefer_previous_node_affinity"></a><ul id="ul_prefer_previous_node_affinity"><li>非故障重调度场景下（例如被驱逐后重新调度），若上次运行的所有节点仍然可用，每个Pod调度回原节点继续运行。</li><li>故障重调度场景下，调度器按照原有调度逻辑进行节点替换，各调度策略的详细重调度策略请参见<a href="../../../04_usage/03_basic_scheduling/01_affinity_scheduling/04_node_based_affinity.md">基于节点的亲和性</a>章节。</li></ul>
     </td>
     </tr>
+    <tr id="row_scheduler_downgrade_timeout"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p_scheduler_downgrade_timeout_name"><a name="p_scheduler_downgrade_timeout_name"></a><a name="p_scheduler_downgrade_timeout_name"></a>scheduler-downgrade-timeout</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p_scheduler_downgrade_timeout_default"><a name="p_scheduler_downgrade_timeout_default"></a><a name="p_scheduler_downgrade_timeout_default"></a>120</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p_scheduler_downgrade_timeout_desc"><a name="p_scheduler_downgrade_timeout_desc"></a><a name="p_scheduler_downgrade_timeout_desc"></a>调度约束降级的全局回退时间，单位为秒。仅对开启降级开关（PodGroup/Pod注解huawei.com/scheduler.downgrade为true）的A3超节点任务生效：任务无法按原始sp-block调度持续超过该时间后，sp-block减半(不为节点npu整数倍是取单个节点的npu数量)。取值范围为[1, 86400]，未配置或取值非法时取默认值120。</p>
+    </td>
+    </tr>
     <tr id="row_ascend_score_weight"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p_ascend_score_weight_name"><a name="p_ascend_score_weight_name"></a><a name="p_ascend_score_weight_name"></a>ascend.scoreWeight</p>
     </td>
     <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p_ascend_score_weight_default"><a name="p_ascend_score_weight_default"></a><a name="p_ascend_score_weight_default"></a>100</p>

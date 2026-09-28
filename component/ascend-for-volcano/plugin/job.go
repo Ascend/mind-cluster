@@ -667,6 +667,77 @@ func (sJob *SchedulerJob) setSchedulingTaskNum(vcJob *api.JobInfo) {
 	sJob.SchedulingTaskNum = sJob.GetSchedulingTaskNum()
 }
 
+// roundTaskCount is the task count of one scheduling round of a job, the
+// terminating tasks and the non-npu tasks stay out of the scope.
+type roundTaskCount struct {
+	// scoped is the number of in-scope npu tasks, the denominator of the round decisions
+	scoped int
+	// pending is the number of in-scope tasks still waiting for a node
+	pending int
+	// scheduled is the number of in-scope tasks placed (see isPlacedTask)
+	scheduled int
+}
+
+// countRoundTasks counts the current round of the job, the caller freezes the
+// count in the round info.
+func countRoundTasks(vcJob *api.JobInfo) roundTaskCount {
+	count := roundTaskCount{}
+	for _, task := range vcJob.Tasks {
+		if !util.IsNPUTask(task) || isTerminatingTask(task) {
+			continue
+		}
+		count.scoped++
+		if task.NodeName == "" {
+			count.pending++
+		}
+		if isPlacedTask(task) {
+			count.scheduled++
+		}
+	}
+	return count
+}
+
+// isTerminatingTask reports whether the pod of the task is being deleted.
+func isTerminatingTask(task *api.TaskInfo) bool {
+	return task != nil && task.Pod != nil && task.Pod.DeletionTimestamp != nil
+}
+
+// isPlacedTask reports whether the task completed scheduling: bound, running
+// or succeeded.
+func isPlacedTask(task *api.TaskInfo) bool {
+	return task.Status == api.Bound || task.Status == api.Running || task.Status == api.Succeeded
+}
+
+// readDowngradeSeed reads the downgrade seed of a job from the pod markers of its
+// placed pods, the durable copy of the in-memory state. The config is handed over
+// as written, the newest effect time wins and the smaller config string breaks the
+// tie, so the pick does not depend on the traversal order of the task map.
+func readDowngradeSeed(vcJob *api.JobInfo) (string, int64) {
+	config, effectTime := "", int64(0)
+	for _, task := range vcJob.Tasks {
+		if !util.IsNPUTask(task) || isTerminatingTask(task) || !isPlacedTask(task) {
+			continue
+		}
+		if task.Pod == nil {
+			continue
+		}
+		rawTime, hasTime := task.Pod.Annotations[util.SchedulerDowngradedAnnoKey]
+		markerConfig, hasConfig := task.Pod.Annotations[util.SchedulerDowngradedLevelAnnoKey]
+		if !hasTime || !hasConfig || markerConfig == "" {
+			continue
+		}
+		markerTime, err := strconv.ParseInt(rawTime, util.Base10, util.BitSize64)
+		if err != nil || markerTime <= 0 {
+			continue
+		}
+		if markerTime < effectTime || (markerTime == effectTime && markerConfig > config) {
+			continue
+		}
+		config, effectTime = markerConfig, markerTime
+	}
+	return config, effectTime
+}
+
 func (sJob *SchedulerJob) setMultiLevelTaskSchedulingConfig(jobInfo *api.JobInfo) {
 	affinityBlocks, err := GetAffinityBlocks(sJob.Annotation)
 	if err != nil {

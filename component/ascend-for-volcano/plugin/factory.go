@@ -41,6 +41,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/downgrade"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/version"
@@ -74,6 +75,7 @@ func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
 	sHandle.initCache()
 	sHandle.initAffinityCache()
 	sHandle.ClusterCache.AffinityCache = sHandle.AffinityCache
+	sHandle.reconcileTimingState(ssn.Jobs)
 	sHandle.startFaultHandler(ssn)
 	sHandle.preStartPlugin(ssn)
 	return nil
@@ -437,6 +439,126 @@ func (sHandle *ScheduleHandler) initCache() {
 		Namespaces: make(map[string]string, util.MapInitNum),
 		Data:       data,
 		Labels:     make(map[string]map[string]string, util.MapInitNum)}
+}
+
+// roundInfo freezes the round state of one job of the session: the session
+// job, the task buckets, the all-waiting verdict and the downgrade switch,
+// read once per session. Both reconciliations and both session snapshots
+// derive from this frozen pass, so the two stores can never count one job
+// differently in one session.
+type roundInfo struct {
+	jobInfo    *api.JobInfo
+	count      roundTaskCount
+	allWaiting bool
+	downgrade  bool
+}
+
+// reconcileTimingState reconciles the package-wide timeout and downgrade
+// states once per session: one frozen pass, then each store runs its own
+// lifecycle (sweep, per-job mutations, session snapshot) over the same
+// numbers, before the session hooks read them. The downgrade lifecycle runs
+// first: its seed gate must see the wait clocks carried from the earlier
+// sessions only, a wait clock started later in this reconciliation would mask
+// a restarted process.
+func (sHandle *ScheduleHandler) reconcileTimingState(ssnJobs map[api.JobID]*api.JobInfo) {
+	rounds := sHandle.collectRoundInfo(ssnJobs)
+	sHandle.reconcileDowngrade(rounds)
+	sHandle.reconcileWaitClock(rounds)
+}
+
+// isAliveJob reports whether the job is still held by the schedule env, the
+// liveness both cross-session stores sweep by.
+func (sHandle *ScheduleHandler) isAliveJob(jobID api.JobID) bool {
+	_, ok := sHandle.Jobs[jobID]
+	return ok
+}
+
+// collectRoundInfo walks the jobs of the session once and freezes their round
+// info: the wait clock is on by default, every job carries it. It writes
+// nothing: the mutations and the snapshots belong to the two reconciliations.
+func (sHandle *ScheduleHandler) collectRoundInfo(ssnJobs map[api.JobID]*api.JobInfo) map[api.JobID]roundInfo {
+	rounds := make(map[api.JobID]roundInfo, len(sHandle.Jobs))
+	for jobID, vcJob := range sHandle.Jobs {
+		jobInfo := ssnJobs[jobID]
+		if jobInfo == nil {
+			continue
+		}
+		count := countRoundTasks(jobInfo)
+		rounds[jobID] = roundInfo{
+			jobInfo:    jobInfo,
+			count:      count,
+			allWaiting: count.pending == count.scoped,
+			downgrade:  vcJob.isSchedulerDowngradeEnabled(),
+		}
+	}
+	return rounds
+}
+
+// reconcileDowngrade runs the session lifecycle of common/downgrade over the
+// round info: sweep the dead jobs, drop the constraint of the job-level
+// rescheduled rounds, lazily seed the state of the others from the pod
+// markers, then stamp the session guard of the downgrade-enabled jobs. It
+// must run before the wait clock reconciliation: the seed gate recognizes a
+// restarted process by the absence of a carried wait clock, and a wait clock
+// started later in this reconciliation would mask it.
+func (sHandle *ScheduleHandler) reconcileDowngrade(rounds map[api.JobID]roundInfo) {
+	downgrade.Sweep(sHandle.isAliveJob)
+	guards := make(map[api.JobID]bool, len(rounds))
+	for jobID, round := range rounds {
+		if !round.downgrade {
+			continue
+		}
+		// job-level reschedule (the whole scope is waiting again): only the level
+		// is dropped, the wait clock is never touched, so the level of the new
+		// round is derived from the time already waited; pod-level reschedule
+		// (part of the scope still scheduled) keeps its level
+		if downgrade.IsEffective(jobID) && round.allWaiting {
+			downgrade.ResetConstraint(jobID)
+		} else {
+			seedDowngradeFromPods(jobID, round.jobInfo)
+		}
+		guards[jobID] = round.allWaiting
+	}
+	downgrade.StampSession(guards)
+}
+
+// reconcileWaitClock runs the session lifecycle of common/cache over the
+// round info: sweep the dead jobs, end the fully placed rounds, start the
+// wait clock of the jobs the scheduler first sees waiting this session, then
+// stamp the elapsed snapshot every task of the session reads alike. A freshly
+// started clock freezes with elapsed zero and decides conservatively, the
+// waited windows are counted from the next session on.
+func (sHandle *ScheduleHandler) reconcileWaitClock(rounds map[api.JobID]roundInfo) {
+	cache.Sweep(sHandle.isAliveJob)
+	waitingRounds := make(map[api.JobID]bool, len(rounds))
+	for jobID, round := range rounds {
+		// the round is complete only in the committed states: a pipelined task
+		// still rolls back to pending, so a rolled back round keeps its wait
+		// clock alive and the elapsed time accumulates across the rollback
+		if round.count.scheduled == round.count.scoped {
+			cache.EndRound(jobID)
+		}
+		// the wait starts when the scheduler first sees the job waiting, the
+		// queue starvation before the first predicate is waited time too
+		if round.count.pending > 0 {
+			cache.RecordWaitStart(jobID)
+		}
+		waitingRounds[jobID] = round.allWaiting
+	}
+	cache.StampSession(waitingRounds)
+}
+
+// seedDowngradeFromPods recovers the downgrade state from the pod markers when
+// the process holds nothing about the job: no record and no wait clock.
+func seedDowngradeFromPods(jobID api.JobID, jobInfo *api.JobInfo) {
+	if downgrade.HasState(jobID) {
+		return
+	}
+	if _, hasClock := cache.WaitStartTime(jobID); hasClock {
+		return
+	}
+	seedConfig, seedTime := readDowngradeSeed(jobInfo)
+	downgrade.SeedDowngrade(jobID, seedConfig, seedTime)
 }
 
 // initAffinityCache initializes the pod-to-node affinity cache.
