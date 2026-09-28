@@ -59,12 +59,12 @@
 
     >[!NOTE]
     >
-    > `VERSION` 环境变量用于指定Ascend组件版本，本文档以`26.1.0`为例。每个独立的代码块中均需设置此变量。
+    > `VERSION` 环境变量用于指定Ascend组件版本，`BASE`环境变量用于指定基础镜像版本类型，本文档以`26.2.0`为例，`26.2.0`镜像版本有两种，即`ubuntu22.04`和`openeuler24.03`，本文以`openeuler24.03`为例。每个独立的代码块中均需设置此变量。
 
     1. 部署Ascend Docker Runtime。
 
         ```shell
-        VERSION=26.1.0
+        VERSION=26.2.0
         mkdir -p /tmp/Ascend-docker-runtime
         cd /tmp/Ascend-docker-runtime
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-docker-runtime_${VERSION}_linux-aarch64.run
@@ -92,18 +92,19 @@
     2. 拉取Ascend Device Plugin镜像。
 
         ```shell
-        VERSION=26.1.0
+        VERSION=26.2.0
+        BASE=openeuler24.03
         # 从华为云镜像仓拉取Ascend Device Plugin镜像
-        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}
+        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}-${BASE}
 
         # 为镜像添加本地标签
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION} ascend-k8sdeviceplugin:v${VERSION}
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}-${BASE} ascend-k8sdeviceplugin:v${VERSION}-${BASE}
         ```
 
     3. 部署Ascend Device Plugin。
 
         ```shell
-        VERSION=26.1.0
+        VERSION=26.2.0
         # 拉取配置文件
         mkdir -p /tmp/devicePlugin
         cd /tmp/devicePlugin
@@ -196,7 +197,7 @@
 5. 清理测试资源。
 
     ```shell
-    VERSION=26.1.0
+    VERSION=26.2.0
     # 删除测试Pod
     kubectl delete pod npu-test
 
@@ -239,12 +240,12 @@
 2. 安装组件。以AArch64架构为例，用户需根据实际情况下载对应架构的软件包。
     >[!NOTE]
     >
-    >快速入门以Helm快捷部署为例，要求MindCluster版本为26.1.0及以上，详细请参见[使用Helm安装](../03_installation_guide/02_installation/00_helm_installation.md)。
+    >快速入门以Helm快捷部署为例，要求MindCluster版本为26.2.0及以上，详细请参见[使用Helm安装](../03_installation_guide/02_installation/00_helm_installation.md)。
 
     1. 安装Ascend Docker Runtime。
 
         ```shell
-        VERSION=26.1.0
+        VERSION=26.2.0
         mkdir -p /tmp/Ascend-docker-runtime
         cd /tmp/Ascend-docker-runtime
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-docker-runtime_${VERSION}_linux-aarch64.run
@@ -256,7 +257,7 @@
     2. 通过Helm安装NodeD、Ascend Device Plugin、Volcano、ClusterD、Ascend Operator组件。
 
         ```shell
-        VERSION=26.1.0
+        VERSION=26.2.0
         mkdir /tmp/helm
         cd /tmp/helm
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-helm-deploy-tool_${VERSION}_linux.zip
