@@ -44,6 +44,10 @@ type NPUHandler struct {
 	NpuNumInvalidMap        map[int]struct{}
 	MaxNodeNPUNum           int
 	MaxCardNPUNum           int
+	// downgradedEffectTime and downgradedConfig are the session-level mark of the
+	// constraint downgrade, the config being the policy's own serialized snapshot
+	downgradedEffectTime int64
+	downgradedConfig     string
 }
 
 const (
