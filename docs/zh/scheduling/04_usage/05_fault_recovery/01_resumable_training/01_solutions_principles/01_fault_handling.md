@@ -36,11 +36,11 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 |重调度的级别|恢复训练耗时|配置步骤|说明|
 |--|--|--|--|
-|Job级别重调度|Job级重调度的恢复时间较长，随着任务规模增加恢复时间超线性劣化。|<p>Job级重调度操作步骤简单，使用MindCluster的用户仅打开配置开关即可使用。</p><p>关键配置步骤请参见[配置Job级别重调度](../03_configuration/01_configuring_fault_handling_policies.md#配置job级别重调度)。</p>|为了进一步降低恢复中资源调度时间，用户可以选择在Job级重调度上开启Pod级重调度能力。|
-|Pod级别重调度|Pod级重调度可以将资源调度时间缩短，且与任务规模无关。但是，Pod级重调度并不能优化训练初始化过程中的时间开销，整体恢复时间仍然会随着任务规模增加而超线性劣化。|<p>Pod级重调度用户需要额外在训练容器中集成训练进程管理能力，使用MindCluster的用户具备对应进程管理能力后即可使用。</p><p>关键配置步骤请参见[配置Pod级别重调度](../03_configuration/01_configuring_fault_handling_policies.md#配置pod级别重调度)。</p>|为了进一步降低训练初始化中的恢复时间，用户可以选择在Pod级重调度上开启进程级重调度能力。|
-|进程级别重调度（进程级恢复）|进程级重调度可以减少训练初始化时间，将整体恢复时间缩短，且与任务规模无关或者弱相关。|<p>相比Pod级重调度，进程级重调度用户需要额外在训练框架中集成高可用训练能力，使用MindCluster的用户需要修改训练脚本，并开启对应配置开关后使用。</p><p>关键配置步骤请参见[配置进程级别重调度](../03_configuration/01_configuring_fault_handling_policies.md#配置进程级别重调度)。</p>|为了解决大规模场景下MTBF时间较短的问题，进一步降低整体恢复时间，用户可以选择在进程级重调度上开启进程级在线恢复能力。|
-|进程级在线恢复|进程级在线恢复比起进程级重调度，恢复训练耗时更低。|<p>相比进程级重调度，进程级在线恢复用户需要配置对应的配置开关后使用。</p><p>关键配置步骤请参见[配置进程级在线恢复](../03_configuration/01_configuring_fault_handling_policies.md#配置进程级在线恢复)。</p>|当前进程级在线恢复支持片上内存故障和网络故障，其余故障场景将回退其他处理方式。|
-|算子级在线恢复|-|关键配置步骤请参见[配置算子级在线恢复](../03_configuration/01_configuring_fault_handling_policies.md#配置算子级在线恢复)。|-|
+|Job级别重调度|Job级重调度的恢复时间较长，随着任务规模增加恢复时间超线性劣化。|<p>Job级重调度操作步骤简单，使用MindCluster的用户仅打开配置开关即可使用。</p><p>关键配置步骤请参见[配置Job级别重调度](../02_configuration/01_configuring_fault_handling_policies.md#配置job级别重调度)。</p>|为了进一步降低恢复中资源调度时间，用户可以选择在Job级重调度上开启Pod级重调度能力。|
+|Pod级别重调度|Pod级重调度可以将资源调度时间缩短，且与任务规模无关。但是，Pod级重调度并不能优化训练初始化过程中的时间开销，整体恢复时间仍然会随着任务规模增加而超线性劣化。|<p>Pod级重调度用户需要额外在训练容器中集成训练进程管理能力，使用MindCluster的用户具备对应进程管理能力后即可使用。</p><p>关键配置步骤请参见[配置Pod级别重调度](../02_configuration/01_configuring_fault_handling_policies.md#配置pod级别重调度)。</p>|为了进一步降低训练初始化中的恢复时间，用户可以选择在Pod级重调度上开启进程级重调度能力。|
+|进程级别重调度（进程级恢复）|进程级重调度可以减少训练初始化时间，将整体恢复时间缩短，且与任务规模无关或者弱相关。|<p>相比Pod级重调度，进程级重调度用户需要额外在训练框架中集成高可用训练能力，使用MindCluster的用户需要修改训练脚本，并开启对应配置开关后使用。</p><p>关键配置步骤请参见[配置进程级别重调度](../02_configuration/01_configuring_fault_handling_policies.md#配置进程级别重调度)。</p>|为了解决大规模场景下MTBF时间较短的问题，进一步降低整体恢复时间，用户可以选择在进程级重调度上开启进程级在线恢复能力。|
+|进程级在线恢复|进程级在线恢复比起进程级重调度，恢复训练耗时更低。|<p>相比进程级重调度，进程级在线恢复用户需要配置对应的配置开关后使用。</p><p>关键配置步骤请参见[配置进程级在线恢复](../02_configuration/01_configuring_fault_handling_policies.md#配置进程级在线恢复)。</p>|当前进程级在线恢复支持片上内存故障和网络故障，其余故障场景将回退其他处理方式。|
+|算子级在线恢复|-|关键配置步骤请参见[配置算子级在线恢复](../02_configuration/01_configuring_fault_handling_policies.md#配置算子级在线恢复)。|-|
 
 #### 重调度策略
 
@@ -64,7 +64,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 ### 亚健康故障处理策略
 
-各亚健康故障处理策略的当前任务行为、CKPT要求、后续动作和配置入口，请参见[配置亚健康故障处理策略](../03_configuration/01_configuring_fault_handling_policies.md#配置亚健康故障处理策略)。
+各亚健康故障处理策略的当前任务行为、CKPT要求、后续动作和配置入口，请参见[配置亚健康故障处理策略](../02_configuration/01_configuring_fault_handling_policies.md#配置亚健康故障处理策略)。
 
 ## 重调度恢复
 
@@ -72,7 +72,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 **Job级别重调度**即每次故障停止所有Pod，重新创建并重调度所有Pod后，重启训练任务。重调度模式默认为**Job级别重调度**。
 
-了解Job级别重调度的关键配置步骤，请参见[配置Job级别重调度](../03_configuration/01_configuring_fault_handling_policies.md#配置job级别重调度)。
+了解Job级别重调度的关键配置步骤，请参见[配置Job级别重调度](../02_configuration/01_configuring_fault_handling_policies.md#配置job级别重调度)。
 
 **使用约束<a name="zh-cn_topic_0000002039194017_section1178044918127"></a>**
 
@@ -111,7 +111,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 **Pod级别重调度**即每次故障只停止故障相关的Pod，重新创建并重调度故障相关的Pod后，重启训练任务。如果当前故障不能恢复，则回退至Job级重调度模式。相比于Job级别重调度，Pod级别重调度会减少部分资源调度、Pod创建的时间。
 
-了解Pod级别重调度的关键配置步骤，请参见[配置Pod级别重调度](../03_configuration/01_configuring_fault_handling_policies.md#配置pod级别重调度)。
+了解Pod级别重调度的关键配置步骤，请参见[配置Pod级别重调度](../02_configuration/01_configuring_fault_handling_policies.md#配置pod级别重调度)。
 
 **使用约束<a name="zh-cn_topic_0000002003034876_section11983145119441"></a>**
 
@@ -153,7 +153,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 不能恢复则回退至Job级或Pod级重调度模式。相比于Pod级别重调度，本功能仅重调度故障进程，减少了大量进程间不同步的等待耗时。同时利用了新的HCCL建链方案大大降低了建链耗时，且通过NPU卡间的参数面高速网络P2P传递CKPT信息，避免了CKPT保存和加载的耗时。
 
-了解进程级别重调度的关键配置步骤，请参见[配置进程级别重调度](../03_configuration/01_configuring_fault_handling_policies.md#配置进程级别重调度)。
+了解进程级别重调度的关键配置步骤，请参见[配置进程级别重调度](../02_configuration/01_configuring_fault_handling_policies.md#配置进程级别重调度)。
 
 >[!NOTE]
 >
@@ -176,7 +176,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 - 不支持开启watchdog功能。
 - 不支持在保存Checkpoint期间触发进程级别重调度。
 - Atlas A3 训练系列产品场景下，若发生NPU掉卡类、OS断连类的故障，可导致进程级别重调度失败。
-- 当故障发生在HCCL建链阶段时，会导致进程级别重调度失败。如果除训练初始化的HCCL建链外，还存在其他训练阶段的HCCL建链，可参考[配置HCCL主动触发建链](../03_configuration/02_configuring_training_recovery.md#配置hccl主动触发建链)章节进行提前建链，防止故障出现在HCCL建链阶段。
+- 当故障发生在HCCL建链阶段时，会导致进程级别重调度失败。如果除训练初始化的HCCL建链外，还存在其他训练阶段的HCCL建链，可参考[配置HCCL主动触发建链](../02_configuration/02_configuring_training_recovery.md#配置hccl主动触发建链)章节进行提前建链，防止故障出现在HCCL建链阶段。
 - 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
 - MindSpore 2.11.0版本不再支持该特性。
 
@@ -454,7 +454,7 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 
 若网络故障的算子级在线恢复（HCCL通信算子重执行）执行失败，则回退至进程级在线恢复
 
-了解算子级在线恢复的关键配置步骤，请参见[配置算子级在线恢复](../03_configuration/01_configuring_fault_handling_policies.md#配置算子级在线恢复)。
+了解算子级在线恢复的关键配置步骤，请参见[配置算子级在线恢复](../02_configuration/01_configuring_fault_handling_policies.md#配置算子级在线恢复)。
 
 >[!NOTE]
 >HCCL（Huawei Collective Communication Library，华为集合通信库）是华为专为昇腾（Ascend）AI处理器设计的分布式通信库，旨在优化多设备（如NPU/GPU）间的高效协作，以加速深度学习模型的分布式训练，适用于需要大规模算力的AI场景。在分布式训练中，HCCL负责协调多个昇腾处理器之间的数据同步（如梯度聚合、参数更新），减少通信开销，提升训练效率。
@@ -508,9 +508,9 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 
 相比于进程级别重调度，进程级在线恢复不会重调度故障进程，减少了大量进程间不同步的等待耗时。同时通过NPU卡间的参数面高速网络P2P传递CKPT信息，避免了CKPT保存和加载的耗时。
 
-该故障处理模式默认关闭，若要开启请参见[（可选）配置组件](../04_examples_and_verification/menu_examples_and_verification.md#ZH-CN_TOPIC_0000002511346449)。
+该故障处理模式默认关闭，若要开启请参见[（可选）配置组件](../03_examples_and_verification/menu_examples_and_verification.md#ZH-CN_TOPIC_0000002511346449)。
 
-了解进程级在线恢复的关键配置步骤，请参见[配置进程级在线恢复](../03_configuration/01_configuring_fault_handling_policies.md#配置进程级在线恢复)。
+了解进程级在线恢复的关键配置步骤，请参见[配置进程级在线恢复](../02_configuration/01_configuring_fault_handling_policies.md#配置进程级在线恢复)。
 
 >[!NOTE]
 >
@@ -532,7 +532,7 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 - 不支持MC2开启场景。
 - 不支持开启watchdog功能。
 - 不支持在同一Step中多次（1次以上）出现网络故障和片上内存故障。
-- 当故障发生在HCCL建链阶段时，会导致进程级在线恢复失败。如果除训练初始化的HCCL建链外，还存在其他训练阶段的HCCL建链，可参考[配置HCCL主动触发建链](../03_configuration/02_configuring_training_recovery.md#配置hccl主动触发建链)章节进行提前建链，防止故障出现在HCCL建链阶段。
+- 当故障发生在HCCL建链阶段时，会导致进程级在线恢复失败。如果除训练初始化的HCCL建链外，还存在其他训练阶段的HCCL建链，可参考[配置HCCL主动触发建链](../02_configuration/02_configuring_training_recovery.md#配置hccl主动触发建链)章节进行提前建链，防止故障出现在HCCL建链阶段。
 - 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
 - MindSpore 2.11.0版本不再支持该特性。
 
@@ -729,7 +729,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 
 使用借轨回切功能时，NPU芯片的组网关系可参考《Ascend Training Solution 组网指南（Atlas A3训练产品）》中的“网络平面介绍 \> 参数面网络 \> [端口对接策略](https://support.huawei.com/enterprise/zh/doc/EDOC1100570090/3e6a1479)”章节。
 
-了解借轨通信任务暂停与回切功能的详细配置方法，请参见[配置借轨通信任务暂停与回切](../03_configuration/01_configuring_fault_handling_policies.md#配置借轨通信任务暂停与回切)。
+了解借轨通信任务暂停与回切功能的详细配置方法，请参见[配置借轨通信任务暂停与回切](../02_configuration/01_configuring_fault_handling_policies.md#配置借轨通信任务暂停与回切)。
 
 - 调用[借轨回切接口](../../../../06_api/04_clusterd/08_link_failover_and_switchback_apis.md)执行借轨回切动作前，请先了解NPU芯片组网关系，保证目标NPU的网络链路正常，如果目标NPU为linkdown状态会导致操作失败。
 - 以上述组网指南中的接口对接关系为例，对于以下几种情况，调用SwitchNicTrack接口时，指定的dev与op如下：
@@ -1144,7 +1144,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 
 优雅容错功能无需进行资源调度，即可自动将故障设备恢复。但是它无法降低训练初始化中的恢复时间，通常情况下，优雅容错所需恢复时间大于进程级重调度和进程级在线恢复功能。
 
-了解优雅容错的关键配置步骤，请参见[配置优雅容错](../03_configuration/01_configuring_fault_handling_policies.md#配置优雅容错)。
+了解优雅容错的关键配置步骤，请参见[配置优雅容错](../02_configuration/01_configuring_fault_handling_policies.md#配置优雅容错)。
 
 **使用约束<a name="zh-cn_topic_0000002098609234_section1137610139461"></a>**
 

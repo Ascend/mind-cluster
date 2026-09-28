@@ -55,13 +55,13 @@ watchdog用于缩短T<sub>1</sub>中的故障检测时间，配置仍位于独�
 
 为了降低上述损失，需要降低单次保存时间。单次保存时间受到保存数据量及存储性能的影响，通常难以改变这两者。本产品提供MindIO ACP产品解决周期性CKPT恢复损失高的问题。
 
-配置步骤请参见[配置周期性CKPT保存](../03_configuration/02_configuring_training_recovery.md#ZH-CN_TOPIC_0000002479226552)。
+配置步骤请参见[配置周期性CKPT保存](../02_configuration/02_configuring_training_recovery.md#ZH-CN_TOPIC_0000002479226552)。
 
 ### 异步CKPT保存
 
 MindIO ACP提供异步保存周期性CKPT的能力。未使用MindIO ACP时，需要将需要保存的参数从设备拷贝到主机侧，再从主机侧落盘到存储中，这一时间通常在分钟级。MindIO ACP提供异步落盘的能力，当需要保存的参数从设备拷贝到主机侧后，通过异步进程进行落盘到存储，不会阻塞训练进程，落盘的过程中训练可以继续进行。
 
-配置步骤请参见[配置异步CKPT保存](../03_configuration/02_configuring_training_recovery.md#配置异步ckpt保存pytorch)。
+配置步骤请参见[配置异步CKPT保存](../02_configuration/02_configuring_training_recovery.md#配置异步ckpt保存pytorch)。
 
 ### 临终CKPT<a name="ZH-CN_TOPIC_0000002511426397"></a>
 
@@ -71,7 +71,7 @@ MindCluster MindIO Try To Persist（下文简称MindIO TTP）提供临终CKPT能
 
 了解临终CKPT保存的详细介绍，请参见[故障恢复加速](../../../../07_references/00_fault_recovery_acceleration/01_product_description.md)。
 
-了解临终CKPT保存的配置步骤，请参见[配置临终CKPT保存](../03_configuration/02_configuring_training_recovery.md#配置临终ckpt保存)。
+了解临终CKPT保存的配置步骤，请参见[配置临终CKPT保存](../02_configuration/02_configuring_training_recovery.md#配置临终ckpt保存)。
 
 **适配功能点<a name="section1446615300284"></a>**
 
@@ -132,7 +132,7 @@ MindCluster MindIO Try To Persist（下文简称MindIO TTP）提供临终CKPT能
 
 ### 亚健康主动CKPT
 
-发生亚健康故障时，可通过亚健康主动CKPT保存临终遗言。该能力需要将亚健康策略配置为`graceExit`、故障恢复策略配置为`dump`，并确保TaskD和ClusterD可以正常使用。具体操作请参见[配置亚健康主动CKPT保存](../03_configuration/02_configuring_training_recovery.md#subHealthCkptSave)。
+发生亚健康故障时，可通过亚健康主动CKPT保存临终遗言。该能力需要将亚健康策略配置为`graceExit`、故障恢复策略配置为`dump`，并确保TaskD和ClusterD可以正常使用。具体操作请参见[配置亚健康主动CKPT保存](../02_configuration/02_configuring_training_recovery.md#subHealthCkptSave)。
 
 ## 缩短状态恢复时间
 
@@ -140,7 +140,7 @@ MindCluster MindIO Try To Persist（下文简称MindIO TTP）提供临终CKPT能
 
 MindIO ACP提供基于内存的周期性CKPT加载的能力。在训练恢复时，通常需要从存储加载之前保存的周期性CKPT，加载完成后恢复训练状态再继续训练。但是，由于数据量较大和存储性能限制，大模型任务通常加载时间在分钟级。为了降低CKPT加载时间，从而降低训练恢复的时间，MindIO ACP提供基于内存的周期性CKPT加载机制，故障后直接基于内存加载，将大幅降低加载时间。
 
-配置步骤请参见[配置内存CKPT加载](../03_configuration/02_configuring_training_recovery.md#配置内存ckpt加载pytorch)。
+配置步骤请参见[配置内存CKPT加载](../02_configuration/02_configuring_training_recovery.md#配置内存ckpt加载pytorch)。
 
 ### 参数面CKPT传输<a name="ZH-CN_TOPIC_0000002511426371"></a>
 
@@ -148,26 +148,26 @@ MindIO ACP提供基于内存的周期性CKPT加载的能力。在训练恢复时
 
 在故障时刻将参数状态保持在设备侧，在容错完成训练恢复时将正常卡内的参数状态通过参数面网络传输到容错处理的卡上，从而快速恢复容错处理卡的参数状态。当前该能力需要结合进程级别重调度和进程级在线恢复使用，不支持用户独立使用。
 
-了解参数面CKPT的配置步骤，请参见[配置参数面CKPT传输恢复](../03_configuration/02_configuring_training_recovery.md#配置参数面CKPT传输恢复)。
+了解参数面CKPT的配置步骤，请参见[配置参数面CKPT传输恢复](../02_configuration/02_configuring_training_recovery.md#配置参数面CKPT传输恢复)。
 
 ## 缩短训练拉起时间
 
 ### 集合通信初始化优化
 
-Parallel Store多线程建链优化：PyTorch框架创建通信组时，使用TCP Store进行信息交换。随着任务规模变大会影响原生TCP Store的信息处理性能，导致创建通信组时间过长。针对该问题，PyTorch Adapter插件支持使用原生TCP Store的优化版本Parallel Store，详细说明请参见[Parallel Store功能说明](../03_configuration/02_configuring_training_recovery.md#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table14133757143220)。
+Parallel Store多线程建链优化：PyTorch框架创建通信组时，使用TCP Store进行信息交换。随着任务规模变大会影响原生TCP Store的信息处理性能，导致创建通信组时间过长。针对该问题，PyTorch Adapter插件支持使用原生TCP Store的优化版本Parallel Store，详细说明请参见[Parallel Store功能说明](../02_configuration/02_configuring_training_recovery.md#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table14133757143220)。
 
-原生HCCL建链性能优化：PyTorch框架在NPU侧交换集合通信信息后进行NPU间连接建链。随任务规模变大，导致建链时间大幅度增加。针对该问题，CANN对原生HCCL建链进行了性能优化，详细说明请参见[原生HCCL建链性能优化功能说明](../03_configuration/02_configuring_training_recovery.md#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table10637950133911)。
+原生HCCL建链性能优化：PyTorch框架在NPU侧交换集合通信信息后进行NPU间连接建链。随任务规模变大，导致建链时间大幅度增加。针对该问题，CANN对原生HCCL建链进行了性能优化，详细说明请参见[原生HCCL建链性能优化功能说明](../02_configuration/02_configuring_training_recovery.md#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table10637950133911)。
 
-RankTable模式建链优化：集群调度Ascend Operator组件为PyTorch框架提供生成集合通信配置文件（RankTable File，也叫hccl.json文件）功能，可以通过RankTable模式建链，缩短集群通信建链时间，详细说明请参见[集合通信使用RankTable模式建链](../03_configuration/02_configuring_training_recovery.md#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table1749892464019)。
+RankTable模式建链优化：集群调度Ascend Operator组件为PyTorch框架提供生成集合通信配置文件（RankTable File，也叫hccl.json文件）功能，可以通过RankTable模式建链，缩短集群通信建链时间，详细说明请参见[集合通信使用RankTable模式建链](../02_configuration/02_configuring_training_recovery.md#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table1749892464019)。
 
 ### 编译和初始化优化
 
-断点续训过程中拉起训练需要重新执行算子时，算子编译需要消耗大量时间。针对该问题，可选择算子二进制或算子编译缓存降低编译时间，详细说明请参见[算子二进制功能说明](../03_configuration/02_configuring_training_recovery.md#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table8599191019143)和[算子编译缓存功能说明](../03_configuration/02_configuring_training_recovery.md#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table2193759172110)。
+断点续训过程中拉起训练需要重新执行算子时，算子编译需要消耗大量时间。针对该问题，可选择算子二进制或算子编译缓存降低编译时间，详细说明请参见[算子二进制功能说明](../02_configuration/02_configuring_training_recovery.md#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table8599191019143)和[算子编译缓存功能说明](../02_configuration/02_configuring_training_recovery.md#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table2193759172110)。
 
 >[!NOTE]
 >算子二进制和算子编译缓存二者不兼容，请选择其中之一进行使用。
 
-断点续训过程中拉起训练时需要构建计算图，在大模型场景下，构建计算图并编译需要消耗大量时间。针对该问题，MindSpore支持在首次编译时将编译缓存文件进行存储，进行故障恢复时可以直接读取存储中的图编译缓存，降低图编译时间，详细说明请参见[图编译缓存功能说明](../03_configuration/02_configuring_training_recovery.md#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table175224282139)。
+断点续训过程中拉起训练时需要构建计算图，在大模型场景下，构建计算图并编译需要消耗大量时间。针对该问题，MindSpore支持在首次编译时将编译缓存文件进行存储，进行故障恢复时可以直接读取存储中的图编译缓存，降低图编译时间，详细说明请参见[图编译缓存功能说明](../02_configuration/02_configuring_training_recovery.md#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table175224282139)。
 
 ## 提升恢复拉起成功率
 

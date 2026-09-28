@@ -32,7 +32,7 @@
 
 `roce_err_ctr_*`、`roce_warn_ctr_*`、`roce_cmdq_ctr_roce_cmd_2err_qp`、`roce_cmdq_ctr_roce_cmd_sqerr2rts_qp`、`roce_cmdq_ctr_roce_data_cqe_ro_enable`、`roce_cmdq_ctr_roce_rq_cqe_128_enable`、`roce_cmdq_ctr_roce_sq_cqe_128_enable`、`roce_cmdq_ctr_shadow_function_invalid`、`roce_dp_ctr_ccp_token_not_enough`、`roce_dp_ctr_db_mtu_error_cnt`、`roce_dp_ctr_sq_datalen_over_limit_cnt`、`roce_dp_ctr_rr_ecn_rx`、`roce_dp_ctr_sw_ecn_rx`、`roce_dp_ctr_cnp_rx_entry`、`roce_dp_ctr_cnp_tx_entry`、`roce_dp_ctr_fast_cnp_event_entry`、`roce_dp_ctr_port_cnp_rx_entry`、`roce_dp_ctr_port_cnp_tx_entry`。
 
-白名单的配置方法和匹配规则详见[白名单配置说明](../05_developer_guide/00_installation_deployment/00_manual_installation/13_dpu_exporter.md#白名单配置说明)。
+白名单的配置方法和匹配规则详见[白名单配置说明](../05_developer_guide/00_installation_deployment/00_manual_installation/12_dpu_exporter.md#白名单配置说明)。
 
 ### 响应示例
 

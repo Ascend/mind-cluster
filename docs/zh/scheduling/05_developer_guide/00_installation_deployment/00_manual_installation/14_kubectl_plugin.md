@@ -4,7 +4,7 @@ Kubectl Plugin是集群运维Agent特性的客户端命令行工具，包含 `ku
 
 - 使用[集群运维Agent](../../../01_introduction/02_feature_description.md#ZH-CN_TOPIC_0000002524312690)特性的用户，必须安装Kubectl Plugin。
 - Kubectl Plugin为纯Python标准库实现的客户端工具，无需pip安装。
-- 安装Kubectl Plugin前，需先完成Agent Core和Node Collector的部署，详细说明请参见 [Agent Core](./16_agent_core.md) 和 [Node Collector](./17_node_collector.md)。
+- 安装Kubectl Plugin前，需先完成Agent Core和Node Collector的部署，详细说明请参见 [Agent Core](./15_agent_core.md) 和 [Node Collector](./16_node_collector.md)。
 
 ## 操作步骤<a name="section15023132772914"></a>
 
