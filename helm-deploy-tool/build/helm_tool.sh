@@ -248,7 +248,7 @@ usage() {
     echo ""
     echo "Options:"
     echo "  --all                       Execute all operations (delete ascend-device-plugin daemonsets before version 26.1.0 and add helm meta to all)"
-    echo "  --delete-old-demonset       Delete ascend-device-plugin daemonsets before version 26.1.0"
+    echo "  --delete-old-daemonset       Delete ascend-device-plugin daemonsets before version 26.1.0"
     echo "  --add-helm-meta-all         Only add helm meta to all resources"
     echo "  --namespace                 Only add helm meta to namespaces (mindx-dl, cluster-system)"
     echo "  --clusterd                  Only add helm meta for clusterd component"
@@ -279,7 +279,7 @@ main() {
                 delete_old_device_plugin
                 add_helm_meta_all
                 ;;
-            --delete-old-demonset)
+            --delete-old-daemonset)
                 delete_old_device_plugin
                 ;;
             --add-helm-meta-all)

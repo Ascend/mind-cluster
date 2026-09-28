@@ -96,7 +96,7 @@ DPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
     - **Containerd场景**：执行如下命令。
 
         ```shell
-        ctr -n k8s.io c ls | grep dpu-exporter
+        ctr -n k8s.io i ls | grep dpu-exporter
         ```
 
     若镜像存在且名称和版本号均正确，执行[步骤4](#li0640635114212)。若镜像不存在，请参见[准备镜像](./01_preparing_for_installation.md#准备镜像)，完成镜像制作和分发。

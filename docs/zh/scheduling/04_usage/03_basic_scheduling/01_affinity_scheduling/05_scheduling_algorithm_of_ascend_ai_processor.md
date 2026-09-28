@@ -24,7 +24,7 @@
 
 **具体实现<a name="section158817331130"></a>**
 
-具体代码实现请参考开源代码中[ValidNPUJob](https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.1.0/component/ascend-for-volcano/internal/npu/base/frame.go)方法。ValidNPUJob用于校验用户下发配置的合理性，此时不会校验集群环境上的真实资源是否充足，而是单纯校验任务的关键字段是否完整，字段的值域是否正确，字段之间是否匹配。
+具体代码实现请参考开源代码中[ValidNPUJob](https://gitcode.com/Ascend/mind-cluster/blob/release%2Fv26.2.0/component/ascend-for-volcano/internal/npu/base/frame.go)方法。ValidNPUJob用于校验用户下发配置的合理性，此时不会校验集群环境上的真实资源是否充足，而是单纯校验任务的关键字段是否完整，字段的值域是否正确，字段之间是否匹配。
 
 ## 节点预选<a name="ZH-CN_TOPIC_0000002479386932"></a>
 
@@ -36,7 +36,7 @@
 
 **具体实现<a name="section185864321413"></a>**
 
-具体代码实现请参考开源代码中[CheckNodeNPUByTask](https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.1.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法。其中通过GetTaskReqNPUNum方法获取到训练任务请求的昇腾AI处理器数量，再通过GetUsableTopFromNode方法获取到节点可用NPU资源。JudgeNodeAndTaskNPU方法实现了判断节点NPU资源是否满足任务需求的功能。
+具体代码实现请参考开源代码中[CheckNodeNPUByTask](https://gitcode.com/Ascend/mind-cluster/blob/release%2Fv26.2.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法。其中通过GetTaskReqNPUNum方法获取到训练任务请求的昇腾AI处理器数量，再通过GetUsableTopFromNode方法获取到节点可用NPU资源。JudgeNodeAndTaskNPU方法实现了判断节点NPU资源是否满足任务需求的功能。
 
 ## 节点优选<a name="ZH-CN_TOPIC_0000002479226940"></a>
 
@@ -48,7 +48,7 @@
 
 **具体实现<a name="section15355114514519"></a>**
 
-具体代码实现请参考开源代码中[ScoreBestNPUNodes](https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.1.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法，其中getNodeBestScore方法实现了根据亲和性确定节点优先级。在选择节点时，优先检测是否配置了交换机亲和性调度和逻辑超节点亲和性调度。既没有配置交换机亲和性调度，又没有逻辑超节点亲和性调度，则使用普通节点优选原则。
+具体代码实现请参考开源代码中[ScoreBestNPUNodes](https://gitcode.com/Ascend/mind-cluster/blob/release%2Fv26.2.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法，其中getNodeBestScore方法实现了根据亲和性确定节点优先级。在选择节点时，优先检测是否配置了交换机亲和性调度和逻辑超节点亲和性调度。既没有配置交换机亲和性调度，又没有逻辑超节点亲和性调度，则使用普通节点优选原则。
 
 **普通节点优选原则<a name="section1797111616358"></a>**
 
@@ -124,4 +124,4 @@ Volcano框架根据节点优选得到分数后为Pod任务选择最优的节点�
 
 **具体实现<a name="section94176351465"></a>**
 
-具体代码实现请参考开源代码中[UseAnnotation](https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.1.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法，其中selectNPUFromNode方法实现了根据亲和性从node上选取昇腾AI处理器的功能。
+具体代码实现请参考开源代码中[UseAnnotation](https://gitcode.com/Ascend/mind-cluster/blob/release%2Fv26.2.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法，其中selectNPUFromNode方法实现了根据亲和性从node上选取昇腾AI处理器的功能。

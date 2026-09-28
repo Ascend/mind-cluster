@@ -604,7 +604,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
 </td>
 <td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5-mindspore "><p id="p1493742904013"><a name="p1493742904013"></a><span id="ph153229411739"><a name="ph153229411739"></a>ms_multinodes_acjob_superpod.yaml</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6-mindspore "><p id="p1637217494110"><a name="p1637217494110"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/yamls/ms_multinodes_acjob_superpod.yaml" target="_blank" rel="noopener noreferrer">ms_multinodes_acjob_superpod.yaml</a></p>
+<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6-mindspore "><p id="p1637217494110"><a name="p1637217494110"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/yamls/ms_multinodes_acjob_superpod.yaml" target="_blank" rel="noopener noreferrer">ms_multinodes_acjob_superpod.yaml</a></p>
 </td>
 <td class="cellrowborder" valign="top" width="15.413082616523303%" headers="mcps1.2.8.1.7-mindspore "><p id="p79373296408"><a name="p79373296408"></a>示例默认使用2*16卡任务</p>
 </td>
@@ -1355,7 +1355,7 @@ Events:  <none>
     cd /data/atlas_dls/public/code
     git clone https://gitcode.com/Ascend/mind-cluster.git
     cd ./mind-cluster/component/clusterd
-    git checkout branch_v26.1.0   # branch_v26.1.0是代码仓版本分支，请自行切换到目标分支
+    git checkout release/v26.2.0   # release/v26.2.0是代码仓版本分支，请自行切换到目标分支
     ```
 
 2. 修改ClusterD代码。
@@ -1397,7 +1397,7 @@ Events:  <none>
    ```shell
    cd ./build/
    chmod +x build.sh && dos2unix build.sh
-   sed -i 's|build_version="v[^"]\+"|build_version="xxx"|g' build.sh  # xxx替换为版本号，如v26.1.0
+   sed -i 's|build_version="v[^"]\+"|build_version="xxx"|g' build.sh  # xxx替换为版本号，如v26.2.0
    sed -i 's|export CGO_ENABLED=0|export CGO_ENABLED=1|g' build.sh  # 开启CGO功能
    ./build.sh # 编译ClusterD，需要提前安装好Go sdk，具体版本以ClusterD组件代码的go.mod文件内容为准
    ```
@@ -1412,7 +1412,7 @@ Events:  <none>
 
    ```bash
    -r-x------. 1 root root 45891128 Aug 13 10:52 clusterd
-   -r--------. 1 root root     4021 Aug 13 10:52 clusterd-v26.1.0.yaml
+   -r--------. 1 root root     4021 Aug 13 10:52 clusterd-v26.2.0.yaml
    -r--------. 1 root root      946 Aug 13 10:52 Dockerfile
    -r--------. 1 root root      209 Aug 13 10:52 faultDuration.json
    -r--------. 1 root root      207 Aug 13 10:52 fdConfig.yaml
