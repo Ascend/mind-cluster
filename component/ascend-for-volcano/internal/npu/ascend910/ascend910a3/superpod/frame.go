@@ -146,6 +146,9 @@ func (tp *module910SuperPod) checkSpBlock() *api.ValidateResult {
 		}
 		tp.spBlock = tp.SpBlockNPUNum / tp.MaxNodeNPUNum
 	}
+	// snapshot the configured constraint, the scheduler downgrade lowers
+	// spBlock later but the hook must keep reading the configured value
+	tp.configuredSpBlock = tp.spBlock
 
 	if tp.spBlock > tp.FrameAttr.SuperPodSize {
 		return &api.ValidateResult{

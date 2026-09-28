@@ -29,6 +29,7 @@ type module910SuperPod struct {
 	ascend910a3.Base910A3
 	nodeVPodId        map[string]string
 	spBlock           int
+	configuredSpBlock int // configuredSpBlock is the sp-block derived from the job annotation by checkSpBlock.
 	isInferServiceJob bool
 	inferServiceID    string
 }
