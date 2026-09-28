@@ -27,6 +27,7 @@ import (
 	"k8s.io/klog/v2"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/downgrade"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 )
@@ -55,6 +56,12 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 	if !found {
 		klog.V(util.LogWarningLev).Infof("%s npuAllocateFunc %s not exist.", PluginName, task.NodeName)
 		return
+	}
+	if vcJob.isSchedulerDowngradeEnabled() {
+		// The constraint is frozen eagerly at the pipeline moment and survives a
+		// rollback by design: the next session hits the all-waiting factory
+		// reset and rebuilds the equivalent state, no compensation here.
+		downgrade.MarkEffective(task.Job)
 	}
 
 	sHandle.markDistributionMode(task, vcJob)
@@ -193,9 +200,15 @@ func (sHandle *ScheduleHandler) NPUDeallocateFunc(task *api.TaskInfo) {
 	// cache entry written by NPUAllocateFunc is stale — the pod never actually
 	// ran on this node. RollbackAssignment restores the previous assignment
 	// if one exists, or removes the entry entirely if this was a first-time assignment.
+	// The downgrade markers written at the pipeline moment are stale the same
+	// way, dropping them lets the next successful binding refresh the markers.
 	// When the task is Releasing (evicted by preempt/reclaim), keep the cache
 	// so the pod can be rescheduled back to its original node to reuse images.
 	if task.Status == api.Pending {
+		if task.Pod != nil {
+			delete(task.Pod.Annotations, util.SchedulerDowngradedAnnoKey)
+			delete(task.Pod.Annotations, util.SchedulerDowngradedLevelAnnoKey)
+		}
 		if sHandle.AffinityCache != nil && vcJob.Owner.UID != "" {
 			if rankIndex, ok := task.Pod.Annotations[PodRankIndexKey]; ok && rankIndex != "" {
 				sHandle.AffinityCache.RollbackAssignment(vcJob.Owner.UID, rankIndex)
