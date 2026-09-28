@@ -76,12 +76,12 @@
 
 **降级与边界说明**
 
-|场景|行为|
-|--|--|
-|集群无空闲NPU，替换副本无法调度|任务以"N-1副本"降级运行，训练不中断；副本扩容可后续手动触发|
-|token续推进度校验失败|自动降级为从头重新生成该prompt|
-|单条prompt重试预算耗尽|计入批次失败率；批次成功率低于`min_ok_ratio`时丢弃该批次（训练不中断），所有批次均失败时生成任务终止、训练中断|
-|同步训推共卡部署模式|不适用本特性|
+|场景| 行为                                                                                                                                                                     |
+|--|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|集群无空闲NPU，替换副本无法调度| 在`replacement_give_up_timeout_s`（默认180秒）内持续等待空闲NPU以拉起替换副本：<ul><li>期间出现空闲NPU：自动完成副本替换，恢复至N副本运行</li><li>等待超时：放弃本次替换，训练不中断，任务以"N-1副本"持续运行至结束；任务运行期间不会自动补齐副本，如需恢复至N副本，需重新下发训练任务</li></ul> |
+|token续推进度校验失败| 自动降级为从头重新生成该prompt                                                                                                                                                     |
+|单条prompt重试预算耗尽| 计入批次失败率；批次成功率低于`min_ok_ratio`时丢弃该批次（训练不中断），所有批次均失败时生成任务终止、训练中断                                                                                                         |
+|同步训推共卡部署模式| 不适用本特性                                                                                                                                                                 |
 
 ## 使用约束
 
@@ -146,7 +146,7 @@
 
 ### 步骤2：执行任务YAML脚本
 
-1. 获取verl弹性推理容错示例（任务YAML、容器启动脚本、训练脚本），根据实际场景修改镜像、模型路径、数据路径和挂载目录。相关样例可参考[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/reinforcement-learning/verl/elastic-rollout)仓库的“samples/reinforcement-learning/verl/elastic-rollout”目录。
+1. 获取verl弹性推理容错示例（任务YAML、容器启动脚本、训练脚本），根据实际场景修改镜像、模型路径、数据路径和挂载目录。相关样例可参考[elastic-rollout vcjob部署脚本示例](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/reinforcement-learning/verl/elastic-rollout)。
 2. 确认任务YAML包含以下标注，用于开启故障检测与Pod重调度：NPU卡故障、推理Pod级故障时由重调度重建推理实例（不涉及Job级重调度），详细配置请参见[配置强化学习任务Pod重调度](../01_colocated_scenario/02_configuring_rescheduling_reinforcement_learning_job.md)。
 
     ```yaml
@@ -173,45 +173,87 @@
 
 ## 训练脚本关键参数说明
 
-在训练启动脚本的verl配置中增加如下配置（示例脚本已集成，可按需修改）：
+弹性推理容错支持fully-async（全异步）和one-step-off（一步偏差）两种执行模式。完整配置（已包含以下配置项）可参考[elastic-rollout vcjob部署脚本示例](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/reinforcement-learning/verl/elastic-rollout)。
+
+### 启动命令
+
+- **fully-async（全异步）**：`python3 -m rollout_elastic.fully_async_main --config-path=config --config-name='fully_async_ppo_trainer'`；Megatron训练框架使用`fully_async_ppo_megatron_trainer`
+- **one-step-off（一步偏差）**：`python3 -m verl.experimental.one_step_off_policy.main_ppo --config-path=config --config-name='one_step_off_ppo_trainer'`；Megatron训练框架使用`one_step_off_ppo_megatron_trainer`
+
+### 公共配置
 
 ```yaml
 actor_rollout_ref:
   rollout:
     mode: async                        # standalone异步推理（训推分离）
-    calculate_log_probs: True
+    calculate_log_probs: True          # 在推理侧计算token级log概率，训推分离场景训练侧需消费该值计算损失
     checkpoint_engine:
-      backend: "hccl"                  # 昇腾环境使用hccl，NVIDIA环境使用nccl
-
-async_training:
-  staleness_threshold: 0.1             # fully-async：样本最大陈旧度，超过后暂停生成
-  trigger_parameter_sync_step: 4       # 每消费N个批次执行一次权重同步
-  require_batches: 1                   # 每次同步消费的ppo_mini_batch数
-  partial_rollout: True                # 权重同步后的中断生成续推
-  fault_tolerance:
-    enabled: True                      # 开启弹性推理容错（默认False，行为与原生verl完全一致）
-    progress:
-      enabled: True                    # 开启token续推
-      persist_root: "checkpoints/rollout_progress"   # 进度持久化根目录（建议指向共享存储）
-      flush_token_interval: 64         # 每生成N个token持久化一次进度
-      model_version_policy:
-        mode: "exact"                  # 续推版本门控：exact/relaxed/compatible
-
+      backend: hccl                    # 权重同步通信后端，昇腾环境为hccl，NVIDIA环境为nccl
 algorithm:
   rollout_correction:
-    bypass_mode: True
+    bypass_mode: True                  # 跳过原生rollout一致性校正流程，容错由本特性接管的必要配置
+async_training:
+  fault_tolerance:
+    enabled: True                      # 弹性推理容错开关，默认False，关闭时行为与原生verl完全一致
 ```
 
-**表 1** async_training参数说明
+### 差异配置
 
-|参数| 默认值    |说明|
-|--|--------|--|
-|`staleness_threshold`| `0.1`  |fully-async模式下允许的样本最大陈旧度，队列中样本过于陈旧时暂停生成|
-|`trigger_parameter_sync_step`| `4`    |训练侧每消费多少个批次触发一次向推理副本的权重同步|
-|`require_batches`| `1`    |每次权重同步期间消费的mini-batch数量|
-|`partial_rollout`| `True` |权重同步中止生成后，是否从断点续推|
+**fully-async（全异步）额外配置**
 
-**表 2** fault_tolerance故障容忍参数说明
+```yaml
+data:
+  train_batch_size: 0                  # 训练批次全部来自推理层持续生成，不从数据集按批次划分
+  gen_batch_size: 1                    # 每次生成的prompt数量，当前仅支持1
+async_training:
+  staleness_threshold: 0.1             # 允许的样本最大陈旧度，队列中样本过于陈旧时暂停生成
+  trigger_parameter_sync_step: 4       # 训练侧每消费多少个批次触发一次向推理副本的权重同步
+  require_batches: 1                   # 每次权重同步期间消费的mini-batch数量
+  partial_rollout: True                # 权重同步中止生成后，是否从断点续推
+```
+
+**one-step-off（一步偏差）额外配置**
+
+```yaml
+actor_rollout_ref:
+  rollout:
+    free_cache_engine: False           # 同步权重前保留推理引擎缓存，否则无法执行权重同步
+```
+
+### 容错相关配置
+
+以下配置为弹性推理容错特性的相关配置，fully-async与one-step-off模式通用，YAML中为各参数默认值：
+
+```yaml
+async_training:
+  fault_tolerance:
+    enabled: False
+    heartbeat_interval_s: 5.0
+    heartbeat_miss_threshold: 3
+    replace_dead_replicas: True
+    replacement_give_up_timeout_s: 180.0
+    max_request_retries: 3
+    request_timeout_s: 600.0
+    server_call_timeout_s: 120.0
+    min_ok_ratio: 0.5
+    weight_sync_member_timeout_s: 60.0
+    weight_sync_transfer_timeout_s: 600.0
+    max_weight_sync_retries: 2
+    progress:
+      enabled: False
+      persist_root: checkpoints/rollout_progress
+      flush_token_interval: 64
+      model_version_policy:
+        mode: exact
+      write_timeout_s: 30.0
+      max_pending_writes_per_recovery: 8
+      stats_log_interval_s: 60.0
+      gc_delay_s: 300.0
+      gc_period_s: 60.0
+      gc_retry_backoff_s: 30.0
+```
+
+**表 1** fault_tolerance参数说明
 
 |参数|默认值| 说明                               |
 |--|--|----------------------------------|
@@ -219,19 +261,26 @@ algorithm:
 |`heartbeat_interval_s`|`5.0`| Supervisor心跳探测周期，单位为秒            |
 |`heartbeat_miss_threshold`|`3`| 连续丢失心跳次数达到该值即判定副本死亡              |
 |`replace_dead_replicas`|`True`| 副本判死后是否自动拉起替换副本（仅standalone模式支持） |
+|`replacement_give_up_timeout_s`|`180.0`| 替换副本等待NPU资源空闲的放弃超时时间，单位为秒；超时后放弃本次替换，任务以"N-1副本"降级运行，且不会自动重试 |
 |`max_request_retries`|`3`| 单条prompt跨副本重试的最大次数               |
 |`request_timeout_s`|`600.0`| 单条prompt完整重试链路的总时间预算，单位为秒        |
 |`server_call_timeout_s`|`120.0`| 单副本单次调用超时时间，超时触发重试，单位为秒          |
 |`min_ok_ratio`|`0.5`| 批次最低成功率，低于该值时训练侧跳过该step          |
+|`weight_sync_member_timeout_s`|`60.0`| 权重同步建立通信组时单个副本的就绪超时时间，超时副本被剔除，单位为秒 |
+|`weight_sync_transfer_timeout_s`|`600.0`| 单次完整模型权重传输的总超时时间，单位为秒        |
+|`max_weight_sync_retries`|`2`| 推理侧权重同步瞬时失败后，剔除故障副本并以"N-1副本"重放同步的最大次数 |
 
-**表 3** fault_tolerance.progress（token续推）参数说明
+**表 2** fault_tolerance.progress（token续推）参数说明
 
-|参数|默认值|说明|
-|--|--|--|
-|`enabled`|`False`|token续推开关，需与`fault_tolerance.enabled`同时开启|
-|`persist_root`|`checkpoints/rollout_progress`|进度持久化根目录，多副本场景建议配置为共享存储路径|
-|`flush_token_interval`|`64`|每生成多少个token持久化一次进度，值越小恢复时重推越少、持久化开销越大|
-|`model_version_policy.mode`|`exact`|续推版本门控模式：<br>- `exact`：严格匹配权重版本<br>- `relaxed`：不校验<br>- `compatible`：版本缺失时放行|
-|`write_timeout_s`|`30.0`|单次进度写入超时时间，单位为秒|
-|`gc_delay_s`|`300.0`|进度记录完成后延迟回收时间，单位为秒|
-|`gc_period_s`|`60.0`|后台垃圾回收周期，单位为秒|
+|参数|默认值| 说明                                                                           |
+|--|--|------------------------------------------------------------------------------|
+|`enabled`|`False`| token续推开关，需与`fault_tolerance.enabled`同时开启                                    |
+|`persist_root`|`checkpoints/rollout_progress`| 进度持久化根目录，多副本场景建议配置为共享存储路径                                                    |
+|`flush_token_interval`|`64`| 每生成多少个token持久化一次进度，值越小恢复时重推越少、持久化开销越大                                        |
+|`model_version_policy.mode`|`exact`| 续推版本门控模式：<ul><li>`exact`：严格匹配权重版本</li><li>`relaxed`：不校验</li><li>`compatible`：版本缺失时放行</li></ul> |
+|`write_timeout_s`|`30.0`| 单次进度写入超时时间，单位为秒                                                              |
+|`max_pending_writes_per_recovery`|`8`| 单个请求恢复期间的待完成写入上限，超过上限后丢弃该次写入，不影响续推正确性                                        |
+|`stats_log_interval_s`|`60.0`| 进度存储统计日志打印周期，单位为秒                                                            |
+|`gc_delay_s`|`300.0`| 进度记录完成后延迟回收时间，单位为秒                                                           |
+|`gc_period_s`|`60.0`| 后台垃圾回收周期，单位为秒                                                                |
+|`gc_retry_backoff_s`|`30.0`| 垃圾回收删除失败后的重试退避时间，单位为秒                                                        |
