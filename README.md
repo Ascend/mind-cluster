@@ -45,7 +45,7 @@ MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）训练�
 | vLLM推理任务最佳实践           | [vLLM推理任务最佳实践](./docs/zh/scheduling/04_usage/09_vllm_best_practice/00_before_you_start.md) | ✅        |
 | Infer Operator推理任务最佳实践 | [Infer Operator推理任务最佳实践](./docs/zh/scheduling/04_usage/10_infer_operator_best_practice/00_before_you_start.md) | ✅        |
 | 潮汐调度最佳实践               | [潮汐调度最佳实践](./docs/zh/scheduling/04_usage/11_tidal_scheduling/00_before_you_start.md) | ✅        |
-| verl强化学习任务最佳实践               | [verl强化学习任务最佳实践](./docs/zh/scheduling/04_usage/12_verl_best_practice/00_before_you_start.md) | ✅        |
+| verl强化学习任务最佳实践               | [verl强化学习任务最佳实践](./docs/zh/scheduling/04_usage/12_verl_best_practice/menu_verl_best_practice.md) | ✅        |
 
 **故障诊断**
 

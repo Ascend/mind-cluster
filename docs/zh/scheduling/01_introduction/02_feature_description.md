@@ -230,7 +230,7 @@ DPU资源监测所需组件：
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[断点续训](../04_usage/05_fault_recovery/01_resumable_training/00_feature_description.md)章节进行操作。
-3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/05_fault_recovery/01_resumable_training/04_examples_and_verification/01_pytorch_examples_and_verification.md#制作镜像)章节。
+3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/01_pytorch_examples_and_verification.md#制作镜像)章节。
 4. MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](../07_references/01_optimizing_saving_and_loading_checkpoints/01_product_description.md)章节。
 5. MindIO TFT的详细介绍及安装步骤请参见[故障恢复加速](../07_references/00_fault_recovery_acceleration/01_product_description.md)。
 
