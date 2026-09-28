@@ -106,20 +106,28 @@ func testInitFaultConfigFromCM() {
 	}
 
 	convey.Convey("test method initFaultConfigFromCM success", func() {
+		configManager.initFromCMFlag = false
 		var p1 = gomonkey.ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetConfigMap", fakeNodeFaultConfigCM(), nil)
 		defer p1.Reset()
 		err := configManager.initFaultConfigFromCM()
 		convey.So(err, convey.ShouldBeNil)
+		// flag must be set only after Loading from configmap successfully
+		convey.So(configManager.initFromCMFlag, convey.ShouldBeTrue)
 	})
 
 	convey.Convey("test method initFaultConfigFromCM failed, get cm error", func() {
+		configManager.initFromCMFlag = false
 		var p2 = gomonkey.ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetConfigMap", nil, testErr)
 		defer p2.Reset()
 		err := configManager.initFaultConfigFromCM()
 		convey.So(err, convey.ShouldResemble, testErr)
+		// flag must keep false when falling back to local file, so that the Add event
+		// from informer after network recovery can reload the configmap
+		convey.So(configManager.initFromCMFlag, convey.ShouldBeFalse)
 	})
 
 	convey.Convey("test method initFaultConfigFromCM failed, UpdateConfigCache error", func() {
+		configManager.initFromCMFlag = false
 		var p3 = gomonkey.ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetConfigMap", fakeNodeFaultConfigCM(), nil).
 			ApplyPrivateMethod(&FaultConfigurator{}, "getFaultConfigFromCM",
 				func(cm *v1.ConfigMap) (*common.FaultConfig, error) {
@@ -128,6 +136,7 @@ func testInitFaultConfigFromCM() {
 		defer p3.Reset()
 		err := configManager.initFaultConfigFromCM()
 		convey.So(err, convey.ShouldResemble, testErr)
+		convey.So(configManager.initFromCMFlag, convey.ShouldBeFalse)
 	})
 }
 
