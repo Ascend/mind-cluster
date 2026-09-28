@@ -189,7 +189,6 @@ func (c *FaultConfigurator) UpdateConfigCache(cm *v1.ConfigMap) error {
 
 // initFaultConfigFromCM init fault config from config map
 func (c *FaultConfigurator) initFaultConfigFromCM() error {
-	c.initFromCMFlag = true
 	configCM, err := c.client.GetConfigMap(common.FaultConfigCMName, api.DLNamespace)
 	if err != nil {
 		hwlog.RunLog.Info("get config cm failed when init, may be not create, load from local json file")
@@ -201,6 +200,9 @@ func (c *FaultConfigurator) initFaultConfigFromCM() error {
 	}
 	c.configManager.SetFaultConfig(c.configCache)
 	common.TriggerUpdate(common.ConfigProcess)
+	// mark that fault config has been loaded from the configmap successfully, so the first
+	// redundant Add event from informer can be skipped;
+	c.initFromCMFlag = true
 	hwlog.RunLog.Info("init fault config from config map success")
 	return nil
 }
