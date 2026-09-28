@@ -161,6 +161,14 @@ const (
 	sizeOfSuperPodKey          = "super-pod-size"
 	preferPreviousNodeKey      = "prefer-previous-node" // enable prefer previous node feature
 	defaultPreferPreviousScore = 100.0                  // +100 score bonus for original node
+	// schedulerDowngradeTimeoutKey the global scheduler downgrade timeout in seconds
+	schedulerDowngradeTimeoutKey = "scheduler-downgrade-timeout"
+	// DefaultSchedulerDowngradeTimeout the default scheduler downgrade timeout seconds
+	DefaultSchedulerDowngradeTimeout = 120
+	minSchedulerDowngradeTimeout     = 1
+	// maxSchedulerDowngradeTimeout 24 hours, keeps the derived durations away from
+	// the time.Duration overflow
+	maxSchedulerDowngradeTimeout = 86400
 )
 
 const (

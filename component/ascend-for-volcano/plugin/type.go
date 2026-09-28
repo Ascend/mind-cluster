@@ -107,6 +107,7 @@ var (
 		util.AffinityConfig,
 		util.ParameterPlaneUnhealthyToleranceAnnoKey,
 		util.ScheduleModeAnnoKey,
+		util.SchedulerDowngradeAnnoKey,
 	}
 )
 
@@ -195,6 +196,10 @@ type DynamicParameters struct {
 
 	// PreferPreviousNode enables "prefer previous node" feature
 	PreferPreviousNode bool
+	// SchedulerDowngradeTimeout is the global timeout in seconds after which a
+	// job with the scheduler downgrade annotation enabled is scheduled with the
+	// downgraded constraint, default is DefaultSchedulerDowngradeTimeout
+	SchedulerDowngradeTimeout int
 }
 
 // ScheduleCache the plugin defined caches saving cm data

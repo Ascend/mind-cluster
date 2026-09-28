@@ -72,6 +72,19 @@ type RunningRestoreHook interface {
 	RestoreAnnotation(*api.TaskInfo, NPUNode) *NPUNode
 }
 
+// DowngradeConstraintHook is an optional interface for policy handlers plugging
+// into the scheduler constraint downgrade. The glue invokes it right after the
+// job validation passes. The validation runs once per scheduling action, so the
+// hook is invoked several times per session and must stay idempotent inside one
+// session: a policy joins the downgrade by implementing this method around the
+// common two-phase entry DegradeConstraintIfTimeout of the base handler, which
+// keeps the settled level while the round holds scheduled tasks and derives the
+// level of the wait otherwise. The level is a pure function of the session-start
+// snapshot, so every invocation of a session settles one constraint.
+type DowngradeConstraintHook interface {
+	DowngradeConstraint(jobID api.JobID)
+}
+
 // SchedulerPlugin for volcano-npu plugin has function.
 type SchedulerPlugin interface {
 	SchedulerPluginBase

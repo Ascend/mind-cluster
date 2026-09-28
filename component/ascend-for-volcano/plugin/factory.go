@@ -289,7 +289,7 @@ func (sHandle *ScheduleHandler) initDynamicParameters(configs map[string]string)
 	sHandle.FrameAttr.PresetVirtualDevice = getPresetVirtualDeviceConfig(configs)
 	sHandle.FrameAttr.ResourceLevelsInfo = initResourceLevels(configs)
 	sHandle.FrameAttr.PreferPreviousNode = getPreferPreviousNodeConfig(configs)
-
+	sHandle.FrameAttr.SchedulerDowngradeTimeout = getSchedulerDowngradeTimeout(configs)
 }
 
 // initStaticParameters
@@ -1100,6 +1100,42 @@ func getGraceDeleteTime(conf map[string]string) int64 {
 		return DefaultGraceOverTime
 	}
 	return overTime
+}
+
+// getSchedulerDowngradeTimeout get the global scheduler downgrade timeout in
+// seconds, invalid or absent value falls back to the default.
+func getSchedulerDowngradeTimeout(conf map[string]string) int {
+	if len(conf) == 0 {
+		return DefaultSchedulerDowngradeTimeout
+	}
+	timeoutStr, ok := conf[schedulerDowngradeTimeoutKey]
+	if !ok {
+		klog.V(util.LogDebugLev).Infof("key %s doesn't exist, set default scheduler downgrade timeout: %d",
+			schedulerDowngradeTimeoutKey, DefaultSchedulerDowngradeTimeout)
+		return DefaultSchedulerDowngradeTimeout
+	}
+	timeout, err := strconv.ParseInt(timeoutStr, util.Base10, util.BitSize64)
+	if err != nil {
+		klog.V(util.LogWarningLev).Infof("scheduler downgrade timeout is invalid [%s], set default: %d",
+			util.SafePrint(timeoutStr), DefaultSchedulerDowngradeTimeout)
+		return DefaultSchedulerDowngradeTimeout
+	}
+	// check the timeout range validity
+	if !checkSchedulerDowngradeTimeoutValid(timeout) {
+		return DefaultSchedulerDowngradeTimeout
+	}
+	return int(timeout)
+}
+
+// checkSchedulerDowngradeTimeoutValid checks the timeout is in the valid range.
+func checkSchedulerDowngradeTimeoutValid(timeout int64) bool {
+	if timeout < minSchedulerDowngradeTimeout || timeout > maxSchedulerDowngradeTimeout {
+		klog.V(util.LogWarningLev).Infof("scheduler downgrade timeout should be in range [%d, %d], "+
+			"configured is [%d], fall back to default %d", minSchedulerDowngradeTimeout,
+			maxSchedulerDowngradeTimeout, timeout, DefaultSchedulerDowngradeTimeout)
+		return false
+	}
+	return true
 }
 
 // getUseClusterDConfig check use cluster info manager by config, default true
