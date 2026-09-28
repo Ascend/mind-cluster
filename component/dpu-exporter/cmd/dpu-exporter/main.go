@@ -27,6 +27,7 @@ import (
 	"syscall"
 	"time"
 
+	"ascend-common/common-utils/healthz"
 	ver "ascend-common/common-utils/version"
 
 	"huawei.com/dpu-exporter/pkg/collector/dpucollector"
@@ -44,6 +45,8 @@ const (
 	portLeft  = 1025
 	portRight = 40000
 )
+
+var hzFlags = healthz.RegisterFlags()
 
 func main() {
 	configFile := flag.String("config", "", "path to config file (default: /etc/dpu-exporter/config.json)")
@@ -78,6 +81,17 @@ func main() {
 	}
 	logger.Info("starting dpu-exporter")
 
+	// Setup graceful shutdown context, shared by the healthz server and collectors
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Start the health check server for the kubernetes liveness probe,
+	// using a port independent from the metrics server
+	if err := hzFlags.Serve(ctx); err != nil {
+		logger.Errorf("failed to start healthz server: %v", err)
+		os.Exit(1)
+	}
+
 	// Load configuration
 	if err := configmanager.LoadConfig(); err != nil {
 		logger.Errorf("failed to load config: %v", err)
@@ -105,10 +119,6 @@ func main() {
 	configmanager.RegisterReloadHook(func() {
 		rebuildChains()
 	})
-
-	// Setup graceful shutdown context
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	var wg sync.WaitGroup
 
