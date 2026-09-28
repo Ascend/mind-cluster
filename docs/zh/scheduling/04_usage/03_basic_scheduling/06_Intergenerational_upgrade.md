@@ -61,7 +61,7 @@
 </tr>
 <tr>
 <td>（可选）ra-block</td>
-<td>指定逻辑框芯片数量。<p>单机时需要和任务请求的芯片数量一致。</p><p>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</p></td>
+<td>指定逻辑框芯片数量。<p>该字段取值需要是2的幂次方。</p><p>单机时需要和任务请求的芯片数量一致。</p><p>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</p></td>
 <td>仅在升级到Atlas 950 SuperPoD 超节点时需要配置该字段。ra-block用于指定逻辑框芯片数量，用于训练任务的逻辑框亲和性调度，若用户未指定该字段，Volcano调度时会将此任务的逻辑框大小指定为8，即不开启逻辑框亲和性调度。<br/> 详细说明请参见<a href="../../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a></td>
 </tr>
 <tr>
