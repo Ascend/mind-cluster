@@ -89,7 +89,7 @@ func (tp *chip1softsharedev) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.
 			}
 			continue
 		}
-		if used.aicoreQuota+reqResourceCfg.aicoreQuota <= util.MaxAicoreQuota &&
+		if used.aicoreQuota+reqResourceCfg.aicoreQuota <= util.SoftShareAicoreBudget() &&
 			used.hbmQuota+reqResourceCfg.hbmQuota <= chipMemory &&
 			used.schedulingPolicy == reqResourceCfg.schedulingPolicy {
 			return nil

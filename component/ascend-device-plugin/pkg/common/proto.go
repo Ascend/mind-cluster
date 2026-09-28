@@ -162,7 +162,8 @@ type Option struct {
 	GraceToleranceOn      bool     // check if grace tolerance is on
 	ListAndWatchPeriod    int      // set listening device state period
 	HotReset              int      // unhealthy chip hot reset
-	ShareCount            uint     // share device count
+	ShareCount            uint     // share device count (advertised inventory per card)
+	SoftShareCoreScaling  float64  // soft-share compute oversell ratio; ShareCount = round(100 * scaling)
 	AiCoreCount           int32    // found by dcmi interface
 	BuildScene            string   // build scene judge device-plugin start scene
 	ProductTypes          []string // all product types

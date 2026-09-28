@@ -128,7 +128,7 @@ func (tp *chip1softsharedev) checkNodeUsableResourceForTask(node plugin.NPUNode,
 	for _, cardIdx := range nodeTop {
 		used, exists := nodeUsedResourceMap[cardIdx]
 		if !exists {
-			nodeUsableResourceForTask.aicoreQuota += util.MaxAicoreQuota / reqResourceCfg.aicoreQuota *
+			nodeUsableResourceForTask.aicoreQuota += util.SoftShareAicoreBudget() / reqResourceCfg.aicoreQuota *
 				reqResourceCfg.aicoreQuota
 			nodeUsableResourceForTask.hbmQuota += chipMemory / reqResourceCfg.hbmQuota * reqResourceCfg.hbmQuota
 			continue
@@ -136,7 +136,7 @@ func (tp *chip1softsharedev) checkNodeUsableResourceForTask(node plugin.NPUNode,
 		if used.schedulingPolicy != taskTotalReqResource.schedulingPolicy {
 			continue
 		}
-		nodeUsableResourceForTask.aicoreQuota += (util.MaxAicoreQuota - used.aicoreQuota) / reqResourceCfg.aicoreQuota *
+		nodeUsableResourceForTask.aicoreQuota += (util.SoftShareAicoreBudget() - used.aicoreQuota) / reqResourceCfg.aicoreQuota *
 			reqResourceCfg.aicoreQuota
 		nodeUsableResourceForTask.hbmQuota += (chipMemory - used.hbmQuota) / reqResourceCfg.hbmQuota *
 			reqResourceCfg.hbmQuota

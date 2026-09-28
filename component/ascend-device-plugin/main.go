@@ -21,6 +21,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 
@@ -97,7 +98,11 @@ var (
 		"when device-plugin starts, if the number of chips is insufficient, the maximum duration to wait for "+
 			"the driver to report all chips, unit second, range [10, 600]")
 	softShareDevConfigDir = flag.String("softShareDevConfigDir", "", "soft share device config dir")
-	useSingleDieMode      = flag.Bool("useSingleDieMode", false,
+	softShareCoreScaling  = flag.Float64("softShareCoreScaling", common.MinSoftShareCoreScaling,
+		"soft-share compute oversell ratio. When softShareDevConfigDir is set, the plugin advertises "+
+			"ShareCount = round(100 * softShareCoreScaling) so the scheduler can admit more than 100% of "+
+			"aicoreQuota on one card. Per-task aicoreQuota stays within [1,100]. Values below 1 are not supported.")
+	useSingleDieMode = flag.Bool("useSingleDieMode", false,
 		"A3 card whether to use single die mode")
 	getPodFromKubelet = flag.Bool("getPodFromKubelet", false,
 		"Whether to get pod information from kubelet instead of apiserver")
@@ -261,15 +266,23 @@ func checkShareDevFeatureParam() bool {
 
 // checkSoftShareDevFeatureParam validates the soft share virtualization feature, which is
 // controlled by softShareDevConfigDir: a non-empty value enables it. Once enabled,
-// shareDevCount must be 100, the config dir must be a valid absolute path, and
+// shareDevCount must be 100 (percentage base), softShareCoreScaling must be in
+// [1, MaxSoftShareCoreScaling], the config dir must be a valid absolute path, and
 // volcanoType must be true.
 func checkSoftShareDevFeatureParam() bool {
 	if *softShareDevConfigDir == "" {
 		return true
 	}
-	if *shareDevCount != common.MaxShareDevCount {
+	if *shareDevCount != common.SoftSharePercentBase {
 		hwlog.RunLog.Errorf("shareDevCount should be %d when softShareDevConfigDir is set",
-			common.MaxShareDevCount)
+			common.SoftSharePercentBase)
+		return false
+	}
+	if math.IsNaN(*softShareCoreScaling) || math.IsInf(*softShareCoreScaling, 0) ||
+		*softShareCoreScaling < common.MinSoftShareCoreScaling ||
+		*softShareCoreScaling > common.MaxSoftShareCoreScaling {
+		hwlog.RunLog.Errorf("softShareCoreScaling %v out of range [%v, %v]",
+			*softShareCoreScaling, common.MinSoftShareCoreScaling, common.MaxSoftShareCoreScaling)
 		return false
 	}
 	if !filepath.IsAbs(*softShareDevConfigDir) {
@@ -332,6 +345,18 @@ func main() {
 }
 
 func setParameters() {
+	shareCount := *shareDevCount
+	scaling := common.MinSoftShareCoreScaling
+	if *softShareDevConfigDir != "" {
+		scaling = *softShareCoreScaling
+		// Keep shareDevCount at the percentage base; inflate only the advertised inventory.
+		shareCount = uint(math.Round(float64(common.SoftSharePercentBase) * scaling))
+		if shareCount < common.SoftSharePercentBase {
+			shareCount = common.SoftSharePercentBase
+		}
+		hwlog.RunLog.Infof("soft-share compute oversell: softShareCoreScaling=%v, advertised ShareCount=%d",
+			scaling, shareCount)
+	}
 	common.ParamOption = common.Option{
 		GetFdFlag:             *fdFlag,
 		UseVolcanoType:        *volcanoType,
@@ -341,7 +366,8 @@ func setParameters() {
 		Use310PMixedInsert:    *use310PMixedInsert,
 		HotReset:              *hotReset,
 		BuildScene:            BuildScene,
-		ShareCount:            *shareDevCount,
+		ShareCount:            shareCount,
+		SoftShareCoreScaling:  scaling,
 		LinkdownTimeout:       *linkdownTimeout,
 		DealWatchHandler:      *dealWatchHandler,
 		CheckCachedPods:       *checkCachedPods,

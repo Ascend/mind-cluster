@@ -579,7 +579,7 @@ func (n *NPUNode) GetNewNPUNodeAnnotation(usedTop []int, resourceName, resourceN
 				continue
 			}
 			if topUsedResourceQuota, exists := topUsedResourceQuotaMap[cardStr]; exists &&
-				(topUsedResourceQuota.aicoreQuota >= util.MaxAicoreQuota ||
+				(topUsedResourceQuota.aicoreQuota >= util.SoftShareAicoreBudget() ||
 					topUsedResourceQuota.hbmQuota >= npuChipMemory*util.MBPerGB) {
 				continue
 			}

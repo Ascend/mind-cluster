@@ -79,6 +79,16 @@ func New(arguments framework.Arguments) framework.Plugin {
 			sHandler.ScoreWeight = defaultScoreWeight
 		}
 	}
+	if raw, ok := arguments[util.SoftShareCoreScalingArg]; ok {
+		if v, err := strconv.ParseFloat(fmt.Sprintf("%v", raw), 64); err == nil && v >= 1 {
+			util.SetSoftShareCoreScaling(v)
+			klog.V(util.LogInfoLev).Infof("set softShareCoreScaling %v (aicore budget %d)",
+				v, util.SoftShareAicoreBudget())
+		} else {
+			klog.V(util.LogWarningLev).Infof("invalid softShareCoreScaling %v, keep %v (budget %d)",
+				raw, util.SoftShareCoreScaling(), util.SoftShareAicoreBudget())
+		}
+	}
 	return &huaweiNPUPlugin{Scheduler: sHandler, Arguments: arguments}
 }
 
@@ -564,7 +574,7 @@ func getNpuNum(ssn *framework.Session, tp *huaweiNPUPlugin, npuName string) int 
 			softShareDevEnable, softShareDevEnableExist := util.GetNodeLabel(node.Node,
 				util.SchedulerSoftShareDevEnableNodeLabel)
 			if softShareDevEnableExist && softShareDevEnable == "true" {
-				shareDevCount = util.SoftShareDevCount
+				shareDevCount = util.SoftShareAicoreBudget()
 			}
 		}
 		tNpuNum += len(deviceList) * shareDevCount

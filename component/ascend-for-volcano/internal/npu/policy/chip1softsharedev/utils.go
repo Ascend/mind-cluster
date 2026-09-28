@@ -32,10 +32,10 @@ func getBestScore(usedResourceMap map[int]softShareDevResource, cardIds []int,
 	}
 	for _, cardId := range cardIds {
 		usedResourceQuota, ok := usedResourceMap[cardId]
-		if ok && usedResourceQuota.aicoreQuota+reqResource.aicoreQuota <= util.MaxAicoreQuota &&
+		if ok && usedResourceQuota.aicoreQuota+reqResource.aicoreQuota <= util.SoftShareAicoreBudget() &&
 			usedResourceQuota.hbmQuota+reqResource.hbmQuota <= maxHbm &&
 			usedResourceQuota.schedulingPolicy == usedResourceQuota.schedulingPolicy {
-			curScore := util.MaxNodeScoreForSoftShareDev - (util.MaxAicoreQuota - usedResourceQuota.aicoreQuota -
+			curScore := util.MaxNodeScoreForSoftShareDev - (util.SoftShareAicoreBudget() - usedResourceQuota.aicoreQuota -
 				reqResource.aicoreQuota)
 			bestScore = int(math.Max(float64(bestScore), float64(curScore)))
 		}
@@ -58,7 +58,7 @@ func npuPrioritySort(nodeTop []int, usedMap map[int]softShareDevResource, reques
 			continue
 		}
 		if usedRes.schedulingPolicy != requestResource.schedulingPolicy ||
-			usedRes.aicoreQuota+requestResource.aicoreQuota > util.MaxAicoreQuota ||
+			usedRes.aicoreQuota+requestResource.aicoreQuota > util.SoftShareAicoreBudget() ||
 			usedRes.hbmQuota+requestResource.hbmQuota > maxHbm {
 			continue
 		}

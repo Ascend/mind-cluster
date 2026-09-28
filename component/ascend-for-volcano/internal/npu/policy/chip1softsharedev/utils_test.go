@@ -69,7 +69,7 @@ func TestGetBestScore(t *testing.T) {
 			reqResource: softShareDevResource{aicoreQuota: aicoreQuota30, hbmQuota: hbm20GB,
 				schedulingPolicy: util.SoftShareDevPolicyFixedShare},
 			maxHbm: defaultMaxHBM,
-			want:   util.MaxNodeScoreForSoftShareDev - (util.MaxAicoreQuota - aicoreQuota20 - aicoreQuota30),
+			want:   util.MaxNodeScoreForSoftShareDev - (util.SoftShareAicoreBudget() - aicoreQuota20 - aicoreQuota30),
 		},
 		{
 			name: "resource exceed limit",
@@ -162,5 +162,28 @@ func TestNpuPrioritySort(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestGetBestScoreWithOversell(t *testing.T) {
+	defer util.SetSoftShareCoreScaling(1)
+
+	used := map[int]softShareDevResource{
+		0: {aicoreQuota: aicoreQuota40 + aicoreQuota40, hbmQuota: hbm20GB,
+			schedulingPolicy: util.SoftShareDevPolicyFixedShare},
+	}
+	req := softShareDevResource{aicoreQuota: aicoreQuota40, hbmQuota: hbm10GB,
+		schedulingPolicy: util.SoftShareDevPolicyFixedShare}
+
+	util.SetSoftShareCoreScaling(1)
+	if got := getBestScore(used, []int{0}, req, defaultMaxHBM); got != resourceExceedScore {
+		t.Fatalf("scaling=1 getBestScore() = %v, want exceed %v", got, resourceExceedScore)
+	}
+
+	util.SetSoftShareCoreScaling(1.5)
+	want := util.MaxNodeScoreForSoftShareDev - (util.SoftShareAicoreBudget() -
+		(aicoreQuota40+aicoreQuota40) - aicoreQuota40)
+	if got := getBestScore(used, []int{0}, req, defaultMaxHBM); got != want {
+		t.Fatalf("scaling=1.5 getBestScore() = %v, want %v", got, want)
 	}
 }

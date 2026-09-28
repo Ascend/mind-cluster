@@ -262,6 +262,14 @@ const (
 	VGroupAndDevLen = 2
 	// MaxShareDevCount open share device function, max share count is 100
 	MaxShareDevCount = 100
+	// SoftSharePercentBase is the fixed 0-100 percentage scale for a single
+	// soft-share task's aicoreQuota. Oversell only expands the advertised
+	// ShareCount via softShareCoreScaling; per-task quota stays within this base.
+	SoftSharePercentBase = 100
+	// MinSoftShareCoreScaling is the minimum compute oversell ratio.
+	MinSoftShareCoreScaling = 1.0
+	// MaxSoftShareCoreScaling caps how far soft-share inventory may be inflated.
+	MaxSoftShareCoreScaling = 5.0
 )
 
 const (
