@@ -317,7 +317,7 @@
        ...
        ```
 
-   - 以服务器（插Atlas 300I 推理卡）为例，回显示例如下，节点上芯片个数请以实际为准。
+   - 以服务器（插Atlas 300I推理卡）为例，回显示例如下，节点上芯片个数请以实际为准。
 
        ```ColdFusion
        root@ubuntu:~# kubectl describe node ubuntu
@@ -342,7 +342,7 @@
        ...
        ```
 
-   - 以服务器（插Atlas 300I Pro 推理卡）为例。非混插模式，节点包含<term>Atlas 推理系列产品</term>，回显示例如下，节点上芯片个数请以实际为准。
+   - 以服务器（插Atlas 300I Pro推理卡）为例。非混插模式，节点包含<term>Atlas推理系列产品</term>，回显示例如下，节点上芯片个数请以实际为准。
 
        ```ColdFusion
        root@ubuntu:~# kubectl describe node ubuntu
@@ -367,7 +367,7 @@
        ...
        ```
 
-   - 以服务器（插Atlas 300I Pro 推理卡）为例。混插模式，节点包含<term>Atlas 推理系列产品</term>，回显示例如下，节点上芯片个数请以实际为准。
+   - 以服务器（插Atlas 300I Pro推理卡）为例。混插模式，节点包含<term>Atlas推理系列产品</term>，回显示例如下，节点上芯片个数请以实际为准。
 
        ```ColdFusion
        root@ubuntu:~# kubectl describe node ubuntu
@@ -717,7 +717,7 @@
     cat /var/log/mindx-dl/container-manager/container-manager.log
     ```
 
-   回显以Atlas 800I A3 超节点服务器为例：
+   回显以Atlas 800I A3超节点服务器为例：
 
     ```ColdFusion
     [INFO]     2025/11/25 22:46:59.007163 1       hwlog/api.go:108    container-manager.log's logger init success

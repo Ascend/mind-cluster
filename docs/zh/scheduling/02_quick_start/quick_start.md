@@ -13,7 +13,7 @@
 
 - 所有节点已安装Kubernetes，支持的版本为1.17.x\~1.36.x。（如需安装Volcano组件，请安装1.21.x及以上版本的Kubernetes，具体Kubernetes版本请参见[Volcano官网中对应的Kubernetes版本](https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility)）。如需获取软件包，请参见[Kubernetes社区](https://kubernetes.io/zh-cn/docs/setup/)。
 - 所有节点已安装Docker，支持的版本为18.09.x\~28.5.1。如需获取软件包，请参见[Docker社区或官网](https://docs.docker.com/engine/install/)。
-- 所有节点已经安装配套的固件与驱动。Atlas 800T A2 训练服务器固件和驱动安装步骤请参见《[Atlas A2 中心推理和训练硬件 NPU驱动和固件安装指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100591781/426cffd9)》。
+- 所有节点已经安装配套的固件与驱动。Atlas 800T A2训练服务器固件和驱动安装步骤请参见《[Atlas A2 中心推理和训练硬件 NPU驱动和固件安装指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100591781/426cffd9)》。
 - 检查主机上[npu-smi](https://support.huawei.com/enterprise/zh/doc/EDOC1100591782/426cffd9)以及[hccn_tool工具](https://support.huawei.com/enterprise/zh/doc/EDOC1100591765/426cffd9)是否可正常运行。
 - 拉取镜像，下载组件安装包等可能需要网络环境，请自行确保网络正常或自行准备相关离线镜像包、组件安装包等。
 
@@ -33,7 +33,7 @@
 
 ### 安装组件
 
-下面以计算节点为Atlas 800T A2 训练服务器、CPU架构为AArch64为例。
+下面以计算节点为Atlas 800T A2训练服务器、CPU架构为AArch64为例。
 
 1. 检查NPU状态，确保与服务器配套的NPU驱动已正确安装。
 
@@ -214,7 +214,7 @@
 
 ## 训练业务快速入门
 
-本章节依然以一台Atlas 800T A2 训练服务器、CPU架构为AArch64为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
+本章节依然以一台Atlas 800T A2训练服务器、CPU架构为AArch64为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
 
 ### 操作说明<a name="section17940333114314"></a>
 
@@ -222,12 +222,12 @@
 
 |操作步骤|操作说明|更多参考|
 |--|--|--|
-|[安装组件](#section1837511531098)|以Atlas 800T A2 训练服务器为例，手把手指导用户在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节。|
+|[安装组件](#section1837511531098)|以Atlas 800T A2训练服务器为例，手把手指导用户在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节。|
 |[下发训练任务](#section106493419399)|以一个简单的PyTorch训练任务为例，让用户快速了解训练任务下发的操作流程。|更多下发训练任务的参数说明和操作步骤，请参见[基础调度](../04_usage/03_basic_scheduling/00_feature_description.md)章节。|
 
 ### 安装组件<a name="section1837511531098"></a>
 
-以下步骤命令均以一台Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)。
+以下步骤命令均以一台Atlas 800T A2训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)。
 
 1. 创建节点标签。
 

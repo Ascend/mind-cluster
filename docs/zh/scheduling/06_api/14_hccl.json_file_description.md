@@ -6,7 +6,7 @@ Ascend Operator将在训练启动时，为训练任务生成集合通信所需�
 - 使用共享存储的方式挂载RankTable时，需要在创建任务时，同时在训练YAML中挂载共享存储或者本地存储的目录，并将该目录挂载进训练容器的“/user/serverid/devindex/config”路径下。Ascend Operator将根据Ascend Device Plugin或volcano-scheduler在任务Pod中写的Annotation信息，构建出任务的集合通信文件RankTable File，并将其内容写入“/共享存储或者本地存储目录/hccl.json”文件中，在训练容器中映射为“/user/serverid/devindex/config/hccl.json”文件。
 - 不同产品型号的hccl.json有不同的文件内容，详细说明如下所示。
 
-## <term>Atlas 训练系列产品</term>、<term>Atlas A2 训练系列产品</term>、Atlas 800I A2 推理服务器、A200I A2 Box 异构组件<a name="section19616113871318"></a>
+## <term>Atlas训练系列产品</term>、<term>Atlas A2训练系列产品</term>、Atlas 800I A2推理服务器、A200I A2 Box异构组件<a name="section19616113871318"></a>
 
 hccl.json文件示例如下：
 
@@ -41,7 +41,7 @@ hccl.json:
 }
 ```
 
-## <term>Atlas A3 训练系列产品</term><a name="section285395510348"></a>
+## <term>Atlas A3训练系列产品</term><a name="section285395510348"></a>
 
 hccl.json文件示例如下：
 

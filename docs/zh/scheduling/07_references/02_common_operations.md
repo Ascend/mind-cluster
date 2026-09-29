@@ -396,7 +396,7 @@ Ascend Device Plugin收集了内部的芯片故障、参数面网络故障和节
 
 查询命令：**kubectl describe cm -n kube-system  mindx-dl-deviceinfo-$**_\{node\_name\}_
 
-以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准。关键参数说明请参见[表1 DeviceInfoCfg](../06_api/02_ascend_device_plugin.md#芯片资源)。
+以<term>Atlas A3训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准。关键参数说明请参见[表1 DeviceInfoCfg](../06_api/02_ascend_device_plugin.md#芯片资源)。
 
 ```ColdFusion
 {"DeviceInfo":{"DeviceList":{"huawei.com/Ascend910":"Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-5,Ascend910-6,Ascend910-7","huawei.com/Ascend910-Fault":"[{\"fault_type\":\"CardNetworkUnhealthy\",\"npu_name\":\"Ascend910-0\",\"large_model_fault_level\":\"PreSeparateNPU\",\"fault_level\":\"PreSeparateNPU\",\"fault_handling\":\"PreSeparateNPU\",\"fault_code\":\"81078603\",\"fault_time_and_level_map\":{\"81078603\":{\"fault_time\":1744168468259,\"fault_level\":\"PreSeparateNPU\"}}},{\"fault_type\":\"CardUnhealthy\",\"npu_name\":\"Ascend910-4\",\"large_model_fault_level\":\"SeparateNPU\",\"fault_level\":\"SeparateNPU\",\"fault_handling\":\"SeparateNPU\",\"fault_code\":\"A8028801,A4028801,80E18402,80E18401\",\"fault_time_and_level_map\":{\"80E18401\":{\"fault_time\":1744167455784,\"fault_level\":\"NotHandleFault\"},\"80E18402\":{\"fault_time\":1744167455784,\"fault_level\":\"SeparateNPU\"},\"A4028801\":{\"fault_time\":1744167455784,\"fault_level\":\"NotHandleFault\"},\"A8028801\":{\"fault_time\":1744167455784,\"fault_level\":\"SeparateNPU\"}}}]","huawei.com/Ascend910-NetworkUnhealthy":"Ascend910-0","huawei.com/Ascend910-Recovering":"","huawei.com/Ascend910-Unhealthy":"Ascend910-4"},"UpdateTime":1744182144},"SuperPodID":-2,"ServerIndex":-2,"CheckCode":"a550811fdfafb5717555526816af2ca4ac6c3e102f5907574048578e0c8fcc73"}
@@ -404,7 +404,7 @@ Ascend Device Plugin收集了内部的芯片故障、参数面网络故障和节
 
 #### 故障事件信息<a name="ZH-CN_TOPIC_0000002511347039"></a>
 
-Ascend Device Plugin收集到的故障事件可以通过K8s的event事件进行上报，查询命令为**kubectl get events -n kube-system**。以<term>Atlas 训练系列产品</term>为例，回显示例如下，参数说明请参见[表1](#table66076214393)。
+Ascend Device Plugin收集到的故障事件可以通过K8s的event事件进行上报，查询命令为**kubectl get events -n kube-system**。以<term>Atlas训练系列产品</term>为例，回显示例如下，参数说明请参见[表1](#table66076214393)。
 
 ```ColdFusion
 NAMESPACE     LAST SEEN   TYPE      REASON     OBJECT                                         MESSAGE
@@ -432,7 +432,7 @@ ClusterD收集了内部的节点故障、芯片故障和灵衢总线设备故障
 
 查询命令：**kubectl describe cm -n mindx-dl cluster-info-node-cm**
 
-以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准。关键参数说明请参见[表1 cluster-info-node-cm](../06_api/04_clusterd/00_cluster_resources.md#cluster-info-configmap说明)。
+以<term>Atlas A3训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准。关键参数说明请参见[表1 cluster-info-node-cm](../06_api/04_clusterd/00_cluster_resources.md#cluster-info-configmap说明)。
 
 ```ColdFusion
 {"mindx-dl-nodeinfo-kwok-node-0":{"FaultDevList":[],"NodeStatus":"Healthy","CmName":"mindx-dl-nodeinfo-kwok-node-0"},"mindx-dl-deviceinfo-kwok-node-1001":{"FaultDevList":[],"NodeStatus":"Healthy","CmName":"mindx-dl-nodeinfo-kwok-node-1001"}}
@@ -444,7 +444,7 @@ ClusterD收集了内部的节点故障、芯片故障和灵衢总线设备故障
 
 m为从0开始递增的整数。集群规模每增加1000个节点，则会新增一个ConfigMap文件cluster-info-device-$\{m\}。
 
-以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准，关键参数说明请参见[表2 cluster-info-device-$\{m\}](../06_api/04_clusterd/00_cluster_resources.md#cluster-info-configmap说明)。
+以<term>Atlas A3训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准，关键参数说明请参见[表2 cluster-info-device-$\{m\}](../06_api/04_clusterd/00_cluster_resources.md#cluster-info-configmap说明)。
 
 ```ColdFusion
 {"mindx-dl-deviceinfo-kwok-node-0":{"DeviceList":{"huawei.com/Ascend910":"Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7","huawei.com/Ascend910-NetworkUnhealthy":"","huawei.com/Ascend910-Unhealthy":""},"UpdateTime":1693899390,"CmName":"mindx-dl-deviceinfo-kwok-node-0","SuperPodID":0,"ServerIndex":0},"mindx-dl-deviceinfo-kwok-node-1001":{"DeviceList":{"huawei.com/Ascend910":"Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7","huawei.com/Ascend910-NetworkUnhealthy":"","huawei.com/Ascend910-Unhealthy":""},"UpdateTime":1693899390,"CmName":"mindx-dl-deviceinfo-kwok-node-1001","SuperPodID":0,"ServerIndex":0}}
@@ -456,7 +456,7 @@ m为从0开始递增的整数。集群规模每增加1000个节点，则会新�
 
 m为从0开始递增的整数。集群规模每增加2000个节点，则会新增一个ConfigMap文件cluster-info-switch-$\{m\}。
 
-以<term>Atlas A3 训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准。关键参数说明请参见[表1](#table9246232250)。
+以<term>Atlas A3训练系列产品</term>为例，回显示例如下；不同设备的回显参数可能不同，以实际为准。关键参数说明请参见[表1](#table9246232250)。
 
 ```ColdFusion
 {"FaultCode":[000001c1],"FaultLevel":"NotHandle","UpdateTime":1722845555,"NodeStatus":"Healthy"}
@@ -480,7 +480,7 @@ m为从0开始递增的整数。集群规模每增加2000个节点，则会新�
 
 m为从0开始递增的整数。集群规模每增加1000个节点，则会新增一个ConfigMap文件cluster-info-dpu-$\{m\}。
 
-以Atlas 950 SuperPoD 超节点为例，回显示例如下；不同设备的回显参数可能不同，以实际为准，关键参数说明请参见[ConfigMap说明](../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_configmap_k8s_rdma_shared_dev_plugin)。
+以Atlas 950 SuperPoD超节点为例，回显示例如下；不同设备的回显参数可能不同，以实际为准，关键参数说明请参见[ConfigMap说明](../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_configmap_k8s_rdma_shared_dev_plugin)。
 
 ```ColdFusion
 {"dpuinfo-<nodename>":{"DPUInfo":{"DPUList":[{"HcaName":"hrn5_0","EthName":"ens0f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[0]},{"HcaName":"hrn5_1","EthName":"ens0f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[2]},{"HcaName":"hrn5_2","EthName":"ens0f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[4]},{"HcaName":"hrn5_3","EthName":"ens0f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[6]},{"HcaName":"hrn5_4","EthName":"ens1f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[1]},{"HcaName":"hrn5_5","EthName":"ens1f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[3]},{"HcaName":"hrn5_6","EthName":"ens1f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[5]},{"HcaName":"hrn5_7","EthName":"ens1f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[7]}],"NodeEvent":{"NodeName":"<nodename>","FaultList":null}},"UpdateTime":1787715568988}}
@@ -938,7 +938,7 @@ DpuInfoCfg:
 软件包名称中\{version\}表示版本号、\{arch\}表示架构、\{chip\_type\}表示芯片类型。配套的CANN软件包在6.3.RC3、6.2.RC3及以上版本增加了“您是否接受EULA来安装CANN（Y/N）”的安装提示；在Dockerfile编写示例中的安装命令包含“--quiet”参数的默认同意EULA，用户可自行修改。
 
 >[!NOTE]
->MindSpore软件包与<term>Atlas 训练系列产品</term>软件配套需满足对应关系，请参见MindSpore[安装指南](https://www.mindspore.cn/install)查看对应关系。
+>MindSpore软件包与<term>Atlas训练系列产品</term>软件配套需满足对应关系，请参见MindSpore[安装指南](https://www.mindspore.cn/install)查看对应关系。
 
 **表 1**  所需软件
 

@@ -6,19 +6,19 @@
 
 - 交换机亲和性调度1.0
 
-    由Volcano进行亲和性调度，保证任务训练时的流量不会造成Spine交换机的下行流量冲突。当前支持的产品为<term>Atlas 训练系列产品</term>和<term>Atlas A2 训练系列产品</term>；支持的框架为PyTorch和MindSpore框架。
+    由Volcano进行亲和性调度，保证任务训练时的流量不会造成Spine交换机的下行流量冲突。当前支持的产品为<term>Atlas训练系列产品</term>和<term>Atlas A2训练系列产品</term>；支持的框架为PyTorch和MindSpore框架。
 
 - 交换机亲和性调度2.0
 
-    采用Volcano+iMaster NCE-Fabric的方案，通过iMaster NCE-Fabric来动态计算训练任务通信时的网络通路，不再使用调度器来解决Spine交换机下行流量冲突。同时支持一个交换机下的节点可以被多个跨交换机的任务使用，提高集群的资源利用率。当前支持的产品为<term>Atlas A2 训练系列产品</term>；支持的框架为PyTorch框架。
+    采用Volcano+iMaster NCE-Fabric的方案，通过iMaster NCE-Fabric来动态计算训练任务通信时的网络通路，不再使用调度器来解决Spine交换机下行流量冲突。同时支持一个交换机下的节点可以被多个跨交换机的任务使用，提高集群的资源利用率。当前支持的产品为<term>Atlas A2训练系列产品</term>；支持的框架为PyTorch框架。
 
 - 单层交换机亲和性调度
 
-    支持Atlas 800I A2 推理服务器、A200I A2 Box 异构组件进行单层组网（只有Leaf层没有Spine层），使用单层交换机亲和性调度，选择最合适的节点分配给分布式推理任务。
+    支持Atlas 800I A2推理服务器、A200I A2 Box异构组件进行单层组网（只有Leaf层没有Spine层），使用单层交换机亲和性调度，选择最合适的节点分配给分布式推理任务。
 
 - 逻辑超节点亲和性调度
 
-    Atlas 900 A3 SuperPoD 超节点产品存在超节点，集群调度组件在下发训练任务时会对其物理超节点根据切分策略划分出逻辑超节点，用于训练产品的亲和性调度。
+    Atlas 900 A3 SuperPoD超节点产品存在超节点，集群调度组件在下发训练任务时会对其物理超节点根据切分策略划分出逻辑超节点，用于训练产品的亲和性调度。
 
 >[!NOTE]
 >

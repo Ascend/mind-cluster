@@ -88,7 +88,7 @@ ClusterD会生成global-ranktable，在RankTable字段中作为返回消息。gl
     }
     ```
 
-- <term>Atlas A3 训练系列产品</term>示例如下。
+- <term>Atlas A3训练系列产品</term>示例如下。
 
     ```json
     {
@@ -145,7 +145,7 @@ ClusterD会生成global-ranktable，在RankTable字段中作为返回消息。gl
 |server_ip|Pod IP|
 |device_id|NPU的设备ID|
 |device_ip|NPU的设备IP|
-|super_device_id|<term>Atlas A3 训练系列产品</term>超节点内NPU的唯一标识|
+|super_device_id|<term>Atlas A3训练系列产品</term>超节点内NPU的唯一标识|
 |rank_id|NPU对应的训练rank ID|
 |device_logical_id|NPU的逻辑ID|
 |super_pod_list|超节点列表|

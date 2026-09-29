@@ -87,10 +87,10 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas 训练系列产品|<ul><li>Atlas 800 训练服务器（型号 9000）</li><li>Atlas 800 训练服务器（型号 9010）</li></ul>若Atlas 800 训练服务器的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见《Atlas 800 训练服务器 iBMC用户指南（型号 9000）》中的“[查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Atlas A2 训练系列产品|<ul><li>Atlas 800T A2 训练服务器</li><li>Atlas 200T A2 Box16 异构子框</li><li>Atlas 900 A2 PoD 集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Atlas A3 训练系列产品|<ul><li>Atlas 800T A3 超节点服务器</li><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li><li>A200T A3 Box8 超节点服务器</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Ascend 950PR&950DT系列产品|<p>Ascend 950PR系列产品：<ul><li>Atlas 850 超节点</li><li>Atlas 650 服务器</li></ul></p><p>Ascend 950DT系列产品：<ul><li>Atlas 850E 超节点</li><li>Atlas 650E 服务器</li><li>Atlas 950 SuperPoD 超节点</li></ul></p>|PyTorch|
+|Atlas训练系列产品|<ul><li>Atlas 800训练服务器（型号：9000）</li><li>Atlas 800训练服务器（型号：9010）</li></ul>若Atlas 800 训练服务器的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见《Atlas 800 训练服务器 iBMC用户指南（型号 9000）》中的“[查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A2训练系列产品|<ul><li>Atlas 800T A2训练服务器</li><li>Atlas 200T A2 Box16异构子框</li><li>Atlas 900 A2 PoD集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A3训练系列产品|<ul><li>Atlas 800T A3超节点服务器</li><li>Atlas 900 A3 SuperPoD超节点</li><li>Atlas 9000 A3 SuperPoD集群算力系统</li><li>A200T A3 Box8超节点服务器</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Ascend 950PR&950DT系列产品|<p>Ascend 950PR系列产品：<ul><li>Atlas 850超节点</li><li>Atlas 650服务器</li></ul></p><p>Ascend 950DT系列产品：<ul><li>Atlas 850E超节点</li><li>Atlas 650E服务器</li><li>Atlas 950 SuperPoD超节点</li></ul></p>|PyTorch|
 
 **重调度原理<a name="zh-cn_topic_0000002039194017_section57901137171110"></a>**
 
@@ -128,10 +128,10 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas 训练系列产品|<ul><li>Atlas 800 训练服务器（型号 9000）</li><li>Atlas 800 训练服务器（型号 9010）</li></ul>若Atlas 800 训练服务器的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见《Atlas 800 训练服务器 iBMC用户指南（型号 9000）》中的“[查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Atlas A2 训练系列产品|<ul><li>Atlas 800T A2 训练服务器</li><li>Atlas 200T A2 Box16 异构子框</li><li>Atlas 900 A2 PoD 集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Atlas A3 训练系列产品|<ul><li>Atlas 800T A3 超节点服务器</li><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li><li>A200T A3 Box8 超节点服务器</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Ascend 950PR&950DT系列产品|<p>Ascend 950PR系列产品：<ul><li>Atlas 850 超节点</li><li>Atlas 650 服务器</li></ul></p><p>Ascend 950DT系列产品：<ul><li>Atlas 850E 超节点</li><li>Atlas 650E 服务器</li><li>Atlas 950 SuperPoD 超节点</li></ul></p>|PyTorch|
+|Atlas训练系列产品|<ul><li>Atlas 800训练服务器（型号：9000）</li><li>Atlas 800训练服务器（型号：9010）</li></ul>若Atlas 800 训练服务器的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见《Atlas 800 训练服务器 iBMC用户指南（型号 9000）》中的“[查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A2训练系列产品|<ul><li>Atlas 800T A2训练服务器</li><li>Atlas 200T A2 Box16异构子框</li><li>Atlas 900 A2 PoD集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A3训练系列产品|<ul><li>Atlas 800T A3超节点服务器</li><li>Atlas 900 A3 SuperPoD超节点</li><li>Atlas 9000 A3 SuperPoD集群算力系统</li><li>A200T A3 Box8超节点服务器</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Ascend 950PR&950DT系列产品|<p>Ascend 950PR系列产品：<ul><li>Atlas 850超节点</li><li>Atlas 650服务器</li></ul></p><p>Ascend 950DT系列产品：<ul><li>Atlas 850E超节点</li><li>Atlas 650E服务器</li><li>Atlas 950 SuperPoD超节点</li></ul></p>|PyTorch|
 
 **重调度原理<a name="zh-cn_topic_0000002003034876_section19557184814234"></a>**
 
@@ -175,7 +175,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 - 不支持多模态模型。
 - 不支持开启watchdog功能。
 - 不支持在保存Checkpoint期间触发进程级别重调度。
-- Atlas A3 训练系列产品场景下，若发生NPU掉卡类、OS断连类的故障，可导致进程级别重调度失败。
+- Atlas A3训练系列产品场景下，若发生NPU掉卡类、OS断连类的故障，可导致进程级别重调度失败。
 - 当故障发生在HCCL建链阶段时，会导致进程级别重调度失败。如果除训练初始化的HCCL建链外，还存在其他训练阶段的HCCL建链，可参考[配置HCCL主动触发建链](../02_configuration/02_configuring_training_recovery.md#配置hccl主动触发建链)章节进行提前建链，防止故障出现在HCCL建链阶段。
 - 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
 - MindSpore 2.11.0版本不再支持该特性。
@@ -188,9 +188,9 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas A2 训练系列产品|<ul><li>Atlas 800T A2 训练服务器</li><li>Atlas 200T A2 Box16 异构子框</li><li>Atlas 900 A2 PoD 集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Atlas A3 训练系列产品|<ul><li>Atlas 800T A3 超节点服务器</li><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Ascend 950PR&950DT系列产品|Atlas 950 SuperPoD 超节点|PyTorch|
+|Atlas A2训练系列产品|<ul><li>Atlas 800T A2训练服务器</li><li>Atlas 200T A2 Box16异构子框</li><li>Atlas 900 A2 PoD集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A3训练系列产品|<ul><li>Atlas 800T A3超节点服务器</li><li>Atlas 900 A3 SuperPoD超节点</li><li>Atlas 9000 A3 SuperPoD集群算力系统</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Ascend 950PR&950DT系列产品|Atlas 950 SuperPoD超节点|PyTorch|
 
 **重调度原理<a name="zh-cn_topic_0000002039353153_section12206164333619"></a>**
 
@@ -338,8 +338,8 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas A2 训练系列产品|Atlas 800T A2 训练服务器|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Atlas A3 训练系列产品|<ul><li>Atlas 800T A3 超节点服务器</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A2训练系列产品|Atlas 800T A2训练服务器|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A3训练系列产品|<ul><li>Atlas 800T A3超节点服务器</li><li>Atlas 9000 A3 SuperPoD集群算力系统</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 
 **亚健康热切原理<a name="zh-cn_topic_0000002039194017_section57901137171110-duplicate-2"></a>**
 
@@ -450,7 +450,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 ### 算子级在线恢复<a name="ZH-CN_TOPIC_0000002479386484"></a>
 
-Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执行通信算子重传。在故障进程不退出的情况下，算子级在线恢复可容忍更长时间的网络异常，训练任务不中断。
+Atlas A3训练系列产品支持在发生参数面网络故障时，HCCL会执行通信算子重传。在故障进程不退出的情况下，算子级在线恢复可容忍更长时间的网络异常，训练任务不中断。
 
 若网络故障的算子级在线恢复（HCCL通信算子重执行）执行失败，则回退至进程级在线恢复
 
@@ -479,7 +479,7 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas A3 训练系列产品|<ul><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li></ul>|-|
+|Atlas A3训练系列产品|<ul><li>Atlas 900 A3 SuperPoD超节点</li><li>Atlas 9000 A3 SuperPoD集群算力系统</li></ul>|-|
 
 **算子级在线恢复原理<a name="section41453583611"></a>**
 
@@ -544,8 +544,8 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas A3 训练系列产品|<ul><li>Atlas 800T A3 超节点服务器</li><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Ascend 950PR&950DT系列产品|Atlas 950 SuperPoD 超节点|PyTorch|
+|Atlas A3训练系列产品|<ul><li>Atlas 800T A3超节点服务器</li><li>Atlas 900 A3 SuperPoD超节点</li><li>Atlas 9000 A3 SuperPoD集群算力系统</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Ascend 950PR&950DT系列产品|Atlas 950 SuperPoD超节点|PyTorch|
 
 **表 9** 片上内存故障进程级在线恢复支持的产品和框架
 
@@ -553,9 +553,9 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas A2 训练系列产品|<ul><li>Atlas 800T A2 训练服务器</li><li>Atlas 900 A2 PoD 集群基础单元</li><li>Atlas 900 A2 PoDc 集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Atlas A3 训练系列产品|<ul><li>Atlas 800T A3 超节点服务器</li><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 9000 A3 SuperPoD 集群算力系统</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Ascend 950PR&950DT系列产品|Atlas 950 SuperPoD 超节点|PyTorch|
+|Atlas A2训练系列产品|<ul><li>Atlas 800T A2训练服务器</li><li>Atlas 900 A2 PoD集群基础单元</li><li>Atlas 900 A2 PoDc集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A3训练系列产品|<ul><li>Atlas 800T A3超节点服务器</li><li>Atlas 900 A3 SuperPoD超节点</li><li>Atlas 9000 A3 SuperPoD集群算力系统</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Ascend 950PR&950DT系列产品|Atlas 950 SuperPoD超节点|PyTorch|
 
 **进程级在线恢复原理<a name="zh-cn_topic_0000002003193196_section961210366427"></a>**
 
@@ -725,7 +725,7 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 
 ### 借轨通信任务暂停与回切<a name="ZH-CN_TOPIC_0000002479226530"></a>
 
-Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练任务借轨通信的暂停与回切功能。即在训练过程中，使用主动借轨回切接口，可自由切换NPU芯片使用的RoCE网口。
+Atlas A3训练系列产品场景下，MindCluster集群调度组件提供训练任务借轨通信的暂停与回切功能。即在训练过程中，使用主动借轨回切接口，可自由切换NPU芯片使用的RoCE网口。
 
 使用借轨回切功能时，NPU芯片的组网关系可参考《Ascend Training Solution 组网指南（Atlas A3训练产品）》中的“网络平面介绍 \> 参数面网络 \> [端口对接策略](https://support.huawei.com/enterprise/zh/doc/EDOC1100570090/3e6a1479)”章节。
 
@@ -767,7 +767,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas A3 训练系列产品|<ul><li>Atlas 800T A3 超节点服务器</li><li>Atlas 900 A3 SuperPoD 超节点</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A3训练系列产品|<ul><li>Atlas 800T A3超节点服务器</li><li>Atlas 900 A3 SuperPoD超节点</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 
 **借轨通信任务暂停与回切原理<a name="section56986212179"></a>**
 
@@ -864,8 +864,8 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas A2 训练系列产品|Atlas 800T A2 训练服务器|PyTorch|
-|Atlas A3 训练系列产品|Atlas 900 A3 SuperPoD 超节点|PyTorch|
+|Atlas A2训练系列产品|Atlas 800T A2训练服务器|PyTorch|
+|Atlas A3训练系列产品|Atlas 900 A3 SuperPoD超节点|PyTorch|
 
 **弹性训练原理<a name="section3841210162013"></a>**
 
@@ -1159,9 +1159,9 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas 训练系列产品|<ul><li>Atlas 800 训练服务器（型号 9000）</li><li>Atlas 800 训练服务器（型号 9010）</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Atlas A2 训练系列产品|<ul><li>Atlas 800T A2 训练服务器</li><li>Atlas 900 A2 PoD 集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Atlas A3 训练系列产品|<ul><li>Atlas 800T A3 超节点服务器</li><li>Atlas 900 A3 SuperPoD 超节点</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas训练系列产品|<ul><li>Atlas 800训练服务器（型号：9000）</li><li>Atlas 800训练服务器（型号：9010）</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A2训练系列产品|<ul><li>Atlas 800T A2训练服务器</li><li>Atlas 900 A2 PoD集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A3训练系列产品|<ul><li>Atlas 800T A3超节点服务器</li><li>Atlas 900 A3 SuperPoD超节点</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 
 **优雅容错原理<a name="zh-cn_topic_0000002098609234_section882584011262"></a>**
 
