@@ -1,270 +1,93 @@
 # MindCluster Ascend FaultDiag
 
-- [变更通知](#-变更通知)
-- [简介](#简介)
-- [版本说明](#版本说明)
-- [环境部署](#环境部署)
-- [快速入门](#快速入门)
-- [特性介绍](#特性介绍)
-- [API参考](#api参考)
-- [FAQ](#faq)
-- [安全声明](#安全声明)
-- [分支维护策略](#分支维护策略)
-- [版本维护策略](#版本维护策略)
-- [免责声明](#免责声明)
-- [License](#license)
-- [建议与交流](#建议与交流)
+## 目录
 
-## 📢 变更通知
-
-- **2025-11-07**: ✨ 补充A3 AI服务器故障模式
-- **2025-09-04**: ✨ 适配训练打屏日志变化
-- **2025-08-22**: ✨ SDK支持故障类型扩充
-- **2025-08-22**: ⚙️ 支持自定义配置
-- **2025-08-22**: ✨ MindSpore故障模式补充
-- **2025-08-08**: 🌐 国际化支持
-- **2025-06-05**: ✨ 根因节点定位能力适配Socket并行建链
-- **2025-05-23**: 🚀 提供 **模型级/POD级** 故障诊断分析
+- [MindCluster Ascend FaultDiag](#mindcluster-ascend-faultdiag)
+  - [目录](#目录)
+  - [简介](#简介)
+  - [软件架构](#软件架构)
+    - [上下游依赖](#上下游依赖)
+  - [编译指南](#编译指南)
+  - [安装部署](#安装部署)
+  - [使用指南](#使用指南)
+  - [说明](#说明)
 
 ## 简介
 
-MindCluster Ascend FaultDiag（故障诊断工具）主要功能如下：提供日志清洗和故障诊断功能，提取训练及推理过程相关日志的关键信息，并根据集群所有节点清洗后的关键信息，分析故障根因节点以及故障事件。
+- MindCluster Ascend FaultDiag（故障诊断工具，命令行名为ascend-fd）是一款面向昇腾AI集群的日志故障诊断工具，部署在集群各节点上，用于提取训练及推理过程相关日志的关键信息，并分析故障根因节点以及故障事件。
+- 主要功能：
+  - 日志清洗：提取训练及推理过程相关日志的关键信息，覆盖主机OS日志、CANN应用侧与Device侧日志、MindCluster组件日志、MindIE组件日志等，输出结构化清洗结果。
+  - 故障诊断：根据集群所有节点清洗后的关键信息，分析故障根因节点以及故障事件，支持根因节点分析、故障事件分析、设备资源分析、网络拥塞分析四类诊断。
+  - 命令行与SDK双入口：提供ascend-fd命令行工具，同时通过ascend-faultdiag-toolkit包提供Python SDK，便于AI运维平台集成清洗与诊断能力。
 
-## 版本说明
+## 软件架构
 
-MindCluster Ascend FaultDiag版本配套详情请参考：[版本配套详情](https://www.hiascend.com/developer/download/community)
+### 上下游依赖
 
-## 环境部署
+![](../../docs/zh/faultdiag/figures/ascend-faultdiag/全量应用场景方案.png "全量应用场景方案")
 
-MindCluster Ascend FaultDiag支持的Python版本需≥3.7。在安装MindCluster Ascend FaultDiag前，请检查依赖的Python版本是否满足要求。
+1. 上游输入为各节点采集的原始日志：训练/推理控制台日志、CANN应用侧与Device侧日志、主机OS日志、MindCluster组件日志、MindIE组件日志以及NPU网口、环境信息等。
+2. 各节点分别执行日志清洗，提取error、trace等关键信息，输出结构化清洗结果。
+3. 将各节点的清洗结果集中转储至同一台设备，执行故障诊断。
+4. 下游输出为故障诊断结果（根因节点、故障事件、故障描述），供用户定位问题，或供AI运维平台做后续处理。
 
-### 编译与构建
+## 编译指南
 
-#### 环境要求
+1. 通过git拉取源码，获得ascend-faultdiag。
 
-- Python版本≥3.7.5
-- scikit-learn>=1.3.0
-- pandas>=1.3.5
-- numpy
+   示例：源码放在/home/mind-cluster/component/ascend-faultdiag目录下。
 
-#### 构建
+2. 执行以下命令，安装编译所需的三方依赖库（要求Python版本不低于3.7.5）。
 
-请先克隆仓库，然后在项目根目录执行构建脚本：
+   ```shell
+   cd /home/mind-cluster/component/ascend-faultdiag
+   pip3 install -r src/requirements.txt && pip3 install 'setuptools>=60.3.0' 'wheel>=0.45.1'
+   ```
 
-```shell
-git clone https://gitcode.com/Ascend/mind-cluster.git
-cd mind-cluster/component/ascend-faultdiag
-bash build/build.sh
-```
+3. 执行构建脚本，在"output"目录下生成组件whl包和SDK whl包。
 
-### [获取软件包](https://gitcode.com/Ascend/mind-cluster/releases)
+   ```shell
+   bash build/build.sh
+   ```
 
-获取MindCluster Ascend FaultDiag软件包。
+4. 执行以下命令，查看 **output** 目录生成的软件列表。
 
-### [命令行方式安装](../../docs/zh/faultdiag/ascend-faultdiag/04_installation_guide/01_installation.md#whl-包安装推荐)
+   ```shell
+   ll /home/mind-cluster/component/ascend-faultdiag/output
+   ```
 
-介绍如何以命令行方式安装MindCluster Ascend FaultDiag。
+   ```text
+   ascend_faultdiag-<version>-py3-none-linux_{arch}.whl
+   alan_faultdiag-<version>-py3-none-linux_{arch}.whl
+   ascend_faultdiag_toolkit-<version>-py3-none-any.whl
+   ```
 
-### [使用MindCluster Ascend Deployer安装](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/05_installation_and_upgrade/02_install_softwares.md)
+   其中`{arch}`为软件包架构（x86_64或aarch64，可通过`arch`命令查看），ascend_faultdiag为组件中文版安装包，alan_faultdiag为组件英文版安装包，ascend_faultdiag_toolkit为SDK工具包。
 
-介绍如何使用MindCluster Ascend Deployer安装MindCluster Ascend FaultDiag。
+## 安装部署
 
-## 快速入门
+当前MindCluster Ascend FaultDiag组件的安装部署支持两种方式：
 
-**（可选）为普通用户配置环境变量。**
+1. Whl包安装（推荐），请参见[MindCluster Ascend FaultDiag安装部署指南 - 安装](../../docs/zh/faultdiag/ascend-faultdiag/04_installation_guide/01_installation.md)。
+2. 使用MindCluster Ascend Deployer安装，请参见[MindCluster Ascend Deployer - 安装软件](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/05_installation_and_upgrade/02_install_softwares.md)。
 
-以root用户安装组件，普通用户使用时，请配置环境变量。若无法找到依赖时，请查看是否已安装该依赖或使用权限不符。
+## 使用指南
 
-- 步骤1：以**root用户**登录并查询组件位置
+ascend-fd的典型使用流程为“日志清洗→清洗结果转储→故障诊断”，快速上手请参见[快速入门](../../docs/zh/faultdiag/ascend-faultdiag/03_quick_start/quick_start.md)。基于自身关键特性的使用指导，请参见MindCluster Ascend FaultDiag用户指南对应章节：
 
-    ```shell
-    which ascend-fd
-    ```
+- 日志清洗（提取原始日志和监测指标信息中的有效信息），请参见[日志清洗](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/03_log_parsing.md)。
+- 故障诊断（分析故障根因节点和故障事件），请参见[故障诊断](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/04_fault_diagnosis.md)。
+- 单机场景的一站式清洗与诊断，请参见[单机故障诊断](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/05_single_server_diagnosis.md)。
+- 超节点场景的故障诊断（含交换机日志分析），请参见[超节点故障诊断](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/06_superpod_diagnosis.md)。
+- 屏蔽无效CANN日志，请参见[屏蔽故障日志](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/08_fault_log_masking.md)。
+- 自定义清洗配置与自定义故障实体，请参见[自定义配置文件](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/09_custom_configuration.md)与[自定义故障实体](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/07_custom_fault_entities.md)。
+- 基于SDK的清洗与诊断（业务日志清洗、根因节点、故障事件），请参见[业务日志清洗](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/10_service_flow_parsing.md)、[根因节点清洗及诊断](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/11_root_cause_parsing_diagnosis.md)与[故障事件清洗及诊断](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/12_fault_event_parsing_diagnosis.md)。
+- 命令行与SDK的详细参数说明，请参见[API参考](../../docs/zh/faultdiag/ascend-faultdiag/06_api/menu_api.md)。
 
-    回显示例如下，实际位置请以查询结果为准：
+## 说明
 
-    ```shell
-    /usr/local/python3.7.5/bin/ascend-fd
-    ```
-
-- 以**普通用户**登录配置环境变量。
-
-    ```shell
-    export PATH=$PATH:/usr/local/python3.7.5/bin
-    ```
-
-- 执行命令查看是否配置完成。
-
-    ```shell
-    ascend-fd version
-    ```
-
-    回显示例如下：
-
-    ```shell
-    ascend-fd ${版本号}
-    ```
-
-### 日志清洗
-
-- 步骤1：上传日志至服务器。
-    上传至服务器任意目录（例如/home），以使用-i参数为例，将所有日志汇总至同一采集目录下进行清洗，目录结构示例如下。
-    Host主机侧：
-
-    ```txt
-    采集目录
-    |-- messages         # 主机侧操作系统日志
-    |-- dmesg                # 主机侧内核消息日志
-    |-- crash
-        |-- 主机+故障时间目录(eg:127.xx.xx.1-2024-09-23-11:25:29)
-            |-- vmcore_dmesg.txt     # 系统崩溃时保存的Host侧内核消息日志文件
-    |-- sysmonitor.log       # 主机侧系统监测日志
-    |-- rank-0.txt      # 训练控制台日志
-    ...
-    |-- rank-7.txt      # 训练控制台日志
-    |-- process_log          # CANN应用侧原始日志，目录名需为process_log
-    |-- device_log           # Device侧日志，目录名需为device_log
-    |-- dl_log                # MindCluster组件日志，目录名需为dl_log
-        |-- devicePlugin        # Ascend Device Plugin组件日志
-        |-- noded               # NodeD组件日志
-        |-- ascend-docker-runtime              # Ascend Docker Runtime组件日志
-        |-- volcano-scheduler              # Volcano中的volcano-scheduler组件日志
-        |-- volcano-controller              # Volcano中的volcano-controller组件日志
-
-        |-- npu-exporter              # NPU Exporter组件日志
-    |-- mindie               # MindIE组件日志
-        |-- log
-            |-- debug        # MindIE组件运行日志
-            |-- security     # MindIE组件审计日志
-            |-- mindie_cluster_log     # MindIE Pod控制台日志
-    |-- amct_log             # AMCT组件日志
-    |-- environment_check # NPU网口、状态信息、资源信息
-        |-- npu_info_before/after.txt  # 训练前或后NPU网口
-    ```
-
-- 步骤2：创建清洗输出目录
-
-    ```shell
-    mkdir 清洗输出目录
-    ```
-
-- 步骤3：执行命令清洗日志
-
-    ```shell
-    ascend-fd parse -i 采集目录  -o 清洗输出目录
-    ```
-
-    回显如下：
-
-    ```shell
-    The parse job starts. Please wait. Job id: [****], run log file is [****].
-    These job ['模块1', '模块2'...] succeeded.
-    The parse job is complete.
-    ```
-
-- 步骤4：日志转储
-将每台服务器的清洗输出目录下所有文件进行集中转储，转储目录结构如下。
-
-    ```txt
-    诊断输入目录
-        |--清洗输出目录1
-           |--plog-parser-{pid}-{0/1}.log        # 根因节点分析清洗后日志，包括error、trace等关键信息，按Pid分别保存，{0/1}代表该{pid}的plog日志有/无错误日志
-           |--device_ip_info.json                # 设备IP信息
-           |--ascend-kg-parser.json              # 故障事件分析清洗结果，推理引擎输入文件
-           |--ascend-kg-analyzer.json            # 故障事件分析清洗结果
-           |--ascend-rc-parser.json              # 根因节点分析清洗结果
-           |--mindie-cluster-info.json           # MindIE Pod控制台日志清洗结果
-           |--server-info.json.json              # MindIE组件日志清洗结果
-
-        |--清洗输出目录2
-           |--plog-parser-{pid}-{0/1}.log
-           |--device_ip_info.json
-           |--ascend-kg-parser.json
-           |--ascend-kg-analyzer.json
-           |--ascend-rc-parser.json
-           |--server-info.json.json
-        ...
-        |--清洗输出目录n
-    ```
-
-### 故障诊断
-
-- 步骤1：创建诊断结果输出目录。
-
-    ```shell
-    mkdir 诊断结果输出目录
-    ```
-
-- 步骤二：执行命令进行故障诊断
-
-    ```shell
-    ascend-fd diag -i 诊断输入目录 -o 诊断结果输出目录
-    ```
-
-    诊断回显样例以及关键参数说明请见：[故障诊断](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG038.html)
-
-## 特性介绍
-
-MindCluster Ascend FaultDiag 具体特性介绍如下：
-
-| 特性名称                  | 介绍                                                                                          |
-|---------------------------|-----------------------------------------------------------------------------------------------|
-| 日志清洗                  | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/03_log_parsing.md)                   |
-| 故障诊断                  | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/04_fault_diagnosis.md)               |
-| 单机故障诊断              | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/05_single_server_diagnosis.md)       |
-| 超节点故障诊断            | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/06_superpod_diagnosis.md)            |
-| 自定义故障实体            | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/07_custom_fault_entities.md)         |
-| 屏蔽故障日志              | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/08_fault_log_masking.md)             |
-| 自定义配置文件            | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/09_custom_configuration.md)          |
-| 业务日志清洗（SDK）       | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/10_service_flow_parsing.md)          |
-| 根因节点清洗及诊断（SDK） | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/11_root_cause_parsing_diagnosis.md)  |
-| 故障事件清洗及诊断（SDK） | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/12_fault_event_parsing_diagnosis.md) |
-
-## API参考
-
-API参考详见：[API参考](../../docs/zh/faultdiag/ascend-faultdiag/06_api/menu_api.md)。
-
-## FAQ
-
-相关FAQ请参考：[FAQ](../../docs/zh/faultdiag/ascend-faultdiag/07_references/02_faq.md)。
-
-## 安全声明
-
-- 安全声明详见：[安全加固](../../docs/zh/faultdiag/ascend-faultdiag/07_references/03_security.md)
-- 公网地址详见：[公网地址](../../docs/zh/resource/MindCluster%2026.0.0%20Ascend%20FaultDiag公网地址.xlsx)
-
-## 分支维护策略
-
-版本分支的维护阶段如下：
-
-| 状态                | 时间     | 说明                                                                                                  |
-|---------------------|----------|-------------------------------------------------------------------------------------------------------|
-| 计划                | 1-3个月  | 计划特性                                                                                              |
-| 开发                | 3个月    | 开发新特性并修复问题，定期发布新版本                                                                  |
-| 维护                | 3-12个月 | 常规分支维护3个月，长期支持分支维护12个月。对重大BUG进行修复，不合入新特性，并视BUG的影响发布补丁版本 |
-| 生命周期终止（EOL） | N/A      | 分支不再接受任何修改                                                                                  |
-
-## 版本维护策略
-
-| 版本   | 维护策略 | 当前状态 | 发布日期         | 后续状态   | EOL日期 |
-|--------|----------|----------|------------------|------------|---------|
-| master | 长期支持 | 开发     | 在研分支，不发布 | 2025-10-27 | -       |
-| v7.3.0 | 长期支持 | 开发     | 在研分支，未发布 | 2025-10-27 | -       |
-
-## 免责声明
-
-- 本仓库代码中包含多个开发分支，这些分支可能包含未完成、实验性或未测试的功能。在正式发布前，这些分支不应被应用于任何生产环境或者依赖关键业务的项目中。请务必使用我们的正式发行版本，以确保代码的稳定性和安全性。
-  使用开发分支所导致的任何问题、损失或数据损坏，本项目及其贡献者概不负责。
-- 正式版本请参考release版本 <https://gitcode.com/ascend/mind-cluster/releases>
-
-## License
-
-MindCluster以Apache 2.0许可证许可，对应许可证文本可查阅[MindCluster根目录](https://gitcode.com/Ascend/mind-cluster/blob/master/LICENSE)。
-
-## 建议与交流
-
-欢迎大家为社区做贡献。如果有任何疑问或建议，请提交[issue](https://gitcode.com/Ascend/mind-cluster/issues)，我们会尽快回复。感谢您的支持。
-
-## 致谢
-
-感谢来自社区的每一个PR，欢迎贡献MindCluster Ascend FaultDiag！
+- 请将ascend-fd独立部署在各服务器上使用。如果部署在共享目录中供多台服务器共用，可能导致功能异常或性能问题。
+- ascend-fd仅支持对整机满卡训练或推理任务提供故障诊断，非满卡场景执行诊断可能导致故障根因定位错误或失败。
+- 请同步各训练/推理服务器的系统时间（含Host与Device、宿主机与容器），时间不一致可能导致分析结果不准确。
+- 使用诊断功能时，因Linux系统最大文件描述符数限制（默认为1024），集群规模建议不超过128台服务器（1024卡），超过时需使用`ulimit -n <值>`命令调整。
+- 各类日志的版本配套要求请参见[使用说明](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/01_usage_overview.md)，常见问题请参见[FAQ](../../docs/zh/faultdiag/ascend-faultdiag/07_references/02_faq.md)。
