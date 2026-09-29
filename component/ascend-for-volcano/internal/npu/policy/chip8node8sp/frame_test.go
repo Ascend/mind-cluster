@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright(C)2025. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -687,6 +687,7 @@ func newNPUNodeWithSuperPodID(nodeName string, superPodID int32) plugin.NPUNode 
 
 const (
 	spBlockNum2 = 2
+	spBlockNum3 = 3
 )
 
 type validNPUJobTest struct {
@@ -1349,51 +1350,154 @@ func TestInSuperPods(t *testing.T) {
 	})
 }
 
+type selectNodesFromSuperPodsTest struct {
+	name          string
+	unReadyID     []string
+	totalCount    int
+	superPods     []superPod
+	selectNodes   map[string][]plugin.SuperNode
+	spBlock       int
+	wantCount     int
+	wantSelected  int
+	wantFirstSize int
+}
+
+func buildSelectNodesFromSuperPodsTestCases() []selectNodesFromSuperPodsTest {
+	return []selectNodesFromSuperPodsTest{
+		{
+			name:       "01 one superPod with multiple blocks will be selected until less than spBlock",
+			unReadyID:  []string{"pod1", "pod2"},
+			totalCount: util.NPUIndex2,
+			superPods: []superPod{
+				{
+					"node1": {CommonNode: plugin.CommonNode{Name: "node1"}},
+					"node2": {CommonNode: plugin.CommonNode{Name: "node2"}},
+					"node3": {CommonNode: plugin.CommonNode{Name: "node3"}},
+					"node4": {CommonNode: plugin.CommonNode{Name: "node4"}},
+				},
+			},
+			selectNodes:   make(map[string][]plugin.SuperNode),
+			spBlock:       spBlockNum2,
+			wantCount:     0,
+			wantSelected:  util.NPUIndex4,
+			wantFirstSize: 0,
+		},
+		{
+			name:       "02 multiple superPods each with one block will be selected",
+			unReadyID:  []string{"pod1", "pod2"},
+			totalCount: util.NPUIndex2,
+			superPods: []superPod{
+				{
+					"node1": {CommonNode: plugin.CommonNode{Name: "node1"}},
+					"node2": {CommonNode: plugin.CommonNode{Name: "node2"}},
+				},
+				{
+					"node3": {CommonNode: plugin.CommonNode{Name: "node3"}},
+					"node4": {CommonNode: plugin.CommonNode{Name: "node4"}},
+				},
+			},
+			selectNodes:   make(map[string][]plugin.SuperNode),
+			spBlock:       spBlockNum2,
+			wantCount:     0,
+			wantSelected:  util.NPUIndex4,
+			wantFirstSize: 0,
+		},
+		{
+			name:         "03 edge case - empty superPods",
+			unReadyID:    []string{"pod1", "pod2"},
+			totalCount:   util.NPUIndex2,
+			superPods:    []superPod{},
+			selectNodes:  make(map[string][]plugin.SuperNode),
+			spBlock:      spBlockNum2,
+			wantCount:    util.NPUIndex2,
+			wantSelected: 0,
+		},
+		{
+			name:          "04 edge case - zero totalCount",
+			unReadyID:     []string{"pod1", "pod2"},
+			totalCount:    0,
+			superPods:     []superPod{{"node1": {CommonNode: plugin.CommonNode{Name: "node1"}}}},
+			selectNodes:   make(map[string][]plugin.SuperNode),
+			spBlock:       spBlockNum2,
+			wantCount:     0,
+			wantSelected:  0,
+			wantFirstSize: 1,
+		},
+		{
+			name:      "05 superPods with fewer nodes than spBlock are skipped",
+			unReadyID: []string{"pod1"},
+			// no superPod reaches spBlock, the loop walks past the last index and returns
+			totalCount: 1,
+			superPods: []superPod{
+				{
+					"node1": {CommonNode: plugin.CommonNode{Name: "node1"}},
+					"node2": {CommonNode: plugin.CommonNode{Name: "node2"}},
+				},
+				{
+					"node3": {CommonNode: plugin.CommonNode{Name: "node3"}},
+				},
+			},
+			selectNodes:   make(map[string][]plugin.SuperNode),
+			spBlock:       spBlockNum3,
+			wantCount:     1,
+			wantSelected:  0,
+			wantFirstSize: util.NPUIndex2,
+		},
+		{
+			name:       "06 remaining pods exceed unReadyID, selection stops",
+			unReadyID:  []string{"pod1"},
+			totalCount: util.NPUIndex3,
+			superPods: []superPod{
+				{
+					"node1": {CommonNode: plugin.CommonNode{Name: "node1"}},
+					"node2": {CommonNode: plugin.CommonNode{Name: "node2"}},
+					"node3": {CommonNode: plugin.CommonNode{Name: "node3"}},
+					"node4": {CommonNode: plugin.CommonNode{Name: "node4"}},
+				},
+			},
+			selectNodes:   make(map[string][]plugin.SuperNode),
+			spBlock:       spBlockNum2,
+			wantCount:     util.NPUIndex3,
+			wantSelected:  0,
+			wantFirstSize: util.NPUIndex4,
+		},
+	}
+}
+
 func TestSelectNodesFromSuperPods(t *testing.T) {
-	convey.Convey("test selectNodesFromSuperPods case 1 ", t, func() {
-		module := &chip8node8sp{}
-		map0 := map[string]plugin.NPUNode{"0": {}}
-		map1 := map[string]plugin.NPUNode{
-			"1": {},
-			"2": {},
-		}
-		superPods := []superPod{map0, map1}
-		unReadyID := []string{"0"}
-		totalCount := 1
-		selectNodes := make(map[string][]plugin.SuperNode)
-		patches1 := gomonkey.ApplyFunc((*chip8node8sp).selectNodesFromSuperPod,
-			func(_ *chip8node8sp, _ string, _ map[string]plugin.NPUNode,
-				_ map[string][]plugin.SuperNode) map[string]plugin.NPUNode {
-				return map[string]plugin.NPUNode{"0": {}}
-			})
-		defer patches1.Reset()
-		result := module.selectNodesFromSuperPods(unReadyID, &totalCount, superPods, selectNodes)
-		exceptResult := 2
-		convey.So(len(result), convey.ShouldEqual, exceptResult)
-	})
-	convey.Convey("test selectNodesFromSuperPods case 2 ", t, func() {
-		module := &chip8node8sp{
-			spBlock: 3,
-		}
-		map0 := map[string]plugin.NPUNode{"0": {}}
-		map1 := map[string]plugin.NPUNode{
-			"1": {},
-			"2": {},
-		}
-		superPods := []superPod{map0, map1}
-		unReadyID := []string{"0"}
-		totalCount := 1
-		selectNodes := make(map[string][]plugin.SuperNode)
-		patches1 := gomonkey.ApplyFunc((*chip8node8sp).selectNodesFromSuperPod,
-			func(_ *chip8node8sp, _ string, _ map[string]plugin.NPUNode,
-				_ map[string][]plugin.SuperNode) map[string]plugin.NPUNode {
-				return map[string]plugin.NPUNode{"0": {}}
-			})
-		defer patches1.Reset()
-		result := module.selectNodesFromSuperPods(unReadyID, &totalCount, superPods, selectNodes)
-		exceptResult := 2
-		convey.So(len(result), convey.ShouldEqual, exceptResult)
-	})
+	patch := gomonkey.ApplyFunc(rescheduling.GetReSchedulerCache,
+		func() *rescheduling.DealReSchedulerCache { return nil })
+	defer patch.Reset()
+	for _, tt := range buildSelectNodesFromSuperPodsTestCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			tp := &chip8node8sp{spBlock: tt.spBlock}
+			got := tp.selectNodesFromSuperPods(tt.unReadyID, &tt.totalCount, tt.superPods, tt.selectNodes)
+			if tt.totalCount != tt.wantCount {
+				t.Errorf("selectNodesFromSuperPods() totalCount = %v, want %v", tt.totalCount, tt.wantCount)
+			}
+			if gotNum := countSelectedNodes(tt.selectNodes); gotNum != tt.wantSelected {
+				t.Errorf("selectNodesFromSuperPods() selected nodes = %v, want %v", gotNum, tt.wantSelected)
+			}
+			if len(got) > 0 && len(got[0]) != tt.wantFirstSize {
+				t.Errorf("selectNodesFromSuperPods() first superPod len = %v, want %v", len(got[0]),
+					tt.wantFirstSize)
+			}
+			if tt.name == "01 one superPod with multiple blocks will be selected until less than spBlock" {
+				if len(tt.selectNodes["pod2"]) != spBlockNum2 || len(tt.selectNodes["pod1"]) != spBlockNum2 {
+					t.Errorf("selectNodesFromSuperPods() vid distribution = pod2:%d, pod1:%d, want each %d",
+						len(tt.selectNodes["pod2"]), len(tt.selectNodes["pod1"]), spBlockNum2)
+				}
+			}
+		})
+	}
+}
+
+func countSelectedNodes(selectNodes map[string][]plugin.SuperNode) int {
+	count := 0
+	for _, nodes := range selectNodes {
+		count += len(nodes)
+	}
+	return count
 }
 
 func TestSelectNodesFromSuperPodsExceptReserve(t *testing.T) {
