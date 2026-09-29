@@ -82,6 +82,8 @@ type ScalingResourceStatus struct {
 	Message string `json:"message,omitempty"`
 }
 
+// +kubebuilder:object:root=true
+
 // InstanceSet is the Schema for the instancesets API
 type InstanceSet struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -90,6 +92,8 @@ type InstanceSet struct {
 	Spec   InstanceSetSpec   `json:"spec,omitempty"`
 	Status InstanceSetStatus `json:"status,omitempty"`
 }
+
+// +kubebuilder:object:root=true
 
 // InstanceSetList contains a list of InstanceSet
 type InstanceSetList struct {

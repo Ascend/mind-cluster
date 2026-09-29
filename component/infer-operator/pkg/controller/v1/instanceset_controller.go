@@ -39,8 +39,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
@@ -182,6 +184,9 @@ func (r *InstanceSetReconciler) reconcileScalingResources(
 		hwlog.RunLog.Infof("InstanceSet %s/%s scaling resource status: type=%s, name=%s, ready=%v, message=%s",
 			instanceSet.Namespace, instanceSet.Name,
 			scalingStatus.Type, scalingStatus.Name, scalingStatus.Ready, scalingStatus.Message)
+		if !scalingStatus.Ready && strings.Contains(scalingStatus.Message, "controlled by PodAutoscaler") {
+			r.Recorder.Event(instanceSet, corev1.EventTypeWarning, "AutoscalingConflict", scalingStatus.Message)
+		}
 	}
 
 	return scalingStatus, nil
@@ -468,6 +473,8 @@ func NewInstanceSetReconciler(
 func (r *InstanceSetReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
 	controller := ctrl.NewControllerManagedBy(mgr).
 		For(&apiv1.InstanceSet{}, builder.WithPredicates(instanceSetPredicate(r))).
+		Watches(&apiv1.PodAutoscaler{}, handler.EnqueueRequestsFromMapFunc(instanceSetForPodAutoscaler),
+			builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(WorkLoadPredicate())).
 		Owns(&appsv1.StatefulSet{}, builder.WithPredicates(WorkLoadPredicate())).
 		Owns(&corev1.Service{}, builder.WithPredicates(WorkLoadPredicate())).
@@ -491,6 +498,15 @@ func (r *InstanceSetReconciler) SetupWithManager(ctx context.Context, mgr ctrl.M
 		return fmt.Errorf("setup rescheduler failed: %v", err)
 	}
 	return controller.Complete(r)
+}
+
+func instanceSetForPodAutoscaler(_ context.Context, object client.Object) []reconcile.Request {
+	pa, ok := object.(*apiv1.PodAutoscaler)
+	if !ok || pa.Spec.ScaleTargetRef.Kind != "InstanceSet" || pa.Spec.ScaleTargetRef.Name == "" {
+		return nil
+	}
+	return []reconcile.Request{{NamespacedName: types.NamespacedName{
+		Namespace: pa.Namespace, Name: pa.Spec.ScaleTargetRef.Name}}}
 }
 
 func (r *InstanceSetReconciler) doRescheduling(ctx context.Context, instanceSet *apiv1.InstanceSet) error {

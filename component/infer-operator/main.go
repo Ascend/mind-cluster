@@ -51,6 +51,7 @@ import (
 	"infer-operator/pkg/common/utils"
 	"infer-operator/pkg/configManager"
 	"infer-operator/pkg/controller/nodepodcleaner"
+	"infer-operator/pkg/controller/podautoscaler"
 	clusterctrlv1 "infer-operator/pkg/controller/v1"
 	"infer-operator/pkg/controller/workload"
 	"infer-operator/pkg/snapshot"
@@ -188,6 +189,10 @@ func main() {
 	instanceSetReconciler := clusterctrlv1.NewInstanceSetReconciler(mgr, supportHPAScaling, registerWorkLoadHandlersFunc())
 	if err := instanceSetReconciler.SetupWithManager(ctx, mgr); err != nil {
 		hwlog.RunLog.Errorf("unable to setup instance set reconciler: %v", err)
+		os.Exit(1)
+	}
+	if err := podautoscaler.NewReconciler(mgr).SetupWithManager(mgr); err != nil {
+		hwlog.RunLog.Errorf("unable to setup PodAutoscaler reconciler: %v", err)
 		os.Exit(1)
 	}
 	inferServiceReconciler := clusterctrlv1.NewInferServiceReconciler(mgr)
