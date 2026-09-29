@@ -8,7 +8,7 @@
 
     开发示例如下：
 
-    使用NPU Exporter集成并采集DevKit工具生成的hccs\_bandwidth指标，详情请参见[NPU Exporter集成DevKit部署指南](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/utils/npu-exporter)。关于hccs\_bandwidth指标信息的说明请参见[HCCS带宽监控](https://www.hikunpeng.com/document/detail/zh/kunpengdevps/profiler/profiler/KunpengDevKitCli_0251.html)。
+    使用NPU Exporter集成并采集DevKit工具生成的hccs\_bandwidth指标，详情请参见[NPU Exporter集成DevKit部署指南](https://gitcode.com/Ascend/mindcluster-deploy/tree/release%2Fv26.2.0/samples/utils/npu-exporter)。关于hccs\_bandwidth指标信息的说明请参见[HCCS带宽监控](https://www.hikunpeng.com/document/detail/zh/kunpengdevps/profiler/profiler/KunpengDevKitCli_0251.html)。
 
 - 通过插件方式开发自定义指标
 

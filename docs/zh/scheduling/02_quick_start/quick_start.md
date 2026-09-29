@@ -335,14 +335,14 @@
         ```shell
         mkdir /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
         cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
-        wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/train_start.sh
+        wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/release%2Fv26.2.0/samples/train/basic-training/without-ranktable/pytorch/train_start.sh
         ```
 
     3. 执行以下命令，获取[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
 
         ```shell
         cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
-        wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/pytorch_standalone_acjob_quickstart.yaml
+        wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/release%2Fv26.2.0/samples/train/basic-training/without-ranktable/pytorch/pytorch_standalone_acjob_quickstart.yaml
         ```
 
     4. （可选）准备数据集。pytorch_standalone_acjob_quickstart.yaml中默认设置了`--dummy`参数，能自动为训练任务生成随机数据集，无需真实数据集即可启动训练任务。若用户需要使用真实数据集，请删除该YAML文件中的`--dummy`参数，然后自行准备ResNet-50对应的数据集，使用时请遵守对应规范，将数据集上传到“/data/atlas_dls/public/dataset/resnet50/imagenet”。

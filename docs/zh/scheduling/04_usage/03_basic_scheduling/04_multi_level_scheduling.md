@@ -277,7 +277,7 @@ annotations:
   huawei.com/affinity-config: level1=2,level2=4 # 按照任务实际需求配置不同层级的网络组大小
 ```
 
-完整的任务YAML配置请参见[pytorch_multinodes_acjob_super_pod_multilevel.yaml](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/train/basic-training/multilevel/pytorch_multinodes_acjob_super_pod_multilevel.yaml)。
+完整的任务YAML配置请参见[pytorch_multinodes_acjob_super_pod_multilevel.yaml](https://gitcode.com/Ascend/mindcluster-deploy/blob/release/v26.2.0/samples/train/basic-training/multilevel/pytorch_multinodes_acjob_super_pod_multilevel.yaml)。
 
 affinity-config中，level后的数字表示网络层级序号，等号后的数字表示在该层级网络内每几个Pod分为一组。本例中：
 
