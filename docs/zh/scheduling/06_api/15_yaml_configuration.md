@@ -11,30 +11,30 @@
 |apiVersion|字符串 (string)|-|定义对象表示的版本化资源模式。服务器会转换为最新内部值，拒绝不识别的版本。更多信息请参见[Types](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds)。|
 |kind|字符串 (string)|-|表示此对象对应的REST资源类型。值通过端点推断，不可更新，采用驼峰命名。更多信息请参见[Resources](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources)。|
 |metadata|对象 (object)|-|Kubernetes元数据（如命名空间、标签等）。更多信息请参见[Metadata](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata)。|
-|metadata.labels.app|字符串 (string)|-|<p>表明MindIE CMotor任务在Ascend Job中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。</p><ul><li>acjob的任务YAML同时包含jobID和app这2个字段时，Ascend Operator组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE、MINDX_SERVER_IP及MINDX_SERVER_DOMAIN，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见[Ascend Operator注入的训练环境变量](./13_environment_variable_description.md#ascend-operator环境变量说明)。</li><li>该参数仅支持在Atlas 800I A3超节点服务器和Atlas 800I A2推理服务器上使用。</li></ul>|
-|metadata.labels.mind-cluster/scaling-rule: scaling-rule|字符串 (string)|-|标记扩缩容规则对应的ConfigMap名称。仅支持MindIE CMotor推理任务在Atlas 800I A3超节点服务器和Atlas 800I A2推理服务器上使用本参数。|
-|metadata.labels.mind-cluster/group-name: group0|字符串 (string)|-|标记扩缩容规则中对应的group名称。仅支持MindIE CMotor推理任务在Atlas 800I A3超节点服务器和Atlas 800I A2推理服务器上使用本参数。|
-|metadata.labels.framework|字符串 (string)|-|AI框架类型，取值为pytorch或mindspore。|
-|metadata.labels.jobID|字符串 (string)|-|当前MindIE CMotor任务在集群中的唯一识别ID，用户可根据实际情况进行配置。该参数仅支持在Atlas 800I A3超节点服务器和Atlas 800I A2推理服务器上使用。|
-|metadata.labels.pod-rescheduling|字符串 (string)|-|<p>Pod级别重调度。表示任务发生故障后，不会删除所有任务Pod，而是将发生故障的Pod进行删除，重新创建新Pod后进行重调度。</p><ul><li>on：开启Pod级别重调度。</li><li>其他值或不使用该字段：关闭Pod级别重调度。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>重调度模式默认为任务级重调度，若需要开启Pod级别重调度，需要新增该字段。</li></ul></div></div>|
-|metadata.labels.process-recover-enable|字符串 (string)|-|<p>Ascend Operator会根据用户配置的recover-strategy自动给任务打上process-recover-enable=on标签，无需用户手动指定。</p><ul><li>on：开启进程级别重调度及进程级在线恢复。<p>进程级别重调度和优雅容错不能同时开启，若同时开启，断点续训将通过Job级别重调度恢复训练。</p></li><li>pause：暂时关闭进程级别重调度及进程级在线恢复。</li><li>off或不使用该字段：关闭进程级别重调度及进程级在线恢复。</li></ul>|
-|metadata.annotations.recover-strategy|字符串 (string)|-|<p>任务可用恢复策略。recover-strategy配置在任务YAML的annotations下，取值为6种策略的随意组合，策略之间由逗号分割。</p><ul><li>retry：进程级在线恢复。</li><li>recover：进程级别重调度。</li><li>recover-in-place：进程级原地恢复。</li><li>elastic-training：弹性训练。</li><li>dump：保存临终遗言。</li><li>exit：退出训练。</li></ul>|
-|metadata.labels.subHealthyStrategy|字符串 (string)|-|<p>节点状态为亚健康（SubHealthy）的节点的处理策略。</p><ul><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>hotSwitch：执行亚健康热切，拉起备份Pod后，暂停训练任务，并使用新节点重新拉起训练。</li><li>默认取值为ignore。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>使用graceExit策略时，需保证任务开启了临终CKPT保存功能。</li><li>hotSwitch策略的使用约束请参见[使用约束](../04_usage/05_fault_recovery/01_resumable_training/01_solutions_principles/01_fault_handling.md#亚健康热切)。</li></ul></div></div>|
-|metadata.labels.fault-scheduling|字符串 (string)|-|<ul><li>grace：配置任务采用优雅删除模式，并在过程中先优雅删除原Pod，15分钟后若还未成功，强制删除原Pod。进程级别重调度和进程级在线恢复场景，需将本参数配置为grace。</li><li>force：配置任务采用强制删除模式，在过程中强制删除原Pod。</li><li>off：该任务不使用断点续训特性，K8s的maxRetry仍然生效。</li><li>无（无fault-scheduling字段）：该任务不使用断点续训特性，K8s的maxRetry仍然生效。</li><li>其他值：该任务不使用断点续训特性，K8s的maxRetry仍然生效。</li></ul>|
-|metadata.labels.fault-retry-times|整数 (integer)|int32|<p>处理业务面故障，必须配置业务面可无条件重试的次数。</p><ul><li>0 &lt; fault-retry-times：处理业务面故障，必须配置业务面可无条件重试的次数。</li><li>无（无fault-retry-times）或0：该任务不使用无条件重试功能，无法感知业务面故障，vcjob的maxRetry仍然生效。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>使用无条件重试功能需保证训练进程异常时会导致容器异常退出，若容器未异常退出则无法成功重试。</li><li>当前仅Atlas 800T A2训练服务器和Atlas 900 A2 PoD集群基础单元支持无条件重试功能。</li><li>进行进程级恢复时，将会触发业务面故障，如需使用进程级恢复，必须配置此参数。</li></ul></div></div>|
-|metadata.labels.ring-controller.atlas|字符串 (string)|-|用于区分任务使用的芯片的类型。<ul><li><term>Atlas A2训练系列产品</term>、A200T A3 Box8超节点服务器、Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器取值为：ascend-{xxx}b</li><li>Atlas 800 训练服务器，服务器（插Atlas 300T 训练卡）取值为：ascend-910</li><li>（可选）<term>Ascend 950PR&950DT系列产品</term>取值为：ascend-npu</li></ul>|
-|metadata.labels.podgroup-sched-enable|字符串 (string)|-|<p>仅在集群使用openFuyao定制Kubernetes和volcano-ext组件场景下配置。</p><ul><li>取值配置为字符串"true"时，表示开启批量调度功能。</li><li>取值配置为其他字符串时，表示批量调度功能不生效，使用普通调度。</li></ul><p>若不配置该参数，表示批量调度功能不生效，使用普通调度。</p><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>该参数只支持使用Volcano调度器的整卡调度特性。</li><li>仅支持在Atlas 900 A3 SuperPoD超节点和Atlas 800T A3超节点服务器中使用本参数。</li></ul></div>|
-|metadata.labels.tor-affinity|字符串 (string)|-|<p>默认值为null，表示不使用交换机亲和性调度。</p><ul><li>large-model-schema：大模型任务或填充任务</li><li>normal-schema：普通任务</li><li>null：不使用交换机亲和性调度</li></ul><span class="notetitle">[!NOTE] 说明</span><div class="notebody">用户需要根据任务副本数，选择任务类型。任务副本数小于4为填充任务。任务副本数大于或等于4为大模型任务。普通任务不限制任务副本数。</div><p>用户需要根据任务类型进行配置。</p><ul><li>交换机亲和性调度1.0版本支持<term>Atlas训练系列产品</term>和<term>Atlas A2训练系列产品</term>；支持PyTorch和MindSpore框架。</li><li>交换机亲和性调度2.0版本支持<term>Atlas A2训练系列产品</term>；支持PyTorch框架。</li><li>只支持整卡进行交换机亲和性调度，不支持静态vNPU进行交换机亲和性调度。</li></ul>|
+|metadata.labels['app']|字符串 (string)|-|<p>表明MindIE CMotor任务在Ascend Job中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。</p><ul><li>acjob的任务YAML同时包含jobID和app这2个字段时，Ascend Operator组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE、MINDX_SERVER_IP及MINDX_SERVER_DOMAIN，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见[Ascend Operator注入的训练环境变量](./13_environment_variable_description.md#ascend-operator环境变量说明)。</li><li>该参数仅支持在Atlas 800I A3超节点服务器和Atlas 800I A2推理服务器上使用。</li></ul>|
+|metadata.labels['mind-cluster/scaling-rule']: scaling-rule|字符串 (string)|-|标记扩缩容规则对应的ConfigMap名称。仅支持MindIE CMotor推理任务在Atlas 800I A3超节点服务器和Atlas 800I A2推理服务器上使用本参数。|
+|metadata.labels['mind-cluster/group-name']: group0|字符串 (string)|-|标记扩缩容规则中对应的group名称。仅支持MindIE CMotor推理任务在Atlas 800I A3超节点服务器和Atlas 800I A2推理服务器上使用本参数。|
+|metadata.labels['framework']|字符串 (string)|-|AI框架类型，取值为pytorch或mindspore。|
+|metadata.labels['jobID']|字符串 (string)|-|当前MindIE CMotor任务在集群中的唯一识别ID，用户可根据实际情况进行配置。该参数仅支持在Atlas 800I A3超节点服务器和Atlas 800I A2推理服务器上使用。|
+|metadata.labels['pod-rescheduling']|字符串 (string)|-|<p>Pod级别重调度。表示任务发生故障后，不会删除所有任务Pod，而是将发生故障的Pod进行删除，重新创建新Pod后进行重调度。</p><ul><li>on：开启Pod级别重调度。</li><li>其他值或不使用该字段：关闭Pod级别重调度。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>重调度模式默认为任务级重调度，若需要开启Pod级别重调度，需要新增该字段。</li></ul></div></div>|
+|metadata.labels['process-recover-enable']|字符串 (string)|-|<p>Ascend Operator会根据用户配置的recover-strategy自动给任务打上process-recover-enable=on标签，无需用户手动指定。</p><ul><li>on：开启进程级别重调度及进程级在线恢复。<p>进程级别重调度和优雅容错不能同时开启，若同时开启，断点续训将通过Job级别重调度恢复训练。</p></li><li>pause：暂时关闭进程级别重调度及进程级在线恢复。</li><li>off或不使用该字段：关闭进程级别重调度及进程级在线恢复。</li></ul>|
+|metadata.annotations['recover-strategy']|字符串 (string)|-|<p>任务可用恢复策略。recover-strategy配置在任务YAML的annotations下，取值为6种策略的随意组合，策略之间由逗号分割。</p><ul><li>retry：进程级在线恢复。</li><li>recover：进程级别重调度。</li><li>recover-in-place：进程级原地恢复。</li><li>elastic-training：弹性训练。</li><li>dump：保存临终遗言。</li><li>exit：退出训练。</li></ul>|
+|metadata.labels['subHealthyStrategy']|字符串 (string)|-|<p>节点状态为亚健康（SubHealthy）的节点的处理策略。</p><ul><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>hotSwitch：执行亚健康热切，拉起备份Pod后，暂停训练任务，并使用新节点重新拉起训练。</li><li>默认取值为ignore。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>使用graceExit策略时，需保证任务开启了临终CKPT保存功能。</li><li>hotSwitch策略的使用约束请参见[使用约束](../04_usage/05_fault_recovery/01_resumable_training/01_solutions_principles/01_fault_handling.md#亚健康热切)。</li></ul></div></div>|
+|metadata.labels['fault-scheduling']|字符串 (string)|-|<ul><li>grace：配置任务采用优雅删除模式，并在过程中先优雅删除原Pod，15分钟后若还未成功，强制删除原Pod。进程级别重调度和进程级在线恢复场景，需将本参数配置为grace。</li><li>force：配置任务采用强制删除模式，在过程中强制删除原Pod。</li><li>off：该任务不使用断点续训特性，K8s的maxRetry仍然生效。</li><li>无（无fault-scheduling字段）：该任务不使用断点续训特性，K8s的maxRetry仍然生效。</li><li>其他值：该任务不使用断点续训特性，K8s的maxRetry仍然生效。</li></ul>|
+|metadata.labels['fault-retry-times']|整数 (integer)|int32|<p>处理业务面故障，必须配置业务面可无条件重试的次数。</p><ul><li>0 &lt; fault-retry-times：处理业务面故障，必须配置业务面可无条件重试的次数。</li><li>无（无fault-retry-times）或0：该任务不使用无条件重试功能，无法感知业务面故障，vcjob的maxRetry仍然生效。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>使用无条件重试功能需保证训练进程异常时会导致容器异常退出，若容器未异常退出则无法成功重试。</li><li>当前仅Atlas 800T A2训练服务器和Atlas 900 A2 PoD集群基础单元支持无条件重试功能。</li><li>进行进程级恢复时，将会触发业务面故障，如需使用进程级恢复，必须配置此参数。</li></ul></div></div>|
+|metadata.labels['ring-controller.atlas']|字符串 (string)|-|用于区分任务使用的芯片的类型。<ul><li><term>Atlas A2训练系列产品</term>、A200T A3 Box8超节点服务器、Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器取值为：ascend-{xxx}b</li><li>Atlas 800 训练服务器，服务器（插Atlas 300T 训练卡）取值为：ascend-910</li><li>（可选）<term>Ascend 950PR&950DT系列产品</term>取值为：ascend-npu</li></ul>|
+|metadata.labels['podgroup-sched-enable']|字符串 (string)|-|<p>仅在集群使用openFuyao定制Kubernetes和volcano-ext组件场景下配置。</p><ul><li>取值配置为字符串"true"时，表示开启批量调度功能。</li><li>取值配置为其他字符串时，表示批量调度功能不生效，使用普通调度。</li></ul><p>若不配置该参数，表示批量调度功能不生效，使用普通调度。</p><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>该参数只支持使用Volcano调度器的整卡调度特性。</li><li>仅支持在Atlas 900 A3 SuperPoD超节点和Atlas 800T A3超节点服务器中使用本参数。</li></ul></div>|
+|metadata.labels['tor-affinity']|字符串 (string)|-|<p>默认值为null，表示不使用交换机亲和性调度。</p><ul><li>large-model-schema：大模型任务或填充任务</li><li>normal-schema：普通任务</li><li>null：不使用交换机亲和性调度</li></ul><span class="notetitle">[!NOTE] 说明</span><div class="notebody">用户需要根据任务副本数，选择任务类型。任务副本数小于4为填充任务。任务副本数大于或等于4为大模型任务。普通任务不限制任务副本数。</div><p>用户需要根据任务类型进行配置。</p><ul><li>交换机亲和性调度1.0版本支持<term>Atlas训练系列产品</term>和<term>Atlas A2训练系列产品</term>；支持PyTorch和MindSpore框架。</li><li>交换机亲和性调度2.0版本支持<term>Atlas A2训练系列产品</term>；支持PyTorch框架。</li><li>只支持整卡进行交换机亲和性调度，不支持静态vNPU进行交换机亲和性调度。</li></ul>|
 |metadata.annotations['sp-block']|字符串 (string)|-|<p>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。若用户未指定该字段，调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</p><ul><li>单机时需要和任务请求的芯片数量一致。</li><li>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</li></ul><p>详细说明请参见[灵衢总线设备节点网络说明](../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod超节点)。</p><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>仅支持在Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器、Atlas 800I A3超节点服务器、Atlas 850E超节点、Atlas 850超节点、Atlas 950 SuperPoD超节点、Atlas 950 SuperPoD Flex中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：[任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败](https://gitcode.com/Ascend/mind-cluster/issues/377)</li></ul></div>|
 |metadata.annotations['ra-block']|字符串 (string)|-|<p>框亲和性调度的标识符。指定ra-block字段，在支持动态配比的前提下，单框64卡被分为8个OS，每个OS在K8s集群中被认为是一个节点，框内通信时延比框间通信时延低，配置此字段用于训练任务的框亲和性调度。</p><p>取值范围是0~64且必须是2的幂次方。</p><p>穷举可得ra-block的取值为{1，2，4，8，16，32，64}。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>仅支持在Atlas 950 SuperPoD超节点中使用该字段。</li><li>ra-block配置需要小于等于sp-block。</li></ul></div></div>|
 |metadata.annotations['huawei.com/parameterplane.unhealthy-tolerance']|字符串 (string)|-|<p>配置分布式Ascend910/Ascend950任务在调度时忽略参数面网络不健康NPU。</p><ul><li>"ignore"：忽略参数面网络不健康NPU，允许调度到网络不健康NPU。</li><li>不设置或其他值：过滤参数面网络不健康NPU，不允许调度到网络不健康NPU。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>默认不设置，即过滤网络不健康NPU。</li><li>该注解仅对分布式任务（NPUTaskNum &gt; 1）生效，单机任务不受影响。</li><li>该注解仅对huawei.com/Ascend910和huawei.com/npu资源类型生效，其他资源类型不受影响。</li></ul></div></div>|
-|metadata.annotations.huawei.com/schedule_policy|字符串 (string)|-|配置任务需要调度的AI芯片布局形态。Volcano会根据该字段选择合适的调度策略。目前支持[huawei.com/schedule_policy配置说明](#huaweicomschedule_policy配置说明)中的配置。|
-|metadata.annotations.huawei.com/schedule.mode|字符串 (string)|-|<p>配置芯片亲和性调度的严格程度。具体取值及含义请参见[huawei.com/schedule.mode](./01_volcano.md#podgroup)中的说明。</p>|
-|huawei.com/affinity-config|字符串 (string)|-|<p>配置任务的多级调度的亲和性层级。</p><p>取值为：level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p><p>要求满足格式为leveli=ni样式的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>|
+|metadata.annotations['huawei.com/schedule_policy']|字符串 (string)|-|配置任务需要调度的AI芯片布局形态。Volcano会根据该字段选择合适的调度策略。目前支持[huawei.com/schedule_policy配置说明](#huaweicomschedule_policy配置说明)中的配置。|
+|metadata.annotations['huawei.com/schedule.mode']|字符串 (string)|-|<p>配置芯片亲和性调度的严格程度。具体取值及含义请参见[huawei.com/schedule.mode](./01_volcano.md#podgroup)中的说明。</p>|
+|metadata.annotations['huawei.com/affinity-config']|字符串 (string)|-|<p>配置任务的多级调度的亲和性层级。</p><p>取值为：level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p><p>要求满足格式为leveli=ni样式的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>|
 |spec|对象 (object)|-|AscendJob期望状态的规格描述。必填字段：replicaSpecs。|
-|spec.template.metadata.annotations.huawei.com/recover_policy_path|字符串 (string)|-|任务重调度策略。当取值为pod，则只支持Pod级重调度，不升级为Job级别。|
-|spec.template.metadata.annotations.huawei.com/schedule_minAvailable|整数|-|默认值为任务总副本数。Ascend Operator启用“gang”调度生效，且调度器为Volcano时，任务运行总副本数。|
-|metadata.annotations.wait-reschedule-timeout|整数 (integer)|int32|进程级别重调度处理时等待故障节点重调度的超时时间，单位为秒，默认值为270。取值范围为30~270。|
+|spec.template.metadata.annotations['huawei.com/recover_policy_path']|字符串 (string)|-|任务重调度策略。当取值为pod，则只支持Pod级重调度，不升级为Job级别。|
+|spec.template.metadata.annotations['huawei.com/schedule_minAvailable']|整数|-|默认值为任务总副本数。Ascend Operator启用“gang”调度生效，且调度器为Volcano时，任务运行总副本数。|
+|metadata.annotations['wait-reschedule-timeout']|整数 (integer)|int32|进程级别重调度处理时等待故障节点重调度的超时时间，单位为秒，默认值为270。取值范围为30~270。|
 |spec.replicaSpecs|对象 (object)|-|ReplicaType到ReplicaSpec的映射，指定MS集群配置。示例：{ "Scheduler": ReplicaSpec, "Worker": ReplicaSpec }。|
 |spec.replicaSpecs.[ReplicaType]|对象 (object)|-|副本的描述。|
 |spec.replicaSpecs.[ReplicaType].replicas|整数 (integer)|int32|副本数量，表示给定模板所需的副本数。默认为1。|
@@ -77,15 +77,13 @@
 |status.replicaStatuses.[ReplicaType].labelSelector.matchExpressions|数组 (array)|-|标签匹配规则（支持In、NotIn、Exists、DoesNotExist等操作符）。|
 |status.replicaStatuses.[ReplicaType].labelSelector.matchLabels|对象 (object)|-|标签匹配的键值对（等价于matchExpressions条件）。|
 |status.startTime|字符串 (string)|date-time|作业开始时间（RFC3339格式，UTC）。|
-|metadata.annotations['huawei.com/AscendXXX']|字符串 (string)|-|XXX表示芯片的型号，支持的取值为910，310和310P。取值需要和环境上实际的芯片类型保持一致。Ascend Docker Runtime会获取该参数值，用于给容器挂载相应类型的NPU。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>该参数只支持使用Volcano调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</li><li><term>Ascend 950PR&950DT系列产品</term>需配置为metadata.annotations['huawei.com/npu']。</li></ul></div></div>|
-|huawei.com/Ascend910|数字|-|请求的NPU数量，请根据实际修改。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><term>Ascend 950PR&950DT系列产品</term>需配置为metadata.annotations['huawei.com/npu']。</div></div>Atlas 800 训练服务器（NPU满配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、8</li><li>分布式任务：1、2、4、8</li></ul>Atlas 800训练服务器（NPU半配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4</li><li>分布式任务：1、2、4</li></ul>服务器（插Atlas 300T训练卡）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2</li><li>分布式任务：2</li></ul>Atlas 800T A2训练服务器和Atlas 900 A2 PoD集群基础单元：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8</li><li>分布式任务：1、2、3、4、5、6、7、8</li></ul>Atlas 200T A2 Box16异构子框和Atlas 200I A2 Box16异构子框：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式任务：1、2、3、4、5、6、7、8、10、12、14、16</li></ul>Atlas 900 A3 SuperPoD超节点、A200T A3 Box8超节点服务器、Atlas 800T A3超节点服务器：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、6、8、10、12、14、16</li><li>分布式任务：2、4、6、8、10、12、14、16</li><li>针对Atlas 900 A3 SuperPoD超节点的逻辑超节点亲和任务：16</li></ul>服务器（插Atlas 350加速卡）（无互联节点内8卡）：<ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul>服务器（插Atlas 350加速卡）（无互联节点内16卡）：<ul><li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li><li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li></ul>服务器（插Atlas 350加速卡）（4P mesh 8卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8</li><li>单机（不保证亲和性）：5、6、7</li><li>分布式（满足亲和性）：1、2、3、4、8</li><li>分布式（不保证亲和性）：5、6、7</li></ul>服务器（插Atlas 350加速卡）（4P mesh 16卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8、12、16</li><li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li><li>分布式（满足亲和性）：1、2、3、4、8、12、16</li><li>分布式（不保证亲和性）：5、6、7、9、10、11、13、14、15</li></ul>Atlas 650E服务器、Atlas 650服务器：<ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul>Atlas 850E超节点、Atlas 850超节点：<ul><li>单机：1、2、4、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul>Atlas 950 SuperPoD超节点：<ul><li>单机：1、2、3、4、5、6、7、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul>Atlas 950 SuperPoD Flex：<ul><li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16（sp-block参数取值与其保持一致）</li><li>分布式：16（sp-block参数取值需为16或16的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul>|
-|metadata.labels.super-pod-affinity|字符串 (string)|-|<p>仅支持在Atlas 900 A3 SuperPoD超节点、Atlas 950 SuperPoD超节点、Atlas 850E超节点、Atlas 850超节点中使用本参数。超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p><ul><li>soft：开启软亲和特性，集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>|
-|<ul><li>customJobKey</li><li>custom-job-id</li></ul>|字符串 (string)|-|<p>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。在资源AscendJob的metadata.labels标签中设置。</p><ul><li>customJobKey：用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<p>customJobKey: tid</p><p>tid: "123456"</p></li><li>custom-job-id：用户自定义标签，直接设置作业唯一标识符，如：<p>custom-job-id："123456"</p></li></ul>|
-|huawei.com/scheduler.softShareDev.aicoreQuota|字符串 (string)|-|请求的AICore百分比，取值范围为[1, 100]。|
-|huawei.com/scheduler.softShareDev.hbmQuota|字符串 (string)|-|<p>请求的高带宽内存量，取值范围为[1, maxHBM]，单位为MB。</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|
-|huawei.com/scheduler.softShareDev.policy|字符串 (string)|-|<p>软切分策略，取值包括：</p><ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|
-|podAffinity|字符串 (string)|-|<p>表示逻辑超节点会往具有更多亲和性Pod的物理超节点调度。</p><p>仅支持MindIE CMotor推理任务Atlas 800I A3超节点服务器上使用本参数。</p>|
-|sp-fit|字符串 (string)|-|<p>超节点调度策略。仅支持MindIE CMotor推理任务Atlas 800I A3超节点服务器上使用本参数。</p><ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul>|
+|metadata.labels['super-pod-affinity']|字符串 (string)|-|<p>仅支持在Atlas 900 A3 SuperPoD 超节点、Atlas 950 SuperPoD 超节点、Atlas 850E 超节点、Atlas 850 超节点中使用本参数。超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p><ul><li>soft：开启软亲和特性，集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>|
+|<ul><li>metadata.labels['customJobKey']</li><li>metadata.labels['custom-job-id']</li></ul>|字符串 (string)|-|<p>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。在资源AscendJob的metadata.labels标签中设置。</p><ul><li>customJobKey：用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<p>customJobKey: tid</p><p>tid: "123456"</p></li><li>custom-job-id：用户自定义标签，直接设置作业唯一标识符，如：<p>custom-job-id："123456"</p></li></ul>|
+|metadata.labels['huawei.com/scheduler.softShareDev.aicoreQuota']|字符串 (string)|-|请求的AICore百分比，取值范围为[1, 100]。|
+|metadata.labels['huawei.com/scheduler.softShareDev.hbmQuota']|字符串 (string)|-|<p>请求的高带宽内存量，取值范围为[1, maxHBM]，单位为MB。</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|
+|metadata.labels['huawei.com/scheduler.softShareDev.policy']|字符串 (string)|-|<p>软切分策略，取值包括：</p><ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|
+|metadata.annotations['podAffinity']|字符串 (string)|-|<p>表示逻辑超节点会往具有更多亲和性Pod的物理超节点调度。</p><p>仅支持MindIE CMotor推理任务Atlas 800I A3超节点服务器上使用本参数。</p>|
+|metadata.annotations['sp-fit']|字符串 (string)|-|<p>超节点调度策略。仅支持MindIE CMotor推理任务Atlas 800I A3超节点服务器上使用本参数。</p><ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul>|
 |metadata.labels['duo']|字符串 (string)|-|<p>仅支持推理服务器（插Atlas 300I Duo推理卡）的参数。</p><ul><li>true：使用Atlas300I Duo 推理卡。</li><li>false：不使用Atlas300I Duo 推理卡。</li></ul>|
 |metadata.labels['npu-310-strategy']|字符串 (string)|-|<p>仅支持推理服务器（插Atlas 300I Duo推理卡）的参数。</p><ul><li>card：按推理卡调度，request请求的昇腾AI处理器个数不超过2，使用同一张Atlas 300I Duo推理卡上的昇腾AI处理器。</li><li>chip：按昇腾AI处理器调度，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul>|
 |metadata.labels['distributed']|字符串 (string)|-|<p>是否使用分布式推理。仅支持推理服务器（插Atlas 300I Duo推理卡）的参数。</p><ul><li>true：使用分布式推理。使用chip模式时，必须将任务调度到整张Atlas 300I Duo推理卡。若任务需要的昇腾AI处理器数量为单数时，使用单个昇腾AI处理器的部分，将优先调度到剩余昇腾AI处理器数量为1的Atlas 300I Duo推理卡上。</li><li>false：使用非分布式推理。使用chip模式时，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>无论是否为分布式推理，card模式的调度策略不变。</li><li>当distributed为true时，只支持单机多卡；当distributed为false时，只支持多机多卡。</li><li>当distributed为true时，不支持Deployment任务。</li></ul></div></div>|
@@ -112,7 +110,7 @@
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001609074269_p11302326164814"><a name="zh-cn_topic_0000001609074269_p11302326164814"></a><a name="zh-cn_topic_0000001609074269_p11302326164814"></a>N为节点个数，Deployment类型的任务不需要该参数，该参数建议与replicas保持一致。</p>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000001609074269_row1065822419459"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001609074269_p5658142413455"><a name="zh-cn_topic_0000001609074269_p5658142413455"></a><a name="zh-cn_topic_0000001609074269_p5658142413455"></a>spec.tasks[].replicas</p>
+<tr id="zh-cn_topic_0000001609074269_row1065822419459"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001609074269_p5658142413455"><a name="zh-cn_topic_0000001609074269_p5658142413455"></a><a name="zh-cn_topic_0000001609074269_p5658142413455"></a>spec.tasks[0].replicas</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000001609074269_ul122461585257"></a><a name="zh-cn_topic_0000001609074269_ul122461585257"></a><ul id="zh-cn_topic_0000001609074269_ul122461585257"><li>单机：1</li><li>分布式：N</li></ul>
 </td>
@@ -142,7 +140,7 @@
 </td>
 </tr>
 <tr>
-<td rowspan="2">metadata.labels.fault-scheduling</td>
+<td rowspan="2">metadata.labels['fault-scheduling']</td>
 <td>grace</td>
 <td>配置任务采用优雅删除模式，并在过程中先优雅删除原Pod，15分钟后若还未成功，使用强制删除原Pod。进程级别重调度和进程级在线恢复场景，需将本参数配置为grace。</td>
 </tr>
@@ -150,7 +148,7 @@
 <td>force</td>
 <td>配置任务采用强制删除模式，在过程中强制删除原Pod。</td>
 </tr>
-<tr id="row128861384219"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="p11288121310421"><a name="p11288121310421"></a><a name="p11288121310421"></a>metadata.labels.elastic-scheduling</p>
+<tr id="row128861384219"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="p11288121310421"><a name="p11288121310421"></a><a name="p11288121310421"></a>metadata.labels['elastic-scheduling']</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.230000000000004%" headers="mcps1.2.4.1.2 "><p id="p7288191354217"><a name="p7288191354217"></a><a name="p7288191354217"></a>on</p>
 </td>
@@ -164,28 +162,28 @@
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001609074269_p1930210269483"><a name="zh-cn_topic_0000001609074269_p1930210269483"></a><a name="zh-cn_topic_0000001609074269_p1930210269483"></a>训练镜像名称，请根据实际修改（用户在制作镜像章节制作的镜像名称）。</p>
 </td>
 </tr>
-<tr id="row319913141385"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p17879179384"><a name="p17879179384"></a><a name="p17879179384"></a>huawei.com/recover_policy_path</p>
+<tr id="row319913141385"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p17879179384"><a name="p17879179384"></a><a name="p17879179384"></a>spec.template.metadata.annotations['huawei.com/recover_policy_path']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p11787717143811"><a name="p11787717143811"></a><a name="p11787717143811"></a>pod：只支持Pod级重调度，不升级为Job级别。（当使用vcjob时，需要配置该策略：policies: -event:PodFailed -action:RestartTask）</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p1278741713381"><a name="p1278741713381"></a><a name="p1278741713381"></a>任务重调度策略。</p>
 </td>
 </tr>
-<tr id="row675991618389"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p778791715380"><a name="p778791715380"></a><a name="p778791715380"></a>huawei.com/schedule_minAvailable</p>
+<tr id="row675991618389"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p778791715380"><a name="p778791715380"></a><a name="p778791715380"></a>spec.template.metadata.annotations['huawei.com/schedule_minAvailable']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p1378781718388"><a name="p1378781718388"></a><a name="p1378781718388"></a>整数</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p1378741712380"><a name="p1378741712380"></a><a name="p1378741712380"></a>任务能够调度的最小副本数。</p>
 </td>
 </tr>
-<tr id="row492051125013"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p1430323175013"><a name="p1430323175013"></a><a name="p1430323175013"></a>huawei.com/schedule_policy</p>
+<tr id="row492051125013"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p1430323175013"><a name="p1430323175013"></a><a name="p1430323175013"></a>metadata.annotations['huawei.com/schedule_policy']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p930320315500"><a name="p930320315500"></a><a name="p930320315500"></a>目前支持<a href="#schedule_policy">huawei.com/schedule_policy配置说明</a>中的配置。</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p153031739509"><a name="p153031739509"></a><a name="p153031739509"></a>配置任务需要调度的AI芯片布局形态。<span id="zh-cn_topic_0000002511347099_ph204811934163414"><a name="zh-cn_topic_0000002511347099_ph204811934163414"></a><a name="zh-cn_topic_0000002511347099_ph204811934163414"></a>Volcano</span>会根据该字段选择合适的调度策略。</p>
 </td>
 </tr>
-<tr id="row_schedule_mode_vcjob"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p_schedule_mode_vcjob"><a name="p_schedule_mode_vcjob"></a><a name="p_schedule_mode_vcjob"></a>metadata.annotations.huawei.com/schedule.mode</p>
+<tr id="row_schedule_mode_vcjob"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p_schedule_mode_vcjob"><a name="p_schedule_mode_vcjob"></a><a name="p_schedule_mode_vcjob"></a>metadata.annotations['huawei.com/schedule.mode']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p_schedule_mode_vcjob_value"><a name="p_schedule_mode_vcjob_value"></a><a name="p_schedule_mode_vcjob_value"></a>具体取值及含义请参见<a href="./01_volcano.md#podgroup">huawei.com/schedule.mode</a>中的说明。</p>
 </td>
@@ -200,7 +198,7 @@
 <div class="note" id="note_ignore_roce_vcjob"><a name="note_ignore_roce_vcjob"></a><a name="note_ignore_roce_vcjob"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>该注解仅对分布式任务（NPUTaskNum > 1）生效，单机任务不受影响。</li><li>该注解仅对huawei.com/Ascend910和huawei.com/npu资源类型生效，其他资源类型不受影响。</li></ul></div></div>
 </td>
 </tr>
-<tr><td>servertype</td><td><ul><li>npu-{aicore核数}</li><li>soc</li><li>Ascend910-{aicore核数}</li><li>Ascend310P-{aicore核数}</li></ul></td><td class="cellrowborder" valign="top" width="37.71377137713771%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001609074213_p202093166576"><a name="zh-cn_topic_0000001609074213_p202093166576"></a><a name="zh-cn_topic_0000001609074213_p202093166576"></a>服务器类型。</p>
+<tr><td>spec.template.spec.nodeSelector['servertype']</td><td><ul><li>npu-{aicore核数}</li><li>soc</li><li>Ascend910-{aicore核数}</li><li>Ascend310P-{aicore核数}</li></ul></td><td class="cellrowborder" valign="top" width="37.71377137713771%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001609074213_p202093166576"><a name="zh-cn_topic_0000001609074213_p202093166576"></a><a name="zh-cn_topic_0000001609074213_p202093166576"></a>服务器类型。</p>
     <a name="zh-cn_topic_0000001609074213_ul87677178911"></a><a name="zh-cn_topic_0000001609074213_ul87677178911"></a><ul id="zh-cn_topic_0000001609074213_ul87677178911"><li>soc：调度到<span id="zh-cn_topic_0000001609074213_ph126801133164916"><a name="zh-cn_topic_0000001609074213_ph126801133164916"></a><a name="zh-cn_topic_0000001609074213_ph126801133164916"></a>Atlas 200I SoC A1核心板</span>节点上，必须要加上此配置，并参考<span class="filepath" id="zh-cn_topic_0000001609074213_filepath127811055718"><a name="zh-cn_topic_0000001609074213_filepath127811055718"></a><a name="zh-cn_topic_0000001609074213_filepath127811055718"></a>“infer-310p-1usoc.yaml”</span>文件进行目录挂载。</li><li>其他类型节点不需要此参数。</li></ul>
     </td></tr>
 <tr id="row16235354174110"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p950710610422"><a name="p950710610422"></a><a name="p950710610422"></a>metadata.annotations['sp-block']</p>
@@ -223,7 +221,7 @@
 </div></div>
 </td>
 </tr>
-<tr id="row862818313577"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p132726845716"><a name="p132726845716"></a><a name="p132726845716"></a>tor-affinity</p>
+<tr id="row862818313577"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p132726845716"><a name="p132726845716"></a><a name="p132726845716"></a>metadata.labels['tor-affinity']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><a name="ul1427218195710"></a><a name="ul1427218195710"></a><ul id="ul1427218195710"><li>large-model-schema：大模型任务或填充任务</li><li>normal-schema：普通任务</li><li>null：不使用交换机亲和性调度<div class="note" id="note32586245294"><a name="note32586245294"></a><a name="note32586245294"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p5258102462916"><a name="p5258102462916"></a><a name="p5258102462916"></a>用户需要根据任务副本数，选择任务类型。任务副本数小于4为填充任务。任务副本数大于或等于4为大模型任务。普通任务不限制任务副本数。</p>
 </div></div>
@@ -322,113 +320,6 @@
 <p id="p16683135019479"><a name="p16683135019479"></a><a name="p16683135019479"></a>limits需要和requests的芯片名称和数量保持一致。</p>
 </td>
 </tr>
-<tr id="row14747131720228"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p10781181822210"><a name="p10781181822210"></a><a name="p10781181822210"></a>metadata.annotations['huawei.com/Ascend<em id="i103895254475"><a name="i103895254475"></a><a name="i103895254475"></a>XXX</em>']</p>
-</td>
-<td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p178151812224"><a name="p178151812224"></a><a name="p178151812224"></a>XXX表示芯片的型号，支持的取值为910，310和310P。取值需要和环境上实际的芯片类型保持一致。</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 ">
-    <p id="p5781181818226"><a name="p5781181818226"></a><a name="p5781181818226"></a><span id="ph1378141872210"><a name="ph1378141872210"></a><a name="ph1378141872210"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
-<p id="zh-cn_topic_0000001609074269_p173021526124817"><a name="zh-cn_topic_0000001609074269_p173021526124817"></a><a name="zh-cn_topic_0000001609074269_p173021526124817"></a>分布式任务中，请确保运行训练任务的节点架构相同。</p>
-<div class="note" id="note269473654014"><a name="note269473654014"></a><a name="note269473654014"></a><span class="notetitle">[!NOTE] 说明</span>
-    <div class="notebody">
-        <ul>
-            <li>
-                <p id="p66941536154018"><a name="p66941536154018"></a><a name="p66941536154018"></a>该参数只支持使用<span id="ph4213155617124"><a name="ph4213155617124"></a><a name="ph4213155617124"></a>Volcano</span>调度器的整卡调度特性。使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
-            </li>
-            <li><p><term>Ascend 950PR&950DT系列产品</term>需配置为metadata.annotations['huawei.com/npu']。</p></li>
-        </ul>
-</div>
-</div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_row1725618216467"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_p15256112124619"><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_p15256112124619"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_p15256112124619"></a>spec.tasks[0].template.spec.containers[0].resources.{requests|limits}['huawei.com/Ascend910']</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p370843110385"><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p370843110385"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p370843110385"></a>根据所使用芯片类型不同，取值如下：</p>
-<a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_ul4403181216571"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_ul4403181216571"></a><ul id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_ul4403181216571"><li><span id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_ph141901927154611"><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_ph141901927154611"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_ph141901927154611"></a>Atlas 800 训练服务器（NPU满配）</span>：<a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_ul169264817234"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_ul169264817234"></a><ul id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_ul169264817234"><li>单机单芯片：1</li><li>单机多芯片：2、4、8</li><li>分布式：1、2、4、8</li></ul>
-</li><li><span id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_ph1312973814465"><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_ph1312973814465"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_ph1312973814465"></a>Atlas 800 训练服务器（NPU半配）</span>：<a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_ul1713712328597"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_ul1713712328597"></a><ul id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_ul1713712328597"><li>单机单芯片：1</li><li>单机多芯片：2、4</li><li>分布式：1、2、4</li></ul>
-</li><li><span id="ph157984201135"><a name="ph157984201135"></a><a name="ph157984201135"></a>Atlas 800T A2训练服务器</span>和<span id="zh-cn_topic_0000001951418201_ph745323894316"><a name="zh-cn_topic_0000001951418201_ph745323894316"></a><a name="zh-cn_topic_0000001951418201_ph745323894316"></a>Atlas 900 A2 PoD集群基础单元</span><a name="zh-cn_topic_0000001951418201_ul169264817234"></a><a name="zh-cn_topic_0000001951418201_ul169264817234"></a><ul id="zh-cn_topic_0000001951418201_ul169264817234"><li>单机单芯片：1</li><li>单机多芯片：2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul>
-</li><li><span id="zh-cn_topic_0000001951418201_ph419517625020"><a name="zh-cn_topic_0000001951418201_ph419517625020"></a><a name="zh-cn_topic_0000001951418201_ph419517625020"></a>Atlas 200T A2 Box16异构子框</span><span id="ph1891953184717"><a name="ph1891953184717"></a><a name="ph1891953184717"></a>和</span><span id="ph1149713543472"><a name="ph1149713543472"></a><a name="ph1149713543472"></a>Atlas 200I A2 Box16异构子框</span>：<a name="zh-cn_topic_0000001951418201_ul191955617509"></a><a name="zh-cn_topic_0000001951418201_ul191955617509"></a><ul id="zh-cn_topic_0000001951418201_ul191955617509"><li>单机单芯片：1</li><li>单机多芯片：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式：1、2、3、4、5、6、7、8、10、12、14、16</li></ul>
-</li>
-<li>
-    <span>服务器（插Atlas 350加速卡）（无互联节点内8卡）</span>：
-    <ul>
-        <li>单机：1、2、3、4、5、6、7、8</li>
-        <li>分布式：1、2、3、4、5、6、7、8</li>
-    </ul>
-</li>
-<li>
-    <span>服务器（插Atlas 350加速卡）（无互联节点内16卡）</span>：
-    <ul>
-        <li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
-        <li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
-    </ul>
-</li>
-<li>
-    <span>服务器（插Atlas 350加速卡）（4P mesh 8卡）</span>：
-    <ul>
-        <li>单机（满足亲和性）：1、2、3、4、8</li>
-        <li>单机（不保证亲和性）：5、6、7</li>
-        <li>分布式（满足亲和性）：1、2、3、4、8</li>
-        <li>分布式（不保证亲和性）：5、6、7</li>
-    </ul>
-</li>
-<li>
-    <span>服务器（插Atlas 350加速卡）（4P mesh 16卡）</span>：
-    <ul>
-        <li>单机（满足亲和性）：1、2、3、4、8、12、16</li>
-        <li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li>
-        <li>分布式（满足亲和性）：1、2、3、4、8、12、16</li>
-        <li>分布式（不保证亲和性）：5、6、7、9、10、11、13、14、15</li>
-    </ul>
-</li>
-<li>
-    <span>Atlas 650E服务器、Atlas 650服务器</span>：
-    <ul>
-        <li>单机：1、2、3、4、5、6、7、8</li>
-        <li>分布式：1、2、3、4、5、6、7、8</li>
-    </ul>
-</li>
-<li>
-    <span>Atlas 850E超节点、Atlas 850超节点</span>：
-    <ul>
-        <li>单机：1、2、4、8（sp-block参数取值与其保持一致）</li>
-        <li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li>
-    </ul>
-</li>
-<li>
-    <span>Atlas 950 SuperPoD超节点</span>：
-    <ul>
-        <li>单机：1、2、3、4、5、6、7、8（sp-block参数取值与其保持一致）</li>
-        <li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li>
-    </ul>
-</li>
-<li>
-    <span>Atlas 950 SuperPoD Flex</span>：
-    <ul>
-        <li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16（sp-block参数取值与其保持一致）</li>
-        <li>分布式：16（sp-block参数取值需为16或16的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li>
-    </ul>
-</li>
-</ul>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_p530216266485"><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_p530216266485"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_zh-cn_topic_0000001609074269_p530216266485"></a>请求的NPU数量，请根据实际修改，请求整卡时不能再同时请求vNPU。</p>
-<div class="note" id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001621472369_note10624141372118"><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001621472369_note10624141372118"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001621472369_note10624141372118"></a><span class="notetitle">[!NOTE] 说明</span>
-    <div class="notebody"><a name="zh-cn_topic_0000001951418201_ul54321224184319"></a><a name="zh-cn_topic_0000001951418201_ul54321224184319"></a>
-        <ul id="zh-cn_topic_0000001951418201_ul54321224184319">
-            <li>
-                <strong id="zh-cn_topic_0000001951418201_b16213840172320"><a name="zh-cn_topic_0000001951418201_b16213840172320"></a><a name="zh-cn_topic_0000001951418201_b16213840172320"></a>优雅容错模式</strong>支持<span id="zh-cn_topic_0000001951418201_ph158146714142"><a name="zh-cn_topic_0000001951418201_ph158146714142"></a><a name="zh-cn_topic_0000001951418201_ph158146714142"></a>Atlas 800 训练服务器</span>，且资源请求数量只能为4N、8N，N为训练节点数。
-            </li>
-            <li>
-                <strong id="zh-cn_topic_0000001951418201_b1091614581433"><a name="zh-cn_topic_0000001951418201_b1091614581433"></a><a name="zh-cn_topic_0000001951418201_b1091614581433"></a>优雅容错模式</strong>支持<span id="ph184881417142314"><a name="ph184881417142314"></a><a name="ph184881417142314"></a>Atlas 800T A2训练服务器</span>或<span id="zh-cn_topic_0000001951418201_ph9246916444"><a name="zh-cn_topic_0000001951418201_ph9246916444"></a><a name="zh-cn_topic_0000001951418201_ph9246916444"></a>Atlas 900 A2 PoD集群基础单元</span>，且资源请求数量只能为8N，N为训练节点数。
-            </li>
-            <li>
-                <p><term>Ascend 950PR&950DT系列产品</term>需将参数名称修改为huawei.com/npu。</p>
-            </li>
-        </ul>
-    </div>
-</div>
-</td>
-</tr>
 <tr id="row171754462391"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p15220101916253"><a name="p15220101916253"></a><a name="p15220101916253"></a>{metadata, spec.tasks[0].template.metadata}.labels['ring-controller.atlas']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p1941725316543"><a name="p1941725316543"></a><a name="p1941725316543"></a>根据所使用芯片类型不同，取值如下：</p>
@@ -439,7 +330,7 @@
 </div></div>
 </td>
 </tr>
-<tr id="row141124616406"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p9313107114010"><a name="p9313107114010"></a><a name="p9313107114010"></a>metadata.labels.super-pod-affinity</p>
+<tr id="row141124616406"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p9313107114010"><a name="p9313107114010"></a><a name="p9313107114010"></a>metadata.labels['super-pod-affinity']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p1531312713409"><a name="p1531312713409"></a><a name="p1531312713409"></a>超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p>
 <a name="ul231337194020"></a><a name="ul231337194020"></a><ul id="ul231337194020"><li>soft：开启软亲和特性，集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>
@@ -447,14 +338,14 @@
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p2313117194012"><a name="p2313117194012"></a><a name="p2313117194012"></a>仅支持在<span id="ph133130710403"><a name="ph133130710403"></a><a name="ph133130710403"></a>Atlas 900 A3 SuperPoD超节点</span>、Atlas 950 SuperPoD超节点、Atlas 850E超节点、Atlas 850超节点中使用本参数。</p>
 </td>
 </tr>
-<tr id="rowcustomjobkey2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobkey2"><a name="pcustomjobkey2"></a><a name="pcustomjobkey2"></a>customJobKey</p>
+<tr id="rowcustomjobkey2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobkey2"><a name="pcustomjobkey2"></a><a name="pcustomjobkey2"></a>metadata.labels['customJobKey']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="pcustomjobkeyvalue2"><a name="pcustomjobkeyvalue2"></a><a name="pcustomjobkeyvalue2"></a>用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<br> customJobKey: tid<br> tid: "123456"</p>
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="pcustomjobkeydesc2"><a name="pcustomjobkeydesc2"></a><a name="pcustomjobkeydesc2"></a>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。<br> <ul><li>vcjob任务在资源Job的metadata.labels标签中设置。<br></li> <li>Deployment任务在资源Deployment的spec.template.metadata.labels标签中设置。</li></ul></p>
 </td>
 </tr>
-<tr id="rowcustomjobid2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobid2"><a name="pcustomjobid2"></a><a name="pcustomjobid2"></a>custom-job-id</p>
+<tr id="rowcustomjobid2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobid2"><a name="pcustomjobid2"></a><a name="pcustomjobid2"></a>metadata.labels['custom-job-id']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="pcustomjobidvalue2"><a name="pcustomjobidvalue2"></a><a name="pcustomjobidvalue2"></a>用户自定义标签，直接设置作业唯一标识符，如：<br> custom-job-id："123456"</p>
 </td>
@@ -491,7 +382,7 @@
     <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p11621102818211"><a name="p11621102818211"></a><a name="p11621102818211"></a>默认值，不关注是否使用DVPP。</p>
     </td>
     </tr>
-<tr id="zh-cn_topic_0000001951418201_row4635558201210"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p1499116019135"><a name="zh-cn_topic_0000001951418201_p1499116019135"></a><a name="zh-cn_topic_0000001951418201_p1499116019135"></a>recover-strategy</p>
+<tr id="zh-cn_topic_0000001951418201_row4635558201210"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p1499116019135"><a name="zh-cn_topic_0000001951418201_p1499116019135"></a><a name="zh-cn_topic_0000001951418201_p1499116019135"></a>metadata.annotations['recover-strategy']</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001951418201_p599118017133"><a name="zh-cn_topic_0000001951418201_p599118017133"></a><a name="zh-cn_topic_0000001951418201_p599118017133"></a>任务可用恢复策略。</p>
 <a name="zh-cn_topic_0000001951418201_ul139911803137"></a><a name="zh-cn_topic_0000001951418201_ul139911803137"></a><ul id="zh-cn_topic_0000001951418201_ul139911803137"><li>retry：进程级在线恢复。</li><li>recover：进程级别重调度。</li><li>recover-in-place：进程级原地恢复。</li><li>dump：保存临终遗言。</li><li>exit：退出训练。</li></ul>
@@ -499,7 +390,7 @@
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000001951418201_ul169911906135"></a><a name="zh-cn_topic_0000001951418201_ul169911906135"></a>recover-strategy配置在任务YAML annotations下，取值为5种策略的随意组合，策略之间由逗号分割。
 </td>
 </tr>
-<tr id="zh-cn_topic_0000001951418201_row10152132415157"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p10821192541514"><a name="zh-cn_topic_0000001951418201_p10821192541514"></a><a name="zh-cn_topic_0000001951418201_p10821192541514"></a>metadata.labels.pod-rescheduling</p>
+<tr id="zh-cn_topic_0000001951418201_row10152132415157"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p10821192541514"><a name="zh-cn_topic_0000001951418201_p10821192541514"></a><a name="zh-cn_topic_0000001951418201_p10821192541514"></a>metadata.labels['pod-rescheduling']</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000001951418201_ul5821162501510"></a><a name="zh-cn_topic_0000001951418201_ul5821162501510"></a><ul id="zh-cn_topic_0000001951418201_ul5821162501510"><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>
 </td>
@@ -508,7 +399,7 @@
 </div></div>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000001951418201_row576132216324"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p1772202423212"><a name="zh-cn_topic_0000001951418201_p1772202423212"></a><a name="zh-cn_topic_0000001951418201_p1772202423212"></a>metadata.labels.subHealthyStrategy</p>
+<tr id="zh-cn_topic_0000001951418201_row576132216324"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p1772202423212"><a name="zh-cn_topic_0000001951418201_p1772202423212"></a><a name="zh-cn_topic_0000001951418201_p1772202423212"></a>metadata.labels['subHealthyStrategy']</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000001951418201_ul972624133214"></a><a name="zh-cn_topic_0000001951418201_ul972624133214"></a><ul id="zh-cn_topic_0000001951418201_ul972624133214"><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>默认取值为ignore。</li></ul>
 </td>
@@ -517,7 +408,7 @@
 </div></div>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000001951418201_row1314311835012"><td class="cellrowborder" rowspan="2" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p123205151739"><a name="zh-cn_topic_0000001951418201_p123205151739"></a><a name="zh-cn_topic_0000001951418201_p123205151739"></a>metadata.labels.fault-retry-times</p>
+<tr id="zh-cn_topic_0000001951418201_row1314311835012"><td class="cellrowborder" rowspan="2" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p123205151739"><a name="zh-cn_topic_0000001951418201_p123205151739"></a><a name="zh-cn_topic_0000001951418201_p123205151739"></a>metadata.labels['fault-retry-times']</p>
 <p id="zh-cn_topic_0000001951418201_p196969196112"><a name="zh-cn_topic_0000001951418201_p196969196112"></a><a name="zh-cn_topic_0000001951418201_p196969196112"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001951418201_p1192310597344"><a name="zh-cn_topic_0000001951418201_p1192310597344"></a><a name="zh-cn_topic_0000001951418201_p1192310597344"></a>0 &lt; fault-retry-times</p>
@@ -671,28 +562,28 @@
 <td class="cellrowborder" valign="top" width="37.71377137713771%" headers="mcps1.2.4.1.3 "><p id="p2799246194816"><a name="p2799246194816"></a><a name="p2799246194816"></a>-</p>
 </td>
 </tr>
-<tr id="row319913141385"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p17879179384"><a name="p17879179384"></a><a name="p17879179384"></a>huawei.com/recover_policy_path</p>
+<tr id="row319913141385"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p17879179384"><a name="p17879179384"></a><a name="p17879179384"></a>spec.template.metadata.annotations['huawei.com/recover_policy_path']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p11787717143811"><a name="p11787717143811"></a><a name="p11787717143811"></a>pod：只支持Pod级重调度，不升级为Job级别。（当使用vcjob时，需要配置该策略：policies: -event:PodFailed -action:RestartTask）</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p>需要写到pod的annotation或label里面。</p><p id="p1278741713381"><a name="p1278741713381"></a><a name="p1278741713381"></a>任务重调度策略。</p>
 </td>
 </tr>
-<tr id="row675991618389"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p778791715380"><a name="p778791715380"></a><a name="p778791715380"></a>huawei.com/schedule_minAvailable</p>
+<tr id="row675991618389"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p778791715380"><a name="p778791715380"></a><a name="p778791715380"></a>spec.template.metadata.annotations['huawei.com/schedule_minAvailable']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p1378781718388"><a name="p1378781718388"></a><a name="p1378781718388"></a>整数</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p>需要写到pod的annotation或label里面。</p><p id="p1378741712380"><a name="p1378741712380"></a><a name="p1378741712380"></a>任务能够调度的最小副本数。</p>
 </td>
 </tr>
-<tr id="row492051125013"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p1430323175013"><a name="p1430323175013"></a><a name="p1430323175013"></a>huawei.com/schedule_policy</p>
+<tr id="row492051125013"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p1430323175013"><a name="p1430323175013"></a><a name="p1430323175013"></a>spec.template.metadata.annotations['huawei.com/schedule_policy']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p930320315500"><a name="p930320315500"></a><a name="p930320315500"></a>目前支持<a href="#schedule_policy">huawei.com/schedule_policy配置说明</a>中的配置。</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p>需要写到pod的annotation或label里面。</p><p id="p153031739509"><a name="p153031739509"></a><a name="p153031739509"></a>配置任务需要调度的AI芯片布局形态。<span id="zh-cn_topic_0000002511347099_ph204811934163414"><a name="zh-cn_topic_0000002511347099_ph204811934163414"></a><a name="zh-cn_topic_0000002511347099_ph204811934163414"></a>Volcano</span>会根据该字段选择合适的调度策略。</p>
 </td>
 </tr>
-<tr id="row_schedule_mode_deploy"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p_schedule_mode_deploy"><a name="p_schedule_mode_deploy"></a><a name="p_schedule_mode_deploy"></a>spec.template.metadata.annotations.huawei.com/schedule.mode</p>
+<tr id="row_schedule_mode_deploy"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p_schedule_mode_deploy"><a name="p_schedule_mode_deploy"></a><a name="p_schedule_mode_deploy"></a>spec.template.metadata.annotations['huawei.com/schedule.mode']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p_schedule_mode_deploy_value"><a name="p_schedule_mode_deploy_value"></a><a name="p_schedule_mode_deploy_value"></a>具体取值及含义请参见<a href="./01_volcano.md#podgroup">huawei.com/schedule.mode</a>中的说明。</p>
 </td>
@@ -751,7 +642,7 @@
 </div>
 </td>
 </tr>
-<tr id="row862818313577"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p132726845716"><a name="p132726845716"></a><a name="p132726845716"></a>tor-affinity</p>
+<tr id="row862818313577"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p132726845716"><a name="p132726845716"></a><a name="p132726845716"></a>spec.template.metadata.labels['tor-affinity']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><a name="ul1427218195710"></a><a name="ul1427218195710"></a><ul id="ul1427218195710"><li>large-model-schema：大模型任务或填充任务</li><li>normal-schema：普通任务</li><li>null：不使用交换机亲和性调度<div class="note" id="note32586245294"><a name="note32586245294"></a><a name="note32586245294"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p5258102462916"><a name="p5258102462916"></a><a name="p5258102462916"></a>用户需要根据任务副本数，选择任务类型。任务副本数小于4为填充任务。任务副本数大于或等于4为大模型任务。普通任务不限制任务副本数。</p>
 </div></div>
@@ -857,19 +748,19 @@
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p2313117194012"><a name="p2313117194012"></a><a name="p2313117194012"></a>仅支持在<span id="ph133130710403"><a name="ph133130710403"></a><a name="ph133130710403"></a>Atlas 900 A3 SuperPoD超节点</span>、Atlas 950 SuperPoD超节点、Atlas 850E超节点、Atlas 850超节点中使用本参数。</p>
 </td>
 </tr>
-<tr id="rowcustomjobkey2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobkey2"><a name="pcustomjobkey2"></a><a name="pcustomjobkey2"></a>customJobKey</p>
+<tr id="rowcustomjobkey2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobkey2"><a name="pcustomjobkey2"></a><a name="pcustomjobkey2"></a>spec.template.metadata.labels['customJobKey']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="pcustomjobkeyvalue2"><a name="pcustomjobkeyvalue2"></a><a name="pcustomjobkeyvalue2"></a>用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<br> customJobKey: tid<br> tid: "123456"</p>
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="pcustomjobkeydesc2"><a name="pcustomjobkeydesc2"></a><a name="pcustomjobkeydesc2"></a>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。<br> <ul><li>vcjob任务在资源Job的metadata.labels标签中设置。<br></li> <li>Deployment任务在资源Deployment的spec.template.metadata.labels标签中设置。</li></ul></p>
 </td>
 </tr>
-<tr id="rowcustomjobid2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobid2"><a name="pcustomjobid2"></a><a name="pcustomjobid2"></a>custom-job-id</p>
+<tr id="rowcustomjobid2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobid2"><a name="pcustomjobid2"></a><a name="pcustomjobid2"></a>spec.template.metadata.labels['custom-job-id']</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="pcustomjobidvalue2"><a name="pcustomjobidvalue2"></a><a name="pcustomjobidvalue2"></a>用户自定义标签，直接设置作业唯一标识符，如：<br> custom-job-id："123456"</p>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000001951418201_row4635558201210"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p1499116019135"><a name="zh-cn_topic_0000001951418201_p1499116019135"></a><a name="zh-cn_topic_0000001951418201_p1499116019135"></a>recover-strategy</p>
+<tr id="zh-cn_topic_0000001951418201_row4635558201210"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p1499116019135"><a name="zh-cn_topic_0000001951418201_p1499116019135"></a><a name="zh-cn_topic_0000001951418201_p1499116019135"></a>spec.template.metadata.annotations['recover-strategy']</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001951418201_p599118017133"><a name="zh-cn_topic_0000001951418201_p599118017133"></a><a name="zh-cn_topic_0000001951418201_p599118017133"></a>任务可用恢复策略。</p>
 <a name="zh-cn_topic_0000001951418201_ul139911803137"></a><a name="zh-cn_topic_0000001951418201_ul139911803137"></a><ul id="zh-cn_topic_0000001951418201_ul139911803137"><li>retry：进程级在线恢复。</li><li>recover：进程级别重调度。</li><li>recover-in-place：进程级原地恢复。</li><li>dump：保存临终遗言。</li><li>exit：退出训练。</li></ul>
@@ -877,7 +768,7 @@
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000001951418201_ul169911906135"></a><a name="zh-cn_topic_0000001951418201_ul169911906135"></a>recover-strategy配置在任务YAML annotations下，取值为5种策略的随意组合，策略之间由逗号分割。
 </td>
 </tr>
-<tr id="zh-cn_topic_0000001951418201_row10152132415157"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p10821192541514"><a name="zh-cn_topic_0000001951418201_p10821192541514"></a><a name="zh-cn_topic_0000001951418201_p10821192541514"></a>pod-rescheduling</p>
+<tr id="zh-cn_topic_0000001951418201_row10152132415157"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p10821192541514"><a name="zh-cn_topic_0000001951418201_p10821192541514"></a><a name="zh-cn_topic_0000001951418201_p10821192541514"></a>spec.template.metadata.labels['pod-rescheduling']</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000001951418201_ul5821162501510"></a><a name="zh-cn_topic_0000001951418201_ul5821162501510"></a><ul id="zh-cn_topic_0000001951418201_ul5821162501510"><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>
 </td>
@@ -885,7 +776,7 @@
 <p>重调度模式默认为任务级重调度，若需要开启Pod级别重调度，需要新增该字段。</p>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000001951418201_row576132216324"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p1772202423212"><a name="zh-cn_topic_0000001951418201_p1772202423212"></a><a name="zh-cn_topic_0000001951418201_p1772202423212"></a>subHealthyStrategy</p>
+<tr id="zh-cn_topic_0000001951418201_row576132216324"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p1772202423212"><a name="zh-cn_topic_0000001951418201_p1772202423212"></a><a name="zh-cn_topic_0000001951418201_p1772202423212"></a>spec.template.metadata.labels['subHealthyStrategy']</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000001951418201_ul972624133214"></a><a name="zh-cn_topic_0000001951418201_ul972624133214"></a><ul id="zh-cn_topic_0000001951418201_ul972624133214"><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>默认取值为ignore。</li></ul>
 </td>
@@ -894,7 +785,7 @@
 </div></div>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000001951418201_row1314311835012"><td class="cellrowborder" rowspan="2" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p123205151739"><a name="zh-cn_topic_0000001951418201_p123205151739"></a><a name="zh-cn_topic_0000001951418201_p123205151739"></a>fault-retry-times</p>
+<tr id="zh-cn_topic_0000001951418201_row1314311835012"><td class="cellrowborder" rowspan="2" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p123205151739"><a name="zh-cn_topic_0000001951418201_p123205151739"></a><a name="zh-cn_topic_0000001951418201_p123205151739"></a>spec.template.metadata.labels['fault-retry-times']</p>
 <p id="zh-cn_topic_0000001951418201_p196969196112"><a name="zh-cn_topic_0000001951418201_p196969196112"></a><a name="zh-cn_topic_0000001951418201_p196969196112"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001951418201_p1192310597344"><a name="zh-cn_topic_0000001951418201_p1192310597344"></a><a name="zh-cn_topic_0000001951418201_p1192310597344"></a>0 &lt; fault-retry-times</p>
@@ -909,7 +800,7 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001951418201_p2096618130353"><a name="zh-cn_topic_0000001951418201_p2096618130353"></a><a name="zh-cn_topic_0000001951418201_p2096618130353"></a>该任务不使用无条件重试功能，无法感知业务面故障，vcjob的maxRetry仍然生效。</p>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000001951418201_row11217021145014"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p1929464718814"><a name="zh-cn_topic_0000001951418201_p1929464718814"></a><a name="zh-cn_topic_0000001951418201_p1929464718814"></a>restartPolicy</p>
+<tr id="zh-cn_topic_0000001951418201_row11217021145014"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p1929464718814"><a name="zh-cn_topic_0000001951418201_p1929464718814"></a><a name="zh-cn_topic_0000001951418201_p1929464718814"></a>spec.template.spec.restartPolicy</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000001951418201_ul193373071216"></a><a name="zh-cn_topic_0000001951418201_ul193373071216"></a><ul id="zh-cn_topic_0000001951418201_ul193373071216"><li>Never：从不重启</li><li>Always：总是重启</li><li>OnFailure：失败时重启</li><li>ExitCode：根据进程退出码决定是否重启Pod，错误码是1~127时不重启，128~255时重启Pod。<div class="note" id="zh-cn_topic_0000001951418201_note278954373014"><a name="zh-cn_topic_0000001951418201_note278954373014"></a><a name="zh-cn_topic_0000001951418201_note278954373014"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000001951418201_p14789194311309"><a name="zh-cn_topic_0000001951418201_p14789194311309"></a><a name="zh-cn_topic_0000001951418201_p14789194311309"></a>vcjob类型的训练任务不支持ExitCode。</p>
 </div></div>
@@ -918,7 +809,7 @@
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001951418201_p1129434710811"><a name="zh-cn_topic_0000001951418201_p1129434710811"></a><a name="zh-cn_topic_0000001951418201_p1129434710811"></a>容器重启策略。当配置业务面故障无条件重试时，容器重启策略取值必须为<span class="parmvalue" id="zh-cn_topic_0000001951418201_parmvalue182751614652"><a name="zh-cn_topic_0000001951418201_parmvalue182751614652"></a><a name="zh-cn_topic_0000001951418201_parmvalue182751614652"></a>“Never”</span>。</p>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_row1116371844811"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p246371419493"><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p246371419493"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p246371419493"></a>terminationGracePeriodSeconds</p>
+<tr id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_row1116371844811"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p246371419493"><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p246371419493"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p246371419493"></a>spec.template.spec.terminationGracePeriodSeconds</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p9919805116"><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p9919805116"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_p9919805116"></a>0 &lt; terminationGracePeriodSeconds &lt;<strong id="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_b1192168195110"><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_b1192168195110"></a><a name="zh-cn_topic_0000001951418201_zh-cn_topic_0000001570873348_b1192168195110"></a> grace-over-time</strong>参数取值</p>
 </td>
