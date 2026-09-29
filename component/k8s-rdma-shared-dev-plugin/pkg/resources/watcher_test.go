@@ -16,6 +16,7 @@ package resources
 
 import (
 	"os"
+	"os/signal"
 	"syscall"
 	"testing"
 	"time"
@@ -75,6 +76,10 @@ func TestSignalNotifierNotifyWithSignals(t *testing.T) {
 				convey.So(false, convey.ShouldBeTrue)
 			}
 		})
+
+		convey.Reset(func() {
+			signal.Stop(sigChan)
+		})
 	})
 }
 
@@ -88,8 +93,8 @@ func TestSignalNotifierNotifyEmptySignals(t *testing.T) {
 			convey.So(sigChan, convey.ShouldNotBeNil)
 		})
 
-		convey.Convey("Then the channel should not block on close", func() {
-			close(sigChan)
+		convey.Convey("Then the channel should be unregistered by Stop without blocking", func() {
+			signal.Stop(sigChan)
 			convey.So(true, convey.ShouldBeTrue)
 		})
 	})
@@ -106,6 +111,11 @@ func TestSignalNotifierNotifyMultipleCalls(t *testing.T) {
 			convey.So(sigChan1, convey.ShouldNotBeNil)
 			convey.So(sigChan2, convey.ShouldNotBeNil)
 			convey.So(sigChan1 == sigChan2, convey.ShouldBeFalse)
+		})
+
+		convey.Reset(func() {
+			signal.Stop(sigChan1)
+			signal.Stop(sigChan2)
 		})
 	})
 }
