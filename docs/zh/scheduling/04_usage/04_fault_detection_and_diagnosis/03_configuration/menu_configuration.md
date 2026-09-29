@@ -8,3 +8,4 @@
 - [配置性能劣化、慢节点与慢网络诊断](./06_performance_diagnosis.md)
 - [配置在线压测](./07_online_stress_testing.md)
 - [配置公共故障](./08_public_faults.md)
+- [配置静默故障检测](./09_silent_faults.md)

@@ -9,6 +9,7 @@
   - [业务故障与任务卡死](./02_fault_types/04_workload_faults.md)
   - [性能劣化、慢节点与慢网络](./02_fault_types/05_performance_degradation.md)
   - [公共故障](./02_fault_types/06_public_faults.md)
+  - [静默故障](./02_fault_types/07_silent_faults.md)
 - [配置](./03_configuration/menu_configuration.md)
   - [配置故障级别](./03_configuration/01_fault_classification.md)
   - [配置节点故障](./03_configuration/02_node_faults.md)
@@ -18,4 +19,5 @@
   - [配置性能劣化、慢节点与慢网络诊断](./03_configuration/06_performance_diagnosis.md)
   - [配置在线压测](./03_configuration/07_online_stress_testing.md)
   - [配置公共故障](./03_configuration/08_public_faults.md)
+  - [配置静默故障检测](./03_configuration/09_silent_faults.md)
 - [查询和验证故障](./04_querying_and_verifying_faults.md)

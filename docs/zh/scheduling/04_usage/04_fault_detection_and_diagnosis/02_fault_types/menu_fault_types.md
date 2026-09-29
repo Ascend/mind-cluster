@@ -6,3 +6,4 @@
 - [业务故障与任务卡死](./04_workload_faults.md)
 - [性能劣化、慢节点与慢网络](./05_performance_degradation.md)
 - [公共故障](./06_public_faults.md)
+- [静默故障](./07_silent_faults.md)

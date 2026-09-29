@@ -235,11 +235,13 @@ detect:
 		convey.So(conf.GetSilentFaultEnabled(), convey.ShouldBeFalse)
 	})
 
-	convey.Convey("load silent config check error", t, func() {
+	convey.Convey("load silent config invalid field falls back to default", t, func() {
 		resetSilentConfig()
 		cm := &v1.ConfigMap{Data: map[string]string{constant.SilentFaultConfigKey: silentInvalid}}
 		loadSilentConfig(cm)
-		convey.So(conf.GetSilentFaultEnabled(), convey.ShouldBeFalse)
+		convey.So(conf.GetSilentFaultEnabled(), convey.ShouldBeTrue)
+		convey.So(conf.GetMinTaskCards(), convey.ShouldEqual, 16)
+		convey.So(conf.GetConsecutiveTimes(), convey.ShouldEqual, 3)
 	})
 
 	convey.Convey("load silent config missing key keeps disabled and cleans", t, func() {

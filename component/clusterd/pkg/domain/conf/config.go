@@ -18,6 +18,7 @@ package conf
 import (
 	"fmt"
 
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 )
 
@@ -108,23 +109,42 @@ func Check(policy ManuallySeparatePolicy) error {
 	return nil
 }
 
-// silent fault detection config bound and defaults
+// silent fault detection config bounds and defaults
 const (
 	// DetectInterval detect loop interval. unit: second
 	DetectInterval = 60
 
+	// DefaultMinTaskCards default min task cards
+	DefaultMinTaskCards = 16
+	// DefaultConsecutiveTimes default consecutive times
+	DefaultConsecutiveTimes = 3
+	// DefaultHwWindowSeconds default hardware fault window seconds. unit: second
+	DefaultHwWindowSeconds = 30
+	// DefaultWindowSeconds default detect window seconds. unit: second
+	DefaultWindowSeconds = 10800
+	// DefaultFaultFreeSeconds default fault free seconds (48 hours). unit: second
+	DefaultFaultFreeSeconds = 48 * 60 * 60
+
 	// MinSilentTaskCards min task cards lower bound (exclusive), valid value must be greater than this
 	MinSilentTaskCards = 0
+	// MaxSilentTaskCards min task cards upper bound (exclusive), valid value must be less than this
+	MaxSilentTaskCards = 10000000
 	// MinConsecutiveTimes min consecutive times lower bound (exclusive)
 	MinConsecutiveTimes = 0
+	// MaxConsecutiveTimes min consecutive times upper bound (exclusive)
+	MaxConsecutiveTimes = 10000
 	// MinHwWindowSeconds min hardware fault window seconds lower bound (exclusive). unit: second
 	MinHwWindowSeconds = 3
-	// MinWindowSeconds min detect window seconds lower bound (exclusive). unit: second
+	// MaxHwWindowSeconds max hardware fault window seconds upper bound (exclusive). unit: second
+	MaxHwWindowSeconds = 24 * 60 * 60
+	// MinWindowSeconds min detect window seconds lower bound (inclusive). unit: second
 	MinWindowSeconds = 30
+	// MaxWindowSeconds max detect window seconds upper bound (exclusive). unit: second
+	MaxWindowSeconds = 365 * 24 * 60 * 60
 	// SilentNotRelease silent fault not auto release
 	SilentNotRelease = -1
-	// DefaultSilentReleaseSeconds default silent fault release duration (48 hours). unit: second
-	DefaultSilentReleaseSeconds = 48 * 60 * 60
+	// MaxFaultFreeSeconds max fault free seconds upper bound (exclusive). unit: second, -1 is also allowed
+	MaxFaultFreeSeconds = 365 * 24 * 60 * 60
 )
 
 // SilentFaultPolicy silent fault policy config
@@ -166,13 +186,10 @@ func GetWindowSeconds() int64 {
 	return int64(config.SilentFaultPolicy.Detect.WindowSecond)
 }
 
-// GetSilentReleaseSeconds get silent fault release duration. unit: second. -1 means no auto release, 0 means default 48 hours
+// GetSilentReleaseSeconds get silent fault release duration. unit: second. -1 means no auto release.
+// The value is normalized to a default when absent or invalid during config loading, so 0 is never stored here.
 func GetSilentReleaseSeconds() int64 {
-	second := config.SilentFaultPolicy.Release.FaultFreeSecond
-	if second == 0 {
-		return DefaultSilentReleaseSeconds
-	}
-	return int64(second)
+	return int64(config.SilentFaultPolicy.Release.FaultFreeSecond)
 }
 
 // GetDetectInterval get detect loop interval. unit: second
@@ -192,26 +209,42 @@ func SilentFaultDetectChanged(newPolicy SilentFaultPolicy) bool {
 	return config.SilentFaultPolicy.Detect != newPolicy.Detect
 }
 
-// CheckSilentFault check silent fault policy config
-func CheckSilentFault(policy SilentFaultPolicy) error {
-	if policy.Detect.MinTaskCards <= MinSilentTaskCards {
-		return fmt.Errorf("min_task_cards must be greater than %d", MinSilentTaskCards)
+// NormalizeSilentFault validates every parameter and resets each absent (zero) or out-of-range
+// value to its default, logging a warning for each parameter that falls back to the default.
+func NormalizeSilentFault(policy *SilentFaultPolicy) {
+	if policy.Detect.MinTaskCards <= MinSilentTaskCards || policy.Detect.MinTaskCards >= MaxSilentTaskCards {
+		hwlog.RunLog.Warnf("silent fault min_task_cards=%d is invalid, use default %d",
+			policy.Detect.MinTaskCards, DefaultMinTaskCards)
+		policy.Detect.MinTaskCards = DefaultMinTaskCards
 	}
-	if policy.Detect.ConsecutiveTimes <= MinConsecutiveTimes {
-		return fmt.Errorf("consecutive_times must be greater than %d", MinConsecutiveTimes)
+	if policy.Detect.ConsecutiveTimes <= MinConsecutiveTimes || policy.Detect.ConsecutiveTimes >= MaxConsecutiveTimes {
+		hwlog.RunLog.Warnf("silent fault consecutive_times=%d is invalid, use default %d",
+			policy.Detect.ConsecutiveTimes, DefaultConsecutiveTimes)
+		policy.Detect.ConsecutiveTimes = DefaultConsecutiveTimes
 	}
-	if policy.Detect.HardwareFaultWindowSecond <= MinHwWindowSeconds {
-		return fmt.Errorf("hardware_fault_window_seconds must be greater than %d", MinHwWindowSeconds)
+	if policy.Detect.HardwareFaultWindowSecond <= MinHwWindowSeconds ||
+		policy.Detect.HardwareFaultWindowSecond >= MaxHwWindowSeconds {
+		hwlog.RunLog.Warnf("silent fault hardware_fault_window_seconds=%d is invalid, use default %d",
+			policy.Detect.HardwareFaultWindowSecond, DefaultHwWindowSeconds)
+		policy.Detect.HardwareFaultWindowSecond = DefaultHwWindowSeconds
 	}
-	if policy.Detect.WindowSecond <= MinWindowSeconds {
-		return fmt.Errorf("window_seconds must be greater than %d", MinWindowSeconds)
+	if policy.Detect.WindowSecond < MinWindowSeconds || policy.Detect.WindowSecond >= MaxWindowSeconds {
+		hwlog.RunLog.Warnf("silent fault window_seconds=%d is invalid, use default %d",
+			policy.Detect.WindowSecond, DefaultWindowSeconds)
+		policy.Detect.WindowSecond = DefaultWindowSeconds
 	}
-	if policy.Release.FaultFreeSecond == SilentNotRelease {
-		return nil
+	if !isValidFaultFreeSeconds(policy.Release.FaultFreeSecond) {
+		hwlog.RunLog.Warnf("silent fault fault_free_seconds=%d is invalid, use default %d",
+			policy.Release.FaultFreeSecond, DefaultFaultFreeSeconds)
+		policy.Release.FaultFreeSecond = DefaultFaultFreeSeconds
 	}
-	// 0 means use default 48 hours; positive value means explicit release seconds
-	if policy.Release.FaultFreeSecond < 0 {
-		return fmt.Errorf("fault_free_seconds must be %d (no release) or a non-negative number, 0 means default 48 hours", SilentNotRelease)
+}
+
+// isValidFaultFreeSeconds reports whether the fault_free_seconds value is valid: -1 means no auto
+// release; otherwise it must fall in (0, MaxFaultFreeSeconds).
+func isValidFaultFreeSeconds(second int) bool {
+	if second == SilentNotRelease {
+		return true
 	}
-	return nil
+	return second > 0 && second < MaxFaultFreeSeconds
 }

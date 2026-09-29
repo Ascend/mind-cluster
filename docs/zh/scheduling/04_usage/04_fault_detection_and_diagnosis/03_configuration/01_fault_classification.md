@@ -36,7 +36,7 @@
 </tr>
 <tr id="row416145918513"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p116115913517"><a name="p116115913517"></a>公共故障</p>
 </td>
-<td class="cellrowborder" colspan="3" valign="top" headers="mcps1.2.5.1.2 "><p id="p147536536717"><a name="p147536536717"></a>NotHandleFault、SeparateNPU、SubHealthFault<span id="ph632635517598"><a name="ph632635517598"></a>、PreSeparateNPU</span></p>
+<td class="cellrowborder" colspan="3" valign="top" headers="mcps1.2.5.1.2 "><p id="p147536536717"><a name="p147536536717"></a>NotHandleFault、SeparateNPU、SubHealthFault、SilentFault<span id="ph632635517598"><a name="ph632635517598"></a>、PreSeparateNPU</span></p>
 </td>
 </tr>
 <tr id="row416145918513"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p116115913528"><a name="p116115913528"></a>任务卡死故障</p>
@@ -173,6 +173,15 @@
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" width="21.81%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"></a>暂不处理</p>
+</td>
+</tr>
+<tr id="row_silentfault001"><td class="cellrowborder" valign="top" width="19.06%" headers="mcps1.2.5.1.1 "><p id="p_silentfault001"><a name="p_silentfault001"></a>SilentFault</p>
+</td>
+<td class="cellrowborder" valign="top" width="35.74%" headers="mcps1.2.5.1.2 "><p id="p_silentfault002"><a name="p_silentfault002"></a>静默故障，节点反复出现软件故障但配置的检测时间段内无硬件故障上报。故障处理策略为追加故障列表、不改变芯片健康状态，后续可根据任务配置不优先调度到该节点。</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.39%" headers="mcps1.2.5.1.3 "><p id="p_silentfault003"><a name="p_silentfault003"></a>暂不处理</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.81%" headers="mcps1.2.5.1.4 "><p id="p_silentfault004"><a name="p_silentfault004"></a>-</p>
 </td>
 </tr>
 </tbody>
