@@ -16,8 +16,8 @@ MindCluster集群调度组件支持用户通过[AIBrix](https://github.com/vllm-
 
 ## 支持的产品形态<a name="zh-cn_topic_0000002322062116_section169961844182917"></a>
 
-- Atlas 800I A2 推理服务器
-- Atlas 800I A3 超节点服务器
+- Atlas 800I A2推理服务器
+- Atlas 800I A3超节点服务器
 
 ## 使用方式<a name="zh-cn_topic_0000002322062116_section6771194616104"></a>
 

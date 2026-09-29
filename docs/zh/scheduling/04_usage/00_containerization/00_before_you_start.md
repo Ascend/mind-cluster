@@ -11,7 +11,7 @@
 - 容器化支持可以和训练场景下的所有特性一起使用，也可以和推理场景的所有特性一起使用。
 - 若使用Volcano进行任务调度，则不建议通过Docker或Containerd指令创建/挂载NPU卡的容器，否则可能会触发Volcano调度问题。
 - 容器化支持会自动挂载宿主机的二进制、动态库文件到容器中，可能会涉及glibc依赖，此时容器OS的glibc版本需>=宿主机OS的glibc版本，以便挂载到容器内可以正常运行。
-- 在Atlas 850E 超节点、Atlas 850 超节点、Atlas 650E 服务器、Atlas 650 服务器、Atlas 950 SuperPoD 超节点等存在UB总线的产品形态下，会默认挂载ub_driver.list中的UB驱动相关内容。ub_driver.list中的文件依赖宿主机的glibc版本，目前支持的OS版本和glibc版本如下：
+- 在Atlas 850E超节点、Atlas 850超节点、Atlas 650E服务器、Atlas 650服务器、Atlas 950 SuperPoD超节点等存在UB总线的产品形态下，会默认挂载ub_driver.list中的UB驱动相关内容。ub_driver.list中的文件依赖宿主机的glibc版本，目前支持的OS版本和glibc版本如下：
   - 宿主机：openEuler24.03（glibc2.38）
   - 容器内：openEuler24.03（glibc2.38）、Ubuntu24.04（glibc2.39）。
 
@@ -19,16 +19,16 @@
 
 支持以下产品使用容器化支持。
 
-- <term>Atlas 训练系列产品</term>
-- <term>Atlas A2 训练系列产品</term>
-- <term>Atlas A3 训练系列产品</term>
-- 推理服务器（插Atlas 300I 推理卡）
-- <term>Atlas 200/300/500 推理产品</term>
-- <term>Atlas 200I/500 A2 推理产品</term>
-- <term>Atlas 推理系列产品</term>
-- Atlas 800I A2 推理服务器
-- A200I A2 Box 异构组件
-- Atlas 800I A3 超节点服务器
+- <term>Atlas训练系列产品</term>
+- <term>Atlas A2训练系列产品</term>
+- <term>Atlas A3训练系列产品</term>
+- 推理服务器（插Atlas 300I推理卡）
+- <term>Atlas 200/300/500推理产品</term>
+- <term>Atlas 200I/500 A2推理产品</term>
+- <term>Atlas推理系列产品</term>
+- Atlas 800I A2推理服务器
+- A200I A2 Box异构组件
+- Atlas 800I A3超节点服务器
 - <term>Ascend 950PR&950DT系列产品</term>
 
 ## 使用场景<a name="section124697813416"></a>

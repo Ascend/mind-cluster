@@ -11,7 +11,7 @@
 >[!NOTE]
 >
 >- 以下示例使用MindSpeed-LLM  26.2.0版本。
->- Atlas 850E 超节点、Atlas 850 超节点、Atlas 650E 服务器、Atlas 650 服务器、Atlas 950 SuperPoD 超节点等存在UB总线的产品形态下，训练镜像内需要增加UB驱动相关文件。支持如下两种方式：
+>- Atlas 850E超节点、Atlas 850超节点、Atlas 650E服务器、Atlas 650服务器、Atlas 950 SuperPoD超节点等存在UB总线的产品形态下，训练镜像内需要增加UB驱动相关文件。支持如下两种方式：
 >   - 从<a href="https://mirrors.huaweicloud.com/ascend/">华为云镜像仓地址</a>的archive目录下载，然后安装到训练镜像中。
 >   - 安装Ascend Docker Runtime，默认挂载ub\_driver.list中的UB驱动相关内容。ub\_driver.list中的文件依赖宿主机的glibc版本，目前支持的OS版本和glibc版本如下：
 >     - 宿主机：openEuler24.03（glibc2.38）
@@ -187,7 +187,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
 企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
 
 >[!NOTE]
->本章节以单台Atlas 800T A2 训练服务器、Ubuntu 20.04 Arm、配套Python 3.10为例来介绍训练镜像的制作，使用过程中需根据实际情况修改相关步骤。
+>本章节以单台Atlas 800T A2训练服务器、Ubuntu 20.04 Arm、配套Python 3.10为例来介绍训练镜像的制作，使用过程中需根据实际情况修改相关步骤。
 
 **操作步骤<a name="zh-cn_topic_0000002039339945_section20489630477"></a>**
 
@@ -377,7 +377,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
 >
 >- 若使用TaskD组件且训练容器使用Host网络，则先通过`sysctl net.ipv4.ip_local_reserved_ports`查询当前预留端口配置后，通过`sysctl -w net.ipv4.ip_local_reserved_ports="xxx,9601,9602"`新增预留端口9601、9602（其中xxx指的是前面查出来已配置的端口，若无则省略）。
 
-训练代码与数据集准备，可以参考[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.2.0/docs/zh/pytorch/training/pretrain/mcore/pretrain.md)。下面以两台Atlas 800T A2 训练服务器为例，说明具体操作步骤。
+训练代码与数据集准备，可以参考[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.2.0/docs/zh/pytorch/training/pretrain/mcore/pretrain.md)。下面以两台Atlas 800T A2训练服务器为例，说明具体操作步骤。
 
 1. 拉取训练代码。
 
@@ -557,7 +557,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
 </thead>
 <tbody><tr id="row4503174412371"><td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.1 "><p id="p09365292408"><a name="p09365292408"></a>Ascend Job</p>
 </td>
-<td class="cellrowborder" valign="top" width="16.173234646929384%" headers="mcps1.2.8.1.2 "><a name="ul129364297402"></a><ul id="ul129364297402"><li><span id="ph157633217501"><a name="ph157633217501"></a>Atlas 800T A2 训练服务器</span></li><li>Atlas 900 A2 PoD 集群基础单元</li></ul>
+<td class="cellrowborder" valign="top" width="16.173234646929384%" headers="mcps1.2.8.1.2 "><a name="ul129364297402"></a><ul id="ul129364297402"><li><span id="ph157633217501"><a name="ph157633217501"></a>Atlas 800T A2训练服务器</span></li><li>Atlas 900 A2 PoD集群基础单元</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="8.521704340868173%" headers="mcps1.2.8.1.3 "><p id="p319343422611"><a name="p319343422611"></a><span id="ph310231710274"><a name="ph310231710274"></a>PyTorch</span></p>
 </td>
@@ -574,7 +574,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
 </table>
 
 >[!NOTE]
->当前部分训练框架未提供Atlas 900 A3 SuperPoD 超节点的断点续训示例YAML，用户可以在示例YAML中的labels下新增annotations字段即可。示例如下：
+>当前部分训练框架未提供Atlas 900 A3 SuperPoD超节点的断点续训示例YAML，用户可以在示例YAML中的labels下新增annotations字段即可。示例如下：
 >
 >```yaml
 >...

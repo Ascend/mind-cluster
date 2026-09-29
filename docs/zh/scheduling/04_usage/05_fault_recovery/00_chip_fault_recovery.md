@@ -12,29 +12,29 @@
 
 ## 支持的产品形态
 
-- Atlas 800 训练服务器（型号 9000）（NPU满配）
-- Atlas 800 训练服务器（型号 9010）（NPU满配）
+- Atlas 800训练服务器（型号：9000）（NPU满配）
+- Atlas 800训练服务器（型号：9010）（NPU满配）
 - Atlas 900T PoD Lite
-- Atlas 900 PoD（型号 9000）
-- Atlas 800T A2 训练服务器
-- Atlas 900 A2 PoD 集群基础单元
-- Atlas 900 A3 SuperPoD 超节点
-- Atlas 800T A3 超节点服务器
-- Atlas 850E 超节点
-- Atlas 850 超节点
-- Atlas 650E 服务器
-- Atlas 650 服务器
-- Atlas 950 SuperPoD 超节点
-- Atlas 350 加速卡
-- Atlas 300I Pro 推理卡
-- Atlas 300V 视频解析卡
-- Atlas 300V Pro 视频解析卡
-- Atlas 300I Duo 推理卡
-- Atlas 300I 推理卡（型号 3000）（整卡）
-- Atlas 300I 推理卡（型号 3010）
-- Atlas 800I A2 推理服务器
-- A200I A2 Box 异构组件
-- Atlas 800I A3 超节点服务器
+- Atlas 900 PoD（型号：9000）
+- Atlas 800T A2训练服务器
+- Atlas 900 A2 PoD集群基础单元
+- Atlas 900 A3 SuperPoD超节点
+- Atlas 800T A3超节点服务器
+- Atlas 850E超节点
+- Atlas 850超节点
+- Atlas 650E服务器
+- Atlas 650服务器
+- Atlas 950 SuperPoD超节点
+- Atlas 350加速卡
+- Atlas 300I Pro推理卡
+- Atlas 300V视频解析卡
+- Atlas 300V Pro视频解析卡
+- Atlas 300I Duo推理卡
+- Atlas 300I推理卡（型号：3000）（整卡）
+- Atlas 300I推理卡（型号：3010）
+- Atlas 800I A2推理服务器
+- A200I A2 Box异构组件
+- Atlas 800I A3超节点服务器
 
 ## 原理说明
 
@@ -61,18 +61,18 @@
 
 >[!NOTE]
 >
->- 针对Atlas 300I Duo 推理卡形态硬件，仅支持按卡复位，即两颗芯片会同时复位。
+>- 针对Atlas 300I Duo推理卡形态硬件，仅支持按卡复位，即两颗芯片会同时复位。
 >
 >- 芯片发生故障时，如果该芯片已经被调度并挂载到了任务容器中，则若要使其空闲，需要配置任务重调度策略，将故障Pod重新调度到其他空闲的NPU上，详细请参见[重调度](../03_basic_scheduling/05_rescheduling.md)。
 >
->- Atlas 800I A2 推理服务器存在以下两种故障恢复方式，一台Atlas 800I A2 推理服务器只能使用一种故障恢复方式，由集群调度组件自动识别使用哪种故障恢复方式。
+>- Atlas 800I A2推理服务器存在以下两种故障恢复方式，一台Atlas 800I A2推理服务器只能使用一种故障恢复方式，由集群调度组件自动识别使用哪种故障恢复方式。
 >
 >    - 方式一：若设备上不存在HCCS环，执行推理任务中，当NPU出现故障，Ascend Device Plugin等待该NPU空闲后，对该NPU进行复位操作。
 >
 >    - 方式二：若设备上存在HCCS环，执行推理任务中，当服务器出现一个或多个故障NPU，Ascend Device Plugin等待环上的NPU全部空闲后，一次性复位环上所有的NPU。
 >
->- Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器、Atlas 800I A3 超节点服务器上执行热复位时会复位指定芯片所在的NPU模组及与其具备网口互助关系的NPU模组。
+>- Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器、Atlas 800I A3超节点服务器上执行热复位时会复位指定芯片所在的NPU模组及与其具备网口互助关系的NPU模组。
 >
->- 在Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器、Atlas 800I A3 超节点服务器上，Ascend Device Plugin调用驱动的带内热复位接口执行热复位失败后，会再次尝试调用带外热复位接口进行热复位。
+>- 在Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器、Atlas 800I A3超节点服务器上，Ascend Device Plugin调用驱动的带内热复位接口执行热复位失败后，会再次尝试调用带外热复位接口进行热复位。
 >
 >- 热复位恢复无法覆盖所有故障，部分故障可能恢复失败，例如：故障导致掉卡，device OS卡死等。

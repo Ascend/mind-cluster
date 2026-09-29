@@ -40,7 +40,7 @@
 <td class="cellrowborder" valign="top" width="30%"><term>Atlas A3系列产品</term></td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" width="30%">Atlas 350 加速卡</td>
+<td class="cellrowborder" valign="top" width="30%">Atlas 350加速卡</td>
 </tr>
 </tbody>
 </table>

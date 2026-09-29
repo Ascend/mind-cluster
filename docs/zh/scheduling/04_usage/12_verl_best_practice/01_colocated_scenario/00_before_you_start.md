@@ -17,8 +17,8 @@ MindCluster集群调度组件支持用户通过acjob工作负载部署verl强化
 
 ## 支持的产品形态<a name="zh-cn_topic_0000002322062116_section169961844182917"></a>
 
-- Atlas 800T A2 训练服务器
-- Atlas 900 A3 SuperPoD 超节点
+- Atlas 800T A2训练服务器
+- Atlas 900 A3 SuperPoD超节点
 
 ## 使用方式<a name="zh-cn_topic_0000002322062116_section6771194616104"></a>
 

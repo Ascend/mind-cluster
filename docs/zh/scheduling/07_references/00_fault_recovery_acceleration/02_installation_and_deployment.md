@@ -70,8 +70,8 @@
 
 |类型|配置参考|
 |--|--|
-|服务器（单机场景）|<ul><li>Atlas 800 训练服务器（型号：9000）：仅支持MindIO TTP功能</li><li>Atlas 800T A2 训练服务器</li><li>Atlas 900 A3 SuperPoD 超节点</li></ul>|
-|服务器（集群场景）|计算节点：<ul><li>Atlas 800 训练服务器（型号：9000）：仅支持MindIO TTP功能</li><li>Atlas 800T A2 训练服务器</li><li>Atlas 900 A3 SuperPoD 超节点</li></ul> 存储节点：存储服务器|
+|服务器（单机场景）|<ul><li>Atlas 800 训练服务器（型号：9000）：仅支持MindIO TTP功能</li><li>Atlas 800T A2训练服务器</li><li>Atlas 900 A3 SuperPoD超节点</li></ul>|
+|服务器（集群场景）|计算节点：<ul><li>Atlas 800 训练服务器（型号：9000）：仅支持MindIO TTP功能</li><li>Atlas 800T A2训练服务器</li><li>Atlas 900 A3 SuperPoD超节点</li></ul> 存储节点：存储服务器|
 |网络|<ul><li>带外管理（BMC）：≥1Gbit/s</li><li>带内管理（SSH）：≥1Gbit/s</li><li>业务面：≥10Gbit/s</li><li>存储面：≥25Gbit/s</li><li>参数面：100Gbit/s</li></ul>|
 
 **软件环境**

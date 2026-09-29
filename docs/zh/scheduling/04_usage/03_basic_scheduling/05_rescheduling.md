@@ -26,8 +26,8 @@
 
 支持以下产品使用**重调度**。
 
-- <term>Atlas 推理系列产品</term>
-- <term>Atlas 训练系列产品</term>
+- <term>Atlas推理系列产品</term>
+- <term>Atlas训练系列产品</term>
 - <term>Atlas A2系列产品</term>
 - <term>Atlas A3系列产品</term>
 - <term>Ascend 950PR&950DT系列产品</term>
