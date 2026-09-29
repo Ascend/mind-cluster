@@ -125,12 +125,12 @@ ClusterD启动后，会创建如下ConfigMap：
 |--|--|
 |PublicFaults|公共故障详情。故障数量过大时，不再更新本字段内容。以下各字段的详细说明请参见[故障信息说明表](./03_public_fault_apis.md#configmap)。|
 |-<i>\<node name></i>|故障节点名称|
-|-resource|故障发送方<p>默认配置为CCAE、fd-online、pingmesh、Netmind。</p>|
+|-resource|故障发送方<p>默认配置为CCAE、fd-online、pingmesh、Netmind、dpcStorage、dtfsStorage、clusterd（当前仅ClusterD自身判定为静默故障场景使用）。</p>|
 |-devIds|故障芯片物理ID|
 |-faultId|故障实例ID|
 |-type|故障类型<ul><li>NPU：芯片故障。</li><li>Node：节点故障。</li><li>Network：网络故障。</li><li>Storage：存储故障。</li></ul>|
 |-faultCode|故障码|
-|-level|故障级别<ul><li>NotHandleFault：暂不处理。</li><li>SubHealthFault：亚健康。</li><li>SeparateNPU：无法恢复，需要隔离芯片。</li><li>PreSeparateNPU：暂不影响业务，后续不再调度任务到该芯片。</li></ul>|
+|-level|故障级别<ul><li>NotHandleFault：暂不处理。</li><li>SubHealthFault：亚健康。</li><li>SeparateNPU：无法恢复，需要隔离芯片。</li><li>PreSeparateNPU：暂不影响业务，后续不再调度任务到该芯片。</li><li>SilentFault：静默故障。</li></ul>|
 |-faultTime|故障产生时间|
 |FaultNum|故障数量|
 |-publicFaultNum|所有节点的公共故障数量之和。|
@@ -169,7 +169,7 @@ ClusterD启动后，会创建如下ConfigMap：
 
 ## clusterd-manual-info-cm<a name="section15483421165190"></a>
 
-该ConfigMap位于用户创建的cluster-system命名空间下。用于展示集群中人工隔离的芯片及故障信息。
+该ConfigMap位于用户创建的cluster-system命名空间下。用于展示集群中人工隔离、静默故障的芯片及故障信息。
 
 示例如下：
 
@@ -184,6 +184,9 @@ Data
 localhost.localdomain:
 ----
 {"Total":["Ascend910-0","Ascend910-2","Ascend910-3"],"Detail":{"Ascend910-0":[{"FaultCode":"8C084E00","FaultLevel":"ManuallySeparateNPU","LastSeparateTime":1770811685650}],"Ascend910-2":[{"FaultCode":"8C084E00","FaultLevel":"ManuallySeparateNPU","LastSeparateTime":1770811685650}],"Ascend910-3":[{"FaultCode":"8C084E00","FaultLevel":"ManuallySeparateNPU","LastSeparateTime":1770811685650}]}}
+silent-node.example:
+----
+{"Total":["Ascend910-0","Ascend910-1","Ascend910-2"],"Detail":{"Ascend910-0":[{"FaultCode":"130001001","FaultLevel":"SilentFault","LastSeparateTime":1770811685650}],"Ascend910-1":[{"FaultCode":"130001001","FaultLevel":"SilentFault","LastSeparateTime":1770811685650}],"Ascend910-2":[{"FaultCode":"130001001","FaultLevel":"SilentFault","LastSeparateTime":1770811685650}]}}
 
 Events:  <none>
 ```
@@ -198,4 +201,9 @@ Events:  <none>
 |-<i>Ascend910-0</i>|芯片名称，例如示例中的Ascend910-0。|
 |-FaultCode|故障码。|
 |-FaultLevel|故障级别。|
-|-LastSeparateTime|达到人工隔离频率时的最后一次故障时间。如果已经触发人工隔离芯片的故障，再一次达到了人工隔离频率，将刷新该时间。|
+|-LastSeparateTime|达到人工隔离频率时的最后一次故障时间。如果已经触发人工隔离芯片的故障，再一次达到了人工隔离频率，将刷新该时间。对于静默故障，表示最近一次命中静默故障的时间，再次命中会刷新该时间。|
+
+>[!NOTE]
+>
+>- 静默故障条目由ClusterD写入（级别SilentFault），支持手动解除与达到配置的释放时间自动释放。
+>- 静默故障按整节点隔离，手动解除时需删除该节点Total字段value值中的所有芯片；只删除部分芯片时不生效，ClusterD会把完整节点自动写回。

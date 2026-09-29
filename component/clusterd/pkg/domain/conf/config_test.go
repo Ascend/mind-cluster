@@ -16,12 +16,18 @@
 package conf
 
 import (
+	"context"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 )
+
+func init() {
+	_ = hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
+}
 
 const (
 	defaultFaultWindowHours = 24
@@ -230,46 +236,73 @@ func validSilentPolicy() SilentFaultPolicy {
 	return p
 }
 
-// TestCheckSilentFault tests the CheckSilentFault function for SilentFaultPolicy
-func TestCheckSilentFault(t *testing.T) {
-	convey.Convey("test func CheckSilentFault", t, func() {
-		convey.Convey("valid", func() {
-			convey.So(CheckSilentFault(validSilentPolicy()), convey.ShouldBeNil)
-		})
-		convey.Convey("min_task_cards out of range", func() {
+// TestNormalizeSilentFault tests the NormalizeSilentFault function for SilentFaultPolicy
+func TestNormalizeSilentFault(t *testing.T) {
+	convey.Convey("test func NormalizeSilentFault", t, func() {
+		convey.Convey("valid policy keeps values", func() {
 			p := validSilentPolicy()
-			p.Detect.MinTaskCards = 0
-			convey.So(CheckSilentFault(p), convey.ShouldNotBeNil)
+			NormalizeSilentFault(&p)
+			convey.So(p.Detect.MinTaskCards, convey.ShouldEqual, 16)
+			convey.So(p.Detect.ConsecutiveTimes, convey.ShouldEqual, 3)
+			convey.So(p.Detect.HardwareFaultWindowSecond, convey.ShouldEqual, 30)
+			convey.So(p.Detect.WindowSecond, convey.ShouldEqual, 10800)
+			convey.So(p.Release.FaultFreeSecond, convey.ShouldEqual, 172800)
 		})
-		convey.Convey("consecutive_times out of range", func() {
+		convey.Convey("min_task_cards below/above range falls back to default", func() {
+			for _, v := range []int{MinSilentTaskCards, MaxSilentTaskCards} {
+				p := validSilentPolicy()
+				p.Detect.MinTaskCards = v
+				NormalizeSilentFault(&p)
+				convey.So(p.Detect.MinTaskCards, convey.ShouldEqual, DefaultMinTaskCards)
+			}
+		})
+		convey.Convey("consecutive_times below/above range falls back to default", func() {
+			for _, v := range []int{MinConsecutiveTimes, MaxConsecutiveTimes} {
+				p := validSilentPolicy()
+				p.Detect.ConsecutiveTimes = v
+				NormalizeSilentFault(&p)
+				convey.So(p.Detect.ConsecutiveTimes, convey.ShouldEqual, DefaultConsecutiveTimes)
+			}
+		})
+		convey.Convey("hardware_fault_window_seconds below/above range falls back to default", func() {
+			for _, v := range []int{MinHwWindowSeconds, MaxHwWindowSeconds} {
+				p := validSilentPolicy()
+				p.Detect.HardwareFaultWindowSecond = v
+				NormalizeSilentFault(&p)
+				convey.So(p.Detect.HardwareFaultWindowSecond, convey.ShouldEqual, DefaultHwWindowSeconds)
+			}
+		})
+		convey.Convey("window_seconds below range falls back to default", func() {
 			p := validSilentPolicy()
-			p.Detect.ConsecutiveTimes = 0
-			convey.So(CheckSilentFault(p), convey.ShouldNotBeNil)
+			p.Detect.WindowSecond = MinWindowSeconds - 1
+			NormalizeSilentFault(&p)
+			convey.So(p.Detect.WindowSecond, convey.ShouldEqual, DefaultWindowSeconds)
 		})
-		convey.Convey("hardware_fault_window_seconds out of range", func() {
+		convey.Convey("window_seconds lower bound is valid", func() {
 			p := validSilentPolicy()
-			p.Detect.HardwareFaultWindowSecond = 3
-			convey.So(CheckSilentFault(p), convey.ShouldNotBeNil)
+			p.Detect.WindowSecond = MinWindowSeconds
+			NormalizeSilentFault(&p)
+			convey.So(p.Detect.WindowSecond, convey.ShouldEqual, MinWindowSeconds)
 		})
-		convey.Convey("window_seconds out of range", func() {
+		convey.Convey("window_seconds above range falls back to default", func() {
 			p := validSilentPolicy()
-			p.Detect.WindowSecond = 30
-			convey.So(CheckSilentFault(p), convey.ShouldNotBeNil)
+			p.Detect.WindowSecond = MaxWindowSeconds
+			NormalizeSilentFault(&p)
+			convey.So(p.Detect.WindowSecond, convey.ShouldEqual, DefaultWindowSeconds)
 		})
-		convey.Convey("fault_free_seconds not release", func() {
+		convey.Convey("fault_free_seconds -1 is valid", func() {
 			p := validSilentPolicy()
 			p.Release.FaultFreeSecond = SilentNotRelease
-			convey.So(CheckSilentFault(p), convey.ShouldBeNil)
+			NormalizeSilentFault(&p)
+			convey.So(p.Release.FaultFreeSecond, convey.ShouldEqual, SilentNotRelease)
 		})
-		convey.Convey("fault_free_seconds default", func() {
-			p := validSilentPolicy()
-			p.Release.FaultFreeSecond = 0
-			convey.So(CheckSilentFault(p), convey.ShouldBeNil)
-		})
-		convey.Convey("fault_free_seconds out of range", func() {
-			p := validSilentPolicy()
-			p.Release.FaultFreeSecond = -2
-			convey.So(CheckSilentFault(p), convey.ShouldNotBeNil)
+		convey.Convey("fault_free_seconds invalid falls back to default", func() {
+			for _, v := range []int{0, -2, MaxFaultFreeSeconds} {
+				p := validSilentPolicy()
+				p.Release.FaultFreeSecond = v
+				NormalizeSilentFault(&p)
+				convey.So(p.Release.FaultFreeSecond, convey.ShouldEqual, DefaultFaultFreeSeconds)
+			}
 		})
 	})
 }
@@ -287,13 +320,6 @@ func TestSetAndGetSilent(t *testing.T) {
 		convey.So(GetWindowSeconds(), convey.ShouldEqual, int64(p.Detect.WindowSecond))
 		convey.So(GetSilentReleaseSeconds(), convey.ShouldEqual, int64(p.Release.FaultFreeSecond))
 		convey.So(GetDetectInterval(), convey.ShouldEqual, int64(DetectInterval))
-	})
-
-	convey.Convey("fault free seconds zero uses default 48 hours", t, func() {
-		p := validSilentPolicy()
-		p.Release.FaultFreeSecond = 0
-		SetSilentFaultPolicy(p)
-		convey.So(GetSilentReleaseSeconds(), convey.ShouldEqual, int64(DefaultSilentReleaseSeconds))
 	})
 }
 

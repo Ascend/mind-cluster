@@ -94,13 +94,13 @@ func loadSilentConfig(cm *v1.ConfigMap) {
 		var sp conf.SilentFaultPolicy
 		if err := yaml.Unmarshal([]byte(data), &sp); err != nil {
 			hwlog.RunLog.Errorf("unmarshal silent fault policy failed: %v", err)
-		} else if err := conf.CheckSilentFault(sp); err != nil {
-			hwlog.RunLog.Errorf("check silent fault policy failed: %v", err)
 		} else {
+			conf.NormalizeSilentFault(&sp)
 			changed = conf.SilentFaultDetectChanged(sp)
 			conf.SetSilentFaultPolicy(sp)
 		}
 	}
+	hwlog.RunLog.Info("load silent fault policy config success")
 	// turn off silent fault: clear all silent-side data (detection cache + result cache + silent-level entries of all sources in the public fault cache)
 	if !conf.GetSilentFaultEnabled() {
 		hwlog.RunLog.Info("silent fault switch is off, clean all silent fault data: reset caches + delete silent entries in public fault cache + rewrite cm")
