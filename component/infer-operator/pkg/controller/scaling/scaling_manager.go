@@ -43,14 +43,14 @@ const (
 // ScalingManager manages the lifecycle of scaling resources for InstanceSet objects.
 type ScalingManager struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme            *runtime.Scheme
+	OwnershipResolver *OwnershipResolver
 }
 
 // NewScalingManager creates a new ScalingManager instance.
 func NewScalingManager(cli client.Client, scheme *runtime.Scheme) *ScalingManager {
 	return &ScalingManager{
-		Client: cli,
-		Scheme: scheme,
+		Client: cli, Scheme: scheme, OwnershipResolver: NewOwnershipResolver(cli),
 	}
 }
 
@@ -81,6 +81,15 @@ func (m *ScalingManager) reconcileHPA(
 	ctx context.Context,
 	instanceSet *apiv1.InstanceSet,
 ) (*apiv1.ScalingResourceStatus, error) {
+	allowed, conflictMessage, err := m.OwnershipResolver.CanManageWithHPA(ctx, instanceSet)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve autoscaling ownership: %w", err)
+	}
+	if !allowed {
+		hwlog.RunLog.Warnf("InstanceSet %s/%s: %s", instanceSet.Namespace, instanceSet.Name, conflictMessage)
+		return &apiv1.ScalingResourceStatus{Type: common.ScalingPolicyTypeHPA, Ready: false,
+			Message: conflictMessage}, nil
+	}
 	hpaSpec := &autoscalingv2.HorizontalPodAutoscalerSpec{}
 	if err := json.Unmarshal(instanceSet.Spec.ScalingPolicy.Spec.Raw, hpaSpec); err != nil {
 		errMsg := fmt.Sprintf("failed to unmarshal HPA spec: %v", err)
@@ -102,7 +111,7 @@ func (m *ScalingManager) reconcileHPA(
 
 	hpaName := buildScalingResourceName(instanceSet)
 	existingHPA := &autoscalingv2.HorizontalPodAutoscaler{}
-	err := m.Get(ctx, types.NamespacedName{Name: hpaName, Namespace: instanceSet.Namespace}, existingHPA)
+	err = m.Get(ctx, types.NamespacedName{Name: hpaName, Namespace: instanceSet.Namespace}, existingHPA)
 	if err != nil && !apierrors.IsNotFound(err) {
 		hwlog.RunLog.Errorf("InstanceSet %s/%s: failed to get HPA %s: %v",
 			instanceSet.Namespace, instanceSet.Name, hpaName, err)

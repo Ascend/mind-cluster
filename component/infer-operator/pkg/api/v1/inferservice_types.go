@@ -40,6 +40,8 @@ type InferServiceStatus struct {
 	Conditions         []v1.Condition `json:"conditions,omitempty"`
 }
 
+// +kubebuilder:object:root=true
+
 // InferService is the Schema for the inferservices API
 type InferService struct {
 	v1.TypeMeta   `json:",inline"`
@@ -48,6 +50,8 @@ type InferService struct {
 	Spec   InferServiceSpec   `json:"spec,omitempty"`
 	Status InferServiceStatus `json:"status,omitempty"`
 }
+
+// +kubebuilder:object:root=true
 
 // InferServiceList contains a list of InferService
 type InferServiceList struct {

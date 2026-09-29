@@ -143,12 +143,16 @@ func (r *InferServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	if err != nil {
 		return ctrl.Result{RequeueAfter: common.DefaultReEnqueueInterval}, err
 	}
+	kpaManagedTargets, err := r.listKPAManagedTargets(ctx, is.Namespace)
+	if err != nil {
+		return ctrl.Result{RequeueAfter: common.DefaultReEnqueueInterval}, err
+	}
 
 	existedInstanceSetMap := r.buildInstanceSetMap(instanceSetList)
 
-	instanceSetsToCreate, instanceSetsToUpdate, instanceSetsToDelete := r.calculateInstanceSetOperations(is, existedInstanceSetMap)
+	operations := r.calculateInstanceSetOperations(is, existedInstanceSetMap, kpaManagedTargets)
 
-	if err := r.manageInstanceSets(ctx, is, instanceSetsToDelete, instanceSetsToUpdate, instanceSetsToCreate); err != nil {
+	if err := r.manageInstanceSets(ctx, is, operations); err != nil {
 		return ctrl.Result{RequeueAfter: common.DefaultReEnqueueInterval}, err
 	}
 
@@ -222,48 +226,62 @@ func (r *InferServiceReconciler) buildInstanceSetMap(instanceSetList *apiv1.Inst
 	return existedInstanceSetMap
 }
 
-// calculateInstanceSetOperations calculates which InstanceSets need to be created, updated, or deleted
+type instanceSetUpdate struct {
+	instanceSet      *apiv1.InstanceSet
+	preserveReplicas bool
+}
+
+type instanceSetOperations struct {
+	toCreate []*apiv1.InstanceSet
+	toUpdate []instanceSetUpdate
+	toDelete []*apiv1.InstanceSet
+}
+
+// calculateInstanceSetOperations calculates which InstanceSets need to be created, updated, or deleted.
+// externallyManagedTargets contains targets whose replica count is managed outside the InferService controller.
 func (r *InferServiceReconciler) calculateInstanceSetOperations(is *apiv1.InferService,
-	existedInstanceSetMap map[string]*apiv1.InstanceSet) ([]*apiv1.InstanceSet, []*apiv1.InstanceSet, []*apiv1.InstanceSet) {
-	var instanceSetsToCreate []*apiv1.InstanceSet
-	var instanceSetsToUpdate []*apiv1.InstanceSet
+	existedInstanceSetMap map[string]*apiv1.InstanceSet,
+	externallyManagedTargets map[string]struct{}) instanceSetOperations {
+	operations := instanceSetOperations{}
 
 	for _, role := range is.Spec.Roles {
 		if instanceSet, ok := existedInstanceSetMap[role.Name]; ok {
-			if r.instanceSetUpdated(instanceSet, role) {
+			_, externallyManaged := externallyManagedTargets[instanceSet.Name]
+			scalingManaged := r.isManagedByScalingController(instanceSet, externallyManaged)
+			if r.instanceSetUpdated(instanceSet, role, scalingManaged) {
 				// Update the InstanceSet's Spec to the new role's Spec before updating
 				instanceSet.Spec = role
-				instanceSetsToUpdate = append(instanceSetsToUpdate, instanceSet)
+				operations.toUpdate = append(operations.toUpdate, instanceSetUpdate{
+					instanceSet: instanceSet, preserveReplicas: scalingManaged})
 			}
 			delete(existedInstanceSetMap, role.Name)
 		} else {
 			instanceSet := r.newInstanceSet(is, role)
-			instanceSetsToCreate = append(instanceSetsToCreate, instanceSet)
+			operations.toCreate = append(operations.toCreate, instanceSet)
 		}
 	}
 
-	var instanceSetsToDelete []*apiv1.InstanceSet
 	for _, instanceSet := range existedInstanceSetMap {
-		instanceSetsToDelete = append(instanceSetsToDelete, instanceSet)
+		operations.toDelete = append(operations.toDelete, instanceSet)
 	}
 
-	return instanceSetsToCreate, instanceSetsToUpdate, instanceSetsToDelete
+	return operations
 }
 
 // manageInstanceSets handles the creation, update, and deletion of InstanceSets
 func (r *InferServiceReconciler) manageInstanceSets(ctx context.Context, is *apiv1.InferService,
-	instanceSetsToDelete []*apiv1.InstanceSet, instanceSetsToUpdate []*apiv1.InstanceSet, instanceSetsToCreate []*apiv1.InstanceSet) error {
-	if err := r.deleteInstanceSets(ctx, is, instanceSetsToDelete); err != nil {
+	operations instanceSetOperations) error {
+	if err := r.deleteInstanceSets(ctx, is, operations.toDelete); err != nil {
 		hwlog.RunLog.Errorf("Failed to delete InstanceSets for InferService %s/%s: %v", is.Namespace, is.Name, err)
 		return err
 	}
 
-	if err := r.updateExistInstanceSets(ctx, is, instanceSetsToUpdate); err != nil {
+	if err := r.updateExistInstanceSets(ctx, is, operations.toUpdate); err != nil {
 		hwlog.RunLog.Errorf("Failed to update exist InstanceSets for InferService %s/%s: %v", is.Namespace, is.Name, err)
 		return err
 	}
 
-	if err := r.createInstanceSets(ctx, is, instanceSetsToCreate); err != nil {
+	if err := r.createInstanceSets(ctx, is, operations.toCreate); err != nil {
 		hwlog.RunLog.Errorf("Failed to scale up InferService %s/%s: %v", is.Namespace, is.Name, err)
 		return err
 	}
@@ -366,11 +384,13 @@ func (r *InferServiceReconciler) updateStatusWithRetry(ctx context.Context, is *
 	})
 }
 
-func (r *InferServiceReconciler) updateExistInstanceSets(ctx context.Context, is *apiv1.InferService, instanceSets []*apiv1.InstanceSet) error {
+func (r *InferServiceReconciler) updateExistInstanceSets(ctx context.Context, is *apiv1.InferService,
+	updates []instanceSetUpdate) error {
 	if is == nil {
 		return nil
 	}
-	for _, instanceSet := range instanceSets {
+	for _, update := range updates {
+		instanceSet := update.instanceSet
 		err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 			latestInstanceSet := &apiv1.InstanceSet{}
 			if err := r.client.Get(ctx, types.NamespacedName{
@@ -380,15 +400,18 @@ func (r *InferServiceReconciler) updateExistInstanceSets(ctx context.Context, is
 				return err
 			}
 
-			scalingManaged := r.isManagedByScalingController(latestInstanceSet)
 			preservedReplicas := latestInstanceSet.Spec.Replicas
 
 			latestInstanceSet.Spec = instanceSet.Spec
 
-			if scalingManaged {
+			if update.preserveReplicas {
 				latestInstanceSet.Spec.Replicas = preservedReplicas
-				hwlog.RunLog.Infof("InstanceSet %s/%s is managed by scaling controller, preserving current replicas %d",
-					latestInstanceSet.Namespace, latestInstanceSet.Name, *preservedReplicas)
+				preservedValue := "unset"
+				if preservedReplicas != nil {
+					preservedValue = fmt.Sprintf("%d", *preservedReplicas)
+				}
+				hwlog.RunLog.Infof("InstanceSet %s/%s is managed by scaling controller, preserving current replicas %s",
+					latestInstanceSet.Namespace, latestInstanceSet.Name, preservedValue)
 			}
 
 			return r.client.Update(ctx, latestInstanceSet)
@@ -404,20 +427,44 @@ func (r *InferServiceReconciler) updateExistInstanceSets(ctx context.Context, is
 	return nil
 }
 
-func (r *InferServiceReconciler) instanceSetUpdated(instanceSet *apiv1.InstanceSet, role apiv1.InstanceSetSpec) bool {
+func (r *InferServiceReconciler) instanceSetUpdated(instanceSet *apiv1.InstanceSet,
+	role apiv1.InstanceSetSpec, scalingManaged bool) bool {
 	if instanceSet == nil {
 		return false
 	}
 
-	if r.isManagedByScalingController(instanceSet) {
+	if scalingManaged {
 		return r.specChangedExcludingReplicas(instanceSet.Spec, role)
 	}
 
 	return !reflect.DeepEqual(instanceSet.Spec, role)
 }
 
-func (r *InferServiceReconciler) isManagedByScalingController(instanceSet *apiv1.InstanceSet) bool {
-	return instanceSet.Spec.ScalingPolicy != nil && instanceSet.Spec.ScalingPolicy.Type == common.ScalingPolicyTypeHPA
+// listKPAManagedTargets returns InstanceSet names currently claimed by a KPA.
+// InferService must not overwrite replicas written by that autoscaler.
+func (r *InferServiceReconciler) listKPAManagedTargets(ctx context.Context,
+	namespace string) (map[string]struct{}, error) {
+	list := &apiv1.PodAutoscalerList{}
+	if err := r.client.List(ctx, list, client.InNamespace(namespace)); err != nil {
+		return nil, fmt.Errorf("failed to list PodAutoscalers: %w", err)
+	}
+
+	targets := make(map[string]struct{})
+	for i := range list.Items {
+		pa := &list.Items[i]
+		ref := pa.Spec.ScaleTargetRef
+		if pa.DeletionTimestamp == nil && strings.EqualFold(pa.Spec.ScalingStrategy, apiv1.ScalingStrategyKPA) &&
+			ref.APIVersion == apiv1.GroupVersion.String() && ref.Kind == "InstanceSet" && ref.Name != "" {
+			targets[ref.Name] = struct{}{}
+		}
+	}
+	return targets, nil
+}
+
+func (r *InferServiceReconciler) isManagedByScalingController(instanceSet *apiv1.InstanceSet,
+	externallyManaged bool) bool {
+	return externallyManaged || instanceSet != nil && instanceSet.Spec.ScalingPolicy != nil &&
+		instanceSet.Spec.ScalingPolicy.Type == common.ScalingPolicyTypeHPA
 }
 
 func (r *InferServiceReconciler) specChangedExcludingReplicas(currentSpec, desiredSpec apiv1.InstanceSetSpec) bool {

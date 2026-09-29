@@ -222,10 +222,10 @@ func TestCalculateInstanceSetOperations(t *testing.T) {
 
 		convey.Convey("create new", func() {
 			existedMap := make(map[string]*apiv1.InstanceSet)
-			toCreate, toUpdate, toDelete := reconciler.calculateInstanceSetOperations(is, existedMap)
-			convey.So(len(toCreate), convey.ShouldEqual, int2)
-			convey.So(len(toUpdate), convey.ShouldEqual, 0)
-			convey.So(len(toDelete), convey.ShouldEqual, 0)
+			operations := reconciler.calculateInstanceSetOperations(is, existedMap, nil)
+			convey.So(len(operations.toCreate), convey.ShouldEqual, int2)
+			convey.So(len(operations.toUpdate), convey.ShouldEqual, 0)
+			convey.So(len(operations.toDelete), convey.ShouldEqual, 0)
 		})
 
 		convey.Convey("update existing", func() {
@@ -235,10 +235,10 @@ func TestCalculateInstanceSetOperations(t *testing.T) {
 					Spec:       apiv1.InstanceSetSpec{Name: "role1"},
 				},
 			}
-			toCreate, toUpdate, toDelete := reconciler.calculateInstanceSetOperations(is, existedMap)
-			convey.So(len(toCreate), convey.ShouldEqual, 1)
-			convey.So(len(toUpdate), convey.ShouldEqual, 0)
-			convey.So(len(toDelete), convey.ShouldEqual, 0)
+			operations := reconciler.calculateInstanceSetOperations(is, existedMap, nil)
+			convey.So(len(operations.toCreate), convey.ShouldEqual, 1)
+			convey.So(len(operations.toUpdate), convey.ShouldEqual, 0)
+			convey.So(len(operations.toDelete), convey.ShouldEqual, 0)
 		})
 
 		convey.Convey("delete obsolete", func() {
@@ -248,10 +248,27 @@ func TestCalculateInstanceSetOperations(t *testing.T) {
 					Spec:       apiv1.InstanceSetSpec{Name: "role3"},
 				},
 			}
-			toCreate, toUpdate, toDelete := reconciler.calculateInstanceSetOperations(is, existedMap)
-			convey.So(len(toCreate), convey.ShouldEqual, int2)
-			convey.So(len(toUpdate), convey.ShouldEqual, 0)
-			convey.So(len(toDelete), convey.ShouldEqual, 1)
+			operations := reconciler.calculateInstanceSetOperations(is, existedMap, nil)
+			convey.So(len(operations.toCreate), convey.ShouldEqual, int2)
+			convey.So(len(operations.toUpdate), convey.ShouldEqual, 0)
+			convey.So(len(operations.toDelete), convey.ShouldEqual, 1)
+		})
+
+		convey.Convey("externally managed update preserves replicas", func() {
+			priority := int32(1)
+			testInferService := is.DeepCopy()
+			testInferService.Spec.Roles[0].Priority = &priority
+			existingReplicas := int32(5)
+			existedMap := map[string]*apiv1.InstanceSet{
+				"role1": {
+					ObjectMeta: metav1.ObjectMeta{Name: "test-role1"},
+					Spec:       apiv1.InstanceSetSpec{Name: "role1", Replicas: &existingReplicas},
+				},
+			}
+			operations := reconciler.calculateInstanceSetOperations(testInferService, existedMap,
+				map[string]struct{}{"test-role1": {}})
+			convey.So(len(operations.toUpdate), convey.ShouldEqual, 1)
+			convey.So(operations.toUpdate[0].preserveReplicas, convey.ShouldBeTrue)
 		})
 	})
 }
@@ -522,7 +539,8 @@ func TestUpdateExistInstanceSets(t *testing.T) {
 			ist := &apiv1.InstanceSet{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
-			err := reconciler.updateExistInstanceSets(context.Background(), is, []*apiv1.InstanceSet{ist})
+			err := reconciler.updateExistInstanceSets(context.Background(), is,
+				[]instanceSetUpdate{{instanceSet: ist}})
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 
@@ -536,7 +554,8 @@ func TestUpdateExistInstanceSets(t *testing.T) {
 			ist := &apiv1.InstanceSet{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
-			err := reconciler.updateExistInstanceSets(context.Background(), is, []*apiv1.InstanceSet{ist})
+			err := reconciler.updateExistInstanceSets(context.Background(), is,
+				[]instanceSetUpdate{{instanceSet: ist}})
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 
@@ -548,7 +567,8 @@ func TestUpdateExistInstanceSets(t *testing.T) {
 			err := fakeClient.Create(context.Background(), ist)
 			convey.So(err, convey.ShouldBeNil)
 
-			err = reconciler.updateExistInstanceSets(context.Background(), is, []*apiv1.InstanceSet{ist})
+			err = reconciler.updateExistInstanceSets(context.Background(), is,
+				[]instanceSetUpdate{{instanceSet: ist}})
 			convey.So(err, convey.ShouldBeNil)
 		})
 
@@ -575,7 +595,8 @@ func TestUpdateExistInstanceSets(t *testing.T) {
 					Replicas: &desiredReplicas,
 				},
 			}
-			err = reconciler.updateExistInstanceSets(context.Background(), is, []*apiv1.InstanceSet{desiredIst})
+			err = reconciler.updateExistInstanceSets(context.Background(), is,
+				[]instanceSetUpdate{{instanceSet: desiredIst, preserveReplicas: true}})
 			convey.So(err, convey.ShouldBeNil)
 
 			updatedIst := &apiv1.InstanceSet{}
@@ -606,7 +627,8 @@ func TestUpdateExistInstanceSets(t *testing.T) {
 					Replicas: &desiredReplicas,
 				},
 			}
-			err = reconciler.updateExistInstanceSets(context.Background(), is, []*apiv1.InstanceSet{desiredIst})
+			err = reconciler.updateExistInstanceSets(context.Background(), is,
+				[]instanceSetUpdate{{instanceSet: desiredIst}})
 			convey.So(err, convey.ShouldBeNil)
 
 			updatedIst := &apiv1.InstanceSet{}
@@ -772,7 +794,7 @@ func TestManageInstanceSetsDeleteError(t *testing.T) {
 			})
 		defer patch.Reset()
 
-		err := reconciler.manageInstanceSets(context.Background(), is, nil, nil, nil)
+		err := reconciler.manageInstanceSets(context.Background(), is, instanceSetOperations{})
 		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
@@ -795,12 +817,12 @@ func TestManageInstanceSetsUpdateError(t *testing.T) {
 		}
 
 		patch := gomonkey.ApplyPrivateMethod(reconciler, "updateExistInstanceSets",
-			func(_ context.Context, _ *apiv1.InferService, _ []*apiv1.InstanceSet) error {
+			func(_ context.Context, _ *apiv1.InferService, _ []instanceSetUpdate) error {
 				return errors.New("update error")
 			})
 		defer patch.Reset()
 
-		err := reconciler.manageInstanceSets(context.Background(), is, nil, nil, nil)
+		err := reconciler.manageInstanceSets(context.Background(), is, instanceSetOperations{})
 		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
@@ -828,7 +850,7 @@ func TestManageInstanceSetsCreateError(t *testing.T) {
 			})
 		defer patch.Reset()
 
-		err := reconciler.manageInstanceSets(context.Background(), is, nil, nil, nil)
+		err := reconciler.manageInstanceSets(context.Background(), is, instanceSetOperations{})
 		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
@@ -850,7 +872,7 @@ func TestManageInstanceSetsSuccess(t *testing.T) {
 			},
 		}
 
-		err := reconciler.manageInstanceSets(context.Background(), is, nil, nil, nil)
+		err := reconciler.manageInstanceSets(context.Background(), is, instanceSetOperations{})
 		convey.So(err, convey.ShouldBeNil)
 	})
 }
@@ -1234,7 +1256,7 @@ func TestIsManagedByHPA(t *testing.T) {
 					ScalingPolicy: nil,
 				},
 			}
-			convey.So(reconciler.isManagedByScalingController(ist), convey.ShouldBeFalse)
+			convey.So(reconciler.isManagedByScalingController(ist, false), convey.ShouldBeFalse)
 		})
 
 		convey.Convey("HPA type", func() {
@@ -1245,7 +1267,7 @@ func TestIsManagedByHPA(t *testing.T) {
 					},
 				},
 			}
-			convey.So(reconciler.isManagedByScalingController(ist), convey.ShouldBeTrue)
+			convey.So(reconciler.isManagedByScalingController(ist, false), convey.ShouldBeTrue)
 		})
 
 		convey.Convey("non-HPA type", func() {
@@ -1256,7 +1278,7 @@ func TestIsManagedByHPA(t *testing.T) {
 					},
 				},
 			}
-			convey.So(reconciler.isManagedByScalingController(ist), convey.ShouldBeFalse)
+			convey.So(reconciler.isManagedByScalingController(ist, false), convey.ShouldBeFalse)
 		})
 
 		convey.Convey("empty type", func() {
@@ -1267,7 +1289,11 @@ func TestIsManagedByHPA(t *testing.T) {
 					},
 				},
 			}
-			convey.So(reconciler.isManagedByScalingController(ist), convey.ShouldBeFalse)
+			convey.So(reconciler.isManagedByScalingController(ist, false), convey.ShouldBeFalse)
+		})
+
+		convey.Convey("KPA managed", func() {
+			convey.So(reconciler.isManagedByScalingController(nil, true), convey.ShouldBeTrue)
 		})
 	})
 }
@@ -1354,7 +1380,7 @@ func TestInstanceSetUpdated(t *testing.T) {
 
 		convey.Convey("nil instanceSet", func() {
 			role := apiv1.InstanceSetSpec{Name: "role1"}
-			convey.So(reconciler.instanceSetUpdated(nil, role), convey.ShouldBeFalse)
+			convey.So(reconciler.instanceSetUpdated(nil, role, false), convey.ShouldBeFalse)
 		})
 
 		convey.Convey("spec unchanged", func() {
@@ -1369,7 +1395,7 @@ func TestInstanceSetUpdated(t *testing.T) {
 				Name:     "role1",
 				Replicas: &replicas,
 			}
-			convey.So(reconciler.instanceSetUpdated(ist, role), convey.ShouldBeFalse)
+			convey.So(reconciler.instanceSetUpdated(ist, role, false), convey.ShouldBeFalse)
 		})
 
 		convey.Convey("spec changed", func() {
@@ -1384,7 +1410,7 @@ func TestInstanceSetUpdated(t *testing.T) {
 				Name:     "role2",
 				Replicas: &replicas,
 			}
-			convey.So(reconciler.instanceSetUpdated(ist, role), convey.ShouldBeTrue)
+			convey.So(reconciler.instanceSetUpdated(ist, role, false), convey.ShouldBeTrue)
 		})
 
 		convey.Convey("HPA managed only replicas changed", func() {
@@ -1406,7 +1432,7 @@ func TestInstanceSetUpdated(t *testing.T) {
 					Type: common.ScalingPolicyTypeHPA,
 				},
 			}
-			convey.So(reconciler.instanceSetUpdated(ist, role), convey.ShouldBeFalse)
+			convey.So(reconciler.instanceSetUpdated(ist, role, true), convey.ShouldBeFalse)
 		})
 
 		convey.Convey("HPA managed name and replicas changed", func() {
@@ -1425,7 +1451,7 @@ func TestInstanceSetUpdated(t *testing.T) {
 				Name:     "role2",
 				Replicas: &desiredReplicas,
 			}
-			convey.So(reconciler.instanceSetUpdated(ist, role), convey.ShouldBeTrue)
+			convey.So(reconciler.instanceSetUpdated(ist, role, true), convey.ShouldBeTrue)
 		})
 
 		convey.Convey("non-HPA managed replicas changed", func() {
@@ -1441,7 +1467,41 @@ func TestInstanceSetUpdated(t *testing.T) {
 				Name:     "role1",
 				Replicas: &desiredReplicas,
 			}
-			convey.So(reconciler.instanceSetUpdated(ist, role), convey.ShouldBeTrue)
+			convey.So(reconciler.instanceSetUpdated(ist, role, false), convey.ShouldBeTrue)
 		})
+
+		convey.Convey("KPA managed only replicas changed", func() {
+			currentReplicas := int32(5)
+			desiredReplicas := int32(3)
+			ist := &apiv1.InstanceSet{Spec: apiv1.InstanceSetSpec{
+				Name: "role1", Replicas: &currentReplicas,
+			}}
+			role := apiv1.InstanceSetSpec{Name: "role1", Replicas: &desiredReplicas}
+
+			convey.So(reconciler.instanceSetUpdated(ist, role, true), convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestListKPAManagedTargets(t *testing.T) {
+	convey.Convey("valid KPA target is externally managed", t, func() {
+		testScheme := runtime.NewScheme()
+		convey.So(apiv1.AddToScheme(testScheme), convey.ShouldBeNil)
+		pa := &apiv1.PodAutoscaler{
+			ObjectMeta: metav1.ObjectMeta{Name: "test-kpa", Namespace: "default"},
+			Spec: apiv1.PodAutoscalerSpec{
+				ScalingStrategy: apiv1.ScalingStrategyKPA,
+				ScaleTargetRef: apiv1.ScaleTargetRef{
+					APIVersion: apiv1.GroupVersion.String(), Kind: "InstanceSet", Name: "target",
+				},
+			},
+		}
+		fakeClient := fake.NewClientBuilder().WithScheme(testScheme).WithObjects(pa).Build()
+		reconciler := &InferServiceReconciler{client: fakeClient}
+
+		targets, err := reconciler.listKPAManagedTargets(context.Background(), "default")
+		convey.So(err, convey.ShouldBeNil)
+		_, found := targets["target"]
+		convey.So(found, convey.ShouldBeTrue)
 	})
 }
