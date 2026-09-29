@@ -54,7 +54,7 @@ spec:
 >
 >- `hostNetwork`必须配置为`true`。由于业务Pod需要访问宿主机的网络命名空间来使用RDMA设备，因此必须启用hostNetwork模式。
 >- 资源名称格式为`<resourcePrefix>/<resourceName>`，需要在K8s RDMA Shared Dev Plugin的配置文件中定义（详见[配置文件说明](../../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_config_k8s_rdma_shared_dev_plugin)）。
->- 完整任务yaml参考[acjob-8npu.yaml](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/train/with-dpu-training/rdma-shared/acjob-8npu.yaml)。
+>- 完整任务yaml参考[acjob-8npu.yaml](https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/train/with-dpu-training/rdma-shared/acjob-8npu.yaml)。
 
 ### 检查业务Pod状态<a name="ZH-CN_TOPIC_biz_pod_status_check"></a>
 
@@ -156,7 +156,7 @@ spec:
 >- `k8s.v1.cni.cncf.io/networks`注解值为NAD的名称，NAD需按UB Host Device CNI的要求配置（参见[UB Host Device CNI](../../06_api/19_ub_host_device_cni.md)），申请多少个设备就写多少个名称。
 >- 独占模式基于UB类型设备。
 >- 独占模式的开启方法与参数说明请参见[独占模式配置](../../05_developer_guide/00_installation_deployment/00_manual_installation/11_k8s_rdma_shared_dev_plugin.md#section187410285361)。
->- 完整任务yaml参考[独占模式任务](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/train/with-dpu-training/rdma-exclusive)
+>- 完整任务yaml参考[独占模式任务](https://gitcode.com/Ascend/mindcluster-deploy/tree/release%2Fv26.2.0/samples/train/with-dpu-training/rdma-exclusive)
 
 Pod创建成功后，可查看Pod的`k8s.v1.cni.cncf.io/device-status`注解确认分配结果：
 
