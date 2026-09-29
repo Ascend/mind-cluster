@@ -1033,7 +1033,6 @@ func (tp *chip8node8sp) selectNodesFromSuperPods(unReadyVirtualPodIDs []string, 
 		superPods[superPodIndex] = tp.selectNodesFromSuperPod(
 			unReadyVirtualPodIDs[*remainingToSelect-1], superPods[superPodIndex], selectNodesMap)
 		*remainingToSelect--
-		superPodIndex++
 	}
 }
 
