@@ -77,14 +77,14 @@
 |status.replicaStatuses.[ReplicaType].labelSelector.matchExpressions|数组 (array)|-|标签匹配规则（支持In、NotIn、Exists、DoesNotExist等操作符）。|
 |status.replicaStatuses.[ReplicaType].labelSelector.matchLabels|对象 (object)|-|标签匹配的键值对（等价于matchExpressions条件）。|
 |status.startTime|字符串 (string)|date-time|作业开始时间（RFC3339格式，UTC）。|
-|metadata.labels['super-pod-affinity']|字符串 (string)|-|<p>仅支持在Atlas 900 A3 SuperPoD 超节点、Atlas 950 SuperPoD超节点、Atlas 850E超节点、Atlas 850超节点中使用本参数。超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p><ul><li>soft：开启软亲和特性，集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>|
+|metadata.labels['super-pod-affinity']|字符串 (string)|-|<p>仅支持在Atlas 900 A3 SuperPoD超节点、Atlas 950 SuperPoD超节点、Atlas 850E超节点、Atlas 850超节点中使用本参数。超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p><ul><li>soft：开启软亲和特性，集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>|
 |<ul><li>metadata.labels['customJobKey']</li><li>metadata.labels['custom-job-id']</li></ul>|字符串 (string)|-|<p>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。在资源AscendJob的metadata.labels标签中设置。</p><ul><li>customJobKey：用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<p>customJobKey: tid</p><p>tid: "123456"</p></li><li>custom-job-id：用户自定义标签，直接设置作业唯一标识符，如：<p>custom-job-id："123456"</p></li></ul>|
 |metadata.labels['huawei.com/scheduler.softShareDev.aicoreQuota']|字符串 (string)|-|请求的AICore百分比，取值范围为[1, 100]。|
 |metadata.labels['huawei.com/scheduler.softShareDev.hbmQuota']|字符串 (string)|-|<p>请求的高带宽内存量，取值范围为[1, maxHBM]，单位为MB。</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|
 |metadata.labels['huawei.com/scheduler.softShareDev.policy']|字符串 (string)|-|<p>软切分策略，取值包括：</p><ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|
 |metadata.annotations['podAffinity']|字符串 (string)|-|<p>表示逻辑超节点会往具有更多亲和性Pod的物理超节点调度。</p><p>仅支持MindIE CMotor推理任务Atlas 800I A3超节点服务器上使用本参数。</p>|
 |metadata.annotations['sp-fit']|字符串 (string)|-|<p>超节点调度策略。仅支持MindIE CMotor推理任务Atlas 800I A3超节点服务器上使用本参数。</p><ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul>|
-|metadata.labels['duo']|字符串 (string)|-|<p>仅支持推理服务器（插Atlas 300I Duo推理卡）的参数。</p><ul><li>true：使用Atlas300I Duo推理卡。</li><li>false：不使用Atlas300I Duo推理卡。</li></ul>|
+|metadata.labels['duo']|字符串 (string)|-|<p>仅支持推理服务器（插Atlas 300I Duo推理卡）的参数。</p><ul><li>true：使用Atlas 300I Duo推理卡。</li><li>false：不使用Atlas 300I Duo推理卡。</li></ul>|
 |metadata.labels['npu-310-strategy']|字符串 (string)|-|<p>仅支持推理服务器（插Atlas 300I Duo推理卡）的参数。</p><ul><li>card：按推理卡调度，request请求的昇腾AI处理器个数不超过2，使用同一张Atlas 300I Duo推理卡上的昇腾AI处理器。</li><li>chip：按昇腾AI处理器调度，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul>|
 |metadata.labels['distributed']|字符串 (string)|-|<p>是否使用分布式推理。仅支持推理服务器（插Atlas 300I Duo推理卡）的参数。</p><ul><li>true：使用分布式推理。使用chip模式时，必须将任务调度到整张Atlas 300I Duo推理卡。若任务需要的昇腾AI处理器数量为单数时，使用单个昇腾AI处理器的部分，将优先调度到剩余昇腾AI处理器数量为1的Atlas 300I Duo推理卡上。</li><li>false：使用非分布式推理。使用chip模式时，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>无论是否为分布式推理，card模式的调度策略不变。</li><li>当distributed为true时，只支持单机多卡；当distributed为false时，只支持多机多卡。</li><li>当distributed为true时，不支持Deployment任务。</li></ul></div></div>|
 
