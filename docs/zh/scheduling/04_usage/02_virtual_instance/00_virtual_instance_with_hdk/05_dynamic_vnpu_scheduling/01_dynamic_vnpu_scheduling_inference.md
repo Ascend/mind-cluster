@@ -464,7 +464,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
     ```
 
     > [!NOTE]
-    > 对于Atlas A2/A3 系列产品，`ring-controller.atlas` 需设置为 `ascend-910b`，且不需要配置 `vnpu-dvpp` 和 `vnpu-level`（Atlas A2/A3 系列产品不支持dvpp和level配置降级）。
+    > 对于Atlas A2/A3系列产品，`ring-controller.atlas` 需设置为 `ascend-910b`，且不需要配置 `vnpu-dvpp` 和 `vnpu-level`（Atlas A2/A3系列产品不支持dvpp和level配置降级）。
 
     **表 6**  infer-deploy-dynamic.yaml参数说明
 
