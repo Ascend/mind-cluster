@@ -170,7 +170,7 @@ ConfigMap中Data字段的Key为`DpuInfoCfg`，Value为JSON格式的DPU故障信�
 
 容器场景下还需要为业务容器配置NET_ADMIN、SYS_ADMIN和IPC_LOCK权限，配置方式请参见下方YAML示例。
 
-通过hostPath挂载驱动配置文件和动态库的配置示例如下（Pod其余配置请参见[业务Pod使用及挂载资源说明](../04_usage/03_basic_scheduling/07_dpu_scheduling.md#ZH-CN_TOPIC_biz_pod_check_k8s_rdma_shared_dev_plugin)）：
+通过hostPath挂载驱动配置文件和动态库的配置示例如下（Pod其余配置请参见[业务Pod使用及挂载资源说明](../04_usage/03_basic_scheduling/06_dpu_scheduling.md#ZH-CN_TOPIC_biz_pod_check_k8s_rdma_shared_dev_plugin)）：
 
 ```yaml
 apiVersion: v1

@@ -19,12 +19,12 @@
 
 支持以下产品使用故障管理和故障容器的自动恢复功能：
 
-- <term>Atlas 训练系列产品</term>
-- <term>Atlas 推理系列产品</term>
+- <term>Atlas训练系列产品</term>
+- <term>Atlas推理系列产品</term>
 - <term>Atlas A2系列产品</term>
 - <term>Atlas A3系列产品</term>
-- Atlas 850E 超节点
-- Atlas 850 超节点
-- Atlas 650E 服务器
-- Atlas 650 服务器
-- Atlas 350 加速卡
+- Atlas 850E超节点
+- Atlas 850超节点
+- Atlas 650E服务器
+- Atlas 650服务器
+- Atlas 350加速卡

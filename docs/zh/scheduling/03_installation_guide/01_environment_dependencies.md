@@ -6,8 +6,8 @@
 
 - 当前环境的Docker版本需要为18.09及以上版本。
 - 宿主机已安装驱动和固件，详情请参见《CANN 软件安装》中的“[安装NPU驱动和固件](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler)”章节。
-- Atlas 500 A2 智能小站安装Ascend Docker Runtime需要修改Docker配置。执行**vi /etc/sysconfig/docker**命令，将--config-file=""参数删除；并执行**systemctl restart docker**使配置生效。
-- Atlas 500 A2 智能小站预置的MEF服务会对Docker进行安全加固配置，Ascend Docker Runtime不支持在安全加固后的Docker环境下使用。若需要使用Ascend Docker Runtime，请手动卸载MEF服务，参考《MindEdge Framework 用户指南》中的“[卸载MEF Edge](https://gitcode.com/Ascend/MEF/blob/master/docs/zh/user_guide/installation_guide.md#%E5%8D%B8%E8%BD%BDmef-edge)”章节进行操作。
+- Atlas 500 A2智能小站安装Ascend Docker Runtime需要修改Docker配置。执行**vi /etc/sysconfig/docker**命令，将--config-file=""参数删除；并执行**systemctl restart docker**使配置生效。
+- Atlas 500 A2智能小站预置的MEF服务会对Docker进行安全加固配置，Ascend Docker Runtime不支持在安全加固后的Docker环境下使用。若需要使用Ascend Docker Runtime，请手动卸载MEF服务，参考《MindEdge Framework 用户指南》中的“[卸载MEF Edge](https://gitcode.com/Ascend/MEF/blob/master/docs/zh/user_guide/installation_guide.md#%E5%8D%B8%E8%BD%BDmef-edge)”章节进行操作。
 
     >[!NOTE]
     >
@@ -35,7 +35,7 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 >
 >- 请根据业务的实际使用场景，选择安装Docker或者Containerd。
 >- Atlas 服务器产品安装操作系统可以参见[安装指导书](https://support.huawei.com/enterprise/zh/ascend-computing/a800-9000-pid-250702818?category=installation-upgrade&subcategory=software-deployment-guide)（ARM）和[安装指导书](https://support.huawei.com/enterprise/zh/ascend-computing/a800-9010-pid-250702809?category=installation-upgrade&subcategory=software-deployment-guide)（x86\_64），安装指导书并不包含上述所有操作系统，仅供参考。
->- <term>Atlas A2 训练系列产品</term>在虚拟机场景下对操作系统的要求不同，具体的操作系统约束请参见《Atlas A2 中心推理和训练硬件 NPU驱动和固件安装指南》中的“[虚拟机安装与卸载](https://support.huawei.com/enterprise/zh/doc/EDOC1100591781/cb91d9dc)”章节。
+>- <term>Atlas A2训练系列产品</term>在虚拟机场景下对操作系统的要求不同，具体的操作系统约束请参见《Atlas A2 中心推理和训练硬件 NPU驱动和固件安装指南》中的“[虚拟机安装与卸载](https://support.huawei.com/enterprise/zh/doc/EDOC1100591781/cb91d9dc)”章节。
 
 ## 组网要求<a name="ZH-CN_TOPIC_0000002479386452"></a>
 
@@ -61,8 +61,8 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 - 业务面：用于K8s集群业务管理。
 - 存储面：用于从存储节点读取训练用的数据集。因为对带宽有要求，所以建议使用单独的网络平面和网络端口，将训练节点（管理节点或计算节点）和存储节点连通。
 - 参数面：用于分布式训练时训练节点之间的参数交换，可参考以下组网说明。
-    - 《[Ascend Training Solution 组网指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100302398/3a822881)》：提供华为训练计算设备（包括Atlas 800 训练服务器、Atlas 900 PoD（型号 9000）等）搭建组网的相关说明。
-    - 《[Ascend Training Solution 组网指南（Atlas A2训练产品）](https://support.huawei.com/enterprise/zh/doc/EDOC1100570094/549e2956)》：提供华为训练计算设备（包括Atlas 800T A2 训练服务器、Atlas 900 A2 PoD 集群基础单元、集成Atlas 200T A2 Box16 异构子框的训练服务器）搭建组网的相关说明。
+    - 《[Ascend Training Solution 组网指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100302398/3a822881)》：提供华为训练计算设备（包括Atlas 800训练服务器、Atlas 900 PoD（型号：9000）等）搭建组网的相关说明。
+    - 《[Ascend Training Solution 组网指南（Atlas A2训练产品）](https://support.huawei.com/enterprise/zh/doc/EDOC1100570094/549e2956)》：提供华为训练计算设备（包括Atlas 800T A2训练服务器、Atlas 900 A2 PoD集群基础单元、集成Atlas 200T A2 Box16异构子框的训练服务器）搭建组网的相关说明。
 
 ## 软硬件规格要求<a name="ZH-CN_TOPIC_0000002479386424"></a>
 

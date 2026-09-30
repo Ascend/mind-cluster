@@ -8,8 +8,8 @@ MindIE CMotor推理任务中，用户可通过配置Job级别弹性扩缩容功�
 
 ## 支持的产品型号<a name="zh-cn_topic_0000002356673977_section618313391397"></a>
 
-- Atlas 800I A2 推理服务器
-- Atlas 800I A3 超节点服务器
+- Atlas 800I A2推理服务器
+- Atlas 800I A3超节点服务器
 
 ## 原理说明<a name="zh-cn_topic_0000002356673977_section1445672111019"></a>
 

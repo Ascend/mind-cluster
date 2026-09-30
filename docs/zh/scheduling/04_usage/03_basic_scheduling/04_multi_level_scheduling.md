@@ -25,8 +25,8 @@
 
 **支持的产品形态<a name="section169961844182917duoji"></a>**
 
-- Atlas 900 A3 SuperPoD 超节点
-- Atlas 9000 A3 SuperPoD 集群算力系统
+- Atlas 900 A3 SuperPoD超节点
+- Atlas 9000 A3 SuperPoD集群算力系统
 
 **使用流程**
 
@@ -203,7 +203,7 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
     ...
     ```
 
-    Atlas 9000 A3 SuperPoD 集群算力系统可以通过脚本配合xlsx格式的LLD文档生成网络配置csv文件，命令如下：
+    Atlas 9000 A3 SuperPoD集群算力系统可以通过脚本配合xlsx格式的LLD文档生成网络配置csv文件，命令如下：
 
     ```shell
     python3 lld_parser.py --input {LLD文档路径}  --output {生成的csv配置文件路径} --topotree-name default
@@ -394,7 +394,7 @@ root（default拓扑树，groupid=0，共8个节点）
 
 #### 配置YAML<a name="ZH-CN_TOPIC_00000025113471duoji"></a>
 
-本章节指导用户配置多级调度特性的任务YAML。以pytorch_multinodes_acjob_super_pod.yaml为例，在Atlas 9000 A3 SuperPoD 集群算力系统上创建多级调度训练任务，修改示例如下。
+本章节指导用户配置多级调度特性的任务YAML。以pytorch_multinodes_acjob_super_pod.yaml为例，在Atlas 9000 A3 SuperPoD集群算力系统上创建多级调度训练任务，修改示例如下。
 
 ```yaml
 apiVersion: mindxdl.gitee.com/v1

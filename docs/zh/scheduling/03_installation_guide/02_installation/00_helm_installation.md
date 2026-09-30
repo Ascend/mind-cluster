@@ -230,7 +230,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 
    npu-exporter:
      enabled: true                                                         # 安装NPU Exporter组件
-     is310P1usoc: false                                                    # false表示产品不是Atlas 200I SoC A1 核心板
+     is310P1usoc: false                                                    # false表示产品不是Atlas 200I SoC A1核心板
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter" # NPU Exporter组件镜像名，请根据实际情况修改
        # 昇腾镜像仓库镜像tag为"v26.2.0-openeuler24.03"或"v26.2.0-ubuntu22.04"
@@ -279,7 +279,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 
    ascend-device-plugin:
      enabled: true                                                         # 安装Ascend Device Plugin组件
-     is310P1usoc: false                                                    # false表示产品不是Atlas 200I SoC A1 核心板
+     is310P1usoc: false                                                    # false表示产品不是Atlas 200I SoC A1核心板
      volcanoType: true                                                     # true表示使用Volcano进行调度，请根据实际情况修改
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin" # Ascend Device Plugin组件镜像名，请根据实际情况修改
@@ -382,7 +382,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>npu-exporter.is310P1usoc</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为false</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示产品为Atlas 200I SoC A1 核心板。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示产品为Atlas 200I SoC A1核心板。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>DPU Exporter</p></td>
@@ -422,7 +422,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-device-plugin.is310P1usoc</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为false</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示产品为Atlas 200I SoC A1 核心板。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示产品为Atlas 200I SoC A1核心板。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-device-plugin.volcanoType</p></td>

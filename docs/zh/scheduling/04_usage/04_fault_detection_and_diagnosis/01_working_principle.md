@@ -47,8 +47,8 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas A2 训练系列产品|Atlas 800T A2 训练服务器|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
-|Atlas A3 训练系列产品|Atlas 900 A3 SuperPoD 超节点|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A2训练系列产品|Atlas 800T A2训练服务器|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas A3训练系列产品|Atlas 900 A3 SuperPoD超节点|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 
 ### 在线压测原理<a name="section56986212179"></a>
 

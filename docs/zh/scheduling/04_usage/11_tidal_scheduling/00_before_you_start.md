@@ -38,10 +38,10 @@
 
 ## 支持的产品形态<a name="section_products_alternation"></a>
 
-- Atlas 800 训练服务器
-- Atlas 800I A2 推理服务器
-- Atlas 900 A3 SuperPoD 超节点
-- Atlas 9000 A3 SuperPoD 集群算力系统
-- <term>Atlas 推理系列产品</term>
-- A200I A2 Box 异构组件
-- Atlas 350 加速卡
+- Atlas 800训练服务器
+- Atlas 800I A2推理服务器
+- Atlas 900 A3 SuperPoD超节点
+- Atlas 9000 A3 SuperPoD集群算力系统
+- <term>Atlas推理系列产品</term>
+- A200I A2 Box异构组件
+- Atlas 350加速卡

@@ -66,10 +66,10 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 |--|--|--|--|
 |MS Controller|-|controller.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
 |MS Coordinator|-|coordinator.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
-|MindIE Server|<p>Atlas 800I A2 推理服务器</p><p>Atlas 800I A3 超节点服务器</p>|server.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
+|MindIE Server|<p>Atlas 800I A2推理服务器</p><p>Atlas 800I A3超节点服务器</p>|server.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
 
 >[!NOTE]
->若使用的设备为Atlas 800I A3 超节点服务器，请在获取YAML后，参考[以下的示例](#li7390175311918)对部分参数进行修改。
+>若使用的设备为Atlas 800I A3超节点服务器，请在获取YAML后，参考[以下的示例](#li7390175311918)对部分参数进行修改。
 
 **任务YAML说明<a name="zh-cn_topic_0000002362848597_section1870105118125"></a>**
 
@@ -155,7 +155,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
       replicaSpecs:
         Master:</pre>
 
-- <a name="li7390175311918"></a>如果硬件型号为Atlas 800I A3 超节点服务器，**MindIE Server**的任务YAML需要做以下修改：
+- <a name="li7390175311918"></a>如果硬件型号为Atlas 800I A3超节点服务器，**MindIE Server**的任务YAML需要做以下修改：
 
     <pre codetype="yaml">
     apiVersion: mindxdl.gitee.com/v1
@@ -198,9 +198,9 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 
 ### （可选）配置实例级亲和性调度<a name="ZH-CN_TOPIC_0000002511346349"></a>
 
-Atlas 800I A3 超节点服务器场景下，MindCluster集群调度组件支持MindIE CMotor推理任务配置任务级别亲和性调度策略，可实现将MindIE Server实例尽量调度到同一个物理超节点中，充分利用HCCS网络，加速实例间的网络通信。
+Atlas 800I A3超节点服务器场景下，MindCluster集群调度组件支持MindIE CMotor推理任务配置任务级别亲和性调度策略，可实现将MindIE Server实例尽量调度到同一个物理超节点中，充分利用HCCS网络，加速实例间的网络通信。
 
-关于逻辑超节点的亲和性调度规则的详细说明，请参见[灵衢总线设备节点网络说明](../03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点)章节。
+关于逻辑超节点的亲和性调度规则的详细说明，请参见[灵衢总线设备节点网络说明](../03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod超节点)章节。
 
 **图 2**  灵衢总线设备节点网络<a name="zh-cn_topic_0000002362872425_fig1054553210321"></a>
 
@@ -272,14 +272,14 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 |参数|取值|说明|
 |---| ---| ---|
 |framework|<ul><li>mindspore</li><li>pytorch</li></ul>|-|
-|jobID|当前MindIE CMotor推理任务在集群中的唯一识别ID，用户可根据实际情况进行配置。|该参数仅支持在Atlas 800I A2 推理服务器、Atlas 800I A3 超节点服务器上使用。|
-|app|表示当前MindIE CMotor推理任务在Ascend Job任务中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。|<ul><li>acjob的任务YAML同时包含jobID和app这2个字段时，Ascend Operator组件会自动传入环境变量MINDX\_TASK\_ID、APP\_TYPE、MINDX\_SERVER\_IP及MINDX\_SERVER\_DOMAIN，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见[Ascend Operator注入的训练环境变量](../../06_api/13_environment_variable_description.md#ascend-operator环境变量说明)。</li><li>该参数仅支持在Atlas 800I A2 推理服务器、Atlas 800I A3 超节点服务器上使用。</li></ul>|
+|jobID|当前MindIE CMotor推理任务在集群中的唯一识别ID，用户可根据实际情况进行配置。|该参数仅支持在Atlas 800I A2推理服务器、Atlas 800I A3超节点服务器上使用。|
+|app|表示当前MindIE CMotor推理任务在Ascend Job任务中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。|<ul><li>acjob的任务YAML同时包含jobID和app这2个字段时，Ascend Operator组件会自动传入环境变量MINDX\_TASK\_ID、APP\_TYPE、MINDX\_SERVER\_IP及MINDX\_SERVER\_DOMAIN，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见[Ascend Operator注入的训练环境变量](../../06_api/13_environment_variable_description.md#ascend-operator环境变量说明)。</li><li>该参数仅支持在Atlas 800I A2推理服务器、Atlas 800I A3超节点服务器上使用。</li></ul>|
 |mx-consumer-cim|标记该ConfigMap是否会被ClusterD侦听。<p>true：是</p>|-|
-|mind-cluster/scaling-rule|标记扩缩容规则对应的ConfigMap名称。|仅支持MindIE CMotor推理任务在Atlas 800I A2 推理服务器、Atlas 800I A3 超节点服务器上使用本参数。|
-|mind-cluster/group-name|标记扩缩容规则中对应的group名称。|仅支持MindIE CMotor推理任务在Atlas 800I A2 推理服务器、Atlas 800I A3 超节点服务器上使用本参数。|
-|podAffinity|表示逻辑超节点会往具有更多亲和性Pod的物理超节点调度。|仅支持MindIE CMotor推理任务Atlas 800I A3 超节点服务器上使用本参数。|
-|sp-fit|超节点调度策略。<ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul>|仅支持MindIE CMotor推理任务Atlas 800I A3 超节点服务器上使用本参数。|
-|ring-controller.atlas|<ul><li><term>Atlas A2 训练系列产品</term>、A200T A3 Box8 超节点服务器、Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器取值为：ascend-<i>{xxx}</i>b</li><li>Atlas 800 训练服务器、服务器（插Atlas 300T 训练卡）取值为：ascend-910</li></ul>|标识任务使用的芯片的产品类型。需要在ConfigMap和任务task中配置。|
+|mind-cluster/scaling-rule|标记扩缩容规则对应的ConfigMap名称。|仅支持MindIE CMotor推理任务在Atlas 800I A2推理服务器、Atlas 800I A3超节点服务器上使用本参数。|
+|mind-cluster/group-name|标记扩缩容规则中对应的group名称。|仅支持MindIE CMotor推理任务在Atlas 800I A2推理服务器、Atlas 800I A3超节点服务器上使用本参数。|
+|podAffinity|表示逻辑超节点会往具有更多亲和性Pod的物理超节点调度。|仅支持MindIE CMotor推理任务Atlas 800I A3超节点服务器上使用本参数。|
+|sp-fit|超节点调度策略。<ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul>|仅支持MindIE CMotor推理任务Atlas 800I A3超节点服务器上使用本参数。|
+|ring-controller.atlas|<ul><li><term>Atlas A2训练系列产品</term>、A200T A3 Box8超节点服务器、Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器取值为：ascend-<i>{xxx}</i>b</li><li>Atlas 800训练服务器、服务器（插Atlas 300T训练卡）取值为：ascend-910</li></ul>|标识任务使用的芯片的产品类型。需要在ConfigMap和任务task中配置。|
 |schedulerName|默认值为“volcano”，用户需根据自身情况填写|Ascend Operator启用“gang”调度时所选择的调度器。|
 |minAvailable|默认值为任务总副本数|Ascend Operator启用“gang”调度生效，且调度器为Volcano时，任务运行总副本数。|
 |queue|默认值为“default”，用户需根据自身情况填写|Ascend Operator启用“gang”调度生效，且调度器为Volcano时，任务所属队列。|
@@ -288,14 +288,14 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 |（可选）ports|若用户未进行设置，系统默认填写以下参数：<ul><li>name：ascendjob-port</li><li>containerPort：2222</li></ul>|分布式训练集合通讯端口。“containerPort”用户可根据实际情况设置，若未进行设置则采用默认端口2222。|
 |replicas|<ul><li>单机：1</li><li>分布式：N</li></ul>|N为任务副本数。|
 |image|-|训练镜像名称，请根据实际修改。|
-|sp-block|指定逻辑超节点芯片数量。<ul><li>单机时需要和任务请求的芯片数量一致。</li><li>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</li></ul>|指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于任务的亲和性调度。若用户未指定该字段，Volcano调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。<br/>详细说明请参见[灵衢总线设备节点网络说明](../03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点)。<ul><li>仅支持在Atlas 800I A3 超节点服务器中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：[任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败](https://gitcode.com/Ascend/mind-cluster/issues/377)</li></ul>|
-|tor-affinity|<ul><li>large-model-schema：大模型任务或填充任务</li><li>normal-schema：普通任务</li><li>null：不使用交换机亲和性调度</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">用户需要根据任务副本数，选择任务类型。任务副本数小于4为填充任务。任务副本数大于或等于4为大模型任务。普通任务不限制任务副本数。</div></div>|默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。<ul><li>交换机亲和性调度1.0版本支持<term>Atlas 训练系列产品</term>和<term>Atlas A2 训练系列产品</term>；支持PyTorch和MindSpore框架。</li><li>交换机亲和性调度2.0版本支持<term>Atlas A2 训练系列产品</term>；支持PyTorch框架。</li></ul>|
+|sp-block|指定逻辑超节点芯片数量。<ul><li>单机时需要和任务请求的芯片数量一致。</li><li>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</li></ul>|指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于任务的亲和性调度。若用户未指定该字段，Volcano调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。<br/>详细说明请参见[灵衢总线设备节点网络说明](../03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod超节点)。<ul><li>仅支持在Atlas 800I A3超节点服务器中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：[任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败](https://gitcode.com/Ascend/mind-cluster/issues/377)</li></ul>|
+|tor-affinity|<ul><li>large-model-schema：大模型任务或填充任务</li><li>normal-schema：普通任务</li><li>null：不使用交换机亲和性调度</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">用户需要根据任务副本数，选择任务类型。任务副本数小于4为填充任务。任务副本数大于或等于4为大模型任务。普通任务不限制任务副本数。</div></div>|默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。<ul><li>交换机亲和性调度1.0版本支持<term>Atlas训练系列产品</term>和<term>Atlas A2训练系列产品</term>；支持PyTorch和MindSpore框架。</li><li>交换机亲和性调度2.0版本支持<term>Atlas A2训练系列产品</term>；支持PyTorch框架。</li></ul>|
 |pod-rescheduling|<ul><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>|Pod级别重调度，表示任务发生故障后，不会删除所有任务Pod，而是将发生故障的Pod进行删除，重新创建新Pod后进行重调度。<ul><li>重调度模式默认为任务级重调度，若需要开启Pod级别重调度，需要新增该字段。</li><li>Pod级别重调度目前只支持MS Controller和MS Coordinator。</li></ul>|
 |subHealthyStrategy|<ul><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>默认取值为ignore。</li></ul>|节点状态为亚健康（SubHealthy）的节点的处理策略。|
-|huawei.com/Ascend910|Atlas 800 训练服务器（NPU满配）：<ul><li>单机单芯片：1</li><li>单机多芯片：2、4、8</li><li>分布式：1、2、4、8</li></ul>Atlas 800 训练服务器（NPU半配）：<ul><li>单机单芯片：1</li><li>单机多芯片：2、4</li><li>分布式：1、2、4</li></ul>服务器（插Atlas 300T 训练卡）：<ul><li>单机单芯片：1</li><li>单机多芯片：2</li><li>分布式：2</li></ul>Atlas 800T A2 训练服务器和Atlas 900 A2 PoD 集群基础单元：<ul><li>单机单芯片：1</li><li>单机多芯片：2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul>Atlas 200T A2 Box16 异构子框和Atlas 200I A2 Box16 异构子框：<ul><li>单机单芯片：1</li><li>单机多芯片：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式：1、2、3、4、5、6、7、8、10、12、14、16</li></ul>Atlas 900 A3 SuperPoD 超节点<ul><li>单机单芯片：1</li><li>单机多芯片：2、4、6、8、10、12、14、16</li><li>分布式：16</li></ul>|请求的NPU数量，请根据实际修改。|
+|huawei.com/Ascend910|Atlas 800训练服务器（NPU满配）：<ul><li>单机单芯片：1</li><li>单机多芯片：2、4、8</li><li>分布式：1、2、4、8</li></ul>Atlas 800训练服务器（NPU半配）：<ul><li>单机单芯片：1</li><li>单机多芯片：2、4</li><li>分布式：1、2、4</li></ul>服务器（插Atlas 300T训练卡）：<ul><li>单机单芯片：1</li><li>单机多芯片：2</li><li>分布式：2</li></ul>Atlas 800T A2训练服务器和Atlas 900 A2 PoD集群基础单元：<ul><li>单机单芯片：1</li><li>单机多芯片：2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul>Atlas 200T A2 Box16异构子框和Atlas 200I A2 Box16异构子框：<ul><li>单机单芯片：1</li><li>单机多芯片：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式：1、2、3、4、5、6、7、8、10、12、14、16</li></ul>Atlas 900 A3 SuperPoD超节点<ul><li>单机单芯片：1</li><li>单机多芯片：2、4、6、8、10、12、14、16</li><li>分布式：16</li></ul>|请求的NPU数量，请根据实际修改。|
 |(.kind=="AscendJob").spec.replicaSpecs.{Master\|Scheduler\|Worker}.template.spec.containers\[0\].env\[name==ASCEND\_VISIBLE\_DEVICES\].valueFrom.fieldRef.fieldPath| 取值为metadata.annotations\['huawei.com/AscendXXX'\]，其中XXX表示芯片的型号，支持的取值为910，310和310P。取值需要和环境上实际的芯片类型保持一致。|Ascend Docker Runtime会获取该参数值，用于给容器挂载相应类型的NPU。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">该参数只支持使用Volcano调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</div></div>|
 |fault-scheduling|<ul><li>grace：配置任务采用优雅删除模式，并在过程中先优雅删除原Pod，15分钟后若还未成功，使用强制删除原Pod。</li><li>force：配置任务采用强制删除模式，在过程中强制删除原Pod。</li><li>off、无（无fault-scheduling字段）或其他值：该任务不使用断点续训特性，K8s的maxRetry仍然生效。</li></ul>|-|
-|fault-retry-times|<ul><li>0 \< fault-retry-times：处理业务面故障，必须配置业务面无条件重试的次数。<ul><li>使用无条件重试功能需保证训练进程异常时容器异常退出，若容器未异常退出则无法成功重试。</li><li>当前仅Atlas 800T A2 训练服务器和Atlas 900 A2 PoD 集群基础单元支持无条件重试功能。</li><li>进行进程级恢复时，将会触发业务面故障，如需使用进程级恢复，必须配置此参数。</li></ul></li><li>无（无fault-retry-times）或0：该任务不使用无条件重试功能，无法感知业务面故障，vcjob的maxRetry仍然生效。</li></ul>|-|
+|fault-retry-times|<ul><li>0 \< fault-retry-times：处理业务面故障，必须配置业务面无条件重试的次数。<ul><li>使用无条件重试功能需保证训练进程异常时容器异常退出，若容器未异常退出则无法成功重试。</li><li>当前仅Atlas 800T A2训练服务器和Atlas 900 A2 PoD集群基础单元支持无条件重试功能。</li><li>进行进程级恢复时，将会触发业务面故障，如需使用进程级恢复，必须配置此参数。</li></ul></li><li>无（无fault-retry-times）或0：该任务不使用无条件重试功能，无法感知业务面故障，vcjob的maxRetry仍然生效。</li></ul>|-|
 |backoffLimit|<ul><li>0 \< backoffLimit：任务重调度次数。任务故障时，可以重调度的次数，当已经重调度次数与backoffLimit取值相同时，任务将不再进行重调度。<p>同时配置了backoffLimit和fault-retry-times参数时，当已经重调度次数与backoffLimit或fault-retry-times取值有一个相同时，将不再进行重调度。</p></li><li>无（无backoffLimit）或backoffLimit ≤ 0：不限制总重调度次数。若不配置backoffLimit，但是配置了fault-retry-times参数，则使用fault-retry-times的重调度次数。</li></ul>|-|
 |restartPolicy|<ul><li>Never：从不重启</li><li>Always：总是重启</li><li>OnFailure：失败时重启</li><li>ExitCode：根据进程退出码决定是否重启Pod，错误码是1~127时不重启，128~255时重启Pod。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">vcjob类型的训练任务不支持ExitCode。</div></div></li></ul>|容器重启策略。当配置业务面故障无条件重试时，容器重启策略取值必须为“Never”。|
 |terminationGracePeriodSeconds|0 \< terminationGracePeriodSeconds \< **grace-over-time**参数取值|容器收到SIGTERM到被K8s强制停止经历的时间，该时间需要大于0且小于volcano-v<i>{version}</i>.yaml文件中“**grace-over-time**”参数取值，同时还需要保证能够保存CKPT文件，请根据实际情况修改。具体说明请参考K8s官网[容器生命周期回调](https://kubernetes.io/zh/docs/concepts/containers/container-lifecycle-hooks/)。<p>只有当fault-scheduling配置为grace时，该字段才生效；fault-scheduling配置为force时，该字段无效。</p>|
@@ -318,7 +318,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 
 ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json对应ConfigMap的变化，实时生成global-ranktable。global-ranktable中部分字段来自hccl.json文件，关于hccl.json文件的详细说明请参见[hccl.json文件说明](../../06_api/14_hccl.json_file_description.md)。
 
-- <term>Atlas A2 训练系列产品</term>global-ranktable示例如下。
+- <term>Atlas A2训练系列产品</term>global-ranktable示例如下。
 
     ```json
     {
@@ -348,7 +348,7 @@ ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json
     }
     ```
 
-- <term>Atlas A3 训练系列产品</term>global-ranktable示例如下。
+- <term>Atlas A3训练系列产品</term>global-ranktable示例如下。
 
     ```json
     {
@@ -405,7 +405,7 @@ ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json
 |server_ip|Pod IP|
 |device_id|NPU的设备ID|
 |device_ip|NPU的设备IP|
-|super_device_id|<span><term>Atlas A3 训练系列产品</term></span>超节点内NPU的唯一标识|
+|super_device_id|<span><term>Atlas A3训练系列产品</term></span>超节点内NPU的唯一标识|
 |rank_id|NPU对应的训练Rank ID|
 |device_logical_id|NPU的逻辑ID|
 |super_pod_list|超节点列表|
