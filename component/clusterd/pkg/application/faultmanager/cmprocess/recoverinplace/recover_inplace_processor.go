@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/sets"
+
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
@@ -17,7 +19,6 @@ import (
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
-	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 var RecoverInplaceProcessor *recoverInplaceFaultProcessor
@@ -246,7 +247,7 @@ func (processor *recoverInplaceFaultProcessor) getFaultDevices(
 	}
 	for _, deviceFaults := range deviceInfo.FaultDeviceList {
 		for _, fault := range deviceFaults {
-			if faultdomain.IsL1Fault(fault.FaultLevel) {
+			if faultdomain.IsL1Fault(fault.FaultLevel) || fault.FaultLevel == constant.PreSeparateNPU {
 				continue
 			}
 			errorMsg := fmt.Sprintf("getFaultDevices cannot find fault time for device %s of node %s",
