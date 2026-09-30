@@ -4,7 +4,7 @@
 - Node Collector以DaemonSet方式部署在每个计算节点，负责从宿主机采集任务日志并在本地完成日志清洗。
 - Node Collector的部署通过节点标签选择计算节点，仅会调度到带有 `workerselector=dls-worker-node` 标签的节点上。节点标签的创建请参见[创建节点标签](./01_preparing_for_installation.md#创建节点标签)。
 - Node Collector和Agent Core共用同一个镜像ascend-clusterops-agent，镜像的获取（制作或拉取）请参见[准备镜像](./01_preparing_for_installation.md#准备镜像)。
-- 部署Node Collector前，需先完成Agent Core的部署，详细说明请参见 [Agent Core](./15_agent_core.md)。
+- 部署Node Collector前，需先完成[安装前准备](./01_preparing_for_installation.md)中的创建用户、创建日志目录和创建命名空间步骤。
 
 ## 操作步骤<a name="section15023132772914"></a>
 

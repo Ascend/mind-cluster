@@ -406,14 +406,14 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 **注意事项**
 
-- Kubectl Plugin为客户端命令行工具，通过安装脚本（install.sh）安装到用户机的 /usr/local/bin目录，不以YAML方式部署在K8s集群中，升级时使用新版本软件包重新安装插件文件即可，无需操作K8s集群资源。
+- Kubectl Plugin为客户端命令行工具，通过安装脚本（install.sh）安装到用户机的 /usr/local/bin目录，不以YAML方式部署在K8s集群中，升级时使用新版本软件包重新安装插件即可，无需操作K8s集群资源。
 - Kubectl Plugin升级不影响集群中已部署的Agent Core和Node Collector服务。
 
 **升级步骤<a name="section2097025262414"></a>**
 
 1. 参考[获取软件包](00_manual_installation/00_obtaining_software_packages.md)章节，下载新版本Ascend ClusterOps Agent软件包并解压。
 
-2. <a name="li2097025262414"></a>以root用户登录用户机，进入新版本软件包解压目录的kubectl-plugin目录，执行以下命令重新安装插件。
+2. <a name="li2097025262414"></a>以root用户登录用户机，进入新版本软件包解压目录，执行以下命令重新安装插件。
 
     ```shell
     cd kubectl-plugin
@@ -464,8 +464,8 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 本章节仅指导用户在同一个版本内对容器镜像中二进制文件版本进行升级，升级过程中不会修改权限及启动参数。如需了解关于升级方式的更详细说明，请参见[升级说明](#升级说明)。
 
-- 如需升级Volcano、ClusterD、Ascend Operator和Infer Operator组件的镜像，可参考[升级管理节点组件](#section1292111716589)。
-- 如需升级NPU Exporter、DPU Exporter、Ascend Device Plugin和NodeD组件镜像，可参考[升级计算节点组件](#section231311416588)。
+- 如需升级Volcano、ClusterD、Ascend Operator、Infer Operator和Agent Core组件的镜像，可参考[升级管理节点组件](#section1292111716589)。
+- 如需升级NPU Exporter、DPU Exporter、Ascend Device Plugin、NodeD和Node Collector组件镜像，可参考[升级计算节点组件](#section231311416588)。
 - TaskD暂不支持此种升级方式。
 
 **升级管理节点组件<a name="section1292111716589"></a>**
