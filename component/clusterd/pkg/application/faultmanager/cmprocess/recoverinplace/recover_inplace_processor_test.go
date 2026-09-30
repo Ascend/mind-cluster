@@ -332,4 +332,35 @@ func TestGetFaultDevices(t *testing.T) {
 		faultCodeLevel := map[string]string{faultCode: constant.RestartRequest, faultCode1: constant.SeparateNPU}
 		assert.Equal(t, faultCodeLevel, res.DeviceInfo[deviceName].FaultDetail.FaultCodeLevel)
 	})
+	t.Run("getFaultDevices, exclude PreSeparateNPU", func(t *testing.T) {
+		nodeName := "nodeName"
+		deviceName := "Ascend910-1"
+		currentTime := time.Now().Unix()
+		oldTime := currentTime - 10000
+		faultCode := "restartRequestCode"
+		preSepCode := "preSeparateNpuCode"
+		deviceInfo := &constant.AdvanceDeviceFaultCm{
+			FaultDeviceList: map[string][]constant.DeviceFault{
+				deviceName: {
+					{
+						FaultLevel: constant.RestartRequest, FaultCode: faultCode, NPUName: deviceName,
+						FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+							faultCode: {FaultTime: currentTime, FaultLevel: constant.RestartRequest},
+						},
+					},
+					{
+						FaultLevel: constant.PreSeparateNPU, FaultCode: preSepCode, NPUName: deviceName,
+						FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+							preSepCode: {FaultTime: oldTime, FaultLevel: constant.PreSeparateNPU},
+						},
+					},
+				},
+			},
+		}
+		res := RecoverInplaceProcessor.getFaultDevices(nodeName, deviceInfo)
+		assert.NotEqual(t, len(res.DeviceInfo), 0)
+		faultDetail := res.DeviceInfo[deviceName].FaultDetail
+		assert.Equal(t, map[string]string{faultCode: constant.RestartRequest}, faultDetail.FaultCodeLevel)
+		assert.Equal(t, currentTime, faultDetail.FaultTime)
+	})
 }
