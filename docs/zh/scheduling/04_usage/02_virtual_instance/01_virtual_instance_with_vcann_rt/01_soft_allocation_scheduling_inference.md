@@ -243,7 +243,7 @@
 主机侧通过`npu-smi`工具开启容器共享模式，可支持多个容器挂载同一设备。若设备未开启容器共享模式，则只能挂载到单个容器。若配合MindCluster使用，要求整节点开启容器共享模式。
 
 ```shell
-# Atlas A2/A3 系列产品：设置容器共享模式
+# Atlas A2/A3系列产品：设置容器共享模式
 npu-smi set -t device-share -i ${id} -c ${chip_id} -d ${value}
 # Ascend 950PR系列产品：设置容器共享模式
 npu-smi set -t device-share -i ${id} -d ${value}
