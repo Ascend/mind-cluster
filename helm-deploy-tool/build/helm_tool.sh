@@ -173,6 +173,7 @@ component_ascend-for-volcano() {
     add_helm_meta configmap volcano-controller-configmap volcano-system
     add_helm_meta svc volcano-controllers-service volcano-system
     add_helm_meta_crds crd hypernodes.topology.volcano.sh
+    add_helm_meta_crds crd colocationconfigurations.config.volcano.sh
 }
 
 component_k8s-rdma-shared-dev-plugin() {
