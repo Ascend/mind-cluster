@@ -292,7 +292,7 @@
     >ubuntu     Ready    worker          23h   v1.17.3
     >```
 
-   - 以Atlas 800 训练服务器为例，回显示例如下：
+   - 以Atlas 800训练服务器为例，回显示例如下：
 
        ```ColdFusion
        root@ubuntu:~# kubectl describe node ubuntu

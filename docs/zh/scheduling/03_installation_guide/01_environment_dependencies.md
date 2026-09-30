@@ -61,7 +61,7 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 - 业务面：用于K8s集群业务管理。
 - 存储面：用于从存储节点读取训练用的数据集。因为对带宽有要求，所以建议使用单独的网络平面和网络端口，将训练节点（管理节点或计算节点）和存储节点连通。
 - 参数面：用于分布式训练时训练节点之间的参数交换，可参考以下组网说明。
-    - 《[Ascend Training Solution 组网指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100302398/3a822881)》：提供华为训练计算设备（包括Atlas 800 训练服务器、Atlas 900 PoD（型号：9000）等）搭建组网的相关说明。
+    - 《[Ascend Training Solution 组网指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100302398/3a822881)》：提供华为训练计算设备（包括Atlas 800训练服务器、Atlas 900 PoD（型号：9000）等）搭建组网的相关说明。
     - 《[Ascend Training Solution 组网指南（Atlas A2训练产品）](https://support.huawei.com/enterprise/zh/doc/EDOC1100570094/549e2956)》：提供华为训练计算设备（包括Atlas 800T A2训练服务器、Atlas 900 A2 PoD集群基础单元、集成Atlas 200T A2 Box16异构子框的训练服务器）搭建组网的相关说明。
 
 ## 软硬件规格要求<a name="ZH-CN_TOPIC_0000002479386424"></a>

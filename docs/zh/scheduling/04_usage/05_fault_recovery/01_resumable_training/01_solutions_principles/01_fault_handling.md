@@ -87,7 +87,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas训练系列产品|<ul><li>Atlas 800训练服务器（型号：9000）</li><li>Atlas 800训练服务器（型号：9010）</li></ul>若Atlas 800 训练服务器的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见《Atlas 800 训练服务器 iBMC用户指南（型号 9000）》中的“[查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas训练系列产品|<ul><li>Atlas 800训练服务器（型号：9000）</li><li>Atlas 800训练服务器（型号：9010）</li></ul>若Atlas 800训练服务器的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见《Atlas 800训练服务器 iBMC用户指南（型号 9000）》中的“[查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 |Atlas A2训练系列产品|<ul><li>Atlas 800T A2训练服务器</li><li>Atlas 200T A2 Box16异构子框</li><li>Atlas 900 A2 PoD集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 |Atlas A3训练系列产品|<ul><li>Atlas 800T A3超节点服务器</li><li>Atlas 900 A3 SuperPoD超节点</li><li>Atlas 9000 A3 SuperPoD集群算力系统</li><li>A200T A3 Box8超节点服务器</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 |Ascend 950PR&950DT系列产品|<p>Ascend 950PR系列产品：<ul><li>Atlas 850超节点</li><li>Atlas 650服务器</li></ul></p><p>Ascend 950DT系列产品：<ul><li>Atlas 850E超节点</li><li>Atlas 650E服务器</li><li>Atlas 950 SuperPoD超节点</li></ul></p>|PyTorch|
@@ -128,7 +128,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 |产品类型|硬件形态|训练框架|
 |--|--|--|
-|Atlas训练系列产品|<ul><li>Atlas 800训练服务器（型号：9000）</li><li>Atlas 800训练服务器（型号：9010）</li></ul>若Atlas 800 训练服务器的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见《Atlas 800 训练服务器 iBMC用户指南（型号 9000）》中的“[查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas训练系列产品|<ul><li>Atlas 800训练服务器（型号：9000）</li><li>Atlas 800训练服务器（型号：9010）</li></ul>若Atlas 800训练服务器的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见《Atlas 800训练服务器 iBMC用户指南（型号 9000）》中的“[查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 |Atlas A2训练系列产品|<ul><li>Atlas 800T A2训练服务器</li><li>Atlas 200T A2 Box16异构子框</li><li>Atlas 900 A2 PoD集群基础单元</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 |Atlas A3训练系列产品|<ul><li>Atlas 800T A3超节点服务器</li><li>Atlas 900 A3 SuperPoD超节点</li><li>Atlas 9000 A3 SuperPoD集群算力系统</li><li>A200T A3 Box8超节点服务器</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 |Ascend 950PR&950DT系列产品|<p>Ascend 950PR系列产品：<ul><li>Atlas 850超节点</li><li>Atlas 650服务器</li></ul></p><p>Ascend 950DT系列产品：<ul><li>Atlas 850E超节点</li><li>Atlas 650E服务器</li><li>Atlas 950 SuperPoD超节点</li></ul></p>|PyTorch|

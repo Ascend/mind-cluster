@@ -64,7 +64,7 @@
 - [Calico网络插件Not Ready](https://gitcode.com/Ascend/mind-cluster/issues/380)
 - [训练进程报错退出，Pod状态非Error无法触发业务面重调度](https://gitcode.com/Ascend/mind-cluster/issues/381)
 - [Node信息中Allocatable.huawei.com/Ascend910对应的芯片数量为8，下发8卡任务，任务处于Pending状态](https://gitcode.com/Ascend/mind-cluster/issues/382)
-- [在Atlas 800 训练服务器上跑训练任务卡住，驱动日志报错：int\_process\_hwts\_sdma\_timeout](https://gitcode.com/Ascend/mind-cluster/issues/383)
+- [在Atlas 800训练服务器上跑训练任务卡住，驱动日志报错：int\_process\_hwts\_sdma\_timeout](https://gitcode.com/Ascend/mind-cluster/issues/383)
 - [同一个任务的不同Pod配置不同的nodeSelector导致重调度失败](https://gitcode.com/Ascend/mind-cluster/issues/385)
 - [gRPC客户端与ClusterD连接时报错"too\_many\_pings"](https://gitcode.com/Ascend/mind-cluster/issues/386)
 - [MindSpore断点续训场景报错重复注册](https://gitcode.com/Ascend/mind-cluster/issues/387)

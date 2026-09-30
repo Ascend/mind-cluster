@@ -38,7 +38,7 @@
 
 ## 支持的产品形态<a name="section_products_alternation"></a>
 
-- Atlas 800 训练服务器
+- Atlas 800训练服务器
 - Atlas 800I A2推理服务器
 - Atlas 900 A3 SuperPoD超节点
 - Atlas 9000 A3 SuperPoD集群算力系统

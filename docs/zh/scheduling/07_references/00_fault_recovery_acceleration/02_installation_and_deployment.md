@@ -11,7 +11,7 @@
 ### 约束限制
 
 - 当前基于MindIO+MindSpeed-llm的高可用特性提供高可用示例以帮助用户快速体验该特性，当前仅完成了基础模型和基础训练特性的适配，暂未进行全量训练特性兼容，如用户对某个训练特性存在兼容需求，请在社区提出issue后我们将快速完成适配
-- MindIO提供TTP、UCE和ARF三种特性，其中MindIO TTP支持在Atlas 800 训练服务器（型号：9000）上使用，MindIO UCE和MindIO ARF不支持该型号设备。
+- MindIO提供TTP、UCE和ARF三种特性，其中MindIO TTP支持在Atlas 800训练服务器（型号：9000）上使用，MindIO UCE和MindIO ARF不支持该型号设备。
 - 众多大模型框架都支持ZeRO（Zero Redundancy Optimizer，零冗余优化器）来减少对显存的使用，当前MindIO TFT仅支持开启ZeRO-1，支持DP（Data Parallelism，数据并行） Size为偶数，同时使用不同的功能对DP Size有不同的限制：
     - MindIO TTP功能
         - 为了保证故障发生后，有完整的优化器状态数据，要求DP Size能被副本数整除。
@@ -70,8 +70,8 @@
 
 |类型|配置参考|
 |--|--|
-|服务器（单机场景）|<ul><li>Atlas 800 训练服务器（型号：9000）：仅支持MindIO TTP功能</li><li>Atlas 800T A2训练服务器</li><li>Atlas 900 A3 SuperPoD超节点</li></ul>|
-|服务器（集群场景）|计算节点：<ul><li>Atlas 800 训练服务器（型号：9000）：仅支持MindIO TTP功能</li><li>Atlas 800T A2训练服务器</li><li>Atlas 900 A3 SuperPoD超节点</li></ul> 存储节点：存储服务器|
+|服务器（单机场景）|<ul><li>Atlas 800训练服务器（型号：9000）：仅支持MindIO TTP功能</li><li>Atlas 800T A2训练服务器</li><li>Atlas 900 A3 SuperPoD超节点</li></ul>|
+|服务器（集群场景）|计算节点：<ul><li>Atlas 800训练服务器（型号：9000）：仅支持MindIO TTP功能</li><li>Atlas 800T A2训练服务器</li><li>Atlas 900 A3 SuperPoD超节点</li></ul> 存储节点：存储服务器|
 |网络|<ul><li>带外管理（BMC）：≥1Gbit/s</li><li>带内管理（SSH）：≥1Gbit/s</li><li>业务面：≥10Gbit/s</li><li>存储面：≥25Gbit/s</li><li>参数面：100Gbit/s</li></ul>|
 
 **软件环境**
