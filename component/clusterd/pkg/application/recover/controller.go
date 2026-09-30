@@ -26,7 +26,7 @@ import (
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/domain/superpod"
-	"clusterd/pkg/interface/grpc/recover"
+	pb "clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -2132,6 +2132,7 @@ func (ctl *EventController) updateRestartProcessOrPodInfo(podRankFaultList []*co
 		}
 		podRankFault.DoRestartInPlace = podRankFault.DoRestartInPlace && fault.DoRestartInPlace
 		podRankFault.FaultType = podRankFault.FaultType | fault.FaultType
+		hwlog.RunLog.Debugf("jobId=%s, update pod rank fault %v", ctl.jobInfo.JobId, podRankFault)
 	}
 }
 
