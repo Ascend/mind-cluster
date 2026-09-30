@@ -320,7 +320,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
 >[!NOTE]
 >
 >- 如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载NPU芯片设备。用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
->- 因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
+>- 因为Atlas 200I SoC A1核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
 
 **操作步骤<a name="zh-cn_topic_0000001558853680_zh-cn_topic_0000001609074213_section14665181617334"></a>**
 
@@ -344,7 +344,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/inference/volcano/pytorch_acjob_infer_910b_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 加速卡</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350加速卡</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>pytorch_acjob_infer_950_softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/inference/volcano/pytorch_acjob_infer_950_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
@@ -355,7 +355,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/inference/volcano/infer-vcjob-910-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 加速卡</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350加速卡</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-vcjob-950-softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/inference/volcano/infer-vcjob-950-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
@@ -366,7 +366,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/inference/volcano/infer-deploy-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 加速卡</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350加速卡</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-deploy-950-softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/inference/volcano/infer-deploy-950-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
@@ -374,7 +374,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     </table>
 2. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
 
-    在Atlas 800I A2 推理服务器上，以pytorch_acjob_infer_910b_softsharedev.yaml为例，申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。YAML配置请参考[YAML配置说明](../../../06_api/15_yaml_configuration.md#yaml_configuration)。
+    在Atlas 800I A2推理服务器上，以pytorch_acjob_infer_910b_softsharedev.yaml为例，申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。YAML配置请参考[YAML配置说明](../../../06_api/15_yaml_configuration.md#yaml_configuration)。
 
     <pre codetype="yaml">
     apiVersion: mindxdl.gitee.com/v1

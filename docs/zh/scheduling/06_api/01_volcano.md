@@ -32,7 +32,7 @@
 |fault-retry-times|任务发生业务面故障可以重调度的次数|0-100|Volcano、Ascend Operator|
 |tor-affinity|交换机亲和性策略|<ul><li>normal-schema</li><li>large-model-schema</li><li>null</li></ul>|Volcano|
 |inferserviceid|推理服务亲和性调度标识，表征当前任务属于哪个推理服务。取值相同的任务会被优先调度至同一框或同一超节点。|字符串，由用户自定义或Infer Operator自动注入|Volcano、Infer Operator|
-|npu-310-strategy|标记推理服务器（插Atlas 300I 推理卡）调度策略|<ul><li>card</li><li>chip</li></ul>|Volcano|
+|npu-310-strategy|标记推理服务器（插Atlas 300I推理卡）调度策略|<ul><li>card</li><li>chip</li></ul>|Volcano|
 |pod-rescheduling|是否启用Pod级别重调度。|<ul><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>|Volcano|
 |process-recover-enable|是否启用进程级别重调度。|<ul><li>on：开启进程级别重调度</li><li>其他值或不使用该字段：关闭进程级别重调度</li></ul>|Volcano|
 |subHealthyStrategy|亚健康处理策略。|<ul><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>hotSwitch：执行亚健康热切，拉起备份Pod后，暂停训练任务，并使用新节点重新拉起训练。</li></ul>|Volcano|
@@ -177,20 +177,20 @@
 
 |配置|说明|
 |--|--|
-|chip4-node8|1个节点8张芯片，每4个芯片形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的整模块场景/Atlas 350 加速卡共8张卡，每4张卡通过UB扣板连接。|
-|chip1-node2|1个节点2张芯片。例如，Atlas 300T 训练卡的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡。|
-|chip4-node4|1个节点4张芯片，形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的半配场景。|
-|chip8-node8|1个节点8张卡，8张卡都在1个互联环上。例如，Atlas 800T A2 训练服务器/Atlas 850E 超节点/Atlas 850 超节点/Atlas 650E 服务器/Atlas 650 服务器。|
-|chip8-node16|1个节点16张卡，每8张卡在1个互联环上。例如，Atlas 200T A2 Box16 异构子框。|
+|chip4-node8|1个节点8张芯片，每4个芯片形成1个互联环。例如，Atlas 800训练服务器（型号：9000）/Atlas 800训练服务器（型号：9010）芯片的整模块场景/Atlas 350加速卡共8张卡，每4张卡通过UB扣板连接。|
+|chip1-node2|1个节点2张芯片。例如，Atlas 300T训练卡的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡。|
+|chip4-node4|1个节点4张芯片，形成1个互联环。例如，Atlas 800训练服务器（型号：9000）/Atlas 800训练服务器（型号：9010）芯片的半配场景。|
+|chip8-node8|1个节点8张卡，8张卡都在1个互联环上。例如，Atlas 800T A2训练服务器/Atlas 850E超节点/Atlas 850超节点/Atlas 650E服务器/Atlas 650服务器。|
+|chip8-node16|1个节点16张卡，每8张卡在1个互联环上。例如，Atlas 200T A2 Box16异构子框。|
 |chip2-node8|1个节点8张卡，每2张卡在1个互联环上。|
-|chip2-node16|1个节点16张卡，每2张卡在1个互联环上。例如，Atlas 800T A3 超节点服务器。|
-|chip2-node8-sp|1个节点8张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 9000 A3 SuperPoD 集群算力系统。|
-|chip2-node16-sp|1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 900 A3 SuperPoD 超节点。|
-|chip4-node16|1个节点16张卡，每4张卡都在1个互联环上。例如，Atlas 350 加速卡共16张卡，每4张卡通过UB扣板连接。|
-|chip1-node8|1个节点8张卡，每张卡之间无互联。例如，Atlas 350 加速卡共8张卡，每张卡之间无互联。|
-|chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350 加速卡共16张卡，每张卡之间无互联。|
-|chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。例如，Atlas 850E 超节点/Atlas 850 超节点。|
-|chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。例如，Atlas 950 SuperPoD 超节点。|
+|chip2-node16|1个节点16张卡，每2张卡在1个互联环上。例如，Atlas 800T A3超节点服务器。|
+|chip2-node8-sp|1个节点8张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 9000 A3 SuperPoD集群算力系统。|
+|chip2-node16-sp|1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 900 A3 SuperPoD超节点。|
+|chip4-node16|1个节点16张卡，每4张卡都在1个互联环上。例如，Atlas 350加速卡共16张卡，每4张卡通过UB扣板连接。|
+|chip1-node8|1个节点8张卡，每张卡之间无互联。例如，Atlas 350加速卡共8张卡，每张卡之间无互联。|
+|chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350加速卡共16张卡，每张卡之间无互联。|
+|chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。例如，Atlas 850E超节点/Atlas 850超节点。|
+|chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。例如，Atlas 950 SuperPoD超节点。|
 |chip8-node16-sp|1个节点16张卡，每8张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 950 SuperPoD Flex。|
 |chip1-softShareDev|软切分虚拟化专用调度策略。|
 |multilevel|多级调度场景使用，多级调度的详细使用方法请参见[多级调度](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md)。|
@@ -248,7 +248,7 @@
 </tr>
 <tr id="row1136411501898"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p0364135010913"><a name="p0364135010913"></a><a name="p0364135010913"></a>npu-310-strategy</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p636425010918"><a name="p636425010918"></a><a name="p636425010918"></a>标记推理服务器（插<span id="ph1436410501390"><a name="ph1436410501390"></a><a name="ph1436410501390"></a>Atlas 300I 推理卡</span>）调度策略</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p636425010918"><a name="p636425010918"></a><a name="p636425010918"></a>标记推理服务器（插<span id="ph1436410501390"><a name="ph1436410501390"></a><a name="ph1436410501390"></a>Atlas 300I推理卡</span>）调度策略</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul73644501797"></a><a name="ul73644501797"></a><ul id="ul73644501797"><li>card</li><li>chip</li></ul>
 </td>

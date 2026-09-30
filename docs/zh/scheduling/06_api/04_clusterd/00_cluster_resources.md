@@ -156,7 +156,7 @@ ClusterD启动后，会创建如下ConfigMap：
 
 ## fault-job-info<a name="section1548342116513"></a>
 
-该ConfigMap位于用户创建的cluster-system命名空间下。用于展示集群中需要强制释放通信资源的故障任务信息。仅在Atlas 900 A3 SuperPoD 超节点进行进程级别重调度时生效。
+该ConfigMap位于用户创建的cluster-system命名空间下。用于展示集群中需要强制释放通信资源的故障任务信息。仅在Atlas 900 A3 SuperPoD超节点进行进程级别重调度时生效。
 
 **表 10**  fault-job-info
 

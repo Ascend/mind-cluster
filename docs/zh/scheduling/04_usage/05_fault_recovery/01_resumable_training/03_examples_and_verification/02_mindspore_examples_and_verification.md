@@ -57,7 +57,7 @@
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3-mindspore "><p id="zh-cn_topic_0000002003180012_p439011371714"><a name="zh-cn_topic_0000002003180012_p439011371714"></a>由于通过pip安装MindSpore时，可能出现依赖的组件安装报错，故可以先安装依赖。</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4-mindspore "><p id="zh-cn_topic_0000002003180012_p6390121315177"><a name="zh-cn_topic_0000002003180012_p6390121315177"></a>wget https://gitcode.com/mindspore/mindspore/raw/r2.4.1/requirements.txt</p>
-<div class="note" id="zh-cn_topic_0000002003180012_note14449193224617"><a name="zh-cn_topic_0000002003180012_note14449193224617"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002003180012_p15449133274617"><a name="zh-cn_topic_0000002003180012_p15449133274617"></a>MindSpore软件包与<span id="zh-cn_topic_0000002003180012_ph327965117217"><a name="zh-cn_topic_0000002003180012_ph327965117217"></a>Atlas 训练系列产品</span>需配套使用，请参见MindSpore<a href="https://www.mindspore.cn/install" target="_blank" rel="noopener noreferrer">安装指南</a>查看对应关系。</p>
+<div class="note" id="zh-cn_topic_0000002003180012_note14449193224617"><a name="zh-cn_topic_0000002003180012_note14449193224617"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002003180012_p15449133274617"><a name="zh-cn_topic_0000002003180012_p15449133274617"></a>MindSpore软件包与<span id="zh-cn_topic_0000002003180012_ph327965117217"><a name="zh-cn_topic_0000002003180012_ph327965117217"></a>Atlas训练系列产品</span>需配套使用，请参见MindSpore<a href="https://www.mindspore.cn/install" target="_blank" rel="noopener noreferrer">安装指南</a>查看对应关系。</p>
 </div></div>
 </td>
 </tr>
@@ -164,7 +164,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
 企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
 
 >[!NOTE]
->本章节以单台Atlas 800T A2 训练服务器、Ubuntu 20.04、配套Python 3.10为例来介绍制作镜像的详细过程，使用过程中需根据实际情况修改相关步骤。
+>本章节以单台Atlas 800T A2训练服务器、Ubuntu 20.04、配套Python 3.10为例来介绍制作镜像的详细过程，使用过程中需根据实际情况修改相关步骤。
 
 **操作步骤<a name="zh-cn_topic_0000002003180012_section614453171018"></a>**
 
@@ -353,7 +353,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
 >
 >- 若使用TaskD组件且训练容器使用Host网络，则先通过`sysctl net.ipv4.ip_local_reserved_ports`查询当前预留端口配置后，通过`sysctl -w net.ipv4.ip_local_reserved_ports="xxx,9601,9602"`新增预留端口9601、9602（其中xxx指的是前面查出来已配置的端口，若无则省略）。
 
-训练代码与数据集准备，可以参考[MindFormers文档](https://gitcode.com/mindspore/mindformers/tree/master/configs/qwen3)。下面以两台Atlas 900 A3 SuperPoD 超节点为例，说明具体操作步骤。
+训练代码与数据集准备，可以参考[MindFormers文档](https://gitcode.com/mindspore/mindformers/tree/master/configs/qwen3)。下面以两台Atlas 900 A3 SuperPoD超节点为例，说明具体操作步骤。
 
 1. 准备代码。
 
@@ -578,42 +578,13 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
 **表 2**  训练任务YAML示例
 
 <a name="table350244433714-mindspore"></a>
-<table><thead align="left"><tr id="row135031644183710-mindspore"><th class="cellrowborder" valign="top" width="15.393078615723146%" id="mcps1.2.8.1.1-mindspore"><p id="p8503244173715-mindspore"><a name="p8503244173715-mindspore"></a>任务类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="16.173234646929384%" id="mcps1.2.8.1.2-mindspore"><p id="p145038448375-mindspore"><a name="p145038448375-mindspore"></a>硬件型号</p>
-</th>
-<th class="cellrowborder" valign="top" width="8.521704340868173%" id="mcps1.2.8.1.3-mindspore"><p id="p919210345266-mindspore"><a name="p919210345266-mindspore"></a>训练框架</p>
-</th>
-<th class="cellrowborder" valign="top" width="13.672734546909378%" id="mcps1.2.8.1.4-mindspore"><p id="p5503544193713-mindspore"><a name="p5503544193713-mindspore"></a>模型</p>
-</th>
-<th class="cellrowborder" valign="top" width="15.393078615723146%" id="mcps1.2.8.1.5-mindspore"><p id="p19672186404-mindspore"><a name="p19672186404-mindspore"></a>YAML文件名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="15.433086617323463%" id="mcps1.2.8.1.6-mindspore"><p id="p1096741894013-mindspore"><a name="p1096741894013-mindspore"></a>获取链接</p>
-</th>
-<th class="cellrowborder" valign="top" width="15.413082616523303%" id="mcps1.2.8.1.7-mindspore"><p id="p2967518174012-mindspore"><a name="p2967518174012-mindspore"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row91607510384-mindspore"><td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.1-mindspore "><p id="p89371529174019"><a name="p89371529174019"></a>Ascend Job</p>
-</td>
-<td class="cellrowborder" valign="top" width="16.173234646929384%" headers="mcps1.2.8.1.2-mindspore "><a name="ul393742934014"></a><ul id="ul393742934014"><li><span id="ph139426426441"><a name="ph139426426441"></a>Atlas 900 A3 SuperPoD 超节点</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="8.521704340868173%" headers="mcps1.2.8.1.3-mindspore "><p id="p1319333422617"><a name="p1319333422617"></a>MindSpore</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.672734546909378%" headers="mcps1.2.8.1.4-mindspore "><p id="p1893752924017"><a name="p1893752924017"></a><span id="ph234505228"><a name="ph234505228"></a>Qwen3</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5-mindspore "><p id="p1493742904013"><a name="p1493742904013"></a><span id="ph153229411739"><a name="ph153229411739"></a>ms_multinodes_acjob_superpod.yaml</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6-mindspore "><p id="p1637217494110"><a name="p1637217494110"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/yamls/ms_multinodes_acjob_superpod.yaml" target="_blank" rel="noopener noreferrer">ms_multinodes_acjob_superpod.yaml</a></p>
-</td>
-<td class="cellrowborder" valign="top" width="15.413082616523303%" headers="mcps1.2.8.1.7-mindspore "><p id="p79373296408"><a name="p79373296408"></a>示例默认使用2*16卡任务</p>
-</td>
-</tr>
-</tbody>
-</table>
+
+|任务类型|硬件型号|训练框架|模型|YAML文件|说明|
+|--|--|--|--|--|--|
+|Ascend Job|Atlas 900 A3 SuperPoD超节点|MindSpore|Qwen3|[ms_multinodes_acjob_superpod.yaml](https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/yamls/ms_multinodes_acjob_superpod.yaml)|示例默认使用2*16卡任务|
 
 >[!NOTE]
->当前部分训练框架未提供Atlas 900 A3 SuperPoD 超节点的断点续训示例YAML，用户可以在示例YAML中的labels下新增annotations字段即可。示例如下：
+>当前部分训练框架未提供Atlas 900 A3 SuperPoD超节点的断点续训示例YAML，用户可以在示例YAML中的labels下新增annotations字段即可。示例如下：
 >
 >```yaml
 >...

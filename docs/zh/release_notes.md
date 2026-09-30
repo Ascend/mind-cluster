@@ -4,10 +4,10 @@
 
 - **断点续训与故障恢复能力增强**：支持DPU故障与DPU亚健康触发断点续训，支持RL场景实例级恢复。Atlas 950 SuperPoD超节点支持UB网络故障进程级在线恢复。
 - **推理高可用增强**：支持弹性伸缩复合指标定义；支持弹性扩缩容时使能容器快照；支持推理任务缩卡、缩Pod恢复。
-- **调度与设备管理**：支持任务调度忽略ROCE网络健康状态；支持节点内的通用亲和性调度与跨迭代混合调度。支持Atlas 950 SuperPoD Flex超节点亲和性调度。
+- **调度与设备管理**：支持任务调度忽略RoCE网络健康状态；支持节点内的通用亲和性调度与跨迭代混合调度。支持Atlas 950 SuperPoD Flex超节点亲和性调度。
 - **生态版本适配**：支持Kubernetes 1.36版本和Volcano 1.15版本。
 - **运行时能力扩展**：Ascend Docker Runtime新增支持CRI-O，支持挂载UMDK和UB驱动用户态文件。
-- **可观测性增强**：新增DPU Exporter组件，支持1825指标采集；NPU Exporter支持上报可用芯片数量，Ascend Device Plugin支持上报设备NUMA信息。
+- **可观测性增强**：新增DPU Exporter组件，支持1825指标采集；NPU Exporter支持上报可用芯片数量；Ascend Device Plugin支持上报设备NUMA信息。
 - **机型适配**：适配Atlas 950 SuperPoD Flex机型基础能力。
 
 **MindCluster Ascend FaultDiag关键特性**
@@ -375,11 +375,11 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 - 提供硬件基础能力标签。
 - Infer Operator支持自动配置实例亲和性。
 - Infer Operator支持MetaService拉起。
-- 支持任务调度忽略ROCE网络健康状态。
+- 支持任务调度忽略RoCE网络健康状态。
 
 **5、设备管理**
 
-- hccn_tool改为dcmi接口，优化调度耗时。
+- hccn_tool修改为DCMI接口，优化调度耗时。
 - 支持组件对外版本信息输出。
 
 **6、Ascend Docker Runtime**
@@ -392,12 +392,12 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 - DPU Exporter支持1825指标采集。
 - NPU Exporter支持上报可用芯片数量。
 - Ascend Device Plugin支持上报设备NUMA信息。
-- vnpu硬切分指标监控增强。
-- 支持Ascend 950PR&950DT的NPU利用率新指标接口。
+- vNPU硬切分指标监控增强。
+- 支持Ascend 950PR&950DT系列产品的NPU利用率新指标接口。
 
 **8、机型适配**
 
-- 适配Atlas 950 SuperPoD Flex超节点机型的基础能力。
+适配Atlas 950 SuperPoD Flex超节点机型的基础能力。
 
 **9、架构优化**
 
@@ -406,14 +406,14 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 **10、资料**
 
-- 优化断点续训和故障监测相关资料。
+优化断点续训和故障检测相关资料。
 
 **MindCluster Ascend FaultDiag故障诊断**
 
 **1、日志诊断工具**
 
-- 基于Cqe error status错误类型并结合日志细化、增强UB 链路故障诊断能力。
-- 新增支持Atlas 950 SuperPoD Flex服务器故障诊断。
+- 基于Cqe error status错误类型并结合日志细化、增强UB链路故障诊断能力。
+- 新增支持Atlas 950 SuperPoD Flex故障诊断。
 
 **2、链路诊断工具**
 
@@ -422,13 +422,13 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 **3、K8s集群运维Agent组件**
 
-- 支持根据用户指令收集K8s集群中失败的昇腾训练/推理任务日志并执行故障诊断；支持接入模型API，优化诊断报告。
+支持根据用户指令收集K8s集群中失败的昇腾训练/推理任务日志并执行故障诊断；支持接入模型API，优化诊断报告。
 
 ## 关键特性变更
 
 本版本继承MindCluster 26.1.0及其之前发布版本的部分特性。主要变更如下：
 
-- hccn_tool工具接口调整为基于DCMI接口实现，优化调度耗时。
+hccn_tool工具接口调整为基于DCMI接口实现，优化调度耗时。
 
 ## 业务接口变更
 
@@ -437,13 +437,13 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 - NPU Exporter新增上报可用芯片数量。
 - hccn_tool工具接口调整为基于DCMI接口实现，优化调度耗时。
 - 未申请NPU的Pod无需配置skip标识即可正常调度（调度行为调整）。
-- Volcano支持任务调度忽略ROCE网络健康状态。
+- Volcano支持任务调度忽略RoCE网络健康状态。
 - 其他兼容性问题请参见[MindCluster组件兼容性问题公告](https://gitcode.com/Ascend/mind-cluster/issues/588)。
 
 ## 已解决的问题
 
 - 旧版本中针对81078603故障码的恢复检测周期为5分钟，本版本优化为带有退避机制的短周期快速检测机制，能够更快速检测恢复事件并消除故障。
-- MindCluster 26.1.0版本以及之前的版本中，Atlas A3系列产品开启算子重执行，在linkdown故障场景下，进程级重调度有概率失败。本版本中已修复，参考PR：https://gitcode.com/Ascend/mind-cluster/pull/4253。
+- MindCluster 26.1.0版本以及之前的版本中，Atlas A3系列产品开启算子重执行，在linkdown故障场景下，进程级重调度有概率失败。本版本中已修复，详细请参见[PR 4253](https://gitcode.com/Ascend/mind-cluster/pull/4253)。
 
 ## 遗留问题
 
@@ -463,8 +463,8 @@ Infer Operator组件从26.1.0之前版本升级到26.1.0及之后版本时，需
 
 | 文档名称 | 内容简介 | 更新说明                                                                          |
 | --- | --- |-------------------------------------------------------------------------------|
-| 《MindCluster 26.2.0 集群调度用户指南》 | 提供集群调度组件说明、特性原理和使用参考，包括各组件的安装部署、集成适配示例和API参考，以及部分调度方案的原理介绍参考。 | 新增断点续训（DPU故障/亚健康触发）、PD实例异构等特性指导、重构断点续训章节，其余变更详见《MindCluster 26.2.0 集群调度用户指南》。 |
-| 《MindCluster 26.2.0 故障诊断用户指南》 | 提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。 | 优化断点续训和故障监测相关指导，其余变更详见《MindCluster 26.2.0 故障诊断用户指南》。                          |
+| 《[MindCluster 集群调度用户指南](./scheduling/01_introduction/00_overview.md)》 | 提供集群调度组件说明、特性原理和使用参考，包括各组件的安装部署、集成适配示例和API参考，以及部分调度方案的原理介绍参考。 | 新增断点续训（DPU故障/亚健康触发）、PD实例异构等特性指导，重构断点续训章节，其余变更详见《[MindCluster 集群调度用户指南](./scheduling/01_introduction/00_overview.md)》。 |
+| 《[MindCluster 故障诊断用户指南](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)》 | 提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。 | 新增Ascend 950PR&950DT系列产品光链路故障诊断内容，其余变更详见《[MindCluster 故障诊断用户指南](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)》。                          |
 
 # 病毒扫描结果
 

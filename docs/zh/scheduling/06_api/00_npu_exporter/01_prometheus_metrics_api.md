@@ -87,7 +87,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 |类别|数据信息名称|数据信息说明|数据信息标签字段|字段类型|单位|支持的产品形态|
 |------|-------------|-------------|-----------------|---------|------|---------------|
-|版本|npu_exporter_version_info|NPU Exporter版本信息|exporterVersion：当前NPU Exporter版本信息| string | 1：占位字符，无实际含义 |<ul><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li>推理服务器（插Atlas 300I 推理卡）</li><li><term>Atlas 推理系列产品</term></li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
+|版本|npu_exporter_version_info|NPU Exporter版本信息|exporterVersion：当前NPU Exporter版本信息| string | 1：占位字符，无实际含义 |<ul><li><term>Atlas训练系列产品</term></li><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li>推理服务器（插Atlas 300I推理卡）</li><li><term>Atlas推理系列产品</term></li><li>Atlas 800I A2推理服务器</li><li>A200I A2 Box异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
 
 ## 节点基本信息<a name="section17031652143620"></a>
 
@@ -95,7 +95,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 |类别|数据信息名称|数据信息说明|数据信息标签字段|字段类型|单位|支持的产品形态|
 |------|-------------|-------------|-----------------|---------|------|---------------|
-|nodeBase|node_base_info|节点基本信息|<ul><li>exporterVersion：当前NPU Exporter版本信息</li><li>driverVersion：驱动版本信息</li><li>dcmiVersion：DCMI版本信息</li></ul>| string | 1：占位字符，无实际含义 |<ul><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li>推理服务器（插Atlas 300I 推理卡）</li><li><term>Atlas 推理系列产品</term></li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
+|nodeBase|node_base_info|节点基本信息|<ul><li>exporterVersion：当前NPU Exporter版本信息</li><li>driverVersion：驱动版本信息</li><li>dcmiVersion：DCMI版本信息</li></ul>| string | 1：占位字符，无实际含义 |<ul><li><term>Atlas训练系列产品</term></li><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li>推理服务器（插Atlas 300I推理卡）</li><li><term>Atlas推理系列产品</term></li><li>Atlas 800I A2推理服务器</li><li>A200I A2 Box异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
 
 ## NPU数据信息<a name="section1379685784314"></a>
 
@@ -126,7 +126,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p_machine_card_nums_unit">单位：个</p>
 </td>
-<td class="cellrowborder" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li>推理服务器（插Atlas 300I 推理卡）</li><li><term>Atlas 推理系列产品</term></li><li><span>Atlas 800I A2 推理服务器</span></li><li><span>A200I A2 Box 异构组件</span></li></ul>
+<td class="cellrowborder" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas训练系列产品</term></li><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li>推理服务器（插Atlas 300I推理卡）</li><li><term>Atlas推理系列产品</term></li><li><span>Atlas 800I A2推理服务器</span></li><li><span>A200I A2 Box异构组件</span></li></ul>
 </td>
 </tr>
 <tr id="row14396115717449"><td class="cellrowborder" valign="top" width="8.43%" headers="mcps1.2.7.1.1 "><p id="p1214131124617"><a name="p1214131124617"></a><a name="p1214131124617"></a>NPU</p>
@@ -139,10 +139,10 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10.77%" headers="mcps1.2.7.1.5 "><p id="p114201174619"><a name="p114201174619"></a><a name="p114201174619"></a>单位：个</p>
 </td>
-<td class="cellrowborder" rowspan="15" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><a name="ul16872655115116"></a><a name="ul16872655115116"></a><ul id="ul16872655115116"><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li></ul>
-<a name="ul13196335219"></a><a name="ul13196335219"></a><ul id="ul13196335219"><li><term>Atlas A3 训练系列产品</term></li><li>推理服务器（插Atlas 300I 推理卡）</li></ul>
-<a name="ul199548911521"></a><a name="ul199548911521"></a><ul id="ul199548911521"><li><term>Atlas 推理系列产品</term></li><li><span id="ph328863144019"><a name="ph328863144019"></a><a name="ph328863144019"></a>Atlas 800I A2 推理服务器</span></li></ul>
-<a name="ul12630181715213"></a><a name="ul12630181715213"></a><ul id="ul12630181715213"><li><span id="ph14798132394418"><a name="ph14798132394418"></a><a name="ph14798132394418"></a>A200I A2 Box 异构组件</span></li></ul><ul><li><term>Ascend 950PR&950DT系列产品</term></li></ul>
+<td class="cellrowborder" rowspan="15" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><a name="ul16872655115116"></a><a name="ul16872655115116"></a><ul id="ul16872655115116"><li><term>Atlas训练系列产品</term></li><li><term>Atlas A2训练系列产品</term></li></ul>
+<a name="ul13196335219"></a><a name="ul13196335219"></a><ul id="ul13196335219"><li><term>Atlas A3训练系列产品</term></li><li>推理服务器（插Atlas 300I推理卡）</li></ul>
+<a name="ul199548911521"></a><a name="ul199548911521"></a><ul id="ul199548911521"><li><term>Atlas推理系列产品</term></li><li><span id="ph328863144019"><a name="ph328863144019"></a><a name="ph328863144019"></a>Atlas 800I A2推理服务器</span></li></ul>
+<a name="ul12630181715213"></a><a name="ul12630181715213"></a><ul id="ul12630181715213"><li><span id="ph14798132394418"><a name="ph14798132394418"></a><a name="ph14798132394418"></a>A200I A2 Box异构组件</span></li></ul><ul><li><term>Ascend 950PR&950DT系列产品</term></li></ul>
 </td>
 </tr>
 <tr id="row_machine_healthy_npu_nums"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p_machine_healthy_npu_nums_cat">NPU</p>
@@ -286,7 +286,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p16165101174617"><a name="p16165101174617"></a><a name="p16165101174617"></a>npu_chip_info_power</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p616601115461"><a name="p616601115461"></a><a name="p616601115461"></a><span id="ph216617115462"><a name="ph216617115462"></a><a name="ph216617115462"></a>昇腾AI处理器</span>功耗</p>
-<div class="note" id="note125551721182116"><a name="note125551721182116"></a><a name="note125551721182116"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p2555192112218"><a name="p2555192112218"></a><a name="p2555192112218"></a>只有<term>Atlas 推理系列产品</term>为板卡功耗，其余产品为<span id="ph13555921192113"><a name="ph13555921192113"></a><a name="ph13555921192113"></a>昇腾AI处理器</span>功耗</p>
+<div class="note" id="note125551721182116"><a name="note125551721182116"></a><a name="note125551721182116"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p2555192112218"><a name="p2555192112218"></a><a name="p2555192112218"></a>只有<term>Atlas推理系列产品</term>为板卡功耗，其余产品为<span id="ph13555921192113"><a name="ph13555921192113"></a><a name="ph13555921192113"></a>昇腾AI处理器</span>功耗</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p1837111312397"><a name="p1837111312397"></a><a name="p1837111312397"></a><a href="#table191895615241">标签1</a></p>
@@ -336,7 +336,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" width="10.77%" headers="mcps1.2.7.1.5 "><p id="p1146982211711"><a name="p1146982211711"></a><a name="p1146982211711"></a>取值为0、1或-1</p>
 <a name="ul1469162261710"></a><a name="ul1469162261710"></a><ul id="ul1469162261710"><li>1：健康，可以连通</li><li>0：不健康，无法连通</li><li>-1：未知，DCMI接口调用失败</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><a name="ul221951194615"></a><a name="ul221951194615"></a><ul id="ul221951194615"><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li><span id="ph1067265144615"><a name="ph1067265144615"></a><a name="ph1067265144615"></a>A200I A2 Box 异构组件</span></li><li><span id="ph16900101265315"><a name="ph16900101265315"></a><a name="ph16900101265315"></a>Atlas 800I A2 推理服务器</span></li></ul>
+<td class="cellrowborder" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><a name="ul221951194615"></a><a name="ul221951194615"></a><ul id="ul221951194615"><li><term>Atlas训练系列产品</term></li><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li><span id="ph1067265144615"><a name="ph1067265144615"></a><a name="ph1067265144615"></a>A200I A2 Box异构组件</span></li><li><span id="ph16900101265315"><a name="ph16900101265315"></a><a name="ph16900101265315"></a>Atlas 800I A2推理服务器</span></li></ul>
 <p id="p1858910113463"><a name="p1858910113463"></a><a name="p1858910113463"></a></p>
 </td>
 </tr>
@@ -353,7 +353,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p621891154618"><a name="p621891154618"></a><a name="p621891154618"></a>单位：MB</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li>A200I A2 Box 异构组件</li><li>Atlas 800I A2 推理服务器</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>
+<td class="cellrowborder" rowspan="2" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas训练系列产品</term></li><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li>A200I A2 Box异构组件</li><li>Atlas 800I A2推理服务器</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>
 <p id="p1858910113463"><a name="p1858910113463"></a><a name="p1858910113463"></a></p>
 </td>
 </tr>
@@ -382,7 +382,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td><p>1：占位字符，无实际含义</p>
 </td>
-<td><p><term>Atlas 推理系列产品</term></p>
+<td><p><term>Atlas推理系列产品</term></p>
 </td>
 </tr>
 </tbody>
@@ -394,11 +394,11 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 | 类别 | 数据信息名称 | 数据信息说明 | 数据信息标签字段 | 单位 | 支持的产品形态 |
 | --- | --- | --- | --- | --- | --- |
-| utilization | npu_chip_info_utilization | 昇腾AI处理器AICore利用率 | [标签1](#table191895615241) | % |<ul><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li>推理服务器（插Atlas 300I 推理卡）</li><li><term>Atlas 推理系列产品</term></li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
-| utilization | container_npu_utilization | 带有容器信息的NPU的AICore利用率<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Telegraf不支持上报该指标</div></div>| [标签1](#table191895615241) | % |<ul><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li>推理服务器（插Atlas 300I 推理卡）</li><li><term>Atlas 推理系列产品</term></li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
-| utilization | npu_chip_info_vector_utilization | 昇腾AI处理器AIVector利用率 | [标签1](#table191895615241) | % |<ul><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li>推理服务器（插Atlas 300I 推理卡）</li><li><term>Atlas 推理系列产品</term></li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
-| utilization | npu_chip_info_cube_utilization | 昇腾AI处理器AICube利用率 | [标签1](#table191895615241) | % |<ul><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
-| utilization | npu_chip_info_overall_utilization | 昇腾AI处理器整体利用率 | [标签1](#table191895615241) | % |<ul><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
+| utilization | npu_chip_info_utilization | 昇腾AI处理器AICore利用率 | [标签1](#table191895615241) | % |<ul><li><term>Atlas训练系列产品</term></li><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li>推理服务器（插Atlas 300I推理卡）</li><li><term>Atlas推理系列产品</term></li><li>Atlas 800I A2推理服务器</li><li>A200I A2 Box异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
+| utilization | container_npu_utilization | 带有容器信息的NPU的AICore利用率<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Telegraf不支持上报该指标</div></div>| [标签1](#table191895615241) | % |<ul><li><term>Atlas训练系列产品</term></li><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li>推理服务器（插Atlas 300I推理卡）</li><li><term>Atlas推理系列产品</term></li><li>Atlas 800I A2推理服务器</li><li>A200I A2 Box异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
+| utilization | npu_chip_info_vector_utilization | 昇腾AI处理器AIVector利用率 | [标签1](#table191895615241) | % |<ul><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li>推理服务器（插Atlas 300I推理卡）</li><li><term>Atlas推理系列产品</term></li><li>Atlas 800I A2推理服务器</li><li>A200I A2 Box异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
+| utilization | npu_chip_info_cube_utilization | 昇腾AI处理器AICube利用率 | [标签1](#table191895615241) | % |<ul><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li>Atlas 800I A2推理服务器</li><li>A200I A2 Box异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
+| utilization | npu_chip_info_overall_utilization | 昇腾AI处理器整体利用率 | [标签1](#table191895615241) | % |<ul><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li>Atlas 800I A2推理服务器</li><li>A200I A2 Box异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
 
 ## vNPU数据信息<a name="section81411161343"></a>
 
@@ -429,7 +429,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10.43%" headers="mcps1.2.7.1.5 "><p id="p1835917279917"><a name="p1835917279917"></a><a name="p1835917279917"></a>单位：%</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="20.18%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas 推理系列产品</term></li><li><term>Atlas A2系列产品</term></li><li><term>Atlas A3系列产品</term></li></ul>
+<td class="cellrowborder" rowspan="3" valign="top" width="20.18%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas推理系列产品</term></li><li><term>Atlas A2系列产品</term></li><li><term>Atlas A3系列产品</term></li></ul>
 </td>
 </tr>
 <tr id="row17703155715411"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p136032717910"><a name="p136032717910"></a><a name="p136032717910"></a>vNPU</p>
@@ -488,7 +488,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p id="p188904163413"><a name="p188904163413"></a><a name="p188904163413"></a>单位：MB/s</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><a name="ul178907161943"></a><a name="ul178907161943"></a><ul id="ul178907161943"><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li><span id="ph57012578543"><a name="ph57012578543"></a><a name="ph57012578543"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph1518064711478"><a name="ph1518064711478"></a><a name="ph1518064711478"></a>A200I A2 Box 异构组件</span></li></ul>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><a name="ul178907161943"></a><a name="ul178907161943"></a><ul id="ul178907161943"><li><term>Atlas训练系列产品</term></li><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li><span id="ph57012578543"><a name="ph57012578543"></a><a name="ph57012578543"></a>Atlas 800I A2推理服务器</span></li><li><span id="ph1518064711478"><a name="ph1518064711478"></a><a name="ph1518064711478"></a>A200I A2 Box异构组件</span></li></ul>
 </td></tr><tr id="row11943132171414"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p163872531349"><a name="p163872531349"></a><a name="p163872531349"></a>network_bandwidth</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.2 "><p id="p173871953046"><a name="p173871953046"></a><a name="p173871953046"></a>npu_chip_info_bandwidth_tx</p>
@@ -510,7 +510,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">旧版本指标，仅支持Atlas 350 加速卡（4Pmesh互联）。
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">旧版本指标，仅支持Atlas 350加速卡（4Pmesh互联）。
 </td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_bandwidth</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx_X_Y</p>
@@ -531,7 +531,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><p><term>Ascend 950PR&950DT系列产品</term></p><p>其中，Atlas 350 加速卡仅支持4Pmesh互联</p>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><p><term>Ascend 950PR&950DT系列产品</term></p><p>其中，Atlas 350加速卡仅支持4Pmesh互联</p>
 </td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_bandwidth</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx</p>
@@ -575,7 +575,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.5 "><p id="p18658038144417"><a name="p18658038144417"></a><a name="p18658038144417"></a>取值为0、1或-1</p>
 <a name="ul136589389444"></a><a name="ul136589389444"></a><ul id="ul136589389444"><li>1：UP</li><li>0：DOWN</li><li>-1：未知(hccn_tool工具调用失败)</li></ul>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><a name="ul178907161943"></a><a name="ul178907161943"></a><ul id="ul178907161943"><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li><span id="ph57012578543"><a name="ph57012578543"></a><a name="ph57012578543"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph1518064711478"><a name="ph1518064711478"></a><a name="ph1518064711478"></a>A200I A2 Box 异构组件</span></li></ul>
+<td class="cellrowborder" rowspan="3" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><a name="ul178907161943"></a><a name="ul178907161943"></a><ul id="ul178907161943"><li><term>Atlas训练系列产品</term></li><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li><span id="ph57012578543"><a name="ph57012578543"></a><a name="ph57012578543"></a>Atlas 800I A2推理服务器</span></li><li><span id="ph1518064711478"><a name="ph1518064711478"></a><a name="ph1518064711478"></a>A200I A2 Box异构组件</span></li></ul>
 </td></tr><tr id="row128958179146"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p1895101717145"><a name="p1895101717145"></a><a name="p1895101717145"></a>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.2 "><p id="p116111121174615"><a name="p116111121174615"></a><a name="p116111121174615"></a>npu_chip_link_speed</p>
@@ -606,7 +606,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>取值为0、1或-1</p><ul><li>1：UP</li><li>0：DOWN</li><li>-1：未知(hccn_tool工具调用失败)</li></ul>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">旧版本指标，仅支持Atlas 350 加速卡（4Pmesh互联）。
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">旧版本指标，仅支持Atlas 350加速卡（4Pmesh互联）。
 </td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_speed_X_Y</p>
@@ -627,7 +627,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>取值为0、1或-1</p><ul><li>1：UP</li><li>0：DOWN</li><li>-1：未知(hccn_tool工具调用失败)</li></ul>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><p><term>Ascend 950PR&950DT系列产品</term></p><p>其中，Atlas 350 加速卡仅支持4Pmesh互联</p>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><p><term>Ascend 950PR&950DT系列产品</term></p><p>其中，Atlas 350加速卡仅支持4Pmesh互联</p>
 </td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_speed</p>
@@ -670,7 +670,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="9.770977097709771%" headers="mcps1.2.7.1.5 "><p id="p17849174864015"><a name="p17849174864015"></a><a name="p17849174864015"></a>单位：MB</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="19.851985198519852%" headers="mcps1.2.7.1.6 "><a name="ul12849124816407"></a><a name="ul12849124816407"></a><ul id="ul12849124816407"><li><term>Atlas 训练系列产品</term></li><li>推理服务器（插Atlas 300I 推理卡）</li><li><term>Atlas 推理系列产品</term></li></ul>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.851985198519852%" headers="mcps1.2.7.1.6 "><a name="ul12849124816407"></a><a name="ul12849124816407"></a><ul id="ul12849124816407"><li><term>Atlas训练系列产品</term></li><li>推理服务器（插Atlas 300I推理卡）</li><li><term>Atlas推理系列产品</term></li></ul>
 </td>
 </tr>
 <tr id="row20281241173220"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p178531848194013"><a name="p178531848194013"></a><a name="p178531848194013"></a>DDR</p>
@@ -719,7 +719,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" width="10.4%" headers="mcps1.2.7.1.5 "><p id="p138871313174819"><a name="p138871313174819"></a><a name="p138871313174819"></a>单位：MB</p>
 <p id="p649111418488"><a name="p649111418488"></a><a name="p649111418488"></a></p>
 </td>
-<td class="cellrowborder" rowspan="12" valign="top" width="20.150000000000006%" headers="mcps1.2.7.1.6 "><a name="ul588814137484"></a><a name="ul588814137484"></a><ul id="ul588814137484"><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li><span id="ph043025116483"><a name="ph043025116483"></a><a name="ph043025116483"></a>A200I A2 Box 异构组件</span></li><li><span id="ph19520133125919"><a name="ph19520133125919"></a><a name="ph19520133125919"></a>Atlas 800I A2 推理服务器</span></li></ul><ul><li><term>Ascend 950PR&950DT系列产品</term></li></ul>
+<td class="cellrowborder" rowspan="12" valign="top" width="20.150000000000006%" headers="mcps1.2.7.1.6 "><a name="ul588814137484"></a><a name="ul588814137484"></a><ul id="ul588814137484"><li><term>Atlas训练系列产品</term></li><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li><span id="ph043025116483"><a name="ph043025116483"></a><a name="ph043025116483"></a>A200I A2 Box异构组件</span></li><li><span id="ph19520133125919"><a name="ph19520133125919"></a><a name="ph19520133125919"></a>Atlas 800I A2推理服务器</span></li></ul><ul><li><term>Ascend 950PR&950DT系列产品</term></li></ul>
 <p id="p1393532018545"><a name="p1393532018545"></a><a name="p1393532018545"></a></p>
 <p id="p674513211898"><a name="p674513211898"></a><a name="p674513211898"></a></p>
 <p id="p25074235513"><a name="p25074235513"></a><a name="p25074235513"></a></p>
@@ -884,7 +884,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <tbody><tr id="row51311483103"><td class="cellrowborder" valign="top" width="7.76%" headers="mcps1.2.7.1.1 "><p id="p192174718131"><a name="p192174718131"></a><a name="p192174718131"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" width="26.200000000000003%" headers="mcps1.2.7.1.2 "><p id="p1313153991311"><a name="p1313153991311"></a><a name="p1313153991311"></a>npu_chip_info_hccs_statistic_info_tx_cnt_X</p>
-<p id="p104597463146"><a name="p104597463146"></a><a name="p104597463146"></a>X范围：1~7（<term>Atlas A2 训练系列产品</term>或Atlas 900 A3 SuperPoD 超节点），2~7（Atlas 9000 A3 SuperPoD 集群算力系统）</p>
+<p id="p104597463146"><a name="p104597463146"></a><a name="p104597463146"></a>X范围：1~7（<term>Atlas A2训练系列产品</term>或Atlas 900 A3 SuperPoD超节点），2~7（Atlas 9000 A3 SuperPoD集群算力系统）</p>
 </td>
 <td class="cellrowborder" valign="top" width="25.53%" headers="mcps1.2.7.1.3 "><a name="ul64654414321"></a><a name="ul64654414321"></a><ul id="ul64654414321"><li>第X个HDLC链路发送报文数，单位是flit。</li><li>采集失败时上报-1。</li></ul>
 </td>
@@ -892,13 +892,13 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="8.88%" headers="mcps1.2.7.1.5 "><p id="p1696115661316"><a name="p1696115661316"></a><a name="p1696115661316"></a>-</p>
 </td>
-<td class="cellrowborder" rowspan="8" valign="top" width="18.91%" headers="mcps1.2.7.1.6 "><a name="ul14353121612171"></a><a name="ul14353121612171"></a><ul id="ul14353121612171"><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li></ul>
+<td class="cellrowborder" rowspan="8" valign="top" width="18.91%" headers="mcps1.2.7.1.6 "><a name="ul14353121612171"></a><a name="ul14353121612171"></a><ul id="ul14353121612171"><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li></ul>
 </td>
 </tr>
 <tr id="row1134048201013"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p131591118181"><a name="p131591118181"></a><a name="p131591118181"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p8269148191816"><a name="p8269148191816"></a><a name="p8269148191816"></a>npu_chip_info_hccs_statistic_info_rx_cnt_X</p>
-<p id="p19920451111518"><a name="p19920451111518"></a><a name="p19920451111518"></a>X范围：1~7（<term>Atlas A2 训练系列产品</term>或Atlas 900 A3 SuperPoD 超节点），2~7（Atlas 9000 A3 SuperPoD 集群算力系统）</p>
+<p id="p19920451111518"><a name="p19920451111518"></a><a name="p19920451111518"></a>X范围：1~7（<term>Atlas A2训练系列产品</term>或Atlas 900 A3 SuperPoD超节点），2~7（Atlas 9000 A3 SuperPoD集群算力系统）</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><a name="ul14760124163111"></a><a name="ul14760124163111"></a><ul id="ul14760124163111"><li>第X个HDLC链路接收报文数，单位是flit。</li><li>采集失败时上报-1。</li></ul>
 </td>
@@ -910,7 +910,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <tr id="row111434263218"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p1582372462510"><a name="p1582372462510"></a><a name="p1582372462510"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p082322414251"><a name="p082322414251"></a><a name="p082322414251"></a>npu_chip_info_hccs_statistic_info_crc_err_cnt_X</p>
-<p id="p9478114473615"><a name="p9478114473615"></a><a name="p9478114473615"></a>X范围：1~7（<term>Atlas A2 训练系列产品</term>、<span id="ph1519015228918"><a name="ph1519015228918"></a><a name="ph1519015228918"></a>Atlas 900 A3 SuperPoD 超节点</span>），2~7（Atlas 9000 A3 SuperPoD 集群算力系统）</p>
+<p id="p9478114473615"><a name="p9478114473615"></a><a name="p9478114473615"></a>X范围：1~7（<term>Atlas A2训练系列产品</term>、<span id="ph1519015228918"><a name="ph1519015228918"></a><a name="ph1519015228918"></a>Atlas 900 A3 SuperPoD超节点</span>），2~7（Atlas 9000 A3 SuperPoD集群算力系统）</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><a name="ul5374194612915"></a><a name="ul5374194612915"></a><ul id="ul5374194612915"><li>第X个HDLC链路接收报文crc错误，单位是flit。</li><li>采集失败时上报-1。</li></ul>
 </td>
@@ -956,7 +956,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <tr id="row3533195313714"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p23261414161118"><a name="p23261414161118"></a><a name="p23261414161118"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p9326014101111"><a name="p9326014101111"></a><a name="p9326014101111"></a>npu_chip_info_hccs_bandwidth_info_tx_X</p>
-<p id="p1048653410101"><a name="p1048653410101"></a><a name="p1048653410101"></a>X范围：1~7（<term>Atlas A2 训练系列产品</term>、<span id="ph5486133415104"><a name="ph5486133415104"></a><a name="ph5486133415104"></a>Atlas 900 A3 SuperPoD 超节点</span>），2~7（Atlas 9000 A3 SuperPoD 集群算力系统）</p>
+<p id="p1048653410101"><a name="p1048653410101"></a><a name="p1048653410101"></a>X范围：1~7（<term>Atlas A2训练系列产品</term>、<span id="ph5486133415104"><a name="ph5486133415104"></a><a name="ph5486133415104"></a>Atlas 900 A3 SuperPoD超节点</span>），2~7（Atlas 9000 A3 SuperPoD集群算力系统）</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p16326161421112"><a name="p16326161421112"></a><a name="p16326161421112"></a>HCCS单链路发送数据带宽，采集失败时上报-1</p>
 </td>
@@ -969,7 +969,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p1916181418136"><a name="p1916181418136"></a><a name="p1916181418136"></a>npu_chip_info_hccs_bandwidth_info_rx_X</p>
 <p id="p1161714161312"><a name="p1161714161312"></a><a name="p1161714161312"></a></p>
-<p id="p1110523181119"><a name="p1110523181119"></a><a name="p1110523181119"></a>X范围：1~7（<term>Atlas A2 训练系列产品</term>、<span id="ph1811015231112"><a name="ph1811015231112"></a><a name="ph1811015231112"></a>Atlas 900 A3 SuperPoD 超节点</span>），2~7（Atlas 9000 A3 SuperPoD 集群算力系统）</p>
+<p id="p1110523181119"><a name="p1110523181119"></a><a name="p1110523181119"></a>X范围：1~7（<term>Atlas A2训练系列产品</term>、<span id="ph1811015231112"><a name="ph1811015231112"></a><a name="ph1811015231112"></a>Atlas 900 A3 SuperPoD超节点</span>），2~7（Atlas 9000 A3 SuperPoD集群算力系统）</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p191681411135"><a name="p191681411135"></a><a name="p191681411135"></a>HCCS单链路接收数据带宽，采集失败时上报-1</p>
 </td>
@@ -1012,7 +1012,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" width="12.440000000000001%" headers="mcps1.2.7.1.5 "><p id="p11437141652810"><a name="p11437141652810"></a><a name="p11437141652810"></a>单位：MB/ms</p>
 <p id="p1159519168288"><a name="p1159519168288"></a><a name="p1159519168288"></a></p>
 </td>
-<td class="cellrowborder" rowspan="6" valign="top" width="21.91%" headers="mcps1.2.7.1.6 "><a name="ul64395165289"></a><a name="ul64395165289"></a><ul id="ul64395165289"><li><term>Atlas A2 训练系列产品</term></li><li><span id="ph9506329133010"><a name="ph9506329133010"></a><a name="ph9506329133010"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph83840211502"><a name="ph83840211502"></a><a name="ph83840211502"></a>A200I A2 Box 异构组件</span></li><li><span id="ph83840211502"><a name="ph83840211502"></a><a name="ph83840211502"></a>Atlas 350 加速卡</span></li></ul>
+<td class="cellrowborder" rowspan="6" valign="top" width="21.91%" headers="mcps1.2.7.1.6 "><a name="ul64395165289"></a><a name="ul64395165289"></a><ul id="ul64395165289"><li><term>Atlas A2训练系列产品</term></li><li><span id="ph9506329133010"><a name="ph9506329133010"></a><a name="ph9506329133010"></a>Atlas 800I A2推理服务器</span></li><li><span id="ph83840211502"><a name="ph83840211502"></a><a name="ph83840211502"></a>A200I A2 Box异构组件</span></li><li><span id="ph83840211502"><a name="ph83840211502"></a><a name="ph83840211502"></a>Atlas 350加速卡</span></li></ul>
 </td>
 </tr>
 <tr id="row34233384255"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p12447181662811"><a name="p12447181662811"></a><a name="p12447181662811"></a>PCIe</p>
@@ -1106,7 +1106,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10.36%" headers="mcps1.2.7.1.5 "><p id="p78527532154"><a name="p78527532154"></a><a name="p78527532154"></a>-</p>
 </td>
-<td class="cellrowborder" rowspan="21" valign="top" width="24.23%" headers="mcps1.2.7.1.6 "><a name="ul199447020331"></a><a name="ul199447020331"></a><ul id="ul199447020331"><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><term>Atlas A3 训练系列产品</term></li><li><span id="ph5953105733115"><a name="ph5953105733115"></a><a name="ph5953105733115"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph1247784012511"><a name="ph1247784012511"></a><a name="ph1247784012511"></a>A200I A2 Box 异构组件</span></li></ul>
+<td class="cellrowborder" rowspan="21" valign="top" width="24.23%" headers="mcps1.2.7.1.6 "><a name="ul199447020331"></a><a name="ul199447020331"></a><ul id="ul199447020331"><li><term>Atlas训练系列产品</term></li><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li><span id="ph5953105733115"><a name="ph5953105733115"></a><a name="ph5953105733115"></a>Atlas 800I A2推理服务器</span></li><li><span id="ph1247784012511"><a name="ph1247784012511"></a><a name="ph1247784012511"></a>A200I A2 Box异构组件</span></li></ul>
 <p id="p152876112332"><a name="p152876112332"></a><a name="p152876112332"></a></p>
 </td>
 </tr>
@@ -1372,7 +1372,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="9.180000000000001%" headers="mcps1.2.7.1.5 "><p id="p0112152802316"><a name="p0112152802316"></a><a name="p0112152802316"></a>-</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="19.689999999999998%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas A3 训练系列产品</term></li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.689999999999998%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas A3训练系列产品</term></li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>
 <p id="p181568282234"><a name="p181568282234"></a><a name="p181568282234"></a></p>
 </td>
 </tr>
@@ -1420,8 +1420,8 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" width="11.96119611961196%" headers="mcps1.2.7.1.5 "><p id="p20129112123513"><a name="p20129112123513"></a><a name="p20129112123513"></a>取值为0或1</p>
 <a name="ul5129202143514"></a><a name="ul5129202143514"></a><ul id="ul5129202143514"><li>0：不在位</li><li>1：在位</li></ul>
 </td>
-<td class="cellrowborder" rowspan="5" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><a name="ul151317217352"></a><a name="ul151317217352"></a><ul id="ul151317217352"><li><term>Atlas 训练系列产品</term></li><li><term>Atlas A2 训练系列产品</term></li><li><span id="ph113282153511"><a name="ph113282153511"></a><a name="ph113282153511"></a>Atlas 900 A3 SuperPoD 超节点</span></li><li><p id="p1546725019404"><a name="p1546725019404"></a><a name="p1546725019404"></a><span id="ph19390121883919"><a name="ph19390121883919"></a><a name="ph19390121883919"></a>Atlas 800I A2 推理服务器</span></p>
-</li><li><span id="ph11463114805219"><a name="ph11463114805219"></a><a name="ph11463114805219"></a>A200I A2 Box 异构组件</span></li></ul>
+<td class="cellrowborder" rowspan="5" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><a name="ul151317217352"></a><a name="ul151317217352"></a><ul id="ul151317217352"><li><term>Atlas训练系列产品</term></li><li><term>Atlas A2训练系列产品</term></li><li><span id="ph113282153511"><a name="ph113282153511"></a><a name="ph113282153511"></a>Atlas 900 A3 SuperPoD超节点</span></li><li><p id="p1546725019404"><a name="p1546725019404"></a><a name="p1546725019404"></a><span id="ph19390121883919"><a name="ph19390121883919"></a><a name="ph19390121883919"></a>Atlas 800I A2推理服务器</span></p>
+</li><li><span id="ph11463114805219"><a name="ph11463114805219"></a><a name="ph11463114805219"></a>A200I A2 Box异构组件</span></li></ul>
 <p id="p0608021173520"><a name="p0608021173520"></a><a name="p0608021173520"></a></p>
 </td>
 </tr>
@@ -1480,7 +1480,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="11.96119611961196%" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 850E 超节点</li><li>Atlas 850 超节点</li><li>Atlas 650E 服务器</li><li>Atlas 650 服务器</li><li>Atlas 950 SuperPoD Flex</li></ul>
+<td class="cellrowborder" rowspan="3" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 850E超节点</li><li>Atlas 850超节点</li><li>Atlas 650E服务器</li><li>Atlas 650服务器</li><li>Atlas 950 SuperPoD Flex</li></ul>
 </td>
 </tr>
 <tr id="row184616483311"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>光模块</p>
@@ -1537,7 +1537,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="11.96119611961196%" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
-<td class="cellrowborder" rowspan="48" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 ">旧版本指标，仅支持Atlas 350 加速卡（4Pmesh互联）。
+<td class="cellrowborder" rowspan="48" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 ">旧版本指标，仅支持Atlas 350加速卡（4Pmesh互联）。
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
@@ -2067,7 +2067,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
-<td class="cellrowborder" rowspan="48" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><p><term>Ascend 950PR&950DT系列产品</term></p><p>其中，Atlas 350 加速卡仅支持4Pmesh互联</p>
+<td class="cellrowborder" rowspan="48" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><p><term>Ascend 950PR&950DT系列产品</term></p><p>其中，Atlas 350加速卡仅支持4Pmesh互联</p>
 </td>
 </tr>
 <tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
@@ -2960,7 +2960,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 NPU Exporter是通过调用底层的HDK接口，获取相应的信息。数据信息调用的HDK接口请参考[NPU Exporter调用的HDK接口.xlsx](../../../resource/NPU-Exporter调用的HDK接口.xlsx)。查找数据信息对应的HDK接口，可参考如下步骤。
 
-1. 登录[昇腾计算文档](https://support.huawei.com/enterprise/zh/category/ascend-computing-pid-1557196528909?submodel=doc)中心，选择并单击对应产品名称，进入文档界面。例如Atlas 800I A2 推理服务器产品的用户，单击“Atlas 800I A2”。
+1. 登录[昇腾计算文档](https://support.huawei.com/enterprise/zh/category/ascend-computing-pid-1557196528909?submodel=doc)中心，选择并单击对应产品名称，进入文档界面。例如Atlas 800I A2推理服务器产品的用户，单击“Atlas 800I A2”。
 2. 在左侧导航栏找到“二次开发”，根据接口的类型选择对应文档。
     - DCMI接口选择“API参考”，单击进入《[DCMI API参考](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=api-reference)》。
     - HCCN Tool接口选择“接口参考”，单击进入《[Atlas A2 中心推理和训练硬件 HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100591765/426cffd9)》。

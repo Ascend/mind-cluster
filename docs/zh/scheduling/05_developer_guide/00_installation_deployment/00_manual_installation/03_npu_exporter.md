@@ -46,13 +46,13 @@
 <tr id="row35071553276"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18507205192711"><a name="p18507205192711"></a><a name="p18507205192711"></a>如果通过设置LD_LIBRARY_PATH设置动态库路径，LD_LIBRARY_PATH环境变量总长度不能超过1024。</p>
 </td>
 </tr>
-<tr id="row75074519275"><td class="cellrowborder" rowspan="2" valign="top" width="29.970000000000002%" headers="mcps1.2.3.1.1 "><p id="p050719519271"><a name="p050719519271"></a><a name="p050719519271"></a><span id="ph13135203152812"><a name="ph13135203152812"></a><a name="ph13135203152812"></a>Atlas 200I SoC A1 核心板</span></p>
+<tr id="row75074519275"><td class="cellrowborder" rowspan="2" valign="top" width="29.970000000000002%" headers="mcps1.2.3.1.1 "><p id="p050719519271"><a name="p050719519271"></a><a name="p050719519271"></a><span id="ph13135203152812"><a name="ph13135203152812"></a><a name="ph13135203152812"></a>Atlas 200I SoC A1核心板</span></p>
 <p id="p35076552719"><a name="p35076552719"></a><a name="p35076552719"></a></p>
 </td>
-<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><p id="p209012054192411"><a name="p209012054192411"></a><a name="p209012054192411"></a><span id="ph56561935182816"><a name="ph56561935182816"></a><a name="ph56561935182816"></a>Atlas 200I SoC A1 核心板</span>使用<span id="ph1865633562811"><a name="ph1865633562811"></a><a name="ph1865633562811"></a>NPU Exporter</span>组件，需要确保<span id="ph10656153513282"><a name="ph10656153513282"></a><a name="ph10656153513282"></a>Atlas 200I SoC A1 核心板</span>的NPU驱动在23.0.RC2及以上版本。升级NPU驱动可参考<span id="ph19001377278"><a name="ph19001377278"></a><a name="ph19001377278"></a>《Atlas 200I SoC A1 核心板 NPU驱动和固件升级指导书》中“<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100493481/b35e85d1" target="_blank" rel="noopener noreferrer">升级驱动</a>”章节</span>进行操作。</p>
+<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><p id="p209012054192411"><a name="p209012054192411"></a><a name="p209012054192411"></a><span id="ph56561935182816"><a name="ph56561935182816"></a><a name="ph56561935182816"></a>Atlas 200I SoC A1核心板</span>使用<span id="ph1865633562811"><a name="ph1865633562811"></a><a name="ph1865633562811"></a>NPU Exporter</span>组件，需要确保<span id="ph10656153513282"><a name="ph10656153513282"></a><a name="ph10656153513282"></a>Atlas 200I SoC A1核心板</span>的NPU驱动在23.0.RC2及以上版本。升级NPU驱动可参考<span id="ph19001377278"><a name="ph19001377278"></a><a name="ph19001377278"></a>《Atlas 200I SoC A1核心板 NPU驱动和固件升级指导书》中“<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100493481/b35e85d1" target="_blank" rel="noopener noreferrer">升级驱动</a>”章节</span>进行操作。</p>
 </td>
 </tr>
-<tr id="row165073518272"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p95251515257"><a name="p95251515257"></a><a name="p95251515257"></a><span id="ph19614124172819"><a name="ph19614124172819"></a><a name="ph19614124172819"></a>Atlas 200I SoC A1 核心板</span>节点上使用镜像方式部署<span id="ph136141041142813"><a name="ph136141041142813"></a><a name="ph136141041142813"></a>NPU Exporter</span>，需要配置多容器共享模式，具体请参考<span id="ph3957123242310"><a name="ph3957123242310"></a><a name="ph3957123242310"></a>《Atlas 200I SoC A1 核心板 NPU驱动和固件安装指南》中“<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100493510/55e9d968" target="_blank" rel="noopener noreferrer">容器内运行</a>”章节</span>。</p>
+<tr id="row165073518272"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p95251515257"><a name="p95251515257"></a><a name="p95251515257"></a><span id="ph19614124172819"><a name="ph19614124172819"></a><a name="ph19614124172819"></a>Atlas 200I SoC A1核心板</span>节点上使用镜像方式部署<span id="ph136141041142813"><a name="ph136141041142813"></a><a name="ph136141041142813"></a>NPU Exporter</span>，需要配置多容器共享模式，具体请参考<span id="ph3957123242310"><a name="ph3957123242310"></a><a name="ph3957123242310"></a>《Atlas 200I SoC A1核心板 NPU驱动和固件安装指南》中“<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100493510/55e9d968" target="_blank" rel="noopener noreferrer">容器内运行</a>”章节</span>。</p>
 </td>
 </tr>
 <tr id="row1044710113298"><td class="cellrowborder" valign="top" width="29.970000000000002%" headers="mcps1.2.3.1.1 "><p id="p1144701142912"><a name="p1144701142912"></a><a name="p1144701142912"></a>虚拟机场景</p>
@@ -344,13 +344,13 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
 7. 如不修改组件的其他启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中NPU Exporter的启动参数。启动参数如[表2](#table872410431914)所示，也可执行<b>./npu-exporter -h</b>查看参数说明。
 8. 在管理节点的YAML所在路径，执行以下命令，启动NPU Exporter。
 
-    - K8s集群中使用Atlas 200I SoC A1 核心板节点，执行以下命令。
+    - K8s集群中使用Atlas 200I SoC A1核心板节点，执行以下命令。
 
         ```shell
         kubectl apply -f npu-exporter-310P-1usoc-v{version}.yaml
         ```
 
-    - K8s集群中使用除Atlas 200I SoC A1 核心板外的其他类型节点，执行以下命令。
+    - K8s集群中使用除Atlas 200I SoC A1核心板外的其他类型节点，执行以下命令。
 
         ```shell
         kubectl apply -f npu-exporter-v{version}.yaml
@@ -526,7 +526,7 @@ NPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 
     3. 按“Esc”键，输入:wq!保存并退出。
 
-7. 若部署节点为Atlas 200I SoC A1 核心板，请依次执行以下命令，在节点上将hwMindX用户加入到HwBaseUser、HwDmUser用户组中。非Atlas 200I SoC A1 核心板用户，可跳过本步骤。
+7. 若部署节点为Atlas 200I SoC A1核心板，请依次执行以下命令，在节点上将hwMindX用户加入到HwBaseUser、HwDmUser用户组中。非Atlas 200I SoC A1核心板用户，可跳过本步骤。
 
     ```shell
     usermod -a -G HwBaseUser hwMindX
@@ -593,9 +593,9 @@ NPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 |-poll_interval|duration(int)|1| Telegraf数据上报的间隔时间，单位：秒。此参数在对接Telegraf平台时才起作用，即需要指定-platform=Telegraf时才生效，否则该参数不生效。                                                                                                                                                                                                                                                                                                                                                                                                                   |
 |-profilingTime|int|200| 配置采集PCIe带宽时间，单位：毫秒，取值范围为1~2000。                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 |-hccsBWProfilingTime|int|200| HCCS链路带宽采样时长，取值范围1~1000，单位：毫秒。                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-|-deviceResetTimeout|int|600| 组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10~600。<ul><li><term>Atlas A2 训练系列产品</term>、Atlas 800I A2 推理服务器、A200I A2 Box 异构组件：建议配置为150秒。</li><li><term>Atlas A3 训练系列产品</term>、Atlas 800I A3 超节点服务器：建议配置为360秒。</li><li><term>Ascend 950PR&950DT系列产品</term>：建议配置为600秒。</li></ul>                                                                                                                                                                       |
+|-deviceResetTimeout|int|600| 组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10~600。<ul><li><term>Atlas A2训练系列产品</term>、Atlas 800I A2推理服务器、A200I A2 Box异构组件：建议配置为150秒。</li><li><term>Atlas A3训练系列产品</term>、Atlas 800I A3超节点服务器：建议配置为360秒。</li><li><term>Ascend 950PR&950DT系列产品</term>：建议配置为600秒。</li></ul>                                                                                                                                                                       |
 |-textMetricsFilePath|string|无| 指定自定义指标文件的路径，其约束说明详细请参见[约束说明](../../../06_api/00_npu_exporter/03_custom_metrics_file.md#约束说明)。                                                                                                                                                                                                                                                                                                                                                                                                       |
-|-enableLegacyMetrics|bool|false| 指定是否开启Atlas 350 加速卡旧版本Prometheus网络类指标格式,默认false不开启。                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|-enableLegacyMetrics|bool|false| 指定是否开启Atlas 350加速卡旧版本Prometheus网络类指标格式,默认false不开启。                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ## 动态加载配置说明<a name="动态配置加载说明"></a>
 

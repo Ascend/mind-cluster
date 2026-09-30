@@ -4,7 +4,7 @@
 
 **使用背景<a name="zh-cn_topic_0000001589264561_section15670165114555"></a>**
 
-由于边缘设备（如Atlas 500 A2 智能小站）存储空间有限，并且边缘设备多采用eMMC等flash作为存储介质，该介质存在使用寿命的限制。为避免存储空间过快被写满从而影响业务或存储介质过快达到使用寿命，用户可以参考本章节边缘容器日志的输出建议，使边缘容器以合适的方式输出日志。
+由于边缘设备（如Atlas 500 A2智能小站）存储空间有限，并且边缘设备多采用eMMC等flash作为存储介质，该介质存在使用寿命的限制。为避免存储空间过快被写满从而影响业务或存储介质过快达到使用寿命，用户可以参考本章节边缘容器日志的输出建议，使边缘容器以合适的方式输出日志。
 
 **输出方式<a name="zh-cn_topic_0000001589264561_section5556162785617"></a>**
 
@@ -71,7 +71,7 @@ Ascend Docker Runtime会根据实际环境情况默认以只读方式挂载以�
 |/dev/dvpp_cmdlist|设备文件，支撑推理业务。|
 |/var/queue_schedule|管理FlowGW调度框架。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>挂载此目录需同时满足以下条件：</p><ul><li>MindCluster组件版本≥6.0.0。</li><li>HDK版本≥24.1.RC2。</li></ul></div></div>|
 
-**表 2**  默认挂载目录和文件（Atlas 200I SoC A1 核心板）
+**表 2**  默认挂载目录和文件（Atlas 200I SoC A1核心板）
 
 <a name="zh-cn_topic_0000001538584750_table2868154235914"></a>
 
@@ -85,7 +85,7 @@ Ascend Docker Runtime会根据实际环境情况默认以只读方式挂载以�
 |/dev/dvpp_cmdlist|设备文件，支撑推理业务。|
 |/var/queue_schedule|管理FlowGW调度框架。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>挂载此目录需同时满足以下条件：</p><ul><li>MindCluster组件版本≥6.0.0。</li><li>HDK版本≥24.1.RC2。</li></ul></div></div>|
 
-**表 3**  默认挂载目录和文件（Atlas 200I A2 加速模块和Atlas 200I DK A2 开发者套件）
+**表 3**  默认挂载目录和文件（Atlas 200I A2加速模块和Atlas 200I DK A2开发者套件）
 
 <a name="zh-cn_topic_0000001538584750_table1986129115"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0000001538584750_row158718919114"><th class="cellrowborder" valign="top" width="42.86%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000001538584750_p2871497112"><a name="zh-cn_topic_0000001538584750_p2871497112"></a><a name="zh-cn_topic_0000001538584750_p2871497112"></a>路径</p>
@@ -236,7 +236,7 @@ Ascend Docker Runtime会根据实际环境情况默认以只读方式挂载以�
 </tbody>
 </table>
 
-**表 4**  默认挂载目录和文件（Atlas 500 智能小站（型号 3000））
+**表 4**  默认挂载目录和文件（Atlas 500智能小站（型号：3000））
 
 <a name="zh-cn_topic_0000001538584750_table13873642175917"></a>
 
@@ -253,7 +253,7 @@ Ascend Docker Runtime会根据实际环境情况默认以只读方式挂载以�
 |/dev/dvpp_cmdlist|设备文件，支撑推理业务。|
 |/var/queue_schedule|管理FlowGW调度框架。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>挂载此目录需同时满足以下条件：</p><ul><li>MindCluster组件版本≥6.0.0。</li><li>HDK版本≥24.1.RC2。</li></ul></div></div>|
 
-**表 5**  默认挂载目录和文件（Atlas 500 A2 智能小站）
+**表 5**  默认挂载目录和文件（Atlas 500 A2智能小站）
 
 <a name="zh-cn_topic_0000001538584750_table1023983110534"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0000001538584750_row11240193115538"><th class="cellrowborder" valign="top" width="42.86%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000001538584750_p16240731145317"><a name="zh-cn_topic_0000001538584750_p16240731145317"></a><a name="zh-cn_topic_0000001538584750_p16240731145317"></a>路径</p>
@@ -731,7 +731,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 </th>
 </tr>
 </thead>
-<tbody><tr id="row326155119271"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p32614515273"><a name="p32614515273"></a><a name="p32614515273"></a><span id="ph1181011812299"><a name="ph1181011812299"></a><a name="ph1181011812299"></a>Atlas 800 训练服务器（NPU满配）</span></p>
+<tbody><tr id="row326155119271"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p32614515273"><a name="p32614515273"></a><a name="p32614515273"></a><span id="ph1181011812299"><a name="ph1181011812299"></a><a name="ph1181011812299"></a>Atlas 800训练服务器（NPU满配）</span></p>
 <p id="p102616512270"><a name="p102616512270"></a><a name="p102616512270"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p5261151172716"><a name="p5261151172716"></a><a name="p5261151172716"></a>单机场景</p>
@@ -747,7 +747,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <p id="p172611510279"><a name="p172611510279"></a><a name="p172611510279"></a>N表示节点个数，其中每个节点的NPU调度约束同单机场景。</p>
 </td>
 </tr>
-<tr id="row1826951172711"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p826165112711"><a name="p826165112711"></a><a name="p826165112711"></a><span id="ph33362565317"><a name="ph33362565317"></a><a name="ph33362565317"></a>Atlas 800 训练服务器（NPU半配）</span></p>
+<tr id="row1826951172711"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p826165112711"><a name="p826165112711"></a><a name="p826165112711"></a><span id="ph33362565317"><a name="ph33362565317"></a><a name="ph33362565317"></a>Atlas 800训练服务器（NPU半配）</span></p>
 <p id="p182705119278"><a name="p182705119278"></a><a name="p182705119278"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p16616135918317"><a name="p16616135918317"></a><a name="p16616135918317"></a>单机场景</p>
@@ -760,7 +760,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1956123214326"><a name="p1956123214326"></a><a name="p1956123214326"></a>可申请NPU数目为1N、2N、4N。N表示节点个数。</p>
 </td>
 </tr>
-<tr id="row83031728327"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p030419223219"><a name="p030419223219"></a><a name="p030419223219"></a><span id="ph1435231416346"><a name="ph1435231416346"></a><a name="ph1435231416346"></a>Atlas 200T A2 Box16 异构子框</span></p>
+<tr id="row83031728327"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p030419223219"><a name="p030419223219"></a><a name="p030419223219"></a><span id="ph1435231416346"><a name="ph1435231416346"></a><a name="ph1435231416346"></a>Atlas 200T A2 Box16异构子框</span></p>
 <p id="p62201442326"><a name="p62201442326"></a><a name="p62201442326"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p230416293218"><a name="p230416293218"></a><a name="p230416293218"></a>单机场景</p>
@@ -775,7 +775,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <a name="ul153831715113813"></a><a name="ul153831715113813"></a><ul id="ul153831715113813"><li>N表示节点个数，其中每个节点的NPU调度约束同单机场景。</li><li>申请NPU的数目为10N、12N、14N时，需要将所需的NPU平均分配到两个环，相对的物理地址可以不一致。</li></ul>
 </td>
 </tr>
-<tr id="row8392059113816"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p163965933816"><a name="p163965933816"></a><a name="p163965933816"></a><span id="ph20714203916"><a name="ph20714203916"></a><a name="ph20714203916"></a>Atlas 800T A2 训练服务器</span>或<span id="ph366416144394"><a name="ph366416144394"></a><a name="ph366416144394"></a>Atlas 900 A2 PoD 集群基础单元</span></p>
+<tr id="row8392059113816"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p163965933816"><a name="p163965933816"></a><a name="p163965933816"></a><span id="ph20714203916"><a name="ph20714203916"></a><a name="ph20714203916"></a>Atlas 800T A2训练服务器</span>或<span id="ph366416144394"><a name="ph366416144394"></a><a name="ph366416144394"></a>Atlas 900 A2 PoD集群基础单元</span></p>
 <p id="p2077250203910"><a name="p2077250203910"></a><a name="p2077250203910"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p16953101913920"><a name="p16953101913920"></a><a name="p16953101913920"></a>单机场景</p>
@@ -788,7 +788,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p18772120173911"><a name="p18772120173911"></a><a name="p18772120173911"></a>可申请NPU的数目为1N、2N、3N、4N、5N、6N、7N、8N、16N。N表示节点个数。</p>
 </td>
 </tr>
-<tr id="row140031116473"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p18993101513479"><a name="p18993101513479"></a><a name="p18993101513479"></a><span id="ph11548211143817"><a name="ph11548211143817"></a><a name="ph11548211143817"></a>Atlas 900 A3 SuperPoD 超节点</span></p>
+<tr id="row140031116473"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p18993101513479"><a name="p18993101513479"></a><a name="p18993101513479"></a><span id="ph11548211143817"><a name="ph11548211143817"></a><a name="ph11548211143817"></a>Atlas 900 A3 SuperPoD超节点</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p425423854716"><a name="p425423854716"></a><a name="p425423854716"></a>单机场景</p>
 </td>
@@ -800,21 +800,21 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p9141413194710"><a name="p9141413194710"></a><a name="p9141413194710"></a>可申请NPU的数目为2、4、6、8、10、12、14、16。若为逻辑超节点亲和任务，即任务YAML中的sp-block字段配置了逻辑超节点大小，则申请NPU的数目只能为16。</p>
 </td>
 </tr>
-<tr id="row91009103501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009103501"><a name="p91009103501"></a><a name="p91009103501"></a><span id="ph91009103501"><a name="ph91009103501"></a><a name="ph91009103501"></a>Atlas 350 加速卡</span></p>
+<tr id="row91009103501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009103501"><a name="p91009103501"></a><a name="p91009103501"></a><span id="ph91009103501"><a name="ph91009103501"></a><a name="ph91009103501"></a>Atlas 350加速卡</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009103502"><a name="p91009103502"></a><a name="p91009103502"></a>单机场景</p>
 </td>
-<td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p91009103503"><a name="p91009103503"></a><a name="p91009103503"></a>根据Atlas 350 加速卡在服务器内的互联拓扑不同，可申请NPU的数目如下：</p>
+<td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p91009103503"><a name="p91009103503"></a><a name="p91009103503"></a>根据Atlas 350加速卡在服务器内的互联拓扑不同，可申请NPU的数目如下：</p>
 <a name="ul91009103501"></a><a name="ul91009103501"></a><ul id="ul91009103501"><li>无互联节点内8卡：可申请NPU的数目为1、2、3、4、5、6、7、8。</li><li>无互联节点内16卡：可申请NPU的数目为1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16。</li><li>4P mesh 8卡：满足亲和性时，可申请NPU的数目为1、2、3、4、8；不保证亲和性时，可申请NPU的数目为5、6、7。</li><li>4P mesh 16卡：满足亲和性时，可申请NPU的数目为1、2、3、4、8、12、16；不保证亲和性时，可申请NPU的数目为5、6、7、9、10、11、13、14、15。</li></ul>
 </td>
 </tr>
 <tr id="row91009103502"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p91009103504"><a name="p91009103504"></a><a name="p91009103504"></a>分布式场景</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p91009103505"><a name="p91009103505"></a><a name="p91009103505"></a>根据Atlas 350 加速卡在服务器内的互联拓扑不同，可申请NPU的数目如下（N表示节点个数，其中每个节点的NPU调度约束同单机场景）：</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p91009103505"><a name="p91009103505"></a><a name="p91009103505"></a>根据Atlas 350加速卡在服务器内的互联拓扑不同，可申请NPU的数目如下（N表示节点个数，其中每个节点的NPU调度约束同单机场景）：</p>
 <a name="ul91009103502"></a><a name="ul91009103502"></a><ul id="ul91009103502"><li>无互联节点内8卡：可申请NPU的数目为1N、2N、3N、4N、5N、6N、7N、8N。</li><li>无互联节点内16卡：可申请NPU的数目为1N、2N、3N、4N、5N、6N、7N、8N、9N、10N、11N、12N、13N、14N、15N、16N。</li><li>4P mesh 8卡：满足亲和性时，可申请NPU的数目为1N、2N、3N、4N、8N；不保证亲和性时，可申请NPU的数目为5N、6N、7N。</li><li>4P mesh 16卡：满足亲和性时，可申请NPU的数目为1N、2N、3N、4N、8N、12N、16N；不保证亲和性时，可申请NPU的数目为5N、6N、7N、9N、10N、11N、13N、14N、15N。</li></ul>
 </td>
 </tr>
-<tr id="row91009106501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009106501"><a name="p91009106501"></a><a name="p91009106501"></a><span id="ph91009106501"><a name="ph91009106501"></a><a name="ph91009106501"></a>Atlas 650E 服务器或Atlas 650 服务器</span></p>
+<tr id="row91009106501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009106501"><a name="p91009106501"></a><a name="p91009106501"></a><span id="ph91009106501"><a name="ph91009106501"></a><a name="ph91009106501"></a>Atlas 650E服务器或Atlas 650服务器</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009106502"><a name="p91009106502"></a><a name="p91009106502"></a>单机场景</p>
 </td>
@@ -826,7 +826,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p91009106505"><a name="p91009106505"></a><a name="p91009106505"></a>可申请NPU的数目为1N、2N、3N、4N、5N、6N、7N、8N。N表示节点个数，其中每个节点的NPU调度约束同单机场景。</p>
 </td>
 </tr>
-<tr id="row91009108501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009108501"><a name="p91009108501"></a><a name="p91009108501"></a><span id="ph91009108501"><a name="ph91009108501"></a><a name="ph91009108501"></a>Atlas 850E 超节点或Atlas 850 超节点</span></p>
+<tr id="row91009108501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009108501"><a name="p91009108501"></a><a name="p91009108501"></a><span id="ph91009108501"><a name="ph91009108501"></a><a name="ph91009108501"></a>Atlas 850E超节点或Atlas 850超节点</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009108502"><a name="p91009108502"></a><a name="p91009108502"></a>单机场景</p>
 </td>
@@ -838,7 +838,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p91009108505"><a name="p91009108505"></a><a name="p91009108505"></a>分布式任务每个节点固定申请8卡，即可申请NPU的数目为8N。N表示节点个数。若为逻辑超节点亲和任务，即任务YAML中的sp-block字段配置了逻辑超节点大小，则sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小。</p>
 </td>
 </tr>
-<tr id="row91009109501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009109501"><a name="p91009109501"></a><a name="p91009109501"></a><span id="ph91009109501"><a name="ph91009109501"></a><a name="ph91009109501"></a>Atlas 950 SuperPoD 超节点</span></p>
+<tr id="row91009109501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009109501"><a name="p91009109501"></a><a name="p91009109501"></a><span id="ph91009109501"><a name="ph91009109501"></a><a name="ph91009109501"></a>Atlas 950 SuperPoD超节点</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009109502"><a name="p91009109502"></a><a name="p91009109502"></a>单机场景</p>
 </td>
@@ -895,12 +895,12 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 
 |产品形态|参考文档|
 |--|--|
-|<term>Atlas 训练系列产品</term>|<ul><li><span>《[Atlas 中心训练服务器 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591757)》</span></li><li><span>《[Atlas 中心训练服务器 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591764)》</span></li></ul>|
+|<term>Atlas训练系列产品</term>|<ul><li><span>《[Atlas 中心训练服务器 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591757)》</span></li><li><span>《[Atlas 中心训练服务器 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591764)》</span></li></ul>|
 |<term>Atlas A2系列产品</term>|<ul><li><span>《[Atlas A2 中心推理和训练硬件 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591767)》</span></li><li><span>《[Atlas A2 中心推理和训练硬件 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591760)》</span></li></ul>|
 |<term>Atlas A3系列产品</term>|<ul><li><span>《[Atlas A3 中心推理和训练硬件 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591769)》</span></li><li><span>《[Atlas A3 中心推理和训练硬件 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591758)》</span></li></ul>|
-|推理服务器（插Atlas 300I 推理卡）|<span>《[Atlas 300I 推理卡 黑匣子错误码信息列表（型号 3000, 3010）](https://support.huawei.com/enterprise/zh/doc/EDOC1100438311)》</span>|
-|Atlas 200I SoC A1 核心板|<ul><li><span>《[Atlas 200I SoC A1核心板 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100493983)》</span></li><li><span>《[Atlas 200I SoC A1核心板 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100493985)》</span></li></ul>|
-|<term>Atlas 推理系列产品</term>（不包含Atlas 200I SoC A1 核心板）|<ul><li><span>《[Atlas 中心推理卡 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591759)》</span></li><li><span>《[Atlas 中心推理卡 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591768)》</span></li></ul>|
+|推理服务器（插Atlas 300I推理卡）|<span>《[Atlas 300I推理卡 黑匣子错误码信息列表（型号 3000, 3010）](https://support.huawei.com/enterprise/zh/doc/EDOC1100438311)》</span>|
+|Atlas 200I SoC A1核心板|<ul><li><span>《[Atlas 200I SoC A1核心板 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100493983)》</span></li><li><span>《[Atlas 200I SoC A1核心板 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100493985)》</span></li></ul>|
+|<term>Atlas推理系列产品</term>（不包含Atlas 200I SoC A1核心板）|<ul><li><span>《[Atlas 中心推理卡 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591759)》</span></li><li><span>《[Atlas 中心推理卡 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591768)》</span></li></ul>|
 |<term>Ascend 950PR&950DT系列产品</term>|<ul><li><span>《[健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100569783)》</span></li><li><span>《[黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100569782)》</span></li></ul>|
 
 ## 节点故障码参考文档<a name="ZH-CN_TOPIC_0000002479386430"></a>
@@ -913,8 +913,8 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 
 |产品形态|参考文档|
 |--|--|
-|Atlas 800T A2 训练服务器|《[Atlas 800T A2 训练服务器 iBMC 告警处理](https://support.huawei.com/enterprise/zh/doc/EDOC1100317321)》|
-|Atlas 900 A2 PoD 集群基础单元|《[Atlas 900 RCK A2 计算节点 iBMC 告警处理](https://support.huawei.com/enterprise/zh/doc/EDOC1100313926)》|
+|Atlas 800T A2训练服务器|《[Atlas 800T A2训练服务器 iBMC 告警处理](https://support.huawei.com/enterprise/zh/doc/EDOC1100317321)》|
+|Atlas 900 A2 PoD集群基础单元|《[Atlas 900 RCK A2 计算节点 iBMC 告警处理](https://support.huawei.com/enterprise/zh/doc/EDOC1100313926)》|
 
 >[!NOTE]
 >其他产品形态的iBMC告警请从[Support网站](https://support.huawei.com/enterprise/zh/category/ascend-computing-pid-1557196528909)获取，选择对应产品，找到对应产品的iBMC 告警处理。
@@ -943,14 +943,14 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 
 |url|说明|
 |--|--|
-|huawei.com/Ascend910|<term>Atlas 训练系列产品</term>资源名称，非网址，不访问。|
-|huawei.com/Ascend310P|<term>Atlas 推理系列产品</term>资源名称，非网址，不访问。|
-|huawei.com/Ascend310|<term>Atlas 200/300/500 推理产品</term>资源名称，非网址，不访问。|
+|huawei.com/Ascend910|<term>Atlas训练系列产品</term>资源名称，非网址，不访问。|
+|huawei.com/Ascend310P|<term>Atlas推理系列产品</term>资源名称，非网址，不访问。|
+|huawei.com/Ascend310|<term>Atlas 200/300/500推理产品</term>资源名称，非网址，不访问。|
 |huawei.com/Ascend*|Ascend*切分芯片资源名称，非网址，不访问。|
 |`https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3`|注释参考信息，不访问。|
-|huawei.com/Ascend310P-V|<term>Atlas 推理系列产品</term>混插模式：Atlas 300V 视频解析卡资源名称，非网址，不访问。|
-|huawei.com/Ascend310P-VPro|<term>Atlas 推理系列产品</term>混插模式：Atlas 300V Pro 视频解析卡资源名称，非网址，不访问。|
-|huawei.com/Ascend310P-IPro|<term>Atlas 推理系列产品</term>混插模式：Atlas 300I Pro 推理卡资源名称，非网址，不访问。|
+|huawei.com/Ascend310P-V|<term>Atlas推理系列产品</term>混插模式：Atlas 300V视频解析卡资源名称，非网址，不访问。|
+|huawei.com/Ascend310P-VPro|<term>Atlas推理系列产品</term>混插模式：Atlas 300V Pro视频解析卡资源名称，非网址，不访问。|
+|huawei.com/Ascend310P-IPro|<term>Atlas推理系列产品</term>混插模式：Atlas 300I Pro推理卡资源名称，非网址，不访问。|
 |huawei.com/npu|<term>Ascend 950PR&950DT系列产品</term>资源名称，非网址，不访问。|
 
 ## 安全说明<a name="ZH-CN_TOPIC_0000002479386374"></a>
@@ -988,18 +988,18 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 |root|-|用户自定义|使用**passwd**命令修改。|
 |HwHiAiUser|驱动run包的运行用户。|用户自定义|使用**passwd**命令修改。|
 |hwMindX|集群调度组件默认的运行用户，默认设置为nologin。|无|-|
-|HwBaseUser|Atlas 200I SoC A1 核心板上驱动相关设备运行用户，安装驱动时由驱动run包或者用户自行创建，默认设置为nologin。|无|-|
-|HwDmUser|Atlas 200I SoC A1 核心板上驱动相关设备运行用户，安装驱动时由驱动run包或者用户自行创建，默认设置为nologin。|无|-|
+|HwBaseUser|Atlas 200I SoC A1核心板上驱动相关设备运行用户，安装驱动时由驱动run包或者用户自行创建，默认设置为nologin。|无|-|
+|HwDmUser|Atlas 200I SoC A1核心板上驱动相关设备运行用户，安装驱动时由驱动run包或者用户自行创建，默认设置为nologin。|无|-|
 
 **集群调度组件容器内用户<a name="zh-cn_topic_0000001515257736_zh-cn_topic_0000001446965016_section222461118323"></a>**
 
 |用户|描述|初始密码|密码修改方法|
 |--|--|--|--|
 |root|-|无|-|
-|HwHiAiUser|驱动run包的运行用户，非Atlas 200I SoC A1 核心板上的集群调度组件容器内默认为nologin，该用户不可登录。|无|-|
+|HwHiAiUser|驱动run包的运行用户，非Atlas 200I SoC A1核心板上的集群调度组件容器内默认为nologin，该用户不可登录。|无|-|
 |hwMindX|集群调度组件容器内默认的运行用户，默认设置为nologin。|无|-|
-|HwBaseUser|Atlas 200I SoC A1 核心板上驱动相关设备运行用户，集群调度组件容器内由用户自行创建。|无|-|
-|HwDmUser|Atlas 200I SoC A1 核心板上驱动相关设备运行用户，集群调度组件容器内由用户自行创建。|无|-|
+|HwBaseUser|Atlas 200I SoC A1核心板上驱动相关设备运行用户，集群调度组件容器内由用户自行创建。|无|-|
+|HwDmUser|Atlas 200I SoC A1核心板上驱动相关设备运行用户，集群调度组件容器内由用户自行创建。|无|-|
 
 **nginx容器内用户（非安全加固场景不涉及）<a name="section1462355162610"></a>**
 

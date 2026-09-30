@@ -21,14 +21,14 @@
 
 支持以下产品使用资源监测。
 
-- <term>Atlas 训练系列产品</term>
-- <term>Atlas A2 训练系列产品</term>
-- <term>Atlas A3 训练系列产品</term>
-- 推理服务器（插Atlas 300I 推理卡）
-- <term>Atlas 推理系列产品</term>
-- Atlas 800I A2 推理服务器
-- A200I A2 Box 异构组件
-- Atlas 800I A3 超节点服务器
-- Atlas 350 加速卡
-- Atlas 950 SuperPoD 超节点
+- <term>Atlas训练系列产品</term>
+- <term>Atlas A2训练系列产品</term>
+- <term>Atlas A3训练系列产品</term>
+- 推理服务器（插Atlas 300I推理卡）
+- <term>Atlas推理系列产品</term>
+- Atlas 800I A2推理服务器
+- A200I A2 Box异构组件
+- Atlas 800I A3超节点服务器
+- Atlas 350加速卡
+- Atlas 950 SuperPoD超节点
 - Atlas 950 SuperPoD Flex

@@ -31,7 +31,7 @@
                 command: [ "/bin/bash", "-c", "--"]
                 args: [ "device-plugin
                          <strong>-volcanoType=true                    # 重调度场景下必须使用Volcano</strong>
-                         <strong>-autoStowing=true                    # 该字段已日落。是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品</strong>
+                         <strong>-autoStowing=true                    # 该字段已日落。是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas训练系列产品</strong>
                          <strong>-listWatchPeriod=5                   # 设置健康状态检查周期，范围[3,1800]；单位为秒</strong>
                          -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log
                          -logLevel=0" ]
@@ -64,7 +64,7 @@
                 command: [ "/bin/bash", "-c", "--"]
                 args: [ "device-plugin
                          -volcanoType=true                    # 重调度场景下必须使用Volcano
-                         -autoStowing=true                    # 该字段已日落。是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品
+                         -autoStowing=true                    # 该字段已日落。是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas训练系列产品
                          <span style="color:#D80000;"><strong>-hotReset=1 # 【DEPRECATED】开启优雅容错模式，系统会尝试自动复位故障芯片（取值为1的在线热复位功能已日落）</strong></span>
                          -listWatchPeriod=5                   # 健康状态检查周期，范围[3,1800]；单位为秒
                          -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log

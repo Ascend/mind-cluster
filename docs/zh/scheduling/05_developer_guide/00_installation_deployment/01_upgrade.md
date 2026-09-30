@@ -300,7 +300,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
         cat /var/log/mindx-dl/container-manager/container-manager.log
         ```
 
-        回显以Atlas 800I A3 超节点服务器为例：
+        回显以Atlas 800I A3超节点服务器为例：
 
         ```ColdFusion
         [INFO]     2025/11/25 22:46:59.007163 1       hwlog/api.go:108    container-manager.log's logger init success

@@ -23,7 +23,7 @@
 NPU上Task执行异常（业务面故障）可能导致任务中正常NPU无法与故障NPU通信，使正常NPU集合通信陷入超时等待状态，任务集合通信出现等待超时异常后才退出（默认为30分钟）。开启watchdog功能（需同时开启业务面故障无条件重试能力），可以在该异常发生后，隔离故障NPU，将任务重调度到健康的NPU上，从而实现6分钟内使任务快速退出。
 
 >[!NOTE]
->NPU上Task执行异常仅支持<term>Atlas A2 训练系列产品</term>的PyTorch框架使用watchdog功能。
+>NPU上Task执行异常仅支持<term>Atlas A2训练系列产品</term>的PyTorch框架使用watchdog功能。
 
 ### 所需组件<a name="zh-cn_topic_0000002194466236_section138036504533"></a>
 
