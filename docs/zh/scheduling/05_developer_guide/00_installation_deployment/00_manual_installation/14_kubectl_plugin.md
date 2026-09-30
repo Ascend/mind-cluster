@@ -4,20 +4,19 @@ Kubectl Plugin是集群运维Agent特性的客户端命令行工具，包含 `ku
 
 - 使用[集群运维Agent](../../../01_introduction/02_feature_description.md#ZH-CN_TOPIC_0000002524312690)特性的用户，必须安装Kubectl Plugin。
 - Kubectl Plugin为纯Python标准库实现的客户端工具，无需pip安装。
-- 安装Kubectl Plugin前，需先完成Agent Core和Node Collector的部署，详细说明请参见 [Agent Core](./15_agent_core.md) 和 [Node Collector](./16_node_collector.md)。
 
 ## 操作步骤<a name="section15023132772914"></a>
 
 1. 参考[获取软件包](./00_obtaining_software_packages.md)章节，下载Ascend ClusterOps Agent软件包。
 
-2. 将软件包上传至用户机服务器并解压。解压后Kubectl Plugin位于kubectl-plugin子目录下，目录结构如下。
+2. 将软件包上传至用户机服务器并解压。解压后插件文件位于kubectl-plugin子目录下，目录结构如下。
 
     ```shell
     Ascend-mindxdl-ascend-clusterops-agent_{version}_linux.zip
     └── kubectl-plugin/           # Kubectl Plugin
         ├── install.sh            # 一键安装脚本
-        ├── kubectl-ascend_diag   # kubectl ascend-diag命令
-        └── kubectl-clusterops    # kubectl clusterops命令
+        ├── kubectl-ascend_diag   # kubectl ascend-diag插件文件
+        └── kubectl-clusterops    # kubectl clusterops插件文件
     ```
 
 3. 以root用户登录用户机，进入kubectl-plugin目录，执行以下命令安装插件。
@@ -45,22 +44,41 @@ Kubectl Plugin是集群运维Agent特性的客户端命令行工具，包含 `ku
 
     ```text
     $ kubectl ascend-diag --help
-    usage: kubectl-ascend_diag [-h] [--job JOB] [-n NAMESPACE] [--refresh] [--json] [--collect-manifest PATH]
+    usage: kubectl-ascend_diag [-h] [--job JOB] [-n NAMESPACE] [--agent-core-service AGENT_CORE_SERVICE] [--refresh] [--json] [--collect-manifest PATH]
 
     Ascend fault diagnosis kubectl plugin
+
+    optional arguments:
+    -h, --help            show this help message and exit
+    --job JOB             job name (job CR name)
+    -n NAMESPACE, --namespace NAMESPACE
+                            namespace
+    --agent-core-service AGENT_CORE_SERVICE
+                            Agent Core Service, format svc.ns:9700
+    --refresh             ignore the cache, force rerun and refresh the cache
+    --json                print the full JSON response
+    --collect-manifest PATH
+                            write a local collect_manifest.yaml into the cluster ConfigMap and exit
 
     $ kubectl clusterops --help
     usage: kubectl-clusterops [-h] [--create-llm-config] [--clear-llm-config] [--base-url BASE_URL] [--model MODEL]
 
     cluster operations kubectl plugin
+
+    optional arguments:
+    -h, --help           show this help message and exit
+    --create-llm-config  configure the LLM Secret (llm-secret)
+    --clear-llm-config   clear all LLM config (delete llm-secret, effective immediately)
+    --base-url BASE_URL  LLM Base URL (prompted; or env LLM_BASE_URL)
+    --model MODEL        LLM model name (prompted; or env LLM_MODEL)
     ```
 
-5. （可选）配置LLM服务。如需对诊断报告进行智能总结，可通过`kubectl clusterops`命令创建LLM配置；不配置时，诊断报告回退为原始诊断结果。配置及清除LLM的具体方法请参见[配置和清除LLM](../../../04_usage/14_clusterops_agent/04_configuring_llm.md)。
+5. （可选）配置LLM服务。如需对诊断报告进行智能总结，可通过`kubectl clusterops`命令创建LLM配置；不配置时，诊断报告默认为原始诊断结果。配置及清除LLM的具体方法请参见[配置和清除LLM](../../../04_usage/14_clusterops_agent/04_configuring_llm.md)。
 
 6. 验证诊断功能。执行以下命令，按任务维度触发集群运维Agent，确认诊断链路正常。
 
     ```shell
-    kubectl ascend-diag --job {job_name}
+    kubectl ascend-diag --job {job_name} -n {namespace}
     ```
 
     命令执行后打印诊断报告（包含根因、故障事件、处置建议等字段）即表示链路正常，示例回显如下。
@@ -72,7 +90,7 @@ Kubectl Plugin是集群运维Agent特性的客户端命令行工具，包含 `ku
     +--------------+------------+----------------------------------------------------------------------------------------------------------------+
     |   版本信息   |    类型    | 版本                                                                                                           |
     +--------------+------------+----------------------------------------------------------------------------------------------------------------+
-    |              | Fault-Diag | 26.1.0                                                                                                         |
+    |              | Fault-Diag | 26.2.0                                                                                                         |
     +--------------+------------+----------------------------------------------------------------------------------------------------------------+
     | 根因节点分析 |    类型    | 描述                                                                                                           |
     +--------------+------------+----------------------------------------------------------------------------------------------------------------+

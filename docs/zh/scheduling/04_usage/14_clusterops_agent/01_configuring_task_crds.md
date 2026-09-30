@@ -16,7 +16,9 @@ Agent Core默认支持以下任务类型，无需任何配置：
 
 **步骤1：修改`agent-core.yaml`中的ConfigMap `agent-core-task-crds`**
 
-在`agent-core.yaml`顶部内联的ConfigMap `agent-core-task-crds`的`task_crds`列表中新增任务CR的`api_version`和`kind`。以新增Volcano Job（`batch.volcano.sh/v1alpha1`，kind为`Job`）为例，修改后的`data.task_crds.yaml`内容：
+在`agent-core.yaml`顶部内联的ConfigMap `agent-core-task-crds`的`task_crds`列表中新增任务CR的`api_version`和`kind`。
+
+以新增Volcano Job（`batch.volcano.sh/v1alpha1`，kind为`Job`）为例，修改后的`data.task_crds.yaml`内容：
 
 ```yaml
 # agent-core.yaml中ConfigMap agent-core-task-crds的data.task_crds.yaml
@@ -34,9 +36,6 @@ task_crds:
 ```shell
 kubectl rollout restart deployment agent-core -n mindx-dl
 ```
-
-> [!NOTE]
-> 新增任务类型后无需修改ClusterRole。任务存在性检查与Pod采集调度均依赖relcache（中心关系缓存，按`agent-core-task-crds`过滤任务Pod），Agent Core不直接查询任务CR。
 
 ## 验证配置<a name="sectionfaultdiagnosisverify"></a>
 
