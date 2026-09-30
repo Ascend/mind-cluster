@@ -444,15 +444,15 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 
 **应用场景<a name="section15761025111720"></a>**
 
-训练或推理任务在运行过程中出现故障时，需要快速定位故障根因。任务通常分布在多个节点，故障相关日志（系统日志、设备日志、业务日志）分散在各节点的宿主机上，人工排查成本高、效率低。MindCluster提供Agent Core组件，作为故障诊断的集中控制中心，按任务维度自动完成节点采集调度、日志清洗与集中诊断。
+训练或推理任务在运行过程中出现故障时，需要快速定位故障根因。任务通常分布在多个节点，故障相关日志（系统日志、设备日志、业务日志、plog等）分散在各节点的宿主机上，人工排查成本高、效率低。MindCluster提供Agent Core组件，作为故障诊断的集中控制中心，按任务维度自动完成节点采集调度、日志清洗与集中诊断。
 
 **组件功能<a name="section1112014512117"></a>**
 
 - 维护任务Pod的中心关系缓存（relcache）：全量监听Pod，记录任务（Job）与Pod、节点、Pod UID、Rank的映射关系，快照按Pod UID分片同步到ConfigMap（agent-core-relcache、agent-core-relcache-1…N），内存容量与分片快照容量一致，超出后按最老优先淘汰。
-- 维护Pod挂载关系表（pathmap）：监听任务Pod的hostPath挂载对、字面env值和pod IP，快照分片同步到ConfigMap（clusterops-pathmap、clusterops-pathmap-1…N），并在TriggerCollect采集指令中随Pod列表下发挂载对/env/pod IP，供Node Collector按请求解析宿主路径、在静态挂载的共享盘上按MINDX_TASK_ID与pod IP过滤采集plog（任务Pod删除后仍可采集）。
+- 维护Pod挂载关系表（pathmap）：监听任务Pod的hostPath挂载对、字面env值和pod IP，快照分片同步到ConfigMap（clusterops-pathmap、clusterops-pathmap-1…N）。
 - 接收诊断请求，按任务名和命名空间查询中心关系表，向各计算节点的Node Collector下发采集指令，并聚合各节点上报的采集结果。
 - 将各节点采集并清洗后的日志组装为诊断输入目录，调用ascend-fd diag命令执行集中诊断，生成诊断报告。
-- 支持诊断结果缓存：每次诊断之后缓存诊断结果，重复诊断直接返回缓存，可通过 --refresh强制刷新。
+- 支持诊断结果缓存：每次诊断之后缓存诊断结果，重复诊断直接返回缓存，可通过--refresh强制刷新。
 - 可选对接LLM服务，对诊断报告进行智能总结，输出根因报告。
 
 **组件上下游依赖<a name="section4941922192110"></a>**
@@ -476,12 +476,12 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 **组件功能<a name="section1112014512117"></a>**
 
 - 接收Agent Core下发的采集指令（含本节点任务Pod的挂载对、env和pod IP），立即返回受理结果，并在后台异步执行采集。
-- 按采集契约（collect_manifest.yaml）执行采集，支持env、paths、mount_keywords、commands等多种实体类型：
+- 按采集契约（collect_manifest.yaml）执行采集，支持env、paths、commands、mount_keywords等多种实体类型：
   - env：读取任务Pod的env值（容器内路径），经挂载对反查宿主机路径后采集。
   - paths：按容器路径前缀匹配任务Pod的挂载对，反查宿主机路径后采集。
-  - mount_keywords：按关键词匹配挂载对或扫描宿主机路径子目录定位日志目录；无命中时在静态挂载的共享盘（/mnt/shared-storage，协议不限）下用pod IP与MINDX_TASK_ID过滤出本Pod的日志目录后采集（任务Pod删除后仍可采集）。
-  - commands：仅允许执行白名单内的采集命令（如dmesg、dmidecode、msnpureport）。
-- 本地调用ascend-fd parse对采集的日志进行清洗，并将清洗结果打包为tar.gz，并通过gRPC接口主动上报给Agent Core。
+  - commands：执行采集命令。
+  - mount_keywords：使用关键词在静态挂载的共享盘（/mnt/shared-storage，协议不限）下用pod IP与MINDX_TASK_ID过滤出本Pod的日志目录后采集；无命中时按关键词匹配挂载对或扫描宿主机路径子目录定位日志目录。
+- 本地调用ascend-fd parse对采集的日志进行清洗，并将清洗结果打包为tar.gz，通过gRPC接口主动上报给Agent Core。
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
@@ -508,5 +508,5 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-1. 用户执行 `kubectl ascend_diag` 命令，插件复用本机kubeconfig通过port-forward将诊断请求转发至Agent Core的/diag接口。
+1. 用户执行 `kubectl ascend_diag` 命令，插件复用本机kubeconfig通过port-forward将诊断请求转发至Agent Core。
 2. Agent Core按任务维度完成节点采集调度、日志清洗与集中诊断后，返回诊断报告，插件在终端展示结果。

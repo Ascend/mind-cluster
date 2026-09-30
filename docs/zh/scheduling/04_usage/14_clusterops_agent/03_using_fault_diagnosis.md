@@ -26,7 +26,7 @@ kubectl ascend_diag --job job-x -n training
 | `--refresh` | 忽略缓存，强制重新执行诊断并刷新缓存 |
 | `--json` | 输出完整JSON响应 |
 | `--collect-manifest` | 将本地采集契约写入集群ConfigMap后退出 |
-| `--agent-core-service` | 指定Agent Core服务，格式`svc.ns:9700`（默认`agent-core.mindx-dl:9700`） |
+| `--agent-core-service` | 指定Agent Core服务，格式`svc.ns:端口`（默认`agent-core.mindx-dl:9700`） |
 
 **诊断输出样例**
 
@@ -38,7 +38,7 @@ The diag job starts. Please wait. Job id: [20260918163512389528_b1b293d4-1c70-4e
 +--------------+------------+----------------------------------------------------------------------------------------------------------------+
 |   版本信息   |    类型    | 版本                                                                                                           |
 +--------------+------------+----------------------------------------------------------------------------------------------------------------+
-|              | Fault-Diag | 26.1.0                                                                                                         |
+|              | Fault-Diag | 26.2.0                                                                                                         |
 +--------------+------------+----------------------------------------------------------------------------------------------------------------+
 | 根因节点分析 |    类型    | 描述                                                                                                           |
 +--------------+------------+----------------------------------------------------------------------------------------------------------------+
@@ -81,7 +81,7 @@ The diag job starts. Please wait. Job id: [20260918163512389528_b1b293d4-1c70-4e
 +--------------+------------+----------------------------------------------------------------------------------------------------------------+
 |   版本信息   |    类型    | 版本                                                                                                           |
 +--------------+------------+----------------------------------------------------------------------------------------------------------------+
-|              | Fault-Diag | 26.1.0                                                                                                         |
+|              | Fault-Diag | 26.2.0                                                                                                         |
 +--------------+------------+----------------------------------------------------------------------------------------------------------------+
 | 根因节点分析 |    类型    | 描述                                                                                                           |
 +--------------+------------+----------------------------------------------------------------------------------------------------------------+
@@ -127,8 +127,14 @@ Agent Core与Node Collector分别在各自的工作目录下按任务维度落�
 ├── {YYYYMMDD}/
 │   └── {namespace}_{job}/
 │       ├── parse-result-{job}-{node}.tar.gz          # 各节点上报的采集归档
-│       ├── diag-input/
-│       │   └── {host_ip}/                             # 各节点清洗产物，以机器IP命名（含 server-info.json 等）
+│       ├── diag-input/                               # 集中诊断输入（各节点清洗产物汇总）
+│       │   ├── 10.0.0.5/                             # 节点1清洗产物，以机器IP命名
+│       │   │   ├── plog-parser-{pid}-{0|1}.log       # 根因节点分析清洗后日志（按Pid保存）
+│       │   │   ├── ascend-rc-parser.json             # 根因节点分析清洗结果
+│       │   │   ├── ascend-kg-parser.json             # 故障事件分析清洗结果（推理引擎输入）
+│       │   │   ├── ascend-kg-analyzer.json           # 故障事件分析清洗结果
+│       │   │   └── server-info.json                  # 设备IP信息
+│       │   └── 10.0.0.6/                             # 节点2清洗产物（内容同上）
 │       └── diag-output/
 │           └── fault_diag_result/
 │               └── diag_report.json                   # 集中诊断报告
@@ -137,9 +143,10 @@ Agent Core与Node Collector分别在各自的工作目录下按任务维度落�
 ```
 
 - `parse-result-{job}-{node}.tar.gz`：Node Collector按节点上报的采集归档。
-- `diag-input/{host_ip}/`：各节点 `ascend-fd parse` 清洗产物，以机器IP命名（host_ip缺失时回退`worker{N}`），组装为集中诊断输入。
-- `diag-output/`：`ascend-fd diag` 生成的诊断报告目录。
+- `diag-input/{host_ip}/`：各节点`ascend-fd parse`清洗产物，以机器IP命名（host_ip缺失时回退`worker{N}`），组装为集中诊断输入。
+- `diag-output/`：`ascend-fd diag`生成的诊断报告目录。
 - `cache/{namespace}_{job}.json`：每次诊断成功后缓存的诊断结果，重复诊断直接返回，支持`--refresh`强制刷新。
+- 落盘内容仅供参考，实际落盘数据可能因为收集的日志不同而增加或减少，具体落盘数据以实际为主。
 
 ### Node Collector落盘内容<a name="sectionfaultdiagnosiscollectorstorage"></a>
 
@@ -147,12 +154,32 @@ Agent Core与Node Collector分别在各自的工作目录下按任务维度落�
 /user/clusterops/node-collector/
 └── {YYYYMMDD}/
     └── {namespace}_{job}/
-        ├── collect/                                   # 从宿主机采集的原始日志
+        ├── collect/                                   # 从宿主机采集的原始日志（按实体名分目录）
+        │   ├── process_log/                           # CANN plog（run/debug/security子目录）
+        │   │   ├── run/
+        │   │   ├── debug/
+        │   │   └── security/
+        │   ├── dl_log/                                # MindCluster组件日志（保留源目录结构）
+        │   │   ├── mindx-dl/devicePlugin/
+        │   │   ├── mindx-dl/noded/
+        │   │   └── ...
+        │   ├── device_log/                            # 现场命令生成的Device侧日志
+        │   └── host_log/                              # 主机OS日志
+        │       ├── dmesg
+        │       ├── dmidecode.txt
+        │       ├── messages
+        │       └── sysmonitor.log
         └── parse-output/                              # ascend-fd parse 清洗产物
+            ├── plog-parser-{pid}-{0|1}.log            # 根因节点分析清洗后日志（按Pid保存）
+            ├── ascend-rc-parser.json                  # 根因节点分析清洗结果
+            ├── ascend-kg-parser.json                  # 故障事件分析清洗结果（推理引擎输入）
+            ├── ascend-kg-analyzer.json                # 故障事件分析清洗结果
+            └── server-info.json                       # 设备IP信息
 ```
 
-- `collect/`：按采集契约从宿主机采集的原始日志（plog、系统日志、设备日志等）。
-- `parse-output/`：本地 `ascend-fd parse` 清洗后的产物，上传后作为诊断输入。
+- `collect/`：按采集契约从宿主机采集的原始日志，目录结构与采集契约中的实体一一对应（`process_log`、`dl_log`、`device_log`、`host_log`等）。
+- `parse-output/`：本地`ascend-fd parse`清洗后的产物。
+- 落盘内容仅供参考，实际落盘数据可能因为收集的日志不同而增加或减少，具体落盘数据以实际为主。
 
 ### 保留策略<a name="sectionfaultdiagnosisretention"></a>
 
@@ -160,9 +187,9 @@ Agent Core与Node Collector分别在各自的工作目录下按任务维度落�
 
 - Agent Core在每次诊断结束后、Node Collector在每次采集上传结束后触发空间回收。
 - 当工作目录总占用超过阈值时，按各job目录及缓存文件的修改时间从旧到新删除，直至总占用降到阈值以内。
-- 删除粒度为job级别：Agent Core删除整个 `{YYYYMMDD}/{namespace}_{job}` 目录及对应的 `{namespace}_{job}.json` 缓存文件；Node Collector删除整个 `{YYYYMMDD}/{namespace}_{job}` 目录。
+- 删除粒度为job级别：Agent Core删除整个`{YYYYMMDD}/{namespace}_{job}`目录及对应的`{namespace}_{job}.json`缓存文件；Node Collector删除整个`{YYYYMMDD}/{namespace}_{job}`目录。
 
 > [!NOTE]
 >
 > - 诊断结果缓存与诊断产物统一纳入Agent Core的10GB配额管理，超限时同样按最旧优先删除。
-> - 缓存目录默认位于 `/user/clusterops/agent-core/cache/`。
+> - 缓存目录默认位于`/user/clusterops/agent-core/cache/`。
