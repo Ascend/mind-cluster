@@ -555,6 +555,14 @@ func TestGetPodUsedDev(t *testing.T) {
 			convey.So(len(usedDev), convey.ShouldEqual, len3)
 			convey.So(usedDev, convey.ShouldResemble, []string{"0", "1", "2"})
 		})
+		convey.Convey("get pod used dev successfully via NPU device annotation fallback", func() {
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			delete(podDemo.Annotations, api.Pod910DeviceAnno)
+			podDemo.Annotations[api.PodNPUDeviceAnno] = podDeviceKey2
+			usedDev := GetPodUsedDev(*podDemo)
+			convey.So(len(usedDev), convey.ShouldEqual, 1)
+			convey.So(usedDev, convey.ShouldResemble, []string{dev2})
+		})
 		convey.Convey("get pod used dev failed, parse annotation failed", func() {
 			const podDeviceKey = `error device key`
 			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
