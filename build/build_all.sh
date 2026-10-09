@@ -55,6 +55,7 @@ fi
 cd "$TOP_DIR"/component
 CUR_DIR=$(dirname $(readlink -f $0))
 mind_cluster=(
+    "ascend-clusterops-agent"
     "ascend-device-plugin"
     "ascend-dynamic-resource-allocation"
     "ascend-docker-runtime"
