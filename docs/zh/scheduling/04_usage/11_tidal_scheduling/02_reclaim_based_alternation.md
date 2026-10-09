@@ -2,7 +2,7 @@
 
 ## 概述<a name="section_overview_reclaim"></a>
 
-Reclaim（回收）是Volcano调度器的资源归还机制：高权重队列资源不足时，从低权重且`reclaimable: true`的队列中回收资源。与Preempt基于任务优先级不同，Reclaim基于队列权重，适合按业务线管理资源优先级。
+Reclaim（回收）是Volcano调度器的资源归还机制：队列资源不足时，从`reclaimable: true`的队列中回收资源。与Preempt基于任务优先级不同，Reclaim基于队列的`reclaimable`配置决定资源是否可被回收，适合按业务线管理资源优先级。
 
 在推理/训练共享集群中，训练队列设置`reclaimable: true`（可被回收），推理队列`reclaimable: false`。当推理队列资源不足时，从训练队列回收资源；当推理低峰期释放资源后，训练任务恢复运行。训练任务配置`minAvailable`等于`replicas`保证gang完整性，Pod被回收导致Job失败后由重调度模块自动触发Job重启，重建的Pod通过回原节点特性回到原节点。
 
@@ -37,7 +37,7 @@ sequenceDiagram
 1. 创建Queue。
 
    ```yaml
-   # 推理队列：高权重，不可被其他队列回收
+   # 推理队列：不可被其他队列回收
    apiVersion: scheduling.volcano.sh/v1beta1
    kind: Queue
    metadata:
@@ -47,7 +47,7 @@ sequenceDiagram
      reclaimable: false              # 推理队列资源不可被回收
 
    ---
-   # 训练队列：低权重，可被高权重队列回收(集群默认存在，不需要额外部署)
+   # 训练队列：可被回收(集群默认存在，不需要额外部署)
    apiVersion: scheduling.volcano.sh/v1beta1
    kind: Queue
    metadata:
