@@ -346,7 +346,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
     docker build -t mindspeed-dl:v1 .
     ```
 
-4. 除按上述流程手动构建镜像外，用户也可直接使用开箱即用的示例镜像`torch-npu-sample-dl:v26.2.0-cann8.5.0-torch_npu2.7.1-910b-ubuntu22.04-py3.10-aarch64`。示例镜像可通过[AscendHub](https://www.hiascend.com/developer/ascendhub)获取，用于快速验证。
+4. 除按上述流程手动构建镜像外，用户也可直接使用开箱即用的示例镜像`torch-npu-sample-dl:v26.2.0-cann8.5.0-torch_npu2.7.1.post2-910b-ubuntu22.04-py3.10-aarch64`、`torch-npu-sample-dl:v26.2.0-cann9.1.1-torch_npu2.7.1.post8-950-ubuntu24.04-py3.10-aarch64`（已集成UB驱动相关文件）。示例镜像可通过[AscendHub](https://www.hiascend.com/developer/ascendhub)获取，用于快速验证。
 
 ## 脚本适配<a name="ZH-CN_TOPIC_0000002511426481"></a>
 
