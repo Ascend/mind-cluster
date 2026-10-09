@@ -20,7 +20,7 @@ K8s RDMA Shared Dev Plugin将节点上的DPU（UB RDMA设备）上报为`<resour
 
 业务Pod使用RDMA共享设备需要在Pod配置中声明资源请求，配置示例（申请1份RDMA设备资源，最大值配置可参考[配置文件说明](../../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_config_k8s_rdma_shared_dev_plugin)中的`rdmaHcaMax`）如下：
 
-```yaml
+<pre codetype="yaml">
 apiVersion: v1
 kind: Pod
 metadata:
@@ -38,17 +38,17 @@ spec:
         resources:
            requests:
               huawei.com/npu: 8
-              huawei.com/ub_rdma: 1
+              <strong>huawei.com/ub_rdma: 1</strong>
            limits:
               huawei.com/npu: 8
-              huawei.com/ub_rdma: 1
+              <strong>huawei.com/ub_rdma: 1</strong>
         command:
            - sh
            - -c
            - |
               ls -l /dev/infiniband /sys/class/infiniband
               sleep 1000000
-```
+</pre>
 
 > [!NOTE]
 >
