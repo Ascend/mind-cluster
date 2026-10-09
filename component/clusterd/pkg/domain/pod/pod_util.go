@@ -89,6 +89,9 @@ func GetPodUsedDev(pod v1.Pod) []string {
 	}
 	devInfo, exist := pod.Annotations[api.Pod910DeviceAnno]
 	if !exist {
+		devInfo, exist = pod.Annotations[api.PodNPUDeviceAnno]
+	}
+	if !exist {
 		return nil
 	}
 	var podDev constant.PodDevice
