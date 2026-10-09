@@ -138,178 +138,11 @@ deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Pl
 |fault-npus|故障任务使用的故障芯片的rank信息。|字符串|-|
 |checkCode|校验码。|字符串|-|
 
-**reset-config-<任务名称\><a name="section3394547123916"></a>**
-
-**表 2**  reset-config-_<job-name\>_
-
-<a name="table1213115712136"></a>
-<table><thead align="left"><tr id="row3132772132"><th class="cellrowborder" valign="top" width="15.950000000000001%" id="mcps1.2.6.1.1"><p id="p1022487193411"><a name="p1022487193411"></a><a name="p1022487193411"></a>字段名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="14.69%" id="mcps1.2.6.1.2"><p id="p1313212741314"><a name="p1313212741314"></a><a name="p1313212741314"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="24.23%" id="mcps1.2.6.1.3"><p id="p513317151314"><a name="p513317151314"></a><a name="p513317151314"></a>含义</p>
-</th>
-<th class="cellrowborder" valign="top" width="28.82%" id="mcps1.2.6.1.4"><p id="p313315721314"><a name="p313315721314"></a><a name="p313315721314"></a>取值</p>
-</th>
-<th class="cellrowborder" valign="top" width="16.31%" id="mcps1.2.6.1.5"><p id="p1313327191318"><a name="p1313327191318"></a><a name="p1313327191318"></a>备注</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row41336711317"><td class="cellrowborder" rowspan="13" valign="top" width="15.950000000000001%" headers="mcps1.2.6.1.1 "><p id="p20565164533410"><a name="p20565164533410"></a><a name="p20565164533410"></a>reset.json</p>
-<p id="p111446396589"><a name="p111446396589"></a><a name="p111446396589"></a></p>
-<p id="p1811413311215"><a name="p1811413311215"></a><a name="p1811413311215"></a></p>
-<p id="p0452951162310"><a name="p0452951162310"></a><a name="p0452951162310"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="14.69%" headers="mcps1.2.6.1.2 "><p id="p813420781315"><a name="p813420781315"></a><a name="p813420781315"></a>RankList</p>
-</td>
-<td class="cellrowborder" valign="top" width="24.23%" headers="mcps1.2.6.1.3 "><p id="p121346712134"><a name="p121346712134"></a><a name="p121346712134"></a>芯片列表</p>
-</td>
-<td class="cellrowborder" valign="top" width="28.82%" headers="mcps1.2.6.1.4 "><p id="p5134137121315"><a name="p5134137121315"></a><a name="p5134137121315"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="16.31%" headers="mcps1.2.6.1.5 "><p id="p1513427131320"><a name="p1513427131320"></a><a name="p1513427131320"></a>-</p>
-</td>
-</tr>
-<tr id="row21341174135"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p171346791316"><a name="p171346791316"></a><a name="p171346791316"></a>-RankId</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p3134177131313"><a name="p3134177131313"></a><a name="p3134177131313"></a>故障任务使用的Rank信息</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p1413587161310"><a name="p1413587161310"></a><a name="p1413587161310"></a>整数类型</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p1413511721318"><a name="p1413511721318"></a><a name="p1413511721318"></a>-</p>
-</td>
-</tr>
-<tr id="row1713512717138"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p161352712139"><a name="p161352712139"></a><a name="p161352712139"></a>-LogicId</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p1135127181319"><a name="p1135127181319"></a><a name="p1135127181319"></a>芯片逻辑ID</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p15135157131311"><a name="p15135157131311"></a><a name="p15135157131311"></a>32位整数类型</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p181366715137"><a name="p181366715137"></a><a name="p181366715137"></a>-</p>
-</td>
-</tr>
-<tr id="row013914719136"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1313927191317"><a name="p1313927191317"></a><a name="p1313927191317"></a>-Status</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p8139177171315"><a name="p8139177171315"></a><a name="p8139177171315"></a>芯片状态</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><a name="ul8436530113"></a><a name="ul8436530113"></a><ul id="ul8436530113"><li>unrecovered：未恢复</li><li>recovered：恢复成功</li><li>failed：恢复失败</li></ul>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p11394791316"><a name="p11394791316"></a><a name="p11394791316"></a>-</p>
-</td>
-</tr>
-<tr id="row814016761315"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1814015719134"><a name="p1814015719134"></a><a name="p1814015719134"></a>-Policy</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p11140676132"><a name="p11140676132"></a><a name="p11140676132"></a>热复位策略</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><a name="ul1156918243817"></a><a name="ul1156918243817"></a><ul id="ul1156918243817"><li>empty：无故障</li><li>ignore：忽略故障</li><li>restart_request：重新执行当前请求</li><li>restart：重新执行训练任务</li><li>free_reset：当NPU上没有任务时，需要重启设备</li><li>reset：需要重启设备</li><li>isolate：需要隔离设备</li></ul>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p11140672134"><a name="p11140672134"></a><a name="p11140672134"></a>-</p>
-</td>
-</tr>
-<tr id="row151401717139"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p101413711136"><a name="p101413711136"></a><a name="p101413711136"></a>-InitialPolicy</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p12141176132"><a name="p12141176132"></a><a name="p12141176132"></a>初始热复位策略</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><a name="ul16378161213281"></a><a name="ul16378161213281"></a><ul id="ul16378161213281"><li>empty：无故障</li><li>ignore：忽略故障</li><li>restart_request：重新执行当前请求</li><li>restart：重新执行训练任务</li><li>free_reset：当NPU上没有任务时，需要重启设备</li><li>reset：需要重启设备</li><li>isolate：需要隔离设备</li></ul>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p171419712133"><a name="p171419712133"></a><a name="p171419712133"></a>-</p>
-</td>
-</tr>
-<tr id="row2141187121312"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p3141197161312"><a name="p3141197161312"></a><a name="p3141197161312"></a>-ErrorCode</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p19141576138"><a name="p19141576138"></a><a name="p19141576138"></a>十进制故障码</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p151429710139"><a name="p151429710139"></a><a name="p151429710139"></a>64位整型数组</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p1314257131311"><a name="p1314257131311"></a><a name="p1314257131311"></a>-</p>
-</td>
-</tr>
-<tr id="row14142137191314"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p171421973132"><a name="p171421973132"></a><a name="p171421973132"></a>-ErrorCodeHex</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p0142577133"><a name="p0142577133"></a><a name="p0142577133"></a>十六进制故障码</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p8142177131320"><a name="p8142177131320"></a><a name="p8142177131320"></a>字符串</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p31421070133"><a name="p31421070133"></a><a name="p31421070133"></a>-</p>
-</td>
-</tr>
-<tr id="row41431139195820"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p3233191110537"><a name="p3233191110537"></a><a name="p3233191110537"></a>GracefulExit</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p321511543920"><a name="p321511543920"></a><a name="p321511543920"></a>管理训练进程</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p33363655012"><a name="p33363655012"></a><a name="p33363655012"></a>0或1</p>
-<a name="ul7532185975011"></a><a name="ul7532185975011"></a><ul id="ul7532185975011"><li>取值为1，终止所有训练进程</li><li>取值为0，不做处理</li></ul>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p921615511390"><a name="p921615511390"></a><a name="p921615511390"></a>-</p>
-</td>
-</tr>
-<tr id="row167775084714"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p108353401829"><a name="p108353401829"></a><a name="p108353401829"></a>UpdateTime</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p118356401224"><a name="p118356401224"></a><a name="p118356401224"></a>ConfigMap的更新时间</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p58359402214"><a name="p58359402214"></a><a name="p58359402214"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p7835114017213"><a name="p7835114017213"></a><a name="p7835114017213"></a>-</p>
-</td>
-</tr>
-<tr id="row189371153471"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p2066862744"><a name="p2066862744"></a><a name="p2066862744"></a>RetryTime</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p126681521149"><a name="p126681521149"></a><a name="p126681521149"></a>Pod重调度的次数</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p66683214418"><a name="p66683214418"></a><a name="p66683214418"></a>整数类型</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p18668142844"><a name="p18668142844"></a><a name="p18668142844"></a>-</p>
-</td>
-</tr>
-<tr id="row13113203322"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1254115251666"><a name="p1254115251666"></a><a name="p1254115251666"></a>FaultFlushing</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p7541192512618"><a name="p7541192512618"></a><a name="p7541192512618"></a>告知<span id="ph14256162281217"><a name="ph14256162281217"></a><a name="ph14256162281217"></a>Elastic Agent</span>当前是否有故障正在刷新</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p13813147101216"><a name="p13813147101216"></a><a name="p13813147101216"></a>取值为true或false</p>
-<a name="ul1563191521213"></a><a name="ul1563191521213"></a><ul id="ul1563191521213"><li>true：表示有故障正在刷新</li><li>false：表示当前无故障刷新</li></ul>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p19951631131314"><a name="p19951631131314"></a><a name="p19951631131314"></a><span id="ph952618296564"><a name="ph952618296564"></a><a name="ph952618296564"></a>Elastic Agent</span>需要等待该字段为false且故障RankList无本节点故障时才会拉起训练进程</p>
-</td>
-</tr>
-<tr id="row18452151202319"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p64521951162319"><a name="p64521951162319"></a><a name="p64521951162319"></a><span>RestartFaultProcess</span></p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p17453851172311"><a name="p17453851172311"></a><a name="p17453851172311"></a><span>告知</span><span id="ph262783362516"><a name="ph262783362516"></a><a name="ph262783362516"></a>Elastic Agent</span><span>当前是否仅重启本节点故障进程</span></p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p2012431813258"><a name="p2012431813258"></a><a name="p2012431813258"></a><span>取值true或false</span></p>
-<a name="ul5650162018256"></a><a name="ul5650162018256"></a><ul id="ul5650162018256"><li><span>true：表示不退出</span><span id="ph8849103812259"><a name="ph8849103812259"></a><a name="ph8849103812259"></a>Elastic Agent</span><span>，仅重启本节点故障进程</span></li><li><span>false：当本节点有故障进程时，退出</span><span id="ph1888614312613"><a name="ph1888614312613"></a><a name="ph1888614312613"></a>Elastic Agent</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p94534513233"><a name="p94534513233"></a><a name="p94534513233"></a>-</p>
-</td>
-</tr>
-<tr id="row859053413417"><td class="cellrowborder" valign="top" width="15.950000000000001%" headers="mcps1.2.6.1.1 "><p id="p844941513297"><a name="p844941513297"></a><a name="p844941513297"></a>restartType</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.69%" headers="mcps1.2.6.1.2 "><p id="p220916992912"><a name="p220916992912"></a><a name="p220916992912"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="24.23%" headers="mcps1.2.6.1.3 "><p id="p1820909182911"><a name="p1820909182911"></a><a name="p1820909182911"></a>reset.json更新的类型</p>
-</td>
-<td class="cellrowborder" valign="top" width="28.82%" headers="mcps1.2.6.1.4 "><p id="p15209596295"><a name="p15209596295"></a><a name="p15209596295"></a>podReschedule或hotReset</p>
-</td>
-<td class="cellrowborder" valign="top" width="16.31%" headers="mcps1.2.6.1.5 "><p id="p95471047133013"><a name="p95471047133013"></a><a name="p95471047133013"></a>单pod重调度情况下取值为podReschedule，热恢复场景下取值为hotReset</p>
-</td>
-</tr>
-<tr id="row165081157153910"><td class="cellrowborder" valign="top" width="15.950000000000001%" headers="mcps1.2.6.1.1 "><p id="p750805713392"><a name="p750805713392"></a><a name="p750805713392"></a>checkCode</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.69%" headers="mcps1.2.6.1.2 "><p id="p0508145711393"><a name="p0508145711393"></a><a name="p0508145711393"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="24.23%" headers="mcps1.2.6.1.3 "><p id="p250845783917"><a name="p250845783917"></a><a name="p250845783917"></a>校验码</p>
-</td>
-<td class="cellrowborder" valign="top" width="28.82%" headers="mcps1.2.6.1.4 "><p id="p750835713919"><a name="p750835713919"></a><a name="p750835713919"></a>字符串</p>
-</td>
-<td class="cellrowborder" valign="top" width="16.31%" headers="mcps1.2.6.1.5 "><p id="p175081157113917"><a name="p175081157113917"></a><a name="p175081157113917"></a>-</p>
-</td>
-</tr>
-</tbody>
-</table>
-
 **data-trace-<任务名称\><a name="section19954856135618"></a>**
 
 存储当前任务的各类打点类型的开关状态，由Ascend Device Plugin挂载到计算节点存储，训练容器挂载该文件后，由TaskD读取后对各类打点数据进行开关。
 
-**表 3**  data-trace-<任务名称\> ConfigMap字段说明
+**表 2**  data-trace-<任务名称\> ConfigMap字段说明
 
 <a name="table97521457610"></a>
 
@@ -333,7 +166,7 @@ deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Pl
 
 存储任务的迭代时延和分组信息的保存路径和启停开关，启动任务时用户可通过CCAE管理平台配置ConfigMap参数进行任务是否劣化的判定。
 
-**表 4**  steptime-dtpgroup ConfigMap字段说明
+**表 3**  steptime-dtpgroup ConfigMap字段说明
 
 <a name="table3610611144615"></a>
 
