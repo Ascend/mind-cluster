@@ -113,6 +113,7 @@ else
 
         cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-device-plugin/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
         cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-dynamic-resource-allocation/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+        cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-clusterops-agent/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
         cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-docker-runtime/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
         cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-docker-runtime/output/*.run ${ATOMGIT_WORKSPACE}/artifacts/
         cp ${ATOMGIT_WORKSPACE}/${servicename}/component/ascend-for-volcano/output/*.zip ${ATOMGIT_WORKSPACE}/artifacts/
