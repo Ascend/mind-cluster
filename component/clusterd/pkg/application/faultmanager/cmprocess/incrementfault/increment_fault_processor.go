@@ -56,15 +56,17 @@ func (p *incrementFaultProcessor) Process(info any) any {
 		oldDevInfo, ok := p.nodeDeviceCmMap[nodeName]
 		if !ok {
 			p.dealIncrementFaultForNode(nodeName, devCmInfo.FaultDeviceList, devCmInfo.DeviceType)
+			hwlog.RunLog.Debugf("first process node<%s>, treat current faults as increment faults", nodeName)
 			continue
 		}
 		if oldDevInfo.IsSame(devCmInfo) {
-			// fault have no changed, ignore
+			// fault has no change, ignore
 			continue
 		}
 		incrementFault := p.getIncrementFault(oldDevInfo.FaultDeviceList, devCmInfo.FaultDeviceList)
 		if len(incrementFault) == 0 {
 			// no increment fault, ignore
+			hwlog.RunLog.Debugf("no increment fault for node<%s>, ignore", nodeName)
 			continue
 		}
 		p.dealIncrementFaultForNode(nodeName, incrementFault, devCmInfo.DeviceType)
@@ -76,6 +78,7 @@ func (p *incrementFaultProcessor) Process(info any) any {
 func (p *incrementFaultProcessor) dealIncrementFaultForNode(nodeName string,
 	incrementFault map[string][]constant.DeviceFault, devType string) {
 	devNameJobMap := pod.CreateDevNameJobMap(nodeName, devType)
+	hwlog.RunLog.Debugf("node<%s> increment fault: %v", nodeName, incrementFault)
 	for devName, faults := range incrementFault {
 		jobId := pod.GetJobIdByDev(devNameJobMap, devName)
 		for _, fault := range faults {
