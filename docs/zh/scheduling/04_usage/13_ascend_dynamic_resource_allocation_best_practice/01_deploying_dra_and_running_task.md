@@ -18,7 +18,7 @@ Ascend DRA基于Kubernetes动态资源分配（DRA）机制管理NPU设备，完
 
 创建`ascend-npu-claim-template.yaml`文件：
 
-```yaml
+<pre codetype="yaml">
 apiVersion: resource.k8s.io/v1
 kind: ResourceClaimTemplate
 metadata:
@@ -29,10 +29,10 @@ spec:
   spec:
     devices:
       requests:
-      - name: npu              # 请求名称，Pod中通过该名称引用
-        deviceClassName: npu.huawei.com   # 引用DRA组件部署时创建的DeviceClass
-        count: 1               # 请求的NPU数量，按需修改
-```
+      - <strong>name: npu              # 请求名称，Pod中通过该名称引用</strong>
+        <strong>deviceClassName: npu.huawei.com   # 引用DRA组件部署时创建的DeviceClass</strong>
+        <strong>count: 1               # 请求的NPU数量，按需修改</strong>
+</pre>
 
 执行以下命令创建模板：
 
@@ -55,7 +55,7 @@ resourceclaimtemplate.resource.k8s.io/ascend-npu-template created
 
 创建`dra-test-deployment.yaml`文件：
 
-```yaml
+<pre codetype="yaml">
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -64,7 +64,7 @@ metadata:
   labels:
     app: dra-test
 spec:
-  replicas: 1                               # 副本数，按需修改
+  <strong>replicas: 1                               # 副本数，按需修改</strong>
   selector:
     matchLabels:
       app: dra-test
@@ -73,9 +73,9 @@ spec:
       labels:
         app: dra-test
     spec:
-      resourceClaims:
-      - name: npu                           # 与容器resources.claims中引用的name一致
-        resourceClaimTemplateName: ascend-npu-template
+      <strong>resourceClaims:</strong>
+      <strong>- name: npu                           # 与容器resources.claims中引用的name一致</strong>
+        <strong>resourceClaimTemplateName: ascend-npu-template</strong>
       containers:
       - name: test
         image: ubuntu:22.04
@@ -86,8 +86,8 @@ spec:
         - sleep inf
         resources:
           claims:
-          - name: npu                      # 引用上方resourceClaims中的name
-```
+          <strong>- name: npu                      # 引用上方resourceClaims中的name</strong>
+</pre>
 
 1. 下发任务。
 
