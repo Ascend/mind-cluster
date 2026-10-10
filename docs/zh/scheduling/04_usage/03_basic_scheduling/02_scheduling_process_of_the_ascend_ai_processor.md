@@ -13,12 +13,13 @@
     默认情况下，Volcano启动YAML中self-maintain-available-card参数的值为true。昇腾AI处理器的调度流程如下所示：
 
     1. Ascend Device Plugin组件上报昇腾AI处理器健康状态。
-    2. 用户调用kube-apiserver创建使用NPU的业务容器，如vcjob。
-    3. Volcano组件通过节点信息和ConfigMap信息计算当前可用的昇腾AI处理器。
-    4. Volcano组件根据亲和性调度原则，将昇腾AI处理器分配的情况写入Pod的Annotations字段中，同时写入分配时的时间戳。Volcano组件写入资源信息后向Kubernetes提交绑定Pod申请。
-    5. 在每个信息上报周期，Ascend Device Plugin从Pod的Annotations中读取芯片的挂载信息。如需修正，则通过kube-apiserver更新回Pod的Annotation中。修正的Annotation包括：huawei.com/资源名、huawei.com/AscendReal、ascend.kubectl.kubernetes.io/ascend-910-configuration。
-    6. kubelet监测到有Pod调度到自己所在节点，调用Ascend Device Plugin的Allocate函数挂载NPU设备。同时也支持使用Ascend Docker Runtime挂载NPU设备。
-    7. Ascend Device Plugin查询当前所在的Node中处于Pending状态的Pod列表，得到亲和性调度后时间戳最小的Pod，获取挂载的device ID，反馈给kubelet进行设备挂载。
+    2. ClusterD读取deviceInfo中的信息并写入cluster-info-device。
+    3. 用户调用kube-apiserver创建使用NPU的业务容器，如vcjob。
+    4. Volcano组件通过节点信息和ConfigMap信息计算当前可用的昇腾AI处理器。
+    5. Volcano组件根据亲和性调度原则，将昇腾AI处理器分配的情况写入Pod的Annotations字段中，同时写入分配时的时间戳。Volcano组件写入资源信息后向Kubernetes提交绑定Pod申请。
+    6. 在每个信息上报周期，Ascend Device Plugin从Pod的Annotations中读取芯片的挂载信息。如需修正，则通过kube-apiserver更新回Pod的Annotation中。修正的Annotation包括：huawei.com/资源名、huawei.com/AscendReal、ascend.kubectl.kubernetes.io/ascend-910-configuration。
+    7. kubelet监测到有Pod调度到自己所在节点，调用Ascend Device Plugin的Allocate函数挂载NPU设备。同时也支持使用Ascend Docker Runtime挂载NPU设备。
+    8. Ascend Device Plugin查询当前所在的Node中处于Pending状态的Pod列表，得到亲和性调度后时间戳最小的Pod，获取挂载的device ID，反馈给kubelet进行设备挂载。
 
 - **调度流程2**
 
@@ -30,12 +31,13 @@
 
     1. Ascend Device Plugin组件上报昇腾AI处理器健康状态。
     2. Ascend Device Plugin通过kube-apiserver将当前空闲的昇腾AI处理器（健康昇腾AI处理器 - 已使用的昇腾AI处理器）信息写到ConfigMap“mindx-dl-deviceinfo-\{_nodeName_\}”的“DeviceInfo”字段中。
-    3. 用户调用kube-apiserver创建使用NPU的业务容器，如vcjob。
-    4. Volcano组件通过“DeviceInfo”获取当前可用的昇腾AI处理器。
-    5. Volcano组件根据亲和性调度原则，将昇腾AI处理器分配的情况写入Pod的“Annotations”字段中，同时写入分配时的时间戳。Volcano组件写入资源信息后向Kubernetes提交绑定Pod申请。
-    6. kubelet监测到有Pod调度到自己所在节点，调用Ascend Device Plugin的Allocate函数挂载NPU设备。同时也支持使用Ascend Docker Runtime挂载NPU设备。
-    7. Ascend Device Plugin查询当前所在的Node中处于Pending状态的Pod列表，得到亲和性调度后时间戳最小的Pod，获取挂载的device ID，反馈给kubelet进行设备挂载。
-    8. Ascend Device Plugin更新“DeviceInfo”字段中的可分配昇腾AI处理器。
+    3. ClusterD读取deviceInfo中的信息并写入cluster-info-device。
+    4. 用户调用kube-apiserver创建使用NPU的业务容器，如vcjob。
+    5. Volcano组件通过“DeviceInfo”获取当前可用的昇腾AI处理器。
+    6. Volcano组件根据亲和性调度原则，将昇腾AI处理器分配的情况写入Pod的“Annotations”字段中，同时写入分配时的时间戳。Volcano组件写入资源信息后向Kubernetes提交绑定Pod申请。
+    7. kubelet监测到有Pod调度到自己所在节点，调用Ascend Device Plugin的Allocate函数挂载NPU设备。同时也支持使用Ascend Docker Runtime挂载NPU设备。
+    8. Ascend Device Plugin查询当前所在的Node中处于Pending状态的Pod列表，得到亲和性调度后时间戳最小的Pod，获取挂载的device ID，反馈给kubelet进行设备挂载。
+    9. Ascend Device Plugin更新“DeviceInfo”字段中的可分配昇腾AI处理器。
 
 ## 具体交互字段说明<a name="section154080418522"></a>
 
