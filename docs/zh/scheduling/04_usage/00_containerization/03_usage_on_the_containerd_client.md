@@ -40,12 +40,14 @@
     ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 --env ASCEND_VNPU_SPECS=vir04 {image-name:tag} {containerID} bash
     ```
 
+<!-- npu="310b" id1 -->
 - 示例6：启动容器时，挂载物理芯片ID为0的芯片，并且允许挂载的驱动文件中存在软链接（仅适用于Atlas 500 A2智能小站、Atlas 200I A2加速模块和Atlas 200I DK A2开发者套件场景）。
 
     ```shell
     ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 -e ASCEND_ALLOW_LINK=True {image-name:tag} {containerID} bash
     ```
 
+<!-- end id1 -->
 启动命令相关参数如[表1](#table5134121862415)所示。
 
 容器启动后，可执行以下命令检查相应设备和驱动是否挂载成功，每台机型具体的挂载目录参考[Ascend Docker Runtime默认挂载内容](../../07_references/05_appendix.md#ascend-docker-runtime默认挂载内容)。命令示例如下：

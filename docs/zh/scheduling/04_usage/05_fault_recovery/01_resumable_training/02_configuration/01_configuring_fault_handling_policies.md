@@ -194,6 +194,7 @@ metadata:
         fi
         ```
 
+<!-- npu="950,A3,910b" id1 -->
 ### 配置进程级别重调度<a name="ZH-CN_TOPIC_0000002511426407"></a>
 
 本章节将指导用户了解配置进程级别重调度的关键步骤。进程级别重调度的特性介绍、使用约束、支持的产品型号及原理请参见[进程级别重调度](../01_solutions_principles/01_fault_handling.md#进程级别重调度)。
@@ -296,7 +297,9 @@ metadata:
            python /job/code/manager.py 2>> /job/code/alllogs/$MINDX_TASK_ID/taskd/error.log &   # manager.py具体执行路径由当前路径决定，error.log日志路径需提前创建
         fi
         ```
+<!-- end id1 -->
 
+<!-- npu="A3,910b" id2 -->
 ### 配置亚健康热切<a name="ZH-CN_TOPIC_0000002511426471"></a>
 
 本章节将指导用户了解配置亚健康热切的关键步骤。亚健康热切的特性介绍、使用约束、支持的产品型号及原理请参见[亚健康热切](../01_solutions_principles/01_fault_handling.md#亚健康热切)。
@@ -399,9 +402,12 @@ metadata:
     >     ```shell
     >     pip show taskd
     >     ```
+<!-- end id2 -->
 
+<!-- npu="950,A3,910b" id3 -->
 ## 配置在线恢复
 
+<!-- npu="A3" id4 -->
 ### 配置算子级在线恢复<a name="ZH-CN_TOPIC_0000002511426477"></a>
 
 本章节将指导用户了解配置算子级在线恢复的关键步骤。算子级在线恢复的特性介绍、使用约束、支持的产品型号及原理请参见[算子级在线恢复](../01_solutions_principles/01_fault_handling.md#算子级在线恢复)。
@@ -414,6 +420,7 @@ metadata:
 export HCCL_OP_RETRY_ENABLE="L0:0, L1:1, L2:1"     # 是否开启HCCL算子的重执行特性
 export HCCL_OP_RETRY_PARAMS="MaxCnt:3, HoldTime:5000, IntervalTime:1000"    # 配置HCCL算子重执行的具体参数，包括最大重执行次数、第一次重执行的等待时间以及两次重执行的间隔时间
 ```
+<!-- end id4 -->
 
 ### 配置进程级在线恢复<a name="ZH-CN_TOPIC_0000002479386492"></a>
 
@@ -577,7 +584,9 @@ context:
 
 >[!NOTE]
 >用户若要测试进程级在线恢复功能，可参考[验证进程级别在线恢复](../03_examples_and_verification/01_pytorch_examples_and_verification.md#验证进程级别在线恢复)进行配置。
+<!-- end id3 -->
 
+<!-- npu="A3" id5 -->
 ## 配置切换恢复
 
 ### 配置借轨通信任务暂停与回切<a name="ZH-CN_TOPIC_0000002511346495"></a>
@@ -895,7 +904,9 @@ context:
                   <strong>- containerPort: 9601                 # 在所有的Pod下增加TaskD通信使用的端口9601</strong>
                     <strong>name: taskd-port</strong>
     ...</pre>
+<!-- end id5 -->
 
+<!-- npu="A3,910b" id6 -->
 ## 配置弹性恢复
 
 ### 配置弹性训练<a name="ZH-CN_TOPIC_0000002511346471"></a>
@@ -1011,7 +1022,9 @@ context:
     scripts/
     └── train_start.sh
     ```
+<!-- end id6 -->
 
+<!-- npu="A3,910b,910" id7 -->
 ## 配置优雅容错机制
 
 ### 配置优雅容错<a name="ZH-CN_TOPIC_0000002511346501"></a>
@@ -1075,6 +1088,7 @@ export MS_ENABLE_TFT="{RSC:1}"      # MindSpore场景下配置此字段开启优
                     fieldPath: status.podIP         # 用于MindIO通信，如果不配置此参数会影响训练任务的正常拉起。
 ...
 ```
+<!-- end id7 -->
 
 ## 参数说明<a name="ZH-CN_TOPIC_0000002511346491"></a>
 

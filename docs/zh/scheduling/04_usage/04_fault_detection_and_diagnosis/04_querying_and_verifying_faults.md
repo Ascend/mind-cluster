@@ -16,6 +16,7 @@
 - [NodeD故障信息](../../07_references/02_common_operations.md#ZH-CN_TOPIC_0000002511427003)
 - [UB网卡故障信息](../../07_references/02_common_operations.md#ZH-CN_TOPIC_0000002511347042)
 
+<!-- npu="A3" id1 -->
 ## 查询pingmesh灵衢网络检测结果
 
 ### 查看检测结果信息<a name="zh-cn_topic_0000002193288232_section772614207398"></a>
@@ -65,6 +66,7 @@ kubectl describe cm -n cluster-system pingmesh-fault-<nodename>
 |--|--|--|
 |mc-consumer-publicfault|ClusterD侦听所需的label key|true|
 |PublicFault|公共故障信息key|详细说明请参见[fault字段说明](../../06_api/04_clusterd/03_public_fault_apis.md#configmap)表。|
+<!-- end id1 -->
 
 ## 查询性能劣化故障检测数据
 

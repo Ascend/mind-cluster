@@ -364,6 +364,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 |KUBELET_PORT|指定当前节点kubelet默认端口号（若用户未自定义kubelet端口，则无需配置）。|0~65535的整数|若用户修改kubelet默认端口，需要设置该环境变量的值为自定义端口号。<p>若用户未修改kubelet默认端口，则忽略该环境变量。</p>|
 |HOST_IP|指定当前节点的物理IP。|合法的IP地址，格式为字符串，要求为常规IPv4或IPv6格式|固定配置项，初始YAML文件已提供。|
 
+<!-- npu="A3,910b" id1 -->
 ## Elastic Agent环境变量说明<a name="section8853192413411"></a>
 
 >[!NOTE]
@@ -383,7 +384,9 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 |RESTART\_FAULT\_PROCESS\_TYPE|Elastic Agent通知MindIO重启故障进程的类型。|字符串|<ul><li>worker：不退出Pod，只重启故障进程。</li><li>pod：重启Pod。</li></ul>|
 |RANK\_TABLE\_FILE|RankTable文件路径。|字符串|hccl.json文件的路径。|
 |PROCESS\_RECOVER|进程级别重调度或进程级在线恢复开关。|字符串|<ul><li>on：开启本功能。</li><li>其他值：关闭本功能。</li></ul>|
+<!-- end id1 -->
 
+<!-- npu="950,A3,910b" id2 -->
 ## TaskD环境变量说明<a name="section6616275583"></a>
 
 使用TaskD组件时可以配置的环境变量。如需了解其他来自源码的环境变量，请参见[PyTorch相关资料](https://pytorch.ac.cn/#google_vignette)。
@@ -405,6 +408,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 |HCCL_ASYNC_ERROR_HANDLING|是否开启watchdog功能。|字符串|取值如下：<ul><li>0：表示关闭故障检测和进程退出功能。</li><li>1：表示开启故障检测和进程退出功能。</li><li>2：表示仅开启故障检测功能。</li></ul>默认值为1。|
 |TASKD_PROCESS_INTERVAL|设置TaskD Manager主流程处理间隔。|字符串|取值范围为100~1000，单位为毫秒。|
 |TASKD_REPORT_FAULT_TIMEOUT|设置TaskD Agent上报业务故障给TaskD Manager的超时时间。若超时后，故障仍然存在，则TaskD Agent退出。|字符串|取值范围为300~600，单位为秒。|
+<!-- end id2 -->
 
 ## NodeD环境变量说明<a name="section10131935141216"></a>
 
@@ -416,6 +420,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 |--|--|--|--|
 |XDL_IP|用于获取Pod所在host的IP地址，慢节点使用，用于记录、匹配慢节点信息。|合法的IP地址，格式为字符串，要求为常规IPv4或IPv6格式。|部署NodeD组件的YAML中写入该环境变量。|
 
+<!-- npu="950,A3,910b" id3 -->
 ## MindIO TFT环境变量说明<a name="section10131935156854"></a>
 
 **表 7** MindIO TFT环境变量说明
@@ -450,3 +455,4 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 |--|--|--|--|
 |MINDIO_AUTO_PATCH_MEGATRON|是否在import mindio_acp的时候自动patch Megatron框架的源代码中的Checkpoint相关函数。|<ul><li>true或者1：开启</li><li>其他值：关闭</li></ul>|false|
 |HCOM_FILE_PATH_PREFIX|HCOM生成的文件路径的前缀，通过前缀保证文件只会在当前路径下（此路径需要已存在）创建和删除。|路径参数|${install_path}|
+<!-- end id3 -->

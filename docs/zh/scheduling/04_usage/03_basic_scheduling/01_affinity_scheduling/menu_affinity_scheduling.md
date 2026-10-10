@@ -6,4 +6,6 @@
 - [基于昇腾AI处理器的亲和性](./03_ascend_ai_processor_based_affinity.md)
 - [基于节点的亲和性](./04_node_based_affinity.md)
 - [昇腾AI处理器的调度算法说明](./05_scheduling_algorithm_of_ascend_ai_processor.md)
+<!-- npu="950,A3" id1 -->
 - [推理服务亲和性调度](./06_infer_affinity_scheduling.md)
+<!-- end id1 -->

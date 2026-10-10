@@ -17,6 +17,7 @@ Ascend Docker Runtime
 1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[容器化支持特性指南](../04_usage/00_containerization/00_before_you_start.md)章节进行操作。
 
+<!-- npu="950,A3,910b,910,310p" id1 -->
 ## 资源监测<a name="ZH-CN_TOPIC_0000002479386910"></a>
 
 **功能特点<a name="section1788818281655"></a>**
@@ -26,25 +27,31 @@ NPU资源监测
 - 支持在执行训练或者推理任务时，对昇腾AI处理器资源各种数据信息的实时监测，可实时获取昇腾AI处理器利用率、温度、电压、内存，以及昇腾AI处理器在容器中的分配状况等信息，实现资源的实时监测。
 - 支持通过自定义插件上报其他指标。
 
+<!-- npu="950" id2 -->
 DPU资源监测
 
-- 支持监测DPU的运行状态与各项统计指标。包括RoCE错包、丢包、接收ECN、发送/接收CNP及PSN异常重传等DPU全局指标以及每个网卡端口的链路运行状态、收发流量与异常错误状态等interface级指标。
+支持监测DPU的运行状态与各项统计指标。包括RoCE错包、丢包、接收ECN、发送/接收CNP及PSN异常重传等DPU全局指标以及每个网卡端口的链路运行状态、收发流量与异常错误状态等Interface级指标。
+<!-- end id2 -->
 
 **所需组件<a name="section15655185785119"></a>**
 
 NPU资源监测所需组件：
 
-- NPU Exporter
+NPU Exporter
 
+<!-- npu="950" id3 -->
 DPU资源监测所需组件：
 
-- DPU Exporter
+DPU Exporter
+<!-- end id3 -->
 
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[资源监测特性指南](../04_usage/01_resource_monitoring/menu_resource_monitoring.md)章节进行操作。
+<!-- end id1 -->
 
+<!-- npu="950,A3,910b,910,310p" id4 -->
 ## 故障检测<a name="ZH-CN_TOPIC_FAULT_DETECTION"></a>
 
 **功能特点<a name="section_fault_detection_features"></a>**
@@ -59,7 +66,9 @@ DPU资源监测所需组件：
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[故障检测特性指南](../04_usage/04_fault_detection_and_diagnosis/00_feature_description.md)章节进行操作。
+<!-- end id4 -->
 
+<!-- npu="950,A3,910b,910,310p" id5 -->
 ## 虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855"></a>
 
 虚拟化实例可将一张NPU切分成多份，分给不同的任务使用。按照切分的方式，分为基于HDK的虚拟化实例和基于vCANN-RT的虚拟化实例。
@@ -91,6 +100,7 @@ DPU资源监测所需组件：
 1. 安装请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[基于HDK的虚拟化实例](../04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md)章节进行操作。
 
+<!-- npu="950,A3,910b" id6 -->
 ### 基于vCANN-RT的虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855vcann"></a>
 
 **功能介绍<a name="section1337420477275vcann"></a>**
@@ -109,7 +119,10 @@ DPU资源监测所需组件：
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[基于vCANN-RT的虚拟化实例](../04_usage/02_virtual_instance/01_virtual_instance_with_vcann_rt/00_description.md)章节进行操作。
+<!-- end id6 -->
+<!-- end id5 -->
 
+<!-- npu="950,A3,910b,910,310p" id7 -->
 ## 基础调度<a name="ZH-CN_TOPIC_0000002511346871"></a>
 
 ### 整卡调度<a name="ZH-CN_TOPIC_0000002479386926"></a>
@@ -141,6 +154,7 @@ DPU资源监测所需组件：
 3. Preempt和Reclaim Action的使用样例请参见[潮汐调度最佳实践](../04_usage/11_tidal_scheduling/00_before_you_start.md)章节进行操作。
 4. DRA机制调度的使用样例请参见[DRA调度最佳实践](../04_usage/13_ascend_dynamic_resource_allocation_best_practice/00_before_you_start.md)章节进行操作。
 
+<!-- npu="A3" id8 -->
 ### 多级调度<a name="ZH-CN_TOPIC_0000002511346873"></a>
 
 **功能特点<a name="section1788818281655"></a>**
@@ -160,6 +174,7 @@ DPU资源监测所需组件：
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[多级调度](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md)章节进行操作。
+<!-- end id8 -->
 
 ### 芯片故障恢复<a name="ZH-CN_TOPIC_0000002479226952"></a>
 
@@ -200,7 +215,9 @@ DPU资源监测所需组件：
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[重调度](../04_usage/03_basic_scheduling/05_rescheduling.md)章节进行操作。
+<!-- end id7 -->
 
+<!-- npu="950,A3,910b" id9 -->
 ## 断点续训<a name="ZH-CN_TOPIC_0000002511346867"></a>
 
 **功能特点<a name="section1788818281655"></a>**
@@ -233,7 +250,9 @@ DPU资源监测所需组件：
 3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/01_pytorch_examples_and_verification.md#制作镜像)章节。
 4. MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](../07_references/01_optimizing_saving_and_loading_checkpoints/01_product_description.md)章节。
 5. MindIO TFT的详细介绍及安装步骤请参见[故障恢复加速](../07_references/00_fault_recovery_acceleration/01_product_description.md)。
+<!-- end id9 -->
 
+<!-- npu="950,A3,910b,910,310p" id10 -->
 ## 容器恢复<a name="ZH-CN_TOPIC_0000002492192948"></a>
 
 **功能特点<a name="section1788818281655"></a>**
@@ -252,7 +271,9 @@ Container Manager
 
 1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[一体机特性指南](../04_usage/06_appliance/00_before_you_start.md)章节进行操作。
+<!-- end id10 -->
 
+<!-- npu="A3,910b" id11 -->
 ## 容器快照<a name="ZH-CN_TOPIC_0000002511346881"></a>
 
 **功能特点<a name="section1788818281655"></a>**
@@ -272,7 +293,9 @@ Container Manager
 
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[容器快照部署及使用](../04_usage/10_infer_operator_best_practice/06_container_snapshot_usage.md)章节进行操作。
+<!-- end id11 -->
 
+<!-- npu="A3,910b" id12 -->
 ## 推理高可用<a name="ZH-CN_TOPIC_0000002511346885"></a>
 
 **功能特点<a name="section2288818281659"></a>**
@@ -299,6 +322,7 @@ Container Manager
 3. MindIE CMotor推理任务最佳实践（已日落）请参见[MindIE CMotor推理任务最佳实践（已日落）](../04_usage/07_mindie_motor_best_practice/00_before_you_start.md)章节进行操作。
 4. SGLang推理任务最佳实践请参见[SGLang推理任务最佳实践](../04_usage/08_sglang_best_practice/00_before_you_start.md)章节进行操作。
 5. vLLM推理任务最佳实践请参见[vLLM推理任务最佳实践](../04_usage/09_vllm_best_practice/00_before_you_start.md)章节进行操作。
+<!-- end id12 -->
 
 ## 集群运维Agent<a name="ZH-CN_TOPIC_0000002524312690"></a>
 
