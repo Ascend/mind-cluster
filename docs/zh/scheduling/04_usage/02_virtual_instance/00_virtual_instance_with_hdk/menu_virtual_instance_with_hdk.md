@@ -4,4 +4,6 @@
 - [应用场景及方案](./02_application_scenarios_solutions.md)
 - [虚拟化模板](./03_virtualization_templates.md)
 - [静态vNPU调度](./04_static_vnpu_scheduling/menu_static_vnpu_scheduling.md)
+<!-- npu="A3,910b,310p" id1 -->
 - [动态vNPU调度](./05_dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md)
+<!-- end id1 -->

@@ -10,20 +10,43 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 本接口支持查询默认指标组和自定义指标组。自定义指标组的方法详细请参见[自定义指标开发](../../05_developer_guide/01_custom_metrics_development.md)；默认指标组包含如下几个部分。指标组的采集和上报由配置文件中的开关控制，若开关配置为开启，则对应的指标组会进行采集和上报；若开关配置为关闭，则对应的指标组不会进行采集和上报。
 
 - [版本数据信息](#section170316521436141)
+
 - [节点基本信息](#section170316521436120)
 - [NPU数据信息](#section1442282202316)
 - [利用率数据信息](#section1379685784315)
+<!-- npu="A3,910b,310p" id1 -->
 - [vNPU数据信息](#section814111613432)
+<!-- end id1 -->
+<!-- npu="950,A3,910b,910" id3 -->
 - [network_bandwidth数据信息](#section1358881214551)
+<!-- end id3 -->
+<!-- npu="950,A3,910b,910" id5 -->
 - [network_link数据信息](#section1358881214552)
+<!-- end id5 -->
+<!-- npu="950,A3,910b,910" id7 -->
 - [片上内存数据信息](#section177232045203114)
+<!-- end id7 -->
+<!-- npu="A3,910b" id9 -->
 - [HCCS数据信息](#section039816240252)
+<!-- end id9 -->
+<!-- npu="910b" id11 -->
 - [PCIe数据信息](#section1240520241824136)
+<!-- end id11 -->
+<!-- npu="A3,910b,910" id13 -->
 - [RoCE数据信息](#section184516450323)
+<!-- end id13 -->
+<!-- npu="950,A3" id15 -->
 - [SIO数据信息](#section7109037161515)
+<!-- end id15 -->
+<!-- npu="950,A3,910b,910" id17 -->
 - [光模块数据信息](#section1517163183510)
+<!-- end id17 -->
+<!-- npu="910,310p" id19 -->
 - [DDR数据信息](#section114607361931169)
+<!-- end id19 -->
+<!-- npu="950" id21 -->
 - [UB数据信息](#section998877563214)
+<!-- end id21 -->
 
 >[!NOTE]
 >
@@ -276,6 +299,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 | utilization | npu_chip_info_cube_utilization | 昇腾AI处理器AICube利用率| % |<ul><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li>Atlas 800I A2推理服务器</li><li>A200I A2 Box异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
 | utilization | npu_chip_info_overall_utilization | 昇腾AI处理器整体利用率 | % |<ul><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li>Atlas 800I A2推理服务器</li><li>A200I A2 Box异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
 
+<!-- npu="A3,910b,310p" id2 -->
 ## vNPU数据信息<a name="section814111613432"></a>
 
 **表 5**  vNPU数据信息
@@ -324,7 +348,9 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </tr>
 </tbody>
 </table>
+<!-- end id2 -->
 
+<!-- npu="950,A3,910b,910" id4 -->
 ## network_bandwidth数据信息<a name="section1358881214551"></a>
 
 **表 6**  network_bandwidth数据信息
@@ -379,7 +405,9 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 </tr></tbody>
 </table>
+<!-- end id4 -->
 
+<!-- npu="950,A3,910b,910" id6 -->
 ## network_link数据信息<a name="section1358881214552"></a>
 
 **表 7**  network_link数据信息
@@ -443,7 +471,9 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 </tr></tbody>
 </table>
+<!-- end id6 -->
 
+<!-- npu="950,A3,910b,910" id8 -->
 ## 片上内存数据信息<a name="section177232045203114"></a>
 
 **表 8**  片上内存数据信息
@@ -576,7 +606,9 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </tr>
 </tbody>
 </table>
+<!-- end id8 -->
 
+<!-- npu="A3,910b" id10 -->
 ## HCCS数据信息<a name="section039816240252"></a>
 
 **表 9**  HCCS数据信息
@@ -675,7 +707,9 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </tr>
 </tbody>
 </table>
+<!-- end id10 -->
 
+<!-- npu="910b" id12 -->
 ## PCIe数据信息<a name="section1240520241824136"></a>
 
 **表 10**  PCIe数据信息
@@ -754,7 +788,9 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </tr>
 </tbody>
 </table>
+<!-- end id12 -->
 
+<!-- npu="A3,910b,910" id14 -->
 ## RoCE数据信息<a name="section184516450323"></a>
 
 **表 11**  RoCE数据信息
@@ -965,7 +1001,9 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </tr>
 </tbody>
 </table>
+<!-- end id14 -->
 
+<!-- npu="950,A3" id16 -->
 ## SIO数据信息<a name="section7109037161515"></a>
 
 **表 12**  SIO数据信息
@@ -1005,7 +1043,9 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </tr>
 </tbody>
 </table>
+<!-- end id16 -->
 
+<!-- npu="950,A3,910b,910" id18 -->
 ## 光模块数据信息<a name="section1517163183510"></a>
 
 **表 13**  光模块数据信息
@@ -1102,7 +1142,9 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </tr>
 </tbody>
 </table>
+<!-- end id18 -->
 
+<!-- npu="910,310p" id20 -->
 ## DDR数据信息<a name="section114607361931169"></a>
 
 **表 14**  DDR数据信息
@@ -1145,7 +1187,9 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </tr>
 </tbody>
 </table>
+<!-- end id20 -->
 
+<!-- npu="950" id22 -->
 ## UB数据信息<a name="section998877563214"></a>
 
 **表 15**  UB数据信息
@@ -1599,6 +1643,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </tr>
 </tbody>
 </table>
+<!-- end id22 -->
 
 ## 调用的HDK接口<a name="section345820153363"></a>
 

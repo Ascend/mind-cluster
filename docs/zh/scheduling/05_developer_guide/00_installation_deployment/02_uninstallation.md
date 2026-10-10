@@ -1,7 +1,9 @@
 # 手动卸载<a name="ZH-CN_TOPIC_0000002511426389"></a>
 
 - 卸载Ascend Docker Runtime组件，请参见[卸载Ascend Docker Runtime](#section6134163311244)进行操作。
+<!-- npu="950,A3,910b,910,310p" id2 -->
 - 卸载Container Manager组件，请参见[卸载Container Manager组件](#section1461059103619)进行操作。
+<!-- end id2 -->
 - 卸载Kubectl Plugin、请参见[卸载Kubectl Plugin](#section1664298135126)进行操作。
 - 卸载NPU Exporter、DPU Exporter、Ascend Device Plugin、K8s RDMA Shared Dev Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD、Resilience Controller、Agent Core和Node Collector，请参见[卸载其他组件](#section6361146202520)。
 
@@ -145,6 +147,7 @@
     >
     > 解决方法：通过kubectl delete pod --force -n <i>{pod_namespace} {pod_name}</i>命令删除报错的Pod，等待Pod重新拉起即可解决。
 
+<!-- npu="950,A3,910b,910,310p" id1 -->
 ## 卸载Container Manager组件<a name="section1461059103619"></a>
 
 使用部署脚本（deploy.sh）进行卸载，脚本自动完成服务停止与禁用、systemd单元文件删除、二进制文件删除等操作。
@@ -179,6 +182,7 @@
     ```shell
     rm -rf /var/log/mindx-dl/container-manager
     ```
+<!-- end id1 -->
 
 ## 卸载Kubectl Plugin<a name="section1664298135126"></a>
 

@@ -84,25 +84,25 @@ modprobe ip6table_filter
 
 **使用说明**
 
-- 容器快照只支持workload为StatefulSet类型任务，且需在该类任务中增加容器快照开启的标签“infer.huawei.com/container-snapshot”，并将其设置为“true”，此外还需在容器环境变量中配置与NodeD相同的快照路径，如下所示：
+容器快照只支持workload为StatefulSet类型任务，且需在该类任务中增加容器快照开启的标签“infer.huawei.com/container-snapshot”，并将其设置为“true”，此外还需在容器环境变量中配置与NodeD相同的快照路径，如下所示：
 
-   ```Yaml
-      - name: prefill
-        replicas: 1
-        workload:
-          apiVersion: apps/v1
-          kind: StatefulSet
-        metadata:
-          labels:
-            infer.huawei.com/container-snapshot: 'true'
+```Yaml
+  - name: prefill
+    replicas: 1
+    workload:
+      apiVersion: apps/v1
+      kind: StatefulSet
+    metadata:
+      labels:
+        infer.huawei.com/container-snapshot: 'true'
 
-      ...
-        spec:
-          containers:
-          - env:
-            - name: host_snapshot_dir_path
-              value: "/user/snapshot"
-   ```
+  ...
+    spec:
+      containers:
+      - env:
+        - name: host_snapshot_dir_path
+          value: "/user/snapshot"
+```
 
 推理任务部署使用说明详见[使用说明](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/features/container_snapshot.md)，下面使用演示仅展示使用流程。
 
