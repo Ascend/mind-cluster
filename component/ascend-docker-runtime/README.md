@@ -140,7 +140,7 @@ runtime 模块不再注入用于设备挂载的 Prestart Hook，而是在内存�
 
 ## 编译指南
 
-1. 通过 git 拉取源码，并切换 master 分支，获得 ascend-docker-runtime。
+1. 通过 git 拉取源码，获得 ascend-docker-runtime。
 
    示例：源码放在 /home/mind-cluster/component/ascend-docker-runtime 目录下。
 
@@ -169,8 +169,10 @@ runtime 模块不再注入用于设备挂载的 Prestart Hook，而是在内存�
    编译完成后，会在 output 目录生成相应的 run 安装包。
 
    ```text
-   -rwxr-xr-x  ... Ascend-docker-runtime_x.x.x_linux-x86_64.run*
+   -rwxr-xr-x  ... Ascend-docker-runtime_<version>_linux-x86_64.run*
    ```
+
+   > **说明：** 上述回显中的 `<version>` 表示当前代码仓分支中的数字版本号。
 
 > [!NOTE]
 >

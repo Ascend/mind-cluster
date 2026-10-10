@@ -7,11 +7,13 @@
 
 # 编译
 
-1. 拉取mind-cluster整体源码，例如放在/home目录下。
+1. 拉取mind-cluster整体源码，例如放在/home目录下：
 
-2. 修改组件版本配置文件service_config.ini中mind-cluster-version字段值为所需编译版本，默认值如下：
+        git clone -b release/v26.2.0 https://gitcode.com/Ascend/mind-cluster.git
 
-        mind-cluster-version=26.1.0
+2. 修改组件版本配置文件 `build/service_config.ini`（相对源码根目录）中mind-cluster-version字段值为所需编译版本，默认值如下：
+
+        mind-cluster-version=26.2.0
 
 3. 执行以下命令，进入/home/mind-cluster/build目录，选择构建脚本执行：
 
@@ -35,7 +37,7 @@
 
 # openEuler从零构建环境准备
 
-以下为在 **openEuler 24.03 LTS** 基础镜像/系统上从零全量构建（build_all.sh，涵盖12个组件及 helm-deploy-tool 打包工具）实测所需的依赖与环境改动。已在 [mindio组件编译依赖](#mindio组件编译依赖) 单列的项这里不再重复。
+以下为在 **openEuler 24.03 LTS** 基础镜像/系统上从零全量构建（build_all.sh，涵盖17个组件及 helm-deploy-tool 打包工具）实测所需的依赖与环境改动。已在 [mindio组件编译依赖](#mindio组件编译依赖) 单列的项这里不再重复。
 
 ## 1. 系统工具链（dnf）
 
@@ -151,14 +153,26 @@ build_all.sh 末尾会构建 helm-deploy-tool（打包 chart），该组件依�
 
 # 自动拉取源码失败
 
-1. 参考以下命令，在/opt/buildtools/volcano_opensource/volcano_1.9/目录下手动拉取Volcano v1.9.0版本官方开源代码。
+1. 参考以下命令，分别在对应目录下手动拉取Volcano各版本分支的官方开源代码。
 
+        # volcano 1.9
+        mkdir -p /opt/buildtools/volcano_opensource/volcano_1.9/
         cd /opt/buildtools/volcano_opensource/volcano_1.9/
         git clone -b release-1.9 https://github.com/volcano-sh/volcano.git
 
-    > 注：国内网络从 github 克隆 volcano 限速严重。可改用 gitee 镜像加速：
+        # volcano 1.12
+        mkdir -p /opt/buildtools/volcano_opensource/volcano_1.12/
+        cd /opt/buildtools/volcano_opensource/volcano_1.12/
+        git clone -b release-1.12 https://github.com/volcano-sh/volcano.git
+
+        # volcano 1.15
+        mkdir -p /opt/buildtools/volcano_opensource/volcano_1.15/
+        cd /opt/buildtools/volcano_opensource/volcano_1.15/
+        git clone -b release-1.15 https://github.com/volcano-sh/volcano.git
+
+    > 注：以上拉取的均为 release 分支（如 `release-1.12`、`release-1.9`），而非 tag。国内网络从 github 克隆 volcano 限速严重。可改用 gitee 镜像加速：
     >
-    > `git clone -b release-1.9 https://gitee.com/mirrors/volcano.git`
+    > `git clone -b release-1.9 https://gitee.com/mirrors/volcano.git`（1.12 对应 `-b release-1.12`，1.15 对应 `-b release-1.15`）。
 2. 进入$GOPATH/mind-cluster/ascend-docker-runtime目录，执行ascend-docker-runtime 组件readme
     中编译部分2,3命令手动拉取编译所需包，其中ascend-docker-runtime目录修改为当前目录
 

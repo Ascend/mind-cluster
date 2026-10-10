@@ -142,7 +142,7 @@ flowchart BT
     ./build.sh
     ```
 
-    构建版本号默认取自 `service_config.ini` 文件，若该文件不存在则默认使用 v6.0.0。
+    构建版本号默认取自 `service_config.ini` 文件，若该文件不存在则默认使用 v26.2.0。
 
 3. 执行以下命令，查看 "output" 目录生成的软件列表。
 
@@ -154,8 +154,8 @@ flowchart BT
     drwxr-xr-x 2 root root     4096 Jan 29 19:12 ./
     drwxr-xr-x 9 root root     4096 Jan 29 19:09 ../
     -r-x------ 1 root root 25481072 Jan 29 19:09 npu-exporter
-    -r-------- 1 root root     3438 Jan 29 19:09 npu-exporter-v6.0.0.yaml
-    -r-------- 1 root root     3438 Jan 29 19:09 npu-exporter-310P-1usoc-v6.0.0.yaml
+    -r-------- 1 root root     3438 Jan 29 19:09 npu-exporter-v<version>.yaml
+    -r-------- 1 root root     3438 Jan 29 19:09 npu-exporter-310P-1usoc-v<version>.yaml
     -r-------- 1 root root      623 Jan 29 19:09 metricConfiguration.json
     -r-------- 1 root root      623 Jan 29 19:09 pluginConfiguration.json
     -r-------- 1 root root      623 Jan 29 19:09 agreement.txt
@@ -165,6 +165,8 @@ flowchart BT
     -r-------- 1 root root      623 Jan 29 19:09 Dockerfile-310P-1usoc.openeuler
     -r-x------ 1 root root     2579 Jan 29 19:09 run_for_310P_1usoc.sh
     ```
+
+    > **说明：** 上述回显中的 `<version>` 表示当前代码仓分支中的数字版本号。
 
 ## 安装部署
 

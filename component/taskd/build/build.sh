@@ -21,7 +21,7 @@ CI_PACKAGE_DIR="${ROOT_PATH}"/output/
 OUTPUT_DIR="${ROOT_PATH}"/_package_output_py3
 BUILD_DIR="${ROOT_PATH}"/build/
 VER_FILE="${ROOT_PATH}"/service_config.ini
-build_version="v7.0.RC1"
+build_version="v26.2.0"
 if [ -f "$VER_FILE" ]; then
   line=$(sed -n '1p' "$VER_FILE" 2>&1)
   # cut the chars after '=' and add char 'v', the final example is v3.0.0

@@ -155,8 +155,10 @@ Container Manager 的最佳实践（包含故障检测、故障处理、容器�
    回显示例如下：
 
     ```text
-    container-manager version: v7.3.0_linux-x86-64
+    container-manager version: v<version>_linux-x86-64
     ```
+
+    > **说明：** 上述回显中的 `<version>` 表示当前代码仓分支中的数字版本号。
 
 3. 查看容器恢复进度及提示信息：
 

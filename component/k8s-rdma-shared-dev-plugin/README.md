@@ -104,7 +104,7 @@ flowchart TD
 
 ## 编译指南
 
-1. 通过 git 拉取源码，并切换 master 分支，获得 k8s-rdma-shared-dev-plugin。
+1. 通过 git 拉取源码，获得 k8s-rdma-shared-dev-plugin。
 
     示例：源码放在 `/home/mind-cluster/component/k8s-rdma-shared-dev-plugin` 目录下
 
@@ -127,7 +127,7 @@ flowchart TD
 
     ```text
     k8s-rdma-shared-dp
-    k8s-rdma-shared-dp-v26.1.0.yaml
+    k8s-rdma-shared-dp-v<version>.yaml
     config.json
     Dockerfile
     Dockerfile.openeuler
@@ -136,6 +136,8 @@ flowchart TD
     fault_detection.sh
     npu-nic-mapping.json
     ```
+
+    > **说明：** 上述回显中的 `<version>` 表示当前代码仓分支中的数字版本号。
 
 ## 安装部署
 

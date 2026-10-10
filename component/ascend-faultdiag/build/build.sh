@@ -41,7 +41,7 @@ alias log_warn='log_base WARN $LINENO'
 alias log_debug='log_base DEBUG $LINENO'
 
 function check_version() {
-    BUILD_VERSION="7.3.0"
+    BUILD_VERSION="26.2.0"
     local version_file="${ROOT_PATH}/service_config.ini"
     if  [ -f "$version_file" ]; then
       line=$(sed -n '1p' "$version_file" 2>&1)
