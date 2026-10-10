@@ -54,7 +54,7 @@ RUNTIMESRCDIR=${RUNTIMESRCPATH%/${RUNTIMESRCNAME}}
 
 PACKAGENAME=${RT_FIRST_CASE}
 
-VERSION="6.0.0"
+VERSION="26.2.0"
 version_file="${ROOT}"/service_config.ini
 if  [ -f "$version_file" ]; then
   line=$(sed -n '1p' "$version_file" 2>&1)

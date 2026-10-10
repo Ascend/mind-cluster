@@ -143,11 +143,13 @@ flowchart TB
     drwxr-xr-x 2 root root     4096 Sep 28 19:12 ./
     drwxr-xr-x 9 root root     4096 Sep 28 19:09 ../
     -r-x------ 1 root root 43524664 Sep 28 19:09 ascend-dra
-    -r-------- 1 root root   372080 Sep 28 19:09 ascend-dra-driver-v6.0.0.yaml
+    -r-------- 1 root root   372080 Sep 28 19:09 ascend-dra-driver-v<version>.yaml
     -r-------- 1 root root      482 Sep 28 19:12 Dockerfile
     -r-------- 1 root root      482 Sep 28 19:12 Dockerfile.openeuler
     -r-------- 1 root root      482 Sep 28 19:12 agreement.txt
     ```
+
+    > **说明：** 上述回显中的 `<version>` 表示当前代码仓分支中的数字版本号。
 
 ## 安装部署
 

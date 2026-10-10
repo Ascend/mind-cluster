@@ -121,7 +121,7 @@ flowchart TB
 ### 编译前准备
 
 - 确保PC机连接至互联网，并已完成Git和Docker的安装。参见 [Git安装](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)、[Docker-ce安装](https://docs.docker.com/engine/install/ubuntu/)。
-- 已完成Go语言环境的安装（版本 ≥ 1.21，建议使用最新的bugfix版本）。参见 [https://golang.org/](https://golang.org/)。
+- 已完成Go语言环境的安装（版本 ≥ 1.26，建议使用最新的bugfix版本）。参见 [https://golang.org/](https://golang.org/)。
 - 完成musl的安装（版本 ≥ 1.2.0）。参见 [http://musl.libc.org/](http://musl.libc.org/)。
 - 根据所在网络环境配置Go代理地址，国内可使用Goproxy China，例如：
 
@@ -151,16 +151,17 @@ flowchart TB
 
 | 文件名 | 说明 |
 | --- | --- |
-| volcano-npu_v26.1.0.so | Volcano昇腾NPU调度插件动态链接库 |
+| volcano-npu_v{version}.so | Volcano昇腾NPU调度插件动态链接库 |
 | Dockerfile-scheduler | Volcano scheduler镜像构建文件 |
 | Dockerfile-controller | Volcano controller镜像构建文件 |
-| volcano-{version}.yaml | Volcano的启动配置文件 |
+| volcano-{volcano-version}.yaml | Volcano的启动配置文件 |
 | vc-scheduler | Volcano scheduler组件二进制文件 |
 | vc-controller-manager | Volcano controller组件二进制文件 |
 
 > **说明：**
 >
-> - `{version}`：表示Volcano框架版本号，取值为v1.9.0、v1.12.0、v1.15.0。
+> - `{volcano-version}`：表示Volcano框架版本号，取值为v1.9.0、v1.12.0、v1.15.0。
+> - `{version}`：表示当前代码仓分支中的数字版本号。
 > - 执行build.sh脚本时会修改部分Volcano开源代码，具体修改详见 [build.sh](build/build.sh)。
 
 ## 安装部署

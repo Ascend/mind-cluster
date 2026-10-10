@@ -19,7 +19,7 @@ TOP_DIR=$(realpath "${CUR_DIR}"/..)
 export GO111MODULE="on"
 export GOTOOLCHAIN="go1.21.13"
 VER_FILE="${TOP_DIR}"/service_config.ini
-build_version="v26.1.0"
+build_version="v26.2.0"
 output_name="clusterd"
 if [ -f "$VER_FILE" ]; then
   line=$(sed -n '1p' "$VER_FILE" 2>&1)
