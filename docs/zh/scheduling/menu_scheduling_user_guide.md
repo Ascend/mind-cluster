@@ -10,15 +10,21 @@
   - [安装前必读](./03_installation_guide/00_before_you_start.md)
   - [环境依赖](./03_installation_guide/01_environment_dependencies.md)
   - [安装部署](03_installation_guide/02_installation/menu_installation.md)
+    <!-- npu="950,A3,910b,910,310p" id45 -->
     - [使用Helm安装（推荐）](03_installation_guide/02_installation/00_helm_installation.md)
+    <!-- end id45 -->
     - [手动安装](03_installation_guide/02_installation/01_manual_installation.md)
     - [使用工具安装](03_installation_guide/02_installation/02_installation_using_tool.md)
   - [组件状态确认](./03_installation_guide/03_confirming_status.md)
   - [升级](./03_installation_guide/04_upgrade/menu_upgrade.md)
+    <!-- npu="950,A3,910b,910,310p" id46 -->
     - [使用Helm升级（推荐）](./03_installation_guide/04_upgrade/02_helm_upgrade.md)
+    <!-- end id46 -->
     - [手动升级](03_installation_guide/04_upgrade/01_manual_upgrade.md)
   - [卸载](./03_installation_guide/05_uninstallation/menu_uninstallation.md)
+    <!-- npu="950,A3,910b,910,310p" id47 -->
     - [使用Helm卸载（推荐）](./03_installation_guide/05_uninstallation/02_helm_uninstallation.md)
+    <!-- end id47 -->
     - [手动卸载](03_installation_guide/05_uninstallation/01_manual_uninstallation.md)
 - [特性指南](./04_usage/menu_usage.md)
   - [容器化支持特性指南](./04_usage/00_containerization/menu_containerization.md)
@@ -27,17 +33,23 @@
     - [在Docker客户端使用](./04_usage/00_containerization/02_usage_on_the_docker_client.md)
     - [在Containerd客户端使用](./04_usage/00_containerization/03_usage_on_the_containerd_client.md)
     - [通过crictl命令行工具使用CRI-O](./04_usage/00_containerization/04_usage_on_the_crio_client.md)
+  <!-- npu="950,A3,910b,910,310p" id1 -->
   - [资源监测特性指南](./04_usage/01_resource_monitoring/menu_resource_monitoring.md)
     - [NPU资源监测](./04_usage/01_resource_monitoring/00_npu_resource_monitoring/menu_npu_resource_monitoring.md)
       - [使用前必读](./04_usage/01_resource_monitoring/00_npu_resource_monitoring/00_before_you_start.md)
       - [实现原理](./04_usage/01_resource_monitoring/00_npu_resource_monitoring/01_working_principle.md)
       - [通过Prometheus使用](./04_usage/01_resource_monitoring/00_npu_resource_monitoring/02_working_with_prometheus.md)
       - [通过Telegraf使用](./04_usage/01_resource_monitoring/00_npu_resource_monitoring/03_working_with_telegraf.md)
+    <!-- npu="950" id2 -->
     - [DPU资源监测](./04_usage/01_resource_monitoring/01_dpu_resource_monitoring/menu_dpu_resource_monitoring.md)
       - [使用前必读](./04_usage/01_resource_monitoring/01_dpu_resource_monitoring/00_before_you_start.md)
       - [实现原理](./04_usage/01_resource_monitoring/01_dpu_resource_monitoring/01_working_principle.md)
       - [通过Prometheus使用](./04_usage/01_resource_monitoring/01_dpu_resource_monitoring/02_working_with_prometheus.md)
+    <!-- end id2 -->
+  <!-- end id1 -->
+  <!-- npu="950,A3,910b,910,310p" id3 -->
   - [虚拟化实例特性指南](./04_usage/02_virtual_instance/menu_virtual_instance.md)
+    <!-- npu="A3,910b,910,310p" id4 -->
     - [基于HDK的虚拟化实例](./04_usage/02_virtual_instance/00_virtual_instance_with_hdk/menu_virtual_instance_with_hdk.md)
       - [特性说明](./04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md)
       - [应用场景及方案](./04_usage/02_virtual_instance/00_virtual_instance_with_hdk/02_application_scenarios_solutions.md)
@@ -46,10 +58,17 @@
         - [创建vNPU](./04_usage/02_virtual_instance/00_virtual_instance_with_hdk/04_static_vnpu_scheduling/01_creating_vnpu.md)
         - [挂载vNPU（静态虚拟化）](./04_usage/02_virtual_instance/00_virtual_instance_with_hdk/04_static_vnpu_scheduling/02_mounting_vnpu_static.md)
         - [销毁vNPU](./04_usage/02_virtual_instance/00_virtual_instance_with_hdk/04_static_vnpu_scheduling/03_destroying_vnpu.md)
+      <!-- npu="A3,910b,310p" id6 -->
       - [动态vNPU调度](./04_usage/02_virtual_instance/00_virtual_instance_with_hdk/05_dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md)
+      <!-- end id6 -->
+    <!-- end id4 -->
+    <!-- npu="950,A3,910b" id5 -->
     - [基于vCANN-RT的虚拟化实例](./04_usage/02_virtual_instance/01_virtual_instance_with_vcann_rt/menu_virtual_instance_with_vcann_rt.md)
       - [特性说明](./04_usage/02_virtual_instance/01_virtual_instance_with_vcann_rt/00_description.md)
       - [软切分调度（推理）](./04_usage/02_virtual_instance/01_virtual_instance_with_vcann_rt/01_soft_allocation_scheduling_inference.md)
+    <!-- end id5 -->
+  <!-- end id3 -->
+  <!-- npu="950,A3,910b,910,310p" id7 -->
   - [调度特性指南](./04_usage/03_basic_scheduling/menu_basic_scheduling.md)
     - [特性说明](./04_usage/03_basic_scheduling/00_feature_description.md)
     - [亲和性调度](./04_usage/03_basic_scheduling/01_affinity_scheduling/menu_affinity_scheduling.md)
@@ -59,13 +78,23 @@
       - [基于昇腾AI处理器的亲和性](./04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md)
       - [基于节点的亲和性](./04_usage/03_basic_scheduling/01_affinity_scheduling/04_node_based_affinity.md)
       - [昇腾AI处理器的调度算法说明](./04_usage/03_basic_scheduling/01_affinity_scheduling/05_scheduling_algorithm_of_ascend_ai_processor.md)
+      <!-- npu="950,A3" id11 -->
       - [推理服务亲和性调度](./04_usage/03_basic_scheduling/01_affinity_scheduling/06_infer_affinity_scheduling.md)
+      <!-- end id11 -->
     - [昇腾AI处理器的调度流程](./04_usage/03_basic_scheduling/02_scheduling_process_of_the_ascend_ai_processor.md)
     - [整卡调度](./04_usage/03_basic_scheduling/03_full_npu_scheduling.md)
+    <!-- npu="A3" id8 -->
     - [多级调度](./04_usage/03_basic_scheduling/04_multi_level_scheduling.md)
+    <!-- end id8 -->
     - [重调度](./04_usage/03_basic_scheduling/05_rescheduling.md)
+    <!-- npu="950" id9 -->
     - [DPU任务调度](./04_usage/03_basic_scheduling/06_dpu_scheduling.md)
+    <!-- end id9 -->
+    <!-- npu="950,A3" id10 -->
     - [代际升级适配指导](./04_usage/03_basic_scheduling/07_Intergenerational_upgrade.md)
+    <!-- end id10 -->
+  <!-- end id7 -->
+  <!-- npu="950,A3,910b,910,310p" id12 -->
   - [故障检测特性指南](./04_usage/04_fault_detection_and_diagnosis/menu_fault_detection_and_diagnosis.md)
     - [特性说明](./04_usage/04_fault_detection_and_diagnosis/00_feature_description.md)
     - [实现原理](./04_usage/04_fault_detection_and_diagnosis/01_working_principle.md)
@@ -83,10 +112,13 @@
       - [配置网络故障](./04_usage/04_fault_detection_and_diagnosis/03_configuration/04_network_faults.md)
       - [配置业务故障与任务卡死检测](./04_usage/04_fault_detection_and_diagnosis/03_configuration/05_task_hang_detection.md)
       - [配置性能劣化、慢节点与慢网络诊断](./04_usage/04_fault_detection_and_diagnosis/03_configuration/06_performance_diagnosis.md)
+      <!-- npu="A3,910b" id23 -->
       - [配置在线压测](./04_usage/04_fault_detection_and_diagnosis/03_configuration/07_online_stress_testing.md)
+      <!-- end id23 -->
       - [配置公共故障](./04_usage/04_fault_detection_and_diagnosis/03_configuration/08_public_faults.md)
     - [查询和验证故障](./04_usage/04_fault_detection_and_diagnosis/04_querying_and_verifying_faults.md)
   - [故障恢复特性指南](./04_usage/05_fault_recovery/menu_fault_recovery.md)
+    <!-- npu="950,A3,910b,910" id43 -->
     - [断点续训特性指南](./04_usage/05_fault_recovery/01_resumable_training/menu_resumable_training.md)
       - [特性说明](./04_usage/05_fault_recovery/01_resumable_training/00_feature_description.md)
       - [方案和原理](./04_usage/05_fault_recovery/01_resumable_training/01_solutions_principles/menu_solutions_principles.md)
@@ -98,29 +130,44 @@
       - [示例与验证](./04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/menu_examples_and_verification.md)
         - [PyTorch场景示例](./04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/01_pytorch_examples_and_verification.md)
         - [MindSpore场景示例](./04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/02_mindspore_examples_and_verification.md)
+    <!-- end id43 -->
+    <!-- npu="950,A3,910b" id44 -->
     - [推理故障恢复特性指南](./04_usage/05_fault_recovery/02_resumable_inference/menu_resumable_inference.md)
       - [配置推理任务Pod级重调度](./04_usage/05_fault_recovery/02_resumable_inference/01_configuring_infer_pod_rescheduling.md)
+    <!-- end id44 -->
     - [芯片故障恢复](./04_usage/05_fault_recovery/00_chip_fault_recovery.md)
+  <!-- end id12 -->
+  <!-- npu="950,A3,910b,910,310p" id13 -->
   - [一体机特性指南](./04_usage/06_appliance/menu_appliance.md)
     - [使用前必读](./04_usage/06_appliance/00_before_you_start.md)
     - [NPU硬件故障检测与恢复](./04_usage/06_appliance/01_npu_hardware_fault_detection_and_rectification.md)
     - [配置推理业务故障恢复](./04_usage/06_appliance/02_inference_service_fault_recovery.md)
+  <!-- end id13 -->
+  <!-- npu="A3,910b" id14 -->
   - [MindIE CMotor推理任务最佳实践（已日落）](./04_usage/07_mindie_motor_best_practice/menu_mindie_motor_best_practice.md)
     - [使用前必读](./04_usage/07_mindie_motor_best_practice/00_before_you_start.md)
     - [部署MindIE CMotor](./04_usage/07_mindie_motor_best_practice/01_deploying_mindie_motor.md)
     - [配置推理任务重调度](./04_usage/07_mindie_motor_best_practice/02_rescheduling_inference_job.md)
     - [配置推理任务场景下的离线复位](./04_usage/07_mindie_motor_best_practice/03_configuring_offline_reset_for_inference_job.md)
     - [配置推理任务的弹性扩缩容](./04_usage/07_mindie_motor_best_practice/04_configuring_elastic_scaling_for_inference_job.md)
+    <!-- npu="910b" id48 -->
     - [配置推理任务交换机亲和性](./04_usage/07_mindie_motor_best_practice/05_configuring_switch_affinity_for_inference_job.md)
+    <!-- end id48 -->
+  <!-- end id14 -->
+  <!-- npu="A3,910b" id15 -->
   - [SGLang推理任务最佳实践](./04_usage/08_sglang_best_practice/menu_sglang_best_practice.md)
     - [使用前必读](./04_usage/08_sglang_best_practice/00_before_you_start.md)
     - [部署基于OME的SGLang推理任务](./04_usage/08_sglang_best_practice/01_deploying_ome_sglang_inference_job.md)
     - [配置推理任务实例重调度](./04_usage/08_sglang_best_practice/02_rescheduling_inference_job_instance.md)
+  <!-- end id15 -->
+  <!-- npu="A3,910b" id16 -->
   - [vLLM推理任务最佳实践](./04_usage/09_vllm_best_practice/menu_vllm_best_practice.md)
     - [使用前必读](./04_usage/09_vllm_best_practice/00_before_you_start.md)
     - [部署vLLM推理任务](./04_usage/09_vllm_best_practice/01_deploying_vllm_inference_job.md)
     - [配置推理任务实例重调度](./04_usage/09_vllm_best_practice/02_rescheduling_inference_job_instance.md)
     - [配置故障隔离](./04_usage/09_vllm_best_practice/03_configuring_fault_isolation.md)
+  <!-- end id16 -->
+  <!-- npu="950,A3,910b" id17 -->
   - [Infer Operator推理任务最佳实践](./04_usage/10_infer_operator_best_practice/menu_infer_operator_best_practice.md)
     - [使用前必读](./04_usage/10_infer_operator_best_practice/00_before_you_start.md)
     - [基于vLLM Proxy部署Infer Operator推理任务](./04_usage/10_infer_operator_best_practice/01_deploying_infer_operator_inference_job_with_vllm_proxy.md)
@@ -128,12 +175,20 @@
     - [配置推理任务优先级调度](./04_usage/10_infer_operator_best_practice/03_configuring_priority_scheduling.md)
     - [配置推理任务实例级重调度](./04_usage/10_infer_operator_best_practice/04_configuring_rescheduling_inference_job.md)
     - [配置基于负载的弹性扩缩容](./04_usage/10_infer_operator_best_practice/05_configuring_elastic_scaling.md)
+    <!-- npu="A3,910b" id18 -->
     - [容器快照部署及使用](./04_usage/10_infer_operator_best_practice/06_container_snapshot_usage.md)
+    <!-- end id18 -->
+    <!-- npu="950,A3" id19 -->
     - [配置推理服务亲和性调度](./04_usage/10_infer_operator_best_practice/07_configuring_infer_service_affinity_scheduling.md)
+    <!-- end id19 -->
+  <!-- end id17 -->
+  <!-- npu="950,A3,910b,910,310p" id20 -->
   - [潮汐调度最佳实践](./04_usage/11_tidal_scheduling/menu_tidal_scheduling.md)
     - [使用前必读](./04_usage/11_tidal_scheduling/00_before_you_start.md)
     - [基于Preempt的推理/训练任务的潮汐调度](./04_usage/11_tidal_scheduling/01_preempt_based_alternation.md)
     - [基于Reclaim的推理/训练任务的潮汐调度](./04_usage/11_tidal_scheduling/02_reclaim_based_alternation.md)
+  <!-- end id20 -->
+  <!-- npu="A3,910b" id21 -->
   - [verl强化学习任务最佳实践](./04_usage/12_verl_best_practice/menu_verl_best_practice.md)
     - [训推同步共卡场景](./04_usage/12_verl_best_practice/01_colocated_scenario/menu_colocated_scenario.md)
       - [使用前必读](./04_usage/12_verl_best_practice/01_colocated_scenario/00_before_you_start.md)
@@ -141,9 +196,12 @@
       - [配置强化学习任务Pod重调度](./04_usage/12_verl_best_practice/01_colocated_scenario/02_configuring_rescheduling_reinforcement_learning_job.md)
     - [训推分离场景](./04_usage/12_verl_best_practice/02_separated_scenario/menu_separated_scenario.md)
       - [配置verl弹性推理容错](./04_usage/12_verl_best_practice/02_separated_scenario/00_configuring_verl_elastic_rollout.md)
+  <!-- end id21 -->
+  <!-- npu="950,A3,910b" id22 -->
   - [Ascend DRA组件最佳实践](./04_usage/13_ascend_dynamic_resource_allocation_best_practice/menu_ascend_dynamic_resource_allocation_best_practice.md)
     - [使用前必读](./04_usage/13_ascend_dynamic_resource_allocation_best_practice/00_before_you_start.md)
     - [DRA机制下资源申请与释放](./04_usage/13_ascend_dynamic_resource_allocation_best_practice/01_deploying_dra_and_running_task.md)
+  <!-- end id22 -->
   - [集群运维Agent特性指南](./04_usage/14_clusterops_agent/menu_fault_diagnosis.md)
     - [特性说明](./04_usage/14_clusterops_agent/00_before_you_start.md)
     - [配置任务类型](./04_usage/14_clusterops_agent/01_configuring_task_crds.md)
@@ -156,27 +214,40 @@
       - [获取软件包](./05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)
       - [安装前准备](./05_developer_guide/00_installation_deployment/00_manual_installation/01_preparing_for_installation.md)
       - [Ascend Docker Runtime](./05_developer_guide/00_installation_deployment/00_manual_installation/02_ascend_docker_runtime.md)
+      <!-- npu="950,A3,910b,910,310p" id24 -->
       - [NPU Exporter](./05_developer_guide/00_installation_deployment/00_manual_installation/03_npu_exporter.md)
       - [Ascend Device Plugin](./05_developer_guide/00_installation_deployment/00_manual_installation/04_ascend_device_plugin.md)
       - [Volcano](./05_developer_guide/00_installation_deployment/00_manual_installation/05_volcano.md)
       - [ClusterD](./05_developer_guide/00_installation_deployment/00_manual_installation/06_clusterd.md)
+      <!-- end id24 -->
+      <!-- npu="950,A3,910b" id41 -->
       - [Infer Operator](./05_developer_guide/00_installation_deployment/00_manual_installation/07_infer_operator.md)
+      <!-- end id41 -->
+      <!-- npu="950,A3,910b,910,310p" id42 -->
       - [Ascend Operator](./05_developer_guide/00_installation_deployment/00_manual_installation/08_ascend_operator.md)
       - [NodeD](./05_developer_guide/00_installation_deployment/00_manual_installation/09_noded.md)
       - [Container Manager](./05_developer_guide/00_installation_deployment/00_manual_installation/10_container-manager.md)
+      <!-- end id42 -->
+      <!-- npu="950" id25 -->
       - [K8s RDMA Shared Dev Plugin](./05_developer_guide/00_installation_deployment/00_manual_installation/11_k8s_rdma_shared_dev_plugin.md)
       - [DPU Exporter](./05_developer_guide/00_installation_deployment/00_manual_installation/12_dpu_exporter.md)
+      <!-- end id25 -->
+      <!-- npu="950,A3,910b" id26 -->
       - [Ascend Dynamic Resource Allocation](./05_developer_guide/00_installation_deployment/00_manual_installation/13_ascend_dynamic_resource_allocation.md)
+      <!-- end id26 -->
       - [Kubectl Plugin](./05_developer_guide/00_installation_deployment/00_manual_installation/14_kubectl_plugin.md)
       - [Agent Core](./05_developer_guide/00_installation_deployment/00_manual_installation/15_agent_core.md)
       - [Node Collector](./05_developer_guide/00_installation_deployment/00_manual_installation/16_node_collector.md)
     - [升级](./05_developer_guide/00_installation_deployment/01_upgrade.md)
     - [卸载](./05_developer_guide/00_installation_deployment/02_uninstallation.md)
+  <!-- npu="950,A3,910b,910,310p" id27 -->
   - [自定义指标开发](./05_developer_guide/01_custom_metrics_development.md)
-  - [DP热复位插件开发](./05_developer_guide/02_dp_hot_reset_plugin_development.md)
+  - [芯片热复位插件开发](./05_developer_guide/02_dp_hot_reset_plugin_development.md)
   - [公共故障上报](./05_developer_guide/03_clusterd_fault_awareness.md)
+  <!-- end id27 -->
   - [开发与编译环境搭建](./05_developer_guide/04_development_environment.md)
 - [API参考](./06_api/menu_api.md)
+  <!-- npu="950,A3,910b,910,310p" id28 -->
   - [NPU Exporter](./06_api/00_npu_exporter/menu_npu_exporter.md)
     - [NPU Exporter主页](./06_api/00_npu_exporter/00_npu_exporter_home_page.md)
     - [Prometheus Metrics接口](./06_api/00_npu_exporter/01_prometheus_metrics_api.md)
@@ -200,7 +271,11 @@
     - [健康探针接口](./06_api/04_clusterd/10_health_probe.md)
     - [集群版本信息](./06_api/04_clusterd/11_cluster_version.md)
   - [Ascend Operator](./06_api/05_ascend_operator.md)
+  <!-- end id28 -->
+  <!-- npu="A3,910b" id29 -->
   - [Elastic-Agent（断点续训相关接口）](./06_api/06_elastic_agent.md)
+  <!-- end id29 -->
+  <!-- npu="950,A3,910b" id30 -->
   - [TaskD](./06_api/07_taskd/menu_taskd.md)
     - [taskd.\_\_version_\_](./06_api/07_taskd/00_taskd_version.md)
     - [TaskD Worker接口](./06_api/07_taskd/01_taskd_worker_apis.md)
@@ -210,22 +285,42 @@
     - [断点续训相关接口](./06_api/07_taskd/05_resumable_training_apis.md)
     - [TaskD内部接口](./06_api/07_taskd/06_internal_taskd_apis.md)
     - [返回码说明](./06_api/07_taskd/07_return_codes.md)
+  <!-- end id30 -->
+  <!-- npu="950,A3,910b,910,310p" id32 -->
   - [Ascend Job](./06_api/08_ascend_job.md)
+  <!-- end id32 -->
+  <!-- npu="950,A3,910b" id31 -->
   - [MindIO](./06_api/09_mindio/menu_mindio.md)
     - [MindIO TFT接口](./06_api/09_mindio/00_mindio_tft_apis.md)
     - [MindIO ACP接口](./06_api/09_mindio/01_mindio_acp_apis.md)
+  <!-- end id31 -->
+  <!-- npu="950,A3,910b" id33 -->
   - [Infer Operator](./06_api/10_infer_operator.md)
+  <!-- end id33 -->
+  <!-- npu="950" id34 -->
   - [K8s RDMA Shared Dev Plugin](./06_api/11_k8s_rdma_shared_dev_plugin.md)
+  <!-- end id34 -->
+  <!-- npu="950,A3,910b,910,310p" id35 -->
   - [K8s原生对象说明](./06_api/12_k8s.md)
   - [环境变量说明](./06_api/13_environment_variable_description.md)
   - [hccl.json文件说明](./06_api/14_hccl.json_file_description.md)
   - [任务YAML配置说明](./06_api/15_yaml_configuration.md)
+  <!-- end id35 -->
+  <!-- npu="950" id36 -->
   - [DPU Exporter](./06_api/16_dpu_exporter.md)
+  <!-- end id36 -->
+  <!-- npu="950,A3,910b" id37 -->
   - [Ascend Dynamic Resource Allocation](./06_api/17_ascend_dynamic_resource_allocation.md)
+  <!-- end id37 -->
+  <!-- npu="950,A3,910b,910,310p" id39 -->
   - [Container Manager](./06_api/18_container-manager.md)
+  <!-- end id39 -->
+  <!-- npu="950" id38 -->
   - [UB Host Device Cni](./06_api/19_ub_host_device_cni.md)
+  <!-- end id38 -->
   - [Agent Core、Node Collector与Kubectl Plugin](./06_api/20_clusterops_agent.md)
 - [参考](./07_references/menu_references.md)
+  <!-- npu="950,A3,910b" id40 -->
   - [故障恢复加速](./07_references/00_fault_recovery_acceleration/menu_fault_recovery_acceleration.md)
     - [产品描述](./07_references/00_fault_recovery_acceleration/01_product_description.md)
     - [安装部署](./07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md)
@@ -241,6 +336,7 @@
     - [API接口参考](./07_references/01_optimizing_saving_and_loading_checkpoints/05_api_reference.md)
     - [告警参考](./07_references/01_optimizing_saving_and_loading_checkpoints/06_alarm_reference.md)
     - [附录](./07_references/01_optimizing_saving_and_loading_checkpoints/07_appendixes.md)
+  <!-- end id40 -->
   - [常用操作](07_references/02_common_operations.md)
   - [FAQ](07_references/03_faq.md)
   - [安全加固](07_references/04_security_hardening.md)

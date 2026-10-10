@@ -72,6 +72,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度
 
 故障检测特性针对**参数面故障**提供了默认的故障级别以及对应级别的故障处理策略，若用户需要修改故障处理策略可参见[参数面网络故障](../03_configuration/04_network_faults.md#ZH-CN_TOPIC_0000002479226486)。若无特殊需求，请勿随意修改。
 
+<!-- npu="A3" id1 -->
 ## pingmesh灵衢网络故障<a name="ZH-CN_TOPIC_0000002511426437"></a>
 
 灵衢网络故障是针对超节点内部（包括节点内和节点间）的HCCS网络提供的NPU网络故障检测。
@@ -102,7 +103,9 @@ NodeD调用DCMI接口启动pingmesh任务，并周期性查询pingmesh结果，�
 |故障码|故障说明|故障级别|
 |--|--|--|
 |220001001|NPU卡HCCS网络故障|<p>SeparateNPU</p><p>该故障级别不支持自行配置。</p>|
+<!-- end id1 -->
 
+<!-- npu="950" id2 -->
 ## 光链路成员端口故障<a name="ZH-CN_TOPIC_0000002511426421"></a>
 
 包括Atlas 950 SuperPoD超节点中的npu到unions及5808的端口故障，以及Atlas 850E超节点、Atlas 850超节点、Atlas 650E服务器、Atlas 650服务器中的npu到1825及5808端口的故障等。
@@ -173,6 +176,7 @@ Job级别重调度、Pod级别重调度
 |21000024|SeparateDPU|hca_port_down|HCA端口故障，故障发生后需切换IP。|
 |22000025|SubHealthFault|bond_member_down|Bond场景下单成员故障，带宽减半可继续运行。|
 |22000026|SeparateDPU|dpu_card_drop|DPU卡掉卡故障。|
+<!-- end id2 -->
 
 ## 相关操作
 

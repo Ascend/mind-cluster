@@ -5,7 +5,11 @@
   - [应用场景及方案](./00_virtual_instance_with_hdk/02_application_scenarios_solutions.md)
   - [虚拟化模板](./00_virtual_instance_with_hdk/03_virtualization_templates.md)
   - [静态vNPU调度](./00_virtual_instance_with_hdk/04_static_vnpu_scheduling/menu_static_vnpu_scheduling.md)
+  <!-- npu="A3,910b,310p" id1 -->
   - [动态vNPU调度](./00_virtual_instance_with_hdk/05_dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md)
+  <!-- end id1 -->
+<!-- npu="950,A3,910b" id2 -->
 - [基于vCANN-RT的虚拟化实例](./01_virtual_instance_with_vcann_rt/menu_virtual_instance_with_vcann_rt.md)
   - [特性说明](./01_virtual_instance_with_vcann_rt/00_description.md)
   - [软切分调度（推理）](./01_virtual_instance_with_vcann_rt/01_soft_allocation_scheduling_inference.md)
+<!-- end id2 -->

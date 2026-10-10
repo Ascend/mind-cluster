@@ -35,6 +35,7 @@
 3. hook&&cli：容器创建前被调用，负责整理芯片设备文件、驱动文件、用户自定义文件，并将其挂载到容器中。
 4. destroy：容器销毁前被调用，负责销毁创建出来的vNPU。
 
+<!-- npu="950,A3,910b,910,310p" id1 -->
 ## NPU Exporter<a name="ZH-CN_TOPIC_0000002479226948"></a>
 
 **应用场景<a name="section15761025111720"></a>**
@@ -177,7 +178,9 @@
 1. 从IPMI中获取计算节点的CPU、内存、硬盘的故障信息。
 2. 从共享存储客户端中获取共享存储异常信息。
 3. 将异常信息上报给ClusterD。
+<!-- end id1 -->
 
+<!-- npu="A3,910b" id2 -->
 ## Elastic Agent<a name="ZH-CN_TOPIC_0000002479386918"></a>
 
 >[!NOTE]
@@ -201,7 +204,9 @@
 - MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写入ConfigMap中，并映射到容器内，ConfigMap名称为[reset-config-任务名称](../06_api/01_volcano.md#任务信息)。
 - Elastic Agent通过ConfigMap获取当前训练容器所使用的设备状况和训练任务状态等信息。
 - Elastic Agent对接K8s集群控制中心，根据集群控制中心完成训练管理。
+<!-- end id2 -->
 
+<!-- npu="950,A3,910b" id3 -->
 ## TaskD<a name="ZH-CN_TOPIC_0000002479386914"></a>
 
 **应用场景<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section15761025111720"></a>**
@@ -276,7 +281,9 @@ MindIO TFT包括临终Checkpoint保存、进程级在线恢复和优雅容错等
 **图 12** MindIO TFT<a name="fig117818118588"></a>
 
 ![](../../figures/scheduling/MindIO-TFT.png "MindIO-TFT")
+<!-- end id3 -->
 
+<!-- npu="950,A3,910b,910,310p" id4 -->
 ## Container Manager<a name="ZH-CN_TOPIC_0000002524312655"></a>
 
 **应用场景<a name="section11132193111423"></a>**
@@ -300,7 +307,9 @@ MindIO TFT包括临终Checkpoint保存、进程级在线恢复和优雅容错等
 2. 向DCMI下发芯片复位命令。
 3. 从容器运行时Docker或者Containerd中获取当前运行中的容器和芯片挂载信息。
 4. 向容器运行时下发容器停止、启动命令。
+<!-- end id4 -->
 
+<!-- npu="950,A3,910b" id5 -->
 ## Infer Operator<a name="ZH-CN_TOPIC_0000002511426821"></a>
 
 **应用场景<a name="section15761025111720"></a>**
@@ -325,7 +334,9 @@ MindCluster提供Infer Operator组件，根据推理服务的实例配置，批�
 1. 基于用户配置的任务YAML创建推理实例Workload。
 2. Workload Controller创建Pod后，Volcano进行资源的最终选定。
 3. 若Workload申请占用NPU卡，Ascend Device Plugin获取NPU信息，完成设备的挂载。
+<!-- end id5 -->
 
+<!-- npu="950" id6 -->
 ## K8s RDMA Shared Dev Plugin<a name="ZH-CN_TOPIC_0000002524312660"></a>
 
 **应用场景<a name="section15761025111720"></a>**
@@ -417,7 +428,9 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 1. 从网卡管理工具hinicadm5获取DPU全局指标，放入缓存。
 2. 从sysfs文件系统获取interface级指标，放入缓存。
 3. 实现Prometheus的指标接口，供其周期性获取缓存中的数据信息。
+<!-- end id6 -->
 
+<!-- npu="950,A3,910b" id7 -->
 ## Ascend Dynamic Resource Allocation<a name="ZH-CN_TOPIC_0000002524312670"></a>
 
 **应用场景<a name="section15761025111720"></a>**
@@ -442,6 +455,7 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 3. 将昇腾芯片的设备信息以ResourceSlice的形式上报给K8s，供调度器感知和选择。
 4. 从ResourceClaim中读取调度器的芯片分配结果，完成设备的分配与释放。
 5. 通过CDI机制将设备注入信息传递给容器运行时，完成设备注入。
+<!-- end id7 -->
 
 ## Agent Core<a name="ZH-CN_TOPIC_0000002524312670"></a>
 

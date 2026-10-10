@@ -152,6 +152,7 @@
 5. <a name="li76002022113215"></a>参考[组件状态确认](../../03_installation_guide/03_confirming_status.md)章节，检查新版本Ascend Docker Runtime是否升级成功。
 6. （可选）恢复旧版本。下载旧版本安装包，依次重新执行[步骤2](#li12599722163212)到[步骤5](#li76002022113215)。
 
+<!-- npu="950,A3,910b" id1 -->
 ## 升级TaskD<a name="ZH-CN_TOPIC_0000002479226444"></a>
 
 TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl包即可完成升级。
@@ -223,7 +224,9 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 5. 检查新版TaskD是否升级完成，参考[检查TaskD组件](#升级说明)章节，检查组件状态是否正常。
 6. （可选）回退老版本。若旧版镜像仍然存在，无需回退操作；若不存在则按上述步骤，重新安装旧版本TaskD软件包即可。
+<!-- end id1 -->
 
+<!-- npu="950,A3,910b,910,310p" id2 -->
 ## 升级Container Manager<a name="ZH-CN_TOPIC_0000002524548731"></a>
 
 使用部署脚本（deploy.sh）进行升级，脚本自动完成二进制替换和服务重启，保留现有服务配置（启动参数等）不变。
@@ -324,7 +327,9 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
         [INFO]     2025/11/25 22:46:59.315101 378     devmgr/hwdevmgr.go:365    subscribe device fault event success
         ...
         ```
+<!-- end id2 -->
 
+<!-- npu="950,A3,910b,910,310p" id3 -->
 ## 升级Ascend Device Plugin<a name="ZH-CN_TOPIC_0000002511346402"></a>
 
 **前提条件**
@@ -397,6 +402,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 5. 安装新版本Ascend Device Plugin。
 
     详细步骤请参见[手动安装Ascend Device Plugin](00_manual_installation/04_ascend_device_plugin.md)。
+<!-- end id3 -->
 
 ## 升级Kubectl Plugin<a name="ZH-CN_TOPIC_0000002524428763"></a>
 
@@ -554,6 +560,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
     mindx-dl   noded-m4j4r  1/1  Running 0     1m
     ```
 
+<!-- npu="A3,910b" id4 -->
 ## Elastic Agent（已日落）升级TaskD<a name="ZH-CN_TOPIC_0000002515202401"></a>
 
 >[!NOTE]
@@ -666,25 +673,28 @@ Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为
 
     2. 在训练脚本中增加以下代码拉起TaskD  Manager。
 
-        <pre codetype="Python">
-        <strong>export TASKD_PROCESS_ENABLE="on"
+        ```python
+        export TASKD_PROCESS_ENABLE="on"
         # 以PyTorch框架为例
         if [[ "${RANK}" == 0 ]]; then
             export MASTER_ADDR=${POD_IP}
             python /job/code/manager.py 2>> /job/code/alllogs/$MINDX_TASK_ID/taskd/error.log &           # manager.py具体执行路径由当前路径决定，error.log日志路径需提前创建
-        fi</strong>
+        fi
 
-        torchrun ...</pre>
+        torchrun ...
+        ```
 
     3. 在任务YAML中修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
-        <pre codetype="yaml">
+        ```yaml
         ...
                 spec:
         ...
                    containers:
         ...
-                     <strong>ports:
+                     ports:
                        - containerPort: 9601
-                         name: taskd-port</strong>
-        ...</pre>
+                         name: taskd-port
+        ...
+        ```
+<!-- end id4 -->

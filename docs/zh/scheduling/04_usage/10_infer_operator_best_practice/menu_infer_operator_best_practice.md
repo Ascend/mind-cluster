@@ -6,5 +6,9 @@
 - [配置推理任务优先级调度](./03_configuring_priority_scheduling.md)
 - [配置推理任务实例级重调度](./04_configuring_rescheduling_inference_job.md)
 - [配置基于负载的弹性扩缩容](./05_configuring_elastic_scaling.md)
+<!-- npu="A3,910b" id1 -->
 - [容器快照部署及使用](./06_container_snapshot_usage.md)
+<!-- end id1 -->
+<!-- npu="950,A3" id2 -->
 - [配置推理服务亲和性调度](./07_configuring_infer_service_affinity_scheduling.md)
+<!-- end id2 -->

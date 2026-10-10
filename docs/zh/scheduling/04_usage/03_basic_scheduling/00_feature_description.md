@@ -2,12 +2,12 @@
 
 基础调度包含如下特性：
 
-- 训练任务：[整卡调度](../../01_introduction/02_feature_description.md#整卡调度)、[多级调度](../../01_introduction/02_feature_description.md#多级调度)、[重调度](../../01_introduction/02_feature_description.md#重调度)。若使用断点续训请参见[断点续训](../05_fault_recovery/01_resumable_training/00_feature_description.md)。
-- 推理任务：[整卡调度](../../01_introduction/02_feature_description.md#整卡调度)、[重调度](../../01_introduction/02_feature_description.md#重调度)。
+- 训练任务：整卡调度、多级调度、重调度。若使用断点续训请参见[断点续训](../05_fault_recovery/01_resumable_training/00_feature_description.md)。
+- 推理任务：整卡调度、重调度。
 
-    不同的特性依赖不同的组件，详细介绍请参见[基础调度](../../01_introduction/02_feature_description.md#基础调度)章节。
+不同的特性依赖不同的组件，详细介绍请参见[基础调度](../../01_introduction/02_feature_description.md#基础调度)章节。
 
-    Ascend Device Plugin支持上报NPU设备的NUMA节点到kubelet，如需开启NUMA亲和性调度策略，只能使用Kubernetes原生调度器。NUMA节点信息查询依赖DCMI接口：dcmi_get_affinity_cpu_info_by_device_id、dcmiv2_get_affinity_cpu_info_by_dev_id、dcmi_get_device_pcie_info_v2、dcmiv2_get_device_pcie_info，请查看对应产品配套的《[DCMI API参考](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=api-reference)》确认是否支持。
+Ascend Device Plugin支持上报NPU设备的NUMA节点到kubelet，如需开启NUMA亲和性调度策略，只能使用Kubernetes原生调度器。NUMA节点信息查询依赖DCMI接口：dcmi_get_affinity_cpu_info_by_device_id、dcmiv2_get_affinity_cpu_info_by_dev_id、dcmi_get_device_pcie_info_v2、dcmiv2_get_device_pcie_info，请查看对应产品配套的《[DCMI API参考](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=api-reference)》确认是否支持。
 
 本文档演示如何基于某模型部署并执行使用NPU的训练或推理任务。生产环境与示例存在差异，本章节内示例仅做参考，用户需要根据实际生产环境做修改。
 

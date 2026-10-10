@@ -7,7 +7,7 @@ DPU资源监测提供对DPU运行状态与统计指标的实时监测，监测�
 
 DPU资源监测特性是一个基础特性，不区分训练或者推理场景；同时也不区分使用Volcano调度器或者使用其他调度器场景。该特性需要用户配合Prometheus使用，即在部署Prometheus后通过调用DPU Exporter相关接口，实现资源监测。
 
-- Prometheus是一个开源的完整监测解决方案，具有易管理、高效、可扩展、可视化等特点。Prometheus配合DPU Exporter组件使用，以可视化的方式展示上报的DPU相关信息。
+Prometheus是一个开源的完整监测解决方案，具有易管理、高效、可扩展、可视化等特点。Prometheus配合DPU Exporter组件使用，以可视化的方式展示上报的DPU相关信息。
 
 ## 前提条件<a name="section1672062465010"></a>
 
@@ -23,5 +23,4 @@ DPU资源监测特性是一个基础特性，不区分训练或者推理场景�
 
 ## 支持的产品形态<a name="section170961844182917"></a>
 
-- 昇腾950PR系列产品
-- 昇腾950DT系列产品
+<term>Ascend 950PR&950DT系列产品</term>

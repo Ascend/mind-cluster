@@ -10,4 +10,4 @@ DPU资源监测特性的实现原理（以接入Prometheus场景为例）如下�
 
 >[!NOTE]
 >
-> - DPU Exporter默认仅提供HTTP服务，如需使用更为安全的HTTPS服务，请自行修改源码进行适配。
+> DPU Exporter默认仅提供HTTP服务，如需使用更为安全的HTTPS服务，请自行修改源码进行适配。

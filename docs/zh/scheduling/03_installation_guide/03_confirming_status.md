@@ -124,6 +124,7 @@
 
    若回显中存在**davinci0**字段，表示芯片挂载成功，安装Ascend Docker Runtime成功且组件功能正常。
 
+<!-- npu="950,A3,910b,910,310p" id1 -->
 ## NPU Exporter<a name="ZH-CN_TOPIC_0000002511346363"></a>
 
 本章节以对接Prometheus，上报Prometheus数据为例，确认NPU Exporter组件是否正常运行。
@@ -395,7 +396,9 @@
          huawei.com/Ascend310P-VPro:    1
        ...
        ```
+<!-- end id1 -->
 
+<!-- npu="950" id2 -->
 ## K8s RDMA Shared Dev Plugin<a name="ZH-CN_TOPIC_0000002524312662"></a>
 
 请在任意节点执行以下步骤验证K8s RDMA Shared Dev Plugin的安装状态。
@@ -479,7 +482,9 @@
       huawei.com/ub_rdma:           8  # K8s已感知到该节点可供分配的RDMA共享设备总个数为8
     ...
     ```
+<!-- end id2 -->
 
+<!-- npu="950,A3,910b,910,310p" id3 -->
 ## Volcano<a name="ZH-CN_TOPIC_0000002511346325"></a>
 
 1. 通过如下命令查看K8s集群中Volcano的两个Pod，需要满足Pod的STATUS都为Running，READY都为1/1。
@@ -603,7 +608,9 @@
     [INFO]     2023/03/20 17:48:34.964296 1       ascend-operator/main.go:101    starting manager
     ...
     ```
+<!-- end id3 -->
 
+<!-- npu="950,A3,910b" id4 -->
 ## Infer Operator<a name="ZH-CN_TOPIC_0000002511346370"></a>
 
 请在任意节点执行以下步骤验证Infer Operator的安装状态。
@@ -633,7 +640,9 @@
     [INFO]     2026/03/20 16:22:12.668888 1       hwlog/api.go:164    infer-operator.log's logger init success
     ...
     ```
+<!-- end id4 -->
 
+<!-- npu="950,A3,910b,910,310p" id5 -->
 ## NodeD<a name="ZH-CN_TOPIC_0000002479386440"></a>
 
 请在任意节点执行以下步骤验证NodeD的安装状态。
@@ -741,7 +750,9 @@
     [INFO]     2025/11/25 22:46:59.315101 378     devmgr/hwdevmgr.go:365    subscribe device fault event success
     ...
     ```
+<!-- end id5 -->
 
+<!-- npu="950" id6 -->
 ## DPU Exporter<a name="ZH-CN_TOPIC_0000002511346364"></a>
 
 本章节以对接Prometheus，上报Prometheus数据为例，确认DPU Exporter组件是否正常运行。
@@ -833,7 +844,9 @@
     [2026-08-26 11:46:23.604187][INFO]     460     logger/logger.go:79    starting prometheus metrics server on :8083
     ...
     ```
+<!-- end id6 -->
 
+<!-- npu="950,A3,910b" id7 -->
 ## Ascend Dynamic Resource Allocation<a name="ZH-CN_TOPIC_0000002511426342"></a>
 
 使用K8s动态资源分配（Dynamic Resource Allocation，DRA）机制申请NPU资源的用户，才需要安装Ascend Dynamic Resource Allocation组件（以下简称DRA驱动）。请在任意节点执行以下步骤验证DRA驱动的安装状态。
@@ -894,6 +907,7 @@
     NAME                                  POOLNAME     DEVICECOUNT   AGE
     npu.huawei.com-node1-1a2b3c           node1        8             2m
     ```
+<!-- end id7 -->
 
 ## Agent Core<a name="ZH-CN_TOPIC_0000002524428761"></a>
 

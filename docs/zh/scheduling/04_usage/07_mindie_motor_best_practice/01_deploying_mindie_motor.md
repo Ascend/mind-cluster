@@ -196,6 +196,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
               nodeSelector:
                 accelerator: huawei-Ascend910</pre>
 
+<!-- npu="A3" id1 -->
 ### （可选）配置实例级亲和性调度<a name="ZH-CN_TOPIC_0000002511346349"></a>
 
 Atlas 800I A3超节点服务器场景下，MindCluster集群调度组件支持MindIE CMotor推理任务配置任务级别亲和性调度策略，可实现将MindIE Server实例尽量调度到同一个物理超节点中，充分利用HCCS网络，加速实例间的网络通信。
@@ -260,6 +261,7 @@ spec:
                     <strong>matchLabels:</strong>
                       <strong>jobID: mindie-ms-test  # 亲和Pod所需要的标签</strong>
                   <strong>topologyKey: kubernetes.io/hostname</strong></pre>
+<!-- end id1 -->
 
 ### YAML参数说明<a name="ZH-CN_TOPIC_0000002511346361"></a>
 

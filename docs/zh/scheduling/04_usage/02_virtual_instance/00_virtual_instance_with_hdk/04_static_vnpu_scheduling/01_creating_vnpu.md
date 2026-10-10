@@ -120,5 +120,8 @@
 
     ![](../../../../../figures/scheduling/1.png)
 
+    <!-- npu="910,310p" id1 -->
     >[!NOTE]
     ><term>Atlas推理系列产品</term>支持返回AICPU，Vgroup ID信息，<term>Atlas训练系列产品</term>不支持返回AICPU，Vgroup ID信息。
+
+    <!-- end id1 -->

@@ -396,18 +396,27 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 
 **通过环境变量配置资源信息场景<a name="section1969664932615"></a>**
 
+<!-- npu="910b" id1 -->
 - 若当前环境使用的是<term>Atlas A2训练系列产品</term>，选择[表1](#table529015783811)获取相应的YAML示例。
 
     根据[表1](#table529015783811)获取示例YAML后，Atlas 800T A2训练服务器、Atlas 200T A2 Box16异构子框和A200T A3 Box8超节点服务器可基于[acjob任务yaml参数说明](../../06_api/15_yaml_configuration.md#acjob)给出的参数说明进行修改适配。
+<!-- end id1 -->
 
+<!-- npu="910" id2 -->
 - 若当前环境使用的是<term>Atlas训练系列产品</term>，选择[表2](#table18698184918261)获取相应的YAML示例。
 
     根据[表2](#table18698184918261)获取示例YAML后，服务器（插Atlas 300T训练卡）可基于Atlas 800训练服务器的YAML，以及参考[acjob任务yaml参数说明](../../06_api/15_yaml_configuration.md#acjob)给出的参数说明进行修改适配。
+<!-- end id2 -->
 
+<!-- npu="A3" id3 -->
 - 若当前环境使用的是<term>Atlas A3训练系列产品</term>，选择[表3](#table57051049102614)获取相应的YAML示例。
+<!-- end id3 -->
 
+<!-- npu="950" id4 -->
 - 若当前环境使用的是<term>Ascend 950PR&950DT系列产品</term>，选择[表4](#table5290157950yaml)获取相应的YAML示例。
+<!-- end id4 -->
 
+<!-- npu="910b" id5 -->
 **表 1** <term>Atlas A2训练系列产品</term>支持的YAML
 
 <a name="table529015783811"></a>
@@ -467,7 +476,9 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </tr>
 </tbody>
 </table>
+<!-- end id5 -->
 
+<!-- npu="910" id6 -->
 **表 2** <term>Atlas训练系列产品</term>支持的YAML
 
 <a name="table18698184918261"></a>
@@ -521,7 +532,9 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </tr>
 </tbody>
 </table>
+<!-- end id6 -->
 
+<!-- npu="A3" id7 -->
 **表 3** <term>Atlas A3训练系列产品</term>支持的YAML
 
 <a name="table57051049102614"></a>
@@ -563,7 +576,9 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </tr>
 </tbody>
 </table>
+<!-- end id7 -->
 
+<!-- npu="950" id8 -->
 **表 4** <term>Ascend 950PR&950DT系列产品</term>支持的YAML
 <a name="table5290157950yaml"></a>
 <table>
@@ -590,7 +605,9 @@ deploy任务原理图如[图4](#fig06571541566)所示。
         </tr>
     </tbody>
 </table>
+<!-- end id8 -->
 
+<!-- npu="950,A3,910b,310p" id15 -->
 **表 5**  推理任务类型与硬件型号对应YAML文件
 
 <a name="zh-cn_topic_0000001609074213_table15169151021912"></a>
@@ -646,16 +663,24 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </tr>
 </tbody>
 </table>
+<!-- end id15 -->
 
 **通过文件配置资源信息场景<a name="section158807920347"></a>**
 
+<!-- npu="910b" id9 -->
 - 若当前环境使用的是<term>Atlas A2训练系列产品</term>，选择[表6](#table62591594016)获取相应的YAML示例。
 
     根据[表6](#table62591594016)获取示例YAML后，Atlas 800T A2训练服务器、Atlas 200T A2 Box16异构子框和A200T A3 Box8超节点服务器可基于[YAML配置说明](../../06_api/15_yaml_configuration.md#yaml_configuration)给出的参数说明进行修改适配。
+<!-- end id9 -->
 
+<!-- npu="910" id10 -->
 - 若当前环境使用的是<term>Atlas训练系列产品</term>，选择[表7](#table21811158146)获取相应的YAML示例。
+<!-- end id10 -->
+<!-- npu="950" id11 -->
 - 若当前环境使用的是<term>Ascend 950PR&950DT系列产品</term>，选择[表8](#table950yaml)获取相应的YAML示例。
+<!-- end id11 -->
 
+<!-- npu="910b" id12 -->
 **表 6** <term>Atlas A2训练系列产品</term>支持的YAML
 
 <a name="table62591594016"></a>
@@ -719,7 +744,9 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </tr>
 </tbody>
 </table>
+<!-- end id12 -->
 
+<!-- npu="910" id13 -->
 **表 7** <term>Atlas训练系列产品</term>支持的YAML
 
 <a name="table21811158146"></a>
@@ -803,7 +830,9 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </tr>
 </tbody>
 </table>
+<!-- end id13 -->
 
+<!-- npu="950" id14 -->
 **表 8** <term>Ascend 950PR&950DT系列产品</term>支持的YAML
 <a name="table950yaml"></a>
 <table>
@@ -836,7 +865,9 @@ deploy任务原理图如[图4](#fig06571541566)所示。
         </tr>
     </tbody>
 </table>
+<!-- end id14 -->
 
+<!-- npu="950,A3,910b,310p" id16 -->
 **表 9**  推理任务类型与硬件型号对应YAML文件
 
 <a name="zh-cn_topic_0000001609074213_table15169151021912"></a>
@@ -878,6 +909,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </tr>
 </tbody>
 </table>
+<!-- end id16 -->
 
 #### YAML参数说明<a name="ZH-CN_TOPIC_0000002511347099"></a>
 

@@ -460,6 +460,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
                     <strong>path: ${preload_path}/ld.so.preload # 主机侧ld.so.preload文件的路径用户可自定义，文档后续内容中使用${preload_path}表示，容器内为固定路径/etc/ld.so.preload。不建议将ld.so.preload文件放置在主机的/etc目录，否则将在主机侧预加载软切分动态库，可能影响主机侧业务。</strong>
     </pre>
 
+<!-- npu="A3" id1 -->
 >[!NOTE]
 ><term>Atlas A3系列产品</term>下发软切分虚拟化任务时，在任务容器中，/dev下实际只会挂载1个die（即1个davinci设备），但是执行<b>npu-smi info</b>命令查询会显示挂载了2个die，此为正常现象。回显示例如下：
 >
@@ -483,6 +484,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
 > +===========================+===============+===================================================+
 > ```
 
+<!-- end id1 -->
 ### 下发任务<a name="ZH-CN_TOPIC_000000247922713402"></a>
 
 在管理节点示例YAML所在路径，执行以下命令，使用YAML下发推理任务。

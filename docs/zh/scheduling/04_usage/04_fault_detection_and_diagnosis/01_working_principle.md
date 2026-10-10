@@ -20,6 +20,7 @@ MindCluster集群调度组件Ascend Device Plugin提供NPU芯片故障检测能�
 - 每个计算节点的K8s RDMA Shared Dev Plugin均会创建记录本节点UB网卡设备信息的ConfigMap文件。该ConfigMap文件名为dpuinfo-&lt;nodename&gt;，故障信息会通过该ConfigMap进行上报。该ConfigMap文件中各字段的说明，请参见[ConfigMap说明](../../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_configmap_k8s_rdma_shared_dev_plugin)。
 - ClusterD会创建记录本集群设备信息的ConfigMap文件，该ConfigMap文件名为cluster-info-<device/switch>-<[0-5]>、cluster-info-node-cm（以下简称cluster-info-cm）。节点及芯片故障信息会通过[cluster-info-cm](../../06_api/04_clusterd/00_cluster_resources.md)进行上报。
 
+<!-- npu="A3,910b" id1 -->
 ## 在线压测<a name="ZH-CN_TOPIC_0000002479226572"></a>
 
 MindCluster支持训练在线压测特性，即在训练过程中可以调用在线压测接口，暂停指定训练任务，对任务使用的节点进行硬件P2P或AIC压力测试，主动判断节点是否存在异常。若不存在故障则恢复训练；若存在故障则隔离故障节点，触发断点续训。
@@ -110,3 +111,4 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 </tr>
 </tbody>
 </table>
+<!-- end id1 -->
