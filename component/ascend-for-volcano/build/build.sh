@@ -48,7 +48,7 @@ echo "Build Version is ${BASE_VER}"
 echo "Will generate both output(Alpine musl) and output-oe(openEuler glibc)"
 echo ""
 
-DEFAULT_VER='v26.1.0'
+DEFAULT_VER='v26.2.0'
 TOP_DIR=${GOPATH}/src/volcano.sh/volcano/
 BASE_PATH=${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/
 CMD_PATH=${GOPATH}/src/volcano.sh/volcano/cmd/
