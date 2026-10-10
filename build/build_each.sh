@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+set -x
 
-
-GOPATH=$1
+export GOPATH=$1
 config=$2
 servicename=$3
 
@@ -22,7 +22,11 @@ function build_volcano() {
   cp -rf "$GOPATH/$config" $GOPATH/src/volcano.sh/volcano/
   ls -la $GOPATH/src/volcano.sh/volcano/
   echo "********$1*********"
-  cd $GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/build
+  local plugin_dir=$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin
+  # Remove the residual go.mod/go.sum of the plugin so that the volcano module is used for building
+  rm -f "$plugin_dir"/go.mod "$plugin_dir"/go.sum
+  mkdir -p "$plugin_dir"/output/alpine "$plugin_dir"/output/openeuler
+  cd "$plugin_dir"/build
   dos2unix *.sh && chmod +x *
   ./build.sh $1
 }
@@ -43,8 +47,32 @@ case "$servicename" in
     ls -la ./ &&  cp -rf ${GOPATH}/${servicename} ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/
     cd ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ${servicename} ascend-volcano-plugin
     build_volcano v1.9.0
-    mkdir -p ${GOPATH}/output/volcano-v1.9.0 && cp -rf ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${GOPATH}/output/volcano-v1.9.0/
+    mkdir -p ${GOPATH}/output/volcano-v1.9.0
+    cp -rf ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/alpine ${GOPATH}/output/volcano-v1.9.0/
+    cp -rf ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/openeuler ${GOPATH}/output/volcano-v1.9.0/
     ls -la ${GOPATH}/output/volcano-v1.9.0/
+    rm -rf ${GOPATH}/src/volcano.sh/volcano
+
+    echo "***************start complie volcano 1.12***********************"
+    cp -rf /opt/buildtools/volcano_opensource/volcano_1.12/volcano ${GOPATH}/src/volcano.sh/
+    ls -la ./ &&  cp -rf ${GOPATH}/${servicename} ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/
+    cd ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ${servicename} ascend-volcano-plugin
+    build_volcano v1.12.0
+    mkdir -p ${GOPATH}/output/volcano-v1.12.0
+    cp -rf ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/alpine ${GOPATH}/output/volcano-v1.12.0/
+    cp -rf ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/openeuler ${GOPATH}/output/volcano-v1.12.0/
+    ls -la ${GOPATH}/output/volcano-v1.12.0/
+    rm -rf ${GOPATH}/src/volcano.sh/volcano
+
+    echo "***************start complie volcano 1.15***********************"
+    cp -rf /opt/buildtools/volcano_opensource/volcano_1.15/volcano ${GOPATH}/src/volcano.sh/
+    ls -la ./ &&  cp -rf ${GOPATH}/${servicename} ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/
+    cd ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ${servicename} ascend-volcano-plugin
+    build_volcano v1.15.0
+    mkdir -p ${GOPATH}/output/volcano-v1.15.0
+    cp -rf ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/alpine ${GOPATH}/output/volcano-v1.15.0/
+    cp -rf ${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/openeuler ${GOPATH}/output/volcano-v1.15.0/
+    ls -la ${GOPATH}/output/volcano-v1.15.0/
     rm -rf ${GOPATH}/src/volcano.sh/volcano
 
   ;;
