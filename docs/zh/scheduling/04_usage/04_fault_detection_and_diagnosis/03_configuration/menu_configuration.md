@@ -6,6 +6,8 @@
 - [配置网络故障](./04_network_faults.md)
 - [配置业务故障与任务卡死检测](./05_task_hang_detection.md)
 - [配置性能劣化、慢节点与慢网络诊断](./06_performance_diagnosis.md)
+<!-- npu="A3,910b" id1 -->
 - [配置在线压测](./07_online_stress_testing.md)
+<!-- end id1 -->
 - [配置公共故障](./08_public_faults.md)
 - [配置静默故障检测](./09_silent_faults.md)

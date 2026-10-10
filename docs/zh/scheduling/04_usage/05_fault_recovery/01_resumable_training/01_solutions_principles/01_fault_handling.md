@@ -142,6 +142,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 3. 重新创建和调度训练Pod和容器。
 4. 容器启动后，拉起训练进程恢复训练。
 
+<!-- npu="950,A3,910b" id1 -->
 ### 进程级别重调度<a name="ZH-CN_TOPIC_0000002511346457"></a>
 
 进程级别重调度即每次故障只停止故障相关节点的进程，根据配置策略判断是否退出故障节点。
@@ -296,6 +297,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 </tr>
 </tbody>
 </table>
+<!-- end id1 -->
 
 ### 亚健康退出与重调度
 
@@ -304,6 +306,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 使用graceExit策略时，需保证任务开启了临终CKPT保存功能。
 
+<!-- npu="A3,910b" id2 -->
 ### 亚健康热切<a name="ZH-CN_TOPIC_0000002479386544"></a>
 
 训练任务配置为亚健康热切策略（hotSwitch）后，当发生亚健康故障时，拉起备份节点后暂停训练进程，再使用备份节点重新拉起训练任务。
@@ -445,9 +448,12 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 </tr>
 </tbody>
 </table>
+<!-- end id2 -->
 
+<!-- npu="950,A3,910b" id3 -->
 ## 在线恢复
 
+<!-- npu="A3" id4 -->
 ### 算子级在线恢复<a name="ZH-CN_TOPIC_0000002479386484"></a>
 
 Atlas A3训练系列产品支持在发生参数面网络故障时，HCCL会执行通信算子重传。在故障进程不退出的情况下，算子级在线恢复可容忍更长时间的网络异常，训练任务不中断。
@@ -492,6 +498,7 @@ Atlas A3训练系列产品支持在发生参数面网络故障时，HCCL会执�
 1. 训练过程中，发生HCCS网络平面LinkDown故障或RoCE网络平面LinkDown故障。
 2. CANN检测到网络故障，当前算子终止后，进行网络链路恢复（HCCS网络平面进行BGP切路，RoCE网络平面进行借轨通信），通信链路恢复后进行网络算子重执行。
 3. 算子重执行成功后，恢复训练迭代。
+<!-- end id4 -->
 
 ### 进程级在线恢复<a name="ZH-CN_TOPIC_0000002479386460"></a>
 
@@ -720,7 +727,9 @@ Atlas A3训练系列产品支持在发生参数面网络故障时，HCCL会执�
 </tr>
 </tbody>
 </table>
+<!-- end id3 -->
 
+<!-- npu="A3" id5 -->
 ## 切换恢复
 
 ### 借轨通信任务暂停与回切<a name="ZH-CN_TOPIC_0000002479226530"></a>
@@ -832,7 +841,9 @@ Atlas A3训练系列产品场景下，MindCluster集群调度组件提供训练�
 </tr>
 </tbody>
 </table>
+<!-- end id5 -->
 
+<!-- npu="A3,910b" id6 -->
 ## 弹性恢复
 
 ### 弹性训练<a name="ZH-CN_TOPIC_0000002479226542"></a>
@@ -1132,7 +1143,9 @@ Atlas A3训练系列产品场景下，MindCluster集群调度组件提供训练�
     - start\_grad\_sync\_wrapper中将梯度缩放因子gradient\_scaling\_factor修改为1.0 / \(arguments.global\_batch\_size / arguments.micro\_batch\_size\)，即在原1/dp\_size基础上再除以num\_micro\_batches。
     - forward\_step\_wrapper将入参num\_microbatches修改为1，目的是loss计算时不再除以num\_microbatches，因为在start\_grad\_sync\_wrapper中已经除以了num\_microbatches。
     - elastic\_training\_get\_forward\_backward\_func\_wrapper因为loss\_func没有执行DP组内all\_reduce，原生forward\_backward\_func执行完成后，在最后一个PP时将losses\_reduced每个key的和（即所有micro\_batch的lm loss相加）在DP组内执行all\_reduce操作求和。
+<!-- end id6 -->
 
+<!-- npu="A3,910b,910" id7 -->
 ## 优雅容错机制
 
 ### （可选）优雅容错<a name="ZH-CN_TOPIC_0000002479226564"></a>
@@ -1182,3 +1195,4 @@ Ascend Device Plugin负责故障的上报以及设备的恢复，管理进程（
 **图 13**  优雅容错故障处理流程<a name="zh-cn_topic_0000002098609234_fig12620181591012"></a>
 
 ![](../../../../../figures/scheduling/优雅容错故障处理流程.png "优雅容错故障处理流程")
+<!-- end id7 -->

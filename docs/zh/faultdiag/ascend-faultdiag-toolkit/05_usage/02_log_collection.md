@@ -50,8 +50,11 @@
 | RoCE速率 | `hccn_tool -i {chip_phy_id} -speed -g` | RoCE速率 |
 | RoCE双工 | `hccn_tool -i {chip_phy_id} -duplex -g` | RoCE双工模式 |
 
+<!-- npu="950" id1 -->
 以上命令适用于<term>Atlas A3系列产品</term>。<term>Ascend 950PR&950DT系列产品</term>除上述命令外，还会额外采集光模块信息与网卡SFP信息，详细请参见下表。
+<!-- end id1 -->
 
+<!-- npu="950" id2 -->
 #### <term>Ascend 950PR&950DT系列产品</term>额外采集命令
 
 | 类别 | 命令 | 用途                                                    |
@@ -61,6 +64,7 @@
 | 网卡列表 | `hinicadm5 info` | 所有网卡名称                                         |
 | 网卡端口数 | `hinicadm5 info -i {card_name}` | 指定网卡的端口数量                                             |
 | 网卡SFP信息 | `hinicadm5 sfp -i {card_name} -p {port_id}` | 指定网卡指定端口的SFP lane信息（Bias/TxPower/RxPower/Los/Lol/SNR） |
+<!-- end id2 -->
 
 <a id="host-offline-log"></a>
 

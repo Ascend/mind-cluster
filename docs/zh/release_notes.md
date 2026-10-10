@@ -27,7 +27,7 @@
 | 版本类型 | Release版本   |
 | 维护周期 | 1年          |
 
-> [!NOTE] 说明
+> [!NOTE]
 >
 > MindCluster 26.0版本规划：MindCluster 26.0.0、MindCluster 26.1.0、MindCluster 26.2.0和MindCluster 26.3.0。
 

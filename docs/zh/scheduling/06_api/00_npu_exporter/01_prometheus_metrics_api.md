@@ -56,20 +56,43 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 本接口支持查询默认指标组和自定义指标组。自定义指标组的方法详细请参见[自定义指标开发](../../05_developer_guide/01_custom_metrics_development.md)；默认指标组包含如下几个部分。指标组的采集和上报由配置文件中的开关控制，若开关配置为开启，则对应的指标组会进行采集和上报；若开关配置为关闭，则对应的指标组不会进行采集和上报。
 
 - [版本数据信息](#section17031652143614)
+
 - [节点基本信息](#section17031652143620)
 - [NPU数据信息](#section1379685784314)
 - [利用率数据信息](#section1379685784315)
+<!-- npu="A3,910b,310p" id2 -->
 - [vNPU数据信息](#section81411161343)
+<!-- end id2 -->
+<!-- npu="950,A3,910b,910" id3 -->
 - [network_bandwidth数据信息](#section630155191018)
+<!-- end id3 -->
+<!-- npu="950,A3,910b,910" id5 -->
 - [network_link数据信息](#section630155191019)
+<!-- end id5 -->
+<!-- npu="910,310p" id7 -->
 - [DDR数据信息](#section11460736193116)
+<!-- end id7 -->
+<!-- npu="950,A3,910b,910" id9 -->
 - [片上内存数据信息](#section82014427452)
+<!-- end id9 -->
+<!-- npu="A3,910b" id11 -->
 - [HCCS数据信息](#section9741133815914)
+<!-- end id11 -->
+<!-- npu="950,910b" id13 -->
 - [PCIe数据信息](#section124052024182413)
+<!-- end id13 -->
+<!-- npu="A3,910b,910" id15 -->
 - [RoCE数据信息](#section2080452819294)
+<!-- end id15 -->
+<!-- npu="950,A3" id17 -->
 - [SIO数据信息](#section1773315620217)
+<!-- end id17 -->
+<!-- npu="950,A3,910b,910" id19 -->
 - [光模块数据信息](#section1692536163118)
+<!-- end id19 -->
+<!-- npu="950" id21 -->
 - [UB数据信息](#section9638996666653)
+<!-- end id21 -->
 
 了解以上各项数据信息中标签的说明，请参见[标签数据信息说明](#section129583351126)。
 
@@ -400,6 +423,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 | utilization | npu_chip_info_cube_utilization | 昇腾AI处理器AICube利用率 | [标签1](#table191895615241) | % |<ul><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li>Atlas 800I A2推理服务器</li><li>A200I A2 Box异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
 | utilization | npu_chip_info_overall_utilization | 昇腾AI处理器整体利用率 | [标签1](#table191895615241) | % |<ul><li><term>Atlas A2训练系列产品</term></li><li><term>Atlas A3训练系列产品</term></li><li>Atlas 800I A2推理服务器</li><li>A200I A2 Box异构组件</li><li><term>Ascend 950PR&950DT系列产品</term></li></ul>|
 
+<!-- npu="A3,910b,310p" id1 -->
 ## vNPU数据信息<a name="section81411161343"></a>
 
 **表 5**  vNPU数据信息
@@ -456,7 +480,9 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </tr>
 </tbody>
 </table>
+<!-- end id1 -->
 
+<!-- npu="950,A3,910b,910" id4 -->
 ## network_bandwidth数据信息<a name="section630155191018"></a>
 
 **表 6**  network_bandwidth数据信息
@@ -544,7 +570,9 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 </tr></tbody>
 </table>
+<!-- end id4 -->
 
+<!-- npu="950,A3,910b,910" id6 -->
 ## network_link数据信息<a name="section630155191019"></a>
 
 **表 7**  network_link数据信息
@@ -640,7 +668,9 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 </tr></tbody>
 </table>
+<!-- end id6 -->
 
+<!-- npu="910,310p" id8 -->
 ## DDR数据信息<a name="section11460736193116"></a>
 
 **表 8**  DDR数据信息
@@ -686,7 +716,9 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </tr>
 </tbody>
 </table>
+<!-- end id8 -->
 
+<!-- npu="950,A3,910b,910" id10 -->
 ## 片上内存数据信息<a name="section82014427452"></a>
 
 **表 9**  片上内存数据信息
@@ -861,7 +893,9 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </tr>
 </tbody>
 </table>
+<!-- end id10 -->
 
+<!-- npu="A3,910b" id12 -->
 ## HCCS数据信息<a name="section9741133815914"></a>
 
 **表 10**  HCCS数据信息
@@ -980,7 +1014,9 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </tr>
 </tbody>
 </table>
+<!-- end id12 -->
 
+<!-- npu="950,910b" id14 -->
 ## PCIe数据信息<a name="section124052024182413"></a>
 
 **表 11**  PCIe数据信息
@@ -1075,7 +1111,9 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </tr>
 </tbody>
 </table>
+<!-- end id14 -->
 
+<!-- npu="A3,910b,910" id16 -->
 ## RoCE数据信息<a name="section2080452819294"></a>
 
 **表 12**  RoCE数据信息
@@ -1342,7 +1380,9 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </tr>
 </tbody>
 </table>
+<!-- end id16 -->
 
+<!-- npu="950,A3" id18 -->
 ## SIO数据信息<a name="section1773315620217"></a>
 
 **表 13**  SIO数据信息
@@ -1389,7 +1429,9 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </tr>
 </tbody>
 </table>
+<!-- end id18 -->
 
+<!-- npu="950,A3,910b,910" id20 -->
 ## 光模块数据信息<a name="section1692536163118"></a>
 
 **表 14**  光模块数据信息
@@ -1507,7 +1549,9 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </tr>
 </tbody>
 </table>
+<!-- end id20 -->
 
+<!-- npu="950" id22 -->
 ## UB数据信息<a name="section9638996666653"></a>
 
 **表 15**  UB数据信息
@@ -2589,6 +2633,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </tr>
 </tbody>
 </table>
+<!-- end id22 -->
 
 ## 标签数据信息说明<a name="section129583351126"></a>
 

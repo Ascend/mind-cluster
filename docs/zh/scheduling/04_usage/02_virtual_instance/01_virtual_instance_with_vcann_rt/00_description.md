@@ -60,7 +60,9 @@
 - 软切分虚拟化场景下不支持并发下发任务，仅支持串行下发；需等待前一个任务完成拉起后，方可下发新的软切分任务。
 - 在软切分虚拟化场景下，一个容器只能挂载一个NPU。
 - 任务YAML中requests对应的数据表示请求的NPU的AICore百分比，不是真实NPU卡数。
+<!-- npu="A3" id1 -->
 - <term>Atlas A3系列产品</term>使用软切分虚拟化功能时，必须开启单die直通模式，即在Ascend Device Plugin的YAML中，增加启动参数-useSingleDieMode=true。
+<!-- end id1 -->
 - 物理NPU软切分虚拟化后，仅支持将物理NPU挂载到容器，不支持将该物理NPU直通到虚拟机。
 - 在软切分虚拟化场景下，如果所有容器都挂载了相同的物理NPU，则该物理NPU必须采用相同的软切分策略。
 - 由于硬件设备的限制(可以参考[使用约束](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/others/acldevg/aclcppdevg_000222.html))，建议vCANN-RT最大切分数量不超过单个device支持的最大用户进程数。

@@ -8,8 +8,10 @@
 
 针对总线设备故障的不同级别进行分级处理时，Ascend Device Plugin组件会获取到当前故障的故障码，根据SwitchFaultCode.json中故障码配置的故障级别，对故障进行相应处理。SwitchFaultCode.json为系统配置文件，若用户无特殊需求，请勿随意修改。若用户需要修改故障码对应的故障级别，可以通过由faultCode.json和SwitchFaultCode.json创建的mindx-dl-fault-config文件实现。
 
+<!-- npu="A3" id1 -->
 >[!NOTE]
 >只有<term>Atlas A3训练系列产品</term>存在**总线设备**，该设备的故障码可以查看SwitchFaultCode.json文件。
+<!-- end id1 -->
 
 故障检测特性针对**总线设备**故障的不同级别进行分级处理。若用户需要修改故障码的故障级别，操作指导请参见[（可选）配置总线设备故障级别](#可选配置总线设备故障级别)。
 
@@ -304,6 +306,7 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
     …
     ```
 
+<!-- npu="A3" id2 -->
 ## 配置灵衢网络检测<a name="zh-cn_topic_0000002193288232_section18190175418362"></a>
 
 ### 前提条件<a name="zh-cn_topic_0000002193288232_section8281518121516"></a>
@@ -385,7 +388,9 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
           name: super-pod-0       # 0为超节点ID
           namespace: cluster-system
         ```
+<!-- end id2 -->
 
+<!-- npu="950" id3 -->
 ## 配置光链路成员端口故障<a name="ZH-CN_TOPIC_0000002479387566"></a>
 
 ### 配置文件说明<a name="ZH-CN_TOPIC_0000002479387566_section_specifications "></a>
@@ -406,6 +411,7 @@ faultCode.json：配置参数面光链路成员端口故障的故障级别。
   ],
     ...
 ```
+<!-- end id3 -->
 
 ## 配置watchdog故障检测
 

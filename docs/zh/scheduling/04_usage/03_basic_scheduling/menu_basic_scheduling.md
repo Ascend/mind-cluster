@@ -8,10 +8,18 @@
   - [基于昇腾AI处理器的亲和性](./01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md)
   - [基于节点的亲和性](./01_affinity_scheduling/04_node_based_affinity.md)
   - [昇腾AI处理器的调度算法说明](./01_affinity_scheduling/05_scheduling_algorithm_of_ascend_ai_processor.md)
+  <!-- npu="950,A3" id4 -->
   - [推理服务亲和性调度](./01_affinity_scheduling/06_infer_affinity_scheduling.md)
+  <!-- end id4 -->
 - [昇腾AI处理器的调度流程](./02_scheduling_process_of_the_ascend_ai_processor.md)
 - [整卡调度](./03_full_npu_scheduling.md)
+<!-- npu="A3" id1 -->
 - [多级调度](./04_multi_level_scheduling.md)
+<!-- end id1 -->
 - [重调度](./05_rescheduling.md)
+<!-- npu="950" id2 -->
 - [DPU任务调度](./06_dpu_scheduling.md)
+<!-- end id2 -->
+<!-- npu="950,A3" id3 -->
 - [代际升级适配指导](./07_Intergenerational_upgrade.md)
+<!-- end id3 -->

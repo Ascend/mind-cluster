@@ -139,6 +139,7 @@
 >[!NOTE]
 > Host日志V1/V2/V3版本详情请参考[host离线日志采集](../05_usage/02_log_collection.md#host-offline-log)。
 
+<!-- npu="950" id1 -->
 ### <term>Ascend 950PR&950DT系列产品</term>主机侧额外诊断
 
 <term>Ascend 950PR&950DT系列产品</term>的主机侧诊断项与<term>Atlas A3系列产品</term>对应项的诊断逻辑一致，但<term>Ascend 950PR&950DT系列产品</term>新增网卡（NIC）SFP lane 级诊断。
@@ -213,6 +214,7 @@
 </tr>
 </tbody>
 </table>
+<!-- end id1 -->
 
 ## BMC 相关诊断
 

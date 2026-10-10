@@ -1,17 +1,29 @@
 # 特性指南
 
 - [容器化支持特性指南](./00_containerization/menu_containerization.md)
+<!-- npu="950,A3,910b,910,310p" id1 -->
 - [资源监测特性指南](./01_resource_monitoring/menu_resource_monitoring.md)
 - [虚拟化实例特性指南](./02_virtual_instance/menu_virtual_instance.md)
 - [调度特性指南](./03_basic_scheduling/menu_basic_scheduling.md)
 - [故障检测特性指南](./04_fault_detection_and_diagnosis/menu_fault_detection_and_diagnosis.md)
 - [故障恢复特性指南](./05_fault_recovery/menu_fault_recovery.md)
 - [一体机特性指南](./06_appliance/menu_appliance.md)
+<!-- end id1 -->
+<!-- npu="A3,910b" id2 -->
 - [MindIE CMotor推理任务最佳实践（已日落）](./07_mindie_motor_best_practice/menu_mindie_motor_best_practice.md)
 - [SGLang推理任务最佳实践](./08_sglang_best_practice/menu_sglang_best_practice.md)
 - [vLLM推理任务最佳实践](./09_vllm_best_practice/menu_vllm_best_practice.md)
+<!-- end id2 -->
+<!-- npu="950,A3,910b" id3 -->
 - [Infer Operator推理任务最佳实践](./10_infer_operator_best_practice/menu_infer_operator_best_practice.md)
+<!-- end id3 -->
+<!-- npu="950,A3,910b,910,310p" id4 -->
 - [潮汐调度最佳实践](./11_tidal_scheduling/menu_tidal_scheduling.md)
+<!-- end id4 -->
+<!-- npu="A3,910b" id5 -->
 - [verl强化学习任务最佳实践](./12_verl_best_practice/menu_verl_best_practice.md)
+<!-- end id5 -->
+<!-- npu="950,A3,910b" id6 -->
 - [Ascend DRA组件最佳实践](./13_ascend_dynamic_resource_allocation_best_practice/menu_ascend_dynamic_resource_allocation_best_practice.md)
+<!-- end id6 -->
 - [集群运维Agent特性指南](./14_clusterops_agent/menu_fault_diagnosis.md)
