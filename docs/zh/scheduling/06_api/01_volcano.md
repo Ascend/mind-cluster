@@ -62,6 +62,15 @@
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p1072973244"><a name="p1072973244"></a><a name="p1072973244"></a><span id="ph197215716249"><a name="ph197215716249"></a><a name="ph197215716249"></a>Volcano</span>、<span id="ph17212711245"><a name="ph17212711245"></a><a name="ph17212711245"></a>Ascend Operator</span></p>
 </td>
 </tr>
+<tr id="row_ra_block_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_ra_block_1"><a name="p_ra_block_1"></a><a name="p_ra_block_1"></a>ra-block</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_ra_block_2"><a name="p_ra_block_2"></a><a name="p_ra_block_2"></a>指定逻辑框芯片数量。</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_ra_block_3"><a name="p_ra_block_3"></a><a name="p_ra_block_3"></a>整数，取值范围是1~64且必须是2的幂次方。</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_ra_block_4"><a name="p_ra_block_4"></a><a name="p_ra_block_4"></a>Volcano</p>
+</td>
+</tr>
 <tr id="row972875243"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p20765429172612"><a name="p20765429172612"></a><a name="p20765429172612"></a>huawei.com/schedule_policy</p>
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p1276572913269"><a name="p1276572913269"></a><a name="p1276572913269"></a>指定调度策略。</p>
