@@ -81,11 +81,10 @@ func GetNPURequestFromTask(task *api.TaskInfo) (string, int) {
 		return "", 0
 	}
 	for k, v := range task.Resreq.ScalarResources {
-		// must contain "huawei.com/"
-		if strings.Contains(string(k), HwPreName) {
+		// canonical NPU resources and static segmentation vNPU names (e.g. huawei.com/Ascend910-2c)
+		if IsNPUResource(k) || IsStaticVnpuResource(k) {
 			return string(k), int(v / NPUHexKilo)
 		}
-		continue
 	}
 	klog.V(LogInfoLev).Infof("getVCTaskReqNPUTypeFromTaskInfo %+v.", task.Resreq.ScalarResources)
 	return "", 0

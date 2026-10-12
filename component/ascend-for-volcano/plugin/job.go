@@ -243,8 +243,7 @@ func GetVCJobReqNPUTypeFromJobInfo(vcJob *api.JobInfo) (string, int, error) {
 
 	vcMinResource := getVcjobMinResource(vcJob)
 	for k, v := range vcMinResource.ScalarResources {
-		// must contain "huawei.com/"
-		if strings.Contains(string(k), util.HwPreName) {
+		if util.IsNPUResource(k) || util.IsStaticVnpuResource(k) {
 			return string(k), int(v / util.NPUHexKilo), nil
 		}
 	}
@@ -271,8 +270,7 @@ func getVCTaskReqNPUTypeFromTaskInfo(vcTask *api.TaskInfo) (string, int) {
 		return "", 0
 	}
 	for k, v := range vcTask.Resreq.ScalarResources {
-		// must contain "huawei.com/"
-		if strings.Contains(string(k), util.HwPreName) {
+		if util.IsNPUResource(k) || util.IsStaticVnpuResource(k) {
 			return string(k), int(v / util.NPUHexKilo)
 		}
 		continue
@@ -825,7 +823,7 @@ func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
 		return nil
 	}
 
-	if ascend910VirtualDevNameReg.MatchString(sJob.ReqNPUName) || ascend310VirtualDevNameReg.MatchString(sJob.ReqNPUName) {
+	if util.IsStaticVnpuResource(v1.ResourceName(sJob.ReqNPUName)) {
 		klog.V(util.LogInfoLev).Infof("%s valid ok, virtual device %s.", sJob.Name, sJob.ReqNPUName)
 		return nil
 	}
@@ -1136,8 +1134,7 @@ func GetJobInfoAllocatedTaskNum(jobInfo *api.JobInfo) int32 {
 func validVirtualDevJob(job *api.JobInfo) *api.ValidateResult {
 	for _, task := range job.Tasks {
 		npuName, rNpuNum := util.GetNPURequestFromTask(task)
-		if (ascend910VirtualDevNameReg.MatchString(npuName) || ascend310VirtualDevNameReg.MatchString(npuName)) &&
-			(rNpuNum > util.NPUIndex1) {
+		if util.IsStaticVnpuResource(v1.ResourceName(npuName)) && (rNpuNum > util.NPUIndex1) {
 			err := fmt.Errorf("job %s task num is <%v>, request vnpu num <%v> more than 1 virtual device"+
 				", keep job pending ", job.Name, len(job.Tasks), rNpuNum)
 			klog.V(util.LogDebugLev).Info(err.Error())

@@ -459,6 +459,14 @@ var (
 		PodName:   regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`),
 	}
 
+	// ascend910VirtualDevNameReg matches the trimmed name of a static segmentation
+	// 910 vNPU resource, e.g. Ascend910-2c trimmed from huawei.com/Ascend910-2c.
+	ascend910VirtualDevNameReg = regexp.MustCompile(Ascend910 + "-([2-6]|8|10|12|16)c")
+
+	// ascend310VirtualDevNameReg matches the trimmed name of a static segmentation
+	// 310P vNPU resource, e.g. Ascend310P-1c trimmed from huawei.com/Ascend310P-1c.
+	ascend310VirtualDevNameReg = regexp.MustCompile(Ascend310P + "-(1|2|4)c")
+
 	// subHealthyStrategs subHealthy Strategs
 	subHealthyStrategs = []string{SubHealthyIgnore, SubHealthyGraceExit, SubHealthyForceExit, SubHealthyHotSwitch}
 )

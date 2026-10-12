@@ -201,7 +201,7 @@ func TestSNodePredicate(t *testing.T) {
 			}
 			tt.args.taskInfo.Resreq = &api.Resource{}
 			tt.args.taskInfo.Resreq.ScalarResources = make(map[v1.ResourceName]float64)
-			tt.args.taskInfo.Resreq.ScalarResources[util.Ascend910bName] = util.NPUIndex10
+			tt.args.taskInfo.Resreq.ScalarResources[util.NPU910CardName] = util.NPUIndex10
 			if err := sHandle.NodePredicate(tt.args.taskInfo, tt.args.nodeInfo); (err != nil) != tt.wantErr {
 				t.Errorf("NodePredicate() error = %v, wantErr %v", err, tt.wantErr)
 			}
