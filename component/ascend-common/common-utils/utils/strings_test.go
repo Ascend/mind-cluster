@@ -65,8 +65,8 @@ func TestMaskPrefix(t *testing.T) {
 
 func TestGetSha256Code(t *testing.T) {
 	convey.Convey("test sha256", t, func() {
-		hashs := GetSha256Code([]byte("this is a test sentence"))
-		convey.So(len(hashs), convey.ShouldEqual, byteLength)
+		hashes := GetSha256Code([]byte("this is a test sentence"))
+		convey.So(len(hashes), convey.ShouldEqual, byteLength)
 	})
 }
 
@@ -79,6 +79,91 @@ func TestIsDigitString(t *testing.T) {
 		convey.Convey("case IsDigitString is false", func() {
 			str := "123a"
 			convey.ShouldBeFalse(IsDigitString(str))
+		})
+	})
+}
+
+// TestIsNPUResourceName test IsNPUResourceName
+func TestIsNPUResourceName(t *testing.T) {
+	convey.Convey("IsNPUResourceName", t, func() {
+		convey.Convey("01-npu resource names should return true", func() {
+			npuNames := []string{
+				"huawei.com/npu",
+				"huawei.com/npu-core",
+				"huawei.com/Ascend910",
+				"huawei.com/Ascend310",
+				"huawei.com/Ascend310P",
+				"huawei.com/Ascend910-2c",
+				"huawei.com/Ascend910-16c",
+			}
+			for _, name := range npuNames {
+				convey.So(IsNPUResourceName(name), convey.ShouldBeTrue)
+			}
+		})
+		convey.Convey("02-same prefix non-npu resource names should return false", func() {
+			nonNPUNames := []string{
+				"huawei.com/dpu.resource.name",
+				"huawei.com/ub_rdma_1",
+				"cpu",
+				"memory",
+				"huawei.com/",
+				"",
+				"huawei.com/Ascend910B",
+				"huawei.com/Ascend910A3",
+				"huawei.com/Ascend910X",
+				"huawei.com/Ascend910B-4c",
+				"huawei.com/Ascend310-2c",
+				"huawei.com/Ascend910-c",
+				"huawei.com/Ascend910-2cpu",
+			}
+			for _, name := range nonNPUNames {
+				convey.So(IsNPUResourceName(name), convey.ShouldBeFalse)
+			}
+		})
+	})
+}
+
+// TestIsStaticCutResourceName test IsStaticCutResourceName
+func TestIsStaticCutResourceName(t *testing.T) {
+	convey.Convey("IsStaticCutResourceName", t, func() {
+		convey.Convey("01-static segmentation resource names should return true", func() {
+			staticCutNames := []string{
+				"huawei.com/Ascend910-2c",
+				"huawei.com/Ascend910-3c",
+				"huawei.com/Ascend910-6c",
+				"huawei.com/Ascend910-8c",
+				"huawei.com/Ascend910-10c",
+				"huawei.com/Ascend910-12c",
+				"huawei.com/Ascend910-16c",
+				"huawei.com/Ascend310P-1c",
+				"huawei.com/Ascend310P-2c",
+				"huawei.com/Ascend310P-4c",
+			}
+			for _, name := range staticCutNames {
+				convey.So(IsStaticCutResourceName(name), convey.ShouldBeTrue)
+			}
+		})
+		convey.Convey("02-non-static segmentation resource names should return false", func() {
+			nonStaticCutNames := []string{
+				"huawei.com/npu",
+				"huawei.com/npu-core",
+				"huawei.com/Ascend910",
+				"huawei.com/Ascend910B",
+				"huawei.com/Ascend310P",
+				"huawei.com/Ascend910B-4c",
+				"huawei.com/Ascend310-2c",
+				"huawei.com/Ascend910-c",
+				"huawei.com/Ascend910-1c",
+				"huawei.com/Ascend910-7c",
+				"huawei.com/Ascend310P-8c",
+				"huawei.com/Ascend910-2cpu",
+				"huawei.com/dpu.resource.name",
+				"cpu",
+				"",
+			}
+			for _, name := range nonStaticCutNames {
+				convey.So(IsStaticCutResourceName(name), convey.ShouldBeFalse)
+			}
 		})
 	})
 }

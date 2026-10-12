@@ -19,6 +19,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	commonutils "ascend-common/common-utils/utils"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/utils"
 )
@@ -134,14 +135,9 @@ func (r *ASJobReconciler) isVirtualResourceReq(requests *corev1.ResourceList) bo
 	if requests == nil {
 		return false
 	}
-	nonVirtualResources := map[corev1.ResourceName]struct{}{
-		api.HuaweiNPU:        {},
-		api.HuaweiAscend310:  {},
-		api.HuaweiAscend310P: {},
-		api.HuaweiAscend910:  {},
-	}
+	// virtual resources are dynamic segmentation (npu-core) and static segmentation resources
 	for name := range *requests {
-		if _, ok := nonVirtualResources[name]; !ok {
+		if commonutils.IsStaticCutResourceName(string(name)) || string(name) == api.HuaweiNPUCore {
 			hwlog.RunLog.Debugf("virtual resource name detected: %s", name)
 			return true
 		}
@@ -187,17 +183,18 @@ func (r *ASJobReconciler) setCommonEnv(pi *podInfo, podTemplate *corev1.PodTempl
 
 func (r *ASJobReconciler) setAscendVisibleDevicesEnv(container *corev1.Container) {
 	for resourceAnnoKey := range container.Resources.Requests {
-		if strings.Contains(string(resourceAnnoKey), api.ResourceNamePrefix) {
-			container.Env = append(container.Env, corev1.EnvVar{
-				Name: api.AscendVisibleDevicesEnv,
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: fmt.Sprintf("metadata.annotations['%s']", resourceAnnoKey),
-					},
-				},
-			})
-			return
+		if !commonutils.IsNPUResourceName(string(resourceAnnoKey)) {
+			continue
 		}
+		container.Env = append(container.Env, corev1.EnvVar{
+			Name: api.AscendVisibleDevicesEnv,
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: fmt.Sprintf("metadata.annotations['%s']", resourceAnnoKey),
+				},
+			},
+		})
+		return
 	}
 }
 
@@ -315,22 +312,24 @@ func (r *ASJobReconciler) setTensorflowEnv(pi *podInfo, podTemplate *corev1.PodT
 // addHcclSuperPodIdEnv add HCCL_LOGIC_SUPERPOD_ID env to build hccs network
 func addHcclSuperPodIdEnv(pi *podInfo, pod *corev1.PodTemplateSpec, index int) {
 	for name, res := range pod.Spec.Containers[index].Resources.Requests {
-		if strings.Contains(string(name), api.ResourceNamePrefix) {
-			chipsPerNode := int(res.Value())
-			superPodId := strconv.Itoa(utils.GetLogicSuperPodId(pi.rank, utils.GetSpBlock(pi.job), chipsPerNode))
-			hwlog.RunLog.Debugf("pod<%s> resource<%v=%v> pod-rank=%v sp-block=%v set %s=%v",
-				pod.Name, name, chipsPerNode, pi.rank, utils.GetSpBlock(pi.job), hcclSuperPodLogicId, superPodId)
-			if pi.job.Labels[utils.SuperPodAffinity] != utils.SoftStrategy {
-				addEnvValue(pod, hcclSuperPodLogicId, superPodId, index)
-				break
-			}
-			if string(name) == api.HuaweiNPU {
-				addEnvValue(pod, hcclSuperPodLogicId, superPodId, index)
-			} else {
-				addEnvValueForSoftStrategy(pod, hcclSuperPodLogicId, index)
-			}
+		if !commonutils.IsNPUResourceName(string(name)) {
+			continue
+		}
+		chipsPerNode := int(res.Value())
+		spBlock := utils.GetSpBlock(pi.job)
+		superPodId := strconv.Itoa(utils.GetLogicSuperPodId(pi.rank, spBlock, chipsPerNode))
+		hwlog.RunLog.Debugf("pod<%s> resource<%v=%v> pod-rank=%v sp-block=%v set %s=%v",
+			pod.Name, name, chipsPerNode, pi.rank, spBlock, hcclSuperPodLogicId, superPodId)
+		if pi.job.Labels[utils.SuperPodAffinity] != utils.SoftStrategy {
+			addEnvValue(pod, hcclSuperPodLogicId, superPodId, index)
 			break
 		}
+		if string(name) == api.HuaweiNPU {
+			addEnvValue(pod, hcclSuperPodLogicId, superPodId, index)
+		} else {
+			addEnvValueForSoftStrategy(pod, hcclSuperPodLogicId, index)
+		}
+		break
 	}
 }
 

@@ -24,6 +24,9 @@ import (
 
 const fakeNpuNum = 16
 
+// dpuResourceName is a DPU resource sharing the same prefix with NPU resources
+const dpuResourceName = "huawei.com/dpu.resource.name"
+
 // TestGetContainerExitCode test getContainerExitCode
 func TestGetContainerExitCode(t *testing.T) {
 	expectCode := 0xbeef
@@ -140,6 +143,29 @@ func TestGetContainerResourceReq(t *testing.T) {
 			expectRequestRes := 8
 			res := getContainerResourceReq(ct)
 			convey.So(res, convey.ShouldEqual, expectRequestRes)
+		})
+		convey.Convey("03-container with mixed npu and dpu resources should only count npu", func() {
+			ct := corev1.Container{
+				Resources: corev1.ResourceRequirements{
+					Requests: map[corev1.ResourceName]resource.Quantity{
+						fakeResourceName: resource.MustParse("8"),
+						dpuResourceName:  resource.MustParse("2"),
+					},
+				},
+			}
+			res := getContainerResourceReq(ct)
+			convey.So(res, convey.ShouldEqual, 8)
+		})
+		convey.Convey("04-container with only dpu resources should return 0", func() {
+			ct := corev1.Container{
+				Resources: corev1.ResourceRequirements{
+					Requests: map[corev1.ResourceName]resource.Quantity{
+						dpuResourceName: resource.MustParse("2"),
+					},
+				},
+			}
+			res := getContainerResourceReq(ct)
+			convey.So(res, convey.ShouldEqual, 0)
 		})
 	})
 }
@@ -357,6 +383,23 @@ func TestGetContainerNPUResourceNameAndReq(t *testing.T) {
 		convey.Convey("02-container without requirement should return 0", func() {
 			ct := newCommonContainer()
 			ct.Resources = corev1.ResourceRequirements{}
+			name, num := getContainerNPUResourceNameAndReq(ct)
+			convey.So(name, convey.ShouldEqual, "")
+			convey.So(num, convey.ShouldEqual, 0)
+		})
+		convey.Convey("03-container with mixed npu and dpu resources should return npu", func() {
+			ct := newCommonContainer()
+			ct.Resources.Requests[dpuResourceName] = resource.MustParse("2")
+			expected := resource.MustParse("1")
+			name, num := getContainerNPUResourceNameAndReq(ct)
+			convey.So(name, convey.ShouldEqual, fakeResourceName)
+			convey.So(num, convey.ShouldEqual, expected.Value())
+		})
+		convey.Convey("04-container with only dpu resource should return empty", func() {
+			ct := newCommonContainer()
+			ct.Resources.Requests = map[corev1.ResourceName]resource.Quantity{
+				dpuResourceName: resource.MustParse("2"),
+			}
 			name, num := getContainerNPUResourceNameAndReq(ct)
 			convey.So(name, convey.ShouldEqual, "")
 			convey.So(num, convey.ShouldEqual, 0)
