@@ -69,6 +69,28 @@ func TestIsVirtualResourceReq(t *testing.T) {
 			res := rc.isVirtualResourceReq(fakeRequests)
 			convey.So(res, convey.ShouldBeFalse)
 		})
+		convey.Convey("04-pod requests only dpu resource, will return false", func() {
+			fakeRequests := &corev1.ResourceList{dpuResourceName: resource.Quantity{}}
+			res := rc.isVirtualResourceReq(fakeRequests)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("05-pod requests npu and dpu resources, will return false", func() {
+			fakeRequests := &corev1.ResourceList{
+				ascend910:       resource.Quantity{},
+				dpuResourceName: resource.Quantity{},
+			}
+			res := rc.isVirtualResourceReq(fakeRequests)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("06-pod requests npu, virtual resource and dpu, will return true", func() {
+			fakeRequests := &corev1.ResourceList{
+				ascend910:       resource.Quantity{},
+				ascend910vir2c:  resource.Quantity{},
+				dpuResourceName: resource.Quantity{},
+			}
+			res := rc.isVirtualResourceReq(fakeRequests)
+			convey.So(res, convey.ShouldBeTrue)
+		})
 	})
 }
 

@@ -22,7 +22,6 @@ package v1
 
 import (
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -31,6 +30,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	commonutils "ascend-common/common-utils/utils"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 )
 
@@ -87,7 +87,7 @@ func ContainsChiefOrMasterSpec(replicas map[commonv1.ReplicaType]*commonv1.Repli
 
 func getContainerResourceReq(ct corev1.Container) int {
 	for rName, rNum := range ct.Resources.Requests {
-		if strings.Contains(string(rName), api.ResourceNamePrefix) {
+		if commonutils.IsNPUResourceName(string(rName)) {
 			return int(rNum.Value())
 		}
 	}
@@ -96,7 +96,7 @@ func getContainerResourceReq(ct corev1.Container) int {
 
 func getContainerNPUResourceNameAndReq(ct corev1.Container) (string, int) {
 	for rName, rNum := range ct.Resources.Requests {
-		if strings.Contains(string(rName), api.ResourceNamePrefix) {
+		if commonutils.IsNPUResourceName(string(rName)) {
 			return string(rName), int(rNum.Value())
 		}
 	}
