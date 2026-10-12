@@ -96,7 +96,12 @@ func PubFaultCollector(newPubFault *api.PubFaultInfo) error {
 			newFault := convertPubFaultInfoToCache(fault, influence)
 			nodeName := getNodeName(influence)
 			faultKey := newPubFault.Resource + fault.FaultId
-			dealFault(fault.Assertion, nodeName, faultKey, newFault)
+			faultExisted := dealFault(fault.Assertion, nodeName, faultKey, newFault)
+			if faultExisted && fault.Assertion == constant.AssertionOccur {
+				hwlog.RunLog.Warnf("skip fault %s, assertion %s, node %s, resource %s: fault already existed",
+					fault.FaultId, fault.Assertion, nodeName, newPubFault.Resource)
+				continue
+			}
 			// level routing: forward silent-fault-level occur/recover messages to the silent-side handler (the source of truth is
 			// the level check at the routing site; when the switch is off, isSilentFaultDisabled above already drops them one by one, so this is a double guard)
 			if newFault.FaultLevel == constant.SilentFault && conf.GetSilentFaultEnabled() && silentFaultHandler != nil {
@@ -150,7 +155,7 @@ func getNodeName(influence api.Influence) string {
 	return name
 }
 
-func dealFault(assertion, nodeName, faultKey string, newFault *constant.PubFaultCache) {
+func dealFault(assertion, nodeName, faultKey string, newFault *constant.PubFaultCache) bool {
 	const diffTime = 5
 
 	faultExisted, addTime := publicfault.PubFaultCache.FaultExisted(nodeName, faultKey)
@@ -164,12 +169,12 @@ func dealFault(assertion, nodeName, faultKey string, newFault *constant.PubFault
 			// deal 'recover' after 5 seconds
 			dealTime := time.Now().Unix() + diffTime
 			PubFaultNeedDelete.Push(dealTime, nodeName, faultKey)
-			return
+			return faultExisted
 		}
 		// 5 seconds have passed, delete 'occur'
 		if time.Now().Unix()-addTime >= diffTime {
 			publicfault.PubFaultCache.DeleteOccurFault(nodeName, faultKey)
-			return
+			return faultExisted
 		}
 		// delete 'recover' after 5 seconds
 		deleteTime := addTime + diffTime
@@ -184,6 +189,7 @@ func dealFault(assertion, nodeName, faultKey string, newFault *constant.PubFault
 			PubFaultNeedDelete.Push(dealTime, nodeName, faultKey)
 		}
 	default:
-		return
+		return faultExisted
 	}
+	return faultExisted
 }

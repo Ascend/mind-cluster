@@ -262,6 +262,7 @@ func (sHandle *ScheduleHandler) releaseAnnotation(task *api.TaskInfo, vcJob Sche
 		delete(task.Pod.Annotations, util.AscendNPUPodRealUse)
 		delete(task.Pod.Annotations, vcTask.ReqNPUName)
 		delete(task.Pod.Annotations, util.Pod910DeviceKey)
+		delete(task.Pod.Annotations, util.PodNPUDeviceKey)
 	}
 }
 

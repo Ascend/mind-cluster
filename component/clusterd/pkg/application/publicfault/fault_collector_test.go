@@ -162,11 +162,13 @@ func testOccur() {
 	resetFaultCache()
 
 	// occur fault, and fault does not exist before
-	dealFault(constant.AssertionOccur, testNodeName1, faultKey1, faultCache)
+	faultExisted := dealFault(constant.AssertionOccur, testNodeName1, faultKey1, faultCache)
+	convey.So(faultExisted, convey.ShouldBeFalse)
 	convey.So(publicfault.PubFaultCache.GetPubFaultNum(), convey.ShouldEqual, 1)
 
 	// occur fault, and fault existed before
-	dealFault(constant.AssertionOccur, testNodeName1, faultKey1, faultCache)
+	faultExisted = dealFault(constant.AssertionOccur, testNodeName1, faultKey1, faultCache)
+	convey.So(faultExisted, convey.ShouldBeTrue)
 	convey.So(publicfault.PubFaultCache.GetPubFaultNum(), convey.ShouldEqual, 1)
 }
 
@@ -312,6 +314,34 @@ func TestRegisterSilentFaultHandler(t *testing.T) {
 		convey.So(received.FaultId, convey.ShouldEqual, faultInfo.Faults[0].FaultId)
 		convey.So(received.Assertion, convey.ShouldEqual, constant.AssertionOccur)
 		convey.So(received.Resource, convey.ShouldEqual, faultInfo.Resource)
+
+		silentFaultHandler = nil
+		resetFaultCache()
+	})
+}
+
+func TestPubFaultCollectorSilentFaultDuplicateOccur(t *testing.T) {
+	convey.Convey("duplicate silent fault occur is not routed to handler again", t, func() {
+		silentFaultHandler = nil
+		receivedCount := 0
+		RegisterSilentFaultHandler(func(event SilentFaultEvent) {
+			receivedCount++
+		})
+
+		p1 := gomonkey.ApplyFuncReturn(LimitByResource, nil).
+			ApplyMethodReturn(&pubFaultInfoChecker{}, "CheckAndFlush", nil).
+			ApplyFuncReturn(publicfault.GetFaultLevelByCode, constant.SilentFault).
+			ApplyFuncReturn(conf.GetSilentFaultEnabled, true)
+		defer p1.Reset()
+		resetFaultCache()
+
+		err := PubFaultCollector(&faultInfo)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(receivedCount, convey.ShouldEqual, 1)
+
+		err = PubFaultCollector(&faultInfo)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(receivedCount, convey.ShouldEqual, 1)
 
 		silentFaultHandler = nil
 		resetFaultCache()
