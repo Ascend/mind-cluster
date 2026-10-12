@@ -98,7 +98,7 @@ Job级别重调度默认开启，用户只需完成制作镜像的步骤及准�
 metadata:
    labels:
      ...
-     fault-scheduling: "grace"        # 可以根据实际情况选择force或者grace， 配置为force时Pod不能配置使用主机网络，配置force时可能存在重调度失败并触发多次重调度直到成功的现象。
+     fault-scheduling: "grace"        # 建议配置grace。
 ```
 
 ### 配置Pod级别重调度<a name="ZH-CN_TOPIC_0000002479226508"></a>
@@ -129,7 +129,7 @@ metadata:
    labels:
      ...
      <strong>pod-rescheduling: "on"</strong>
-     <strong>fault-scheduling: "grace"   # 可以根据实际情况选择force或者grace， 配置为force时Pod不能配置使用主机网络，配置force时可能存在重调度失败并触发多次重调度直到成功的现象。</strong>
+     <strong>fault-scheduling: "grace"   # 建议配置grace。</strong>
 ...
         spec:
 ...
@@ -225,7 +225,7 @@ RUN pip3 install $TASKD_WHL
 metadata:
   labels:
     ...
-    <strong>fault-scheduling: "grace"                     # 可以根据实际情况选择force或者grace， 配置为force时Pod不能配置使用主机网络，配置force时可能存在重调度失败并触发多次重调度直到成功的现象。</strong>
+    <strong>fault-scheduling: "grace"                     #必须配置grace。</strong>
   annotations:
     ...
     <strong>recover-strategy: "recover,recover-in-place"   # 任务可用恢复策略（retry：进程级在线恢复；recover：进程级别重调度，故障后迁移故障Pod到健康节点；recover-in-place: 进程级原地恢复，故障后不迁移故障Pod，仅重启故障进程；elastic-training：弹性训练；dump：保存临终遗言；exit：退出训练），6种策略可随意组合，策略之间由逗号分隔</strong>
@@ -450,7 +450,7 @@ RUN pip3 install $MINDIO_TTP_PKG
 ...
    labels:
      ...
-     <strong>fault-scheduling: "grace"</strong>
+     <strong>fault-scheduling: "grace"    # 必须配置grace。</strong>
  ...
 ...
    annotations:
