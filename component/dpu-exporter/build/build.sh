@@ -66,6 +66,7 @@ function mv_file() {
   cp "${TOP_DIR}"/build/dpu-exporter.yaml "${TOP_DIR}"/output/dpu-exporter-"${build_version}".yaml
   cp "${TOP_DIR}"/build/config.json "${TOP_DIR}"/output/
   sed -i "s/dpu-exporter:.*/dpu-exporter:${build_version}/" "${TOP_DIR}"/output/dpu-exporter-"${build_version}".yaml
+  cp "${TOP_DIR}"/build/agreement.txt "${TOP_DIR}"/output/
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME}.openeuler "${TOP_DIR}"/output
   chmod 400 "${TOP_DIR}"/output/*
