@@ -120,13 +120,13 @@ rdma-app   1/1     Running   0          10s   10.244.1.*   compute-node-1
 
 ### 独占模式下业务Pod的资源配置示例
 
-```yaml
+<pre codetype="yaml">
 apiVersion: v1
 kind: Pod
 metadata:
    name: ub-rdma-test-pod
    annotations:
-      k8s.v1.cni.cncf.io/networks: roce-network, roce-network
+      <strong>k8s.v1.cni.cncf.io/networks: roce-network, roce-network</strong>
 spec:
    restartPolicy: OnFailure
    containers:
@@ -139,17 +139,17 @@ spec:
         resources:
            requests:
               huawei.com/npu: 2
-              huawei.com/ub_rdma: 2
+              <strong>huawei.com/ub_rdma: 2</strong>
            limits:
               huawei.com/npu: 2
-              huawei.com/ub_rdma: 2
+              <strong>huawei.com/ub_rdma: 2</strong>
         command:
            - sh
            - -c
            - |
               ls -l /dev/infiniband /sys/class/infiniband
               sleep 1000000
-```
+</pre>
 
 > [!NOTE]
 >
