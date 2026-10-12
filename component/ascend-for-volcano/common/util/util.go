@@ -437,8 +437,7 @@ func IsNPUTask(nT *api.TaskInfo) bool {
 		return false
 	}
 	for k := range nT.Resreq.ScalarResources {
-		// must contain "huawei.com/"
-		if strings.Contains(string(k), HwPreName) {
+		if IsNPUResource(k) || IsStaticVnpuResource(k) {
 			return true
 		}
 	}
@@ -447,7 +446,13 @@ func IsNPUTask(nT *api.TaskInfo) bool {
 
 // IsNPUResource check the resource is npu or not
 func IsNPUResource(res v1.ResourceName) bool {
-	return res == NPUCardName || res == NPU310CardName || res == NPU910CardName || res == NPU310PCardName
+	return res == NPUCardName || res == NPU310CardName || res == NPU910CardName || res == NPU310PCardName || res == AscendNPUCore
+}
+
+// IsStaticVnpuResource reports whether res is a static segmentation vNPU resource
+// name, e.g. huawei.com/Ascend910-2c.
+func IsStaticVnpuResource(res v1.ResourceName) bool {
+	return ascend910VirtualDevNameReg.MatchString(string(res)) || ascend310VirtualDevNameReg.MatchString(string(res))
 }
 
 // IsDRATask reports whether the task requests devices through Kubernetes Dynamic Resource Allocation.

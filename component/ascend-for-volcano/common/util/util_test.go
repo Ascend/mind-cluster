@@ -1006,6 +1006,15 @@ func TestIsNPUTask(t *testing.T) {
 			taskInfo: nil,
 			want:     false,
 		},
+		{
+			name: "04 test func IsNPUTask, static vNPU resource available",
+			taskInfo: &api.TaskInfo{
+				Resreq: &api.Resource{ScalarResources: map[v1.ResourceName]float64{
+					v1.ResourceName(HwPreName + Ascend910 + "-2c"): 1000,
+				}},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1559,16 +1568,37 @@ func TestIsNPUResource(t *testing.T) {
 		{"06 virtual device Ascend910-2c is not an NPU resource", v1.ResourceName(HwPreName + Ascend910 + "-2c"), false},
 		{"07 virtual device Ascend910-16c is not an NPU resource", v1.ResourceName(HwPreName + Ascend910 + "-16c"), false},
 		{"08 virtual device Ascend310P-1c is not an NPU resource", v1.ResourceName(HwPreName + Ascend310P + "-1c"), false},
-		{"09 sub-resource npu-core is not a card", v1.ResourceName(NPUCardName + "-core"), false},
+		{"09 dynamic vNPU core resource is an NPU resource", AscendNPUCore, true},
 		{"10 unhealthy suffix is not a request name", v1.ResourceName(NPU910CardName + "-Unhealthy"), false},
 		{"11 network-unhealthy suffix is not a request name", v1.ResourceName(NPUCardName + "-NetworkUnhealthy"), false},
 		{"12 unrelated huawei key is not a request name", v1.ResourceName(HwPreName + "AscendReal"), false},
 		{"13 dirty card-name prefix is not a request name", v1.ResourceName(NPU310PCardNamePre), false},
+		{"14 rdma resource with huawei prefix is not an NPU resource", v1.ResourceName(HwPreName + "ub_rdma"), false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IsNPUResource(tt.res); got != tt.want {
 				t.Errorf("IsNPUResource(%q) = %v, want %v", tt.res, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsStaticVnpuResource(t *testing.T) {
+	tests := []struct {
+		name string
+		res  v1.ResourceName
+		want bool
+	}{
+		{"01 static 910 vNPU resource", v1.ResourceName(HwPreName + Ascend910 + "-2c"), true},
+		{"02 static 310P vNPU resource", v1.ResourceName(HwPreName + Ascend310P + "-1c"), true},
+		{"03 unhealthy annotation key is not static vNPU", v1.ResourceName(HwPreName + Ascend910 + "-Unhealthy"), false},
+		{"04 rdma resource is not static vNPU", v1.ResourceName(HwPreName + "ub_rdma"), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsStaticVnpuResource(tt.res); got != tt.want {
+				t.Errorf("IsStaticVnpuResource(%q) = %v, want %v", tt.res, got, tt.want)
 			}
 		})
 	}
