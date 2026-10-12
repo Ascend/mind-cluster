@@ -69,7 +69,7 @@
 
 **系统配置**
 
-使用如下命令检查系统iptables后端类型是否为legacy，
+使用如下命令检查系统iptables后端类型是否为legacy：
 
 ```shell
 iptables-restore --version

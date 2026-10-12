@@ -176,25 +176,6 @@ DPU Exporter
 2. 特性使用指导请参见[多级调度](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md)章节进行操作。
 <!-- end id8 -->
 
-### 芯片故障恢复<a name="ZH-CN_TOPIC_0000002479226952"></a>
-
-**功能特点<a name="section113779818313"></a>**
-
-集群调度组件管理的NPU资源出现故障后，将对故障资源（对应NPU）进行热复位操作，使NPU恢复健康。
-
-**所需组件<a name="section143231032154719"></a>**
-
-- Volcano
-- Ascend Device Plugin
-- Ascend Docker Runtime
-- ClusterD
-- NodeD
-
-**使用说明<a name="section74221327111220"></a>**
-
-1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
-2. 特性使用指导请参见[芯片故障恢复](../04_usage/05_fault_recovery/00_chip_fault_recovery.md)章节进行操作。
-
 ### 重调度<a name="ZH-CN_TOPIC_0000002511346875"></a>
 
 **功能特点<a name="section119259203315"></a>**
@@ -216,6 +197,21 @@ DPU Exporter
 1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[重调度](../04_usage/03_basic_scheduling/05_rescheduling.md)章节进行操作。
 <!-- end id7 -->
+
+## 芯片故障恢复<a name="ZH-CN_TOPIC_0000002479226952"></a>
+
+**功能特点<a name="section113779818313"></a>**
+
+集群调度组件管理的NPU资源出现故障后，将对故障资源（对应NPU）进行热复位操作，使NPU恢复健康。
+
+**所需组件<a name="section143231032154719"></a>**
+
+- Ascend Device Plugin
+
+**使用说明<a name="section74221327111220"></a>**
+
+1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
+2. 特性使用指导请参见[芯片故障恢复](../04_usage/05_fault_recovery/00_chip_fault_recovery.md)章节进行操作。
 
 <!-- npu="950,A3,910b" id9 -->
 ## 断点续训<a name="ZH-CN_TOPIC_0000002511346867"></a>
