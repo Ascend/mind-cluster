@@ -42,10 +42,10 @@ update_version_number
 if [ "${servicename}" = "ascend-for-volcano" ]; then
     cp -rf $GOPATH/${reponame}/.gitcode/workflows/config/service_config.ini $GOPATH/src/volcano.sh/volcano/
     ls -la $GOPATH/src/volcano.sh/volcano/
-    echo "********$2*********"
+    echo "********$4*********"
     cd $GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/build
     dos2unix *.sh && chmod +x *
-    ./build.sh $2
+    ./build.sh $4
 elif [ "${servicename}" = "mindio" ]; then
     cp -rf $GOPATH/${reponame}/.gitcode/workflows/config/service_config.ini $GOPATH/mind-cluster/component/${servicename}/${targetname}/
     ls -la $GOPATH/

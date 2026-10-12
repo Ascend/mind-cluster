@@ -6,8 +6,8 @@ on:
     keyword: '^compile$'
   pull_request_comment:
     types: [created]
-    branches: [ 'master', '26.2.0', '26.1.0', '26.0.0' ]
-    comments: [ 'compile' ]
+    branches: [ 'master', 'release_v26.2.0', 'branch_v26.1.0', 'branch_v26.0.0' ]
+    comments: [ '^compile$' ]
   workflow_dispatch:
     inputs:
       print_tags:
