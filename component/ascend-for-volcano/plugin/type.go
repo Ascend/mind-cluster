@@ -18,7 +18,6 @@ limitations under the License.
 package plugin
 
 import (
-	"regexp"
 	"sync"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -93,8 +92,6 @@ const (
 )
 
 var (
-	ascend910VirtualDevNameReg = regexp.MustCompile(util.Ascend910 + "-([2-6]|8|10|12|16)c")
-	ascend310VirtualDevNameReg = regexp.MustCompile(util.Ascend310P + "-(1|2|4)c")
 	// add annotation from pod, if new anno key is needed add by pod, add key in this slice
 	annotationKeysForPodGroup = []string{
 		util.SuperPodAnnoKey,
