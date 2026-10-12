@@ -396,7 +396,7 @@ root（default拓扑树，groupid=0，共8个节点）
 
 本章节指导用户配置多级调度特性的任务YAML。以pytorch_multinodes_acjob_super_pod.yaml为例，在Atlas 9000 A3 SuperPoD集群算力系统上创建多级调度训练任务，修改示例如下。
 
-```yaml
+<pre codetype="yaml">
 apiVersion: mindxdl.gitee.com/v1
 kind: AscendJob
 metadata:
@@ -406,8 +406,8 @@ metadata:
     ring-controller.atlas: ascend-{xxx}b  # 标识产品类型
     podgroup-sched-enable: "true"  # 仅在集群使用openFuyao定制Kubernetes和volcano-ext组件场景下配置。取值为字符串"true"时，表示开启批量调度功能；取值为其他字符串时，表示批量调度功能不生效，使用普通调度；若不配置该参数，表示批量调度功能不生效，使用普通调度。
   annotations:
-    huawei.com/schedule_policy: multilevel # 配置调度策略为多级调度策略
-    huawei.com/affinity-config: level1=2,level2=4 # 按照任务实际需求配置不同层级的网络组大小
+    <strong>huawei.com/schedule_policy: multilevel # 配置调度策略为多级调度策略</strong>
+    <strong>huawei.com/affinity-config: level1=2,level2=4 # 按照任务实际需求配置不同层级的网络组大小</strong>
 spec:
   schedulerName: volcano  # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
   runPolicy:
@@ -476,7 +476,7 @@ spec:
                 huawei.com/Ascend910: 8   # 任务申请的芯片数量，多级调度任务必须和节点最大npu数量一致
               requests:
                 huawei.com/Ascend910: 8   # 与limits取值一致
-```
+</pre>
 
 若需要配置CPU、Memory资源、修改训练脚本、代码的挂载路径，请参见整卡调度中[配置YAML](./03_full_npu_scheduling.md#配置yaml)中对应的步骤。
 
