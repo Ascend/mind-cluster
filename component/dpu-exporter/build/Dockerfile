@@ -9,6 +9,7 @@ RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /usr/sbin/nologin HwHiAiUser &&\
 
 COPY ./dpu-exporter /usr/local/bin/
 COPY ./config.json  /etc/dpu-exporter/config.json
+COPY ./agreement.txt /usr/local/
 
 RUN chown root:root /usr/local/bin/dpu-exporter  &&\
     chmod 750 -R /home/HwHiAiUser &&\
@@ -16,6 +17,7 @@ RUN chown root:root /usr/local/bin/dpu-exporter  &&\
     chmod 500 /usr/local/bin/dpu-exporter &&\
     mkdir -p /etc/dpu-exporter &&\
     chmod 440 /etc/dpu-exporter/config.json &&\
+    chmod 440 /usr/local/agreement.txt &&\
     echo 'umask 027' >> /etc/profile && \
     echo 'source /etc/profile' >> ~/.bashrc
 
