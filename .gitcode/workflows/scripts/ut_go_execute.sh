@@ -66,7 +66,7 @@ if grep -q "component/ascend-docker-runtime" "${ATOMGIT_WORKSPACE}/$file_path"; 
 fi
 if grep -q "component/ascend-for-volcano" "${ATOMGIT_WORKSPACE}/$file_path"; then
     cd ${ATOMGIT_WORKSPACE}
-    mkdir -p src/volcano.sh && cp -rf /opt/buildtools/volcano_opensource/volcano_1.7/volcano src/volcano.sh/
+    mkdir -p src/volcano.sh && cp -rf /opt/buildtools/volcano_opensource/volcano_1.9/volcano src/volcano.sh/
     ls -la ./ &&  cp -rf mind-cluster/component/ascend-for-volcano src/volcano.sh/volcano/pkg/scheduler/plugins/
     cd ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ascend-for-volcano ascend-volcano-plugin
     export GOPATH=${ATOMGIT_WORKSPACE}
