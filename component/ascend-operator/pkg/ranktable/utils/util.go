@@ -11,7 +11,6 @@ import (
 	"io/fs"
 	"os"
 	"path"
-	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 
@@ -101,7 +100,7 @@ func podUseNpu(pod *corev1.Pod) bool {
 			if !ok {
 				continue
 			}
-			if strings.Contains(string(resName), api.ResourceNamePrefix) && resValNum > 0 {
+			if utils.IsNPUResourceName(string(resName)) && resValNum > 0 {
 				return true
 			}
 		}

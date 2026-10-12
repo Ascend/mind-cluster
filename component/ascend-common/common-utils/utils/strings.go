@@ -18,6 +18,7 @@ package utils
 import (
 	"crypto/sha256"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -107,4 +108,37 @@ func MaskDevType(devType string) string {
 		return masked
 	}
 	return devType
+}
+
+// npuResourceNameSet fixed NPU resource names, including whole-card and
+// dynamic segmentation (npu-core) resources, excluding other resources
+// with the same prefix (such as DPU and UB NIC resources)
+var npuResourceNameSet = map[string]struct{}{
+	api.HuaweiNPU:        {},
+	api.HuaweiNPUCore:    {},
+	api.HuaweiAscend910:  {},
+	api.HuaweiAscend310:  {},
+	api.HuaweiAscend310P: {},
+}
+
+// staticCutResourceRegexp matches static segmentation (vNPU) resource names
+// with valid hardware tiers, like Ascend910-2c, Ascend310P-1c
+var staticCutResourceRegexp = regexp.MustCompile(`^(Ascend910-([2-6]|8|10|12|16)|Ascend310P-(1|2|4))c$`)
+
+// IsNPUResourceName check whether the resource name is an NPU resource,
+// including fixed names and static segmentation names like huawei.com/Ascend910-2c
+func IsNPUResourceName(name string) bool {
+	if _, ok := npuResourceNameSet[name]; ok {
+		return true
+	}
+	return IsStaticCutResourceName(name)
+}
+
+// IsStaticCutResourceName check whether the resource name is a static
+// segmentation (vNPU) resource name, like huawei.com/Ascend910-2c
+func IsStaticCutResourceName(name string) bool {
+	if !strings.HasPrefix(name, api.ResourceNamePrefix) {
+		return false
+	}
+	return staticCutResourceRegexp.MatchString(strings.TrimPrefix(name, api.ResourceNamePrefix))
 }

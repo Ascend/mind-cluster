@@ -29,6 +29,8 @@ const (
 
 	// HuaweiNPU huawei npu resource name
 	HuaweiNPU = "huawei.com/npu"
+	// HuaweiNPUCore huawei npu-core resource name for dynamic segmentation
+	HuaweiNPUCore = "huawei.com/npu-core"
 	// NPULowerCase npu
 	NPULowerCase = "npu"
 	// AscendMinuxPrefix name prefix of ascend chip

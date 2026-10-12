@@ -100,6 +100,14 @@ func TestPodHasAllocated(t *testing.T) {
 			res := PodHasAllocated(pod)
 			convey.So(res, convey.ShouldEqual, true)
 		})
+		convey.Convey("05-pod with only dpu request should return true", func() {
+			pod.Annotations = nil
+			pod.Spec.Containers[0].Resources.Requests = map[v1.ResourceName]resource.Quantity{
+				"huawei.com/dpu.resource.name": resource.MustParse("2"),
+			}
+			res := PodHasAllocated(pod)
+			convey.So(res, convey.ShouldEqual, true)
+		})
 	})
 }
 
