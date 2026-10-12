@@ -1295,7 +1295,7 @@ func getPresetVirtualDeviceConfig(conf map[string]string) bool {
 	segmentEnable, ok := conf[util.SegmentEnable]
 	if !ok {
 		klog.V(util.LogWarningLev).Info("checkVNPUSegmentEnable doesn't exist presetVirtualDevice.")
-		return false
+		return true
 	}
 	return segmentEnable == "true"
 }
