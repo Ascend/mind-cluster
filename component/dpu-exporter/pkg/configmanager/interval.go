@@ -15,8 +15,11 @@
 package configmanager
 
 import (
+	"fmt"
 	"sync"
 	"time"
+
+	"huawei.com/dpu-exporter/utils/logger"
 )
 
 // collectorIntervalMap stores per-collector intervals, keyed by cache key (collector struct name).
@@ -28,8 +31,20 @@ const (
 	CollectOnceInterval = -1 * time.Second
 	// DisabledInterval sentinel: collector is disabled
 	DisabledInterval = -2 * time.Second
-	// DefaultGroupInterval is the default interval when not configured
+	// DefaultGroupInterval is the default interval when not configured or invalid
 	DefaultGroupInterval = 60 * time.Second
+
+	// MinIntervalSeconds is the minimum valid collection interval in seconds
+	MinIntervalSeconds = 20
+	// MaxIntervalSeconds is the maximum valid collection interval in seconds
+	MaxIntervalSeconds = 3600
+
+	// DefaultHinicadm5IntervalSeconds is the default hinicadm5 collection interval in seconds
+	DefaultHinicadm5IntervalSeconds = 40
+	// DefaultSysfsIntervalSeconds is the default sysfs collection interval in seconds
+	DefaultSysfsIntervalSeconds = 20
+	// DefaultDpuListRefreshIntervalSeconds is the default DPU list refresh interval in seconds
+	DefaultDpuListRefreshIntervalSeconds = 60
 
 	// CacheKeyHinicadm5 is the cache key for hinicadm5 collectors
 	CacheKeyHinicadm5 = "Hinicadm5Collector"
@@ -38,6 +53,28 @@ const (
 	// CacheKeyDpuListRefresh is the cache key for DPU list refresh
 	CacheKeyDpuListRefresh = "DpuListRefresh"
 )
+
+// ValidateInterval validates an interval value (in seconds) and returns
+// the corresponding time.Duration.
+//
+// Valid values:
+//   - -1: CollectOnceInterval (collect only once)
+//   - 20~3600: normal collection interval in seconds
+//
+// Invalid values return an error. The caller should use the default
+// interval when validation fails.
+func ValidateInterval(seconds int) (time.Duration, error) {
+	switch {
+	case seconds == -1:
+		return CollectOnceInterval, nil
+	case seconds < MinIntervalSeconds || seconds > MaxIntervalSeconds:
+		return 0, fmt.Errorf(
+			"interval %d is invalid, valid values: -1 or [%d, %d]",
+			seconds, MinIntervalSeconds, MaxIntervalSeconds)
+	default:
+		return time.Duration(seconds) * time.Second, nil
+	}
+}
 
 // SetCollectorInterval stores a collector's interval in the global map
 func SetCollectorInterval(cacheKey string, interval time.Duration) {
@@ -86,14 +123,22 @@ type IntervalConfig struct {
 	DpuListRefreshInterval int
 }
 
-// Apply writes the interval config into the global collectorIntervalMap
+// Apply writes the interval config into the global collectorIntervalMap.
+// Invalid values are replaced with each collector's own default and a warning is logged.
 func (c *IntervalConfig) Apply() {
-	SetCollectorInterval(CacheKeyHinicadm5,
-		time.Duration(c.Hinicadm5CollectorInterval)*time.Second)
-	SetCollectorInterval(CacheKeySysfs,
-		time.Duration(c.SysfsCollectorInterval)*time.Second)
-	SetCollectorInterval(CacheKeyDpuListRefresh,
-		time.Duration(c.DpuListRefreshInterval)*time.Second)
+	applyValidatedInterval(CacheKeyHinicadm5, c.Hinicadm5CollectorInterval, DefaultHinicadm5IntervalSeconds)
+	applyValidatedInterval(CacheKeySysfs, c.SysfsCollectorInterval, DefaultSysfsIntervalSeconds)
+	applyValidatedInterval(CacheKeyDpuListRefresh, c.DpuListRefreshInterval, DefaultDpuListRefreshIntervalSeconds)
+}
+
+func applyValidatedInterval(cacheKey string, seconds int, defaultSeconds int) {
+	d, err := ValidateInterval(seconds)
+	if err != nil {
+		logger.Warnf("invalid interval for %s: %v, using default %ds", cacheKey, err, defaultSeconds)
+		SetCollectorInterval(cacheKey, time.Duration(defaultSeconds)*time.Second)
+		return
+	}
+	SetCollectorInterval(cacheKey, d)
 }
 
 // GetDpuListRefreshInterval returns the DPU list refresh interval
