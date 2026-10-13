@@ -69,9 +69,9 @@ DPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
 
     |参数|说明|
     |---|---|
-    |hinicadm5CollectorInterval|全局指标（hinicadm5 counter）采集周期，单位为秒。取值范围为1~86400，默认值40。|
-    |sysfsCollectorInterval|Interface级指标（sysfs文件接口）采集周期，单位为秒。取值范围为1~86400，默认值20。|
-    |dpuListRefreshInterval|DPU设备列表刷新周期，单位为秒。取值范围为1~86400，默认值60。|
+    |hinicadm5CollectorInterval|全局指标（hinicadm5 counter）采集周期，单位为秒。取值范围为-1、20~3600，默认值40。<ul><li>-1：只采集一次，不再重复采集。</li><li>20~3600：按指定周期采集。配置为其他值时使用默认值。</li></ul>|
+    |sysfsCollectorInterval|Interface级指标（sysfs文件接口）采集周期，单位为秒。取值范围为-1、20~3600，默认值20。<ul><li>-1：只采集一次，不再重复采集。</li><li>20~3600：按指定周期采集。配置为其他值时使用默认值。</li></ul>|
+    |dpuListRefreshInterval|DPU设备列表刷新周期，单位为秒。取值范围为-1、20~3600，默认值60。<ul><li>-1：启动时刷新一次，不再重复刷新。</li><li>20~3600：按指定周期刷新。配置为其他值时使用默认值。</li></ul>|
     |metricWhiteList|自定义指标白名单，支持前缀匹配（以`*`结尾）。为空时使用[默认白名单](../../../06_api/16_dpu_exporter.md#默认白名单)。|
 
     配置文件挂载方式有如下两种，修改配置的方法取决于所选择的挂载方式，具体的配置方法请参考[动态配置加载说明](#动态配置加载说明)章节。
@@ -205,9 +205,9 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 
         |参数|说明|
         |---|---|
-        |hinicadm5CollectorInterval|全局指标（hinicadm5 counter）采集周期，单位为秒。取值范围为1~86400。默认值40。|
-        |sysfsCollectorInterval|Interface级指标（sysfs文件接口）采集周期，单位为秒。取值范围为1~86400。默认值20。|
-        |dpuListRefreshInterval|DPU设备列表刷新周期，单位为秒。取值范围为1~86400。默认值60。|
+        |hinicadm5CollectorInterval|全局指标（hinicadm5 counter）采集周期，单位为秒。取值范围为-1、20~3600。默认值40。<ul><li>-1：只采集一次，不再重复采集。</li><li>20~3600：按指定周期采集。配置为其他值时使用默认值。</li></ul>|
+        |sysfsCollectorInterval|Interface级指标（sysfs文件接口）采集周期，单位为秒。取值范围为-1、20~3600。默认值20。<ul><li>-1：只采集一次，不再重复采集。</li><li>20~3600：按指定周期采集。配置为其他值时使用默认值。</li></ul>|
+        |dpuListRefreshInterval|DPU设备列表刷新周期，单位为秒。取值范围为-1、20~3600。默认值60。<ul><li>-1：启动时刷新一次，不再重复刷新。</li><li>20~3600：按指定周期刷新。配置为其他值时使用默认值。</li></ul>|
         |metricWhiteList|自定义指标白名单，支持前缀匹配（以`*`结尾）。为空时使用[默认白名单](../../../06_api/16_dpu_exporter.md#默认白名单)。|
 
     4. <a name="li18459954104719"></a>按"Esc"键，输入:wq!保存并退出。
