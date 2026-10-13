@@ -1,6 +1,6 @@
 # 集群调度组件 Ascend Dynamic Resource Allocation
 
-> English | 中文
+> [English](./OVERVIEW.md) | 中文
 
 ## 快速参考
 
@@ -66,7 +66,9 @@ Ascend Dynamic Resource Allocation（Ascend DRA）是 MindCluster 集群调度�
 | `版本`   | `v26.2.0`     | Ascend DRA 版本号 |
 | `操作系统` | `ubuntu22.04` | Ascend DRA 镜像操作系统                      |
 
-### Ascend Dynamic Resource Allocation 26.2.0
+### Ascend Dynamic Resource Allocation 最新版本 26.2.0
+
+如下所示是Ascend DRA最新发布的26.2.0版本的所有镜像，历史版本所有Tag请参考[supported_tags.md](./supported_tags.md)
 
 | Tag                      | Dockerfile                                                                                                                                          | 镜像内容                                                |
 |--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|
