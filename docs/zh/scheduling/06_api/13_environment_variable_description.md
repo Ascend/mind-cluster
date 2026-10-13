@@ -403,11 +403,11 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 |TASKD_LOG_STDOUT|指定日志是否需要打印。|bool|取值为True或False。不配置默认为True。|
 |ENABLE_RESTART_FAULT_PROCESS|TaskD组件开启进程级别原地恢复功能的开关。|字符串|取值为“on”或“其他值”。<ul><li>on：开启本功能</li><li>其他值：关闭本功能</li></ul>|
 |RESTART_FAULT_PROCESS_TYPE|TaskD通知MindIO重启故障进程的类型。|字符串|取值为“worker”或“pod”。<ul><li>worker：不退出Pod，只重启故障进程</li><li>pod：重启Pod</li></ul>|
-|TASKD_PROCESS_ENABLE|TaskD组件开启进程级别重调度、进程级在线恢复、进程级别原地恢复和弹性训练功能的开关。|字符串|取值为“on”或“off”。<ul><li>on：开启本功能</li><li>off：关闭本功能</li></ul>|
+|TASKD_PROCESS_ENABLE|TaskD组件开启进程级别重调度、进程级在线恢复、进程级别原地恢复和弹性训练功能的开关。|字符串|取值为“on”或“off”。<ul><li>on：开启本功能</li><li>off：关闭本功能</li></ul>默认值为“on”。|
 |LOCAL_PROXY_ENABLE|是否开启本地代理（安全加固需要）。|字符串|取值为“on”或“off”。<ul><li>on：开启本功能</li><li>off：关闭本功能</li></ul>默认值为“off”，通信安全加固场景需要设置为“on”。|
 |HCCL_ASYNC_ERROR_HANDLING|是否开启watchdog功能。|字符串|取值如下：<ul><li>0：表示关闭故障检测和进程退出功能。</li><li>1：表示开启故障检测和进程退出功能。</li><li>2：表示仅开启故障检测功能。</li></ul>默认值为1。|
-|TASKD_PROCESS_INTERVAL|设置TaskD Manager主流程处理间隔。|字符串|取值范围为100~1000，单位为毫秒。|
-|TASKD_REPORT_FAULT_TIMEOUT|设置TaskD Agent上报业务故障给TaskD Manager的超时时间。若超时后，故障仍然存在，则TaskD Agent退出。|字符串|取值范围为300~600，单位为秒。|
+|TASKD_PROCESS_INTERVAL|设置TaskD Manager主流程处理间隔。|字符串|取值范围为100~1000，单位为毫秒。默认值为100。|
+|TASKD_REPORT_FAULT_TIMEOUT|设置TaskD Agent上报业务故障给TaskD Manager的超时时间。若超时后，故障仍然存在，则TaskD Agent退出。|字符串|取值范围为300~600，单位为秒。默认值为-1，表示不设置超时时间。|
 <!-- end id2 -->
 
 ## NodeD环境变量说明<a name="section10131935141216"></a>
