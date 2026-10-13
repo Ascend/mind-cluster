@@ -39,8 +39,8 @@ func init() {
 }
 
 // testConfigJSON contains known interval values to verify config application.
-const testConfigJSON = `{"hinicadm5CollectorInterval": 7, "sysfsCollectorInterval": 8,
-	"dpuListRefreshInterval": 9, "metricWhiteList": []}`
+const testConfigJSON = `{"hinicadm5CollectorInterval": 25, "sysfsCollectorInterval": 26,
+	"dpuListRefreshInterval": 27, "metricWhiteList": []}`
 
 func loadTestConfig(t *testing.T) {
 	t.Helper()
@@ -76,14 +76,14 @@ func TestInitChains(t *testing.T) {
 	checkChains(t)
 
 	// intervals from the config must be applied to the global interval map
-	if got := configmanager.GetCollectorInterval(configmanager.CacheKeyHinicadm5, 0); got != 7*time.Second {
-		t.Errorf("hinicadm5 interval = %v, want 7s", got)
+	if got := configmanager.GetCollectorInterval(configmanager.CacheKeyHinicadm5, 0); got != 25*time.Second {
+		t.Errorf("hinicadm5 interval = %v, want 25s", got)
 	}
-	if got := configmanager.GetCollectorInterval(configmanager.CacheKeySysfs, 0); got != 8*time.Second {
-		t.Errorf("sysfs interval = %v, want 8s", got)
+	if got := configmanager.GetCollectorInterval(configmanager.CacheKeySysfs, 0); got != 26*time.Second {
+		t.Errorf("sysfs interval = %v, want 26s", got)
 	}
-	if got := configmanager.GetDpuListRefreshInterval(0); got != 9*time.Second {
-		t.Errorf("dpu list refresh interval = %v, want 9s", got)
+	if got := configmanager.GetDpuListRefreshInterval(0); got != 27*time.Second {
+		t.Errorf("dpu list refresh interval = %v, want 27s", got)
 	}
 }
 

@@ -37,7 +37,7 @@ func TestLoadConfigFromBytes(t *testing.T) {
 	cfg := &Config{
 		IntervalConfig: IntervalConfig{
 			Hinicadm5CollectorInterval: 30,
-			SysfsCollectorInterval:     15,
+			SysfsCollectorInterval:     25,
 			DpuListRefreshInterval:     60,
 		},
 		MetricWhiteList: []string{"roce_err_ctr_*"},
@@ -108,7 +108,7 @@ func TestDoReloadConfig(t *testing.T) {
 	writeCfg := func(interval int) {
 		cfg := &Config{IntervalConfig: IntervalConfig{
 			Hinicadm5CollectorInterval: interval,
-			SysfsCollectorInterval:     15,
+			SysfsCollectorInterval:     25,
 			DpuListRefreshInterval:     60,
 		}}
 		data, err := json.Marshal(cfg)
@@ -301,8 +301,9 @@ func TestLoadConfig_ValidFile(t *testing.T) {
 
 func TestDefaultConfig(t *testing.T) {
 	cfg := defaultConfig()
-	if cfg.Hinicadm5CollectorInterval != 40 {
-		t.Errorf("default hinicadm5 interval = %d, want 40", cfg.Hinicadm5CollectorInterval)
+	if cfg.Hinicadm5CollectorInterval != DefaultHinicadm5IntervalSeconds {
+		t.Errorf("default hinicadm5 interval = %d, want %d",
+			cfg.Hinicadm5CollectorInterval, DefaultHinicadm5IntervalSeconds)
 	}
 }
 
