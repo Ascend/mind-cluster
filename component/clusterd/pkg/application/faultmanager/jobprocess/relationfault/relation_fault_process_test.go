@@ -4,6 +4,7 @@
 package relationfault
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -675,6 +676,42 @@ func testValidConfig() {
 
 		result := validateFaultDurationConfig(faultConfig)
 		convey.So(result, convey.ShouldBeTrue)
+	})
+}
+
+func TestAppendFaultDurationStrategies(t *testing.T) {
+	convey.Convey("Test appendFaultDurationStrategies", t, func() {
+		convey.Convey("should append valid strategies and skip invalid ones", func() {
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			patches.ApplyGlobalVar(&faultDurationStrategies, make([]constant.FaultDuration, 0))
+			patches.ApplyFunc(hwlog.RunLog.Error, func(args ...interface{}) {})
+
+			strategies := []constant.FaultDuration{
+				{FaultCode: "fault1", TimeOutInterval: 100},
+				{FaultCode: "", TimeOutInterval: 100},
+				{FaultCode: "fault2", TimeOutInterval: -1},
+				{FaultCode: "fault3", TimeOutInterval: 200},
+			}
+			validAndAddFaultDurationStrategies(strategies)
+
+			convey.So(len(faultDurationStrategies), convey.ShouldEqual, 2)
+			convey.So(faultDurationStrategies[0].FaultCode, convey.ShouldEqual, "fault1")
+			convey.So(faultDurationStrategies[1].FaultCode, convey.ShouldEqual, "fault3")
+		})
+	})
+}
+
+func TestDefaultFaultDurationConfigConsistentWithFile(t *testing.T) {
+	convey.Convey("Test defaultFaultDurationConfig consistency with faultDuration.json", t, func() {
+		durationFilePath := "../../../../../build/faultDuration.json"
+		fileBytes := LoadConfigFromFile(durationFilePath)
+		convey.So(fileBytes, convey.ShouldNotBeNil)
+
+		var fileConfig []constant.FaultDuration
+		err := json.Unmarshal(fileBytes, &fileConfig)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(fileConfig, convey.ShouldResemble, defaultFaultDurationConfig)
 	})
 }
 

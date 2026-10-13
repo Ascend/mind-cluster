@@ -20,6 +20,12 @@ import (
 	"clusterd/pkg/interface/kube"
 )
 
+const (
+	deviceFaultType        = "faultDevice"
+	switchFaultType        = "faultSwitch"
+	defaultTimeOutInterval = 300
+)
+
 // RelationProcessor network relation fault process
 var RelationProcessor *relationFaultProcessor
 var loadConfigTag = sync.Once{}
@@ -39,7 +45,9 @@ func loadConfig() {
 		initFaultDuration(fileBytes)
 		initFaultCodeTimeOutMap()
 	} else {
-		hwlog.RunLog.Errorf("load config from file %s failed", constant.FaultDurationPath)
+		hwlog.RunLog.Errorf("load config from file %s failed, use default config", constant.FaultDurationPath)
+		validAndAddFaultDurationStrategies(defaultFaultDurationConfig)
+		initFaultCodeTimeOutMap()
 	}
 }
 
@@ -133,6 +141,16 @@ func (processor *relationFaultProcessor) GetRelationFaultInfo(jobId, nodeName st
 
 var relationFaultStrategies = make([]constant.RelationFaultStrategy, 0)
 var faultDurationStrategies = make([]constant.FaultDuration, 0)
+
+// defaultFaultDurationConfig is the fallback configuration for faultDuration.json.
+// It is used when loading the deployed faultDuration.json fails at runtime,
+// ensuring the default fault codes keep their time out interval.
+// Note: FaultCode, FaultType and TimeOutInterval must stay consistent with build/faultDuration.json.
+// If the default fault codes in build/faultDuration.json change, keep this in sync.
+var defaultFaultDurationConfig = []constant.FaultDuration{
+	{FaultCode: constant.LinkDownFaultCode, FaultType: deviceFaultType, TimeOutInterval: defaultTimeOutInterval},
+	{FaultCode: constant.SwitchLinkDownFaultCode, FaultType: switchFaultType, TimeOutInterval: defaultTimeOutInterval},
+}
 var relationFaultTypeMap = make(sets.String)
 var triggerFaultMap = make(sets.String)
 var faultCodeTimeOutMap = make(map[string]int64)
@@ -187,7 +205,11 @@ func initFaultDuration(fileBytes []byte) {
 		fmt.Printf("fault duration fault config is invalid")
 		return
 	}
-	for _, faultConfig := range tmpFaultDurationStrategies {
+	validAndAddFaultDurationStrategies(tmpFaultDurationStrategies)
+}
+
+func validAndAddFaultDurationStrategies(strategies []constant.FaultDuration) {
+	for _, faultConfig := range strategies {
 		if !validateFaultDurationConfig(faultConfig) {
 			continue
 		}
@@ -353,7 +375,7 @@ func (fJob *FaultJob) clearProcessedAndTimeOutFault() {
 			continue
 		}
 		if preStopTime-fault.FaultTime >= fault.DealMaxTime*constant.Kilo {
-			hwlog.RunLog.Infof("fault code %s is time out, process as default strategy", fault.FaultUid)
+			hwlog.RunLog.Infof("fault code %s is time out, process as default strategy, deal max time: %v", fault.FaultUid, fault.DealMaxTime)
 			fJob.addFaultStrategyForTimeOutCode(fault)
 			continue
 		}
@@ -417,7 +439,7 @@ func (fJob *FaultJob) isMeetTMOutTriggerFault(fault *constant.FaultInfo) bool {
 		if tmOutTriggerFault.FaultTime >= fault.FaultTime &&
 			tmOutTriggerFault.FaultTime-fault.FaultTime <= fault.DealMaxTime*constant.Kilo {
 			isMeet = true
-			hwlog.RunLog.Infof("fault <%s> meet <%s> when time out exec", fault.FaultUid, tmOutTriggerFault.FaultUid)
+			hwlog.RunLog.Infof("fault <%s> meet <%s> when time out exec, deal max time: %v", fault.FaultUid, tmOutTriggerFault.FaultUid, fault.DealMaxTime)
 			continue
 		}
 		tmpTMOutTriggerFault = append(tmpTMOutTriggerFault, tmOutTriggerFault)
