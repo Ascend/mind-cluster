@@ -436,6 +436,7 @@ hccn_tool工具接口调整为基于DCMI接口实现，优化调度耗时。
 
 - Ascend Docker Runtime新增支持CRI-O。
 - Ascend Device Plugin新增上报设备NUMA信息。
+- Ascend Device Plugin移除启动参数linkdownTimeout。
 - NPU Exporter新增上报可用芯片数量。
 - hccn_tool工具接口调整为基于DCMI接口实现，优化调度耗时。
 - 未申请NPU的Pod无需配置skip标识即可正常调度（调度行为调整）。
@@ -460,6 +461,7 @@ hccn_tool工具接口调整为基于DCMI接口实现，优化调度耗时。
 ### 升级后对现行系统的影响
 
 Infer Operator组件从26.1.0之前版本升级到26.1.0及之后版本时，需删除日志目录重新创建为root权限或修改日志目录及日志文件的权限为root。
+Device Plugin组件从26.1.1之前版本升级到26.2.0及之后版本时，需删除linkdownTimeout启动参数。
 
 ## 版本配套文档
 
