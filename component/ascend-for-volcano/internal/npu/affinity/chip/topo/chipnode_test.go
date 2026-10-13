@@ -37,7 +37,7 @@ func initTopo(t *testing.T, raw string, faulty, netUnh map[int]struct{}, owners 
 	if root == nil {
 		t.Fatalf("ParseTopology(%q) = nil", raw)
 	}
-	root.Init(faulty, netUnh, owners)
+	root.Init(faulty, netUnh, nil, owners)
 	return root
 }
 

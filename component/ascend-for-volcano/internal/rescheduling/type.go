@@ -24,6 +24,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -105,6 +106,13 @@ const (
 	CardUnhealthy = "Unhealthy"
 	// CardNetworkUnhealthy represents a network unhealthy card
 	CardNetworkUnhealthy = "NetworkUnhealthy"
+	// SilentFault is the fault_level of a card recorded on the ChipNode as a
+	// silent-fault card (a node-level static property, like pod-error cards): the
+	// card is gated by the job's silent-fault tolerance rather than the node.
+	SilentFault = util.SilentFault
+	// ToleranceForbidden is the after-time which keeps a time-gated constraint
+	// (silent-fault card or pod-error card) withheld forever.
+	ToleranceForbidden = util.ToleranceForbidden
 	// NodeHealthy represents node is available for scheduling
 	NodeHealthy = "Healthy"
 	// NodeUnhealthy represents node is unhealthy
@@ -117,8 +125,6 @@ const (
 	NoFaultJobsErr = "none fault jobs to be restarted in cache"
 	// JobRecovery Name of cm for recovery
 	JobRecovery = "job-recovery"
-	// DeviceFaultCmKeySuffix the key of DeviceFault info
-	DeviceFaultCmKeySuffix = "-Fault"
 	// PodFailed the state of failed pod
 	PodFailed = "pod-failed"
 	// ProcessException the state of failed process in the pod
@@ -194,7 +200,7 @@ type ReScheduler struct {
 
 // FaultNodeInfoToCm fault node info to cm
 type FaultNodeInfoToCm struct {
-	FaultDeviceList     []FaultDeviceList
+	FaultDeviceList     []k8s.FaultDeviceList
 	NodeName            string
 	UnhealthyNPU        []string
 	NetworkUnhealthyNPU []string
@@ -265,10 +271,11 @@ type FaultNode struct {
 	RackID                  int32
 	NodeName                string
 	NPUName                 string
-	FaultDeviceList         []FaultDeviceList
+	FaultDeviceList         []k8s.FaultDeviceList
 	UpdateTime              int64
 	UnhealthyNPU            []string
 	NetworkUnhealthyNPU     []string
+	SilentUnhealthyNPU      []string
 	IsFaultNode             bool
 	NodeHealthState         string
 	FaultCards              []FaultCard
@@ -296,16 +303,6 @@ type SimpleFNodeInfo struct {
 	NodeHealthState         string
 }
 
-// FaultDeviceList is the fault reason of card
-type FaultDeviceList struct {
-	FaultType            string `json:"fault_type"`
-	NPUName              string `json:"npu_name"`
-	FaultLevel           string `json:"fault_level"`
-	FaultHandling        string `json:"fault_handling"`
-	LargeModelFaultLevel string `json:"large_model_fault_level"`
-	FaultCode            string `json:"fault_code"`
-}
-
 // FaultTask object dealing with node for rescheduling
 type FaultTask struct {
 	Reason             []FaultReasonList
@@ -322,6 +319,7 @@ type FaultTask struct {
 	NodeRankIndex      string
 	UseCardName        []string
 	PodCreateTime      int64
+	PodFailedTime      int64
 	faultType          string
 	IsNpuTask          bool
 	IsUseRdmaTask      bool
@@ -358,7 +356,7 @@ type FaultReasonList struct {
 	NodeName      string `json:"node_name"`
 	TaskName      string `json:"task_name"`
 	FaultRankList []string
-	FaultDeviceList
+	k8s.FaultDeviceList
 }
 
 // FaultJob job object for re-scheduling

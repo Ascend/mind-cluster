@@ -28,7 +28,7 @@ import (
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -136,7 +136,7 @@ func fakeTestFaultNodeHasSubHealthyFault(nodeName string) *FaultNode {
 func fakeTestFaultNodeLinkDown(nodeName string, linkDownTime int64) *FaultNode {
 	fNode := fakeTestFaultNodeNodeHealthy(nodeName)
 	fNode.LinkDownTime = linkDownTime
-	fNode.FaultDeviceList = []FaultDeviceList{
+	fNode.FaultDeviceList = []k8s.FaultDeviceList{
 		{
 			NPUName:       "Ascend910-0",
 			FaultCode:     linkDownFaultCode,
@@ -1632,8 +1632,8 @@ func TestIsJobCanAssignToSubHealthNode(t *testing.T) {
 	}
 }
 
-func mockFaultDeviceList(index string, faultHandling string) FaultDeviceList {
-	return FaultDeviceList{
+func mockFaultDeviceList(index string, faultHandling string) k8s.FaultDeviceList {
+	return k8s.FaultDeviceList{
 		NPUName:       "npuName" + index,
 		FaultHandling: faultHandling,
 	}
@@ -1652,7 +1652,7 @@ func TestSetTaskFaultReasonByFaultNode(t *testing.T) {
 				"when card name match and faulthandling is not NotHandleFault",
 			fTask: ftask,
 			fNode: &FaultNode{
-				FaultDeviceList: []FaultDeviceList{
+				FaultDeviceList: []k8s.FaultDeviceList{
 					mockFaultDeviceList("0", SubHealthFault),
 				},
 				IsNpuNode: true},
@@ -1663,7 +1663,7 @@ func TestSetTaskFaultReasonByFaultNode(t *testing.T) {
 				"when card name not match or faulthandling is NotHandleFault",
 			fTask: ftask,
 			fNode: &FaultNode{
-				FaultDeviceList: []FaultDeviceList{
+				FaultDeviceList: []k8s.FaultDeviceList{
 					mockFaultDeviceList("0", NotHandleFault),
 				},
 				IsNpuNode: true},
@@ -1753,7 +1753,7 @@ func TestSetTaskCardHealthCode(t *testing.T) {
 					"nodeName0": {
 						NodeName:        "nodeName0",
 						NodeHealthState: NodeUnhealthy,
-						FaultDeviceList: []FaultDeviceList{
+						FaultDeviceList: []k8s.FaultDeviceList{
 							mockFaultDeviceList("0", NotHandleFault),
 						},
 						IsNpuNode: true},
@@ -1853,7 +1853,7 @@ func TestSetFaultTaskUseNodeLinkDownTime(t *testing.T) {
 		reScheduler := &ReScheduler{DealReSchedulerCache: &DealReSchedulerCache{
 			FaultNodes: map[string]*FaultNode{
 				"node0": {
-					FaultDeviceList: []FaultDeviceList{
+					FaultDeviceList: []k8s.FaultDeviceList{
 						{
 							FaultLevel: NotHandleFault,
 							FaultCode:  linkDownFaultCode,
@@ -1875,7 +1875,7 @@ func TestSetFaultTaskUseNodeLinkDownTime(t *testing.T) {
 		reScheduler := &ReScheduler{DealReSchedulerCache: &DealReSchedulerCache{
 			FaultNodes: map[string]*FaultNode{
 				"node0": {
-					FaultDeviceList: []FaultDeviceList{
+					FaultDeviceList: []k8s.FaultDeviceList{
 						{
 							FaultLevel: NotHandleFault,
 						},

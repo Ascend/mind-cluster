@@ -426,11 +426,11 @@ func TestJudgePublicFaultInReason(t *testing.T) {
 		faultTask := miniFaultTask{
 			Reason: []FaultReasonList{
 				{
-					FaultDeviceList: FaultDeviceList{
+					FaultDeviceList: k8s.FaultDeviceList{
 						FaultType: PublicFaultType,
 					},
 				}, {
-					FaultDeviceList: FaultDeviceList{
+					FaultDeviceList: k8s.FaultDeviceList{
 						FaultType: CardUnhealthy,
 					},
 				},

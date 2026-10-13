@@ -148,7 +148,30 @@ func (fNode *FaultNode) updateFaultNodesFromDeviceInfo(node *plugin.NPUNode) {
 		klog.V(util.LogWarningLev).Infof("GetNodeDeviceFaultFromDeviceInfo: %s", util.SafePrint(err))
 	}
 	fNode.setFaultDeviceList(deviceFaultReason)
+	fNode.setSilentUnhealthyNPU()
 	fNode.setNodeHasCardSubHealthFault()
+}
+
+// setSilentUnhealthyNPU collects the cards reported with fault_level SilentFault,
+// the node is treated as a silent-fault node once any of its cards is silent
+// faulting.
+func (fNode *FaultNode) setSilentUnhealthyNPU() {
+	silentCards := make([]string, 0)
+	for _, fault := range fNode.FaultDeviceList {
+		if fault.FaultLevel == SilentFault && fault.NPUName != "" {
+			silentCards = append(silentCards, fault.NPUName)
+		}
+	}
+	fNode.SilentUnhealthyNPU = silentCards
+	if len(silentCards) > 0 {
+		klog.V(util.LogInfoLev).Infof("node %s silent-unhealthy cards from device info: %v",
+			fNode.NodeName, silentCards)
+	}
+}
+
+// IsSilentFaultNode reports whether any card of the node has a silent fault.
+func (fNode *FaultNode) IsSilentFaultNode() bool {
+	return fNode != nil && len(fNode.SilentUnhealthyNPU) > 0
 }
 
 // updateFaultNodesFromDpuInfo update FaultNode from dpu info (annotation huawei.com/dpu.infos)
@@ -184,12 +207,12 @@ func (fNode *FaultNode) updateFaultDpuFromAnnotation(node *plugin.NPUNode) {
 }
 
 // getNodeDeviceFaultFromDeviceInfo get device fault from device info
-func (fNode *FaultNode) getNodeDeviceFaultFromDeviceInfo(node *plugin.NPUNode) ([]FaultDeviceList, error) {
-	deviceFaultList, ok := node.Annotation[fNode.NPUName+DeviceFaultCmKeySuffix]
+func (fNode *FaultNode) getNodeDeviceFaultFromDeviceInfo(node *plugin.NPUNode) ([]k8s.FaultDeviceList, error) {
+	deviceFaultList, ok := node.Annotation[fNode.NPUName+util.DeviceFaultCmKeySuffix]
 	if !ok {
 		return nil, fmt.Errorf("getNodeDeviceFaultFromDeviceInfo failed")
 	}
-	var deviceFault []FaultDeviceList
+	var deviceFault []k8s.FaultDeviceList
 	if unmarshalErr := json.Unmarshal([]byte(deviceFaultList), &deviceFault); unmarshalErr != nil {
 		klog.V(util.LogWarningLev).Infof("convertToDeviceFaultListFromCM Unmarshal: %s.", util.SafePrint(unmarshalErr))
 		return nil, unmarshalErr
@@ -325,7 +348,7 @@ func (fCard *FaultCard) setIsFaultCard(value bool) {
 	fCard.IsFaultCard = value
 }
 
-func (fNode *FaultNode) setFaultDeviceList(value []FaultDeviceList) {
+func (fNode *FaultNode) setFaultDeviceList(value []k8s.FaultDeviceList) {
 	fNode.FaultDeviceList = value
 }
 
@@ -347,7 +370,7 @@ func newFaultNodeDefault(nodeName string, updateTime int64) *FaultNode {
 		IsFaultNode:         false,
 		NodeHealthState:     NodeHealthy,
 		FaultCards:          nil,
-		FaultDeviceList:     []FaultDeviceList{},
+		FaultDeviceList:     []k8s.FaultDeviceList{},
 		NodeFault:           []FaultDetail{},
 		SwitchFault:         FaultDetail{},
 	}

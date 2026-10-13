@@ -45,8 +45,34 @@ type NPUJob struct {
 	ScheduleMode ScheduleMode
 	// ParameterPlaneUnhealthyTolerance indicates whether the job tolerates parameter plane unhealthy NPU.
 	ParameterPlaneUnhealthyTolerance bool
+	// ToleranceConfig aggregates every time-based tolerance backoff config of the
+	// job. Add a new field here for each backoff type.
+	ToleranceConfig JobToleranceConfig
+	AffinityBlocks  map[string]int
+}
 
-	AffinityBlocks map[string]int
+// JobToleranceConfig aggregates every time-based tolerance backoff config of a
+// job. Each field is the after-time in seconds: 0 allows immediately, -1 forbids
+// forever and N allows after the job has been pending N seconds.
+type JobToleranceConfig struct {
+	// SilentUnhealthyToleranceAfterTime gates silent-fault cards.
+	SilentUnhealthyToleranceAfterTime int64
+	// PodErrorToleranceAfterTime gates the cards which caused the job's last
+	// rescheduling, covering every fault that errors the pod, default 30 seconds.
+	PodErrorToleranceAfterTime int64
+}
+
+// TimeGateAllows reports whether a time-based tolerance gate releases its
+// constraint after elapsed seconds: ToleranceForbidden (-1) never, an after-time
+// of 0 (or negative) immediately, and N releases once elapsed reaches N.
+func TimeGateAllows(afterTime int64, elapsed int64) bool {
+	if afterTime == ToleranceForbidden {
+		return false
+	}
+	if afterTime <= 0 {
+		return true
+	}
+	return elapsed >= afterTime
 }
 
 // ComJob all vcJob has.

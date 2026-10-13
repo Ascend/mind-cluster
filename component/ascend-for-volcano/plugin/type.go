@@ -20,7 +20,7 @@ package plugin
 import (
 	"sync"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/informers"
@@ -105,6 +105,8 @@ var (
 		util.ParameterPlaneUnhealthyToleranceAnnoKey,
 		util.ScheduleModeAnnoKey,
 		util.SchedulerDowngradeAnnoKey,
+		util.SilentUnhealthyToleranceAnnoKey,
+		util.PodErrorToleranceAnnoKey,
 	}
 )
 

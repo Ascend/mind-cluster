@@ -23,9 +23,11 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"time"
 
 	"k8s.io/klog/v2"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -46,6 +48,7 @@ func (tp *NPUHandler) GetUsableTopFromNode(node plugin.NPUNode, disFlag bool) ([
 		klog.V(util.LogDebugLev).Infof("%s GetUsableTopFromNode err: %s", tp.GetPluginName(), err.Error())
 		return nil, err
 	}
+	nodeTop = tp.removeBackoffCards(node, nodeTop)
 	if !disFlag || !tp.IsNetworkFaultAttention || tp.ParameterPlaneUnhealthyTolerance {
 		sort.Ints(nodeTop)
 		return nodeTop, nil
@@ -60,6 +63,32 @@ func (tp *NPUHandler) GetUsableTopFromNode(node plugin.NPUNode, disFlag bool) ([
 	res := util.RemoveCommonElement(nodeTop, netUnhealthyTop)
 	sort.Ints(res)
 	return res, nil
+}
+
+// removeBackoffCards removes every card the current job has errored (pod-error)
+// from the node's usable top while the job's pod-error tolerance window is still
+// active. Pod-error backoff is per job: only the job that errored a card backs
+// off from it, other jobs are unaffected.
+func (tp *NPUHandler) removeBackoffCards(node plugin.NPUNode, nodeTop []int) []int {
+	if tp == nil || node.ChipTopo == nil || tp.NPUJob == nil {
+		return nodeTop
+	}
+	backoffTop := make([]int, 0)
+	now := time.Now().Unix()
+	for card, faultTime := range cache.PodErrorCards(node.Name) {
+		if util.TimeGateAllows(tp.NPUJob.ToleranceConfig.PodErrorToleranceAfterTime, now-faultTime) {
+			continue
+		}
+		for id := range node.ChipIDsFromCardNames([]string{card}) {
+			backoffTop = append(backoffTop, id)
+		}
+	}
+	if len(backoffTop) == 0 {
+		return nodeTop
+	}
+	klog.V(util.LogDebugLev).Infof("%s remove pod-error cards %v from nodeTop %v",
+		tp.GetPluginName(), backoffTop, nodeTop)
+	return util.RemoveCommonElement(nodeTop, backoffTop)
 }
 
 func (tp *NPUHandler) getNetUnhealthyNPU(node plugin.NPUNode) ([]int, error) {

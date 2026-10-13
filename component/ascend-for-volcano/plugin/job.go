@@ -35,6 +35,7 @@ import (
 	"k8s.io/klog/v2"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
@@ -577,6 +578,8 @@ func (sJob *SchedulerJob) initNPUJob(vcJob *api.JobInfo, npuName string, npuNum 
 	sJob.setSchedulingTaskNum(vcJob)
 	sJob.setMultiLevelTaskSchedulingConfig(vcJob)
 	sJob.setParameterPlaneUnhealthyTolerance()
+	sJob.setSilentUnhealthyTolerance()
+	sJob.setPodErrorTolerance()
 	sJob.setScheduleMode()
 	sJob.initVTasks(vcJob)
 }
@@ -606,6 +609,74 @@ func (sJob *SchedulerJob) setParameterPlaneUnhealthyTolerance() {
 	if ok && val == util.ParameterPlaneUnhealthyToleranceIgnoreValue || sJob.NPUTaskNum <= 1 {
 		sJob.NPUJob.ParameterPlaneUnhealthyTolerance = true
 	}
+}
+
+// setSilentUnhealthyTolerance reads the huawei.com/silent.unhealthy-tolerance.after-time
+// annotation and populates NPUJob.ToleranceConfig.SilentUnhealthyToleranceAfterTime, defaulting to 0.
+func (sJob *SchedulerJob) setSilentUnhealthyTolerance() {
+	if sJob == nil || sJob.NPUJob == nil {
+		return
+	}
+	sJob.NPUJob.ToleranceConfig.SilentUnhealthyToleranceAfterTime = util.DefaultSilentUnhealthyToleranceAfterTime
+	val, ok := sJob.Annotation[util.SilentUnhealthyToleranceAnnoKey]
+	if !ok {
+		return
+	}
+	tolerance, err := strconv.ParseInt(val, 10, 64)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("job %s invalid %s=%s, use default %d",
+			sJob.Name, util.SilentUnhealthyToleranceAnnoKey, val, util.DefaultSilentUnhealthyToleranceAfterTime)
+		return
+	}
+	sJob.NPUJob.ToleranceConfig.SilentUnhealthyToleranceAfterTime = clampSilentUnhealthyTolerance(tolerance)
+}
+
+// clampSilentUnhealthyTolerance clamps a silent-fault tolerance after-time into
+// [ToleranceForbidden, MaxSilentUnhealthyToleranceAfterTime]. Values below -1
+// are treated as -1 (withheld forever), values above the max are capped at the
+// max; 0 and -1 keep their existing semantics.
+func clampSilentUnhealthyTolerance(tolerance int64) int64 {
+	if tolerance < util.ToleranceForbidden {
+		return util.ToleranceForbidden
+	}
+	if tolerance > util.MaxSilentUnhealthyToleranceAfterTime {
+		return util.MaxSilentUnhealthyToleranceAfterTime
+	}
+	return tolerance
+}
+
+// setPodErrorTolerance reads the huawei.com/pod.error-tolerance.after-time
+// annotation and populates NPUJob.ToleranceConfig.PodErrorToleranceAfterTime, defaulting to 30.
+func (sJob *SchedulerJob) setPodErrorTolerance() {
+	if sJob == nil || sJob.NPUJob == nil {
+		return
+	}
+	sJob.NPUJob.ToleranceConfig.PodErrorToleranceAfterTime = util.DefaultPodErrorToleranceAfterTime
+	val, ok := sJob.Annotation[util.PodErrorToleranceAnnoKey]
+	if !ok {
+		return
+	}
+	tolerance, err := strconv.ParseInt(val, 10, 64)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("job %s invalid %s=%s, use default %d",
+			sJob.Name, util.PodErrorToleranceAnnoKey, val, util.DefaultPodErrorToleranceAfterTime)
+		return
+	}
+	sJob.NPUJob.ToleranceConfig.PodErrorToleranceAfterTime = clampPodErrorTolerance(tolerance)
+}
+
+// clampPodErrorTolerance clamps a pod-error tolerance after-time into
+// [0, MaxPodErrorToleranceAfterTime]. -1 (ToleranceForbidden) and any negative
+// value are not allowed for pod-error: it is a temporary backoff, not a
+// permanent forbid.
+func clampPodErrorTolerance(tolerance int64) int64 {
+	if tolerance < 0 {
+		return 0
+	}
+	if tolerance > util.MaxPodErrorToleranceAfterTime {
+		return util.MaxPodErrorToleranceAfterTime
+	}
+	return tolerance
 }
 
 // setNPUTaskNumInJob set the NPU task number in one job. for some task has no NPU.
@@ -869,6 +940,40 @@ func (sJob SchedulerJob) rejectWholeCardOnSoftShareNode(task *api.TaskInfo, node
 	}
 	return fmt.Errorf("node %s enables chip soft share dev, whole-card task %s is not allowed",
 		node.Name, task.Name)
+}
+
+// rejectSuperPodNodeWithBackoffCards rejects a whole-node (super-pod) job's
+// candidate node at predicate time when the node still holds a card that is
+// withheld for the job. A super-pod occupies the entire node, so a single
+// silent-fault or pod-error card inside its tolerance window invalidates the
+// whole node; the chip-affinity handlers already withhold such cards per-card
+// for non-super-pod jobs, but super-pod jobs must be rejected up front.
+func (sJob SchedulerJob) rejectSuperPodNodeWithBackoffCards(node NPUNode) error {
+	if !sJob.IsSuperPodJob() || sJob.NPUJob == nil {
+		return nil
+	}
+	root := node.ChipTopo
+	if root == nil {
+		return nil
+	}
+	elapsed, _ := cache.SessionElapsed(sJob.Name)
+	if !util.TimeGateAllows(sJob.ToleranceConfig.SilentUnhealthyToleranceAfterTime, elapsed) &&
+		len(root.SilentFaultChips()) > 0 {
+		klog.V(util.LogDebugLev).Infof("super-pod job %s rejects node %s: silent-fault cards within tolerance",
+			sJob.Name, node.Name)
+		return fmt.Errorf("%s node<%s> has silent-fault card within tolerance for super-pod job",
+			util.NPUResourceUnavailableError, node.Name)
+	}
+	now := time.Now().Unix()
+	for _, faultTime := range cache.PodErrorCards(node.Name) {
+		if !util.TimeGateAllows(sJob.ToleranceConfig.PodErrorToleranceAfterTime, now-faultTime) {
+			klog.V(util.LogDebugLev).Infof("super-pod job %s rejects node %s: pod-error cards within tolerance",
+				sJob.Name, node.Name)
+			return fmt.Errorf("%s node<%s> has pod-error card within tolerance for super-pod job",
+				util.NPUResourceUnavailableError, node.Name)
+		}
+	}
+	return nil
 }
 
 // PreCheckNodePredicate PreCheck Predicate nodes.

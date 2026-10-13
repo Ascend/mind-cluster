@@ -113,7 +113,7 @@ func (reCache DealReSchedulerCache) getRealFaultJobs() map[api.JobID]*FaultJob {
 		faultReason := PodFailed
 		for _, faultType := range fJob.FaultTypes {
 			if faultType == NodeUnhealthy || faultType == NodeCardUnhealthy || faultType == SubHealthFault ||
-				faultType == util.RelationFault {
+				faultType == util.RelationFault || faultType == SilentFault {
 				faultReason = faultType
 				break
 			}

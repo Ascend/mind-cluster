@@ -19,10 +19,12 @@ package chip
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"k8s.io/klog/v2"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/affinity/chip/topo"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
@@ -76,6 +78,10 @@ func (tp *chipHandler) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNod
 	if root == nil {
 		return fmt.Errorf("%s node<%s> has no topology tree", util.NPUResourceUnavailableError, node.Name)
 	}
+	// Withhold silent-fault cards within their tolerance window (card-level
+	// backoff) so the predicate rejects the node when the healthy chips left
+	// cannot satisfy the request.
+	root = root.Exclude(tp.excludedChipIDs(node))
 	klog.V(util.LogDebugLev).Infof("%s CheckNodeNPUByTask task<%s> node<%s> req<%d> mode<%v> allowNetUnhealthy"+
 		"<%v> chips[%s]", tp.GetPluginName(), task.Name, node.Name, reqNum, tp.ScheduleMode,
 		tp.ParameterPlaneUnhealthyTolerance, root.State())
@@ -122,6 +128,7 @@ func (tp *chipHandler) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeIn
 		if root == nil {
 			continue
 		}
+		root = root.Exclude(tp.excludedChipIDs(nNode))
 		klog.V(util.LogDebugLev).Infof("%s ScoreBestNPUNodes node<%s> chips[%s]",
 			tp.GetPluginName(), node.Name, root.State())
 		scoreMap[node.Name] = root.Score(req, allow)
@@ -143,7 +150,10 @@ func (tp *chipHandler) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *p
 	}
 	klog.V(util.LogDebugLev).Infof("%s UseAnnotation task<%s> node<%s> req<%d> mode<%v> chips[%s]",
 		tp.GetPluginName(), task.Name, node.Name, req, tp.ScheduleMode, root.State())
-	selected := root.SelectChips(&util.Request{
+	// Select on a backoff view (silent-fault cards withheld), but register the
+	// selection on the real tree so this session's occupancy stays consistent.
+	view := root.Exclude(tp.excludedChipIDs(node))
+	selected := view.SelectChips(&util.Request{
 		ReqNPUNum:         req,
 		Mode:              tp.ScheduleMode,
 		AllowNetUnhealthy: tp.ParameterPlaneUnhealthyTolerance,
@@ -219,3 +229,45 @@ func (tp *chipHandler) RestoreAnnotation(task *api.TaskInfo, node plugin.NPUNode
 
 // ScoreFrameworkAware label chip-affinity score nodes by score-framework
 func (tp *chipHandler) ScoreFrameworkAware() bool { return true }
+
+// excludedChipIDs returns the chip-id set the topology tree should withhold for
+// the job this handler serves. Silent-fault cards are node-level static state
+// recorded on the ChipTopo and gated by the job's silent-fault tolerance window;
+// pod-error cards are per job (only the job that errored a card backs off from
+// it) and gated by the job's pod-error tolerance window. An empty set means no
+// card is currently withheld.
+func (tp *chipHandler) excludedChipIDs(node plugin.NPUNode) map[int]struct{} {
+	set := make(map[int]struct{})
+	if root := node.ChipTopo; root != nil {
+		if !tp.silentToleranceAllows() {
+			for id := range root.SilentFaultChips() {
+				set[id] = struct{}{}
+			}
+		}
+		if tp.NPUJob != nil {
+			now := time.Now().Unix()
+			for card, faultTime := range cache.PodErrorCards(node.Name) {
+				if util.TimeGateAllows(tp.NPUJob.ToleranceConfig.PodErrorToleranceAfterTime, now-faultTime) {
+					continue
+				}
+				for id := range node.ChipIDsFromCardNames([]string{card}) {
+					set[id] = struct{}{}
+				}
+			}
+		}
+	}
+	if len(set) == 0 {
+		return nil
+	}
+	return set
+}
+
+// silentToleranceAllows reports whether the job's silent-fault tolerance has
+// released the silent-fault cards (true) or they are still withheld (false).
+func (tp *chipHandler) silentToleranceAllows() bool {
+	if tp == nil || tp.NPUJob == nil {
+		return true
+	}
+	elapsed, _ := cache.SessionElapsed(tp.Name)
+	return util.TimeGateAllows(tp.NPUJob.ToleranceConfig.SilentUnhealthyToleranceAfterTime, elapsed)
+}

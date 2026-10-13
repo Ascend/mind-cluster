@@ -59,6 +59,9 @@ func (reScheduler *ReScheduler) Execute(env *plugin.ScheduleEnv, ssn *framework.
 	if err := reScheduler.AddFaultJobWithSession(runningJobs, *env); err != nil {
 		klog.V(util.LogWarningLev).Infof("AddFaultJobWithSession %s", err)
 	}
+	// 3.5 record the pod-error cards onto each node's ChipNode so the policy
+	// handlers withhold them at card level, gated by the job's tolerance.
+	reScheduler.recordPodErrorCardsToNodes()
 	// 4. restart the fault jobs
 	if restartErr := reScheduler.RestartFaultJobs(ssn, *env); restartErr != nil {
 		klog.V(util.LogErrorLev).Infof("RestartFaultJobs: %s", restartErr.Error())

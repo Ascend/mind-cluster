@@ -28,13 +28,14 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
@@ -72,8 +73,9 @@ func (reScheduler *ReScheduler) createFaultTaskHandler(job *api.JobInfo, cardNam
 		if err != nil {
 			klog.V(util.LogDebugLev).Infof("setTaskCardHealthCode task %s err %s", task.Name, util.SafePrint(err))
 		}
+		silentTolerance := reScheduler.jobSilentUnhealthyTolerance(faultJob.JobUID)
 		isFaultTask, healthState := reScheduler.getTaskHealthState(&faultTask, task,
-			faultJob.SubHealthyStrategy, faultJob.ReScheduleKey)
+			faultJob.SubHealthyStrategy, faultJob.ReScheduleKey, silentTolerance)
 		if isFaultTask {
 			klog.V(util.LogInfoLev).Infof("task %s is fault task: %v, health state: %s", task.Name, isFaultTask,
 				healthState)
@@ -82,6 +84,9 @@ func (reScheduler *ReScheduler) createFaultTaskHandler(job *api.JobInfo, cardNam
 			healthState)
 		faultTask.setIsFaultTask(isFaultTask)
 		faultTask.setFaultType(healthState)
+		if isFaultTask {
+			faultTask.PodFailedTime = getPodFailedTime(task)
+		}
 		faultTask.setIsSatisfiedRackAffinity(true)
 		faultTasks = append(faultTasks, faultTask)
 	}
@@ -905,9 +910,31 @@ func (reScheduler *ReScheduler) CheckNodeNPUByTask(task *api.TaskInfo, vcNode *p
 	if err := reScheduler.checkNodeCurNodeIsFault(vcNode, task); err != nil {
 		return err
 	}
+	// Card-level backoff (silent-fault / pod-error) is enforced by the policy
+	// handler directly from the ChipNode: silent-fault cards are recorded there
+	// at parse time, pod-error cards by the fault handler below.
 	klog.V(util.LogDebugLev).Infof("CheckNodeNPUByTask node %s passed rescheduling predicate for task %s",
 		vcNode.Name, task.Name)
 	return nil
+}
+
+// recordPodErrorCardsToNodes records the cards that errored a pod (the fault
+// tasks' used cards) as pod-error for the owning job on the node, in the
+// cross-session pod-error cache. Pod-error backoff is per job: only the job that
+// errored a card backs off from it, other jobs are unaffected.
+func (reScheduler *ReScheduler) recordPodErrorCardsToNodes() {
+	if reScheduler == nil {
+		return
+	}
+	for _, fJob := range reScheduler.FaultJobs {
+		for i := range fJob.FaultTasks {
+			fTask := &fJob.FaultTasks[i]
+			if !fTask.IsFaultTask || fTask.NodeName == "" {
+				continue
+			}
+			cache.RecordPodError(fTask.NodeName, fTask.UseCardName, fTask.PodFailedTime)
+		}
+	}
 }
 
 func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode *plugin.NPUNode, task *api.TaskInfo) error {
@@ -1120,7 +1147,7 @@ func (reScheduler ReScheduler) updateJobHealthCode(fJob *FaultJob) {
 // reScheduleKey is the job-level fault-scheduling policy, used to filter fault types:
 // external-force-pod-failed only handles PodFailed (business fault) and skips hardware faults.
 func (reScheduler ReScheduler) getTaskHealthState(fTask *FaultTask, task *api.TaskInfo,
-	subHealthyStrategy string, reScheduleKey string) (bool, string) {
+	subHealthyStrategy string, reScheduleKey string, silentUnhealthyTolerance int64) (bool, string) {
 	klog.V(util.LogDebugLev).Infof("task %s getTaskHealthState", fTask.TaskName)
 
 	if fTask.NodeName == "" {
@@ -1140,6 +1167,15 @@ func (reScheduler ReScheduler) getTaskHealthState(fTask *FaultTask, task *api.Ta
 
 	if isFault, state := reScheduler.getTaskHealthStateByNode(fTask); isFault {
 		return isFault, state
+	}
+
+	// a job which forbids silent-fault nodes must be evicted once its node turns
+	// silently faulting, even though the node stays schedulable otherwise.
+	if silentUnhealthyTolerance == ToleranceForbidden &&
+		reScheduler.isTaskUsingSilentFaultCard(fTask) {
+		klog.V(util.LogInfoLev).Infof("task %s on silent-fault node %s, job forbids silent fault, thus task sets %s",
+			fTask.TaskName, fTask.NodeName, SilentFault)
+		return true, SilentFault
 	}
 
 	if fTask.IsUseRdmaTask {
@@ -1167,6 +1203,35 @@ func (reScheduler ReScheduler) getTaskHealthState(fTask *FaultTask, task *api.Ta
 	}
 
 	return fTask.getTaskHealthStateBySubHealth(subHealthyStrategy)
+}
+
+// jobSilentUnhealthyTolerance returns the silent-fault after-time of the job,
+// defaulting to 0 when the job is unknown.
+func (reScheduler *ReScheduler) jobSilentUnhealthyTolerance(jobID api.JobID) int64 {
+	if schedulerJob, ok := reScheduler.Jobs[jobID]; ok && schedulerJob.NPUJob != nil {
+		return schedulerJob.ToleranceConfig.SilentUnhealthyToleranceAfterTime
+	}
+	return util.DefaultSilentUnhealthyToleranceAfterTime
+}
+
+// isTaskUsingSilentFaultCard reports whether the task actually uses at least one
+// card that is reported as silently faulting on its node. Cards are matched at
+// card granularity: a task placed on a node with some silent-fault cards but not
+// using any of them is not considered silently faulting.
+func (reScheduler *ReScheduler) isTaskUsingSilentFaultCard(fTask *FaultTask) bool {
+	if fTask == nil || fTask.NodeName == "" {
+		return false
+	}
+	fNode, ok := reScheduler.FaultNodes[fTask.NodeName]
+	if !ok || !fNode.IsSilentFaultNode() {
+		return false
+	}
+	for _, usedCard := range fTask.UseCardName {
+		if util.IsSliceContain(usedCard, fNode.SilentUnhealthyNPU) {
+			return true
+		}
+	}
+	return false
 }
 
 func (reScheduler *ReScheduler) getTaskHealthStateByNode(fTask *FaultTask) (bool, string) {

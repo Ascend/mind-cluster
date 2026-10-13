@@ -26,12 +26,13 @@ import (
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
@@ -276,7 +277,7 @@ func buildIsNormalJobNeedRestartTestCases() []isNormalJobNeedRestartTestCase {
 			name: "03-IsNormalJobNeedRestart return true when FaultHandling is PreSeparateNPU",
 			fJob: &FaultJob{FaultTasks: []FaultTask{{
 				Reason: []FaultReasonList{
-					{FaultDeviceList: FaultDeviceList{FaultHandling: PreSeparateNPU}},
+					{FaultDeviceList: k8s.FaultDeviceList{FaultHandling: PreSeparateNPU}},
 				},
 			}}},
 			wantRes: true,

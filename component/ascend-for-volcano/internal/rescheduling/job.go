@@ -28,7 +28,7 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -576,7 +576,6 @@ func (fJob *FaultJob) updateFaultJobWhenNewPodError(jobInfo *api.JobInfo) {
 		}
 	}
 }
-
 func isFailedTask(task *api.TaskInfo) bool {
 	if task == nil || task.Pod == nil {
 		return false
@@ -597,6 +596,30 @@ func isFailedTask(task *api.TaskInfo) bool {
 		}
 	}
 	return false
+}
+
+// getPodFailedTime returns the latest terminated-container finish time of a
+// failed pod as the pod's actual failure unix second. It returns 0 when no
+// terminated container carries a finish time, so the caller can fall back.
+func getPodFailedTime(task *api.TaskInfo) int64 {
+	if task == nil || task.Pod == nil {
+		return 0
+	}
+	var latest int64
+	for _, status := range task.Pod.Status.ContainerStatuses {
+		for _, term := range []*v1.ContainerStateTerminated{
+			status.State.Terminated,
+			status.LastTerminationState.Terminated,
+		} {
+			if term == nil || term.FinishedAt.IsZero() {
+				continue
+			}
+			if u := term.FinishedAt.Unix(); u > latest {
+				latest = u
+			}
+		}
+	}
+	return latest
 }
 
 // isPodFailedCanRestarted if the pod status is failed, judge whether job can be restarted
@@ -740,7 +763,7 @@ func (fJob *FaultJob) addPodStatusAnnotationForFaultTask(env plugin.ScheduleEnv)
 			if err := fJob.addPodStatusAnnotation(env, faultTask); err != nil {
 				err := fmt.Errorf("add pod status annotation for fault task %s/%s failed: %s",
 					faultTask.TaskNamespace, faultTask.TaskName, err)
-				klog.V(util.LogErrorLev).Infof(err.Error())
+				klog.V(util.LogErrorLev).Infof("%s", err.Error())
 				return err
 			}
 		}
@@ -846,9 +869,7 @@ func (fJob *FaultJob) recordFaultJobsToLogs() {
 		tmpfTaskInfo.FaultType = fTask.faultType
 		tmpfTaskInfo.UseCardName = fTask.UseCardName
 		tmpfTaskInfo.NodeRankIndex = fTask.NodeRankIndex
-		if judgePublicFaultInReason(&tmpfTaskInfo) {
-			tmpfTaskInfo.FaultType = PublicFaultType
-		}
+
 		tmpfJobInfo.FaultTasks = append(tmpfJobInfo.FaultTasks, tmpfTaskInfo)
 	}
 	str, err := json.Marshal(tmpfJobInfo)

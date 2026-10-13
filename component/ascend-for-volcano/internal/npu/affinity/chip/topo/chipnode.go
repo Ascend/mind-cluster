@@ -40,6 +40,7 @@ type ChipNode struct {
 	Raw          string
 	faulty       int
 	netUnhealthy int
+	silentFault  int
 	allocated    int
 	ownedBy      []string
 
@@ -143,7 +144,7 @@ func (n *ChipNode) collectLeaves(out map[int]*ChipNode) {
 	}
 }
 
-func (n *ChipNode) Init(faulty, netUnh map[int]struct{}, owners map[string][]int) {
+func (n *ChipNode) Init(faulty, netUnh, silent map[int]struct{}, owners map[string][]int) {
 	n.owners = owners
 	if n.owners == nil {
 		n.owners = make(map[string][]int)
@@ -151,13 +152,17 @@ func (n *ChipNode) Init(faulty, netUnh map[int]struct{}, owners map[string][]int
 	n.leafIndex = make(map[int]*ChipNode, n.total)
 	n.collectLeaves(n.leafIndex)
 	for _, leaf := range n.leafIndex {
-		leaf.faulty, leaf.netUnhealthy, leaf.allocated, leaf.ownedBy = 0, 0, 0, nil
+		leaf.faulty, leaf.netUnhealthy, leaf.silentFault, leaf.allocated, leaf.ownedBy =
+			0, 0, 0, 0, nil
 		id := leaf.chipID
 		switch {
 		case has(faulty, id):
 			leaf.faulty = 1
 		case has(netUnh, id):
 			leaf.netUnhealthy = 1
+		}
+		if has(silent, id) {
+			leaf.silentFault = 1
 		}
 	}
 	keys := make([]string, 0, len(owners))
@@ -276,6 +281,41 @@ func (n *ChipNode) Clone() *ChipNode {
 	return c
 }
 
+// Exclude returns a clone of the tree with the given chip ids marked unusable
+// (hard-faulty) for the duration of one evaluation. Temporary backoffs — such
+// as silent-fault cards within their tolerance window — are evaluated on the
+// clone only, leaving the session tree untouched. An empty set returns the
+// receiver unchanged.
+func (n *ChipNode) Exclude(chips map[int]struct{}) *ChipNode {
+	if n == nil || len(chips) == 0 {
+		return n
+	}
+	c := n.Clone()
+	for id := range chips {
+		if leaf, ok := c.leafIndex[id]; ok {
+			leaf.faulty = 1
+		}
+	}
+	return c
+}
+
+// SilentFaultChips returns the chip ids of every leaf recorded as silently
+// faulting. This is node-level static state (which cards are silently faulting),
+// independent of any job's tolerance: whether to withhold them is decided by the
+// consumer via its tolerance window.
+func (n *ChipNode) SilentFaultChips() map[int]struct{} {
+	out := make(map[int]struct{})
+	if n == nil {
+		return out
+	}
+	for id, leaf := range n.leafIndex {
+		if leaf.silentFault == 1 {
+			out[id] = struct{}{}
+		}
+	}
+	return out
+}
+
 func (n *ChipNode) cloneRec() *ChipNode {
 	if n == nil {
 		return nil
@@ -283,7 +323,8 @@ func (n *ChipNode) cloneRec() *ChipNode {
 	cl := &ChipNode{
 		chipID: n.chipID, total: n.total, Raw: n.Raw,
 		faulty: n.faulty, allocated: n.allocated, netUnhealthy: n.netUnhealthy,
-		ownedBy: append([]string(nil), n.ownedBy...),
+		silentFault: n.silentFault,
+		ownedBy:     append([]string(nil), n.ownedBy...),
 	}
 	for _, c := range n.children {
 		cl.children = append(cl.children, c.cloneRec())

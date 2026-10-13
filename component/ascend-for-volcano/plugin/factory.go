@@ -917,6 +917,7 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 	if v, ok := vcJob.policyHandler.(ScoreFrameworkAware); ok && v.ScoreFrameworkAware() {
 		return sHandle.batchNodeOrderByFramework(task, nodes, vcJob)
 	}
+
 	// 1. Policy-level mandatory scoring (super pod, multi-level, normal topology constraints)
 	errGet := vcJob.policyHandler.ScoreBestNPUNodes(task, nodes, scoreMap)
 
