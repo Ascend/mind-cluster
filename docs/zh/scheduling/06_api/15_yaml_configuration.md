@@ -77,7 +77,7 @@
 |status.replicaStatuses.[ReplicaType].labelSelector.matchExpressions|数组 (array)|-|标签匹配规则（支持In、NotIn、Exists、DoesNotExist等操作符）。|
 |status.replicaStatuses.[ReplicaType].labelSelector.matchLabels|对象 (object)|-|标签匹配的键值对（等价于matchExpressions条件）。|
 |status.startTime|字符串 (string)|date-time|作业开始时间（RFC3339格式，UTC）。|
-|metadata.labels['super-pod-affinity']|字符串 (string)|-|<p>仅支持在Atlas 900 A3 SuperPoD超节点、Atlas 950 SuperPoD超节点、Atlas 850E超节点、Atlas 850超节点中使用本参数。超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p><ul><li>soft：开启软亲和特性，集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>|
+|metadata.labels['super-pod-affinity']|字符串 (string)|-|<p>仅支持在Atlas 900 A3 SuperPoD超节点、Atlas 950 SuperPoD超节点、Atlas 950 SuperPoD Flex、Atlas 850E超节点、Atlas 850超节点中使用本参数。超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p><ul><li>soft：开启软亲和特性，集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>|
 |<ul><li>metadata.labels['customJobKey']</li><li>metadata.labels['custom-job-id']</li></ul>|字符串 (string)|-|<p>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。在资源AscendJob的metadata.labels标签中设置。</p><ul><li>customJobKey：用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<p>customJobKey: tid</p><p>tid: "123456"</p></li><li>custom-job-id：用户自定义标签，直接设置作业唯一标识符，如：<p>custom-job-id："123456"</p></li></ul>|
 |metadata.labels['huawei.com/scheduler.softShareDev.aicoreQuota']|字符串 (string)|-|请求的AICore百分比，取值范围为[1, 100]。|
 |metadata.labels['huawei.com/scheduler.softShareDev.hbmQuota']|字符串 (string)|-|<p>请求的高带宽内存量，取值范围为[1, maxHBM]，单位为MB。</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|
@@ -335,7 +335,7 @@
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p1531312713409"><a name="p1531312713409"></a><a name="p1531312713409"></a>超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p>
 <a name="ul231337194020"></a><a name="ul231337194020"></a><ul id="ul231337194020"><li>soft：开启软亲和特性，集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p2313117194012"><a name="p2313117194012"></a><a name="p2313117194012"></a>仅支持在<span id="ph133130710403"><a name="ph133130710403"></a><a name="ph133130710403"></a>Atlas 900 A3 SuperPoD超节点</span>、Atlas 950 SuperPoD超节点、Atlas 850E超节点、Atlas 850超节点中使用本参数。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p2313117194012"><a name="p2313117194012"></a><a name="p2313117194012"></a>仅支持在<span id="ph133130710403"><a name="ph133130710403"></a><a name="ph133130710403"></a>Atlas 900 A3 SuperPoD超节点</span>、Atlas 950 SuperPoD超节点、Atlas 950 SuperPoD Flex、Atlas 850E超节点、Atlas 850超节点中使用本参数。</p>
 </td>
 </tr>
 <tr id="rowcustomjobkey2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobkey2"><a name="pcustomjobkey2"></a><a name="pcustomjobkey2"></a>metadata.labels['customJobKey']</p>
@@ -745,7 +745,7 @@
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p1531312713409"><a name="p1531312713409"></a><a name="p1531312713409"></a>超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p>
 <a name="ul231337194020"></a><a name="ul231337194020"></a><ul id="ul231337194020"><li>soft：开启软亲和特性，集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p2313117194012"><a name="p2313117194012"></a><a name="p2313117194012"></a>仅支持在<span id="ph133130710403"><a name="ph133130710403"></a><a name="ph133130710403"></a>Atlas 900 A3 SuperPoD超节点</span>、Atlas 950 SuperPoD超节点、Atlas 850E超节点、Atlas 850超节点中使用本参数。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p2313117194012"><a name="p2313117194012"></a><a name="p2313117194012"></a>仅支持在<span id="ph133130710403"><a name="ph133130710403"></a><a name="ph133130710403"></a>Atlas 900 A3 SuperPoD超节点</span>、Atlas 950 SuperPoD超节点、Atlas 950 SuperPoD Flex、Atlas 850E超节点、Atlas 850超节点中使用本参数。</p>
 </td>
 </tr>
 <tr id="rowcustomjobkey2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobkey2"><a name="pcustomjobkey2"></a><a name="pcustomjobkey2"></a>spec.template.metadata.labels['customJobKey']</p>
