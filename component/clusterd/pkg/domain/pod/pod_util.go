@@ -87,16 +87,18 @@ func GetPodUsedDev(pod v1.Pod) []string {
 	if pod.Annotations == nil {
 		return nil
 	}
-	devInfo, exist := pod.Annotations[api.Pod910DeviceAnno]
+	annoKey := api.Pod910DeviceAnno
+	devInfo, exist := pod.Annotations[annoKey]
 	if !exist {
-		devInfo, exist = pod.Annotations[api.PodNPUDeviceAnno]
+		annoKey = api.PodNPUDeviceAnno
+		devInfo, exist = pod.Annotations[annoKey]
 	}
 	if !exist {
 		return nil
 	}
 	var podDev constant.PodDevice
 	if err := json.Unmarshal([]byte(devInfo), &podDev); err != nil {
-		hwlog.RunLog.Errorf("parse annotation %s of pod <%s/%s> failed, error: %v", api.Pod910DeviceAnno,
+		hwlog.RunLog.Errorf("parse annotation %s of pod <%s/%s> failed, error: %v", annoKey,
 			pod.Namespace, pod.Name, err)
 		return nil
 	}
@@ -271,16 +273,18 @@ func getSN(serverName, nodeIp string, ipSnMap map[string]string) string {
 }
 
 func getPodDevice(pod v1.Pod) (constant.PodDevice, bool) {
-	devInfo, exist := pod.Annotations[api.Pod910DeviceAnno]
+	annoKey := api.Pod910DeviceAnno
+	devInfo, exist := pod.Annotations[annoKey]
 	if !exist {
-		devInfo, exist = pod.Annotations[api.PodNPUDeviceAnno]
+		annoKey = api.PodNPUDeviceAnno
+		devInfo, exist = pod.Annotations[annoKey]
 	}
 	if !exist {
 		return constant.PodDevice{}, shouldAllocated(pod.Spec.Containers)
 	}
 	var podDev constant.PodDevice
 	if err := json.Unmarshal([]byte(devInfo), &podDev); err != nil {
-		hwlog.RunLog.Errorf("parse annotation of pod %s/%s error: %v", pod.Namespace, pod.Name, err)
+		hwlog.RunLog.Errorf("parse annotation %s of pod <%s/%s> error: %v", annoKey, pod.Namespace, pod.Name, err)
 	}
 	return podDev, true
 }
