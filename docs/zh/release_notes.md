@@ -347,9 +347,9 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 **1、断点续训与故障恢复**
 
-- 支持DPU故障触发断点续训。
-- 支持DPU亚健康可配置策略主动触发断点续训。
-- RL场景支持实例级恢复。
+- Atlas 950 SuperPoD超节点支持DPU故障触发断点续训。
+- Atlas 950 SuperPoD超节点支持DPU亚健康可配置策略主动触发断点续训。
+- Atlas 900 A3 SuperPoD超节点支持RL场景实例级恢复。
 - Atlas 950 SuperPoD超节点支持UB网络故障进程级在线恢复。
 
 **2、推理高可靠**
@@ -360,9 +360,9 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 **3、可靠性与健壮性**
 
-- 完成快恢可靠性能力验证。
-- 完成降lane等亚健康故障主动隔离节点可靠性能力验证。
-- 支持一体机自愈型故障100%自愈。
+- 完成Atlas 950 SuperPod Flex的Job重调度、Pod重调度、进程级重调度、进程级在线恢复可靠性能力验证。
+- 完成Atlas 950 SuperPod Flex的降lane等亚健康故障主动隔离节点可靠性能力验证。
+- 支持Atlas 850E超节点、Atlas 850超节点、Atlas 650E服务器、Atlas 650服务器、Atlas 350加速卡双机一体机自愈型故障100%自愈。
 
 **4、调度**
 
@@ -381,20 +381,20 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 **5、设备管理**
 
-- hccn_tool修改为DCMI接口，优化调度耗时。
+- NPU Exporter组件部分hccn_tool命令修改为DCMI接口，优化调度耗时。
 - 支持组件对外版本信息输出。
 
 **6、Ascend Docker Runtime**
 
 - 支持CRI-O。
-- 支持挂载UMDK和UB驱动用户态文件。
+- 支持挂载UB驱动用户态文件。
 
 **7、可观测性**
 
 - DPU Exporter支持1825指标采集。
 - NPU Exporter支持上报可用芯片数量。
 - Ascend Device Plugin支持上报设备NUMA信息。
-- vNPU硬切分指标监控增强。
+- Atlas A2/A3训练推理系列产品支持vNPU硬切分的利用率指标展示。
 - 支持Ascend 950PR&950DT系列产品的NPU利用率新指标接口。
 
 **8、机型适配**
@@ -430,7 +430,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 本版本继承MindCluster 26.1.0及其之前发布版本的部分特性。主要变更如下：
 
-hccn_tool工具接口调整为基于DCMI接口实现，优化调度耗时。
+NPU Exporter部分hccn_tool命令接口调整为基于DCMI接口实现，优化调度耗时。
 
 ### 业务接口变更
 
@@ -438,7 +438,7 @@ hccn_tool工具接口调整为基于DCMI接口实现，优化调度耗时。
 - Ascend Device Plugin新增上报设备NUMA信息。
 - Ascend Device Plugin移除启动参数linkdownTimeout。
 - NPU Exporter新增上报可用芯片数量。
-- hccn_tool工具接口调整为基于DCMI接口实现，优化调度耗时。
+- NPU Exporter部分hccn_tool命令接口调整为基于DCMI接口实现，优化调度耗时。
 - 未申请NPU的Pod无需配置skip标识即可正常调度（调度行为调整）。
 - Volcano支持任务调度忽略RoCE网络健康状态。
 - 其他兼容性问题请参见[MindCluster组件兼容性问题公告](https://gitcode.com/Ascend/mind-cluster/issues/588)。
