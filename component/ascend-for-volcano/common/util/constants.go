@@ -26,6 +26,9 @@ const (
 	HwPreName           = "huawei.com/"
 	NPUUnhealthySuffix  = "-Unhealthy"
 	NPUNetworkUnhealthy = "-NetworkUnhealthy"
+	// DeviceFaultCmKeySuffix is the annotation suffix carrying the device fault
+	// list (a JSON array of device faults) reported by the fault monitor.
+	DeviceFaultCmKeySuffix = "-Fault"
 	// NPUCardName for judge npu resource.
 	NPUCardName = "huawei.com/npu"
 	// NPU910CardName for judge 910 npu resource.
@@ -113,6 +116,43 @@ const (
 	SchedulerDowngradedLevelAnnoKey = "huawei.com/scheduler.downgrade.effected-config"
 	// DefaultDowngradedFactor npu number downgrade factor
 	DefaultDowngradedFactor = 2
+)
+
+// constants for fault-node tolerance backoff
+const (
+	// SilentFault is the fault_level of a card reported by the fault monitor as
+	// silently faulting: the node stays schedulable but the card is gated by the
+	// job's silent-fault tolerance.
+	SilentFault = "SilentFault"
+	// ToleranceForbidden is the after-time which keeps a time-gated constraint
+	// (silent-fault card or pod-error card) withheld forever.
+	ToleranceForbidden int64 = -1
+	// SilentUnhealthyToleranceAnnoKey annotation key for the silent-fault node
+	// tolerance after-time in seconds: 0 allows immediately (default), -1 never
+	// and N allows after the job has been pending N seconds.
+	SilentUnhealthyToleranceAnnoKey = "huawei.com/silent.unhealthy-tolerance.after-time"
+	// PodErrorToleranceAnnoKey annotation key for the rescheduled-node tolerance
+	// after-time in seconds: it gates the node which caused the last rescheduling
+	// of the job, covering every fault that errors the pod (hardware fault included),
+	// not only the pod's own failure.
+	PodErrorToleranceAnnoKey = "huawei.com/pod.error-tolerance.after-time"
+	// DefaultSilentUnhealthyToleranceAfterTime is the default silent-fault node
+	// tolerance in seconds: silent-fault nodes are released immediately.
+	DefaultSilentUnhealthyToleranceAfterTime = 0
+	// MaxSilentUnhealthyToleranceAfterTime is the upper bound of the silent-fault
+	// tolerance after-time in seconds. -1 (ToleranceForbidden) keeps its meaning
+	// (withheld forever); any positive value is clamped to this bound.
+	MaxSilentUnhealthyToleranceAfterTime int64 = 1800
+	// DefaultPodErrorToleranceAfterTime is the default rescheduled-node tolerance
+	// in seconds: the node which caused the last rescheduling is withheld for 30
+	// seconds.
+	DefaultPodErrorToleranceAfterTime = 30
+	// MaxPodErrorToleranceAfterTime is the upper bound of the pod-error tolerance
+	// after-time in seconds. Pod-error is a temporary backoff, not a permanent
+	// forbid, so -1 (ToleranceForbidden) is not allowed; any configured value is
+	// clamped to [0, MaxPodErrorToleranceAfterTime]. The pod-error cache also
+	// expires entries older than this bound.
+	MaxPodErrorToleranceAfterTime int64 = 300
 )
 
 // constants for ome inference service

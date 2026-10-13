@@ -124,6 +124,17 @@ type FaultDevList struct {
 	FaultLevel string
 }
 
+// FaultDeviceList is the fault reason of card, reported by the fault monitor
+// through the "-Fault" annotation (a JSON array of device faults).
+type FaultDeviceList struct {
+	FaultType            string `json:"fault_type"`
+	NPUName              string `json:"npu_name"`
+	FaultLevel           string `json:"fault_level"`
+	FaultHandling        string `json:"fault_handling"`
+	LargeModelFaultLevel string `json:"large_model_fault_level"`
+	FaultCode            string `json:"fault_code"`
+}
+
 // SwitchFaultInfo Switch Fault Info
 type SwitchFaultInfo struct {
 	FaultCode  []string

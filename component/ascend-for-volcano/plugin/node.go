@@ -192,6 +192,14 @@ func (sHandle *ScheduleHandler) NodePredicateOnVCNode(taskInfo *api.TaskInfo, vc
 		return nil
 	}
 
+	// Whole-node (super-pod) jobs occupy the entire node, so a single
+	// silent-fault or pod-error card still inside its tolerance window
+	// invalidates the node up front.
+	if err := vcJob.rejectSuperPodNodeWithBackoffCards(vcNode); err != nil {
+		klog.V(util.LogDebugLev).Infof("NodePredicateOnVCNode err: %v", err)
+		return err
+	}
+
 	// Reject whole-card tasks on chip soft-share nodes: once the node enables
 	// chip soft-split (VCANN-RT), its physical cards are virtualized into
 	// soft-share slices and can only serve soft-share (chip1softsharedev)
@@ -323,12 +331,12 @@ func (n *NPUNode) ParseChipTopology(node *api.NodeInfo) {
 		return
 	}
 	n.buildChipPods(node)
-	faulty, netUnh, maxCardID := n.parseDeviceHealthAnnotations()
+	faulty, netUnh, silent, maxCardID := n.parseDeviceHealthAnnotations()
 	if n.chipTopoOversize(maxCardID) {
 		n.ChipTopo = nil
 		return
 	}
-	n.ChipTopo.Init(faulty, netUnh, n.buildOwners())
+	n.ChipTopo.Init(faulty, netUnh, silent, n.buildOwners())
 }
 
 // topologyRaw returns the raw chip topology value, falling back to a flat
@@ -377,12 +385,26 @@ func (n *NPUNode) buildChipPods(node *api.NodeInfo) {
 	}
 }
 
-// parseDeviceHealthAnnotations collects faulty and network-unhealthy card ids
-// from the card annotations, plus the highest referenced chip id.
-func (n *NPUNode) parseDeviceHealthAnnotations() (faulty, netUnh map[int]struct{}, maxCardID int) {
+// parseDeviceHealthAnnotations collects faulty, network-unhealthy and
+// silent-fault card ids from the card annotations, plus the highest referenced
+// chip id. Silent-fault cards are recorded on the ChipNode as node-level static
+// state; whether they are withheld is decided later per job via its tolerance.
+func (n *NPUNode) parseDeviceHealthAnnotations() (faulty, netUnh, silent map[int]struct{}, maxCardID int) {
 	for key, val := range n.Annotation {
 		pre, ok := cardAnnoNpuPre(key)
 		if !ok {
+			continue
+		}
+		if strings.HasSuffix(key, util.DeviceFaultCmKeySuffix) {
+			for id := range n.silentFaultCardsFromAnno(val, pre) {
+				if id > maxCardID {
+					maxCardID = id
+				}
+				if silent == nil {
+					silent = make(map[int]struct{})
+				}
+				silent[id] = struct{}{}
+			}
 			continue
 		}
 		for id := range util.ParseDevList(val, pre) {
@@ -411,6 +433,25 @@ func (n *NPUNode) parseDeviceHealthAnnotations() (faulty, netUnh map[int]struct{
 	return
 }
 
+// silentFaultCardsFromAnno parses the -Fault annotation (a JSON array of device
+// faults) and returns the chip ids whose fault_level is SilentFault, mirroring
+// FaultNode.setSilentUnhealthyNPU but resolving each card name to chip ids.
+func (n *NPUNode) silentFaultCardsFromAnno(val, pre string) map[int]struct{} {
+	res := make(map[int]struct{})
+	var faults []k8s.FaultDeviceList
+	if err := json.Unmarshal([]byte(val), &faults); err != nil {
+		return res
+	}
+	for _, fault := range faults {
+		if fault.FaultLevel == util.SilentFault && fault.NPUName != "" {
+			for id := range util.ParseDevList(fault.NPUName, pre) {
+				res[id] = struct{}{}
+			}
+		}
+	}
+	return res
+}
+
 // buildOwners maps each running pod's uid to its allocated chip ids; failed and
 // succeeded pods keep no ownership so their chips can be reclaimed.
 func (n *NPUNode) buildOwners() map[string][]int {
@@ -425,11 +466,32 @@ func (n *NPUNode) buildOwners() map[string][]int {
 	return owners
 }
 
+// ChipIDsFromCardNames converts physical card names (e.g. "Ascend910-0") into
+// chip ids using the node's chip-kind prefix, skipping names that do not match.
+func (n NPUNode) ChipIDsFromCardNames(cards []string) map[int]struct{} {
+	res := make(map[int]struct{})
+	chipKind, err := n.GetChipKindFromNpuNode()
+	if err != nil {
+		return res
+	}
+	pre, ok := cardAnnoNpuPre(util.HwPreName + chipKind)
+	if !ok {
+		return res
+	}
+	for _, card := range cards {
+		for id := range util.ParseDevList(card, pre) {
+			res[id] = struct{}{}
+		}
+	}
+	return res
+}
+
 // cardAnnoNpuPre
 func cardAnnoNpuPre(key string) (string, bool) {
 	family := strings.TrimPrefix(key, util.HwPreName)
 	family = strings.TrimSuffix(family, util.NPUUnhealthySuffix)
 	family = strings.TrimSuffix(family, util.NPUNetworkUnhealthy)
+	family = strings.TrimSuffix(family, util.DeviceFaultCmKeySuffix)
 	switch family {
 	case "Ascend910", "Ascend910b":
 		return util.NPU910CardNamePre, true
