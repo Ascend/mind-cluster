@@ -7,7 +7,7 @@
 - K8s RDMA Shared Device Plugin is maintained by [MindCluster Code Repository](https://gitcode.com/Ascend/mind-cluster)
 - Where to get help
     - [MindCluster Code Repository](https://gitcode.com/Ascend/mind-cluster)
-    - [MindCluster Atlas Community](https://www.hiascend.com/document/detail/zh/mindcluster/latest/clustersched/dlug/docs/zh/scheduling/01_introduction/00_overview.md)
+    - [MindCluster Atlas Community](https://www.hiascend.com/document/detail/en/mindcluster/latest/clustersched/schedulingug/docs/en/scheduling/01_introduction/00_overview.md)
         - [Issue Tracker](https://gitcode.com/Ascend/mind-cluster/issues)
 
 ---
