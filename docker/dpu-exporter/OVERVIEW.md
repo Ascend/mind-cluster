@@ -17,19 +17,25 @@
 ### Use Cases
 
 During job execution, the health status of the DPU directly affects job stability. MindCluster provides the DPU
-Exporter component to monitor the running status and statistics metrics of the DPU.
+Exporter component to monitor the running status and statistics metrics of the DPU. The metrics provided fall into
+two categories:
+
+- **Global metrics**: statistics metrics such as RoCE packet errors, packet loss, received ECN, sent/received CNP,
+  and PSN abnormal retransmission.
+- **Interface-level metrics**: metrics such as the link running status, sent/received traffic, and abnormal error
+  status of each NIC port.
 
 ### Features
 
-- Obtains the running status and statistics metrics of the DPU from the NIC management tool and file interfaces.
+- Obtains DPU global metrics and interface-level metrics from the NIC management tool and file system interfaces
+  respectively.
 - Provides a Prometheus metrics interface for monitoring the running status and statistics metrics of the DPU.
 
 ### Upstream and Downstream Dependencies
 
-1. Obtains DPU global metrics and interface-level metrics from the NIC management tool and file interfaces
-   respectively.
-2. Converts the obtained metrics into Prometheus metric format.
-3. Provides a Prometheus metrics interface for monitoring the running status and statistics metrics of the DPU.
+1. Obtains DPU global metrics from the NIC management tool hinicadm5 and stores them in the cache.
+2. Obtains interface-level metrics from the sysfs file system and stores them in the cache.
+3. Implements the Prometheus metrics interface for Prometheus to periodically obtain data from the cache.
 
 ---
 
@@ -48,7 +54,10 @@ Tags follow the format below:
 | `version` | `v26.2.0`     | Version Number of DPU Exporter           |
 | `os`      | `ubuntu22.04` | Operating System for DPU Exporter Images |
 
-### DPU Exporter 26.2.0
+### DPU Exporter Latest Version 26.2.0
+
+The following lists all images of the latest released DPU Exporter 26.2.0. For all historical tags, see
+[Supported Tags](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/dpu-exporter/supported_tags.md).
 
 | Tag                      | Dockerfile                                                                                                                   | Image Content                                      |
 |--------------------------|------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|
@@ -145,7 +154,7 @@ Example: build a DPU Exporter image of architecture linux-aarch64, version v26.2
 4. Access monitoring metrics
 
    ```bash
-   curl http://<pod-ip>:8080/metrics
+   curl http://<pod-ip>:8083/metrics
    ```
 
 ---

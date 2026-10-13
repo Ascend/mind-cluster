@@ -16,18 +16,21 @@
 
 ### 应用场景
 
-在任务运行过程中，DPU的健康状态直接影响任务的稳定性。MindCluster提供DPU Exporter组件用于监测DPU的运行状态与统计指标。
+在任务运行过程中，DPU的健康状态直接影响任务的稳定性。MindCluster提供DPU Exporter组件用于监测DPU的运行状态与各项统计指标。当前提供的指标可分为两类：
+
+- **全局指标**：涵盖RoCE错包、丢包、接收ECN、发送/接收CNP及PSN异常重传等统计指标。
+- **Interface级指标**：涵盖每个网卡端口的链路运行状态、收发流量与异常错误状态等指标。
 
 ### 组件功能
 
-- 从网卡管理工具与文件接口获取DPU的运行状态与统计指标。
-- 提供Prometheus指标接口，用于监控DPU的运行状态与统计指标。
+- 从网卡管理工具与文件系统接口分别获取DPU的全局指标与Interface级指标。
+- 提供Prometheus指标接口，用于监控DPU的运行状态与各项统计指标。
 
 ### 组件上下游依赖
 
-1. 从网卡管理工具和文件接口分别获取DPU全局指标和interface级指标。
-2. 将获取到的指标转换为Prometheus指标格式。
-3. 提供Prometheus指标接口，用于监控DPU的运行状态与统计指标。
+1. 从网卡管理工具hinicadm5获取DPU全局指标，放入缓存。
+2. 从sysfs文件系统获取Interface级指标，放入缓存。
+3. 实现Prometheus的指标接口，供其周期性获取缓存中的数据信息。
 
 ---
 
@@ -46,7 +49,9 @@ Tag 遵循以下格式：
 | `版本`   | `v26.2.0`     | DPU Exporter 版本号   |
 | `操作系统` | `ubuntu22.04` | DPU Exporter 镜像操作系统 |
 
-### DPU Exporter 26.2.0
+### DPU Exporter 最新版本 26.2.0
+
+如下所示是 DPU Exporter 最新发布的 26.2.0 版本的所有镜像，历史版本所有 Tag 请参考 [Supported Tags](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/dpu-exporter/supported_tags.md)。
 
 | Tag                      | Dockerfile                                                                                                                   | 镜像内容                                        |
 |--------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------|
@@ -141,7 +146,7 @@ Tag 遵循以下格式：
 4. 访问监控指标
 
    ```bash
-   curl http://<pod-ip>:8080/metrics
+   curl http://<pod-ip>:8083/metrics
    ```
 
 ---
