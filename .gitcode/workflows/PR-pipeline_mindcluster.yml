@@ -1,6 +1,11 @@
 name: PR-pipeline_mindcluster
 
 on:
+  pull_request_target:
+    branches: [ 'master', 'release_v26.2.0', 'branch_v26.1.0', 'branch_v26.0.0' ]
+    types:
+      - open
+      - update
   pr_comment:
     types: [created]
     keyword: '^compile$'
@@ -84,6 +89,7 @@ stages:
           - name: checkout
             uses: checkout
             with:
+              allow-unsafe-pr-checkout: true
               ref: ${{ atomgit.event.pull_request.merge_commit_sha || '' }}
           - name: only doc commit check
             id: filter
@@ -155,6 +161,7 @@ stages:
           - name: checkout
             uses: checkout
             with:
+              allow-unsafe-pr-checkout: true
               ref: ${{ atomgit.event.pull_request.merge_commit_sha || '' }}
           - name: gitleaks install
             run: |
@@ -176,6 +183,8 @@ stages:
         steps:
           - name: checkout
             uses: checkout
+            with:
+              allow-unsafe-pr-checkout: true
           - name: Run SCA PR scan
             uses: openlibing/sca-action/sca-pr-action@v1.0.0
             with:
@@ -190,6 +199,8 @@ stages:
         steps:
           - name: Checkout
             uses: checkout
+            with:
+              allow-unsafe-pr-checkout: true
           - name: Run malicious code scan
             uses: openlibing/malicious-code-scan-action/malicious-code-pr-scan-action@v1.0.0
             with:
