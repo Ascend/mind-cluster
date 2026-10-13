@@ -697,3 +697,27 @@ func TestGetContainerRuntime_Success(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 	})
 }
+
+// TestCheckPod an ut for function checkPod
+func TestCheckPod(t *testing.T) {
+	convey.Convey("test checkPod", t, func() {
+		convey.Convey("pod with huawei.com/npu annotation, should return true", func() {
+			pod := v1.Pod{}
+			pod.Annotations = map[string]string{api.HuaweiNPU: api.NPULowerCase + "-0"}
+			convey.So(checkPod(&pod), convey.ShouldBeTrue)
+		})
+		convey.Convey("pod with huawei.com/Ascend910 annotation, should return true", func() {
+			pod := v1.Pod{}
+			pod.Annotations = map[string]string{api.HuaweiAscend910: api.Ascend910 + "-0"}
+			convey.So(checkPod(&pod), convey.ShouldBeTrue)
+		})
+		convey.Convey("pod without target annotations, should return false", func() {
+			pod := v1.Pod{}
+			pod.Annotations = map[string]string{"other/annotation": "0"}
+			convey.So(checkPod(&pod), convey.ShouldBeFalse)
+		})
+		convey.Convey("object is not a pod, should return false", func() {
+			convey.So(checkPod("not a pod"), convey.ShouldBeFalse)
+		})
+	})
+}
