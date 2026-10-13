@@ -191,6 +191,10 @@ component_k8s-rdma-shared-dev-plugin() {
     add_helm_meta rolebinding rdma-shared-dp-cm-rb kube-system
     add_helm_meta configmap rdma-devices kube-system
     add_helm_meta daemonset rdma-shared-dp-ds kube-system
+    add_helm_meta clusterrole rdma-shared-dp-pod-reader
+    add_helm_meta clusterrolebinding rdma-shared-dp-pod-reader-rb
+    add_helm_meta clusterrole rdma-shared-dp-node-role
+    add_helm_meta clusterrolebinding rdma-shared-dp-node-rb
 }
 
 component_ascend-dynamic-resource-allocation() {
