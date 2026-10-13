@@ -90,6 +90,14 @@ component_npu-exporter() {
     add_helm_meta daemonset npu-exporter-310p-1usoc npu-exporter
 }
 
+component_dpu-exporter() {
+    echo "========== dpu-exporter =========="
+    add_helm_meta namespace dpu-exporter
+    add_helm_meta configmap dpu-exporter-config dpu-exporter
+    add_helm_meta daemonset dpu-exporter dpu-exporter
+    add_helm_meta svc dpu-exporter dpu-exporter
+}
+
 component_infer-operator() {
     echo "========== infer-operator =========="
     add_helm_meta configmap infer-operator-config mindx-dl
@@ -192,6 +200,7 @@ component_ascend-dynamic-resource-allocation() {
     add_helm_meta clusterrolebinding ascend-dra-driver-role-binding
     add_helm_meta daemonset ascend-dra-driver-kubeletplugin kube-system
     add_helm_meta deviceclass npu.huawei.com
+    add_helm_meta deviceclass static-vnpu.huawei.com
     add_helm_meta validatingadmissionpolicy resourceslices-policy-ascend-dra-driver
     add_helm_meta validatingadmissionpolicybinding resourceslices-policy-ascend-dra-driver
 }
@@ -200,8 +209,12 @@ all_namespace() {
     echo "========== namespace mindx-dl and cluster-system =========="
     add_helm_meta namespace mindx-dl
     add_helm_meta namespace cluster-system
+    add_helm_meta namespace dpu-exporter
+    add_helm_meta namespace npu-exporter
     kubectl annotate namespace mindx-dl helm.sh/resource-policy=keep --overwrite
     kubectl annotate namespace cluster-system helm.sh/resource-policy=keep --overwrite
+    kubectl annotate namespace dpu-exporter helm.sh/resource-policy=keep --overwrite
+    kubectl annotate namespace npu-exporter helm.sh/resource-policy=keep --overwrite
 }
 
 delete_recource() {
@@ -236,6 +249,7 @@ add_helm_meta_all() {
     component_clusterd
     component_noded
     component_npu-exporter
+    component_dpu-exporter
     component_infer-operator
     component_ascend-operator
     component_ascend-device-plugin
@@ -255,6 +269,7 @@ usage() {
     echo "  --clusterd                  Only add helm meta for clusterd component"
     echo "  --noded                     Only add helm meta for noded component"
     echo "  --npu-exporter              Only add helm meta for npu-exporter component"
+    echo "  --dpu-exporter              Only add helm meta for dpu-exporter component"
     echo "  --infer-operator            Only add helm meta for infer-operator component"
     echo "  --ascend-operator           Only add helm meta for ascend-operator component"
     echo "  --ascend-device-plugin      Only add helm meta for ascend-device-plugin component"
@@ -297,6 +312,9 @@ main() {
                 ;;
             --npu-exporter)
                 component_npu-exporter
+                ;;
+            --dpu-exporter)
+                component_dpu-exporter
                 ;;
             --infer-operator)
                 component_infer-operator
