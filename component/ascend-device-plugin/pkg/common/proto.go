@@ -19,7 +19,7 @@ import (
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/api"
@@ -168,7 +168,6 @@ type Option struct {
 	ProductTypes          []string // all product types
 	RealCardType          string   // real card type
 	CardType              string   // standard card type
-	LinkdownTimeout       int64    // linkdown timeout duration
 	DealWatchHandler      bool     // update pod cache when receiving pod informer watch errors
 	EnableSwitchFault     bool     // if enable switch fault
 	CheckCachedPods       bool     // check cached pods periodically

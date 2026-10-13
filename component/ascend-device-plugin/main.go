@@ -49,13 +49,6 @@ const (
 	// minListWatchPeriod is the min listening device state's period
 	minListWatchPeriod = 3
 	maxLogLineLength   = 1024
-
-	// defaultLinkdownTimeout is the default linkdown timeout duration
-	defaultLinkdownTimeout = 30
-	// maxLinkdownTimeout is the max linkdown timeout duration
-	maxLinkdownTimeout = 30
-	// minLinkdownTimeout is the min linkdown timeout duration
-	minLinkdownTimeout = 1
 )
 
 var (
@@ -83,8 +76,6 @@ var (
 	hotReset      = flag.Int("hotReset", -1, "set hot reset mode: -1-close, 0-infer, 2-train-offline")
 	shareDevCount = flag.Uint("shareDevCount", 1, "share device function, enable the func by setting "+
 		"a value greater than 1, range is [1, 100], only support inference product")
-	linkdownTimeout = flag.Int64("linkdownTimeout", defaultLinkdownTimeout, "linkdown timeout duration, "+
-		", range [1, 30]")
 	dealWatchHandler = flag.Bool("dealWatchHandler", false,
 		"update pod cache when receiving pod informer watch errors")
 	checkCachedPods = flag.Bool("checkCachedPods", true,
@@ -145,7 +136,6 @@ func checkParam() bool {
 		checkPresetWithShareDevCount,
 		checkHotResetMode,
 		checkBuildScene,
-		checkLinkdownTimeout,
 		checkThirdPartyScanDelay,
 		checkDeviceResetTimeout,
 		checkShareDevFeatureParam,
@@ -212,14 +202,6 @@ func checkHotResetMode() bool {
 func checkBuildScene() bool {
 	if BuildScene != common.EdgeScene && BuildScene != common.CenterScene {
 		hwlog.RunLog.Error("unSupport build scene, only support edge and center")
-		return false
-	}
-	return true
-}
-
-func checkLinkdownTimeout() bool {
-	if (*linkdownTimeout) < minLinkdownTimeout || (*linkdownTimeout) > maxLinkdownTimeout {
-		hwlog.RunLog.Warn("linkdown timeout duration out of range")
 		return false
 	}
 	return true
@@ -342,7 +324,6 @@ func setParameters() {
 		HotReset:              *hotReset,
 		BuildScene:            BuildScene,
 		ShareCount:            *shareDevCount,
-		LinkdownTimeout:       *linkdownTimeout,
 		DealWatchHandler:      *dealWatchHandler,
 		CheckCachedPods:       *checkCachedPods,
 		EnableSlowNode:        *enableSlowNode,
