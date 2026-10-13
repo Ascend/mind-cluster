@@ -10,7 +10,7 @@
 - **生态版本适配**：支持Kubernetes 1.36版本和Volcano 1.15版本。
 - **运行时能力扩展**：Ascend Docker Runtime新增支持CRI-O，支持挂载UMDK和UB驱动用户态文件。
 - **可观测性增强**：新增DPU Exporter组件，支持1825指标采集；NPU Exporter支持上报可用芯片数量；Ascend Device Plugin支持上报设备NUMA信息。
-- **机型适配**：适配Atlas 950 SuperPoD Flex机型基础能力。
+- **机型适配**：适配Atlas 950 SuperPoD Flex机型。
 
 **MindCluster Ascend FaultDiag关键特性**
 
@@ -399,7 +399,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 **8、机型适配**
 
-适配Atlas 950 SuperPoD Flex超节点机型的基础能力。
+适配Atlas 950 SuperPoD Flex机型。
 
 **9、架构优化**
 
