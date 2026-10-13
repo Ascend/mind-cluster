@@ -75,31 +75,74 @@ func TestCollectorIntervalSetGet(t *testing.T) {
 // TestIntervalConfigApply covers IntervalConfig.Apply and GetDpuListRefreshInterval.
 func TestIntervalConfigApply(t *testing.T) {
 	defer func() {
-		// restore defaults so other tests in the package are not affected
-		SetCollectorInterval(CacheKeyHinicadm5, 40*time.Second)
-		SetCollectorInterval(CacheKeySysfs, 20*time.Second)
-		SetCollectorInterval(CacheKeyDpuListRefresh, 60*time.Second)
+		SetCollectorInterval(CacheKeyHinicadm5, time.Duration(DefaultHinicadm5IntervalSeconds)*time.Second)
+		SetCollectorInterval(CacheKeySysfs, time.Duration(DefaultSysfsIntervalSeconds)*time.Second)
+		SetCollectorInterval(CacheKeyDpuListRefresh, time.Duration(DefaultDpuListRefreshIntervalSeconds)*time.Second)
 	}()
 
 	(&IntervalConfig{
-		Hinicadm5CollectorInterval: 7,
-		SysfsCollectorInterval:     8,
-		DpuListRefreshInterval:     9,
+		Hinicadm5CollectorInterval: 25,
+		SysfsCollectorInterval:     26,
+		DpuListRefreshInterval:     27,
 	}).Apply()
 
-	if got := GetCollectorInterval(CacheKeyHinicadm5, 0); got != 7*time.Second {
-		t.Errorf("hinicadm5 interval = %v, want 7s", got)
+	if got := GetCollectorInterval(CacheKeyHinicadm5, 0); got != 25*time.Second {
+		t.Errorf("hinicadm5 interval = %v, want 25s", got)
 	}
-	if got := GetCollectorInterval(CacheKeySysfs, 0); got != 8*time.Second {
-		t.Errorf("sysfs interval = %v, want 8s", got)
+	if got := GetCollectorInterval(CacheKeySysfs, 0); got != 26*time.Second {
+		t.Errorf("sysfs interval = %v, want 26s", got)
 	}
-	if got := GetDpuListRefreshInterval(0); got != 9*time.Second {
-		t.Errorf("dpu list refresh interval = %v, want 9s", got)
+	if got := GetDpuListRefreshInterval(0); got != 27*time.Second {
+		t.Errorf("dpu list refresh interval = %v, want 27s", got)
 	}
 
 	// unconfigured key returns the fallback
 	collectorIntervalMap.Delete(CacheKeyDpuListRefresh)
-	if got := GetDpuListRefreshInterval(11*time.Second); got != 11*time.Second {
+	if got := GetDpuListRefreshInterval(11 * time.Second); got != 11*time.Second {
 		t.Errorf("dpu list refresh fallback = %v, want 11s", got)
+	}
+}
+
+func TestValidateInterval(t *testing.T) {
+	tests := []struct {
+		name    string
+		seconds int
+		want    time.Duration
+		wantErr bool
+	}{
+		{"collect-once", -1, CollectOnceInterval, false},
+		{"min valid", 20, 20 * time.Second, false},
+		{"max valid", 3600, 3600 * time.Second, false},
+		{"zero", 0, 0, true},
+		{"below min", 19, 0, true},
+		{"above max", 3601, 0, true},
+		{"negative two", -2, 0, true},
+		{"far above", 86400, 0, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ValidateInterval(tt.seconds)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateInterval(%d) error = %v, wantErr %v", tt.seconds, err, tt.wantErr)
+			}
+			if got != tt.want {
+				t.Errorf("ValidateInterval(%d) = %v, want %v", tt.seconds, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestApplyInvalidValueUsesDefault(t *testing.T) {
+	defer func() {
+		SetCollectorInterval(CacheKeyHinicadm5, time.Duration(DefaultHinicadm5IntervalSeconds)*time.Second)
+	}()
+
+	(&IntervalConfig{
+		Hinicadm5CollectorInterval: 10,
+	}).Apply()
+
+	if got := GetCollectorInterval(CacheKeyHinicadm5, 0); got != time.Duration(DefaultHinicadm5IntervalSeconds)*time.Second {
+		t.Errorf("invalid interval should use hinicadm5 default %ds, got %v",
+			DefaultHinicadm5IntervalSeconds, got)
 	}
 }

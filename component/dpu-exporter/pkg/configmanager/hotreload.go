@@ -51,9 +51,9 @@ type Config struct {
 func defaultConfig() *Config {
 	return &Config{
 		IntervalConfig: IntervalConfig{
-			Hinicadm5CollectorInterval: 40,
-			SysfsCollectorInterval:     20,
-			DpuListRefreshInterval:     60,
+			Hinicadm5CollectorInterval: DefaultHinicadm5IntervalSeconds,
+			SysfsCollectorInterval:     DefaultSysfsIntervalSeconds,
+			DpuListRefreshInterval:     DefaultDpuListRefreshIntervalSeconds,
 		},
 	}
 }
