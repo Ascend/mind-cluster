@@ -1,6 +1,6 @@
 module github.com/Mellanox/k8s-rdma-shared-dev-plugin
 
-go 1.26.9
+go 1.26.0
 
 require (
 	ascend-common v0.0.0
