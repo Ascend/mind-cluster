@@ -1910,7 +1910,7 @@ func (tool *AscendTools) HandleLostHyperPlaneFaultEvents(device *common.NpuDevic
 		return
 	}
 	needHandleLostHyperPlaneFaultCondition := isFirstFlushFault || (common.Int32Tool.Contains(initLogicIDs,
-		device.LogicID)) || common.SubscribeFailed
+		device.LogicID)) || common.SubscribeFailed || (device.Health == v1beta1.Unhealthy && moreThanFiveMin(device))
 	if !needHandleLostHyperPlaneFaultCondition {
 		return
 	}
