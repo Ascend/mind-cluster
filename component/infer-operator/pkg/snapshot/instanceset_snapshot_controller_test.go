@@ -188,6 +188,55 @@ func TestInstanceSetSnapshotReconcilerReconcile2(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(result, convey.ShouldResemble, reconcile.Result{})
 		})
+
+		convey.Convey("Should fall back to default replicas when sts spec replicas is nil", func() {
+			instanceSet := createTestInstanceSetWithSnapshot("test-instance", "default", int32(1), true)
+			statefulSetSpec := &appsv1.StatefulSetSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name: "main",
+								Env: []corev1.EnvVar{
+									{
+										Name:  common.HostSnapshotDirPathEnvKey,
+										Value: "/data/host-snapshot",
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			specBytes, _ := json.Marshal(statefulSetSpec)
+			instanceSet.Spec.InstanceSpec = runtime.RawExtension{Raw: specBytes}
+
+			fakeClient := getFakeClientBuilder().WithRuntimeObjects(instanceSet).Build()
+
+			reconciler := &InstanceSetSnapshotReconciler{
+				Client:          fakeClient,
+				SnapshotChecker: NewSnapshotChecker(fakeClient, 0),
+			}
+
+			ctx := context.Background()
+			req := reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Name:      "test-instance",
+					Namespace: "default",
+				},
+			}
+
+			_, err := reconciler.Reconcile(ctx, req)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(reconciler.SnapshotChecker.GetTrackerCount(), convey.ShouldEqual, 1)
+
+			trackerKey := reconciler.SnapshotChecker.getInstanceSetKey("default", "test-instance")
+			reconciler.SnapshotChecker.mu.RLock()
+			tracker := reconciler.SnapshotChecker.instanceTrackers[trackerKey]
+			reconciler.SnapshotChecker.mu.RUnlock()
+			convey.So(tracker, convey.ShouldNotBeNil)
+			convey.So(tracker.Replicas, convey.ShouldEqual, common.DefaultReplicas)
+		})
 	})
 }
 
