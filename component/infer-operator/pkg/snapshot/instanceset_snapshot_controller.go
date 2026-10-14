@@ -93,10 +93,17 @@ func (r *InstanceSetSnapshotReconciler) Reconcile(ctx context.Context, req ctrl.
 		r.SnapshotChecker.Start(ctx)
 	}
 
+	// stsSpec.Replicas may be nil since shouldProcessInstanceset only guards the top-level
+	// Spec.Replicas; fall back to DefaultReplicas, consistent with workload defaulting
+	podReplicas := common.DefaultReplicas
+	if stsSpec.Replicas != nil {
+		podReplicas = *stsSpec.Replicas
+	}
+
 	trackerKey := r.SnapshotChecker.getInstanceSetKey(instanceSet.Namespace, instanceSet.Name)
 	r.SnapshotChecker.removeTracker(trackerKey)
 
-	if err := r.SnapshotChecker.TrackInstanceSet(instanceSet, selectLabels, *stsSpec.Replicas); err != nil {
+	if err := r.SnapshotChecker.TrackInstanceSet(instanceSet, selectLabels, podReplicas); err != nil {
 		hwlog.RunLog.Warnf("Failed to track InstanceSet %s/%s for snapshot: %v",
 			instanceSet.Namespace, instanceSet.Name, err)
 		return ctrl.Result{}, nil
