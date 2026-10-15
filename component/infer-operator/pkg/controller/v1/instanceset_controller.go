@@ -368,8 +368,13 @@ func (r *InstanceSetReconciler) getNewStatus(
 	ctx context.Context,
 	instanceSet *apiv1.InstanceSet,
 	indexer common.InstanceIndexer) (newStatus apiv1.InstanceSetStatus, err error) {
+	replicas := common.DefaultReplicas
+	if instanceSet.Spec.Replicas != nil {
+		replicas = *instanceSet.Spec.Replicas
+	}
+
 	newStatus = *instanceSet.Status.DeepCopy()
-	newStatus.Replicas = *instanceSet.Spec.Replicas
+	newStatus.Replicas = replicas
 	newStatus.ObservedGeneration = instanceSet.Generation
 	readyReplicas, err := r.WorkLoadReconciler.InstanceReady(ctx, instanceSet, indexer)
 	if err != nil {
