@@ -749,7 +749,7 @@ Elastic Agent的安全加固请参见[TaskD安全加固](#taskd安全加固)章�
 
 ## 健康探针安全加固<a name="ZH-CN_TOPIC_0000002511346467"></a>
 
-各组件（Ascend Device Plugin、Ascend Operator、ClusterD、Infer Operator、NodeD、NPU Exporter）均内置HTTP健康探针服务，用于K8s livenessProbe机制探测组件存活状态。默认使用HTTP协议。
+各组件（Ascend Device Plugin、Ascend Operator、ClusterD、Infer Operator、NodeD、NPU Exporter等）均内置HTTP健康探针服务，用于K8s livenessProbe机制探测组件存活状态。默认使用HTTP协议。
 
 >[!NOTE]
 >Kubelet在执行HTTPS探针时**不校验服务端证书**，因此仅开启HTTPS探针对K8s probe场景无额外安全增益。仅在外部系统需要调用健康探针接口且需要验证服务端身份时（例如第三方监控系统、自定义健康检查脚本），才有必要配置探针的HTTPS。

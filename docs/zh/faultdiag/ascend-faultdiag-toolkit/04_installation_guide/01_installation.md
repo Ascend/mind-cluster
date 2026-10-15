@@ -12,6 +12,8 @@
 
 ### 1. 获取 Whl 包
 
+请参考本章获取所需软件包，下载二进制软件即表示您同意《[软件许可协议2.0](https://www.hiascend.com/legal/softlicense)》的条款和条件，下载源码软件即表示您同意Apache License Version 2.0的条款和条件。
+
 通过以下任意一种方式获取 Whl 包。
 
 **方式 1：从发行版本下载**

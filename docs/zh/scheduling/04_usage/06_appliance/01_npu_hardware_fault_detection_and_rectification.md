@@ -271,7 +271,7 @@ ctr run -t --env ASCEND_VISIBLE_DEVICES=0 \
 
 >[!NOTE]
 >
->- 当`huawei.com/job.replica`配置为1时，该容器按普通容器对待，不参与分布式协调，不会向Leader节点发起协调请求。
+>当`huawei.com/job.replica`配置为1时，该容器按普通容器对待，不参与分布式协调，不会向Leader节点发起协调请求。
 
 **故障停止流程**
 

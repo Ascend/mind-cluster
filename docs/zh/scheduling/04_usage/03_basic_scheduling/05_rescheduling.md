@@ -72,9 +72,7 @@ metadata:
     fault-retry-times: "100"         # 配置无条件尝试次数，软件故障场景需要配置。
 ```
 
-fault-scheduling配置项取值含义如下。
-
-**表 2**  fault-scheduling配置项值列表
+**表 1**  fault-scheduling配置项取值列表
 
 <a name="table0396162644916"></a>
 

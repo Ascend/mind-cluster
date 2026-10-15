@@ -4,7 +4,7 @@
 
 ## 前提条件
 
-- 已完成Infer Operator服务部署，详细请参见[部署Infer Operator任务](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md)。
+已完成Infer Operator服务部署，详细请参见[部署Infer Operator任务](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md)。
 
 ## 支持的产品形态
 

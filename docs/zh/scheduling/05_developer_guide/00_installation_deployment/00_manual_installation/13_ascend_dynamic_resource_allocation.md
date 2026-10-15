@@ -293,7 +293,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p0414dra240101"><a name="p0414dra240101"></a><a name="p0414dra240101"></a>false</p>
 </td>
-<td class="cellrowborder" valign="top" width="35%" headers="mcps1.2.5.1.4 "><p id="p0414dra240102"><a name="p0414dra240102"></a><a name="p0414dra240102"></a>查询当前Ascend DRA的版本号与commit ID等详细信息，该参数为标志位，无需跟值。使用示例：./ascend-dra -version或./ascend-dra -v</p>
+<td class="cellrowborder" valign="top" width="35%" headers="mcps1.2.5.1.4 "><p id="p0414dra240102"><a name="p0414dra240102"></a><a name="p0414dra240102"></a>查询当前Ascend DRA的版本号与commit ID等详细信息，该参数为标志位，无需跟值。使用示例：./ascend-dra -version或./ascend-dra -v。</p>
 </td>
 </tr>
 </tbody>

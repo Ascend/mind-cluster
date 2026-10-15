@@ -763,8 +763,6 @@ ClusterD与FD-OL（Fault Diagnose Online）框架在同一进程中，都部署�
 
 ### 配置慢网络诊断
 
-#### 使用示例<a name="zh-cn_topic_0000002313236861_section1969604665710"></a>
-
 1. 配置共享存储。
 
     ClusterD和NodeD通过共享存储进行交互，两者的共享存储根路径需要保持一致。共享目录的根路径属主为9000用户，与ClusterD运行用户一致。

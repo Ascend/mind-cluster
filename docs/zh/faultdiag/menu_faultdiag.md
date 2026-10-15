@@ -1,5 +1,6 @@
 # MindCluster 故障诊断用户指南
 
+<!-- npu="950,A3,910b,910,310p" id1 -->
 - [MindCluster Ascend FaultDiag](./ascend-faultdiag/menu_ascend_faultdiag_user_guide.md)
   - [简介](./ascend-faultdiag/01_introduction/menu_introduction.md)
     - [概述](./ascend-faultdiag/01_introduction/01_overview.md)
@@ -38,6 +39,8 @@
     - [FAQ](./ascend-faultdiag/07_references/02_faq.md)
     - [安全加固](./ascend-faultdiag/07_references/03_security.md)
     - [附录](./ascend-faultdiag/07_references/04_appendix.md)
+<!-- end id1 -->
+<!-- npu="950,A3,910b,310p" id2 -->
 - [MindCluster Ascend FaultDiag Toolkit](./ascend-faultdiag-toolkit/menu_ascend-faultdiag-toolkit.md)
   - [简介](./ascend-faultdiag-toolkit/01_introduction/menu_introduction.md)
     - [概述](./ascend-faultdiag-toolkit/01_introduction/01_overview.md)
@@ -85,3 +88,4 @@
     - [FAQ](./ascend-faultdiag-toolkit/07_references/01_faq.md)
     - [诊断项参考](./ascend-faultdiag-toolkit/07_references/02_diagnosis_items.md)
     - [术语表](./ascend-faultdiag-toolkit/07_references/03_list_of_terms.md)
+<!-- end id2 -->

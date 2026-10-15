@@ -12,30 +12,32 @@ Agent Core默认支持以下任务类型，无需任何配置：
 | inferjob（InferServiceSet推理任务） | mindcluster.huawei.com/v1 | InferServiceSet |
 
 > [!NOTE]
-> 若使用上述两种任务类型，可直接跳过本章节，进入[配置日志采集](./02_configuring_log_collection.md)章节。
+> 若使用上述两种任务类型，可直接跳过本章节，进入[配置日志采集](./02_configuring_log_collection.md)章节。否则请执行以下操作。
 
-**步骤1：修改`agent-core.yaml`中的ConfigMap `agent-core-task-crds`**
+## 配置步骤
 
-在`agent-core.yaml`顶部内联的ConfigMap `agent-core-task-crds`的`task_crds`列表中新增任务CR的`api_version`和`kind`。
+1. 修改`agent-core.yaml`中的ConfigMap `agent-core-task-crds`。
 
-以新增Volcano Job（`batch.volcano.sh/v1alpha1`，kind为`Job`）为例，修改后的`data.task_crds.yaml`内容：
+    在`agent-core.yaml`顶部内联的ConfigMap `agent-core-task-crds`的`task_crds`列表中新增任务CR的`api_version`和`kind`。
 
-```yaml
-# agent-core.yaml中ConfigMap agent-core-task-crds的data.task_crds.yaml
-task_crds:
-  - api_version: mindxdl.gitee.com/v1   # AscendJob
-    kind: AscendJob
-  - api_version: mindcluster.huawei.com/v1  # InferServiceSet (推理任务)
-    kind: InferServiceSet
-  - api_version: batch.volcano.sh/v1alpha1  # Volcano Job (新增)
-    kind: Job
-```
+    以新增Volcano Job（`batch.volcano.sh/v1alpha1`，kind为`Job`）为例，修改后的`data.task_crds.yaml`内容：
 
-**步骤2：重启Agent Core使配置生效**
+    ```yaml
+    # agent-core.yaml中ConfigMap agent-core-task-crds的data.task_crds.yaml
+    task_crds:
+      - api_version: mindxdl.gitee.com/v1   # AscendJob
+        kind: AscendJob
+      - api_version: mindcluster.huawei.com/v1  # InferServiceSet (推理任务)
+        kind: InferServiceSet
+      - api_version: batch.volcano.sh/v1alpha1  # Volcano Job (新增)
+        kind: Job
+    ```
 
-```shell
-kubectl rollout restart deployment agent-core -n mindx-dl
-```
+2. 重启Agent Core使配置生效。
+
+    ```shell
+    kubectl rollout restart deployment agent-core -n mindx-dl
+    ```
 
 ## 验证配置<a name="sectionfaultdiagnosisverify"></a>
 

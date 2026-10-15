@@ -4,8 +4,6 @@
 
 ## 使用前必读<a name="section_precondition"></a>
 
-**前提条件<a name="section_prerequisite"></a>**
-
 - 离线热复位特性一般搭配**整卡调度**和**重调度**特性一起使用，具体使用方式请参见[整卡调度](../03_basic_scheduling/03_full_npu_scheduling.md)和[重调度](../03_basic_scheduling/05_rescheduling.md)。
 - 开启离线热复位特性必须安装Ascend Device Plugin，并且将启动参数“-hotReset”取值设置为“0”或“2”（默认为“-1”，不支持离线热复位功能）详细请参见[手动安装Ascend Device Plugin](../../05_developer_guide/00_installation_deployment/00_manual_installation/04_ascend_device_plugin.md)。
 - 仅芯片故障支持热复位恢复。
