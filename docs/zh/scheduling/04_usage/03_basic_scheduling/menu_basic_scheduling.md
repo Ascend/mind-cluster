@@ -1,6 +1,7 @@
 # 调度特性指南
 
 - [特性说明](./00_feature_description.md)
+<!-- npu="950,A3,910b,910" id5 -->
 - [亲和性调度](./01_affinity_scheduling/menu_affinity_scheduling.md)
   - [方案介绍](./01_affinity_scheduling/00_solution_description.md)
   - [亲和性调度对接说明](./01_affinity_scheduling/01_affinity_scheduling_interconnection.md)
@@ -11,6 +12,7 @@
   <!-- npu="950,A3" id4 -->
   - [推理服务亲和性调度](./01_affinity_scheduling/06_infer_affinity_scheduling.md)
   <!-- end id4 -->
+<!-- end id5 -->
 - [昇腾AI处理器的调度流程](./02_scheduling_process_of_the_ascend_ai_processor.md)
 - [整卡调度](./03_full_npu_scheduling.md)
 <!-- npu="A3" id1 -->

@@ -25,9 +25,13 @@
 <!-- npu="950,A3,910b,910,310p" id6 -->
 - [K8s原生对象说明](12_k8s.md)
 - [环境变量说明](13_environment_variable_description.md)
-- [hccl.json文件说明](14_hccl.json_file_description.md)
-- [任务YAML配置说明](15_yaml_configuration.md)
 <!-- end id6 -->
+<!-- npu="950,A3,910b,910" id11 -->
+- [hccl.json文件说明](14_hccl.json_file_description.md)
+<!-- end id11 -->
+<!-- npu="950,A3,910b,910,310p" id12 -->
+- [任务YAML配置说明](15_yaml_configuration.md)
+<!-- end id12 -->
 <!-- npu="950" id7 -->
 - [DPU Exporter](16_dpu_exporter.md)
 <!-- end id7 -->

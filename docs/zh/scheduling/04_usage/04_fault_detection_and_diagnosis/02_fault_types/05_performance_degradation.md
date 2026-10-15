@@ -58,8 +58,6 @@ MindCluster集群调度组件结合MindCluster Ascend FaultDiag（故障诊断�
 
 ### 慢节点诊断<a name="ZH-CN_TOPIC_0000002500880704"></a>
 
-#### 功能说明<a name="zh-cn_topic_0000002278667326_section27999216294"></a>
-
 对于AI集群中出现的节点训练性能劣化现象，提供支持实时检测计算域问题或网络导致的慢节点，以便用户通过切换或其他方式隔离慢节点。
 
 当前仅支持与ClusterD和NodeD集成进行在线部署，请参见[安装部署](../../../03_installation_guide/02_installation/00_helm_installation.md)章节完成ClusterD和NodeD部署。
@@ -69,8 +67,6 @@ MindCluster集群调度组件结合MindCluster Ascend FaultDiag（故障诊断�
 - 慢节点调度：调度慢节点整体流程，控制数据清洗和慢节点算法。
 
 ### 慢网络诊断<a name="ZH-CN_TOPIC_0000002500720860"></a>
-
-#### 功能说明<a name="zh-cn_topic_0000002313236861_section27999216294"></a>
 
 支持提供参数面网络连通性检测，实时进行网络监测和异常上报，辅助故障分析和定界定位，提前预警网络故障和亚健康风险信息，保障集群网络的长期稳定运行。
 

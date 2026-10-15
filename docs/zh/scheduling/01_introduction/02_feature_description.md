@@ -35,14 +35,10 @@ DPU资源监测
 
 **所需组件<a name="section15655185785119"></a>**
 
-NPU资源监测所需组件：
-
-NPU Exporter
+NPU资源监测所需组件：NPU Exporter
 
 <!-- npu="950" id3 -->
-DPU资源监测所需组件：
-
-DPU Exporter
+DPU资源监测所需组件：DPU Exporter
 <!-- end id3 -->
 
 **使用说明<a name="section1245612501584"></a>**
@@ -71,8 +67,11 @@ DPU Exporter
 <!-- npu="950,A3,910b,910,310p" id5 -->
 ## 虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855"></a>
 
+<!-- npu="A3,910b" id14 -->
 虚拟化实例可将一张NPU切分成多份，分给不同的任务使用。按照切分的方式，分为基于HDK的虚拟化实例和基于vCANN-RT的虚拟化实例。
+<!-- end id14 -->
 
+<!-- npu="A3,910b,910,310p" id13 -->
 ### 基于HDK的虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855hdk"></a>
 
 **功能介绍<a name="section1337420477275"></a>**
@@ -99,6 +98,7 @@ DPU Exporter
 
 1. 安装请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[基于HDK的虚拟化实例](../04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md)章节进行操作。
+<!-- end id13 -->
 
 <!-- npu="950,A3,910b" id6 -->
 ### 基于vCANN-RT的虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855vcann"></a>

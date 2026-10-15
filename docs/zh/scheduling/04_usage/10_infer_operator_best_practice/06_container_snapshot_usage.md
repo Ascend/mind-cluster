@@ -17,21 +17,22 @@
 
 **前提条件**
 
-- 使用容器快照特性，需要确保已经安装如下组件。
-    - Volcano（本特性只支持使用Volcano作为调度器，不支持使用其他调度器。）
-    - Ascend Device Plugin
-    - Ascend Docker Runtime
-    - ClusterD
-    - NodeD
-    - Infer Operator
+使用容器快照特性，需要确保已经安装如下组件。
 
-- 若没有安装，可以参考[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作，其中NodeD、Infer Operator需要修改部分安装步骤。
+- Volcano（本特性只支持使用Volcano作为调度器，不支持使用其他调度器。）
+- Ascend Device Plugin
+- Ascend Docker Runtime
+- ClusterD
+- NodeD
+- Infer Operator
 
-  - NodeD
-    - 需要组件软件包中容器快照特性对应的`Dockerfile-container-snapshot`Dockerfile制作NodeD镜像。
-    - NodeD的启动yaml需使用组件软件包中容器快照特性对应的`noded-container-snapshot.yaml`，其中可根据实际快照大小修改CPU和内存资源请求与限制，此外快照路径`/user/snapshot`须根据实际情况配置，且为共享存储路径。
+若没有安装，可以参考[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作，其中NodeD、Infer Operator需要修改部分安装步骤。
 
-        ```Yaml
+- NodeD
+  - 需要使用组件软件包中容器快照特性对应的`Dockerfile-container-snapshot`Dockerfile制作NodeD镜像。
+  - NodeD的启动YAML需使用组件软件包中容器快照特性对应的`noded-container-snapshot.yaml`，其中可根据实际快照大小修改CPU和内存资源请求与限制，此外快照路径`/user/snapshot`需根据实际情况配置，且为共享存储路径。
+
+      ```Yaml
       ...
           volumeMounts:
       ...
@@ -45,27 +46,28 @@
             path: /user/snapshot
             type: Directory
       ...
-        ```
+      ```
 
-  - Infer Operator
-     - Infer Operator的启动yaml中添加快照路径挂载项，其中mountPath与hostPath根据实际情况配置并与NodeD的快照路径相同，此外还可配置快照超时参数（>= 1，单位为分钟）snapshotTimeout，默认60分钟
+- Infer Operator
 
-        ```Yaml
-           - name: image-path
-             mountPath: /user/snapshot
+  Infer Operator的启动YAML中添加快照路径挂载项，其中mountPath与hostPath根据实际情况配置并与NodeD的快照路径相同，此外还可配置快照超时参数snapshotTimeout（>= 1，单位为分钟，默认60分钟）。
 
-           - name: image-path
-             hostPath:
-               path: /user/snapshot
-               type: Directory
+  ```Yaml
+  - name: image-path
+    mountPath: /user/snapshot
 
-           containers:
-             - command: [ "/bin/bash", "-c", "--"]
-               args: [ "infer-operator
-                       --logFile=/var/log/mindx-dl/infer-operator/infer-operator.log
-                       --logLevel=0 --snapshotTimeout=120
-                       --enable-healthz=true --healthz-address=11254" ]
-        ```
+  - name: image-path
+    hostPath:
+      path: /user/snapshot
+      type: Directory
+
+  containers:
+    - command: [ "/bin/bash", "-c", "--"]
+      args: [ "infer-operator
+              --logFile=/var/log/mindx-dl/infer-operator/infer-operator.log
+              --logLevel=0 --snapshotTimeout=120
+              --enable-healthz=true --healthz-address=11254" ]
+  ```
 
 **系统配置**
 
@@ -104,7 +106,7 @@ modprobe ip6table_filter
           value: "/user/snapshot"
 ```
 
-推理任务部署使用说明详见[使用说明](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/features/container_snapshot.md)，下面使用演示仅展示使用流程。
+推理任务部署使用说明详见[使用说明](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/features/container_snapshot.md)，下面使用示例仅展示使用流程。
 
 **支持的产品形态**
 
@@ -113,11 +115,11 @@ modprobe ip6table_filter
 - <term>Atlas A2训练系列产品</term>
 - <term>Atlas A3训练系列产品</term>
 
-## 使用演示
+## 使用示例
 
-### 下发任务成功后查看任务进程
+### 查看任务进程
 
-执行以下命令，查看Pod运行状况。
+下发任务成功后，查看Pod运行状况。
 
 ```shell
 kubectl get pod --all-namespaces
@@ -147,22 +149,22 @@ default          my-test-hb-0-hybrid-1-1                      1/1     Running   
 container.id image rootfs-diff.digest rootfs-diff.tar rootfs-external-diff.tar
 ```
 
-如果没有生成快照文件，在对应计算节点上Ascend Docker Runtime日志查看故障：
+如果没有生成快照文件，在对应计算节点上的Ascend Docker Runtime日志中查看故障：
 
 ```ColdFusion
 [root@worker]# cd /var/log/ascend-docker-runtime
 [root@worker]# tail -f runtime-run.log
 ```
 
-### 构造pod故障并发生重调度
+### 构造Pod故障并发生重调度
 
-进入容器杀死推理服务进程：
+进入容器终止推理服务进程：
 
 ```shell
 kill -9 xxx
 ```
 
-pod 重启成功：
+Pod重启成功：
 
 ```ColdFusion
 NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE
@@ -174,7 +176,7 @@ default          my-test-hb-0-hybrid-1-1                      1/1     Running   
 ...
 ```
 
-如果pod 重启失败，在对应计算节点上Ascend Docker Runtime的restore日志查看故障：
+如果Pod重启失败，在对应计算节点上Ascend Docker Runtime的restore日志中查看故障：
 
 ```ColdFusion
 [root@worker]# cd /var/log/ascend-docker-runtime/restore
@@ -182,9 +184,9 @@ default          my-test-hb-0-hybrid-1-1                      1/1     Running   
 [root@worker]# tail -f restore.log
 ```
 
-### Ascend Docker Runtime日志显示恢复容器成功
+### 查看Ascend Docker Runtime日志
 
-查看Ascend Docker Runtime日志目录中runtime-run.log：
+查看Ascend Docker Runtime日志目录中runtime-run.log，显示恢复容器成功：
 
 ```ColdFusion
 ...

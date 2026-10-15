@@ -457,7 +457,7 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 5. 通过CDI机制将设备注入信息传递给容器运行时，完成设备注入。
 <!-- end id7 -->
 
-## Agent Core<a name="ZH-CN_TOPIC_0000002524312670"></a>
+## Agent Core<a name="ZH-CN_TOPIC_0000002524312673"></a>
 
 **应用场景<a name="section15761025111720"></a>**
 
@@ -478,7 +478,7 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 
 ![](../../figures/scheduling/组件上下游依赖-11.png "组件上下游依赖-11")
 
-1. 从K8s API Server获取任务请求
+1. 从K8s API Server获取任务请求。
 2. 从ConfigMap中获取任务缓存信息、训练/推理任务的挂载对和env信息。
 3. 从训练/推理任务容器中获取挂载信息、env信息和元数据。
 4. 发送采集指令给Node Collector。

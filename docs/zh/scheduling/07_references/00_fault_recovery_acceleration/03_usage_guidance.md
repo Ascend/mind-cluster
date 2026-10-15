@@ -191,7 +191,7 @@
 
             对于分布式优化器而言，由于增加了优化器副本，导致静态内存有所增加。但是集群规模越大时，DP Size越大，平均到单卡的显存增加量很小，这样可以避免OOM，因此推荐在大集群中使用。根据显存情况选择开启与否，调节参数。
 
-        - **enable-hbmfault-repair**：MindIO UCE功能开关，默认关闭，配置后对片上内存和网络状态进行故障检测，并完成在线修复，达到进程级在线恢复功能。本开关在开启 enable-high-availability 时生效。此特性依赖PyTorch的内存管理机制，仅在PyTorch的环境变量 PYTORCH\_NO\_NPU\_MEMORY\_CACHING 未配置，即开启内存复用机制时，才可使用此特性，若 export PYTORCH\_NO\_NPU\_MEMORY\_CACHING = 1，则无法使用此特性。
+        - **enable-hbmfault-repair**：MindIO UCE功能开关，默认关闭，配置后对片上内存和网络状态进行故障检测，并完成在线修复，实现进程级在线恢复功能。本开关在开启 enable-high-availability 时生效。此特性依赖PyTorch的内存管理机制，仅在PyTorch的环境变量 PYTORCH\_NO\_NPU\_MEMORY\_CACHING 未配置，即开启内存复用机制时，才可使用此特性，若 export PYTORCH\_NO\_NPU\_MEMORY\_CACHING = 1，则无法使用此特性。
         - **enable-worker-reboot**：MindIO ARF功能开关，默认关闭，配置后在发生一般性故障时，进行进程级重调度修复，继续训练。本开关在开启 enable-high-availability 时生效。
         - **distributed-optimizer-no-replica**：开启高可用特性后，分布式优化器默认增加优化器副本，会导致片上内存使用增加，开启该开关后，分布式优化器不增加副本内存占用；在MindIO UCE和MindIO ARF场景下，直接使用周期Checkpoint进行在线修复。
 

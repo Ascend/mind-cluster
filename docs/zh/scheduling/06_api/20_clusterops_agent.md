@@ -10,14 +10,13 @@
 
 ### Agent Core创建ConfigMap
 
-- clusterops-pathmap，详细说明请参见[表1](#tableclusteropspathmap)。
-- agent-core-relcache，详细说明请参见[表2](#tableagentcorerelcache)。
+#### clusterops-pathmap
+
+该ConfigMap位于cluster-system命名空间，数据键为`pathmap.json`，用于记录任务Pod的挂载对、env值和主机IP。Agent Core重启时会从中读取内容恢复关系数据，并在TriggerCollect采集指令中随Pod列表下发。快照按顺序填充分片写入（`clusterops-pathmap`、`clusterops-pathmap-1`…`clusterops-pathmap-N`，分片0写满后写分片1，依此类推；分片数固定为100），每个分片不超过ConfigMap的1MB数据上限。
 
 **表1**  clusterops-pathmap
 
 <a name="tableclusteropspathmap"></a>
-
-该ConfigMap位于cluster-system命名空间，数据键为`pathmap.json`，用于记录任务Pod的挂载对、env值和主机IP，供Agent Core重启时会从中读取内容恢复关系数据，并在TriggerCollect采集指令中随Pod列表下发。快照按顺序填充分片写入（`clusterops-pathmap`、`clusterops-pathmap-1`…`clusterops-pathmap-N`，分片0写满后写分片1，依此类推；分片数固定为100），每个分片不超过ConfigMap的1MB数据上限。
 
 |参数|说明|
 |--|--|
@@ -32,11 +31,13 @@
 |-deleted_at|Pod删除时间戳，存活Pod为null。|
 |-shard|该条目所属分片号（内部路由字段）。|
 
+#### agent-core-relcache
+
+该ConfigMap位于cluster-system命名空间，数据键为`snapshot`，用于保存任务与Pod的中心关系缓存快照。Agent Core重启时会从中读取内容恢复关系数据。快照按顺序填充分片写入（`agent-core-relcache`、`agent-core-relcache-1`…`agent-core-relcache-N`，分片0写满后写分片1，依此类推；分片数固定为100），每个分片不超过ConfigMap的1MB数据上限。
+
 **表2**  agent-core-relcache
 
 <a name="tableagentcorerelcache"></a>
-
-该ConfigMap位于cluster-system命名空间，数据键为`snapshot`，用于保存任务与Pod的中心关系缓存快照，Agent Core重启时会从中读取内容恢复关系数据。快照按顺序填充分片写入（`agent-core-relcache`、`agent-core-relcache-1`…`agent-core-relcache-N`，分片0写满后写分片1，依此类推；分片数固定为100），每个分片不超过ConfigMap的1MB数据上限。
 
 |参数|说明|
 |--|--|
@@ -54,7 +55,7 @@
 |-shard|该条目所属分片号（内部路由字段）。|
 
 >[!NOTE]
->Agent Core启动时读取该快照恢复任务→Pod关系数据，诊断时按任务名查询该关系表获取Pod及所在节点，再向各节点Node Collector下发采集指令。已删除Pod条目默认保留7天（可通过agent-core.yaml中环境变量POD_TTL进行修改）；内存表容量上限与分片快照总容量一致（100MB），超出后按最老优先淘汰。
+>Agent Core启动时读取该快照恢复任务→Pod关系数据，诊断时按任务名查询该关系表获取Pod及所在节点，再向各节点Node Collector下发采集指令。
 
 ### 其他业务相关ConfigMap/Secret
 
@@ -78,7 +79,7 @@ relcache/pathmap快照按顺序填充分片存储，分片0写满后写分片1�
 
 - 昇腾单集群上限10万卡（约1.25万个节点）。
 - 4个十万卡任务包含删除后保留的默认7天内的任务。
-- 历史任务过期：已删除Pod条目默认保留**7天**（`POD_TTL`，可在agent-core.yaml中调整，单位秒），超期后从内存表与分片快照中删除；内存占用超过容量上限时，按最老优先淘汰。
+- 历史任务过期：已删除Pod条目默认保留**7天**（可通过agent-core.yaml中环境变量`POD_TTL`进行修改），超期后从内存表与分片快照中删除；内存占用超过容量上限时，按最老优先淘汰。
 
 ## HTTP接口<a name="sectionascendclusteropshttp"></a>
 
@@ -117,11 +118,11 @@ relcache/pathmap快照按顺序填充分片存储，分片0写满后写分片1�
 
 >[!NOTE]
 >
-> - 9700为集群内部端口，不对外暴露；集群外请通过Kubectl Plugin（`kubectl ascend_diag`，经`kubectl port-forward`访问）调用该接口，参见[Kubectl Plugin](#sectionascendclusteropskubectl)。
+> 9700为集群内部端口，不对外暴露；集群外请通过Kubectl Plugin（`kubectl ascend_diag`，经`kubectl port-forward`访问）调用该接口，参见[Kubectl Plugin](#sectionascendclusteropskubectl)。
 
 ## 诊断结果缓存<a name="sectionascendclusteropscache"></a>
 
-Agent Core提供两级诊断结果缓存：近期结果缓存（内存）和持久结果缓存（磁盘）。
+Agent Core提供以下两级诊断结果缓存：
 
 **近期结果缓存（内存，10秒）**
 
@@ -137,8 +138,8 @@ Agent Core提供两级诊断结果缓存：近期结果缓存（内存）和持�
 |------|------|
 | 缓存文件 | `{缓存目录}/cache/<ns>_<job>.json`，按任务命名空间与任务名命名，跨天可命中。 |
 | 缓存目录 | 默认`{AGENT_WORK_ROOT}/cache`，即`/user/clusterops/agent-core/cache`（宿主导出目录），可通过环境变量`AGENT_CACHE_DIR`覆盖。 |
-| 淘汰机制 | 缓存文件不设固定保留期，每次诊断后按`WORK_ROOT`目录总容量配额（默认10GB，可通过环境变量`WORK_ROOT_MAX_BYTES`调整）淘汰，超限时连同诊断产物按最老优先删除。 |
-| 可诊断窗口 | 任务结束或Pod删除后7天内（`POD_TTL`默认值，可通过环境变量`POD_TTL`调整）relcache中仍有该任务记录，仍可执行诊断并命中缓存；超期后任务记录过期，返回任务不存在。 |
+| 淘汰机制 | 缓存文件不设置固定保留期，每次诊断后按`WORK_ROOT`目录总容量配额（默认10GB，可通过环境变量`WORK_ROOT_MAX_BYTES`调整）淘汰，超限时连同诊断产物按最老优先删除。 |
+| 可诊断窗口 | 任务结束或Pod删除后7天（agent-core.yaml中环境变量`POD_TTL`的默认值，可进行修改）内relcache中仍有该任务记录，仍可执行诊断并命中缓存；超期后任务记录过期，返回任务不存在。 |
 
 **表8**  缓存数据说明
 
@@ -155,7 +156,7 @@ Agent Core提供两级诊断结果缓存：近期结果缓存（内存）和持�
 
 **缓存条件**
 
-- 每次诊断成功后均缓存诊断结果，不依赖任务CR状态；命中缓存时直接返回缓存结果，提示使用 --refresh强制刷新获取最新结果。
+- 每次诊断成功后均缓存诊断结果，不依赖任务CR状态；命中缓存时直接返回缓存结果，提示使用`--refresh`强制刷新获取最新结果。
 - 任务CR不存在（404，任务已删除）时：若relcache中仍有该任务Pod记录（删除TTL内，日志仍保留在节点/共享盘上），仍可执行诊断并缓存；仅当relcache中也没有该任务记录时，直接返回任务不存在。
 
 >[!NOTE]
@@ -172,7 +173,7 @@ Agent Core提供两级诊断结果缓存：近期结果缓存（内存）和持�
 
 >[!NOTE]
 >
-> - 9710和9720为集群内部端口，不对外暴露，仅供Agent Core与Node Collector在集群内互相调用。
+> 9710和9720为集群内部端口，不对外暴露，仅供Agent Core与Node Collector在集群内互相调用。
 
 ## Kubectl Plugin<a name="sectionascendclusteropskubectl"></a>
 

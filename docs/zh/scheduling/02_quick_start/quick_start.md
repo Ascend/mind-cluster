@@ -311,7 +311,7 @@
 
     >[!NOTE]
     >
-    > 本示例使用的镜像版本为24.0.0-A2-2.1.0。如需获取最新版本镜像，请访问[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)查看可用版本列表，或联系华为技术支持获取版本配套信息。
+    > 本示例使用的镜像版本为24.0.0-A2-2.1.0。如需获取最新版本镜像，请访问[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)查看可用版本列表。
 
     ```shell
     docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04

@@ -102,6 +102,7 @@ affScoreList\[3\] = \[\]int\{8,8,8,0,1,2,3,4\}
 >- Soft软亲和只支持Job级别重调度。
 >- 若业务开启了软亲和，为满足业务运行优先，在物理超节点无法满足逻辑超节点调度时，会跨超节点调度，但是可能导致业务性能有所下降。
 
+<!-- npu="950" id1 -->
 **逻辑框亲和性调度<a name="section941034517442"></a>**
 
 1. 根据任务的逻辑框大小，将任务所需节点数转化为所需逻辑框的数量，以逻辑框大小为16，任务所需芯片总数64为例，则逻辑框数量X=4。
@@ -125,3 +126,4 @@ Volcano框架根据节点优选得到分数后为Pod任务选择最优的节点�
 **具体实现<a name="section94176351465"></a>**
 
 具体代码实现请参考开源代码中[UseAnnotation](https://gitcode.com/Ascend/mind-cluster/blob/release%2Fv26.2.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法，其中selectNPUFromNode方法实现了根据亲和性从node上选取昇腾AI处理器的功能。
+<!-- end id1 -->

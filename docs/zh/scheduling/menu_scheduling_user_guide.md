@@ -71,6 +71,7 @@
   <!-- npu="950,A3,910b,910,310p" id7 -->
   - [调度特性指南](./04_usage/03_basic_scheduling/menu_basic_scheduling.md)
     - [特性说明](./04_usage/03_basic_scheduling/00_feature_description.md)
+    <!-- npu="950,A3,910b,910" id52 -->
     - [亲和性调度](./04_usage/03_basic_scheduling/01_affinity_scheduling/menu_affinity_scheduling.md)
       - [方案介绍](./04_usage/03_basic_scheduling/01_affinity_scheduling/00_solution_description.md)
       - [亲和性调度对接说明](./04_usage/03_basic_scheduling/01_affinity_scheduling/01_affinity_scheduling_interconnection.md)
@@ -81,6 +82,7 @@
       <!-- npu="950,A3" id11 -->
       - [推理服务亲和性调度](./04_usage/03_basic_scheduling/01_affinity_scheduling/06_infer_affinity_scheduling.md)
       <!-- end id11 -->
+    <!-- end id52 -->
     - [昇腾AI处理器的调度流程](./04_usage/03_basic_scheduling/02_scheduling_process_of_the_ascend_ai_processor.md)
     - [整卡调度](./04_usage/03_basic_scheduling/03_full_npu_scheduling.md)
     <!-- npu="A3" id8 -->
@@ -117,6 +119,8 @@
       <!-- end id23 -->
       - [配置公共故障](./04_usage/04_fault_detection_and_diagnosis/03_configuration/08_public_faults.md)
     - [查询和验证故障](./04_usage/04_fault_detection_and_diagnosis/04_querying_and_verifying_faults.md)
+  <!-- end id12 -->
+  <!-- npu="950,A3,910b,910,310p" id49 -->
   - [故障恢复特性指南](./04_usage/05_fault_recovery/menu_fault_recovery.md)
     <!-- npu="950,A3,910b,910" id43 -->
     - [断点续训特性指南](./04_usage/05_fault_recovery/01_resumable_training/menu_resumable_training.md)
@@ -136,7 +140,7 @@
       - [配置推理任务Pod级重调度](./04_usage/05_fault_recovery/02_resumable_inference/01_configuring_infer_pod_rescheduling.md)
     <!-- end id44 -->
     - [芯片故障恢复](./04_usage/05_fault_recovery/00_chip_fault_recovery.md)
-  <!-- end id12 -->
+  <!-- end id49 -->
   <!-- npu="950,A3,910b,910,310p" id13 -->
   - [一体机特性指南](./04_usage/06_appliance/menu_appliance.md)
     - [使用前必读](./04_usage/06_appliance/00_before_you_start.md)
@@ -303,9 +307,13 @@
   <!-- npu="950,A3,910b,910,310p" id35 -->
   - [K8s原生对象说明](./06_api/12_k8s.md)
   - [环境变量说明](./06_api/13_environment_variable_description.md)
-  - [hccl.json文件说明](./06_api/14_hccl.json_file_description.md)
-  - [任务YAML配置说明](./06_api/15_yaml_configuration.md)
   <!-- end id35 -->
+  <!-- npu="950,A3,910b,910" id50 -->
+  - [hccl.json文件说明](./06_api/14_hccl.json_file_description.md)
+  <!-- end id50 -->
+  <!-- npu="950,A3,910b,910,310p" id51 -->
+  - [任务YAML配置说明](./06_api/15_yaml_configuration.md)
+  <!-- end id51 -->
   <!-- npu="950" id36 -->
   - [DPU Exporter](./06_api/16_dpu_exporter.md)
   <!-- end id36 -->

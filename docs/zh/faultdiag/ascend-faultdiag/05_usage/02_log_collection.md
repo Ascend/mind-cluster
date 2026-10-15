@@ -527,11 +527,12 @@ MindIO 组件运行时，每个进程会产生一个 `ttp_log.log.*` 日志文�
 cp -r ~/ttp_log {采集目录}/dl_log/ttp_log
 ```
 
+<!-- npu="950,A3" id1 -->
 ### LCNE 日志（Bus 日志 / UBM 日志）
 
 训练或推理结束后，需要采集 LCNE 组件日志。ascend-fd组件26.2.0及之后版本，增强了Unified Bus（UB）链路诊断能力，如果希望使用该增强能力，请务必采集LCNE日志。
 
-<!-- npu="950" id1 -->
+<!-- npu="950" id2 -->
 **Ascend 950PR&950DT系列产品**
 
 <term>Ascend 950PR&950DT系列产品</term>LCNE组件运行时，需要将日志解压至`采集目录/lcne_log/`下。可按照以下方式进行采集：
@@ -558,9 +559,9 @@ cp -r ~/ttp_log {采集目录}/dl_log/ttp_log
                       └──...
       └──…
   ```
-<!-- end id1 -->
+<!-- end id2 -->
 
-<!-- npu="A3" id2 -->
+<!-- npu="A3" id3 -->
 **<term>Atlas A3系列产品</term>**
 
 直接将 SmartKit 或 CCAE 导出的 LCNE 组件日志递归解压后放置到 `采集目录/lcne_log/` 下。
@@ -568,7 +569,8 @@ cp -r ~/ttp_log {采集目录}/dl_log/ttp_log
 > [!NOTE]
 >
 > 如果不能确定 LCNE 归属于哪个节点，请单独放置到一个目录，如 `LCNE采集日志/` 下，使用请参考[场景一拓扑信息自动关联推荐](./06_superpod_diagnosis.md#场景一拓扑信息自动关联推荐)。
-<!-- end id2 -->
+<!-- end id3 -->
+<!-- end id1 -->
 
 ### BMC 日志
 
