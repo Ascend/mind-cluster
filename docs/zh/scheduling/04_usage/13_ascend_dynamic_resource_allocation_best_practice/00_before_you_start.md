@@ -23,18 +23,18 @@ Ascend DRA组件的完整生命周期包含如下六个阶段：
 
 <a name="fig_dra_life_cycle"></a>
 
-- **部署与发现**：用户通过API Server下发DeviceClass、RBAC及DaemonSet；DRA组件启动后通过DCMI查询本节点NPU列表，并发布ResourceSlice到API Server。
-- **用户提交**：用户提交引用了ResourceClaim的Pod，resourceclaim-controller负责创建并关联Claim。
-- **调度**：kube-scheduler/Volcano Scheduler读取ResourceSlice匹配DeviceClass，锁定设备并写入Claim.status.allocation，将Pod绑定到目标节点。
-- **准备（Prepare）**：kubelet读取Claim确认分配结果后调用DRA插件的NodePrepareResources回调；插件校验allocation，生成CDI spec文件并产出CDI device IDs返回给kubelet。
-- **运行**：kubelet调用CRI创建容器，CRI自动合并静态与动态CDI spec，注入设备节点、挂载及环境变量。
-- **清理（Unprepare）**：用户删除Pod后，kubelet调用DRA插件的NodeUnprepareResources回调，清理对应的CDI spec，Claim随之释放，设备归还资源池。
+1. **部署与发现**：用户通过API Server下发DeviceClass、RBAC及DaemonSet；DRA组件启动后通过DCMI查询本节点NPU列表，并发布ResourceSlice到API Server。
+2. **用户提交**：用户提交引用了ResourceClaim的Pod，ResourceClaim Controller负责创建并关联Claim。
+3. **调度**：kube-scheduler/Volcano Scheduler读取ResourceSlice匹配DeviceClass，锁定设备并写入Claim.status.allocation，将Pod绑定到目标节点。
+4. **准备（Prepare）**：kubelet读取Claim确认分配结果后调用DRA插件的NodePrepareResources回调；插件校验allocation，生成CDI spec文件并产出CDI device IDs返回给kubelet。
+5. **运行**：kubelet调用CRI创建容器，CRI自动合并静态与动态CDI spec，注入设备节点、挂载及环境变量。
+6. **清理（Unprepare）**：用户删除Pod后，kubelet调用DRA插件的NodeUnprepareResources回调，清理对应的CDI spec，Claim随之释放，设备归还资源池。
 
 ## 前提条件<a name="section_dra_prerequisites"></a>
 
 在部署和使用Ascend DRA组件前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 
-- Kubernetes集群版本 1.36.x。
+- Kubernetes集群版本为1.36.x。
 - （可选）Volcano调度器。使用Volcano调度DRA任务时，ascend-volcano-plugin会对DRA任务旁路NPU专用调度逻辑。
 - NPU节点已安装NPU驱动与固件，且设备运行正常。
 
@@ -53,7 +53,7 @@ Ascend DRA组件支持的产品形态如下：
 
 MindCluster集群调度组件支持通过以下方式使用Ascend DRA组件：
 
-- [部署DRA组件并运行Prepare/Unprepare验证](./01_deploying_dra_and_running_task.md)：通过部署DRA组件并下发引用ResourceClaim的任务，验证完整的设备分配与释放流程。
+[部署DRA组件并运行Prepare/Unprepare验证](./01_deploying_dra_and_running_task.md)：通过部署DRA组件并下发引用ResourceClaim的任务，验证完整的设备分配与释放流程。
 
 > [!NOTE]
 > 关于Ascend DRA组件上报的ResourceSlice格式与健康检查接口的详细说明，请参见[Ascend Dynamic Resource Allocation](../../06_api/17_ascend_dynamic_resource_allocation.md)。
