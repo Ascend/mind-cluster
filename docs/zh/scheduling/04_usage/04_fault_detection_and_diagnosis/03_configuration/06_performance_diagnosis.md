@@ -172,13 +172,10 @@
 
       2. 挂载文件。
           1. 挂载轻量profiling配置文件：需将宿主机上任务对应的data-trace ConfigMap落盘到/user/cluster-info/datatrace-config/命名空间.data-trace-任务名称/文件夹下。将名为profilingSwitch的文件挂载到容器指定路径：/user/cluster-info/datatrace-config/。
-          2. 挂载轻量profiling落盘文件：轻量profiling数据写在容器内的/user/cluster-info/profiling路径下。如需在宿主机获取，请修改任务YAML，将该路径挂出。
               - 容器内YAML挂载示例如下。
 
                   ```yaml
                   volumeMounts:
-                  - name: profilingdata
-                    mountPath: /user/cluster-info/
                   - name: profileswitch
                     mountPath: /user/cluster-info/datatrace-config
                   ```
@@ -190,6 +187,23 @@
                   - name: profileswitch
                     hostPath:
                       path: /user/cluster-info/datatrace-config/default.data-trace-default-test-pytorch-fault-mixtral
+                  ```
+
+              >[!NOTE]
+              >- 该挂载方式仅适用通过ConfigMap方式开启轻量profiling获取落盘数据。
+          2. 挂载轻量profiling落盘文件：轻量profiling数据写在容器内的/user/cluster-info/profiling路径下。如需在宿主机获取，请修改任务YAML，将该路径挂出。
+              - 容器内YAML挂载示例如下。
+
+                  ```yaml
+                  volumeMounts:
+                  - name: profilingdata
+                    mountPath: /user/cluster-info/
+                  ```
+
+              - 宿主机内YAML挂载示例如下。
+
+                  ```yaml
+                  volumes:
                   - name: profilingdata
                     hostPath:
                       path: /home/profilingdatapath
