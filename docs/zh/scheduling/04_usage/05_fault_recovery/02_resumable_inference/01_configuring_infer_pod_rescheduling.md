@@ -12,7 +12,7 @@
 
 Infer Operator在部署不同角色的实例时，会创建Deployment/StatefulSet（具体类型取决于配置项workload）对应实例。开启Pod级重调度后，当某个Pod发生业务面故障时，Infer Operator仅删除故障Pod，由对应的Controller重新创建被删除的Pod，并由Volcano重新调度新创建Pod。
 
-以示例yaml为例，其中各配置项含义如下：
+以示例YAML为例，其中各配置项含义如下：
 
 - `fault-scheduling: external-force-pod-failed`：仅处理业务面故障（Pod内进程非零退出），硬件故障时不删除故障节点Pod。
 - `pod-rescheduling: on`：取值为on时按Pod粒度删除故障Pod；取值为其他值时按实例粒度删除。
@@ -20,7 +20,7 @@ Infer Operator在部署不同角色的实例时，会创建Deployment/StatefulSe
 
 ## 配置Pod级重调度
 
-Infer Operator任务配置Pod级重调度示例如下，需修改以下加粗部分配置。相关配置项说明请参见[YAML参数说明](../../10_infer_operator_best_practice/01_deploying_infer_operator_inference_job_with_vllm_proxy.md#YAML参数说明)。
+Infer Operator任务配置Pod级重调度示例如下，需修改以下加粗部分配置。相关配置项说明请参见[YAML参数说明](../../10_infer_operator_best_practice/01_deploying_infer_operator_inference_job_with_vllm_proxy.md#yaml参数说明)。
 
 <pre codetype="yaml">
 apiVersion: mindcluster.huawei.com/v1

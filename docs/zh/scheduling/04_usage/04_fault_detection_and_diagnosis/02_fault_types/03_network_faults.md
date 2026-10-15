@@ -132,10 +132,10 @@ UB PORT link状态变化（UP -> DOWN）；UBOE PORT link状态变化 (UP -> DOW
 
 |故障码|故障说明|故障级别|
 |--|--|--|
-|020001002|超平面路由不可收敛。       |SeparateNPUCodes：隔离NPU故障。|
-|020000002|超平面路由可收敛设备亚健康。|SubHealthFaultCodes：亚健康故障。|
-|110001024|参数面路由不可收敛。       |PreSeparateNPUCodes：预隔离NPU故障。|
-|110000002|参数面路由可收敛设备亚健康。|SubHealthFaultCodes：亚健康故障。|
+|020001002|超平面路由不可收敛。       |SeparateNPU：隔离NPU故障。|
+|020000002|超平面路由可收敛设备亚健康。|SubHealthFault：亚健康故障。|
+|110001024|参数面路由不可收敛。       |PreSeparateNPU：预隔离NPU故障。|
+|110000002|参数面路由可收敛设备亚健康。|SubHealthFault：亚健康故障。|
 
 ## UB网卡故障<a name="ZH-CN_TOPIC_0000002511426421"></a>
 
@@ -169,7 +169,7 @@ Job级别重调度、Pod级别重调度
 
 ### 已支持的UB网卡故障
 
-|故障码|故障等级|故障事件名称|故障说明|
+|故障码|故障级别|故障事件名称|故障说明|
 |--|--|--|--|
 |21000022|SubHealthFault|ub_port_down|RoCE设备不可用，需切换NIC和IP。|
 |21000023|SubHealthFault|ub_lane_down|UB通道降lane，无需切换NIC或IP。|
