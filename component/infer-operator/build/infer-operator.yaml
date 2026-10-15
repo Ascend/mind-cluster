@@ -38,7 +38,7 @@ spec:
       initContainers:
         - name: init-log-setup
           image: infer-operator:latest
-          command: ['sh', '-c', 'mkdir -p /var/log/mindx-dl && chmod 755 /var/log/mindx-dl && chown root:root /var/log/mindx-dl && mkdir -p /var/log/mindx-dl/infer-operator && chmod 750 /var/log/mindx-dl/infer-operator']
+          command: ['sh', '-c', 'mkdir -p /var/log/mindx-dl && chmod 755 /var/log/mindx-dl && chown root:root /var/log/mindx-dl && mkdir -p /var/log/mindx-dl/infer-operator && chmod 750 /var/log/mindx-dl/infer-operator && chown -R root:root /var/log/mindx-dl/infer-operator']
           securityContext:
             runAsUser: 0
             runAsNonRoot: false
@@ -73,6 +73,8 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
+            runAsUser: 0
+            runAsGroup: 0
             capabilities:
               drop: ["All"]
           volumeMounts:
