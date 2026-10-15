@@ -1271,6 +1271,40 @@ func TestGetNewStatus2(t *testing.T) {
 	})
 }
 
+// TestGetNewStatusWithNilSpecReplicas tests that getNewStatus does not panic when Spec.Replicas is nil.
+// role.replicas may be removed from the InferService while the stale status keeps its replica count;
+// the rescheduling path calls updateStatus for the affected InstanceSets directly, bypassing validate.
+func TestGetNewStatusWithNilSpecReplicas(t *testing.T) {
+	convey.Convey("Test InstanceSetReconciler getNewStatus method with nil spec replicas", t, func() {
+		convey.Convey("Should fall back to default replicas when spec replicas is nil", func() {
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(2))
+			instanceSet.Spec.Replicas = nil
+			instanceSet.Status.Replicas = 2
+			fakeClient := NewFakeClient(instanceSet).Build()
+
+			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workLoadReconciler,
+			}
+
+			patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "InstanceReady", 0, nil)
+			defer patches.Reset()
+
+			ctx := context.Background()
+			indexer := GetTestIndexer("test-service", "test-role", "0")
+			newStatus, err := reconciler.getNewStatus(ctx, instanceSet, indexer)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(newStatus.Replicas, convey.ShouldEqual, common.DefaultReplicas)
+			convey.So(newStatus.ReadyReplicas, convey.ShouldEqual, int32(0))
+			convey.So(len(newStatus.Conditions), convey.ShouldEqual, 1)
+			convey.So(newStatus.Conditions[0].Type, convey.ShouldEqual, string(common.InstanceSetReady))
+			convey.So(newStatus.Conditions[0].Status, convey.ShouldEqual, metav1.ConditionFalse)
+			convey.So(newStatus.Conditions[0].Reason, convey.ShouldEqual, common.WorkloadNotReadyReason)
+		})
+	})
+}
+
 // TestValidateServices tests the validateServices function.
 func TestValidateServices(t *testing.T) {
 	convey.Convey("Test validateServices function", t, func() {
