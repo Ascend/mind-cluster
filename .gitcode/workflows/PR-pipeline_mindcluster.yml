@@ -222,38 +222,6 @@ stages:
           IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:mindCluster_20260813"
           runs_on_arch: "arm"
 
-      Build_mindio_x86:
-        name: Build_mindio_x86
-        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
-        uses: .gitcode/workflows/.build_mindio.yml
-        with:
-          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_20251203"
-          runs_on_arch: "x86"
-
-      Build_mindio_arm:
-        name: Build_mindio_arm
-        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
-        uses: .gitcode/workflows/.build_mindio.yml
-        with:
-          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:mindxdl_go1207_20251202_1"
-          runs_on_arch: "arm"
-
-      Build_faultdiag_x86:
-        name: Build_faultdiag_x86
-        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
-        uses: .gitcode/workflows/.build_faultdiag.yml
-        with:
-          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:SDK_20260113_1"
-          runs_on_arch: "x86"
-
-      Build_faultdiag_arm:
-        name: Build_faultdiag_arm
-        if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' && env.ATOMGIT_BASE_REF != 'master' && env.ATOMGIT_BASE_REF != 'branch_v26.0.0' && env.ATOMGIT_BASE_REF != 'branch_v26.1.0' }}
-        uses: .gitcode/workflows/.build_faultdiag.yml
-        with:
-          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:SDK_20260113_1"
-          runs_on_arch: "arm"
-
       UT_go:
         name: UT_go
         if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
