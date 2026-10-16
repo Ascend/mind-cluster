@@ -160,6 +160,7 @@ RUN go install github.com/mikefarah/yq/v4@v4.44.3 \
 #    standalone swig via pip.
 # ------------------------------------------------------------------------------
 RUN pip3 install "swig>=4.2,<4.4"
+RUN pip3 install "setuptools>=61"
 
 # ------------------------------------------------------------------------------
 # 9. Python component deps (ascend-faultdiag / taskd)
