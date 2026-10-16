@@ -62,7 +62,8 @@ type BuildSpecConfig struct {
 	// Use mount.MountConfig{Dir: "/etc/ascend-docker-runtime.d",
 	// IsAscendDockerRuntime: true} for runtime CDI (list mode), or
 	// mount.MountConfig{Dir: "/etc/ascend-dra/mounts"} for the JSON mount
-	// profile written by DRA (default JSON mode).
+	// profile written by DRA (default JSON mode). HostFsPrefix also locates
+	// host /dev nodes for stat; it never changes CDI HostPath.
 	mount.MountConfig
 
 	// Version is the CDI spec version. Empty falls back to the package
@@ -154,11 +155,11 @@ func BuildSpec(cfg BuildSpecConfig) (*cdispec.Spec, error) {
 		return &cdispec.Spec{Version: version, Kind: kind, ContainerEdits: specEdits}, nil
 	}
 
-	devices, err := GeneratePerDeviceNodes(cfg.DeviceIDs, cfg.UseVirtual)
+	devices, err := GeneratePerDeviceNodes(cfg.DeviceIDs, cfg.UseVirtual, cfg.MountConfig.HostFsPrefix)
 	if err != nil {
 		return nil, err
 	}
-	sharedNodes, err := GenerateSharedNodes(cfg.DevType, cfg.ProductType)
+	sharedNodes, err := GenerateSharedNodes(cfg.DevType, cfg.ProductType, cfg.MountConfig.HostFsPrefix)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +224,7 @@ func validateSpec(spec *cdispec.Spec) error {
 //
 // Returns:
 //   - specName:  the generated Spec file name (without extension), used for later removal
-//   - cdidIDs:   fully-qualified CDI device names ("ascend.com/npu={id}")
+//   - cdiIDs:    fully-qualified CDI device names
 //   - err:       non-nil on validation, I/O, or serialisation failure
 func GenerateClaimSpec(cfg BuildSpecConfig, claimUID string) (string, []string, error) {
 	if claimUID == "" {
@@ -233,6 +234,9 @@ func GenerateClaimSpec(cfg BuildSpecConfig, claimUID string) (string, []string, 
 	spec, err := BuildSpec(cfg)
 	if err != nil {
 		return "", nil, fmt.Errorf("cdi: build spec: %w", err)
+	}
+	if len(spec.Devices) == 0 {
+		return "", nil, fmt.Errorf("cdi: build spec returned no devices")
 	}
 
 	name, err := cdiapi.GenerateNameForTransientSpec(spec, claimUID)
@@ -244,12 +248,12 @@ func GenerateClaimSpec(cfg BuildSpecConfig, claimUID string) (string, []string, 
 		return "", nil, fmt.Errorf("cdi: write spec: %w", err)
 	}
 
-	cdidIDs := make([]string, 0, len(cfg.DeviceIDs))
-	for _, id := range cfg.DeviceIDs {
-		cdidIDs = append(cdidIDs, fmt.Sprintf("%s=%d", spec.Kind, id))
+	cdiIDs := make([]string, 0, len(spec.Devices))
+	for _, device := range spec.Devices {
+		cdiIDs = append(cdiIDs, fmt.Sprintf("%s=%s", spec.Kind, device.Name))
 	}
 
-	return name, cdidIDs, nil
+	return name, cdiIDs, nil
 }
 
 // DeleteClaimSpec removes a previously generated per-claim CDI spec

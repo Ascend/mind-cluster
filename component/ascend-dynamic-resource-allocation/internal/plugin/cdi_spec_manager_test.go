@@ -89,9 +89,16 @@ func TestParseCDIDeviceName(t *testing.T) {
 	}{
 		{"physical device", "npu-7", 7, false, false},
 		{"static vNPU uses vDev ID", "static-vnpu-100-7", 100, true, false},
+		{"dynamic vNPU uses vDev ID", "dynamic-vnpu-212-7", 212, true, false},
 		{"invalid static shape", "static-vnpu-100", 0, true, true},
+		{"invalid dynamic shape", "dynamic-vnpu-212", 0, true, true},
 		{"too many static segments", "static-vnpu-100-7-extra", 0, true, true},
 		{"invalid static vDev ID", "static-vnpu-x-7", 0, true, true},
+		{"vDev ID below range", "dynamic-vnpu-99-7", 0, true, true},
+		{"vDev ID above range", "dynamic-vnpu-1124-7", 0, true, true},
+		{"invalid physical ID", "dynamic-vnpu-212-x", 0, true, true},
+		{"negative physical ID", "dynamic-vnpu-212--1", 0, true, true},
+		{"physical ID above range", "dynamic-vnpu-212-256", 0, true, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -152,6 +159,8 @@ func TestWriteClaimSpec_Errors(t *testing.T) {
 			[]string{"Ascend910-0"}, "claimUID must not be empty"},
 		{"mixed physical and static devices", "Ascend910", "ut-claim",
 			[]string{"npu-0", "static-vnpu-100-0"}, "physical and virtual devices cannot share"},
+		{"mixed static and dynamic vNPUs", "Ascend910", "ut-claim",
+			[]string{"static-vnpu-100-0", "dynamic-vnpu-212-0"}, "static and dynamic vNPUs cannot share"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

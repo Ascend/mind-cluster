@@ -90,6 +90,8 @@ var (
 const (
 	// Minus separates the fields of an NPU device name.
 	Minus = "-"
+	// VNPUTemplatePrefix is the common prefix of DCMI vNPU template names.
+	VNPUTemplatePrefix = "vir"
 )
 
 // Public vNPU type suffixes shared by device-plugin and DRA.

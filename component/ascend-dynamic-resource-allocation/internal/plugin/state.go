@@ -16,8 +16,10 @@
 package plugin
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	resourceapi "k8s.io/api/resource/v1"
@@ -25,6 +27,7 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/checkpointmanager"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-dynamic-resource-allocation/internal/device"
 	"ascend-dynamic-resource-allocation/internal/flags"
 	"ascend-dynamic-resource-allocation/pkg/consts"
 )
@@ -35,27 +38,35 @@ type PreparedDevices []*PreparedDevice
 // PreparedClaims maps claim UID to its prepared devices.
 type PreparedClaims map[string]PreparedDevices
 
+// DynamicVNPUInterface is the hardware lifecycle required by DeviceState.
+type DynamicVNPUInterface interface {
+	Create(phyID int32, template string, requestedAICore int64) (*device.DynamicVNPU, error)
+	Destroy(logicID int32, vDevID uint32) error
+}
+
 // PreparedDevice wraps the DRA device protocol type.
 type PreparedDevice struct {
 	drapbv1.Device
+	DynamicVNPU   bool   `json:"dynamicVNPU,omitempty"`
+	CDIDeviceName string `json:"cdiDeviceName,omitempty"`
+	ShareID       string `json:"shareID,omitempty"`
+	LogicID       int32  `json:"logicID,omitempty"`
+	PhyID         int32  `json:"phyID,omitempty"`
+	VDevID        uint32 `json:"vDevID,omitempty"`
+	TemplateName  string `json:"templateName,omitempty"`
 }
 
-// GetDevices returns the underlying device slice.
-func (pds PreparedDevices) GetDevices() []*drapbv1.Device {
-	var devices []*drapbv1.Device
-	for _, pd := range pds {
-		devices = append(devices, &pd.Device)
-	}
-	return devices
-}
-
-// DeviceNames returns the DeviceName field of every prepared device. Used to
-// hand the allocated device identity list to CdiSpecManager, which extracts
-// the numeric suffix as the device ID for CDI spec generation.
+// DeviceNames returns the CDI-facing identity of every prepared device. A
+// dynamic vNPU uses its created-device name, which CdiSpecManager later scopes
+// to the claim; physical and static devices use the scheduler allocation name.
 func (pds PreparedDevices) DeviceNames() []string {
 	names := make([]string, 0, len(pds))
 	for _, pd := range pds {
-		names = append(names, pd.DeviceName)
+		if pd.CDIDeviceName != "" {
+			names = append(names, pd.CDIDeviceName)
+		} else {
+			names = append(names, pd.DeviceName)
+		}
 	}
 	return names
 }
@@ -63,10 +74,11 @@ func (pds PreparedDevices) DeviceNames() []string {
 // DeviceState owns the checkpoint and CDI spec lifecycle for prepared claims.
 type DeviceState struct {
 	sync.Mutex
-	specs             CdiSpecInterface
-	checkpointManager checkpointmanager.CheckpointManager
-	checkpoint        *Checkpoint
-	draOption         *flags.DRAOption
+	specs              CdiSpecInterface
+	checkpointManager  checkpointmanager.CheckpointManager
+	checkpoint         *Checkpoint
+	draOption          *flags.DRAOption
+	dynamicVNPUManager DynamicVNPUInterface
 }
 
 // NewDeviceState creates or reuses the checkpoint-backed device state.
@@ -133,56 +145,83 @@ func (s *DeviceState) LoadCheckpoint() error {
 	return nil
 }
 
-// Prepare allocates devices for a claim. Idempotent: a previously prepared
-// claim returns the same prepared devices from the checkpoint. After
-// allocating, the CDI spec is generated and the assignment is persisted.
-func (s *DeviceState) Prepare(claim *resourceapi.ResourceClaim) ([]*drapbv1.Device, error) {
+// ValidateMode rejects a checkpoint prepared in a different allocation mode.
+func (s *DeviceState) ValidateMode(preset bool) error {
 	s.Lock()
 	defer s.Unlock()
+	if s.checkpoint == nil || s.checkpoint.V1 == nil {
+		return errors.New("checkpoint is not loaded")
+	}
 
-	claimUID := string(claim.UID)
+	for _, devices := range s.checkpoint.V1.PreparedClaims {
+		for _, prepared := range devices {
+			if !isPreparedDeviceModeCompatible(preset, prepared) {
+				return fmt.Errorf("checkpoint device %s conflicts with presetVirtualDevice=%t", prepared.DeviceName, preset)
+			}
+		}
+	}
+	return nil
+}
 
+// isPreparedDeviceModeCompatible distinguishes preset assignments from dynamically created vNPUs.
+func isPreparedDeviceModeCompatible(preset bool, preparedDevice *PreparedDevice) bool {
+	return preset != preparedDevice.DynamicVNPU
+}
+
+// Prepare creates hardware, writes CDI and checkpoints; failures are cleaned up immediately.
+func (s *DeviceState) Prepare(claim *resourceapi.ResourceClaim) (PreparedDevices, error) {
+	s.Lock()
+	defer s.Unlock()
+	if claim == nil || claim.UID == "" {
+		return nil, errors.New("claim UID is required")
+	}
 	if s.checkpoint == nil || s.checkpoint.V1 == nil {
 		return nil, errors.New("checkpoint is not loaded")
 	}
+	claimUID := string(claim.UID)
 	preparedClaims := s.checkpoint.V1.PreparedClaims
-
 	if preparedClaims[claimUID] != nil {
-		hwlog.RunLog.Debugf("claim %v already prepared, reusing", claimUID)
-		return preparedClaims[claimUID].GetDevices(), nil
+		return preparedClaims[claimUID], nil
 	}
-
 	preparedDevices, err := s.prepareDevices(claim)
 	if err != nil {
-		return nil, fmt.Errorf("prepare failed: %w", err)
+		return nil, s.rollbackPrepare(claimUID, preparedDevices, fmt.Errorf("prepare failed: %w", err))
 	}
-
+	if len(preparedDevices) == 0 {
+		return nil, nil
+	}
 	cdiDeviceIDs, err := s.specs.WriteClaimSpec(claimUID, preparedDevices.DeviceNames())
+	if err == nil && len(cdiDeviceIDs) != len(preparedDevices) {
+		err = errors.New("CDI device count differs from prepared devices")
+	}
 	if err != nil {
-		return nil, fmt.Errorf("unable to create CDI spec file for claim: %w", err)
+		return nil, s.rollbackPrepare(claimUID, preparedDevices, err)
 	}
-	for _, pd := range preparedDevices {
-		pd.CdiDeviceIds = cdiDeviceIDs
+	for i, pd := range preparedDevices {
+		pd.CdiDeviceIds = []string{cdiDeviceIDs[i]}
 	}
-
 	preparedClaims[claimUID] = preparedDevices
 	if err := s.checkpointManager.CreateCheckpoint(consts.DriverPluginCheckpointFile, s.checkpoint); err != nil {
 		delete(preparedClaims, claimUID)
-		if cleanupErr := s.specs.DeleteClaimSpec(claimUID); cleanupErr != nil {
-			hwlog.RunLog.Warnf("rollback CDI spec for claim %v failed: %v", claimUID, cleanupErr)
-		}
-		return nil, fmt.Errorf("unable to sync to checkpoint: %w", err)
+		return nil, s.rollbackPrepare(claimUID, preparedDevices, fmt.Errorf("unable to sync to checkpoint: %w", err))
 	}
-
-	hwlog.RunLog.Infof("devices prepared for claim %v, count=%d, cdiIDs=%v",
-		claimUID, len(preparedDevices), cdiDeviceIDs)
-	return preparedClaims[claimUID].GetDevices(), nil
+	return preparedDevices, nil
 }
 
-// Unprepare releases devices for a claim. Idempotent: for a claim missing
-// from the checkpoint it still removes any leftover CDI spec, healing the
-// orphan left behind when a previous Unprepare failed after the checkpoint
-// was already persisted.
+// rollbackPrepare reports each cleanup failure and preserves the original error.
+func (s *DeviceState) rollbackPrepare(claimUID string, preparedDevices PreparedDevices, prepareErr error) error {
+	cdiErr := s.specs.DeleteClaimSpec(claimUID)
+	if cdiErr != nil {
+		hwlog.RunLog.Errorf("rollback CDI spec for claim %s failed: %v", claimUID, cdiErr)
+	}
+	cleanupErr := s.unprepareDevices(preparedDevices)
+	if cleanupErr != nil {
+		hwlog.RunLog.Errorf("rollback devices for claim %s failed: %v", claimUID, cleanupErr)
+	}
+	return errors.Join(prepareErr, cdiErr, cleanupErr)
+}
+
+// Unprepare releases an assignment and retains ownership on any error.
 func (s *DeviceState) Unprepare(claimUID string) error {
 	s.Lock()
 	defer s.Unlock()
@@ -203,20 +242,16 @@ func (s *DeviceState) Unprepare(claimUID string) error {
 	}
 
 	devices := preparedClaims[claimUID]
-	if err := s.unprepareDevices(claimUID, devices); err != nil {
+	if err := s.unprepareDevices(devices); err != nil {
 		return fmt.Errorf("unprepare failed: %w", err)
 	}
-
-	// Persist the checkpoint first: on failure the CDI spec stays untouched,
-	// so a retry can replay the full Unprepare flow.
+	if err := s.specs.DeleteClaimSpec(claimUID); err != nil {
+		return fmt.Errorf("unable to delete CDI spec file for claim: %w", err)
+	}
 	delete(preparedClaims, claimUID)
 	if err := s.checkpointManager.CreateCheckpoint(consts.DriverPluginCheckpointFile, s.checkpoint); err != nil {
 		preparedClaims[claimUID] = devices
 		return fmt.Errorf("unable to sync to checkpoint: %w", err)
-	}
-
-	if err := s.specs.DeleteClaimSpec(claimUID); err != nil {
-		return fmt.Errorf("unable to delete CDI spec file for claim: %w", err)
 	}
 
 	hwlog.RunLog.Infof("devices unprepared for claim %v", claimUID)
@@ -232,20 +267,148 @@ func (s *DeviceState) prepareDevices(claim *resourceapi.ResourceClaim) (Prepared
 	// prepared devices to return. CdiDeviceIds are filled in by the caller
 	// after the CDI spec file has been written by CdiSpecManager.
 	var preparedDevices PreparedDevices
+	identities := make(map[string]bool)
 	for _, result := range claim.Status.Allocation.Devices.Results {
-		device := &PreparedDevice{
+		if result.Driver != consts.DriverName {
+			continue
+		}
+		preparedDevice := &PreparedDevice{
 			Device: drapbv1.Device{
 				RequestNames: []string{result.Request},
 				PoolName:     result.Pool,
 				DeviceName:   result.Device,
 			},
 		}
-		preparedDevices = append(preparedDevices, device)
+		if result.ShareID != nil {
+			preparedDevice.ShareID = string(*result.ShareID)
+		}
+		template, err := dynamicVNPUTemplate(claim, result.Request)
+		if err != nil {
+			return preparedDevices, err
+		}
+		phyID, requestedAICore, err := s.validateDynamicAllocation(result, template)
+		if err != nil {
+			return preparedDevices, err
+		}
+		if template != "" {
+			key := result.Pool + "/" + result.Device + "/" + preparedDevice.ShareID
+			if identities[key] {
+				return preparedDevices, fmt.Errorf("duplicate allocation %s", key)
+			}
+			identities[key] = true
+			created, createErr := s.dynamicVNPUManager.Create(phyID, template, requestedAICore)
+			if created == nil {
+				if createErr == nil {
+					createErr = errors.New("create returned no device")
+				}
+				return preparedDevices, createErr
+			}
+			preparedDevice.DynamicVNPU = true
+			preparedDevice.CDIDeviceName = created.CDIDeviceName
+			preparedDevice.LogicID = created.LogicID
+			preparedDevice.PhyID = phyID
+			preparedDevice.VDevID = created.VDevID
+			preparedDevice.TemplateName = created.TemplateName
+			if createErr != nil {
+				return append(preparedDevices, preparedDevice), createErr
+			}
+		}
+		preparedDevices = append(preparedDevices, preparedDevice)
 	}
 	hwlog.RunLog.Debugf("prepared devices for claim '%v': %+v", claim.UID, preparedDevices)
 	return preparedDevices, nil
 }
 
-func (s *DeviceState) unprepareDevices(claimUID string, devices PreparedDevices) error {
+// validateDynamicAllocation checks the request before any hardware operation.
+// Static allocations have no template and return without dynamic validation.
+func (s *DeviceState) validateDynamicAllocation(
+	result resourceapi.DeviceRequestAllocationResult, template string) (int32, int64, error) {
+	capacity, hasAICoreCapacity := result.ConsumedCapacity[resourceapi.QualifiedName(consts.AICoreNum)]
+	if s.draOption != nil && s.draOption.PresetVirtualDevice && (template != "" || hasAICoreCapacity) {
+		return 0, 0, fmt.Errorf("dynamic vNPU allocation requires presetVirtualDevice=false")
+	}
+	if template == "" && hasAICoreCapacity {
+		return 0, 0, fmt.Errorf("request %s consumed %s capacity without dynamic vNPU config",
+			result.Request, consts.AICoreNum)
+	}
+	if template == "" {
+		return 0, 0, nil
+	}
+	if s.dynamicVNPUManager == nil {
+		return 0, 0, errors.New("dynamic vNPU manager is unavailable")
+	}
+	if result.ShareID == nil || *result.ShareID == "" {
+		return 0, 0, fmt.Errorf("request %s has no share ID for dynamic vNPU allocation", result.Request)
+	}
+	requestedAICore, exact := capacity.AsInt64()
+	if !hasAICoreCapacity || !exact || requestedAICore <= 0 {
+		return 0, 0, fmt.Errorf("request %s has no positive integer consumed %s capacity",
+			result.Request, consts.AICoreNum)
+	}
+	phyID, err := parsePhysicalNPUName(result.Device)
+	return int32(phyID), requestedAICore, err
+}
+
+func (s *DeviceState) unprepareDevices(devices PreparedDevices) error {
+	for _, prepared := range devices {
+		if !prepared.DynamicVNPU {
+			continue
+		}
+		if s.dynamicVNPUManager == nil {
+			return errors.New("dynamic vNPU manager is unavailable")
+		}
+		if err := s.dynamicVNPUManager.Destroy(prepared.LogicID, prepared.VDevID); err != nil {
+			hwlog.RunLog.Errorf("destroy vNPU logicID=%d vDevID=%d: %v", prepared.LogicID, prepared.VDevID, err)
+			return err
+		}
+	}
 	return nil
+}
+
+type dynamicVNPUConfig struct {
+	Template string `json:"template"`
+}
+
+func dynamicVNPUTemplate(claim *resourceapi.ResourceClaim, request string) (string, error) {
+	if claim.Status.Allocation == nil {
+		return "", nil
+	}
+	var template string
+	for _, config := range claim.Status.Allocation.Devices.Config {
+		// The allocator records whether this config came from DeviceClass or ResourceClaim.
+		if config.Source != resourceapi.AllocationConfigSourceClass &&
+			config.Source != resourceapi.AllocationConfigSourceClaim {
+			continue
+		}
+		if config.DeviceConfiguration.Opaque == nil ||
+			config.DeviceConfiguration.Opaque.Driver != consts.DriverName || !matchesRequest(config.Requests, request) {
+			continue
+		}
+		var decoded dynamicVNPUConfig
+		if err := json.Unmarshal(config.DeviceConfiguration.Opaque.Parameters.Raw, &decoded); err != nil {
+			return "", fmt.Errorf("decode dynamic vNPU config for request %s: %w", request, err)
+		}
+		decoded.Template = strings.TrimSpace(decoded.Template)
+		if decoded.Template == "" {
+			return "", fmt.Errorf("invalid dynamic vNPU config for request %s", request)
+		}
+		if template != "" && decoded.Template != template {
+			return "", fmt.Errorf("conflicting dynamic vNPU templates for request %s: %q and %q",
+				request, template, decoded.Template)
+		}
+		template = decoded.Template
+	}
+	return template, nil
+}
+
+func matchesRequest(configRequests []string, allocatedRequest string) bool {
+	if len(configRequests) == 0 {
+		return true
+	}
+	for _, configRequest := range configRequests {
+		if configRequest == allocatedRequest || strings.HasPrefix(allocatedRequest, configRequest+"/") {
+			return true
+		}
+	}
+	return false
 }

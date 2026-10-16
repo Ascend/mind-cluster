@@ -56,6 +56,7 @@ type fakeGeneration struct {
 	listErr      error
 	devType      string
 	productTypes []string
+	capacity     map[resourceapi.QualifiedName]resourceapi.DeviceCapacity
 }
 
 func (f *fakeGeneration) SetDmgr(devmanager.DeviceInterface) {}
@@ -69,6 +70,10 @@ func (f *fakeGeneration) DeviceAttributes(dev device.NpuDevice) map[resourceapi.
 		"type":     {StringValue: ptr.To(consts.NPUNamePrefix)},
 		"physicId": {IntValue: ptr.To(int64(dev.PhyID))},
 	}
+}
+
+func (f *fakeGeneration) DeviceCapacity(device.NpuDevice) map[resourceapi.QualifiedName]resourceapi.DeviceCapacity {
+	return f.capacity
 }
 
 func (f *fakeGeneration) GetDevType() string        { return f.devType }
@@ -89,23 +94,22 @@ func newDriverWithFake(gen *fakeGeneration) (*AscendDraDriver, *plugin.AscendDra
 	}
 	adp := &plugin.AscendDraPlugin{
 		ResourcePublisher: &plugin.ResourcePublisher{Helper: &kubeletplugin.Helper{}},
-		DraHealthManager:  &plugin.DraHealthManager{},
 	}
 	return NewAscendDraDriver(cfg, gen, adp, nil), adp
 }
 
-// pluginMethodPatches holds the three boundary-method patches the driver tests
+// pluginMethodPatches holds the boundary-method patches the driver tests
 // reuse. Each field may be nil when the test does not need to stub that method.
 type pluginMethodPatches struct {
-	loadCheckpoint   *gomonkey.Patches
+	mode             *gomonkey.Patches
 	registerService  *gomonkey.Patches
 	publishResources *gomonkey.Patches
 	stop             *gomonkey.Patches
 }
 
 func (p *pluginMethodPatches) Reset() {
-	if p.loadCheckpoint != nil {
-		p.loadCheckpoint.Reset()
+	if p.mode != nil {
+		p.mode.Reset()
 	}
 	if p.registerService != nil {
 		p.registerService.Reset()
@@ -118,12 +122,9 @@ func (p *pluginMethodPatches) Reset() {
 	}
 }
 
-func patchPluginMethods(p *pluginMethodPatches, loadErr, registerErr, publishErr error, stopCalled *bool) {
-	p.loadCheckpoint = gomonkey.ApplyMethod(
-		reflect.TypeOf(&plugin.AscendDraPlugin{}), "LoadCheckpoint",
-		func(_ *plugin.AscendDraPlugin) error {
-			return loadErr
-		})
+func patchPluginMethods(p *pluginMethodPatches, modeErr, registerErr, publishErr error, stopCalled *bool) {
+	p.mode = gomonkey.ApplyMethod(reflect.TypeOf(&plugin.AscendDraPlugin{}), "ValidateMode",
+		func(_ *plugin.AscendDraPlugin, _ bool) error { return modeErr })
 	p.registerService = gomonkey.ApplyMethod(
 		reflect.TypeOf(&plugin.AscendDraPlugin{}), "RegisterService",
 		func(_ *plugin.AscendDraPlugin, _ context.Context, _ *draFlags.DRAConfig) error {

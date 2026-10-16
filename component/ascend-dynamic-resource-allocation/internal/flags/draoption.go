@@ -36,7 +36,9 @@ type DRAOption struct {
 	KubeletRegistrarDirectoryPath string
 	KubeletPluginsDirectoryPath   string
 	DeviceResetTimeout            int
-	Version bool
+	// PresetVirtualDevice preserves the existing exclusive whole-card and static-vNPU mode.
+	PresetVirtualDevice bool
+	Version             bool
 }
 
 // RegisterFlags registers DRA options flags using standard library flag package
@@ -45,6 +47,8 @@ func (d *DRAOption) RegisterFlags() {
 
 	flag.BoolVar(&d.Version, "version", false, "Show application version")
 	flag.BoolVar(&d.Version, "v", false, "Show application version")
+	flag.BoolVar(&d.PresetVirtualDevice, "presetVirtualDevice", true,
+		"Publish whole cards and pre-created vNPUs exclusively; false enables dynamic hard slicing")
 
 	flag.StringVar(&d.CdiRoot,
 		"cdi-root",

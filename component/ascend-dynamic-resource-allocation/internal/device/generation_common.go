@@ -37,8 +37,6 @@ const (
 	attrKeyTemplate = "template"
 	// attrKeyVNPUType is the public type selected by ResourceClaims.
 	attrKeyVNPUType = "vnpuType"
-	// attrKeyAICore is the number of AI cores in a static vNPU.
-	attrKeyAICore = "aiCore"
 )
 
 // AscendCommonGeneration holds the device manager shared by every generation.

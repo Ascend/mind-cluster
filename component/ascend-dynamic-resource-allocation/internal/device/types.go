@@ -48,4 +48,6 @@ type NpuDevice struct {
 	TemplateName string
 	VNPUType     string
 	AICore       int64
+	AICpu        int64
+	MemorySize   int64 // MB, as reported by DCMI.
 }

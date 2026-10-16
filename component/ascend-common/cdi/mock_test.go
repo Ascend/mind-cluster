@@ -28,11 +28,34 @@ import (
 	"ascend-common/cdi/mount"
 	"ascend-common/common-utils/hwlog"
 
+	cdiapi "tags.cncf.io/container-device-interface/pkg/cdi"
 	cdispec "tags.cncf.io/container-device-interface/specs-go"
 )
 
 func init() {
 	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
+}
+
+// TestMain isolates transient CDI specs from the host's runtime directory.
+// This is especially important when the package tests run as root on a node.
+func TestMain(m *testing.M) {
+	specDir, err := os.MkdirTemp("", "ascend-common-cdi-test-")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "create temporary CDI spec directory: %v\n", err)
+		os.Exit(1)
+	}
+	if err := cdiapi.Configure(cdiapi.WithSpecDirs(specDir)); err != nil {
+		fmt.Fprintf(os.Stderr, "configure temporary CDI spec directory: %v\n", err)
+		_ = os.RemoveAll(specDir)
+		os.Exit(1)
+	}
+
+	code := m.Run()
+	if err := os.RemoveAll(specDir); err != nil && code == 0 {
+		fmt.Fprintf(os.Stderr, "remove temporary CDI spec directory: %v\n", err)
+		code = 1
+	}
+	os.Exit(code)
 }
 
 // Ascend NPU device major numbers — mock reference values for device generation tests.
@@ -97,9 +120,10 @@ func (m *mockDirEntry) Info() (os.FileInfo, error) { return &mockFileInfo{name: 
 // Mock function implementations (portable — no unix imports)
 // ---------------------------------------------------------------------------
 
-// mockOSStatFunc returns a non-nil FileInfo for any /dev/ path.
+// mockOSStatFunc returns a non-nil FileInfo for device nodes, including those
+// read through a host filesystem mount inside the DRA plugin.
 func mockOSStatFunc(path string) (os.FileInfo, error) {
-	if !strings.HasPrefix(path, "/dev/") {
+	if !strings.Contains(path, "/dev/") {
 		return nil, os.ErrNotExist
 	}
 	return &mockFileInfo{name: filepath.Base(path), mode: os.ModeDevice | os.ModeCharDevice}, nil
@@ -124,6 +148,9 @@ func mockStatFunc(path string, st *unix.Stat_t) error {
 
 // mockDeviceMajorMinor returns the (major, minor) pair for a mock device path.
 func mockDeviceMajorMinor(path string) (uint32, uint32) {
+	if i := strings.Index(path, "/dev/"); i >= 0 {
+		path = path[i:]
+	}
 	// Per-device davinci / vdavinci: extract numeric ID from path suffix.
 	if (strings.HasPrefix(path, "/dev/davinci") || strings.HasPrefix(path, "/dev/vdavinci")) &&
 		!strings.Contains(path, "manager") {

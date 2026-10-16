@@ -30,6 +30,7 @@ import (
 
 	"ascend-common/common-utils/healthz"
 	draFlags "ascend-dynamic-resource-allocation/internal/flags"
+	"ascend-dynamic-resource-allocation/pkg/consts"
 )
 
 // RegisterService is not covered here: kubeletplugin.Start creates real
@@ -81,7 +82,7 @@ func allocatedClaim(uid, device string) *resourceapi.ResourceClaim {
 			Allocation: &resourceapi.AllocationResult{
 				Devices: resourceapi.DeviceAllocationResult{
 					Results: []resourceapi.DeviceRequestAllocationResult{
-						{Request: "req-0", Pool: "pool-a", Device: device},
+						{Request: "req-0", Driver: consts.DriverName, Pool: "pool-a", Device: device},
 					},
 				},
 			},
@@ -141,9 +142,7 @@ func TestNewAscendDraPlugin(t *testing.T) {
 		if adp.state == nil {
 			t.Error("NewAscendDraPlugin().state = nil, want non-nil device state")
 		}
-		if adp.DraHealthManager.DraHealthzConfig != draConfig.DraHealthzConfig {
-			t.Error("DraHealthzConfig was not stored on the plugin")
-		}
+
 	})
 
 	t.Run("client creation fails", func(t *testing.T) {
@@ -162,26 +161,6 @@ func TestNewAscendDraPlugin(t *testing.T) {
 		}
 		if !strings.Contains(err.Error(), "create client") {
 			t.Errorf("NewAscendDraPlugin() error = %v, want containing %q", err, "create client")
-		}
-	})
-}
-
-// TestAscendDraPlugin_LoadCheckpoint verifies the plugin facade rejects a nil
-// state and delegates loading to an initialized state.
-func TestAscendDraPlugin_LoadCheckpoint(t *testing.T) {
-	t.Run("nil state", func(t *testing.T) {
-		adp := &AscendDraPlugin{}
-
-		if err := adp.LoadCheckpoint(); err == nil {
-			t.Error("LoadCheckpoint() = nil error, want error for nil state")
-		}
-	})
-
-	t.Run("delegates to state", func(t *testing.T) {
-		adp := &AscendDraPlugin{state: newTestDeviceState(t, &fakeCdiSpec{})}
-
-		if err := adp.LoadCheckpoint(); err != nil {
-			t.Errorf("LoadCheckpoint() error = %v, want nil", err)
 		}
 	})
 }

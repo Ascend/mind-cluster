@@ -547,11 +547,28 @@ func TestDeviceManagerGetDeviceVoltageErrorPath(t *testing.T) {
 // TestDeviceManagerCreateVirtualDeviceInvalidTemplateName test CreateVirtualDevice invalid template name
 func TestDeviceManagerCreateVirtualDeviceInvalidTemplateName(t *testing.T) {
 	manager := &DeviceManager{DevType: "Ascend910", DcMgr: &dcmi.DcManager{}}
-	vDevInfo := common.CgoCreateVDevRes{TemplateName: "invalid"}
-	convey.Convey("CreateVirtualDevice returns error for invalid template name", t, func() {
-		_, err := manager.CreateVirtualDevice(1, vDevInfo)
-		convey.So(err, convey.ShouldNotBeNil)
-	})
+	patch := gomonkey.ApplyMethodReturn(manager.DcMgr, "DcCreateVDevice", common.CgoCreateVDevOut{VDevID: 212}, nil)
+	defer patch.Reset()
+	patch.ApplyMethodReturn(manager.DcMgr, "DcGetVDeviceInfo",
+		common.VirtualDevInfo{VDevInfo: []common.CgoVDevQueryStru{
+			{VDevID: 212, QueryInfo: common.CgoVDevQueryInfo{Name: "future-template"}},
+		}}, nil)
+	for template, wantError := range map[string]bool{"future-template": false, "": true, "bad\x00name": true} {
+		_, err := manager.CreateVirtualDevice(1, common.CgoCreateVDevRes{TemplateName: template})
+		if (err != nil) != wantError {
+			t.Fatalf("template=%q error=%v wantError=%t", template, err, wantError)
+		}
+	}
+	if _, err := manager.GetVirtualDeviceInfo(1); err != nil {
+		t.Fatalf("hardware template was rejected: %v", err)
+	}
+	driverErr := errors.New("driver rejected template")
+	patch.Reset()
+	rejectPatch := gomonkey.ApplyMethodReturn(manager.DcMgr, "DcCreateVDevice", common.CgoCreateVDevOut{}, driverErr)
+	defer rejectPatch.Reset()
+	if _, err := manager.CreateVirtualDevice(1, common.CgoCreateVDevRes{TemplateName: "unsupported"}); !errors.Is(err, driverErr) {
+		t.Fatalf("driver error was lost: %v", err)
+	}
 }
 
 // TestDeviceManagerSetFaultEventCallFuncNilFunc test set fault event func is nil

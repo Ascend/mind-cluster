@@ -72,7 +72,8 @@ type MountConfig struct {
 	// (list mode); false (zero value) selects JSON mode.
 	IsAscendDockerRuntime bool
 
-	// HostFsPrefix prefixes stat targets for non-/dev paths when non-empty.
+	// HostFsPrefix prefixes stat targets for non-/dev mount paths when non-empty.
+	// The CDI builder also uses it to locate host device nodes under /dev.
 	HostFsPrefix string
 }
 

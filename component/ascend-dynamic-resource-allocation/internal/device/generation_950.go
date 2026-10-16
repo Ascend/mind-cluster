@@ -83,6 +83,11 @@ func (g *Ascend950Generation) DeviceAttributes(dev NpuDevice) map[resourceapi.Qu
 	}
 }
 
+// DeviceCapacity returns nil because A5 soft sharing is outside dynamic hard slicing.
+func (g *Ascend950Generation) DeviceCapacity(_ NpuDevice) map[resourceapi.QualifiedName]resourceapi.DeviceCapacity {
+	return nil
+}
+
 // PhyIDToMountID queries the device manager on every call so a 950 (A5) node
 // picks up the latest phyID->logicID mapping even if device state changes after
 // driver startup. On A5 the device node is keyed by logicID, so the mount ID is

@@ -205,6 +205,7 @@ component_ascend-dynamic-resource-allocation() {
     add_helm_meta daemonset ascend-dra-driver-kubeletplugin kube-system
     add_helm_meta deviceclass npu.huawei.com
     add_helm_meta deviceclass static-vnpu.huawei.com
+    add_helm_meta deviceclass dynamic-vnpu.huawei.com
     add_helm_meta validatingadmissionpolicy resourceslices-policy-ascend-dra-driver
     add_helm_meta validatingadmissionpolicybinding resourceslices-policy-ascend-dra-driver
 }
