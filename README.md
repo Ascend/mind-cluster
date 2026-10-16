@@ -27,25 +27,63 @@ MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）训练�
 
 <img src="./docs/zh/figures/scheduling/full_view.png" width="1200"/>
 
+> [!NOTE]
+>
+> 全景图中的Ascend DMI和Ascend Deployer组件不属于本仓库，Ascend DMI暂未开源，Ascend Deployer源码与使用说明请参考 [Ascend Deployer](https://gitcode.com/Ascend/ascend-deployer) 仓库。
+
 ## ⚙️ 功能介绍
 
 **集群调度**
 
-| 特性名称                       | 介绍                                                         | Released |
-| ------------------------------ | ------------------------------------------------------------ | -------- |
-| 容器化支持特性                 | [容器化支持特性](./docs/zh/scheduling/04_usage/00_containerization/00_before_you_start.md) | ✅        |
-| 资源监测特性                   | [资源监测特性](./docs/zh/scheduling/04_usage/01_resource_monitoring/menu_resource_monitoring.md) | ✅        |
-| 虚拟化实例特性                 | [虚拟化实例特性](./docs/zh/scheduling/04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md) | ✅        |
-| 基础调度特性                   | [基础调度特性](./docs/zh/scheduling/04_usage/03_basic_scheduling/00_feature_description.md) | ✅        |
-| 故障检测特性                   | [故障检测特性](./docs/zh/scheduling/04_usage/04_fault_detection_and_diagnosis/00_feature_description.md) | ✅        |
-| 断点续训特性                   | [断点续训特性](docs/zh/scheduling/04_usage/05_fault_recovery/01_resumable_training/00_feature_description.md) | ✅        |
-| 一体机特性                     | [一体机特性](./docs/zh/scheduling/04_usage/06_appliance/01_npu_hardware_fault_detection_and_rectification.md) | ✅        |
-| MindIE Motor推理任务最佳实践   | [MindIE Motor推理任务最佳实践](./docs/zh/scheduling/04_usage/07_mindie_motor_best_practice/00_before_you_start.md) | ✅        |
-| SGLang推理任务最佳实践         | [SGLang推理任务最佳实践](./docs/zh/scheduling/04_usage/08_sglang_best_practice/00_before_you_start.md) | ✅        |
-| vLLM推理任务最佳实践           | [vLLM推理任务最佳实践](./docs/zh/scheduling/04_usage/09_vllm_best_practice/00_before_you_start.md) | ✅        |
-| Infer Operator推理任务最佳实践 | [Infer Operator推理任务最佳实践](./docs/zh/scheduling/04_usage/10_infer_operator_best_practice/00_before_you_start.md) | ✅        |
-| 潮汐调度最佳实践               | [潮汐调度最佳实践](./docs/zh/scheduling/04_usage/11_tidal_scheduling/00_before_you_start.md) | ✅        |
-| verl强化学习任务最佳实践               | [verl强化学习任务最佳实践](./docs/zh/scheduling/04_usage/12_verl_best_practice/menu_verl_best_practice.md) | ✅        |
+- 设备管理
+
+  基于Kubernetes设备插件机制，提供NPU、DPU设备的自动发现、资源上报与健康状态管理；通过Ascend Docker Runtime适配容器运行环境，并支持NPU虚拟化实例（vNPU）切分，实现异构算力资源的灵活供给。
+
+  | 特性名称 | 介绍                                                                                                     | Released |
+  | --- |--------------------------------------------------------------------------------------------------------| --- |
+  | NPU设备发现 | [NPU设备发现](./docs/zh/scheduling/01_introduction/01_component_description.md#ascend-device-plugin)       | ✅ |
+  | DPU设备发现 | [DPU设备发现](./docs/zh/scheduling/01_introduction/01_component_description.md#k8s-rdma-shared-dev-plugin) | ✅ |
+  | 容器化支持 | [容器化支持](./docs/zh/scheduling/04_usage/00_containerization/00_before_you_start.md)                      | ✅ |
+  | NPU虚拟化 | [NPU虚拟化](./docs/zh/scheduling/04_usage/02_virtual_instance/menu_virtual_instance.md)                   | ✅ |
+
+- 资源监测
+
+  提供NPU、DPU资源的监测能力，支持对接Prometheus、Telegraf等监测组件，实现集群异构资源使用情况的采集与可视化监测。
+
+  | 特性名称 | 介绍 | Released |
+  | --- | --- | --- |
+  | NPU资源监测 | [NPU资源监测](docs/zh/scheduling/04_usage/01_resource_monitoring/00_npu_resource_monitoring/00_before_you_start.md) | ✅ |
+  | DPU资源监测 | [DPU资源监测](docs/zh/scheduling/04_usage/01_resource_monitoring/01_dpu_resource_monitoring/00_before_you_start.md) | ✅ |
+
+- 资源调度
+
+  提供整卡、静态/动态vNPU等基础调度能力，支持NPU亲和性调度与潮汐调度，满足不同场景下的作业调度需求。
+
+  | 特性名称 | 介绍                                                                                                           | Released |
+  | --- |--------------------------------------------------------------------------------------------------------------| --- |
+  | NPU基础调度 | [NPU基础调度](./docs/zh/scheduling/04_usage/03_basic_scheduling/00_feature_description.md)                       | ✅ |
+  | 亲和性调度 | [亲和性调度](./docs/zh/scheduling/04_usage/03_basic_scheduling/01_affinity_scheduling/00_solution_description.md) | ✅ |
+  | 潮汐调度 | [潮汐调度](./docs/zh/scheduling/04_usage/11_tidal_scheduling/00_before_you_start.md)                             | ✅ |
+
+- 训练高可靠
+
+  提供训练任务的故障检测与恢复能力，覆盖预训练阶段的断点续训和后训练（强化学习）任务的重调度与快速恢复，提升训练任务的可靠性与故障恢复效率。
+
+  | 特性名称 | 介绍                                                                                                              | Released |
+  | --- |-----------------------------------------------------------------------------------------------------------------| --- |
+  | 预训练故障恢复 | [预训练故障恢复（断点续训）](./docs/zh/scheduling/04_usage/05_fault_recovery/01_resumable_training/00_feature_description.md) | ✅ |
+  | 后训练故障恢复 | [后训练故障恢复（verl强化学习任务最佳实践）](./docs/zh/scheduling/04_usage/12_verl_best_practice/menu_verl_best_practice.md)                     | ✅ |
+
+- 推理高可靠
+
+  提供推理任务的故障检测与恢复能力，覆盖推理阶段的断点续训和后推理（强化学习）任务的重调度与弹性容错，提升推理任务的可靠性与故障恢复效率。
+
+  | 应用编排组件            | 服务化组件                     | 推理引擎       | 介绍                                                                                                              |  Released |
+  |--------------------|---------------------------|------------|-----------------------------------------------------------------------------------------------------------------| -- |
+  |       OME          | OME                       | SGLang     | [SGLang推理任务最佳实践](./docs/zh/scheduling/04_usage/08_sglang_best_practice/00_before_you_start.md)                  | ✅ |
+  |      AIBrix        | AIBrix                    | vLLM       | [vLLM推理任务最佳实践](./docs/zh/scheduling/04_usage/09_vllm_best_practice/00_before_you_start.md)                      | ✅ |
+  | Infer Operator     | MindIE PyMotor/vLLM Proxy | vLLM       | [Infer Operator推理任务最佳实践](./docs/zh/scheduling/04_usage/10_infer_operator_best_practice/00_before_you_start.md)  | ✅ |
+  | Ascend Operator    | MindIE CMotor             | MindIE LLM | [MindIE CMotor推理任务最佳实践（已日落）](./docs/zh/scheduling/04_usage/07_mindie_motor_best_practice/00_before_you_start.md)     | ✅ |
 
 **故障诊断**
 
@@ -115,7 +153,7 @@ MindCluster提供两种快速入门路径：
 
 **集群调度**
 
-MindCluster提供了环境安装部署（支持Helm、手动、工具等多种安装方式）、容器化支持、资源监测、虚拟化实例（vNPU）、调度特性（整卡调度、亲和性调度、多级调度等）、断点续训、潮汐调度等特性指南，以及MindIE Motor、SGLang、vLLM、Infer Operator等多种推理框架的最佳实践。具体操作请参考：[集群调度用户指南](./docs/zh/scheduling/menu_scheduling_user_guide.md)。
+MindCluster集群调度用户指南覆盖从环境部署、资源管理到训练推理业务运行的全流程。指南支持Helm、手动、工具等多种安装方式完成环境部署；通过容器化支持、资源监测、虚拟化实例（vNPU）等特性实现资源的管理与监控；提供整卡调度、亲和性调度、多级调度、潮汐调度等调度能力，满足不同场景的作业调度需求；同时依托断点续训提升训练任务可靠性；并提供MindIE Motor、SGLang、vLLM、Infer Operator等推理框架的最佳实践。具体特性介绍及使用指南请参考：[集群调度用户指南](./docs/zh/scheduling/menu_scheduling_user_guide.md)。
 
 **故障诊断**
 

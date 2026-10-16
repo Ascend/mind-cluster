@@ -4,10 +4,7 @@ MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）构建�
 
 **图 1** MindCluster堆栈图<a name="fig163081328205916"></a>
 
-![](figures/scheduling/MindCluster堆栈图.png "MindCluster堆栈图")
-
->[!NOTE]
->Resilience Controller和Elastic Agent组件已经日落，Resilience Controller相关内容将于2026年9月30日的版本删除；Elastic Agent相关内容将于2026年12月30日的版本删除。
+![](figures/scheduling/full_view.png "MindCluster堆栈图")
 
 **MindCluster特性说明<a name="section921922516408"></a>**
 
@@ -24,37 +21,37 @@ MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）构建�
 
 |组件|功能介绍|
 |--|--|
-|MindCluster Ascend Deployer|提供昇腾软件和其依赖软件的自动下载及一键式安装，支持参数面网络配置等功能。|
+|Ascend Deployer|提供昇腾软件和其依赖软件的自动下载及一键式安装，支持参数面网络配置等功能。|
 
 **表 2**  ToolBox组件说明
 
 |组件|功能介绍|
 |--|--|
 |Ascend DMI|提供Atlas硬件产品的兼容性检查、带宽测试、算力测试、功耗测试、诊断压测等功能。|
-|Ascend Cert|提供软件包数字签名校验和更新CRL证书吊销列表等功能，保证软件包的安全性和CRL文件的有效性。|
 
 **表 3**  故障诊断组件说明
 
 |组件| 功能介绍                                                                             |
 |--|----------------------------------------------------------------------------------|
-|MindCluster Ascend FaultDiag| 提供日志诊断与链路诊断功能，前者通过对训练或推理集群节点日志进行清洗，定位故障根因节点与事件；后者结合服务器、交换机、BMC 等多维信息，实现集群链路故障定位。 |
+|Ascend FaultDiag| 提供日志诊断与链路诊断功能，前者通过对训练或推理集群节点日志进行清洗，定位故障根因节点与事件；后者结合服务器、交换机、BMC 等多维信息，实现集群链路故障定位。 |
+|Ascend ClusterOps Agent| 提供集群运维Agent，按任务维度一键触发诊断，自动完成节点日志采集、日志清洗、集中诊断的全流程，帮助用户快速定位任务故障根因。                 |
 
 **表 4**  集群调度组件说明
 
-|组件|功能介绍|
-|--|--|
-|Ascend Docker Runtime|为训推任务提供容器化支持，自动挂载所需文件和设备依赖。|
-|Ascend Device Plugin|基于Kubernetes设备插件机制，提供昇腾AI处理器的设备发现、分配和健康状态上报功能，启动Kubernetes管理昇腾AI处理器资源。|
-|NPU Exporter|实时监测昇腾AI处理器的资源指标，获取如昇腾AI处理器的利用率、温度、电压等信息。|
-|Volcano|基于开源Volcano调度插件机制，增加昇腾AI处理器的亲和性调度、故障重调度等特性，最大化发挥昇腾AI处理器计算性能。|
-|ClusterD|提供集群级别的可用资源信息。收集集群任务信息、资源信息和故障信息及影响范围，从任务、芯片和故障维度统计分析。|
-|Ascend Operator|提供训练任务生命周期管理，为不同AI框架的分布式训练任务提供相应的环境变量、生成分布式训练任务依赖的集合通讯配置。|
-|NodeD|提供节点状态上报功能，上报如节点健康状态、CPU和内存等故障信息。|
-|Resilience Controller|提供弹性缩容训练服务。在训练任务使用的硬件发生故障时，剔除该硬件并继续训练。|
-|Elastic Agent|提供训练任务故障时刻保存临终Checkpoint能力。|
-|TaskD|提供昇腾设备上训练及推理任务的状态监测和状态控制能力。|
-|MindIO ACP|在大模型训练中，使用训练服务器内存作为缓存，对Checkpoint的保存及加载进行加速。|
-|MindIO TFT|提供TTP、UCE和ARF等功能。|
-|Container Manager|提供无K8s场景下的业务容器恢复能力，主要用于一体机。|
-|Infer Operator|根据推理服务的配置，管理推理服务生命周期，支持实例级扩缩容以及任务角色扩展。|
-|K8s RDMA Shared Dev Plugin|基于开源组件的功能，以共享的方式提供华为UB RDMA DPU设备的发现和故障检测功能。|
+|组件| 功能介绍                                                                   |
+|--|------------------------------------------------------------------------|
+|Ascend Docker Runtime| 为训推任务提供容器化支持，自动挂载所需文件和设备依赖。                                            |
+|Ascend Device Plugin| 基于Kubernetes设备插件机制，提供昇腾AI处理器的设备发现、分配和健康状态上报功能，启动Kubernetes管理昇腾AI处理器资源。 |
+|NPU Exporter| 实时监测昇腾AI处理器的资源指标，获取如昇腾AI处理器的利用率、温度、电压等信息。                              |
+|DPU Exporter| 实时监测DPU的运行状态与统计指标，提供RoCE错包、丢包、ECN、CNP及PSN异常重传等全局指标，以及各网卡端口链路状态、收发流量等interface级指标。                              |
+|Volcano| 基于开源Volcano调度插件机制，增加昇腾AI处理器的亲和性调度、故障重调度等特性，最大化发挥昇腾AI处理器计算性能。           |
+|ClusterD| 提供集群级别的可用资源信息。收集集群任务信息、资源信息和故障信息及影响范围，从任务、芯片和故障维度统计分析。                 |
+|Ascend Operator| 提供训练任务生命周期管理，为不同AI框架的分布式训练任务提供相应的环境变量、生成分布式训练任务依赖的集合通讯配置。              |
+|NodeD| 提供节点状态上报功能，上报如节点健康状态、CPU和内存等故障信息。                                      |
+|TaskD| 提供昇腾设备上训练及推理任务的状态监测和状态控制能力。                                            |
+|MindIO ACP| 在大模型训练中，使用训练服务器内存作为缓存，对Checkpoint的保存及加载进行加速。                           |
+|MindIO TFT| 提供TTP、UCE和ARF等功能。                                                      |
+|Container Manager| 提供无K8s场景下的业务容器恢复能力，主要用于一体机。                                            |
+|Infer Operator| 根据推理服务的配置，管理推理服务生命周期，支持实例级扩缩容以及任务角色扩展。                                 |
+|K8s RDMA Shared Dev Plugin| 基于开源组件的功能，以共享的方式提供华为UB RDMA DPU设备的发现和故障检测功能。                           |
+|UB Host Device CNI| 以CNI插件方式部署在宿主机，将宿主机上的UB RDMA网络设备挂载到Pod的网络命名空间，使容器能够通过UB设备进行RDMA高速通信。                           |
