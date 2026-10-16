@@ -20,8 +20,10 @@ import (
 	"strings"
 
 	resourceapi "k8s.io/api/resource/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/utils/ptr"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	devcommon "ascend-common/devmanager/common"
 	"ascend-dynamic-resource-allocation/pkg/consts"
@@ -36,15 +38,20 @@ const (
 	ipv6LinkTypePrefix = "fe80"
 )
 
+func supportsDynamicVNPU(devType string) bool {
+	return devType == api.Ascend910B || devType == api.Ascend910A3
+}
+
 // Ascend910Generation embeds AscendCommonGeneration for the shared dmgr field
 // and SetDmgr; only 910-specific logic lives here.
 type Ascend910Generation struct {
 	AscendCommonGeneration
+	PresetVirtualDevice bool
 }
 
 // NewAscend910Generation creates an Ascend910 generation instance.
 func NewAscend910Generation() *Ascend910Generation {
-	return &Ascend910Generation{}
+	return &Ascend910Generation{PresetVirtualDevice: true}
 }
 
 // ListNpuDevices publishes physical devices or their pre-created static vNPUs.
@@ -61,13 +68,39 @@ func (g *Ascend910Generation) ListNpuDevices() ([]NpuDevice, error) {
 		}
 		vDevInfo, err := g.dmgr.GetVirtualDeviceInfo(devList[i])
 		if err != nil {
-			hwlog.RunLog.Warnf("The virtual device is considered not exist, please check the error: %v", err)
-			devs = append(devs, physical)
+			if !g.PresetVirtualDevice {
+				return nil, fmt.Errorf("query checkpoint-owned vNPUs on logic device %d: %w", physical.LogicID, err)
+			}
+			// An inventory error cannot prove that this card is unsliced. Hide
+			// only this card so healthy cards remain available to the scheduler.
+			hwlog.RunLog.Warnf("skip physical device %d: vNPU inventory is unknown: %v", physical.PhyID, err)
+			continue
+		}
+		if err := validateVNPUInventory(physical.LogicID, vDevInfo); err != nil {
+			if !g.PresetVirtualDevice {
+				return nil, err
+			}
+			hwlog.RunLog.Warnf("skip physical device %d: %v", physical.PhyID, err)
+			continue
+		}
+		if err := physical.setResources(vDevInfo.TotalResource.Computing); err != nil {
+			if !g.PresetVirtualDevice {
+				return nil, err
+			}
+			hwlog.RunLog.Warnf("skip physical device %d: %v", physical.PhyID, err)
 			continue
 		}
 		if vDevInfo.TotalResource.VDevNum == 0 {
+			if !g.PresetVirtualDevice && supportsDynamicVNPU(physical.DevType) {
+				if physical.AICore <= 0 {
+					return nil, fmt.Errorf("physical device %d reports invalid AI core capacity", physical.PhyID)
+				}
+			}
 			devs = append(devs, physical)
 			continue
+		}
+		if !g.PresetVirtualDevice {
+			return nil, fmt.Errorf("unowned pre-created vNPUs on logic device %d in dynamic mode", physical.LogicID)
 		}
 		virtualDevices := g.buildStaticVNPUDevices(physical, vDevInfo)
 		devs = append(devs, virtualDevices...)
@@ -105,7 +138,10 @@ func (g *Ascend910Generation) buildStaticVNPUDevices(
 		device.VDevID = vDev.VDevID
 		device.TemplateName = vDev.QueryInfo.Name
 		device.VNPUType = vnpuType
-		device.AICore = int64(vDev.QueryInfo.Computing.Aic)
+		if err := device.setResources(vDev.QueryInfo.Computing); err != nil {
+			hwlog.RunLog.Warnf("skip static vNPU %d: %v", vDev.VDevID, err)
+			continue
+		}
 		device.DeviceName = fmt.Sprintf("%s%s%d%s%d", StaticVNPUDevice, devcommon.Minus,
 			vDev.VDevID, devcommon.Minus, physical.PhyID)
 		devices = append(devices, device)
@@ -150,14 +186,40 @@ func (g *Ascend910Generation) DeviceAttributes(dev NpuDevice) map[resourceapi.Qu
 		attrKeyPhysicID:   {IntValue: ptr.To(int64(dev.PhyID))},
 		attrKeyChipName:   {StringValue: ptr.To(g.getChipName(dev.LogicID))},
 		attrKeyDeviceKind: {StringValue: ptr.To(string(dev.Kind))},
+		consts.AICoreNum:  {IntValue: ptr.To(dev.AICore)},
+		consts.AICpuNum:   {IntValue: ptr.To(dev.AICpu)},
+		consts.MemorySize: {IntValue: ptr.To(dev.MemorySize)},
 	}
 	if dev.Kind == StaticVNPUDevice {
 		attributes[attrKeyVDevID] = resourceapi.DeviceAttribute{IntValue: ptr.To(int64(dev.VDevID))}
 		attributes[attrKeyTemplate] = resourceapi.DeviceAttribute{StringValue: ptr.To(dev.TemplateName)}
 		attributes[attrKeyVNPUType] = resourceapi.DeviceAttribute{StringValue: ptr.To(dev.VNPUType)}
-		attributes[attrKeyAICore] = resourceapi.DeviceAttribute{IntValue: ptr.To(dev.AICore)}
 	}
 	return attributes
+}
+
+// setResources uses total resources for pools and QueryInfo for static vNPUs.
+func (dev *NpuDevice) setResources(r devcommon.CgoComputingResource) error {
+	if r.Aic < 0 || float64(r.Aic) >= float64(1<<63) ||
+		float64(int64(r.Aic)) != float64(r.Aic) || r.MemorySize > 1<<63-1 {
+		return fmt.Errorf("invalid DCMI resource totals on physical device %d", dev.PhyID)
+	}
+	dev.AICore = int64(r.Aic)
+	dev.AICpu = int64(r.DeviceAicpu)
+	dev.MemorySize = int64(r.MemorySize)
+	return nil
+}
+
+// DeviceCapacity publishes capacity when DCMI reports it for an unsliced
+// physical device. DCMI decides which templates the hardware accepts.
+func (g *Ascend910Generation) DeviceCapacity(
+	dev NpuDevice) map[resourceapi.QualifiedName]resourceapi.DeviceCapacity {
+	if dev.Kind != PhysicalDevice || dev.AICore <= 0 {
+		return nil
+	}
+	return map[resourceapi.QualifiedName]resourceapi.DeviceCapacity{
+		consts.AICoreNum: {Value: *resource.NewQuantity(dev.AICore, resource.DecimalSI)},
+	}
 }
 
 // PhyIDToMountID is a no-op on 910 generations where devices mount by phyID,

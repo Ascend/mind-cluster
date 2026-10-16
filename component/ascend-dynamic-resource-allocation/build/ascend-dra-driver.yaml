@@ -90,7 +90,7 @@ spec:
             add: [ "SYS_PTRACE" ]
         image: ascend-dra:v6.0.0
         imagePullPolicy: IfNotPresent
-        command: ["/bin/bash", "-c", "exec ascend-dra -logLevel=0 --enable-healthz --healthz-address=11258"]
+        command: ["/bin/bash", "-c", "exec ascend-dra -logLevel=0 --enable-healthz --healthz-address=11258 -presetVirtualDevice=true"]
         resources:
           requests:
             memory: 500Mi
@@ -202,6 +202,19 @@ spec:
       expression: >-
         device.driver == 'npu.huawei.com' &&
         device.attributes['npu.huawei.com'].deviceKind == 'static-vnpu'
+---
+# A single class selects any physical NPU reporting consumable AI-core capacity.
+# The ResourceClaim supplies the DCMI template and requested capacity.
+apiVersion: resource.k8s.io/v1
+kind: DeviceClass
+metadata:
+  name: dynamic-vnpu.huawei.com
+spec:
+  selectors:
+  - cel:
+      expression: >-
+        device.driver == 'npu.huawei.com' &&
+        device.attributes['npu.huawei.com'].deviceKind == 'dynamic-vnpu'
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy

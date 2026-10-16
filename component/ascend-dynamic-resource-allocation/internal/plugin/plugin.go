@@ -40,7 +40,14 @@ type AscendDraPlugin struct {
 	cancelCtx func(error)
 }
 
-// NewAscendDraPlugin creates a plugin instance with kube client, state and health manager.
+// SetDynamicVNPUManager enables claim-scoped hard slicing on supported hardware.
+func (adp *AscendDraPlugin) SetDynamicVNPUManager(manager DynamicVNPUInterface) {
+	if adp.state != nil {
+		adp.state.dynamicVNPUManager = manager
+	}
+}
+
+// NewAscendDraPlugin creates a plugin instance with kube client, state.
 func NewAscendDraPlugin(
 	draConfig *draFlags.DRAConfig,
 	cancelCtx context.CancelCauseFunc,
@@ -76,19 +83,18 @@ func (adp *AscendDraPlugin) RegisterService(ctx context.Context, draConfig *draF
 		kubeletplugin.RegistrarDirectoryPath(draConfig.DraOption.KubeletRegistrarDirectoryPath),
 		kubeletplugin.PluginDataDirectoryPath(draConfig.DraOption.DriverPluginPath()),
 	)
+	if err != nil {
+		return err
+	}
 	adp.ResourcePublisher.Helper = helper
 	hwlog.RunLog.Infof("kubelet plugin registered, node=%s, driver=%s",
 		draConfig.DraOption.NodeName, consts.DriverName)
-	return err
+	return nil
 }
 
-// LoadCheckpoint loads and verifies the prepared-claim state before the
-// plugin is registered with kubelet.
-func (adp *AscendDraPlugin) LoadCheckpoint() error {
-	if adp.state == nil {
-		return errors.New("device state is not initialized")
-	}
-	return adp.state.LoadCheckpoint()
+// ValidateMode ensures the checkpoint is compatible with the configured mode.
+func (adp *AscendDraPlugin) ValidateMode(preset bool) error {
+	return adp.state.ValidateMode(preset)
 }
 
 // PrepareResourceClaims is the kubelet DRA callback for allocating devices
@@ -107,25 +113,36 @@ func (adp *AscendDraPlugin) PrepareResourceClaims(ctx context.Context, claims []
 }
 
 func (adp *AscendDraPlugin) prepareResourceClaim(_ context.Context, claim *resourceapi.ResourceClaim) kubeletplugin.PrepareResult {
-	preparedPBs, err := adp.state.Prepare(claim)
+	preparedDevices, err := adp.state.Prepare(claim)
 	if err != nil {
+		hwlog.RunLog.Errorf("prepare devices for claim %v failed: %v", claim.UID, err)
 		return kubeletplugin.PrepareResult{
 			Err: fmt.Errorf("error preparing devices for claim %v: %w", claim.UID, err),
 		}
 	}
 	var prepared []kubeletplugin.Device
-	for _, preparedPB := range preparedPBs {
+	for _, preparedDevice := range preparedDevices {
+		var shareID *types.UID
+		if preparedDevice.ShareID != "" {
+			value := types.UID(preparedDevice.ShareID)
+			shareID = &value
+		}
 		prepared = append(prepared, kubeletplugin.Device{
-			Requests:     preparedPB.GetRequestNames(),
-			PoolName:     preparedPB.GetPoolName(),
-			DeviceName:   preparedPB.GetDeviceName(),
-			CDIDeviceIDs: preparedPB.GetCdiDeviceIds(),
+			Requests:     preparedDevice.GetRequestNames(),
+			PoolName:     preparedDevice.GetPoolName(),
+			DeviceName:   preparedDevice.GetDeviceName(),
+			ShareID:      shareID,
+			CDIDeviceIDs: preparedDevice.GetCdiDeviceIds(),
 		})
 	}
 	hwlog.RunLog.Infof("Returning newly prepared devices for claim '%v', count=%d", claim.UID, len(prepared))
 	for i, dev := range prepared {
-		hwlog.RunLog.Debugf("  prepared[%d]: request=%v pool=%s device=%s cdi=%v",
-			i, dev.Requests, dev.PoolName, dev.DeviceName, dev.CDIDeviceIDs)
+		shareID := ""
+		if dev.ShareID != nil {
+			shareID = string(*dev.ShareID)
+		}
+		hwlog.RunLog.Infof("prepared[%d]: request=%v pool=%s device=%s shareID=%s cdi=%v",
+			i, dev.Requests, dev.PoolName, dev.DeviceName, shareID, dev.CDIDeviceIDs)
 	}
 	return kubeletplugin.PrepareResult{Devices: prepared}
 }
@@ -169,3 +186,5 @@ func (adp *AscendDraPlugin) HandleError(ctx context.Context, err error, msg stri
 		adp.cancelCtx(fmt.Errorf("fatal background error: %w", err))
 	}
 }
+
+// ReconcileStartup completes recovery before kubelet can call Prepare.

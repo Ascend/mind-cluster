@@ -44,7 +44,7 @@ func TestResolveDavinciManager_310B_DockerVariant_Missing(t *testing.T) {
 	}
 	defer func() { osStat = origOSStat }()
 
-	dev, err := resolveDavinciManager(api.Ascend310B)
+	dev, err := resolveDavinciManager(api.Ascend310B, "")
 	if err != nil {
 		t.Fatalf("expected fallback to succeed: %v", err)
 	}
@@ -62,7 +62,7 @@ func TestResolveDavinciManager_310B_DockerVariant_Exists(t *testing.T) {
 
 	// mockOSStatFunc returns a non-nil FileInfo for /dev/ paths, so the docker
 	// variant "exists".
-	dev, err := resolveDavinciManager(api.Ascend310B)
+	dev, err := resolveDavinciManager(api.Ascend310B, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -87,7 +87,7 @@ func TestGenerateSharedNodes_DvppCmdList_StatFail(t *testing.T) {
 	}
 	defer func() { unixStat = origStat }()
 
-	nodes, err := GenerateSharedNodes(api.Ascend910, "")
+	nodes, err := GenerateSharedNodes(api.Ascend910, "", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -106,7 +106,7 @@ func TestAddDevicesFromDir_ReadError(t *testing.T) {
 	}
 	defer func() { osReadDir = origReadDir }()
 
-	_, err := addDevicesFromDir("/dev/uburma")
+	_, err := addDevicesFromDir("/dev/uburma", "")
 	if err == nil {
 		t.Fatal("expected error from osReadDir")
 	}
@@ -129,7 +129,7 @@ func TestAddDevicesFromDir_StatFailure(t *testing.T) {
 	}
 	defer func() { unixStat = origStat }()
 
-	_, err := addDevicesFromDir("/dev/uburma")
+	_, err := addDevicesFromDir("/dev/uburma", "")
 	if err == nil {
 		t.Fatal("expected error from statDevice failure in addDevicesFromDir")
 	}
@@ -148,7 +148,7 @@ func TestAddUBDevicesFromDir_ReadError(t *testing.T) {
 	}
 	defer func() { osReadDir = origReadDir }()
 
-	nodes, err := GenerateSharedNodes(api.Ascend910, "")
+	nodes, err := GenerateSharedNodes(api.Ascend910, "", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -170,7 +170,7 @@ func TestGenerateSharedNodes_310BSpecials_StatFailure(t *testing.T) {
 	}
 	defer func() { unixStat = origStat }()
 
-	nodes, err := GenerateSharedNodes(api.Ascend310B, "")
+	nodes, err := GenerateSharedNodes(api.Ascend310B, "", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -195,7 +195,7 @@ func TestGenerateSharedNodes_CommonManagers_StatFailure(t *testing.T) {
 	}
 	defer func() { unixStat = origStat }()
 
-	nodes, err := GenerateSharedNodes(api.Ascend910, "")
+	nodes, err := GenerateSharedNodes(api.Ascend910, "", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

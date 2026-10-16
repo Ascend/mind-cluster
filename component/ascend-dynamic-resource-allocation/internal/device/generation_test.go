@@ -153,7 +153,7 @@ type deviceAttrCase struct {
 }
 
 var deviceAttrCases = []deviceAttrCase{
-	{name: "populated device", dev: NpuDevice{DevType: "Ascend910", PhyID: 7, LogicID: 3}},
+	{name: "populated device", dev: NpuDevice{DevType: "Ascend910", PhyID: 7, LogicID: 3, AICore: 20, AICpu: 6, MemorySize: 65536}},
 	{name: "zero-value device", dev: NpuDevice{}},
 }
 
@@ -384,7 +384,10 @@ func TestAscend910Generation_DeviceAttributes(t *testing.T) {
 		for idx, tc := range deviceAttrCases {
 			Convey(fmt.Sprintf("case#%d %s", idx, tc.name), func() {
 				attrs := g.DeviceAttributes(tc.dev)
-				So(len(attrs), ShouldEqual, 4)
+				So(len(attrs), ShouldEqual, 7)
+				So(*attrs[consts.AICoreNum].IntValue, ShouldEqual, tc.dev.AICore)
+				So(*attrs[consts.AICpuNum].IntValue, ShouldEqual, tc.dev.AICpu)
+				So(*attrs[consts.MemorySize].IntValue, ShouldEqual, tc.dev.MemorySize)
 				So(attrs[attrKeyType], ShouldResemble,
 					resourceapi.DeviceAttribute{StringValue: ptr.To(consts.NPUNamePrefix)})
 				So(attrs[attrKeyPhysicID], ShouldResemble,
@@ -546,7 +549,7 @@ func TestAscend910Generation_StaticVNPUDiscoveryBranches(t *testing.T) {
 		So(devices, ShouldHaveLength, 1)
 		So(devices[0].Kind, ShouldEqual, PhysicalDevice)
 	})
-	Convey("vNPU query error keeps the physical device available", t, func() {
+	Convey("vNPU query error hides the card instead of publishing a possibly sliced card", t, func() {
 		g, _ := new910WithMock()
 		p := gomonkey.NewPatches()
 		defer p.Reset()
@@ -556,8 +559,7 @@ func TestAscend910Generation_StaticVNPUDiscoveryBranches(t *testing.T) {
 		patchGetVirtualDeviceInfo(p, common.VirtualDevInfo{}, errSentinel)
 		devices, err := g.ListNpuDevices()
 		So(err, ShouldBeNil)
-		So(devices, ShouldHaveLength, 1)
-		So(devices[0].Kind, ShouldEqual, PhysicalDevice)
+		So(devices, ShouldHaveLength, 0)
 	})
 	Convey("one vNPU query error does not stop enumeration of other cards", t, func() {
 		g, _ := new910WithMock()
@@ -574,9 +576,8 @@ func TestAscend910Generation_StaticVNPUDiscoveryBranches(t *testing.T) {
 		})
 		devices, err := g.ListNpuDevices()
 		So(err, ShouldBeNil)
-		So(devices, ShouldHaveLength, 2)
-		So(devices[0].Kind, ShouldEqual, PhysicalDevice)
-		So(devices[1].Kind, ShouldEqual, StaticVNPUDevice)
+		So(devices, ShouldHaveLength, 1)
+		So(devices[0].Kind, ShouldEqual, StaticVNPUDevice)
 	})
 }
 
@@ -630,4 +631,16 @@ func TestNpuDeviceKindValues(t *testing.T) {
 		So(string(PhysicalDevice), ShouldEqual, consts.PhysicalNPUDeviceKind)
 		So(string(StaticVNPUDevice), ShouldEqual, consts.StaticVNPUDeviceKind)
 	})
+}
+func TestHardwareResourceTotals(t *testing.T) {
+	dev := NpuDevice{}
+	if err := dev.setResources(common.CgoComputingResource{Aic: 20, DeviceAicpu: 6, MemorySize: 65536}); err != nil {
+		t.Fatal(err)
+	}
+	dev.Kind = PhysicalDevice
+	attrs := NewAscend910Generation().DeviceCapacity(dev)
+	capacity := attrs[consts.AICoreNum]
+	if dev.AICore != 20 || dev.AICpu != 6 || dev.MemorySize != 65536 || capacity.Value.Value() != 20 {
+		t.Fatalf("hardware totals: %+v, capacity=%v", dev, attrs)
+	}
 }

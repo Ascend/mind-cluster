@@ -851,7 +851,7 @@ func (d *DeviceManager) GetDeviceIPAddress(logicID, ipType int32) (string, error
 // CreateVirtualDevice create virtual device
 func (d *DeviceManager) CreateVirtualDevice(
 	logicID int32, vDevInfo common.CgoCreateVDevRes) (common.CgoCreateVDevOut, error) {
-	if !common.IsValidTemplateName(d.DevType, vDevInfo.TemplateName) {
+	if vDevInfo.TemplateName == "" || strings.ContainsRune(vDevInfo.TemplateName, 0) {
 		return common.CgoCreateVDevOut{}, fmt.Errorf("input invalid template name: %s", vDevInfo.TemplateName)
 	}
 	return d.DcMgr.DcCreateVDevice(logicID, vDevInfo)
@@ -864,12 +864,6 @@ func (d *DeviceManager) GetVirtualDeviceInfo(logicID int32) (common.VirtualDevIn
 		hwlog.RunLog.Debug(err)
 		return common.VirtualDevInfo{}, fmt.Errorf("get virtual device info failed, error is: %v "+
 			"and vdev num is: %d", err, int32(cgoVDevInfo.TotalResource.VDevNum))
-	}
-	for _, vDevInfo := range cgoVDevInfo.VDevInfo {
-		if !common.IsValidTemplateName(d.DevType, vDevInfo.QueryInfo.Name) {
-			return common.VirtualDevInfo{}, fmt.Errorf("vdevice id %d, it's template name is invalid: %s",
-				vDevInfo.VDevID, vDevInfo.QueryInfo.Name)
-		}
 	}
 	return cgoVDevInfo, nil
 }

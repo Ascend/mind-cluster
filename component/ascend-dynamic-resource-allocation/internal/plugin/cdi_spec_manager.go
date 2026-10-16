@@ -108,7 +108,7 @@ func NewCDISpecManager(
 // Compile-time check: cdiSpecManager satisfies CdiSpecInterface.
 var _ CdiSpecInterface = (*cdiSpecManager)(nil)
 
-// WriteClaimSpec resolves physical and static-vNPU device names, then asks the
+// WriteClaimSpec resolves physical, static-vNPU and dynamic-vNPU device names, then asks the
 // CDI public library to build and persist a CDI spec file. Returns the
 // fully-qualified CDI device IDs so the plugin can fill them into the prepared
 // devices handed back to kubelet.
@@ -116,15 +116,19 @@ func (m *cdiSpecManager) WriteClaimSpec(claimUID string, deviceNames []string) (
 	if len(deviceNames) == 0 {
 		return nil, fmt.Errorf("cdi: claim %s has no devices", claimUID)
 	}
-	useVirtual := strings.HasPrefix(deviceNames[0], staticVNPUNamePrefix)
+	useVirtual := isVNPUDeviceName(deviceNames[0])
+	useDynamic := strings.HasPrefix(deviceNames[0], dynamicVNPUNamePrefix)
 	ids := make([]int, 0, len(deviceNames))
 	for _, name := range deviceNames {
 		deviceID, virtual, err := parseCDIDeviceName(name)
 		if err != nil {
 			return nil, fmt.Errorf("cdi: parse device ID for %q: %w", name, err)
 		}
-		if virtual != useVirtual {
+		switch {
+		case virtual != useVirtual:
 			return nil, fmt.Errorf("cdi: physical and virtual devices cannot share one claim spec")
+		case virtual && strings.HasPrefix(name, dynamicVNPUNamePrefix) != useDynamic:
+			return nil, fmt.Errorf("cdi: static and dynamic vNPUs cannot share one claim spec")
 		}
 		if !useVirtual && m.toMountID != nil {
 			mountID, err := m.toMountID(int32(deviceID))
@@ -173,25 +177,51 @@ func (m *cdiSpecManager) DeleteClaimSpec(claimUID string) error {
 
 const (
 	staticVNPUNamePrefix       = consts.StaticVNPUDeviceKind + devcommon.Minus
+	dynamicVNPUNamePrefix      = consts.DynamicVNPUDeviceKind + devcommon.Minus
+	physicalNPUNamePrefix      = consts.NPUNamePrefix + devcommon.Minus
 	staticVNPUNameSegmentCount = 4
 	staticVNPUVDevIDSegment    = 2
 )
 
+func isVNPUDeviceName(name string) bool {
+	return strings.HasPrefix(name, staticVNPUNamePrefix) ||
+		strings.HasPrefix(name, dynamicVNPUNamePrefix)
+}
+
 func parseCDIDeviceName(name string) (int, bool, error) {
-	if !strings.HasPrefix(name, staticVNPUNamePrefix) {
+	if !isVNPUDeviceName(name) {
 		id, err := parseDeviceIDSuffix(name)
 		return id, false, err
 	}
 	parts := strings.Split(name, devcommon.Minus)
 	if len(parts) != staticVNPUNameSegmentCount {
-		return 0, true, fmt.Errorf("invalid static vNPU device name %q", name)
+		return 0, true, fmt.Errorf("invalid vNPU device name %q", name)
 	}
 	id, err := strconv.Atoi(parts[staticVNPUVDevIDSegment])
 	if err != nil {
 		return 0, true, fmt.Errorf("vDevID %q in %q is not an integer: %w",
 			parts[staticVNPUVDevIDSegment], name, err)
 	}
+	if id < int(devcommon.MinVDevID) || id >= int(devcommon.MaxVDevID) {
+		return 0, true, fmt.Errorf("vDevID %d in %q is out of range", id, name)
+	}
+	if _, err := parsePhysicalNPUName(physicalNPUNamePrefix + parts[staticVNPUVDevIDSegment+1]); err != nil {
+		return 0, true, err
+	}
 	return id, true, nil
+}
+
+// parsePhysicalNPUName checks the scheduler's device prefix, suffix and physical ID bounds.
+func parsePhysicalNPUName(name string) (int, error) {
+	suffix, hasPrefix := strings.CutPrefix(name, physicalNPUNamePrefix)
+	id, err := strconv.Atoi(suffix)
+	if !hasPrefix || err != nil || strings.Contains(suffix, devcommon.Minus) {
+		return 0, fmt.Errorf("invalid physical device name %q", name)
+	}
+	if id < 0 || id >= devcommon.HiAIMaxCardNum*devcommon.HiAIMaxDeviceNum {
+		return 0, fmt.Errorf("physical device ID %d in %q is out of range", id, name)
+	}
+	return id, nil
 }
 
 // parseDeviceIDSuffix returns the trailing integer from a physical device name.

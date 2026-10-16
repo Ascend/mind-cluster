@@ -22,6 +22,7 @@ import (
 
 	resourceapi "k8s.io/api/resource/v1"
 	"k8s.io/dynamic-resource-allocation/resourceslice"
+	"k8s.io/utils/ptr"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -31,6 +32,7 @@ import (
 	draFlags "ascend-dynamic-resource-allocation/internal/flags"
 	"ascend-dynamic-resource-allocation/internal/kubeclient"
 	"ascend-dynamic-resource-allocation/internal/plugin"
+	"ascend-dynamic-resource-allocation/pkg/consts"
 )
 
 // DraGenerationInterface converges everything that touches the device manager
@@ -51,6 +53,8 @@ type DraGenerationInterface interface {
 	// ResourceSlice for a device. Centralising this here keeps publish
 	// logic free of generation-specific attribute names.
 	DeviceAttributes(dev device.NpuDevice) map[resourceapi.QualifiedName]resourceapi.DeviceAttribute
+	// DeviceCapacity returns consumable capacity for devices which support dynamic slicing.
+	DeviceCapacity(dev device.NpuDevice) map[resourceapi.QualifiedName]resourceapi.DeviceCapacity
 	GetDevType() string
 	GetProductTypes() []string
 	// PhyIDToMountID converts the physical device ID (parsed from the device
@@ -80,9 +84,9 @@ type AscendDraDriver struct {
 	generation      DraGenerationInterface
 	ascendDraPlugin *plugin.AscendDraPlugin
 	draConfig       *draFlags.DRAConfig
-	kubeClient  *kubeclient.ClientK8s
-	groupDevice map[string][]*device.NpuDevice
-	allInfo     device.NpuAllInfo
+	kubeClient      *kubeclient.ClientK8s
+	groupDevice     map[string][]*device.NpuDevice
+	allInfo         device.NpuAllInfo
 }
 
 // NewAscendDraDriver is the only construction path. Replaces the previous
@@ -114,7 +118,7 @@ func (d *AscendDraDriver) publishResources(ctx context.Context) error {
 	if err := d.ascendDraPlugin.PublishResources(ctx, resources); err != nil {
 		return err
 	}
-	hwlog.RunLog.Infof("ResourceSlice published, pool=%s, deviceCount=%d",
+	hwlog.RunLog.Infof("ResourceSlice publication requested, pool=%s, deviceCount=%d",
 		d.draConfig.DraOption.NodeName, len(d.allInfo.AllDevs))
 	return nil
 }
@@ -127,10 +131,25 @@ func (d *AscendDraDriver) publishResources(ctx context.Context) error {
 func (d *AscendDraDriver) buildDriverResources() resourceslice.DriverResources {
 	devices := make([]resourceapi.Device, 0, len(d.allInfo.AllDevs))
 	for _, dev := range d.allInfo.AllDevs {
-		devices = append(devices, resourceapi.Device{
+		var capacity map[resourceapi.QualifiedName]resourceapi.DeviceCapacity
+		if !d.draConfig.DraOption.PresetVirtualDevice {
+			capacity = d.generation.DeviceCapacity(*dev)
+		}
+		published := resourceapi.Device{
 			Name:       strings.ToLower(dev.DeviceName),
 			Attributes: d.generation.DeviceAttributes(*dev),
-		})
+			Capacity:   capacity,
+		}
+		if len(capacity) > 0 {
+			published.AllowMultipleAllocations = ptr.To(true)
+			if published.Attributes == nil {
+				published.Attributes = make(map[resourceapi.QualifiedName]resourceapi.DeviceAttribute)
+			}
+			published.Attributes["deviceKind"] = resourceapi.DeviceAttribute{
+				StringValue: ptr.To(consts.DynamicVNPUDeviceKind),
+			}
+		}
+		devices = append(devices, published)
 	}
 	return resourceslice.DriverResources{
 		Pools: map[string]resourceslice.Pool{
@@ -148,19 +167,19 @@ func (d *AscendDraDriver) buildDriverResources() resourceslice.DriverResources {
 // kubelet liveness probe passes during slow device-manager init.
 func (d *AscendDraDriver) Start(ctx context.Context) error {
 	hwlog.RunLog.Info("starting ascend dra driver")
-	// 1. pull npu info from generation
+	// The plugin constructor loaded durable ownership before startup.
+	if err := d.ascendDraPlugin.ValidateMode(d.draConfig.DraOption.PresetVirtualDevice); err != nil {
+		return fmt.Errorf("validate vNPU mode: %w", err)
+	}
+
 	if err := d.pullNPUInfo(); err != nil {
 		return err
 	}
-	// 2. load checkpoint into memory and verify it before accepting requests.
-	if err := d.ascendDraPlugin.LoadCheckpoint(); err != nil {
-		return fmt.Errorf("load checkpoint: %w", err)
-	}
-	// 3. start dra service
+	// Start serving only after checkpoint and hardware reconciliation.
 	if err := d.startService(ctx); err != nil {
 		return err
 	}
-	// 4. publish resourceslice
+	// Publish the reconciled resourceslice.
 	if err := d.publishResources(ctx); err != nil {
 		return err
 	}
@@ -254,12 +273,18 @@ func (adm *AscendDraManager) autoSetDraDriver(
 	var generation DraGenerationInterface
 	switch devType {
 	case api.Ascend910A, api.Ascend910B, api.Ascend910A3:
-		generation = device.NewAscend910Generation()
+		gen910 := device.NewAscend910Generation()
+		gen910.PresetVirtualDevice = draConfig.DraOption.PresetVirtualDevice
+		generation = gen910
 	case api.Ascend910A5:
 		generation = device.NewAscend950Generation()
 	default:
 		hwlog.RunLog.Errorf("found an unsupported draGen type: %v", devType)
 		return fmt.Errorf("an unsupported draGen type: %v", devType)
+	}
+	if !draConfig.DraOption.PresetVirtualDevice &&
+		devType != api.Ascend910B && devType != api.Ascend910A3 {
+		return fmt.Errorf("dynamic hard slicing is unsupported on %s", devType)
 	}
 	hwlog.RunLog.Infof("dra generation selected, devType=%s", devType)
 	generation.SetDmgr(dmgr)
@@ -275,6 +300,7 @@ func (adm *AscendDraManager) autoSetDraDriver(
 	if err != nil {
 		return fmt.Errorf("new dra plugin err:%v", err)
 	}
+	ascendDraPlugin.SetDynamicVNPUManager(device.NewDynamicVNPUManager(dmgr))
 
 	// The node-level k8s client is built here once and owned by the driver.
 	// A kubeconfig problem is logged and never blocks startup.

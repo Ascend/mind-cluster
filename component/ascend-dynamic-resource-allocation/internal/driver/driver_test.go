@@ -26,8 +26,8 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/cdi"
-	"ascend-common/devmanager"
 	ver "ascend-common/common-utils/version"
+	"ascend-common/devmanager"
 	"ascend-dynamic-resource-allocation/internal/device"
 	draFlags "ascend-dynamic-resource-allocation/internal/flags"
 	"ascend-dynamic-resource-allocation/internal/kubeclient"
@@ -40,7 +40,7 @@ import (
 
 // startCase drives AscendDraDriver.Start through every branch:
 //   - pullNPUInfo fails
-//   - loadCheckpoint fails
+//   - validateMode fails
 //   - startService fails
 //   - publishResources fails
 //   - happy path
@@ -48,7 +48,7 @@ type startCase struct {
 	name        string
 	listErr     error // error returned by fakeGeneration.ListNpuDevices
 	devices     []device.NpuDevice
-	loadErr     error
+	modeErr     error
 	registerErr error
 	publishErr  error
 	expectErr   bool
@@ -57,9 +57,9 @@ type startCase struct {
 var startCases = []startCase{
 	{name: "pullNPUInfo fails", listErr: errSentinel, expectErr: true},
 	{
-		name:    "loadCheckpoint fails",
+		name:    "validateMode fails",
 		devices: []device.NpuDevice{{DevType: "Ascend910", DeviceName: "npu-0", PhyID: 0}},
-		loadErr: errSentinel, expectErr: true,
+		modeErr: errSentinel, expectErr: true,
 	},
 	{
 		name:        "startService fails",
@@ -245,7 +245,7 @@ func TestAscendDraDriver_Start(t *testing.T) {
 				d, _ := newDriverWithFake(gen)
 				stopCalled := false
 				patches := &pluginMethodPatches{}
-				patchPluginMethods(patches, tc.loadErr, tc.registerErr, tc.publishErr, &stopCalled)
+				patchPluginMethods(patches, tc.modeErr, tc.registerErr, tc.publishErr, &stopCalled)
 				defer patches.Reset()
 				err := d.Start(context.Background())
 				if tc.expectErr {
@@ -335,7 +335,7 @@ func TestNewAscendDraManager(t *testing.T) {
 		for idx, tc := range autoSetDriverCases {
 			Convey(fmt.Sprintf("case#%d %s", idx, tc.name), func() {
 				dmgr := &devmanager.DeviceManagerMock{DevType: tc.devType}
-				cfg := &draFlags.DRAConfig{DraOption: &draFlags.DRAOption{}}
+				cfg := &draFlags.DRAConfig{DraOption: &draFlags.DRAOption{PresetVirtualDevice: true}}
 
 				p := gomonkey.NewPatches()
 				defer p.Reset()

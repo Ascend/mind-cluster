@@ -32,6 +32,12 @@ const (
 	PhysicalNPUDeviceKind = "physical-npu"
 	// StaticVNPUDeviceKind identifies a pre-created static vNPU in DRA metadata and device names.
 	StaticVNPUDeviceKind = "static-vnpu"
+	// DynamicVNPUDeviceKind identifies a claim-scoped vNPU created by DRA.
+	DynamicVNPUDeviceKind = "dynamic-vnpu"
+	// Hardware resource attributes; memory is measured in MB.
+	AICoreNum  = "aiCoreNum"
+	AICpuNum   = "aiCpuNum"
+	MemorySize = "memory"
 )
 
 // Path and Environment related constants.

@@ -49,7 +49,7 @@ func multiDeviceClaim(uid string, devices ...string) *resourceapi.ResourceClaim 
 	results := make([]resourceapi.DeviceRequestAllocationResult, 0, len(devices))
 	for i, device := range devices {
 		results = append(results, resourceapi.DeviceRequestAllocationResult{
-			Request: fmt.Sprintf("req-%d", i), Pool: "pool-a", Device: device,
+			Request: fmt.Sprintf("req-%d", i), Driver: consts.DriverName, Pool: "pool-a", Device: device,
 		})
 	}
 	return &resourceapi.ResourceClaim{
@@ -64,7 +64,7 @@ func multiDeviceClaim(uid string, devices ...string) *resourceapi.ResourceClaim 
 
 // preparedDeviceSummaries extracts comparable "name:cdiIDs" pairs, since
 // drapbv1.Device contains slices and cannot be compared with ==.
-func preparedDeviceSummaries(devs []*drapbv1.Device) []string {
+func preparedDeviceSummaries(devs PreparedDevices) []string {
 	summaries := make([]string, 0, len(devs))
 	for _, d := range devs {
 		summaries = append(summaries, fmt.Sprintf("%s:%v", d.DeviceName, d.CdiDeviceIds))
@@ -72,15 +72,12 @@ func preparedDeviceSummaries(devs []*drapbv1.Device) []string {
 	return summaries
 }
 
-// TestPreparedDevices_Helpers verifies GetDevices and DeviceNames on empty
+// TestPreparedDevices_Helpers verifies DeviceNames on empty
 // and populated slices.
 func TestPreparedDevices_Helpers(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		var pds PreparedDevices
 
-		if got := pds.GetDevices(); len(got) != 0 {
-			t.Errorf("GetDevices() len = %d, want 0", len(got))
-		}
 		if got := pds.DeviceNames(); len(got) != 0 {
 			t.Errorf("DeviceNames() len = %d, want 0", len(got))
 		}
@@ -92,16 +89,8 @@ func TestPreparedDevices_Helpers(t *testing.T) {
 			{Device: drapbv1.Device{DeviceName: "Ascend910-1", PoolName: "pool-a"}},
 		}
 
-		devices := pds.GetDevices()
-		if len(devices) != 2 {
-			t.Fatalf("GetDevices() len = %d, want 2", len(devices))
-		}
 		wantNames := []string{"Ascend910-0", "Ascend910-1"}
-		for i, dev := range devices {
-			if dev.DeviceName != wantNames[i] {
-				t.Errorf("GetDevices()[%d].DeviceName = %q, want %q", i, dev.DeviceName, wantNames[i])
-			}
-		}
+
 		if got := pds.DeviceNames(); !reflect.DeepEqual(got, wantNames) {
 			t.Errorf("DeviceNames() = %v, want %v", got, wantNames)
 		}
@@ -229,10 +218,9 @@ func TestDeviceState_Prepare_PersistsAcrossRestart(t *testing.T) {
 }
 
 // TestDeviceState_Prepare_MultipleDevices verifies a claim with several
-// allocation results prepares one device per result, in order, all sharing
-// the CDI IDs of the single claim spec.
+// allocation results prepares one device per result, in order, each receiving its own CDI identity.
 func TestDeviceState_Prepare_MultipleDevices(t *testing.T) {
-	specs := &fakeCdiSpec{cdiIDs: []string{"ascend.com/npu=0", "ascend.com/npu=1"}}
+	specs := &fakeCdiSpec{cdiIDs: []string{"ascend.com/npu=0", "ascend.com/npu=1", "ascend.com/npu=2"}}
 	state := newTestDeviceState(t, specs)
 	claim := multiDeviceClaim("uid-multi", "Ascend910-0", "Ascend910-1", "Ascend910-2")
 
@@ -249,8 +237,8 @@ func TestDeviceState_Prepare_MultipleDevices(t *testing.T) {
 		if dev.DeviceName != wantNames[i] {
 			t.Errorf("devices[%d].DeviceName = %q, want %q", i, dev.DeviceName, wantNames[i])
 		}
-		if len(dev.CdiDeviceIds) != 2 {
-			t.Errorf("devices[%d].CdiDeviceIds = %v, want both CDI ids", i, dev.CdiDeviceIds)
+		if len(dev.CdiDeviceIds) != 1 || dev.CdiDeviceIds[0] != specs.cdiIDs[i] {
+			t.Errorf("devices[%d].CdiDeviceIds = %v, want its own CDI id", i, dev.CdiDeviceIds)
 		}
 	}
 	if got := specs.writes; len(got) != 1 || got[0] != "uid-multi" {
@@ -444,8 +432,7 @@ func TestDeviceState_Prepare_RollbackOnCheckpointWriteFailure(t *testing.T) {
 }
 
 // TestDeviceState_Unprepare_RollbackOnCheckpointWriteFailure verifies a
-// failed checkpoint write keeps the claim in memory and leaves the CDI spec
-// untouched, so a kubelet retry can replay the whole flow.
+// failed checkpoint write keeps ownership and blocks ID reuse until retry.
 func TestDeviceState_Unprepare_RollbackOnCheckpointWriteFailure(t *testing.T) {
 	specs := &fakeCdiSpec{cdiIDs: []string{"ascend.com/npu=0"}}
 	state, mgr := newInjectableDeviceState(t, specs)
@@ -467,8 +454,8 @@ func TestDeviceState_Unprepare_RollbackOnCheckpointWriteFailure(t *testing.T) {
 	if state.checkpoint.V1.PreparedClaims[string(claim.UID)] == nil {
 		t.Error("claim removed from preparedClaims, want rolled back")
 	}
-	if len(specs.deletes) != 0 {
-		t.Errorf("DeleteClaimSpec calls = %v, want none (CDI spec untouched)",
+	if len(specs.deletes) != 1 {
+		t.Errorf("DeleteClaimSpec calls = %v, want one (aliases cleared before ownership removal)",
 			specs.deletes)
 	}
 }

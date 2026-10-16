@@ -61,7 +61,7 @@ func assert310BSpecials(t *testing.T, nodes []*cdispec.DeviceNode) {
 }
 
 func TestGenerateSharedNodes_EmptyDevType(t *testing.T) {
-	_, err := GenerateSharedNodes("", "")
+	_, err := GenerateSharedNodes("", "", "")
 	if err == nil {
 		t.Fatal("expected error for empty devType")
 	}
@@ -71,7 +71,7 @@ func TestGenerateSharedNodes_Ascend910(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
 
-	nodes, err := GenerateSharedNodes(api.Ascend910, "")
+	nodes, err := GenerateSharedNodes(api.Ascend910, "", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -91,7 +91,7 @@ func TestGenerateSharedNodes_Ascend310B(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
 
-	nodes, err := GenerateSharedNodes(api.Ascend310B, "")
+	nodes, err := GenerateSharedNodes(api.Ascend310B, "", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -115,7 +115,7 @@ func TestGenerateSharedNodes_Ascend910A5(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
 
-	nodes, err := GenerateSharedNodes(api.Ascend910A5, "")
+	nodes, err := GenerateSharedNodes(api.Ascend910A5, "", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -140,7 +140,7 @@ func TestGenerateSharedNodes_Atlas200(t *testing.T) {
 			cleanup := setupMocks()
 			defer cleanup()
 
-			nodes, err := GenerateSharedNodes(api.Ascend910, pt)
+			nodes, err := GenerateSharedNodes(api.Ascend910, pt, "")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -169,7 +169,7 @@ func TestGenerateSharedNodes_UBDevicesPresent(t *testing.T) {
 	osReadDir = mockReadDirWithUB
 	defer func() { osReadDir = origReadDir }()
 
-	nodes, err := GenerateSharedNodes(api.Ascend910, "")
+	nodes, err := GenerateSharedNodes(api.Ascend910, "", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -199,7 +199,7 @@ func TestGenerateSharedNodes_ManagerError(t *testing.T) {
 	}
 	defer func() { unixStat = origStat }()
 
-	_, err := GenerateSharedNodes(api.Ascend910, "")
+	_, err := GenerateSharedNodes(api.Ascend910, "", "")
 	if err == nil {
 		t.Fatal("expected error from resolveDavinciManager via GenerateSharedNodes")
 	}

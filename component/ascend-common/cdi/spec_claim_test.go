@@ -61,12 +61,9 @@ func TestClaimSpec_Errors(t *testing.T) {
 }
 
 func TestClaimSpec_EmptyLogicIDs(t *testing.T) {
-	_, ids, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{}, DevType: "Ascend910"}, MountConfig: testMountSource(t)}, "claim-empty")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(ids) != 0 {
-		t.Errorf("got %d ids", len(ids))
+	_, _, err := GenerateClaimSpec(BuildSpecConfig{DeviceConfig: DeviceConfig{DeviceIDs: []int{}, DevType: "Ascend910"}, MountConfig: testMountSource(t)}, "claim-empty")
+	if err == nil {
+		t.Fatal("expected empty device list to be rejected")
 	}
 }
 

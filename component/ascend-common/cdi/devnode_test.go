@@ -26,7 +26,7 @@ import (
 // =============================================================================
 
 func TestGeneratePerDeviceNodes_Empty(t *testing.T) {
-	_, err := GeneratePerDeviceNodes([]int{}, false)
+	_, err := GeneratePerDeviceNodes([]int{}, false, "")
 	if err == nil {
 		t.Fatal("expected error for empty device IDs")
 	}
@@ -47,7 +47,7 @@ func TestGeneratePerDeviceNodes_NegativeID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := GeneratePerDeviceNodes(tt.deviceIDs, false)
+			_, err := GeneratePerDeviceNodes(tt.deviceIDs, false, "")
 			if err == nil {
 				t.Fatal("expected error for negative logic ID")
 			}
@@ -59,7 +59,7 @@ func TestGeneratePerDeviceNodes_Virtual(t *testing.T) {
 	cleanup := setupMocks()
 	defer cleanup()
 
-	devices, err := GeneratePerDeviceNodes([]int{0, 1}, true)
+	devices, err := GeneratePerDeviceNodes([]int{0, 1}, true, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
