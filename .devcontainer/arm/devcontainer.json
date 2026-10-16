@@ -1,6 +1,6 @@
 {
     "name": "MindCluster Build Env (ARM)",
-    "image": "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindcluster_arm:20260831",
+    "image": "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindcluster_arm:20261016",
     "customizations": {
         "vscode": {
             "extensions": [
