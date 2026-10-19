@@ -21,11 +21,23 @@
 
 ### 产品版本信息
 
-| 产品名称 | MindCluster |
-| --- |-------------|
-| 产品版本 | 26.2.0      |
-| 版本类型 | Release版本   |
-| 维护周期 | 1年          |
+<table><tbody><tr><th class="firstcol" valign="top" width="25%" id="mcps1.1.3.1.1"><p>产品名称</p>
+</th>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.1.3.1.1 "><p>MindCluster</p>
+</td>
+</tr>
+<tr><th class="firstcol" valign="top" width="25%" id="mcps1.1.3.2.1"><p>产品版本</p>
+</th>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.1.3.2.1 "><p>26.2.0</p>
+</td>
+</tr>
+<tr><th class="firstcol" valign="top" width="25%" id="mcps1.1.3.3.1"><p>版本类型</p>
+</th>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.1.3.3.1 "><p>Release版本</p>
+</td>
+</tr>
+</tbody>
+</table>
 
 > [!NOTE]
 >

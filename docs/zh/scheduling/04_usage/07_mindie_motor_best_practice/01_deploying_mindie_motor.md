@@ -320,6 +320,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 
 ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json对应ConfigMap的变化，实时生成global-ranktable。global-ranktable中部分字段来自hccl.json文件，关于hccl.json文件的详细说明请参见[hccl.json文件说明](../../06_api/14_hccl.json_file_description.md)。
 
+<!-- npu="910b" id2 -->
 - <term>Atlas A2训练系列产品</term>global-ranktable示例如下。
 
     ```json
@@ -349,7 +350,9 @@ ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json
         ]
     }
     ```
+<!-- end id2 -->
 
+<!-- npu="A3" id3 -->
 - <term>Atlas A3训练系列产品</term>global-ranktable示例如下。
 
     ```json
@@ -390,6 +393,7 @@ ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json
         ]
     }
     ```
+<!-- end id3 -->
 
 **表 2**  global-ranktable字段说明
 

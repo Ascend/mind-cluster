@@ -115,6 +115,7 @@
 
     - 其他类型节点，修改对应启动YAML文件中Ascend Device Plugin的启动参数。
 
+   <!-- npu="950" id1 -->
 4. <a name="step_npu_nic_mapping"></a>（<term>Ascend 950PR&950DT系列产品</term>可选）若计算节点存在UB网卡（DPU），Ascend Device Plugin通过`npu-nic-mapping.json`读取NPU与UB网卡的连接关系，用于生成<term>Ascend 950PR&950DT系列产品</term>的RoCE通信地址。软件包内的默认配置不一定匹配节点实际拓扑，建议按节点实际情况自行创建映射文件并挂载到容器内。
 
     1. 从驱动侧获取NPU与UB网卡的物理连接关系。
@@ -170,6 +171,7 @@
     >[!NOTE]
     >- 不同节点的NPU与UB网卡物理连接关系可能不同，请按各节点实际拓扑分别创建并挂载。
     >- 该配置文件在组件启动时读取，修改后需重启组件使配置生效。
+    <!-- end id1 -->
 
 5. （可选）使用**断点续训**（包括进程级恢复）或**弹性训练**时，根据需要使用的故障处理模式，修改Ascend Device Plugin组件的启动YAML。
 

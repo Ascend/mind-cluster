@@ -110,6 +110,7 @@ Ascend Device Plugin上报的NPU设备故障信息如[表6](#table68216761214)�
 |reportingComponent|事件的控制者。|唯一值：device-plugin|
 |reportingInstance|事件的上报实例。|字符串。取当前Ascend Device Plugin的Pod名称。|
 
+<!-- npu="A3,910b,910,310p" id1 -->
 **deviceNameCustomization.json<a name="section579455712489"></a>**
 
 deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Plugin镜像时，将该文件放在二进制包的同级目录下，即可将Ascend Device Plugin对外展示的资源类型、资源名称修改为自定义的名称。<term>Ascend 950PR&950DT系列产品</term>目前不支持该功能。
@@ -124,6 +125,7 @@ deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Pl
 |DevicePublicType|设备对外展示的类型，例如huawei.com/Ascend910，必填。|仅支持xxx.xxx/xxx格式，xxx可以为大小写字母及数字，长度范围为10~32个字符。|
 |DevicePublicNamePre|设备对外展示的名称前缀，例如Ascend910-。实际展示的名称，Ascend Device Plugin会在前缀后面拼接芯片的物理ID，必填。|可以包含大小写字母、中划线（-）、数字，必须以大小写字母开头，长度范围为2~16个字符。|
 |PodConfigurationName|Pod的annotation上展示的挂载芯片信息详情，ResourceType为Ascend910时必填。|可以包含大小写字母、中划线（-）、/、点（.）、数字，必须以大小写字母开头，大小写字母数字结尾，长度范围为10~63个字符。|
+<!-- end id1 -->
 
 ## 任务信息<a name="ZH-CN_TOPIC_0000002479226860"></a>
 

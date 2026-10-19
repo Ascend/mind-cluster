@@ -473,6 +473,7 @@ m为从0开始递增的整数。集群规模每增加2000个节点，则会新�
 |UpdateTime|ConfigMap更新时间。|
 |NodeStatus|<p>当前节点状态。</p><ul><li>Healthy：节点健康。</li><li>SubHealthy：节点预隔离，当前任务不做处理，后续任务不再调度该节点。</li><li>UnHealthy：节点不健康，隔离节点，进行任务重调度。</li></ul>|
 
+<!-- npu="950" id1 -->
 **UB网卡故障<a name="section208771421688"></a>**
 
 查询命令：
@@ -485,6 +486,7 @@ m为从0开始递增的整数。集群规模每增加1000个节点，则会新�
 ```ColdFusion
 {"dpuinfo-<nodename>":{"DPUInfo":{"DPUList":[{"HcaName":"hrn5_0","EthName":"ens0f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[0]},{"HcaName":"hrn5_1","EthName":"ens0f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[2]},{"HcaName":"hrn5_2","EthName":"ens0f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[4]},{"HcaName":"hrn5_3","EthName":"ens0f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[6]},{"HcaName":"hrn5_4","EthName":"ens1f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[1]},{"HcaName":"hrn5_5","EthName":"ens1f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[3]},{"HcaName":"hrn5_6","EthName":"ens1f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[5]},{"HcaName":"hrn5_7","EthName":"ens1f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[7]}],"NodeEvent":{"NodeName":"<nodename>","FaultList":null}},"UpdateTime":1787715568988}}
 ```
+<!-- end id1 -->
 
 ### NodeD<a name="ZH-CN_TOPIC_0000002511427003"></a>
 
@@ -506,6 +508,7 @@ NodeInfo:
 Events:  <none>
 ```
 
+<!-- npu="950" id2 -->
 ### K8s RDMA Shared Dev Plugin<a name="ZH-CN_TOPIC_0000002511347042"></a>
 
 K8s RDMA Shared Dev Plugin收集了节点UB网卡的故障信息，将其作为对外的信息放在K8s的ConfigMap中，以供外部查询和使用。
@@ -525,6 +528,7 @@ DpuInfoCfg:
 ----
 {"DPUInfo":{"DPUList":[{"HcaName":"hrn5_0","EthName":"ens0f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[0]},{"HcaName":"hrn5_1","EthName":"ens0f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[2]},{"HcaName":"hrn5_2","EthName":"ens0f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[4]},{"HcaName":"hrn5_3","EthName":"ens0f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[6]},{"HcaName":"hrn5_4","EthName":"ens1f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[1]},{"HcaName":"hrn5_5","EthName":"ens1f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[3]},{"HcaName":"hrn5_6","EthName":"ens1f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[5]},{"HcaName":"hrn5_7","EthName":"ens1f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[7]}],"NodeEvent":{"NodeName":"<nodename>","FaultList":[]}},"UpdateTime":1787724959094}
 ```
+<!-- end id2 -->
 
 ## 制作镜像<a name="ZH-CN_TOPIC_0000002479227114"></a>
 
