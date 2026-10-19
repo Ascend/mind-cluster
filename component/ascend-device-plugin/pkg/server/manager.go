@@ -1442,12 +1442,6 @@ func (hdm *HwDevManager) subscribeNpuFaultEvent() {
 	hwlog.RunLog.Errorf("request SubscribeDeviceFaultEvent failed, the subscribe way is closed")
 }
 
-// graceTolerance start fault tolerance for training tasks
-func (hdm *HwDevManager) graceTolerance(ctx context.Context, groupDevice map[string][]*common.NpuDevice) {
-	hdm.manager.GraceTolerance(ctx, groupDevice)
-	return
-}
-
 // syncCM sync hot reset cm with kubernetes
 func (hdm *HwDevManager) syncCM(ctx context.Context, groupDevice map[string][]*common.NpuDevice) {
 	hdm.manager.SyncCM(ctx, groupDevice)

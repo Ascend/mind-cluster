@@ -409,10 +409,6 @@ func TestNotifyToK8s(t *testing.T) {
 				func(_ *device.AscendTools, _ map[string][]*common.NpuDevice, _ []*common.NpuDevice, _ string) {
 					return
 				})
-			mockGrace := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "graceTolerance",
-				func(_ *HwDevManager, _ map[string][]*common.NpuDevice) {
-					return
-				})
 			mockChange := gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetChange",
 				func(_ *device.AscendTools, _ map[string][]*common.NpuDevice,
 					_ map[string][]*common.NpuDevice) map[string]bool {
@@ -421,7 +417,6 @@ func TestNotifyToK8s(t *testing.T) {
 			patch := setPatch()
 			defer patch.Reset()
 			defer mockUpdateHealth.Reset()
-			defer mockGrace.Reset()
 			defer mockChange.Reset()
 			common.ParamOption.PresetVDevice = true
 			devMgrPatch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetSuperPodInfo",

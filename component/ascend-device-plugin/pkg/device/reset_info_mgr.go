@@ -131,17 +131,6 @@ func ReadResetInfo() ResetInfo {
 	return *mgr.resetInfo
 }
 
-// IsDevBusy check whether one device is busy, for example in reset, wait third party reset or wait manually reset
-func IsDevBusy(logicID int32) bool {
-	_, exist := mgr.busyDevs.Load(strconv.Itoa(int(logicID)))
-	return exist
-}
-
-// AddBusyDev add a new busy device
-func AddBusyDev(logicID int32) {
-	mgr.busyDevs.Store(strconv.Itoa(int(logicID)), struct{}{})
-}
-
 // FreeBusyDev remove a device from busy map
 func FreeBusyDev(logicID int32) {
 	key := strconv.Itoa(int(logicID))
@@ -166,12 +155,6 @@ func GetResetCnt(logicID int32) int {
 		return 0
 	}
 	return ret
-}
-
-// AddResetCnt add device reset count
-func AddResetCnt(logicID int32) {
-	cnt := GetResetCnt(logicID)
-	SetResetCnt(logicID, cnt+1)
 }
 
 // SetResetCnt set device reset count
