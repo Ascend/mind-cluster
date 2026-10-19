@@ -120,7 +120,7 @@
 <td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p_node_collector_priv"><a name="p_node_collector_priv"></a><a name="p_node_collector_priv"></a>需要使用特权容器。</p>
 </td>
 </tr>
-<tr id="row_kubectl_plugin"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p_kubectl_plugin"><a name="p_kubectl_plugin"></a><a name="p_kubectl_plugin"></a><span id="span_kubectl_plugin"><a name="span_kubectl_plugin"></a><a name="span_kubectl_plugin"></a>kubectl plugin</span></p>
+<tr id="row_kubectl_plugin"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p_kubectl_plugin"><a name="p_kubectl_plugin"></a><a name="p_kubectl_plugin"></a><span id="span_kubectl_plugin"><a name="span_kubectl_plugin"></a><a name="span_kubectl_plugin"></a>Kubectl Plugin</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p_kubectl_plugin_user"><a name="p_kubectl_plugin_user"></a><a name="p_kubectl_plugin_user"></a>由用户自行决定。</p>
 </td>
@@ -423,7 +423,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
         alpine            latest              a24bb4013296        2 years ago         5.57MB
         ```
 
-    - 如果需要安装Agent Core和Node Collector，则需要检查python镜像是否存在。Agent Core和Node Collector共用同一个镜像ascend-clusterops-agent，该镜像以python:3.13-slim为基础镜像构建。执行 **docker images | grep python** 命令检查python镜像是否存在。
+    - 如果需要安装Agent Core和Node Collector，则需要检查Python镜像是否存在。Agent Core和Node Collector共用同一个镜像ascend-clusterops-agent，该镜像以python:3.13-slim为基础镜像构建。执行 **docker images | grep python** 命令检查Python镜像是否存在。
 
         ```ColdFusion
         python            3.13-slim           1f9d5b4f2b5a        2 years ago         123MB
@@ -495,7 +495,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     </td>
     <td class="cellrowborder" valign="top" width="54.76547654765477%" headers="mcps1.2.5.1.3 "><ul><li>基础镜像为Ubuntu的Ascend Device Plugin镜像制作命令。<pre class="screen" id="screen3237730141519"><a name="screen3237730141519"></a><a name="screen3237730141519"></a>docker build --no-cache -t ascend-k8sdeviceplugin:<em id="i02419301157"><a name="i02419301157"></a><a name="i02419301157"></a>{</em><em id="i133991029173612"><a name="i133991029173612"></a><a name="i133991029173612"></a>tag}</em> ./</pre></li><li>基础镜像为openEuler的Ascend Device Plugin镜像制作命令。<pre class="screen">docker build --no-cache -t ascend-k8sdeviceplugin:<em>{</em><em>tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
     </td>
-    <td class="cellrowborder" rowspan="16" valign="top" width="19.21192119211921%" headers="mcps1.2.5.1.4 "><p id="p10280193431010"><a name="p10280193431010"></a><a name="p10280193431010"></a><em id="i472612293915"><a name="i472612293915"></a><a name="i472612293915"></a>{tag}</em>需要参考软件包上的版本。如：软件包上版本为<span id="ph18653133316811"><a name="ph18653133316811"></a><a name="ph18653133316811"></a>26.2.0</span>，则<em id="i1572610273910"><a name="i1572610273910"></a><a name="i1572610273910"></a>{tag}</em>为v<span id="ph205239348813"><a name="ph205239348813"></a><a name="ph205239348813"></a>26.2.0</span>。</p>
+    <td class="cellrowborder" rowspan="17" valign="top" width="19.21192119211921%" headers="mcps1.2.5.1.4 "><p id="p10280193431010"><a name="p10280193431010"></a><a name="p10280193431010"></a><em id="i472612293915"><a name="i472612293915"></a><a name="i472612293915"></a>{tag}</em>需要参考软件包上的版本。如：软件包上版本为<span id="ph18653133316811"><a name="ph18653133316811"></a><a name="ph18653133316811"></a>26.2.0</span>，则<em id="i1572610273910"><a name="i1572610273910"></a><a name="i1572610273910"></a>{tag}</em>为v<span id="ph205239348813"><a name="ph205239348813"></a><a name="ph205239348813"></a>26.2.0</span>。</p>
     <div class="note" id="note1217913258443"><a name="note1217913258443"></a><a name="note1217913258443"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p11793259444"><a name="p11793259444"></a><a name="p11793259444"></a>请确保Dockerfile-310P-1usoc中HwDmUser和HwBaseUser的<span id="ph18833164913291"><a name="ph18833164913291"></a><a name="ph18833164913291"></a>GID</span>和<span id="ph5530185193011"><a name="ph5530185193011"></a><a name="ph5530185193011"></a>UID</span>与物理机上的保持一致。</p>
     </div></div>
     <p id="p7733142881719"><a name="p7733142881719"></a><a name="p7733142881719"></a></p>
@@ -559,7 +559,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t ascend-dra:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>UMDK_PKG参数取值为UMDK软件包文件名，需要从<a href="https://mirrors.huaweicloud.com/ascend/">华为云镜像仓地址</a>的archive目录下载。当前UMDK软件包仅支持aarch64架构。</p>
     </td>
     </tr>
-    <tr id="row16602529173910"><td class="cellrowborder" rowspan="7" valign="top" headers="mcps1.2.5.1.1 "><p id="p119247391094"><a name="p119247391094"></a><a name="p119247391094"></a>其他产品</p>
+    <tr id="row16602529173910"><td class="cellrowborder" rowspan="6" valign="top" headers="mcps1.2.5.1.1 "><p id="p119247391094"><a name="p119247391094"></a><a name="p119247391094"></a>其他产品</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p4603162993920"><a name="p4603162993920"></a><a name="p4603162993920"></a><span id="ph2247144612408"><a name="ph2247144612408"></a><a name="ph2247144612408"></a>Ascend Operator</span></p>
     </td>
@@ -586,16 +586,15 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p7611881466"><a name="p7611881466"></a><a name="p7611881466"></a>进入<span id="ph11611128154615"><a name="ph11611128154615"></a><a name="ph11611128154615"></a>Volcano</span>组件解压目录，选择以下版本路径并进入对应基础镜像目录（Alpine镜像进入<em id="i76118814661"><a name="i76118814661"></a><a name="i76118814661"></a>alpine</em>目录，openEuler镜像进入<em id="i76118814662"><a name="i76118814662"></a><a name="i76118814662"></a>openeuler</em>目录），执行以下命令。</p>
     <a name="ul1193395714453"></a><a name="ul1193395714453"></a><pre class="screen" id="screen73221362140"><a name="screen73221362140"></a><a name="screen73221362140"></a>docker build --no-cache -t volcanosh/vc-scheduler:<em id="i73221362140"><a name="i73221362140"></a><a name="i73221362140"></a>{version}</em>-<em id="i73221362140"><a name="i73221362140"></a><a name="i73221362140"></a>{tag}</em> ./ -f ./Dockerfile-scheduler
    docker build --no-cache -t volcanosh/vc-controller-manager:<em id="i73221362140"><a name="i73221362140"></a><a name="i73221362140"></a>{version}</em>-<em id="i73221362141"><a name="i73221362141"></a><a name="i73221362141"></a>{tag}</em> ./ -f ./Dockerfile-controller</pre>
-    <div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>低版本 Docker 出于安全管控会限制`clone`系统调用，但其拦截策略过于严苛，会误拦截正常线程创建行为。Volcano 内部 CGO 程序依赖原生线程能力，一旦线程创建被拦截将直接引发进程崩溃。因此，使用 openEuler 作为基础镜像构建 Volcano 组件镜像时，Docker 版本需不低于 <b>20.10.10</b>。</p></div></div>
+    <p>低版本Docker出于安全管控会限制clone系统调用，但其拦截策略过于严苛，会误拦截正常线程创建行为。Volcano内部CGO程序依赖原生线程能力，一旦线程创建被拦截将直接引发进程崩溃。因此，使用openEuler作为基础镜像构建Volcano组件镜像时，Docker版本需不低于<b>20.10.10</b>。</p>
     </td>
     </tr>
     <tr id="row141082412331"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1410824123311"><a name="p1410824123311"></a><a name="p1410824123311"></a><span id="ph1410824123312"><a name="ph1410824123312"></a><a name="ph1410824123312"></a>Agent Core/Node Collector</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Agent Core和Node Collector共用同一个镜像ascend-clusterops-agent，一个镜像即可满足两个组件的部署。在软件包解压目录执行以下命令。</p>
     <pre class="screen" id="screen141082412331"><a name="screen141082412331"></a><a name="screen141082412331"></a>docker build --no-cache -t ascend-clusterops-agent:<em id="i141082412331"><a name="i141082412331"></a><a name="i141082412331"></a>{tag}</em> .</pre>
-    <div class="note" id="note141082412331"><a name="note141082412331"></a><a name="note141082412331"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>构建命令在软件包解压目录执行（组件whl与Dockerfile同层）。该镜像以python:3.13-slim为基础镜像，构建前请提前下载<a href="https://gitcode.com/Ascend/mind-cluster/releases">Ascend-mindxdl-faultdiag_<i>{version}</i>_linux-<i>{arch}</i>.zip</a>，解压后仅提取其中ascend_faultdiag-*.whl，放到软件包解压目录（与Dockerfile同目录），否则镜像内无法安装ascend-fd，诊断功能不可用。</p>
+    <p>构建命令在软件包解压目录执行（组件Whl与Dockerfile同层）。该镜像以python:3.13-slim为基础镜像，构建前请提前下载<a href="https://gitcode.com/Ascend/mind-cluster/releases">Ascend-mindxdl-faultdiag_<i>{version}</i>_linux-<i>{arch}</i>.zip</a>，解压后仅提取其中ascend_faultdiag-*.whl，放到软件包解压目录（与Dockerfile同目录），否则镜像内无法安装ascend-fd，诊断功能不可用。</p>
     <p>Agent Core和Node Collector的组件包为通用架构，构建镜像时还需服务器能访问互联网，镜像内pip会自动安装运行依赖。软件包解压目录（与Dockerfile同目录）中需放置ascend_faultdiag-*.whl，构建时Dockerfile会自动挑选与目标架构匹配的wheel（默认x86_64，检测到aarch64时选aarch64架构），匹配架构的wheel缺失时镜像构建会直接报错。</p>
-    </div></div>
     </td>
     </tr>
     </tbody>

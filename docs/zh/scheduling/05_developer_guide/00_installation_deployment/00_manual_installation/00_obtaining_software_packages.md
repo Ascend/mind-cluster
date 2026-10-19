@@ -31,7 +31,7 @@
 |UB Host Device CNI|Ascend-mindxdl-ub-host-device-cni_<i>{version}</i>\_linux-<i>{arch}</i>.zip| UB Host Device CNI软件包。以二进制方式部署在节点`/opt/cni/bin`下，由Multus CNI调用。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)|
 |Agent Core / Node Collector / Kubectl Plugin|Ascend-mindxdl-ascend-clusterops-agent_<i>{version}</i>\_linux.zip| Agent Core、Node Collector和Kubectl Plugin共用的软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)|
 |Elastic Agent|Ascend-mindxdl-elastic\_<i>{version}</i>\_linux-<i>{arch}</i>.zip| Elastic Agent软件包。                                                                                                                                                                                                                                                                                                                                                                        |[获取链接](https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann)|
-|Ascend Dynamic Resource Allocation|Ascend-mindxdl-ascend-dynamic-resource-allocation\_<i>{version}</i>\_linux-<i>{arch}</i>.zip| Ascend Dynamic Resource Allocation软件包。||
+|Ascend Dynamic Resource Allocation|Ascend-mindxdl-ascend-dynamic-resource-allocation\_<i>{version}</i>\_linux-<i>{arch}</i>.zip| Ascend Dynamic Resource Allocation软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)|
 
 >[!NOTE]
 >Elastic Agent组件已经在7.3.0版本日落，请获取7.3.0之前版本的软件包。

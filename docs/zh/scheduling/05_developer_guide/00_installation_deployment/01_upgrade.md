@@ -440,6 +440,39 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
     kubectl clusterops --help
     ```
 
+    回显示例如下，表示插件升级成功。
+
+    ```ColdFusion
+    $ kubectl ascend-diag --help
+    usage: kubectl-ascend_diag [-h] [--job JOB] [-n NAMESPACE] [--agent-core-service AGENT_CORE_SERVICE] [--refresh] [--json] [--collect-manifest PATH]
+
+    Ascend fault diagnosis kubectl plugin
+
+    optional arguments:
+    -h, --help            show this help message and exit
+    --job JOB             job name (job CR name)
+    -n NAMESPACE, --namespace NAMESPACE
+                            namespace
+    --agent-core-service AGENT_CORE_SERVICE
+                            Agent Core Service, format svc.ns:9700
+    --refresh             ignore the cache, force rerun and refresh the cache
+    --json                print the full JSON response
+    --collect-manifest PATH
+                            write a local collect_manifest.yaml into the cluster ConfigMap and exit
+
+    $ kubectl clusterops --help
+    usage: kubectl-clusterops [-h] [--create-llm-config] [--clear-llm-config] [--base-url BASE_URL] [--model MODEL]
+
+    cluster operations kubectl plugin
+
+    optional arguments:
+    -h, --help           show this help message and exit
+    --create-llm-config  configure the LLM Secret (llm-secret)
+    --clear-llm-config   clear all LLM config (delete llm-secret, effective immediately)
+    --base-url BASE_URL  LLM Base URL (prompted; or env LLM_BASE_URL)
+    --model MODEL        LLM model name (prompted; or env LLM_MODEL)
+    ```
+
 4. （可选）回退旧版本。使用旧版本软件包，重新执行[步骤2](#li2097025262414)即可。
 
 ## 升级其他组件<a name="ZH-CN_TOPIC_0000002511346401"></a>
@@ -447,8 +480,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 **前提条件<a name="section176591058124515"></a>**
 
 - 已完成[升级环境检查](#升级说明)。
-
-- 如需升级 NPU Exporter、DPU Exporter、Volcano、K8s Rdma Shared Dev Plugin、ClusterD、Ascend Operator、Infer Operator、NodeD、Agent Core和Node Collector组件，需卸载旧版本后，再执行新版本的安装步骤。
+- 如需升级NPU Exporter、DPU Exporter、Volcano、K8s RDMA Shared Dev Plugin、ClusterD、Ascend Operator、Infer Operator、NodeD、Ascend Dynamic Resource Allocation、Agent Core和Node Collector组件，需卸载旧版本后，再执行新版本的安装步骤。
 
 **注意事项**
 
@@ -470,7 +502,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 本章节仅指导用户在同一个版本内对容器镜像中二进制文件版本进行升级，升级过程中不会修改权限及启动参数。如需了解关于升级方式的更详细说明，请参见[升级说明](#升级说明)。
 
 - 如需升级Volcano、ClusterD、Ascend Operator、Infer Operator和Agent Core组件的镜像，可参考[升级管理节点组件](#section1292111716589)。
-- 如需升级NPU Exporter、DPU Exporter、Ascend Device Plugin、NodeD和Node Collector组件镜像，可参考[升级计算节点组件](#section231311416588)。
+- 如需升级NPU Exporter、DPU Exporter、Ascend Device Plugin、NodeD、Ascend Dynamic Resource Allocation和Node Collector组件镜像，可参考[升级计算节点组件](#section231311416588)。
 - TaskD暂不支持此种升级方式。
 
 **升级管理节点组件<a name="section1292111716589"></a>**
@@ -563,9 +595,9 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 ## Elastic Agent（已日落）升级TaskD<a name="ZH-CN_TOPIC_0000002515202401"></a>
 
 >[!NOTE]
->Elastic Agent 组件已在 7.3.0 版本日落，本章节仅作为历史迁移参考保留。如当前环境已不再使用 Elastic Agent，可跳过本章节。
+>Elastic Agent组件已在7.3.0版本日落，本章节仅作为历史迁移参考保留。如当前环境已不再使用Elastic Agent，可跳过本章节。
 
-Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为TaskD组件的操作指导。
+本章节提供将Elastic Agent组件升级为TaskD组件的操作指导。
 
 **前提条件<a name="section565512391204"></a>**
 
