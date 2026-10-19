@@ -42,7 +42,7 @@ Kubectl Plugin是集群运维Agent特性的客户端命令行工具，包含 `ku
 
     回显示例如下，表示插件可用。
 
-    ```text
+    ```ColdFusion
     $ kubectl ascend-diag --help
     usage: kubectl-ascend_diag [-h] [--job JOB] [-n NAMESPACE] [--agent-core-service AGENT_CORE_SERVICE] [--refresh] [--json] [--collect-manifest PATH]
 
@@ -83,7 +83,7 @@ Kubectl Plugin是集群运维Agent特性的客户端命令行工具，包含 `ku
 
     命令执行后打印诊断报告（包含根因、故障事件、处置建议等字段）即表示链路正常，示例回显如下。
 
-    ```text
+    ```ColdFusion
     The diag job starts. Please wait. Job id: [20260918163512389528_b1b293d4-1c70-4e11-916e-a9023da3660a], run log file is [ascend_faultdiag_36.log].
     +--------------------------------------------------------------------------------------------------------------------------------------------+
     |                                                        Ascend-fd Fault-Diag Report                                                         |

@@ -4,8 +4,8 @@
 <!-- npu="950,A3,910b,910,310p" id2 -->
 - 卸载Container Manager组件，请参见[卸载Container Manager组件](#section1461059103619)进行操作。
 <!-- end id2 -->
-- 卸载Kubectl Plugin、请参见[卸载Kubectl Plugin](#section1664298135126)进行操作。
-- 卸载NPU Exporter、DPU Exporter、Ascend Device Plugin、K8s RDMA Shared Dev Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD、Resilience Controller、Agent Core和Node Collector，请参见[卸载其他组件](#section6361146202520)。
+- 卸载Kubectl Plugin，请参见[卸载Kubectl Plugin](#section1664298135126)进行操作。
+- 卸载NPU Exporter、DPU Exporter、Ascend Device Plugin、K8s RDMA Shared Dev Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD、Ascend Dynamic Resource Allocation、Resilience Controller、Agent Core和Node Collector，请参见[卸载其他组件](#section6361146202520)。
 
 ## 卸载Ascend Docker Runtime<a name="section6134163311244"></a>
 
@@ -196,7 +196,7 @@ rm -f /usr/local/bin/kubectl-ascend_diag /usr/local/bin/kubectl-clusterops
 
 >[!NOTE]
 >
-> - 卸载Kubectl Plugin不影响集群中已部署的Agent Core和Node Collector服务。
+>卸载Kubectl Plugin不影响集群中已部署的Agent Core和Node Collector服务。
 
 ## 卸载其他组件<a name="section6361146202520"></a>
 

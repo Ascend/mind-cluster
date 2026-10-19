@@ -107,7 +107,7 @@ ascend-fd 支持通过 Whl 包安装和使用 MindCluster Ascend Deployer 安装
 
 MindCluster Ascend Deployer 支持 7.1.RC1 及以上版本的 ascend-fd 组件安装。
 
-单台或多台设备批量安装 MindCluster Ascend FaultDiag 组件，请参见《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/05_installation_and_upgrade/02_install_softwares.md)”章节。
+单台或多台设备批量安装 MindCluster Ascend FaultDiag 组件，请参见《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/release_v26.2.0/docs/zh/05_installation_and_upgrade/02_install_softwares.md)”章节。
 
 ## 参考
 

@@ -980,31 +980,44 @@ Kubectl Plugin为安装在用户机上的客户端命令行工具，不包含Pod
 
 **操作步骤<a name="section-kubectl-plugin-confirm-status"></a>**
 
-1. 执行以下命令，查看插件是否可用。命令正常回显帮助信息，表示插件安装成功。
+1. 执行以下命令，查看插件是否可用。
 
     ```shell
     kubectl ascend_diag --help
     kubectl clusterops --help
     ```
 
-   回显示例如下：
+   回显示例如下，表示插件可用。
 
     ```ColdFusion
+    $ kubectl ascend-diag --help
     usage: kubectl-ascend_diag [-h] [--job JOB] [-n NAMESPACE] [--agent-core-service AGENT_CORE_SERVICE] [--refresh] [--json] [--collect-manifest PATH]
 
     Ascend fault diagnosis kubectl plugin
 
-    options:
-      -h, --help            show this help message and exit
-      --job JOB             job name (job CR name)
-      -n NAMESPACE, --namespace NAMESPACE
+    optional arguments:
+    -h, --help            show this help message and exit
+    --job JOB             job name (job CR name)
+    -n NAMESPACE, --namespace NAMESPACE
                             namespace
-      --agent-core-service AGENT_CORE_SERVICE
-                            agent-core Service, format svc.ns:9700
-      --refresh             ignore the cache, force rerun and refresh the cache
-      --json                print the full JSON response
-      --collect-manifest PATH
+    --agent-core-service AGENT_CORE_SERVICE
+                            Agent Core Service, format svc.ns:9700
+    --refresh             ignore the cache, force rerun and refresh the cache
+    --json                print the full JSON response
+    --collect-manifest PATH
                             write a local collect_manifest.yaml into the cluster ConfigMap and exit
+
+    $ kubectl clusterops --help
+    usage: kubectl-clusterops [-h] [--create-llm-config] [--clear-llm-config] [--base-url BASE_URL] [--model MODEL]
+
+    cluster operations kubectl plugin
+
+    optional arguments:
+    -h, --help           show this help message and exit
+    --create-llm-config  configure the LLM Secret (llm-secret)
+    --clear-llm-config   clear all LLM config (delete llm-secret, effective immediately)
+    --base-url BASE_URL  LLM Base URL (prompted; or env LLM_BASE_URL)
+    --model MODEL        LLM model name (prompted; or env LLM_MODEL)
     ```
 
 2. （可选）执行以下命令，触发一次集群运维Agent，确认诊断链路正常。
