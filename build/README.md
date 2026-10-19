@@ -9,7 +9,7 @@
 
 1. 拉取mind-cluster整体源码，例如放在/home目录下：
 
-        git clone -b release/v26.2.0 https://gitcode.com/Ascend/mind-cluster.git
+        git clone -b release_v26.2.0 https://gitcode.com/Ascend/mind-cluster.git
 
 2. 修改组件版本配置文件 `build/service_config.ini`（相对源码根目录）中mind-cluster-version字段值为所需编译版本，默认值如下：
 
