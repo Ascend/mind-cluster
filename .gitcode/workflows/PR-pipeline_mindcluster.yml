@@ -73,6 +73,13 @@ permissions:
   pr: write
   note: write
 
+concurrency:
+  enable: true
+  max: 5
+  exceed-action: QUEUE
+  preemption:
+    enable: true
+
 stages:
   stage_0:
     name: CodeCheck
