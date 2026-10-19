@@ -565,7 +565,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
 </td>
 <td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5 "><p id="p893610293406"><a name="p893610293406"></a>pytorch_multinodes_acjob_910b.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml" target="_blank" rel="noopener noreferrer">pytorch_multinodes_acjob_910b.yaml</a></p>
+<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml" target="_blank" rel="noopener noreferrer">pytorch_multinodes_acjob_910b.yaml</a></p>
 </td>
 <td class="cellrowborder" valign="top" width="15.413082616523303%" headers="mcps1.2.8.1.7 "><p id="p8936152964011"><a name="p8936152964011"></a>示例默认使用2*8卡任务</p>
 </td>
@@ -1353,7 +1353,7 @@ Events:  <none>
     cd /data/atlas_dls/public/code
     git clone https://gitcode.com/Ascend/mind-cluster.git
     cd ./mind-cluster/component/clusterd
-    git checkout release/v26.2.0   # release/v26.2.0是代码仓版本分支，请自行切换到目标分支
+    git checkout release_v26.2.0   # release_v26.2.0是代码仓版本分支，请自行切换到目标分支
     ```
 
 2. 修改ClusterD代码。

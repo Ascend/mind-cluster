@@ -682,7 +682,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><a name="ul158133245418"></a><a name="ul158133245418"></a><ul id="ul158133245418"><li><a href="https://www.hiascend.com/developer/ascendhub/detail/54545fa4ff9f446e914bf44b85efdb61" target="_blank" rel="noopener noreferrer">volcanosh/vc-scheduler</a></li><li><a href="https://www.hiascend.com/developer/ascendhub/detail/16f17a3c95d54f9da710a9c51bfceaa3" target="_blank" rel="noopener noreferrer">volcanosh/vc-controller-manager</a></li></ul>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p38142241846"><a name="p38142241846"></a><a name="p38142241846"></a>根据需要选择镜像：</p><p>v1.7.0-v26.2.0-openeuler24.03</p><p>v1.9.0-v26.2.0-openeuler24.03</p><p>v1.12.0-v26.2.0-openeuler24.03</p><p>v1.7.0-v26.2.0-alpinelatest</p><p>v1.9.0-v26.2.0-alpinelatest</p><p>v1.12.0-v26.2.0-alpinelatest</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p38142241846"><a name="p38142241846"></a><a name="p38142241846"></a>根据需要选择镜像：</p><p>v1.9.0-v26.2.0-openeuler24.03</p><p>v1.12.0-v26.2.0-openeuler24.03</p><p>v1.15.0-v26.2.0-openeuler24.03</p><p>v1.9.0-v26.2.0-alpinelatest</p><p>v1.12.0-v26.2.0-alpinelatest</p><p>v1.15.0-v26.2.0-alpinelatest</p>
     </td>
     <td class="cellrowborder" rowspan="4" valign="top" width="19.67%" headers="mcps1.2.5.1.4 "><p id="p18131924748"><a name="p18131924748"></a><a name="p18131924748"></a>管理节点</p>
     <p id="p1081314241741"><a name="p1081314241741"></a><a name="p1081314241741"></a></p>

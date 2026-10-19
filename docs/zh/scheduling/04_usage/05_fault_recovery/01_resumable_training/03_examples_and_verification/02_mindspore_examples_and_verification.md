@@ -581,7 +581,7 @@ taskd和mindio_ttp的校验过程可参考[软件包 SUM 值校验](../../../../
 
 |任务类型|硬件型号|训练框架|模型|YAML文件|说明|
 |--|--|--|--|--|--|
-|Ascend Job|Atlas 900 A3 SuperPoD超节点|MindSpore|Qwen3|[ms_multinodes_acjob_superpod.yaml](https://gitcode.com/Ascend/mindcluster-deploy/blob/release%2Fv26.2.0/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/yamls/ms_multinodes_acjob_superpod.yaml)|示例默认使用2*16卡任务|
+|Ascend Job|Atlas 900 A3 SuperPoD超节点|MindSpore|Qwen3|[ms_multinodes_acjob_superpod.yaml](https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/yamls/ms_multinodes_acjob_superpod.yaml)|示例默认使用2*16卡任务|
 
 >[!NOTE]
 >当前部分训练框架未提供Atlas 900 A3 SuperPoD超节点的断点续训示例YAML，用户可以在示例YAML中的labels下新增annotations字段即可。示例如下：
@@ -1326,7 +1326,7 @@ Events:  <none>
     cd /data/atlas_dls/public/code
     git clone https://gitcode.com/Ascend/mind-cluster.git
     cd ./mind-cluster/component/clusterd
-    git checkout release/v26.2.0   # release/v26.2.0是代码仓版本分支，请自行切换到目标分支
+    git checkout release_v26.2.0   # release_v26.2.0是代码仓版本分支，请自行切换到目标分支
     ```
 
 2. 修改ClusterD代码。
