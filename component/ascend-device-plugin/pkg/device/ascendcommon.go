@@ -17,7 +17,6 @@ package device
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -129,7 +128,6 @@ type AscendTools struct {
 type DevManager interface {
 	GetNPUs() (common.NpuAllInfo, error)
 	DoWithVolcanoListAndWatch(map[string][]*common.NpuDevice, int)
-	GraceTolerance(context.Context, map[string][]*common.NpuDevice)
 	SetDmgr(devmanager.DeviceInterface)
 	GetDmgr() devmanager.DeviceInterface
 	GetChipAICore() int32
@@ -593,25 +591,6 @@ func (tool *AscendTools) removeDuplicate(allDeviceTypes *[]string) []string {
 		rmDupDeviceTypes = append(rmDupDeviceTypes, deviType)
 	}
 	return rmDupDeviceTypes
-}
-
-func getResetInfoData(resetInfo *v1.ConfigMap) ([]*common.TaskDevInfo, error) {
-	data, ok := resetInfo.Data[common.ResetInfoCMDataKey]
-	if !ok {
-		return nil, fmt.Errorf("%s not exist", common.ResetInfoCMDataKey)
-	}
-	if len(data) > common.CMDataMaxLength {
-		return nil, fmt.Errorf("configmap data size is out of memory")
-	}
-	var taskResetInfo common.TaskResetInfo
-	if err := json.Unmarshal([]byte(data), &taskResetInfo); err != nil {
-		return nil, fmt.Errorf("unmarshal configmap data failed, err: %v", err)
-	}
-	if taskResetInfo.UpdateTime == 0 {
-		hwlog.RunLog.Debugf("reset configmap is initializing")
-		return nil, nil
-	}
-	return taskResetInfo.RankList, nil
 }
 
 func (tool *AscendTools) getRealUsedDevices() sets.String {

@@ -17,7 +17,6 @@ package device
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -1433,35 +1432,6 @@ func TestRemoveDuplicateErr(t *testing.T) {
 		oldErrors = []int64{code98008, code98008, code98008, code98008, code98008, code98008, codeB8008, codeB8008}
 		newErrors = tool.removeDuplicateErr(oldErrors)
 		convey.So(len(baseErrors), convey.ShouldEqual, len(newErrors))
-	})
-}
-
-// TestGetResetInfoData for test getResetInfoData
-func TestGetResetInfoData(t *testing.T) {
-	convey.Convey("test getResetInfoData", t, func() {
-		resetInfo := &v1.ConfigMap{}
-		convey.Convey("01-reset.json not exist, should return error", func() {
-			_, err := getResetInfoData(resetInfo)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-		convey.Convey("02-unmarshal fail, should return error", func() {
-			mockUnmarshal := gomonkey.ApplyFuncReturn(json.Unmarshal, errors.New("fail"))
-			defer mockUnmarshal.Reset()
-			resetInfo.Data = map[string]string{common.ResetInfoCMDataKey: "yyy"}
-			_, err := getResetInfoData(resetInfo)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-		convey.Convey("03-unmarshal success, should return nil", func() {
-			taskResetInfo := common.TaskResetInfo{RankList: []*common.TaskDevInfo{{RankId: 0}, {RankId: 1}}, UpdateTime: 20}
-			devNumsFromRestJson := 2
-			resetByte, err := json.Marshal(taskResetInfo)
-			convey.So(err, convey.ShouldBeNil)
-			resetInfo.Data = map[string]string{common.ResetInfoCMDataKey: string(resetByte)}
-			devInfo, err := getResetInfoData(resetInfo)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(len(devInfo) == devNumsFromRestJson, convey.ShouldBeTrue)
-		})
-
 	})
 }
 

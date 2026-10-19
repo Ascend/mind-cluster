@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"sync"
 	"testing"
 
@@ -68,21 +69,12 @@ func TestWriteResetInfo(t *testing.T) {
 	})
 }
 
-// TestIsDevBusy test the function IsDevBusy
-func TestIsDevBusy(t *testing.T) {
-	AddBusyDev(testLogicID)
-	ret := IsDevBusy(testLogicID)
-	if !ret {
-		t.Errorf("expected true, got false")
-	}
-}
-
 // TestFreeBusyDev test the function FreeBusyDev
 func TestFreeBusyDev(t *testing.T) {
-	AddBusyDev(testLogicID)
+	key := strconv.Itoa(int(testLogicID))
+	mgr.busyDevs.Store(key, struct{}{})
 	FreeBusyDev(testLogicID)
-	ret := IsDevBusy(testLogicID)
-	if ret {
+	if _, ok := mgr.busyDevs.Load(key); ok {
 		t.Errorf("expected false, got true")
 	}
 }
@@ -102,17 +94,6 @@ func TestGetResetCnt(t *testing.T) {
 			convey.So(cnt, convey.ShouldEqual, testNum)
 		})
 	})
-}
-
-// TestAddResetCnt test the function AddResetCnt
-func TestAddResetCnt(t *testing.T) {
-	SetResetCnt(testLogicID, zeroVal)
-	AddResetCnt(testLogicID)
-	ret := GetResetCnt(testLogicID)
-	const expectVal = 1
-	if ret != expectVal {
-		t.Errorf("expect %v, got %v", expectVal, ret)
-	}
 }
 
 // TestSetResetCnt test the function SetResetCnt
