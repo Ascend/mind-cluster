@@ -51,8 +51,8 @@
 
        ```ColdFusion
        NAME               NAMESPACE   REVISION  UPDATED                                  STATUS       CHART                                        APP VERSION
-       mindcluster        default    1         2026-03-24 15:30:00.000000000 +0800 CST  deployed  mindcluster-deploy-tool-26.1.0                26.1.0
-       mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.1.0           26.1.0
+       mindcluster        default     1         2026-03-24 15:30:00.000000000 +0800 CST  deployed     mindcluster-deploy-tool-26.1.0               26.1.0
+       mindcluster-crds   default     1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.1.0          26.1.0
        ```
 
    2. 根据回显结果判断组件的升级方式。
@@ -92,7 +92,7 @@
     #（可选）
     bash helm_tool.sh --help # 查看脚本命令参数。
 
-    bash helm_tool.sh --add-helm-meta-all # 给资源添加helm元数据。
+    bash helm_tool.sh --add-helm-meta-all # 给资源添加Helm元数据。
 
     #（可选）若当前集群中存在 v26.1.0 之前版本的 Ascend Device Plugin DaemonSet，请执行此命令清理旧资源；若不存在则可跳过
     bash helm_tool.sh --delete-old-daemonset
@@ -205,6 +205,8 @@
     -rw-r--r-- 1 root root  2026 Mar 24 15:25 helm_tool.sh
     ```
 
+    其中，{version}表示MindCluster组件版本；{chart_version}表示Helm Chart版本。
+
 2. 升级MindCluster CRD的Release实例。
     >[!NOTE]
     >- 以下三个组件包含CRD：Ascend Operator、Volcano和Infer Operator。若用户不需要升级这三个组件，可跳过此步骤。
@@ -292,7 +294,7 @@
 
 ## 版本回退<a name="section_helm_rollback"></a>
 
-若升级后组件运行异常，可通过Helm的回退功能恢复到升级前的版本。版本回退仅适用于通过Helm升级过的Release实例，Helm会记录每次升级的Revision历史。
+若升级后组件运行异常，可通过Helm的回退功能恢复到升级前的版本。版本回退仅适用于通过Helm升级过的Release实例，Helm会记录每次升级的REVISION历史。
 
 1. 执行以下命令，查看Release实例的升级历史。
     - 查看应用组件Release实例的升级历史：
@@ -305,8 +307,8 @@
 
       ```ColdFusion
       REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
-      1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-26.1.0        26.1.0       Install complete
-      2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-26.2.0        26.2.0       Upgrade complete
+      1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-26.1.0       26.1.0       Install complete
+      2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-26.2.0       26.2.0       Upgrade complete
       ```
 
     - 查看组件CRD的Release实例的升级历史：
@@ -318,15 +320,15 @@
        回显示例如下：
 
       ```ColdFusion
-      REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
-      1         2026-03-24 15:30:00.000   superseded  mindcluster-crds-deploy-tool-26.1.0        26.1.0       Install complete
-      2         2026-03-25 10:00:00.000   deployed    mindcluster-crds-deploy-tool-26.2.0        26.2.0       Upgrade complete
+      REVISION  UPDATED                   STATUS      CHART                                   APP VERSION  DESCRIPTION
+      1         2026-03-24 15:30:00.000   superseded  mindcluster-crds-deploy-tool-26.1.0     26.1.0       Install complete
+      2         2026-03-25 10:00:00.000   deployed    mindcluster-crds-deploy-tool-26.2.0     26.2.0       Upgrade complete
       ```
 
     >[!NOTE]
     >Helm的REVISION是一个简单的递增整数，它的核心作用是记录和回滚：每次应用变更都会生成一个新的REVISION，需要时可以通过REVISION号快速恢复到过去的任意稳定版本，从而实现应用发布的可追溯和故障快速恢复。
 
-2. 执行以下命令，回退CRD到指定Revision版本。以回退到REVISION 1为例：
+2. 执行以下命令，回退CRD到指定REVISION版本。以回退到REVISION 1为例：
 
     ```bash
     helm rollback mindcluster-crds 1
@@ -338,7 +340,7 @@
     Rollback was a success! Happy Helming!
     ```
 
-3. 执行以下命令，回退应用到指定的Revision版本。以回退到REVISION 1为例：
+3. 执行以下命令，回退应用到指定的REVISION版本。以回退到REVISION 1为例：
 
     ```bash
     helm rollback mindcluster 1
