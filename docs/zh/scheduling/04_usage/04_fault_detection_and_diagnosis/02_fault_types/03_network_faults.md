@@ -137,7 +137,7 @@ UB PORT link状态变化（UP -> DOWN）；UBOE PORT link状态变化 (UP -> DOW
 |110001024|参数面路由不可收敛。       |PreSeparateNPU：预隔离NPU故障。|
 |110000002|参数面路由可收敛设备亚健康。|SubHealthFault：亚健康故障。|
 
-## UB网卡故障<a name="ZH-CN_TOPIC_0000002511426421"></a>
+## UB网卡故障<a name="ZH-CN_TOPIC_0000002511426422"></a>
 
 UB（Unified Bus）网卡故障是针对Atlas 950 SuperPoD超节点、Atlas 850E超节点、Atlas 850超节点、Atlas 650E服务器、Atlas 650服务器中使用的UB网卡的故障。
 

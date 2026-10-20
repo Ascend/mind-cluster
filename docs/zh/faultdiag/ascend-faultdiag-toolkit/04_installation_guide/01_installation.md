@@ -20,7 +20,7 @@
 
 | 软件包                                                | 子文件                                                          | 说明          | 链接                                                         |
 |-------------------------------------------------------|-----------------------------------------------------------------|-------------|--------------------------------------------------------------|
-| `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag_toolkit-{version}-py3-none-any.whl`          | 链路故障诊断组件安装包 | [下载链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0) |
+| `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag_toolkit-{version}-py3-none-any.whl`          | 链路故障诊断组件安装包 | [下载链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0) |
 
 >[!NOTE]
 >
@@ -100,7 +100,7 @@ ascend-fd-tk about
 
 **软件包 SUM 值校验步骤**：
 
-1. 下载[Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0)文件
+1. 下载[Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)文件
 
 2. 将 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum` 和 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` 放置到同一目录，执行以下命令进行校验：
 

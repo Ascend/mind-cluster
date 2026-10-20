@@ -12,21 +12,21 @@
 1. 下载链路诊断软件包：
 
     ```bash
-    # 下载 v26.1.0 版本的 故障诊断 ZIP 压缩包（因为 ascend-fd-tk Whl 安装包不区分架构，所以以下示例直接下载 aarch64 架构的）。
-    wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-faultdiag_26.1.0_linux-aarch64.zip
-    unzip Ascend-mindxdl-faultdiag_26.1.0_linux-aarch64.zip
+    # 下载 v26.2.0 版本的 故障诊断 ZIP 压缩包（因为 ascend-fd-tk Whl 安装包不区分架构，所以以下示例直接下载 aarch64 架构的）。
+    wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.2.0/Ascend-mindxdl-faultdiag_26.2.0_linux-aarch64.zip
+    unzip Ascend-mindxdl-faultdiag_26.2.0_linux-aarch64.zip
     ```
 
 2. 安装软件包：
 
     ```bash
-    pip3 install ascend_faultdiag_toolkit-26.1.0-py3-none-any.whl
+    pip3 install ascend_faultdiag_toolkit-26.2.0-py3-none-any.whl
     ```
 
     成功回显示例：
 
     ```txt
-    Successfully installed ascend-faultdiag-toolkit-26.1.0
+    Successfully installed ascend-faultdiag-toolkit-26.2.0
     ```
 
 3. 验证安装是否成功：
@@ -38,7 +38,7 @@
     成功回显示例：
 
     ```text
-    MindCluster ascend-faultdiag-toolkit诊断工具版本：26.1.0
+    MindCluster ascend-faultdiag-toolkit诊断工具版本：26.2.0
     ```
 
 ## 步骤 2：清理缓存

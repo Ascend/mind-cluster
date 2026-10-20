@@ -137,7 +137,7 @@
 
 3. 安装Prometheus。
     1. <a name="li601241164212"></a>进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](../../../07_references/05_appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/utils/prometheus/base”目录下的prometheus.yaml文件。
-    2. 参考[直接对接Prometheus](#section875071183215)章节的[步骤3](#li127175170321)，将prometheus.yaml中DPU-Exporter metrics的获取配置修改为实际所需配置。
+    2. 参考[直接对接Prometheus](#section875071183215)章节的步骤3，将prometheus.yaml中DPU-Exporter metrics的获取配置修改为实际所需配置。
     3. 将[步骤1](#li601241164212)中获取到的prometheus.yaml上传至环境任意路径。
     4. 在“prometheus.yaml”存放路径，执行以下命令，安装Prometheus。
 
