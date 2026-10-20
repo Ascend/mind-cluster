@@ -18,13 +18,13 @@
     - aarch64
 
     ```shell
-    wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-faultdiag_26.1.0_linux-aarch64.zip
+    wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.2.0/Ascend-mindxdl-faultdiag_26.2.0_linux-aarch64.zip
     ```
 
     - x86_64
 
     ```shell
-    wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-faultdiag_26.1.0_linux-x86_64.zip
+    wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.2.0/Ascend-mindxdl-faultdiag_26.2.0_linux-x86_64.zip
     ```
 
 2. 解压并安装
@@ -32,15 +32,15 @@
     - aarch64
 
     ```shell
-    unzip Ascend-mindxdl-faultdiag_26.1.0_linux-aarch64.zip
-    pip3 install ascend_faultdiag-26.1.0-py3-none-linux_aarch64.whl
+    unzip Ascend-mindxdl-faultdiag_26.2.0_linux-aarch64.zip
+    pip3 install ascend_faultdiag-26.2.0-py3-none-linux_aarch64.whl
     ```
 
     - x86_64
 
     ```shell
-    unzip Ascend-mindxdl-faultdiag_26.1.0_linux-x86_64.zip
-    pip3 install ascend_faultdiag-26.1.0-py3-none-linux_x86_64.whl
+    unzip Ascend-mindxdl-faultdiag_26.2.0_linux-x86_64.zip
+    pip3 install ascend_faultdiag-26.2.0-py3-none-linux_x86_64.whl
     ```
 
 3. 验证安装是否成功
@@ -52,7 +52,7 @@
     如果回显版本号，说明安装成功，如：
 
     ```shell
-    ascend-fd v26.1.0
+    ascend-fd v26.2.0
     ```
 
 ## 步骤2：准备日志
@@ -135,7 +135,7 @@
     +--------------+------------+-----------------------------------------------------------------------------------------------------------+
     |   版本信息   |    类型    | 版本                                                                                                      |
     +--------------+------------+-----------------------------------------------------------------------------------------------------------+
-    |              | Fault-Diag | 26.1.0                                                                                                    |
+    |              | Fault-Diag | 26.2.0                                                                                                    |
     |              |   Driver   | 23.0.7                                                                                                    |
     |              |  Firmware  | 7.1.0.11.220                                                                                              |
     |              |    NNAE    | 8.0.0                                                                                                     |

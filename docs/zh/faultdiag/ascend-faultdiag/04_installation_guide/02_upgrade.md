@@ -22,7 +22,7 @@
     回显新的版本号即表示升级成功：
 
     ```shell
-    ascend-fd v26.1.0
+    ascend-fd v26.2.0
     ```
 
     若升级失败，请参考[卸载指南](03_uninstallation.md)进行卸载，然后参考[安装指南](01_installation.md)重新进行安装。

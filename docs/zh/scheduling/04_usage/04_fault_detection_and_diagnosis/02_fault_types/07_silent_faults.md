@@ -6,7 +6,7 @@
 
 ## 判定机制
 
-ClusterD通过监听job-reschedule-reason ConfigMap获取任务的重调度记录，并结合节点的硬件故信息，综合判定静默故障。判定为静默故障需同时满足以下条件（以下阈值均为默认值，可通过配置调整，参数说明请参见[配置静默故障检测](../03_configuration/09_silent_faults.md)）：
+ClusterD通过监听job-reschedule-reason ConfigMap获取任务的重调度记录，并结合节点的硬件故障信息，综合判定静默故障。判定为静默故障需同时满足以下条件（以下阈值均为默认值，可通过配置调整，参数说明请参见[配置静默故障检测](../03_configuration/09_silent_faults.md)）：
 
 - 重调度任务的总NPU数量不小于16，且为整机任务。
 - 单次重调度仅1个pod-failed，批量pod重调度不统计。

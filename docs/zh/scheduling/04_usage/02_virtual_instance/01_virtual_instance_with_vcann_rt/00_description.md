@@ -65,4 +65,4 @@
 <!-- end id1 -->
 - 物理NPU软切分虚拟化后，仅支持将物理NPU挂载到容器，不支持将该物理NPU直通到虚拟机。
 - 在软切分虚拟化场景下，如果所有容器都挂载了相同的物理NPU，则该物理NPU必须采用相同的软切分策略。
-- 由于硬件设备的限制(可以参考[使用约束](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/others/acldevg/aclcppdevg_000222.html))，建议vCANN-RT最大切分数量不超过单个device支持的最大用户进程数。
+- 由于硬件设备的限制(可以参考[使用约束](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/920/others/acldevg/docs/zh/app-dev/c/constraints.md))，建议vCANN-RT最大切分数量不超过单个device支持的最大用户进程数。

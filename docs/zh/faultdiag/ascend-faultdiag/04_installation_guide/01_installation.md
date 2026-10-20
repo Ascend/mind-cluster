@@ -23,11 +23,11 @@ ascend-fd 支持通过 Whl 包安装和使用 MindCluster Ascend Deployer 安装
 
     | 软件包                                                | 子文件                                                          | 说明                   | 链接                                                         |
     |-------------------------------------------------------|-----------------------------------------------------------------|------------------------|--------------------------------------------------------------|
-    | `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag-{version}-py3-none-linux_{arch}.whl`          | 日志故障诊断组件安装包 | [下载链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0) |
+    | `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag-{version}-py3-none-linux_{arch}.whl`          | 日志故障诊断组件安装包 | [下载链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0) |
 
     > [!NOTE]
     >
-    > - `{version}` 为软件包版本号，请根据需要修改，如 26.1.0。
+    > - `{version}` 为软件包版本号，请根据需要修改，如 26.2.0。
     > - `{arch}` 为软件包架构，分为 x86_64 和 aarch64，请根据实际需要修改，可通过 `arch` 命令查看。
     > - 为防止软件包在传递过程中或存储期间被恶意篡改，建议校验软件包的 SUM 值。如需对软件包进行 SUM 值校验，请参考[软件包 SUM 值校验](#软件包-sum-值校验步骤)。
 
@@ -47,7 +47,7 @@ ascend-fd 支持通过 Whl 包安装和使用 MindCluster Ascend Deployer 安装
         pip3 install -r src/requirements.txt && pip3 install 'setuptools>=60.3.0' 'wheel>=0.45.1'
         ```
 
-    3. 如需自定义版本信息，可在当前目录（`mind-cluster/component/ascend-faultdiag`）创建 `service_config.ini` 文件，填入版本号如 `26.1.0`，版本号格式须符合 [Python 版本号规范](https://packaging.pythonlang.cn/en/latest/specifications/version-specifiers/)
+    3. 如需自定义版本信息，可在当前目录（`mind-cluster/component/ascend-faultdiag`）创建 `service_config.ini` 文件，填入版本号如 `26.2.0`，版本号格式须符合 [Python 版本号规范](https://packaging.pythonlang.cn/en/latest/specifications/version-specifiers/)
 
     4. 执行编译
 
@@ -93,7 +93,7 @@ ascend-fd 支持通过 Whl 包安装和使用 MindCluster Ascend Deployer 安装
     回显版本号表示安装成功，如：
 
     ```shell
-    ascend-fd v26.1.0
+    ascend-fd v26.2.0
     ```
 
 #### 日志说明
@@ -113,7 +113,7 @@ MindCluster Ascend Deployer 支持 7.1.RC1 及以上版本的 ascend-fd 组件�
 
 ### 软件包 SUM 值校验步骤
 
-1. 下载[Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0)文件
+1. 下载[Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)文件
 
 2. 将 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum` 和 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` 放置到同一目录，执行以下命令进行校验
 

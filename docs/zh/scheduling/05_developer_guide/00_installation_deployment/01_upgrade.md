@@ -101,7 +101,7 @@
 
 **升级步骤<a name="section520182224617"></a>**
 
-1. 下载新版本组件安装包，详情请参见参考[获取软件包](00_manual_installation/00_obtaining_software_packages.md)章节。
+1. 下载新版本组件安装包，详情请参见[获取软件包](00_manual_installation/00_obtaining_software_packages.md)章节。
 2. <a name="li12599722163212"></a>进入安装包（run包）所在路径，在该路径下执行以下命令为软件包添加可执行权限。
 
     ```shell
