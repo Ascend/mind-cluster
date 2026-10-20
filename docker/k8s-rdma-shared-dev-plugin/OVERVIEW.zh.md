@@ -53,18 +53,18 @@ K8s RDMA 共享设备插件是一个 Kubernetes 设备插件，用于以共享�
 
 | 字段     | 示例值           | 说明                      |
 |--------|---------------|-------------------------|
-| `版本`   | `v26.1.1`     | K8s RDMA 共享设备插件组件版本号    |
+| `版本`   | `v26.2.0`     | K8s RDMA 共享设备插件组件版本号    |
 | `操作系统` | `ubuntu22.04` | K8s RDMA 共享设备插件组件镜像操作系统 |
 
-### K8s RDMA 共享设备插件 最新版本 26.1.1
+### K8s RDMA 共享设备插件 最新版本 26.2.0
 
-如下所示是 K8s RDMA 共享设备插件 最新发布的 26.1.1 版本的所有镜像，历史版本所有 Tag
+如下所示是 K8s RDMA 共享设备插件 最新发布的 26.2.0 版本的所有镜像，历史版本所有 Tag
 请参考 [Supported Tags](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/supported_tags.md)。
 
 | Tag                      | Dockerfile                                                                                                                                 | 镜像内容                                           |
 |--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------|
-| `v26.1.1-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.1.1/Dockerfile.ubuntu)       | K8s RDMA 共享设备插件 v26.1.1 (基础镜像 Ubuntu 22.04)    |
-| `v26.1.1-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.1.1/Dockerfile.openeuler) | K8s RDMA 共享设备插件 v26.1.1 (基础镜像 openEuler 24.03) |
+| `v26.2.0-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.2.0/Dockerfile.ubuntu)       | K8s RDMA 共享设备插件 v26.2.0 (基础镜像 Ubuntu 22.04)    |
+| `v26.2.0-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.2.0/Dockerfile.openeuler) | K8s RDMA 共享设备插件 v26.2.0 (基础镜像 openEuler 24.03) |
 
 ---
 
@@ -88,18 +88,18 @@ K8s RDMA 共享设备插件是一个 Kubernetes 设备插件，用于以共享�
 
 ### 本地构建
 
-示例场景：构建 linux-aarch64 架构、v26.1.1 版本、基于 Ubuntu 22.04 的 K8s RDMA 共享设备插件镜像。
+示例场景：构建 linux-aarch64 架构、v26.2.0 版本、基于 Ubuntu 22.04 的 K8s RDMA 共享设备插件镜像。
 
 1. 获取对应架构的 Dockerfile
 
    前往支持的 Tags 及 Dockerfile
-   链接章节（如 [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.1.1/Dockerfile.ubuntu)
+   链接章节（如 [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.2.0/Dockerfile.ubuntu)
    ），打开目标版本对应的 Dockerfile.ubuntu 链接，保存文件至 aarch64 架构环境的本地目录。
 
 2. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
 
    ```bash
-   docker build --no-cache -t k8s-rdma-shared-dev-plugin:v26.1.1 ./ -f Dockerfile.ubuntu
+   docker build --no-cache -t k8s-rdma-shared-dev-plugin:v26.2.0 ./ -f Dockerfile.ubuntu
    ```
 
 > [!NOTE]

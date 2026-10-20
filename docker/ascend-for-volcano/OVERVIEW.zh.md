@@ -71,39 +71,39 @@ Ascend for Volcano 包含两个镜像：
 
 | 字段         | 示例值            | 说明            |
 |------------|----------------|---------------|
-| `组件版本`     | `v1.7.0`       | Volcano 组件版本  |
-| `昇腾调度插件版本` | `v26.1.1`      | 昇腾NPU调度插件版本   |
+| `组件版本`     | `v1.15.0`       | Volcano 组件版本  |
+| `昇腾调度插件版本` | `v26.2.0`      | 昇腾NPU调度插件版本   |
 | `操作系统`     | `alpinelatest` | Volcano镜像操作系统 |
 
-### Ascend for Volcano 最新版本 26.1.1（Volcano v1.12.0）
+### Ascend for Volcano 最新版本 26.2.0（Volcano v1.15.0）
 
-如下所示是 Ascend for Volcano 最新发布的 26.1.1（Volcano v1.12.0） 版本的所有镜像，历史版本所有 Tag
+如下所示是 Ascend for Volcano 最新发布的 26.2.0（Volcano v1.15.0） 版本的所有镜像，历史版本所有 Tag
 请参考 [Supported Tags](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/supported_tags.md)。
 
 | Tag                              | Dockerfile                                                                                                                                                               | 镜像内容                                                                     |
 |----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
-| `v1.12.0-v26.1.1-alpinelatest`   | [Dockerfile-scheduler.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.1.1/Dockerfile-scheduler.alpine)         | Volcano调度器v26.1.1版本镜像（含昇腾NPU调度插件，基于Volcano v1.12.0，基础镜像 Alpine latest）   |
-| `v1.12.0-v26.1.1-alpinelatest`   | [Dockerfile-controller.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.1.1/Dockerfile-controller.alpine)       | Volcano控制器v26.1.1版本镜像（基于Volcano v1.12.0，基础镜像 Alpine latest）              |
-| `v1.12.0-v26.1.1-openeuler24.03` | [Dockerfile-scheduler.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.1.1/Dockerfile-scheduler.openeuler)   | Volcano调度器v26.1.1版本镜像（含昇腾NPU调度插件，基于Volcano v1.12.0，基础镜像 openEuler 24.03） |
-| `v1.12.0-v26.1.1-openeuler24.03` | [Dockerfile-controller.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.1.1/Dockerfile-controller.openeuler) | Volcano控制器v26.1.1版本镜像（基于Volcano v1.12.0，基础镜像 openEuler 24.03）            |
+| `v1.15.0-v26.2.0-alpinelatest`   | [Dockerfile-scheduler.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.15.0/v26.2.0/Dockerfile-scheduler.alpine)         | Volcano调度器v26.2.0版本镜像（含昇腾NPU调度插件，基于Volcano v1.15.0，基础镜像 Alpine latest）   |
+| `v1.15.0-v26.2.0-alpinelatest`   | [Dockerfile-controller.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.15.0/v26.2.0/Dockerfile-controller.alpine)       | Volcano控制器v26.2.0版本镜像（基于Volcano v1.15.0，基础镜像 Alpine latest）              |
+| `v1.15.0-v26.2.0-openeuler24.03` | [Dockerfile-scheduler.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.15.0/v26.2.0/Dockerfile-scheduler.openeuler)   | Volcano调度器v26.2.0版本镜像（含昇腾NPU调度插件，基于Volcano v1.15.0，基础镜像 openEuler 24.03） |
+| `v1.15.0-v26.2.0-openeuler24.03` | [Dockerfile-controller.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.15.0/v26.2.0/Dockerfile-controller.openeuler) | Volcano控制器v26.2.0版本镜像（基于Volcano v1.15.0，基础镜像 openEuler 24.03）            |
 
-### Ascend for Volcano 26.1.1（Volcano v1.9.0）
+### Ascend for Volcano 26.2.0（Volcano v1.12.0）
+
+| Tag                              | Dockerfile                                                                                                                                                               | 镜像内容                                                                     |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| `v1.12.0-v26.2.0-alpinelatest`   | [Dockerfile-scheduler.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.2.0/Dockerfile-scheduler.alpine)         | Volcano调度器v26.2.0版本镜像（含昇腾NPU调度插件，基于Volcano v1.12.0，基础镜像 Alpine latest）   |
+| `v1.12.0-v26.2.0-alpinelatest`   | [Dockerfile-controller.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.2.0/Dockerfile-controller.alpine)       | Volcano控制器v26.2.0版本镜像（基于Volcano v1.12.0，基础镜像 Alpine latest）              |
+| `v1.12.0-v26.2.0-openeuler24.03` | [Dockerfile-scheduler.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.2.0/Dockerfile-scheduler.openeuler)   | Volcano调度器v26.2.0版本镜像（含昇腾NPU调度插件，基于Volcano v1.12.0，基础镜像 openEuler 24.03） |
+| `v1.12.0-v26.2.0-openeuler24.03` | [Dockerfile-controller.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.2.0/Dockerfile-controller.openeuler) | Volcano控制器v26.2.0版本镜像（基于Volcano v1.12.0，基础镜像 openEuler 24.03）            |
+
+### Ascend for Volcano 26.2.0（Volcano v1.9.0）
 
 | Tag                             | Dockerfile                                                                                                                                                              | 镜像内容                                                                    |
 |---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| `v1.9.0-v26.1.1-alpinelatest`   | [Dockerfile-scheduler.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.1.1/Dockerfile-scheduler.alpine)         | Volcano调度器v26.1.1版本镜像（含昇腾NPU调度插件，基于Volcano v1.9.0，基础镜像 Alpine latest）   |
-| `v1.9.0-v26.1.1-alpinelatest`   | [Dockerfile-controller.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.1.1/Dockerfile-controller.alpine)       | Volcano控制器v26.1.1版本镜像（基于Volcano v1.9.0，基础镜像 Alpine latest）              |
-| `v1.9.0-v26.1.1-openeuler24.03` | [Dockerfile-scheduler.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.1.1/Dockerfile-scheduler.openeuler)   | Volcano调度器v26.1.1版本镜像（含昇腾NPU调度插件，基于Volcano v1.9.0，基础镜像 openEuler 24.03） |
-| `v1.9.0-v26.1.1-openeuler24.03` | [Dockerfile-controller.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.1.1/Dockerfile-controller.openeuler) | Volcano控制器v26.1.1版本镜像（基于Volcano v1.9.0，基础镜像 openEuler 24.03）            |
-
-### Ascend for Volcano 26.1.1（Volcano v1.7.0）
-
-| Tag                             | Dockerfile                                                                                                                                                              | 镜像内容                                                                    |
-|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| `v1.7.0-v26.1.1-alpinelatest`   | [Dockerfile-scheduler.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.7.0/v26.1.1/Dockerfile-scheduler.alpine)         | Volcano调度器v26.1.1版本镜像（含昇腾NPU调度插件，基于Volcano v1.7.0，基础镜像 Alpine latest）   |
-| `v1.7.0-v26.1.1-alpinelatest`   | [Dockerfile-controller.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.7.0/v26.1.1/Dockerfile-controller.alpine)       | Volcano控制器v26.1.1版本镜像（基于Volcano v1.7.0，基础镜像 Alpine latest）              |
-| `v1.7.0-v26.1.1-openeuler24.03` | [Dockerfile-scheduler.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.7.0/v26.1.1/Dockerfile-scheduler.openeuler)   | Volcano调度器v26.1.1版本镜像（含昇腾NPU调度插件，基于Volcano v1.7.0，基础镜像 openEuler 24.03） |
-| `v1.7.0-v26.1.1-openeuler24.03` | [Dockerfile-controller.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.7.0/v26.1.1/Dockerfile-controller.openeuler) | Volcano控制器v26.1.1版本镜像（基于Volcano v1.7.0，基础镜像 openEuler 24.03）            |
+| `v1.9.0-v26.2.0-alpinelatest`   | [Dockerfile-scheduler.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.2.0/Dockerfile-scheduler.alpine)         | Volcano调度器v26.2.0版本镜像（含昇腾NPU调度插件，基于Volcano v1.9.0，基础镜像 Alpine latest）   |
+| `v1.9.0-v26.2.0-alpinelatest`   | [Dockerfile-controller.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.2.0/Dockerfile-controller.alpine)       | Volcano控制器v26.2.0版本镜像（基于Volcano v1.9.0，基础镜像 Alpine latest）              |
+| `v1.9.0-v26.2.0-openeuler24.03` | [Dockerfile-scheduler.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.2.0/Dockerfile-scheduler.openeuler)   | Volcano调度器v26.2.0版本镜像（含昇腾NPU调度插件，基于Volcano v1.9.0，基础镜像 openEuler 24.03） |
+| `v1.9.0-v26.2.0-openeuler24.03` | [Dockerfile-controller.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.2.0/Dockerfile-controller.openeuler) | Volcano控制器v26.2.0版本镜像（基于Volcano v1.9.0，基础镜像 openEuler 24.03）            |
 
 ---
 
@@ -185,7 +185,7 @@ Volcano组件安装包下载：[Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip]
 
 #### 昇腾 NPU 调度插件 v26.1.0 及更高版本本地镜像构建流程
 
-示例场景：构建基于 Alpine latest、架构为 linux-aarch64 的 Volcano v1.9.0 组件镜像，镜像内置昇腾 NPU 调度插件 v26.1.1。
+示例场景：构建基于 Alpine latest、架构为 linux-aarch64 的 Volcano v1.9.0 组件镜像，镜像内置昇腾 NPU 调度插件 v26.2.0。
 
 1. 获取对应架构的 Dockerfile
 
