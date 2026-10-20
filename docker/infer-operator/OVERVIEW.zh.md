@@ -46,18 +46,18 @@ MindCluster 提供 Infer Operator 组件，根据推理服务的实例配置，�
 
 | 字段     | 示例值           | 说明                    |
 |--------|---------------|-----------------------|
-| `版本`   | `v26.1.1`     | Infer Operator 版本号    |
+| `版本`   | `v26.2.0`     | Infer Operator 版本号    |
 | `操作系统` | `ubuntu22.04` | Infer Operator 镜像操作系统 |
 
-### Infer Operator 最新版本 26.1.1
+### Infer Operator 最新版本 26.2.0
 
-如下所示是 Infer Operator 最新发布的 26.1.1 版本的所有镜像，历史版本所有 Tag
+如下所示是 Infer Operator 最新发布的 26.2.0 版本的所有镜像，历史版本所有 Tag
 请参考 [Supported Tags](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/infer-operator/supported_tags.md)。
 
 | Tag                      | Dockerfile                                                                                                                     | 镜像内容                                          |
 |--------------------------|--------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------|
-| `v26.1.1-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/infer-operator/v26.1.1/Dockerfile.ubuntu)       | Infer Operator v26.1.1 (基础镜像 Ubuntu 22.04)    |
-| `v26.1.1-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/infer-operator/v26.1.1/Dockerfile.openeuler) | Infer Operator v26.1.1 (基础镜像 openEuler 24.03) |
+| `v26.2.0-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/infer-operator/v26.2.0/Dockerfile.ubuntu)       | Infer Operator v26.2.0 (基础镜像 Ubuntu 22.04)    |
+| `v26.2.0-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/infer-operator/v26.2.0/Dockerfile.openeuler) | Infer Operator v26.2.0 (基础镜像 openEuler 24.03) |
 
 ---
 
@@ -120,7 +120,7 @@ v26.1.0之前版本的 Tag 遵循以下格式：
 
 #### v26.1.0 及更高版本本地镜像构建流程
 
-示例场景：构建 linux-aarch64 架构、v26.1.1 版本、基于 Ubuntu 22.04 的 Infer Operator 组件镜像。
+示例场景：构建 linux-aarch64 架构、v26.2.0 版本、基于 Ubuntu 22.04 的 Infer Operator 组件镜像。
 
 1. 获取对应架构的 Dockerfile
 
@@ -129,7 +129,7 @@ v26.1.0之前版本的 Tag 遵循以下格式：
 2. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
 
    ```bash
-   docker build --no-cache -t infer-operator:v26.1.1 ./ -f Dockerfile.ubuntu
+   docker build --no-cache -t infer-operator:v26.2.0 ./ -f Dockerfile.ubuntu
    ```
 
 > **重要注意事项**

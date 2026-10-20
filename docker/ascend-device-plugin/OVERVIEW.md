@@ -64,18 +64,18 @@ Starting from version v26.1.0, tags follow the format below:
 
 | Field     | Example       | Description                                     |
 |-----------|---------------|-------------------------------------------------|
-| `version` | `v26.1.1`     | Version Number of Atlas Device Plugin           |
+| `version` | `v26.2.0`     | Version Number of Atlas Device Plugin           |
 | `os`      | `ubuntu22.04` | Operating System for Atlas Device Plugin Images |
 
-### Atlas Device Plugin Latest Version 26.1.1
+### Atlas Device Plugin Latest Version 26.2.0
 
-The following are all images of the latest released 26.1.1 version of Atlas Device Plugin. For all historical
+The following are all images of the latest released 26.2.0 version of Atlas Device Plugin. For all historical
 version Tags, please refer to [Supported Tags](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-device-plugin/supported_tags.md).
 
 | Tag                      | Dockerfile                                                                                                                           | Image Content                                             |
 |--------------------------|--------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------|
-| `v26.1.1-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-device-plugin/v26.1.1/Dockerfile.ubuntu)       | Atlas Device Plugin v26.1.1 (Base Image: Ubuntu 22.04)    |
-| `v26.1.1-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-device-plugin/v26.1.1/Dockerfile.openeuler) | Atlas Device Plugin v26.1.1 (Base Image: openEuler 24.03) |
+| `v26.2.0-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-device-plugin/v26.2.0/Dockerfile.ubuntu)       | Atlas Device Plugin v26.2.0 (Base Image: Ubuntu 22.04)    |
+| `v26.2.0-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-device-plugin/v26.2.0/Dockerfile.openeuler) | Atlas Device Plugin v26.2.0 (Base Image: openEuler 24.03) |
 
 ---
 
@@ -145,7 +145,7 @@ the [CANN Software Installation Guide (Commercial Edition)](https://www.hiascend
 
 #### Local Build Steps for v26.1.0 and Later Versions
 
-Example: build an Atlas Device Plugin image of architecture linux-aarch64, version v26.1.1, based on Ubuntu 22.04.
+Example: build an Atlas Device Plugin image of architecture linux-aarch64, version v26.2.0, based on Ubuntu 22.04.
 
 1. Obtain the target Dockerfile
 
@@ -155,7 +155,7 @@ Example: build an Atlas Device Plugin image of architecture linux-aarch64, versi
 2. Build the Docker image locally (disable cache to ensure a clean build)
 
    ```bash
-   docker build --no-cache -t ascend-k8sdeviceplugin:v26.1.1 ./ -f Dockerfile.ubuntu
+   docker build --no-cache -t ascend-k8sdeviceplugin:v26.2.0 ./ -f Dockerfile.ubuntu
    ```
 
 > **Important Notes**
