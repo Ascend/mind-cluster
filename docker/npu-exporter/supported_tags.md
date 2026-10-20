@@ -2,6 +2,13 @@
 
 A full list of tags that are supported with NPU Exporter.
 
+## NPU Exporter 26.2.0
+
+| Tag                      | Dockerfile                                                                                                                             | Content                                                     |
+|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------|
+| `v26.2.0-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/npu-exporter/v26.2.0/Dockerfile.ubuntu)       | NPU Exporter v26.2.0 (Base Image: Ubuntu 22.04)    |
+| `v26.2.0-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/npu-exporter/v26.2.0/Dockerfile.openeuler) | NPU Exporter v26.2.0 (Base Image: openEuler 24.03) |
+
 ## NPU Exporter 26.1.1
 
 | Tag                      | Dockerfile                                                                                                                             | Content                                                     |
