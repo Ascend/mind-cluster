@@ -50,7 +50,7 @@ ulimit -n 65535
   ```bash
   WARNING: The script ascend-fd is installed in '/usr/local/python3.8/bin' which is not on PATH.
     Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
-  Successfully installed ascend-faultdiag-26.1.0
+  Successfully installed ascend-faultdiag-26.2.0
   ```
 
   可按以下方式解决：
