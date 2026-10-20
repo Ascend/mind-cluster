@@ -25,5 +25,5 @@ ascend-fd version
 回显示例：
 
 ```text
-ascend-fd v26.1.0
+ascend-fd v26.2.0
 ```

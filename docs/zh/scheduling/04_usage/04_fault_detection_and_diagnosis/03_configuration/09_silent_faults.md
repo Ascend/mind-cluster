@@ -6,13 +6,15 @@
 
 ## 配置文件说明
 
-静默故障检测默认关闭，需用户显式开启。ClusterD根据ConfigMap（clusterd-config-cm）中silent_fault_policy.conf配置项的内容，执行静默故障检测。silent_fault_policy.conf参数说明请参见表1。
+静默故障检测默认关闭，需用户显式开启。ClusterD根据ConfigMap（clusterd-config-cm）中silent_fault_policy.conf配置项的内容，执行静默故障检测。silent_fault_policy.conf参数说明请参见[表1](#silent_table01)。
 
 >[!NOTE]
 >
->静默故障的故障码与级别在publicFaultConfiguration.json中配置，用户可通过publicCustomization.json调整级别，参考[配置公共故障](./08_public_faults.md)。
+>静默故障的故障码与级别在publicFaultConfiguration.json中配置，用户可通过publicCustomization.json调整级别，详细请参见[配置公共故障](./08_public_faults.md)。
 
 **表 1**  silent_fault_policy.conf的参数说明
+
+<a name="silent_table01"></a>
 
 |一级参数|二级参数|类型|说明|
 |--|--|--|--|
@@ -39,13 +41,13 @@
     kubectl describe cm -n cluster-system clusterd-config-cm
     ```
 
-    - 如果存在clusterd-config-cm，则执行步骤3进行编辑。
-    - 如果不存在clusterd-config-cm，则执行步骤2进行创建。
+    - 如果存在clusterd-config-cm，则执行[步骤3](#silent_li03)进行编辑。
+    - 如果不存在clusterd-config-cm，则执行[步骤2](#silent_li02)进行创建。
 
     >[!NOTE]
     >正常情况下存在clusterd-config-cm，因为安装ClusterD时已默认创建了该ConfigMap。若不存在，建议确认ClusterD的安装过程是否存在错误。
 
-2. 创建静默故障检测所需的ConfigMap（clusterd-config-cm）。
+2. <a name="silent_li02"></a>创建静默故障检测所需的ConfigMap（clusterd-config-cm）。
 
     将以下内容保存为文件cm.yaml：
 
@@ -79,13 +81,13 @@
     configmap/clusterd-config-cm created
     ```
 
-3. 执行以下命令，编辑clusterd-config-cm。
+3. <a name="silent_li03"></a>执行以下命令，编辑clusterd-config-cm。
 
     ```shell
     kubectl edit cm -n cluster-system clusterd-config-cm
     ```
 
-    根据实际情况，修改静默故障检测配置。参数说明请参见表1。
+    根据实际情况，修改静默故障检测配置。参数说明请参见[表1](#silent_table01)。
 
     ```yaml
     # Please edit the object below. Lines beginning with a '#' will be ignored,
@@ -136,8 +138,7 @@
         kubectl logs -f -n mindx-dl clusterd-559bf4bd6-z9hv4
         ```
 
-        >[!NOTE]
-        >若日志出现“load silent fault policy config success”，表示静默故障检测配置加载成功。
+        若日志出现“load silent fault policy config success”，表示静默故障检测配置加载成功。
 
 ## （可选）解除静默故障
 

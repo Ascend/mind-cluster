@@ -736,7 +736,7 @@ Atlas A3训练系列产品支持在发生参数面网络故障时，HCCL会执�
 
 Atlas A3训练系列产品场景下，MindCluster集群调度组件提供训练任务借轨通信的暂停与回切功能。即在训练过程中，使用主动借轨回切接口，可自由切换NPU芯片使用的RoCE网口。
 
-使用借轨回切功能时，NPU芯片的组网关系可参考《Ascend Training Solution 组网指南（Atlas A3训练产品）》中的“网络平面介绍 \> 参数面网络 \> [端口对接策略](https://support.huawei.com/enterprise/zh/doc/EDOC1100570090/3e6a1479)”章节。
+使用借轨回切功能时，NPU芯片的组网关系可参考《Ascend Training Solution 组网指南（Atlas A3训练产品）》中的“网络平面介绍 \> 参数面网络 \> [端口对接策略](https://support.huawei.com/enterprise/zh/doc/EDOC1100601843/ebf2c19)”章节。
 
 了解借轨通信任务暂停与回切功能的详细配置方法，请参见[配置借轨通信任务暂停与回切](../02_configuration/01_configuring_fault_handling_policies.md#配置借轨通信任务暂停与回切)。
 
@@ -861,7 +861,7 @@ Atlas A3训练系列产品场景下，MindCluster集群调度组件提供训练�
 - 不支持开启watchdog功能。
 - 由于弹性训练会额外创建新的通信组，因此可能会导致片上内存占用增加。
 
-    增加内存大小计算公式：增加内存最大值（MB）= HCCL\_BUFFSIZE \* 2 \* 9，其中，HCCL\_BUFFSIZE默认为200MB，HCCL\_BUFFSIZE的说明详细请参见《CANN HCCL集合通信库》中的“[HCCL_BUFFSIZE](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/commlib/hcclug/docs/zh/user_guide/hccl_env/HCCL_BUFFSIZE.md)”章节。
+    增加内存大小计算公式：增加内存最大值（MB）= HCCL\_BUFFSIZE \* 2 \* 9，其中，HCCL\_BUFFSIZE默认为200MB，HCCL\_BUFFSIZE的说明详细请参见《CANN HCCL集合通信库》中的“[HCCL_BUFFSIZE](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/920/commlib/hcclug/docs/zh/user_guide/hccl_env/HCCL_BUFFSIZE.md)”章节。
 
 - 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
 

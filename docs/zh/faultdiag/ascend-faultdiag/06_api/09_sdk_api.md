@@ -521,7 +521,7 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
         "server": "10.1.1.1",
         "fault": [
             {
-                "parse_version": "26.1.0",
+                "parse_version": "26.2.0",
                 "response": {
                     "0": {
                         "analyze_success": true,

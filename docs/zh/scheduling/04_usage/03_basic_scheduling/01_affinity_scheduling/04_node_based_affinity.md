@@ -26,7 +26,7 @@
 
     采用Volcano+iMaster NCE-Fabric的方案，通过iMaster NCE-Fabric来动态计算训练任务通信时的网络通路，不再使用调度器来解决Spine交换机下行流量冲突。同时支持一个交换机下的节点可以被多个跨交换机的任务使用，提高集群的资源利用率。当前支持的产品为<term>Atlas A2训练系列产品</term>；支持的框架为PyTorch框架。
 
-    使用交换机亲和性调度2.0前，请先参见《[Ascend Training Solution 组网指南（Atlas A2训练产品）](https://support.huawei.com/enterprise/zh/doc/EDOC1100570094)》中的“参数面网络配置示例 \> 网络配置说明 \> NSLB配置策略”和“配置示例”章节，了解相关参数面组网的原理说明和操作指导。
+    使用交换机亲和性调度2.0前，请先参见《[Ascend Training Solution 组网指南（Atlas A2训练产品）](https://support.huawei.com/enterprise/zh/doc/EDOC1100601851)》中的“参数面网络配置示例 \> 网络配置说明 \> NSLB配置策略”和“配置示例”章节，了解相关参数面组网的原理说明和操作指导。
 <!-- end id5 -->
 
 <!-- npu="910b" id4 -->

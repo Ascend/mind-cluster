@@ -63,7 +63,7 @@
 |软件|版本|安装位置|获取方式|
 |--|--|--|--|
 |操作系统|<ul><li>CentOS 7.6 Arm</li><li>CentOS 7.6 x86</li><li>openEuler 20.03 Arm</li><li>openEuler 20.03 x86</li><li>openEuler 22.03 Arm</li><li>openEuler 22.03 x86</li><li>Ubuntu 20.04 Arm</li><li>Ubuntu 20.04 x86</li><li>Ubuntu 18.04.5 Arm</li><li>Ubuntu 18.04.5 x86</li><li>Ubuntu 18.04.1 Arm</li><li>Ubuntu 18.04.1 x86</li><li>Kylin V10 SP2 Arm</li><li>Kylin V10 SP2 x86</li><li>UOS20 1020e Arm</li></ul>|所有节点|-|
-|Python|3.7或更高版本|计算节点|用户安装|
+|Python|3.8 ~ 3.12|计算节点|用户安装|
 |Torch|2.7.1|计算节点|用户安装|
 |MindSpore|2.7.0或更高版本|计算节点|用户安装|
 
