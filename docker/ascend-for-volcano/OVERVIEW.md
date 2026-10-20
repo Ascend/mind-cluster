@@ -89,40 +89,40 @@ Starting from Atlas NPU Scheduler Plugin v26.1.0, tags follow the format below:
 
 | 字段                                 | 示例值            | 说明                                           |
 |------------------------------------|----------------|----------------------------------------------|
-| `component-version`                | `v1.7.0`       | Version Number of Volcano component          |
-| `ascend-scheduling-plugin-version` | `v26.1.1`      | Version Number of Atlas NPU Scheduler Plugin |
+| `component-version`                | `v1.15.0`      | Version Number of Volcano component          |
+| `ascend-scheduling-plugin-version` | `v26.2.0`      | Version Number of Atlas NPU Scheduler Plugin |
 | `os`                               | `alpinelatest` | Operating System for Volcano Images          |
 
-### Atlas for Volcano Latest Version 26.1.1（Volcano v1.12.0）
+### Atlas for Volcano Latest Version 26.2.0（Volcano v1.15.0）
 
-The following are all images of the latest released 26.1.1（Volcano v1.12.0） version of Atlas for Volcano. For all
+The following are all images of the latest released 26.2.0（Volcano v1.15.0） version of Atlas for Volcano. For all
 historical version Tags, please refer
 to [Supported Tags](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/supported_tags.md).
 
 | Tag                              | Dockerfile                                                                                                                                                               | Image Content                                                                                                                 |
 |----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| `v1.12.0-v26.1.1-alpinelatest`   | [Dockerfile-scheduler.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.1.1/Dockerfile-scheduler.alpine)         | Volcano Scheduler v26.1.1 Image (Including Atlas NPU Scheduler Plugin, based on Volcano v1.12.0, Base Image: Alpine latest)   |
-| `v1.12.0-v26.1.1-alpinelatest`   | [Dockerfile-controller.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.1.1/Dockerfile-controller.alpine)       | Volcano Controller v26.1.1 Image (based on Volcano v1.12.0, Base Image: Alpine latest)                                        |
-| `v1.12.0-v26.1.1-openeuler24.03` | [Dockerfile-scheduler.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.1.1/Dockerfile-scheduler.openeuler)   | Volcano Scheduler v26.1.1 Image (Including Atlas NPU Scheduler Plugin, based on Volcano v1.12.0, Base Image: openEuler 24.03) |
-| `v1.12.0-v26.1.1-openeuler24.03` | [Dockerfile-controller.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.1.1/Dockerfile-controller.openeuler) | Volcano Controller v26.1.1 Image (based on Volcano v1.12.0, Base Image: openEuler 24.03)                                      |
+| `v1.15.0-v26.2.0-alpinelatest`   | [Dockerfile-scheduler.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.15.0/v26.2.0/Dockerfile-scheduler.alpine)         | Volcano Scheduler v26.2.0 Image (Including Atlas NPU Scheduler Plugin, based on Volcano v1.15.0, Base Image: Alpine latest)   |
+| `v1.15.0-v26.2.0-alpinelatest`   | [Dockerfile-controller.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.15.0/v26.2.0/Dockerfile-controller.alpine)       | Volcano Controller v26.2.0 Image (based on Volcano v1.15.0, Base Image: Alpine latest)                                        |
+| `v1.15.0-v26.2.0-openeuler24.03` | [Dockerfile-scheduler.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.15.0/v26.2.0/Dockerfile-scheduler.openeuler)   | Volcano Scheduler v26.2.0 Image (Including Atlas NPU Scheduler Plugin, based on Volcano v1.15.0, Base Image: openEuler 24.03) |
+| `v1.15.0-v26.2.0-openeuler24.03` | [Dockerfile-controller.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.15.0/v26.2.0/Dockerfile-controller.openeuler) | Volcano Controller v26.2.0 Image (based on Volcano v1.15.0, Base Image: openEuler 24.03)                                      |
 
-### Atlas for Volcano 26.1.1（Volcano v1.9.0）
+### Atlas for Volcano 26.2.0（Volcano v1.12.0）
+
+| Tag                              | Dockerfile                                                                                                                                                               | Image Content                                                                                                                 |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| `v1.12.0-v26.2.0-alpinelatest`   | [Dockerfile-scheduler.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.2.0/Dockerfile-scheduler.alpine)         | Volcano Scheduler v26.2.0 Image (Including Atlas NPU Scheduler Plugin, based on Volcano v1.12.0, Base Image: Alpine latest)   |
+| `v1.12.0-v26.2.0-alpinelatest`   | [Dockerfile-controller.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.2.0/Dockerfile-controller.alpine)       | Volcano Controller v26.2.0 Image (based on Volcano v1.12.0, Base Image: Alpine latest)                                        |
+| `v1.12.0-v26.2.0-openeuler24.03` | [Dockerfile-scheduler.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.2.0/Dockerfile-scheduler.openeuler)   | Volcano Scheduler v26.2.0 Image (Including Atlas NPU Scheduler Plugin, based on Volcano v1.12.0, Base Image: openEuler 24.03) |
+| `v1.12.0-v26.2.0-openeuler24.03` | [Dockerfile-controller.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.12.0/v26.2.0/Dockerfile-controller.openeuler) | Volcano Controller v26.2.0 Image (based on Volcano v1.12.0, Base Image: openEuler 24.03)                                      |
+
+### Atlas for Volcano 26.2.0（Volcano v1.9.0）
 
 | Tag                             | Dockerfile                                                                                                                                                              | Image Content                                                                                                                |
 |---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| `v1.9.0-v26.1.1-alpinelatest`   | [Dockerfile-scheduler.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.1.1/Dockerfile-scheduler.alpine)         | Volcano Scheduler v26.1.1 Image (Including Atlas NPU Scheduler Plugin, based on Volcano v1.9.0, Base Image: Alpine latest)   |
-| `v1.9.0-v26.1.1-alpinelatest`   | [Dockerfile-controller.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.1.1/Dockerfile-controller.alpine)       | Volcano Controller v26.1.1 Image (based on Volcano v1.9.0, Base Image: Alpine latest)                                        |
-| `v1.9.0-v26.1.1-openeuler24.03` | [Dockerfile-scheduler.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.1.1/Dockerfile-scheduler.openeuler)   | Volcano Scheduler v26.1.1 Image (Including Atlas NPU Scheduler Plugin, based on Volcano v1.9.0, Base Image: openEuler 24.03) |
-| `v1.9.0-v26.1.1-openeuler24.03` | [Dockerfile-controller.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.1.1/Dockerfile-controller.openeuler) | Volcano Controller v26.1.1 Image (based on Volcano v1.9.0, Base Image: openEuler 24.03)                                      |
-
-### Atlas for Volcano 26.1.1（Volcano v1.7.0）
-
-| Tag                             | Dockerfile                                                                                                                                                              | Image Content                                                                                                                |
-|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| `v1.7.0-v26.1.1-alpinelatest`   | [Dockerfile-scheduler.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.7.0/v26.1.1/Dockerfile-scheduler.alpine)         | Volcano Scheduler v26.1.1 Image (Including Atlas NPU Scheduler Plugin, based on Volcano v1.7.0, Base Image: Alpine latest)   |
-| `v1.7.0-v26.1.1-alpinelatest`   | [Dockerfile-controller.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.7.0/v26.1.1/Dockerfile-controller.alpine)       | Volcano Controller v26.1.1 Image (based on Volcano v1.7.0, Base Image: Alpine latest)                                        |
-| `v1.7.0-v26.1.1-openeuler24.03` | [Dockerfile-scheduler.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.7.0/v26.1.1/Dockerfile-scheduler.openeuler)   | Volcano Scheduler v26.1.1 Image (Including Atlas NPU Scheduler Plugin, based on Volcano v1.7.0, Base Image: openEuler 24.03) |
-| `v1.7.0-v26.1.1-openeuler24.03` | [Dockerfile-controller.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.7.0/v26.1.1/Dockerfile-controller.openeuler) | Volcano Controller v26.1.1 Image (based on Volcano v1.7.0, Base Image: openEuler 24.03)                                      |
+| `v1.9.0-v26.2.0-alpinelatest`   | [Dockerfile-scheduler.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.2.0/Dockerfile-scheduler.alpine)         | Volcano Scheduler v26.2.0 Image (Including Atlas NPU Scheduler Plugin, based on Volcano v1.9.0, Base Image: Alpine latest)   |
+| `v1.9.0-v26.2.0-alpinelatest`   | [Dockerfile-controller.alpine](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.2.0/Dockerfile-controller.alpine)       | Volcano Controller v26.2.0 Image (based on Volcano v1.9.0, Base Image: Alpine latest)                                        |
+| `v1.9.0-v26.2.0-openeuler24.03` | [Dockerfile-scheduler.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.2.0/Dockerfile-scheduler.openeuler)   | Volcano Scheduler v26.2.0 Image (Including Atlas NPU Scheduler Plugin, based on Volcano v1.9.0, Base Image: openEuler 24.03) |
+| `v1.9.0-v26.2.0-openeuler24.03` | [Dockerfile-controller.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-for-volcano/volcano-v1.9.0/v26.2.0/Dockerfile-controller.openeuler) | Volcano Controller v26.2.0 Image (based on Volcano v1.9.0, Base Image: openEuler 24.03)                                      |
 
 ---
 
@@ -206,7 +206,7 @@ download: [Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip](https://gitcode.com/
 #### Local Image Build Process for Atlas NPU Scheduler Plugin v26.1.0 and Later Versions
 
 Example: Build a Volcano v1.9.0 component image with linux-aarch64 architecture based on Alpine latest, integrated with
-Atlas NPU Scheduler Plugin v26.1.1.
+Atlas NPU Scheduler Plugin v26.2.0.
 
 1. Obtain the target Dockerfile
 
