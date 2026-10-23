@@ -19,6 +19,7 @@ import asyncio
 import os
 import tempfile
 import unittest
+from unittest import mock
 
 from ascend_fd_tk.utils.executors import CommandResult, CmdTask, AsyncCmdExecutor, AsyncSSHExecutor
 
@@ -116,6 +117,58 @@ class TestAsyncSSHExecutorConstruction(unittest.TestCase):
         """测试传入不存在的私钥路径 - 正常调用（应优雅返回 None）"""
         executor = AsyncSSHExecutor(host="127.0.0.1", port=22, username="root", private_key="/nonexistent/key")
         self.assertIsNone(executor.private_key_obj)
+
+
+class TestAsyncSSHExecutorEnsureShellSession(unittest.TestCase):
+    """测试 AsyncSSHExecutor.ensure_shell_session 会话建立逻辑（mock 掉真实连接）"""
+
+    def _make_executor(self):
+        return AsyncSSHExecutor(
+            host="127.0.0.1", port=22, username="root", password="test", look_for_keys=False, allow_agent=False
+        )
+
+    def test_create_when_no_client(self):
+        """无 ssh_client 时应创建客户端和通道。"""
+        executor = self._make_executor()
+        with (
+            mock.patch.object(AsyncSSHExecutor, "_create_ssh_client") as mock_client,
+            mock.patch.object(AsyncSSHExecutor, "_create_shell_channel") as mock_channel,
+        ):
+            executor.ensure_shell_session()
+            mock_client.assert_called_once()
+            mock_channel.assert_called_once()
+
+    def test_reuse_when_active(self):
+        """客户端与通道均活跃时复用，不重复创建。"""
+        executor = self._make_executor()
+        client = mock.MagicMock()
+        client.get_transport.return_value.is_active.return_value = True
+        channel = mock.MagicMock()
+        channel.active = True
+        executor.ssh_client = client
+        executor.shell_channel = channel
+        with (
+            mock.patch.object(AsyncSSHExecutor, "_create_ssh_client") as mock_client,
+            mock.patch.object(AsyncSSHExecutor, "_create_shell_channel") as mock_channel,
+        ):
+            executor.ensure_shell_session()
+            mock_client.assert_not_called()
+            mock_channel.assert_not_called()
+
+    def test_recreate_channel_when_inactive(self):
+        """客户端活跃但通道失效时仅重建通道。"""
+        executor = self._make_executor()
+        client = mock.MagicMock()
+        client.get_transport.return_value.is_active.return_value = True
+        executor.ssh_client = client
+        executor.shell_channel = None
+        with (
+            mock.patch.object(AsyncSSHExecutor, "_create_ssh_client") as mock_client,
+            mock.patch.object(AsyncSSHExecutor, "_create_shell_channel") as mock_channel,
+        ):
+            executor.ensure_shell_session()
+            mock_client.assert_not_called()
+            mock_channel.assert_called_once()
 
 
 def asyncio_run(coro):

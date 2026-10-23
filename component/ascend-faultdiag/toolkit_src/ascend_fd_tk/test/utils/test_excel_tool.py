@@ -20,11 +20,15 @@
 覆盖本次改动：
 - _get_cell_value_and_style: dict/list/set 等容器类型转字符串，空容器用 na_rep
 - 修复 FormParser 空字典 {} 导致的 ValueError: Cannot convert {} to Excel
+- flatten_dict / get_all_columns / dict_list_to_excel 便捷函数
 """
 
+import os
+import tempfile
 import unittest
 
 from ascend_fd_tk.utils.excel_tool import ExcelGenerator, StyledCell, CellStyle
+from ascend_fd_tk.utils import excel_tool
 
 
 class TestExcelToolCellParsing(unittest.TestCase):
@@ -56,6 +60,34 @@ class TestExcelToolCellParsing(unittest.TestCase):
         value, style = ExcelGenerator._get_cell_value_and_style(cell, na_rep="-")
         self.assertEqual(value, {"k": "v"})
         self.assertIs(style, custom_style)
+
+
+class TestExcelToolFunctions(unittest.TestCase):
+    """测试 excel_tool 模块级便捷函数。"""
+
+    def test_flatten_dict(self):
+        """嵌套字典展平为 a_b 形式。"""
+        self.assertEqual(excel_tool.flatten_dict({"a": {"b": 1}, "c": 2}), {"a_b": 1, "c": 2})
+
+    def test_get_all_columns(self):
+        """展平后自动去重排序获取列名。"""
+        self.assertEqual(excel_tool.get_all_columns([{"a": {"b": 1}}, {"c": 2}]), ["a_b", "c"])
+
+    def test_dict_list_to_excel(self):
+        """将 list[dict] 写入 Excel 文件并校验内容。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "out.xlsx")
+            excel_tool.dict_list_to_excel([{"name": "a", "age": 1}], path)
+            self.assertTrue(os.path.exists(path))
+
+            from openpyxl import load_workbook
+
+            wb = load_workbook(path)
+            ws = wb["Sheet1"]
+            self.assertEqual(ws["A1"].value, "age")
+            self.assertEqual(ws["B1"].value, "name")
+            self.assertEqual(ws["A2"].value, 1)
+            self.assertEqual(ws["B2"].value, "a")
 
 
 if __name__ == "__main__":
