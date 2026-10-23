@@ -26,12 +26,13 @@ If you require third-party licenses, obtain them through legal means, unless oth
 
         Formula for calculating the additional on-chip memory size for adding replicas: Total additional on-chip memory (GB) = Number of model parameters N (B) × 12 × Number of copies. The unit of the number of model parameters is B (billion). The formula determines the additional memory required. After scaling up, MindIO TFT can be used.
 
-- There is one Active Controller and two Backup Controllers in the training fault tolerance framework. To ensure a smooth switchover to a Backup Controller to complete the final save when multiple devices, including the Active Controller, fail, the number of devices in normal status must be greater than half of `world_size`.
+- There is one Active Controller and two Backup Controllers in the training fault tolerance framework. To ensure a smooth switchover to a Backup Controller from Active Controller to complete the final save when multiple devices fail, the number of devices in normal status must be greater than half of `world_size`.
 - MindIO TFT creates replicas of optimizer state data. During MindIO UCE or MindIO ARF repair, valid replicas are found to repair the faulty device. When there are many faults in the training cluster and a complete copy still cannot be assembled, the system will fall back to online repair via periodic checkpoint loading from online step repair.
 - When generating the dying gasp Checkpoint data, MindIO TFT not only considers a complete data copy but also verifies data consistency. If, after a fault occurs, an optimizer state data shard remains in a modified state for a long time, or the training iterations are inconsistent across different optimizer state data shards, it is considered global data inconsistency, and the dying gasp checkpoint cannot be generated.
 - MindIO TTP does not use the MindIO ACP feature. After MindIO TTP completes saving the dying gasp checkpoint, it terminates the training process. To ensure that the dying gasp checkpoint has been saved to persistent storage before the process exits, MindIO TTP is constrained to write data directly to persistent storage rather than using the asynchronous checkpoint saving method.
 - MindIO TFT currently does not support cascading failure scenarios. For example, if another fault occurs while MindIO TTP is saving, the save operation will fail.
 - MindIO TFT increases memory usage. For details, see [Table 1 Theoretical numerical changes of optimizer parameters between the native optimizer and the optimizer after enabling the fast fault recovery feature](./03_usage_guidance.md#table_tft_03).
+- The UCE fast fault recovery feature of MindIO TFT supports UCE faults occurring in the following memory space ranges: (1) model parameters (2) optimizer parameters
 - The TLS (Transport Layer Security) is enabled by default. Disabling it may allow forged Controller connections, affecting the training process.
 - MindIO ARF requires multiple nodes (≥ 2), does not support Controller node failures, and does not support cascading failures. After MindIO ARF repair fails, MindCluster controls the subsequent process.
 - The default log storage path is the `logs/ttp_log.log` file in the same directory as the running script. You can configure it in the running script. The default log level is "INFO". The size limit for a single log file is 10 MB, and logs are written in append‑only mode. When a log file reaches the size limit, it rolls over to a new log file. The maximum number of rolling log files is five, with older files being overwritten in a circular manner.
@@ -69,8 +70,8 @@ Before installation, check the following hardware configurations, as shown in [T
 
 |Type|Configuration reference|
 |--|--|
-|Server (single-node scenario)|<ul><li>Atlas 800 training server (model: 9000): supports MindIO TTP function only</li><li>Atlas 800T A2 training server</li><li>Atlas 900 A3 SuperPoD</li></ul>|
-|Server (cluster scenario)|Compute node: <ul><li>Atlas 800 training server (model 9000): supports MindIO TTP function only</li><li>Atlas 800T A2 training server</li><li>Atlas 900 A3 SuperPoD</li></ul> Storage node: storage server|
+|Server (single-node scenario)|<ul><li>Atlas 800 training server (model: 9000): supports MindIO TTP function only</li><li>Atlas 800T A2</li><li>Atlas 900 A3 SuperPoD</li></ul>|
+|Server (cluster scenario)|Compute node: <ul><li>Atlas 800 training server (model 9000): supports MindIO TTP function only</li><li>Atlas 800T A2</li><li>Atlas 900 A3 SuperPoD</li></ul> Storage node: storage server|
 |Network|<ul><li>Out-of-band management (BMC): ≥ 1 Gbit/s</li><li>In-band management (SSH): ≥ 1 Gbit/s</li><li>Service plane: ≥10 Gbit/s</li><li>Storage plane: ≥ 25 Gbit/s</li><li>Parameter plane: 100 Gbit/s</li></ul>|
 
 **Software Environment**

@@ -20,9 +20,12 @@ metadata:
     framework: pytorch
     ring-controller.atlas: ascend-910b
     tor-affinity: "null" #This label indicates whether the job uses switch affinity scheduling. If it is null or not specified, it is not applicable. large-model-schema indicates a large model job, and normal-schema indicates a normal job.
+  annotations:
+      huawei.com/schedule_policy: "chip8-node8"
 spec:
   schedulerName: volcano   # work when enableGangScheduling is true
   runPolicy:
+    ttlSecondsAfterFinished: 30 # TTL (time to live) after the job is finished.
     schedulingPolicy:      # work when enableGangScheduling is true
       minAvailable: 2
       queue: default
@@ -47,11 +50,10 @@ spec:
                           - default-test-pytorch
                   topologyKey: kubernetes.io/hostname
           nodeSelector:
-            host-arch: huawei-arm
-            accelerator-type: card-910b-2 # depend on your device model, 910bx8 is module-910b-8, 910bx16 is module-910b-16
+            example-key: example-value    # Example value. Configure nodeSelector based on your scheduling requirements
           containers:
-          - name: ascend # do not modify
-            image: pytorch-test:latest         # training framework image, which can be modified
+          - name: ascend # Do not modify
+            image: pytorch-test:latest         # Training framework image, which can be modified
             imagePullPolicy: IfNotPresent
             env:
               - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running
@@ -64,13 +66,13 @@ spec:
                 valueFrom:
                   fieldRef:
                     fieldPath: metadata.annotations['huawei.com/Ascend910']               # The value must be the same as resources.requests
-            command:                           # training command, which can be modified
+            command:                           # Training command, which can be modified
               - /bin/bash
               - -c
             args: [ "cd /job/code/scripts; chmod +x train_start.sh; bash train_start.sh /job/code /job/output main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend='hccl' --multiprocessing-distributed --epochs=90 --batch-size=4096" ]
-            ports:                          # default value containerPort: 2222 name: ascendjob-port if not set
-              - containerPort: 2222         # determined by user
-                name: ascendjob-port        # do not modify
+            ports:                          # Default value containerPort: 2222 name: ascendjob-port if not set
+              - containerPort: 2222         # Determined by user
+                name: ascendjob-port        # Do not modify
             resources:
               limits:
                 huawei.com/Ascend910: 2
@@ -135,11 +137,10 @@ spec:
                           - default-test-pytorch
                   topologyKey: kubernetes.io/hostname
           nodeSelector:
-            host-arch: huawei-arm
-            accelerator-type: card-910b-2 # depend on your device model, 910bx8 is module-910b-8, 910bx16 is module-910b-16
+            example-key: example-value    # Example value. Configure nodeSelector based on your scheduling requirements.
           containers:
-          - name: ascend # do not modify
-            image: pytorch-test:latest                # training framework image, which can be modified
+          - name: ascend # Do not modify
+            image: pytorch-test:latest                # Training framework image, which can be modified
             imagePullPolicy: IfNotPresent
             env:
               - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running
@@ -152,13 +153,13 @@ spec:
                 valueFrom:
                   fieldRef:
                     fieldPath: metadata.annotations['huawei.com/Ascend910']               # The value must be the same as resources.requests
-            command:                                  # training command, which can be modified
+            command:                                  # Training command, which can be modified
               - /bin/bash
               - -c
             args: ["cd /job/code/scripts; chmod +x train_start.sh; bash train_start.sh /job/code /job/output main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend='hccl' --multiprocessing-distributed --epochs=90 --batch-size=4096"]
-            ports:                          # default value containerPort: 2222 name: ascendjob-port if not set
-              - containerPort: 2222         # determined by user
-                name: ascendjob-port        # do not modify
+            ports:                          # Default value containerPort: 2222 name: ascendjob-port if not set
+              - containerPort: 2222         # Determined by user
+                name: ascendjob-port        # Do not modify
             resources:
               limits:
                 huawei.com/Ascend910: 2
@@ -277,12 +278,12 @@ status:
 Use the following command to view the detailed status and exception information of the job:
 
 ```bash
-# View AscendJob Status
+# View AscendJob status
 kubectl get acjob -n <namespace> <job-name> -o yaml
 
-# View AscendJob Status Summary
+# View AscendJob status summary
 kubectl get acjob -n <namespace> <job-name> -o jsonpath={.status.conditions}
 
-# View the Latest Status of AscendJob
+# View the latest status of AscendJob
 kubectl get acjob -n <namespace> <job-name> -o jsonpath={.status.conditions[-1]}
 ```

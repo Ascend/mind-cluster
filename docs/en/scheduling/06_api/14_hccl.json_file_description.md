@@ -6,7 +6,7 @@ When training starts, Ascend Operator generates the RankTable file required for 
 - When using shared storage to mount the RankTable, you need to mount a shared storage or local storage directory in the YAML when creating a training job, and mount the directory to the `"/user/serverid/devindex/config"` path in the training container. Ascend Operator constructs the collective communication RankTable file for the job based on the `Annotation` information written by Ascend Device Plugin or volcano-scheduler in the job Pod, writes its content into the `"/shared storage or local storage directory/hccl.json"` file, and maps it as the `"/user/serverid/devindex/config/hccl.json"` file in the training container.
 - Different products have different `hccl.json` file contents, as detailed below.
 
-## <term>Atlas Training Products</term>, <term>Atlas A2 Training Products</term>, Atlas 800I A2 Inference Server, A200I A2 Box Heterogeneous Subrack<a name="section19616113871318"></a>
+## <term>Atlas Training Products</term>, <term>Atlas A2 Training Products</term>, Atlas 800I A2, A200I A2 Box<a name="section19616113871318"></a>
 
 The `hccl.json` file example is as follows:
 
@@ -49,15 +49,15 @@ The following is an example of the `hccl.json` file:
 hccl.json:
 ----
 {
-    "status": "completed",  // Whether Ascend Operator Has Finished Writing
-    "server_list": [    // Node List
+    "status": "completed",  // Whether Ascend Operator has finished writing
+    "server_list": [    // Node list
         {
             "device": [
                 {
-                    "device_id": "0",     // NPU Device ID
-                    "device_ip": "xx.xx.xx.xx",  // NPU Device IP
-                    "super_device_id": "37748736",   //NPU Device ID
-                    "rank_id": "0"             // Training Rank ID Corresponding to the NPU
+                    "device_id": "0",     // NPU device ID
+                    "device_ip": "xx.xx.xx.xx",  // NPU device IP
+                    "super_device_id": "37748736",   //NPU device ID
+                    "rank_id": "0"             // Training rank ID Corresponding to the NPU
                 },
 ...
                 {
@@ -75,9 +75,9 @@ hccl.json:
     ],
     "server_count": "1",
     "version": "1.2",
-    "super_pod_list": [   //Super node list
+    "super_pod_list": [   //SuperPoD list
         {
-            "super_pod_id": "0",  //Logical super node ID
+            "super_pod_id": "0",  //Logical SuperPoD ID
             "server_list": [
                 {
                     "server_id": "xx-xx-xx-xx"   //AI Server identifier, globally unique
@@ -88,7 +88,7 @@ hccl.json:
 }
 ```
 
-## Atlas 350 Accelerator Card, Atlas 850E SuperPoD, Atlas 650E Server, Atlas 950 SuperPoD<a name="section285395510348"></a>
+## <term>Ascend 950PR&950DT Products</term><a name="section285395514569"></a>
 
 The `hccl.json` file example is as follows:
 
@@ -99,23 +99,23 @@ hccl.json:
   "status": "completed", // Whether the Ascend Operator has finished writing
   "version": "2.0",
   "rank_count": 1,     // Number of ranks participating in training
-  "rank_list": [       // Rank Information List
+  "rank_list": [       // Rank information list
     {
-      "rank_id": 0,    // Training Rank ID
+      "rank_id": 0,    // Training rank ID
       "local_id": 0,   // Associated with the ID in the topology file
       "device_id": 0,  // Physical ID
       "level_list": [
         {
-          "net_layer": 0,   // Communication Level
+          "net_layer": 0,   // Communication layer: 0 for intra-rack communication, 1 for intra-SuperPoD communication (absent in non-SuperPoD scenarios, where the large network layer serves as layer 1), 2 for the UBoE communication type, and 3 for RoCE communication
           "net_instance_id": "xx",          // Network ID
           "net_type": "TOPO_FILE_DESC",     // Network type, with values TOPO_FILE_DESC and CLOS. TOPO_FILE_DESC indicates querying the network type from a file, and CLOS indicates a CLOS network.
-          "net_attr": "",                   // Network Hierarchy
+          "net_attr": "",                   // Network hierarchy, leave it empty
           "rank_addr_list": [
             {
-              "addr_type": "EID",           // Address Type
-              "addr": "....",               // Address Value
-              "ports": ["x/x"],             // NPU Port List
-              "plane_id": "1"               // Network Plane
+              "addr_type": "EID",           // Address type
+              "addr": "....",               // Address value
+              "ports": ["x/x"],             // NPU port list
+              "plane_id": "1"               // Network plane ID
             },
             ...
             {

@@ -24,7 +24,7 @@ Determines the number of Ascend AI processors required for a job. For <term>Atla
 
 **Specific Implementation<a name="section158817331130"></a>**
 
-For the specific code implementation, refer to the [ValidNPUJob](https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.1.0/component/ascend-for-volcano/internal/npu/base/frame.go) method. The `ValidNPUJob` method is used to validate the rationality of the configuration submitted by the user. At this stage, it does not check whether the actual resources in the cluster environment are sufficient; instead, it simply validates whether the key fields of a job are complete, whether the field value ranges are correct, and whether the fields match each other.
+For the specific code implementation, refer to the [ValidNPUJob](https://gitcode.com/Ascend/mind-cluster/blob/release_v26.2.0/component/ascend-for-volcano/internal/npu/base/frame.go) method. The `ValidNPUJob` method is used to validate the rationality of the configuration submitted by the user. At this stage, it does not check whether the actual resources in the cluster environment are sufficient; instead, it simply validates whether the key fields of a job are complete, whether the field value ranges are correct, and whether the fields match each other.
 
 ## Node Pre-selection<a name="ZH-CN_TOPIC_0000002479386932"></a>
 
@@ -36,7 +36,7 @@ For example, if a job requires 4 Ascend AI processors and a node has 4 Ascend AI
 
 **Specific Implementation<a name="section185864321413"></a>**
 
-For the specific code implementation, refer to the [CheckNodeNPUByTask](https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.1.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go) method. It obtains the number of Ascend AI processors requested by the training job through the `GetTaskReqNPUNum` method, and then obtains the available NPU resources of the node through the `GetUsableTopFromNode` method. The `JudgeNodeAndTaskNPU` method implements the function of determining whether the node's NPU resources meet the job requirements.
+For the specific code implementation, refer to the [CheckNodeNPUByTask](https://gitcode.com/Ascend/mind-cluster/blob/release_v26.2.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go) method. It obtains the number of Ascend AI processors requested by the training job through the `GetTaskReqNPUNum` method, and then obtains the available NPU resources of the node through the `GetUsableTopFromNode` method. The `JudgeNodeAndTaskNPU` method implements the function of determining whether the node's NPU resources meet the job requirements.
 
 ## Node Prioritization<a name="ZH-CN_TOPIC_0000002479226940"></a>
 
@@ -48,7 +48,7 @@ For example, a Pod requires 1 Ascend AI processor. There are two nodes A and B t
 
 **Specific Implementation<a name="section15355114514519"></a>**
 
-For the specific code implementation, refer to the [ScoreBestNPUNodes](https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.1.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go) method, where the `getNodeBestScore` method implements node priority determination based on affinity. When selecting nodes, it first checks whether switch affinity scheduling and logical SuperPoD affinity scheduling are configured. If neither switch affinity scheduling nor logical SuperPoD affinity scheduling is configured, the normal node prioritization principle is used.
+For the specific code implementation, refer to the [ScoreBestNPUNodes](https://gitcode.com/Ascend/mind-cluster/blob/release_v26.2.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go) method, where the `getNodeBestScore` method implements node priority determination based on affinity. When selecting nodes, it first checks whether switch affinity scheduling and logical SuperPoD affinity scheduling are configured. If neither switch affinity scheduling nor logical SuperPoD affinity scheduling is configured, the normal node prioritization principle is used.
 
 **Normal Node Prioritization Principle<a name="section1797111616358"></a>**
 
@@ -95,7 +95,12 @@ The idle switch resources are divided into two 2D arrays. One is partitioned hor
     ![](../../../../figures/scheduling/superpod_prioritization_order.png)
 
 3. If resources are still insufficient, use the resources in Queue 2. Queue 2 is sorted by the number of remaining nodes in descending order, and SuperPoD selection proceeds from the first entry onward.
-4. If resources are still insufficient, and the SuperPoD affinity scheduling policy configured for the job is `Soft` (non-mandatory affinity), use the resources in Queue 3. Queue 3 is sorted by remaining nodes in descending order, and SuperPoD selection proceeds from the first entry onward.
+4. If resources are still insufficient, and the SuperPoD affinity scheduling policy configured for the job is `Soft` (non-mandatory affinity, `super-pod-affinity = soft`), use the resources in Queue 3. Queue 3 is sorted by remaining nodes in descending order, and SuperPoD selection proceeds from the first entry onward.
+
+>[!NOTE]
+>
+>- Soft affinity only supports Job-level rescheduling.
+>- If soft affinity is enabled for a service, in order to prioritize service operation, when a physical SuperPoD cannot satisfy logical SuperPoD scheduling, cross-SuperPoD scheduling will be performed, but this may cause a certain decline in service performance.
 
 **Logical Rack Affinity Scheduling<a name="section941034517442"></a>**
 
@@ -107,7 +112,7 @@ The idle switch resources are divided into two 2D arrays. One is partitioned hor
     ![](../../../../figures/scheduling/logical-rack-prioritization-order.PNG)
 
 3. If only physical racks with 2, 4, and 6 remaining available nodes exist in the SuperPoD, then following the principle of minimizing fragmentation, the physical rack with 2 remaining nodes is selected first, followed by the physical rack with 4 remaining nodes, and then the physical rack with 6 remaining nodes.
-4. If only physical racks with 2 and 4 remaining available nodes exist in the SuperPoD, and the `Soft` affinity policy is enabled, selection will be made from other SuperPoDs, with the selection strategy being sorted by the number of remaining nodes in ascending order.
+4. If only physical racks with 2 and 4 remaining available nodes exist in the SuperPoD, and the `Soft` affinity policy is enabled (`super-pod-affinity = Soft`), selection will be made from other SuperPoDs, with the selection strategy being sorted by the number of remaining nodes in ascending order.
 
 ## Selecting Ascend AI Processors<a name="ZH-CN_TOPIC_0000002511426837"></a>
 
@@ -119,4 +124,4 @@ For example, if a Pod requires 1 Ascend AI processor and the two HCCL rings on t
 
 **Specific Implementation<a name="section94176351465"></a>**
 
-For specific code implementation, please refer to the [UseAnnotation](https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.1.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go) method in the open-source code, where the `SelectNPUFromNode` method implements the function of selecting Ascend AI processors from a node based on affinity.
+For specific code implementation, please refer to the [UseAnnotation](https://gitcode.com/Ascend/mind-cluster/blob/release_v26.2.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go) method in the open-source code, where the `SelectNPUFromNode` method implements the function of selecting Ascend AI processors from a node based on affinity.

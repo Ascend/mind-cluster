@@ -1,7 +1,5 @@
 # TaskD Agent APIs<a name="ZH-CN_TOPIC_0000002479226872"></a>
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T01:43:05.254Z pushedAt=2026-06-09T02:05:50.642Z -->
-
 ## def init_taskd_agent(config : dict = {}, cls = None) -> bool<a name="ZH-CN_TOPIC_0000002511426763"></a>
 
 **Function Description<a name="section3468140175411"></a>**

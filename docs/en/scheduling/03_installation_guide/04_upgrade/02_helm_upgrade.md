@@ -1,7 +1,5 @@
 # Upgrade with Helm<a name="ZH-CN_TOPIC_0000002479226453"></a>
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-27T02:28:39.377Z pushedAt=2026-08-27T06:46:31.974Z -->
-
 ## Upgrade Description<a name="section_helm_upgrade_desc"></a>
 
 This document describes how to upgrade MindCluster components using Helm.
@@ -18,9 +16,12 @@ This document describes how to upgrade MindCluster components using Helm.
     - [ClusterD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511346859)
     - [NodeD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386924)
     - [NPU Exporter](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226948)
+    - [DPU Exporter](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312665)
     - [Infer Operator](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426821)
     - [K8s RDMA Shared Dev Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312660)
+    - [Ascend Dynamic Resource Allocation](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312670)
 - To upgrade [Ascend Docker Runtime](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426843), [Container Manager](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312655), [TaskD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386914), and [MindIO](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226942), refer to the [Manual Upgrade](../../05_developer_guide/00_installation_deployment/01_upgrade.md#ZH-CN_TOPIC_0000002479226452) section.
+- When upgrading Infer Operator of v26.0.0 or an earlier version to the latest version, delete the log directory and recreate it with root permissions, or change the permissions of the log directory and log files to root.
 
 ## Pre-upgrade Preparation<a name="section_helm_upgrade_prepare"></a>
 
@@ -68,7 +69,7 @@ If the components are installed manually through kubectl and have not yet been b
 1. <a name="li1471945063444_helm_download"></a>Download and decompress the deployment tool.
 
     ```bash
-    # Replace {version} in the command with the corresponding version number, such as 26.1.0.
+    # Replace {version} in the command with the corresponding version number, such as 26.2.0.
     wget https://gitcode.com/Ascend/mind-cluster/releases/download/v{version}/Ascend-helm-deploy-tool_{version}_linux.zip
     unzip Ascend-helm-deploy-tool_{version}_linux.zip
     ```
@@ -94,7 +95,7 @@ If the components are installed manually through kubectl and have not yet been b
     bash helm_tool.sh --add-helm-meta-all # Add Helm metadata to resources.
 
     # (Optional) If an Ascend Device Plugin DaemonSet of a version earlier than v26.1.0 exists in the current cluster, run this command to clean up the old resources. If it does not exist, skip this step.
-    bash helm_tool.sh --delete-old-demonset
+    bash helm_tool.sh --delete-old-daemonset
     ```
 
     The following is an output example, indicating that the Helm metadata has been added successfully:
@@ -191,7 +192,7 @@ If a component has been installed through Helm and is managed by Helm, follow th
 1. Download and decompress the deployment tool.
 
     ```bash
-    # Replace {version} in the command with the corresponding version number, for example, 26.1.0.
+    # Replace {version} in the command with the corresponding version number, for example, 26.2.0.
     wget https://gitcode.com/Ascend/mind-cluster/releases/download/v{version}/Ascend-helm-deploy-tool_{version}_linux.zip
     unzip Ascend-helm-deploy-tool_{version}_linux.zip
     ```
@@ -304,8 +305,8 @@ If components run abnormally after an upgrade, use the Helm rollback feature to 
 
       ```ColdFusion
       REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
-      1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-26.0.0        26.0.0       Install complete
-      2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-26.1.0        26.1.0       Upgrade complete
+      1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-26.1.0        26.1.0       Install complete
+      2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-26.2.0        26.2.0       Upgrade complete
       ```
 
     - View the upgrade history of the `Release` instance for component CRDs:
@@ -318,8 +319,8 @@ If components run abnormally after an upgrade, use the Helm rollback feature to 
 
       ```ColdFusion
       REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
-      1         2026-03-24 15:30:00.000   superseded  mindcluster-crds-deploy-tool-26.0.0        26.0.0       Install complete
-      2         2026-03-25 10:00:00.000   deployed    mindcluster-crds-deploy-tool-26.1.0        26.1.0       Upgrade complete
+      1         2026-03-24 15:30:00.000   superseded  mindcluster-crds-deploy-tool-26.1.0        26.1.0       Install complete
+      2         2026-03-25 10:00:00.000   deployed    mindcluster-crds-deploy-tool-26.2.0        26.2.0       Upgrade complete
       ```
 
     >[!NOTE]

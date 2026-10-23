@@ -1,7 +1,5 @@
 # Feature Description<a name="ZH-CN_TOPIC_0000002511426281vcann"></a>
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-28T09:27:01.865Z pushedAt=2026-08-28T10:52:27.704Z -->
-
 The vCANN-RT-based virtual instance feature mounts the NPU (Ascend AI Processor) configured on the physical machine into containers by providing a soft partitioning configuration file to vCANN-RT.
 
 This feature offers the following advantages:
@@ -33,22 +31,16 @@ Ascend NPU hardware resources mainly include AICore (used for AI model computati
 </thead>
 <tbody align="left">
 <tr>
-<td class="cellrowborder" valign="top" width="30%"><term>Atlas A2 training products</term></td>
-<td class="cellrowborder" rowspan="5" valign="center" width="40%"><p>Generate a soft partitioning configuration file on the physical machine, and mount the NPU and configuration file to the container</p></td>
-<td class="cellrowborder" rowspan="5" align="center" valign="center" width="15%"><p>Soft partitioning virtualization</p></td>
-<td class="cellrowborder" rowspan="5" align="center" valign="center" width="10%"><p>Yes</p></td>
+<td class="cellrowborder" valign="top" width="30%"><term>Atlas A2 products</term></td>
+<td class="cellrowborder" rowspan="3" valign="center" width="40%"><p>Generate a soft partitioning configuration file on the physical machine, and mount the NPU and configuration file to the container</p></td>
+<td class="cellrowborder" rowspan="3" align="center" valign="center" width="15%"><p>Soft partitioning virtualization</p></td>
+<td class="cellrowborder" rowspan="3" align="center" valign="center" width="10%"><p>Yes</p></td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" width="30%"><term>Atlas A2 inference products</term></td>
+<td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 products</term></td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 training products</term></td>
-</tr>
-<tr>
-<td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 inference products</term></td>
-</tr>
-<tr>
-<td class="cellrowborder" valign="top" width="30%">Atlas 350 accelerator card</td>
+<td class="cellrowborder" valign="top" width="30%">Atlas 350 accelerator cards</td>
 </tr>
 </tbody>
 </table>
@@ -65,9 +57,10 @@ by repeatedly mounting the NPU to multiple containers. The CANN inside each cont
 ## Usage Constraints<a name="section911013420264vcann"></a>
 
 - The soft partitioning virtualization feature supports inference jobs only.
+- In the soft partitioning virtualization scenario, concurrent submission is not supported; only serial submission is supported. You must wait until the previous job has been fully brought up before submitting a new soft partitioning job.
 - In the soft partitioning virtualization scenario, a container can mount only one NPU.
 - The data corresponding to requests in the job YAML indicates the requested AICore percentage of the NPU, not the actual number of NPUs.
-- When **Atlas A3 training or inference products** use the soft partitioning virtualization feature, single-die passthrough mode must be enabled. That is, add `-useSingleDieMode=true` to the YAML of Ascend Device Plugin.
+- When <term>Atlas A3 products</term>use the soft partitioning virtualization feature, single-die passthrough mode must be enabled. That is, add `-useSingleDieMode=true` to the YAML of Ascend Device Plugin.
 - After a physical NPU is virtualized through soft partitioning, the physical NPU can only be mounted to containers and cannot be passed through to virtual machines.
 - In the soft partitioning virtualization scenario, if all containers mount the same physical NPU, the physical NPU must use the same soft partitioning policy.
 - Due to hardware device limitations (see [Usage Constraints](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/others/acldevg/aclcppdevg_000222.html)), it is recommended that the maximum number of vCANN-RT partitions not exceed the maximum number of user processes supported by a single device.

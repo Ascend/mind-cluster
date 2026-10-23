@@ -559,16 +559,6 @@ DpuInfoCfg:
 |install_ascend_pkgs.sh|昇腾软件包安装脚本。|参考[步骤4](#zh-cn_topic_0000001497364957_zh-cn_topic_0256378845_li538351517716)|
 |postbuild.sh|清除不需要保留在容器中的安装包、脚本、代理配置等。|参考[步骤5](#zh-cn_topic_0000001497364957_zh-cn_topic_0256378845_li154641047879)|
 
-为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
-
-在软件包下载之后，请参考《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请不要使用该软件包，先联系华为技术支持工程师解决。
-
-使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
-
-运营商客户请访问：[https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction)
-
-企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
-
 >[!NOTE]
 >本章节以Ubuntu操作系统，配套Python  3.10，CANN 8.5.0为例来介绍使用Dockerfile构建容器镜像的详细过程，使用过程中需根据实际情况修改相关步骤。
 
@@ -959,16 +949,6 @@ DpuInfoCfg:
 |prebuild.sh|执行训练运行环境安装准备工作，例如配置代理等。|参考[步骤3](#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li206652021677)。|
 |install_ascend_pkgs.sh|昇腾软件包安装脚本。|参考[步骤4](#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li538351517716)。|
 |postbuild.sh|清除不需要保留在容器中的安装包、脚本、代理配置等。|参考[步骤5](#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li154641047879)。|
-
-为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
-
-在软件包下载之后，请参考《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请不要使用该软件包，先联系华为技术支持工程师解决。
-
-使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
-
-运营商客户请访问：[https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction)
-
-企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
 
 >[!NOTE]
 >
@@ -1400,16 +1380,6 @@ DpuInfoCfg:
 
 >[!NOTE]
 >推理需要的其他软件包和代码请用户自行准备。
-
-为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
-
-在软件包下载之后，请参考《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请不要使用该软件包，先联系华为技术支持工程师解决。
-
-使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
-
-运营商客户请访问：[https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction)
-
-企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
 
 本章节以Ubuntu  x86\_64操作系统为例，以下操作步骤中的代码为示例代码，用户可参考示例进行定制化修改，并且建议用户对示例代码和镜像做安全加固，可参考[容器安全加固](./04_security_hardening.md#容器安全加固)。
 

@@ -1,7 +1,5 @@
 # TaskD Worker APIs<a name="ZH-CN_TOPIC_0000002479386850"></a>
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T01:43:27.477Z pushedAt=2026-06-09T02:05:50.647Z -->
-
 ## def init_taskd_worker(rank_id: int, upper_limit_of_disk_in_mb: int = 5000, framework: str = "pt") -> bool<a name="ZH-CN_TOPIC_0000002479226866"></a>
 
 **Function Description<a name="section1931361114330"></a>**

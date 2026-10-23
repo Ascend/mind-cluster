@@ -2,7 +2,7 @@
 
 ## Installing Volcano<a name="ZH-CN_TOPIC_0000002511426351"></a>
 
-- Users who use full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, inference card fault recovery, or inference card fault rescheduling must install a **scheduler** on the master node. This scheduler can be Volcano or another scheduler.
+- Users who use full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, chip fault recovery, or chip fault rescheduling must install a **scheduler** on the management node. This scheduler can be Volcano or another scheduler.
 - If Volcano is used for job scheduling, it is not recommended to create or mount NPU containers through Docker or Containerd instructions and run jobs inside the containers. Otherwise, Volcano scheduling issues may be triggered.
 - Users who only use containerization support and resource monitoring do not need to install Volcano. Please skip this chapter directly.
 
@@ -25,8 +25,8 @@
     Command output:
 
     ```ColdFusion
-    volcanosh/vc-controller-manager      v1.7.0              84c73128cc55        3 days ago          44.5MB
-    volcanosh/vc-scheduler               v1.7.0              e90c114c75b1        3 days ago          188MB
+    volcanosh/vc-controller-manager      v1.9.0              84c73128cc55        3 days ago          44.5MB
+    volcanosh/vc-scheduler               v1.9.0              e90c114c75b1        3 days ago          188MB
     ```
 
     - If correct, perform [Step 2](#li823273914318).
@@ -194,7 +194,7 @@
             enableNodeOrder: false
           - name: conformance
             enableNodeOrder: false
-          - name: volcano-npu_v26.1.0_linux-aarch64   # v26.1.0 is MindCluster version number, which varies according to the actual version in use.
+          - name: volcano-npu_v26.2.0_linux-aarch64   # v26.2.0 is MindCluster version number, which varies according to the actual version in use.
         - plugins:
           - name: drf
             enableNodeOrder: false
@@ -226,7 +226,7 @@
       template:
     ...
             - name: volcano-scheduler
-              image: volcanosh/vc-scheduler:v1.7.0-v26.1.0   # Starting from MindCluster v26.1.0, the tag must include the corresponding version number
+              image: volcanosh/vc-scheduler:v1.9.0-v26.2.0   # Starting from MindCluster v26.1.0, the tag must include the corresponding version number
               args: [ ...
                   ...
                   <strong>--enable-healthz=true   # To ensure normal access to the Volcano health check port, this parameter value must be "true"</strong>
@@ -362,7 +362,7 @@
     </td>
     <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p6613173818516"><a name="p6613173818516"></a><a name="p6613173818516"></a>48</p>
     </td>
-    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p461323812519"><a name="p461323812519"></a><a name="p461323812519"></a><span id="ph128111331314"><a name="ph128111331314"></a><a name="ph128111331314"></a>The number of nodes with an </span>Atlas 900 A3 SuperPoD.</p>
+    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p461323812519"><a name="p461323812519"></a><a name="p461323812519"></a>The number of nodes in a SuperPoD.</p>
     <p id="p1704246153099"><a name="p1704246153099"></a><a name="p1704246153099"></a>Value range: greater than 0. If set to 0, a negative number, or a non-numeric value, it is treated as a configuration error and the default value of 48 is used.</p>
     </td>
     </tr>
@@ -370,10 +370,9 @@
     </td>
     <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p125626567516"><a name="p125626567516"></a><a name="p125626567516"></a>2</p>
     </td>
-    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p25637568515"><a name="p25637568515"></a><a name="p25637568515"></a><span id="ph915032251212"><a name="ph915032251212"></a><a name="ph915032251212"></a>The number of reserved nodes</span> within an Atlas 900 A3 SuperPoD.</p>
+    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p25637568515"><a name="p25637568515"></a><a name="p25637568515"></a>The number of reserved nodes within a SuperPoD.</p>
     <p id="p1704246153100"><a name="p1704246153100"></a><a name="p1704246153100"></a>Value range: greater than or equal to `0`. When set to `0`, no nodes are reserved.</p>
-    <div class="note" id="note1514175285210"><a name="note1514175285210"></a><a name="note1514175285210"></a><span class="notetitle">Note</span><div class="notebody"><p id="p96481321115510"><a name="p96481321115510"></a><a name="p96481321115510"></a>If reserve-nodes is greater than super-pod-size, the following applies:</p>
-    <a name="ul13842528165510"></a><a name="ul13842528165510"></a><ul id="ul13842528165510"><li>If super-pod-size is greater than 2, reserve-nodes is reset to the default value of 2.</li><li>If super-pod-size is less than or equal to 2, reserve-nodes is reset to 0.</li></ul>
+    <div class="note" id="note1514175285210"><a name="note1514175285210"></a><a name="note1514175285210"></a><span class="notetitle">Note</span><div class="notebody"><a name="ul13842528165510"></a><a name="ul13842528165510"></a><ul id="ul13842528165510"><li>If reserve-nodes is greater than or equal to super-pod-size, the following scenarios apply.<ul><li>If super-pod-size is greater than 2, reserve-nodes is reset to 2 by default</li><li>If super-pod-size is less than or equal to 2, reserve-nodes is reset to 0 by default.</li></ul></li><li>When the scheduling policy is chip8-node8-ra64-sp, the reserve-nodes configuration does not take effect.</li></ul>
     </div></div>
     </td>
     </tr>
@@ -406,6 +405,15 @@
     <a name="ul_prefer_previous_node_affinity"></a><a name="ul_prefer_previous_node_affinity"></a><ul id="ul_prefer_previous_node_affinity"><li>In non-fault rescheduling scenarios (e.g., rescheduling after eviction), if all nodes from the previous run are still available, each Pod is scheduled back to its original node to continue running.</li><li>In fault rescheduling scenarios, the scheduler performs node replacement according to the original scheduling logic. For detailed rescheduling strategies for each scheduling policy, refer to <a href="../../../04_usage/03_basic_scheduling/01_affinity_scheduling/04_node_based_affinity.md">Node-Based Affinity</a>.</li></ul>
     </td>
     </tr>
+    <tr id="row_ascend_score_weight"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p_ascend_score_weight_name"><a name="p_ascend_score_weight_name"></a><a name="p_ascend_score_weight_name"></a>ascend.scoreWeight</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p_ascend_score_weight_default"><a name="p_ascend_score_weight_default"></a><a name="p_ascend_score_weight_default"></a>100</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p_ascend_score_weight_desc"><a name="p_ascend_score_weight_desc"></a><a name="p_ascend_score_weight_desc"></a>Unified scaling weight of the Ascend plugin when scoring NPU scheduling nodes. This weight is a unified positive proportional scaling factor that only changes the magnitude of each node's score and does not change the relative order among nodes. With the same magnitude, a larger weight means the Ascend plugin's scoring has a greater impact on the scheduling result.</p>
+    <p>Value range: greater than 0. If it is configured as 0, a negative number, or a non-numeric value, it is treated as a configuration error and the default value 100 is used.</p>
+    <p>This parameter is configured under the arguments of the volcano-npu plugin in volcano-scheduler.conf. Example: <code>ascend.scoreWeight: 100</code>.</p>
+    </td>
+    </tr>
     </tbody>
     </table>
 
@@ -430,7 +438,7 @@
     ...
           containers:
             - name: volcano-scheduler
-              image: volcanosh/vc-scheduler:v1.7.0-v26.1.0   # Starting from MindCluster v26.1.0, the tag must include the corresponding version number
+              image: volcanosh/vc-scheduler:v1.9.0-v26.2.0   # Starting from MindCluster v26.1.0, the tag must include the Volcano version number
               command: ["/bin/ash"]
               args: ["-c", "umask 027; <strong>GOMEMLIMIT=15000000000 GOGC=off</strong> /vc-scheduler      <strong># Add the GOMEMLIMIT=15000000000 and GOGC=off fields</strong>
                       --scheduler-conf=/volcano.scheduler/volcano-scheduler.conf
@@ -754,25 +762,25 @@ To configure switch affinity scheduling, you need to configure the `tor-affinity
 The cluster scheduling Volcano component adds NPU scheduling-related features on top of the open-source Volcano. This functionality can be implemented by integrating the Ascend-volcano-plugin provided by cluster scheduling for developers. The open-source [Volcano](https://volcano.sh/#home_slider) framework supports a plugin mechanism for users to register scheduling plugins and implement different scheduling policies.
 
 >[!NOTE]
->Ascend-volcano-plugin currently supports open-source Volcano v1.7.0 and v1.9.0, and no modifications have been made to the open-source Volcano framework.
+>Ascend-volcano-plugin currently supports open-source Volcano v1.9.0, and no modifications have been made to the open-source Volcano framework.
 
 **Procedure<a name="section2672154791712"></a>**
 
-1. Run the following commands in sequence to pull the official Volcano (using v1.7 as an example) open-source code in the `$GOPATH/src/volcano.sh/` directory.
+1. Run the following commands in sequence to pull the official open-source Volcano code (using v1.9 as an example) in the `$GOPATH/src/volcano.sh/` directory.
 
     ```shell
     mkdir -p $GOPATH/src/volcano.sh/
     cd $GOPATH/src/volcano.sh/
-    git clone -b release-1.7 https://github.com/volcano-sh/volcano.git
+    git clone -b release-1.9 https://github.com/volcano-sh/volcano.git
     ```
 
 2. Rename the obtained [ascend-for-volcano](https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-for-volcano) source code to ascend-volcano-plugin, and upload it to the plugin path of the official open-source Volcano code (`$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/`).
-3. <a name="li627818212613"></a>Run the following commands in sequence to compile the open-source Volcano binary files and the Huawei NPU scheduling plugin `.so` file. Select the corresponding parameter for the `build.sh` script based on the open-source code version, for example, v1.7.0.
+3. <a name="li627818212613"></a>Run the following commands in sequence to compile the open-source Volcano binary files and the Huawei NPU scheduling plugin `.so` file. Select the corresponding parameter for the `build.sh` script based on the open-source code version, for example, v1.9.0.
 
     ```shell
     cd $GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/build
     chmod +x build.sh
-    ./build.sh v1.7.0
+    ./build.sh v1.9.0
     ```
 
     >[!NOTE]
@@ -795,11 +803,11 @@ The cluster scheduling Volcano component adds NPU scheduling-related features on
 
 4. Choose one of the following two methods to start the volcano-scheduler component.
     - Using the startup YAML of the MindCluster Volcano
-        1. Run the following command to build the Volcano image. Select the corresponding parameter for the image based on the open-source code version, such as v1.7.0.
+        1. Run the following command to build the Volcano image. Select the corresponding parameter for the image based on the open-source code version, such as v1.9.0.
 
             ```shell
-            # Starting from MindCluster v26.1.0, the tag must include the corresponding version number.
-            docker build --no-cache -t volcanosh/vc-scheduler:v1.7.0-v26.1.0 ./ -f ./Dockerfile-scheduler
+            # Starting from MindCluster v26.1.0, the tag must include the Volcano version number.
+            docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0-v26.2.0 ./ -f ./Dockerfile-scheduler
             ```
 
         2. Run the following command to start the volcano-scheduler component.
@@ -844,12 +852,12 @@ The cluster scheduling Volcano component adds NPU scheduling-related features on
             ENTRYPOINT ["/vc-scheduler"]
             ```
 
-        2. Run the following commands in sequence to build the Volcano image. Select the corresponding tag for the image based on the open-source code version, such as v1.7.0.
+        2. Run the following commands in sequence to build the Volcano image. Select the corresponding tag for the image based on the open-source code version, such as v1.9.0.
 
             ```shell
             cd $GOPATH/src/volcano.sh/volcano
-            # Starting from MindCluster v26.1.0, the tag must include the corresponding version number.
-            docker build --no-cache -t volcanosh/vc-scheduler:v1.7.0-v26.1.0 ./ -f installer/dockerfile/scheduler/Dockerfile
+            # Starting from MindCluster v26.1.0, the tag must include the Volcano version number.
+            docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0-v26.2.0 ./ -f installer/dockerfile/scheduler/Dockerfile
             ```
 
         3. Modify `volcano-development.yaml`. The file path is `$GOPATH/src/volcano.sh/volcano/installer/volcano-development.yaml`.
@@ -869,7 +877,7 @@ The cluster scheduling Volcano component adds NPU scheduling-related features on
                    - name: gang
                      enablePreemptable: false
                    - name: conformance
-                   <strong>- name: volcano-npu_v26.1.0_linux-x86_64    # Custom scheduling plugin added in ConfigMap. Ensure version compatibility between components.</strong>
+                   <strong>- name: volcano-npu_v26.2.0_linux-x86_64    # Custom scheduling plugin added in ConfigMap. Ensure version compatibility between components.</strong>
                  - plugins:
                    - name: overcommit
                    - name: drf
@@ -894,7 +902,7 @@ The cluster scheduling Volcano component adds NPU scheduling-related features on
               template:
             ...
                     - name: volcano-scheduler
-                      image: volcanosh/vc-scheduler:v1.7.0-v26.1.0   # Starting from MindCluster v26.1.0, the tag must include the corresponding version number
+                      image: volcanosh/vc-scheduler:v1.9.0-v26.2.0   # Starting from MindCluster v26.1.0, the tag must include the Volcano version number
                       args:
                         - --logtostderr
                         - --scheduler-conf=/volcano.scheduler/volcano-scheduler.conf

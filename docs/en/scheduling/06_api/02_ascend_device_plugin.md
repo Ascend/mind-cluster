@@ -12,11 +12,11 @@ The NPU information reported by Ascend Device Plugin is shown in [Table 1](#tabl
 
 |Name|Meaning|Description|
 |--|--|--|
-|huawei.com/Ascend910|Marks the chip name information available on the current node. When multiple chips exist, they are concatenated with commas. |<ul><li>This field is currently being phased out and will no longer be presented in subsequent versions. By default, the available chips on a node are maintained by Volcano, and this field does not take effect. To make it take effect, you can modify the Volcano configuration parameter "self-maintain-available-card" to false.</li><li>Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD use huawei.com/npu as the parameter name.</li></ul>|
-|huawei.com/Ascend910-NetworkUnhealthy|Marks the chip name information for chips with unhealthy networks on the current node. When multiple chips exist, they are concatenated with commas. |Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD use huawei.com/npu-NetworkUnhealthy as the parameter name.|
-|huawei.com/Ascend910-Unhealthy|Marks the chip name information for unhealthy chips on the current node. When multiple chips exist, they are concatenated with commas. |Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD use huawei.com/npu-Unhealthy as the parameter name.|
-|huawei.com/Ascend910-Recovering|Marks the chips that are currently being recovered on the current node. When multiple chips exist, they are concatenated with commas. |Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD use huawei.com/npu-Recovering as the parameter name.|
-|huawei.com/Ascend910-Fault|Records specific fault information of the chip. |<ul><li>Array object. The object contains seven fields: fault_type, npu_name, large_model_fault_level, fault_level, fault_handling, fault_code, and fault_time_and_level_map.</li><li>Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD use huawei.com/npu-Fault as the parameter name.</li></ul>|
+|huawei.com/Ascend910|Marks the chip name information available on the current node. When multiple chips exist, they are concatenated with commas. |<ul><li>This field is currently being phased out and will no longer be presented in subsequent versions. By default, the available chips on a node are maintained by Volcano, and this field does not take effect. To make it take effect, you can modify the Volcano configuration parameter "self-maintain-available-card" to false.</li><li><term>Ascend 950PR&950DT products</term> use huawei.com/npu as the parameter name.</li></ul>|
+|huawei.com/Ascend910-NetworkUnhealthy|Marks the chip name information for chips with unhealthy networks on the current node. When multiple chips exist, they are concatenated with commas. |<term>Ascend 950PR&950DT products</term> use huawei.com/npu-NetworkUnhealthy as the parameter name.|
+|huawei.com/Ascend910-Unhealthy|Marks the chip name information for unhealthy chips on the current node. When multiple chips exist, they are concatenated with commas. |<term>Ascend 950PR&950DT products</term> use huawei.com/npu-Unhealthy as the parameter name.|
+|huawei.com/Ascend910-Recovering|Marks the chips that are currently being recovered on the current node. When multiple chips exist, they are concatenated with commas. |<term>Ascend 950PR&950DT products</term> use huawei.com/npu-Recovering as the parameter name.|
+|huawei.com/Ascend910-Fault|Records specific fault information of the chip. |<ul><li>Array object. The object contains seven fields: fault_type, npu_name, large_model_fault_level, fault_level, fault_handling, fault_code, and fault_time_and_level_map.</li><li><term>Ascend 950PR&950DT products</term> use huawei.com/npu-Fault as the parameter name.</li></ul>|
 |-fault_type|Fault type. |<ul><li>CardUnhealthy: Chip fault</li><li>CardNetworkUnhealthy: Chip network fault</li><li>NodeUnhealthy: Node fault</li></ul>|
 |-npu_name|Name of the faulty chip. It is empty for a node fault. |String|
 |<p>-large_model_fault_level</p><p>-fault_level</p><p>-fault_handling</p>|Fault handling type. The value is empty for a node fault. |<ul><li>NotHandleFault: No handling</li><li>RestartRequest: In inference scenarios, the inference request needs to be re-executed. In training scenarios, the training workload needs to be re-executed.</li><li>RestartBusiness: The workload needs to be re-executed.</li><li>FreeRestartNPU: Affects workload execution. The chip needs to be reset when it is idle.</li><li>RestartNPU: Directly reset the chip and re-execute the workload.</li><li>SeparateNPU: Isolate chip</li><li>PreSeparateNPU: Pre-isolate chip. Whether to reschedule is determined based on the actual running status of the training task.</li></ul><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><ul><li>The large_model_fault_level, fault_level, and fault_handling parameters have the same function. It is recommended to use fault_handling.</li><li>If an inference task subscribes to fault information, and a RestartRequest fault occurs on the inference card used by the task, and the fault duration does not exceed 60 seconds, task rescheduling is not performed. If the fault duration exceeds 60 seconds and the fault is not recovered, the chip is isolated and task rescheduling is performed.</li></ul></div></div>|
@@ -112,7 +112,7 @@ The NPU device fault information reported by Ascend Device Plugin is shown in [T
 
 **deviceNameCustomization.json<a name="section579455712489"></a>**
 
-`deviceNameCustomization.json` supports customizing device names. When building the Ascend Device Plugin image, place this file in the same directory as the binary package to change the resource type and resource name displayed by Ascend Device Plugin to custom names. Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD do not currently support this feature.
+`deviceNameCustomization.json` supports customizing device names. When building the Ascend Device Plugin image, place this file in the same directory as the binary package to change the resource type and resource name displayed by Ascend Device Plugin to custom names. <term>Ascend 950PR&950DT products</term> do not currently support this feature.
 
 **Table 7** Custom device names supported by deviceNameCustomization.json
 
@@ -346,11 +346,11 @@ Stores the save path and start/stop switch for the job's iteration latency and g
 
 **Fault Levels in faultCode.json<a name="section579455712489"></a>**
 
-The hierarchical handling based on different chip fault levels is introduced in resumable training. If you need to modify the fault level of a fault code, see [(Optional) Configuring Chip Fault Levels](../04_usage/04_resumable_training/03_configuration/01_configuring_fault_detection_levels.md#optional-configuring-chip-fault-levels).
+The hierarchical handling based on different chip fault levels is introduced in resumable training. If you need to modify the fault level of a fault code, see [(Optional) Configuring Chip Fault Levels](../04_usage/04_fault_detection_and_diagnosis/03_configuration/03_chip_faults.md#optional-configuring-the-chip-fault-level).
 
 After Ascend Device Plugin obtains chip fault codes from the driver, it classifies the faults into the following levels based on their impact on devices and workloads. For a detailed description, see [Table 1](#table7618951152212).
 
-**Table 1** Fault level and handling polices
+**Table 1** Fault level and handling policies
 
 <a name="table7618951152212"></a>
 <table><thead align="left"><tr id="row461812518228"><th class="cellrowborder" valign="top" width="19.06%" id="mcps1.2.5.1.1"><p id="p12618851162220"><a name="p12618851162220"></a><a name="p12618851162220"></a>Fault Handling Policy</p>
@@ -424,7 +424,7 @@ After Ascend Device Plugin obtains chip fault codes from the driver, it classifi
 </td>
 <td class="cellrowborder" valign="top" width="35.78%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002171521445_p1354813311915"><a name="zh-cn_topic_0000002171521445_p1354813311915"></a><a name="zh-cn_topic_0000002171521445_p1354813311915"></a>Handled based on the value of the subHealthyStrategy parameter configured in the job YAML. For details, see <a href="./15_yaml_configuration.md">Table 1 YAML parameter description</a>.</p>
 </td>
-<td class="cellrowborder" valign="top" width="20.349999999999998%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002171521445_p3352524125220"><a name="zh-cn_topic_0000002171521445_p3352524125220"></a><a name="zh-cn_topic_0000002171521445_p3352524125220"></a>When a sub-health fault occurs on a chip, it needs to be handled according to the policy in <a href="../04_usage/04_resumable_training/03_configuration/02_configuring_fault_handling_policies.md#configuring-hot-switching">Configuring YAML</a>.</p>
+<td class="cellrowborder" valign="top" width="20.349999999999998%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002171521445_p3352524125220"><a name="zh-cn_topic_0000002171521445_p3352524125220"></a><a name="zh-cn_topic_0000002171521445_p3352524125220"></a>When a sub-health fault occurs on a chip, it needs to be handled according to the policy in <a href="../04_usage/05_fault_recovery/01_resumable_training/02_configuration/01_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002511426471">Configuring YAML</a>.</p>
 
 <div class="note" id="zh-cn_topic_0000002171521445_note7936204710536"><a name="zh-cn_topic_0000002171521445_note7936204710536"></a><a name="zh-cn_topic_0000002171521445_note7936204710536"></a><span class="notetitle">Note</span><div class="notebody"><p id="zh-cn_topic_0000002171521445_p15222114115810"><a name="zh-cn_topic_0000002171521445_p15222114115810"></a><a name="zh-cn_topic_0000002171521445_p15222114115810"></a>If a fault of another level occurs on the chip subsequently, the SubHealthFault</p>
 <p id="zh-cn_topic_0000002171521445_p109369476532"><a name="zh-cn_topic_0000002171521445_p109369476532"></a><a name="zh-cn_topic_0000002171521445_p109369476532"></a>handling policy does not affect the handling of faults at other levels.</p>
@@ -472,7 +472,7 @@ If the user does not manually modify the `faultCustomization.json` file, Ascend 
 
 ## Custom UnifiedBus Device Faults<a name="ZH-CN_TOPIC_0000002511426735"></a>
 
-Resumable training performs hierarchical handling based on different levels of UnifiedBus device faults. If users need to modify the fault level of a fault code, see [(Optional) Configuring UnifiedBus Device Fault Levels](../04_usage/04_resumable_training/03_configuration/01_configuring_fault_detection_levels.md#optional-configuring-bus-device-fault-levels).
+Resumable training performs hierarchical handling based on different levels of UnifiedBus device faults. If users need to modify the fault level of a fault code, see [(Optional) Configuring UnifiedBus Device Fault Levels](../04_usage/04_fault_detection_and_diagnosis/03_configuration/04_network_faults.md#optional-configuring-the-bus-device-fault-level).
 
 After Ascend Device Plugin obtains fault codes from the driver, it classifies faults into the following five levels based on their impact on devices and workloads, and performs corresponding rescheduling handling. For detailed description, see [Table 1](#table212253274720).
 

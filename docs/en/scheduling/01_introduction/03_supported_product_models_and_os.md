@@ -1,7 +1,5 @@
 # Supported Product Forms and OSs
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-27T02:19:12.376Z pushedAt=2026-08-27T02:26:43.515Z -->
-
 The product forms supported by the management nodes, compute nodes, and storage nodes in the cluster scenario differ from each other; among them, the product forms supported by the compute nodes are consistent with those supported in the single-server scenario.
 
 ## Cluster Scenario
@@ -17,27 +15,40 @@ In the single-server scenario, the product forms and operating systems supported
 **Table 1**  Supported product forms and OSs
 
 <a name="tableAtlasGeneral"></a>
-<table><thead align="left"><tr id="rowAtlasGeneralH"><th class="cellrowborder" valign="top" width="15.93%" id="mcpsGen1.2.4.1.1"><p id="pGenSeries"><a name="pGenSeries"></a><a name="pGenSeries"></a>Product Series</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.67%" id="mcpsGen1.2.4.1.2"><p id="pGenName"><a name="pGenName"></a><a name="pGenName"></a>Product Name</p>
-</th>
-<th class="cellrowborder" valign="top" width="50.4%" id="mcpsGen1.2.4.1.3"><p id="pGenOS"><a name="pGenOS"></a><a name="pGenOS"></a>Operating System</p>
-</th>
+<table><thead align="left"><tr>
+<th>Product Series</th>
+<th>Product</th>
+<th>OS</th>
 </tr>
 </thead>
-<tbody><tr id="rowAtlas950"><td class="cellrowborder" rowspan="4" valign="top" width="15.93%" headers="mcpsGen1.2.4.1.1 "><p id="pAtlas950"><a name="pAtlas950"></a><a name="pAtlas950"></a><span id="phAtlas950"><a name="phAtlas950"></a><a name="phAtlas950"></a>Ascend 950 products</span></p>
+<tbody><tr id="rowAtlas950"><td class="cellrowborder" rowspan="7" valign="top" width="15.93%" headers="mcpsGen1.2.4.1.1 "><p id="pAtlas950"><a name="pAtlas950"></a><a name="pAtlas950"></a><span id="phAtlas950"><a name="phAtlas950"></a><a name="phAtlas950"></a>Ascend 950PR&950DT products</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas950SuperPoD"><a name="pAtlas950SuperPoD"></a><a name="pAtlas950SuperPoD"></a><span id="phAtlas950SuperPoD"><a name="phAtlas950SuperPoD"></a><a name="phAtlas950SuperPoD"></a>Atlas 950 SuperPoD</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas950OS"><a name="pAtlas950OS"></a><a name="pAtlas950OS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
 </td>
 </tr>
-<tr id="rowAtlas850"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850Server"><a name="pAtlas850Server"></a><a name="pAtlas850Server"></a><span id="phAtlas850Server"><a name="phAtlas850Server"></a><a name="phAtlas850Server"></a>Atlas 850E SuperPoD</span></p>
+<tr id="rowAtlas950SuperPoDFlex"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas950SuperPoDFlex"><a name="pAtlas950SuperPoDFlex"></a><a name="pAtlas950SuperPoDFlex"></a><span id="phAtlas950SuperPoDFlex"><a name="phAtlas950SuperPoDFlex"></a><a name="phAtlas950SuperPoDFlex"></a>Atlas 950 SuperPoD Flex</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas950SuperPoDFlexOS"><a name="pAtlas950SuperPoDFlexOS"></a><a name="pAtlas950SuperPoDFlexOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
+</td>
+</tr>
+<tr id="rowAtlas850"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850Server"><a name="pAtlas850Server"></a><a name="pAtlas850Server"></a><span id="phAtlas850Server"><a name="phAtlas850Server"></a><a name="phAtlas850Server"></a>Atlas 850E</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850ServerOS"><a name="pAtlas850ServerOS"></a><a name="pAtlas850ServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
 </td>
 </tr>
-<tr id="rowAtlas850E"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850EServer"><a name="pAtlas850EServer"></a><a name="pAtlas850EServer"></a><span id="phAtlas850EServer"><a name="phAtlas850EServer"></a><a name="phAtlas850EServer"></a>Atlas 650E server</span></p>
+<tr id="rowAtlas850"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850Server"><a name="pAtlas850Server"></a><a name="pAtlas850Server"></a><span id="phAtlas850Server"><a name="phAtlas850Server"></a><a name="phAtlas850Server"></a>Atlas 850</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850ServerOS"><a name="pAtlas850ServerOS"></a><a name="pAtlas850ServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
+</td>
+</tr>
+<tr id="rowAtlas850E"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850EServer"><a name="pAtlas850EServer"></a><a name="pAtlas850EServer"></a><span id="phAtlas850EServer"><a name="phAtlas850EServer"></a><a name="phAtlas850EServer"></a>Atlas 650E</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850EServerOS"><a name="pAtlas850EServerOS"></a><a name="pAtlas850EServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
+</td>
+</tr>
+<tr id="rowAtlas850E"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850EServer"><a name="pAtlas850EServer"></a><a name="pAtlas850EServer"></a><span id="phAtlas850EServer"><a name="phAtlas850EServer"></a><a name="phAtlas850EServer"></a>Atlas 650</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850EServerOS"><a name="pAtlas850EServerOS"></a><a name="pAtlas850EServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
 </td>
@@ -97,17 +108,17 @@ In the single-server training scenario, the supported product forms and OSs are 
 <p id="p1531492319428"><a name="p1531492319428"></a><a name="p1531492319428"></a></p>
 <p id="p9314152374214"><a name="p9314152374214"></a><a name="p9314152374214"></a></p>
 </td>
-<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p5314102315424"><a name="p5314102315424"></a><a name="p5314102315424"></a><span id="ph1831422311424"><a name="ph1831422311424"></a><a name="ph1831422311424"></a>Atlas 200T A2 Box16 heterogeneous subrack</span></p>
+<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p5314102315424"><a name="p5314102315424"></a><a name="p5314102315424"></a><span id="ph1831422311424"><a name="ph1831422311424"></a><a name="ph1831422311424"></a>Atlas 200T A2 Box16</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul66426318579"></a><a name="ul66426318579"></a><ul id="ul66426318579"><li>Debian 10.0 for x86_64</li><li>Debian 11.7 (5.10.0-103-bili kernel)</li><li>Debian 12.0 (5.15.152.ve.10 kernel)</li><li>Ubuntu 20.04.1 for x86_64</li><li>Ubuntu 22.04 for x86_64</li><li>Ubuntu 22.04.1 for x86_64 (5.16.20-051620-generic kernel)</li><li>Ubuntu 22.04.5 for x86_64 (5.15.0-119-generic kernel)</li><li>Tlinux 3.1 for x86_64</li><li>Tlinux 3.2 for x86_64</li><li>Tlinux 4.0 for x86_64 (6.6.80.29.tl4.x86_64 kernel)</li><li>openEuler 22.03 LTS SP4 for x86_64</li><li>openEuler 24.03 LTS for x86_64</li><li>openEuler 24.03 LTS SP1 for x86_64</li></ul>
 </td>
 </tr>
-<tr id="row531414237429"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p831482324215"><a name="p831482324215"></a><a name="p831482324215"></a><span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 800T A2 training server</span></p>
+<tr id="row531414237429"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p831482324215"><a name="p831482324215"></a><a name="p831482324215"></a><span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 800T A2</span></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul20696163813553"></a><a name="ul20696163813553"></a><ul id="ul20696163813553"><li>CentOS 7.6 for aarch64</li><li>CTYunOS 22.06 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>Kylin V10 SP3 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V20 1050u2e for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li><li>Ubuntu 22.04 for aarch64</li><li>Ubuntu 22.04.4 for aarch64 (6.5.0-18-generic kernel)</li><li>Ubuntu 24.04 LTS for aarch64</li><li>openEuler 22.03 for aarch64</li><li>openEuler 22.03 LTS SP2 for aarch64</li><li>openEuler 22.03 LTS SP4 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>BC-Linux_21.10 U4  for aarch64</li></ul>
 </td>
 </tr>
-<tr id="row5314923164214"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p11314172324210"><a name="p11314172324210"></a><a name="p11314172324210"></a><span id="ph1531415237425"><a name="ph1531415237425"></a><a name="ph1531415237425"></a>Atlas 900 A2 PoD cluster basic unit</span></p>
+<tr id="row5314923164214"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p11314172324210"><a name="p11314172324210"></a><a name="p11314172324210"></a><span id="ph1531415237425"><a name="ph1531415237425"></a><a name="ph1531415237425"></a>Atlas 900 A2 PoD</span></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul0428918809"></a><a name="ul0428918809"></a><ul id="ul0428918809"><li>BC-Linux-for-Euler-21.10 for aarch64</li><li>BC-Linux_21.10 U4 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>Kylin V11 for aarch64</li><li>CTYunOS 22.06 for aarch64</li><li>openEuler 22.03 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>Ubuntu 22.04 for aarch64</li><li>Ubuntu 24.04 LTS for aarch64</li><li>HCE 2.0  for aarch64</li></ul>
 </td>
@@ -126,12 +137,12 @@ In the single-server training scenario, the supported product forms and OSs are 
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul1330454618016"></a><a name="ul1330454618016"></a><ul id="ul1330454618016"><li>HCE 2.0 for aarch64</li><li>Debian 10.2 for aarch64</li><li>BC-Linux_21.10 U4  for aarch64</li><li>MTOS for aarch64</li><li>openEuler 24.03 LTS SP1  for aarch64</li><li>openEuler 22.03 LTS SP1 for aarch64 (6.6.0-72.0.0.76.oe2403sp1.aarch64 kernel) </li><li>CentOS 7.5 for aarch64</li><li>Linux Kernel 6.6 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>CTYunOS 4.0 for aarch64</li><li><span id="ph103053469018"><a name="ph103053469018"></a><a name="ph103053469018"></a>AntOS</span> 6.6.47 for aarch64</li><li>Kylin V10 SP3 2403 for aarch64</li><li>Kylin V11 for aarch64</li><li>Velinux 2.0 for aarch64</li><li>VesselOS 2.0 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>
 </tr>
-<tr id="row73155239422"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1231542318428"><a name="p1231542318428"></a><a name="p1231542318428"></a><span id="ph1031518232426"><a name="ph1031518232426"></a><a name="ph1031518232426"></a>Atlas 800T A3 SuperPoD server</span></p>
+<tr id="row73155239422"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1231542318428"><a name="p1231542318428"></a><a name="p1231542318428"></a><span id="ph1031518232426"><a name="ph1031518232426"></a><a name="ph1031518232426"></a>Atlas 800T A3</span></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul19518634212"></a><a name="ul19518634212"></a><ul id="ul19518634212"><li>openEuler 22.03 LTS SP4 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>CUlinux 3.0 for aarch64</li><li>CUlinux 4.0 for aarch64</li><li>HCE 2.0.2506 for aarch64</li><li>Velinux 2.0 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>
 </tr>
-<tr id="row16507172322215"><td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p166420278225"><a name="p166420278225"></a><a name="p166420278225"></a><span id="ph064214271224"><a name="ph064214271224"></a><a name="ph064214271224"></a>A200T A3 Box8 SuperPoD server</span></p>
+<tr id="row16507172322215"><td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p166420278225"><a name="p166420278225"></a><a name="p166420278225"></a><span id="ph064214271224"><a name="ph064214271224"></a><a name="ph064214271224"></a>A200T A3 Box8</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul164242719228"></a><a name="ul164242719228"></a><ul id="ul164242719228"><li>Tlinux 3.1 for x86_64</li><li>Tlinux 4.0 for x86_64 (6.6.80-29.tl4.x86_64 kernel) </li><li>Velinux 1.4 for x86_64</li></ul>
 </td>
@@ -210,24 +221,24 @@ In the single-server inference scenario, the supported product forms and operati
 <tr id="row12748144512318"><td class="cellrowborder" rowspan="3" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p19470381257"><a name="p19470381257"></a><a name="p19470381257"></a><span id="ph996833614580"><a name="ph996833614580"></a><a name="ph996833614580"></a>Atlas A2 inference products</span></p>
 <p id="p722736189"><a name="p722736189"></a><a name="p722736189"></a></p>
 </td>
-<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p159463383518"><a name="p159463383518"></a><a name="p159463383518"></a><span id="ph16179151202"><a name="ph16179151202"></a><a name="ph16179151202"></a>Atlas 800I A2 inference server</span></p>
+<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p159463383518"><a name="p159463383518"></a><a name="p159463383518"></a><span id="ph16179151202"><a name="ph16179151202"></a><a name="ph16179151202"></a>Atlas 800I A2</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul1491814439342"></a><a name="ul1491814439342"></a><ul id="ul1491814439342"><li>AntOS 6.6 for aarch64</li><li>BC-Linux-for-Euler-21.10 for aarch64</li><li>BC-Linux_21.10 U4  for aarch64</li><li>Euler 2.12 for aarch64</li><li>Euler 2.13 for aarch64</li><li>Euler 2.15 for aarch64</li><li>CentOS 7.6 for aarch64</li><li>CTYunOS 22.06 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>Kylin V10 SP3 for aarch64</li><li>Kylin V11 for aarch64</li><li>openEuler 22.03 LTS for aarch64</li><li>openEuler 22.03 LTS SP4 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>UOS V20 1050u2e for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li><li>Ubuntu 22.04 for aarch64</li><li>Ubuntu 24.04 LTS for aarch64</li></ul>
 </td>
 </tr>
-<tr id="row4711679201"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1171275208"><a name="p1171275208"></a><a name="p1171275208"></a><span id="ph9484121219204"><a name="ph9484121219204"></a><a name="ph9484121219204"></a>A200I A2 Box heterogeneous subrack</span></p>
+<tr id="row4711679201"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1171275208"><a name="p1171275208"></a><a name="p1171275208"></a><span id="ph9484121219204"><a name="ph9484121219204"></a><a name="ph9484121219204"></a>A200I A2 Box</span></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul115263163208"></a><a name="ul115263163208"></a><ul id="ul115263163208"><li>Velinux 1.2 for x86_64</li><li>Ubuntu 22.04 LTS for x86_64</li><li>openEuler 22.03 LTS for x86_64</li></ul>
 </td>
 </tr>
-<tr id="row022717618816"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1927840182513"><a name="p1927840182513"></a><a name="p1927840182513"></a><span id="ph10949202261219"><a name="ph10949202261219"></a><a name="ph10949202261219"></a>Atlas 200I A2 Box16 heterogeneous subrack</span></p>
+<tr id="row022717618816"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1927840182513"><a name="p1927840182513"></a><a name="p1927840182513"></a><span id="ph10949202261219"><a name="ph10949202261219"></a><a name="ph10949202261219"></a>Atlas 200I A2 Box16</span></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul147601946131620"></a><a name="ul147601946131620"></a><ul id="ul147601946131620"><li>Debian 10.0 for x86_64</li><li>Debian 11.7 (5.10.0-103-bili kernel)</li><li>Debian 12.0 (5.15.152.ve.10 kernel)</li><li>Ubuntu 20.04.1 for x86_64</li><li>Ubuntu 22.04 for x86_64</li><li>Ubuntu 22.04.1 for x86_64 (5.16.20-051620-generic kernel)</li><li>Tlinux 3.1 for x86_64</li><li>Tlinux 3.2 for x86_64</li><li>Tlinux 4.0 for x86_64 (6.6.80.29.tl4.x86_64 kernel)</li><li>openEuler 22.03 LTS SP4 for x86_64</li><li>openEuler 24.03 LTS for x86_64</li><li>openEuler 24.03 LTS SP1 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row15438111011218"><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p168412537204"><a name="p168412537204"></a><a name="p168412537204"></a><span id="ph791742714211"><a name="ph791742714211"></a><a name="ph791742714211"></a>Atlas A3 inference products</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p143871017213"><a name="p143871017213"></a><a name="p143871017213"></a><span id="ph18760103420211"><a name="ph18760103420211"></a><a name="ph18760103420211"></a>Atlas 800I A3 SuperPoD server</span></p>
+<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p143871017213"><a name="p143871017213"></a><a name="p143871017213"></a><span id="ph18760103420211"><a name="ph18760103420211"></a><a name="ph18760103420211"></a>Atlas 800I A3</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul877545583412"></a><a name="ul877545583412"></a><ul id="ul877545583412"><li>openEuler 22.03 LTS SP4 for aarch64</li><li>Euler 2.13 for aarch64</li><li>CUlinux 3.0 for aarch64</li><li>CUlinux 4.0 for aarch64</li><li>CTYunOS 4.0 for aarch64</li><li>HCE 2.0.2506 for aarch64</li><li>Velinux 2.0 for aarch64</li><li>Kylin V10 SP3 2403 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>

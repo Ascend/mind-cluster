@@ -2,7 +2,8 @@
 
 - To uninstall Ascend Docker Runtime, see [Uninstalling Ascend Docker Runtime](#section6134163311244).
 - To uninstall Container Manager, see [Uninstalling Container Manager](#section1461059103619).
-- To uninstall NPU Exporter, Ascend Device Plugin, K8s RDMA Shared Dev Plugin, Volcano, ClusterD, Ascend Operator, Infer Operator, NodeD, and Resilience Controller, see [Uninstalling Other Components](#section6361146202520).
+- To uninstall Kubectl Plugin, see [Uninstalling Kubectl Plugin](#section1664298135126).
+- To uninstall NPU Exporter, DPU Exporter, Ascend Device Plugin, K8s RDMA Shared Dev Plugin, Volcano, ClusterD, Ascend Operator, Infer Operator, NodeD, Resilience Controller, Agent Core, and Node Collector, see [Uninstalling Other Components](#section6361146202520).
 
 ## Uninstalling Ascend Docker Runtime<a name="section6134163311244"></a>
 
@@ -17,7 +18,7 @@
 >[!NOTE]
 >
 >- If you need to retain one of the container engines, reinstall it for the corresponding scenario after Ascend Docker Runtime is uninstalled.
->- Uninstalling Ascend Docker Runtime will restore the default runtime of Docker or Containerd to runc.
+>- Uninstalling Ascend Docker Runtime will restore the default runtime of Docker, Containerd, or CRI-O to runc.
 
 1. (Optional) Disable pingmesh UnifiedBus network detection.
     1. Run the following command to edit the `pingmesh-config` ConfigMap.
@@ -54,10 +55,17 @@
                 ./Ascend-docker-runtime_{version}_linux-{arch}.run --uninstall --install-scene=containerd
                 ```
 
+            - CRI-O scenario
+
+                ```shell
+                ./Ascend-docker-runtime_{version}_linux-{arch}.run --uninstall --install-scene=crio
+                ```
+
             >[!NOTE]
             >- If the Docker configuration file path is not the default `/etc/docker/daemon.json`, add the `--config-file-path` parameter to specify the configuration file path.
             >- If the Containerd configuration file path is not the default `/etc/containerd/config.toml`, add the `--config-file-path` parameter to specify the configuration file path.
-            >- To uninstall Ascend Docker Runtime in a specified installation path, add the `--install-path=<path>` parameter to the uninstall command.
+            >- If the CRI-O drop-in configuration file path is not the default `/etc/crio/crio.conf.d/99-ascend-runtime.conf`, add the `--config-file-path` parameter to specify the configuration file path.
+            >- To uninstall Ascend Docker Runtime in a specified installation path, add the `--install-path=<path>` parameter to the uninstallation command.
 
             The command output is as follows, indicating a successful uninstallation.
 
@@ -89,9 +97,16 @@
                 ./uninstall.sh containerd containerd <config.toml file path>
                 ```
 
+            - CRI-O scenario
+
+                ```shell
+                ./uninstall.sh crio crio <drop-in file path under crio.conf.d>
+                ```
+
             >[!NOTE]
             >- You can omit the path to the Docker configuration file `daemon.json`. If not specified, `/etc/docker/daemon.json` is used by default.
             >- You can omit the path to the Containerd configuration file `config.toml`. If not specified, `/etc/containerd/config.toml` is used by default.
+            >- You can omit the CRI-O drop-in file path. If not specified, `/etc/crio/crio.conf.d/99-ascend-runtime.conf` is used by default.
 
         The command output example is as follows, indicating a successful uninstallation.
 
@@ -113,6 +128,12 @@
 
         ```shell
         systemctl daemon-reload && systemctl restart containerd
+        ```
+
+    - CRI-O scenario
+
+        ```shell
+        systemctl daemon-reload && systemctl restart crio
         ```
 
     >[!NOTE]
@@ -158,6 +179,20 @@ Use the deployment script (`deploy.sh`) for uninstallation. The script automatic
     ```shell
     rm -rf /var/log/mindx-dl/container-manager
     ```
+
+## Uninstalling Kubectl Plugin<a name="section1664298135126"></a>
+
+Kubectl Plugin is a client command-line tool installed to the `/usr/local/bin` directory through the installation script (`install.sh`). To uninstall it, delete the plugin files.
+
+On the user machine where Kubectl Plugin is installed, run the following command to delete the plugin files.
+
+```shell
+rm -f /usr/local/bin/kubectl-ascend_diag /usr/local/bin/kubectl-clusterops
+```
+
+>[!NOTE]
+>
+> - Uninstalling Kubectl Plugin does not affect the Agent Core and Node Collector services already deployed in the cluster.
 
 ## Uninstalling Other Components<a name="section6361146202520"></a>
 
@@ -242,10 +277,4 @@ Uninstalling cluster scheduling components is supported. You can uninstall compo
 
     ```shell
     rm -rf /var/log/mindx-dl/clusterd
-    ```
-
-5. (Optional) When uninstalling Resilience Controller, if certificates and KubeConfig files are imported, you need to delete them. Confirm before deleting.
-
-    ```shell
-    rm -rf /etc/mindx-dl/resilience-controller
     ```

@@ -1,13 +1,13 @@
 # Feature Description<a name="ZH-CN_TOPIC_0000002511347091"></a>
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-22T09:45:42.901Z pushedAt=2026-06-22T09:46:04.501Z -->
-
 Basic scheduling features:
 
-- Training jobs: [Full-NPU Scheduling](../../01_introduction/02_feature_description.md#full-npu-scheduling), [Multi-Level Scheduling](../../01_introduction/02_feature_description.md#multi-level-scheduling), and [Resumable Training](../../04_usage/04_resumable_training/00_feature_description.md).
-- Inference jobs: [Full-NPU Scheduling](../../01_introduction/02_feature_description.md#full-npu-scheduling), [Recovery of Inference Card Faults](../../01_introduction/02_feature_description.md#recovery-of-inference-card-faults), and [Rescheduling upon Inference Card Faults](../../01_introduction/02_feature_description.md#rescheduling-upon-inference-card-faults).
+- Training jobs: [Full-NPU Scheduling](../../01_introduction/02_feature_description.md#full-npu-scheduling), [Multi-Level Scheduling](../../01_introduction/02_feature_description.md#multi-level-scheduling), and [Resumable Training](../05_fault_recovery/01_resumable_training/00_feature_description.md).
+- Inference jobs: [Full-NPU Scheduling](../../01_introduction/02_feature_description.md#full-npu-scheduling) and [Rescheduling](../../01_introduction/02_feature_description.md).
 
     Different features depend on different components. For details, see the [Basic Scheduling](../../01_introduction/02_feature_description.md#basic-scheduling) chapter.
+
+    Ascend Device Plugin supports reporting the NUMA node of an NPU device to kubelet. If you need to enable the NUMA affinity scheduling policy, you can only use the native Kubernetes scheduler. NUMA node information query depends on the DCMI interfaces: `dcmi_get_affinity_cpu_info_by_device_id`, `dcmiv2_get_affinity_cpu_info_by_dev_id`, `dcmi_get_device_pcie_info_v2`, and `dcmiv2_get_device_pcie_info`. Please refer to the [DCMI API Reference](https://support.huawei.com/enterprise/en/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=api-reference) provided with the corresponding product to confirm whether it is supported.
 
 This document demonstrates how to deploy and execute training or inference jobs using NPUs based on a certain model. There are differences between the production environment and the examples. The examples in this chapter are for reference only, and you need to modify them according to your production environment.
 
@@ -29,7 +29,7 @@ Ascend Operator provides the following two ways to configure resource informatio
 
 ## Scheduling Time Description<a name="section12177114564719"></a>
 
-In multi-job or single-job scenarios, the reference scheduling time for acjob on the Atlas 800T A2 training server is described as follows. To achieve the following reference times, ensure that the CPU frequency is at least 2.60 GHz and the API Server latency does not exceed 80 milliseconds. The scheduling time refers to the period from when a job is submitted until the Pod status changes to Running..
+In multi-job or single-job scenarios, the reference scheduling time for acjob on the Atlas 800T A2 is described as follows. To achieve the following reference times, ensure that the CPU frequency is at least 2.60 GHz and the API Server latency does not exceed 80 milliseconds. The scheduling time refers to the period from when a job is submitted until the Pod status changes to Running..
 
 - Multi-job scheduling time
     - The peak number of concurrently created single-server single-device jobs is 100, meaning that 100 jobs are created simultaneously using 100 job YAML files, and the scheduling time for these 100 jobs is 107 seconds.

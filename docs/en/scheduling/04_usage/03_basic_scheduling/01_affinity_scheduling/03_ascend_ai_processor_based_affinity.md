@@ -13,13 +13,13 @@ Each device has two HCCS rings with a total of eight Ascend AI processors (A0 to
 ![](../../../../figures/scheduling/Atlas-train.png)
 
 > [!NOTE]
-> The Atlas 800T A2 training server and the Atlas 900 A2 PoD cluster basic unit do not support affinity scheduling of Ascend AI processors.
+> The Atlas 800T A2 and the Atlas 900 A2 PoD do not support affinity scheduling of Ascend AI processors.
 
-### Atlas 200T A2 Box16/Atlas 200I A2 Box16 Heterogeneous Subrack<a name="ZH-CN_TOPIC_0000002479386922"></a>
+### Atlas 200T A2 Box16/Atlas 200I A2 Box16<a name="ZH-CN_TOPIC_0000002479386922"></a>
 
-The Ascend AI processors in the Atlas 200T A2 Box16 heterogeneous subrack and Atlas 200I A2 Box16 heterogeneous subrack are high-performance AI processors developed by Huawei, and the internal AI processors are interconnected via HCCS. Each Atlas 200T A2 Box16 heterogeneous subrack or Atlas 200I A2 Box16 heterogeneous subrack has two HCCS rings with a total of 16 Ascend AI processors. Each HCCS ring has 8 Ascend AI processors. Data exchange can be performed within the same HCCS ring, but communication between different HCCS rings is not possible. That is, the Ascend AI processors allocated to a job (if less than or equal to 8) must be within the same HCCS ring; otherwise, the job will fail to run. The interconnection topology diagram of the Atlas 200T A2 Box16 heterogeneous subrack and Atlas 200I A2 Box16 heterogeneous subrack is shown in [Figure 2](#fig1920102817143).
+The Ascend AI processors in the Atlas 200T A2 Box16 and Atlas 200I A2 Box16 are high-performance AI processors developed by Huawei, and the internal AI processors are interconnected via HCCS. Each Atlas 200T A2 Box16 or Atlas 200I A2 Box16 has two HCCS rings with a total of 16 Ascend AI processors. Each HCCS ring has 8 Ascend AI processors. Data exchange can be performed within the same HCCS ring, but communication between different HCCS rings is not possible. That is, the Ascend AI processors allocated to a job (if less than or equal to 8) must be within the same HCCS ring; otherwise, the job will fail to run. The interconnection topology diagram of the Atlas 200T A2 Box16 and Atlas 200I A2 Box16 is shown in [Figure 2](#fig1920102817143).
 
-**Figure 2** Interconnection topology of Atlas 200T/200I A2 Box16 heterogeneous subrack<a name="fig1920102817143"></a>
+**Figure 2** Interconnection topology of Atlas 200T/200I A2 Box16<a name="fig1920102817143"></a>
 
 ![](../../../../figures/scheduling/interconnection-topology-of-atlas-200t-200i-a2-box16-heterogeneous-subrack.png)
 
@@ -39,19 +39,19 @@ Jobs can request 1, 2, 4, 6, 8, 10, 12, 14, or 16 Ascend AI processors. The requ
 
 ![](../../../../figures/scheduling/unifiedbus-device-network.png)
 
-### A200T A3 Box8 SuperPoD Server, Atlas 800I A3 SuperPoD Server, and Atlas 800T A3 SuperPoD Server<a name="ZH-CN_TOPIC_0000002479386928"></a>
+### A200T A3 Box8, Atlas 800I A3, and Atlas 800T A3<a name="ZH-CN_TOPIC_0000002479386928"></a>
 
-The intra-node affinity of the A200T A3 Box8 SuperPoD server, Atlas 800I A3 SuperPoD server, and Atlas 800T A3 SuperPoD server is basically the same as that of the Atlas 900 A3 SuperPoD.
+The intra-node affinity of the A200T A3 Box8, Atlas 800I A3, and Atlas 800T A3 is basically the same as that of the Atlas 900 A3 SuperPoD.
 
-The Ascend AI processors in the A200T A3 Box8 SuperPoD server, Atlas 800I A3 SuperPoD server, and Atlas 800T A3 SuperPoD server are high-performance AI processors developed by Huawei. Internally, every two Ascend AI processors are interconnected via SIO to form a HiAM module. For example, Ascend AI processors 0 and 1 form a HiAM module. Each A200T A3 Box8 SuperPoD server, Atlas 800I A3 SuperPoD server, and Atlas 800T A3 SuperPoD server contains eight HiAM modules. The HiAM modules are interconnected using HCCS.
+The Ascend AI processors in the A200T A3 Box8, Atlas 800I A3, and Atlas 800T A3 are high-performance AI processors developed by Huawei. Internally, every two Ascend AI processors are interconnected via SIO to form a HiAM module. For example, Ascend AI processors 0 and 1 form a HiAM module. Each A200T A3 Box8, Atlas 800I A3, and Atlas 800T A3 contains eight HiAM modules. The HiAM modules are interconnected using HCCS.
 
 The number of Ascend AI processors that a job can request is 1, 2, 4, 6, 8, 10, 12, 14, or 16. The requested Ascend AI processors must preferentially occupy the entire node. When the number of requested Ascend AI processors is even, the entire HiAM module must be occupied. For example, if a job requests two Ascend AI processors and the remaining Ascend AI processor numbers on the node are 0, 2, 3, and 4, the job can only use Ascend AI processors 2 and 3 because only processors 2 and 3 are in the same HiAM module. The number of Ascend AI processors that a distributed job can request is 2, 4, 6, 8, 10, 12, 14, or 16.
 
-### Atlas 850E SuperPoD<a name="ZH-CN_TOPIC_0000002479386928"></a>
+### Atlas 850E and Atlas 850<a name="ZH-CN_TOPIC_0000002479386928"></a>
 
-The Ascend AI processor in the Atlas 850E SuperPoD is a high-performance AI processor developed by Huawei. Internally, it consists of two compute DIEs and two IO DIEs packaged into a single chip. Each Atlas 850E SuperPoD contains eight Ascend AI processors. The Ascend AI processors are interconnected via HCCS to form a full-mesh connection. Servers are connected through 5808 switches, with each 5808 switch supporting a maximum of 16 Atlas 850E SuperPoDs, totaling 128 Ascend AI processors. A two-layer 5808 switch network can support a 1K-scale SuperPoD, allowing flexible customization of the SuperPoD scale based on requirements.
+The Ascend AI processor in the Atlas 850E and Atlas 850 is a high-performance AI processor developed by Huawei. Internally, it consists of two compute DIEs and two IO DIEs packaged into a single chip. Each SuperPoD contains eight Ascend AI processors. The Ascend AI processors are interconnected via HCCS to form a full-mesh connection. Servers are connected through 5808 switches, with each 5808 switch supporting a maximum of 16 SuperPoDs and a maximum of 128 Ascend AI processors. A two-layer 5808 switch network can support a 1K-scale SuperPoD, allowing flexible customization of the SuperPoD scale based on requirements.
 
-The number of Ascend AI processors that a standalone job can request is 1, 2, 4, or 8. The requested Ascend AI processors must preferentially occupy the entire node. Distributed jobs only support full-NPU scheduling, that is, configured as 8. The scheduling priority is sorted from high to low based on communication efficiency, meaning that scheduling within the node is prioritized. If node resources are insufficient, scheduling is performed on Ascend AI processors within the SuperPoD.
+The number of Ascend AI processors that a standalone job can request is 1 to 8. The requested Ascend AI processors must preferentially occupy the entire node. Distributed jobs only support full-NPU scheduling, that is, configured as 8. The scheduling priority is sorted from high to low based on communication efficiency, meaning that scheduling within the node is prioritized. If node resources are insufficient, scheduling is performed on Ascend AI processors within the SuperPoD.
 
 ### Atlas 950 SuperPoD<a name="ZH-CN_TOPIC_0000002479386928"></a>
 
@@ -85,6 +85,41 @@ Inference servers (with Atlas 300I Duo inference cards) supports affinity schedu
 |duo|false|<ul><li>true: Use Atlas 300I Duo inference cards.</li><li>false: Do not use Atlas 300I Duo inference cards.</li></ul>|
 |npu-310-strategy|chip|<ul><li>card: Schedule by inference card. The number of Ascend AI processors requested does not exceed 2, using Ascend AI processors on the same Atlas 300I Duo inference card.</li><li>chip: Schedule by Ascend AI processor. The number of Ascend AI processors requested does not exceed the maximum number of processors that a single node hosts.</li></ul>|
 |distributed|false|<ul><li>true: Distributed inference scheduling policy. When using chip mode, jobs must be scheduled to an entire Atlas 300I Duo inference card. If the number of Ascend AI processors required by the job is odd, the portion using a single Ascend AI processor will be preferentially scheduled to an Atlas 300I Duo inference card with 1 remaining Ascend AI processor.</li><li>false: Non-distributed inference scheduling policy. When using chip mode, the number of Ascend AI processors requested does not exceed the maximum number of processors that a single node hosts.</li></ul>Regardless of whether it is distributed inference, the scheduling policy for card mode remains unchanged.|
+
+## General In-Node Affinity Scheduling Policy<a name="section_in_node_general_affinity_scheduling_strategy"></a>
+
+The chip affinity scheduling policy is the default in-node chip affinity scheduling policy of Volcano for NPUs. When a job YAML does not have the `huawei.com/schedule_policy` annotation or the deprecated `accelerator-type` label configured, Volcano applies the chip affinity scheduling policy by default to jobs that request the `huawei.com/Ascend910` or `huawei.com/npu` resource. Based on the interconnection (affinity) topology of chips within a node, this policy preferentially allocates the chips requested by a job to a more tightly interconnected domain, reducing cross-chip communication overhead.
+
+### Prerequisites<a name="section_chip_affinity_precondition"></a>
+
+To use the chip affinity scheduling policy, a node must have chip interconnection topology information. A node declares the interconnection (affinity) topology between chips within the node through the `huawei.com/npu.topology` annotation, which is written by Ascend Device Plugin at startup. The annotation value is a nested JSON integer array. Chips in the same sub-array belong to the same, more tightly interconnected domain (for example, the same HCCS ring), and the deeper the nesting, the tighter the interconnection. If the node does not have this annotation configured, Volcano constructs a flat topology based on the number of chips on the node (no grouping, that is, no chip topology affinity). For details about the format, valid values, and self-configuration rules of this annotation, see the "npu.topology Annotation Description" section in [K8s Native Object Description](../../../06_api/12_k8s.md).
+
+### Compatibility Description<a name="section_chip_affinity_compatibility"></a>
+
+- If a job has the `huawei.com/schedule_policy` annotation or the deprecated `accelerator-type` label configured, the chip affinity scheduling policy does not take effect, and the job is scheduled according to the original policy.
+- If a job does not have the preceding annotation or label configured and the node does not declare the `huawei.com/npu.topology` annotation, on <term>Atlas training products</term>, the chip affinity scheduling policy imposes no restriction on the number of chips requested by the job. The job can be scheduled as long as the number of available chips on the node is sufficient.
+
+### Scheduling Principles<a name="section_chip_affinity_strategy_principle"></a>
+
+The scheduling principles of the chip affinity scheduling policy are as follows:
+
+- **Closest interconnection domain first**: The chips requested by a job are preferentially placed in the affinity domain with the closest interconnection (the group with the deepest topology nesting). If the closest affinity domain cannot satisfy the request, the scope is progressively expanded to a larger interconnection domain.
+- **Node preference**: Nodes are scored. A node that can strictly satisfy the chip topology request of a job obtains the highest score and is preferentially selected. A node that can satisfy the request only through soft affinity allocation or eviction obtains a lower score.
+- **Chip-level eviction**: When the available chips on a node cannot satisfy the request of a high-priority job, preemptible jobs that occupy chips on the node (for example, low-priority jobs) can be evicted to release the chips, and then the high-priority job is scheduled.
+
+### Scheduling Mode<a name="section_chip_affinity_schedule_mode"></a>
+
+A job can configure the strictness of chip affinity scheduling through the `huawei.com/schedule.mode` annotation. For details about the values and default behavior of this annotation, see the "huawei.com/schedule.mode" row in the annotations table of [PodGroup](../../../06_api/01_volcano.md#podgroup) and [Pod](../../../06_api/01_volcano.md#pod).
+
+### Single-Node Scheduling Scenario<a name="section_chip_affinity_single_node_scene"></a>
+
+In the single-node scheduling scenario, a job does not need to have the `huawei.com/schedule_policy` annotation configured, and Volcano applies the chip affinity scheduling policy by default. For example, for a single-node job on Atlas 950 SuperPoD Flex (16 Ascend AI processors on a single node, with every eight processors on one interconnection ring), the job only needs to request the `huawei.com/npu` resource without configuring `huawei.com/schedule_policy`. Volcano then preferentially places the chips requested by the job into the same interconnection ring with closer interconnection according to the chip affinity scheduling policy, reducing cross-ring communication overhead.
+
+### Constraints<a name="section_chip_affinity_constraint"></a>
+
+- The number of chips requested by a job cannot be greater than the total number of chips on the node. A single node supports a maximum of 64 chips.
+- When a node has chips whose parameter plane network is unhealthy, you can configure whether to tolerate scheduling to such chips through the `huawei.com/parameterplane.unhealthy-tolerance` annotation: if it is set to `ignore`, jobs are allowed to be scheduled to chips whose parameter plane network is unhealthy; if it is not configured or is set to another value, chips whose parameter plane network is unhealthy are filtered out.
+- If a node declares the `huawei.com/npu.topology` annotation and its value is over-scaled (the maximum chip ID exceeds the number of physical cards on the node), the node is unschedulable on the chip affinity scheduling path.
 
 ## Affinity Policy in Single-Node Scenarios<a name="ZH-CN_TOPIC_0000002511346873"></a>
 
@@ -135,26 +170,26 @@ The scenarios sorted out based on affinity policies and service models are shown
 - Remaining Ascend AI Processors on the node when HCCS affinity is satisfied within a group: To the left of the tilde (~) is the remaining count for the HCCS that meets the requirements, and to the right is the remaining count for the other HCCS. For example, in the case of group A when requesting 1 Ascend AI Processor, the other HCCS may have 0, 1, 2, 3, or 4 remaining Ascend AI Processors.
 - When the number of requested Ascend AI Processors is 8 or more, the request is placed in group A and requires full occupancy.
 
-### Atlas 200T A2 Box16/Atlas 200I A2 Box16 Heterogeneous Subrack<a name="ZH-CN_TOPIC_0000002511346843"></a>
+### Atlas 200T A2 Box16/Atlas 200I A2 Box16<a name="ZH-CN_TOPIC_0000002511346843"></a>
 
 #### Affinity Scheduling Policy<a name="ZH-CN_TOPIC_0000002479386904"></a>
 
-The characteristics and resource utilization rules of the Atlas 200T A2 Box16/Atlas 200I A2 Box16 heterogeneous subrack are shown in [Table 4](#table768417221315).
+The characteristics and resource utilization rules of the Atlas 200T A2 Box16/Atlas 200I A2 Box16 are shown in [Table 4](#table768417221315).
 
-**Table 4** Affinity policy for Atlas 200T A2 Box16/Atlas 200I A2 Box16 heterogeneous subrack
+**Table 4** Affinity policy for Atlas 200T A2 Box16/Atlas 200I A2 Box16
 
 <a name="table768417221315"></a>
 
 | Priority | Policy Name | Policy Description |
 |--|--|--|
 | 1 | HCCS allocation | If the number of requested Ascend AI processors is 1 to 8, they must be scheduled to the same HCCS ring. If the number of requested Ascend AI processors is 10, 12, or 14, the required Ascend AI processors must be evenly distributed across two rings, with corresponding physical addresses also being identical. |
-| 2 | Preferentially occupying a node | Prioritize allocation to nodes that already have Ascend AI processors assigned to reduce fragmentation. Using 1, 2, 4, and 8 as examples, the details are as follows: <ul><li>If requesting 1 Ascend AI processor, prioritize nodes with 1 available Ascend AI processor in the HCCS ring, followed by nodes with 2, 3, up to 8 available processors. For the same quantity, prioritize nodes with fewer total Ascend AI processors.</li><li>If requesting 2 Ascend AI processors, prioritize nodes with 2 available Ascend AI processors in the HCCS ring, followed by nodes with 3, 4, up to 8 available processors. For the same quantity, prioritize nodes with fewer total Ascend AI processors.</li><li>If requesting 4 Ascend AI processors, prioritize nodes with 4 available Ascend AI processors in the HCCS ring, followed by nodes with 5, 6, up to 8 available processors. For the same quantity, prioritize nodes with fewer total Ascend AI processors.</li><li>If requesting 8 Ascend AI processors, only request nodes with 8 available Ascend AI processors in the HCCS ring. For the same quantity, prioritize nodes with fewer total Ascend AI processors.</li></ul><p>When a delivered distributed job may not fully occupy a node according to this principle:</p><ul><li>Phenomenon description: For example, in a cluster of two Atlas 200T A2 Box16 heterogeneous subracks or Atlas 200I A2 Box16 heterogeneous subracks, when submitting 5-processor, 4-processor, and 3-processor jobs simultaneously, the 4-processor and 3-processor jobs may be scheduled to the same node, while the 5-processor job is scheduled to another node.</li><li>Cause analysis: After Volcano schedules a job, there is a delay in Ascend Device Plugin reporting the topology of the scheduled Ascend AI processors to mindx-dl-deviceinfo-${node_name}. This causes Volcano to fail when verifying the number of Ascend AI processors on that node, resulting in the job being scheduled to another node.</li></ul> |
+| 2 | Preferentially occupying a node | Prioritize allocation to nodes that already have Ascend AI processors assigned to reduce fragmentation. Using 1, 2, 4, and 8 as examples, the details are as follows: <ul><li>If requesting 1 Ascend AI processor, prioritize nodes with 1 available Ascend AI processor in the HCCS ring, followed by nodes with 2, 3, up to 8 available processors. For the same quantity, prioritize nodes with fewer total Ascend AI processors.</li><li>If requesting 2 Ascend AI processors, prioritize nodes with 2 available Ascend AI processors in the HCCS ring, followed by nodes with 3, 4, up to 8 available processors. For the same quantity, prioritize nodes with fewer total Ascend AI processors.</li><li>If requesting 4 Ascend AI processors, prioritize nodes with 4 available Ascend AI processors in the HCCS ring, followed by nodes with 5, 6, up to 8 available processors. For the same quantity, prioritize nodes with fewer total Ascend AI processors.</li><li>If requesting 8 Ascend AI processors, only request nodes with 8 available Ascend AI processors in the HCCS ring. For the same quantity, prioritize nodes with fewer total Ascend AI processors.</li></ul><p>When a delivered distributed job may not fully occupy a node according to this principle:</p><ul><li>Phenomenon description: For example, in a cluster of two Atlas 200T A2 Box16s or Atlas 200I A2 Box16, when submitting 5-processor, 4-processor, and 3-processor jobs simultaneously, the 4-processor and 3-processor jobs may be scheduled to the same node, while the 5-processor job is scheduled to another node.</li><li>Cause analysis: After Volcano schedules a job, there is a delay in Ascend Device Plugin reporting the topology of the scheduled Ascend AI processors to mindx-dl-deviceinfo-${node_name}. This causes Volcano to fail when verifying the number of Ascend AI processors on that node, resulting in the job being scheduled to another node.</li></ul> |
 
 #### Resource Request Constraint <a name="ZH-CN_TOPIC_0000002511426829"></a>
 
-**Resource Request Constraints for Atlas 200T A2 Box16/Atlas 200I A2 Box16 Heterogeneous Subrack <a name="section1283218207311"></a>**
+**Resource Request Constraints for Atlas 200T A2 Box16/Atlas 200I A2 Box16 <a name="section1283218207311"></a>**
 
-Based on the service model, the following requirements are imposed on the resource requests for training jobs on the Atlas 200T A2 Box16/Atlas 200I A2 Box16 heterogeneous subrack:
+Based on the service model, the following requirements are imposed on the resource requests for training jobs on the Atlas 200T A2 Box16/Atlas 200I A2 Box16:
 
 - The number of Ascend AI processors requested by a training job cannot exceed the total number of Ascend AI processors in a node.
 - The number of Ascend AI processors requested by a training job is 1 to 8, 10, 12, 14, and 16.
@@ -187,45 +222,45 @@ Based on the service model, the following requirements are imposed on the resour
 - The number of Ascend AI processors requested by a training job can only be 1, 2, 4, 6, 8, 10, 12, 14, or 16.
 - Follow other constraints of the open-source Volcano component.
 
-### Atlas 800I A3/Atlas 800T A3 SuperPoD Server<a name="ZH-CN_TOPIC_0000002479226934"></a>
+### Atlas 800I A3/Atlas 800T A3<a name="ZH-CN_TOPIC_0000002479226934"></a>
 
 #### Affinity scheduling policy<a name="ZH-CN_TOPIC_0000002479226920"></a>
 
-The resource utilization rules for the Atlas 800I A3/Atlas 800T A3 SuperPoD server are shown in [Table 6](#table424284684011).
+The resource utilization rules for the Atlas 800I A3/Atlas 800T A3 are shown in [Table 6](#table424284684011).
 
-**Table 6** Affinity policies for Atlas 800I A3/Atlas 800T A3 SuperPoD server
+**Table 6** Affinity policies for Atlas 800I A3/Atlas 800T A3
 
 <a name="table424284684011"></a>
 
 | Priority | Policy Name | Policy Description |
 |--|--|--|
-| 1 | Preferentially occupying a node | The fewer processors a node has, the higher its priority.<p>When a single-node job is submitted, the job may not fully occupy a node.</p><ul><li>Phenomenon description: For example, on the Atlas 800I A3/Atlas 800T A3 SuperPoD server, when 2-processor and 14-processor jobs are delivered simultaneously, the 2-processor and 14-processor jobs may not be scheduled to the same node.</li><li>Cause analysis: After Volcano schedules a job, there is a delay in the Ascend Device Plugin reporting the topology of the scheduled Ascend AI processors to mindx-dl-deviceinfo-${node_name}. This causes Volcano to fail when verifying the number of Ascend AI processors on the node, and the job is scheduled to another node.</li></ul>|
+| 1 | Preferentially occupying a node | The fewer processors a node has, the higher its priority.<p>When a single-node job is submitted, the job may not fully occupy a node.</p><ul><li>Phenomenon description: For example, on the Atlas 800I A3/Atlas 800T A3, when 2-processor and 14-processor jobs are delivered simultaneously, the 2-processor and 14-processor jobs may not be scheduled to the same node.</li><li>Cause analysis: After Volcano schedules a job, there is a delay in the Ascend Device Plugin reporting the topology of the scheduled Ascend AI processors to mindx-dl-deviceinfo-${node_name}. This causes Volcano to fail when verifying the number of Ascend AI processors on the node, and the job is scheduled to another node.</li></ul>|
 
 #### Resource Request Constraints<a name="ZH-CN_TOPIC_0000002511346857"></a>
 
-Based on the service model, the following requirements apply to training job resource requests for the Atlas 800I A3/Atlas 800T A3 SuperPoD server:
+Based on the service model, the following requirements apply to training job resource requests for the Atlas 800I A3/Atlas 800T A3:
 
 - The number of Ascend AI processors requested by a training job cannot exceed the total number of Ascend AI processors on a node.
 - The number of Ascend AI processors requested by a training job can only be 1, 2, 4, 6, 8, 10, 12, 14, or 16.
 - Other constraints of the open-source Volcano component must be followed.
 
-### A200T A3 Box8 SuperPoD Server<a name="ZH-CN_TOPIC_0000002479226954"></a>
+### A200T A3 Box8<a name="ZH-CN_TOPIC_0000002479226954"></a>
 
 #### Affinity Scheduling Policy<a name="ZH-CN_TOPIC_0000002511426851"></a>
 
-The resource utilization rules for the A200T A3 Box8 SuperPoD server are shown in [Table 7](#table424284684013).
+The resource utilization rules for the A200T A3 Box8 are shown in [Table 7](#table424284684013).
 
-**Table 7** A200T A3 Box8 SuperPoD server affinity policy
+**Table 7** A200T A3 Box8 affinity policy
 
 <a name="table424284684013"></a>
 
 |Priority|Policy Name|Policy Description|
 |--|--|--|
-|1|Preferentially occupying a node|Nodes with fewer processors have higher priority.<p>When a distributed job is submitted, the job may not fully occupy a node.</p><ul><li>Phenomenon description: For example, on the A200T A3 Box8 SuperPoD server, when 2-processor and 14-processor jobs are submitted simultaneously, the 2-processor and 14-processor jobs may not be scheduled to the same node.</li><li>Cause analysis: After Volcano schedules a job, there is a delay in the Ascend Device Plugin reporting the topology of the scheduled Ascend AI processor to mindx-dl-deviceinfo-${node_name}. This causes Volcano to fail to verify the number of Ascend AI processors on the node and schedule the job to another node.</li></ul>|
+|1|Preferentially occupying a node|Nodes with fewer processors have higher priority.<p>When a distributed job is submitted, the job may not fully occupy a node.</p><ul><li>Phenomenon description: For example, on the A200T A3 Box8, when 2-processor and 14-processor jobs are submitted simultaneously, the 2-processor and 14-processor jobs may not be scheduled to the same node.</li><li>Cause analysis: After Volcano schedules a job, there is a delay in the Ascend Device Plugin reporting the topology of the scheduled Ascend AI processor to mindx-dl-deviceinfo-${node_name}. This causes Volcano to fail to verify the number of Ascend AI processors on the node and schedule the job to another node.</li></ul>|
 
 #### Resource Request Constraint<a name="ZH-CN_TOPIC_0000002511346869"></a>
 
-Based on the service model, the following requirements are imposed on the resource request of training jobs for the A200T A3 Box8 SuperPoD server:
+Based on the service model, the following requirements are imposed on the resource request of training jobs for the A200T A3 Box8:
 
 - The number of Ascend AI processors requested by a training job cannot exceed the total number of Ascend AI processors in a node.
 - The number of Ascend AI processors requested by a training job can only be 1, 2, 4, 6, 8, 10, 12, 14, or 16.
@@ -347,17 +382,17 @@ The characteristics and resource utilization rules of the Atlas 350 accelerator 
 - For standalone/distributed jobs, the number of requested Ascend AI processors supports 1, 2, 3, 4, 8, 12, and 16 (affinity guaranteed), while requesting 5, 6, 7, 9, 10, 11, 13, 14, or 15 does not guarantee affinity.
 - When multiple job Pods are scheduled to a single node, collective communication between Pods is not supported.
 
-### Atlas 650E Server
+### Atlas 650E and Atlas 650
 
 #### Affinity Scheduling Policy
 
-The characteristics and resource utilization rules of Atlas 650E server are shown in the following table.
+The characteristics and resource utilization rules of Atlas 650E and Atlas 650 are shown in the following table.
 
-**Table 14** Affinity scheduling policy for Atlas 650E server
+**Table 14** Affinity scheduling policy for Atlas 650E and Atlas 650
 
 |Priority|Policy Name|Policy Description|
 |--|--|--|
-|1|Preferentially occupying a node | Nodes with fewer processors have higher priority.<p>When a single-node job is submitted, the job may not fully occupy a node.</p><ul><li>Phenomenon description: For example, in Atlas 650E server, when 2-processor and 6-processor jobs are submitted simultaneously, the 2-processor and 6-processor jobs may not be scheduled to the same node.</li><li>Cause analysis: After Volcano schedules a job, there is a delay in the Ascend Device Plugin reporting the topology of the scheduled Ascend AI processor to mindx-dl-deviceinfo-${node_name}. This causes Volcano to fail to verify the number of Ascend AI processors on that node and schedule the job to another node.</li></ul>|
+|1|Preferentially occupying a node | Nodes with fewer processors have higher priority.<p>When a single-node job is submitted, the job may not fully occupy a node.</p><ul><li>Phenomenon description: For example, on a server, when 2-processor and 6-processor jobs are submitted simultaneously, the 2-processor and 6-processor jobs may not be scheduled to the same node.</li><li>Cause analysis: After Volcano schedules a job, there is a delay in the Ascend Device Plugin reporting the topology of the scheduled Ascend AI processor to mindx-dl-deviceinfo-${node_name}. This causes Volcano to fail to verify the number of Ascend AI processors on that node and schedule the job to another node.</li></ul>|
 
 #### Resource Request Constraint
 
@@ -365,17 +400,17 @@ The characteristics and resource utilization rules of Atlas 650E server are show
 - The number of Ascend AI processors requested by a standalone/distributed job supports 1, 2, 4, and 8 (affinity satisfied).
 - When multiple job Pods are scheduled to a single node, collective communication between Pods is not supported.
 
-### Atlas 850E SuperPoD
+### Atlas 850E and Atlas 850
 
 #### Affinity Scheduling Policy
 
-The characteristics and resource utilization rules of Atlas 850E SuperPoD are shown in the following table.
+The characteristics and resource utilization rules of Atlas 850E and Atlas 850 are shown in the following table.
 
-**Table 15** Affinity policy for Atlas 850E SuperPoD
+**Table 15** Affinity policy for Atlas 850E and Atlas 850
 
 | Priority | Policy Name | Policy Description |
 |--|--|--|
-| 1 | Preferentially occupying a node | Nodes with fewer processors have higher priority.<p>When a single-node job is submitted, the job may not fully occupy a node.</p><ul><li>Phenomenon description: For example, in Atlas 850E SuperPoD, when 2-processor and 6-processor jobs are dispatched simultaneously, the 2-processor and 6-processor jobs may not be scheduled to the same node.</li><li>Cause analysis: After Volcano schedules a job, there is a delay in the Ascend Device Plugin reporting the topology of the scheduled Ascend AI processor to mindx-dl-deviceinfo-${node_name}. This causes Volcano to fail in verifying the number of Ascend AI processors on that node, and the job is scheduled to another node.</li></ul> |
+| 1 | Preferentially occupying a node | Nodes with fewer processors have higher priority.<p>When a single-node job is submitted, the job may not fully occupy a node.</p><ul><li>Phenomenon description: For example, in a SuperPoD, when 2-processor and 6-processor jobs are dispatched simultaneously, the 2-processor and 6-processor jobs may not be scheduled to the same node.</li><li>Cause analysis: After Volcano schedules a job, there is a delay in the Ascend Device Plugin reporting the topology of the scheduled Ascend AI processor to mindx-dl-deviceinfo-${node_name}. This causes Volcano to fail in verifying the number of Ascend AI processors on that node, and the job is scheduled to another node.</li></ul> |
 | 2 | Remaining node priority | When the number of reserved nodes for a SuperPoD is 2, and two SuperPoDs have 3 and 2 remaining nodes respectively, the SuperPoD with 3 remaining nodes is preferred. |
 | 3 | Preferentially occupying a SuperPoD | When the number of reserved nodes for a SuperPoD is 2, and two SuperPoDs have 4 and 3 remaining nodes respectively, the SuperPoD with 3 remaining nodes is preferred. |
 
@@ -415,18 +450,18 @@ For distributed training jobs, the number of Ascend AI processors requested per 
 
 - In MindCluster 5.0.RC1 and later versions, the number of Ascend AI processors requested per node for distributed training jobs supports 1, 2, 4, and 8. For the affinity policy of a single node, see [Affinity Policy in Single-Node Scenarios](#affinity-policy-in-single-node-scenarios).
 
-**Distributed Affinity Policy for Atlas 200T A2 Box16/Atlas 200I A2 Box16 Heterogeneous Subrack<a name="section1514432814143"></a>**
+**Distributed Affinity Policy for Atlas 200T A2 Box16/Atlas 200I A2 Box16<a name="section1514432814143"></a>**
 
-- For distributed jobs on the Atlas 200T A2 Box16/Atlas 200I A2 Box16 heterogeneous subrack, the number of Ascend AI processors requested per node supports 1 to 8, 10, 12, 14, and 16.
+- For distributed jobs on the Atlas 200T A2 Box16/Atlas 200I A2 Box16, the number of Ascend AI processors requested per node supports 1 to 8, 10, 12, 14, and 16.
 - When the number of Ascend AI processors requested by a training job is not greater than 8, Ascend AI processors within the HCCS ring must be selected.
 - When the number of Ascend AI processors requested by a training job is 10, 12, or 14, the required Ascend AI processors only need to be evenly distributed across two rings, and the corresponding physical addresses may be inconsistent.
 
 **Distributed Affinity Policy for Atlas 900 A3 SuperPoD<a name="section4162187114513"></a>**
 
 - For logical SuperPoD affinity jobs, that is, when the `sp-block` field in the job YAML is configured with a logical SuperPoD size, the number of Ascend AI processors requested can only be 16.
-- If distributed scheduling with a non-16-processor configuration is used, after setting the `huawei.com/schedule_policy` field in the job YAML to `chip2-node16`, its affinity policy is the same as that of the Atlas 800T A3 SuperPoD server. When multiple job pods are scheduled to a single node, collective communication between pods is not supported.
+- If distributed scheduling with a non-16-processor configuration is used, after setting the `huawei.com/schedule_policy` field in the job YAML to `chip2-node16`, its affinity policy is the same as that of the Atlas 800T A3. When multiple job pods are scheduled to a single node, collective communication between pods is not supported.
 
-**Distributed Affinity Policy for A200T A3 Box8 SuperPoD Server, Atlas 800I A3 SuperPoD Server, and Atlas 800T A3 SuperPoD Server<a name="section13474194413317"></a>**
+**Distributed Affinity Policy for A200T A3 Box8/Atlas 800I A3/Atlas 800T A3<a name="section13474194413317"></a>**
 
 The number of Ascend AI processors requested by the job supports 2, 4, 6, 8, 10, 12, 14, and 16. When multiple job pods are scheduled to a single node, collective communication between pods is not supported.
 
@@ -440,14 +475,14 @@ The number of Ascend AI processors requested by the job supports 2, 4, 6, 8, 10,
 - The number of Ascend AI processors requested by an inference job cannot exceed the total number of Ascend AI processors in a node.
 - When the number of Ascend AI processors requested by an inference job is less than or equal to 2, the inference job must be scheduled to the same Atlas 300I Duo inference card.
 
-**Distributed Affinity Policy for Atlas 650E Server**<a name="section225141656114618"></a>
+**Distributed Affinity Policy for Atlas 650E/Atlas 650**<a name="section225141656114618"></a>
 
 - The number of Ascend AI processors requested by a job cannot exceed the total number of Ascend AI processors on a node.
-- When the number of Ascend AI processors requested by a job is less than or equal to 8, the job must be scheduled within the same Atlas 650E server.
+- When the number of Ascend AI processors requested by a job is less than or equal to 8, the job must be scheduled within the same server.
 
-**Distributed Affinity Policy for Atlas 850E SuperPoD<a name="section235141656114619"></a>**
+**Distributed Affinity Policy for Atlas 850E/Atlas 850<a name="section235141656114619"></a>**
 
-- For distributed jobs on Atlas 850E SuperPoD, the number of Ascend AI processors requested per node is fixed at 8, and the 8 processors within the server are fully meshed.
+- For distributed jobs on Atlas 850E and Atlas 850, the number of Ascend AI processors requested per node is fixed at 8, and the eight processors within the server are fully meshed.
 - For logical SuperPoD affinity jobs, that is, when the `sp-block` field in the job YAML configures the logical SuperPoD size, the number of Ascend AI processors requested can only be a multiple of `sp-block`.
 
 **Distributed Affinity Policy for Atlas 950 SuperPoD<a name="section245141656114620"></a>**

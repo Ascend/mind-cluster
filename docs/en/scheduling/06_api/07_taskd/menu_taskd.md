@@ -1,7 +1,5 @@
 # TaskD
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T01:43:55.996Z pushedAt=2026-06-09T02:05:50.656Z -->
-
 - [TaskD Version](./00_taskd_version.md)
 - [TaskD Worker APIs](./01_taskd_worker_apis.md)
 - [TaskD Agent APIs](./02_taskd_agent_apis.md)

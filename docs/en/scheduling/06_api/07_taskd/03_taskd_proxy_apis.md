@@ -1,7 +1,5 @@
 # TaskD Proxy APIs<a name="ZH-CN_TOPIC_0000002479386846"></a>
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T01:43:27.292Z pushedAt=2026-06-09T02:05:50.644Z -->
-
 ## def init_taskd_proxy(config : dict) -> bool:<a name="ZH-CN_TOPIC_0000002479226870"></a>
 
 **Function Description<a name="section3468140175411"></a>**
