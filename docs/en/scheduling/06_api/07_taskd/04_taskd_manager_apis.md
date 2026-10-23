@@ -1,7 +1,5 @@
 # TaskD Manager Interface<a name="ZH-CN_TOPIC_0000002479386782"></a>
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T01:43:32.836Z pushedAt=2026-06-09T02:05:50.654Z -->
-
 ## def init_taskd_manager(config:dict) -> bool:<a name="ZH-CN_TOPIC_0000002479386834"></a>
 
 **Function Description<a name="section3468140175411"></a>**

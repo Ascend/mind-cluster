@@ -2,26 +2,7 @@
 
 ## Environment Variables
 
-> [!NOTE]
-> Commonly used environment variables are displayed.
-
-|Variable|Description|Value Range|Default Value|
-|--|--|--|--|
-|TTP_LOG_PATH|MindIO TFT log path. Configuring soft links is prohibited. The log file name is supplemented as `ttp_log.log`. It is recommended to include the date and time in the log path to avoid multiple training records being written to the same log, causing cyclic overwriting. It is recommended to configure the log path in the training startup script as follows: <br> `date_time=$(date +%Y-%m-%d-%H_%M_%S)` <br> `export TTP_LOG_PATH=logs/${date_time}` <br>When using shared storage, it is recommended to configure the log path per node:<br>`export TTP_LOG_PATH=logs/${nodeId}`|Folder path.|logs|
-|TTP_LOG_LEVEL|MindIO TFT log level.<ul><li>DEBUG: Detailed information, applicable only when diagnosing problems.</li><li>INFO: Confirms that the program is running as expected.</li><li>WARNING: Indicates that an unexpected event has occurred or is about to occur. The program continues to run as expected.</li><li>ERROR: Indicates that some functions of the program cannot be executed normally due to a serious problem.</li></ul>|<ul><li>DEBUG</li><li>INFO</li><li>WARNING</li><li>ERROR</li></ul>|INFO|
-|TTP_LOG_MODE|MindIO TFT log mode.<ul><li>ONLY_ONE: All MindIO TFT processes write one log.</li><li>PER_PROC: Each MindIO TFT process writes an independent log. The log file path is `{TTP_LOG_PATH}/ttp_log.log.{pid}`.</li></ul>|<ul><li>ONLY_ONE</li><li>PER_PROC (If ONLY_ONE is not specified, the default is PER_PROC)</li></ul>|PER_PROC|
-|TTP_LOG_STDOUT|MindIO TFT log recording method.<ul><li>0: Records MindIO TFT runtime logs to the corresponding log file.</li><li>1: Prints MindIO TFT runtime logs directly without local storage.</li></ul>|<ul><li>0</li><li>1</li></ul>|0|
-|MASTER_ADDR|IP address or domain name of the training master node.|Valid IPv4, IPv6 address, or domain name.|-|
-|MASTER_PORT|Communication port of the training master node. The port is configurable.|[1024, 65535]|-|
-|TTP_RETRY_TIMES|Number of Processor TCP (Transmission Control Protocol) connection attempts.|[1, 300]|10|
-|MINDIO_WAIT_MINDX_TIME|Maximum time for the Controller to wait for a MindCluster response, in seconds|[1, 3600]|30|
-|TTP_ACCLINK_CHECK_PERIOD_HOURS| Period for MindIO TFT to check certificate validity after TLS authentication is enabled, in hours.|[24, 720]|168|
-|TTP_ACCLINK_CERT_CHECK_AHEAD_DAYS|Duration for MindIO TFT to issue an early warning before the certificate expiration date after TLS authentication is enabled, in days. The certificate expiration warning duration must not be less than the check period to ensure timely detection and warning of certificate expiration risks.|[7, 180]; satisfy TTP_ACCLINK_CERT_CHECK_AHEAD_DAYS * 24 ≥ TTP_ACCLINK_CHECK_PERIOD_HOURS.|30|
-|TTP_NORMAL_ACTION_TIME_LIMIT|Timeout for executing the `rebuild/repair/rollback` callback during the fault recovery process, in seconds.|[30, 1800]|180|
-|MINDIO_FOR_MINDSPORE|Whether to enable the MindSpore switch. When `True` (case-insensitive) or `1` is passed, the MindSpore switch is enabled. Other values disable the MindSpore switch.|<ul><li>True (case-insensitive) or 1: Enable MindSpore.</li><li>Other: Disable MindSpore.</li></ul>|False|
-|MINDX_TASK_ID|Used by the MindIO ARF feature; MindCluster task ID; configured by ClusterD; no user intervention required.|String.|-|
-|TORCHELASTIC_USE_AGENT_STORE|PyTorch environment variable; controls whether to create a TCP Store Server or Client. Used by MindIO TFT in scenarios where a dying gasp checkpoint is saved and the Torch Agent TCP Store Server connection fails.|<ul><li>True: Create Client.</li><li>False: Create Server.</li></ul>|-|
-|TTP_STOP_CLEAN_BEFORE_DUMP|Used by the MindIO TFT feature; controls whether MindIO TTP performs a stop&clean operation before saving the dying gasp checkpoint.|<ul><li>0: Disable.</li><li>1: Enable.</li></ul>|0|
+For MindIO TFT environment variables, see [MindIO TFT Environment Variables](../../06_api/13_environment_variable_description.md#section10131935156854).
 
 ## Setting User Validity Period
 

@@ -1,7 +1,5 @@
 # Mounting vNPUs (Static Virtualization)<a name="ZH-CN_TOPIC_0000002479386388"></a>
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-28T09:22:25.753Z pushedAt=2026-08-28T09:25:39.049Z -->
-
 ## Method 1: Mounting vNPUs Based on Native Docker
 
 In the native Docker scenario (where MindCluster cluster scheduling components are not deployed), you need to use the npu-smi tool to create vNPUs and then mount the vNPUs into containers.
@@ -302,13 +300,13 @@ In Kubernetes scenarios, when you need to use vNPU resources, use Ascend Device 
 
         The YAML startup is as follows:
 
-        - The K8s cluster contains nodes of <term>Atlas inference products</term>, <term>Atlas training products</term>, <term>Atlas A2 training products</term>, <term>Atlas A3 training products</term>, <term>Atlas A2 inference products</term>, and <term>Atlas A3 inference products</term>(Ascend Device Plugin works independently, without Volcano and Ascend Operator).
+        - The K8s cluster contains nodes of <term>Atlas inference products</term>, <term>Atlas training products</term>, <term>Atlas A2 products</term>, and  <term>Atlas A3 products</term> (Ascend Device Plugin works independently, without Volcano and Ascend Operator).
 
             ```shell
             kubectl apply -f device-plugin-v{version}.yaml
             ```
 
-        - The K8s cluster contains nodes of <term>Atlas inference products</term>, <term>Atlas training products</term>, <term>Atlas A2 training products</term>, <term>Atlas A3 training products</term>, <term>Atlas A2 inference products</term>, and <term>Atlas A3 inference products</term> (used with Volcano and Ascend Operator, supporting NPU virtualization. Dynamic virtualization is disabled by default in the YAML).
+        - The K8s cluster contains nodes of <term>Atlas inference products</term>, <term>Atlas training products</term>, <term>Atlas A2 products</term>, and  <term>Atlas A3 products</term> (used with Volcano and Ascend Operator, supporting NPU virtualization. Dynamic virtualization is disabled by default in the YAML).
 
             ```shell
             kubectl apply -f device-plugin-volcano-v{version}.yaml
@@ -330,7 +328,7 @@ In Kubernetes scenarios, when you need to use vNPU resources, use Ascend Device 
               - name: priority
               - name: gang
               - name: conformance
-              - name: volcano-npu-v26.1.0_linux-aarch64    # Where 26.1.0 is the MindCluster version number, and the value varies depending on the version.
+              - name: volcano-npu-v26.2.0_linux-aarch64    # Where 26.2.0 is the MindCluster version number, and the value varies depending on the version.
             - plugins:
               - name: drf
               - name: predicates

@@ -1,12 +1,13 @@
 # Cluster Resources<a name="ZH-CN_TOPIC_0000002511346785"></a>
 
-## ConfigMap Description<a name="section17868183824213"></a>
+## cluster-info ConfigMap Description<a name="section17868183824213"></a>
 
 After ClusterD starts, the following ConfigMaps are created:
 
 - `cluster-info-node-cm`. For details, see [Table 1](#table25031946405).
-- `cluster-info-device-${m}`. For details, see [Table 2](#table915714719368). `m` is an integer that increments from 0. For every additional 1,000 nodes in a cluster, a new ConfigMap file of this type is created.
-- `cluster-info-switch-${x}`. For details, see [Table 3](#table9246232250). `x` is an integer that increments from 0. For every additional 2,000 nodes in a cluster, a new ConfigMap file of this type is added.
+- `cluster-info-device-${m}`. For details, see [Table 2](#table915714719368). `m` is an integer that increments from 0. As the cluster scale increases, `cluster-info-device` is split into multiple ConfigMaps by no more than 800 KB.
+- `cluster-info-switch-${x}`. For details, see [Table 3](#table9246232250). `x` is an integer that increments from 0. As the cluster scale increases, cluster-info-switch is split into multiple ConfigMaps by no more than 800 KB.
+- `cluster-info-dpu-${n}`. For details, see [Table 4](#table2511346791). `n` is an integer that increments from 0. As the cluster scale increases, `cluster-info-dpu` is split into multiple ConfigMaps by no more than 800 KB.
 
 **Table 1** cluster-info-node-cm
 
@@ -30,10 +31,10 @@ After ClusterD starts, the following ConfigMaps are created:
 |Parameter|Description|
 |--|--|
 |mindx-dl-deviceinfo-kwok-node-0|The prefix is fixed as `mindx-dl-deviceinfo`, and `kwok-node-0` is the node name, used to locate the specific node where a fault occurs.|
-|huawei.com/Ascend910|<ul><li>Name information of the chips available on the current node. When there are multiple chips, they are concatenated with commas.</li><li>Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD use `huawei.com/npu` as the parameter.</li></ul>|
-|huawei.com/Ascend910-NetworkUnhealthy|<ul><li>Name information of the chips with unhealthy network on the current node. When there are multiple chips, they are concatenated with commas.</li><li>Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD use `huawei.com/npu-NetworkUnhealthy` as the parameter.</li></ul>|
-|huawei.com/Ascend910-Unhealthy|<ul><li>Name information of the unhealthy chips on the current node. When there are multiple chips, they are concatenated with commas.</li><li>Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD use `huawei.com/npu-Unhealthy` as the parameter.</li></ul>|
-|huawei.com/Ascend910-Fault|<ul><li>Array object. The object contains the `fault_type`, `npu_name`, `large_model_fault_level`, `fault_level`, `fault_handling`, `fault_code`, and `fault_time_and_level_map` fields.</li><li>Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD use `huawei.com/npu-Fault` as the parameter.</li></ul>|
+|huawei.com/Ascend910|<ul><li>Name information of the chips available on the current node. When there are multiple chips, they are concatenated with commas.</li><li><term>Ascend 950PR&950DT products</term> use `huawei.com/npu` as the parameter.</li></ul>|
+|huawei.com/Ascend910-NetworkUnhealthy|<ul><li>Name information of the chips with unhealthy network on the current node. When there are multiple chips, they are concatenated with commas.</li><li><term>Ascend 950PR&950DT products</term> use `huawei.com/npu-NetworkUnhealthy` as the parameter.</li></ul>|
+|huawei.com/Ascend910-Unhealthy|<ul><li>Name information of the unhealthy chips on the current node. When there are multiple chips, they are concatenated with commas.</li><li><term>Ascend 950PR&950DT products</term> use `huawei.com/npu-Unhealthy` as the parameter.</li></ul>|
+|huawei.com/Ascend910-Fault|<ul><li>Array object. The object contains the `fault_type`, `npu_name`, `large_model_fault_level`, `fault_level`, `fault_handling`, `fault_code`, and `fault_time_and_level_map` fields.</li><li><term>Ascend 950PR&950DT products</term> use `huawei.com/npu-Fault` as the parameter.</li></ul>|
 |- fault_type|Fault type.<ul><li>`CardUnhealthy`: chip fault</li><li>`CardNetworkUnhealthy`: parameter plane network fault (chip network-related fault)</li><li>`NodeUnhealthy`: node fault</li><li>`PublicFault`: public fault</li></ul>|
 |- npu_name|Name of the faulty chip; null when a node fault occurs.|
 |<p>- large_model_fault_level</p><p>- fault_level</p><p>- fault_handling</p>|Fault handling type. The value is empty when a node fault occurs.<ul><li>`NotHandleFault`: No handling is performed.</li><li>`RestartRequest`: In inference scenarios, the inference request needs to be re-executed. In training scenarios, the training service needs to be re-executed.</li><li>`RestartBusiness`: The service needs to be re-executed.</li><li>`FreeRestartNPU`: Service execution is affected. The chip needs to be reset when it is idle.</li><li>`RestartNPU`: Directly reset the chip and re-execute the service.</li><li>`SeparateNPU`: Isolate the chip.</li><li>`PreSeparateNPU`: Pre-isolate the chip. Whether to reschedule will be determined based on the actual running status of the training job.</li><li>`ManuallySeparateNPU`: Manually isolate the chip. When the respective fault frequencies of Ascend Device Plugin and ClusterD are reached, Ascend Device Plugin and ClusterD will manually isolate the faulty chip.</li></ul><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><ul><li>The `large_model_fault_level`, `fault_handling`, and `fault_level` parameters have the same function. It is recommended to use `fault_handling`.</li><li>If the inference job subscribes to fault information, and a `RestartRequest` fault occurs on the inference card used by the job and the fault duration does not exceed 60 seconds, job rescheduling will not be performed. If the fault duration exceeds 60 seconds and is not recovered, the chip will be isolated and job rescheduling will be performed.</li></ul></div></div>|
@@ -68,11 +69,57 @@ After ClusterD starts, the following ConfigMaps are created:
 |-fault_time|Time when the fault occurred.|
 |-fault_level|Fault handling level.|
 
+**Table 4** cluster-info-dpu-${n}
+
+<a name="table2511346791"></a>
+
+|Parameter|Description|
+|--|--|
+|dpuinfo-*\<kwok-node-0\>*|The prefix is fixed as `dpuinfo`, and `kwok-node-0` is the node name, used to locate the specific node to which the DPU information belongs.|
+|DPUInfo|DPU device information.|
+|- DPUList|DPU device list. Each element in the array describes the information of a DPU device. For details, see [Table 5](#table2511346792).|
+|- NodeEvent|Node-level fault event, for example, DPU card detachment. For details, see [Table 6](#table2511346793).|
+|UpdateTime|Current DPU information update time, in Unix millisecond timestamp format, used to identify the latest reporting time of fault information.|
+
+**Table 5** DPUList element description
+
+<a name="table2511346792"></a>
+
+|Parameter|Description|
+|--|--|
+|HcaName|HCA device name, for example, `hrn5_0`.|
+|EthName|Associated Ethernet interface name.|
+|IpAddr|IP address of the DPU device.|
+|DeviceID|Device ID, in hexadecimal format.|
+|VendorID|Vendor ID, in hexadecimal format.|
+|FaultList|Fault detail list on the DPU device. Each element in the array describes a fault message. For details, see [Table 7](#table2511346794).|
+|AffectedNPU|List of NPU device IDs affected by the fault of this device, including only the NPU device IDs whose primary NIC is the current UB NIC.|
+
+**Table 6** NodeEvent description
+
+<a name="table2511346793"></a>
+
+|Parameter|Description|
+|--|--|
+|NodeName|Node name.|
+|FaultList|Node-level fault detail list. For details, see [Table 7](#table2511346794).|
+
+**Table 7** FaultList description
+
+<a name="table2511346794"></a>
+
+|Parameter|Description|
+|--|--|
+|FaultCode|Fault code, used to identify the fault type.|
+|Time|First fault detection time, in Unix millisecond timestamp format.|
+|Description|Fault description information.|
+|FaultLevel|Fault level.
+
 ## statistic-fault-info<a name="section1153232554520"></a>
 
 This ConfigMap is located in the user-created `cluster-system` namespace, with the label `mc-statistic-fault=true`. It is used to display fault information in a cluster (currently only public fault information is displayed).
 
-**Table 4** Data information
+**Table 8** Data information
 
 |Parameter|Description|
 |--|--|
@@ -96,7 +143,7 @@ This ConfigMap is located in the user-created `cluster-system` namespace, with t
 
 This ConfigMap is located in the user-created `cluster-system` namespace, with the label `app=pingmesh`.
 
-**Table 5** super-pod-<super-pod-id\>
+**Table 9** super-pod-<super-pod-id\>
 
 |Parameter|Description|
 |--|--|
@@ -111,7 +158,7 @@ This ConfigMap is located in the user-created `cluster-system` namespace, with t
 
 This ConfigMap is located in the `cluster-system` namespace created by the user. It is used to display fault job information that requires forced release of communication resources in the cluster. It takes effect only when process-level rescheduling is performed on the Atlas 900 A3 SuperPoD.
 
-**Table 6** fault-job-info
+**Table 10** fault-job-info
 
 |Parameter|Description|Value|
 |--|--|--|
@@ -141,7 +188,7 @@ localhost.localdomain:
 Events:  <none>
 ```
 
-**Table 7**  clusterd-manual-info-cm
+**Table 11**  clusterd-manual-info-cm
 
 |Parameter|Description|
 |--|--|

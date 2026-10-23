@@ -23,16 +23,15 @@ The following two development approaches are supported for custom metrics.
         - `IsSupported`: Detects the current environment and determines whether the current device is supported.
         - `PreCollect`: Executed once before collection officially starts. It can be used for device initialization and may be empty.
         - `PostCollect`: Executed once after collection ends. It can be used for data reclamation and may be empty.
-    - `register.go`: Provides the plugin registration function. It completes plugin registration and DCMI initialization when NPU Exporter starts. **Do not modify the `RegisterPlugin` function signature.** In the `RegisterPlugin` function, registration is completed through `registerPlugin(plugin name, &plugin class{})`. The metric name must be consistent with the metric group name in `pluginConfiguration.json`.
-
-    The metric names defined in a plugin metric group must not duplicate the plugin metrics already defined in the existing code (current NPU metrics and plugin metrics).
-
-    If the collection time of a custom plugin exceeds 10s, NPU Exporter prints a log indicating that the plugin collection takes too long, and proceeds to collect the next plugin.
+    - `register.go`: Provides the plugin registration function. It completes plugin registration and DCMI initialization when NPU Exporter starts. **Do not modify the RegisterPlugin function signature.** In the `RegisterPlugin` function, registration is completed through `registerPlugin(plugin name, &plugin class{})`. The metric name must be consistent with the metric group name in `pluginConfiguration.json`.
+    - The metric names defined in a plugin metric group must not duplicate the existing plugin metrics (current NPU metrics and plugin metrics).
+    - The metric names and metric labels defined in a plugin metric group can only use letters, digits, and underscores, and cannot start with a digit.
+    - If the collection time of a custom plugin exceeds 10s, NPU Exporter prints a log indicating that the plugin collection takes too long, and proceeds to collect the next plugin.
 
     **dcmi.go Example**
 
     ```go
-    /* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+    /* Copyright(C) 2026. Huawei Technologies Co.,Ltd. All rights reserved.
        Licensed under the Apache License, Version 2.0 (the "License");
        you may not use this file except in compliance with the License.
        You may obtain a copy of the License at
@@ -192,7 +191,7 @@ The following two development approaches are supported for custom metrics.
     **custom_metrics.go Example**
 
     ```go
-    /* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+    /* Copyright(C) 2026. Huawei Technologies Co.,Ltd. All rights reserved.
        Licensed under the Apache License, Version 2.0 (the "License");
        you may not use this file except in compliance with the License.
        You may obtain a copy of the License at
@@ -267,7 +266,7 @@ The following two development approaches are supported for custom metrics.
 
     // UpdatePrometheus update prometheus metric
     func (c *PluginInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *common.NpuCollector,
-        containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
+        containerMap map[int32][]container.DevicesInfo, chips []common.HuaWeiAIChip) {
         logger.Debug("PluginInfoCollector UpdatePrometheus")
         // get metric from cache
         pluginCache, pluginOk := c.Cache.Load(pluginInfoKey)
@@ -287,29 +286,27 @@ The following two development approaches are supported for custom metrics.
     }
 
     // UpdateTelegraf update telegraf metric
-    func (c *PluginInfoCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *common.NpuCollector,
-        containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) map[string]map[string]interface{} {
+    func (c *PluginInfoCollector) UpdateTelegraf(ch chan<- common.TelegrafMetric, n *common.NpuCollector,
+    containerMap map[int32][]container.DevicesInfo, chips []common.HuaWeiAIChip)  {
         logger.Debug("PluginInfoCollector UpdateTelegraf")
         // get metric from cache
         pluginCache, pluginOk := c.Cache.Load(pluginInfoKey)
         npuPluginCache, npuPluginOk := c.Cache.Load(npuPluginInfoKey)
-        // update plugin info
+        // update plugin info (node-level metric)
         if pluginOk {
-         if fieldsMap[common.GeneralDevTagKey] == nil {
-          fieldsMap[common.GeneralDevTagKey] = make(map[string]interface{})
-         }
-         utils.DoUpdateTelegraf(fieldsMap[common.GeneralDevTagKey], PluginInfoDesc, pluginCache.(float64), "")
+            metric := common.NewGeneralMetric()
+            utils.DoUpdateTelegraf(metric.Fields, PluginInfoDesc, pluginCache.(float64), "")
+            ch <- metric
         }
-        // update npu plugin info
+
+        // update npu plugin info (device-level metric, logic id is 1 here for demo)
         if npuPluginOk {
-         const NpuLogicID = "1"
-         value := float64(npuPluginCache.(int32))
-         if fieldsMap[NpuLogicID] == nil {
-          fieldsMap[NpuLogicID] = make(map[string]interface{})
-         }
-         utils.DoUpdateTelegraf(fieldsMap[NpuLogicID], PluginNpuInfoDesc, value, "")
+            const NpuLogicID = 1
+            value := float64(npuPluginCache.(int32))
+            metric := common.NewDeviceMetric(NpuLogicID)
+            utils.DoUpdateTelegraf(metric.Fields, PluginNpuInfoDesc, value, "")
+            ch <- metric
         }
-        return fieldsMap
     }
 
     // PreCollect pre handle before collect
@@ -386,6 +383,7 @@ The following two development approaches are supported for custom metrics.
 >[!NOTICE]
 >
 >- Custom metrics must not duplicate existing metric names.
+>- The custom metric names and metric label names can only use letters, digits, and underscores, and cannot start with a digit.
 >- Developers are responsible for the stability of custom plugins and must ensure that issues such as runtime panics are not introduced.
 >- Developers are responsible for the correctness of the custom metric file format.
 >- The DCMIs in the sample code must be verified for availability based on the product generation.

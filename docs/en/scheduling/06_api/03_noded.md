@@ -21,9 +21,9 @@ When a fault occurs on a node, NodeD will create `node-info-cm` to report the fa
 
 ## Customizing Node Faults<a name="ZH-CN_TOPIC_0000002479386802"></a>
 
-The configuration file `NodeDConfiguration.json` of the NodeD component is a system configuration file. Do not modify it arbitrarily unless you have special requirements. If you need to modify the fault level of a fault code, you can do so through the `mindx-dl-node-fault-config` file created from `NodeDConfiguration.json`. For details, see [(Optional) Configuring Node Hardware Fault Levels](../04_usage/04_resumable_training/03_configuration/01_configuring_fault_detection_levels.md#optional-configuring-node-hardware-fault-levels).
+The configuration file `NodeDConfiguration.json` of the NodeD component is a system configuration file. Do not modify it arbitrarily unless you have special requirements. If you need to modify the fault level of a fault code, you can do so through the `mindx-dl-node-fault-config` file created from `NodeDConfiguration.json`. For details, see [(Optional) Configuring Node Hardware Fault Levels](../04_usage/04_fault_detection_and_diagnosis/03_configuration/02_node_faults.md#optional-configuring-node-hardware-fault-levels).
 
-**Table 1**  Fault description
+**Table 2** Fault description
 
 |Fault Level|Fault Handling Policy|Description|
 |--|--|--|
@@ -34,7 +34,7 @@ The configuration file `NodeDConfiguration.json` of the NodeD component is a sys
 > [!NOTE]
 > The fault levels, from lowest to highest, are NotHandleFault < PreSeparateFault < SeparateFault.
 
-**Table 2**  Node status description
+**Table 3** Node status description
 
 |Node Status|Highest Fault Level|Fault Handling Policy|Description|
 |--|--|--|--|
@@ -52,7 +52,7 @@ The configuration file `NodeDConfiguration.json` of the NodeD component is a sys
 
 NodeD starts an HTTP health probe service within the component, which is used by the K8s livenessProbe mechanism to detect the component's liveness status.
 
-**Table 3** Health probe interface
+**Table 4** Health probe interface
 
 | Item | Description |
 |------|------|
@@ -61,7 +61,7 @@ NodeD starts an HTTP health probe service within the component, which is used by
 | Default Port | 11255 |
 | Protocol | HTTP (HTTPS when `--tls-cert-file` and `--tls-private-key-file` are correctly configured) |
 
-**Table 4** Response descriptions
+**Table 5** Response descriptions
 
 | Status Code | Trigger Condition | Description |
 |--------|---------|------|

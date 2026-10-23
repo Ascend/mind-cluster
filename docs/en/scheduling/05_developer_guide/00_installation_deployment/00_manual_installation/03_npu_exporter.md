@@ -1,10 +1,8 @@
 # NPU Exporter<a name="ZH-CN_TOPIC_0000002511426331"></a>
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-09-02T01:25:38.351Z pushedAt=2026-09-02T01:30:48.464Z -->
-
 - When using **resource monitoring**, NPU Exporter must be installed. This component supports integration with Prometheus or Telegraf.
     - When integrating with Prometheus, NPU Exporter can be deployed in either image mode or binary mode. For deployment differences, see [Image and Binary Deployment Differences](../../../07_references/05_appendix.md#differences-between-image-and-binary-deployments).
-    - When integrating with Telegraf, see the [Working with Telegraf](../../../04_usage/01_resource_monitoring/03_working_with_telegraf.md) section to install NPU Exporter and Telegraf.
+    - When integrating with Telegraf, see [Working with Telegraf](../../../04_usage/01_resource_monitoring/00_npu_resource_monitoring/03_working_with_telegraf.md) to install NPU Exporter and Telegraf.
 
 - Users who do not use **resource monitoring** can skip installing NPU Exporter and proceed directly past this chapter.
 
@@ -64,7 +62,13 @@ Before installing NPU Exporter, read the relevant constraints described in [Tabl
 </tr>
 <tr id="row_container_metrics"><td class="cellrowborder" valign="top" width="29.970000000000002%" headers="mcps1.2.3.1.1 "><p id="p_container_metrics_cat">Container-related metrics</p>
 </td>
-<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><ul id="ol_container_metrics"><li>Container-related metrics are displayed only in the Prometheus scenario when NPUs are mounted to Pods in K8s. The Telegraf scenario does not support displaying container-related metrics.</li><li>In the Prometheus scenario, if NPUs are not mounted to Pods in K8s, the container_name, namespace, and pod_name labels of each metric are empty.</li><li>When parsing the NPU information mounted to a Pod, the "ASCEND_VISIBLE_DEVICE" environment variable in the container is parsed first. Ensure that this environment variable is not preset in the image to avoid interference.</li><li>Do not start service containers in privileged mode. If a service container is started in privileged mode, the NPUs actually used by service processes may be inconsistent with the NPUs allocated by MindCluster components.</li></ul>
+<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><ul id="ol_container_metrics"><li>Container-related metrics are displayed only in the Prometheus scenario when NPUs are mounted to Pods in K8s. The Telegraf scenario does not support displaying container-related metrics.</li><li>In the Prometheus scenario, if NPUs are not mounted to Pods in K8s, the container_name, namespace, and pod_name labels of each metric are empty.</li><li>When parsing the NPU information mounted to a Pod, the "ASCEND_VISIBLE_DEVICE" environment variable in the container is parsed first. Ensure that this environment variable is not preset in the image to avoid interference.</li><li>Do not start service containers in privileged mode. If a service container is started in privileged mode, the NPUs actually used by service processes may be inconsistent with the NPUs allocated by MindCluster components.</li>
+<li>When a single NPU is mounted by multiple Pods, the display rules for the container-related labels are as follows:
+   <ul>
+     <li>Chip-level metrics: when a single NPU corresponds to multiple Pods, pod_name, namespace, and container_name are displayed as not_displayed_for_multi_pod, and the remaining label fields are displayed normally.</li>
+     <li>Process-level metrics: when each Pod on a single NPU has only one service process, pod_name, namespace, and container_name are displayed normally; when each Pod has multiple service processes, pod_name, namespace, and container_name are still displayed, but correctness cannot be guaranteed; when the container runtime is isula, container information display is not supported, pod_name, namespace, and container_name are empty, and the remaining label fields are displayed normally.</li>
+   </ul>
+</li></ul>
 </td>
 </tr>
 </tbody>
@@ -104,6 +108,14 @@ Before installing NPU Exporter, read the relevant constraints described in [Tabl
   | 60s        | sio, hbm, hccs, pcie, vnpu, roce, optical, network, ub |
   | 86400s (one day) | nodeBase                                               |
 
+### 26.2.0 Compatibility Notes
+
+- Metric group: the original `network` metric group is split into `network_bandwidth` and `network_link` metric groups.
+    - `network_bandwidth`: includes bandwidth metrics (such as `npu_chip_info_bandwidth_tx` and `npu_chip_info_bandwidth_rx`), with a default collection interval of 60s.
+    - `network_link`: includes metrics such as link status, rate, and UP statistics (such as `npu_chip_info_link_status`, `npu_chip_link_speed`, and `npu_chip_link_up_num`), with a default collection interval of 600s.
+- Compatibility: configuration files of earlier versions (version 26.1.0/patch and earlier) can still be collected normally. The collector of the original `network` metric group is temporarily retained for compatibility. Since `network` collects the same metrics as `network_bandwidth` and `network_link`, enabling them simultaneously is not recommended to avoid performance waste caused by duplicate collection.
+- Default collection frequency change: the default collection interval of the `optical` metric group is adjusted from 60s to 600s; the default collection interval of the `network_bandwidth` metric group is 60s; the default collection interval of the `network_link` metric group is 600s.
+
 ## Procedure<a name="section83111543151612"></a>
 
 NPU Exporter supports two installation modes. You can select either one based on actual conditions. This component provides only HTTP services. To use the more secure HTTPS service, modify the source code for adaptation.
@@ -124,6 +136,9 @@ NPU Exporter supports two installation modes. You can select either one based on
 
     3. Press `i` to enter edit mode, and configure the collection switch and collection interval of the default metric group as needed.
 
+       >[!NOTE]
+       > NPU Exporter obtains metrics from the underlying layer by invoking driver interfaces and other methods, which may occupy some resources. You can disable other unrelated metrics based on the metrics you care about.
+
         The following is an example of the configuration file:
 
         ```json
@@ -140,19 +155,23 @@ NPU Exporter supports two installation modes. You can select either one based on
                 {"metricsGroup": "nodeBase", "state": "ON", "intervalSeconds": 86400},
 
                 {"metricsGroup": "roce", "state": "ON", "intervalSeconds": 60},
-                {"metricsGroup": "optical", "state": "ON", "intervalSeconds": 60},
-                {"metricsGroup": "network", "state": "ON", "intervalSeconds": 60},
+                {"metricsGroup": "optical", "state": "ON", "intervalSeconds": 600},
+                {"metricsGroup": "network_bandwidth", "state": "ON", "intervalSeconds": 60},
+                {"metricsGroup": "network_link", "state": "ON", "intervalSeconds": 600},
                 {"metricsGroup": "ub", "state": "ON", "intervalSeconds": 60}
             ]
         ```
 
         <a name="table192202574406"></a>
 
-        |Name|Description|
-        |---|---|
-        |metricsGroup|Name of the default metric group.<ul><li>Collected through DCMI:<ul><li>version: version data information</li><li>utilization: utilization data information</li><li>npu: NPU data information</li><li>ddr: DDR data information</li><li>sio: SIO data information</li><li>hbm: on-chip memory data information</li><li>hccs: HCCS data information</li><li>pcie: PCIe data information</li><li>vnpu: vNPU data information</li><li>nodeBase: basic node information</li></ul></li><li>Collected through hccn_tool:<ul><li>roce: RoCE data information</li><li>optical: optical module data information</li><li>network: Network data information</li><li>ub: NPU UB data information</li></ul></li></ul>|
-        |state|Switch for metric group collection and reporting. The default value is ON.<ul><li>ON: enabled. After the switch of the corresponding metric group is enabled, the metrics of this metric group are collected and reported.</li><li>OFF: disabled. After the switch of the corresponding metric group is disabled, the metrics of this metric group are not collected or reported.</li></ul>|
-        |intervalSeconds|Collection interval of the metric group, in seconds.<ul><li>Must be configured as an integer value.</li><li>Value range: -1, 1 to 86400 seconds.</li><li>If this configuration item is missing, the default value of 60 seconds is used.</li><li>If configured as -1, the metric group is collected only once and is not collected repeatedly.</li></ul>|
+        | Name | Description |
+        |-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+        | metricsGroup | Name of the default metric group.<ul><li>Collected through DCMI:<ul><li>version: version data information</li><li>utilization: utilization data information</li><li>npu: NPU data information</li><li>ddr: DDR data information</li><li>sio: SIO data information</li><li>hbm: on-chip memory data information</li><li>hccs: HCCS data information</li><li>pcie: PCIe data information</li><li>vnpu: vNPU data information</li><li>nodeBase: basic node information</li></ul></li><li>Collected through hccn_tool:<ul><li>roce: RoCE data information</li><li>optical: optical module data information</li><li>network_bandwidth: Network bandwidth data information</li><li>network_link: Network link data information</li></ul></li></ul> |
+        | state | Switch for metric group collection and reporting. The default value is ON.<ul><li>ON: enabled. After the switch of the corresponding metric group is enabled, the metrics of this metric group are collected and reported.</li><li>OFF: disabled. After the switch of the corresponding metric group is disabled, the metrics of this metric group are not collected or reported.</li></ul> |
+        | intervalSeconds | Collection interval of the metric group, in seconds.<ul><li>Must be configured as an integer value.</li><li>Value range: -1, 1 to 86400 seconds.</li><li>If this configuration item is missing, the default value of 60 seconds is used.</li><li>If configured as -1, the metric group is collected only once and is not collected repeatedly.</li></ul> |
+
+        >[!NOTE]
+        > `network` metric group has been split into `network_bandwidth` and `network_link`. The `optical` and `network_link` metric groups have relatively stable metric information. It is recommended to keep low-frequency queries (for example, 600s).
 
     4. <a name="li151815494115"></a>Press `Esc`, type `:wq!` to save and exit.
     5. Refer to [2.b](#li11364381194) through [2.d](#li151815494115), modify the `pluginConfiguration.json` file, and configure the collection switch and collection interval of custom metric groups as needed.
@@ -192,19 +211,19 @@ NPU Exporter supports two installation modes. You can select either one based on
         Command output:
 
         ```ColdFusion
-        npu-exporter                         v26.1.0              20185c45f1bc        About an hour ago         90.1MB
+        npu-exporter                         v26.2.0              20185c45f1bc        About an hour ago         90.1MB
         ```
 
     - **Containerd**: Run the following command.
 
         ```shell
-        ctr -n k8s.io c ls | grep npu-exporter
+        ctr -n k8s.io i ls | grep npu-exporter
         ```
 
         Command output:
 
         ```ColdFusion
-        docker.io/library/npu-exporter:v26.1.0                                                         application/vnd.docker.distribution.manifest.v2+json      sha256:38fd69ee9f5753e73a55a216d039f6ed4ea8a5de15c0e6b3bb503022db470c7b 91.5 MiB  linux/arm64
+        docker.io/library/npu-exporter:v26.2.0                                                         application/vnd.docker.distribution.manifest.v2+json      sha256:38fd69ee9f5753e73a55a216d039f6ed4ea8a5de15c0e6b3bb503022db470c7b 91.5 MiB  linux/arm64
         ```
 
     - Yes, proceed to [Step 5](#li0640635114211).
@@ -402,6 +421,9 @@ When NPU Exporter runs in image mode, it requires a privileged container, the ro
 
     3. Press `i` to enter edit mode, and configure the collection switch and collection interval of the default metric group as needed.
 
+       >[!NOTE]
+       > NPU Exporter obtains metrics from the underlying layer by invoking driver interfaces and other methods, which may occupy some resources. You can disable other unrelated metrics based on the metrics you care about.
+
         The following is an example of the configuration file:
 
         ```json
@@ -418,19 +440,23 @@ When NPU Exporter runs in image mode, it requires a privileged container, the ro
                 {"metricsGroup": "nodeBase", "state": "ON", "intervalSeconds": 86400},
 
                 {"metricsGroup": "roce", "state": "ON", "intervalSeconds": 60},
-                {"metricsGroup": "optical", "state": "ON", "intervalSeconds": 60},
-                {"metricsGroup": "network", "state": "ON", "intervalSeconds": 60},
+                {"metricsGroup": "optical", "state": "ON", "intervalSeconds": 600},
+                {"metricsGroup": "network_bandwidth", "state": "ON", "intervalSeconds": 60},
+                {"metricsGroup": "network_link", "state": "ON", "intervalSeconds": 600},
                 {"metricsGroup": "ub", "state": "ON", "intervalSeconds": 60}
             ]
         ```
 
         <a name="zh-cn_topic_0000002511426331_table192202574406"></a>
 
-        |Name|Description|
-        |---|---|
-        |metricsGroup|Name of the default metric group.<ul><li>Collected through DCMI:<ul><li>version: version data information</li><li>utilization: utilization data information</li><li>npu: NPU data information</li><li>ddr: DDR data information</li><li>sio: SIO data information</li><li>hbm: on-chip memory data information</li><li>hccs: HCCS data information</li><li>pcie: PCIe data information</li><li>vnpu: vNPU data information</li><li>nodeBase: basic node information</li></ul></li><li>Collected through hccn_tool:<ul><li>roce: RoCE data information</li><li>optical: optical module data information</li><li>network: Network data information</li><li>ub: NPU UB data information</li></ul></li></ul>|
-        |state|Switch for metric group collection and reporting. The default value is ON.<ul><li>ON: enabled. After the switch of the corresponding metric group is enabled, the metrics of this metric group are collected and reported.</li><li>OFF: disabled. After the switch of the corresponding metric group is disabled, the metrics of this metric group are not collected or reported.</li></ul>|
-        |intervalSeconds|Collection interval of the metric group, in seconds.<ul><li>Must be configured as an integer value.</li><li>The value range is -1 and 1 to 86400 seconds.</li><li>If this configuration item is missing, the default value of 60 seconds is used.</li><li>If it is set to -1, the metric group is collected only once and is not collected repeatedly.</li></ul>|
+        | Name | Description |
+        |-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+        | metricsGroup | Name of the default metric group.<ul><li>Collected through DCMI:<ul><li>version: version data information</li><li>utilization: utilization data information</li><li>npu: NPU data information</li><li>ddr: DDR data information</li><li>sio: SIO data information</li><li>hbm: on-chip memory data information</li><li>hccs: HCCS data information</li><li>pcie: PCIe data information</li><li>vnpu: vNPU data information</li><li>nodeBase: basic node information</li></ul></li><li>Collected through hccn_tool:<ul><li>roce: RoCE data information</li><li>optical: optical module data information</li><li>network_bandwidth: Network bandwidth data information</li><li>network_link: Network link data information</li></ul></li></ul> |
+        | state | Switch for metric group collection and reporting. The default value is ON.<ul><li>ON: enabled. After the switch of the corresponding metric group is enabled, the metrics of this metric group are collected and reported.</li><li>OFF: disabled. After the switch of the corresponding metric group is disabled, the metrics of this metric group are not collected or reported.</li></ul> |
+        | intervalSeconds | Collection interval of the metric group, in seconds.<ul><li>Must be configured as an integer value.</li><li>Value range: -1, 1 to 86400 seconds.</li><li>If this configuration item is missing, the default value of 60 seconds is used.</li><li>If configured as -1, the metric group is collected only once and is not collected repeatedly.</li></ul> |
+
+        >[!NOTE]
+        > `network` metric group has been split into `network_bandwidth` and `network_link`. The `optical` and `network_link` metric groups have relatively stable metric information. It is recommended to keep low-frequency queries (for example, 600s).
 
     4. <a name="li18459954104718"></a>Press `Esc`, type `:wq!` to save and exit.
     5. Refer to [4.b](#li1445835411478) to [4.d](#li18459954104718), modify the `pluginConfiguration.json` file, and configure the collection switch and collection interval of custom metric groups as needed.
@@ -540,36 +566,36 @@ When NPU Exporter runs in image mode, it requires a privileged container, the ro
 
 <a name="table872410431914"></a>
 
-|Name|Type|Default Value|Description|
+|Name|Type|Default Value| Description|
 |--|--|--|--|
-|-port|int|8082|Listening port. Value range: 1025 to 40000.|
-|-updateTime|int|None|**To be sunset soon and not recommended.** Global configuration metric update interval. Value range: 1 to 60 seconds. It is recommended to configure the metric update interval by group. For details, see [Configuration File](#section103551921135917).<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">If the updateTime parameter is configured, it remains effective and takes precedence over intervalSeconds in the metricConfiguration.json/pluginConfiguration.json configuration files.</div></div>|
-|-ip|string|None|This parameter has no default value and must be configured.<p>Listening IP address. It must be in valid IPv4 or IPv6 format. On hosts with multiple NICs, configuring it as 0.0.0.0 is not recommended.</p>|
-|-version|bool|false|Whether to query the NPU Exporter version number.<ul><li>true: Query.</li><li>false: Do not query.</li></ul>|
-|-concurrency|int|5|Rate limiting size of the HTTP service. The default is 5 concurrent requests. Value range: 1 to 512.|
-|-logLevel|int|0|Log level:<ul><li>-1: debug</li><li>0: info</li><li>1: warning</li><li>2: error</li><li>3: critical</li></ul>|
-|-maxAge|int|7|Log backup retention time. Value range: 7 to 700, in days.|
-|-logFile|string|/var/log/mindx-dl/npu-exporter/npu-exporter.log|Log file.<p>When a single log file exceeds 20 MB, automatic rotation is triggered. The maximum file size cannot be modified. The naming format of rotated files is: npu-exporter-<i>{rotation_time}</i>.log, for example: npu-exporter-2023-10-07T03-38-24.402.log.</p>|
-|-maxBackups|int|30|Maximum number of rotated log files to retain. Value range: 1 to 180, in files.|
-|-containerMode|string|docker|Sets the container runtime type.<ul><li>Set to docker to indicate that the current environment uses Docker as the container runtime.</li><li>Set to containerd to indicate that the current environment uses Containerd as the container runtime.</li><li>Set to "isula" to indicate that the current environment uses iSula as the container runtime.</li></ul>|
-|-containerd|string|<ul><li>(Docker)unix:/run/docker/containerd/docker-containerd.sock</li><li>(Containerd)unix:///run/containerd/containerd.sock</li><li>(iSula)unix:///run/isulad.sock</li></ul>|Endpoint of the containerd daemon process, used to communicate with Containerd.<ul><li>If containerMode=docker, the default value is /run/docker/containerd/docker-containerd.sock. If the connection fails, it automatically attempts to connect to unix:///run/containerd/containerd.sock and unix:///run/docker/containerd/containerd.sock.</li><li>If containerMode=containerd, the default value is /run/containerd/containerd.sock.</li><li>If containerMode=isula, the default value is /run/isulad.sock.</li></ul><p>In general, use the default value. If you have modified the sock file path of Containerd, modify the corresponding path accordingly.</p><p>You can run the **ps aux \| grep containerd** command to check whether the sock file path of Containerd has been modified.</p>|
-|-endpoint|string|<ul><li>(Docker)unix:///var/run/dockershim.sock</li><li>(Containerd)unix:///run/containerd/containerd.sock</li><li>(iSula)unix:///run/isulad.sock</li></ul>|Sock address of the CRI server:<ul><li>If containerMode=docker, it connects to Dockershim to obtain the container list. The default value is /var/run/dockershim.sock.</li><li>If containerMode=containerd, the default value is /run/containerd/containerd.sock.</li><li>If containerMode=isula, the default value is /run/isulad.sock.</li></ul><p>In general, use the default value unless you have modified the sock file path of Dockershim or Containerd.</p><p>If the connection fails, it automatically attempts to connect to unix:///run/cri-dockerd.sock.</p>|
-|-limitIPConn|int|5|Value range of the TCP connection limit per IP: 1 to 128.|
-|-limitTotalConn|int|20|Value range of the total TCP connection limit of the program: 1 to 512.|
-|-limitIPReq|string|20/1|Request limit per IP. 20/1 indicates a limit of 20 requests per second. Each side of "/" supports a maximum of three digits.|
-|-cacheSize|int|102400|Limit on the number of cache keys. Value range: 1 to 1024000.|
-|--enable-healthz|bool|false|Whether to enable the health check service. During K8s deployment, it is enabled (true) by the component YAML configuration.<ul><li>true: Enable.</li><li>false: Disable.</li></ul>|
-|--healthz-address|string|11251|Listening port number of the health check service. Value range: 1025 to 65535. During K8s deployment, it is configured as 11256 by the component YAML. If the specified port is occupied, the component fails to start.|
-|--tls-cert-file|string|""|Path of the HTTPS certificate file. If empty, the HTTP protocol is used. It must be configured together with --tls-private-key-file or both left empty. For the configuration method and security precautions, see [Health Probe Security Hardening](../../../07_references/04_security_hardening.md).|
-|--tls-private-key-file|string|""|Path of the HTTPS private key file. If empty, the HTTP protocol is used. It must be configured together with --tls-cert-file or both left empty.|
-|-h or -help|None|None|Displays help information.|
-|-platform|string|Prometheus|Specifies the platform to integrate with.<ul><li>Prometheus: Integrate with Prometheus</li><li>Telegraf: Integrate with Telegraf</li></ul>|
-|-poll_interval|duration(int)|1|Interval for Telegraf data reporting, in seconds. This parameter takes effect only when integrating with the Telegraf platform, that is, it takes effect only when -platform=Telegraf is specified. Otherwise, this parameter does not take effect.|
-|-profilingTime|int|200|Configures the PCIe bandwidth collection time, in milliseconds. Value range: 1 to 2000.|
-|-hccsBWProfilingTime|int|200|Sampling duration of the HCCS link bandwidth. Value range: 1 to 1000, in milliseconds.|
-|-deviceResetTimeout|int|600|When the component starts, if the number of chips is insufficient, the maximum duration to wait for the driver to report the complete chips, in seconds. Value range: 10 to 600.<ul><li><term>Atlas A2 training products</term>, Atlas 800I A2 inference server, A200I A2 Box heterogeneous subrack: 150 seconds is recommended.</li><li><term>Atlas A3 training products</term>, A200T A3 Box8 SuperPoD server, Atlas 800I A3 SuperPoD server: 360 seconds is recommended.</li><li>Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, Atlas 950 SuperPoD: 600 seconds is recommended.</li></ul>|
-|-textMetricsFilePath|string|None|Specifies the path of the custom metrics file. For details about its constraints, see [Constraints](../../../06_api/00_npu_exporter/03_custom_metrics_file.md#constraints).|
-|-enableLegacyMetrics|bool|false|Specifies whether to enable the legacy Prometheus network metric format of the Atlas 350 accelerator card. The default value is false, which means disabled.|
+|-port|int|8082| Listening port. Value range: 1025 to 40000.|
+|-updateTime|int|None| **To be sunset soon and not recommended.** Global configuration metric update interval. Value range: 1 to 60 seconds. It is recommended to configure the metric update interval by group. For details, see [Configuration File](#section103551921135917).<br>If the updateTime parameter is configured, it remains effective and takes precedence over intervalSeconds in the metricConfiguration.json/pluginConfiguration.json configuration files.|
+|-ip|string|None| This parameter has no default value and must be configured.<p>Listening IP address. It must be in valid IPv4 or IPv6 format. On hosts with multiple NICs, configuring it as 0.0.0.0 is not recommended.</p>|
+|-version|bool|false| Whether to query the NPU Exporter version number and commit ID and other detailed information.<ul><li>true: Query.</li><li>false: Do not query.</li></ul>|
+|-concurrency|int|5| Rate limiting size of the HTTP service. The default is 5 concurrent requests. Value range: 1 to 512.|
+|-logLevel|int|0| Log level:<ul><li>-1: debug</li><li>0: info</li><li>1: warning</li><li>2: error</li><li>3: critical</li></ul>|
+|-maxAge|int|7| Log backup retention time. Value range: 7 to 700, in days.|
+|-logFile|string|/var/log/mindx-dl/npu-exporter/npu-exporter.log| Log file.<p>When a single log file exceeds 20 MB, automatic rotation is triggered. The maximum file size cannot be modified. The naming format of rotated files is: npu-exporter-<i>{rotation_time}</i>.log, for example: npu-exporter-2023-10-07T03-38-24.402.log.</p>|
+|-maxBackups|int|30| Maximum number of rotated log files to retain. Value range: 1 to 180, in files.|
+|-containerMode|string|docker| Sets the container runtime type.<ul><li>Set to docker to indicate that the current environment uses Docker as the container runtime.</li><li>Set to containerd to indicate that the current environment uses Containerd as the container runtime.</li><li>Set to "isula" to indicate that the current environment uses iSula as the container runtime.</li></ul>|
+|-containerd|string|<ul><li>(Docker)unix:/run/docker/containerd/docker-containerd.sock</li><li>(Containerd)unix:///run/containerd/containerd.sock</li><li>(iSula)unix:///run/isulad.sock</li></ul>| Endpoint of the containerd daemon process, used to communicate with Containerd.<ul><li>If containerMode=docker, the default value is /run/docker/containerd/docker-containerd.sock. If the connection fails, it automatically attempts to connect to unix:///run/containerd/containerd.sock and unix:///run/docker/containerd/containerd.sock.</li><li>If containerMode=containerd, the default value is /run/containerd/containerd.sock.</li><li>If containerMode=isula, the default value is /run/isulad.sock.</li></ul><p>In general, use the default value. If you have modified the sock file path of Containerd, modify the corresponding path accordingly.</p><p>You can run the **ps aux \| grep containerd** command to check whether the sock file path of Containerd has been modified.</p>|
+|-endpoint|string|<ul><li>(Docker)unix:///var/run/dockershim.sock</li><li>(Containerd)unix:///run/containerd/containerd.sock</li><li>(iSula)unix:///run/isulad.sock</li></ul>| Sock address of the CRI server:<ul><li>If containerMode=docker, it connects to Dockershim to obtain the container list. The default value is /var/run/dockershim.sock.</li><li>If containerMode=containerd, the default value is /run/containerd/containerd.sock.</li><li>If containerMode=isula, the default value is /run/isulad.sock.</li></ul><p>In general, use the default value unless you have modified the sock file path of Dockershim or Containerd.</p><p>If the connection fails, it automatically attempts to connect to unix:///run/cri-dockerd.sock.</p>|
+|-limitIPConn|int|5| Value range of the TCP connection limit per IP: 1 to 128.|
+|-limitTotalConn|int|20| Value range of the total TCP connection limit of the program: 1 to 512.|
+|-limitIPReq|string|20/1| Request limit per IP. 20/1 indicates a limit of 20 requests per second. Each side of "/" supports a maximum of three digits.|
+|-cacheSize|int|102400| Limit on the number of cache keys. Value range: 1 to 1024000.|
+|--enable-healthz|bool|false| Whether to enable the health check service. During K8s deployment, it is enabled (true) by the component YAML configuration.<ul><li>true: Enable.</li><li>false: Disable.</li></ul>|
+|--healthz-address|string|11251| Listening port number of the health check service. Value range: 1025 to 65535. During K8s deployment, it is configured as 11256 by the component YAML. If the specified port is occupied, the component fails to start.|
+|--tls-cert-file|string|""| Path of the HTTPS certificate file. If empty, the HTTP protocol is used. It must be configured together with --tls-private-key-file or both left empty. For the configuration method and security precautions, see [Health Probe Security Hardening](../../../07_references/04_security_hardening.md).|
+|--tls-private-key-file|string|""| Path of the HTTPS private key file. If empty, the HTTP protocol is used. It must be configured together with --tls-cert-file or both left empty.|
+|-h or -help|None|None| Displays help information.|
+|-platform|string|Prometheus| Specifies the platform to integrate with.<ul><li>Prometheus: Integrate with Prometheus</li><li>Telegraf: Integrate with Telegraf</li></ul>|
+|-poll_interval|duration(int)|1| Interval for Telegraf data reporting, in seconds. This parameter takes effect only when integrating with the Telegraf platform, that is, it takes effect only when -platform=Telegraf is specified. Otherwise, this parameter does not take effect.|
+|-profilingTime|int|200| Configures the PCIe bandwidth collection time, in milliseconds. Value range: 1 to 2000.|
+|-hccsBWProfilingTime|int|200| Sampling duration of the HCCS link bandwidth. Value range: 1 to 1000, in milliseconds.|
+|-deviceResetTimeout|int|600| When the component starts, if the number of chips is insufficient, the maximum duration to wait for the driver to report the complete chips, in seconds. Value range: 10 to 600.<ul><li><term>Atlas A2 training products</term>, Atlas 800I A2, A200I A2 Box: 150 seconds is recommended.</li><li><term>Atlas A3 training products</term>, Atlas 800I A3: 360 seconds is recommended.</li><li><term>Ascend 950PR&950DT products</term>: 600 seconds is recommended.</li></ul>|
+|-textMetricsFilePath|string|None| Specifies the path of the custom metrics file. For details about its constraints, see [Constraints](../../../06_api/00_npu_exporter/03_custom_metrics_file.md#constraints).|
+|-enableLegacyMetrics|bool|false| Specifies whether to enable the legacy Prometheus network metric format of the Atlas 350 accelerator card. The default value is false, which means disabled.|
 
 ## Dynamic Configuration Loading Instructions<a name="dynamic-configuration-loading-instructions"></a>
 

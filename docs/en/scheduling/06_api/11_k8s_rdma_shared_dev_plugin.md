@@ -36,7 +36,7 @@ livenessProbe:
    failureThreshold: 3
 ```
 
-For details about the probe startup parameters, see [Parameter Description](../05_developer_guide/00_installation_deployment/00_manual_installation/12_k8s_rdma_shared_dev_plugin.md#parameter-description).
+For details about the probe startup parameters, see [Parameter Description](../05_developer_guide/00_installation_deployment/00_manual_installation/11_k8s_rdma_shared_dev_plugin.md#parameter-description).
 
 ## Configuration File Description<a name="ZH-CN_TOPIC_config_k8s_rdma_shared_dev_plugin"></a>
 
@@ -69,9 +69,7 @@ K8s RDMA Shared Dev Plugin configures a selector for RDMA devices through the JS
 |------|---------|------|--------|--------------------------------------------------------------|
 | periodicUpdateInterval | No | int | 60 | Interval for periodically updating device resources, in seconds. When the value is 0, the periodic device resource update function is disabled. When not set, the default value of 60 seconds is used. The value cannot be less than 0. |
 | faultDetectPeriod | No | int | 0 | Fault detection period, in seconds. It takes effect only for UB devices. When not set or the value is less than 1, the fault detection function is disabled.                   |
-| configList | Yes | object list | - | Resource configuration list. Each element describes the reporting rules for a group of RDMA devices. The list contains at least 1 element.                       |
-
-For the field description of each configuration object in configList, see [Table 4](#table_config_list_k8s_rdma_shared_dev_plugin).
+| configList | Yes | object list | - | Resource configuration list. Each element describes the reporting rules for a group of RDMA devices. The list contains at least 1 element.<p>For the field description of each configuration object in configList, see [Table 4](#table_config_list_k8s_rdma_shared_dev_plugin). </p>|
 
 **Table 4** configList fields<a name="table_config_list_k8s_rdma_shared_dev_plugin"></a>
 
@@ -79,7 +77,7 @@ For the field description of each configuration object in configList, see [Table
 |------|---------|------|--------|------|
 | resourceName | Yes | string | - | Device resource name. It must be unique within the resourcePrefix scope and supports only uppercase and lowercase letters, digits, and underscores. The final resource name format reported to K8s is `<resourcePrefix>/<resourceName>`. |
 | resourcePrefix | No | string | rdma | Device resource prefix. It must be a valid DNS subdomain (supporting only lowercase letters, digits, hyphens, and dots). |
-| rdmaHcaMax | Yes | int | - | Maximum number of RDMA resources that the device plugin can provide. The value cannot be less than 0. |
+| rdmaHcaMax | Yes | int | - | Maximum number of RDMA resources that the device plugin can provide. The value cannot be less than 0. In UB scenarios, this field does not take effect. The number of RDMA resources that can be provided is determined by the number of UB devices actually discovered.|
 | selectors | No | object | - | Device selector, used to filter target devices. For details, see [Table 5](#table_selectors_k8s_rdma_shared_dev_plugin) for the field description. |
 
 **Table 5** selectors fields<a name="table_selectors_k8s_rdma_shared_dev_plugin"></a>
@@ -113,7 +111,7 @@ In the ConfigMap, the Key of the Data field is `DpuInfoCfg`, and the Value is th
 |DPUInfo|object|DPU device fault information.|
 |-DPUList|list|DPU device list. Each element in the array describes the fault information of a DPU device. For a detailed description, see [Table 7](#table_dpuitem_k8s_rdma_shared_dev_plugin).|
 |-NodeEvent|object|Node-level fault events, such as DPU card removal. For a detailed description, see [Table 8](#table_nodeevent_k8s_rdma_shared_dev_plugin).|
-|UpdateTime|RFC 3339 timestamp|The update time of the current DPU information, used to identify the latest reporting time of the fault information.|
+|UpdateTime|Unix timestamp in milliseconds|The update time of the current DPU information, used to identify the latest reporting time of the fault information.|
 
 **Table 7** DPUList element description
 <a name="table_dpuitem_k8s_rdma_shared_dev_plugin"></a>
@@ -126,6 +124,7 @@ In the ConfigMap, the Key of the Data field is `DpuInfoCfg`, and the Value is th
 |DeviceID|string|Device ID in hexadecimal format.|
 |VendorID|string|Vendor ID in hexadecimal format.|
 |FaultList|list|List of fault details on this DPU device. Each element in the array describes one piece of fault information. For details, see [Table 9](#table_faultdetail_k8s_rdma_shared_dev_plugin).|
+|AffectedNPU|list|List of NPU device IDs affected by the fault of this device. Only NPU device IDs that use the current UB NIC as their primary NIC are included.|
 
 **Table 8** NodeEvent field description
 <a name="table_nodeevent_k8s_rdma_shared_dev_plugin"></a>
@@ -145,104 +144,95 @@ In the ConfigMap, the Key of the Data field is `DpuInfoCfg`, and the Value is th
 | Description |string|Fault description information.|
 | FaultLevel  |string|Fault level.|
 
-## Business Pod Usage and Mounted Resource Description<a name="ZH-CN_TOPIC_biz_pod_check_k8s_rdma_shared_dev_plugin"></a>
+## Configuration in Container Scenarios
 
-When a business Pod uses RDMA shared devices, K8s RDMA Shared Dev Plugin automatically mounts all RDMA devices into the Pod. The following steps are used to verify the resource request and device mounting status of the business Pod.
+When a service needs to use a UB NIC inside a container, the RoCE device and driver must be mounted; otherwise, the UB NIC cannot be initialized in the container. For an example of the resources required in a container in the UB NIC scenario, see [Table 10](#table1011k8srdmashareddevplugin).
 
-### Business Pod Resource Request Configuration<a name="ZH-CN_TOPIC_biz_pod_resource_config"></a>
+**Table 10** Resources required to use a UB NIC in a container
+<a name="table1011k8srdmashareddevplugin"></a>
 
-To use RDMA shared devices, a business Pod must declare resource requests in its Pod configuration. The following configuration example requests one RDMA device resource (for the maximum configurable value, see [Configuration File Description](#configuration-file-description) rdmaHcaMax):
+| Resource Path | Type |
+|---------|------|
+| /dev/infiniband/rdma_cm | Character device |
+| /dev/infiniband/uverbs{N} | Character device (N indicates the device number) |
+| /etc/libibverbs.d/hrn5.driver | Driver configuration file |
+| /usr/lib64/libhrn5-rdmav34.so | Dynamic library |
+| /usr/lib64/libhrn5-rdmav.so | Dynamic library |
+| /usr/lib64/libibv_extend.so | Dynamic library |
+| /usr/lib64/libibv_extend.so.4 | Dynamic library |
+| /usr/lib64/libibv_extend.so.4.2.0 | Dynamic library |
+
+How to obtain each resource:
+
+- **Character devices**: No mounting configuration is required. The DaemonSet of the component has mounted the host `/dev` directory and discovers UB devices through the host sysfs. After a service Pod requests the `<resourcePrefix>/<resourceName>` resource, kubelet automatically injects the `/dev/infiniband/rdma_cm` and the corresponding `uverbs{N}` character devices when creating the container, based on the device information returned by the component.
+- **Driver configuration files and dynamic libraries**: They are not automatically mounted by the component. They must be included in the service image, or mounted from the host through hostPath. You are advised to install them in advance in the service image. If a non-UB NIC is used, consult the NIC provider to confirm the files to be mounted.
+- **rdma-core**: An open-source RDMA user-mode component that provides basic libraries such as libibverbs and librdmacm, and tools such as `ibv_devinfo`. The dynamic libraries provided by the UB NIC driver in Table 10 (`libhrn5-*` and `libibv_extend*`) are vendor extensions of libibverbs and must run on top of libibverbs. Ensure that they are installed in the training image, or directly use a training image with rdma-core preinstalled.
+
+In the container scenario, you also need to configure the `NET_ADMIN`, `SYS_ADMIN`, and `IPC_LOCK` permissions for the service container. For the configuration method, see the YAML example below.
+
+The following is a configuration example of mounting driver configuration files and dynamic libraries through `hostPath` (for the other Pod configurations, see [Business Pod Usage and Mounted Resource Description](../04_usage/03_basic_scheduling/07_dpu_scheduling.md#ZH-CN_TOPIC_biz_pod_check_k8s_rdma_shared_dev_plugin)):
 
 ```yaml
 apiVersion: v1
-kind: Pod
+kind: AscendJob
 metadata:
-   name: mofed-test-pod
+   name: rdma-test
 spec:
    restartPolicy: OnFailure
    hostNetwork: true
    containers:
       - image: rdma-test:latest
-        name: mofed-test-ctr
+        name: ub-rdma-test-ctr
         imagePullPolicy: IfNotPresent
         securityContext:
            capabilities:
-              add: [ "IPC_LOCK" ]
+              add: [ "NET_ADMIN", "SYS_ADMIN", "IPC_LOCK" ]
         resources:
            requests:
               huawei.com/ub_rdma: '1'
            limits:
               huawei.com/ub_rdma: '1'
-        command:
-           - sh
-           - -c
-           - |
-              ls -l /dev/infiniband /sys/class/infiniband
-              sleep 1000000
+        volumeMounts:
+           - name: hrn5-driver-config
+             mountPath: /etc/libibverbs.d/hrn5.driver
+           - name: hrn5-rdmav34
+             mountPath: /usr/lib64/libhrn5-rdmav34.so
+           - name: hrn5-rdmav
+             mountPath: /usr/lib64/libhrn5-rdmav.so
+           - name: ibv-extend
+             mountPath: /usr/lib64/libibv_extend.so
+           - name: ibv-extend-4
+             mountPath: /usr/lib64/libibv_extend.so.4
+           - name: ibv-extend-4-2-0
+             mountPath: /usr/lib64/libibv_extend.so.4.2.0
+   volumes:
+      - name: hrn5-driver-config
+        hostPath:
+           path: /etc/libibverbs.d/hrn5.driver
+           type: File
+      - name: hrn5-rdmav34
+        hostPath:
+           path: /usr/lib64/libhrn5-rdmav34.so
+           type: File
+      - name: hrn5-rdmav
+        hostPath:
+           path: /usr/lib64/libhrn5-rdmav.so
+           type: File
+      - name: ibv-extend
+        hostPath:
+           path: /usr/lib64/libibv_extend.so
+           type: File
+      - name: ibv-extend-4
+        hostPath:
+           path: /usr/lib64/libibv_extend.so.4
+           type: File
+      - name: ibv-extend-4-2-0
+        hostPath:
+           path: /usr/lib64/libibv_extend.so.4.2.0
+           type: File
 ```
-
-> [!NOTICE]
-> `hostNetwork` must be set to `true`. Because a business Pod needs to access the host's network namespace to use RDMA devices, hostNetwork mode must be enabled.
-> The resource name format is `<resourcePrefix>/<resourceName>`, which must be defined in the K8s RDMA Shared Dev Plugin configuration file (for details, see [Configuration File Description](#configuration-file-description)).
-
-### Checking the Business Pod Status<a name="ZH-CN_TOPIC_biz_pod_status_check"></a>
 
 > [!NOTE]
 >
-> When a business container uses a 1825 DPU, in addition to component mounting, the following are also required:
->
-> - Configure `hostNetwork: true`
-> - Configure the user-mode driver. Choose either of the following two methods:
->   1. Install the OFED driver for the 1825 DPU in the image.
->   2. Mount the OFED driver for the 1825 DPU from the host after the container starts.
-
-1. **Check the Pod status.**
-
-   Run the following command to check whether the business Pod is created successfully:
-
-    ```shell
-    kubectl get pod rdma-app -o wide
-    ```
-
-   The following is an example of the output. **Running** indicates that the Pod is created successfully:
-
-    ```ColdFusion
-    NAME       READY   STATUS    RESTARTS   AGE   IP            NODE
-    rdma-app   1/1     Running   0          10s   10.244.1.*   compute-node-1
-    ```
-
-### RDMA Device Verification in a Pod<a name="ZH-CN_TOPIC_biz_pod_rdma_verify"></a>
-
-After the service Pod is created successfully, you can verify whether the RDMA devices are correctly mounted by the component through the following steps:
-
-1. **Enter the Pod.**
-
-    ```shell
-    kubectl exec -it rdma-app -- /bin/bash
-    ```
-
-2. **Check the RDMA device nodes.**
-
-    ```shell
-    ls -la /dev/infiniband/
-    ```
-
-   Under normal circumstances, device node files such as `uverbs0` and `uverbs1` should be displayed. If the device nodes are empty or do not exist, the RDMA devices are not correctly mounted.
-
-After the service Pod is created successfully, you also need to check the mounting status of the RDMA NIC devices and the corresponding network interfaces:
-
-1. **Check Infiniband device information.**
-
-    ```shell
-    ls -la /sys/class/infiniband/
-    ```
-
-   Under normal circumstances, the RDMA NIC devices on the current node should be displayed, such as `hrn5_0` and `hrn5_1`.
-
-2. **Check network interface information.**
-
-     ```shell
-     ls -la /sys/class/net/
-     ```
-
-   Under normal circumstances, the network interface devices on the node should be displayed, including the network interfaces corresponding to the RDMA NICs (such as `ens***`). If the network does not appear in the Pod, check whether hostNetwork is set to true.
+> - When mounting dynamic libraries, the mount path in the container must be the same as the host path (for example, `/usr/lib64`); otherwise, the dynamic libraries may fail to find each other due to dependencies.
+> - The file paths and version numbers in Table 10 and the preceding example (for example, `libibv_extend.so.4.2.0`) are examples only in the UB NIC scenario. As the driver version is upgraded, the minor version number of the dynamic library may change. Use the driver files actually installed on the host as the basis.

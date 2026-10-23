@@ -1,7 +1,5 @@
 # Resumable Training APIs<a name="ZH-CN_TOPIC_0000002479226856"></a>
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T01:44:07.212Z pushedAt=2026-06-09T02:05:50.661Z -->
-
 ## taskd.python.toolkit.recover_module.recover_manager. DLRecoverManager (Internal, Do Not Call)<a name="ZH-CN_TOPIC_0000002479386778"></a>
 
 **Function Description<a name="section95016253292"></a>**

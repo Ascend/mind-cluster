@@ -45,7 +45,7 @@ You can prevent DoS attacks on the system by limiting the connection rate to the
 
 ### sudo Configuration<a name="ZH-CN_TOPIC_0000002511346403"></a>
 
-- Set the `targetpw` option in the *sudo command` to require the target user's password by default. This prevents all users from escalating to the root account and executing system commands without entering the root password after adding sudo rules, which could lead to unauthorized command execution by ordinary users. This option is not added by default; it is recommended to add it.
+- Set the `targetpw` option in the **sudo command** to require the target user's password by default. This prevents all users from escalating to the root account and executing system commands without entering the root password after adding sudo rules, which could lead to unauthorized command execution by ordinary users. This option is not added by default; it is recommended to add it.
 
     Run the `cat /etc/sudoers | grep -E "^[^#]*Defaults[[:space:]]+targetpw"` command to check if the `"Defaults targetpw"` or `"Defaults rootpw"` configuration entry exists. If not exist, add the `"Defaults targetpw"` or `"Defaults rootpw"` configuration entry under the `"#Defaults specification"` section in the `"/etc/sudoers"` file.
 
@@ -57,7 +57,7 @@ You can prevent DoS attacks on the system by limiting the connection rate to the
 
 Use the Linux built-in ASLR (Address Space Layout Randomization) feature to strengthen protection against vulnerabilities.
 
-Write 2` to the `"/proc/sys/kernel/randomize_va_space"` file.
+Write 2 to the `"/proc/sys/kernel/randomize_va_space"` file.
 
 ## Security Hardening for Docker<a name="ZH-CN_TOPIC_0000002479386408"></a>
 
@@ -291,7 +291,7 @@ The seccomp configuration can constrain the system calls of a container, reducin
 
 In Kubernetes versions earlier than 1.19, seccomp uses the `annotations[seccomp.security.alpha.kubernetes.io/pod]` method. In version 1.19 and later, the seccomp feature has reached GA. For version 1.19 and later, it is recommended to use `securityContext.seccompProfile` for configuration, and starting from version 1.27, the annotation method is no longer effective. For details, see: [Kubernetes Removals and Major Changes In v1.27](https://kubernetes.io/blog/2023/03/17/upcoming-changes-in-kubernetes-v1-27/#support-for-deprecated-seccomp-annotations). Therefore, modify the seccomp configuration based on different Kubernetes versions and container security requirements.
 
-There are two configuration methods provided to modify the MindCluster component settings. The following is the seccomp configuration for Resilience Controller, and other components have reserved related configurations.
+There are two configuration methods provided to modify the MindCluster component settings. The following is the seccomp configuration for clusterD, and other components have reserved related configurations.
 
 >[!NOTE]
 >
@@ -300,12 +300,12 @@ There are two configuration methods provided to modify the MindCluster component
 ```Yaml
     metadata:
       labels:
-        app: resilience-controller
+        app: clusterd
       ##### For Kubernetes versions lower than 1.19, seccomp is used with annotations.
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: runtime/default
     spec:
-      ##### For Kubernetes versions 1.19 and above, seccomp is used with securityContext.
+      ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
 #      securityContext:
 #        seccompProfile:
 #          type: RuntimeDefault
@@ -328,7 +328,7 @@ Kubernetes requires the following hardening:
 
 - kubelet:
     - To prevent a single Pod from occupying too many processes, you can enable `SupportPodPidsLimit` and set `--pod-max-pids`. Add `--feature-gates=SupportPodPidsLimit=true --pod-max-pids=<max pid number>` to the `KUBELET_KUBEADM_ARGS` item in the kubelet configuration file. After modifying the configuration, restart to take effect. For details, refer to the [Kubernetes official documentation](https://kubernetes.io/docs/concepts/policy/pid-limiting/).
-    - Modify or add the startup parameter `"--tls-cipher-suites"` and set its value as follows to avoid risks from insecure TLS cipher suites.
+    - Modify or add the startup parameter `--tls-cipher-suites` and set its value as follows to avoid risks from insecure TLS cipher suites.
 
         ```shell
         --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
@@ -831,6 +831,8 @@ If the above scenarios do not apply, the default HTTP configuration is sufficien
     | NodeD | 11255 |
     | NPU Exporter | 11256 |
     | K8s RDMA Shared Dev Plugin | 11257 |
+    | Ascend Dynamic Resource Allocation | 11258 |
+    | DPU Exporter | 11259 |
 
 ## Viewing Command Line Operation Records<a name="ZH-CN_TOPIC_0000002524473029"></a>
 

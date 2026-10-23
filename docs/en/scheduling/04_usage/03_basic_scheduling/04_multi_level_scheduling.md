@@ -9,9 +9,10 @@ Before using the multi-level scheduling feature in command-line scenarios, ensur
 - Volcano
 - Ascend Device Plugin
 - Ascend Docker Runtime
-- Ascend Operator
+- Ascend Operator (mandatory for AscendJob)
 - ClusterD
 - NodeD
+- Infer Operator (mandatory for InferServiceSet jobs)
 
 **Usage<a name="section179431435174811duoji"></a>**
 
@@ -25,13 +26,13 @@ The multi-level scheduling feature only supports distributed jobs whose job Pod 
 **Supported Product Forms<a name="section169961844182917duoji"></a>**
 
 - Atlas 900 A3 SuperPoD
-- Atlas 9000 A3 SuperPoD cluster computing system
+- Atlas 9000 A3 SuperPoD
 
 **Usage Process**
 
 For the process of using the multi-level scheduling feature through the command line, see [Figure 1](#fig2425249866601duoji).
 
-**Figure 1**  Usage flow<a name="fig2425249866601duoji"></a>
+**Figure 1** Usage flow<a name="fig2425249866601duoji"></a>
 
 ![](../../../figures/scheduling/multi-level-scheduling-process.PNG)
 
@@ -43,7 +44,7 @@ Multi-level scheduling is an advanced scheduling strategy within the ascend-for-
 
 - Resource tree: Foundation of multi-level scheduling, which organizes cluster resources according to physical or logical hierarchies.
 
-  - Root: Represents the resources of the entire cluster that belong to the same topology network. A single multi-level scheduling task can only be scheduled to a single topology network.
+  - Root: Represents the resources of the entire cluster that belong to the same topology network. A single multi-level scheduling job can only be scheduled to a single topology network.
   - Intermediate nodes: Represent resource aggregation at different levels (such as racks, switches, etc.).
   - Leaf nodes: Represent specific computing resources (servers).
 
@@ -63,13 +64,13 @@ Multi-level scheduling is an advanced scheduling strategy within the ascend-for-
   - Communication between node0 and node2 requires passing through the Layer-2 switch, resulting in lower communication efficiency.
   - Communication between node0 and node4 requires passing through the Layer-3 switch, resulting in the lowest communication efficiency.
 
-  The actual hardware networking mode can be mapped to one or more tree structures for subsequent task scheduling. For details on resource tree configuration in multi-level scheduling scenarios, see [Configuring Volcano Startup Parameters](#configuring-volcano-startup-parameters).
+  The actual hardware networking mode can be mapped to one or more tree structures for subsequent job scheduling. For details on resource tree configuration in multi-level scheduling scenarios, see [Configuring Volcano Startup Parameters](#configuring-volcano-startup-parameters).
 
-- Task tree: Represents the multi-level resource requirements of a job.
+- Job tree: Represents the multi-level resource requirements of a job.
 
   - Each layer corresponds to a level of the resource tree.
   - The size of each layer indicates the number of resource nodes required at that level.
-  - The task tree reflects the distributed topology requirements of the job.
+  - The job tree reflects the distributed topology requirements of the job.
 
 - Scheduling tree: A temporary structure built on the resource tree to execute scheduling algorithms.
 
@@ -94,11 +95,13 @@ Multi-level scheduling is an advanced scheduling strategy within the ascend-for-
 - Scheduling execution phase
 
   1. Create a scheduling tree: Create a scheduling tree based on the resource tree and add scheduling-related attributes.
-  2. Initialize nodes: Calculate the number of assignable tasks and the fragmentation score for each node.
+  2. Initialize nodes: Calculate the number of assignable jobs and the fragmentation score for each node.
   3. Execute the scheduling algorithm:
 
      - Prioritize scheduling using non-reserved resources. If scheduling fails, attempt to use reserved resources for scheduling.
      - Select the scheduling scheme with the lowest fragmentation score.
+
+  For the detailed configuration method and scheduling effect, see [Configuration Example](#configuration-example).
 
 ## Using via Command Line (Volcano) <a name="ZH-CN_TOPIC_0000002479227158duoji"></a>
 
@@ -125,7 +128,7 @@ data:
 ...
     configurations:
       - name: init-params
-        arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2","useClusterInfoManager":"false","self-maintain-available-card":"true","super-pod-size": "48","reserve-nodes": "2","forceEnqueue":"true","resource-level-config": '{"default":  {"level1": {"label": "huawei.com/topotree.superpodid", "reservedNode": 1}, "level2": {"label": "huawei.com/topotree.groupid"}}}'}
+        arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2","useClusterInfoManager":"false","self-maintain-available-card":"true","super-pod-size": "128","reserve-nodes": "2","forceEnqueue":"true","resource-level-config": '{"default":  {"level1": {"label": "huawei.com/topotree.superpodid", "reservedNode": 1}, "level2": {"label": "huawei.com/topotree.groupid"}}}'}
 ...
 ```
 
@@ -147,7 +150,7 @@ Users can add labels to nodes in the following ways:
 
 The keys and values of the labels required on the node are as follows:
 
-- Use `huawei.com/topotree` as the key of the node label, and the name of the network topology tree in the Volcano Scheduler startup parameter configuration as the value. The Ascend Volcano plugin will classify nodes with the same `huawei.com/topotree` label value into the same topology tree during task scheduling. If the `huawei.com/topotree` label is not configured on a node, Volcano will, by default, consider the node as belonging to the default topology tree during scheduling.
+- Use `huawei.com/topotree` as the key of the node label, and the name of the network topology tree in the Volcano Scheduler startup parameter configuration as the value. The Ascend Volcano plugin will classify nodes with the same `huawei.com/topotree` label value into the same topology tree during job scheduling. If the `huawei.com/topotree` label is not configured on a node, Volcano will, by default, consider the node as belonging to the default topology tree during scheduling.
 - The value of the `label` field in the network layer definition configured in the Volcano Scheduler topology startup parameter configuration serves as the key, and the node's ID in the physical network layer serves as the value. The value must be unique within the cluster.
 
 #### Adding Node Labels Manually
@@ -200,7 +203,7 @@ Manually adding node labels using `kubectl` commands is inefficient and error-pr
     ...
     ```
 
-   For the Atlas 9000 A3 SuperPoD cluster computing system, you can generate a network configuration CSV file by using a script together with an LLD document in XLSX format. The command is as follows:
+   For the Atlas 9000 A3 SuperPoD, you can generate a network configuration CSV file by using a script together with an LLD document in XLSX format. The command is as follows:
 
     ```shell
     python3 lld_parser.py --input {LLD file path}  --output {Generated csv configuration file path} --topotree-name default
@@ -229,11 +232,117 @@ Manually adding node labels using `kubectl` commands is inefficient and error-pr
 >[!NOTE]
 >For other detailed instructions, see the `-h` parameter of each script or the README in the `multilevel-label-tool` directory.
 
+### Configuration Example<a name="section1674351750duoji"></a>
+
+For multi-level scheduling, level information must be configured separately on the cluster side and the job side: the cluster side describes network levels through node labels (which nodes are close to each other), and the job side declares the level requirements of Pods through annotations (which Pods need to be placed close together). The scheduler matches the two. This section uses an eight-node cluster and a four-node training job (four replicas in total, with each Pod requesting eight NPUs) as an example to describe the entire process from configuration to scheduling result in three steps.
+
+**Step 1: Configure Network Levels on the Cluster Side (Node Labels and Volcano Startup Parameters)**
+
+The cluster contains eight nodes, which are divided into two SuperPoD levels (`superpodid 0` and `superpodid 1`). All nodes belong to the same group ID (`groupid 0`). Assume that the node labels are as follows:
+
+|Node|huawei.com/topotree|huawei.com/topotree.superpodid|huawei.com/topotree.groupid|
+|--|--|--|--|
+|node0 to node3|default|0|0|
+|node4 to node7|default|1|0|
+
+node0 to node3 belong to `superpodid 0` and are directly interconnected through the first-layer switch, providing the highest communication efficiency. node4 to node7 belong to `superpodid 1`. Communication between the two groups of nodes must pass through an upper-layer switch, resulting in lower communication efficiency.
+
+In `volcano-v{version}.yaml`, define the node label corresponding to each network level through the `resource-level-config` parameter:
+
+```yaml
+...
+data:
+  volcano-scheduler.conf: |
+...
+    configurations:
+      - name: init-params
+        arguments: {"resource-level-config": '{"default":  {"level1": {"label": "huawei.com/topotree.superpodid", "reservedNode": 1}, "level2": {"label": "huawei.com/topotree.groupid"}}}'}
+...
+```
+
+- level1: The network level closest to the nodes. Node groups are divided using the `superpodid` label. One node is reserved in each level1 node group (`reservedNode: 1`), that is, node3 and node7 are reserved nodes, which participate in scheduling only when other resources are insufficient.
+- level2: A higher-layer network aggregation. Node groups are divided using the `groupid` label.
+
+>[!NOTE]
+>
+>The number of levels must be consistent with the actual networking depth of the cluster. Multiple levels such as level1, level2, and level3 can be defined, and the levels must start from level1 and be consecutive. In this example, the networking has two layers, so only two levels are configured.
+
+**Step 2: Configure Level Requirements on the Job Side (Job YAML Annotations)**
+
+The YAML annotation configuration of a four-node job (four replicas in total) is as follows:
+
+```yaml
+annotations:
+  huawei.com/schedule_policy: multilevel # Configures the scheduling policy as multilevel scheduling policy
+  huawei.com/affinity-config: level1=2,level2=4 # Configures the network group size for different levels according to the actual needs of the job
+```
+
+For the complete job YAML configuration, see [pytorch_multinodes_acjob_super_pod_multilevel.yaml](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/train/basic-training/multilevel/pytorch_multinodes_acjob_super_pod_multilevel.yaml).
+
+In `affinity-config`, the number after `level` indicates the network level sequence number, and the number after the equal sign indicates how many Pods are grouped together within the network at that level. In this example:
+
+- level1=2: Every two Pods form a close-knit group, and the Pods in the group must be placed under the same `superpodid`.
+- level2=4: Four Pods form a large group, and the Pods in the group must be placed under the same `groupid`.
+
+The job tree obtained after the preceding annotations are expanded is as follows. The job tree describes the communication structure of the job: Pods in the same level1 group communicate most frequently and must be directly connected through the first-layer switch; Pods in different level1 groups but the same level2 group communicate less frequently and are allowed to pass through an upper-layer switch.
+
+```text
+Job tree (what the job requires)
+root (4 Pods)
+└── level2 group (4 Pods, must be in the same groupid)
+    ├── level1 group A (2 Pods, must be in the same superpodid) → Pod 1, Pod 2
+    └── level1 group B (2 Pods, must be in the same superpodid) → Pod 3, Pod 4
+```
+
+In addition, the number of NPUs requested by each Pod must be consistent with the maximum number of NPUs on the node ("huawei.com/Ascend910: 8" in this example).
+
+**Step 3: The Scheduler Matches the Job Tree with the Resource Tree (Scheduling Result)**
+
+The scheduler collects healthy nodes to build a resource tree and attaches scheduling attributes (number of assignable jobs, reservation flag, and fragmentation score) to it to form a scheduling tree. The scheduling tree is the operation object of the scheduling algorithm:
+
+```text
+Resource tree (what the cluster has)
+root (default topology tree, groupid=0, 8 nodes in total)
+├── superpodid=0 (level1 node group, 4 nodes)
+│   ├── node0 (8 NPUs, idle)
+│   ├── node1 (8 NPUs, idle)
+│   ├── node2 (8 NPUs, idle)
+│   └── node3 (8 NPUs, idle, reserved node)
+└── superpodid=1 (level1 node group, 4 nodes)
+    ├── node4 (8 NPUs, idle)
+    ├── node5 (8 NPUs, idle)
+    ├── node6 (8 NPUs, idle)
+    └── node7 (8 NPUs, idle, reserved node)
+```
+
+The scheduler traverses the scheduling tree to find a placement scheme that allows the job tree to fit completely. In this example, the job tree requires that "4 Pods belong to `groupid 0` and every 2 Pods belong to the same `superpodid`". The candidate schemes that satisfy the constraints are as follows:
+
+|Candidate Scheme|Placement of Pod 1 and Pod 2|Placement of Pod 3 and Pod 4|
+|--|--|--|
+|Scheme 1|node0 and node1 (superpodid 0)|node4 and node5 (superpodid 1)|
+|Scheme 2|node0 and node1 (superpodid 0)|node4 and node6 (superpodid 1)|
+|Scheme 3|node0 and node2 (superpodid 0)|node5 and node6 (superpodid 1)|
+|...|...|...|
+
+After scheduling, two idle nodes remain in both `superpodid 0` and `superpodid 1` for each candidate scheme, and the fragmentation score (which measures how scattered the remaining resources are) is the same. The scheduler selects nodes based on node priority. Eventually, Pod 1 and Pod 2 are scheduled to node0 and node1, and Pod 3 and Pod 4 are scheduled to node4 and node5.
+
+If the cluster is partially occupied by other jobs (for example, node1 and node2 are fully occupied), the only idle non-reserved node left in `superpodid` 0 is node0, which cannot accommodate a level1 group alone (two nodes are required). Therefore, one level1 group can be scheduled only by using node0 and the reserved node node3, and the other level1 group preferentially uses the non-reserved nodes node4 and node5. Only when the number of idle non-reserved nodes is insufficient does the scheduler include reserved nodes in scheduling.
+
+If the annotation is changed to "level1=4,level2=4", the job tree requires that all four Pods belong to the same `superpodid`, and the scheduling result changes to node0 to node3. All Pods are directly connected through the first-layer switch, providing the highest communication efficiency. You can select an appropriate level configuration based on the job requirements for scale and communication performance.
+
+**Configuration Verification Failure Example**
+
+If the total number of job replicas is 4 but "level1=1,level2=3" is configured, the total number of job replicas must be an integer multiple of all level values (4 is not an integer multiple of 3). As a result, verification fails in the job verification phase and the scheduler rejects the job. Based on the verification failure information in the scheduler log, you can check whether the level configuration of `affinity-config` meets the following requirements:
+
+- When a job has more than one level, the value of level n must be an integer multiple of n-1.
+- The total number of job replicas must be an integer multiple of all levels.
+- The job level configuration must start from level1 and be consecutive in ascending order.
+
 ### Preparing the Job YAML<a name="ZH-CN_TOPIC_000000296583duoji"></a>
 
 #### Select a YAML Example<a name="ZH-CN_TOPIC_0000002479duoji"></a>
 
-Multi-level scheduling tasks are configured additionally on top of full-NPU scheduling. The following YAML examples illustrate this.
+Multi-level scheduling jobs are configured additionally on top of full-NPU scheduling. The following YAML examples illustrate this.
 
 **Table 1** YAML examples
 
@@ -258,7 +367,7 @@ Multi-level scheduling tasks are configured additionally on top of full-NPU sche
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="10.280000000000001%" headers="mcps1.2.7.1.5 "><p id="p3707749162616"><a name="p3707749162616"></a><a name="p3707749162616"></a>The example defaults to a two-node job.</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/tree/branch_v26.1.0/samples/train/basic-training/without-ranktable
+<td class="cellrowborder" rowspan="2" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/tree/release_v26.2.0/samples/train/basic-training/without-ranktable
 ">Get YAML</a></p>
 </td>
 </tr>
@@ -280,12 +389,12 @@ This section only provides the YAML parameters required for multi-level scheduli
 
 |Parameter|Value|Description|
 |--|--|--|
-|`huawei.com/schedule_policy`|multilevel|A multi-level scheduling task must specify this unique scheduling policy.|
-|`huawei.com/affinity-config`|<p>level1=x,level2=y,...</p><p>Where x, y... are the subtask sizes at the corresponding network levels.</p>|<p>Configures the affinity levels for multi-level scheduling of the task.</p><p>The format must be a concatenation of strings in the style of leveli=ni, separated by commas. Here, i is the network level sequence number, and ni is the number of replicas for the subtask at that network level. For example, for a task with a total of 8 replicas, "level1=2,level2=4" means that every 2 Pods in the task are assigned to nodes with the same level1 label, and every 4 Pods are assigned to nodes with the same level2 label.</p><p>The network level configuration must meet the following requirements:<ul><li>When the task has more than one level, the value of level n must be an integer multiple of n-1.</li><li>The total number of task replicas must be an integer multiple of all levels.</li><li>The task level configuration must start from level1 and be consecutive in ascending order.</li></ul></p>|
+|`huawei.com/schedule_policy`|multilevel|A multi-level scheduling job must specify this unique scheduling policy.|
+|`huawei.com/affinity-config`|<p>level1=x,level2=y,...</p><p>Where x, y... are the subjob sizes at the corresponding network levels.</p>|<p>Configures the affinity levels for multi-level scheduling of the job. For the value meaning and scheduling effect, see [Configuration Example](#configuration-example).</p><p>The format must be a concatenation of strings in the style of leveli=ni, separated by commas. Here, i is the network level sequence number, and ni is the number of replicas for the subjob at that network level. For example, for a job with a total of 8 replicas, "level1=2,level2=4" means that every 2 Pods in the job are assigned to nodes with the same level1 label, and every 4 Pods are assigned to nodes with the same level2 label.</p><p>The network level configuration must meet the following requirements:<ul><li>When the job has more than one level, the value of level n must be an integer multiple of n-1.</li><li>The total number of job replicas must be an integer multiple of all levels.</li><li>The level configuration must start from level1 and be consecutive in ascending order.</li></ul></p>|
 
 #### Configuring YAML<a name="ZH-CN_TOPIC_00000025113471duoji"></a>
 
-This section guides users on how to configure the job YAML for the multi-level scheduling feature. Taking `pytorch_multinodes_acjob_super_pod.yaml` as an example, create a multi-level scheduling training job on the Atlas 9000 A3 SuperPoD cluster computing system. The modification example is as follows.
+This section guides users on how to configure the job YAML for the multi-level scheduling feature. Taking `pytorch_multinodes_acjob_super_pod.yaml` as an example, create a multi-level scheduling training job on the Atlas 9000 A3 SuperPoD. The modification example is as follows.
 
 ```Yaml
 apiVersion: mindxdl.gitee.com/v1
@@ -302,6 +411,7 @@ metadata:
 spec:
   schedulerName: volcano  # Takes effect when the Ascend Operator component's startup parameter enableGangScheduling is set to true
   runPolicy:
+    ttlSecondsAfterFinished: 30 # TTL (time to live) after the job is completed.
     schedulingPolicy:    # Takes effect when the Ascend Operator component's startup parameter enableGangScheduling is set to true
       minAvailable: 8     # Total number of job replicas
       queue: default  # Queue to which the job belongs

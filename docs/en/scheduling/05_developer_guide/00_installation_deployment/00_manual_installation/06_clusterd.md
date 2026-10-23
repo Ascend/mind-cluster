@@ -1,10 +1,10 @@
 # ClusterD<a name="ZH-CN_TOPIC_0000002511346341"></a>
 
-- Users who use full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, inference card fault recovery, or rescheduling upon inference card faults must install ClusterD. ClusterD can provide full information collection services only when both Ascend Device Plugin and NodeD components exist in the cluster.
+- Users who use full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, chip fault recovery, or rescheduling must install ClusterD. ClusterD can provide full information collection services only when both Ascend Device Plugin and NodeD components exist in the cluster.
 - When you install ClusterD, it is recommended to install Volcano in advance. If ClusterD is installed before Volcano, the Pod where ClusterD resides may experience `CrashLoopBackOff`. ClusterD will return to normal only after the Volcano Pod starts.
 - Users who only use containerization support and resource monitoring do not need to install ClusterD. Please skip this chapter directly.
 - Before starting ClusterD, you need to start Ascend Operator first. ClusterD needs to perceive Ascend Job resources.
-- To detect slow node and slow network faults, you need to install ClusterD. For details, see [Slow Node and Slow Network Faults](../../../04_usage/04_resumable_training/01_solutions_principles.md#slow-nodes--slow-network-faults).
+- To detect slow node and slow network faults, you need to install ClusterD. For details, see [Slow Node and Slow Network Faults](../../../04_usage/04_fault_detection_and_diagnosis/02_fault_types/05_performance_degradation.md#slow-node-and-slow-network-faults).
 
 ## Procedure<a name="section20114193212615"></a>
 
@@ -17,7 +17,7 @@
     The following is an example of the output:
 
     ```ColdFusion
-    clusterd                   v26.1.0              c532e9d0889c        About an hour ago         126MB
+    clusterd                   v26.2.0              c532e9d0889c        About an hour ago         126MB
     ```
 
     - If correct, perform [Step 2](#li615118054419).
@@ -114,7 +114,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="p26141489467"><a name="p26141489467"></a><a name="p26141489467"></a>false</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p5614648134615"><a name="p5614648134615"></a><a name="p5614648134615"></a>Queries the <span id="ph1950137183918"><a name="ph1950137183918"></a><a name="ph1950137183918"></a>ClusterD</span> version.</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p5614648134615"><a name="p5614648134615"></a><a name="p5614648134615"></a>Queries the <span id="ph1950137183918"><a name="ph1950137183918"></a><a name="ph1950137183918"></a>ClusterD</span> version number, commit ID, and other details.</p>
 <a name="ul178554235168"></a><a name="ul178554235168"></a><ul id="ul178554235168"><li>true: Query.</li><li>false: Do not query.</li></ul>
 </td>
 </tr>

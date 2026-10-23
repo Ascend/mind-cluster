@@ -1,7 +1,5 @@
 # Overview
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T02:16:14.814Z pushedAt=2026-06-09T06:22:06.940Z -->
-
 Based on Kubernetes—the industry's leading cluster scheduling system—the cluster scheduling components add support for Ascend AI Processors (NPUs). They provide essential functions such as NPU resource management, optimized scheduling, and collective communication configuration for distributed training. By leveraging these components, deep learning platform developers can significantly reduce the software development effort associated with underlying resource scheduling, enabling users to rapidly build deep learning platforms on MindCluster.
 
 This document is a guide on how to use cluster scheduling components. Before installing and using them, familiarize yourself with [their features](./02_feature_description.md), and [install the corresponding components](../03_installation_guide/02_installation/00_helm_installation.md) based on your actual needs.

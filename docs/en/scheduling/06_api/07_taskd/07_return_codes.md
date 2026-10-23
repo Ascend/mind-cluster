@@ -1,7 +1,5 @@
 # Return Code Description<a name="ZH-CN_TOPIC_0000002511426711"></a>
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T01:44:01.011Z pushedAt=2026-06-09T02:05:50.659Z -->
-
 The TaskD return codes are shown in the following table.
 
 **Table 1** TaskD return codes

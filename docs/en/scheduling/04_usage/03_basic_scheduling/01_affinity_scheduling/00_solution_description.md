@@ -15,8 +15,8 @@ Volcano can implement affinity scheduling in the following two aspects: Ascend A
 
 ## Ascend AI Processor-Based Affinity <a name="section18208162194419"></a>
 
-This document details the Ascend AI processor-based affinity rules for products such as the <term>Atlas training products</term>, Atlas 200T A2 Box16 heterogeneous subrack, A200T A3 Box8 SuperPoD server, Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD, as well as Volcano scheduling rules developed on this basis.
+This document details the Ascend AI processor-based affinity rules for products such as the <term>Atlas training products</term>, Atlas 200T A2 Box16, A200T A3 Box8, <term>Ascend 950PR&950DT products</term>, as well as Volcano scheduling rules developed on this basis.
 
 ## Node-Based Affinity <a name="section654613453444"></a>
 
-This document also introduces the affinity rules for products such as the <term>Atlas training products</term>, <term>Atlas A2 training products</term>, Atlas 900 A3 SuperPoD, and Atlas 950 SuperPoD, that is, the node scheduling rules for switches; it provides a detailed introduction to selecting which node under a switch to invoke in the Spine-Leaf networking mode.
+This document also introduces the affinity rules for products such as the <term>Atlas training products</term>, <term>Atlas A2 training products</term>, Atlas 900 A3 SuperPoD, Atlas 950 SuperPoD, and Atlas 950 SuperPoD Flex, that is, the node scheduling rules for switches; it provides a detailed introduction to selecting which node under a switch to invoke in the Spine-Leaf networking mode.

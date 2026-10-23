@@ -1,7 +1,5 @@
 # Quick Start<a name="ZH-CN_TOPIC_0000002511346939"></a>
 
-<!-- md-trans-meta sourceCommit=cc2549abde258f50a946dbab123b7ff2035ed91e translatedAt=2026-08-27T02:28:28.575Z pushedAt=2026-08-27T06:46:31.972Z -->
-
 This document provides two quick start scenarios to help you get started with Ascend NPU cluster scheduling:
 
 - **10-Minute Quick Start**: Deploy only Ascend Device Plugin and Ascend Docker Runtime, use the Kubernetes native scheduler to schedule normal Pods, and quickly verify NPU resource scheduling capabilities. This is suitable for beginners to get a quick experience.
@@ -13,16 +11,16 @@ You can select an appropriate quick start path based on your actual requirements
 
 The quick start examples require that the cluster environment has been set up.
 
-- Kubernetes has been installed on all nodes, with supported versions 1.17.x to 1.34.x. (If you need to install Volcano, install Kubernetes 1.19.x or later. For the specific Kubernetes version, see [the corresponding Kubernetes version on the Volcano official website](https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility)). To obtain the software package, see the [Kubernetes community](https://kubernetes.io/docs/concepts/).
+- Kubernetes has been installed on all nodes, with supported versions 1.17.x to 1.36.x. (If you need to install Volcano, install Kubernetes 1.21.x or later. For the specific Kubernetes version, see [the corresponding Kubernetes version on the Volcano official website](https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility)). To obtain the software package, see the [Kubernetes community](https://kubernetes.io/docs/concepts/).
 - Docker has been installed on all nodes, with supported versions 18.09.x to 28.5.1. To obtain the software package, see the [Docker community or official website](https://docs.docker.com/engine/install/).
 - The matching firmware and driver have been installed on all nodes.
 - Check whether npu-smi and the hccn_tool can run properly on the host.
 - Pulling images and downloading component installation packages may require a network environment. Ensure that the network is normal or prepare the relevant offline image packages and component installation packages by yourself.
 
-  >[!NOTE]
-  >
-  >- See [*Ascend Training Solution Version Mapping*](https://support.huawei.com/enterprise/en/ascend-computing/ascend-training-solution-pid-258915853/software) to confirm whether the firmware and driver versions are compatible with the cluster scheduling components.
-  >- The NPU driver and firmware versions can be queried by running the **npu-smi info -t board -i** <i>NPU ID</i> command. In the command output, the "Software Version" field indicates the NPU driver version, and the "Firmware Version" field indicates the NPU firmware version.
+    >[!NOTE]
+    >
+    >- See [*Ascend Training Solution Version Mapping*](https://support.huawei.com/enterprise/en/ascend-computing/ascend-training-solution-pid-258915853/software) to confirm whether the firmware and driver versions are compatible with the cluster scheduling components.
+    >- The NPU driver and firmware versions can be queried by running the **npu-smi info -t board -i** <i>NPU ID</i> command. In the command output, the "Software Version" field indicates the NPU driver version, and the "Firmware Version" field indicates the NPU firmware version.
 
 ## 10-Minute Quick Start
 
@@ -35,7 +33,7 @@ This tutorial guides you through setting up the most simplified Ascend NPU clust
 
 ### Install Components
 
-The following Atlas 800T A2 training server (compute node) with an AArch64 CPU architecture as an example.
+The following Atlas 800T A2 (compute node) with an AArch64 CPU architecture as an example.
 
 1. Check the NPU status to ensure that the NPU driver matching the server has been correctly installed.
 
@@ -43,7 +41,7 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
     npu-smi info
     ```
 
-   If chip information is displayed, the NPU driver has been correctly installed.
+    If chip information is displayed, the NPU driver has been correctly installed.
 
 2. Add a label to the NPU node.
 
@@ -53,20 +51,20 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
     kubectl label nodes --all workerselector=dls-worker-node
     ```
 
-   >[!NOTE]
-   >
-   > The `workerselector=dls-worker-node` label is used to identify compute nodes so that cluster scheduling components (such as NodeD and Ascend Device Plugin) can identify and manage NPU resources.
+    >[!NOTE]
+    >
+    > The `workerselector=dls-worker-node` label is used to identify compute nodes so that cluster scheduling components (such as NodeD and Ascend Device Plugin) can identify and manage NPU resources.
 
 3. Deploy Ascend Docker Runtime and Ascend Device Plugin.
 
-   >[!NOTE]
-   >
-   > The `VERSION` environment variable specifies the Ascend component version. This document uses `26.1.0` as an example. This variable must be set in each independent code block.
+    >[!NOTE]
+    >
+    > The `VERSION` environment variable specifies the Ascend component version, and the `BASE` environment variable specifies the base image version type. This document uses `26.2.0` as an example. There are two image versions for `26.2.0`, namely `ubuntu22.04` and `openeuler24.03`. This document uses `openeuler24.03` as an example. These variables must be set in each independent code block.
 
     1. Deploy Ascend Docker Runtime.
 
         ```shell
-        VERSION=26.1.0
+        VERSION=26.2.0
         mkdir -p /tmp/Ascend-docker-runtime
         cd /tmp/Ascend-docker-runtime
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-docker-runtime_${VERSION}_linux-aarch64.run
@@ -75,7 +73,7 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
         systemctl daemon-reload && systemctl restart docker
         ```
 
-       The example output is as follows, indicating successful installation.
+        The example output is as follows, indicating successful installation.
 
         ```output
         Uncompressing ascend-docker-runtime  100%
@@ -94,7 +92,8 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
     2. Pull the Ascend Device Plugin image.
 
         ```shell
-        VERSION=26.1.0
+        VERSION=26.2.0
+        BASE=openeuler24.03
         # Pull the Ascend Device Plugin image from the Huawei Cloud image repository.
         docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}-${BASE}
 
@@ -105,7 +104,7 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
     3. Deploy Ascend Device Plugin.
 
         ```shell
-        VERSION=26.1.0
+        VERSION=26.2.0
         # Pull the configuration file.
         mkdir -p /tmp/devicePlugin
         cd /tmp/devicePlugin
@@ -116,13 +115,13 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
         kubectl apply -f device-plugin-v${VERSION}.yaml
         ```
 
-       Check the status of the Ascend Device Plugin Pod.
+        Check the status of the Ascend Device Plugin Pod.
 
         ```shell
         kubectl get pod -n kube-system
         ```
 
-       The example output is as follows, indicating that the status is normal.
+        The example output is as follows, indicating that the status is normal.
 
         ```output
         NAME                                  READY   STATUS    RESTARTS   AGE
@@ -137,7 +136,7 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
         kubectl describe node -A | grep "huawei.com/Ascend910"
         ```
 
-       The example output is as follows, showing the number of available NPUs.
+        The example output is as follows, showing the number of available NPUs.
 
         ```output
         huawei.com/Ascend910:     8
@@ -174,10 +173,12 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
 3. Verify Pod scheduling.
 
     ```shell
-    # View the Pod status.
     kubectl get pods npu-test -o wide
+    ```
 
-    # Expected output (STATUS is Running, indicating successful scheduling)
+    The example output is as follows. The `STATUS` field is `Running`, indicating successful scheduling.
+
+    ```output
     NAME      READY   STATUS    RESTARTS   AGE   IP           NODE      NOMINATED NODE
     npu-test  1/1     Running   0          10s   10.244.1.2   worker01  <none>
     ```
@@ -196,7 +197,7 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
 5. Clean up test resources.
 
     ```shell
-    VERSION=26.1.0
+    VERSION=26.2.0
     # Delete the test Pod
     kubectl delete pod npu-test
 
@@ -213,7 +214,7 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
 
 ## Training Service Quick Start
 
-This section still uses an Atlas 800T A2 training server with an AArch64 CPU architecture as an example to guide developers in quickly completing the installation of NodeD, Ascend Device Plugin, Ascend Docker Runtime, Volcano, ClusterD, and Ascend Operator, and in using the full-NPU scheduling feature to quickly submit a training job.
+This section still uses an Atlas 800T A2 with an AArch64 CPU architecture as an example to guide developers in quickly completing the installation of NodeD, Ascend Device Plugin, Ascend Docker Runtime, Volcano, ClusterD, and Ascend Operator, and in using the full-NPU scheduling feature to quickly submit a training job.
 
 ### Procedure<a name="section17940333114314"></a>
 
@@ -221,12 +222,12 @@ This section still uses an Atlas 800T A2 training server with an AArch64 CPU arc
 
 |Procedure|Description|More References|
 |--|--|--|
-|[Installing Components](#section1837511531098)|Using an Atlas 800T A2 training server as an example, this section walks you through quickly installing cluster scheduling components on Ascend devices.|For more parameter descriptions and procedures for installing cluster scheduling components, see the [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md) chapter.|
+|[Installing Components](#section1837511531098)|Using an Atlas 800T A2 as an example, this section walks you through quickly installing cluster scheduling components on Ascend devices.|For more parameter descriptions and procedures for installing cluster scheduling components, see the [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md) chapter.|
 |[Submitting a Training Job](#section106493419399)|Using a simple PyTorch training job as an example, this section helps you quickly understand the workflow for submitting a training job.|For more parameter descriptions and procedures for submitting training jobs, see the [Basic Scheduling](../04_usage/03_basic_scheduling/00_feature_description.md) chapter.|
 
 ### Installing Components<a name="section1837511531098"></a>
 
-The Atlas 800T A2 training server is used as an example in the following steps. For detailed installation steps and parameter descriptions of all components, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
+The Atlas 800T A2 is used as an example in the following steps. For detailed installation steps and parameter descriptions of all components, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
 
 1. Create a node label.
 
@@ -239,12 +240,12 @@ The Atlas 800T A2 training server is used as an example in the following steps. 
 2. Install components. Using the AArch64 architecture as an example, download the software packages that match your actual architecture.
     >[!NOTE]
     >
-    >Helm is used as an example for quick deployment, which requires MindCluster version 26.1.0 or later. See [Installing with Helm](../03_installation_guide/02_installation/00_helm_installation.md).
+    >Helm is used as an example for quick deployment, which requires MindCluster version 26.2.0 or later. See [Installing with Helm](../03_installation_guide/02_installation/00_helm_installation.md).
 
     1. Install Ascend Docker Runtime.
 
         ```shell
-        VERSION=26.1.0
+        VERSION=26.2.0
         mkdir -p /tmp/Ascend-docker-runtime
         cd /tmp/Ascend-docker-runtime
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-docker-runtime_${VERSION}_linux-aarch64.run
@@ -256,7 +257,7 @@ The Atlas 800T A2 training server is used as an example in the following steps. 
     2. Install NodeD, Ascend Device Plugin, Volcano, ClusterD, and Ascend Operator through Helm.
 
         ```shell
-        VERSION=26.1.0
+        VERSION=26.2.0
         mkdir /tmp/helm
         cd /tmp/helm
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-helm-deploy-tool_${VERSION}_linux.zip
@@ -306,11 +307,11 @@ The Atlas 800T A2 training server is used as an example in the following steps. 
 
 1. Prepare the image.
 
-   Download the ascend-pytorch training image of version 24.0.x from the [Ascend image repository](https://www.hiascend.com/en/developer/ascendhub). The image does not contain files such as training scripts and code. During training, files such as training scripts and code are usually mapped into the container by mounting.
+    Download the ascend-pytorch training image of version 24.0.x from the [Ascend image repository](https://www.hiascend.com/en/developer/ascendhub). The image does not contain files such as training scripts and code. During training, files such as training scripts and code are usually mapped into the container by mounting.
 
-   >[!NOTE]
-   >
-   > The image version used in this example is 24.0.0-A2-2.1.0. To obtain the latest image version, visit the [Ascend image repository](https://www.hiascend.com/en/developer/ascendhub) to view the list of available versions, or contact Huawei technical support to obtain version compatibility information.
+    >[!NOTE]
+    >
+    > The image version used in this example is 24.0.0-A2-2.1.0. To obtain the latest image version, visit the [Ascend image repository](https://www.hiascend.com/en/developer/ascendhub) to view the list of available versions, or contact Huawei technical support to obtain version compatibility information.
 
     ```shell
     docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04
@@ -363,20 +364,20 @@ The Atlas 800T A2 training server is used as an example in the following steps. 
     kubectl get pod -A -o wide
     ```
 
-   The example output is as follows. The presence of `Running` indicates that the job is running normally.
+    The example output is as follows. The presence of `Running` indicates that the job is running normally.
 
-   >[!NOTE]
-   >
-   > In the output, `192.168.244.xxx` is the actual IP address assigned to the Pod, and `worker01` is the actual node name. Refer to the actual output.
+    >[!NOTE]
+    >
+    > In the output, `192.168.244.xxx` is the actual IP address assigned to the Pod, and `worker01` is the actual node name. Refer to the actual output.
 
     ```output
     NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE     IP                NODE      NOMINATED NODE   READINESS GATES
     default          default-test-pytorch-master-0              1/1     Running   0          6s      192.168.244.xxx   worker01   <none>           <none>
     ```
 
-   >[!NOTE]
-   >
-   >If the job remains in the `Pending` status after submission, see [Training job stuck in Pending status, cause: nodes are unavailable](https://gitcode.com/Ascend/mind-cluster/issues/352) or [Job stuck in Pending status due to insufficient resources](https://gitcode.com/Ascend/mind-cluster/issues/355) for handling.
+    >[!NOTE]
+    >
+    >If the job remains in the `Pending` status after submission, see [Training job stuck in Pending status, cause: nodes are unavailable](https://gitcode.com/Ascend/mind-cluster/issues/352) or [Job stuck in Pending status due to insufficient resources](https://gitcode.com/Ascend/mind-cluster/issues/355) for handling.
 
 5. View the training results.
 
@@ -388,9 +389,9 @@ The Atlas 800T A2 training server is used as an example in the following steps. 
 
     2. View the training log. If the following content appears, the training is successful.
 
-       >[!NOTE]
-       >
-       > In the output, `10.106.227.xxx` is the actual IP address assigned by the cluster. Refer to the actual output.
+        >[!NOTE]
+        >
+        > In the output, `10.106.227.xxx` is the actual IP address assigned by the cluster. Refer to the actual output.
 
         ```output
         [20260724-11:16:23] [MindXDL Service Log]Training start at 2026-07-24-11:16:23
