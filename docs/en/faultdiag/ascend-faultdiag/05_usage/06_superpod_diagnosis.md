@@ -1,8 +1,6 @@
 # SuperPoD Fault Diagnosis
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:29:08.887Z pushedAt=2026-08-24T02:51:43.284Z -->
-
-SuperPoD fault diagnosis is a diagnostic feature specifically designed for the Atlas A3 SuperPoD, which requires simultaneous consideration of three types of logs: Host (server), BMC (management controller), and LCNE (UnifiedBus switch).
+SuperPoD fault diagnosis is a diagnostic feature specifically designed for SuperPoD, which requires simultaneous consideration of three types of logs: Host (server), BMC (baseboard management controller), and LCNE (UnifiedBus switch).
 
 Host logs refer to all logs other than BMC and LCNE logs in the [Log Collection Archive Directory Structure](02_log_collection.md#log-collection-archive-directory-structure).
 
@@ -74,11 +72,11 @@ SuperPoD fault diagnosis supports the following two scenarios:
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
     |   Version Information   |    Type    | Version                                                                                                                                            |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-    |              | Fault-Diag | 26.1.0                                                                                                                                         |
+    |              | Fault-Diag | 26.2.0                                                                                                                                         |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-    | Root Node Cause Analysis |    Type    | Description                                                                                                                                            |
+    | Root Cause Node Analysis |    Type    | Description                                                                                                                                            |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-    |              |  Root Node Cause  | ['xxxxxxxxxxx']                                                                                             |
+    |              |  Root Cause Node  | ['xxxxxxxxxxx']                                                                                             |
     |              |  Symptom  | No timeout information found in all Plogs. Some nodes may have experienced abnormal process exit or hang.                                                                                        |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
     | Fault Event Analysis |    Type    | Description                                                                                                                                            |
@@ -179,16 +177,16 @@ When any of the host, BMC, or LCNE logs is missing, manual association is requir
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
     |   Version Information   |    Type    | Version                                                                                                                                                                        |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-    |              | Fault-Diag | 26.1.0                                                                                                                                         |
+    |              | Fault-Diag | 26.2.0                                                                                                                                         |
     |              |   Driver   | 25.2.0                                                                                                                                          |
     |              |  Firmware  | 7.7.0.3.220                                                                                                                                     |
     |              |  Toolkit   | 8.1.RC1                                                                                                                                         |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-    | Root Node Cause Analysis |    Type    | Description                                                                                                                                            |
+    | Root Cause Node Analysis |    Type    | Description                                                                                                                                            |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
     |              |    Description    | Root cause node analysis has detected multiple suspected root cause nodes. Please prioritize investigating these nodes.                                                                                |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-    |              |  Root Node Cause  | ['xxxxxx', 'xxxxxx', 'xxxxxx', 'xxxxxx', 'xxxxxx', 'xxxxxx', 'xxxxxx', 'xxxxxx']                                                                |
+    |              |  Root Cause Node  | ['xxxxxx', 'xxxxxx', 'xxxxxx', 'xxxxxx', 'xxxxxx', 'xxxxxx', 'xxxxxx', 'xxxxxx']                                                                |
     |              |  Symptom   |No error log information found in Plogs from all valid nodes. Root cause node cannot be located. Please also confirm whether this is a normal job.                                                            |
     |              |            | This inference instance experienced MindIE connection establishment failure. Please investigate the nodes where connection establishment failed.                                                                                        |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -218,16 +216,16 @@ When any of the host, BMC, or LCNE logs is missing, manual association is requir
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
     |   Version Information   |    Type    | Version                                                                                                                                            |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-    |              | Fault-Diag | 26.1.0                                                                                                                                         |
+    |              | Fault-Diag | 26.2.0                                                                                                                                         |
     |              |   Driver   | 25.2.0                                                                                                                                          |
     |              |  Firmware  | 7.7.0.3.220                                                                                                                                     |
     |              |  Toolkit   | 8.1.RC1                                                                                                                                         |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-    | Root Node Cause Analysis |    Type    | Description                                                                                                                                            |
+    | Root Cause Node Analysis |    Type    | Description                                                                                                                                            |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
     |              |    Description    |  A waiting relationship exists between some devices. An example is shown in the "Inter-device Waiting Chain".                                                                                            |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-    |              |  Root Node Cause  | ['xxxxxx']                                                                                                                                      |
+    |              |  Root Cause Node  | ['xxxxxx']                                                                                                                                      |
     |              |  Symptom  | All nodes used by the training/inference job reported operator dispatch connection establishment timeout errors in Plogs. The time interval between the earliest error node and the latest error node did not exceed the configured timeout (480s). Please prioritize investigating devices involved in mutual waiting or at the end of the waiting chain.                                                                                                                                                            |
     |              | Inter-device Waiting Chain | worker-2 device-0 -> worker-5 device-0                                                                                                          |
     |              |  First Error Node  | worker-2 device-0: 2025-06-23-11:10:41.730228                                                                                                   |

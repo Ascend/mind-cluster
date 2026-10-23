@@ -1,7 +1,5 @@
 # clear_cache
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:19:26.686Z pushedAt=2026-08-24T02:22:41.624Z -->
-
 ## Command Function
 
 Clears the cache.

@@ -1,7 +1,5 @@
 # Common Operations
 
-<!-- md-trans-meta sourceCommit=0bdfcd26262ca7cc1165bb55c8f28c6a29b377ef translatedAt=2026-08-24T02:29:44.006Z pushedAt=2026-08-24T02:51:43.296Z -->
-
 ## Querying NPU Information
 
 Query the NPU driver and firmware versions:

@@ -1,7 +1,5 @@
 # Security Hardening
 
-<!-- md-trans-meta sourceCommit=14372229050641e3df56cf2ec68c3468e5c3727f translatedAt=2026-08-24T02:30:20.776Z pushedAt=2026-08-24T02:51:43.303Z -->
-
 ## File Permissions
 
 During the installation and use of ascend-fd, it is recommended to set file permissions as follows.

@@ -1,7 +1,5 @@
 # config Command (Custom Configuration)
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:29:19.032Z pushedAt=2026-08-24T02:51:43.282Z -->
-
 ## Function Description
 
 Used to manage custom configuration files. You can configure whether to support cleaning ModelArts key logs, configure the size of console logs to read, configure parsing of custom files, and so on.

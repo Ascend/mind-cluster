@@ -1,7 +1,5 @@
 # Log Collection
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:16:17.581Z pushedAt=2026-08-24T02:22:41.538Z -->
-
 This section introduces the log collection process from the user's perspective, explaining how ascend-fd-tk obtains the log data required for diagnosing link faults on servers (Host), BMC, and switches.
 
 ## Collection Mode Overview
@@ -15,7 +13,7 @@ The tool supports two data collection modes:
 
 >[!NOTE]
 >
-> - For online collection commands, select the corresponding reference documentation based on the product model, for example: [Atlas 800T A3 SuperPoD iBMC Commands](https://support.huawei.com/enterprise/en/doc/EDOC1100517755/f3754fb1/about-this-document), [Switch Command Reference](https://support.huawei.com/enterprise/en/switches/s3700-s5700-s6700-pid-259602657?category=reference-guides&subcategory=command-reference).
+> - For online collection commands, select the corresponding reference documentation based on the product model, for example: [Atlas 800T A3 iBMC Commands](https://support.huawei.com/enterprise/en/doc/EDOC1100517755/f3754fb1/about-this-document), [Switch Command Reference](https://support.huawei.com/enterprise/en/switches/s3700-s5700-s6700-pid-259602657?category=reference-guides&subcategory=command-reference).
 > - Offline log directory structure description: The tool supports automatic parsing of compressed packages, so no manual decompression is required during use. The offline log directory structure below shows the internal hierarchy of the compressed package to illustrate the important files within it.
 
 **Quick Navigation**
@@ -51,6 +49,18 @@ The tool automatically runs the following commands on the server over SSH for co
 | SPOD | `npu-smi info -t spod-info -i {npu_id} -c {chip_id}` | SPOD fault location |
 | RoCE speed | `hccn_tool -i {chip_phy_id} -speed -g` | RoCE speed |
 | RoCE duplex | `hccn_tool -i {chip_phy_id} -duplex -g` | RoCE duplex mode |
+
+The preceding commands are applicable to <term>Atlas A3 products</term>. For <term>Ascend 950PR&950DT products</term>, in addition to the above commands, optical module information and NIC SFP information are also additionally collected. For details, please refer to the table below.
+
+#### Collection Commands for <term>Ascend 950PR&950DT Products</term>
+
+| Category | Command | Purpose                                                    |
+|------|------|-------------------------------------------------------|
+| Optical module details | `hccn_tool -g -optical -i {npu_id} -u {udie_id} -p {port_id}` | Query optical module information by specific port ID |
+| Port Credit information | `hccn_tool -g -credit -i {npu_id} -u {udie_id} -p {port_id}` | Allocation/usage count of shared credits and virtual link (VL) priority credits for the specified port |
+| NIC list | `hinicadm5 info` | Names of all NICs                                         |
+| Number of NIC ports | `hinicadm5 info -i {card_name}` | Number of ports on the specified NIC                                             |
+| NIC SFP information | `hinicadm5 sfp -i {card_name} -p {port_id}` | SFP lane information for the specified port of the specified NIC (Bias/TxPower/RxPower/Los/Lol/SNR) |
 
 <a id="host-offline-log"></a>
 
@@ -99,6 +109,8 @@ host log collection directory/
     ├── lldp.log
     └── optical.log
 ```
+
+---
 
 <a id="BMC-log"></a>
 
@@ -151,6 +163,7 @@ BMC log collection directory/
             └── CpuMem/NpuIO/optical_module_history_info_log.csv                    # Optical module history 2
 ```
 
+---
 <a id="switch-log"></a>
 
 ## Switch Logs

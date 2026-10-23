@@ -1,7 +1,5 @@
 # Log Parsing
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:27:22.858Z pushedAt=2026-08-24T02:51:43.247Z -->
-
 Log parsing is the process of extracting key information from raw logs. After parsing is complete, the valid information in the raw logs is extracted for subsequent diagnosis.
 
 ## Usage

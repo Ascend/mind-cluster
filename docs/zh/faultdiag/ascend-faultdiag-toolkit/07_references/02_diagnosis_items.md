@@ -463,7 +463,7 @@
 </tr>
 <tr>
 <td>端口QoS Credit不足检测</td>
-<td><code>dis forward information enp slot {slot_id} chip {chip_id} "get oda table qos credit current" | no-more</code>（Ascend 950PR&950DT系列产品经 PoDManager 跳转 NPU 槽位执行）</td>
+<td><code>dis forward information enp slot {slot_id} chip {chip_id} "get oda table qos credit current" | no-more</code>（<term>Ascend 950PR&950DT系列产品</term>经 PoDManager 跳转 NPU 槽位执行）</td>
 <td>暂不支持</td>
 <td>检查各 VL 优先级维度的当前可用 Credit（current credit）为 0 且分配的 Credit（alloc credit）非 0（满足 alloc credit = used credit + current credit；分配为 0 表示未启用，不视为异常）</td>
 <td>chip15, port0 QoS Credit不足：vl1 分配数量=8 当前可用数量=0</td>

@@ -1,7 +1,5 @@
 # entity Command (Custom Fault Entities)
 
-<!-- md-trans-meta sourceCommit=0bdfcd26262ca7cc1165bb55c8f28c6a29b377ef translatedAt=2026-08-24T02:29:17.798Z pushedAt=2026-08-24T02:51:43.290Z -->
-
 ## Function Description
 
 Used to manage custom fault entities. You can add, view, and delete custom fault detection rules.

@@ -1,7 +1,5 @@
 # Fault Diagnosis
 
-<!-- md-trans-meta sourceCommit=e50286ce9b97df080579d7c724af5b63dfeb835e translatedAt=2026-08-24T02:16:00.085Z pushedAt=2026-08-24T02:22:41.533Z -->
-
 After completing [log collection](02_log_collection.md) and [log parsing](03_log_parse.md) with the ascend-fd-tk tool, use the diagnosis function to perform fault analysis on the parsed structured data.
 
 ## Diagnosis Commands

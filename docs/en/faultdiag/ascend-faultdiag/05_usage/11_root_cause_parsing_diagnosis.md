@@ -1,7 +1,5 @@
 # Root Cause Node Parsing and Diagnosis (SDK)
 
-<!-- md-trans-meta sourceCommit=0bdfcd26262ca7cc1165bb55c8f28c6a29b377ef translatedAt=2026-08-24T02:28:09.472Z pushedAt=2026-08-24T02:51:43.268Z -->
-
 Through the Python SDK APIs of ascend-fd, you can parse and diagnose root cause nodes in logs to identify the device that triggered the fault.
 
 ## Applicable Scenarios

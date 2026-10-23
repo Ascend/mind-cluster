@@ -1,7 +1,5 @@
 # Prerequisites
 
-<!-- md-trans-meta sourceCommit=14372229050641e3df56cf2ec68c3468e5c3727f translatedAt=2026-08-24T02:26:31.612Z pushedAt=2026-08-24T02:51:43.228Z -->
-
 Before using ascend-fd, you are advised to understand the following basic knowledge.
 
 ## Basic Knowledge
@@ -20,7 +18,7 @@ ascend-fd is a tool developed in Python. Basic Python knowledge and the package 
 
 - **NPU**: Neural-network Processing Unit. An NPU is a hardware chip specifically designed for neural network inference. Through parallel computing architecture and instruction set optimization, it can execute core neural network operations such as matrix multiplication and convolution with extremely low power consumption and extremely high efficiency.
 - **[CANN](https://www.hiascend.com/eng/cann)**: Compute Architecture for Neural Networks (CANN) is a heterogeneous computing architecture launched by Huawei for AI scenarios. It supports multiple AI frameworks on the upper layer and serves AI processors and programming on the lower layer, playing a key bridging role and serving as a critical platform for improving the computing efficiency of Ascend AI processors.
-- **[HCCL](https://gitcode.com/cann/hccl)**: The Huawei Collective Communication Library (HCCL) is a high-performance collective communication library based on Ascend AI processors, providing high-performance and highly reliable communication solutions for computing clusters.
+- **[HCCL](https://gitcode.com/cann/hccl)**: Huawei Collective Communication Library (HCCL) is a high-performance collective communication library based on Ascend AI processors, providing high-performance and highly reliable communication solutions for computing clusters.
 - **[MindIE](https://www.hiascend.com/en/developer/software/mindie)**: Mind Inference Engine (MindIE) is an inference acceleration suite launched by Huawei Ascend for all AI scenarios. By opening up AI capabilities in a layered manner, it supports diverse AI business requirements, enables a wide range of models and scenarios, and unleashes the computing power of Ascend hardware devices.
 - **[AMCT](https://gitcode.com/cann/amct)**: Ascend Model Compression Toolkit, abbreviated as AMCT, is a deep learning model compression toolkit optimized for Ascend AI processors, providing multiple model quantization and compression features. After compression, the model size is reduced. Deploying it on Ascend AI processors enables low-bit operations, improving computational efficiency and achieving the goal of performance improvement.
 - **LCNE**: UnifiedBus Computing Network Engine, which supports domain-based centralized topology discovery, routing management, and forwarding control for large-scale compute networks.

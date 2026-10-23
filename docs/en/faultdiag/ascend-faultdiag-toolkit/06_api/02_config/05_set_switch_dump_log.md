@@ -1,7 +1,5 @@
 # set_switch_dump_log
 
-<!-- md-trans-meta sourceCommit=e50286ce9b97df080579d7c724af5b63dfeb835e translatedAt=2026-08-24T02:18:42.051Z pushedAt=2026-08-24T02:22:41.592Z -->
-
 ## Command Function
 
 Sets the switch command output/log export directory for offline analysis scenarios.
@@ -25,7 +23,7 @@ For details, see [Offline Log Collection (Switch)](../../05_usage/02_log_collect
 
 ## Output Description
 
-- On success, the command returns `Setting succeeded`.
+- On success, the command returns `Setting successful`.
 
 - On failure, the command returns `The address is empty. Set it again`, `The address {dir_path} does not exist. Set it again`, or `The address {dir_path} is not a folder. Set it again`.
 
