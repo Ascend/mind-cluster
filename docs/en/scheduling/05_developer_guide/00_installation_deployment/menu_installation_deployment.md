@@ -1,7 +1,5 @@
 # Manual Installation and Deployment
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T02:11:24.423Z pushedAt=2026-06-09T06:22:06.760Z -->
-
 - [Installation and Deployment](./00_manual_installation/menu_manual_installation.md)
   - [Obtaining Software Packages](./00_manual_installation/00_obtaining_software_packages.md)
   - [Preparing for Installation](./00_manual_installation/01_preparing_for_installation.md)
@@ -13,8 +11,12 @@
   - [Infer Operator](./00_manual_installation/07_infer_operator.md)
   - [Ascend Operator](./00_manual_installation/08_ascend_operator.md)
   - [NodeD](./00_manual_installation/09_noded.md)
-  - [Resilience Controller (Deprecated)](./00_manual_installation/10_resilience_controller.md)
-  - [Container Manager](./00_manual_installation/11_container_manager.md)
-  - [K8s RDMA Shared Dev Plugin](./00_manual_installation/12_k8s_rdma_shared_dev_plugin.md)
+  - [Container Manager](./00_manual_installation/10_container-manager.md)
+  - [K8s RDMA Shared Dev Plugin](./00_manual_installation/11_k8s_rdma_shared_dev_plugin.md)
+  - [DPU Exporter](./00_manual_installation/12_dpu_exporter.md)
+  - [Ascend Dynamic Resource Allocation](./00_manual_installation/13_ascend_dynamic_resource_allocation.md)
+  - [Kubectl Plugin](./00_manual_installation/14_kubectl_plugin.md)
+  - [Agent Core](./00_manual_installation/15_agent_core.md)
+  - [Node Collector](./00_manual_installation/16_node_collector.md)
 - [Upgrade](01_upgrade.md)
 - [Uninstallation](02_uninstallation.md)

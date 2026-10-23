@@ -1,7 +1,5 @@
 # Dynamic vNPU Scheduling<a name="ZH-CN_TOPIC_0000002511427045"></a>
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-28T09:23:22.765Z pushedAt=2026-08-28T09:25:39.052Z -->
-
 ## Method 1: Mounting vNPU Using Ascend Docker Runtime
 
 Use Ascend Docker Runtime (a container engine plugin) alone to mount vNPUs to a container.
@@ -149,7 +147,7 @@ The key operations are as follows:
 <tr id="row11782173617479"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18782936144718"><a name="p18782936144718"></a><a name="p18782936144718"></a>By default, the container must be started as the root user. To run inference jobs as a non-root user, refer to the section <a href="https://gitcode.com/Ascend/mind-cluster/issues/359">Failure to Run Inference Service Containers as a Non-Root User When Using Dynamic Virtualization</a>.</p>
 </td>
 </tr>
-<tr id="row117233216566"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18081933105617"><a name="p18081933105617"></a><a name="p18081933105617"></a>Dynamic creation and destruction of vNPUs are supported on <span id="ph20808153335610"><a name="ph20808153335610"></a><a name="ph20808153335610"></a><term>Atlas inference products</term>, <term>Atlas A2 inference products</term>, <term>Atlas A2 training products</term>, <term>Atlas A3 inference products</term>, and <term>Atlas A3 training products</term></span>, and must be used together with <span id="ph13808233145619"><a name="ph13808233145619"></a><a name="ph13808233145619"></a>Volcano</span>.</p>
+<tr id="row117233216566"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18081933105617"><a name="p18081933105617"></a><a name="p18081933105617"></a>Dynamic creation and destruction of vNPUs are supported on <span id="ph20808153335610"><a name="ph20808153335610"></a><a name="ph20808153335610"></a><term>Atlas inference products</term>, <term>Atlas A2 inference products</term>, <term>Atlas A2 products</term>, and <term>Atlas A3 products</term></span>, and must be used together with <span id="ph13808233145619"><a name="ph13808233145619"></a><a name="ph13808233145619"></a>Volcano</span>.</p>
 </td>
 </tr>
 <tr id="row_dyn_switch"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p_dyn_switch">When a node switches between dynamic virtualization and non-dynamic virtualization, existing tasks must be deleted.</p>
@@ -160,7 +158,7 @@ The key operations are as follows:
 <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p id="p32561983469"><a name="p32561983469"></a><a name="p32561983469"></a>Multiple replicas are supported, but every Pod in the multiple replicas must use vNPU.</p>
 </td>
 </tr>
-<tr id="row825611817468"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p2795151384913"><a name="p2795151384913"></a><a name="p2795151384913"></a>Rescheduling upon chip faults and node faults is supported. For details, see <span id="ph1389215534914"><a name="ph1389215534914"></a><a name="ph1389215534914"></a><a href="../../../03_basic_scheduling/06_recovery_of_inference_card_faults.md">Recovery of Inference Card Faults</a></span> and <a href="../../../03_basic_scheduling/05_rescheduling_upon_inference_card_faults.md">Rescheduling upon Inference Card Faults</a>.</p>
+<tr id="row825611817468"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p2795151384913"><a name="p2795151384913"></a><a name="p2795151384913"></a>Rescheduling upon chip faults and node faults is supported. For details, see <a href="../../../03_basic_scheduling/05_rescheduling.md">Rescheduling</a>.</p>
 </td>
 </tr>
 <tr id="row237762345420"><td class="cellrowborder" rowspan="4" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p id="p840574125511"><a name="p840574125511"></a><a name="p840574125511"></a>Unsupported scenarios</p>
@@ -175,7 +173,7 @@ The key operations are as follows:
 <tr id="row1625614818462"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p32566874611"><a name="p32566874611"></a><a name="p32566874611"></a>Uninstalling <span id="ph42462611516"><a name="ph42462611516"></a><a name="ph42462611516"></a>Volcano</span> during task execution is not supported.</p>
 </td>
 </tr>
-<tr id="row1854910515540"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p12256108124616"><a name="p12256108124616"></a><a name="p12256108124616"></a>In the K8s scenario, vNPUs are automatically created and destroyed, and operations cannot be mixed with those in the Docker scenario.</p>
+<tr id="row1854910515540"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p12256108124616"><a name="p12256108124616"></a><a name="p12256108124616"></a>In the K8s scenario, vNPUs are automatically created, destroyed, and mounted, and operations cannot be mixed with those in the Docker scenario.</p>
 </td>
 </tr>
 <tr id="row151011624135113"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18102182414515"><a name="p18102182414515"></a><a name="p18102182414515"></a>Nodes that perform dynamic virtualization cannot configure the chip CPU.</p>
@@ -248,7 +246,7 @@ The key operations are as follows:
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9957636276"><a name="p9957636276"></a><a name="p9957636276"></a>Ascend310P-4c.4cpu.dvpp-100-0</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p><term>Atlas A2 inference products</term>, <term>Atlas A2 training products</term></p><p>(20/24 AICores)</p></td>
+<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p><term>Atlas A2 products</term></p><p>(20/24 AICores)</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir05_1c_16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-5c.1cpu.16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-5c.1cpu.16g-100-0</p></td>
@@ -265,7 +263,7 @@ The key operations are as follows:
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-12c.3cpu.32g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-12c.3cpu.32g-100-0</p></td>
 </tr>
-<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p><term>Atlas A3 inference products</term>, <term>Atlas A3 training products</term></p><p>(40/48 AICores)</p></td>
+<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p><term>Atlas A3 products</term></p><p>(40/48 AICores)</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir05_1c_16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-5c.1cpu.16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-5c.1cpu.16g-100-0</p></td>
@@ -292,10 +290,8 @@ The key operations are as follows:
 #### Supported Product Forms<a name="section169961844182917"></a>
 
 - <term>Atlas inference products</term>
-- <term>Atlas A2 inference products</term>
-- <term>Atlas A2 training products</term>
-- <term>Atlas A3 inference products</term>
-- <term>Atlas A3 training products</term>
+- <term>Atlas A2 products</term>
+- <term>Atlas A3 products</term>
 
 #### Usage Flow<a name="zh-cn_topic_0000001559979444_section246711128536"></a>
 
@@ -414,14 +410,14 @@ This section uses the inference image in the Ascend image repository as an examp
     </td>
     <td class="cellrowborder" valign="top" width="37.769999999999996%" headers="mcps1.2.5.1.3 "><p id="p142651427103519"><a name="p142651427103519"></a><a name="p142651427103519"></a>infer-deploy-dynamic.yaml</p>
     </td>
-    <td class="cellrowborder" valign="top" width="28.67%" headers="mcps1.2.5.1.4 "><p id="p1826522718352"><a name="p1826522718352"></a><a name="p1826522718352"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy-dynamic.yaml" target="_blank" rel="noopener noreferrer">Obtain YAML</a></p>
+    <td class="cellrowborder" valign="top" width="28.67%" headers="mcps1.2.5.1.4 "><p id="p1826522718352"><a name="p1826522718352"></a><a name="p1826522718352"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-deploy-dynamic.yaml" target="_blank" rel="noopener noreferrer">Obtain YAML</a></p>
     </td>
     </tr>
     <tr id="row9265727173515"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p191941452171418"><a name="p191941452171418"></a><a name="p191941452171418"></a>Volcano Job</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p15629131423715"><a name="p15629131423715"></a><a name="p15629131423715"></a>infer-vcjob-dynamic.yaml</p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1626592713355"><a name="p1626592713355"></a><a name="p1626592713355"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-vcjob-dynamic.yaml" target="_blank" rel="noopener noreferrer">Obtain YAML</a></p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1626592713355"><a name="p1626592713355"></a><a name="p1626592713355"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-vcjob-dynamic.yaml" target="_blank" rel="noopener noreferrer">Obtain YAML</a></p>
     </td>
     </tr>
     </tbody>
@@ -523,7 +519,7 @@ On <term>Atlas inference products</term>, using `infer-deploy-dynamic.yaml` as a
 </tr>
 <tr id="row1762110285220"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p8621102882112"><a name="p8621102882112"></a><a name="p8621102882112"></a>ascend-910b</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1762182892114"><a name="p1762182892114"></a><a name="p1762182892114"></a>Identifier for jobs running on <term>Atlas A2 inference products</term>, <term>Atlas A2 training products</term>, <term>Atlas A3 inference products</term>, and <term>Atlas A3 training products</term>.</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1762182892114"><a name="p1762182892114"></a><a name="p1762182892114"></a>Identifier for jobs running on <term>Atlas A2 products</term> and <term>Atlas A3 products</term>.</p>
 </td>
 </tr>
 </tbody>
@@ -682,7 +678,7 @@ On <term>Atlas inference products</term>, using `infer-deploy-dynamic.yaml` as a
     >[!NOTICE]
     >In the preceding table, for chip virtualization (non-full-NPU), the value of `vnpu-dvpp` can only be the corresponding value in the table. Any other value will cause the jop to fail to be submitted.
 
-3. Mount the weight files.
+1. Mount the weight files.
 
     ```yaml
     ...
@@ -710,7 +706,7 @@ On <term>Atlas inference products</term>, using `infer-deploy-dynamic.yaml` as a
     >- `path-to-weights` is the model weight, which needs to be prepared by the user. For the MindIE image, refer to the instructions in the `$ATB_SPEED_HOME_PATH/examples/models/llama3/README.md` file in the image to download it.
     >- The default path of `ATB_SPEED_HOME_PATH` is `/usr/local/Ascend/atb-models`. It has been configured when the `set_env.sh` script is executed in the source model repository, and the user does not need to configure it.
 
-4. Modify the container startup command in the selected YAML, that is, the content of the `command` field. If it does not exist, add it.
+2. Modify the container startup command in the selected YAML, that is, the content of the `command` field. If it does not exist, add it.
 
     ```yaml
     ...

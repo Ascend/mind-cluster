@@ -1,15 +1,17 @@
 # Feature Guide
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T07:17:04.391Z pushedAt=2026-06-09T09:02:55.383Z -->
-
 - [Containerization Support](./00_containerization/menu_containerization.md)
 - [Resource Monitoring](./01_resource_monitoring/menu_resource_monitoring.md)
 - [Virtual Instance](./02_virtual_instance/menu_virtual_instance.md)
 - [Scheduling](./03_basic_scheduling/menu_basic_scheduling.md)
-- [Resumable Training](./04_resumable_training/menu_resumable_training.md)
-- [Appliance](./05_appliance/menu_appliance.md)
-- [MindIE Motor Inference Jobs Best Practices](./06_mindie_motor_best_practice/menu_mindie_motor_best_practice.md)
-- [SGLang Inference Jobs Best Practices](./07_sglang_best_practice/menu_sglang_best_practice.md)
-- [vLLM Inference Jobs Best Practices](./08_vllm_best_practice/menu_vllm_best_practice.md)
-- [Infer Operator Inference Jobs Best Practices](./09_infer_operator_best_practice/menu_infer_operator_best_practice.md)
-- [Tidal Scheduling Best Practices](./10_tidal_scheduling/menu_tidal_scheduling.md)
+- [Fault Detection Feature Guide](./04_fault_detection_and_diagnosis/menu_fault_detection_and_diagnosis.md)
+- [Fault Recovery Feature Guide](./05_fault_recovery/menu_fault_recovery.md)
+- [Appliance](./06_appliance/menu_appliance.md)
+- [MindIE CMotor Inference Jobs Best Practices (Sunset)](./07_mindie_motor_best_practice/menu_mindie_motor_best_practice.md)
+- [SGLang Inference Jobs Best Practices](./08_sglang_best_practice/menu_sglang_best_practice.md)
+- [vLLM Inference Jobs Best Practices](./09_vllm_best_practice/menu_vllm_best_practice.md)
+- [Infer Operator Inference Jobs Best Practices](./10_infer_operator_best_practice/menu_infer_operator_best_practice.md)
+- [Tidal Scheduling Best Practices](./11_tidal_scheduling/menu_tidal_scheduling.md)
+- [verl Reinforcement Learning Jobs Best Practices](./12_verl_best_practice/menu_verl_best_practice.md)
+- [Ascend DRA Best Practices](./13_ascend_dynamic_resource_allocation_best_practice/menu_ascend_dynamic_resource_allocation_best_practice.md)
+- [ClusterOps Agent Feature Guide](./14_clusterops_agent/menu_fault_diagnosis.md)

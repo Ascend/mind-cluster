@@ -1,7 +1,5 @@
 # ClusterD
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T01:47:30.844Z pushedAt=2026-06-09T02:05:50.711Z -->
-
 - [Cluster Resources](./00_cluster_resources.md)
 - [Job Information](./01_job_information.md)
 - [Process-Level Recovery APIs](./02_process_level_recovery_apis.md)
@@ -13,3 +11,4 @@
 - [Link Failover and Switchback APIs](./08_link_failover_and_switchback_apis.md)
 - [Online Stress Testing APIs](./09_online_stress_testing_apis.md)
 - [Health Probe](./10_health_probe.md)
+- [Cluster Version Information](./11_cluster_version.md)

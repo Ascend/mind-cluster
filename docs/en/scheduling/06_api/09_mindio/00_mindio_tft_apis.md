@@ -89,8 +89,8 @@ mindio_ttp.framework_ttp.tft_init_processor(rank: int, world_size: int, enable_l
 
 |Parameter|Mandatory|Description|Value Requirements|
 |--|--|--|--|
-|rank|Mandatory|NPU card number currently executing the training task.|int, [0, world_size).|
-|world_size|Mandatory|Number of cluster cards participating in the training task.|int, [1, 100000].|
+|rank|Mandatory|NPU card number currently executing the training job.|int, [0, world_size).|
+|world_size|Mandatory|Number of cluster cards participating in the training job.|int, [1, 100000].|
 |enable_local_copy|Mandatory|Whether to enable local copy.|<ul><li>False: disabled</li><li>True: enabled</li></ul>|
 |enable_tls|Optional|TLS encrypted transmission switch.|<ul><li>False: disabled</li><li>True: enabled</li></ul>Defaults to True.|
 |tls_info|Optional|TLS certificate configuration.|Defaults to empty. When TLS authentication is enabled, certificate information must be configured, and specific fields should be organized as key-value pairs. For specific configuration guidance, see [Importing TLS Certificates](../../07_references/00_fault_recovery_acceleration/04_security_management_and_hardening.md#importing-tls-certificates).|
@@ -439,7 +439,7 @@ mindio_ttp.framework_ttp.tft_register_clean_handler(func: Callable, ctx = None)
 
 |Name|Mandatory|Description|Value requirements|
 |--|--|--|--|
-|func|Mandatory|Callback function that cleans up residual operators and performs the functions of cleaning up residual operators and underlying faults.|Callback function, must not be empty. For input parameter requirements of the callback function, see [Table 1](#table_tft_10). It is agreed that this callback function has the following return values: <ul><li>0: Success.</li><li>1: Failure.</li><li>2: UCE scenario where the model optimizer does not need to be rebuilt.</li></ul>|
+|func|Mandatory|Callback function that cleans up residual operators and performs the functions of cleaning up residual operators and handling underlying faults.|Callback function, must not be empty. For input parameter requirements of the callback function, see [Table 1](#table_tft_10). It is agreed that this callback function has the following return values: <ul><li>0: Success.</li><li>1: Failure.</li><li>2: UCE scenario where the model optimizer does not need to be rebuilt.</li></ul>|
 |ctx|Optional|Callback function context.|Defaults to empty.|
 
 **Table 1<a id="table_tft_10"></a>**  Callback function parameters

@@ -1,8 +1,8 @@
 # NodeD<a name="ZH-CN_TOPIC_0000002479226406"></a>
 
-- NodeD must be installed when full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, inference card fault recovery, rescheduling upon inference card faults, resumable training, or elastic training are required.
+- NodeD must be installed when full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, chip fault recovery, rescheduling, resumable training, or elastic training are required.
 - Users who only use containerization support and resource monitoring can skip installing NodeD and proceed directly past this chapter.
-- NodeD must be installed before using the slow node & slow network fault detection feature. For details, see [Slow Node & Slow Network Faults](../../../04_usage/04_resumable_training/01_solutions_principles.md#slow-nodes--slow-network-faults).
+- NodeD must be installed before using the slow node & slow network fault detection feature. For details, see [Slow Node and Slow Network Faults](../../../04_usage/04_fault_detection_and_diagnosis/02_fault_types/05_performance_degradation.md#slow-node-and-slow-network-faults).
 
 ## Procedure<a name="section135381552125414"></a>
 
@@ -15,7 +15,7 @@
     The following is an example of the command output:
 
     ```ColdFusion
-    noded                               v26.1.0              ef801847acd2        29 minutes ago      133MB
+    noded                               v26.2.0              ef801847acd2        29 minutes ago      133MB
     ```
 
     - If correct, proceed to [Step 2](#li26221447455).
@@ -48,7 +48,7 @@
     >- When the request pressure on the K8s API Server increases, you can increase the interval time according to the actual situation to reduce the load on the API Server.
 
 5. In the path where the YAML file is located on the management node, run the following command to start NodeD.
-    - If you do not use the [DPC fault detection](../../../04_usage/04_resumable_training/01_solutions_principles.md#node-faults) function, run the following command.
+    - If you do not use the [DPC fault detection](../../../04_usage/04_fault_detection_and_diagnosis/02_fault_types/01_node_faults.md#node-faults) function, run the following command.
 
         ```shell
         kubectl apply -f noded-v{version}.yaml
@@ -62,7 +62,7 @@
 
         This YAML contains fault detection for two types of shared storage: DPC and DTFS. If the node has only the DPC client, delete `dtfsstatus` and its sub-items. If the node has only the DTFS client, delete `dpcstatus` and its sub-items.
 
-        ```ColdFusion
+        ```Yaml
       volumes:
         ...
         - name: dpcstatus
@@ -71,6 +71,40 @@
         - name: dtfsstatus
           hostPath:
             path: /proc/dtfs
+        ```
+
+    - If you need to use the [container snapshot](../../../04_usage/10_infer_operator_best_practice/06_container_snapshot_usage.md#) feature, run the following command to start NodeD.
+
+        ```shell
+        kubectl apply -f noded-container-snapshot-v{version}.yaml
+        ```
+
+        The snapshot path `/user/snapshot` must be configured based on the actual situation and must be a shared storage path. In addition, if components such as Ascend Docker Runtime and the driver on the host are not installed in the default paths, modify the `/usr/local/Ascend/driver` and `/usr/local/Ascend/Ascend-Docker-Runtime` mount items in the YAML to the correct installation paths. The mount paths inside the container do not need to be modified.
+
+        ```Yaml
+      ...
+          volumeMounts:
+      ...
+            - name: image-path
+              mountPath: /user/snapshot # Container snapshot path
+      ...
+      volumes:
+      ...
+        - name: image-path
+          hostPath:
+            path: /user/snapshot # Host snapshot path
+            type: Directory
+        - name: ascend-docker-runtime
+          hostPath:
+            path: /usr/local/Ascend/Ascend-Docker-Runtime # Host Ascend Docker Runtime path
+            type: Directory
+        - name: hiai-driver
+          hostPath:
+            path: /usr/local/Ascend/driver # Host Ascend driver path
+        - name: ascend-driver-include
+          hostPath:
+            path: /usr/local/Ascend/driver/include
+      ...
         ```
 
         Example:
@@ -143,7 +177,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p176271728143613"><a name="p176271728143613"></a><a name="p176271728143613"></a>false</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p146279281367"><a name="p146279281367"></a><a name="p146279281367"></a>Whether to query the current version number of <span id="ph1437310218483"><a name="ph1437310218483"></a><a name="ph1437310218483"></a>NodeD</span>.</p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p146279281367"><a name="p146279281367"></a><a name="p146279281367"></a>Whether to query the current version number of <span id="ph1437310218483"><a name="ph1437310218483"></a><a name="ph1437310218483"></a>NodeD</span>, commit ID, and other detailed information.</p>
 <a name="ul178554235168"></a><a name="ul178554235168"></a><ul id="ul178554235168"><li>true: Query.</li><li>false: Do not query.</li></ul>
 </td>
 </tr>
@@ -202,7 +236,7 @@
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p19894131961512"><a name="p19894131961512"></a><a name="p19894131961512"></a><span id="ph67327379151"><a name="ph67327379151"></a><a name="ph67327379151"></a>60</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971510"><a name="p589551971510"></a><a name="p589551971510"></a><span id="ph4556742141516"><a name="ph4556742141516"></a><a name="ph4556742141516"></a>During component startup, if the number of chips is insufficient, the maximum time to wait for the driver to report the complete chips. Unit: seconds, value range: 10 to 600</span><span id="ph124041056151513"><a name="ph124041056151513"></a><a name="ph124041056151513"></a>.</span></p>
-<a name="ul1354220213192"></a><a name="ul1354220213192"></a><ul id="ul1354220213192"><li><span id="ph278017516257"><a name="ph278017516257"></a><a name="ph278017516257"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 training products</term></span>, <span id="ph13163257131918"><a name="ph13163257131918"></a><a name="ph13163257131918"></a>Atlas 800I A2 inference server</span>, <span id="ph10930753142211"><a name="ph10930753142211"></a><a name="ph10930753142211"></a>A200I A2 Box heterogenous subrack</span>: 150s recommended.</li><li><span id="ph531432344210"><a name="ph531432344210"></a><a name="ph531432344210"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 training products</term></span>, <span id="ph1692713816224"><a name="ph1692713816224"></a><a name="ph1692713816224"></a>A200T A3 Box8 SuperPoD server</span>, <span id="ph18760103420211"><a name="ph18760103420211"></a><a name="ph18760103420211"></a>Atlas 800I A3 SuperPoD server</span>: 360s recommended.</li><li><span>Atlas 350 accelerator card</span>, <span id="ph1692713816224"><a name="ph1692713816224"></a><a name="ph1692713816224"></a>Atlas 850E SuperPoD, Atlas 650E server</span>, <span id="ph18760103420211"><a name="ph18760103420211"></a><a name="ph18760103420211"></a>Atlas 950 SuperPoD</span>: 600s recommended.</li></ul>
+<a name="ul1354220213192"></a><a name="ul1354220213192"></a><ul id="ul1354220213192"><li><span id="ph278017516257"><a name="ph278017516257"></a><a name="ph278017516257"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 training products</term></span>, <span id="ph13163257131918"><a name="ph13163257131918"></a><a name="ph13163257131918"></a>Atlas 800I A2</span>, <span id="ph10930753142211"><a name="ph10930753142211"></a><a name="ph10930753142211"></a>A200I A2 Box</span>: 150s recommended.</li><li><span id="ph531432344210"><a name="ph531432344210"></a><a name="ph531432344210"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 training products</term></span>, <span id="ph1692713816224"><a name="ph1692713816224"></a><a name="ph1692713816224"></a>A200T A3 Box8</span>, <span id="ph18760103420211"><a name="ph18760103420211"></a><a name="ph18760103420211"></a>Atlas 800I A3</span>: 360s recommended.</li><li><term>Ascend 950PR&950DT products</term>: 600s recommended.</li></ul>
 </td>
 </tr>
 <tr id="rowhz001-noded"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="phz001-noded"><a name="phz001-noded"></a><a name="phz001-noded"></a>--enable-healthz</p>

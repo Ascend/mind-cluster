@@ -1,7 +1,5 @@
 # Manual Installation
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T02:11:22.782Z pushedAt=2026-06-09T06:22:06.751Z -->
-
 - [Obtaining Software Packages](./00_obtaining_software_packages.md)
 - [Preparing for Installation](./01_preparing_for_installation.md)
 - [Ascend Docker Runtime](./02_ascend_docker_runtime.md)
@@ -12,6 +10,10 @@
 - [Infer Operator](./07_infer_operator.md)
 - [Ascend Operator](./08_ascend_operator.md)
 - [NodeD](./09_noded.md)
-- [Resilience Controller (Deprecated)](./10_resilience_controller.md)
-- [Container Manager](./11_container_manager.md)
-- [K8s RDMA Shared Dev Plugin](./12_k8s_rdma_shared_dev_plugin.md)
+- [Container Manager](./10_container-manager.md)
+- [K8s RDMA Shared Dev Plugin](./11_k8s_rdma_shared_dev_plugin.md)
+- [DPU Exporter](./12_dpu_exporter.md)
+- [Ascend Dynamic Resource Allocation](./13_ascend_dynamic_resource_allocation.md)
+- [Kubectl Plugin](./14_kubectl_plugin.md)
+- [Agent Core](./15_agent_core.md)
+- [Node Collector](./16_node_collector.md)

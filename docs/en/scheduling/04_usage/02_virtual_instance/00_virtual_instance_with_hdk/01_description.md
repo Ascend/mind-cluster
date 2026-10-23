@@ -1,7 +1,5 @@
 # Feature Description<a name="ZH-CN_TOPIC_0000002511426281"></a>
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-28T08:18:35.294Z pushedAt=2026-08-28T08:38:32.782Z -->
-
 The HDK-based virtual instance function refers to partitioning the NPU configured on a physical machine or virtual machine into multiple virtual NPUs (vNPUs) through resource virtualization, and mounting them to containers for use.
 
 The HDK-based virtual instance function offers the following advantages:
@@ -105,8 +103,8 @@ Ascend NPU hardware resources mainly include AICore (used for AI model computati
 <td class="cellrowborder" valign="top" width="13.01%" headers="mcps1.2.5.1.4 "><p id="p19101175084517"><a name="p19101175084517"></a><a name="p19101175084517"></a>Yes</p>
 </td>
 </tr>
-<tr id="row32781215162311"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p162786153239"><a name="p162786153239"></a><a name="p162786153239"></a><span id="ph151431757142112"><a name="ph151431757142112"></a><a name="ph151431757142112"></a>Atlas A2 training products</span></p>
-<ul><li><span>Atlas 800T A2 training server (24 AICores)</span></li></ul>
+<tr id="row32781215162311"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p162786153239"><a name="p162786153239"></a><a name="p162786153239"></a><span id="ph151431757142112"><a name="ph151431757142112"></a><a name="ph151431757142112"></a>Atlas A2 products</span></p>
+<ul><li>Atlas A2 training products: <p>Atlas 800T A2 (24 AICores)</p></li><li>Atlas A2 products: <p>Atlas 800I A2</p></li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="33.339999999999996%" headers="mcps1.2.5.1.2 "><p id="p366920193216"><a name="p366920193216"></a><a name="p366920193216"></a>Partition vNPUs on the physical machine and mount the vNPUs to containers</p>
 </td>
@@ -115,34 +113,14 @@ Ascend NPU hardware resources mainly include AICore (used for AI model computati
 <td class="cellrowborder" valign="top" width="13.01%" headers="mcps1.2.5.1.4 "><p id="p1154214466369"><a name="p1154214466369"></a><a name="p1154214466369"></a>Yes</p>
 </td>
 </tr>
-<tr id="row11243152011236"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p18243192015230"><a name="p18243192015230"></a><a name="p18243192015230"></a><span id="ph18411121792018"><a name="ph18411121792018"></a><a name="ph18411121792018"></a>Atlas A3 training products</span></p>
-<ul><li><span>Atlas 800T A3 SuperPoD server</span></li></ul>
+<tr id="row11243152011236"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p18243192015230"><a name="p18243192015230"></a><a name="p18243192015230"></a><span id="ph18411121792018"><a name="ph18411121792018"></a><a name="ph18411121792018"></a>Atlas A3 products</span></p>
+<ul><li>Atlas A3 training products: <p>Atlas 800T A3</p></li><li>Atlas A3 inference products: <p>Atlas 800I A3 </p></li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="33.339999999999996%" headers="mcps1.2.5.1.2 "><p id="p82441020122317"><a name="p82441020122317"></a><a name="p82441020122317"></a>Partition vNPUs on the physical machine and mount the vNPUs to containers</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.87%" headers="mcps1.2.5.1.3 "><ul><li>Static virtualization</li><li>Dynamic virtualization</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="13.01%" headers="mcps1.2.5.1.4 "><p id="p2244122042319"><a name="p2244122042319"></a><a name="p2244122042319"></a>Yes</p>
-</td>
-</tr>
-<tr id="row18359185713363"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p18176151918"><a name="p18176151918"></a><a name="p18176151918"></a><span id="ph996833614580"><a name="ph996833614580"></a><a name="ph996833614580"></a>Atlas A2 inference products</span></p>
-<ul><li><span>Atlas 800I A2 inference server</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.339999999999996%" headers="mcps1.2.5.1.2 "><p id="p1035910576364"><a name="p1035910576364"></a><a name="p1035910576364"></a>Partition vNPUs on the physical machine and mount the vNPUs to containers</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.87%" headers="mcps1.2.5.1.3 "><ul><li>Static virtualization</li><li>Dynamic virtualization</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="13.01%" headers="mcps1.2.5.1.4 "><p id="p143597578361"><a name="p143597578361"></a><a name="p143597578361"></a>Yes</p>
-</td>
-</tr>
-<tr><td><p><span>Atlas A3 inference products</span></p>
-<ul><li><span>Atlas 800I A3 SuperPoD server</span></li></ul>
-</td>
-<td><p>Partition vNPUs on the physical machine and mount the vNPUs to containers</p>
-</td>
-<td><ul><li>Static virtualization</li><li>Dynamic virtualization</li></ul>
-</td>
-<td><p>Yes</p>
 </td>
 </tr>
 <tr id="row188952007382"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p1746332773811"><a name="p1746332773811"></a><a name="p1746332773811"></a><span id="ph97104582114"><a name="ph97104582114"></a><a name="ph97104582114"></a><term id="zh-cn_topic_0000001519959665_term169221139190"><a name="zh-cn_topic_0000001519959665_term169221139190"></a><a name="zh-cn_topic_0000001519959665_term169221139190"></a>Atlas 200/300/500 inference products</term></span></p>

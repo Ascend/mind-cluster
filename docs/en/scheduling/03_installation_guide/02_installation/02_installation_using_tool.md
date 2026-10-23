@@ -13,9 +13,9 @@ With Ascend Deployer, you can install cluster scheduling components in batches, 
    - Checking installation results
    - Configuring environment variables
 
-For the list of hardware products, operating systems, and installation scenarios currently supported by Ascend Deployer, see [Supported Products and OSs](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.1.0/docs/en/01_introduction/02_supported_product_and_os.md) in *MindCluster Ascend Deployer User Guide*, to determine whether to use Ascend Deployer.
+For the list of hardware products, operating systems, and installation scenarios currently supported by Ascend Deployer, see [Supported Products and OSs](https://gitcode.com/Ascend/ascend-deployer/blob/release_v26.2.0/docs/en/01_introduction/02_supported_product_and_os.md) in *MindCluster Ascend Deployer User Guide*, to determine whether to use Ascend Deployer.
 
-To use Ascend Deployer, see [Installing Ascend Software](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.1.0/docs/en/05_installation_and_upgrade/02_install_softwares.md) in *MindCluster Ascend Deployer User Guide*.
+To use Ascend Deployer, see [Installing Ascend Software](https://gitcode.com/Ascend/ascend-deployer/blob/release_v26.2.0/docs/en/05_installation_and_upgrade/02_install_softwares.md) in *MindCluster Ascend Deployer User Guide*.
 
 >[!NOTE]
 >

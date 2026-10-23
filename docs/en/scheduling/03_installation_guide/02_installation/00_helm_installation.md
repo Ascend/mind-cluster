@@ -1,7 +1,5 @@
 # Installing with Helm<a name="ZH-CN_centerIC_0000002479226452"></a>
 
-<!-- md-trans-meta sourceCommit=6b15c7c280d50f1cd26f995458d18bf687b8e5bb translatedAt=2026-08-27T02:29:08.120Z pushedAt=2026-08-27T06:46:31.977Z -->
-
 ## Installation Description<a name="ZH-CN_centerIC_0000002511346381_install_desc"></a>
 
 Helm is a tool for managing Kubernetes applications. It helps users quickly deploy, upgrade, and manage Kubernetes applications. The MindCluster Helm can quickly deploy and manage MindCluster components.
@@ -16,10 +14,13 @@ Helm is a tool for managing Kubernetes applications. It helps users quickly depl
     - [ClusterD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511346859)
     - [NodeD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386924)
     - [NPU Exporter](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226948)
+    - [DPU Exporter](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312665)
     - [Infer Operator](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426821)
     - [K8s RDMA Shared Dev Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312660)
-- To instal [Container Manager](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312655), refer to the [Manually Installing Container Manager](../../05_developer_guide/00_installation_deployment/00_manual_installation/11_container_manager.md) chapter.
+    - [Ascend Dynamic Resource Allocation](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312670)
+- To instal [Container Manager](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312655), refer to the [Manually Installing Container Manager](../../05_developer_guide/00_installation_deployment/00_manual_installation/10_container-manager.md) chapter.
 - [TaskD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386914) and [MindIO](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226942) are installed in service containers and are not within the scope of the components covered in this chapter.
+- [Ascend Dynamic Resource Allocation](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312670) provides the same functions as [Ascend Device Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226928). Both provide the discovery, reporting, allocation, and mounting capabilities of Ascend NPU devices. The difference is that the former is based on the K8s dynamic resource allocation mechanism, while the latter is based on the K8s device plugin mechanism. You only need to deploy one of them. Ascend Device Plugin is installed by default and Ascend Dynamic Resource Allocation is not installed. When using Ascend Dynamic Resource Allocation, you are advised to disable Ascend Device Plugin.
 
 ## Preparations Before Installation<a name="ZH-CN_centerIC_0000002511346381_install_prepare"></a>
 
@@ -56,7 +57,7 @@ The installation steps are as follows:
    1. Download the deployment tool.
 
       ```bash
-      # Replace {version} in the command with the corresponding version number, for example, 26.1.0.
+      # Replace {version} in the command with the corresponding version number, for example, 26.2.0.
       wget https://gitcode.com/Ascend/mind-cluster/releases/download/v{version}/Ascend-helm-deploy-tool_{version}_linux.zip
       ```
 
@@ -81,7 +82,7 @@ The installation steps are as follows:
       ```
 
       > [!NOTE]
-      >- `{version}` indicates the MindCluster component version, such as 26.1.0.
+      >- `{version}` indicates the MindCluster component version, such as 26.2.0.
       >- `{chart_version}` indicates the Helm Chart version, which is consistent with the MindCluster component version.
       >- For the purposes of the extracted files, refer to [Table 4](#table15274931175244).
 
@@ -146,7 +147,7 @@ The installation steps are as follows:
           volcanoType: true
           image:
             repository: "ascend-k8sdeviceplugin" # Modify the Ascend Device Plugin image name.
-            tag: "v26.1.0"
+            tag: "v26.2.0"
             pullPolicy: "IfNotPresent"
           args: [ "device-plugin -volcanoType=true -presetVirtualDevice=true -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=-1 --enable-healthz=true --healthz-address=11251 -hotReset=2" ] # Change the log level to Debug level and enable the offline hot reset function.
         ...
@@ -175,6 +176,7 @@ Then run the following command:
 
 1. Refer to [Component Status Confirmation](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390) to confirm the component installation status.
 2. If the component status is abnormal, check whether the installation configuration is correct, troubleshoot the cause of the abnormality, and then reinstall.
+
    - Before reinstalling, run the following commands to uninstall the related resources.
 
      ```bash
@@ -201,8 +203,9 @@ Then run the following command:
 
 - Component default configuration<a name="default_app_yaml_install_config"></a>
     > [!NOTE]
-    >- Components installed by default include Ascend Device Plugin, Ascend Operator, Volcano, ClusterD, NodeD, NPU Exporter, and Infer Operator. The Volcano version is v1.9.0.
-    >- Components not installed by default include K8s RDMA Shared Dev Plugin.
+    >- Components installed by default include Ascend Device Plugin, Ascend Operator, Volcano, ClusterD, NodeD, NPU Exporter, DPU Exporter, and Infer Operator. The Volcano version is v1.9.0.
+    >- Components not installed by default include K8s RDMA Shared Dev Plugin and Ascend Dynamic Resource Allocation.
+    >- Ascend Dynamic Resource Allocation provides the same functions as Ascend Device Plugin. Both provide the discovery, reporting, allocation, and mounting capabilities of Ascend NPU devices, and you only need to deploy one of them. Therefore, Ascend Device Plugin is installed by default and Ascend Dynamic Resource Allocation is not installed. This component requires K8s 1.34.x to 1.36.x. Do not enable it in clusters with earlier K8s versions. To use the dynamic resource allocation function, set `enabled` of this component to `true` through custom configuration, and you are advised to set `enabled` of Ascend Device Plugin to `false`.
     >- For parameter descriptions, see [Table 2](#table15274931175242) and [Table 3](#table15274931175243). The parameters in [Table 3](#table15274931175243) are not shown in the YAML configuration below. You can add or modify them as needed.
     >- In version 26.1.0, the default value of the `tag` field is `v26.1.0`, without the `-openeuler24.03`, `-ubuntu22.04`, or `-alpinelatest` suffix. This is inconsistent with the image tags in the Ascend image repository. Using the default value directly may cause image pull failures. You can set it to a tag with a suffix, such as `v26.1.0-openeuler24.03`, `v26.1.0-ubuntu22.04`, or `v1.9.0-v26.1.0-alpinelatest`.
 
@@ -212,8 +215,8 @@ Then run the following command:
      enabled: true                                                         # Install ClusterD.
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd"   # ClusterD image name. Modify it based on the actual situation.
-       # The image tag in the Ascend image repository is "v26.1.0-openeuler24.03" or "v26.1.0-ubuntu22.04".
-       tag: "v26.1.0"                                                      # ClusterD image tag. Modify it based on the actual situation. Later versions (including patch versions) will add the suffixes "-openeuler24.03" and "-ubuntu22.04".
+       # The image tag in the Ascend image repository is "v26.2.0-openeuler24.03" or "v26.2.0-ubuntu22.04".
+       tag: "v26.2.0-openeuler24.03"                                                      # ClusterD image tag. Modify it based on the actual situation.
        pullPolicy: "IfNotPresent"                                          # ClusterD image pull policy. Modify it based on the actual situation.
 
    noded:
@@ -221,8 +224,8 @@ Then run the following command:
      enabledStorageCheck: ""                                                # Type of shared storage fault detection to enable; empty means disabled.
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/noded"      # NodeD image name. Modify it based on the actual situation.
-       # The image tag in the Ascend image repository is "v26.1.0-openeuler24.03" or "v26.1.0-ubuntu22.04".
-       tag: "v26.1.0"                                                      # NodeD image tag. Modify it based on the actual situation. Future versions (including patch versions) will add the suffixes "-openeuler24.03" and "-ubuntu22.04".
+       # The image tag in the Ascend image repository is "v26.2.0-openeuler24.03" or "v26.2.0-ubuntu22.04".
+       tag: "v26.2.0-openeuler24.03"                                                      # NodeD image tag. Modify it based on the actual situation.
        pullPolicy: "IfNotPresent"                                          # NodeD image pull policy. Modify it based on the actual situation.
 
    npu-exporter:
@@ -230,16 +233,24 @@ Then run the following command:
      is310P1usoc: false                                                    # false indicates that the product is not an Atlas 200I SoC A1 core board.
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter" # NPU Exporter image name. Modify it based on the actual situation.
-       # The image tag in the Ascend image repository is "v26.1.0-openeuler24.03" or "v26.1.0-ubuntu22.04".
-       tag: "v26.1.0"                                                      # NPU Exporter image tag. Modify it based on the actual situation. Later versions (including patch versions) will add the suffixes "-openeuler24.03" and "-ubuntu22.04".
+       # The image tag in the Ascend image repository is "v26.2.0-openeuler24.03" or "v26.2.0-ubuntu22.04".
+       tag: "v26.2.0-openeuler24.03"                                                      # NPU Exporter image tag. Modify it based on the actual situation.
        pullPolicy: "IfNotPresent"                                          # NPU Exporter image pull policy. Modify it based on the actual situation.
+
+   dpu-exporter:
+     enabled: false                                                         # false indicates that DPU Exporter is not installed.
+     image:
+       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/dpu-exporter" # DPU Exporter image name. Modify it based on the actual situation.
+       # The image tag in the Ascend image repository is "v26.2.0-openeuler24.03" or "v26.2.0-ubuntu22.04".
+       tag: "v26.2.0-openeuler24.03"                                       # DPU Exporter image tag. Modify it based on the actual situation.
+       pullPolicy: "IfNotPresent"                                          # DPU Exporter image pull policy. Modify it based on the actual situation.
 
    ascend-operator:
      enabled: true                                                         # Install Ascend Operator.
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator" # Ascend Operator image name. Modify it based on the actual situation.
-       # The image tag in the Ascend image repository is "v26.1.0-openeuler24.03" or "v26.1.0-ubuntu22.04".
-       tag: "v26.1.0"                                                      # Ascend Operator image tag. Modify it based on the actual situation. Later versions (including patch versions) will add the suffixes "-openeuler24.03" and "-ubuntu22.04".
+       # The image tag in the Ascend image repository is "v26.2.0-openeuler24.03" or "v26.2.0-ubuntu22.04".
+       tag: "v26.2.0-openeuler24.03"                                                      # Ascend Operator image tag. Modify it based on the actual situation.
        pullPolicy: "IfNotPresent"                                          # Ascend Operator image pull policy. Modify it based on the actual situation.
 
    ascend-for-volcano:
@@ -248,22 +259,22 @@ Then run the following command:
      scheduler:
        image:
          repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler"      # Volcano Scheduler image name. Modify it based on the actual situation.
-         # The image tag in the Ascend image repository is "v1.9.0-v26.1.0-openeuler24.03" or "v1.9.0-v26.1.0-alpinelatest"
-         tag: "v1.9.0-v26.1.0"                                                      # Volcano Scheduler image tag. Future versions (including patch versions) will add the suffixes "-openeuler24.03" and "-alpinelatest"
+         # The image tag in the Ascend image repository is "v1.9.0-v26.2.0-openeuler24.03" or "v1.9.0-v26.2.0-alpinelatest"
+         tag: "v1.9.0-v26.2.0-openeuler24.03"                                                      # Volcano Scheduler image tag.
          pullPolicy: "IfNotPresent"                                                 # Volcano Scheduler image pull policy
      controller:
        image:
          repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager" # Volcano Controller image name. Modify it based on the actual situation
-         # The image tag in the Ascend image repository is "v1.9.0-v26.1.0-openeuler24.03" or "v1.9.0-v26.1.0-alpinelatest"
-         tag: "v1.9.0-v26.1.0"                                                          # Volcano Controller image tag. Modify it based on the actual situation. Later versions (including patch versions) will add the suffixes "-openeuler24.03" and "-alpinelatest".
+         # The image tag in the Ascend image repository is "v1.9.0-v26.2.0-openeuler24.03" or "v1.9.0-v26.2.0-alpinelatest"
+         tag: "v1.9.0-v26.2.0-openeuler24.03"                                                          # Volcano Controller image tag. Modify it based on the actual situation.
          pullPolicy: "IfNotPresent"                                                     # Volcano Controller image pull policy.
 
    infer-operator:
      enabled: true                                                         # Install Infer Operator.
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator" # Infer Operator image name. Modify it based on the actual situation.
-       # The image tag in the Ascend image repository is "v26.1.0-openeuler24.03" or "v26.1.0-ubuntu22.04".
-       tag: "v26.1.0"                                                      # Infer Operator image tag. Modify it based on the actual situation. Later versions (including patch versions) will add the suffixes "-openeuler24.03" and "-ubuntu22.04".
+       # The image tag in the Ascend image repository is "v26.2.0-openeuler24.03" or "v26.2.0-ubuntu22.04".
+       tag: "v26.2.0-openeuler24.03"                                                      # Infer Operator image tag. Modify it based on the actual situation.
        pullPolicy: "IfNotPresent"                                          # Infer Operator image pull policy. Modify it based on the actual situation.
 
    ascend-device-plugin:
@@ -272,17 +283,25 @@ Then run the following command:
      volcanoType: true                                                     # true indicates that Volcano is used for scheduling. Modify it based on the actual situation.
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin" # Ascend Device Plugin image name. Modify it based on the actual situation.
-       # The image tag in the Ascend image repository is "v26.1.0-openeuler24.03" or "v26.1.0-ubuntu22.04".
-       tag: "v26.1.0"                                                      # Ascend Device Plugin image tag. Modify it based on the actual situation. Later versions (including patch versions) will add the suffixes "-openeuler24.03" and "-ubuntu22.04".
+       # The image tag in the Ascend image repository is "v26.2.0-openeuler24.03" or "v26.2.0-ubuntu22.04".
+       tag: "v26.2.0-openeuler24.03"                                                      # Ascend Device Plugin image tag. Modify it based on the actual situation.
        pullPolicy: "IfNotPresent"                                          # Ascend Device Plugin image pull policy. Modify it based on the actual situation.
 
    k8s-rdma-shared-dev-plugin:
      enabled: false                                                           # false indicates that K8s RDMA Shared Dev Plugin is not installed.
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dp" # Image name of K8s RDMA Shared Dev Plugin. Modify it based on the actual situation.
-       # The image tag in the Ascend image repository is "v26.1.0-openeuler24.03" or "v26.1.0-ubuntu22.04".
-       tag: "v26.1.0"                                                              # Image tag of K8s RDMA Shared Dev Plugin. Modify it based on the actual situation. Later versions (including patch versions) will add the suffixes "-openeuler24.03" and "-ubuntu22.04".
+       # The image tag in the Ascend image repository is "v26.2.0-openeuler24.03" or "v26.2.0-ubuntu22.04".
+       tag: "v26.2.0-openeuler24.03"                                                              # Image tag of K8s RDMA Shared Dev Plugin. Modify it based on the actual situation.
        pullPolicy: "IfNotPresent"                                                  # Image pull policy of K8s RDMA Shared Dev Plugin. Modify it based on the actual situation.
+
+   ascend-dynamic-resource-allocation:
+     enabled: false                                                          # false indicates that the Ascend Dynamic Resource Allocation component is not installed. This component requires K8s 1.34.x to 1.36.x.
+     image:
+       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-dra"   # Ascend Dynamic Resource Allocation image name. Modify it based on the actual situation.
+       # The image tag in the Ascend image repository is "v26.2.0-openeuler24.03" or "v26.2.0-ubuntu22.04".
+       tag: "v26.2.0-openeuler24.03"                                        # Ascend Dynamic Resource Allocation image tag. Modify it based on the actual situation. Select a tag with the suffix corresponding to the node OS.
+       pullPolicy: "IfNotPresent"                                            # Ascend Dynamic Resource Allocation image pull policy. Modify it based on the actual situation.
    ```
 
 ## Parameter Description
@@ -313,7 +332,7 @@ Then run the following command:
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano-crds.volcanoVersion</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p></p><p>string</p><ul><li>v1.7.0</li><li>v1.9.0</li><li>v1.12.0</li></ul><p>The default value is v1.9.0</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p><p>string</p><ul><li>v1.9.0</li><li>v1.12.0</li><li>v1.15.0</li></ul></p><p>The default value is v1.9.0</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>Select the Volcano version.</p></td>
   </tr>
   <tr>
@@ -325,7 +344,7 @@ Then run the following command:
 </tbody>
 </table>
 
-**Table 2**  Configurable component parameters
+**Table 2** Configurable component parameters
 <a name="table15274931175242"></a>
 <table>
 <thead align="left">
@@ -366,6 +385,12 @@ Then run the following command:
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>Set to true indicating that the product is the Atlas 200I SoC A1 core board.</p></td>
   </tr>
   <tr>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>DPU Exporter</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>dpu-exporter.enabled</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>The default value is false.</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>Set it to true to enable DPU Exporter.</p></td>
+  </tr>
+  <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>Ascend Operator</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-operator.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>Default value is true</p></td>
@@ -379,7 +404,7 @@ Then run the following command:
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano.volcanoVersion</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string</p><p>Values include:<ul><li>v1.7.0</li><li>v1.9.0</li><li>v1.12.0</li></ul></p><p>The default value is v1.9.0.</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string</p><p>Values include:<ul><li>v1.9.0</li><li>v1.12.0</li><li>v1.15.0</li></ul></p><p>The default value is v1.9.0.</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>Select the volcano version to enable.</p></td>
   </tr>
   <tr>
@@ -410,10 +435,16 @@ Then run the following command:
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>default value is false</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>Set to true indicating that K8s RDMA Shared Dev Plugin is enabled.</p></td>
   </tr>
+  <tr>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>Ascend Dynamic Resource Allocation</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-dynamic-resource-allocation.enabled</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>The default value is false.</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>Set it to true to enable the Ascend Dynamic Resource Allocation component. This component requires K8s 1.34.x to 1.36.x. Do not enable it in clusters with earlier K8s versions.</p></td>
+  </tr>
 </tbody>
 </table>
 
-**Table 3**  Other configurable component parameters
+**Table 3** Other configurable component parameters
 <a name="table15274931175243"></a>
 <table>
 <thead align="left">
@@ -468,9 +499,9 @@ Then run the following command:
 </table>
 
 >[!NOTE]
-> In Table 3, the value of `<component>` can be `clusterd`, `noded`, `npu-exporter`, `ascend-operator`, `ascend-for-volcano.scheduler`, `ascend-for-volcano.controller`, `infer-operator`, `ascend-device-plugin`, `k8s-rdma-shared-dev-plugin`. Taking `clusterd` as an example, `<component>.image.repository` is replaced with `clusterd.image.repository`.
+> In Table 3, the value of `<component>` can be `clusterd`, `noded`, `npu-exporter`, `dpu-exporter`, `ascend-operator`, **ascend-for-volcano.scheduler**, **ascend-for-volcano.controller**, `infer-operator`, `ascend-device-plugin`, `k8s-rdma-shared-dev-plugin`. Taking `clusterd` as an example, `<component>.image.repository` is replaced with `clusterd.image.repository`, and so on.
 
-**Table 4**  Files in the Helm package
+**Table 4** Files in the Helm package
 <a name="table15274931175244"></a>
 <table>
 <thead align="left">
@@ -493,8 +524,8 @@ Then run the following command:
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>helm_tool.sh</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>Its functions include: <ul><li><p>A script that adds Helm metadata to the resources of each component.</p></li><li>Deletes the DaemonSet resources of Ascend Device Plugin before version 26.1.0</li></ul></p><p>Used only during upgrade.</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 ">The script adds Helm metadata to the following resources, including: <ul><li>Ascend Operator-related resources</li><li>Ascend Device Plugin-related resources</li><li>Volcano-related resources</li><li>ClusterD-related resources</li><li>NodeD -related resources</li><li>NPU Exporter-related resources</li><li>Infer Operator-related resources</li><li>K8s RDMA Shared Dev Plugin-related resources</li><li>Namespaces, including "mindx-dl" and "cluster-system"</li></ul></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>Its functions include: <ul><li><p>Adds Helm metadata scrips to the resources of each component.</p></li><li>Deletes the DaemonSet resources of Ascend Device Plugin before version 26.1.0</li></ul></p><p>Used only during upgrade.</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 ">Helm metadata is added to the following resources, including: <ul><li>Ascend Operator-related resources</li><li>Ascend Device Plugin-related resources</li><li>Volcano-related resources</li><li>ClusterD-related resources</li><li>NodeD-related resources</li><li>NPU Exporter-related resources</li><li>DPU Exporter-related resources</li><li>Infer Operator-related resources</li><li>K8s RDMA Shared Dev Plugin-related resources</li><li>Ascend Dynamic Resource Allocation-related resources</li><li>Namespaces, including "mindx-dl" and "cluster-system"</li></ul></td>
   </tr>
 </tbody>
 </table>

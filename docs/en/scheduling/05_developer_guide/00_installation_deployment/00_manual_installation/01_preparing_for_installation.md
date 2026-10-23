@@ -32,7 +32,7 @@ To reduce manual operations, you do not need to create a new user on the host. Y
 >- If the user is not created on the host, the Dockerfile will create a user with UID 9000 inside the container by default. Processes inside the container will run with this UID and map to the host. Ensure that this UID is not occupied by another user on the host machine.
 >- For components where the container startup user is `hwMindX`, if the component's YAML file contains fields such as `runAsUser`, `runAsGroup`, or `fsGroup`, please ensure that their values are modified to the actual UID and GID being used. `runAsUser` must be set to the actual UID being used, and `runAsGroup` and `fsGroup` must be set to the actual GID being used.
 
-**Table 1**  Component user description
+**Table 1** Component user description
 
 <a name="table125971501113"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0299839362_row86431704617"><th class="cellrowborder" valign="top" width="20.962096209620963%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0299839362_p464201754614"><a name="zh-cn_topic_0299839362_p464201754614"></a><a name="zh-cn_topic_0299839362_p464201754614"></a>Component</p>
@@ -50,11 +50,18 @@ To reduce manual operations, you do not need to create a new user on the host. Y
 <td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><a name="ul8401830195518"></a><a name="ul8401830195518"></a><ul id="ul8401830195518"><li>Run in binary: N/A</li><li>Run in container: privileged container required. Run in binary is recommended.</li></ul>
 </td>
 </tr>
+<tr id="row_dpu_exporter_user"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p_dpu_exporter_user"><span id="span_dpu_exporter_user">DPU Exporter</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><ul id="ul_dpu_exporter_user"><li>Run in binary: hwMindX</li><li>Run in container: root</li></ul>
+</td>
+<td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><ul id="ul_dpu_exporter_priv"><li>Run in binary: N/A</li><li>Run in container: privileged container required. Run in binary is recommended.</li></ul>
+</td>
+</tr>
 <tr id="zh-cn_topic_0299839362_row1064121764612"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0299839362_p16641317134612"><a name="zh-cn_topic_0299839362_p16641317134612"></a><a name="zh-cn_topic_0299839362_p16641317134612"></a><span id="ph522114212719"><a name="ph522114212719"></a><a name="ph522114212719"></a>Ascend Device Plugin</span></p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p53735269103"><a name="p53735269103"></a><a name="p53735269103"></a>root</p>
+<td class="cellrowborder" rowspan="4" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p53735269103"><a name="p53735269103"></a><a name="p53735269103"></a>root</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p29286561106"><a name="p29286561106"></a><a name="p29286561106"></a>Required</p>
+<td class="cellrowborder" rowspan="4" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p29286561106"><a name="p29286561106"></a><a name="p29286561106"></a>Required</p>
 </td>
 </tr>
 <tr id="row10935147171519"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1935947181513"><a name="p1935947181513"></a><a name="p1935947181513"></a><span id="ph5551115391513"><a name="ph5551115391513"></a><a name="ph5551115391513"></a>NodeD</span></p>
@@ -63,17 +70,17 @@ To reduce manual operations, you do not need to create a new user on the host. Y
 <tr id="row2597060117201"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1597060117201"><a name="p1597060117201"></a><a name="p1597060117201"></a><span id="ph2597060117201"><a name="ph2597060117201"></a><a name="ph2597060117201"></a>K8s RDMA Shared Dev Plugin</span></p>
 </td>
 </tr>
+<tr id="row3597060117201"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p3597060117201"><a name="p3597060117201"></a><a name="p3597060117201"></a><span id="ph3597060117201"><a name="ph3597060117201"></a><a name="ph3597060117201"></a>Ascend Dynamic Resource Allocation</span></p>
+</td>
+</tr>
 <tr id="zh-cn_topic_0299839362_row664817164615"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0299839362_p0649177466"><a name="zh-cn_topic_0299839362_p0649177466"></a><a name="zh-cn_topic_0299839362_p0649177466"></a><span id="ph175881448132716"><a name="ph175881448132716"></a><a name="ph175881448132716"></a>Volcano</span></p>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p153424813128"><a name="p153424813128"></a><a name="p153424813128"></a>hwMindX</p>
+<td class="cellrowborder" rowspan="3" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p153424813128"><a name="p153424813128"></a><a name="p153424813128"></a>hwMindX</p>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p17327314131212"><a name="p17327314131212"></a><a name="p17327314131212"></a>N/A</p>
+<td class="cellrowborder" rowspan="3" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p17327314131212"><a name="p17327314131212"></a><a name="p17327314131212"></a>N/A</p>
 </td>
 </tr>
 <tr id="row24141825191817"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1941515259187"><a name="p1941515259187"></a><a name="p1941515259187"></a><span id="ph16899408574"><a name="ph16899408574"></a><a name="ph16899408574"></a>ClusterD</span></p>
-</td>
-</tr>
-<tr id="row29051413163917"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p390551333913"><a name="p390551333913"></a><a name="p390551333913"></a><span id="ph829115811272"><a name="ph829115811272"></a><a name="ph829115811272"></a>Resilience Controller</span></p>
 </td>
 </tr>
 <tr id="row1674814434406"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p97491434407"><a name="p97491434407"></a><a name="p97491434407"></a><span id="ph1566531814589"><a name="ph1566531814589"></a><a name="ph1566531814589"></a>Ascend Operator</span></p>
@@ -99,12 +106,33 @@ To reduce manual operations, you do not need to create a new user on the host. Y
 <tr id="row1674814434406"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p97491434407"><a name="p97491434407"></a><a name="p97491434407"></a><span id="ph1566531814589"><a name="ph1566531814589"></a><a name="ph1566531814589"></a>Infer Operator</span></p>
 </td>
 </tr>
+<tr id="row_agent_core"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p_agent_core"><a name="p_agent_core"></a><a name="p_agent_core"></a><span id="span_agent_core"><a name="span_agent_core"></a><a name="span_agent_core"></a>Agent Core</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p_agent_core_user"><a name="p_agent_core_user"></a><a name="p_agent_core_user"></a>hwMindX</p>
+</td>
+<td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p_agent_core_priv"><a name="p_agent_core_priv"></a><a name="p_agent_core_priv"></a>N/A</p>
+</td>
+</tr>
+<tr id="row_node_collector"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p_node_collector"><a name="p_node_collector"></a><a name="p_node_collector"></a><span id="span_node_collector"><a name="span_node_collector"></a><a name="span_node_collector"></a>Node Collector</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p_node_collector_user"><a name="p_node_collector_user"></a><a name="p_node_collector_user"></a>root</p>
+</td>
+<td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p_node_collector_priv"><a name="p_node_collector_priv"></a><a name="p_node_collector_priv"></a>privileged container required.</p>
+</td>
+</tr>
+<tr id="row_kubectl_plugin"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p_kubectl_plugin"><a name="p_kubectl_plugin"></a><a name="p_kubectl_plugin"></a><span id="span_kubectl_plugin"><a name="span_kubectl_plugin"></a><a name="span_kubectl_plugin"></a>kubectl plugin</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p_kubectl_plugin_user"><a name="p_kubectl_plugin_user"></a><a name="p_kubectl_plugin_user"></a>Decided by the user.</p>
+</td>
+<td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p_kubectl_plugin_priv"><a name="p_kubectl_plugin_priv"></a><a name="p_kubectl_plugin_priv"></a>N/A</p>
+</td>
+</tr>
 </tbody>
 </table>
 
 ## (Optional) Creating Log Directories<a name="ZH-CN_TOPIC_0000002511346417"></a>
 
-For components other than Elastic Agent, TaskD, and Resilience Controller, the installation described in this chapter can be skipped.
+For components other than Elastic Agent and TaskD, the installation described in this chapter can be skipped.
 
 Create the parent log directory for components and the log directories for each component on the corresponding nodes, and set the owner and permissions for the directories.
 
@@ -137,15 +165,21 @@ Create the parent log directory for components and the log directories for each 
     <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1657216638"><a name="screen1657216638"></a><a name="screen1657216638"></a>mkdir -m 750 /var/log/mindx-dl/devicePlugin
    chown root:root /var/log/mindx-dl/devicePlugin</pre>
     </td>
-    <td class="cellrowborder" rowspan="6" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p11572661536"><a name="p11572661536"></a><a name="p11572661536"></a>Compute node</p>
+    <td class="cellrowborder" rowspan="8" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p11572661536"><a name="p11572661536"></a><a name="p11572661536"></a>Compute node</p>
     </td>
-    <td class="cellrowborder" rowspan="4" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p557592110325"><a name="p557592110325"></a><a name="p557592110325"></a>-</p>
+    <td class="cellrowborder" rowspan="6" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p557592110325"><a name="p557592110325"></a><a name="p557592110325"></a>-</p>
     </td>
     </tr>
     <tr id="row95721761536"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p125721269315"><a name="p125721269315"></a><a name="p125721269315"></a><span id="ph14572161034"><a name="ph14572161034"></a><a name="ph14572161034"></a>NPU Exporter</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen457213611313"><a name="screen457213611313"></a><a name="screen457213611313"></a>mkdir -m 750 /var/log/mindx-dl/npu-exporter
    chown root:root /var/log/mindx-dl/npu-exporter</pre>
+    </td>
+    </tr>
+    <tr id="row_dpu_exporter_log"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p_dpu_exporter_log"><span id="ph_dpu_exporter_log">DPU Exporter</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen_dpu_exporter_log">mkdir -m 750 /var/log/mindx-dl/dpu-exporter
+   chown root:root /var/log/mindx-dl/dpu-exporter</pre>
     </td>
     </tr>
     <tr id="row105739620318"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p195731868318"><a name="p195731868318"></a><a name="p195731868318"></a><span id="ph11573862310"><a name="ph11573862310"></a><a name="ph11573862310"></a>NodeD</span></p>
@@ -158,6 +192,12 @@ Create the parent log directory for components and the log directories for each 
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen2597060117202"><a name="screen2597060117202"></a><a name="screen2597060117202"></a>mkdir -m 750 /var/log/mindx-dl/k8s-rdma-shared-dp
    chown root:root /var/log/mindx-dl/k8s-rdma-shared-dp</pre>
+    </td>
+    </tr>
+    <tr id="row3597060117202"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p3597060117202"><a name="p3597060117202"></a><a name="p3597060117202"></a><span id="ph3597060117202"><a name="ph3597060117202"></a><a name="ph3597060117202"></a>Ascend Dynamic Resource Allocation</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen3597060117202"><a name="screen3597060117202"></a><a name="screen3597060117202"></a>mkdir -m 750 /var/log/mindx-dl/ascend-dra
+   chown root:root /var/log/mindx-dl/ascend-dra</pre>
     </td>
     </tr>
     <tr id="row55731961237"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p15573961314"><a name="p15573961314"></a><a name="p15573961314"></a><span id="ph13573106431"><a name="ph13573106431"></a><a name="ph13573106431"></a>Elastic Agent</span></p>
@@ -181,21 +221,15 @@ Create the parent log directory for components and the log directories for each 
     <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen05746613313"><a name="screen05746613313"></a><a name="screen05746613313"></a>mkdir -m 750 /var/log/mindx-dl/ascend-operator
    chown hwMindX:hwMindX /var/log/mindx-dl/ascend-operator</pre>
     </td>
-    <td class="cellrowborder" rowspan="6" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p65611868135"><a name="p65611868135"></a><a name="p65611868135"></a>Management node</p>
+    <td class="cellrowborder" rowspan="5" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p65611868135"><a name="p65611868135"></a><a name="p65611868135"></a>Management node</p>
     </td>
-    <td class="cellrowborder" rowspan="6" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p11355115061313"><a name="p11355115061313"></a><a name="p11355115061313"></a>-</p>
+    <td class="cellrowborder" rowspan="5" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p11355115061313"><a name="p11355115061313"></a><a name="p11355115061313"></a>-</p>
     </td>
     </tr>
     <tr id="row45741461130"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p18574466314"><a name="p18574466314"></a><a name="p18574466314"></a><span id="ph13574176736"><a name="ph13574176736"></a><a name="ph13574176736"></a>Infer Operator</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1574064313"><a name="screen1574064313"></a><a name="screen1574064313"></a>mkdir -m 750 /var/log/mindx-dl/infer-operator
    chown root:root /var/log/mindx-dl/infer-operator</pre>
-    </td>
-    </tr>
-    <tr id="row45741461130"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p18574466314"><a name="p18574466314"></a><a name="p18574466314"></a><span id="ph13574176736"><a name="ph13574176736"></a><a name="ph13574176736"></a>Resilience Controller</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1574064313"><a name="screen1574064313"></a><a name="screen1574064313"></a>mkdir -m 750 /var/log/mindx-dl/resilience-controller
-   chown hwMindX:hwMindX /var/log/mindx-dl/resilience-controller</pre>
     </td>
     </tr>
     <tr id="row68981954111810"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p28991454191811"><a name="p28991454191811"></a><a name="p28991454191811"></a><span id="ph16899408574"><a name="ph16899408574"></a><a name="ph16899408574"></a>ClusterD</span></p>
@@ -222,6 +256,30 @@ Create the parent log directory for components and the log directories for each 
     <td class="cellrowborder" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p53074565125"><a name="p53074565125"></a><a name="p53074565125"></a>Nodes that require the container recovery feature</p>
     </td>
     <td class="cellrowborder" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p1518124119135"><a name="p1518124119135"></a><a name="p1518124119135"></a>-</p>
+    </td>
+    </tr>
+    <tr id="row15240277142119"><td class="cellrowborder" valign="top" width="21.93%" headers="mcps1.2.5.1.1 "><p id="p142813122113"><a name="p142813122113"></a><a name="p142813122113"></a><span id="ph19341812117"><a name="ph19341812117"></a><a name="ph19341812117"></a>Agent Core</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen14281121213"><a name="screen14281121213"></a><a name="screen14281121213"></a>mkdir -m 750 /var/log/mindx-dl/agent-core
+   chown hwMindX:hwMindX /var/log/mindx-dl/agent-core
+   mkdir -m 750 -p /user/clusterops/agent-core
+   chown hwMindX:hwMindX /user/clusterops/agent-core</pre>
+    </td>
+    <td class="cellrowborder" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p121012411212"><a name="p121012411212"></a><a name="p121012411212"></a>Management node</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p828125121211"><a name="p828125121211"></a><a name="p828125121211"></a>/user/clusterops/agent-core is used to store collected logs, diagnostic artifacts, and result caches.</p>
+    </td>
+    </tr>
+    <tr id="row94125171218"><td class="cellrowborder" valign="top" width="21.93%" headers="mcps1.2.5.1.1 "><p id="p4121114121211"><a name="p4121114121211"></a><a name="p4121114121211"></a><span id="ph5121101211214"><a name="ph5121101211214"></a><a name="ph5121101211214"></a>Node Collector</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen812141221219"><a name="screen812141221219"></a><a name="screen812141221219"></a>mkdir -m 750 /var/log/mindx-dl/node-collector
+   chown root:root /var/log/mindx-dl/node-collector
+   mkdir -m 750 -p /user/clusterops/node-collector
+   chown root:root /user/clusterops/node-collector</pre>
+    </td>
+    <td class="cellrowborder" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p5121412101214"><a name="p5121412101214"></a><a name="p5121412101214"></a>Compute node</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p1412122121119"><a name="p1412122121119"></a><a name="p1412122121119"></a>/user/clusterops/node-collector is used to store log collection and parsing artifacts.</p>
     </td>
     </tr>
     </tbody>
@@ -292,7 +350,7 @@ In a K8s cluster, if a node containing an Ascend AI Processor is used as the K8s
 
 ## Creating a Namespace<a name="ZH-CN_TOPIC_0000002479226384"></a>
 
-- The NodeD, Resilience Controller, ClusterD, Infer Operator, and Ascend Operator components run in the `mindx-dl` namespace of K8s. Run the following command on the management node of K8s to create the corresponding namespace.
+- The NodeD, ClusterD, Infer Operator, Ascend Operator, Agent Core, and Node Collector components run in the `mindx-dl` namespace of K8s. Run the following command on the management node of K8s to create the corresponding namespace.
 
     ```shell
     kubectl create ns mindx-dl
@@ -304,7 +362,7 @@ In a K8s cluster, if a node containing an Ascend AI Processor is used as the K8s
     kubectl create ns cluster-system
     ```
 
-- The namespace for NPU Exporter is `npu-exporter`; the namespace for Volcano is `volcano-system`; the namespace for Ascend Device Plugin and K8s RDMA Shared Dev Plugin is `kube-system`. The namespaces for the preceding components are created by the system, and you do not need to create them again.
+- The namespace for NPU Exporter is `npu-exporter`; the namespace for DPU Exporter is `dpu-exporter`; the namespace for Volcano is `volcano-system`; the namespace for Ascend Device Plugin, K8s RDMA Shared Dev Plugin, and Ascend Dynamic Resource Allocation is `kube-system`. The namespaces for the preceding components are created by the system, and you do not need to create them again.
 
 ## Preparing an Image<a name="ZH-CN_TOPIC_0000002479226488"></a>
 
@@ -316,11 +374,12 @@ You can prepare images in the following two ways. After obtaining the images, cr
 
 >[!NOTE]
 >
+>- Agent Core and Node Collector share the same image `ascend-clusterops-agent`. The image contains both components and uses the `SERVICE` environment variable to distinguish startup roles.
 >- After pulling or creating images, perform security hardening in a timely manner, such as fixing vulnerabilities in the base image and those introduced by third-party dependencies.
 >- Import the images into the container runtime used by K8s. For example, K8s versions 1.24 and later use Containerd as the default container runtime. After pulling or creating images, you need to import them into Containerd.
 >- The running user for NPU Exporter and Ascend Device Plugin is `root`. The `LD_LIBRARY_PATH` environment variable is configured in their corresponding Dockerfiles, and its value includes paths related to driver libraries. The components will use files in these paths at runtime. It is recommended that the running user specified during driver installation be `root` to avoid privilege escalation risks caused by user inconsistency.
 >- For components whose startup user is `hwMindX`, if a custom user or an existing user is used during [user creation](#ZH-CN_TOPIC_0000002511346353), you need to modify the UID in the `useradd` command in the corresponding component's Dockerfile before image creation to make it consistent with the user UID on the host.
->- For Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD that requiring call DCMI in containers, refer to [Container Base Image Integration with UMDK](../../../07_references/02_common_operations.md#) to install UMDK when building images.
+>- For Atlas 850E, Atlas 850, Atlas 650E, Atlas 650, and Atlas 950 SuperPoD that requiring call DCMI in containers, refer to [Container Base Image Integration with UMDK](../../../07_references/02_common_operations.md#) to install UMDK when building images.
 
 **Create Images<a name="section106851195114"></a>**
 
@@ -364,6 +423,12 @@ You can prepare images in the following two ways. After obtaining the images, cr
         alpine            latest              a24bb4013296        2 years ago         5.57MB
         ```
 
+    - If you need to install Agent Core and Node Collector, check whether the Python image exists. Agent Core and Node Collector share the same image `ascend-clusterops-agent`, which is built based on the `python:3.13-slim` base image. Run the **docker images | grep python** command to check whether the Python image exists.
+
+        ```ColdFusion
+        python            3.13-slim           1f9d5b4f2b5a        2 years ago         123MB
+        ```
+
     If the preceding base images do not exist, use the relevant commands in [Table 1](#table17241135718196) to pull the base images (pulling images requires the server to have internet access).
 
     **Table 1**  Commands for obtaining base images
@@ -399,6 +464,13 @@ You can prepare images in the following two ways. After obtaining the images, cr
     <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.3 "><p>-</p>
     </td>
     </tr>
+    <tr><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1"><p>python:3.13-slim</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.2 "><pre class="screen">docker pull python:3.13-slim</pre>
+    </td>
+    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.3 "><p>Base image shared by the Agent Core and Node Collector images. The system architecture is automatically identified during pulling.</p>
+    </td>
+    </tr>
     </tbody>
     </table>
 
@@ -423,7 +495,7 @@ You can prepare images in the following two ways. After obtaining the images, cr
     </td>
     <td class="cellrowborder" valign="top" width="54.76547654765477%" headers="mcps1.2.5.1.3 "><ul><li>Image build command for Ascend Device Plugin with Ubuntu base image: <pre class="screen" id="screen3237730141519"><a name="screen3237730141519"></a><a name="screen3237730141519"></a>docker build --no-cache -t ascend-k8sdeviceplugin:<em id="i02419301157"><a name="i02419301157"></a><a name="i02419301157"></a>{</em><em id="i133991029173612"><a name="i133991029173612"></a><a name="i133991029173612"></a>tag}</em> ./</pre></li><li>Image build command for Ascend Device Plugin with openEuler base image: <pre class="screen">docker build --no-cache -t ascend-k8sdeviceplugin:<em>{</em><em>tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
     </td>
-    <td class="cellrowborder" rowspan="13" valign="top" width="19.21192119211921%" headers="mcps1.2.5.1.4 "><p id="p10280193431010"><a name="p10280193431010"></a><a name="p10280193431010"></a><em id="i472612293915"><a name="i472612293915"></a><a name="i472612293915"></a>{tag}</em> needs to reference the version on the software package. For example, if the software package version is <span id="ph18653133316811"><a name="ph18653133316811"></a><a name="ph18653133316811"></a>26.1.0</span>,<em id="i1572610273910"><a name="i1572610273910"></a><a name="i1572610273910"></a>{tag}</em> is v<span id="ph205239348813"><a name="ph205239348813"></a><a name="ph205239348813"></a>26.1.0</span>.</p>
+    <td class="cellrowborder" rowspan="16" valign="top" width="19.21192119211921%" headers="mcps1.2.5.1.4 "><p id="p10280193431010"><a name="p10280193431010"></a><a name="p10280193431010"></a><em id="i472612293915"><a name="i472612293915"></a><a name="i472612293915"></a>{tag}</em> needs to reference the version on the software package. For example, if the software package version is <span id="ph18653133316811"><a name="ph18653133316811"></a><a name="ph18653133316811"></a>26.2.0</span>,<em id="i1572610273910"><a name="i1572610273910"></a><a name="i1572610273910"></a>{tag}</em> is v<span id="ph205239348813"><a name="ph205239348813"></a><a name="ph205239348813"></a>26.2.0</span>.</p>
     <div class="note" id="note1217913258443"><a name="note1217913258443"></a><a name="note1217913258443"></a><span class="notetitle">Note</span><div class="notebody"><p id="p11793259444"><a name="p11793259444"></a><a name="p11793259444"></a>Ensure that the GID and UID of HwDmUser and HwBaseUser in Dockerfile-310P-1usoc Dockerfile-310P-1usoc <span id="ph18833164913291"><a name="ph18833164913291"></a><a name="ph18833164913291"></a></span><span id="ph5530185193011"><a name="ph5530185193011"></a><a name="ph5530185193011"></a></span>are consistent with those on the physical machine.</p>
     </div></div>
     <p id="p7733142881719"><a name="p7733142881719"></a><a name="p7733142881719"></a></p>
@@ -434,7 +506,7 @@ You can prepare images in the following two ways. After obtaining the images, cr
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><ul><li>Image build command for Ascend Device Plugin on Atlas 200I SoC A1 core board with Ubuntu base image: <pre class="screen" id="screen11251535101518"><a name="screen11251535101518"></a><a name="screen11251535101518"></a>docker build --no-cache -t<strong id="b412563510158"><a name="b412563510158"></a><a name="b412563510158"></a> </strong>ascend-k8sdeviceplugin:<em id="i14896103963618"><a name="i14896103963618"></a><a name="i14896103963618"></a>{</em><em id="i108961395368"><a name="i108961395368"></a><a name="i108961395368"></a>tag}</em> -f Dockerfile-310P-1usoc ./</pre></li><li>Image build command for Ascend Device Plugin on Atlas 200I SoC A1 core board with openEuler base image: <pre class="screen">docker build --no-cache -t ascend-k8sdeviceplugin:<em>{</em><em>tag}</em> -f Dockerfile-310P-1usoc.openeuler ./</pre></li></ul>
     </td>
     </tr>
-    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142916"></a><a name="p1519601142916"></a><span id="ph138789131470"><a name="ph138789131470"></a><a name="ph138789131470"></a>Atlas 850E SuperPoD, Atlas 650E server, Atlas 950 SuperPoD</span></p>
+    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142916"></a><a name="p1519601142916"></a><span id="ph138789131470"><a name="ph138789131470"></a><a name="ph138789131470"></a>Atlas 850E, Atlas 850, Atlas 650E, Atlas 650, Atlas 950 SuperPoD</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t ascend-k8sdeviceplugin:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>The value of the UMDK_PKG parameter is the UMDK software package file name, which needs to be downloaded from the archive directory in the <a href="https://mirrors.huaweicloud.com/ascend/"> Huawei Cloud image repository.</a></p>
     </td>
@@ -451,9 +523,16 @@ You can prepare images in the following two ways. After obtaining the images, cr
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><ul><li>Image build command for NPU Exporter on Atlas 200I SoC A1 core board with Ubuntu base image: <pre class="screen" id="screen18159134401518"><a name="screen18159134401518"></a><a name="screen18159134401518"></a>docker build --no-cache -t<strong id="b416024416154"><a name="b416024416154"></a><a name="b416024416154"></a> </strong>npu-exporter:<em id="i1316184923612"><a name="i1316184923612"></a><a name="i1316184923612"></a>{</em><em id="i21616493369"><a name="i21616493369"></a><a name="i21616493369"></a>tag}</em> -f Dockerfile-310P-1usoc ./</pre></li><li>Image build command for NPU Exporter on Atlas 200I SoC A1 core board with openEuler base image: <pre class="screen">docker build --no-cache -t npu-exporter:<em>{</em><em>tag}</em> -f Dockerfile-310P-1usoc.openeuler ./</pre></li></ul>
     </td>
     </tr>
-    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142917"></a><a name="p1519601142917"></a><span id="ph138789131471"><a name="ph138789131471"></a><a name="ph138789131471"></a>Atlas 850E SuperPoD, Atlas 650E server, Atlas 950 SuperPoD</span></p>
+    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142917"></a><a name="p1519601142917"></a><span id="ph138789131471"><a name="ph138789131471"></a><a name="ph138789131471"></a>Atlas 850E, Atlas 850, Atlas 650E, Atlas 650, Atlas 950 SuperPoD</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t npu-exporter:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>The value of the UMDK_PKG parameter is the UMDK software package file name, which needs to be downloaded from the archive directory in the <a href="https://mirrors.huaweicloud.com/ascend/"> Huawei Cloud image repository.</a></p>
+    </td>
+    </tr>
+    <tr id="row_dpu_exporter_build"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p_dpu_exporter_build_node">Other products</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p_dpu_exporter_build"><span id="ph_dpu_exporter_build">DPU Exporter</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><ul><li>Image build command for DPU Exporter when the base image is Ubuntu.<pre class="screen" id="screen_dpu_exporter_build_ubuntu">docker build --no-cache -t dpu-exporter:<em>{</em><em>tag}</em> ./</pre></li><li>Image build command for DPU Exporter when the base image is openEuler.<pre class="screen" id="screen_dpu_exporter_build_openeuler">docker build --no-cache -t dpu-exporter:<em>{</em><em>tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
     </td>
     </tr>
     <tr id="row098844612416"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p3927139182818"><a name="p3927139182818"></a><a name="p3927139182818"></a>Other products</p>
@@ -463,12 +542,24 @@ You can prepare images in the following two ways. After obtaining the images, cr
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><ul><li>Image build command for NodeD with Ubuntu base image: <pre class="screen" id="screen194843931521"><a name="screen194843931521"></a><a name="screen194843931521"></a>docker build --no-cache -t noded:<em id="i1233412449362"><a name="i1233412449362"></a><a name="i1233412449362"></a>{</em><em id="i16334174433616"><a name="i16334174433616"></a><a name="i16334174433616"></a>tag}</em> ./</pre></li><li>Image build command for NodeD with openEuler base image: <pre class="screen">docker build --no-cache -t noded:<em>{</em><em>tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
     </td>
     </tr>
-    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142918"></a><a name="p1519601142918"></a><span id="ph138789131472"><a name="ph138789131472"></a><a name="ph138789131472"></a>Atlas 850E SuperPoD, Atlas 650E server, Atlas 950 SuperPoD</span></p>
+    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142918"></a><a name="p1519601142918"></a><span id="ph138789131472"><a name="ph138789131472"></a><a name="ph138789131472"></a>Atlas 850E, Atlas 850, Atlas 650E, Atlas 650, Atlas 950 SuperPoD</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t noded:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>The value of the UMDK_PKG parameter is the UMDK software package file name, which needs to be downloaded from the archive directory in the <a href="https://mirrors.huaweicloud.com/ascend/"> Huawei Cloud image repository.</a></p>
     </td>
     </tr>
-    <tr id="row16602529173910"><td class="cellrowborder" rowspan="6" valign="top" headers="mcps1.2.5.1.1 "><p id="p119247391094"><a name="p119247391094"></a><a name="p119247391094"></a>Other products</p>
+    <tr id="row3597060117204"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p3597060117204"><a name="p3597060117204"></a><a name="p3597060117204"></a>Other products</p>
+    </td>
+    <td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.5.1.2 "><p id="p3597060117205"><a name="p3597060117205"></a><a name="p3597060117205"></a><span id="ph3597060117205"><a name="ph3597060117205"></a><a name="ph3597060117205"></a>Ascend Dynamic Resource Allocation</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><ul><li>Image build command for Ascend Dynamic Resource Allocation when the base image is Ubuntu.<pre class="screen" id="screen3597060117204"><a name="screen3597060117204"></a><a name="screen3597060117204"></a>docker build --no-cache -t ascend-dra:<em id="i3597060117204"><a name="i3597060117204"></a><a name="i3597060117204"></a>{</em><em id="i3597060117205"><a name="i3597060117205"></a><a name="i3597060117205"></a>tag}</em> ./</pre></li><li>Image build command for Ascend Dynamic Resource Allocation when the base image is openEuler.<pre class="screen">docker build --no-cache -t ascend-dra:<em>{</em><em>tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p3597060117206"></a><a name="p3597060117206"></a><span id="ph3597060117206"><a name="ph3597060117206"></a><a name="ph3597060117206"></a>Atlas 850E, Atlas 850, Atlas 650E, Atlas 650, Atlas 950 SuperPoD</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t ascend-dra:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>The value of the UMDK_PKG parameter is the UMDK software package file name, which needs to be downloaded from the archive directory in the <a href="https://mirrors.huaweicloud.com/ascend/"> Huawei Cloud image repository.</a> The current UMDK package only supports the aarch64 architecture.</p>
+    </td>
+    </tr>
+    <tr id="row16602529173910"><td class="cellrowborder" rowspan="7" valign="top" headers="mcps1.2.5.1.1 "><p id="p119247391094"><a name="p119247391094"></a><a name="p119247391094"></a>Other products</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p4603162993920"><a name="p4603162993920"></a><a name="p4603162993920"></a><span id="ph2247144612408"><a name="ph2247144612408"></a><a name="ph2247144612408"></a>Ascend Operator</span></p>
     </td>
@@ -478,11 +569,6 @@ You can prepare images in the following two ways. After obtaining the images, cr
     <tr id="row17988246152414"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1741731972511"><a name="p1741731972511"></a><a name="p1741731972511"></a><span id="ph16157133165316"><a name="ph16157133165316"></a><a name="ph16157133165316"></a>Infer Operator</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><ul><li>Image build command for Infer Operator with Ubuntu base image: <pre class="screen" id="screen2020115813153"><a name="screen2020115813153"></a><a name="screen2020115813153"></a>docker build --no-cache -t infer-operator:<em id="i1078611616374"><a name="i1078611616374"></a><a name="i1078611616374"></a>{tag}</em> ./</pre></li><li>Image build command for Infer Operator with openEuler base image: <pre class="screen">docker build --no-cache -t infer-operator:<em>{tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
-    </td>
-    </tr>
-    <tr id="row17988246152414"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1741731972511"><a name="p1741731972511"></a><a name="p1741731972511"></a><span id="ph16157133165316"><a name="ph16157133165316"></a><a name="ph16157133165316"></a>Resilience Controller</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen2020115813153"><a name="screen2020115813153"></a><a name="screen2020115813153"></a>docker build --no-cache -t resilience-controller:<em id="i1078611616374"><a name="i1078611616374"></a><a name="i1078611616374"></a>{tag}</em> ./</pre>
     </td>
     </tr>
     <tr id="row2597060117203"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1597060117203"><a name="p1597060117203"></a><a name="p1597060117203"></a><span id="ph2597060117203"><a name="ph2597060117203"></a><a name="ph2597060117203"></a>K8s RDMA Shared Dev Plugin</span></p>
@@ -502,7 +588,14 @@ You can prepare images in the following two ways. After obtaining the images, cr
    docker build --no-cache -t volcanosh/vc-controller-manager:<em id="i73221362140"><a name="i73221362140"></a><a name="i73221362140"></a>{version}</em>-<em id="i73221362141"><a name="i73221362141"></a><a name="i73221362141"></a>{tag}</em> ./ -f ./Dockerfile-controller</pre>
     <div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><p>For security reasons, lower versions of Docker restrict the clone system call, but their interception policies are overly strict and may incorrectly block normal thread creation. Volcano's internal CGO programs rely on native threading capabilities, and if thread creation is blocked, process crashes will occur directly. Therefore, when using openEuler as the base image to build Volcano component images, the Docker version must be no lower than <b>20.10.10</b></p></div></div>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p966311264620"><a name="p966311264620"></a><a name="p966311264620"></a>-</p>
+    </tr>
+    <tr id="row141082412331"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1410824123311"><a name="p1410824123311"></a><a name="p1410824123311"></a><span id="ph1410824123312"><a name="ph1410824123312"></a><a name="ph1410824123312"></a>Agent Core/Node Collector</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Agent Core and Node Collector share the same image ascend-clusterops-agent. A single image can meet the deployment of both components. Run the following command in the software package decompression directory.</p>
+    <pre class="screen" id="screen141082412331"><a name="screen141082412331"></a><a name="screen141082412331"></a>docker build --no-cache -t ascend-clusterops-agent:<em id="i141082412331"><a name="i141082412331"></a><a name="i141082412331"></a>{tag}</em> .</pre>
+    <div class="note" id="note141082412331"><a name="note141082412331"></a><a name="note141082412331"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p>The build command is run in the software package decompression directory (the component whl and Dockerfile are at the same level). This image is built based on the python:3.13-slim base image. Before building, download the <a href="https://gitcode.com/Ascend/mind-cluster/releases">Ascend-mindxdl-faultdiag_<i>{version}</i>_linux-<i>{arch}</i>.zip</a> in advance. After decompression, extract only the ascend_faultdiag-*.whl and place it in the software package decompression directory (in the same directory as the Dockerfile). Otherwise, ascend-fd cannot be installed in the image, and the diagnostic function is unavailable.</p>
+    <p>The component packages of Agent Core and Node Collector are of a general architecture. When building the image, the server must be able to access the Internet, and pip in the image automatically installs runtime dependencies. The ascend_faultdiag-*.whl must be placed in the software package decompression directory (in the same directory as the Dockerfile). During building, the Dockerfile automatically selects the wheel that matches the target architecture (x86_64 by default; aarch64 is selected when aarch64 is detected). If the wheel for the matching architecture is missing, the image build reports an error directly.</p>
+    </div></div>
     </td>
     </tr>
     </tbody>
@@ -590,7 +683,7 @@ You can prepare images in the following two ways. After obtaining the images, cr
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><a name="ul158133245418"></a><a name="ul158133245418"></a><ul id="ul158133245418"><li><a href="https://www.hiascend.com/developer/ascendhub/detail/54545fa4ff9f446e914bf44b85efdb61" target="_blank" rel="noopener noreferrer">volcanosh/vc-scheduler</a></li><li><a href="https://www.hiascend.com/developer/ascendhub/detail/16f17a3c95d54f9da710a9c51bfceaa3" target="_blank" rel="noopener noreferrer">volcanosh/vc-controller-manager</a></li></ul>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p38142241846"><a name="p38142241846"></a><a name="p38142241846"></a>Select image as needed:</p><p>v1.7.0-v26.1.0-openeuler24.03</p><p>v1.9.0-v26.1.0-openeuler24.03</p><p>v1.12.0-v26.1.0-openeuler24.03</p><p>v1.7.0-v26.1.0-alpinelatest</p><p>v1.9.0-v26.1.0-alpinelatest</p><p>v1.12.0-v26.1.0-alpinelatest</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p38142241846"><a name="p38142241846"></a><a name="p38142241846"></a>Select image as needed:</p><p>v1.7.0-v26.2.0-openeuler24.03</p><p>v1.9.0-v26.2.0-openeuler24.03</p><p>v1.12.0-v26.2.0-openeuler24.03</p><p>v1.7.0-v26.2.0-alpinelatest</p><p>v1.9.0-v26.2.0-alpinelatest</p><p>v1.12.0-v26.2.0-alpinelatest</p>
     </td>
     <td class="cellrowborder" rowspan="4" valign="top" width="19.67%" headers="mcps1.2.5.1.4 "><p id="p18131924748"><a name="p18131924748"></a><a name="p18131924748"></a>Management node</p>
     <p id="p1081314241741"><a name="p1081314241741"></a><a name="p1081314241741"></a></p>
@@ -600,51 +693,67 @@ You can prepare images in the following two ways. After obtaining the images, cr
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1381415241342"><a name="p1381415241342"></a><a name="p1381415241342"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/a066319600634cf6a1e522856a63a1c5" target="_blank" rel="noopener noreferrer">ascend-operator</a></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.1.0-openeuler24.03</p><p>v26.1.0-ubuntu22.04</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.2.0-openeuler24.03</p><p>v26.2.0-ubuntu22.04</p>
     </td>
     </tr>
     <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Infer Operator</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p><a href="https://www.hiascend.com/developer/ascendhub/detail/13f3dee71712420d8b583b9275c04899" target="_blank" rel="noopener noreferrer">infer-operator</a></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.1.0-openeuler24.03</p><p>v26.1.0-ubuntu22.04</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.2.0-openeuler24.03</p><p>v26.2.0-ubuntu22.04</p>
     </td>
     </tr>
     <tr id="row1381419241342"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1814324740"><a name="p1814324740"></a><a name="p1814324740"></a><span id="ph88147247419"><a name="ph88147247419"></a><a name="ph88147247419"></a>ClusterD</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p98151024149"><a name="p98151024149"></a><a name="p98151024149"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/b554929b470747448924bc786b5ab95d" target="_blank" rel="noopener noreferrer">clusterd</a></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.1.0-openeuler24.03</p><p>v26.1.0-ubuntu22.04</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.2.0-openeuler24.03</p><p>v26.2.0-ubuntu22.04</p>
     </td>
     </tr>
     <tr id="row138151249410"><td class="cellrowborder" valign="top" width="28.689999999999998%" headers="mcps1.2.5.1.1 "><p id="p1881520248414"><a name="p1881520248414"></a><a name="p1881520248414"></a><span id="ph081511241449"><a name="ph081511241449"></a><a name="ph081511241449"></a>NodeD</span></p>
     </td>
     <td class="cellrowborder" valign="top" width="34.43%" headers="mcps1.2.5.1.2 "><p id="p1681572413418"><a name="p1681572413418"></a><a name="p1681572413418"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/cc7e6c0a10834f1888d790174fba4bc5" target="_blank" rel="noopener noreferrer">noded</a></p>
     </td>
-    <td class="cellrowborder" valign="top" width="17.21%" headers="mcps1.2.5.1.3 "><p>v26.1.0-openeuler24.03</p><p>v26.1.0-ubuntu22.04</p>
+    <td class="cellrowborder" valign="top" width="17.21%" headers="mcps1.2.5.1.3 "><p>v26.2.0-openeuler24.03</p><p>v26.2.0-ubuntu22.04</p>
     </td>
-    <td class="cellrowborder" rowspan="4" valign="top" width="19.67%" headers="mcps1.2.5.1.4 "><p id="p128156248413"><a name="p128156248413"></a><a name="p128156248413"></a>Compute node</p>
+    <td class="cellrowborder" rowspan="5" valign="top" width="19.67%" headers="mcps1.2.5.1.4 "><p id="p128156248413"><a name="p128156248413"></a><a name="p128156248413"></a>Compute node</p>
     </td>
     </tr>
     <tr id="row08151024548"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p281518242412"><a name="p281518242412"></a><a name="p281518242412"></a><span id="ph481514241548"><a name="ph481514241548"></a><a name="ph481514241548"></a>NPU Exporter</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p481512243413"><a name="p481512243413"></a><a name="p481512243413"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/1b1a8c3cc1ff4710bdb0222514a8a7a3" target="_blank" rel="noopener noreferrer">npu-exporter</a></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.1.0-openeuler24.03</p><p>v26.1.0-ubuntu22.04</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.2.0-openeuler24.03</p><p>v26.2.0-ubuntu22.04</p>
+    </td>
+    </tr>
+    <tr id="row_dpu_exporter_image"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p_dpu_exporter_image"><span id="ph_dpu_exporter_image">DPU Exporter</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p_dpu_exporter_image_name">dpu-exporter</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.2.0-openeuler24.03</p><p>v26.2.0-ubuntu22.04</p>
     </td>
     </tr>
     <tr id="row1781532410415"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p78163241644"><a name="p78163241644"></a><a name="p78163241644"></a><span id="ph148168241849"><a name="ph148168241849"></a><a name="ph148168241849"></a>Ascend Device Plugin</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1081612418413"><a name="p1081612418413"></a><a name="p1081612418413"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/a592da7bd2ab4dffa8864abd4eac5068" target="_blank" rel="noopener noreferrer">ascend-k8sdeviceplugin</a></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.1.0-openeuler24.03</p><p>v26.1.0-ubuntu22.04</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.2.0-openeuler24.03</p><p>v26.2.0-ubuntu22.04</p>
     </td>
     </tr>
     <tr id="row2597060117204"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1597060117204"><a name="p1597060117204"></a><a name="p1597060117204"></a><span id="ph2597060117204"><a name="ph2597060117204"></a><a name="ph2597060117204"></a>K8s RDMA Shared Dev Plugin</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2597060117204"><a name="p2597060117204"></a><a name="p2597060117204"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/k8s-rdma-shared-dp" target="_blank" rel="noopener noreferrer">k8s-rdma-shared-dp</a></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.1.0-openeuler24.03</p><p>v26.1.0-ubuntu22.04</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.2.0-openeuler24.03</p><p>v26.2.0-ubuntu22.04</p>
+    </td>
+    </tr>
+    <tr id="row141082412329"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p24129111236"><a name="p24129111236"></a><a name="p24129111236"></a><span id="ph84128121239"><a name="ph84128121239"></a><a name="ph84128121239"></a>Agent Core/Node Collector</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p941210912311"><a name="p941210912311"></a><a name="p941210912311"></a>ascend-clusterops-agent</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.2.0</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.4 "><p id="p941212012312"><a name="p941212012312"></a><a name="p941212012312"></a>Agent Core runs on the management node, and Node Collector runs on the compute node.</p>
     </td>
     </tr>
     </tbody>
@@ -656,41 +765,47 @@ You can prepare images in the following two ways. After obtaining the images, cr
 3. <a name="li14816124549"></a>The cluster scheduling images pulled from the Ascend image repository have different names from those in the component startup YAML files. You need to rename the pulled images before starting the components. Follow the steps below to rename the images obtained in <a href="#li1381232414410">Step 2</a>. It is also recommended to delete the images with the original names. The specific operations are as follows:
     1. Rename images (users need to select the corresponding command based on the component used).
         >[!NOTE]
-        >Please replace the tag in the commands below with the corresponding tag based on the actual image tag pulled. For example, replace `v26.1.0-openeuler24.03` with `v26.1.0-ubuntu22.04`, and replace `{version}-v26.1.0-openeuler24.03` with `{version}-v26.1.0-alpinelatest`.
+        >Please replace the tag in the commands below with the corresponding tag based on the actual image tag pulled. For example, replace `v26.2.0-openeuler24.03` with `v26.2.0-ubuntu22.04`, and replace `{version}-v26.2.0-openeuler24.03` with `{version}-v26.2.0-alpinelatest`.
 
         ```shell
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.1.0-openeuler24.03 ascend-operator:v26.1.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.2.0-openeuler24.03 ascend-operator:v26.2.0
 
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.1.0-openeuler24.03 infer-operator:v26.1.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.2.0-openeuler24.03 infer-operator:v26.2.0
 
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.1.0-openeuler24.03 npu-exporter:v26.1.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.2.0-openeuler24.03 npu-exporter:v26.2.0
 
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.1.0-openeuler24.03 ascend-k8sdeviceplugin:v26.1.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/dpu-exporter:v26.2.0-openeuler24.03 dpu-exporter:v26.2.0
+
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.2.0-openeuler24.03 ascend-k8sdeviceplugin:v26.2.0
 
         # Replace {version} with the actual version number (for example, v1.7.0, v1.9.0,v1.12.0) based on Volcano in use.
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{version}-v26.1.0-openeuler24.03 volcanosh/vc-controller-manager:{version}-v26.1.0
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{version}-v26.1.0-openeuler24.03 volcanosh/vc-scheduler:{version}-v26.1.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{version}-v26.2.0-openeuler24.03 volcanosh/vc-controller-manager:{version}-v26.2.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{version}-v26.2.0-openeuler24.03 volcanosh/vc-scheduler:{version}-v26.2.0
 
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.1.0-openeuler24.03 noded:v26.1.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.2.0-openeuler24.03 noded:v26.2.0
 
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.1.0-openeuler24.03 clusterd:v26.1.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.2.0-openeuler24.03 clusterd:v26.2.0
+
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-clusterops-agent:v26.2.0 ascend-clusterops-agent:v26.2.0
         ```
 
     2. (Optional) Delete images with the original names (users need to select the corresponding command based on the component used).
         >[!NOTE]
-        >Please replace the tag in the commands below with the corresponding tag based on the actual image tag pulled. For example, replace `v26.1.0-openeuler24.03` with `v26.1.0-ubuntu22.04`, and replace `{version}-v26.1.0-openeuler24.03` with `{version}-v26.1.0-alpinelatest`.
+        >Please replace the tag in the commands below with the corresponding tag based on the actual image tag pulled. For example, replace `v26.2.0-openeuler24.03` with `v26.2.0-ubuntu22.04`, and replace `{version}-v26.2.0-openeuler24.03` with `{version}-v26.2.0-alpinelatest`.
 
         ```shell
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.1.0-openeuler24.03
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.1.0-openeuler24.03
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.1.0-openeuler24.03
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.1.0-openeuler24.03
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.2.0-openeuler24.03
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.2.0-openeuler24.03
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.2.0-openeuler24.03
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/dpu-exporter:v26.2.0-openeuler24.03
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.2.0-openeuler24.03
         # Replace {version} with the actual version number (for example, v1.7.0, v1.9.0,v1.12.0) based on Volcano in use.
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{version}-v26.1.0-openeuler24.03
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{version}-v26.1.0-openeuler24.03
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{version}-v26.2.0-openeuler24.03
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{version}-v26.2.0-openeuler24.03
 
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.1.0-openeuler24.03
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.1.0-openeuler24.03
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.2.0-openeuler24.03
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.2.0-openeuler24.03
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-clusterops-agent:v26.2.0
         ```
 
 4. (Optional) Import the offline image into Containerd. This step applies to scenarios where the container runtime is Containerd. Skip this step for other scenarios.

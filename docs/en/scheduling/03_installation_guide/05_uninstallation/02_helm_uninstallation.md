@@ -1,7 +1,5 @@
 # Uninstallation with Helm<a name="ZH-CN_TOPIC_0000002511426390"></a>
 
-<!-- md-trans-meta sourceCommit=1add3fb0e10984a5f5f80d259f8bb278e17a1a27 translatedAt=2026-08-27T02:28:11.677Z pushedAt=2026-08-27T06:46:31.966Z -->
-
 ## Uninstallation Description<a name="section_uninstall_desc"></a>
 
 This document describes how to uninstall MindCluster components using Helm.
@@ -16,8 +14,10 @@ This document describes how to uninstall MindCluster components using Helm.
   - ClusterD
   - NodeD
   - NPU Exporter
+  - DPU Exporter
   - Infer Operator
   - K8s RDMA Shared Dev Plugin
+  - Ascend Dynamic Resource Allocation
 - To uninstall Ascend Docker Runtime and Container Manager, perform the operations described in [Manual Uninstallation](../../05_developer_guide/00_installation_deployment/02_uninstallation.md).
 - TaskD and MindIO are installed in service containers and are not covered by the components described in this chapter.
 
@@ -49,8 +49,8 @@ This document describes how to uninstall MindCluster components using Helm.
 
        ```ColdFusion
        NAME               NAMESPACE   REVISION  UPDATED                                  STATUS       CHART                                        APP VERSION
-       mindcluster        default    1         2026-03-24 15:30:00.000000000 +0800 CST  deployed     mindcluster-deploy-tool-26.1.0                26.1.0
-       mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.1.0           26.1.0
+       mindcluster        default    1         2026-03-24 15:30:00.000000000 +0800 CST  deployed     mindcluster-deploy-tool-26.2.0                26.2.0
+       mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.2.0           26.2.0
        ```
 
    2. Determine whether the components are managed by Helm based on the command output.

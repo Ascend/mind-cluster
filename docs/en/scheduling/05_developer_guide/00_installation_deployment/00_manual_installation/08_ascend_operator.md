@@ -1,8 +1,8 @@
 # Ascend Operator<a name="ZH-CN_TOPIC_0000002479386414"></a>
 
 - Users who use full-NPU scheduling (training), static vNPU scheduling (training), resumable training, or elastic training must install Ascend Operator. If Volcano is used as the scheduler, it must be installed first; otherwise, Ascend Operator will fail to start.
-- Users who use full-NPU scheduling (inference) and scheduling upon inference card faults to submit distributed inference job of the AscendJob type must install Ascend Operator.
-- Users who only use containerization and resource monitoring, inference card fault recovery, or scheduling upon inference card faults (single-node jobs) do not need to install Ascend Operator. Please skip this chapter directly.
+- Users who use full-NPU scheduling (inference) and rescheduling to submit distributed inference job of the AscendJob type must install Ascend Operator.
+- Users who only use containerization and resource monitoring, chip fault recovery, or rescheduling (single-node jobs) do not need to install Ascend Operator. Please skip this chapter directly.
 - Before starting Ascend Operator, Volcano must be started first. Ascend Operator needs to perceive PodGroup resources.
 - The maximum number of replicas for a single AscendJob that Ascend Operator allows to create is 20,000.
 
@@ -17,7 +17,7 @@
     The following is an example of the output:
 
     ```ColdFusion
-    ascend-operator                      v26.1.0              c532e9d0889c        About an hour ago         137MB
+    ascend-operator                      v26.2.0              c532e9d0889c        About an hour ago         137MB
     ```
 
     - If correct, proceed to [Step 2](#li19793191914420).
@@ -115,7 +115,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="p26141489467"><a name="p26141489467"></a><a name="p26141489467"></a>false</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p5614648134615"><a name="p5614648134615"></a><a name="p5614648134615"></a>Whether to query the <span id="ph446121313413"><a name="ph446121313413"></a><a name="ph446121313413"></a>Ascend Operator</span> version.</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p5614648134615"><a name="p5614648134615"></a><a name="p5614648134615"></a>Whether to query the <span id="ph446121313413"><a name="ph446121313413"></a><a name="ph446121313413"></a>Ascend Operator</span> version, commit ID, and other detailed information.</p>
 <a name="ul178554235168"></a><a name="ul178554235168"></a><ul id="ul178554235168"><li>true: Query.</li><li>false: Do not query.</li></ul>
 </td>
 </tr>
@@ -202,6 +202,15 @@
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="p17205159154412"><a name="p17205159154412"></a><a name="p17205159154412"></a>50</p>
 </td>
 <td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p172054590444"><a name="p172054590444"></a><a name="p172054590444"></a>QPS (queries per second) used for communication with K8s. The value range is (0,10000]. If the value is outside this range, the default value of 50 is used.</p>
+</td>
+</tr>
+<tr id="row182053596443"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="p4205165917448"><a name="p4205165917448"></a><a name="p4205165917448"></a>-jobScanInterval</p>
+</td>
+<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p42051059174420"><a name="p42051059174420"></a><a name="p42051059174420"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="p17205159154413"><a name="p17205159154413"></a><a name="p17205159154413"></a>300</p>
+</td>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p172054590445"><a name="p172054590445"></a><a name="p172054590445"></a>Scan interval for clearing completed acjobs, in seconds. Value range: [300, 86400]. If the value is outside this range, the default value of 300 is used.</p>
 </td>
 </tr>
 <tr id="rowhz001-clusterd"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz001-clusterd"><a name="phz001-clusterd"></a><a name="phz001-clusterd"></a>--enable-healthz</p>

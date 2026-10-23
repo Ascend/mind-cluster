@@ -11,12 +11,12 @@ The fields in the custom metric file are shown in [Table 1](#ZH-CN_TOPIC_0000002
 |Field |Type|Description|
 |--|--|--|
 |version|string|Fixed value: 1.0.|
-|name|string|Metric name. Cannot be empty. Length cannot exceed 128.|
+|name|string|Metric name. Cannot be empty. Length cannot exceed 128. Only letters, digits, and underscores are supported, and the name cannot start with a digit.|
 |desc|string|Detailed description of the metric. Cannot be empty. Length cannot exceed 1024.|
 |timestamp|timestamp|Update timestamp of the metric, in us.|
 |data_list|list|Non-empty array. Length cannot exceed 128.|
 |-value|float|Value of the metric.|
-|-label|json|Label of the metric. Both keys and values in the JSON must be of string type. The number of child elements in the JSON cannot exceed 10.|
+|-label|json|Label of the metric. Both keys and values in the JSON must be of string type. Keys can contain only letters, digits, and underscores, and cannot start with a digit. The number of child elements in the JSON cannot exceed 10.|
 
 ## Constraints<a name="section342514924413"></a>
 
