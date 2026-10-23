@@ -1,7 +1,5 @@
 # API Reference
 
-<!-- md-trans-meta sourceCommit=8c36d230fe88892740f2c741498130e6a9bb3cce translatedAt=2026-08-24T02:29:40.647Z pushedAt=2026-08-24T02:51:43.294Z -->
-
 - [API Overview](./01_api_overview.md)
 - [parse Command (Log Parsing)](./02_command_parse.md)
 - [diag Command (Fault Diagnosis)](./03_command_diag.md)

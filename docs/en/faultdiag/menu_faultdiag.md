@@ -1,7 +1,5 @@
 # MindCluster Fault Diagnosis User Guide
 
-<!-- md-trans-meta sourceCommit=c4693e618818875051b730a07eb0ae8f922b409d translatedAt=2026-08-24T02:53:41.348Z pushedAt=2026-08-24T03:08:41.000Z -->
-
 - [MindCluster Ascend FaultDiag](./ascend-faultdiag/menu_ascend_faultdiag_user_guide.md)
   - [Introduction](./ascend-faultdiag/01_introduction/menu_introduction.md)
     - [Overview](./ascend-faultdiag/01_introduction/01_overview.md)
@@ -80,6 +78,7 @@
       - [auto_collect](./ascend-faultdiag-toolkit/06_api/04_parse_diagnosis/01_auto_collect.md)
       - [auto_diag](./ascend-faultdiag-toolkit/06_api/04_parse_diagnosis/02_auto_diag.md)
       - [auto_collect_diag](./ascend-faultdiag-toolkit/06_api/04_parse_diagnosis/03_auto_collect_diag.md)
+      - [auto_single_diag](./ascend-faultdiag-toolkit/06_api/04_parse_diagnosis/04_auto_single_diag.md)
     - [Inspection Commands](./ascend-faultdiag-toolkit/06_api/05_inspection/auto_inspection.md)
     - [Maintenance Command](./ascend-faultdiag-toolkit/06_api/06_maintenance/clear_cache.md)
   - [Reference](./ascend-faultdiag-toolkit/07_references/01_faq.md)

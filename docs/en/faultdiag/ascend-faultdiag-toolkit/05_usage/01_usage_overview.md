@@ -1,7 +1,5 @@
 # Feature Overview
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:15:58.934Z pushedAt=2026-08-24T02:22:41.531Z -->
-
 The ascend-fd-tk tool provides complete end-to-end fault diagnosis capabilities, covering the entire process from data collection to fault localization. This section introduces the usage and typical scenarios of the tool's features.
 
 ## Usage
@@ -10,6 +8,14 @@ The ascend-fd-tk tool provides complete end-to-end fault diagnosis capabilities,
 |------|----------|------|
 | Interactive | Temporary debugging, troubleshooting, step-by-step operations | Enter the `>>>` prompt and input commands one by one |
 | Non-interactive | Automated O&M, scheduled tasks, script integration | Complete the entire process with a single command |
+
+| Performance   | <term>Atlas A3 Products</term>                  | <term>Ascend 950PR&950DT Products</term>                   |
+|------|-------------------------------|------------------------------------------|
+| Single-node time consumption | Parsing/diagnosis for a single host, BMC, or Switch takes no more than 3 minutes  | Parsing/diagnosis for a single host, BMC, Switch, board BMC, or board UBM takes no more than 5 minutes |
+| Cluster time consumption | Cluster parsing/diagnosis takes no more than 3*cluster size/number of CPU cores*0.8 minutes | Cluster parsing/diagnosis takes no more than 5*cluster size/number of CPU cores*0.8 minutes          |
+
+> [!NOTE]
+> Some switch devices take a long time to parse, which increases the overall parsing duration.
 
 ## Home Directory
 
@@ -27,7 +33,7 @@ Directory structure:
 | `{home_directory}/report/` | Output directory for diagnosis/inspection reports (`diag_report_{YYYYMMDD_HHMMSS}.xlsx` / `inspection_errors.csv`) |
 | `{home_directory}/encrypted_conn_config` | Encrypted file of the online connection configuration file `conn.ini` |
 
->[!NOTE]
+> [!NOTE]
 > The maximum size of a single tool execution log file is 10 MB. When the file size reaches the threshold, log rotation and archiving are triggered automatically. Archived files are named `ascend-fd-tk.log.1`, `ascend-fd-tk.log.2`, and so on, where a smaller number indicates a more recent log generation time. The system retains up to 5 archived log files.
 
 ## Features

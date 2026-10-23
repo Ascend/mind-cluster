@@ -1,7 +1,5 @@
 # Fault Inspection
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:16:08.192Z pushedAt=2026-08-24T02:22:41.536Z -->
-
 After completing [log collection](02_log_collection.md) and [log parsing](03_log_parse.md) with the ascend-fd-tk tool, use the [auto_inspection](../06_api/05_inspection/auto_inspection.md) command to perform batch health checks based on predefined rules for different customer types, and periodically inspect the cluster to detect potential link anomalies in advance. The inspection feature is a beta feature and is not recommended for use in production environments.
 
 The main differences between diagnosis and inspection are as follows:

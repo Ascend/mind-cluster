@@ -1,7 +1,5 @@
 # Log Collection
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:27:48.402Z pushedAt=2026-08-24T02:51:43.261Z -->
-
 Log collection is the first prerequisites to use ascend-fd. You need to collect log files from each training/inference device and store them according to the specified structure.
 
 ## Log Collection Archive Directory Structure
@@ -45,13 +43,21 @@ collection_directory
         └── mindie_cluster_log  # MindIE Pod logs
 |-- amct_log             # AMCT logs
 |-- lcne_log             # LCNE logs
-    |-- log.log
-    |-- log_1_*.log
     |-- diag_display_info.txt
     └── diagnostic_information
-        └── slot_1
-            └── tempdir
-                └── devm_bddrvadp.log
+        |-- diag
+            └── slot_{slot_id}
+                |-- diag.log
+                └── diaglog_{slot_id}_{timestamp}.log
+        |-- log
+            └── slot_{slot_id}
+                |-- log.log
+                └── log_{slot_id}_{timestamp}.log
+        |-- varlog
+            └── slot_{slot_id}
+                └── varlog
+                    |-- cpdt_checkcc.log
+                    └── devm_bddrvadp.log
 |-- environment_check    # Environment check logs: NPU network interfaces, status, resource info
     |-- npu_smi_0_details.csv   # NPU status monitoring
     |-- npu_0_details.csv       # NPU network interface statistics
@@ -113,7 +119,7 @@ After training or inference is complete, copy the training or inference logs to 
 - `rank-(rank_id).log` or `rank-(rank_id).txt`
 - `worker-(worker_id).log` or `worker-(worker_id).txt`
 
-**Figure 1**  Example of training and inference logs
+**Figure 1** Example of training and inference logs
 
 ![Training and inference log example](../../figures/ascend-faultdiag/training-and-inference-logs.png)
 
@@ -227,84 +233,185 @@ dmidecode > {collection_directory}/dmidecode.txt
 
 ### Device-Side Logs
 
-After training or inference is complete, run the following command to collect device-side logs:
+- In ascend-fd 26.2.0 and later, the UnifiedBus (UB) link diagnostic capability has been enhanced. The log collection method differs from that of previous versions: before task startup and after task completion, the device-side UB maintenance and test information needs to be collected. You can choose not to use this enhanced capability and continue to use the previous log collection method. ascend-fd is compatible and automatically identifies whether the new or previous log collection method is used based on the contents of the `device_log` directory. For previous versions, see [Device-Side Log Collection for ascend-fd 26.1.0 and Earlier](#fd-log-collect-old). The device-side logs used by the new version are collected as follows:
 
-```shell
-msnpureport
-```
+    1. Create log archive directories before task startup and after task completion. The new method requires both directories to exist at the same time (previous versions did not have `before_task` and `after_task` directories). As long as both directories exist, the new log collection method is identified.
 
-After the command is executed, timestamp-named log data is generated in the current directory. Run the following command to copy the logs to the collection directory:
+        ```shell
+        mkdir -p {collection_directory}/device_log/before_task
+        mkdir -p {collection_directory}/device_log/after_task
+        ```
 
-```shell
-cp -r {Timestamp_directory}/slog {collection_directory}/device_log
-cp -r {Timestamp_directory}/hisi_logs {collection_directory}/device_log
-```
+    2. After the training or inference task is complete, run the following command to collect device-side system and partial maintenance and test logs.
 
-Directory structure:
+        ```shell
+        msnpureport -f
+        ```
 
-- Ascend HDK 23.0.RC3
+    3. Copy the logs collected in Step 2 to the `after_task` directory.
+
+        ```shell
+        cp -r {timestamp_directory_of_logs_collected_in_step_2}/slog {collection_directory}/device_log/after_task
+        cp -r {timestamp_directory_of_logs_collected_in_step_2}/hisi_logs {collection_directory}/device_log/after_task
+        ```
+
+    4. Run the following command to collect UB maintenance and test information (`ub_info` directory) before and after task.
+
+        ```shell
+        msnpureport report -t 6
+        ```
+
+    5. Copy the collected UB maintenance and test information logs before and after task to the collection directory.
+
+        ```shell
+        # Place logs before task in before_task
+        cp -r {timestamp_directory_of_logs_collected_in_step_4}/ub_info {collection_directory}/device_log/before_task
+
+        # Place logs after task in after_task
+        cp -r {timestamp_directory_of_logs_collected_in_step_4}/ub_info {collection_directory}/device_log/after_task
+        ```
+
+<a id="fd-log-collect-old"></a>
+
+- For ascend-fd 26.1.0 and earlier, the device-side logs used can be collected as follows:
+
+    1. After training or inference is complete, run the following command to collect device-side system and partial maintenance and test information logs.
+
+        ```shell
+        msnpureport -f
+        ```
+
+    2. After execution is complete, log data named with a timestamp will be generated in the current directory. Run the following command to copy the logs to the collection directory. Logs placed in this way will be automatically identified by ascend-fd as post-task logs and processed according to this category. The overall component functionality remains unchanged.
+
+        ```shell
+        cp -r {timestamp_directory}/slog {collection_directory}/device_log
+        cp -r {timestamp_directory}/hisi_logs {collection_directory}/device_log
+        ```
+
+    3. refer to the new version's method to collect UB maintenance and test information logs (`ub_info`) and place them under `{collection_directory}/device_log`, but only a small number of UB link issues can be identified.
+
+Directory Structure:
+
+- For ascend-fd 26.2.0 and later, the NPU driver must be updated in a coordinated manner.
 
     ```text
     |--device_log
-        |-- slog
-            |-- dev-os-3
-                |-- debug
-                    |--device-os
-                        └── device-os_{time}.log # System logs on device-side Control CPU
-                |-- run
-                    |--device-os
-                        └── device-os_{time}.log # System logs on device-side Control CPU
-                |--device-0
-                    └──device-0_{time}.log   # System logs on device-side non-Control CPU
-                |--device-2
-                |--…
-                |--slogd
-                └──device_sys_init_ext.log
-            |-- dev-os-7
-            |-- …
-        └──hisi_logs
-            |-- device-0
+        |-- before_task
+            └── ub_info
+                |--device-os-0
+                    |--…
+                    └──ubctl
+                        └──2026_09_01_10_22_12
+                            └──ubctl_log.txt
+                |--device-os-1
+                    |--…
+                └──…
+        └──after_task
+            |-- ub_info
+                |--device-os-0
+                    |--…
+                    └──ubctl
+                        └──2026_09_01_14_22_12
+                            └──ubctl_log.txt
+                |--device-os-1
+                    |--…
+                └──…
+            |-- slog
+                |-- dev-os-3
+                    |-- debug
+                        |--device-os
+                            |-- device-os_{time}.log # System logs of device-side Control CPU
+                        |--device-0
+                            |--device-0_{time}.log   # System logs of device-side non-Control CPU
+                        |--device-2
+                        |--…
+                    |-- run
+                        |--device-os
+                            └── device-os_{time}.log # System logs of device-side Control CPU
+                        └──event
+                            └── event_{time}.log # EVENT logs of device-side Control CPU
+                    |--…
+                    |--slogd
+                    └──device_sys_init_ext.log
+                |-- dev-os-7
+                └── …
+            └──hisi_logs
+                └── device-0
+                    |-- …
+                    |-- history.log                  # Black Box log
+                    |-- {time}/log/kernel.log        # NPU chip kernel log
+                    |-- {time}/bbox/os/os_info.txt   # Device-side OS basic information
+                    └── {time}/mntn/hbm.txt          # Device-side on-chip memory log
+                |-- device-2
                 |-- …
-                └── history.log     # Black Box log
-            |-- device-2
-            |-- …
-            └── device_info.txt
+                └── device_info.txt
     ```
 
-- Ascend HDK 23.0.3 and later versions
+- ascend-fd 26.1.0 and earlier
 
-    ```text
-    |--device_log
-        |-- slog
-            |-- dev-os-3
-                |-- debug
-                    |--device-os
-                        |-- device-os_{time}.log # System logs on device-side Control CPU
+    - Ascend HDK 23.0.RC3
+
+        ```text
+        |--device_log
+            |-- slog
+                |-- dev-os-3
+                    |-- debug
+                        |--device-os
+                            └── device-os_{time}.log # System logs of device-side Control CPU
+                    |-- run
+                        |--device-os
+                            └── device-os_{time}.log # System logs of device-side Control CPU
                     |--device-0
-                        |--device-0_{time}.log   # System logs on device-side non-Control CPU
+                        └──device-0_{time}.log   # System logs of device-side non-Control CPU
                     |--device-2
                     |--…
-                |-- run
-                    |--device-os
-                        └── device-os_{time}.log # System logs on device-side Control CPU
-                    └──event
-                        └── event_{time}.log # EVENT-level system logs on device-side Control CPU
-                |--…
-                |--slogd
-                └──device_sys_init_ext.log
-            |-- dev-os-7
-            └── …
-        └──hisi_logs
-            └── device-0
+                    |--slogd
+                    └──device_sys_init_ext.log
+                |-- dev-os-7
                 |-- …
-                |-- history.log                  # Black Box log
-                |-- {time}/log/kernel.log        # NPU kernel logs
-                |-- {time}/bbox/os/os_info.txt   # Basic device-side OS information
-                └── {time}/mntn/hbm.txt          # Device-side on-chip memory logs
-            |-- device-2
-            |-- …
-            └── device_info.txt
-    ```
+            └──hisi_logs
+                |-- device-0
+                    |-- …
+                    └── history.log     # Black Box log
+                |-- device-2
+                |-- …
+                └── device_info.txt
+        ```
+
+    - Ascend HDK 23.0.3 and later
+
+        ```text
+        |--device_log
+            |-- slog
+                |-- dev-os-3
+                    |-- debug
+                        |--device-os
+                            |-- device-os_{time}.log # System logs of device-side Control CPU
+                        |--device-0
+                            |--device-0_{time}.log   # System logs of device-side non-Control CPU
+                        |--device-2
+                        |--…
+                    |-- run
+                        |--device-os
+                            └── device-os_{time}.log # System logs of device-side Control CPU
+                        └──event
+                            └── event_{time}.log # EVENT logs of device-side Control CPU
+                    |--…
+                    |--slogd
+                    └──device_sys_init_ext.log
+                |-- dev-os-7
+                └── …
+            └──hisi_logs
+                └── device-0
+                    |-- …
+                    |-- history.log                  # Black Box log
+                    |-- {time}/log/kernel.log        # NPU chip kernel log
+                    |-- {time}/bbox/os/os_info.txt   # Device-side OS basic information
+                    └── {time}/mntn/hbm.txt          # Device-side on-chip memory log
+                |-- device-2
+                |-- …
+                └── device_info.txt
+        ```
 
 ### MindCluster Component Logs
 
@@ -420,20 +527,38 @@ Run the following command to collect:
 cp -r ~/ttp_log {collection_directory}/dl_log/ttp_log
 ```
 
-### LCNE Logs (Formerly Bus Log)
+### LCNE Logs (Bus/UBM Logs)
 
-After training or inference is complete, you need to collect LCNE logs.
+After training or inference is complete, LCNE logs need to be collected. In ascend-fd 26.2.0 and later, the UB link diagnostic capability is enhanced. If you want to use this enhanced capability, you must collect LCNE logs.
 
-**<term>Ascend 950 Products</term>**
+**<term>Ascend 950PR&950DT Products</term>**
 
-When LCNE of the Ascend 950 products is running, it generates a related log file `log.log`.
+When LCNE is running on <term>Ascend 950PR&950DT products</term>, the logs need to be decompressed to `collection_directory/lcne_log/`. You can collect them as follows:
 
-Copy `log.log` to `{collection_directory}/lcne_log/`. You can collect it in the following way:
+- Server
+  1. Go to the 1213 frontend of <term>Ascend 950PR&950DT products</term>1213, run the **collect diagnostic information** command to collect logs.
+  2. Go to the `/opt/vrpv8/home/` directory of the 1213 backend of <term>Ascend 950PR&950DT products</term> to obtain `diagnostic_information_*.zip`, and manually decompress all the compressed logs.
 
-1. Log in to the 1213 backend of <term>Ascend 950 products</term>, and obtain `log.log` from the `/opt/vrpv8/home/logfile` directory.
-2. Log in to the 1213 frontend of <term>Ascend 950 products</term>, run the **collect diagnostic information** command to collect logs, and then obtain `diagnostic_information_*.zip` from the `/opt/vrpv8/home/logfile` directory on the 1213 backend of <term>Ascend 950 products</term>. You need to manually decompress all compressed logs.
+- PoD
 
-**<term>Atlas A3 Training Products</term>/<term>Atlas A3 Inference Products</term>**
+   Log in to PoDManager to collect UBM logs in one-click mode, and manually decompress all the compressed logs. The log directory is as follows:
+
+  ```text
+  |--LCNE logs
+      |--slot_014
+          └──debug
+              └──ubm_slot014_debug_{timestamp}
+                  └──diagnostic_information
+                      └──...
+      |--slot_015
+          └──debug
+              └──ubm_slot015_debug_{timestamp}
+                  └──diagnostic_information
+                      └──...
+      └──…
+  ```
+
+**<term>Atlas A3 Products</term>**
 
 Directly place LCNE logs exported by SmartKit or CCAE into `{collection_directory}/lcne_log/` after recursive decompression.
 
@@ -463,5 +588,5 @@ You are required to manually copy the logs to `{collection_directory}/pymotor_vl
 
 > [!NOTE]
 >
-> - For details on MindIE-PyMotor deployment, see [MindIE-PyMotor Deployment](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/en/user_guide/deployment/k8s/pd_aggregation_deployment.).
+> - For details on MindIE-PyMotor deployment, see [MindIE-PyMotor Deployment](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/deployment/k8s/pd_aggregation_deployment.md#%E6%9F%A5%E7%9C%8B%E9%9B%86%E7%BE%A4%E7%8A%B6%E6%80%81%E4%B8%8E%E6%97%A5%E5%BF%97).
 > - The log naming formats are `mindie-motor-controller-*.log`, `mindie-motor-coordinator-*.log`, `vllm-d0-*.log`, and `vllm-p0-*.log`.

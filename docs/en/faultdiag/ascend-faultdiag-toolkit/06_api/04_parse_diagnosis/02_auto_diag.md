@@ -1,7 +1,5 @@
 # auto_diag
 
-<!-- md-trans-meta sourceCommit=e50286ce9b97df080579d7c724af5b63dfeb835e translatedAt=2026-08-24T02:19:03.223Z pushedAt=2026-08-24T02:22:41.602Z -->
-
 ## Command Function
 
 Starts automatic diagnosis, which is suitable for unified diagnosis after batch collection.

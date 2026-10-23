@@ -1,7 +1,5 @@
 # set_host_dump_log
 
-<!-- md-trans-meta sourceCommit=e50286ce9b97df080579d7c724af5b63dfeb835e translatedAt=2026-08-24T02:18:33.942Z pushedAt=2026-08-24T02:22:41.586Z -->
-
 ## Command Function
 
 Sets the server export log directory for offline analysis scenarios.

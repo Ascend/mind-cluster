@@ -1,7 +1,5 @@
 # Batch Diagnosis
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:16:37.974Z pushedAt=2026-08-24T02:22:41.544Z -->
-
 This feature applies to scenarios with **multiple network planes** or **a large number of devices**. By executing `auto_collect` multiple times to collect device information in batches, and finally executing `auto_diag` once to complete the full diagnosis.
 
 ## Non-interactive Mode (Commands and Outputs)

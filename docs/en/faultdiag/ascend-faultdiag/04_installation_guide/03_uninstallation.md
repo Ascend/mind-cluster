@@ -1,7 +1,5 @@
 # Uninstallation
 
-<!-- md-trans-meta sourceCommit=3ecb02f7ecbf391029443f4d074a7e520371f838 translatedAt=2026-08-24T02:26:54.454Z pushedAt=2026-08-24T02:51:43.239Z -->
-
 ## Uninstallation for Package Installed via Command-Line
 
 Run the following command as the installation user of the component:

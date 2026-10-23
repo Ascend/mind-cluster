@@ -1,7 +1,5 @@
 # diag Command (Fault Diagnosis)
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:30:32.971Z pushedAt=2026-08-24T02:51:43.311Z -->
-
 ## Function Description
 
 Used to analyze the root cause of node faults. To analyze the root cause of faults across multiple nodes, you need to aggregate the parsing results of each node into the same directory before diagnosis. For the directory format, see [Log Collection Archive Directory Structure](../05_usage/02_log_collection.md#log-collection-archive-directory-structure).
@@ -58,7 +56,7 @@ ascend-fd diag -i /tmp/parse_out -o /tmp/diag_out
     |                                                                                       Ascend Fault-Diag Report                                                                                       |
     +--------------+------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+                                                                                                                                                                       |   Version Information   |   Type     | Version                                                                                                                                                                     |
     +--------------+------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    |              | Fault-Diag | 26.1.0                                                                                                                                                                    |
+    |              | Fault-Diag | 26.2.0                                                                                                                                                                    |
     +--------------+------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     | Root Cause Node Analysis |    Type    | Description                                                                                                                                                                     |
     +--------------+------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -96,7 +94,7 @@ ascend-fd diag -i /tmp/parse_out -o /tmp/diag_out
     > [!NOTE]
     >
     > - When the peer device is not found, the root cause node chain is displayed differently for different product forms.
-    >   - <term>Ascend 950 products</term>: displays the peer device EID.
+    >   - <term>Ascend 950PR&950DT products</term>: displays the peer device EID.
     >   - Other products: displays the peer device IP.
     > - For field descriptions of the displayed results, see [Diagnostic Result Description](#diagnostic-result-description).
 
@@ -112,7 +110,7 @@ ascend-fd diag -i /tmp/parse_out -o /tmp/diag_out
     +--------------+------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |   Version Information   |    Type    | Version                                                                                                                                                           |
     +--------------+------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    |              | Fault-Diag | 26.1.0                                                                                                                                                        |
+    |              | Fault-Diag | 26.2.0                                                                                                                                                        |
     +--------------+------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
     | Root Cause Node Analysis |    Type    | Description                                                                                                                                                           |
     +--------------+------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -140,7 +138,7 @@ ascend-fd diag -i /tmp/parse_out -o /tmp/diag_out
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |   Version Information   |    Type    | Version                                                                                                                                                              |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    |              | Fault-Diag | 26.1.0                                                                                                                                                           |
+    |              | Fault-Diag | 26.2.0                                                                                                                                                           |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     | Root Cause Analysis |    Type    | Description                                                                                                                                                              |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -178,7 +176,7 @@ Diagnose performance degradation issues during training. Example output:
 +--------------+----------+------------------------------------------------------------------------------------------------------------------------+
 |   Version Information   |    Type    | Version                                                                                                                   |
 +--------------+----------+------------------------------------------------------------------------------------------------------------------------+
-|              |Fault-Diag| 26.1.0                                                                                                                  |
+|              |Fault-Diag| 26.2.0                                                                                                                  |
 +--------------+----------+------------------------------------------------------------------------------------------------------------------------+
 | Root Cause Analysis |    Type    | Description                                                                                                                   |
 +--------------+----------+------------------------------------------------------------------------------------------------------------------------+
@@ -236,11 +234,11 @@ Output example:
 +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
 |   Version Information   |    Type    | Version                                                                                                                                            |
 +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-|              | Fault-Diag | 26.1.0                                                                                                                                         |
+|              | Fault-Diag | 26.2.0                                                                                                                                         |
 +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
 | Root Cause Node Analysis |    Type    | Description                                                                                                                                            |
 +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-|              |  Root Node Cause  | ['xxxxxxxxxxx']                                                                                             |
+|              |  Root Cause Node  | ['xxxxxxxxxxx']                                                                                             |
 |              |  Symptom  | No timeout information found in all Plogs. Some nodes may have experienced abnormal process exit or hang.                                                                                        |
 +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
 | Fault Event Analysis |    Type    | Description                                                                                                                                            |
@@ -322,7 +320,7 @@ Example of `diag_report.json`:
 
 ```json
 {
-    "Version": "26.1.0",
+    "Version": "26.2.0",
     "Build_Time": "2026-05-19",
     "Task_id": "20260714035618106072_df7bf6b1-c77a-4991-b92c-a563e952077e",
     "Root_Cluster": {
@@ -447,7 +445,7 @@ Example of `diag_report.json`:
 | `detect_workers_devices`   | Dict[String, List[String]] | List of device IDs detected under each worker.                        |
 <!-- markdownlint-enable -->
 
-- `show_device_info` field
+- `show_device_info` fields
 
 <!-- markdownlint-disable -->
 | Field            | Type   | Description                                                                                |
@@ -463,7 +461,7 @@ Example of `diag_report.json`:
 >
 >`show_device_info` is output only when the root cause node is not an `Unknown Device` or a first error node exists, and it contains fields only when the first root cause/error node has error logs.
 
-- `Knowledge_Graph` field
+- `Knowledge_Graph` fields
 
 <!-- markdownlint-disable -->
 | Field             | Type         | Description                                          |
@@ -474,7 +472,7 @@ Example of `diag_report.json`:
 | `fault`           | List[Object] | Fault event list. See the following table for fields.                    |
 <!-- markdownlint-enable -->
 
-- `fault` field
+- `fault` fields
 
 <!-- markdownlint-disable -->
 | Field           | Type         | Description                                                          |
@@ -491,7 +489,7 @@ Example of `diag_report.json`:
 | `fault_chains`   | List         | Fault propagation chain.                                             |
 <!-- markdownlint-enable -->
 
-- `event_attr` field
+- `event_attr` fields
 
 `event_attr` is a list of event attribute objects, each containing the following:
 

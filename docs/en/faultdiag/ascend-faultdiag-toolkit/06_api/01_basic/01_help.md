@@ -1,7 +1,5 @@
 # help
 
-<!-- md-trans-meta sourceCommit=9d708be25ec5fef354b48beecd57d9b30752b536 translatedAt=2026-08-24T02:17:43.045Z pushedAt=2026-08-24T02:22:41.569Z -->
-
 ## Command Function
 
 Displays help information for all available commands, facilitating quick retrieval of tool capabilities.

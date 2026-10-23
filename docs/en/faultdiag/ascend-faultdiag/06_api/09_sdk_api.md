@@ -1,7 +1,5 @@
 # SDK API Reference
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:30:28.842Z pushedAt=2026-08-24T02:51:43.307Z -->
-
 ## Invocation Description
 
 When the SDK is used, operation logs and runtime logs are generated in the `$HOME/.ascend_faultdiag` directory. The directory structure is as follows:
@@ -523,7 +521,7 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
         "server": "10.1.1.1",
         "fault": [
             {
-                "parse_version": "26.1.0",
+                "parse_version": "26.2.0",
                 "response": {
                     "0": {
                         "analyze_success": true,

@@ -1,7 +1,5 @@
 # single-diag Command (Single-Server Fault Diagnostics)
 
-<!-- md-trans-meta sourceCommit=0bdfcd26262ca7cc1165bb55c8f28c6a29b377ef translatedAt=2026-08-24T02:28:47.969Z pushedAt=2026-08-24T02:51:43.278Z -->
-
 ## Function Description
 
 Used to directly complete log cleaning and fault diagnosis on a single server, without the need for multi-server log dumping.

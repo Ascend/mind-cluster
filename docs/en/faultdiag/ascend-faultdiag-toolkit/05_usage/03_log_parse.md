@@ -1,7 +1,5 @@
 # Log Parsing
 
-<!-- md-trans-meta sourceCommit=9d708be25ec5fef354b48beecd57d9b30752b536 translatedAt=2026-08-24T02:15:56.783Z pushedAt=2026-08-24T02:22:41.529Z -->
-
 Use the [auto_collect](../06_api/04_parse_diagnosis/01_auto_collect.md) command for data parsing, converting raw logs into structured data for subsequent diagnosis and inspection.
 
 | Collection Method   | Parsing Behavior                                   |
@@ -77,9 +75,9 @@ Collection complete. If all collections are completed, please proceed with diagn
 
 ## Default Path Reading
 
-When the connection configuration file `conn.ini` or the offline log directory is not manually set, the tool automatically reads the following default files or directories under the [ascend-fd-tk home directory](01_usage_overview.md). You need to create the relevant files or directories in advance, configure device connection information, and place offline logs into the corresponding directories.
+When the connection configuration file `conn.ini` or the offline log directory is not manually set, the tool automatically reads the following default files or directories under the current execution path. You need to create the relevant files or directories in advance, configure device connection information, and place offline logs into the corresponding directories.
 
-- Connection configuration: `{home_directory}/conn.ini`
-- BMC log directory: `{home_directory}/bmc_dump_log`
-- Server log directory: `{home_directory}/host_dump_log`
-- Switch log directory: `{home_directory}/switch_dump_log`
+- Connection configuration: `conn.ini` (When using this file in the current execution path, before running the parsing/diagnosis task multiple times, you need to execute the `clear_cache` command to clear the cache.)
+- BMC log directory: `bmc_dump_log/`
+- Server log directory: `host_dump_log/`
+- Switch log directory: `switch_dump_log/`

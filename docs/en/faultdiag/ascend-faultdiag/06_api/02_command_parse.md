@@ -1,7 +1,5 @@
 # parse Command (Log Parsing)
 
-<!-- md-trans-meta sourceCommit=0bdfcd26262ca7cc1165bb55c8f28c6a29b377ef translatedAt=2026-08-24T02:28:38.421Z pushedAt=2026-08-24T02:51:43.276Z -->
-
 ## Function Description
 
 Parses raw logs and extracts valid information.

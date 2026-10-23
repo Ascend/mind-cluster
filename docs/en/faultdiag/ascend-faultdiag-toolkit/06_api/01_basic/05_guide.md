@@ -1,7 +1,5 @@
 # guide
 
-<!-- md-trans-meta sourceCommit=9d708be25ec5fef354b48beecd57d9b30752b536 translatedAt=2026-08-24T02:18:09.444Z pushedAt=2026-08-24T02:22:41.577Z -->
-
 ## Command Function
 
 Obtains the usage guide information of the diagnostic tool. It is recommended to run this command first when using the tool for the first time to understand the overall process.

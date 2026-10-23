@@ -1,7 +1,5 @@
 # Overview
 
-<!-- md-trans-meta sourceCommit=8365be9d0952baf3115b994bb9ecbcf4fa1c577c translatedAt=2026-08-24T02:26:35.825Z pushedAt=2026-08-24T02:51:43.230Z -->
-
 ## Product Introduction
 
 **MindCluster Ascend FaultDiag** (hereinafter referred to as ascend-fd) is a log diagnosis tool for Ascend AI clusters, providing two core functions: log parsing and fault diagnosis. When a training or inference task exits abnormally or suffers performance degradation, ascend-fd can automatically extract key information from cluster logs, analyze root cause nodes and fault events, and help users quickly locate problems.
@@ -81,7 +79,7 @@ The typical process for using ascend-fd is as follows:
 
 1. **Log collection**: Collect log files from each training/inference device.
 2. **Log parsing**: Parse logs and extract valid information.
-3. **Cleaning result dump**: Aggregate the cleaning results from each node onto the same device.
+3. **Parsing result dump**: Aggregate the parsing results from each node onto the same device.
 4. **Fault diagnosis**: Analyze the root cause of a fault.
 
 ## Disclaimer
