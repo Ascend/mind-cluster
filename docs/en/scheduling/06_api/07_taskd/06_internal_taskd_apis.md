@@ -1,7 +1,5 @@
 # Internal TaskD APIs<a name="ZH-CN_TOPIC_0000002479386822"></a>
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T01:44:11.302Z pushedAt=2026-06-09T02:05:50.664Z -->
-
 ## Register (Internal, Do Not Call)<a name="ZH-CN_TOPIC_0000002479226852"></a>
 
 **Function Description<a name="section3468140175411"></a>**

@@ -23,7 +23,7 @@ This chapter is intended to guide you through upgrading the MindCluster cluster 
 
 Before performing the upgrade steps for each component, select the corresponding component for checking based on the actual installation scenario.
 
-1. Check whether there are any running jobs. If a job is currently being executed, wait for the job to complete or stop the job in advance before upgrading MindCluster components.
+1. Check whether there are any running jobs. If a user has a job currently being executed, wait for the job to complete or stop the job in advance before upgrading MindCluster components.
     1. Execute the following command to check whether there are any running jobs.
 
         ```shell
@@ -59,7 +59,7 @@ Before performing the upgrade steps for each component, select the corresponding
     2. <a name="li1427143773119"></a>(Optional) Modify the value of the `activate` field.
         - If the SuperPoD ID is in the `pingmesh-config` file, modify the `activate` field under this SuperPoD ID to `off`.
         - If the SuperPoD ID is not in the `pingmesh-config` file, you can configure it using the following two methods.
-            - Add the SuperPoD information in the configuration file and set `activate` to `off`.
+            - Add the SuperPoD information in the configuration file and set the value of the `activate` field to `off`.
             - Delete all SuperPoD information in the `pingmesh-config` file, and set the value of the `activate` field in the global configuration to `off`.
 
 3. Check the installed MindCluster components.
@@ -81,13 +81,13 @@ Before performing the upgrade steps for each component, select the corresponding
         Author-email:
         License: UNKNOWN
         Location: /usr/local/python3/lib/python3.10/site-packages
-        Requires: grpcio, protobuf, pyOpenSSL, torch, torch-npu
+        Requires: grpcio, protobuf, torch, torch-npu
         Required-by:
         ```
 
     - (Optional)Check other components. Refer to [Component Status Confirmation](../../03_installation_guide/03_confirming_status.md) to confirm whether the corresponding components are installed on the nodes in the cluster.
 
-4. (Optional) If MindCluster cluster scheduling components have not been installed, refer to the [Installation and Deployment](00_manual_installation/00_obtaining_software_packages.md) chapter to install them first. For the installation steps of TaskD, refer to the [Preparing an Image](../../04_usage/04_resumable_training/04_using_resumable_training_on_the_cli.md#building-an-image) chapter.
+4. (Optional) If MindCluster cluster scheduling components have not been installed, refer to the [Installation and Deployment](00_manual_installation/00_obtaining_software_packages.md) chapter to install them first. For the installation steps of TaskD, refer to the [Preparing an Image](../../04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/01_pytorch_examples_and_verification.md#building-an-image) chapter.
 
 ## Upgrading Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002479226420"></a>
 
@@ -143,6 +143,12 @@ The [upgrade environment check](#upgrade-instructions) has been completed.
         systemctl daemon-reload && systemctl restart containerd
         ```
 
+    - CRI-O scenario (or K8s integrated with CRI-O)
+
+        ```shell
+        systemctl daemon-reload && systemctl restart crio
+        ```
+
 5. <a name="li76002022113215"></a>Refer to the [Component Status](../../03_installation_guide/03_confirming_status.md) chapter to check whether the new version of Ascend Docker Runtime has been upgraded successfully.
 6. (Optional) Restore the old version. Download the old version installation package, and re-execute [Step 2](#li12599722163212) to [Step 5](#li76002022113215) in sequence.
 
@@ -178,7 +184,7 @@ The [upgrade environment check](#upgrade-instructions) has been completed.
         pip uninstall taskd -y
         ```
 
-        The output example as follows indicates a successful uninstallation.
+        The output example is as follows, indicating a successful uninstallation.
 
         ```ColdFusion
         Successfully uninstalled taskd-{version}
@@ -257,12 +263,12 @@ Use the deployment script (`deploy.sh`) to perform the upgrade. The script autom
 
     ```shell
     [INFO] Upgrading container-manager...
-    [INFO] Current version : container-manager version: v26.0.0_linux-x86-64
-    [INFO] Target version  : container-manager version: v26.1.0_linux-x86-64
+    [INFO] Current version : container-manager version: v26.1.0_linux-x86-64
+    [INFO] Target version  : container-manager version: v26.2.0_linux-x86-64
     [INFO] Stopping service...
     [INFO] Replacing binary...
     [INFO] Starting service...
-    [INFO] Binary upgraded to: container-manager version: v26.1.0_linux-x86-64
+    [INFO] Binary upgraded to: container-manager version: v26.2.0_linux-x86-64
     [INFO] Upgrade completed successfully
     ```
 
@@ -294,7 +300,7 @@ Use the deployment script (`deploy.sh`) to perform the upgrade. The script autom
         cat /var/log/mindx-dl/container-manager/container-manager.log
         ```
 
-        Output example for the Atlas 800I A3 SuperPoD server:
+        Output example for the Atlas 800I A3:
 
         ```ColdFusion
         [INFO]     2025/11/25 22:46:59.007163 1       hwlog/api.go:108    container-manager.log's logger init success
@@ -392,13 +398,51 @@ The [upgrade environment check](#upgrade-instructions) has been completed.
 
     For detailed steps, refer to [Manually Installing Ascend Device Plugin](00_manual_installation/04_ascend_device_plugin.md).
 
+## Upgrading Kubectl Plugin<a name="ZH-CN_TOPIC_0000002524428763"></a>
+
+**Prerequisites<a name="section176591058124516"></a>**
+
+The [upgrade environment check](#upgrade-instructions) has been completed.
+
+**Precautions**
+
+- Kubectl Plugin is a client command line tool. It is installed to the `/usr/local/bin` directory on the user machine through the installation script (`install.sh`). It is not deployed in the K8s cluster in YAML mode. During the upgrade, you only need to reinstall the plugin files using the new version software package. No K8s cluster resources need to be operated.
+- Upgrading Kubectl Plugin does not affect the Agent Core and Node Collector services already deployed in the cluster.
+
+**Upgrade Steps<a name="section2097025262414"></a>**
+
+1. Refer to the [Obtaining Software Packages](00_manual_installation/00_obtaining_software_packages.md) chapter to download the new version of the Ascend ClusterOps Agent package and decompress it.
+
+2. <a name="li2097025262414"></a>Log in to the user machine as the `root` user, go to the `kubectl-plugin` directory in the decompressed new version software package, and run the following command to reinstall the plugin.
+
+    ```shell
+    cd kubectl-plugin
+    bash install.sh
+    ```
+
+    The output example is as follows, indicating a successful upgrade.
+
+    ```ColdFusion
+    installed. Verification:
+    OK: kubectl ascend-diag / kubectl clusterops are available
+    ```
+
+3. Run the following command to verify whether the plugin upgrade is successful.
+
+    ```shell
+    kubectl ascend-diag --help
+    kubectl clusterops --help
+    ```
+
+4. (Optional) Roll back to the old version. Use the old version software package and re-execute [Step 2](#li2097025262414).
+
 ## Upgrading Other Components<a name="ZH-CN_TOPIC_0000002511346401"></a>
 
 **Prerequisites<a name="section176591058124515"></a>**
 
 - The [upgrade environment check](#upgrade-instructions) has been completed.
 
-- If you need to upgrade NPU Exporter, Volcano, K8s RDMA Shared Dev Plugin, ClusterD, Ascend Operator, Infer Operator, and NodeD, you must uninstall the old versions first, and then execute the installation steps for the new version.
+- If you need to upgrade NPU Exporter, DPU Exporter, Volcano, K8s RDMA Shared Dev Plugin, ClusterD, Ascend Operator, Infer Operator, NodeD, Agent Core, and Node Collector, you must uninstall the old versions first, and then execute the installation steps for the new version.
 
 **NOTE**
 
@@ -421,7 +465,7 @@ If a job with resumable training enabled is running, upgrading ClusterD will cau
 This chapter only guides users on upgrading the binary file version within a container image under the same version. Permissions and startup parameters will not be modified during the upgrade process. For more detailed instructions on upgrade methods, see [Upgrade Instructions](#upgrade-instructions).
 
 - If you need to upgrade the images of Volcano, ClusterD, Ascend Operator, and Infer Operator, refer to [Upgrading Management Node Components](#section1292111716589).
-- If you need to upgrade the images of NPU Exporter, Ascend Device Plugin, and NodeD, refer to [Upgrading Compute Node Components](#section231311416588).
+- If you need to upgrade the images of NPU Exporter, DPU Exporter, Ascend Device Plugin, and NodeD, refer to [Upgrading Compute Node Components](#section231311416588).
 - TaskD does not currently support this type of upgrade.
 
 **Upgrading Management Node Components<a name="section1292111716589"></a>**

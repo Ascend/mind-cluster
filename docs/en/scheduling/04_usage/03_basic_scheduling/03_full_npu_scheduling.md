@@ -1,7 +1,5 @@
 # Full-NPU Scheduling<a name="ZH-CN_TOPIC_0000002479387138"></a>
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-29T08:04:43.744Z pushedAt=2026-08-29T08:07:08.002Z -->
-
 ## Before You Start<a name="ZH-CN_TOPIC_0000002511347093"></a>
 
 **Prerequisites<a name="section52051339787"></a>**
@@ -10,9 +8,10 @@
     - Volcano or other schedulers
     - Ascend Device Plugin
     - Ascend Docker Runtime
-    - Ascend Operator
+    - Ascend Operator (mandatory for AscendJob)
     - ClusterD
     - NodeD
+    - Infer Operator (mandatory for InferServiceSet jobs)
 - For the fault recovery scenario, ensure that each node has the model script information required for job execution. It is recommended to use a shared storage solution, such as NFS (Network File System). For details, see [Installing NFS](../../07_references/02_common_operations.md#installing-nfs).
 - Training scenario: for ultra-large-scale cluster scheduling scenarios, batch Pod creation and batch scheduling are supported.
    - To use the batch Pod creation feature, the customized openFuyao Kubernetes must be used when installing Ascend Operator.
@@ -36,11 +35,9 @@ The following products support **full-NPU scheduling**:
 
 - <term>Atlas inference products</term>
 - <term>Atlas training products</term>
-- <term>Atlas A2 inference products</term>
-- <term>Atlas A2 training products</term>
-- <term>Atlas A3 inference products</term>
-- <term>Atlas A3 training products</term>
-- <term>Ascend 950 products</term>
+- <term>Atlas A2 products</term>
+- <term>Atlas A3 products</term>
+- <term>Ascend 950PR&950DT products</term>
 
 **Usage Workflow<a name="section5640184231810"></a>**
 
@@ -119,7 +116,7 @@ The scheduling principle of a deploy job is shown in [Figure 4](#fig06571541566)
 
 **Figure 4**  deploy job scheduling principle<a name="fig06571541566"></a>
 
-![](../../../figures/scheduling/deploy job scheduling principle diagram.png "deploy job scheduling principle diagram")
+![](../../../figures/scheduling/deploy-scheduling.png "deploy job scheduling principle diagram")
 
 The steps are described as follows:
 
@@ -303,6 +300,7 @@ Configuring resource information through files supports creating the following t
 >- The dataset used in this section is [ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php) (**Note: If this dataset is used, the usage specifications of the dataset provider must be followed**).
 >- The model sample code below may differ from the actual version. Use the code of the actual version as the standard.
 >- The following MindSpore examples require a version earlier than CANN 8.5.0.
+>- `rank_table.sh` is not applicable to non-acjob on<term>Ascend 950PR&950DT products</term>.
 
 **PyTorch<a name="zh-cn_topic_0000001558834798_section17760205783316"></a>**
 
@@ -400,7 +398,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 
 - For <term>Atlas A2 training products</term>, see [Table 1](#table529015783811) to obtain the corresponding YAML example.
 
-    After obtaining the example YAML from [Table 1](#table529015783811), the Atlas 800T A2 training server, Atlas 200T A2 Box16 heterogeneous subrack, and A200T A3 Box8 SuperPoD server can be modified and adapted based on the parameter description provided in [acjob YAML Parameter Description](../../06_api/15_yaml_configuration.md).
+    After obtaining the example YAML from [Table 1](#table529015783811), the Atlas 800T A2, Atlas 200T A2 Box16, and A200T A3 Box8 can be modified and adapted based on the parameter description provided in [acjob YAML Parameter Description](../../06_api/15_yaml_configuration.md).
 
 - For <term>Atlas training products</term>, see [Table 2](#table18698184918261) to obtain the corresponding YAML example.
 
@@ -408,7 +406,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 
 - For <term>Atlas A3 training products</term>, see [Table 3](#table57051049102614) to obtain the corresponding YAML example.
 
-- For <term>Ascend 950 products</term>, see [Table 4](#table5290157950yaml) to obtain the corresponding YAML example.
+- For <term>Ascend 950PR&950DT products</term>, see [Table 4](#table5290157950yaml) to obtain the corresponding YAML example.
 
 **Table 1** YAML supported by <term>Atlas A2 training products</term>
 
@@ -430,7 +428,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 <tbody><tr id="row13291757163813"><td class="cellrowborder" rowspan="6" valign="top" width="8.8%" headers="mcps1.2.7.1.1 "><p id="p11291115783810"><a name="p11291115783810"></a><a name="p11291115783810"></a>Ascend Job</p>
 <p id="p1629145703816"><a name="p1629145703816"></a><a name="p1629145703816"></a></p>
 </td>
-<td class="cellrowborder" rowspan="6" valign="top" width="15.000000000000002%" headers="mcps1.2.7.1.2 "><p id="p14227163913366"><a name="p14227163913366"></a><a name="p14227163913366"></a><span id="ph13291155773812"><a name="ph13291155773812"></a><a name="ph13291155773812"></a>Atlas 900 A2 PoD cluster basic unit</span></p>
+<td class="cellrowborder" rowspan="6" valign="top" width="15.000000000000002%" headers="mcps1.2.7.1.2 "><p id="p14227163913366"><a name="p14227163913366"></a><a name="p14227163913366"></a><span id="ph13291155773812"><a name="ph13291155773812"></a><a name="ph13291155773812"></a>Atlas 900 A2 PoD</span></p>
 </td>
 </tr>
 <tr id="row829235719380"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p52921579382"><a name="p52921579382"></a><a name="p52921579382"></a><span id="ph1829255713389"><a name="ph1829255713389"></a><a name="ph1829255713389"></a>PyTorch</span></p>
@@ -439,7 +437,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p1129285753810"><a name="p1129285753810"></a><a name="p1129285753810"></a>The example defaults to a two-node two-processor job.</p>
 </td>
-<td class="cellrowborder" rowspan="6" valign="top" width="15.000000000000002%" headers="mcps1.2.7.1.6 "><p id="p17292357133814"><a name="p17292357133814"></a><a name="p17292357133814"></a>After selecting the corresponding training framework, <a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v26.1.0/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">obtain the YAML.</a></p>
+<td class="cellrowborder" rowspan="6" valign="top" width="15.000000000000002%" headers="mcps1.2.7.1.6 "><p id="p17292357133814"><a name="p17292357133814"></a><a name="p17292357133814"></a>After selecting the corresponding training framework, <a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/release_v26.2.0/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">obtain the YAML.</a></p>
 <div class="note" id="note14933145219586"><a name="note14933145219586"></a><a name="note14933145219586"></a><span class="notetitle">Note</span><div class="notebody"><p id="p1027616512420"><a name="p1027616512420"></a><a name="p1027616512420"></a><span id="ph9014016509"><a name="ph9014016509"></a><a name="ph9014016509"></a>The {<em id="zh-cn_topic_0000001519959665_i1914312018209"><a name="zh-cn_topic_0000001519959665_i1914312018209"></a><a name="zh-cn_topic_0000001519959665_i1914312018209"></a>xxx</em>} in the following text takes "910" as the chip model.</span></p>
 </div></div>
 </td>
@@ -497,7 +495,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p269913494266"><a name="p269913494266"></a><a name="p269913494266"></a>The example defaults to a two-node 16-processor job.</p>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="13.000000000000004%" headers="mcps1.2.7.1.6 "><p id="p369974917262"><a name="p369974917262"></a><a name="p369974917262"></a>After selecting the corresponding training framework, <a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v26.1.0/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">obtain the YAML.</a></p>
+<td class="cellrowborder" rowspan="4" valign="top" width="13.000000000000004%" headers="mcps1.2.7.1.6 "><p id="p369974917262"><a name="p369974917262"></a><a name="p369974917262"></a>After selecting the corresponding training framework, <a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/release_v26.2.0/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">obtain the YAML.</a></p>
 </td>
 </tr>
 <tr id="row670044914266"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p2070054918265"><a name="p2070054918265"></a><a name="p2070054918265"></a><span id="ph177001649182618"><a name="ph177001649182618"></a><a name="ph177001649182618"></a>MindSpore</span></p>
@@ -552,7 +550,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p167072049132613"><a name="p167072049132613"></a><a name="p167072049132613"></a>The example defaults to a single-node 16-processor job.</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p id="p1670794911264"><a name="p1670794911264"></a><a name="p1670794911264"></a>After selecting the corresponding training framework, <a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v26.1.0/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">obtain the YAML.</a></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p id="p1670794911264"><a name="p1670794911264"></a><a name="p1670794911264"></a>After selecting the corresponding training framework, <a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/release_v26.2.0/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">obtain the YAML.</a></p>
 <p id="p1770716492268"><a name="p1770716492268"></a><a name="p1770716492268"></a></p>
 </td>
 </tr>
@@ -566,7 +564,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </tbody>
 </table>
 
-**Table 4** YAML supported by <term>Ascend 950 products</term>
+**Table 4** YAML supported by <term>Ascend 950PR&950DT products</term>
 <a name="table5290157950yaml"></a>
 <table>
     <thead align="left">
@@ -581,23 +579,19 @@ The following YAML examples are provided for users. Select the appropriate YAML 
     </thead>
     <tbody>
         <tr>
-            <td class="cellrowborder" rowspan="2" valign="top" width="8.799999999999999%" headers="mcps1.2.7.1.1 "><p>Ascend Job</p></td>
-            <td class="cellrowborder" rowspan="2" valign="top" width="15%" headers="mcps1.2.7.1.2 "><p><span>Atlas 950 SuperPoD</span></p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="8.799999999999999%" headers="mcps1.2.7.1.1 "><p>Ascend Job</p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="15%" headers="mcps1.2.7.1.2 "><p><span>Atlas 950 SuperPoD</span></p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>pytorch_standalone_acjob_950.yaml</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>The example defaults to a single-node 8-processor job.</p></td>
-            <td class="cellrowborder" rowspan="2" valign="top" width="15%" headers="mcps1.2.7.1.6 ">                <p>After selecting the corresponding training framework, <a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v26.1.0/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">obtain the YAML.</a></p>
+            <td class="cellrowborder" rowspan="1" valign="top" width="15%" headers="mcps1.2.7.1.6 ">
+                <<p>After selecting the corresponding training framework, <a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/release_v26.2.0/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">obtain the YAML.</a></p>
             </td>
-        </tr>
-        <tr>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>MindSpore</p></td>
-            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>mindspore_standalone_acjob_950.yaml</p></td>
-            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>The example defaults to a single-node single-processor job.</p></td>
         </tr>
     </tbody>
 </table>
 
-**Table 5**  YAML files for different inference job types and hardware models
+**Table 5** YAML files for different inference job types and hardware models
 
 <a name="zh-cn_topic_0000001609074213_table15169151021912"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0000001609074213_row16169201019192"><th class="cellrowborder" valign="top" width="18.48%" id="mcps1.2.5.1.1"><p id="zh-cn_topic_0000001609074213_p4169191017192"><a name="zh-cn_topic_0000001609074213_p4169191017192"></a><a name="zh-cn_topic_0000001609074213_p4169191017192"></a>Job Type</p>
@@ -616,13 +610,13 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </td>
 <td class="cellrowborder" valign="top" width="42.59%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000001609074213_p1116971091915"><a name="zh-cn_topic_0000001609074213_p1116971091915"></a><a name="zh-cn_topic_0000001609074213_p1116971091915"></a>infer-deploy-310p-1usoc.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p784716567219"><a name="p784716567219"></a><a name="p784716567219"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy-310p-1usoc.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
+<td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p784716567219"><a name="p784716567219"></a><a name="p784716567219"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-deploy-310p-1usoc.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
 </td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD</p><p>Atlas 850E SuperPoD</p><p>Atlas 350 accelerator card</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD</p><p>Atlas 850E</p><p>Atlas 350 accelerator card</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-deploy-950.yaml</p></td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy-950.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-deploy-950.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001609074213_row17169201091917"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000001609074213_p14853125832110"><a name="zh-cn_topic_0000001609074213_p14853125832110"></a><a name="zh-cn_topic_0000001609074213_p14853125832110"></a>Other types of inference nodes</p>
@@ -630,24 +624,24 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000001609074213_p51692100191"><a name="zh-cn_topic_0000001609074213_p51692100191"></a><a name="zh-cn_topic_0000001609074213_p51692100191"></a>infer-deploy.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p74352718168"><a name="p74352718168"></a><a name="p74352718168"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p74352718168"><a name="p74352718168"></a><a name="p74352718168"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-deploy.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
 </td>
 </tr>
 <tr id="row114428221610"><td class="cellrowborder" rowspan="2" valign="top" width="18.48%" headers="mcps1.2.5.1.1 "><p id="p9442102131620"><a name="p9442102131620"></a><a name="p9442102131620"></a>Volcano Job</p>
 </td>
-<td class="cellrowborder" valign="top" width="26.479999999999997%" headers="mcps1.2.5.1.2 "><p id="p367438101714"><a name="p367438101714"></a><a name="p367438101714"></a><span id="ph313817549316"><a name="ph313817549316"></a><a name="ph313817549316"></a>Atlas 800I A2 inference server</span></p>
-<p id="p20458181019389"><a name="p20458181019389"></a><a name="p20458181019389"></a><span id="ph56342369338"><a name="ph56342369338"></a><a name="ph56342369338"></a>A200I A2 Box heterogeneous subrack</span></p>
-<p id="p1792637151014"><a name="p1792637151014"></a><a name="p1792637151014"></a><span id="ph12174764117"><a name="ph12174764117"></a><a name="ph12174764117"></a>Atlas 800I A3 SuperPoD server</span></p>
+<td class="cellrowborder" valign="top" width="26.479999999999997%" headers="mcps1.2.5.1.2 "><p id="p367438101714"><a name="p367438101714"></a><a name="p367438101714"></a><span id="ph313817549316"><a name="ph313817549316"></a><a name="ph313817549316"></a>Atlas 800I A2</span></p>
+<p id="p20458181019389"><a name="p20458181019389"></a><a name="p20458181019389"></a><span id="ph56342369338"><a name="ph56342369338"></a><a name="ph56342369338"></a>A200I A2 Box</span></p>
+<p id="p1792637151014"><a name="p1792637151014"></a><a name="p1792637151014"></a><span id="ph12174764117"><a name="ph12174764117"></a><a name="ph12174764117"></a>Atlas 800I A3</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="42.59%" headers="mcps1.2.5.1.3 "><p id="p8442112171619"><a name="p8442112171619"></a><a name="p8442112171619"></a>infer-vcjob-910.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p15442424164"><a name="p15442424164"></a><a name="p15442424164"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-vcjob-910.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
+<td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p15442424164"><a name="p15442424164"></a><a name="p15442424164"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-vcjob-910.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
 </td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD</p><p>Atlas 850E SuperPoD</p><p>Atlas 350 accelerator card</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD</p><p>Atlas 850E</p><p>Atlas 350 accelerator card</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-vcjob-950.yaml</p></td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-vcjob-950.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-vcjob-950.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
 </td>
 </tr>
 </tbody>
@@ -657,10 +651,10 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 
 - For <term>Atlas A2 training products</term>, see [Table 6](#table62591594016) to obtain the corresponding YAML example.
 
-    After obtaining the example YAML from [Table 6](#table62591594016), the Atlas 800T A2 training server, Atlas 200T A2 Box16 heterogeneous subrack, and A200T A3 Box8 SuperPoD server can be modified and adapted based on the parameter description provided in [YAML Configuration Description](../../06_api/15_yaml_configuration.md#).
+    After obtaining the example YAML from [Table 6](#table62591594016), the Atlas 800T A2, Atlas 200T A2 Box16, and A200T A3 Box8 can be modified and adapted based on the parameter description provided in [YAML Configuration Description](../../06_api/15_yaml_configuration.md#).
 
 - For <term>Atlas training products</term>, see [Table 7](#table21811158146) to obtain the corresponding YAML example.
-- For <term>Ascend 950 products</term>, see [Table 8](#table950yaml) to obtain the corresponding YAML example.
+- For <term>Ascend 950PR&950DT products</term>, see [Table 8](#table950yaml) to obtain the corresponding YAML example.
 
 **Table 6** YAML supported by <term>Atlas A2 training products</term>
 
@@ -683,7 +677,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 <p id="p12475353114815"><a name="p12475353114815"></a><a name="p12475353114815"></a></p>
 <p id="p18475175312481"><a name="p18475175312481"></a><a name="p18475175312481"></a></p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p id="p455716252506"><a name="p455716252506"></a><a name="p455716252506"></a><span id="ph1262151402"><a name="ph1262151402"></a><a name="ph1262151402"></a>Atlas 900 A2 PoD cluster basic unit</span></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p id="p455716252506"><a name="p455716252506"></a><a name="p455716252506"></a><span id="ph1262151402"><a name="ph1262151402"></a><a name="ph1262151402"></a>Atlas 900 A2 PoD</span></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p102791534015"><a name="p102791534015"></a><a name="p102791534015"></a><span id="ph15271015144017"><a name="ph15271015144017"></a><a name="ph15271015144017"></a>PyTorch</span></p>
 </td>
@@ -693,7 +687,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 <p id="p8271715184013"><a name="p8271715184013"></a><a name="p8271715184013"></a></p>
 <p id="p7271115194015"><a name="p7271115194015"></a><a name="p7271115194015"></a></p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="15.02%" headers="mcps1.2.7.1.6 "><p id="p142781511408"><a name="p142781511408"></a><a name="p142781511408"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v26.1.0/samples/train/basic-training/ranktable/yaml/910b" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="15.02%" headers="mcps1.2.7.1.6 "><p id="p142781511408"><a name="p142781511408"></a><a name="p142781511408"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/release_v26.2.0/samples/train/basic-training/ranktable/yaml/910b" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
 <p id="p71901195499"><a name="p71901195499"></a><a name="p71901195499"></a></p>
 <p id="p151911091496"><a name="p151911091496"></a><a name="p151911091496"></a></p>
 </td>
@@ -707,7 +701,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 <p id="p93517386498"><a name="p93517386498"></a><a name="p93517386498"></a></p>
 <p id="p12352113874920"><a name="p12352113874920"></a><a name="p12352113874920"></a></p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p id="p1538185310530"><a name="p1538185310530"></a><a name="p1538185310530"></a><span id="ph2029215114013"><a name="ph2029215114013"></a><a name="ph2029215114013"></a>Atlas 900 A2 PoD cluster basic unit</span></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p id="p1538185310530"><a name="p1538185310530"></a><a name="p1538185310530"></a><span id="ph2029215114013"><a name="ph2029215114013"></a><a name="ph2029215114013"></a>Atlas 900 A2 PoD</span></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p172910152406"><a name="p172910152406"></a><a name="p172910152406"></a><span id="ph1029181516406"><a name="ph1029181516406"></a><a name="ph1029181516406"></a>PyTorch</span></p>
 </td>
@@ -715,7 +709,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="12.26%" headers="mcps1.2.7.1.5 "><p id="p142910157401"><a name="p142910157401"></a><a name="p142910157401"></a>The example defaults to a single-node 16-processor job.</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="15.02%" headers="mcps1.2.7.1.6 "><p id="p7243709503"><a name="p7243709503"></a><a name="p7243709503"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v26.1.0/samples/train/basic-training/ranktable/yaml/910b" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="15.02%" headers="mcps1.2.7.1.6 "><p id="p7243709503"><a name="p7243709503"></a><a name="p7243709503"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/release_v26.2.0/samples/train/basic-training/ranktable/yaml/910b" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
 </td>
 </tr>
 <tr id="row32915158403"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p7291515164014"><a name="p7291515164014"></a><a name="p7291515164014"></a><span id="ph102941514401"><a name="ph102941514401"></a><a name="ph102941514401"></a>MindSpore</span></p>
@@ -753,7 +747,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="12.280000000000001%" headers="mcps1.2.7.1.5 "><p id="p16627332172713"><a name="p16627332172713"></a><a name="p16627332172713"></a>The example defaults to a single-node 8-processor job.</p>
 </td>
-<td class="cellrowborder" rowspan="8" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p id="p6510121394114"><a name="p6510121394114"></a><a name="p6510121394114"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v26.1.0/samples/train/basic-training/ranktable/yaml/910" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
+<td class="cellrowborder" rowspan="8" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p id="p6510121394114"><a name="p6510121394114"></a><a name="p6510121394114"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/release_v26.2.0/samples/train/basic-training/ranktable/yaml/910" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
 </td>
 </tr>
 <tr id="row66819525592"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="zh-cn_topic_0000001609074269_p85061291815"><a name="zh-cn_topic_0000001609074269_p85061291815"></a><a name="zh-cn_topic_0000001609074269_p85061291815"></a><span id="ph13573184092614"><a name="ph13573184092614"></a><a name="ph13573184092614"></a>MindSpore</span></p>
@@ -810,7 +804,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </tbody>
 </table>
 
-**Table 8** YAML supported by <term>Ascend 950 products</term>
+**Table 8** YAML supported by <term>Ascend 950PR&950DT products</term>
 <a name="table950yaml"></a>
 <table>
     <thead align="left">
@@ -825,28 +819,20 @@ The following YAML examples are provided for users. Select the appropriate YAML 
     </thead>
     <tbody>
         <tr>
-            <td class="cellrowborder" rowspan="2" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Volcano Job</p></td>
-            <td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD</p><p>Atlas 850E SuperPoD</p><p>Atlas 350 accelerator card</p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Volcano Job</p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD</p><p>Atlas 850E</p><p>Atlas 350 accelerator card</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>atlas_950_pytorch_vcjob.yaml</p></td>
-            <td class="cellrowborder" rowspan="4" valign="top" width="12.26%" headers="mcps1.2.7.1.5 "><p>The example defaults to a single-node 8-processor job.</p></td>
-            <td class="cellrowborder" rowspan="4" valign="top" width="15.02%" headers="mcps1.2.7.1.6 ">
-                <p><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v26.1.0/samples/train/basic-training/ranktable/yaml/950" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
+            <td class="cellrowborder" rowspan="2" valign="top" width="12.26%" headers="mcps1.2.7.1.5 "><p>The example defaults to a single-node 8-processor job.</p></td>
+            <td class="cellrowborder" rowspan="2" valign="top" width="15.02%" headers="mcps1.2.7.1.6 ">
+                <p><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/release_v26.2.0/samples/train/basic-training/ranktable/yaml/950" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
             </td>
         </tr>
         <tr>
-            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>MindSpore</p></td>
-            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>atlas_950_mindspore_vcjob.yaml</p></td>
-        </tr>
-        <tr>
-            <td class="cellrowborder" rowspan="2" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Deployment</p></td>
-            <td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD</p><p>Atlas 850E SuperPoD</p><p>Atlas 350 accelerator card</p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Deployment</p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD</p><p>Atlas 850E</p><p>Atlas 850</p><p>Atlas 350 accelerator card</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>atlas_950_pytorch_deployment.yaml</p></td>
-        </tr>
-        <tr>
-            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>MindSpore</p></td>
-            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>atlas_950_mindspore_deployment.yaml</p></td>
         </tr>
     </tbody>
 </table>
@@ -872,22 +858,22 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </td>
 <td class="cellrowborder" valign="top" width="42.59%" headers="mcps1.2.5.1.3 "><p id="p10861813135419"><a name="p10861813135419"></a><a name="p10861813135419"></a>pytorch_acjob_infer_310p_with_ranktable.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p1986116136544"><a name="p1986116136544"></a><a name="p1986116136544"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_acjob_infer_310p_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
+<td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p1986116136544"><a name="p1986116136544"></a><a name="p1986116136544"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/release_v26.2.0/samples/inference/volcano/pytorch_acjob_infer_310p_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
 </td>
 </tr>
-<tr id="row18446115212811"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1611216221297"><a name="p1611216221297"></a><a name="p1611216221297"></a><span id="ph10342125017508"><a name="ph10342125017508"></a><a name="ph10342125017508"></a>Atlas 800I A2 inference server</span></p>
-<p id="p1877419343388"><a name="p1877419343388"></a><a name="p1877419343388"></a><span id="ph1311636133812"><a name="ph1311636133812"></a><a name="ph1311636133812"></a>A200I A2 Box heterogeneous subrack</span></p>
-<p id="p1368016125100"><a name="p1368016125100"></a><a name="p1368016125100"></a><span id="ph17176513111020"><a name="ph17176513111020"></a><a name="ph17176513111020"></a>Atlas 800I A3 SuperPoD server</span></p>
+<tr id="row18446115212811"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1611216221297"><a name="p1611216221297"></a><a name="p1611216221297"></a><span id="ph10342125017508"><a name="ph10342125017508"></a><a name="ph10342125017508"></a>Atlas 800I A2</span></p>
+<p id="p1877419343388"><a name="p1877419343388"></a><a name="p1877419343388"></a><span id="ph1311636133812"><a name="ph1311636133812"></a><a name="ph1311636133812"></a>A200I A2 Box</span></p>
+<p id="p1368016125100"><a name="p1368016125100"></a><a name="p1368016125100"></a><span id="ph17176513111020"><a name="ph17176513111020"></a><a name="ph17176513111020"></a>Atlas 800I A3</span></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p4446185212815"><a name="p4446185212815"></a><a name="p4446185212815"></a>pytorch_multinodes_acjob_infer_<em id="i232224205019"><a name="i232224205019"></a><a name="i232224205019"></a>{</em><em id="i133214249507"><a name="i133214249507"></a><a name="i133214249507"></a>xxx}</em>b_with_ranktable.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p962512301913"><a name="p962512301913"></a><a name="p962512301913"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_910b_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p962512301913"><a name="p962512301913"></a><a name="p962512301913"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/release_v26.2.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_910b_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
+</td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD</p><p>Atlas 850E SuperPoD</p><p>Atlas 350 accelerator card</p>
-</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD</p><p>Atlas 850E</p><p>Atlas 350 accelerator card</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>pytorch_multinodes_acjob_infer_950_with_ranktable.yaml</p></td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_950_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/release_v26.2.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_950_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">Get YAML</a></p>
 </td>
 </tr>
 </tbody>
@@ -923,6 +909,7 @@ This section guides users in configuring the job YAML for the full-NPU schedulin
         spec:
           schedulerName: volcano  # Takes effect when the enableGangScheduling startup parameter of Ascend Operator is set to true.
           runPolicy:
+            ttlSecondsAfterFinished: 30 # TTL (time to live) after the job is completed.
             schedulingPolicy:    # Takes effect when the enableGangScheduling startup parameter of Ascend Operator is set to true
               minAvailable: 1     # Total number of job replicas
               queue: default  # Queue to which the job belongs
@@ -960,7 +947,7 @@ This section guides users in configuring the job YAML for the full-NPU schedulin
 
         After the modification is complete, perform [Step 2](#li118885168281) to configure other fields in the YAML.
 
-    - <a name="li1134113548015"></a>Use the **full-NPU scheduling** feature and refer to this configuration. Taking `infer-vcjob-910.yaml` as an example, create a single-processor inference job on an Atlas 800I A2 inference server. The modification example is as follows.
+    - <a name="li1134113548015"></a>Use the **full-NPU scheduling** feature and refer to this configuration. Taking `infer-vcjob-910.yaml` as an example, create a single-processor inference job on an Atlas 800I A2. The modification example is as follows.
 
         ```yaml
         apiVersion: batch.volcano.sh/v1alpha1
@@ -1187,7 +1174,7 @@ This section guides users in configuring the job YAML for the full-NPU schedulin
 
         >[!NOTE]
         > - In **Allocated resources**, focus on the `huawei.com/XXX` field:
-        >   - `huawei.com/Ascend910` indicates that the server type is <term>Atlas training products</term>, <term>Atlas A2 inference products</term>, <term>Atlas A2 training products</term>, <term>Atlas A3 inference products</term>, or <term>Atlas A3 training products</term>. For <term>Ascend 950 products</term>, this field is `huawei.com/npu`.
+        >   - `huawei.com/Ascend910` indicates that the server type is <term>Atlas training products</term>, <term>Atlas A2 products</term>, or <term>Atlas A3 products</term>. For <term>Ascend 950PR&950DT products</term>, this field is `huawei.com/npu`.
         >   - The value corresponding to `huawei.com/Ascend910` is `8`, which indicates the number of chips currently mounted by containers on the node. After a job is delivered successfully, this value increases by the number of NPU chips used by the job.
         > - For the inference scenario:
         >   - If <term>Atlas inference products</term> are used in non-mixed-insertion mode, the preceding field is displayed as **Ascend310P**.
@@ -1305,6 +1292,7 @@ The usage workflow for command-line usage (other schedulers) is the same as that
    spec:
    schedulerName: volcano        # Delete this field when using another scheduler.
    runPolicy:                    # Delete this field when using another scheduler.
+     ttlSecondsAfterFinished: 30 # TTL (time to live) after the job is completed.
      schedulingPolicy:
        minAvailable: 1
        queue: default
@@ -1419,8 +1407,8 @@ The integration involves many interfaces. You are advised to refer to the releva
                                 initContainerCommand([]string{"/bin/bash", "-c", "bash train_start.sh ..."}).  // Initialize the container startup command. For specific parameters, refer to the sample YAML.
                                 initContainerArgs([]string{"/bin/bash", "-c", "bash train_start.sh ..."}).  // Initialize the container startup command. For specific parameters, refer to the sample YAML.
                                 initContainerPorts(2222).                                                // Initialize the container port.
-                                initContainerLimits("huawei.com/Ascend910", "8").                        // Initialize job resources. For Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD, change the parameter name to huawei.com/npu.
-                                initContainerRequests("huawei.com/Ascend910", "8").                      // Initialize task resources. For Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD, change the parameter name to huawei.com/npu.
+                                initContainerLimits("huawei.com/Ascend910", "8").                        // Initialize job resources. For Ascend 950PR&950DT products, change the parameter name to huawei.com/npu.
+                                initContainerRequests("huawei.com/Ascend910", "8").                      // Initialize task resources. For Ascend 950PR&950DT products, change the parameter name to huawei.com/npu.
                                 initContainerVolumeMounts()).                                            // Initialize container mount items.
                              initReplica()).
               addReplicaSpecs("Worker", newReplica(). // Initialize Worker replicas.
@@ -1443,8 +1431,8 @@ The integration involves many interfaces. You are advised to refer to the releva
                     initContainerCommand([]string{"/bin/bash", "-c", "bash train_start.sh ..."}). // Initialize the container startup command. For details about the parameters, see the sample YAML.
                     initContainerArgs([]string{"/bin/bash", "-c", "bash train_start.sh ..."}).    // Initialize the container startup command. For details about the parameters, see the sample YAML.
                     initContainerPorts(2222).                                                     // Initialize the container port.
-                    initContainerLimits("huawei.com/Ascend910", "8").                             // Initialize job resources. For Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD, change the parameter name to huawei.com/npu.
-                    initContainerRequests("huawei.com/Ascend910", "8").                           // Initialize job resources. For Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD, change the parameter name to huawei.com/npu.
+                    initContainerLimits("huawei.com/Ascend910", "8").                             // Initialize job resources. For Ascend 950PR&950DT products, change the parameter name to huawei.com/npu.
+                    initContainerRequests("huawei.com/Ascend910", "8").                           // Initialize job resources. For Ascend 950PR&950DT products, change the parameter name to huawei.com/npu.
                     initContainerVolumeMounts()).
                  initReplica())
            return v1.AscendJob(job)
@@ -1537,8 +1525,8 @@ The integration involves many interfaces. You are advised to refer to the releva
                         initContainerName("mindspore").                                             // Initialize the container name.
                         initContainerImage("ms-arm:b120").                                          // Initialize the image name.
                         initContainerImagePullPolicy("IfNotPresent").                               // Initialize the image pull policy.
-                        initContainerLimits("huawei.com/Ascend910", "8").                           // Initialize the job resources. For Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD, change the parameter name to huawei.com/npu.
-                        initContainerRequests("huawei.com/Ascend910", "8").                         // Initialize task resources. For Atlas 350 accelerator card, Atlas 850E SuperPoD, Atlas 650E server, and Atlas 950 SuperPoD, change the parameter name to huawei.com/npu.
+                        initContainerLimits("huawei.com/Ascend910", "8").                           // Initialize the job resources. For Ascend 950PR&950DT products, change the parameter name to huawei.com/npu.
+                        initContainerRequests("huawei.com/Ascend910", "8").                         // Initialize task resources. For Ascend 950PR&950DT products, change the parameter name to huawei.com/npu.
                         initContainerVolumeMounts().                                                // Initialize container mount items.
                         initContainerEnv("MindSpore").                                              // Initialize container environment variables.
                         initContainerCommand([]string{"/bin/bash", "-c", "bash train_start.sh ..."}))))) // Initialize the container startup command. For specific parameters, refer to the sample YAML.

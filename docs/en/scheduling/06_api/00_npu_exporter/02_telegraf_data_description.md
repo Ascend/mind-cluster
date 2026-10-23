@@ -9,13 +9,13 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 
 This interface supports querying default metric groups and custom metric groups. For details on how to customize metric groups, see [Custom Metric Development](../../05_developer_guide/01_custom_metrics_development.md). The default metric groups include the following sections. The collection and reporting of metric groups are controlled by switches in the configuration file. If a switch is configured as enabled, the corresponding metric group will be collected and reported; if a switch is configured as disabled, the corresponding metric group will not be collected and reported.
 
-- [Telegraf Data Information Description](#telegraf-data-information-description)
   - [Version Data Information](#version-data-information)
   - [Basic Node Information](#basic-node-information)
   - [NPU Data Information](#npu-data-information)
   - [Utilization Data Information](#utilization-data-information)
   - [vNPU Data Information](#vnpu-data-information)
-  - [Network Data Information](#network-data-information)
+  - [network_bandwidth Data Information](#network_bandwidth-data-information)
+  - [network_link Data Information](#network_link-data-information)
   - [On-Chip Memory Data Information](#on-chip-memory-data-information)
   - [HCCS Data Information](#hccs-data-information)
   - [PCIe Data Information](#pcie-data-information)
@@ -24,7 +24,6 @@ This interface supports querying default metric groups and custom metric groups.
   - [Optical Module Data Information](#optical-module-data-information)
   - [DDR Data Information](#ddr-data-information)
   - [UB Data Information](#ub-data-information)
-  - [HDK Interface Call](#hdk-interface-call)
 
 >[!NOTE]
 >
@@ -36,39 +35,18 @@ This interface supports querying default metric groups and custom metric groups.
 **Table 1** Version data information
 
 <a name="table81981837143713"></a>
-<table><thead align="left"><tr id="row319910378373"><th class="cellrowborder" valign="top" width="7.9399999999999995%" id="mcps1.2.6.1.1"><p id="p622884917372"><a name="p622884917372"></a><a name="p622884917372"></a>Category</p>
-</th>
-<th class="cellrowborder" valign="top" width="25.03%" id="mcps1.2.6.1.2"><p id="p1322844963710"><a name="p1322844963710"></a><a name="p1322844963710"></a>Data Information Name</p>
-</th>
-<th class="cellrowborder" valign="top" width="21.23%" id="mcps1.2.6.1.3"><p id="p822864983718"><a name="p822864983718"></a><a name="p822864983718"></a>Data Information Description</p>
-</th>
-<th class="cellrowborder" valign="top" width="21.8%" id="mcps1.2.6.1.4"><p id="p15229649123712"><a name="p15229649123712"></a><a name="p15229649123712"></a>Unit</p>
-</th>
-<th class="cellrowborder" valign="top" width="24%" id="mcps1.2.6.1.5"><p id="p1023084933716"><a name="p1023084933716"></a><a name="p1023084933716"></a>Supported Product Forms</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row191991937123720"><td class="cellrowborder" valign="top" width="7.9399999999999995%" headers="mcps1.2.6.1.1 "><p id="p96501612386"><a name="p96501612386"></a><a name="p96501612386"></a>Version</p>
-</td>
-<td class="cellrowborder" valign="top" width="25.03%" headers="mcps1.2.6.1.2 "><p id="p36502183811"><a name="p36502183811"></a><a name="p36502183811"></a>npu_exporter_version_info</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.23%" headers="mcps1.2.6.1.3 "><p id="p1665017112386"><a name="p1665017112386"></a><a name="p1665017112386"></a><span id="ph122556224122"><a name="ph122556224122"></a><a name="ph122556224122"></a>NPU Exporter</span> version information</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.8%" headers="mcps1.2.6.1.4 "><p id="p11641734202218"><a name="p11641734202218"></a><a name="p11641734202218"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="24%" headers="mcps1.2.6.1.5 "><ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2 inference server</li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+
+|Category|Data Information Name|Data Information Description|Unit|Supported Product Form|
+|------|-------------|-------------|------|---------------|
+|Version|npu_exporter_version_info|NPU Exporter version information|-|<ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
 
 ## Basic Node Information<a name="section170316521436120"></a>
 
-**Table 2**  Basic node information
+**Table 2** Basic node information
 
-|Category|Data Information Name|Data Information Description|Unit|Supported Product Forms|
+|Category|Data Information Name|Data Information Description|Unit|Supported Product Form|
 |------|-------------|-------------|------|---------------|
-|nodeBase|node_base_info|Basic node information, including:<ul><li>exporterVersion: current NPU Exporter version</li><li>driverVersion: driver version</li></ul>| 1: Placeholder character, with no actual meaning. |<ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2 inference server</li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>|
+|nodeBase|node_base_info|Basic node information, including:<ul><li>exporterVersion: current NPU Exporter version</li><li>driverVersion: driver version</li><li>dcmiVersion: DCMI version information</li></ul>| 1: Placeholder character, with no actual meaning. |<ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
 
 ## NPU Data Information<a name="section1442282202316"></a>
 
@@ -83,7 +61,7 @@ This interface supports querying default metric groups and custom metric groups.
 </th>
 <th class="cellrowborder" valign="top" width="19.68%" id="mcps1.2.6.1.4"><p id="p149531054142812"><a name="p149531054142812"></a><a name="p149531054142812"></a>Unit</p>
 </th>
-<th class="cellrowborder" valign="top" width="23.94%" id="mcps1.2.6.1.5"><p id="p14953115412284"><a name="p14953115412284"></a><a name="p14953115412284"></a>Supported Product Forms</p>
+<th class="cellrowborder" valign="top" width="23.94%" id="mcps1.2.6.1.5"><p id="p14953115412284"><a name="p14953115412284"></a><a name="p14953115412284"></a>Supported Product Form</p>
 </th>
 </tr>
 </thead>
@@ -96,7 +74,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="19.68%" headers="mcps1.2.6.1.4 "><p id="p_machine_card_nums_unit">Unit: pcs</p>
 </td>
-<td class="cellrowborder" valign="top" width="23.94%" headers="mcps1.2.6.1.5 "><ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li><span>Atlas 800I A2 inference server</span></li><li><span>A200I A2 Box heterogeneous subrack</span></li></ul>
+<td class="cellrowborder" valign="top" width="23.94%" headers="mcps1.2.6.1.5 "><ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li><span>Atlas 800I A2</span></li><li><span>A200I A2 Box</span></li></ul>
 </td>
 </tr>
 <tr id="row1999144418467"><td class="cellrowborder" valign="top" width="9.8%" headers="mcps1.2.6.1.1 "><p id="p1549615614460"><a name="p1549615614460"></a><a name="p1549615614460"></a>NPU</p>
@@ -107,7 +85,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="19.68%" headers="mcps1.2.6.1.4 "><p id="p19999944144617"><a name="p19999944144617"></a><a name="p19999944144617"></a>Unit: pcs</p>
 </td>
-<td class="cellrowborder" rowspan="12" valign="top" width="23.94%" headers="mcps1.2.6.1.5 "><a name="ul1142611144613"></a><a name="ul1142611144613"></a><ul id="ul1142611144613"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li><span id="ph279972618380"><a name="ph279972618380"></a><a name="ph279972618380"></a>Atlas 800I A2 inference server</span></li><li><span id="ph1823654413571"><a name="ph1823654413571"></a><a name="ph1823654413571"></a>A200I A2 Box heterogeneous subrack</span></li><li><span>Atlas 350 accelerator card</span></li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>
+<td class="cellrowborder" rowspan="15" valign="top" width="23.94%" headers="mcps1.2.6.1.5 "><a name="ul1142611144613"></a><a name="ul1142611144613"></a><ul id="ul1142611144613"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li><span id="ph279972618380"><a name="ph279972618380"></a><a name="ph279972618380"></a>Atlas 800I A2</span></li><li><span id="ph1823654413571"><a name="ph1823654413571"></a><a name="ph1823654413571"></a>A200I A2 Box</span></li><li><term>Ascend 950PR&950DT products</term></li></ul>
 <p id="p72006546535"><a name="p72006546535"></a><a name="p72006546535"></a></p>
 <p id="p4385659175311"><a name="p4385659175311"></a><a name="p4385659175311"></a></p>
 <p id="p11457148195318"><a name="p11457148195318"></a><a name="p11457148195318"></a></p>
@@ -127,6 +105,33 @@ This interface supports querying default metric groups and custom metric groups.
 <p id="p1945262715417"><a name="p1945262715417"></a><a name="p1945262715417"></a></p>
 <p id="p156813447544"><a name="p156813447544"></a><a name="p156813447544"></a></p>
 <p id="p589672265514"><a name="p589672265514"></a><a name="p589672265514"></a></p>
+</td>
+</tr>
+<tr id="row_machine_healthy_npu_nums"><td class="cellrowborder" valign="top" width="9.8%" headers="mcps1.2.6.1.1 "><p id="p_machine_healthy_npu_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.279999999999998%" headers="mcps1.2.6.1.2 "><p id="p_machine_healthy_npu_nums_name">machine_healthy_npu_nums</p>
+</td>
+<td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.6.1.3 "><p id="p_machine_healthy_npu_nums_desc">Number of healthy Ascend AI Processors</p>
+</td>
+<td class="cellrowborder" valign="top" width="19.68%" headers="mcps1.2.6.1.4 "><p id="p_machine_healthy_npu_nums_unit">Unit: count</p>
+</td>
+</tr>
+<tr id="row_machine_unhealthy_npu_nums"><td class="cellrowborder" valign="top" width="9.8%" headers="mcps1.2.6.1.1 "><p id="p_machine_unhealthy_npu_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.279999999999998%" headers="mcps1.2.6.1.2 "><p id="p_machine_unhealthy_npu_nums_name">machine_unhealthy_npu_nums</p>
+</td>
+<td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.6.1.3 "><p id="p_machine_unhealthy_npu_nums_desc">Number of faulty Ascend AI Processors</p>
+</td>
+<td class="cellrowborder" valign="top" width="19.68%" headers="mcps1.2.6.1.4 "><p id="p_machine_unhealthy_npu_nums_unit">Unit: count</p>
+</td>
+</tr>
+<tr id="row_machine_unknown_npu_nums"><td class="cellrowborder" valign="top" width="9.8%" headers="mcps1.2.6.1.1 "><p id="p_machine_unknown_npu_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.279999999999998%" headers="mcps1.2.6.1.2 "><p id="p_machine_unknown_npu_nums_name">machine_unknown_npu_nums</p>
+</td>
+<td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.6.1.3 "><p id="p_machine_unknown_npu_nums_desc">Number of Ascend AI Processors whose health status cannot be obtained via the DCMI interface</p>
+</td>
+<td class="cellrowborder" valign="top" width="19.68%" headers="mcps1.2.6.1.4 "><p id="p_machine_unknown_npu_nums_unit">Unit: count</p>
 </td>
 </tr>
 <tr id="row1883144115448"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p18433255105719"><a name="p18433255105719"></a><a name="p18433255105719"></a>NPU</p>
@@ -243,7 +248,7 @@ This interface supports querying default metric groups and custom metric groups.
 <td class="cellrowborder" valign="top" width="19.68%" headers="mcps1.2.6.1.4 "><p id="p169536543281"><a name="p169536543281"></a><a name="p169536543281"></a>The value is 0, 1, or -1.</p>
 <a name="ul1695355411281"></a><a name="ul1695355411281"></a><ul id="ul1695355411281"><li>1: Healthy, reachable</li><li>0: Unhealthy, unreachable</li><li>-1: Unknown (DCMI call failed)</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="23.94%" headers="mcps1.2.6.1.5 "><a name="ul195418540284"></a><a name="ul195418540284"></a><ul id="ul195418540284"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph79376229499"><a name="ph79376229499"></a><a name="ph79376229499"></a>Atlas 800I A2 inference server</span></li><li><span id="ph288515314573"><a name="ph288515314573"></a><a name="ph288515314573"></a>A200I A2 Box heterogeneous subrack</span></li></ul>
+<td class="cellrowborder" valign="top" width="23.94%" headers="mcps1.2.6.1.5 "><a name="ul195418540284"></a><a name="ul195418540284"></a><ul id="ul195418540284"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph79376229499"><a name="ph79376229499"></a><a name="ph79376229499"></a>Atlas 800I A2</span></li><li><span id="ph288515314573"><a name="ph288515314573"></a><a name="ph288515314573"></a>A200I A2 Box</span></li></ul>
 </td>
 </tr>
 <tr><td><p>NPU</p>
@@ -264,12 +269,12 @@ This interface supports querying default metric groups and custom metric groups.
 
 **Table 4** Utilization data information
 
-| Category | Data Information Name | Data Information Description | Unit | Supported Product Forms |
+| Category | Data Information Name | Data Information Description | Unit | Supported Product Form |
 | --- | --- | --- | --- | --- |
-| utilization | npu_chip_info_utilization | AICore utilization of the Ascend AI Processor | % |<ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2 inference server</li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>|
-| utilization | npu_chip_info_vector_utilization | AIVector utilization of the Ascend AI Processor | % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2 inference server</li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>|
-| utilization | npu_chip_info_cube_utilization | AICube utilization of the Ascend AI Processor| % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2 inference server</li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>|
-| utilization | npu_chip_info_overall_utilization | Overall utilization of the Ascend AI Processor | % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2 inference server</li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>|
+| utilization | npu_chip_info_utilization | AICore utilization of the Ascend AI Processor | % |<ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
+| utilization | npu_chip_info_vector_utilization | AIVector utilization of the Ascend AI Processor | % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
+| utilization | npu_chip_info_cube_utilization | AICube utilization of the Ascend AI Processor| % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
+| utilization | npu_chip_info_overall_utilization | Overall utilization of the Ascend AI Processor | % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
 
 ## vNPU Data Information<a name="section814111613432"></a>
 
@@ -284,7 +289,7 @@ This interface supports querying default metric groups and custom metric groups.
 </th>
 <th class="cellrowborder" valign="top" width="12.55125512551255%" id="mcps1.2.6.1.4"><p id="p1580317257217"><a name="p1580317257217"></a><a name="p1580317257217"></a>Unit</p>
 </th>
-<th class="cellrowborder" valign="top" width="23.642364236423642%" id="mcps1.2.6.1.5"><p id="p0803132522113"><a name="p0803132522113"></a><a name="p0803132522113"></a>Supported Product Forms</p>
+<th class="cellrowborder" valign="top" width="23.642364236423642%" id="mcps1.2.6.1.5"><p id="p0803132522113"><a name="p0803132522113"></a><a name="p0803132522113"></a>Supported Product Form</p>
 </th>
 </tr>
 </thead>
@@ -296,11 +301,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="12.55125512551255%" headers="mcps1.2.6.1.4 "><p id="p480452542116"><a name="p480452542116"></a><a name="p480452542116"></a>Unit: %</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="23.642364236423642%" headers="mcps1.2.6.1.5 "><p id="p553617193312"><a name="p553617193312"></a><a name="p553617193312"></a><span id="ph19590185162111"><a name="ph19590185162111"></a><a name="ph19590185162111"></a><term>Atlas inference products</term></span></p>
-<p id="p5979185811548"><a name="p5979185811548"></a><a name="p5979185811548"></a></p>
-<p id="p1272129165519"><a name="p1272129165519"></a><a name="p1272129165519"></a></p>
-<p id="p1666712017555"><a name="p1666712017555"></a><a name="p1666712017555"></a></p>
-<p id="p17841125753817"><a name="p17841125753817"></a><a name="p17841125753817"></a></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="23.642364236423642%" headers="mcps1.2.6.1.5 "><ul><li><term>Atlas inference products</term></li><li><term>Atlas A2 products</term></li><li><term>Atlas A3 products</term></li></ul>
 </td>
 </tr>
 <tr id="row17703155715411"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p7804152519214"><a name="p7804152519214"></a><a name="p7804152519214"></a>vNPU</p>
@@ -324,9 +325,9 @@ This interface supports querying default metric groups and custom metric groups.
 </tbody>
 </table>
 
-## Network Data Information<a name="section1358881214551"></a>
+## network_bandwidth Data Information<a name="section1358881214551"></a>
 
-**Table 6** Network data information
+**Table 6** network_bandwidth data information
 
 <a name="table133306180110"></a>
 <table><thead align="left"><tr id="row1033041814119"><td class="cellrowborder" valign="top" width="20%" id="mcps1.2.6.1.1"><p id="p9187428181111"><a name="p9187428181111"></a><a name="p9187428181111"></a>Category</p>
@@ -337,11 +338,11 @@ This interface supports querying default metric groups and custom metric groups.
 </th>
 <th class="cellrowborder" valign="top" width="20%" id="mcps1.2.6.1.4"><p id="p9187152818113"><a name="p9187152818113"></a><a name="p9187152818113"></a>Unit</p>
 </th>
-<th class="cellrowborder" valign="top" width="20%" id="mcps1.2.6.1.5"><p id="p124519421113"><a name="p124519421113"></a><a name="p124519421113"></a>Supported Product Forms</p>
+<th class="cellrowborder" valign="top" width="20%" id="mcps1.2.6.1.5"><p id="p124519421113"><a name="p124519421113"></a><a name="p124519421113"></a>Supported Product Form</p>
 </th>
 </tr>
 </thead>
-<tbody><tr id="row103308189112"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.6.1.1 "><p id="p141871428111110"><a name="p141871428111110"></a><a name="p141871428111110"></a>Network</p>
+<tbody><tr id="row103308189112"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.6.1.1 "><p id="p141871428111110"><a name="p141871428111110"></a><a name="p141871428111110"></a>network_bandwidth</p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.6.1.2 "><p id="p718722816112"><a name="p718722816112"></a><a name="p718722816112"></a>npu_chip_info_bandwidth_rx</p>
 </td>
@@ -349,10 +350,9 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.6.1.4 "><p id="p19187928171115"><a name="p19187928171115"></a><a name="p19187928171115"></a>Unit: MB/s</p>
 </td>
-<td class="cellrowborder" rowspan="5" valign="top" width="20%" headers="mcps1.2.6.1.5 "><a name="ul19245194241111"></a><a name="ul19245194241111"></a><ul id="ul19245194241111"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph206765471804"><a name="ph206765471804"></a><a name="ph206765471804"></a>Atlas 800I A2 inference server</span></li><li><span id="ph6245242151119"><a name="ph6245242151119"></a><a name="ph6245242151119"></a>A200I A2 Box heterogeneous subrack</span></li></ul>
-</td>
-</tr>
-<tr id="row93303180110"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p19187142811114"><a name="p19187142811114"></a><a name="p19187142811114"></a>Network</p>
+
+<td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.6.1.5 "><a name="ul19245194241111"></a><a name="ul19245194241111"></a><ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li></ul>
+</td></tr><tr id="row93303180110"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p19187142811114"><a name="p19187142811114"></a><a name="p19187142811114"></a>network_bandwidth</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p01871528121114"><a name="p01871528121114"></a><a name="p01871528121114"></a>npu_chip_info_bandwidth_tx</p>
 </td>
@@ -360,8 +360,44 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p191872283111"><a name="p191872283111"></a><a name="p191872283111"></a>Unit: MB/s</p>
 </td>
+</tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_bandwidth</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx_X_Y</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>Real-time RX rate of the Ascend AI Processor port.</p><p>X is the Udie ID and Y is the Port ID. The value of the -time parameter is 100.</p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: MB/s</p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><p><term>Ascend 950PR&950DT products</term></p><p>Atlas 350 accelerator cards support only 4 processor-meshed interconnection.</p>
+</td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_bandwidth</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx_X_Y</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>Real-time TX rate of the Ascend AI Processor port.</p><p>X is the Udie ID and Y is the Port ID. The value of the -time parameter is 100.</p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: MB/s</p>
+</td>
+</tr></tbody>
+</table>
+
+## network_link Data Information<a name="section1358881214552"></a>
+
+**Table 7** network_link data information
+
+<a name="table133306180111"></a>
+<table><thead align="left"><tr id="row1033041814119"><td class="cellrowborder" valign="top" width="20%" id="mcps1.2.6.1.1"><p id="p9187428181111"><a name="p9187428181111"></a><a name="p9187428181111"></a>Category</p>
+</td>
+<th class="cellrowborder" valign="top" width="20%" id="mcps1.2.6.1.2"><p id="p18187728181116"><a name="p18187728181116"></a><a name="p18187728181116"></a>Data Information Name</p>
+</th>
+<th class="cellrowborder" valign="top" width="20%" id="mcps1.2.6.1.3"><p id="p1118742891112"><a name="p1118742891112"></a><a name="p1118742891112"></a>Data Information Description</p>
+</th>
+<th class="cellrowborder" valign="top" width="20%" id="mcps1.2.6.1.4"><p id="p9187152818113"><a name="p9187152818113"></a><a name="p9187152818113"></a>Unit</p>
+</th>
+<th class="cellrowborder" valign="top" width="20%" id="mcps1.2.6.1.5"><p id="p124519421113"><a name="p124519421113"></a><a name="p124519421113"></a>Supported Product Form</p>
+</th>
 </tr>
-<tr id="row133011181117"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p181872028151119"><a name="p181872028151119"></a><a name="p181872028151119"></a>Network</p>
+</thead>
+<tbody><tr id="row133011181117"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p181872028151119"><a name="p181872028151119"></a><a name="p181872028151119"></a>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p12187122801111"><a name="p12187122801111"></a><a name="p12187122801111"></a>npu_chip_info_link_status</p>
 </td>
@@ -370,8 +406,8 @@ This interface supports querying default metric groups and custom metric groups.
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p1118714283116"><a name="p1118714283116"></a><a name="p1118714283116"></a>Value is 0, 1, or -1.</p>
 <a name="ul5187128201110"></a><a name="ul5187128201110"></a><ul id="ul5187128201110"><li>1: UP</li><li>0: DOWN</li><li>-1: Unknown (hccn_tool call failed)</li></ul>
 </td>
-</tr>
-<tr id="row7330418111118"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p10187122819116"><a name="p10187122819116"></a><a name="p10187122819116"></a>Network</p>
+<td class="cellrowborder" rowspan="3" valign="top" width="20%" headers="mcps1.2.6.1.5 "><ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li></ul>
+</td></tr><tr id="row7330418111118"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p10187122819116"><a name="p10187122819116"></a><a name="p10187122819116"></a>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p218782813114"><a name="p218782813114"></a><a name="p218782813114"></a>npu_chip_link_speed</p>
 </td>
@@ -379,8 +415,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p61871028181113"><a name="p61871028181113"></a><a name="p61871028181113"></a>Unit: MB/s</p>
 </td>
-</tr>
-<tr id="row1133111810118"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p11188142815112"><a name="p11188142815112"></a><a name="p11188142815112"></a>Network</p>
+</tr><tr id="row1133111810118"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p11188142815112"><a name="p11188142815112"></a><a name="p11188142815112"></a>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p418852851110"><a name="p418852851110"></a><a name="p418852851110"></a>npu_chip_link_up_num</p>
 </td>
@@ -388,8 +423,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p018822815114"><a name="p018822815114"></a><a name="p018822815114"></a>Unit: times</p>
 </td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+</tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_status_X_Y</p>
 </td>
@@ -397,28 +431,9 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>The value is 0, 1, or -1.</p><ul><li>1: UP</li><li>0: DOWN</li><li>-1: Unknown (hccn_tool call failed)</li></ul>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><ul><li>Atlas 350 accelerator card (4 processor-meshed)</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx_X_Y</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>Real-time RX rate of the Ascend AI Processor port.</p><p>X is the Udie ID and Y is the Port ID. The -time parameter used is 100.</p>
-</td>
-<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: MB/s</p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx_X_Y</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>Real-time TX rate of the Ascend AI Processor port.</p><p>X is the Udie ID and Y is the Port ID. The -time parameter used is 100.</p>
-</td>
-<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: MB/s</p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><p><term>Ascend 950PR&950DT products</term></p><p>Atlas 350 accelerator cards support only 4 processor-meshed interconnection.</p>
+</td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_speed_X_Y</p>
 </td>
@@ -426,13 +441,12 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: G</p>
 </td>
-</tr>
-</tbody>
+</tr></tbody>
 </table>
 
 ## On-Chip Memory Data Information<a name="section177232045203114"></a>
 
-**Table 7**  On-Chip memory data information
+**Table 8** On-Chip memory data information
 
 <a name="table728745315300"></a>
 <table><thead align="left"><tr id="row72881853103019"><th class="cellrowborder" valign="top" width="9.21%" id="mcps1.2.6.1.1"><p id="p11126227312"><a name="p11126227312"></a><a name="p11126227312"></a>Category</p>
@@ -443,7 +457,7 @@ This interface supports querying default metric groups and custom metric groups.
 </th>
 <th class="cellrowborder" valign="top" width="14.91%" id="mcps1.2.6.1.4"><p id="p17112182293120"><a name="p17112182293120"></a><a name="p17112182293120"></a>Unit</p>
 </th>
-<th class="cellrowborder" valign="top" width="26.61%" id="mcps1.2.6.1.5"><p id="p71121822153119"><a name="p71121822153119"></a><a name="p71121822153119"></a>Supported Product Forms</p>
+<th class="cellrowborder" valign="top" width="26.61%" id="mcps1.2.6.1.5"><p id="p71121822153119"><a name="p71121822153119"></a><a name="p71121822153119"></a>Supported Product Form</p>
 </th>
 </tr>
 </thead>
@@ -455,7 +469,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="14.91%" headers="mcps1.2.6.1.4 "><p id="p1376214173120"><a name="p1376214173120"></a><a name="p1376214173120"></a>Unit: MB</p>
 </td>
-<td class="cellrowborder" rowspan="12" valign="top" width="26.61%" headers="mcps1.2.6.1.5 "><a name="ul1737721403120"></a><a name="ul1737721403120"></a><ul id="ul1737721403120"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph043025116483"><a name="ph043025116483"></a><a name="ph043025116483"></a>A200I A2 Box heterogeneous subrack</span></li><li><span id="ph1201913534"><a name="ph1201913534"></a><a name="ph1201913534"></a>Atlas 800I A2 inference server</span></li></ul><ul><li><span>Atlas 350 accelerator card</span></li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>
+<td class="cellrowborder" rowspan="12" valign="top" width="26.61%" headers="mcps1.2.6.1.5 "><a name="ul1737721403120"></a><a name="ul1737721403120"></a><ul id="ul1737721403120"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph043025116483"><a name="ph043025116483"></a><a name="ph043025116483"></a>A200I A2 Box</span></li><li><span id="ph1201913534"><a name="ph1201913534"></a><a name="ph1201913534"></a>Atlas 800I A2</span></li></ul><ul><li><term>Ascend 950PR&950DT products</term></li></ul>
 <p id="p744164714207"><a name="p744164714207"></a><a name="p744164714207"></a></p>
 <p id="p1642204722019"><a name="p1642204722019"></a><a name="p1642204722019"></a></p>
 </td>
@@ -565,7 +579,7 @@ This interface supports querying default metric groups and custom metric groups.
 
 ## HCCS Data Information<a name="section039816240252"></a>
 
-**Table 8** HCCS data information
+**Table 9** HCCS data information
 
 <a name="table9399845122516"></a>
 <table><thead align="left"><tr id="row153998454253"><th class="cellrowborder" valign="top" width="8.950000000000001%" id="mcps1.2.6.1.1"><p id="p94879162267"><a name="p94879162267"></a><a name="p94879162267"></a>Category</p>
@@ -576,14 +590,14 @@ This interface supports querying default metric groups and custom metric groups.
 </th>
 <th class="cellrowborder" valign="top" width="15.570000000000004%" id="mcps1.2.6.1.4"><p id="p174873165265"><a name="p174873165265"></a><a name="p174873165265"></a>Unit</p>
 </th>
-<th class="cellrowborder" valign="top" width="25.300000000000004%" id="mcps1.2.6.1.5"><p id="p0487161620269"><a name="p0487161620269"></a><a name="p0487161620269"></a>Supported Product Forms</p>
+<th class="cellrowborder" valign="top" width="25.300000000000004%" id="mcps1.2.6.1.5"><p id="p0487161620269"><a name="p0487161620269"></a><a name="p0487161620269"></a>Supported Product Form</p>
 </th>
 </tr>
 </thead>
 <tbody><tr id="row2040184552518"><td class="cellrowborder" valign="top" width="8.950000000000001%" headers="mcps1.2.6.1.1 "><p id="p14401145172516"><a name="p14401145172516"></a><a name="p14401145172516"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" width="28.190000000000005%" headers="mcps1.2.6.1.2 "><p id="p338114141712"><a name="p338114141712"></a><a name="p338114141712"></a>npu_chip_info_hccs_statistic_info_tx_cnt_X</p>
-<p id="p1024171512455"><a name="p1024171512455"></a><a name="p1024171512455"></a>Range of X: 1~7 (<term>Atlas A2 training products</term> or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD cluster computing system)</p>
+<p id="p1024171512455"><a name="p1024171512455"></a><a name="p1024171512455"></a>Range of X: 1~7 (<term>Atlas A2 training products</term> or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD)</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.990000000000006%" headers="mcps1.2.6.1.3 "><a name="ul1424913612438"></a><a name="ul1424913612438"></a><ul id="ul1424913612438"><li>Number of packets sent on the X-th HDLC link, unit is flit.</li><li>-1 is reported if collection fails.</li></ul>
 </td>
@@ -595,7 +609,7 @@ This interface supports querying default metric groups and custom metric groups.
 <tr id="row1140184517258"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1240115459259"><a name="p1240115459259"></a><a name="p1240115459259"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p186021875020"><a name="p186021875020"></a><a name="p186021875020"></a>npu_chip_info_hccs_statistic_info_rx_cnt_X</p>
-<p id="p11562871013"><a name="p11562871013"></a><a name="p11562871013"></a>Range of X: 1~7 (<term>Atlas A2 training products</term> or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD cluster computing system)</p>
+<p id="p11562871013"><a name="p11562871013"></a><a name="p11562871013"></a>Range of X: 1~7 (<term>Atlas A2 training products</term> or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD)</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><a name="ul1234520167435"></a><a name="ul1234520167435"></a><ul id="ul1234520167435"><li>Number of packets received on the X-th HDLC link, unit is flit.</li><li>-1 is reported if collection fails.</li></ul>
 </td>
@@ -605,7 +619,7 @@ This interface supports querying default metric groups and custom metric groups.
 <tr id="row1240254522514"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p5402245122513"><a name="p5402245122513"></a><a name="p5402245122513"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p1139102394715"><a name="p1139102394715"></a><a name="p1139102394715"></a>npu_chip_info_hccs_statistic_info_crc_err_cnt_X</p>
-<p id="p1429534131018"><a name="p1429534131018"></a><a name="p1429534131018"></a>Range of X: 1~7 (<term>Atlas A2 training products</term> or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD cluster computing system)</p>
+<p id="p1429534131018"><a name="p1429534131018"></a><a name="p1429534131018"></a>Range of X: 1~7 (<term>Atlas A2 training products</term> or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD)</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><a name="ul112792234316"></a><a name="ul112792234316"></a><ul id="ul112792234316"><li>CRC error in received packets on the X‑th HDLC link, unit is flit.</li><li>-1 is reported if collection fails.</li></ul>
 </td>
@@ -642,7 +656,7 @@ This interface supports querying default metric groups and custom metric groups.
 <tr id="row1853162231416"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p153161253161412"><a name="p153161253161412"></a><a name="p153161253161412"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p549352091516"><a name="p549352091516"></a><a name="p549352091516"></a>npu_chip_info_hccs_bandwidth_info_tx_X</p>
-<p id="p2493172021511"><a name="p2493172021511"></a><a name="p2493172021511"></a>Range of X: 1~7 (<term>Atlas A2 training products</term>, Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD cluster computing system).</p>
+<p id="p2493172021511"><a name="p2493172021511"></a><a name="p2493172021511"></a>Range of X: 1~7 (<term>Atlas A2 training products</term>, Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD).</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p3493152051511"><a name="p3493152051511"></a><a name="p3493152051511"></a>TX data bandwidth for a single HCCS link. -1 is reported if collection fails.</p>
 </td>
@@ -652,7 +666,7 @@ This interface supports querying default metric groups and custom metric groups.
 <tr id="row18299930131419"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1031665361416"><a name="p1031665361416"></a><a name="p1031665361416"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p7494122091513"><a name="p7494122091513"></a><a name="p7494122091513"></a>npu_chip_info_hccs_bandwidth_info_rx_X</p>
-<p id="p10494720131520"><a name="p10494720131520"></a><a name="p10494720131520"></a>Range of X: 1~7 (<term>Atlas A2 training products</term>, Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD cluster computing system)</p>
+<p id="p10494720131520"><a name="p10494720131520"></a><a name="p10494720131520"></a>Range of X: 1~7 (<term>Atlas A2 training products</term>, Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD)</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p449492011517"><a name="p449492011517"></a><a name="p449492011517"></a>RX data bandwidth for a single HCCS link. -1 is reported if collection fails.</p>
 </td>
@@ -664,7 +678,7 @@ This interface supports querying default metric groups and custom metric groups.
 
 ## PCIe Data Information<a name="section1240520241824136"></a>
 
-**Table 9** PCIe data information
+**Table 10** PCIe data information
 
 <a name="table1341911380255"></a>
 <table><thead align="left"><tr id="row941993842520"><th class="cellrowborder" valign="top" width="9.85%" id="mcps1.2.6.1.1"><p id="p5917122513215"><a name="p5917122513215"></a><a name="p5917122513215"></a>Category</p>
@@ -675,7 +689,7 @@ This interface supports querying default metric groups and custom metric groups.
 </th>
 <th class="cellrowborder" valign="top" width="11.59%" id="mcps1.2.6.1.4"><p id="p79189258216"><a name="p79189258216"></a><a name="p79189258216"></a>Unit</p>
 </th>
-<th class="cellrowborder" valign="top" width="30.91%" id="mcps1.2.6.1.5"><p id="p169182258212"><a name="p169182258212"></a><a name="p169182258212"></a>Supported Product Forms</p>
+<th class="cellrowborder" valign="top" width="30.91%" id="mcps1.2.6.1.5"><p id="p169182258212"><a name="p169182258212"></a><a name="p169182258212"></a>Supported Product Form</p>
 </th>
 </tr>
 </thead>
@@ -688,8 +702,8 @@ This interface supports querying default metric groups and custom metric groups.
 <td class="cellrowborder" valign="top" width="11.59%" headers="mcps1.2.6.1.4 "><p id="p1191992510210"><a name="p1191992510210"></a><a name="p1191992510210"></a>Unit: MB/ms</p>
 </td>
 <td class="cellrowborder" rowspan="6" valign="top" width="30.91%" headers="mcps1.2.6.1.5 "><a name="ul64395165289"></a><a name="ul64395165289"></a><ul id="ul64395165289"><li><p id="li2043917168282p0"><a name="li2043917168282p0"></a><a name="li2043917168282p0"></a><term>Atlas A2 training products</term></p>
-</li><li><p id="li114396166286p0"><a name="li114396166286p0"></a><a name="li114396166286p0"></a><span id="ph1722042181618"><a name="ph1722042181618"></a><a name="ph1722042181618"></a>Atlas 800I A2 inference server</span></p>
-</li><li><p id="p258313228429"><a name="p258313228429"></a><a name="p258313228429"></a><span id="ph18642192315427"><a name="ph18642192315427"></a><a name="ph18642192315427"></a>A200I A2 Box heterogeneous subrack</span></p>
+</li><li><p id="li114396166286p0"><a name="li114396166286p0"></a><a name="li114396166286p0"></a><span id="ph1722042181618"><a name="ph1722042181618"></a><a name="ph1722042181618"></a>Atlas 800I A2</span></p>
+</li><li><p id="p258313228429"><a name="p258313228429"></a><a name="p258313228429"></a><span id="ph18642192315427"><a name="ph18642192315427"></a><a name="ph18642192315427"></a>A200I A2 Box</span></p>
 </li></ul>
 </td>
 </tr>
@@ -743,7 +757,7 @@ This interface supports querying default metric groups and custom metric groups.
 
 ## RoCE Data Information<a name="section184516450323"></a>
 
-**Table 10** RoCE data information
+**Table 11** RoCE data information
 
 <a name="table1562691116332"></a>
 <table><thead align="left"><tr id="row126261011133318"><th class="cellrowborder" valign="top" width="9.01%" id="mcps1.2.6.1.1"><p id="p149115619355"><a name="p149115619355"></a><a name="p149115619355"></a>Category</p>
@@ -754,7 +768,7 @@ This interface supports querying default metric groups and custom metric groups.
 </th>
 <th class="cellrowborder" valign="top" width="13.52%" id="mcps1.2.6.1.4"><p id="p59116653520"><a name="p59116653520"></a><a name="p59116653520"></a>Unit</p>
 </th>
-<th class="cellrowborder" valign="top" width="28.299999999999997%" id="mcps1.2.6.1.5"><p id="p199115623510"><a name="p199115623510"></a><a name="p199115623510"></a>Supported Product Forms</p>
+<th class="cellrowborder" valign="top" width="28.299999999999997%" id="mcps1.2.6.1.5"><p id="p199115623510"><a name="p199115623510"></a><a name="p199115623510"></a>Supported Product Form</p>
 </th>
 </tr>
 </thead>
@@ -766,7 +780,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="13.52%" headers="mcps1.2.6.1.4 "><p id="p1413585319348"><a name="p1413585319348"></a><a name="p1413585319348"></a>-</p>
 </td>
-<td class="cellrowborder" rowspan="21" valign="top" width="28.299999999999997%" headers="mcps1.2.6.1.5 "><a name="ul3135253123412"></a><a name="ul3135253123412"></a><ul id="ul3135253123412"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph1241332842611"><a name="ph1241332842611"></a><a name="ph1241332842611"></a>Atlas 800I A2 inference server</span></li><li><span id="ph6496152317452"><a name="ph6496152317452"></a><a name="ph6496152317452"></a>A200I A2 Box heterogeneous subrack</span></li></ul>
+<td class="cellrowborder" rowspan="21" valign="top" width="28.299999999999997%" headers="mcps1.2.6.1.5 "><a name="ul3135253123412"></a><a name="ul3135253123412"></a><ul id="ul3135253123412"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph1241332842611"><a name="ph1241332842611"></a><a name="ph1241332842611"></a>Atlas 800I A2</span></li><li><span id="ph6496152317452"><a name="ph6496152317452"></a><a name="ph6496152317452"></a>A200I A2 Box</span></li></ul>
 </td>
 </tr>
 <tr id="row762714116330"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p13135135314348"><a name="p13135135314348"></a><a name="p13135135314348"></a>RoCE</p>
@@ -954,7 +968,7 @@ This interface supports querying default metric groups and custom metric groups.
 
 ## SIO Data Information<a name="section7109037161515"></a>
 
-**Table 11**  SIO data information
+**Table 12** SIO data information
 
 <a name="table1910972371718"></a>
 <table><thead align="left"><tr id="row10109122321710"><th class="cellrowborder" valign="top" width="9.509999999999998%" id="mcps1.2.6.1.1"><p id="p18120184111178"><a name="p18120184111178"></a><a name="p18120184111178"></a>Category</p>
@@ -965,7 +979,7 @@ This interface supports querying default metric groups and custom metric groups.
 </th>
 <th class="cellrowborder" valign="top" width="17.509999999999998%" id="mcps1.2.6.1.4"><p id="p1212112418173"><a name="p1212112418173"></a><a name="p1212112418173"></a>Unit</p>
 </th>
-<th class="cellrowborder" valign="top" width="23.309999999999995%" id="mcps1.2.6.1.5"><p id="p12121204113171"><a name="p12121204113171"></a><a name="p12121204113171"></a>Supported Product Forms</p>
+<th class="cellrowborder" valign="top" width="23.309999999999995%" id="mcps1.2.6.1.5"><p id="p12121204113171"><a name="p12121204113171"></a><a name="p12121204113171"></a>Supported Product Form</p>
 </th>
 </tr>
 </thead>
@@ -977,7 +991,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="17.509999999999998%" headers="mcps1.2.6.1.4 "><p id="p10113449181711"><a name="p10113449181711"></a><a name="p10113449181711"></a>-</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="23.309999999999995%" headers="mcps1.2.6.1.5 "><ul><li><term>Atlas A3 training products</term></li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>
+<td class="cellrowborder" rowspan="2" valign="top" width="23.309999999999995%" headers="mcps1.2.6.1.5 "><ul><li><term>Atlas A3 training products</term></li><li><term>Ascend 950PR&950DT products</term></li></ul>
 </td>
 </tr>
 <tr id="row1111082310171"><td class="cellrowborder" valign="top" width="9.509999999999998%" headers="mcps1.2.6.1.1 "><p id="p10114204910174"><a name="p10114204910174"></a><a name="p10114204910174"></a>SIO</p>
@@ -994,7 +1008,7 @@ This interface supports querying default metric groups and custom metric groups.
 
 ## Optical Module Data Information<a name="section1517163183510"></a>
 
-**Table 12** Optical module data information
+**Table 13** Optical module data information
 
 <a name="table1379935213357"></a>
 <table><thead align="left"><tr id="row1279915521353"><th class="cellrowborder" valign="top" width="9.08%" id="mcps1.2.6.1.1"><p id="p570012555368"><a name="p570012555368"></a><a name="p570012555368"></a>Category</p>
@@ -1005,7 +1019,7 @@ This interface supports querying default metric groups and custom metric groups.
 </th>
 <th class="cellrowborder" valign="top" width="17.52%" id="mcps1.2.6.1.4"><p id="p5701115514361"><a name="p5701115514361"></a><a name="p5701115514361"></a>Unit</p>
 </th>
-<th class="cellrowborder" valign="top" width="26.889999999999997%" id="mcps1.2.6.1.5"><p id="p970175515360"><a name="p970175515360"></a><a name="p970175515360"></a>Supported Product Forms</p>
+<th class="cellrowborder" valign="top" width="26.889999999999997%" id="mcps1.2.6.1.5"><p id="p970175515360"><a name="p970175515360"></a><a name="p970175515360"></a>Supported Product Form</p>
 </th>
 </tr>
 </thead>
@@ -1018,7 +1032,7 @@ This interface supports querying default metric groups and custom metric groups.
 <td class="cellrowborder" valign="top" width="17.52%" headers="mcps1.2.6.1.4 "><p id="p12681133718365"><a name="p12681133718365"></a><a name="p12681133718365"></a>The value is 0 or 1.</p>
 <a name="ul14681837183617"></a><a name="ul14681837183617"></a><ul id="ul14681837183617"><li>0: Not present</li><li>1: Present</li></ul>
 </td>
-<td class="cellrowborder" rowspan="5" valign="top" width="26.889999999999997%" headers="mcps1.2.6.1.5 "><a name="ul1868114372365"></a><a name="ul1868114372365"></a><ul id="ul1868114372365"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><span id="ph1768263703612"><a name="ph1768263703612"></a><a name="ph1768263703612"></a>Atlas 900 A3 SuperPoD</span></li><li><span id="ph16373157182715"><a name="ph16373157182715"></a><a name="ph16373157182715"></a>Atlas 800I A2 inference server</span></li><li><span id="ph103551958184611"><a name="ph103551958184611"></a><a name="ph103551958184611"></a>A200I A2 Box heterogeneous subrack</span></li></ul>
+<td class="cellrowborder" rowspan="5" valign="top" width="26.889999999999997%" headers="mcps1.2.6.1.5 "><a name="ul1868114372365"></a><a name="ul1868114372365"></a><ul id="ul1868114372365"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><span id="ph1768263703612"><a name="ph1768263703612"></a><a name="ph1768263703612"></a>Atlas 900 A3 SuperPoD</span></li><li><span id="ph16373157182715"><a name="ph16373157182715"></a><a name="ph16373157182715"></a>Atlas 800I A2</span></li><li><span id="ph103551958184611"><a name="ph103551958184611"></a><a name="ph103551958184611"></a>A200I A2 Box</span></li></ul>
 </td>
 </tr>
 <tr id="row780035203510"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p7682143773611"><a name="p7682143773611"></a><a name="p7682143773611"></a>Optical Module</p>
@@ -1065,7 +1079,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="11.96119611961196%" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li></ul>
+<td class="cellrowborder" rowspan="3" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 850E</li><li>Atlas 850</li><li>Atlas 650E</li><li>Atlas 650</li><li>Atlas 950 SuperPoD Flex</li></ul>
 </td>
 </tr>
 <tr id="row184616483311"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>Optical Module</p>
@@ -1091,7 +1105,7 @@ This interface supports querying default metric groups and custom metric groups.
 
 ## DDR Data Information<a name="section114607361931169"></a>
 
-**Table 13** DDR data information
+**Table 14** DDR data information
 
 <a name="table1251541123212"></a>
 <table><thead align="left"><tr id="row152510419324"><th class="cellrowborder" valign="top" width="11.288871112888712%" id="mcps1.2.6.1.1"><p id="p191542026122120"><a name="p191542026122120"></a><a name="p191542026122120"></a>Category</p>
@@ -1102,7 +1116,7 @@ This interface supports querying default metric groups and custom metric groups.
 </th>
 <th class="cellrowborder" valign="top" width="11.668833116688331%" id="mcps1.2.6.1.4"><p id="p515513269215"><a name="p515513269215"></a><a name="p515513269215"></a>Unit</p>
 </th>
-<th class="cellrowborder" valign="top" width="23.707629237076294%" id="mcps1.2.6.1.5"><p id="p191558266210"><a name="p191558266210"></a><a name="p191558266210"></a>Supported Product Forms</p>
+<th class="cellrowborder" valign="top" width="23.707629237076294%" id="mcps1.2.6.1.5"><p id="p191558266210"><a name="p191558266210"></a><a name="p191558266210"></a>Supported Product Form</p>
 </th>
 </tr>
 </thead>
@@ -1134,7 +1148,7 @@ This interface supports querying default metric groups and custom metric groups.
 
 ## UB Data Information<a name="section998877563214"></a>
 
-**Table 14** UB Data Information
+**Table 15** UB Data Information
 
 <a name="table998877563214"></a>
 <table><thead align="left"><tr><th class="cellrowborder" valign="top" width="8.150815081508151%"><p>Category</p>
@@ -1145,7 +1159,7 @@ This interface supports querying default metric groups and custom metric groups.
 </th>
 <th class="cellrowborder" valign="top" width="11.96119611961196%"><p>Unit</p>
 </th>
-<th class="cellrowborder" valign="top" width="22.872287228722872%"><p>Supported Product Forms</p>
+<th class="cellrowborder" valign="top" width="22.872287228722872%"><p>Supported Product Form</p>
 </th>
 </tr>
 </thead>
@@ -1157,7 +1171,7 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 <td class="cellrowborder" valign="top" width="11.96119611961196%" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
-<td class="cellrowborder" rowspan="48" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 350 accelerator card (4 processor-meshed)</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>
+<td class="cellrowborder" rowspan="48" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><p><term>Ascend 950PR&950DT products</term></p><p>Atlas 350 accelerator cards support only 4 processor-meshed interconnection.</p>
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
@@ -1590,6 +1604,6 @@ This interface supports querying default metric groups and custom metric groups.
 
 NPU Exporter obtains corresponding information by calling the underlying HDK interfaces. For more details, refer to [HDK APIs Called by NPU Exporter.xlsx](../../../resource/HDK_APIs_called_by_NPU_Exporter.xlsx). To find the HDK interface corresponding to the data information, refer to the following steps.
 
-1. Log in to the [Ascend Computing Documentation](https://support.huawei.com/enterprise/en/category/ascend-computing-pid-1557196528909?submodel=doc) center, select and click the corresponding product name to enter the documentation page. For example, to search for the Atlas 800I A2 inference server documentation, click "Atlas 800I A2".
+1. Log in to the [Ascend Computing Documentation](https://support.huawei.com/enterprise/en/category/ascend-computing-pid-1557196528909?submodel=doc) center, select and click the corresponding product name to enter the documentation page. For example, to search for the Atlas 800I A2 documentation, click "Atlas 800I A2".
 2. Find "Secondary Development" in the left navigation bar.
 3. In the search bar on the document homepage, directly search for the corresponding interface name or keyword to obtain relevant information about the interface.

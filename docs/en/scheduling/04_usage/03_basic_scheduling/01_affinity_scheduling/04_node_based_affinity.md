@@ -14,7 +14,7 @@ To address the issue of downstream traffic conflicts on Spine switches in a Spin
 
 - Single-Layer Switch Affinity Scheduling
 
-    Supports Atlas 800I A2 inference servers and A200I A2 Box heterogeneous subracks in single-layer networking (only the Leaf layer, without the Spine layer). Single-layer switch affinity scheduling is used to select the most suitable nodes for distributed inference jobs.
+    Supports Atlas 800I A2 and A200I A2 Box in single-layer networking (only the Leaf layer, without the Spine layer). Single-layer switch affinity scheduling is used to select the most suitable nodes for distributed inference jobs.
 
 - Logical SuperPoD Affinity Scheduling
 
@@ -175,10 +175,11 @@ When a fault occurs on the node or Ascend AI processor where the job is located,
 - If no nodes in the logical SuperPoD have failed, the nodes under that logical SuperPoD must continue to be used during rescheduling.
 - If some nodes in the logical SuperPoD become faulty and unavailable, nodes are selected from the physical SuperPoD where they reside, while other nodes remain unchanged.
 - If the remaining nodes in the physical SuperPoD can no longer satisfy the logical SuperPoD requirements, all jobs on the logical SuperPoD are scheduled to other physical SuperPoDs.
+- If the soft affinity feature is enabled (that is, the `super-pod-affinity` parameter is set to `soft`, which allows the job to continue being scheduled using fragmented resources in the cluster when cluster resources do not satisfy SuperPoD affinity), Pod-level rescheduling is not supported.
 
 **MindIE Service Inference Job Scheduling<a name="section243084619505"></a>**
 
-For MindIE Service inference jobs, the following affinity scheduling policy is added. For detailed configuration instructions of this affinity scheduling policy, see the [Configuring Instance-Level Affinity Scheduling](../../06_mindie_motor_best_practice/01_deploying_mindie_motor.md#optional-configuring-instance-level-affinity-scheduling) section.
+For MindIE Service inference jobs, the following affinity scheduling policy is added. For detailed configuration instructions of this affinity scheduling policy, see the [Configuring Instance-Level Affinity Scheduling](../../07_mindie_motor_best_practice/01_deploying_mindie_motor.md#optional-configuring-instance-level-affinity-scheduling) section.
 
 - You can specify the `sp-block` field in the job YAML. The value of `sp-block` must be consistent with the number of job chips to ensure that the entire job is scheduled to one physical SuperPoD.
 
@@ -198,10 +199,11 @@ For MindIE Service inference jobs, the following affinity scheduling policy is a
 
 **Normal Job Scheduling<a name="section_logic_frame_normal"></a>**
 
-- You can specify the `ra-block` field in the job YAML to define the number of logical rack chips. For a single node, it must match the number of chips requested by the job. For distributed scenarios, it must be an integer multiple of the node chip count, and the total number of job chips must be an integer multiple of it. If you do not specify this field, Volcano will set the logical rack size of this job to the total number of NPUs on the node during scheduling.
+- You can specify the `ra-block` field in the job YAML to define the number of logical rack chips. The value of this field must be a power of 2. For a single node, it must match the number of chips requested by the job. For distributed scenarios, it must be an integer multiple of the node chip count, and the total number of job chips must be an integer multiple of it. If you do not specify this field, Volcano will set the logical rack size of this job to the total number of NPUs on the node during scheduling.
 
 **Fault Rescheduling**<a name="section_logic_frame_fault"></a>
 
 - If all nodes in the logical rack have no faults, the nodes under this logical rack must continue to be used during rescheduling.
 - If some nodes in the logical rack become faulty and unavailable, nodes are selected from the physical rack they belong to, while other nodes remain unchanged.
 - If the remaining nodes in the physical rack can no longer satisfy the logical rack requirements, all jobs on the logical rack are scheduled to other physical racks.
+- If the soft affinity feature is enabled (that is, the `super-pod-affinity` parameter is set to `soft`, which allows the job to continue being scheduled using fragmented resources in the cluster when cluster resources do not satisfy SuperPoD affinity), Pod-level rescheduling is not supported.

@@ -210,7 +210,9 @@ After installing MindIO ACP SDK, to leverage the cache acceleration capabilities
 - For MindSpeed-LLM framework preparation, see [MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/2.3.0). The matching Megatron-LM version is **core_v0.12.1**.
 
 > [!NOTE]
-> This release package is compatible with the **2.3.0** branch of MindSpeed-LLM. For environment, code, and dataset preparation, refer to the relevant guidance in the MindSpeed-LLM repository and ensure their security.
+>
+> - This release package is compatible with the **2.3.0** branch of MindSpeed-LLM. For environment, code, and dataset preparation, refer to the relevant guidance in the MindSpeed-LLM repository and ensure their security.
+> - When the periodic checkpoint acceleration feature of MindIO ACP is enabled in the MindSpeed-LLM framework, it is incompatible with MindIO TFT and the two cannot be installed and used at the same time.
 
 **Procedure**
 

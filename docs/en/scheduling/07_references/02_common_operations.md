@@ -52,6 +52,7 @@ Volcano supports native K8s scheduling and can use `nodeAffinity` for scheduling
     spec:
       schedulerName: volcano
       runPolicy:
+        ttlSecondsAfterFinished: 30
         schedulingPolicy:
           minAvailable: 2
           queue: default
@@ -364,7 +365,7 @@ If information similar to the following appears, the service is normal.
 
 Volcano collects internal chip faults, parameter plane network faults, and node fault information, and places them as external information in the K8s ConfigMap for external query and use.
 
-The query command is `kubectl describe cm -n volcano-system vcjob-fault-npu-cm`. The command output is as follows. For key parameterdescriptions, see [Table 2 vcjob-fault-npu-cm field description](../06_api/01_volcano.md#job-information).
+The query command is `kubectl describe cm -n volcano-system vcjob-fault-npu-cm`. The command output is as follows. For key parameter descriptions, see [Table 2 vcjob-fault-npu-cm field description](../06_api/01_volcano.md#job-information).
 
 ```ColdFusion
 Name:         vcjob-fault-npu-cm
@@ -421,7 +422,7 @@ kube-system   8s          Warning   Occur      pod/ascend-device-plugin-daemonse
 |TYPE|<p>Event type, with values of <span>"Normal"</span> and <span>"Warning"</span>.</p>|
 |REASON|<p>Reason for the event. The values are described as follows:</p><ul><li>Occur: fault occurrence</li><li>Recovery: Fault recovery</li><li>Notice: Notification</li></ul>|
 |OBJECT|<p>Event object, with the value specification of pod/<span><em>Ascend Device Plugin</em></span><em> Pod name</em>, such as pod/ascend-device-plugin-daemonset-910-dlpmv.</p>|
-|MESSAGE|<p>Description of the event information content. The fields of the event content are described as follows:</p><ul><li>nodeName: node name</li><li>assertion: information type<ul><li>Occur: fault occurrence</li><li>Recovery: Fault recovery</li><li>Notice: Notification</li></ul></li><li>cardID: NPU management unit ID (NPU device ID)</li><li>deviceID: Device number</li><li>faultCodes: Fault code, such as 8C084E00</li><li>faultLevelName: Fault level name<ul><li>NotHandleFault: no handling required</li><li>RestartRequest: <span>affect services execution; need to re-execute service requests</span></li><li>RestartBusiness: <span>affect services execution;</span> need to restart services</li><li>FreeRestartNPU: affect services execution; need to reset the chip when it is idle</li><li>RestartNPU: directly reset the chip and re-execute services</li><li>SeparateNPU: isolate chip</li><li>PreSeparateNPU: does not affect services temporarily, and no more jobs will be scheduled to this chip subsequently.</li><li>SubHealthFault: dandled according to the subHealthyStrategy parameter configured in the job YAML</li></ul></li><li>alarmRaisedTime: fault occurrence time</li></ul>|
+|MESSAGE|<p>Description of the event information content. The fields of the event content are described as follows:</p><ul><li>nodeName: node name</li><li>assertion: information type<ul><li>Occur: fault occurrence</li><li>Recovery: Fault recovery</li><li>Notice: Notification</li></ul></li><li>cardID: NPU management unit ID (NPU device ID)</li><li>deviceID: Device number</li><li>faultCodes: Fault code, such as 8C084E00</li><li>faultLevelName: Fault level name<ul><li>NotHandleFault: no handling required</li><li>RestartRequest: <span>affect services execution; need to re-execute service requests</span></li><li>RestartBusiness: <span>affect services execution;</span> need to restart services</li><li>FreeRestartNPU: affect services execution; need to reset the chip when it is idle</li><li>RestartNPU: directly reset the chip and re-execute services</li><li>SeparateNPU: isolate chip</li><li>PreSeparateNPU: does not affect services temporarily, and no more jobs will be scheduled to this chip subsequently.</li><li>SubHealthFault: handled according to the subHealthyStrategy parameter configured in the job YAML</li></ul></li><li>alarmRaisedTime: fault occurrence time</li></ul>|
 
 ### ClusterD<a name="ZH-CN_TOPIC_0000002511347035"></a>
 
@@ -431,7 +432,7 @@ ClusterD collects internal node faults, chip faults, and UnifiedBus device fault
 
 Query command: `kubectl describe cm -n mindx-dl cluster-info-node-cm`
 
-Taking the <term>Atlas A3 training products</term> as an example, the command output is as follows. The response parameters may vary for different devices, and the actual output shall prevail. For key parameter descriptions, see [Table 1 cluster-info-node-cm](../06_api/04_clusterd/00_cluster_resources.md#configmap-description).
+Taking the <term>Atlas A3 training products</term> as an example, the command output is as follows. The response parameters may vary for different devices, and the actual output shall prevail. For key parameter descriptions, see [Table 1 cluster-info-node-cm](../06_api/04_clusterd/00_cluster_resources.md#cluster-info-configmap-description).
 
 ```ColdFusion
 {"mindx-dl-nodeinfo-kwok-node-0":{"FaultDevList":[],"NodeStatus":"Healthy","CmName":"mindx-dl-nodeinfo-kwok-node-0"},"mindx-dl-deviceinfo-kwok-node-1001":{"FaultDevList":[],"NodeStatus":"Healthy","CmName":"mindx-dl-nodeinfo-kwok-node-1001"}}
@@ -441,9 +442,9 @@ Taking the <term>Atlas A3 training products</term> as an example, the command ou
 
 Query command: `kubectl describe cm -n mindx-dl cluster-info-device-${m}`
 
-*m* is an integer incrementing from 0. For every additional 1000 nodes in ae cluster, a new ConfigMap file `cluster-info-device-${m}` is added.
+*m* is an integer incrementing from 0. For every additional 1000 nodes in a cluster, a new ConfigMap file `cluster-info-device-${m}` is added.
 
-Taking the <term>Atlas A3 training products</term> as an example, the command output is as follows. The response parameters may vary for different devices, and the actual output shall prevail. For key parameter descriptions, see [Table 2 cluster-info-device-$\{m\}](../06_api/04_clusterd/00_cluster_resources.md#configmap-description).
+Taking the <term>Atlas A3 training products</term> as an example, the command output is as follows. The response parameters may vary for different devices, and the actual output shall prevail. For key parameter descriptions, see [Table 2 cluster-info-device-$\{m\}](../06_api/04_clusterd/00_cluster_resources.md#cluster-info-configmap-description).
 
 ```ColdFusion
 {"mindx-dl-deviceinfo-kwok-node-0":{"DeviceList":{"huawei.com/Ascend910":"Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7","huawei.com/Ascend910-NetworkUnhealthy":"","huawei.com/Ascend910-Unhealthy":""},"UpdateTime":1693899390,"CmName":"mindx-dl-deviceinfo-kwok-node-0","SuperPodID":0,"ServerIndex":0},"mindx-dl-deviceinfo-kwok-node-1001":{"DeviceList":{"huawei.com/Ascend910":"Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7","huawei.com/Ascend910-NetworkUnhealthy":"","huawei.com/Ascend910-Unhealthy":""},"UpdateTime":1693899390,"CmName":"mindx-dl-deviceinfo-kwok-node-1001","SuperPodID":0,"ServerIndex":0}}
@@ -472,6 +473,19 @@ Taking <term>Atlas A3 training products</term> as an example, the command output
 |UpdateTime|ConfigMap update time.|
 |NodeStatus|<p>Current node status.</p><ul><li>Healthy: The node is healthy.</li><li>SubHealthy: The node is pre-isolated. The current job is not processed, and subsequent jobs will no longer be scheduled to this node.</li><li>UnHealthy: The node is unhealthy. Isolate the node and reschedule jobs.</li></ul>|
 
+**UB NIC Fault<a name="section208771421688"></a>**
+
+Query command:
+`kubectl describe cm -n mindx-dl cluster-info-dpu-${m}`
+
+*m* is an integer incrementing from 0. For every additional 1000 nodes in a cluster, a new ConfigMap file `cluster-info-dpu-${m}` is added.
+
+Taking Atlas 950 SuperPoD as an example, the command output is as follows. The response parameters may vary for different devices, and the actual output shall prevail. For key parameter descriptions, see [ConfigMap Description](../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_configmap_k8s_rdma_shared_dev_plugin).
+
+```ColdFusion
+{"dpuinfo-<nodename>":{"DPUInfo":{"DPUList":[{"HcaName":"hrn5_0","EthName":"ens0f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[0]},{"HcaName":"hrn5_1","EthName":"ens0f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[2]},{"HcaName":"hrn5_2","EthName":"ens0f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[4]},{"HcaName":"hrn5_3","EthName":"ens0f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[6]},{"HcaName":"hrn5_4","EthName":"ens1f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[1]},{"HcaName":"hrn5_5","EthName":"ens1f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[3]},{"HcaName":"hrn5_6","EthName":"ens1f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[5]},{"HcaName":"hrn5_7","EthName":"ens1f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[7]}],"NodeEvent":{"NodeName":"<nodename>","FaultList":null}},"UpdateTime":1787715568988}}
+```
+
 ### NodeD<a name="ZH-CN_TOPIC_0000002511427003"></a>
 
 NodeD collects node fault information and node health status information, and places it as external information in a K8s ConfigMap for external query and use.
@@ -490,6 +504,26 @@ NodeInfo:
 ----
 {"NodeInfo":{"FaultDevList":[{"DeviceType":"CPU","DeviceId":1,"FaultCode":["00000011"],"FaultLevel":"SeparateFault"}],"NodeStatus":"UnHealthy"},"CheckCode":"3a2934c3cb875f2256c770c75a6fdf24594fcf64481ac6cd0d0f74b8fea88855"}
 Events:  <none>
+```
+
+### K8s RDMA Shared Dev Plugin<a name="ZH-CN_TOPIC_0000002511347042"></a>
+
+K8s RDMA Shared Dev Plugin collects fault information about UB NICs on a node, and places it as external information in a K8s ConfigMap for external query and use.
+
+The query command is `kubectl describe cm dpuinfo-<nodename> -n kube-system`. A command output is shown below. For key parameter descriptions, see [ConfigMap Description](../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_configmap_k8s_rdma_shared_dev_plugin).
+
+```ColdFusion
+Name:         dpuinfo-<nodename>
+Namespace:    kube-system
+Labels:       huawei.com/consumer.clusterd=true
+              mx-consumer-cim=true
+Annotations:  <none>
+
+Data
+====
+DpuInfoCfg:
+----
+{"DPUInfo":{"DPUList":[{"HcaName":"hrn5_0","EthName":"ens0f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[0]},{"HcaName":"hrn5_1","EthName":"ens0f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[2]},{"HcaName":"hrn5_2","EthName":"ens0f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[4]},{"HcaName":"hrn5_3","EthName":"ens0f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[6]},{"HcaName":"hrn5_4","EthName":"ens1f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[1]},{"HcaName":"hrn5_5","EthName":"ens1f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[3]},{"HcaName":"hrn5_6","EthName":"ens1f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[5]},{"HcaName":"hrn5_7","EthName":"ens1f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[7]}],"NodeEvent":{"NodeName":"<nodename>","FaultList":[]}},"UpdateTime":1787724959094}
 ```
 
 ## Creating an Image<a name="ZH-CN_TOPIC_0000002479227114"></a>
@@ -512,7 +546,7 @@ In the package name, *{version}* indicates the version, *{arch}* indicates the a
 |<p>Ascend-cann-<em>{chip_type}</em>-ops_<em>{version}</em>_linux-<em>{arch}</em>.run</p>|<p>CANN operator package.</p><p>Before CANN 8.5.0, this package was named Ascend-cann-kernels-<em>{chip_type}</em>_<em>{version}</em>_linux-<em>{arch}</em>.run</p>|[Download Link](https://www.hiascend.com/developer/download/community/result?module=cann)|
 |apex-0.1+ascend-cp3x-cp3x-linux_<em>{arch}</em>.whl|<p>Mixed precision module.</p><p>cp3x in the package name indicates the Python version. For example, x being 10 indicates Python 3.10.</p>|See the "[Installing the APEX Module](https://gitcode.com/Ascend/apex/blob/master/docs/en/installing_apex.md)" section in *Ascend Extension for PyTorch Software Installation Guide*, and compile the APEX software package based on the actual situation.|
 |<ul><li><span>x86_64</span>: torch-<em>v{version}</em>+cpu-cp3x-cp3x-linux_x86_64.whl</li><li><span>ARM</span>: torch-<em>v{version}</em>-cp3x-cp3x-manylinux_2_17_aarch64.manylinux2014_aarch64.whl</li></ul>|<p>Official <span>PyTorch</span> package.</p><p>cp3x in the package name indicates the Python version. For example, x being 10 indicates Python 3.10.</p><p><em>{version}</em> indicates the <span>PyTorch</span> version. Currently, <span>PyTorch</span> 2.1.0 to 2.7.1 is supported.</p>|<p>[Download Link](https://download.pytorch.org/whl/torch/)</p><p>Select the <span>PyTorch</span> version to install based on the actual situation.</p>|
-|<p>torch_npu-<em>v{version}</em><em>.</em>post<em>{version}</em>-cp3x-cp3x-manylinux_2_17_<em>{arch}</em>.manylinux2014_<em>{arch}</em>.whl</p>|<p><span>Ascend Extension for PyTorch</span> plugin.</p><p>cp3x in the package name indicates the Python version. For example, x being 10 indicates Python 3.10.</p>|<p>[Download Link](https://www.hiascend.com/document/detail/en/Pytorch/600/configandinstg/instg/insg_0001.html)</p><ul><li>Select a TorchNPU version that is compatible with <span>PyTorch</span>.</li><li>If using <span>PyTorch</span> models from the MindSpeed-LLM repository, <span>Ascend Extension for PyTorch</span> 2.1.0 or later is required.</li></ul>|
+|<p>torch_npu-<em>v{version}</em><em>.</em>post<em>{version}</em>-cp3x-cp3x-manylinux_2_17_<em>{arch}</em>.manylinux2014_<em>{arch}</em>.whl</p>|<p><span>Ascend Extension for PyTorch</span> plugin.</p><p>cp3x in the package name indicates the Python version. For example, x being 10 indicates Python 3.10.</p>|<p>[Download Link](https://www.hiascend.com/document/detail/en/Pytorch/latest/installguide/swinstall/docs/en/installation_guide/)</p><ul><li>Select a TorchNPU version that is compatible with <span>PyTorch</span>.</li><li>If using <span>PyTorch</span> models from the MindSpeed-LLM repository, <span>Ascend Extension for PyTorch</span> 2.1.0 or later is required.</li></ul>|
 |Dockerfile|Required for creating images.|Refer to [Dockerfile Writing Example](#zh-cn_topic_0000001497364957_li104026527188)|
 |dllogger-master|PyTorch logging tool.|[Download Link](https://github.com/NVIDIA/dllogger)|
 |ascend_install.info|Driver installation information file.|Copy the "/etc/ascend_install.info" file from the host.|
@@ -520,16 +554,6 @@ In the package name, *{version}* indicates the version, *{arch}* indicates the a
 |prebuild.sh|Performs preparation for training runtime environment installation, such as configuring proxies.|Refer to [Step 3](#zh-cn_topic_0000001497364957_zh-cn_topic_0256378845_li206652021677)|
 |install_ascend_pkgs.sh|Ascend software package installation script.|Refer to [Step 4](#zh-cn_topic_0000001497364957_zh-cn_topic_0256378845_li538351517716)|
 |postbuild.sh|Clears installation packages, scripts, proxy configurations, etc., that do not need to be kept in the container.|Refer to [Step 5](#zh-cn_topic_0000001497364957_zh-cn_topic_0256378845_li154641047879)|
-
-To prevent software packages from being maliciously tampered with during transmission or storage, you need to download the corresponding digital signature file for integrity verification when downloading the software packages.
-
-After downloading the software packages, refer to the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/doc/EDOC1100209376)* to perform PGP digital signature verification on the software packages downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers first.
-
-Before installing or upgrading using a software package, you must also verify the digital signature of the software package following the above process to ensure that the software package has not been tampered with.
-
-For carrier customers, please visit [https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction).
-
-For enterprise customers, please visit [https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054).
 
 >[!NOTE]
 >This chapter uses the Ubuntu OS with Python 3.10 and CANN 8.5.0 as an example to introduce the detailed process of building a container image using a Dockerfile. You need to modify the relevant steps according to the actual situation during use.
@@ -921,16 +945,6 @@ In the package name, *{version}* indicates the version number, *{arch}* indicate
 |prebuild.sh|Performs preparation for training runtime environment installation, such as configuring proxies.|Refer to [Step 3](#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li206652021677).|
 |install_ascend_pkgs.sh|Ascend software package installation script.|Refer to [Step 4](#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li538351517716).|
 |postbuild.sh|Clears installation packages, scripts, proxy configurations, and other items that do not need to be retained in the container.|Refer to [Step 5](#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li154641047879).|
-
-To prevent software packages from being maliciously tampered with during transmission or storage, you need to download the corresponding digital signature file for integrity verification when downloading the software package.
-
-After downloading the software package, refer to *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/doc/EDOC1100209376)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers for resolution first.
-
-Before installing or upgrading using a software package, you must also verify the digital signature of the software package as described above to ensure that it has not been tampered with.
-
-For carrier customers, please visit [https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction).
-
-For enterprise customers, please visit [https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054)
 
 >[!NOTE]
 >
@@ -1363,16 +1377,6 @@ In the package name, `{version}` indicates the version number, `{arch}` indicate
 > [!NOTE]
 > You need to prepare other software packages and code required for inference on your own.
 
-To prevent software packages from being maliciously tampered with during transmission or storage, you need to download the corresponding digital signature file for integrity verification when downloading software packages.
-
-After downloading the software package, refer to the *[OpenPGP Signature Verification Guide](https://support.huawei.com/enterprise/en/doc/EDOC1100209376)* to perform PGP digital signature verification on the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers for resolution first.
-
-Before using a software package for installation or upgrade, you also need to verify the digital signature of the software package following the above process to ensure that the software package has not been tampered with.
-
-For carrier customers, please visit [https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction).
-
-For enterprise customers, please visit [https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054).
-
 This section uses Ubuntu x86_64 as an example. The code in the following steps is sample code. You can customize it based on the examples, and it is recommended that you perform security hardening on the sample code and images. Refer to [Container Security Hardening](./04_security_hardening.md#container-security-hardening).
 
 **Procedure<a name="zh-cn_topic_0000001497364777_section9307172524312"></a>**
@@ -1680,8 +1684,7 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
                     tar -mzxf "/tmp/${UMDK_PKG}" -C /tmp/umdk_pkgs; \
                     rpm -ivh /tmp/umdk_pkgs/*.rpm; \
                 else \
-                    echo "warning: umdk package not provided, install from yum"; \
-                    yum install -y umdk-urma-bin umdk-urma-devel umdk-urma-lib umdk-urma-tools; \
+                    echo "note: umdk package not provided, it is necessary for unified bus scenario only"; \
                 fi && \
                 yum clean all && \
                 rm -rf /var/cache/yum && \
@@ -1705,8 +1708,7 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
                    tar -mzxf "/tmp/${UMDK_PKG}" -C /tmp/umdk_pkgs ; \
                    dpkg -i /tmp/umdk_pkgs/*.deb; \
                else \
-                   echo "error: umdk package not provided"; \
-                   exit 1; \
+                   echo "note: umdk package not provided, it is necessary for unified bus scenario only"; \
               fi && \
               apt-get clean && \
               rm -rf /var/lib/apt/lists/* && \

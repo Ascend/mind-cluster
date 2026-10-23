@@ -1,7 +1,5 @@
 # NPU Exporter Home Page<a name="ZH-CN_TOPIC_0000002479386854"></a>
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T01:44:21.039Z pushedAt=2026-06-09T02:05:50.667Z -->
-
 ## Function Description<a name="zh-cn_topic_0000001497524785_section1617874274411"></a>
 
 Basic information page of NPU Exporter.

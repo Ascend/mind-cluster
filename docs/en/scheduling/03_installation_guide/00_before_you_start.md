@@ -1,13 +1,11 @@
 # Before You Start <a name="ZH-CN_TOPIC_0000002511426285"></a>
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-09T02:15:13.036Z pushedAt=2026-06-09T06:22:06.880Z -->
-
 Before installing the components, you must read [Introduction](../01_introduction/00_overview.md) carefully to understand the detailed functions of each cluster scheduling component, and select the corresponding components to install based on the features you intend to use.
 
-The Elastic Agent, TaskD, and MindIO components must be deployed in containers. For detailed installation steps, see [Creating an Image](../04_usage/04_resumable_training/04_using_resumable_training_on_the_cli.md).
+The Elastic Agent, TaskD, and MindIO components must be deployed in containers. For detailed installation steps, see [Creating an Image](../04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/01_pytorch_examples_and_verification.md).
 
 >[!NOTE]
-> The Resilience Controller and Elastic Agent components have been deprecated. Content related to Resilience Controller will be removed in the version released on September 30, 2026; content related to Elastic Agent will be removed in the version released on December 30, 2026.
+> Elastic Agent has been deprecated. Its documents will be removed in the version released on December 30, 2026.
 
 ## Constraints <a name="section933252483715"></a>
 
@@ -18,14 +16,15 @@ The Elastic Agent, TaskD, and MindIO components must be deployed in containers. 
 
 ## Component Deployment Description<a name="section1563217510232"></a>
 
-When installing and deploying cluster scheduling components, you can refer to [Figure 1](#fig87391254145620) to install the corresponding components or other third-party software on the corresponding nodes. Most components are deployed using images; Ascend Docker Runtime and Container Manager are deployed using binaries; only NPU Exporter can be deployed using either images or binaries.
+When installing and deploying cluster scheduling components, you can refer to [Figure 1](#fig87391254145620) to install the corresponding components or other third-party software on the corresponding nodes. Most components are deployed using images; Ascend Docker Runtime and Container Manager are deployed using binaries; only NPU Exporter and DPU Exporter can be deployed using either images or binaries.
 
 **Figure 1** Component installation and deployment in the K8s environment<a name="fig87391254145620"></a>
 ![](../../figures/scheduling/installation_guide_001.png)
 
 >[!NOTE]
->MindCluster provides Volcano, which integrates the Ascend-volcano-plugin on top of the open-source Volcano.
->MindCluster provides K8s Rdma Shared Dev Plugin, which adds support for Huawei UB RDMA DPU device discovery and fault detection on the top of the open-source K8s Rdma Shared Dev Plugin.
+>
+>- MindCluster provides Volcano, which integrates the Ascend-volcano-plugin on top of the open-source Volcano.
+>- MindCluster provides K8s Rdma Shared Dev Plugin, which adds support for Huawei UB RDMA DPU device discovery and fault detection on the top of the open-source K8s Rdma Shared Dev Plugin.
 
 ## Log Path Description<a name="section4837236204914"></a>
 

@@ -25,6 +25,15 @@ Data is returned in the Prometheus-specific format. The relevant data informatio
 # HELP machine_npu_nums Amount of npu installed on the machine.
 # TYPE machine_npu_nums gauge
 machine_npu_nums 8
+# HELP machine_healthy_npu_nums Amount of healthy npu on the machine.
+# TYPE machine_healthy_npu_nums gauge
+machine_healthy_npu_nums 6
+# HELP machine_unhealthy_npu_nums Amount of unhealthy npu on the machine.
+# TYPE machine_unhealthy_npu_nums gauge
+machine_unhealthy_npu_nums 1
+# HELP machine_unknown_npu_nums Amount of the npus whose health status cannot be obtained via DCMI interface on the machine.
+# TYPE machine_unknown_npu_nums gauge
+machine_unknown_npu_nums 1
 # HELP machine_card_nums Amount of card installed on the machine.
 # TYPE machine_card_nums gauge
 machine_card_nums 8
@@ -51,7 +60,8 @@ This interface supports querying default metric groups and custom metric groups.
 - [NPU Data Information](#section1379685784314)
 - [Utilization Data Information](#section1379685784315)
 - [vNPU Data Information](#section81411161343)
-- [Network Data Information](#section630155191018)
+- [network_bandwidth Data Information](#section630155191018)
+- [network_link Data Information](#section630155191019)
 - [DDR Data Information](#section11460736193116)
 - [On-Chip Memory Data Information](#section82014427452)
 - [HCCS Data Information](#section9741133815914)
@@ -74,39 +84,10 @@ To understand the description of labels in the above data information, see [Data
 **Table 1** Version data information
 
 <a name="table81981837143713"></a>
-<table><thead align="left"><tr id="row319910378373"><th class="cellrowborder" valign="top" width="6.278116565030489%" id="mcps1.2.8.1.1"><p id="p622884917372"><a name="p622884917372"></a><a name="p622884917372"></a>Category</p>
-</th>
-<th class="cellrowborder" valign="top" width="19.794061781465558%" id="mcps1.2.8.1.2"><p id="p1322844963710"><a name="p1322844963710"></a><a name="p1322844963710"></a>Data Information Name</p>
-</th>
-<th class="cellrowborder" valign="top" width="16.7849645106468%" id="mcps1.2.8.1.3"><p id="p822864983718"><a name="p822864983718"></a><a name="p822864983718"></a>Data Information Description</p>
-</th>
-<th class="cellrowborder" valign="top" width="13.126062181345594%" id="mcps1.2.8.1.4"><p id="p92292490370"><a name="p92292490370"></a><a name="p92292490370"></a>Data Label</p>
-</th>
-<th class="cellrowborder" valign="top" width="7.807657702689193%" id="mcps1.2.8.1.5"><p id="p22291749183713"><a name="p22291749183713"></a><a name="p22291749183713"></a>Field Type</p>
-</th>
-<th class="cellrowborder" valign="top" width="17.234829551134656%" id="mcps1.2.8.1.6"><p id="p15229649123712"><a name="p15229649123712"></a><a name="p15229649123712"></a>Unit</p>
-</th>
-<th class="cellrowborder" valign="top" width="18.97430770768769%" id="mcps1.2.8.1.7"><p id="p1023084933716"><a name="p1023084933716"></a><a name="p1023084933716"></a>Supported Product Form</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row191991937123720"><td class="cellrowborder" valign="top" width="6.278116565030489%" headers="mcps1.2.8.1.1 "><p id="p96501612386"><a name="p96501612386"></a><a name="p96501612386"></a>Version</p>
-</td>
-<td class="cellrowborder" valign="top" width="19.794061781465558%" headers="mcps1.2.8.1.2 "><p id="p36502183811"><a name="p36502183811"></a><a name="p36502183811"></a>npu_exporter_version_info</p>
-</td>
-<td class="cellrowborder" valign="top" width="16.7849645106468%" headers="mcps1.2.8.1.3 "><p id="p1665017112386"><a name="p1665017112386"></a><a name="p1665017112386"></a><span id="ph122556224122"><a name="ph122556224122"></a><a name="ph122556224122"></a>NPU Exporter</span> version information</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.126062181345594%" headers="mcps1.2.8.1.4 "><p id="p146501619389"><a name="p146501619389"></a><a name="p146501619389"></a>exporterVersion: Current <span id="ph159901939141619"><a name="ph159901939141619"></a><a name="ph159901939141619"></a>NPU Exporter</span> version information</p>
-</td>
-<td class="cellrowborder" valign="top" width="7.807657702689193%" headers="mcps1.2.8.1.5 "><p id="p1650311389"><a name="p1650311389"></a><a name="p1650311389"></a>String</p>
-</td>
-<td class="cellrowborder" valign="top" width="17.234829551134656%" headers="mcps1.2.8.1.6 "><p id="p1965091173818"><a name="p1965091173818"></a><a name="p1965091173818"></a>1: Placeholder character, having no actual meaning.</p>
-</td>
-<td class="cellrowborder" valign="top" width="18.97430770768769%" headers="mcps1.2.8.1.7 "><ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2 inference server</li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+
+|Category|Data Information Name|Data Information Description|Data Label|Field Type|Unit|Supported Product Form|
+|------|-------------|-------------|-----------------|---------|------|---------------|
+|Version|npu_exporter_version_info|NPU Exporter version information|exporterVersion: Current NPU Exporter version information| String | 1: Placeholder character, having no actual meaning. |<ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
 
 ## Basic Node Information<a name="section17031652143620"></a>
 
@@ -114,7 +95,7 @@ To understand the description of labels in the above data information, see [Data
 
 |Category|Data Information Name|Data Information Description|Data Label|Field Type|Unit|Supported Product Form|
 |------|-------------|-------------|-----------------|---------|------|---------------|
-|nodeBase|node_base_info|Basic node information|<ul><li>exporterVersion: Current NPU Exporter version information</li><li>driverVersion: Driver version information</li></ul>| String | 1: Placeholder character, having no actual meaning. |<ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2 inference server</li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>|
+|nodeBase|node_base_info|Basic node information|<ul><li>exporterVersion: Current NPU Exporter version information</li><li>driverVersion: Driver version information</li><li>dcmiVersion: DCMI version information</li></ul>| String | 1: Placeholder character, having no actual meaning. |<ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
 
 ## NPU Data Information<a name="section1379685784314"></a>
 
@@ -145,7 +126,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p_machine_card_nums_unit">Unit: pcs</p>
 </td>
-<td class="cellrowborder" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li><span>Atlas 800I A2 inference server</span></li><li><span>A200I A2 Box heterogeneous subrack</span></li></ul>
+<td class="cellrowborder" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li><span>Atlas 800I A2</span></li><li><span>A200I A2 Box</span></li></ul>
 </td>
 </tr>
 <tr id="row14396115717449"><td class="cellrowborder" valign="top" width="8.43%" headers="mcps1.2.7.1.1 "><p id="p1214131124617"><a name="p1214131124617"></a><a name="p1214131124617"></a>NPU</p>
@@ -158,10 +139,43 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="10.77%" headers="mcps1.2.7.1.5 "><p id="p114201174619"><a name="p114201174619"></a><a name="p114201174619"></a>Unit: count</p>
 </td>
-<td class="cellrowborder" rowspan="12" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><a name="ul16872655115116"></a><a name="ul16872655115116"></a><ul id="ul16872655115116"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li></ul>
+<td class="cellrowborder" rowspan="15" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><a name="ul16872655115116"></a><a name="ul16872655115116"></a><ul id="ul16872655115116"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li></ul>
 <a name="ul13196335219"></a><a name="ul13196335219"></a><ul id="ul13196335219"><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li></ul>
-<a name="ul199548911521"></a><a name="ul199548911521"></a><ul id="ul199548911521"><li><term>Atlas inference products</term></li><li><span id="ph328863144019"><a name="ph328863144019"></a><a name="ph328863144019"></a>Atlas 800I A2 inference server</span></li></ul>
-<a name="ul12630181715213"></a><a name="ul12630181715213"></a><ul id="ul12630181715213"><li><span id="ph14798132394418"><a name="ph14798132394418"></a><a name="ph14798132394418"></a>A200I A2 Box heterogeneous subrack</span></li></ul><ul><li><span>Atlas 350 accelerator card</span></li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>
+<a name="ul199548911521"></a><a name="ul199548911521"></a><ul id="ul199548911521"><li><term>Atlas inference products</term></li><li><span id="ph328863144019"><a name="ph328863144019"></a><a name="ph328863144019"></a>Atlas 800I A2</span></li></ul>
+<a name="ul12630181715213"></a><a name="ul12630181715213"></a><ul id="ul12630181715213"><li><span id="ph14798132394418"><a name="ph14798132394418"></a><a name="ph14798132394418"></a>A200I A2 Box</span></li></ul><ul><li><term>Ascend 950PR&950DT products</term></li></ul>
+</td>
+</tr>
+<tr id="row_machine_healthy_npu_nums"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p_machine_healthy_npu_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p_machine_healthy_npu_nums_name">machine_healthy_npu_nums</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p_machine_healthy_npu_nums_desc">Number of healthy Ascend AI Processors</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p_machine_healthy_npu_nums_label">-</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p_machine_healthy_npu_nums_unit">Unit: count</p>
+</td>
+</tr>
+<tr id="row_machine_unhealthy_npu_nums"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p_machine_unhealthy_npu_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p_machine_unhealthy_npu_nums_name">machine_unhealthy_npu_nums</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p_machine_unhealthy_npu_nums_desc">Number of faulty Ascend AI Processors</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p_machine_unhealthy_npu_nums_label">-</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p_machine_unhealthy_npu_nums_unit">Unit: count</p>
+</td>
+</tr>
+<tr id="row_machine_unknown_npu_nums"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p_machine_unknown_npu_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p_machine_unknown_npu_nums_name">machine_unknown_npu_nums</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p_machine_unknown_npu_nums_desc">Number of Ascend AI Processors whose health status cannot be obtained via the DCMI</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p_machine_unknown_npu_nums_label">-</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p_machine_unknown_npu_nums_unit">Unit: count</p>
 </td>
 </tr>
 <tr id="row1679397191510"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p3433112131511"><a name="p3433112131511"></a><a name="p3433112131511"></a>NPU</p>
@@ -322,7 +336,7 @@ To understand the description of labels in the above data information, see [Data
 <td class="cellrowborder" valign="top" width="10.77%" headers="mcps1.2.7.1.5 "><p id="p1146982211711"><a name="p1146982211711"></a><a name="p1146982211711"></a>The value is 0, 1, or -1.</p>
 <a name="ul1469162261710"></a><a name="ul1469162261710"></a><ul id="ul1469162261710"><li>1: Healthy, reachable</li><li>0: Unhealthy, unreachable</li><li>-1: Unknown (DCMI call failure)</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><a name="ul221951194615"></a><a name="ul221951194615"></a><ul id="ul221951194615"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph1067265144615"><a name="ph1067265144615"></a><a name="ph1067265144615"></a>A200I A2 Box heterogeneous subrack</span></li><li><span id="ph16900101265315"><a name="ph16900101265315"></a><a name="ph16900101265315"></a>Atlas 800I A2 inference server</span></li></ul>
+<td class="cellrowborder" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><a name="ul221951194615"></a><a name="ul221951194615"></a><ul id="ul221951194615"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph1067265144615"><a name="ph1067265144615"></a><a name="ph1067265144615"></a>A200I A2 Box</span></li><li><span id="ph16900101265315"><a name="ph16900101265315"></a><a name="ph16900101265315"></a>Atlas 800I A2</span></li></ul>
 <p id="p1858910113463"><a name="p1858910113463"></a><a name="p1858910113463"></a></p>
 </td>
 </tr>
@@ -339,7 +353,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p621891154618"><a name="p621891154618"></a><a name="p621891154618"></a>Unit: MB</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 800I A2 inference server</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>
+<td class="cellrowborder" rowspan="2" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>A200I A2 Box</li><li>Atlas 800I A2</li><li><term>Ascend 950PR&950DT products</term></li></ul>
 <p id="p1858910113463"><a name="p1858910113463"></a><a name="p1858910113463"></a></p>
 </td>
 </tr>
@@ -380,11 +394,11 @@ To understand the description of labels in the above data information, see [Data
 
 | Category | Data Information Name | Data Information Description | Data Label | Unit | Supported Product Form |
 | --- | --- | --- | --- | --- | --- |
-| utilization | npu_chip_info_utilization | Ascend AI processor's AICore utilization | [Label 1](#table191895615241) | % |<ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2 inference server</li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>|
-| utilization | container_npu_utilization |AICore utilization of NPU with container information<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">Telegraf does not support reporting this metric</div></div>| [Label 1](#table191895615241) | % |<ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2 inference server</li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>|
-| utilization | npu_chip_info_vector_utilization | Ascend AI processor's AIVector utilization | [Label 1](#table191895615241) | % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2 inference server</li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>|
-| utilization | npu_chip_info_cube_utilization | Ascend AI processor's AICube utilization | [Label 1](#table191895615241) | % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2 inference server</li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>|
-| utilization | npu_chip_info_overall_utilization | Overall utilization of the Ascend AI Processor| [Label 1](#table191895615241) | % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2 inference server</li><li>A200I A2 Box heterogeneous subrack</li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>|
+| utilization | npu_chip_info_utilization | Ascend AI Processor's AICore utilization | [Label 1](#table191895615241) | % |<ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
+| utilization | container_npu_utilization |AICore utilization of NPU with container information<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">Telegraf does not support reporting this metric</div></div>| [Label 1](#table191895615241) | % |<ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
+| utilization | npu_chip_info_vector_utilization | Ascend AI processor's AIVector utilization | [Label 1](#table191895615241) | % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
+| utilization | npu_chip_info_cube_utilization | Ascend AI processor's AICube utilization | [Label 1](#table191895615241) | % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
+| utilization | npu_chip_info_overall_utilization | Overall utilization of the Ascend AI Processor| [Label 1](#table191895615241) | % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
 
 ## vNPU Data Information<a name="section81411161343"></a>
 
@@ -415,7 +429,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="10.43%" headers="mcps1.2.7.1.5 "><p id="p1835917279917"><a name="p1835917279917"></a><a name="p1835917279917"></a>Unit: %</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="20.18%" headers="mcps1.2.7.1.6 "><p id="p735982715917"><a name="p735982715917"></a><a name="p735982715917"></a><span id="ph19590185162111"><a name="ph19590185162111"></a><a name="ph19590185162111"></a><term>Atlas inference products</term></span></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="20.18%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas inference products</term></li><li><term>Atlas A2 products</term></li><li><term>Atlas A3 products</term></li></ul>
 </td>
 </tr>
 <tr id="row17703155715411"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p136032717910"><a name="p136032717910"></a><a name="p136032717910"></a>vNPU</p>
@@ -443,9 +457,9 @@ To understand the description of labels in the above data information, see [Data
 </tbody>
 </table>
 
-## Network Data Information<a name="section630155191018"></a>
+## network_bandwidth Data Information<a name="section630155191018"></a>
 
-**Table 6** Network data information
+**Table 6** network_bandwidth data information
 
 <a name="table164281059191110"></a>
 <table><thead align="left"><tr id="row5428155912116"><th class="cellrowborder" valign="top" width="11.21%" id="mcps1.1.7.1.1"><p id="p2429195912115"><a name="p2429195912115"></a><a name="p2429195912115"></a>Category</p>
@@ -462,7 +476,7 @@ To understand the description of labels in the above data information, see [Data
 </th>
 </tr>
 </thead>
-<tbody><tr id="row0429155915119"><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p id="p547216401235"><a name="p547216401235"></a><a name="p547216401235"></a>Network</p>
+<tbody><tr id="row0429155915119"><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p id="p547216401235"><a name="p547216401235"></a><a name="p547216401235"></a>network_bandwidth</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p id="p847284010318"><a name="p847284010318"></a><a name="p847284010318"></a>npu_chip_info_bandwidth_rx</p>
 <p id="p184729405313"><a name="p184729405313"></a><a name="p184729405313"></a></p>
@@ -474,10 +488,8 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p id="p188904163413"><a name="p188904163413"></a><a name="p188904163413"></a>Unit: MB/s</p>
 </td>
-<td class="cellrowborder" rowspan="5" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><a name="ul178907161943"></a><a name="ul178907161943"></a><ul id="ul178907161943"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph57012578543"><a name="ph57012578543"></a><a name="ph57012578543"></a>Atlas 800I A2 inference server</span></li><li><span id="ph1518064711478"><a name="ph1518064711478"></a><a name="ph1518064711478"></a>A200I A2 Box heterogeneous subrack</span></li></ul>
-</td>
-</tr>
-<tr id="row11943132171414"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p163872531349"><a name="p163872531349"></a><a name="p163872531349"></a>Network</p>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><a name="ul178907161943"></a><a name="ul178907161943"></a><ul id="ul178907161943"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph57012578543"><a name="ph57012578543"></a><a name="ph57012578543"></a>Atlas 800I A2</span></li><li><span id="ph1518064711478"><a name="ph1518064711478"></a><a name="ph1518064711478"></a>A200I A2 Box </span></li></ul>
+</td></tr><tr id="row11943132171414"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p163872531349"><a name="p163872531349"></a><a name="p163872531349"></a>network_bandwidth</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.2 "><p id="p173871953046"><a name="p173871953046"></a><a name="p173871953046"></a>npu_chip_info_bandwidth_tx</p>
 </td>
@@ -488,8 +500,71 @@ To understand the description of labels in the above data information, see [Data
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.5 "><p id="p15556656691"><a name="p15556656691"></a><a name="p15556656691"></a>Unit: MB/s</p>
 <p id="p1655613561890"><a name="p1655613561890"></a><a name="p1655613561890"></a></p>
 </td>
+</tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_bandwidth</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx_X_Y</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>Real-time RX rate of an Ascend AI Processor port. In the hccn_tool collection command used for this metric, the -time parameter is 100, and the bandwidth measurement period is 100 milliseconds. Here, X is the Udie ID and Y is the Port ID.</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">Label 1</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: MB/s</p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">Metric of the old version, supporting only Atlas 350 accelerator cards (4 processor-meshed).
+</td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_bandwidth</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx_X_Y</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>Real-time TX rate of an Ascend AI Processor port. In the hccn_tool collection command used for this metric, the -time parameter is 100, and the bandwidth measurement period is 100 milliseconds. Here, X is the Udie ID and Y is the Port ID.</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">Label 1</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: MB/s</p>
+</td>
+</tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_bandwidth</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>Real-time RX rate of an Ascend AI Processor port. In the hccn_tool collection command used for this metric, the -time parameter is 100, and the bandwidth measurement period is 100 milliseconds.</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">Label 8</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: MB/s</p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><p><term>Ascend 950PR&950DT products</term></p><p>Atlas 350 accelerator cards support only 4 processor-meshed interconnection.</p>
+</td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_bandwidth</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>Real-time TX rate of an Ascend AI Processor port. In the hccn_tool collection command used for this metric, the -time parameter is 100, and the bandwidth measurement period is 100 milliseconds.</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">Label 8</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: MB/s</p>
+</td>
+</tr></tbody>
+</table>
+
+## network_link Data Information<a name="section630155191019"></a>
+
+**Table  7** network_link data information
+
+<a name="table164281059191111"></a>
+<table><thead align="left"><tr id="row5428155912116"><th class="cellrowborder" valign="top" width="11.21%" id="mcps1.1.7.1.1"><p id="p2429195912115"><a name="p2429195912115"></a><a name="p2429195912115"></a>Category</p>
+</th>
+<th class="cellrowborder" valign="top" width="21.73%" id="mcps1.1.7.1.2"><p id="p64291159101114"><a name="p64291159101114"></a><a name="p64291159101114"></a>Data Information Name</p>
+</th>
+<th class="cellrowborder" valign="top" width="21.61%" id="mcps1.1.7.1.3"><p id="p5429759111115"><a name="p5429759111115"></a><a name="p5429759111115"></a>Data Information Description</p>
+</th>
+<th class="cellrowborder" valign="top" width="15.540000000000001%" id="mcps1.1.7.1.4"><p id="p942911590111"><a name="p942911590111"></a><a name="p942911590111"></a>Data Label</p>
+</th>
+<th class="cellrowborder" valign="top" width="10%" id="mcps1.1.7.1.5"><p id="p26148601218"><a name="p26148601218"></a><a name="p26148601218"></a>Unit</p>
+</th>
+<th class="cellrowborder" valign="top" width="19.91%" id="mcps1.1.7.1.6"><p id="p1424452617302"><a name="p1424452617302"></a><a name="p1424452617302"></a>Supported Product Form</p>
+</th>
 </tr>
-<tr id="row2097471041420"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p5177695400"><a name="p5177695400"></a><a name="p5177695400"></a>Network</p>
+</thead>
+<tbody><tr id="row2097471041420"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p5177695400"><a name="p5177695400"></a><a name="p5177695400"></a>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.2 "><p id="p1469741634018"><a name="p1469741634018"></a><a name="p1469741634018"></a>npu_chip_info_link_status</p>
 </td>
@@ -500,8 +575,8 @@ To understand the description of labels in the above data information, see [Data
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.5 "><p id="p18658038144417"><a name="p18658038144417"></a><a name="p18658038144417"></a>The value is 0, 1, or -1.</p>
 <a name="ul136589389444"></a><a name="ul136589389444"></a><ul id="ul136589389444"><li>1: UP</li><li>0: DOWN</li><li>-1: Unknown (hccn_tool call failed)</li></ul>
 </td>
-</tr>
-<tr id="row128958179146"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p1895101717145"><a name="p1895101717145"></a><a name="p1895101717145"></a>Network</p>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><a name="ul178907161943"></a><a name="ul178907161943"></a><ul id="ul178907161943"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph57012578543"><a name="ph57012578543"></a><a name="ph57012578543"></a>Atlas 800I A2</span></li><li><span id="ph1518064711478"><a name="ph1518064711478"></a><a name="ph1518064711478"></a>A200I A2</span></li></ul>
+</td></tr><tr id="row128958179146"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p1895101717145"><a name="p1895101717145"></a><a name="p1895101717145"></a>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.2 "><p id="p116111121174615"><a name="p116111121174615"></a><a name="p116111121174615"></a>npu_chip_link_speed</p>
 </td>
@@ -511,8 +586,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.5 "><p id="p728312308482"><a name="p728312308482"></a><a name="p728312308482"></a>Unit: MB/s</p>
 </td>
-</tr>
-<tr id="row1063192616140"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p12632265145"><a name="p12632265145"></a><a name="p12632265145"></a>Network</p>
+</tr><tr id="row1063192616140"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p12632265145"><a name="p12632265145"></a><a name="p12632265145"></a>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.2 "><p id="p460342419500"><a name="p460342419500"></a><a name="p460342419500"></a>npu_chip_link_up_num</p>
 </td>
@@ -522,8 +596,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.5 "><p id="p142831501527"><a name="p142831501527"></a><a name="p142831501527"></a>Unit: times</p>
 </td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+</tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_status_X_Y</p>
 </td>
@@ -533,32 +606,8 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>The value is 0, 1, or -1.</p><ul><li>1: UP</li><li>0: DOWN</li><li>-1: Unknown (hccn_tool invocation failed)</li></ul>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">Metrics of the old version, supporting only Atlas 350 accelerator card (4 processor-meshed).
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx_X_Y</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>Real-time receive rate of the Ascend AI processor port. In the hccn_tool collection command used for this metric, the -time parameter is set to 100, and the bandwidth measurement period is 100 milliseconds.</p><p>X is the Udie ID and Y is the Port ID.</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">Label 1</a></p>
-</td>
-<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: MB/s</p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx_X_Y</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>Real-time transmit rate of the Ascend AI processor port. In the hccn_tool collection command used for this metric, the -time parameter is set to 100, and the bandwidth measurement period is 100 milliseconds.</p><p> X is the Udie ID and Y is the Port ID.</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">Label 1</a></p>
-</td>
-<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: MB/s</p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">Metric of the old version, supporting only Atlas 350 accelerator cards (4 processor-meshed).
+</td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_speed_X_Y</p>
 </td>
@@ -568,8 +617,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: G</p>
 </td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+</tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_status</p>
 </td>
@@ -579,32 +627,8 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>The value is 0, 1, or -1.</p><ul><li>1: UP</li><li>0: DOWN</li><li>-1: Unknown (hccn_tool invocation failed)</li></ul>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><ul><li>Atlas 350 accelerator card (4 processor-meshed)</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>Real-time receive rate of the Ascend AI processor port. In the hccn_tool collection command used for this metric, the -time parameter is set to 100, and the bandwidth measurement period is 100 milliseconds. </p>
-</td>
-<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">Label 8</a></p>
-</td>
-<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: MB/s </p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>Real-time transmit rate of the Ascend AI processor port. In the hccn_tool collection command used for this metric, the -time parameter is set to 100, and the bandwidth measurement period is 100 milliseconds.</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">Label 8</a></p>
-</td>
-<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: MB/s </p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><p><term>Ascend 950PR&950DT products</term></p><p>Atlas 350 accelerator cards support only 4 processor-meshed interconnection.</p>
+</td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_speed</p>
 </td>
@@ -614,13 +638,12 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: G</p>
 </td>
-</tr>
-</tbody>
+</tr></tbody>
 </table>
 
 ## DDR Data Information<a name="section11460736193116"></a>
 
-**Table 7** DDR data information
+**Table 8** DDR data information
 
 <a name="table1251541123212"></a>
 <table><thead align="left"><tr id="row152510419324"><th class="cellrowborder" valign="top" width="9.460946094609461%" id="mcps1.2.7.1.1"><p id="p7637172411347"><a name="p7637172411347"></a><a name="p7637172411347"></a>Category</p>
@@ -666,7 +689,7 @@ To understand the description of labels in the above data information, see [Data
 
 ## On-Chip Memory Data Information<a name="section82014427452"></a>
 
-**Table 8**  On-chip memory data information
+**Table 9** On-chip memory data information
 
 <a name="table1989710355466"></a>
 <table><thead align="left"><tr id="row10898113515468"><th class="cellrowborder" valign="top" width="7.370000000000002%" id="mcps1.2.7.1.1"><p id="p19552123871112"><a name="p19552123871112"></a><a name="p19552123871112"></a>Category</p>
@@ -696,7 +719,7 @@ To understand the description of labels in the above data information, see [Data
 <td class="cellrowborder" valign="top" width="10.4%" headers="mcps1.2.7.1.5 "><p id="p138871313174819"><a name="p138871313174819"></a><a name="p138871313174819"></a>Unit: MB</p>
 <p id="p649111418488"><a name="p649111418488"></a><a name="p649111418488"></a></p>
 </td>
-<td class="cellrowborder" rowspan="12" valign="top" width="20.150000000000006%" headers="mcps1.2.7.1.6 "><a name="ul588814137484"></a><a name="ul588814137484"></a><ul id="ul588814137484"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph043025116483"><a name="ph043025116483"></a><a name="ph043025116483"></a>A200I A2 Box heterogeneous subrack</span></li><li><span id="ph19520133125919"><a name="ph19520133125919"></a><a name="ph19520133125919"></a>Atlas 800I A2 inference server</span></li></ul><ul><li><span>Atlas 350 accelerator card</span></li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>
+<td class="cellrowborder" rowspan="12" valign="top" width="20.150000000000006%" headers="mcps1.2.7.1.6 "><a name="ul588814137484"></a><a name="ul588814137484"></a><ul id="ul588814137484"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph043025116483"><a name="ph043025116483"></a><a name="ph043025116483"></a>A200I A2 Box</span></li><li><span id="ph19520133125919"><a name="ph19520133125919"></a><a name="ph19520133125919"></a>Atlas 800I A2</span></li></ul><ul><li><term>Ascend 950PR&950DT products</term></li></ul>
 <p id="p1393532018545"><a name="p1393532018545"></a><a name="p1393532018545"></a></p>
 <p id="p674513211898"><a name="p674513211898"></a><a name="p674513211898"></a></p>
 <p id="p25074235513"><a name="p25074235513"></a><a name="p25074235513"></a></p>
@@ -841,7 +864,7 @@ To understand the description of labels in the above data information, see [Data
 
 ## HCCS Data Information<a name="section9741133815914"></a>
 
-**Table 9**  HCCS data information
+**Table 10** HCCS data information
 
 <a name="table812924831013"></a>
 <table><thead align="left"><tr id="row6130748141017"><th class="cellrowborder" valign="top" width="7.76%" id="mcps1.2.7.1.1"><p id="p93074164111"><a name="p93074164111"></a><a name="p93074164111"></a>Category</p>
@@ -861,7 +884,7 @@ To understand the description of labels in the above data information, see [Data
 <tbody><tr id="row51311483103"><td class="cellrowborder" valign="top" width="7.76%" headers="mcps1.2.7.1.1 "><p id="p192174718131"><a name="p192174718131"></a><a name="p192174718131"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" width="26.200000000000003%" headers="mcps1.2.7.1.2 "><p id="p1313153991311"><a name="p1313153991311"></a><a name="p1313153991311"></a>npu_chip_info_hccs_statistic_info_tx_cnt_X</p>
-<p id="p104597463146"><a name="p104597463146"></a><a name="p104597463146"></a>Range of X: 1~7 (<term>Atlas A2 training products</term> or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD cluster computing system)</p>
+<p id="p104597463146"><a name="p104597463146"></a><a name="p104597463146"></a>Range of X: 1~7 (<term>Atlas A2 training products</term> or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD)</p>
 </td>
 <td class="cellrowborder" valign="top" width="25.53%" headers="mcps1.2.7.1.3 "><a name="ul64654414321"></a><a name="ul64654414321"></a><ul id="ul64654414321"><li>Number of packets sent on the X-th HDLC link, in flit.</li><li>-1 is reported if collection fails.</li></ul>
 </td>
@@ -875,7 +898,7 @@ To understand the description of labels in the above data information, see [Data
 <tr id="row1134048201013"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p131591118181"><a name="p131591118181"></a><a name="p131591118181"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p8269148191816"><a name="p8269148191816"></a><a name="p8269148191816"></a>npu_chip_info_hccs_statistic_info_rx_cnt_X</p>
-<p id="p19920451111518"><a name="p19920451111518"></a><a name="p19920451111518"></a>Range of X: 1~7 (<term>Atlas A2 training products</term> or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD cluster computing system)</p>
+<p id="p19920451111518"><a name="p19920451111518"></a><a name="p19920451111518"></a>Range of X: 1~7 (<term>Atlas A2 training products</term> or Atlas 900 A3 SuperPoD), 2~7 (Atlas 9000 A3 SuperPoD)</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><a name="ul14760124163111"></a><a name="ul14760124163111"></a><ul id="ul14760124163111"><li>Number of packets received on the X-th HDLC link, in flit.</li><li>-1 is reported if collection fails.</li></ul>
 </td>
@@ -887,7 +910,7 @@ To understand the description of labels in the above data information, see [Data
 <tr id="row111434263218"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p1582372462510"><a name="p1582372462510"></a><a name="p1582372462510"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p082322414251"><a name="p082322414251"></a><a name="p082322414251"></a>npu_chip_info_hccs_statistic_info_crc_err_cnt_X</p>
-<p id="p9478114473615"><a name="p9478114473615"></a><a name="p9478114473615"></a>Range of X: 1~7 (<term>Atlas A2 training products</term>, <span id="ph1519015228918"><a name="ph1519015228918"></a><a name="ph1519015228918"></a>Atlas 900 A3 SuperPoD</span>), 2~7 (Atlas 9000 A3 SuperPoD cluster computing system)</p>
+<p id="p9478114473615"><a name="p9478114473615"></a><a name="p9478114473615"></a>Range of X: 1~7 (<term>Atlas A2 training products</term>, <span id="ph1519015228918"><a name="ph1519015228918"></a><a name="ph1519015228918"></a>Atlas 900 A3 SuperPoD</span>), 2~7 (Atlas 9000 A3 SuperPoD)</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><a name="ul5374194612915"></a><a name="ul5374194612915"></a><ul id="ul5374194612915"><li>CRC error in received packets on the X‑th HDLC link, in flit.</li><li>-1 is reported upon collection failure.</li></ul>
 </td>
@@ -933,7 +956,7 @@ To understand the description of labels in the above data information, see [Data
 <tr id="row3533195313714"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p23261414161118"><a name="p23261414161118"></a><a name="p23261414161118"></a>HCCS</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p9326014101111"><a name="p9326014101111"></a><a name="p9326014101111"></a>npu_chip_info_hccs_bandwidth_info_tx_X</p>
-<p id="p1048653410101"><a name="p1048653410101"></a><a name="p1048653410101"></a>Range of X: 1~7(<term>Atlas A2 training products</term>, <span id="ph5486133415104"><a name="ph5486133415104"></a><a name="ph5486133415104"></a>Atlas 900 A3 SuperPoD</span>), 2~7(Atlas 9000 A3 SuperPoD cluster computing system)</p>
+<p id="p1048653410101"><a name="p1048653410101"></a><a name="p1048653410101"></a>Range of X: 1~7(<term>Atlas A2 training products</term>, <span id="ph5486133415104"><a name="ph5486133415104"></a><a name="ph5486133415104"></a>Atlas 900 A3 SuperPoD</span>), 2~7(Atlas 9000 A3 SuperPoD)</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p16326161421112"><a name="p16326161421112"></a><a name="p16326161421112"></a>TX data bandwidth for a single HCCS link. -1 is reported if collection fails.</p>
 </td>
@@ -946,7 +969,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p1916181418136"><a name="p1916181418136"></a><a name="p1916181418136"></a>npu_chip_info_hccs_bandwidth_info_rx_X</p>
 <p id="p1161714161312"><a name="p1161714161312"></a><a name="p1161714161312"></a></p>
-<p id="p1110523181119"><a name="p1110523181119"></a><a name="p1110523181119"></a>Range of X: 1~7 (<term>Atlas A2 training products</term>, <span id="ph1811015231112"><a name="ph1811015231112"></a><a name="ph1811015231112"></a>Atlas 900 A3 SuperPoD</span>), 2~7 (Atlas 9000 A3 SuperPoD cluster computing system)</p>
+<p id="p1110523181119"><a name="p1110523181119"></a><a name="p1110523181119"></a>Range of X: 1~7 (<term>Atlas A2 training products</term>, <span id="ph1811015231112"><a name="ph1811015231112"></a><a name="ph1811015231112"></a>Atlas 900 A3 SuperPoD</span>), 2~7 (Atlas 9000 A3 SuperPoD)</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p191681411135"><a name="p191681411135"></a><a name="p191681411135"></a>RX data bandwidth of a single HCCS link. -1 is reported if collection fails.</p>
 </td>
@@ -960,7 +983,7 @@ To understand the description of labels in the above data information, see [Data
 
 ## PCIe Data Information<a name="section124052024182413"></a>
 
-**Table 10** PCIe data information
+**Table 11** PCIe data information
 
 <a name="table1341911380255"></a>
 <table><thead align="left"><tr id="row941993842520"><th class="cellrowborder" valign="top" width="7.080000000000002%" id="mcps1.2.7.1.1"><p id="p3550823152717"><a name="p3550823152717"></a><a name="p3550823152717"></a>Category</p>
@@ -989,7 +1012,7 @@ To understand the description of labels in the above data information, see [Data
 <td class="cellrowborder" valign="top" width="12.440000000000001%" headers="mcps1.2.7.1.5 "><p id="p11437141652810"><a name="p11437141652810"></a><a name="p11437141652810"></a>Unit: MB/ms</p>
 <p id="p1159519168288"><a name="p1159519168288"></a><a name="p1159519168288"></a></p>
 </td>
-<td class="cellrowborder" rowspan="6" valign="top" width="21.91%" headers="mcps1.2.7.1.6 "><a name="ul64395165289"></a><a name="ul64395165289"></a><ul id="ul64395165289"><li><term>Atlas A2 training products</term></li><li><span id="ph9506329133010"><a name="ph9506329133010"></a><a name="ph9506329133010"></a>Atlas 800I A2 inference server</span></li><li><span id="ph83840211502"><a name="ph83840211502"></a><a name="ph83840211502"></a>A200I A2 Box heterogeneous subrack</span></li></ul>
+<td class="cellrowborder" rowspan="6" valign="top" width="21.91%" headers="mcps1.2.7.1.6 "><a name="ul64395165289"></a><a name="ul64395165289"></a><ul id="ul64395165289"><li><term>Atlas A2 training products</term></li><li><span id="ph9506329133010"><a name="ph9506329133010"></a><a name="ph9506329133010"></a>Atlas 800I A2</span></li><li><span id="ph83840211502"><a name="ph83840211502"></a><a name="ph83840211502"></a>A200I A2 Box</span></li><li><span id="ph83840211502"><a name="ph83840211502"></a><a name="ph83840211502"></a>Atlas 350 accelerator card</span></li></ul>
 </td>
 </tr>
 <tr id="row34233384255"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p12447181662811"><a name="p12447181662811"></a><a name="p12447181662811"></a>PCIe</p>
@@ -1055,7 +1078,7 @@ To understand the description of labels in the above data information, see [Data
 
 ## RoCE Data Information<a name="section2080452819294"></a>
 
-**Table 11** RoCE data information
+**Table 12** RoCE data information
 
 <a name="table16943172263012"></a>
 <table><thead align="left"><tr id="row11943122133012"><th class="cellrowborder" valign="top" width="8.52%" id="mcps1.2.7.1.1"><p id="p14944105716305"><a name="p14944105716305"></a><a name="p14944105716305"></a>Category</p>
@@ -1083,7 +1106,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="10.36%" headers="mcps1.2.7.1.5 "><p id="p78527532154"><a name="p78527532154"></a><a name="p78527532154"></a>-</p>
 </td>
-<td class="cellrowborder" rowspan="21" valign="top" width="24.23%" headers="mcps1.2.7.1.6 "><a name="ul199447020331"></a><a name="ul199447020331"></a><ul id="ul199447020331"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph5953105733115"><a name="ph5953105733115"></a><a name="ph5953105733115"></a>Atlas 800I A2 inference server</span></li><li><span id="ph1247784012511"><a name="ph1247784012511"></a><a name="ph1247784012511"></a>A200I A2 Box heterogeneous subrack</span></li></ul>
+<td class="cellrowborder" rowspan="21" valign="top" width="24.23%" headers="mcps1.2.7.1.6 "><a name="ul199447020331"></a><a name="ul199447020331"></a><ul id="ul199447020331"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li><span id="ph5953105733115"><a name="ph5953105733115"></a><a name="ph5953105733115"></a>Atlas 800I A2</span></li><li><span id="ph1247784012511"><a name="ph1247784012511"></a><a name="ph1247784012511"></a>A200I A2 Box</span></li></ul>
 <p id="p152876112332"><a name="p152876112332"></a><a name="p152876112332"></a></p>
 </td>
 </tr>
@@ -1322,7 +1345,7 @@ To understand the description of labels in the above data information, see [Data
 
 ## SIO Data Information<a name="section1773315620217"></a>
 
-**Table 12**  SIO data information
+**Table 13** SIO data information
 
 <a name="table128661257212"></a>
 <table><thead align="left"><tr id="row886614251216"><th class="cellrowborder" valign="top" width="8.16%" id="mcps1.2.7.1.1"><p id="p7564115242211"><a name="p7564115242211"></a><a name="p7564115242211"></a>Category</p>
@@ -1349,7 +1372,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="9.180000000000001%" headers="mcps1.2.7.1.5 "><p id="p0112152802316"><a name="p0112152802316"></a><a name="p0112152802316"></a>-</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="19.689999999999998%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas A3 training products</term></li><li>Atlas 350 accelerator card</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>
+<td class="cellrowborder" rowspan="2" valign="top" width="19.689999999999998%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas A3 training products</term></li><li><term>Ascend 950PR&950DT products</term></li></ul>
 <p id="p181568282234"><a name="p181568282234"></a><a name="p181568282234"></a></p>
 </td>
 </tr>
@@ -1369,7 +1392,7 @@ To understand the description of labels in the above data information, see [Data
 
 ## Optical Module Data Information<a name="section1692536163118"></a>
 
-**Table 13** Optical module data information
+**Table 14** Optical module data information
 
 <a name="table1845716484313"></a>
 <table><thead align="left"><tr id="row17457848123120"><th class="cellrowborder" valign="top" width="8.150815081508151%" id="mcps1.2.7.1.1"><p id="p1360995513110"><a name="p1360995513110"></a><a name="p1360995513110"></a>Category</p>
@@ -1397,8 +1420,8 @@ To understand the description of labels in the above data information, see [Data
 <td class="cellrowborder" valign="top" width="11.96119611961196%" headers="mcps1.2.7.1.5 "><p id="p20129112123513"><a name="p20129112123513"></a><a name="p20129112123513"></a>The value is 0 or 1.</p>
 <a name="ul5129202143514"></a><a name="ul5129202143514"></a><ul id="ul5129202143514"><li>0: Not present</li><li>1: Present</li></ul>
 </td>
-<td class="cellrowborder" rowspan="5" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><a name="ul151317217352"></a><a name="ul151317217352"></a><ul id="ul151317217352"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><span id="ph113282153511"><a name="ph113282153511"></a><a name="ph113282153511"></a>Atlas 900 A3 SuperPoD</span></li><li><p id="p1546725019404"><a name="p1546725019404"></a><a name="p1546725019404"></a><span id="ph19390121883919"><a name="ph19390121883919"></a><a name="ph19390121883919"></a>Atlas 800I A2 inference server</span></p>
-</li><li><span id="ph11463114805219"><a name="ph11463114805219"></a><a name="ph11463114805219"></a>A200I A2 Box Heterogeneous Subrack</span></li></ul>
+<td class="cellrowborder" rowspan="5" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><a name="ul151317217352"></a><a name="ul151317217352"></a><ul id="ul151317217352"><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><span id="ph113282153511"><a name="ph113282153511"></a><a name="ph113282153511"></a>Atlas 900 A3 SuperPoD</span></li><li><p id="p1546725019404"><a name="p1546725019404"></a><a name="p1546725019404"></a><span id="ph19390121883919"><a name="ph19390121883919"></a><a name="ph19390121883919"></a>Atlas 800I A2</span></p>
+</li><li><span id="ph11463114805219"><a name="ph11463114805219"></a><a name="ph11463114805219"></a>A200I A2 Box</span></li></ul>
 <p id="p0608021173520"><a name="p0608021173520"></a><a name="p0608021173520"></a></p>
 </td>
 </tr>
@@ -1457,7 +1480,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="11.96119611961196%" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li></ul>
+<td class="cellrowborder" rowspan="3" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 850E</li><li>Atlas 850</li><li>Atlas 650E</li><li>Atlas 650</li><li>Atlas 950 SuperPoD Flex</li></ul>
 </td>
 </tr>
 <tr id="row184616483311"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>Optical Module</p>
@@ -1487,7 +1510,7 @@ To understand the description of labels in the above data information, see [Data
 
 ## UB Data Information<a name="section9638996666653"></a>
 
-**Table 14** UB data information
+**Table 15** UB data information
 
 <a name="table9638996666653"></a>
 <table><thead align="left"><tr><th class="cellrowborder" valign="top" width="8.150815081508151%"><p>Category</p>
@@ -2044,7 +2067,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
-<td class="cellrowborder" rowspan="48" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 350 accelerator card (4 processor-meshed)</li><li>Atlas 850E SuperPoD</li><li>Atlas 650E server</li><li>Atlas 950 SuperPoD</li></ul>
+<td class="cellrowborder" rowspan="48" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><p><term>Ascend 950PR&950DT products</term></p><p>Atlas 350 accelerator cards support only 4 processor-meshed interconnection.</p>
 </td>
 </tr>
 <tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
@@ -2571,7 +2594,7 @@ To understand the description of labels in the above data information, see [Data
 
 The data labels used in the above tables are described as follows.
 
-**Table 15**  Data label information
+**Table 16** Data label information
 
 <a name="table191895615241"></a>
 <table><thead align="left"><tr id="row8191356112418"><th class="cellrowborder" valign="top" width="9.43%" id="mcps1.2.4.1.1"><p id="p1919205692417"><a name="p1919205692417"></a><a name="p1919205692417"></a>Label</p>
@@ -2584,7 +2607,7 @@ The data labels used in the above tables are described as follows.
 </thead>
 <tbody><tr id="row191916565240"><td class="cellrowborder" rowspan="7" valign="top" width="9.43%" headers="mcps1.2.4.1.1 "><p id="p11251921132717"><a name="p11251921132717"></a><a name="p11251921132717"></a>Label 1</p>
 </td>
-<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p id="p845273212520"><a name="p845273212520"></a><a name="p845273212520"></a>container_name: Container name</p>
+<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p id="p845273212520"><a name="p845273212520"></a><a name="p845273212520"></a>container_name: Container name. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p id="p445233232518"><a name="p445233232518"></a><a name="p445233232518"></a>String</p>
 </td>
@@ -2599,7 +2622,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p143931839928"><a name="p143931839928"></a><a name="p143931839928"></a>String</p>
 </td>
 </tr>
-<tr id="row196257269217"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p113052331628"><a name="p113052331628"></a><a name="p113052331628"></a>namespace: Namespace</p>
+<tr id="row196257269217"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p113052331628"><a name="p113052331628"></a><a name="p113052331628"></a>namespace: Namespace. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p86252269215"><a name="p86252269215"></a><a name="p86252269215"></a>String</p>
 </td>
@@ -2609,7 +2632,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p12353133317315"><a name="p12353133317315"></a><a name="p12353133317315"></a>String</p>
 </td>
 </tr>
-<tr id="row155451138137"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p545219327256"><a name="p545219327256"></a><a name="p545219327256"></a>pod_name: Pod name</p>
+<tr id="row155451138137"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p545219327256"><a name="p545219327256"></a><a name="p545219327256"></a>pod_name: Pod name. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p175458386311"><a name="p175458386311"></a><a name="p175458386311"></a>String</p>
 </td>
@@ -2621,7 +2644,7 @@ The data labels used in the above tables are described as follows.
 </tr>
 <tr id="row3907925453"><td class="cellrowborder" rowspan="9" valign="top" width="9.43%" headers="mcps1.2.4.1.1 "><p id="p610614317312"><a name="p610614317312"></a><a name="p610614317312"></a>Label 2</p>
 </td>
-<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p id="p189077251559"><a name="p189077251559"></a><a name="p189077251559"></a>container_name: Container name, in the format "Pod Namespace_{Pod_Name}_{Container_Name}". If the process runs on the host, this value is empty.</p>
+<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p id="p189077251559"><a name="p189077251559"></a><a name="p189077251559"></a>container_name: Container name, in the format "Pod Namespace_{Pod_Name}_{Container_Name}". If the process runs on the host, this value is empty. In scenarios where a single NPU is mounted by multiple Pods, this value is displayed normally when each Pod has only one service process; when each Pod has multiple service processes, the accuracy of this value is not guaranteed.</p>
 </td>
 <td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p id="p179072251510"><a name="p179072251510"></a><a name="p179072251510"></a>String</p>
 </td>
@@ -2636,12 +2659,12 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p17907225953"><a name="p17907225953"></a><a name="p17907225953"></a>String</p>
 </td>
 </tr>
-<tr id="row16907162510513"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p890718251958"><a name="p890718251958"></a><a name="p890718251958"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to the Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 inference products</term>/<term>Atlas A3 training products</term> does not contain the Chip Type field.</div></div>
+<tr id="row16907162510513"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p890718251958"><a name="p890718251958"></a><a name="p890718251958"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to the Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 products</term> does not contain the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p390718251755"><a name="p390718251755"></a><a name="p390718251755"></a>String</p>
 </td>
 </tr>
-<tr id="row1890714251357"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p79071725258"><a name="p79071725258"></a><a name="p79071725258"></a>namespace: Namespace</p>
+<tr id="row1890714251357"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p79071725258"><a name="p79071725258"></a><a name="p79071725258"></a>namespace: Namespace. In scenarios where a single NPU is mounted by multiple Pods, this value is displayed normally when each Pod has only one service process; when each Pod has multiple service processes, the accuracy of this value is not guaranteed.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p590722513516"><a name="p590722513516"></a><a name="p590722513516"></a>String</p>
 </td>
@@ -2651,7 +2674,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p39074253512"><a name="p39074253512"></a><a name="p39074253512"></a>String</p>
 </td>
 </tr>
-<tr id="row169072252520"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1390718251455"><a name="p1390718251455"></a><a name="p1390718251455"></a>pod_name: Pod name</p>
+<tr id="row169072252520"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1390718251455"><a name="p1390718251455"></a><a name="p1390718251455"></a>pod_name: Pod name. In scenarios where a single NPU is mounted by multiple Pods, this value is displayed normally when each Pod has only one service process; when each Pod has multiple service processes, the accuracy of this value is not guaranteed.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p189075251752"><a name="p189075251752"></a><a name="p189075251752"></a>String</p>
 </td>
@@ -2674,7 +2697,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p id="p20206191913160"><a name="p20206191913160"></a><a name="p20206191913160"></a>Float</p>
 </td>
 </tr>
-<tr id="row159891956371"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p298995620718"><a name="p298995620718"></a><a name="p298995620718"></a>container_name: Container name</p>
+<tr id="row159891956371"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p298995620718"><a name="p298995620718"></a><a name="p298995620718"></a>container_name: Container name. When a single card is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p120611931615"><a name="p120611931615"></a><a name="p120611931615"></a>String</p>
 </td>
@@ -2684,17 +2707,17 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p320616197163"><a name="p320616197163"></a><a name="p320616197163"></a>String</p>
 </td>
 </tr>
-<tr id="row9989656471"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14989556078"><a name="p14989556078"></a><a name="p14989556078"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 inference products</term>/<term>Atlas A3 training products</term> does not contain the Chip Type field.</div></div>
+<tr id="row9989656471"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14989556078"><a name="p14989556078"></a><a name="p14989556078"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 products</term> does not contain the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p11206819191615"><a name="p11206819191615"></a><a name="p11206819191615"></a>String</p>
 </td>
 </tr>
-<tr id="row1398911561279"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p598916561078"><a name="p598916561078"></a><a name="p598916561078"></a>namespace: Namespace</p>
+<tr id="row1398911561279"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p598916561078"><a name="p598916561078"></a><a name="p598916561078"></a>namespace: Namespace. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p620631910164"><a name="p620631910164"></a><a name="p620631910164"></a>String</p>
 </td>
 </tr>
-<tr id="row13989956371"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p098985614716"><a name="p098985614716"></a><a name="p098985614716"></a>pod_name: Pod name</p>
+<tr id="row13989956371"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p098985614716"><a name="p098985614716"></a><a name="p098985614716"></a>pod_name: Pod name. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1720631921611"><a name="p1720631921611"></a><a name="p1720631921611"></a>String</p>
 </td>
@@ -2711,7 +2734,7 @@ The data labels used in the above tables are described as follows.
 </tr>
 <tr id="row10217101831"><td class="cellrowborder" rowspan="8" valign="top" width="9.43%" headers="mcps1.2.4.1.1 "><p id="p19218160939"><a name="p19218160939"></a><a name="p19218160939"></a>Label 4</p>
 </td>
-<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p id="p103704551136"><a name="p103704551136"></a><a name="p103704551136"></a>container_name: Container name</p>
+<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p id="p103704551136"><a name="p103704551136"></a><a name="p103704551136"></a>container_name: Container name. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p id="p237025512315"><a name="p237025512315"></a><a name="p237025512315"></a>String</p>
 </td>
@@ -2721,12 +2744,12 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p113712551439"><a name="p113712551439"></a><a name="p113712551439"></a>String</p>
 </td>
 </tr>
-<tr id="row12181801433"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p17371205512310"><a name="p17371205512310"></a><a name="p17371205512310"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to the Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 inference products</term>/<term>Atlas A3 training products</term> does not include the Chip Type field.</div></div>
+<tr id="row12181801433"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p17371205512310"><a name="p17371205512310"></a><a name="p17371205512310"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to the Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 products</term> does not include the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p6371125516312"><a name="p6371125516312"></a><a name="p6371125516312"></a>String</p>
 </td>
 </tr>
-<tr id="row17218106313"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p6371055238"><a name="p6371055238"></a><a name="p6371055238"></a>namespace: Namespace</p>
+<tr id="row17218106313"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p6371055238"><a name="p6371055238"></a><a name="p6371055238"></a>namespace: Namespace. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p6371175512318"><a name="p6371175512318"></a><a name="p6371175512318"></a>String</p>
 </td>
@@ -2736,7 +2759,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p437220551737"><a name="p437220551737"></a><a name="p437220551737"></a>String</p>
 </td>
 </tr>
-<tr id="row1218110432"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p03721255839"><a name="p03721255839"></a><a name="p03721255839"></a>pod_name: Pod name</p>
+<tr id="row1218110432"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p03721255839"><a name="p03721255839"></a><a name="p03721255839"></a>pod_name: Pod name. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p53720552037"><a name="p53720552037"></a><a name="p53720552037"></a>String</p>
 </td>
@@ -2754,7 +2777,7 @@ The data labels used in the above tables are described as follows.
 </tr>
 <tr id="row97376712319"><td class="cellrowborder" rowspan="9" valign="top" width="9.43%" headers="mcps1.2.4.1.1 "><p id="p167371271038"><a name="p167371271038"></a><a name="p167371271038"></a>Label 5</p>
 </td>
-<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p id="p13670533839"><a name="p13670533839"></a><a name="p13670533839"></a>container_name: Container name</p>
+<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p id="p13670533839"><a name="p13670533839"></a><a name="p13670533839"></a>container_name: Container name. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p id="p129282543417"><a name="p129282543417"></a><a name="p129282543417"></a>String</p>
 </td>
@@ -2774,12 +2797,12 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p199299511345"><a name="p199299511345"></a><a name="p199299511345"></a>String</p>
 </td>
 </tr>
-<tr id="row127379715315"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14670733636"><a name="p14670733636"></a><a name="p14670733636"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 inference products</term>/<term>Atlas A3 training products</term> does not include the Chip Type field.</div></div>
+<tr id="row127379715315"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14670733636"><a name="p14670733636"></a><a name="p14670733636"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 products</term> does not include the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p10930125193414"><a name="p10930125193414"></a><a name="p10930125193414"></a>String</p>
 </td>
 </tr>
-<tr id="row4737871036"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p467073312313"><a name="p467073312313"></a><a name="p467073312313"></a>namespace: Namespace</p>
+<tr id="row4737871036"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p467073312313"><a name="p467073312313"></a><a name="p467073312313"></a>namespace: Namespace. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p10930175143412"><a name="p10930175143412"></a><a name="p10930175143412"></a>String</p>
 </td>
@@ -2789,7 +2812,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p5931953347"><a name="p5931953347"></a><a name="p5931953347"></a>String</p>
 </td>
 </tr>
-<tr id="row6737671133"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p76708332313"><a name="p76708332313"></a><a name="p76708332313"></a>pod_name: Pod name</p>
+<tr id="row6737671133"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p76708332313"><a name="p76708332313"></a><a name="p76708332313"></a>pod_name: Pod name. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p109311556343"><a name="p109311556343"></a><a name="p109311556343"></a>String</p>
 </td>
@@ -2801,7 +2824,7 @@ The data labels used in the above tables are described as follows.
 </tr>
 <tr id="row11396133454012"><td class="cellrowborder" rowspan="8" valign="top" width="9.43%" headers="mcps1.2.4.1.1 "><p id="p127054914110"><a name="p127054914110"></a><a name="p127054914110"></a>Label 6</p>
 </td>
-<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p id="p1170559184111"><a name="p1170559184111"></a><a name="p1170559184111"></a>container_name: Container name</p>
+<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p id="p1170559184111"><a name="p1170559184111"></a><a name="p1170559184111"></a>container_name: Container name. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p id="p17705291418"><a name="p17705291418"></a><a name="p17705291418"></a>String</p>
 </td>
@@ -2811,12 +2834,12 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1570549114116"><a name="p1570549114116"></a><a name="p1570549114116"></a>String</p>
 </td>
 </tr>
-<tr id="row113218442408"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p6706394412"><a name="p6706394412"></a><a name="p6706394412"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to the Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 inference products</term>/<term>Atlas A3 training products</term> does not contain the Chip Type field.</div></div>
+<tr id="row113218442408"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p6706394412"><a name="p6706394412"></a><a name="p6706394412"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to the Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 products</term> does not contain the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1670611944113"><a name="p1670611944113"></a><a name="p1670611944113"></a>String</p>
 </td>
 </tr>
-<tr id="row17132944154018"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p9706139164110"><a name="p9706139164110"></a><a name="p9706139164110"></a>namespace: Namespace</p>
+<tr id="row17132944154018"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p9706139164110"><a name="p9706139164110"></a><a name="p9706139164110"></a>namespace: Namespace. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1770610910412"><a name="p1770610910412"></a><a name="p1770610910412"></a>String</p>
 </td>
@@ -2826,7 +2849,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p0706169134114"><a name="p0706169134114"></a><a name="p0706169134114"></a>String</p>
 </td>
 </tr>
-<tr id="row7436124934012"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p670619974112"><a name="p670619974112"></a><a name="p670619974112"></a>pod_name: Pod name</p>
+<tr id="row7436124934012"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p670619974112"><a name="p670619974112"></a><a name="p670619974112"></a>pod_name: Pod name. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p97065974117"><a name="p97065974117"></a><a name="p97065974117"></a>String</p>
 </td>
@@ -2843,7 +2866,7 @@ The data labels used in the above tables are described as follows.
 </tr>
 <tr><td class="cellrowborder" rowspan="8" valign="top" width="9.43%" headers="mcps1.2.4.1.1 "><p>Label 7</p>
 </td>
-<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p>container_name: Container name.</p>
+<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p>container_name: Container name. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p>String</p>
 </td>
@@ -2853,12 +2876,12 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 inference products</term>/<term>Atlas A3 training products</term> does not contain the Chip Type field.</div></div>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 products</term> does not contain the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>namespace: Namespace</p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>namespace: Namespace. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>
@@ -2868,7 +2891,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>pod_name: Pod name</p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>pod_name: Pod name. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>
@@ -2885,7 +2908,7 @@ The data labels used in the above tables are described as follows.
 </tr>
 <tr><td class="cellrowborder" rowspan="9" valign="top" width="9.43%" headers="mcps1.2.4.1.1 "><p>Label 8</p>
 </td>
-<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p>container_name: container name</p>
+<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p>container_name: Container name. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p>String</p>
 </td>
@@ -2895,12 +2918,12 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 inference products</term>/<term>Atlas A3 training products</term> does not contain the Chip Type field.</div></div>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 products</term> does not contain the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>namespace: Namespace</p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>namespace: Namespace. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>
@@ -2910,7 +2933,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>pod_name: Pod name</p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>pod_name: Pod name. When a single NPU is mounted by multiple Pods, this value is not_displayed_for_multi_pod.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>
@@ -2920,7 +2943,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>udie: Udie ID of Ascend 950 processor</p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>udie: Udie ID of Ascend 950PR&950DT</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>String</p>
 </td>
@@ -2937,13 +2960,13 @@ The data labels used in the above tables are described as follows.
 
 NPU Exporter obtains corresponding information by calling the underlying HDK interfaces. For more details, refer to [HDK APIs Called by NPU Exporter.xlsx](../../../resource/HDK_APIs_called_by_NPU_Exporter.xlsx). To find the HDK interface corresponding to the data information, refer to the following steps.
 
-1. Log in to the [Ascend Computing Documentation](https://support.huawei.com/enterprise/en/category/ascend-computing-pid-1557196528909?submodel=doc) center, select and click the corresponding product name to enter the documentation page. For example, to search for the Atlas 800I A2 inference server documentation, click "Atlas 800I A2".
-2. Find "Secondary Development" in the left navigation bar.
+1. Log in to the [Ascend Computing Documentation](https://support.huawei.com/enterprise/en/category/ascend-computing-pid-1557196528909?submodel=doc) center, select and click the corresponding product name to enter the documentation page. For example, to search for the Atlas 800I A2 documentation, click "Atlas 800I A2".
+2. Find "Secondary Development" in the left navigation bar, and select the corresponding document based on the interface type.
 3. In the search bar on the document homepage, directly search for the corresponding interface name or keyword to obtain relevant information about the interface.
 
 ## Status Codes<a name="zh-cn_topic_0000001446964912_section1287016166169"></a>
 
-**Table 16** Status codes
+**Table 17** Status codes
 
 <a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_table10702170191419"></a>
 

@@ -28,9 +28,10 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 |Name|Description|Value|Component|
 |--|--|--|--|
 |ring-controller.atlas|Identifies Atlas Pods|<ul><li>ascend-npu</li><li>ascend-910</li><li>ascend-<span><em>{xxx}</em></span>b</li></ul>|Ascend Device Plugin, Ascend Operator, Volcano|
-|fault-scheduling|Fault rescheduling switch |grace, force, off|Volcano|
+|fault-scheduling|Fault rescheduling switch |grace, force, off, external-force, external-grace, external-force-pod-failed|Volcano|
 |fault-retry-times|Number of times a job can be rescheduled when a service-plane fault occurs |0-100|Volcano, Ascend Operator|
 |tor-affinity|Switch affinity policy|<ul><li>normal-schema</li><li>large-model-schema</li><li>null</li></ul>|Volcano|
+|inferserviceid|Inference service affinity scheduling identifier, indicating which inference service the current job belongs to. Jobs with the same value are preferentially scheduled to the same cabinet or the same SuperPoD.|String, user-defined or automatically injected by Infer Operator.|Volcano, Infer Operator|
 |npu-310-strategy|Scheduling strategy for inference servers (with Atlas 300I inference cards)|<ul><li>card</li><li>chip</li></ul>|Volcano|
 |pod-rescheduling|Whether to enable Pod-level rescheduling.|<ul><li>on: Enable Pod-level rescheduling.</li><li>Other values or omitting this field: Disable Pod-level rescheduling.</li></ul>|Volcano|
 |process-recover-enable|Whether to enable process-level rescheduling.|<ul><li>on: Enable process-level rescheduling</li><li>Other values or omitting this field: Disable process-level rescheduling</li></ul>|Volcano|
@@ -68,6 +69,16 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 <td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p1389015013273"><a name="p1389015013273"></a><a name="p1389015013273"></a>Currently supports the configurations in <a href="#table1120511613153">Table 3</a>.</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p197214711249"><a name="p197214711249"></a><a name="p197214711249"></a><span id="ph972477246"><a name="ph972477246"></a><a name="ph972477246"></a>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_schedule_mode_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_schedule_mode_1"><a name="p_schedule_mode_1"></a><a name="p_schedule_mode_1"></a>huawei.com/schedule.mode</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_schedule_mode_2"><a name="p_schedule_mode_2"></a><a name="p_schedule_mode_2"></a>Configures the strictness of chip affinity scheduling.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>hard: Strict topology affinity scheduling. The chips requested by the job must be placed in the same tightly interconnected domain. If a node cannot meet this requirement, the job remains Pending until sufficient resources become available.</li><li>soft: Soft affinity scheduling (default). Strict topology affinity scheduling is attempted first. If a node cannot meet this requirement, the chips requested by the job are allowed to be distributed across multiple affinity domains (using cross-domain fragmented resources) for scheduling.</li></ul>
+<p id="p_schedule_mode_3"><a name="p_schedule_mode_3"></a><a name="p_schedule_mode_3"></a>If this annotation is not configured or the value is invalid, soft scheduling is used by default.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_schedule_mode_4"><a name="p_schedule_mode_4"></a><a name="p_schedule_mode_4"></a><span id="ph_schedule_mode_volcano"><a name="ph_schedule_mode_volcano"></a><a name="ph_schedule_mode_volcano"></a>Volcano</span></p>
 </td>
 </tr>
 <tr id="row572178247"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p13765229182617"><a name="p13765229182617"></a><a name="p13765229182617"></a>sp-fit</p>
@@ -148,6 +159,15 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
 </tr>
+<tr id="row_ignore_roce_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_ignore_roce_1"><a name="p_ignore_roce_1"></a><a name="p_ignore_roce_1"></a>huawei.com/parameterplane.unhealthy-tolerance</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Configures distributed Ascend910/Ascend950 jobs to ignore NPUs with unhealthy parameter-plane networks during scheduling. Only takes effect for the huawei.com/Ascend910 and huawei.com/npu resource types.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>"ignore": Ignores NPUs with unhealthy parameter-plane networks, allowing scheduling to NPUs with unhealthy networks.</li><li>Not set or other values: Filters out NPUs with unhealthy parameter-plane networks, disallowing scheduling to NPUs with unhealthy networks.</li></ul><p>By default, it is not set, meaning NPUs with unhealthy networks are filtered.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -160,17 +180,18 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 | chip4-node8 | 1 node with 8 chips, every 4 chips form an interconnect ring. For example, Atlas 800 training server (model 9000)/Atlas 800 training server (model 9010)/Atlas 350 accelerator card has 8 chips total, every 4 chips are connected via UB mezzanine. |
 | chip1-node2 | 1 node with 2 chips. For example, the Atlas 300T training card supports up to 1 chip, and 1 node supports up to 2 chips. |
 | chip4-node4 | 1 node with 4 chips, forming 1 interconnect ring, for example, Atlas 800 training server (models 9000, 9010) half-configuration chip scenario. |
-| chip8-node8 | 1 node with 8 chips. All 8 chips form 1 interconnect ring. For example, Atlas 800T A2 training server/Atlas 850E SuperPoD/Atlas 650E server. |
-| chip8-node16 | 1 node with 16 chips, every 8 chips on 1 interconnect ring. For example, Atlas 200T A2 Box16 heterogeneous subrack. |
+| chip8-node8 | 1 node with 8 chips. All 8 chips form 1 interconnect ring, for example, Atlas 800T A2/Atlas 850E/Atlas 850/Atlas 650E/Atlas 650. |
+| chip8-node16 | 1 node with 16 chips, every 8 chips on 1 interconnect ring, for example, Atlas 200T A2 Box16. |
 | chip2-node8 | 1 node with 8 chips, every 2 chips on 1 interconnect ring. |
-| chip2-node16 | 1 node with 16 chips, every 2 chips on 1 interconnect ring. For example, Atlas 800T A3 SuperPoD server. |
-| chip2-node8-sp | 1 node with 8 chips, every 2 chips on 1 interconnect ring. Multiple servers form a SuperPoD, for example, Atlas 9000 A3 SuperPoD cluster computing system. |
+| chip2-node16 | 1 node with 16 chips, every 2 chips on 1 interconnect ring, for example, Atlas 800T A3. |
+| chip2-node8-sp | 1 node with 8 chips, every 2 chips on 1 interconnect ring. Multiple servers form a SuperPoD, for example, Atlas 9000 A3 SuperPoD. |
 | chip2-node16-sp | 1 node with 16 chips, every 2 chip on 1 interconnect ring. Multiple servers form a SuperPoD, for example, Atlas 900 A3 SuperPoD. |
-| chip4-node16 | 1 node with 16 chips, every 4 chips on 1 interconnect ring. For example, Atlas 350 accelerator card with 16 chips total, every 4 chips connected via UB mezzanine. |
-| chip1-node8 | 1 node with 8 chips, no interconnect between chips. For example, Atlas 350 accelerator card with 8 chips total, no interconnect between chips. |
-| chip1-node16 | 1 node with 16 chips, no interconnect between chips. For example, Atlas 350 accelerator card with 16 chips total, no interconnect between chips. |
-| chip8-node8-sp | 1 node with 8 chips, all 8 chips on 1 interconnect ring. Multiple servers form a SuperPoD, for example, Atlas 850E SuperPoD. |
+| chip4-node16 | 1 node with 16 chips, every 4 chips on 1 interconnect ring, for example, Atlas 350 accelerator card with 16 chips total and every 4 chips connected via UB mezzanine. |
+| chip1-node8 | 1 node with 8 chips, no interconnect between chips, for example, Atlas 350 accelerator card with 8 chips total and no interconnect between chips. |
+| chip1-node16 | 1 node with 16 chips, no interconnect between chips, for example, Atlas 350 accelerator card with 16 chips total and no interconnect between chips. |
+| chip8-node8-sp | 1 node with 8 chips, all 8 chips on 1 interconnect ring. Multiple servers form a SuperPoD, for example, Atlas 850E/Atlas 850. |
 | chip8-node8-ra64-sp | 1 node with 8 chips, all 8 chips on 1 interconnect ring, 64 nodes form a computing cabinet. Multiple cabinets form a SuperPoD, for example, Atlas 950 SuperPoD. |
+| chip8-node16-sp | 1 node with 16 chips, every 8 chips on 1 interconnect ring. Multiple servers form a SuperPoD, for example, Atlas 950 SuperPoD Flex. |
 | chip1-softShareDev | Dedicated scheduling policy for soft partition-based virtualization. |
 | multilevel | Used in multi-level scheduling scenarios. For details on how to use multi-level scheduling, see [Multi-level Scheduling](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md). |
 
@@ -202,9 +223,9 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p935815502914"><a name="p935815502914"></a><a name="p935815502914"></a>Switch for job rescheduling upon faults</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p5358950291"><a name="p5358950291"></a><a name="p5358950291"></a>grace, force, off</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p5358950291"><a name="p5358950291"></a><a name="p5358950291"></a>grace, force, off, external-force, external-grace, external-force-pod-failed</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p10358105012913"><a name="p10358105012913"></a><a name="p10358105012913"></a><span id="ph635812501497"><a name="ph635812501497"></a><a name="ph635812501497"></a>Volcano</span>, <span id="ph183581350898"><a name="ph183581350898"></a><a name="ph183581350898"></a>Resilience Controller</span></p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p10358105012913"><a name="p10358105012913"></a><a name="p10358105012913"></a><span id="ph635812501497"><a name="ph635812501497"></a><a name="ph635812501497"></a>Volcano</span>, <span id="ph183581350898"><a name="ph183581350898"></a><a name="ph183581350898"></a>Infer Operator</span></p>
 </td>
 </tr>
 <tr id="row103614504912"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p6361950695"><a name="p6361950695"></a><a name="p6361950695"></a>fault-retry-times</p>
@@ -240,7 +261,7 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul186101614131"></a><a name="ul186101614131"></a><ul id="ul186101614131"><li>on: Enable Pod-level rescheduling</li><li>Other values or when this field is not used: Disable Pod-level rescheduling</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p1372045172812"><a name="p1372045172812"></a><a name="p1372045172812"></a><span id="ph2072005192818"><a name="ph2072005192818"></a><a name="ph2072005192818"></a>Volcano</span></p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p1372045172812"><a name="p1372045172812"></a><a name="p1372045172812"></a><span id="ph2072005192818"><a name="ph2072005192818"></a><a name="ph2072005192818"></a>Volcano, Infer Operator</span></p>
 </td>
 </tr>
 <tr id="row209101813153710"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p2417162275410"><a name="p2417162275410"></a><a name="p2417162275410"></a>process-recover-enable</p>
@@ -259,6 +280,15 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul18716519102210"></a><a name="ul18716519102210"></a><ul id="ul18716519102210"><li>ignore: Ignore the sub-healthy node, and subsequent jobs will not prioritize this node in affinity scheduling.</li><li>graceExit: Do not use the sub-healthy node, save the dying gasp CKPT file, and then perform rescheduling. Subsequent jobs will not be scheduled to this node.</li><li>forceExit: Do not use the sub-healthy node, exit the job directly without saving, and perform rescheduling. Subsequent jobs will not be scheduled to this node.</li><li>hotSwitch: Perform a hot switching, start the backup Pod, pause the training job, and use a new node to restart the training.</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p929902143119"><a name="p929902143119"></a><a name="p929902143119"></a><span id="ph6299326312"><a name="ph6299326312"></a><a name="ph6299326312"></a>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_inferserviceid_pod"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_inferserviceid_pod"><a name="p_inferserviceid_pod"></a><a name="p_inferserviceid_pod"></a>inferserviceid</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_inferserviceid_pod_desc"><a name="p_inferserviceid_pod_desc"></a><a name="p_inferserviceid_pod_desc"></a>Inference service affinity scheduling identifier, indicating which inference service the current job belongs to. Jobs with the same value are preferentially scheduled to the same cabinet or the same SuperPoD.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_inferserviceid_pod_val"><a name="p_inferserviceid_pod_val"></a><a name="p_inferserviceid_pod_val"></a>String, user-defined or automatically injected by Infer Operator.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_inferserviceid_pod_comp"><a name="p_inferserviceid_pod_comp"></a><a name="p_inferserviceid_pod_comp"></a>Volcano, Infer Operator</p>
 </td>
 </tr>
 </tbody>
@@ -293,6 +323,16 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 <td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p1389015013273"><a name="p1389015013273"></a><a name="p1389015013273"></a>Currently supports the configurations in <a href="#table1120511613153">Table 3</a>.</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p197214711249"><a name="p197214711249"></a><a name="p197214711249"></a><span id="ph972477246"><a name="ph972477246"></a><a name="ph972477246"></a>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_schedule_mode_pod"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_schedule_mode_pod_1"><a name="p_schedule_mode_pod_1"></a><a name="p_schedule_mode_pod_1"></a>huawei.com/schedule.mode</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_schedule_mode_pod_2"><a name="p_schedule_mode_pod_2"></a><a name="p_schedule_mode_pod_2"></a>Configures the strictness of chip affinity scheduling.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>hard: Strict topology affinity scheduling. The chips requested by the job must be placed in the same tightly interconnected domain. If a node cannot meet this requirement, the job remains Pending until sufficient resources become available.</li><li>soft: Soft affinity scheduling (default). Strict topology affinity scheduling is attempted first. If a node cannot meet this requirement, the chips requested by the job are allowed to be distributed across multiple affinity domains (using cross-domain fragmented resources) for scheduling.</li></ul>
+<p id="p_schedule_mode_pod_3"><a name="p_schedule_mode_pod_3"></a><a name="p_schedule_mode_pod_3"></a>If this annotation is not configured or the value is invalid, scheduling defaults to soft.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_schedule_mode_pod_4"><a name="p_schedule_mode_pod_4"></a><a name="p_schedule_mode_pod_4"></a><span id="ph_schedule_mode_pod_volcano"><a name="ph_schedule_mode_pod_volcano"></a><a name="ph_schedule_mode_pod_volcano"></a>Volcano</span></p>
 </td>
 </tr>
 <tr id="row572178247"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p13765229182617"><a name="p13765229182617"></a><a name="p13765229182617"></a>sp-fit</p>
@@ -334,6 +374,8 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 <tr id="row16233175083617"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p5523142033819"><a name="p5523142033819"></a><a name="p5523142033819"></a>huawei.com/skip-ascend-plugin</p>
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Allows some special jobs (such as jobs that do not require NPU resources) to bypass the default check logic of Ascend-for-volcano.</p>
+<div class="note" id="note_skip_ascend_plugin"><a name="note_skip_ascend_plugin"></a><a name="note_skip_ascend_plugin"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="p_skip_ascend_plugin"><a name="p_skip_ascend_plugin"></a><a name="p_skip_ascend_plugin"></a>This parameter will be deprecated. In subsequent versions, non-NPU Pods can be scheduled normally without configuring this parameter.</p>
+</div></div>
 </td>
 <td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>Not set or set to "enabled"</p>
 </td>
@@ -345,6 +387,15 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>When NPU resources are not configured in MinResources, this annotation is used to declare the NPU type that the job uses, so that Volcano still schedules the job according to NPU affinity scheduling rules.</p>
 </td>
 <td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>The value is NPU type, for example,Ascend910, Ascend310P, and Ascend310.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_ignore_roce_2"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_ignore_roce_2"><a name="p_ignore_roce_2"></a><a name="p_ignore_roce_2"></a>huawei.com/parameterplane.unhealthy-tolerance</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Configures distributed Ascend910/Ascend950 jobs to ignore NPUs with unhealthy parameter-plane networks during scheduling. Only takes effect for the huawei.com/Ascend910 and huawei.com/npu resource types.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>"ignore": Ignores NPUs with unhealthy parameter-plane networks, allowing scheduling to NPUs with unhealthy networks.</li><li>Not set or other values: Filters out NPUs with unhealthy parameter-plane networks, disallowing scheduling to NPUs with unhealthy networks.</li></ul><p>By default, it is not set, meaning NPUs with unhealthy networks are filtered.</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
@@ -632,7 +683,7 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 
 **reset-config-<job-name\><a name="section3394547123916"></a>**
 
-The MindCluster cluster scheduling components write information such as device and training job status into the `reset-config-<job-name>` ConfigMap through K8s and maps it into the container. Elastic Agent reads it and performs corresponding fault detection and processing.
+The MindCluster cluster scheduling components write information such as device and training job status into the `reset-config-<job-name>` ConfigMap through K8s and maps it into the container. TaskD reads it and performs corresponding fault detection and processing.
 
 **Table 3** reset-config-_<job-name\>_
 
@@ -726,20 +777,20 @@ The MindCluster cluster scheduling components write information such as device a
 </tr>
 <tr id="row45409251618"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1254115251666"><a name="p1254115251666"></a><a name="p1254115251666"></a>FaultFlushing</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p7541192512618"><a name="p7541192512618"></a><a name="p7541192512618"></a>Informs <span id="ph14256162281217"><a name="ph14256162281217"></a><a name="ph14256162281217"></a>Elastic Agent</span> whether a fault is currently being flushed</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p7541192512618"><a name="p7541192512618"></a><a name="p7541192512618"></a>Informs <span id="ph14256162281217"><a name="ph14256162281217"></a><a name="ph14256162281217"></a>TaskD</span> whether a fault is currently being flushed</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p13813147101216"><a name="p13813147101216"></a><a name="p13813147101216"></a>Value is true or false</p>
 <a name="ul1563191521213"></a><a name="ul1563191521213"></a><ul id="ul1563191521213"><li>true: Indicates that a fault is being flushed</li><li>false: Indicates that no fault is being flushed</li></ul>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p19951631131314"><a name="p19951631131314"></a><a name="p19951631131314"></a><span id="ph952618296564"><a name="ph952618296564"></a><a name="ph952618296564"></a>Elastic Agent</span> needs to wait until this field is false and the fault RankList does not contain a fault for this node before starting the training process</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p19951631131314"><a name="p19951631131314"></a><a name="p19951631131314"></a><span id="ph952618296564"><a name="ph952618296564"></a><a name="ph952618296564"></a>TaskD</span> needs to wait until this field is false and the fault RankList does not contain a fault for this node before starting the training process</p>
 </td>
 </tr>
 <tr id="row141375594377"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p64521951162319"><a name="p64521951162319"></a><a name="p64521951162319"></a><span>RestartFaultProcess</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p17453851172311"><a name="p17453851172311"></a><a name="p17453851172311"></a><span>Informs </span><span id="ph262783362516"><a name="ph262783362516"></a><a name="ph262783362516"></a>Elastic Agent</span><span> whether to restart only the faulty process on this node</span></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p17453851172311"><a name="p17453851172311"></a><a name="p17453851172311"></a><span>Informs </span><span id="ph262783362516"><a name="ph262783362516"></a><a name="ph262783362516"></a>TaskD</span><span> whether to restart only the faulty process on this node</span></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p2012431813258"><a name="p2012431813258"></a><a name="p2012431813258"></a><span>Value is true or false</span></p>
-<a name="ul14729113619013"></a><a name="ul14729113619013"></a><ul id="ul14729113619013"><li><span>true: When a fault occurs on this node, restart only the faulty process on this node</span></li><li><span>false: When a fault occurs on this node, exit all processes on this node and exit </span><span id="ph205211257104"><a name="ph205211257104"></a><a name="ph205211257104"></a>Elastic Agent</span></li></ul>
+<a name="ul14729113619013"></a><a name="ul14729113619013"></a><ul id="ul14729113619013"><li><span>true: When a fault occurs on this node, restart only the faulty process on this node</span></li><li><span>false: When a fault occurs on this node, exit all processes on this node and exit </span><span id="ph205211257104"><a name="ph205211257104"></a><a name="ph205211257104"></a>TaskD</span></li></ul>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p94534513233"><a name="p94534513233"></a><a name="p94534513233"></a>This field takes effect only when the fault RankList contains a fault for this node</p>
 </td>

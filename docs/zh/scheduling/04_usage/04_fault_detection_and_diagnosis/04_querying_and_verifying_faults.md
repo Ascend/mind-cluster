@@ -5,7 +5,9 @@
 ## 查询ConfigMap上报结果
 
 - 每个计算节点的Ascend Device Plugin均会创建记录本节点NPU和灵衢总线设备信息的ConfigMap文件。该ConfigMap文件名为mindx-dl-deviceinfo-&lt;nodename&gt;（以下简称device-info-cm），故障信息会通过该ConfigMap进行上报。该ConfigMap文件中各字段的说明，请参见[DeviceInfoCfg](../../06_api/02_ascend_device_plugin.md#芯片资源)表。
+<!-- npu="950" id2 -->
 - 每个计算节点的K8s RDMA Shared Dev Plugin均会创建记录本节点UB网卡故障信息的ConfigMap文件。该ConfigMap文件名为dpuinfo-&lt;nodename&gt;，UB网卡故障信息会通过该ConfigMap进行上报。该ConfigMap文件中各字段的说明，请参见[ConfigMap说明](../../06_api/11_k8s_rdma_shared_dev_plugin.md#table_dpuconfigmap_k8s_rdma_shared_dev_plugin)。
+<!-- end id2 -->
 - 当节点上存在节点故障时，每个计算节点的NodeD会创建记录本节点设备信息的ConfigMap文件。该ConfigMap文件名为mindx-dl-nodeinfo-&lt;nodename&gt;（以下简称node-info-cm），节点故障信息会通过该ConfigMap进行上报。该ConfigMap文件中各字段的说明，请参见[mindx-dl-nodeinfo-&lt;nodename&gt;](../../06_api/03_noded.md#节点资源)表。
 - ClusterD会创建记录本集群设备信息的ConfigMap文件，该ConfigMap文件名为cluster-info-<device/switch>-<[0-5]>、cluster-info-node-cm（以下简称cluster-info-cm）。节点及芯片故障信息会通过[cluster-info-cm](../../06_api/04_clusterd/00_cluster_resources.md)进行上报。
 
@@ -14,7 +16,9 @@
 - [Ascend Device Plugin故障信息](../../07_references/02_common_operations.md#ZH-CN_TOPIC_0000002479387086)
 - [ClusterD故障信息](../../07_references/02_common_operations.md#ZH-CN_TOPIC_0000002511347035)
 - [NodeD故障信息](../../07_references/02_common_operations.md#ZH-CN_TOPIC_0000002511427003)
+<!-- npu="950" id3 -->
 - [UB网卡故障信息](../../07_references/02_common_operations.md#ZH-CN_TOPIC_0000002511347042)
+<!-- end id3 -->
 
 <!-- npu="A3" id1 -->
 ## 查询pingmesh灵衢网络检测结果

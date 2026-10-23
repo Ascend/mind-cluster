@@ -3,7 +3,7 @@
 - The commands for creating vNPUs using the npu-smi tool are basically the same for physical machines and virtual machines, so the commands listed in this section can be applied to both. However, vNPU creation on virtual machines is supported only by <term>Atlas inference products</term>.
 - To use static virtualization, run the `npu-smi` command to create vNPUs and mount them to containers and then refer to [Mounting vNPUs (Static Virtualization)](./02_mounting_vnpu_static.md) section to mount them to the container.
 - To use dynamic virtualization, skip this section, as there is no need to create vNPUs in advance. Set parameters as follows during container startup.
-    - Ascend Docker Runtime: Refer to [Dynamic vNPU Scheduling (Inference)](../05_dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md) to virtualize multiple vNPUs from the physical NPU and mount them to the container through the `ASCEND_VISIBLE_DEVICES` and `ASCEND_VNPU_SPECS` parameters.
+    - Ascend Docker Runtime: Refer to [Dynamic vNPU Scheduling (Inference)](../05_dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md) to virtualize vNPUs from the physical NPU and mount them to the container through the `ASCEND_VISIBLE_DEVICES` and `ASCEND_VNPU_SPECS` parameters.
     - Ascend Device Plugin and Volcano: Refer to [Dynamic vNPU Scheduling (Inference)](../05_dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md). vNPUs are automatically created by APIs based on configuration requirements during job running.
 
 ## Methods<a name="section206799361399"></a>

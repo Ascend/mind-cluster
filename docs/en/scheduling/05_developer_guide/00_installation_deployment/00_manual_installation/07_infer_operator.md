@@ -1,6 +1,7 @@
 # Infer Operator<a name="ZH-CN_TOPIC_0000002479386414"></a>
 
-To deliver inference jobs of the InferServiceSet type, you must install Infer Operator.
+- To deliver inference jobs of the InferServiceSet type, you must install Infer Operator.
+- Before installing Infer Operator, it is recommended to install Volcano first. Otherwise, Infer Operator does not support gang scheduling. If a job has gang scheduling enabled (that is, the `infer.huawei.com/gang-schedule` parameter is set to `'true'`), Infer Operator reports an error and the job fails to start normally.
 
 ## Procedure<a name="section209273712583"></a>
 
@@ -13,7 +14,7 @@ To deliver inference jobs of the InferServiceSet type, you must install Infer Op
     The following is an example of the command output:
 
     ```ColdFusion
-    infer-operator                      v26.1.0              c7221984e8ae        About an hour ago         140MB
+    infer-operator                      v26.2.0              c7221984e8ae        About an hour ago         140MB
     ```
 
     - If correct, proceed to [Step 2](#li19793191914420).
@@ -83,7 +84,7 @@ To deliver inference jobs of the InferServiceSet type, you must install Infer Op
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p>false</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p>Queries the <span>ClusterD</span> version number.</p><ul><li>true: Query.</li><li>false: Do not query.</li></ul>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p>Queries the <span>Infer Operator</span> version number, commit ID, and other details.</p><ul><li>true: Query.</li><li>false: Do not query.</li></ul>
 </td>
 </tr>
 <tr id="row56148488467"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="p661410488460"><a name="p661410488460"></a><a name="p661410488460"></a>-logLevel</p>

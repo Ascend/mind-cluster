@@ -1,6 +1,6 @@
 # What is MindCluster
 
-MindCluster is a deep learning component for an AI cluster built to support NPUs (Ascend AI Processors), providing cluster-level solutions specifically for training and inference tasks. By leveraging MindCluster, deep learning platform developers can minimize development efforts related to underlying resource scheduling and rapidly build their platforms.
+MindCluster is a deep learning component for an AI cluster built to support NPUs (Ascend AI Processors), providing cluster-level solutions specifically for training and inference jobs. By leveraging MindCluster, deep learning platform developers can minimize development efforts related to underlying resource scheduling and rapidly build their platforms.
 
 **Figure 1** MindCluster architecture<a name="fig163081328205916"></a>
 
@@ -13,10 +13,10 @@ MindCluster is a deep learning component for an AI cluster built to support NPUs
 
 |Key Feature|Introduction|Reference|
 |--|--|--|
-|Installation and deployment|Provides online download, installation, and signature verification for Ascend software and its dependencies.|[Installation and Deployment](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.1.0/docs/en/01_introduction/01_introduction.md)|
-|Performance testing|Provides functions such as Atlas hardware compatibility check, performance testing, and fault diagnosis.|[Performance Testing](https://www.hiascend.com/document/detail/en/mindcluster/2610/toolbox/toolboxug/toolboxug_0002.html)|
-|Fault Diagnosis|Provides log cleaning and fault diagnosis functions for training and inference tasks, and locates the root cause of failures.|[Fault Diagnosis](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)|
-|Cluster Scheduling|Provides functions such as NPU resource scheduling and management, configuration generation for distributed training collective communication, and resumable training.|[Cluster Scheduling](./scheduling/01_introduction/00_overview.md)|
+|Installation and deployment|Provides online download, installation, and signature verification for Ascend software and its dependencies.|[Installation and Deployment](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/en/01_introduction/01_introduction.md)|
+|Performance testing|Provides functions such as Atlas hardware compatibility check, performance testing, and fault diagnosis.|[Performance Testing](https://www.hiascend.com/document/detail/en/mindcluster/2620/toolbox/toolboxug/toolboxug_0002.html)|
+|Fault diagnosis|Provides log cleaning and fault diagnosis functions for training and inference jobs, and locates the root cause of failures.|[Fault Diagnosis](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)|
+|Cluster scheduling|Provides functions such as NPU resource scheduling and management, configuration generation for distributed training collective communication, and resumable training.|[Cluster Scheduling](./scheduling/01_introduction/00_overview.md)|
 
 **MindCluster Component Description<a name="section3934175581912"></a>**
 
@@ -43,18 +43,18 @@ MindCluster is a deep learning component for an AI cluster built to support NPUs
 
 |Component|Feature Overview|
 |--|--|
-|Ascend Docker Runtime|Provides containerization support for training and inference tasks, automatically mounting required files and device dependencies.|
+|Ascend Docker Runtime|Provides containerization support for training and inference jobs, automatically mounting required files and device dependencies.|
 |Ascend Device Plugin|Based on the Kubernetes device plugin mechanism, provides device discovery, allocation, and health status reporting capabilities for Ascend AI Processors, enabling Kubernetes to manage Ascend AI Processor resources.|
 |NPU Exporter|Monitors resource metrics of Ascend AI Processors in real time, obtaining information such as utilization, temperature, and voltage of Ascend AI Processors.|
 |Volcano|Based on the open-source Volcano scheduling plugin mechanism, adds features such as affinity scheduling and fault rescheduling for Ascend AI Processors to maximize their computing performance.|
-|ClusterD|Provides cluster-level available resource information and collects cluster task information, resource information, fault information, and impact scope, performing statistical analysis from task, chip, and fault dimensions.|
-|Ascend Operator|Provides lifecycle management for training tasks, supplying corresponding environment variables for distributed training tasks of different AI frameworks and generating necessary collective communication configuration.|
+|ClusterD|Provides cluster-level available resource information and collects cluster information, resource information, fault information, and impact scope, performing statistical analysis from job, chip, and fault dimensions.|
+|Ascend Operator|Provides lifecycle management for training jobs, supplying corresponding environment variables for distributed training jobs of different AI frameworks and generating necessary collective communication configuration.|
 |NodeD|Reports node status and fault information such as node health status, CPU, and memory.|
-|Resilience Controller|Provides elastic scaling-down training service. When the hardware used by a training task fails, it removes the hardware and continues training.|
-|Elastic Agent|Provides the capability to save a dying gasp checkpoint at the moment of a training task failure.|
-|TaskD|Provides status monitoring and status control capabilities for training and inference tasks on Ascend devices.|
+|Resilience Controller|Provides elastic scaling-down training service. When the hardware used by a training job fails, it removes the hardware and continues training.|
+|Elastic Agent|Provides the capability to save a dying gasp checkpoint at the moment of a training job failure.|
+|TaskD|Provides status monitoring and status control capabilities for training and inference jobs on Ascend devices.|
 |MindIO ACP|Uses the training server memory as a cache to accelerate the saving and loading of checkpoints during large model training.|
 |MindIO TFT|Provides functions such as TTP, UCE, and ARF.|
 |Container Manager|Provides service container recovery capability in non-Kubernetes scenarios, mainly used in appliances.|
-|Infer Operator|Manages the lifecycle of inference services based on their configuration, supporting instance-level scaling and task role expansion.|
+|Infer Operator|Manages the lifecycle of inference services based on their configuration, supporting instance-level scaling and job role expansion.|
 |K8s RDMA Shared Dev Plugin|Provides shared discovery and fault detection capabilities for Huawei UB RDMA DPU devices leveraging open-source components. |

@@ -1,12 +1,12 @@
 # Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002479226434"></a>
 
-- Users who demand containerization support, full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, inference card fault recovery, or rescheduling upon inference card faults must install Ascend Docker Runtime.
+- Users who demand containerization support, full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, chip fault recovery, or rescheduling must install Ascend Docker Runtime.
 - Users who only use resource monitoring do not need to install Ascend Docker Runtime and can skip this chapter directly.
 
 ## Prerequisites<a name="section137058405153"></a>
 
 - Before installation, ensure that the user ID of the `runc` file is 0.
-- Before installation, in the Containerd scenario, ensure that the user and user group of the `/etc/containerd/config.toml` file are `root`; in the Docker scenario or Isula scenario, ensure that the user and user group of the `/etc/docker/daemon.json` file are `root`.
+- Before installation, in the Containerd scenario, ensure that the user and user group of the `/etc/containerd/config.toml` file are `root`; in the Docker scenario or Isula scenario, ensure that the user and user group of the `/etc/docker/daemon.json` file are `root`; in the CRI-O scenario, ensure that the user and user group of the `/etc/crio/crio.config.d` directory are `root`.
 - Before installation, ensure that the `RPATH` and `RUNPATH` of the so files configured in `/etc/ld.so.preload` do not contain the HDK driver directory with a relative path (you can check this using the `readelf -d xxx.so` command).
 
 ## Confirming the Installation Scenario<a name="zh-cn_topic_0000001930317932_section1235447163310"></a>
@@ -32,11 +32,13 @@ Currently, only the `root` user is supported for installing Ascend Docker Runtim
         ```shell
         docker --version      # Docker
         containerd --version     # Containerd
+        crio --version     # CRI-O
         ```
 
         - If the output shows Docker version information, the current scenario is [Docker scenario](#zh-cn_topic_0000001930317932_section1443063532919).
         - If the output shows Containerd version information, the current scenario is [Containerd scenario](#zh-cn_topic_0000001930317932_section196591123133116).
-        - If the output contains version information for both Docker and Containerd, determine which container runtime to use for job execution.
+        - If the output shows CRI-O version information, the current scenario is [CRI-O scenario](#zh-cn_topic_0000001930317932_section196591123133117).
+        - If version information for multiple container runtimes is displayed, determine which container runtime to use for job execution yourself.
 
     - K8s integrated container runtime scenario: Run the following command on the management node.
 
@@ -46,6 +48,7 @@ Currently, only the `root` user is supported for installing Ascend Docker Runtim
 
         - If the output contains Docker information, this indicates a [K8s integrated Docker scenario](#zh-cn_topic_0000001930317932_section1443063532919).
         - If the output contains Containerd information, this indicates a [K8s integrated Containerd scenario](#zh-cn_topic_0000001930317932_section14600174633116).
+        - If the output contains CRI-O information, this indicates a [K8s integrated CRI-O scenario](#zh-cn_topic_0000001930317932_section14600174633117).
 
 ## Installing Ascend Docker Runtime in a Docker Scenario<a name="zh-cn_topic_0000001930317932_section1443063532919"></a>
 
@@ -240,6 +243,59 @@ The installation procedure of Ascend Docker Runtime in the K8s-Docker integrated
     systemctl daemon-reload && systemctl restart containerd
     ```
 
+## Installing Ascend Docker Runtime in the CRI-O Scenario<a name="zh-cn_topic_0000001930317932_section196591123133117"></a>
+
+1. After downloading the software package, go to the path where the software package (run package) is located.
+
+    ```shell
+    cd <path to run package>
+    ```
+
+2. Run the following command to add executable permission to the software package.
+
+    ```shell
+    chmod u+x Ascend-docker-runtime_{version}_linux-{arch}.run
+    ```
+
+3. Run the following command to verify the consistency and integrity of the software package installation file.
+
+    ```shell
+    ./Ascend-docker-runtime_{version}_linux-{arch}.run --check
+    ```
+
+4. Run the following command to install Ascend Docker Runtime. In the CRI-O scenario, you must specify `--install-scene=crio`.
+
+    - Installation to the default path
+
+        ```shell
+        ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=crio
+        ```
+
+    - Installation to a specified path: The `--install-path` parameter specifies the installation path.
+
+        ```shell
+        ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=crio --install-path=<path>
+        ```
+
+        >[!NOTE]
+        >- An absolute path must be used when specifying the installation path.
+        >- The installer writes the CRI-O drop-in configuration file `/etc/crio/crio.conf.d/99-ascend-runtime.conf`, which registers `ascend` as an OCI runtime and sets it as the default runtime. If the drop-in directory or file is not the default path, you need to add the `--config-file-path` parameter to specify it.
+
+    The following example output indicates a successful installation.
+
+    ```ColdFusion
+    Uncompressing ascend-docker-runtime  100%
+    [INFO]: installing ascend-docker-runtime
+    ...
+    [INFO] ascend-docker-runtime install success
+    ```
+
+5. Run the following command to restart CRI-O for the configuration to take effect.
+
+    ```shell
+    systemctl daemon-reload && systemctl restart crio
+    ```
+
 ## Installing Ascend Docker Runtime in the K8s-Containerd Integrated Scenario<a name="zh-cn_topic_0000001930317932_section14600174633116"></a>
 
 1. After the software package is downloaded, first go to the path where the installation package (run package) is located.
@@ -296,6 +352,54 @@ The installation procedure of Ascend Docker Runtime in the K8s-Docker integrated
     systemctl daemon-reload && systemctl restart containerd kubelet
     ```
 
+## Installing Ascend Docker Runtime in the K8s-CRI-O Integrated Scenario<a name="zh-cn_topic_0000001930317932_section14600174633117"></a>
+
+1. After the software package is downloaded, first go to the path where the installation package (run package) is located.
+
+    ```shell
+    cd <path to run package>
+    ```
+
+2. Run the following command to add executable permission to the software package.
+
+    ```shell
+    chmod u+x Ascend-docker-runtime_{version}_linux-{arch}.run
+    ```
+
+3. You can install Ascend Docker Runtime using the following commands.
+
+    - Installation to the default path
+
+        ```shell
+        ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=crio
+        ```
+
+    - Installation to a specified path: The `--install-path` parameter specifies the installation path.
+
+        ```shell
+        ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=crio --install-path=<path>
+        ```
+
+        >[!NOTE]
+        >You must use an absolute path when specifying the installation path.
+
+    The following example output indicates a successful installation.
+
+    ```ColdFusion
+    Uncompressing ascend-docker-runtime  100%
+    [INFO]: installing ascend-docker-runtime
+    ...
+    [INFO] ascend-docker-runtime install success
+    ```
+
+4. If you need to change the container runtime on the node from another container runtime to CRI-O, you must modify the kubelet configuration file `kubeadm-flags.env` on the node. You can refer to the "Docker to containerd" method in the [K8s official documentation](https://kubernetes.io/docs/tasks/administer-cluster/migrating-from-dockershim/change-runtime-containerd/). This method also applies to switching to CRI-O; you only need to replace the container runtime-related configuration items with CRI-O.
+
+5. Run the command to restart CRI-O and kubelet.
+
+    ```shell
+    systemctl daemon-reload && systemctl restart crio kubelet
+    ```
+
 ## Parameter Description <a name="zh-cn_topic_0000001930317932_section425619177219"></a>
 
 [Table 1](#zh-cn_topic_0000001930317932_table35676204212) lists parameters supported by the Ascend Docker Runtime installation commands.
@@ -322,13 +426,19 @@ The installation procedure of Ascend Docker Runtime in the K8s-Docker integrated
 <tr id="zh-cn_topic_0000001930317932_row19570122010217"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p15570172014213"><a name="zh-cn_topic_0000001930317932_p15570172014213"></a><a name="zh-cn_topic_0000001930317932_p15570172014213"></a>--install-path=&lt;path&gt;</p>
 </td>
 <td class="cellrowborder" valign="top" width="67.57%" headers="mcps1.2.3.1.2 "><p id="p369633161410"><a name="p369633161410"></a><a name="p369633161410"></a>Specify the installation path.</p>
-<a name="zh-cn_topic_0000001930317932_ul29611936455"></a><a name="zh-cn_topic_0000001930317932_ul29611936455"></a><ul id="zh-cn_topic_0000001930317932_ul29611936455"><li> An absolute path must be used as the installation path.</li><li>If the global configuration file `ascend_docker_runtime_install.info` exists on the environment, the specified installation path must be consistent with the path saved in the global configuration file.</li><li>To change the installation path, you must first uninstall the <span id="zh-cn_topic_0000001930317932_ph1528115352583"><a name="zh-cn_topic_0000001930317932_ph1528115352583"></a><a name="zh-cn_topic_0000001930317932_ph1528115352583"></a>Ascend Docker Runtime</span> package from the original path and ensure that the global configuration file `ascend_docker_runtime_install.info` has been deleted.</li><li>If Ascend Docker Runtime<span id="zh-cn_topic_0000001930317932_ph93781522588"><a name="zh-cn_topic_0000001930317932_ph93781522588"></a><a name="zh-cn_topic_0000001930317932_ph93781522588"></a>prior to version 5.0.RC1 was installed</span> via the ToolBox installation package, this file does not exist and does not need to be deleted</li><li>If no installation path is specified, the package will be installed to the default path <span class="filepath" id="zh-cn_topic_0000001930317932_filepath7570102017212"><a name="zh-cn_topic_0000001930317932_filepath7570102017212"></a><a name="zh-cn_topic_0000001930317932_filepath7570102017212"></a>"/usr/local/Ascend"</span>.</li><li>If an installation directory is specified via this parameter, the runtime user must have read and write permissions to the specified installation path.</li></ul>
+<a name="zh-cn_topic_0000001930317932_ul29611936455"></a><a name="zh-cn_topic_0000001930317932_ul29611936455"></a><ul id="zh-cn_topic_0000001930317932_ul29611936455"><li> An absolute path must be used as the installation path.</li><li>If the global configuration file ascend_docker_runtime_install.info exists on the environment, the specified installation path must be consistent with the path saved in the global configuration file.</li><li>To change the installation path, you must first uninstall the <span id="zh-cn_topic_0000001930317932_ph1528115352583"><a name="zh-cn_topic_0000001930317932_ph1528115352583"></a><a name="zh-cn_topic_0000001930317932_ph1528115352583"></a>Ascend Docker Runtime</span> package from the original path and ensure that ascend_docker_runtime_install.info has been deleted.</li><li>If Ascend Docker Runtime<span id="zh-cn_topic_0000001930317932_ph93781522588"><a name="zh-cn_topic_0000001930317932_ph93781522588"></a><a name="zh-cn_topic_0000001930317932_ph93781522588"></a>prior to version 5.0.RC1 was installed</span> via the ToolBox installation package, this file does not exist and does not need to be deleted</li><li>If no installation path is specified, the package will be installed to the default path <span class="filepath" id="zh-cn_topic_0000001930317932_filepath7570102017212"><a name="zh-cn_topic_0000001930317932_filepath7570102017212"></a><a name="zh-cn_topic_0000001930317932_filepath7570102017212"></a>"/usr/local/Ascend"</span>.</li><li>If an installation directory is specified via this parameter, the runtime user must have read and write permissions to the specified installation path.</li><li>You can view details such as the version commit ID in the ascend_docker_runtime_install.info file.</li></ul>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001930317932_row1444404185013"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p1144584125019"><a name="zh-cn_topic_0000001930317932_p1144584125019"></a><a name="zh-cn_topic_0000001930317932_p1144584125019"></a>--install-scene=&lt;scene&gt;</p>
 </td>
 <td class="cellrowborder" valign="top" width="67.57%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001930317932_p153510190174"><a name="zh-cn_topic_0000001930317932_p153510190174"></a><a name="zh-cn_topic_0000001930317932_p153510190174"></a><span id="zh-cn_topic_0000001930317932_ph1308455195116"><a name="zh-cn_topic_0000001930317932_ph1308455195116"></a><a name="zh-cn_topic_0000001930317932_ph1308455195116"></a>Ascend Docker Runtime</span> installation scenario.<span id="zh-cn_topic_0000001930317932_ph1641213426170"><a name="zh-cn_topic_0000001930317932_ph1641213426170"></a><a name="zh-cn_topic_0000001930317932_ph1641213426170"></a>The default value is </span><span id="zh-cn_topic_0000001930317932_ph8821719135318"><a name="zh-cn_topic_0000001930317932_ph8821719135318"></a><a name="zh-cn_topic_0000001930317932_ph8821719135318"></a>docker.</span> Valid values are as follows</p>
-<a name="zh-cn_topic_0000001930317932_ul8352122811918"></a><a name="zh-cn_topic_0000001930317932_ul8352122811918"></a><ul id="zh-cn_topic_0000001930317932_ul8352122811918"><li><span id="zh-cn_topic_0000001930317932_ph3371331161710"><a name="zh-cn_topic_0000001930317932_ph3371331161710"></a><a name="zh-cn_topic_0000001930317932_ph3371331161710"></a>docker</span>: Install in the <span id="zh-cn_topic_0000001930317932_ph1159416519530"><a name="zh-cn_topic_0000001930317932_ph1159416519530"></a><a name="zh-cn_topic_0000001930317932_ph1159416519530"></a>Docker</span> (or<span id="zh-cn_topic_0000001930317932_ph5391475179"><a name="zh-cn_topic_0000001930317932_ph5391475179"></a><a name="zh-cn_topic_0000001930317932_ph5391475179"></a> K8s integrated with Docker</span>) scenario.</li><li><span id="zh-cn_topic_0000001930317932_ph7743733115213"><a name="zh-cn_topic_0000001930317932_ph7743733115213"></a><a name="zh-cn_topic_0000001930317932_ph7743733115213"></a>c</span><span id="zh-cn_topic_0000001930317932_ph1274373385212"><a name="zh-cn_topic_0000001930317932_ph1274373385212"></a><a name="zh-cn_topic_0000001930317932_ph1274373385212"></a>containerd: install in the </span>Containerd(or K8s integrated with Containerd) scenario.</li><li>isula: install in the iSula container engine scenario.</li></ul><p>--install-scene cannot be used alone; it must be used together with --install, --uninstall, or --upgrade.</p>
+<a name="zh-cn_topic_0000001930317932_ul8352122811918"></a><a name="zh-cn_topic_0000001930317932_ul8352122811918"></a><ul id="zh-cn_topic_0000001930317932_ul8352122811918"><li><span id="zh-cn_topic_0000001930317932_ph3371331161710"><a name="zh-cn_topic_0000001930317932_ph3371331161710"></a><a name="zh-cn_topic_0000001930317932_ph3371331161710"></a>docker</span>: Install in the <span id="zh-cn_topic_0000001930317932_ph1159416519530"><a name="zh-cn_topic_0000001930317932_ph1159416519530"></a><a name="zh-cn_topic_0000001930317932_ph1159416519530"></a>Docker</span> (or<span id="zh-cn_topic_0000001930317932_ph5391475179"><a name="zh-cn_topic_0000001930317932_ph5391475179"></a><a name="zh-cn_topic_0000001930317932_ph5391475179"></a> K8s integrated with Docker</span>) scenario.</li><li><span id="zh-cn_topic_0000001930317932_ph7743733115213"><a name="zh-cn_topic_0000001930317932_ph7743733115213"></a><a name="zh-cn_topic_0000001930317932_ph7743733115213"></a>c</span><span id="zh-cn_topic_0000001930317932_ph1274373385212"><a name="zh-cn_topic_0000001930317932_ph1274373385212"></a><a name="zh-cn_topic_0000001930317932_ph1274373385212"></a>containerd: install in the </span>Containerd(or K8s integrated with Containerd) scenario.</li><li>isula: install in the iSula container engine scenario.</li><li>crio: install in the CRI-O container engine scenario.</li></ul><p>--install-scene cannot be used alone; it must be used together with --install, --uninstall, or --upgrade.</p>
+</td>
+</tr>
+<tr id="zh-cn_topic_0000001930317932_row1895631155201"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p895631155201"><a name="zh-cn_topic_0000001930317932_p895631155201"></a><a name="zh-cn_topic_0000001930317932_p895631155201"></a>--injection-mode=&lt;mode&gt;</p>
+</td>
+<td class="cellrowborder" valign="top" width="67.57%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001930317932_p995631155201"><a name="zh-cn_topic_0000001930317932_p995631155201"></a><a name="zh-cn_topic_0000001930317932_p995631155201"></a>Set the NPU device injection mode. The default value is legacy. The valid values are as follows.</p>
+<a name="zh-cn_topic_0000001930317932_ul109563155201"></a><a name="zh-cn_topic_0000001930317932_ul109563155201"></a><ul id="zh-cn_topic_0000001930317932_ul109563155201"><li>cdi: inject NPU devices using CDI.</li><li>legacy: inject NPU devices using the traditional hook method.</li></ul><p>--injection-mode cannot be used alone; it must be used together with --install or --upgrade.</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001930317932_row16570162013216"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p1457092012114"><a name="zh-cn_topic_0000001930317932_p1457092012114"></a><a name="zh-cn_topic_0000001930317932_p1457092012114"></a>--uninstall</p>
