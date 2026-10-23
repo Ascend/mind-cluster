@@ -345,15 +345,12 @@ class TestSheetLinkFilter(unittest.TestCase):
 
 
 class TestCliRunTask(unittest.TestCase):
-    """CLI入口run_task参数校验与透传"""
-
-    def _run(self, *args):
-        """构造CLI模型并执行run_task，返回(结果, AutoSingleDiag构造Mock)"""
+    def _run(self, *args, error_msg=""):
         with (
             patch("ascend_fd_tk.core.cli_module.cli_model.AutoSingleDiag") as single_cls,
             patch("ascend_fd_tk.core.cli_module.cli_model.asyncio.run"),
         ):
-            single_cls.return_value.error_msg = ""
+            single_cls.return_value.error_msg = error_msg
             cli_model = AutoSingleDiagCliModel(MagicMock(), MagicMock())
             result = cli_model.run_task(*args)
         return result, single_cls
@@ -372,14 +369,7 @@ class TestCliRunTask(unittest.TestCase):
         self.assertEqual(single_cls.call_args.args[1:], (_HOST_IP, "5"))
 
     def test_error_msg_returned(self):
-        """诊断返回错误信息时直接透传给用户"""
-        with (
-            patch("ascend_fd_tk.core.cli_module.cli_model.AutoSingleDiag") as single_cls,
-            patch("ascend_fd_tk.core.cli_module.cli_model.asyncio.run"),
-        ):
-            single_cls.return_value.error_msg = "未在缓存中找到设备 10.9.9.9"
-            cli_model = AutoSingleDiagCliModel(MagicMock(), MagicMock())
-            result = cli_model.run_task("10.9.9.9", "5")
+        result, _ = self._run("10.9.9.9", "5", error_msg="未在缓存中找到设备 10.9.9.9")
         self.assertEqual(result, "未在缓存中找到设备 10.9.9.9")
 
 
@@ -414,20 +404,23 @@ class TestMainFlow(unittest.TestCase):
         ]
         return patchers, report
 
-    def test_filter_results_and_generate_report(self):
-        """仅保留指定链路结果并生成报告"""
-        link_result = DiagResult(HostDomain(host_id=_HOST_IP, npu_id="5", chip_phy_id="9"))
-        other_result = DiagResult(HostDomain(host_id="10.1.1.9", npu_id="2", chip_phy_id="5"))
+    def _run_main(self, diag_results, ip=_HOST_IP, port="5"):
         diag_ctx = _make_diag_ctx()
-        patchers, report = self._patch_services([link_result, other_result])
+        patchers, report = self._patch_services(diag_results)
         for p in patchers:
             p.start()
         try:
-            diag = AutoSingleDiag(diag_ctx, _HOST_IP, "5")
+            diag = AutoSingleDiag(diag_ctx, ip, port)
             asyncio.run(diag.main())
         finally:
             for p in patchers:
                 p.stop()
+        return diag, diag_ctx, report
+
+    def test_filter_results_and_generate_report(self):
+        link_result = DiagResult(HostDomain(host_id=_HOST_IP, npu_id="5", chip_phy_id="9"))
+        other_result = DiagResult(HostDomain(host_id="10.1.1.9", npu_id="2", chip_phy_id="5"))
+        diag, diag_ctx, report = self._run_main([link_result, other_result])
         self.assertEqual(diag.error_msg, "")
         self.assertEqual(diag_ctx.diag_result, [link_result])
         report.assert_called_once_with(diag_ctx, link_filter=diag._is_specified_link_row)
@@ -436,32 +429,13 @@ class TestMainFlow(unittest.TestCase):
     def test_no_fault_on_link(self):
         """指定链路无故障时不生成报告并提示未发现故障"""
         other_result = DiagResult(HostDomain(host_id="10.1.1.9", npu_id="2", chip_phy_id="5"))
-        diag_ctx = _make_diag_ctx()
-        patchers, report = self._patch_services([other_result])
-        for p in patchers:
-            p.start()
-        try:
-            diag = AutoSingleDiag(diag_ctx, _HOST_IP, "5")
-            asyncio.run(diag.main())
-        finally:
-            for p in patchers:
-                p.stop()
+        diag, diag_ctx, report = self._run_main([other_result])
         self.assertIn("未发现故障", diag.error_msg)
         self.assertEqual(diag_ctx.diag_result, [])
         report.return_value.run.assert_not_awaited()
 
     def test_invalid_device_stops_before_diag(self):
-        """设备校验失败时不执行诊断"""
-        diag_ctx = _make_diag_ctx()
-        patchers, _ = self._patch_services([])
-        for p in patchers:
-            p.start()
-        try:
-            diag = AutoSingleDiag(diag_ctx, "10.9.9.9", "5")
-            asyncio.run(diag.main())
-        finally:
-            for p in patchers:
-                p.stop()
+        diag, _, _ = self._run_main([], ip="10.9.9.9")
         self.assertIn("未在缓存中找到设备", diag.error_msg)
 
 
