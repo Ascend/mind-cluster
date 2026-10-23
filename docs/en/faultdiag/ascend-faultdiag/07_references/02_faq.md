@@ -1,7 +1,5 @@
 # FAQs
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:29:57.133Z pushedAt=2026-08-24T02:51:43.298Z -->
-
 ## Python Version Not Meeting the Requirement During Installation
 
 ascend-fd requires Python 3.7 or later. To use the performance degradation feature, Python 3.8 or later is required. Check the Python version:
@@ -52,7 +50,7 @@ The terminal displays only 16 faulty device entries by default. The complete inf
   ```bash
   WARNING: The script ascend-fd is installed in '/usr/local/python3.8/bin' which is not on PATH.
     Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
-  Successfully installed ascend-faultdiag-26.1.0
+  Successfully installed ascend-faultdiag-26.2.0
   ```
 
   You can resolve this issue as follows:

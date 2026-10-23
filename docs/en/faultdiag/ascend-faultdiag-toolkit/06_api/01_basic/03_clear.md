@@ -1,7 +1,5 @@
 # clear
 
-<!-- md-trans-meta sourceCommit=e50286ce9b97df080579d7c724af5b63dfeb835e translatedAt=2026-08-24T02:17:50.219Z pushedAt=2026-08-24T02:22:41.571Z -->
-
 ## Command Function
 
 Clears the content displayed on the current terminal screen to facilitate viewing subsequent output. This command affects only the screen display and does not clear the internal state or cached data of the tool.

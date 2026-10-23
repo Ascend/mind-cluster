@@ -1,7 +1,5 @@
 # Customized Inspection
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:16:47.204Z pushedAt=2026-08-24T02:22:41.547Z -->
-
 This feature is suitable for customizing inspection dimensions on demand to meet link inspection requirements in customer-specific scenarios. The inspection feature is a beta feature and is not recommended for use in production environments.
 
 ## Non-interactive Mode (Commands and Outputs)

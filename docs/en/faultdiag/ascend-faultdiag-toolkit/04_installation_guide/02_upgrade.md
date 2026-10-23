@@ -1,7 +1,5 @@
 # Upgrade
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:15:28.425Z pushedAt=2026-08-24T02:22:41.521Z -->
-
 This section describes the version upgrade process of ascend-fd-tk.
 
 1. Upgrade the Whl package.

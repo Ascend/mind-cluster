@@ -1,7 +1,5 @@
 # Service Log Parsing (SDK)
 
-<!-- md-trans-meta sourceCommit=0bdfcd26262ca7cc1165bb55c8f28c6a29b377ef translatedAt=2026-08-24T02:27:59.443Z pushedAt=2026-08-24T02:51:43.266Z -->
-
 You can use the Python SDK interfaces of ascend-fd to parse service logs and extract key information.
 
 ## Applicable Scenarios

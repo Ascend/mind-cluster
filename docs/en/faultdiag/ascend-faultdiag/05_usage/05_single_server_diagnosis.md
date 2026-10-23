@@ -1,7 +1,5 @@
 # Single-Server Fault Diagnosis
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:27:17.459Z pushedAt=2026-08-24T02:51:43.245Z -->
-
 Single-server fault diagnosis can quickly complete log cleaning and fault diagnosis on a single server, without the need for multi-server log dumping.
 
 It is suitable for quickly troubleshooting issues on a single server, without the need for cross-server analysis.

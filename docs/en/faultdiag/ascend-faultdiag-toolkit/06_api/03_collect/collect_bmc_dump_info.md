@@ -1,7 +1,5 @@
 # collect_bmc_dump_info
 
-<!-- md-trans-meta sourceCommit=9d708be25ec5fef354b48beecd57d9b30752b536 translatedAt=2026-08-24T02:18:53.476Z pushedAt=2026-08-24T02:22:41.598Z -->
-
 ## Command Function
 
 Collects BMC dump info logs online. Based on the BMC connection information configured by `set_conn_config`, it remotely logs in to the BMC to perform log collection and downloads the logs to the local cache directory. This command only triggers collection on the BMC side and does not automatically start diagnostics.

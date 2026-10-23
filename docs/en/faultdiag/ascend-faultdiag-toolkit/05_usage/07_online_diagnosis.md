@@ -1,7 +1,5 @@
 # Online Diagnosis
 
-<!-- md-trans-meta sourceCommit=e50286ce9b97df080579d7c724af5b63dfeb835e translatedAt=2026-08-24T02:16:27.086Z pushedAt=2026-08-24T02:22:41.540Z -->
-
 This feature is applicable to accessible cluster devices. Configure device connection information to automatically perform data collection and fault diagnosis.
 
 ## Non-interactive Mode (Commands and Outputs)

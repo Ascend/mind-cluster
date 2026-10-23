@@ -1,7 +1,5 @@
 # set_conn_config
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:18:31.328Z pushedAt=2026-08-24T02:22:41.584Z -->
-
 ## Command Function
 
 Sets the path of the device connection configuration file for online analysis scenarios. The tool reads the host, BMC, and switch connection information configured in the file and stores it in encrypted form. After the configuration is set successfully, it is recommended to delete the source file containing plaintext passwords as soon as possible.
@@ -34,6 +32,10 @@ Sets the path of the device connection configuration file for online analysis sc
 # Supports IP range format ip1-ip2 (ensuring identical username and password), with step setting the increment
 1.1.1.4-1.1.1.10 step=2 username="root" password="<your_password>"
 
+[pod_manager]
+# PoDManager is the unified device management entry for the Atlas 950 SuperPoD. After login, it switches to each slot number to collect information.
+1.1.1.11 username="root" password="<your_password>"
+
 [config]
 # Supports setting a global private key file
 private_key="~/.ssh/your_private_key"
@@ -46,6 +48,7 @@ Configuration notes for cluster device connection:
 - Key-based login is supported. `private_key` specifies the private key path, which can be configured separately on each line or configured for all environments in the cluster in the `config` section.
 - The `ip` field supports both a single IP address and an IP range configuration (configured via `step`: `step` defaults to `1`; ensure that the username and password are the same).
 - Devices such as the 1620 front-end switch are also treated as switches; enter them under the `switch` section.
+- PoDManager is the unified device management entry for the Atlas 950 SuperPoD. Fill in the `pod_manager` option. After configuration, the tool logs in to PoDManager and switches slot by slot based on the built-in slot table to collect the information of each slot.
 
 [!NOTICE]
 > `conn.ini` contains device login credentials and is considered sensitive information. Recommendations:

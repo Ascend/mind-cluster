@@ -1,7 +1,5 @@
 # MindCluster Ascend FaultDiag User Guide
 
-<!-- md-trans-meta sourceCommit=355d5eb4764ef6f9269adcc2ff3c1d280a94349d translatedAt=2026-08-24T02:30:26.360Z pushedAt=2026-08-24T02:51:43.305Z -->
-
 - [Introduction](./01_introduction/menu_introduction.md)
   - [Overview](./01_introduction/01_overview.md)
   - [Supported Product Forms](./01_introduction/02_supported_products.md)

@@ -1,7 +1,5 @@
 # Fault Event Parsing and Diagnosis (SDK)
 
-<!-- md-trans-meta sourceCommit=0bdfcd26262ca7cc1165bb55c8f28c6a29b377ef translatedAt=2026-08-24T02:28:17.674Z pushedAt=2026-08-24T02:51:43.270Z -->
-
 Through the Python SDK interfaces of ascend-fd, all fault events in logs can be parsed and diagnosed based on the knowledge graph to identify specific fault types and causes.
 
 ## Applicable Scenarios

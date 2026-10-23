@@ -1,7 +1,5 @@
 # exit
 
-<!-- md-trans-meta sourceCommit=e50286ce9b97df080579d7c724af5b63dfeb835e translatedAt=2026-08-24T02:17:42.107Z pushedAt=2026-08-24T02:22:41.565Z -->
-
 ## Command Function
 
 Exits the interactive program of the diagnostic tool. After execution, the tool process terminates. This command is meaningful only in interactive mode.

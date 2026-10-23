@@ -1,8 +1,6 @@
 # Supported Product Forms
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:15:00.330Z pushedAt=2026-08-24T02:22:41.507Z -->
-
-The servers supported by the ascend-fd-tk tool are listed in the following table.
+The products supported by the ascend-fd-tk tool are listed in the following table.
 
 <table>
 <thead>
@@ -13,46 +11,26 @@ The servers supported by the ascend-fd-tk tool are listed in the following table
 </thead>
 <tbody>
 <tr>
-<td rowspan="3">Atlas A2 training products</td>
-<td>Atlas 200T A2 Box16 heterogeneous subrack</td>
-</tr>
-<tr>
-<td>Atlas 800T A2 training server</td>
-</tr>
-<tr>
-<td>Atlas 900 A2 PoD cluster base unit</td>
-</tr>
-<tr>
-<td rowspan="4">Atlas A3 training products</td>
-<td>Atlas 900 A3 SuperPoD</td>
-</tr>
-<tr>
-<td>Atlas 9000 A3 SuperPoD cluster computing system</td>
-</tr>
-<tr>
-<td>Atlas 800T A3 SuperPoD server</td>
-</tr>
-<tr>
-<td>A200T A3 Box8 SuperPoD server</td>
-</tr>
-<tr>
 <td>Atlas inference products</td>
 <td>Atlas 300I Duo inference card</td>
 </tr>
 <tr>
-<td rowspan="3">Atlas A2 inference products</td>
-<td>Atlas 800I A2 inference server (32 GB; HCCS)</td>
+<td rowspan="2">Atlas A2 products</td>
+<td>Atlas A2 training products: <ul><li>Atlas 800T A2</li><li>Atlas 900 A2 PoD</li><li>Atlas 200T A2 Box16</li></ul></td>
 </tr>
 <tr>
-<td>Atlas 800I A2 inference server (32 GB; PCIe)</td>
+<td>Atlas A2 inference products: <ul><li>Atlas 800I A2 (32 GB, HCCS)</li><li>Atlas 800I A2 (32 GB, PCIe)</li><li>Atlas 800I A2 (64 GB, HCCS)</li></ul></td>
 </tr>
 <tr>
-<td>Atlas 800I A2 inference server (64 GB; HCCS)</td>
+<td rowspan="2">Atlas A3 products</td>
+<td>Atlas A3 training products: <ul><li>Atlas 800T A3</li><li>Atlas 900 A3 SuperPoD</li><li>Atlas 9000 A3 SuperPoD</li><li>A200T A3 Box8</li></ul></td>
 </tr>
+<tr><td>Atlas A3 inference products:<p>Atlas 800I A3</p></td></tr>
 <tr>
-<td>Atlas A3 inference products</td>
-<td>Atlas 800I A3 SuperPoD server</td>
+<td rowspan="2">Ascend 950PR&950DT products</td>
+<td>Ascend 950PR products:<ul><li>Atlas 350 accelerator cards</li><li>Atlas 850</li><li>Atlas 650</li></ul></td>
 </tr>
+<tr><td>Ascend 950DT products:<ul><li>Atlas 850E</li><li>Atlas 650E</li><li>Atlas 950 SuperPoD</li></ul></td></tr>
 </tbody>
 </table>
 

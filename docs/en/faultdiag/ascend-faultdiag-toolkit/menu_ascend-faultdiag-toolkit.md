@@ -1,7 +1,5 @@
 # MindCluster Ascend FaultDiag Toolkit User Guide
 
-<!-- md-trans-meta sourceCommit=9d708be25ec5fef354b48beecd57d9b30752b536 translatedAt=2026-08-24T02:17:41.904Z pushedAt=2026-08-24T02:22:41.567Z -->
-
 - [Introduction](01_introduction/menu_introduction.md)
   - [Overview](01_introduction/01_overview.md)
   - [Supported Product Forms](01_introduction/02_supported_products.md)
@@ -41,6 +39,7 @@
     - [auto_collect](06_api/04_parse_diagnosis/01_auto_collect.md)
     - [auto_diag](06_api/04_parse_diagnosis/02_auto_diag.md)
     - [auto_collect_diag](06_api/04_parse_diagnosis/03_auto_collect_diag.md)
+    - [auto_single_diag](06_api/04_parse_diagnosis/04_auto_single_diag.md)
   - [Inspection Commands](06_api/05_inspection/auto_inspection.md)
   - [Maintenance Commands](06_api/06_maintenance/clear_cache.md)
 - [References](07_references/menu_references.md)

@@ -1,7 +1,5 @@
 # Offline Diagnosis
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:16:26.701Z pushedAt=2026-08-24T02:22:41.542Z -->
-
 This feature is suitable for scenarios where offline logs have been collected in advance, and fault diagnosis is performed based on the existing logs.
 
 ## Non-interactive Mode (Commands and Outputs)

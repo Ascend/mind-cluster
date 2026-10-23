@@ -533,7 +533,7 @@ cp -r ~/ttp_log {采集目录}/dl_log/ttp_log
 训练或推理结束后，需要采集 LCNE 组件日志。ascend-fd组件26.2.0及之后版本，增强了Unified Bus（UB）链路诊断能力，如果希望使用该增强能力，请务必采集LCNE日志。
 
 <!-- npu="950" id2 -->
-**Ascend 950PR&950DT系列产品**
+**<term>Ascend 950PR&950DT系列产品</term>**
 
 <term>Ascend 950PR&950DT系列产品</term>LCNE组件运行时，需要将日志解压至`采集目录/lcne_log/`下。可按照以下方式进行采集：
 

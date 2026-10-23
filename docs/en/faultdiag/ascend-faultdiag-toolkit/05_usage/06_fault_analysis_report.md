@@ -1,7 +1,5 @@
 # Diagnostic/Inspection Report Description
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:16:54.068Z pushedAt=2026-08-24T02:22:41.549Z -->
-
 This section describes the output location, file format, and field meanings of the ascend-fd-tk diagnostic report and inspection report, for interpreting diagnostic/inspection results.
 
 ## Report Description
@@ -111,7 +109,12 @@ In addition to the sheet label colors, some cells within the report also use col
 | Cabinet Number | Cabinet location number |
 | NPU ID | NPU number |
 | Physical Chip ID | Physical chip ID (`chip_phy_id`) |
+| UDie ID |New for <term>Ascend 950PR&950DT products</term>. UDie ID (used to distinguish different optical modules when there are multiple optical modules under the same NPU); empty for <term>Atlas A3 products</term>. |
+| NPU Port |New for <term>Ascend 950PR&950DT products</term>. NPU port number (used to distinguish different optical modules when there are multiple optical modules under the same NPU); empty for <term>Atlas A3 products</term>. |
+| NIC Name |New for <term>Ascend 950PR&950DT products</term>. NIC name (for example, `hinic0`), only has a value for NIC-related diagnostic items.        |
+| NIC Port |New for <term>Ascend 950PR&950DT products</term>. NIC port number (for example, `0` and `1`), only has a value for NIC-related diagnostic items.        |
 | Fault Code | Fault code defined internally by the tool (empty for some diagnostic items) |
+| Fault Time | Time when the fault occurred (empty for some diagnostic items)                                           |
 | Fault Information | Detailed description of the fault (including data values and thresholds) |
 | Handling Suggestion | Recommended handling method |
 | Link Fault Root Cause | Whether it is the root cause of this diagnosis (`yes`/`no`/`unknown`) |
@@ -131,11 +134,13 @@ In addition to the sheet label colors, some cells within the report also use col
 | Field | Description |
 |------|--------------|
 | Switch Name | Switch `sysname` |
-| Switch ID | Switch IP address |
+| Switch/PodManager ID | Switch IP address; PoDManager IP for collection via PoDManager |
+| Slot ID                          | Slot ID: Slot of the device for collection via PoDManager; empty for normal switches               |
 | SN | Switch serial number |
 | Equipment Room Name | Equipment room name |
 | Cabinet Number | Cabinet location number |
 | Port | Switch port name |
+| Optical Module ID                        |New for <term>Ascend 950PR&950DT products</term>. Optical module number (used to distinguish different optical modules when there are multiple optical modules under the same NPU); empty for <term>Atlas A3 products</term>. |
 | Fault Code/Fault Information/Handling Suggestion/Link Fault Root Cause | Same as the Host sheet |
 
 ### Link Analysis Sheet
@@ -197,7 +202,7 @@ This Sheet uses a two-section layout with "host side" + "switch side", and each 
 |---------|------|
 | Device Information | Host ID, Host Name, Host SN, Equipment Room Name, Cabinet Number |
 | Chip Information | NPU ID, Chip ID, Physical Chip ID, NPU Type, Host Side Port |
-| Optical Module Basic Information | Host Side Optical Module Status, Optical Module Vendor, Optical Module Model, Optical Module SN, Optical Module Temperature, Optical Module Supply Voltage |
+| Optical Module Basic Information | Host Side Optical Module Status, Optical Module Vendor, Optical Module Model, Optical Module SN, Optical Module Temperature, Optical Module Supply Voltage, Optical Module Type (ODSP/LPO) |
 | Link Status | Host Side Link Speed, Duplex Mode, Network Health, Link Status, Link UP Count, Link DOWN Count |
 | Lane Metrics (Lane 0~3) | TX Power, RX Power, TX Bias, Host SNR, Media SNR |
 
@@ -205,9 +210,9 @@ This Sheet uses a two-section layout with "host side" + "switch side", and each 
 
 | Field Category | Field |
 |---------|------|
-| Device Information | Peer Switch Name, Peer Switch ID, Peer Switch SN, Equipment Room Name, Cabinet Number |
-| Port Information | Peer Switch Port, Port Speed, Port Duplex Mode, Port Status |
-| Optical Module Basic Information | Peer Switch Optical Module Vendor, Optical Module Model, Optical Module SN, Optical Module Temperature |
+| Device Information | Peer Switch Name, Peer Switch ID, Peer Switch SN, Peer Switch Equipment Room Name, Peer Switch Cabinet Number |
+| Port Information | Peer Switch Port, Peer Switch Port Speed, Peer Switch Port Duplex Mode, Peer Switch Port Status |
+| Optical Module Basic Information | Peer Switch Optical Module Vendor, Optical Module Model, Optical Module SN, Peer Switch Optical Module Type (ODSP/LPO), Optical Module Temperature |
 | Lane Metrics (Lane 0~3) | TX Power, RX Power, SNR |
 
 #### Inter-Switch Port Connection
@@ -218,18 +223,18 @@ This sheet uses a two-section layout of "local" + "peer", with each side contain
 
 | Field Category | Field |
 |---------|------|
-| Device Information | Local Switch Name, Switch ID, Switch SN, Equipment Room Name, Cabinet Number |
+| Device Information | Local Switch Name, Local Switch ID, Local Switch Slot ID, Local Switch SN, Local Equipment Room Name, Local Cabinet Number |
 | Port Information | Local Port |
-| Optical Module Basic Information | Local Optical Module Vendor, Optical Module Model, Optical Module SN, Optical Module Temperature |
+| Optical Module Basic Information | Local Optical Module Vendor, Optical Module Model, Optical Module SN, Local Optical Module Type (ODSP/LPO), Optical Module Temperature |
 | Lane Metrics (Lane 0~3) | TX Power, RX Power, SNR |
 
 **Peer Switch Fields**
 
 | Field Category | Field |
 |---------|------|
-| Device Information | Peer Switch Name, Switch ID, Switch SN, Equipment Room Name, Cabinet Number |
+| Device Information | Peer Switch Name, Peer Switch ID, Peer Switch Slot ID, Peer Switch SN, Peer Equipment Room Name, Peer Cabinet Number |
 | Port Information | Peer Port |
-| Optical Module Basic Information | Peer Optical Module Vendor, Optical Module Model, Optical Module SN, Optical Module Temperature |
+| Optical Module Basic Information | Peer Optical Module Vendor, Optical Module Model, Optical Module SN, Peer Optical Module Type (ODSP/LPO), Optical Module Temperature |
 | Lane metrics (Lane 0~3) | TX Power, RX Power, SNR |
 
 ### Report Interpretation

@@ -1,18 +1,16 @@
 # Diagnostic Items
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:18:11.615Z pushedAt=2026-08-24T02:22:41.579Z -->
-
-Diagnostic items are categorized by device type, and each diagnostic item specifies its online command source and offline log path. The same device may involve multiple diagnostic items, and each diagnostic item corresponds to one or more online commands and offline logs. The toolkit includes a total of **40** diagnostic items, covering the host, BMC, switch, HCCS, and general dimensions.
+Diagnostic items are categorized by device type, and each diagnostic item specifies its online command source and offline log path. The same device may involve multiple diagnostic items, and each diagnostic item corresponds to one or more online commands and offline logs. The toolkit includes various diagnostic items, covering the host, BMC, switch, HCCS, and general dimensions.
 
 ## Diagnostic Item Index
 
-| Device Type | Number of Diagnostic Items | Detailed Description |
-|----------|------------|----------|
-| Host-side Diagnostics | 18 | [Host-side Diagnostics](#host-side-diagnostics) |
-| BMC Related Diagnostics | 2 | [BMC Related Diagnostics](#bmc-related-diagnostics) |
-| Switch-side Diagnostics | 11 | [Switch-side Diagnostics](#switch-side-diagnostics) |
-| HCCS Related Diagnostics | 8 | [HCCS Related Diagnostics](#hccs-related-diagnostics) |
-| General Diagnostics | 1 | [General Diagnostics](#general-diagnostics) |
+| Device Type | Detailed Description |
+|----------|----------|
+| Host-side Diagnostics | [Host-side Diagnostics](#host-side-diagnostics) |
+| BMC Related Diagnostics | [BMC Related Diagnostics](#bmc-related-diagnostics) |
+| Switch-side Diagnostics | [Switch-side Diagnostics](#switch-side-diagnostics) |
+| HCCS Related Diagnostics | [HCCS Related Diagnostics](#hccs-related-diagnostics) |
+| General Diagnostics | [General Diagnostics](#general-diagnostics) |
 
 ## Host-side Diagnostics
 
@@ -87,7 +85,7 @@ Diagnostic items are categorized by device type, and each diagnostic item specif
 <td>Optical Module CDR SNR Detection</td>
 <td><code>hccn_tool -i {chip_phy_id} -cdr_snr -g</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: Not Supported</td>
-<td>Check whether the CDR Host SNR / Media SNR values are below the threshold</td>
+<td>Check whether the CDR Host SNR/Media SNR values are below the threshold</td>
 <td>CDR SNR abnormal, Host SNR value 6.8 dB, below the threshold of 8.0 dB</td>
 </tr>
 <tr>
@@ -108,8 +106,8 @@ Diagnostic items are categorized by device type, and each diagnostic item specif
 <td>NPU Peer LLDP Information Missing Detection</td>
 <td><code>hccn_tool -i {chip_phy_id} -lldp -g</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: <code>lldp.log</code></td>
-<td>Check whether the lldp information of the peer of the NPU optical module is collected</td>
-<td>The lldp information of the peer of the NPU optical module is not collected</td>
+<td>Check whether the LLDP information of the peer of the NPU optical module is collected</td>
+<td>The LLDP information of the peer of the NPU optical module is not collected</td>
 </tr>
 <tr>
 <td>Loopback Detection</td>
@@ -127,7 +125,7 @@ Diagnostic items are categorized by device type, and each diagnostic item specif
 </tr>
 <tr>
 <td>Dual-ended Optical Module SNR Detection</td>
-<td>Obtain the peer port through LLDP information, and perform comparative analysis on the Host SNR / Media SNR of the dual-ended optical module.</td>
+<td>Obtain the peer port through LLDP information, and perform comparative analysis on the Host SNR/Media SNR of the dual-ended optical module.</td>
 <td>Local SNR value 7.2 dB is below the threshold of 8.0 dB, while the peer switch SNR value 9.5 dB is normal.</td>
 </tr>
 <tr>
@@ -140,6 +138,81 @@ Diagnostic items are categorized by device type, and each diagnostic item specif
 
 >[!NOTE]
 > For details about host log V1/V2/V3 versions, see [Offline Log Collection (Host)](../05_usage/02_log_collection.md#host-offline-log).
+
+### Additional Host-side Diagnostics for <term>Ascend 950PR&950DT Products</term>
+
+The host-side diagnostic items of <term>Ascend 950PR&950DT products</term> have the same diagnostic logic as the corresponding items of <term>Atlas A3 products</term>, except that <term>Ascend 950PR&950DT products</term> additionally provide NIC SFP lane-level diagnostics.
+
+<table>
+<thead>
+<tr>
+<th>Diagnostic Item</th>
+<th>Online Command</th>
+<th>Diagnostic Logic</th>
+<th>Abnormal Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Optical Module Presence Detection</td>
+<td rowspan="6"><code>hccn_tool -g -optical -i {npu_id} -u {udie_id} -p {port_id}</code></td>
+<td>Check whether the optical module is present</td>
+<td>Optical module not present; status: NA.</td>
+</tr>
+<tr>
+<td>High-power Enable Register Status Detection</td>
+<td>Check the high power enable register status</td>
+<td>The optical module is in low power mode; high power enable reg:0x00</td>
+</tr>
+<tr>
+<td>Optical Module Los/LoL Detection</td>
+<td>Check whether the TxFault, TxLos, RxLos, TxLol, and RxLol flag status values of each lane are Normal</td>
+<td>Optical module TxLos flag indicator abnormal: Lane1: 0x1</td>
+</tr>
+<tr>
+<td>Optical Module Bias Current Detection</td>
+<td>Check whether the bias value of each lane exceeds the threshold range</td>
+<td>Optical module bias abnormal: Lane1 bias current 78 mA is below the threshold of 90 mA</td>
+</tr>
+<tr>
+<td>Optical Module Optical Power Detection</td>
+<td>Check whether the TxPower/RxPower values of each lane exceed the threshold range</td>
+<td>Optical module optical power abnormal: Lane1 RX power -18.5 dBm is below the threshold of -15 dBm</td>
+</tr>
+<tr>
+<td>Optical Module SNR Detection and Inter-LANE Difference</td>
+<td>Check whether the Host SNR / Media SNR values of each lane are below the threshold, and check whether the difference between lanes exceeds the threshold</td>
+<td>Optical module Host SNR abnormal: Lane1 Host SNR value 7.2 dB, below the threshold of 8.0 dB</td>
+</tr>
+<tr>
+<td>Port Virtual Link Priority Credit Insufficient Detection</td>
+<td><code>hccn_tool -g -credit -i {npu_id} -u {udie_id} -p {port_id}</code></td>
+<td>Check whether the allocated quantity (link_alloc_vl_pri_credit) and the used quantity (link_cur_used_pri_credit) of the credit of each priority are equal and non-zero (if both the allocated and used quantities are 0, the priority is not enabled, which is not considered an exception)</td>
+<td>Port virtual link priority credit insufficient: vl1 allocated quantity=8, used quantity=8</td>
+</tr>
+<tr>
+<td>NIC Optical Module Los/LoL Detection</td>
+<td rowspan="4"><code>hinicadm5 sfp -i {card_name} -p {port_id}</code></td>
+<td>Check whether the TxLos, RxLos, TxCdrLol, and RxCdrLol status values of each lane of the NIC port are non-zero</td>
+<td>NIC port Lane1 TxLos abnormal: actual value 0x1 (normal value 0)</td>
+</tr>
+<tr>
+<td>NIC Optical Module Optical Power Detection</td>
+<td>Check whether the TxPower/RxPower values of each lane of the NIC port exceed the threshold range</td>
+<td>NIC port tx_power abnormal: Lane1 RX power -18.5 dBm is below the threshold of -15 dBm</td>
+</tr>
+<tr>
+<td>NIC Optical Module Bias Current Detection</td>
+<td>Check whether the bias value of each lane of the NIC port exceeds the threshold range</td>
+<td>NIC port bias abnormal: Lane1 bias current 78 mA is below the threshold of 90 mA</td>
+</tr>
+<tr>
+<td>NIC Optical Module SNR Detection</td>
+<td>Check whether the Host SNR / Media SNR values of each lane of the NIC port are below the threshold</td>
+<td>NIC port host_snr abnormal: Lane1 Host SNR value 7.2 dB is below the threshold of 8.0 dB</td>
+</tr>
+</tbody>
+</table>
 
 ## BMC Related Diagnostics
 
@@ -385,6 +458,13 @@ The following table lists the main BMC alarm codes recognized by the tool and th
 <td>Dual-ended Optical Module Current Detection</td>
 <td>Obtain the peer through the port mapping relationship, and perform comparative analysis on the bias current of the dual-ended optical modules</td>
 <td>The local switch bias current is 8 mA, and the peer host bias current is 105 mA</td>
+</tr>
+<tr>
+<td>Port QoS Credit Insufficient Detection</td>
+<td><code>dis forward information enp slot {slot_id} chip {chip_id} "get oda table qos credit current" | no-more</code> (For <term>Ascend 950PR&950DT products</term>, this command is executed after redirecting to the NPU slot through PoDManager.)</td>
+<td>Not supported</td>
+<td>Check whether the current available credit (current credit) of each VL priority is 0 and the allocated credit (alloc credit) is non-zero (alloc credit = used credit + current credit; if the allocated credit is 0, the priority is not enabled, which is not considered an exception)</td>
+<td>chip15, port0 QoS credit insufficient: vl1 allocated quantity=8, current available quantity=0</td>
 </tr>
 </tbody>
 </table>
