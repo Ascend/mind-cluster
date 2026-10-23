@@ -1,7 +1,5 @@
 # Feature Guide
 
-<!-- md-trans-meta sourceCommit=8c36d230fe88892740f2c741498130e6a9bb3cce translatedAt=2026-08-24T02:28:20.743Z pushedAt=2026-08-24T02:51:43.272Z -->
-
 - [Feature Overview](./01_usage_overview.md)
 - [Log Collection](./02_log_collection.md)
 - [Log Parsing](./03_log_parsing.md)

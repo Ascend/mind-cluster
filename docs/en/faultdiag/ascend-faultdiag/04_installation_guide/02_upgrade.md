@@ -1,7 +1,5 @@
 # Upgrade
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:26:47.556Z pushedAt=2026-08-24T02:51:43.235Z -->
-
 1. Run the following command to install the new software package.
 
     ```shell
@@ -24,7 +22,7 @@
     If the new version number is displayed, the upgrade is successful:
 
     ```shell
-    ascend-fd v26.1.0
+    ascend-fd v26.2.0
     ```
 
     If the upgrade fails, refer to the [uninstallation guide](03_uninstallation.md) to uninstall it, and then refer to the [installation guide](01_installation.md) to reinstall it.

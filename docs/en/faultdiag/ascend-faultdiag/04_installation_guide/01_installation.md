@@ -1,7 +1,5 @@
 # Installation and Deployment
 
-<!-- md-trans-meta sourceCommit=cc2549abde258f50a946dbab123b7ff2035ed91e translatedAt=2026-08-24T02:26:50.048Z pushedAt=2026-08-24T02:51:43.237Z -->
-
 ## Before You Begin
 
 - Deploy ascend-fd independently on each server. If it is deployed in a shared directory for use by multiple servers, functional exceptions or performance issues may occur.
@@ -23,11 +21,11 @@ You can obtain the software package by downloading the zip package from the open
 
     | Software Package                                      | Subfile                                                         | Description                          | Link                                                         |
     |-------------------------------------------------------|-----------------------------------------------------------------|--------------------------------------|--------------------------------------------------------------|
-    | `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag-{version}-py3-none-linux_{arch}.whl`          | ascend-fd installation package | [Download link](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0) |
+    | `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag-{version}-py3-none-linux_{arch}.whl`          | ascend-fd installation package | [Download link](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0) |
 
     > [!NOTE]
     >
-    > - `{version}` is the software package version. Change it as needed, for example, 26.1.0.
+    > - `{version}` is the software package version. Change it as needed, for example, 26.2.0.
     > - `{arch}` is the software package architecture, which can be `x86_64` or `aarch64`. Change it as needed. You can run the `arch` command to view it.
     > - To prevent the software package from being maliciously tampered with during transfer or storage, you are advised to verify the SUM value of the software package. To verify the SUM value, refer to [Software Package SUM Value Verification](#software-package-sum-value-verification-procedure).
 
@@ -47,7 +45,7 @@ You can obtain the software package by downloading the zip package from the open
         pip3 install -r src/requirements.txt && pip3 install 'setuptools>=60.3.0' 'wheel>=0.45.1'
         ```
 
-    3. To customize version information, create a `service_config.ini` file in the current directory (`mind-cluster/component/ascend-faultdiag`) and fill in the version number, such as `26.1.0`. The version number format must comply with [Python version specifications](https://packaging.pythonlang.cn/en/latest/specifications/version-specifiers/).
+    3. To customize version information, create a `service_config.ini` file in the current directory (`mind-cluster/component/ascend-faultdiag`) and fill in the version number, such as `26.2.0`. The version number format must comply with [Python version specifications](https://packaging.pythonlang.cn/en/latest/specifications/version-specifiers/).
 
     4. Execute the build script.
 
@@ -93,7 +91,7 @@ You can obtain the software package by downloading the zip package from the open
     The version number in the output indicates that the installation is successful, for example:
 
     ```shell
-    ascend-fd v26.1.0
+    ascend-fd v26.2.0
     ```
 
 #### Log Description
@@ -107,13 +105,13 @@ You can obtain the software package by downloading the zip package from the open
 
 MindCluster Ascend Deployer supports installation of ascend-fd version 7.1.RC1 or later.
 
-To install ascend-fd on a single server or multiple servers in batches, refer to the "[Installing Ascend Software](https://gitcode.com/Ascend/ascend-deployer/blob/branch_v26.1.0/docs/en/05_installation_and_upgrade/02_install_softwares.md)" section in the *MindCluster Ascend Deployer User Guide*.
+To install ascend-fd on a single server or multiple servers in batches, refer to the "[Installing Ascend Software](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/en/05_installation_and_upgrade/02_install_softwares.md)" section in the *MindCluster Ascend Deployer User Guide*.
 
 ## Reference
 
 ### Software Package SUM Value Verification Procedure
 
-1. Download the [Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0) file.
+1. Download the [Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0) file.
 
 2. Place `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum` and `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` in the same directory, and run the following command to perform verification.
 

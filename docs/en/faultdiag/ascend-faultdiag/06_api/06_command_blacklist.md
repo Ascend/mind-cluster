@@ -1,7 +1,5 @@
 # blacklist Command (Fault Log Masking)
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:29:08.164Z pushedAt=2026-08-24T02:51:43.280Z -->
-
 ## Function Description
 
 Used to manage log masking rules and filter out log information that does not need attention.

@@ -1,10 +1,8 @@
 # Appendix
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:30:11.001Z pushedAt=2026-08-24T02:51:43.302Z -->
-
 ## Version Number Format
 
-The ascend-fd version number follows the format `X.Y.Z`, for example, `26.1.0`.
+The ascend-fd version number follows the format `X.Y.Z`, for example, `26.2.0`.
 
 ## Default Paths
 
@@ -39,4 +37,4 @@ The ascend-fd version number follows the format `X.Y.Z`, for example, `26.1.0`.
 
 ## Known Faults
 
-Refer to [MindCluster 26.1.0 Fault Diagnosis Types](https://raw.gitcode.com/Ascend/mind-cluster/blobs/c49ed595d1b87b34eaf020591778c4536c34b2fe/%E6%95%85%E9%9A%9C%E8%AF%8A%E6%96%AD%E7%B1%BB%E5%9E%8B.xlsx).
+Refer to [MindCluster 26.2.0 Fault Diagnosis Types](https://raw.gitcode.com/Ascend/mind-cluster/blobs/c49ed595d1b87b34eaf020591778c4536c34b2fe/%E6%95%85%E9%9A%9C%E8%AF%8A%E6%96%AD%E7%B1%BB%E5%9E%8B.xlsx).

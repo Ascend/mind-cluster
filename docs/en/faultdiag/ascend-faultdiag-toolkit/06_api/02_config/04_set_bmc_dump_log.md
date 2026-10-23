@@ -1,7 +1,5 @@
 # set_bmc_dump_log
 
-<!-- md-trans-meta sourceCommit=9d708be25ec5fef354b48beecd57d9b30752b536 translatedAt=2026-08-24T02:18:36.087Z pushedAt=2026-08-24T02:22:41.588Z -->
-
 ## Command Function
 
 Sets the BMC export log directory for offline analysis scenarios.

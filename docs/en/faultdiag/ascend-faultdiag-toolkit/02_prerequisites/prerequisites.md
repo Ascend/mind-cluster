@@ -1,7 +1,5 @@
 # Prerequisites
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:15:06.391Z pushedAt=2026-08-24T02:22:41.516Z -->
-
 Before using ascend-fd-tk, you are advised to understand the following concepts.
 
 ## Basic Concepts
@@ -27,7 +25,7 @@ The AI SuperPoD intelligent computing cluster consists of two parts that togethe
 
 ### Typical Example
 
-The 384-NPU-module Atlas 800T A3 SuperPoD is used as a typical example to illustrate the networking composition. The schematic diagram of the 384-NPU-module SuperPoD networking solution is as follows:
+The 384-NPU-module Atlas 800T A3 is used as a typical example to illustrate the networking composition. The schematic diagram of the 384-NPU-module SuperPoD networking solution is as follows:
 
 ![Schematic diagram of the 384-NPU-module SuperPoD networking solution](../../figures/ascend-faultdiag-toolkit/384-NPU-module-SuperPoD-networking.PNG)
 

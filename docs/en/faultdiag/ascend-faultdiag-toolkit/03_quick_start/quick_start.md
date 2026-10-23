@@ -1,7 +1,5 @@
 # Quick Start
 
-<!-- md-trans-meta sourceCommit=cc2549abde258f50a946dbab123b7ff2035ed91e translatedAt=2026-08-24T02:15:30.506Z pushedAt=2026-08-24T02:22:41.525Z -->
-
 This document guides you through the diagnosis operation with ascend-fd-tk, demonstrating the link failure diagnosis feature based on offline switch logs.
 
 ## Prerequisites
@@ -14,21 +12,21 @@ This document guides you through the diagnosis operation with ascend-fd-tk, demo
 1. Download the software package.
 
     ```bash
-    # Download the fault diagnosis ZIP package of version v26.1.0 (because the ascend-fd-tk Whl installation package is architecture-independent, the following example directly downloads the aarch64 architecture).
-    wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-faultdiag_26.1.0_linux-aarch64.zip
-    unzip Ascend-mindxdl-faultdiag_26.1.0_linux-aarch64.zip
+    # Download the fault diagnosis ZIP package of version v26.2.0 (because the ascend-fd-tk Whl installation package is architecture-independent, the following example directly downloads the aarch64 architecture).
+    wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.2.0/Ascend-mindxdl-faultdiag_26.2.0_linux-aarch64.zip
+    unzip Ascend-mindxdl-faultdiag_26.2.0_linux-aarch64.zip
     ```
 
 2. Install the software package.
 
     ```bash
-    pip3 install ascend_faultdiag_toolkit-26.1.0-py3-none-any.whl
+    pip3 install ascend_faultdiag_toolkit-26.2.0-py3-none-any.whl
     ```
 
     Output if installation succeeds:
 
     ```txt
-    Successfully installed ascend-faultdiag-toolkit-26.1.0
+    Successfully installed ascend-faultdiag-toolkit-26.2.0
     ```
 
 3. Verify whether the installation is successful.
@@ -40,7 +38,7 @@ This document guides you through the diagnosis operation with ascend-fd-tk, demo
     Output if installation succeeds:
 
     ```text
-    MindCluster ascend-faultdiag-toolkit version: 26.1.0
+    MindCluster ascend-faultdiag-toolkit version: 26.2.0
     ```
 
 ## Step 2: Clear the Cache

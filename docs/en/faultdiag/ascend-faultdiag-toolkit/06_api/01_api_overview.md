@@ -1,10 +1,6 @@
 # API Overview
 
-<!-- md-trans-meta sourceCommit=9d708be25ec5fef354b48beecd57d9b30752b536 translatedAt=2026-08-24T02:16:57.246Z pushedAt=2026-08-24T02:22:41.554Z -->
-
 This document summarizes all commands provided by ascend-fd-tk and their functional categories for quick reference. For detailed descriptions of each command, see the corresponding sections.
-
-The toolkit provides 16 commands in total, grouped into 6 categories by functionality.
 
 ## Command Categories
 
@@ -41,6 +37,7 @@ The toolkit provides 16 commands in total, grouped into 6 categories by function
 | `auto_collect` | Starts automatic information collection, supporting offline and online collection, and is suitable for batch collection across different network planes | No | [auto_collect](04_parse_diagnosis/01_auto_collect.md) |
 | `auto_diag` | Starts automatic diagnostics (used together with batch collection) | No | [auto_diag](04_parse_diagnosis/02_auto_diag.md) |
 | `auto_collect_diag` | One-click automatic collection + diagnostics | No | [auto_collect_diag](04_parse_diagnosis/03_auto_collect_diag.md) |
+| `auto_single_diag` | Diagnoses a single link (device IP + port) | Yes (IP, port) | [auto_single_diag](04_parse_diagnosis/04_auto_single_diag.md) |
 
 ### Inspection Commands
 

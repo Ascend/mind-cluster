@@ -1,7 +1,5 @@
 # auto_collect_diag
 
-<!-- md-trans-meta sourceCommit=9d708be25ec5fef354b48beecd57d9b30752b536 translatedAt=2026-08-24T02:19:09.932Z pushedAt=2026-08-24T02:22:41.606Z -->
-
 ## Command Function
 
 Starts one-click automatic collection and diagnosis, and automatically executes the collection (online device collection or offline log collection) and diagnosis process, which is equivalent to executing `auto_collect` + `auto_diag` in sequence.

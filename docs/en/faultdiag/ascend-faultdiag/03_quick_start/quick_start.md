@@ -1,7 +1,5 @@
 # Quick Start
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:26:40.617Z pushedAt=2026-08-24T02:51:43.232Z -->
-
 This chapter helps users install ascend-fd and run a basic diagnostic example, using sample logs to experience how ascend-fd diagnoses the issue of an NPU optical module not in position.
 
 ## Prerequisites
@@ -20,13 +18,13 @@ This chapter helps users install ascend-fd and run a basic diagnostic example, u
     - aarch64
 
         ```shell
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-faultdiag_26.1.0_linux-aarch64.zip
+        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.2.0/Ascend-mindxdl-faultdiag_26.2.0_linux-aarch64.zip
         ```
 
     - x86_64
 
         ```shell
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-faultdiag_26.1.0_linux-x86_64.zip
+        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.2.0/Ascend-mindxdl-faultdiag_26.2.0_linux-x86_64.zip
         ```
 
 2. Decompress and install the package.
@@ -34,15 +32,15 @@ This chapter helps users install ascend-fd and run a basic diagnostic example, u
     - aarch64
 
         ```shell
-        unzip Ascend-mindxdl-faultdiag_26.1.0_linux-aarch64.zip
-        pip3 install ascend_faultdiag-26.1.0-py3-none-linux_aarch64.whl
+        unzip Ascend-mindxdl-faultdiag_26.2.0_linux-aarch64.zip
+        pip3 install ascend_faultdiag-26.2.0-py3-none-linux_aarch64.whl
         ```
 
     - x86_64
 
         ```shell
-        unzip Ascend-mindxdl-faultdiag_26.1.0_linux-x86_64.zip
-        pip3 install ascend_faultdiag-26.1.0-py3-none-linux_x86_64.whl
+        unzip Ascend-mindxdl-faultdiag_26.2.0_linux-x86_64.zip
+        pip3 install ascend_faultdiag-26.2.0-py3-none-linux_x86_64.whl
         ```
 
 3. Verify whether the installation is successful.
@@ -54,7 +52,7 @@ This chapter helps users install ascend-fd and run a basic diagnostic example, u
     If the version number is displayed, the installation is successful.
 
     ```shell
-    ascend-fd v26.1.0
+    ascend-fd v26.2.0
     ```
 
 ## Step 2: Prepare Logs
@@ -137,7 +135,7 @@ This example only requires preparing the environment check logs.
     +--------------+------------+-----------------------------------------------------------------------------------------------------------+
     |   Version Information  |    Type    | Version                                                                                                      |
     +--------------+------------+-----------------------------------------------------------------------------------------------------------+
-    |              | Fault-Diag | 26.1.0                                                                                                    |
+    |              | Fault-Diag | 26.2.0                                                                                                    |
     |              |   Driver   | 23.0.7                                                                                                    |
     |              |  Firmware  | 7.1.0.11.220                                                                                              |
     |              |    NNAE    | 8.0.0                                                                                                     |

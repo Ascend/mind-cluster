@@ -1,7 +1,5 @@
 # Installation
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:15:42.757Z pushedAt=2026-08-24T02:22:41.527Z -->
-
 ## Before You Begin
 
 - The ascend-fd-tk tool requires Python 3.8 or later. Before installation, check whether the Python version meets the requirement.
@@ -20,7 +18,7 @@ Obtain the Whl package in either of the following ways.
 
 | Package                                                | Subfile                                                         | Description          | Link                                                         |
 |-------------------------------------------------------|-----------------------------------------------------------------|-------------|--------------------------------------------------------------|
-| `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag_toolkit-{version}-py3-none-any.whl`          | Link fault diagnosis component installation package | [Download link](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0) |
+| `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag_toolkit-{version}-py3-none-any.whl`          | Link fault diagnosis component installation package | [Download link](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0) |
 
 >[!NOTE]
 >
@@ -100,7 +98,7 @@ ascend-fd-tk about
 
 **Software package checksum verification steps**:
 
-1. Download the [Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum](https://gitcode.com/Ascend/mind-cluster/releases/v26.1.0) file.
+1. Download the [Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0) file.
 
 2. Place `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum` and `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` in the same directory, and run the following command to perform verification.
 

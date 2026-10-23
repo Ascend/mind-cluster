@@ -1,7 +1,5 @@
 # Introduction
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:15:02.955Z pushedAt=2026-08-24T02:22:41.512Z -->
-
 ## Overview
 
 MindCluster Ascend FaultDiag Toolkit (abbreviated as ascend-fd-tk) is a link fault diagnosis tool for Ascend AI clusters. The tool provides both interactive and non-interactive operation modes, and supports two data processing capabilities: online automatic data collection and offline log parsing. It can collect cluster device information, conduct automated inspection diagnosis, and locate link faults in a cluster through information of servers, L1/L2 UnifiedBus switches, RoCE switches, and BMC.
