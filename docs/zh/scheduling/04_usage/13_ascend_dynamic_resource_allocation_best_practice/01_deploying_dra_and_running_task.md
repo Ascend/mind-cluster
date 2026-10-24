@@ -29,8 +29,9 @@ Ascend DRA基于Kubernetes动态资源分配（Dynamic Resource Allocation，DRA
         devices:
           requests:
           - <strong>name: npu              # 请求名称，Pod中通过该名称引用</strong>
-            <strong>deviceClassName: npu.huawei.com   # 引用DRA组件部署时创建的DeviceClass</strong>
-            <strong>count: 1               # 请求的NPU数量，按需修改</strong>
+            <strong>exactly:</strong>
+              <strong>deviceClassName: npu.huawei.com # 引用DRA组件部署时创建的DeviceClass</strong>
+              <strong>count: 1                        # 请求的NPU数量，按需修改</strong>
     </pre>
     > [!NOTE]
     > `deviceClassName`取值为`npu.huawei.com`，该DeviceClass由`ascend-dra-driver.yaml`部署时自动创建，其选择器匹配driver为`npu.huawei.com`的所有设备。
