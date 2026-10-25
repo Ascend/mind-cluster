@@ -25,3 +25,4 @@
 <!-- npu="950,A3" id3 -->
 - [代际升级适配指导](./07_Intergenerational_upgrade.md)
 <!-- end id3 -->
+- [故障退避容忍的降级调度](./08_fault_tolerance_backoff_scheduling.md)

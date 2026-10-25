@@ -95,6 +95,7 @@
     <!-- npu="950,A3" id10 -->
     - [代际升级适配指导](./04_usage/03_basic_scheduling/07_Intergenerational_upgrade.md)
     <!-- end id10 -->
+    - [故障退避容忍的降级调度](./04_usage/03_basic_scheduling/08_fault_tolerance_backoff_scheduling.md)
   <!-- end id7 -->
   <!-- npu="950,A3,910b,910,310p" id12 -->
   - [故障检测特性指南](./04_usage/04_fault_detection_and_diagnosis/menu_fault_detection_and_diagnosis.md)
