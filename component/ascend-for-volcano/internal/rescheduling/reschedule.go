@@ -918,11 +918,13 @@ func (reScheduler *ReScheduler) CheckNodeNPUByTask(task *api.TaskInfo, vcNode *p
 	return nil
 }
 
-// recordPodErrorCardsToNodes records the cards that errored a pod (the fault
+// recordAndRefreshPodErrorCardsToNodes records the cards that errored a pod (the fault
 // tasks' used cards) as pod-error for the owning job on the node, in the
 // cross-session pod-error cache. Pod-error backoff is per job: only the job that
-// errored a card backs off from it, other jobs are unaffected.
-func (reScheduler *ReScheduler) recordPodErrorCardsToNodes() {
+// errored a card backs off from it, other jobs are unaffected. After recording,
+// each node's ChipTopo is refreshed so the pod-error backoff reflects this
+// session's failures instead of the previous session's.
+func (reScheduler *ReScheduler) recordAndRefreshPodErrorCardsToNodes(env *plugin.ScheduleEnv) {
 	if reScheduler == nil {
 		return
 	}
@@ -934,6 +936,12 @@ func (reScheduler *ReScheduler) recordPodErrorCardsToNodes() {
 			}
 			cache.RecordPodError(fTask.NodeName, fTask.UseCardName, fTask.PodFailedTime)
 		}
+	}
+	if env == nil {
+		return
+	}
+	for _, npuNode := range env.Nodes {
+		npuNode.RefreshPodErrorTime()
 	}
 }
 

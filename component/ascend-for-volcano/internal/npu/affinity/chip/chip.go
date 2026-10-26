@@ -231,11 +231,10 @@ func (tp *chipHandler) RestoreAnnotation(task *api.TaskInfo, node plugin.NPUNode
 func (tp *chipHandler) ScoreFrameworkAware() bool { return true }
 
 // excludedChipIDs returns the chip-id set the topology tree should withhold for
-// the job this handler serves. Silent-fault cards are node-level static state
-// recorded on the ChipTopo and gated by the job's silent-fault tolerance window;
-// pod-error cards are per job (only the job that errored a card backs off from
-// it) and gated by the job's pod-error tolerance window. An empty set means no
-// card is currently withheld.
+// the job this handler serves. Silent-fault and pod-error cards are both
+// node-level static state recorded on the ChipTopo and gated by the job's
+// silent-fault and pod-error tolerance windows respectively. An empty set means
+// no card is currently withheld.
 func (tp *chipHandler) excludedChipIDs(node plugin.NPUNode) map[int]struct{} {
 	set := make(map[int]struct{})
 	if root := node.ChipTopo; root != nil {
@@ -246,13 +245,11 @@ func (tp *chipHandler) excludedChipIDs(node plugin.NPUNode) map[int]struct{} {
 		}
 		if tp.NPUJob != nil {
 			now := time.Now().Unix()
-			for card, faultTime := range cache.PodErrorCards(node.Name) {
+			for id, faultTime := range root.PodErrorChips() {
 				if util.TimeGateAllows(tp.NPUJob.ToleranceConfig.PodErrorToleranceAfterTime, now-faultTime) {
 					continue
 				}
-				for id := range node.ChipIDsFromCardNames([]string{card}) {
-					set[id] = struct{}{}
-				}
+				set[id] = struct{}{}
 			}
 		}
 	}
