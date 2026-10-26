@@ -41,7 +41,7 @@ func newTwoGroupTree(owners map[string][]int) *topo.ChipNode {
 	if root == nil {
 		panic("parse [[0,1,2,3],[4,5,6,7]] failed")
 	}
-	root.Init(nil, nil, nil, owners)
+	root.Init(nil, nil, nil, nil, owners)
 	return root
 }
 
@@ -109,6 +109,6 @@ func allNetUnhealthyNode(n int) *topo.ChipNode {
 	for i := 0; i < n; i++ {
 		netUnh[i] = struct{}{}
 	}
-	root.Init(nil, netUnh, nil, nil)
+	root.Init(nil, netUnh, nil, nil, nil)
 	return root
 }

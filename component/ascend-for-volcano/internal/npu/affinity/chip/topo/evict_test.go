@@ -34,7 +34,7 @@ func twoGroupTree(owners map[string][]int) *ChipNode {
 	if root == nil {
 		panic("parse [[0,1,2,3],[4,5,6,7]] failed")
 	}
-	root.Init(nil, nil, nil, owners)
+	root.Init(nil, nil, nil, nil, owners)
 	return root
 }
 
@@ -88,7 +88,7 @@ func TestSelectEvictSoftMinimal(t *testing.T) {
 func TestSelectEvictSoftNotSatisfiable(t *testing.T) {
 	root := ParseTopology("[[0,1,2,3],[4,5,6,7]]")
 	owners := map[string][]int{"p2": {2}, "p3": {3}, "p4": {4}, "p5": {5}, "p6": {6}, "p7": {7}}
-	root.Init(map[int]struct{}{0: {}, 1: {}}, nil, nil, owners)
+	root.Init(map[int]struct{}{0: {}, 1: {}}, nil, nil, nil, owners)
 	preemptees := []*api.TaskInfo{peTask(2, 2), peTask(3, 3), peTask(4, 4), peTask(5, 5), peTask(6, 6), peTask(7, 7)}
 	selected, ok := root.SelectEvictSoft(7, false, preemptees)
 	if ok || selected != nil {
@@ -99,7 +99,7 @@ func TestSelectEvictSoftNotSatisfiable(t *testing.T) {
 func TestSelectEvictSoftUnhealthyChip(t *testing.T) {
 	root := ParseTopology("[[0,1,2,3],[4,5,6,7]]")
 	owners := map[string][]int{"p0": {0}, "p1": {1}}
-	root.Init(nil, map[int]struct{}{0: {}}, nil, owners)
+	root.Init(nil, map[int]struct{}{0: {}}, nil, nil, owners)
 	preemptees := []*api.TaskInfo{peTask(0, 0), peTask(1, 1)}
 	selected, ok := root.SelectEvictSoft(7, false, preemptees)
 	if !ok {
@@ -206,7 +206,7 @@ func TestSelectEvictHardKGroupComposition(t *testing.T) {
 		"p0": {0}, "p1": {1}, "p2": {2}, "p3": {3},
 		"p4": {4}, "p5": {5}, "p6": {6}, "p7": {7},
 	}
-	root.Init(nil, nil, nil, owners)
+	root.Init(nil, nil, nil, nil, owners)
 	preemptees := []*api.TaskInfo{
 		peTask(0, 0), peTask(1, 1), peTask(2, 2), peTask(3, 3),
 		peTask(4, 4), peTask(5, 5), peTask(6, 6), peTask(7, 7),
@@ -236,7 +236,7 @@ func TestSelectEvictHardZeroEvictionWholeFreeTree(t *testing.T) {
 func TestSelectEvictHardZeroEvictionWholeGroupsFree(t *testing.T) {
 	root := ParseTopology("[[0,1],[2,3],[4,5],[6,7]]")
 	owners := map[string][]int{"p4": {4}, "p5": {5}, "p6": {6}, "p7": {7}}
-	root.Init(nil, nil, nil, owners)
+	root.Init(nil, nil, nil, nil, owners)
 	selected, ok := root.SelectEvictHard(4, false, nil)
 	if !ok || selected != nil {
 		t.Fatalf("want (nil,true) zero eviction, got selected=%v ok=%v", names(selected), ok)

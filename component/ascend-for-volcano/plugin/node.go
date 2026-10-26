@@ -33,6 +33,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/affinity/chip/topo"
@@ -336,7 +337,7 @@ func (n *NPUNode) ParseChipTopology(node *api.NodeInfo) {
 		n.ChipTopo = nil
 		return
 	}
-	n.ChipTopo.Init(faulty, netUnh, silent, n.buildOwners())
+	n.ChipTopo.Init(faulty, netUnh, silent, n.podErrorChipTimes(), n.buildOwners())
 }
 
 // topologyRaw returns the raw chip topology value, falling back to a flat
@@ -484,6 +485,33 @@ func (n NPUNode) ChipIDsFromCardNames(cards []string) map[int]struct{} {
 		}
 	}
 	return res
+}
+
+// podErrorChipTimes converts the node's pod-error card records (card name ->
+// failure unix second) into chip-id -> failure unix second, resolving card
+// names to chip ids the same way ChipIDsFromCardNames does. A later failure
+// time wins when several cards map to the same chip id.
+func (n *NPUNode) podErrorChipTimes() map[int]int64 {
+	res := make(map[int]int64)
+	for card, faultTime := range cache.PodErrorCards(n.Name) {
+		for id := range n.ChipIDsFromCardNames([]string{card}) {
+			if existing, ok := res[id]; !ok || faultTime > existing {
+				res[id] = faultTime
+			}
+		}
+	}
+	return res
+}
+
+// RefreshPodErrorTime re-reads the pod-error cache and writes the latest
+// chip-id -> failure time onto the node's ChipTopo. It is called after the
+// fault handler records the current session's pod-error cards, so the pod-error
+// backoff reflects this session's failures instead of the previous session's.
+func (n *NPUNode) RefreshPodErrorTime() {
+	if n == nil || n.ChipTopo == nil {
+		return
+	}
+	n.ChipTopo.SetPodErrorTimes(n.podErrorChipTimes())
 }
 
 // cardAnnoNpuPre

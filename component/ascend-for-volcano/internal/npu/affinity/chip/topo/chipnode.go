@@ -41,6 +41,7 @@ type ChipNode struct {
 	faulty       int
 	netUnhealthy int
 	silentFault  int
+	podErrorTime int64
 	allocated    int
 	ownedBy      []string
 
@@ -144,7 +145,8 @@ func (n *ChipNode) collectLeaves(out map[int]*ChipNode) {
 	}
 }
 
-func (n *ChipNode) Init(faulty, netUnh, silent map[int]struct{}, owners map[string][]int) {
+func (n *ChipNode) Init(faulty, netUnh, silent map[int]struct{}, podError map[int]int64,
+	owners map[string][]int) {
 	n.owners = owners
 	if n.owners == nil {
 		n.owners = make(map[string][]int)
@@ -152,8 +154,8 @@ func (n *ChipNode) Init(faulty, netUnh, silent map[int]struct{}, owners map[stri
 	n.leafIndex = make(map[int]*ChipNode, n.total)
 	n.collectLeaves(n.leafIndex)
 	for _, leaf := range n.leafIndex {
-		leaf.faulty, leaf.netUnhealthy, leaf.silentFault, leaf.allocated, leaf.ownedBy =
-			0, 0, 0, 0, nil
+		leaf.faulty, leaf.netUnhealthy, leaf.silentFault, leaf.podErrorTime, leaf.allocated, leaf.ownedBy =
+			0, 0, 0, 0, 0, nil
 		id := leaf.chipID
 		switch {
 		case has(faulty, id):
@@ -163,6 +165,9 @@ func (n *ChipNode) Init(faulty, netUnh, silent map[int]struct{}, owners map[stri
 		}
 		if has(silent, id) {
 			leaf.silentFault = 1
+		}
+		if t, ok := podError[id]; ok {
+			leaf.podErrorTime = t
 		}
 	}
 	keys := make([]string, 0, len(owners))
@@ -316,6 +321,46 @@ func (n *ChipNode) SilentFaultChips() map[int]struct{} {
 	return out
 }
 
+// PodErrorChips returns the chip ids of every leaf with a pod-error record,
+// mapped to its failure unix second. Like SilentFaultChips it is node-level
+// static state; whether to withhold them is decided by the consumer via its
+// tolerance window.
+func (n *ChipNode) PodErrorChips() map[int]int64 {
+	out := make(map[int]int64)
+	if n == nil {
+		return out
+	}
+	for id, leaf := range n.leafIndex {
+		if leaf.podErrorTime > 0 {
+			out[id] = leaf.podErrorTime
+		}
+	}
+	return out
+}
+
+// SetPodErrorTimes refreshes the pod-error time of every leaf to the given
+// chip-id -> failure-unix-second map, clearing any previously recorded value.
+// It is used after the fault handler records the current session's pod-error
+// cards, so the node's ChipTopo reflects the latest cache without a one-session
+// delay. Only the pod-error state is touched; faulty/net/silent/allocated and
+// owners are left unchanged.
+func (n *ChipNode) SetPodErrorTimes(podError map[int]int64) {
+	if n == nil {
+		return
+	}
+	for _, leaf := range n.leafIndex {
+		leaf.podErrorTime = 0
+	}
+	for id, t := range podError {
+		if t <= 0 {
+			continue
+		}
+		if leaf, ok := n.leafIndex[id]; ok {
+			leaf.podErrorTime = t
+		}
+	}
+}
+
 func (n *ChipNode) cloneRec() *ChipNode {
 	if n == nil {
 		return nil
@@ -323,8 +368,8 @@ func (n *ChipNode) cloneRec() *ChipNode {
 	cl := &ChipNode{
 		chipID: n.chipID, total: n.total, Raw: n.Raw,
 		faulty: n.faulty, allocated: n.allocated, netUnhealthy: n.netUnhealthy,
-		silentFault: n.silentFault,
-		ownedBy:     append([]string(nil), n.ownedBy...),
+		silentFault: n.silentFault, podErrorTime: n.podErrorTime,
+		ownedBy: append([]string(nil), n.ownedBy...),
 	}
 	for _, c := range n.children {
 		cl.children = append(cl.children, c.cloneRec())
