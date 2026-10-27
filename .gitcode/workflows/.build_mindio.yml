@@ -72,6 +72,7 @@ jobs:
                 ls -al ${ATOMGIT_WORKSPACE}/tempdir
                 cp -fr ${ATOMGIT_WORKSPACE}/tempdir/.gitcode/workflows/build ${workflow_path}/
                 cp -fr ${ATOMGIT_WORKSPACE}/tempdir/.gitcode/workflows/config ${workflow_path}/
+                cp -fr ${ATOMGIT_WORKSPACE}/tempdir/.gitcode/workflows/scripts ${workflow_path}/
                 rm -fr ${ATOMGIT_WORKSPACE}/tempdir
             fi
       - name: compile
