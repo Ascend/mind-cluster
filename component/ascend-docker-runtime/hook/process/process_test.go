@@ -36,6 +36,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"ascend-common/api"
+	"ascend-common/cdi/mount"
 	"ascend-docker-runtime/mindxcheckutils"
 )
 
@@ -766,6 +767,87 @@ func TestParseMounts(t *testing.T) {
 			assert.Equalf(t, tt.want, parseMounts(tt.mounts), "parseMounts(%v)", tt.mounts)
 		})
 	}
+}
+
+// TestParseMountEntry tests the function parseMountEntry
+func TestParseMountEntry(t *testing.T) {
+	convey.Convey("test parseMountEntry", t, func() {
+		convey.Convey("legacy entry without colon keeps same-path mount", func() {
+			hostPath, containerPath, err := parseMountEntry("/usr/local/Ascend/driver")
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(hostPath, convey.ShouldEqual, "/usr/local/Ascend/driver")
+			convey.So(containerPath, convey.ShouldBeEmpty)
+		})
+		convey.Convey("mapping entry should be split correctly", func() {
+			hostPath, containerPath, err := parseMountEntry("/data/models:/workspace/models")
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(hostPath, convey.ShouldEqual, "/data/models")
+			convey.So(containerPath, convey.ShouldEqual, "/workspace/models")
+		})
+		convey.Convey("entry with spaces around parts should be trimmed", func() {
+			hostPath, containerPath, err := parseMountEntry(" /data/a : /container/a ")
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(hostPath, convey.ShouldEqual, "/data/a")
+			convey.So(containerPath, convey.ShouldEqual, "/container/a")
+		})
+		convey.Convey("blank entry should return error", func() {
+			_, _, err := parseMountEntry("")
+			convey.So(err, convey.ShouldBeError)
+			_, _, err = parseMountEntry("   ")
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("empty part should return error", func() {
+			_, _, err := parseMountEntry(":/container/a")
+			convey.So(err, convey.ShouldBeError)
+			_, _, err = parseMountEntry("/data/a:")
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("relative container path should return error", func() {
+			_, _, err := parseMountEntry("/data/a:container/a")
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("container path contains '..' should return error", func() {
+			_, _, err := parseMountEntry("/data/a:/container/../etc")
+			convey.So(err, convey.ShouldBeError)
+		})
+		convey.Convey("container path of exactly MaxContainerPathLen should pass", func() {
+			_, _, err := parseMountEntry("/data/a:/container/" + strings.Repeat("a", mount.MaxContainerPathLen-11))
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("too long container path should return error", func() {
+			_, _, err := parseMountEntry("/data/a:/container/" + strings.Repeat("a", mount.MaxContainerPathLen-10))
+			convey.So(err, convey.ShouldBeError)
+		})
+	})
+}
+
+// TestBuildMountEntry tests the function buildMountEntry
+func TestBuildMountEntry(t *testing.T) {
+	convey.Convey("test buildMountEntry", t, func() {
+		convey.Convey("empty container path keeps host path only", func() {
+			convey.So(buildMountEntry("/data/a", ""), convey.ShouldEqual, "/data/a")
+		})
+		convey.Convey("mapping entry should be reassembled", func() {
+			convey.So(buildMountEntry("/data/a", "/container/a"),
+				convey.ShouldEqual, "/data/a:/container/a")
+		})
+	})
+}
+
+// TestReadMountConfigGlobMapping verifies glob entries cannot carry a mapping
+func TestReadMountConfigGlobMapping(t *testing.T) {
+	patch := gomonkey.ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil)
+	defer patch.Reset()
+
+	convey.Convey("test readMountConfig rejects glob entries with mapping", t, func() {
+		tmpDir := t.TempDir()
+		listPath := filepath.Join(tmpDir, "base.list")
+		if err := os.WriteFile(listPath, []byte(tmpDir+"/src/*:/data/m\n"), 0600); err != nil {
+			t.Fatalf("write list failed: %v", err)
+		}
+		_, _, err := readMountConfig(tmpDir, "base")
+		convey.So(err, convey.ShouldBeError)
+	})
 }
 
 // TestReadMountConfig tests the function readMountConfig

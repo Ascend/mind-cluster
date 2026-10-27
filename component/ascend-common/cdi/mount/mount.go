@@ -87,9 +87,86 @@ type MountEntry struct {
 	// Paths are the host paths in this group, or glob patterns when they
 	// contain wildcard characters (*?[).
 	Paths []string `json:"path"`
+	// ContainerPaths holds the in-container target path for each path in
+	// Paths (1:1 aligned); an empty string means same-path mount. Only the
+	// legacy list mode populates it via "hostPath[:containerPath]" entries.
+	ContainerPaths []string `json:"containerPath,omitempty"`
 	// Type marks the group; "UB" for UB user-space files (gated by
 	// MountUBDrv), empty otherwise.
 	Type string `json:"type,omitempty"`
+}
+
+// MaxContainerPathLen bounds the container path length of a mount mapping.
+// It aligns with ascend-docker-cli: MountEntry.dst is char[BUF_SIZE] and
+// CheckDstPath rejects len >= BUF_SIZE, so at most BUF_SIZE-1 (1023)
+// characters can pass. Sharing one bound here prevents entries accepted by
+// the hook/CDI side from being rejected by the CLI at container start.
+const MaxContainerPathLen = 1023
+
+// validateContainerPath validates an in-container target path, shared by the
+// list parser and the JSON profile mode: absolute, at most
+// MaxContainerPathLen characters, no ".." component (anti rootfs-escape),
+// never "/" (which would shadow the whole container rootfs), and no ':'
+// (extra ':' makes the entry ambiguous).
+func validateContainerPath(containerPath string) error {
+	if containerPath == "" {
+		return nil
+	}
+	if !filepath.IsAbs(containerPath) || len(containerPath) > MaxContainerPathLen {
+		return fmt.Errorf("container path %q must be absolute and at most %d characters",
+			containerPath, MaxContainerPathLen)
+	}
+	if containerPath == "/" {
+		return fmt.Errorf("container path %q must not shadow the container rootfs", containerPath)
+	}
+	if strings.Contains(containerPath, "..") {
+		return fmt.Errorf("container path %q must not contain '..'", containerPath)
+	}
+	if strings.Contains(containerPath, ":") {
+		return fmt.Errorf("container path %q must not contain ':'", containerPath)
+	}
+	return nil
+}
+
+// ParseMountEntry parses a mount list line "hostPath[:containerPath]".
+// Entries without ':' keep the legacy same-path mount behaviour and must not
+// be empty (callers should skip blank lines before parsing); entries with ':'
+// require both parts non-empty and a valid container path.
+func ParseMountEntry(entry string) (string, string, error) {
+	parts := strings.SplitN(entry, ":", 2)
+	if len(parts) == 1 {
+		hostPath := strings.TrimSpace(parts[0])
+		if hostPath == "" {
+			return "", "", fmt.Errorf("invalid mount entry %s: empty host path", entry)
+		}
+		return hostPath, "", nil
+	}
+
+	hostPath := strings.TrimSpace(parts[0])
+	containerPath := strings.TrimSpace(parts[1])
+	if hostPath == "" || containerPath == "" {
+		return "", "", fmt.Errorf("invalid mount entry %s: empty host or container path", entry)
+	}
+	// normalize trailing slashes (docker -v style "/dir/") so the CLI's parent
+	// path resolution and mount point creation see a clean target
+	containerPath = strings.TrimRight(containerPath, "/")
+	if containerPath == "" {
+		return "", "", fmt.Errorf("invalid mount entry %s: container path contains only '/'", entry)
+	}
+	if err := validateContainerPath(containerPath); err != nil {
+		return "", "", fmt.Errorf("invalid mount entry %s: %w", entry, err)
+	}
+
+	return hostPath, containerPath, nil
+}
+
+// containerPathAt returns the in-container path aligned with Paths[i], or ""
+// when the entry has no mapping (legacy same-path mount).
+func (e MountEntry) containerPathAt(i int) string {
+	if i < len(e.ContainerPaths) {
+		return e.ContainerPaths[i]
+	}
+	return ""
 }
 
 // Build is the single entry point of the mount engine. It reads mount entries
@@ -140,20 +217,29 @@ func roBindOptions() []string {
 
 // buildMounts converts normalized entries into CDI bind mounts. Glob entries
 // (paths containing wildcard characters) are expanded and validated by
-// expandGlobPath (symlink containment + ownership); plain entries are
-// existence-checked (via StatHostPath) and symlink-validated via
+// expandGlobPath (symlink containment + ownership) and must not carry a path
+// mapping; container paths are validated centrally so that entries from both
+// the list mode and the JSON profile mode are equally guarded; plain entries
+// are existence-checked (via StatHostPath) and symlink-validated via
 // checkSymlinkOwner.
 func buildMounts(entries []MountEntry, hostFsPrefix string, allowLink bool) ([]*cdispec.Mount, error) {
 	mounts := make([]*cdispec.Mount, 0, len(entries))
 	for _, entry := range entries {
-		for _, path := range entry.Paths {
+		for i, path := range entry.Paths {
+			containerPath := entry.containerPathAt(i)
 			if containsGlob(path) {
+				if containerPath != "" {
+					return nil, fmt.Errorf("glob path %s does not support container mapping", path)
+				}
 				for _, matched := range expandGlobPath(path, allowLink, hostFsPrefix) {
-					mounts = append(mounts, newBindMount(matched))
+					mounts = append(mounts, newBindMount(matched, matched))
 				}
 				continue
 			}
 
+			if err := validateContainerPath(containerPath); err != nil {
+				return nil, fmt.Errorf("mount %s: %w", path, err)
+			}
 			if err := StatHostPath(hostFsPrefix, path); err != nil {
 				hwlog.RunLog.Warnf("Mount: skip non-existent path %q: %v", path, err)
 				continue
@@ -161,19 +247,23 @@ func buildMounts(entries []MountEntry, hostFsPrefix string, allowLink bool) ([]*
 			if !checkSymlinkOwner(path, allowLink, hostFsPrefix) {
 				continue
 			}
-			mounts = append(mounts, newBindMount(path))
+			mounts = append(mounts, newBindMount(path, containerPath))
 		}
 	}
 
 	return mounts, nil
 }
 
-// newBindMount returns a read-only bind mount whose host and container paths
-// are identical, as required by CDI for driver library files.
-func newBindMount(hostPath string) *cdispec.Mount {
+// newBindMount returns a read-only bind mount. An empty containerPath keeps
+// the legacy same-path mount (HostPath == ContainerPath, as required by CDI
+// for driver library files); otherwise containerPath is the bind target.
+func newBindMount(hostPath, containerPath string) *cdispec.Mount {
+	if containerPath == "" {
+		containerPath = hostPath
+	}
 	return &cdispec.Mount{
 		HostPath:      hostPath,
-		ContainerPath: hostPath,
+		ContainerPath: containerPath,
 		Type:          mountTypeBind,
 		Options:       roBindOptions(),
 	}

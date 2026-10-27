@@ -409,3 +409,98 @@ func TestCheckSymlinkOwner_AllowLinkDisabled(t *testing.T) {
 		t.Error("checkSymlinkOwner with allowLink=false must pass non-symlink files")
 	}
 }
+
+// TestParseMountEntry verifies "hostPath[:containerPath]" parsing: legacy
+// same-path passthrough, valid mapping, and all invalid mapping forms.
+func TestParseMountEntry(t *testing.T) {
+	// Legacy entries without ':' keep same-path mounts and stay lenient.
+	hostPath, containerPath, err := ParseMountEntry("/usr/local/Ascend/driver")
+	if err != nil || hostPath != "/usr/local/Ascend/driver" || containerPath != "" {
+		t.Fatalf("legacy entry broken: %q %q %v", hostPath, containerPath, err)
+	}
+
+	hostPath, containerPath, err = ParseMountEntry(" /data/models : /workspace/models ")
+	if err != nil || hostPath != "/data/models" || containerPath != "/workspace/models" {
+		t.Fatalf("mapping entry broken: %q %q %v", hostPath, containerPath, err)
+	}
+
+	// trailing slashes are normalized (docker -v style "/dir/")
+	hostPath, containerPath, err = ParseMountEntry("/data/a:/container/dir/")
+	if err != nil || containerPath != "/container/dir" {
+		t.Fatalf("trailing slash normalization broken: %q %q %v", hostPath, containerPath, err)
+	}
+
+	// container path of exactly MaxContainerPathLen (1023) chars is accepted
+	maxLenPath := "/c/" + strings.Repeat("a", MaxContainerPathLen-3)
+	hostPath, containerPath, err = ParseMountEntry("/data/a:" + maxLenPath)
+	if err != nil || containerPath != maxLenPath {
+		t.Fatalf("max-length container path broken: %q %v", containerPath, err)
+	}
+
+	invalid := []string{
+		"",                          // blank line (callers must skip)
+		"   ",                       // whitespace-only line (callers must skip)
+		":/container/a",             // empty host path
+		"/data/a:",                  // empty container path
+		"/data/a:container/a",       // relative container path
+		"/data/a:/",                 // shadows the whole container rootfs
+		"/data/a:/container/../etc", // '..' escape
+		"/data/a:/con:tainer/a",     // extra ':' in container path
+		"/data/a:/x///",             // container path with only slashes
+		"/data/a:/c/" + strings.Repeat("a", MaxContainerPathLen-2), // exceeds the CLI bound
+	}
+	for _, entry := range invalid {
+		if _, _, err := ParseMountEntry(entry); err == nil {
+			t.Errorf("expected error for entry %q", entry)
+		}
+	}
+}
+
+// TestBuildMounts_MappingEntry verifies that buildMounts honors the aligned
+// container path and keeps HostPath == ContainerPath for legacy entries.
+func TestBuildMounts_MappingEntry(t *testing.T) {
+	dir := t.TempDir()
+	lib := filepath.Join(dir, "lib.so")
+	mustWriteFile(t, lib, "")
+
+	entries := []MountEntry{
+		{Paths: []string{lib}, ContainerPaths: []string{"/container/lib.so"}},
+	}
+	mounts, err := buildMounts(entries, "", false)
+	if err != nil {
+		t.Fatalf("buildMounts returned error: %v", err)
+	}
+	if len(mounts) != 1 || mounts[0].HostPath != lib || mounts[0].ContainerPath != "/container/lib.so" {
+		t.Fatalf("mapping not applied, got %+v", mounts)
+	}
+
+	// Legacy entry without ContainerPaths keeps same-path mount.
+	mounts, err = buildMounts([]MountEntry{{Paths: []string{lib}}}, "", false)
+	if err != nil {
+		t.Fatalf("buildMounts returned error: %v", err)
+	}
+	if len(mounts) != 1 || mounts[0].ContainerPath != mounts[0].HostPath {
+		t.Fatalf("legacy entry must keep same-path mount, got %+v", mounts)
+	}
+}
+
+// TestBuildMounts_ContainerPathValidation verifies that buildMounts guards
+// container paths centrally (covering the JSON profile mode): "/" shadowing,
+// relative paths, and glob entries carrying a mapping must all fail.
+func TestBuildMounts_ContainerPathValidation(t *testing.T) {
+	dir := t.TempDir()
+	lib := filepath.Join(dir, "lib.so")
+	mustWriteFile(t, lib, "")
+
+	invalid := []MountEntry{
+		{Paths: []string{lib}, ContainerPaths: []string{"/"}},
+		{Paths: []string{lib}, ContainerPaths: []string{"relative"}},
+		{Paths: []string{lib}, ContainerPaths: []string{"/container/../etc"}},
+		{Paths: []string{filepath.Join(dir, "lib*")}, ContainerPaths: []string{"/container/lib.so"}},
+	}
+	for _, entry := range invalid {
+		if _, err := buildMounts([]MountEntry{entry}, "", false); err == nil {
+			t.Errorf("buildMounts must reject entry %+v", entry)
+		}
+	}
+}

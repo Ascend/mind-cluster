@@ -12,17 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <string>
-#include <iostream>
-#include <climits>
 #include <sys/mount.h>
 #include <unistd.h>
 
-#include "gtest/gtest.h"
-#include "securec.h"
-#include "mockcpp/mockcpp.hpp"
+#include <climits>
+#include <iostream>
+#include <string>
 
 #include "../../../src/basic.h"
+#include "gtest/gtest.h"
+#include "mockcpp/mockcpp.hpp"
+#include "securec.h"
 
 using namespace std;
 using namespace testing;
@@ -33,8 +33,8 @@ extern "C" int snprintf_s(char *strDest, size_t destMax, size_t count, const cha
 extern "C" int open(const char *path, int flags);
 extern "C" int close(int fd);
 extern "C" int stat(const char *file_name, struct stat *buf);
-extern "C" int mount(const char *source, const char *target,
-                     const char *filesystemtype, unsigned long mountflags, const void *data);
+extern "C" int mount(const char *source, const char *target, const char *filesystemtype, unsigned long mountflags,
+                     const void *data);
 extern "C" int Mount(const char *src, const char *dst);
 extern "C" int rmdir(const char *pathname);
 extern "C" int EnterNsByFd(int fd, int nsType);
@@ -44,7 +44,7 @@ extern "C" int EnterNsByPath(const char *path, int nsType);
 extern "C" int CheckDirExists(char *dir, int len);
 extern "C" int GetParentPathStr(const char *path, char *parent, size_t bufSize);
 extern "C" int MakeDirWithParent(const char *path, mode_t mode);
-extern "C" int MountDir(const char *rootfs, const char *file, unsigned long reMountRwFlag);
+extern "C" int MountDir(const char *rootfs, const char *src, const char *dstInContainer);
 extern "C" int SetupContainer(struct CmdArgs *args);
 extern "C" int Process(int argc, char **argv);
 extern "C" int DoFileMounting(const char *rootfs, const struct MountList *list);
@@ -59,173 +59,104 @@ extern "C" int LogLoop(const char *filename);
 extern "C" bool TakeNthWord(char **pLine, unsigned int n, char **word);
 extern "C" bool CheckRootDir(char **pLine);
 extern "C" bool GetFileSubsetAndCheck(const char *basePath, const size_t basePathLen);
-extern "C" bool CheckExistsFile(const char* filePath, const size_t filePathLen,
-                                const size_t maxFileSizeMb, const bool checkWgroup);
-extern "C" int VerifyPathInfo(const struct PathInfo* pathInfo);
-extern "C" bool CheckExternalFile(const char* filePath, const size_t filePathLen,
-                                  const size_t maxFileSizeMb, const bool checkOwner);
-extern "C" int LogLoop(const char* filename);
+extern "C" bool CheckExistsFile(const char *filePath, const size_t filePathLen, const size_t maxFileSizeMb,
+                                const bool checkWgroup);
+extern "C" int VerifyPathInfo(const struct PathInfo *pathInfo);
+extern "C" bool CheckExternalFile(const char *filePath, const size_t filePathLen, const size_t maxFileSizeMb,
+                                  const bool checkOwner);
+extern "C" int LogLoop(const char *filename);
 extern "C" void Logger(const char *msg, int level, int screen);
 extern "C" int EnterNsByPath(const char *path, int nsType);
-extern "C" bool CheckOpenedFile(FILE* fp, const long maxSize, const bool checkOwner);
+extern "C" bool CheckOpenedFile(FILE *fp, const long maxSize, const bool checkOwner);
 
 #ifdef GOOGLE_TEST
 extern "C" STATIC int MkDir(const char *dir, mode_t mode);
-extern "C" STATIC void WriteLogFile(const char* filename, const long maxSize, const char* buffer, unsigned bufferSize);
-extern "C" STATIC long GetLogSize(const char* filename);
-extern "C" STATIC int CreateLog(const char* filename);
-extern "C" STATIC int GetCurrentLocalTime(char* buffer, int length);
-extern "C" STATIC bool LogConvertStorage(const char* filename, const long maxSize);
+extern "C" STATIC void WriteLogFile(const char *filename, const long maxSize, const char *buffer, unsigned bufferSize);
+extern "C" STATIC long GetLogSize(const char *filename);
+extern "C" STATIC int CreateLog(const char *filename);
+extern "C" STATIC int GetCurrentLocalTime(char *buffer, int length);
+extern "C" STATIC bool LogConvertStorage(const char *filename, const long maxSize);
 extern "C" STATIC void DivertAndWrite(const char *logPath, const char *msg, const int level);
-extern "C" STATIC long GetLogSizeProcess(const char* path);
+extern "C" STATIC long GetLogSizeProcess(const char *path);
 extern "C" STATIC bool CheckSrcFile(const char *src);
-extern "C" STATIC int MountFile(const char *rootfs, const char *filepath);
+extern "C" STATIC int MountFile(const char *rootfs, const char *src, const char *dstInContainer);
+extern "C" STATIC bool SplitMountEntry(const char *arg, char *src, char *dst);
+extern "C" STATIC bool CheckDstPath(const char *dst);
 extern "C" STATIC bool OptionsCmdArgParser(struct CmdArgs *args, const char *arg);
 extern "C" STATIC bool MountFileCmdArgParser(struct CmdArgs *args, const char *arg);
 extern "C" STATIC bool MountDirCmdArgParser(struct CmdArgs *args, const char *arg);
 extern "C" STATIC bool LinkCheckCmdArgParser(const char *argv);
 #endif
 
-int stub_setns(int fd, int nstype)
+int stub_setns(int fd, int nstype) { return 0; }
+
+int Stub_GetNsPath_Failed(const int pid, const char *nsType, char *buf, size_t bufSize) { return -1; }
+
+int Stub_GetSelfNsPath_Failed(const char *nsType, char *buf, size_t bufSize) { return -1; }
+
+int Stub_EnterNsByFd_Success(int fd, int nsType) { return 0; }
+
+int Stub_EnterNsByFd_Failed(int fd, int nsType) { return -1; }
+
+int stub_open_success(const char *path, int flags) { return 0; }
+
+int stub_open_failed(const char *path, int flags) { return -1; }
+
+int stub_close_success(int fd) { return 0; }
+
+int stub_MkDir_success(const char *dir, mode_t mode) { return 0; }
+
+int stub_MkDir_failed(const char *dir, mode_t mode) { return -1; }
+
+int stub_mount_success(const char *source, const char *target, const char *filesystemtype, unsigned long mountflags,
+                       const void *data)
 {
     return 0;
 }
 
-int Stub_GetNsPath_Failed(const int pid, const char *nsType, char *buf, size_t bufSize)
+int stub_Mount_success(const char *src, const char *dst) { return 0; }
+
+int stub_Mount_failed(const char *src, const char *dst) { return -1; }
+
+int stub_mount_failed(const char *source, const char *target, const char *filesystemtype, unsigned long mountflags,
+                      const void *data)
 {
     return -1;
 }
 
-int Stub_GetSelfNsPath_Failed(const char *nsType, char *buf, size_t bufSize)
+int stub_mount_src_nil_failed(const char *source, const char *target, const char *filesystemtype,
+                              unsigned long mountflags, const void *data)
 {
-    return -1;
-}
-
-int Stub_EnterNsByFd_Success(int fd, int nsType)
-{
-    return 0;
-}
-
-int Stub_EnterNsByFd_Failed(int fd, int nsType)
-{
-    return -1;
-}
-
-int stub_open_success(const char *path, int flags)
-{
-    return 0;
-}
-
-int stub_open_failed(const char *path, int flags)
-{
-    return -1;
-}
-
-int stub_close_success(int fd)
-{
-    return 0;
-}
-
-int stub_MkDir_success(const char *dir, mode_t mode)
-{
-    return 0;
-}
-
-int stub_MkDir_failed(const char *dir, mode_t mode)
-{
-    return -1;
-}
-
-int stub_mount_success(const char *source, const char *target,
-                       const char *filesystemtype, unsigned long mountflags, const void *data)
-{
-    return 0;
-}
-
-int stub_Mount_success(const char *src, const char *dst)
-{
-    return 0;
-}
-
-int stub_Mount_failed(const char *src, const char *dst)
-{
-    return -1;
-}
-
-int stub_mount_failed(const char *source, const char *target,
-                      const char *filesystemtype, unsigned long mountflags, const void *data)
-{
-    return -1;
-}
-
-int stub_mount_src_nil_failed(const char *source, const char *target,
-                              const char *filesystemtype, unsigned long mountflags, const void *data)
-{
-    if (source == nullptr) {
+    if (source == nullptr)
+    {
         return -1;
     }
     return 0;
 }
 
-int stub_stat_success(const char *file_name, struct stat *buf)
-{
-    return 0;
-}
+int stub_stat_success(const char *file_name, struct stat *buf) { return 0; }
 
-int stub_stat_failed(const char *file_name, struct stat *buf)
-{
-    return -1;
-}
+int stub_stat_failed(const char *file_name, struct stat *buf) { return -1; }
 
-int Stub_MountDevice_Success(const char *rootfs, const char *deviceName)
-{
-    return 0;
-}
+int Stub_MountDevice_Success(const char *rootfs, const char *deviceName) { return 0; }
 
-int Stub_MountDevice_Failed(const char *rootfs, const char *deviceName)
-{
-    return -1;
-}
+int Stub_MountDevice_Failed(const char *rootfs, const char *deviceName) { return -1; }
 
-int Stub_MountDir_Success(const char *rootfs, const char *file, unsigned long reMountRwFlag)
-{
-    return 0;
-}
+int Stub_MountDir_Success(const char *rootfs, const char *src, const char *dstInContainer) { return 0; }
 
-int Stub_MountDir_Failed(const char *rootfs, const char *file, unsigned long reMountRwFlag)
-{
-    return -1;
-}
+int Stub_MountDir_Failed(const char *rootfs, const char *src, const char *dstInContainer) { return -1; }
 
-int Stub_CheckDirExists_Success(char *dir, int len)
-{
-    return 0;
-}
+int Stub_CheckDirExists_Success(char *dir, int len) { return 0; }
 
-int Stub_MakeDirWithParent_Success(const char *path, mode_t mode)
-{
-    return 0;
-}
+int Stub_MakeDirWithParent_Success(const char *path, mode_t mode) { return 0; }
 
-int Stub_MakeDirWithParent_Failed(const char *path, mode_t mode)
-{
-    return -1;
-}
+int Stub_MakeDirWithParent_Failed(const char *path, mode_t mode) { return -1; }
 
-int Stub_CheckDirExists_Failed(char *dir, int len)
-{
-    return -1;
-}
+int Stub_CheckDirExists_Failed(char *dir, int len) { return -1; }
 
-int Stub_EnterNsByPath_Success(const char *path, int nsType)
-{
-    return 0;
-}
+int Stub_EnterNsByPath_Success(const char *path, int nsType) { return 0; }
 
-int Stub_EnterNsByPath_Failed(const char *path, int nsType)
-{
-    return -1;
-}
+int Stub_EnterNsByPath_Failed(const char *path, int nsType) { return -1; }
 
 int Stub_DoDeviceMounting_Success(const char *rootfs, const char *device_name, const size_t ids[], size_t idsNr)
 {
@@ -237,162 +168,72 @@ int Stub_DoDeviceMounting_Failed(const char *rootfs, const char *device_name, co
     return -1;
 }
 
-int Stub_DoCtrlDeviceMounting_Success(const char *rootfs)
-{
-    return 0;
-}
+int Stub_DoCtrlDeviceMounting_Success(const char *rootfs) { return 0; }
 
-int Stub_DoCtrlDeviceMounting_Failed(const char *rootfs)
-{
-    return -1;
-}
+int Stub_DoCtrlDeviceMounting_Failed(const char *rootfs) { return -1; }
 
-int Stub_DoDirectoryMounting_Success(const char *rootfs, const struct MountList *list)
-{
-    return 0;
-}
+int Stub_DoDirectoryMounting_Success(const char *rootfs, const struct MountList *list) { return 0; }
 
-int Stub_DoDirectoryMounting_Failed(const char *rootfs, const struct MountList *list)
-{
-    return -1;
-}
+int Stub_DoDirectoryMounting_Failed(const char *rootfs, const struct MountList *list) { return -1; }
 
-int Stub_DoFileMounting_Success(const char *rootfs, const struct MountList *list)
-{
-    return 0;
-}
+int Stub_DoFileMounting_Success(const char *rootfs, const struct MountList *list) { return 0; }
 
-int Stub_DoFileMounting_Failed(const char *rootfs, const struct MountList *list)
-{
-    return -1;
-}
+int Stub_DoFileMounting_Failed(const char *rootfs, const struct MountList *list) { return -1; }
 
-int Stub_DoMounting_Success(const struct ParsedConfig *config)
-{
-    return 0;
-}
+int Stub_DoMounting_Success(const struct ParsedConfig *config) { return 0; }
 
-int Stub_DoMounting_Failed(const struct ParsedConfig *config)
-{
-    return -1;
-}
+int Stub_DoMounting_Failed(const struct ParsedConfig *config) { return -1; }
 
-int Stub_SetupCgroup_Success(const struct ParsedConfig *config)
-{
-    return 0;
-}
+int Stub_SetupCgroup_Success(const struct ParsedConfig *config) { return 0; }
 
-int Stub_SetupCgroup_Failed(const struct ParsedConfig *config)
-{
-    return 0;
-}
+int Stub_SetupCgroup_Failed(const struct ParsedConfig *config) { return 0; }
 
-int Stub_SetupContainer_Success(struct CmdArgs *args)
-{
-    return 0;
-}
+int Stub_SetupContainer_Success(struct CmdArgs *args) { return 0; }
 
-int Stub_SetupContainer_Failed(struct CmdArgs *args)
-{
-    return -1;
-}
+int Stub_SetupContainer_Failed(struct CmdArgs *args) { return -1; }
 
-int Stub_SetupDeviceCgroup_Success(FILE *cgroupAllow, const char *devPath)
-{
-    return 0;
-}
+int Stub_SetupDeviceCgroup_Success(FILE *cgroupAllow, const char *devPath) { return 0; }
 
-int Stub_SetupDeviceCgroup_Failed(FILE *cgroupAllow, const char *devPath)
-{
-    return -1;
-}
+int Stub_SetupDeviceCgroup_Failed(FILE *cgroupAllow, const char *devPath) { return -1; }
 
-int Stub_SetupDriverCgroup_Fail(FILE *cgroupAllow)
-{
-    return -1;
-}
+int Stub_SetupDriverCgroup_Fail(FILE *cgroupAllow) { return -1; }
 
-int Stub_SetupDriverCgroup_Success(FILE *cgroupAllow)
-{
-    return 0;
-}
+int Stub_SetupDriverCgroup_Success(FILE *cgroupAllow) { return 0; }
 
-int Stub_DoPrepare_Failed(const struct CmdArgs *args, struct ParsedConfig *config)
-{
-    return -1;
-}
+int Stub_DoPrepare_Failed(const struct CmdArgs *args, struct ParsedConfig *config) { return -1; }
 
-int Stub_DoPrepare_Success(const struct CmdArgs *args, struct ParsedConfig *config)
-{
-    return 0;
-}
+int Stub_DoPrepare_Success(const struct CmdArgs *args, struct ParsedConfig *config) { return 0; }
 
-int Stub_ParseFileByLine_Success(char *buffer, int bufferSize, ParseFileLine fn, const char *filepath)
-{
-    return 0;
-}
+int Stub_ParseFileByLine_Success(char *buffer, int bufferSize, ParseFileLine fn, const char *filepath) { return 0; }
 
-int Stub_GetCgroupPath_Success(int pid, char *effPath, const size_t maxSize)
-{
-    return 0;
-}
+int Stub_GetCgroupPath_Success(int pid, char *effPath, const size_t maxSize) { return 0; }
 
-bool Stub_IsOptionNoDrvSet_True()
-{
-    return true;
-}
+bool Stub_IsOptionNoDrvSet_True() { return true; }
 
-bool Stub_IsOptionNoDrvSet_False()
+bool Stub_IsOptionNoDrvSet_False() { return false; }
+
+bool Stub_CheckExistsFile_Success() { return true; }
+
+int Stub_LogLoop_Failed(const char *filename) { return -1; }
+
+bool Stub_CheckExternalFile_Failed(const char *filePath, const size_t filePathLen, const size_t maxFileSizeMb,
+                                   const bool checkOwner)
 {
     return false;
 }
 
-bool Stub_CheckExistsFile_Success()
-{
-    return true;
-}
+int Stub_MakeMountPoints_Failed(const char *path, mode_t mode) { return -1; }
 
-int Stub_LogLoop_Failed(const char* filename)
-{
-    return -1;
-}
-
-bool Stub_CheckExternalFile_Failed(const char* filePath, const size_t filePathLen,
-    const size_t maxFileSizeMb, const bool checkOwner)
-{
-    return false;
-}
-
-int Stub_MakeMountPoints_Failed(const char *path, mode_t mode)
-{
-    return -1;
-}
-
-int Stub_MakeMountPoints_Success(const char *path, mode_t mode)
-{
-    return 0;
-}
+int Stub_MakeMountPoints_Success(const char *path, mode_t mode) { return 0; }
 
 class Test_Fhho : public Test
 {
-protected:
-    static void SetUpTestCase()
-    {
-        cout << "TestSuite测试套事件：在第一个testcase之前执行" << endl;
-    }
-    static void TearDownTestCase()
-    {
-        cout << "TestSuite测试套事件：在最后一个testcase之后执行" << endl;
-    }
+   protected:
+    static void SetUpTestCase() { cout << "TestSuite测试套事件：在第一个testcase之前执行" << endl; }
+    static void TearDownTestCase() { cout << "TestSuite测试套事件：在最后一个testcase之后执行" << endl; }
     // 如果想在相同的测试套中设置两种事件，那么可以写在一起，运行就看到效果了
-    virtual void SetUp()
-    {
-        cout << "TestSuite测试用例事件：在每个testcase之前执行" << endl;
-    }
-    virtual void TearDown()
-    {
-        cout << "TestSuite测试用例事件：在每个testcase之后执行" << endl;
-    }
+    virtual void SetUp() { cout << "TestSuite测试用例事件：在每个testcase之前执行" << endl; }
+    virtual void TearDown() { cout << "TestSuite测试用例事件：在每个testcase之后执行" << endl; }
 };
 
 TEST_F(Test_Fhho, ClassEQ)
@@ -419,9 +260,7 @@ TEST_F(Test_Fhho, StatusOne)
 {
     int pid = 1;
     int nsType = 1;
-    MOCKER(setns)
-        .stubs()
-        .will(invoke(stub_setns));
+    MOCKER(setns).stubs().will(invoke(stub_setns));
     int ret = EnterNsByFd(pid, nsType);
     GlobalMockObject::verify();
     EXPECT_LE(0, ret);
@@ -457,7 +296,7 @@ TEST_F(Test_Fhho, StatusTwo1)
 
 TEST_F(Test_Fhho, EnterNsByPathCase3)
 {
-    const char* containerNsPath = NULL;
+    const char *containerNsPath = NULL;
     int nsType = 1;
     int ret = EnterNsByPath(containerNsPath, nsType);
     EXPECT_LE(-1, ret);
@@ -605,25 +444,13 @@ TEST_F(Test_Fhho, StatusTwoMakeDirWithParent)
 }
 
 #ifdef GOOGLE_TEST
-STATIC long Stub_GetLogSize_Failed(const char* filename)
-{
-    return -1;
-}
+STATIC long Stub_GetLogSize_Failed(const char *filename) { return -1; }
 
-STATIC long Stub_GetLogSize_Success(const char* filename)
-{
-    return strlen(filename);
-}
+STATIC long Stub_GetLogSize_Success(const char *filename) { return strlen(filename); }
 
-STATIC bool Stub_CheckSrcFile_Success(const char *src)
-{
-    return true;
-}
+STATIC bool Stub_CheckSrcFile_Success(const char *src) { return true; }
 
-STATIC int Stub_MountFile_Failed(const char *rootfs, const char *filepath)
-{
-    return -1;
-}
+STATIC int Stub_MountFile_Failed(const char *rootfs, const char *src, const char *dstInContainer) { return -1; }
 
 TEST_F(Test_Fhho, MkDirtestsuccess)
 {
@@ -653,19 +480,19 @@ TEST_F(Test_Fhho, StatusThreeMountDir)
     MOCKER(CheckDirExists).stubs().will(invoke(Stub_CheckDirExists_Failed));
     MOCKER(MkDir).stubs().will(invoke(stub_MkDir_failed));
     char *rootfs = "/rootfs";
-    unsigned long reMountRwFlag = MS_BIND | MS_REMOUNT | MS_RDONLY | MS_NOSUID | MS_NOEXEC;
-    int ret = MountDir(rootfs, "/home", reMountRwFlag);
+    int ret = MountDir(rootfs, "/home", "");
     GlobalMockObject::verify();
     EXPECT_EQ(-1, ret);
 }
 
-FILE* CreateTempFile(const char* content, size_t size, char **tempFilename)
+FILE *CreateTempFile(const char *content, size_t size, char **tempFilename)
 {
     char filename[] = "/tmp/test_XXXXXX";
     int fd = mkstemp(filename);
     if (fd == -1) return NULL;
 
-    if (write(fd, content, size) != (ssize_t)size) {
+    if (write(fd, content, size) != (ssize_t)size)
+    {
         close(fd);
         unlink(filename);
         return NULL;
@@ -675,11 +502,12 @@ FILE* CreateTempFile(const char* content, size_t size, char **tempFilename)
     return fdopen(fd, "r+");
 }
 
-void CloseFile(FILE* fp, char *tempFilename)
+void CloseFile(FILE *fp, char *tempFilename)
 {
-    if (fp) {
+    if (fp)
+    {
         char filename[256];
-        snprintf_s(filename, sizeof(filename), sizeof(filename)-1, "/proc/self/fd/%d", fileno(fp));
+        snprintf_s(filename, sizeof(filename), sizeof(filename) - 1, "/proc/self/fd/%d", fileno(fp));
         fclose(fp);
         unlink(filename);
     }
@@ -691,7 +519,7 @@ void CloseFile(FILE* fp, char *tempFilename)
 TEST_F(Test_Fhho, WriteLogFileTestForFileIsNull)
 {
     char *tempFilename = NULL;
-    FILE* fp = CreateTempFile(NULL, 0, &tempFilename);
+    FILE *fp = CreateTempFile(NULL, 0, &tempFilename);
     WriteLogFile(tempFilename, 0, NULL, 0);
     long contentSize = GetLogSizeProcess(tempFilename);
     EXPECT_EQ(0, contentSize);
@@ -708,8 +536,8 @@ TEST_F(Test_Fhho, CreateLogTestForFilenameIsNull)
 TEST_F(Test_Fhho, CreateLogTestSuccess)
 {
     char *tempFilename = NULL;
-    FILE* fp = CreateTempFile(NULL, 0, &tempFilename);
-    char* dest = strdup(tempFilename);
+    FILE *fp = CreateTempFile(NULL, 0, &tempFilename);
+    char *dest = strdup(tempFilename);
     CloseFile(fp, tempFilename);
     int ret = CreateLog(dest);
     EXPECT_EQ(0, ret);
@@ -764,7 +592,7 @@ TEST_F(Test_Fhho, CheckSrcFileForCheckFileFailed)
 {
     MOCKER(CheckExternalFile).stubs().will(invoke(Stub_CheckExternalFile_Failed));
     char *tempFilename = NULL;
-    FILE* fp = CreateTempFile(NULL, 0, &tempFilename);
+    FILE *fp = CreateTempFile(NULL, 0, &tempFilename);
     bool ret = CheckSrcFile(tempFilename);
     CloseFile(fp, tempFilename);
     GlobalMockObject::verify();
@@ -773,7 +601,7 @@ TEST_F(Test_Fhho, CheckSrcFileForCheckFileFailed)
 
 TEST_F(Test_Fhho, MountFileForNullArgs)
 {
-    int ret = MountFile(NULL, NULL);
+    int ret = MountFile(NULL, NULL, NULL);
     EXPECT_EQ(-1, ret);
 }
 
@@ -781,8 +609,29 @@ TEST_F(Test_Fhho, MountFileForAssembleFilePathFailed)
 {
     char *rootfs = "/rootfs";
     char filepath[BUF_SIZE];
-    memset_s(filepath, sizeof(filepath), 'a', sizeof(filepath));
-    int ret = MountFile(rootfs, filepath);
+    memset_s(filepath, sizeof(filepath) - 1, 'a', sizeof(filepath) - 1);
+    filepath[sizeof(filepath) - 1] = '\0';  // terminated buffer: strlen is deterministic
+    int ret = MountFile(rootfs, filepath, "");
+    EXPECT_EQ(-1, ret);
+}
+
+TEST_F(Test_Fhho, MountFileForDstOverflowWithRootfs)
+{
+    char dst[BUF_SIZE];
+    memset_s(dst, sizeof(dst) - 1, 'a', sizeof(dst) - 1);
+    dst[0] = '/';
+    dst[sizeof(dst) - 1] = '\0';  // dst is 1023 chars; rootfs(7) + dst(1023) >= BUF_SIZE
+    int ret = MountFile("/rootfs", "/tmp/test.txt", dst);
+    EXPECT_EQ(-1, ret);
+}
+
+TEST_F(Test_Fhho, MountDirForDstOverflowWithRootfs)
+{
+    char dst[BUF_SIZE];
+    memset_s(dst, sizeof(dst) - 1, 'a', sizeof(dst) - 1);
+    dst[0] = '/';
+    dst[sizeof(dst) - 1] = '\0';  // rejected before MakeDirWithParent, no side effect
+    int ret = MountDir("/rootfs", "/tmp", dst);
     EXPECT_EQ(-1, ret);
 }
 
@@ -791,7 +640,7 @@ TEST_F(Test_Fhho, MountFileForStatFailed)
     MOCKER(stat).stubs().will(invoke(stub_stat_failed));
     char *rootfs = "/rootfs";
     char *filepath = "/tmp/test.txt";
-    int ret = MountFile(rootfs, filepath);
+    int ret = MountFile(rootfs, filepath, "");
     GlobalMockObject::verify();
     EXPECT_EQ(0, ret);
 }
@@ -802,7 +651,7 @@ TEST_F(Test_Fhho, MountFileForMakeMountPointsFailed)
     MOCKER(MakeMountPoints).stubs().will(invoke(Stub_MakeMountPoints_Failed));
     char *rootfs = "/rootfs";
     char *filepath = "/tmp/test.txt";
-    int ret = MountFile(rootfs, filepath);
+    int ret = MountFile(rootfs, filepath, "");
     GlobalMockObject::verify();
     EXPECT_EQ(-1, ret);
 }
@@ -814,7 +663,7 @@ TEST_F(Test_Fhho, MountFileForMountFailed)
     MOCKER(Mount).stubs().will(invoke(stub_Mount_failed));
     char *rootfs = "/rootfs";
     char *filepath = "/tmp/test.txt";
-    int ret = MountFile(rootfs, filepath);
+    int ret = MountFile(rootfs, filepath, "");
     GlobalMockObject::verify();
     EXPECT_EQ(-1, ret);
 }
@@ -828,7 +677,7 @@ TEST_F(Test_Fhho, OptionsCmdArgParserForNullArgs)
 TEST_F(Test_Fhho, OptionsCmdArgParserForCpyFailed)
 {
     struct CmdArgs args;
-    char arg[BUF_SIZE+2];
+    char arg[BUF_SIZE + 2];
     memset_s(arg, sizeof(arg), 'a', sizeof(arg));
     bool ret = OptionsCmdArgParser(&args, arg);
     EXPECT_EQ(false, ret);
@@ -869,7 +718,7 @@ TEST_F(Test_Fhho, MountFileCmdArgParserForCpyFailed)
 {
     struct CmdArgs args;
     memset_s(&args, sizeof(struct CmdArgs), 0, sizeof(struct CmdArgs));
-    char arg[PATH_MAX+2];
+    char arg[PATH_MAX + 2];
     memset_s(arg, sizeof(arg), 'a', sizeof(arg));
     bool ret = MountFileCmdArgParser(&args, arg);
     EXPECT_EQ(false, ret);
@@ -903,7 +752,7 @@ TEST_F(Test_Fhho, MountDirCmdArgParserForCpyFailed)
 {
     struct CmdArgs args;
     memset_s(&args, sizeof(struct CmdArgs), 0, sizeof(struct CmdArgs));
-    char arg[PATH_MAX+2];
+    char arg[PATH_MAX + 2];
     memset_s(arg, sizeof(arg), 'a', sizeof(arg));
     bool ret = MountDirCmdArgParser(&args, arg);
     EXPECT_EQ(false, ret);
@@ -916,6 +765,109 @@ TEST_F(Test_Fhho, MountDirCmdArgParserForCheckFileLegalityFailed)
     char *arg = "/tmp/##/test";
     bool ret = MountDirCmdArgParser(&args, arg);
     EXPECT_EQ(false, ret);
+}
+
+TEST_F(Test_Fhho, SplitMountEntryWithoutColon)
+{
+    char src[PATH_MAX] = {0};
+    char dst[PATH_MAX] = {0};
+    bool ret = SplitMountEntry("/tmp/a.txt", src, dst);
+    EXPECT_EQ(true, ret);
+    EXPECT_STREQ("/tmp/a.txt", src);
+    EXPECT_STREQ("", dst);
+}
+
+TEST_F(Test_Fhho, SplitMountEntryWithColon)
+{
+    char src[PATH_MAX] = {0};
+    char dst[PATH_MAX] = {0};
+    bool ret = SplitMountEntry("/tmp/a.txt:/container/a.txt", src, dst);
+    EXPECT_EQ(true, ret);
+    EXPECT_STREQ("/tmp/a.txt", src);
+    EXPECT_STREQ("/container/a.txt", dst);
+}
+
+TEST_F(Test_Fhho, SplitMountEntryForEmptyPart)
+{
+    char src[PATH_MAX] = {0};
+    char dst[PATH_MAX] = {0};
+    EXPECT_EQ(false, SplitMountEntry(":/container/a.txt", src, dst));
+    EXPECT_EQ(false, SplitMountEntry("/tmp/a.txt:", src, dst));
+}
+
+TEST_F(Test_Fhho, SplitMountEntryForSrcTooLong)
+{
+    char src[PATH_MAX] = {0};
+    char dst[PATH_MAX] = {0};
+    char arg[PATH_MAX + 10];
+    memset_s(arg, sizeof(arg) - 1, 'a', sizeof(arg) - 1);
+    arg[0] = '/';
+    arg[sizeof(arg) - 1] = '\0';
+    EXPECT_EQ(false, SplitMountEntry(arg, src, dst));
+}
+
+TEST_F(Test_Fhho, SplitMountEntryForDstTooLong)
+{
+    char src[PATH_MAX] = {0};
+    char dst[PATH_MAX] = {0};
+    char arg[BUF_SIZE + 8] = {0};
+    memset_s(arg, sizeof(arg) - 1, 'a', sizeof(arg) - 1);
+    arg[0] = '/';
+    arg[1] = ':';  // dst length exceeds the BUF_SIZE limit
+    arg[sizeof(arg) - 1] = '\0';
+    EXPECT_EQ(false, SplitMountEntry(arg, src, dst));
+}
+
+TEST_F(Test_Fhho, CheckDstPathForValidPath) { EXPECT_EQ(true, CheckDstPath("/container/a.txt")); }
+
+TEST_F(Test_Fhho, CheckDstPathForInvalidPath)
+{
+    EXPECT_EQ(false, CheckDstPath(""));
+    EXPECT_EQ(false, CheckDstPath("/"));  // "/" overwrites the whole container rootfs
+    EXPECT_EQ(false, CheckDstPath("container/a.txt"));
+    EXPECT_EQ(false, CheckDstPath("/container/../etc"));
+    EXPECT_EQ(false, CheckDstPath("/container/a:b"));  // extra ':' makes the entry ambiguous
+    char tooLong[PATH_MAX] = {0};
+    memset_s(tooLong, sizeof(tooLong) - 1, 'a', sizeof(tooLong) - 1);
+    tooLong[0] = '/';
+    EXPECT_EQ(false, CheckDstPath(tooLong));  // exceeds the BUF_SIZE assembly buffer limit
+}
+
+TEST_F(Test_Fhho, MountFileCmdArgParserForMappingEntrySuccess)
+{
+    char *tempFilename = NULL;
+    FILE *fp = CreateTempFile("test", 4, &tempFilename);
+    ASSERT_NE((FILE *)NULL, fp);
+    struct CmdArgs args;
+    memset_s(&args, sizeof(struct CmdArgs), 0, sizeof(struct CmdArgs));
+    char arg[PATH_MAX];
+    (void)snprintf_s(arg, sizeof(arg), sizeof(arg) - 1, "%s:/container/test.txt", tempFilename);
+    bool ret = MountFileCmdArgParser(&args, arg);
+    CloseFile(fp, tempFilename);
+    EXPECT_EQ(true, ret);
+    EXPECT_EQ(1, args.files.count);
+    EXPECT_STREQ("/container/test.txt", args.files.list[0].dst);
+}
+
+TEST_F(Test_Fhho, MountFileCmdArgParserForInvalidDst)
+{
+    struct CmdArgs args;
+    memset_s(&args, sizeof(struct CmdArgs), 0, sizeof(struct CmdArgs));
+    // src must really exist so the failure comes from CheckDstPath
+    EXPECT_EQ(false, MountFileCmdArgParser(&args, "/tmp:../etc/passwd"));
+    EXPECT_EQ(false, MountFileCmdArgParser(&args, "/tmp:relative/path"));
+}
+
+TEST_F(Test_Fhho, MountDirCmdArgParserForMappingEntrySuccess)
+{
+    struct CmdArgs args;
+    memset_s(&args, sizeof(struct CmdArgs), 0, sizeof(struct CmdArgs));
+    char *arg = "/tmp:/container/testdir";  // /tmp must really exist to pass CheckFileLegality
+    bool ret = MountDirCmdArgParser(&args, arg);
+    EXPECT_EQ(true, ret);
+    EXPECT_EQ(1, args.dirs.count);
+    EXPECT_STREQ("/tmp", args.dirs.list[0].src);
+    EXPECT_STREQ("/container/testdir", args.dirs.list[0].dst);
 }
 
 TEST_F(Test_Fhho, LinkCheckCmdArgParserForNullArgs)
@@ -945,8 +897,7 @@ TEST_F(Test_Fhho, StatusTwoMountDir)
     MOCKER(CheckDirExists).stubs().will(invoke(Stub_CheckDirExists_Failed));
     MOCKER(MakeDirWithParent).stubs().will(invoke(Stub_MakeDirWithParent_Failed));
     char *rootfs = "/rootfs";
-    unsigned long reMountRwFlag = MS_BIND | MS_REMOUNT | MS_RDONLY | MS_NOSUID | MS_NOEXEC;
-    int ret = MountDir(rootfs, "/home", reMountRwFlag);
+    int ret = MountDir(rootfs, "/home", "");
     GlobalMockObject::verify();
     EXPECT_EQ(-1, ret);
 }
@@ -957,8 +908,7 @@ TEST_F(Test_Fhho, StatusFourMountDir)
     MOCKER(MakeDirWithParent).stubs().will(invoke(Stub_MakeDirWithParent_Success));
     MOCKER(mount).stubs().will(invoke(stub_mount_failed));
     char *rootfs = "/rootfs";
-    unsigned long reMountRwFlag = MS_BIND | MS_REMOUNT | MS_RDONLY | MS_NOSUID | MS_NOEXEC;
-    int ret = MountDir(rootfs, "/home", reMountRwFlag);
+    int ret = MountDir(rootfs, "/home", "");
     GlobalMockObject::verify();
     EXPECT_EQ(-1, ret);
 }
@@ -969,16 +919,14 @@ TEST_F(Test_Fhho, StatusFiveMountDir)
     MOCKER(MakeDirWithParent).stubs().will(invoke(Stub_MakeDirWithParent_Success));
     MOCKER(Mount).stubs().will(invoke(stub_Mount_success));
     char *rootfs = "/rootfs";
-    unsigned long reMountRwFlag = MS_BIND | MS_REMOUNT | MS_RDONLY | MS_NOSUID | MS_NOEXEC;
-    int ret = MountDir(rootfs, "/dev/random", reMountRwFlag);
+    int ret = MountDir(rootfs, "/dev/random", "");
     GlobalMockObject::verify();
     EXPECT_EQ(0, ret);
 }
 
 TEST_F(Test_Fhho, StatusSixMountDir)
 {
-    unsigned long reMountRwFlag = MS_BIND | MS_REMOUNT | MS_RDONLY | MS_NOSUID | MS_NOEXEC;
-    int ret = MountDir(nullptr, nullptr, reMountRwFlag);
+    int ret = MountDir(nullptr, nullptr, nullptr);
     EXPECT_EQ(-1, ret);
 }
 
@@ -1093,8 +1041,9 @@ TEST_F(Test_Fhho, StatusFourProcess)
 TEST_F(Test_Fhho, StatusFiveProcess)
 {
     const int argc = 11;
-    const char *argvData[argc] = {"ascend-docker-cli", "--pid", "123", "--rootfs",
-                                  "/home", "--options", "base", "--mount-file", "a.list", "--mount-dir", "/home/code"};
+    const char *argvData[argc] = {"ascend-docker-cli", "--pid", "123",          "--rootfs", "/home",
+                                  "--options",         "base",  "--mount-file", "a.list",   "--mount-dir",
+                                  "/home/code"};
     MOCKER(SetupContainer).stubs().will(invoke(Stub_SetupContainer_Success));
     int ret = Process(argc, const_cast<char **>(argvData));
     GlobalMockObject::verify();
@@ -1104,8 +1053,8 @@ TEST_F(Test_Fhho, StatusFiveProcess)
 TEST_F(Test_Fhho, StatusSixProcess)
 {
     const int argc = 11;
-    const char *argvData[argc] = {"ascend-docker-cli", "--pid", "123", "--rootfs",
-                                  "/home", "--opt", "base", "--mount-f", "a.list", "--mount-dir", "/root/sxv"};
+    const char *argvData[argc] = {"ascend-docker-cli", "--pid",  "123",         "--rootfs", "/home", "--opt", "base",
+                                  "--mount-f",         "a.list", "--mount-dir", "/root/sxv"};
     MOCKER(SetupContainer).stubs().will(invoke(Stub_SetupContainer_Success));
     int ret = Process(argc, const_cast<char **>(argvData));
     GlobalMockObject::verify();
@@ -1115,8 +1064,9 @@ TEST_F(Test_Fhho, StatusSixProcess)
 TEST_F(Test_Fhho, StatusSevenProcess)
 {
     const int argc = 11;
-    const char *argvData[argc] = {"ascend-docker-cli", "--ops", "--pid", "123",
-                                  "--rootfs", "/home", "base", "--mounle", "a.list", "--mount-dir", "/home/code"};
+    const char *argvData[argc] = {
+        "ascend-docker-cli", "--ops",  "--pid",       "123",       "--rootfs", "/home", "base",
+        "--mounle",          "a.list", "--mount-dir", "/home/code"};
     MOCKER(SetupContainer).stubs().will(invoke(Stub_SetupContainer_Success));
     int ret = Process(argc, const_cast<char **>(argvData));
     GlobalMockObject::verify();
@@ -1126,8 +1076,8 @@ TEST_F(Test_Fhho, StatusSevenProcess)
 TEST_F(Test_Fhho, StatusEightProcess)
 {
     const int argc = 2048;
-    char *argvData[argc] = {"ascend-docker-cli", "--ops", "--pid", "123",
-                            "--rootfs", "/home", "base", "--mounle", "a.list", "--mount-dir", "/home/code"};
+    char *argvData[argc] = {"ascend-docker-cli", "--ops",  "--pid",       "123",       "--rootfs", "/home", "base",
+                            "--mounle",          "a.list", "--mount-dir", "/home/code"};
     int ret = Process(argc, argvData);
     EXPECT_EQ(-1, ret);
 }
@@ -1256,16 +1206,13 @@ TEST_F(Test_Fhho, IsVirtualOne)
     EXPECT_EQ(false, ret);
 }
 
-TEST_F(Test_Fhho, CheckOpenedFileOne)
-{
-    EXPECT_FALSE(CheckOpenedFile(nullptr, BUF_SIZE, false));
-}
+TEST_F(Test_Fhho, CheckOpenedFileOne) { EXPECT_FALSE(CheckOpenedFile(nullptr, BUF_SIZE, false)); }
 
 TEST_F(Test_Fhho, CheckOpenedFileTwo)
 {
     const long maxSize = 5;
     char *tempFilename = nullptr;
-    FILE* fp = CreateTempFile("1234567890", 10, &tempFilename);
+    FILE *fp = CreateTempFile("1234567890", 10, &tempFilename);
     EXPECT_FALSE(CheckOpenedFile(fp, maxSize, false));
     CloseFile(fp, tempFilename);
 }
@@ -1274,7 +1221,7 @@ TEST_F(Test_Fhho, CheckOpenedFileThree)
 {
     const long maxSize = 1024;
     char *tempFilename = nullptr;
-    FILE* fp = CreateTempFile("test", 4, &tempFilename);
+    FILE *fp = CreateTempFile("test", 4, &tempFilename);
     EXPECT_TRUE(CheckOpenedFile(fp, maxSize, false));
     CloseFile(fp, tempFilename);
 }

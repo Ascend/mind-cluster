@@ -152,7 +152,8 @@ func parseMountNames(mountNames string) []string {
 }
 
 // parseListFile parses a single .list file and returns normalized entries.
-// Each non-comment, non-blank line becomes one MountEntry. Glob detection and
+// Each non-comment, non-blank line "hostPath[:containerPath]" becomes one
+// MountEntry; mapping syntax errors fail fast while glob detection and
 // existence/symlink checks are deferred to buildMounts.
 func parseListFile(path string) ([]MountEntry, error) {
 	f, err := os.Open(path)
@@ -178,13 +179,25 @@ func parseListFile(path string) ([]MountEntry, error) {
 			return nil, fmt.Errorf("mount list too long in %s (max %d entries)", path, maxEntriesPerFile)
 		}
 
-		absPath, err := filepath.Abs(line)
+		hostPath, containerPath, err := ParseMountEntry(line)
 		if err != nil {
-			hwlog.RunLog.Warnf("Mount: skip invalid path %q in %s: %v", line, path, err)
+			return nil, fmt.Errorf("parse entry in %s: %w", path, err)
+		}
+		if containerPath != "" && containsGlob(hostPath) {
+			return nil, fmt.Errorf("mount entry %s in %s: glob path does not support container mapping",
+				hostPath, path)
+		}
+
+		absPath, err := filepath.Abs(hostPath)
+		if err != nil {
+			hwlog.RunLog.Warnf("Mount: skip invalid path %q in %s: %v", hostPath, path, err)
 			continue
 		}
 
-		entries = append(entries, MountEntry{Paths: []string{absPath}})
+		entries = append(entries, MountEntry{
+			Paths:          []string{absPath},
+			ContainerPaths: []string{containerPath},
+		})
 	}
 
 	if err := scanner.Err(); err != nil {

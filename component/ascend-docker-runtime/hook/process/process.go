@@ -32,6 +32,7 @@ import (
 	"github.com/opencontainers/runtime-spec/specs-go"
 
 	"ascend-common/api"
+	"ascend-common/cdi/mount"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
 	"ascend-docker-runtime/mindxcheckutils"
@@ -248,6 +249,18 @@ func getValueByKey(data []string, name string) string {
 	return ""
 }
 
+// parseMountEntry parses "hostPath[:containerPath]" via the shared CDI mount
+// engine logic to keep hook and CDI validation consistent.
+var parseMountEntry = mount.ParseMountEntry
+
+// buildMountEntry reassembles the "hostPath:containerPath" entry for the CLI
+func buildMountEntry(hostPath, containerPath string) string {
+	if containerPath == "" {
+		return hostPath
+	}
+	return hostPath + ":" + containerPath
+}
+
 func readMountConfig(dir string, name string) ([]string, []string, error) {
 	configFileName := fmt.Sprintf("%s.%s", name, configFileSuffix)
 	baseConfigFilePath, err := filepath.Abs(filepath.Join(dir, configFileName))
@@ -279,36 +292,46 @@ func readMountConfig(dir string, name string) ([]string, []string, error) {
 	entryCount := 0
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		mountPath := scanner.Text()
+		mountPath := strings.TrimSpace(scanner.Text())
+		if mountPath == "" || mountPath[0] == '#' {
+			continue // skip blank and comment lines, consistent with CDI parseListFile
+		}
 		entryCount = entryCount + 1
 		if entryCount > maxEntryNumber {
 			return nil, nil, fmt.Errorf("mount list too long")
 		}
-		absMountPath, err := filepath.Abs(mountPath)
+		hostPath, containerPath, err := parseMountEntry(mountPath)
+		if err != nil {
+			return nil, nil, err
+		}
+		if containerPath != "" && containsGlob(hostPath) {
+			return nil, nil, fmt.Errorf("mount entry %s: glob path does not support container mapping", hostPath)
+		}
+		absMountPath, err := filepath.Abs(hostPath)
 		if err != nil {
 			continue // skipping files/dirs with any problems
 		}
-		mountPath = absMountPath
+		hostPath = absMountPath
 
-		if containsGlob(mountPath) {
-			fileList, dirList := expandGlobPath(mountPath)
+		if containsGlob(hostPath) {
+			fileList, dirList := expandGlobPath(hostPath)
 			fileMountList = append(fileMountList, fileList...)
 			dirMountList = append(dirMountList, dirList...)
 			continue
 		}
 
-		stat, err := os.Stat(mountPath)
+		stat, err := os.Stat(hostPath)
 		if err != nil {
 			continue // skipping files/dirs with any problems
 		}
 
-		if !checkSymlinkOwner(mountPath, stat) {
+		if !checkSymlinkOwner(hostPath, stat) {
 			continue
 		}
 		if stat.Mode().IsRegular() {
-			fileMountList = append(fileMountList, mountPath)
+			fileMountList = append(fileMountList, buildMountEntry(hostPath, containerPath))
 		} else if stat.Mode().IsDir() {
-			dirMountList = append(dirMountList, mountPath)
+			dirMountList = append(dirMountList, buildMountEntry(hostPath, containerPath))
 		}
 	}
 
