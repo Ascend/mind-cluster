@@ -23,7 +23,7 @@
 </tr>
 <tr id="row0414dra240015"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240015"><a name="p0414dra240015"></a><a name="p0414dra240015"></a>容器运行时</p>
 </td>
-<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240016"><a name="p0414dra240016"></a><a name="p0414dra240016"></a>组件通过CDI（Container Device Interface）向业务容器注入NPU设备，要求计算节点的容器运行时支持CDI，如containerd 1.7.0及以上版本。</p>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240016"><a name="p0414dra240016"></a><a name="p0414dra240016"></a>组件通过CDI（Container Device Interface）向业务容器注入NPU设备，要求计算节点的容器运行时支持CDI，如containerd 1.7.0及以上版本；不支持以cri-docker（cri-dockerd）作为容器运行时。</p>
 </td>
 </tr>
 <tr id="row0414dra240017"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240017"><a name="p0414dra240017"></a><a name="p0414dra240017"></a>NPU驱动</p>
@@ -77,7 +77,7 @@
             securityContext:
               privileged: true
             image: ascend-dra:v26.2.0
-            command: ["/bin/bash", "-c", "exec ascend-dra --enable-healthz --healthz-address=11258"]
+            command: ["/bin/bash", "-c", "exec ascend-dra --enable-healthz=true --healthz-address=11258"]
     ...
     ```
 

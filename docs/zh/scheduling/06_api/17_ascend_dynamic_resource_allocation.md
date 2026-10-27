@@ -44,7 +44,7 @@ Ascend DRA内置一个健康检查回调`draHealthChecker`，只要插件进程�
 | --tls-private-key-file | HTTPS私钥文件路径，需与--tls-cert-file同时配置或同时留空 | 空 |
 
 > [!NOTE]
-> --enable-healthz默认为false，镜像启动命令需显式开启。推荐配置为 `--enable-healthz --healthz-address=11258`。
+> --enable-healthz默认为false，镜像启动命令需显式开启。推荐配置为 `--enable-healthz=true --healthz-address=11258`。
 
 **K8s livenessProbe配置示例：**
 

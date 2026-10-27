@@ -90,7 +90,7 @@ spec:
             add: [ "SYS_PTRACE" ]
         image: ascend-dra:v6.0.0
         imagePullPolicy: IfNotPresent
-        command: ["/bin/bash", "-c", "exec ascend-dra -logLevel=0 --enable-healthz --healthz-address=11258 -presetVirtualDevice=true"]
+        command: ["/bin/bash", "-c", "exec ascend-dra -logLevel=0 --enable-healthz=true --healthz-address=11258 -presetVirtualDevice=true"]
         resources:
           requests:
             memory: 500Mi
