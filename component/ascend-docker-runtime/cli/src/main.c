@@ -135,6 +135,60 @@ static bool CheckFileLegality(const char *filePath, const size_t filePathLen, co
     return true;
 }
 
+// SplitMountEntry splits "src[:dst]" into two parts; dst is empty for legacy
+// same-path entries. The ':' scan is bounded by PATH_MAX so that unterminated
+// oversized arguments (see the CpyFailed tests) fail deterministically.
+STATIC bool SplitMountEntry(const char *arg, char *src, char *dst)
+{
+    size_t argLen = strnlen(arg, PATH_MAX);
+    const char *sep = (argLen == 0) ? NULL : (const char *)memchr(arg, ':', argLen);
+    if (sep == NULL)
+    {
+        if (strcpy_s(src, PATH_MAX, arg) != EOK)
+        {
+            Logger("failed to copy mount entry to src: entry is too long.", LEVEL_ERROR, SCREEN_YES);
+            return false;
+        }
+        return true;
+    }
+    size_t srcLen = (size_t)(sep - arg);
+    size_t dstLen = strlen(sep + 1);
+    // dst capacity aligns with MountEntry.dst[BUF_SIZE] and the MountFile assembly buffer
+    if ((srcLen == 0) || (dstLen == 0) || (srcLen >= PATH_MAX) || (dstLen >= BUF_SIZE))
+    {
+        char *str = FormatLogMessage("invalid mount entry: %s, srcLen: %lu, dstLen: %lu.", arg, (unsigned long)srcLen,
+                                     (unsigned long)dstLen);
+        Logger(str, LEVEL_ERROR, SCREEN_YES);
+        free(str);
+        str = NULL;
+        return false;
+    }
+    if ((strncpy_s(src, PATH_MAX, arg, srcLen) != EOK) || (strncpy_s(dst, BUF_SIZE, sep + 1, dstLen) != EOK))
+    {
+        Logger("failed to copy mount entry into src and dst.", LEVEL_ERROR, SCREEN_YES);
+        return false;
+    }
+    return true;
+}
+
+// CheckDstPath validates the container dst path: absolute, no '..' (anti
+// rootfs-escape), never "/" (which would shadow the whole container rootfs),
+// no extra ':' (which makes the entry ambiguous), and within the MountFile
+// assembly buffer bound.
+STATIC bool CheckDstPath(const char *dst)
+{
+    size_t len = strlen(dst);
+    if ((len <= 1) || (len >= BUF_SIZE) || (dst[0] != '/'))
+    {
+        return false;  // must be an absolute path other than "/"
+    }
+    if (strchr(dst, ':') != NULL)
+    {
+        return false;  // extra ':' makes the entry ambiguous
+    }
+    return strstr(dst, "..") == NULL;  // reject ".." to prevent escaping rootfs via relative paths
+}
+
 static bool RootfsCmdArgParser(struct CmdArgs *args, const char *arg)
 {
     if (args == NULL || arg == NULL)
@@ -201,25 +255,26 @@ STATIC bool MountFileCmdArgParser(struct CmdArgs *args, const char *arg)
         return false;
     }
 
-    char *dst = &args->files.list[args->files.count++][0];
-    errno_t err = strcpy_s(dst, PATH_MAX, arg);
-    if (err != EOK)
+    struct MountEntry *entry = &args->files.list[args->files.count];
+    if (!SplitMountEntry(arg, entry->src, entry->dst))
     {
-        char *str = FormatLogMessage("failed to copy mount file path: %s", arg);
+        char *str = FormatLogMessage("invalid mount file entry: %s", arg);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
         str = NULL;
         return false;
     }
     const size_t maxFileSzieMb = 50;  // max 50MB
-    if (!CheckFileLegality(dst, strlen(dst), maxFileSzieMb))
+    if (!CheckFileLegality(entry->src, strlen(entry->src), maxFileSzieMb) ||
+        (strlen(entry->dst) > 0 && !CheckDstPath(entry->dst)))
     {
-        char *str = FormatLogMessage("failed to check files: %s", dst);
+        char *str = FormatLogMessage("failed to check files: %s", entry->src);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
         str = NULL;
         return false;
     }
+    args->files.count++;
 
     return true;
 }
@@ -241,22 +296,26 @@ STATIC bool MountDirCmdArgParser(struct CmdArgs *args, const char *arg)
         return false;
     }
 
-    char *dst = &args->dirs.list[args->dirs.count++][0];
-    errno_t err = strcpy_s(dst, PATH_MAX, arg);
-    if (err != EOK)
+    struct MountEntry *entry = &args->dirs.list[args->dirs.count];
+    if (!SplitMountEntry(arg, entry->src, entry->dst))
     {
-        char *str = FormatLogMessage("error: failed to copy mount directory path: %s", arg);
+        char *str = FormatLogMessage("invalid mount directory entry: %s", arg);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
         str = NULL;
         return false;
     }
     const size_t maxFileSzieMb = 50;  // max 50MB
-    if (!CheckFileLegality(dst, strlen(dst), maxFileSzieMb))
+    if (!CheckFileLegality(entry->src, strlen(entry->src), maxFileSzieMb) ||
+        (strlen(entry->dst) > 0 && !CheckDstPath(entry->dst)))
     {
-        Logger("failed to check dir.", LEVEL_ERROR, SCREEN_YES);
+        char *str = FormatLogMessage("failed to check dir: %s", entry->src);
+        Logger(str, LEVEL_ERROR, SCREEN_YES);
+        free(str);
+        str = NULL;
         return false;
     }
+    args->dirs.count++;
 
     return true;
 }
