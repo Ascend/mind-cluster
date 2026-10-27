@@ -42,6 +42,19 @@ jobs:
           git diff-tree -r --name-only --no-commit-id origin/${{ inputs.TARGET_BRANCH }} HEAD > ${ATOMGIT_WORKSPACE}/change.txt
           cat ${ATOMGIT_WORKSPACE}/change.txt
 
+          if [ "${{ env.ATOMGIT_BASE_REF }}" != "master" ]; then
+                workflow_path=${ATOMGIT_WORKSPACE}/${{ inputs.servicename }}/.gitcode/workflows
+                mkdir -p ${workflow_path}
+                ls -al ${workflow_path}
+
+                git clone --no-tags --single-branch --depth 1 -b master ${{ inputs.REMOTE_URL }} ${ATOMGIT_WORKSPACE}/tempdir
+                ls -al ${ATOMGIT_WORKSPACE}/tempdir
+                cp -fr ${ATOMGIT_WORKSPACE}/tempdir/.gitcode/workflows/build ${workflow_path}/
+                cp -fr ${ATOMGIT_WORKSPACE}/tempdir/.gitcode/workflows/config ${workflow_path}/
+                cp -fr ${ATOMGIT_WORKSPACE}/tempdir/.gitcode/workflows/scripts ${workflow_path}/
+                rm -fr ${ATOMGIT_WORKSPACE}/tempdir
+          fi
+
       - name: Download build artifact
         uses: download-artifact
         with:

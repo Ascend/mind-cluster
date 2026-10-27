@@ -55,6 +55,19 @@ jobs:
           git clone -b v1.1.10 https://atomgit.com/openeuler/libboundscheck.git ${{ inputs.servicename }}/component/ascend-docker-runtime/libboundscheck
           ls -la ./
 
+          if [ "${{ env.ATOMGIT_BASE_REF }}" != "master" ]; then
+                workflow_path=${ATOMGIT_WORKSPACE}/${{ inputs.servicename }}/.gitcode/workflows
+                mkdir -p ${workflow_path}
+                ls -al ${workflow_path}
+
+                git clone --no-tags --single-branch --depth 1 -b master ${{ inputs.REMOTE_URL }} ${ATOMGIT_WORKSPACE}/tempdir
+                ls -al ${ATOMGIT_WORKSPACE}/tempdir
+                cp -fr ${ATOMGIT_WORKSPACE}/tempdir/.gitcode/workflows/build ${workflow_path}/
+                cp -fr ${ATOMGIT_WORKSPACE}/tempdir/.gitcode/workflows/config ${workflow_path}/
+                cp -fr ${ATOMGIT_WORKSPACE}/tempdir/.gitcode/workflows/scripts ${workflow_path}/
+                rm -fr ${ATOMGIT_WORKSPACE}/tempdir
+          fi
+
       - name: execute test
         run: |
           cd ${ATOMGIT_WORKSPACE}/${{ inputs.servicename }}/.gitcode/workflows/scripts && bash +x ut_mindio_cpp_execute.sh
