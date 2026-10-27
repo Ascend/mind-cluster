@@ -144,9 +144,9 @@ const (
 	// (withheld forever); any positive value is clamped to this bound.
 	MaxSilentUnhealthyToleranceAfterTime int64 = 1800
 	// DefaultPodErrorToleranceAfterTime is the default rescheduled-node tolerance
-	// in seconds: the node which caused the last rescheduling is withheld for 30
+	// in seconds: the node which caused the last rescheduling is withheld for 0
 	// seconds.
-	DefaultPodErrorToleranceAfterTime = 30
+	DefaultPodErrorToleranceAfterTime = 0
 	// MaxPodErrorToleranceAfterTime is the upper bound of the pod-error tolerance
 	// after-time in seconds. Pod-error is a temporary backoff, not a permanent
 	// forbid, so -1 (ToleranceForbidden) is not allowed; any configured value is

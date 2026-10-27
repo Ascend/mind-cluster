@@ -85,7 +85,12 @@ func (reScheduler *ReScheduler) createFaultTaskHandler(job *api.JobInfo, cardNam
 		faultTask.setIsFaultTask(isFaultTask)
 		faultTask.setFaultType(healthState)
 		if isFaultTask {
-			faultTask.PodFailedTime = getPodFailedTime(task)
+			podFailedTime, err := getPodFailedTime(task)
+			if err != nil {
+				klog.V(util.LogWarningLev).Infof("getPodFailedTime %s %s", task.Name, err)
+			} else {
+				faultTask.PodFailedTime = podFailedTime
+			}
 		}
 		faultTask.setIsSatisfiedRackAffinity(true)
 		faultTasks = append(faultTasks, faultTask)

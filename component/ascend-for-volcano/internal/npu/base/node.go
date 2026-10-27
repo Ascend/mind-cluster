@@ -86,7 +86,7 @@ func (tp *NPUHandler) removeBackoffCards(node plugin.NPUNode, nodeTop []int) []i
 	if len(backoffTop) == 0 {
 		return nodeTop
 	}
-	klog.V(util.LogDebugLev).Infof("%s remove pod-error cards %v from nodeTop %v",
+	klog.V(util.LogWarningLev).Infof("%s remove pod-error cards %v from nodeTop %v",
 		tp.GetPluginName(), backoffTop, nodeTop)
 	return util.RemoveCommonElement(nodeTop, backoffTop)
 }

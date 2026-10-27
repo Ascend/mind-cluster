@@ -54,7 +54,7 @@ func RecordPodError(nodeName string, cards []string, faultTime int64) {
 		return
 	}
 	if faultTime <= 0 {
-		faultTime = time.Now().Unix()
+		return
 	}
 	podErrorCache.mu.Lock()
 	defer podErrorCache.mu.Unlock()
