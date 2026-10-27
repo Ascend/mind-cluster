@@ -168,43 +168,6 @@ STATIC bool OptionsCmdArgParser(struct CmdArgs *args, const char *arg)
     return true;
 }
 
-static bool CheckWhiteList(const char* fileName)
-{
-    if (fileName == NULL) {
-        return false;
-    }
-    bool fileExists = false;
-    static const char MOUNT_WHITE_LIST[WHITE_LIST_NUM][PATH_MAX] = {{"/usr/local/Ascend/driver/lib64"},
-        {"/usr/local/Ascend/driver/include"}, {"/usr/local/dcmi"}, {"/usr/local/bin/npu-smi"},
-        {"/home/data/miniD/driver/lib64"}, {"/usr/local/sbin/npu-smi"},
-        {"/usr/local/Ascend/driver/tools"}, {"/etc/hdcBasic.cfg"}, {"/etc/sys_version.conf"},
-        {"/etc/ld.so.conf.d/mind_so.conf"}, {"/etc/slog.conf"}, {"/var/dmp_daemon"}, {"/var/slogd"},
-        {"/usr/lib64/libsemanage.so.2"}, {"/usr/lib64/libmmpa.so"}, {"/usr/lib64/libcrypto.so.1.1"},
-        {"/usr/lib64/libdrvdsmi.so"}, {"/usr/lib64/libdcmi.so"}, {"/usr/lib64/libstackcore.so"},
-        {"/usr/lib64/libmpi_dvpp_adapter.so"}, {"/usr/lib64/libaicpu_scheduler.so"},
-        {"/usr/lib64/libaicpu_processer.so"}, {"/usr/lib64/libaicpu_prof.so"}, {"/usr/lib64/libaicpu_sharder.so"},
-        {"/usr/lib64/libadump.so"}, {"/usr/lib64/libtsd_eventclient.so"},
-        {"/usr/lib64/aicpu_kernels"}, {"/usr/lib64/libyaml-0.so.2"},
-        {"/usr/lib/aarch64-linux-gnu/libyaml-0.so.2"}, {"/usr/lib/aarch64-linux-gnu/libcrypto.so.1.1"},
-        {"/var/queue_schedule"}
-        };
-
-    for (size_t iLoop = 0; iLoop < WHITE_LIST_NUM; iLoop++) {
-        if (strcmp(MOUNT_WHITE_LIST[iLoop], fileName) == 0) {
-            fileExists = true;
-            break;
-        }
-    }
-    if (!fileExists) {
-        char* str = FormatLogMessage("failed to check whiteList value: %s.", fileName);
-        Logger(str, LEVEL_ERROR, SCREEN_YES);
-        free(str);
-        str = NULL;
-        return false;
-    }
-    return true;
-}
-
 STATIC bool MountFileCmdArgParser(struct CmdArgs *args, const char *arg)
 {
     if (args == NULL || arg == NULL) {
@@ -238,7 +201,7 @@ STATIC bool MountFileCmdArgParser(struct CmdArgs *args, const char *arg)
         return false;
     }
 
-    return CheckWhiteList(dst) ? true : false;
+    return true;
 }
 
 STATIC bool MountDirCmdArgParser(struct CmdArgs *args, const char *arg)
@@ -271,7 +234,7 @@ STATIC bool MountDirCmdArgParser(struct CmdArgs *args, const char *arg)
         return false;
     }
 
-    return CheckWhiteList(dst) ? true : false;
+    return true;
 }
 
 STATIC bool LinkCheckCmdArgParser(const char *argv)
