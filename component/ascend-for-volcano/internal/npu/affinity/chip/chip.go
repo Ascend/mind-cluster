@@ -242,6 +242,9 @@ func (tp *chipHandler) excludedChipIDs(node plugin.NPUNode) map[int]struct{} {
 			for id := range root.SilentFaultChips() {
 				set[id] = struct{}{}
 			}
+			if len(set) != 0 {
+				klog.V(util.LogWarningLev).Infof("%s excluded SilentFaultChips %v", tp.GetPluginName(), set)
+			}
 		}
 		if tp.NPUJob != nil {
 			now := time.Now().Unix()
@@ -256,6 +259,7 @@ func (tp *chipHandler) excludedChipIDs(node plugin.NPUNode) map[int]struct{} {
 	if len(set) == 0 {
 		return nil
 	}
+	klog.V(util.LogWarningLev).Infof("%s excluded FaultChips %v", tp.GetPluginName(), set)
 	return set
 }
 

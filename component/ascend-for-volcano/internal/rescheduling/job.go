@@ -601,9 +601,9 @@ func isFailedTask(task *api.TaskInfo) bool {
 // getPodFailedTime returns the latest terminated-container finish time of a
 // failed pod as the pod's actual failure unix second. It returns 0 when no
 // terminated container carries a finish time, so the caller can fall back.
-func getPodFailedTime(task *api.TaskInfo) int64 {
+func getPodFailedTime(task *api.TaskInfo) (int64, error) {
 	if task == nil || task.Pod == nil {
-		return 0
+		return 0, fmt.Errorf("nil task or nil pod")
 	}
 	var latest int64
 	for _, status := range task.Pod.Status.ContainerStatuses {
@@ -619,7 +619,10 @@ func getPodFailedTime(task *api.TaskInfo) int64 {
 			}
 		}
 	}
-	return latest
+	if latest == 0 {
+		return 0, fmt.Errorf("pod %v has no Terminated time", task.Name)
+	}
+	return latest, nil
 }
 
 // isPodFailedCanRestarted if the pod status is failed, judge whether job can be restarted
