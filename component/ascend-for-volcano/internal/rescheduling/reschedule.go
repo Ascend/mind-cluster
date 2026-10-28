@@ -976,6 +976,17 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode *plugin.NPUNode, 
 			"switchSubHealthy=%v, but sub-healthy strategy is %v", fNode.HasCardSubHealthFault,
 			fNode.HasSwitchSubHealthFault, schedulerJob.SubHealthyStrategy)
 	}
+	// Node-level (switch) sub-healthy backoff gated by time: with the strategy
+	// released above (ignore), the switch sub-healthy node is still withheld
+	// from every scheduling policy while the job's tolerance window is active,
+	// and released once the window times out. Card-level backoff (npu/public
+	// fault chips, DPU-affected cards) stays in each policy handler.
+	if fNode.HasSwitchSubHealthFault && subHealthyBackoffWithinWindow(schedulerJob) {
+		klog.V(util.LogInfoLev).Infof("node %s is switch sub-healthy, withhold task %s"+
+			" within backoff window", vcNode.Name, task.Name)
+		return fmt.Errorf("%s node<%s> is switch sub-healthy and within backoff window, can not be selected",
+			util.NPUResourceUnavailableError, vcNode.Name)
+	}
 	if util.IsRdmaTask(task, vcNode.Annotation) && hasDpuNodeSubHealthFault(fNode.FaultDpuList) &&
 		schedulerJob.SubHealthyStrategy != util.SubHealthyIgnore {
 		klog.V(util.LogWarningLev).Infof("node %s has dpu subhealth fault, not suitable for rdma full card"+
@@ -1014,6 +1025,14 @@ func (reScheduler *ReScheduler) isJobCanAssignToSubHealthNode(jobSubHealthStrate
 		return false
 	}
 	return true
+}
+
+// subHealthyBackoffWithinWindow reports whether the job is still within its
+// sub-healthy tolerance window: node-level (switch) sub-healthy resources are
+// withheld from every scheduling policy until the window releases them.
+func subHealthyBackoffWithinWindow(schedulerJob plugin.SchedulerJob) bool {
+	elapsed, _ := cache.SessionElapsed(schedulerJob.Name)
+	return util.TimeGateAllows(schedulerJob.NPUJob.ToleranceConfig.SubHealthyToleranceAfterTime, elapsed)
 }
 
 func (reScheduler ReScheduler) getFaultNodeNameByFaultJob(faultJob *FaultJob) []string {

@@ -332,12 +332,12 @@ func (n *NPUNode) ParseChipTopology(node *api.NodeInfo) {
 		return
 	}
 	n.buildChipPods(node)
-	faulty, netUnh, silent, maxCardID := n.parseDeviceHealthAnnotations()
+	faultChips, maxCardID := n.parseDeviceHealthAnnotations()
 	if n.chipTopoOversize(maxCardID) {
 		n.ChipTopo = nil
 		return
 	}
-	n.ChipTopo.Init(faulty, netUnh, silent, n.podErrorChipTimes(), n.buildOwners())
+	n.ChipTopo.Init(&faultChips, n.podErrorChipTimes(), n.buildOwners())
 }
 
 // topologyRaw returns the raw chip topology value, falling back to a flat
@@ -386,71 +386,105 @@ func (n *NPUNode) buildChipPods(node *api.NodeInfo) {
 	}
 }
 
-// parseDeviceHealthAnnotations collects faulty, network-unhealthy and
-// silent-fault card ids from the card annotations, plus the highest referenced
-// chip id. Silent-fault cards are recorded on the ChipNode as node-level static
-// state; whether they are withheld is decided later per job via its tolerance.
-func (n *NPUNode) parseDeviceHealthAnnotations() (faulty, netUnh, silent map[int]struct{}, maxCardID int) {
+// parseDeviceHealthAnnotations collects faulty, network-unhealthy,
+// silent-fault and sub-healthy card ids from the card annotations, plus the
+// highest referenced chip id. Silent-fault and sub-healthy cards are recorded on
+// the ChipNode as node-level static state; whether they are withheld is decided
+// later per job via its tolerance.
+func (n *NPUNode) parseDeviceHealthAnnotations() (topo.NodeFaultChips, int) {
+	var chips topo.NodeFaultChips
+	maxCardID := 0
 	for key, val := range n.Annotation {
 		pre, ok := cardAnnoNpuPre(key)
 		if !ok {
 			continue
 		}
 		if strings.HasSuffix(key, util.DeviceFaultCmKeySuffix) {
-			for id := range n.silentFaultCardsFromAnno(val, pre) {
-				if id > maxCardID {
-					maxCardID = id
-				}
-				if silent == nil {
-					silent = make(map[int]struct{})
-				}
-				silent[id] = struct{}{}
-			}
+			maxCardID = mergeFaultAnnoCards(&chips, val, pre, maxCardID)
 			continue
 		}
 		for id := range util.ParseDevList(val, pre) {
-			if id > maxCardID {
-				maxCardID = id
-			}
+			maxCardID = recordMaxCardID(maxCardID, id)
 			switch {
 			case strings.HasSuffix(key, util.NPUUnhealthySuffix):
-				if faulty == nil {
-					faulty = make(map[int]struct{})
+				if chips.Faulty == nil {
+					chips.Faulty = make(map[int]struct{})
 				}
-				faulty[id] = struct{}{}
+				chips.Faulty[id] = struct{}{}
 			case strings.HasSuffix(key, util.NPUNetworkUnhealthy):
-				if netUnh == nil {
-					netUnh = make(map[int]struct{})
+				if chips.NetUnh == nil {
+					chips.NetUnh = make(map[int]struct{})
 				}
-				netUnh[id] = struct{}{}
+				chips.NetUnh[id] = struct{}{}
 			}
 		}
 	}
 	for id := range n.ChipPods {
-		if id > maxCardID {
-			maxCardID = id
-		}
+		maxCardID = recordMaxCardID(maxCardID, id)
 	}
-	return
+	return chips, maxCardID
 }
 
-// silentFaultCardsFromAnno parses the -Fault annotation (a JSON array of device
-// faults) and returns the chip ids whose fault_level is SilentFault, mirroring
-// FaultNode.setSilentUnhealthyNPU but resolving each card name to chip ids.
-func (n *NPUNode) silentFaultCardsFromAnno(val, pre string) map[int]struct{} {
-	res := make(map[int]struct{})
+// recordMaxCardID keeps the higher of the recorded max and the given chip id.
+func recordMaxCardID(cur, id int) int {
+	if id > cur {
+		return id
+	}
+	return cur
+}
+
+// mergeFaultAnnoCards merges the silent-fault and sub-healthy chip ids parsed
+// from one -Fault annotation into the sets and returns the updated max chip id.
+func mergeFaultAnnoCards(c *topo.NodeFaultChips, val, pre string, maxCardID int) int {
+	silent, subHealth := faultCardsFromAnno(val, pre)
+	for id := range silent {
+		maxCardID = recordMaxCardID(maxCardID, id)
+		if c.Silent == nil {
+			c.Silent = make(map[int]struct{})
+		}
+		c.Silent[id] = struct{}{}
+	}
+	for id := range subHealth {
+		maxCardID = recordMaxCardID(maxCardID, id)
+		if c.SubHealth == nil {
+			c.SubHealth = make(map[int]struct{})
+		}
+		c.SubHealth[id] = struct{}{}
+	}
+	return maxCardID
+}
+
+// faultCardsFromAnno parses the -Fault annotation (a JSON array of device
+// faults) once and returns the chip-id sets of the cards whose fault handling
+// is SilentFault and SubHealthFault respectively. Per the ClusterD interface
+// the fault_level and fault_handling fields are functionally identical, so a
+// single FaultHandling comparison covers both the silent-fault and the
+// sub-healthy entries.
+func faultCardsFromAnno(val, pre string) (silent, subHealth map[int]struct{}) {
+	silent = make(map[int]struct{})
+	subHealth = make(map[int]struct{})
 	var faults []k8s.FaultDeviceList
 	if err := json.Unmarshal([]byte(val), &faults); err != nil {
-		return res
+		return silent, subHealth
 	}
 	for _, fault := range faults {
-		if fault.FaultLevel == util.SilentFault && fault.NPUName != "" {
-			for id := range util.ParseDevList(fault.NPUName, pre) {
-				res[id] = struct{}{}
-			}
+		if fault.NPUName == "" {
+			continue
+		}
+		var target map[int]struct{}
+		switch fault.FaultHandling {
+		case util.SilentFault:
+			target = silent
+		case util.SubHealthFault:
+			target = subHealth
+		default:
+			continue
+		}
+		for id := range util.ParseDevList(fault.NPUName, pre) {
+			target[id] = struct{}{}
 		}
 	}
-	return res
+	return silent, subHealth
 }
 
 // buildOwners maps each running pod's uid to its allocated chip ids; failed and

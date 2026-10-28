@@ -107,6 +107,7 @@ var (
 		util.SchedulerDowngradeAnnoKey,
 		util.SilentUnhealthyToleranceAnnoKey,
 		util.PodErrorToleranceAnnoKey,
+		util.SubHealthyToleranceAnnoKey,
 	}
 )
 

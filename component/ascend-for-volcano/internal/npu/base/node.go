@@ -65,10 +65,11 @@ func (tp *NPUHandler) GetUsableTopFromNode(node plugin.NPUNode, disFlag bool) ([
 	return res, nil
 }
 
-// removeBackoffCards removes every card the current job has errored (pod-error)
-// from the node's usable top while the job's pod-error tolerance window is still
-// active. Pod-error backoff is per job: only the job that errored a card backs
-// off from it, other jobs are unaffected.
+// removeBackoffCards removes every backoff card from the node's usable top:
+// the cards the current job has errored (pod-error) while the job's pod-error
+// tolerance window is still active, plus the node-level sub-healthy cards while
+// the job's sub-healthy tolerance window is still active. Both backoffs are per
+// job: other jobs are unaffected.
 func (tp *NPUHandler) removeBackoffCards(node plugin.NPUNode, nodeTop []int) []int {
 	if tp == nil || node.ChipTopo == nil || tp.NPUJob == nil {
 		return nodeTop
@@ -83,12 +84,27 @@ func (tp *NPUHandler) removeBackoffCards(node plugin.NPUNode, nodeTop []int) []i
 			backoffTop = append(backoffTop, id)
 		}
 	}
+	if !tp.subHealthyToleranceAllows() {
+		for id := range node.ChipTopo.SubHealthChips(node.Name) {
+			backoffTop = append(backoffTop, id)
+		}
+	}
 	if len(backoffTop) == 0 {
 		return nodeTop
 	}
-	klog.V(util.LogWarningLev).Infof("%s remove pod-error cards %v from nodeTop %v",
+	klog.V(util.LogWarningLev).Infof("%s remove backoff cards %v from nodeTop %v",
 		tp.GetPluginName(), backoffTop, nodeTop)
 	return util.RemoveCommonElement(nodeTop, backoffTop)
+}
+
+// subHealthyToleranceAllows reports whether the job's sub-healthy tolerance has
+// released the sub-healthy resources (true) or they are still withheld (false).
+func (tp *NPUHandler) subHealthyToleranceAllows() bool {
+	if tp == nil || tp.NPUJob == nil {
+		return true
+	}
+	elapsed, _ := cache.SessionElapsed(tp.Name)
+	return util.TimeGateAllows(tp.NPUJob.ToleranceConfig.SubHealthyToleranceAfterTime, elapsed)
 }
 
 func (tp *NPUHandler) getNetUnhealthyNPU(node plugin.NPUNode) ([]int, error) {
