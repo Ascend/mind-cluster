@@ -118,7 +118,7 @@ Ascend DRA基于Kubernetes动态资源分配（Dynamic Resource Allocation，DRA
    查看DRA组件日志，确认`PrepareResourceClaims`被调用且设备已分配（以下日志与代码`plugin.go`和`state.go`中的`Infof`输出一致）：
 
    ```bash
-   kubectl logs -n ascend-dra-driver <dra-pod-name> | grep "PrepareResourceClaims\|devices prepared\|Returning newly prepared"
+   kubectl logs -n kube-system <dra-pod-name> | grep "PrepareResourceClaims\|devices prepared\|Returning newly prepared"
    ```
 
    回显示例如下：
@@ -242,7 +242,7 @@ Ascend DRA基于Kubernetes动态资源分配（Dynamic Resource Allocation，DRA
    查看DRA组件日志，确认`UnprepareResourceClaims`被调用且设备已释放（以下日志与代码`plugin.go`中的`Infof`输出一致）：
 
    ```bash
-   kubectl logs -n ascend-dra-driver <dra-pod-name> | grep "UnprepareResourceClaims\|devices unprepared"
+   kubectl logs -n kube-system <dra-pod-name> | grep "UnprepareResourceClaims\|devices unprepared"
    ```
 
    回显示例如下：
