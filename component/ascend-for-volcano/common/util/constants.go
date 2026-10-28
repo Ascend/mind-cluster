@@ -153,6 +153,19 @@ const (
 	// clamped to [0, MaxPodErrorToleranceAfterTime]. The pod-error cache also
 	// expires entries older than this bound.
 	MaxPodErrorToleranceAfterTime int64 = 300
+	// SubHealthyToleranceAnnoKey annotation key for the sub-healthy resource
+	// tolerance after-time in seconds: 0 allows immediately and N allows after
+	// the job has been pending N seconds. Covers sub-healthy npu cards, public
+	// fault and switches.
+	SubHealthyToleranceAnnoKey = "huawei.com/subhealthy.tolerance.after-time"
+	// DefaultSubHealthyToleranceAfterTime is the default sub-healthy tolerance in
+	// seconds: sub-healthy resources are withheld for the first 10 pending
+	// seconds, then released so jobs without redundant resources still schedule.
+	DefaultSubHealthyToleranceAfterTime = 10
+	// MaxSubHealthyToleranceAfterTime is the upper bound of the sub-healthy
+	// tolerance after-time in seconds. The valid range is [0, MaxSubHealthyToleranceAfterTime] and any
+	// configured value is clamped into it.
+	MaxSubHealthyToleranceAfterTime int64 = 300
 )
 
 // constants for ome inference service

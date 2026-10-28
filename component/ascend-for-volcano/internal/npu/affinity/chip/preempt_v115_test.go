@@ -107,7 +107,7 @@ func TestPreemptOrReclaimNotSatisfiable(t *testing.T) {
 	tp := newTestHandler()
 	root := topo.ParseTopology("[[0,1,2,3],[4,5,6,7]]")
 	owners := map[string][]int{"p2": {2}, "p3": {3}, "p4": {4}, "p5": {5}, "p6": {6}, "p7": {7}}
-	root.Init(map[int]struct{}{0: {}, 1: {}}, nil, nil, nil, owners)
+	root.Init(&topo.NodeFaultChips{Faulty: map[int]struct{}{0: {}, 1: {}}}, nil, owners)
 	preemptees := []*api.TaskInfo{
 		newPeTask(2, 2), newPeTask(3, 3), newPeTask(4, 4),
 		newPeTask(5, 5), newPeTask(6, 6), newPeTask(7, 7),

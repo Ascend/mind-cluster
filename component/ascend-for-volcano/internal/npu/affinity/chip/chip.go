@@ -231,10 +231,10 @@ func (tp *chipHandler) RestoreAnnotation(task *api.TaskInfo, node plugin.NPUNode
 func (tp *chipHandler) ScoreFrameworkAware() bool { return true }
 
 // excludedChipIDs returns the chip-id set the topology tree should withhold for
-// the job this handler serves. Silent-fault and pod-error cards are both
+// the job this handler serves. Silent-fault, pod-error and sub-healthy cards are
 // node-level static state recorded on the ChipTopo and gated by the job's
-// silent-fault and pod-error tolerance windows respectively. An empty set means
-// no card is currently withheld.
+// silent-fault, pod-error and sub-healthy tolerance windows respectively. An
+// empty set means no card is currently withheld.
 func (tp *chipHandler) excludedChipIDs(node plugin.NPUNode) map[int]struct{} {
 	set := make(map[int]struct{})
 	if root := node.ChipTopo; root != nil {
@@ -244,6 +244,11 @@ func (tp *chipHandler) excludedChipIDs(node plugin.NPUNode) map[int]struct{} {
 			}
 			if len(set) != 0 {
 				klog.V(util.LogWarningLev).Infof("%s excluded SilentFaultChips %v", tp.GetPluginName(), set)
+			}
+		}
+		if !tp.subHealthyToleranceAllows() {
+			for id := range root.SubHealthChips(node.Name) {
+				set[id] = struct{}{}
 			}
 		}
 		if tp.NPUJob != nil {
@@ -271,4 +276,14 @@ func (tp *chipHandler) silentToleranceAllows() bool {
 	}
 	elapsed, _ := cache.SessionElapsed(tp.Name)
 	return util.TimeGateAllows(tp.NPUJob.ToleranceConfig.SilentUnhealthyToleranceAfterTime, elapsed)
+}
+
+// subHealthyToleranceAllows reports whether the job's sub-healthy tolerance has
+// released the sub-healthy resources (true) or they are still withheld (false).
+func (tp *chipHandler) subHealthyToleranceAllows() bool {
+	if tp == nil || tp.NPUJob == nil {
+		return true
+	}
+	elapsed, _ := cache.SessionElapsed(tp.Name)
+	return util.TimeGateAllows(tp.NPUJob.ToleranceConfig.SubHealthyToleranceAfterTime, elapsed)
 }

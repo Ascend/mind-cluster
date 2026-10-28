@@ -58,8 +58,11 @@ type JobToleranceConfig struct {
 	// SilentUnhealthyToleranceAfterTime gates silent-fault cards.
 	SilentUnhealthyToleranceAfterTime int64
 	// PodErrorToleranceAfterTime gates the cards which caused the job's last
-	// rescheduling, covering every fault that errors the pod, default 30 seconds.
+	// rescheduling, covering every fault that errors the pod, default 0 seconds.
 	PodErrorToleranceAfterTime int64
+	// SubHealthyToleranceAfterTime gates sub-healthy npu cards, public fault and
+	// switches, default 10 seconds.
+	SubHealthyToleranceAfterTime int64
 }
 
 // TimeGateAllows reports whether a time-based tolerance gate releases its

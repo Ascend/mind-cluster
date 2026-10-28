@@ -42,6 +42,7 @@ type ChipNode struct {
 	netUnhealthy int
 	silentFault  int
 	podErrorTime int64
+	subHealth    int
 	allocated    int
 	ownedBy      []string
 
@@ -145,8 +146,19 @@ func (n *ChipNode) collectLeaves(out map[int]*ChipNode) {
 	}
 }
 
-func (n *ChipNode) Init(faulty, netUnh, silent map[int]struct{}, podError map[int]int64,
-	owners map[string][]int) {
+// NodeFaultChips groups the node-level static chip-id fault sets that seed a
+// ChipNode topology: faulty, network-unhealthy, silent-fault and sub-healthy.
+type NodeFaultChips struct {
+	Faulty    map[int]struct{}
+	NetUnh    map[int]struct{}
+	Silent    map[int]struct{}
+	SubHealth map[int]struct{}
+}
+
+func (n *ChipNode) Init(faults *NodeFaultChips, podError map[int]int64, owners map[string][]int) {
+	if faults == nil {
+		faults = &NodeFaultChips{}
+	}
 	n.owners = owners
 	if n.owners == nil {
 		n.owners = make(map[string][]int)
@@ -154,20 +166,23 @@ func (n *ChipNode) Init(faulty, netUnh, silent map[int]struct{}, podError map[in
 	n.leafIndex = make(map[int]*ChipNode, n.total)
 	n.collectLeaves(n.leafIndex)
 	for _, leaf := range n.leafIndex {
-		leaf.faulty, leaf.netUnhealthy, leaf.silentFault, leaf.podErrorTime, leaf.allocated, leaf.ownedBy =
-			0, 0, 0, 0, 0, nil
+		leaf.faulty, leaf.netUnhealthy, leaf.silentFault, leaf.podErrorTime = 0, 0, 0, 0
+		leaf.subHealth, leaf.allocated, leaf.ownedBy = 0, 0, nil
 		id := leaf.chipID
 		switch {
-		case has(faulty, id):
+		case has(faults.Faulty, id):
 			leaf.faulty = 1
-		case has(netUnh, id):
+		case has(faults.NetUnh, id):
 			leaf.netUnhealthy = 1
 		}
-		if has(silent, id) {
+		if has(faults.Silent, id) {
 			leaf.silentFault = 1
 		}
 		if t, ok := podError[id]; ok {
 			leaf.podErrorTime = t
+		}
+		if has(faults.SubHealth, id) {
+			leaf.subHealth = 1
 		}
 	}
 	keys := make([]string, 0, len(owners))
@@ -321,6 +336,29 @@ func (n *ChipNode) SilentFaultChips() map[int]struct{} {
 	return out
 }
 
+// SubHealthChips returns the chip ids of every leaf recorded as sub-healthy
+// (fault_handling SubHealthFault). This is node-level static state, independent
+// of any job's tolerance: whether to withhold them is decided by the consumer
+// via its tolerance window. nodeName (from the caller's plugin.NPUNode) is
+// used for the backoff log only.
+func (n *ChipNode) SubHealthChips(nodeName string) map[int]struct{} {
+	out := make(map[int]struct{})
+	if n == nil {
+		return out
+	}
+
+	for id, leaf := range n.leafIndex {
+		if leaf.subHealth == 1 {
+			out[id] = struct{}{}
+		}
+	}
+	if len(out) != 0 {
+		klog.V(util.LogWarningLev).Infof("node<%s> has sub-healthy chips %v, they will be withheld by sub-healthy backoff",
+			nodeName, out)
+	}
+	return out
+}
+
 // PodErrorChips returns the chip ids of every leaf with a pod-error record,
 // mapped to its failure unix second. Like SilentFaultChips it is node-level
 // static state; whether to withhold them is decided by the consumer via its
@@ -368,7 +406,7 @@ func (n *ChipNode) cloneRec() *ChipNode {
 	cl := &ChipNode{
 		chipID: n.chipID, total: n.total, Raw: n.Raw,
 		faulty: n.faulty, allocated: n.allocated, netUnhealthy: n.netUnhealthy,
-		silentFault: n.silentFault, podErrorTime: n.podErrorTime,
+		silentFault: n.silentFault, podErrorTime: n.podErrorTime, subHealth: n.subHealth,
 		ownedBy: append([]string(nil), n.ownedBy...),
 	}
 	for _, c := range n.children {
@@ -847,7 +885,7 @@ func (n *ChipNode) Score(req int, allowNetUnh bool) float64 {
 
 // State returns a compact per-chip snapshot of the topology for logging, one
 // entry per leaf ordered by ascending chip id: "id:free" (free healthy),
-// "id:F" (faulty), "id:n" (net-unhealthy) or "id:a(owner)" (allocated).
+// "id:F" (faulty), "id:n" (net-unhealthy), "id:s" (sub-healthy) or "id:a(owner)" (allocated).
 // A nil tree prints "<nil>", an uninitialized tree prints "".
 func (n *ChipNode) State() string {
 	if n == nil {
@@ -871,6 +909,8 @@ func (n *ChipNode) State() string {
 			parts = append(parts, fmt.Sprintf("%d:F", id))
 		case leaf.netUnhealthy > 0:
 			parts = append(parts, fmt.Sprintf("%d:n", id))
+		case leaf.subHealth > 0:
+			parts = append(parts, fmt.Sprintf("%d:s", id))
 		case len(leaf.ownedBy) > 0:
 			parts = append(parts, fmt.Sprintf("%d:a(%s)", id, leaf.ownedBy[0]))
 		default:

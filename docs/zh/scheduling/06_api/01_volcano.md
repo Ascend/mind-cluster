@@ -35,7 +35,7 @@
 |npu-310-strategy|标记推理服务器（插Atlas 300I推理卡）调度策略|<ul><li>card</li><li>chip</li></ul>|Volcano|
 |pod-rescheduling|是否启用Pod级别重调度。|<ul><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>|Volcano|
 |process-recover-enable|是否启用进程级别重调度。|<ul><li>on：开启进程级别重调度</li><li>其他值或不使用该字段：关闭进程级别重调度</li></ul>|Volcano|
-|subHealthyStrategy|亚健康处理策略。|<ul><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>hotSwitch：执行亚健康热切，拉起备份Pod后，暂停训练任务，并使用新节点重新拉起训练。</li></ul>|Volcano|
+|subHealthyStrategy|亚健康处理策略。|<ul><li>ignore：调度新任务时默认10s的退避窗口内不使用该亚健康节点，退避窗口外不优先调度该节点，可通过[huawei.com/subhealthy.tolerance.after-time配置说明](#p_subhealthy_tolerance_1)调整退避窗口。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>hotSwitch：执行亚健康热切，拉起备份Pod后，暂停训练任务，并使用新节点重新拉起训练。</li></ul>|Volcano|
 |huawei.com/scheduler.softShareDev.aicoreQuota|软切分任务请求的AICore百分比。|[1, 100]|Volcano|
 |huawei.com/scheduler.softShareDev.hbmQuota|软切分任务请求的高带宽内存量。|<p>[1, maxHBM]</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|Volcano|
 |huawei.com/scheduler.softShareDev.policy|软切分任务的策略。|<ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|Volcano|
@@ -205,6 +205,15 @@
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
 </tr>
+<tr id="row_subhealthy_tolerance_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_subhealthy_tolerance_1"><a name="p_subhealthy_tolerance_1"></a><a name="p_subhealthy_tolerance_1"></a>huawei.com/subhealthy.tolerance.after-time</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>配置任务调度时对亚健康资源的容忍时长，窗口内调度器不将任务调度到亚健康资源，窗口外放行。</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>默认为10，单位为秒；取值范围为[0, 300]，详细取值说明请参见<a href="./12_k8s.md#p_subhealthy_tolerance_k8s">Pod annotation使用说明</a>。</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -314,7 +323,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p728915247282"><a name="p728915247282"></a><a name="p728915247282"></a>亚健康处理策略</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul18716519102210"></a><a name="ul18716519102210"></a><ul id="ul18716519102210"><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>hotSwitch：执行亚健康热切，拉起备份Pod后，暂停训练任务，并使用新节点重新拉起训练。</li></ul>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul18716519102210"></a><a name="ul18716519102210"></a><ul id="ul18716519102210"><li>ignore：调度新任务时默认10s的退避窗口内不使用该亚健康节点，退避窗口外不优先调度该节点，可通过<a href="#p_subhealthy_tolerance_1">huawei.com/subhealthy.tolerance.after-time配置说明</a>调整退避窗口。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>hotSwitch：执行亚健康热切，拉起备份Pod后，暂停训练任务，并使用新节点重新拉起训练。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p929902143119"><a name="p929902143119"></a><a name="p929902143119"></a><span id="ph6299326312"><a name="ph6299326312"></a><a name="ph6299326312"></a>Volcano</span></p>
 </td>
@@ -461,6 +470,15 @@
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>配置分布式Ascend910/Ascend950任务在调度时忽略参数面网络不健康NPU。仅对huawei.com/Ascend910和huawei.com/npu资源类型生效。</p>
 </td>
 <td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>"ignore"：忽略参数面网络不健康NPU，允许调度到网络不健康NPU。</li><li>不设置或其他值：过滤参数面网络不健康NPU，不允许调度到网络不健康NPU。</li></ul><p>默认不设置，即过滤网络不健康NPU。</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_subhealthy_tolerance_2"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_subhealthy_tolerance_2"><a name="p_subhealthy_tolerance_2"></a><a name="p_subhealthy_tolerance_2"></a>huawei.com/subhealthy.tolerance.after-time</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>配置任务调度时对亚健康资源的容忍时长，窗口内调度器不将任务调度到亚健康资源，窗口外放行。</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>默认为10，单位为秒；取值范围为[0, 300]，详细取值说明请参见<a href="./12_k8s.md#p_subhealthy_tolerance_k8s">Pod annotation使用说明</a>。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>

@@ -580,6 +580,7 @@ func (sJob *SchedulerJob) initNPUJob(vcJob *api.JobInfo, npuName string, npuNum 
 	sJob.setParameterPlaneUnhealthyTolerance()
 	sJob.setSilentUnhealthyTolerance()
 	sJob.setPodErrorTolerance()
+	sJob.setSubHealthyTolerance()
 	sJob.setScheduleMode()
 	sJob.initVTasks(vcJob)
 }
@@ -622,7 +623,7 @@ func (sJob *SchedulerJob) setSilentUnhealthyTolerance() {
 	if !ok {
 		return
 	}
-	tolerance, err := strconv.ParseInt(val, 10, 64)
+	tolerance, err := strconv.ParseInt(val, base10, bitSize64)
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("job %s invalid %s=%s, use default %d",
 			sJob.Name, util.SilentUnhealthyToleranceAnnoKey, val, util.DefaultSilentUnhealthyToleranceAfterTime)
@@ -656,7 +657,7 @@ func (sJob *SchedulerJob) setPodErrorTolerance() {
 	if !ok {
 		return
 	}
-	tolerance, err := strconv.ParseInt(val, 10, 64)
+	tolerance, err := strconv.ParseInt(val, base10, bitSize64)
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("job %s invalid %s=%s, use default %d",
 			sJob.Name, util.PodErrorToleranceAnnoKey, val, util.DefaultPodErrorToleranceAfterTime)
@@ -675,6 +676,46 @@ func clampPodErrorTolerance(tolerance int64) int64 {
 	}
 	if tolerance > util.MaxPodErrorToleranceAfterTime {
 		return util.MaxPodErrorToleranceAfterTime
+	}
+	return tolerance
+}
+
+// setSubHealthyTolerance reads the huawei.com/subhealthy.tolerance.after-time
+// annotation and populates NPUJob.ToleranceConfig.SubHealthyToleranceAfterTime,
+// defaulting to 10: sub-healthy cards and switches are withheld for the first
+// 10 pending seconds, then released.
+func (sJob *SchedulerJob) setSubHealthyTolerance() {
+	if sJob == nil || sJob.NPUJob == nil {
+		return
+	}
+	sJob.NPUJob.ToleranceConfig.SubHealthyToleranceAfterTime = util.DefaultSubHealthyToleranceAfterTime
+	val, ok := sJob.Annotation[util.SubHealthyToleranceAnnoKey]
+	if !ok {
+		return
+	}
+
+	tolerance, err := strconv.ParseInt(val, base10, bitSize64)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("job %s invalid %s=%s, use default %d",
+			sJob.Name, util.SubHealthyToleranceAnnoKey, val, util.DefaultSubHealthyToleranceAfterTime)
+		return
+	}
+	sJob.NPUJob.ToleranceConfig.SubHealthyToleranceAfterTime = clampSubHealthyTolerance(sJob.Name, tolerance)
+}
+
+// clampSubHealthyTolerance clamps a sub-healthy tolerance after-time into
+// [0, MaxSubHealthyToleranceAfterTime]. Negative values (including -1) are
+// clamped to the lower bound 0; values above the max are capped at the max.
+func clampSubHealthyTolerance(jobID api.JobID, tolerance int64) int64 {
+	if tolerance < 0 {
+		klog.V(util.LogErrorLev).Infof("job %s invalid %s=%v, less than %d, use %d",
+			jobID, util.SubHealthyToleranceAnnoKey, tolerance, 0, 0)
+		return 0
+	}
+	if tolerance > util.MaxSubHealthyToleranceAfterTime {
+		klog.V(util.LogErrorLev).Infof("job %s invalid %s=%v, greater than %d, use %d",
+			jobID, util.SubHealthyToleranceAnnoKey, tolerance, util.MaxSubHealthyToleranceAfterTime, util.MaxSubHealthyToleranceAfterTime)
+		return util.MaxSubHealthyToleranceAfterTime
 	}
 	return tolerance
 }

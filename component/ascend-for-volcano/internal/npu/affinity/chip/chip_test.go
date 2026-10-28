@@ -67,7 +67,7 @@ func mockChipNode(name string, root *topo.ChipNode) plugin.NPUNode {
 // flatNode builds a node with a real flat topology [0..n-1] and no faults/owners.
 func flatNode(name string, n int) plugin.NPUNode {
 	root := topo.ParseTopology(topo.BuildFlatTopology(n))
-	root.Init(nil, nil, nil, nil, nil)
+	root.Init(nil, nil, nil)
 	return mockChipNode(name, root)
 }
 
@@ -162,7 +162,7 @@ func TestCheckNodeNPUByTask(t *testing.T) {
 
 	// fully busy: only eviction can satisfy the request -> NPUResourceShortageError
 	busy := topo.ParseTopology(topo.BuildFlatTopology(8))
-	busy.Init(nil, nil, nil, nil, map[string][]int{"o": {0, 1, 2, 3, 4, 5, 6, 7}})
+	busy.Init(nil, nil, map[string][]int{"o": {0, 1, 2, 3, 4, 5, 6, 7}})
 	if err := tp.CheckNodeNPUByTask(good, mockChipNode("n5", busy)); err == nil {
 		t.Error("fully-busy flat8 req4 soft should report shortage")
 	} else if !strings.Contains(err.Error(), util.NPUResourceShortageError) {

@@ -187,3 +187,8 @@ const (
 	chipNameAscend910A3 = "Ascend910"
 	chipNameAscend950   = "Ascend950"
 )
+
+const (
+	base10    = 10
+	bitSize64 = 64
+)
