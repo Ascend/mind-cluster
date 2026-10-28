@@ -69,10 +69,17 @@ struct PathInfo
     size_t dstLen;
 };
 
+struct MountEntry
+{
+    char src[PATH_MAX];  // host path
+    // container path; empty means same as src; cap aligns with MountFile's rootfs+dst assembly buffer
+    char dst[BUF_SIZE];
+};
+
 struct MountList
 {
     unsigned int count;
-    char list[MAX_MOUNT_NR][PATH_MAX];
+    struct MountEntry list[MAX_MOUNT_NR];
 };
 
 struct CmdArgs
