@@ -27,8 +27,8 @@
 <tbody>
 <tr>
 <td>光模块通信链路故障检测</td>
-<td rowspan="7"><code>hccn_tool -i {chip_phy_id} -optical -g</code></td>
-<td rowspan="7">V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: <code>optical.log</code></td>
+<td rowspan="8"><code>hccn_tool -i {chip_phy_id} -optical -g</code></td>
+<td rowspan="8">V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: <code>optical.log</code></td>
 <td>检查光模块控制链路是否可达</td>
 <td>光模块Control link unreachable</td>
 </tr>
@@ -58,9 +58,14 @@
 <td>光模块SNR LANE间差值异常：LANE0与LANE3差值为4.2dB</td>
 </tr>
 <tr>
-<td>光模块Los/LoL检测</td>
-<td>检查Rx Los、Tx Los、Rx LoL、Tx LoL状态值是否大于 0</td>
+<td>光模块Los检测</td>
+<td>检查Rx Los、Tx Los状态值是否大于 0</td>
 <td>光模块Rx Los指标异常，状态：1</td>
+</tr>
+<tr>
+<td>光模块LoL检测</td>
+<td>检查Rx LoL、Tx LoL状态值是否大于 0</td>
+<td>光模块Rx LoL指标异常，状态：1</td>
 </tr>
 <tr>
 <td>光模块uncorr_cw_cnt检测</td>
@@ -76,24 +81,43 @@
 </tr>
 <tr>
 <td>光模块初始化开光状态检测</td>
-<td><code>hccn_tool -i {chip_phy_id} -dfx_cfg -g</code></td>
+<td><code>hccn_tool -i {chip_phy_id} -optical -g dfx_cfg</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 暂不支持</td>
 <td>检查TX Disable状态是否为禁用</td>
 <td>光模块处于关光状态，tx disable status：1</td>
 </tr>
 <tr>
 <td>光模块CDR SNR检测</td>
-<td><code>hccn_tool -i {chip_phy_id} -cdr_snr -g</code></td>
-<td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 暂不支持</td>
+<td rowspan="2"><code>hccn_tool -i {chip_phy_id} -scdr -t 5</code></td>
+<td rowspan="2">V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 暂不支持</td>
 <td>检查CDR的Host SNR/Media SNR值是否低于阈值</td>
 <td>CDR SNR异常，Host SNR值为6.8dB低于阈值8.0dB</td>
 </tr>
 <tr>
-<td>光模块端口状态、网络健康状态、连接状态检测</td>
-<td><code>hccn_tool -i {chip_phy_id} -link -g</code>、<code>hccn_tool -i {chip_phy_id} -net_health -g</code></td>
+<td>光模块CDR SNR LANE间差值检测</td>
+<td>检查CDR不同lane间的Host SNR/Media SNR差值是否超过阈值</td>
+<td>CDR SNR LANE间差值异常：LANE0与LANE3差值为4.2dB</td>
+</tr>
+<tr>
+<td>端口网络健康状态检测</td>
+<td><code>hccn_tool -i {chip_phy_id} -net_health -g</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: <code>optical.log</code>（net_health不支持）</td>
-<td>检查NPU端口的网络健康状态与连接状态是否偏离正常阈值，并附带对端交换机与端口信息</td>
-<td>端口光模块状态异常，网络健康状态：abnormal，连接状态：down。 对端交换机：SWITCH-01，对端端口：10GE1/0/1。</td>
+<td>检查NPU端口的网络健康状态是否偏离正常阈值，并附带对端交换机与端口信息</td>
+<td>端口光模块状态异常，网络健康状态：abnormal。 对端交换机：SWITCH-01，对端端口：10GE1/0/1。</td>
+</tr>
+<tr>
+<td>端口连接状态检测</td>
+<td><code>hccn_tool -i {chip_phy_id} -link -g</code></td>
+<td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: <code>optical.log</code></td>
+<td>检查NPU端口的连接状态是否偏离正常阈值，并附带对端交换机与端口信息</td>
+<td>端口光模块状态异常，连接状态：down。 对端交换机：SWITCH-01，对端端口：10GE1/0/1。</td>
+</tr>
+<tr>
+<td>链路状态检测</td>
+<td><code>hccn_tool -i {chip_phy_id} -link_stat -g</code></td>
+<td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: <code>optical.log</code></td>
+<td>统计24h内端口link down次数：次数≥5判定为链路异常（紧急），≥3判定为链路亚健康（告警）</td>
+<td>链路异常：24h内link down次数为5次，down时间：2025-10-01 14:30:00、2025-10-01 14:35:00</td>
 </tr>
 <tr>
 <td>RoCE端口配置检测</td>
@@ -110,11 +134,16 @@
 <td>未采集到NPU光模块对端LLDP信息</td>
 </tr>
 <tr>
-<td>环回检测</td>
-<td><code>hccn_tool -i {npu_id} -optical -t {model}</code></td>
-<td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 暂不支持</td>
-<td>根据环回测试状态码判定故障位置：环回类型1后端口down判定为本端故障；环回类型1后端口up但环回类型2后端口down判定为本端端口光模块故障/脏污</td>
+<td>环回类型1检测（本端故障判定）</td>
+<td rowspan="2"><code>hccn_tool -i {npu_id} -optical -t {model}</code></td>
+<td rowspan="2">V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 暂不支持</td>
+<td>环回测试后，环回类型1后端口down判定为本端故障</td>
 <td>本端环回类型1后端口down，诊断为本端故障</td>
+</tr>
+<tr>
+<td>环回类型2检测（本端端口光模块故障/脏污判定）</td>
+<td>环回类型1后端口up但环回类型2后端口down判定为本端端口光模块故障/脏污</td>
+<td>本端环回类型1后端口up，环回类型2后端口down，诊断为本端端口光模块故障/脏污</td>
 </tr>
 <tr>
 <td>双端光模块光功率检测</td>
@@ -156,7 +185,7 @@
 <tbody>
 <tr>
 <td>光模块在位检测</td>
-<td rowspan="6"><code>hccn_tool -g -optical -i {npu_id} -u {udie_id} -p {port_id}</code></td>
+<td rowspan="9"><code>hccn_tool -g -optical -i {npu_id} -u {udie_id} -p {port_id}</code></td>
 <td>检查光模块是否在位</td>
 <td>光模块未在位，状态：NA</td>
 </tr>
@@ -166,9 +195,14 @@
 <td>光模块处于低功率模式，high power enable reg:0x00</td>
 </tr>
 <tr>
-<td>光模块Los/LoL检测</td>
-<td>检查 TxFault / TxLos / RxLos / TxLol / RxLol Flag 各 lane 状态值是否为 Normal</td>
+<td>光模块Los检测</td>
+<td>检查 TxFault / TxLos / RxLos Flag 各 lane 状态值是否为 Normal</td>
 <td>光模块 TxLos Flag 指标状态异常：Lane1：0x1</td>
+</tr>
+<tr>
+<td>光模块LoL检测</td>
+<td>检查 TxLol / RxLol Flag 各 lane 状态值是否为 Normal（LPO 光模块不支持 Lol 标志，自动跳过检查）</td>
+<td>光模块 RxLol Flag 指标状态异常：Lane1：0x1</td>
 </tr>
 <tr>
 <td>光模块偏置电流检测</td>
@@ -181,9 +215,19 @@
 <td>光模块光功率异常：Lane1 RX功率-18.5dBm低于阈值-15dBm</td>
 </tr>
 <tr>
-<td>光模块SNR检测及LANE间差值</td>
-<td>检查各 lane 的 Host SNR / Media SNR 值是否低于阈值，并检查 lane 间差值是否超过阈值</td>
+<td>光模块Host SNR检测</td>
+<td>检查各 lane 的 Host SNR 值是否低于阈值</td>
 <td>光模块Host SNR异常：Lane1 Host SNR值7.2dB低于阈值8.0dB</td>
+</tr>
+<tr>
+<td>光模块Media SNR检测</td>
+<td>检查各 lane 的 Media SNR 值是否低于阈值</td>
+<td>光模块Media SNR异常：Lane1 Media SNR值7.2dB低于阈值8.0dB</td>
+</tr>
+<tr>
+<td>光模块SNR LANE间差值检测</td>
+<td>检查各 lane 间 Host SNR / Media SNR 差值是否超过阈值</td>
+<td>光模块SNR LANE间差值异常：Lane0与Lane3 Host SNR差值为4.2dB</td>
 </tr>
 <tr>
 <td>端口虚拟链路（VL）优先级Credit不足检测</td>
@@ -192,10 +236,15 @@
 <td>端口虚拟链路（VL）优先级Credit不足：vl1 分配数量=8 使用数量=8</td>
 </tr>
 <tr>
-<td>NIC光模块Los/LoL检测</td>
-<td rowspan="4"><code>hinicadm5 sfp -i {card_name} -p {port_id}</code></td>
-<td>检查网卡端口各 lane 的 TxLos / RxLos / TxCdrLol / RxCdrLol 状态值是否非 0</td>
+<td>NIC光模块Los检测</td>
+<td rowspan="5"><code>hinicadm5 sfp -i {card_name} -p {port_id}</code></td>
+<td>检查网卡端口各 lane 的 TxLos / RxLos 状态值是否非 0</td>
 <td>网卡端口 Lane1 TxLos 异常：实际值 0x1（正常值 0）</td>
+</tr>
+<tr>
+<td>NIC光模块LoL检测</td>
+<td>检查网卡端口各 lane 的 TxCdrLol / RxCdrLol 状态值是否非 0</td>
+<td>网卡端口 Lane1 RxCdrLol 异常：实际值 0x1（正常值 0）</td>
 </tr>
 <tr>
 <td>NIC光模块光功率检测</td>
@@ -234,14 +283,46 @@
 <td><code>ipmcget -d sel -v list</code></td>
 <td><code>dump_info/AppDump/event/sel.txt</code></td>
 <td>解析 BMC SEL 日志中的事件代码，按错误码与关键字匹配异常描述并输出处置建议</td>
-<td>详见下方告警码列表</td>
+<td>详见下方告警码详情列表</td>
 </tr>
 <tr>
-<td>BMC光模块历史信息检测</td>
-<td><code>ipmcget -t sensor -d list</code></td>
-<td><code>dump_info/AppDump/sensor/sensor_info.txt</code>、<code>dump_info/AppDump/network_adapter/optical_module/optical_module_history_info_log.csv</code></td>
-<td>检测到光模块历史信息即记录 linkdown 时间（可能为闪断或硬件故障），并按 lane 检查光功率、偏置电流、Host SNR / Media SNR 是否超出阈值，Tx Los / Rx Los 状态值是否大于 0</td>
-<td>NPU存在linkdown，记录时间2025-10-01 14:30:00，可能为闪断或硬件故障；lane0: RX功率-18.5dBm低于阈值-15dBm；Tx los值0x1大于0</td>
+<td>BMC光模块linkdown历史信息检测</td>
+<td rowspan="5"><code>ipmcget -t sensor -d list</code></td>
+<td rowspan="5"><code>dump_info/AppDump/sensor/sensor_info.txt</code>、<code>dump_info/AppDump/network_adapter/optical_module/optical_module_history_info_log.csv</code></td>
+<td>检测到光模块历史信息即记录 linkdown 时间（可能为闪断或硬件故障）</td>
+<td>NPU存在linkdown，记录时间2025-10-01 14:30:00，可能为闪断或硬件故障</td>
+</tr>
+<tr>
+<td>BMC光模块Lane级光功率检测</td>
+<td>按 lane 检查 TX/RX 光功率是否超出阈值范围</td>
+<td>lane0: RX功率-18.5dBm低于阈值-15dBm</td>
+</tr>
+<tr>
+<td>BMC光模块Lane级偏置电流检测</td>
+<td>按 lane 检查偏置电流是否超出阈值范围</td>
+<td>lane1: 偏置电流78mA低于阈值90mA</td>
+</tr>
+<tr>
+<td>BMC光模块Lane级SNR检测</td>
+<td>按 lane 检查 Host SNR / Media SNR 是否低于阈值</td>
+<td>lane0: Host SNR值7.2dB低于阈值8.0dB</td>
+</tr>
+<tr>
+<td>BMC光模块Lane级Los状态检测</td>
+<td>按 lane 检查 Tx Los / Rx Los 状态值是否大于 0</td>
+<td>Tx los值0x1大于0</td>
+</tr>
+<tr>
+<td>BMC链路降级检测（端口级别）</td>
+<td rowspan="2"><code>ipmcget -d healthevents</code></td>
+<td rowspan="2"><code>dump_info/AppDump/event/current_event.txt</code></td>
+<td>解析错误码 <code>0x28000049</code> 的事件描述，定位 CPU 板 UBC/macro 与 L1 端口之间的故障</td>
+<td>Cpu0 UBC0 macro0 CPU board 0与L1端口之间发生故障</td>
+</tr>
+<tr>
+<td>BMC链路降级检测（板级别）</td>
+<td>当某 L1 交换芯片所有 CPU 端口均异常时，判定为板级别故障</td>
+<td>L1交换芯片所有端口异常</td>
 </tr>
 </tbody>
 </table>
@@ -283,6 +364,12 @@
 <td><code>0x80cb8009</code></td>
 <td>AIV 总线访问错误</td>
 <td>建议对硬件做 AICode 压测</td>
+</tr>
+<tr>
+<td>HCCS</td>
+<td><code>0x2800004B</code></td>
+<td>HCCS 断链告警</td>
+<td>1. 下电检查接触不良；2. 尝试更换 hccs 线缆；3. 必要时更换 NPU 板</td>
 </tr>
 <tr>
 <td>NPU 健康</td>
@@ -421,11 +508,21 @@
 <td>光模块链路Los告警，原因：接收信号丢失</td>
 </tr>
 <tr>
-<td>光模块状态检测（State-flag/Datapath State/Module State）</td>
-<td><code>display interface transceiver verbose</code></td>
-<td><code>switch_cli_output.txt</code>、<code>diag_info.txt</code></td>
-<td>检查光模块 Flag（收发光指标，预期 Normal）、Datapath State（通道状态，预期 Active）、Module State（功率模式，预期 Ready）字段值，按 lane 输出异常项</td>
+<td>光模块Flag（收发光指标）状态检测</td>
+<td rowspan="3"><code>dis optical-module interface {interface}</code></td>
+<td rowspan="3"><code>switch_cli_output.txt</code>、<code>diag_info.txt</code></td>
+<td>检查光模块收发光指标 Flag 字段值，预期 Normal，按 lane 输出异常项</td>
 <td>端口10GE1/0/1 flag信息异常：lane2 收发光指标 Flag值异常：0x03，预期为：Normal</td>
+</tr>
+<tr>
+<td>光模块Datapath State（通道状态）检测</td>
+<td>检查光模块通道状态 Datapath State 字段值，预期 Active，按 lane 输出异常项</td>
+<td>端口10GE1/0/1 flag信息异常：lane2 通道状态 Datapath State值异常：Inactive，预期为：Active</td>
+</tr>
+<tr>
+<td>光模块Module State（功率模式）检测</td>
+<td>检查光模块功率模式 Module State 字段值，预期 Ready</td>
+<td>端口10GE1/0/1 flag信息异常：功率模式 Module State值异常：PowerDown，预期为：Ready</td>
 </tr>
 <tr>
 <td>单端光模块光功率检测</td>
@@ -443,6 +540,13 @@
 <td>单端光模块电流检测</td>
 <td>检查光模块偏置电流是否超出阈值范围</td>
 <td>本端电流异常，偏置电流78mA低于阈值90mA</td>
+</tr>
+<tr>
+<td>光模块SNR LANE间差值检测</td>
+<td><code>dis optical-module interface {interface}</code></td>
+<td><code>switch_cli_output.txt</code>、<code>diag_info.txt</code></td>
+<td>检查同端口不同 lane 间的 Host SNR / Media SNR 差值是否超过阈值，优先排查 SNR 异常的 lane</td>
+<td>光模块SNR LANE间差值异常：LANE0与LANE3差值为4.2dB</td>
 </tr>
 <tr>
 <td>双端光模块光功率检测</td>
@@ -485,11 +589,16 @@
 </thead>
 <tbody>
 <tr>
-<td>HCCS Serdes检测</td>
-<td><code>display for info enp s 1 c {chip_id} "get port serdes dump-info macro-id {port_id} lane-id {lane_id} hilink {type}"</code></td>
-<td><code>switch_cli_output.txt</code>、<code>diag_info.txt</code></td>
-<td>1. hilink_type 取值为 4。检查 CDR 是否失锁（<code>cdr_los == "1"</code>）<br>2. hilink_type 取值为 1。电源故障码 <code>csr119_data</code> 是否以 <code>0x380</code> 开头</td>
-<td>交换芯片：0，端口：24，存在CDR失锁，存在电源故障，故障码：0x3802</td>
+<td>HCCS Serdes CDR失锁检测</td>
+<td rowspan="2"><code>display for info enp s 1 c {chip_id} "get port serdes dump-info macro-id {port_id} lane-id {lane_id} hilink {type}"</code></td>
+<td rowspan="2"><code>switch_cli_output.txt</code>、<code>diag_info.txt</code></td>
+<td>hilink_type 取值为 4，检查 CDR 是否失锁（<code>cdr_los == "1"</code>）</td>
+<td>交换芯片：0，端口：24，存在CDR失锁</td>
+</tr>
+<tr>
+<td>HCCS Serdes电源故障检测</td>
+<td>hilink_type 取值为 1，电源故障码 <code>csr119_data</code> 是否以 <code>0x380</code> 开头</td>
+<td>交换芯片：0，端口：24，存在电源故障，故障码：0x3802</td>
 </tr>
 <tr>
 <td>HCCS 端口SNR检测（源端）</td>
@@ -500,41 +609,79 @@
 </tr>
 <tr>
 <td>HCCS 端口SNR检测（目的端）</td>
-<td><code>display interface hilink snr</code></td>
+<td><code>display for info enp s 1 c {chip_id} "get port snr port-id {port_id}"</code></td>
 <td><code>switch_cli_output.txt</code>、<code>diag_info.txt</code></td>
 <td>检查 HCCS 交换芯片端口 SNR 是否低于阈值，并附带对端 XPU（CPU/NPU）端口信息</td>
 <td>对端NPU0端口，lane 0 SNR值6.8dB低于阈值8.0dB</td>
 </tr>
 <tr>
-<td>HCCS RP TX 超时检测（本端）</td>
-<td rowspan="2"><code>display hccs proxy response statistics</code>、<code>display hccs proxy response detail interface {interface}</code></td>
-<td rowspan="2"><code>switch_cli_output.txt</code>、<code>diag_info.txt</code></td>
-<td>当发生 RP TX 超时时，结合端口长期 down、端口闪断、窝包（RP/VOQ）等情况判定本端端口故障</td>
-<td>交换机端口长期down；或 交换机端口闪断；或 rp窝包</td>
+<td>HCCS RP TX超时检测（超时统计）</td>
+<td rowspan="8"><code>display hccs proxy response statistics</code>、<code>display hccs proxy response detail interface {interface}</code></td>
+<td rowspan="8"><code>switch_cli_output.txt</code>、<code>diag_info.txt</code></td>
+<td>解析 RP TX 超时统计，输出超时次数</td>
+<td>HCCS RP TX超时，超时次数：3</td>
 </tr>
 <tr>
-<td>HCCS RP TX 超时检测（对端）</td>
-<td>当发生 RP TX 超时时，结合对端端口 LP 方向路由 miss、LP 窝包、VOQ 窝包等情况判定对端端口故障</td>
+<td>HCCS RP TX超时检测（本端端口长期down）</td>
+<td>发生 RP TX 超时且本端端口长期 down，判定本端端口故障</td>
+<td>交换机端口长期down</td>
+</tr>
+<tr>
+<td>HCCS RP TX超时检测（本端端口闪断）</td>
+<td>发生 RP TX 超时且本端端口闪断，判定本端端口故障</td>
+<td>交换机端口闪断</td>
+</tr>
+<tr>
+<td>HCCS RP TX超时检测（本端RP窝包）</td>
+<td>发生 RP TX 超时且本端端口 RP 方向窝包，判定本端端口故障</td>
+<td>rp窝包</td>
+</tr>
+<tr>
+<td>HCCS RP TX超时检测（本端VOQ窝包）</td>
+<td>发生 RP TX 超时且本端端口 VOQ 窝包，判定本端端口故障</td>
+<td>voq窝包</td>
+</tr>
+<tr>
+<td>HCCS RP TX超时检测（对端LP方向路由miss）</td>
+<td>发生 RP TX 超时且对端端口 LP 方向路由 miss，判定对端端口故障</td>
 <td>lp方向路由miss</td>
 </tr>
 <tr>
-<td>HCCS RX超时检测</td>
-<td><code>display hccs proxy response statistics</code>、<code>display interface</code>、<code>display for info enp s 1 c {chip_id} "get port link start 0 end 47"</code></td>
-<td><code>switch_cli_output.txt</code>、<code>diag_info.txt</code></td>
-<td>筛选发生 RX 超时的接口（<code>rp_rx</code> 或 <code>lp_tx</code> 超时），结合端口长期 down、端口闪断、链路降 lane、XPU 设备异常等判断故障原因</td>
-<td>交换机端口长期down；或 交换机端口闪断；或 交换机链路降lane；或 xpu设备异常</td>
+<td>HCCS RP TX超时检测（对端LP窝包）</td>
+<td>发生 RP TX 超时且对端端口 LP 窝包，判定对端端口故障</td>
+<td>lp窝包</td>
 </tr>
 <tr>
-<td>HCCS链路降级检测（端口级别）</td>
-<td rowspan="2"><code>ipmcget -d healthevents</code></td>
-<td rowspan="2"><code>dump_info/AppDump/event/current_event.txt</code></td>
-<td>解析错误码 <code>0x28000049</code> 的事件描述，定位 CPU 板 UBC/macro 与 L1 端口之间的故障</td>
-<td>Cpu0 UBC0 macro0 CPU board 0与L1端口之间发生故障</td>
+<td>HCCS RP TX超时检测（对端VOQ窝包）</td>
+<td>发生 RP TX 超时且对端端口 VOQ 窝包，判定对端端口故障</td>
+<td>voq窝包</td>
 </tr>
 <tr>
-<td>HCCS链路降级检测（板级别）</td>
-<td>当某 L1 交换芯片所有 CPU 端口均异常时，判定为板级别故障</td>
-<td>L1交换芯片所有端口异常</td>
+<td>HCCS RX超时检测（超时统计）</td>
+<td rowspan="5"><code>display hccs proxy response statistics</code>、<code>display interface</code>、<code>display for info enp s 1 c {chip_id} "get port link start 0 end 47"</code></td>
+<td rowspan="5"><code>switch_cli_output.txt</code>、<code>diag_info.txt</code></td>
+<td>筛选发生 RX 超时的接口（<code>rp_rx</code> 或 <code>lp_tx</code> 超时），输出超时次数</td>
+<td>HCCS RX超时，超时次数：3</td>
+</tr>
+<tr>
+<td>HCCS RX超时检测（端口长期down）</td>
+<td>发生 RX 超时且端口长期 down，判定为端口故障</td>
+<td>交换机端口长期down</td>
+</tr>
+<tr>
+<td>HCCS RX超时检测（端口闪断）</td>
+<td>发生 RX 超时且端口闪断，判定为端口故障</td>
+<td>交换机端口闪断</td>
+</tr>
+<tr>
+<td>HCCS RX超时检测（链路降lane）</td>
+<td>发生 RX 超时且链路降 lane，判定为链路故障</td>
+<td>交换机链路降lane</td>
+</tr>
+<tr>
+<td>HCCS RX超时检测（XPU设备异常）</td>
+<td>发生 RX 超时且未发现端口/链路异常时，判定对端 XPU（CPU/NPU）设备异常</td>
+<td>xpu设备异常</td>
 </tr>
 </tbody>
 </table>
@@ -553,11 +700,25 @@
 </thead>
 <tbody>
 <tr>
-<td>端口Lane间功率差检测</td>
-<td><code>hccn_tool -i {chip_phy_id} -optical -g</code>（主机）、<code>dis optical-module interface {interface}</code>（交换机）、<code>ipmcget -t sensor -d list</code>（BMC）</td>
-<td>主机 <code>hccn_log/optical.log</code>、交换机 <code>switch_cli_output.txt</code>、BMC <code>dump_info/AppDump/sensor/sensor_info.txt</code></td>
-<td>计算同一端口不同 lane 间 TX/RX 功率的最大值与最小值差值，判断是否超过阈值（3dB）。支持主机、交换机和 BMC 三个维度的检测</td>
+<td>主机侧端口Lane间功率差检测</td>
+<td><code>hccn_tool -i {chip_phy_id} -optical -g</code></td>
+<td><code>hccn_log/optical.log</code></td>
+<td>计算同一端口不同 lane 间 TX/RX 功率的最大值与最小值差值，判断是否超过阈值（3dB），异常时建议排查光模块、检查端口</td>
 <td>TX端口Lane最大值和最小值差值大于3dB，实际最大值lane0：-12.0dBm，最小值lane3：-16.0dBm</td>
+</tr>
+<tr>
+<td>交换机侧端口Lane间功率差检测</td>
+<td><code>dis optical-module interface {interface}</code></td>
+<td><code>switch_cli_output.txt</code>、<code>diag_info.txt</code></td>
+<td>计算同一端口不同 lane 间 TX/RX 功率的最大值与最小值差值，判断是否超过阈值（3dB）。交换机侧阈值按端口速率选取：800G 端口使用 800G 光模块阈值，其余端口使用默认阈值</td>
+<td>交换机端口10GE1/0/1 TX端口Lane最大值和最小值差值大于3dB，实际最大值lane0：-12.0dBm，最小值lane3：-16.0dBm</td>
+</tr>
+<tr>
+<td>BMC侧端口Lane间功率差检测</td>
+<td><code>ipmcget -t sensor -d list</code></td>
+<td><code>dump_info/AppDump/sensor/sensor_info.txt</code></td>
+<td>计算同一端口不同 lane 间 TX/RX 功率的最大值与最小值差值，判断是否超过阈值（3dB），异常时建议排查光模块、检查端口</td>
+<td>BMC NPU0端口 TX端口Lane最大值和最小值差值大于3dB，实际最大值lane0：-12.0dBm，最小值lane3：-16.0dBm</td>
 </tr>
 </tbody>
 </table>
