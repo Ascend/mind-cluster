@@ -107,22 +107,22 @@
 
 1. 安装MindCluster集群调度组件（Volcano、Ascend Device Plugin、Ascend Docker Runtime、Ascend Operator、ClusterD），安装部署请参见[安装部署](../../../05_developer_guide/00_installation_deployment/menu_installation_deployment.md)。
 2. 参照[部署verl强化学习任务](../01_colocated_scenario/01_deploying_verl_reinforcement_learning_job.md)操作步骤1~3准备镜像、模型和数据集，并额外创建共享存储目录（如`/home/rollout_progress`），用于token续推进度持久化。
-3. 安装指定版本verl（commit id为`dfc01f85`），支持以下两种方式：
+3. 安装指定版本verl（基于verl 0.9.0分支适配，git ref为`v0.9.0`），支持以下两种方式：
 
     - 方式一：pip安装（推荐）
 
         ```shell
-        pip install "verl @ git+https://github.com/verl-project/verl.git@dfc01f85"
+        pip install "verl @ git+https://github.com/verl-project/verl.git@v0.9.0"
         ```
 
-        pip会自动clone仓库、checkout到该commit并构建安装，无需手动管理代码目录。
+        pip会自动clone仓库、checkout到该版本并构建安装，无需手动管理代码目录。
 
     - 方式二：git clone源码安装
 
         ```shell
         git clone https://github.com/verl-project/verl.git
         cd verl
-        git checkout dfc01f85
+        git checkout v0.9.0
         pip install -e .
         ```
 
