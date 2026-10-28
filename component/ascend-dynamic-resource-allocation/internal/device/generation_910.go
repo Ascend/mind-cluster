@@ -38,6 +38,18 @@ const (
 	ipv6LinkTypePrefix = "fe80"
 )
 
+// DCMI reports capacities as uint64, but ResourceSlice attributes are int64.
+// Values above maxInt64ResourceValue are sentinels or corrupt data, not capacity.
+const (
+	// maxInt64ResourceValue is the largest uint64 that still fits in an int64
+	// attribute. It is inclusive: this exact value is publishable.
+	maxInt64ResourceValue uint64 = 1<<63 - 1
+	// maxAICoreFloatBound is the exclusive float64 bound for DCMI AICore totals.
+	// It is 2^63 rather than 2^63-1 because float64 cannot represent 2^63-1,
+	// so the inclusive int64 limit would round up to this same value.
+	maxAICoreFloatBound float64 = 1 << 63
+)
+
 func supportsDynamicVNPU(devType string) bool {
 	return devType == api.Ascend910B || devType == api.Ascend910A3
 }
@@ -61,52 +73,110 @@ func (g *Ascend910Generation) ListNpuDevices() ([]NpuDevice, error) {
 		return nil, err
 	}
 	devs := make([]NpuDevice, 0, devNum)
+	skippableInvalidDeviceCount := 0
 	for i := int32(0); i < devNum; i++ {
-		physical, err := g.buildNpuDevice(devList[i])
+		validDevices, foundSkippableInvalidDevice, err := g.collectNpuDevicesByLogicID(devList[i])
 		if err != nil {
 			return nil, err
 		}
-		vDevInfo, err := g.dmgr.GetVirtualDeviceInfo(devList[i])
-		if err != nil {
-			if !g.PresetVirtualDevice {
-				return nil, fmt.Errorf("query checkpoint-owned vNPUs on logic device %d: %w", physical.LogicID, err)
-			}
-			// An inventory error cannot prove that this card is unsliced. Hide
-			// only this card so healthy cards remain available to the scheduler.
-			hwlog.RunLog.Warnf("skip physical device %d: vNPU inventory is unknown: %v", physical.PhyID, err)
+		if foundSkippableInvalidDevice {
+			skippableInvalidDeviceCount++
 			continue
 		}
-		if err := validateVNPUInventory(physical.LogicID, vDevInfo); err != nil {
-			if !g.PresetVirtualDevice {
-				return nil, err
-			}
-			hwlog.RunLog.Warnf("skip physical device %d: %v", physical.PhyID, err)
-			continue
-		}
-		if err := physical.setResources(vDevInfo.TotalResource.Computing); err != nil {
-			if !g.PresetVirtualDevice {
-				return nil, err
-			}
-			hwlog.RunLog.Warnf("skip physical device %d: %v", physical.PhyID, err)
-			continue
-		}
-		if vDevInfo.TotalResource.VDevNum == 0 {
-			if !g.PresetVirtualDevice && supportsDynamicVNPU(physical.DevType) {
-				if physical.AICore <= 0 {
-					return nil, fmt.Errorf("physical device %d reports invalid AI core capacity", physical.PhyID)
-				}
-			}
-			devs = append(devs, physical)
-			continue
-		}
-		if !g.PresetVirtualDevice {
-			return nil, fmt.Errorf("unowned pre-created vNPUs on logic device %d in dynamic mode", physical.LogicID)
-		}
-		virtualDevices := g.buildStaticVNPUDevices(physical, vDevInfo)
-		devs = append(devs, virtualDevices...)
+		devs = append(devs, validDevices...)
+	}
+	if skippableInvalidDeviceCount > 0 {
+		hwlog.RunLog.Errorf("Ascend910 left %d physical devices out of the ResourceSlice", skippableInvalidDeviceCount)
 	}
 	hwlog.RunLog.Infof("Ascend910 enumerated %d devices", len(devs))
 	return devs, nil
+}
+
+// getChipHBM reads the HBM capacity of one chip. Each chip is queried on its
+// own so a mismatched reading is reported against the device it came from.
+func (g *Ascend910Generation) getChipHBM(phyID int32, logicID int32) (uint64, error) {
+	hbm, err := g.dmgr.GetDeviceHbmInfo(logicID)
+	if err != nil {
+		return 0, fmt.Errorf("query HBM on physical device %d: %w", phyID, err)
+	}
+	if hbm == nil {
+		return 0, fmt.Errorf("query HBM returned empty memory info on physical device %d", phyID)
+	}
+	return hbm.MemorySize, nil
+}
+
+func (g *Ascend910Generation) collectNpuDevicesByLogicID(logicID int32) ([]NpuDevice, bool, error) {
+	npuDev, err := g.buildNpuDevice(logicID)
+	if err != nil {
+		return nil, false, err
+	}
+	vDevInfo, queryErr := g.dmgr.GetVirtualDeviceInfo(logicID)
+	if g.PresetVirtualDevice {
+		// An unreadable inventory is logged, and this card is skipped.
+		if queryErr != nil {
+			hwlog.RunLog.Errorf("physical device %d is absent from the ResourceSlice: vNPU inventory is unknown: %v",
+				npuDev.PhyID, queryErr)
+			return nil, true, nil
+		}
+		// An invalid inventory is logged, and this card is skipped.
+		if err := validateVNPUInventory(npuDev.LogicID, vDevInfo); err != nil {
+			hwlog.RunLog.Errorf("physical device %d is absent from the ResourceSlice: %v", npuDev.PhyID, err)
+			return nil, true, nil
+		}
+		// Preset mode with no vNPU: publish the unsliced card without resource totals.
+		if vDevInfo.TotalResource.VDevNum == 0 {
+			return g.collectPhyNpu(npuDev, vDevInfo)
+		}
+		// Preset mode with existing vNPUs: publish static slices, each with its own quota.
+		return g.collectStaticVNPU(npuDev, vDevInfo)
+	}
+	// An unreadable or invalid inventory is returned, and enumeration stops.
+	if queryErr != nil {
+		return nil, false, fmt.Errorf("query checkpoint-owned vNPUs on logic device %d: %w", npuDev.LogicID, queryErr)
+	}
+	if err := validateVNPUInventory(npuDev.LogicID, vDevInfo); err != nil {
+		return nil, false, err
+	}
+	// Dynamic mode: AICore comes from the pool. Memory is this chip's HBM capacity.
+	return g.collectDynamicVNPU(npuDev, vDevInfo)
+}
+
+// collectPhyNpu publishes one unsliced card. It carries no allocation quota,
+// so DeviceAttributes publishes no AICore, AICpu, or memory for it.
+func (g *Ascend910Generation) collectPhyNpu(
+	npuDev NpuDevice, _ devcommon.VirtualDevInfo) ([]NpuDevice, bool, error) {
+	return []NpuDevice{npuDev}, false, nil
+}
+
+// collectStaticVNPU publishes pre-created slices. Each slice keeps its own quota.
+func (g *Ascend910Generation) collectStaticVNPU(
+	npuDev NpuDevice, info devcommon.VirtualDevInfo) ([]NpuDevice, bool, error) {
+	staticVNPUDevs := g.buildStaticVNPUDevices(npuDev, info)
+	if len(staticVNPUDevs) == 0 {
+		hwlog.RunLog.Errorf("physical device %d is absent from the ResourceSlice: no static vNPU could be recorded",
+			npuDev.PhyID)
+		return nil, true, nil
+	}
+	return staticVNPUDevs, false, nil
+}
+
+// collectDynamicVNPU publishes an unsliced card. Each chip is queried for its own HBM capacity.
+func (g *Ascend910Generation) collectDynamicVNPU(
+	npuDev NpuDevice, info devcommon.VirtualDevInfo) ([]NpuDevice, bool, error) {
+	if info.TotalResource.VDevNum > 0 {
+		return nil, false, fmt.Errorf("unowned pre-created vNPUs on logic device %d in dynamic mode", npuDev.LogicID)
+	}
+	hbmMB, err := g.getChipHBM(npuDev.PhyID, npuDev.LogicID)
+	if err != nil {
+		return nil, false, err
+	}
+	if err := npuDev.setDynamicVNPUResources(info.TotalResource.Computing, hbmMB); err != nil {
+		return nil, false, err
+	}
+	if supportsDynamicVNPU(npuDev.DevType) && npuDev.AICore <= 0 {
+		return nil, false, fmt.Errorf("physical device %d reports invalid AI core capacity", npuDev.PhyID)
+	}
+	return []NpuDevice{npuDev}, false, nil
 }
 
 func (g *Ascend910Generation) buildStaticVNPUDevices(
@@ -138,8 +208,9 @@ func (g *Ascend910Generation) buildStaticVNPUDevices(
 		device.VDevID = vDev.VDevID
 		device.TemplateName = vDev.QueryInfo.Name
 		device.VNPUType = vnpuType
-		if err := device.setResources(vDev.QueryInfo.Computing); err != nil {
-			hwlog.RunLog.Warnf("skip static vNPU %d: %v", vDev.VDevID, err)
+		if err := device.setStaticVNPUResources(vDev.QueryInfo.Computing); err != nil {
+			hwlog.RunLog.Errorf("static vNPU %d on physical device %d is absent from the ResourceSlice: %v",
+				vDev.VDevID, physical.PhyID, err)
 			continue
 		}
 		device.DeviceName = fmt.Sprintf("%s%s%d%s%d", StaticVNPUDevice, devcommon.Minus,
@@ -186,9 +257,13 @@ func (g *Ascend910Generation) DeviceAttributes(dev NpuDevice) map[resourceapi.Qu
 		attrKeyPhysicID:   {IntValue: ptr.To(int64(dev.PhyID))},
 		attrKeyChipName:   {StringValue: ptr.To(g.getChipName(dev.LogicID))},
 		attrKeyDeviceKind: {StringValue: ptr.To(string(dev.Kind))},
-		consts.AICoreNum:  {IntValue: ptr.To(dev.AICore)},
-		consts.AICpuNum:   {IntValue: ptr.To(dev.AICpu)},
-		consts.MemorySize: {IntValue: ptr.To(dev.MemorySize)},
+	}
+	if g.publishesCardResources(dev) {
+		attributes[consts.AICoreNum] = resourceapi.DeviceAttribute{IntValue: ptr.To(dev.AICore)}
+		attributes[consts.AICpuNum] = resourceapi.DeviceAttribute{IntValue: ptr.To(dev.AICpu)}
+	}
+	if g.publishesMemory() {
+		attributes[consts.MemorySize] = resourceapi.DeviceAttribute{IntValue: ptr.To(dev.MemorySize)}
 	}
 	if dev.Kind == StaticVNPUDevice {
 		attributes[attrKeyVDevID] = resourceapi.DeviceAttribute{IntValue: ptr.To(int64(dev.VDevID))}
@@ -198,15 +273,51 @@ func (g *Ascend910Generation) DeviceAttributes(dev NpuDevice) map[resourceapi.Qu
 	return attributes
 }
 
-// setResources uses total resources for pools and QueryInfo for static vNPUs.
-func (dev *NpuDevice) setResources(r devcommon.CgoComputingResource) error {
-	if r.Aic < 0 || float64(r.Aic) >= float64(1<<63) ||
-		float64(int64(r.Aic)) != float64(r.Aic) || r.MemorySize > 1<<63-1 {
-		return fmt.Errorf("invalid DCMI resource totals on physical device %d", dev.PhyID)
+// publishesCardResources reports whether AICore and AICpu are published.
+// A preset unsliced card has no allocation quota, so it publishes neither.
+// Static vNPUs and dynamic-mode cards always carry a quota.
+func (g *Ascend910Generation) publishesCardResources(dev NpuDevice) bool {
+	return !g.PresetVirtualDevice || dev.Kind != PhysicalDevice
+}
+
+// publishesMemory reports whether the memory attribute is published. Only
+// dynamic-mode cards report HBM capacity. A preset whole card carries no quota,
+// and a static vNPU does not publish memory at all.
+func (g *Ascend910Generation) publishesMemory() bool {
+	return !g.PresetVirtualDevice
+}
+
+// setStaticVNPUResources records the AICore and AICpu quota of one static slice.
+// Memory is not recorded: a static vNPU never publishes memory.
+func (dev *NpuDevice) setStaticVNPUResources(r devcommon.CgoComputingResource) error {
+	if err := validateAICore(dev.PhyID, r.Aic); err != nil {
+		return err
 	}
 	dev.AICore = int64(r.Aic)
 	dev.AICpu = int64(r.DeviceAicpu)
-	dev.MemorySize = int64(r.MemorySize)
+	return nil
+}
+
+// setDynamicVNPUResources records a dynamic-mode card.
+// AICore and AICpu come from the pool. memoryMB is the HBM capacity in MB.
+// The pool memory in r is not published.
+func (dev *NpuDevice) setDynamicVNPUResources(r devcommon.CgoComputingResource, memoryMB uint64) error {
+	if err := validateAICore(dev.PhyID, r.Aic); err != nil {
+		return err
+	}
+	if memoryMB > maxInt64ResourceValue {
+		return fmt.Errorf("invalid HBM memory size %d on physical device %d", memoryMB, dev.PhyID)
+	}
+	dev.AICore = int64(r.Aic)
+	dev.AICpu = int64(r.DeviceAicpu)
+	dev.MemorySize = int64(memoryMB)
+	return nil
+}
+
+func validateAICore(phyID int32, aic float32) error {
+	if aic < 0 || float64(aic) >= maxAICoreFloatBound || float64(int64(aic)) != float64(aic) {
+		return fmt.Errorf("invalid DCMI AICore totals on physical device %d", phyID)
+	}
 	return nil
 }
 

@@ -18,6 +18,7 @@ package device
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -27,6 +28,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"ascend-common/api"
+	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
 	"ascend-dynamic-resource-allocation/pkg/consts"
@@ -153,7 +155,7 @@ type deviceAttrCase struct {
 }
 
 var deviceAttrCases = []deviceAttrCase{
-	{name: "populated device", dev: NpuDevice{DevType: "Ascend910", PhyID: 7, LogicID: 3, AICore: 20, AICpu: 6, MemorySize: 65536}},
+	{name: "populated device", dev: NpuDevice{DevType: "Ascend910", PhyID: 7, LogicID: 3, AICore: 20, AICpu: 6}},
 	{name: "zero-value device", dev: NpuDevice{}},
 }
 
@@ -204,6 +206,29 @@ func patchGetChipInfoErr(p *gomonkey.Patches) {
 func patchGetDevType(p *gomonkey.Patches, devType string) {
 	p.ApplyMethod(dmmType, "GetDevType",
 		func(_ *devmanager.DeviceManagerMock) string { return devType })
+}
+
+func patchGetDeviceHbmInfo(p *gomonkey.Patches, info *common.HbmInfo, err error) {
+	p.ApplyMethod(dmmType, "GetDeviceHbmInfo",
+		func(_ *devmanager.DeviceManagerMock, _ int32) (*common.HbmInfo, error) {
+			return info, err
+		})
+}
+
+func patchGetDeviceHbmInfoByLogicID(p *gomonkey.Patches,
+	getInfo func(int32) (*common.HbmInfo, error)) {
+	p.ApplyMethod(dmmType, "GetDeviceHbmInfo",
+		func(_ *devmanager.DeviceManagerMock, logicID int32) (*common.HbmInfo, error) {
+			return getInfo(logicID)
+		})
+}
+
+func captureRunLogErrorf(p *gomonkey.Patches) *[]string {
+	lines := make([]string, 0)
+	p.ApplyMethodFunc(hwlog.RunLog, "Errorf", func(format string, args ...interface{}) {
+		lines = append(lines, fmt.Sprintf(format, args...))
+	})
+	return &lines
 }
 
 func patchGetVirtualDeviceInfo(p *gomonkey.Patches, info common.VirtualDevInfo, err error) {
@@ -384,10 +409,10 @@ func TestAscend910Generation_DeviceAttributes(t *testing.T) {
 		for idx, tc := range deviceAttrCases {
 			Convey(fmt.Sprintf("case#%d %s", idx, tc.name), func() {
 				attrs := g.DeviceAttributes(tc.dev)
-				So(len(attrs), ShouldEqual, 7)
+				So(len(attrs), ShouldEqual, 6)
 				So(*attrs[consts.AICoreNum].IntValue, ShouldEqual, tc.dev.AICore)
 				So(*attrs[consts.AICpuNum].IntValue, ShouldEqual, tc.dev.AICpu)
-				So(*attrs[consts.MemorySize].IntValue, ShouldEqual, tc.dev.MemorySize)
+				So(attrs[consts.MemorySize], ShouldResemble, resourceapi.DeviceAttribute{})
 				So(attrs[attrKeyType], ShouldResemble,
 					resourceapi.DeviceAttribute{StringValue: ptr.To(consts.NPUNamePrefix)})
 				So(attrs[attrKeyPhysicID], ShouldResemble,
@@ -503,7 +528,7 @@ func TestAscend950Generation_DeviceAttributes(t *testing.T) {
 func TestAscend910Generation_ListStaticVNPUDevices(t *testing.T) {
 	tests := []struct {
 		name, devType, template, expectedType string
-		aiCore                               float32
+		aiCore                                float32
 	}{
 		{"910A", api.Ascend910A, common.Vir02, api.Ascend910 + common.Minus + common.Core2, 2},
 		{"910B/A2", api.Ascend910B, common.Vir05C1G16,
@@ -634,13 +659,231 @@ func TestNpuDeviceKindValues(t *testing.T) {
 }
 func TestHardwareResourceTotals(t *testing.T) {
 	dev := NpuDevice{}
-	if err := dev.setResources(common.CgoComputingResource{Aic: 20, DeviceAicpu: 6, MemorySize: 65536}); err != nil {
+	if err := dev.setDynamicVNPUResources(common.CgoComputingResource{Aic: 20, DeviceAicpu: 6, MemorySize: ^uint64(0)}, 32768); err != nil {
 		t.Fatal(err)
 	}
 	dev.Kind = PhysicalDevice
 	attrs := NewAscend910Generation().DeviceCapacity(dev)
 	capacity := attrs[consts.AICoreNum]
-	if dev.AICore != 20 || dev.AICpu != 6 || dev.MemorySize != 65536 || capacity.Value.Value() != 20 {
+	if dev.AICore != 20 || dev.AICpu != 6 || dev.MemorySize != 32768 || capacity.Value.Value() != 20 {
 		t.Fatalf("hardware totals: %+v, capacity=%v", dev, attrs)
 	}
+}
+
+func TestSetResourcesMemorySentinel(t *testing.T) {
+	for _, mem := range []uint64{0, 16384, maxInt64ResourceValue, maxInt64ResourceValue + 1, ^uint64(0) - 1, ^uint64(0)} {
+		static := NpuDevice{PhyID: 3}
+		err := static.setStaticVNPUResources(common.CgoComputingResource{Aic: 32, DeviceAicpu: 8, MemorySize: mem})
+		if err != nil || static.AICore != 32 || static.AICpu != 8 || static.MemorySize != 0 {
+			t.Fatalf("static vNPU must ignore the DCMI memory %d: err=%v dev=%+v", mem, err, static)
+		}
+	}
+	static := NpuDevice{PhyID: 3}
+	if err := static.setStaticVNPUResources(common.CgoComputingResource{Aic: -1}); err == nil {
+		t.Fatal("negative AICore was accepted")
+	}
+	dynamic := NpuDevice{PhyID: 7}
+	err := dynamic.setDynamicVNPUResources(common.CgoComputingResource{Aic: 32, DeviceAicpu: 8, MemorySize: ^uint64(0)}, 32768)
+	if err != nil || dynamic.AICore != 32 || dynamic.MemorySize != 32768 {
+		t.Fatalf("dynamic HBM: err=%v dev=%+v", err, dynamic)
+	}
+	emptyHBM := NpuDevice{PhyID: 8}
+	err = emptyHBM.setDynamicVNPUResources(common.CgoComputingResource{Aic: 32, DeviceAicpu: 8, MemorySize: 16384}, 0)
+	if err != nil || emptyHBM.MemorySize != 0 {
+		t.Fatalf("zero HBM capacity: err=%v dev=%+v", err, emptyHBM)
+	}
+	rejectedHBM := NpuDevice{PhyID: 9}
+	err = rejectedHBM.setDynamicVNPUResources(common.CgoComputingResource{Aic: 32, DeviceAicpu: 8}, ^uint64(0))
+	if err == nil || rejectedHBM.AICore != 0 || rejectedHBM.MemorySize != 0 {
+		t.Fatalf("oversized HBM was stored: err=%v dev=%+v", err, rejectedHBM)
+	}
+}
+
+func TestAscend910Generation_PresetCardAndStaticMemory(t *testing.T) {
+	unsliced := func(mem uint64) common.VirtualDevInfo {
+		return common.VirtualDevInfo{
+			TotalResource: common.CgoSocTotalResource{
+				Computing: common.CgoComputingResource{Aic: 32, DeviceAicpu: 8, MemorySize: mem},
+			},
+		}
+	}
+	prepare := func(p *gomonkey.Patches, info common.VirtualDevInfo) *Ascend910Generation {
+		g, _ := new910WithMock()
+		patchGetDeviceList(p, 1, []int32{0}, nil)
+		setup910BuildScenario(p, "ipv4Ok")
+		patchGetDevType(p, api.Ascend910A)
+		patchGetVirtualDeviceInfo(p, info, nil)
+		return g
+	}
+	Convey("unsliced card omits AICore, AICpu, and memory", t, func() {
+		p := gomonkey.NewPatches()
+		defer p.Reset()
+		g := prepare(p, unsliced(^uint64(0)))
+		patchGetDeviceHbmInfo(p, nil, errSentinel)
+		devices, err := g.ListNpuDevices()
+		So(err, ShouldBeNil)
+		So(devices, ShouldHaveLength, 1)
+		So(devices[0].Kind, ShouldEqual, PhysicalDevice)
+		So(devices[0].AICore, ShouldEqual, int64(0))
+		So(devices[0].AICpu, ShouldEqual, int64(0))
+		So(devices[0].MemorySize, ShouldEqual, int64(0))
+		attrs := g.DeviceAttributes(devices[0])
+		So(attrs[consts.AICoreNum], ShouldResemble, resourceapi.DeviceAttribute{})
+		So(attrs[consts.AICpuNum], ShouldResemble, resourceapi.DeviceAttribute{})
+		So(attrs[consts.MemorySize], ShouldResemble, resourceapi.DeviceAttribute{})
+		So(*attrs[attrKeyDeviceKind].StringValue, ShouldEqual, string(PhysicalDevice))
+	})
+	Convey("static vNPU never publishes memory whatever DCMI reports", t, func() {
+		for _, mem := range []uint64{0, 16384, maxInt64ResourceValue, maxInt64ResourceValue + 1, ^uint64(0)} {
+			p := gomonkey.NewPatches()
+			info := newStaticVNPUInfo(common.MinVDevID, common.Vir02, 2)
+			info.VDevInfo[0].QueryInfo.Computing.DeviceAicpu = 1
+			info.VDevInfo[0].QueryInfo.Computing.MemorySize = mem
+			g := prepare(p, info)
+			logs := captureRunLogErrorf(p)
+			devices, err := g.ListNpuDevices()
+			So(err, ShouldBeNil)
+			So(devices, ShouldHaveLength, 1)
+			So(devices[0].Kind, ShouldEqual, StaticVNPUDevice)
+			So(devices[0].DeviceName, ShouldEqual, "static-vnpu-100-1")
+			So(devices[0].VDevID, ShouldEqual, uint32(common.MinVDevID))
+			So(devices[0].TemplateName, ShouldEqual, common.Vir02)
+			So(devices[0].AICore, ShouldEqual, int64(2))
+			So(devices[0].AICpu, ShouldEqual, int64(1))
+			So(devices[0].MemorySize, ShouldEqual, int64(0))
+			attrs := g.DeviceAttributes(devices[0])
+			So(attrs[consts.MemorySize], ShouldResemble, resourceapi.DeviceAttribute{})
+			So(*attrs[consts.AICoreNum].IntValue, ShouldEqual, int64(2))
+			So(*attrs[consts.AICpuNum].IntValue, ShouldEqual, int64(1))
+			So(*attrs[attrKeyTemplate].StringValue, ShouldEqual, common.Vir02)
+			So(*attrs[attrKeyVDevID].IntValue, ShouldEqual, int64(common.MinVDevID))
+			joined := strings.Join(*logs, "\n")
+			So(joined, ShouldNotContainSubstring, "absent from the ResourceSlice")
+			So(joined, ShouldNotContainSubstring, "invalid DCMI memory size")
+			p.Reset()
+		}
+	})
+}
+
+func TestAscend910Generation_DynamicPoolMemory(t *testing.T) {
+	pool := func(mem uint64, aiCore float32) common.VirtualDevInfo {
+		return common.VirtualDevInfo{
+			TotalResource: common.CgoSocTotalResource{
+				Computing: common.CgoComputingResource{Aic: aiCore, DeviceAicpu: 8, MemorySize: mem},
+			},
+		}
+	}
+	prepare := func(p *gomonkey.Patches, info common.VirtualDevInfo) *Ascend910Generation {
+		g, _ := new910WithMock()
+		g.PresetVirtualDevice = false
+		patchGetDeviceList(p, 1, []int32{0}, nil)
+		setup910BuildScenario(p, "ipv4Ok")
+		patchGetDevType(p, api.Ascend910B)
+		patchGetVirtualDeviceInfo(p, info, nil)
+		return g
+	}
+	Convey("dynamic memory is the HBM capacity and ignores the pool quota", t, func() {
+		p := gomonkey.NewPatches()
+		defer p.Reset()
+		g := prepare(p, pool(^uint64(0), 32))
+		patchGetDeviceHbmInfo(p, &common.HbmInfo{MemorySize: 32768}, nil)
+		devices, err := g.ListNpuDevices()
+		So(err, ShouldBeNil)
+		So(devices, ShouldHaveLength, 1)
+		So(devices[0].Kind, ShouldEqual, PhysicalDevice)
+		So(devices[0].MemorySize, ShouldEqual, int64(32768))
+		So(*g.DeviceAttributes(devices[0])[consts.MemorySize].IntValue, ShouldEqual, int64(32768))
+		So(devices[0].AICore, ShouldEqual, int64(32))
+		So(devices[0].AICpu, ShouldEqual, int64(8))
+	})
+	Convey("successful zero HBM capacity is published as zero", t, func() {
+		p := gomonkey.NewPatches()
+		defer p.Reset()
+		g := prepare(p, pool(16384, 32))
+		patchGetDeviceHbmInfo(p, &common.HbmInfo{MemorySize: 0}, nil)
+		devices, err := g.ListNpuDevices()
+		So(err, ShouldBeNil)
+		So(devices, ShouldHaveLength, 1)
+		So(devices[0].MemorySize, ShouldEqual, int64(0))
+		So(*g.DeviceAttributes(devices[0])[consts.MemorySize].IntValue, ShouldEqual, int64(0))
+	})
+	for _, tt := range []struct {
+		name   string
+		info   *common.HbmInfo
+		err    error
+		reason string
+	}{
+		{name: "HBM query error fails enumeration", err: errSentinel, reason: "query HBM on physical device"},
+		{name: "empty HBM info fails enumeration", reason: "query HBM returned empty memory info"},
+		{name: "all-ones HBM fails enumeration", info: &common.HbmInfo{MemorySize: ^uint64(0)}, reason: "invalid HBM memory size"},
+	} {
+		Convey(tt.name, t, func() {
+			p := gomonkey.NewPatches()
+			defer p.Reset()
+			g := prepare(p, pool(16384, 32))
+			patchGetDeviceHbmInfo(p, tt.info, tt.err)
+			devices, err := g.ListNpuDevices()
+			So(err, ShouldNotBeNil)
+			So(devices, ShouldBeNil)
+			So(err.Error(), ShouldContainSubstring, tt.reason)
+		})
+	}
+	Convey("zero AI core on a dynamic-capable chip fails enumeration", t, func() {
+		p := gomonkey.NewPatches()
+		defer p.Reset()
+		g := prepare(p, pool(1024, 0))
+		patchGetDeviceHbmInfo(p, &common.HbmInfo{MemorySize: 32768}, nil)
+		devices, err := g.ListNpuDevices()
+		So(err, ShouldNotBeNil)
+		So(devices, ShouldBeNil)
+		So(err.Error(), ShouldContainSubstring, "invalid AI core capacity")
+	})
+	Convey("every chip reads its own HBM capacity", t, func() {
+		p := gomonkey.NewPatches()
+		defer p.Reset()
+		g, _ := new910WithMock()
+		g.PresetVirtualDevice = false
+		patchGetDeviceList(p, 2, []int32{0, 1}, nil)
+		setup910BuildScenario(p, "ipv4Ok")
+		patchGetDevType(p, api.Ascend910B)
+		patchGetVirtualDeviceInfoByLogicID(p, func(logicID int32) (common.VirtualDevInfo, error) {
+			return pool(16384, 32), nil
+		})
+		calls := 0
+		patchGetDeviceHbmInfoByLogicID(p, func(logicID int32) (*common.HbmInfo, error) {
+			calls++
+			if logicID == 0 {
+				return &common.HbmInfo{MemorySize: 32768}, nil
+			}
+			return &common.HbmInfo{MemorySize: 65536}, nil
+		})
+		devices, err := g.ListNpuDevices()
+		So(err, ShouldBeNil)
+		So(calls, ShouldEqual, 2)
+		So(devices, ShouldHaveLength, 2)
+		So(devices[0].MemorySize, ShouldEqual, int64(32768))
+		So(devices[1].MemorySize, ShouldEqual, int64(65536))
+	})
+	Convey("one chip with an invalid HBM reading fails enumeration", t, func() {
+		p := gomonkey.NewPatches()
+		defer p.Reset()
+		g, _ := new910WithMock()
+		g.PresetVirtualDevice = false
+		patchGetDeviceList(p, 2, []int32{0, 1}, nil)
+		setup910BuildScenario(p, "ipv4Ok")
+		patchGetDevType(p, api.Ascend910B)
+		patchGetVirtualDeviceInfoByLogicID(p, func(logicID int32) (common.VirtualDevInfo, error) {
+			return pool(16384, 32), nil
+		})
+		patchGetDeviceHbmInfoByLogicID(p, func(logicID int32) (*common.HbmInfo, error) {
+			if logicID == 0 {
+				return &common.HbmInfo{MemorySize: 32768}, nil
+			}
+			return &common.HbmInfo{MemorySize: maxInt64ResourceValue + 1}, nil
+		})
+		devices, err := g.ListNpuDevices()
+		So(err, ShouldNotBeNil)
+		So(devices, ShouldBeNil)
+		So(err.Error(), ShouldContainSubstring, "invalid HBM memory size")
+	})
 }
