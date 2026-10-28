@@ -49,5 +49,7 @@ type NpuDevice struct {
 	VNPUType     string
 	AICore       int64
 	AICpu        int64
-	MemorySize   int64 // MB, as reported by DCMI.
+	// MemorySize is the HBM capacity in MB, published only in dynamic mode.
+	// A preset whole card and a static vNPU do not publish memory.
+	MemorySize int64
 }
