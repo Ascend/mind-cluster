@@ -106,6 +106,11 @@ const (
 	PreSeparateFaultCodesStr = "PreSeparateFaultCodes"
 	// SeparateFaultCodesStr is the string for SeparateFaultCodes
 	SeparateFaultCodesStr = "SeparateFaultCodes"
+	// UBSeparateFaultReportWindow is the window (in seconds) during which the UB separate fault
+	// is not reported after a hyper plane fault recovery. When the fault is recovering, the UB
+	// ports may come up at different times, so the separate fault can only be reported after
+	// this window expires
+	UBSeparateFaultReportWindow int64 = 600
 )
 
 var (
@@ -194,6 +199,11 @@ var (
 	// ubPortDownConfirmedMap records the devices whose UB port down fault was already seen
 	// in a previous processing cycle
 	ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+	// ubFaultRecoverTime records the time when a hyper plane fault recovery was first observed
+	// while some UB ports were still down. The UB separate fault is reported only
+	// after UBSeparateFaultReportWindow counted from this time. The window covers the recovery
+	// of all cards and all ports on the node
+	ubFaultRecoverTime int64 = 0
 )
 
 // FormatFaultCodeHex formats fault code as hex string with correct leading zeros based on config
@@ -1704,12 +1714,14 @@ func a950HyperPlaneFaultRecover(logicID int32, hyperPlaneFaultInfos []common.Dev
 			}
 			handleA950HyperPlaneFaultRecover(logicID, device, faultInfo)
 			if snapshot.UBDownCnt != common.PortNoDownCount {
-				tmpFaultInfo := faultInfo
-				tmpFaultInfo.EventID = UBSeparateFaultCode
-				updateDeviceFaultTimeMap(device, tmpFaultInfo, true)
-				hwlog.RunLog.Infof("UB separate fault still exist after hyper plane fault recover, "+
-					"devFaultInfo: %#v, hex code: %v", tmpFaultInfo, FormatFaultCodeHex(tmpFaultInfo.EventID))
-				device.FaultCodes = append(device.FaultCodes, UBSeparateFaultCode)
+				// During fault recovery the UB ports may come up at different times. Anchor the
+				// report window at the first recovery and only re-occur the original fault code
+				// here, the UB separate fault is reported after UBSeparateFaultReportWindow expires
+				if ubFaultRecoverTime == 0 {
+					ubFaultRecoverTime = time.Now().Unix()
+					hwlog.RunLog.Infof("UB ports still down after hyper plane fault recover, device: %d, "+
+						"UB separate fault report is delayed for %d seconds", logicID, UBSeparateFaultReportWindow)
+				}
 				updateDeviceFaultTimeMap(device, faultInfo, true)
 				device.FaultCodes = append(device.FaultCodes, faultInfo.EventID)
 			}
@@ -1759,6 +1771,10 @@ func a950HyperPlaneNewOverallFaultModify(devices []*NpuDevice) {
 	}
 	// if all device has UB port down fault code, then convert status from separate fault code to sub heal fault code
 	if allHaveHyperPlaneFaultCode {
+		// all ports down on all devices means a switch fault, which starts a new fault episode,
+		// reset the recover window here
+		ubFaultRecoverTime = 0
+		hwlog.RunLog.Debug("all devices have UB ports down, reset recover window")
 		curTime := time.Now().Unix()
 		for _, device := range devices {
 			if Int64Tool.Contains(device.FaultCodes, UBSeparateFaultCode) {
@@ -1789,19 +1805,21 @@ func a950HyperPlaneNewOverallFaultModify(devices []*NpuDevice) {
 	delayReportUBSeparateFault(devices)
 }
 
-// delayUBSeparateFault generates the UB separate fault code for the device whose UB port down
-// fault was already reported in a previous cycle. The delayed promotion is to avoid a transient
-// false separate fault report when the faults of all devices arrive in different processing cycles.
+// delayReportUBSeparateFault promotes the confirmed UB port down fault (8603) to the UB
+// separate fault (1002), delayed by one cycle per device and blocked while the node is
+// still in the fault recover window. Clears the window when no port down fault remains.
 func delayReportUBSeparateFault(devices []*NpuDevice) {
+	anyPortDown := false
 	for _, device := range devices {
 		if !Int64Tool.Contains(device.FaultCodes, UBPortDownCode) {
-			// clear the confirm flag when the fault is recovered, so a re-occurred fault
-			// is also delayed by one cycle before promotion
+			// clear the confirm flag when the fault is recovered,
+			// so a re-occurred fault is also delayed by one cycle before promotion
 			if _, ok := ubPortDownConfirmedMap[device.LogicID]; ok {
 				delete(ubPortDownConfirmedMap, device.LogicID)
 			}
 			continue
 		}
+		anyPortDown = true
 		if Int64Tool.Contains(device.FaultCodes, UBSeparateFaultCode) ||
 			Int64Tool.Contains(device.FaultCodes, UBSubHealFaultCode) {
 			continue
@@ -1809,6 +1827,11 @@ func delayReportUBSeparateFault(devices []*NpuDevice) {
 		if !ubPortDownConfirmedMap[device.LogicID] {
 			ubPortDownConfirmedMap[device.LogicID] = true
 			hwlog.RunLog.Infof("delay UB separate fault for device: %d", device.LogicID)
+			continue
+		}
+		if inUBSeparateFaultReportWindow() {
+			hwlog.RunLog.Infof("trigger recover window for device: %d, suppress %d",
+				device.LogicID, UBSeparateFaultCode)
 			continue
 		}
 		faultTime := device.FaultTimeMap[UBPortDownCode]
@@ -1823,6 +1846,28 @@ func delayReportUBSeparateFault(devices []*NpuDevice) {
 			tmpFaultInfo, FormatFaultCodeHex(tmpFaultInfo.EventID))
 		device.FaultCodes = append(device.FaultCodes, UBSeparateFaultCode)
 	}
+	// the fault recover window covers the recovery of all cards and all ports,
+	// clear it only when no UB port down fault remains on any device
+	if !anyPortDown {
+		ubFaultRecoverTime = 0
+		hwlog.RunLog.Debug("all devices recover, reset recover window")
+	}
+}
+
+// inUBSeparateFaultReportWindow checks whether the node is still in the report window started
+// at the hyper plane fault recovery. When the fault is recovering, the UB ports may come up at
+// different times, so the separate fault is reported only after the window expires. The window
+// is shared by all devices because it covers the recovery of all cards and all ports.
+func inUBSeparateFaultReportWindow() bool {
+	if ubFaultRecoverTime == 0 {
+		return false
+	}
+	if time.Now().Unix()-ubFaultRecoverTime < UBSeparateFaultReportWindow {
+		hwlog.RunLog.Debugf("node is in the UB separate fault report window after fault "+
+			"recovery, recover time: %d", ubFaultRecoverTime)
+		return true
+	}
+	return false
 }
 
 // DelOnceRecoverFault delete func 'cacheAfterDelFaultCode' record fault code and network fault code in the end of cycle

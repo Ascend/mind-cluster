@@ -531,10 +531,12 @@ func TestSetHyperPlaneNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			convey.So(device.FaultCodes, convey.ShouldBeEmpty)
 			convey.So(len(recoverFaultMap[logicID]), convey.ShouldEqual, 0)
 		})
-		convey.Convey("A950 card type recover with port still down, should re-occur precise fault", func() {
+		convey.Convey("A950 card type recover with port still down, should delay separate fault "+
+			"within the report window", func() {
 			ParamOption.RealCardType = Ascend910A5
 			defer func() { ParamOption = Option{} }()
 			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
+			ubFaultRecoverTime = 0
 			logicID := int32(0)
 			faultInfos := []common.DevFaultInfo{
 				{Assertion: common.FaultRecover, EventID: UBPortDownCode},
@@ -548,8 +550,9 @@ func TestSetHyperPlaneNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 				common.UBPortsDownSnapshot{UBDownCnt: 1}, nil)
 			defer patchSnapshot.Reset()
 			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
-			convey.So(device.FaultCodes, convey.ShouldContain, UBSeparateFaultCode)
+			convey.So(device.FaultCodes, convey.ShouldNotContain, UBSeparateFaultCode)
 			convey.So(device.FaultCodes, convey.ShouldContain, UBPortDownCode)
+			convey.So(ubFaultRecoverTime, convey.ShouldBeGreaterThan, 0)
 		})
 	})
 }
@@ -562,6 +565,7 @@ func TestA950HyperPlaneNewOverallFaultModify(t *testing.T) {
 			ParamOption.RealCardType = Ascend910A5
 			defer func() { ParamOption = Option{} }()
 			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			ubFaultRecoverTime = 0
 			// simulate 8 cards, only 4 cards' 8603 fault is processed in the first cycle
 			curTime := time.Now().UnixMilli()
 			devices := make([]*NpuDevice, 0, 8)
@@ -586,6 +590,7 @@ func TestA950HyperPlaneNewOverallFaultModify(t *testing.T) {
 			ParamOption.RealCardType = Ascend910A5
 			defer func() { ParamOption = Option{} }()
 			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			ubFaultRecoverTime = 0
 			curTime := time.Now().UnixMilli()
 			devices := []*NpuDevice{
 				{
@@ -607,6 +612,7 @@ func TestA950HyperPlaneNewOverallFaultModify(t *testing.T) {
 			ParamOption.RealCardType = Ascend910A5
 			defer func() { ParamOption = Option{} }()
 			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			ubFaultRecoverTime = 0
 			curTime := time.Now().UnixMilli()
 			devices := make([]*NpuDevice, 0, 8)
 			for i := 0; i < 8; i++ {
@@ -626,6 +632,7 @@ func TestA950HyperPlaneNewOverallFaultModify(t *testing.T) {
 			ParamOption.RealCardType = Ascend910A5
 			defer func() { ParamOption = Option{} }()
 			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			ubFaultRecoverTime = 0
 			curTime := time.Now().UnixMilli()
 			devices := []*NpuDevice{
 				{
@@ -653,6 +660,7 @@ func TestA950HyperPlaneNewOverallFaultModify(t *testing.T) {
 			ParamOption.RealCardType = Ascend910A5
 			defer func() { ParamOption = Option{} }()
 			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			ubFaultRecoverTime = 0
 			curTime := time.Now().UnixMilli()
 			devices := make([]*NpuDevice, 0, 8)
 			for i := 0; i < 8; i++ {
@@ -671,6 +679,83 @@ func TestA950HyperPlaneNewOverallFaultModify(t *testing.T) {
 				convey.So(device.FaultCodes, convey.ShouldContain, UBSubHealFaultCode)
 				convey.So(device.FaultCodes, convey.ShouldNotContain, UBSeparateFaultCode)
 			}
+		})
+		convey.Convey("within fault recover report window, should not promote to separate fault", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = map[int32]bool{0: true}
+			ubFaultRecoverTime = time.Now().Unix()
+			curTime := time.Now().UnixMilli()
+			devices := []*NpuDevice{
+				{
+					LogicID:      0,
+					FaultCodes:   []int64{UBPortDownCode},
+					FaultTimeMap: map[int64]int64{UBPortDownCode: curTime},
+				},
+				{LogicID: 1},
+			}
+			// the fault was already confirmed in a previous cycle, but the device is in the
+			// report window after fault recovery, so promotion should be blocked
+			a950HyperPlaneNewOverallFaultModify(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldNotContain, UBSeparateFaultCode)
+		})
+		convey.Convey("report window expired, should promote to separate fault", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = map[int32]bool{0: true}
+			ubFaultRecoverTime = time.Now().Unix() - UBSeparateFaultReportWindow - 1
+			curTime := time.Now().UnixMilli()
+			devices := []*NpuDevice{
+				{
+					LogicID:      0,
+					FaultCodes:   []int64{UBPortDownCode},
+					FaultTimeMap: map[int64]int64{UBPortDownCode: curTime},
+				},
+				{LogicID: 1},
+			}
+			a950HyperPlaneNewOverallFaultModify(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldContain, UBSeparateFaultCode)
+		})
+		convey.Convey("fault fully recovered after report window, should clear the window cache", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = map[int32]bool{0: true}
+			ubFaultRecoverTime = time.Now().Unix()
+			devices := []*NpuDevice{
+				{LogicID: 0},
+				{LogicID: 1},
+			}
+			a950HyperPlaneNewOverallFaultModify(devices)
+			convey.So(ubFaultRecoverTime, convey.ShouldEqual, 0)
+			convey.So(ubPortDownConfirmedMap[0], convey.ShouldBeFalse)
+		})
+		convey.Convey("switch fault during recover window, should reset the stale window on "+
+			"sub-health conversion", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = map[int32]bool{0: true, 1: true}
+			// window anchored before the switch fault and already expired
+			ubFaultRecoverTime = time.Now().Unix() - UBSeparateFaultReportWindow - 1
+			curTime := time.Now().UnixMilli()
+			devices := []*NpuDevice{
+				{
+					LogicID:      0,
+					FaultCodes:   []int64{UBPortDownCode},
+					FaultTimeMap: map[int64]int64{UBPortDownCode: curTime},
+				},
+				{
+					LogicID:      1,
+					FaultCodes:   []int64{UBPortDownCode},
+					FaultTimeMap: map[int64]int64{UBPortDownCode: curTime},
+				},
+			}
+			// all devices have the port down fault, switch fault converts it to 0002 sub-health
+			// and resets the stale window, so the staggered port recovery after the switch
+			// fault is protected by a fresh window anchored at its own first recovery
+			a950HyperPlaneNewOverallFaultModify(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldContain, UBSubHealFaultCode)
+			convey.So(devices[1].FaultCodes, convey.ShouldContain, UBSubHealFaultCode)
+			convey.So(ubFaultRecoverTime, convey.ShouldEqual, 0)
 		})
 	})
 }
