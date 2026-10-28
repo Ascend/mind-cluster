@@ -136,6 +136,62 @@ func TestReadListEntries_UbIncludedFlag(t *testing.T) {
 	}
 }
 
+// TestParseListFile_MappingEntries verifies "hostPath[:containerPath]" entry
+// parsing: mapping lines split into aligned Paths/ContainerPaths, and legacy
+// plain lines keep same-path mounts with an empty container path.
+func TestParseListFile_MappingEntries(t *testing.T) {
+	dir := t.TempDir()
+	lib := filepath.Join(dir, "lib.so")
+	mustWriteFile(t, lib, "")
+
+	writeListFile(t, dir, "mapped", lib+":/workspace/lib.so\n")
+	entries, err := parseListFile(filepath.Join(dir, "mapped.list"))
+	if err != nil {
+		t.Fatalf("parseListFile returned error: %v", err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 entry, got %d", len(entries))
+	}
+	if entries[0].Paths[0] != lib || entries[0].ContainerPaths[0] != "/workspace/lib.so" {
+		t.Fatalf("mapping not parsed, got %v / %v", entries[0].Paths, entries[0].ContainerPaths)
+	}
+
+	writeListFile(t, dir, "plain", lib+"\n")
+	entries, err = parseListFile(filepath.Join(dir, "plain.list"))
+	if err != nil {
+		t.Fatalf("parseListFile returned error: %v", err)
+	}
+	if len(entries) != 1 || entries[0].ContainerPaths[0] != "" {
+		t.Fatalf("legacy entry must keep same-path mount, got %v", entries)
+	}
+}
+
+// TestParseListFile_InvalidMapping verifies that mapping syntax errors fail
+// fast: relative container path, '..' component, empty part, and glob+mapping.
+func TestParseListFile_InvalidMapping(t *testing.T) {
+	dir := t.TempDir()
+	lib := filepath.Join(dir, "lib.so")
+	mustWriteFile(t, lib, "")
+
+	tests := []struct {
+		name    string
+		content string
+	}{
+		{"relative dst", lib + ":relative/path"},
+		{"dot-dot dst", lib + ":/container/../etc"},
+		{"empty part", ":" + lib},
+		{"glob with mapping", "/usr/lib64/libummu*:/workspace"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			writeListFile(t, dir, "bad", tt.content+"\n")
+			if _, err := parseListFile(filepath.Join(dir, "bad.list")); err == nil {
+				t.Fatalf("expected error for entry %q", tt.content)
+			}
+		})
+	}
+}
+
 func TestReadListEntries_MissingDir(t *testing.T) {
 	entries, _, err := readListEntries("/nonexistent/directory/for/test", "", true)
 	if err != nil {
