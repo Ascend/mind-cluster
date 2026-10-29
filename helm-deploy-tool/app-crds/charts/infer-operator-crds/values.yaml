@@ -3,3 +3,4 @@ renderCrds:
   inferservices: "yamls/default/CustomResourceDefinition-inferservices.mindcluster.huawei.com.yaml"
   inferservicesets: "yamls/default/CustomResourceDefinition-inferservicesets.mindcluster.huawei.com.yaml"
   instancesets: "yamls/default/CustomResourceDefinition-instancesets.mindcluster.huawei.com.yaml"
+  podautoscalers: "yamls/default/CustomResourceDefinition-podautoscalers.mindcluster.huawei.com.yaml"
