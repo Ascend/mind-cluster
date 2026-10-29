@@ -216,6 +216,33 @@ spec:
         device.driver == 'npu.huawei.com' &&
         device.attributes['npu.huawei.com'].deviceKind == 'dynamic-vnpu'
 ---
+apiVersion: resource.k8s.io/v1
+kind: DeviceClass
+metadata:
+  name: ascend910.ext.huawei.com
+spec:
+  selectors:
+  - cel:
+      expression: >-
+        device.driver == 'npu.huawei.com' &&
+        device.attributes['npu.huawei.com'].deviceKind == 'physical-npu' &&
+        (device.attributes['npu.huawei.com'].chipName.startsWith('910') ||
+         device.attributes['npu.huawei.com'].chipName.startsWith('Ascend910'))
+  extendedResourceName: huawei.com/Ascend910
+---
+apiVersion: resource.k8s.io/v1
+kind: DeviceClass
+metadata:
+  name: npu.ext.huawei.com
+spec:
+  selectors:
+  - cel:
+      expression: >-
+        device.driver == 'npu.huawei.com' &&
+        device.attributes['npu.huawei.com'].deviceKind == 'physical-npu' &&
+        device.attributes['npu.huawei.com'].chipName.startsWith('Ascend950')
+  extendedResourceName: huawei.com/npu
+---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:

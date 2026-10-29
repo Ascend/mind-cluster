@@ -207,6 +207,8 @@ component_ascend-dynamic-resource-allocation() {
     add_helm_meta deviceclass npu.huawei.com
     add_helm_meta deviceclass static-vnpu.huawei.com
     add_helm_meta deviceclass dynamic-vnpu.huawei.com
+    add_helm_meta deviceclass ascend910.ext.huawei.com
+    add_helm_meta deviceclass npu.ext.huawei.com
     add_helm_meta validatingadmissionpolicy resourceslices-policy-ascend-dra-driver
     add_helm_meta validatingadmissionpolicybinding resourceslices-policy-ascend-dra-driver
 }

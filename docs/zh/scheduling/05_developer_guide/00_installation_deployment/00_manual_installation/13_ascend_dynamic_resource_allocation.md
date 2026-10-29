@@ -68,7 +68,7 @@
 
 2. <a name="li2093514717dra01"></a>将Ascend Dynamic Resource Allocation软件包解压目录下的YAML文件（ascend-dra-driver-v<i>{version}</i>.yaml），拷贝到K8s管理节点上任意目录。
 
-3. 如不修改组件启动参数，可跳过本步骤。否则，根据实际情况修改YAML文件中DRA驱动的启动参数，启动参数位于DaemonSet的“command”行，如下所示。启动参数请参见[表2](#table20426115dra02)，可执行<b>./ascend-dra -h</b>查看参数说明。
+3. 如不修改组件启动参数，可跳过本步骤。否则，根据实际情况修改YAML文件中DRA驱动的启动参数，启动参数位于DaemonSet的“command”行，如下所示。启动参数请参见[表3](#table20426115dra02)，可执行<b>./ascend-dra -h</b>查看参数说明。
 
     ```Yaml
     ...
@@ -95,6 +95,10 @@
     clusterrolebinding.rbac.authorization.k8s.io/ascend-dra-driver-role-binding created
     daemonset.apps/ascend-dra-driver-kubeletplugin created
     deviceclass.resource.k8s.io/npu.huawei.com created
+    deviceclass.resource.k8s.io/static-vnpu.huawei.com created
+    deviceclass.resource.k8s.io/dynamic-vnpu.huawei.com created
+    deviceclass.resource.k8s.io/ascend910.ext.huawei.com created
+    deviceclass.resource.k8s.io/npu.ext.huawei.com created
     validatingadmissionpolicy.admissionregistration.k8s.io/resourceslices-policy-ascend-dra-driver created
     validatingadmissionpolicybinding.admissionregistration.k8s.io/resourceslices-policy-ascend-dra-driver created
     ```
@@ -115,29 +119,46 @@
 6. 执行以下命令，验证NPU资源是否上报成功。
 
     ```shell
-    kubectl get deviceclass npu.huawei.com
+    kubectl get deviceclass
     kubectl get resourceslices
     ```
 
-    回显示例如下，能查询到名为“npu.huawei.com”的DeviceClass，且每个计算节点存在对应的ResourceSlice，表示资源上报成功。
+    回显示例如下，能查询到[表2](#table_dra_deviceclass_list)中的全部DeviceClass，且每个计算节点存在对应的ResourceSlice，表示资源上报成功。
 
     ```ColdFusion
-    NAME            AGE
-    npu.huawei.com  2m
+    NAME                       AGE
+    npu.huawei.com             2m
+    static-vnpu.huawei.com     2m
+    dynamic-vnpu.huawei.com    2m
+    ascend910.ext.huawei.com   2m
+    npu.ext.huawei.com         2m
 
     NAME                                  POOLNAME     DEVICECOUNT   AGE
     npu.huawei.com-node1-1a2b3c           node1        8             2m
     ```
 
+    **表 2**  DeviceClass说明
+
+    <a name="table_dra_deviceclass_list"></a>
+
+    | DeviceClass | 说明 |
+    |--|--|
+    | npu.huawei.com | 选择全部未切分的物理整卡，供ResourceClaim引用。无扩展资源名。 |
+    | static-vnpu.huawei.com | 选择预先创建的静态vNPU。无扩展资源名。 |
+    | dynamic-vnpu.huawei.com | 选择支持动态硬切分的物理卡，由ResourceClaim指定模板与容量。无扩展资源名。 |
+    | ascend910.ext.huawei.com | 选择Ascend910系列未切分的物理整卡，扩展资源名为`huawei.com/Ascend910`。 |
+    | npu.ext.huawei.com | 选择Ascend950系列未切分的物理整卡，扩展资源名为`huawei.com/npu`。 |
+
 >[!NOTE]
 >
+>- 只有`ascend910.ext.huawei.com`与`npu.ext.huawei.com`声明了`extendedResourceName`，业务才可以在Pod的`resources.requests`与`resources.limits`中直接配置`huawei.com/Ascend910`或`huawei.com/npu`申请整卡，无需创建ResourceClaimTemplate。该方式要求K8s版本为1.36及以上，且`DynamicResourceAllocation`与`DRAExtendedResource`特性门控已开启（K8s 1.36及以上版本默认开启），调度器为kube-scheduler。DeviceClass的创建由YAML文件完成，驱动不在启动时同步DeviceClass；如果集群中已存在同名但签名不同的DeviceClass，YAML不会覆盖，需先手动删除旧对象。
 >- 安装组件后，组件的Pod状态不为Running，可参考[组件Pod状态不为Running](https://gitcode.com/Ascend/mind-cluster/issues/342)章节进行处理。
 >- 安装组件后，组件的Pod状态为ContainerCreating，可参考[集群调度组件Pod处于ContainerCreating状态](https://gitcode.com/Ascend/mind-cluster/issues/343)章节进行处理。
 >- 组件启动成功，找不到组件对应的Pod，可参考[组件启动YAML执行成功，找不到组件对应的Pod](https://gitcode.com/Ascend/mind-cluster/issues/345)章节信息。
 
 ## 参数说明<a name="section2042611570393"></a>
 
-**表 2** DRA驱动启动参数
+**表 3** DRA驱动启动参数
 
 <a name="table20426115dra02"></a>
 <table><thead align="left"><tr id="row0414dra240031"><th class="cellrowborder" valign="top" width="30%" id="mcps1.2.5.1.1"><p id="p0414dra240031"><a name="p0414dra240031"></a><a name="p0414dra240031"></a>参数</p>
