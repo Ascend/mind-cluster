@@ -108,6 +108,7 @@ component_infer-operator() {
     add_helm_meta_crds crd inferservices.mindcluster.huawei.com
     add_helm_meta_crds crd inferservicesets.mindcluster.huawei.com
     add_helm_meta_crds crd instancesets.mindcluster.huawei.com
+    add_helm_meta_crds crd podautoscalers.mindcluster.huawei.com
 }
 
 component_ascend-operator() {
