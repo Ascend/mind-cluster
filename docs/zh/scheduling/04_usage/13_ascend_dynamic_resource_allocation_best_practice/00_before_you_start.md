@@ -36,11 +36,12 @@ Ascend DRA组件的完整生命周期包含如下六个阶段：
 
 - Kubernetes集群版本为1.36.x。
 - 计算节点的容器运行时支持CDI，如containerd 1.7.0及以上版本，不支持以cri-docker（cri-dockerd）作为容器运行时。
+- Ascend DRA组件通过CDI机制向业务容器注入NPU设备，不安装也不依赖Ascend Docker Runtime。
 - （可选）Volcano调度器。使用Volcano调度DRA任务时，ascend-volcano-plugin会对DRA任务旁路NPU专用调度逻辑。
 - NPU节点已安装NPU驱动与固件，且设备运行正常。
 
 > [!NOTE]
-> Ascend DRA组件与Ascend Device Plugin是两种不同的设备接入方式。使用DRA方式时，节点上无需同时部署Ascend Device Plugin；若集群中同时存在两种接入方式的节点，请通过节点标签区分。
+> Ascend DRA组件与Ascend Device Plugin是两种不同的设备接入方式，两者功能在同一节点上互斥，无需同时部署。
 
 ## 支持的产品形态<a name="section_dra_products"></a>
 
