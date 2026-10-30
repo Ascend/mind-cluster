@@ -1294,8 +1294,8 @@ func TestDoRestartJobSkipRescheduleReason(t *testing.T) {
 	fakeJob.ReScheduleKey = JobExternalForcePodFailedReschedulingPrefix
 	fakeJob.UUID = types.UID("test-job-real-uid")
 
-	t.Run("01-doRestartJob() skip recording reschedule reason for pod-level rescheduling "+
-		"under external-force-pod-failed", func(t *testing.T) {
+	t.Run("01-doRestartJob() skip recording reschedule reason when fault-scheduling is "+
+		"external-force-pod-failed", func(t *testing.T) {
 		reScheduler := &ReScheduler{
 			DealReSchedulerCache: &DealReSchedulerCache{
 				JobRecentRescheduleRecords: make(map[api.JobID]*RescheduleReason),
@@ -1305,7 +1305,7 @@ func TestDoRestartJobSkipRescheduleReason(t *testing.T) {
 		schedulerJob.Label = map[string]string{util.SinglePodTag: util.EnableFunc}
 		reScheduler.doRestartJob(ssn, env, &fakeJob, schedulerJob)
 		if _, recorded := reScheduler.JobRecentRescheduleRecords[mockJobUID]; recorded {
-			t.Errorf("doRestartJob() should skip recording for pod-level rescheduling, but recorded")
+			t.Errorf("doRestartJob() should skip recording for external-force-pod-failed, but recorded")
 		}
 	})
 
@@ -1334,7 +1334,7 @@ func TestDoRestartJobSkipRescheduleReason(t *testing.T) {
 		}
 	})
 
-	t.Run("03-doRestartJob() record reschedule reason when pod-rescheduling is not enabled",
+	t.Run("03-doRestartJob() skip recording reschedule reason even when pod-rescheduling is not enabled",
 		func(t *testing.T) {
 			reScheduler := &ReScheduler{
 				DealReSchedulerCache: &DealReSchedulerCache{
@@ -1343,12 +1343,12 @@ func TestDoRestartJobSkipRescheduleReason(t *testing.T) {
 			}
 			schedulerJob := plugin.SchedulerJob{}
 			reScheduler.doRestartJob(ssn, env, &fakeJob, schedulerJob)
-			if _, recorded := reScheduler.JobRecentRescheduleRecords[mockJobUID]; !recorded {
-				t.Errorf("doRestartJob() should record for job-level rescheduling")
+			if _, recorded := reScheduler.JobRecentRescheduleRecords[mockJobUID]; recorded {
+				t.Errorf("doRestartJob() should skip recording for external-force-pod-failed, but recorded")
 			}
 		})
 
-	t.Run("04-doRestartJob() record reschedule reason after upgrading to job-level rescheduling",
+	t.Run("04-doRestartJob() skip recording reschedule reason even after upgrading to job-level rescheduling",
 		func(t *testing.T) {
 			reScheduler := &ReScheduler{
 				DealReSchedulerCache: &DealReSchedulerCache{
@@ -1360,8 +1360,8 @@ func TestDoRestartJobSkipRescheduleReason(t *testing.T) {
 			schedulerJob := plugin.SchedulerJob{}
 			schedulerJob.Label = map[string]string{util.SinglePodTag: util.EnableFunc}
 			reScheduler.doRestartJob(ssn, env, &job, schedulerJob)
-			if _, recorded := reScheduler.JobRecentRescheduleRecords[mockJobUID]; !recorded {
-				t.Errorf("doRestartJob() should record after upgrading to job-level rescheduling")
+			if _, recorded := reScheduler.JobRecentRescheduleRecords[mockJobUID]; recorded {
+				t.Errorf("doRestartJob() should skip recording for external-force-pod-failed, but recorded")
 			}
 		})
 }

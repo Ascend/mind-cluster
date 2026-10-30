@@ -633,12 +633,11 @@ func (reScheduler *ReScheduler) doRestartJob(ssn *framework.Session, env plugin.
 		}
 		restartFaultJob.recordFaultJobsToLogs()
 		// update rescheduling reason
-		// skip recording reschedule reason when pod-level rescheduling is external-force-pod-failed
-		skipRecordReason := restartFaultJob.ReScheduleKey == JobExternalForcePodFailedReschedulingPrefix &&
-			restartFaultJob.IsJobSingleRescheduling(&schedulerJob)
+		// skip recording reschedule reason when fault-scheduling is external-force-pod-failed
+		skipRecordReason := restartFaultJob.ReScheduleKey == JobExternalForcePodFailedReschedulingPrefix
 		if skipRecordReason {
 			klog.V(util.LogWarningLev).Infof("job<%s> skip recording reschedule reason to configmap, "+
-				"because pod-level rescheduling is external-force-pod-failed", restartFaultJob.JobUID)
+				"because fault-scheduling is external-force-pod-failed", restartFaultJob.JobUID)
 		} else {
 			reScheduler.JobRecentRescheduleRecords[restartFaultJob.JobUID] =
 				updateRescheduleReason(reScheduler.JobRecentRescheduleRecords[restartFaultJob.JobUID], restartFaultJob)
