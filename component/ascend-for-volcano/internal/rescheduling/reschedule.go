@@ -1031,7 +1031,11 @@ func (reScheduler *ReScheduler) isJobCanAssignToSubHealthNode(jobSubHealthStrate
 // sub-healthy tolerance window: node-level (switch) sub-healthy resources are
 // withheld from every scheduling policy until the window releases them.
 func subHealthyBackoffWithinWindow(schedulerJob plugin.SchedulerJob) bool {
-	elapsed, _ := cache.SessionElapsed(schedulerJob.Name)
+	elapsed, ok := cache.SessionElapsed(schedulerJob.Name)
+	if !ok {
+		klog.V(util.LogWarningLev).Infof("ReScheduler cannot get job %s elapsed time", schedulerJob.Name)
+		return true
+	}
 	return util.TimeGateAllows(schedulerJob.NPUJob.ToleranceConfig.SubHealthyToleranceAfterTime, elapsed)
 }
 

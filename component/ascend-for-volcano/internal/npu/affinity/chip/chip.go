@@ -274,7 +274,11 @@ func (tp *chipHandler) silentToleranceAllows() bool {
 	if tp == nil || tp.NPUJob == nil {
 		return true
 	}
-	elapsed, _ := cache.SessionElapsed(tp.Name)
+	elapsed, ok := cache.SessionElapsed(tp.Name)
+	if !ok {
+		klog.V(util.LogWarningLev).Infof("%s cannot get job %s elapsed time", tp.GetPluginName(), tp.Name)
+		return true
+	}
 	return util.TimeGateAllows(tp.NPUJob.ToleranceConfig.SilentUnhealthyToleranceAfterTime, elapsed)
 }
 
@@ -284,6 +288,10 @@ func (tp *chipHandler) subHealthyToleranceAllows() bool {
 	if tp == nil || tp.NPUJob == nil {
 		return true
 	}
-	elapsed, _ := cache.SessionElapsed(tp.Name)
+	elapsed, ok := cache.SessionElapsed(tp.Name)
+	if !ok {
+		klog.V(util.LogWarningLev).Infof("%s cannot get job %s elapsed time", tp.GetPluginName(), tp.Name)
+		return true
+	}
 	return util.TimeGateAllows(tp.NPUJob.ToleranceConfig.SubHealthyToleranceAfterTime, elapsed)
 }

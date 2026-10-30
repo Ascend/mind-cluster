@@ -67,9 +67,9 @@ func (tp *NPUHandler) GetUsableTopFromNode(node plugin.NPUNode, disFlag bool) ([
 
 // removeBackoffCards removes every backoff card from the node's usable top:
 // the cards the current job has errored (pod-error) while the job's pod-error
-// tolerance window is still active, plus the node-level sub-healthy cards while
-// the job's sub-healthy tolerance window is still active. Both backoffs are per
-// job: other jobs are unaffected.
+// tolerance window is still active, plus the node-level silent-fault and
+// sub-healthy cards while the job's corresponding tolerance window is still
+// active. Both backoffs are per job: other jobs are unaffected.
 func (tp *NPUHandler) removeBackoffCards(node plugin.NPUNode, nodeTop []int) []int {
 	if tp == nil || node.ChipTopo == nil || tp.NPUJob == nil {
 		return nodeTop
@@ -89,6 +89,11 @@ func (tp *NPUHandler) removeBackoffCards(node plugin.NPUNode, nodeTop []int) []i
 			backoffTop = append(backoffTop, id)
 		}
 	}
+	if !tp.silentToleranceAllows() {
+		for id := range node.ChipTopo.SilentFaultChips() {
+			backoffTop = append(backoffTop, id)
+		}
+	}
 	if len(backoffTop) == 0 {
 		return nodeTop
 	}
@@ -103,8 +108,26 @@ func (tp *NPUHandler) subHealthyToleranceAllows() bool {
 	if tp == nil || tp.NPUJob == nil {
 		return true
 	}
-	elapsed, _ := cache.SessionElapsed(tp.Name)
+	elapsed, ok := cache.SessionElapsed(tp.Name)
+	if !ok {
+		klog.V(util.LogWarningLev).Infof("%s cannot get job %s elapsed time", tp.GetPluginName(), tp.Name)
+		return true
+	}
 	return util.TimeGateAllows(tp.NPUJob.ToleranceConfig.SubHealthyToleranceAfterTime, elapsed)
+}
+
+// silentToleranceAllows reports whether the job's silent-fault tolerance has
+// released the silent-fault resources (true) or they are still withheld (false).
+func (tp *NPUHandler) silentToleranceAllows() bool {
+	if tp == nil || tp.NPUJob == nil {
+		return true
+	}
+	elapsed, ok := cache.SessionElapsed(tp.Name)
+	if !ok {
+		klog.V(util.LogWarningLev).Infof("%s cannot get job %s elapsed time", tp.GetPluginName(), tp.Name)
+		return true
+	}
+	return util.TimeGateAllows(tp.NPUJob.ToleranceConfig.SilentUnhealthyToleranceAfterTime, elapsed)
 }
 
 func (tp *NPUHandler) getNetUnhealthyNPU(node plugin.NPUNode) ([]int, error) {
