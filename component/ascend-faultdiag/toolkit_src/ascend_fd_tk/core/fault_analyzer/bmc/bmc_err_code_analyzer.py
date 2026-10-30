@@ -44,8 +44,13 @@ class BmcErrCodeAnalyzer(Analyzer):
         if not search_data:
             return bmc_id, npu_id, chip_phy_id
         hardware_info = search_data.groupdict()
-        npu_id = hardware_info.get("npu") or hardware_info.get("npu1") or hardware_info.get("npu2")
-        chip_id = hardware_info.get("chip")  # 1-2
+        npu_id = (
+            hardware_info.get("npu")
+            or hardware_info.get("npu1")
+            or hardware_info.get("npu2")
+            or hardware_info.get("npu3")
+        )
+        chip_id = hardware_info.get("chip") or hardware_info.get("chip1")
         if not npu_id:
             return bmc_id, npu_id, chip_phy_id
         npu_id = str(int(npu_id) - 1)

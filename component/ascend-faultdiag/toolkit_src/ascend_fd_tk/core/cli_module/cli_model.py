@@ -567,13 +567,22 @@ class ClearCacheCliModel(CliModel):
         return "清理缓存，请在执行新诊断任务前务必执行！避免干扰诊断结果（若清理未生效请用管理员模式打开工具）"
 
     def run_task(self, *args) -> str:
+        # 清理磁盘缓存文件
         try:
-            if os.path.exists(CommonPath.TOOL_HOME_CACHE_DIR):
-                shutil.rmtree(CommonPath.TOOL_HOME_CACHE_DIR)
-            if os.path.isfile(CommonPath.ENCRYPTED_CONN_CONFIG_PATH):
-                os.remove(CommonPath.ENCRYPTED_CONN_CONFIG_PATH)
+            home_cache_dir = convert_log_path(CommonPath.TOOL_HOME_CACHE_DIR)
+            if os.path.exists(home_cache_dir):
+                shutil.rmtree(home_cache_dir)
+            encrypted_conn_config_path = convert_log_path(CommonPath.ENCRYPTED_CONN_CONFIG_PATH)
+            if os.path.isfile(encrypted_conn_config_path):
+                os.remove(encrypted_conn_config_path)
         except Exception as e:
-            return f"清理{CommonPath.COLLECT_CACHE}异常：{e}"
+            return f"清理缓存文件异常：{e}"
+        # 清理进程中的缓存
+        old_diag_ctx = self.diag_ctx
+        new_diag_ctx = DiagCtx()
+        for cli_model in self.cli_ctx.cli_model_map.values():
+            cli_model.diag_ctx = new_diag_ctx
+        old_diag_ctx.close()
         return "清理完成"
 
 
