@@ -178,37 +178,203 @@ else
             cp -p -f -r ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-docker-runtime/output/Ascend-docker-runtime_*.run ${ATOMGIT_WORKSPACE}/artifacts/
         fi
         if grep -q "component/ascend-for-volcano" "${ATOMGIT_WORKSPACE}/$file_path"; then
-            cd ${ATOMGIT_WORKSPACE}
-            mkdir -p src/volcano.sh
-            cp -rf /opt/buildtools/volcano_opensource/volcano_1.9/volcano src/volcano.sh/
-            ls -la ./ && cp -rf mind-cluster/component/ascend-for-volcano src/volcano.sh/volcano/pkg/scheduler/plugins/
-            cd src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ascend-for-volcano ascend-volcano-plugin
-            ls -la ${ATOMGIT_WORKSPACE} && cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && dos2unix *.sh 2>/dev/null || true && bash -x ci_build.sh ${servicename} ${TARGET_BRANCH} ascend-for-volcano v1.9.0
-            mkdir -p ${ATOMGIT_WORKSPACE}/output/volcano-v1.9.0 && cp -rf ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${ATOMGIT_WORKSPACE}/output/volcano-v1.9.0/
-            ls -la ${ATOMGIT_WORKSPACE}/output/volcano-v1.9.0/
-            rm -rf ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano
+            if ! command -v timeout >/dev/null 2>&1; then
+                echo "timeout is required to build volcano" >&2
+                exit 1
+            fi
+            if ! command -v setsid >/dev/null 2>&1; then
+                echo "setsid is required to build volcano" >&2
+                exit 1
+            fi
+            # Prefer a usable GOROOT from the job. Otherwise ask the go binary on PATH.
+            # Clear GOROOT for that query so a bad value is not echoed back.
+            if [ -z "${GOROOT}" ] || [ ! -x "${GOROOT}/bin/go" ]; then
+                if command -v go >/dev/null 2>&1; then
+                    GOROOT=$(GOROOT= go env GOROOT)
+                fi
+            fi
+            if [ -z "${PYTHON_HOME}" ]; then
+                py=$(command -v python3 2>/dev/null || true)
+                if [ -n "${py}" ]; then
+                    PYTHON_HOME=$(dirname "${py}")
+                fi
+            fi
+            if [ -z "${GOROOT}" ] || [ ! -x "${GOROOT}/bin/go" ] || [ -z "${PYTHON_HOME}" ]; then
+                echo "GOROOT and PYTHON_HOME are required in the environment" >&2
+                exit 1
+            fi
+            export GOROOT PYTHON_HOME
 
-            echo "***************start complie volcano 1.12***********************"
-            rm -rf ${ATOMGIT_WORKSPACE}/src/volcano.sh/*
-            cp -rf /opt/buildtools/volcano_opensource/volcano_1.12/volcano ${ATOMGIT_WORKSPACE}/src/volcano.sh/
-            ls -la ./ && cp -rf ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/
-            cd ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ascend-for-volcano ascend-volcano-plugin
-            ls -la ${ATOMGIT_WORKSPACE} && cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && dos2unix *.sh 2>/dev/null || true && bash -x ci_build.sh ${servicename} ${TARGET_BRANCH} ascend-for-volcano v1.12.0
-            mkdir -p ${ATOMGIT_WORKSPACE}/output/volcano-v1.12.0 && cp -rf ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${ATOMGIT_WORKSPACE}/output/volcano-v1.12.0/
+            # Index i is one build. The image dir has no "v" and no ".0".
+            # build.sh uses the version for patches and volcano-<version>.yaml, not the git branch.
+            volcano_vers=(v1.9.0 v1.12.0 v1.15.0)
+            volcano_srcs=(volcano_1.9 volcano_1.12 volcano_1.15)
+            volcano_timeout=20m
+            volcano_kill_after=30s
+            volcano_poll_secs=5
+            volcano_heartbeat_secs=60
 
-            echo "***************start complie volcano 1.15***********************"
-            rm -rf ${ATOMGIT_WORKSPACE}/src/volcano.sh/*
-            cp -rf /opt/buildtools/volcano_opensource/volcano_1.15/volcano ${ATOMGIT_WORKSPACE}/src/volcano.sh/
-            ls -la ./ && cp -rf ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/
-            cd ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ && mv ascend-for-volcano ascend-volcano-plugin
-            ls -la ${ATOMGIT_WORKSPACE} && cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && dos2unix *.sh 2>/dev/null || true && bash -x ci_build.sh ${servicename} ${TARGET_BRANCH} ascend-for-volcano v1.15.0
-            mkdir -p ${ATOMGIT_WORKSPACE}/output/volcano-v1.15.0 && cp -rf ${ATOMGIT_WORKSPACE}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output/* ${ATOMGIT_WORKSPACE}/output/volcano-v1.15.0/
+            # Replace the version number only once. The three builds no longer call ci_build.sh,
+            # so they do not edit the same ini at the same time and GOPATH is not pulled back
+            # to one directory.
+            # utils.sh is stored with CR. Strip it before source, or a blank line runs as $'\r'.
+            utils_sh="${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build/utils.sh"
+            if command -v dos2unix >/dev/null 2>&1; then
+                dos2unix "${utils_sh}"
+            else
+                sed -i 's/\r$//' "${utils_sh}"
+            fi
+            source "${utils_sh}"
+            VERSION_NUMBER=$(get_version_number "${TARGET_BRANCH}")
+            if [ $? -ne 0 ]; then
+                echo "get Version_Number failed, please check."
+                exit 1
+            fi
+            sed -i "s/VERSION_NUMBER/${VERSION_NUMBER}/g" \
+                "${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/config/service_config.ini"
+
+            # Compile one Volcano version.
+            # Arguments: version, source directory name, and the CPU count for this version.
+            # After a successful build, copy the plugin output/ to ${ATOMGIT_WORKSPACE}/output/volcano-<version>/.
+            compile_volcano() {
+                local ver="$1"
+                local src_name="$2"
+                local slots="$3"
+                # Own tree per version. build.sh writes under ${GOPATH}/src/volcano.sh/volcano.
+                local root="${ATOMGIT_WORKSPACE}/volcano-build/${ver}"
+                local plugin="${root}/src/volcano.sh/volcano/pkg/scheduler/plugins"
+                set -e
+
+                mkdir -p "${root}/src/volcano.sh"
+                cp -rf "/opt/buildtools/volcano_opensource/${src_name}/volcano" "${root}/src/volcano.sh/"
+                cp -rf "${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano" "${plugin}/"
+                mv "${plugin}/ascend-for-volcano" "${plugin}/ascend-volcano-plugin"
+                cp -f "${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/config/service_config.ini" \
+                    "${root}/src/volcano.sh/volcano/"
+
+                (
+                    export GOPATH="${root}"
+                    export GO111MODULE='auto'
+                    export GOSUMDB=sum.golang.google.cn
+                    export GOPROXY="https://repo.huaweicloud.com/repository/goproxy/"
+                    export PATH="${PYTHON_HOME}:${GOROOT}/bin:${PATH}"
+                    # go build -p defaults to GOMAXPROCS. Split the machine across the three versions.
+                    export GOMAXPROCS="${slots}"
+                    cd "${plugin}/ascend-volcano-plugin/build"
+                    dos2unix *.sh && chmod +x *
+                    # 124: timeout sent TERM. 137: KILL after --kill-after. A normal build is about 3 minutes.
+                    status=0
+                    timeout --kill-after="${volcano_kill_after}" "${volcano_timeout}" ./build.sh "${ver}" || status=$?
+                    if [ "${status}" -ne 0 ]; then
+                        exit "${status}"
+                    fi
+                )
+
+                mkdir -p "${ATOMGIT_WORKSPACE}/output/volcano-${ver}"
+                cp -rf "${plugin}/ascend-volcano-plugin/output/"* \
+                    "${ATOMGIT_WORKSPACE}/output/volcano-${ver}/"
+            }
+
+            # Runs in its own session. $$ is the process group id used to stop the build.
+            # The status path is baked into the trap: after a normal return the function's locals are gone.
+            run_one_volcano() {
+                local ver="$1"
+                local src_name="$2"
+                local slots="$3"
+                local status_file="${ATOMGIT_WORKSPACE}/volcano-build/${ver}.status"
+                local status_q
+                status_q=$(printf '%q' "${status_file}")
+                set -e
+                # $$ is this session's process group id. The parent stops the build with it.
+                printf '%s\n' "$$" > "${ATOMGIT_WORKSPACE}/volcano-build/${ver}.pgid"
+                # EXIT runs after locals are gone, so the status path is already expanded in the trap.
+                trap "code=\$?; printf '%s\n' \"\$code\" > ${status_q}" EXIT
+                # 143: TERM. 130: INT. EXIT then writes that code into the status file.
+                trap 'exit 143' TERM
+                trap 'exit 130' INT
+                set -x
+                compile_volcano "${ver}" "${src_name}" "${slots}"
+            }
+
+            # Invoked as "bash build_job_compile.sh", then this script cds to the workspace.
+            # dirname of that name is ".", so BASH_SOURCE cannot find the helper.
+            # shellcheck source=volcano_job_control.sh
+            source "${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/scripts/volcano_job_control.sh"
+
+            # go build -p defaults to GOMAXPROCS, so each version gets about one third of the cores.
+            volcano_cores=$(nproc 2>/dev/null || echo 1)
+            volcano_slots=$(( volcano_cores / ${#volcano_vers[@]} ))
+            if [ "${volcano_slots}" -lt 1 ]; then
+                volcano_slots=1
+            fi
+            echo "volcano GOMAXPROCS=${volcano_slots} (${volcano_cores} cores, ${#volcano_vers[@]} versions)"
+
+            # Drop a previous run's status files so a stale exit code cannot be collected.
+            rm -rf "${ATOMGIT_WORKSPACE}/volcano-build"
+            mkdir -p "${ATOMGIT_WORKSPACE}/volcano-build"
+            volcano_pids=()
+            volcano_started=()
+            volcano_collected=()
+            volcano_status=()
+            volcano_elapsed=()
+
+            # Monitor mode would make setsid fork, and $! would not be the build session.
+            set +m
+            export -f compile_volcano run_one_volcano
+            trap 'on_volcano_interrupt 130' INT
+            trap 'on_volcano_interrupt 143' TERM
+            # set -e exits are not INT/TERM. The builds are in another session, so clean them up here.
+            trap 'stop_volcano_sessions' EXIT
+
+            for volcano_i in "${!volcano_vers[@]}"; do
+                ver="${volcano_vers[$volcano_i]}"
+                volcano_started[$volcano_i]=$(date +%s)
+                volcano_collected[$volcano_i]=0
+                # Per-version logs. The child records its own exit code; the parent reaps it below.
+                ATOMGIT_WORKSPACE="${ATOMGIT_WORKSPACE}" servicename="${servicename}" \
+                    volcano_timeout="${volcano_timeout}" volcano_kill_after="${volcano_kill_after}" \
+                    GOROOT="${GOROOT}" PYTHON_HOME="${PYTHON_HOME}" \
+                    setsid bash -c 'run_one_volcano "$@"' _ \
+                    "${ver}" "${volcano_srcs[$volcano_i]}" "${volcano_slots}" \
+                    > "${ATOMGIT_WORKSPACE}/volcano-build/${ver}.log" 2>&1 </dev/null &
+                volcano_pids[$volcano_i]=$!
+            done
+            echo "volcano builds started: ${volcano_vers[*]}"
+
+            # set +x turns off command tracing. Only the heartbeat, once every 60s, reports volcano build progress.
+            set +x
+            next_beat=$(( $(date +%s) + volcano_heartbeat_secs ))
+            while :; do
+                collect_finished_volcano_jobs
+                running=$(volcano_still_running)
+                if [ -z "${running}" ]; then
+                    break
+                fi
+                now=$(date +%s)
+                if [ "${now}" -ge "${next_beat}" ]; then
+                    echo "volcano still running: ${running}"
+                    next_beat=$(( now + volcano_heartbeat_secs ))
+                fi
+                sleep "${volcano_poll_secs}"
+            done
+            trap - EXIT INT TERM
+            report_volcano_jobs 0
+            set -x
+            export -nf compile_volcano run_one_volcano 2>/dev/null || true
+            # Skip chmod and packaging when any version failed.
+            [ "${fail}" -eq 0 ]
 
             rm -rf ${ATOMGIT_WORKSPACE}/output/Dockerfile*
             cp -rf ${ATOMGIT_WORKSPACE}/output ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano/
-            cd ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano/output && chmod 550 volcano-v1.7.0 && chmod 550 volcano-v1.9.0 && chmod 550 volcano-v1.12.0
-            cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && dos2unix *.sh 2>/dev/null || true && bash -x build_package.sh ascend-for-volcano ${TARGET_BRANCH}
-            cp -p -f -r  ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano/output/Ascend-mindxdl-volcano_*.zip ${ATOMGIT_WORKSPACE}/artifacts/
+            cd ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano/output
+            for ver in "${volcano_vers[@]}"; do
+                chmod 550 "volcano-${ver}"
+            done
+            # TARGET_BRANCH is the git branch used for the package version, not the Volcano version.
+            cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build \
+                && bash -x build_package.sh ascend-for-volcano ${TARGET_BRANCH}
+            cp -p -f -r ${ATOMGIT_WORKSPACE}/mind-cluster/component/ascend-for-volcano/output/Ascend-mindxdl-volcano_*.zip \
+                ${ATOMGIT_WORKSPACE}/artifacts/
         fi
         if grep -q "component/ascend-operator" "${ATOMGIT_WORKSPACE}/$file_path"; then
             cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && dos2unix *.sh 2>/dev/null || true && bash -x ci_build.sh ${servicename} ${TARGET_BRANCH} ascend-operator
