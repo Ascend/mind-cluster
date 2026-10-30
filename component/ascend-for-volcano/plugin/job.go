@@ -997,7 +997,11 @@ func (sJob SchedulerJob) rejectSuperPodNodeWithBackoffCards(node NPUNode) error 
 	if root == nil {
 		return nil
 	}
-	elapsed, _ := cache.SessionElapsed(sJob.Name)
+	elapsed, ok := cache.SessionElapsed(sJob.Name)
+	if !ok {
+		klog.V(util.LogWarningLev).Infof("SchedulerJob cannot get job %s elapsed time", sJob.Name)
+		return nil
+	}
 	if !util.TimeGateAllows(sJob.ToleranceConfig.SilentUnhealthyToleranceAfterTime, elapsed) &&
 		len(root.SilentFaultChips()) > 0 {
 		klog.V(util.LogDebugLev).Infof("super-pod job %s rejects node %s: silent-fault cards within tolerance",

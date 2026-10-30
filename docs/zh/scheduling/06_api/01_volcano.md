@@ -205,6 +205,24 @@
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
 </tr>
+<tr id="row_silent_tolerance_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_silent_tolerance_1"><a name="p_silent_tolerance_1"></a><a name="p_silent_tolerance_1"></a>huawei.com/silent.unhealthy-tolerance.after-time</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>静默故障芯片退避容忍时长，单位为s（秒）。</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0：立即允许，不退避。</li><li>-1：永久禁止，任务不调度到静默故障芯片，已运行任务使用到静默故障芯片时会被驱逐并重调度。</li><li>N（N>0）：任务排队N秒后才允许使用静默故障芯片。</li></ul><p>默认值为0，取值范围为[-1, 1800]。</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_pod_error_tolerance_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_pod_error_tolerance_1"><a name="p_pod_error_tolerance_1"></a><a name="p_pod_error_tolerance_1"></a>huawei.com/pod.error-tolerance.after-time</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Pod错误芯片退避容忍时长，单位为s（秒）。</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0：立即允许，不退避。</li><li>N（N>0）：任务在Pod失败后N秒内避让导致本次失败的芯片。</li></ul><p>默认值为0，取值范围为[0, 300]。Pod错误退避为临时退避，不支持配置-1（永久禁止）。</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
 <tr id="row_subhealthy_tolerance_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_subhealthy_tolerance_1"><a name="p_subhealthy_tolerance_1"></a><a name="p_subhealthy_tolerance_1"></a>huawei.com/subhealthy.tolerance.after-time</p>
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>配置任务调度时对亚健康资源的容忍时长，窗口内调度器不将任务调度到亚健康资源，窗口外放行。</p>
@@ -470,6 +488,24 @@
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>配置分布式Ascend910/Ascend950任务在调度时忽略参数面网络不健康NPU。仅对huawei.com/Ascend910和huawei.com/npu资源类型生效。</p>
 </td>
 <td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>"ignore"：忽略参数面网络不健康NPU，允许调度到网络不健康NPU。</li><li>不设置或其他值：过滤参数面网络不健康NPU，不允许调度到网络不健康NPU。</li></ul><p>默认不设置，即过滤网络不健康NPU。</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_silent_tolerance_2"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_silent_tolerance_2"><a name="p_silent_tolerance_2"></a><a name="p_silent_tolerance_2"></a>huawei.com/silent.unhealthy-tolerance.after-time</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>静默故障芯片退避容忍时长，单位为s（秒）。</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0：立即允许，不退避。</li><li>-1：永久禁止，任务不调度到静默故障芯片，已运行任务使用到静默故障芯片时会被驱逐并重调度。</li><li>N（N>0）：任务排队N秒后才允许使用静默故障芯片。</li></ul><p>默认值为0，取值范围为[-1, 1800]。</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_pod_error_tolerance_2"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_pod_error_tolerance_2"><a name="p_pod_error_tolerance_2"></a><a name="p_pod_error_tolerance_2"></a>huawei.com/pod.error-tolerance.after-time</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Pod错误芯片退避容忍时长，单位为s（秒）。</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0：立即允许，不退避。</li><li>N（N>0）：任务在Pod失败后N秒内避让导致本次失败的芯片。</li></ul><p>默认值为0，取值范围为[0, 300]。Pod错误退避为临时退避，不支持配置-1（永久禁止）。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>

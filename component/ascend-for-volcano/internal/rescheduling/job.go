@@ -620,7 +620,8 @@ func getPodFailedTime(task *api.TaskInfo) (int64, error) {
 		}
 	}
 	if latest == 0 {
-		return 0, fmt.Errorf("pod %v has no Terminated time", task.Name)
+		klog.V(util.LogWarningLev).Infof("pod %v has no Terminated time, may physic fault", task.Name)
+		return time.Now().Unix(), nil
 	}
 	return latest, nil
 }
