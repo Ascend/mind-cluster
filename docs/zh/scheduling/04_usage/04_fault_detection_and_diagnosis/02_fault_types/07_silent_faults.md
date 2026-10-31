@@ -20,6 +20,10 @@ ClusterD通过监听job-reschedule-reason ConfigMap获取任务的重调度记�
 - 必选组件：Volcano、Ascend Device Plugin、ClusterD
 - 可选组件：NodeD
 
+## 使用约束<a name="section_silent_faults_constraint"></a>
+
+- 任务的fault-scheduling取值为external-force-pod-failed时，不支持静默故障检测。该取值下任务不记录重调度原因，ClusterD无法从job-reschedule-reason ConfigMap获取任务的重调度记录，因此不会判定静默故障。
+
 ## 相关操作
 
 - [配置静默故障检测](../03_configuration/09_silent_faults.md)
