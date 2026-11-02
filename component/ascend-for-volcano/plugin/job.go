@@ -613,7 +613,7 @@ func (sJob *SchedulerJob) setParameterPlaneUnhealthyTolerance() {
 }
 
 // setSilentUnhealthyTolerance reads the huawei.com/silent.unhealthy-tolerance.after-time
-// annotation and populates NPUJob.ToleranceConfig.SilentUnhealthyToleranceAfterTime, defaulting to 0.
+// annotation and populates NPUJob.ToleranceConfig.SilentUnhealthyToleranceAfterTime, defaulting to 600.
 func (sJob *SchedulerJob) setSilentUnhealthyTolerance() {
 	if sJob == nil || sJob.NPUJob == nil {
 		return

@@ -1241,7 +1241,7 @@ func (reScheduler ReScheduler) getTaskHealthState(fTask *FaultTask, task *api.Ta
 }
 
 // jobSilentUnhealthyTolerance returns the silent-fault after-time of the job,
-// defaulting to 0 when the job is unknown.
+// defaulting to 600 when the job is unknown.
 func (reScheduler *ReScheduler) jobSilentUnhealthyTolerance(jobID api.JobID) int64 {
 	if schedulerJob, ok := reScheduler.Jobs[jobID]; ok && schedulerJob.NPUJob != nil {
 		return schedulerJob.ToleranceConfig.SilentUnhealthyToleranceAfterTime
