@@ -309,7 +309,8 @@ func readMountConfig(dir string, name string) ([]string, []string, error) {
 		}
 		absMountPath, err := filepath.Abs(hostPath)
 		if err != nil {
-			continue // skipping files/dirs with any problems
+			hwlog.RunLog.Warnf("skip mount entry %s: failed to get absolute path: %v", hostPath, err)
+			continue
 		}
 		hostPath = absMountPath
 
@@ -322,7 +323,8 @@ func readMountConfig(dir string, name string) ([]string, []string, error) {
 
 		stat, err := os.Stat(hostPath)
 		if err != nil {
-			continue // skipping files/dirs with any problems
+			hwlog.RunLog.Warnf("skip mount entry %s: path not found: %v", hostPath, err)
+			continue
 		}
 
 		if !checkSymlinkOwner(hostPath, stat) {
@@ -332,6 +334,8 @@ func readMountConfig(dir string, name string) ([]string, []string, error) {
 			fileMountList = append(fileMountList, buildMountEntry(hostPath, containerPath))
 		} else if stat.Mode().IsDir() {
 			dirMountList = append(dirMountList, buildMountEntry(hostPath, containerPath))
+		} else {
+			hwlog.RunLog.Warnf("skip mount entry %s: not a regular file or directory", hostPath)
 		}
 	}
 
