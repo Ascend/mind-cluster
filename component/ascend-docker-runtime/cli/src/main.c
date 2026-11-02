@@ -117,19 +117,28 @@ static bool CheckFileLegality(const char *filePath, const size_t filePathLen, co
     {
         if (!IsValidChar(filePath[iLoop]))
         {  // 非法字符
-            Logger("filePath has an illegal character!", LEVEL_ERROR, SCREEN_YES);
+            char *str = FormatLogMessage("filePath %s has an illegal character!", filePath);
+            Logger(str, LEVEL_ERROR, SCREEN_YES);
+            free(str);
+            str = NULL;
             return false;
         }
     }
     char resolvedPath[PATH_MAX] = {0};
     if (realpath(filePath, resolvedPath) == NULL && errno != ENOENT)
     {
-        Logger("realpath failed!", LEVEL_ERROR, SCREEN_YES);
+        char *str = FormatLogMessage("realpath %s failed, errno: %d.", filePath, errno);
+        Logger(str, LEVEL_ERROR, SCREEN_YES);
+        free(str);
+        str = NULL;
         return false;
     }
     if (!GetAllowLink() && strcmp(resolvedPath, filePath) != 0)
     {  // 存在软链接
-        Logger("filePath has a soft link!", LEVEL_ERROR, SCREEN_YES);
+        char *str = FormatLogMessage("filePath %s has a soft link, resolved path: %s.", filePath, resolvedPath);
+        Logger(str, LEVEL_ERROR, SCREEN_YES);
+        free(str);
+        str = NULL;
         return false;
     }
     return true;
