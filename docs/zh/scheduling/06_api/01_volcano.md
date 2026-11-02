@@ -209,7 +209,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>静默故障芯片退避容忍时长，单位为s（秒）。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0：立即允许，不退避。</li><li>-1：永久禁止，任务不调度到静默故障芯片，已运行任务使用到静默故障芯片时会被驱逐并重调度。</li><li>N（N>0）：任务排队N秒后才允许使用静默故障芯片。</li></ul><p>默认值为0，取值范围为[-1, 1800]。</p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0：立即允许，不退避。</li><li>-1：永久禁止，任务不调度到静默故障芯片，已运行任务使用到静默故障芯片时会被驱逐并重调度。</li><li>N（N>0）：任务排队N秒后才允许使用静默故障芯片。</li></ul><p>默认值为600，取值范围为[-1, 1800]。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
@@ -496,7 +496,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>静默故障芯片退避容忍时长，单位为s（秒）。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0：立即允许，不退避。</li><li>-1：永久禁止，任务不调度到静默故障芯片，已运行任务使用到静默故障芯片时会被驱逐并重调度。</li><li>N（N>0）：任务排队N秒后才允许使用静默故障芯片。</li></ul><p>默认值为0，取值范围为[-1, 1800]。</p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0：立即允许，不退避。</li><li>-1：永久禁止，任务不调度到静默故障芯片，已运行任务使用到静默故障芯片时会被驱逐并重调度。</li><li>N（N>0）：任务排队N秒后才允许使用静默故障芯片。</li></ul><p>默认值为600，取值范围为[-1, 1800]。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>

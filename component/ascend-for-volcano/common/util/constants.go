@@ -128,8 +128,9 @@ const (
 	// (silent-fault card or pod-error card) withheld forever.
 	ToleranceForbidden int64 = -1
 	// SilentUnhealthyToleranceAnnoKey annotation key for the silent-fault node
-	// tolerance after-time in seconds: 0 allows immediately (default), -1 never
-	// and N allows after the job has been pending N seconds.
+	// tolerance after-time in seconds: 0 allows immediately, -1 never and N
+	// allows after the job has been pending N seconds. Jobs without the
+	// annotation default to DefaultSilentUnhealthyToleranceAfterTime.
 	SilentUnhealthyToleranceAnnoKey = "huawei.com/silent.unhealthy-tolerance.after-time"
 	// PodErrorToleranceAnnoKey annotation key for the rescheduled-node tolerance
 	// after-time in seconds: it gates the node which caused the last rescheduling
@@ -137,8 +138,9 @@ const (
 	// not only the pod's own failure.
 	PodErrorToleranceAnnoKey = "huawei.com/pod.error-tolerance.after-time"
 	// DefaultSilentUnhealthyToleranceAfterTime is the default silent-fault node
-	// tolerance in seconds: silent-fault nodes are released immediately.
-	DefaultSilentUnhealthyToleranceAfterTime = 0
+	// tolerance in seconds: silent-fault cards are withheld for 600 seconds
+	// unless the job configures the annotation explicitly.
+	DefaultSilentUnhealthyToleranceAfterTime = 600
 	// MaxSilentUnhealthyToleranceAfterTime is the upper bound of the silent-fault
 	// tolerance after-time in seconds. -1 (ToleranceForbidden) keeps its meaning
 	// (withheld forever); any positive value is clamped to this bound.
