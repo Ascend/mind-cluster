@@ -961,7 +961,24 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode *plugin.NPUNode, 
 	if !exist {
 		return fmt.Errorf("node corresponding not in session")
 	}
+	if err := reScheduler.checkHardFault(vcNode, task, fNode); err != nil {
+		return err
+	}
+	if err := reScheduler.checkSubHealthyFault(vcNode, task, schedulerJob, fNode); err != nil {
+		return err
+	}
+	if err := reScheduler.checkLinkDownFault(vcNode, fNode); err != nil {
+		return err
+	}
+	klog.V(util.LogDebugLev).Infof("node %s is not fault node, check success", vcNode.Name)
+	return nil
+}
 
+// checkHardFault checks the node-level hard fault states: the unhealthy
+// state, the pre-separate state reported by nodeD, and the dpu card-drop
+// fault that makes the node unsuitable for rdma tasks.
+func (reScheduler *ReScheduler) checkHardFault(vcNode *plugin.NPUNode, task *api.TaskInfo,
+	fNode *FaultNode) error {
 	if fNode.NodeHealthState == NodeUnhealthy {
 		return fmt.Errorf("node is unhealthy")
 	}
@@ -969,6 +986,19 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode *plugin.NPUNode, 
 	if nodeHealthyStatusByNodeD == util.PreSeparateFaultCode {
 		return fmt.Errorf("node health status is %s", nodeHealthyStatusByNodeD)
 	}
+	if util.IsRdmaTask(task, vcNode.Annotation) && hasDpuNodeSeparateFault(fNode.DpuNodeEvent) {
+		klog.V(util.LogWarningLev).Infof("node %s has dpu card drop fault, not suitable for rdma task %s",
+			vcNode.Name, task.Name)
+		return fmt.Errorf("node has dpu card drop fault, not suitable for rdma task")
+	}
+	return nil
+}
+
+// checkSubHealthyFault checks the sub-healthy gates: the non-ignore
+// strategy rejection, the node-level (switch) backoff within the job's
+// sub-healthy tolerance window, and the dpu sub-healthy strategy rejection.
+func (reScheduler *ReScheduler) checkSubHealthyFault(vcNode *plugin.NPUNode, task *api.TaskInfo,
+	schedulerJob plugin.SchedulerJob, fNode *FaultNode) error {
 	if !reScheduler.isJobCanAssignToSubHealthNode(schedulerJob.SubHealthyStrategy,
 		fNode.HasCardSubHealthFault || fNode.HasSwitchSubHealthFault) {
 		return fmt.Errorf("NodePredicate failed, cardSubHealthy=%v and"+
@@ -980,7 +1010,7 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode *plugin.NPUNode, 
 	// from every scheduling policy while the job's tolerance window is active,
 	// and released once the window times out. Card-level backoff (npu/public
 	// fault chips, DPU-affected cards) stays in each policy handler.
-	if fNode.HasSwitchSubHealthFault && subHealthyBackoffWithinWindow(schedulerJob) {
+	if fNode.HasSwitchSubHealthFault && !subHealthyToleranceAllows(schedulerJob) {
 		klog.V(util.LogInfoLev).Infof("node %s is switch sub-healthy, withhold task %s"+
 			" within backoff window", vcNode.Name, task.Name)
 		return fmt.Errorf("%s node<%s> is switch sub-healthy and within backoff window, can not be selected",
@@ -992,11 +1022,12 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode *plugin.NPUNode, 
 			" task %s with strategy %s", vcNode.Name, task.Name, schedulerJob.SubHealthyStrategy)
 		return fmt.Errorf("node has dpu subhealth fault, not suitable for rdma full card task")
 	}
-	if util.IsRdmaTask(task, vcNode.Annotation) && hasDpuNodeSeparateFault(fNode.DpuNodeEvent) {
-		klog.V(util.LogWarningLev).Infof("node %s has dpu card drop fault, not suitable for rdma task %s",
-			vcNode.Name, task.Name)
-		return fmt.Errorf("node has dpu card drop fault, not suitable for rdma task")
-	}
+	return nil
+}
+
+// checkLinkDownFault checks the link-down fault: within the timeout, the
+// l1-link-down cards are recorded into the node annotation for later filters.
+func (reScheduler *ReScheduler) checkLinkDownFault(vcNode *plugin.NPUNode, fNode *FaultNode) error {
 	if fNode.LinkDownTime == 0 {
 		klog.V(util.LogDebugLev).Infof("node %s is not fault node, check success", vcNode.Name)
 		return nil
@@ -1015,7 +1046,6 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode *plugin.NPUNode, 
 			vcNode.Annotation[networkUnhealthyCardName] = strings.Join(l1LinkCards, ",") + "," + k
 		}
 	}
-	klog.V(util.LogDebugLev).Infof("node %s is not fault node, check success", vcNode.Name)
 	return nil
 }
 
@@ -1026,10 +1056,12 @@ func (reScheduler *ReScheduler) isJobCanAssignToSubHealthNode(jobSubHealthStrate
 	return true
 }
 
-// subHealthyBackoffWithinWindow reports whether the job is still within its
-// sub-healthy tolerance window: node-level (switch) sub-healthy resources are
-// withheld from every scheduling policy until the window releases them.
-func subHealthyBackoffWithinWindow(schedulerJob plugin.SchedulerJob) bool {
+// subHealthyToleranceAllows reports whether the job's sub-healthy tolerance has
+// released the sub-healthy resources (true) or they are still withheld (false).
+func subHealthyToleranceAllows(schedulerJob plugin.SchedulerJob) bool {
+	if schedulerJob.NPUJob == nil {
+		return true
+	}
 	elapsed, ok := cache.SessionElapsed(schedulerJob.Name)
 	if !ok {
 		klog.V(util.LogWarningLev).Infof("ReScheduler cannot get job %s elapsed time", schedulerJob.Name)
