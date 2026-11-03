@@ -61,21 +61,32 @@ func CheckPath(path string, allowLink bool) error {
 		return fmt.Errorf("invalid path")
 	}
 
-	if strings.Contains(path, "..") || strings.Contains(path, "./") {
-		return fmt.Errorf("err path %s", path)
-	}
-	filePath, err := filepath.Abs(path)
+	filePath, err := checkPathAndAbs(path, true)
 	if err != nil {
-		return fmt.Errorf("get abs path failed %v", err)
-	}
-	if len(filepath.Base(filePath)) > DefaultStringSize {
-		return fmt.Errorf("path too long: %s", path)
+		return err
 	}
 	realPath, err := filepath.EvalSymlinks(filePath)
 	if err != nil || (realPath != filePath && !allowLink) {
 		return fmt.Errorf("symlinks or not existed, failed %v, %v, %v, %v", filePath, err, realPath, allowLink)
 	}
 	return nil
+}
+
+func checkPathAndAbs(path string, includePathInLengthError bool) (string, error) {
+	if strings.Contains(path, "..") || strings.Contains(path, "./") {
+		return "", fmt.Errorf("err path %s", path)
+	}
+	filePath, err := filepath.Abs(path)
+	if err != nil {
+		return "", fmt.Errorf("get abs path failed %v", err)
+	}
+	if len(filepath.Base(filePath)) > DefaultStringSize {
+		if includePathInLengthError {
+			return "", fmt.Errorf("path too long: %s", path)
+		}
+		return "", fmt.Errorf("path too long")
+	}
+	return filePath, nil
 }
 
 // CheckFileInfo check file info
@@ -97,33 +108,48 @@ func CheckFileInfo(fileInfo *os.File, size int) error {
 	if fileStat.Size() > int64(size)*int64(oneMegabytes) {
 		return fmt.Errorf("size too large")
 	}
-	perm := fileStat.Mode().Perm().String()
+	return checkFileSecurity(fileStat, fileInfo.Name(), false)
+}
+
+func checkFileSecurity(info os.FileInfo, displayPath string, setIDFirst bool) error {
+	checkSetID := func() error {
+		if info.Mode()&os.ModeSetuid != 0 {
+			return fmt.Errorf("setuid not allowed %v", displayPath)
+		}
+		if info.Mode()&os.ModeSetgid != 0 {
+			return fmt.Errorf("setgid not allowed %v", displayPath)
+		}
+		return nil
+	}
+	// FileChecker checks set-ID bits before permissions; CheckFileInfo checks them after ownership.
+	if setIDFirst {
+		if err := checkSetID(); err != nil {
+			return err
+		}
+	}
+	perm := info.Mode().Perm().String()
 	if len(perm) != permLength {
-		return fmt.Errorf("permission not right %v %v", fileInfo.Name(), perm)
+		return fmt.Errorf("permission not right %v %v", displayPath, perm)
 	}
 	for index, char := range perm {
 		switch index {
 		case groupWriteIndex, otherWriteIndex:
 			if char == 'w' {
-				return fmt.Errorf("write permission not right %v %v", fileInfo.Name(), perm)
+				return fmt.Errorf("write permission not right %v %v", displayPath, perm)
 			}
 		default:
 		}
 	}
-	stat, ok := fileStat.Sys().(*syscall.Stat_t)
+	stat, ok := info.Sys().(*syscall.Stat_t)
 	if !ok {
-		return fmt.Errorf("can not get stat %v", fileInfo.Name())
+		return fmt.Errorf("can not get stat %v", displayPath)
 	}
 	uid := int(stat.Uid)
 	if !(uid == 0 || uid == os.Getuid()) {
-		return fmt.Errorf("owner not right %v %v", fileInfo.Name(), uid)
+		return fmt.Errorf("owner not right %v %v", displayPath, uid)
 	}
-
-	if fileStat.Mode()&os.ModeSetuid != 0 {
-		return fmt.Errorf("setuid not allowed %v", fileInfo.Name())
-	}
-	if fileStat.Mode()&os.ModeSetgid != 0 {
-		return fmt.Errorf("setgid not allowed %v", fileInfo.Name())
+	if !setIDFirst {
+		return checkSetID()
 	}
 	return nil
 }
@@ -138,19 +164,8 @@ func RealFileChecker(path string, checkParent, allowLink bool, size int) (string
 		hwlog.RunLog.Errorf("failed to check files, error: %v", err)
 		return notValidPath, err
 	}
-	realPath, err := filepath.Abs(path)
+	realPath, fileInfo, err := resolveFileInfo(path)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get absolute path, error: %v", err)
-		return notValidPath, err
-	}
-	realPath, err = filepath.EvalSymlinks(realPath)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get real path, error: %v", err)
-		return notValidPath, err
-	}
-	fileInfo, err := os.Stat(realPath)
-	if err != nil {
-		hwlog.RunLog.Errorf(getStatErr, err)
 		return notValidPath, err
 	}
 	if !fileInfo.Mode().IsRegular() {
@@ -175,19 +190,8 @@ func RealDirChecker(path string, checkParent, allowLink bool) (string, error) {
 		hwlog.RunLog.Errorf("failed to check files, error: %v", err)
 		return notValidPath, err
 	}
-	realPath, err := filepath.Abs(path)
+	realPath, fileInfo, err := resolveFileInfo(path)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to get absolute path, error: %v", err)
-		return notValidPath, err
-	}
-	realPath, err = filepath.EvalSymlinks(realPath)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get real path, error: %v", err)
-		return notValidPath, err
-	}
-	fileInfo, err := os.Stat(realPath)
-	if err != nil {
-		hwlog.RunLog.Errorf(getStatErr, err)
 		return notValidPath, err
 	}
 	if !fileInfo.IsDir() {
@@ -196,46 +200,41 @@ func RealDirChecker(path string, checkParent, allowLink bool) (string, error) {
 	return realPath, nil
 }
 
+func resolveFileInfo(path string) (string, os.FileInfo, error) {
+	realPath, err := filepath.Abs(path)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get absolute path, error: %v", err)
+		return "", nil, err
+	}
+	realPath, err = filepath.EvalSymlinks(realPath)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get real path, error: %v", err)
+		return "", nil, err
+	}
+	fileInfo, err := os.Stat(realPath)
+	if err != nil {
+		hwlog.RunLog.Errorf(getStatErr, err)
+		return "", nil, err
+	}
+	return realPath, fileInfo, nil
+}
+
 // FileChecker check if a file/dir is safe to use
 func FileChecker(path string, allowDir, checkParent, allowLink bool, deep int) (bool, error) {
-	const maxDepth, groupWriteIndex, otherWriteIndex, permLength int = 99, 5, 8, 10
+	const maxDepth int = 99
 	if deep > maxDepth {
 		return false, fmt.Errorf("over maxDepth %v", maxDepth)
 	}
-	if strings.Contains(path, "..") || strings.Contains(path, "./") {
-		return false, fmt.Errorf("err path %s", path)
-	}
-	filePath, err := filepath.Abs(path)
+	filePath, err := checkPathAndAbs(path, false)
 	if err != nil {
-		return false, fmt.Errorf("get abs path failed %v", err)
-	}
-	if len(filepath.Base(filePath)) > DefaultStringSize {
-		return false, fmt.Errorf("path too long")
+		return false, err
 	}
 	fileInfo, ok, err := normalFileCheck(filePath, allowDir, allowLink)
 	if err != nil {
 		return ok, err
 	}
-	perm := fileInfo.Mode().Perm().String()
-	if len(perm) != permLength {
-		return false, fmt.Errorf("permission not right %v %v", filePath, perm)
-	}
-	for index, char := range perm {
-		switch index {
-		case groupWriteIndex, otherWriteIndex:
-			if char == 'w' {
-				return false, fmt.Errorf("write permission not right %v %v", filePath, perm)
-			}
-		default:
-		}
-	}
-	stat, ok := fileInfo.Sys().(*syscall.Stat_t)
-	if !ok {
-		return false, fmt.Errorf("can not get stat %v", filePath)
-	}
-	uid := int(stat.Uid)
-	if !(uid == 0 || uid == os.Getuid()) {
-		return false, fmt.Errorf("owner not right %v %v", filePath, uid)
+	if err := checkFileSecurity(fileInfo, filePath, true); err != nil {
+		return false, err
 	}
 	if filePath != "/" && checkParent {
 		return FileChecker(filepath.Dir(filePath), true, true, allowLink, deep+1)
@@ -261,12 +260,6 @@ func normalFileCheck(filePath string, allowDir bool, allowLink bool) (os.FileInf
 		if !fileInfo.Mode().IsRegular() {
 			return nil, false, fmt.Errorf("not regular file %v", filePath)
 		}
-	}
-	if fileInfo.Mode()&os.ModeSetuid != 0 {
-		return nil, false, fmt.Errorf("setuid not allowed %v", filePath)
-	}
-	if fileInfo.Mode()&os.ModeSetgid != 0 {
-		return nil, false, fmt.Errorf("setgid not allowed %v", filePath)
 	}
 	return fileInfo, false, nil
 }

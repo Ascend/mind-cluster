@@ -37,6 +37,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/cdi/mount"
+	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
 )
 
@@ -53,6 +54,15 @@ var (
 	containerConfigInputStream = os.Stdin
 	testError                  = errors.New("test")
 )
+
+// TestMain initializes the logger before tests run individually or in any order.
+func TestMain(m *testing.M) {
+	if err := hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background()); err != nil {
+		fmt.Fprintf(os.Stderr, "initialize test logger: %v\n", err)
+		os.Exit(1)
+	}
+	os.Exit(m.Run())
+}
 
 // TestDoPrestartHookCase1 test function DoPrestartHook
 func TestDoPrestartHookCase1(t *testing.T) {
@@ -219,16 +229,15 @@ func TestDoPrestartHookPatch2(t *testing.T) {
 			ApplyFuncReturn(os.Executable, testStr, nil).
 			ApplyFuncReturn(os.Stat, fileInfoMock{}, nil).
 			ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil).
-			ApplyFuncReturn(getArgs, []string{testStr}).
 			ApplyFuncReturn(mindxcheckutils.ChangeRuntimeLogMode, nil)
 		defer patches.Reset()
 		convey.Convey("06-doExec error, should return error", func() {
-			patch := gomonkey.ApplyFuncReturn(doExec, testError)
+			patch := gomonkey.ApplyFuncVarReturn(&doExec, testError)
 			defer patch.Reset()
 			err := DoPrestartHook()
 			convey.So(err, convey.ShouldBeError)
 		})
-		patches.ApplyFuncReturn(doExec, nil)
+		patches.ApplyFuncVarReturn(&doExec, nil)
 		convey.Convey("07-success, should return nil", func() {
 			err := DoPrestartHook()
 			convey.So(err, convey.ShouldBeNil)
@@ -237,14 +246,17 @@ func TestDoPrestartHookPatch2(t *testing.T) {
 			var capturedAllowLink string
 			patchSoftLink := gomonkey.ApplyFuncReturn(parseSoftLinkMode, "False", nil)
 			defer patchSoftLink.Reset()
-			patchGetArgs := gomonkey.ApplyFunc(getArgs,
-				func(cliPath string, containerConfig *containerConfig, fileMountList []string,
-					dirMountList []string, allowLink string) []string {
-					capturedAllowLink = allowLink
-					return []string{testStr}
-				})
-			defer patchGetArgs.Reset()
-			patchDoExec := gomonkey.ApplyFuncReturn(doExec, nil)
+			// Keep getArgs real: gomonkey's ARM64 jump overwrites X10, which holds
+			// its final string argument's length. Capture the generated CLI arguments instead.
+			patchDoExec := gomonkey.ApplyFuncVar(&doExec, func(_ string, args, _ []string) error {
+				for i := 0; i+1 < len(args); i++ {
+					if args[i] == "--allow-link" {
+						capturedAllowLink = args[i+1]
+						break
+					}
+				}
+				return nil
+			})
 			defer patchDoExec.Reset()
 			err := DoPrestartHook()
 			convey.So(err, convey.ShouldBeNil)
@@ -422,7 +434,7 @@ func TestGetContainerConfigPatch2(t *testing.T) {
 				"Decode", nil)
 		defer patches.Reset()
 		convey.Convey("04-rfs not abs path, success, should return nil", func() {
-			patch := gomonkey.ApplyFuncReturn(filepath.Abs, testStr, false)
+			patch := gomonkey.ApplyFuncReturn(filepath.Abs, testStr, nil)
 			defer patch.Reset()
 			_, err := getContainerConfig()
 			convey.So(err, convey.ShouldBeNil)
