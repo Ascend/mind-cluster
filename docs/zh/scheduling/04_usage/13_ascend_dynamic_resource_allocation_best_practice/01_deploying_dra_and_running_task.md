@@ -7,7 +7,7 @@ Ascend DRA基于Kubernetes动态资源分配（Dynamic Resource Allocation，DRA
 申请整卡资源有两种方案，两者互斥选择其一：
 
 - **方案一：通过ResourceClaimTemplate申请资源**。显式创建ResourceClaimTemplate，Pod通过`spec.resourceClaims`引用。适用于需要显式管理资源模板或需要与现有ResourceClaim流程保持一致的场景。该方案可申请未切分的整卡，也可通过替换`deviceClassName`申请静态vNPU或动态vNPU。
-- **方案二：使用扩展资源名申请资源**。不创建ResourceClaimTemplate，Pod只在`resources.requests`与`resources.limits`中配置扩展资源名。适用于只需申请整卡、希望清单更简单的场景，要求K8s 1.36及以上版本。该方案只支持申请未切分的物理整卡，申请虚拟卡请使用方案一。
+- **方案二：使用扩展资源名申请资源**。不创建ResourceClaimTemplate，Pod只在`resources.requests`与`resources.limits`中配置扩展资源名。适用于只需申请整卡、希望清单更简单的场景，要求K8s 1.36及以上版本。该方案只支持申请未切分的物理整卡，且只支持Ascend950系列，申请虚拟卡或其他芯片代际的整卡请使用方案一。
 
 ## 前提条件<a name="section_dra_prereq"></a>
 
@@ -285,7 +285,7 @@ Ascend DRA基于Kubernetes动态资源分配（Dynamic Resource Allocation，DRA
 
 ### 配置YAML文件<a name="section_extended_config"></a>
 
-1. 确认资源名与芯片代际的对应关系。资源名必须等于某个DeviceClass的`extendedResourceName`：
+1. 确认扩展资源名：
 
     **表 1**  扩展资源名与DeviceClass对应关系
 
@@ -293,10 +293,11 @@ Ascend DRA基于Kubernetes动态资源分配（Dynamic Resource Allocation，DRA
 
     | 扩展资源名 | DeviceClass | 适用芯片 |
     |--|--|--|
-    | `huawei.com/Ascend910` | ascend910.ext.huawei.com | Ascend910系列，`chipName`以`910`或`Ascend910`开头 |
     | `huawei.com/npu` | npu.ext.huawei.com | Ascend950系列，`chipName`以`Ascend950`开头 |
 
     > [!NOTE]
+    > 该扩展资源名只支持Ascend950系列。
+    >
     > 同一节点不要同时部署Ascend Device Plugin。Device Plugin上报的扩展资源名与本表相同，两者同时存在会对同一张卡重复计数，并触发资源名冲突。
 
 2. 创建`dra-extended-npu.yaml`文件，业务Pod只需配置`requests`与`limits`，不配置`spec.resourceClaims`：
@@ -318,12 +319,10 @@ Ascend DRA基于Kubernetes动态资源分配（Dynamic Resource Allocation，DRA
         - sleep inf
         resources:
           <strong>requests:</strong>
-            <strong>huawei.com/Ascend910: 1     # 申请1张未切分的物理整卡，按需修改</strong>
+            <strong>huawei.com/npu: 1     # 申请1张未切分的物理整卡，按需修改</strong>
           <strong>limits:</strong>
-            <strong>huawei.com/Ascend910: 1     # 必须与requests相等</strong>
+            <strong>huawei.com/npu: 1     # 必须与requests相等</strong>
     </pre>
-
-    芯片为Ascend950系列时，将两处`huawei.com/Ascend910`同时改为`huawei.com/npu`。
 
 ### 下发任务<a name="section_extended_apply"></a>
 
@@ -404,6 +403,5 @@ Ascend DRA基于Kubernetes动态资源分配（Dynamic Resource Allocation，DRA
 
 - **幂等性**：Prepare和Unprepare操作均支持幂等。对已Prepare的Claim再次Prepare会返回相同的分配结果；对已Unprepare的Claim再次Unprepare为空操作，不会报错。
 - **Checkpoint机制**：DRA插件通过Checkpoint文件（`checkpoint.json`）持久化Claim与设备的分配关系。插件重启后从Checkpoint恢复分配状态，确保已Prepare的Claim不受影响。
+- **与Ascend Device Plugin的关系**：DRA和Device Plugin是两种不同的设备接入方式，互斥使用。使用DRA方式的节点无需部署Ascend Device Plugin。[方案二](#section_scheme_extended_resource)使用的扩展资源名与Device Plugin上报的名称相同，同一节点不可同时使用。
 - **清理部署**：删除业务侧资源后，如需卸载组件，执行`kubectl delete -f ascend-dra-driver.yaml`。
-- **DeviceClass**：DRA组件部署时自动创建名为`npu.huawei.com`的DeviceClass，其选择器匹配driver为`npu.huawei.com`的所有设备。用户无需手动创建DeviceClass。
-- **与Ascend Device Plugin的关系**：DRA和Device Plugin是两种不同的设备接入方式，两者功能在同一节点上互斥，无需同时部署。
