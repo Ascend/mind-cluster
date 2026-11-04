@@ -434,8 +434,8 @@ else
             cd ${ATOMGIT_WORKSPACE}/${servicename}/.gitcode/workflows/build && dos2unix *.sh 2>/dev/null || true && bash -x build_package.sh infer-operator ${TARGET_BRANCH}
             cp -p -f -r ${ATOMGIT_WORKSPACE}/mind-cluster/component/infer-operator/output/Ascend-mindxdl-infer-operator_*.zip ${ATOMGIT_WORKSPACE}/artifacts/
         fi
-        if grep -q "component/faultdiag" "${ATOMGIT_WORKSPACE}/$file_path"; then
-            pip3 install  numpy==1.26.4
+        if grep -q "component/ascend-faultdiag/" "${ATOMGIT_WORKSPACE}/$file_path"; then
+            pip3 install numpy==1.26.4
             pip3 install pandas
             pip3 install scikit-learn
             pip3 install ply
@@ -480,7 +480,7 @@ else
             cp -p -f -r ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/acp/output/mindio_acp-*.whl ${ATOMGIT_WORKSPACE}/artifacts/
             cp -p -f -r ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/tft/output/mindio_ttp-*.whl ${ATOMGIT_WORKSPACE}/artifacts/
         fi
-        cd ${ATOMGIT_WORKSPACE}/artifacts/ && zip -r artifacts_$(uname -m).zip .
+        cd ${ATOMGIT_WORKSPACE}/artifacts/ && zip -r artifacts_$(uname -m).zip . && find . -maxdepth 1 ! -name "artifacts_$(uname -m).zip" -delete
         ls -al ${ATOMGIT_WORKSPACE}/artifacts/
     fi
 fi
