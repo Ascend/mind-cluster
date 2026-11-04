@@ -88,9 +88,17 @@ func (tp *chip8node8sp) checkSpBlock() *api.ValidateResult {
 		}
 	}
 	if tp.SpBlockNPUNum < tp.MaxNodeNPUNum {
-		klog.V(util.LogWarningLev).Infof("sp-block less than node npu num(%d), set default value 1",
-			tp.MaxNodeNPUNum)
-		tp.spBlock = 1
+		if tp.SpBlockNPUNum == tp.ReqNPUNum {
+			klog.V(util.LogWarningLev).Infof("sp-block less than node npu num(%d), set default value 1",
+				tp.MaxNodeNPUNum)
+			tp.spBlock = 1
+		} else {
+			return &api.ValidateResult{
+				Pass:    false,
+				Reason:  util.InvalidArgumentReason,
+				Message: fmt.Sprintf("sp-block(%d) is not mutiple of node npu (%d)", tp.SpBlockNPUNum, tp.MaxNodeNPUNum),
+			}
+		}
 	} else {
 		if tp.SpBlockNPUNum%tp.MaxNodeNPUNum != 0 {
 			return &api.ValidateResult{

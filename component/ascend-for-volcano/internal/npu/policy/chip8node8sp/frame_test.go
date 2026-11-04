@@ -697,6 +697,9 @@ type validNPUJobTest struct {
 	reqNPUNum     int
 	taskNum       int
 	wantPass      bool
+	wantSpBlock   int
+	wantReason    string
+	wantMsg       string
 }
 
 func buildValidNPUJobTestCases() []validNPUJobTest {
@@ -705,39 +708,71 @@ func buildValidNPUJobTestCases() []validNPUJobTest {
 			name:          "01 will return false when spBlockNPUNum is 0",
 			spBlockNPUNum: 0,
 			wantPass:      false,
+			wantReason:    spBlockInvalidReason,
+			wantMsg:       "sp-block(0) is invalid",
 		},
 		{
-			name:          "02 will return false when spBlockNPUNum is 1 but superPodSize is 0 ",
+			name:          "02 will return false when spBlockNPUNum equals require npu but superPodSize is 0",
+			reqNPUNum:     util.NPUIndex1,
 			spBlockNPUNum: util.NPUIndex1,
 			wantPass:      false,
+			wantSpBlock:   util.NPUIndex1,
+			wantReason:    spBlockInvalidReason,
+			wantMsg:       "sp-block(1/8=1) is bigger than size of super-pod(0)",
 		},
 		{
 			name:          "03 will return false when spBlockNPUNum is not mutiple of node npu",
 			spBlockNPUNum: util.CoreNum25,
 			wantPass:      false,
+			wantReason:    spBlockInvalidReason,
+			wantMsg:       "sp-block(25) is not mutiple of node npu (8)",
 		},
 		{
-			name:          "04 will return false when require npu num is 1 and sp-block is not 1",
+			name:          "04 will return InvalidArgument when sp-block less than node npu and not equal require npu num",
 			reqNPUNum:     util.NPUIndex1,
 			spBlockNPUNum: util.NPUIndex2,
 			superPodSize:  util.NPUIndex1,
 			wantPass:      false,
+			wantReason:    util.InvalidArgumentReason,
+			wantMsg:       "sp-block(2) is not mutiple of node npu (8)",
 		},
 		{
-			name:          "05 will return false when 1 task job require npu num is 1 and sp-block is not 1",
+			name:          "05 will return InvalidArgument when 1 task job sp-block less than node npu and not equal require npu num",
 			taskNum:       util.NPUIndex1,
 			reqNPUNum:     util.NPUIndex1,
 			spBlockNPUNum: util.NPUIndex2,
 			superPodSize:  util.NPUIndex1,
 			wantPass:      false,
+			wantReason:    util.InvalidArgumentReason,
+			wantMsg:       "sp-block(2) is not mutiple of node npu (8)",
 		},
 		{
-			name:          "06 will return false when job require npu num is 3 not mutiple of die npu",
+			name:          "06 will return InvalidArgument when 1 task job sp-block less than node npu and differs from require npu num",
 			taskNum:       util.NPUIndex1,
 			reqNPUNum:     util.NPUIndex3,
 			spBlockNPUNum: util.NPUIndex1,
 			superPodSize:  util.NPUIndex1,
 			wantPass:      false,
+			wantReason:    util.InvalidArgumentReason,
+			wantMsg:       "sp-block(1) is not mutiple of node npu (8)",
+		},
+		{
+			name:          "07 will pass and default spBlock to 1 when sp-block equals require npu num of a 1 task job",
+			taskNum:       util.NPUIndex1,
+			reqNPUNum:     util.NPUIndex2,
+			spBlockNPUNum: util.NPUIndex2,
+			superPodSize:  util.NPUIndex1,
+			wantPass:      true,
+			wantSpBlock:   util.NPUIndex1,
+		},
+		{
+			name:          "08 will pass when 1 task job with 1 npu has sp-block equal require npu num",
+			taskNum:       util.NPUIndex1,
+			reqNPUNum:     util.NPUIndex1,
+			spBlockNPUNum: util.NPUIndex1,
+			superPodSize:  util.NPUIndex1,
+			wantPass:      true,
+			wantSpBlock:   util.NPUIndex1,
 		},
 	}
 }
@@ -753,8 +788,23 @@ func TestValidNPUJob(t *testing.T) {
 			tp.ReqNPUNum = tt.reqNPUNum
 			tp.NPUTaskNum = tt.taskNum
 			tp.FrameAttr.SuperPodSize = tt.superPodSize
-			if got := tp.ValidNPUJob(); got != nil && !reflect.DeepEqual(got.Pass, tt.wantPass) {
-				t.Errorf("ValidNPUJob() = %v, want %v", got.Pass, tt.wantPass)
+			got := tp.ValidNPUJob()
+			if tt.wantPass {
+				if got != nil {
+					t.Errorf("ValidNPUJob() = %v, want pass", got)
+				}
+			} else {
+				want := &api.ValidateResult{
+					Pass:    false,
+					Reason:  tt.wantReason,
+					Message: tt.wantMsg,
+				}
+				if !reflect.DeepEqual(got, want) {
+					t.Errorf("ValidNPUJob() = %v, want %v", got, want)
+				}
+			}
+			if tp.spBlock != tt.wantSpBlock {
+				t.Errorf("spBlock = %d, want %d", tp.spBlock, tt.wantSpBlock)
 			}
 		})
 	}
