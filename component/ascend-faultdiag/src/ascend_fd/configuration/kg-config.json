@@ -12088,7 +12088,7 @@
             "source_file": "CANN_Plog",
             "regex": {
                 "in": [
-                  ["Invalid para","va"],
+                  ["Invalid para. (va="],
                   ["Addr cap is not support ipc create"],
                   ["The address does not support IPC sharing"]
                 ]
@@ -13166,7 +13166,7 @@
                 "cause_zh": "rank table文件内容配置不正确",
                 "description_zh": "HCCL初始化失败：ranktable方式初始化时，HCCL需要open ranktable文件以获取集群rank信息。可能有以下原因：\n  a. rank id、server id字段重复；\n  b. device ip、rank id、device id字段格式不符合要求。",
                 "suggestion_zh": [
-                    "1. 检查ranktable文件中的个字段配置是否符合要求；"
+                    "1. 检查ranktable文件中字段配置是否符合要求；"
                 ],
                 "cause_en": "Incorrect rank table file content",
                 "description_en": "During HCCL initialization in ranktable mode, HCCL needs to open the ranktable file to obtain the rank information of the cluster. The possible causes are as follows:\n  a. The rank ID and server ID are duplicate.\n  b. The format of the device IP, rank ID, or device ID does not meet the requirements.",
@@ -13357,7 +13357,7 @@
                 "suggestion_zh": [
                     "1. 检查所有卡的报错情况，若有卡未报建链超时错误，请通过任务日志或者plog日志检查此卡是否存在业务卡死情况，若存在请定位根因；",
                     "2. 若所有卡均上报建链超时错误，则检查错误日志中最早和最晚时间差异是否超过超时阈值；",
-                    "3. 若超过阈值请定位最晚报错的卡执行较慢的原因或通过通过增大建链超时时间尝试解决（例如通过配置export HCCL_CONNECT_TIMEOUT=1800将超时时间增大为1800s）；",
+                    "3. 若超过阈值请定位最晚报错的卡执行较慢的原因或通过增大建链超时时间尝试解决（例如通过配置export HCCL_CONNECT_TIMEOUT=1800将超时时间增大为1800s）；",
                     "4. 若时间差异未超过阈值，请检查各rank执行的集合通信算子数量是否一致，算子加载的顺序是否一致，HCCL要求一个通信域内各个rank上算子加载顺序保持一致；",
                     "5. 检查集群中是否存在Device网口通信链路不通的情况；",
                     "6. 如果自定义监听或连接端口，请检查端口是否有效；",
@@ -13855,6 +13855,661 @@
             "source_file": "CANN_Plog",
             "regex": {
                 "in": ["Some ranks tlsStatus are inconsistent"]
+            }
+        },
+        "AISW_CANN_HCCL_035": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "环境变量配置错误",
+                "description_zh": "HCCL初始化时，会读取进程中配置的HCCL环境变量。可能原因：环境变量配置不合理。",
+                "suggestion_zh": [
+                    "1. 检查配置的HCCL环境变量是否合理；"
+                ],
+                "cause_en": "Environment variable configuration error",
+                "description_en": "During HCCL initialization, the HCCL environment variables configured in the process will be read. Possible cause: The configuration of environment variables is unreasonable.",
+                "suggestion_en": [
+                    "1. Check whether the configured HCCL environment variables are reasonable."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["[Init][EnvVarParam]Env config"]
+            }
+        },
+        "AISW_CANN_HCCL_036": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "rank table及topo文件读取失败",
+                "description_zh": "ranktable方式初始化时，HCCL需要open ranktable文件和topo文件以获取集群rank信息。可能有以下原因：\n  a. ranktable或topo文件不存在。\n  b. ranktable或topo文件权限不正确，当前用户无权限访问。\n  c. ranktable或topo文件不符合json文件格式要求。\n  d. rank table或topo文件内容配置不正确，字段重复或格式不符合要求。",
+                "suggestion_zh": [
+                    "1. 检查配置的rank table路径是否错误以及文件是否生成；",
+                    "2. 检查使用的ranktable文件权限是否正确配置；",
+                    "3. 检查使用的ranktable文件是否符合json文件格式要求；",
+                    "4. 检查ranktable文件中字段配置是否符合要求；"
+                ],
+                "cause_en": "Failed to read the rank table and topology file.",
+                "description_en": "During initialization in ranktable mode, the HCCL needs to open the ranktable file and topo file to obtain the cluster rank information. The possible causes are as follows:\n  a. The ranktable or topo file does not exist.\n  b. The permission on the ranktable or topo file is incorrect. The current user does not have the permission to access the file.\n  c. The ranktable or topo file does not meet the JSON file format requirements.\n  d. The content of the rank table or topology file is incorrectly configured, the field is duplicate, or the format does not meet the requirements.",
+                "suggestion_en": [
+                    "1. Check whether the configured path of the rank table is incorrect and whether the file has been generated.",
+                    "2. Check whether the permissions of the ranktable file being used are correctly configured.",
+                    "3. Check whether the ranktable file being used meets the format requirements of a JSON file.",
+                    "4. Check whether the field configuration in the ranktable file meets the requirements."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["RanktableRealPath", "is not a valid real path"]
+            }
+        },
+        "AISW_CANN_HCCL_037": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "rootinfo方式HCCL初始化失败",
+                "description_zh": "rootinfo方式初始化时，所有rank需要使用host网卡进行socket通信交换信息。可能有以下原因：\n  a. 用户配置的HCCL_IF_IP和环境IP不一致，导致HCCL获取host网卡信息失败。\n  b. 用户配置的HCCL_SOCKET_IFNAME和环境网卡名不一致，导致HCCL获取host网卡信息失败。\n  c. HCCL使用的host socket端口被其他服务占用，导致HCCL监听host网卡端口失败。\n  d. topo文件和rootinfo文件不存在或配置不正确导致初始化失败。",
+                "suggestion_zh": [
+                    "1. 请确认环境变量HCCL_IF_IP和环境的host网卡IP是否一致；",
+                    "2. 请确认环境变量HCCL_SOCKET_IFNAME和环境的host网卡名称是否一致；",
+                    "3. HCCL通信端口被占用，导致socket listen失败，切换HCCL的通信端口避开已使用的端口，或者将HCCL需要监听的端口预留出来；"
+                ],
+                "cause_en": "HCCL initialization failure in rootinfo mode",
+                "description_en": "During initialization in rootinfo mode, all ranks need to use the host network adapter for socket communication and exchange information. The possible causes are as follows:\n  a. The HCCL_IF_IP configured by the user is different from the environment IP address. As a result, the HCCL fails to obtain the host network adapter information.\n  b. The value of HCCL_SOCKET_IFNAME is different from the network adapter name in the environment. As a result, the HCCL fails to obtain the host network adapter information.\n  c. The host socket port used by the HCCL is occupied by other services. As a result, the HCCL fails to listen to the host NIC port.\n  d. The topo file and rootinfo file do not exist or are configured incorrectly. As a result, initialization fails.",
+                "suggestion_en": [
+                    "1. Please verify whether the environment variable HCCL_IF_IP matches the IP address of the host network interface in the environment.",
+                    "2. Please verify whether the environment variable HCCL_SOCKET_IFNAME matches the name of the host network interface in the environment.",
+                    "3. The HCCL communication port is occupied, causing the socket listen operation to fail. To resolve this issue, switch the HCCL communication port to avoid using an already occupied port, or reserve the port that HCCL needs to listen on."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["there is no valid host ip"],
+                    ["Env config", "HCCL_SOCKET_IFNAME", "is", "which is not found in the nic list"]
+                ]
+            }
+        },
+        "AISW_CANN_HCCL_038": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "root rank上 socket 建链失败",
+                "description_zh": "rootinfo方式初始化时，rootrank需要和所有rank使用host网卡进行socket通信。可能有以下原因：\n  a. 部分rank未执行通信域初始化。\n  b. 部分rank在执行通信域初始化时因其他错误退出导致未发起socket建链。\n  c. 操作系统配置问题：rootrank上进程可open的文件数不足，或者linux配置的tcp backlog值较小。\n  d. 部分rank执行通信域初始化较晚,超过超时阈值。\n  e. 集群规模较大，rootrank建链处理耗时较长,超过阈值。\n  f. 部分rank的host网卡和rootrank网络不通。",
+                "suggestion_zh": [
+                    "1. 检查通信域内所有卡的日志，是否存在未初始化通信域的rank；",
+                    "2. 检查通信域内是否存在rank在通信域初始化时非socket通信异常报错退出；",
+                    "3. 检查linux系统配置的可打开文件数和tcp backlog是否合理；",
+                    "4. 检查环境变量HCCL_CONNECT_TIMEOUT配置是否合理；",
+                    "5. 检查通信域内各rank使用的host网卡是否互通；"
+                ],
+                "cause_en": "Socket link establishment failure on the root rank",
+                "description_en": "During initialization in rootinfo mode, the rootrank needs to communicate with all ranks through the host network adapter for socket communication. The possible causes are as follows:\n  a. Some ranks do not perform communication domain initialization.\n  b. Some ranks exit due to other errors during communication domain initialization. As a result, socket connection establishment is not initiated.\n  c. The operating system configuration is incorrect: The number of open files that can be opened by the rootrank process is insufficient or the TCP backlog value configured for Linux is small.\n  d. Some ranks perform communication domain initialization late, exceeding the timeout threshold.\n  e. The cluster scale is large, and the rootrank link establishment processing takes a long time, exceeding the threshold.\n  f. The network connection between the host network adapters of some rank and rootrank is abnormal.",
+                "suggestion_en": [
+                    "1. Check the logs of all cards within the communication domain to see if there is a rank that initializes the communication domain.",
+                    "2. Check whether there is a rank within the communication domain that was not a socket during the initialization of the communication domain. If so, check whether there is an abnormal error report and exit.",
+                    "3. Check whether the number of open files and the TCP backlog configured in the Linux system are reasonable.",
+                    "4. Check whether the configuration of the environment variable HCCL_CONNECT_TIMEOUT is reasonable.",
+                    "5. Check whether the host network cards used by each rank within the communication domain can communicate with each other."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["server get sockets timeout"]
+            }
+        },
+        "AISW_CANN_HCCL_039": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "非root rank上 socket 建链失败",
+                "description_zh": "rootinfo方式初始化时，非rootrank需要和rootrank使用host网卡进行socket通信。可能有以下原因：\n  a. 操作系统配置问题：rootrank上进程可open的文件数不足。或者rootrank上linux配置的tcp backlog值较小。\n  b. 执行通信域初始化较晚或较早，超过超时阈值。\n  c. 集群规模较大，rootrank建链处理耗时较长，超过阈值。\n  d. 非root rank的host网卡和rootrank网络不通。",
+                "suggestion_zh": [
+                    "1. 检查linux系统配置的可打开文件数和tcp backlog是否合理；",
+                    "2. 检查环境变量HCCL_CONNECT_TIMEOUT配置是否合理；",
+                    "3. 检查通信域内各rank使用的host网卡是否互通；"
+                ],
+                "cause_en": "Failed to establish a socket connection on a non-root rank.",
+                "description_en": "During initialization in rootinfo mode, non-rootrank and rootrank need to communicate with each other through the host network adapter. The possible causes are as follows:\n  a. The operating system configuration is incorrect: The number of open files that can be opened by the process on the rootrank is insufficient or the value of TCP backlog configured for Linux on the rootrank is small.\n  b. The communication domain initialization is performed late or early, and the timeout threshold is exceeded.\n  c. If the cluster scale is large, the rootrank link establishment takes a long time, exceeding the threshold.\n  d. The network connection between the non-root rank host network adapter and root rank is interrupted.",
+                "suggestion_en": [
+                    "1. Check whether the number of open files and the TCP backlog in the Linux system configuration are reasonable.",
+                    "2. Check whether the environment variable HCCL_CONNECT_TIMEOUT is configured reasonably.",
+                    "3. Check whether the host network cards used by each rank within the communication domain are interconnected."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["client get connection timeout"]
+            }
+        },
+        "AISW_CANN_HCCL_040": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "非root rank上 socket recv失败",
+                "description_zh": "rootinfo方式初始化时，非rootrank需要从rootrank接收集群rank信息。可能原因：rootrank上socket建链失败退出。",
+                "suggestion_zh": [
+                    "1. 检查通信域内所有卡的日志，是否存在未初始化通信域的rank；",
+                    "2. 检查通信域内是否存在rank在通信域初始化时非socket通信异常报错退出；",
+                    "3. 检查linux系统配置的可打开文件数和tcp backlog是否合理；",
+                    "4. 检查环境变量HCCL_CONNECT_TIMEOUT配置是否合理；",
+                    "5. 检查通信域内各rank使用的host网卡是否互通；"
+                ],
+                "cause_en": "Socket Recv Failure on Non-root Rank",
+                "description_en": "During initialization in rootinfo mode, non-rootranks need to receive cluster rank information from rootranks. Possible causes: The socket fails to be established on the rootrank and exits.",
+                "suggestion_en": [
+                    "1. Check the logs of all ranks within the communication domain to see if there are any ranks that have not initialized the communication domain.",
+                    "2. Check whether there are any ranks within the communication domain that encountered non-socket communication exceptions during the initialization of the communication domain, causing the process to exit abnormally.",
+                    "3. Check whether the number of open files and the TCP backlog configured in the Linux system are reasonable.",
+                    "4. Check whether the configuration of the environment variable HCCL_CONNECT_TIMEOUT is reasonable.",
+                    "5. Check whether the host network cards used by each rank within the communication domain can communicate with each other."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["recv rankTable error"],
+                    ["Wait timeout for sockets recv"]
+                ]
+            }
+        },
+        "AISW_CANN_HCCL_041": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "TSD open失败",
+                "description_zh": "HCCL初始化时，需要通过TSD open拉起device侧的HCCP进程。可能有以下原因：\n  a. HCCP进程残留。\n  b. 多个HCCL rank使用同一个NPU。",
+                "suggestion_zh": [
+                    "1. 检查是否有其他任务在占用NPU；",
+                    "2. 等待HCCP进程退出后，再重试；"
+                ],
+                "cause_en": "Failed to open the TSD.",
+                "description_en": "During HCCL initialization, you need to run TSD open to start the HCCP process on the device side. The possible causes are as follows:\n  a. Residual HCCP processes.\n  b. Multiple HCCL ranks use the same NPU.",
+                "suggestion_en": [
+                    "1. Check if there are other tasks occupying the NPU.",
+                    "2. Wait for the HCCP process to exit, and then retry."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["TsdProcessOpen fail"]
+            }
+        },
+        "AISW_CANN_HCCL_043": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "通信算子申请资源失败",
+                "description_zh": "HCCL算子加载失败：在通信算子加载时，会在Host申请device的notify/stream/taskid/CCL buffer等资源用于device之间的同步控制和通信。可能有以下原因：\n  a. 预留给HCCL使用的notify/stream/taskid等资源不足。\n  b. 创建的通信域很多，导致资源耗尽。\n  c. 配置的CCL buffer大小和业务不匹配。",
+                "suggestion_zh": [
+                    "1. 预留足够的notify/stream/taskid资源供通信算子使用；",
+                    "2. 配置合理的CCL buffer大小；"
+                ],
+                "cause_en": "Communication operator failed to apply for resources.",
+                "description_en": "HCCL operator loading failed: During the loading of communication operators, resources such as notify/stream/taskid/CCL buffer are requested on the Host for synchronization control and communication between devices. The possible reasons are as follows:\n  a. Insufficient resources (notify/stream/taskid, etc.) reserved for HCCL use.\n  b. Too many communication domains are created, leading to resource exhaustion.\n  c. The configured CCL buffer size does not match the service requirements.",
+                "suggestion_en": [
+                    "1. Reserve sufficient notify/stream/taskid resources for communication operators to use.",
+                    "2. Configure a reasonable size for the CCL buffer."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["[Stream][CreateWithFlags]errNo[", "rtStreamCreate error", "rtRet[", "flags["]
+            }
+        },
+        "AISW_CANN_HCCL_044": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "通信算子下发Device失败",
+                "description_zh": "HCCL算子加载失败：在通信算子加载时，将通信算子通过runtime接口下发至device侧。可能有以下原因：\n  a. kernelLaunch通道异常。\n  b. NPU HCCP/AICPU进程异常退出。\n  c. NPU异常掉卡。",
+                "suggestion_zh": [
+                    "1. 检查HDC通道是否异常；",
+                    "2. 检查NPU HCCP/AICPU进程是否异常退出；",
+                    "3. 检查NPU是否掉卡；"
+                ],
+                "cause_en": "Communication operator fails to deliver to the device.",
+                "description_en": "HCCL operator loading failure: During the loading of the communication operator, the communication operator is delivered to the device through the runtime interface. The possible causes are as follows:\n  a. The kernelLaunch channel is abnormal.\n  b. The NPU HCCP/AICPU process exits abnormally.\n  c. The NPU is abnormally disconnected.",
+                "suggestion_en": [
+                    "1. Check whether the HDC channel is abnormal.",
+                    "2. Check whether the NPU HCCP/AICPU process has abnormally exited.",
+                    "3. Check whether the NPU has lost its card."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "rtAicpuKernelLaunchExWithArgs failed"
+                ]
+            }
+        },
+        "AISW_CANN_HCCL_045": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "socket建立连接失败",
+                "description_zh": "HCCL算子加载失败：在通信算子加载时，会在需要通信的NPU之间建立socket连接。可能有以下原因：\n  a. 对端rank未执行该算子的加载。\n  b. 对端rank在该算子加载过程中，因异常报错而退出。\n  c. 对端rank和本rank加载该算子的启动时间差较大，超过HCCL建链超时阈值。\n  d. 对端rank和本rank加载的通信算子不一致，通信算子tag matching失败，导致建链超时。\n  e. NPU网络问题，比如网络不通、NPU网络地址冲突、UB链路故障等。\n  f. TLS问题，比如证书开关不一致、证书过期、证书不匹配。",
+                "suggestion_zh": [
+                    "1. 检查所有卡的报错情况，若有卡未报建链超时错误，请通过训练或者plog日志检查此卡是否存在业务卡死情况，若存在请定位根因；",
+                    "2. 若所有卡均上报建链超时错误，则检查错误日志中最早和最晚时间差异是否超过超时阈值，若超过阈值请定位最晚报错的卡执行较慢的原因或通过增大建链超时时间尝试解决（例如通过配置export HCCL_CONNECT_TIMEOUT=1800将超时时间增大为1800s）；",
+                    "3. 若时间差异未超过阈值，请检查各rank执行的集合通信算子数量一致，算子加载的顺序一致。HCCL要求一个通信域内各个rank上算子加载顺序保持一致；",
+                    "4. 检查集群中是否存在Device网口通信链路不通的情况；"
+                ],
+                "cause_en": "Socket connection failed.",
+                "description_en": "HCCL operator loading failure: When the communication operator is being loaded, a socket connection is set up between the NPUs that need communication. The possible causes are as follows:\n  a. The peer rank does not load the operator.\n  b. During the loading of the peer rank operator, the peer rank exits due to an error.\n  c. The difference between the start time of loading the operator in the peer rank and the start time of loading the operator in the local rank is large, which exceeds the HCCL link setup timeout threshold.\n  d. The communication operator loaded by the peer rank is different from that loaded by the local rank. The tag matching of the communication operator fails, and the link establishment times out.\n  e. The NPU network is faulty, for example, the network is disconnected, the NPU network address conflicts, and the UB link is faulty.\n  f. TLS problems, such as inconsistent certificate switch settings, certificate expiration, or certificate mismatch.",
+                "suggestion_en": [
+                    "1. Check the errors reported by all cards. If the card does not report the link establishment timeout error, check whether the card has service suspension based on training or plog logs. If yes, locate the root cause.",
+                    "2. If all cards report the link setup timeout error, check whether the difference between the earliest and latest time in the error logs exceeds the timeout threshold. If the difference exceeds the threshold, locate the cause of the slow execution of the latest card or increase the timeout interval. For example, you can set export HCCL_CONNECT_TIMEOUT=1800 to increase the timeout period to 1800s.",
+                    "3. If the time difference does not exceed the threshold, check that the number of set communication operators executed by each rank is the same and the operator loading sequence is the same. HCCL requires the operator loading sequence on all ranks in a communication domain to be the same.",
+                    "4. Check whether the communication link of the device network port is disconnected in the cluster."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["socket timeout", "commId"]
+            }
+        },
+        "AISW_CANN_HCCL_046": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "socket 接收失败",
+                "description_zh": "NPU之间使用socket连接收发控制消息（如地址、长度等）。可能原因：对端在通信算子加载时失败报错退出。",
+                "suggestion_zh": [
+                    "1. 检查所有卡的报错情况，通过训练或者plog日志检查是否存在其他业务卡存在报错退出情况，若存在请定位根因；",
+                    "2. 检查集群中是否存在Device网口通信链路不通的情况；"
+                ],
+                "cause_en": "Socket receive failed",
+                "description_en": "NPUs use socket connections to send and receive control messages (such as addresses and lengths). Possible causes: When the peer end fails to load the communication operator, an error is reported and the system exits.",
+                "suggestion_en": [
+                    "1. Check the error status of all cards. Through training or by examining the plog logs, check whether there are other service cards that have encountered errors and exited. If such cases exist, please identify the root cause.",
+                    "2. Check whether there are any Device network port communication links that are not functioning properly within the cluster."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["TransportReady timeout"]
+            }
+        },
+        "AISW_CANN_HCCL_047": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "通信算子信息一致性校验失败",
+                "description_zh": "HCCL算子加载失败：在通信算子加载时，会在需要通信的NPU之间使用socket交换算子信息(ranktable CRC值、CANN版本号、通信算子参数)，并互相check是否一致。可能有以下原因：\n  a. 和对端的ranktable文件不完全一致。\n  b. 和对端的CANN版本不一致。\n  c. 和对端的通信算子参数不一致(比如数据类型，reduce类型，算子groupname、rootrank等)。",
+                "suggestion_zh": [
+                    "1. 检查通信两端rank的ranktable、cann版本、通信参数是否一致；"
+                ],
+                "cause_en": "Communication operator information consistency check failed.",
+                "description_en": "Failed to load the HCCL operator. When the communication operator is loaded, the socket is used to exchange operator information between the NPUs that need to communicate. (ranktable CRC value, CANN version number, and communication operator parameters) and check whether the consistency is consistent with each other. The possible causes are as follows:\n  a. The ranktable file is different from the ranktable file on the peer end.\n  b. The CANN version is inconsistent with that on the peer end.\n  c. Parameters of the communication operator are inconsistent with those of the peer end. (for example, data type, reduce type, operator groupname, and rootrank).",
+                "suggestion_en": [
+                    "1. Check whether the ranktable, cann version, and communication parameters of the ranks at both ends of the communication are consistent."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["op information", "check fail"]
+            }
+        },
+        "AISW_CANN_HCCL_048": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "UB网卡初始化失败",
+                "description_zh": "HCCL初始化时，初始化NPU的UB网卡。可能有以下原因：\n  a. UB网卡linkdown。\n  b. ranktable中配置的EID/IP等和实际的不一致。\n  c. 打开设备失败。",
+                "suggestion_zh": [
+                    "1. 检查device网卡是否linkdown；",
+                    "2. 检查ranktable中该rank的EID和该rank的实际EID是否一致；"
+                ],
+                "cause_en": "UB network card initialization failed",
+                "description_en": "Initialize the UB NIC on the NPU during HCCL initialization. The possible causes are as follows:\n  a. UB Ethernet adapter linkdown.\n  b. The EID or IP address configured in the ranktable is different from the actual one.\n  c. Failed to open the device.",
+                "suggestion_en": [
+                    "1. Check whether the device network card is linkdown.",
+                    "2. Check whether the EID of the rank in the rank table matches the actual EID of that rank."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["[Init][Ra]errNo["]
+            }
+        },
+        "AISW_CANN_HCCL_049": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "创建和交换Jetty失败",
+                "description_zh": "HCCL算子加载失败：在通信算子加载时，需要在通信的两卡之间，创建和交换UB通信使用的Jetty和TP及内存等信息。可能有以下原因：\n  a. Jetty/TP等资源超限。\n  b. 管控面进程异常或管理通道异常。\n  c. 对端进程异常退出。\n  d. NPU之间网络不通。",
+                "suggestion_zh": [
+                    "1. 通过plog日志检查是否存在UB资源受限；",
+                    "2. 检查管控面是否报错；",
+                    "3. 检查是否存在其他业务卡存在报错退出情况，若存在请定位根因；",
+                    "4. 检查NPU间网络是否存在链路都在闪断或丢包等情况；"
+                ],
+                "cause_en": "Failed to create and exchange Jetty",
+                "description_en": "HCCL operator loading failure: When the communication operator is loaded, the Jetty, TP, and memory information used by the UB communication needs to be created and exchanged between the two cards. The possible causes are as follows:\n  a. The number of Jetty/TP resources exceeds the limit.\n  b. The process on the management plane is abnormal or the management channel is abnormal.\n  c. The peer process exits abnormally.\n  d. The network between NPUs is disconnected.",
+                "suggestion_en": [
+                    "1. Check the plog logs to determine if there are any UB resource limitations.",
+                    "2. Check whether the control plane reports any errors.",
+                    "3. Check whether there are any other services that have encountered errors and exited. If such services exist, please identify the root cause.",
+                    "4. Check whether the network between NPUs has any issues, such as all links experiencing intermittent disconnections or packet loss."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["failed", "call interface error[", "raReqHandle[", "rdmaHandle["]
+            }
+        },
+        "AISW_CANN_HCCL_050": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "UB传输数据任务报ErrorCQE",
+                "description_zh": "HCCL算子执行失败：在通信算子执行时，会使用UB WQE进行卡间数据收发，传输任务出错会报ErrorCQE。可能有以下原因：\n  a. 本地执行错误（UB表项配置错误，内存访问越界或发生多Bit错误，UB硬件RAS故障等）。\n  b. 远端执行错误（token/UPI校验失败，UB表项配置错误，内存访问越界或发生多Bit错误，UB硬件RAS故障等）。\n  c. 事务层ACK超时(CTP模式下网卡或交换机丢包，TP模式下端口linkdown或交换机大量丢包导致传输层重传超次)。\n  d. 事务层重试超次(目的端RC资源不足，pagefault)。",
+                "suggestion_zh": [
+                    "1. 检查端侧和交换机端口是否出现linkdown或者闪断，如出现则排查相关光模块和光纤是否故障；",
+                    "2. 检查端侧和交换机是否出现丢包或RAS报错，如出现则排查相关硬件或配置是否正确；",
+                    "3. UBoE场景检查NPU网口报文统计，是否有大量的PFC统计，如果存在则需要检查网络是否出现拥塞；",
+                    "4. UBoE场景检查NPU侧的MTU、PFC、QoS、Headroom、TC buf等配置和交换机侧是否匹配；"
+                ],
+                "cause_en": "Error CQE Is Reported in a UB Data Transmission Task",
+                "description_en": "Execution failure of the HCCL operator: When the communication operator is being executed, the UB WQE is used to transmit and receive data between cards. If a transmission task fails, ErrorCQE is reported. The possible causes are as follows:\n  a. Local execution error (UB entry configuration error, memory overwriting, multi-bit error, UB hardware RAS fault, etc.).\n  b. Remote execution error. (Token/UPI check failure, UB entry configuration error, memory overwriting, multi-bit error, UB hardware RAS fault, etc.).\n  c. The transaction layer ACK times out. (In CTP mode, packet loss occurs on the NIC or switch. In TP mode, the port linkdown or a large number of packet loss occurs on the switch, causing the number of retransmissions at the transport layer to exceed the threshold.).\n  d. The number of retry attempts at the transaction layer exceeds the threshold. (The RC resources on the destination end are insufficient, and the pagefault occurs.).",
+                "suggestion_en": [
+                    "1. Check whether the device-side and switch ports have experienced linkdown or intermittent disconnections. If such issues are found, check whether the related optical modules and optical fibers are faulty.",
+                    "2. Check whether the device-side and switch have experienced packet loss or RAS errors. If such issues are found, check whether the related hardware or configurations are correct.",
+                    "3. In the UBoE scenario, check the packet statistics of the NPU network port. Check whether there is a large number of PFC statistics. If such statistics exist, check whether the network is experiencing congestion.",
+                    "4. In the UBoE scenario, check whether the MTU, PFC, QoS, Headroom, TC buf, and other configurations on the NPU side match those on the switch side."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["errorMessage ubCqeStatus[", "local[Eid[eid[", "remoteEid[eid["]
+            }
+        },
+        "AISW_CANN_HCCL_051": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "notify wait超时",
+                "description_zh": "HCCL算子执行失败：在通信算子执行时，会使用notify进行卡间同步，如果在超时时间内本端没有收到对应的notify record，则会报notify wait超时。可能有以下原因：\n  a. 对端因其他算子执行失败报错退出（如计算算子失败，通信任务失败，event wait超时等）。\n  b. 对端业务进程异常退出。\n  c. 快慢卡，不同的卡之间执行时间差超过时间阈值。\n  d. 不同的卡上执行了不同的通信算子。\n  e. RTS调度异常。",
+                "suggestion_zh": [
+                    "1. 检查所有卡的报错情况，若有卡未报notify wait超时错误，通过训练或者plog日志检查此卡是否存在业务卡死或退出情况，若存在请定位根因；",
+                    "2. 某进程执行过慢引起其他进程超时，可通过设置环境变量HCCL_EXEC_TIMEOUT增加时长；",
+                    "3. 检查集群中是否存在Device网口通信链路不通或网络丢包等情况；"
+                ],
+                "cause_en": "Notify wait timeout",
+                "description_en": "Execution failure of the HCCL operator: When the communication operator is being executed, the Notify function is used for inter-card synchronization. If the local end does not receive the corresponding Notify record within the timeout period, a Notify wait message is reported. The possible causes are as follows:\n  a. The peer end reports an error and exits due to execution failure of other operators. (for example, operator calculation failure, communication task failure, event wait timeout).\n  b. The peer service process exits abnormally.\n  c. The execution time difference between different cards exceeds the threshold.\n  d. Different communication operators are executed on different cards.\n  e. RTS scheduling is abnormal.",
+                "suggestion_en": [
+                    "1. Check the error status of all cards. If any card does not report a notify wait timeout error, check whether the card has experienced a service deadlock or exit through training or plog log checks. If such a situation exists, please identify the root cause.",
+                    "2. If a certain process executes too slowly, causing other processes to time out, you can increase the timeout duration by setting the environment variable HCCL_EXEC_TIMEOUT.",
+                    "3. Check whether there are any issues in the cluster, such as the communication link of the Device network port being disconnected or network packet loss occurring."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["Task run failed", "base information is streamID", "taskID", "taskType", "TaskParamType", "TASK_NOTIFY_WAIT"]
+            }
+        },
+        "AISW_CANN_HCCL_052": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "SDMA任务失败",
+                "description_zh": "HCCL算子执行失败：在通信算子执行时，会使用SDMA进行片内内存搬移。可能有以下原因：\n  a. 内存地址无效导致访问越界。\n  b. reduce溢出。\n  c. 输入数据格式非法nan、inf。",
+                "suggestion_zh": [
+                    "1. 检查内存地址是否错误或者被提前释放；",
+                    "2. 检查reduce是否溢出；",
+                    "3. 检查输入数据格式是否合法；"
+                ],
+                "cause_en": "SDMA task failed",
+                "description_en": "HCCL operator execution failure: During the execution of the communication operator, the SDMA is used for on-chip memory transfer. The possible causes are as follows:\n  a. Invalid memory address causes out-of-bounds access.\n  b. Reduce overflow.\n  c. The input data format is invalid.",
+                "suggestion_en": [
+                    "1. Check whether the memory address is incorrect or has been prematurely released.",
+                    "2. Check whether the reduce operation has overflowed.",
+                    "3. Check whether the input data format is valid."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["Task run failed", "base information is streamID", "taskID", "taskType", "TaskParamType", "TASK_SDMA"]
+            }
+        },
+        "AISW_CANN_HCCL_053": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "CCU 启动失败",
+                "description_zh": "CCU启动由上层业务拉起，启动失败可能有以下原因：\n  a. 内核ub设备注册失败。\n  b. 通过mmap对72M资源空间映射，申请出的内存未按8M对齐或内存申请不出来。",
+                "suggestion_zh": [
+                    "1. 检查UB设备注册是否失败；",
+                    "2. 预留足够的内存资源供通信使用；"
+                ],
+                "cause_en": "CCU startup failure",
+                "description_en": "The CCU is started by upper-layer services. The possible causes are as follows:\n  a. The kernel ub device fails to register.\n  b. When the 72 MB resource space is mapped using the mmap, the allocated memory is not 8 MB aligned or the allocated memory cannot be obtained.",
+                "suggestion_en": [
+                    "1. Check whether the UB registration fails.",
+                    "2. Sufficient memory resources are reserved for communication."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["mmap failed"],
+                    ["ccu_u_get_res_addr failed"]
+                ]
+            }
+        },
+        "AISW_CANN_HCCL_054": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "构造CCU SQE失败",
+                "description_zh": "构造CCU SQE时，通过runtime接口申请资源。可能有以下原因：\n  a. 资源申请失败，由于资源不足，导致申请stream资源失败。\n  b. 获取内存对应的token信息失败。",
+                "suggestion_zh": [
+                    "1. 预留足够的stream/taskid资源供通信算子使用；"
+                ],
+                "cause_en": "Failed to construct CCU SQE",
+                "description_en": "When constructing the CCU SQE, apply for resources through the runtime interface. The possible causes are as follows:\n  a. Failed to apply for stream resources due to insufficient resources.\n  b. Failed to obtain the token information corresponding to the memory.",
+                "suggestion_en": [
+                    "1. Reserve sufficient stream/taskid resources for communication operators to use."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["rtStreamCreate error"]
+            }
+        },
+        "AISW_CANN_HCCL_055": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "CCU 指令模板下发失败",
+                "description_zh": "在CCU 任务加载时，需要将CCU 指令模板下发给NPU设备。可能有以下原因：\n  a. CCU指令是通过RTS的H2D的接口copy到HBM，操作失败。\n  b. 通过HDC通道指令，HCCL告诉CCU驱动从HBM copy指令块到CCU指令空间失败。",
+                "suggestion_zh": [
+                    "1. 检查HDC通道是否异常；",
+                    "2. 检查NPU HCCP进程是否异常退出；",
+                    "3. 检查NPU是否掉卡；"
+                ],
+                "cause_en": "Failed to deliver the CCU command template.",
+                "description_en": "When a CCU task is loaded, the CCU instruction template needs to be delivered to the NPU. The possible causes are as follows:\n  a. The CCU command is copied to the HBM through the H2D interface of the RTS. The operation fails.\n  b. The HCCL notifies the CCU driver of the failure to copy the instruction block from the HBM to the CCU instruction space through the HDC channel.",
+                "suggestion_en": [
+                    "1. Check whether the HDC channel is abnormal.",
+                    "2. Check whether the NPU HCCP process abnormally exits.",
+                    "3. Check whether the NPU has lost its card."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["call ra_custom_channel failed", "error code"]
+            }
+        },
+        "AISW_CANN_HCCL_056": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "CCU SQE下发失败",
+                "description_zh": "在CCU SQE加载时，会根据通信算法将CCU SQE信息下发给NPU设备。可能原因：CCU SQE是通过RTS的H2D的接口copy到HBM，操作失败。",
+                "suggestion_zh": [
+                    "1. 检查HDC通道是否异常；",
+                    "2. 检查NPU HCCP进程是否异常退出；",
+                    "3. 检查NPU是否掉卡；"
+                ],
+                "cause_en": "CCU SQE issuance failed",
+                "description_en": "When the CCU SQE is loaded, the CCU SQE information is delivered to the NPU based on the communication algorithm. Possible causes: The CCU SQE uses the H2D interface of the RTS to copy data to the HBM. The operation fails.",
+                "suggestion_en": [
+                    "1. Check whether the HDC channel is abnormal.",
+                    "2. Check whether the NPU HCCP process abnormally exits.",
+                    "3. Check whether the NPU has lost its card."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["Call rtCCULaunch failed"]
+            }
+        },
+        "AISW_CANN_HCCL_057": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "CCU mission执行失败",
+                "description_zh": "CCU mission执行失败：在mission执行时，会使用CCU指令下发的UB操作进行卡间数据通信。可能有以下原因：\n  a. UB通信失败。\n  b. CCU内部指令执行失败。",
+                "suggestion_zh": [
+                    "1. 检查端侧和交换机端口是否出现linkdown或者闪断，如出现则排查相关光模块和光纤是否故障；",
+                    "2. 检查端侧和交换机是否出现丢包或RAS报错，如出现则排查相关硬件或配置是否正确；",
+                    "3. UBoE场景检查NPU网口报文统计，是否有大量的PFC统计，如果存在则需要检查网络是否出现拥塞；",
+                    "4. UBoE场景检查NPU侧的MTU、PFC、QoS、Headroom、TC buf等配置和交换机侧是否匹配；"
+                ],
+                "cause_en": "CCU mission execution failed",
+                "description_en": "CCU mission execution failed: During mission execution, inter-card data communication is performed using the UB operations issued by the CCU command. Possible reasons include:\n  a. UB communication failure.\n  b. Internal command execution failure in CCU.",
+                "suggestion_en": [
+                    "1. Check whether the device-side and switch ports have experienced linkdown or intermittent disconnections. If such issues are found, check whether the related optical modules and optical fibers are faulty.",
+                    "2. Check whether the device-side and switch have experienced packet loss or RAS errors. If such issues are found, check whether the related hardware or configurations are correct.",
+                    "3. In the UBoE scenario, check the packet statistics of the NPU network port. Check whether there is a large number of PFC statistics. If such statistics exist, check whether the network is experiencing congestion.",
+                    "4. In the UBoE scenario, check whether the MTU, PFC, QoS, Headroom, TC buf, and other configurations on the NPU side match those on the switch side."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["missionError"]
+            }
+        },
+        "AISW_CANN_HCCL_058": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "CCU mission的任务超时",
+                "description_zh": "CCU mission执行失败：在mission执行时，会使用cke进行卡间同步，如果在超时时间内本端没有收到对应的cke通知，则会出现CCU mission超时。可能有以下原因：\n  a. 对端因其他算子执行失败报错退出（如计算算子失败，通信任务失败，event wait超时等）。\n  b. 对端业务进程异常退出。\n  c. 快慢卡，不同的卡之间执行时间差超过时间阈值。\n  d. 不同的卡上执行了不同的通信算子。",
+                "suggestion_zh": [
+                    "1. 检查所有卡的报错情况，若有卡未报CCU mission超时错误，通过训练或者plog日志检查此卡是否存在业务卡死或退出情况，若存在请定位根因；",
+                    "2. 某进程执行过慢引起其他进程超时，可通过设置环境变量HCCL_EXEC_TIMEOUT增加时长；",
+                    "3. 检查集群中是否存在Device网口通信链路不通或网络丢包等情况；"
+                ],
+                "cause_en": "The CCU task times out.",
+                "description_en": "CCU mission execution failure: During the task execution, the CCU uses the cke to synchronize data between cards. If the local end does not receive the corresponding cke notification within the timeout period, the CCU mission times out. The possible causes are as follows:\n  a. The peer end reports an error and exits due to execution failure of other operators. (for example, operator calculation failure, communication task failure, event wait timeout).\n  b. The peer service process exits abnormally.\n  c. The execution time difference between different cards exceeds the threshold.\n  d. Different communication operators are executed on different cards.",
+                "suggestion_en": [
+                    "1. Check the error status of all cards. If any card does not report a CCU mission timeout error, check whether the card has experienced a service card freeze or exit through training or plog log checks. If such a situation exists, please identify the root cause.",
+                    "2. If a certain process executes too slowly, causing other processes to time out, you can increase the timeout duration by setting the environment variable HCCL_EXEC_TIMEOUT.",
+                    "3. Check whether there are any issues in the cluster, such as the Device network port communication link being disconnected or network packet loss occurring."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["CCUM Execute Error(", "CCU Mission Task Killed("]
+            }
+        },
+        "AISW_CANN_HCCL_059": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "停止通信失败",
+                "description_zh": "HCCL通信快恢失败：在故障快恢场景，需要主动停止NPU的通信任务。可能有以下原因：\n  a. HCCP进程异常退出。\n  b. 删除Jetty失败或停止CCU失败。",
+                "suggestion_zh": [
+                    "1. 检查HCCP进程是否退出或NPU掉卡；",
+                    "2. 检查是否存在删jetty或停止CCU任务失败的日志，若存在请定位根因；"
+                ],
+                "cause_en": "Failed to stop communication",
+                "description_en": "HCCL Communication Fast Recovery Failure: In the fault fast recovery scenario, it is necessary to proactively stop the communication tasks of the NPU. Possible reasons include:\n  a. Abnormal exit of the HCCP process.\n  b. Failure to delete Jetty or failure to stop the CCU.",
+                "suggestion_en": [
+                    "1. Check whether the HCCP process has exited or whether the NPU card has been removed.",
+                    "2. Check whether there are logs indicating the deletion of Jetty or the failure to stop the CCU task. If such logs exist, please identify the root cause."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["[NsRecovery][Callback] finish suspend failed"]
+            }
+        },
+        "AISW_CANN_HCCL_060": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "恢复通信失败",
+                "description_zh": "HCCL通信快恢失败：在故障快恢场景，需要恢复NPU的通信任务。可能有以下原因：\n  a. HCCP进程异常退出。\n  b. 管控面进程异常退出。\n  c. 创建Jetty失败或下发CCU任务失败。",
+                "suggestion_zh": [
+                    "1. 检查HCCP进程是否退出或NPU掉卡；",
+                    "2. 检查管控面是否报错；",
+                    "3. 检查是否存在其他业务卡存在报错退出情况，若存在请定位根因；",
+                    "4. 检查NPU间网络是否存在链路都在闪断或丢包等情况；"
+                ],
+                "cause_en": "Failed to restore communication",
+                "description_en": "HCCL communication recovery failure: In the fault recovery scenario, the communication task of the NPU needs to be recovered. The possible causes are as follows:\n  a. The HCCP process exits abnormally.\n  b. The process on the management plane exits abnormally.\n  c. Failed to create the Jetty or deliver the CCU task.",
+                "suggestion_en": [
+                    "1. Check whether the HCCP process has exited or whether the NPU card has been removed.",
+                    "2. Check whether the control plane reports any errors.",
+                    "3. Check whether any other service cards report errors and exit. If such a situation exists, please identify the root cause.",
+                    "4. Check whether the network between NPUs has any issues, such as all links intermittently disconnecting or experiencing packet loss."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["WaitOpbasedTransportReady timeout", "commId["]
+            }
+        },
+        "AISW_CANN_HCCL_061": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "通信域销毁失败",
+                "description_zh": "通信域销毁的时候触发资源回收，可能有以下原因：\n  a. HDC通道异常。\n  b. URMA接口返错。\n  c. RTS接口返错。",
+                "suggestion_zh": [
+                    "1. 检查HDC通道是否异常；",
+                    "2. 检查URMA和RTS是否返错，若存在请定位根因；"
+                ],
+                "cause_en": "Failed to destroy the communication domain.",
+                "description_en": "When a communication domain is destroyed, resources are reclaimed. The possible causes are as follows:\n  a. The HDC channel is abnormal.\n  b. The URMA interface returns an error.\n  c. The RTS interface returns an error.",
+                "suggestion_en": [
+                    "1. Check whether the HDC channel is abnormal.",
+                    "2. Check whether URMA and RTS return errors. If errors exist, please identify the root cause."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["ubDestroyJetty failed", "jettyHandle="]
             }
         },
         "AISW_CANN_HCCP_001": {
@@ -24151,27 +24806,6 @@
             "source_file": "CANN_Plog",
             "regex": {
                 "in": ["Cmd 20 warn", "trs_dev_ioctl"]
-            }
-        },
-        "AISW_CANN_HCCL_028": {
-            "attribute": {
-                "class": "Software",
-                "component": "CANN",
-                "module": "集合通信",
-                "cause_zh": "QP建链失败",
-                "description_zh": "HCCL算子加载失败：在通信算子加载时，会在节点间，需要直接通信的两卡之间，创建RDMA通信需要使用的QP，并使用socket完成QP之间的建链。可能原因：对端进程异常退出。",
-                "suggestion_zh": [
-                    "1. 检查对端异常退出原因；"
-                ],
-                "cause_en": "QP link establishment failed",
-                "description_en": "HCCL operator loading failed: During the loading of communication operators, a QP (Queue Pair) required for RDMA communication needs to be created between nodes and between two GPUs that require direct communication. The socket is then used to establish a connection between the QPs. Possible causes include: The peer process abnormally exited.",
-                "suggestion_en": [
-                    "1. Check the reason for the abnormal exit of the peer end."
-                ]
-            },
-            "source_file": "CANN_Plog",
-            "regex": {
-                "in": ["Connect][Qp]get qp status timeout_=", "qp_status="]
             }
         },
         "AISW_CANN_OS_003": {
