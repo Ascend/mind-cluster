@@ -1,6 +1,6 @@
 # 配置和清除LLM<a name="ZH-CN_TOPIC_00000026faultdiagnosis07"></a>
 
-集群运维Agent可以对接LLM服务，对ascend-fd生成的诊断报告进行智能总结，输出简明根因报告（故障事件、根因节点、建议处置）。LLM配置为可选项，未配置或配置清除后，诊断默认返回确定性诊断报告，不影响诊断主流程。
+集群运维Agent可以对接LLM服务，对ascend-fd生成的诊断报告进行智能总结，输出简明根因报告（故障事件、根因节点、建议处置）。LLM配置为可选项，未配置或清除配置后，诊断默认返回确定性诊断报告，不影响诊断主流程。
 
 ## 添加LLM配置<a name="sectionfaultdiagnosisllmcreate"></a>
 
@@ -36,7 +36,7 @@ llm-secret updated, effective immediately
 其中：
 
 - `api-key`为必填项，由大模型服务商提供。
-- `base-url`和`model`为必填项，由大模型服务商提供，可通过`--base-url`、`--model`参数或`LLM_BASE_URL`、`LLM_MODEL`环境变量提供，否则命令会交互输入；留空将报错退出。
+- `base-url`和`model`为必填项，由大模型服务商提供，可通过`--base-url`、`--model`参数或`LLM_BASE_URL`、`LLM_MODEL`环境变量提供，否则命令将进入交互式输入；留空将报错退出。
 - 配置通过k8s Secret `llm-secret`存储，默认命名空间`mindx-dl`，可通过环境变量`ASCEND_CLUSTEROPS_NS`覆盖。
 
 ## 清除LLM配置<a name="sectionfaultdiagnosisllmclear"></a>

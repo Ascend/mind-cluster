@@ -8,14 +8,14 @@
 - **自动采集调度**：Agent Core作为故障诊断的集中控制中心，自动维护任务与Pod的映射关系，并向各计算节点的Node Collector下发采集指令。
 - **本地清洗上报**：Node Collector按采集契约从宿主机采集任务日志，本地调用ascend-fd parse完成日志清洗，并将清洗结果打包上报给Agent Core。
 - **集中诊断**：Agent Core聚合各节点上报的清洗结果，组装为诊断输入目录，调用ascend-fd diag执行集中诊断，生成诊断报告。
-- **结果缓存**：每次诊断之后缓存诊断结果，重复诊断直接返回缓存，支持通过`--refresh`参数强制刷新。
+- **结果缓存**：诊断完成后自动缓存诊断结果，重复诊断时直接返回缓存结果，支持通过`--refresh`参数强制刷新。
 - **智能总结**：可选对接LLM服务，对诊断报告进行智能总结，输出根因报告；未配置LLM时默认返回确定性诊断报告。
 
 ## 前提条件<a name="sectionfaultdiagnosisprereq"></a>
 
 - 已完成Agent Core、Node Collector和Kubectl Plugin的安装部署，操作请参见[手动安装](../../03_installation_guide/02_installation/01_manual_installation.md)章节。
 - 本机已安装kubectl，且kubeconfig具备访问集群的权限。
-- 本机已安装socat，确保`kubectl port-forward`功能正常。
+- 本机已安装socat，以确保`kubectl port-forward`功能正常。
 - 需要诊断的任务（如acjob、inferjob）已在集群中创建。若任务类型不在Agent Core默认支持范围内，请先完成[配置任务类型](./01_configuring_task_crds.md)章节的操作。
 - 需要采集任务日志（如plog）时，请先完成[配置日志采集](./02_configuring_log_collection.md)章节的操作。
 
