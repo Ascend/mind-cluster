@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
+	"github.com/smartystreets/goconvey/convey"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
@@ -35,6 +36,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
@@ -2162,5 +2164,164 @@ func TestUpdateFaultJobInfo_NotFaultJob(t *testing.T) {
 	fJob.updateFaultJobInfo(npuJob, reScheduler, plugin.ScheduleEnv{})
 	if fJob.SuperPods == nil {
 		t.Error("updateFaultJobInfo() should set fJob.SuperPods even for non-fault job")
+	}
+}
+
+// cnfFaultNodeName is the node checked by the check*Fault tests below
+const cnfFaultNodeName = "cnf-node"
+
+// cnfDpuSeparateLevel makes hasDpuNodeSeparateFault return true
+const cnfDpuSeparateLevel = "SeparateFault"
+
+// cnfLinkDownCardName is the l1 link-down card recorded into the node annotation
+const cnfLinkDownCardName = "Ascend910-0"
+
+// cnfLinkDownExpiredSeconds pushes the link-down time beyond linkDownFaultTimeout
+const cnfLinkDownExpiredSeconds = 1
+
+// cnfWithholdSeconds is a tolerance window longer than shElapsedSeconds (5),
+// so the job is still withheld inside the window
+const cnfWithholdSeconds = 10
+
+// cnfCheckNode builds a plain node and its healthy fault-node counterpart
+func cnfCheckNode() (*plugin.NPUNode, *FaultNode) {
+	node := &plugin.NPUNode{CommonNode: plugin.CommonNode{Name: cnfFaultNodeName,
+		Annotation: map[string]string{}}}
+	return node, fakeTestFaultNodeNodeHealthy(cnfFaultNodeName)
+}
+
+func TestCheckHardFault(t *testing.T) {
+	cases := []struct {
+		name         string
+		healthState  string
+		preSeparate  bool
+		rdma         bool
+		dpuDropFault bool
+		wantErr      string
+	}{
+		{"should pass when the node is healthy", "", false, false, false, ""},
+		{"should reject when the node state is node unhealthy",
+			NodeUnhealthy, false, false, false, "node is unhealthy"},
+		{"should reject when the node is in pre-separate state",
+			"", true, false, false, util.PreSeparateFaultCode},
+		{"should reject an rdma task when the dpu has card drop fault",
+			"", false, true, true, "dpu card drop fault"},
+		{"should pass a non-rdma task when the dpu has card drop fault",
+			"", false, false, true, ""},
+	}
+	for _, c := range cases {
+		convey.Convey(c.name, t, func() {
+			patches := gomonkey.ApplyFuncReturn(util.IsRdmaTask, c.rdma)
+			defer patches.Reset()
+			node, fNode := cnfCheckNode()
+			if c.preSeparate {
+				node.Annotation[util.NodeHealthyStatusKey] = util.PreSeparateFaultCode
+			}
+			fNode.NodeHealthState = c.healthState
+			if c.dpuDropFault {
+				fNode.DpuNodeEvent = &k8s.DpuNodeEvent{
+					FaultList: []k8s.DpuFaultDetail{{FaultLevel: cnfDpuSeparateLevel}}}
+			}
+			err := (&ReScheduler{}).checkHardFault(node, &api.TaskInfo{}, fNode)
+			if c.wantErr == "" {
+				convey.So(err, convey.ShouldBeNil)
+				return
+			}
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, c.wantErr)
+		})
+	}
+}
+
+func TestCheckSubHealthyFault(t *testing.T) {
+	patches := gomonkey.ApplyFuncReturn(cache.SessionElapsed, int64(shElapsedSeconds), true)
+	defer patches.Reset()
+	cases := []struct {
+		name       string
+		strategy   string
+		cardSub    bool
+		switchSub  bool
+		rdma       bool
+		dpuSub     bool
+		afterTime  int64
+		wantErr    string
+	}{
+		{"should reject when the strategy is not ignore and the node has card sub-healthy fault",
+			util.SubHealthyForceExit, true, false, false, false, cnfWithholdSeconds,
+			"NodePredicate failed"},
+		{"should reject a switch sub-healthy node within the window",
+			util.SubHealthyIgnore, false, true, false, false, cnfWithholdSeconds, "switch sub-healthy"},
+		{"should release a switch sub-healthy node after the window",
+			util.SubHealthyIgnore, false, true, false, false, shElapsedSeconds, ""},
+		{"should reject an rdma task on a dpu sub-healthy node by the non-ignore strategy",
+			util.SubHealthyForceExit, false, false, true, true, cnfWithholdSeconds,
+			"not suitable for rdma full card task"},
+		{"should reject an rdma task on a dpu sub-healthy node within the window",
+			util.SubHealthyIgnore, false, false, true, true, cnfWithholdSeconds, "dpu subhealth fault"},
+		{"should release an rdma task on a dpu sub-healthy node after the window",
+			util.SubHealthyIgnore, false, false, true, true, shElapsedSeconds, ""},
+		{"should release a healthy node within the window",
+			util.SubHealthyIgnore, false, false, false, false, cnfWithholdSeconds, ""},
+	}
+	for _, c := range cases {
+		convey.Convey(c.name, t, func() {
+			rdma := gomonkey.ApplyFuncReturn(util.IsRdmaTask, c.rdma)
+			defer rdma.Reset()
+			node, fNode := cnfCheckNode()
+			fNode.HasCardSubHealthFault = c.cardSub
+			fNode.HasSwitchSubHealthFault = c.switchSub
+			if c.dpuSub {
+				fNode.FaultDpuList = []k8s.DPUItem{{FaultList: []k8s.DpuFaultDetail{
+					{FaultLevel: SubHealthFault}}}}
+			}
+			job := shSchedulerJob(c.strategy, c.afterTime)
+			err := (&ReScheduler{}).checkSubHealthyFault(node, &api.TaskInfo{}, job, fNode)
+			if c.wantErr == "" {
+				convey.So(err, convey.ShouldBeNil)
+				return
+			}
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, c.wantErr)
+		})
+	}
+}
+
+func TestCheckLinkDownFault(t *testing.T) {
+	cases := []struct {
+		name        string
+		linkDown    bool
+		expired     bool
+		haveCards   bool
+		wantWritten bool
+	}{
+		{"should pass when the link down time is zero", false, false, false, false},
+		{"should pass when the link down fault timed out", false, true, true, false},
+		{"should record the l1 link down cards within the timeout", true, false, true, true},
+		{"should not record when there is no l1 link down card within the timeout",
+			true, false, false, false},
+	}
+	for _, c := range cases {
+		convey.Convey(c.name, t, func() {
+			node, fNode := cnfCheckNode()
+			if c.linkDown {
+				fNode.LinkDownTime = time.Now().Unix()
+			}
+			if c.expired {
+				fNode.LinkDownTime = time.Now().Unix() - linkDownFaultTimeout - cnfLinkDownExpiredSeconds
+			}
+			if c.haveCards {
+				fNode.FaultDeviceList = []k8s.FaultDeviceList{{
+					NPUName: cnfLinkDownCardName, FaultCode: linkDownFaultCode,
+					FaultHandling: NotHandleFault}}
+			}
+			err := (&ReScheduler{}).checkLinkDownFault(node, fNode)
+			convey.So(err, convey.ShouldBeNil)
+			key := fmt.Sprintf("%s-%s", fNode.NPUName, CardNetworkUnhealthy)
+			if c.wantWritten {
+				convey.So(node.Annotation[key], convey.ShouldEqual, cnfLinkDownCardName)
+				return
+			}
+			convey.So(node.Annotation[key], convey.ShouldBeEmpty)
+		})
 	}
 }
