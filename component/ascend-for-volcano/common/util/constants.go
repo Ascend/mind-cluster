@@ -212,6 +212,12 @@ const (
 )
 
 const (
+	// RaAffinityFlag is the affinity policy for ra affinity
+	RaAffinityFlag = "-ra"
+	// SpAffinityFlag is the affinity policy for sp affinity
+	SpAffinityFlag = "-sp"
+)
+const (
 	// MinAvailableKey decide minAvailable of task
 	MinAvailableKey = "huawei.com/schedule_minAvailable"
 	// RecoverPolicyPathKey decide recover policy path

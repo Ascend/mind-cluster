@@ -990,7 +990,7 @@ func (sJob SchedulerJob) rejectWholeCardOnSoftShareNode(task *api.TaskInfo, node
 // whole node; the chip-affinity handlers already withhold such cards per-card
 // for non-super-pod jobs, but super-pod jobs must be rejected up front.
 func (sJob SchedulerJob) rejectSuperPodNodeWithBackoffCards(node NPUNode) error {
-	if !sJob.IsSuperPodJob() || sJob.NPUJob == nil {
+	if !sJob.IsSuperPodJob() || sJob.NPUJob == nil || sJob.NPUTaskNum == 1 {
 		return nil
 	}
 	root := node.ChipTopo

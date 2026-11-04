@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/affinity/chip"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/policy/chip8node8sp"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a3/superpod"
@@ -192,11 +191,11 @@ func TestGet910CardHandlerNameRoutesToChipAffinity(t *testing.T) {
 	}
 }
 
-// TestGet910CardHandlerNameSingleTaskRoutesToChip verifies that a single-node
-// (NPUTaskNum==1) job under the 8p-16-sp schedule policy is routed to
-// chip-affinity, while single-task 8p-8-sp and all multi-task jobs keep their
-// super-pod handler.
-func TestGet910CardHandlerNameSingleTaskRoutesToChip(t *testing.T) {
+// TestGet910CardHandlerNameSingleTaskStripsAffinity verifies that a single-node
+// (NPUTaskNum==1) job under an -ra/-sp schedule policy is routed to the base
+// policy handler with the affinity segments stripped (e.g. chip8-node8-ra64-sp
+// becomes chip8-node8), while multi-task jobs keep their super-pod handler.
+func TestGet910CardHandlerNameSingleTaskStripsAffinity(t *testing.T) {
 	tests := []struct {
 		name        string
 		policy      string
@@ -204,31 +203,49 @@ func TestGet910CardHandlerNameSingleTaskRoutesToChip(t *testing.T) {
 		wantHandler string
 	}{
 		{
-			name:        "single task 8p-8-sp keeps super-pod handler",
+			name:        "single task 8p-8-sp routes to base 8p-8 handler",
 			policy:      util.Chip8Node8Sp,
 			npuTaskNum:  1,
-			wantHandler: chip8node8sp.SchedulePolicy8Px8Sp,
+			wantHandler: policy910HandlerMap[util.Chip8Node8],
 		},
 		{
-			name:        "single task 8p-16-sp routes to chip",
+			name:        "single task 8p-8-ra64-sp routes to base 8p-8 handler",
+			policy:      util.Chip8Node8Ra64Sp,
+			npuTaskNum:  1,
+			wantHandler: policy910HandlerMap[util.Chip8Node8],
+		},
+		{
+			name:        "single task 8p-16-sp routes to base 8p-16 handler",
 			policy:      util.Chip8Node16Sp,
 			npuTaskNum:  1,
-			wantHandler: chip.PolicyName,
+			wantHandler: policy910HandlerMap[util.Chip8Node16],
+		},
+		{
+			name:        "single task 2p-16-sp routes to base 2p-16 handler",
+			policy:      util.Chip2Node16Sp,
+			npuTaskNum:  1,
+			wantHandler: policy910HandlerMap[util.Chip2Node16],
+		},
+		{
+			name:        "single task 2p-8-sp routes to base 2p-8 handler",
+			policy:      util.Chip2Node8Sp,
+			npuTaskNum:  1,
+			wantHandler: policy910HandlerMap[util.Chip2Node8],
 		},
 		{
 			name:        "multi task 8p-8-sp keeps super-pod handler",
 			policy:      util.Chip8Node8Sp,
 			npuTaskNum:  8,
-			wantHandler: chip8node8sp.SchedulePolicy8Px8Sp,
+			wantHandler: policy910HandlerMap[util.Chip8Node8Sp],
 		},
 		{
 			name:        "multi task 8p-16-sp keeps super-pod handler",
 			policy:      util.Chip8Node16Sp,
 			npuTaskNum:  16,
-			wantHandler: chip8node8sp.SchedulePolicy8Px16Sp,
+			wantHandler: policy910HandlerMap[util.Chip8Node16Sp],
 		},
 		{
-			name:        "single task non-super-pod policy keeps own handler",
+			name:        "single task non-affinity policy keeps own handler",
 			policy:      util.Chip8Node16,
 			npuTaskNum:  1,
 			wantHandler: policy910HandlerMap[util.Chip8Node16],

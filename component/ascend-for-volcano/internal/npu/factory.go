@@ -220,16 +220,37 @@ func init910CardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPlugi
 	return handlerFunc(), true
 }
 
+func judgeSchedulePolicyIsNodeAffinityRequired(policy string) bool {
+	return strings.Contains(policy, util.RaAffinityFlag) || strings.Contains(policy, util.SpAffinityFlag)
+}
+
+// stripAffinitySegments removes the -ra and -sp affinity segments from a
+// schedule policy: chip8-node8-ra64-sp becomes chip8-node8. A single-task job
+// spans no cross-node super-pod block, so it schedules as the base policy.
+func stripAffinitySegments(policy string) string {
+	if idx := strings.Index(policy, util.RaAffinityFlag); idx >= 0 {
+		policy = policy[:idx]
+	}
+	return strings.TrimSuffix(policy, util.SpAffinityFlag)
+}
+
 func get910CardHandlerName(attr util.SchedulerJobAttr) string {
 	policy, ok := attr.Annotation[util.SchedulePolicyAnnoKey]
 	if ok {
 		handlerName, ok := policy910HandlerMap[policy]
 		if ok {
-			// single-node (one NPU task) jobs under the 8p-16-sp policy
-			// have no cross-node super-pod block, so reuse chip-affinity directly.
-			if attr.NPUTaskNum == 1 && policy == util.Chip8Node16Sp {
-				klog.V(util.LogInfoLev).Infof("single task job<%s> route schedule policy %s to %s",
-					attr.Name, policy, chip.PolicyName)
+			// single-node (one NPU task) jobs have no cross-node super-pod
+			// block, so they schedule as the base policy with the -ra/-sp
+			// affinity segments stripped (chip8-node8-ra64-sp -> chip8-node8).
+			if attr.NPUTaskNum == 1 && judgeSchedulePolicyIsNodeAffinityRequired(policy) {
+				basePolicy := stripAffinitySegments(policy)
+				if baseHandler, ok := policy910HandlerMap[basePolicy]; ok {
+					klog.V(util.LogInfoLev).Infof("single task job<%s> route schedule policy %s to %s",
+						attr.Name, basePolicy, baseHandler)
+					return baseHandler
+				}
+				klog.V(util.LogInfoLev).Infof(
+					"single task job<%s> has no base policy for %s, route to %s", attr.Name, policy, chip.PolicyName)
 				return chip.PolicyName
 			}
 			klog.V(util.LogInfoLev).Infof("get handler name for schedule policy %s success", policy)
