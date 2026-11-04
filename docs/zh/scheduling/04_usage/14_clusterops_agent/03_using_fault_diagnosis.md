@@ -1,6 +1,6 @@
 # 使用故障诊断<a name="ZH-CN_TOPIC_00000026faultdiagnosis04"></a>
 
-当训练/推理任务发生异常时，可通过`kubectl ascend_diag`命令按任务维度一键触发集群运维Agent。
+当训练/推理任务发生异常时，可通过`kubectl ascend_diag`命令按任务维度一键触发集群运维Agent的故障诊断。
 
 ## 诊断流程<a name="sectionfaultdiagnosisprocess"></a>
 
@@ -146,7 +146,7 @@ Agent Core与Node Collector分别在各自的工作目录下按任务维度落�
 - `diag-input/{host_ip}/`：各节点`ascend-fd parse`清洗产物，以机器IP命名（host_ip缺失时回退`worker{N}`），组装为集中诊断输入。
 - `diag-output/`：`ascend-fd diag`生成的诊断报告目录。
 - `cache/{namespace}_{job}.json`：每次诊断成功后缓存的诊断结果，重复诊断直接返回，支持`--refresh`强制刷新。
-- 落盘内容仅供参考，实际落盘数据可能因为收集的日志不同而增加或减少，具体落盘数据以实际为主。
+- 落盘内容仅供参考，实际落盘数据可能因收集的日志不同而增加或减少，具体以实际落盘数据为准。
 
 ### Node Collector落盘内容<a name="sectionfaultdiagnosiscollectorstorage"></a>
 
@@ -179,7 +179,7 @@ Agent Core与Node Collector分别在各自的工作目录下按任务维度落�
 
 - `collect/`：按采集契约从宿主机采集的原始日志，目录结构与采集契约中的实体一一对应（`process_log`、`dl_log`、`device_log`、`host_log`等）。
 - `parse-output/`：本地`ascend-fd parse`清洗后的产物。
-- 落盘内容仅供参考，实际落盘数据可能因为收集的日志不同而增加或减少，具体落盘数据以实际为主。
+- 落盘内容仅供参考，实际落盘数据可能因收集的日志不同而增加或减少，具体以实际落盘数据为准。
 
 ### 保留策略<a name="sectionfaultdiagnosisretention"></a>
 

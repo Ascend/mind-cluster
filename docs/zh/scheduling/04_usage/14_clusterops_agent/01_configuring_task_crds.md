@@ -1,6 +1,6 @@
 # 配置任务类型<a name="ZH-CN_TOPIC_00000026faultdiagnosis02"></a>
 
-Agent Core通过ConfigMap `agent-core-task-crds`（cluster-system命名空间）配置可检测的任务CR GVK清单。Agent Core启动时经K8s API读取一次该ConfigMap，仅跟踪这些任务CR所管理的Pod（用于任务存在性判定和Pod采集调度）。
+Agent Core通过ConfigMap `agent-core-task-crds`（cluster-system命名空间）配置可检测的任务CR GVK清单。Agent Core启动时通过K8s API读取一次该ConfigMap，仅跟踪这些任务CR所管理的Pod（用于任务存在性判定和Pod采集调度）。
 
 ## 默认支持的任务类型<a name="sectionfaultdiagnosisdefaultcr"></a>
 
