@@ -994,11 +994,15 @@ func (reScheduler *ReScheduler) checkHardFault(vcNode *plugin.NPUNode, task *api
 	return nil
 }
 
-// checkSubHealthyFault checks the sub-healthy gates: the non-ignore
-// strategy rejection, the node-level (switch) backoff within the job's
-// sub-healthy tolerance window, and the dpu sub-healthy strategy rejection.
+// checkSubHealthyFault checks the sub-healthy gates: the non-ignore strategy
+// rejection, the node-level (switch) backoff within the job's sub-healthy
+// tolerance window, the dpu sub-healthy strategy rejection, and the node-level
+// (dpu) backoff within the same window for rdma full-card tasks.
 func (reScheduler *ReScheduler) checkSubHealthyFault(vcNode *plugin.NPUNode, task *api.TaskInfo,
 	schedulerJob plugin.SchedulerJob, fNode *FaultNode) error {
+	if schedulerJob.NPUJob == nil {
+		return nil
+	}
 	if !reScheduler.isJobCanAssignToSubHealthNode(schedulerJob.SubHealthyStrategy,
 		fNode.HasCardSubHealthFault || fNode.HasSwitchSubHealthFault) {
 		return fmt.Errorf("NodePredicate failed, cardSubHealthy=%v and"+
@@ -1016,11 +1020,22 @@ func (reScheduler *ReScheduler) checkSubHealthyFault(vcNode *plugin.NPUNode, tas
 		return fmt.Errorf("%s node<%s> is switch sub-healthy and within backoff window, can not be selected",
 			util.NPUResourceUnavailableError, vcNode.Name)
 	}
-	if util.IsRdmaTask(task, vcNode.Annotation) && hasDpuNodeSubHealthFault(fNode.FaultDpuList) &&
-		schedulerJob.SubHealthyStrategy != util.SubHealthyIgnore {
-		klog.V(util.LogWarningLev).Infof("node %s has dpu subhealth fault, not suitable for rdma full card"+
-			" task %s with strategy %s", vcNode.Name, task.Name, schedulerJob.SubHealthyStrategy)
-		return fmt.Errorf("node has dpu subhealth fault, not suitable for rdma full card task")
+	// Node-level (dpu) sub-healthy gates for rdma tasks requesting full dpu
+	// cards (8): a non-ignore strategy always rejects the dpu sub-healthy node,
+	// while the ignore strategy still withholds it within the job's sub-healthy
+	// tolerance window and releases it once the window times out.
+	if util.IsRdmaTask(task, vcNode.Annotation) && hasDpuNodeSubHealthFault(fNode.FaultDpuList) {
+		if schedulerJob.SubHealthyStrategy != util.SubHealthyIgnore {
+			klog.V(util.LogWarningLev).Infof("node %s has dpu subhealth fault, not suitable for rdma full card"+
+				" task %s with strategy %s", vcNode.Name, task.Name, schedulerJob.SubHealthyStrategy)
+			return fmt.Errorf("node has dpu subhealth fault, not suitable for rdma full card task")
+		}
+		if !subHealthyToleranceAllows(schedulerJob) {
+			klog.V(util.LogInfoLev).Infof("node %s has dpu subhealth fault, not suitable for rdma full card"+
+				" task %s within backoff window", vcNode.Name, task.Name)
+			return fmt.Errorf("%s node<%s> has dpu subhealth fault and within backoff window, "+
+				"can not be selected for rdma full card task", util.NPUResourceUnavailableError, vcNode.Name)
+		}
 	}
 	return nil
 }
@@ -1029,7 +1044,6 @@ func (reScheduler *ReScheduler) checkSubHealthyFault(vcNode *plugin.NPUNode, tas
 // l1-link-down cards are recorded into the node annotation for later filters.
 func (reScheduler *ReScheduler) checkLinkDownFault(vcNode *plugin.NPUNode, fNode *FaultNode) error {
 	if fNode.LinkDownTime == 0 {
-		klog.V(util.LogDebugLev).Infof("node %s is not fault node, check success", vcNode.Name)
 		return nil
 	}
 	if time.Now().Unix()-fNode.LinkDownTime < linkDownFaultTimeout {
