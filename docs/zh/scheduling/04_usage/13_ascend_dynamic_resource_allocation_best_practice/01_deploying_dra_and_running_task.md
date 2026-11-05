@@ -6,7 +6,7 @@ Ascend DRA基于Kubernetes动态资源分配（Dynamic Resource Allocation，DRA
 
 ## 前提条件<a name="section_dra_prereq"></a>
 
-- 已完成Volcano、Ascend Docker Runtime、Ascend DRA组件的安装部署，详细请参见[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)。
+- 已完成Volcano、Ascend DRA组件的安装部署，详细请参见[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)。Ascend DRA组件通过CDI机制向业务容器注入NPU设备，不安装也不依赖Ascend Docker Runtime。
 - NPU节点已安装NPU驱动与固件，且设备运行正常。
 
 ## 操作步骤<a name="section_dra_steps"></a>
@@ -125,11 +125,11 @@ Ascend DRA基于Kubernetes动态资源分配（Dynamic Resource Allocation，DRA
 
    ```text
    PrepareResourceClaims is called, number of claims: 1
-   devices prepared for claim <claim-uid>, count=1, cdiIDs=[npu.huawei.com/ascend910=0]
+   devices prepared for claim <claim-uid>, count=1, cdiIDs=[ascend.com/npu=0]
    Returning newly prepared devices for claim '<claim-uid>', count=1
    ```
 
-   其中，`<claim-uid>`为ResourceClaim的UID，cdiIDs为CDI设备ID列表，格式为`<driverName>/<class>=<index>`，driverName取值为`npu.huawei.com`。
+   其中，`<claim-uid>`为ResourceClaim的UID，cdiIDs为CDI设备ID列表，格式为`<driverName>/<class>=<index>`，driverName取值为`ascend.com`。
 
 5. 查看生成的CDI（Container Device Interface） spec文件。
 
@@ -283,4 +283,4 @@ Ascend DRA基于Kubernetes动态资源分配（Dynamic Resource Allocation，DRA
 - **幂等性**：Prepare和Unprepare操作均支持幂等。对已Prepare的Claim再次Prepare会返回相同的分配结果；对已Unprepare的Claim再次Unprepare为空操作，不会报错。
 - **Checkpoint机制**：DRA插件通过Checkpoint文件（`checkpoint.json`）持久化Claim与设备的分配关系。插件重启后从Checkpoint恢复分配状态，确保已Prepare的Claim不受影响。
 - **DeviceClass**：DRA组件部署时自动创建名为`npu.huawei.com`的DeviceClass，其选择器匹配driver为`npu.huawei.com`的所有设备。用户无需手动创建DeviceClass。
-- **与Ascend Device Plugin的关系**：DRA和Device Plugin是两种不同的设备接入方式，互斥使用。使用DRA方式的节点无需部署Ascend Device Plugin。
+- **与Ascend Device Plugin的关系**：DRA和Device Plugin是两种不同的设备接入方式，两者功能在同一节点上互斥，无需同时部署。

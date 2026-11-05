@@ -87,7 +87,7 @@ Ascend DRA启动时枚举本节点全部NPU设备，按K8s资源API（resource.k
 | chipName | string | 芯片名称 | 取自设备管理器GetChipInfo的返回值。获取失败时为空字符串，但属性仍会上报。 |
 
 > [!NOTE]
-> 当前Ascend910与Ascend950两类芯片代际上报的属性集合一致，均为type、physicId、chipName三项。新增芯片代际如需扩展属性，在对应代际的DeviceAttributes方法中返回即可，不影响上报链路。
+> 当前Ascend950芯片代际上报的属性集合为type、physicId、chipName三项。新增芯片代际如需扩展属性，在对应代际的DeviceAttributes方法中返回即可，不影响上报链路。
 
 **ResourceSlice示例：**
 
@@ -110,12 +110,12 @@ spec:
       attributes:
         type: "npu"
         physicId: 0
-        chipName: "Ascend910B..."
+        chipName: "Ascend950..."
     - name: npu-1
       attributes:
         type: "npu"
         physicId: 1
-        chipName: "Ascend910B..."
+        chipName: "Ascend950..."
 ```
 
 > [!NOTE]

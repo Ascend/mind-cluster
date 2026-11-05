@@ -23,7 +23,7 @@
 </tr>
 <tr id="row0414dra240015"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240015"><a name="p0414dra240015"></a><a name="p0414dra240015"></a>容器运行时</p>
 </td>
-<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240016"><a name="p0414dra240016"></a><a name="p0414dra240016"></a>组件通过CDI（Container Device Interface）向业务容器注入NPU设备，要求计算节点的容器运行时支持CDI，如containerd 1.7.0及以上版本。</p>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240016"><a name="p0414dra240016"></a><a name="p0414dra240016"></a>组件通过CDI（Container Device Interface）向业务容器注入NPU设备，要求计算节点的容器运行时支持CDI，如containerd 1.7.0及以上版本；不支持以cri-docker（cri-dockerd）作为容器运行时。</p>
 </td>
 </tr>
 <tr id="row0414dra240017"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240017"><a name="p0414dra240017"></a><a name="p0414dra240017"></a>NPU驱动</p>
@@ -31,14 +31,25 @@
 <td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240018"><a name="p0414dra240018"></a><a name="p0414dra240018"></a>组件会调用NPU驱动的相关接口。如果要升级驱动，请先停止业务任务，再停止组件容器服务。</p>
 </td>
 </tr>
+<tr id="row0414dra240025"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240025"><a name="p0414dra240025"></a><a name="p0414dra240025"></a>组件依赖</p>
+</td>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240026"><a name="p0414dra240026"></a><a name="p0414dra240026"></a>组件通过CDI机制向业务容器注入NPU设备，不安装也不依赖Ascend Docker Runtime。</p>
+</td>
+</tr>
+<tr id="row0414dra240027"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240027"><a name="p0414dra240027"></a><a name="p0414dra240027"></a>与Ascend Device Plugin互斥</p>
+</td>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240028"><a name="p0414dra240028"></a><a name="p0414dra240028"></a>Ascend DRA与Ascend Device Plugin是两种不同的设备接入方式，两者功能在同一节点上互斥，无需同时部署。</p>
+</td>
+</tr>
 <tr id="row0414dra240019"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240019"><a name="p0414dra240019"></a><a name="p0414dra240019"></a>部署形态</p>
 </td>
 <td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240020"><a name="p0414dra240020"></a><a name="p0414dra240020"></a>组件以特权容器方式运行，运行用户为root，并且挂载了宿主机的NPU驱动目录、kubelet插件目录与设备目录，请勿修改YAML文件中DaemonSet的名称及其挂载配置，否则组件无法正常工作。</p>
 </td>
 </tr>
-<tr id="row0414dra240021"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240021"><a name="p0414dra240021"></a><a name="p0414dra240021"></a>支持芯片</p>
+<tr id="row0414dra240021"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240021"><a name="p0414dra240021"></a><a name="p0414dra240021"></a>支持产品形态</p>
 </td>
-<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240022"><a name="p0414dra240022"></a><a name="p0414dra240022"></a>支持Ascend910系列和Ascend950系列处理器。</p>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240022"><a name="p0414dra240022"></a><a name="p0414dra240022"></a>支持的产品形态如下：</p>
+<a name="ul0414dra240021"></a><a name="ul0414dra240021"></a><ul id="ul0414dra240021"><li><term>Ascend 950PR&amp;950DT系列产品</term></li></ul>
 </td>
 </tr>
 <tr id="row0414dra240023"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240023"><a name="p0414dra240023"></a><a name="p0414dra240023"></a>健康检查端口</p>
