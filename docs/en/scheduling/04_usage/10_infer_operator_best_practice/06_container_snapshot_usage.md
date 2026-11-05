@@ -17,21 +17,22 @@ The environment requirements for using the container snapshot feature are as fol
 
 **Prerequisites**
 
-- To use the container snapshot feature, ensure that the following components are installed.
-    - Volcano (This feature supports only Volcano as the scheduler. Other schedulers are not supported.)
-    - Ascend Device Plugin
-    - Ascend Docker Runtime
-    - ClusterD
-    - NodeD
-    - Infer Operator
+To use the container snapshot feature, ensure that the following components are installed.
 
-- If they are not installed, refer to [Installation and Deployment](../../03_installation_guide/02_installation/00_helm_installation.md) for the procedure. Note that some installation steps need to be modified for NodeD and Infer Operator.
+- Volcano (This feature supports only Volcano as the scheduler. Other schedulers are not supported.)
+- Ascend Device Plugin
+- Ascend Docker Runtime
+- ClusterD
+- NodeD
+- Infer Operator
 
-  - NodeD
-    - The NodeD image must be built using the `Dockerfile-container-snapshot` Dockerfile corresponding to the container snapshot feature in the component package.
-    - The startup YAML of NodeD must be `noded-container-snapshot.yaml` corresponding to the container snapshot feature in the component package. You can modify the CPU and memory resource requests and limits based on the actual snapshot size. In addition, the snapshot path `/user/snapshot` must be configured based on the actual situation and must be a shared storage path.
+If they are not installed, refer to [Installation and Deployment](../../03_installation_guide/02_installation/00_helm_installation.md) for the procedure. Note that some installation steps need to be modified for NodeD and Infer Operator.
 
-        ```Yaml
+- NodeD
+  - The NodeD image must be built using the `Dockerfile-container-snapshot` Dockerfile corresponding to the container snapshot feature in the component package.
+  - The startup YAML of NodeD must be `noded-container-snapshot.yaml` corresponding to the container snapshot feature in the component package. You can modify the CPU and memory resource requests and limits based on the actual snapshot size. In addition, the snapshot path `/user/snapshot` must be configured based on the actual situation and must be a shared storage path.
+
+      ```Yaml
       ...
           volumeMounts:
       ...
@@ -45,27 +46,28 @@ The environment requirements for using the container snapshot feature are as fol
             path: /user/snapshot
             type: Directory
       ...
-        ```
+      ```
 
-  - Infer Operator
-     - Add the snapshot path mount item to the startup YAML of Infer Operator, where `mountPath` and `hostPath` are configured according to the actual situation and must be the same as the snapshot path of NodeD. In addition, `snapshotTimeout` (>= 1, in minutes) can be configured, with a default of 60 minutes.
+- Infer Operator
 
-        ```Yaml
-           - name: image-path
-             mountPath: /user/snapshot
+  Add the snapshot path mount item to the startup YAML of Infer Operator, where `mountPath` and `hostPath` are configured according to the actual situation and must be the same as the snapshot path of NodeD. In addition, `snapshotTimeout` (>= 1, in minutes) can be configured, with a default of 60 minutes.
 
-           - name: image-path
-             hostPath:
-               path: /user/snapshot
-               type: Directory
+  ```Yaml
+  - name: image-path
+    mountPath: /user/snapshot
 
-           containers:
-             - command: [ "/bin/bash", "-c", "--"]
-               args: [ "infer-operator
-                       --logFile=/var/log/mindx-dl/infer-operator/infer-operator.log
-                       --logLevel=0 --snapshotTimeout=120
-                       --enable-healthz=true --healthz-address=11254" ]
-        ```
+  - name: image-path
+    hostPath:
+      path: /user/snapshot
+      type: Directory
+
+  containers:
+    - command: [ "/bin/bash", "-c", "--"]
+      args: [ "infer-operator
+              --logFile=/var/log/mindx-dl/infer-operator/infer-operator.log
+              --logLevel=0 --snapshotTimeout=120
+              --enable-healthz=true --healthz-address=11254" ]
+  ```
 
 **System Configuration**
 
@@ -84,27 +86,27 @@ modprobe ip6table_filter
 
 **Usage Notes**
 
-- Container snapshot supports only jobs whose workload is of the `StatefulSet` type. For such jobs, the label `infer.huawei.com/container-snapshot` that enables container snapshot must be added and set to `true`. In addition, the same snapshot path as that of NodeD must be configured in the container environment variables, as shown below:
+Container snapshot supports only jobs whose workload is of the `StatefulSet` type. For such jobs, the label `infer.huawei.com/container-snapshot` that enables container snapshot must be added and set to `true`. In addition, the same snapshot path as that of NodeD must be configured in the container environment variables, as shown below:
 
-   ```Yaml
-      - name: prefill
-        replicas: 1
-        workload:
-          apiVersion: apps/v1
-          kind: StatefulSet
-        metadata:
-          labels:
-            infer.huawei.com/container-snapshot: 'true'
+```Yaml
+  - name: prefill
+    replicas: 1
+    workload:
+      apiVersion: apps/v1
+      kind: StatefulSet
+    metadata:
+      labels:
+        infer.huawei.com/container-snapshot: 'true'
 
-      ...
-        spec:
-          containers:
-          - env:
-            - name: host_snapshot_dir_path
-              value: "/user/snapshot"
-   ```
+  ...
+    spec:
+      containers:
+      - env:
+        - name: host_snapshot_dir_path
+          value: "/user/snapshot"
+```
 
-For details about inference job deployment and usage, see [Usage Instructions](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/features/container_snapshot.md). The following demonstration only shows the usage process.
+For details about inference job deployment and usage, see [Usage Instructions](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/features/container_snapshot.md). The following example only shows the usage process.
 
 **Supported Product Forms**
 
@@ -117,7 +119,7 @@ The following products support container snapshots.
 
 ### Viewing Job Processes After a Job Is Successfully Delivered
 
-Run the following command to view the Pod running status.
+After the job is delivered, view the Pod running status.
 
 ```shell
 kubectl get pod --all-namespaces
@@ -182,9 +184,9 @@ If the Pod fails to restart, check the fault in the restore log of Ascend Docker
 [root@worker]# tail -f restore.log
 ```
 
-### Ascend Docker Runtime Log Shows Successful Container Restoration
+### Viewing Ascend Docker Runtime Logs
 
-View `runtime-run.log` in the Ascend Docker Runtime log directory:
+View `runtime-run.log` in the Ascend Docker Runtime log directory, which indicates a successful container recovery:
 
 ```ColdFusion
 ...

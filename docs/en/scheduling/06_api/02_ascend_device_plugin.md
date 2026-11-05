@@ -6,7 +6,7 @@
 
 The NPU information reported by Ascend Device Plugin is shown in [Table 1](#table13817185391117).
 
-**Table 1**  DeviceInfoCfg
+**Table 1** DeviceInfoCfg
 
 <a name="table13817185391117"></a>
 
@@ -110,6 +110,7 @@ The NPU device fault information reported by Ascend Device Plugin is shown in [T
 |reportingComponent|Event controller.|Unique value: device-plugin|
 |reportingInstance|Event reporting instance.|String. Takes the Pod name of the current Ascend Device Plugin.|
 
+<!-- npu="A3,910b,910,310p" id1 -->
 **deviceNameCustomization.json<a name="section579455712489"></a>**
 
 `deviceNameCustomization.json` supports customizing device names. When building the Ascend Device Plugin image, place this file in the same directory as the binary package to change the resource type and resource name displayed by Ascend Device Plugin to custom names. <term>Ascend 950PR&950DT products</term> do not currently support this feature.
@@ -124,6 +125,7 @@ The NPU device fault information reported by Ascend Device Plugin is shown in [T
 |DevicePublicType|Type displayed externally for the device, for example, huawei.com/Ascend910. Mandatory.|Only the xxx.xxx/xxx format is supported. xxx can be uppercase and lowercase letters and digits, with a length range of 10 to 32 characters.|
 |DevicePublicNamePre|Prefix of the device name displayed externally, for example, Ascend910-. For the actual displayed name, Ascend Device Plugin appends the physical ID of the chip after the prefix. Mandatory.|Can contain uppercase and lowercase letters, hyphens (-), and digits. Must start with an uppercase or lowercase letter. Length range: 2 to 16 characters.|
 |PodConfigurationName|Details of the mounted chip information displayed in the Pod annotation. Mandatory when ResourceType is Ascend910.|Can contain uppercase and lowercase letters, hyphens (-), slashes (/), dots (.), and digits. Must start with an uppercase or lowercase letter and end with an uppercase or lowercase letter or digit. Length range: 10 to 63 characters.|
+<!-- end id1 -->
 
 ## Job Information<a name="ZH-CN_TOPIC_0000002479226860"></a>
 
@@ -131,185 +133,18 @@ The NPU device fault information reported by Ascend Device Plugin is shown in [T
 
 **Table 1** fault-config-<job-name\>
 
-<a name="table68216761214"></a>
+<a name="table6821676121423"></a>
 
 |Field |Description|Value|Remarks|
 |--|--|--|--|
 |fault-npus|Rank information of the faulty chip in a failed job.|String|-|
 |checkCode|Check code.|String|-|
 
-**reset-config-<job-name\> <a name="section3394547123916"></a>**
-
-**Table 2** reset-config-<job-name\>
-
-<a name="table1213115712136"></a>
-<table><thead align="left"><tr id="row3132772132"><th class="cellrowborder" valign="top" width="15.950000000000001%" id="mcps1.2.6.1.1"><p id="p1022487193411"><a name="p1022487193411"></a><a name="p1022487193411"></a>Field</p>
-</th>
-<th class="cellrowborder" valign="top" width="14.69%" id="mcps1.2.6.1.2"><p id="p1313212741314"><a name="p1313212741314"></a><a name="p1313212741314"></a>Parameter</p>
-</th>
-<th class="cellrowborder" valign="top" width="24.23%" id="mcps1.2.6.1.3"><p id="p513317151314"><a name="p513317151314"></a><a name="p513317151314"></a>Meaning</p>
-</th>
-<th class="cellrowborder" valign="top" width="28.82%" id="mcps1.2.6.1.4"><p id="p313315721314"><a name="p313315721314"></a><a name="p313315721314"></a>Value</p>
-</th>
-<th class="cellrowborder" valign="top" width="16.31%" id="mcps1.2.6.1.5"><p id="p1313327191318"><a name="p1313327191318"></a><a name="p1313327191318"></a>Remarks</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row41336711317"><td class="cellrowborder" rowspan="13" valign="top" width="15.950000000000001%" headers="mcps1.2.6.1.1 "><p id="p20565164533410"><a name="p20565164533410"></a><a name="p20565164533410"></a>reset.json</p>
-<p id="p111446396589"><a name="p111446396589"></a><a name="p111446396589"></a></p>
-<p id="p1811413311215"><a name="p1811413311215"></a><a name="p1811413311215"></a></p>
-<p id="p0452951162310"><a name="p0452951162310"></a><a name="p0452951162310"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="14.69%" headers="mcps1.2.6.1.2 "><p id="p813420781315"><a name="p813420781315"></a><a name="p813420781315"></a>RankList</p>
-</td>
-<td class="cellrowborder" valign="top" width="24.23%" headers="mcps1.2.6.1.3 "><p id="p121346712134"><a name="p121346712134"></a><a name="p121346712134"></a>Chip list</p>
-</td>
-<td class="cellrowborder" valign="top" width="28.82%" headers="mcps1.2.6.1.4 "><p id="p5134137121315"><a name="p5134137121315"></a><a name="p5134137121315"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="16.31%" headers="mcps1.2.6.1.5 "><p id="p1513427131320"><a name="p1513427131320"></a><a name="p1513427131320"></a>-</p>
-</td>
-</tr>
-<tr id="row21341174135"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p171346791316"><a name="p171346791316"></a><a name="p171346791316"></a>-RankId</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p3134177131313"><a name="p3134177131313"></a><a name="p3134177131313"></a>Rank information used by the failed job</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p1413587161310"><a name="p1413587161310"></a><a name="p1413587161310"></a>Integer</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p1413511721318"><a name="p1413511721318"></a><a name="p1413511721318"></a>-</p>
-</td>
-</tr>
-<tr id="row1713512717138"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p161352712139"><a name="p161352712139"></a><a name="p161352712139"></a>-LogicId</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p1135127181319"><a name="p1135127181319"></a><a name="p1135127181319"></a>Chip logic ID</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p15135157131311"><a name="p15135157131311"></a><a name="p15135157131311"></a>32-bit integer</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p181366715137"><a name="p181366715137"></a><a name="p181366715137"></a>-</p>
-</td>
-</tr>
-<tr id="row013914719136"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1313927191317"><a name="p1313927191317"></a><a name="p1313927191317"></a>-Status</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p8139177171315"><a name="p8139177171315"></a><a name="p8139177171315"></a>Chip status</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><a name="ul8436530113"></a><a name="ul8436530113"></a><ul id="ul8436530113"><li>unrecovered: Not recovered</li><li>recovered: Recovery succeeded</li><li>failed: Recovery failed</li></ul>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p11394791316"><a name="p11394791316"></a><a name="p11394791316"></a>-</p>
-</td>
-</tr>
-<tr id="row814016761315"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1814015719134"><a name="p1814015719134"></a><a name="p1814015719134"></a>-Policy</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p11140676132"><a name="p11140676132"></a><a name="p11140676132"></a>Hot reset policy</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><a name="ul1156918243817"></a><a name="ul1156918243817"></a><ul id="ul1156918243817"><li>empty: No fault</li><li>ignore: Ignore the fault</li><li>restart_request: Re-execute the current request</li><li>restart: Re-execute the training task</li><li>free_reset: When no job is running on the NPU, the device needs to be reset</li><li>reset: The device needs to be reset</li><li>isolate: The device needs to be isolated</li></ul>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p11140672134"><a name="p11140672134"></a><a name="p11140672134"></a>-</p>
-</td>
-</tr>
-<tr id="row151401717139"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p101413711136"><a name="p101413711136"></a><a name="p101413711136"></a>-InitialPolicy</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p12141176132"><a name="p12141176132"></a><a name="p12141176132"></a>Initial hot reset policy</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><a name="ul16378161213281"></a><a name="ul16378161213281"></a><ul id="ul16378161213281"><li>empty: No fault</li><li>ignore: Ignore the fault</li><li>restart_request: Re-execute the current request</li><li>restart: Re-execute the training job</li><li>free_reset: When no job is running on the NPU, the device needs to be reset</li><li>reset: The device needs to be reset</li><li>isolate: The device needs to be isolated</li></ul>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p171419712133"><a name="p171419712133"></a><a name="p171419712133"></a>-</p>
-</td>
-</tr>
-<tr id="row2141187121312"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p3141197161312"><a name="p3141197161312"></a><a name="p3141197161312"></a>-ErrorCode</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p19141576138"><a name="p19141576138"></a><a name="p19141576138"></a>Decimal fault code</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p151429710139"><a name="p151429710139"></a><a name="p151429710139"></a>64-bit integer array</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p1314257131311"><a name="p1314257131311"></a><a name="p1314257131311"></a>-</p>
-</td>
-</tr>
-<tr id="row14142137191314"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p171421973132"><a name="p171421973132"></a><a name="p171421973132"></a>-ErrorCodeHex</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p0142577133"><a name="p0142577133"></a><a name="p0142577133"></a>Hexadecimal fault code</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p8142177131320"><a name="p8142177131320"></a><a name="p8142177131320"></a>String</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p31421070133"><a name="p31421070133"></a><a name="p31421070133"></a>-</p>
-</td>
-</tr>
-<tr id="row41431139195820"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p3233191110537"><a name="p3233191110537"></a><a name="p3233191110537"></a>GracefulExit</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p321511543920"><a name="p321511543920"></a><a name="p321511543920"></a>Manage training processes</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p33363655012"><a name="p33363655012"></a><a name="p33363655012"></a>0 or 1</p>
-<a name="ul7532185975011"></a><a name="ul7532185975011"></a><ul id="ul7532185975011"><li>Value 1: Terminate all training processes</li><li>Value 0: No action</li></ul>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p921615511390"><a name="p921615511390"></a><a name="p921615511390"></a>-</p>
-</td>
-</tr>
-<tr id="row167775084714"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p108353401829"><a name="p108353401829"></a><a name="p108353401829"></a>UpdateTime</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p118356401224"><a name="p118356401224"></a><a name="p118356401224"></a>ConfigMap update time</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p58359402214"><a name="p58359402214"></a><a name="p58359402214"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p7835114017213"><a name="p7835114017213"></a><a name="p7835114017213"></a>-</p>
-</td>
-</tr>
-<tr id="row189371153471"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p2066862744"><a name="p2066862744"></a><a name="p2066862744"></a>RetryTime</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p126681521149"><a name="p126681521149"></a><a name="p126681521149"></a>Number of Pod rescheduling attempts</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p66683214418"><a name="p66683214418"></a><a name="p66683214418"></a>Integer</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p18668142844"><a name="p18668142844"></a><a name="p18668142844"></a>-</p>
-</td>
-</tr>
-<tr id="row13113203322"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1254115251666"><a name="p1254115251666"></a><a name="p1254115251666"></a>FaultFlushing</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p7541192512618"><a name="p7541192512618"></a><a name="p7541192512618"></a>Informs <span id="ph14256162281217"><a name="ph14256162281217"></a><a name="ph14256162281217"></a>Elastic Agent</span> whether a fault is currently being flushed</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p13813147101216"><a name="p13813147101216"></a><a name="p13813147101216"></a>Value is true or false</p>
-<a name="ul1563191521213"></a><a name="ul1563191521213"></a><ul id="ul1563191521213"><li>true: Indicates a fault is being flushed</li><li>false: Indicates no fault is being flushed currently</li></ul>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p19951631131314"><a name="p19951631131314"></a><a name="p19951631131314"></a><span id="ph952618296564"><a name="ph952618296564"></a><a name="ph952618296564"></a>Elastic Agent</span> needs to wait until this field is false and the faulty RankList contains no faults for this node before starting the training process</p>
-</td>
-</tr>
-<tr id="row18452151202319"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p64521951162319"><a name="p64521951162319"></a><a name="p64521951162319"></a><span>RestartFaultProcess</span></p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p17453851172311"><a name="p17453851172311"></a><a name="p17453851172311"></a><span>Informs </span><span id="ph262783362516"><a name="ph262783362516"></a><a name="ph262783362516"></a>Elastic Agent</span><span> whether to restart only the faulty process on this node</span></p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p2012431813258"><a name="p2012431813258"></a><a name="p2012431813258"></a><span>Value is true or false</span></p>
-<a name="ul5650162018256"></a><a name="ul5650162018256"></a><ul id="ul5650162018256"><li><span>true: Indicates not to exit </span><span id="ph8849103812259"><a name="ph8849103812259"></a><a name="ph8849103812259"></a>Elastic Agent</span><span>, only restart the faulty process on this node</span></li><li><span>false: When this node has a faulty process, exit </span><span id="ph1888614312613"><a name="ph1888614312613"></a><a name="ph1888614312613"></a>Elastic Agent</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p94534513233"><a name="p94534513233"></a><a name="p94534513233"></a>-</p>
-</td>
-</tr>
-<tr id="row859053413417"><td class="cellrowborder" valign="top" width="15.950000000000001%" headers="mcps1.2.6.1.1 "><p id="p844941513297"><a name="p844941513297"></a><a name="p844941513297"></a>restartType</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.69%" headers="mcps1.2.6.1.2 "><p id="p220916992912"><a name="p220916992912"></a><a name="p220916992912"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="24.23%" headers="mcps1.2.6.1.3 "><p id="p1820909182911"><a name="p1820909182911"></a><a name="p1820909182911"></a>Type of reset.json update</p>
-</td>
-<td class="cellrowborder" valign="top" width="28.82%" headers="mcps1.2.6.1.4 "><p id="p15209596295"><a name="p15209596295"></a><a name="p15209596295"></a>podReschedule or hotReset</p>
-</td>
-<td class="cellrowborder" valign="top" width="16.31%" headers="mcps1.2.6.1.5 "><p id="p95471047133013"><a name="p95471047133013"></a><a name="p95471047133013"></a>Value is podReschedule for single Pod rescheduling, and hotReset for hot recovery scenarios</p>
-</td>
-</tr>
-<tr id="row165081157153910"><td class="cellrowborder" valign="top" width="15.950000000000001%" headers="mcps1.2.6.1.1 "><p id="p750805713392"><a name="p750805713392"></a><a name="p750805713392"></a>checkCode</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.69%" headers="mcps1.2.6.1.2 "><p id="p0508145711393"><a name="p0508145711393"></a><a name="p0508145711393"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="24.23%" headers="mcps1.2.6.1.3 "><p id="p250845783917"><a name="p250845783917"></a><a name="p250845783917"></a>Check code</p>
-</td>
-<td class="cellrowborder" valign="top" width="28.82%" headers="mcps1.2.6.1.4 "><p id="p750835713919"><a name="p750835713919"></a><a name="p750835713919"></a>String</p>
-</td>
-<td class="cellrowborder" valign="top" width="16.31%" headers="mcps1.2.6.1.5 "><p id="p175081157113917"><a name="p175081157113917"></a><a name="p175081157113917"></a>-</p>
-</td>
-</tr>
-</tbody>
-</table>
-
 **data-trace-<job_name\><a name="section19954856135618"></a>**
 
 Stores the `on`/`off` status of various tracing types for the current job. It is mounted to the compute node by Ascend Device Plugin for storage. After the training container mounts this file, TaskD reads it to trace various data.
 
-**Table 3** data-trace-<job_name\> ConfigMap
+**Table 2** data-trace-<job_name\> ConfigMap
 
 <a name="table97521457610"></a>
 
@@ -333,7 +168,7 @@ Stores the `on`/`off` status of various tracing types for the current job. It is
 
 Stores the save path and start/stop switch for the job's iteration latency and grouping information. When starting a job, users can configure ConfigMap parameters through the CCAE management platform to determine whether the job has degraded.
 
-**Table 4** steptime-dtpgroup ConfigMap
+**Table 3** steptime-dtpgroup ConfigMap
 
 <a name="table3610611144615"></a>
 

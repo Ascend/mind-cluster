@@ -113,7 +113,7 @@ After ClusterD starts, the following ConfigMaps are created:
 |FaultCode|Fault code, used to identify the fault type.|
 |Time|First fault detection time, in Unix millisecond timestamp format.|
 |Description|Fault description information.|
-|FaultLevel|Fault level.
+|FaultLevel|Fault level.|
 
 ## statistic-fault-info<a name="section1153232554520"></a>
 

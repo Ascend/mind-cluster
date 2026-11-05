@@ -18,12 +18,12 @@ Before installing the DRA driver, familiarize yourself with the related constrai
 </thead>
 <tbody><tr id="row0414dra240013"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240013"><a name="p0414dra240013"></a><a name="p0414dra240013"></a>K8s version</p>
 </td>
-<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240014"><a name="p0414dra240014"></a><a name="p0414dra240014"></a>The component YAML file uses the resource.k8s.io/v1 and admissionregistration.k8s.io/v1 APIs, which require K8s 1.34.x to 1.36.x. The component cannot be installed on a K8s cluster of an earlier version.</p>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240014"><a name="p0414dra240014"></a><a name="p0414dra240014"></a>The component YAML file uses the resource.k8s.io/v1 and admissionregistration.k8s.io/v1 APIs, which require K8s 1.36.x. The component cannot be installed on a K8s cluster of an earlier version.</p>
 </td>
 </tr>
 <tr id="row0414dra240015"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240015"><a name="p0414dra240015"></a><a name="p0414dra240015"></a>Container runtime</p>
 </td>
-<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240016"><a name="p0414dra240016"></a><a name="p0414dra240016"></a>The component injects NPU devices into service containers through CDI (Container Device Interface), which requires the container runtime on the compute node to support CDI, for example, containerd 1.7.0 or later.</p>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240016"><a name="p0414dra240016"></a><a name="p0414dra240016"></a>The component injects NPU devices into service containers through CDI (Container Device Interface), which requires the container runtime on the compute node to support CDI, for example, containerd 1.7.0 or later. cri-docker (cri-dockerd) cannot be used as the container runtime.</p>
 </td>
 </tr>
 <tr id="row0414dra240017"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240017"><a name="p0414dra240017"></a><a name="p0414dra240017"></a>NPU driver</p>
@@ -31,14 +31,25 @@ Before installing the DRA driver, familiarize yourself with the related constrai
 <td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240018"><a name="p0414dra240018"></a><a name="p0414dra240018"></a>The component calls related interfaces of the NPU driver. To upgrade the driver, stop service jobs first, and then stop the component container service.</p>
 </td>
 </tr>
+<tr id="row0414dra240025"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240025"><a name="p0414dra240025"></a><a name="p0414dra240025"></a>Component dependency</p>
+</td>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240026"><a name="p0414dra240026"></a><a name="p0414dra240026"></a>The component injects NPU devices into service containers through the CDI mechanism. Ascend Docker Runtime does not need to be installed, and the component does not depend on it.</p>
+</td>
+</tr>
+<tr id="row0414dra240027"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240027"><a name="p0414dra240027"></a><a name="p0414dra240027"></a>Mutually exclusive with Ascend Device Plugin</p>
+</td>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240028"><a name="p0414dra240028"></a><a name="p0414dra240028"></a>Ascend DRA and Ascend Device Plugin are two different device access methods, and the two functions are mutually exclusive on the same node. They do not need to be deployed at the same time.</p>
+</td>
+</tr>
 <tr id="row0414dra240019"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240019"><a name="p0414dra240019"></a><a name="p0414dra240019"></a>Deployment form</p>
 </td>
 <td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240020"><a name="p0414dra240020"></a><a name="p0414dra240020"></a>The component runs as a privileged container under the root user and mounts the NPU driver directory, kubelet plugin directory, and device directory of the host. Do not modify the DaemonSet name or its mount configuration in the YAML file. Otherwise, the component cannot work properly.</p>
 </td>
 </tr>
-<tr id="row0414dra240021"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240021"><a name="p0414dra240021"></a><a name="p0414dra240021"></a>Supported chip</p>
+<tr id="row0414dra240021"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240021"><a name="p0414dra240021"></a><a name="p0414dra240021"></a>Supported product forms</p>
 </td>
-<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240022"><a name="p0414dra240022"></a><a name="p0414dra240022"></a>Ascend910 and Ascend950 NPUs are supported.</p>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240022"><a name="p0414dra240022"></a><a name="p0414dra240022"></a>The following product forms are supported:</p>
+<a name="ul0414dra240021"></a><a name="ul0414dra240021"></a><ul id="ul0414dra240021"><li><term>Ascend 950PR&amp;950DT products</term></li></ul>
 </td>
 </tr>
 <tr id="row0414dra240023"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240023"><a name="p0414dra240023"></a><a name="p0414dra240023"></a>Health check port</p>

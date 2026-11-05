@@ -1,4 +1,4 @@
-# Collection and Diagnosis Commands
+# Parsing and Diagnosis Commands
 
 - [auto_collect](01_auto_collect.md)
 - [auto_diag](02_auto_diag.md)

@@ -1,5 +1,6 @@
 # MindCluster Fault Diagnosis User Guide
 
+<!-- npu="950,A3,910b,910,310p" id1 -->
 - [MindCluster Ascend FaultDiag](./ascend-faultdiag/menu_ascend_faultdiag_user_guide.md)
   - [Introduction](./ascend-faultdiag/01_introduction/menu_introduction.md)
     - [Overview](./ascend-faultdiag/01_introduction/01_overview.md)
@@ -13,7 +14,7 @@
   - [Usage Guide](./ascend-faultdiag/05_usage/menu_usage.md)
     - [Usage Overview](./ascend-faultdiag/05_usage/01_usage_overview.md)
     - [Log Collection](./ascend-faultdiag/05_usage/02_log_collection.md)
-    - [Log Cleaning](./ascend-faultdiag/05_usage/03_log_parsing.md)
+    - [Log Parsing](./ascend-faultdiag/05_usage/03_log_parsing.md)
     - [Fault Diagnosis](./ascend-faultdiag/05_usage/04_fault_diagnosis.md)
     - [Single-Server Diagnosis](./ascend-faultdiag/05_usage/05_single_server_diagnosis.md)
     - [SuperPoD Diagnosis](./ascend-faultdiag/05_usage/06_superpod_diagnosis.md)
@@ -21,11 +22,11 @@
     - [Fault Log Masking](./ascend-faultdiag/05_usage/08_fault_log_masking.md)
     - [Custom Configuration File](./ascend-faultdiag/05_usage/09_custom_configuration.md)
     - [Service Flow Parsing (SDK)](./ascend-faultdiag/05_usage/10_service_flow_parsing.md)
-    - [Root Cause Parsing and Diagnosis (SDK)](./ascend-faultdiag/05_usage/11_root_cause_parsing_diagnosis.md)
+    - [Root Cause Node Parsing and Diagnosis (SDK)](./ascend-faultdiag/05_usage/11_root_cause_parsing_diagnosis.md)
     - [Fault Event Parsing and Diagnosis (SDK)](./ascend-faultdiag/05_usage/12_fault_event_parsing_diagnosis.md)
   - [API Reference](./ascend-faultdiag/06_api/menu_api.md)
     - [API Overview](./ascend-faultdiag/06_api/01_api_overview.md)
-    - [parse Command (Log Cleaning)](./ascend-faultdiag/06_api/02_command_parse.md)
+    - [parse Command (Log Parsing)](./ascend-faultdiag/06_api/02_command_parse.md)
     - [diag Command (Fault Diagnosis)](./ascend-faultdiag/06_api/03_command_diag.md)
     - [single-diag Command (Single-Server Diagnosis)](./ascend-faultdiag/06_api/04_command_single_diag.md)
     - [entity Command (Custom Fault Entities)](./ascend-faultdiag/06_api/05_command_entity.md)
@@ -38,6 +39,8 @@
     - [FAQs](./ascend-faultdiag/07_references/02_faq.md)
     - [Security Hardening](./ascend-faultdiag/07_references/03_security.md)
     - [Appendix](./ascend-faultdiag/07_references/04_appendix.md)
+<!-- end id1 -->
+<!-- npu="950,A3,910b,310p" id2 -->
 - [MindCluster Ascend FaultDiag Toolkit](./ascend-faultdiag-toolkit/menu_ascend-faultdiag-toolkit.md)
   - [Introduction](./ascend-faultdiag-toolkit/01_introduction/menu_introduction.md)
     - [Overview](./ascend-faultdiag-toolkit/01_introduction/01_overview.md)
@@ -74,7 +77,7 @@
       - [set_bmc_dump_log](./ascend-faultdiag-toolkit/06_api/02_config/04_set_bmc_dump_log.md)
       - [set_switch_dump_log](./ascend-faultdiag-toolkit/06_api/02_config/05_set_switch_dump_log.md)
     - [Collection Command](./ascend-faultdiag-toolkit/06_api/03_collect/collect_bmc_dump_info.md)
-    - [Cleaning and Diagnosis Commands](./ascend-faultdiag-toolkit/06_api/04_parse_diagnosis/menu_parse_diagnosis.md)
+    - [Parsing and Diagnosis Commands](./ascend-faultdiag-toolkit/06_api/04_parse_diagnosis/menu_parse_diagnosis.md)
       - [auto_collect](./ascend-faultdiag-toolkit/06_api/04_parse_diagnosis/01_auto_collect.md)
       - [auto_diag](./ascend-faultdiag-toolkit/06_api/04_parse_diagnosis/02_auto_diag.md)
       - [auto_collect_diag](./ascend-faultdiag-toolkit/06_api/04_parse_diagnosis/03_auto_collect_diag.md)
@@ -85,3 +88,4 @@
     - [FAQs](./ascend-faultdiag-toolkit/07_references/01_faq.md)
     - [Diagnosis Item Reference](./ascend-faultdiag-toolkit/07_references/02_diagnosis_items.md)
     - [Glossary](./ascend-faultdiag-toolkit/07_references/03_list_of_terms.md)
+<!-- end id2 -->

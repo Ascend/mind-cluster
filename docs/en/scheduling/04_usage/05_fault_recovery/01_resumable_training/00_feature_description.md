@@ -132,7 +132,7 @@ The description of each step is as follows:
       ...
       ```
 
-  - (Optional) Configure CPU and memory resources: If you need to configure CPU and Memory resources, refer to the following example to manually add the `cpu`"` and `memory` parameters and their corresponding values. Configure the specific values according to actual conditions.
+  - (Optional) Configure CPU and memory resources: If you need to configure CPU and Memory resources, refer to the following example to manually add the `cpu` and `memory` parameters and their corresponding values. Configure the specific values according to actual conditions.
 
       ```yaml
       ...

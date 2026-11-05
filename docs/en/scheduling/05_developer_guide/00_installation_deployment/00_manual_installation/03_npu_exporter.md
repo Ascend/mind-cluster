@@ -80,7 +80,7 @@ Before installing NPU Exporter, read the relevant constraints described in [Tabl
 
 - Configuration file path change: the paths of `metricConfiguration.json` and `pluginConfiguration.json` are changed from `/usr/local/` to `/user/mind-cluster/npu-exporter-config`. Users migrating from earlier versions (26.0 and earlier) need to copy the configuration files to `/user/mind-cluster/npu-exporter-config`.
 
-- The following metrics add a `-1` status, indicating that the DCMI interface/hccn_tool invocation failed. For specific metric information, see [NPU Data Information](../../../06_api/00_npu_exporter/01_prometheus_metrics_api.md#section1379685784314):
+- The following metrics add a `-1` status, indicating that the DCMI/hccn_tool invocation failed. For specific metric information, see [NPU Data Information](../../../06_api/00_npu_exporter/01_prometheus_metrics_api.md#section1379685784314):
     - `npu_chip_info_health_status`
     - `npu_chip_info_network_status`
     - `npu_chip_info_link_status`
@@ -333,7 +333,7 @@ NPU Exporter supports two installation modes. You can select either one based on
                 <strong>- name: cri-dockerd</strong>
                   <strong>hostPath:</strong>
                     <strong>path: /var/run/cri-dockerd.sock</strong>
-                <strong>- name: sock                 # dd the fields in bold</strong>
+                <strong>- name: sock                 # Add the fields in bold</strong>
                   <strong>hostPath:</strong>
                     <strong>path: /var/run                    # Use the actual dockershim.sock directory</strong>
                 - name: containerd
@@ -572,7 +572,7 @@ When NPU Exporter runs in image mode, it requires a privileged container, the ro
 |-updateTime|int|None| **To be sunset soon and not recommended.** Global configuration metric update interval. Value range: 1 to 60 seconds. It is recommended to configure the metric update interval by group. For details, see [Configuration File](#section103551921135917).<br>If the updateTime parameter is configured, it remains effective and takes precedence over intervalSeconds in the metricConfiguration.json/pluginConfiguration.json configuration files.|
 |-ip|string|None| This parameter has no default value and must be configured.<p>Listening IP address. It must be in valid IPv4 or IPv6 format. On hosts with multiple NICs, configuring it as 0.0.0.0 is not recommended.</p>|
 |-version|bool|false| Whether to query the NPU Exporter version number and commit ID and other detailed information.<ul><li>true: Query.</li><li>false: Do not query.</li></ul>|
-|-concurrency|int|5| Rate limiting size of the HTTP service. The default is 5 concurrent requests. Value range: 1 to 512.|
+|-concurrency|int|5| Rate limiting size of the HTTP service. The default value is 5 concurrent requests. Value range: 1 to 512.|
 |-logLevel|int|0| Log level:<ul><li>-1: debug</li><li>0: info</li><li>1: warning</li><li>2: error</li><li>3: critical</li></ul>|
 |-maxAge|int|7| Log backup retention time. Value range: 7 to 700, in days.|
 |-logFile|string|/var/log/mindx-dl/npu-exporter/npu-exporter.log| Log file.<p>When a single log file exceeds 20 MB, automatic rotation is triggered. The maximum file size cannot be modified. The naming format of rotated files is: npu-exporter-<i>{rotation_time}</i>.log, for example: npu-exporter-2023-10-07T03-38-24.402.log.</p>|

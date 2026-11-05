@@ -40,12 +40,14 @@ In the examples, `{image-name:tag}` represents the image name and tag. For detai
     docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {image-name:tag} /bin/bash
     ```
 
+<!-- npu="310b" id1 -->
 - Example 6: When starting the container, mount the chip with physical chip ID 0, and allow soft links in the mounted driver files (applicable only to Atlas 500 A2 intelligent station, Atlas 200I A2 accelerator module, and Atlas 200I DK A2):
 
     ```shell
     docker run --rm -it -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_ALLOW_LINK=True {image-name:tag} /bin/bash
     ```
 
+<!-- end id1 -->
 After the container is started, run the following commands inside and outside the container to check whether the corresponding devices and drivers are mounted successfully. For the specific mount directory of each model, refer to [Content Mounted by Ascend Docker Runtime](../../07_references/05_appendix.md#content-mounted-by-ascend-docker-runtime). Example commands are as follows:
 
 ```shell

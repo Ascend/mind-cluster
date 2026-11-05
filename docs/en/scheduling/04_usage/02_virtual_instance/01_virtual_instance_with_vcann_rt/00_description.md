@@ -40,7 +40,7 @@ Ascend NPU hardware resources mainly include AICore (used for AI model computati
 <td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 products</term></td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" width="30%">Atlas 350 accelerator cards</td>
+<td class="cellrowborder" valign="top" width="30%"><term>Ascend 950PR&950DT products</term></td>
 </tr>
 </tbody>
 </table>
@@ -60,7 +60,9 @@ by repeatedly mounting the NPU to multiple containers. The CANN inside each cont
 - In the soft partitioning virtualization scenario, concurrent submission is not supported; only serial submission is supported. You must wait until the previous job has been fully brought up before submitting a new soft partitioning job.
 - In the soft partitioning virtualization scenario, a container can mount only one NPU.
 - The data corresponding to requests in the job YAML indicates the requested AICore percentage of the NPU, not the actual number of NPUs.
+<!-- npu="A3" id1 -->
 - When <term>Atlas A3 products</term>use the soft partitioning virtualization feature, single-die passthrough mode must be enabled. That is, add `-useSingleDieMode=true` to the YAML of Ascend Device Plugin.
+<!-- end id1 -->
 - After a physical NPU is virtualized through soft partitioning, the physical NPU can only be mounted to containers and cannot be passed through to virtual machines.
 - In the soft partitioning virtualization scenario, if all containers mount the same physical NPU, the physical NPU must use the same soft partitioning policy.
-- Due to hardware device limitations (see [Usage Constraints](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/others/acldevg/aclcppdevg_000222.html)), it is recommended that the maximum number of vCANN-RT partitions not exceed the maximum number of user processes supported by a single device.
+- Due to hardware device limitations (see [Usage Constraints](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/others/acldevg/docs/en/app-dev/c/constraints.md)), it is recommended that the maximum number of vCANN-RT partitions not exceed the maximum number of user processes supported by a single device.

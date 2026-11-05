@@ -43,7 +43,7 @@ rpc GetTrainingDataTraceSwitch(DataStatusReq) returns (DataStatusRes) {}
 
 |Parameter|Type (Protobuf Definition)|Description|
 |--|--|--|
-|DataStatusReq|message DataStatusReq{<p>string jobNsName = 1;</p>}|**jobNsName**: The namespace and name of the job to be modified, concatenated with '/', e.g., `default/test-pytorch`.|
+|DataStatusReq|message DataStatusReq{<p>string jobNsName = 1;</p>}|**jobNsName**: The namespace and name of the job to be queried, concatenated with '/', e.g., `default/test-pytorch`.|
 
 **Return Value Description<a name="section93011951104217"></a>**
 

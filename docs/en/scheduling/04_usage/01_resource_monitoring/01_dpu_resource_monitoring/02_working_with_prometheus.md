@@ -137,7 +137,7 @@ This chapter guides you through installing and deploying Prometheus-related soft
 
 3. Install Prometheus.
     1. <a name="li601241164212"></a>Go to the [mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy) repository, switch to the corresponding branch according to [mindcluster-deploy Open-Source Repository Version Description](../../../07_references/05_appendix.md#mindcluster-deploy-open-source-repository-version-description), and obtain the `prometheus.yaml` file from the `samples/utils/prometheus/base` directory.
-    2. Refer to [step 3](#li127175170321) in [Directly Connecting to Prometheus](#section875071183215), and change the DPU-Exporter metrics collection configuration in `prometheus.yaml` to the configuration required in practice.
+    2. Refer to Step 3 in [Directly Connecting to Prometheus](#section875071183215), and change the DPU-Exporter metrics collection configuration in `prometheus.yaml` to the configuration required in practice.
     3. Upload the `prometheus.yaml` obtained in [Step 1](#li601241164212) to any path in the environment.
     4. In the directory where `prometheus.yaml` is stored, run the following command to install Prometheus.
 

@@ -13,7 +13,7 @@
 
 >[!NOTE]
 >
-> - 在线采集命令请根据产品型号选择对应的参考资料，例如：[Atlas A3 中心推理和训练硬件 HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100591762/426cffd9)、[Atlas 800T A3 超节点 iBMC 命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100461433/2cd78eac?idPath=23710424|251366513|22892968|252309113|261716443)、[交换机命令参考](https://support.huawei.com/enterprise/zh/switches/s3700-s5700-s6700-pid-259602657?category=reference-guides&subcategory=command-reference)。
+> - 在线采集命令请根据产品型号选择对应的参考资料，例如：[Atlas A3 中心推理和训练硬件 HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100621076/426cffd9)、[Atlas 800T A3 超节点 iBMC 命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100461433/2cd78eac?idPath=23710424|251366513|22892968|252309113|261716443)、[交换机命令参考](https://support.huawei.com/enterprise/zh/switches/s3700-s5700-s6700-pid-259602657?category=reference-guides&subcategory=command-reference)。
 > - 离线日志目录结构说明：工具支持压缩包自动解析，使用时无需手动解压。下文离线日志目录结构展示了压缩包内部层级，用于说明包内的重要文件。
 
 **快速导航**

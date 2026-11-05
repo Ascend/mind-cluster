@@ -312,7 +312,7 @@ Obtain the software packages for the corresponding operating system as shown in 
     docker build -t mindformers-dl:v1 .
     ```
 
-4. In addition to manually building an image by following the preceding process, you can also directly use the out-of-the-box sample image `mindspore-sample-dl:v26.2.0-cann8.5.0-mindspore2.5.0-910b-py3.10-aarch64`. The sample image can be obtained from [AscendHub](https://www.hiascend.com/en/developer/ascendhub) for quick verification.
+4. In addition to manually building an image by following the preceding process, you can also directly use the out-of-the-box sample image `mindspore-sample-dl:v26.2.0-cann8.5.0-mindspore2.7.2-910b-py3.10-aarch64`. The sample image can be obtained from [AscendHub](https://www.hiascend.com/en/developer/ascendhub) for quick verification.
 
 ## Script Adaptation<a name="ZH-CN_TOPIC_0000002511426481-mindspore"></a>
 
@@ -334,7 +334,7 @@ This chapter guides users through the adaptation steps for resumable training, s
 >- The component code shown for resumable training is open-source code. For related security statements, see [Security Statement](../../../../07_references/05_appendix.md#ZH-CN_TOPIC_0000002479386374).
 >- The model example code below may differ from the actual version. The actual version code prevails.
 >- Write the model parameter configuration based on the model configuration in the model repository and the actual situation. Improper modification may cause unpredictable problems.
->- If the error "Failed to bind the IP port. Reason: The IP address and port have been bound already" occurs during training, configure it as follows. For details, see the "[HCCL_HOST_SOCKET_PORT_RANGE](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/commlib/hcclug/docs/en/user_guide/hccl_env/HCCL_HOST_SOCKET_PORT_RANGE.md)" section.
+>- If the error "Failed to bind the IP port. Reason: The IP address and port have been bound already" occurs during training, configure it as follows. For details, see the "[HCCL_HOST_SOCKET_PORT_RANGE](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/commlib/hcclug/docs/en/user_guide/hccl_env/HCCL_HOST_SOCKET_PORT_RANGE.md)" section.
 >
 >   ```shell
 >   export HCCL_HOST_SOCKET_PORT_RANGE="60000-60050"
@@ -568,39 +568,10 @@ Cluster scheduling components provide YAML examples. Select the corresponding YA
 **Table 2** Training job YAML example
 
 <a name="table350244433714-mindspore"></a>
-<table><thead align="left"><tr id="row135031644183710-mindspore"><th class="cellrowborder" valign="top" width="15.393078615723146%" id="mcps1.2.8.1.1-mindspore"><p id="p8503244173715-mindspore"><a name="p8503244173715-mindspore"></a>Job Type</p>
-</th>
-<th class="cellrowborder" valign="top" width="16.173234646929384%" id="mcps1.2.8.1.2-mindspore"><p id="p145038448375-mindspore"><a name="p145038448375-mindspore"></a>Hardware Model</p>
-</th>
-<th class="cellrowborder" valign="top" width="8.521704340868173%" id="mcps1.2.8.1.3-mindspore"><p id="p919210345266-mindspore"><a name="p919210345266-mindspore"></a>Training Framework</p>
-</th>
-<th class="cellrowborder" valign="top" width="13.672734546909378%" id="mcps1.2.8.1.4-mindspore"><p id="p5503544193713-mindspore"><a name="p5503544193713-mindspore"></a>Model</p>
-</th>
-<th class="cellrowborder" valign="top" width="15.393078615723146%" id="mcps1.2.8.1.5-mindspore"><p id="p19672186404-mindspore"><a name="p19672186404-mindspore"></a>YAML File Name</p>
-</th>
-<th class="cellrowborder" valign="top" width="15.433086617323463%" id="mcps1.2.8.1.6-mindspore"><p id="p1096741894013-mindspore"><a name="p1096741894013-mindspore"></a>Download Link</p>
-</th>
-<th class="cellrowborder" valign="top" width="15.413082616523303%" id="mcps1.2.8.1.7-mindspore"><p id="p2967518174012-mindspore"><a name="p2967518174012-mindspore"></a>Description</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row91607510384-mindspore"><td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.1-mindspore "><p id="p89371529174019"><a name="p89371529174019"></a>Ascend Job</p>
-</td>
-<td class="cellrowborder" valign="top" width="16.173234646929384%" headers="mcps1.2.8.1.2-mindspore "><a name="ul393742934014"></a><ul id="ul393742934014"><li><span id="ph139426426441"><a name="ph139426426441"></a>Atlas 900 A3 SuperPoD</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="8.521704340868173%" headers="mcps1.2.8.1.3-mindspore "><p id="p1319333422617"><a name="p1319333422617"></a>MindSpore</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.672734546909378%" headers="mcps1.2.8.1.4-mindspore "><p id="p1893752924017"><a name="p1893752924017"></a><span id="ph234505228"><a name="ph234505228"></a>Qwen3</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5-mindspore "><p id="p1493742904013"><a name="p1493742904013"></a><span id="ph153229411739"><a name="ph153229411739"></a>ms_multinodes_acjob_superpod.yaml</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6-mindspore "><p id="p1637217494110"><a name="p1637217494110"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/yamls/ms_multinodes_acjob_superpod.yaml" target="_blank" rel="noopener noreferrer">ms_multinodes_acjob_superpod.yaml</a></p>
-</td>
-<td class="cellrowborder" valign="top" width="15.413082616523303%" headers="mcps1.2.8.1.7-mindspore "><p id="p79373296408"><a name="p79373296408"></a>The example uses a 2 x 16-chip job by default</p>
-</td>
-</tr>
-</tbody>
-</table>
+
+|Job Type|Hardware Model|Training Framework|Model|YAML File|Description|
+|--|--|--|--|--|--|
+|Ascend Job|Atlas 900 A3 SuperPoD|MindSpore|Qwen3|[ms_multinodes_acjob_superpod.yaml](https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/yamls/ms_multinodes_acjob_superpod.yaml)|The example uses a 2*16 NPU job by default|
 
 >[!NOTE]
 >Currently, some training frameworks do not provide resumable training example YAMLs for Atlas 900 A3 SuperPoD. You can add an annotations field under labels in the example YAML. An example is shown below:
@@ -724,7 +695,7 @@ After the training job has been running for longer than the CKPT saving interval
 This chapter guides users through constructing simple faults, including node faults, parameter plane network faults, and service plane faults.
 
 >[!NOTE]
->Constructing a chip fault involves security risks. If you need to construct one, contact Huawei technical support engineers.
+>Constructing a chip fault involves security risks.
 
 **Constructing a Node Fault<a name="section173881558133914-mindspore"></a>**
 

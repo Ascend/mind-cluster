@@ -749,7 +749,7 @@ For security hardening of Elastic Agent, see the [TaskD Security Hardening](#tas
 
 ## Health Probe Security Hardening<a name="ZH-CN_TOPIC_0000002511346467"></a>
 
-Ascend Device Plugin, Ascend Operator, ClusterD, Infer Operator, NodeD, and NPU Exporter have a built-in HTTP health probe service, which is used by the K8s livenessProbe mechanism to detect the component's liveness status. The HTTP protocol is used by default.
+Components (Ascend Device Plugin, Ascend Operator, ClusterD, Infer Operator, NodeD, NPU Exporter, and so on) have a built-in HTTP health probe service, which is used by the K8s livenessProbe mechanism to detect the component's liveness status. The HTTP protocol is used by default.
 
 >[!NOTE]
 >Kubelet **does not validate the server certificate** when executing HTTPS probes. Therefore, enabling HTTPS probes alone provides no additional security gain for K8s probe scenarios. It is only necessary to configure HTTPS for the probe when external systems need to call the health probe interface and require server identity verification (for example, third-party monitoring systems or custom health check scripts).

@@ -2,9 +2,9 @@
 
 ## Overview<a name="section_overview_reclaim"></a>
 
-Reclaim is the resource return mechanism of the Volcano scheduler: when a high-weight queue runs short of resources, resources are reclaimed from low-weight queues with `reclaimable: true`. Unlike Preempt, which is based on job priority, Reclaim is based on queue weight, making it suitable for managing resource priorities by service line.
+Reclaim is the resource return mechanism of the Volcano scheduler: when resources are insufficient, resources are reclaimed from queues with `reclaimable: true`. Unlike Preempt, which is based on job priority, Reclaim determines whether resources can be reclaimed based on the queue's reclaimable configuration, making it suitable for managing resource priorities by business line.
 
-In an inference/training shared cluster, the training queue is set to `reclaimable: true` (reclaimable), while the inference queue is set to `reclaimable: false`. When the inference queue runs short of resources, resources are reclaimed from the training queue; after resources are released during the inference off-peak period, training jobs resume running. A training job sets `minAvailable` equal to `replicas` to ensure gang integrity. After a Pod is reclaimed and the Job fails, the rescheduling module automatically triggers a Job restart, and the rebuilt Pod returns to its original node through the return-to-original-node feature.
+In an inference/training shared cluster, the training queue is set to `reclaimable: true` (reclaimable), while the inference queue is set to `reclaimable: false`. When the inference queue runs short of resources, resources are reclaimed from the training queue; after resources are released during the inference off-peak period, training jobs resume running. A training job sets `minAvailable` equal to `replicas` to ensure gang integrity. After a Pod is reclaimed and the job fails, the rescheduling module automatically triggers a job restart, and the rebuilt Pod returns to its original node through the return-to-original-node feature.
 
 ## Implementation Principle<a name="section_principle_reclaim"></a>
 
@@ -37,7 +37,7 @@ sequenceDiagram
 1. Create a Queue.
 
    ```yaml
-   # Inference queue: high weight, cannot be reclaimed by other queues
+   # Inference queue: cannot be reclaimed by other queues
    apiVersion: scheduling.volcano.sh/v1beta1
    kind: Queue
    metadata:
@@ -47,7 +47,7 @@ sequenceDiagram
      reclaimable: false              # Inference queue resources cannot be reclaimed
 
    ---
-   # Training queue: low weight, can be reclaimed by higher-weight queues (exists by default in the cluster and does not need to be deployed separately)
+   # Training queue: can be reclaimed by other queues (exists by default in the cluster and does not need to be deployed separately)
    apiVersion: scheduling.volcano.sh/v1beta1
    kind: Queue
    metadata:

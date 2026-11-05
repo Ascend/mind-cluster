@@ -2,6 +2,8 @@
 
 To obtain the corresponding software, see [Downloading Software Packages](#section10979172103311); to obtain the source-code of the corresponding software packages, see [Open-Source Component Source Code](#section149534517468).
 
+Refer to this chapter to obtain the required software packages. Downloading the binary software indicates that you agree to the terms and conditions of the [Software License Agreement 2.0](https://www.hiascend.com/en/legal/softlicense). Downloading the source software indicates that you agree to the terms and conditions of Apache License Version 2.0.
+
 ## Downloading Software Packages<a name="section10979172103311"></a>
 
 >[!NOTE]
@@ -25,10 +27,11 @@ To obtain the corresponding software, see [Downloading Software Packages](#secti
 |TaskD|Ascend-mindxdl-taskd\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|TaskD package|[Click here](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)|
 |Container Manager|Ascend-mindxdl-container-manager\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Container Manager package|[Click here](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)|
 |MindIO|Ascend-mindxdl-mindio\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|MindIO package|[Click here](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)|
-|K8s RDMA Shared Dev Plugin|Ascend-mindxdl-k8s-rdma-shared-dev-plugin\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|K8s RDMA Shared Dev Plugin package|[Click here](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)|
+|K8s RDMA Shared Dev Plugin|Ascend-mindxdl-k8s-rdma-shared-dev-plugin_<i>{version}</i>\_linux-<i>{arch}</i>.zip|K8s RDMA Shared Dev Plugin package.|[Click here](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)|
+|UB Host Device CNI|Ascend-mindxdl-ub-host-device-cni_<i>{version}</i>\_linux-<i>{arch}</i>.zip|UB Host Device CNI package. It is deployed on the node in binary mode in the `/opt/cni/bin` directory and invoked by Multus CNI.|[Click here](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)|
 |Agent Core / Node Collector / Kubectl Plugin|Ascend-mindxdl-ascend-clusterops-agent\_<i>{version}</i>\_linux.zip|Shared software package for Agent Core, Node Collector, and Kubectl Plugin.|[Click here](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)|
 |Elastic Agent|Ascend-mindxdl-elastic\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Elastic Agent package|[Click here](https://www.hiascend.com/en/developer/software/mindcluster/download?versionId=460&ids=53%2C154%2C%2C58%2C60%2C63%2C)|
-|Ascend Dynamic Resource Allocation|Ascend-mindxdl-ascend-dynamic-resource-allocation\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Ascend Dynamic Resource Allocation package||
+|Ascend Dynamic Resource Allocation|Ascend-mindxdl-ascend-dynamic-resource-allocation\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Ascend Dynamic Resource Allocation package.|[Click here](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)|
 
 >[!NOTE]
 >Elastic Agent has reached its end of life in version 7.3.0. Please obtain its package from versions prior to 7.3.0.
@@ -83,6 +86,7 @@ The source code of open-source components like Ascend Docker Runtime, NPU Export
 |Infer Operator|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/infer-operator>|
 |MindIO|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/mindio>|
 |K8s RDMA Shared Dev Plugin|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/k8s-rdma-shared-dev-plugin>|
+|UB Host Device CNI|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/ub-host-device-cni>|
 |Ascend Dynamic Resource Allocation|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-dynamic-resource-allocation>|
 |Agent Core|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-clusterops-agent/agent-core>|
 |Node Collector|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-clusterops-agent/node-collector>|

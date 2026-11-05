@@ -24,7 +24,7 @@ When installing and deploying cluster scheduling components, you can refer to [F
 >[!NOTE]
 >
 >- MindCluster provides Volcano, which integrates the Ascend-volcano-plugin on top of the open-source Volcano.
->- MindCluster provides K8s Rdma Shared Dev Plugin, which adds support for Huawei UB RDMA DPU device discovery and fault detection on the top of the open-source K8s Rdma Shared Dev Plugin.
+>- MindCluster provides K8s RDMA Shared Dev Plugin, which adds support for Huawei UB RDMA DPU device discovery and fault detection on the top of the open-source K8s Rdma Shared Dev Plugin.
 
 ## Log Path Description<a name="section4837236204914"></a>
 

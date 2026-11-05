@@ -110,7 +110,7 @@ Directory structure:
 > [!NOTE]
 >
 > - CANN App logs are stored in the `$HOME/ascend/log` directory by default, and the log storage path can be customized through the environment variable `ASCEND_PROCESS_LOG_PATH`.
-> - App logs printed by CANN include two types: host-side App logs `plog-{pid}_{unix time}.log` and device-side App logs `device-{pid}_{unix time}.log`. For more log-related information, see [Viewing Logs (Ascend EP)](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/maintenref/logreference/logreference_0002.html) in [*CANN Log Reference*](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/maintenref/logreference/logreference_0001.html).
+> - App logs printed by CANN include two types: host-side App logs (`plog-{pid}_{unix time}.log`) and device-side App logs (`device-{pid}_{unix time}.log`). For more log-related information, see [Viewing Logs (Ascend EP)](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/maintenref/logreference/docs/en/log_ref/viewing_logs_ep.md) in *CANN Log Reference*.
 
 ### User Training/Inference Logs
 
@@ -255,7 +255,7 @@ dmidecode > {collection_directory}/dmidecode.txt
         cp -r {timestamp_directory_of_logs_collected_in_step_2}/hisi_logs {collection_directory}/device_log/after_task
         ```
 
-    4. Run the following command to collect UB maintenance and test information (`ub_info` directory) before and after task.
+    4. Run the following command to collect device-side UB maintenance and test information (`ub_info` directory) before and after task.
 
         ```shell
         msnpureport report -t 6
@@ -527,16 +527,18 @@ Run the following command to collect:
 cp -r ~/ttp_log {collection_directory}/dl_log/ttp_log
 ```
 
+<!-- npu="950,A3" id1 -->
 ### LCNE Logs (Bus/UBM Logs)
 
 After training or inference is complete, LCNE logs need to be collected. In ascend-fd 26.2.0 and later, the UB link diagnostic capability is enhanced. If you want to use this enhanced capability, you must collect LCNE logs.
 
+<!-- npu="950" id2 -->
 **<term>Ascend 950PR&950DT Products</term>**
 
 When LCNE is running on <term>Ascend 950PR&950DT products</term>, the logs need to be decompressed to `collection_directory/lcne_log/`. You can collect them as follows:
 
 - Server
-  1. Go to the 1213 frontend of <term>Ascend 950PR&950DT products</term>1213, run the **collect diagnostic information** command to collect logs.
+  1. Go to the 1213 frontend of <term>Ascend 950PR&950DT products</term>, run the **collect diagnostic information** command to collect logs.
   2. Go to the `/opt/vrpv8/home/` directory of the 1213 backend of <term>Ascend 950PR&950DT products</term> to obtain `diagnostic_information_*.zip`, and manually decompress all the compressed logs.
 
 - PoD
@@ -557,7 +559,9 @@ When LCNE is running on <term>Ascend 950PR&950DT products</term>, the logs need 
                       └──...
       └──…
   ```
+<!-- end id2 -->
 
+<!-- npu="A3" id3 -->
 **<term>Atlas A3 Products</term>**
 
 Directly place LCNE logs exported by SmartKit or CCAE into `{collection_directory}/lcne_log/` after recursive decompression.
@@ -565,6 +569,8 @@ Directly place LCNE logs exported by SmartKit or CCAE into `{collection_director
 > [!NOTE]
 >
 > If you cannot determine which node LCNE belongs to, place it in a separate directory, such as `LCNE collection log/`. For usage, see [Scenario 1: Automatic Topology Association (Recommended)](./06_superpod_diagnosis.md#scenario-1-automatic-topology-association-recommended).
+<!-- end id3 -->
+<!-- end id1 -->
 
 ### BMC Logs
 

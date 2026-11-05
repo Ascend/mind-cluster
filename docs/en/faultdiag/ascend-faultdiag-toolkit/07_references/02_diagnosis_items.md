@@ -139,6 +139,7 @@ Diagnostic items are categorized by device type, and each diagnostic item specif
 >[!NOTE]
 > For details about host log V1/V2/V3 versions, see [Offline Log Collection (Host)](../05_usage/02_log_collection.md#host-offline-log).
 
+<!-- npu="950" id1 -->
 ### Additional Host-side Diagnostics for <term>Ascend 950PR&950DT Products</term>
 
 The host-side diagnostic items of <term>Ascend 950PR&950DT products</term> have the same diagnostic logic as the corresponding items of <term>Atlas A3 products</term>, except that <term>Ascend 950PR&950DT products</term> additionally provide NIC SFP lane-level diagnostics.
@@ -213,6 +214,7 @@ The host-side diagnostic items of <term>Ascend 950PR&950DT products</term> have 
 </tr>
 </tbody>
 </table>
+<!-- end id1 -->
 
 ## BMC Related Diagnostics
 

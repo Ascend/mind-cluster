@@ -47,7 +47,7 @@ ascend-fd 支持通过 Whl 包安装和使用 MindCluster Ascend Deployer 安装
         pip3 install -r src/requirements.txt && pip3 install 'setuptools>=60.3.0' 'wheel>=0.45.1'
         ```
 
-    3. 如需自定义版本信息，可在当前目录（`mind-cluster/component/ascend-faultdiag`）创建 `service_config.ini` 文件，填入版本号如 `26.2.0`，版本号格式须符合 [Python 版本号规范](https://packaging.pythonlang.cn/en/latest/specifications/version-specifiers/)
+    3. 如需自定义版本信息，可在当前目录（`mind-cluster/component/ascend-faultdiag`）创建 `service_config.ini` 文件，填入版本号如 `26.2.0`，版本号格式须符合 [Python版本号规范](https://packaging.python.org/en/latest/specifications/version-specifiers/)
 
     4. 执行编译
 

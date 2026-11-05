@@ -11,9 +11,11 @@ Before using the containerization feature, ensure that the relevant components a
 - Containerization can be used together with all features in training scenarios, and can also be used together with all features in inference scenarios.
 - If Volcano is used for job scheduling, it is not recommended to create/mount containers with NPUs through Docker or Containerd commands, as this may trigger Volcano scheduling issues.
 - Containerization support automatically mounts the host machine's binary and dynamic library files into the container, which may involve glibc dependencies. In this case, the glibc version of the container OS must be >= the glibc version of the host OS, so that they can run properly after being mounted into the container.
+<!-- npu="950" id1 -->
 - In UB-involved product forms, such as Atlas 850E, Atlas 850, Atlas 650E, Atlas 650, and Atlas 950 SuperPoD, the UB driver-related content in `ub_driver.list` is mounted by default. The files in `ub_driver.list` depend on the host machine's glibc version. The currently supported OS versions and glibc versions are as follows:
   - Host: openEuler24.03 (glibc2.38)
   - Container: openEuler24.03 (glibc2.38), Ubuntu24.04 (glibc2.39)
+<!-- end id1 -->
 
 ## Supported Product Forms<a name="section169961844182917"></a>
 

@@ -45,13 +45,13 @@ It is recommended that users set the server's `umask` to 027 ~ 777 to restrict f
 
 Taking setting `umask` to `027` as an example, the specific operation is as follows.
 
-1. Log in to the server as the root user and edit the `"/etc/profile"` file.
+1. Log in to the server as the root user and edit the `/etc/profile` file.
 
     ```bash
     vim /etc/profile
     ```
 
-2. Add `umask 027` at the end of the `"/etc/profile`" file, save and exit.
+2. Add `umask 027` at the end of the `/etc/profile` file, save and exit.
 3. Run the following command to apply the configuration.
 
     ```bash

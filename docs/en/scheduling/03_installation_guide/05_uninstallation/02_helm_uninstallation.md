@@ -49,8 +49,8 @@ This document describes how to uninstall MindCluster components using Helm.
 
        ```ColdFusion
        NAME               NAMESPACE   REVISION  UPDATED                                  STATUS       CHART                                        APP VERSION
-       mindcluster        default    1         2026-03-24 15:30:00.000000000 +0800 CST  deployed     mindcluster-deploy-tool-26.2.0                26.2.0
-       mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.2.0           26.2.0
+       mindcluster        default     1         2026-03-24 15:30:00.000000000 +0800 CST  deployed     mindcluster-deploy-tool-26.2.0               26.2.0
+       mindcluster-crds   default     1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.2.0          26.2.0
        ```
 
    2. Determine whether the components are managed by Helm based on the command output.
@@ -90,8 +90,6 @@ This document describes how to uninstall MindCluster components using Helm.
     ```
 
 3. Uninstall the MindCluster CRD resources.
-
-    Run the following command to uninstall the MindCluster CRD resources:
 
     ```bash
     helm uninstall mindcluster-crds

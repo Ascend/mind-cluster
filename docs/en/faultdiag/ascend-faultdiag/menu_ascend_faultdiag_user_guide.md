@@ -20,7 +20,7 @@
   - [Fault Log Masking](./05_usage/08_fault_log_masking.md)
   - [Custom Configuration](./05_usage/09_custom_configuration.md)
   - [Service Flow Parsing (SDK)](./05_usage/10_service_flow_parsing.md)
-  - [Root Cause Parsing and Diagnosis (SDK)](./05_usage/11_root_cause_parsing_diagnosis.md)
+  - [Root Cause Node Parsing and Diagnosis (SDK)](./05_usage/11_root_cause_parsing_diagnosis.md)
   - [Fault Event Parsing and Diagnosis (SDK)](./05_usage/12_fault_event_parsing_diagnosis.md)
 - [API Reference](./06_api/menu_api.md)
   - [API Overview](./06_api/01_api_overview.md)

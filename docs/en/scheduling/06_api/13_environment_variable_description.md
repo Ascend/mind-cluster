@@ -29,7 +29,7 @@ The environment variables used by MindCluster components are described in [Table
 |SSH_CLIENT|Environment variable set by the SSH server, containing information about the client connection|Yes|Information about the current client connection|Records this information in the operation log when installing Ascend Docker Runtime|
 |TASKD_LOG_PATH|-|No|String|Indicates the disk path for TaskD running logs|
 |MINDX_SERVER_IP|Written by Ascend Operator during container creation|Yes|String|Indicates the IP address for communication between a job and ClusterD, which is also the svc IP of clusterd-grpc-svc|
-|MINDX_SERVER_DOMAIN|Written by Ascend Operator during container creation|Yes|String|Indicates the domain name for communication between a job and ClusterD. Default Value is "clusterd-grpc-svc.mindx-dl.svc.cluster.local"|
+|MINDX_SERVER_DOMAIN|Written by Ascend Operator during container creation|Yes|String|Indicates the domain name for communication between a job and ClusterD. The default value is "clusterd-grpc-svc.mindx-dl.svc.cluster.local"|
 |MINDX_TASK_ID|Written by Ascend Operator during container creation|No|For MindIE inference jobs, the value is the value of the jobID field under the label field in an acjob |Required for Elastic Agent/TaskD to register the gRPC service with ClusterD and for the TaskD profiling feature to save logs|
 |GROUP_BASE_DIR|Written in the job startup script|No|Folder path|Indicates the parallel domain information export path of TaskD |
 |MINDIO_WAIT_MINDX_TIME|Written in the job YAML|No|Numeric string, with a value range of [1, 3600]|Timeout for waiting for faulty pod scheduling when process-level rescheduling is not enabled and elastic training is enabled|
@@ -291,7 +291,7 @@ Ascend Operator provides corresponding environment variables for distributed tra
 </td>
 <td class="cellrowborder" valign="top" width="27.77%" headers="mcps1.2.6.1.3 "><p id="p1518175973216"><a name="p1518175973216"></a><a name="p1518175973216"></a><span id="ph1072282311518"><a name="ph1072282311518"></a><a name="ph1072282311518"></a>Elastic Agent</span>-side switch for process-level rescheduling, process-level online recovery, and dying gasp checkpoint features.</p>
 </td>
-<td class="cellrowborder" valign="top" width="19.79%" headers="mcps1.2.6.1.4 "><a name="ul167945693511"></a><a name="ul167945693511"></a><ul id="ul167945693511"><li>Value is 1: Enable.</li><li>Value is other values: Disable. When this variable feature is, the related features on the MindIO side must also be disabled.</li></ul>
+<td class="cellrowborder" valign="top" width="19.79%" headers="mcps1.2.6.1.4 "><a name="ul167945693511"></a><a name="ul167945693511"></a><ul id="ul167945693511"><li>Value is 1: Enable.</li><li>Value is other values: Disable. When this feature is disabled, the related features on the MindIO side must also be disabled.</li></ul>
 </td>
 <td class="cellrowborder" rowspan="4" valign="top" width="23.189999999999998%" headers="mcps1.2.6.1.5 "><p id="p923972485920"><a name="p923972485920"></a><a name="p923972485920"></a>Inject this environment variable in process-level rescheduling, process-level online recovery, and process-level in-place recovery scenarios.</p>
 </td>
@@ -364,6 +364,7 @@ Ascend Device Plugin injects corresponding environment variables into the contai
 | KUBELET_PORT | Specifies the default port number of kubelet on the current node (if the user has not customized the kubelet port, no configuration is required). | Integer from 0 to 65535 | If the user modifies the default kubelet port, the value of this environment variable must be set to the custom port number.<p>If the user has not modified the default kubelet port, this environment variable is ignored.</p> |
 | HOST_IP | Specifies the physical IP address of the current node. | Valid IP address in the format of string; must be in standard IPv4 or IPv6 format | Fixed configuration item, provided in the initial YAML file. |
 
+<!-- npu="A3,910b" id1 -->
 ## Elastic Agent Environment Variables<a name="section8853192413411"></a>
 
 >[!NOTE]
@@ -383,7 +384,9 @@ The table below describes environment variables that can be configured when Elas
 | RESTART\_FAULT\_PROCESS\_TYPE | Type of faulty process restart that Elastic Agent notifies MindIO to perform. | String | <ul><li>worker: Do not exit the Pod, and only restart the faulty process.</li><li>pod: Restart the Pod.</li></ul> |
 | RANK\_TABLE\_FILE | RankTable file path. | String | Path to the hccl.json file. |
 | PROCESS\_RECOVER | Switch for process-level rescheduling or process-level online recovery. | String | <ul><li>on: Enable this feature.</li><li>Other values: Disable this feature.</li></ul> |
+<!-- end id1 -->
 
+<!-- npu="950,A3,910b" id2 -->
 ## TaskD Environment Variables<a name="section6616275583"></a>
 
 The table below describes environment variables that can be configured when TaskD is used. For other environment variables from the source code, see [PyTorch Documentation](https://pytorch.ac.cn/#google_vignette).
@@ -401,10 +404,11 @@ The table below describes environment variables that can be configured when Task
 | ENABLE_RESTART_FAULT_PROCESS | Switch for the TaskD component to enable the process-level in-place recovery feature. | String | Value: <ul><li>on: Enable this feature</li><li>Other Values: Disable this feature</li></ul> |
 | RESTART_FAULT_PROCESS_TYPE | Type of notification from TaskD to MindIO for restarting the faulty process. | String | Value: <ul><li>worker: Do not exit the pod, and only restart the faulty process</li><li>pod: Restart the pod</li></ul> |
 | TASKD_PROCESS_ENABLE | Switch for TaskD to enable process-level rescheduling, process-level online recovery, process-level in-place recovery, and elastic training features. | String | Value: <ul><li>on: Enable this feature</li><li>off: Disable this feature</li></ul> |
-| LOCAL_PROXY_ENABLE | Whether to enable the local proxy (required for security hardening). | String | Value: <ul><li>on: Enable this feature</li><li>off: Disable this feature</li></ul>Default Value is "off". It must be set to "on" for communication security hardening scenarios. |
-| HCCL_ASYNC_ERROR_HANDLING | Whether to enable the watchdog feature. | String | Value: <ul><li>0: Disables fault detection and process exit features.</li><li>1: Enables fault detection and process exit features.</li><li>2: Enables only the fault detection feature.</li></ul>Default Value is 1. |
-| TASKD_PROCESS_INTERVAL | Sets the processing interval for the TaskD Manager main process. | String | Value ranging from 100 to 1000, in milliseconds. |
-| TASKD_REPORT_FAULT_TIMEOUT | Timeout for TaskD Agent to report service faults to TaskD Manager. If the fault persists after the timeout, TaskD Agent exits. | String | Value ranging from 300 to 600, in seconds. |
+| LOCAL_PROXY_ENABLE | Whether to enable the local proxy (required for security hardening). | String | Value: <ul><li>on: Enable this feature</li><li>off: Disable this feature</li></ul>The default value is "off". It must be set to "on" for communication security hardening scenarios. |
+| HCCL_ASYNC_ERROR_HANDLING | Whether to enable the watchdog feature. | String | Value: <ul><li>0: Disables fault detection and process exit features.</li><li>1: Enables fault detection and process exit features.</li><li>2: Enables only the fault detection feature.</li></ul>The default value is 1. |
+| TASKD_PROCESS_INTERVAL | Sets the processing interval for the TaskD Manager main process. | String | Value ranging from 100 to 1000, in milliseconds. The default value is 100. |
+| TASKD_REPORT_FAULT_TIMEOUT | Timeout for TaskD Agent to report service faults to TaskD Manager. If the fault persists after the timeout, TaskD Agent exits. | String | Value ranging from 300 to 600, in seconds. The default value is -1, meaning no timeout is set.|
+<!-- end id2 -->
 
 ## NodeD Environment Variable<a name="section10131935141216"></a>
 
@@ -416,6 +420,7 @@ The table below describes environment variables that can be configured when Task
 |--|--|--|--|
 | XDL_IP | Used to obtain the IP address of the host where the pod resides. Used by slow nodes to record and match slow node information. | A valid IP address in string format, either regular IPv4 or IPv6. | Write this environment variable in the YAML for deploying NodeD. |
 
+<!-- npu="950,A3,910b" id3 -->
 ## MindIO TFT Environment Variables<a name="section10131935156854"></a>
 
 **Table 7** MindIO TFT environment variables
@@ -426,7 +431,7 @@ The table below describes environment variables that can be configured when Task
 |--|--|--|--|
 | TTP_LOG_PATH | MindIO TFT log path. Soft links are not allowed. The log file name is appended as ttp_log.log. It is recommended that the log path contains the date and time to avoid multiple training sessions recording to the same log, which would cause circular overwriting. It is recommended to configure the log path in the training startup script as follows: <br> `date_time=$(date +%Y-%m-%d-%H_%M_%S)` <br> `export TTP_LOG_PATH=logs/${date_time}` <br> When shared storage is used, it is recommended to configure the log path by node: <br> `export TTP_LOG_PATH=logs/${nodeId}` | Folder path. | logs |
 | TTP_LOG_LEVEL | MindIO TFT log level. <ul><li>DEBUG: Detailed information, applicable only when diagnosing problems.</li><li>INFO: Confirms that the program runs as expected.</li><li>WARNING: Indicates an unexpected situation that has occurred or is about to occur, but the program still runs as expected.</li><li>ERROR: Due to a serious problem, some functions of the program cannot be executed normally.</li></ul> | <ul><li>DEBUG</li><li>INFO</li><li>WARNING</li><li>ERROR</li></ul> | INFO |
-| TTP_LOG_MODE | MindIO TFT log mode. <ul><li>ONLY_ONE: All MindIO TFT processes write to one log.</li><li>PER_PROC: Each MindIO TFT process writes an independent log. The log file path is {TTP_LOG_PATH}/ttp_log.log.{pid}.</li></ul> | <ul><li>ONLY_ONE</li><li>PER_PROC (if not specified as ONLY_ONE, the default is PER_PROC)</li></ul> | PER_PROC |
+| TTP_LOG_MODE | MindIO TFT log mode. <ul><li>ONLY_ONE: All MindIO TFT processes write to one log.</li><li>PER_PROC: Each MindIO TFT process writes an independent log. The log file path is {TTP_LOG_PATH}/ttp_log.log.{pid}.</li></ul> | <ul><li>ONLY_ONE</li><li>PER_PROC (if not specified as ONLY_ONE, the default value is PER_PROC)</li></ul> | PER_PROC |
 | TTP_LOG_STDOUT | MindIO TFT log recording mode. <ul><li>0: Records MindIO TFT running logs to the corresponding log file.</li><li>1: Directly prints MindIO TFT running logs without local storage.</li></ul> | <ul><li>0</li><li>1</li></ul> | 0 |
 | MASTER_ADDR | IP address or domain name of the training master node. | Valid IPv4 or IPv6 address, or domain name. | - |
 | MASTER_PORT | Communication port of the training master node. The port is configurable. If an invalid value is used, the default value 6000 is used. | [1024, 65535] | - |
@@ -450,3 +455,4 @@ The table below describes environment variables that can be configured when Task
 |--|--|--|--|
 | MINDIO_AUTO_PATCH_MEGATRON | Whether to automatically patch the Checkpoint-related functions in the Megatron framework source code when importing mindio_acp. | <ul><li>true or 1: Enable</li><li>Others: Disable</li></ul> | false |
 | HCOM_FILE_PATH_PREFIX | Prefix of the file path generated by HCOM. The prefix ensures that files are only created and deleted within the current path (this path must already exist). | Path parameter. | ${install_path} |
+<!-- end id3 -->

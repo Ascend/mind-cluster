@@ -133,7 +133,7 @@ deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Pl
 
 **表 1**  fault-config-任务名称
 
-<a name="table68216761214"></a>
+<a name="table6821676121423"></a>
 
 |字段名称|含义|取值|备注|
 |--|--|--|--|

@@ -19,7 +19,7 @@
 
 ## LLD.xlsx文件说明
 
-需要提供 `LLD.xlsx` 文件，样例文件可参考：[LLD.xlsx](../../../../resource/LLD.xlsx)。该文件需包含两个 Sheet：
+需要提供 `LLD.xlsx` 文件，样例文件可参考：[LLD.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/1c76693517e8e08dc2b3403497eb945134946916/LLD.xlsx)。该文件需包含两个 Sheet：
 
 | Sheet 名 | 必填项 | 用途 |
 |----------|--------|------|
@@ -28,7 +28,7 @@
 
 ## threshold_config.json文件说明
 
-阈值配置文件 `threshold_config.json` 用于覆盖各诊断项的默认阈值，便于根据实际环境调整判障标准。该文件需放置在 `set_config_dir` 设置的配置目录下，工具加载配置时自动读取；未放置该文件时使用代码内置默认阈值。完整示例文件请参见[threshold_config.json](../../../../resource/threshold_config.json)。
+阈值配置文件 `threshold_config.json` 用于覆盖各诊断项的默认阈值，便于根据实际环境调整判障标准。该文件需放置在 `set_config_dir` 设置的配置目录下，工具加载配置时自动读取；未放置该文件时使用代码内置默认阈值。完整示例文件请参见[threshold_config.json](https://raw.gitcode.com/Ascend/mind-cluster/blobs/a507a1f8b90420c25290e69c7d431c947e522ef2/threshold_config.json)。
 
 配置文件为 JSON 对象，每个配置项对应一个阈值名称，阈值字段统一嵌套在 `threshold` 子对象内，例：
 

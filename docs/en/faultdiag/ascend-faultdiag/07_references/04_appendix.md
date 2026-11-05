@@ -37,4 +37,4 @@ The ascend-fd version number follows the format `X.Y.Z`, for example, `26.2.0`.
 
 ## Known Faults
 
-Refer to [MindCluster 26.2.0 Fault Diagnosis Types](https://raw.gitcode.com/Ascend/mind-cluster/blobs/c49ed595d1b87b34eaf020591778c4536c34b2fe/%E6%95%85%E9%9A%9C%E8%AF%8A%E6%96%AD%E7%B1%BB%E5%9E%8B.xlsx).
+Refer to [MindCluster 26.2.0 Fault Diagnosis Types](https://raw.gitcode.com/Ascend/mind-cluster/blobs/ec70b93018ddf49da3898c2b13dd610366ee1185/%E6%95%85%E9%9A%9C%E8%AF%8A%E6%96%AD%E7%B1%BB%E5%9E%8B.xlsx).

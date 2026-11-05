@@ -158,7 +158,7 @@ The Elastic-Agent return codes are shown in [Table 1](#table1248859202914).
 | ProcessNotReady | 404 | The training process is not started. |
 | RecoverableRetryError | 405 | Recovery failed due to a clean device failure. |
 | UnRecoverableRetryError | 406 | Recovery failed due to a stop device failure. |
-| DumpError | 407 | Failed to save the last words. |
+| DumpError | 407 | Failed to save the dying gasps. |
 | UnInit | 408 | Initialization is not called. |
 | ClientError | 499 | Other failure causes. |
 | OutOfMaxServeJobs | 500 | The maximum number of service jobs has been exceeded. |
