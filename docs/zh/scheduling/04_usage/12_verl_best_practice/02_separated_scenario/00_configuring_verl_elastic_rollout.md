@@ -107,26 +107,29 @@
 
 1. 安装MindCluster集群调度组件（Volcano、Ascend Device Plugin、Ascend Docker Runtime、Ascend Operator、ClusterD），安装部署请参见[安装部署](../../../05_developer_guide/00_installation_deployment/menu_installation_deployment.md)。
 2. 参照[部署verl强化学习任务](../01_colocated_scenario/01_deploying_verl_reinforcement_learning_job.md)操作步骤1~3准备镜像、模型和数据集，并额外创建共享存储目录（如`/home/rollout_progress`），用于token续推进度持久化。
-3. 安装指定版本verl（基于verl 0.9.0分支适配，git ref为`v0.9.0`），支持以下两种方式：
+3. 安装指定版本verl（基于verl 0.9.0分支适配，git ref为`release/v0.9.0`分支），支持以下两种方式：
+
+    >[!NOTE]
+    >请使用`release/v0.9.0`分支的最新代码（commit为`91c297dc8d9991b79c90cad5b50683a5d6d8c02b`），不要使用`v0.9.0`标签（tag）的代码（commit为`483b8a009ba3a97563edee3a19887e4862b8094a`）。
 
     - 方式一：pip安装（推荐）
 
         ```shell
-        pip install "verl @ git+https://github.com/verl-project/verl.git@v0.9.0"
+        pip install "verl @ git+https://github.com/verl-project/verl.git@release/v0.9.0"
         ```
 
-        pip会自动clone仓库、checkout到该版本并构建安装，无需手动管理代码目录。
+        pip会自动clone仓库、checkout到该分支并构建安装，无需手动管理代码目录。
 
     - 方式二：git clone源码安装
 
         ```shell
         git clone https://github.com/verl-project/verl.git
         cd verl
-        git checkout v0.9.0
+        git checkout release/v0.9.0
         pip install -e .
         ```
 
-        适合需要查看或修改verl源码的场景，安装后代码目录保留在本地。
+        适合需要查看或修改verl源码的场景，安装后代码目录保留在本地。如需固定到本文档验证过的代码，可执行`git checkout 91c297dc8d9991b79c90cad5b50683a5d6d8c02b`。
 
 4. 获取[verl-ascend-recipe代码](https://github.com/verl-project/verl-ascend-recipe)，将`rollout_elastic`目录与verl原生代码放置在同一目录下，使容器可导入该模块：
 
