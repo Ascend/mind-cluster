@@ -49,7 +49,7 @@
 <tr id="row0414dra240021"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240021"><a name="p0414dra240021"></a><a name="p0414dra240021"></a>支持产品形态</p>
 </td>
 <td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240022"><a name="p0414dra240022"></a><a name="p0414dra240022"></a>支持的产品形态如下：</p>
-<a name="ul0414dra240021"></a><a name="ul0414dra240021"></a><ul id="ul0414dra240021"><li><term>Atlas A2系列产品</term></li><li><term>Atlas A3系列产品</term></li><li><term>Ascend 950PR&amp;950DT系列产品</term></li></ul>
+<a name="ul0414dra240021"></a><a name="ul0414dra240021"></a><ul id="ul0414dra240021"><li><term>Ascend 950PR&amp;950DT系列产品</term></li></ul>
 </td>
 </tr>
 <tr id="row0414dra240023"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240023"><a name="p0414dra240023"></a><a name="p0414dra240023"></a>健康检查端口</p>
