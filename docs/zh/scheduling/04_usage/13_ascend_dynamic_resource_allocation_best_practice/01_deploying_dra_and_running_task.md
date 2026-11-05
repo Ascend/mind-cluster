@@ -132,11 +132,11 @@ Ascend DRA基于Kubernetes动态资源分配（Dynamic Resource Allocation，DRA
 
    ```text
    PrepareResourceClaims is called, number of claims: 1
-   devices prepared for claim <claim-uid>, count=1, cdiIDs=[npu.huawei.com/ascend910=0]
+   devices prepared for claim <claim-uid>, count=1, cdiIDs=[ascend.com/npu=0]
    Returning newly prepared devices for claim '<claim-uid>', count=1
    ```
 
-   其中，`<claim-uid>`为ResourceClaim的UID，cdiIDs为CDI设备ID列表，格式为`<driverName>/<class>=<index>`，driverName取值为`npu.huawei.com`。
+   其中，`<claim-uid>`为ResourceClaim的UID，cdiIDs为CDI设备ID列表，格式为`<driverName>/<class>=<index>`，driverName取值为`ascend.com`。
 
 5. 查看生成的CDI（Container Device Interface） spec文件。
 
