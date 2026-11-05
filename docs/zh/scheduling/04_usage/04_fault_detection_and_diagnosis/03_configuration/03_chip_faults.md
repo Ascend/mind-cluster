@@ -94,6 +94,33 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 >     - 无法识别出是硬件还是软件类故障：该类故障无法准确识别是硬件还是软件故障，且会影响训练任务。该类故障不提供提升故障级别的初始化配置，建议用户根据实际情况手动配置任务支持的断点续训最大次数和达到最大次数后故障的处理策略，可以参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)进行配置。
 >     - 软件配置类故障：该类故障为软件配置类问题，正常情况下不会出现。该类故障不提供提升故障级别的初始化配置，建议用户检查软件版本是否配套。
 
+**EscalationMode（故障升级模式）说明**
+
+`EscalationMode`为`FaultFrequency`下的可选参数，用于控制故障频率计数与故障超时策略是否联动生效，取值为`combined`或`independent`。
+
+- `combined`：频率计数依赖时长超时触发。时长超时计一次故障发生，时长恢复计一次故障恢复。
+- `independent`：频率计数独立于时长超时。每次故障发生直接计频率发生，每次故障恢复直接计频率恢复，时长超时只触发时长升级。
+- 不配置该参数时自动推导：该故障码在`FaultDuration`中有配置则为`combined`，否则为`independent`。
+- 配置为`combined`但该故障码在`FaultDuration`中无配置时，自动降级为`independent`。
+
+以故障码81078603为例，将`EscalationMode`配置为`independent`（频率计数独立于时长超时），示例如下。
+
+```json
+{
+  "EventId": ["81078603"],
+  "TimeWindow": 86400,
+  "Times": 5,
+  "FaultHandling": "ManuallySeparateNPU",
+  "ReleaseTimeWindow": 172800,
+  "EscalationMode": "independent"
+}
+```
+
+>[!NOTE]
+>
+>- 一个故障码仅支持配置一条`FaultFrequency`数据，同一故障码的`EscalationMode`只能取一个值（`combined`或`independent`）。
+>- 不支持通过配置两条数据分别表示`combined`与`independent`两种模式下的故障判定；若同一故障码重复配置，后面的条目将被忽略，并打印`duplicated event id detected`告警日志。
+
 **faultCustomization.json参数说明<a name="zh-cn_topic_0000002171521445_section33036167576"></a>**
 
 用户不手动修改faultCustomization.json文件时，Ascend Device Plugin按照faultCustomization.json的默认配置（默认值）进行故障处理。faultCustomization.json文件参数说明请参见[表2](../../../06_api/02_ascend_device_plugin.md#自定义芯片故障)。
