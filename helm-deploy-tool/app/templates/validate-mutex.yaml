@@ -1,0 +1,8 @@
+{{- /*
+Ascend Device Plugin and Ascend DRA are mutually exclusive device access methods.
+Enabling both in the same release makes the two DaemonSets conflict on NPU nodes,
+so fail the whole install/upgrade before any resource is applied to the cluster.
+*/ -}}
+{{- if and (index .Values "ascend-device-plugin" "enabled") (index .Values "ascend-dynamic-resource-allocation" "enabled") }}
+{{- fail "ascend-device-plugin and ascend-dynamic-resource-allocation are mutually exclusive and cannot be enabled at the same time. Please disable one of them in values.yaml and retry." }}
+{{- end }}
