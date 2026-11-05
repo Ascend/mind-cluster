@@ -206,7 +206,7 @@ DPU资源监测所需组件：DPU Exporter
 
 **所需组件<a name="section143231032154719"></a>**
 
-- Ascend Device Plugin
+Ascend Device Plugin
 
 **使用说明<a name="section74221327111220"></a>**
 

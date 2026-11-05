@@ -34,7 +34,7 @@
     <tr><td>Atlas A3 inference products: <p>Atlas 800I A3</p></td></tr>
     <tr>
       <td rowspan="2">Ascend 950PR&950DT products</td>
-      <td>Ascend 950PR products: <ul><li>Atlas 350 accelerator cards</li><li>Atlas 850</li><li>Atlas 650</li></ul></td>
+      <td>Ascend 950PR products: <ul><li>Atlas 350 accelerator card</li><li>Atlas 850</li><li>Atlas 650</li></ul></td>
     </tr>
     <tr><td>Ascend 950DT products: <ul><li>Atlas 850E</li><li>Atlas 650E</li><li>Atlas 950 SuperPoD</li><li>Atlas 950 SuperPoD Flex</li></ul></td></tr>
   </tbody>

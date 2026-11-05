@@ -1,6 +1,6 @@
 # Telegraf Data Information Description<a name="ZH-CN_TOPIC_0000002511426775"></a>
 
-After Telegraf runs, the monitored data information of the Ascend AI Processor will be displayed. The following information is for reference only, and the actual display shall prevail. For detailed description of the data information, see below or [Data Description.xlsx](../../../resource/Data_Description.xlsx).
+After Telegraf runs, the monitored data information of the Ascend AI Processor will be displayed. The following information is for reference only, and the actual display shall prevail. For detailed description of the data information, see below or [Data Description.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/6d94cd44e839440a329507e803dc225beb80d46e/Data_Description.xlsx).
 
 ```ColdFusion
 ...
@@ -10,20 +10,43 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 This interface supports querying default metric groups and custom metric groups. For details on how to customize metric groups, see [Custom Metric Development](../../05_developer_guide/01_custom_metrics_development.md). The default metric groups include the following sections. The collection and reporting of metric groups are controlled by switches in the configuration file. If a switch is configured as enabled, the corresponding metric group will be collected and reported; if a switch is configured as disabled, the corresponding metric group will not be collected and reported.
 
   - [Version Data Information](#version-data-information)
+
   - [Basic Node Information](#basic-node-information)
   - [NPU Data Information](#npu-data-information)
   - [Utilization Data Information](#utilization-data-information)
+<!-- npu="A3,910b,310p" id1 -->
   - [vNPU Data Information](#vnpu-data-information)
+<!-- end id1 -->
+<!-- npu="950,A3,910b,910" id3 -->
   - [network_bandwidth Data Information](#network_bandwidth-data-information)
+<!-- end id3 -->
+<!-- npu="950,A3,910b,910" id5 -->
   - [network_link Data Information](#network_link-data-information)
+<!-- end id5 -->
+<!-- npu="950,A3,910b,910" id7 -->
   - [On-Chip Memory Data Information](#on-chip-memory-data-information)
+<!-- end id7 -->
+<!-- npu="A3,910b" id9 -->
   - [HCCS Data Information](#hccs-data-information)
+<!-- end id9 -->
+<!-- npu="910b" id11 -->
   - [PCIe Data Information](#pcie-data-information)
+<!-- end id11 -->
+<!-- npu="A3,910b,910" id13 -->
   - [RoCE Data Information](#roce-data-information)
+<!-- end id13 -->
+<!-- npu="950,A3" id15 -->
   - [SIO Data Information](#sio-data-information)
+<!-- end id15 -->
+<!-- npu="950,A3,910b,910" id17 -->
   - [Optical Module Data Information](#optical-module-data-information)
+<!-- end id17 -->
+<!-- npu="910,310p" id19 -->
   - [DDR Data Information](#ddr-data-information)
+<!-- end id19 -->
+<!-- npu="950" id21 -->
   - [UB Data Information](#ub-data-information)
+<!-- end id21 -->
 
 >[!NOTE]
 >
@@ -276,6 +299,7 @@ This interface supports querying default metric groups and custom metric groups.
 | utilization | npu_chip_info_cube_utilization | AICube utilization of the Ascend AI Processor| % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
 | utilization | npu_chip_info_overall_utilization | Overall utilization of the Ascend AI Processor | % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
 
+<!-- npu="A3,910b,310p" id2 -->
 ## vNPU Data Information<a name="section814111613432"></a>
 
 **Table 5** vNPU data information
@@ -324,7 +348,9 @@ This interface supports querying default metric groups and custom metric groups.
 </tr>
 </tbody>
 </table>
+<!-- end id2 -->
 
+<!-- npu="950,A3,910b,910" id4 -->
 ## network_bandwidth Data Information<a name="section1358881214551"></a>
 
 **Table 6** network_bandwidth data information
@@ -379,7 +405,9 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 </tr></tbody>
 </table>
+<!-- end id4 -->
 
+<!-- npu="950,A3,910b,910" id6 -->
 ## network_link Data Information<a name="section1358881214552"></a>
 
 **Table 7** network_link data information
@@ -443,7 +471,9 @@ This interface supports querying default metric groups and custom metric groups.
 </td>
 </tr></tbody>
 </table>
+<!-- end id6 -->
 
+<!-- npu="950,A3,910b,910" id8 -->
 ## On-Chip Memory Data Information<a name="section177232045203114"></a>
 
 **Table 8** On-Chip memory data information
@@ -576,7 +606,9 @@ This interface supports querying default metric groups and custom metric groups.
 </tr>
 </tbody>
 </table>
+<!-- end id8 -->
 
+<!-- npu="A3,910b" id10 -->
 ## HCCS Data Information<a name="section039816240252"></a>
 
 **Table 9** HCCS data information
@@ -675,7 +707,9 @@ This interface supports querying default metric groups and custom metric groups.
 </tr>
 </tbody>
 </table>
+<!-- end id10 -->
 
+<!-- npu="910b" id12 -->
 ## PCIe Data Information<a name="section1240520241824136"></a>
 
 **Table 10** PCIe data information
@@ -754,7 +788,9 @@ This interface supports querying default metric groups and custom metric groups.
 </tr>
 </tbody>
 </table>
+<!-- end id12 -->
 
+<!-- npu="A3,910b,910" id14 -->
 ## RoCE Data Information<a name="section184516450323"></a>
 
 **Table 11** RoCE data information
@@ -965,7 +1001,9 @@ This interface supports querying default metric groups and custom metric groups.
 </tr>
 </tbody>
 </table>
+<!-- end id14 -->
 
+<!-- npu="950,A3" id16 -->
 ## SIO Data Information<a name="section7109037161515"></a>
 
 **Table 12** SIO data information
@@ -1005,7 +1043,9 @@ This interface supports querying default metric groups and custom metric groups.
 </tr>
 </tbody>
 </table>
+<!-- end id16 -->
 
+<!-- npu="950,A3,910b,910" id18 -->
 ## Optical Module Data Information<a name="section1517163183510"></a>
 
 **Table 13** Optical module data information
@@ -1102,7 +1142,9 @@ This interface supports querying default metric groups and custom metric groups.
 </tr>
 </tbody>
 </table>
+<!-- end id18 -->
 
+<!-- npu="910,310p" id20 -->
 ## DDR Data Information<a name="section114607361931169"></a>
 
 **Table 14** DDR data information
@@ -1145,7 +1187,9 @@ This interface supports querying default metric groups and custom metric groups.
 </tr>
 </tbody>
 </table>
+<!-- end id20 -->
 
+<!-- npu="950" id22 -->
 ## UB Data Information<a name="section998877563214"></a>
 
 **Table 15** UB Data Information
@@ -1599,10 +1643,11 @@ This interface supports querying default metric groups and custom metric groups.
 </tr>
 </tbody>
 </table>
+<!-- end id22 -->
 
 ## HDK Interface Call<a name="section345820153363"></a>
 
-NPU Exporter obtains corresponding information by calling the underlying HDK interfaces. For more details, refer to [HDK APIs Called by NPU Exporter.xlsx](../../../resource/HDK_APIs_called_by_NPU_Exporter.xlsx). To find the HDK interface corresponding to the data information, refer to the following steps.
+NPU Exporter obtains corresponding information by calling the underlying HDK interfaces. For more details, refer to [HDK APIs Called by NPU Exporter.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/bf05e2cc441c9cf12792bc8f4536c4b01f7f00a8/HDK_APIs_called_by_NPU_Exporter.xlsx). To find the HDK interface corresponding to the data information, refer to the following steps.
 
 1. Log in to the [Ascend Computing Documentation](https://support.huawei.com/enterprise/en/category/ascend-computing-pid-1557196528909?submodel=doc) center, select and click the corresponding product name to enter the documentation page. For example, to search for the Atlas 800I A2 documentation, click "Atlas 800I A2".
 2. Find "Secondary Development" in the left navigation bar.

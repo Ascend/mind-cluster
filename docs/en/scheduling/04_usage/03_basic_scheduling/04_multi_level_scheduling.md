@@ -277,14 +277,14 @@ annotations:
   huawei.com/affinity-config: level1=2,level2=4 # Configures the network group size for different levels according to the actual needs of the job
 ```
 
-For the complete job YAML configuration, see [pytorch_multinodes_acjob_super_pod_multilevel.yaml](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/train/basic-training/multilevel/pytorch_multinodes_acjob_super_pod_multilevel.yaml).
+For the complete job YAML configuration, see [pytorch_multinodes_acjob_super_pod_multilevel.yaml](https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/train/basic-training/multilevel/pytorch_multinodes_acjob_super_pod_multilevel.yaml).
 
 In `affinity-config`, the number after `level` indicates the network level sequence number, and the number after the equal sign indicates how many Pods are grouped together within the network at that level. In this example:
 
 - level1=2: Every two Pods form a close-knit group, and the Pods in the group must be placed under the same `superpodid`.
 - level2=4: Four Pods form a large group, and the Pods in the group must be placed under the same `groupid`.
 
-The job tree obtained after the preceding annotations are expanded is as follows. The job tree describes the communication structure of the job: Pods in the same level1 group communicate most frequently and must be directly connected through the first-layer switch; Pods in different level1 groups but the same level2 group communicate less frequently and are allowed to pass through an upper-layer switch.
+The job tree obtained after the preceding annotations are expanded is as follows. The job tree describes the communication structure of the job: Pods in the same level1 group communicate most frequently and must be directly connected through the first-layer switch; Pods in different level1 groups but the same level2 group do not communicate very frequently and are allowed to pass through an upper-layer switch.
 
 ```text
 Job tree (what the job requires)
@@ -396,7 +396,7 @@ This section only provides the YAML parameters required for multi-level scheduli
 
 This section guides users on how to configure the job YAML for the multi-level scheduling feature. Taking `pytorch_multinodes_acjob_super_pod.yaml` as an example, create a multi-level scheduling training job on the Atlas 9000 A3 SuperPoD. The modification example is as follows.
 
-```Yaml
+<pre codetype="yaml">
 apiVersion: mindxdl.gitee.com/v1
 kind: AscendJob
 metadata:
@@ -406,8 +406,8 @@ metadata:
     ring-controller.atlas: ascend-{xxx}b  # Identifies the product type
     podgroup-sched-enable: "true"  # Only configured when the cluster uses the openFuyao customized Kubernetes and volcano-ext components. When set to the string "true", batch scheduling is enabled; when set to any other string, batch scheduling does not take effect and normal scheduling is used; if this parameter is not configured, batch scheduling does not take effect and normal scheduling is used.
   annotations:
-    huawei.com/schedule_policy: multilevel # Configures the scheduling policy as multilevel scheduling policy
-    huawei.com/affinity-config: level1=2,level2=4 # Configures the network group size for different levels according to the actual needs of the job
+    <strong>huawei.com/schedule_policy: multilevel # Configures the scheduling policy as multilevel scheduling policy</strong>
+    <strong>huawei.com/affinity-config: level1=2,level2=4 # Configures the network group size for different levels according to the actual needs of the job</strong>
 spec:
   schedulerName: volcano  # Takes effect when the Ascend Operator component's startup parameter enableGangScheduling is set to true
   runPolicy:
@@ -476,7 +476,7 @@ spec:
                 huawei.com/Ascend910: 8   # Number of chips requested by the job; for multilevel scheduling jobs, this must match the maximum number of NPUs per node
               requests:
                 huawei.com/Ascend910: 8   # Must match the limits value
-```
+</pre>
 
 If you need to configure CPU and memory resources, or modify the mount paths of training scripts and code, see the corresponding steps in [Configuring YAML](./03_full_npu_scheduling.md#configuring-yaml).
 

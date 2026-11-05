@@ -22,8 +22,10 @@ The scheduler continuously polls and queries the Pod status of each job, so as t
 
 An abnormal Task execution on an NPU (service plane fault) may cause healthy NPUs in the job to fail to communicate with the faulty NPU, so that the collective communication of the healthy NPUs enters a timeout waiting state, and the job exits only after a collective communication timeout exception occurs (30 minutes by default). If the watchdog function is enabled (the unconditional retry capability upon service plane faults must be enabled at the same time), after the exception occurs, the faulty NPU can be isolated and the job can be rescheduled to a healthy NPU, so that the job exits quickly within 6 minutes.
 
+<!-- npu="910b" id1 -->
 >[!NOTE]
 >Task execution exceptions on NPUs support the watchdog function only for the PyTorch framework of <term>Atlas A2 training products</term>.
+<!-- end id1 -->
 
 ### Required Components<a name="zh-cn_topic_0000002194466236_section138036504533"></a>
 
@@ -55,7 +57,7 @@ Hang fault detection is performed by Ascend Device Plugin, which performs a roun
    - Network traffic:
      - For <term>Ascend 950PR&950DT products</term>, use the hccn_tool to collect the `tx_busi_flit_num` and `rx_busi_flit_num` statistics of UB.
      - For other scenarios, use the hccn_tool to collect the `roce_tx_all_pkt_num` and `roce_rx_all_pkt_num` statistics of RoCE.
-   - Process CPU time: Obtain the `utime` and `stim`e of the process by reading the `/proc/{pid}/stat` file, and calculate the CPU time of all processes associated with the NPU.
+   - Process CPU time: Obtain the `utime` and `stime` of the process by reading the `/proc/{pid}/stat` file, and calculate the CPU time of all processes associated with the NPU.
 3. Compare the metrics of the current round with those saved in the previous round and calculate the increment of each metric.
 4. When **all** the following conditions are met, the job in this round is determined to be in a hang state:
    - A process is running on the NPU.

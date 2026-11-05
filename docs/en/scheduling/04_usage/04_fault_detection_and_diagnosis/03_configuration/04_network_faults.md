@@ -8,8 +8,10 @@
 
 To handle bus device faults by level, Ascend Device Plugin obtains the fault code of the current fault and handles the fault accordingly based on the fault level configured for the fault code in `SwitchFaultCode.json`. `SwitchFaultCode.json` is a system configuration file. Do not modify it unless necessary. If you need to change the fault level corresponding to a fault code, use the `mindx-dl-fault-config` file created from `faultCode.json` and `SwitchFaultCode.json`.
 
+<!-- npu="A3" id1 -->
 >[!NOTE]
 >Only <term>Atlas A3 training products</term> involve **bus devices**, and their fault codes can be viewed in the `SwitchFaultCode.json` file.
+<!-- end id1 -->
 
 The fault detection feature handles **bus device** faults by level. If you need to change the fault level of a fault code, see [(Optional) Configuring the Bus Device Fault Level](#ZH-CN_TOPIC_0000002511426433).
 
@@ -263,7 +265,7 @@ If you want to customize related fault codes and the corresponding handling poli
 
 **Procedure<a name="zh-cn_topic_0000002157048501_section2086912531189"></a>**
 
-The following uses `RelationFaults` with fault code `81078603` and `TriggerFault` with fault code `8C1F8609` as an example. If the `8C1F8609` fault occurs, and `8C1F8609` occurs within the following 60s, the `8C1F8609` fault needs to be ignored and the job with the `81078603` fault needs to be isolated. You can manually configure the handling policy for related faults as `Separate`.
+The following uses `RelationFaults` with fault code `81078603` and `TriggerFault` with fault code `8C1F8609` as an example. If the `81078603` fault occurs, and `8C1F8609` occurs within the following 60s, the `8C1F8609` fault needs to be ignored and the job with the `81078603` fault needs to be isolated. You can manually configure the handling policy for related faults as `Separate`.
 
 1. Log in to the environment and go to the decompressed ClusterD directory.
 2. Run the `vi relationFaultCustomization.json` command to edit the configuration file.
@@ -304,6 +306,7 @@ The following uses `RelationFaults` with fault code `81078603` and `TriggerFault
     …
     ```
 
+<!-- npu="A3" id2 -->
 ## Configuring UnifiedBus Network Detection<a name="zh-cn_topic_0000002193288232_section18190175418362"></a>
 
 ### Prerequisites<a name="zh-cn_topic_0000002193288232_section8281518121516"></a>
@@ -385,7 +388,9 @@ To configure UnifiedBus network detection, perform the following steps.
           name: super-pod-0       # 0 is the SuperPoD ID
           namespace: cluster-system
         ```
+<!-- end id2 -->
 
+<!-- npu="950" id3 -->
 ## Configuring Optical Link Member Port Faults<a name="ZH-CN_TOPIC_0000002479387566"></a>
 
 ### Configuration File Description<a name="ZH-CN_TOPIC_0000002479387566_section_specifications "></a>
@@ -406,6 +411,7 @@ For customization, distinguish the configured product forms. When the UBoE outbo
   ],
     ...
 ```
+<!-- end id3 -->
 
 ## Configuring Watchdog Fault Detection
 

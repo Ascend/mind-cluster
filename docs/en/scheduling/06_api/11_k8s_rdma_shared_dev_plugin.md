@@ -170,7 +170,7 @@ How to obtain each resource:
 
 In the container scenario, you also need to configure the `NET_ADMIN`, `SYS_ADMIN`, and `IPC_LOCK` permissions for the service container. For the configuration method, see the YAML example below.
 
-The following is a configuration example of mounting driver configuration files and dynamic libraries through `hostPath` (for the other Pod configurations, see [Business Pod Usage and Mounted Resource Description](../04_usage/03_basic_scheduling/07_dpu_scheduling.md#ZH-CN_TOPIC_biz_pod_check_k8s_rdma_shared_dev_plugin)):
+The following is a configuration example of mounting driver configuration files and dynamic libraries through `hostPath` (for the other Pod configurations, see [Business Pod Usage and Mounted Resource Description](../04_usage/03_basic_scheduling/06_dpu_scheduling.md#ZH-CN_TOPIC_biz_pod_check_k8s_rdma_shared_dev_plugin)):
 
 ```yaml
 apiVersion: v1

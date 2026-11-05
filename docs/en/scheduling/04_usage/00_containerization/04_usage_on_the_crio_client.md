@@ -246,6 +246,7 @@ In the following examples, `{image-name:tag}` is the image name and tag, such as
     crictl run container-config.json pod-config.json
     ```
 
+<!-- npu="310b" id1 -->
 - Example 6: Mount the physical chip with chip ID 0 when starting the container and allow symbolic links in the mounted driver files (applicable only to Atlas 500 A2 intelligent station, Atlas 200I A2 accelerator module, and Atlas 200I DK A2 scenarios).
 
     ```json
@@ -288,6 +289,7 @@ In the following examples, `{image-name:tag}` is the image name and tag, such as
     crictl run container-config.json pod-config.json
     ```
 
+<!-- end id1 -->
 For details about the container configuration environment variables, see [Table 1](#table5134121862415).
 
 After the container is started, run the following commands to check whether the corresponding devices and drivers are mounted successfully. For the specific mount directory of each product model, see [Content Mounted by Ascend Docker Runtime](../../07_references/05_appendix.md#content-mounted-by-ascend-docker-runtime). Example commands are as follows:

@@ -6,7 +6,7 @@ The fault detection capability obtains the fault status of the cluster and of tr
 
 ## Supported Fault Modes
 
-Currently, more than 200 faults can be detected. For supported fault types, see [Table 1](#zh-cn_topic_0000002039699773_table9980135316395). For detailed fault descriptions, see [Typical_Faults.xlsx](../../../resource/Typical_Faults.xlsx).
+Currently, more than 200 faults can be detected. For supported fault types, see [Table 1](#zh-cn_topic_0000002039699773_table9980135316395). For detailed fault descriptions, see [Typical_Faults.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/258f6db313be04050c0965a6332beba3b93b9086/Typical_Faults.xlsx).
 
 **Table 1** Fault types
 

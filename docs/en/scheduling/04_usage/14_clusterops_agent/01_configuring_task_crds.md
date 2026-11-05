@@ -12,31 +12,32 @@ Agent Core supports the following job types by default, without any configuratio
 | inferjob (InferServiceSet inference job) | mindcluster.huawei.com/v1 | InferServiceSet |
 
 > [!NOTE]
-> If you use the preceding two job types, skip this section and go to [Configuring Log Collection](./02_configuring_log_collection.md).
+> If you use the preceding two job types, skip this section and go to [Configuring Log Collection](./02_configuring_log_collection.md). Otherwise, perform the following operations.
 
-**Step 1: Modify the ConfigMap `agent-core-task-crds` in `agent-core.yaml`**
+## Configuration Steps
 
-Add the `api_version` and `kind` of the CR to the `task_crds` list of the ConfigMap `agent-core-task-crds` inlined at the top of `agent-core.yaml`. The following example adds a Volcano Job (`batch.volcano.sh/v1alpha1`, kind `Job`). The modified `data.task_crds.yaml` content is as follows:
+1. Modify the ConfigMap `agent-core-task-crds` in `agent-core.yaml`.
 
-```yaml
-# data.task_crds.yaml of the ConfigMap agent-core-task-crds in agent-core.yaml
-task_crds:
-  - api_version: mindxdl.gitee.com/v1   # AscendJob
-    kind: AscendJob
-  - api_version: mindcluster.huawei.com/v1  # InferServiceSet (inference job)
-    kind: InferServiceSet
-  - api_version: batch.volcano.sh/v1alpha1  # Volcano Job (newly added)
-    kind: Job
-```
+    Add the `api_version` and `kind` of a job CR to the `task_crds` list of the ConfigMap `agent-core-task-crds` inlined at the top of `agent-core.yaml`.
 
-**Step 2: Restart Agent Core for the configuration to take effect**
+    The following uses adding a Volcano Job (`batch.volcano.sh/v1alpha1`, kind as `Job`) as an example. The modified `data.task_crds.yaml` content is as follows:
 
-```shell
-kubectl rollout restart deployment agent-core -n mindx-dl
-```
+    ```yaml
+    # data.task_crds.yaml of the ConfigMap agent-core-task-crds in agent-core.yaml
+    task_crds:
+      - api_version: mindxdl.gitee.com/v1   # AscendJob
+        kind: AscendJob
+      - api_version: mindcluster.huawei.com/v1  # InferServiceSet (inference job)
+        kind: InferServiceSet
+      - api_version: batch.volcano.sh/v1alpha1  # Volcano Job (newly added)
+        kind: Job
+    ```
 
-> [!NOTE]
-> After adding a job type, the ClusterRole does not need to be modified. Both job existence checks and Pod collection scheduling rely on relcache (the central relationship cache, which filters job Pods by `agent-core-task-crds`). Agent Core does not query CRs directly.
+2. Restart Agent Core for the configuration to take effect.
+
+    ```shell
+    kubectl rollout restart deployment agent-core -n mindx-dl
+    ```
 
 ## Verifying the Configuration<a name="sectionfaultdiagnosisverify"></a>
 

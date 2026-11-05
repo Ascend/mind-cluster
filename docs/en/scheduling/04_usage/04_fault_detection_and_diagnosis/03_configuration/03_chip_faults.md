@@ -105,7 +105,7 @@ When the Ascend Device Plugin image is built, the `faultCode.json` and `faultCus
 If you want to customize fault levels or graceful fault tolerance related configurations, you can create a ConfigMap file (`mindx-dl-fault-config`) in the cluster.
 
 - If `mindx-dl-fault-config` already exists in the cluster when Ascend Device Plugin is started, Ascend Device Plugin preferentially uses the content configured in the existing `mindx-dl-fault-config` as the basis for current fault handling.
-- If `mindx-dl-fault-config` already exists in the cluster after Ascend Device Plugin is reinstalled, the default `faultCode.jso`n of Ascend Device Plugin does not take effect, and the existing `mindx-dl-fault-config` in the cluster is used.
+- If `mindx-dl-fault-config` already exists in the cluster after Ascend Device Plugin is reinstalled, the default `faultCode.json` of Ascend Device Plugin does not take effect, and the existing `mindx-dl-fault-config` in the cluster is used.
 - If you want to use the default configuration of `faultCode.json` or `faultCustomization.json`, delete `mindx-dl-fault-config` so that Ascend Device Plugin reads the default `faultCode.json`, `SwitchFaultCode.json`, or `faultCustomization.json` file.
 - If the content of the ConfigMap file has problems such as format errors, Ascend Device Plugin reads the content of the ConfigMap file built into the image by default as the basis for current fault handling.
 

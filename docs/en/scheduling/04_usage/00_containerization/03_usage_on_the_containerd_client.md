@@ -40,12 +40,14 @@ The `{image-name:tag}` in the examples represents the image name and tag, such a
     ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 --env ASCEND_VNPU_SPECS=vir04 {image-name:tag} {containerID} bash
     ```
 
+<!-- npu="310b" id1 -->
 - Example 6: When starting a container, mount the physical chip with chip ID 0, and allow soft links in the mounted driver files (applicable only to Atlas 500 A2 intelligent station, Atlas 200I A2 accelerator module, and Atlas 200I DK A2 Developer Kit).
 
     ```shell
     ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 -e ASCEND_ALLOW_LINK=True {image-name:tag} {containerID} bash
     ```
 
+<!-- end id1 -->
 The parameters related to the startup command are shown in [Table 1](#table5134121862415).
 
 After the container is started, you can run the following commands to check whether the corresponding devices and drivers are mounted successfully. For the specific mount directories of each model, refer to [Content Mounted by Ascend Docker Runtime](../../07_references/05_appendix.md#content-mounted-by-ascend-docker-runtime). The command example is as follows:

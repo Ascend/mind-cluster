@@ -23,37 +23,37 @@ The complete lifecycle of Ascend DRA consists of the following six phases.
 
 <a name="fig_dra_life_cycle"></a>
 
-- **Deployment and discovery**: The user delivers the DeviceClass, RBAC, and DaemonSet through the API Server. After DRA starts, it queries the local node's NPU list through DCMI and publishes a ResourceSlice to the API Server.
-- **User submission**: The user submits a Pod that references a ResourceClaim, and resourceclaim-controller creates and associates the claim.
-- **Scheduling**: kube-scheduler or the Volcano Scheduler reads the ResourceSlice to match the DeviceClass, locks the device and writes it to Claim.status.allocation, and binds the Pod to the target node.
-- **Preparation (Prepare)**: After reading the claim and confirming the allocation result, kubelet calls the DRA plugin's NodePrepareResources callback. The plugin validates the allocation, generates a CDI spec file, and returns the CDI device IDs to kubelet.
-- **Running**: kubelet calls CRI to create the container. CRI automatically merges the static and dynamic CDI specs and injects the device nodes, mounts, and environment variables.
-- **Cleanup (Unprepare)**: After the user deletes the Pod, kubelet calls the DRA plugin's NodeUnprepareResources callback, cleans up the corresponding CDI spec, releases the claim, and returns the device to the resource pool.
+1. **Deployment and discovery**: The user delivers the DeviceClass, RBAC, and DaemonSet through the API Server. After DRA starts, it queries the local node's NPU list through DCMI and publishes a ResourceSlice to the API Server.
+2. **User submission**: The user submits a Pod that references a ResourceClaim, and ResourceClaim Controller creates and associates Claim.
+3. **Scheduling**: kube-scheduler or the Volcano Scheduler reads the ResourceSlice to match the DeviceClass, locks the device and writes it to Claim.status.allocation, and binds the Pod to the target node.
+4. **Preparation (Prepare)**: After reading the claim and confirming the allocation result, kubelet calls the DRA plugin's NodePrepareResources callback. The plugin validates the allocation, generates a CDI spec file, and returns the CDI device IDs to kubelet.
+5. **Running**: kubelet calls CRI to create the container. CRI automatically merges the static and dynamic CDI specs and injects the device nodes, mounts, and environment variables.
+6. **Cleanup (Unprepare)**: After the user deletes the Pod, kubelet calls the DRA plugin's NodeUnprepareResources callback, cleans up the corresponding CDI spec, releases the claim, and returns the device to the resource pool.
 
 ## Prerequisites<a name="section_dra_prerequisites"></a>
 
 Before deploying and using Ascend DRA, ensure that the related components have been installed. If they are not installed, see [Installation and Deployment](../../03_installation_guide/02_installation/00_helm_installation.md).
 
 - The Kubernetes cluster version is 1.36.x.
+- The container runtime on the compute node supports CDI, for example, containerd 1.7.0 or later. cri-docker (cri-dockerd) is not supported as the container runtime.
+- Ascend DRA injects NPU devices into service containers through the CDI mechanism. Ascend Docker Runtime does not need to be installed, and Ascend DRA does not depend on it.
 - (Optional) The Volcano scheduler. When Volcano is used to schedule DRA jobs, ascend-volcano-plugin bypasses the NPU-specific scheduling logic for DRA jobs.
 - The NPU driver and firmware have been installed on the NPU nodes, and the devices are running properly.
 
 > [!NOTE]
-> Ascend DRA and Ascend Device Plugin are two different device access methods. When the DRA method is used, Ascend Device Plugin does not need to be deployed on the node at the same time. If nodes using both access methods exist in the cluster, distinguish them by node labels.
+> Ascend DRA and Ascend Device Plugin are two different device access methods, and the two functions are mutually exclusive on the same node. They do not need to be deployed at the same time.
 
 ## Supported Product Forms<a name="section_dra_products"></a>
 
 Ascend DRA supports the following product forms:
 
-- <term>Atlas A2 products</term>
-- <term>Atlas A3 products</term>
 - <term>Ascend 950PR&950DT products</term>
 
 ## Usage<a name="section_dra_usage"></a>
 
 MindCluster cluster scheduling components support using Ascend DRA in the following way:
 
-- [Deploying the DRA Component and Running Prepare/Unprepare Verification](./01_deploying_dra_and_running_task.md): Deploy the DRA component and deliver a job that references a ResourceClaim, to verify the complete device allocation and release process.
+[Deploying the DRA Component and Running Prepare/Unprepare Verification](./01_deploying_dra_and_running_task.md): Deploy the DRA component and deliver a job that references a ResourceClaim, to verify the complete device allocation and release process.
 
 > [!NOTE]
 > For details about the ResourceSlice format reported by the Ascend DRA component and the health check API, see [Ascend Dynamic Resource Allocation](../../06_api/17_ascend_dynamic_resource_allocation.md).

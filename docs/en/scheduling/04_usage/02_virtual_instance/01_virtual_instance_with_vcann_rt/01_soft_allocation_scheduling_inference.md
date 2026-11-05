@@ -245,7 +245,7 @@ On the host side, use the `npu-smi` tool to enable container sharing mode, which
 ```shell
 # Atlas A2/A3 products: set container sharing mode
 npu-smi set -t device-share -i ${id} -c ${chip_id} -d ${value}
-# Ascend 950PR products: set container sharing mode
+# Ascend 950PR&950DT products: set container sharing mode
 npu-smi set -t device-share -i ${id} -d ${value}
 
 # Query the container sharing mode of a device
@@ -260,7 +260,7 @@ npu-smi info -t device-share -i ${id}
 |`chip_id`|Chip ID. The Chip ID obtained by running the `npu-smi info -m` command is the chip ID.|
 |`value`|Startup status of the container sharing mode.<ul><li>`0`: disabled</li><li>`1`: enabled</li></ul>It is disabled by default.|
 
-The following uses the Ascend 950PR products as an example:
+The following uses the Ascend 950PR&950DT products as an example:
 Enable the container sharing mode for all chips on device 0, and query the container sharing mode of device 0.
 
   ```shell
@@ -344,7 +344,7 @@ This section uses the inference image in the Ascend image repository as an examp
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/inference/volcano/pytorch_acjob_infer_910b_softsharedev.yaml" target="_blank" rel="noopener noreferrer">YAML</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 accelerator card</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p><term>Ascend 950PR&950DT products</term></p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>pytorch_acjob_infer_950_softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/inference/volcano/pytorch_acjob_infer_950_softsharedev.yaml" target="_blank" rel="noopener noreferrer">YAML</a></p></td>
     </tr>
@@ -355,7 +355,7 @@ This section uses the inference image in the Ascend image repository as an examp
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-vcjob-910-softsharedev.yaml" target="_blank" rel="noopener noreferrer">YAML</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 accelerator card</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><term>Ascend 950PR&950DT products</term></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-vcjob-950-softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-vcjob-950-softsharedev.yaml" target="_blank" rel="noopener noreferrer">YAML</a></p></td>
     </tr>
@@ -366,7 +366,7 @@ This section uses the inference image in the Ascend image repository as an examp
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-deploy-softsharedev.yaml" target="_blank" rel="noopener noreferrer">YAML</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 accelerator card</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><term>Ascend 950PR&950DT products</term></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-deploy-950-softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-deploy-950-softsharedev.yaml" target="_blank" rel="noopener noreferrer">YAML</a></p></td>
     </tr>
@@ -460,6 +460,7 @@ This section uses the inference image in the Ascend image repository as an examp
                     <strong>path: ${preload_path}/ld.so.preload # The path of the ld.so.preload file on the host can be customized by users. In the subsequent content of this document, ${preload_path} is used to represent it. Inside the container, it is a fixed path /etc/ld.so.preload. It is not recommended to place the ld.so.preload file in the /etc directory of the host. Otherwise, the soft partitioning dynamic library will be preloaded on the host side, which may affect host-side services.</strong>
     </pre>
 
+<!-- npu="A3" id1 -->
 >[!NOTE]
 >When a soft partitioning virtualization task is submitted on **Atlas A3 products**, only one die (that is, one Da Vinci device) is actually mounted under `/dev` in the task container. However, running the <b>npu-smi info</b> command shows that two dies are mounted. This is normal. The sample output is as follows:
 >
@@ -483,6 +484,7 @@ This section uses the inference image in the Ascend image repository as an examp
 > +===========================+===============+===================================================+
 > ```
 
+<!-- end id1 -->
 ### Submitting a Job<a name="ZH-CN_TOPIC_000000247922713402"></a>
 
 In the directory where the sample YAML file is located on the management node, run the following command to submit an inference job using the YAML file.

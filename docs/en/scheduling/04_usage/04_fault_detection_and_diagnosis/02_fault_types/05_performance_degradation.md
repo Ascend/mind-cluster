@@ -58,8 +58,6 @@ MindCluster cluster scheduling components use the online diagnosis capability pr
 
 ### Slow Node Diagnosis<a name="ZH-CN_TOPIC_0000002500880704"></a>
 
-#### Function Description<a name="zh-cn_topic_0000002278667326_section27999216294"></a>
-
 For the node training performance degradation phenomenon in an AI cluster, real-time detection of slow nodes caused by computing domain problems or network problems is supported, so that you can isolate slow nodes by switching or other methods.
 
 Currently, only online deployment integrated with ClusterD and NodeD is supported. For details, see [Installation and Deployment](../../../03_installation_guide/02_installation/00_helm_installation.md) to complete ClusterD and NodeD deployment.
@@ -69,8 +67,6 @@ Currently, only online deployment integrated with ClusterD and NodeD is supporte
 - Slow node scheduling: Schedules the entire slow node process and controls data cleansing and the slow node algorithm.
 
 ### Slow Network Diagnosis<a name="ZH-CN_TOPIC_0000002500720860"></a>
-
-#### Function Description<a name="zh-cn_topic_0000002313236861_section27999216294"></a>
 
 Detection of the connectivity of the parameter plane network is supported, and network monitoring and exception reporting are performed in real time, assisting fault analysis and demarcation and locating, giving early warning of network faults and sub-health risks, and ensuring long-term stable running of the cluster network.
 

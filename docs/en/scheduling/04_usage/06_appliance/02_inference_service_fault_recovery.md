@@ -226,23 +226,21 @@ The following uses the Qwen3-1.7B model as an example.
     - `<restart_times>` is passed as a parameter to `infer_start.sh`, indicating the number of service restarts. Replace it with a number; if left unspecified, the default value is `0`. The container will exit if the restart count is exceeded.
     - Modify the value of the environment variable `ASCEND_VISIBLE_DEVICES` as needed to mount different numbers of chips. The chip IDs must be consistent with the chip IDs included in the `npuDeviceIds` field in `config.json`.
     - Add or remove the `--device` parameter as needed to mount different numbers of chips and devices. The chip IDs must be consistent with the chip IDs included in the `npuDeviceIds` field in `config.json.`
+    - The following table briefly describes the main parameters used in the startup command. For more Docker native parameters, see the official Docker documentation.
 
-   >[!NOTE]
-   >1. **Command parameter description**: The following table briefly describes the main parameters used in the startup command. For more Docker native parameters, please refer to the official Docker documentation.
-   >
-   >    |Parameter|Description|
-   >       |--|--|
-   >    |`-it`|Runs the container in interactive mode and allocates a pseudo-terminal.|
-   >    |`-d`|Runs the container in the background and returns the container ID.|
-   >    |`--net=host`|Uses the host network; the container shares the network namespace with the host.|
-   >    |`--shm-size=1g`|Sets the container shared memory size to 1 GB to meet multi-process communication requirements.|
-   >    |`--name`|Specifies the container name.|
-   >    |`-e ASCEND_VISIBLE_DEVICES`|Specifies the NPU device IDs to be mounted into the container. Ascend Docker Runtime identifies and mounts the corresponding NPU devices and drivers.|
-   >    |`--device`|Mounts host devices into the container. `rwm` indicates read, write, and device node creation permissions.|
-   >    |`-v`|Mounts a host directory or file into the container. `ro` indicates read-only mount.|
-   >    |`--entrypoint`|Specifies the entry program when the container starts; here, it is the inference service startup script.|
-   >
-   >2. **FAQ**: After starting the container, if the error "OpenBLAS blas_thread_int: pthread_create failed for thread 1 of 128: Operation not permitted" is reported, it indicates that OpenBLAS failed to create multiple threads. The possible cause is that seccomp is blocking pthread-related system calls. In this case, you can add `--security-opt seccomp=unconfined --security-opt no-new-privileges` to the Docker startup command to resolve the issue.
+       |Parameter|Description|
+       |--|--|
+       |-it|Runs the container in interactive mode and allocates a pseudo-TTY to the container.|
+       |-d|Runs the container in the background and returns the container ID.|
+       |--net=host|Uses the host network so that the container shares the network namespace with the host.|
+       |--shm-size=1g|Sets the shared memory size of the container to 1 GB to meet the requirements of multi-process communication.|
+       |--name|Specifies the container name.|
+       |-e ASCEND_VISIBLE_DEVICES|Specifies the ID of the NPU device mounted to the container. Ascend Docker Runtime identifies the ID and mounts the corresponding NPU device and driver.|
+       |--device|Mounts a host device to the container. rwm indicates that the device node is readable, writable, and can be created.|
+       |-v|Mounts a host directory or file to the container. ro indicates a read-only mount.|
+       |--entrypoint|Specifies the entry program used when the container starts. In this example, it is the inference service startup script.|
+
+    - After the container is started, if the error "OpenBLAS blas_thread_int: pthread_create failed for thread 1 of 128: Operation not permitted" is reported, OpenBLAS has failed to create multiple threads. The possible cause is that seccomp blocks pthread-related system calls. In this case, you can add the "--security-opt seccomp=unconfined --security-opt no-new-privileges" parameters to the Docker startup command to resolve the issue.
 
 8. View container logs.
 

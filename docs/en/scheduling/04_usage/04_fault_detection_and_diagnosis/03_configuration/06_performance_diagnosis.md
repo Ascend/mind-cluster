@@ -172,13 +172,10 @@ This solution applies only to TaskD 7.1.RC1 or later. If you use a component ear
 
       2. Mount files.
           1. Mount the lightweight profiling configuration file: persist the `data-trace` ConfigMap corresponding to the job on the host to the `/user/cluster-info/datatrace-config/{namespace}.data-trace-{job name}/` folder, and mount the file named `profilingSwitch` to the specified path in the container: `/user/cluster-info/datatrace-config/`.
-          2. Mount the lightweight profiling persisted file: lightweight profiling data is written to the `/user/cluster-info/profiling` path in the container. To obtain it on the host, modify the job YAML to mount this path out.
               - The following is an example of mounting in the container YAML.
 
                   ```yaml
                   volumeMounts:
-                  - name: profilingdata
-                    mountPath: /user/cluster-info/
                   - name: profileswitch
                     mountPath: /user/cluster-info/datatrace-config
                   ```
@@ -190,6 +187,23 @@ This solution applies only to TaskD 7.1.RC1 or later. If you use a component ear
                   - name: profileswitch
                     hostPath:
                       path: /user/cluster-info/datatrace-config/default.data-trace-default-test-pytorch-fault-mixtral
+                  ```
+
+              >[!NOTE]
+              >- This mounting method is only suitable to obtain persisted data by enabling lightweight profiling through a ConfigMap.
+          2. Mount the lightweight profiling persisted file. The lightweight profiling data is written to the `/user/cluster-info/profiling` path in the container. To obtain it on the host, modify the job YAML to mount this path out.
+              - The following is an example of mounting in the container YAML.
+
+                  ```yaml
+                  volumeMounts:
+                  - name: profilingdata
+                    mountPath: /user/cluster-info/
+                  ```
+
+              - The following is an example of mounting in the host YAML.
+
+                  ```yaml
+                  volumes:
                   - name: profilingdata
                     hostPath:
                       path: /home/profilingdatapath
@@ -281,7 +295,7 @@ This solution applies only to TaskD 7.1.RC1 or later. If you use a component ear
       export LD_PRELOAD=/usr/local/Ascend/cann/lib64/libmspti.so:/usr/local/python3.10.5/lib/python3.10/site-packages/taskd/python/cython_api/libs/libtaskd.so:$LD_PRELOAD
       ```
 
-      - `libmspti.s`o: This so file is provided by MindStudio and integrated within the CANN package. When the default installation path is used, the path is `/usr/local/Ascend/cann/lib64/libmspti.so`.
+      - `libmspti.so`: This so file is provided by MindStudio and integrated within the CANN package. When the default installation path is used, the path is `/usr/local/Ascend/cann/lib64/libmspti.so`.
 
       - `libtaskd.so`: This so file is provided by TaskD. After the wheel package is installed, the path is `TaskD_installation_path/taskd/python/cython_api/libs/libtaskd.so`.
 
@@ -377,7 +391,7 @@ This solution applies only to TaskD 7.1.RC1 or later. If you use a component ear
 
 |Software Package|Required|Description|Obtaining Method|Scenario|
 |--|--|--|--|--|
-|mstx_torch_plugin|No|<p>The [Collecting and Parsing msproftx Data](https://www.hiascend.com/document/detail/zh/canncommercial/800/devaids/devtools/profiling/atlasprofiling_16_0033.html) function in Ascend PyTorch Profiler already has built-in instrumentation for communication operators. To make it easier for users to obtain the time consumption data of more key phases without modifying service code, mstx_torch_plugin has built-in instrumentation for the four key phase functions dataloader, forward, step, and save_checkpoint in Ascend PyTorch Profiler.</p><ul><li>mstx_torch_plugin must be installed if you want to use FP data. It does not need to be installed in other scenarios.</li><li>mstx_torch_plugin 1.0 or later is required.</li></ul>|[Download link](https://ptdbg.obs.myhuaweicloud.com/profiler/example/1.0/mstx_torch_plugin-1.0-py3-none-any.whl)|PyTorch|
+|mstx_torch_plugin|No|<p>The [Collecting and Parsing msproftx Data](https://www.hiascend.com/document/detail/en/canncommercial/800/devaids/devtools/profiling/atlasprofiling_16_0033.html) function in Ascend PyTorch Profiler already has built-in instrumentation for communication operators. To make it easier for users to obtain the time consumption data of more key phases without modifying service code, mstx_torch_plugin has built-in instrumentation for the four key phase functions dataloader, forward, step, and save_checkpoint in Ascend PyTorch Profiler.</p><ul><li>mstx_torch_plugin must be installed if you want to use FP data. It does not need to be installed in other scenarios.</li><li>mstx_torch_plugin 1.0 or later is required.</li></ul>|[Download link](https://ptdbg.obs.myhuaweicloud.com/profiler/example/1.0/mstx_torch_plugin-1.0-py3-none-any.whl)|PyTorch|
 
 #### Configuring Performance Degradation Fault Detection<a name="section167141313174510"></a>
 
@@ -759,11 +773,9 @@ Start a slow node diagnosis job.
     |nSecondsDoOneDetection|30 seconds|Interval for detection, in seconds.|
     |clusterMeanDistance|1.3|After clustering, the threshold distance between two categories (mean1 and mean2).|
     |cardOneNode|16 cards|Number of cards on one node.|
-    |slowNode|The default value is 1, and the job is enabled.|<p>Whether to enable the job.</p><ul><li>1: Enable the job.</li><li>0: Disable the job.</li></ul>|
+    |SlowNode|The default value is 1, and the job is enabled.|<p>Whether to enable the job.</p><ul><li>1: Enable the job.</li><li>0: Disable the job.</li></ul>|
 
 ### Configuring Slow Network Diagnosis
-
-#### Usage Example<a name="zh-cn_topic_0000002313236861_section1969604665710"></a>
 
 1. Configure shared storage.
 

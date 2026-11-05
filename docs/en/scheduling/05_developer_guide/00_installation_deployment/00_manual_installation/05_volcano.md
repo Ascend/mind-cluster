@@ -179,7 +179,7 @@
                   <strong>cpu: 2000m</strong>
     ...</pre>
 
-6. (Optional) Tune scheduling time performance. It is supported to configure the plugins used by Volcano in `volcano-v{version}</i>.yaml`. Refer to the tables of Volcano advanced configuration parameters and supported plugins list in the [Open-Source Volcano Official Documentation](https://support.huaweicloud.com/usermanual-cce/cce_10_0193.html) for operation.
+6. (Optional) Tune scheduling time performance. It is supported to configure the plugins used by Volcano in `volcano-v{version}.yaml`. Refer to the tables of Volcano advanced configuration parameters and supported plugins list in the [Open-Source Volcano Official Documentation](https://support.huaweicloud.com/usermanual-cce/cce_10_0193.html) for operation.
 
     ```Yaml
     ...

@@ -20,7 +20,7 @@ When a service Pod uses an RDMA shared device, K8s RDMA Shared Dev Plugin automa
 
 A service Pod that uses an RDMA shared device needs to declare a resource request in the Pod configuration. The configuration example is as follows (applying for one RDMA device resource; for the maximum value configuration, see `rdmaHcaMax` in [Configuration File Description](../../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_config_k8s_rdma_shared_dev_plugin)):
 
-```yaml
+<pre codetype="yaml">
 apiVersion: v1
 kind: Pod
 metadata:
@@ -38,23 +38,23 @@ spec:
         resources:
            requests:
               huawei.com/npu: 8
-              huawei.com/ub_rdma: 1
+              <strong>huawei.com/ub_rdma: 1</strong>
            limits:
               huawei.com/npu: 8
-              huawei.com/ub_rdma: 1
+              <strong>huawei.com/ub_rdma: 1</strong>
         command:
            - sh
            - -c
            - |
               ls -l /dev/infiniband /sys/class/infiniband
               sleep 1000000
-```
+</pre>
 
 > [!NOTE]
 >
 >- `hostNetwork` must be set to `true`. Because the service Pod needs to access the network namespace of the host to use RDMA devices, the `hostNetwork` mode must be enabled.
 >- The resource name format is `<resourcePrefix>/<resourceName>`, which must be defined in the configuration file of K8s RDMA Shared Dev Plugin (for details, see [Configuration File Description](../../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_config_k8s_rdma_shared_dev_plugin)).
->- For the complete job yaml, see [acjob-8npu.yaml](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/train/with-dpu-training/rdma-shared/acjob-8npu.yaml).
+>- For the complete job yaml, see [acjob-8npu.yaml](https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/train/with-dpu-training/rdma-shared/acjob-8npu.yaml).
 
 ### Checking the Service Pod Status<a name="ZH-CN_TOPIC_biz_pod_status_check"></a>
 
@@ -120,13 +120,13 @@ In exclusive mode, device mounting depends on Multus CNI that reads the `k8s.v1.
 
 ### Service Pod Resource Configuration Example in Exclusive Mode
 
-```yaml
+<pre codetype="yaml">
 apiVersion: v1
 kind: Pod
 metadata:
    name: ub-rdma-test-pod
    annotations:
-      k8s.v1.cni.cncf.io/networks: roce-network, roce-network
+      <strong>k8s.v1.cni.cncf.io/networks: roce-network, roce-network</strong>
 spec:
    restartPolicy: OnFailure
    containers:
@@ -139,24 +139,24 @@ spec:
         resources:
            requests:
               huawei.com/npu: 2
-              huawei.com/ub_rdma: 2
+              <strong>huawei.com/ub_rdma: 2</strong>
            limits:
               huawei.com/npu: 2
-              huawei.com/ub_rdma: 2
+              <strong>huawei.com/ub_rdma: 2</strong>
         command:
            - sh
            - -c
            - |
               ls -l /dev/infiniband /sys/class/infiniband
               sleep 1000000
-```
+</pre>
 
 > [!NOTE]
 >
 >- The value of the `k8s.v1.cni.cncf.io/networks` annotation is the name of the NAD, and the NAD must be configured as required by UB Host Device CNI (see [UB Host Device CNI](../../06_api/19_ub_host_device_cni.md)). Write as many names as the number of devices to be requested.
 >- Exclusive mode is based on UB type devices.
 >- For the enabling method and parameter description of exclusive mode, see [Exclusive Mode Configuration](../../05_developer_guide/00_installation_deployment/00_manual_installation/11_k8s_rdma_shared_dev_plugin.md#section187410285361).
->- For the complete job yaml, see [Exclusive Job](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/train/with-dpu-training/rdma-exclusive).
+>- For the complete job yaml, see [Exclusive Job](https://gitcode.com/Ascend/mindcluster-deploy/tree/release_v26.2.0/samples/train/with-dpu-training/rdma-exclusive).
 
 After the Pod is created successfully, you can view the `k8s.v1.cni.cncf.io/device-status` annotation of the Pod to confirm the allocation result:
 

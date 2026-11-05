@@ -79,7 +79,7 @@
 
     **npu-smi set -t vnpu-cfg-recover -d** _mode_
 
-    `mode` indicates the vNPU configuration recovery state: `1` for enabled, `0` for disabled. The default is enabled.
+    `mode` indicates the vNPU configuration recovery state: `1` for enabled (default), `0` for disabled.
 
     To set the vNPU configuration recovery state to enabled:
 
@@ -119,5 +119,8 @@
 
     ![](../../../../../figures/scheduling/1.png)
 
+    <!-- npu="910,310p" id1 -->
     >[!NOTE]
     >The AICPU and Vgroup ID information can be returned for Atlas inference products, while cannot be returned for Atlas training products.
+
+    <!-- end id1 -->

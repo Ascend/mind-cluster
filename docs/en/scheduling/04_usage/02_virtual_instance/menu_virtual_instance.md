@@ -5,7 +5,11 @@
   - [Application Scenarios and Solutions](./00_virtual_instance_with_hdk/02_application_scenarios_solutions.md)
   - [Virtualization Templates](./00_virtual_instance_with_hdk/03_virtualization_templates.md)
   - [Static vNPU Scheduling](./00_virtual_instance_with_hdk/04_static_vnpu_scheduling/menu_static_vnpu_scheduling.md)
+  <!-- npu="A3,910b,310p" id1 -->
   - [Dynamic vNPU Scheduling](./00_virtual_instance_with_hdk/05_dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md)
+  <!-- end id1 -->
+<!-- npu="950,A3,910b" id2 -->
 - [vCANN-RT-Based Virtual Instance](./01_virtual_instance_with_vcann_rt/menu_virtual_instance_with_vcann_rt.md)
   - [Feature Description](./01_virtual_instance_with_vcann_rt/00_description.md)
   - [Soft Partitioning-based Scheduling (Inference)](./01_virtual_instance_with_vcann_rt/01_soft_allocation_scheduling_inference.md)
+<!-- end id2 -->

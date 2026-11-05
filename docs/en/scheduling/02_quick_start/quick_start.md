@@ -311,7 +311,7 @@ The Atlas 800T A2 is used as an example in the following steps. For detailed ins
 
     >[!NOTE]
     >
-    > The image version used in this example is 24.0.0-A2-2.1.0. To obtain the latest image version, visit the [Ascend image repository](https://www.hiascend.com/en/developer/ascendhub) to view the list of available versions, or contact Huawei technical support to obtain version compatibility information.
+    > The image version used in this example is 24.0.0-A2-2.1.0. To obtain the latest image version, visit the [Ascend image repository](https://www.hiascend.com/en/developer/ascendhub) to view the list of available versions.
 
     ```shell
     docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04
@@ -335,14 +335,14 @@ The Atlas 800T A2 is used as an example in the following steps. For detailed ins
         ```shell
         mkdir /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
         cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
-        wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/train_start.sh
+        wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/release_v26.2.0/samples/train/basic-training/without-ranktable/pytorch/train_start.sh
         ```
 
     3. Execute the following command to obtain the `pytorch_standalone_acjob_quickstart.yaml` file from the `samples/train/basic-training/without-ranktable/pytorch` directory of the [MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy) repository. The example defaults to a single-server single-device job.
 
         ```shell
         cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
-        wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/pytorch_standalone_acjob_quickstart.yaml
+        wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/release_v26.2.0/samples/train/basic-training/without-ranktable/pytorch/pytorch_standalone_acjob_quickstart.yaml
         ```
 
     4. (Optional) Prepare the dataset. The `--dummy` parameter is set by default in `pytorch_standalone_acjob_quickstart.yaml`, which automatically generates a random dataset for the training job, so the training job can be started without a real dataset. If you need to use a real dataset, delete the `--dummy` parameter from this yaml file, prepare the dataset corresponding to ResNet-50 by yourself, and upload the dataset to `/data/atlas_dls/public/dataset/resnet50/imagenet` in compliance with the corresponding specifications.

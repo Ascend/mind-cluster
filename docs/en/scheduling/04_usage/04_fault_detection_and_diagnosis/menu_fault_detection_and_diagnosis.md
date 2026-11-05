@@ -16,6 +16,8 @@
   - [Configuring Network Faults](./03_configuration/04_network_faults.md)
   - [Configuring Workload Fault and Task Hang Detection](./03_configuration/05_task_hang_detection.md)
   - [Configuring Performance Degradation, Slow Node, and Slow Network Diagnosis](./03_configuration/06_performance_diagnosis.md)
+  <!-- npu="A3,910b" id1 -->
   - [Configuring Online Stress Testing](./03_configuration/07_online_stress_testing.md)
+  <!-- end id1 -->
   - [Configuring Public Faults](./03_configuration/08_public_faults.md)
 - [Querying and Verifying Faults](./04_querying_and_verifying_faults.md)

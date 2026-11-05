@@ -83,17 +83,19 @@ Before installation, ensure the following environments are installed, as shown i
 |Software|Version|Installation Path|Obtaining Method|
 |--|--|--|--|
 |Operating system|<ul><li>CentOS 7.6</li><li>Ubuntu 18.04</li><li>Ubuntu 20.04</li><li>Ubuntu 22.04</li></ul>|All nodes|-|
-|Python|3.7 ~ 3.11|Compute node|User-installed|
+|Python|3.8 to 3.12|Compute node|User-installed|
 |Torch|2.7.1|Compute node|User-installed|
-|TorchNPU|26.1.0|Compute node|User-installed|
-|CANN|9.1.0|Compute node|User-installed|
-|Driver and firmware|26.1.0|Compute node|User-installed|
+|TorchNPU|26.2.0|Compute node|User-installed|
+|CANN|9.2.0|Compute node|User-installed|
+|Driver and firmware|26.2.0|Compute node|User-installed|
 
 ### Preparing the Software Package
 
 **Downloading the Software Package**
 
-**Table 3**  Software download
+Refer to this chapter to obtain the required software packages. Downloading this software indicates that you agree to the terms and conditions of the [Software License Agreement 2.0](https://www.hiascend.com/en/legal/softlicense).
+
+**Table 3** Software download
 
 | Component Name | Software Package | Download URL |
 |--|--|--|

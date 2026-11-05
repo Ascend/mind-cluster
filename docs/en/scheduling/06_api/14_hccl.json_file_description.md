@@ -6,6 +6,7 @@ When training starts, Ascend Operator generates the RankTable file required for 
 - When using shared storage to mount the RankTable, you need to mount a shared storage or local storage directory in the YAML when creating a training job, and mount the directory to the `"/user/serverid/devindex/config"` path in the training container. Ascend Operator constructs the collective communication RankTable file for the job based on the `Annotation` information written by Ascend Device Plugin or volcano-scheduler in the job Pod, writes its content into the `"/shared storage or local storage directory/hccl.json"` file, and maps it as the `"/user/serverid/devindex/config/hccl.json"` file in the training container.
 - Different products have different `hccl.json` file contents, as detailed below.
 
+<!-- npu="910b,910" id1 -->
 ## <term>Atlas Training Products</term>, <term>Atlas A2 Training Products</term>, Atlas 800I A2, A200I A2 Box<a name="section19616113871318"></a>
 
 The `hccl.json` file example is as follows:
@@ -40,7 +41,9 @@ hccl.json:
     "version": "1.0"
 }
 ```
+<!-- end id1 -->
 
+<!-- npu="A3" id2 -->
 ## <term>Atlas A3 Training Products</term><a name="section285395510348"></a>
 
 The following is an example of the `hccl.json` file:
@@ -87,7 +90,9 @@ hccl.json:
     ]
 }
 ```
+<!-- end id2 -->
 
+<!-- npu="950" id3 -->
 ## <term>Ascend 950PR&950DT Products</term><a name="section285395514569"></a>
 
 The `hccl.json` file example is as follows:
@@ -132,3 +137,4 @@ hccl.json:
   ]
 }
 ```
+<!-- end id3 -->

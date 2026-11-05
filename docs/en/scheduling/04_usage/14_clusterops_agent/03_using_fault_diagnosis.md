@@ -26,7 +26,7 @@ Where:
 | `--refresh` | Ignores the cache and forcibly re-executes diagnosis and refreshes the cache |
 | `--json` | Outputs the complete JSON response |
 | `--collect-manifest` | Writes the local collection contract to the cluster ConfigMap and then exits |
-| `--agent-core-service` | Specifies the Agent Core service in the format `svc.ns:9700` (default: `agent-core.mindx-dl:9700`) |
+| `--agent-core-service` | Specifies the Agent Core service in the format `svc.ns:port` (default: `agent-core.mindx-dl:9700`) |
 
 **Diagnosis output example**:
 
@@ -38,7 +38,7 @@ The diag job starts. Please wait. Job id: [20260918163512389528_b1b293d4-1c70-4e
 +-----------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
 |     Version Information     |       Type       | Version                                                                                                                                    |
 +-----------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-|                             |    Fault-Diag    | 26.1.0                                                                                                                                     |
+|              | Fault-Diag | 26.2.0                                                                                                         |
 +-----------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
 |   Root Cause Node Analysis  |       Type       | Description                                                                                                                                |
 +-----------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
@@ -81,7 +81,7 @@ The diag job starts. Please wait. Job id: [20260918163512389528_b1b293d4-1c70-4e
 +-----------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
 |     Version Information     |       Type       | Version                                                                                                                                    |
 +-----------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-|                             |    Fault-Diag    | 26.1.0                                                                                                                                     |
+|              | Fault-Diag | 26.2.0                                                                                                         |
 +-----------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
 |   Root Cause Node Analysis  |       Type       | Description                                                                                                                                |
 +-----------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
@@ -127,8 +127,14 @@ Agent Core and Node Collector persist collection and diagnosis outputs by job di
 ├── {YYYYMMDD}/
 │   └── {namespace}_{job}/
 │       ├── parse-result-{job}-{node}.tar.gz          # Collection archive reported by each node
-│       ├── diag-input/
-│       │   └── {host_ip}/                             # Parsing output of each node, named by server IP (including server-info.json and so on)
+│       ├── diag-input/                               # Centralized diagnosis input (summary of the cleaning output of each node)
+│       │   ├── 10.0.0.5/                             # Cleaning output of node 1, named by machine IP
+│       │   │   ├── plog-parser-{pid}-{0|1}.log       # Logs cleaned for root cause node analysis (saved by process ID)
+│       │   │   ├── ascend-rc-parser.json             # Cleaning result of root cause node analysis
+│       │   │   ├── ascend-kg-parser.json             # Cleaning result of fault event analysis (inference engine input)
+│       │   │   ├── ascend-kg-analyzer.json           # Cleaning result of fault event analysis
+│       │   │   └── server-info.json                  # Device IP information
+│       │   └── 10.0.0.6/                             # Cleaning output of node 2 (same content as above)
 │       └── diag-output/
 │           └── fault_diag_result/
 │               └── diag_report.json                   # Centralized diagnosis report
@@ -140,6 +146,7 @@ Agent Core and Node Collector persist collection and diagnosis outputs by job di
 - `diag-input/{host_ip}/`: `ascend-fd parse` output of each node, named by machine IP (falls back to `worker{N}` when `host_ip` is missing), assembled as the centralized diagnosis input.
 - `diag-output/`: directory of the diagnosis report generated by `ascend-fd diag`.
 - `cache/{namespace}_{job}.json`: diagnosis result cached after each successful diagnosis. Repeated diagnosis directly returns it, and `--refresh` can be used to forcibly refresh it.
+- The persisted content is for reference only. The actual persisted data may increase or decrease depending on the logs collected. The actual persisted data prevails.
 
 ### Node Collector Persistent Content<a name="sectionfaultdiagnosiscollectorstorage"></a>
 
@@ -147,12 +154,32 @@ Agent Core and Node Collector persist collection and diagnosis outputs by job di
 /user/clusterops/node-collector/
 └── {YYYYMMDD}/
     └── {namespace}_{job}/
-        ├── collect/                                   # Original logs collected from the host
+        ├── collect/                                   # Original logs collected from the host (grouped by entity name)
+        │   ├── process_log/                           # CANN plog (run/debug/security subdirectories)
+        │   │   ├── run/
+        │   │   ├── debug/
+        │   │   └── security/
+        │   ├── dl_log/                                # MindCluster component logs (source directory structure retained)
+        │   │   ├── mindx-dl/devicePlugin/
+        │   │   ├── mindx-dl/noded/
+        │   │   └── ...
+        │   ├── device_log/                            # Device-side logs generated by on-site commands
+        │   └── host_log/                              # Host OS logs
+        │       ├── dmesg
+        │       ├── dmidecode.txt
+        │       ├── messages
+        │       └── sysmonitor.log
         └── parse-output/                              # ascend-fd parse output
+            ├── plog-parser-{pid}-{0|1}.log            # Logs cleaned for root cause node analysis (saved by process ID)
+            ├── ascend-rc-parser.json                  # Cleaning result of root cause node analysis
+            ├── ascend-kg-parser.json                  # Cleaning result of fault event analysis (inference engine input)
+            ├── ascend-kg-analyzer.json                # Cleaning result of fault event analysis
+            └── server-info.json                       # Device IP information
 ```
 
-- `collect/`: original logs collected from the host according to the collection contract (plog, system logs, device logs, and so on).
-- `parse-output/`: output parsed by the local `ascend-fd parse`, which is uploaded as the diagnosis input.
+- `collect/`: original logs collected from the host according to the collection contract. The directory structure corresponds to the entities in the collection contract (`process_log`, `dl_log`, `device_log`, `host_log`, and so on).
+- `parse-output/`: output cleaned by the local `ascend-fd parse`.
+- The persisted content is for reference only. The actual persisted data may increase or decrease depending on the logs collected. The actual persisted data prevails.
 
 ### Retention Policy<a name="sectionfaultdiagnosisretention"></a>
 

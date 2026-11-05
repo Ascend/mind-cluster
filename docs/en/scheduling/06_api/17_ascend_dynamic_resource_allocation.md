@@ -87,7 +87,7 @@ When Ascend DRA is started, it enumerates all NPU devices on the node and assemb
 | chipName | string | Chip name | Obtained from the return value of GetChipInfo of the device manager. If the acquisition fails, the value is an empty string, but the attribute is still reported. |
 
 > [!NOTE]
-> Currently, Ascend910 and Ascend950 generations report the same set of attributes, namely `type`, `physicId`, and `chipName`. If attributes need to be extended for a new chip generation, you only need to return them in the `DeviceAttributes` method of the corresponding generation, which does not affect the reporting link.
+> Currently, the Ascend950 chip generation reports the attributes `type`, `physicId`, and `chipName`. If attributes need to be extended for a new chip generation, you only need to return them in the `DeviceAttributes` method of the corresponding generation, which does not affect the reporting link.
 
 **ResourceSlice example:**
 
@@ -110,12 +110,12 @@ spec:
       attributes:
         type: "npu"
         physicId: 0
-        chipName: "Ascend910B..."
+        chipName: "Ascend950..."
     - name: npu-1
       attributes:
         type: "npu"
         physicId: 1
-        chipName: "Ascend910B..."
+        chipName: "Ascend950..."
 ```
 
 > [!NOTE]

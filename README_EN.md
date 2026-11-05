@@ -2,10 +2,10 @@
 
  <div align="center">
 
- [![Ascend](https://img.shields.io/badge/Community-MindCluster-blue.svg)](https://www.hiascend.com/cn/developer/software/mindcluster)
- [![License](https://badgen.net/badge/License/Apache-2.0/blue)](LICENSE)
- [![Zread](https://img.shields.io/badge/Zread-Ask_AI-_.svg?style=flat&color=0052D9&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff)](https://zread.ai/Ascend/mind-cluster)&nbsp;&nbsp;&nbsp;&nbsp;
- [![DeepWiki](https://img.shields.io/badge/DeepWiki-Ask_AI-_.svg?style=flat&color=0052D9&labelColor=000000&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAyCAYAAAAnWDnqAAAAAXNSR0IArs4c6QAAA05JREFUaEPtmUtyEzEQhtWTQyQLHNak2AB7ZnyXZMEjXMGeK/AIi+QuHrMnbChYY7MIh8g01fJoopFb0uhhEqqcbWTp06/uv1saEDv4O3n3dV60RfP947Mm9/SQc0ICFQgzfc4CYZoTPAswgSJCCUJUnAAoRHOAUOcATwbmVLWdGoH//PB8mnKqScAhsD0kYP3j/Yt5LPQe2KvcXmGvRHcDnpxfL2zOYJ1mFwrryWTz0advv1Ut4CJgf5uhDuDj5eUcAUoahrdY/56ebRWeraTjMt/00Sh3UDtjgHtQNHwcRGOC98BJEAEymycmYcWwOprTgcB6VZ5JK5TAJ+fXGLBm3FDAmn6oPPjR4rKCAoJCal2eAiQp2x0vxTPB3ALO2CRkwmDy5WohzBDwSEFKRwPbknEggCPB/imwrycgxX2NzoMCHhPkDwqYMr9tRcP5qNrMZHkVnOjRMWwLCcr8ohBVb1OMjxLwGCvjTikrsBOiA6fNyCrm8V1rP93iVPpwaE+gO0SsWmPiXB+jikdf6SizrT5qKasx5j8ABbHpFTx+vFXp9EnYQmLx02h1QTTrl6eDqxLnGjporxl3NL3agEvXdT0WmEost648sQOYAeJS9Q7bfUVoMGnjo4AZdUMQku50McDcMWcBPvr0SzbTAFDfvJqwLzgxwATnCgnp4wDl6Aa+Ax283gghmj+vj7feE2KBBRMW3FzOpLOADl0Isb5587h/U4gGvkt5v60Z1VLG8BhYjbzRwyQZemwAd6cCR5/XFWLYZRIMpX39AR0tjaGGiGzLVyhse5C9RKC6ai42ppWPKiBagOvaYk8lO7DajerabOZP46Lby5wKjw1HCRx7p9sVMOWGzb/vA1hwiWc6jm3MvQDTogQkiqIhJV0nBQBTU+3okKCFDy9WwferkHjtxib7t3xIUQtHxnIwtx4mpg26/HfwVNVDb4oI9RHmx5WGelRVlrtiw43zboCLaxv46AZeB3IlTkwouebTr1y2NjSpHz68WNFjHvupy3q8TFn3Hos2IAk4Ju5dCo8B3wP7VPr/FGaKiG+T+v+TQqIrOqMTL1VdWV1DdmcbO8KXBz6esmYWYKPwDL5b5FA1a0hwapHiom0r/cKaoqr+27/XcrS5UwSMbQAAAABJRU5ErkJggg==)](https://deepwiki.com/Ascend/mind-cluster)
+[![Ascend](https://img.shields.io/badge/Community-MindCluster-blue.svg)](https://www.hiascend.com/cn/developer/software/mindcluster)
+[![License](https://badgen.net/badge/License/Apache-2.0/blue)](LICENSE)
+[![Zread](https://img.shields.io/badge/Zread-Ask_AI-_.svg?style=flat&color=0052D9&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff)](https://zread.ai/Ascend/mind-cluster)&nbsp;&nbsp;&nbsp;&nbsp;
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-Ask_AI-_.svg?style=flat&color=0052D9&labelColor=000000&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAyCAYAAAAnWDnqAAAAAXNSR0IArs4c6QAAA05JREFUaEPtmUtyEzEQhtWTQyQLHNak2AB7ZnyXZMEjXMGeK/AIi+QuHrMnbChYY7MIh8g01fJoopFb0uhhEqqcbWTp06/uv1saEDv4O3n3dV60RfP947Mm9/SQc0ICFQgzfc4CYZoTPAswgSJCCUJUnAAoRHOAUOcATwbmVLWdGoH//PB8mnKqScAhsD0kYP3j/Yt5LPQe2KvcXmGvRHcDnpxfL2zOYJ1mFwrryWTz0advv1Ut4CJgf5uhDuDj5eUcAUoahrdY/56ebRWeraTjMt/00Sh3UDtjgHtQNHwcRGOC98BJEAEymycmYcWwOprTgcB6VZ5JK5TAJ+fXGLBm3FDAmn6oPPjR4rKCAoJCal2eAiQp2x0vxTPB3ALO2CRkwmDy5WohzBDwSEFKRwPbknEggCPB/imwrycgxX2NzoMCHhPkDwqYMr9tRcP5qNrMZHkVnOjRMWwLCcr8ohBVb1OMjxLwGCvjTikrsBOiA6fNyCrm8V1rP93iVPpwaE+gO0SsWmPiXB+jikdf6SizrT5qKasx5j8ABbHpFTx+vFXp9EnYQmLx02h1QTTrl6eDqxLnGjporxl3NL3agEvXdT0WmEost648sQOYAeJS9Q7bfUVoMGnjo4AZdUMQku50McDcMWcBPvr0SzbTAFDfvJqwLzgxwATnCgnp4wDl6Aa+Ax283gghmj+vj7feE2KBBRMW3FzOpLOADl0Isb5587h/U4gGvkt5v60Z1VLG8BhYjbzRwyQZemwAd6cCR5/XFWLYZRIMpX39AR0tjaGGiGzLVyhse5C9RKC6ai42ppWPKiBagOvaYk8lO7DajerabOZP46Lby5wKjw1HCRx7p9sVMOWGzb/vA1hwiWc6jm3MvQDTogQkiqIhJV0nBQBTU+3okKCFDy9WwferkHjtxib7t3xIUQtHxnIwtx4mpg26/HfwVNVDb4oI9RHmx5WGelRVlrtiw43zboCLaxv46AZeB3IlTkwouebTr1y2NjSpHz68WNFjHvupy3q8TFn3Hos2IAk4Ju5dCo8B3wP7VPr/FGaKiG+T+v+TQqIrOqMTL1VdWV1DdmcbO8KXBz6esmYWYKPwDL5b5FA1a0hwapHiom0r/cKaoqr+27/XcrS5UwSMbQAAAABJRU5ErkJggg==)](https://deepwiki.com/Ascend/mind-cluster)
 
 </div>
 
@@ -27,56 +27,94 @@ MindCluster (AI cluster system software) is a set of deep learning components th
 
 <img src="./docs/en/figures/scheduling/full_view.png" width="1200"/>
 
+> [!NOTE]
+>
+> Ascend DMI and Ascend Deployer are not included in this repository. Ascend DMI has not been open-sourced. For details about the source code and usage of Ascend Deployer, see [Ascend Deployer](https://gitcode.com/Ascend/ascend-deployer) repository.
+
 ## ⚙️ Feature Description
 
-**Cluster Scheduling**
+**Cluster scheduling**
 
-| Feature Name                       | Introduction                                                         | Released |
-| ------------------------------ | ------------------------------------------------------------ | -------- |
-| Containerization                 | [Containerization](./docs/en/scheduling/04_usage/00_containerization/00_before_you_start.md) | ✅        |
-| Resource Monitoring                   | [Resource Monitoring](./docs/en/scheduling/04_usage/01_resource_monitoring/menu_resource_monitoring.md) | ✅        |
-| Virtualization Instance                   | [Virtualization Instance](./docs/en/scheduling/04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md) | ✅        |
-| Basic Scheduling                   | [Basic Scheduling](./docs/en/scheduling/04_usage/03_basic_scheduling/00_feature_description.md) | ✅        |
-| Fault Detection                   | [Fault Detection](./docs/en/scheduling/04_usage/04_fault_detection_and_diagnosis/00_feature_description.md) | ✅        |
-| Resumable Training                   | [Resumable Training](./docs/en/scheduling/04_usage/05_fault_recovery/01_resumable_training/00_feature_description.md) | ✅        |
-| Appliance                     | [Appliance](./docs/en/scheduling/04_usage/06_appliance/01_npu_hardware_fault_detection_and_rectification.md) | ✅        |
-| Best Practices of MindIE CMotor Inference Jobs   | [Best Practices of MindIE CMotor Inference Jobs](./docs/en/scheduling/04_usage/07_mindie_motor_best_practice/00_before_you_start.md) | ✅        |
-| Best Practices of SGLang Inference Jobs         | [Best Practices of SGLang Inference Jobs](./docs/en/scheduling/04_usage/08_sglang_best_practice/00_before_you_start.md) | ✅        |
-| Best Practices of vLLM Inference Jobs           | [Best Practices of vLLM Inference Jobs](./docs/en/scheduling/04_usage/09_vllm_best_practice/00_before_you_start.md) | ✅        |
-| Best Practices of Infer Operator Inference Jobs | [Best Practices of Infer Operator Inference Jobs](./docs/en/scheduling/04_usage/10_infer_operator_best_practice/00_before_you_start.md) | ✅        |
-| Best Practices of Tidal Scheduling              | [Best Practices of Tidal Scheduling](./docs/en/scheduling/04_usage/11_tidal_scheduling/00_before_you_start.md) | ✅        |
-| Best Practices of verl Reinforcement Learning Jobs                | [Best Practices of verl Reinforcement Learning Jobs](./docs/en/scheduling/04_usage/12_verl_best_practice/menu_verl_best_practice.md) | ✅        |
+- Device management
+
+  Based on the Kubernetes device plugin mechanism, it provides automatic discovery, resource reporting, and health status management for NPU and DPU devices. It adapts to container runtime environments through Ascend Docker Runtime and supports NPU virtualization instance (vNPU) partitioning, enabling flexible provisioning of heterogeneous computing resources.
+
+  | Feature Name | Introduction                                                                                                     | Released |
+    | --- |--------------------------------------------------------------------------------------------------------| --- |
+  | NPU Device Discovery | [NPU Device Discovery](./docs/en/scheduling/01_introduction/01_component_description.md#ascend-device-plugin)       | ✅ |
+  | DPU Device Discovery | [DPU Device Discovery](./docs/en/scheduling/01_introduction/01_component_description.md#k8s-rdma-shared-dev-plugin) | ✅ |
+  | Containerization | [Containerization](./docs/en/scheduling/04_usage/00_containerization/00_before_you_start.md)                      | ✅ |
+  | NPU Virtualization | [NPU Virtualization](./docs/en/scheduling/04_usage/02_virtual_instance/menu_virtual_instance.md)                   | ✅ |
+
+- Resource monitoring
+
+  Provides monitoring capabilities for NPU and DPU resources, supports integration with monitoring components such as Prometheus and Telegraf, and enables collection and visual monitoring of heterogeneous resource usage across the cluster.
+
+  | Feature Name | Introduction | Released |
+    | --- | --- | --- |
+  | NPU Resource Monitoring | [NPU Resource Monitoring](docs/en/scheduling/04_usage/01_resource_monitoring/00_npu_resource_monitoring/00_before_you_start.md) | ✅ |
+  | DPU Resource Monitoring | [DPU Resource Monitoring](docs/en/scheduling/04_usage/01_resource_monitoring/01_dpu_resource_monitoring/00_before_you_start.md) | ✅ |
+
+- Resource scheduling
+
+  Provides basic scheduling capabilities such as full-NPU and static/dynamic vNPU scheduling, supports NPU affinity scheduling and tidal scheduling, and meets job scheduling requirements in various scenarios.
+
+  | Feature Name | Introduction                                                                                                           | Released |
+    | --- |--------------------------------------------------------------------------------------------------------------| --- |
+  | NPU Basic Scheduling | [NPU Basic Scheduling](./docs/en/scheduling/04_usage/03_basic_scheduling/00_feature_description.md)                       | ✅ |
+  | Affinity Scheduling | [Affinity Scheduling](./docs/en/scheduling/04_usage/03_basic_scheduling/01_affinity_scheduling/00_solution_description.md) | ✅ |
+  | Tidal Scheduling | [Tidal Scheduling](./docs/en/scheduling/04_usage/11_tidal_scheduling/00_before_you_start.md)                             | ✅ |
+
+- High-reliability training
+
+  Provides fault detection and recovery capabilities for training jobs, covering checkpoint-based resume training during pre-training and rescheduling and fast recovery of post-training (reinforcement learning) jobs, thereby improving the reliability of training jobs and the efficiency of fault recovery.
+
+  | Feature Name | Introduction                                                                                                              | Released |
+    | --- |-----------------------------------------------------------------------------------------------------------------| --- |
+  | Pre-training Fault Recovery | [Pre-training Fault Recovery (Resumable Training)](./docs/en/scheduling/04_usage/05_fault_recovery/01_resumable_training/00_feature_description.md) | ✅ |
+  | Post-training Fault Recovery | [Post-training Fault Recovery (Best Practices of verl Reinforcement Learning Jobs)](./docs/en/scheduling/04_usage/12_verl_best_practice/menu_verl_best_practice.md)                     | ✅ |
+
+- High-reliability inference
+
+  Provides fault detection and recovery capabilities for inference jobs, covering resumable training during the inference phase and rescheduling and elastic fault tolerance for post-inference (reinforcement learning) jobs, thereby improving the reliability and fault recovery efficiency of inference jobs.
+
+  | Application Orchestration Component            | Serving Component                     | Inference Engine       | Introduction                                                                                                              |  Released |
+    |--------------------|---------------------------|------------|-----------------------------------------------------------------------------------------------------------------| -- |
+  |       OME          | OME                       | SGLang     | [Best Practices of SGLang Inference Jobs](./docs/en/scheduling/04_usage/08_sglang_best_practice/00_before_you_start.md)                  | ✅ |
+  |      AIBrix        | AIBrix                    | vLLM       | [Best Practices of vLLM Inference Jobs](./docs/en/scheduling/04_usage/09_vllm_best_practice/00_before_you_start.md)                      | ✅ |
+  | Infer Operator     | MindIE PyMotor/vLLM Proxy | vLLM       | [Best Practices of Infer Operator Inference Jobs](./docs/en/scheduling/04_usage/10_infer_operator_best_practice/00_before_you_start.md)  | ✅ |
+  | Ascend Operator    | MindIE CMotor             | MindIE LLM | [Best Practices of MindIE CMotor Inference Jobs (Sunset)](./docs/en/scheduling/04_usage/07_mindie_motor_best_practice/00_before_you_start.md)     | ✅ |
 
 **Fault Diagnosis**
 
 - Log Diagnostic Tool
 
-| Feature Name                  | Introduction                                                         | Released |
-| ------------------------- | ------------------------------------------------------------ | -------- |
-| Log Parsing                  | [Log Parsing](./docs/en/faultdiag/ascend-faultdiag/05_usage/03_log_parsing.md) | ✅        |
-| Fault Diagnosis                  | [Fault Diagnosis](./docs/en/faultdiag/ascend-faultdiag/05_usage/04_fault_diagnosis.md) | ✅        |
-| Single-Server Fault Diagnosis              | [Single-Server Fault Diagnosis](./docs/en/faultdiag/ascend-faultdiag/05_usage/05_single_server_diagnosis.md) | ✅        |
-| SuperPoD Fault Diagnosis            | [SuperPoD Fault Diagnosis](./docs/en/faultdiag/ascend-faultdiag/05_usage/06_superpod_diagnosis.md) | ✅        |
-| Custom Fault Entities            | [Custom Fault Entities](./docs/en/faultdiag/ascend-faultdiag/05_usage/07_custom_fault_entities.md) | ✅        |
-| Fault Log Masking              | [Fault Log Masking](./docs/en/faultdiag/ascend-faultdiag/05_usage/08_fault_log_masking.md) | ✅        |
-| Custom Configuration Files            | [Custom Configuration Files](./docs/en/faultdiag/ascend-faultdiag/05_usage/09_custom_configuration.md) | ✅        |
-| Service Log Cleaning (SDK)       | [Service Log Cleaning (SDK)](./docs/en/faultdiag/ascend-faultdiag/05_usage/10_service_flow_parsing.md) | ✅        |
-| Root Cause Node Cleaning and Diagnosis (SDK) | [Root Cause Node Cleaning and Diagnosis (SDK)](./docs/en/faultdiag/ascend-faultdiag/05_usage/11_root_cause_parsing_diagnosis.md) | ✅        |
-| Fault Event Cleaning and Diagnosis (SDK) | [Fault Event Cleaning and Diagnosis (SDK)](./docs/en/faultdiag/ascend-faultdiag/05_usage/12_fault_event_parsing_diagnosis.md) | ✅        |
+  | Feature Name                  | Introduction                                                         | Released |
+  | ------------------------- | ------------------------------------------------------------ | -------- |
+  | Log Parsing                  | [Log Parsing](./docs/en/faultdiag/ascend-faultdiag/05_usage/03_log_parsing.md) | ✅        |
+  | Fault Diagnosis                  | [Fault Diagnosis](./docs/en/faultdiag/ascend-faultdiag/05_usage/04_fault_diagnosis.md) | ✅        |
+  | Single-Server Fault Diagnosis              | [Single-Server Fault Diagnosis](./docs/en/faultdiag/ascend-faultdiag/05_usage/05_single_server_diagnosis.md) | ✅        |
+  | SuperPoD Fault Diagnosis            | [SuperPoD Fault Diagnosis](./docs/en/faultdiag/ascend-faultdiag/05_usage/06_superpod_diagnosis.md) | ✅        |
+  | Custom Fault Entities            | [Custom Fault Entities](./docs/en/faultdiag/ascend-faultdiag/05_usage/07_custom_fault_entities.md) | ✅        |
+  | Fault Log Masking              | [Fault Log Masking](./docs/en/faultdiag/ascend-faultdiag/05_usage/08_fault_log_masking.md) | ✅        |
+  | Custom Configuration Files            | [Custom Configuration Files](./docs/en/faultdiag/ascend-faultdiag/05_usage/09_custom_configuration.md) | ✅        |
+  | Service Log Cleaning (SDK)       | [Service Log Parsing (SDK)](./docs/en/faultdiag/ascend-faultdiag/05_usage/10_service_flow_parsing.md) | ✅        |
+  | Root Cause Node Cleaning and Diagnosis (SDK) | [Root Cause Node Parsing and Diagnosis (SDK)](./docs/en/faultdiag/ascend-faultdiag/05_usage/11_root_cause_parsing_diagnosis.md) | ✅        |
+  | Fault Event Cleaning and Diagnosis (SDK) | [Fault Event Parsing and Diagnosis (SDK)](./docs/en/faultdiag/ascend-faultdiag/05_usage/12_fault_event_parsing_diagnosis.md) | ✅        |
 
 - Link Diagnostic Tool
 
-| Feature Name            | Introduction                                                         | Released |
-| ------------------- | ------------------------------------------------------------ | -------- |
-| Log Collection            | [Log Collection](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/02_log_collection.md) | ✅        |
-| Log Parsing            | [Log Parsing](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/03_log_parse.md) | ✅        |
-| Fault Diagnosis            | [Fault Diagnosis](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/04_fault_diagnosis.md) | ✅        |
-| Fault Inspection            | [Fault Inspection](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/05_fault_inspection.md) | ✅        |
-| Diagnosis/Inspection Report Description | [Diagnosis/Inspection Report Description](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/06_fault_analysis_report.md) | ✅        |
-| Online Diagnosis            | [Online Diagnosis](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/07_online_diagnosis.md) | ✅        |
-| Offline Diagnosis            | [Offline Diagnosis](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/08_offline_diagnosis.md) | ✅        |
-| Batch Diagnosis            | [Batch Diagnosis](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/09_batch_diagnosis.md) | ✅        |
-| Customized Inspection      | [Customized Inspection](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/10_customized_inspection.md) | ✅        |
+  | Feature Name            | Introduction                                                         | Released |
+  | ------------------- | ------------------------------------------------------------ | -------- |
+  | Log Collection            | [Log Collection](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/02_log_collection.md) | ✅        |
+  | Log Parsing            | [Log Parsing](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/03_log_parse.md) | ✅        |
+  | Fault Diagnosis            | [Fault Diagnosis](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/04_fault_diagnosis.md) | ✅        |
+  | Fault Inspection            | [Fault Inspection](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/05_fault_inspection.md) | ✅        |
+  | Diagnosis/Inspection Report Description | [Diagnosis/Inspection Report Description](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/06_fault_analysis_report.md) | ✅        |
+  | Online Diagnosis            | [Online Diagnosis](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/07_online_diagnosis.md) | ✅        |
+  | Offline Diagnosis            | [Offline Diagnosis](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/08_offline_diagnosis.md) | ✅        |
+  | Batch Diagnosis            | [Batch Diagnosis](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/09_batch_diagnosis.md) | ✅        |
+  | Customized Inspection      | [Customized Inspection](./docs/en/faultdiag/ascend-faultdiag-toolkit/05_usage/10_customized_inspection.md) | ✅        |
 
 ## 🚀 Getting Started
 
@@ -115,7 +153,7 @@ Before installation, read [Before You Start](./docs/en/scheduling/03_installatio
 
 **Cluster Scheduling**
 
-MindCluster provides guides for environment installation and deployment (supporting multiple installation methods such as Helm, manual, and tool-based installation), containerization, resource monitoring, virtualization instances (vNPU), scheduling features (full-NPU scheduling, affinity scheduling, and multi-level scheduling), resumable training, and tidal scheduling, as well as best practices for various inference frameworks such as MindIE CMotor, SGLang, vLLM, and Infer Operator. For details, see [Cluster Scheduling User Guide](./docs/en/scheduling/menu_scheduling_user_guide.md).
+MindCluster User Guide covers the entire process from environment deployment and resource management to the operation of training and inference services. The guide supports multiple installation methods—including Helm, manual, and tool-based installation—to complete environment deployment; enables resource management and monitoring through features such as containerization support, resource monitoring, and virtualized instances (vNPU); provides scheduling capabilities such as whole-card scheduling, affinity scheduling, multi-level scheduling, and tidal scheduling to meet job scheduling requirements in different scenarios; improves the reliability of training jobs through checkpoint-based resume training; and provides best practices for inference frameworks such as MindIE Motor, SGLang, vLLM, and Infer Operator. For details, see [Cluster Scheduling User Guide](./docs/en/scheduling/menu_scheduling_user_guide.md).
 
 **Fault Diagnosis**
 

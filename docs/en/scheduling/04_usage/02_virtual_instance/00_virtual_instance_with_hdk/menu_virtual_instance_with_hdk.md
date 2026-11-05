@@ -4,4 +4,6 @@
 - [Application Scenarios and Solutions](./02_application_scenarios_solutions.md)
 - [Virtualization Templates](./03_virtualization_templates.md)
 - [Static vNPU Scheduling](./04_static_vnpu_scheduling/menu_static_vnpu_scheduling.md)
+<!-- npu="A3,910b,310p" id1 -->
 - [Dynamic vNPU Scheduling](./05_dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md)
+<!-- end id1 -->

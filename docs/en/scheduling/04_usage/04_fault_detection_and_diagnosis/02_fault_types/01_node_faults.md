@@ -30,7 +30,7 @@ To ensure that the node fault detection function works properly, install Volcano
 
 ## Usage Constraints<a name="section16867482102"></a>
 
-- The node hardware fault reporting capability of NodeD is supported only for the following product models: Atlas 800T A2, Atlas 900 A2 PoD, and Atlas 900 A3 SuperPoD.
+- The node hardware fault reporting capability of NodeD is supported only for the following products: Atlas 800T A2, Atlas 900 A2 PoD, Atlas 900 A3 SuperPoD, Atlas 950 SuperPoD, Atlas 850E, Atlas 850, Atlas 650E, Atlas 650, and Atlas 350 accelerator card.
 - The node hardware fault reporting capability of NodeD is supported only when the iBMC is V2 3.15.0.1 or later or V2 3.10.02.55, and the IPMI driver is installed. When a lower iBMC version fails to obtain node fault information through IPMI, only the node health status is reported.
 - To use the SuperPoD fault detection function, the iBMC must be V3 5.8.3.35 or later.
 - To use the DPC fault detection function, Scale-Out Storage DPC 24.2.0 or later is required.

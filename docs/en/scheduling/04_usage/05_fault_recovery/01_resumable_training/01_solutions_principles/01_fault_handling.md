@@ -142,6 +142,7 @@ If a hardware or software fault occurs during training, the training state becom
 3. Recreate and schedule the training Pods and containers.
 4. After the containers are started, start the training process to recover the training job.
 
+<!-- npu="950,A3,910b" id1 -->
 ### Process-Level Rescheduling<a name="ZH-CN_TOPIC_0000002511346457"></a>
 
 Process-level rescheduling stops only the processes on fault-related nodes on each fault, and determines whether to exit the faulty node based on the configured policy.
@@ -296,6 +297,7 @@ For users who do not use MindSpeed-LLM and the MindCluster platform, the functio
 </tr>
 </tbody>
 </table>
+<!-- end id1 -->
 
 ### Sub-Healthy Exit and Rescheduling
 
@@ -304,6 +306,7 @@ For users who do not use MindSpeed-LLM and the MindCluster platform, the functio
 
 When the `graceExit` policy is used, ensure that the dying gasp CKPT saving function is enabled for the job.
 
+<!-- npu="A3,910b" id2 -->
 ### Hot Switching<a name="ZH-CN_TOPIC_0000002479386544"></a>
 
 After the training job is configured with the sub-healthy hot switchover policy (`hotSwitch`), when a sub-healthy fault occurs, the standby node is started, the training process is paused, and then the training job is started again on the standby node.
@@ -445,9 +448,12 @@ For users who do not use MindSpeed-LLM and the MindCluster platform, the functio
 </tr>
 </tbody>
 </table>
+<!-- end id2 -->
 
+<!-- npu="950,A3,910b" id3 -->
 ## Online Recovery
 
+<!-- npu="A3" id4 -->
 ### Operator-Level Online Recovery<a name="ZH-CN_TOPIC_0000002479386484"></a>
 
 Atlas A3 training products support HCCL operator retransmission when a parameter plane network fault occurs. Without exiting the faulty process, operator-level online recovery can tolerate network exceptions for a longer time, and the training job is not interrupted.
@@ -492,6 +498,7 @@ In the principle diagram above, the steps are described as follows.
 1. During training, a LinkDown fault occurs on the HCCS network plane or the RoCE network plane.
 2. CANN detects the network fault. After the current operator is terminated, network link recovery is performed (BGP route switching on the HCCS network plane, and link failover communication on the RoCE network plane). After the communication link is recovered, network operator re-execution is performed.
 3. After the operator re-execution succeeds, training iteration is resumed.
+<!-- end id4 -->
 
 ### Process-Level Online Recovery<a name="ZH-CN_TOPIC_0000002479386460"></a>
 
@@ -720,14 +727,16 @@ For users who do not use MindSpeed-LLM and the MindCluster platform, the followi
 </tr>
 </tbody>
 </table>
+<!-- end id3 -->
 
+<!-- npu="A3" id5 -->
 ## Switchback Recovery
 
 ### Suspension and Switchback of Link Failover Communication<a name="ZH-CN_TOPIC_0000002479226530"></a>
 
 For Atlas A3 training products, the MindCluster cluster scheduling components provide the suspension and switchback of link failover communication for training jobs. That is, during training, the RoCE port used by an NPU chip can be switched freely by using the proactive link failover and switchback API.
 
-For the detailed configuration method of suspension and switchback of link failover communication, see [Configuring Suspension and Switchback for Link Failover Communication](../02_configuration/01_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002511346495).
+For details about configurations of suspension and switchback for link failover communication, see [Configuring Suspension and Switchback for Link Failover Communication](../02_configuration/01_configuring_fault_handling_policies.md#configuring-suspension-and-switchback-for-link-failover-communication).
 
 - Before calling the [Link Failover and Switchback API](../../../../06_api/04_clusterd/08_link_failover_and_switchback_apis.md) to perform a link failover or switchback action, familiarize yourself with the NPU chip networking relationship and ensure that the network link of the target NPU is normal. If the target NPU is in linkdown state, the operation fails.
 - Taking the interface interconnection relationship in the preceding networking guide as an example, for the following cases, specify dev and op as follows when calling the `SwitchNicTrack` API:
@@ -794,7 +803,7 @@ For users who do not use MindSpeed-LLM and the MindCluster platform, the functio
 </th>
 <th class="cellrowborder" valign="top" width="43.419999999999995%" id="mcps1.2.5.1.2"><p id="p176601638153816"><a name="p176601638153816-duplicate-3"></a>Function Brief</p>
 </th>
-<th class="cellrowborder" valign="top" width="14.719999999999999%" id="mcps1.2.5.1.3"><p id="p10978953142414"><a name="p10978953142414"></a>Invloved Component</p>
+<th class="cellrowborder" valign="top" width="14.719999999999999%" id="mcps1.2.5.1.3"><p id="p10978953142414"><a name="p10978953142414"></a>Involved Component</p>
 </th>
 <th class="cellrowborder" valign="top" width="22.99%" id="mcps1.2.5.1.4"><p id="p4660113823812"><a name="p4660113823812-duplicate-3"></a>Reference Link</p>
 </th>
@@ -830,7 +839,9 @@ For users who do not use MindSpeed-LLM and the MindCluster platform, the functio
 </tr>
 </tbody>
 </table>
+<!-- end id5 -->
 
+<!-- npu="A3,910b" id6 -->
 ## Elastic Recovery
 
 ### Elastic Training<a name="ZH-CN_TOPIC_0000002479226542"></a>
@@ -848,7 +859,7 @@ When a hardware fault occurs and no backup resource is available in the K8s clus
 - The watchdog function cannot be enabled.
 - Because elastic training creates additional communication groups, on-chip memory usage may increase.
 
-    Formula for calculating the additional memory: maximum additional memory (MB) = HCCL\_BUFFSIZE \* 2 \* 9, where the default value of HCCL\_BUFFSIZE is 200 MB. For details about HCCL\_BUFFSIZE, see the "[HCCL_BUFFSIZE](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/commlib/hcclug/docs/en/user_guide/hccl_env/HCCL_BUFFSIZE.md)" section in *CANN HCCL Collective Communication Library*.
+    Formula for calculating the additional memory: maximum additional memory (MB) = HCCL\_BUFFSIZE \* 2 \* 9, where the default value of HCCL\_BUFFSIZE is 200 MB. For details about HCCL\_BUFFSIZE, see the "[HCCL_BUFFSIZE](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/commlib/hcclug/docs/en/user_guide/hccl_env/HCCL_BUFFSIZE.md)" section in *CANN HCCL Collective Communication Library*.
 
 - This function depends on MindIO. Before use, familiarize yourself with the [Constraints](../../../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#constraints) of MindIO.
 
@@ -873,7 +884,7 @@ For more usage constraints, see [MindSpeed-LLM Elastic Training Usage Constraint
 
 The preceding figure uses scale-in of one DP domain as an example only. In actual elastic training, multiple DP domains may be scaled in at a time. Each square in the figure represents a rank.
 
-1. Distributed training is performed normally with TP Tensor Parallelism (TP), Pipeline Parallelism (PP), and Data Parallelism (DP).
+1. Distributed training is performed normally with Tensor Parallelism (TP), Pipeline Parallelism (PP), and Data Parallelism (DP).
 2. At some point during training, if a rank becomes faulty and no more idle resources in the cluster can be scheduled for resumable training, scale in by DP domain, that is, scale in the Pods corresponding to one DP domain (possibly multiple Pods) and then continue training.
 3. At some point during scale-in training, when idle resources become available in the cluster, the scaled-in Pods are rescheduled, and scale-out restores the original scale to continue training.
 
@@ -1045,7 +1056,7 @@ For users who do not use MindSpeed-LLM and the MindCluster platform, the functio
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p5422211095"><a name="p5422211095"></a>Gradient precision calculation adaptation</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p5282161815916"><a name="p5282161815916"></a>Adapt to the precision gradient changes caused by changes in num_microbatches and other parameters during scale-in.</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p5282161815916"><a name="p5282161815916"></a>Adapt to the gradient precision changes caused by changes in num_microbatches and other parameters during scale-in.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p17653121214259"><a name="p17653121214259"></a><a href="https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/mindspeed_llm/features_manager/high_availability/high_availability.py" target="_blank" rel="noopener noreferrer">LLM Repository Reference Link 1</a></p>
 <p id="p116531412172515"><a name="p116531412172515"></a><a href="https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/pretrain_gpt.py#:~text=if args.enable_elastic_training:" target="_blank" rel="noopener noreferrer">LLM Repository Reference Link 2</a></p>
@@ -1127,10 +1138,12 @@ Adaptation items 1-6 in [Table 17](#table19955141136107) are the common logic of
     In [LLM Repository Reference Link 1](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/mindspeed_llm/features_manager/high_availability/high_availability.py), `start_grad_sync_wrapper`, `forward_step_wrapper`, and `elastic_training_get_forward_backward_func_wrapper`, as well as the `loss_func` code pointed to by [LLM Repository Reference Link 2](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/pretrain_gpt.py#:~text=if%20args.enable_elastic_training%3A), are patched or modified to adapt to the precision gradient changes caused by scale-in.
 
     - `loss_func` is changed from performing DP group all\_reduce communication for each `micro_batch` to not performing communication during scale-in training, because after scale-in the number of `num_micro_batches` in each DP domain may differ, which causes the first few DPs to execute all\_reduce one extra time and get stuck.
-    - In s`tart_grad_sync_wrapper`, `gradient_scaling_factor` is changed to `1.0/(arguments.global_batch_size/arguments.micro_batch_size)`, that is, the original `1/dp_size` is further divided by `num_micro_batches`.
+    - In `start_grad_sync_wrapper`, `gradient_scaling_factor` is changed to `1.0/(arguments.global_batch_size/arguments.micro_batch_size)`, that is, the original `1/dp_size` is further divided by `num_micro_batches`.
     - `forward_step_wrapper` changes the input parameter `num_microbatches` to 1, so that loss calculation no longer divides by `num_microbatches`, because `num_microbatches` has already been divided in `start_grad_sync_wrapper`.
     - Because `loss_func` does not perform DP group all\_reduce, `elastic_training_get_forward_backward_func_wrapper`, after the native `forward_backward_func` is executed, performs an all\_reduce operation in the DP group at the last PP to sum the value of each key in `losses_reduced` (that is, the sum of `lm loss` of all `micro_batches`).
+<!-- end id6 -->
 
+<!-- npu="A3,910b,910" id7 -->
 ## Graceful Fault Tolerance Mechanism
 
 ### (Optional) Graceful Fault Tolerance<a name="ZH-CN_TOPIC_0000002479226564"></a>
@@ -1180,3 +1193,4 @@ The graceful fault tolerance mode classifies faults into the following four type
 **Figure 13**  Graceful fault tolerance fault handling process<a name="zh-cn_topic_0000002098609234_fig12620181591012"></a>
 
 ![](../../../../../figures/scheduling/graceful-fault-tolerance-fault-handling-process.png)
+<!-- end id7 -->

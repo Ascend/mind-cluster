@@ -63,7 +63,7 @@ Before installation, ensure the following environments are installed, as shown i
 |Software|Version|Installation Path|How to Obtain|
 |--|--|--|--|
 |Operating system|<ul><li>CentOS 7.6 Arm</li><li>CentOS 7.6 x86</li><li>openEuler 20.03 Arm</li><li>openEuler 20.03 x86</li><li>openEuler 22.03 Arm</li><li>openEuler 22.03 x86</li><li>Ubuntu 20.04 Arm</li><li>Ubuntu 20.04 x86</li><li>Ubuntu 18.04.5 Arm</li><li>Ubuntu 18.04.5 x86</li><li>Ubuntu 18.04.1 Arm</li><li>Ubuntu 18.04.1 x86</li><li>Kylin V10 SP2 Arm</li><li>Kylin V10 SP2 x86</li><li>UOS20 1020e Arm</li></ul>|All nodes|-|
-|Python|3.7 or later|Compute node|Installed by yourself|
+|Python|3.8 to 3.12|Compute node|Installed by yourself|
 |Torch|2.7.1|Compute node|Installed by yourself|
 |MindSpore|2.7.0 or later|Compute node|Installed by yourself|
 
@@ -82,6 +82,8 @@ The recommended disk partitions for the operating system are shown in [Table 3](
 ### Preparing the Software Package
 
 **Downloading the Software Package**
+
+Refer to this chapter to obtain the required software packages. Downloading this software indicates that you agree to the terms and conditions of the [Software License Agreement 2.0](https://www.hiascend.com/en/legal/softlicense).
 
 **Table 4** Required software
 

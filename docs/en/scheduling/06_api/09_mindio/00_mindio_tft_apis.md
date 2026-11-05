@@ -347,7 +347,7 @@ mindio_ttp.framework_ttp.tft_register_save_ckpt_handler(func: Callable, ctx = No
 |Name|Description|Value Requirements|
 |--|--|--|
 |step|The step corresponding to when the optimizer data is dumped.|Positive integer.|
-|save_info|The rank list when different optimizers participate in saving terminal last words, where each element is a dictionary, and the dictionaries are arranged in the index order of ATTENTION (0) and MOE (1).|[<br>{<br>"type": int,   # optimizer type <br>"ranks": list, # rank list of the corresponding optimizer participating in saving terminal last words<br>},<br>]|
+|save_info|The rank list when different optimizers participate in saving dying gasps, where each element is a dictionary, and the dictionaries are arranged in the index order of ATTENTION (0) and MOE (1).|[<br>{<br>"type": int,   # optimizer type <br>"ranks": list, # rank list of the corresponding optimizer participating in saving dying gasps<br>},<br>]|
 |args|The parameters configured by tft_set_step_args.|Determined by the registering party.|
 |ctx|Callback function context.|Determined by the registering party.|
 
@@ -802,7 +802,7 @@ A string.
 
 - retry: perform UCE repair.
 - recover: perform ARF repair.
-- dump: Execute terminal last words.
+- dump: Execute dying gasps.
 - unknown: No repair type found.
 
 ## tft_is_reboot_node
@@ -1105,7 +1105,7 @@ mindio_ttp.controller_ttp.tft_register_mindx_callback(action: str, func: Callabl
 |Parameter|Description|Value Requirements|
 |--|--|--|
 |error_rank_dict|Information about the faulty card.|Dictionary of <int key, int errorType>: <ul><li>key is the rank number of the faulty card.</li><li>errorType is the fault type:</li><ul><li>0: UCE fault.</li><li>1: non-UCE fault.</li></ul></ul>|
-|strategy_list|List of repair strategies supported by MindIO TFT based on the currently available replica information.|list. The supported repair strategy values are as follows (str): <ul><li>retry: execute UCE repair.</li><li>recover: execute ARF repair.</li><li>dump: execute terminal checkpoint.</li><li>exit: exit.</li></ul>|
+|strategy_list|List of repair strategies supported by MindIO TFT based on the currently available replica information.|list. The supported repair strategy values are as follows (str): <ul><li>retry: execute UCE repair.</li><li>recover: execute ARF repair.</li><li>dump: execute dying gasp.</li><li>exit: exit.</li></ul>|
 
 **Table 4<a id="table_tft_17"></a>**  Callback function parameters when action is report\_result
 

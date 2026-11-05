@@ -336,7 +336,7 @@ As shown in [Table 1](#zh-cn_topic_0000002039339945_table1172542119019),obtain t
     docker build -t mindspeed-dl:v1 .
     ```
 
-4. In addition to manually building an image by following the preceding process, you can also directly use the out-of-the-box sample image `torch-npu-sample-dl:v26.2.0-cann8.5.0-torch_npu2.7.1-910b-ubuntu22.04-py3.10-aarch64`. The sample image can be obtained from [AscendHub](https://www.hiascend.com/en/developer/ascendhub) for quick verification.
+4. In addition to manually building an image by following the preceding process, you can also directly use the out-of-the-box sample image: `torch-npu-sample-dl:v26.2.0-cann8.5.0-torch_npu2.7.1.post2-910b-ubuntu22.04-py3.10-aarch64` or `torch-npu-sample-dl:v26.2.0-cann9.1.1-torch_npu2.7.1.post8-950-ubuntu24.04-py3.10-aarch64` (integrated UB driver-related files). The sample image can be obtained from [AscendHub](https://www.hiascend.com/en/developer/ascendhub) for quick verification.
 
 ## Script Adaptation<a name="ZH-CN_TOPIC_0000002511426481"></a>
 
@@ -358,7 +358,7 @@ This chapter guides users through the adaptation steps for resumable training, s
 >- The component code shown for resumable training is open-source code. For related security statements, see [Security Statement](../../../../07_references/05_appendix.md#ZH-CN_TOPIC_0000002479386374).
 >- The model example code below may differ from the actual version. The actual version code prevails.
 >- Write the model parameter configuration based on the model configuration in the model repository and the actual situation. Improper modification may cause unpredictable problems.
->- If the error "Failed to bind the IP port. Reason: The IP address and port have been bound already" occurs during training, configure it as follows. For details, see the "[HCCL_HOST_SOCKET_PORT_RANGE](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/commlib/hcclug/docs/en/user_guide/hccl_env/HCCL_HOST_SOCKET_PORT_RANGE.md)" section.
+>- If the error "Failed to bind the IP port. Reason: The IP address and port have been bound already" occurs during training, configure it as follows. For details, see the "[HCCL_HOST_SOCKET_PORT_RANGE](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/commlib/hcclug/docs/en/user_guide/hccl_env/HCCL_HOST_SOCKET_PORT_RANGE.md)" section.
 >
 >   ```shell
 >   export HCCL_HOST_SOCKET_PORT_RANGE="60000-60050"
@@ -685,7 +685,7 @@ After the training job has been running for longer than the CKPT saving interval
 This chapter guides users through constructing simple faults, including node faults, parameter plane network faults, and service plane faults.
 
 >[!NOTE]
->Constructing a chip fault involves security risks. If you need to construct one, contact Huawei technical support engineers.
+>Constructing a chip fault involves security risks.
 
 **Constructing a Node Fault<a name="section173881558133914"></a>**
 

@@ -4,7 +4,7 @@ When an Infer Operator inference service is deployed in a SuperPoD scenario, Inf
 
 ## Prerequisites
 
-- Infer Operator services have been deployed. For details, see [Deploying Infer Operator Jobs](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md).
+Infer Operator services have been deployed. For details, see [Deploying Infer Operator Jobs](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md).
 
 ## Supported Product Forms
 

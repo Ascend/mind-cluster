@@ -62,6 +62,15 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p1072973244"><a name="p1072973244"></a><a name="p1072973244"></a><span id="ph197215716249"><a name="ph197215716249"></a><a name="ph197215716249"></a>Volcano</span>, <span id="ph17212711245"><a name="ph17212711245"></a><a name="ph17212711245"></a>Ascend Operator</span></p>
 </td>
 </tr>
+<tr id="row_ra_block_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_ra_block_1"><a name="p_ra_block_1"></a><a name="p_ra_block_1"></a>ra-block</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_ra_block_2"><a name="p_ra_block_2"></a><a name="p_ra_block_2"></a>Specifies the number of chips in a logical rack.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_ra_block_3"><a name="p_ra_block_3"></a><a name="p_ra_block_3"></a>Integer, ranging from 1 to 64 and must be a power of 2.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_ra_block_4"><a name="p_ra_block_4"></a><a name="p_ra_block_4"></a>Volcano</p>
+</td>
+</tr>
 <tr id="row972875243"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p20765429172612"><a name="p20765429172612"></a><a name="p20765429172612"></a>huawei.com/schedule_policy</p>
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p1276572913269"><a name="p1276572913269"></a><a name="p1276572913269"></a>Specifies the scheduling policy.</p>
@@ -177,7 +186,7 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 
 | Configuration | Description |
 |--|--|
-| chip4-node8 | 1 node with 8 chips, every 4 chips form an interconnect ring. For example, Atlas 800 training server (model 9000)/Atlas 800 training server (model 9010)/Atlas 350 accelerator card has 8 chips total, every 4 chips are connected via UB mezzanine. |
+| chip4-node8 | 1 node with 8 chips, every 4 chips form an interconnect ring. For example, for the chips in the full-module scenario of Atlas 800 training server (model 9000)/Atlas 800 training server (model 9010) and the Atlas 350 accelerator card, there are 8 chips in total, and every 4 chips are connected via UB mezzanine. |
 | chip1-node2 | 1 node with 2 chips. For example, the Atlas 300T training card supports up to 1 chip, and 1 node supports up to 2 chips. |
 | chip4-node4 | 1 node with 4 chips, forming 1 interconnect ring, for example, Atlas 800 training server (models 9000, 9010) half-configuration chip scenario. |
 | chip8-node8 | 1 node with 8 chips. All 8 chips form 1 interconnect ring, for example, Atlas 800T A2/Atlas 850E/Atlas 850/Atlas 650E/Atlas 650. |
@@ -185,7 +194,7 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 | chip2-node8 | 1 node with 8 chips, every 2 chips on 1 interconnect ring. |
 | chip2-node16 | 1 node with 16 chips, every 2 chips on 1 interconnect ring, for example, Atlas 800T A3. |
 | chip2-node8-sp | 1 node with 8 chips, every 2 chips on 1 interconnect ring. Multiple servers form a SuperPoD, for example, Atlas 9000 A3 SuperPoD. |
-| chip2-node16-sp | 1 node with 16 chips, every 2 chip on 1 interconnect ring. Multiple servers form a SuperPoD, for example, Atlas 900 A3 SuperPoD. |
+| chip2-node16-sp | 1 node with 16 chips, every 2 chips on 1 interconnect ring. Multiple servers form a SuperPoD, for example, Atlas 900 A3 SuperPoD. |
 | chip4-node16 | 1 node with 16 chips, every 4 chips on 1 interconnect ring, for example, Atlas 350 accelerator card with 16 chips total and every 4 chips connected via UB mezzanine. |
 | chip1-node8 | 1 node with 8 chips, no interconnect between chips, for example, Atlas 350 accelerator card with 8 chips total and no interconnect between chips. |
 | chip1-node16 | 1 node with 16 chips, no interconnect between chips, for example, Atlas 350 accelerator card with 16 chips total and no interconnect between chips. |

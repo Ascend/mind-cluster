@@ -18,7 +18,7 @@ Helm is a tool for managing Kubernetes applications. It helps users quickly depl
     - [Infer Operator](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426821)
     - [K8s RDMA Shared Dev Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312660)
     - [Ascend Dynamic Resource Allocation](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312670)
-- To instal [Container Manager](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312655), refer to the [Manually Installing Container Manager](../../05_developer_guide/00_installation_deployment/00_manual_installation/10_container-manager.md) chapter.
+- To install [Container Manager](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312655), refer to the [Manually Installing Container Manager](../../05_developer_guide/00_installation_deployment/00_manual_installation/10_container-manager.md) chapter.
 - [TaskD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386914) and [MindIO](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226942) are installed in service containers and are not within the scope of the components covered in this chapter.
 - [Ascend Dynamic Resource Allocation](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312670) provides the same functions as [Ascend Device Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226928). Both provide the discovery, reporting, allocation, and mounting capabilities of Ascend NPU devices. The difference is that the former is based on the K8s dynamic resource allocation mechanism, while the latter is based on the K8s device plugin mechanism. You only need to deploy one of them. Ascend Device Plugin is installed by default and Ascend Dynamic Resource Allocation is not installed. When using Ascend Dynamic Resource Allocation, you are advised to disable Ascend Device Plugin.
 
@@ -124,7 +124,7 @@ The installation steps are as follows:
     > [!NOTE]
     >- The **default configuration installation method** downloads the images of the components from the Ascend image repository. If your nodes cannot connect to the internet and the images are not cached locally, the installation may fail.
     >- When installing the 26.1.0 version components, note that in the Ascend image repository, the image tags of the 26.1.0 version components are `v26.1.0-ubuntu22.04`, `v26.1.0-alpinelatest`, or `v26.1.0-openeuler24.03`, but in the default configuration of the 26.1.0 version Helm tool, the tag only specifies `v26.1.0`. If the **default configuration installation** is used, an error will be reported during installation because the image cannot be found. Therefore, use the **custom configuration installation** method to configure the correct tag.
-    >- Choose either the **default configuration installation** or the **custom configuration installation** method as needed.
+    >- Except for version 26.1.0, which must use **custom configuration installation** with the correct tag configured, other versions can use either **default configuration installation** or **custom configuration installation** as needed.
     - **Default configuration installation**: If the [component default configuration](#default_app_yaml_install_config) meets requirements, run the following command to install them.
 
       ```bash
@@ -153,7 +153,7 @@ The installation steps are as follows:
         ...
         ```
 
-Then run the following command:
+      Then run the following command:
 
       ```bash
       # (Optional) --dry-run does not actually create any resources. It can be used to verify the template syntax and check whether the generated configuration meets expectations.
@@ -174,10 +174,10 @@ Then run the following command:
       TEST SUITE: None
       ```
 
-1. Refer to [Component Status Confirmation](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390) to confirm the component installation status.
-2. If the component status is abnormal, check whether the installation configuration is correct, troubleshoot the cause of the abnormality, and then reinstall.
+5. Refer to [Component Status Confirmation](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390) to confirm the component installation status.
+6. If the component status is abnormal, check whether the installation configuration is correct, troubleshoot the cause of the abnormality, and then reinstall.
 
-   - Before reinstalling, run the following commands to uninstall the related resources.
+   Before reinstalling, run the following commands to uninstall the related resources.
 
      ```bash
      helm uninstall mindcluster-crds # Uninstall CRDs.
@@ -472,7 +472,7 @@ Then run the following command:
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>&lt;component&gt;.image.pullPolicy</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string</p><p>The value can be:<ul><li>IfNotPresent</li><li>Always</li><li>Never</li></ul></p><p>If set to "", the component default image pull policy is used.</p><p>If not set, the default is IfNotPresent.</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string</p><p>The value can be:<ul><li>IfNotPresent</li><li>Always</li><li>Never</li></ul></p><p>If set to "", the component default image pull policy is used.</p><p>If not set, the default value is IfNotPresent.</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>Indicates the image pull policy of the component.</p></td>
   </tr>
   <tr>
@@ -524,7 +524,7 @@ Then run the following command:
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>helm_tool.sh</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>Its functions include: <ul><li><p>Adds Helm metadata scrips to the resources of each component.</p></li><li>Deletes the DaemonSet resources of Ascend Device Plugin before version 26.1.0</li></ul></p><p>Used only during upgrade.</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>Its functions include: <ul><li><p>Adds Helm metadata scripts to the resources of each component.</p></li><li>Deletes the DaemonSet resources of Ascend Device Plugin before version 26.1.0</li></ul></p><p>Used only during upgrade.</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 ">Helm metadata is added to the following resources, including: <ul><li>Ascend Operator-related resources</li><li>Ascend Device Plugin-related resources</li><li>Volcano-related resources</li><li>ClusterD-related resources</li><li>NodeD-related resources</li><li>NPU Exporter-related resources</li><li>DPU Exporter-related resources</li><li>Infer Operator-related resources</li><li>K8s RDMA Shared Dev Plugin-related resources</li><li>Ascend Dynamic Resource Allocation-related resources</li><li>Namespaces, including "mindx-dl" and "cluster-system"</li></ul></td>
   </tr>
 </tbody>

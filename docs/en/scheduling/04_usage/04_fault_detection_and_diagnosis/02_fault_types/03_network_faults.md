@@ -72,6 +72,7 @@ Job-level rescheduling, Pod-level rescheduling, process-level rescheduling
 
 For **parameter plane faults**, the fault detection feature provides default fault levels and fault handling policies for the corresponding levels. If you need to modify a fault handling policy, see [Parameter Plane Network Faults](../03_configuration/04_network_faults.md#ZH-CN_TOPIC_0000002479226486). Do not modify it at will unless you have special requirements.
 
+<!-- npu="A3" id1 -->
 ## pingmesh UnifiedBus Network Faults<a name="ZH-CN_TOPIC_0000002511426437"></a>
 
 UnifiedBus network faults are detected NPU network faults within the HCCS network inside a SuperPoD (including intra-node and inter-node).
@@ -102,7 +103,9 @@ This function is supported only by Atlas 900 A3 SuperPoD.
 |Fault Code|Fault Description|Fault Level|
 |--|--|--|
 |220001001|NPU HCCS network fault|<p>SeparateNPU</p><p>This fault level cannot be configured manually.</p>|
+<!-- end id1 -->
 
+<!-- npu="950" id2 -->
 ## Optical Link Member Port Faults<a name="ZH-CN_TOPIC_0000002511426421"></a>
 
 Include the port faults from NPU to unions and 5808 in Atlas 950 SuperPoD, and the port faults from NPU to 1825 and 5808 in Atlas 850E, Atlas 850, Atlas 650E, and Atlas 650.
@@ -129,12 +132,12 @@ This function is supported only by Atlas 950 SuperPoD, Atlas 850E, Atlas 850, At
 
 |Fault Code|Fault Description|Fault Level|
 |--|--|--|
-|020001002|The hyper-plane route cannot converge.       |SeparateNPUCodes|
-|020000002|The hyper-plane route can converge, but the device is in a sub-health state.|SubHealthFaultCodes|
-|110001024|The parameter plane route cannot converge.       |PreSeparateNPUCodes: pre-isolate the NPU fault.|
-|110000002|The parameter plane route can converge, but the device is in a sub-health state.|SubHealthFaultCodes|
+|020001002|The hyper-plane route cannot converge.       |SeparateNPU|
+|020000002|The hyper-plane route can converge, but the device is in a sub-health state.|SubHealthFault|
+|110001024|The parameter plane route cannot converge.       |PreSeparateNPU|
+|110000002|The parameter plane route can converge, but the device is in a sub-health state.|SubHealthFault|
 
-## UB NIC Faults<a name="ZH-CN_TOPIC_0000002511426421"></a>
+## UB NIC Faults<a name="ZH-CN_TOPIC_0000002511426422"></a>
 
 UB NIC faults are faults that occur on UB NICs in Atlas 950 SuperPoD, Atlas 850E, Atlas 850, Atlas 650E, and Atlas 650.
 
@@ -173,6 +176,7 @@ Job-level rescheduling, Pod-level rescheduling
 |21000024|SeparateDPU|hca_port_down|HCA port fault. The IP address needs to be switched after the fault occurs.|
 |22000025|SubHealthFault|bond_member_down|A single member is faulty in the Bond scenario. The service can continue with half the bandwidth.|
 |22000026|SeparateDPU|dpu_card_drop|DPU loss fault.|
+<!-- end id2 -->
 
 ## Related Operations
 

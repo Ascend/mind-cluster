@@ -18,7 +18,7 @@
 </thead>
 <tbody><tr id="row0414dra240013"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240013"><a name="p0414dra240013"></a><a name="p0414dra240013"></a>K8s版本</p>
 </td>
-<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240014"><a name="p0414dra240014"></a><a name="p0414dra240014"></a>组件的YAML文件中使用resource.k8s.io/v1与admissionregistration.k8s.io/v1 API，要求K8s版本为1.34.x~1.36.x，低版本K8s集群无法安装该组件。</p>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240014"><a name="p0414dra240014"></a><a name="p0414dra240014"></a>组件的YAML文件中使用resource.k8s.io/v1与admissionregistration.k8s.io/v1 API，要求K8s版本为1.36.x，低版本K8s集群无法安装该组件。</p>
 </td>
 </tr>
 <tr id="row0414dra240015"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240015"><a name="p0414dra240015"></a><a name="p0414dra240015"></a>容器运行时</p>

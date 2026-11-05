@@ -1,6 +1,6 @@
 # Working with Telegraf<a name="ZH-CN_TOPIC_0000002479227042"></a>
 
-This section guides users through installing and deploying Telegraf, and viewing resource monitoring-related Data Information via Telegraf. For details on the data information, see [Telegraf Data Information Description](../../../06_api/00_npu_exporter/02_telegraf_data_description.md).
+This section guides users through installing and deploying Telegraf, and viewing resource monitoring-related data information via Telegraf. For details on the data information, see [Telegraf Data Information Description](../../../06_api/00_npu_exporter/02_telegraf_data_description.md).
 
 ## Binary Integration with Telegraf<a name="section31082142614"></a>
 

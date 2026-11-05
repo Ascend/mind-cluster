@@ -4,8 +4,6 @@ Chip fault recovery refers to the offline hot reset function of Ascend Device Pl
 
 ## Before You Start<a name="section_precondition"></a>
 
-**Prerequisites<a name="section_prerequisite"></a>**
-
 - The offline hot reset feature is usually used together with the **full-NPU scheduling** and **rescheduling** features. For details about how to use them, see [Full-NPU Scheduling](../03_basic_scheduling/03_full_npu_scheduling.md) and [Rescheduling](../03_basic_scheduling/05_rescheduling.md).
 - To enable the offline hot reset feature, Ascend Device Plugin must be installed and the startup parameter `-hotReset` must be set to `0` or `2` (`-1` by default, which does not support the offline hot reset feature). For details, see [Manually Installing Ascend Device Plugin](../../05_developer_guide/00_installation_deployment/00_manual_installation/04_ascend_device_plugin.md).
 - Only chip faults support recovery through a hot reset.

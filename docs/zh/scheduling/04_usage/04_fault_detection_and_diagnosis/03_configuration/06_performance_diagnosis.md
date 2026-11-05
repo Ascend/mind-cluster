@@ -773,7 +773,7 @@ ClusterD与FD-OL（Fault Diagnose Online）框架在同一进程中，都部署�
     |nSecondsDoOneDetection|30秒|设置间隔时长，进行检测，单位为秒。|
     |clusterMeanDistance|1.3|聚类后，两个类别之间的阈值距离（mean1、mean2）。|
     |cardOneNode|16张卡|一个节点的卡片数量。|
-    |slowNode|默认为1，开启任务。|<p>是否开启任务。</p><ul><li>1：开启任务。</li><li>0：关闭任务。</li></ul>|
+    |SlowNode|默认为1，开启任务。|<p>是否开启任务。</p><ul><li>1：开启任务。</li><li>0：关闭任务。</li></ul>|
 
 ### 配置慢网络诊断
 

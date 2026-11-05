@@ -1,9 +1,11 @@
 # Manual uninstallation<a name="ZH-CN_TOPIC_0000002511426389"></a>
 
 - To uninstall Ascend Docker Runtime, see [Uninstalling Ascend Docker Runtime](#section6134163311244).
+<!-- npu="950,A3,910b,910,310p" id2 -->
 - To uninstall Container Manager, see [Uninstalling Container Manager](#section1461059103619).
+<!-- end id2 -->
 - To uninstall Kubectl Plugin, see [Uninstalling Kubectl Plugin](#section1664298135126).
-- To uninstall NPU Exporter, DPU Exporter, Ascend Device Plugin, K8s RDMA Shared Dev Plugin, Volcano, ClusterD, Ascend Operator, Infer Operator, NodeD, Resilience Controller, Agent Core, and Node Collector, see [Uninstalling Other Components](#section6361146202520).
+- To uninstall NPU Exporter, DPU Exporter, Ascend Device Plugin, K8s RDMA Shared Dev Plugin, Volcano, ClusterD, Ascend Operator, Infer Operator, NodeD, Ascend Dynamic Resource Allocation, Resilience Controller, Agent Core, and Node Collector, see [Uninstalling Other Components](#section6361146202520).
 
 ## Uninstalling Ascend Docker Runtime<a name="section6134163311244"></a>
 
@@ -145,6 +147,7 @@
     >
     > Solution: Delete the faulty Pod using the command `kubectl delete pod --force -n {pod_namespace} {pod_name}` and wait for the Pod to be recreated.
 
+<!-- npu="950,A3,910b,910,310p" id1 -->
 ## Uninstalling Container Manager<a name="section1461059103619"></a>
 
 Use the deployment script (`deploy.sh`) for uninstallation. The script automatically completes operations such as stopping and disabling the service, deleting the systemd unit file, and removing binary files.
@@ -179,6 +182,7 @@ Use the deployment script (`deploy.sh`) for uninstallation. The script automatic
     ```shell
     rm -rf /var/log/mindx-dl/container-manager
     ```
+<!-- end id1 -->
 
 ## Uninstalling Kubectl Plugin<a name="section1664298135126"></a>
 
@@ -192,7 +196,7 @@ rm -f /usr/local/bin/kubectl-ascend_diag /usr/local/bin/kubectl-clusterops
 
 >[!NOTE]
 >
-> - Uninstalling Kubectl Plugin does not affect the Agent Core and Node Collector services already deployed in the cluster.
+>Uninstalling Kubectl Plugin does not affect the Agent Core and Node Collector services already deployed in the cluster.
 
 ## Uninstalling Other Components<a name="section6361146202520"></a>
 

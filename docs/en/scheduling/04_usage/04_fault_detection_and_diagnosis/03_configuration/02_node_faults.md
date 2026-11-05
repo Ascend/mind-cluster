@@ -10,10 +10,10 @@ The configuration file `NodeDConfiguration.json` of NodeD is a system configurat
 
 When the NodeD image is built, the fault level configuration file `NodeDConfiguration.json` is built into the image. When NodeD is started, it reads the default configuration in this file as the basis for current fault handling.
 
-If you want to customize fault levels, you can create a ConfigMap file `(mindx-dl-node-fault-config`) in the cluster.
+If you want to customize fault levels, you can create a ConfigMap file (`mindx-dl-node-fault-config`) in the cluster.
 
 - If `mindx-dl-node-fault-config` already exists in the cluster when NodeD is started, NodeD preferentially uses the content configured in the existing `mindx-dl-node-fault-config` as the basis for current fault handling.
-- If `mindx-dl-node-fault-config` already exists in the cluster after NodeD is reinstalled, the default NodeDConfiguration.json of NodeD does not take effect, and the existing `mindx-dl-node-fault-config` in the cluster is used. If you want to use the default configuration of `NodeDConfiguration.json`, you can delete m`indx-dl-node-fault-config` so that NodeD reads the default `NodeDConfiguration.json` file.
+- If `mindx-dl-node-fault-config` already exists in the cluster after NodeD is reinstalled, the default NodeDConfiguration.json of NodeD does not take effect, and the existing `mindx-dl-node-fault-config` in the cluster is used. If you want to use the default configuration of `NodeDConfiguration.json`, you can delete `mindx-dl-node-fault-config` so that NodeD reads the default `NodeDConfiguration.json` file.
 - If the content of `mindx-dl-node-fault-config` has problems such as format errors, NodeD reads the content of the `NodeDConfiguration.json` file built into the image by default as the basis for current fault handling.
 
 **Procedure<a name="section25164134219"></a>**
