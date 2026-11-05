@@ -111,6 +111,17 @@ const (
 	// ports may come up at different times, so the separate fault can only be reported after
 	// this window expires
 	UBSeparateFaultReportWindow int64 = 600
+	// ModeCombined counts frequency only on duration timeout/recovery (legacy behavior).
+	ModeCombined = "combined"
+	// ModeIndependent counts frequency on every fault occur/recover; duration
+	// timeout only triggers duration upgrade.
+	ModeIndependent = "independent"
+	// domainForEscalationModeCombinedFallback is the rate-limit domain of the warn
+	// log for EscalationMode=combined without a duration config (fallback to independent).
+	domainForEscalationModeCombinedFallback = "escalationModeCombinedFallback"
+	// domainForEscalationModeInvalidFallback is the rate-limit domain of the warn
+	// log for unrecognized EscalationMode values (fallback to default derivation).
+	domainForEscalationModeInvalidFallback = "escalationModeInvalidFallback"
 )
 
 var (
@@ -327,6 +338,9 @@ type FaultFrequency struct {
 	Times             int64
 	FaultHandling     string
 	ReleaseTimeWindow int64
+	// EscalationMode is "combined" or "independent"; empty means auto-derived during
+	// config loading (has duration config -> combined, otherwise -> independent).
+	EscalationMode string `json:"EscalationMode,omitempty"`
 }
 
 // FaultDurationCustomization is the customization info of fault duration
@@ -750,9 +764,22 @@ func LoadFaultCustomization(faultCustomizationByte []byte) error {
 		return err
 	}
 	loadGraceToleranceCustomization(faultCustomization.GraceTolerance)
-	loadFaultFrequencyCustomization(faultCustomization.FaultFrequency)
+	// Build both maps off to the side and swap them in under one exclusive lock
+	// hold, using a fixed lock order (duration -> frequency). This keeps the
+	// published pair atomic: concurrent fault handling never sees a duration
+	// config and its derived EscalationMode disagree, and no fault event can
+	// land in a map that is about to be replaced.
+	faultDurationMapLock.Lock()
+	faultFrequencyMapLock.Lock()
+	newDurationMap := buildFaultDurationCustomization(faultCustomization.FaultDuration, faultDurationMap)
+	durationConfiguredIds := durationMapEventIds(newDurationMap)
+	newFrequencyMap := buildFaultFrequencyCustomization(faultCustomization.FaultFrequency,
+		durationConfiguredIds, faultFrequencyMap)
+	faultDurationMap = newDurationMap
+	faultFrequencyMap = newFrequencyMap
+	faultFrequencyMapLock.Unlock()
+	faultDurationMapLock.Unlock()
 	setAutofillReasonReleaseTime()
-	loadFaultDurationCustomization(faultCustomization.FaultDuration)
 
 	// Check and update existing upgrade faults when config changes
 	// Only copy FaultFrequency and FaultDuration fields to avoid concurrent map access issues
@@ -836,7 +863,12 @@ func registerFaultCodeFormats(eventIdStrs []string) {
 	}
 }
 
-func loadFaultDurationCustomization(customization []FaultDurationCustomization) {
+// buildFaultDurationCustomization builds a new faultDurationMap, carrying over the
+// runtime per-logic Duration state of event ids that still exist (by sharing the
+// map reference, no deep copy). It takes no lock; the caller publishes the result.
+func buildFaultDurationCustomization(customization []FaultDurationCustomization,
+	oldMap map[string]*FaultDurationCache) map[string]*FaultDurationCache {
+	newMap := make(map[string]*FaultDurationCache, len(oldMap))
 	handledEventId := make(sets.String, common.MaxErrorCodeCount)
 	for _, cus := range customization {
 		if !validateFaultDurationCustomization(cus) {
@@ -851,39 +883,37 @@ func loadFaultDurationCustomization(customization []FaultDurationCustomization) 
 			}
 			handledEventId.Insert(id)
 			registerFaultCodeFormat(id)
-			if cache, ok := faultDurationMap[id]; ok {
-				cache.FaultTimeout = cus.FaultTimeout
-				cache.RecoverTimeout = cus.RecoverTimeout
-				cache.FaultHandling = cus.FaultHandling
+			newCache := &FaultDurationCache{
+				FaultDuration: FaultDuration{
+					FaultTimeout:   cus.FaultTimeout,
+					RecoverTimeout: cus.RecoverTimeout,
+					FaultHandling:  cus.FaultHandling,
+				},
+			}
+			if old, ok := oldMap[id]; ok {
+				// carry over the runtime duration state by sharing the map reference
+				newCache.Duration = old.Duration
 				hwlog.RunLog.Debugf("update FaultDuration for event id %s success, FaultTimeout: %d, "+
 					"RecoverTimeout: %d, FaultHandling: %s", id, cus.FaultTimeout, cus.RecoverTimeout,
 					cus.FaultHandling)
 			} else {
-				faultDurationMap[id] = &FaultDurationCache{
-					Duration: make(map[int32]FaultDurationData, GeneralMapSize),
-					FaultDuration: FaultDuration{
-						FaultTimeout:   cus.FaultTimeout,
-						RecoverTimeout: cus.RecoverTimeout,
-						FaultHandling:  cus.FaultHandling,
-					},
-				}
+				newCache.Duration = make(map[int32]FaultDurationData, GeneralMapSize)
 				hwlog.RunLog.Debugf("insert FaultDuration for event id %s success, FaultTimeout: %d, "+
 					"RecoverTimeout: %d, FaultHandling: %s", id, cus.FaultTimeout, cus.RecoverTimeout,
 					cus.FaultHandling)
 			}
+			newMap[id] = newCache
 		}
 	}
-	// delete event id those in cache but not in CM
-	cachedEventIds := make([]string, 0, len(faultDurationMap))
-	for k := range faultDurationMap {
-		cachedEventIds = append(cachedEventIds, k)
-	}
-	for _, cachedId := range cachedEventIds {
-		if !handledEventId.Has(cachedId) && len(cachedId) != 0 {
-			delete(faultDurationMap, cachedId)
-			hwlog.RunLog.Infof("delete FaultDuration for event id %s", cachedId)
-		}
-	}
+	// event ids missing from the new config are simply not carried into newMap,
+	// which replaces the previous "delete stale entries" loop.
+	return newMap
+}
+
+// loadFaultDurationCustomization replaces the global faultDurationMap. Kept as a
+// thin wrapper for unit tests; LoadFaultCustomization publishes atomically.
+func loadFaultDurationCustomization(customization []FaultDurationCustomization) {
+	faultDurationMap = buildFaultDurationCustomization(customization, faultDurationMap)
 }
 
 func loadGraceToleranceCustomization(customization GraceToleranceCustomization) {
@@ -950,10 +980,17 @@ func GetAutofillReasonReleaseTime() int64 {
 	return autoFillReasonReleaseTimeWindow
 }
 
-func loadFaultFrequencyCustomization(customizations []FaultFrequencyCustomization) {
+// buildFaultFrequencyCustomization builds a new faultFrequencyMap, storing the
+// derived EscalationMode in each entry. durationConfiguredIds is the set of event
+// ids having a duration config in the same config snapshot, used to derive the
+// default mode; the caller holds both map locks across both builds, so the
+// derivation is consistent. Existing runtime frequency state is
+// carried over by sharing map references. The caller swaps in the result.
+func buildFaultFrequencyCustomization(customizations []FaultFrequencyCustomization,
+	durationConfiguredIds sets.String,
+	oldMap map[string]*FaultFrequencyCache) map[string]*FaultFrequencyCache {
+	newMap := make(map[string]*FaultFrequencyCache, len(oldMap))
 	handledEventId := make(sets.String, GeneralMapSize)
-	faultFrequencyMapLock.Lock()
-	defer faultFrequencyMapLock.Unlock()
 	for _, cus := range customizations {
 		if !validateFaultFrequencyCustomization(&cus) {
 			continue
@@ -967,49 +1004,94 @@ func loadFaultFrequencyCustomization(customizations []FaultFrequencyCustomizatio
 			}
 			handledEventId.Insert(id)
 			registerFaultCodeFormat(id)
-			if cache, ok := faultFrequencyMap[id]; ok {
-				cache.TimeWindow = cus.TimeWindow
-				cache.Times = cus.Times
-				cache.FaultHandling = cus.FaultHandling
-				cache.ReleaseTimeWindow = cus.ReleaseTimeWindow
+			escalationMode := deriveEscalationMode(cus.EscalationMode, id, durationConfiguredIds)
+			newCache := &FaultFrequencyCache{
+				FaultFrequency: FaultFrequency{
+					TimeWindow:        cus.TimeWindow,
+					Times:             cus.Times,
+					FaultHandling:     cus.FaultHandling,
+					ReleaseTimeWindow: cus.ReleaseTimeWindow,
+					EscalationMode:    escalationMode,
+				},
+			}
+			if old, ok := oldMap[id]; ok {
+				// carry over the runtime frequency state by sharing the map references
+				newCache.Frequency = old.Frequency
+				newCache.LastFaultTime = old.LastFaultTime
+				newCache.LastFaultRecoverTime = old.LastFaultRecoverTime
 				hwlog.RunLog.Debugf("update FaultFrequency for event id %s success, TimeWindow: %d, "+
 					"Times: %d, FaultHandling: %s", id, cus.TimeWindow, cus.Times, cus.FaultHandling)
 			} else {
-				faultFrequencyMap[id] = &FaultFrequencyCache{
-					Frequency:            make(map[int32][]int64, common.MaxErrorCodeCount),
-					LastFaultTime:        make(map[int32]int64),
-					LastFaultRecoverTime: make(map[int32]int64),
-					FaultFrequency: FaultFrequency{
-						TimeWindow:        cus.TimeWindow,
-						Times:             cus.Times,
-						FaultHandling:     cus.FaultHandling,
-						ReleaseTimeWindow: cus.ReleaseTimeWindow,
-					},
-				}
+				newCache.Frequency = make(map[int32][]int64, common.MaxErrorCodeCount)
+				newCache.LastFaultTime = make(map[int32]int64)
+				newCache.LastFaultRecoverTime = make(map[int32]int64)
 				hwlog.RunLog.Debugf("insert FaultFrequency for event id %s success: %v", id, cus)
 			}
+			newMap[id] = newCache
 		}
 	}
-	// delete event id those in cache but not in CM
-	cachedEventIds := make([]string, 0, len(faultFrequencyMap))
-	for k := range faultFrequencyMap {
-		cachedEventIds = append(cachedEventIds, k)
+	// event ids missing from the new config are simply not carried into newMap,
+	// which replaces the previous "delete stale entries" loop.
+	return newMap
+}
+
+// loadFaultFrequencyCustomization replaces the global faultFrequencyMap. Kept as
+// a thin wrapper for unit tests; LoadFaultCustomization publishes atomically.
+func loadFaultFrequencyCustomization(customizations []FaultFrequencyCustomization,
+	durationConfiguredIds sets.String) {
+	faultFrequencyMap = buildFaultFrequencyCustomization(customizations, durationConfiguredIds, faultFrequencyMap)
+}
+
+// durationMapEventIds returns the event ids present in the given duration map.
+func durationMapEventIds(durationMap map[string]*FaultDurationCache) sets.String {
+	ids := make(sets.String, len(durationMap))
+	for id := range durationMap {
+		ids.Insert(id)
 	}
-	for _, cachedId := range cachedEventIds {
-		if !handledEventId.Has(cachedId) && len(cachedId) != 0 {
-			delete(faultFrequencyMap, cachedId)
-			hwlog.RunLog.Infof("delete FaultFrequency for event id %s", cachedId)
+	return ids
+}
+
+// deriveEscalationMode resolves the escalation mode from the configured value:
+// empty or invalid values fall back to the default derivation (has duration
+// config -> combined), and "combined" without a duration config falls back to
+// independent with a warning.
+func deriveEscalationMode(configuredMode, eventId string, durationConfiguredIds sets.String) string {
+	hasDuration := durationConfiguredIds.Has(eventId)
+	switch configuredMode {
+	case ModeCombined:
+		if !hasDuration {
+			hwlog.RunLog.WarnfWithLimit(domainForEscalationModeCombinedFallback, eventId,
+				"EscalationMode=combined but no duration config for event id %s, "+
+					"fallback to independent", eventId)
+			return ModeIndependent
 		}
+		return ModeCombined
+	case ModeIndependent:
+		return ModeIndependent
+	default:
+		// empty or invalid configured mode: fall back to default derivation
+		if hasDuration {
+			return ModeCombined
+		}
+		return ModeIndependent
 	}
 }
 
-func insertFrequencyFaultOccur(logicId int32, eventId int64, faultTime int64) {
+// insertFrequencyFaultOccur inserts a frequency occurrence count when the cached
+// EscalationMode matches expectedMode. The mode check and write share one lock so
+// a concurrent config reload cannot make them observe different map versions.
+func insertFrequencyFaultOccur(logicId int32, eventId int64, faultTime int64, expectedMode string) {
 	faultFrequencyMapLock.Lock()
 	defer faultFrequencyMapLock.Unlock()
 	eventIdStr := FormatFaultCodeHex(eventId)
 	frequencyCache, ok := faultFrequencyMap[eventIdStr]
 	if !ok {
 		hwlog.RunLog.Debugf("skip inserting event id %s to fault frequency cache, no config found", eventIdStr)
+		return
+	}
+	if frequencyCache.EscalationMode != expectedMode {
+		hwlog.RunLog.Debugf("skip inserting event id %s to fault frequency cache, "+
+			"escalation mode is %s, expected %s", eventIdStr, frequencyCache.EscalationMode, expectedMode)
 		return
 	}
 	_, ok = frequencyCache.Frequency[logicId]
@@ -1026,13 +1108,20 @@ func insertFrequencyFaultOccur(logicId int32, eventId int64, faultTime int64) {
 		len(frequencyCache.Frequency[logicId]), frequencyCache.Times)
 }
 
-func insertFrequencyFaultRecover(logicId int32, eventId int64, faultRecoverTime int64) {
+// insertFrequencyFaultRecover inserts a frequency recover count when the cached
+// EscalationMode matches expectedMode (same locking rationale as insertFrequencyFaultOccur).
+func insertFrequencyFaultRecover(logicId int32, eventId int64, faultRecoverTime int64, expectedMode string) {
 	faultFrequencyMapLock.Lock()
 	defer faultFrequencyMapLock.Unlock()
 	eventIdStr := FormatFaultCodeHex(eventId)
 	frequencyCache, ok := faultFrequencyMap[eventIdStr]
 	if !ok {
 		hwlog.RunLog.Debugf("skip inserting event id %s to fault frequency cache, no config found", eventIdStr)
+		return
+	}
+	if frequencyCache.EscalationMode != expectedMode {
+		hwlog.RunLog.Debugf("skip inserting event id %s to fault frequency cache, "+
+			"escalation mode is %s, expected %s", eventIdStr, frequencyCache.EscalationMode, expectedMode)
 		return
 	}
 	if faultRecoverTime == 0 {
@@ -1081,6 +1170,16 @@ func validateFaultFrequencyCustomization(customization *FaultFrequencyCustomizat
 			"The supported range of FaultHandling in this FaultFrequency is %v. %s",
 			customization.EventId, customization.FaultHandling, FaultTypeSet.List(), invalidMsg)
 		return false
+	}
+	// EscalationMode is an optional field. Invalid value does not discard the
+	// whole entry, it will fallback to default derivation in load phase.
+	if customization.EscalationMode != "" &&
+		customization.EscalationMode != ModeCombined && customization.EscalationMode != ModeIndependent {
+		hwlog.RunLog.WarnfWithLimit(domainForEscalationModeInvalidFallback,
+			strings.Join(customization.EventId, ","),
+			"EventIDs: %v, EscalationMode(%s) is unrecognized, "+
+				"will fallback to default derivation. %s",
+			customization.EventId, customization.EscalationMode, invalidMsg)
 	}
 	return true
 }
@@ -1495,10 +1594,7 @@ func baseChipFaultOccur(newFaultInfos []common.DevFaultInfo, device *NpuDevice) 
 		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
 			device.FaultCodes = append(device.FaultCodes, faultInfo.EventID)
 			updateDeviceFaultTimeMap(device, faultInfo, true)
-			eventIdStr := FormatFaultCodeHex(faultInfo.EventID)
-			if _, ok := faultDurationMap[eventIdStr]; !ok {
-				insertFrequencyFaultOccur(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime)
-			}
+			insertFrequencyFaultOccur(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime, ModeIndependent)
 		}
 	}
 }
@@ -1543,10 +1639,7 @@ func handleNpuFaultRecover(logicID int32, device *NpuDevice, faultInfo common.De
 	} else {
 		device.FaultCodes = Int64Tool.Remove(device.FaultCodes, faultInfo.EventID)
 		updateDeviceFaultTimeMap(device, faultInfo, false)
-		eventIdStr := FormatFaultCodeHex(faultInfo.EventID)
-		if _, ok := faultDurationMap[eventIdStr]; !ok {
-			insertFrequencyFaultRecover(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime)
-		}
+		insertFrequencyFaultRecover(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime, ModeIndependent)
 	}
 }
 
@@ -1606,10 +1699,7 @@ func baseParameterPlaneFaultRecover(logicID int32, faultInfos []common.DevFaultI
 func handleNetworkFaultRecover(device *NpuDevice, faultInfo common.DevFaultInfo) {
 	device.NetworkFaultCodes = Int64Tool.Remove(device.NetworkFaultCodes, faultInfo.EventID)
 	updateDeviceFaultTimeMap(device, faultInfo, false)
-	eventIdStr := FormatFaultCodeHex(faultInfo.EventID)
-	if _, ok := faultDurationMap[eventIdStr]; !ok {
-		insertFrequencyFaultRecover(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime)
-	}
+	insertFrequencyFaultRecover(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime, ModeIndependent)
 }
 
 func a950ParameterPlaneFaultRecover(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice) {
@@ -1662,10 +1752,7 @@ func baseParameterPlaneFaultOccur(faultInfos []common.DevFaultInfo, device *NpuD
 		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
 			device.NetworkFaultCodes = append(device.NetworkFaultCodes, faultInfo.EventID)
 			updateDeviceFaultTimeMap(device, faultInfo, true)
-			eventIdStr := FormatFaultCodeHex(faultInfo.EventID)
-			if _, ok := faultDurationMap[eventIdStr]; !ok {
-				insertFrequencyFaultOccur(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime)
-			}
+			insertFrequencyFaultOccur(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime, ModeIndependent)
 		}
 	}
 }
@@ -2205,10 +2292,10 @@ func handleFaultQueue(logicID int32, eventId string) {
 		return
 	}
 	if initTimeoutStatus == false && faultDurationData.TimeoutStatus == true {
-		insertFrequencyFaultOccur(logicID, num, faultDurationData.FaultAlarmTime)
+		insertFrequencyFaultOccur(logicID, num, faultDurationData.FaultAlarmTime, ModeCombined)
 	}
 	if initTimeoutStatus == true && faultDurationData.TimeoutStatus == false {
-		insertFrequencyFaultRecover(logicID, num, faultDurationData.FaultAlarmTime)
+		insertFrequencyFaultRecover(logicID, num, faultDurationData.FaultAlarmTime, ModeCombined)
 	}
 
 	var duration int64

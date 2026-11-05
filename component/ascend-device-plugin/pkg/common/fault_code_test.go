@@ -18,8 +18,10 @@ package common
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -1647,6 +1649,39 @@ func TestValidateFaultFrequencyCustomizationPart3(t *testing.T) {
 	})
 }
 
+// TestValidateFaultFrequencyCustomizationEscalationMode verifies that the
+// validate step accepts any EscalationMode value instead of discarding the whole
+// config entry: an invalid value is accepted and later falls back to the derived
+// mode during load, an explicit value passes through unchanged (TC-D).
+func TestValidateFaultFrequencyCustomizationEscalationMode(t *testing.T) {
+	convey.Convey("TC-D: invalid EscalationMode is accepted, config is not discarded", t, func() {
+		faultFrequencyCustomization := FaultFrequencyCustomization{
+			EventId: []string{"80C98000"},
+			FaultFrequency: FaultFrequency{
+				TimeWindow:     86400,
+				Times:          2,
+				FaultHandling:  ManuallySeparateNPU,
+				EscalationMode: "invalid-mode",
+			},
+		}
+		result := validateFaultFrequencyCustomization(&faultFrequencyCustomization)
+		convey.So(result, convey.ShouldEqual, true)
+	})
+	convey.Convey("TC-D: explicit combined passes validation", t, func() {
+		faultFrequencyCustomization := FaultFrequencyCustomization{
+			EventId: []string{"80C98000"},
+			FaultFrequency: FaultFrequency{
+				TimeWindow:     86400,
+				Times:          2,
+				FaultHandling:  ManuallySeparateNPU,
+				EscalationMode: ModeCombined,
+			},
+		}
+		result := validateFaultFrequencyCustomization(&faultFrequencyCustomization)
+		convey.So(result, convey.ShouldEqual, true)
+	})
+}
+
 // TestLoadFaultFrequencyCustomizationCase1 for test loadFaultFrequencyCustomization
 func TestLoadFaultFrequencyCustomizationCase1(t *testing.T) {
 	convey.Convey("test loadFaultFrequencyCustomization success case1", t, func() {
@@ -1670,7 +1705,8 @@ func TestLoadFaultFrequencyCustomizationCase1(t *testing.T) {
 					TimeWindow:        86400,
 					Times:             2,
 					ReleaseTimeWindow: MaxReleaseTimeWindow,
-					FaultHandling:     ManuallySeparateNPU}},
+					FaultHandling:     ManuallySeparateNPU,
+					EscalationMode:    ModeIndependent}},
 			strings.ToLower(faultCode2): {Frequency: make(map[int32][]int64, common.MaxErrorCodeCount),
 				LastFaultTime:        map[int32]int64{},
 				LastFaultRecoverTime: make(map[int32]int64),
@@ -1678,9 +1714,10 @@ func TestLoadFaultFrequencyCustomizationCase1(t *testing.T) {
 					TimeWindow:        86400,
 					Times:             3,
 					ReleaseTimeWindow: MaxReleaseTimeWindow,
-					FaultHandling:     ManuallySeparateNPU}}}
+					FaultHandling:     ManuallySeparateNPU,
+					EscalationMode:    ModeIndependent}}}
 		faultFrequencyMap = make(map[string]*FaultFrequencyCache, common.MaxErrorCodeCount)
-		loadFaultFrequencyCustomization(faultFrequencyCustomizations)
+		loadFaultFrequencyCustomization(faultFrequencyCustomizations, sets.NewString())
 		convey.So(faultFrequencyMap, convey.ShouldResemble, expectVal)
 		ResetFaultCustomizationCache()
 	})
@@ -1707,7 +1744,8 @@ func TestLoadFaultFrequencyCustomizationCase2(t *testing.T) {
 					TimeWindow:        86400,
 					Times:             3,
 					FaultHandling:     ManuallySeparateNPU,
-					ReleaseTimeWindow: MaxReleaseTimeWindow}}}
+					ReleaseTimeWindow: MaxReleaseTimeWindow,
+					EscalationMode:    ModeIndependent}}}
 		faultFrequencyMap = map[string]*FaultFrequencyCache{
 			strings.ToLower(faultCode1): {Frequency: make(map[int32][]int64, common.MaxErrorCodeCount),
 				FaultFrequency: FaultFrequency{
@@ -1719,9 +1757,743 @@ func TestLoadFaultFrequencyCustomizationCase2(t *testing.T) {
 					TimeWindow:    86400,
 					Times:         3,
 					FaultHandling: ManuallySeparateNPU}}}
-		loadFaultFrequencyCustomization(faultFrequencyCustomizations)
+		loadFaultFrequencyCustomization(faultFrequencyCustomizations, sets.NewString())
 		convey.So(faultFrequencyMap, convey.ShouldResemble, expectVal)
 		ResetFaultCustomizationCache()
+	})
+}
+
+// TestLoadFaultFrequencyCustomizationWithEscalationMode for test loadFaultFrequencyCustomization
+// deriving the default EscalationMode from durationConfiguredIds
+func TestLoadFaultFrequencyCustomizationWithEscalationMode(t *testing.T) {
+	convey.Convey("test loadFaultFrequencyCustomization with duration config derives combined", t, func() {
+		faultCode := "81078603"
+		faultFrequencyCustomizations := []FaultFrequencyCustomization{{
+			EventId: []string{faultCode}, FaultFrequency: FaultFrequency{
+				TimeWindow:        86400,
+				Times:             5,
+				FaultHandling:     ManuallySeparateNPU,
+				ReleaseTimeWindow: 172800,
+			}}}
+		durationConfiguredIds := sets.NewString(strings.ToLower(faultCode))
+		faultFrequencyMap = make(map[string]*FaultFrequencyCache, common.MaxErrorCodeCount)
+		loadFaultFrequencyCustomization(faultFrequencyCustomizations, durationConfiguredIds)
+		convey.So(faultFrequencyMap[strings.ToLower(faultCode)].EscalationMode, convey.ShouldEqual, ModeCombined)
+		ResetFaultCustomizationCache()
+	})
+	convey.Convey("test loadFaultFrequencyCustomization without duration config derives independent", t, func() {
+		faultCode := "80C98000"
+		faultFrequencyCustomizations := []FaultFrequencyCustomization{{
+			EventId: []string{faultCode}, FaultFrequency: FaultFrequency{
+				TimeWindow:    86400,
+				Times:         2,
+				FaultHandling: ManuallySeparateNPU,
+			}}}
+		faultFrequencyMap = make(map[string]*FaultFrequencyCache, common.MaxErrorCodeCount)
+		loadFaultFrequencyCustomization(faultFrequencyCustomizations, sets.NewString())
+		convey.So(faultFrequencyMap[strings.ToLower(faultCode)].EscalationMode, convey.ShouldEqual, ModeIndependent)
+		ResetFaultCustomizationCache()
+	})
+	convey.Convey("test loadFaultFrequencyCustomization with explicit independent keeps independent", t, func() {
+		faultCode := "81078603"
+		faultFrequencyCustomizations := []FaultFrequencyCustomization{{
+			EventId: []string{faultCode}, FaultFrequency: FaultFrequency{
+				TimeWindow:        86400,
+				Times:             5,
+				FaultHandling:     ManuallySeparateNPU,
+				ReleaseTimeWindow: 172800,
+				EscalationMode:    ModeIndependent,
+			}}}
+		durationConfiguredIds := sets.NewString(strings.ToLower(faultCode))
+		faultFrequencyMap = make(map[string]*FaultFrequencyCache, common.MaxErrorCodeCount)
+		loadFaultFrequencyCustomization(faultFrequencyCustomizations, durationConfiguredIds)
+		convey.So(faultFrequencyMap[strings.ToLower(faultCode)].EscalationMode, convey.ShouldEqual, ModeIndependent)
+		ResetFaultCustomizationCache()
+	})
+}
+
+// TestDeriveEscalationMode for test deriveEscalationMode
+func TestDeriveEscalationMode(t *testing.T) {
+	convey.Convey("test deriveEscalationMode", t, func() {
+		durationIds := sets.NewString("81078603")
+		convey.Convey("empty mode with duration config derives combined", func() {
+			convey.So(deriveEscalationMode("", "81078603", durationIds), convey.ShouldEqual, ModeCombined)
+		})
+		convey.Convey("empty mode without duration config derives independent", func() {
+			convey.So(deriveEscalationMode("", "80C98000", durationIds), convey.ShouldEqual, ModeIndependent)
+		})
+		convey.Convey("explicit combined with duration config keeps combined", func() {
+			convey.So(deriveEscalationMode(ModeCombined, "81078603", durationIds), convey.ShouldEqual, ModeCombined)
+		})
+		convey.Convey("explicit combined without duration config falls back to independent", func() {
+			convey.So(deriveEscalationMode(ModeCombined, "80C98000", durationIds), convey.ShouldEqual, ModeIndependent)
+		})
+		convey.Convey("explicit independent keeps independent", func() {
+			convey.So(deriveEscalationMode(ModeIndependent, "81078603", durationIds), convey.ShouldEqual, ModeIndependent)
+		})
+		convey.Convey("invalid mode falls back to default derivation", func() {
+			convey.So(deriveEscalationMode("invalid", "81078603", durationIds), convey.ShouldEqual, ModeCombined)
+			convey.So(deriveEscalationMode("invalid", "80C98000", durationIds), convey.ShouldEqual, ModeIndependent)
+		})
+	})
+}
+
+// TestInsertFrequencyFaultOccurByMode verifies that counting happens only when the
+// cached EscalationMode matches the expected mode.
+func TestInsertFrequencyFaultOccurByMode(t *testing.T) {
+	convey.Convey("test insertFrequencyFaultOccur counts only when mode matches", t, func() {
+		faultFrequencyMap = map[string]*FaultFrequencyCache{
+			"81078603": {
+				Frequency:            make(map[int32][]int64),
+				LastFaultTime:        make(map[int32]int64),
+				LastFaultRecoverTime: make(map[int32]int64),
+				FaultFrequency:       FaultFrequency{EscalationMode: ModeCombined},
+			},
+			"80c98000": {
+				Frequency:            make(map[int32][]int64),
+				LastFaultTime:        make(map[int32]int64),
+				LastFaultRecoverTime: make(map[int32]int64),
+				FaultFrequency:       FaultFrequency{EscalationMode: ModeIndependent},
+			},
+		}
+		// combined cache + expected independent -> skipped, no count
+		insertFrequencyFaultOccur(0, 0x81078603, 1000, ModeIndependent)
+		convey.So(len(faultFrequencyMap["81078603"].Frequency[0]), convey.ShouldEqual, 0)
+		// independent cache + expected independent -> counted once
+		insertFrequencyFaultOccur(0, 0x80c98000, 1000, ModeIndependent)
+		convey.So(len(faultFrequencyMap["80c98000"].Frequency[0]), convey.ShouldEqual, 1)
+		// no frequency config -> skipped, nothing to count
+		insertFrequencyFaultOccur(0, 0x80e18005, 1000, ModeIndependent)
+		convey.So(faultFrequencyMap["80e18005"], convey.ShouldBeNil)
+		ResetFaultCustomizationCache()
+	})
+}
+
+// TestInsertFrequencyFaultRecoverByMode verifies that recovery is marked only when
+// the cached EscalationMode matches the expected mode.
+func TestInsertFrequencyFaultRecoverByMode(t *testing.T) {
+	convey.Convey("test insertFrequencyFaultRecover marks recovery only when mode matches", t, func() {
+		faultFrequencyMap = map[string]*FaultFrequencyCache{
+			"81078603": {
+				Frequency:            make(map[int32][]int64),
+				LastFaultTime:        make(map[int32]int64),
+				LastFaultRecoverTime: make(map[int32]int64),
+				FaultFrequency:       FaultFrequency{EscalationMode: ModeCombined},
+			},
+			"80c98000": {
+				Frequency:            make(map[int32][]int64),
+				LastFaultTime:        make(map[int32]int64),
+				LastFaultRecoverTime: make(map[int32]int64),
+				FaultFrequency:       FaultFrequency{EscalationMode: ModeIndependent},
+			},
+		}
+		// combined cache + expected independent -> skipped, no recover mark
+		insertFrequencyFaultRecover(0, 0x81078603, 2000, ModeIndependent)
+		convey.So(faultFrequencyMap["81078603"].LastFaultRecoverTime[0], convey.ShouldEqual, int64(0))
+		// independent cache + expected independent -> marked
+		insertFrequencyFaultRecover(0, 0x80c98000, 2000, ModeIndependent)
+		convey.So(faultFrequencyMap["80c98000"].LastFaultRecoverTime[0], convey.ShouldEqual, int64(2000))
+		// no frequency config -> skipped
+		insertFrequencyFaultRecover(0, 0x80e18005, 2000, ModeIndependent)
+		convey.So(faultFrequencyMap["80e18005"], convey.ShouldBeNil)
+		ResetFaultCustomizationCache()
+	})
+}
+
+// TestEscalationModeBaseline pins the current combined-mode behavior before the dual-mode change.
+// TC-A01: 81078603 configured with freq+duration, no EscalationMode field.
+// - occur does NOT directly count frequency (combined: duration guard skips insert)
+// - timeout DOES count frequency once (handleFaultQueue inserts on timeout transition)
+func TestEscalationModeBaseline(t *testing.T) {
+	convey.Convey("TC-A01 baseline: freq+duration no mode -> combined behavior", t, func() {
+		logicID := int32(0)
+		linkDownCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
+		ResetFaultCustomizationCache()
+		defer ResetFaultCustomizationCache()
+		recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
+		defer func() { recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize) }()
+
+		faultFrequencyMap = map[string]*FaultFrequencyCache{
+			linkDownCodeStr: {
+				Frequency:            make(map[int32][]int64, GeneralMapSize),
+				LastFaultTime:        make(map[int32]int64),
+				LastFaultRecoverTime: make(map[int32]int64),
+				FaultFrequency: FaultFrequency{
+					TimeWindow:     86400,
+					Times:          2,
+					FaultHandling:  PreSeparateNPU,
+					EscalationMode: ModeCombined,
+				},
+			},
+		}
+		faultDurationMap = map[string]*FaultDurationCache{
+			linkDownCodeStr: {
+				Duration: make(map[int32]FaultDurationData, GeneralMapSize),
+				FaultDuration: FaultDuration{
+					FaultTimeout:   30,
+					RecoverTimeout: 60,
+					FaultHandling:  PreSeparateNPU,
+				},
+			},
+		}
+
+		// Step 1: trigger occur -> frequency cache stays 0 (duration guard skips insert)
+		device := &NpuDevice{LogicID: logicID}
+		occurFaultInfos := []common.DevFaultInfo{
+			{EventID: LinkDownFaultCode, Assertion: common.FaultOccur,
+				AlarmRaisedTime: 50 * SecondMagnification},
+		}
+		baseChipFaultOccur(occurFaultInfos, device)
+		convey.So(len(faultFrequencyMap[linkDownCodeStr].Frequency[logicID]), convey.ShouldEqual, 0)
+
+		// Step 2: simulate timeout via handleFaultQueue -> frequency cache becomes 1
+		faultInfos := []common.DevFaultInfo{
+			{EventID: LinkDownFaultCode, Assertion: common.FaultOccur,
+				AlarmRaisedTime: 50 * SecondMagnification},
+			{EventID: LinkDownFaultCode, Assertion: common.FaultRecover,
+				AlarmRaisedTime: 81 * SecondMagnification},
+			{EventID: LinkDownFaultCode, Assertion: common.FaultOccur,
+				AlarmRaisedTime: 82 * SecondMagnification},
+		}
+		collectEachFaultEvent(logicID, faultInfos)
+		sortFaultEventsInAscendingOrder(logicID, linkDownCodeStr)
+		cleanFaultQueue(logicID, linkDownCodeStr)
+		handleFaultQueue(logicID, linkDownCodeStr)
+
+		convey.So(faultDurationMap[linkDownCodeStr].Duration[logicID].TimeoutStatus, convey.ShouldBeTrue)
+		convey.So(len(faultFrequencyMap[linkDownCodeStr].Frequency[logicID]), convey.ShouldEqual, 1)
+	})
+}
+
+// TestEscalationModeIndependentOccur TC-C01: independent mode, occur directly counts frequency.
+func TestEscalationModeIndependentOccur(t *testing.T) {
+	convey.Convey("TC-C01: independent mode occur directly counts frequency", t, func() {
+		logicID := int32(0)
+		linkDownCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
+		ResetFaultCustomizationCache()
+		defer ResetFaultCustomizationCache()
+		recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
+		defer func() { recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize) }()
+
+		faultFrequencyMap = map[string]*FaultFrequencyCache{
+			linkDownCodeStr: {
+				Frequency:            make(map[int32][]int64, GeneralMapSize),
+				LastFaultTime:        make(map[int32]int64),
+				LastFaultRecoverTime: make(map[int32]int64),
+				FaultFrequency: FaultFrequency{
+					TimeWindow:     86400,
+					Times:          2,
+					FaultHandling:  PreSeparateNPU,
+					EscalationMode: ModeIndependent,
+				},
+			},
+		}
+		faultDurationMap = map[string]*FaultDurationCache{
+			linkDownCodeStr: {
+				Duration: make(map[int32]FaultDurationData, GeneralMapSize),
+				FaultDuration: FaultDuration{
+					FaultTimeout:   30,
+					RecoverTimeout: 60,
+					FaultHandling:  PreSeparateNPU,
+				},
+			},
+		}
+
+		device := &NpuDevice{LogicID: logicID}
+		occurFaultInfos := []common.DevFaultInfo{
+			{EventID: LinkDownFaultCode, Assertion: common.FaultOccur,
+				AlarmRaisedTime: 50 * SecondMagnification},
+		}
+		baseChipFaultOccur(occurFaultInfos, device)
+		convey.So(len(faultFrequencyMap[linkDownCodeStr].Frequency[logicID]), convey.ShouldEqual, 1)
+	})
+}
+
+// TestEscalationModeIndependentTimeout TC-C02: independent mode, timeout does NOT count frequency.
+func TestEscalationModeIndependentTimeout(t *testing.T) {
+	convey.Convey("TC-C02: independent mode timeout does not count frequency", t, func() {
+		logicID := int32(0)
+		linkDownCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
+		ResetFaultCustomizationCache()
+		defer ResetFaultCustomizationCache()
+		recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
+		defer func() { recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize) }()
+
+		faultFrequencyMap = map[string]*FaultFrequencyCache{
+			linkDownCodeStr: {
+				Frequency:            make(map[int32][]int64, GeneralMapSize),
+				LastFaultTime:        make(map[int32]int64),
+				LastFaultRecoverTime: make(map[int32]int64),
+				FaultFrequency: FaultFrequency{
+					TimeWindow:     86400,
+					Times:          2,
+					FaultHandling:  PreSeparateNPU,
+					EscalationMode: ModeIndependent,
+				},
+			},
+		}
+		faultDurationMap = map[string]*FaultDurationCache{
+			linkDownCodeStr: {
+				Duration: make(map[int32]FaultDurationData, GeneralMapSize),
+				FaultDuration: FaultDuration{
+					FaultTimeout:   30,
+					RecoverTimeout: 60,
+					FaultHandling:  PreSeparateNPU,
+				},
+			},
+		}
+
+		faultInfos := []common.DevFaultInfo{
+			{EventID: LinkDownFaultCode, Assertion: common.FaultOccur,
+				AlarmRaisedTime: 50 * SecondMagnification},
+			{EventID: LinkDownFaultCode, Assertion: common.FaultRecover,
+				AlarmRaisedTime: 81 * SecondMagnification},
+			{EventID: LinkDownFaultCode, Assertion: common.FaultOccur,
+				AlarmRaisedTime: 82 * SecondMagnification},
+		}
+		collectEachFaultEvent(logicID, faultInfos)
+		sortFaultEventsInAscendingOrder(logicID, linkDownCodeStr)
+		cleanFaultQueue(logicID, linkDownCodeStr)
+		handleFaultQueue(logicID, linkDownCodeStr)
+
+		convey.So(faultDurationMap[linkDownCodeStr].Duration[logicID].TimeoutStatus, convey.ShouldBeTrue)
+		convey.So(len(faultFrequencyMap[linkDownCodeStr].Frequency[logicID]), convey.ShouldEqual, 0)
+	})
+}
+
+// TestEscalationModeFreqOnlyDefaultIndependent TC-A02: freq only, no mode field, occur directly counts.
+func TestEscalationModeFreqOnlyDefaultIndependent(t *testing.T) {
+	convey.Convey("TC-A02: freq only no mode -> independent, occur directly counts", t, func() {
+		logicID := int32(0)
+		faultCode := "80C98000"
+		ResetFaultCustomizationCache()
+		defer ResetFaultCustomizationCache()
+		recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
+		defer func() { recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize) }()
+
+		faultFrequencyMap = map[string]*FaultFrequencyCache{
+			strings.ToLower(faultCode): {
+				Frequency:            make(map[int32][]int64, GeneralMapSize),
+				LastFaultTime:        make(map[int32]int64),
+				LastFaultRecoverTime: make(map[int32]int64),
+				FaultFrequency: FaultFrequency{
+					TimeWindow:     86400,
+					Times:          2,
+					FaultHandling:  ManuallySeparateNPU,
+					EscalationMode: ModeIndependent,
+				},
+			},
+		}
+		faultDurationMap = make(map[string]*FaultDurationCache)
+
+		eventId, err := strconv.ParseInt(faultCode, Hex, 0)
+		convey.So(err, convey.ShouldBeNil)
+		device := &NpuDevice{LogicID: logicID}
+		occurFaultInfos := []common.DevFaultInfo{
+			{EventID: eventId, Assertion: common.FaultOccur, AlarmRaisedTime: 50 * SecondMagnification},
+		}
+		baseChipFaultOccur(occurFaultInfos, device)
+		convey.So(len(faultFrequencyMap[strings.ToLower(faultCode)].Frequency[logicID]),
+			convey.ShouldEqual, 1)
+	})
+}
+
+// TestEscalationModeIndependentEscalationChain verifies the full independent-mode
+// escalation chain (TC-C03): each occur counts directly, and once the accumulated
+// count reaches Times the fault escalates to the configured FaultHandling level.
+func TestEscalationModeIndependentEscalationChain(t *testing.T) {
+	convey.Convey("TC-C03: independent mode accumulates occurs and escalates at Times", t, func() {
+		logicID := int32(0)
+		faultCode := "80C98000"
+		ResetFaultCustomizationCache()
+		defer ResetFaultCustomizationCache()
+		recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
+		defer func() { recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize) }()
+
+		faultFrequencyMap = map[string]*FaultFrequencyCache{
+			strings.ToLower(faultCode): {
+				Frequency:            make(map[int32][]int64, GeneralMapSize),
+				LastFaultTime:        make(map[int32]int64),
+				LastFaultRecoverTime: make(map[int32]int64),
+				FaultFrequency: FaultFrequency{
+					TimeWindow:     86400,
+					Times:          2,
+					FaultHandling:  PreSeparateNPU,
+					EscalationMode: ModeIndependent,
+				},
+			},
+		}
+		faultDurationMap = make(map[string]*FaultDurationCache)
+
+		eventId, err := strconv.ParseInt(faultCode, Hex, 0)
+		convey.So(err, convey.ShouldBeNil)
+		device := &NpuDevice{LogicID: logicID}
+		now := time.Now().UnixMilli()
+
+		// first occur: counted once, below Times so no escalation yet
+		baseChipFaultOccur([]common.DevFaultInfo{
+			{EventID: eventId, Assertion: common.FaultOccur, AlarmRaisedTime: now - 1000},
+		}, device)
+		convey.So(len(faultFrequencyMap[strings.ToLower(faultCode)].Frequency[logicID]),
+			convey.ShouldEqual, 1)
+		convey.So(GetFaultTypeFromFaultFrequency(logicID, ChipFaultMode), convey.ShouldEqual, NormalNPU)
+
+		// second occur reaches Times: escalates to the configured level
+		baseChipFaultOccur([]common.DevFaultInfo{
+			{EventID: eventId, Assertion: common.FaultOccur, AlarmRaisedTime: now},
+		}, device)
+		convey.So(len(faultFrequencyMap[strings.ToLower(faultCode)].Frequency[logicID]),
+			convey.ShouldEqual, 2)
+		convey.So(GetFaultTypeFromFaultFrequency(logicID, ChipFaultMode), convey.ShouldEqual, PreSeparateNPU)
+	})
+}
+
+// TestEscalationModeIndependentRecover verifies that in independent mode a recover
+// event records the recover time without consuming an occur count, and an
+// occur-recover-occur cycle still accumulates towards escalation (TC-C04).
+func TestEscalationModeIndependentRecover(t *testing.T) {
+	convey.Convey("TC-C04: independent mode recover records time, does not add count", t, func() {
+		logicID := int32(0)
+		faultCode := "80C98000"
+		ResetFaultCustomizationCache()
+		defer ResetFaultCustomizationCache()
+		recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
+		defer func() { recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize) }()
+
+		faultFrequencyMap = map[string]*FaultFrequencyCache{
+			strings.ToLower(faultCode): {
+				Frequency:            make(map[int32][]int64, GeneralMapSize),
+				LastFaultTime:        make(map[int32]int64),
+				LastFaultRecoverTime: make(map[int32]int64),
+				FaultFrequency: FaultFrequency{
+					TimeWindow:     86400,
+					Times:          2,
+					FaultHandling:  PreSeparateNPU,
+					EscalationMode: ModeIndependent,
+				},
+			},
+		}
+		faultDurationMap = make(map[string]*FaultDurationCache)
+
+		eventId, err := strconv.ParseInt(faultCode, Hex, 0)
+		convey.So(err, convey.ShouldBeNil)
+		device := &NpuDevice{LogicID: logicID}
+		now := time.Now().UnixMilli()
+
+		// occur -> recover: recover only records the recover time, no extra count
+		baseChipFaultOccur([]common.DevFaultInfo{
+			{EventID: eventId, Assertion: common.FaultOccur, AlarmRaisedTime: now - 2000},
+		}, device)
+		handleNpuFaultRecover(logicID, device, common.DevFaultInfo{
+			EventID: eventId, Assertion: common.FaultRecover, AlarmRaisedTime: now - 1000,
+		})
+		convey.So(len(faultFrequencyMap[strings.ToLower(faultCode)].Frequency[logicID]),
+			convey.ShouldEqual, 1)
+		convey.So(faultFrequencyMap[strings.ToLower(faultCode)].LastFaultRecoverTime[logicID],
+			convey.ShouldEqual, now-1000)
+
+		// a new occur after recover keeps counting towards escalation
+		baseChipFaultOccur([]common.DevFaultInfo{
+			{EventID: eventId, Assertion: common.FaultOccur, AlarmRaisedTime: now},
+		}, device)
+		convey.So(len(faultFrequencyMap[strings.ToLower(faultCode)].Frequency[logicID]),
+			convey.ShouldEqual, 2)
+		convey.So(GetFaultTypeFromFaultFrequency(logicID, ChipFaultMode), convey.ShouldEqual, PreSeparateNPU)
+	})
+}
+
+// TestEscalationModeIndependentContinuousCounting verifies that after reaching
+// Times the counting continues, each new occur is still recorded and the
+// escalation level is maintained (TC-C05).
+func TestEscalationModeIndependentContinuousCounting(t *testing.T) {
+	convey.Convey("TC-C05: independent mode keeps counting past the threshold", t, func() {
+		logicID := int32(0)
+		faultCode := "80C98000"
+		ResetFaultCustomizationCache()
+		defer ResetFaultCustomizationCache()
+		recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
+		defer func() { recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize) }()
+
+		faultFrequencyMap = map[string]*FaultFrequencyCache{
+			strings.ToLower(faultCode): {
+				Frequency:            make(map[int32][]int64, GeneralMapSize),
+				LastFaultTime:        make(map[int32]int64),
+				LastFaultRecoverTime: make(map[int32]int64),
+				FaultFrequency: FaultFrequency{
+					TimeWindow:     86400,
+					Times:          2,
+					FaultHandling:  PreSeparateNPU,
+					EscalationMode: ModeIndependent,
+				},
+			},
+		}
+		faultDurationMap = make(map[string]*FaultDurationCache)
+
+		eventId, err := strconv.ParseInt(faultCode, Hex, 0)
+		convey.So(err, convey.ShouldBeNil)
+		device := &NpuDevice{LogicID: logicID}
+		now := time.Now().UnixMilli()
+
+		for i := 0; i < 3; i++ {
+			baseChipFaultOccur([]common.DevFaultInfo{
+				{EventID: eventId, Assertion: common.FaultOccur, AlarmRaisedTime: now - int64(3-i)*1000},
+			}, device)
+		}
+		convey.So(len(faultFrequencyMap[strings.ToLower(faultCode)].Frequency[logicID]),
+			convey.ShouldEqual, 3)
+		convey.So(GetFaultTypeFromFaultFrequency(logicID, ChipFaultMode), convey.ShouldEqual, PreSeparateNPU)
+	})
+}
+
+// TestLoadFaultCustomizationPublishesConsistentMode verifies that a reload publishes
+// the duration config and its derived EscalationMode together and carries over runtime state.
+func TestLoadFaultCustomizationPublishesConsistentMode(t *testing.T) {
+	convey.Convey("reload publishes duration config + derived mode atomically", t, func() {
+		ResetFaultCustomizationCache()
+		defer ResetFaultCustomizationCache()
+		recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
+		defer func() { recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize) }()
+
+		logicID := int32(0)
+		linkDownCodeStr := FormatFaultCodeHex(LinkDownFaultCode) // 81078603: freq + duration
+		freqOnlyCode := strings.ToLower("80C98000")              // freq only, no duration
+
+		// seed runtime state that must survive the reload
+		faultFrequencyMap = map[string]*FaultFrequencyCache{
+			linkDownCodeStr: {
+				Frequency:            map[int32][]int64{logicID: {50 * SecondMagnification}},
+				LastFaultTime:        map[int32]int64{logicID: 50 * SecondMagnification},
+				LastFaultRecoverTime: map[int32]int64{},
+				FaultFrequency: FaultFrequency{
+					TimeWindow:        86400,
+					Times:             2,
+					FaultHandling:     PreSeparateNPU,
+					EscalationMode:    ModeCombined,
+				},
+			},
+			freqOnlyCode: {
+				Frequency:            map[int32][]int64{},
+				LastFaultTime:        map[int32]int64{},
+				LastFaultRecoverTime: map[int32]int64{},
+				FaultFrequency: FaultFrequency{
+					TimeWindow:        86400,
+					Times:             2,
+					FaultHandling:     ManuallySeparateNPU,
+					EscalationMode:    ModeIndependent,
+				},
+			},
+		}
+		faultDurationMap = map[string]*FaultDurationCache{
+			linkDownCodeStr: {
+				Duration: map[int32]FaultDurationData{logicID: {
+					TimeoutStatus:     true,
+					FaultAlarmTime:     50 * SecondMagnification,
+					FaultDurationTime:  40 * SecondMagnification,
+				}},
+				FaultDuration: FaultDuration{FaultTimeout: 30, RecoverTimeout: 60, FaultHandling: PreSeparateNPU},
+			},
+		}
+
+		cfg := `{
+  "FaultFrequency": [
+    {"EventId": ["81078603"], "TimeWindow": 86400, "Times": 2, "FaultHandling": "PreSeparateNPU", "ReleaseTimeWindow": 172800},
+    {"EventId": ["80C98000"], "TimeWindow": 86400, "Times": 2, "FaultHandling": "ManuallySeparateNPU"}
+  ],
+  "FaultDuration": [
+    {"EventId": ["81078603"], "FaultTimeout": 30, "RecoverTimeout": 60, "FaultHandling": "PreSeparateNPU"}
+  ]
+}`
+		err := LoadFaultCustomization([]byte(cfg))
+		convey.So(err, convey.ShouldBeNil)
+
+		// the published pair is consistent: has duration -> combined, no duration -> independent
+		convey.So(faultFrequencyMap[linkDownCodeStr].EscalationMode, convey.ShouldEqual, ModeCombined)
+		convey.So(faultFrequencyMap[freqOnlyCode].EscalationMode, convey.ShouldEqual, ModeIndependent)
+		// runtime state is carried over, not dropped by the atomic swap
+		convey.So(faultFrequencyMap[linkDownCodeStr].Frequency[logicID],
+			convey.ShouldResemble, []int64{50 * SecondMagnification})
+		convey.So(faultFrequencyMap[freqOnlyCode].Frequency[logicID], convey.ShouldBeEmpty)
+		convey.So(faultDurationMap[linkDownCodeStr].Duration[logicID].TimeoutStatus, convey.ShouldBeTrue)
+	})
+}
+
+// TestLoadFaultCustomizationReloadModeSwitch verifies hot reload of the
+// EscalationMode (TC-E01/E02): reloading the same fault code with a different
+// explicit mode publishes the new mode, carries over the accumulated frequency
+// cache, and makes subsequent occurs behave per the new mode (independent counts
+// directly, combined does not).
+func TestLoadFaultCustomizationReloadModeSwitch(t *testing.T) {
+	convey.Convey("TC-E: reload switches mode and runtime behavior follows", t, func() {
+		logicID := int32(0)
+		linkDownCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
+		ResetFaultCustomizationCache()
+		defer ResetFaultCustomizationCache()
+		recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize)
+		defer func() { recoverFaultFrequencyMap = make(map[int32]string, GeneralMapSize) }()
+
+		independentCfg := `{
+  "FaultFrequency": [
+    {"EventId": ["81078603"], "TimeWindow": 86400, "Times": 2, "FaultHandling": "PreSeparateNPU", "ReleaseTimeWindow": 172800, "EscalationMode": "independent"}
+  ],
+  "FaultDuration": [
+    {"EventId": ["81078603"], "FaultTimeout": 30, "RecoverTimeout": 60, "FaultHandling": "PreSeparateNPU"}
+  ]
+}`
+		combinedCfg := `{
+  "FaultFrequency": [
+    {"EventId": ["81078603"], "TimeWindow": 86400, "Times": 2, "FaultHandling": "PreSeparateNPU", "ReleaseTimeWindow": 172800, "EscalationMode": "combined"}
+  ],
+  "FaultDuration": [
+    {"EventId": ["81078603"], "FaultTimeout": 30, "RecoverTimeout": 60, "FaultHandling": "PreSeparateNPU"}
+  ]
+}`
+
+		err := LoadFaultCustomization([]byte(independentCfg))
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(faultFrequencyMap[linkDownCodeStr].EscalationMode, convey.ShouldEqual, ModeIndependent)
+
+		// independent mode: occur counts directly
+		device := &NpuDevice{LogicID: logicID}
+		baseChipFaultOccur([]common.DevFaultInfo{
+			{EventID: LinkDownFaultCode, Assertion: common.FaultOccur, AlarmRaisedTime: time.Now().UnixMilli()},
+		}, device)
+		convey.So(len(faultFrequencyMap[linkDownCodeStr].Frequency[logicID]), convey.ShouldEqual, 1)
+
+		// reload to combined: mode switches, accumulated count survives
+		err = LoadFaultCustomization([]byte(combinedCfg))
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(faultFrequencyMap[linkDownCodeStr].EscalationMode, convey.ShouldEqual, ModeCombined)
+		convey.So(len(faultFrequencyMap[linkDownCodeStr].Frequency[logicID]), convey.ShouldEqual, 1)
+
+		// combined mode: occur no longer counts directly
+		baseChipFaultOccur([]common.DevFaultInfo{
+			{EventID: LinkDownFaultCode, Assertion: common.FaultOccur, AlarmRaisedTime: time.Now().UnixMilli()},
+		}, device)
+		convey.So(len(faultFrequencyMap[linkDownCodeStr].Frequency[logicID]), convey.ShouldEqual, 1)
+	})
+}
+
+// TestLoadFaultCustomizationConcurrentReload verifies the merged single-lock
+// reload path (build + atomic swap under one lock hold) under concurrent fault
+// handling: fault events contending with a reload never deadlock, and a reader
+// holding both locks never observes a duration config and a derived
+// EscalationMode that disagree. Run with -race to also assert memory safety.
+func TestLoadFaultCustomizationConcurrentReload(t *testing.T) {
+	convey.Convey("concurrent reload and fault handling stays consistent", t, func() {
+		ResetFaultCustomizationCache()
+		defer ResetFaultCustomizationCache()
+
+		logicID := int32(1)
+		codeStr := FormatFaultCodeHex(LinkDownFaultCode)
+
+		combinedCfg := `{
+  "FaultFrequency": [
+    {"EventId": ["81078603"], "TimeWindow": 86400, "Times": 2, "FaultHandling": "PreSeparateNPU", "ReleaseTimeWindow": 172800}
+  ],
+  "FaultDuration": [
+    {"EventId": ["81078603"], "FaultTimeout": 30, "RecoverTimeout": 60, "FaultHandling": "PreSeparateNPU"}
+  ]
+}`
+		independentCfg := `{
+  "FaultFrequency": [
+    {"EventId": ["81078603"], "TimeWindow": 86400, "Times": 2, "FaultHandling": "PreSeparateNPU", "ReleaseTimeWindow": 172800}
+  ]
+}`
+
+		stop := make(chan struct{})
+		inconsistent := make(chan string, 1)
+		var wg sync.WaitGroup
+
+		// checker: the published duration/frequency pair must always satisfy the
+		// derivation rule (has duration config -> combined, otherwise independent).
+		// It takes both locks in the same fixed order as the reload, so it can
+		// only ever observe a fully-published pair.
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				select {
+				case <-stop:
+					return
+				default:
+				}
+				faultDurationMapLock.Lock()
+				faultFrequencyMapLock.Lock()
+				_, hasDuration := faultDurationMap[codeStr]
+				if cache, ok := faultFrequencyMap[codeStr]; ok {
+					expected := ModeIndependent
+					if hasDuration {
+						expected = ModeCombined
+					}
+					if cache.EscalationMode != expected {
+						select {
+						case inconsistent <- fmt.Sprintf("event %s: EscalationMode=%s, expected %s (hasDuration=%v)",
+							codeStr, cache.EscalationMode, expected, hasDuration):
+						default:
+						}
+					}
+				}
+				faultFrequencyMapLock.Unlock()
+				faultDurationMapLock.Unlock()
+			}
+		}()
+
+		// fault event producers contend on the frequency hot path
+		for i := 0; i < 4; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for {
+					select {
+					case <-stop:
+						return
+					default:
+					}
+					insertFrequencyFaultOccur(logicID, LinkDownFaultCode, time.Now().UnixMilli(), ModeIndependent)
+				}
+			}()
+		}
+
+		// a single reloader alternates between the two configs (production
+		// serializes reloads through the single configmap poll goroutine)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			cfg := combinedCfg
+			for {
+				select {
+				case <-stop:
+					return
+				default:
+				}
+				_ = LoadFaultCustomization([]byte(cfg))
+				if cfg == combinedCfg {
+					cfg = independentCfg
+				} else {
+					cfg = combinedCfg
+				}
+			}
+		}()
+
+		time.Sleep(100 * time.Millisecond)
+		close(stop)
+		wg.Wait()
+
+		select {
+		case msg := <-inconsistent:
+			convey.So(msg, convey.ShouldBeEmpty)
+		default:
+		}
+
+		// deterministic final state: a reload with duration config publishes combined
+		convey.So(LoadFaultCustomization([]byte(combinedCfg)), convey.ShouldBeNil)
+		convey.So(faultDurationMap[codeStr], convey.ShouldNotBeNil)
+		convey.So(faultFrequencyMap[codeStr].EscalationMode, convey.ShouldEqual, ModeCombined)
+
+		// a reload without duration config publishes independent and drops the duration entry
+		convey.So(LoadFaultCustomization([]byte(independentCfg)), convey.ShouldBeNil)
+		convey.So(faultDurationMap[codeStr], convey.ShouldBeNil)
+		convey.So(faultFrequencyMap[codeStr].EscalationMode, convey.ShouldEqual, ModeIndependent)
 	})
 }
 
