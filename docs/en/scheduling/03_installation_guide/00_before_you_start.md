@@ -1,6 +1,6 @@
 # Before You Start <a name="ZH-CN_TOPIC_0000002511426285"></a>
 
-Before installing the components, you must read [Introduction](../01_introduction/00_overview.md) carefully to understand the detailed functions of each cluster scheduling component, and select the corresponding components to install based on the features you intend to use.
+Before installing the components, you must read [Overview](../01_introduction/00_overview.md) carefully to understand the detailed functions of each cluster scheduling component, and select the corresponding components to install based on the features you intend to use.
 
 The Elastic Agent, TaskD, and MindIO components must be deployed in containers. For detailed installation steps, see [Creating an Image](../04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/01_pytorch_examples_and_verification.md).
 
@@ -9,7 +9,7 @@ The Elastic Agent, TaskD, and MindIO components must be deployed in containers. 
 
 ## Constraints <a name="section933252483715"></a>
 
-- Ensure that the root directory has sufficient disk space. If the disk space utilization of the root directory exceeds 85%, the kubelet resource eviction mechanism will be triggered, causing service unavailability. For disk space requirements, see [Table 1](./01_environment_dependencies.md#software-and-hardware-specifications); for eviction policies, see the [Kubernetes official documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/node-pressure-eviction/).
+- Ensure that the root directory has sufficient disk space. If the disk space utilization of the root directory exceeds 85%, the kubelet resource eviction mechanism will be triggered, causing service unavailability. For disk space requirements, see [Table 2](./01_environment_dependencies.md#software-and-hardware-specifications); for eviction policies, see the [Kubernetes official documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/node-pressure-eviction/).
 - To ensure the normal installation and use of MindCluster cluster scheduling components, keep the system time consistent across different training servers within the same cluster.
 - Cluster scheduling component images used for Arm architecture and x86_64 architecture are not compatible.
 - The default certificate validity period for K8s is 365 days. Users need to renew the certificates before they expire.

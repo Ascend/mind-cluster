@@ -8,7 +8,7 @@
 - The host machine must have the drivers and firmware installed. For details, see "Installing the NPU Driver and Firmware" in the [CANN Software Installation](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler).
 <!-- npu="310b" id1 -->
 - For Atlas 500 A2 intelligent station, installing Ascend Docker Runtime requires modifying the Docker configuration. Run the **vi /etc/sysconfig/docker** command to delete the `--config-file=""` parameter, and run **systemctl restart docker** to make the configuration take effect.
-- The MEF service pre-installed on the Atlas 500 A2 intelligent station performs security hardening on Docker. Ascend Docker Runtime does not support running in a security-hardened Docker environment. If you need to use Ascend Docker Runtime, manually uninstall the MEF service by referring to the "Uninstalling MEF Edge" in the [MindEdge Framework User Guide](https://gitcode.com/Ascend/MEF/blob/master/docs/en/user_guide/installation_guide.md#uninstalling-mef-edge).
+- The MEF service pre-installed on the Atlas 500 A2 intelligent station performs security hardening on Docker. Ascend Docker Runtime does not support running in a security-hardened Docker environment. If you need to use Ascend Docker Runtime, manually uninstall the MEF service by referring to the "[Uninstalling MEF Edge](https://gitcode.com/Ascend/MEF/blob/master/docs/en/user_guide/installation_guide.md#uninstalling-mef-edge)" in the *MindEdge Framework User Guide*.
 
     >[!NOTE]
     >
@@ -35,7 +35,7 @@ The dependencies for the Arm architecture and x86_64 architecture are different.
 
 >[!NOTE]
 >
->- Choose to install Docker or Containerd based on the actual service scenario.
+>- Choose to install Docker, Containerd or CRI-O based on the actual service scenario.
 >- For installing the operating system on Atlas servers, see the [Installation Guide (Arm)](https://support.huawei.com/enterprise/en/ascend-computing/a800-9000-pid-250702818?category=installation-upgrade&subcategory=software-deployment-guide) and [Installation Guide (x86_64)](https://support.huawei.com/enterprise/en/ascend-computing/a800-9010-pid-250702809?category=installation-upgrade&subcategory=software-deployment-guide). The installation guides do not cover all the operating systems mentioned above and are for reference only.
 >- <term>Atlas A2 training products</term> have different operating system requirements in virtual machine scenarios.
 
@@ -215,5 +215,5 @@ The cluster scheduling component resource configuration must meet the following 
 |NodeD|0.5|0.3|
 |NPU Exporter|1|1|
 |K8s RDMA Shared Dev Plugin|0.5|0.5|
-|Ascend Docker Runtime|A Docker service plugin that does not require dedicated CPU|A Docker service plugin that does not require dedicated memory space|
 |Ascend Dynamic Resource Allocation|0.5|0.5|
+|Ascend Docker Runtime|A Docker service plugin that does not require dedicated CPU|A Docker service plugin that does not require dedicated memory space|

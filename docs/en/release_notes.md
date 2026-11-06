@@ -346,7 +346,7 @@ MindCluster components must be used together as a matched set. Do not mix compon
 </tbody>
 </table>
 
-### Version Usage Notes
+## Version Usage Notes
 
 - HDK version numbers vary with hardware and generations. Determine the hardware form first, then find the corresponding HDK version for that hardware form, and finally find the MindCluster version that matches it in the compatibility tables.
 - MindSpore 2.11.0 no longer supports advanced resumable training capabilities such as process-level rescheduling, process-level online recovery, online stress testing, and link failover communication when used with MindCluster. Only the basic Job-level and Pod-level rescheduling capabilities are retained.
@@ -472,8 +472,8 @@ None
 
 ### Impact on the Current System After the Upgrade
 
-When upgrading the Infer Operator component from a version earlier than 26.1.0 to 26.1.0 or later, you need to delete the log directory and recreate it with `root` permissions, or change the permissions of the log directory and log files to `root`.
-When upgrading the Device Plugin component from a version earlier than 26.1.1 to 26.2.0 or later, delete `linkdownTimeout`.
+- When upgrading the Infer Operator component from a version earlier than 26.1.0 to 26.1.0 or later, you need to delete the log directory and recreate it with `root` permissions, or change the permissions of the log directory and log files to `root`.
+- When upgrading the Ascend Device Plugin component from a version earlier than 26.1.1 to 26.2.0 or later, delete `linkdownTimeout`.
 
 ## Document Reference
 
@@ -494,4 +494,4 @@ None
 
 |Document Version|Release Date|Change Description|
 |--|--|--|
-| 01 | 2026-10-15 | First official release. |
+| 01 | 2026-11-05 | First official release. |

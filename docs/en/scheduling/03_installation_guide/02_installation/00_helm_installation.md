@@ -205,7 +205,7 @@ The installation steps are as follows:
     > [!NOTE]
     >- Components installed by default include Ascend Device Plugin, Ascend Operator, Volcano, ClusterD, NodeD, NPU Exporter, DPU Exporter, and Infer Operator. The Volcano version is v1.9.0.
     >- Components not installed by default include K8s RDMA Shared Dev Plugin and Ascend Dynamic Resource Allocation.
-    >- Ascend Dynamic Resource Allocation provides the same functions as Ascend Device Plugin. Both provide the discovery, reporting, allocation, and mounting capabilities of Ascend NPU devices, and you only need to deploy one of them. Therefore, Ascend Device Plugin is installed by default and Ascend Dynamic Resource Allocation is not installed. This component requires K8s 1.34.x to 1.36.x. Do not enable it in clusters with earlier K8s versions. To use the dynamic resource allocation function, set `enabled` of this component to `true` through custom configuration, and you are advised to set `enabled` of Ascend Device Plugin to `false`.
+    >- Ascend Dynamic Resource Allocation provides the same functions as Ascend Device Plugin. Both provide the discovery, reporting, allocation, and mounting capabilities of Ascend NPU devices, and you only need to deploy one of them. Therefore, Ascend Device Plugin is installed by default and Ascend Dynamic Resource Allocation is not installed. This component requires K8s 1.36.x. Do not enable it in clusters with earlier K8s versions. To use the dynamic resource allocation function, set `enabled` of this component to `true` through custom configuration, and you are advised to set `enabled` of Ascend Device Plugin to `false`.
     >- For parameter descriptions, see [Table 2](#table15274931175242) and [Table 3](#table15274931175243). The parameters in [Table 3](#table15274931175243) are not shown in the YAML configuration below. You can add or modify them as needed.
     >- In version 26.1.0, the default value of the `tag` field is `v26.1.0`, without the `-openeuler24.03`, `-ubuntu22.04`, or `-alpinelatest` suffix. This is inconsistent with the image tags in the Ascend image repository. Using the default value directly may cause image pull failures. You can set it to a tag with a suffix, such as `v26.1.0-openeuler24.03`, `v26.1.0-ubuntu22.04`, or `v1.9.0-v26.1.0-alpinelatest`.
 
@@ -296,7 +296,7 @@ The installation steps are as follows:
        pullPolicy: "IfNotPresent"                                                  # Image pull policy of K8s RDMA Shared Dev Plugin. Modify it based on the actual situation.
 
    ascend-dynamic-resource-allocation:
-     enabled: false                                                          # false indicates that the Ascend Dynamic Resource Allocation component is not installed. This component requires K8s 1.34.x to 1.36.x.
+     enabled: false                                                          # false indicates that the Ascend Dynamic Resource Allocation component is not installed. This component requires K8s 1.36.x.
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-dra"   # Ascend Dynamic Resource Allocation image name. Modify it based on the actual situation.
        # The image tag in the Ascend image repository is "v26.2.0-openeuler24.03" or "v26.2.0-ubuntu22.04".
@@ -439,7 +439,7 @@ The installation steps are as follows:
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>Ascend Dynamic Resource Allocation</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-dynamic-resource-allocation.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>The default value is false.</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>Set it to true to enable the Ascend Dynamic Resource Allocation component. This component requires K8s 1.34.x to 1.36.x. Do not enable it in clusters with earlier K8s versions.</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>Set it to true to enable the Ascend Dynamic Resource Allocation component. This component requires K8s 1.36.x. Do not enable it in clusters with earlier K8s versions.</p></td>
   </tr>
 </tbody>
 </table>

@@ -472,8 +472,8 @@ NPU Exporter部分hccn_tool命令接口调整为基于DCMI接口实现，优化�
 
 ### 升级后对现行系统的影响
 
-Infer Operator组件从26.1.0之前版本升级到26.1.0及之后版本时，需删除日志目录重新创建为root权限或修改日志目录及日志文件的权限为root。
-Device Plugin组件从26.1.1之前版本升级到26.2.0及之后版本时，需删除linkdownTimeout启动参数。
+- Infer Operator组件从26.1.0之前版本升级到26.1.0及之后版本时，需删除日志目录重新创建为root权限或修改日志目录及日志文件的权限为root。
+- Ascend Device Plugin组件从26.1.1之前版本升级到26.2.0及之后版本时，需删除linkdownTimeout启动参数。
 
 ## 版本配套文档
 

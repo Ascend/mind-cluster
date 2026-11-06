@@ -128,7 +128,7 @@ The key operations are as follows:
        <a name="table1064314568229"></a>
 
        |Name|Type|Default Value| Description|
-       |--|--|--||
+       |--|--|--|--|
        |`-shareDevCount`|uint|1| When using the soft partitioning virtualization feature, the value can only be `100`.|
        |`-softShareDevConfigDir`|string|""| Configuration directory for the soft partitioning virtualization scenario.|
        |`-useSingleDieMode`|bool|false| Whether to enable single-die passthrough mode for <b>Atlas A3 products</b>.<ul><li>`true`: enable single-die passthrough mode.</li><li>`false`: disable single-die passthrough mode.</li></ul>When using the soft partitioning virtualization feature, this parameter must be set to `true`. |

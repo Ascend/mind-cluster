@@ -9,4 +9,4 @@ Manual installation and deployment is intended for scenarios where Helm is not a
 3. Install base components: Ascend Docker Runtime, Container Manager, and Kubectl Plugin.
 4. Install K8s components: NPU Exporter, Ascend Device Plugin, K8s RDMA Shared Dev Plugin, Volcano, ClusterD, Ascend Operator, Infer Operator, NodeD, Agent Core, Node Collector, etc.
 
-For detailed installation steps, refer to [Developer Guide - Manual Installation and Deployment](../../05_developer_guide/00_installation_deployment/00_manual_installation/menu_manual_installation.md).
+For detailed installation steps, refer to [Manual Installation and Deployment](../../05_developer_guide/00_installation_deployment/00_manual_installation/menu_manual_installation.md).
