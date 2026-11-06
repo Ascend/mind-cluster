@@ -120,4 +120,4 @@ kubectl get instanceset <instance-set-name> -n <namespace> -o jsonpath='{.metada
 >
 >- 推理服务亲和性调度依赖PodGroup将`inferserviceid`标签传递给Volcano调度器，因此需将`infer.huawei.com/gang-schedule`配置为'true'以开启gang调度。
 >- `huawei.com/schedule_policy`与`sp-block`注解需配置在角色的metadata.annotations中（如上示例所示），配置在其他位置时不会触发亲和性标签的自动注入。
->- 若不希望开启推理服务亲和性调度，可将`huawei.com/schedule_policy`配置为非超节点调度策略（如chip8-node8），或在角色metadata的labels中自行配置`inferserviceid`。
+>- 若不希望开启推理服务亲和性调度，可将`huawei.com/schedule_policy`配置为与硬件形态对应的非超节点调度策略（如chip8-node8、chip2-node16）。若希望自行指定亲和分组而非使用Infer Operator自动生成的ID，可在角色metadata的labels中配置`inferserviceid`；该配置不会关闭亲和性调度，只是覆盖自动注入的取值，同一推理服务下各角色需使用相同取值才会归入同一亲和组。
