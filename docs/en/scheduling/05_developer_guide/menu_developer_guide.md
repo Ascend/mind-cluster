@@ -33,7 +33,7 @@
   - [Manual Uninstallation](00_installation_deployment/02_uninstallation.md)
 <!-- npu="950,A3,910b,910,310p" id6 -->
 - [Custom Metrics Development](./01_custom_metrics_development.md)
-- [DP Hot Reset Plugin Development](./02_dp_hot_reset_plugin_development.md)
+- [Chip Hot Reset Plugin Development](./02_dp_hot_reset_plugin_development.md)
 - [Public Fault Reporting](./03_clusterd_fault_awareness.md)
 <!-- end id6 -->
 - [Setting Up the Development and Compilation Environment](./04_development_environment.md)

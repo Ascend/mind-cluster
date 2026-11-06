@@ -1,6 +1,6 @@
 # Overview
 
-Based on Kubernetes—the industry's leading cluster scheduling system—the cluster scheduling components add support for Ascend AI Processors (NPUs). They provide essential functions such as NPU resource management, optimized scheduling, and collective communication configuration for distributed training. By leveraging these components, deep learning platform developers can significantly reduce the software development effort associated with underlying resource scheduling, enabling users to rapidly build deep learning platforms on MindCluster.
+Based on Kubernetes—the industry's leading cluster scheduling system—the cluster scheduling components add support for Ascend AI Processors (NPUs). They provide essential functions such as NPU resource management, affinity scheduling, fault recovery, and metrics monitoring. You can directly use K8s commands to launch Ascend jobs, or quickly develop Ascend deep learning platforms based on MindCluster.
 
 This document is a guide on how to use cluster scheduling components. Before installing and using them, familiarize yourself with [their features](./02_feature_description.md), and [install the corresponding components](../03_installation_guide/02_installation/00_helm_installation.md) based on your actual needs.
 
@@ -16,9 +16,9 @@ The figure below shows the component installation and usage process.
 
 |Step|Description|
 |--|--|
-|Select features|Multiple features for training and inference jobs are provided. Each feature requires different components, and the component configurations also vary. Select features as needed. Multiple features can be used simultaneously.|
-|Install the corresponding components|After selecting features, you need to install the corresponding components via a manual installation or tool-based installation mode.|
-|Refer to examples|Feature usage examples are provided, including training job examples and inference job examples. The examples include the frameworks, models, and corresponding script adaptation operations supported by cluster scheduling components, helping you better understand and use the cluster scheduling components.|
+|Select features.|Multiple features for training and inference jobs are provided. Each feature requires different components, and the component configurations also vary. Select features as needed. Multiple features can be used simultaneously.|
+|Install the related components.|After selecting features, you need to install the corresponding components via Helm installation, manual installation, or Ascend Deployer-based installation.|
+|Refer to examples.|Feature usage examples are provided, including training job examples and inference job examples. The examples include the frameworks, models, and corresponding script adaptation operations supported by cluster scheduling components, helping you better understand and use the cluster scheduling components.|
 
 ## Disclaimer<a name="section7267115610496"></a>
 

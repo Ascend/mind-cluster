@@ -27,7 +27,7 @@ The overall scheduling logic is shown in the figure below Ascend Device Plugin d
 
     ![](../../../figures/scheduling/scheduling-process-2.png)
 
-If the value of the self-maintain-available-card parameter in the Volcano startup YAML is set to false, the scheduling process for Ascend AI processors is as follows:
+    If the value of the self-maintain-available-card parameter in the Volcano startup YAML is set to false, the scheduling process for Ascend AI processors is as follows:
 
     1. Ascend Device Plugin reports the health status of Ascend AI processors.
     2. Ascend Device Plugin writes the information of currently idle Ascend AI processors (healthy Ascend AI processors - used Ascend AI processors) to the `DeviceInfo` field of the ConfigMap `mindx-dl-deviceinfo-{nodeName}` through kube-apiserver.

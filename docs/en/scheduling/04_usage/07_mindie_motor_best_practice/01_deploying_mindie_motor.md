@@ -38,7 +38,7 @@ MindIE CMotor consists of two parts: MindIE MS (MindIE Management Service) and M
 
 The MindCluster cluster scheduling components support running MS Controller, MS Coordinator, and MindIE Server in independent Pods. When using the MindCluster cluster scheduling components for MindIE CMotor deployment, MS Controller, MS Coordinator, and each instance in MindIE Server are deployed as an AscendJob respectively. For example, if an inference job contains two Prefill instances and one Decode instance, five AscendJobs need to be deployed.
 
-For detailed instructions on Prefill-Decode disaggregation deployment, refer to the "MindIE Motor CPP Development Guide > Cluster Service Deployment > [Prefill-Decode Disaggregation Deployment](https://www.hiascend.com/document/detail/en/mindie/310/mindiellm/llmdev/mindie_motor_cpp/user_guide/service_deployment/pd_separation_service_deployment.md)" section in the *MindIE LLM Development Guide*.
+For detailed instructions on Prefill-Decode disaggregation deployment, refer to the "MindIE Motor CPP Development Guide > Cluster Service Deployment > [Prefill-Decode Disaggregation Deployment](https://www.hiascend.com/document/detail/en/mindie/320/mindiellm/llmdev/mindie_motor_cpp/user_guide/service_deployment/pd_separation_service_deployment.md)" section in the *MindIE LLM Development Guide*.
 
 **Usage Process<a name="zh-cn_topic_0000002328850238_section5640184231810"></a>**
 
@@ -314,7 +314,7 @@ After completing the preparation of the job YAML,perform the following operation
 3. View  the inference job running status.
 4. (Optional) Delete a job.
 
-For detailed instructions on the above steps, see the "MindIE Motor CPP Deployment Guide > Cluster Service Deployment > Prefill-Decode Disaggregation Deployment > Installation and Deployment > [Deploying a Single-Server Prefill-Decode Disaggregation Service Using kubectl](https://www.hiascend.com/document/detail/en/mindie/310/mindiellm/llmdev/mindie_motor_cpp/user_guide/service_deployment/pd_separation_service_deployment.md)" section in the *MindIE LLM Development Guide*.
+For detailed instructions on the above steps, see the "MindIE Motor CPP Deployment Guide > Cluster Service Deployment > Prefill-Decode Disaggregation Deployment > Installation and Deployment > [Deploying a Single-Server Prefill-Decode Disaggregation Service Using kubectl](https://www.hiascend.com/document/detail/en/mindie/320/mindiellm/llmdev/mindie_motor_cpp/user_guide/service_deployment/pd_separation_service_deployment.md)" section in the *MindIE LLM Development Guide*.
 
 ### global-ranktable Description<a name="ZH-CN_TOPIC_0000002479226414"></a>
 

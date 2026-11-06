@@ -246,7 +246,7 @@
     - [Uninstallation](./05_developer_guide/00_installation_deployment/02_uninstallation.md)
   <!-- npu="950,A3,910b,910,310p" id27 -->
   - [Custom Metrics Development](./05_developer_guide/01_custom_metrics_development.md)
-  - [DP Hot Reset Plugin Development](./05_developer_guide/02_dp_hot_reset_plugin_development.md)
+  - [Chip Hot Reset Plugin Development](./05_developer_guide/02_dp_hot_reset_plugin_development.md)
   - [Public Fault Reporting](./05_developer_guide/03_clusterd_fault_awareness.md)
   <!-- end id27 -->
   - [Setting Up the Development and Compilation Environment](./05_developer_guide/04_development_environment.md)
