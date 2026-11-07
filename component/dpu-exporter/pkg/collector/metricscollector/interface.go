@@ -31,6 +31,8 @@ const (
 	CardTypeLabel = "card_type"
 	// InterfaceLabel is the label for network interface name (e.g. "ens1f0")
 	InterfaceLabel = "interface"
+	// RdmaDeviceLabelName is the label for RDMA device name (e.g. "hinic0")
+	RdmaDeviceLabelName = "rdma_device"
 )
 
 // DPU labels used in Prometheus output
@@ -39,7 +41,17 @@ var (
 	DpuCardLabels = []string{CardLabelName, CardTypeLabel}
 	// DpuIfaceLabels are labels for interface-level metrics
 	DpuIfaceLabels = []string{CardLabelName, InterfaceLabel}
+	// DpuRdmaLabels are labels for RDMA device-level metrics
+	DpuRdmaLabels = []string{RdmaDeviceLabelName}
 )
+
+// RdmaMetricValue is the cached value and missing-round count for one RDMA metric.
+type RdmaMetricValue struct {
+	// Value is the last valid metric value.
+	Value float64
+	// MissCount is the number of consecutive collection rounds without a valid value.
+	MissCount int
+}
 
 // CollectorContext provides access to the collector engine's state.
 // Defined here (in metricscollector) to break the import cycle:
@@ -59,9 +71,11 @@ type CacheAccessor interface {
 	GetDpuList() []device.DPU
 	GetDpuMetrics(cardName string) map[string]float64
 	GetIfaceMetrics(ethName string) map[string]float64
+	GetAllRdmaMetrics() map[string]map[string]RdmaMetricValue
 	// Write methods
 	SetDpuMetrics(cardName string, metrics map[string]float64)
 	SetIfaceMetrics(ethName string, metrics map[string]float64)
+	SetAllRdmaMetrics(all map[string]map[string]RdmaMetricValue)
 	SetDpuList(dpuList []device.DPU)
 }
 

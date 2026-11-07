@@ -18,6 +18,7 @@ import (
 	"sync"
 	"testing"
 
+	"huawei.com/dpu-exporter/pkg/collector/metricscollector"
 	"huawei.com/dpu-exporter/pkg/device"
 )
 
@@ -107,6 +108,32 @@ func TestIfaceMetricsSetGet(t *testing.T) {
 	if len(got) != 2 || got["carrier"] != 1 || got["rx_packets"] != 100 {
 		t.Errorf("SetIfaceMetrics merge failed, got %v, want carrier=1,rx_packets=100", got)
 	}
+}
+
+// TestRdmaMetricsConcurrency exercises concurrent RDMA readers/writers (run with -race).
+func TestRdmaMetricsConcurrency(t *testing.T) {
+	c := NewDpuCache()
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 10; i++ {
+			c.SetAllRdmaMetrics(map[string]map[string]metricscollector.RdmaMetricValue{
+				"dev0": {"qp": {Value: float64(i)}},
+				"dev1": {"qp": {Value: float64(i)}},
+			})
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 10; i++ {
+			all := c.GetAllRdmaMetrics()
+			if len(all) == 2 && all["dev0"]["qp"].Value != all["dev1"]["qp"].Value {
+				t.Errorf("mixed snapshot: %v", all)
+			}
+		}
+	}()
+	wg.Wait()
 }
 
 // TestDpuCacheConcurrency exercises concurrent readers/writers (run with -race).

@@ -146,3 +146,23 @@ func TestApplyInvalidValueUsesDefault(t *testing.T) {
 			DefaultHinicadm5IntervalSeconds, got)
 	}
 }
+
+func TestRdmaInterval(t *testing.T) {
+	defer SetCollectorInterval(CacheKeyRdma, time.Duration(DefaultRdmaIntervalSeconds)*time.Second)
+	(&IntervalConfig{RdmaCollectorInterval: 28}).Apply()
+	if got := GetCollectorInterval(CacheKeyRdma, 0); got != 28*time.Second {
+		t.Errorf("rdma interval = %v", got)
+	}
+	collectorIntervalMap.Delete(CacheKeyRdma)
+	if got := GetCollectorInterval(CacheKeyRdma, 17*time.Second); got != 17*time.Second {
+		t.Errorf("rdma fallback = %v", got)
+	}
+	(&IntervalConfig{RdmaCollectorInterval: -1}).Apply()
+	if got := GetCollectorInterval(CacheKeyRdma, 0); got != CollectOnceInterval {
+		t.Errorf("rdma collect-once = %v", got)
+	}
+	(&IntervalConfig{RdmaCollectorInterval: 10}).Apply()
+	if got := GetCollectorInterval(CacheKeyRdma, 0); got != time.Duration(DefaultRdmaIntervalSeconds)*time.Second {
+		t.Errorf("rdma invalid interval = %v", got)
+	}
+}

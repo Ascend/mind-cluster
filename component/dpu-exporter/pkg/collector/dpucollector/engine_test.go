@@ -50,6 +50,7 @@ func (m *mockDeviceManager) GetDpuList() []device.DPU {
 	return m.list
 }
 func (m *mockDeviceManager) ExecCommand(...string) (string, error) { return "", nil }
+func (m *mockDeviceManager) ExecRdma(...string) (string, error)    { return "", nil }
 func (m *mockDeviceManager) ReadSysfs(string) (string, error)      { return "", nil }
 func (m *mockDeviceManager) ListDir(string) ([]string, error)      { return nil, nil }
 func (m *mockDeviceManager) GetCardType() string                   { return m.cardType }
@@ -141,31 +142,32 @@ func TestNewDpuCollector(t *testing.T) {
 
 // TestSetChainsAndGetChainsSnapshot covers chain set/get and snapshot isolation.
 func TestSetChainsAndGetChainsSnapshot(t *testing.T) {
-	defer SetChains(nil, nil)
+	defer SetChains(nil, nil, nil)
 
-	c1 := &mockCollector{supported: true}
-	SetChains([]metricscollector.MetricsCollector{c1}, []metricscollector.MetricsCollector{c1})
+	c1, host := &mockCollector{supported: true}, &mockCollector{supported: true}
+	SetChains([]metricscollector.MetricsCollector{c1}, []metricscollector.MetricsCollector{c1},
+		[]metricscollector.MetricsCollector{host})
 
-	dpu, iface := GetChainsSnapshot()
-	if len(dpu) != 1 || dpu[0] != c1 {
-		t.Errorf("dpu chain snapshot = %v, want [%v]", dpu, c1)
+	dpu, iface, hostChain := GetChainsSnapshot()
+	if len(dpu) != 1 || dpu[0] != c1 || len(iface) != 1 || iface[0] != c1 {
+		t.Errorf("chain snapshots = %v/%v, want [%v]", dpu, iface, c1)
 	}
-	if len(iface) != 1 || iface[0] != c1 {
-		t.Errorf("iface chain snapshot = %v, want [%v]", iface, c1)
+	if len(hostChain) != 1 || hostChain[0] != host {
+		t.Errorf("host chain snapshot = %v, want [%v]", hostChain, host)
 	}
 
 	// snapshot must be a copy: mutating it must not affect the global chains
-	dpu = append(dpu, &mockCollector{})
-	dpu2, _ := GetChainsSnapshot()
-	if len(dpu2) != 1 {
-		t.Errorf("global dpu chain affected by snapshot mutation, len=%d", len(dpu2))
+	dpu, hostChain = append(dpu, &mockCollector{}), append(hostChain, &mockCollector{})
+	dpu2, _, host2 := GetChainsSnapshot()
+	if len(dpu2) != 1 || len(host2) != 1 {
+		t.Errorf("global chains affected by snapshot mutation: %d/%d", len(dpu2), len(host2))
 	}
 
 	// empty chains
-	SetChains(nil, nil)
-	dpu, iface = GetChainsSnapshot()
-	if len(dpu) != 0 || len(iface) != 0 {
-		t.Errorf("empty chains snapshot = %d,%d, want 0,0", len(dpu), len(iface))
+	SetChains(nil, nil, nil)
+	dpu, iface, hostChain = GetChainsSnapshot()
+	if len(dpu) != 0 || len(iface) != 0 || len(hostChain) != 0 {
+		t.Errorf("empty chains snapshot = %d/%d/%d, want 0/0/0", len(dpu), len(iface), len(hostChain))
 	}
 }
 
@@ -229,18 +231,39 @@ func TestInitDpuList(t *testing.T) {
 	waitWg(t, &wg, 2*time.Second)
 }
 
+// TestStartCollectHostMetrics verifies the host chain runs in one goroutine.
+func TestStartCollectHostMetrics(t *testing.T) {
+	defer resetMockCollectorInterval()
+	defer SetChains(nil, nil, nil)
+	configmanager.SetCollectorInterval(mockCollectorCacheKey, 20*time.Millisecond)
+	host := &mockCollector{supported: true}
+	SetChains(nil, nil, []metricscollector.MetricsCollector{host})
+	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
+	startCollectHostMetrics(&wg, ctx, NewDpuCollector(&mockDeviceManager{}))
+	if !waitUntil(2*time.Second, func() bool { return atomic.LoadInt32(&host.collects) >= 1 }) {
+		t.Fatal("host collector did not run")
+	}
+	cancel()
+	waitWg(t, &wg, 2*time.Second)
+	if host.preCnt < 1 || host.postCnt < 1 {
+		t.Errorf("host lifecycle = %d/%d, want >=1", host.preCnt, host.postCnt)
+	}
+}
+
 // TestStartCollect covers first-time dpu list init, per-card and interface
 // collection loops, collector filtering, and graceful shutdown.
 func TestStartCollect(t *testing.T) {
 	defer resetMockCollectorInterval()
 	configmanager.SetCollectorInterval(mockCollectorCacheKey, 60*time.Millisecond)
-	defer SetChains(nil, nil)
+	defer SetChains(nil, nil, nil)
 
 	supported := &mockCollector{supported: true}
 	unsupported := &mockCollector{supported: false}
 	SetChains(
 		[]metricscollector.MetricsCollector{supported, unsupported},
 		[]metricscollector.MetricsCollector{supported},
+		nil,
 	)
 
 	dmgr := &mockDeviceManager{list: []device.DPU{{CardName: "hinic0", CardType: "huawei"}}}

@@ -40,7 +40,7 @@ func init() {
 
 // testConfigJSON contains known interval values to verify config application.
 const testConfigJSON = `{"hinicadm5CollectorInterval": 25, "sysfsCollectorInterval": 26,
-	"dpuListRefreshInterval": 27, "metricWhiteList": []}`
+	"dpuListRefreshInterval": 27, "rdmaCollectorInterval": 28, "metricWhiteList": []}`
 
 func loadTestConfig(t *testing.T) {
 	t.Helper()
@@ -52,7 +52,7 @@ func loadTestConfig(t *testing.T) {
 // checkChains verifies the expected collector chain layout.
 func checkChains(t *testing.T) {
 	t.Helper()
-	dpu, iface := dpucollector.GetChainsSnapshot()
+	dpu, iface, host := dpucollector.GetChainsSnapshot()
 	if len(dpu) != 1 {
 		t.Fatalf("dpu metrics chain len = %d, want 1", len(dpu))
 	}
@@ -65,11 +65,17 @@ func checkChains(t *testing.T) {
 	if _, ok := iface[0].(*metricscollector.SysfsCollector); !ok {
 		t.Errorf("iface chain[0] = %T, want *metricscollector.SysfsCollector", iface[0])
 	}
+	if len(host) != 1 {
+		t.Fatalf("host metrics chain len = %d, want 1", len(host))
+	}
+	if _, ok := host[0].(*metricscollector.RdmaCollector); !ok {
+		t.Errorf("host chain[0] = %T, want *metricscollector.RdmaCollector", host[0])
+	}
 }
 
 // TestInitChains covers chain initialization and interval config application.
 func TestInitChains(t *testing.T) {
-	defer dpucollector.SetChains(nil, nil)
+	defer dpucollector.SetChains(nil, nil, nil)
 	loadTestConfig(t)
 
 	initChains()
@@ -85,15 +91,18 @@ func TestInitChains(t *testing.T) {
 	if got := configmanager.GetDpuListRefreshInterval(0); got != 27*time.Second {
 		t.Errorf("dpu list refresh interval = %v, want 27s", got)
 	}
+	if got := configmanager.GetCollectorInterval(configmanager.CacheKeyRdma, 0); got != 28*time.Second {
+		t.Errorf("rdma interval = %v, want 28s", got)
+	}
 }
 
 // TestRebuildChains covers chain rebuilding on config hot-reload.
 func TestRebuildChains(t *testing.T) {
-	defer dpucollector.SetChains(nil, nil)
+	defer dpucollector.SetChains(nil, nil, nil)
 	loadTestConfig(t)
 
 	// start from empty chains to prove rebuild replaces them
-	dpucollector.SetChains(nil, nil)
+	dpucollector.SetChains(nil, nil, nil)
 	rebuildChains()
 	checkChains(t)
 }
@@ -104,6 +113,7 @@ type fakeDeviceManager struct{}
 func (f *fakeDeviceManager) AutoInit() error                            { return nil }
 func (f *fakeDeviceManager) GetDpuList() []device.DPU                   { return nil }
 func (f *fakeDeviceManager) ExecCommand(args ...string) (string, error) { return "", nil }
+func (f *fakeDeviceManager) ExecRdma(args ...string) (string, error)    { return "", nil }
 func (f *fakeDeviceManager) ReadSysfs(path string) (string, error)      { return "", nil }
 func (f *fakeDeviceManager) ListDir(path string) ([]string, error)      { return nil, nil }
 func (f *fakeDeviceManager) GetCardType() string                        { return device.CardTypeHuawei }
@@ -114,7 +124,7 @@ func (f *fakeDeviceManager) GetCardType() string                        { return
 // Hardware-dependent dependencies are patched with gomonkey
 // (requires running tests with -gcflags=all=-l, as build/test.sh does).
 func TestMainFunction(t *testing.T) {
-	defer dpucollector.SetChains(nil, nil)
+	defer dpucollector.SetChains(nil, nil, nil)
 
 	autoInitCnt, promCnt, exitCnt := int32(0), int32(0), int32(0)
 	patches := gomonkey.NewPatches()

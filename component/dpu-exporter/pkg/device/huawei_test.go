@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 
@@ -53,7 +54,17 @@ func newFakeScriptManager(t *testing.T, body string) *HwDpuManager {
 	if err := os.WriteFile(path, []byte(body), 0o755); err != nil {
 		t.Fatalf("write fake hinicadm5 failed: %v", err)
 	}
-	return NewHwDpuManagerWithPath(path, sysfsNetBase)
+	return NewHwDpuManagerWithPath(path, sysfsNetBase, defaultRdmaPaths[0])
+}
+
+// newFakeCommandManager writes a fake rdma script and returns a manager using it.
+func newFakeCommandManager(t *testing.T, body string) *HwDpuManager {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "rdma")
+	if err := os.WriteFile(path, []byte(body), 0o755); err != nil {
+		t.Fatalf("write fake rdma failed: %v", err)
+	}
+	return NewHwDpuManagerWithPath("", sysfsNetBase, path)
 }
 
 // TestNewHwDpuManager covers both exit paths of the constructor
@@ -86,6 +97,28 @@ func TestNewHwDpuManager(t *testing.T) {
 	if m.hinicadm5Path != "/fake/hinicadm5" || m.sysfsBasePath != sysfsNetBase {
 		t.Errorf("manager paths = (%s, %s), want (/fake/hinicadm5, %s)",
 			m.hinicadm5Path, m.sysfsBasePath, sysfsNetBase)
+	}
+}
+
+// TestNewHwDpuManagerWithoutRdma verifies missing rdma only disables RDMA metrics.
+func TestNewHwDpuManagerWithoutRdma(t *testing.T) {
+	patches := gomonkey.NewPatches()
+	defer patches.Reset()
+	patches.ApplyFunc(exec.LookPath, func(name string) (string, error) {
+		if name == "hinicadm5" {
+			return "/fake/hinicadm5", nil
+		}
+		return "", errors.New("rdma not found")
+	})
+	patches.ApplyFunc(validateBinaryPath, func(path string) error {
+		if strings.HasSuffix(path, "/rdma") {
+			return errors.New("missing")
+		}
+		return nil
+	})
+	m, err := NewHwDpuManager()
+	if err != nil || m.rdmaPath != "" {
+		t.Errorf("NewHwDpuManager(no rdma) = %+v, %v", m, err)
 	}
 }
 
@@ -173,10 +206,82 @@ func TestHwDpuManagerExecAndAutoInit(t *testing.T) {
 	}
 }
 
+// TestExecRdma covers success, failure, empty path and timeout.
+func TestExecRdma(t *testing.T) {
+	ok := newFakeCommandManager(t, "#!/bin/sh\necho \"args:$*\"\necho warning >&2\n")
+	out, err := ok.ExecRdma("resource", "show")
+	if err != nil || strings.TrimSpace(out) != "args:resource show" {
+		t.Errorf("ExecRdma success = %q, %v", out, err)
+	}
+	fail := newFakeCommandManager(t, "#!/bin/sh\necho partial-out\necho partial-err >&2\nexit 3\n")
+	out, err = fail.ExecRdma("resource", "show")
+	if err == nil || out != "" {
+		t.Errorf("ExecRdma failure = %q, %v, want empty output", out, err)
+	}
+	patches := gomonkey.ApplyFunc(resolveRdmaPath, func() string { return "" })
+	if _, err := NewHwDpuManagerWithPath("", sysfsNetBase, "").ExecRdma("resource", "show"); err == nil {
+		t.Error("ExecRdma(empty path) = nil error")
+	}
+	patches.Reset()
+	old := rdmaCmdTimeout
+	rdmaCmdTimeout = 20 * time.Millisecond
+	defer func() { rdmaCmdTimeout = old }()
+	if _, err := newFakeCommandManager(t, "#!/bin/sh\nsleep 2\n").ExecRdma("resource", "show"); err == nil {
+		t.Error("ExecRdma(timeout) = nil error")
+	}
+}
+
+// TestExecRdmaLimitsOutput verifies oversized command output becomes a failure.
+func TestExecRdmaLimitsOutput(t *testing.T) {
+	m := newFakeCommandManager(t, "#!/bin/sh\n"+
+		"dd if=/dev/zero bs=1024 count=20481 2>/dev/null | tr '\\000' x\n")
+	if _, err := m.ExecRdma("resource", "show"); err == nil {
+		t.Fatal("ExecRdma oversized output error = nil, want error")
+	}
+}
+
+// TestExecRdmaResolvesPathAfterStartup verifies a failed initial rdma lookup is retried.
+func TestExecRdmaResolvesPathAfterStartup(t *testing.T) {
+	m := NewHwDpuManagerWithPath("", sysfsNetBase, "")
+	path := filepath.Join(t.TempDir(), "rdma")
+	if err := os.WriteFile(path, []byte("#!/bin/sh\necho resolved\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	patches := gomonkey.ApplyFunc(resolveRdmaPath, func() string { return path })
+	defer patches.Reset()
+	out, err := m.ExecRdma("resource", "show")
+	if err != nil || strings.TrimSpace(out) != "resolved" {
+		t.Fatalf("ExecRdma after retry = %q, %v", out, err)
+	}
+	if m.rdmaPath != path {
+		t.Fatalf("rdmaPath = %q, want %q", m.rdmaPath, path)
+	}
+}
+
+// TestExecWaitDelay verifies inherited pipes cannot make Wait block forever
+// and that a successful process exit is not reported as a collection failure.
+func TestExecWaitDelay(t *testing.T) {
+	old := rdmaWaitDelay
+	rdmaWaitDelay = 50 * time.Millisecond
+	defer func() { rdmaWaitDelay = old }()
+	m := newFakeCommandManager(t, "#!/bin/sh\necho stdout\nsleep 5 &\nexit 0\n")
+	start := time.Now()
+	out, err := m.ExecRdma("resource", "show")
+	if err != nil {
+		t.Fatalf("ExecRdma wait delay error = %v, want nil", err)
+	}
+	if elapsed := time.Since(start); elapsed > time.Second {
+		t.Fatalf("ExecRdma blocked for %v", elapsed)
+	}
+	if strings.TrimSpace(out) != "stdout" {
+		t.Fatalf("ExecRdma output = %q", out)
+	}
+}
+
 // TestHwDpuManagerSysfs covers ReadSysfs, ReadSysfsMetric, ListDir and GetCardType.
 func TestHwDpuManagerSysfs(t *testing.T) {
 	base := t.TempDir()
-	m := NewHwDpuManagerWithPath("/usr/sbin/hinicadm5", base)
+	m := NewHwDpuManagerWithPath("/usr/sbin/hinicadm5", base, defaultRdmaPaths[0])
 
 	// ReadSysfs returns trimmed file content
 	f := filepath.Join(base, "file1")

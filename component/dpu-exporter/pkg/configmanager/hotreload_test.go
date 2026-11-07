@@ -307,6 +307,42 @@ func TestDefaultConfig(t *testing.T) {
 	}
 }
 
+func TestRdmaConfigDefaults(t *testing.T) {
+	original := GetConfig()
+	if original == nil {
+		original = defaultConfig()
+	}
+	t.Cleanup(func() {
+		configMu.Lock()
+		currentConfig = original
+		configMu.Unlock()
+		original.IntervalConfig.Apply()
+		GetWhitelist().LoadCustom(original.MetricWhiteList)
+	})
+
+	if cfg := defaultConfig(); cfg.RdmaCollectorInterval != DefaultRdmaIntervalSeconds {
+		t.Errorf("default rdma interval = %d", cfg.RdmaCollectorInterval)
+	}
+	oldJSON := []byte(`{"hinicadm5CollectorInterval":30,"sysfsCollectorInterval":25,"dpuListRefreshInterval":60}`)
+	if err := LoadConfigFromBytes(oldJSON); err != nil {
+		t.Fatal(err)
+	}
+	if got := GetConfig().RdmaCollectorInterval; got != DefaultRdmaIntervalSeconds {
+		t.Errorf("old config rdma interval = %d", got)
+	}
+	cfg := &Config{IntervalConfig: IntervalConfig{RdmaCollectorInterval: 35}}
+	data, err := json.Marshal(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := LoadConfigFromBytes(data); err != nil {
+		t.Fatal(err)
+	}
+	if got := GetConfig().RdmaCollectorInterval; got != 35 {
+		t.Errorf("rdma interval = %d, want 35", got)
+	}
+}
+
 func TestSetConfigFilePath(t *testing.T) {
 	SetConfigFilePath("/custom/path")
 	if configFilePath != "/custom/path" {

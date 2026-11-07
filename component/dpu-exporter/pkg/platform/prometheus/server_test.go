@@ -138,6 +138,7 @@ type stubDeviceManager struct{}
 func (s *stubDeviceManager) AutoInit() error                         { return nil }
 func (s *stubDeviceManager) GetDpuList() []device.DPU                { return nil }
 func (s *stubDeviceManager) ExecCommand(_ ...string) (string, error) { return "", nil }
+func (s *stubDeviceManager) ExecRdma(_ ...string) (string, error)    { return "", nil }
 func (s *stubDeviceManager) ReadSysfs(_ string) (string, error)      { return "", nil }
 func (s *stubDeviceManager) ListDir(_ string) ([]string, error)      { return nil, nil }
 func (s *stubDeviceManager) GetCardType() string                     { return "stub" }
