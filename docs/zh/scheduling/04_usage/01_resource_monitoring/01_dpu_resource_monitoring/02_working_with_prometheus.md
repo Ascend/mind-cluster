@@ -92,7 +92,7 @@
 
         在prometheus.yaml文件中找到nodePort字段，该字段的值为Prometheus服务的端口号，默认为30003。
 
-    3. 选择DPU的相关标签，查看对应数据信息。例如查询集群内DPU卡的interface级收流量指标，可在查询框中输入`dpu_interface_rx_bytes`；查询DPU卡的全局RoCE接收ECN指标，可输入`dpu_roce_dp_ctr_rr_ecn_rx`。所有指标名以`dpu_`（全局指标）和`dpu_interface_`（interface级指标）为前缀，详见[Prometheus Metrics接口](../../../06_api/16_dpu_exporter.md)章节。
+    3. 选择DPU的相关标签，查看对应数据信息。例如查询集群内DPU卡的Interface级接收流量指标，可在查询框中输入`dpu_interface_rx_bytes`；查询DPU卡的全局RoCE接收ECN指标，可输入`dpu_roce_dp_ctr_rr_ecn_rx`；查询RDMA设备级队列对数量，可输入`dpu_roce_qp`。所有指标名以`dpu_`（全局指标）和`dpu_interface_`（Interface级指标）为前缀，详见[Prometheus Metrics接口](../../../06_api/16_dpu_exporter.md)章节。
 
 ## 通过Prometheus Operator对接Prometheus<a name="section1031014512341"></a>
 
@@ -268,4 +268,4 @@
 
         在prometheus.yaml文件中找到nodePort字段，该字段的值为Prometheus服务的端口号，默认为30003。
 
-    3. 选择DPU的相关标签，查看对应数据信息。例如查询集群内DPU卡的interface级链路载波状态，可在查询框中输入`dpu_interface_carrier`；查询DPU卡的全局RoCE接收ECN指标，可输入`dpu_roce_dp_ctr_rr_ecn_rx`。所有指标名以`dpu_`（全局指标）和`dpu_interface_`（interface级指标）为前缀，详见[Prometheus Metrics接口](../../../06_api/16_dpu_exporter.md)章节。
+    3. 选择DPU的相关标签，查看对应数据信息。例如查询集群内DPU卡的Interface级链路载波状态，可在查询框中输入`dpu_interface_carrier`；查询DPU卡的全局RoCE接收ECN指标，可输入`dpu_roce_dp_ctr_rr_ecn_rx`；查询RDMA设备级队列对数量，可输入`dpu_roce_qp`。所有指标名以`dpu_`（全局指标）和`dpu_interface_`（Interface级指标）为前缀，详见[Prometheus Metrics接口](../../../06_api/16_dpu_exporter.md)章节。

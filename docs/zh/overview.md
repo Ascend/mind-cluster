@@ -43,7 +43,7 @@ MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）构建�
 |Ascend Docker Runtime| 为训推任务提供容器化支持，自动挂载所需文件和设备依赖。                                            |
 |Ascend Device Plugin| 基于Kubernetes设备插件机制，提供昇腾AI处理器的设备发现、分配和健康状态上报功能，启动Kubernetes管理昇腾AI处理器资源。 |
 |NPU Exporter| 实时监测昇腾AI处理器的资源指标，获取如昇腾AI处理器的利用率、温度、电压等信息。                              |
-|DPU Exporter| 实时监测DPU的运行状态与统计指标，提供RoCE错包、丢包、ECN、CNP及PSN异常重传等全局指标，以及各网卡端口链路状态、收发流量等interface级指标。                              |
+|DPU Exporter| 实时监测DPU的运行状态与统计指标：DPU卡级全局指标包括RoCE错包、丢包、ECN、CNP及PSN异常重传等；RDMA设备级全局指标包括保护域（PD）、完成队列（CQ）、队列对（QP）、通信管理ID（CM ID）、内存区域（MR）、上下文（CTX）及共享接收队列（SRQ）；Interface级指标包括各网卡端口链路状态、收发流量等。                              |
 |Volcano| 基于开源Volcano调度插件机制，增加昇腾AI处理器的亲和性调度、故障重调度等特性，最大化发挥昇腾AI处理器计算性能。           |
 |ClusterD| 提供集群级别的可用资源信息。收集集群任务信息、资源信息和故障信息及影响范围，从任务、芯片和故障维度统计分析。                 |
 |Ascend Operator| 提供训练任务生命周期管理，为不同AI框架的分布式训练任务提供相应的环境变量、生成分布式训练任务依赖的集合通讯配置。              |
