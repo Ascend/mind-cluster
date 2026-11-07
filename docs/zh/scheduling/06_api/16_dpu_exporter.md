@@ -17,9 +17,10 @@
 
 ## 响应说明<a name="section_dpu_metrics_response"></a>
 
-按照Prometheus的专用格式返回数据，仅供参考，以实际回显为准。DPU Exporter采集以下两类指标：
+按照Prometheus的专用格式返回数据，仅供参考，以实际回显为准。DPU Exporter采集以下三类指标：
 
 - [全局指标（DPU卡级）](#section_global_metrics)
+- [全局指标（RDMA设备级）](#section_rdma_metrics)
 - [Interface级指标](#section_interface_metrics)
 
 ## 全局指标（DPU卡级）<a name="section_global_metrics"></a>
@@ -44,11 +45,46 @@ dpu_roce_cmdq_ctr_roce_cc_resource_drain{card="hinic0",card_type="CAL_2X400G_UB_
 ...
 ```
 
+## 全局指标（RDMA设备级）<a name="section_rdma_metrics"></a>
+
+通过执行`rdma resource show`命令从Linux RDMA子系统查询当前网络命名空间（netns）内可见的RDMA设备的资源计数。指标名格式为`dpu_roce_<metric_name>`，label包含`rdma_device`，取值为命令输出中的RDMA设备名。各指标依次取自`pd`、`cq`、`qp`、`cm_id`、`mr`、`ctx`、`srq`字段。
+
+**表 1**  RDMA指标
+
+|指标名|说明|Labels|类型|
+|------|----|------|----|
+|dpu_roce_pd|RDMA设备上的保护域（PD）数量|rdma_device|gauge|
+|dpu_roce_cq|RDMA设备上的完成队列（CQ）数量|rdma_device|gauge|
+|dpu_roce_qp|RDMA设备上的队列对（QP）数量|rdma_device|gauge|
+|dpu_roce_cm_id|RDMA设备上的通信管理ID（CM ID）数量|rdma_device|gauge|
+|dpu_roce_mr|RDMA设备上的内存区域（MR）数量|rdma_device|gauge|
+|dpu_roce_ctx|RDMA设备上的上下文（CTX）数量|rdma_device|gauge|
+|dpu_roce_srq|RDMA设备上的共享接收队列（SRQ）数量|rdma_device|gauge|
+
+以上指标均通过`rdma resource show`命令采集。当某个RDMA设备的某个指标连续未取到有效值时，前2个采集周期保留最近一次有效值，第3个采集周期起不再上报该指标；设备的所有指标均不再上报后，该设备也不再上报。新发现的设备在首次取到有效值前不上报。`rdma resource show`命令执行失败、输出为空或未解析到设备时，按上述缺失规则处理。
+
+RDMA指标仅包含当前netns内可见的设备；当RDMA子系统运行在`exclusive`模式时，分配到其他netns的设备不会出现在指标中。
+
+### 响应示例
+
+```text
+# HELP dpu_roce_qp Number of RDMA queue pairs (QP) on the RDMA device
+# TYPE dpu_roce_qp gauge
+dpu_roce_pd{rdma_device="hrn5_0"} 2
+dpu_roce_cq{rdma_device="hrn5_0"} 1
+dpu_roce_qp{rdma_device="hrn5_0"} 1
+dpu_roce_cm_id{rdma_device="hrn5_0"} 0
+dpu_roce_mr{rdma_device="hrn5_0"} 0
+dpu_roce_ctx{rdma_device="hrn5_0"} 0
+dpu_roce_srq{rdma_device="hrn5_0"} 0
+...
+```
+
 ## Interface级指标<a name="section_interface_metrics"></a>
 
 通过读取`/sys/class/net/<interface_name>/`目录下的文件采集网络接口的链路状态和流量统计指标。指标名格式为`dpu_interface_<metric_name>`，label包含`card`和`interface`。
 
-**表 1**  Interface级指标
+**表 2**  Interface级指标
 
 |指标名|说明|Labels|类型|
 |------|----|------|----|
@@ -95,7 +131,7 @@ dpu_interface_tx_bytes{card="hinic0",interface="ens3f0"} 987654321
 
 DPU Exporter启动组件内的HTTP健康探针服务，用于K8s livenessProbe机制探测组件存活状态。探针服务与DPU Exporter的业务HTTP服务完全解耦，使用独立端口（与Metrics端口8083互不影响）。
 
-**表 2**  健康探针接口
+**表 3**  健康探针接口
 
 | 项目 | 说明 |
 |------|------|
@@ -104,7 +140,7 @@ DPU Exporter启动组件内的HTTP健康探针服务，用于K8s livenessProbe�
 | 默认端口 | 11259 |
 | 协议 | HTTP（正确配置--tls-cert-file和--tls-private-key-file参数时为HTTPS） |
 
-**表 3**  响应说明
+**表 4**  响应说明
 
 | 状态码 | 触发条件 | 说明 |
 |--------|---------|------|

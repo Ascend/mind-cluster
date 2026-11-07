@@ -409,14 +409,15 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 
 **应用场景<a name="section15761025111720"></a>**
 
-在任务运行过程中，DPU的健康状态直接影响任务的稳定性。MindCluster提供DPU Exporter组件用于监测DPU的运行状态与各项统计指标。当前提供的指标可分为两类：
+在任务运行过程中，DPU的健康状态直接影响任务的稳定性。MindCluster提供DPU Exporter组件用于监测DPU的运行状态与各项统计指标。当前提供的指标可分为三类：
 
-- **全局指标**：涵盖RoCE错包、丢包、接收ECN、发送/接收CNP及PSN异常重传等统计指标。
-- **interface级指标**：涵盖每个网卡端口的链路运行状态、收发流量与异常错误状态等指标。
+- **全局指标（DPU卡级）**：涵盖RoCE错包、丢包、接收ECN、发送/接收CNP及PSN异常重传等统计指标。
+- **全局指标（RDMA设备级）**：包括RDMA设备上的保护域（PD）、完成队列（CQ）、队列对（QP）、通信管理ID（CM ID）、内存区域（MR）、上下文（CTX）及共享接收队列（SRQ）资源计数。
+- **Interface级指标**：涵盖每个网卡端口的链路运行状态、收发流量与异常错误状态等指标。
 
 **组件功能<a name="section388944161719"></a>**
 
-- 从网卡管理工具与文件系统接口分别获取DPU的全局指标与interface级指标。
+- 从网卡管理工具、Linux RDMA子系统与文件系统接口分别获取DPU卡级全局指标、RDMA设备级指标与Interface级指标。
 - 提供Prometheus指标接口，用于监控DPU的运行状态与各项统计指标。
 
 **组件上下游依赖<a name="section4941922192110"></a>**
@@ -426,8 +427,9 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 ![](../../figures/scheduling/组件上下游依赖-9.png "组件上下游依赖-9")
 
 1. 从网卡管理工具hinicadm5获取DPU全局指标，放入缓存。
-2. 从sysfs文件系统获取interface级指标，放入缓存。
-3. 实现Prometheus的指标接口，供其周期性获取缓存中的数据信息。
+2. 从sysfs文件系统获取Interface级指标，放入缓存。
+3. 通过`rdma resource show`获取RDMA设备级指标，放入缓存。
+4. 实现Prometheus的指标接口，供其周期性获取缓存中的数据信息。
 <!-- end id6 -->
 
 <!-- npu="950,A3,910b" id7 -->

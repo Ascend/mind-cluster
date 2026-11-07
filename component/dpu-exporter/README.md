@@ -13,11 +13,12 @@
 
 ## 简介
 
-- 在任务运行过程中，DPU的健康状态直接影响任务的稳定性。MindCluster提供DPU Exporter组件用于监测DPU的运行状态与各项统计指标。当前提供的指标可分为两类：
-  - **全局指标**：涵盖RoCE错包、丢包、接收ECN、发送/接收CNP及PSN异常重传等统计指标。
+- 在任务运行过程中，DPU的健康状态直接影响任务的稳定性。MindCluster提供DPU Exporter组件用于监测DPU的运行状态与各项统计指标。当前提供的指标可分为三类：
+  - **全局指标（DPU卡级）**：涵盖RoCE错包、丢包、接收ECN、发送/接收CNP及PSN异常重传等统计指标。
+  - **全局指标（RDMA设备级）**：包括RDMA设备上的保护域（PD）、完成队列（CQ）、队列对（QP）、通信管理ID（CM ID）、内存区域（MR）、上下文（CTX）及共享接收队列（SRQ）资源计数。
   - **Interface级指标**：涵盖每个网卡端口的链路运行状态、收发流量与异常错误状态等指标。
 - 主要功能：
-  - 从网卡管理工具与文件系统接口分别获取DPU的全局指标与Interface级指标。
+  - 从网卡管理工具、Linux RDMA子系统与文件系统接口分别获取DPU卡级全局指标、RDMA设备级指标与Interface级指标。
   - 提供Prometheus指标接口，用于监控DPU的运行状态与各项统计指标。
 
 ## 软件架构
@@ -28,7 +29,8 @@
 
 1. 从网卡管理工具hinicadm5获取DPU全局指标，放入缓存。
 2. 从sysfs文件系统获取Interface级指标，放入缓存。
-3. 实现Prometheus的指标接口，供其周期性获取缓存中的数据信息。
+3. 通过`rdma resource show`获取RDMA设备级指标，放入缓存。
+4. 实现Prometheus的指标接口，供其周期性获取缓存中的数据信息。
 
 ### 组件架构
 
@@ -51,9 +53,10 @@ flowchart BT
     %% ===== 最底层：硬件 =====
     DPU["DPU"]
 
-    %% ===== 数据来源：网卡管理工具与文件接口 =====
+    %% ===== 数据来源：网卡管理工具、文件接口与RDMA子系统 =====
     TOOL["网卡管理工具 hinicadm5"]
     SYS["sysfs 文件接口<br/>/sys/class/net/"]
+    RDMA["RDMA设备 / 内核RDMA子系统<br/>rdma resource show"]
 
     subgraph op["DPU Exporter（DaemonSet，部署于DPU节点）"]
         direction BT
@@ -68,8 +71,9 @@ flowchart BT
         subgraph collect["数据采集层（DpuCollector 采集引擎周期调度）"]
             direction LR
             DM["DeviceManager<br/>设备管理"]
-            C1["Hinicadm5 采集器<br/>全局指标"]
-            C2["Sysfs 采集器<br/>Interface 级指标"]
+            C1["Hinicadm5 采集器<br/>全局指标（DPU卡级）"]
+            C2["Sysfs 采集器<br/>Interface级指标"]
+            C3["RdmaCollector<br/>全局指标（RDMA设备级）"]
         end
 
         CACHE["DpuCache 指标缓存"]
@@ -90,13 +94,16 @@ flowchart BT
     DPU -->|"② 端口状态与统计"| SYS
     TOOL -->|"③ exec 调用"| DM
     SYS -->|"④ 文件读取"| DM
+    RDMA -->|"⑤ 资源查询"| DM
     DM --> C1
     DM --> C2
+    DM --> C3
     C1 --> CACHE
     C2 --> CACHE
+    C3 --> CACHE
     CACHE --> S1
-    S1 -->|"⑤ HTTP 拉取 metrics"| PROM
-    S2 -->|"⑥ 存活探针检查"| K8S
+    S1 -->|"⑥ HTTP 拉取 metrics"| PROM
+    S2 -->|"⑦ 存活探针检查"| K8S
 
     style op fill:#ffffff,stroke:#9ca3af,stroke-width:2px,color:#111827
     style collect fill:#eaf3fc,stroke:#7fb2e5,stroke-width:1.5px,color:#1e3a5f
@@ -112,9 +119,9 @@ flowchart BT
     classDef extension fill:#e4d6f7,stroke:#7c3aed,stroke-width:2px,color:#3b1e73
 
     class DPU hardware
-    class TOOL,SYS upstream
+    class TOOL,RDMA,SYS upstream
     class PROM,K8S downstream
-    class DM,C1,C2 collector
+    class DM,C1,C2,C3 collector
     class S1,S2 server
     class E1,E2,E3 extension
 ```
