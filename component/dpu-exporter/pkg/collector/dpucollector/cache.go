@@ -17,6 +17,7 @@ package dpucollector
 import (
 	"sync"
 
+	"huawei.com/dpu-exporter/pkg/collector/metricscollector"
 	"huawei.com/dpu-exporter/pkg/device"
 )
 
@@ -34,14 +35,22 @@ type IfaceData struct {
 	IfaceMetrics map[string]map[string]float64 // keyed by eth name → metric name → value
 }
 
+// RdmaData holds RDMA device-level metrics.
+type RdmaData struct {
+	Mu          sync.RWMutex
+	RdmaMetrics map[string]map[string]metricscollector.RdmaMetricValue // device → resource → value
+}
+
 // DpuCache is the central in-memory cache for dpu-exporter.
-// Per the class diagram, it holds DpuData, IfaceData, and DPU list with a top-level RWMutex.
+// Per the class diagram, it holds DpuData, IfaceData, RDMA data, and DPU list
+// with a top-level RWMutex.
 // It implements metricscollector.CacheAccessor interface.
 type DpuCache struct {
 	mu        sync.RWMutex
 	dpuList   []device.DPU
 	dpuData   *DpuData
 	ifaceData *IfaceData
+	rdmaData  *RdmaData
 }
 
 // NewDpuCache creates a new DpuCache instance
@@ -52,6 +61,9 @@ func NewDpuCache() *DpuCache {
 		},
 		ifaceData: &IfaceData{
 			IfaceMetrics: make(map[string]map[string]float64),
+		},
+		rdmaData: &RdmaData{
+			RdmaMetrics: make(map[string]map[string]metricscollector.RdmaMetricValue),
 		},
 	}
 }
@@ -135,4 +147,19 @@ func (c *DpuCache) SetIfaceMetrics(ethName string, metrics map[string]float64) {
 	for k, v := range metrics {
 		existing[k] = v
 	}
+}
+
+// SetAllRdmaMetrics atomically replaces the complete RDMA snapshot.
+func (c *DpuCache) SetAllRdmaMetrics(all map[string]map[string]metricscollector.RdmaMetricValue) {
+	c.rdmaData.Mu.Lock()
+	defer c.rdmaData.Mu.Unlock()
+	c.rdmaData.RdmaMetrics = all
+}
+
+// GetAllRdmaMetrics returns the current read-only RDMA snapshot.
+// Callers must not modify the returned map.
+func (c *DpuCache) GetAllRdmaMetrics() map[string]map[string]metricscollector.RdmaMetricValue {
+	c.rdmaData.Mu.RLock()
+	defer c.rdmaData.Mu.RUnlock()
+	return c.rdmaData.RdmaMetrics
 }

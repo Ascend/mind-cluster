@@ -130,16 +130,19 @@ func main() {
 	// Initialize DPU device list (must run before StartCollect)
 	dpucollector.InitDpuList(&wg, ctx, n)
 
-	// Start all collection goroutines (dpu metrics, interface metrics)
+	// Start all collection goroutines (dpu metrics, interface metrics, host metrics)
 	dpucollector.StartCollect(&wg, ctx, n)
 
 	// Setup Prometheus platform
 	promCollector := prompkg.NewPrometheusCollector()
-	dpuMetricsChain, ifaceMetricsChain := dpucollector.GetChainsSnapshot()
+	dpuMetricsChain, ifaceMetricsChain, hostMetricsChain := dpucollector.GetChainsSnapshot()
 	for _, c := range dpuMetricsChain {
 		promCollector.Register(c)
 	}
 	for _, c := range ifaceMetricsChain {
+		promCollector.Register(c)
+	}
+	for _, c := range hostMetricsChain {
 		promCollector.Register(c)
 	}
 
@@ -197,8 +200,9 @@ func initChains() {
 
 	dpuMetricsChain := []metricscollector.MetricsCollector{&metricscollector.Hinicadm5Collector{}}
 	ifaceMetricsChain := []metricscollector.MetricsCollector{&metricscollector.SysfsCollector{}}
+	hostMetricsChain := []metricscollector.MetricsCollector{&metricscollector.RdmaCollector{}}
 
-	dpucollector.SetChains(dpuMetricsChain, ifaceMetricsChain)
+	dpucollector.SetChains(dpuMetricsChain, ifaceMetricsChain, hostMetricsChain)
 	logger.Info("collector chains initialized")
 }
 
@@ -206,7 +210,8 @@ func initChains() {
 func rebuildChains() {
 	dpuMetricsChain := []metricscollector.MetricsCollector{&metricscollector.Hinicadm5Collector{}}
 	ifaceMetricsChain := []metricscollector.MetricsCollector{&metricscollector.SysfsCollector{}}
+	hostMetricsChain := []metricscollector.MetricsCollector{&metricscollector.RdmaCollector{}}
 
-	dpucollector.SetChains(dpuMetricsChain, ifaceMetricsChain)
+	dpucollector.SetChains(dpuMetricsChain, ifaceMetricsChain, hostMetricsChain)
 	logger.Info("collector chains rebuilt after config reload")
 }

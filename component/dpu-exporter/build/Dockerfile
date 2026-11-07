@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libmnl0 && \
+    apt-get install -y --no-install-recommends libmnl0 iproute2 && \
     rm -rf /var/lib/apt/lists/*
 
 RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /usr/sbin/nologin HwHiAiUser &&\

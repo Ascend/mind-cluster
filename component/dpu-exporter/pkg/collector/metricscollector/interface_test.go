@@ -108,4 +108,10 @@ func TestLabelConstants(t *testing.T) {
 	if len(DpuCardLabels) != 2 || len(DpuIfaceLabels) != 2 {
 		t.Errorf("DpuCardLabels=%v DpuIfaceLabels=%v, want 2 labels each", DpuCardLabels, DpuIfaceLabels)
 	}
+	if RdmaDeviceLabelName != "rdma_device" || len(DpuRdmaLabels) != 1 || DpuRdmaLabels[0] != RdmaDeviceLabelName {
+		t.Fatalf("RDMA label contract changed: %q %v", RdmaDeviceLabelName, DpuRdmaLabels)
+	}
+	if desc := BuildDescWithLabels("dpu_roce_pd", "help", DpuRdmaLabels); !strings.Contains(desc.String(), "dpu_roce_pd") || !strings.Contains(desc.String(), RdmaDeviceLabelName) {
+		t.Fatal("RDMA desc missing metric/label")
+	}
 }

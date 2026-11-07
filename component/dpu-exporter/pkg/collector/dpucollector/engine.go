@@ -38,6 +38,8 @@ var (
 	ChainForDpuMetrics []metricscollector.MetricsCollector
 	// ChainForInterfaceMetrics collectors for interface-level metrics (single goroutine)
 	ChainForInterfaceMetrics []metricscollector.MetricsCollector
+	// ChainForHostMetrics collectors for host-level command metrics (single goroutine)
+	ChainForHostMetrics []metricscollector.MetricsCollector
 
 	// dpuListInitOnce ensures DPU list is initialized at least once before collecting
 	dpuListInitOnce sync.Once
@@ -89,21 +91,23 @@ func (n *DpuCollector) GetIfaceMetrics(ethName string) map[string]float64 {
 	return n.cache.GetIfaceMetrics(ethName)
 }
 
-// SetChains atomically replaces the collector chains (called during config reload)
-func SetChains(dpuMetrics, ifaceMetrics []metricscollector.MetricsCollector) {
+// SetChains atomically replaces the collector chains (called during startup and config reload)
+func SetChains(dpuMetrics, ifaceMetrics, hostMetrics []metricscollector.MetricsCollector) {
 	chainsMu.Lock()
 	defer chainsMu.Unlock()
 	ChainForDpuMetrics = dpuMetrics
 	ChainForInterfaceMetrics = ifaceMetrics
+	ChainForHostMetrics = hostMetrics
 }
 
 // GetChainsSnapshot returns a shallow copy of the current collector chains
-func GetChainsSnapshot() (dpuMetrics, ifaceMetrics []metricscollector.MetricsCollector) {
+func GetChainsSnapshot() (dpuMetrics, ifaceMetrics, hostMetrics []metricscollector.MetricsCollector) {
 	chainsMu.RLock()
 	defer chainsMu.RUnlock()
 	dpuMetrics = append([]metricscollector.MetricsCollector(nil), ChainForDpuMetrics...)
 	ifaceMetrics = append([]metricscollector.MetricsCollector(nil), ChainForInterfaceMetrics...)
-	return dpuMetrics, ifaceMetrics
+	hostMetrics = append([]metricscollector.MetricsCollector(nil), ChainForHostMetrics...)
+	return dpuMetrics, ifaceMetrics, hostMetrics
 }
 
 // InitDpuList starts a background goroutine that periodically refreshes the DPU device list.
@@ -164,13 +168,15 @@ func dpuListInitAtFirstTime(n *DpuCollector) {
 }
 
 // StartCollect starts all collection goroutines.
-// It launches two types of collectors:
+// It launches three types of collectors:
 //  1. DPU metrics collectors — one goroutine per DPU card (parallel)
 //  2. Interface metrics collectors — single goroutine (reads are very fast)
+//  3. Host metrics collectors — single goroutine (host-level commands)
 func StartCollect(group *sync.WaitGroup, ctx context.Context, n *DpuCollector) {
 	dpuListInitAtFirstTime(n)
 	startCollectDpuMetrics(group, ctx, n)
 	startCollectInterfaceMetrics(group, ctx, n)
+	startCollectHostMetrics(group, ctx, n)
 }
 
 // filterSupported returns only collectors that support the current card type
@@ -194,7 +200,7 @@ func startCollectDpuMetrics(group *sync.WaitGroup, ctx context.Context, n *DpuCo
 			defer group.Done()
 			runCollectorLoop(ctx, n, collectorLoopOptions{
 				loadChain: func() []metricscollector.MetricsCollector {
-					dpuMetricsChain, _ := GetChainsSnapshot()
+					dpuMetricsChain, _, _ := GetChainsSnapshot()
 					return filterSupported(dpuMetricsChain, n)
 				},
 				onStop: func() {
@@ -223,7 +229,7 @@ func startCollectInterfaceMetrics(group *sync.WaitGroup, ctx context.Context, n 
 		defer group.Done()
 		runCollectorLoop(ctx, n, collectorLoopOptions{
 			loadChain: func() []metricscollector.MetricsCollector {
-				_, ifaceMetricsChain := GetChainsSnapshot()
+				_, ifaceMetricsChain, _ := GetChainsSnapshot()
 				return filterSupported(ifaceMetricsChain, n)
 			},
 			onStop: func() {
@@ -236,6 +242,31 @@ func startCollectInterfaceMetrics(group *sync.WaitGroup, ctx context.Context, n 
 					c.CollectToCache(n)
 				}
 				logger.Debugf("end interface metrics collect, time cost: %v", time.Since(begin))
+			},
+		})
+	}()
+}
+
+// startCollectHostMetrics starts a single goroutine for host-level command collectors.
+func startCollectHostMetrics(group *sync.WaitGroup, ctx context.Context, n *DpuCollector) {
+	group.Add(1)
+	go func() {
+		defer group.Done()
+		runCollectorLoop(ctx, n, collectorLoopOptions{
+			loadChain: func() []metricscollector.MetricsCollector {
+				_, _, hostMetricsChain := GetChainsSnapshot()
+				return filterSupported(hostMetricsChain, n)
+			},
+			onStop: func() {
+				logger.Info("received stop signal, stop host metrics collect")
+			},
+			runDueCollectors: func(dueCollectors []metricscollector.MetricsCollector) {
+				logger.Debugf("start host metrics collect, collectors: %v", getCollectorNames(dueCollectors))
+				begin := time.Now()
+				for _, c := range dueCollectors {
+					c.CollectToCache(n)
+				}
+				logger.Debugf("end host metrics collect, time cost: %v", time.Since(begin))
 			},
 		})
 	}()

@@ -113,12 +113,14 @@ type mockCacheAccessor struct {
 	dpuList      []device.DPU
 	dpuMetrics   map[string]map[string]float64
 	ifaceMetrics map[string]map[string]float64
+	rdmaMetrics  map[string]map[string]RdmaMetricValue
 }
 
 func newMockCache() *mockCacheAccessor {
 	return &mockCacheAccessor{
 		dpuMetrics:   make(map[string]map[string]float64),
 		ifaceMetrics: make(map[string]map[string]float64),
+		rdmaMetrics:  make(map[string]map[string]RdmaMetricValue),
 	}
 }
 
@@ -128,6 +130,13 @@ func (m *mockCacheAccessor) GetIfaceMetrics(e string) map[string]float64    { re
 func (m *mockCacheAccessor) SetDpuMetrics(c string, v map[string]float64)   { m.dpuMetrics[c] = v }
 func (m *mockCacheAccessor) SetIfaceMetrics(e string, v map[string]float64) { m.ifaceMetrics[e] = v }
 func (m *mockCacheAccessor) SetDpuList(d []device.DPU)                      { m.dpuList = d }
+
+func (m *mockCacheAccessor) GetAllRdmaMetrics() map[string]map[string]RdmaMetricValue {
+	return m.rdmaMetrics
+}
+func (m *mockCacheAccessor) SetAllRdmaMetrics(all map[string]map[string]RdmaMetricValue) {
+	m.rdmaMetrics = all
+}
 
 // collectorMockDmgr implements device.DeviceManager with injectable behavior
 // for exercising collector collection paths.
@@ -153,6 +162,10 @@ func (m *collectorMockDmgr) ListDir(string) ([]string, error) { return m.listFil
 
 func (m *collectorMockDmgr) ExecCommand(_ ...string) (string, error) {
 	m.execCalls++
+	return m.execOutput, m.execErr
+}
+
+func (m *collectorMockDmgr) ExecRdma(_ ...string) (string, error) {
 	return m.execOutput, m.execErr
 }
 

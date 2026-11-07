@@ -45,6 +45,10 @@ const (
 	DefaultSysfsIntervalSeconds = 20
 	// DefaultDpuListRefreshIntervalSeconds is the default DPU list refresh interval in seconds
 	DefaultDpuListRefreshIntervalSeconds = 60
+	// DefaultRdmaIntervalSeconds is the default RDMA resource collection interval in seconds
+	DefaultRdmaIntervalSeconds = 60
+	// DefaultRdmaInterval is the default RDMA resource collection interval
+	DefaultRdmaInterval = DefaultRdmaIntervalSeconds * time.Second
 
 	// CacheKeyHinicadm5 is the cache key for hinicadm5 collectors
 	CacheKeyHinicadm5 = "Hinicadm5Collector"
@@ -52,6 +56,8 @@ const (
 	CacheKeySysfs = "SysfsCollector"
 	// CacheKeyDpuListRefresh is the cache key for DPU list refresh
 	CacheKeyDpuListRefresh = "DpuListRefresh"
+	// CacheKeyRdma is the cache key for RDMA collectors
+	CacheKeyRdma = "RdmaCollector"
 )
 
 // ValidateInterval validates an interval value (in seconds) and returns
@@ -121,6 +127,8 @@ type IntervalConfig struct {
 	SysfsCollectorInterval int
 	// DpuListRefreshInterval for DPU device list refresh, in seconds
 	DpuListRefreshInterval int
+	// RdmaCollectorInterval for RDMA resource collectors, in seconds
+	RdmaCollectorInterval int
 }
 
 // Apply writes the interval config into the global collectorIntervalMap.
@@ -129,6 +137,7 @@ func (c *IntervalConfig) Apply() {
 	applyValidatedInterval(CacheKeyHinicadm5, c.Hinicadm5CollectorInterval, DefaultHinicadm5IntervalSeconds)
 	applyValidatedInterval(CacheKeySysfs, c.SysfsCollectorInterval, DefaultSysfsIntervalSeconds)
 	applyValidatedInterval(CacheKeyDpuListRefresh, c.DpuListRefreshInterval, DefaultDpuListRefreshIntervalSeconds)
+	applyValidatedInterval(CacheKeyRdma, c.RdmaCollectorInterval, DefaultRdmaIntervalSeconds)
 }
 
 func applyValidatedInterval(cacheKey string, seconds int, defaultSeconds int) {

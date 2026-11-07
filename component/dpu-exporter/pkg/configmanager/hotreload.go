@@ -54,6 +54,7 @@ func defaultConfig() *Config {
 			Hinicadm5CollectorInterval: DefaultHinicadm5IntervalSeconds,
 			SysfsCollectorInterval:     DefaultSysfsIntervalSeconds,
 			DpuListRefreshInterval:     DefaultDpuListRefreshIntervalSeconds,
+			RdmaCollectorInterval:      DefaultRdmaIntervalSeconds,
 		},
 	}
 }

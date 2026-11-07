@@ -15,8 +15,8 @@
 package device
 
 import (
-	"ascend-common/common-utils/utils"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -24,6 +24,9 @@ import (
 	"strings"
 	"time"
 
+	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/limiter"
+	"ascend-common/common-utils/utils"
 	"huawei.com/dpu-exporter/utils/logger"
 )
 
@@ -40,15 +43,37 @@ const (
 	maxBinarySizeMB int64 = 200
 	// splitParts is the number of parts for strings.SplitN
 	splitParts = 2
+	// rdmaOutputLimitBytes limits stdout/stderr captured from the external rdma command.
+	rdmaOutputLimitBytes = 20 << 20
+)
+
+// defaultRdmaPaths are candidate paths for the iproute2 rdma binary.
+var defaultRdmaPaths = []string{"/usr/bin/rdma", "/usr/sbin/rdma"}
+
+// rdmaCmdTimeout limits the execution time of one rdma command.
+var rdmaCmdTimeout = 10 * time.Second
+
+// rdmaWaitDelay bounds how long Wait may block on inherited I/O pipes after
+// the rdma command exits or its context is canceled.
+var rdmaWaitDelay = 2 * time.Second
+
+const (
+	rdmaExecLogDomain  = "rdma_exec"
+	rdmaExecLogID      = 0
+	rdmaPathLogDomain  = "rdma_path"
+	rdmaPathNotFoundID = 0
+	rdmaPathInvalidID  = 1
 )
 
 // HwDpuManager implements DeviceManager for Huawei DPU hardware.
-// It uses hinicadm5 CLI for global metrics and sysfs for interface-level metrics.
+// It uses hinicadm5 CLI for global metrics, the rdma CLI for RDMA device metrics,
+// and sysfs for interface-level metrics.
 // Per the class diagram, HwDpuManager has ExecHinicadm5 as a Huawei-specific method
 // and implements the generic DeviceManager interface.
 type HwDpuManager struct {
 	hinicadm5Path string
 	sysfsBasePath string
+	rdmaPath      string
 	dpuList       []DPU
 }
 
@@ -65,7 +90,34 @@ func NewHwDpuManager() (*HwDpuManager, error) {
 	return &HwDpuManager{
 		hinicadm5Path: path,
 		sysfsBasePath: sysfsNetBase,
+		rdmaPath:      resolveRdmaPath(),
 	}, nil
+}
+
+// resolveRdmaPath locates and validates the iproute2 rdma binary.
+func resolveRdmaPath() string {
+	path, lookPathErr := exec.LookPath("rdma")
+	foundInPath := lookPathErr == nil
+	if !foundInPath {
+		for _, candidate := range defaultRdmaPaths {
+			path = candidate
+			if validateBinaryPath(candidate) == nil {
+				break
+			}
+		}
+		hwlog.RunLog.WarnfWithLimit(rdmaPathLogDomain, rdmaPathNotFoundID,
+			"rdma not found in PATH, using default: %s", path)
+	}
+	if err := validateBinaryPath(path); err != nil {
+		hwlog.RunLog.ErrorfWithLimit(rdmaPathLogDomain, rdmaPathInvalidID,
+			"invalid rdma path %s: %v, RDMA metrics will be unavailable", path, err)
+		return ""
+	}
+	if foundInPath {
+		hwlog.ResetErrCnt(rdmaPathLogDomain, rdmaPathNotFoundID)
+	}
+	hwlog.ResetErrCnt(rdmaPathLogDomain, rdmaPathInvalidID)
+	return path
 }
 
 // validateBinaryPath checks that a binary path is a regular file owned by root and not a symlink.
@@ -87,10 +139,11 @@ func validateBinaryPath(path string) error {
 }
 
 // NewHwDpuManagerWithPath creates a HwDpuManager with custom paths (for testing)
-func NewHwDpuManagerWithPath(hinicadm5Path, sysfsBasePath string) *HwDpuManager {
+func NewHwDpuManagerWithPath(hinicadm5Path, sysfsBasePath, rdmaPath string) *HwDpuManager {
 	return &HwDpuManager{
 		hinicadm5Path: hinicadm5Path,
 		sysfsBasePath: sysfsBasePath,
+		rdmaPath:      rdmaPath,
 	}
 }
 
@@ -129,6 +182,54 @@ func (m *HwDpuManager) ExecHinicadm5(args ...string) (string, error) {
 			err, output)
 	}
 	return output, err
+}
+
+// ensureRdmaPath resolves the rdma binary again when the initial lookup failed.
+func (m *HwDpuManager) ensureRdmaPath() string {
+	if m.rdmaPath == "" {
+		m.rdmaPath = resolveRdmaPath()
+		if m.rdmaPath != "" {
+			logger.Infof("rdma path is now available: %s", m.rdmaPath)
+		}
+	}
+	return m.rdmaPath
+}
+
+// ExecRdma executes the Linux rdma command and returns stdout separately from stderr.
+func (m *HwDpuManager) ExecRdma(args ...string) (string, error) {
+	rdmaPath := m.ensureRdmaPath()
+	if rdmaPath == "" {
+		return "", fmt.Errorf("rdma binary path is empty")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), rdmaCmdTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, rdmaPath, args...)
+	cmd.WaitDelay = rdmaWaitDelay
+	stdout := limiter.NewLimitedWriter(rdmaOutputLimitBytes)
+	stderr := limiter.NewLimitedWriter(rdmaOutputLimitBytes)
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+
+	runErr := cmd.Run()
+	if runErr != nil {
+		// ErrWaitDelay means the command itself succeeded; only inherited I/O
+		// outlived the wait delay.
+		if errors.Is(runErr, exec.ErrWaitDelay) &&
+			cmd.ProcessState != nil && cmd.ProcessState.Success() {
+			logger.Debugf("rdma %s exited successfully but inherited I/O did not close within %v",
+				strings.Join(args, " "), rdmaWaitDelay)
+			hwlog.ResetErrCnt(rdmaExecLogDomain, rdmaExecLogID)
+			return string(stdout.GetBufferBytes()), nil
+		}
+		hwlog.RunLog.ErrorfWithLimit(rdmaExecLogDomain, rdmaExecLogID,
+			"rdma %s failed: %v, stderr: %s", strings.Join(args, " "), runErr,
+			string(stderr.GetBufferBytes()))
+		return "", runErr
+	}
+	hwlog.ResetErrCnt(rdmaExecLogDomain, rdmaExecLogID)
+	return string(stdout.GetBufferBytes()), nil
 }
 
 // ReadSysfs implements DeviceManager.ReadSysfs — reads a file at the given path

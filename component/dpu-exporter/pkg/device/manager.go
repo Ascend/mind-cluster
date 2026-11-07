@@ -25,7 +25,7 @@ const CardTypeHuawei = "huawei"
 
 // DeviceManager is the abstraction layer for DPU hardware operations.
 // Different card types implement this interface to provide unified access to DPU metrics.
-// Per the class diagram, the interface provides generic ExecCommand and ReadSysfs methods.
+// Per the class diagram, the interface provides generic ExecCommand, ExecRdma, and ReadSysfs methods.
 type DeviceManager interface {
 	// AutoInit discovers DPU devices and populates the device list
 	AutoInit() error
@@ -35,6 +35,10 @@ type DeviceManager interface {
 
 	// ExecCommand executes a card-type-specific CLI command with given args and returns raw output
 	ExecCommand(args ...string) (string, error)
+
+	// ExecRdma executes the Linux rdma CLI with given args and returns stdout.
+	// On error, stdout is empty and the caller should treat the round as failed.
+	ExecRdma(args ...string) (string, error)
 
 	// ReadSysfs reads a file at the given sysfs path and returns its content
 	ReadSysfs(path string) (string, error)
