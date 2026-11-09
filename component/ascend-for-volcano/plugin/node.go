@@ -317,10 +317,16 @@ func getNPUCapacity(node *api.NodeInfo) int {
 }
 
 // ParseChipTopology parses the node huawei.com/npu.topology annotation into
-// the chip tree: fallback raw, parse/prune, index allocated chips, apply
-// device health annotations, then initialize the tree with owners and states.
+// the chip tree: the physically-existing cards from base-device-infos size the
+// flat fallback when the annotation is missing, the tree is then pruned to
+// those cards, and finally initialized with owners and states. Card ids
+// referenced outside the built tree (health annotations, allocated chips) are
+// ignored by Init instead of invalidating the whole tree.
 func (n *NPUNode) ParseChipTopology(node *api.NodeInfo) {
-	raw := n.topologyRaw(node)
+	n.buildChipPods(node)
+	faults := n.parseDeviceHealthAnnotations()
+	exist := n.realChipIDsFromBaseDeviceInfo()
+	raw := n.topologyRaw(node, highestCardID(exist))
 	if n.ChipTopo == nil || n.ChipTopo.Raw != raw {
 		n.ChipTopo = topo.ParseTopology(raw)
 	}
@@ -328,35 +334,35 @@ func (n *NPUNode) ParseChipTopology(node *api.NodeInfo) {
 		klog.V(util.LogWarningLev).Infof("ParseChipTopology node<%s> topology parse failed, raw: %s", n.Name, raw)
 		return
 	}
-	if !n.pruneChipTopology(raw) {
+	if !n.pruneChipTopology(raw, exist) {
 		return
 	}
-	n.buildChipPods(node)
-	faultChips, maxCardID := n.parseDeviceHealthAnnotations()
-	if n.chipTopoOversize(maxCardID) {
-		n.ChipTopo = nil
-		return
-	}
-	n.ChipTopo.Init(&faultChips, n.podErrorChipTimes(), n.buildOwners())
+	n.ChipTopo.Init(&faults, n.podErrorChipTimes(), n.buildOwners())
 }
 
 // topologyRaw returns the raw chip topology value, falling back to a flat
-// topology built from the node's npu capacity when the annotation is absent.
-func (n *NPUNode) topologyRaw(node *api.NodeInfo) string {
+// topology when the annotation is absent. The fallback covers the greater of
+// the node's npu capacity and maxCardID+1 for the physically-existing cards;
+// maxCardID is -1 when base-device-infos is absent or empty, which falls back
+// to capacity alone, so an entirely empty node still parses to nil.
+func (n *NPUNode) topologyRaw(node *api.NodeInfo, maxCardID int) string {
 	raw, exist := n.Annotation[util.TopologyAnnoKey]
 	if !exist {
-		raw = topo.BuildFlatTopology(getNPUCapacity(node))
+		count := getNPUCapacity(node)
+		if maxCardID+1 > count {
+			count = maxCardID + 1
+		}
+		raw = topo.BuildFlatTopology(count)
 	}
 	return raw
 }
 
 // pruneChipTopology rebuilds the tree with only the leaves that match the
-// physically-existing cards in base-device-infos, so a stale topology declaring
-// more chips than the node actually owns can never over-admit jobs. Returns
-// false and clears ChipTopo when no leaf survives; skipped when the annotation
-// is absent.
-func (n *NPUNode) pruneChipTopology(raw string) bool {
-	exist := n.realChipIDsFromBaseDeviceInfo()
+// physically-existing cards, so a stale topology declaring more chips than the
+// node actually owns can never over-admit jobs. Returns false and clears
+// ChipTopo when no leaf survives; skipped when exist is empty (base-device-info
+// absent or unparsable).
+func (n *NPUNode) pruneChipTopology(raw string, exist map[int]struct{}) bool {
 	if len(exist) == 0 {
 		return true
 	}
@@ -386,72 +392,49 @@ func (n *NPUNode) buildChipPods(node *api.NodeInfo) {
 	}
 }
 
-// parseDeviceHealthAnnotations collects faulty, network-unhealthy,
-// silent-fault and sub-healthy card ids from the card annotations, plus the
-// highest referenced chip id. Silent-fault and sub-healthy cards are recorded on
-// the ChipNode as node-level static state; whether they are withheld is decided
-// later per job via its tolerance.
-func (n *NPUNode) parseDeviceHealthAnnotations() (topo.NodeFaultChips, int) {
-	var chips topo.NodeFaultChips
-	maxCardID := 0
+// parseDeviceHealthAnnotations collects the node's card-health state from its
+// card annotations into the node-level chip-fault sets. Silent-fault and
+// sub-healthy cards are recorded on the ChipNode as node-level static state;
+// whether they are withheld is decided later per job via its tolerance.
+func (n *NPUNode) parseDeviceHealthAnnotations() topo.NodeFaultChips {
+	var faults topo.NodeFaultChips
 	for key, val := range n.Annotation {
 		pre, ok := cardAnnoNpuPre(key)
 		if !ok {
 			continue
 		}
 		if strings.HasSuffix(key, util.DeviceFaultCmKeySuffix) {
-			maxCardID = mergeFaultAnnoCards(&chips, val, pre, maxCardID)
+			silent, subHealth := faultCardsFromAnno(val, pre)
+			for id := range silent {
+				if faults.Silent == nil {
+					faults.Silent = make(map[int]struct{})
+				}
+				faults.Silent[id] = struct{}{}
+			}
+			for id := range subHealth {
+				if faults.SubHealth == nil {
+					faults.SubHealth = make(map[int]struct{})
+				}
+				faults.SubHealth[id] = struct{}{}
+			}
 			continue
 		}
 		for id := range util.ParseDevList(val, pre) {
-			maxCardID = recordMaxCardID(maxCardID, id)
 			switch {
 			case strings.HasSuffix(key, util.NPUUnhealthySuffix):
-				if chips.Faulty == nil {
-					chips.Faulty = make(map[int]struct{})
+				if faults.Faulty == nil {
+					faults.Faulty = make(map[int]struct{})
 				}
-				chips.Faulty[id] = struct{}{}
+				faults.Faulty[id] = struct{}{}
 			case strings.HasSuffix(key, util.NPUNetworkUnhealthy):
-				if chips.NetUnh == nil {
-					chips.NetUnh = make(map[int]struct{})
+				if faults.NetUnh == nil {
+					faults.NetUnh = make(map[int]struct{})
 				}
-				chips.NetUnh[id] = struct{}{}
+				faults.NetUnh[id] = struct{}{}
 			}
 		}
 	}
-	for id := range n.ChipPods {
-		maxCardID = recordMaxCardID(maxCardID, id)
-	}
-	return chips, maxCardID
-}
-
-// recordMaxCardID keeps the higher of the recorded max and the given chip id.
-func recordMaxCardID(cur, id int) int {
-	if id > cur {
-		return id
-	}
-	return cur
-}
-
-// mergeFaultAnnoCards merges the silent-fault and sub-healthy chip ids parsed
-// from one -Fault annotation into the sets and returns the updated max chip id.
-func mergeFaultAnnoCards(c *topo.NodeFaultChips, val, pre string, maxCardID int) int {
-	silent, subHealth := faultCardsFromAnno(val, pre)
-	for id := range silent {
-		maxCardID = recordMaxCardID(maxCardID, id)
-		if c.Silent == nil {
-			c.Silent = make(map[int]struct{})
-		}
-		c.Silent[id] = struct{}{}
-	}
-	for id := range subHealth {
-		maxCardID = recordMaxCardID(maxCardID, id)
-		if c.SubHealth == nil {
-			c.SubHealth = make(map[int]struct{})
-		}
-		c.SubHealth[id] = struct{}{}
-	}
-	return maxCardID
+	return faults
 }
 
 // faultCardsFromAnno parses the -Fault annotation (a JSON array of device
@@ -567,26 +550,13 @@ func cardAnnoNpuPre(key string) (string, bool) {
 	return "", false
 }
 
-// chipTopoOversize reports whether the node owns a card whose id exceeds the
-// topology's max chip id. maxCardID is recorded once in ParseChipTopology while
-// the annotations are already being walked, instead of re-parsing every card id here.
-func (n *NPUNode) chipTopoOversize(maxCardID int) bool {
-	maxID := n.ChipTopo.MaxChipID()
-	if maxCardID > maxID {
-		klog.V(util.LogErrorLev).Infof(
-			"node<%s> topo<%s> abnormal: node card id<%d> exceeds topo max chip id<%d>, init failed",
-			n.Name, n.ChipTopo.Raw, maxCardID, maxID)
-		return true
-	}
-	return false
-}
-
 // realChipIDsFromBaseDeviceInfo returns the set of physically-existing card ids
 // recorded in the huawei.com/npu.base-device-infos annotation. Device names are
 // "<cardType>-<id>" (e.g. "Ascend910-0", "Ascend950-<phyID>"); the id is the
-// last non-empty dash segment, mirroring buildPhyIdToDeviceIdMap. An empty map
-// is returned when the annotation is absent or unparsable, which makes callers
-// skip topology pruning.
+// last non-empty dash segment, mirroring buildPhyIdToDeviceIdMap. The set sizes
+// the flat fallback and prunes the parsed tree; an empty map is returned when
+// the annotation is absent or unparsable, so callers fall back to capacity
+// sizing and skip pruning.
 func (n *NPUNode) realChipIDsFromBaseDeviceInfo() map[int]struct{} {
 	ids := make(map[int]struct{})
 	if n == nil || len(n.BaseDeviceInfo) == 0 {
@@ -612,6 +582,17 @@ func (n *NPUNode) realChipIDsFromBaseDeviceInfo() map[int]struct{} {
 		ids[id] = struct{}{}
 	}
 	return ids
+}
+
+// highestCardID returns the highest card id in the set, or -1 when it is empty.
+func highestCardID(ids map[int]struct{}) int {
+	maxID := -1
+	for id := range ids {
+		if id > maxID {
+			maxID = id
+		}
+	}
+	return maxID
 }
 
 // getNPUNodeAddress get npu node address
