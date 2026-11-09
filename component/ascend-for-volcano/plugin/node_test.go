@@ -835,21 +835,6 @@ func TestCardAnnoNpuPre(t *testing.T) {
 	}
 }
 
-func TestChipTopoOversize(t *testing.T) {
-	// nested16 topo's max chip id is 15: a node owning card 16 is abnormal
-	root := topo.ParseTopology(nested16TopoAnno)
-	n := &NPUNode{CommonNode: CommonNode{Name: "n", ChipTopo: root}}
-	if !n.chipTopoOversize(16) {
-		t.Error("chipTopoOversize(16) should be true with max id 15")
-	}
-	if n.chipTopoOversize(15) {
-		t.Error("chipTopoOversize(15) should be false with max id 15")
-	}
-	if n.chipTopoOversize(0) {
-		t.Error("chipTopoOversize(0) should be false with max id 15")
-	}
-}
-
 func TestParseChipTopology(t *testing.T) {
 	// no topology annotation and no capacity -> BuildFlatTopology(0)="" ->
 	// ParseTopology returns nil -> ChipTopo stays nil, method must not panic.
@@ -873,6 +858,124 @@ func TestParseChipTopology(t *testing.T) {
 	if got := n2.ChipTopo.MaxChipID(); got != 15 {
 		t.Errorf("MaxChipID = %d, want 15", got)
 	}
+}
+
+func TestParseChipTopologyKeepsTreeForOutOfTreeCards(t *testing.T) {
+	// A stale annotation or pod referencing a card id outside the built tree
+	// must not invalidate the tree: out-of-tree ids are ignored by Init.
+	t.Run("annotation-declared-topology", func(t *testing.T) {
+		n := &NPUNode{CommonNode: CommonNode{Name: "n", Annotation: map[string]string{
+			util.TopologyAnnoKey: "[0,1,2,3]",
+			util.HwPreName + util.Ascend910 + util.NPUUnhealthySuffix: "Ascend910-9",
+		}}}
+		n.ParseChipTopology(&api.NodeInfo{Capacity: &api.Resource{}})
+		if n.ChipTopo == nil {
+			t.Fatal("out-of-tree referenced card must not clear the tree")
+		}
+		if got := n.ChipTopo.MaxChipID(); got != 3 {
+			t.Errorf("MaxChipID = %d, want 3", got)
+		}
+		if got := n.ChipTopo.CountUsable(false); got != 4 {
+			t.Errorf("CountUsable(false) = %d, want 4 (card 9 is outside the tree)", got)
+		}
+	})
+
+	t.Run("pruned-topology", func(t *testing.T) {
+		// topology declares 16 chips, base-device-infos keeps 0..7, and a stale
+		// annotation references card 9: the pruned tree must survive.
+		n := &NPUNode{CommonNode: CommonNode{Name: "n", Annotation: map[string]string{
+			util.TopologyAnnoKey: nested16TopoAnno,
+			util.HwPreName + util.Ascend910 + util.NPUUnhealthySuffix: "Ascend910-9",
+		}}}
+		n.BaseDeviceInfo = `{"Ascend910-0":{},"Ascend910-1":{},"Ascend910-2":{},"Ascend910-3":{},` +
+			`"Ascend910-4":{},"Ascend910-5":{},"Ascend910-6":{},"Ascend910-7":{}}`
+		n.ParseChipTopology(&api.NodeInfo{Capacity: &api.Resource{}})
+		if n.ChipTopo == nil {
+			t.Fatal("referenced card outside the pruned tree must not clear the tree")
+		}
+		if got := n.ChipTopo.MaxChipID(); got != 7 {
+			t.Errorf("MaxChipID = %d, want 7", got)
+		}
+		if got := n.ChipTopo.CountUsable(false); got != 8 {
+			t.Errorf("CountUsable(false) = %d, want 8", got)
+		}
+	})
+}
+
+func TestParseChipTopologyFallbackCount(t *testing.T) {
+	// Flat fallback without a topology annotation is sized to the greater of
+	// the node's npu capacity and highest physically-existing card id + 1 from
+	// base-device-infos, so the built tree covers every physical card.
+
+	t.Run("capacity-alone-no-annotation", func(t *testing.T) {
+		// no base-device-info -> count follows capacity only
+		n := &NPUNode{CommonNode: CommonNode{Name: "n", Annotation: map[string]string{}}}
+		n.ParseChipTopology(&api.NodeInfo{Capacity: &api.Resource{ScalarResources: map[v1.ResourceName]float64{
+			v1.ResourceName(util.HwPreName + util.Ascend910): 8000,
+		}}})
+		if n.ChipTopo == nil {
+			t.Fatal("capacity-only fallback should build a tree")
+		}
+		if got := n.ChipTopo.MaxChipID(); got != 7 {
+			t.Errorf("MaxChipID = %d, want 7", got)
+		}
+	})
+
+	t.Run("base-device-info-covers-beyond-capacity", func(t *testing.T) {
+		// physical card 9 exists while capacity says 8 cards -> fallback grows
+		// to cover 0..9 and the stale unhealthy mark on card 9 is carved out
+		n := &NPUNode{CommonNode: CommonNode{Name: "n", Annotation: map[string]string{
+			util.HwPreName + util.Ascend910 + util.NPUUnhealthySuffix: "Ascend910-9",
+		}}}
+		n.BaseDeviceInfo = `{"Ascend910-0":{},"Ascend910-1":{},"Ascend910-2":{},"Ascend910-3":{},` +
+			`"Ascend910-4":{},"Ascend910-5":{},"Ascend910-6":{},"Ascend910-7":{},` +
+			`"Ascend910-8":{},"Ascend910-9":{}}`
+		n.ParseChipTopology(&api.NodeInfo{Capacity: &api.Resource{ScalarResources: map[v1.ResourceName]float64{
+			v1.ResourceName(util.HwPreName + util.Ascend910): 8000,
+		}}})
+		if n.ChipTopo == nil {
+			t.Fatal("base-device-info-covered fallback should build a tree")
+		}
+		if got := n.ChipTopo.MaxChipID(); got != 9 {
+			t.Errorf("MaxChipID = %d, want 9", got)
+		}
+		if got := n.ChipTopo.CountUsable(false); got != 9 {
+			t.Errorf("CountUsable(false) = %d, want 9 (card 9 is unhealthy)", got)
+		}
+	})
+
+	t.Run("base-device-info-only-no-capacity", func(t *testing.T) {
+		// no capacity at all but physical card 5 exists -> still a tree
+		n := &NPUNode{CommonNode: CommonNode{Name: "n", Annotation: map[string]string{
+			util.HwPreName + util.Ascend910 + util.NPUNetworkUnhealthy: "Ascend910-5",
+		}}}
+		n.BaseDeviceInfo = `{"Ascend910-5":{}}`
+		n.ParseChipTopology(&api.NodeInfo{Capacity: &api.Resource{}})
+		if n.ChipTopo == nil {
+			t.Fatal("base-device-info-only fallback should build a tree")
+		}
+		if got := n.ChipTopo.MaxChipID(); got != 5 {
+			t.Errorf("MaxChipID = %d, want 5", got)
+		}
+	})
+
+	t.Run("card-zero-in-base-device-info-builds-one-card", func(t *testing.T) {
+		// physical card 0 with no capacity -> count = max(0, 0+1) = 1
+		n := &NPUNode{CommonNode: CommonNode{Name: "n", Annotation: map[string]string{
+			util.HwPreName + util.Ascend910 + util.NPUUnhealthySuffix: "Ascend910-0",
+		}}}
+		n.BaseDeviceInfo = `{"Ascend910-0":{}}`
+		n.ParseChipTopology(&api.NodeInfo{Capacity: &api.Resource{}})
+		if n.ChipTopo == nil {
+			t.Fatal("card-0 base-device-info should build a one-card tree")
+		}
+		if got := n.ChipTopo.MaxChipID(); got != 0 {
+			t.Errorf("MaxChipID = %d, want 0", got)
+		}
+		if got := n.ChipTopo.CountUsable(false); got != 0 {
+			t.Errorf("CountUsable(false) = %d, want 0 (only card is unhealthy)", got)
+		}
+	})
 }
 
 func TestParseChipTopologyCarvesFaults(t *testing.T) {
