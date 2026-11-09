@@ -43,8 +43,8 @@ function clean() {
 
 function build() {
   cd "${TOP_DIR}/cmd/k8s-rdma-shared-dp"
-  export CGO_ENABLED=0
-  go build -mod=mod -buildmode=pie -ldflags "-s -bindnow
+  export CGO_ENABLED=1
+  go build -mod=mod -ldflags "-s -linkmode external -extldflags \"-static\"
     -X main.BuildVersion=${build_version}_linux-${arch} \
     -X main.BuildName=${OUTPUT_NAME} \
     -X ascend-common/common-utils/version.Version=${build_version} \

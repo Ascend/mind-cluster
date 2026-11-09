@@ -61,6 +61,7 @@ import (
 	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
 	ver "ascend-common/common-utils/version"
+	"ascend-common/devmanager"
 )
 
 const (
@@ -89,6 +90,8 @@ var (
 	logMaxBackups  int
 	logMaxAge      int
 	logFile        string
+	// deviceResetTimeout is the timeout in seconds for the dcmi init used by the npu-nic query.
+	deviceResetTimeout int
 
 	// Build info
 	version = "master@git"
@@ -124,6 +127,10 @@ func initFlags() {
 	flag.IntVar(&logMaxBackups, "maxBackups", defaultLogMaxBackups, "Maximum number of backup log files, range is (0, 180]")
 	flag.IntVar(&logMaxAge, "maxAge", defaultLogMaxAge, "Maximum number of days for backup log files, range [7, 700]")
 	flag.StringVar(&logFile, "logFile", defaultLogFile, "The log file path, if the file size exceeds 20MB, will be rotate")
+
+	// Device reset timeout used by the dcmi init of the npu-nic query
+	flag.IntVar(&deviceResetTimeout, api.DeviceResetTimeout, api.DefaultDeviceResetTimeout,
+		"Device reset timeout in seconds, range is [10, 600]")
 }
 
 func initLogModule(ctx context.Context) error {
@@ -165,6 +172,16 @@ func checkLogParams() bool {
 	return true
 }
 
+// checkDeviceResetTimeout checks the device reset timeout used by the dcmi init of the npu-nic query.
+func checkDeviceResetTimeout() bool {
+	if deviceResetTimeout < api.MinDeviceResetTimeout || deviceResetTimeout > api.MaxDeviceResetTimeout {
+		fmt.Printf("Invalid deviceResetTimeout %d, range should be [%d, %d]\n", deviceResetTimeout,
+			api.MinDeviceResetTimeout, api.MaxDeviceResetTimeout)
+		return false
+	}
+	return true
+}
+
 func main() {
 	// Initialize flags first - this must be done before flag.Parse()
 	initFlags()
@@ -181,6 +198,9 @@ func main() {
 
 	// Check log parameters
 	if !checkLogParams() {
+		return
+	}
+	if !checkDeviceResetTimeout() {
 		return
 	}
 
@@ -254,8 +274,14 @@ func main() {
 			hwlog.RunLog.Errorf("Failed to create k8s client: %v", err)
 		}
 
-		// Load npu-nic-mapping.json with retries.
-		utils.InitNpuNicMapping(ctx)
+		// Load the npu-nic mapping at startup and poll the nic count to refresh it.
+		dcMgr, dcMgrErr := devmanager.AutoInit("", deviceResetTimeout)
+		if dcMgrErr != nil {
+			hwlog.RunLog.Warnf("init device manager failed: %v, npu-nic mapping falls back to the config file",
+				dcMgrErr)
+			dcMgr = nil
+		}
+		utils.InitNpuNicMapping(ctx, dcMgr)
 
 		rm, stopPeriodicUpdate = initAndStartDevices("UB", func() types.ResourceManager {
 			return ub_device.NewUbResourceManager(configFilePath, useCdi, ubExclMode, k8sClient)
