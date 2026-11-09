@@ -61,9 +61,6 @@ var (
 	ip                  = ""
 	version             bool
 	concurrency         int
-	containerMode       = ""
-	containerd          = ""
-	endpoint            = ""
 	limitIPReq          = ""
 	platform            = ""
 	textMetricsFilePath = ""
@@ -84,20 +81,17 @@ var (
 )
 
 const (
-	portConst               = 8082
-	deviceParserTimeout     = 5
-	cacheTime               = 100 * time.Second
-	portLeft                = 1025
-	portRight               = 40000
-	oneMinute               = 60
-	defaultConcurrency      = 5
-	defaultLogFile          = "/var/log/mindx-dl/npu-exporter/npu-exporter.log"
-	containerModeDocker     = "docker"
-	containerModeContainerd = "containerd"
-	containerModeIsula      = "isula"
-	unixPre                 = "unix://"
-	timeout                 = 10
-	maxHeaderBytes          = 1024
+	portConst           = 8082
+	deviceParserTimeout = 5
+	cacheTime           = 100 * time.Second
+	portLeft            = 1025
+	portRight           = 40000
+	oneMinute           = 60
+	defaultConcurrency  = 5
+	defaultLogFile      = "/var/log/mindx-dl/npu-exporter/npu-exporter.log"
+	unixPre             = "unix://"
+	timeout             = 10
+	maxHeaderBytes      = 1024
 	// tenDays ten days
 	tenDays                = 10
 	maxIPConnLimit         = 128
@@ -206,6 +200,10 @@ func initParams() {
 }
 
 func paramValid(platform string) error {
+	if err := checkCntMonitoringFlags(); err != nil {
+		logger.Error(err)
+		return err
+	}
 	var err error
 	switch platform {
 	case prometheusPlatform:
@@ -260,38 +258,6 @@ func newServerAndListener(conf *limiter.HandlerConfig) (*http.Server, net.Listen
 		return nil, nil
 	}
 	return s, limitLs
-}
-
-func readCntMonitoringFlags() container.CntNpuMonitorOpts {
-	opts := container.CntNpuMonitorOpts{UseOciBackup: true, UseCriBackup: true}
-	switch containerMode {
-	case containerModeDocker:
-		opts.EndpointType = container.EndpointTypeDockerd
-		opts.OciEndpoint = container.DefaultDockerAddr
-		opts.CriEndpoint = container.DefaultDockerShim
-	case containerModeContainerd:
-		opts.EndpointType = container.EndpointTypeContainerd
-		opts.OciEndpoint = container.DefaultContainerdAddr
-		opts.CriEndpoint = container.DefaultContainerdAddr
-	case containerModeIsula:
-		opts.EndpointType = container.EndpointTypeIsula
-		opts.OciEndpoint = container.DefaultIsuladAddr
-		opts.CriEndpoint = container.DefaultIsuladAddr
-	default:
-		hwlog.RunLog.Error("invalid container mode setting,reset to docker")
-		opts.EndpointType = container.EndpointTypeDockerd
-		opts.OciEndpoint = container.DefaultDockerAddr
-		opts.CriEndpoint = container.DefaultDockerShim
-	}
-	if containerd != "" {
-		opts.OciEndpoint = containerd
-		opts.UseOciBackup = false
-	}
-	if endpoint != "" {
-		opts.CriEndpoint = endpoint
-		opts.UseCriBackup = false
-	}
-	return opts
 }
 
 func checkIPAndPortInPrometheus() error {
@@ -449,7 +415,7 @@ func init() {
 	flag.BoolVar(&version, "version", false,
 		"If true,query the version of the program (default false)")
 	flag.StringVar(&containerMode, "containerMode", containerModeDocker,
-		"Set 'docker' for monitoring docker containers or 'containerd' for CRI & containerd")
+		"Container runtime to monitor: docker, containerd, isula or crio")
 	flag.StringVar(&containerd, "containerd", "",
 		"The endpoint of containerd used for listening containers' events")
 	flag.StringVar(&endpoint, "endpoint", "",

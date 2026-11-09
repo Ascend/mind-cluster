@@ -57,6 +57,8 @@ const (
 	EndpointTypeDockerd
 	// EndpointTypeIsula K8S + isula
 	EndpointTypeIsula = 2
+	// EndpointTypeCrio K8S + CRI-O
+	EndpointTypeCrio = 3
 )
 
 var (
@@ -85,7 +87,7 @@ var (
 
 // CntNpuMonitorOpts contains setting options for monitoring containers
 type CntNpuMonitorOpts struct {
-	EndpointType int    // containerd or docker
+	EndpointType int    // containerd, docker, isula or CRI-O
 	CriEndpoint  string // CRI server address
 	UseCriBackup bool   // whether try to use cri backup address
 	OciEndpoint  string // OCI server, now is containerd address
@@ -95,6 +97,7 @@ type CntNpuMonitorOpts struct {
 // MakeDevicesParser evaluates option settings and make an instance according to it
 func MakeDevicesParser(opts CntNpuMonitorOpts) *DevicesParser {
 	runtimeOperator := &RuntimeOperatorTool{
+		EndpointType: opts.EndpointType,
 		UseCriBackup: opts.UseCriBackup,
 		UseOciBackup: opts.UseOciBackup,
 		CriEndpoint:  opts.CriEndpoint,
@@ -109,6 +112,8 @@ func MakeDevicesParser(opts CntNpuMonitorOpts) *DevicesParser {
 		runtimeOperator.Namespace = namespaceK8s
 	case EndpointTypeDockerd:
 		runtimeOperator.Namespace = namespaceMoby
+	case EndpointTypeCrio:
+		// CRI-O does not require a containerd namespace.
 	case EndpointTypeIsula:
 		runtimeOperator.Namespace = namespaceK8s
 	default:
