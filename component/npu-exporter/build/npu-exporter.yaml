@@ -108,20 +108,23 @@ spec:
           - name: ascend-dcmi
             mountPath: /usr/local/dcmi
             readOnly: true
-          - name: docker-shim  # delete when only use containerd or isula
+          - name: docker-shim  # delete when only use containerd, isula or crio
             mountPath: /var/run/dockershim.sock
             readOnly: true
-          - name: docker  # delete when only use containerd or isula
+          - name: docker  # delete when only use containerd, isula or crio
             mountPath: /var/run/docker
             readOnly: true
           - name: cri-dockerd  # reserve when k8s version is 1.24+ and the container runtime is docker
             mountPath: /var/run/cri-dockerd.sock
             readOnly: true
-          - name: containerd  # delete when only use isula
+          - name: containerd  # delete when only use isula or crio
             mountPath: /run/containerd
             readOnly: true
-          - name: isulad  # delete when use containerd or docker
+          - name: isulad  # delete when use containerd, docker or crio
             mountPath: /run/isulad.sock
+            readOnly: true
+          - name: crio  # reserve only when use crio
+            mountPath: /var/run/crio
             readOnly: true
           - name: tmp
             mountPath: /tmp
@@ -139,21 +142,25 @@ spec:
         - name: ascend-dcmi
           hostPath:
             path: /usr/local/dcmi
-        - name: docker-shim # delete when only use containerd or isula
+        - name: docker-shim # delete when only use containerd, isula or crio
           hostPath:
             path: /var/run/dockershim.sock
-        - name: docker  # delete when only use containerd or isula
+        - name: docker  # delete when only use containerd, isula or crio
           hostPath:
             path: /var/run/docker
         - name: cri-dockerd # reserve when k8s version is 1.24+ and the container runtime is docker
           hostPath:
             path: /var/run/cri-dockerd.sock
-        - name: containerd  # delete when only use isula
+        - name: containerd  # delete when only use isula or crio
           hostPath:
             path: /run/containerd
-        - name: isulad  # delete when use containerd or docker
+        - name: isulad  # delete when use containerd, docker or crio
           hostPath:
             path: /run/isulad.sock
+        - name: crio  # reserve only when use crio
+          hostPath:
+            path: /var/run/crio
+            type: DirectoryOrCreate
         - name: tmp
           hostPath:
             path: /tmp

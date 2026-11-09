@@ -80,9 +80,19 @@ func TestNodeBaseCollectorDescribe(t *testing.T) {
 	}
 }
 
+// nodeBaseVersionStub avoids rewriting the short DeviceManager getter methods.
+// Only these two methods are used by CollectToCache.
+type nodeBaseVersionStub struct {
+	devmanager.DeviceInterface
+	driverVersion string
+	dcmiVersion   string
+}
+
+func (d *nodeBaseVersionStub) GetDriverVersion() string { return d.driverVersion }
+func (d *nodeBaseVersionStub) GetDcmiVersion() string   { return d.dcmiVersion }
+
 type collectToCacheTestCase struct {
 	name              string
-	setupPatches      func(*devmanager.DeviceManager) *gomonkey.Patches
 	expectExporterVer string
 	expectDriverVer   string
 	expectDcmiVer     string
@@ -91,27 +101,13 @@ type collectToCacheTestCase struct {
 func buildCollectToCacheTestCases() []collectToCacheTestCase {
 	return []collectToCacheTestCase{
 		{
-			name: "should store cache with correct versions when CollectToCache is called",
-			setupPatches: func(dmgr *devmanager.DeviceManager) *gomonkey.Patches {
-				patches := gomonkey.NewPatches()
-				patches.ApplyGlobalVar(&versions.BuildVersion, mockExporterVersion)
-				patches.ApplyMethodReturn(dmgr, "GetDriverVersion", mockDriverVersion)
-				patches.ApplyMethodReturn(dmgr, "GetDcmiVersion", mockDcmiVersion)
-				return patches
-			},
+			name:              "should store cache with correct versions when CollectToCache is called",
 			expectExporterVer: mockExporterVersion,
 			expectDriverVer:   mockDriverVersion,
 			expectDcmiVer:     mockDcmiVersion,
 		},
 		{
-			name: "should store cache with empty driverVersion when GetDriverVersion returns empty",
-			setupPatches: func(dmgr *devmanager.DeviceManager) *gomonkey.Patches {
-				patches := gomonkey.NewPatches()
-				patches.ApplyGlobalVar(&versions.BuildVersion, mockExporterVersion)
-				patches.ApplyMethodReturn(dmgr, "GetDriverVersion", "")
-				patches.ApplyMethodReturn(dmgr, "GetDcmiVersion", mockDcmiVersion)
-				return patches
-			},
+			name:              "should store cache with empty driverVersion when GetDriverVersion returns empty",
 			expectExporterVer: mockExporterVersion,
 			expectDriverVer:   "",
 			expectDcmiVer:     mockDcmiVersion,
@@ -122,12 +118,14 @@ func buildCollectToCacheTestCases() []collectToCacheTestCase {
 func TestNodeBaseCollectorCollectToCache(t *testing.T) {
 	for _, tt := range buildCollectToCacheTestCases() {
 		convey.Convey(tt.name, t, func() {
-			dmgr := &devmanager.DeviceManager{}
-			patches := tt.setupPatches(dmgr)
+			patches := gomonkey.ApplyGlobalVar(&versions.BuildVersion, mockExporterVersion)
 			defer patches.Reset()
 
 			n := mockNpuCollector()
-			n.Dmgr = dmgr
+			n.Dmgr = &nodeBaseVersionStub{
+				driverVersion: tt.expectDriverVer,
+				dcmiVersion:   tt.expectDcmiVer,
+			}
 			collector := &NodeBaseCollector{}
 			collector.CollectToCache(n, nil)
 
@@ -306,11 +304,9 @@ func buildConcurrentCollectTestCases() []concurrentCollectTestCase {
 func TestNodeBaseCollectorConcurrentCollect(t *testing.T) {
 	for _, tt := range buildConcurrentCollectTestCases() {
 		convey.Convey(tt.name, t, func() {
-			dmgr := &devmanager.DeviceManager{}
+			dmgr := &nodeBaseVersionStub{driverVersion: mockDriverVersion, dcmiVersion: mockDcmiVersion}
 			patches := gomonkey.NewPatches()
 			patches.ApplyGlobalVar(&versions.BuildVersion, mockExporterVersion)
-			patches.ApplyMethodReturn(dmgr, "GetDriverVersion", mockDriverVersion)
-			patches.ApplyMethodReturn(dmgr, "GetDcmiVersion", mockDcmiVersion)
 			defer patches.Reset()
 
 			n := mockNpuCollector()

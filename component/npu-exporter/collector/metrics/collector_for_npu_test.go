@@ -17,6 +17,7 @@ package metrics
 
 import (
 	"errors"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -731,4 +732,15 @@ func collectContainerInfoMetrics(chip *chipCache, containerInfos []container.Dev
 		}
 	}
 	return metrics
+}
+
+// TestContainerTotalMemoryMetricName verifies the corrected public metric name for issue #1001.
+func TestContainerTotalMemoryMetricName(t *testing.T) {
+	desc := npuCtrTotalMemory.String()
+	if !strings.Contains(desc, `fqName: "container_npu_total_memory"`) {
+		t.Fatalf("unexpected container memory metric descriptor: %s", desc)
+	}
+	if strings.Contains(desc, `fqName: "container_npu_totol_memory"`) {
+		t.Fatalf("misspelled container memory metric name is still exported: %s", desc)
+	}
 }

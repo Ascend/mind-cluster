@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"syscall"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -52,6 +53,8 @@ const (
 )
 
 func TestRuntimeOperatorToolInit(t *testing.T) {
+	uidPatch := gomonkey.ApplyFuncReturn(syscall.Getuid, 0)
+	defer uidPatch.Reset()
 	r := &RuntimeOperatorTool{
 		CriEndpoint: testContainerdEndpoint,
 		OciEndpoint: testContainerdEndpoint,

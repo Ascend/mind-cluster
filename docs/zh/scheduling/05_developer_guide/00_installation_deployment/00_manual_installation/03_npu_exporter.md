@@ -29,7 +29,7 @@
 </tr>
 <tr id="row54685525282"><td class="cellrowborder" valign="top" width="29.970000000000002%" headers="mcps1.2.3.1.1 "><p id="p5249201634114"><a name="p5249201634114"></a><a name="p5249201634114"></a><span id="ph1461172794116"><a name="ph1461172794116"></a><a name="ph1461172794116"></a>K8s</span>版本</p>
 </td>
-<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><p id="p5468852142813"><a name="p5468852142813"></a><a name="p5468852142813"></a>使用<span id="ph98079531286"><a name="ph98079531286"></a><a name="ph98079531286"></a>NPU Exporter</span>前需要确保环境的<span id="ph18807253152810"><a name="ph18807253152810"></a><a name="ph18807253152810"></a>K8s</span>版本，若<span id="ph6808453102813"><a name="ph6808453102813"></a><a name="ph6808453102813"></a>K8s</span>版本在1.24.x及以上版本，需要用户自行<a href="https://github.com/mirantis/cri-dockerd#build-and-install" target="_blank" rel="noopener noreferrer">安装cri-dockerd</a>依赖。</p>
+<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><p id="p5468852142813"><a name="p5468852142813"></a><a name="p5468852142813"></a>使用<span id="ph98079531286"><a name="ph98079531286"></a><a name="ph98079531286"></a>NPU Exporter</span>前需要确保环境的<span id="ph18807253152810"><a name="ph18807253152810"></a><a name="ph18807253152810"></a>K8s</span>版本，若<span id="ph6808453102813"><a name="ph6808453102813"></a><a name="ph6808453102813"></a>K8s</span>版本在1.24.x及以上版本且容器运行时为Docker，需要用户自行<a href="https://github.com/mirantis/cri-dockerd#build-and-install" target="_blank" rel="noopener noreferrer">安装cri-dockerd</a>依赖。</p>
 </td>
 </tr>
 <tr id="row7507135142716"><td class="cellrowborder" rowspan="3" valign="top" width="29.970000000000002%" headers="mcps1.2.3.1.1 "><p id="p45071516276"><a name="p45071516276"></a><a name="p45071516276"></a>DCMI动态库</p>
@@ -201,6 +201,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
     >可通过执行 `kubectl get nodes -o wide` 命令，查看打印信息中 **CONTAINER-RUNTIME** 列的输出判断容器运行时：
     >- 输出为 `docker://xxx`，表示Docker场景。
     >- 输出为 `containerd://xxx`，表示Containerd场景。
+    >- 输出为 `cri-o://xxx`，表示CRI-O场景。
 
     - **Docker场景**：执行如下命令。
 
@@ -226,11 +227,29 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
         docker.io/library/npu-exporter:v26.2.0                                                         application/vnd.docker.distribution.manifest.v2+json      sha256:38fd69ee9f5753e73a55a216d039f6ed4ea8a5de15c0e6b3bb503022db470c7b 91.5 MiB  linux/arm64
         ```
 
+    - **CRI-O场景**：在部署节点上使用crictl查看CRI-O镜像存储中的镜像。通用YAML使用`imagePullPolicy: Never`，需确保每个部署节点已具备与YAML中名称和版本一致的NPU Exporter镜像。
+
+        ```shell
+        crictl --runtime-endpoint=unix:///var/run/crio/crio.sock \
+          --image-endpoint=unix:///var/run/crio/crio.sock images | grep npu-exporter
+        ```
+
     - 是，执行[步骤5](#li0640635114211)。
     - 否，请参见[准备镜像](./01_preparing_for_installation.md#准备镜像)，完成镜像制作和分发。
 
 5. <a name="li0640635114211"></a>将NPU Exporter软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
 6. 请根据实际使用的容器运行时，选择执行以下步骤。
+
+    通用YAML中包含不同容器运行时的挂载配置，请按实际场景保留对应条目。Docker、Containerd和iSula场景均需删除`volumeMounts`和`volumes`中名为`crio`的条目。
+
+    - **CRI-O场景**：复用软件包中的通用`npu-exporter-v{version}.yaml`，无需独立的CRI-O YAML。将启动参数中的`-containerMode=docker`替换为`-containerMode=crio`，保留其余启动参数。
+
+        默认连接`unix:///var/run/crio/crio.sock`，无需指定`-endpoint`。CRI-O模式仅使用CRI接口，不支持配置`-containerd`；同时指定时，启动参数校验报错并停止启动，请使用`-endpoint`指定CRI地址。CRI-O模式不会回退连接其他运行时。
+
+        通用YAML已包含名为`crio`的`volumeMounts`和`volumes`条目，挂载`/var/run/crio`目录。CRI-O场景保留这两处条目，删除两处名为`docker-shim`、`docker`、`cri-dockerd`、`containerd`、`isulad`的条目，保留驱动、DCMI、日志等通用挂载。
+
+        部署前须确保节点上的CRI-O已启动，且`/var/run/crio/crio.sock`为可访问的Unix socket。挂载其所在目录，避免只绑定单个socket文件。若使用自定义路径，需同时调整hostPath、mountPath和`-endpoint=unix:///容器内实际路径/crio.sock`，确保endpoint指向容器内可访问的CRI-O socket。
+
     - **Containerd场景**：需要将containerMode设置为containerd，并对以下加粗代码进行修改。
 
         如果使用默认的NPU Exporter启动参数“-containerMode=docker”时，可跳过本步骤。
@@ -395,7 +414,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
 
 ## 二进制方式运行<a name="section103551921135917"></a>
 
-NPU Exporter组件以镜像方式运行时需使用特权容器、root用户和挂载了docker-shim或Containerd的socket文件，如果容器被人恶意利用，有容器逃逸风险。当安全性要求较高时，可直接在物理机上通过二进制方式运行。
+NPU Exporter组件以镜像方式运行时需使用特权容器、root用户和挂载了所用容器运行时（如Docker、Containerd或CRI-O）的socket文件，如果容器被人恶意利用，有容器逃逸风险。当安全性要求较高时，可直接在物理机上通过二进制方式运行。
 
 >[!NOTE]
 >
@@ -502,6 +521,14 @@ NPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 
         NPU Exporter默认情况只侦听127.0.0.1，可通过修改的启动参数“-ip”和“npu-exporter.service”文件的“ExecStart”字段修改需要侦听的IP地址。
 
+        **CRI-O场景**：二进制部署不需要YAML或容器卷挂载。确认本机CRI-O服务已启动，并在上述ExecStart的输出重定向之前添加`-containerMode=crio`，例如：
+
+        ```ini
+        ExecStart=/bin/bash -c "/usr/local/bin/npu-exporter -ip=127.0.0.1 -port=8082 -containerMode=crio -logFile=/var/log/mindx-dl/npu-exporter/npu-exporter.log >/dev/null 2>&1 &"
+        ```
+
+        默认连接本机`unix:///var/run/crio/crio.sock`；自定义socket时，再添加`-endpoint=unix:///实际路径/crio.sock`。CRI-O模式无需设置`-containerd`。非root部署仍须满足本节的驱动访问、目录权限及连接容器运行时所需的权限配置。
+
     3. 按“Esc”键，输入:wq!保存并退出。
 
 6. 创建并编辑npu-exporter.timer文件。通过配置timer延时启动，可保证NPU Exporter启动时NPU卡已就位。
@@ -577,9 +604,9 @@ NPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 |-maxAge|int|7| 日志备份时间，取值范围为7~700，单位为天。                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 |-logFile|string|/var/log/mindx-dl/npu-exporter/npu-exporter.log| 日志文件。<p>单个日志文件超过20 MB时会触发自动转储功能，文件大小上限不支持修改。转储后文件的命名格式为：npu-exporter-触发转储的时间.log，如：npu-exporter-2023-10-07T03-38-24.402.log。</p>                                                                                                                                                                                                                                                                                                                                                                     |
 |-maxBackups|int|30| 转储后日志文件保留个数上限，取值范围为1~180，单位为个。                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-|-containerMode|string|docker| 设置容器运行时类型。<ul><li>设置为docker表示当前环境使用Docker作为容器运行时。</li><li>设置为containerd表示当前环境使用Containerd作为容器运行时。</li><li>设置为“isula”表示当前环境使用iSula作为容器运行时。</li></ul>                                                                                                                                                                                                                                                                                                                                                  |
-|-containerd|string|<ul><li>(Docker)unix：/run/docker/containerd/docker-containerd.sock</li><li>(Containerd)unix：///run/containerd/containerd.sock</li><li>(iSula)unix：///run/isulad.sock</li></ul>| containerd daemon进程endpoint，用于与Containerd通信。<ul><li>若containerMode=docker，则默认值为/run/docker/containerd/docker-containerd.sock；连接失败后，自动尝试连接：unix：///run/containerd/containerd.sock和unix:///run/docker/containerd/containerd.sock。</li><li>若containerMode=containerd，则默认值为/run/containerd/containerd.sock。</li><li>若containerMode=isula，则默认值为/run/isulad.sock。</li></ul><p>一般情况下使用默认值即可。若用户自行修改了Containerd的sock文件路径则需要进行相应路径的修改。</p><p>可通过**ps aux \| grep containerd**命令查询Containerd的sock文件路径是否修改。</p> |
-|-endpoint|string|<ul><li>(Docker)unix：///var/run/dockershim.sock</li><li>(Containerd)unix：///run/containerd/containerd.sock</li><li>(iSula)unix：///run/isulad.sock</li></ul>| CRI server的sock地址：<ul><li>若containerMode=docker，将连接到Dockershim获取容器列表，默认值/var/run/dockershim.sock；</li><li>若containerMode=containerd，默认值/run/containerd/containerd.sock。</li><li>若containerMode=isula，则默认值为/run/isulad.sock。</li></ul><p>一般情况下使用默认值即可，除非用户自行修改了Dockershim或者Containerd的sock文件路径。</p><p>连接失败后，自动尝试连接unix:///run/cri-dockerd.sock</p>                                                                                                                                                    |
+|-containerMode|string|docker| 设置容器运行时类型。<ul><li>设置为docker表示当前环境使用Docker作为容器运行时。</li><li>设置为containerd表示当前环境使用Containerd作为容器运行时。</li><li>设置为“isula”表示当前环境使用iSula作为容器运行时。</li><li>设置为crio表示当前环境使用CRI-O作为容器运行时。</li></ul>                                                                                                                                                                                                                                                                                                                                                  |
+|-containerd|string|<ul><li>(Docker)unix：/run/docker/containerd/docker-containerd.sock</li><li>(Containerd)unix：///run/containerd/containerd.sock</li><li>(iSula)unix：///run/isulad.sock</li></ul>| containerd daemon进程endpoint，用于与Containerd通信。CRI-O模式不支持此参数，同时指定时启动参数校验报错。<ul><li>若containerMode=docker，则默认值为/run/docker/containerd/docker-containerd.sock；连接失败后，自动尝试连接：unix：///run/containerd/containerd.sock和unix:///run/docker/containerd/containerd.sock。</li><li>若containerMode=containerd，则默认值为/run/containerd/containerd.sock。</li><li>若containerMode=isula，则默认值为/run/isulad.sock。</li></ul><p>一般情况下使用默认值即可。若用户自行修改了Containerd的sock文件路径则需要进行相应路径的修改。</p><p>可通过**ps aux \| grep containerd**命令查询Containerd的sock文件路径是否修改。</p> |
+|-endpoint|string|<ul><li>(Docker)unix：///var/run/dockershim.sock</li><li>(Containerd)unix：///run/containerd/containerd.sock</li><li>(iSula)unix：///run/isulad.sock</li><li>(CRI-O)unix:///var/run/crio/crio.sock</li></ul>| CRI server的sock地址：<ul><li>若containerMode=docker，将连接到Dockershim获取容器列表，默认值/var/run/dockershim.sock；</li><li>若containerMode=containerd，默认值/run/containerd/containerd.sock。</li><li>若containerMode=isula，则默认值为/run/isulad.sock。</li><li>若containerMode=crio，则默认值为unix:///var/run/crio/crio.sock。</li></ul><p>一般情况下使用默认值即可，若使用自定义sock路径，可通过此参数显式指定。</p><p>未显式指定endpoint且为非CRI-O模式时，连接失败后自动尝试连接unix:///run/cri-dockerd.sock。CRI-O模式或显式指定endpoint时，不回退连接其他socket</p>                                                                                                                                                    |
 |-limitIPConn|int|5| 每个IP的TCP限制数的取值范围为1~128。                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 |-limitTotalConn|int|20| 程序总共的TCP限制数的取值范围为1~512。                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 |-limitIPReq|string|20/1| 每个IP的请求限制数，20/1表示1秒限制20个请求，“/”两侧最大只支持三位数。                                                                                                                                                                                                                                                                                                                                                                                                                                                            |

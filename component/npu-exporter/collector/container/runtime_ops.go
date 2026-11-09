@@ -34,6 +34,7 @@ import (
 
 	"huawei.com/npu-exporter/v6/collector/container/isula"
 	"huawei.com/npu-exporter/v6/collector/container/v1"
+	exporterutils "huawei.com/npu-exporter/v6/utils"
 	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
@@ -48,6 +49,8 @@ const (
 	DefaultDockerShim = "unix:///run/dockershim.sock"
 	// DefaultCRIDockerd default cri-dockerd  sock address
 	DefaultCRIDockerd = "unix:///run/cri-dockerd.sock"
+	// DefaultCrioAddr is the CRI-O socket endpoint required by the runtime configuration.
+	DefaultCrioAddr = "unix:///var/run/crio/crio.sock"
 	// DefaultContainerdAddr default containerd sock address
 	DefaultContainerdAddr = "unix:///run/containerd/containerd.sock"
 	// DefaultDockerAddr default docker containerd sock address
@@ -58,6 +61,8 @@ const (
 
 	// IsulaContainer represents isula container type
 	IsulaContainer = "isula"
+	// CrioContainer represents CRI-O container type
+	CrioContainer = "crio"
 	// DefaultContainer represents default container type
 	DefaultContainer   = "docker-containerd"
 	excludePermissions = 0002
@@ -93,10 +98,12 @@ const (
 
 // RuntimeOperatorTool implements RuntimeOperator interface
 type RuntimeOperatorTool struct {
-	criConn   *grpc.ClientConn
-	conn      *grpc.ClientConn
-	criClient interface{}
-	client    interface{}
+	// EndpointType selects the runtime independently of a custom socket path.
+	EndpointType int
+	criConn      *grpc.ClientConn
+	conn         *grpc.ClientConn
+	criClient    interface{}
+	client       interface{}
 	// CriEndpoint CRI server endpoint
 	CriEndpoint string
 	// OciEndpoint containerd Server endpoint
@@ -138,6 +145,9 @@ func (operator *RuntimeOperatorTool) Init() error {
 		return fmt.Errorf("init CRI client failed, %s", err)
 	}
 
+	if operator.EndpointType == EndpointTypeCrio {
+		return nil
+	}
 	if err := operator.initOciClient(); err != nil {
 		return fmt.Errorf("init OCI client failed, %s", err)
 	}
@@ -160,7 +170,7 @@ func (operator *RuntimeOperatorTool) initCriClient() error {
 	if err != nil {
 		return fmt.Errorf("connecting to CRI server failed: %v", err)
 	}
-	if operator.CriEndpoint == DefaultIsuladAddr {
+	if operator.EndpointType != EndpointTypeCrio && operator.CriEndpoint == DefaultIsuladAddr {
 		operator.criClient = isula.NewRuntimeServiceClient(criConn)
 	} else {
 		operator.criClient = v1alpha2.NewRuntimeServiceClient(criConn)
@@ -198,7 +208,11 @@ func (operator *RuntimeOperatorTool) initOciClient() error {
 }
 
 func sockCheck(operator *RuntimeOperatorTool) error {
-	absPath, err := utils.CheckPath(strings.TrimPrefix(operator.CriEndpoint, unixPre))
+	criPath := strings.TrimPrefix(operator.CriEndpoint, unixPre)
+	if operator.EndpointType == EndpointTypeCrio && criPath == strings.TrimPrefix(DefaultCrioAddr, unixPre) {
+		criPath = exporterutils.NormalizeVarRunPath(criPath)
+	}
+	absPath, err := utils.CheckPath(criPath)
 	if err != nil {
 		return err
 	}
@@ -206,6 +220,10 @@ func sockCheck(operator *RuntimeOperatorTool) error {
 		return err
 	}
 
+	if operator.EndpointType == EndpointTypeCrio {
+		operator.CriEndpoint = unixPre + absPath
+		return nil
+	}
 	absPath, err = utils.CheckPath(strings.TrimPrefix(operator.OciEndpoint, unixPre))
 	if err != nil {
 		return err
@@ -218,13 +236,13 @@ func sockCheck(operator *RuntimeOperatorTool) error {
 
 // Close closes container runtime operator
 func (operator *RuntimeOperatorTool) Close() error {
-	err := operator.conn.Close()
-	if err != nil {
-		return err
+	if operator.conn != nil {
+		if err := operator.conn.Close(); err != nil {
+			return err
+		}
 	}
-	err = operator.criConn.Close()
-	if err != nil {
-		return err
+	if operator.criConn != nil {
+		return operator.criConn.Close()
 	}
 	return nil
 }
@@ -280,8 +298,15 @@ func isUnimplementedError(err error, serviceName string) bool {
 	return false
 }
 
-// GetContainerInfoByID use oci interface to get container
+// GetContainerInfoByID returns the OCI spec using the selected runtime API.
 func (operator *RuntimeOperatorTool) GetContainerInfoByID(ctx context.Context, id string) (v1.Spec, error) {
+	if operator.EndpointType == EndpointTypeCrio {
+		info, err := operator.getCrioContainerInfo(ctx, id)
+		if err != nil {
+			return v1.Spec{}, err
+		}
+		return *info.RuntimeSpec, nil
+	}
 	if utils.IsNil(operator.client) || operator.conn == nil {
 		return v1.Spec{}, errors.New("oci client is empty")
 	}
@@ -336,6 +361,9 @@ func (operator *RuntimeOperatorTool) GetIsulaContainerInfoByID(ctx context.Conte
 // docker/containerd, isulad Inspect for isula) instead of host /proc, which is
 // not mounted in container mode.
 func (operator *RuntimeOperatorTool) GetContainerPIDs(ctx context.Context, id string) ([]uint32, error) {
+	if operator.EndpointType == EndpointTypeCrio {
+		return operator.getCrioContainerPIDs(ctx, id)
+	}
 	if utils.IsNil(operator.client) || operator.conn == nil {
 		return nil, errors.New("oci client is empty")
 	}
@@ -378,6 +406,9 @@ func (operator *RuntimeOperatorTool) getIsulaContainerPIDs(ctx context.Context, 
 
 // GetContainerType return container type
 func (operator *RuntimeOperatorTool) GetContainerType() string {
+	if operator.EndpointType == EndpointTypeCrio {
+		return CrioContainer
+	}
 	if operator.OciEndpoint == DefaultIsuladAddr {
 		return IsulaContainer
 	}
