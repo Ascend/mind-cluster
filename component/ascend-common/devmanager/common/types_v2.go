@@ -61,13 +61,6 @@ type UBPingMeshInfo struct {
 	OccurTime    uint   // Timestamp when the result was recorded (in ms)
 }
 
-// CgoUBAddr ub address
-type CgoUBAddr struct {
-	PortID int32
-	EID    string
-	CNA    string
-}
-
 // UrmaEidInfo eid info in urma device
 type UrmaEidInfo struct {
 	Eid      Eid
@@ -78,4 +71,37 @@ type UrmaEidInfo struct {
 type UrmaDeviceInfo struct {
 	EidCount uint
 	EidInfos []UrmaEidInfo
+}
+
+// TopoType the topology type between NPU and NIC, the value is the same as dcmi_topo_type
+type TopoType int32
+
+const (
+	// TopoTypeSelf DCMI_TOPO_TYPE_SELF
+	TopoTypeSelf TopoType = 0
+	// TopoTypeSys DCMI_TOPO_TYPE_SYS
+	TopoTypeSys TopoType = 1
+	// TopoTypePhb DCMI_TOPO_TYPE_PHB
+	TopoTypePhb TopoType = 2
+	// TopoTypeHccs DCMI_TOPO_TYPE_HCCS
+	TopoTypeHccs TopoType = 3
+	// TopoTypePxb DCMI_TOPO_TYPE_PXB
+	TopoTypePxb TopoType = 4
+	// TopoTypePix DCMI_TOPO_TYPE_PIX
+	TopoTypePix TopoType = 5
+	// TopoTypeSio DCMI_TOPO_TYPE_SIO
+	TopoTypeSio TopoType = 6
+	// TopoTypeHccsSw DCMI_TOPO_TYPE_HCCS_SW
+	TopoTypeHccsSw TopoType = 7
+	// TopoTypeUB DCMI_TOPO_TYPE_UB, NPU and NIC are connected by UB bus, affinity is valid
+	TopoTypeUB TopoType = 8
+	// TopoTypeButt DCMI_TOPO_TYPE_BUTT
+	TopoTypeButt TopoType = 9
+	// TopoTypeMax DCMI_TOPO_TYPE_MAX, also used as the invalid value
+	TopoTypeMax TopoType = 10
+)
+
+// IsUBAffinity check whether the topology type means UB affinity
+func (t TopoType) IsUBAffinity() bool {
+	return t == TopoTypeUB
 }

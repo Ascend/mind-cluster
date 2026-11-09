@@ -61,6 +61,7 @@ spec:
       labels:
         name: ascend-device-plugin-ds
     spec:
+      hostNetwork: true
       ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
 #      securityContext:
 #        seccompProfile:

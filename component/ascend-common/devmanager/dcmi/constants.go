@@ -46,6 +46,8 @@ const (
 	DriverVersionLen = 64
 	// TopoInfoMaxLen max length of topology info
 	TopoInfoMaxLen = 32
+	// ifNameMaxLen max length of network interface name, the same as syscall.IFNAMSIZ
+	ifNameMaxLen = 16
 
 	// MainCmdChipInf main cmd chip inf
 	MainCmdChipInf MainCmd = 12

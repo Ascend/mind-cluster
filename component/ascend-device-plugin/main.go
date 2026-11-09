@@ -48,7 +48,8 @@ const (
 	maxListWatchPeriod = 1800
 	// minListWatchPeriod is the min listening device state's period
 	minListWatchPeriod = 3
-	maxLogLineLength   = 1024
+
+	maxLogLineLength = 1024
 )
 
 var (
@@ -301,6 +302,8 @@ func main() {
 	}
 	hdm.DoSetMultiDiePolicyForA3()
 	setUseAscendDocker()
+	// query the npu-nic affinity at startup and refresh the snapshot periodically
+	hdm.InitNpuNicMappingRefresh(ctx)
 	go hdm.ListenDevice(ctx)
 	// start goroutine to dump topo of rack A5 for ras
 	go topology.RasTopoWriteTask(ctx, hdm)

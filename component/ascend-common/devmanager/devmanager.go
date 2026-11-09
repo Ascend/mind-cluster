@@ -124,6 +124,9 @@ type DeviceInterface interface {
 	WaitDeviceOnline(resetTimeout int)
 	// GetPortPktStatsInfo get UB port packet statistics for A5
 	GetPortPktStatsInfo(logicID int32, udieID, portID int32) (*common.PortPktStatsInfo, error)
+	// GetTopoInfoByDeviceIDAndNicName get the topology type between the NPU and the NIC,
+	// only supported on the A5 generation
+	GetTopoInfoByDeviceIDAndNicName(logicID int32, nicName string) (common.TopoType, error)
 }
 
 const (
@@ -776,6 +779,13 @@ func (d *DeviceManager) GetDeviceHbmInfo(logicID int32) (*common.HbmInfo, error)
 // GetPortPktStatsInfo not supported in dcmi v1
 func (d *DeviceManager) GetPortPktStatsInfo(logicID int32, udieID, portID int32) (*common.PortPktStatsInfo, error) {
 	return nil, fmt.Errorf("not support in dcmi v1 api")
+}
+
+// GetTopoInfoByDeviceIDAndNicName get the topology type between the NPU and the NIC
+func (d *DeviceManager) GetTopoInfoByDeviceIDAndNicName(logicID int32, nicName string) (common.TopoType,
+	error) {
+	return common.TopoTypeMax, fmt.Errorf("get topo info by logicID(%d) and nicName(%q) is not supported, "+
+		"error code: %s", logicID, nicName, common.NotSupportErrorCode)
 }
 
 // GetDeviceErrorCode get npu device error code
