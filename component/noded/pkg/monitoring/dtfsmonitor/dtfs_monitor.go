@@ -70,6 +70,9 @@ func (i *DtfsEventMonitor) Name() string {
 
 // Monitoring start monitor
 func (i *DtfsEventMonitor) Monitoring() {
+	period := time.Duration(common.ParamOption.DtfsMonitorPeriod) * time.Second
+	timer := time.NewTimer(period)
+	defer timer.Stop()
 	for {
 		select {
 		case _, ok := <-i.stopChan:
@@ -79,23 +82,28 @@ func (i *DtfsEventMonitor) Monitoring() {
 			}
 			hwlog.RunLog.Info("receive stop signal, dtfs monitor shut down...")
 			return
-		default:
-			time.Sleep(common.CheckPeriod)
-			newDtfsStatus, err := getStatusFromFile()
-			if err != nil {
-				hwlog.RunLog.ErrorfWithLimit(common.DtfsLogDomain,
-					common.DtfsLogDomainId, "get dtfs status failed, err is %v", err)
-				continue
-			}
-			hwlog.ResetErrCnt(common.DtfsLogDomain, common.DtfsLogDomainId)
-			if isSame(newDtfsStatus) {
-				continue
-			}
-			lastUploadTime = time.Now().UnixMilli()
-			dtfsStatus = newDtfsStatus
-			common.TriggerUpdate(common.DtfsProcess)
+		case <-timer.C:
+			i.checkStatus()
+			timer.Reset(period)
 		}
 	}
+}
+
+// checkStatus poll dtfs status from file once, trigger update when the status changes
+func (i *DtfsEventMonitor) checkStatus() {
+	newDtfsStatus, err := getStatusFromFile()
+	if err != nil {
+		hwlog.RunLog.ErrorfWithLimit(common.DtfsLogDomain,
+			common.DtfsLogDomainId, "get dtfs status failed, err is %v", err)
+		return
+	}
+	hwlog.ResetErrCnt(common.DtfsLogDomain, common.DtfsLogDomainId)
+	if isSame(newDtfsStatus) {
+		return
+	}
+	lastUploadTime = time.Now().UnixMilli()
+	dtfsStatus = newDtfsStatus
+	common.TriggerUpdate(common.DtfsProcess)
 }
 
 func isSame(newDtfsStatus common.DtfsStatus) bool {

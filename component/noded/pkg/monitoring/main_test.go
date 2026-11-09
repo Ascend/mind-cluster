@@ -70,7 +70,7 @@ func TestMain(m *testing.M) {
 		ApplyFuncReturn(ipmi.Open, &ipmi.IPMI{}, nil).
 		ApplyMethodReturn(&ipmi.IPMI{}, "RawCmd", currentAlarmReq, nil).
 		ApplyMethodReturn(&ipmi.IPMI{}, "Close", nil).
-		ApplyGlobalVar(&common.ParamOption, common.Option{MonitorPeriod: 10}).
+		ApplyGlobalVar(&common.ParamOption, common.Option{IpmiMonitorPeriod: 10}).
 		ApplyMethodReturn(&ipmimonitor.IpmiEventMonitor{}, "GetCurrentAlarmFaultEvents", testFaultEvents, nil)
 	defer patches.Reset()
 

@@ -170,7 +170,6 @@ const (
 )
 
 const (
-	CheckPeriod        = 5 * time.Second
 	ExcludePermissions = 0133
 	RootUID            = 0
 	MaxInstNumber      = 20

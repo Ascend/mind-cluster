@@ -49,16 +49,28 @@ const (
 	defaultLogFile = "/var/log/mindx-dl/noded/noded.log"
 	// defaultHeatBeatInterval is the default report interval
 	defaultReportInterval = 5
-	// defaultMonitorPeriod is the default plugin monitor period
-	defaultMonitorPeriod = 60
+	// defaultIpmiMonitorPeriod is the default ipmi monitor period
+	defaultIpmiMonitorPeriod = 60
+	// defaultDpcMonitorPeriod is the default dpc monitor period
+	defaultDpcMonitorPeriod = 5
+	// defaultDtfsMonitorPeriod is the default dtfs monitor period
+	defaultDtfsMonitorPeriod = 5
 	// maxReportInterval is the max report interval
 	maxReportInterval = 300
 	// minReportInterval is the min report interval
 	minReportInterval = 0
-	// maxMonitorPeriod is the max plugin monitor period
-	maxMonitorPeriod = 600
-	// minMonitorPeriod is the min plugin monitor period
-	minMonitorPeriod = 60
+	// maxIpmiMonitorPeriod is the max ipmi monitor period
+	maxIpmiMonitorPeriod = 600
+	// minIpmiMonitorPeriod is the min ipmi monitor period
+	minIpmiMonitorPeriod = 60
+	// maxDpcMonitorPeriod is the max dpc monitor period
+	maxDpcMonitorPeriod = 300
+	// minDpcMonitorPeriod is the min dpc monitor period
+	minDpcMonitorPeriod = 1
+	// maxDtfsMonitorPeriod is the max dtfs monitor period
+	maxDtfsMonitorPeriod = 300
+	// minDtfsMonitorPeriod is the min dtfs monitor period
+	minDtfsMonitorPeriod = 1
 	// maxLineLength is max length of each log line
 	maxLineLength          = 512
 	fdConfigPath           = "/usr/local/fdConfig.yaml"
@@ -83,8 +95,14 @@ var (
 	BuildName string
 	// reportInterval report Interval
 	reportInterval int
-	// monitorPeriod monitoring period
+	// ipmiMonitorPeriod ipmi monitoring period
+	ipmiMonitorPeriod int
+	// monitorPeriod is the deprecated alias of ipmiMonitorPeriod, kept for compatibility
 	monitorPeriod int
+	// dpcMonitorPeriod dpc monitoring period
+	dpcMonitorPeriod int
+	// dtfsMonitorPeriod dtfs monitoring period
+	dtfsMonitorPeriod int
 	// resultMaxAge pingmesh result max age
 	resultMaxAge int
 	// deviceResetTimeout device reset timeout duration
@@ -144,8 +162,19 @@ func init() {
 	flag.BoolVar(&version, "version", false, "the version of the program")
 	flag.IntVar(&reportInterval, "reportInterval", defaultReportInterval,
 		"Min interval of report node status")
-	flag.IntVar(&monitorPeriod, "monitorPeriod", defaultMonitorPeriod, "Monitoring period of monitor ,"+
-		"range [60,600] seconds")
+	flag.IntVar(&ipmiMonitorPeriod, "ipmiMonitorPeriod", defaultIpmiMonitorPeriod, fmt.Sprintf(
+		"Monitoring period of the ipmi monitor, range [%d,%d] seconds",
+		minIpmiMonitorPeriod, maxIpmiMonitorPeriod))
+	flag.IntVar(&monitorPeriod, "monitorPeriod", defaultIpmiMonitorPeriod, fmt.Sprintf(
+		"(Deprecated) Monitoring period of the ipmi monitor, range [%d,%d] seconds, "+
+			"replaced by -ipmiMonitorPeriod and takes precedence when both are set",
+		minIpmiMonitorPeriod, maxIpmiMonitorPeriod))
+	flag.IntVar(&dpcMonitorPeriod, "dpcMonitorPeriod", defaultDpcMonitorPeriod, fmt.Sprintf(
+		"Monitoring period of the dpc monitor, range [%d,%d] seconds",
+		minDpcMonitorPeriod, maxDpcMonitorPeriod))
+	flag.IntVar(&dtfsMonitorPeriod, "dtfsMonitorPeriod", defaultDtfsMonitorPeriod, fmt.Sprintf(
+		"Monitoring period of the dtfs monitor, range [%d,%d] seconds",
+		minDtfsMonitorPeriod, maxDtfsMonitorPeriod))
 	// hwlog configuration
 	flag.IntVar(&hwLogConfig.LogLevel, "logLevel", 0,
 		"Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical(default 0)")
@@ -163,31 +192,62 @@ func init() {
 }
 
 func checkParameters() bool {
+	// reportInterval is a half-open range (0,300], so it is checked explicitly
 	if reportInterval <= minReportInterval || reportInterval > maxReportInterval {
 		hwlog.RunLog.Errorf("report interval %d out of range (0,300]", reportInterval)
 		return false
 	}
-	if monitorPeriod < minMonitorPeriod || monitorPeriod > maxMonitorPeriod {
-		hwlog.RunLog.Errorf("monitor period %d out of range [60,600]", monitorPeriod)
+	// monitorPeriod is deprecated but takes precedence over ipmiMonitorPeriod when both are set
+	if isFlagPassed("monitorPeriod") {
+		if !checkRange("monitor period", monitorPeriod, minIpmiMonitorPeriod, maxIpmiMonitorPeriod) {
+			return false
+		}
+	} else if !checkRange("ipmi monitor period", ipmiMonitorPeriod, minIpmiMonitorPeriod, maxIpmiMonitorPeriod) {
 		return false
 	}
-	if resultMaxAge < pingmesh.MinResultMaxAge || resultMaxAge > pingmesh.MaxResultMaxAge {
-		hwlog.RunLog.Errorf("resultMaxAge %d out of range [%d,%d]", resultMaxAge, pingmesh.MinResultMaxAge,
-			pingmesh.MaxResultMaxAge)
+	if !checkRange("dpc monitor period", dpcMonitorPeriod, minDpcMonitorPeriod, maxDpcMonitorPeriod) {
 		return false
 	}
-	if deviceResetTimeout < api.MinDeviceResetTimeout || deviceResetTimeout > api.MaxDeviceResetTimeout {
-		hwlog.RunLog.Errorf("deviceResetTimeout %d out of range [%d,%d]", deviceResetTimeout,
-			api.MinDeviceResetTimeout, api.MaxDeviceResetTimeout)
+	if !checkRange("dtfs monitor period", dtfsMonitorPeriod, minDtfsMonitorPeriod, maxDtfsMonitorPeriod) {
+		return false
+	}
+	if !checkRange("resultMaxAge", resultMaxAge, pingmesh.MinResultMaxAge, pingmesh.MaxResultMaxAge) {
+		return false
+	}
+	return checkRange("deviceResetTimeout", deviceResetTimeout, api.MinDeviceResetTimeout, api.MaxDeviceResetTimeout)
+}
+
+// checkRange logs an error and returns false if value is outside [min, max].
+func checkRange(name string, value, min, max int) bool {
+	if value < min || value > max {
+		hwlog.RunLog.Errorf("%s %d out of range [%d,%d]", name, value, min, max)
 		return false
 	}
 	return true
 }
 
+// isFlagPassed reports whether the named command-line flag was explicitly set.
+func isFlagPassed(name string) bool {
+	passed := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			passed = true
+		}
+	})
+	return passed
+}
+
 func setParameters() {
+	ipmiPeriod := ipmiMonitorPeriod
+	if isFlagPassed("monitorPeriod") {
+		hwlog.RunLog.Warn("monitorPeriod is deprecated, please use ipmiMonitorPeriod instead")
+		ipmiPeriod = monitorPeriod
+	}
 	common.ParamOption = common.Option{
 		ReportInterval:     reportInterval,
-		MonitorPeriod:      monitorPeriod,
+		IpmiMonitorPeriod:  ipmiPeriod,
+		DpcMonitorPeriod:   dpcMonitorPeriod,
+		DtfsMonitorPeriod:  dtfsMonitorPeriod,
 		DeviceResetTimeout: deviceResetTimeout,
 	}
 }

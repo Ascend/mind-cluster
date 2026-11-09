@@ -72,6 +72,9 @@ func (i *DpcEventMonitor) Name() string {
 
 // Monitoring start monitor
 func (i *DpcEventMonitor) Monitoring() {
+	period := time.Duration(common.ParamOption.DpcMonitorPeriod) * time.Second
+	timer := time.NewTimer(period)
+	defer timer.Stop()
 	for {
 		select {
 		case _, ok := <-i.stopChan:
@@ -79,26 +82,31 @@ func (i *DpcEventMonitor) Monitoring() {
 				hwlog.RunLog.Error("stop channel is closed")
 				return
 			}
-			hwlog.RunLog.Info("receive stop signal, ipmi monitor shut down...")
+			hwlog.RunLog.Info("receive stop signal, dpc monitor shut down...")
 			return
-		default:
-			time.Sleep(common.CheckPeriod)
-			newDpcMap, err := getStatusFromFile()
-			if err != nil {
-				hwlog.RunLog.ErrorfWithLimit(common.DpcLogDomain,
-					common.DpcLogDomainId, "get dpc status failed, err is %v", err)
-				continue
-			}
-			hwlog.ResetErrCnt(common.DpcLogDomain, common.DpcLogDomainId)
-			newDpcMap = setNewDpcMapTime(newDpcMap)
-			if isSame(newDpcMap) {
-				continue
-			}
-			lastUploadTime = time.Now().UnixMilli()
-			dpcMap = newDpcMap
-			common.TriggerUpdate(common.DpcProcess)
+		case <-timer.C:
+			i.checkStatus()
+			timer.Reset(period)
 		}
 	}
+}
+
+// checkStatus poll dpc status from file once, trigger update when the status changes
+func (i *DpcEventMonitor) checkStatus() {
+	newDpcMap, err := getStatusFromFile()
+	if err != nil {
+		hwlog.RunLog.ErrorfWithLimit(common.DpcLogDomain,
+			common.DpcLogDomainId, "get dpc status failed, err is %v", err)
+		return
+	}
+	hwlog.ResetErrCnt(common.DpcLogDomain, common.DpcLogDomainId)
+	newDpcMap = setNewDpcMapTime(newDpcMap)
+	if isSame(newDpcMap) {
+		return
+	}
+	lastUploadTime = time.Now().UnixMilli()
+	dpcMap = newDpcMap
+	common.TriggerUpdate(common.DpcProcess)
 }
 
 func setNewDpcMapTime(newDpcMap map[int]common.DpcStatus) map[int]common.DpcStatus {

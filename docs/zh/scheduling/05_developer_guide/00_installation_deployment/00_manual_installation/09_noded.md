@@ -162,13 +162,40 @@
 <td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><a name="ul49338283283"></a><a name="ul49338283283"></a><ul id="ul49338283283"><li>上报节点故障信息的最小间隔，如果节点状态有变化，那么在5秒内就会上报，如果节点状态持续没有变化，那么上报周期为30分钟。</li><li>取值范围为1~300，单位为秒。</li><li>当K8s APIServer请求压力变大时，可根据实际情况增大间隔时间，以减轻APIServer压力。</li></ul>
 </td>
 </tr>
-<tr id="row1240181274312"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1691522724316"><a name="p1691522724316"></a><a name="p1691522724316"></a>-monitorPeriod</p>
+<tr id="row1240181274312"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1691522724316"><a name="p1691522724316"></a><a name="p1691522724316"></a>-ipmiMonitorPeriod</p>
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p17916227194316"><a name="p17916227194316"></a><a name="p17916227194316"></a>int</p>
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p1491652715431"><a name="p1491652715431"></a><a name="p1491652715431"></a>60</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p139161227154317"><a name="p139161227154317"></a><a name="p139161227154317"></a>节点硬件故障的轮询检测周期，取值范围为60~600，单位为秒。</p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p139161227154317"><a name="p139161227154317"></a><a name="p139161227154317"></a>IPMI插件（节点硬件故障）的轮询检测周期，取值范围为60~600，单位为秒。</p>
+</td>
+</tr>
+<tr id="row1240181274315"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1691522724319"><a name="p1691522724319"></a><a name="p1691522724319"></a>-monitorPeriod</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p17916227194319"><a name="p17916227194319"></a><a name="p17916227194319"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p1491652715434"><a name="p1491652715434"></a><a name="p1491652715434"></a>60</p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p139161227154320"><a name="p139161227154320"></a><a name="p139161227154320"></a>已废弃（日落参数），作用与-ipmiMonitorPeriod一致，后续版本将由-ipmiMonitorPeriod替代。若同时配置-monitorPeriod与-ipmiMonitorPeriod，优先使用-monitorPeriod的值。</p>
+</td>
+</tr>
+<tr id="row1240181274313"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1691522724317"><a name="p1691522724317"></a><a name="p1691522724317"></a>-dpcMonitorPeriod</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p17916227194317"><a name="p17916227194317"></a><a name="p17916227194317"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p1491652715432"><a name="p1491652715432"></a><a name="p1491652715432"></a>5</p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p139161227154318"><a name="p139161227154318"></a><a name="p139161227154318"></a>DPC插件（存储故障）的轮询检测周期，取值范围为1~300，单位为秒。</p>
+</td>
+</tr>
+<tr id="row1240181274314"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1691522724318"><a name="p1691522724318"></a><a name="p1691522724318"></a>-dtfsMonitorPeriod</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p17916227194318"><a name="p17916227194318"></a><a name="p17916227194318"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p1491652715433"><a name="p1491652715433"></a><a name="p1491652715433"></a>5</p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p139161227154319"><a name="p139161227154319"></a><a name="p139161227154319"></a>DTFS插件（存储故障）的轮询检测周期，取值范围为1~300，单位为秒。</p>
 </td>
 </tr>
 <tr id="row562722803619"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p862732803617"><a name="p862732803617"></a><a name="p862732803617"></a>-version</p>

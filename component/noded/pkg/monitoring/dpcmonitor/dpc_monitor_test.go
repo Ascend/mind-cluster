@@ -32,10 +32,6 @@ import (
 	"nodeD/pkg/common"
 )
 
-const (
-	int6 = 6
-)
-
 func init() {
 	hwLogConfig := hwlog.LogConfig{
 		OnlyToStdout: true,
@@ -130,6 +126,10 @@ func TestIsSame(t *testing.T) {
 		convey.Convey("should return false for different status", func() {
 			convey.So(isSame(map3), convey.ShouldBeFalse)
 		})
+		convey.Convey("should return false for missing inst in new map", func() {
+			dpcMap = map[int]common.DpcStatus{1: {}, 2: {}}
+			convey.So(isSame(map[int]common.DpcStatus{1: {}, 3: {}}), convey.ShouldBeFalse)
+		})
 	})
 }
 
@@ -145,8 +145,34 @@ func TestGetStatusByText(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(status, convey.ShouldBeTrue)
 		})
+		convey.Convey("should handle DPC_PROCESS_ERROR healthy", func() {
+			status, err := getStatusByText("DPC_PROCESS_ERROR: 0", common.DpcProcessErrorKey)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(status, convey.ShouldBeFalse)
+		})
+		convey.Convey("should handle DPC_PROCESS_ERROR error", func() {
+			status, err := getStatusByText("DPC_PROCESS_ERROR: -1", common.DpcProcessErrorKey)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(status, convey.ShouldBeTrue)
+		})
 		convey.Convey("should handle invalid format", func() {
 			_, err := getStatusByText("invalid text", common.DpcInternalErrorKey)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("should fail when file key does not match", func() {
+			_, err := getStatusByText("DPC_PROCESS_ERROR: 0", common.DpcInternalErrorKey)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("should fail when DPC_INTERNAL_ERROR value is invalid", func() {
+			_, err := getStatusByText("DPC_INTERNAL_ERROR: 5", common.DpcInternalErrorKey)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("should fail when DPC_PROCESS_ERROR value is invalid", func() {
+			_, err := getStatusByText("DPC_PROCESS_ERROR: 5", common.DpcProcessErrorKey)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("should fail when key is unknown", func() {
+			_, err := getStatusByText("UNKNOWN_KEY: 0", "UNKNOWN_KEY")
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
@@ -169,6 +195,28 @@ func TestReadInstStatus(t *testing.T) {
 		convey.Convey("should fail on invalid inst format", func() {
 			badInput := "invalid_inst"
 			scanner := bufio.NewScanner(strings.NewReader(badInput))
+			scanner.Scan()
+			_, _, err := readInstStatus(scanner)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("should fail when status lines are missing after inst line", func() {
+			scanner := bufio.NewScanner(strings.NewReader("[instidx=1]"))
+			scanner.Scan()
+			_, _, err := readInstStatus(scanner)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("should fail when the third status line is missing", func() {
+			scanner := bufio.NewScanner(strings.NewReader("[instidx=1]\nDPC_INTERNAL_ERROR: 0"))
+			scanner.Scan()
+			_, _, err := readInstStatus(scanner)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("should fail when the second status line is invalid", func() {
+			scanner := bufio.NewScanner(
+				strings.NewReader("[instidx=1]\ninvalid text\nDPC_PROCESS_ERROR: 0"))
 			scanner.Scan()
 			_, _, err := readInstStatus(scanner)
 			convey.So(err, convey.ShouldNotBeNil)
@@ -209,6 +257,70 @@ func TestGetStatusFromFile(t *testing.T) {
 	convey.Convey("Test getStatusFromFile", t, func() {
 		testInvalidPath()
 		testFileOpenFailure()
+		testValidFile()
+		testInvalidFileContent()
+		testTooManyInstEntries()
+	})
+}
+
+func testValidFile() {
+	convey.Convey("Test valid file", func() {
+		filePath := os.TempDir() + "/dpc_status_check"
+		content := "[instidx=1]\nDPC_INTERNAL_ERROR: 0\nDPC_PROCESS_ERROR: -1\n" +
+			"[instidx=2]\nDPC_INTERNAL_ERROR: -12\nDPC_PROCESS_ERROR: 0\n"
+		if err := os.WriteFile(filePath, []byte(content), 0600); err != nil {
+			convey.So(err, convey.ShouldBeNil)
+			return
+		}
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyFuncReturn(utils.CheckOwnerAndPermission, filePath, nil)
+
+		result, err := getStatusFromFile()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(len(result), convey.ShouldEqual, 2)
+		convey.So(result[1].ProcessError, convey.ShouldBeTrue)
+		convey.So(result[1].MemoryError, convey.ShouldBeFalse)
+		convey.So(result[2].MemoryError, convey.ShouldBeTrue)
+		convey.So(result[2].ProcessError, convey.ShouldBeFalse)
+	})
+}
+
+func testInvalidFileContent() {
+	convey.Convey("Test invalid file content", func() {
+		filePath := os.TempDir() + "/dpc_status_check"
+		if err := os.WriteFile(filePath, []byte("invalid line\n"), 0600); err != nil {
+			convey.So(err, convey.ShouldBeNil)
+			return
+		}
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyFuncReturn(utils.CheckOwnerAndPermission, filePath, nil)
+
+		_, err := getStatusFromFile()
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "file not valid")
+	})
+}
+
+func testTooManyInstEntries() {
+	convey.Convey("Test more inst entries than max inst number", func() {
+		var sb strings.Builder
+		for i := 0; i < common.MaxInstNumber+2; i++ {
+			fmt.Fprintf(&sb, "[instidx=%d]\nDPC_INTERNAL_ERROR: 0\nDPC_PROCESS_ERROR: 0\n", i)
+		}
+		filePath := os.TempDir() + "/dpc_status_check"
+		if err := os.WriteFile(filePath, []byte(sb.String()), 0600); err != nil {
+			convey.So(err, convey.ShouldBeNil)
+			return
+		}
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyFuncReturn(utils.CheckOwnerAndPermission, filePath, nil)
+
+		result, err := getStatusFromFile()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(len(result), convey.ShouldEqual, common.MaxInstNumber+1)
 	})
 }
 
@@ -283,7 +395,7 @@ func testNormalFlow(monitor *DpcEventMonitor) {
 			monitor.Monitoring()
 		}()
 
-		time.Sleep(time.Second * int6)
+		time.Sleep(2 * time.Second)
 		close(monitor.stopChan)
 
 		convey.So(triggerUpdateCalled, convey.ShouldBeTrue)
@@ -292,6 +404,9 @@ func testNormalFlow(monitor *DpcEventMonitor) {
 
 func TestDpcEventMonitor_Monitoring(t *testing.T) {
 	convey.Convey("Test DpcEventMonitor.Monitoring", t, func() {
+		patches := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{DpcMonitorPeriod: 1})
+		defer patches.Reset()
+
 		monitor := &DpcEventMonitor{
 			stopChan: make(chan struct{}),
 		}
