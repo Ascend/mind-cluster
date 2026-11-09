@@ -87,7 +87,7 @@ func TestIpmiEventMonitor(t *testing.T) {
 	var patches = gomonkey.ApplyFuncReturn(ipmi.Open, &ipmi.IPMI{}, nil).
 		ApplyMethodReturn(&ipmi.IPMI{}, "RawCmd", currentAlarmReq, nil).
 		ApplyMethodReturn(&ipmi.IPMI{}, "Close", nil).
-		ApplyGlobalVar(&common.ParamOption, common.Option{MonitorPeriod: 1})
+		ApplyGlobalVar(&common.ParamOption, common.Option{IpmiMonitorPeriod: 1})
 	defer patches.Reset()
 
 	convey.Convey("test IpmiEventMonitor method 'Init'", t, testIpmiMonitorInit)

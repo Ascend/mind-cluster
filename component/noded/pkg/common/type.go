@@ -27,7 +27,9 @@ var (
 // Option struct definition
 type Option struct {
 	ReportInterval     int
-	MonitorPeriod      int
+	IpmiMonitorPeriod  int
+	DpcMonitorPeriod   int
+	DtfsMonitorPeriod  int
 	DeviceResetTimeout int // device reset timeout
 }
 

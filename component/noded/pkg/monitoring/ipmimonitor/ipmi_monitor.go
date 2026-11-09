@@ -51,6 +51,9 @@ func NewIpmiEventMonitor() *IpmiEventMonitor {
 
 // Monitoring monitor working loop
 func (i *IpmiEventMonitor) Monitoring() {
+	period := time.Duration(common.ParamOption.IpmiMonitorPeriod) * time.Second
+	timer := time.NewTimer(period)
+	defer timer.Stop()
 	for {
 		select {
 		case _, ok := <-i.stopChan:
@@ -60,11 +63,11 @@ func (i *IpmiEventMonitor) Monitoring() {
 			}
 			hwlog.RunLog.Info("receive stop signal, ipmi monitor shut down...")
 			return
-		default:
-			time.Sleep(time.Duration(common.ParamOption.MonitorPeriod) * time.Second)
+		case <-timer.C:
 			if err := i.UpdateFaultDevList(); err != nil {
 				hwlog.RunLog.Errorf("ipmi monitor update fault device list failed, error: %v", err)
 			}
+			timer.Reset(period)
 		}
 	}
 }
