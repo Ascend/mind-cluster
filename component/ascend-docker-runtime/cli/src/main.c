@@ -182,8 +182,9 @@ STATIC bool SplitMountEntry(const char *arg, char *src, char *dst)
 
 // CheckDstPath validates the container dst path: absolute, no '..' (anti
 // rootfs-escape), never "/" (which would shadow the whole container rootfs),
-// no extra ':' (which makes the entry ambiguous), and within the MountFile
-// assembly buffer bound.
+// no character on the dst deny list DST_DENIED_CHARS (defined in basic.h,
+// mirrored from Go dstDeniedChars), no control characters, and within the
+// MountFile assembly buffer bound.
 STATIC bool CheckDstPath(const char *dst)
 {
     size_t len = strlen(dst);
@@ -191,9 +192,12 @@ STATIC bool CheckDstPath(const char *dst)
     {
         return false;  // must be an absolute path other than "/"
     }
-    if (strchr(dst, ':') != NULL)
+    for (const char *p = dst; *p != '\0'; p++)
     {
-        return false;  // extra ':' makes the entry ambiguous
+        if ((strchr(DST_DENIED_CHARS, *p) != NULL) || ((unsigned char)*p < 0x20) || ((unsigned char)*p == 0x7F))
+        {
+            return false;  // denied character per DST_DENIED_CHARS or control character
+        }
     }
     return strstr(dst, "..") == NULL;  // reject ".." to prevent escaping rootfs via relative paths
 }

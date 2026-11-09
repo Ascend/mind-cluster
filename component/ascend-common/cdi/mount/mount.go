@@ -103,11 +103,41 @@ type MountEntry struct {
 // the hook/CDI side from being rejected by the CLI at container start.
 const MaxContainerPathLen = 1023
 
+// dstDeniedChars is the single deny list for in-container target paths:
+// glob-semantic characters plus the entry delimiter. Characters outside the
+// list (including multi-byte UTF-8) are allowed. The C side mirrors this
+// literal as DST_DENIED_CHARS in cli/src/main.c; keep both in sync.
+const dstDeniedChars = `*?[]:`
+
+// Control characters rejected in container paths: the C0 range and DEL.
+// Rejecting them eliminates the divergence where a Go string can carry NUL
+// while the C side truncates at strlen.
+const (
+	maxControlChar = 0x1F // upper bound of the C0 control character range
+	delChar        = 0x7F // DEL control character
+)
+
+// validateDstChars rejects characters on the deny list and control
+// characters. Only character-level content is governed here; sequence-level
+// ('..') and structural (absolute path, length) checks stay with the caller.
+func validateDstChars(containerPath string) error {
+	for _, r := range containerPath {
+		if r <= maxControlChar || r == delChar {
+			return fmt.Errorf("container path %q contains control character %#x", containerPath, r)
+		}
+		if strings.ContainsRune(dstDeniedChars, r) {
+			return fmt.Errorf("container path %q contains denied character %q (deny list: %q)",
+				containerPath, r, dstDeniedChars)
+		}
+	}
+	return nil
+}
+
 // validateContainerPath validates an in-container target path, shared by the
 // list parser and the JSON profile mode: absolute, at most
 // MaxContainerPathLen characters, no ".." component (anti rootfs-escape),
-// never "/" (which would shadow the whole container rootfs), and no ':'
-// (extra ':' makes the entry ambiguous).
+// never "/" (which would shadow the whole container rootfs), and no
+// character on the dst deny list.
 func validateContainerPath(containerPath string) error {
 	if containerPath == "" {
 		return nil
@@ -122,10 +152,7 @@ func validateContainerPath(containerPath string) error {
 	if strings.Contains(containerPath, "..") {
 		return fmt.Errorf("container path %q must not contain '..'", containerPath)
 	}
-	if strings.Contains(containerPath, ":") {
-		return fmt.Errorf("container path %q must not contain ':'", containerPath)
-	}
-	return nil
+	return validateDstChars(containerPath)
 }
 
 // ParseMountEntry parses a mount list line "hostPath[:containerPath]".

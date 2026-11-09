@@ -818,15 +818,26 @@ TEST_F(Test_Fhho, SplitMountEntryForDstTooLong)
     EXPECT_EQ(false, SplitMountEntry(arg, src, dst));
 }
 
-TEST_F(Test_Fhho, CheckDstPathForValidPath) { EXPECT_EQ(true, CheckDstPath("/container/a.txt")); }
+TEST_F(Test_Fhho, CheckDstPathForValidPath)
+{
+    EXPECT_EQ(true, CheckDstPath("/container/a.txt"));
+    EXPECT_EQ(true, CheckDstPath("/container/中文目录"));  // multi-byte UTF-8 is outside the deny list
+}
 
 TEST_F(Test_Fhho, CheckDstPathForInvalidPath)
 {
+    EXPECT_STREQ(DST_DENIED_CHARS, "*?[]:");  // deny-list consistency gate against Go dstDeniedChars
     EXPECT_EQ(false, CheckDstPath(""));
     EXPECT_EQ(false, CheckDstPath("/"));  // "/" overwrites the whole container rootfs
     EXPECT_EQ(false, CheckDstPath("container/a.txt"));
     EXPECT_EQ(false, CheckDstPath("/container/../etc"));
     EXPECT_EQ(false, CheckDstPath("/container/a:b"));  // extra ':' makes the entry ambiguous
+    EXPECT_EQ(false, CheckDstPath("/container/*"));    // wildcard has no glob meaning at mount time
+    EXPECT_EQ(false, CheckDstPath("/container/a?"));   // '?' belongs to the deny list
+    EXPECT_EQ(false, CheckDstPath("/container/[a]"));  // '[' belongs to the deny list
+    EXPECT_EQ(false, CheckDstPath("/container/a"
+                                  "\x01"
+                                  "b"));  // control characters are rejected
     char tooLong[PATH_MAX] = {0};
     memset_s(tooLong, sizeof(tooLong) - 1, 'a', sizeof(tooLong) - 1);
     tooLong[0] = '/';
