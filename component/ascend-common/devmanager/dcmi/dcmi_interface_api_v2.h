@@ -122,6 +122,9 @@ extern "C"
 
     DCMIDLLEXPORT int dcmiv2_get_port_pkt_stats_info(int dev_id, struct dcmi_ub_port_info *ub_port_info,
                                                      struct dcmi_port_pkt_stats_info *port_pkt_stats_info);
+
+    DCMIDLLEXPORT int dcmiv2_get_topo_info_by_device_id_and_nic_name(int dev_id, const char *nic_name, int nic_name_len,
+                                                                     int *topo_type);
 #endif
 
 #ifdef __cplusplus

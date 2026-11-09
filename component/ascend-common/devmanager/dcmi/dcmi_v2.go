@@ -274,6 +274,13 @@ package dcmi
         CALL_FUNC(dcmiv2_get_port_pkt_stats_info, dev_id, ub_port_info, port_pkt_stats_info)
     }
 
+    static int (*dcmiv2_get_topo_info_by_device_id_and_nic_name_func)(int dev_id, const char *nic_name,
+                int nic_name_len, int *topo_type);
+    static int dcmiv2_get_topo_info_by_device_id_and_nic_name(int dev_id, const char *nic_name,
+                int nic_name_len, int *topo_type){
+        CALL_FUNC(dcmiv2_get_topo_info_by_device_id_and_nic_name, dev_id, nic_name, nic_name_len, topo_type)
+    }
+
     // load .so files and functions
     static int dcmiv2Init_dl(const char* dcmiLibPath){
         if (dcmiLibPath == NULL) {
@@ -328,6 +335,8 @@ package dcmi
         dcmiv2_get_ub_ping_mesh_info_func = dlsym(dcmiHandle,"dcmiv2_get_ub_ping_mesh_info");
         dcmiv2_get_ub_ping_mesh_state_func = dlsym(dcmiHandle,"dcmiv2_get_ub_ping_mesh_state");
         dcmiv2_get_port_pkt_stats_info_func = dlsym(dcmiHandle,"dcmiv2_get_port_pkt_stats_info");
+        dcmiv2_get_topo_info_by_device_id_and_nic_name_func =
+            dlsym(dcmiHandle,"dcmiv2_get_topo_info_by_device_id_and_nic_name");
         return SUCCESS;
     }
 
@@ -408,6 +417,7 @@ type DcV2DriverInterface interface {
 	DcGetUbPingMeshInfo(int32, uint, int) (*common.HccspingMeshInfo, error)
 	DcGetUbPingMeshState(logicID int32, taskID uint) (int, error)
 	DcGetPortPktStatsInfo(logicID int32, udieID, portID int32) (*common.PortPktStatsInfo, error)
+	DcGetTopoInfoByDeviceIDAndNicName(deviceID int32, nicName string) (common.TopoType, error)
 }
 
 // DcV2Manager for manager dcmi interface
@@ -1643,4 +1653,29 @@ func (d *DcV2Manager) DcGetPortPktStatsInfo(logicID int32, udieID, portID int32)
 		CoreMibRxBadOctets: uint64(stats.core_mib_rxbadoctets),
 		CoreMibTxBadOctets: uint64(stats.core_mib_txbadoctets),
 	}, nil
+}
+
+// DcGetTopoInfoByDeviceIDAndNicName get the topology type between the device and the nic.
+// The underlying driver interface is only supported on the A5 generation, callers should check the
+// device type before calling it, e.g. via npu_nic.Query.
+func (d *DcV2Manager) DcGetTopoInfoByDeviceIDAndNicName(deviceID int32, nicName string) (common.TopoType,
+	error) {
+	if !common.IsValidLogicIDOrPhyID(deviceID) {
+		return common.TopoTypeMax, fmt.Errorf("deviceID(%d) is invalid", deviceID)
+	}
+	if nicName == "" || len(nicName) >= ifNameMaxLen || strings.ContainsRune(nicName, '\x00') {
+		return common.TopoTypeMax, fmt.Errorf(
+			"nicName(%q) is invalid, length should be in [1,%d) and no NUL is allowed", nicName, ifNameMaxLen)
+	}
+
+	cNicName := C.CString(nicName)
+	defer C.free(unsafe.Pointer(cNicName))
+
+	var cTopoType C.int
+	retCode := C.dcmiv2_get_topo_info_by_device_id_and_nic_name(C.int(deviceID), cNicName,
+		C.int(len(nicName)), &cTopoType)
+	if int32(retCode) != common.Success {
+		return common.TopoTypeMax, buildDcmiV2Err(deviceID, "topo info by deviceID and nicName", retCode)
+	}
+	return common.TopoType(cTopoType), nil
 }

@@ -530,6 +530,13 @@ func (d *DeviceManagerV2) GetPortPktStatsInfo(logicID int32, udieID, portID int3
 	return d.DcMgr.DcGetPortPktStatsInfo(logicID, udieID, portID)
 }
 
+// GetTopoInfoByDeviceIDAndNicName get the topology type between the NPU and the NIC,
+// only supported on the A5 generation
+func (d *DeviceManagerV2) GetTopoInfoByDeviceIDAndNicName(logicID int32, nicName string) (common.TopoType,
+	error) {
+	return d.DcMgr.DcGetTopoInfoByDeviceIDAndNicName(logicID, nicName)
+}
+
 // GetDeviceErrorCode get npu device error code
 func (d *DeviceManagerV2) GetDeviceErrorCode(logicID int32) (int32, int64, error) {
 	errCount, errCode, err := d.DcMgr.DcGetDeviceErrorCode(logicID)

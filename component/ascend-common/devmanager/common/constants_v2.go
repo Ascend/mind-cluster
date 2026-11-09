@@ -21,6 +21,13 @@ const (
 	// MaxUBEIDByteLen max eid bytes len for device ub port
 	MaxUBEIDByteLen = 128 / 8
 
+	// InfinibandClassPath is the sysfs class dir of the rdma devices
+	InfinibandClassPath = "/sys/class/infiniband"
+	// InfinibandDeviceDirName is the sysfs dir of the pci device bound to an rdma device
+	InfinibandDeviceDirName = "device"
+	// InfinibandNetDirName is the sysfs dir of the ethernet interfaces bound to an rdma device
+	InfinibandNetDirName = "net"
+
 	// MaxUBCNAByteLen max bytes len of common network address for device ub port
 	MaxUBCNAByteLen = 32 / 8
 

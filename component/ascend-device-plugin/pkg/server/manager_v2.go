@@ -16,10 +16,13 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
+	"sort"
 	"sync"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -28,10 +31,16 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
+	"ascend-common/devmanager/npu_nic"
 )
 
-const npuNicMappingConfigPath = "/user/mindx-dl/npu/npu-nic-mapping.json"
+const (
+	npuNicMappingConfigPath = "/user/mindx-dl/npu/npu-nic-mapping.json"
+	// npuNicPollInterval is the fixed interval of the nic count polling, not configurable.
+	npuNicPollInterval = 5 * time.Minute
+)
 
 // NpuNicMapping is npu nic mapping config
 type NpuNicMapping struct {
@@ -45,9 +54,10 @@ type NpuNicItem struct {
 }
 
 var (
-	npuNicMappingCache     *NpuNicMapping
-	npuNicMappingCacheOnce sync.Once
-	npuNicMappingErr       error
+	npuNicMappingMu     sync.RWMutex
+	npuNicMappingCache  *NpuNicMapping
+	npuNicMappingErr    error
+	npuNicMappingLoaded bool
 )
 
 func (hdm *HwDevManager) getCardType() (string, error) {
@@ -218,31 +228,141 @@ func (hdm *HwDevManager) getRankAddrListOriginal(level int, dev *common.NpuDevic
 	return rankAddrList
 }
 
-func getNpuNicMappingCache() (*NpuNicMapping, error) {
-	npuNicMappingCacheOnce.Do(func() {
-		data, err := utils.LoadFile(npuNicMappingConfigPath)
-		if err != nil {
-			npuNicMappingErr = fmt.Errorf("read config file error: %v", err)
+// InitNpuNicMappingRefresh queries the npu-nic affinity from the driver once and starts the poll task.
+func (hdm *HwDevManager) InitNpuNicMappingRefresh(ctx context.Context) {
+	if hdm.manager == nil {
+		hwlog.RunLog.Warnf("manager is nil, skip npu-nic mapping refresh")
+		return
+	}
+	dmgr := hdm.manager.GetDmgr()
+	refreshNpuNicMapping(dmgr)
+	nics, _ := npu_nic.ListNics()
+	go watchNicCount(ctx, dmgr, len(nics))
+}
+
+// watchNicCount refreshes the npu-nic affinity snapshot only when the nic count changes.
+func watchNicCount(ctx context.Context, dmgr devmanager.DeviceInterface, lastCount int) {
+	ticker := time.NewTicker(npuNicPollInterval)
+	defer ticker.Stop()
+	hwlog.RunLog.Infof("npu-nic mapping poll task started, interval: %v, nic count: %d", npuNicPollInterval, lastCount)
+	for {
+		select {
+		case <-ctx.Done():
+			hwlog.RunLog.Infof("npu-nic mapping poll task stopped")
 			return
+		case <-ticker.C:
+			lastCount = checkNicCountAndRefresh(dmgr, lastCount)
 		}
+	}
+}
 
-		if data == nil {
-			hwlog.RunLog.Warnf("npu-nic-mapping config file not found: %s", npuNicMappingConfigPath)
-			npuNicMappingCache = nil
-			return
-		}
+// checkNicCountAndRefresh refreshes the snapshot when the nic count changes and returns the new count.
+func checkNicCountAndRefresh(dmgr devmanager.DeviceInterface, lastCount int) int {
+	nics, err := npu_nic.ListNics()
+	if err != nil {
+		hwlog.RunLog.Debugf("poll nic devices failed: %v, keep the npu-nic mapping", err)
+		return lastCount
+	}
+	if len(nics) == lastCount {
+		return lastCount
+	}
+	hwlog.RunLog.Infof("nic count changed from %d to %d, refresh npu-nic mapping", lastCount, len(nics))
+	if !refreshNpuNicMapping(dmgr) {
+		return lastCount
+	}
+	return len(nics)
+}
 
-		var mapping NpuNicMapping
-		if err = json.Unmarshal(data, &mapping); err != nil {
-			npuNicMappingErr = fmt.Errorf("parse config file error: %v", err)
-			return
-		}
+// getNpuNicMappingCache returns the npu-nic mapping from the memory snapshot.
+func getNpuNicMappingCache(dmgr devmanager.DeviceInterface) (*NpuNicMapping, error) {
+	if !isNpuNicMappingLoaded() {
+		refreshNpuNicMapping(dmgr)
+	}
 
-		npuNicMappingCache = &mapping
-		hwlog.RunLog.Infof("npu-nic-mapping config loaded: %v", mapping)
-	})
-
+	npuNicMappingMu.RLock()
+	defer npuNicMappingMu.RUnlock()
 	return npuNicMappingCache, npuNicMappingErr
+}
+
+// refreshNpuNicMapping queries the npu-nic affinity from the driver and updates the memory snapshot,
+// returning whether a valid snapshot is available. The config file is used as the fallback at startup.
+func refreshNpuNicMapping(dmgr devmanager.DeviceInterface) bool {
+	mapping, err := getNpuNicMappingFromDriver(dmgr)
+	if err == nil {
+		setNpuNicMapping(mapping, nil)
+		hwlog.RunLog.Infof("npu-nic mapping queried from driver: %v", mapping)
+		return true
+	}
+
+	if isNpuNicMappingLoaded() {
+		hwlog.RunLog.Warnf("refresh npu-nic mapping from driver failed: %v, use the memory snapshot", err)
+		return false
+	}
+
+	hwlog.RunLog.Warnf("query npu-nic mapping from driver failed: %v, fallback to config file", err)
+	mapping, err = loadNpuNicMappingFile()
+	setNpuNicMapping(mapping, err)
+	return err == nil && mapping != nil
+}
+
+// setNpuNicMapping updates the memory snapshot, a failed load never marks the snapshot as loaded
+// so that the driver query is retried by the next refresh.
+func setNpuNicMapping(mapping *NpuNicMapping, err error) {
+	npuNicMappingMu.Lock()
+	defer npuNicMappingMu.Unlock()
+	npuNicMappingCache = mapping
+	npuNicMappingErr = err
+	npuNicMappingLoaded = err == nil && mapping != nil
+}
+
+// isNpuNicMappingLoaded reports whether a valid memory snapshot has been loaded.
+func isNpuNicMappingLoaded() bool {
+	npuNicMappingMu.RLock()
+	defer npuNicMappingMu.RUnlock()
+	return npuNicMappingLoaded
+}
+
+// getNpuNicMappingFromDriver queries the npu-nic affinity from dcmi. The primary nic returned by
+// npu_nic.Query is the first nic of each npu.
+func getNpuNicMappingFromDriver(dmgr devmanager.DeviceInterface) (*NpuNicMapping, error) {
+	affinity, err := npu_nic.Query(dmgr)
+	if err != nil {
+		return nil, err
+	}
+
+	mapping := &NpuNicMapping{NpuNics: make([]NpuNicItem, 0, len(affinity))}
+	for logicID, nicNames := range affinity {
+		phyID, err := dmgr.GetPhysicIDFromLogicID(logicID)
+		if err != nil {
+			return nil, fmt.Errorf("get physic id of logicID(%d) failed: %w", logicID, err)
+		}
+		mapping.NpuNics = append(mapping.NpuNics, NpuNicItem{NpuId: int(phyID), NicNames: nicNames})
+	}
+	sort.Slice(mapping.NpuNics, func(i, j int) bool {
+		return mapping.NpuNics[i].NpuId < mapping.NpuNics[j].NpuId
+	})
+	return mapping, nil
+}
+
+// loadNpuNicMappingFile loads the npu-nic mapping from the config file.
+func loadNpuNicMappingFile() (*NpuNicMapping, error) {
+	data, err := utils.LoadFile(npuNicMappingConfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("read config file error: %v", err)
+	}
+
+	if data == nil {
+		hwlog.RunLog.Warnf("npu-nic-mapping config file not found: %s", npuNicMappingConfigPath)
+		return nil, nil
+	}
+
+	var mapping NpuNicMapping
+	if err = json.Unmarshal(data, &mapping); err != nil {
+		return nil, fmt.Errorf("parse config file error: %v", err)
+	}
+
+	hwlog.RunLog.Infof("npu-nic-mapping config loaded: %v", mapping)
+	return &mapping, nil
 }
 
 func getIPAddressType(ip string) string {
@@ -298,8 +418,8 @@ func getInterfaceIPs(nicName string) []string {
 	return ips
 }
 
-func getNpuToNicNames(npuId int) ([]string, error) {
-	mapping, err := getNpuNicMappingCache()
+func getNpuToNicNames(npuId int, dmgr devmanager.DeviceInterface) ([]string, error) {
+	mapping, err := getNpuNicMappingCache(dmgr)
 	if err != nil {
 		return nil, err
 	}
@@ -324,7 +444,11 @@ func (hdm *HwDevManager) getROCEAddrList(dev *common.NpuDevice, maxNpuNum int) [
 		return []api.RankAddrItem{}
 	}
 	npuId := int(dev.PhyID % int32(maxNpuNum))
-	nicNames, err := getNpuToNicNames(npuId)
+	var dmgr devmanager.DeviceInterface
+	if hdm.manager != nil {
+		dmgr = hdm.manager.GetDmgr()
+	}
+	nicNames, err := getNpuToNicNames(npuId, dmgr)
 	if err != nil {
 		hwlog.RunLog.Warnf("get npu %d nic names failed: %v, returning empty addr list", npuId, err)
 		return []api.RankAddrItem{}

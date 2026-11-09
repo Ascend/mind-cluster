@@ -435,3 +435,9 @@ func (d *DeviceManagerMockErr) SetMultiDiePolicy(policy dcmi.DiePolicyType) erro
 func (d *DeviceManagerMockErr) GetPortPktStatsInfo(logicID int32, udieID, portID int32) (*common.PortPktStatsInfo, error) {
 	return nil, errors.New(errorMsg)
 }
+
+// GetTopoInfoByDeviceIDAndNicName get the topology type between the NPU and the NIC
+func (d *DeviceManagerMockErr) GetTopoInfoByDeviceIDAndNicName(logicID int32, nicName string) (common.TopoType,
+	error) {
+	return common.TopoTypeMax, errors.New(errorMsg)
+}

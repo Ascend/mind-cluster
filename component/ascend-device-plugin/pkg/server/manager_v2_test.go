@@ -22,6 +22,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
@@ -33,6 +34,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
+	"ascend-common/devmanager/npu_nic"
 )
 
 // TestGetCardType for test getCardType
@@ -233,8 +235,11 @@ func removeTestConfig() {
 }
 
 func resetConfigCache() {
+	npuNicMappingMu.Lock()
+	defer npuNicMappingMu.Unlock()
 	npuNicMappingCache = nil
 	npuNicMappingErr = nil
+	npuNicMappingLoaded = false
 }
 
 func TestGetIPAddressType_ShouldReturnIPv4_WhenIPv4Address(t *testing.T) {
@@ -368,10 +373,9 @@ func TestGetInterfaceIPsByPriority_ShouldReturnFirstValidIP_WhenMultipleInterfac
 
 func TestGetNpuToNicNames_ShouldReturnNil_WhenConfigNotExists(t *testing.T) {
 	convey.Convey("TestGetNpuToNicNames should return nil when config not exists", t, func() {
-		// 直接设置缓存变量为 nil
-		npuNicMappingCache = nil
-		npuNicMappingErr = nil
-		result, err := getNpuToNicNames(0)
+		// simulate a loaded snapshot whose config content is empty
+		setNpuNicMapping(&NpuNicMapping{NpuNics: []NpuNicItem{{NpuId: 0, NicNames: nil}}}, nil)
+		result, err := getNpuToNicNames(0, &devmanager.DeviceManagerMock{})
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(result, convey.ShouldBeNil)
 	})
@@ -379,13 +383,102 @@ func TestGetNpuToNicNames_ShouldReturnNil_WhenConfigNotExists(t *testing.T) {
 
 func TestGetNpuToNicNames_ShouldReturnCachedResult_WhenConfigAlreadyLoaded(t *testing.T) {
 	convey.Convey("TestGetNpuToNicNames should return cached result", t, func() {
-		npuNicMappingCache = &NpuNicMapping{
+		setNpuNicMapping(&NpuNicMapping{
 			NpuNics: []NpuNicItem{{NpuId: 0, NicNames: []string{"cached-eth"}}},
-		}
-		npuNicMappingErr = nil
+		}, nil)
 
-		result, _ := getNpuToNicNames(0)
+		result, _ := getNpuToNicNames(0, &devmanager.DeviceManagerMock{})
 		convey.So(result, convey.ShouldResemble, []string{"cached-eth"})
+	})
+}
+
+func TestCheckNicCountAndRefresh(t *testing.T) {
+	convey.Convey("TestCheckNicCountAndRefresh", t, func() {
+		dev := &devmanager.DeviceManagerMock{}
+		convey.Convey("should refresh when the nic count changes", func() {
+			nics := gomonkey.ApplyFuncReturn(npu_nic.ListNics, []string{testNicName, testNicName2}, nil)
+			defer nics.Reset()
+			refresh := gomonkey.ApplyFuncReturn(refreshNpuNicMapping, true)
+			defer refresh.Reset()
+
+			convey.So(checkNicCountAndRefresh(dev, 1), convey.ShouldEqual, 2)
+		})
+		convey.Convey("should skip when the nic count is unchanged", func() {
+			nics := gomonkey.ApplyFuncReturn(npu_nic.ListNics, []string{testNicName}, nil)
+			defer nics.Reset()
+			refresh := gomonkey.ApplyFunc(refreshNpuNicMapping, func(devmanager.DeviceInterface) bool {
+				t.Fatal("refresh should not be called when the nic count is unchanged")
+				return true
+			})
+			defer refresh.Reset()
+
+			convey.So(checkNicCountAndRefresh(dev, 1), convey.ShouldEqual, 1)
+		})
+		convey.Convey("should keep the count when polling fails", func() {
+			nics := gomonkey.ApplyFuncReturn(npu_nic.ListNics, nil, fmt.Errorf("read failed"))
+			defer nics.Reset()
+
+			convey.So(checkNicCountAndRefresh(dev, 3), convey.ShouldEqual, 3)
+		})
+		convey.Convey("should keep the count when refresh fails", func() {
+			nics := gomonkey.ApplyFuncReturn(npu_nic.ListNics, []string{testNicName}, nil)
+			defer nics.Reset()
+			refresh := gomonkey.ApplyFuncReturn(refreshNpuNicMapping, false)
+			defer refresh.Reset()
+
+			convey.So(checkNicCountAndRefresh(dev, 2), convey.ShouldEqual, 2)
+		})
+	})
+}
+
+func TestRefreshNpuNicMapping_ShouldRefreshSnapshot_WhenDriverSucceeds(t *testing.T) {
+	convey.Convey("TestRefreshNpuNicMapping should refresh the snapshot from driver", t, func() {
+		resetConfigCache()
+		driverMapping := &NpuNicMapping{NpuNics: []NpuNicItem{{NpuId: 0, NicNames: []string{testNicName}}}}
+		patches := gomonkey.ApplyFuncReturn(getNpuNicMappingFromDriver, driverMapping, nil)
+		defer patches.Reset()
+
+		refreshNpuNicMapping(&devmanager.DeviceManagerMock{})
+
+		convey.So(isNpuNicMappingLoaded(), convey.ShouldBeTrue)
+		mapping, err := getNpuNicMappingCache(&devmanager.DeviceManagerMock{})
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(mapping, convey.ShouldResemble, driverMapping)
+	})
+}
+
+func TestRefreshNpuNicMapping_ShouldKeepSnapshot_WhenDriverFails(t *testing.T) {
+	convey.Convey("TestRefreshNpuNicMapping should keep the snapshot when driver fails", t, func() {
+		resetConfigCache()
+		snapshot := &NpuNicMapping{NpuNics: []NpuNicItem{{NpuId: 0, NicNames: []string{testNicName}}}}
+		setNpuNicMapping(snapshot, nil)
+
+		patches := gomonkey.ApplyFuncReturn(getNpuNicMappingFromDriver, nil, fmt.Errorf("driver unavailable"))
+		defer patches.Reset()
+
+		refreshNpuNicMapping(&devmanager.DeviceManagerMock{})
+
+		mapping, err := getNpuNicMappingCache(&devmanager.DeviceManagerMock{})
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(mapping, convey.ShouldResemble, snapshot)
+	})
+}
+
+func TestWatchNicCount_ShouldStopWhenContextDone(t *testing.T) {
+	convey.Convey("TestWatchNicCount should stop when context is done", t, func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		done := make(chan struct{})
+		go func() {
+			watchNicCount(ctx, &devmanager.DeviceManagerMock{}, 0)
+			close(done)
+		}()
+
+		select {
+		case <-done:
+		case <-time.After(time.Second):
+			t.Fatal("poll task should stop when context is done")
+		}
 	})
 }
 
