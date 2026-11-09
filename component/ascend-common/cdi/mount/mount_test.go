@@ -446,12 +446,37 @@ func TestParseMountEntry(t *testing.T) {
 		"/data/a:/",                 // shadows the whole container rootfs
 		"/data/a:/container/../etc", // '..' escape
 		"/data/a:/con:tainer/a",     // extra ':' in container path
+		"/data/a:/container/*",      // wildcard has no glob meaning at mount time
+		"/data/a:/container/a?",     // '?' belongs to the deny list
+		"/data/a:/container/[a]",    // '[' belongs to the deny list
+		"/data/a:/cont\x01ainer/a",  // control characters are rejected
 		"/data/a:/x///",             // container path with only slashes
 		"/data/a:/c/" + strings.Repeat("a", MaxContainerPathLen-2), // exceeds the CLI bound
 	}
 	for _, entry := range invalid {
 		if _, _, err := ParseMountEntry(entry); err == nil {
 			t.Errorf("expected error for entry %q", entry)
+		}
+	}
+}
+
+// TestDstDeniedCharsList asserts the dst deny list literal as the consistency
+// gate: the C side mirrors it as DST_DENIED_CHARS in cli/src/main.c; changing
+// one side without the other must fail exactly one of the two tests.
+func TestDstDeniedCharsList(t *testing.T) {
+	const expected = "*?[]:"
+	if dstDeniedChars != expected {
+		t.Fatalf("dstDeniedChars = %q, expected %q (keep DST_DENIED_CHARS in cli/src/main.c in sync)",
+			dstDeniedChars, expected)
+	}
+	// multi-byte UTF-8 stays outside the deny list and must be accepted
+	if err := validateDstChars("/container/中文目录"); err != nil {
+		t.Fatalf("UTF-8 container path rejected: %v", err)
+	}
+	// every deny-list character and control character must be rejected
+	for _, r := range expected + "\x01\x1f\x7f" {
+		if err := validateDstChars(string(r)); err == nil {
+			t.Errorf("expected rejection for character %q", r)
 		}
 	}
 }

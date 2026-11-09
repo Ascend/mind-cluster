@@ -30,6 +30,12 @@
 #define MAX_DEVICE_NR 1024
 #define MAX_MOUNT_NR 512
 
+// DST_DENIED_CHARS is the single deny list for in-container target paths:
+// glob-semantic characters plus the entry delimiter. It must stay literally
+// identical to dstDeniedChars in ascend-common/cdi/mount/mount.go; the Go and
+// C unit tests assert this list on both sides as a consistency gate.
+#define DST_DENIED_CHARS "*?[]:"
+
 #define ROOT_UID 0
 
 #define ROOT_UID 0
