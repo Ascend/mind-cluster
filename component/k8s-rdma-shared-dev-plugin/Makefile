@@ -14,7 +14,7 @@ TESTPKGS = $(shell $(GO) list -f '{{ if or .TestGoFiles .XTestGoFiles }}{{ .Impo
 VERSION?=master
 DATE=`date -Iseconds`
 COMMIT?=`git rev-parse --verify HEAD`
-LDFLAGS="-X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(DATE)"
+LDFLAGS="-linkmode external -extldflags \"-static\" -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(DATE)"
 
 # Docker
 IMAGE_BUILDER?=@docker
@@ -57,7 +57,7 @@ build: $(BUILDDIR)/$(BINARY_NAME) ; $(info Building $(BINARY_NAME)...) ## Build 
 	$(info Done!)
 
 $(BUILDDIR)/$(BINARY_NAME): $(GOFILES) | $(BUILDDIR)
-	@cd $(CURDIR)/cmd/$(BINARY_NAME) && CGO_ENABLED=0 $(GO) build -o $(BUILDDIR)/$(BINARY_NAME) -tags no_openssl -ldflags $(LDFLAGS) -v
+	@cd $(CURDIR)/cmd/$(BINARY_NAME) && CGO_ENABLED=1 $(GO) build -o $(BUILDDIR)/$(BINARY_NAME) -tags no_openssl -ldflags $(LDFLAGS) -v
 
 # Tools
 $(GOLANGCI_LINT): | $(BINDIR) ; $(info  installing golangci-lint...)

@@ -20,7 +20,6 @@ import (
 	"errors"
 	"io/fs"
 	"os"
-	"sync"
 	"testing"
 	"time"
 
@@ -29,16 +28,19 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+	"ascend-common/devmanager/npu_nic"
 )
 
 func init() {
 	_ = hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
 }
 
-func resetNpuNicMappingCache() {
-	npuNicMappingCache = nil
-	npuNicMappingErr = nil
-	npuNicMappingOnce = sync.Once{}
+func resetNpuNicMappingSnapshot() {
+	npuNicMappingMu.Lock()
+	npuNicMappingSnapshot = nil
+	npuNicMappingLoaded = false
+	npuNicMappingMu.Unlock()
+	affinityFromDriver.Store(false)
 }
 
 func resetDpuToNpuIndex() {
@@ -61,6 +63,52 @@ func TestLoadNpuNicMappingSuccess(t *testing.T) {
 			convey.So(len(mapping.NpuNics), convey.ShouldEqual, 1)
 			convey.So(mapping.NpuNics[0].NpuId, convey.ShouldEqual, 0)
 			convey.So(mapping.NpuNics[0].NicNames, convey.ShouldResemble, []string{"ens2f0", "ens0f2", "ens1f0"})
+		})
+	})
+}
+
+func TestLoadNpuNicMappingFromDriver(t *testing.T) {
+	patches := gomonkey.ApplyFunc(queryNpuNicAffinity, func() (map[int32][]string, error) {
+		return map[int32][]string{1: {"hrn1_0"}, 0: {"hrn0_1", "hrn0_0"}}, nil
+	})
+	defer patches.Reset()
+	defer func() { affinityFromDriver.Store(false) }()
+
+	convey.Convey("Given the driver returns the npu nic affinity", t, func() {
+		mapping, err := loadNpuNicMapping()
+		convey.Convey("Then the mapping should come from the driver and be sorted by npu id", func() {
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(mapping, convey.ShouldNotBeNil)
+			convey.So(mapping.NpuNics, convey.ShouldResemble, []NpuNicItem{
+				{NpuId: 0, NicNames: []string{"hrn0_1", "hrn0_0"}},
+				{NpuId: 1, NicNames: []string{"hrn1_0"}},
+			})
+			convey.So(affinityFromDriver.Load(), convey.ShouldBeTrue)
+			convey.So(mappingSource(), convey.ShouldEqual, "driver")
+		})
+	})
+}
+
+func TestLoadNpuNicMappingDriverEmpty(t *testing.T) {
+	driverPatches := gomonkey.ApplyFunc(queryNpuNicAffinity, func() (map[int32][]string, error) {
+		return map[int32][]string{}, nil
+	})
+	defer driverPatches.Reset()
+	defer func() { affinityFromDriver.Store(false) }()
+
+	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+		return []byte(`{"npuNics":[{"npuId":0,"nicNames":["ens2f0"]}]}`), nil
+	})
+	defer patches.Reset()
+
+	convey.Convey("Given the driver returns an empty affinity", t, func() {
+		mapping, err := loadNpuNicMapping()
+		convey.Convey("Then the config file should be used as fallback", func() {
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(mapping, convey.ShouldNotBeNil)
+			convey.So(mapping.NpuNics[0].NicNames, convey.ShouldResemble, []string{"ens2f0"})
+			convey.So(affinityFromDriver.Load(), convey.ShouldBeFalse)
+			convey.So(mappingSource(), convey.ShouldEqual, "config file")
 		})
 	})
 }
@@ -126,95 +174,147 @@ func TestLoadNpuNicMappingMachineTypeFail(t *testing.T) {
 	})
 }
 
-// waitForDpuIndexLoaded polls until the async load completes or timeout.
-func waitForDpuIndexLoaded(timeout time.Duration) bool {
-	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
-		dpuToNpuMu.RLock()
-		loaded := len(dpuToNpuIDs) > 0
-		dpuToNpuMu.RUnlock()
-		if loaded {
-			return true
-		}
-		time.Sleep(5 * time.Millisecond)
-	}
-	return false
-}
-
-// TestInitNpuNicMapping tests InitNpuNicMapping: the reverse index is built from a valid config.
+// TestInitNpuNicMapping tests InitNpuNicMapping: the reverse index is built synchronously at startup.
 func TestInitNpuNicMapping(t *testing.T) {
 	convey.Convey("Given a valid mapping config, the reverse index is built", t, func() {
 		resetDpuToNpuIndex()
+		resetNpuNicMappingSnapshot()
 		patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
 			return []byte(`{"npuNics":[{"npuId":0,"nicNames":["ens2f0","ens0f2"]}]}`), nil
 		})
 		convey.Convey("Then affected NPUs are resolved from the primary NIC", func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			InitNpuNicMapping(ctx)
-			convey.So(waitForDpuIndexLoaded(2*time.Second), convey.ShouldBeTrue)
+			InitNpuNicMapping(ctx, nil)
 			convey.So(GetAffectedNPU("ens2f0"), convey.ShouldResemble, []int{0})
 			convey.So(GetAffectedNPU("ens0f2"), convey.ShouldBeEmpty)
 		})
 		patches.Reset()
 		resetDpuToNpuIndex()
+		resetNpuNicMappingSnapshot()
 	})
 }
 
 func TestInitNpuNicMapping2(t *testing.T) {
 	convey.Convey("Given a config read failure, the reverse index stays empty", t, func() {
 		resetDpuToNpuIndex()
+		resetNpuNicMappingSnapshot()
 		patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
 			return nil, errors.New("read error")
 		})
 		defer patches.Reset()
 		defer resetDpuToNpuIndex()
+		defer resetNpuNicMappingSnapshot()
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		InitNpuNicMapping(ctx)
+		InitNpuNicMapping(ctx, nil)
 		convey.So(GetAffectedNPU("ens2f0"), convey.ShouldBeEmpty)
 	})
 	convey.Convey("Given the config file does not exist, the reverse index stays empty", t, func() {
 		resetDpuToNpuIndex()
+		resetNpuNicMappingSnapshot()
 		patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
 			return nil, nil
 		})
 		defer patches.Reset()
 		defer resetDpuToNpuIndex()
+		defer resetNpuNicMappingSnapshot()
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		InitNpuNicMapping(ctx)
+		InitNpuNicMapping(ctx, nil)
 		convey.So(GetAffectedNPU("ens2f0"), convey.ShouldBeEmpty)
 	})
-	convey.Convey("Given a transient failure, the mapping is loaded on retry", t, func() {
+	convey.Convey("Given a transient failure, the mapping is loaded on the next poll", t, func() {
 		resetDpuToNpuIndex()
-		origInterval := npuNicMappingRetryInterval
-		npuNicMappingRetryInterval = 10 * time.Millisecond
-		defer func() { npuNicMappingRetryInterval = origInterval }()
+		resetNpuNicMappingSnapshot()
 
 		start := time.Now()
-		patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+		driverPatches := gomonkey.ApplyFunc(queryNpuNicAffinity, func() (map[int32][]string, error) {
 			if time.Since(start) < 20*time.Millisecond {
-				return nil, errors.New("transient read error")
+				return nil, errors.New("transient driver error")
 			}
-			return []byte(`{"npuNics":[{"npuId":0,"nicNames":["ens2f0"]}]}`), nil
+			return map[int32][]string{0: {"ens2f0"}}, nil
 		})
+		patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+			return nil, errors.New("config file not available")
+		})
+		nics := gomonkey.ApplyFuncReturn(npu_nic.ListNics, []string{"ens2f0", "ens3f0"}, nil)
+		defer driverPatches.Reset()
 		defer patches.Reset()
+		defer nics.Reset()
 		defer resetDpuToNpuIndex()
+		defer resetNpuNicMappingSnapshot()
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		InitNpuNicMapping(ctx)
-		convey.So(waitForDpuIndexLoaded(2*time.Second), convey.ShouldBeTrue)
+		InitNpuNicMapping(ctx, nil)
+		convey.So(GetAffectedNPU("ens2f0"), convey.ShouldBeEmpty)
+		time.Sleep(20 * time.Millisecond)
+		convey.So(checkNicCountAndRefresh(1), convey.ShouldEqual, 2)
 		convey.So(GetAffectedNPU("ens2f0"), convey.ShouldResemble, []int{0})
 	})
 }
 
-// TestGetNicNamesLoadError tests GetNicNames when the config load fails on first access.
+// TestRefreshNpuNicMappingKeepsSnapshot tests that a failed refresh keeps the previous mapping.
+func TestRefreshNpuNicMappingKeepsSnapshot(t *testing.T) {
+	resetNpuNicMappingSnapshot()
+	defer resetNpuNicMappingSnapshot()
+	resetDpuToNpuIndex()
+	defer resetDpuToNpuIndex()
+
+	updateNpuNicMapping(&NpuNicMapping{NpuNics: []NpuNicItem{{NpuId: 0, NicNames: []string{"ens0f2"}}}})
+	setNpuNicMappingLoaded()
+
+	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
+		return nil, errors.New("read error")
+	})
+	defer patches.Reset()
+
+	convey.Convey("Given a refresh failure after a successful load", t, func() {
+		refreshNpuNicMapping()
+		convey.Convey("Then the previous mapping and reverse index are kept", func() {
+			names, err := GetNicNames(0)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(names, convey.ShouldResemble, []string{"ens0f2"})
+			convey.So(GetAffectedNPU("ens0f2"), convey.ShouldResemble, []int{0})
+		})
+	})
+}
+
+// TestRefreshNpuNicMappingFromDriver tests that a refresh replaces the snapshot with driver data.
+func TestRefreshNpuNicMappingFromDriver(t *testing.T) {
+	resetNpuNicMappingSnapshot()
+	defer resetNpuNicMappingSnapshot()
+	resetDpuToNpuIndex()
+	defer resetDpuToNpuIndex()
+
+	updateNpuNicMapping(&NpuNicMapping{NpuNics: []NpuNicItem{{NpuId: 0, NicNames: []string{"ens0f2"}}}})
+	setNpuNicMappingLoaded()
+
+	patches := gomonkey.ApplyFunc(queryNpuNicAffinity, func() (map[int32][]string, error) {
+		return map[int32][]string{0: {"hrn0_1", "hrn0_0"}}, nil
+	})
+	defer patches.Reset()
+
+	convey.Convey("Given the driver recovers on refresh", t, func() {
+		refreshNpuNicMapping()
+		convey.Convey("Then the snapshot is replaced by driver data", func() {
+			names, err := GetNicNames(0)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(names, convey.ShouldResemble, []string{"hrn0_1", "hrn0_0"})
+			convey.So(GetAffectedNPU("hrn0_1"), convey.ShouldResemble, []int{0})
+			convey.So(GetAffectedNPU("ens0f2"), convey.ShouldBeEmpty)
+			convey.So(mappingSource(), convey.ShouldEqual, "driver")
+		})
+	})
+}
+
+// TestGetNicNamesLoadError tests GetNicNames when the config load fails.
 func TestGetNicNamesLoadError(t *testing.T) {
-	resetNpuNicMappingCache()
+	resetNpuNicMappingSnapshot()
+	defer resetNpuNicMappingSnapshot()
 
 	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
 		return nil, errors.New("read error")
@@ -222,6 +322,7 @@ func TestGetNicNamesLoadError(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("Given a config load failure", t, func() {
+		refreshNpuNicMapping()
 		_, err := GetNicNames(0)
 		convey.Convey("Then an error should be returned", func() {
 			convey.So(err, convey.ShouldNotBeNil)
@@ -230,7 +331,8 @@ func TestGetNicNamesLoadError(t *testing.T) {
 }
 
 func TestGetNicNamesConfigNotFound(t *testing.T) {
-	resetNpuNicMappingCache()
+	resetNpuNicMappingSnapshot()
+	defer resetNpuNicMappingSnapshot()
 
 	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
 		return nil, nil
@@ -238,6 +340,7 @@ func TestGetNicNamesConfigNotFound(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("Given the mapping config file does not exist", t, func() {
+		refreshNpuNicMapping()
 		_, err := GetNicNames(0)
 		convey.Convey("Then an error should be returned", func() {
 			convey.So(err, convey.ShouldNotBeNil)
@@ -517,7 +620,8 @@ func TestGetAffectedNPU(t *testing.T) {
 }
 
 func TestGetNicNamesSuccess(t *testing.T) {
-	resetNpuNicMappingCache()
+	resetNpuNicMappingSnapshot()
+	defer resetNpuNicMappingSnapshot()
 
 	patches := gomonkey.ApplyFunc(utils.LoadFile, func(name string) ([]byte, error) {
 		return []byte(`{"npuNics":[{"npuId":0,"nicNames":["ens2f0","ens0f2"]},{"npuId":1,"nicNames":["ens2f1"]}]}`), nil
@@ -525,6 +629,7 @@ func TestGetNicNamesSuccess(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("Given a valid mapping config", t, func() {
+		refreshNpuNicMapping()
 		convey.Convey("Then the NIC names of a mapped NPU id are returned", func() {
 			names, err := GetNicNames(0)
 			convey.So(err, convey.ShouldBeNil)

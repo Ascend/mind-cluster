@@ -19,12 +19,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+	"ascend-common/devmanager"
+	"ascend-common/devmanager/npu_nic"
 )
 
 const (
@@ -33,6 +37,8 @@ const (
 	sysClassNetPath = "/sys/class/net"
 	// npuNicMappingMaxSize is the max allowed size (in MB) of npu-nic-mapping config.
 	npuNicMappingMaxSize = 1
+	// npuNicPollInterval is the fixed interval of the nic count polling, not configurable.
+	npuNicPollInterval = 5 * time.Minute
 )
 
 // NpuNicMapping is npu nic mapping config
@@ -56,52 +62,158 @@ var (
 	dpuToNpuMu  sync.RWMutex
 	dpuToNpuIDs map[string][]int
 
-	npuNicMappingCache *NpuNicMapping
-	npuNicMappingErr   error
-	npuNicMappingOnce  sync.Once
+	npuNicMappingMu       sync.RWMutex
+	npuNicMappingSnapshot *NpuNicMapping
+	npuNicMappingLoaded   bool
 
-	// npuNicMappingRetryInterval is the retry interval for loading npu-nic-mapping.json.
-	npuNicMappingRetryInterval = 30 * time.Second
+	// deviceManager is initialized when the plugin starts, it is used to query the npu-nic affinity.
+	deviceManager devmanager.DeviceInterface
+
+	// affinityFromDriver records whether the current mapping comes from the driver.
+	affinityFromDriver atomic.Bool
 )
 
-// InitNpuNicMapping starts a goroutine that loads npu-nic-mapping.json with retries and builds the reverse index.
-// Callers must invoke it only once during process startup.
-func InitNpuNicMapping(ctx context.Context) {
-	go loadNpuNicMappingWithRetry(ctx)
+// InitNpuNicMapping records the device manager initialized by the plugin, loads the npu-nic
+// mapping synchronously at startup, then polls the nic count.
+// A failed refresh keeps the previous snapshot, so consumers always read the latest valid mapping.
+func InitNpuNicMapping(ctx context.Context, mgr devmanager.DeviceInterface) {
+	deviceManager = mgr
+	refreshNpuNicMapping()
+	nics, _ := npu_nic.ListNics()
+	go watchNicCount(ctx, len(nics))
 }
 
-// loadNpuNicMappingWithRetry retries loading npu-nic-mapping.json until success or ctx cancelled.
-func loadNpuNicMappingWithRetry(ctx context.Context) {
-	ticker := time.NewTicker(npuNicMappingRetryInterval)
+// queryNpuNicAffinity queries the npu-nic affinity from dcmi, the logic id returned by npu_nic.Query
+// is converted to the npu physic id which is the npu id used by the device annotation.
+func queryNpuNicAffinity() (map[int32][]string, error) {
+	affinity, err := npu_nic.Query(deviceManager)
+	if err != nil {
+		return nil, err
+	}
+	phyAffinity := make(map[int32][]string, len(affinity))
+	for logicID, nicNames := range affinity {
+		phyID, err := deviceManager.GetPhysicIDFromLogicID(logicID)
+		if err != nil {
+			return nil, fmt.Errorf("get physic id of logicID(%d) failed: %w", logicID, err)
+		}
+		phyAffinity[phyID] = nicNames
+	}
+	return phyAffinity, nil
+}
+
+// watchNicCount refreshes the mapping only when the nic count changes.
+func watchNicCount(ctx context.Context, lastCount int) {
+	ticker := time.NewTicker(npuNicPollInterval)
 	defer ticker.Stop()
+	hwlog.RunLog.Infof("npu-nic-mapping poll task started, interval: %v, nic count: %d", npuNicPollInterval, lastCount)
 
 	for {
-		mapping, err := loadNpuNicMapping()
-		switch {
-		case err != nil:
-			hwlog.RunLog.Debugf("load npu-nic-mapping config failed: %v, "+
-				"AffectedNPU will be empty until loaded, retry in %s",
-				err, npuNicMappingRetryInterval)
-		case mapping == nil:
-			hwlog.RunLog.Debugf("npu-nic-mapping config not found, "+
-				"AffectedNPU will be empty until loaded, retry in %s",
-				npuNicMappingRetryInterval)
-		default:
-			index := buildReverseIndex(mapping.NpuNics)
-			dpuToNpuMu.Lock()
-			dpuToNpuIDs = index
-			dpuToNpuMu.Unlock()
-			hwlog.RunLog.Infof("npu-nic-mapping loaded, primary-DPU "+
-				"reverse index size: %d", len(index))
-			return
-		}
 		select {
 		case <-ctx.Done():
-			hwlog.RunLog.Infof("npu-nic-mapping loading stopped: %v", ctx.Err())
+			hwlog.RunLog.Infof("npu-nic-mapping refresh stopped: %v", ctx.Err())
 			return
 		case <-ticker.C:
+			lastCount = checkNicCountAndRefresh(lastCount)
 		}
 	}
+}
+
+// checkNicCountAndRefresh refreshes the mapping when the nic count changes and returns the new count.
+func checkNicCountAndRefresh(lastCount int) int {
+	nics, err := npu_nic.ListNics()
+	if err != nil {
+		hwlog.RunLog.Debugf("poll nic devices failed: %v, keep the npu-nic mapping", err)
+		return lastCount
+	}
+	if len(nics) == lastCount {
+		return lastCount
+	}
+	hwlog.RunLog.Infof("nic count changed from %d to %d, refresh npu-nic mapping", lastCount, len(nics))
+	if !refreshNpuNicMapping() {
+		return lastCount
+	}
+	return len(nics)
+}
+
+// refreshNpuNicMapping loads the mapping on the first call, after that only the driver is
+// queried again, returning whether the refresh succeeded. When the driver is unavailable the
+// existing snapshot is kept, the config file is used as fallback until a mapping is loaded.
+func refreshNpuNicMapping() bool {
+	if isNpuNicMappingLoaded() {
+		return refreshNpuNicMappingFromDriver()
+	}
+
+	mapping, err := loadNpuNicMapping()
+	switch {
+	case err != nil:
+		hwlog.RunLog.Warnf("load npu-nic-mapping failed: %v, will retry in the next refresh", err)
+		return false
+	case mapping == nil:
+		hwlog.RunLog.Warnf("npu-nic-mapping config not found, will retry in the next refresh")
+		return false
+	default:
+		setNpuNicMappingLoaded()
+		indexSize := updateNpuNicMapping(mapping)
+		hwlog.RunLog.Infof("npu-nic-mapping loaded from %s, primary-DPU reverse index size: %d",
+			mappingSource(), indexSize)
+		return true
+	}
+}
+
+// refreshNpuNicMappingFromDriver refreshes an already loaded snapshot with driver data, returning
+// whether the refresh succeeded. A failed refresh keeps the previous snapshot.
+func refreshNpuNicMappingFromDriver() bool {
+	affinity, err := queryNpuNicAffinity()
+	if err != nil {
+		hwlog.RunLog.Debugf("refresh npu-nic-mapping from driver failed: %v, use the memory snapshot", err)
+		return false
+	}
+	if len(affinity) == 0 {
+		hwlog.RunLog.Debugf("refresh npu-nic-mapping from driver returned empty result, use the memory snapshot")
+		return false
+	}
+
+	affinityFromDriver.Store(true)
+	indexSize := updateNpuNicMapping(newNpuNicMapping(affinity))
+	hwlog.RunLog.Infof("npu-nic-mapping refreshed from driver, primary-DPU reverse index size: %d", indexSize)
+	return true
+}
+
+// isNpuNicMappingLoaded reports whether a valid mapping has been loaded.
+func isNpuNicMappingLoaded() bool {
+	npuNicMappingMu.RLock()
+	defer npuNicMappingMu.RUnlock()
+	return npuNicMappingLoaded
+}
+
+// setNpuNicMappingLoaded marks the first load as attempted.
+func setNpuNicMappingLoaded() {
+	npuNicMappingMu.Lock()
+	npuNicMappingLoaded = true
+	npuNicMappingMu.Unlock()
+}
+
+// updateNpuNicMapping replaces the snapshot and the reverse index built from it,
+// returning the size of the reverse index.
+func updateNpuNicMapping(mapping *NpuNicMapping) int {
+	index := buildReverseIndex(mapping.NpuNics)
+
+	npuNicMappingMu.Lock()
+	npuNicMappingSnapshot = mapping
+	npuNicMappingMu.Unlock()
+
+	dpuToNpuMu.Lock()
+	dpuToNpuIDs = index
+	dpuToNpuMu.Unlock()
+
+	return len(index)
+}
+
+// getNpuNicMappingSnapshot returns the current mapping snapshot.
+func getNpuNicMappingSnapshot() *NpuNicMapping {
+	npuNicMappingMu.RLock()
+	defer npuNicMappingMu.RUnlock()
+	return npuNicMappingSnapshot
 }
 
 // GetAffectedNPU returns affected NPU ids by HCA name from reverse index.
@@ -206,8 +318,49 @@ func buildReverseIndex(items []NpuNicItem) map[string][]int {
 	return index
 }
 
-// loadNpuNicMapping reads the NPU-NIC mapping config baked into the image.
+// loadNpuNicMapping queries the npu-nic affinity from dcmi first, then falls back to
+// the config file baked into the image.
 func loadNpuNicMapping() (*NpuNicMapping, error) {
+	affinity, err := queryNpuNicAffinity()
+	if err == nil && len(affinity) > 0 {
+		affinityFromDriver.Store(true)
+		return newNpuNicMapping(affinity), nil
+	}
+	affinityFromDriver.Store(false)
+	if err != nil {
+		hwlog.RunLog.Warnf("query npu nic affinity from driver failed: %v, fallback to config file", err)
+	} else {
+		hwlog.RunLog.Warnf("query npu nic affinity from driver returned empty result, fallback to config file")
+	}
+	return loadNpuNicMappingFile()
+}
+
+// newNpuNicMapping converts the affinity queried from driver to NpuNicMapping. The primary nic
+// returned by npu_nic.Query is already the first nic of each npu.
+func newNpuNicMapping(affinity map[int32][]string) *NpuNicMapping {
+	npuIds := make([]int, 0, len(affinity))
+	for npuId := range affinity {
+		npuIds = append(npuIds, int(npuId))
+	}
+	sort.Ints(npuIds)
+
+	mapping := &NpuNicMapping{NpuNics: make([]NpuNicItem, 0, len(npuIds))}
+	for _, npuId := range npuIds {
+		mapping.NpuNics = append(mapping.NpuNics, NpuNicItem{NpuId: npuId, NicNames: affinity[int32(npuId)]})
+	}
+	return mapping
+}
+
+// mappingSource returns a readable description of where the current mapping comes from.
+func mappingSource() string {
+	if affinityFromDriver.Load() {
+		return "driver"
+	}
+	return "config file"
+}
+
+// loadNpuNicMappingFile reads the NPU-NIC mapping config baked into the image.
+func loadNpuNicMappingFile() (*NpuNicMapping, error) {
 	data, err := utils.LoadFile(npuNicMappingConfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("read config file error: %v", err)
@@ -241,30 +394,9 @@ func loadNpuNicMapping() (*NpuNicMapping, error) {
 	return &mapping, nil
 }
 
-// getNpuNicMappingCache returns the NPU-NIC mapping config.
-func getNpuNicMappingCache() (*NpuNicMapping, error) {
-	npuNicMappingOnce.Do(func() {
-		mapping, err := loadNpuNicMapping()
-		if err != nil {
-			npuNicMappingErr = err
-			return
-		}
-		npuNicMappingCache = mapping
-		if mapping != nil {
-			hwlog.RunLog.Infof("npu-nic-mapping config loaded: %v", mapping)
-		}
-	})
-
-	return npuNicMappingCache, npuNicMappingErr
-}
-
 // GetNicNames returns the NIC names mapped to the given NPU ID
 func GetNicNames(npuId int) ([]string, error) {
-	mapping, err := getNpuNicMappingCache()
-	if err != nil {
-		return nil, err
-	}
-
+	mapping := getNpuNicMappingSnapshot()
 	if mapping == nil {
 		return nil, fmt.Errorf("npu-nic-mapping config not found")
 	}
