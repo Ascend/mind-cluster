@@ -593,6 +593,11 @@ func isFailedTask(task *api.TaskInfo) bool {
 			klog.V(util.LogInfoLev).Infof("task [name=%v, containerName=%v] failed",
 				task.Name, status.Name)
 			return true
+		} else if status.LastTerminationState.Terminated == nil && status.RestartCount > 0 {
+			// container restore from snapshot and task failed
+			klog.V(util.LogInfoLev).Infof("task [name=%v, containerName=%v] failed from snapshot",
+				task.Name, status.Name)
+			return true
 		}
 	}
 	return false

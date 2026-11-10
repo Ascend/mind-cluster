@@ -799,6 +799,11 @@ func TestIsFailedTask(t *testing.T) {
 		LastTerminationState: terminatedErrorState,
 		RestartCount:         0,
 	}
+	containerSnapshotStatus := v1.ContainerStatus{
+		State:                terminatedErrorState,
+		LastTerminationState: v1.ContainerState{},
+		RestartCount:         1,
+	}
 	task := test.FakeNormalTestTask("pod1", "node1", "pg1")
 	t.Run("01-isFailedTask return false when task status normal", func(t *testing.T) {
 		task.Pod.Status = v1.PodStatus{ContainerStatuses: []v1.ContainerStatus{normalStatus}}
@@ -821,6 +826,12 @@ func TestIsFailedTask(t *testing.T) {
 	t.Run("04-isFailedTask return false when task or pod are nil", func(t *testing.T) {
 		if isFailedTask(nil) || isFailedTask(&api.TaskInfo{}) {
 			t.Errorf("isFailedTask() error, want false, return true")
+		}
+	})
+	t.Run("05-isFailedTask return true when task container restart once from snapshot", func(t *testing.T) {
+		task.Pod.Status = v1.PodStatus{ContainerStatuses: []v1.ContainerStatus{containerSnapshotStatus}}
+		if !isFailedTask(task) {
+			t.Errorf("isFailedTask() error, want true, return false")
 		}
 	})
 }
