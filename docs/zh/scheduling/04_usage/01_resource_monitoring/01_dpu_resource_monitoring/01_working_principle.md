@@ -2,7 +2,7 @@
 
 DPU资源监测特性的实现原理（以接入Prometheus场景为例）如下所示。
 
-1. DPU Exporter组件周期性调用网卡管理工具hinicadm5，查询DPU卡的RoCE计数器，获取DPU全局指标，放入缓存。
+1. DPU Exporter组件周期性调用网卡管理工具hinicadm5，查询DPU卡的RoCE计数器，获取DPU卡级全局指标，放入缓存。
 2. DPU Exporter组件周期性读取sysfs文件系统"/sys/class/net/&lt;interface_name&gt;/"目录下的文件，获取Interface级指标，放入缓存。
 3. DPU Exporter组件周期性执行`rdma resource show`命令，从Linux RDMA子系统获取当前网络命名空间内可见的RDMA设备级指标，放入缓存。
 4. DPU Exporter组件实现Prometheus的指标接口（/metrics），供Prometheus周期性获取缓存中的数据信息。

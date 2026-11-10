@@ -27,7 +27,7 @@
 
 ![](../../docs/zh/figures/scheduling/组件上下游依赖-9.png "组件上下游依赖-9")
 
-1. 从网卡管理工具hinicadm5获取DPU全局指标，放入缓存。
+1. 从网卡管理工具hinicadm5获取DPU卡级全局指标，放入缓存。
 2. 从sysfs文件系统获取Interface级指标，放入缓存。
 3. 通过`rdma resource show`获取RDMA设备级指标，放入缓存。
 4. 实现Prometheus的指标接口，供其周期性获取缓存中的数据信息。

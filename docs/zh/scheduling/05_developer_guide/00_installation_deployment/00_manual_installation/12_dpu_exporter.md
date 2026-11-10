@@ -18,14 +18,14 @@
 </thead>
 <tbody><tr id="row115077513272"><td class="cellrowborder" valign="top" width="29.970000000000002%" headers="mcps1.2.3.1.1 "><p id="p17925222412"><a name="p17925222412"></a><a name="p17925222412"></a>DPU驱动与工具</p>
 </td>
-<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><p id="p450745142713"><a name="p450745142713"></a><a name="p450745142713"></a><span id="ph10112356112714"><a name="ph10112356112714"></a><a name="ph10112356112714"></a>DPU Exporter</span>会周期性调用<code>hinicadm5</code>工具查询DPU卡级全局指标，并读取<code>/sys/class/net/</code>下的sysfs接口获取Interface级指标。如果要升级驱动或工具，请先停止业务任务，再停止<span id="ph154413248376"><a name="ph154413248376"></a><a name="ph154413248376"></a>DPU Exporter</span>服务。</p>
+<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><p id="p450745142713"><a name="p450745142713"></a><a name="p450745142713"></a><span id="ph10112356112714"><a name="ph10112356112714"></a><a name="ph10112356112714"></a>DPU Exporter</span>会周期性调用<code>hinicadm5</code>工具查询DPU卡级全局指标、执行<code>rdma resource show</code>命令获取RDMA设备级指标，并读取<code>/sys/class/net/</code>下的sysfs接口获取Interface级指标。如果要升级驱动或工具，请先停止业务任务，再停止<span id="ph154413248376"><a name="ph154413248376"></a><a name="ph154413248376"></a>DPU Exporter</span>服务。</p>
 <div class="note" id="note1993172317416"><a name="note1993172317416"></a><a name="note1993172317416"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><div class="p" id="zh-cn_topic_0000002479226379_p18934232419"><a name="zh-cn_topic_0000002479226379_p18934232419"></a><a name="zh-cn_topic_0000002479226379_p18934232419"></a>镜像部署时，需确保宿主机上<code>hinicadm5</code>位于<code>/usr/sbin/</code>目录下，YAML中已通过hostPath将该文件挂载至容器中。<code>hinicadm5</code>依赖的动态链接库（如<code>libmnl</code>）已在构建镜像时安装至镜像内。</div>
 </div></div>
 </td>
 </tr>
 <tr id="row_dpu_rdma"><td class="cellrowborder" valign="top" width="29.970000000000002%" headers="mcps1.2.3.1.1 "><p id="p_dpu_rdma_cat">RDMA工具与网络命名空间</p>
 </td>
-<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><p id="p_dpu_rdma_desc">DPU Exporter通过<code>rdma resource show</code>获取RDMA设备级指标。镜像部署时，镜像内已安装iproute2，无需从宿主机挂载<code>rdma</code>；二进制部署时，宿主机需安装iproute2，且<code>rdma</code>位于<code>/usr/bin/</code>（Ubuntu/Debian）或<code>/usr/sbin/</code>（openEuler/RHEL）目录下。</p>
+<td class="cellrowborder" valign="top" width="70.03%" headers="mcps1.2.3.1.2 "><p id="p_dpu_rdma_desc">DPU Exporter通过<code>rdma resource show</code>获取RDMA设备级指标。镜像部署时，Ubuntu镜像已安装iproute2、openEuler镜像已安装iproute，无需从宿主机挂载<code>rdma</code>；二进制部署时，宿主机需安装iproute2（Ubuntu/Debian）或iproute（openEuler/RHEL），且<code>rdma</code>分别位于<code>/usr/bin/</code>和<code>/usr/sbin/</code>目录下。</p>
 <p id="p_dpu_rdma_netns">RDMA指标仅包含当前网络命名空间（netns）内可见的RDMA设备；RDMA子系统<code>exclusive</code>模式下，分配到其他netns的设备不会出现在指标中。</p>
 </td>
 </tr>
@@ -76,7 +76,7 @@ DPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
 
     |参数|说明|
     |---|---|
-    |hinicadm5CollectorInterval|全局指标（hinicadm5 counter）采集周期，单位为秒。取值范围为-1、20~3600，默认值40。<ul><li>-1：只采集一次，不再重复采集。</li><li>20~3600：按指定周期采集。配置为其他值时使用默认值。</li></ul>|
+    |hinicadm5CollectorInterval|DPU卡级全局指标（hinicadm5 counter）采集周期，单位为秒。取值范围为-1、20~3600，默认值40。<ul><li>-1：只采集一次，不再重复采集。</li><li>20~3600：按指定周期采集。配置为其他值时使用默认值。</li></ul>|
     |sysfsCollectorInterval|Interface级指标（sysfs文件接口）采集周期，单位为秒。取值范围为-1、20~3600，默认值20。<ul><li>-1：只采集一次，不再重复采集。</li><li>20~3600：按指定周期采集。配置为其他值时使用默认值。</li></ul>|
     |dpuListRefreshInterval|DPU设备列表刷新周期，单位为秒。取值范围为-1、20~3600，默认值60。<ul><li>-1：启动时刷新一次，不再重复刷新。</li><li>20~3600：按指定周期刷新。配置为其他值时使用默认值。</li></ul>|
     |rdmaCollectorInterval|RDMA设备级指标（`rdma resource show`）采集周期，单位为秒。取值范围为-1、20~3600，默认值60。<ul><li>-1：只采集一次，不再重复采集。</li><li>20~3600：按指定周期采集。配置为其他值时使用默认值。</li></ul>|
@@ -214,7 +214,7 @@ DPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 
         |参数|说明|
         |---|---|
-        |hinicadm5CollectorInterval|全局指标（hinicadm5 counter）采集周期，单位为秒。取值范围为-1、20~3600。默认值40。<ul><li>-1：只采集一次，不再重复采集。</li><li>20~3600：按指定周期采集。配置为其他值时使用默认值。</li></ul>|
+        |hinicadm5CollectorInterval|DPU卡级全局指标（hinicadm5 counter）采集周期，单位为秒。取值范围为-1、20~3600。默认值40。<ul><li>-1：只采集一次，不再重复采集。</li><li>20~3600：按指定周期采集。配置为其他值时使用默认值。</li></ul>|
         |sysfsCollectorInterval|Interface级指标（sysfs文件接口）采集周期，单位为秒。取值范围为-1、20~3600。默认值20。<ul><li>-1：只采集一次，不再重复采集。</li><li>20~3600：按指定周期采集。配置为其他值时使用默认值。</li></ul>|
         |dpuListRefreshInterval|DPU设备列表刷新周期，单位为秒。取值范围为-1、20~3600。默认值60。<ul><li>-1：启动时刷新一次，不再重复刷新。</li><li>20~3600：按指定周期刷新。配置为其他值时使用默认值。</li></ul>|
         |rdmaCollectorInterval|RDMA设备级指标（`rdma resource show`）采集周期，单位为秒。取值范围为-1、20~3600，默认值60。<ul><li>-1：只采集一次，不再重复采集。</li><li>20~3600：按指定周期采集。配置为其他值时使用默认值。</li></ul>|
@@ -424,7 +424,7 @@ config reload completed
 
 ## 白名单配置说明<a name="白名单配置说明"></a>
 
-DPU Exporter通过白名单机制控制hinicadm5全局指标的采集范围，避免采集不必要的指标。
+DPU Exporter通过白名单机制控制hinicadm5采集的DPU卡级全局指标范围，避免采集不必要的指标。
 
 ### 白名单优先级
 
