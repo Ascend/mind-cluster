@@ -19,9 +19,12 @@ package plugin
 import (
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/affinity/chip/topo"
 )
 
 const (
@@ -129,6 +132,57 @@ func TestFaultCardsFromAnno(t *testing.T) {
 				silent, subHealth := faultCardsFromAnno(c.anno, shDevListPre)
 				convey.So(silent, convey.ShouldResemble, c.wantSilent)
 				convey.So(subHealth, convey.ShouldResemble, c.wantSubHealth)
+			})
+		}
+	})
+}
+
+// shSpElapsedSeconds is the job-wait snapshot stubbed for the super-pod cases
+const shSpElapsedSeconds = 5
+
+func TestRejectSuperPodNodeWithBackoffCards(t *testing.T) {
+	convey.Convey("should reject a super-pod node holding backoff cards per the window", t, func() {
+		patches := gomonkey.ApplyFuncReturn(cache.SessionElapsed, int64(shSpElapsedSeconds), true)
+		defer patches.Reset()
+		cases := []struct {
+			name      string
+			policy    string
+			taskNum   int
+			subHealth map[int]struct{}
+			afterTime int64
+			wantErr   string
+		}{
+			{"should reject when the node has sub-healthy cards within the window",
+				util.Chip8Node8Ra64Sp, 8, map[int]struct{}{0: {}}, 10,
+				"sub-healthy card within tolerance"},
+			{"should pass when the window times out",
+				util.Chip8Node8Ra64Sp, 8, map[int]struct{}{0: {}}, shSpElapsedSeconds, ""},
+			{"should pass when the job is not a super-pod job",
+				"", 8, map[int]struct{}{0: {}}, 10, ""},
+			{"should pass when the job has a single pod",
+				util.Chip8Node8Ra64Sp, 1, map[int]struct{}{0: {}}, 10, ""},
+			{"should pass when the node has no sub-healthy cards",
+				util.Chip8Node8Ra64Sp, 8, nil, 10, ""},
+		}
+		for _, c := range cases {
+			convey.Convey(c.name, func() {
+				anno := map[string]string{}
+				if c.policy != "" {
+					anno[util.SchedulePolicyAnnoKey] = c.policy
+				}
+				sJob := shBuildJob(anno)
+				sJob.NPUTaskNum = c.taskNum
+				sJob.NPUJob.ToleranceConfig.SubHealthyToleranceAfterTime = c.afterTime
+				root := topo.ParseTopology(topo.BuildFlatTopology(4))
+				root.Init(&topo.NodeFaultChips{SubHealth: c.subHealth}, nil, nil)
+				node := NPUNode{CommonNode: CommonNode{Name: "sh-node", ChipTopo: root}}
+				err := sJob.rejectSuperPodNodeWithBackoffCards(node)
+				if c.wantErr == "" {
+					convey.So(err, convey.ShouldBeNil)
+					return
+				}
+				convey.So(err, convey.ShouldNotBeNil)
+				convey.So(err.Error(), convey.ShouldContainSubstring, c.wantErr)
 			})
 		}
 	})
