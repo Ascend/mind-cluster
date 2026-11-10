@@ -124,6 +124,7 @@ If Ascend Docker Runtime has been installed, perform the following procedure on 
 
    If the output contains the **davinci0** field, the chip is mounted successfully, indicating that Ascend Docker Runtime is installed successfully and the component functions properly.
 
+<!-- npu="950,A3,910b,910,310p" id1 -->
 ## NPU Exporter<a name="ZH-CN_TOPIC_0000002511346363"></a>
 
 This section uses the integration with Prometheus and reporting of Prometheus data as an example to confirm whether NPU Exporter is running properly.
@@ -395,7 +396,9 @@ Perform the following procedure on any node to verify the installation status of
          huawei.com/Ascend310P-VPro:    1
        ...
        ```
+<!-- end id1 -->
 
+<!-- npu="950" id2 -->
 ## K8s RDMA Shared Dev Plugin<a name="ZH-CN_TOPIC_0000002524312662"></a>
 
 Perform the following procedure on any node to verify the installation status of K8s RDMA Shared Dev Plugin.
@@ -479,7 +482,9 @@ Perform the following procedure on any node to verify the installation status of
       huawei.com/ub_rdma:           8  # K8s has detected that the total number of RDMA shared devices available for allocation on this node is 8.
     ...
     ```
+<!-- end id2 -->
 
+<!-- npu="950,A3,910b,910,310p" id3 -->
 ## Volcano<a name="ZH-CN_TOPIC_0000002511346325"></a>
 
 1. Run the following command to view the two Volcano Pods in the K8s cluster. The `STATUS` of both Pods must be `Running` and `READY` must be `1/1`.
@@ -603,7 +608,9 @@ Perform the following procedure on any node to verify the installation status of
     [INFO]     2023/03/20 17:48:34.964296 1       ascend-operator/main.go:101    starting manager
     ...
     ```
+<!-- end id3 -->
 
+<!-- npu="950,A3,910b" id4 -->
 ## Infer Operator<a name="ZH-CN_TOPIC_0000002511346370"></a>
 
 Perform the following procedure on any node to verify the installation status of Infer Operator.
@@ -633,7 +640,9 @@ Perform the following procedure on any node to verify the installation status of
     [INFO]     2026/03/20 16:22:12.668888 1       hwlog/api.go:164    infer-operator.log's logger init success
     ...
     ```
+<!-- end id4 -->
 
+<!-- npu="950,A3,910b,910,310p" id5 -->
 ## NodeD<a name="ZH-CN_TOPIC_0000002479386440"></a>
 
 Perform the following procedure on any node to verify the installation status of NodeD.
@@ -696,7 +705,7 @@ Perform the following procedure on the node where the Container Manager componen
          Loaded: loaded (/etc/systemd/system/container-manager.service; disabled; vendor preset: enabled)
          Active: active (running) since Wed 2025-11-26 20:56:50 UTC; 16s ago
         Process: 41459 ExecStart=/bin/bash -c container-manager run  -ctrStrategy ringRecover -logPath=/var/log/mindx-dl/container-manager/container-manager.log >/dev/null 2>&1 & (code=exited, status=0/SUCCESS)
-       Main PID: 41464 (container-manage)
+       Main PID: 41464 (container-manag)
           Tasks: 10 (limit: 629145)
          Memory: 13.3M
          CGroup: /system.slice/container-manager.service
@@ -741,7 +750,9 @@ Perform the following procedure on the node where the Container Manager componen
     [INFO]     2025/11/25 22:46:59.315101 378     devmgr/hwdevmgr.go:365    subscribe device fault event success
     ...
     ```
+<!-- end id5 -->
 
+<!-- npu="950" id6 -->
 ## DPU Exporter<a name="ZH-CN_TOPIC_0000002511346364"></a>
 
 This section uses the integration with Prometheus and reporting of Prometheus data as an example to confirm whether DPU Exporter is running properly.
@@ -833,7 +844,9 @@ Perform the following procedure on the node where DPU Exporter is installed to v
     [2026-08-26 11:46:23.604187][INFO]     460     logger/logger.go:79    starting prometheus metrics server on :8083
     ...
     ```
+<!-- end id6 -->
 
+<!-- npu="950,A3,910b" id7 -->
 ## Ascend Dynamic Resource Allocation<a name="ZH-CN_TOPIC_0000002511426342"></a>
 
 Ascend Dynamic Resource Allocation (hereinafter referred to as the DRA driver) is required only for users who apply for NPU resources using the K8s Dynamic Resource Allocation (DRA) mechanism. Perform the following procedure on any node to verify the installation status of the DRA driver.
@@ -894,7 +907,7 @@ Ascend Dynamic Resource Allocation (hereinafter referred to as the DRA driver) i
     NAME                                  POOLNAME     DEVICECOUNT   AGE
     npu.huawei.com-node1-1a2b3c           node1        8             2m
     ```
-
+<!-- end id7 -->
 ## Agent Core<a name="ZH-CN_TOPIC_0000002524428761"></a>
 
 Perform the following procedure on any node to verify the installation status of Agent Core.
@@ -966,31 +979,44 @@ Kubectl Plugin is a client command-line tool installed on the user machine and d
 
 **Procedure<a name="section-kubectl-plugin-confirm-status"></a>**
 
-1. Run the following commands to check whether the plugin is available. If the help information is displayed, the plugin is installed successfully.
+1. Run the following command to check whether the plugin is available.
 
     ```shell
     kubectl ascend_diag --help
     kubectl clusterops --help
     ```
 
-   Output example:
+   The following is an example of the command output, which indicates that the plugin is available.
 
     ```ColdFusion
+    $ kubectl ascend-diag --help
     usage: kubectl-ascend_diag [-h] [--job JOB] [-n NAMESPACE] [--agent-core-service AGENT_CORE_SERVICE] [--refresh] [--json] [--collect-manifest PATH]
 
     Ascend fault diagnosis kubectl plugin
 
-    options:
-      -h, --help            show this help message and exit
-      --job JOB             job name (job CR name)
-      -n NAMESPACE, --namespace NAMESPACE
+    optional arguments:
+    -h, --help            show this help message and exit
+    --job JOB             job name (job CR name)
+    -n NAMESPACE, --namespace NAMESPACE
                             namespace
-      --agent-core-service AGENT_CORE_SERVICE
-                            agent-core Service, format svc.ns:9700
-      --refresh             ignore the cache, force rerun and refresh the cache
-      --json                print the full JSON response
-      --collect-manifest PATH
+    --agent-core-service AGENT_CORE_SERVICE
+                            Agent Core Service, format svc.ns:9700
+    --refresh             ignore the cache, force rerun and refresh the cache
+    --json                print the full JSON response
+    --collect-manifest PATH
                             write a local collect_manifest.yaml into the cluster ConfigMap and exit
+
+    $ kubectl clusterops --help
+    usage: kubectl-clusterops [-h] [--create-llm-config] [--clear-llm-config] [--base-url BASE_URL] [--model MODEL]
+
+    cluster operations kubectl plugin
+
+    optional arguments:
+    -h, --help           show this help message and exit
+    --create-llm-config  configure the LLM Secret (llm-secret)
+    --clear-llm-config   clear all LLM config (delete llm-secret, effective immediately)
+    --base-url BASE_URL  LLM Base URL (prompted; or env LLM_BASE_URL)
+    --model MODEL        LLM model name (prompted; or env LLM_MODEL)
     ```
 
 2. (Optional) Run the following command to trigger the ClusterOps Agent once to confirm that the diagnosis link is working properly.

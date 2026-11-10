@@ -35,7 +35,7 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 |npu-310-strategy|Scheduling strategy for inference servers (with Atlas 300I inference cards)|<ul><li>card</li><li>chip</li></ul>|Volcano|
 |pod-rescheduling|Whether to enable Pod-level rescheduling.|<ul><li>on: Enable Pod-level rescheduling.</li><li>Other values or omitting this field: Disable Pod-level rescheduling.</li></ul>|Volcano|
 |process-recover-enable|Whether to enable process-level rescheduling.|<ul><li>on: Enable process-level rescheduling</li><li>Other values or omitting this field: Disable process-level rescheduling</li></ul>|Volcano|
-|subHealthyStrategy| Sub-healthy node handling strategy.|<ul><li>ignore:Ignore the sub-healthy node; subsequent jobs will not preferentially schedule to this node in affinity scheduling.</li><li>graceExit: Do not use the sub-healthy node, save the checkpoint file, then perform rescheduling; subsequent jobs will not be scheduled to this node.</li><li>forceExit: Do not use the sub-healthy node, exit the job directly without saving, perform rescheduling; subsequent jobs will not be scheduled to this node.</li><li>hotSwitch: Performs hot switching. After bringing up a backup Pod, pause the training job and restart training on the new node.</li></ul>|Volcano|
+|subHealthyStrategy| Sub-healthy node handling strategy.|<ul><li>ignore: When new jobs are scheduled, the sub-healthy node is not used within the default 10s backoff window. Outside the backoff window, this node is not preferentially scheduled. You can adjust the backoff window through [huawei.com/subhealthy.tolerance.after-time](#p_subhealthy_tolerance_1).</li><li>graceExit: Do not use the sub-healthy node, save the checkpoint file, then perform rescheduling; subsequent jobs will not be scheduled to this node.</li><li>forceExit: Do not use the sub-healthy node, exit the job directly without saving, perform rescheduling; subsequent jobs will not be scheduled to this node.</li><li>hotSwitch: Performs hot switching. After bringing up a backup Pod, pause the training job and restart training on the new node.</li></ul>|Volcano|
 |huawei.com/scheduler.softShareDev.aicoreQuota|AICore percentage requested by a soft-partitioning task.|[1, 100]|Volcano|
 |huawei.com/scheduler.softShareDev.hbmQuota|High-bandwidth memory amount requested by a soft-partitioning task.|<p>[1, maxHBM]</p><p>maxHBM is the value of HBM-Usage(MB) displayed by the <b>npu-smi info</b> command.</p>|Volcano|
 |huawei.com/scheduler.softShareDev.policy|Policy for soft-partitioning tasks.|<ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|Volcano|
@@ -62,6 +62,15 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p1072973244"><a name="p1072973244"></a><a name="p1072973244"></a><span id="ph197215716249"><a name="ph197215716249"></a><a name="ph197215716249"></a>Volcano</span>, <span id="ph17212711245"><a name="ph17212711245"></a><a name="ph17212711245"></a>Ascend Operator</span></p>
 </td>
 </tr>
+<tr id="row_ra_block_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_ra_block_1"><a name="p_ra_block_1"></a><a name="p_ra_block_1"></a>ra-block</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_ra_block_2"><a name="p_ra_block_2"></a><a name="p_ra_block_2"></a>Specifies the number of chips in a logical rack.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_ra_block_3"><a name="p_ra_block_3"></a><a name="p_ra_block_3"></a>Integer, ranging from 1 to 64 and must be a power of 2.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_ra_block_4"><a name="p_ra_block_4"></a><a name="p_ra_block_4"></a>Volcano</p>
+</td>
+</tr>
 <tr id="row972875243"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p20765429172612"><a name="p20765429172612"></a><a name="p20765429172612"></a>huawei.com/schedule_policy</p>
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p1276572913269"><a name="p1276572913269"></a><a name="p1276572913269"></a>Specifies the scheduling policy.</p>
@@ -79,6 +88,34 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 <p id="p_schedule_mode_3"><a name="p_schedule_mode_3"></a><a name="p_schedule_mode_3"></a>If this annotation is not configured or the value is invalid, soft scheduling is used by default.</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_schedule_mode_4"><a name="p_schedule_mode_4"></a><a name="p_schedule_mode_4"></a><span id="ph_schedule_mode_volcano"><a name="ph_schedule_mode_volcano"></a><a name="ph_schedule_mode_volcano"></a>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_scheduler_downgrade_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgrade_1"><a name="p_scheduler_downgrade_1"></a><a name="p_scheduler_downgrade_1"></a>huawei.com/scheduler.downgrade</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgrade_2"><a name="p_scheduler_downgrade_2"></a><a name="p_scheduler_downgrade_2"></a>Switch for the scheduling constraint downgrade (topology constraint fallback) of A3 SuperPoD jobs.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>true: enabled. When the job continuously cannot be scheduled with the original sp-block, the level increases by 1 for each waiting period of the scheduler global fallback time (scheduler-downgrade-timeout): level n means halving the original sp-block n times consecutively (each halving must result in a value that is an integer multiple of the NPU count per node; otherwise, the NPU count of a single node is used instead.). The level is derived from the waiting time snapshot at the start of each scheduling session and is determined once within the same session: if the waiting time spans multiple windows, the level may drop by more than one level at a time (for example, 64 to 16), but it is not lowered consecutively within the same session. When the job is scheduled at a finer granularity, the read-only marker annotations huawei.com/scheduler.downgrade.timestamp and huawei.com/scheduler.downgrade.effected-config are written to the Pod.</li><li>false (default): disabled, consistent with the current behavior.</li></ul>
+<p id="p_scheduler_downgrade_3"><a name="p_scheduler_downgrade_3"></a><a name="p_scheduler_downgrade_3"></a>If this annotation is not configured or its value is not true, the function is disabled by default. It takes effect only for the A3 SuperPoD scheduling policy. It also takes effect for inference service (infer-service) jobs, whose node selection is also based on the effective sp-block. When this function is enabled, Pod-level rescheduling (pod-rescheduling) and process-level recovery (process-recover-enable) cannot be enabled at the same time; otherwise, the job verification is rejected. After the job is scheduled at a certain level for the first time, the level is fixed and no longer deepened. For job-level rescheduling (all jobs within the scheduling scope become pending again), the level is reset to the original sp-block and re-derived based on the waiting time. For Pod-level rescheduling (some jobs become pending), the effective level is retained.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_scheduler_downgrade_4"><a name="p_scheduler_downgrade_4"></a><a name="p_scheduler_downgrade_4"></a><span id="ph_scheduler_downgrade_volcano"><a name="ph_scheduler_downgrade_volcano"></a><a name="ph_scheduler_downgrade_volcano"></a>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_scheduler_downgraded_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgraded_1"><a name="p_scheduler_downgraded_1"></a><a name="p_scheduler_downgraded_1"></a>huawei.com/scheduler.downgrade.timestamp</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgraded_2"><a name="p_scheduler_downgraded_2"></a><a name="p_scheduler_downgraded_2"></a>Records the effective time of the scheduling constraint downgrade of A3 SuperPoD jobs. Automatically updated by Volcano.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_scheduler_downgraded_3"><a name="p_scheduler_downgraded_3"></a><a name="p_scheduler_downgraded_3"></a>Unix timestamp, in seconds. It is written by Volcano when the Pod is bound successfully. If the Pod already has the marker, it is not overwritten. It is cleared when a reserved rollback occurs and rewritten when the next binding succeeds. Users should not modify this annotation. Different Pods of the same job may record different downgrade levels. To determine the level currently in effect for a job, use the latest timestamp among all Pods of the job.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_scheduler_downgraded_4"><a name="p_scheduler_downgraded_4"></a><a name="p_scheduler_downgraded_4"></a><span id="ph_scheduler_downgraded_volcano"><a name="ph_scheduler_downgraded_volcano"></a><a name="ph_scheduler_downgraded_volcano"></a>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_scheduler_downgraded_level_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgraded_level_1"><a name="p_scheduler_downgraded_level_1"></a><a name="p_scheduler_downgraded_level_1"></a>huawei.com/scheduler.downgrade.effected-config</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgraded_level_2"><a name="p_scheduler_downgraded_level_2"></a><a name="p_scheduler_downgraded_level_2"></a>Records the effective downgrade constraint of A3 SuperPoD jobs. Automatically updated by Volcano.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_scheduler_downgraded_level_3"><a name="p_scheduler_downgraded_level_3"></a><a name="p_scheduler_downgraded_level_3"></a>The value is a snapshot of the effective downgrade constraint, represented by the JSON serialized from the scheduling policy: under the A3 SuperPoD policy, the value is similar to {"sp-block":16}, where the number equals the number of NPUs corresponding to the effective sp-block. For example, {"sp-block":16} indicates that the level has been lowered to the single-node lower limit. It is written at the same time as huawei.com/scheduler.downgrade.timestamp. If the Pod already has the marker, it is not overwritten. It is cleared when a reserved rollback occurs and rewritten when the next binding succeeds. Users should not modify this annotation. For the effective time of this annotation, see huawei.com/scheduler.downgrade.timestamp.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_scheduler_downgraded_level_4"><a name="p_scheduler_downgraded_level_4"></a><a name="p_scheduler_downgraded_level_4"></a><span id="ph_scheduler_downgraded_level_volcano"><a name="ph_scheduler_downgraded_level_volcano"></a><a name="ph_scheduler_downgraded_level_volcano"></a>Volcano</span></p>
 </td>
 </tr>
 <tr id="row572178247"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p13765229182617"><a name="p13765229182617"></a><a name="p13765229182617"></a>sp-fit</p>
@@ -168,6 +205,33 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
 </tr>
+<tr id="row_silent_tolerance_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_silent_tolerance_1"><a name="p_silent_tolerance_1"></a><a name="p_silent_tolerance_1"></a>huawei.com/silent.unhealthy-tolerance.after-time</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Backoff tolerance duration for chips with silent faults, in s (second).</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0: allowed immediately without backoff.</li><li>-1: permanently prohibited. Jobs are not scheduled to chips with silent faults, and a running job that uses a chip with a silent fault is evicted and rescheduled.</li><li>N (N&gt;0): jobs can use chips with silent faults only after being queued for N seconds.</li></ul><p>The default value is 0, and the value range is [-1, 1800].</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_pod_error_tolerance_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_pod_error_tolerance_1"><a name="p_pod_error_tolerance_1"></a><a name="p_pod_error_tolerance_1"></a>huawei.com/pod.error-tolerance.after-time</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Backoff tolerance duration for Pod error chips, in s (second).</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0: allowed immediately without backoff.</li><li>N (N&gt;0): within N seconds after a Pod failure, the job avoids the chip that caused the failure.</li></ul><p>The default value is 0, and the value range is [0, 300]. Pod error backoff is a temporary backoff, and -1 (permanent prohibition) is not supported.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_subhealthy_tolerance_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_subhealthy_tolerance_1"><a name="p_subhealthy_tolerance_1"></a><a name="p_subhealthy_tolerance_1"></a>huawei.com/subhealthy.tolerance.after-time</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Configures the tolerance duration for subhealthy resources during job scheduling. Within the window, the scheduler does not schedule the job to subhealthy resources; outside the window, the job is allowed.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>The default value is 10, in seconds, and the value range is [0, 300]. For details about the values, see <a href="./12_k8s.md#p_subhealthy_tolerance_k8s">Pod Annotation Usage Description</a>.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -177,7 +241,7 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 
 | Configuration | Description |
 |--|--|
-| chip4-node8 | 1 node with 8 chips, every 4 chips form an interconnect ring. For example, Atlas 800 training server (model 9000)/Atlas 800 training server (model 9010)/Atlas 350 accelerator card has 8 chips total, every 4 chips are connected via UB mezzanine. |
+| chip4-node8 | 1 node with 8 chips, every 4 chips form an interconnect ring. For example, for the chips in the full-module scenario of Atlas 800 training server (model 9000)/Atlas 800 training server (model 9010) and the Atlas 350 accelerator card, there are 8 chips in total, and every 4 chips are connected via UB mezzanine. |
 | chip1-node2 | 1 node with 2 chips. For example, the Atlas 300T training card supports up to 1 chip, and 1 node supports up to 2 chips. |
 | chip4-node4 | 1 node with 4 chips, forming 1 interconnect ring, for example, Atlas 800 training server (models 9000, 9010) half-configuration chip scenario. |
 | chip8-node8 | 1 node with 8 chips. All 8 chips form 1 interconnect ring, for example, Atlas 800T A2/Atlas 850E/Atlas 850/Atlas 650E/Atlas 650. |
@@ -185,7 +249,7 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 | chip2-node8 | 1 node with 8 chips, every 2 chips on 1 interconnect ring. |
 | chip2-node16 | 1 node with 16 chips, every 2 chips on 1 interconnect ring, for example, Atlas 800T A3. |
 | chip2-node8-sp | 1 node with 8 chips, every 2 chips on 1 interconnect ring. Multiple servers form a SuperPoD, for example, Atlas 9000 A3 SuperPoD. |
-| chip2-node16-sp | 1 node with 16 chips, every 2 chip on 1 interconnect ring. Multiple servers form a SuperPoD, for example, Atlas 900 A3 SuperPoD. |
+| chip2-node16-sp | 1 node with 16 chips, every 2 chips on 1 interconnect ring. Multiple servers form a SuperPoD, for example, Atlas 900 A3 SuperPoD. |
 | chip4-node16 | 1 node with 16 chips, every 4 chips on 1 interconnect ring, for example, Atlas 350 accelerator card with 16 chips total and every 4 chips connected via UB mezzanine. |
 | chip1-node8 | 1 node with 8 chips, no interconnect between chips, for example, Atlas 350 accelerator card with 8 chips total and no interconnect between chips. |
 | chip1-node16 | 1 node with 16 chips, no interconnect between chips, for example, Atlas 350 accelerator card with 16 chips total and no interconnect between chips. |
@@ -277,7 +341,7 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p728915247282"><a name="p728915247282"></a><a name="p728915247282"></a>Sub-health handling strategy</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul18716519102210"></a><a name="ul18716519102210"></a><ul id="ul18716519102210"><li>ignore: Ignore the sub-healthy node, and subsequent jobs will not prioritize this node in affinity scheduling.</li><li>graceExit: Do not use the sub-healthy node, save the dying gasp CKPT file, and then perform rescheduling. Subsequent jobs will not be scheduled to this node.</li><li>forceExit: Do not use the sub-healthy node, exit the job directly without saving, and perform rescheduling. Subsequent jobs will not be scheduled to this node.</li><li>hotSwitch: Perform a hot switching, start the backup Pod, pause the training job, and use a new node to restart the training.</li></ul>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul18716519102210"></a><a name="ul18716519102210"></a><ul id="ul18716519102210"><li>ignore: When new jobs are scheduled, the subhealthy node is not used within the default 10s backoff window. Outside the backoff window, this node is not prioritized in scheduling. You can adjust the backoff window through <a href="#p_subhealthy_tolerance_1">huawei.com/subhealthy.tolerance.after-time Configuration Description</a>.</li><li>graceExit: Do not use the sub-healthy node, save the dying gasp CKPT file, and then perform rescheduling. Subsequent jobs will not be scheduled to this node.</li><li>forceExit: Do not use the sub-healthy node, exit the job directly without saving, and perform rescheduling. Subsequent jobs will not be scheduled to this node.</li><li>hotSwitch: Perform a hot switching, start the backup Pod, pause the training job, and use a new node to restart the training.</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p929902143119"><a name="p929902143119"></a><a name="p929902143119"></a><span id="ph6299326312"><a name="ph6299326312"></a><a name="ph6299326312"></a>Volcano</span></p>
 </td>
@@ -333,6 +397,34 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 <p id="p_schedule_mode_pod_3"><a name="p_schedule_mode_pod_3"></a><a name="p_schedule_mode_pod_3"></a>If this annotation is not configured or the value is invalid, scheduling defaults to soft.</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_schedule_mode_pod_4"><a name="p_schedule_mode_pod_4"></a><a name="p_schedule_mode_pod_4"></a><span id="ph_schedule_mode_pod_volcano"><a name="ph_schedule_mode_pod_volcano"></a><a name="ph_schedule_mode_pod_volcano"></a>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_scheduler_downgrade_pod_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgrade_pod_1"><a name="p_scheduler_downgrade_pod_1"></a><a name="p_scheduler_downgrade_pod_1"></a>huawei.com/scheduler.downgrade</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgrade_pod_2"><a name="p_scheduler_downgrade_pod_2"></a><a name="p_scheduler_downgrade_pod_2"></a>Switch for the scheduling constraint downgrade (topology constraint fallback) of A3 SuperPoD jobs.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>true: enabled. When the job continuously cannot be scheduled with the original sp-block, the level increases by 1 for each waiting period of the scheduler global fallback time (scheduler-downgrade-timeout): level n means halving the original sp-block n times consecutively (each halving must result in a value that is an integer multiple of the NPU count per node; otherwise, the NPU count of a single node is used instead.). The level is derived from the waiting time snapshot at the start of each scheduling session and is determined once within the same session: if the waiting time spans multiple windows, the level may drop by more than one level at a time (for example, 64 to 16), but it is not lowered consecutively within the same session. When the job is scheduled at a finer granularity, the read-only marker annotations huawei.com/scheduler.downgrade.timestamp and huawei.com/scheduler.downgrade.effected-config are written to the Pod.</li><li>false (default): disabled, consistent with the current behavior.</li></ul>
+<p id="p_scheduler_downgrade_pod_3"><a name="p_scheduler_downgrade_pod_3"></a><a name="p_scheduler_downgrade_pod_3"></a>If this annotation is not configured or its value is not true, the function is disabled by default. It takes effect only for the A3 SuperPoD scheduling policy. It also takes effect for inference service (infer-service) jobs, whose node selection is also based on the effective sp-block. When this function is enabled, Pod-level rescheduling (pod-rescheduling) and process-level recovery (process-recover-enable) cannot be enabled at the same time; otherwise, the job verification is rejected. After the job is scheduled at a certain level for the first time, the level is fixed and no longer deepened. For job-level rescheduling (all jobs within the scheduling scope become pending again), the level is reset to the original sp-block and re-derived based on the waiting time. For Pod-level rescheduling (some jobs become pending), the effective level is retained.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_scheduler_downgrade_pod_4"><a name="p_scheduler_downgrade_pod_4"></a><a name="p_scheduler_downgrade_pod_4"></a><span id="ph_scheduler_downgrade_pod_volcano"><a name="ph_scheduler_downgrade_pod_volcano"></a><a name="ph_scheduler_downgrade_pod_volcano"></a>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_scheduler_downgraded_pod_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgraded_pod_1"><a name="p_scheduler_downgraded_pod_1"></a><a name="p_scheduler_downgraded_pod_1"></a>huawei.com/scheduler.downgrade.timestamp</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgraded_pod_2"><a name="p_scheduler_downgraded_pod_2"></a><a name="p_scheduler_downgraded_pod_2"></a>Records the effective time of the scheduling constraint downgrade of A3 SuperPoD jobs. Automatically updated by Volcano.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_scheduler_downgraded_pod_3"><a name="p_scheduler_downgraded_pod_3"></a><a name="p_scheduler_downgraded_pod_3"></a>Unix timestamp, in seconds. It is written by Volcano when the Pod is bound successfully. If the Pod already has the marker, it is not overwritten. It is cleared when a reserved rollback occurs and rewritten when the next binding succeeds. Users should not modify this annotation. Different Pods of the same job may record different downgrade levels. To determine the level currently in effect for a job, use the latest timestamp among all Pods of the job.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_scheduler_downgraded_pod_4"><a name="p_scheduler_downgraded_pod_4"></a><a name="p_scheduler_downgraded_pod_4"></a><span id="ph_scheduler_downgraded_pod_volcano"><a name="ph_scheduler_downgraded_pod_volcano"></a><a name="ph_scheduler_downgraded_pod_volcano"></a>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_scheduler_downgraded_level_pod_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgraded_level_pod_1"><a name="p_scheduler_downgraded_level_pod_1"></a><a name="p_scheduler_downgraded_level_pod_1"></a>huawei.com/scheduler.downgrade.effected-config</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgraded_level_pod_2"><a name="p_scheduler_downgraded_level_pod_2"></a><a name="p_scheduler_downgraded_level_pod_2"></a>Records the effective downgrade constraint of A3 SuperPoD jobs. Automatically updated by Volcano.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_scheduler_downgraded_level_pod_3"><a name="p_scheduler_downgraded_level_pod_3"></a><a name="p_scheduler_downgraded_level_pod_3"></a>The value is a snapshot of the effective downgrade constraint, represented by the JSON serialized from the scheduling policy: under the A3 SuperPoD policy, the value is similar to {"sp-block":16}, where the number equals the number of NPUs corresponding to the effective sp-block. For example, {"sp-block":16} indicates that the level has been lowered to the single-node lower limit. It is written at the same time as huawei.com/scheduler.downgrade.timestamp. If the Pod already has the marker, it is not overwritten. It is cleared when a reserved rollback occurs and rewritten when the next binding succeeds. Users should not modify this annotation. For the effective time of this annotation, see huawei.com/scheduler.downgrade.timestamp.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_scheduler_downgraded_level_pod_4"><a name="p_scheduler_downgraded_level_pod_4"></a><a name="p_scheduler_downgraded_level_pod_4"></a><span id="ph_scheduler_downgraded_level_pod_volcano"><a name="ph_scheduler_downgraded_level_pod_volcano"></a><a name="ph_scheduler_downgraded_level_pod_volcano"></a>Volcano</span></p>
 </td>
 </tr>
 <tr id="row572178247"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p13765229182617"><a name="p13765229182617"></a><a name="p13765229182617"></a>sp-fit</p>
@@ -396,6 +488,33 @@ Regarding the interfaces exposed by the Pods of the volcano-scheduler and volcan
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Configures distributed Ascend910/Ascend950 jobs to ignore NPUs with unhealthy parameter-plane networks during scheduling. Only takes effect for the huawei.com/Ascend910 and huawei.com/npu resource types.</p>
 </td>
 <td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>"ignore": Ignores NPUs with unhealthy parameter-plane networks, allowing scheduling to NPUs with unhealthy networks.</li><li>Not set or other values: Filters out NPUs with unhealthy parameter-plane networks, disallowing scheduling to NPUs with unhealthy networks.</li></ul><p>By default, it is not set, meaning NPUs with unhealthy networks are filtered.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_silent_tolerance_2"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_silent_tolerance_2"><a name="p_silent_tolerance_2"></a><a name="p_silent_tolerance_2"></a>huawei.com/silent.unhealthy-tolerance.after-time</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Backoff tolerance duration for chips with silent faults, in s (second).</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0: allowed immediately without backoff.</li><li>-1: permanently prohibited. Jobs are not scheduled to chips with silent faults, and a running job that uses a chip with a silent fault is evicted and rescheduled.</li><li>N (N&gt;0): jobs can use chips with silent faults only after being queued for N seconds.</li></ul><p>The default value is 0, and the value range is [-1, 1800].</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_pod_error_tolerance_2"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_pod_error_tolerance_2"><a name="p_pod_error_tolerance_2"></a><a name="p_pod_error_tolerance_2"></a>huawei.com/pod.error-tolerance.after-time</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Backoff tolerance duration for Pod error chips, in s (second).</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0: allowed immediately without backoff.</li><li>N (N&gt;0): within N seconds after a Pod failure, the job avoids the chip that caused the failure.</li></ul><p>The default value is 0, and the value range is [0, 300]. Pod error backoff is a temporary backoff, and -1 (permanent prohibition) is not supported.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+</td>
+</tr>
+<tr id="row_subhealthy_tolerance_2"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_subhealthy_tolerance_2"><a name="p_subhealthy_tolerance_2"></a><a name="p_subhealthy_tolerance_2"></a>huawei.com/subhealthy.tolerance.after-time</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Configures the tolerance duration for subhealthy resources during job scheduling. Within the window, the scheduler does not schedule the job to subhealthy resources; outside the window, the job is allowed.</p>
+</td>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>The default value is 10, in seconds, and the value range is [0, 300]. For details about the values, see <a href="./12_k8s.md#p_subhealthy_tolerance_k8s">Pod Annotation Usage Description</a>.</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
@@ -820,7 +939,7 @@ The MindCluster cluster scheduling components write information such as device a
 
 **mindx-dl/job-reschedule-reason<a name="section20866121155814"></a>**
 
-This ConfigMap is used to record the historical information of job rescheduling. By default, it saves the ten most recent rescheduling records of a job. When the ConfigMap content exceeds 950 KB, the earliest record of each job will be deleted in sequence.
+This ConfigMap is used to record the historical information of job rescheduling. By default, it saves the ten most recent rescheduling records of a job. When the ConfigMap content exceeds 950 KB, the earliest record of each job will be deleted in sequence. When the `fault-scheduling` value of a job is external-force-pod-failed, the job does not record the rescheduling reason, that is, no corresponding job rescheduling record is generated in this ConfigMap.
 
 **Table 4** Job field description
 

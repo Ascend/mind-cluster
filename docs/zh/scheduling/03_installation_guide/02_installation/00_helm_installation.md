@@ -205,7 +205,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     > [!NOTE]
     >- 默认安装的组件包括：Ascend Device Plugin、Ascend Operator、Volcano、ClusterD、NodeD、NPU Exporter、DPU Exporter和Infer Operator，Volcano版本为v1.9.0。
     >- 默认不安装的组件包括：K8s RDMA Shared Dev Plugin和Ascend Dynamic Resource Allocation。
-    >- Ascend Dynamic Resource Allocation组件与Ascend Device Plugin组件功能等价，均提供昇腾NPU设备的发现上报、分配与挂载能力，部署其中一种即可，因此默认安装Ascend Device Plugin组件、不安装Ascend Dynamic Resource Allocation组件。该组件要求K8s版本为1.34.x~1.36.x，低版本K8s集群请勿开启。若需要使用动态资源分配功能，请通过自定义配置将该组件的enabled设置为true，并建议同时将Ascend Device Plugin组件的enabled设置为false。
+    >- Ascend Dynamic Resource Allocation组件与Ascend Device Plugin组件功能等价，均提供昇腾NPU设备的发现上报、分配与挂载能力，部署其中一种即可，因此默认安装Ascend Device Plugin组件、不安装Ascend Dynamic Resource Allocation组件。该组件要求K8s版本为1.36.x，低版本K8s集群请勿开启。若需要使用动态资源分配功能，请通过自定义配置将该组件的enabled设置为true，并建议同时将Ascend Device Plugin组件的enabled设置为false。
     >- 参数说明可参见[表2](#table15274931175242)和[表3](#table15274931175243)，其中[表3](#table15274931175243)中的参数未在下方YAML配置中展示，用户可根据实际情况新增或修改。
     >- 26.1.0版本中，tag字段默认值为`v26.1.0`，不带`-openeuler24.03`、`-ubuntu22.04`或`-alpinelatest`后缀，与昇腾镜像仓库中的镜像tag不一致，直接使用默认值可能导致镜像拉取失败。可将其配置为`v26.1.0-openeuler24.03`、`v26.1.0-ubuntu22.04`、`v1.9.0-v26.1.0-alpinelatest`等带后缀的tag。
 
@@ -296,7 +296,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
        pullPolicy: "IfNotPresent"                                                  # K8s RDMA Shared Dev Plugin组件镜像拉取策略，请根据实际情况修改
 
    ascend-dynamic-resource-allocation:
-     enabled: false                                                          # false表示不安装Ascend Dynamic Resource Allocation组件，该组件要求K8s版本为1.34.x~1.36.x
+     enabled: false                                                          # false表示不安装Ascend Dynamic Resource Allocation组件，该组件要求K8s版本为1.36.x
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-dra"   # Ascend Dynamic Resource Allocation组件镜像名，请根据实际情况修改
        # 昇腾镜像仓库镜像tag为"v26.2.0-openeuler24.03"或"v26.2.0-ubuntu22.04"
@@ -439,7 +439,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>Ascend Dynamic Resource Allocation</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-dynamic-resource-allocation.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为false</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用Ascend Dynamic Resource Allocation组件。该组件要求K8s版本为1.34.x~1.36.x，低版本K8s集群请勿开启。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用Ascend Dynamic Resource Allocation组件。该组件要求K8s版本为1.36.x，低版本K8s集群请勿开启。</p></td>
   </tr>
 </tbody>
 </table>

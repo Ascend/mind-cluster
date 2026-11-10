@@ -44,7 +44,7 @@ Ascend DRA has a built-in health check callback `draHealthChecker`, which return
 | --tls-private-key-file | Path of the HTTPS private key file. It must be configured together with --tls-cert-file, or both must be left empty | Empty |
 
 > [!NOTE]
-> `--enable-healthz` is set to `false` by default, and it must be explicitly enabled in the image startup command. The recommended configuration is `--enable-healthz --healthz-address=11258`.
+> `--enable-healthz` is set to `false` by default, and it must be explicitly enabled in the image startup command. The recommended configuration is `--enable-healthz=true --healthz-address=11258`.
 
 **K8s livenessProbe configuration example:**
 

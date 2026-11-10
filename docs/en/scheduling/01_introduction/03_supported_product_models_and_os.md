@@ -12,7 +12,7 @@ The product forms supported by the management nodes, compute nodes, and storage 
 
 In the single-server scenario, the product forms and operating systems supported for both training and inference are shown in the following table.
 
-**Table 1**  Supported product forms and OSs
+**Table 1** Supported product forms and OSs
 
 <a name="tableAtlasGeneral"></a>
 <table><thead align="left"><tr>
@@ -120,10 +120,10 @@ In the single-server training scenario, the supported product forms and OSs are 
 </tr>
 <tr id="row5314923164214"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p11314172324210"><a name="p11314172324210"></a><a name="p11314172324210"></a><span id="ph1531415237425"><a name="ph1531415237425"></a><a name="ph1531415237425"></a>Atlas 900 A2 PoD</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul0428918809"></a><a name="ul0428918809"></a><ul id="ul0428918809"><li>BC-Linux-for-Euler-21.10 for aarch64</li><li>BC-Linux_21.10 U4 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>Kylin V11 for aarch64</li><li>CTYunOS 22.06 for aarch64</li><li>openEuler 22.03 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>Ubuntu 22.04 for aarch64</li><li>Ubuntu 24.04 LTS for aarch64</li><li>HCE 2.0  for aarch64</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul0428918809"></a><a name="ul0428918809"></a><ul id="ul0428918809"><li>BC-Linux-for-Euler-21.10 for aarch64</li><li>BC-Linux_21.10 U4 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>Kylin V11 for aarch64</li><li>CTYunOS 22.06 for aarch64</li><li>openEuler 22.03 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>Ubuntu 22.04 for aarch64</li><li>Ubuntu 24.04 LTS for aarch64</li><li>HCE 2.0 for aarch64</li></ul>
 </td>
 </tr>
-<tr id="row13314162394218"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14314142374220"><a name="p14314142374220"></a><a name="p14314142374220"></a><span id="ph1431418234423"><a name="ph1431418234423"></a><a name="ph1431418234423"></a>Atlas 900 A2 PoDc cluster basic unit</span></p>
+<tr id="row13314162394218"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14314142374220"><a name="p14314142374220"></a><a name="p14314142374220"></a><span id="ph1431418234423"><a name="ph1431418234423"></a><a name="ph1431418234423"></a>Atlas 900 A2 PoDc</span></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1192418295016"></a><a name="ul1192418295016"></a><ul id="ul1192418295016"><li>openEuler 22.03 LTS SP4 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>Ubuntu 24.04 LTS for aarch64</li><li>BC-Linux_21.10 U4 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>

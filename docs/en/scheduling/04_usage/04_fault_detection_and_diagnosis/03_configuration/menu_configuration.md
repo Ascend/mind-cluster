@@ -6,5 +6,8 @@
 - [Configuring Network Faults](./04_network_faults.md)
 - [Configuring Workload Fault and Task Hang Detection](./05_task_hang_detection.md)
 - [Configuring Performance Degradation, Slow Node, and Slow Network Diagnosis](./06_performance_diagnosis.md)
+<!-- npu="A3,910b" id1 -->
 - [Configuring Online Stress Testing](./07_online_stress_testing.md)
+<!-- end id1 -->
 - [Configuring Public Faults](./08_public_faults.md)
+- [Configuring Silent Fault Detection](./09_silent_faults.md)

@@ -15,7 +15,7 @@
 - For the fault recovery scenario, ensure that each node has the model script information required for job execution. It is recommended to use a shared storage solution, such as NFS (Network File System). For details, see [Installing NFS](../../07_references/02_common_operations.md#installing-nfs).
 - Training scenario: for ultra-large-scale cluster scheduling scenarios, batch Pod creation and batch scheduling are supported.
    - To use the batch Pod creation feature, the customized openFuyao Kubernetes must be used when installing Ascend Operator.
-   - To use the batch scheduling feature, the customized openFuyao Kubernetes and volcano-ext must be used when installing Volcano, and the batch scheduling feature must be enabled.
+   - To use the batch scheduling feature, the customized openFuyao Kubernetes and volcano-ext must be used when installing Volcano, and the batch scheduling feature must be enabled. For parameter configurations, see [YAML Configuration](../../06_api/15_yaml_configuration.md).
    - The batch scheduling feature is applicable to ultra-large-scale cluster scenarios. In such scenarios, expand the CPU and memory resources allocated to MindCluster components as needed to prevent these components from experiencing insufficient performance or exceeding the allocated memory usage, which would cause the components to be evicted by Kubernetes.
 
 **Usage<a name="section179431435174811"></a>**
@@ -396,18 +396,27 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 
 **Scenario of Configuring Resource Information Through Environment Variables<a name="section1969664932615"></a>**
 
+<!-- npu="910b" id1 -->
 - For <term>Atlas A2 training products</term>, see [Table 1](#table529015783811) to obtain the corresponding YAML example.
 
     After obtaining the example YAML from [Table 1](#table529015783811), the Atlas 800T A2, Atlas 200T A2 Box16, and A200T A3 Box8 can be modified and adapted based on the parameter description provided in [acjob YAML Parameter Description](../../06_api/15_yaml_configuration.md).
+<!-- end id1 -->
 
+<!-- npu="910" id2 -->
 - For <term>Atlas training products</term>, see [Table 2](#table18698184918261) to obtain the corresponding YAML example.
 
     After obtaining the example YAML from [Table 2](#table18698184918261), the server (with Atlas 300T training cards installed) can be adapted based on the YAML of the Atlas 800 training server and the parameter description provided in [acjob YAML Parameter Description](../../06_api/15_yaml_configuration.md).
+<!-- end id2 -->
 
+<!-- npu="A3" id3 -->
 - For <term>Atlas A3 training products</term>, see [Table 3](#table57051049102614) to obtain the corresponding YAML example.
+<!-- end id3 -->
 
+<!-- npu="950" id4 -->
 - For <term>Ascend 950PR&950DT products</term>, see [Table 4](#table5290157950yaml) to obtain the corresponding YAML example.
+<!-- end id4 -->
 
+<!-- npu="910b" id5 -->
 **Table 1** YAML supported by <term>Atlas A2 training products</term>
 
 <a name="table529015783811"></a>
@@ -467,7 +476,9 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </tr>
 </tbody>
 </table>
+<!-- end id5 -->
 
+<!-- npu="910" id6 -->
 **Table 2** YAML supported by <term>Atlas training products</term>
 
 <a name="table18698184918261"></a>
@@ -521,7 +532,9 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </tr>
 </tbody>
 </table>
+<!-- end id6 -->
 
+<!-- npu="A3" id7 -->
 **Table 3** YAML supported by <term>Atlas A3 training products</term>
 
 <a name="table57051049102614"></a>
@@ -563,7 +576,9 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </tr>
 </tbody>
 </table>
+<!-- end id7 -->
 
+<!-- npu="950" id8 -->
 **Table 4** YAML supported by <term>Ascend 950PR&950DT products</term>
 <a name="table5290157950yaml"></a>
 <table>
@@ -590,7 +605,9 @@ The following YAML examples are provided for users. Select the appropriate YAML 
         </tr>
     </tbody>
 </table>
+<!-- end id8 -->
 
+<!-- npu="950,A3,910b,310p" id15 -->
 **Table 5** YAML files for different inference job types and hardware models
 
 <a name="zh-cn_topic_0000001609074213_table15169151021912"></a>
@@ -646,16 +663,24 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </tr>
 </tbody>
 </table>
+<!-- end id15 -->
 
 **Scenario of Configuring Resource Information Through Files<a name="section158807920347"></a>**
 
+<!-- npu="910b" id9 -->
 - For <term>Atlas A2 training products</term>, see [Table 6](#table62591594016) to obtain the corresponding YAML example.
 
     After obtaining the example YAML from [Table 6](#table62591594016), the Atlas 800T A2, Atlas 200T A2 Box16, and A200T A3 Box8 can be modified and adapted based on the parameter description provided in [YAML Configuration Description](../../06_api/15_yaml_configuration.md#).
+<!-- end id9 -->
 
+<!-- npu="910" id10 -->
 - For <term>Atlas training products</term>, see [Table 7](#table21811158146) to obtain the corresponding YAML example.
+<!-- end id10 -->
+<!-- npu="950" id11 -->
 - For <term>Ascend 950PR&950DT products</term>, see [Table 8](#table950yaml) to obtain the corresponding YAML example.
+<!-- end id11 -->
 
+<!-- npu="910b" id12 -->
 **Table 6** YAML supported by <term>Atlas A2 training products</term>
 
 <a name="table62591594016"></a>
@@ -719,7 +744,9 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </tr>
 </tbody>
 </table>
+<!-- end id12 -->
 
+<!-- npu="910" id13 -->
 **Table 7** YAML supported by <term>Atlas training products</term>
 
 <a name="table21811158146"></a>
@@ -803,7 +830,9 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </tr>
 </tbody>
 </table>
+<!-- end id13 -->
 
+<!-- npu="950" id14 -->
 **Table 8** YAML supported by <term>Ascend 950PR&950DT products</term>
 <a name="table950yaml"></a>
 <table>
@@ -836,8 +865,10 @@ The following YAML examples are provided for users. Select the appropriate YAML 
         </tr>
     </tbody>
 </table>
+<!-- end id14 -->
 
-**Table 9**  YAML files for different inference job types and hardware models
+<!-- npu="950,A3,910b,310p" id16 -->
+**Table 9** YAML files for different inference job types and hardware models
 
 <a name="zh-cn_topic_0000001609074213_table15169151021912"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0000001609074213_row16169201019192"><th class="cellrowborder" valign="top" width="18.48%" id="mcps1.2.5.1.1"><p id="zh-cn_topic_0000001609074213_p4169191017192"><a name="zh-cn_topic_0000001609074213_p4169191017192"></a><a name="zh-cn_topic_0000001609074213_p4169191017192"></a>Job Type</p>
@@ -878,6 +909,7 @@ The following YAML examples are provided for users. Select the appropriate YAML 
 </tr>
 </tbody>
 </table>
+<!-- end id16 -->
 
 #### YAML Parameter Description<a name="ZH-CN_TOPIC_0000002511347099"></a>
 
@@ -1073,7 +1105,7 @@ This section guides users in configuring the job YAML for the full-NPU schedulin
               - name: output
                 mountPath: /job/output                    # Output path in the container
     ...
-               # Optional. In the training scenari, to use components to generate the RankTable file for a training job, add the following bold fields to set the save path of the hccl.json file in the container. This path cannot be modified.
+               # Optional. In the training scenario, to use components to generate the RankTable file for a training job, add the following bold fields to set the save path of the hccl.json file in the container. This path cannot be modified.
               <strong>- name: ranktable</strong>
                 <strong>mountPath: /user/serverid/devindex/config</strong>
     ...
@@ -1092,7 +1124,7 @@ This section guides users in configuring the job YAML for the full-NPU schedulin
                 server: 127.0.0.1
                 path: "xxxxxx"           # Configure the output path.
     ...
-               # Optional. In the training scenari, to use components to generate RankTable files for the PyTorch and MindSpore frameworks, add the following bold fields to set the hccl.json file save path.
+               # Optional. In the training scenario, to use components to generate RankTable files for the PyTorch and MindSpore frameworks, add the following bold fields to set the hccl.json file save path.
             <strong>- name: ranktable           # Do not modify the default value of this parameter. Ascend Operator uses it to check whether file mounting of hccl.json is enabled.</strong>
               <strong>hostPath:                 # Use hostPath mounting or NFS mounting.</strong>
                 <strong>path: /user/mindx-dl/ranktable/default.default-test-pytorch   # Shared storage or local storage path. /user/mindx-dl/ranktable/ is the prefix path and must be consistent with the Ranktable root directory mounted by Ascend Operator. default.default-test-pytorch is the suffix path. It is recommended to change it to: namespace.job-name</strong></pre>
@@ -1175,7 +1207,7 @@ This section guides users in configuring the job YAML for the full-NPU schedulin
         >[!NOTE]
         > - In **Allocated resources**, focus on the `huawei.com/XXX` field:
         >   - `huawei.com/Ascend910` indicates that the server type is <term>Atlas training products</term>, <term>Atlas A2 products</term>, or <term>Atlas A3 products</term>. For <term>Ascend 950PR&950DT products</term>, this field is `huawei.com/npu`.
-        >   - The value corresponding to `huawei.com/Ascend910` is `8`, which indicates the number of chips currently mounted by containers on the node. After a job is delivered successfully, this value increases by the number of NPU chips used by the job.
+        >   - The value corresponding to `huawei.com/Ascend910` is `8`, which indicates the number of chips currently mounted by K8s containers on the node. After a job is delivered successfully, this value increases by the number of NPU chips used by the job.
         > - For the inference scenario:
         >   - If <term>Atlas inference products</term> are used in non-mixed-insertion mode, the preceding field is displayed as **Ascend310P**.
         >   - If <term>Atlas inference products</term> are used in mixed-insertion mode, the preceding field is displayed as **one of Ascend310P-V, Ascend310P-VPro, and Ascend310P-IPro**.
@@ -1585,7 +1617,7 @@ The integration involves many interfaces. You are advised to refer to the releva
     clientset.CoreV1().ConfigMaps(job.Namespace).Create(context.TODO(), newConfigMap("rings-config-"+job.Name), metav1.CreateOptions{})
     ```
 
-6. Call the `Create` API to sumbit the job.
+6. Call the `Create` API to submit the job.
     - Ascend Job
 
         ```go

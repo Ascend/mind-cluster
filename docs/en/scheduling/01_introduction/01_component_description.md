@@ -35,6 +35,7 @@ To use Ascend AI Processors in containers, scripts and commands related to the A
 3. hook&&cli: Invoked before container creation, responsible for organizing chip device files, driver files, and user-defined files, and mounting them into the container.
 4. destroy: Invoked before container destruction, responsible for destroying the created vNPU.
 
+<!-- npu="950,A3,910b,910,310p" id1 -->
 ## NPU Exporter<a name="ZH-CN_TOPIC_0000002479226948"></a>
 
 **Application Scenario<a name="section15761025111720"></a>**
@@ -177,7 +178,9 @@ For a job to run stably on a node, in addition to ensuring the health of the NPU
 1. Obtains the CPU, memory, and drive fault information of the compute node from IPMI.
 2. Obtain shared storage abnormal information from the shared storage client.
 3. Report the abnormal information to ClusterD.
+<!-- end id1 -->
 
+<!-- npu="A3,910b" id2 -->
 ## Elastic Agent<a name="ZH-CN_TOPIC_0000002479386918"></a>
 
 >[!NOTE]
@@ -201,7 +204,9 @@ Because various software and hardware faults are prone to occur during large mod
 - The MindCluster cluster scheduling components write information such as device and training job status into a ConfigMap through K8s and maps it in the container. The ConfigMap name is [reset-config_job_name](../06_api/01_volcano.md#job-information).
 - Elastic Agent obtains information such as the device status used by the current training container and the training job status through the ConfigMap.
 - Elastic Agent connects to the K8s cluster control center and completes training management based on the cluster control center.
+<!-- end id2 -->
 
+<!-- npu="950,A3,910b" id3 -->
 ## TaskD<a name="ZH-CN_TOPIC_0000002479386914"></a>
 
 **Application Scenario<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section15761025111720"></a>**
@@ -276,7 +281,9 @@ MindIO TFT includes functions such as dying gasp checkpoint saving, process-leve
 **Figure 12** MindIO TFT dependencies<a name="fig117818118588"></a>
 
 ![](../../figures/scheduling/MindIO-TFT.png "MindIO-TFT")
+<!-- end id3 -->
 
+<!-- npu="950,A3,910b,910,310p" id4 -->
 ## Container Manager<a name="ZH-CN_TOPIC_0000002524312655"></a>
 
 **Application Scenario<a name="section11132193111423"></a>**
@@ -300,7 +307,9 @@ In scenarios without K8s, when an inference or training process becomes abnormal
 2. Delivers chip reset commands to DCMI.
 3. Obtains the currently running containers and chip mount information from the container runtime Docker or Containerd.
 4. Delivers container stop and start commands to the container runtime.
+<!-- end id4 -->
 
+<!-- npu="950,A3,910b" id5 -->
 ## Infer Operator<a name="ZH-CN_TOPIC_0000002511426821"></a>
 
 **Application Scenario<a name="section15761025111720"></a>**
@@ -310,19 +319,24 @@ MindCluster provides Infer Operator to batch start inference instances based on 
 **Component Function<a name="section1112014512117"></a>**
 
 - A single request creates a job group that contains multiple inference services, each of which contains multiple instance workloads with different roles.
-- Supports scaling of inference instances.
-- Supports load-based elastic scaling.
+- Supports manual scaling of inference instances: you can increase or decrease inference instances by modifying the replica count configuration, without rebuilding the entire inference job.
+- Supports load-based elastic scaling: automatically creates and manages Horizontal Pod Autoscaler (HPA) according to scaling policies, and supports composite metric definitions that combine multiple service metrics into scaling trigger conditions (for example, complex rules such as metric addition, multiplication, and time-window averaging), automatically adjusting the number of inference instances.
+- Supports priority scheduling configuration for multiple roles of an inference job. After priority scheduling is enabled, instances of each role are created and scheduled in descending order of priority (a smaller value indicates a higher priority), ensuring that high-priority roles occupy resources first.
+- Supports container snapshots: works with NodeD and Ascend Docker Runtime to generate host-side and device-side snapshots after an inference job completes warm-up, and quickly restores services based on the snapshots after a Pod is abnormally deleted. Container snapshots support elastic scaling scenarios. During scale-out, containers can be started from snapshots and instances can be launched, shortening the startup time of scaled-out instances.
+- Supports automatic configuration of instance affinity: in SuperPoD scenarios, affinity labels (`inferserviceid`) are automatically injected for all instances of the same inference service, so that Ascend-for-volcano preferentially schedules instances of the same inference service to the same frame or the same SuperPoD, and falls back to other SuperPoDs when resources are insufficient.
 
 **Component Upstream and Downstream Dependencies<a name="section4941922192110"></a>**
 
-**Figure 14**  Component upstream and downstream dependencies<a name="fig107831859289"></a>
+**Figure 14** Component upstream and downstream dependencies<a name="fig107831859289"></a>
 
 ![](../../figures/scheduling/introduction_infer-operator.PNG "introduction_infer-operator")
 
 1. Create an inference instance Workload based on the job YAML configured by the user.
 2. After Workload Controller creates the Pod, Volcano performs the final resource selection.
 3. If the Workload requests NPUs, Ascend Device Plugin obtains the NPU information and completes device mounting.
+<!-- end id5 -->
 
+<!-- npu="950" id6 -->
 ## K8s RDMA Shared Dev Plugin<a name="ZH-CN_TOPIC_0000002524312660"></a>
 
 **Application Scenario<a name="section15761025111720"></a>**
@@ -341,7 +355,7 @@ Kubernetes needs to be aware of RDMA network device resource information to impl
 **Working Mode<a name="section15761025111720"></a>**
 
 - **Shared mode (default)**: All pods in the cluster share all RDMA devices on the node, and no specific device needs to be allocated to a single pod. The component creates virtual devices based on the `rdmaHcaMax` parameter and reports them to kubelet. After a pod requests the resource, it can use any device.
-- **Exclusive mode**: Each NPU corresponds to a specific DPU device in a one-to-one manner, and device allocation is completed through the NPU-NIC mapping relationship. Based on the NPU requested by the pod, the component finds the corresponding DPU device through the mapping file and mounts it to the container, implementing device-level isolation.
+- **Exclusive mode (beta)**: Each NPU corresponds to a specific DPU device in a one-to-one manner, and device allocation is completed through the NPU-NIC mapping relationship. Based on the NPU requested by the pod, the component finds the corresponding DPU device through the mapping file and mounts it to the container, implementing device-level isolation.
   - **How to enable**: Add the `--ub-excl-mode` parameter when starting the component to enable exclusive mode.
   - **Allocation logic**: When a pod is created, the component reads the NPU ID requested by the pod, finds the corresponding DPU device through the mapping relationship, and mounts it to the container.
   - **Device reporting**: In exclusive mode, the UB devices actually discovered on the node are reported, and the reported quantity is the same as the actual number of DPU devices on the node.
@@ -414,7 +428,9 @@ During job running, the health status of the DPU directly affects job stability.
 1. Obtains DPU global metrics from the NIC management tool hinicadm5 and stores them in the cache.
 2. Obtains interface-level metrics from the file system sysfs and stores them in the cache.
 3. Implements the Prometheus metrics API so that Prometheus can periodically obtain the data in the cache.
+<!-- end id6 -->
 
+<!-- npu="950,A3,910b" id7 -->
 ## Ascend Dynamic Resource Allocation<a name="ZH-CN_TOPIC_0000002524312670"></a>
 
 **Application Scenario<a name="section15761025111720"></a>**
@@ -439,20 +455,21 @@ Ascend Dynamic Resource Allocation is the Kubernetes Dynamic Resource Allocation
 3. Reports the device information of Ascend chips to K8s in the ResourceSlice format for the scheduler to perceive and select.
 4. Reads the chip allocation result of the scheduler from ResourceClaim, and completes device allocation and release.
 5. Transfers the device injection information to the container runtime through the CDI mechanism to complete device injection.
+<!-- end id7 -->
 
-## Agent Core<a name="ZH-CN_TOPIC_0000002524312670"></a>
+## Agent Core<a name="ZH-CN_TOPIC_0000002524312673"></a>
 
 **Application Scenario<a name="section15761025111720"></a>**
 
-When a training or inference job encounters a fault during running, the root cause must be located quickly. Jobs are usually distributed across multiple nodes, and fault-related logs (system logs, device logs, and service logs) are scattered on the host of each node, making manual troubleshooting costly and inefficient. MindCluster provides the Agent Core component as the centralized control center for fault diagnosis, which automatically completes node collection scheduling, log parsing, and centralized diagnosis by job.
+When a training or inference job encounters a fault during running, the root cause must be located quickly. Jobs are usually distributed across multiple nodes, and fault-related logs (system logs, device logs, service logs, plog, and so on) are scattered on the host of each node, making manual troubleshooting costly and inefficient. MindCluster provides the Agent Core component as the centralized control center for fault diagnosis, which automatically completes node collection scheduling, log parsing, and centralized diagnosis by job.
 
 **Component Function<a name="section1112014512117"></a>**
 
 - Maintains the central relationship cache (`relcache`) of job pods: fully watches pods and records the mapping between jobs and pods, nodes, pod UIDs, and ranks. Snapshots are synchronized to ConfigMaps (`agent-core-relcache`, `agent-core-relcache-1...N`) in shards by pod UID. The memory capacity is the same as the shard snapshot capacity, and the oldest entries are evicted first when the capacity is exceeded.
-- Maintains the pod mount relationship table (`pathmap`): watches the `hostPath` mount pairs, literal env values, and pod IPs of job pods. Snapshots are synchronized to ConfigMaps (`clusterops-pathmap`, `clusterops-pathmap-1...N`) in shards, and the mount pairs/env/pod IPs are delivered with the pod list in the TriggerCollect collection instruction, so that Node Collector can resolve host paths as requested and filter and collect plog on the statically mounted shared storage by `MINDX_TASK_ID` and pod IP (collection is still possible after the job pod is deleted).
+- Maintains the pod mount relationship table (`pathmap`): watches the `hostPath` mount pairs, literal `env` values, and pod IPs of job pods, and synchronizes snapshot shards to ConfigMaps (`clusterops-pathmap`, `clusterops-pathmap-1...N`).
 - Receives diagnosis requests, queries the central relationship table by job name and namespace, delivers collection instructions to the Node Collector on each compute node, and aggregates the collection results reported by each node.
 - Assembles the logs collected and parsed by each node into a diagnosis input directory, and calls the ascend-fd diag command to perform centralized diagnosis and generate a diagnosis report.
-- Supports diagnosis result caching: the diagnosis result is cached after each diagnosis, and repeated diagnosis requests directly return the cached result. You can run --refresh to forcibly refresh the result.
+- Supports diagnosis result caching: the diagnosis result is cached after each diagnosis, and repeated diagnosis requests directly return the cached result. You can run `--refresh` to forcibly refresh the result.
 - Optionally connects to an LLM service to intelligently summarize the diagnosis report and output a root cause report.
 
 **Component Upstream and Downstream Dependencies<a name="section4941922192110"></a>**
@@ -479,8 +496,8 @@ Job logs are scattered on the hosts of compute nodes in the cluster. During diag
 - Performs collection according to the collection contract (`collect_manifest.yaml`), and supports multiple entity types such as `env`, `paths`, `mount_keywords`, and `commands`:
   - `env`: Reads the env value (container path) of the job pod, and collects the log after resolving the host path through the mount pair.
   - `paths`: Matches the mount pairs of the job pod by the container path prefix, and collects the log after resolving the host path.
-  - `mount_keywords`: Locates the log directory by matching mount pairs with keywords or scanning the host path subdirectories. If no match is found, the log directory of the pod is filtered out by pod IP and `MINDX_TASK_ID` on the statically mounted shared storage (`/mnt/shared-storage`, protocol not limited) before collection (collection is still possible after the job pod is deleted).
-  - `commands`: Only collection commands in the trustlist (such as `dmesg`, `dmidecode`, and `msnpureport`) are allowed to be executed.
+  - `commands`: Executes collection commands.
+  - `mount_keywords`: Filters out the log directory of the current pod by pod IP and `MINDX_TASK_ID` on the statically mounted shared storage (`/mnt/shared-storage`, protocol not limited) for collection; if no match is found, locates the log directory by matching mount pairs with keywords or scanning the host path subdirectories.
 - Locally calls ascend-fd parse to parse the collected logs, packages the parsing result as tar.gz, and proactively reports it to Agent Core through the gRPC API.
 
 **Component Upstream and Downstream Dependencies<a name="section4941922192110"></a>**
@@ -508,5 +525,5 @@ Users need to quickly trigger the ClusterOps Agent by job, and the invocation me
 
 **Component Upstream and Downstream Dependencies<a name="section4941922192110"></a>**
 
-1. The user runs the `kubectl ascend_diag` command. The plugin reuses the local kubeconfig and forwards the diagnosis request to the `/diag` API of Agent Core through port-forward.
+1. The user runs the `kubectl ascend_diag` command. The plugin reuses the local kubeconfig and forwards the diagnosis request to Agent Core through port-forward.
 2. After Agent Core completes node collection scheduling, log parsing, and centralized diagnosis by job, it returns the diagnosis report, and the plugin displays the result on the terminal.

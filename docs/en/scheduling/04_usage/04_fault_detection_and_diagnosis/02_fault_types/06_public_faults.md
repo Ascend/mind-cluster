@@ -1,6 +1,6 @@
 # Public Faults<a name="ZH-CN_TOPIC_0000002511426387"></a>
 
-Public faults are faults reported by other fault providers (not MindCluster components). Public faults include the following types: NPU faults, node faults, network faults, and storage faults.
+Public faults mainly refer to faults reported by other fault providers (not MindCluster components). Public faults include the following types: NPU faults, node faults, network faults, and storage faults. In addition, silent faults determined by ClusterD based on comprehensive software and hardware fault information also belong to public faults.
 
 >[!NOTE]
 >For ClusterD to receive public faults, Ascend Device Plugin must be installed on the target node, and the corresponding `device-info-cm` must be generated.
@@ -26,6 +26,9 @@ To ensure that the public fault detection function works properly, install the f
 ## Supported Fault Handling Types<a name="zh-cn_topic_0000002216292813_section177211923175116"></a>
 
 Job-level rescheduling, Pod-level rescheduling, and process-level rescheduling
+
+>[!NOTE]
+> A silent fault is a special type of public faults. Its handling policy is to append the fault to the fault list only without changing the chip health status, so it does not trigger job-level, Pod-level, or process-level rescheduling.
 
 ## (Optional) Configuring the Fault Detection Level and Provider<a name="zh-cn_topic_0000002216292813_section1343172016386"></a>
 

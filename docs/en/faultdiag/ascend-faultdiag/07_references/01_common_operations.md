@@ -26,4 +26,4 @@ Example output:
 
 | Environment Variable                  | Description                                                                                          |
 |-----------------------|------------------------------------------------------------------------------------------------------|
-| `ASCEND_FD_HOME_PATH` | Storage path for runtime logs, operation logs, and configuration files. The default is `$HOME/.ascend_faultdiag`. Setting it to the `/tmp` directory is not supported. |
+| `ASCEND_FD_HOME_PATH` | Storage path for runtime logs, operation logs, and configuration files. The default value is `$HOME/.ascend_faultdiag`. Setting it to the `/tmp` directory is not supported. |

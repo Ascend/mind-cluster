@@ -766,7 +766,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p230416293218"><a name="p230416293218"></a><a name="p230416293218"></a>单机场景</p>
 </td>
 <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p202281257143415"><a name="p202281257143415"></a><a name="p202281257143415"></a>可申请NPU的数目为1、2、3、4、5、6、7、8、10、12、14、16。</p>
-<a name="ul14261149163515"></a><a name="ul14261149163515"></a><ul id="ul14261149163515"><li>当申请NPU数目小于8时，根据亲和性约束分配的NPU只能在同一台服务器同一个环内（0~7号NPU为一个环，8~15号NPU为一个环）。</li><li>当申请NPU数目为10、12、14时，需要将所需的NPU平均分配到两个环，相对的物理地址也一致。例如申请了2个NPU进行训练，则分配的2个NPU要么都在同一台服务器的0~7号上或者都在8~15号上。不能出现一个在0~7号上，另一个在8~15号上。</li></ul>
+<a name="ul14261149163515"></a><a name="ul14261149163515"></a><ul id="ul14261149163515"><li>当申请NPU数目小于8时，根据亲和性约束分配的NPU只能在同一台服务器同一个环内（0~7号NPU为一个环，8~15号NPU为一个环）。例如申请了2个NPU进行训练，则分配的2个NPU要么都在同一台服务器的0~7号上或者都在8~15号上。不能出现一个在0~7号上，另一个在8~15号上。</li><li>当申请NPU数目为10、12、14时，需要将所需的NPU平均分配到两个环，相对的物理地址也一致。</li></ul>
 </td>
 </tr>
 <tr id="row20219245321"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p95591734153713"><a name="p95591734153713"></a><a name="p95591734153713"></a>分布式场景</p>
@@ -896,11 +896,11 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 |产品形态|参考文档|
 |--|--|
 |<term>Atlas训练系列产品</term>|<ul><li><span>《[Atlas 中心训练服务器 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591757)》</span></li><li><span>《[Atlas 中心训练服务器 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591764)》</span></li></ul>|
-|<term>Atlas A2系列产品</term>|<ul><li><span>《[Atlas A2 中心推理和训练硬件 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591767)》</span></li><li><span>《[Atlas A2 中心推理和训练硬件 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591760)》</span></li></ul>|
-|<term>Atlas A3系列产品</term>|<ul><li><span>《[Atlas A3 中心推理和训练硬件 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591769)》</span></li><li><span>《[Atlas A3 中心推理和训练硬件 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591758)》</span></li></ul>|
+|<term>Atlas A2系列产品</term>|<ul><li><span>《[Atlas A2 中心推理和训练硬件 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100621083)》</span></li><li><span>《[Atlas A2 中心推理和训练硬件 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100621080)》</span></li></ul>|
+|<term>Atlas A3系列产品</term>|<ul><li><span>《[Atlas A3 中心推理和训练硬件 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100621093)》</span></li><li><span>《[Atlas A3 中心推理和训练硬件 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100621098)》</span></li></ul>|
 |推理服务器（插Atlas 300I推理卡）|<span>《[Atlas 300I推理卡 黑匣子错误码信息列表（型号 3000, 3010）](https://support.huawei.com/enterprise/zh/doc/EDOC1100438311)》</span>|
 |Atlas 200I SoC A1核心板|<ul><li><span>《[Atlas 200I SoC A1核心板 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100493983)》</span></li><li><span>《[Atlas 200I SoC A1核心板 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100493985)》</span></li></ul>|
-|<term>Atlas推理系列产品</term>（不包含Atlas 200I SoC A1核心板）|<ul><li><span>《[Atlas 中心推理卡 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100591759)》</span></li><li><span>《[Atlas 中心推理卡 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100591768)》</span></li></ul>|
+|<term>Atlas推理系列产品</term>（不包含Atlas 200I SoC A1核心板）|<ul><li><span>《[Atlas 中心推理卡 健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100621086)》</span></li><li><span>《[Atlas 中心推理卡 黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100621100)》</span></li></ul>|
 |<term>Ascend 950PR&950DT系列产品</term>|<ul><li><span>《[健康管理故障定义](https://support.huawei.com/enterprise/zh/doc/EDOC1100569783)》</span></li><li><span>《[黑匣子错误码信息列表](https://support.huawei.com/enterprise/zh/doc/EDOC1100569782)》</span></li></ul>|
 
 ## 节点故障码参考文档<a name="ZH-CN_TOPIC_0000002479386430"></a>

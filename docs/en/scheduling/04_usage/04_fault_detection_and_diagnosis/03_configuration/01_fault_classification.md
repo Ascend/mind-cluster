@@ -36,7 +36,7 @@ The configurable fault levels supported for different types of faults are listed
 </tr>
 <tr id="row416145918513"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p116115913517"><a name="p116115913517"></a>Public faults</p>
 </td>
-<td class="cellrowborder" colspan="3" valign="top" headers="mcps1.2.5.1.2 "><p id="p147536536717"><a name="p147536536717"></a>NotHandleFault, SeparateNPU, SubHealthFault<span id="ph632635517598"><a name="ph632635517598"></a>, PreSeparateNPU</span></p>
+<td class="cellrowborder" colspan="3" valign="top" headers="mcps1.2.5.1.2 "><p id="p147536536717"><a name="p147536536717"></a>NotHandleFault, SeparateNPU, SubHealthFault, SilentFault<span id="ph632635517598"><a name="ph632635517598"></a>, PreSeparateNPU</span></p>
 </td>
 </tr>
 <tr id="row416145918513"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p116115913528"><a name="p116115913528"></a>Task hang faults</p>
@@ -173,6 +173,15 @@ In the preceding table, the handling policy of each fault level is described as 
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" width="21.81%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"></a>Not handled for now</p>
+</td>
+</tr>
+<tr id="row_silentfault001"><td class="cellrowborder" valign="top" width="19.06%" headers="mcps1.2.5.1.1 "><p id="p_silentfault001"><a name="p_silentfault001"></a>SilentFault</p>
+</td>
+<td class="cellrowborder" valign="top" width="35.74%" headers="mcps1.2.5.1.2 "><p id="p_silentfault002"><a name="p_silentfault002"></a>Silent fault. The node repeatedly encounters software faults, but no hardware fault is reported within the configured detection period. The fault handling policy is to append the fault to the fault list without changing the chip health status. Subsequent jobs can be configured not to preferentially schedule to this node.</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.39%" headers="mcps1.2.5.1.3 "><p id="p_silentfault003"><a name="p_silentfault003"></a>Not handled for now</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.81%" headers="mcps1.2.5.1.4 "><p id="p_silentfault004"><a name="p_silentfault004"></a>-</p>
 </td>
 </tr>
 </tbody>

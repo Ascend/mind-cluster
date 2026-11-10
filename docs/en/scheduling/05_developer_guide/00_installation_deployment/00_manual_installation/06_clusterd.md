@@ -41,6 +41,15 @@
           fault_threshold: 3
         release:
           fault_free_hours: 48
+      silent_fault_policy.conf: |
+        enabled: false
+        detect:
+          min_task_cards: 16
+          consecutive_times: 3
+          hardware_fault_window_seconds: 30
+          window_seconds: 10800
+        release:
+          fault_free_seconds: 172800
 
     ```
 
@@ -57,6 +66,24 @@
 
     >[!NOTE]
     >If the `enabled` field is missing, ClusterD will recognize it as `false`; if other int type fields are missing, ClusterD will recognize them as `0`.
+
+    **Table 2** Parameter description of silent_fault_policy.conf
+
+    <a name="table208902"></a>
+
+    |Primary Parameter|Secondary Parameter|Type|Description|
+    |--|--|--|--|
+    |enabled|-|bool|Silent fault detection switch. Values include: <ul><li>true: enables silent fault detection.</li><li>false: disables silent fault detection.</li></ul><p>The default value is false. When this switch is disabled, ClusterD will clear the silent faults in the clusterd-manual-info-cm and statistic-fault-info ConfigMaps.</p>|
+    |detect|min_task_cards|int|Total number of NPUs in a job required for silent fault determining. The value range is (0, 10000000), and the default value is 16.|
+    |detect|consecutive_times|int|Number of valid rescheduling attempts that must be reached within the determining period before a silent fault is determined. The value range is (0, 10000), and the default value is 3.|
+    |detect|hardware_fault_window_seconds|int|Window without hardware faults before and after rescheduling. The value range is (3, 86400), the default value is 30, and the unit is second.|
+    |detect|window_seconds|int|Determining period for silent faults. The value range is [30, 31536000), the default value is 10800 (3 hours), and the unit is second.|
+    |release|fault_free_seconds|int|Automatic release duration of a silent fault. Values include: <ul><li>-1: no automatic release.</li><li>(0, 31536000): explicit release duration, in second.</li></ul><p>The default value is 172800 (48 hours). After a silent fault is determined, a new hit refreshes the timer, and the release time is recalculated from the latest hit.</p>|
+
+    >[!NOTE]
+    >- The fault code and level of a silent fault are configured in `publicFaultConfiguration.json`, and users can adjust the level through `publicCustomization.json`. The sender `clusterd` has been configured in `publicFaultResource` by default.
+    >- You can manually delete the silent fault entry of the node in `clusterd-manual-info-cm` (clear all chips in the value of the `Total` field) to release the silent fault in advance. For details about `clusterd-manual-info-cm`, see [clusterd-manual-info-cm](../../../06_api/04_clusterd/00_cluster_resources.md#clusterd-manual-info-cm).
+    >- If the `enabled` field is missing, ClusterD recognizes it as `false`. If other fields are not configured or their values are invalid, ClusterD uses the default values of these fields.
 
 5. On the management node, in the path where the YAML file is located, run the following command to start ClusterD.
 

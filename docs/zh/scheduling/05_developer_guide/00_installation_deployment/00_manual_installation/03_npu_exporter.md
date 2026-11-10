@@ -248,7 +248,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
 
         通用YAML已包含名为`crio`的`volumeMounts`和`volumes`条目，挂载`/var/run/crio`目录。CRI-O场景保留这两处条目，删除两处名为`docker-shim`、`docker`、`cri-dockerd`、`containerd`、`isulad`的条目，保留驱动、DCMI、日志等通用挂载。
 
-        部署前须确保节点上的CRI-O已启动，且`/var/run/crio/crio.sock`为可访问的Unix socket。挂载其所在目录，避免只绑定单个socket文件。若使用自定义路径，需同时调整hostPath、mountPath和`-endpoint=unix:///容器内实际路径/crio.sock`，确保endpoint指向容器内可访问的CRI-O socket。
+        部署前需确保节点上的CRI-O已启动，且`/var/run/crio/crio.sock`为可访问的Unix socket。挂载其所在目录，避免只绑定单个socket文件。若使用自定义路径，需同时调整hostPath、mountPath和`-endpoint=unix:///容器内实际路径/crio.sock`，确保endpoint指向容器内可访问的CRI-O socket。
 
     - **Containerd场景**：需要将containerMode设置为containerd，并对以下加粗代码进行修改。
 

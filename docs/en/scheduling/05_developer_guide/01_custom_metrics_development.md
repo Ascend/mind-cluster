@@ -14,7 +14,7 @@ The following two development approaches are supported for custom metrics.
 
     Users can define custom metrics by writing plugins. Before using the plugin, developers need to learn the language features of cgo and Go. Users can refer to the provided demo, or copy the code to the plugins directory, recompile, and deploy it. The following describes each file in the demo:
 
-    - `dcmi.go` and `dcmi_interface_api.h`: interface declarations and cgo implementation for user-defined NPU metrics, used to connect to the driver DCMI. For details, refer to the demo implementation. For all DCMIs, refer to the driver's DCMI documentation.
+    - `dcmi.go` and `dcmi_interface_api.h`: interface declarations and cgo implementation for user-defined NPU metrics, used to connect to the driver DCMI. For details, refer to the demo implementation. For all DCMIs, refer to the driver's [DCMI Documentation](https://support.huawei.com/enterprise/en/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=api-reference).
     - `custom_metrics.go`: implements the `MetricCollector` interface for metric collection and reporting. The following interfaces need to be implemented. For details, refer to the demo implementation:
         - `Describe`: Before Prometheus reports metrics, the metrics must be defined first. This interface is used for Prometheus metric definition.
         - `CollectToCache`: The metric collection method, which is executed in every collection cycle to obtain data from external sources and pass it into the internal cache.
@@ -378,12 +378,10 @@ The following two development approaches are supported for custom metrics.
 
     After the plugin is developed, run `build/build.sh` in the NPU Exporter code directory to complete compilation. A Go development environment must be prepared in advance.
 
-    After compilation is complete, new binary files and related configuration files are generated in the output directory. Enable or disable the corresponding switches as needed, and rebuild the image for deployment according to the installation instructions in the installation and deployment chapter.
+    After compilation is complete, new binary files and related configuration files are generated in the output directory. Enable or disable the corresponding switches as needed, and redeploy the image according to the installation instructions in the installation and deployment chapter.
 
 >[!NOTICE]
 >
->- Custom metrics must not duplicate existing metric names.
->- The custom metric names and metric label names can only use letters, digits, and underscores, and cannot start with a digit.
 >- Developers are responsible for the stability of custom plugins and must ensure that issues such as runtime panics are not introduced.
 >- Developers are responsible for the correctness of the custom metric file format.
 >- The DCMIs in the sample code must be verified for availability based on the product generation.

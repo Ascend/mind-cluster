@@ -19,7 +19,7 @@ The quick start examples require that the cluster environment has been set up.
 
     >[!NOTE]
     >
-    >- See [*Ascend Training Solution Version Mapping*](https://support.huawei.com/enterprise/en/ascend-computing/ascend-training-solution-pid-258915853/software) to confirm whether the firmware and driver versions are compatible with the cluster scheduling components.
+    >- See [Ascend Training Solution Version Mapping](https://support.huawei.com/enterprise/en/ascend-computing/ascend-training-solution-pid-258915853/software) to confirm whether the firmware and driver versions are compatible with the cluster scheduling components.
     >- The NPU driver and firmware versions can be queried by running the **npu-smi info -t board -i** <i>NPU ID</i> command. In the command output, the "Software Version" field indicates the NPU driver version, and the "Firmware Version" field indicates the NPU firmware version.
 
 ## 10-Minute Quick Start
@@ -311,7 +311,7 @@ The Atlas 800T A2 is used as an example in the following steps. For detailed ins
 
     >[!NOTE]
     >
-    > The image version used in this example is 24.0.0-A2-2.1.0. To obtain the latest image version, visit the [Ascend image repository](https://www.hiascend.com/en/developer/ascendhub) to view the list of available versions, or contact Huawei technical support to obtain version compatibility information.
+    > The image version used in this example is 24.0.0-A2-2.1.0. To obtain the latest image version, visit the [Ascend image repository](https://www.hiascend.com/en/developer/ascendhub) to view the list of available versions.
 
     ```shell
     docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04

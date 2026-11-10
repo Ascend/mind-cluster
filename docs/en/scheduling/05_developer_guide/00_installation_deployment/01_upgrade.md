@@ -152,6 +152,7 @@ The [upgrade environment check](#upgrade-instructions) has been completed.
 5. <a name="li76002022113215"></a>Refer to the [Component Status](../../03_installation_guide/03_confirming_status.md) chapter to check whether the new version of Ascend Docker Runtime has been upgraded successfully.
 6. (Optional) Restore the old version. Download the old version installation package, and re-execute [Step 2](#li12599722163212) to [Step 5](#li76002022113215) in sequence.
 
+<!-- npu="950,A3,910b" id1 -->
 ## Upgrading TaskD<a name="ZH-CN_TOPIC_0000002479226444"></a>
 
 TaskD is installed inside the training image. Re-install the whl package inside the training image to complete the upgrade.
@@ -223,7 +224,9 @@ The [upgrade environment check](#upgrade-instructions) has been completed.
 
 5. Check whether the new version of TaskD has been upgraded. Refer to the [Checking TaskD](#upgrade-instructions) chapter to verify that the component status is normal.
 6. (Optional) Roll back to the old version. If the old image still exists, no rollback operation is required; if it does not exist, follow the steps above to reinstall the old version of the TaskD package.
+<!-- end id1 -->
 
+<!-- npu="950,A3,910b,910,310p" id2 -->
 ## Upgrading Container Manager<a name="ZH-CN_TOPIC_0000002524548731"></a>
 
 Use the deployment script (`deploy.sh`) to perform the upgrade. The script automatically completes binary replacement and service restart, keeping the existing service configuration (startup parameters, etc.) unchanged.
@@ -324,7 +327,9 @@ Use the deployment script (`deploy.sh`) to perform the upgrade. The script autom
         [INFO]     2025/11/25 22:46:59.315101 378     devmgr/hwdevmgr.go:365    subscribe device fault event success
         ...
         ```
+<!-- end id2 -->
 
+<!-- npu="950,A3,910b,910,310p" id3 -->
 ## Upgrading Ascend Device Plugin<a name="ZH-CN_TOPIC_0000002511346402"></a>
 
 **Prerequisites**
@@ -397,6 +402,7 @@ The [upgrade environment check](#upgrade-instructions) has been completed.
 5. Install the new version of Ascend Device Plugin.
 
     For detailed steps, refer to [Manually Installing Ascend Device Plugin](00_manual_installation/04_ascend_device_plugin.md).
+<!-- end id3 -->
 
 ## Upgrading Kubectl Plugin<a name="ZH-CN_TOPIC_0000002524428763"></a>
 
@@ -406,14 +412,14 @@ The [upgrade environment check](#upgrade-instructions) has been completed.
 
 **Precautions**
 
-- Kubectl Plugin is a client command line tool. It is installed to the `/usr/local/bin` directory on the user machine through the installation script (`install.sh`). It is not deployed in the K8s cluster in YAML mode. During the upgrade, you only need to reinstall the plugin files using the new version software package. No K8s cluster resources need to be operated.
+- Kubectl Plugin is a client command line tool. It is installed to the `/usr/local/bin` directory on the user machine through the installation script (`install.sh`). It is not deployed in the K8s cluster in YAML mode. During the upgrade, you only need to reinstall the plugin using the new version software package. No K8s cluster resources need to be operated.
 - Upgrading Kubectl Plugin does not affect the Agent Core and Node Collector services already deployed in the cluster.
 
 **Upgrade Steps<a name="section2097025262414"></a>**
 
 1. Refer to the [Obtaining Software Packages](00_manual_installation/00_obtaining_software_packages.md) chapter to download the new version of the Ascend ClusterOps Agent package and decompress it.
 
-2. <a name="li2097025262414"></a>Log in to the user machine as the `root` user, go to the `kubectl-plugin` directory in the decompressed new version software package, and run the following command to reinstall the plugin.
+2. <a name="li2097025262414"></a>Log in to the user machine as the `root` user, go to the decompressed directory of the new version software package, and run the following command to reinstall the plugin.
 
     ```shell
     cd kubectl-plugin
@@ -434,6 +440,39 @@ The [upgrade environment check](#upgrade-instructions) has been completed.
     kubectl clusterops --help
     ```
 
+    The following is an example of the command output, which indicates that the plugin is upgraded successfully.
+
+    ```ColdFusion
+    $ kubectl ascend-diag --help
+    usage: kubectl-ascend_diag [-h] [--job JOB] [-n NAMESPACE] [--agent-core-service AGENT_CORE_SERVICE] [--refresh] [--json] [--collect-manifest PATH]
+
+    Ascend fault diagnosis kubectl plugin
+
+    optional arguments:
+    -h, --help            show this help message and exit
+    --job JOB             job name (job CR name)
+    -n NAMESPACE, --namespace NAMESPACE
+                            namespace
+    --agent-core-service AGENT_CORE_SERVICE
+                            Agent Core Service, format svc.ns:9700
+    --refresh             ignore the cache, force rerun and refresh the cache
+    --json                print the full JSON response
+    --collect-manifest PATH
+                            write a local collect_manifest.yaml into the cluster ConfigMap and exit
+
+    $ kubectl clusterops --help
+    usage: kubectl-clusterops [-h] [--create-llm-config] [--clear-llm-config] [--base-url BASE_URL] [--model MODEL]
+
+    cluster operations kubectl plugin
+
+    optional arguments:
+    -h, --help           show this help message and exit
+    --create-llm-config  configure the LLM Secret (llm-secret)
+    --clear-llm-config   clear all LLM config (delete llm-secret, effective immediately)
+    --base-url BASE_URL  LLM Base URL (prompted; or env LLM_BASE_URL)
+    --model MODEL        LLM model name (prompted; or env LLM_MODEL)
+    ```
+
 4. (Optional) Roll back to the old version. Use the old version software package and re-execute [Step 2](#li2097025262414).
 
 ## Upgrading Other Components<a name="ZH-CN_TOPIC_0000002511346401"></a>
@@ -441,8 +480,7 @@ The [upgrade environment check](#upgrade-instructions) has been completed.
 **Prerequisites<a name="section176591058124515"></a>**
 
 - The [upgrade environment check](#upgrade-instructions) has been completed.
-
-- If you need to upgrade NPU Exporter, DPU Exporter, Volcano, K8s RDMA Shared Dev Plugin, ClusterD, Ascend Operator, Infer Operator, NodeD, Agent Core, and Node Collector, you must uninstall the old versions first, and then execute the installation steps for the new version.
+- If you need to upgrade NPU Exporter, DPU Exporter, Volcano, K8s RDMA Shared Dev Plugin, ClusterD, Ascend Operator, Infer Operator, NodeD, Ascend Dynamic Resource Allocation, Agent Core, and Node Collector, you must uninstall the old versions first, and then execute the installation steps for the new version.
 
 **NOTE**
 
@@ -464,8 +502,8 @@ If a job with resumable training enabled is running, upgrading ClusterD will cau
 
 This chapter only guides users on upgrading the binary file version within a container image under the same version. Permissions and startup parameters will not be modified during the upgrade process. For more detailed instructions on upgrade methods, see [Upgrade Instructions](#upgrade-instructions).
 
-- If you need to upgrade the images of Volcano, ClusterD, Ascend Operator, and Infer Operator, refer to [Upgrading Management Node Components](#section1292111716589).
-- If you need to upgrade the images of NPU Exporter, DPU Exporter, Ascend Device Plugin, and NodeD, refer to [Upgrading Compute Node Components](#section231311416588).
+- If you need to upgrade the images of Volcano, ClusterD, Ascend Operator, Infer Operator, and Agent Core, refer to [Upgrading Management Node Components](#section1292111716589).
+- If you need to upgrade the images of NPU Exporter, DPU Exporter, Ascend Device Plugin, NodeD, Ascend Dynamic Resource Allocation, and Node Collector, refer to [Upgrading Compute Node Components](#section231311416588).
 - TaskD does not currently support this type of upgrade.
 
 **Upgrading Management Node Components<a name="section1292111716589"></a>**
@@ -554,12 +592,13 @@ This chapter only guides users on upgrading the binary file version within a con
     mindx-dl   noded- m4j4r  1/1  Running 0     1m
     ```
 
+<!-- npu="A3,910b" id4 -->
 ## Elastic Agent (Deprecated) Upgrade to TaskD<a name="ZH-CN_TOPIC_0000002515202401"></a>
 
 >[!NOTE]
 >Elastic Agent has been deprecated as of version 7.3.0. This chapter is retained solely as a historical migration reference. If Elastic Agent is no longer used in your current environment, you may skip this chapter.
 
-Elastic Agent has been deprecated. This chapter provides operational guidance for upgrading Elastic Agent to TaskD.
+This chapter provides operational guidance for upgrading Elastic Agent to TaskD.
 
 **Prerequisites<a name="section565512391204"></a>**
 
@@ -666,25 +705,28 @@ Elastic Agent has been deprecated. This chapter provides operational guidance fo
 
     2. Add the following code to the training script to start TaskD Manager.
 
-        <pre codetype="Python">
-        <strong>export TASKD_PROCESS_ENABLE="on"
+        ```python
+        export TASKD_PROCESS_ENABLE="on"
         # Take PyTorch framework as an example
         if [[ "${RANK}" == 0 ]]; then
             export MASTER_ADDR=${POD_IP}
             python /job/code/manager.py 2>> /job/code/alllogs/$MINDX_TASK_ID/taskd/error.log &           # The specific execution path of manager.py is determined by the current path, and the error.log path must be created in advance.
-        fi</strong>
+        fi
 
-        torchrun ...</pre>
+        torchrun ...
+        ```
 
     3. Modify the container port in the job YAML, and add `port 9601` for TaskD communication under all Pods.
 
-        <pre codetype="yaml">
+        ```yaml
         ...
                 spec:
         ...
                    containers:
         ...
-                     <strong>ports:
+                     ports:
                        - containerPort: 9601
-                         name: taskd-port</strong>
-        ...</pre>
+                         name: taskd-port
+        ...
+        ```
+<!-- end id4 -->

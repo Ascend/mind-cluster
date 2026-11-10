@@ -54,7 +54,7 @@ For parameter details, see [YAML Configuration Description](../../../../06_api/1
 
 | Policy | Current Job Behavior | CKPT Requirement | Subsequent Action | Detailed Configuration Entry |
 | ---- | ---- | ---- | ---- | ---- |
-| `ignore` | Continue training | None | Subsequent jobs do not preferentially select this node during affinity scheduling | No additional recovery configuration |
+| `ignore` | Continue training | None | When a new job is scheduled, this sub-healthy node is not used within the default 10s backoff window. After the backoff window expires, this node is not preferentially selected. You can adjust the backoff window through [huawei.com/subhealthy.tolerance.after-time configuration description](../../../../06_api/15_yaml_configuration.md#p_subhealthy_tolerance_vcjob) | No additional recovery configuration |
 | `graceExit` | Stop using the sub-healthy node and exit gracefully | Dying gasp CKPT saving must be enabled | Avoid the sub-healthy node and reschedule | [Configuring Dying Gasp CKPT Saving](./02_configuring_training_recovery.md#ZH-CN_TOPIC_0000002479226544), [Configuring Rescheduling Recovery](#configuring-rescheduling-recovery) |
 | `forceExit` | Stop using the sub-healthy node and exit directly | Do not save dying gasp CKPT | Avoid the sub-healthy node and reschedule | [Configuring Rescheduling Recovery](#configuring-rescheduling-recovery) |
 | `hotSwitch` | Start a backup Pod, suspend training, and resume training on the new node | Restore the training state by the hot switching mechanism | Switch training to the backup node | [Configuring Sub-Healthy Hot Switching](#configuring-hot-switching) |
@@ -98,7 +98,7 @@ In the job YAML, add the following fields to enable Job-level rescheduling.
 metadata:
    labels:
      ...
-     fault-scheduling: "grace"        # You can choose either force or grace based on the actual situation. When configured as force, the Pod cannot use the host network. When configured as force, there may be cases where rescheduling fails and triggers multiple rescheduling attempts until success.
+     fault-scheduling: "grace"        # grace is recommended
 ```
 
 ### Configuring Pod-Level Rescheduling<a name="ZH-CN_TOPIC_0000002479226508"></a>
@@ -129,7 +129,7 @@ metadata:
    labels:
      ...
      <strong>pod-rescheduling: "on"</strong>
-     <strong>fault-scheduling: "force"   # You can choose either force or grace based on the actual situation. When configured as force, the Pod cannot use the host network. When configured as force, there may be cases where rescheduling fails and triggers multiple rescheduling attempts until success.</strong>
+     <strong>fault-scheduling: "grace"   # grace is recommended</strong>
 ...
         spec:
 ...
@@ -194,6 +194,7 @@ metadata:
         fi
         ```
 
+<!-- npu="950,A3,910b" id1 -->
 ### Configuring Process-Level Rescheduling<a name="ZH-CN_TOPIC_0000002511426407"></a>
 
 This part describes the key steps for configuring process-level rescheduling. For details about the feature introduction, usage constraints, supported product models, and principles of process-level rescheduling, see [Process-Level Rescheduling](../01_solutions_principles/01_fault_handling.md#process-level-rescheduling).
@@ -224,7 +225,7 @@ Currently, process-level rescheduling supports `recover` and `recover-in-place` 
 metadata:
   labels:
     ...
-    <strong>fault-scheduling: "grace"                     # Choose either force or grace based on the actual situation. When configured as force, the Pod cannot use the host network. When configured as force, there may be cases where rescheduling fails and triggers multiple rescheduling attempts until success.</strong>
+    <strong>fault-scheduling: "grace"                     # Must be set to grace</strong>
   annotations:
     ...
     <strong>recover-strategy: "recover,recover-in-place"   # Recovery strategies (retry: process-level online recovery; recover: process-level rescheduling; recover-in-place: process-level in-place recovery; elastic-training: elastic training; dump: save dying gasps; exit: exit training). Six strategies can be combined arbitrarily, separated by commas.</strong>
@@ -296,7 +297,9 @@ metadata:
            python /job/code/manager.py 2>> /job/code/alllogs/$MINDX_TASK_ID/taskd/error.log &           # The specific execution path of `manager.py` is determined by the current path, and the error.log path must be created in advance.
         fi
         ```
+<!-- end id1 -->
 
+<!-- npu="A3,910b" id2 -->
 ### Configuring Hot Switching<a name="ZH-CN_TOPIC_0000002511426471"></a>
 
 This section describes how to configure hot switching. For details about its features, restrictions, supported products, and working principles, see [Hot Switching](../01_solutions_principles/01_fault_handling.md#hot-switching).
@@ -399,21 +402,25 @@ After the distributed environment is initialized and the global rank is obtained
     >     ```shell
     >     pip show taskd
     >     ```
+<!-- end id2 -->
 
+<!-- npu="950,A3,910b" id3 -->
 ## Configuring Online Recovery
 
+<!-- npu="A3" id4 -->
 ### Configuring Operator-level Online Recovery<a name="ZH-CN_TOPIC_0000002511426477"></a>
 
 This part describes key steps for configuring operator-level online recovery. For details on the feature introduction, usage constraints, supported product models, and principles of operator-level online recovery, see [Operator-level Online Recovery](../01_solutions_principles/01_fault_handling.md#operator-level-online-recovery).
 
 **Configuring Environment Variables<a name="section12610013287"></a>**
 
-Before using operator-level online recovery, configure the environment variables `HCCL_OP_RETRY_ENABLE` and `HCCL_OP_RETRY_PARAMS` in the training startup script. For detailed descriptions of these environment variables, see the *[CANN Environment Variable Reference](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/commlib/hcclug/docs/en/user_guide/hccl_env/HCCL_OP_RETRY_ENABLE.md)*. A configuration example is shown below.
+Before using operator-level online recovery, configure the environment variables `HCCL_OP_RETRY_ENABLE` and `HCCL_OP_RETRY_PARAMS` in the training startup script. For detailed descriptions of these environment variables, see the *[CANN Environment Variable Reference](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/commlib/hcclug/docs/en/user_guide/hccl_env/HCCL_OP_RETRY_ENABLE.md)*. A configuration example is shown below.
 
 ```shell
 export HCCL_OP_RETRY_ENABLE="L0:0, L1:1, L2:1"     # Whether to enable the re-execution feature of HCCL operators
 export HCCL_OP_RETRY_PARAMS="MaxCnt:3, HoldTime:5000, IntervalTime:1000"    # Configures specific parameters for HCCL operator re-execution, including the maximum number of re-execution attempts, the wait time before the first re-execution, and the interval between two re-executions
 ```
+<!-- end id4 -->
 
 ### Configuring Process-Level Online Recovery<a name="ZH-CN_TOPIC_0000002479386492"></a>
 
@@ -443,12 +450,12 @@ In the job YAML, add the following bold fields to enable process-level recovery,
 ...
    labels:
      ...
-     <strong>fault-scheduling: "grace"</strong>
+     <strong>fault-scheduling: "grace"    # must be grace</strong>
  ...
 ...
    annotations:
      ...
-     <strong>recover-strategy: "retry"    # Recovery strategies (retry: process-level online recovery; recover: process-level rescheduling; recover-in-place: process-level in-place recovery; elastic-training: elastic training; dump: save last words; exit: exit training). Six strategies can be combined arbitrarily, separated by commas.</strong>
+     <strong>recover-strategy: "retry"    # Recovery strategies (retry: process-level online recovery; recover: process-level rescheduling; recover-in-place: process-level in-place recovery; elastic-training: elastic training; dump: save dying gasps; exit: exit training). Six strategies can be combined arbitrarily, separated by commas.</strong>
  ...
 ...
 spec:
@@ -577,7 +584,9 @@ context:
 
 >[!NOTE]
 >To test the process-level online recovery feature, see [Process-level Online Recovery Verification](../03_examples_and_verification/01_pytorch_examples_and_verification.md#verifying-process-level-online-recovery).
+<!-- end id3 -->
 
+<!-- npu="A3" id5 -->
 ## Configuring Switchback Recovery
 
 ### Configuring Suspension and Switchback for Link Failover Communication<a name="ZH-CN_TOPIC_0000002511346495"></a>
@@ -895,7 +904,9 @@ This section describes how to configure suspension and switchback of link failov
                   <strong>- containerPort: 9601                 # Adds port 9601 used for TaskD communication under all Pods.</strong>
                     <strong>name: taskd-port</strong>
     ...</pre>
+<!-- end id5 -->
 
+<!-- npu="A3,910b" id6 -->
 ## Configuring Elastic Recovery
 
 ### Configuring Elastic Training<a name="ZH-CN_TOPIC_0000002511346471"></a>
@@ -953,7 +964,7 @@ This section describes how to configure elastic training. For details about its 
         ...
            annotations:
              ...
-             <strong>wait-reschedule-timeout: "270" # Timeout for waiting for the faulty node to be rescheduled during process-level recovery. The default is 270 seconds, with a valid range of 30 to 270. When both process-level recovery and elastic training are enabled, if the faulty node is successfully scheduled within this time, process-level recovery is performed; otherwise, elastic training is triggered.</strong>
+             <strong>wait-reschedule-timeout: "270" # Timeout for waiting for the faulty node to be rescheduled during process-level recovery. The default value is 270 seconds, with a valid range of 30 to 270. When both process-level recovery and elastic training are enabled, if the faulty node is successfully scheduled within this time, process-level recovery is performed; otherwise, elastic training is triggered.</strong>
              <strong>recover-strategy: "elastic-training"    # Available recovery strategy. The value is elastic-training, indicating that elastic training is enabled.</strong>
          ...
         ...
@@ -1011,7 +1022,9 @@ This section describes how to configure elastic training. For details about its 
     scripts/
     └── train_start.sh
     ```
+<!-- end id6 -->
 
+<!-- npu="A3,910b,910" id7 -->
 ## Configuring Graceful Fault Tolerance Mechanism
 
 ### Configuring Graceful Fault Tolerance<a name="ZH-CN_TOPIC_0000002511346501"></a>
@@ -1059,7 +1072,7 @@ Modify the startup YAML of Ascend Device Plugin, set `-hotReset=1` to enable hot
         command: [ "/bin/bash", "-c", "--"]
         args: [ "device-plugin
                  -volcanoType=true                    # Volcano must be used for rescheduling
-                 -autoStowing=true                    # This field has been deprecated. Whether to enable automatic management switch; defaults to true. Setting to false disables automatic management, meaning that when a chip's health status changes from unhealthy to healthy, it will not be automatically added back to the schedulable resource pool. With automatic management disabled, when the chip's parameter-plane network fault is recovered, it will not be automatically added back to the schedulable resource pool. This feature only applies to <term>Atlas training products</term>
+                 -autoStowing=true                    # This field has been deprecated. Whether to enable automatic management switch; defaults to true. Setting to false disables automatic management, meaning that when a chip's health status changes from unhealthy to healthy, it will not be automatically added back to the schedulable resource pool. With automatic management disabled, when the chip's parameter-plane network fault is recovered, it will not be automatically added back to the schedulable resource pool. This feature only applies to Atlas training products
                  -listWatchPeriod=5                   # Sets the health check interval; range [3,1800]; unit is seconds
                  -hotReset=1      # When using resumable training, the hot reset feature can be enabled on top of Job-level or Pod-level rescheduling to use graceful fault tolerance mode (this feature has been deprecated)
                  -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log
@@ -1075,6 +1088,7 @@ Modify the startup YAML of Ascend Device Plugin, set `-hotReset=1` to enable hot
                     fieldPath: status.podIP         # Used for MindIO communication. If this parameter is not configured, it will affect the normal startup of training jobs.
 ...
 ```
+<!-- end id7 -->
 
 ## Parameter Description<a name="ZH-CN_TOPIC_0000002511346491"></a>
 
@@ -1369,11 +1383,11 @@ Different fault handling modes require different parameters to be configured, as
 |pod-rescheduling|metadata.labels of the training job YAML| <ul><li>on: Enable Pod-level rescheduling.</li><li>Other values or not using this field: Disable Pod-level rescheduling.</li></ul>                                                                                                                                                                                                                      |
 |fault-scheduling|metadata.labels of the training job YAML| Rescheduling switch.                                                                                                                                                                                                                                                                               |
 |process-recover-enable|metadata.labels of the training job YAML| <ul><li>on: Enable process-level rescheduling and process-level online recovery. Process-level rescheduling and graceful fault tolerance cannot be enabled simultaneously. If both are enabled, checkpoint restart will resume training through Job-level rescheduling.</li><li>pause: Temporarily disable process-level rescheduling and process-level online recovery.</li><li>off or not using this field: Disable process-level rescheduling and process-level online recovery.</li></ul>                                                                                                                         |
-|recover-strategy|metadata.annotations of the training job YAML| Available recovery strategies for the job.<ul><li>retry: Process-level online recovery.</li><li>recover: Process-level rescheduling.</li><li>recover-in-place: Process-level in-place recovery.</li><li>elastic-training: Elastic training.</li><li>dump: Save last words.</li><li>exit: Exit training.</li></ul>                                                                                                          |
+|recover-strategy|metadata.annotations of the training job YAML| Available recovery strategies for the job.<ul><li>retry: Process-level online recovery.</li><li>recover: Process-level rescheduling.</li><li>recover-in-place: Process-level in-place recovery.</li><li>elastic-training: Elastic training.</li><li>dump: Save dying gasps.</li><li>exit: Exit training.</li></ul>                                                                                                          |
 |PROCESS_RECOVER|spec.replicaSpecs.{ Master \|Scheduler\| Worker}.template.spec.containers.env of the training job YAML| Master switch on the Elastic Agent/TaskD side for process-level rescheduling and process-level online recovery.<ul><li>on: Enable.</li><li>off: Disable.</li></ul>                                                                                                                                                                                                      |
-|ELASTIC_PROCESS_RECOVER_ENABLE|spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args of the startup training YAML| Switch on the Elastic Agent side for process-level rescheduling, process-level online recovery, and last CKPT recovery features.<ul><li>Value 1: Enable this feature.</li><li>Other values: Disable this feature.<p>When disabling this feature, the related features on the MindIO side must be disabled simultaneously.</p></li></ul><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><p>The Elastic Agent component has been sunset, and related materials will be removed in the version released on December 30, 2026. This environment variable will be removed accordingly.</p></div></div> |
-|ENABLE_RESTART_FAULT_PROCESS|spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args of the startup training YAML| Switch for the Elastic Agent/TaskD component to enable the in-place recovery feature for faulty processes.<ul><li>on: Enable this feature;</li><li>Other values: Disable this feature</li></ul>                                                                                                                                                                                                   |
-|--enable-high-availability|Startup parameter of the training script pretrain_gpt.py| Fault fast recovery feature switch, disabled by default. When configured, the last words feature is enabled.                                                                                                                                                                                                                                                        |
+|ELASTIC_PROCESS_RECOVER_ENABLE|spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args of the startup training YAML| Switch on the Elastic Agent side for process-level rescheduling, process-level online recovery, and last CKPT recovery features.<ul><li>Value 1: Enable this feature.</li><li>Other values: Disable this feature.<p>When disabling this feature, the related features on the MindIO side must be disabled simultaneously.</p></li></ul><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><p>Elastic Agent has been sunset, and related materials will be removed in the version released on December 30, 2026. This environment variable will be removed accordingly.</p></div></div> |
+|ENABLE_RESTART_FAULT_PROCESS|spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args of the startup training YAML| Switch for the Elastic Agent/TaskD component to enable the in-place recovery feature for faulty processes.<ul><li>on: Enable this feature;</li><li>Other values: Disable this feature</li></ul><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><p>Elastic Agent has been sunset, and related materials will be removed in the version released on December 30, 2026.</p></div></div>                                                                                                                                                                                                   |
+|--enable-high-availability|Startup parameter of the training script pretrain_gpt.py| Fault fast recovery feature switch, disabled by default. When configured, the dying gasp feature is enabled.                                                                                                                                                                                                                                                        |
 |--enable-hbmfault-repair|Startup parameter of the training script pretrain_gpt.py| Process-level online recovery feature switch, disabled by default. When configured, fault detection is performed on on-chip memory and online repair is completed. Must be enabled together with enable-high-availability.                                                                                                                                                                                                               |
 |--enable-worker-reboot|Startup parameter of the training script pretrain_gpt.py| Process-level rescheduling feature switch, disabled by default. When configured, process-level scheduling is performed when a general fault occurs. Must be enabled together with enable-high-availability.                                                                                                                                                                                                                |
 |--enable-elastic-training|Startup parameter of the training script pretrain_gpt.py| Elastic training feature switch, disabled by default.                                                                                                                                                                                                                                                                       |

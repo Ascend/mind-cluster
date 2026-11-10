@@ -473,6 +473,7 @@ Taking <term>Atlas A3 training products</term> as an example, the command output
 |UpdateTime|ConfigMap update time.|
 |NodeStatus|<p>Current node status.</p><ul><li>Healthy: The node is healthy.</li><li>SubHealthy: The node is pre-isolated. The current job is not processed, and subsequent jobs will no longer be scheduled to this node.</li><li>UnHealthy: The node is unhealthy. Isolate the node and reschedule jobs.</li></ul>|
 
+<!-- npu="950" id1 -->
 **UB NIC Fault<a name="section208771421688"></a>**
 
 Query command:
@@ -485,6 +486,7 @@ Taking Atlas 950 SuperPoD as an example, the command output is as follows. The r
 ```ColdFusion
 {"dpuinfo-<nodename>":{"DPUInfo":{"DPUList":[{"HcaName":"hrn5_0","EthName":"ens0f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[0]},{"HcaName":"hrn5_1","EthName":"ens0f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[2]},{"HcaName":"hrn5_2","EthName":"ens0f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[4]},{"HcaName":"hrn5_3","EthName":"ens0f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[6]},{"HcaName":"hrn5_4","EthName":"ens1f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[1]},{"HcaName":"hrn5_5","EthName":"ens1f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[3]},{"HcaName":"hrn5_6","EthName":"ens1f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[5]},{"HcaName":"hrn5_7","EthName":"ens1f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[7]}],"NodeEvent":{"NodeName":"<nodename>","FaultList":null}},"UpdateTime":1787715568988}}
 ```
+<!-- end id1 -->
 
 ### NodeD<a name="ZH-CN_TOPIC_0000002511427003"></a>
 
@@ -506,6 +508,7 @@ NodeInfo:
 Events:  <none>
 ```
 
+<!-- npu="950" id2 -->
 ### K8s RDMA Shared Dev Plugin<a name="ZH-CN_TOPIC_0000002511347042"></a>
 
 K8s RDMA Shared Dev Plugin collects fault information about UB NICs on a node, and places it as external information in a K8s ConfigMap for external query and use.
@@ -525,6 +528,7 @@ DpuInfoCfg:
 ----
 {"DPUInfo":{"DPUList":[{"HcaName":"hrn5_0","EthName":"ens0f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[0]},{"HcaName":"hrn5_1","EthName":"ens0f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[2]},{"HcaName":"hrn5_2","EthName":"ens0f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[4]},{"HcaName":"hrn5_3","EthName":"ens0f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[6]},{"HcaName":"hrn5_4","EthName":"ens1f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[1]},{"HcaName":"hrn5_5","EthName":"ens1f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[3]},{"HcaName":"hrn5_6","EthName":"ens1f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[5]},{"HcaName":"hrn5_7","EthName":"ens1f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":[],"AffectedNPU":[7]}],"NodeEvent":{"NodeName":"<nodename>","FaultList":[]}},"UpdateTime":1787724959094}
 ```
+<!-- end id2 -->
 
 ## Creating an Image<a name="ZH-CN_TOPIC_0000002479227114"></a>
 
@@ -610,7 +614,7 @@ In the package name, *{version}* indicates the version, *{arch}* indicates the a
 7. Go to the directory where the software packages are located and run the following command to build the container image. **Note: Do not omit the dot (".") at the end of the command.**
 
     ```shell
-    docker build -t Image name_OS architecture: Image tag .
+    docker build -t {image_name}_{system_architecture}:{image_tag} .
     ```
 
     In the above command, the description of each parameter is shown in the following table.
@@ -622,7 +626,7 @@ In the package name, *{version}* indicates the version, *{arch}* indicates the a
     |Name|Description|
     |--|--|
     |-t|Specifies the image name.|
-    |Image name_OS architecture: Image tag|Image name and tag. Enter the actual values.|
+    |{image_name}_{system_architecture}:{image_tag}|Image name and tag. Enter the actual values.|
 
     Example:
 
@@ -1000,7 +1004,7 @@ In the package name, *{version}* indicates the version number, *{arch}* indicate
 7. Go to the directory where the software packages are located and run the following command to build the container image. **Note: Do not omit the dot (".") at the end of the command**.
 
     ```shell
-    docker build -t image_name_system_architecture:image_tag .
+    docker build -t {image_name}_{system_architecture}:{image_tag} .
     ```
 
     In the above command, the parameters are described in the following table.
@@ -1012,7 +1016,7 @@ In the package name, *{version}* indicates the version number, *{arch}* indicate
     |Name|Description|
     |--|--|
     |-t|Image name|
-    |image_name_system_architecture:image_tag|Image name and tag. Use the actual values.|
+    |{image_name}_{system_architecture}:{image_tag}|Image name and tag. Use the actual values.|
 
     For example:
 
@@ -1420,7 +1424,7 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
 6. Go to the directory where the software packages are located and run the following command to build the container image. **Be careful not to omit the dot (".") at the end of the command**.
 
     ```shell
-    docker build --build-arg TOOLKIT_VERSION={version} --build-arg TOOLKIT_ARCH={arch} --build-arg DIST_PKG=XXX.tar -t image_name_system_architecture:image_tag .
+    docker build --build-arg TOOLKIT_VERSION={version} --build-arg TOOLKIT_ARCH={arch} --build-arg DIST_PKG=XXX.tar -t {image_name}_{system_architecture}:{image_tag} .
     ```
 
     In the above commands, the description of each parameter is shown in the following table.
@@ -1436,7 +1440,7 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
     |<em>{arch}</em>|Toolkit package architecture. Enter the actual value based on your situation.|
     |<em>XXX</em>.tar|Name of the inference service code package. Enter the actual value based on your situation.|
     |-t|Image name.|
-    |<em>Image name</em><em>_system architecture:</em><em>Image tag</em>|Image name and tag. Enter the actual values based on your situation.|
+    |<em>{image_name}_{system_architecture}:{image_tag}</em>|Image name and tag. Enter the actual values based on your situation.|
 
     An example is as follows:
 
@@ -1720,7 +1724,7 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
 5. Go to the directory where the Dockerfile is located and execute the image build command to build the image. Note that the dot (".") at the end of the command should not be omitted.
 
     ```shell
-    docker build [OPTIONS] -t image_name_system_architecture:image_tag --build-arg UMDK_PKG=UMDK package name .
+    docker build [OPTIONS] -t {image_name}_{system_architecture}:{image_tag} --build-arg UMDK_PKG=UMDK package name .
     ```
 
    The command is explained in the following table.
@@ -1733,7 +1737,7 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
    |--|---------------------------|
    | <em>OPTIONS</em> | "--no-cache" option: rebuild the image without using cache. |
    | -t | Image name.|
-   | image_name_system_architecture:image_tag | Image name and tag. Fill in according to the actual situation. |
+   | {image_name}_{system_architecture}:{image_tag} | Image name and tag. Fill in according to the actual situation. |
    | --build-arg UMDK_PKG | UMDK package name |
 
    For example:

@@ -6,5 +6,9 @@
 - [Configuring Priority Scheduling for Inference Job](./03_configuring_priority_scheduling.md)
 - [Configuring Instance-Level Rescheduling of Inference Jobs](./04_configuring_rescheduling_inference_job.md)
 - [Configuring Load-based Elastic Scaling](./05_configuring_elastic_scaling.md)
+<!-- npu="A3,910b" id1 -->
 - [Container Snapshot Deployment and Usage](./06_container_snapshot_usage.md)
+<!-- end id1 -->
+<!-- npu="950,A3" id2 -->
 - [Configuring Inference Service Affinity Scheduling](./07_configuring_infer_service_affinity_scheduling.md)
+<!-- end id2 -->

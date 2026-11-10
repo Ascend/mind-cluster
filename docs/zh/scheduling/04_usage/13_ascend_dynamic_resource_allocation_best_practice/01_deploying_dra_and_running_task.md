@@ -209,7 +209,7 @@ Ascend DRA基于Kubernetes动态资源分配（Dynamic Resource Allocation，DRA
 
       字段说明：
       - `cdiVersion`：CDI spec版本，固定为`0.8.0`。
-      - `kind`：CDI driver标识，固定为`https://ascend.com/npu`。
+      - `kind`：CDI driver标识，固定为`ascend.com/npu`。
       - `devices`：按设备粒度划分的编辑项，每个`name`对应一颗NPU的`/dev/davinci<id>`设备节点。
       - `containerEdits`（spec级）：所有设备共享的编辑项，包括共享设备节点（`davinci_manager`、`hisi_hdc`等）、`LD_LIBRARY_PATH`环境变量与驱动库/工具挂载。
 

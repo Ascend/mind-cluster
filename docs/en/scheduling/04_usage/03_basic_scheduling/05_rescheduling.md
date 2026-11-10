@@ -72,9 +72,7 @@ metadata:
     fault-retry-times: "100"         # Number of unconditional attempts. This parameter needs to be configured in the software fault scenario.
 ```
 
-The meanings of the values of the `fault-scheduling` configuration item are as follows.
-
-**Table 2** fault-scheduling configuration values
+**Table 1** fault-scheduling configuration values
 
 <a name="table0396162644916"></a>
 

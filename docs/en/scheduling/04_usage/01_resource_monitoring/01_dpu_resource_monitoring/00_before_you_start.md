@@ -7,7 +7,7 @@ DPU resource monitoring provides real-time monitoring of the running status and 
 
 DPU resource monitoring is a basic feature. It does not distinguish between training and inference scenarios, nor between scenarios that use the Volcano scheduler and scenarios that use other schedulers. This feature must be used together with Prometheus. That is, after Prometheus is deployed, call the DPU Exporter APIs to monitor resources.
 
-- Prometheus is a complete open-source monitoring solution featuring easy management, high efficiency, scalability, and visualization. It works with DPU Exporter to display the reported DPU information in a visualized manner.
+Prometheus is a complete open-source monitoring solution featuring easy management, high efficiency, scalability, and visualization. It works with DPU Exporter to display the reported DPU information in a visualized manner.
 
 ## Prerequisites<a name="section1672062465010"></a>
 
@@ -23,5 +23,4 @@ DPU resource monitoring is a basic feature. It does not distinguish between trai
 
 ## Supported Product Forms<a name="section170961844182917"></a>
 
-- Ascend 950PR Products
-- Ascend 950DT Products
+<term>Ascend 950PR&950DT Products</term>

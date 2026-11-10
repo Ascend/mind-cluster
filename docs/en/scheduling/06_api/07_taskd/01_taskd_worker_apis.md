@@ -34,7 +34,7 @@ No input parameters.
 
 **Return Value<a name="section1871411618361"></a>**
 
-|Parameter|Description|
+|Return Value Type|Description|
 |--|--|
 |bool|Indicates whether the startup is successful.<ul><li>`True:` Startup succeed.</li><li>`False`: Startup failed.</li></ul>|
 

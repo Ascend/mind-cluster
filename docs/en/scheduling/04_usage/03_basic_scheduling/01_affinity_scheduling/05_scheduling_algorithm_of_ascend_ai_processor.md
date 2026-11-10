@@ -102,12 +102,13 @@ The idle switch resources are divided into two 2D arrays. One is partitioned hor
 >- Soft affinity only supports Job-level rescheduling.
 >- If soft affinity is enabled for a service, in order to prioritize service operation, when a physical SuperPoD cannot satisfy logical SuperPoD scheduling, cross-SuperPoD scheduling will be performed, but this may cause a certain decline in service performance.
 
-**Logical Rack Affinity Scheduling<a name="section941034517442"></a>**
+<!-- npu="950" id1 -->
+**Logical Rack Affinity Scheduling<a name="section941034517443"></a>**
 
 1. Based on the logical rack size of the job, convert the number of nodes required by the job into the number of logical racks required. For example, if the logical rack size is 16 and the total number of chips required by the job is 64, the number of logical racks *X* = 4.
 2. Rack affinity scheduling prioritizes scheduling the *X* logical racks required by the job into a single physical rack. For example, if the remaining available nodes in the physical racks of the current SuperPoD are 2, 4, 6, and 8 respectively, the job will be preferentially scheduled to the physical rack with 8 remaining available nodes.
 
-    **Figure 4**  Logical rack prioritization order<a name="fig_logic_frame_select_order"></a>
+    **Figure 4** Logical rack prioritization order<a name="fig_logic_frame_select_order"></a>
 
     ![](../../../../figures/scheduling/logical-rack-prioritization-order.PNG)
 
@@ -125,3 +126,4 @@ For example, if a Pod requires 1 Ascend AI processor and the two HCCL rings on t
 **Specific Implementation<a name="section94176351465"></a>**
 
 For specific code implementation, please refer to the [UseAnnotation](https://gitcode.com/Ascend/mind-cluster/blob/release_v26.2.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go) method in the open-source code, where the `SelectNPUFromNode` method implements the function of selecting Ascend AI processors from a node based on affinity.
+<!-- end id1 -->

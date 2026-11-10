@@ -2,16 +2,16 @@
 
 With Ascend Deployer, you can install cluster scheduling components in batches, significantly reducing the complex configuration operations involved in manual installation and streamlining the installation process. It is suitable for batch component installation in cluster scenarios.
 
-**Key Steps for Tool Installation**
+## Key Steps
 
 1. Verify that the hardware product and OS are supported in the Ascend Deployer support list.
 2. Deploy Ascend Deployer, ensuring that the tool version matches the cluster scheduling component version.
 3. Follow Ascend Deployer guide to configure installation parameters and execute batch component installation. Steps include:
-   - Remote server connection (optional)
-   - Configuring server installation and deployment parameters
-   - Executing installation commands
-   - Checking installation results
-   - Configuring environment variables
+   1. Remote server connection (optional)
+   2. Configuring server installation and deployment parameters
+   3. Executing installation commands
+   4. Checking installation results
+   5. Configuring environment variables
 
 For the list of hardware products, operating systems, and installation scenarios currently supported by Ascend Deployer, see [Supported Products and OSs](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/en/01_introduction/02_supported_product_and_os.md) in *MindCluster Ascend Deployer User Guide*, to determine whether to use Ascend Deployer.
 
