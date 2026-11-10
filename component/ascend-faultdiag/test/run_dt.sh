@@ -25,16 +25,24 @@ DT_RESULT_PATH="${OUTPUT_PATH}/DT"
 DT_RESULT_COV_DIR="${OUTPUT_PATH}/DT/cov_data"
 DT_RESULT_XML_DIR="${OUTPUT_PATH}/DT/xmls"
 DT_RESULT_HTMLS_DIR="${OUTPUT_PATH}/DT/htmls"
+TOOLKIT_DT_RESULT_COV_DIR="${OUTPUT_PATH}/DT/toolkit_cov_data"
 
 ASCEND_FD_CODE_PATH="${ROOT_PATH}/src/ascend_fd"
 ASCEND_FD_DT_REQUIREMENTS_FILE_PATH="${ROOT_PATH}/test/requirements.txt"
 ASCEND_FD_REQUIREMENTS_FILE_PATH="${SRC_PATH}/requirements.txt"
+
+TOOLKIT_SRC_PATH="${ROOT_PATH}/toolkit_src"
+TOOLKIT_CODE_PATH="${TOOLKIT_SRC_PATH}/ascend_fd_tk"
+TOOLKIT_REQUIREMENTS_FILE_PATH="${TOOLKIT_SRC_PATH}/requirements.txt"
 ASCEND_CONF_MODEL_DIR="${SRC_PATH}/ascend_fd/configuration/model/"
 
 DECISION_TREE_MODEL_PATH="${ROOT_PATH}/platform/res_model_training/cpu_decision_tree_latest.pkl"
 NET_RF_MODEL_PATH="${ROOT_PATH}/platform/net_model_training/net_rf_model_latest.pt"
 
-pip3 install setuptools==65.6.3
+# setuptools 65.6.3 is incompatible with Python 3.12+ (pkgutil.ImpImporter removed); pin it only for older interpreters.
+if python3 -c 'import sys; sys.exit(0 if sys.version_info < (3, 12) else 1)'; then
+    pip3 install setuptools==65.6.3
+fi
 
 function train_net_model() {
     echo "Begin to train random forest model"
@@ -83,9 +91,28 @@ function build_ascend_fd() {
   python3 setup_linux.py develop -i https://repo.huaweicloud.com/repository/pypi/simple/
 }
 
+function run_toolkit_test() {
+  echo "Begin to run DT test for ascend_fd_tk"
+  cd "${ROOT_PATH}" || exit 3
+  pip3 install -r "${TOOLKIT_REQUIREMENTS_FILE_PATH}"
+  PYTHONPATH="${TOOLKIT_SRC_PATH}${PYTHONPATH:+:${PYTHONPATH}}" pytest "${TOOLKIT_CODE_PATH}/test" \
+  --cov="${TOOLKIT_CODE_PATH}" --cov-branch \
+  --junit-xml="${DT_RESULT_XML_DIR}/toolkit.xml" \
+  --html="${DT_RESULT_HTMLS_DIR}/toolkit.html" \
+  --self-contained-html
+
+  mkdir -p "${TOOLKIT_DT_RESULT_COV_DIR}"
+  mv .coverage "${TOOLKIT_DT_RESULT_COV_DIR}"
+  cd "${TOOLKIT_DT_RESULT_COV_DIR}" || exit 3
+  coverage xml
+  coverage html -d coverage_result
+  echo "Running DT for ascend_fd_tk over."
+}
+
 function run_test() {
   echo "Begin to run DT test for ascend_fd"
   pytest ${ROOT_PATH} \
+  --ignore="${TOOLKIT_SRC_PATH}" \
   --cov="${ASCEND_FD_CODE_PATH}" --cov-branch \
   --junit-xml="${DT_RESULT_XML_DIR}/final.xml" \
   --html="${DT_RESULT_HTMLS_DIR}/asecndfd.html" \
@@ -97,6 +124,8 @@ function run_test() {
   coverage xml
   coverage html -d coverage_result
   echo "Running DT for ascend_fd over."
+
+  run_toolkit_test
 
   cd ${SRC_PATH} || exit 3
   python3 setup_linux.py develop --uninstall
