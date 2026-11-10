@@ -51,8 +51,8 @@ This document describes how to upgrade MindCluster components using Helm.
 
        ```ColdFusion
        NAME               NAMESPACE   REVISION  UPDATED                                  STATUS       CHART                                        APP VERSION
-       mindcluster        default    1         2026-03-24 15:30:00.000000000 +0800 CST  deployed  mindcluster-deploy-tool-26.1.0                26.1.0
-       mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.1.0           26.1.0
+       mindcluster        default     1         2026-03-24 15:30:00.000000000 +0800 CST  deployed     mindcluster-deploy-tool-26.1.0               26.1.0
+       mindcluster-crds   default     1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.1.0          26.1.0
        ```
 
    2. Determine the component upgrade method based on the command output.
@@ -146,7 +146,8 @@ If the components are installed manually through kubectl and have not yet been b
     > [!NOTE]
     >- The **default configuration installation** method downloads the images of components from the Ascend image repository. If your nodes cannot connect to the internet and the images are not cached locally, the upgrade may fail.
     >- When upgrading components to version 26.1.0, note: In the Ascend image repository, the image tags for version 26.1.0 components are `v26.1.0-ubuntu22.04`, `v26.1.0-alpinelatest`, or `v26.1.0-openeuler24.03`. However, in the default configuration of the 26.1.0 Helm tool, the tag is specified only as `v26.1.0`. If the **default configuration installation** method is used, an error occurs during installation because the image cannot be found. Therefore, use the **custom configuration installation** method to configure the correct tag.
-    >- Choose either the **default configuration installation** or the **custom configuration installation** method as needed.
+    >- Except for version 26.1.0, which must use **custom configuration installation** with the correct tag configured, other versions can use either **default configuration installation** or **custom configuration installation** as needed.
+    >- When upgrading Infer Operator from 26.0.0 or an earlier version to the latest version, you need to run the `chown -R root:root /var/log/mindx-dl/infer-operator` command to change the owner of the log directory and log files to root.
    - **Default configuration installation**: If the [default configuration of components](../02_installation/00_helm_installation.md#default_app_yaml_install_config) meets requirements, run the following command.
 
        ```bash
@@ -205,6 +206,8 @@ If a component has been installed through Helm and is managed by Helm, follow th
     -rw-r--r-- 1 root root  2026 Mar 24 15:25 helm_tool.sh
     ```
 
+    Here, `{version}` indicates the MindCluster component version, and `{chart_version}` indicates the Helm Chart version.
+
 2. Upgrade the `Release` instance of MindCluster CRDs.
     >[!NOTE]
     >- The following three components contain CRDs: Ascend Operator, Volcano, and Infer Operator. If you do not need to upgrade these three components, skip this step.
@@ -248,7 +251,8 @@ If a component has been installed through Helm and is managed by Helm, follow th
    >[!NOTE]
    >- The **default configuration upgrade method** downloads the component images from the Ascend image repository. If your node cannot connect to the internet and the images are not cached locally, the upgrade may fail.
    >- When upgrading components of version 26.1.0, note: In the Ascend image repository, the image tags of the 26.1.0 components are `v26.1.0-ubuntu22.04`, `v26.1.0-alpinelatest`, or `v26.1.0-openeuler24.03`. However, in the default configuration of the 26.1.0 Helm tool, the tag is specified only as `v26.1.0`. If **default configuration upgrade** is used, an error is reported during the upgrade because the image cannot be found. Therefore, use **custom configuration upgrade** to configure the correct tag.
-   >- Select either **default configuration upgrade** or **custom configuration upgrade** as required.
+   >- Except for version 26.1.0, which must use **custom configuration upgrade** with the correct tag configured, other versions can use either **default configuration upgrade** or **custom configuration upgrade** as needed.
+   >- When upgrading Infer Operator from 26.0.0 or an earlier version to the latest version, you need to run the `chown -R root:root /var/log/mindx-dl/infer-operator` command to change the owner of the log directory and log files to root.
    - **Default configuration upgrade**: If the [default configuration of the components](../02_installation/00_helm_installation.md#default_app_yaml_install_config) meets user requirements, run the following command.
 
        ```bash
@@ -292,7 +296,7 @@ If a component has been installed through Helm and is managed by Helm, follow th
 
 ## Version Rollback<a name="section_helm_rollback"></a>
 
-If components run abnormally after an upgrade, use the Helm rollback feature to restore the version before the upgrade. Version rollback applies only to `Release` instances that have been upgraded through Helm upgrade. Helm records the `Revision` history of each upgrade.
+If components run abnormally after an upgrade, use the Helm rollback feature to restore the version before the upgrade. Version rollback applies only to `Release` instances that have been upgraded through Helm upgrade. Helm records the `REVISION` history of each upgrade.
 
 1. Run the following command to view the upgrade history of the `Release` instance.
     - View the upgrade history of the component `Release` instance:
@@ -305,8 +309,8 @@ If components run abnormally after an upgrade, use the Helm rollback feature to 
 
       ```ColdFusion
       REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
-      1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-26.1.0        26.1.0       Install complete
-      2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-26.2.0        26.2.0       Upgrade complete
+      1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-26.1.0       26.1.0       Install complete
+      2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-26.2.0       26.2.0       Upgrade complete
       ```
 
     - View the upgrade history of the `Release` instance for component CRDs:
@@ -318,7 +322,7 @@ If components run abnormally after an upgrade, use the Helm rollback feature to 
        The output example is as follows:
 
       ```ColdFusion
-      REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
+      REVISION  UPDATED                   STATUS      CHART                                      APP VERSION  DESCRIPTION
       1         2026-03-24 15:30:00.000   superseded  mindcluster-crds-deploy-tool-26.1.0        26.1.0       Install complete
       2         2026-03-25 10:00:00.000   deployed    mindcluster-crds-deploy-tool-26.2.0        26.2.0       Upgrade complete
       ```
@@ -326,7 +330,7 @@ If components run abnormally after an upgrade, use the Helm rollback feature to 
     >[!NOTE]
     >Helm's `REVISION` is a simple incrementing integer whose core purpose is to record and roll back: each change generates a new `REVISION`, and when needed, you can quickly restore to any previous stable version by the `REVISION` number, thereby achieving traceability of component releases and rapid fault recovery.
 
-2. Run the following command to roll back the CRDs to the specified `Revision` version. The following uses REVISION 1 as an example:
+2. Run the following command to roll back the CRDs to the specified `REVISION` version. The following uses `REVISION 1` as an example:
 
     ```bash
     helm rollback mindcluster-crds 1
@@ -338,7 +342,7 @@ If components run abnormally after an upgrade, use the Helm rollback feature to 
     Rollback was a success! Happy Helming!
     ```
 
-3. Run the following command to roll back components to the specified `Revision`. The following uses REVISION 1 as an example:
+3. Run the following command to roll back components to the specified `REVISION`. The following uses `REVISION 1` as an example:
 
     ```bash
     helm rollback mindcluster 1
@@ -350,4 +354,6 @@ If components run abnormally after an upgrade, use the Helm rollback feature to 
     Rollback was a success! Happy Helming!
     ```
 
-4. Confirm the component status. For details, see [Component Status Confirmation](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390).
+4. (Optional) When rolling back Infer Operator to 26.0.0 or an earlier version, you need to run the `chown -R hwMindX:hwMindX /var/log/mindx-dl/infer-operator` command to change the owner of the log directory and log files to `hwMindX`.
+
+5. Confirm the component status. For details, see [Component Status Confirmation](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390).

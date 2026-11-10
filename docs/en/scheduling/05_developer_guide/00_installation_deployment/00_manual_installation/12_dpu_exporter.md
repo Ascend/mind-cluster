@@ -69,10 +69,10 @@ DPU Exporter supports two installation modes. You can select either of them base
 
     |Parameter|Description|
     |---|---|
-    |hinicadm5CollectorInterval|Collection period of global metrics (hinicadm5 counter), in seconds. The value range is 1 to 86400, and the default value is 40.|
-    |sysfsCollectorInterval|Collection period of interface-level metrics (sysfs file interface), in seconds. The value range is 1 to 86400, and the default value is 20.|
-    |dpuListRefreshInterval|Refresh period of the DPU device list, in seconds. The value range is 1 to 86400, and the default value is 60.|
-    |metricWhiteList|Custom metric whitelist, which supports prefix matching (ending with `*`). When it is empty, the [Default Trustlist](../../../06_api/16_dpu_exporter.md#default-trustlist) is used.|
+    |hinicadm5CollectorInterval|Collection period of global metrics (hinicadm5 counter), in seconds. The value range includes -1 and 20 to 3600, and the default value is 40. <ul><li>-1: collect only once. No repeat collection.</li><li>20 to 3600: collect by a specified period. If configured to any other value, the default value is used.</li></ul>|
+    |sysfsCollectorInterval|Collection period of interface-level metrics (sysfs file interface), in seconds. The value range includes -1 and 20 to 3600, and the default value is 20.<ul><li>-1: collect only once. No repeat collection.</li><li>20 to 3600: collect by a specified period. If configured to any other value, the default value is used.</li></ul>|
+    |dpuListRefreshInterval|Refresh period of the DPU device list, in seconds. The value range includes -1 and 20 to 3600, and the default value is 60.<ul><li>-1: refresh once upon startup. No repeat refresh.</li><li>20 to 3600: refresh by a specified period. If configured to any other value, the default value is used.</li></ul>|
+    |metricWhiteList|Custom metric trustlist, which supports prefix matching (ending with `*`). When it is empty, the [Default Trustlist](../../../06_api/16_dpu_exporter.md#default-trustlist) is used.|
 
     The configuration file can be mounted in either of the following modes. The method for modifying the configuration depends on the selected mount mode. For details, see [Dynamically Loading Configurations](#dynamically-loading-configurations).
 
@@ -205,9 +205,9 @@ When DPU Exporter runs in container mode, privileged containers, the `root` user
 
         |Parameter|Description|
         |---|---|
-        |hinicadm5CollectorInterval|Collection period of global metrics (hinicadm5 counter), in seconds. The value range is 1 to 86400. The default value is 40.|
-        |sysfsCollectorInterval|Collection period of interface-level metrics (sysfs file interface), in seconds. The value range is 1 to 86400. The default value is 20.|
-        |dpuListRefreshInterval|Refresh period of the DPU device list, in seconds. The value range is 1 to 86400. The default value is 60.|
+        |hinicadm5CollectorInterval|Collection period of global metrics (hinicadm5 counter), in seconds. The value range includes -1 and 20 to 3600, and the default value is 40. <ul><li>-1: collect only once. No repeat collection.</li><li>20 to 3600: collect by a specified period. If configured to any other value, the default value is used.</li></ul>|
+        |sysfsCollectorInterval|Collection period of interface-level metrics (sysfs file interface), in seconds. The value range includes -1 and 20 to 3600, and the default value is 20.<ul><li>-1: collect only once. No repeat collection.</li><li>20 to 3600: collect by a specified period. If configured to any other value, the default value is used.</li></ul>|
+        |dpuListRefreshInterval|Refresh period of the DPU device list, in seconds. The value range includes -1 and 20 to 3600, and the default value is 60.<ul><li>-1: refresh once upon startup. No repeat refresh.</li><li>20 to 3600: refresh by a specified period. If configured to any other value, the default value is used.</li></ul>|
         |metricWhiteList|Custom metric trustlist, which supports prefix matching (ending with `*`). When it is empty, the [Default Trustlist](../../../06_api/16_dpu_exporter.md#default-trustlist) is used.|
 
     4. <a name="li18459954104719"></a>Press `Esc`, type `:wq!`, and press `Enter` to save and exit.

@@ -36,10 +36,11 @@ MindCluster supports deploying Infer Operator inference jobs in the following wa
 - [Deploying an Infer Operator Inference Job Based on MindIE PyMotor](./02_deploying_infer_operator_inference_job_with_mindie_pymotor.md).
 
 >[!NOTE]
->If you have not configured a RoCE network or the RoCE network is unhealthy:
 >
->- In a non-SuperPoD scheduling scenario, a single-node inference instance can be scheduled normally, but KV transfers between inference instances may be abnormal, causing the inference job to fail to run normally.
->- In a SuperPoD scheduling scenario, if the number of logical SuperPoDs of the inference instance is 1, the inference instance can be scheduled normally, but KV transfers between inference instances may be abnormal, causing the inference job to fail to run normally.
+> If you have not configured a RoCE network or the RoCE network is unhealthy:
+>
+> - In a non-SuperPoD scheduling scenario, a single-node inference instance can be scheduled normally, but KV transfers between inference instances may be abnormal, causing the inference job to fail to run normally.
+> - In a SuperPoD scheduling scenario, if the number of logical SuperPoDs of the inference instance is 1, the inference instance can be scheduled normally, but KV transfers between inference instances may be abnormal, causing the inference job to fail to run normally.
 >
 > Infer Operator supports deploying the following roles within the same InferServiceSet:
 >

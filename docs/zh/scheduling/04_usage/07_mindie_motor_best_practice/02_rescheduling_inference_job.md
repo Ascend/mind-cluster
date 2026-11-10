@@ -84,9 +84,9 @@ kubectl get pod --all-namespaces
 回显示例如下：
 
 ```ColdFusion
-NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE
+NAMESPACE        NAME                                READY   STATUS    RESTARTS   AGE
 ...
-default          mindie-server-master-0                     1/1     Running   0          20m
+default          mindie-server-0                     1/1     Running   0          20m
 ...
 ```
 
@@ -103,9 +103,9 @@ kubectl get pod --all-namespaces
 查看任务Pod，可以看到任务被删除之后重新创建，原Pod状态Error后被删除，新的任务Pod被创建，Pod状态从Pending到ContainerCreating再到Running， AGE从0秒开始，表示故障重调度特性运行成功。
 
 ```ColdFusion
-NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE
+NAMESPACE        NAME                             READY   STATUS    RESTARTS   AGE
 ...
-default          mindie-server-0-master-0                   1/1     Running   0          1s
+default          mindie-server-0                  1/1     Running   0          1s
 ...
 ```
 

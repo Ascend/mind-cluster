@@ -107,22 +107,22 @@ Configure and start elastic inference fault tolerance as follows:
 
 1. Install MindCluster cluster scheduling components (Volcano, Ascend Device Plugin, Ascend Docker Runtime, Ascend Operator, and ClusterD). For details, see [Installation and Deployment](../../../05_developer_guide/00_installation_deployment/menu_installation_deployment.md).
 2. Prepare images, models, and datasets by referring to steps 1 to 3 in [Deploying a verl Reinforcement Learning Job](../01_colocated_scenario/01_deploying_verl_reinforcement_learning_job.md). In addition, create a shared storage directory (for example, `/home/rollout_progress`) for persisting token continuation progress.
-3. Install the specified version of verl (commit ID: `dfc01f85`) in either of the following ways:
+3. Install the specified version of verl (adapted based on the verl 0.9.0 branch, `git ref: v0.9.0`) in either of the following ways:
 
     - Method 1: `pip` installation (recommended)
 
         ```shell
-        pip install "verl @ git+https://github.com/verl-project/verl.git@dfc01f85"
+        pip install "verl @ git+https://github.com/verl-project/verl.git@v0.9.0"
         ```
 
-        `pip` automatically clones the repository, checks out the commit, and builds and installs the package. You do not need to manage the code directory manually.
+        `pip` automatically clones the repository, checks out the version, and builds and installs the package. You do not need to manually manage the code directory.
 
     - Method 2: source code installation using git clone
 
         ```shell
         git clone https://github.com/verl-project/verl.git
         cd verl
-        git checkout dfc01f85
+        git checkout v0.9.0
         pip install -e .
         ```
 

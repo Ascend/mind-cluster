@@ -4,13 +4,13 @@
 
 Use Ascend Docker Runtime (a container engine plugin) alone to mount vNPUs to a container.
 
-**Prerequisites**
+### Prerequisites
 
 Install Ascend Docker Runtime by referring to [Installing Ascend Docker Runtime](../../../../05_developer_guide/00_installation_deployment/00_manual_installation/02_ascend_docker_runtime.md).
 
-**Method for Using vNPUs with Ascend Docker Runtime**
+### Method for Using vNPUs with Ascend Docker Runtime
 
-When starting a container, the following command to virtualize resources. The following command indicates that 4 AICores are split from the physical chip with ID 0 as a vNPU and mounted to the container. For a container started in this way, the virtual device is automatically destroyed when the container process ends.
+When starting a container, run the following command to virtualize resources. The following command indicates that 4 AICores are split from the physical chip with ID 0 as a vNPU and mounted to the container. For a container started in this way, the virtual device is automatically destroyed when the container process ends.
 
 ```shell
 docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {image-name:tag} /bin/bash
@@ -20,7 +20,6 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 >
 >- When using dynamic virtualization, disable vNPU recovery.
 >- The available chip IDs can be queried and confirmed as follows:
->   - Physical chip ID:
 >
 >      ```shell
 >      ls /dev/davinci*
@@ -35,14 +34,12 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 |Parameter|Description|Example|
 |--|--|--|
 |`ASCEND_VISIBLE_DEVICES`|Used to specify the NPU device to be mounted to the container. Otherwise, mounting the NPU device fails. During dynamic virtualization, `ASCEND_VISIBLE_DEVICES=0` indicates that a certain number of AICores are split from NPU device 0.|<ul><li>A dynamic virtualization command can specify only the ID of one physical NPU for dynamic virtualization.</li><li>It must be used together with `ASCEND_VNPU_SPECS`, which indicates the number of AICores split from the specified NPU.</li><li>It can be used together with `ASCEND_RUNTIME_OPTIONS`, but the value can only be `NODRV`, which indicates that driver-related directories are not mounted.</li></ul>|
-|`ASCEND_RUNTIME_OPTIONS`|<p>Restricts the chip ID specified in `ASCEND_VISIBLE_DEVICES`:</p><ul><li>`NODRV`: indicates that driver-related directories are not mounted.</li></ul>|`ASCEND_RUNTIME_OPTIONS=NODRV`<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><ul><li>In the dynamic virtualization scenario, if `ASCEND_RUNTIME_OPTIONS` is used, its value cannot contain `VIRTUAL`.</li></ul></div></div>|
+|`ASCEND_RUNTIME_OPTIONS`|<p>Restricts the chip ID specified in `ASCEND_VISIBLE_DEVICES`:</p><p>`NODRV`: indicates that driver-related directories are not mounted.</p>|`ASCEND_RUNTIME_OPTIONS=NODRV`<div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">In the dynamic virtualization scenario, if `ASCEND_RUNTIME_OPTIONS` is used, its value cannot contain `VIRTUAL`.</div></div>|
 |`ASCEND_VNPU_SPECS`|Splits a certain number of AICores from the physical NPU device and specifies them as virtual devices. For supported values, see the "Virtual Instance Template" column in Table 1 of [Virtualization Templates](../03_virtualization_templates.md).<ul><li>This parameter can be used only for product forms that support dynamic virtualization.</li><li>It must be used together with `ASCEND_VISIBLE_DEVICES`, which specifies the physical NPU device used for virtualization.</li></ul>|`ASCEND_VNPU_SPECS=vir04` indicates that 4 AICores are split as a vNPU and mounted to the container.|
 
 ## Method 2: Mounting vNPU Using Kubernetes
 
-### Before You Start<a name="ZH-CN_TOPIC_0000002511347087"></a>
-
-#### Prerequisites<a name="section121807404519"></a>
+### Prerequisites<a name="section121807404519"></a>
 
 To use the dynamic vNPU scheduling feature in command-line scenarios, ensure that the following components are installed. If they are not installed, refer to [Installation and Deployment](../../../../03_installation_guide/02_installation/00_helm_installation.md) for operations. The dynamic vNPU scheduling feature supports only Volcano as the scheduler and does not support other schedulers.
 
@@ -54,7 +51,7 @@ To use the dynamic vNPU scheduling feature in command-line scenarios, ensure tha
 
 The key operations are as follows:
 
-1. Obtain `Ascend-docker-runtime_{version}_linux-{arch}.run`" first, and install Ascend Docker Runtime.
+1. Obtain `Ascend-docker-runtime_{version}_linux-{arch}.run` first, and install Ascend Docker Runtime.
 2. Refer to the [Installation and Deployment](../../../../03_installation_guide/02_installation/00_helm_installation.md) section to complete the installation of each component.
 
    The cluster scheduling components whose parameters need to be modified for the virtual instance feature are Volcano and Ascend Device Plugin. Modify them as required below and use the corresponding YAML for installation and deployment:
@@ -111,12 +108,12 @@ The key operations are as follows:
        ...
        ```
 
-#### Usage Method<a name="zh-cn_topic_0000001559979444_section91871616135119"></a>
+### Usage Method<a name="zh-cn_topic_0000001559979444_section91871616135119"></a>
 
 - Use via the command line: Install the cluster scheduling components and use the dynamic vNPU scheduling feature through the command line.
 - Use after integration: Integrate the cluster scheduling components into an existing third-party AI platform or an AI platform developed based on them.
 
-#### Usage Instructions<a name="section10769161412815"></a>
+### Usage Instructions<a name="section10769161412815"></a>
 
 **Table 3**  Scenario description
 
@@ -283,17 +280,19 @@ The key operations are as follows:
 </tbody>
 </table>
 
+### Usage Constraints
+
 - Resource monitoring can be used together with all features in inference scenarios.
 - Multiple inference jobs can run simultaneously in a cluster, and each task can use different features. However, tasks using static vNPUs and tasks using dynamic vNPUs cannot coexist.
 - Dynamic vNPU scheduling supports only single-node tasks with a single replica or multiple replicas. Each replica works independently, and distributed tasks are not supported.
 
-#### Supported Product Forms<a name="section169961844182917"></a>
+### Supported Product Forms<a name="section169961844182917"></a>
 
 - <term>Atlas inference products</term>
 - <term>Atlas A2 products</term>
 - <term>Atlas A3 products</term>
 
-#### Usage Flow<a name="zh-cn_topic_0000001559979444_section246711128536"></a>
+### Usage Flow<a name="zh-cn_topic_0000001559979444_section246711128536"></a>
 
 For the flow of using the dynamic vNPU scheduling feature through the command line, see [Figure 1](#zh-cn_topic_0000001559979444_fig242524985412).
 
@@ -676,7 +675,7 @@ On <term>Atlas inference products</term>, using `infer-deploy-dynamic.yaml` as a
     </table>
 
     >[!NOTICE]
-    >In the preceding table, for chip virtualization (non-full-NPU), the value of `vnpu-dvpp` can only be the corresponding value in the table. Any other value will cause the jop to fail to be submitted.
+    >In the preceding table, for chip virtualization (non-full-NPU), the value of `vnpu-dvpp` can only be the corresponding value in the table. Any other value will cause the job to fail to be submitted.
 
 1. Mount the weight files.
 

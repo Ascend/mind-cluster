@@ -20,7 +20,7 @@ When a service Pod uses an RDMA shared device, K8s RDMA Shared Dev Plugin automa
 
 A service Pod that uses an RDMA shared device needs to declare a resource request in the Pod configuration. The configuration example is as follows (applying for one RDMA device resource; for the maximum value configuration, see `rdmaHcaMax` in [Configuration File Description](../../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_config_k8s_rdma_shared_dev_plugin)):
 
-```yaml
+<pre codetype="yaml">
 apiVersion: v1
 kind: Pod
 metadata:
@@ -38,17 +38,17 @@ spec:
         resources:
            requests:
               huawei.com/npu: 8
-              huawei.com/ub_rdma: 1
+              <strong>huawei.com/ub_rdma: 1</strong>
            limits:
               huawei.com/npu: 8
-              huawei.com/ub_rdma: 1
+              <strong>huawei.com/ub_rdma: 1</strong>
         command:
            - sh
            - -c
            - |
               ls -l /dev/infiniband /sys/class/infiniband
               sleep 1000000
-```
+</pre>
 
 > [!NOTE]
 >
@@ -64,8 +64,8 @@ spec:
 >
 > - Configure the host network `hostNetwork: true`.
 > - Configure the user-mode driver. Choose either of the following methods:
-    >   - Install the OFED driver of the 1825 DPU in the image.
-    >   - After the container is started, mount the OFED driver of the 1825 DPU from the host (for the mounting method, see [Configuration in Container Scenarios](../../06_api/11_k8s_rdma_shared_dev_plugin.md#configuration-in-container-scenarios)).
+>   - Install the OFED driver of the 1825 DPU in the image.
+>   - After the container is started, mount the OFED driver of the 1825 DPU from the host (for the mounting method, see [Configuration in Container Scenarios](../../06_api/11_k8s_rdma_shared_dev_plugin.md#configuration-in-container-scenarios)).
 
 Run the following command to check whether the service Pod is created successfully:
 
@@ -120,13 +120,13 @@ In exclusive mode, device mounting depends on Multus CNI that reads the `k8s.v1.
 
 ### Service Pod Resource Configuration Example in Exclusive Mode
 
-```yaml
+<pre codetype="yaml">
 apiVersion: v1
 kind: Pod
 metadata:
    name: ub-rdma-test-pod
    annotations:
-      k8s.v1.cni.cncf.io/networks: roce-network, roce-network
+      <strong>k8s.v1.cni.cncf.io/networks: roce-network, roce-network</strong>
 spec:
    restartPolicy: OnFailure
    containers:
@@ -139,17 +139,17 @@ spec:
         resources:
            requests:
               huawei.com/npu: 2
-              huawei.com/ub_rdma: 2
+              <strong>huawei.com/ub_rdma: 2</strong>
            limits:
               huawei.com/npu: 2
-              huawei.com/ub_rdma: 2
+              <strong>huawei.com/ub_rdma: 2</strong>
         command:
            - sh
            - -c
            - |
               ls -l /dev/infiniband /sys/class/infiniband
               sleep 1000000
-```
+</pre>
 
 > [!NOTE]
 >

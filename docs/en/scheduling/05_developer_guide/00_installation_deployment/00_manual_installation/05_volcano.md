@@ -179,7 +179,7 @@
                   <strong>cpu: 2000m</strong>
     ...</pre>
 
-6. (Optional) Tune scheduling time performance. It is supported to configure the plugins used by Volcano in `volcano-v{version}</i>.yaml`. Refer to the tables of Volcano advanced configuration parameters and supported plugins list in the [Open-Source Volcano Official Documentation](https://support.huaweicloud.com/usermanual-cce/cce_10_0193.html) for operation.
+6. (Optional) Tune scheduling time performance. It is supported to configure the plugins used by Volcano in `volcano-v{version}.yaml`. Refer to the tables of Volcano advanced configuration parameters and supported plugins list in the [Open-Source Volcano Official Documentation](https://support.huaweicloud.com/usermanual-cce/cce_10_0193.html) for operation.
 
     ```Yaml
     ...
@@ -372,7 +372,9 @@
     </td>
     <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p25637568515"><a name="p25637568515"></a><a name="p25637568515"></a>The number of reserved nodes within a SuperPoD.</p>
     <p id="p1704246153100"><a name="p1704246153100"></a><a name="p1704246153100"></a>Value range: greater than or equal to `0`. When set to `0`, no nodes are reserved.</p>
-    <div class="note" id="note1514175285210"><a name="note1514175285210"></a><a name="note1514175285210"></a><span class="notetitle">Note</span><div class="notebody"><a name="ul13842528165510"></a><a name="ul13842528165510"></a><ul id="ul13842528165510"><li>If reserve-nodes is greater than or equal to super-pod-size, the following scenarios apply.<ul><li>If super-pod-size is greater than 2, reserve-nodes is reset to 2 by default</li><li>If super-pod-size is less than or equal to 2, reserve-nodes is reset to 0 by default.</li></ul></li><li>When the scheduling policy is chip8-node8-ra64-sp, the reserve-nodes configuration does not take effect.</li></ul>
+    <div class="note" id="note1514175285210"><a name="note1514175285210"></a><a name="note1514175285210"></a><span class="notetitle">Note</span><div class="notebody"><p id="p96481321115510"><a name="p96481321115510"></a><a name="p96481321115510"></a>If reserve-nodes is greater than or equal to super-pod-size, the following scenarios apply.</p>
+    <a name="ul13842528165510"></a><a name="ul13842528165510"></a><ul id="ul13842528165510"><li>If super-pod-size is greater than 2, reserve-nodes is reset to 2 by default</li><li>If super-pod-size is less than or equal to 2, reserve-nodes is reset to 0 by default.</li></ul>
+    <p id="p96481321115511"><a name="p96481321115511"></a><a name="p96481321115511"></a>When the scheduling policy is chip8-node8-ra64-sp, the reserve-nodes configuration does not take effect.</p>
     </div></div>
     </td>
     </tr>
@@ -403,6 +405,13 @@
     <a name="ul_prefer_previous_node_normal"></a><a name="ul_prefer_previous_node_normal"></a><ul id="ul_prefer_previous_node_normal"><li>When a Pod is reconstructed, it is preferentially scheduled back to its original node to reuse the existing container image cache and avoid re-pulling the image.</li><li>Healthy Pods have the highest priority to return to their original node; faulty Pods actively avoid the original node and choose other nodes to move out of the fault domain.</li></ul>
     <p id="p_prefer_previous_node_affinity"><a name="p_prefer_previous_node_affinity"></a><a name="p_prefer_previous_node_affinity"></a><b>Inter-node affinity scheduling scenarios (SuperPoD scheduling / multi-level scheduling / rack affinity scheduling):</b></p>
     <a name="ul_prefer_previous_node_affinity"></a><a name="ul_prefer_previous_node_affinity"></a><ul id="ul_prefer_previous_node_affinity"><li>In non-fault rescheduling scenarios (e.g., rescheduling after eviction), if all nodes from the previous run are still available, each Pod is scheduled back to its original node to continue running.</li><li>In fault rescheduling scenarios, the scheduler performs node replacement according to the original scheduling logic. For detailed rescheduling strategies for each scheduling policy, refer to <a href="../../../04_usage/03_basic_scheduling/01_affinity_scheduling/04_node_based_affinity.md">Node-Based Affinity</a>.</li></ul>
+    </td>
+    </tr>
+    <tr id="row_scheduler_downgrade_timeout"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p_scheduler_downgrade_timeout_name"><a name="p_scheduler_downgrade_timeout_name"></a><a name="p_scheduler_downgrade_timeout_name"></a>scheduler-downgrade-timeout</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p_scheduler_downgrade_timeout_default"><a name="p_scheduler_downgrade_timeout_default"></a><a name="p_scheduler_downgrade_timeout_default"></a>120</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p_scheduler_downgrade_timeout_desc"><a name="p_scheduler_downgrade_timeout_desc"></a><a name="p_scheduler_downgrade_timeout_desc"></a>The global fallback time for scheduling constraint downgrade, in seconds. It takes effect only for A3 SuperPoD jobs that have the downgrade switch enabled (the <code>huawei.com/scheduler.downgrade</code> annotation on the PodGroup or Pod is set to <code>true</code>). If a job cannot be scheduled with the original sp-block for longer than this period, sp-block is halved (if the value is not an integer multiple of the node's NPU count, the NPU count of a single node is used). The value range is [1, 86400]. If the parameter is not configured or the value is invalid, the default value 120 is used.</p>
     </td>
     </tr>
     <tr id="row_ascend_score_weight"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p_ascend_score_weight_name"><a name="p_ascend_score_weight_name"></a><a name="p_ascend_score_weight_name"></a>ascend.scoreWeight</p>

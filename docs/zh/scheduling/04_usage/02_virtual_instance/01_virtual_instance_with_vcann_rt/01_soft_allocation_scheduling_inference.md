@@ -245,7 +245,7 @@
 ```shell
 # Atlas A2/A3系列产品：设置容器共享模式
 npu-smi set -t device-share -i ${id} -c ${chip_id} -d ${value}
-# Ascend 950PR系列产品：设置容器共享模式
+# Ascend 950PR&950DT系列产品：设置容器共享模式
 npu-smi set -t device-share -i ${id} -d ${value}
 
 # 查询设备容器共享模式
@@ -260,7 +260,7 @@ npu-smi info -t device-share -i ${id}
 |chip_id|芯片ID。通过`npu-smi info -m`命令查询获取的Chip ID即为芯片ID。|
 |value|容器共享模式启动状态。<ul><li>0：关闭</li><li>1：开启</li></ul>默认为关闭状态。|
 
-以Ascend 950PR系列产品为例：
+以Ascend 950PR&950DT系列产品为例：
 开启设备0上所有芯片的容器共享模式，查询设备0的容器共享模式。
 
   ```shell
@@ -344,7 +344,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/inference/volcano/pytorch_acjob_infer_910b_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350加速卡</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p><term>Ascend 950PR&950DT系列产品</term></p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>pytorch_acjob_infer_950_softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/inference/volcano/pytorch_acjob_infer_950_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
@@ -355,7 +355,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-vcjob-910-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350加速卡</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p><term>Ascend 950PR&950DT系列产品</term></p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-vcjob-950-softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-vcjob-950-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
@@ -366,7 +366,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-deploy-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350加速卡</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p><term>Ascend 950PR&950DT系列产品</term></p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-deploy-950-softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-deploy-950-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>

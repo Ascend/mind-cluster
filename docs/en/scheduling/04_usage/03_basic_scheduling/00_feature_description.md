@@ -2,12 +2,12 @@
 
 Basic scheduling features:
 
-- Training jobs: [Full-NPU Scheduling](../../01_introduction/02_feature_description.md#full-npu-scheduling), [Multi-Level Scheduling](../../01_introduction/02_feature_description.md#multi-level-scheduling), and [Resumable Training](../05_fault_recovery/01_resumable_training/00_feature_description.md).
-- Inference jobs: [Full-NPU Scheduling](../../01_introduction/02_feature_description.md#full-npu-scheduling) and [Rescheduling](../../01_introduction/02_feature_description.md).
+- Training jobs: full-NPU scheduling, multi-level scheduling, and rescheduling. To use resumable training, see [Resumable Training](../05_fault_recovery/01_resumable_training/00_feature_description.md).
+- Inference jobs: full-NPU scheduling and rescheduling
 
-    Different features depend on different components. For details, see the [Basic Scheduling](../../01_introduction/02_feature_description.md#basic-scheduling) chapter.
+Different features depend on different components. For details, see the [Basic Scheduling](../../01_introduction/02_feature_description.md#basic-scheduling) chapter.
 
-    Ascend Device Plugin supports reporting the NUMA node of an NPU device to kubelet. If you need to enable the NUMA affinity scheduling policy, you can only use the native Kubernetes scheduler. NUMA node information query depends on the DCMI interfaces: `dcmi_get_affinity_cpu_info_by_device_id`, `dcmiv2_get_affinity_cpu_info_by_dev_id`, `dcmi_get_device_pcie_info_v2`, and `dcmiv2_get_device_pcie_info`. Please refer to the [DCMI API Reference](https://support.huawei.com/enterprise/en/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=api-reference) provided with the corresponding product to confirm whether it is supported.
+Ascend Device Plugin supports reporting the NUMA node of an NPU device to kubelet. If you need to enable the NUMA affinity scheduling policy, you can only use the native Kubernetes scheduler. NUMA node information query depends on the DCMI interfaces: `dcmi_get_affinity_cpu_info_by_device_id`, `dcmiv2_get_affinity_cpu_info_by_dev_id`, `dcmi_get_device_pcie_info_v2`, and `dcmiv2_get_device_pcie_info`. Please refer to the [DCMI API Reference](https://support.huawei.com/enterprise/en/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=api-reference) provided with the corresponding product to confirm whether it is supported.
 
 This document demonstrates how to deploy and execute training or inference jobs using NPUs based on a certain model. There are differences between the production environment and the examples. The examples in this chapter are for reference only, and you need to modify them according to your production environment.
 

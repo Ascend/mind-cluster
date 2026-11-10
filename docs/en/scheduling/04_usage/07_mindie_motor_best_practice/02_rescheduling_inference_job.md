@@ -84,9 +84,9 @@ kubectl get pod --all-namespaces
 Command output:
 
 ```ColdFusion
-NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE
+NAMESPACE        NAME                                READY   STATUS    RESTARTS   AGE
 ...
-default          mindie-server-master-0                     1/1     Running   0          20m
+default          mindie-server-0                     1/1     Running   0          20m
 ...
 ```
 
@@ -103,9 +103,9 @@ kubectl get pod --all-namespaces
 View the job Pod. You can see that the job is recreated after being deleted. The original Pod is deleted after its status becomes `Error`, and a new job Pod is created. The Pod status changes from `Pending` to `ContainerCreating` and then to `Running`, and AGE starts from 0 seconds, indicating that the fault rescheduling feature runs successfully.
 
 ```ColdFusion
-NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE
+NAMESPACE        NAME                              READY   STATUS    RESTARTS   AGE
 ...
-default          mindie-server-0-master-0                   1/1     Running   0          1s
+default          mindie-server-0                   1/1     Running   0          1s
 ...
 ```
 

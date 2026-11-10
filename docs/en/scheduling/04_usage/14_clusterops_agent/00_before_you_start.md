@@ -9,7 +9,7 @@ When a training or inference job fails during running, the fault root cause must
 - **Local parsing and reporting**: Node Collector collects job logs from the host machine according to the collection contract, locally calls ascend-fd parse to parse the logs, and packages and reports the parsing result to Agent Core.
 - **Centralized diagnosis**: Agent Core aggregates the parsing results reported by each node, assembles them into a diagnosis input directory, and calls ascend-fd diag to perform centralized diagnosis and generate a diagnosis report.
 - **Result caching**: The diagnosis result is cached after each diagnosis. Repeated diagnosis directly returns the cached result, and the `--refresh` parameter can be used to force a refresh.
-- **Intelligent summarization**: Optionally connects to an LLM service to intelligently summarize the diagnosis report and output a root cause report. When no LLM is configured, the system automatically falls back to a deterministic diagnosis report.
+- **Intelligent summarization**: Optionally connects to an LLM service to intelligently summarize the diagnosis report and output a root cause report. When no LLM is configured, the system returns a deterministic diagnosis report by default.
 
 ## Prerequisites<a name="sectionfaultdiagnosisprereq"></a>
 

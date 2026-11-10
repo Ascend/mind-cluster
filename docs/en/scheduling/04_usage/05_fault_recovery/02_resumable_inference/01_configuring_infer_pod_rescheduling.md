@@ -12,7 +12,7 @@ Infer Operator services have been deployed. For details, see [Deploying Infer Op
 
 When Infer Operator deploys instances of different roles, it creates `Deployment` or `StatefulSet` instances (the specific type depends on the workload configuration item). After Pod-level rescheduling is enabled, when a service plane fault occurs on a Pod, Infer Operator deletes only the faulty Pod, the corresponding Controller recreates the deleted Pod, and Volcano reschedules the newly created Pod.
 
-The following example yaml describes the meaning of each configuration item:
+The following example YAML describes the meaning of each configuration item:
 
 - `fault-scheduling: external-force-pod-failed`: Handles only service plane faults (a process in a Pod exits with a non-zero code). In the case of a hardware fault, the Pod on the faulty node is not deleted.
 - `pod-rescheduling: on`: When the value is on, faulty Pods are deleted at the Pod granularity. When the value is another value, they are deleted at the instance granularity.

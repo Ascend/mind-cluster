@@ -17,7 +17,7 @@
 
 ## 响应说明<a name="zh-cn_topic_0000001446964912_section1433551894112"></a>
 
-按照Prometheus的专用格式返回数据，相关数据信息如下所示，仅供参考，以实际回显为准。数据信息的详细说明参见下文或[数据信息说明.xlsx](../../../resource/数据信息说明.xlsx)。Prometheus自带数据信息无需关注，不在此展示说明。有部分数据信息仅支持某种产品形态，具体以实际上报的数据信息为准。
+按照Prometheus的专用格式返回数据，相关数据信息如下所示，仅供参考，以实际回显为准。数据信息的详细说明参见下文或[数据信息说明.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/e6517cddb8cca5da83fbf64e0f2e009210c1f704/%E6%95%B0%E6%8D%AE%E4%BF%A1%E6%81%AF%E8%AF%B4%E6%98%8E.xlsx)。Prometheus自带数据信息无需关注，不在此展示说明。有部分数据信息仅支持某种产品形态，具体以实际上报的数据信息为准。
 
 ```ColdFusion
 ...
@@ -3003,12 +3003,12 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 ## 调用的HDK接口<a name="section1137512020304"></a>
 
-NPU Exporter是通过调用底层的HDK接口，获取相应的信息。数据信息调用的HDK接口请参考[NPU Exporter调用的HDK接口.xlsx](../../../resource/NPU-Exporter调用的HDK接口.xlsx)。查找数据信息对应的HDK接口，可参考如下步骤。
+NPU Exporter是通过调用底层的HDK接口，获取相应的信息。数据信息调用的HDK接口请参考[NPU Exporter调用的HDK接口.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/f350849c4f413a14f1dbd929fca76129a0e222e4/NPU-Exporter%E8%B0%83%E7%94%A8%E7%9A%84HDK%E6%8E%A5%E5%8F%A3.xlsx)。查找数据信息对应的HDK接口，可参考如下步骤。
 
 1. 登录[昇腾计算文档](https://support.huawei.com/enterprise/zh/category/ascend-computing-pid-1557196528909?submodel=doc)中心，选择并单击对应产品名称，进入文档界面。例如Atlas 800I A2推理服务器产品的用户，单击“Atlas 800I A2”。
 2. 在左侧导航栏找到“二次开发”，根据接口的类型选择对应文档。
     - DCMI接口选择“API参考”，单击进入《[DCMI API参考](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=api-reference)》。
-    - HCCN Tool接口选择“接口参考”，单击进入《[Atlas A2 中心推理和训练硬件 HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100591765/426cffd9)》。
+    - HCCN Tool接口选择“接口参考”，单击进入《[Atlas A2 中心推理和训练硬件 HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100621102/426cffd9)》。
 
 3. 在文档首页搜索栏中，直接搜索对应的接口名称或者关键词，获取接口的相关信息。
 

@@ -12,6 +12,8 @@
 
 ### 1. Obtain the Whl Package
 
+Refer to this chapter to obtain the required software packages. Downloading the binary software indicates that you agree to the terms and conditions of the [Software License Agreement 2.0](https://www.hiascend.com/en/legal/softlicense). Downloading the source software indicates that you agree to the terms and conditions of Apache License Version 2.0.
+
 Obtain the Whl package in either of the following ways.
 
 **Method 1: Download from a release**

@@ -113,7 +113,7 @@ After ClusterD starts, the following ConfigMaps are created:
 |FaultCode|Fault code, used to identify the fault type.|
 |Time|First fault detection time, in Unix millisecond timestamp format.|
 |Description|Fault description information.|
-|FaultLevel|Fault level.
+|FaultLevel|Fault level.|
 
 ## statistic-fault-info<a name="section1153232554520"></a>
 
@@ -125,12 +125,12 @@ This ConfigMap is located in the user-created `cluster-system` namespace, with t
 |--|--|
 |PublicFaults|Details of public faults. When the number of faults is too large, this field will no longer be updated. For details about the following fields, see [Fault Information Description Table](./03_public_fault_apis.md#configmap).|
 |-node_name|Name of the faulty node|
-|-resource|Fault sender<p>The default configuration includes CCAE, fd-online, pingmesh, and Netmind.</p>|
+|-resource|Fault sender<p>The default configuration includes CCAE, fd-online, pingmesh, Netmind, dpcStorage, dtfsStorage, and clusterd (currently used only when ClusterD itself determines a silent fault).</p>|
 |-devIds|Physical ID of the faulty chip|
 |-faultId|Fault instance ID|
 |-type|Fault type<ul><li>NPU: chip fault.</li><li>Node: node fault.</li><li>Network: network fault.</li><li>Storage: storage fault.</li></ul>|
 |-faultCode|Fault code|
-|-level|Fault level<ul><li>`NotHandleFault`: Not handled for now.</li><li>`SubHealthFault`: Sub-health.</li><li>`SeparateNPU`: Unrecoverable; the chip needs to be isolated.</li><li>`PreSeparateNPU`: Does not affect services for now, and no more jobs will be scheduled to this chip.</li></ul>|
+|-level|Fault level<ul><li>`NotHandleFault`: Not handled for now.</li><li>`SubHealthFault`: Sub-health.</li><li>`SeparateNPU`: Unrecoverable; the chip needs to be isolated.</li><li>`PreSeparateNPU`: Does not affect services for now, and no more jobs will be scheduled to this chip.</li><li>`SilentFault`: Silent fault.</li></ul>|
 |-faultTime|Fault occurrence time|
 |FaultNum|Number of faults|
 |-publicFaultNum|Sum of public faults across all nodes.|
@@ -169,7 +169,7 @@ This ConfigMap is located in the `cluster-system` namespace created by the user.
 
 ## clusterd-manual-info-cm<a name="section15483421165190"></a>
 
-This ConfigMap is located in the `cluster-system` namespace created by the user. It is used to display the chips and fault information of manual isolation in the cluster.
+This ConfigMap is located in the `cluster-system` namespace created by the user. It is used to display the chips and fault information of manual isolation and silent faults in the cluster.
 
 The following is an example:
 
@@ -184,6 +184,9 @@ Data
 localhost.localdomain:
 ----
 {"Total":["Ascend910-0","Ascend910-2","Ascend910-3"],"Detail":{"Ascend910-0":[{"FaultCode":"8C084E00","FaultLevel":"ManuallySeparateNPU","LastSeparateTime":1770811685650}],"Ascend910-2":[{"FaultCode":"8C084E00","FaultLevel":"ManuallySeparateNPU","LastSeparateTime":1770811685650}],"Ascend910-3":[{"FaultCode":"8C084E00","FaultLevel":"ManuallySeparateNPU","LastSeparateTime":1770811685650}]}}
+silent-node.example:
+----
+{"Total":["Ascend910-0","Ascend910-1","Ascend910-2"],"Detail":{"Ascend910-0":[{"FaultCode":"130001001","FaultLevel":"SilentFault","LastSeparateTime":1770811685650}],"Ascend910-1":[{"FaultCode":"130001001","FaultLevel":"SilentFault","LastSeparateTime":1770811685650}],"Ascend910-2":[{"FaultCode":"130001001","FaultLevel":"SilentFault","LastSeparateTime":1770811685650}]}}
 
 Events:  <none>
 ```
@@ -198,4 +201,9 @@ Events:  <none>
 |-<i>Ascend910-0</i>|Chip name, for example, `Ascend910-0`.|
 |-FaultCode|Fault code.|
 |-FaultLevel|Fault level.|
-|-LastSeparateTime|Time of the last fault when the manual isolation frequency is reached. If a fault that has triggered manual chip isolation reaches the manual isolation frequency again, this time will be refreshed.|
+|-LastSeparateTime|Time of the last fault when the manual isolation frequency is reached. If a fault that has triggered manual chip isolation reaches the manual isolation frequency again, this time will be refreshed. For a silent fault, this field indicates the time when the silent fault was last hit, and it will be refreshed when the silent fault is hit again.|
+
+>[!NOTE]
+>
+>- Silent fault entries are written by ClusterD (with the level `SilentFault`), and can be released manually or automatically when the configured release duration is reached.
+>- Silent faults are isolated by the entire node. To manually release a silent fault, delete all chips in the `value` of the `Total` field of the node. Deleting only some of the chips does not take effect, and ClusterD will automatically write the complete node back.

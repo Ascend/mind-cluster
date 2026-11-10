@@ -17,7 +17,7 @@ None
 
 ## Response Description<a name="zh-cn_topic_0000001446964912_section1433551894112"></a>
 
-Data is returned in the Prometheus-specific format. The relevant data information is shown below for reference only, and the actual echo shall prevail. For detailed description of the data information, see the following text or [Data Description.xlsx](../../../resource/Data_Description.xlsx). The data information that comes with Prometheus does not need attention and is not shown here. Some data information is only supported by certain product forms, and the actually reported data information shall prevail.
+Data is returned in the Prometheus-specific format. The relevant data information is shown below for reference only, and the actual echo shall prevail. For detailed description of the data information, see the following text or [Data Description.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/6d94cd44e839440a329507e803dc225beb80d46e/Data_Description.xlsx). The data information that comes with Prometheus does not need attention and is not shown here. Some data information is only supported by certain product forms, and the actually reported data information shall prevail.
 
 ```ColdFusion
 ...
@@ -56,20 +56,43 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 This interface supports querying default metric groups and custom metric groups. For details on customizing metric groups, see [Custom Metric Development](../../05_developer_guide/01_custom_metrics_development.md). The default metric groups include the following sections. The collection and reporting of metric groups are controlled by switches in the configuration file. If a switch is configured as enabled, the corresponding metric group will be collected and reported; if a switch is configured as disabled, the corresponding metric group will not be collected and reported.
 
 - [Version Data Information](#section17031652143614)
+
 - [Basic Node Information](#section17031652143620)
 - [NPU Data Information](#section1379685784314)
 - [Utilization Data Information](#section1379685784315)
+<!-- npu="A3,910b,310p" id2 -->
 - [vNPU Data Information](#section81411161343)
+<!-- end id2 -->
+<!-- npu="950,A3,910b,910" id3 -->
 - [network_bandwidth Data Information](#section630155191018)
+<!-- end id3 -->
+<!-- npu="950,A3,910b,910" id5 -->
 - [network_link Data Information](#section630155191019)
+<!-- end id5 -->
+<!-- npu="910,310p" id7 -->
 - [DDR Data Information](#section11460736193116)
+<!-- end id7 -->
+<!-- npu="950,A3,910b,910" id9 -->
 - [On-Chip Memory Data Information](#section82014427452)
+<!-- end id9 -->
+<!-- npu="A3,910b" id11 -->
 - [HCCS Data Information](#section9741133815914)
+<!-- end id11 -->
+<!-- npu="950,910b" id13 -->
 - [PCIe Data Information](#section124052024182413)
+<!-- end id13 -->
+<!-- npu="A3,910b,910" id15 -->
 - [RoCE Data Information](#section2080452819294)
+<!-- end id15 -->
+<!-- npu="950,A3" id17 -->
 - [SIO Data Information](#section1773315620217)
+<!-- end id17 -->
+<!-- npu="950,A3,910b,910" id19 -->
 - [Optical Module Data Information](#section1692536163118)
+<!-- end id19 -->
+<!-- npu="950" id21 -->
 - [UB Data Information](#section9638996666653)
+<!-- end id21 -->
 
 To understand the description of labels in the above data information, see [Data Label Information](#section129583351126).
 
@@ -124,7 +147,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p_machine_card_nums_label">-</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p_machine_card_nums_unit">Unit: pcs</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p_machine_card_nums_unit">Unit: count</p>
 </td>
 <td class="cellrowborder" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li><span>Atlas 800I A2</span></li><li><span>A200I A2 Box</span></li></ul>
 </td>
@@ -400,6 +423,7 @@ To understand the description of labels in the above data information, see [Data
 | utilization | npu_chip_info_cube_utilization | Ascend AI processor's AICube utilization | [Label 1](#table191895615241) | % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
 | utilization | npu_chip_info_overall_utilization | Overall utilization of the Ascend AI Processor| [Label 1](#table191895615241) | % |<ul><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Atlas 800I A2</li><li>A200I A2 Box</li><li><term>Ascend 950PR&950DT products</term></li></ul>|
 
+<!-- npu="A3,910b,310p" id1 -->
 ## vNPU Data Information<a name="section81411161343"></a>
 
 **Table 5** vNPU data information
@@ -456,7 +480,9 @@ To understand the description of labels in the above data information, see [Data
 </tr>
 </tbody>
 </table>
+<!-- end id1 -->
 
+<!-- npu="950,A3,910b,910" id4 -->
 ## network_bandwidth Data Information<a name="section630155191018"></a>
 
 **Table 6** network_bandwidth data information
@@ -510,7 +536,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>Unit: MB/s</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">Metric of the old version, supporting only Atlas 350 accelerator cards (4 processor-meshed).
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">Metric of the old version, supporting only Atlas 350 accelerator card (4 processor-meshed).
 </td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_bandwidth</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx_X_Y</p>
@@ -544,7 +570,9 @@ To understand the description of labels in the above data information, see [Data
 </td>
 </tr></tbody>
 </table>
+<!-- end id4 -->
 
+<!-- npu="950,A3,910b,910" id6 -->
 ## network_link Data Information<a name="section630155191019"></a>
 
 **Table  7** network_link data information
@@ -606,7 +634,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>The value is 0, 1, or -1.</p><ul><li>1: UP</li><li>0: DOWN</li><li>-1: Unknown (hccn_tool invocation failed)</li></ul>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">Metric of the old version, supporting only Atlas 350 accelerator cards (4 processor-meshed).
+<td class="cellrowborder" rowspan="2" valign="top" width="19.91%" headers="mcps1.1.7.1.6 ">Metric of the old version, supporting only Atlas 350 accelerator card (4 processor-meshed).
 </td></tr><tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>network_link</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_speed_X_Y</p>
@@ -640,7 +668,9 @@ To understand the description of labels in the above data information, see [Data
 </td>
 </tr></tbody>
 </table>
+<!-- end id6 -->
 
+<!-- npu="910,310p" id8 -->
 ## DDR Data Information<a name="section11460736193116"></a>
 
 **Table 8** DDR data information
@@ -686,7 +716,9 @@ To understand the description of labels in the above data information, see [Data
 </tr>
 </tbody>
 </table>
+<!-- end id8 -->
 
+<!-- npu="950,A3,910b,910" id10 -->
 ## On-Chip Memory Data Information<a name="section82014427452"></a>
 
 **Table 9** On-chip memory data information
@@ -845,7 +877,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p0711454121814"><a name="p0711454121814"></a><a name="p0711454121814"></a><a href="#table191895615241">Label 1</a></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p1871185411812"><a name="p1871185411812"></a><a name="p1871185411812"></a>Unit: &deg;C</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p1871185411812"><a name="p1871185411812"></a><a name="p1871185411812"></a>Unit: °C</p>
 </td>
 </tr>
 <tr id="row123017710196"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p36914261197"><a name="p36914261197"></a><a name="p36914261197"></a>On-Chip Memory</p>
@@ -861,7 +893,9 @@ To understand the description of labels in the above data information, see [Data
 </tr>
 </tbody>
 </table>
+<!-- end id10 -->
 
+<!-- npu="A3,910b" id12 -->
 ## HCCS Data Information<a name="section9741133815914"></a>
 
 **Table 10** HCCS data information
@@ -980,7 +1014,9 @@ To understand the description of labels in the above data information, see [Data
 </tr>
 </tbody>
 </table>
+<!-- end id12 -->
 
+<!-- npu="950,910b" id14 -->
 ## PCIe Data Information<a name="section124052024182413"></a>
 
 **Table 11** PCIe data information
@@ -1075,7 +1111,9 @@ To understand the description of labels in the above data information, see [Data
 </tr>
 </tbody>
 </table>
+<!-- end id14 -->
 
+<!-- npu="A3,910b,910" id16 -->
 ## RoCE Data Information<a name="section2080452819294"></a>
 
 **Table 12** RoCE data information
@@ -1176,7 +1214,7 @@ To understand the description of labels in the above data information, see [Data
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p888017073318"><a name="p888017073318"></a><a name="p888017073318"></a>npu_chip_mac_tx_bad_oct_num</p>
 <p id="p2328117334"><a name="p2328117334"></a><a name="p2328117334"></a></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p2881807333"><a name="p2881807333"></a><a name="p2881807333"></a>Total bytes bad packets sent by MAC</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p2881807333"><a name="p2881807333"></a><a name="p2881807333"></a>Total bytes of bad packets sent by MAC</p>
 <p id="p19328919335"><a name="p19328919335"></a><a name="p19328919335"></a></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p8626140112114"><a name="p8626140112114"></a><a name="p8626140112114"></a><a href="#table191895615241">Label 1</a></p>
@@ -1342,7 +1380,9 @@ To understand the description of labels in the above data information, see [Data
 </tr>
 </tbody>
 </table>
+<!-- end id16 -->
 
+<!-- npu="950,A3" id18 -->
 ## SIO Data Information<a name="section1773315620217"></a>
 
 **Table 13** SIO data information
@@ -1389,7 +1429,9 @@ To understand the description of labels in the above data information, see [Data
 </tr>
 </tbody>
 </table>
+<!-- end id18 -->
 
+<!-- npu="950,A3,910b,910" id20 -->
 ## Optical Module Data Information<a name="section1692536163118"></a>
 
 **Table 14** Optical module data information
@@ -1507,7 +1549,9 @@ To understand the description of labels in the above data information, see [Data
 </tr>
 </tbody>
 </table>
+<!-- end id20 -->
 
+<!-- npu="950" id22 -->
 ## UB Data Information<a name="section9638996666653"></a>
 
 **Table 15** UB data information
@@ -2589,6 +2633,7 @@ To understand the description of labels in the above data information, see [Data
 </tr>
 </tbody>
 </table>
+<!-- end id22 -->
 
 ## Data Label Information <a name="section129583351126"></a>
 
@@ -2617,7 +2662,7 @@ The data labels used in the above tables are described as follows.
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1469410183214"><a name="p1469410183214"></a><a name="p1469410183214"></a>String</p>
 </td>
 </tr>
-<tr id="row739383919217"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p43931839326"><a name="p43931839326"></a><a name="p43931839326"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 inference products</term>/<term>Atlas A3 training products</term> does not contain the Chip Type field.</div></div>
+<tr id="row739383919217"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p43931839326"><a name="p43931839326"></a><a name="p43931839326"></a>model_name: Ascend AI Processor name. This field is composed of the chip name, chip type, and chip version. These three parts can be queried using the <b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i> command, and correspond respectively to Chip Name, Chip Type, and Chip Version in the return information.</p><div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody">The return information for <term>Atlas A3 products</term> does not contain the Chip Type field.</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p143931839928"><a name="p143931839928"></a><a name="p143931839928"></a>String</p>
 </td>
@@ -2958,7 +3003,7 @@ The data labels used in the above tables are described as follows.
 
 ## HDK Interface Call<a name="section1137512020304"></a>
 
-NPU Exporter obtains corresponding information by calling the underlying HDK interfaces. For more details, refer to [HDK APIs Called by NPU Exporter.xlsx](../../../resource/HDK_APIs_called_by_NPU_Exporter.xlsx). To find the HDK interface corresponding to the data information, refer to the following steps.
+NPU Exporter obtains corresponding information by calling the underlying HDK interfaces. For more details, refer to [HDK APIs Called by NPU Exporter.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/bf05e2cc441c9cf12792bc8f4536c4b01f7f00a8/HDK_APIs_called_by_NPU_Exporter.xlsx). To find the HDK interface corresponding to the data information, refer to the following steps.
 
 1. Log in to the [Ascend Computing Documentation](https://support.huawei.com/enterprise/en/category/ascend-computing-pid-1557196528909?submodel=doc) center, select and click the corresponding product name to enter the documentation page. For example, to search for the Atlas 800I A2 documentation, click "Atlas 800I A2".
 2. Find "Secondary Development" in the left navigation bar, and select the corresponding document based on the interface type.

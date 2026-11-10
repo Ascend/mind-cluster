@@ -1,4 +1,6 @@
-# Key Features
+# Release Notes
+
+## Key Features
 
 **Key features of MindCluster cluster scheduling components**
 
@@ -8,28 +10,40 @@
 - **Ecosystem version adaptation**: Supports Kubernetes 1.36 and Volcano 1.15.
 - **Runtime capability extension**: Ascend Docker Runtime adds support for CRI-O and supports mounting UMDK and UB driver user-mode files.
 - **Enhanced observability**: Adds DPU Exporter component, which supports 1825 metric collection. NPU Exporter supports reporting the number of available chips, and Ascend Device Plugin supports reporting device NUMA information.
-- **Hardware adaptation**: Adapts the basic capabilities of the Atlas 950 SuperPoD Flex.
+- **Hardware adaptation**: Adapts the Atlas 950 SuperPoD Flex.
 
 **Key features of MindCluster Ascend FaultDiag**
 
 - **New K8s ClusterOps Agent**: Supports collecting the logs of failed Ascend training/inference jobs in a K8s cluster and performing fault diagnosis according to user instructions, and supports connecting to model APIs to optimize diagnosis reports.
 - **Enhanced link diagnosis tool**: Adds support for optical link fault diagnosis of <term>Ascend 950PR&950DT products</term>. Fault thresholds can be modified through the configuration file, and different thresholds can be set by optical module type and metric.
 
-# Version Mapping Description
+## Version Mapping Description
 
-## Version Information
+### Product Version Information
 
-| Product | MindCluster |
-|--|--|
-|Product Version|26.2.0|
-|Version Type|Release|
-|Maintenance Period|1 year|
+<table><tbody><tr><th class="firstcol" valign="top" width="25%" id="mcps1.1.3.1.1"><p>Product</p>
+</th>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.1.3.1.1 "><p>MindCluster</p>
+</td>
+</tr>
+<tr><th class="firstcol" valign="top" width="25%" id="mcps1.1.3.2.1"><p>Product Version</p>
+</th>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.1.3.2.1 "><p>26.2.0</p>
+</td>
+</tr>
+<tr><th class="firstcol" valign="top" width="25%" id="mcps1.1.3.3.1"><p>Version Type</p>
+</th>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.1.3.3.1 "><p>Release</p>
+</td>
+</tr>
+</tbody>
+</table>
 
 > [!NOTE]
 >
 > MindCluster 26.0 version planning: MindCluster 26.0.0, MindCluster 26.1.0, MindCluster 26.2.0, and MindCluster 26.3.0.
 
-## Related Product Version Compatibility
+### Related Product Version Compatibility
 
 **Table 1** MindCluster software version compatibility
 
@@ -37,7 +51,7 @@
 |--|--|--------|--|--|
 |26.2.0|9.2.0| 26.2.0 |26.2.0|26.2.0|
 
-# Version Compatibility
+## Version Compatibility
 
 MindCluster components must be used together as a matched set. Do not mix components across different versions.
 >[!NOTE]
@@ -104,7 +118,7 @@ MindCluster components must be used together as a matched set. Do not mix compon
 <thead>
   <tr>
     <th rowspan="2">MindCluster</th>
-    <th colspan="1">HDK of <term>Ascend 950PR&950DT Products</term>(Before June 30, 2026)</th>
+    <th colspan="1">HDK of Ascend 950PR&950DT Products (Before June 30, 2026)</th>
   </tr>
   <tr>
     <th>25.1.RC1/25.6.RC1/25.7.RC1</th>
@@ -345,10 +359,10 @@ MindCluster components must be used together as a matched set. Do not mix compon
 
 **1. Resumable training and fault recovery**
 
-- Supports resumable training triggered by DPU faults.
-- Supports proactively triggering resumable training through a configurable policy when a DPU is sub-healthy.
-- Supports instance-level recovery in RL scenarios.
-- The Atlas 950 SuperPoD supports process-level online recovery for UB network faults.
+- Atlas 950 SuperPoD supports DPU fault-triggered resumable training.
+- Atlas 950 SuperPoD supports proactively triggering resumable training through a configurable policy when a DPU is sub-healthy.
+- Atlas 900 A3 SuperPoD supports instance-level recovery in RL scenarios.
+- Atlas 950 SuperPoD supports process-level online recovery for UB network faults.
 
 **2. High inference reliability**
 
@@ -358,9 +372,9 @@ MindCluster components must be used together as a matched set. Do not mix compon
 
 **3. Reliability and robustness**
 
-- Completes the reliability verification of fast recovery capabilities.
-- Completes the reliability verification of proactively isolating nodes for sub-healthy faults such as lane degradation.
-- Supports 100% recovery of self-healing faults in appliances.
+- Completes the reliability verification of Job rescheduling, Pod rescheduling, process-level rescheduling, and process-level online recovery for the Atlas 950 SuperPod Flex.
+- Completes the reliability verification of proactively isolating nodes for sub-healthy faults such as lane degradation on the Atlas 950 SuperPod Flex.
+- Supports 100% self-healing of self-healing faults in the dual-node appliances of the Atlas 850E, Atlas 850, Atlas 650E, Atlas 650, and Atlas 350 accelerator cards.
 
 **4. Scheduling**
 
@@ -379,25 +393,25 @@ MindCluster components must be used together as a matched set. Do not mix compon
 
 **5. Device management**
 
-- hccn_tool is changed to the DCMI to optimize scheduling duration.
+- Some hccn_tool commands of NPU Exporter are changed to the DCMIs to optimize scheduling duration.
 - Supports output of component external version information.
 
 **6. Ascend Docker Runtime**
 
 - Supports CRI-O.
-- Supports mounting UMDK and UB driver user-mode files.
+- Supports mounting UB driver user-mode files.
 
 **7. Observability**
 
 - DPU Exporter supports 1825 metric collection.
 - NPU Exporter supports reporting the number of available chips.
 - Ascend Device Plugin supports reporting device NUMA information.
-- vNPU hard partitioning metric monitoring is enhanced.
+- <term>Atlas A2 products</term>/<term>Atlas A3 products</term> support utilization metric display for vNPU hard partitioning.
 - Supports a new NPU utilization metric interface for <term>Ascend 950PR&950DT products</term>.
 
 **8. Hardware adaptation**
 
-- Adapts the basic capabilities of the Atlas 950 SuperPoD Flex.
+Adapts the Atlas 950 SuperPoD Flex.
 
 **9. Architecture optimization**
 
@@ -406,7 +420,7 @@ MindCluster components must be used together as a matched set. Do not mix compon
 
 **10. Documentation**
 
-- Optimizes the documentation related to resumable training and fault monitoring.
+Optimizes the documentation related to resumable training and fault detection.
 
 **MindCluster Ascend FaultDiag**
 
@@ -422,60 +436,63 @@ MindCluster components must be used together as a matched set. Do not mix compon
 
 **3. K8s ClusterOps Agent**
 
-- Supports collecting the logs of failed Ascend training/inference jobs in a K8s cluster and performing fault diagnosis according to user instructions, and supports connecting to model APIs to optimize diagnosis reports.
+Supports collecting the logs of failed Ascend training/inference jobs in a K8s cluster and performing fault diagnosis according to user instructions, and supports connecting to model APIs to optimize diagnosis reports.
 
-## Key Feature Changes
+### Key Feature Changes
 
 This release inherits some features of MindCluster 26.1.0 and earlier releases. The main changes are as follows:
 
-- The hccn_tool interface is changed to be implemented based on the DCMI to optimize scheduling duration.
+Some hccn_tool command interfaces of NPU Exporter are changed to be implemented based on the DCMIs to optimize scheduling duration.
 
-## Service Interface Changes
+### Service Interface Changes
 
 - Ascend Docker Runtime adds support for CRI-O.
 - Ascend Device Plugin reports device NUMA information.
+- Ascend Device Plugin removes the `linkdownTimeout` startup parameter.
 - NPU Exporter reports the number of available chips.
-- The hccn_tool interface is changed to be implemented based on the DCMI to optimize scheduling duration.
+- Some hccn_tool command interfaces of NPU Exporter are changed to be implemented based on the DCMIs to optimize scheduling duration.
 - Pods that do not request NPUs can be scheduled normally without configuring the `skip` flag (scheduling behavior adjustment).
 - Volcano supports ignoring the RoCE network health status during job scheduling.
 - For other compatibility issues, see [MindCluster Component Compatibility Issue Announcement](https://gitcode.com/Ascend/mind-cluster/issues/588).
 
-## Fixed Issues
+### Fixed Issues
 
 - In earlier versions, the recovery detection period for fault code 81078603 was 5 minutes. In this release, it is optimized to a short-period fast detection mechanism with a backoff mechanism, which can detect recovery events and clear faults more quickly.
 - In MindCluster 26.1.0 and earlier versions, when operator re-execution was enabled for <term>Atlas A3 products</term>, process-level rescheduling could fail in linkdown fault scenarios. This issue has been fixed in this release. For details, see the [PR 4253](https://gitcode.com/Ascend/mind-cluster/pull/4253).
 
-## Known Issues
+### Known Issues
 
 After multiple rescheduling recoveries, the process-level rescheduling feature is subject to a gloo segmentation fault in the native PyTorch component, with a probability of approximately 0.00125. For details, see [issue 188266](https://github.com/pytorch/pytorch/issues/188266). You can configure Job/Pod-level rescheduling as a fallback measure.
 
-# Upgrade Impact
+## Upgrade Impact
 
-## Impact of the Upgrade Process on the Current System
+### Impact of the Upgrade Process on the Current System
 
 None
 
-## Impact on the Current System After Upgrade
+### Impact on the Current System After the Upgrade
 
-When upgrading the Infer Operator component from a version earlier than 26.1.0 to 26.1.0 or later, you need to delete the log directory and recreate it with `root` permissions, or change the permissions of the log directory and log files to `root`.
+- When upgrading the Infer Operator component from a version earlier than 26.1.0 to 26.1.0 or later, you need to delete the log directory and recreate it with `root` permissions, or change the permissions of the log directory and log files to `root`.
+- When upgrading the Ascend Device Plugin component from a version earlier than 26.1.1 to 26.2.0 or later, delete `linkdownTimeout`.
+After the ascend-for-volcano component is upgraded from a version earlier than 26.3.0 to 26.3.0 or later, sub-healthy resources are not allowed to be scheduled within 10s by default. In a scenario without redundancy, job scheduling may be delayed by 10s. In a pod-level rescheduling scenario, rescheduling may be downgraded to job-level rescheduling.
 
-# Document Reference
+## Document Reference
 
 |Document|Description|Release Notes|
 |--|--|--|
-|[*MindCluster 26.2.0 Cluster Scheduling User Guide*](./scheduling/01_introduction/00_overview.md)|Provides component descriptions, feature principles, and usage references for cluster scheduling, including installation and deployment of each component, integration and adaptation examples, API references, and principle introductions for some scheduling solutions.|Adds guidance for features such as resumable training (triggered by DPU faults or sub-health faults) and heterogeneous PD instances, and restructures the resumable training chapter. For details about other changes, see the [*MindCluster 26.2.0 Cluster Scheduling User Guide*](./scheduling/01_introduction/00_overview.md).|
-|[*MindCluster 26.2.0 Fault Diagnosis User Guide*](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)|Provides usage guidance for log collection, log cleaning and dumping, fault diagnosis, and other functions.|Optimizes the guidance related to resumable training and fault monitoring. For details about other changes, see the [*MindCluster 26.2.0 Fault Diagnosis User Guide*](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md).|
+| [*MindCluster Cluster Scheduling User Guide*](./scheduling/01_introduction/00_overview.md) | Provides component descriptions, feature principles, and usage references for cluster scheduling, including installation and deployment of each component, integration and adaptation examples, API references, and principle introductions for some scheduling solutions. | Adds guidance for features such as resumable training (triggered by DPU faults or sub-health) and PD instance heterogeneity, and restructures the resumable training chapter. For details about other changes, see the [*MindCluster Cluster Scheduling User Guide*](./scheduling/01_introduction/00_overview.md). |
+| [*MindCluster Fault Diagnosis User Guide*](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md) | Provides usage guidance for log collection, log cleaning and dumping, fault diagnosis, and other functions. | Adds content about optical link fault diagnosis for Ascend 950PR&950DT products. For details about other changes, see the [*MindCluster Fault Diagnosis User Guide*](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md). |
 
-# Virus Scan Results
+## Virus Scan Results
 
 The virus scan passed.
 
-# Fixed Vulnerabilities List
+## Fixed Vulnerabilities List
 
 None
 
-# Change History
+## Change History
 
 |Document Version|Release Date|Change Description|
 |--|--|--|
-|01|2026-09-30|First official release|
+| 01 | 2026-11-05 | First official release. |

@@ -4,20 +4,19 @@ Kubectl Plugin is the client command line tool of the ClusterOps Agent feature. 
 
 - Users who use the [ClusterOps Agent](../../../01_introduction/02_feature_description.md#ZH-CN_TOPIC_0000002524312690) feature must install Kubectl Plugin.
 - Kubectl Plugin is a client tool implemented with the pure Python standard library and does not require pip installation.
-- Before installing Kubectl Plugin, deploy Agent Core and Node Collector first. For details, see [Agent Core](./15_agent_core.md) and [Node Collector](./16_node_collector.md).
 
 ## Procedure<a name="section15023132772914"></a>
 
 1. Download the Ascend ClusterOps Agent package by referring to [Obtaining Software Packages](./00_obtaining_software_packages.md).
 
-2. Upload the software package to the user machine server and decompress it. After decompression, Kubectl Plugin is located in the `kubectl-plugin` subdirectory. The directory structure is as follows.
+2. Upload the software package to the user machine server and decompress it. After decompression, the plugin files are located in the `kubectl-plugin` subdirectory. The directory structure is as follows.
 
     ```shell
     Ascend-mindxdl-ascend-clusterops-agent_{version}_linux.zip
     └── kubectl-plugin/           # Kubectl Plugin
         ├── install.sh            # One-click installation script
-        ├── kubectl-ascend_diag   # kubectl ascend-diag command
-        └── kubectl-clusterops    # kubectl clusterops command
+        ├── kubectl-ascend_diag   # kubectl ascend-diag plugin file
+        └── kubectl-clusterops    # kubectl clusterops plugin file
     ```
 
 3. Log in to the user machine as the `root` user, go to the `kubectl-plugin` directory, and run the following command to install the plugin.
@@ -43,36 +42,55 @@ Kubectl Plugin is the client command line tool of the ClusterOps Agent feature. 
 
     The following is the output example, which indicates that the plugin is available.
 
-    ```text
+    ```ColdFusion
     $ kubectl ascend-diag --help
-    usage: kubectl-ascend_diag [-h] [--job JOB] [-n NAMESPACE] [--refresh] [--json] [--collect-manifest PATH]
+    usage: kubectl-ascend_diag [-h] [--job JOB] [-n NAMESPACE] [--agent-core-service AGENT_CORE_SERVICE] [--refresh] [--json] [--collect-manifest PATH]
 
     Ascend fault diagnosis kubectl plugin
+
+    optional arguments:
+    -h, --help            show this help message and exit
+    --job JOB             job name (job CR name)
+    -n NAMESPACE, --namespace NAMESPACE
+                            namespace
+    --agent-core-service AGENT_CORE_SERVICE
+                            Agent Core Service, format svc.ns:9700
+    --refresh             ignore the cache, force rerun and refresh the cache
+    --json                print the full JSON response
+    --collect-manifest PATH
+                            write a local collect_manifest.yaml into the cluster ConfigMap and exit
 
     $ kubectl clusterops --help
     usage: kubectl-clusterops [-h] [--create-llm-config] [--clear-llm-config] [--base-url BASE_URL] [--model MODEL]
 
     cluster operations kubectl plugin
+
+    optional arguments:
+    -h, --help           show this help message and exit
+    --create-llm-config  configure the LLM Secret (llm-secret)
+    --clear-llm-config   clear all LLM config (delete llm-secret, effective immediately)
+    --base-url BASE_URL  LLM Base URL (prompted; or env LLM_BASE_URL)
+    --model MODEL        LLM model name (prompted; or env LLM_MODEL)
     ```
 
-5. (Optional) Configure the LLM service. If you need to intelligently summarize the diagnosis report, create an LLM configuration through the `kubectl clusterops` command. If no LLM is configured, the diagnosis report falls back to the original diagnosis result. For details about how to configure and clear the LLM, see [Configuring and Clearing the LLM](../../../04_usage/14_clusterops_agent/04_configuring_llm.md).
+5. (Optional) Configure the LLM service. If you need to intelligently summarize the diagnosis report, create an LLM configuration through the `kubectl clusterops` command. If no LLM is configured, the diagnosis report is the original diagnosis result by default. For details about how to configure and clear the LLM, see [Configuring and Clearing the LLM](../../../04_usage/14_clusterops_agent/04_configuring_llm.md).
 
 6. Verify the diagnosis function. Run the following command to trigger the ClusterOps Agent by job dimension and confirm that the diagnosis link is normal.
 
     ```shell
-    kubectl ascend-diag --job {job_name}
+    kubectl ascend-diag --job {job_name} -n {namespace}
     ```
 
     If the diagnosis report (including fields such as root cause, fault event, and suggestion) is printed after the command is executed, the link is normal. The following is the output example.
 
-    ```text
+    ```ColdFusion
     The diag job starts. Please wait. Job id: [20260918163512389528_b1b293d4-1c70-4e11-916e-a9023da3660a], run log file is [ascend_faultdiag_36.log].
     +-----------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
     |                                                                                 Ascend-fd Fault-Diag Report                                                                                 |
     +-----------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
     |     Version Information     |       Type       | Version                                                                                                                                    |
     +-----------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-    |                             |    Fault-Diag    | 26.1.0                                                                                                                                     |
+    |              | Fault-Diag | 26.2.0                                                                                                         |
     +-----------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
     |   Root Cause Node Analysis  |       Type       | Description                                                                                                                                |
     +-----------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------+

@@ -3,29 +3,22 @@
 Infer Operator supports configuring elastic scaling policies for inference instances, enabling automatic adjustment of the number of inference instances based on their load.
 
 > [!NOTE]
-> Currently, the elastic scaling function is supported only in MindIE scenarios. That is, only inference instances [deployed based on MindIE PyMotor](./02_deploying_infer_operator_inference_job_with_mindie_pymotor.md)
-> Deployed inference instances support elastic scaling configuration.
+>
+> - The elastic scaling function is currently supported only in MindIE scenarios. That is, only inference instances [deployed based on MindIE PyMotor](./02_deploying_infer_operator_inference_job_with_mindie_pymotor.md) support elastic scaling configuration.
+> - In fault scenarios, automatic or manual elastic scaling is not supported. Before elastic scaling starts, you must ensure that all instances are in the `Running` state.
 
 ## Prerequisites
 
 - Infer Operator has been [installed and deployed](../../03_installation_guide/02_installation/00_helm_installation.md).
-- The inference job must be deployed based on MindIE
-  PyMotor. For the deployment method, see [Deploying Infer Operator Inference Jobs Based on MindIE PyMotor](./02_deploying_infer_operator_inference_job_with_mindie_pymotor.md).
-- To configure scaling metrics, you need to build an elastic scaling base environment based on Prometheus
-Adapter. For details about the deployment method and configuration example, see the [Building the Elastic Scaling Base Environment](#building-the-elastic-scaling-base-environment-based-on-prometheus-adapter)
-section.
-
-> [!NOTE]
-> If faults occur, automatic or manual elastic scaling is not supported. Before elastic scaling starts, you must ensure that all instances are in the `Running` state.
+- The inference job must be deployed based on MindIE PyMotor. For the deployment method, see [Deploying Infer Operator Inference Jobs Based on MindIE PyMotor](./02_deploying_infer_operator_inference_job_with_mindie_pymotor.md).
+- To configure scaling metrics, you need to build an elastic scaling base environment based on Prometheus Adapter. For details about the deployment method and configuration example, see the [Building the Elastic Scaling Base Environment](#building-the-elastic-scaling-base-environment-based-on-prometheus-adapter) section.
 
 ## Elastic Scaling Principles
 
 Based on the elastic scaling configuration of an inference instance, Infer Operator creates the corresponding scaling controller resources (for example, Horizontal Pod
 Autoscaler (HPA)) for that instance. The scaling controller then automatically adjusts the desired replica count of the instance according to its load conditions.
 
-For elastic scaling based on Prometheus Adapter, service instances report load metrics to Prometheus, and Prometheus
-Adapter converts the metrics into metrics that HPA can recognize through promQL. HPA calculates the desired replica count based on the metrics and applies it to the replica count of service instances. The HPA metric type varies depending on the metric source: metrics reported by Prefill or Decode instances correspond to the Object metric type, as shown in [Figure 1](#fig1)
-; metrics reported by the Coordinator correspond to the External metric type, as shown in [Figure 2](#fig2).
+For elastic scaling based on Prometheus Adapter, service instances report load metrics to Prometheus, and Prometheus Adapter converts the metrics into metrics that HPA can recognize through promQL. HPA calculates the desired replica count based on the metrics and applies it to the replica count of service instances. The HPA metric type varies depending on the metric source: metrics reported by Prefill or Decode instances correspond to the Object metric type, as shown in [Figure 1](#fig1); metrics reported by the Coordinator correspond to the External metric type, as shown in [Figure 2](#fig2).
 
 <a id="fig1"></a>
 
@@ -37,7 +30,8 @@ Figure 1 is described as follows:
 
 1. In the Pod of a Prefill or Decode instance, load metrics (for example, request queue length) are reported to Prometheus through NPU Exporter or other metric collection components.
 2. Prometheus collects and stores the metrics reported by service instances.
-3. Prometheus Adapter converts the metrics queried from Prometheus into metrics that HPA can recognize through the configured promQL rules, and registers them with the `custom.metrics.k8s.io` interface of the K8s API Server.
+3. Prometheus Adapter converts the metrics queried from Prometheus into metrics that HPA can recognize through the configured promQL rules, and registers them with the `custom.metrics.k8s.io` interface of the K8s API
+   Server.
 4. HPA references the metrics reported by Prefill or Decode instances (Pods) as the Object type, monitors metric changes through the Informer, and periodically calculates the desired replica count.
 5. HPA writes the desired replica count to the replicas field of the workload of the Prefill or Decode instance, implementing scale-out and scale-in of Prefill or Decode instances.
 
@@ -49,9 +43,8 @@ Figure 1 is described as follows:
 
 Figure 2 is described as follows:
 
-1. The Pod of the Coordinator reports load metrics (for example, request processing time) to Prometheus through NPU-Exporter or other metric collection components.
-2. After the metrics are collected and stored by Prometheus, converted by the promQL rules of Prometheus Adapter, and registered with the K8s API Server,
-HPA references the metrics as the External type, monitors metric changes through the Informer, calculates the desired replica count, and finally applies it to the replica count of Prefill instances, implementing scale-out and scale-in of Prefill instances.
+1. The Pod of the Coordinator reports load metrics (for example, request processing time) to Prometheus through NPU Exporter or other metric collection components.
+2. After the metrics are collected and stored by Prometheus, converted by the promQL rules of Prometheus Adapter, and registered with the K8s API Server, HPA references the metrics as the External type, monitors metric changes through the Informer, calculates the desired replica count, and finally applies it to the replica count of Prefill instances, implementing scale-out and scale-in of Prefill instances.
 
 Compared with Figure 1, the metrics in Figure 2 come from the Coordinator instance rather than Prefill or Decode instances, and the metric type is External (the metric type reported by Prefill or Decode instances in Figure 1 is Object). The Coordinator reporting scenario applies to scenarios where the load observed by the Coordinator (for example, the request volume in a PD-disaggregated scenario) is used as the basis for decision-making to adjust the number of Prefill instances. The subsequent links of the two (Prometheus →
 Prometheus Adapter → K8s API Server → HPA Informer → replica count adjustment) are exactly the same.
@@ -68,11 +61,12 @@ The elastic scaling base environment based on Prometheus Adapter consists of the
 | Infer Operator                                                          | Automatically creates and manages HPA based on the scalingPolicy configuration.                                                                                                                                                                                                  |
 | HPA                                                                     | Queries Object/External metrics, calculates the desired replica count, and adjusts the replica count of service instances. HPA is automatically created and managed by Infer Operator based on the scalingPolicy configuration of the job.                                       |
 
+### Setup Procedure
+
 Steps for building the base environment:
 
 1. **Deploy service instances and report metrics**: Service instances must report load metrics in Prometheus format to Prometheus.
-2. **Deploy Prometheus**:
-   Prometheus is used to collect and store the load metrics reported by service instances. For details about the deployment and configuration method of Prometheus, see [Using with Prometheus](../01_resource_monitoring/00_npu_resource_monitoring/02_working_with_prometheus.md).
+2. **Deploy Prometheus**: Prometheus is used to collect and store the load metrics reported by service instances. For details about the deployment and configuration method of Prometheus, see [Using with Prometheus](../01_resource_monitoring/00_npu_resource_monitoring/02_working_with_prometheus.md).
 
    If the metrics reported by MindIE are not successfully collected by Prometheus, you can add Prometheus service discovery annotations to the `mindie-motor-coordinator-obs` service. After the annotations are added, Prometheus automatically scrapes the endpoints of the service (MindIE) through Kubernetes service discovery (`kubernetes_sd_configs`), thereby successfully obtaining the metrics. Example annotations are as follows:
 
@@ -84,27 +78,19 @@ Steps for building the base environment:
        prometheus.io/port: "<metrics_port>" # Specifies the metric scraping port, which must be the port through which the mindie-motor-coordinator-obs service exposes metrics
    ```
 
-3. **Deploy Prometheus Adapter**: Complete the deployment according to the installation and deployment guide on the [official website of Prometheus Adapter](https://github.com/kubernetes-sigs/prometheus-adapter)
-   (you can use the Helm Chart `prometheus-community/prometheus-adapter` it provides for deployment), and configure promQL rules
-   to convert the metric query results in Prometheus into metrics that HPA can recognize, and register them with the `custom.metrics.k8s.io` interface (for the Object metric type)
-   or `external.metrics.k8s.io` interface (for the External metric type) of the K8s API Server for HPA to query. Note the following during deployment:
+3. **Deploy Prometheus Adapter**: Complete the deployment according to the installation and deployment guide on the [official website of Prometheus Adapter](https://github.com/kubernetes-sigs/prometheus-adapter) (you can use the Helm Chart `prometheus-community/prometheus-adapter` it provides for deployment), and configure promQL rules to convert the metric query results in Prometheus into metrics that HPA can recognize, and register them with the `custom.metrics.k8s.io` interface (for the Object metric type) or `external.metrics.k8s.io` interface (for the External metric type) of the K8s API Server for HPA to query. Note the following during deployment:
     - Configure `--prometheus-url` as the access address of the actual Prometheus service.
-    - Ensure that Prometheus Adapter provides the preceding interfaces externally so that HPA can query metrics.
-      For a configuration example of promQL rules, see [Prometheus Adapter Configuration Example](#prometheus-adapter-configuration-example) below.
+    - Ensure that Prometheus Adapter provides the preceding interfaces externally so that HPA can query metrics. For a configuration example of promQL rules, see [Prometheus Adapter Configuration Example](#prometheus-adapter-configuration-example) below.
 4. **Verify that the metrics are available**: Query the `custom.metrics.k8s.io` or `external.metrics.k8s.io` interface through kubectl to confirm that the target metrics can be queried. For example, run the
    `kubectl get --raw "/apis/external.metrics.k8s.io/v1beta1/namespaces/<namespace>/<metric-name>"` command to view the External metric query result.
 
 ### Prometheus Adapter Configuration Example
 
-The following uses the service metrics `num_requests_waiting` and `generation_tokens_per_second` as examples to provide a configuration example of Prometheus
-Adapter. You can customize promQL rules based on actual service metrics and trigger rules. For the deployment method of Prometheus
-Adapter, see the [Building the Elastic Scaling Base Environment](#building-the-elastic-scaling-base-environment-based-on-prometheus-adapter) section above.
+The following uses the service metrics `num_requests_waiting` and `generation_tokens_per_second` as examples to provide a configuration example of Prometheus Adapter. You can customize promQL rules based on actual service metrics and trigger rules. For the deployment method of Prometheus Adapter, see the [Building the Elastic Scaling Base Environment](#building-the-elastic-scaling-base-environment-based-on-prometheus-adapter) section above.
 
 **1. Creating Prometheus Adapter Configurations (ConfigMap)**
 
-Define promQL rules through `config.yaml` in the ConfigMap to convert the metrics in Prometheus into metrics that HPA can recognize. The metrics defined under `rules`
-are registered with the `custom.metrics.k8s.io` interface for HPA to reference as the Object type (corresponding to the scenario where Prefill or Decode instances report metrics); the metrics defined under `externalRules`
-are registered with the `external.metrics.k8s.io` interface for HPA to reference as the External type (corresponding to the scenario where the Coordinator reports metrics). An example is as follows.
+Define promQL rules through `config.yaml` in the ConfigMap to convert the metrics in Prometheus into metrics that HPA can recognize. The metrics defined under `rules` are registered with the `custom.metrics.k8s.io` interface for HPA to reference as the Object type (corresponding to the scenario where Prefill or Decode instances report metrics); the metrics defined under `externalRules` are registered with the `external.metrics.k8s.io` interface for HPA to reference as the External type (corresponding to the scenario where the Coordinator reports metrics). An example is as follows.
 
 ```yaml
 apiVersion: v1 # K8s API version
@@ -143,13 +129,11 @@ data: # Configuration data
         ) by (namespace, pod)
 ```
 
-`seriesQuery` is used to match the metric series in Prometheus, and `metricsQuery` is the promQL statement executed when exposing the metric externally. By modifying
-`metricsQuery`, you can implement complex trigger rules such as metric addition, metric multiplication, and time window average (for example, `avg_over_time`).
+`seriesQuery` is used to match the metric series in Prometheus, and `metricsQuery` is the promQL statement executed when exposing the metric externally. By modifying `metricsQuery`, you can implement complex trigger rules such as metric addition, metric multiplication, and time window average (for example, `avg_over_time`).
 
 **2. Example of HPA referencing metrics**
 
-After Prometheus Adapter converts Prometheus metrics into metrics that HPA can recognize, HPA references the metrics through `type: Object` (metrics reported by Prefill or Decode instances) or `type: External`
-(metrics reported by the Coordinator). `metric.name` must be consistent with the metric name exposed by Prometheus Adapter.
+After Prometheus Adapter converts Prometheus metrics into metrics that HPA can recognize, HPA references the metrics through `type: Object` (metrics reported by Prefill or Decode instances) or `type: External` (metrics reported by the Coordinator). `metric.name` must be consistent with the metric name exposed by Prometheus Adapter.
 
 In the scenario where Prefill or Decode instances report metrics, HPA references the metrics as `type: Object`. Example:
 
@@ -187,15 +171,11 @@ The correspondence between service instances, metric types, and HPA references i
 | Prefill or Decode instance         | rules (promQL: direct exposure/add/multiply/time window average) | custom.metrics.k8s.io         | Object          | object.metric.name   |
 | Coordinator                        | externalRules (promQL)                                           | external.metrics.k8s.io       | External        | external.metric.name |
 
-After the preceding steps are complete, you can configure the HPA metrics in the example as shown in the [Configuring the Elastic Scaling Policy](#configuring-the-elastic-scaling-policy) section. This example uses the `type: External`
-type to configure scaling metrics. According to the elastic scaling principle, metrics reported by Prefill or Decode instances correspond to `type: Object`, and metrics reported by the Coordinator correspond to `type: External`
-. The metric name must be consistent with the metric exposed by Prometheus Adapter.
+After the preceding steps are complete, you can configure the HPA metrics in the example as shown in the [Configuring the Elastic Scaling Policy](#configuring-the-elastic-scaling-policy) section. This example uses the `type: External` type to configure scaling metrics. According to the elastic scaling principle, metrics reported by Prefill or Decode instances correspond to `type: Object`, and metrics reported by the Coordinator correspond to `type: External`. The metric name must be consistent with the metric exposed by Prometheus Adapter.
 
 ## Configuring the Elastic Scaling Policy
 
-The following example shows how to configure an elastic scaling policy for an inference instance. You need to add the configuration in bold. For inference jobs deployed based on MindIE
-PyMotor, only the Coordinator instance reports load metrics while Prefill and Decode instances do not report metrics, and HPA scaling metrics can be expressed only in the External type (obtained from the metrics reported by the Coordinator after conversion by Prometheus
-Adapter).
+The following example shows how to configure an elastic scaling policy for an inference instance. You need to add the configuration in bold. For inference jobs deployed based on MindIE PyMotor, only the Coordinator instance reports load metrics while Prefill and Decode instances do not report metrics, and HPA scaling metrics can be expressed only in the External type (obtained from the metrics reported by the Coordinator after conversion by Prometheus Adapter).
 
 <pre codetype="yaml">
 apiVersion: mindcluster.huawei.com/v1
@@ -349,4 +329,4 @@ spec:
 
 > [!NOTE]
 >
->- This feature supports Kubernetes 1.23 and later.
+> This feature supports Kubernetes 1.23 and later.

@@ -443,29 +443,29 @@ cp -r /var/log/mindx-dl/npu-exporter {采集目录}/dl_log
 env | grep "MINDIE_LOG_PATH"
 ```
 
-- 若无结果显示或结果显示中不包含绝对路径，例如回显为以下：
+- 若无结果显示或结果显示中不包含绝对路径，例如：
 
-```shell
-MINDIE_LOG_PATH="llm: llm"
-```
+    ```shell
+    MINDIE_LOG_PATH="llm: llm"
+    ```
 
-代表日志存储在默认路径下，使用以下命令进入日志默认存储目录，拷贝相关组件日志
+    表示日志存储在默认路径下，执行以下命令进入日志默认存储目录，拷贝相关组件日志。
 
-```shell
-cp -r ~/mindie {采集目录}/
-```
+    ```shell
+    cp -r ~/mindie {采集目录}/
+    ```
 
-- 若有结果显示且结果显示中包含绝对路径，例如回显为以下：
+- 若有结果显示且结果显示中包含绝对路径，例如：
 
-```shell
-MINDIE_LOG_PATH="llm: /home/working/"
-```
+    ```shell
+    MINDIE_LOG_PATH="llm: /home/working/"
+    ```
 
-则需要进入回显中对应的日志存储目录，拷贝相关组件日志。
+    则需要进入回显中对应的日志存储目录，拷贝相关组件日志。
 
-```shell
-cp -r /home/working {采集目录}/mindie
-```
+    ```shell
+    cp -r /home/working {采集目录}/mindie
+    ```
 
 ### MindIE Pod 日志
 

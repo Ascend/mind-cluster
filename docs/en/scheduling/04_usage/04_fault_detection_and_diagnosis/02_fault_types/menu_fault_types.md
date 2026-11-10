@@ -6,3 +6,4 @@
 - [Workload Faults and Task Hangs](./04_workload_faults.md)
 - [Performance Degradation, Slow Nodes, and Slow Networks](./05_performance_degradation.md)
 - [Public Faults](./06_public_faults.md)
+- [Silent Faults](./07_silent_faults.md)

@@ -154,8 +154,11 @@ Ascend NPU hardware resources mainly include AICore (used for AI model computati
 
 - After a physical NPU is virtualized into vNPUs, the physical NPU can no longer be mounted to a container for use, nor can it be passed through to a virtual machine for use.
 - A vNPU can be used by only one task container. Multiple task containers are not supported to use the same vNPU.
+<!-- npu="310p" id1 -->
 - The working modes of the two chips on the Atlas 300I Duo inference card must be consistent. That is, both chips must use the virtual instance function, or both must use the entire card. Plan this according to your service requirements.
+<!-- end id1 -->
 - The virtual instance template is used to partition resources of all NPUs on the entire server. Mixing standard cards of different specifications is not supported. For example, the Atlas 300V Pro video analysis card supports 24 GB and 48 GB memory specifications, but mixing cards of these two memory specifications for virtualization is not supported. Mixing <term>Atlas training products</term> with 30 AICores and <term>Atlas training products</term> with 32 AICores is also not supported.
+<!-- npu="910" id2 -->
 - When the server is an Atlas training product, the virtualization function is supported only when the NPU chip works in AMP mode, and SMP mode is not supported. The procedure for query and configuration of the NPU chip working mode is as follows (ensure that the server operating system is powered off):
 
     1. Log in to the iBMC command line.
@@ -163,3 +166,4 @@ Ascend NPU hardware resources mainly include AICore (used for AI model computati
     3. Run the **ipmcset -d npuworkmode -v 0** command to set the working mode of the NPU chip to AMP mode.
 
     For details about query and configuration of the NPU chip working mode, see the "[Querying and Setting the NPU Chip Working Mode (npuworkmode)](https://support.huawei.com/enterprise/en/doc/EDOC1100136580/51fd0a0/querying-and-setting-the-npu-chip-working-mode-npuworkmode?idPath=23710424|251366513|22892968|252309113|250702818)" section in *[Atlas 800 Training Server iBMC User Guide (Model 9000)](https://support.huawei.com/enterprise/en/doc/EDOC1100136580/426cffd9/about-this-document?idPath=23710424|251366513|22892968|252309113|250702818)*.
+<!-- end id2 -->

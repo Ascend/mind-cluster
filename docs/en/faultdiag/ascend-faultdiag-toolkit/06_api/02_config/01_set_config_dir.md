@@ -19,7 +19,7 @@ Sets the configuration file directory path. The tool automatically scans and loa
 
 ## LLD.xlsx Description
 
-You need to provide the `LLD.xlsx` file. For a sample file, see [LLD.xlsx](../../../../resource/LLD.xlsx). The file must contain two sheets:
+You need to provide the `LLD.xlsx` file. For a sample file, see [LLD.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/81bc2b850ea97aab32379a9cd6e65935857e620b/LLD.xlsx). The file must contain two sheets:
 
 | Sheet Name | Mandatory Fields | Purpose |
 |----------|--------|------|
@@ -28,7 +28,7 @@ You need to provide the `LLD.xlsx` file. For a sample file, see [LLD.xlsx](../..
 
 ## threshold_config.json Description
 
-The threshold configuration file `threshold_config.json` is used to override the default thresholds of each diagnosis item, so that the fault diagnosis criteria can be adjusted based on the actual environment. The file must be placed in the configuration directory set by `set_config_dir` and is automatically read when the tool loads the configuration. When the file is not placed, the built-in default thresholds in the code are used. For a complete sample file, see [threshold_config.json](../../../../resource/threshold_config.json).
+The threshold configuration file `threshold_config.json` is used to override the default thresholds of each diagnosis item, so that the fault diagnosis criteria can be adjusted based on the actual environment. The file must be placed in the configuration directory set by `set_config_dir` and is automatically read when the tool loads the configuration. When the file is not placed, the built-in default thresholds in the code are used. For a complete sample file, see [threshold_config.json](https://raw.gitcode.com/Ascend/mind-cluster/blobs/a507a1f8b90420c25290e69c7d431c947e522ef2/threshold_config.json).
 
 The configuration file is a JSON object. Each configuration item corresponds to a threshold name, and the threshold fields are uniformly nested in the `threshold` sub-object, for example:
 
@@ -78,16 +78,16 @@ Meaning of threshold configuration items:
 | `NIC_HOST_SNR_DB` | Host-side SNR of the NIC (NIC SFP) optical module | dB |
 | `NIC_MEDIA_SNR_DB` | Media-side SNR of the NIC (NIC SFP) optical module | dB |
 | `NIC_LANE_FLAG` | NIC lane exception flag, with the normal value `0` | - |
-| `LPO_TX_BIAS_MA` | Transmit bias current of the LPO optical module (only for <term>Ascend 950PR&950DT products</term>) | mA |
-| `LPO_TX_POWER_DBM` | Transmit optical power of the LPO optical module (only for <term>Ascend 950PR&950DT products</term>) | dBm |
-| `LPO_RX_POWER_DBM` | Receive optical power of the LPO optical module (only for <term>Ascend 950PR&950DT products</term>) | dBm |
-| `LPO_POWER_LANE_DIFF_DB` | Maximum optical power difference among lanes of the LPO optical module (only for <term>Ascend 950PR&950DT products</term>) | dBm |
+| `LPO_TX_BIAS_MA` | Transmit bias current of the LPO optical module | mA |
+| `LPO_TX_POWER_DBM` | Transmit optical power of the LPO optical module | dBm |
+| `LPO_RX_POWER_DBM` | Receive optical power of the LPO optical module | dBm |
+| `LPO_POWER_LANE_DIFF_DB` | Maximum optical power difference among lanes of the LPO optical module | dBm |
 
 Notes:
 
 - For `DUPLEX_THRESHOLD`, `NET_HEALTH_THRESHOLD`, `LINK_STATUS_THRESHOLD`, `OPTICAL_PRESENT_THRESHOLD`, and `NIC_LANE_FLAG`, the normal value is determined by string comparison: a value is considered normal only when it equals the configured normal value; all other values are considered abnormal.
 - `HCCN_LINK_DOWN_CNT` is considered sub-health when it exceeds the warning threshold, and abnormal when it exceeds the alarm (fault) threshold.
-- NIC-related thresholds are used only by <term>Ascend 950PR&950DT products</term>.
+- Related thresholds of the NIC and LPO optical module are used only by <term>Ascend 950PR&950DT products</term>.
 - Optical module thresholds vary by module type: ODSP and LPO optical modules are supported. When the optical module type is not identified, the ODSP type is used by default.
 
 Configuration validation rules:
@@ -112,7 +112,7 @@ Non-interactive mode (command and output):
 
 ```bash
 ascend-fd-tk set_config_dir /home/user/config set_conn_config /home/user/conn.ini auto_collect_diag
-Setting successful. Configuration directory: /home/user/config
+Configuration succeeded. Configuration directory: /home/user/config
 # Other log output...
 ```
 
@@ -121,5 +121,5 @@ Interactive mode (command and output):
 ```bash
 ascend-fd-tk
 >>> set_config_dir /home/user/config
-Setting successful. Configuration directory: /home/user/config
+Configuration succeeded. Configuration directory: /home/user/config
 ```

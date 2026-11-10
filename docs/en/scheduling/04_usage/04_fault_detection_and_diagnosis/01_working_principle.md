@@ -19,10 +19,8 @@ Among MindCluster cluster scheduling components, Ascend Device Plugin detects NP
 - When a node fault exists on a node, NodeD on each compute node creates a ConfigMap file that records the device information of the node. The ConfigMap file is named `mindx-dl-nodeinfo-<nodename>`, (hereinafter referred to as `node-info-cm`), and node fault information is reported through this ConfigMap. For details about the fields in the ConfigMap file, see the [mindx-dl-nodeinfo-&lt;nodename&gt;](../../06_api/03_noded.md#node-resources) table.
 - K8s RDMA Shared Dev Plugin on each compute node creates a ConfigMap file that records information about the UB NIC devices on the node. The ConfigMap file is named `dpuinfo-<nodename>`, and fault information is reported through this ConfigMap. For details about the fields in the ConfigMap file, see [ConfigMap Description](../../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_configmap_k8s_rdma_shared_dev_plugin).
 - ClusterD creates ConfigMap files that record the device information of the cluster. The ConfigMap files are named `cluster-info-<device/switch>-<[0-5]>` and `cluster-info-node-cm` (hereinafter referred to as `cluster-info-cm`). Node and chip fault information is reported through [cluster-info-cm](../../06_api/04_clusterd/00_cluster_resources.md).
-- When each job is created, a ConfigMap file needs to be configured in the YAML. The ConfigMap file is named `reset-config-<job-name>`, (hereinafter referred to as `reset-info-cm`). This ConfigMap is mounted to the "/user/restore/reset/config" path of the container. Ascend Device Plugin automatically mounts the ConfigMap to the "/user/restore/reset/&lt;job-namespace&gt;.&lt;job-name&gt;" path of the node.
 
-    Alternatively, the "/user/restore/reset/&lt;job-namespace&gt;.&lt;job-name&gt;" on the node can be mounted to the "/user/restore/reset/config" path of the container instead of the ConfigMap. For details about the fields in the ConfigMap file, see the [reset-config-&lt;job-name&gt;](../../06_api/02_ascend_device_plugin.md#job-information) table.
-
+<!-- npu="A3,910b" id1 -->
 ## Online Stress Testing<a name="ZH-CN_TOPIC_0000002479226572"></a>
 
 MindCluster supports the online stress testing feature, that is, during training, the online stress testing interface can be called to suspend a specified training job and perform a hardware P2P or AIC stress test on the nodes used by the job, so as to proactively determine whether the nodes are abnormal. If no fault exists, training is resumed. If a fault exists, the faulty node is isolated and resumable training is triggered.
@@ -113,3 +111,4 @@ For users who do not use MindSpeed-LLM or the MindCluster platform, complete the
 </tr>
 </tbody>
 </table>
+<!-- end id1 -->

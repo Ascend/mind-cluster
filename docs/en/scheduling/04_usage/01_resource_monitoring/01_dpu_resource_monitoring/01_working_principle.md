@@ -10,4 +10,4 @@ Configuration items such as the collection period and the metric trustlist can b
 
 >[!NOTE]
 >
-> - By default, DPU Exporter provides only HTTP services. To use the more secure HTTPS service, modify the source code for adaptation.
+> By default, DPU Exporter provides only HTTP services. To use the more secure HTTPS service, modify the source code for adaptation.

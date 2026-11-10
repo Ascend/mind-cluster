@@ -18,12 +18,12 @@ Before installing the DRA driver, familiarize yourself with the related constrai
 </thead>
 <tbody><tr id="row0414dra240013"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240013"><a name="p0414dra240013"></a><a name="p0414dra240013"></a>K8s version</p>
 </td>
-<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240014"><a name="p0414dra240014"></a><a name="p0414dra240014"></a>The component YAML file uses the resource.k8s.io/v1 and admissionregistration.k8s.io/v1 APIs, which require K8s 1.34.x to 1.36.x. The component cannot be installed on a K8s cluster of an earlier version.</p>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240014"><a name="p0414dra240014"></a><a name="p0414dra240014"></a>The component YAML file uses the resource.k8s.io/v1 and admissionregistration.k8s.io/v1 APIs, which require K8s 1.36.x. The component cannot be installed on a K8s cluster of an earlier version.</p>
 </td>
 </tr>
 <tr id="row0414dra240015"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240015"><a name="p0414dra240015"></a><a name="p0414dra240015"></a>Container runtime</p>
 </td>
-<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240016"><a name="p0414dra240016"></a><a name="p0414dra240016"></a>The component injects NPU devices into service containers through CDI (Container Device Interface), which requires the container runtime on the compute node to support CDI, for example, containerd 1.7.0 or later.</p>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240016"><a name="p0414dra240016"></a><a name="p0414dra240016"></a>The component injects NPU devices into service containers through CDI (Container Device Interface), which requires the container runtime on the compute node to support CDI, for example, containerd 1.7.0 or later. Using cri-docker (cri-dockerd) as the container runtime is not supported.</p>
 </td>
 </tr>
 <tr id="row0414dra240017"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240017"><a name="p0414dra240017"></a><a name="p0414dra240017"></a>NPU driver</p>
@@ -31,14 +31,25 @@ Before installing the DRA driver, familiarize yourself with the related constrai
 <td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240018"><a name="p0414dra240018"></a><a name="p0414dra240018"></a>The component calls related interfaces of the NPU driver. To upgrade the driver, stop service jobs first, and then stop the component container service.</p>
 </td>
 </tr>
+<tr id="row0414dra240025"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240025"><a name="p0414dra240025"></a><a name="p0414dra240025"></a>Component dependencies</p>
+</td>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240026"><a name="p0414dra240026"></a><a name="p0414dra240026"></a>The component injects NPU devices into service containers through the CDI mechanism. Ascend Docker Runtime is neither installed nor required.</p>
+</td>
+</tr>
+<tr id="row0414dra240027"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240027"><a name="p0414dra240027"></a><a name="p0414dra240027"></a>Mutually exclusive with Ascend Device Plugin</p>
+</td>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240028"><a name="p0414dra240028"></a><a name="p0414dra240028"></a>Ascend DRA and Ascend Device Plugin are two different device access modes. Their functions are mutually exclusive on the same node, and they do not need to be deployed at the same time.</p>
+</td>
+</tr>
 <tr id="row0414dra240019"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240019"><a name="p0414dra240019"></a><a name="p0414dra240019"></a>Deployment form</p>
 </td>
 <td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240020"><a name="p0414dra240020"></a><a name="p0414dra240020"></a>The component runs as a privileged container under the root user and mounts the NPU driver directory, kubelet plugin directory, and device directory of the host. Do not modify the DaemonSet name or its mount configuration in the YAML file. Otherwise, the component cannot work properly.</p>
 </td>
 </tr>
-<tr id="row0414dra240021"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240021"><a name="p0414dra240021"></a><a name="p0414dra240021"></a>Supported chip</p>
+<tr id="row0414dra240021"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240021"><a name="p0414dra240021"></a><a name="p0414dra240021"></a>Supported product forms</p>
 </td>
-<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240022"><a name="p0414dra240022"></a><a name="p0414dra240022"></a>Ascend910 and Ascend950 NPUs are supported.</p>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p0414dra240022"><a name="p0414dra240022"></a><a name="p0414dra240022"></a>The following product forms are supported:</p>
+<a name="ul0414dra240021"></a><a name="ul0414dra240021"></a><ul id="ul0414dra240021"><li><term>Atlas A2 products</term></li><li><term>Atlas A3 products</term></li><li><term>Ascend 950PR&amp;950DT products</term></li></ul>
 </td>
 </tr>
 <tr id="row0414dra240023"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p0414dra240023"><a name="p0414dra240023"></a><a name="p0414dra240023"></a>Health check port</p>
@@ -68,7 +79,7 @@ Before installing the DRA driver, familiarize yourself with the related constrai
 
 2. <a name="li2093514717dra01"></a>Copy the YAML file (ascend-dra-driver-v<i>{version}</i>.yaml) in the Ascend Dynamic Resource Allocation software package decompression directory to any directory on the K8s management node.
 
-3. If you do not need to modify the component startup parameters, skip this step. Otherwise, modify the DRA driver startup parameters in the YAML file as required. The startup parameters are located in the "command" line of the DaemonSet, as shown below. For the startup parameters, see [Table 2](#table20426115dra02). You can also run <b>./ascend-dra -h</b> to view the parameter description.
+3. If you do not need to modify the component startup parameters, skip this step. Otherwise, modify the DRA driver startup parameters in the YAML file as required. The startup parameters are located in the "command" line of the DaemonSet, as shown below. For the startup parameters, see [Table 3](#table20426115dra02). You can also run <b>./ascend-dra -h</b> to view the parameter description.
 
     ```Yaml
     ...
@@ -77,7 +88,7 @@ Before installing the DRA driver, familiarize yourself with the related constrai
             securityContext:
               privileged: true
             image: ascend-dra:v26.2.0
-            command: ["/bin/bash", "-c", "exec ascend-dra --enable-healthz --healthz-address=11258"]
+            command: ["/bin/bash", "-c", "exec ascend-dra --enable-healthz=true --healthz-address=11258"]
     ...
     ```
 
@@ -95,6 +106,10 @@ Before installing the DRA driver, familiarize yourself with the related constrai
     clusterrolebinding.rbac.authorization.k8s.io/ascend-dra-driver-role-binding created
     daemonset.apps/ascend-dra-driver-kubeletplugin created
     deviceclass.resource.k8s.io/npu.huawei.com created
+    deviceclass.resource.k8s.io/static-vnpu.huawei.com created
+    deviceclass.resource.k8s.io/dynamic-vnpu.huawei.com created
+    deviceclass.resource.k8s.io/ascend910.ext.huawei.com created
+    deviceclass.resource.k8s.io/npu.ext.huawei.com created
     validatingadmissionpolicy.admissionregistration.k8s.io/resourceslices-policy-ascend-dra-driver created
     validatingadmissionpolicybinding.admissionregistration.k8s.io/resourceslices-policy-ascend-dra-driver created
     ```
@@ -115,29 +130,46 @@ Before installing the DRA driver, familiarize yourself with the related constrai
 6. Run the following command to verify whether NPU resources are reported successfully.
 
     ```shell
-    kubectl get deviceclass npu.huawei.com
+    kubectl get deviceclass
     kubectl get resourceslices
     ```
 
-    The following is the output example. If a DeviceClass named "npu.huawei.com" can be queried and each compute node has a corresponding ResourceSlice, resources are reported successfully.
+    The following is the output example. If all the DeviceClasses in [Table 2](#table_dra_deviceclass_list) can be queried and each compute node has a corresponding ResourceSlice, resources are reported successfully.
 
     ```ColdFusion
-    NAME            AGE
-    npu.huawei.com  2m
+    NAME                       AGE
+    npu.huawei.com             2m
+    static-vnpu.huawei.com     2m
+    dynamic-vnpu.huawei.com    2m
+    ascend910.ext.huawei.com   2m
+    npu.ext.huawei.com         2m
 
     NAME                                  POOLNAME     DEVICECOUNT   AGE
     npu.huawei.com-node1-1a2b3c           node1        8             2m
     ```
 
+    **Table 2** DeviceClass description
+
+    <a name="table_dra_deviceclass_list"></a>
+
+    | DeviceClass | Description |
+    |--|--|
+    | npu.huawei.com | Selects all unsliced physical NPUs for ResourceClaim to reference. No extended resource name. |
+    | static-vnpu.huawei.com | Selects pre-created static vNPUs. No extended resource name. |
+    | dynamic-vnpu.huawei.com | Selects physical NPUs that support dynamic hard partitioning. The template and capacity are specified by the ResourceClaim. No extended resource name. |
+    | ascend910.ext.huawei.com | Selects unsliced physical NPUs of the Ascend910 series. The extended resource name is `huawei.com/Ascend910`. |
+    | npu.ext.huawei.com | Selects unsliced physical NPUs of the Ascend950 series. The extended resource name is `huawei.com/npu`. |
+
 >[!NOTE]
 >
+>- Only `ascend910.ext.huawei.com` and `npu.ext.huawei.com` declare `extendedResourceName`. Only in this case can a job directly configure `huawei.com/Ascend910` or `huawei.com/npu` in the `resources.requests` and `resources.limits` of a Pod to request full cards without creating a `ResourceClaimTemplate`. This method requires K8s 1.36 or later, and the `DynamicResourceAllocation` and `DRAExtendedResource` feature gates must be enabled (they are enabled by default in K8s 1.36 and later), with kube-scheduler as the scheduler. DeviceClasses are created by the YAML file, and the driver does not synchronize DeviceClasses at startup. If a DeviceClass with the same name but a different signature already exists in the cluster, the YAML does not overwrite it. Delete the old object manually first.
 >- If the Pod status of the component is not `Running` after the component is installed, handle it by referring to [Component Pod status is not Running](https://gitcode.com/Ascend/mind-cluster/issues/342).
 >- If the Pod status of the component is `ContainerCreating` after the component is installed, handle it by referring to [Cluster scheduling component Pod is in ContainerCreating state](https://gitcode.com/Ascend/mind-cluster/issues/343).
 >- If the component is started successfully but the Pod corresponding to the component cannot be found, refer to [The component startup YAML is executed successfully but the Pod corresponding to the component cannot be found](https://gitcode.com/Ascend/mind-cluster/issues/345).
 
 ## Parameter Description<a name="section2042611570393"></a>
 
-**Table 2** DRA driver startup parameters
+**Table 3** DRA driver startup parameters
 
 <a name="table20426115dra02"></a>
 <table><thead align="left"><tr id="row0414dra240031"><th class="cellrowborder" valign="top" width="30%" id="mcps1.2.5.1.1"><p id="p0414dra240031"><a name="p0414dra240031"></a><a name="p0414dra240031"></a>Parameter</p>

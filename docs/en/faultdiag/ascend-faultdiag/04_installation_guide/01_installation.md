@@ -15,9 +15,11 @@ ascend-fd supports installation via the Whl package and via MindCluster Ascend D
 
 #### Obtaining the Software Package
 
+Refer to this chapter to obtain the required software packages. Downloading the binary software indicates that you agree to the terms and conditions of the [Software License Agreement 2.0](https://www.hiascend.com/en/legal/softlicense). Downloading the source software indicates that you agree to the terms and conditions of Apache License Version 2.0.
+
 You can obtain the software package by downloading the zip package from the open-source community or by compiling the Whl package from source code.
 
-1. Obtain the software package from the open-source community.
+1. Download software packages.
 
     | Software Package                                      | Subfile                                                         | Description                          | Link                                                         |
     |-------------------------------------------------------|-----------------------------------------------------------------|--------------------------------------|--------------------------------------------------------------|
@@ -45,7 +47,7 @@ You can obtain the software package by downloading the zip package from the open
         pip3 install -r src/requirements.txt && pip3 install 'setuptools>=60.3.0' 'wheel>=0.45.1'
         ```
 
-    3. To customize version information, create a `service_config.ini` file in the current directory (`mind-cluster/component/ascend-faultdiag`) and fill in the version number, such as `26.2.0`. The version number format must comply with [Python version specifications](https://packaging.pythonlang.cn/en/latest/specifications/version-specifiers/).
+    3. To customize version information, create a `service_config.ini` file in the current directory (`mind-cluster/component/ascend-faultdiag`) and fill in the version number, such as `26.2.0`. The version number format must comply with [Python version specifications](https://packaging.python.org/en/latest/specifications/version-specifiers/).
 
     4. Execute the build script.
 

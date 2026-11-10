@@ -15,7 +15,7 @@
 **MindCluster Ascend FaultDiag关键特性**
 
 - **新增K8s集群运维Agent组件**：支持根据用户指令收集K8s集群中失败的昇腾训练/推理任务日志并执行故障诊断；支持接入模型API，优化诊断报告。
-- **链路诊断工具增强**：新增支持Ascend 950PR&950DT系列产品光链路故障诊断；故障阈值支持通过配置文件修改，并可按光模块类型、指标设置不同阈值。
+- **链路诊断工具增强**：新增支持<term>Ascend 950PR&950DT系列产品</term>光链路故障诊断；故障阈值支持通过配置文件修改，并可按光模块类型、指标设置不同阈值。
 
 ## 版本配套说明
 
@@ -382,7 +382,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 - 未申请NPU的Pod无需配置skip标识即可正常调度。
 - 支持Kubernetes 1.36版本kube-scheduler与worker节点组件。
 - 支持Volcano 1.15版本。
-- job-summary中的ranktable支持Ascend 950PR&950DT系列产品。
+- job-summary中的ranktable支持<term>Ascend 950PR&950DT系列产品</term>。
 - 支持节点内的通用亲和性调度与跨迭代混合调度。
 - 支持Atlas 950 SuperPoD Flex超节点亲和性调度。
 - 亲和性调度支持Pod类型。
@@ -406,8 +406,8 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 - DPU Exporter支持1825指标采集。
 - NPU Exporter支持上报可用芯片数量。
 - Ascend Device Plugin支持上报设备NUMA信息。
-- Atlas A2/A3训练推理系列产品支持vNPU硬切分的利用率指标展示。
-- 支持Ascend 950PR&950DT系列产品的NPU利用率新指标接口。
+- <term>Atlas A2系列产品</term>/<term>Atlas A3系列产品</term>支持vNPU硬切分的利用率指标展示。
+- 支持<term>Ascend 950PR&950DT系列产品</term>的NPU利用率新指标接口。
 
 **8、机型适配**
 
@@ -431,7 +431,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 **2、链路诊断工具**
 
-- 新增支持Ascend 950PR&950DT系列产品光链路故障诊断。
+- 新增支持<term>Ascend 950PR&950DT系列产品</term>光链路故障诊断。
 - 故障阈值支持通过配置文件修改，并可按光模块类型、指标设置不同阈值。
 
 **3、K8s集群运维Agent组件**
@@ -472,9 +472,9 @@ NPU Exporter部分hccn_tool命令接口调整为基于DCMI接口实现，优化�
 
 ### 升级后对现行系统的影响
 
-Infer Operator组件从26.1.0之前版本升级到26.1.0及之后版本时，需删除日志目录重新创建为root权限或修改日志目录及日志文件的权限为root。
-Device Plugin组件从26.1.1之前版本升级到26.2.0及之后版本时，需删除linkdownTimeout启动参数。
-ascend-for-volcano组件从26.3.0之前版本升级到26.3.0及之后版本后，默认在10s内不允许调度亚健康资源，在无冗余场景下，可能会导致任务调度延迟10s；在Pod级重调度场景，可能会降级为Job级重调度。
+- Infer Operator组件从26.1.0之前版本升级到26.1.0及之后版本时，需删除日志目录重新创建为root权限或修改日志目录及日志文件的权限为root。
+- Ascend Device Plugin组件从26.1.1之前版本升级到26.2.0及之后版本时，需删除linkdownTimeout启动参数。
+- ascend-for-volcano组件从26.3.0之前版本升级到26.3.0及之后版本后，默认在10s内不允许调度亚健康资源，在无冗余场景下，可能会导致任务调度延迟10s；在Pod级重调度场景，可能会降级为Job级重调度。
 
 ## 版本配套文档
 

@@ -53,6 +53,13 @@ The fault detection feature handles public faults by level. ClusterD obtains the
 <td class="cellrowborder" valign="top" width="42.35924932975871%" headers="mcps1.2.4.1.3 "><p id="p1280114235116"><a name="p1280114235116"></a><span id="ph3392758212"><a name="ph3392758212"></a>Pre-isolate the chip.</span></p>
 </td>
 </tr>
+<tr id="row_silentfault_lv"><td class="cellrowborder" valign="top" width="15.09499941718149%" headers="mcps1.2.4.1.1 "><p id="p_silentfault_lv1"><a name="p_silentfault_lv1"></a>SilentFault</p>
+</td>
+<td class="cellrowborder" valign="top" width="42.54575125305979%" headers="mcps1.2.4.1.2 "><p id="p_silentfault_lv2"><a name="p_silentfault_lv2"></a>Silent fault. Software faults occur repeatedly on the node but no hardware fault is reported. The fault list is appended, and the chip health status is not changed.</p>
+</td>
+<td class="cellrowborder" valign="top" width="42.35924932975871%" headers="mcps1.2.4.1.3 "><p id="p_silentfault_lv3"><a name="p_silentfault_lv3"></a>Not handled for now.</p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -72,7 +79,7 @@ The fault detection feature handles public faults by level. ClusterD obtains the
 </tr>
 <tr id="zh-cn_topic_0000002181110120_row14606121802219"><td class="cellrowborder" valign="top" width="28.93%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002181110120_p1760617182224"><a name="zh-cn_topic_0000002181110120_p1760617182224"></a>publicFaultResource</p>
 </td>
-<td class="cellrowborder" valign="top" width="71.07%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002181110120_p1606118102218"><a name="zh-cn_topic_0000002181110120_p1606118102218"></a>Configuration of public fault senders.</p>
+<td class="cellrowborder" valign="top" width="71.07%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002181110120_p1606118102218"><a name="zh-cn_topic_0000002181110120_p1606118102218"></a>Configuration of public fault senders. Among them, "clusterd" is dedicated to the silent fault detection inside ClusterD and is used only in silent fault scenarios. It is not an external sender.</p>
 </td>
 </tr>
 </tbody>
@@ -105,6 +112,11 @@ The fault detection feature handles public faults by level. ClusterD obtains the
 <tr id="row107385344217"><td class="cellrowborder" valign="top" width="28.849999999999998%" headers="mcps1.2.3.1.1 "><p id="p187397341724"><a name="p187397341724"></a><span id="ph791817016319"><a name="ph791817016319"></a>PreSeparateNPUCodes</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="71.15%" headers="mcps1.2.3.1.2 "><p id="p15739113415210"><a name="p15739113415210"></a><span id="ph8918120234"><a name="ph8918120234"></a>Fault codes whose fault level is </span><span id="ph491890639"><a name="ph491890639"></a>PreSeparateNPU</span><span id="ph6918601336"><a name="ph6918601336"></a>(does not affect services for now; jobs are no longer scheduled to this chip).</span></p>
+</td>
+</tr>
+<tr id="row_silentfaultcodes"><td class="cellrowborder" valign="top" width="28.849999999999998%" headers="mcps1.2.3.1.1 "><p id="p_silentfaultcodes01"><a name="p_silentfaultcodes01"></a>SilentFaultCodes</p>
+</td>
+<td class="cellrowborder" valign="top" width="71.15%" headers="mcps1.2.3.1.2 "><p id="p_silentfaultcodes02"><a name="p_silentfaultcodes02"></a>Fault codes whose fault level is SilentFault.</p>
 </td>
 </tr>
 </tbody>
@@ -142,6 +154,7 @@ A public fault code has nine digits, as described below.
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p103791114185115"><a name="p103791114185115"></a>0: NotHandleFault</p>
 <p id="p193791214175112"><a name="p193791214175112"></a>1: SubHealthFault</p>
 <p id="p737991475119"><a name="p737991475119"></a>2: SeparateNPU</p>
+<p id="p737991475119_2"><a name="p737991475119_2"></a>3: SilentFault</p>
 </td>
 </tr>
 <tr id="row1737917147519"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p133793145514"><a name="p133793145514"></a>3, 4</p>
@@ -433,6 +446,13 @@ A public fault code has nine digits, as described below.
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level-duplicate-5"></a>SubHealthFault</p>
 </td>
 </tr>
+<tr id="row_silentfaultcode"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p_silentfaultcode01"><a name="p_silentfaultcode01"></a>130001001</p>
+</td>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p_silentfaultcode02"><a name="p_silentfaultcode02"></a>Silent fault. Determined internally by ClusterD and not reported by external senders.</p>
+</td>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_silentfaultcode03"><a name="p_silentfaultcode03"></a>SilentFault</p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -471,7 +491,7 @@ The fault level of a public fault code can be configured in the following two sc
         "PreSeparateNPUCodes":[]
       },
       "publicFaultResource": [
-        "CCAE", "fd-online", "pingmesh", "Netmind", "dpcStorage", "dtfsStorage"
+        "CCAE", "fd-online", "pingmesh", "Netmind", "dpcStorage", "dtfsStorage", "clusterd"
       ]
     }
     ```
@@ -497,7 +517,7 @@ The following uses adding the fault sender XXX as an example to describe how to 
         "PreSeparateNPUCodes":[]
       },
       "publicFaultResource": [
-        "CCAE", "fd-online", "pingmesh", "Netmind", "dpcStorage", "dtfsStorage", "XXX"
+        "CCAE", "fd-online", "pingmesh", "Netmind", "dpcStorage", "dtfsStorage", "clusterd", "XXX"
       ]
     }
     ```

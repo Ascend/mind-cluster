@@ -132,7 +132,7 @@ For users who do not use MindSpeed-LLM, complete the function adaptation in [Tab
 
 ### Proactive Sub-Health CKPT
 
-When a sub-health fault occurs, the dying gasp can be saved through proactive sub-health CKPT. This capability requires that the sub-health policy be configured as `graceExit`, the fault recovery policy be configured as `dump`, and TaskD and ClusterD work properly. For details, see [Configuring Proactive Checkpoint Saving for Sub-healthy Policy](../02_configuration/02_configuring_training_recovery.md#configuring-proactive-checkpoint-saving-for-subhealthy-policy).
+When a sub-health fault occurs, the dying gasp can be saved through proactive sub-health CKPT. This capability requires that the sub-health policy be configured as `graceExit`, the fault recovery policy be configured as `dump`, and TaskD and ClusterD work properly. For details, see [Configuring Proactive Checkpoint Saving for Sub-healthy Policy](../02_configuration/02_configuring_training_recovery.md#configuring-proactive-checkpoint-saving-for-sub-healthy-policy).
 
 ## Shortening State Recovery Time
 

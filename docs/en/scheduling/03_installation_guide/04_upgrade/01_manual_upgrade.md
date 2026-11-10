@@ -7,4 +7,4 @@ Manual upgrade supports two methods:
 
 Before upgrading, please check whether there are any running tasks, and disable pingmesh UnifiedBus network detection as appropriate. Upgrade steps include environment checks, uninstalling the old version, installing the new version, restoring configurations, and others.
 
-For details, see [Developer Guide - Manual Upgrade](../../05_developer_guide/00_installation_deployment/01_upgrade.md).
+For details, see [Manual Upgrade](../../05_developer_guide/00_installation_deployment/01_upgrade.md).

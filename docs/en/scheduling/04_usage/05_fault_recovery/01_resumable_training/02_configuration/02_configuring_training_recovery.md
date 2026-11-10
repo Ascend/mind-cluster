@@ -288,9 +288,9 @@ spec:
 </tbody>
 </table>
 
-### Configuring Proactive Checkpoint Saving for Subhealthy Policy<a name="subHealthCkptSave"></a>
+### Configuring Proactive Checkpoint Saving for Sub-healthy Policy<a name="subHealthCkptSave"></a>
 
-If you want to save the dying gasp checkpoint when a subhealth fault occurs in a job, modify the job YAML. Specifically, configure the subhealth policy to `graceExit`, and set the fault recovery policy to `dump`. For the remaining startup script and job YAML configurations, see [Dying Gasp Checkpoint Saving](#ZH-CN_TOPIC_0000002479226544). This feature requires TaskD and ClusterD to function properly.
+If you want to save the dying gasp checkpoint when a sub-healthy fault occurs in a job, modify the job YAML. Specifically, configure the sub-healthy policy to `graceExit`, and set the fault recovery policy to `dump`. For the remaining startup script and job YAML configurations, see [Dying Gasp Checkpoint Saving](#ZH-CN_TOPIC_0000002479226544). This feature requires TaskD and ClusterD to function properly.
 
 ```yaml
 ...

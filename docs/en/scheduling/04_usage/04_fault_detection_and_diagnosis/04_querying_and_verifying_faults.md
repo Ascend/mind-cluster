@@ -5,7 +5,9 @@ This chapter is used only to verify whether faults are detected, diagnosed, aggr
 ## Querying ConfigMap Reporting Results
 
 - The Ascend Device Plugin on each compute node creates a ConfigMap file that records information about the NPUs and UnifiedBus devices on the node. The ConfigMap file is named "mindx-dl-deviceinfo-&lt;nodename&gt;" (hereinafter referred to as "device-info-cm"), and fault information is reported through this ConfigMap. For details about the fields in the ConfigMap file, see the [DeviceInfoCfg](../../06_api/02_ascend_device_plugin.md#chip-resources) table.
+<!-- npu="950" id2 -->
 - K8s RDMA Shared Dev Plugin on each compute node creates a ConfigMap file that records the UB NIC fault information of the node. The ConfigMap file is named "dpuinfo-&lt;nodename&gt;", and UB NIC fault information is reported through this ConfigMap. For details about the fields in the ConfigMap file, see [ConfigMap Description](../../06_api/11_k8s_rdma_shared_dev_plugin.md#table_dpuconfigmap_k8s_rdma_shared_dev_plugin).
+<!-- end id2 -->
 - When a node fault exists on a node, NodeD on each compute node creates a ConfigMap file that records the device information of the node. The ConfigMap file is named "mindx-dl-nodeinfo-&lt;nodename&gt;" (hereinafter referred to as "node-info-cm"), and node fault information is reported through this ConfigMap. For details about the fields in the ConfigMap file, see the [mindx-dl-nodeinfo-&lt;nodename&gt;](../../06_api/03_noded.md#node-resources) table.
 - ClusterD creates ConfigMap files that record the device information of the cluster. The ConfigMap files are named "cluster-info-<device/switch>-<[0-5]>" and "cluster-info-node-cm" (hereinafter referred to as "cluster-info-cm"). Node and chip fault information is reported through [cluster-info-cm](../../06_api/04_clusterd/00_cluster_resources.md).
 
@@ -14,8 +16,11 @@ Related query entries:
 - [Ascend Device Plugin fault information](../../07_references/02_common_operations.md#ZH-CN_TOPIC_0000002479387086)
 - [ClusterD fault information](../../07_references/02_common_operations.md#ZH-CN_TOPIC_0000002511347035)
 - [NodeD fault information](../../07_references/02_common_operations.md#ZH-CN_TOPIC_0000002511427003)
+<!-- npu="950" id3 -->
 - [UB NIC fault information](../../07_references/02_common_operations.md)
+<!-- end id3 -->
 
+<!-- npu="A3" id1 -->
 ## Querying pingmesh UnifiedBus Network Detection Results
 
 ### Viewing Detection Result Information<a name="zh-cn_topic_0000002193288232_section772614207398"></a>
@@ -65,6 +70,7 @@ The fields in the fault information are described as follows.
 |--|--|--|
 |mc-consumer-publicfault|Label key required by ClusterD for listening|true|
 |PublicFault|Public fault information key|For details, see the [fault field description](../../06_api/04_clusterd/03_public_fault_apis.md#configmap) table.|
+<!-- end id1 -->
 
 ## Querying Performance Degradation Fault Detection Data
 

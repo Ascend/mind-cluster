@@ -2,33 +2,60 @@
 
 ## Solution Introduction<a name="ZH-CN_TOPIC_0000002479386916"></a>
 
-To address the issue of downstream traffic conflicts on Spine switches in a Spine-Leaf network architecture, MindCluster provides users with two versions of switch affinity scheduling. To reduce networking costs, MindCluster supports switch affinity scheduling for single-layer networking. To maximize the utilization of the higher-bandwidth SuperPoD UnifiedBus network, MindCluster provides users with logical SuperPoD affinity scheduling. Switch affinity means that there are multiple nodes under a Leaf switch, and the system selects the most appropriate nodes to assign to training jobs based on the configured switch affinity rules.
+<!-- npu="910b,910" id14 -->
+To address the issue of downstream traffic conflicts on Spine switches in a Spine-Leaf network architecture, MindCluster provides users with switch affinity scheduling.
+<!-- end id14 -->
+<!-- npu="910b" id15 -->
+To reduce networking costs, MindCluster supports switch affinity scheduling for single-layer networking.
+<!-- end id15 -->
+<!-- npu="950,A3" id16 -->
+To maximize the utilization of the higher-bandwidth SuperPoD UnifiedBus network, MindCluster provides users with logical SuperPoD affinity scheduling and logical rack affinity scheduling.
+<!-- end id16 -->
+<!-- npu="910b,910" id17 -->
+Switch affinity means that multiple nodes exist under a Leaf switch. The system selects the most appropriate node for a training job based on the configured switch affinity rules.
+<!-- end id17 -->
 
+<!-- npu="910b,910" id6 -->
 - Switch Affinity Scheduling 1.0
 
     Affinity scheduling is performed by Volcano to ensure that traffic during job training does not cause downstream traffic conflicts on Spine switches. Currently supported products are <term>Atlas training products</term> and <term>Atlas A2 training products</term>; supported frameworks are PyTorch and MindSpore.
+<!-- end id6 -->
 
+<!-- npu="910b" id5 -->
 - Switch Affinity Scheduling 2.0
 
-    This solution adopts Volcano + iMaster NCE-Fabric. iMaster NCE-Fabric dynamically calculates the network path for training job communication, eliminating the need for the scheduler to resolve downstream traffic conflicts on Spine switches. It also allows nodes under one switch to be used by multiple cross-switch jobs, improving cluster resource utilization. Currently supported products are <term>Atlas A2 training products</term>; the supported framework is PyTorch.
+    This solution adopts Volcano + iMaster NCE-Fabric. iMaster NCE-Fabric dynamically calculates the network path for training job communication, so the scheduler is no longer used to resolve downstream traffic conflicts on Spine switches. It also allows nodes under one switch to be used by multiple cross-switch jobs, improving cluster resource utilization. The currently supported products are <term>Atlas A2 training products</term>, and the supported framework is PyTorch.
 
+<!-- end id5 -->
+
+<!-- npu="910b" id4 -->
 - Single-Layer Switch Affinity Scheduling
 
     Supports Atlas 800I A2 and A200I A2 Box in single-layer networking (only the Leaf layer, without the Spine layer). Single-layer switch affinity scheduling is used to select the most suitable nodes for distributed inference jobs.
+<!-- end id4 -->
 
+<!-- npu="A3" id3 -->
 - Logical SuperPoD Affinity Scheduling
 
-    For Atlas 900 A3 SuperPoD, when cluster scheduling components dispatch training jobs, they divide the physical SuperPoDs into logical SuperPoDs based on the partitioning policy, which are used for affinity scheduling of training products.
+    For Atlas 900 A3 SuperPoD, when delivering training jobs, the cluster scheduling components divide the physical SuperPoD into logical SuperPoDs based on the partitioning policy, which are used for affinity scheduling of training products.
+<!-- end id3 -->
+
+<!-- npu="950" id1 -->
+- Logical Rack Affinity Scheduling
+
+    The Atlas 950 SuperPoD consists of multiple physical racks, and each physical rack has 8 nodes in total. The network communication performance between nodes in a racks is better. When delivering training jobs, the cluster scheduling components divide the physical racks into logical racks based on the partitioning policy, which are used for affinity scheduling of training products.
+<!-- end id1 -->
 
 >[!NOTE]
 >
 >Currently, only full-NPU switch affinity scheduling is supported for training and inference jobs. Static or dynamic vNPU scheduling is not supported.
 
+<!-- npu="910b,910" id7 -->
 **Switch Affinity Scheduling 1.0 Flowchart<a name="section116221319144514"></a>**
 
 For the scheduling logic of switch affinity scheduling 1.0, see [Figure 1](#fig1189110673717).
 
-**Figure 1**  Scheduling process<a name="fig1189110673717"></a>
+**Figure 1** Scheduling process<a name="fig1189110673717"></a>
 
 ![](../../../../figures/scheduling/scheduling-process.png)
 
@@ -37,7 +64,9 @@ The steps are described as follows:
 1. Volcano reads the `basic-tor-node-cm` file to obtain the cluster topology information in preparation for job scheduling.
 2. The user submits a training job from the deep learning platform or via CLI.
 3. Based on the information obtained from `basic-tor-node-cm`, Volcano schedules the job Pod to an appropriate compute node and writes the switch status of the current node at the time of Pod scheduling into the job Pod's annotation.
+<!-- end id7 -->
 
+<!-- npu="910b" id8 -->
 **Switch Affinity Scheduling 2.0 Flowchart<a name="section109765354917"></a>**
 
 For the scheduling logic of switch affinity scheduling 2.0, see [Figure 2](#fig178701112193911).
@@ -54,7 +83,9 @@ The steps are described as follows:
 4. ClusterD detects that the job has been scheduled to appropriate compute nodes through the informer mechanism and aggregates the information of all Pods in the job.
 5. ClusterD writes the job information into the `job-summary-_<JobName>_ ConfigMap`.
 6. iMaster NCE-Fabric reads the job information from the `job-summary-_<JobName>_ ConfigMap` file and dynamically calculates the network path for communication during the training job.
+<!-- end id8 -->
 
+<!-- npu="910b,910" id13 -->
 **Job Description<a name="section1853122363817"></a>**
 
 Switch affinity scheduling selects different scheduling policies based on the job type. The job type is the value of the `tor-affinity` field in the YAML file for submitting training jobs. Different job types have different replica count requirements for jobs, as described below:
@@ -66,7 +97,9 @@ Switch affinity scheduling selects different scheduling policies based on the jo
 |Normal job|normal-schema|Unlimited|
 |Large model job|large-model-schema|Greater than or equal to 4|
 |Filler job|large-model-schema|Less than 4|
+<!-- end id13 -->
 
+<!-- npu="910b,910" id9 -->
 ## Switch Affinity Scheduling 1.0<a name="ZH-CN_TOPIC_0000002479386912"></a>
 
 **Usage Instructions<a name="section176781621152118"></a>**
@@ -92,7 +125,9 @@ For filler jobs, nodes under a switch that meets the replica requirement and has
 **Fault Rescheduling<a name="section1614032710011"></a>**
 
 When a fault occurs on the node where a job is located or on an Ascend AI processor, fault rescheduling is triggered for the job. Before rescheduling, Pods on normal nodes will be scheduled back to their original nodes to continue training, while Pods on the faulty node will select new nodes.
+<!-- end id9 -->
 
+<!-- npu="910b" id10 -->
 ## Switch Affinity Scheduling 2.0<a name="ZH-CN_TOPIC_0000002479226944"></a>
 
 Currently, only the PyTorch framework supports switch affinity scheduling 2.0.
@@ -142,7 +177,9 @@ Cross-switch scheduling is not allowed. Pods can only be deployed within a singl
 **Fault Rescheduling<a name="section1614032710011"></a>**
 
 When a fault occurs on the node or Ascend AI Processor where the job is running, the job undergoes fault‑triggered rescheduling. Before rescheduling, Pods on healthy nodes will be scheduled back to their original nodes to continue training, while Pods on faulty nodes will be relocated to new nodes. The rescheduling priority is as follows: first, other nodes under the exclusive switch that was used by the job before rescheduling; second, other nodes under the shared switch that was used by the job before rescheduling; and finally, nodes that were not used before rescheduling.
+<!-- end id10 -->
 
+<!-- npu="910b" id11 -->
 ## Single-Layer Switch Affinity Scheduling<a name="ZH-CN_TOPIC_0000002511346841"></a>
 
 **Usage Instructions<a name="section1320110477345"></a>**
@@ -155,7 +192,9 @@ When a fault occurs on the node or Ascend AI Processor where the job is running,
 **Fault Rescheduling<a name="section1980293903511"></a>**
 
 When a fault occurs on the node or Ascend AI processor where the job is located, the job will undergo fault rescheduling. Before rescheduling, the Pods on the normally running nodes will be scheduled to the original nodes again to continue training, and the Pods on the faulty nodes will be rescheduled to new nodes.
+<!-- end id11 -->
 
+<!-- npu="A3" id12 -->
 ## Logical SuperPoD Affinity Scheduling<a name="ZH-CN_TOPIC_0000002479386896"></a>
 
 **Usage Instructions<a name="section773381911315"></a>**
@@ -175,6 +214,7 @@ When a fault occurs on the node or Ascend AI processor where the job is located,
 - If no nodes in the logical SuperPoD have failed, the nodes under that logical SuperPoD must continue to be used during rescheduling.
 - If some nodes in the logical SuperPoD become faulty and unavailable, nodes are selected from the physical SuperPoD where they reside, while other nodes remain unchanged.
 - If the remaining nodes in the physical SuperPoD can no longer satisfy the logical SuperPoD requirements, all jobs on the logical SuperPoD are scheduled to other physical SuperPoDs.
+- Nodes that have only experienced software faults may still be used during rescheduling.
 - If the soft affinity feature is enabled (that is, the `super-pod-affinity` parameter is set to `soft`, which allows the job to continue being scheduled using fragmented resources in the cluster when cluster resources do not satisfy SuperPoD affinity), Pod-level rescheduling is not supported.
 
 **MindIE Service Inference Job Scheduling<a name="section243084619505"></a>**
@@ -188,7 +228,9 @@ For MindIE Service inference jobs, the following affinity scheduling policy is a
 
 - If `sp-fit` is set to `idlest`, the logical SuperPoD is scheduled to a more idle physical SuperPoD.
 - If `podAffinity` is set, the logical SuperPoD is scheduled to a physical SuperPoD with more affinity Pods.
+<!-- end id12 -->
 
+<!-- npu="950" id2 -->
 ## Logical Rack Affinity Scheduling<a name="ZH-CN_TOPIC_0000002479386897"></a>
 
 **Usage Instructions<a name="section_logic_frame_usage"></a>**
@@ -206,4 +248,6 @@ For MindIE Service inference jobs, the following affinity scheduling policy is a
 - If all nodes in the logical rack have no faults, the nodes under this logical rack must continue to be used during rescheduling.
 - If some nodes in the logical rack become faulty and unavailable, nodes are selected from the physical rack they belong to, while other nodes remain unchanged.
 - If the remaining nodes in the physical rack can no longer satisfy the logical rack requirements, all jobs on the logical rack are scheduled to other physical racks.
+- Nodes that have only experienced software faults may still be used during rescheduling.
 - If the soft affinity feature is enabled (that is, the `super-pod-affinity` parameter is set to `soft`, which allows the job to continue being scheduled using fragmented resources in the cluster when cluster resources do not satisfy SuperPoD affinity), Pod-level rescheduling is not supported.
+<!-- end id2 -->

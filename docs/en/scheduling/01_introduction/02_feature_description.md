@@ -17,6 +17,7 @@ Ascend Docker Runtime
 1. For component installation, see [Installation and Deployment](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md).
 2. For feature usage guidance, see [Containerization Feature Guide](../04_usage/00_containerization/00_before_you_start.md).
 
+<!-- npu="950,A3,910b,910,310p" id1 -->
 ## Resource Monitoring<a name="ZH-CN_TOPIC_0000002479386910"></a>
 
 **Feature Introduction<a name="section1788818281655"></a>**
@@ -26,25 +27,27 @@ NPU Resource Monitoring
 - Supports real-time monitoring of various data information of Ascend AI Processor resources while executing training or inference jobs. It can obtain in real time information such as Ascend AI Processor utilization, temperature, voltage, memory, and the allocation status of Ascend AI Processors in containers, thereby enabling real-time resource monitoring.
 - Supports reporting other metrics through custom plugins.
 
+<!-- npu="950" id2 -->
 DPU Resource Monitoring
 
-- Supports monitoring the running status and various statistics of the DPU, including DPU global metrics such as RoCE packet errors, packet loss, received ECN, sent/received CNP, and abnormal PSN retransmission, as well as interface-level metrics such as the link running status, send/receive traffic, and abnormal error status of each NIC port.
+Supports monitoring the running status and various statistics of the DPU, including DPU global metrics such as RoCE packet errors, packet loss, received ECN, sent/received CNP, and abnormal PSN retransmission, as well as interface-level metrics such as the link running status, send/receive traffic, and abnormal error status of each NIC port.
+<!-- end id2 -->
 
 **Required Components<a name="section15655185785119"></a>**
 
-Required component for NPU resource monitoring:
+Required component for NPU resource monitoring: NPU Exporter
 
-- NPU Exporter
-
-Required component for DPU resource monitoring:
-
-- DPU Exporter
+<!-- npu="950" id3 -->
+Required component for DPU resource monitoring: DPU Exporter
+<!-- end id3 -->
 
 **Usage Instructions<a name="section1245612501584"></a>**
 
 1. For component installation, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
 2. For feature usage guidance, see [Resource Monitoring Feature Guide](../04_usage/01_resource_monitoring/menu_resource_monitoring.md).
+<!-- end id1 -->
 
+<!-- npu="950,A3,910b,910,310p" id4 -->
 ## Fault Detection<a name="ZH-CN_TOPIC_FAULT_DETECTION"></a>
 
 **Feature Introduction<a name="section_fault_detection_features"></a>**
@@ -59,11 +62,16 @@ The required components vary by fault type. For details, see [Fault Detection Fe
 
 1. For component installation, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
 2. For feature usage guidance, see [Fault Detection Feature Guide](../04_usage/04_fault_detection_and_diagnosis/00_feature_description.md).
+<!-- end id4 -->
 
+<!-- npu="950,A3,910b,910,310p" id5 -->
 ## Virtual Instance<a name="ZH-CN_TOPIC_0000002511346855"></a>
 
+<!-- npu="A3,910b" id14 -->
 A virtual instance can divide one NPU into multiple parts and allocate them to different jobs. Based on the division method, virtual instances are classified into HDK-based virtual instances and vCANN-RT-based virtual instances.
+<!-- end id14 -->
 
+<!-- npu="A3,910b,910,310p" id13 -->
 ### HDK-Based Virtual Instance<a name="ZH-CN_TOPIC_0000002511346855hdk"></a>
 
 **Feature Introduction<a name="section1337420477275"></a>**
@@ -90,7 +98,9 @@ Required components for dynamic virtualization:
 
 - For installation, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
 - For feature usage instructions, see [HDK-Based Virtual Instance](../04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md).
+<!-- end id13 -->
 
+<!-- npu="950,A3,910b" id6 -->
 ### vCANN-RT-Based Virtual Instance<a name="ZH-CN_TOPIC_0000002511346855vcann"></a>
 
 **Feature Introduction<a name="section1337420477275vcann"></a>**
@@ -109,7 +119,10 @@ This feature based on vCANN-RT mounts NPUs (Ascend AI Processors) configured on 
 
 1. For installation components, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
 2. For feature usage instructions, see [vCANN-RT-Based Virtual Instance](../04_usage/02_virtual_instance/01_virtual_instance_with_vcann_rt/00_description.md).
+<!-- end id6 -->
+<!-- end id5 -->
 
+<!-- npu="950,A3,910b,910,310p" id7 -->
 ## Basic Scheduling<a name="ZH-CN_TOPIC_0000002511346871"></a>
 
 ### Full-NPU Scheduling<a name="ZH-CN_TOPIC_0000002479386926"></a>
@@ -141,6 +154,7 @@ With the Ascend Dynamic Resource Allocation component, you can request a whole N
 3. For usage examples of Preempt and Reclaim Action, see [Tidal Scheduling Best Practices](../04_usage/11_tidal_scheduling/00_before_you_start.md).
 4. For usage examples of DRA-based scheduling, see [DRA Scheduling Best Practices](../04_usage/13_ascend_dynamic_resource_allocation_best_practice/00_before_you_start.md).
 
+<!-- npu="A3" id8 -->
 ### Multi-Level Scheduling<a name="ZH-CN_TOPIC_0000002511346873"></a>
 
 **Feature Highlights<a name="section1788818281655"></a>**
@@ -160,31 +174,13 @@ Multi-level scheduling is an advanced scheduling strategy of the ascend-for-volc
 
 1. For installation components, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
 2. For feature usage guidance, see [Multi-level Scheduling](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md).
-
-### Chip Fault Recovery<a name="ZH-CN_TOPIC_0000002479226952"></a>
-
-**Feature Introduction<a name="section113779818313"></a>**
-
-When NPU resources managed by the cluster scheduling components fail, a hot reset is performed on the faulty resource (the corresponding NPU) to restore the NPU to health.
-
-**Required Components<a name="section143231032154719"></a>**
-
-- Volcano
-- Ascend Device Plugin
-- Ascend Docker Runtime
-- ClusterD
-- NodeD
-
-**Usage Instructions<a name="section74221327111220"></a>**
-
-1. For installation components, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
-2. For feature usage instructions, see [Chip Fault Recovery](../04_usage/05_fault_recovery/00_chip_fault_recovery.md).
+<!-- end id8 -->
 
 ### Rescheduling<a name="ZH-CN_TOPIC_0000002511346875"></a>
 
 **Feature Introduction<a name="section119259203315"></a>**
 
-After a fault occurs on an NPU resource managed by the cluster scheduling component, the cluster scheduling component isolates the faulty resource (the corresponding NPU) and automatically reschedules it.
+After a fault occurs on an NPU resource managed by the cluster scheduling components, the cluster scheduling components isolate the faulty resource (the corresponding NPU) and automatically reschedule it.
 
 **Required Components<a name="section15655185785119"></a>**
 
@@ -200,7 +196,24 @@ After a fault occurs on an NPU resource managed by the cluster scheduling compon
 
 1. For component installation, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
 2. For feature usage guidance, see [Rescheduling](../04_usage/03_basic_scheduling/05_rescheduling.md).
+<!-- end id7 -->
 
+## Chip Fault Recovery<a name="ZH-CN_TOPIC_0000002479226952"></a>
+
+**Features<a name="section113779818313"></a>**
+
+When a fault occurs on an NPU resource managed by the cluster scheduling components, a hot reset is performed on the faulty resource (the corresponding NPU) to restore the NPU to a healthy state.
+
+**Required Components<a name="section143231032154719"></a>**
+
+Ascend Device Plugin
+
+**Usage Instructions<a name="section74221327111220"></a>**
+
+1. For component installation, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
+2. For feature usage guidance, see [Chip Fault Recovery](../04_usage/05_fault_recovery/00_chip_fault_recovery.md).
+
+<!-- npu="950,A3,910b" id9 -->
 ## Resumable Training<a name="ZH-CN_TOPIC_0000002511346867"></a>
 
 **Feature Introduction<a name="section1788818281655"></a>**
@@ -233,7 +246,9 @@ When a fault occurs on a training job, resumable training relies on the fault ev
 3. TaskD must be installed inside the container. For details, see [Building an Image](../04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/01_pytorch_examples_and_verification.md#building-an-image).
 4. For a detailed introduction to MindIO ACP and its installation steps, see [Checkpoint Saving and Loading Optimization](../07_references/01_optimizing_saving_and_loading_checkpoints/01_product_description.md).
 5. For a detailed introduction to MindIO TFT and its installation steps, see [Fault Recovery Acceleration](../07_references/00_fault_recovery_acceleration/01_product_description.md).
+<!-- end id9 -->
 
+<!-- npu="950,A3,910b,910,310p" id10 -->
 ## Container Recovery<a name="ZH-CN_TOPIC_0000002492192948"></a>
 
 **Feature Introduction<a name="section1788818281655"></a>**
@@ -252,7 +267,9 @@ Container Manager
 
 1. For installation components, see [Installation and Deployment](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md).
 2. For feature usage instructions, see [Appliance Feature Guide](../04_usage/06_appliance/01_npu_hardware_fault_detection_and_rectification.md).
+<!-- end id10 -->
 
+<!-- npu="A3,910b" id11 -->
 ## Container Snapshot<a name="ZH-CN_TOPIC_0000002511346881"></a>
 
 **Feature Introduction<a name="section1788818281655"></a>**
@@ -272,7 +289,9 @@ This feature implements the container snapshot capability for inference services
 
 1. For installation components, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
 2. For feature usage guidance, see [Container Snapshot Deployment and Usage](../04_usage/10_infer_operator_best_practice/06_container_snapshot_usage.md).
+<!-- end id11 -->
 
+<!-- npu="A3,910b" id12 -->
 ## Inference High Availability<a name="ZH-CN_TOPIC_0000002511346885"></a>
 
 **Feature Introduction<a name="section2288818281659"></a>**
@@ -299,6 +318,7 @@ The inference high availability module provides best practices for inference job
 3. For MindIE CMotor inference job best practices (sunset), see [MindIE CMotor Inference Job Best Practices (Sunset)](../04_usage/07_mindie_motor_best_practice/00_before_you_start.md).
 4. For SGLang inference job best practices, see [SGLang Inference Job Best Practices](../04_usage/08_sglang_best_practice/00_before_you_start.md).
 5. For vLLM inference job best practices, see [vLLM Inference Job Best Practices](../04_usage/09_vllm_best_practice/00_before_you_start.md).
+<!-- end id12 -->
 
 ## ClusterOps Agent<a name="ZH-CN_TOPIC_0000002524312690"></a>
 

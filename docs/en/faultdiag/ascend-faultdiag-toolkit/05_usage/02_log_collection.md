@@ -50,8 +50,11 @@ The tool automatically runs the following commands on the server over SSH for co
 | RoCE speed | `hccn_tool -i {chip_phy_id} -speed -g` | RoCE speed |
 | RoCE duplex | `hccn_tool -i {chip_phy_id} -duplex -g` | RoCE duplex mode |
 
+<!-- npu="950" id1 -->
 The preceding commands are applicable to <term>Atlas A3 products</term>. For <term>Ascend 950PR&950DT products</term>, in addition to the above commands, optical module information and NIC SFP information are also additionally collected. For details, please refer to the table below.
+<!-- end id1 -->
 
+<!-- npu="950" id2 -->
 #### Collection Commands for <term>Ascend 950PR&950DT Products</term>
 
 | Category | Command | Purpose                                                    |
@@ -61,6 +64,7 @@ The preceding commands are applicable to <term>Atlas A3 products</term>. For <te
 | NIC list | `hinicadm5 info` | Names of all NICs                                         |
 | Number of NIC ports | `hinicadm5 info -i {card_name}` | Number of ports on the specified NIC                                             |
 | NIC SFP information | `hinicadm5 sfp -i {card_name} -p {port_id}` | SFP lane information for the specified port of the specified NIC (Bias/TxPower/RxPower/Los/Lol/SNR) |
+<!-- end id2 -->
 
 <a id="host-offline-log"></a>
 

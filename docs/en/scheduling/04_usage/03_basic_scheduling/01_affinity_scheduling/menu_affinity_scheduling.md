@@ -6,4 +6,6 @@
 - [Ascend AI Processor-Based Affinity](./03_ascend_ai_processor_based_affinity.md)
 - [Node-Based affinity](./04_node_based_affinity.md)
 - [Scheduling Algorithm of Ascend AI Processors](./05_scheduling_algorithm_of_ascend_ai_processor.md)
+<!-- npu="950,A3" id1 -->
 - [Inference Service Affinity Scheduling](./06_infer_affinity_scheduling.md)
+<!-- end id1 -->

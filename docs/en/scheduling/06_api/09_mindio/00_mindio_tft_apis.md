@@ -347,7 +347,7 @@ mindio_ttp.framework_ttp.tft_register_save_ckpt_handler(func: Callable, ctx = No
 |Name|Description|Value Requirements|
 |--|--|--|
 |step|The step corresponding to when the optimizer data is dumped.|Positive integer.|
-|save_info|The rank list when different optimizers participate in saving terminal last words, where each element is a dictionary, and the dictionaries are arranged in the index order of ATTENTION (0) and MOE (1).|[<br>{<br>"type": int,   # optimizer type <br>"ranks": list, # rank list of the corresponding optimizer participating in saving terminal last words<br>},<br>]|
+|save_info|The rank list when different optimizers participate in saving terminal dying gasps, where each element is a dictionary, and the dictionaries are arranged in the index order of ATTENTION (0) and MOE (1).|[<br>{<br>"type": int,   # optimizer type <br>"ranks": list, # rank list of the corresponding optimizer participating in saving terminal dying gasps<br>},<br>]|
 |args|The parameters configured by tft_set_step_args.|Determined by the registering party.|
 |ctx|Callback function context.|Determined by the registering party.|
 
@@ -802,7 +802,7 @@ A string.
 
 - retry: perform UCE repair.
 - recover: perform ARF repair.
-- dump: Execute terminal last words.
+- dump: Execute terminal dying gasps.
 - unknown: No repair type found.
 
 ## tft_is_reboot_node
