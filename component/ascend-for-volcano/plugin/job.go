@@ -986,9 +986,10 @@ func (sJob SchedulerJob) rejectWholeCardOnSoftShareNode(task *api.TaskInfo, node
 // rejectSuperPodNodeWithBackoffCards rejects a whole-node (super-pod) job's
 // candidate node at predicate time when the node still holds a card that is
 // withheld for the job. A super-pod occupies the entire node, so a single
-// silent-fault or pod-error card inside its tolerance window invalidates the
-// whole node; the chip-affinity handlers already withhold such cards per-card
-// for non-super-pod jobs, but super-pod jobs must be rejected up front.
+// sub-healthy, silent-fault or pod-error card inside its tolerance window
+// invalidates the whole node; the chip-affinity handlers already withhold such
+// cards per-card for non-super-pod jobs, but super-pod jobs must be rejected
+// up front.
 func (sJob SchedulerJob) rejectSuperPodNodeWithBackoffCards(node NPUNode) error {
 	if !sJob.IsSuperPodJob() || sJob.NPUJob == nil || sJob.NPUTaskNum == 1 {
 		return nil
@@ -1007,6 +1008,13 @@ func (sJob SchedulerJob) rejectSuperPodNodeWithBackoffCards(node NPUNode) error 
 		klog.V(util.LogDebugLev).Infof("super-pod job %s rejects node %s: silent-fault cards within tolerance",
 			sJob.Name, node.Name)
 		return fmt.Errorf("%s node<%s> has silent-fault card within tolerance for super-pod job",
+			util.NPUResourceUnavailableError, node.Name)
+	}
+	if !util.TimeGateAllows(sJob.ToleranceConfig.SubHealthyToleranceAfterTime, elapsed) &&
+		len(root.SubHealthChips(node.Name)) > 0 {
+		klog.V(util.LogDebugLev).Infof("super-pod job %s rejects node %s: sub-healthy cards within tolerance",
+			sJob.Name, node.Name)
+		return fmt.Errorf("%s node<%s> has sub-healthy card within tolerance for super-pod job",
 			util.NPUResourceUnavailableError, node.Name)
 	}
 	now := time.Now().Unix()

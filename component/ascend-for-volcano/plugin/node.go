@@ -194,8 +194,8 @@ func (sHandle *ScheduleHandler) NodePredicateOnVCNode(taskInfo *api.TaskInfo, vc
 	}
 
 	// Whole-node (super-pod) jobs occupy the entire node, so a single
-	// silent-fault or pod-error card still inside its tolerance window
-	// invalidates the node up front.
+	// sub-healthy, silent-fault or pod-error card still inside its tolerance
+	// window invalidates the node up front.
 	if err := vcJob.rejectSuperPodNodeWithBackoffCards(vcNode); err != nil {
 		klog.V(util.LogDebugLev).Infof("NodePredicateOnVCNode err: %v", err)
 		return err
