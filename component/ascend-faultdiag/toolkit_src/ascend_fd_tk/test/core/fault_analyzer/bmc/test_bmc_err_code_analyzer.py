@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright 2026 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +17,7 @@
 import unittest
 
 from ascend_fd_tk.core.fault_analyzer.bmc.bmc_err_code_analyzer import BmcErrCodeAnalyzer
+from ascend_fd_tk.core.fault_analyzer.bmc.bmc_err_code_config import _ERR_CODE_EVENT_LIST
 
 from .helpers import BMC_ID, build_bmc_info, build_cluster_info, build_sel_event
 
@@ -88,6 +88,23 @@ class TestBmcErrCodeAnalyzer(unittest.TestCase):
         self.assertEqual(results[1].domain.chip_phy_id, "")
         self.assertEqual(results[1].err_code, "0x56000009")
         self.assertIn("NPU 过热关机", results[1].fault_info)
+
+
+class TestBmcErrCodeAnalyzerAllCodes(unittest.TestCase):
+    """All configured BMC error codes and keyword variants."""
+
+    def test_all_configured_codes_are_recognized(self):
+        for event in _ERR_CODE_EVENT_LIST:
+            code_str = f"0x{event.err_code:08X}"
+            description = f"NPU1 {event.keywords}" if event.keywords else "NPU1 abnormal"
+            with self.subTest(code=code_str, keyword=event.keywords):
+                sel = build_sel_event(sel_id="1", event_code=code_str, event_description=description)
+                cluster_info = build_cluster_info(build_bmc_info(bmc_sel_list=[sel]))
+                results = BmcErrCodeAnalyzer(cluster_info).analyse()
+                self.assertEqual(len(results), 1)
+                self.assertEqual(results[0].err_code, code_str)
+                self.assertEqual(results[0].suggestion, event.handle_suggestion)
+                self.assertIn(event.err_desc, results[0].fault_info)
 
 
 if __name__ == "__main__":

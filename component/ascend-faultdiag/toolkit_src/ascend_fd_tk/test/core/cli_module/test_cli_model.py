@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright 2026 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,13 +24,17 @@ from unittest import mock
 from ascend_fd_tk.core.cli_module.base import CliCtx
 from ascend_fd_tk.core.cli_module.cli_model import (
     AboutCliModel,
+    AutoCollectCliModel,
+    AutoCollectDiagCliModel,
     AutoDiagCliModel,
     AutoInspection,
     AutoSingleDiagCliModel,
     ClearCacheCliModel,
     ClearCliModel,
+    CollectBmcDumpInfoLog,
     ExitCliModel,
     GenerateCsvPermissionErr,
+    GuideCliModel,
     HelpCliModel,
     SetBmcDumpLogDirCliModel,
     SetConfigDirCliModel,
@@ -139,6 +142,12 @@ class TestAutoCommands(_CliTestBase):
         ):
             self.assertIn("生成报告失败", model.run_task())
 
+    def test_auto_inspection_supported_customer(self):
+        model = AutoInspection(self.diag_ctx, self.cli_ctx)
+        with mock.patch("ascend_fd_tk.core.cli_module.cli_model.asyncio.run") as mock_run:
+            self.assertEqual(model.run_task("default"), "巡检完成")
+            mock_run.assert_called_once()
+
     def test_auto_single_diag(self):
         model = AutoSingleDiagCliModel(self.diag_ctx, self.cli_ctx)
         self.assertEqual(AutoSingleDiagCliModel.max_param_count(), 2)
@@ -164,8 +173,103 @@ class TestClearCache(_CliTestBase):
             self.assertEqual(model.run_task(), "清理完成")
             mock_rmtree.assert_not_called()
             mock_remove.assert_not_called()
+        with (
+            mock.patch("ascend_fd_tk.core.cli_module.cli_model.os.path.exists", return_value=True),
+            mock.patch("ascend_fd_tk.core.cli_module.cli_model.os.path.isfile", return_value=True),
+            mock.patch("ascend_fd_tk.core.cli_module.cli_model.shutil.rmtree") as mock_rmtree,
+            mock.patch("ascend_fd_tk.core.cli_module.cli_model.os.remove") as mock_remove,
+        ):
+            self.assertEqual(model.run_task(), "清理完成")
+            mock_rmtree.assert_called_once()
+            mock_remove.assert_called_once()
         with mock.patch("ascend_fd_tk.core.cli_module.cli_model.os.path.exists", side_effect=OSError("denied")):
             self.assertIn("异常", model.run_task())
+
+
+class TestGuideAndAutoCommands(_CliTestBase):
+    def test_guide_mentions_required_commands(self):
+        detail = GuideCliModel(self.diag_ctx, self.cli_ctx).run_task()
+        for command in (
+            "set_conn_config",
+            "set_host_dump_log",
+            "set_bmc_dump_log",
+            "set_switch_dump_log",
+            "auto_collect_diag",
+            "clear_cache",
+        ):
+            self.assertIn(command, detail)
+
+    def test_collect_bmc_dump_info(self):
+        model = CollectBmcDumpInfoLog(self.diag_ctx, self.cli_ctx)
+        with mock.patch("ascend_fd_tk.core.cli_module.cli_model.asyncio.run") as mock_run:
+            self.assertIn("收集完成", model.run_task())
+            mock_run.assert_called_once()
+
+    def test_auto_collect(self):
+        model = AutoCollectCliModel(self.diag_ctx, self.cli_ctx)
+        with mock.patch("ascend_fd_tk.core.cli_module.cli_model.asyncio.run") as mock_run:
+            self.assertIn("收集完成", model.run_task())
+            mock_run.assert_called_once()
+
+    def test_auto_collect_diag_runs_collect_and_diag(self):
+        model = AutoCollectDiagCliModel(self.diag_ctx, self.cli_ctx)
+        with mock.patch("ascend_fd_tk.core.cli_module.cli_model.asyncio.run") as mock_run:
+            self.assertEqual(model.run_task(), "诊断完成")
+            self.assertEqual(mock_run.call_count, 2)
+
+    def test_auto_collect_diag_report_permission_error(self):
+        model = AutoCollectDiagCliModel(self.diag_ctx, self.cli_ctx)
+        with mock.patch(
+            "ascend_fd_tk.core.cli_module.cli_model.asyncio.run", side_effect=GenerateCsvPermissionErr("occupied")
+        ):
+            self.assertIn("生成报告失败", model.run_task())
+
+
+class TestDumpLogDirValidation(_CliTestBase):
+    def _assert_invalid(self, model, path, expected):
+        self.assertIn(expected, model.run(path))
+
+    def test_empty_path(self):
+        for model in (
+            SetHostDumpLogDirCliModel(self.diag_ctx, self.cli_ctx),
+            SetBmcDumpLogDirCliModel(self.diag_ctx, self.cli_ctx),
+            SetSwiDumpLogDirCliModel(self.diag_ctx, self.cli_ctx),
+        ):
+            with self.subTest(model=model.get_key()):
+                self._assert_invalid(model, "", "为空")
+
+    def test_not_exist_path(self):
+        for model in (
+            SetHostDumpLogDirCliModel(self.diag_ctx, self.cli_ctx),
+            SetBmcDumpLogDirCliModel(self.diag_ctx, self.cli_ctx),
+            SetSwiDumpLogDirCliModel(self.diag_ctx, self.cli_ctx),
+        ):
+            with self.subTest(model=model.get_key()):
+                self._assert_invalid(model, "no_such_dump_dir_xyz", "不存在")
+
+    def test_path_is_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            file_path = os.path.join(tmp, "dump.txt")
+            with open(file_path, "w", encoding="utf-8") as file_stream:
+                file_stream.write("x")
+            for model in (
+                SetHostDumpLogDirCliModel(self.diag_ctx, self.cli_ctx),
+                SetBmcDumpLogDirCliModel(self.diag_ctx, self.cli_ctx),
+                SetSwiDumpLogDirCliModel(self.diag_ctx, self.cli_ctx),
+            ):
+                with self.subTest(model=model.get_key()):
+                    self._assert_invalid(model, file_path, "非文件夹")
+
+    def test_conn_config_accepts_file_and_reports_load_error(self):
+        model = SetConnConfigCliModel(self.diag_ctx, self.cli_ctx)
+        with tempfile.TemporaryDirectory() as tmp:
+            file_path = os.path.join(tmp, "conn.txt")
+            with open(file_path, "w", encoding="utf-8") as file_stream:
+                file_stream.write("[host]\n1.1.1.1 username=root\n")
+            self.diag_ctx.load_conn_config.return_value = ""
+            self.assertIn("设置成功", model.run_task(file_path))
+            self.diag_ctx.load_conn_config.return_value = "invalid content"
+            self.assertIn("invalid content", model.run_task(file_path))
 
 
 if __name__ == "__main__":

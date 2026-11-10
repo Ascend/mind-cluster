@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright 2026 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,6 +88,68 @@ private_key="/path/to/key"
 """
         conn_config = DeviceConfigParser(config).parse()
         self.assertEqual(len(conn_config.host_conn), 1)
+
+
+class TestDeviceConfigParserIpRange(unittest.TestCase):
+    """IP 段边界场景，对应 ascend-fd-tk sheet 日志采集/host/IP 段解析用例。"""
+
+    @staticmethod
+    def parse_host(line):
+        return DeviceConfigParser(f"[host]\n{line}\n").parse().host_conn
+
+    def test_step_greater_than_255(self):
+        conns = self.parse_host("1.1.1.1-1.1.2.1 username=root step=300")
+        self.assertEqual([conn.host for conn in conns], ["1.1.1.1"])
+
+    def test_step_greater_than_range_returns_first_ip(self):
+        conns = self.parse_host("1.1.1.1-1.1.1.5 username=root step=10")
+        self.assertEqual([conn.host for conn in conns], ["1.1.1.1"])
+
+    def test_end_ip_not_on_step_is_excluded(self):
+        conns = self.parse_host("1.1.1.1-1.1.1.6 username=root step=2")
+        self.assertEqual([conn.host for conn in conns], ["1.1.1.1", "1.1.1.3", "1.1.1.5"])
+
+    def test_step_with_invalid_character(self):
+        with self.assertRaises(ValueError) as context:
+            self.parse_host("1.1.1.1-1.1.1.5 username=root step=abc")
+        self.assertIn("step必须是整数", str(context.exception))
+
+    def test_step_zero(self):
+        with self.assertRaises(ValueError) as context:
+            self.parse_host("1.1.1.1-1.1.1.5 username=root step=0")
+        self.assertIn("step必须是正整数", str(context.exception))
+
+    def test_multiple_ranges_with_invalid_range(self):
+        config = """
+[host]
+1.1.1.1-1.1.1.2 username=root
+999.1.1.1-999.1.1.2 username=root
+"""
+        with self.assertRaises(ValueError):
+            DeviceConfigParser(config).parse()
+
+    def test_duplicate_ips_across_ranges_are_deduplicated(self):
+        config = """
+[host]
+1.1.1.1-1.1.1.3 username=root
+1.1.1.2-1.1.1.4 username=root
+"""
+        conns = DeviceConfigParser(config).parse().host_conn
+        self.assertEqual([conn.host for conn in conns], ["1.1.1.1", "1.1.1.2", "1.1.1.3", "1.1.1.4"])
+
+    def test_host_bmc_switch_tags_parse_independently(self):
+        config = """
+[host]
+1.1.1.1-1.1.1.2 username=root
+[bmc]
+2.2.2.1-2.2.2.2 username=admin
+[switch]
+3.3.3.1-3.3.3.2 username=root
+"""
+        conn_config = DeviceConfigParser(config).parse()
+        self.assertEqual([conn.host for conn in conn_config.host_conn], ["1.1.1.1", "1.1.1.2"])
+        self.assertEqual([conn.host for conn in conn_config.bmc_conn], ["2.2.2.1", "2.2.2.2"])
+        self.assertEqual([conn.host for conn in conn_config.switch_conn], ["3.3.3.1", "3.3.3.2"])
 
 
 if __name__ == "__main__":

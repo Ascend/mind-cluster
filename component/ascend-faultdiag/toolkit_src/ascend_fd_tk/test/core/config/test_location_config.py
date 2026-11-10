@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright 2026 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,9 +19,9 @@ from unittest.mock import MagicMock, patch
 
 from ascend_fd_tk.core.config.location_config import (
     HostLocationInfo,
-    SwitchLocationInfo,
-    LocationConfig,
     LldConfigReader,
+    LocationConfig,
+    SwitchLocationInfo,
 )
 
 
@@ -51,6 +50,9 @@ class TestLocationConfigFind(unittest.TestCase):
         self.assertEqual(c._find_switch_location("", "10.0.0.1", ""), ("机房Y", "柜Y"))
         self.assertEqual(c._find_switch_location("", "", "sw1"), ("机房Z", "柜Z"))
         self.assertEqual(c._find_switch_location("SW-SN", "10.0.0.1", "sw1"), ("机房X", "柜X"))  # SN优先
+        self.assertEqual(c._find_switch_location("", "10.0.0.1", "sw1"), ("机房Y", "柜Y"))  # IP优先于名称
+        self.assertEqual(c._find_switch_location("unknown", "unknown", "sw1"), ("机房Z", "柜Z"))
+        self.assertEqual(c._find_switch_location("unknown", "unknown", "unknown"), ("", ""))
 
     def test_enrich_host(self):
         c = LocationConfig()
@@ -92,6 +94,10 @@ class TestLldConfigReader(unittest.TestCase):
         config = LldConfigReader()._read(wb)
         self.assertIn("host1", config.host_name_location_map)
         self.assertIn("10.0.0.1", config.switch_ip_location_map)
+        self.assertEqual(config.host_name_location_map["host1"].room_name, "机房A")
+        self.assertEqual(config.host_name_location_map["host1"].cabinet_id, "柜1")
+        self.assertEqual(config.switch_ip_location_map["10.0.0.1"].room_name, "机房A")
+        self.assertEqual(config.switch_ip_location_map["10.0.0.1"].cabinet_id, "柜1")
 
     def test_read_l2_sheet(self):
         wb = MagicMock()
@@ -107,6 +113,10 @@ class TestLldConfigReader(unittest.TestCase):
         config = LldConfigReader()._read(wb)
         self.assertIn("L2-1", config.switch_name_location_map)
         self.assertIn("L2SN001", config.switch_sn_location_map)
+        self.assertEqual(config.switch_name_location_map["L2-1"].room_name, "机房C")
+        self.assertEqual(config.switch_name_location_map["L2-1"].cabinet_id, "柜3")
+        self.assertEqual(config.switch_sn_location_map["L2SN001"].room_name, "机房C")
+        self.assertEqual(config.switch_sn_location_map["L2SN001"].cabinet_id, "柜3")
 
     def test_file_not_exist(self):
         self.assertIsNone(LldConfigReader().read_from_dir("/nonexistent/path"))

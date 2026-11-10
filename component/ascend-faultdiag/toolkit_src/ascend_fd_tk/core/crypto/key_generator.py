@@ -42,11 +42,21 @@ class KeyGenerator:
         生成复杂密码
         参数:
             length: 密码长度
-            use_*: 使用的字符集
         """
         # 构建字符集
         charset = list(chain(*self.CHARSETS.values()))
-        password = []
+        required_charsets = [
+            self.CHARSETS['lower'],
+            self.CHARSETS['upper'],
+            self.CHARSETS['digits'],
+            self.CHARSETS['special'],
+        ]
+        if length < len(required_charsets):
+            # 长度不足以覆盖全部字符集时，直接从总字符集随机生成
+            return ''.join(secrets.choice(charset) for _ in range(length))
+
+        # 每个字符集至少取一个字符，保证密码复杂度
+        password = [secrets.choice(charset_item) for charset_item in required_charsets]
 
         # 填充剩余字符
         remaining = length - len(password)

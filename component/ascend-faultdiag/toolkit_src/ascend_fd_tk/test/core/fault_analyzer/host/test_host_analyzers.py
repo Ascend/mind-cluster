@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright 2026 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +28,7 @@ from ascend_fd_tk.core.fault_analyzer.host.host_op_los_lol_analyzer_a5 import Ho
 from ascend_fd_tk.core.fault_analyzer.host.host_op_status_analyzer import HostOpticalStatusAnalyzer
 from ascend_fd_tk.core.fault_analyzer.host.inter_host_analyzer import InterHostFaultAnalyzer
 from ascend_fd_tk.core.fault_analyzer.host.roce_port_analyzer import RocePortAnalyzer
+from ascend_fd_tk.core.log_parser.base import FindResult
 from ascend_fd_tk.core.model.diag_result import HostDomain
 
 
@@ -332,6 +332,87 @@ class TestHostAnalyzers(unittest.TestCase):
         host = SimpleNamespace(host_id="host-01", npu_chip_info={"0": chip})
         results = HostCreditAnalyzerA5(_cluster(host_info=host)).analyse()
         self.assertEqual(results, [])
+
+
+class TestHostAnalyzerIicAndUncorrCw(unittest.TestCase):
+    """IIC 通信故障与 uncorr_cw_cnt 超阈值场景。"""
+
+    @staticmethod
+    def _uncorr_info(device_id="4", die_id="0", count="11", date_time="2026-06-01-10:00:00.000.000"):
+        return FindResult(
+            pattern_key="uncorr_cw_cnt_check",
+            logline="",
+            log_path="",
+            info_dict={"device_id": device_id, "die_id": die_id, "count": count, "date_time": date_time},
+        )
+
+    def test_iic_error_reports_connected_chip(self):
+        analyzer = HostAnalyzer(_cluster())
+        host_info = MagicMock(host_id="host-01", msnpureport_log=object())
+        host_info.get_msn_logs_by_type.return_value = [SimpleNamespace(info_dict={"device_id": "4"})]
+        host_info.npu_chip_info = {"4": SimpleNamespace(npu_id="2")}
+
+        results = analyzer._analyze_iic_fault(host_info)
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].domain.npu_id, "2")
+        self.assertEqual(results[0].domain.chip_phy_id, "4")
+        self.assertIn("IIC异常", results[0].fault_info)
+        self.assertIn("更换", results[0].suggestion)
+
+    def test_iic_skipped_without_msnpureport_log(self):
+        analyzer = HostAnalyzer(_cluster())
+        host_info = MagicMock(host_id="host-01", msnpureport_log=None)
+        self.assertEqual(analyzer._analyze_iic_fault(host_info), [])
+
+    def test_uncorr_cw_three_times_within_24h_reports(self):
+        analyzer = HostAnalyzer(_cluster())
+        domain = HostDomain(host_id="host-01", npu_id="0", chip_phy_id="4")
+        chip = SimpleNamespace(chip_phy_id="4", chip_id="0")
+        infos = [
+            self._uncorr_info(date_time="2026-06-01-10:00:00.000.000"),
+            self._uncorr_info(date_time="2026-06-01-10:00:01.000.000"),
+            self._uncorr_info(date_time="2026-06-01-10:00:02.000.000"),
+        ]
+
+        results = analyzer._analyze_uncorr_cw_cnt_fault(domain, infos, chip)
+
+        self.assertEqual(len(results), 1)
+        self.assertIn("uncorr_cw_cnt > 10", results[0].fault_info)
+        self.assertIn("排查光纤", results[0].suggestion)
+
+    def test_uncorr_cw_beyond_24h_not_reported(self):
+        analyzer = HostAnalyzer(_cluster())
+        domain = HostDomain(host_id="host-01", npu_id="0", chip_phy_id="4")
+        chip = SimpleNamespace(chip_phy_id="4", chip_id="0")
+        infos = [
+            self._uncorr_info(date_time="2026-06-01-10:00:00.000.000"),
+            self._uncorr_info(date_time="2026-06-03-10:00:00.000.000"),
+            self._uncorr_info(date_time="2026-06-05-10:00:00.000.000"),
+        ]
+        self.assertEqual(analyzer._analyze_uncorr_cw_cnt_fault(domain, infos, chip), [])
+
+    def test_uncorr_cw_count_not_above_threshold_not_reported(self):
+        analyzer = HostAnalyzer(_cluster())
+        domain = HostDomain(host_id="host-01", npu_id="0", chip_phy_id="4")
+        chip = SimpleNamespace(chip_phy_id="4", chip_id="0")
+        infos = [
+            self._uncorr_info(count="10", date_time="2026-06-01-10:00:00.000.000"),
+            self._uncorr_info(count="10", date_time="2026-06-01-10:00:01.000.000"),
+            self._uncorr_info(count="10", date_time="2026-06-01-10:00:02.000.000"),
+        ]
+        self.assertEqual(analyzer._analyze_uncorr_cw_cnt_fault(domain, infos, chip), [])
+
+    def test_uncorr_cw_device_mismatch_not_reported(self):
+        analyzer = HostAnalyzer(_cluster())
+        domain = HostDomain(host_id="host-01", npu_id="0", chip_phy_id="4")
+        chip = SimpleNamespace(chip_phy_id="4", chip_id="0")
+        infos = [
+            self._uncorr_info(device_id="5", date_time="2026-06-01-10:00:00.000.000"),
+            self._uncorr_info(device_id="5", date_time="2026-06-01-10:00:01.000.000"),
+            self._uncorr_info(device_id="5", date_time="2026-06-01-10:00:02.000.000"),
+        ]
+        self.assertEqual(analyzer._analyze_uncorr_cw_cnt_fault(domain, infos, chip), [])
 
 
 if __name__ == "__main__":
