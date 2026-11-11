@@ -1,0 +1,8 @@
+/etc/libibverbs.d/hrn5.driver
+/usr/lib64/libibverbs/libhrn5-rdmav34.so
+/usr/lib64/libhrn5-rdmav34.so
+/usr/lib64/libhrn5.so
+/usr/lib64/libhrn5.so.1
+/usr/lib64/libibv_extend.so
+/usr/lib64/libibv_extend.so.4
+/usr/lib64/libibv_extend.so.4.2.0

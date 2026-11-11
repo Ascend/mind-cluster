@@ -136,6 +136,8 @@ function copy_file_output()
 
     /bin/cp -f scripts/base.list run_pkg
     /bin/cp -f scripts/ub_driver.list run_pkg
+    # Package the device table and all RDMA lists; select collections by device at container creation.
+    /bin/cp -f scripts/rdma_devices.conf scripts/rdma_*.list run_pkg
     /bin/cp -f scripts/base.list_A500 run_pkg
     /bin/cp -f scripts/base.list_A500A2 run_pkg
     /bin/cp -f scripts/base.list_A200 run_pkg
@@ -145,6 +147,7 @@ function copy_file_output()
     /bin/cp -f ${ROOT}/README.md run_pkg
     chmod 640 run_pkg/base.list* run_pkg/ub_driver.list run_pkg/README.md
     chmod 440 run_pkg/agreement.txt
+    chmod 440 run_pkg/rdma_devices.conf run_pkg/rdma_*.list
 
     /bin/cp -rf ${ROOT}/assets run_pkg
     chmod 750 run_pkg/assets
