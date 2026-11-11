@@ -316,13 +316,13 @@ func TestModifySpecFilePatch1(t *testing.T) {
 // TestModifySpecFilePatch2 tests the function modifySpecFile patch2
 func TestModifySpecFilePatch2(t *testing.T) {
 	convey.Convey("test modifySpecFile patch2", t, func() {
-		patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil).
-			ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
+		patches := gomonkey.ApplyFuncReturn(mindxcheckutils.CheckPath, nil).
+			ApplyFuncReturn(os.Stat, mockFileInfo{}, nil).
 			ApplyFuncReturn(os.OpenFile, &os.File{}, nil).
-			ApplyFuncReturn(io.ReadAll, []byte{}, nil).
-			ApplyMethodReturn(&os.File{}, "Truncate", nil).
-			ApplyMethodReturn(&os.File{}, "Seek", int64(0), nil).
-			ApplyFuncReturn(json.Unmarshal, nil)
+			ApplyFuncReturn(mindxcheckutils.CheckFileInfo, nil).
+			ApplyFuncReturn(io.ReadAll, []byte(`{"process":{"env":["ASCEND_RUNTIME_OPTIONS=VIRTUAL"]}}`), nil).
+			ApplyFuncReturn(loadConfig, &Config{InjectionMode: "legacy"}).
+			ApplyMethodReturn(&os.File{}, "Truncate", nil)
 		defer patches.Reset()
 		convey.Convey("05-check visible device error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(checkVisibleDevice, []int{}, testError)
@@ -335,15 +335,16 @@ func TestModifySpecFilePatch2(t *testing.T) {
 				ApplyFuncReturn(checkVisibleDevice, []int{0}, nil)
 			defer patch.Reset()
 			err := modifySpecFile("")
-			convey.So(err, convey.ShouldBeError)
+			convey.So(errors.Is(err, testError), convey.ShouldBeTrue)
 		})
 		patches.ApplyFuncReturn(addHook, nil)
 		convey.Convey("07-fail to add device, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(addDevice, testError).
+				ApplyFuncReturn(dcmi.GetMatchingNpuWorker, &dcmi.NpuV1Worker{}, nil).
 				ApplyFuncReturn(checkVisibleDevice, []int{0}, nil)
 			defer patch.Reset()
 			err := modifySpecFile("")
-			convey.So(err, convey.ShouldBeError)
+			convey.So(errors.Is(err, testError), convey.ShouldBeTrue)
 		})
 		patches.ApplyFuncReturn(checkVisibleDevice, []int{}, nil).
 			ApplyFunc(addAscendDockerEnv, func(spec *specs.Spec) {})
@@ -366,13 +367,13 @@ func TestModifySpecFilePatch2(t *testing.T) {
 // TestModifySpecFilePatch3 tests the function modifySpecFile patch3
 func TestModifySpecFilePatch3(t *testing.T) {
 	convey.Convey("test modifySpecFile patch3", t, func() {
-		patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil).
-			ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
+		patches := gomonkey.ApplyFuncReturn(mindxcheckutils.CheckPath, nil).
+			ApplyFuncReturn(os.Stat, mockFileInfo{}, nil).
 			ApplyFuncReturn(os.OpenFile, &os.File{}, nil).
-			ApplyFuncReturn(io.ReadAll, []byte{}, nil).
+			ApplyFuncReturn(mindxcheckutils.CheckFileInfo, nil).
+			ApplyFuncReturn(io.ReadAll, []byte(`{"process":{"env":[]}}`), nil).
+			ApplyFuncReturn(loadConfig, &Config{InjectionMode: "legacy"}).
 			ApplyMethodReturn(&os.File{}, "Truncate", nil).
-			ApplyMethodReturn(&os.File{}, "Seek", int64(0), nil).
-			ApplyFuncReturn(json.Unmarshal, nil).
 			ApplyFuncReturn(addHook, nil).
 			ApplyFuncReturn(checkVisibleDevice, []int{}, nil).
 			ApplyFunc(addAscendDockerEnv, func(spec *specs.Spec) {}).
@@ -760,42 +761,6 @@ func TestWriteSpecFile(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
-}
-
-func TestAddHookCase1(t *testing.T) {
-	var specArgs = &specs.Spec{}
-	stub := gomonkey.ApplyGlobalVar(&hookCliPath, ".")
-	defer stub.Reset()
-
-	err := addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, specArgs, &deviceList)
-	assert.NotNil(t, err)
-}
-
-// TestAddHookCase2 tests the function addHook
-func TestAddHookCase2(t *testing.T) {
-	var specArgs = &specs.Spec{}
-	stub := gomonkey.ApplyGlobalVar(&hookCliPath, ".")
-	defer stub.Reset()
-	stub.ApplyGlobalVar(&hookDefaultFile, ".")
-	err := addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, specArgs, &deviceList)
-	assert.NotNil(t, err)
-}
-
-// TestAddHookCase3 tests the function addHook
-func TestAddHookCase3(t *testing.T) {
-	file := "/usr/local/bin/ascend-docker-hook"
-	filenew := "/usr/local/bin/ascend-docker-hook-1"
-
-	if err := os.Rename(file, filenew); err != nil {
-		t.Log("rename ", file)
-	}
-	var specArgs = &specs.Spec{}
-	err := addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, specArgs, &deviceList)
-	assert.NotNil(t, err)
-
-	if err := os.Rename(filenew, file); err != nil {
-		t.Log("rename ", file)
-	}
 }
 
 // TestExecRunc tests the function execRunc
@@ -1605,118 +1570,94 @@ func TestAddDevicePatch1(t *testing.T) {
 	})
 }
 
-// TestAddHook tests the function addHook
-func TestAddHook(t *testing.T) {
-	patch := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
-		return nil, nil
-	})
-	defer patch.Reset()
-	patchRealFileCheck := gomonkey.ApplyFunc(mindxcheckutils.RealFileChecker, func(path string,
-		checkParent, allowLink bool, size int) (string, error) {
-		return "", nil
-	})
-	defer patchRealFileCheck.Reset()
-	tests := []struct {
-		name         string
-		spec         *specs.Spec
-		deviceIdList *[]int
-		wantErr      bool
+func TestAddHookReusesExistingPrestart(t *testing.T) {
+	patches := gomonkey.ApplyFuncReturn(os.Executable, "/usr/local/bin/ascend-docker-runtime", nil).
+		ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil)
+	defer patches.Reset()
+	for _, hooks := range []*specs.Hooks{nil, {Prestart: []specs.Hook{{Path: hookCli}}}} {
+		spec := &specs.Spec{Hooks: hooks, Process: &specs.Process{}}
+		assert.NoError(t, addHook(spec))
+		assert.NoError(t, addHook(spec))
+		assert.Len(t, spec.Hooks.Prestart, 1)
+	}
+}
+
+func TestAddHookExecutableAndFileFailures(t *testing.T) {
+	patches := gomonkey.ApplyFuncReturn(os.Executable, "", testError)
+	defer patches.Reset()
+	assert.Error(t, addHook(&specs.Spec{}))
+	patches.ApplyFuncReturn(os.Executable, "/usr/local/bin/ascend-docker-runtime", nil).
+		ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", testError)
+	assert.ErrorIs(t, addHook(&specs.Spec{}), testError)
+}
+
+func TestAddHookLimits(t *testing.T) {
+	patches := gomonkey.ApplyFuncReturn(os.Executable, "/usr/local/bin/ascend-docker-runtime", nil).
+		ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil)
+	defer patches.Reset()
+	for _, spec := range []*specs.Spec{
+		{Hooks: &specs.Hooks{Prestart: make([]specs.Hook, MaxCommandLength+1)}},
+		{Process: &specs.Process{Env: make([]string, MaxCommandLength+1)}},
+	} {
+		assert.Error(t, addHook(spec))
+	}
+}
+
+func TestProcessNPURequestVirtualModes(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		options     string
+		virtualID   int32
+		wantIDs     []int
+		wantCreates int
+		wantUpdates int
 	}{
-		{
-			name:         "success case 1",
-			deviceIdList: &[]int{0},
-			spec: &specs.Spec{
-				Process: &specs.Process{
-					Env: []string{ascendRuntimeOptions + "=VIRTUAL"},
-				},
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, tt.spec, tt.deviceIdList); (err != nil) != tt.wantErr {
-				t.Errorf("addHook() error = %v, wantErr %v", err, tt.wantErr)
-			}
+		{"static", "VIRTUAL", -1, []int{1}, 0, 0},
+		{"physical", "", -1, []int{1}, 1, 0},
+		{"dynamic", "", 7, []int{7}, 1, 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			creates, updates, injected := 0, 0, 0
+			patches := gomonkey.ApplyFuncReturn(dcmi.GetMatchingNpuWorker, &dcmi.NpuV1Worker{}, nil).
+				ApplyFunc(dcmi.CreateVDevice, func(_ dcmi.WorkerInterface, _ *specs.Spec, ids []int) (dcmi.VDeviceInfo, error) {
+					creates++
+					assert.Equal(t, []int{1}, ids)
+					return dcmi.VDeviceInfo{VdeviceID: tc.virtualID}, nil
+				}).ApplyFunc(updateEnvAndPostHook, func(*specs.Spec, dcmi.VDeviceInfo) error { updates++; return nil }).
+				ApplyFunc(addDevice, func(_ dcmi.WorkerInterface, _ *specs.Spec, ids []int) error {
+					injected++
+					assert.Equal(t, tc.wantIDs, ids)
+					return nil
+				})
+			defer patches.Reset()
+			spec := &specs.Spec{Process: &specs.Process{Env: []string{ascendRuntimeOptions + "=" + tc.options}}}
+			assert.NoError(t, processNPURequest(spec, []int{1}))
+			assert.Equal(t, tc.wantCreates, creates)
+			assert.Equal(t, tc.wantUpdates, updates)
+			assert.Equal(t, 1, injected)
 		})
 	}
 }
 
-// TestAddHookPatch1 tests the function addHook
-func TestAddHookPatch1(t *testing.T) {
-	convey.Convey("test addHook patch1", t, func() {
-		convey.Convey("01-deviceList is nil, should return nil", func() {
-			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &specs.Spec{}, nil), convey.ShouldBeNil)
-		})
-		testInstance := make([]int, 1)
-		convey.Convey("02-Executable error, should return error", func() {
-			patch := gomonkey.ApplyFuncReturn(os.Executable, testStr, testError)
-			defer patch.Reset()
-			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &specs.Spec{}, &testInstance), convey.ShouldBeError)
-		})
-		patches := gomonkey.ApplyFuncReturn(os.Executable, testStr, nil).
-			ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil)
-		defer patches.Reset()
-		convey.Convey("03-Stat error, should return error", func() {
-			patch := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, testError)
-			defer patch.Reset()
-			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &specs.Spec{}, &testInstance), convey.ShouldBeError)
-		})
-		patches.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
-		convey.Convey("04-over MaxCommandLength, should return error", func() {
-			testSp := specs.Spec{
-				Hooks: &specs.Hooks{
-					Prestart: make([]specs.Hook, MaxCommandLength+1),
-				},
+func TestProcessNPURequestFailures(t *testing.T) {
+	for _, stage := range []string{"worker", "create", "poststop", "inject"} {
+		t.Run(stage, func(t *testing.T) {
+			fail := func(name string) error {
+				if name == stage {
+					return testError
+				}
+				return nil
 			}
-			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testInstance), convey.ShouldBeError)
+			patches := gomonkey.ApplyFunc(dcmi.GetMatchingNpuWorker, func() (dcmi.WorkerInterface, error) {
+				return &dcmi.NpuV1Worker{}, fail("worker")
+			}).ApplyFunc(dcmi.CreateVDevice, func(dcmi.WorkerInterface, *specs.Spec, []int) (dcmi.VDeviceInfo, error) {
+				return dcmi.VDeviceInfo{VdeviceID: 7}, fail("create")
+			}).ApplyFunc(updateEnvAndPostHook, func(*specs.Spec, dcmi.VDeviceInfo) error { return fail("poststop") }).
+				ApplyFunc(addDevice, func(dcmi.WorkerInterface, *specs.Spec, []int) error { return fail("inject") })
+			defer patches.Reset()
+			assert.ErrorIs(t, processNPURequest(&specs.Spec{Process: &specs.Process{}}, []int{1}), testError)
 		})
-		convey.Convey("05-hook path contains hookCli, should return error", func() {
-			testSp := specs.Spec{
-				Hooks: &specs.Hooks{
-					Prestart: []specs.Hook{specs.Hook{
-						Path: hookCli,
-					}},
-				},
-				Process: &specs.Process{
-					Env: make([]string, MaxCommandLength+1),
-				},
-			}
-			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testInstance), convey.ShouldBeError)
-		})
-	})
-}
-
-// TestAddHookPatch2 tests the function addHook
-func TestAddHookPatch2(t *testing.T) {
-	convey.Convey("test addHook patch2", t, func() {
-		patches := gomonkey.ApplyFuncReturn(os.Executable, testStr, nil).
-			ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil).
-			ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
-		defer patches.Reset()
-		testInstance := make([]int, 1)
-		testSp := specs.Spec{
-			Hooks: &specs.Hooks{
-				Prestart: []specs.Hook{specs.Hook{
-					Path: hookCli,
-				}},
-			},
-			Process: &specs.Process{
-				Env: make([]string, 1),
-			},
-		}
-		convey.Convey("06-CreateVDevice error, return error", func() {
-			patch := gomonkey.ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{}, testError)
-			defer patch.Reset()
-			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testInstance), convey.ShouldBeError)
-		})
-		patches.ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{VdeviceID: 0}, nil)
-		convey.Convey("07-success, should return nil", func() {
-			patch := gomonkey.ApplyFuncReturn(updateEnvAndPostHook, nil)
-			defer patch.Reset()
-			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testInstance), convey.ShouldBeNil)
-		})
-	})
+	}
 }
 
 // TestParseAscendDevices tests the function parseAscendDevices
