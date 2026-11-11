@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -265,11 +264,14 @@ func (s *StatefulSetHandler) createService(
 	return nil
 }
 
-// DeleteExtraWorkLoad deletes statefulsets that exceed the specified index limit
+// DeleteExtraWorkLoad deletes the statefulsets that exceed the specified index limit.
+// Instances with a negative index are deleted first, then unready instances, then ready
+// instances, each group in descending index order, until the shrink count is reached.
+// Instances with a missing or illegal index label are kept.
 func (s *StatefulSetHandler) DeleteExtraWorkLoad(
 	ctx context.Context,
 	indexer common.InstanceIndexer, indexLimit int) error {
-	// 1. fetch workload
+	// 1. fetch workloads
 	selectLabels := make(map[string]string)
 	selectLabels = common.AddLabelsFromIndexer(selectLabels, indexer)
 	delete(selectLabels, common.InstanceIndexLabelKey)
@@ -278,31 +280,45 @@ func (s *StatefulSetHandler) DeleteExtraWorkLoad(
 		return err
 	}
 
-	// 2. delete workload if its instance-index >= indexLimit
-	for _, statefulset := range statefulsetList.Items {
-		instanceIndexStr, ok := statefulset.Labels[common.InstanceIndexLabelKey]
-		if !ok {
-			continue
+	// 2. select the indices to delete
+	workLoads := make([]WorkLoadInterface, 0, len(statefulsetList.Items))
+	indexedWorkLoads := make(map[int][]*StatefulSetWorkLoad, len(statefulsetList.Items))
+	for i := range statefulsetList.Items {
+		statefulset := &StatefulSetWorkLoad{&statefulsetList.Items[i]}
+		workLoads = append(workLoads, statefulset)
+		if index, ok := parseInstanceIndex(statefulset.GetWorkLoadObjMeta()); ok {
+			indexedWorkLoads[index] = append(indexedWorkLoads[index], statefulset)
 		}
-		instanceIndex, err := strconv.Atoi(instanceIndexStr)
-		if err != nil {
-			hwlog.RunLog.Warnf("StatefulSet<%s> Failed to convert instance index to int: %v",
-				statefulset.Name, instanceIndexStr)
-			// invalid workload, skip it
-			continue
-		}
-		if instanceIndex < indexLimit && instanceIndex >= 0 {
-			// normal range, keep it
-			continue
-		}
-		if err = s.client.Delete(ctx, &statefulset); err != nil {
-			hwlog.RunLog.Errorf("Failed to delete StatefulSet<%s>: %v", statefulset.Name, err)
-			return err
-		}
-		hwlog.RunLog.Infof("Delete Extra StatefulSet<%s>", statefulset.Name)
 	}
-	// 3. delete extra services
-	return s.deleteExtraService(ctx, selectLabels, indexer.Namespace, indexLimit)
+	deletedIndices := selectIndicesToDelete(workLoads, indexLimit)
+
+	// 3. delete the selected statefulsets in descending index order
+	for _, index := range deletedIndices {
+		for _, statefulset := range indexedWorkLoads[index] {
+			if index >= 0 && !statefulset.IsWorkLoadReady() {
+				hwlog.RunLog.Warnf("delete unready instance index<%d> of StatefulSet<%s> during scale-down, "+
+					"desiredReplicas=%d", index, statefulset.Name, statefulset.GetWorkLoadReplicas())
+			}
+			if err = s.client.Delete(ctx, statefulset.StatefulSet); err != nil {
+				hwlog.RunLog.Errorf("Failed to delete StatefulSet<%s>: %v", statefulset.Name, err)
+				return err
+			}
+			hwlog.RunLog.Infof("Delete Extra StatefulSet<%s>", statefulset.Name)
+		}
+		indexedWorkLoads[index] = nil
+	}
+
+	// 4. delete the services of the instances that no longer exist. The keep set is derived from
+	// the remaining workloads rather than from the current deletion set, so a service whose
+	// workload has already been deleted is retried on the next round, and orphan services without
+	// any workload are cleaned up as well.
+	keepIndices := make([]int, 0, len(indexedWorkLoads))
+	for index, workloads := range indexedWorkLoads {
+		if len(workloads) > 0 {
+			keepIndices = append(keepIndices, index)
+		}
+	}
+	return s.deleteServicesNotInIndices(ctx, selectLabels, indexer.Namespace, keepIndices)
 }
 
 // GetWorkLoadReadyReplicas returns the number of ready replicas of the statefulset
@@ -328,11 +344,15 @@ func (s *StatefulSetHandler) GetWorkLoadReadyReplicas(
 	return readyReplicas, nil
 }
 
-func (s *StatefulSetHandler) deleteExtraService(
+// deleteServicesNotInIndices deletes the services whose instance index is not in keepIndices.
+// The keep set comes from the workloads that survive this round, which makes the cleanup
+// retryable: a service whose workload was already deleted is still selected, and services
+// without any workload (orphans) are removed as well.
+func (s *StatefulSetHandler) deleteServicesNotInIndices(
 	ctx context.Context,
 	selectLabels map[string]string,
 	namespace string,
-	indexLimit int) error {
+	keepIndices []int) error {
 	// 1. fetch services
 	serviceList := &corev1.ServiceList{}
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
@@ -347,24 +367,20 @@ func (s *StatefulSetHandler) deleteExtraService(
 		hwlog.RunLog.Errorf("Failed to list extra services: %v", err)
 		return common.NewRequeueError(err.Error())
 	}
-	// 2. delete extra services
+	// 2. delete the services whose instance index is not in the keep set
+	keepIndexSet := make(map[int]struct{}, len(keepIndices))
+	for _, index := range keepIndices {
+		keepIndexSet[index] = struct{}{}
+	}
 	for _, service := range serviceList.Items {
-		instanceIndexStr, ok := service.Labels[common.InstanceIndexLabelKey]
+		index, ok := parseInstanceIndex(service.ObjectMeta)
 		if !ok {
 			continue
 		}
-		instanceIndex, err := strconv.Atoi(instanceIndexStr)
-		if err != nil {
-			hwlog.RunLog.Warnf("service<%s> Failed to convert instance index to int: %v",
-				service.Name, instanceIndexStr)
+		if _, keep := keepIndexSet[index]; keep {
 			continue
 		}
-		if instanceIndex < indexLimit && instanceIndex >= 0 {
-			// normal range, keep it
-			continue
-		}
-		err = s.client.Delete(ctx, &service)
-		if err != nil {
+		if err = s.client.Delete(ctx, &service); err != nil {
 			hwlog.RunLog.Errorf("Failed to delete Extra Service<%s>: %v", service.Name, err)
 			return common.NewRequeueError(err.Error())
 		}

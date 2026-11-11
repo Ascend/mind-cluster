@@ -19,11 +19,13 @@ package workload
 import (
 	"context"
 	"errors"
+	"sort"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
@@ -342,6 +344,62 @@ func TestWorkLoadReconcilerDeleteExtraInstances(t *testing.T) {
 			ctx := context.Background()
 			err = reconciler.DeleteExtraInstances(ctx, instanceSet, indexer)
 			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+// TestWorkLoadReconcilerGetInstanceIndices tests the GetInstanceIndices method of WorkLoadReconciler.
+func TestWorkLoadReconcilerGetInstanceIndices(t *testing.T) {
+	convey.Convey("Test WorkLoadReconciler GetInstanceIndices method", t, func() {
+		convey.Convey("Should include terminating instances and skip missing or invalid index labels", func() {
+			const ns = "default"
+			instanceSet := CreateTestInstanceSet("test-instance", ns, int32(4))
+
+			deploy0 := CreateTestDeployment("test-service-test-role-0", ns, 1)
+			deploy0.Labels[common.InstanceIndexLabelKey] = "0"
+			deploy2 := CreateTestDeployment("test-service-test-role-2", ns, 1)
+			deploy2.Labels[common.InstanceIndexLabelKey] = "2"
+			// Terminating instance: deletion timestamp set, but still listed and its index counted.
+			terminating := CreateTestDeployment("test-service-test-role-3", ns, 1)
+			terminating.Labels[common.InstanceIndexLabelKey] = "3"
+			deletionTime := metav1.Now()
+			terminating.DeletionTimestamp = &deletionTime
+			terminating.Finalizers = []string{"test/finalizer"}
+			// Skipped instances: missing or illegal index label.
+			noIndex := CreateTestDeployment("test-service-test-role-noidx", ns, 1)
+			delete(noIndex.Labels, common.InstanceIndexLabelKey)
+			invalidIndex := CreateTestDeployment("test-service-test-role-bad", ns, 1)
+			invalidIndex.Labels[common.InstanceIndexLabelKey] = "abc"
+
+			fakeClient := NewFakeClient(deploy0, deploy2, terminating, noIndex, invalidIndex).Build()
+			reconciler := NewWorkLoadReconciler(fakeClient)
+			gvk := schema.GroupVersionKind{
+				Group:   "apps",
+				Version: "v1",
+				Kind:    "Deployment",
+			}
+			workLoadHandlerFactory := NewWorkLoadHandlerFactory()
+			err := workLoadHandlerFactory.Register(gvk, NewDeploymentHandler(fakeClient))
+			convey.So(err, convey.ShouldBeNil)
+			reconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
+
+			indexer := GetTestIndexer("test-service", "test-role", "0")
+			ctx := context.Background()
+			indices, err := reconciler.GetInstanceIndices(ctx, instanceSet, indexer)
+			convey.So(err, convey.ShouldBeNil)
+			sort.Ints(indices)
+			convey.So(indices, convey.ShouldResemble, []int{0, 2, 3})
+		})
+
+		convey.Convey("Should return error when the workload handler is not registered", func() {
+			fakeClient := NewFakeClient().Build()
+			reconciler := NewWorkLoadReconciler(fakeClient)
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+			indexer := GetTestIndexer("test-service", "test-role", "0")
+			ctx := context.Background()
+			indices, err := reconciler.GetInstanceIndices(ctx, instanceSet, indexer)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(indices, convey.ShouldBeNil)
 		})
 	})
 }

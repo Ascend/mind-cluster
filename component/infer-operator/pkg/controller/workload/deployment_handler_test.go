@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -366,19 +367,67 @@ func TestDeploymentHandlerCreateService(t *testing.T) {
 
 // TestDeploymentHandlerDeleteExtraWorkLoad tests the DeleteExtraWorkLoad method of DeploymentHandler.
 func TestDeploymentHandlerDeleteExtraWorkLoad(t *testing.T) {
+	const ns = "default"
 	convey.Convey("Test DeploymentHandler DeleteExtraWorkLoad method", t, func() {
-		convey.Convey("Should successfully delete extra Deployments", func() {
-			extraDeployment := CreateTestDeployment("test-service-test-role-5", "default", 1)
-			extraDeployment.Labels[common.InstanceIndexLabelKey] = "5"
-			fakeClient := NewFakeClient().WithObjects(extraDeployment).Build()
-			handler := NewDeploymentHandler(fakeClient)
+		convey.Convey("Should delete illegal index first, then unready, then ready by descending index, and keep invalid", func() {
+			ready0 := CreateTestDeployment("test-service-test-role-0", ns, 1)
+			ready0.Labels[common.InstanceIndexLabelKey] = "0"
+			unready1 := CreateTestDeployment("test-service-test-role-1", ns, 1)
+			unready1.Labels[common.InstanceIndexLabelKey] = "1"
+			unready1.Status.ReadyReplicas = 0
+			ready2 := CreateTestDeployment("test-service-test-role-2", ns, 1)
+			ready2.Labels[common.InstanceIndexLabelKey] = "2"
+			ready3 := CreateTestDeployment("test-service-test-role-3", ns, 1)
+			ready3.Labels[common.InstanceIndexLabelKey] = "3"
+			purgeNeg := CreateTestDeployment("test-service-test-role-neg", ns, 1)
+			purgeNeg.Labels[common.InstanceIndexLabelKey] = "-1"
+			noIndex := CreateTestDeployment("test-service-test-role-noidx", ns, 1)
+			delete(noIndex.Labels, common.InstanceIndexLabelKey)
+			invalidIndex := CreateTestDeployment("test-service-test-role-bad", ns, 1)
+			invalidIndex.Labels[common.InstanceIndexLabelKey] = "abc"
+
+			svc0 := CreateTestServiceWithIndex("test-service-test-role-0", ns, "0")
+			svc1 := CreateTestServiceWithIndex("test-service-test-role-1", ns, "1")
+			svc2 := CreateTestServiceWithIndex("test-service-test-role-2", ns, "2")
+			svc3 := CreateTestServiceWithIndex("test-service-test-role-3", ns, "3")
+			svcNeg := CreateTestServiceWithIndex("test-service-test-role-neg", ns, "-1")
+			svcNoIdx := CreateTestServiceWithoutIndex("test-service-test-role-noidx", ns)
+
+			fc := NewFakeClient(ready0, unready1, ready2, ready3, purgeNeg, noIndex, invalidIndex,
+				svc0, svc1, svc2, svc3, svcNeg, svcNoIdx).Build()
+			handler := NewDeploymentHandler(fc)
 			indexer := GetTestIndexer("test-service", "test-role", "0")
 			ctx := context.Background()
-			patches2 := gomonkey.ApplyMethodReturn(handler.client, "Delete", nil)
-			defer patches2.Reset()
-			replicas := 3
-			err := handler.DeleteExtraWorkLoad(ctx, indexer, replicas)
+
+			existedDeploy := func(name string) bool {
+				return fc.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, &appsv1.Deployment{}) == nil
+			}
+			existedSvc := func(name string) bool {
+				return fc.Get(ctx, types.NamespacedName{Name: name, Namespace: ns}, &corev1.Service{}) == nil
+			}
+
+			// 7 listed workloads with indexLimit 5 => shrinkCount 2:
+			// delete index -1 (highest priority), then the unready index 1; the quota is then exhausted.
+			err := handler.DeleteExtraWorkLoad(ctx, indexer, 5)
 			convey.So(err, convey.ShouldBeNil)
+
+			// deleted indices in order: -1 (illegal), 1 (unready)
+			convey.So(existedDeploy("test-service-test-role-1"), convey.ShouldBeFalse)
+			convey.So(existedDeploy("test-service-test-role-neg"), convey.ShouldBeFalse)
+			// kept indices: 0, 2, 3 (ready ones are not reached) and workloads with missing / invalid label
+			convey.So(existedDeploy("test-service-test-role-0"), convey.ShouldBeTrue)
+			convey.So(existedDeploy("test-service-test-role-2"), convey.ShouldBeTrue)
+			convey.So(existedDeploy("test-service-test-role-3"), convey.ShouldBeTrue)
+			convey.So(existedDeploy("test-service-test-role-noidx"), convey.ShouldBeTrue)
+			convey.So(existedDeploy("test-service-test-role-bad"), convey.ShouldBeTrue)
+
+			// services of the deleted index set are removed together with their workloads
+			convey.So(existedSvc("test-service-test-role-1"), convey.ShouldBeFalse)
+			convey.So(existedSvc("test-service-test-role-neg"), convey.ShouldBeFalse)
+			convey.So(existedSvc("test-service-test-role-0"), convey.ShouldBeTrue)
+			convey.So(existedSvc("test-service-test-role-2"), convey.ShouldBeTrue)
+			convey.So(existedSvc("test-service-test-role-3"), convey.ShouldBeTrue)
+			convey.So(existedSvc("test-service-test-role-noidx"), convey.ShouldBeTrue)
 		})
 
 		convey.Convey("Should return error when listing Deployments fails", func() {
@@ -388,24 +437,23 @@ func TestDeploymentHandlerDeleteExtraWorkLoad(t *testing.T) {
 			patches := gomonkey.ApplyMethodReturn(handler.client, "List", mockErr)
 			defer patches.Reset()
 			ctx := context.Background()
-			replicas := 3
 			indexer := GetTestIndexer("test-service", "test-role", "0")
-			err := handler.DeleteExtraWorkLoad(ctx, indexer, replicas)
+			err := handler.DeleteExtraWorkLoad(ctx, indexer, 5)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 
 		convey.Convey("Should return error when deleting Deployment fails", func() {
-			extraDeployment := CreateTestDeployment("test-service-test-role-5", "default", 1)
-			extraDeployment.Labels[common.InstanceIndexLabelKey] = "5"
-			fakeClient := NewFakeClient().WithObjects(extraDeployment).Build()
+			readyDeployment := CreateTestDeployment("test-service-test-role-0", ns, 1)
+			readyDeployment.Labels[common.InstanceIndexLabelKey] = "0"
+			fakeClient := NewFakeClient().WithObjects(readyDeployment).Build()
 			handler := NewDeploymentHandler(fakeClient)
 			mockErr := errors.New("failed to delete deployment")
 			patches2 := gomonkey.ApplyMethodReturn(handler.client, "Delete", mockErr)
 			defer patches2.Reset()
 			ctx := context.Background()
-			replicas := 3
 			indexer := GetTestIndexer("test-service", "test-role", "0")
-			err := handler.DeleteExtraWorkLoad(ctx, indexer, replicas)
+			// indexLimit 0 with one workload => shrinkCount 1, index 0 is selected and its deletion fails
+			err := handler.DeleteExtraWorkLoad(ctx, indexer, 0)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
@@ -1182,13 +1230,12 @@ func getTestDeploymentSpec() *appsv1.DeploymentSpec {
 	}
 }
 
-// TestDeploymentHandlerDeleteExtraService tests the deleteExtraService method of DeploymentHandler.
-func TestDeploymentHandlerDeleteExtraService(t *testing.T) {
+// TestDeploymentHandlerDeleteServicesNotInIndices tests the deleteServicesNotInIndices method of DeploymentHandler.
+func TestDeploymentHandlerDeleteServicesNotInIndices(t *testing.T) {
 	const (
 		ns         = "default"
 		svcName    = "test-service"
 		instSetKey = "test-role"
-		idxLimit   = 3
 		extraIdx   = "5"
 		negIdx     = "-1"
 		normalIdx  = "0"
@@ -1198,21 +1245,29 @@ func TestDeploymentHandlerDeleteExtraService(t *testing.T) {
 		common.InferServiceNameLabelKey: svcName,
 		common.InstanceSetNameLabelKey:  instSetKey,
 	}
+	keepIndices := []int{0}
 	testCases := []struct {
-		name     string
-		services []*corev1.Service
+		name       string
+		services   []*corev1.Service
+		shouldKeep []string
+		shouldGone []string
 	}{
 		{name: "should return nil when no services exist"},
-		{name: "should delete service when index exceeds limit",
-			services: []*corev1.Service{CreateTestServiceWithIndex("svc-extra", ns, extraIdx)}},
-		{name: "should delete service when index is negative",
-			services: []*corev1.Service{CreateTestServiceWithIndex("svc-neg", ns, negIdx)}},
-		{name: "should keep service when index in normal range",
-			services: []*corev1.Service{CreateTestServiceWithIndex("svc-normal", ns, normalIdx)}},
+		{name: "should delete service when index is not in the keep set",
+			services:   []*corev1.Service{CreateTestServiceWithIndex("svc-extra", ns, extraIdx)},
+			shouldGone: []string{"svc-extra"}},
+		{name: "should delete service when index is negative and not in the keep set",
+			services:   []*corev1.Service{CreateTestServiceWithIndex("svc-neg", ns, negIdx)},
+			shouldGone: []string{"svc-neg"}},
+		{name: "should keep service when index is in the keep set",
+			services:   []*corev1.Service{CreateTestServiceWithIndex("svc-normal", ns, normalIdx)},
+			shouldKeep: []string{"svc-normal"}},
 		{name: "should skip service when index label is missing",
-			services: []*corev1.Service{CreateTestServiceWithoutIndex("svc-noidx", ns)}},
+			services:   []*corev1.Service{CreateTestServiceWithoutIndex("svc-noidx", ns)},
+			shouldKeep: []string{"svc-noidx"}},
 		{name: "should skip service when index is invalid integer",
-			services: []*corev1.Service{CreateTestServiceWithIndex("svc-invalid", ns, invalidIdx)}},
+			services:   []*corev1.Service{CreateTestServiceWithIndex("svc-invalid", ns, invalidIdx)},
+			shouldKeep: []string{"svc-invalid"}},
 	}
 	for _, tc := range testCases {
 		convey.Convey(tc.name, t, func() {
@@ -1222,25 +1277,39 @@ func TestDeploymentHandlerDeleteExtraService(t *testing.T) {
 			}
 			fc := NewFakeClient(objs...).Build()
 			handler := NewDeploymentHandler(fc)
-			err := handler.deleteExtraService(context.Background(), selectLabels, ns, idxLimit)
+			err := handler.deleteServicesNotInIndices(context.Background(), selectLabels, ns, keepIndices)
 			convey.So(err, convey.ShouldBeNil)
+
+			remaining := &corev1.ServiceList{}
+			getErr := fc.List(context.Background(), remaining)
+			convey.So(getErr, convey.ShouldBeNil)
+			remainNames := make(map[string]bool, len(remaining.Items))
+			for i := range remaining.Items {
+				remainNames[remaining.Items[i].Name] = true
+			}
+			for _, name := range tc.shouldKeep {
+				convey.So(remainNames[name], convey.ShouldBeTrue)
+			}
+			for _, name := range tc.shouldGone {
+				convey.So(remainNames[name], convey.ShouldBeFalse)
+			}
 		})
 	}
 }
 
-// TestDeploymentHandlerDeleteExtraServiceError tests deleteExtraService error cases.
-func TestDeploymentHandlerDeleteExtraServiceError(t *testing.T) {
+// TestDeploymentHandlerDeleteServicesNotInIndicesError tests deleteServicesNotInIndices error cases.
+func TestDeploymentHandlerDeleteServicesNotInIndicesError(t *testing.T) {
 	const (
 		ns         = "default"
 		svcName    = "test-service"
 		instSetKey = "test-role"
-		idxLimit   = 3
 		extraIdx   = "5"
 	)
 	selectLabels := map[string]string{
 		common.InferServiceNameLabelKey: svcName,
 		common.InstanceSetNameLabelKey:  instSetKey,
 	}
+	keepIndices := []int{0}
 	testCases := []struct {
 		name      string
 		services  []*corev1.Service
@@ -1269,8 +1338,187 @@ func TestDeploymentHandlerDeleteExtraServiceError(t *testing.T) {
 				patches := gomonkey.ApplyMethodReturn(fc, "Delete", tc.deleteErr)
 				defer patches.Reset()
 			}
-			err := handler.deleteExtraService(context.Background(), selectLabels, ns, idxLimit)
+			err := handler.deleteServicesNotInIndices(context.Background(), selectLabels, ns, keepIndices)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
+	}
+}
+
+// legacyDeletedIndices mirrors the pre-refactor deletion set: every instance whose index is
+// negative or not below indexLimit is deleted. The result is returned in descending order,
+// matching selectIndicesToDelete, so the two can be compared element by element.
+func legacyDeletedIndices(indices []int, indexLimit int) []int {
+	deleted := make([]int, 0, len(indices))
+	for _, index := range indices {
+		if index < 0 || index >= indexLimit {
+			deleted = append(deleted, index)
+		}
+	}
+	slices.SortFunc(deleted, func(a, b int) int { return b - a })
+	return deleted
+}
+
+// indicesNotInSet returns the elements of all that are absent from a set, in descending order.
+func indicesNotInSet(all []int, present map[int]struct{}) []int {
+	missing := make([]int, 0, len(all))
+	for _, index := range all {
+		if _, ok := present[index]; !ok {
+			missing = append(missing, index)
+		}
+	}
+	slices.SortFunc(missing, func(a, b int) int { return b - a })
+	return missing
+}
+
+// TestDFxC01AllReadyDeleteSetMatchesLegacy reproduces design §9.2.3 TC-DFx-C01: with a
+// contiguous all-ready instance set the refactored selection must be bit-for-bit identical
+// to the legacy rule (delete index<0 or index>=indexLimit), both on the pure function and
+// end to end through DeleteExtraWorkLoad on Deployments.
+func TestDFxC01AllReadyDeleteSetMatchesLegacy(t *testing.T) {
+	const (
+		ns         = "default"
+		indexLimit = 5
+	)
+	allIndices := []int{0, 1, 2, 3, 4, 5, 6, 7}
+	wantDeleted := legacyDeletedIndices(allIndices, indexLimit) // 8->5 => {7,6,5}
+
+	// 1. pure function: contiguous all-ready workloads degrade to the highest indices.
+	workloads := make([]WorkLoadInterface, 0, len(allIndices))
+	for _, index := range allIndices {
+		workloads = append(workloads, readyWorkLoad(fmt.Sprintf("%d", index)))
+	}
+	gotIndices := selectIndicesToDelete(workloads, indexLimit)
+	if !slices.Equal(gotIndices, wantDeleted) {
+		t.Fatalf("selectIndicesToDelete() = %v, legacy = %v", gotIndices, wantDeleted)
+	}
+
+	// 2. handler level: the deleted Deployment indices match the legacy expectation.
+	objs := make([]runtime.Object, 0, len(allIndices)*2)
+	for _, index := range allIndices {
+		name := fmt.Sprintf("test-service-test-role-%d", index)
+		deploy := CreateTestDeployment(name, ns, 1)
+		deploy.Labels[common.InstanceIndexLabelKey] = fmt.Sprintf("%d", index)
+		objs = append(objs, deploy, CreateTestServiceWithIndex(name, ns, fmt.Sprintf("%d", index)))
+	}
+	fc := NewFakeClient(objs...).Build()
+	handler := NewDeploymentHandler(fc)
+	indexer := GetTestIndexer("test-service", "test-role", "0")
+	if err := handler.DeleteExtraWorkLoad(context.Background(), indexer, indexLimit); err != nil {
+		t.Fatal(err)
+	}
+
+	deletedIndices := make([]int, 0, len(allIndices))
+	for _, index := range allIndices {
+		name := fmt.Sprintf("test-service-test-role-%d", index)
+		if err := fc.Get(context.Background(),
+			types.NamespacedName{Name: name, Namespace: ns}, &appsv1.Deployment{}); err != nil {
+			deletedIndices = append(deletedIndices, index)
+		}
+	}
+	slices.SortFunc(deletedIndices, func(a, b int) int { return b - a })
+	if !slices.Equal(deletedIndices, wantDeleted) {
+		t.Fatalf("deleted Deployment indices = %v, legacy = %v", deletedIndices, wantDeleted)
+	}
+	if len(deletedIndices) == 0 {
+		t.Fatal("fixture deleted no Deployment, the assertion would be vacuous")
+	}
+}
+
+// TestDFxC02ServiceAndWorkloadDeleteSetsAgree reproduces design §9.2.3 TC-DFx-C02: the
+// Service cleanup must keep exactly the same instance-index set as the workload deletion.
+func TestDFxC02ServiceAndWorkloadDeleteSetsAgree(t *testing.T) {
+	const (
+		ns         = "default"
+		indexLimit = 5
+	)
+	allIndices := []int{0, 1, 2, 3, 4, 5, 6, 7}
+
+	objs := make([]runtime.Object, 0, len(allIndices)*2)
+	for _, index := range allIndices {
+		label := fmt.Sprintf("%d", index)
+		name := fmt.Sprintf("test-service-test-role-%d", index)
+		deploy := CreateTestDeployment(name, ns, 1)
+		deploy.Labels[common.InstanceIndexLabelKey] = label
+		objs = append(objs, deploy, CreateTestServiceWithIndex(name, ns, label))
+	}
+	fc := NewFakeClient(objs...).Build()
+	handler := NewDeploymentHandler(fc)
+	indexer := GetTestIndexer("test-service", "test-role", "0")
+	if err := handler.DeleteExtraWorkLoad(context.Background(), indexer, indexLimit); err != nil {
+		t.Fatal(err)
+	}
+
+	remainingDeploy := make(map[int]struct{})
+	deployList := &appsv1.DeploymentList{}
+	if err := fc.List(context.Background(), deployList); err != nil {
+		t.Fatal(err)
+	}
+	for i := range deployList.Items {
+		if index, ok := parseInstanceIndex(deployList.Items[i].ObjectMeta); ok {
+			remainingDeploy[index] = struct{}{}
+		}
+	}
+
+	remainingService := make(map[int]struct{})
+	serviceList := &corev1.ServiceList{}
+	if err := fc.List(context.Background(), serviceList); err != nil {
+		t.Fatal(err)
+	}
+	for i := range serviceList.Items {
+		if index, ok := parseInstanceIndex(serviceList.Items[i].ObjectMeta); ok {
+			remainingService[index] = struct{}{}
+		}
+	}
+
+	deletedDeploy := indicesNotInSet(allIndices, remainingDeploy)
+	deletedService := indicesNotInSet(allIndices, remainingService)
+	if !slices.Equal(deletedDeploy, deletedService) {
+		t.Fatalf("deleted workload indices = %v, deleted Service indices = %v", deletedDeploy, deletedService)
+	}
+	if len(deletedDeploy) != len(allIndices)-indexLimit {
+		t.Fatalf("deleted %d instances, want %d", len(deletedDeploy), len(allIndices)-indexLimit)
+	}
+}
+
+// TestDeploymentHandlerDeleteServicesCleansOrphanService covers the review finding: when the
+// workload of a deleted instance is already gone, its leftover Service must still be cleaned up
+// on a later round, and the Service of a surviving instance above indexLimit must be kept.
+func TestDeploymentHandlerDeleteServicesCleansOrphanService(t *testing.T) {
+	const (
+		ns         = "default"
+		indexLimit = 4
+	)
+	// The workloads now number exactly indexLimit, so this round selects nothing to delete: index 2
+	// was deleted as unready in a previous round and only its Service is left behind. index 4
+	// survives even though 4 >= indexLimit, so its Service must not be deleted by the boundary rule.
+	remaining := []int{0, 1, 3, 4}
+	objs := make([]runtime.Object, 0, len(remaining)*2+1)
+	for _, index := range remaining {
+		label := fmt.Sprintf("%d", index)
+		name := fmt.Sprintf("test-service-test-role-%d", index)
+		deploy := CreateTestDeployment(name, ns, 1)
+		deploy.Labels[common.InstanceIndexLabelKey] = label
+		objs = append(objs, deploy, CreateTestServiceWithIndex(name, ns, label))
+	}
+	// orphan Service: its workload was already deleted in a previous round.
+	objs = append(objs, CreateTestServiceWithIndex("orphan-svc", ns, "2"))
+
+	fc := NewFakeClient(objs...).Build()
+	handler := NewDeploymentHandler(fc)
+	indexer := GetTestIndexer("test-service", "test-role", "0")
+	if err := handler.DeleteExtraWorkLoad(context.Background(), indexer, indexLimit); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := fc.Get(context.Background(),
+		types.NamespacedName{Name: "orphan-svc", Namespace: ns}, &corev1.Service{}); err == nil {
+		t.Fatal("orphan Service was not cleaned up")
+	}
+	for _, index := range remaining {
+		name := fmt.Sprintf("test-service-test-role-%d", index)
+		if err := fc.Get(context.Background(),
+			types.NamespacedName{Name: name, Namespace: ns}, &corev1.Service{}); err != nil {
+			t.Fatalf("Service of surviving instance %d was deleted: %v", index, err)
+		}
 	}
 }
