@@ -39,10 +39,17 @@ func validatePending() {
 				ev.JobID, ev.FailNode, ev.Timestamp)
 			continue
 		}
-		// check whether a hardware fault exists within O seconds before/after (rule 3); the hardware fault log stores milliseconds, so convert the window
-		if faultHardwareLog.HasFaultIn(ev.FailNode, (ev.Timestamp-hwWindowSeconds)*ms, (ev.Timestamp+hwWindowSeconds)*ms) {
+		// check whether a hardware fault exists within O seconds before/after (rule 3); the hardware fault log stores milliseconds, so convert the window.
+		// DPU faults are counted only when the job requested DPU on the failed node; the DPU fault log is kept separate for this reason.
+		start := (ev.Timestamp - hwWindowSeconds) * ms
+		end := (ev.Timestamp + hwWindowSeconds) * ms
+		hasFault := faultHardwareLog.HasFaultIn(ev.FailNode, start, end)
+		if ev.UseDPU && !hasFault {
+			hasFault = dpuFaultHardwareLog.HasFaultIn(ev.FailNode, start, end)
+		}
+		if hasFault {
 			hwlog.RunLog.Infof("skip silent fault record: job %s node %s ts %d has hardware fault in window [%d, %d]",
-				ev.JobID, ev.FailNode, ev.Timestamp, (ev.Timestamp-hwWindowSeconds)*ms, (ev.Timestamp+hwWindowSeconds)*ms)
+				ev.JobID, ev.FailNode, ev.Timestamp, start, end)
 			continue
 		}
 		// no fault -> dispatch to the first-error node recording module (stage 2)

@@ -27,6 +27,7 @@ type PendingEvent struct {
 	FailNode  string   // first-error node (the faulty node of this pod-failed event)
 	TaskNodes []string // all nodes occupied by the job when the event occurred (PreServerList snapshot, including FailNode)
 	Timestamp int64    // reschedule occurrence time (seconds)
+	UseDPU    bool     // whether the job requested DPU, so DPU faults also count as hardware evidence
 }
 
 // FirstFaultEvent stage-2 node-level event (first error / non-first error)

@@ -24,6 +24,7 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/conf"
 	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/silentfault"
 	"clusterd/pkg/interface/kube"
 )
@@ -69,6 +70,51 @@ func TestIsWholeNodeJob(t *testing.T) {
 			{ServerName: "n2", PodName: "p2", DeviceList: []constant.Device{{}}},
 		}}
 		convey.So(isWholeNodeJob(ji4, "p1"), convey.ShouldBeFalse)
+	})
+}
+
+func TestJobUsesDpuOnNode(t *testing.T) {
+	convey.Convey("job uses dpu on node", t, func() {
+		convey.Convey("node nil returns false", func() {
+			p := gomonkey.ApplyFunc(kube.GetNode, func(string) *v1.Node { return nil })
+			defer p.Reset()
+			convey.So(jobUsesDpu("j1", "n1"), convey.ShouldBeFalse)
+		})
+		convey.Convey("node without dpu annotation returns false", func() {
+			p := gomonkey.ApplyFunc(kube.GetNode, func(string) *v1.Node { return &v1.Node{} })
+			defer p.Reset()
+			convey.So(jobUsesDpu("j1", "n1"), convey.ShouldBeFalse)
+		})
+		convey.Convey("any pod requesting dpu resource returns true even on other node or partial count", func() {
+			p := gomonkey.ApplyFunc(kube.GetNode, func(string) *v1.Node {
+				node := &v1.Node{}
+				node.Annotations = map[string]string{constant.DpuResourceNameKey: "huawei.com/ub_rdma"}
+				return node
+			})
+			defer p.Reset()
+			p2 := gomonkey.ApplyFunc(pod.GetSimplePodByJobId, func(string) map[string]*constant.SimplePodInfo {
+				return map[string]*constant.SimplePodInfo{
+					"pod1": {NodeName: "n2", ResourceRequests: map[string]int64{"huawei.com/ub_rdma": 1}},
+				}
+			})
+			defer p2.Reset()
+			convey.So(jobUsesDpu("j1", "n1"), convey.ShouldBeTrue)
+		})
+		convey.Convey("no pod requesting dpu resource returns false", func() {
+			p := gomonkey.ApplyFunc(kube.GetNode, func(string) *v1.Node {
+				node := &v1.Node{}
+				node.Annotations = map[string]string{constant.DpuResourceNameKey: "huawei.com/ub_rdma"}
+				return node
+			})
+			defer p.Reset()
+			p2 := gomonkey.ApplyFunc(pod.GetSimplePodByJobId, func(string) map[string]*constant.SimplePodInfo {
+				return map[string]*constant.SimplePodInfo{
+					"pod1": {NodeName: "n1", ResourceRequests: map[string]int64{"npu.huawei.com/NPU": 8}},
+				}
+			})
+			defer p2.Reset()
+			convey.So(jobUsesDpu("j1", "n1"), convey.ShouldBeFalse)
+		})
 	})
 }
 

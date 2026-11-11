@@ -12,7 +12,7 @@ data:
     release:
       fault_free_hours: 48
   silent_fault_policy.conf: |
-    enabled: false
+    enabled: true
     detect:
       min_task_cards: 16
       consecutive_times: 3

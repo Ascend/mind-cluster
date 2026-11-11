@@ -91,7 +91,7 @@ func loadManualConfig(cm *v1.ConfigMap) {
 func loadSilentConfig(cm *v1.ConfigMap) {
 	changed := false
 	if data, ok := cm.Data[constant.SilentFaultConfigKey]; ok {
-		var sp conf.SilentFaultPolicy
+		sp := conf.SilentFaultPolicy{Enabled: conf.DefaultSilentFaultEnabled}
 		if err := yaml.Unmarshal([]byte(data), &sp); err != nil {
 			hwlog.RunLog.Errorf("unmarshal silent fault policy failed: %v", err)
 		} else {
