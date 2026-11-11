@@ -36,6 +36,7 @@ import (
 	"ascend-common/cdi"
 	cdimount "ascend-common/cdi/mount"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/parser"
 	"ascend-docker-runtime/mindxcheckutils"
 	"ascend-docker-runtime/runtime/common"
 	"ascend-docker-runtime/runtime/dcmi"
@@ -356,10 +357,8 @@ func addDPMountsToSpec(spec *specs.Spec) {
 	}
 }
 
-func addHook(w dcmi.WorkerInterface, spec *specs.Spec, deviceIdList *[]int) error {
-	if deviceIdList == nil {
-		return nil
-	}
+// addHook registers the prestart hook without initializing NPU/DCMI.
+func addHook(spec *specs.Spec) error {
 	currentExecPath, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("cannot get the path of docker-runtime: %v", err)
@@ -369,10 +368,6 @@ func addHook(w dcmi.WorkerInterface, spec *specs.Spec, deviceIdList *[]int) erro
 	if _, err := mindxcheckutils.RealFileChecker(hookCliPath, true, false, mindxcheckutils.DefaultSize); err != nil {
 		return err
 	}
-	if _, err = os.Stat(hookCliPath); err != nil {
-		return fmt.Errorf("cannot find docker-hook executable file at %s: %v", hookCliPath, err)
-	}
-
 	if spec.Hooks == nil {
 		spec.Hooks = &specs.Hooks{}
 	}
@@ -393,26 +388,8 @@ func addHook(w dcmi.WorkerInterface, spec *specs.Spec, deviceIdList *[]int) erro
 			Args: []string{hookCliPath},
 		})
 	}
-
-	if len(spec.Process.Env) > MaxCommandLength {
+	if spec.Process != nil && len(spec.Process.Env) > MaxCommandLength {
 		return fmt.Errorf("too many items in Env ")
-	}
-
-	if strings.Contains(getValueByKey(spec.Process.Env, ascendRuntimeOptions), "VIRTUAL") {
-		return nil
-	}
-
-	vdevice, err := dcmi.CreateVDevice(w, spec, *deviceIdList)
-	if err != nil {
-		return err
-	}
-	hwlog.RunLog.Infof("vnpu split done: vdevice: %v", vdevice.VdeviceID)
-
-	if vdevice.VdeviceID != -1 {
-		if err = updateEnvAndPostHook(spec, vdevice); err != nil {
-			return fmt.Errorf("update evn and post hook failed: %v ", err)
-		}
-		*deviceIdList = []int{int(vdevice.VdeviceID)}
 	}
 
 	return nil
@@ -595,7 +572,11 @@ func addDeviceToSpec(spec *specs.Spec, dHostPath string, dContainerPath string) 
 	}
 
 	device.Path = dContainerPath
+	appendDeviceToSpec(spec, device)
+	return nil
+}
 
+func appendDeviceToSpec(spec *specs.Spec, device *specs.LinuxDevice) {
 	spec.Linux.Devices = append(spec.Linux.Devices, *device)
 	newDeviceCgroup := specs.LinuxDeviceCgroup{
 		Allow:  true,
@@ -605,7 +586,6 @@ func addDeviceToSpec(spec *specs.Spec, dHostPath string, dContainerPath string) 
 		Access: "rwm",
 	}
 	spec.Linux.Resources.Devices = append(spec.Linux.Resources.Devices, newDeviceCgroup)
-	return nil
 }
 
 func addAscend310BManagerDevice(spec *specs.Spec) error {
@@ -858,6 +838,8 @@ func updateEnvAndPostHook(spec *specs.Spec, vdevice dcmi.VDeviceInfo) error {
 	return nil
 }
 
+// modifySpecFile updates the OCI spec and writes it only after device and hook processing succeeds.
+// Return on validation or processing errors without writing the modified spec.
 func modifySpecFile(path string) error {
 	if err := mindxcheckutils.CheckPath(path, true); err != nil {
 		hwlog.RunLog.Error(err)
@@ -906,17 +888,22 @@ func readSpecFile(path string) (*specs.Spec, error) {
 
 // processDevicesAndHooks handles device detection and hook addition.
 func processDevicesAndHooks(spec *specs.Spec) error {
-	devices, err := checkVisibleDevice(spec)
+	npuDeviceIDs, err := checkVisibleDevice(spec)
 	if err != nil {
 		return fmt.Errorf("failed to check %v parameter, err: %v", api.AscendVisibleDevicesEnv, err)
 	}
 
 	if loadConfig().InjectionMode == cdiInjectionMode {
-		if err = processDevicesCDI(spec, devices); err != nil {
+		rdmaRequestValue := strings.TrimSpace(parser.GetEnvValue(spec.Process.Env, api.AscendRdmaDevicesEnv))
+		if rdmaRequestValue != "" && rdmaRequestValue != void {
+			hwlog.RunLog.Warnf("%s is ignored in CDI mode; use legacy mode to request RDMA devices",
+				api.AscendRdmaDevicesEnv)
+		}
+		if err = processDevicesCDI(spec, npuDeviceIDs); err != nil {
 			return err
 		}
 	} else {
-		if err = processDevicesLegacy(spec, devices); err != nil {
+		if err = processDevicesLegacy(spec, npuDeviceIDs); err != nil {
 			return err
 		}
 	}
@@ -929,8 +916,8 @@ func processDevicesAndHooks(spec *specs.Spec) error {
 }
 
 // processDevicesCDI handles the CDI injection path.
-func processDevicesCDI(spec *specs.Spec, devices []int) error {
-	if len(devices) == 0 {
+func processDevicesCDI(spec *specs.Spec, npuDeviceIDs []int) error {
+	if len(npuDeviceIDs) == 0 {
 		return nil
 	}
 
@@ -941,7 +928,7 @@ func processDevicesCDI(spec *specs.Spec, devices []int) error {
 	if err != nil {
 		return err
 	}
-	devices, useVirtual, err := resolveVDevice(spec, npuWorker, devices)
+	npuDeviceIDs, useVirtual, err := resolveVDevice(spec, npuWorker, npuDeviceIDs)
 	if err != nil {
 		return err
 	}
@@ -960,7 +947,7 @@ func processDevicesCDI(spec *specs.Spec, devices []int) error {
 	}
 	edits, err := cdi.BuildSpec(cdi.BuildSpecConfig{
 		DeviceConfig: cdi.DeviceConfig{
-			DeviceIDs:   devices,
+			DeviceIDs:   npuDeviceIDs,
 			DevType:     devType,
 			ProductType: productType,
 			UseVirtual:  useVirtual,
@@ -986,10 +973,10 @@ func processDevicesCDI(spec *specs.Spec, devices []int) error {
 // resolveVDevice first attempts dynamic vNPU splitting via CreateVDevice (which
 // splits only when ASCEND_VNPU_SPECS is set), then falls back to the explicitly
 // requested VIRTUAL mode when no split is performed.
-func resolveVDevice(spec *specs.Spec, npuWorker dcmi.WorkerInterface, devices []int) ([]int, bool, error) {
-	vdevice, err := dcmi.CreateVDevice(npuWorker, spec, devices)
+func resolveVDevice(spec *specs.Spec, npuWorker dcmi.WorkerInterface, npuDeviceIDs []int) ([]int, bool, error) {
+	vdevice, err := dcmi.CreateVDevice(npuWorker, spec, npuDeviceIDs)
 	if err != nil {
-		return devices, false, err
+		return npuDeviceIDs, false, err
 	}
 	hwlog.RunLog.Infof("vnpu split done: vdevice: %v", vdevice.VdeviceID)
 	if vdevice.VdeviceID != -1 {
@@ -997,12 +984,12 @@ func resolveVDevice(spec *specs.Spec, npuWorker dcmi.WorkerInterface, devices []
 			spec.Hooks = &specs.Hooks{}
 		}
 		if err = updateEnvAndPostHook(spec, vdevice); err != nil {
-			return devices, false, fmt.Errorf("update env and post hook failed: %v", err)
+			return npuDeviceIDs, false, fmt.Errorf("update env and post hook failed: %v", err)
 		}
 		return []int{int(vdevice.VdeviceID)}, true, nil
 	}
 	runtimeOpts := getValueByKey(spec.Process.Env, ascendRuntimeOptions)
-	return devices, strings.Contains(runtimeOpts, "VIRTUAL"), nil
+	return npuDeviceIDs, strings.Contains(runtimeOpts, "VIRTUAL"), nil
 }
 
 // resolveDeviceTypes resolves the device type and product type of the matched NPU worker.
@@ -1018,18 +1005,47 @@ func resolveDeviceTypes(npuWorker dcmi.WorkerInterface) (string, string, error) 
 	return GetDeviceTypeByChipName(chipName), productType, nil
 }
 
-// processDevicesLegacy handles the legacy Prestart Hook injection path.
-func processDevicesLegacy(spec *specs.Spec, devices []int) error {
-	if len(devices) != 0 {
-		npuWorker, err := dcmi.GetMatchingNpuWorker()
+func processNPURequest(spec *specs.Spec, npuDeviceIDs []int) error {
+	npuWorker, err := dcmi.GetMatchingNpuWorker()
+	if err != nil {
+		return err
+	}
+	// Explicit VIRTUAL mode already refers to existing vNPU devices.
+	if !strings.Contains(getValueByKey(spec.Process.Env, ascendRuntimeOptions), "VIRTUAL") {
+		vdevice, err := dcmi.CreateVDevice(npuWorker, spec, npuDeviceIDs)
 		if err != nil {
 			return err
 		}
-		if err = addHook(npuWorker, spec, &devices); err != nil {
-			return fmt.Errorf("failed to inject hook, err: %v", err)
+		hwlog.RunLog.Infof("vnpu split done: vdevice: %v", vdevice.VdeviceID)
+		if vdevice.VdeviceID != -1 {
+			if err = updateEnvAndPostHook(spec, vdevice); err != nil {
+				return fmt.Errorf("update env and post hook failed: %w", err)
+			}
+			npuDeviceIDs = []int{int(vdevice.VdeviceID)}
 		}
-		if err = addDevice(npuWorker, spec, devices); err != nil {
-			return fmt.Errorf("failed to add device to env: %v", err)
+	}
+	if err := addDevice(npuWorker, spec, npuDeviceIDs); err != nil {
+		return fmt.Errorf("failed to add NPU devices: %w", err)
+	}
+	return nil
+}
+
+func processDevicesLegacy(spec *specs.Spec, npuDeviceIDs []int) error {
+	if spec.Process == nil {
+		return errors.New("empty process info")
+	}
+	hasRDMARequest, err := processRDMARequest(spec)
+	if err != nil {
+		return err
+	}
+	if len(npuDeviceIDs) != 0 || hasRDMARequest {
+		if err := addHook(spec); err != nil {
+			return fmt.Errorf("failed to inject prestart hook: %w", err)
+		}
+	}
+	if len(npuDeviceIDs) != 0 {
+		if err := processNPURequest(spec, npuDeviceIDs); err != nil {
+			return err
 		}
 	}
 
