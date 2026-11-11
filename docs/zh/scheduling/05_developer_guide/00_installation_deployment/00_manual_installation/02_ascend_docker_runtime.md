@@ -472,3 +472,11 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
 </tr>
 </tbody>
 </table>
+
+<!-- npu="950" id1 -->
+>[!NOTE]
+>
+>- 挂载UB网卡设备及驱动时需使用Legacy注入模式（默认模式，或指定`--injection-mode=legacy`）。CDI模式会忽略`ASCEND_RDMA_DEVICES`，不会根据该参数自动注入RDMA设备及挂载对应驱动文件，用户仍可通过卷手动挂载文件。
+>- 安装和升级时会将RDMA配置文件`rdma_devices.conf`和`rdma_*.list`部署到“/etc/ascend-docker-runtime.d/”目录并覆盖同名文件（权限为440）。支持先安装Ascend Docker Runtime、后安装UB网卡驱动。使用方法请参见[使用前必读](../../../04_usage/00_containerization/00_before_you_start.md)。
+
+<!-- end id1 -->
