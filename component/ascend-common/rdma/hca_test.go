@@ -77,26 +77,69 @@ func TestResolveRdmaDeviceNode(t *testing.T) {
 	root := t.TempDir()
 	replaceRdmaSysfs(t, root)
 	verbs := filepath.Join(root, "mlx5_999", "device", "infiniband_verbs")
-	if err := os.MkdirAll(filepath.Join(verbs, "uverbs17"), 0755); err != nil {
-		t.Fatal(err)
-	}
+	writeRdmaVerbsMapping(t, verbs, "uverbs17", "mlx5_999\n")
+	writeRdmaVerbsMapping(t, verbs, "uverbs18", "hrn5_0\n")
 	got, err := ResolveRdmaDeviceNode("mlx5_999")
-	if err != nil || got != "/dev/infiniband/uverbs17" {
+	if err != nil || got != filepath.Join("/dev/infiniband", "uverbs17") {
 		t.Fatalf("mapping %s: %v", got, err)
 	}
+}
 
-	if err := os.Symlink(filepath.Join(root, "mlx5_999"), filepath.Join(root, "hrn5_0")); err != nil {
+func TestResolveRdmaDeviceNodeSymlink(t *testing.T) {
+	root := t.TempDir()
+	replaceRdmaSysfs(t, filepath.Join(root, "class"))
+	if err := os.Mkdir(rdmaSysfsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if got, err = ResolveRdmaDeviceNode("hrn5_0"); err != nil || got != "/dev/infiniband/uverbs17" {
-		t.Fatalf("symlink %s: %v", got, err)
-	}
-
-	if err := os.Mkdir(filepath.Join(verbs, "uverbs18"), 0755); err != nil {
+	hcaPath := filepath.Join(root, "devices", "hrn5_0")
+	verbs := filepath.Join(hcaPath, "device", "infiniband_verbs")
+	writeRdmaVerbsMapping(t, verbs, "uverbs17", "hrn5_0\n")
+	if err := os.Symlink(hcaPath, filepath.Join(rdmaSysfsDir, "hrn5_0")); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = ResolveRdmaDeviceNode("hrn5_0"); err == nil || !strings.Contains(err.Error(), "got 2") {
-		t.Fatalf("ambiguous: %v", err)
+	if got, err := ResolveRdmaDeviceNode("hrn5_0"); err != nil || got != filepath.Join("/dev/infiniband", "uverbs17") {
+		t.Fatalf("symlink mapping %s: %v", got, err)
+	}
+}
+
+func TestResolveRdmaDeviceNodeSharedParent(t *testing.T) {
+	root := t.TempDir()
+	replaceRdmaSysfs(t, filepath.Join(root, "class"))
+	parentPath := filepath.Join(root, "pci_device")
+	verbs := filepath.Join(parentPath, "infiniband_verbs")
+	for _, tc := range []struct{ hcaName, verbsName string }{
+		{"hrn5_0", "uverbs17"}, {"hrn5_1", "uverbs18"},
+	} {
+		writeRdmaVerbsMapping(t, verbs, tc.verbsName, tc.hcaName+"\n")
+		hcaPath := filepath.Join(rdmaSysfsDir, tc.hcaName)
+		if err := os.MkdirAll(hcaPath, 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Symlink(parentPath, filepath.Join(hcaPath, "device")); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(verbs, "abi_version"), []byte("1\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct{ hcaName, verbsName string }{
+		{"hrn5_0", "uverbs17"}, {"hrn5_1", "uverbs18"},
+	} {
+		if got, err := ResolveRdmaDeviceNode(tc.hcaName); err != nil || got != filepath.Join("/dev/infiniband", tc.verbsName) {
+			t.Fatalf("%s mapping %s: %v", tc.hcaName, got, err)
+		}
+	}
+}
+
+func TestResolveRdmaDeviceNodeAmbiguous(t *testing.T) {
+	root := t.TempDir()
+	replaceRdmaSysfs(t, root)
+	verbs := filepath.Join(root, "hrn5_0", "device", "infiniband_verbs")
+	writeRdmaVerbsMapping(t, verbs, "uverbs17", "hrn5_0\n")
+	writeRdmaVerbsMapping(t, verbs, "uverbs18", "hrn5_0\n")
+	if got, err := ResolveRdmaDeviceNode("hrn5_0"); err == nil || got != "" ||
+		!strings.Contains(err.Error(), "got 2") {
+		t.Fatalf("ambiguous mapping %s: %v", got, err)
 	}
 }
 
@@ -147,4 +190,52 @@ func replaceRdmaSysfs(t *testing.T, root string) {
 	original := rdmaSysfsDir
 	rdmaSysfsDir = root
 	t.Cleanup(func() { rdmaSysfsDir = original })
+}
+
+func TestResolveRdmaDeviceNodeMappingIdentityFailures(t *testing.T) {
+	for _, tc := range []struct{ name, ibdev, wantError string }{
+		{"missing", "", "ibdev"}, {"empty", "\n", "got 0"},
+		{"other HCA", "hrn5_01\n", "got 0"}, {"invalid name", "../hrn5_0\n", "got 0"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			root := t.TempDir()
+			replaceRdmaSysfs(t, root)
+			verbs := filepath.Join(root, "hrn5_0", "device", "infiniband_verbs")
+			writeRdmaVerbsMapping(t, verbs, "uverbs0", tc.ibdev)
+			if tc.name == "missing" {
+				if err := os.Remove(filepath.Join(verbs, "uverbs0", "ibdev")); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if got, err := ResolveRdmaDeviceNode("hrn5_0"); err == nil || got != "" ||
+				!strings.Contains(err.Error(), tc.wantError) {
+				t.Fatalf("invalid mapping %s: %v", got, err)
+			}
+		})
+	}
+}
+
+func TestResolveRdmaDeviceNodeUnreadableSibling(t *testing.T) {
+	root := t.TempDir()
+	replaceRdmaSysfs(t, root)
+	verbs := filepath.Join(root, "hrn5_0", "device", "infiniband_verbs")
+	writeRdmaVerbsMapping(t, verbs, "uverbs17", "hrn5_0\n")
+	if err := os.Mkdir(filepath.Join(verbs, "uverbs18"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := ResolveRdmaDeviceNode("hrn5_0"); err == nil || got != "" ||
+		!strings.Contains(err.Error(), filepath.Join("uverbs18", "ibdev")) {
+		t.Fatalf("unreadable sibling mapping %s: %v", got, err)
+	}
+}
+
+func writeRdmaVerbsMapping(t *testing.T, verbsPath, verbsName, hcaName string) {
+	t.Helper()
+	mapping := filepath.Join(verbsPath, verbsName)
+	if err := os.MkdirAll(mapping, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(mapping, "ibdev"), []byte(hcaName), 0600); err != nil {
+		t.Fatal(err)
+	}
 }

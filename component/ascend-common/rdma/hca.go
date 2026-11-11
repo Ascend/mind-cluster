@@ -85,7 +85,16 @@ func ResolveRdmaDeviceNode(hcaName string) (string, error) {
 	}
 	verbsNames := make([]string, 0)
 	for _, entry := range entries {
-		if rdmaVerbsName.MatchString(entry.Name()) {
+		if !rdmaVerbsName.MatchString(entry.Name()) {
+			continue
+		}
+		// HCA siblings can share this directory; ibdev identifies each node's owner.
+		ibdevPath := filepath.Join(verbsPath, entry.Name(), "ibdev")
+		ibdev, err := os.ReadFile(ibdevPath)
+		if err != nil {
+			return "", fmt.Errorf("HCA %s: read %s: %w", hcaName, ibdevPath, err)
+		}
+		if strings.TrimSpace(string(ibdev)) == hcaName {
 			verbsNames = append(verbsNames, entry.Name())
 		}
 	}
