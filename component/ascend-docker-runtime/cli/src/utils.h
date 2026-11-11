@@ -16,23 +16,25 @@
 #define UTILS_H
 
 #include <stdbool.h>
-#include <sys/types.h>
 #include <stdio.h>
+#include <sys/types.h>
+
 #include "basic.h"
 
 char *FormatLogMessage(char *format, ...);
-int VerifyPathInfo(const struct PathInfo* pathInfo);
+int VerifyPathInfo(const struct PathInfo *pathInfo);
 int CheckDirExists(const char *dir);
 int GetParentPathStr(const char *path, char *parent, size_t bufSize);
 int MakeDirWithParent(const char *path, mode_t mode);
 int MakeMountPoints(const char *path, mode_t mode);
 bool IsValidChar(const char c);
-bool CheckExternalFile(const char* filePath, const size_t filePathLen,
-    const size_t maxFileSizeMb, const bool checkOwner);
+bool CheckExternalFile(const char *filePath, const size_t filePathLen, const size_t maxFileSizeMb,
+                       const bool checkOwner);
+bool CheckDstInsideRootfs(const char *rootfs, const char *dstPath);
 bool GetFileSubsetAndCheck(const char *basePath, const size_t basePathLen);
-bool CheckExistsFile(const char* filePath, const size_t filePathLen,
-    const size_t maxFileSizeMb, const bool checkWgroup);
-bool CheckOpenedFile(FILE* fp, const long maxSize, const bool checkOwner);
+bool CheckExistsFile(const char *filePath, const size_t filePathLen, const size_t maxFileSizeMb,
+                     const bool checkWgroup);
+bool CheckOpenedFile(FILE *fp, const long maxSize, const bool checkOwner);
 bool GetAllowLink(void);
 void SetAllowLink(bool value);
 

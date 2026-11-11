@@ -183,10 +183,6 @@ func parseListFile(path string) ([]MountEntry, error) {
 		if err != nil {
 			return nil, fmt.Errorf("parse entry in %s: %w", path, err)
 		}
-		if containerPath != "" && containsGlob(hostPath) {
-			return nil, fmt.Errorf("mount entry %s in %s: glob path does not support container mapping",
-				hostPath, path)
-		}
 
 		absPath, err := filepath.Abs(hostPath)
 		if err != nil {

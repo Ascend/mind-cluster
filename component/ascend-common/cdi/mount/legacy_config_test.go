@@ -164,10 +164,19 @@ func TestParseListFile_MappingEntries(t *testing.T) {
 	if len(entries) != 1 || entries[0].ContainerPaths[0] != "" {
 		t.Fatalf("legacy entry must keep same-path mount, got %v", entries)
 	}
+
+	writeListFile(t, dir, "glob", filepath.Join(dir, "lib*")+":/usr/lib64\n")
+	entries, err = parseListFile(filepath.Join(dir, "glob.list"))
+	if err != nil {
+		t.Fatalf("parseListFile returned error: %v", err)
+	}
+	if len(entries) != 1 || entries[0].ContainerPaths[0] != "/usr/lib64" {
+		t.Fatalf("glob mapping not parsed, got %v", entries)
+	}
 }
 
 // TestParseListFile_InvalidMapping verifies that mapping syntax errors fail
-// fast: relative container path, '..' component, empty part, and glob+mapping.
+// fast: relative container path, '..' component, and empty part.
 func TestParseListFile_InvalidMapping(t *testing.T) {
 	dir := t.TempDir()
 	lib := filepath.Join(dir, "lib.so")
@@ -180,7 +189,6 @@ func TestParseListFile_InvalidMapping(t *testing.T) {
 		{"relative dst", lib + ":relative/path"},
 		{"dot-dot dst", lib + ":/container/../etc"},
 		{"empty part", ":" + lib},
-		{"glob with mapping", "/usr/lib64/libummu*:/workspace"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -835,19 +835,66 @@ func TestBuildMountEntry(t *testing.T) {
 	})
 }
 
-// TestReadMountConfigGlobMapping verifies glob entries cannot carry a mapping
+// TestDedupMountList tests the function dedupMountList
+func TestDedupMountList(t *testing.T) {
+	convey.Convey("test dedupMountList", t, func() {
+		convey.Convey("identical entries are deduplicated silently", func() {
+			in := []string{"/data/a", "/data/a", "/data/a", "/data/b", "/data/b"}
+			convey.So(dedupMountList(in, make(map[string]string)), convey.ShouldResemble,
+				[]string{"/data/a", "/data/b"})
+		})
+		convey.Convey("conflicting sources keep the first entry", func() {
+			in := []string{"/data/a:/c/a", "/data/b:/c/a", "/data/c", "/data/d:/c/c"}
+			convey.So(dedupMountList(in, make(map[string]string)), convey.ShouldResemble,
+				[]string{"/data/a:/c/a", "/data/c", "/data/d:/c/c"})
+		})
+		convey.Convey("same-path entry conflicts with a mapping to the same dst", func() {
+			in := []string{"/data/a", "/data/b:/data/a"}
+			convey.So(dedupMountList(in, make(map[string]string)), convey.ShouldResemble, []string{"/data/a"})
+		})
+		convey.Convey("trailing slashes on dst are normalized before comparison", func() {
+			in := []string{"/data/a:/c/a", "/data/b:/c/a/", "/data/c/", "/data/d:/data/c"}
+			convey.So(dedupMountList(in, make(map[string]string)), convey.ShouldResemble,
+				[]string{"/data/a:/c/a", "/data/c/"})
+		})
+		convey.Convey("file and directory lists share one dst set", func() {
+			seen := make(map[string]string)
+			files := []string{"/data/file:/c/x", "/data/other:/c/y"}
+			dirs := []string{"/data/dir:/c/x", "/data/tree:/c/z"}
+			convey.So(dedupMountList(files, seen), convey.ShouldResemble,
+				[]string{"/data/file:/c/x", "/data/other:/c/y"})
+			convey.So(dedupMountList(dirs, seen), convey.ShouldResemble, []string{"/data/tree:/c/z"})
+		})
+	})
+}
+
+// TestReadMountConfigGlobMapping verifies glob entries mount each match under the mapped directory
 func TestReadMountConfigGlobMapping(t *testing.T) {
 	patch := gomonkey.ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil)
 	defer patch.Reset()
 
-	convey.Convey("test readMountConfig rejects glob entries with mapping", t, func() {
+	convey.Convey("test readMountConfig maps glob matches under the container directory", t, func() {
 		tmpDir := t.TempDir()
+		srcDir := filepath.Join(tmpDir, "src")
+		if err := os.MkdirAll(srcDir, 0700); err != nil {
+			t.Fatalf("mkdir failed: %v", err)
+		}
+		for _, name := range []string{"libummu.so", "libummu.so.1", "other.so"} {
+			if err := os.WriteFile(filepath.Join(srcDir, name), []byte{}, 0600); err != nil {
+				t.Fatalf("write src failed: %v", err)
+			}
+		}
 		listPath := filepath.Join(tmpDir, "base.list")
-		if err := os.WriteFile(listPath, []byte(tmpDir+"/src/*:/data/m\n"), 0600); err != nil {
+		if err := os.WriteFile(listPath, []byte(srcDir+"/libummu*:/data/m\n"), 0600); err != nil {
 			t.Fatalf("write list failed: %v", err)
 		}
-		_, _, err := readMountConfig(tmpDir, "base")
-		convey.So(err, convey.ShouldBeError)
+		fileList, dirList, err := readMountConfig(tmpDir, "base")
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(dirList, convey.ShouldBeEmpty)
+		convey.So(fileList, convey.ShouldResemble, []string{
+			srcDir + "/libummu.so:/data/m/libummu.so",
+			srcDir + "/libummu.so.1:/data/m/libummu.so.1",
+		})
 	})
 }
 

@@ -200,6 +200,7 @@ func (e MountEntry) containerPathAt(i int) string {
 // from cfg (list or JSON mode, selected by IsAscendDockerRuntime), builds
 // the container mounts, and — for list mode only — appends the HCCL topology
 // mounts (JSON mode carries the topology paths data-driven in mounts.json).
+// Duplicate container paths are deduplicated (see dedupMounts).
 // DisableMounts skips mount generation entirely (NODRV mode, handled here so
 // callers can pass the full config unconditionally); MountUBDrv mounts
 // UB user-space files; AllowLink permits symlink entries; HostFsPrefix, when
@@ -233,7 +234,7 @@ func Build(cfg MountConfig, devType string) ([]*cdispec.Mount, error) {
 	if cfg.IsAscendDockerRuntime {
 		mounts = appendTopology(mounts, cfg.HostFsPrefix)
 	}
-	return mounts, nil
+	return dedupMounts(mounts), nil
 }
 
 // roBindOptions returns the read-only bind-mount options shared by every
@@ -255,11 +256,15 @@ func buildMounts(entries []MountEntry, hostFsPrefix string, allowLink bool) ([]*
 		for i, path := range entry.Paths {
 			containerPath := entry.containerPathAt(i)
 			if containsGlob(path) {
-				if containerPath != "" {
-					return nil, fmt.Errorf("glob path %s does not support container mapping", path)
-				}
 				for _, matched := range expandGlobPath(path, allowLink, hostFsPrefix) {
-					mounts = append(mounts, newBindMount(matched, matched))
+					dst := matched
+					if containerPath != "" {
+						dst = filepath.Join(containerPath, filepath.Base(matched))
+						if err := validateContainerPath(dst); err != nil {
+							return nil, fmt.Errorf("mount %s: %w", matched, err)
+						}
+					}
+					mounts = append(mounts, newBindMount(matched, dst))
 				}
 				continue
 			}
@@ -294,6 +299,26 @@ func newBindMount(hostPath, containerPath string) *cdispec.Mount {
 		Type:          mountTypeBind,
 		Options:       roBindOptions(),
 	}
+}
+
+// dedupMounts deduplicates mounts by container path: an identical (src, dst)
+// repeat is dropped silently, and a conflicting source targeting the same dst
+// keeps the first entry with a warning.
+func dedupMounts(mounts []*cdispec.Mount) []*cdispec.Mount {
+	seen := make(map[string]string, len(mounts))
+	result := make([]*cdispec.Mount, 0, len(mounts))
+	for _, m := range mounts {
+		if firstSrc, ok := seen[m.ContainerPath]; ok {
+			if firstSrc != m.HostPath {
+				hwlog.RunLog.Warnf("Mount: skip conflicting mount %q: container path %q is already mounted from %q",
+					m.HostPath, m.ContainerPath, firstSrc)
+			}
+			continue
+		}
+		seen[m.ContainerPath] = m.HostPath
+		result = append(result, m)
+	}
+	return result
 }
 
 // toContainerPath maps a host path to the path accessible inside the
@@ -351,6 +376,10 @@ func expandGlobPath(pattern string, allowLink bool, hostFsPrefix string) []strin
 	matches, err := filepath.Glob(fsPattern)
 	if err != nil {
 		hwlog.RunLog.Warnf("failed to glob %s: %v", fsPattern, err)
+		return nil
+	}
+	if len(matches) == 0 {
+		hwlog.RunLog.Warnf("glob %s matched no path, the mount entry is skipped", pattern)
 		return nil
 	}
 	// expectedDir is the host-path directory a resolved symlink target must

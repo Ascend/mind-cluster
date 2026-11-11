@@ -116,6 +116,11 @@ STATIC int MountFile(const char *rootfs, const char *src, const char *dstInConta
         Logger("failed to assemble file mounting path.", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
+    if (!CheckDstInsideRootfs(rootfs, dst))
+    {
+        Logger("dst escapes container rootfs, abort file mounting.", LEVEL_ERROR, SCREEN_YES);
+        return -1;
+    }
 
     struct stat srcStat;
     ret = stat(src, &srcStat);
@@ -165,6 +170,11 @@ int MountDir(const char *rootfs, const char *src, const char *dstInContainer)
     if (ret < 0)
     {
         Logger("failed to assemble dir mounting path.", LEVEL_ERROR, SCREEN_YES);
+        return -1;
+    }
+    if (!CheckDstInsideRootfs(rootfs, dst))
+    {
+        Logger("dst escapes container rootfs, abort directory mounting.", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
 

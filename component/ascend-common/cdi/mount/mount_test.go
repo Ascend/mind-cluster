@@ -511,7 +511,7 @@ func TestBuildMounts_MappingEntry(t *testing.T) {
 
 // TestBuildMounts_ContainerPathValidation verifies that buildMounts guards
 // container paths centrally (covering the JSON profile mode): "/" shadowing,
-// relative paths, and glob entries carrying a mapping must all fail.
+// relative paths, and '..' escapes must all fail.
 func TestBuildMounts_ContainerPathValidation(t *testing.T) {
 	dir := t.TempDir()
 	lib := filepath.Join(dir, "lib.so")
@@ -521,11 +521,98 @@ func TestBuildMounts_ContainerPathValidation(t *testing.T) {
 		{Paths: []string{lib}, ContainerPaths: []string{"/"}},
 		{Paths: []string{lib}, ContainerPaths: []string{"relative"}},
 		{Paths: []string{lib}, ContainerPaths: []string{"/container/../etc"}},
-		{Paths: []string{filepath.Join(dir, "lib*")}, ContainerPaths: []string{"/container/lib.so"}},
 	}
 	for _, entry := range invalid {
 		if _, err := buildMounts([]MountEntry{entry}, "", false); err == nil {
 			t.Errorf("buildMounts must reject entry %+v", entry)
 		}
+	}
+}
+
+// TestBuildMounts_GlobMapping verifies each glob match keeps its basename under
+// the mapped container directory.
+func TestBuildMounts_GlobMapping(t *testing.T) {
+	dir := t.TempDir()
+	for _, name := range []string{"libummu.so", "libummu.so.1", "other.so"} {
+		mustWriteFile(t, filepath.Join(dir, name), "")
+	}
+	entry := MountEntry{
+		Paths:          []string{filepath.Join(dir, "libummu*")},
+		ContainerPaths: []string{"/usr/lib64"},
+	}
+	mounts, err := buildMounts([]MountEntry{entry}, "", false)
+	if err != nil {
+		t.Fatalf("buildMounts returned error: %v", err)
+	}
+	want := map[string]string{
+		filepath.Join(dir, "libummu.so"):   "/usr/lib64/libummu.so",
+		filepath.Join(dir, "libummu.so.1"): "/usr/lib64/libummu.so.1",
+	}
+	if len(mounts) != len(want) {
+		t.Fatalf("expected %d mounts, got %+v", len(want), mounts)
+	}
+	for _, m := range mounts {
+		if want[m.HostPath] != m.ContainerPath {
+			t.Errorf("unexpected glob mount %+v", m)
+		}
+	}
+}
+
+// TestDedupMounts verifies the dedup rules: identical (src, dst) repeats are
+// dropped silently and conflicting sources on one dst keep the first entry.
+func TestDedupMounts(t *testing.T) {
+	in := []*cdispec.Mount{
+		{HostPath: "/a", ContainerPath: "/a"},
+		{HostPath: "/a", ContainerPath: "/a"},
+		{HostPath: "/b", ContainerPath: "/a"},
+		{HostPath: "/c", ContainerPath: "/mapped/c"},
+		{HostPath: "/d", ContainerPath: "/mapped/c"},
+	}
+	got := dedupMounts(in)
+	if len(got) != 2 {
+		t.Fatalf("expected 2 mounts after dedup, got %+v", got)
+	}
+	if got[0].HostPath != "/a" || got[0].ContainerPath != "/a" {
+		t.Errorf("same-path dedup broken, got %+v", got[0])
+	}
+	if got[1].HostPath != "/c" || got[1].ContainerPath != "/mapped/c" {
+		t.Errorf("conflicting mapping must keep the first entry, got %+v", got[1])
+	}
+
+	// nil and empty inputs pass through as empty results.
+	if got := dedupMounts(nil); got == nil || len(got) != 0 {
+		t.Errorf("dedupMounts(nil) = %v, want empty non-nil slice", got)
+	}
+}
+
+// TestBuild_DedupMounts verifies end-to-end deduplication in list mode:
+// duplicate and conflicting entries collapse to the first mount per
+// container path, and a topology item already present in base.list is not
+// appended twice.
+func TestBuild_DedupMounts(t *testing.T) {
+	dir := t.TempDir()
+	lib := filepath.Join(dir, "lib.so")
+	other := filepath.Join(dir, "other.so")
+	mustWriteFile(t, lib, "")
+	mustWriteFile(t, other, "")
+	writeListFile(t, dir, "base",
+		lib+"\n"+lib+"\n"+other+":/c/other.so\n"+lib+":/c/other.so\n")
+
+	orig := TopologyItems
+	defer func() { TopologyItems = orig }()
+	TopologyItems = []TopologyItem{{HostPath: lib, Options: []string{"rbind", "rprivate", "ro"}}}
+
+	mounts, err := Build(MountConfig{Dir: dir, IsAscendDockerRuntime: true}, "")
+	if err != nil {
+		t.Fatalf("Build returned error: %v", err)
+	}
+	if len(mounts) != 2 {
+		t.Fatalf("expected 2 mounts after dedup, got %+v", mounts)
+	}
+	if mounts[0].HostPath != lib || mounts[0].ContainerPath != lib {
+		t.Errorf("same-path dedup broken, got %+v", mounts[0])
+	}
+	if mounts[1].HostPath != other || mounts[1].ContainerPath != "/c/other.so" {
+		t.Errorf("conflicting mapping must keep the first entry, got %+v", mounts[1])
 	}
 }
