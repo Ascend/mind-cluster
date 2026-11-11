@@ -138,6 +138,42 @@ func (r *WorkLoadReconciler) DeleteExtraInstances(
 	return workloadHandler.DeleteExtraWorkLoad(ctx, indexer, replicaNum)
 }
 
+// GetInstanceIndices returns the instance indices of all the workloads of the given InstanceSet.
+// The list contains terminating objects as well (no field selector), so that their index is
+// counted and never treated as a gap when creating instances. Workloads with a missing or
+// illegal instance index label are skipped with a warning.
+func (r *WorkLoadReconciler) GetInstanceIndices(
+	ctx context.Context,
+	instanceSet *v1.InstanceSet,
+	indexer common.InstanceIndexer) ([]int, error) {
+	// 1. check WorkLoadHandler
+	workloadHandler, err := r.GetWorkLoadReconciler(instanceSet)
+	if err != nil {
+		hwlog.RunLog.Errorf("Failed to get workload handler: %v", err)
+		return nil, err
+	}
+
+	// 2. list all the workloads of this role, including terminating ones
+	selectLabels := make(map[string]string)
+	selectLabels = common.AddLabelsFromIndexer(selectLabels, indexer)
+	delete(selectLabels, common.InstanceIndexLabelKey)
+	workLoads, err := workloadHandler.ListWorkLoad(ctx, selectLabels, indexer.Namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. parse the instance index of each workload
+	indices := make([]int, 0, len(workLoads))
+	for _, workLoad := range workLoads {
+		index, ok := parseInstanceIndex(workLoad.GetWorkLoadObjMeta())
+		if !ok {
+			continue
+		}
+		indices = append(indices, index)
+	}
+	return indices, nil
+}
+
 // GetWorkLoadReconciler returns the WorkLoadHandler for the given InstanceSet
 func (r *WorkLoadReconciler) GetWorkLoadReconciler(instanceSet *v1.InstanceSet) (WorkLoadHandler, error) {
 	workloadType := instanceSet.Spec.WorkloadTypeMeta

@@ -131,8 +131,10 @@ func (reconciler *Reconciler) Reconcile(ctx context.Context, request ctrl.Reques
 	if err != nil {
 		return reconciler.fail(ctx, pa, "MetricsUnavailable", err)
 	}
+	// use the ready replica count as the evaluation base so that it stays consistent with the
+	// ready-only observed metrics, avoiding a ghost base that causes cascading scale-down
 	computeResult, err := reconciler.engine.Recommend(ctx, autoscaler.ReplicaComputeRequest{
-		PodAutoscaler: pa, Evaluation: state.evaluation, CurrentReplicas: workload.currentReplicas,
+		PodAutoscaler: pa, Evaluation: state.evaluation, CurrentReplicas: readyPods(workload.pods),
 		Observations: observations, Timestamp: now})
 	if err != nil {
 		return reconciler.fail(ctx, pa, "MetricsUnavailable", err)

@@ -612,10 +612,19 @@ func (r *InstanceSetReconciler) reconcileServices(ctx context.Context, instanceS
 }
 
 func (r *InstanceSetReconciler) reconcileWorkloadInstances(ctx context.Context, instanceSet *apiv1.InstanceSet, indexer common.InstanceIndexer) error {
-	replicaNum := int(*instanceSet.Spec.Replicas)
-	for instanceIndex := 0; instanceIndex < replicaNum; instanceIndex++ {
+	// 1. get the current instance indices of the workloads of this role
+	currentIndices, err := r.WorkLoadReconciler.GetInstanceIndices(ctx, instanceSet, indexer)
+	if err != nil {
+		hwlog.RunLog.Errorf("get instance indices of InstanceSet %s/%s, error: %v",
+			instanceSet.Namespace, instanceSet.Name, err)
+		return err
+	}
+
+	// 2. create only the missing instances: fill gaps first, then append beyond the max index
+	toCreate := workload.SelectIndicesToCreate(currentIndices, int(*instanceSet.Spec.Replicas))
+	for _, instanceIndex := range toCreate {
 		indexer.InstanceIndex = strconv.Itoa(instanceIndex)
-		if err := r.WorkLoadReconciler.Reconcile(ctx, instanceSet, indexer); err != nil {
+		if err = r.WorkLoadReconciler.Reconcile(ctx, instanceSet, indexer); err != nil {
 			hwlog.RunLog.Errorf("reconcile WorkLoads of InstanceSet %s/%s, error: %v",
 				instanceSet.Namespace, instanceSet.Name, err)
 			return err

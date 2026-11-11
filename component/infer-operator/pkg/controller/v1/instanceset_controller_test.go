@@ -945,6 +945,9 @@ func TestReconcileWorkLoads(t *testing.T) {
 			defer patches.Reset()
 			patches2 := gomonkey.ApplyMethodReturn(workLoadReconciler, "Reconcile", nil)
 			defer patches2.Reset()
+			// quantity-driven: the current indices are 0..N-1 so nothing new is created
+			patches3 := gomonkey.ApplyMethodReturn(workLoadReconciler, "GetInstanceIndices", []int{0}, nil)
+			defer patches3.Reset()
 
 			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
 			ctx := context.Background()
@@ -986,6 +989,8 @@ func TestReconcileWorkLoads2(t *testing.T) {
 
 			patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "DeleteExtraInstances", nil)
 			defer patches.Reset()
+			patches3 := gomonkey.ApplyMethodReturn(workLoadReconciler, "GetInstanceIndices", []int{}, nil)
+			defer patches3.Reset()
 
 			reconcileErr := errors.New("reconcile failed")
 			patches2 := gomonkey.ApplyMethodReturn(workLoadReconciler, "Reconcile", reconcileErr)
@@ -1008,10 +1013,97 @@ func TestReconcileWorkLoads2(t *testing.T) {
 
 			patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "DeleteExtraInstances", nil)
 			defer patches.Reset()
+			patches2 := gomonkey.ApplyMethodReturn(workLoadReconciler, "GetInstanceIndices", []int{}, nil)
+			defer patches2.Reset()
 
 			ctx := context.Background()
 			err := reconciler.reconcileWorkLoads(ctx, instanceSet)
 			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestReconcileWorkloadInstances tests the quantity-driven reconcileWorkloadInstances
+// method of InstanceSetReconciler: only the missing indices are created, gaps first.
+func TestReconcileWorkloadInstances(t *testing.T) {
+	convey.Convey("Test InstanceSetReconciler reconcileWorkloadInstances method", t, func() {
+		convey.Convey("Should fill gaps first then append beyond the max index", func() {
+			fakeClient := NewFakeClient().Build()
+			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workLoadReconciler,
+			}
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(4))
+			indexer := GetTestIndexer("test-service", "test-role", "0")
+
+			patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "GetInstanceIndices", []int{0, 2}, nil)
+			defer patches.Reset()
+
+			created := make([]string, 0, 4)
+			patches2 := gomonkey.ApplyMethodFunc(workLoadReconciler, "Reconcile",
+				func(_ context.Context, _ *v1.InstanceSet, idx common.InstanceIndexer) error {
+					created = append(created, idx.InstanceIndex)
+					return nil
+				})
+			defer patches2.Reset()
+
+			err := reconciler.reconcileWorkloadInstances(context.Background(), instanceSet, indexer)
+			convey.So(err, convey.ShouldBeNil)
+			// target 4 with current {0,2} => create 1 (gap) then 3 (append)
+			convey.So(created, convey.ShouldResemble, []string{"1", "3"})
+		})
+
+		convey.Convey("Should create nothing when the current count reaches the target", func() {
+			fakeClient := NewFakeClient().Build()
+			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workLoadReconciler,
+			}
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(2))
+			indexer := GetTestIndexer("test-service", "test-role", "0")
+
+			patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "GetInstanceIndices", []int{0, 1}, nil)
+			defer patches.Reset()
+
+			created := make([]string, 0, 2)
+			patches2 := gomonkey.ApplyMethodFunc(workLoadReconciler, "Reconcile",
+				func(_ context.Context, _ *v1.InstanceSet, idx common.InstanceIndexer) error {
+					created = append(created, idx.InstanceIndex)
+					return nil
+				})
+			defer patches2.Reset()
+
+			err := reconciler.reconcileWorkloadInstances(context.Background(), instanceSet, indexer)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(created), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("Should create from zero when no instance exists", func() {
+			fakeClient := NewFakeClient().Build()
+			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workLoadReconciler,
+			}
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(3))
+			indexer := GetTestIndexer("test-service", "test-role", "0")
+
+			patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "GetInstanceIndices", []int{}, nil)
+			defer patches.Reset()
+
+			created := make([]string, 0, 3)
+			patches2 := gomonkey.ApplyMethodFunc(workLoadReconciler, "Reconcile",
+				func(_ context.Context, _ *v1.InstanceSet, idx common.InstanceIndexer) error {
+					created = append(created, idx.InstanceIndex)
+					return nil
+				})
+			defer patches2.Reset()
+
+			err := reconciler.reconcileWorkloadInstances(context.Background(), instanceSet, indexer)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(created, convey.ShouldResemble, []string{"0", "1", "2"})
 		})
 	})
 }

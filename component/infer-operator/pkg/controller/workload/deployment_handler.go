@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -276,11 +275,14 @@ func (d *DeploymentHandler) createService(
 	return nil
 }
 
-// DeleteExtraWorkLoad deletes deployments that exceed the specified index limit
+// DeleteExtraWorkLoad deletes the deployments that exceed the specified index limit.
+// Instances with a negative index are deleted first, then unready instances, then ready
+// instances, each group in descending index order, until the shrink count is reached.
+// Instances with a missing or illegal index label are kept.
 func (d *DeploymentHandler) DeleteExtraWorkLoad(
 	ctx context.Context,
 	indexer common.InstanceIndexer, indexLimit int) error {
-	// 1. fetch workload
+	// 1. fetch workloads
 	selectLabels := make(map[string]string)
 	selectLabels = common.AddLabelsFromIndexer(selectLabels, indexer)
 	delete(selectLabels, common.InstanceIndexLabelKey)
@@ -290,30 +292,45 @@ func (d *DeploymentHandler) DeleteExtraWorkLoad(
 		return err
 	}
 
-	// 2. delete workload if its instance-index >= indexLimit
-	for _, deploy := range deployList.Items {
-		instanceIndexStr, ok := deploy.Labels[common.InstanceIndexLabelKey]
-		if !ok {
-			continue
+	// 2. select the indices to delete
+	workLoads := make([]WorkLoadInterface, 0, len(deployList.Items))
+	indexedWorkLoads := make(map[int][]*DeploymentWorkLoad, len(deployList.Items))
+	for i := range deployList.Items {
+		deploy := &DeploymentWorkLoad{&deployList.Items[i]}
+		workLoads = append(workLoads, deploy)
+		if index, ok := parseInstanceIndex(deploy.GetWorkLoadObjMeta()); ok {
+			indexedWorkLoads[index] = append(indexedWorkLoads[index], deploy)
 		}
-		instanceIndex, err := strconv.Atoi(instanceIndexStr)
-		if err != nil {
-			hwlog.RunLog.Warnf("Deployment<%s> Failed to convert instance index to int: %v",
-				deploy.Name, instanceIndexStr)
-			// invalid workload, skip it
-			continue
-		}
-		if instanceIndex < indexLimit && instanceIndex >= 0 {
-			// normal range, keep it
-			continue
-		}
-		if err = d.client.Delete(ctx, &deploy); err != nil {
-			hwlog.RunLog.Errorf("Failed to delete Deployment<%s>: %v", deploy.Name, err)
-			return err
-		}
-		hwlog.RunLog.Infof("Delete Extra Deployment<%s>", deploy.Name)
 	}
-	return d.deleteExtraService(ctx, selectLabels, indexer.Namespace, indexLimit)
+	deletedIndices := selectIndicesToDelete(workLoads, indexLimit)
+
+	// 3. delete the selected deployments in descending index order
+	for _, index := range deletedIndices {
+		for _, deploy := range indexedWorkLoads[index] {
+			if index >= 0 && !deploy.IsWorkLoadReady() {
+				hwlog.RunLog.Warnf("delete unready instance index<%d> of Deployment<%s> during scale-down, "+
+					"desiredReplicas=%d", index, deploy.Name, deploy.GetWorkLoadReplicas())
+			}
+			if err = d.client.Delete(ctx, deploy.Deployment); err != nil {
+				hwlog.RunLog.Errorf("Failed to delete Deployment<%s>: %v", deploy.Name, err)
+				return err
+			}
+			hwlog.RunLog.Infof("Delete Extra Deployment<%s>", deploy.Name)
+		}
+		indexedWorkLoads[index] = nil
+	}
+
+	// 4. delete the services of the instances that no longer exist. The keep set is derived from
+	// the remaining workloads rather than from the current deletion set, so a service whose
+	// workload has already been deleted is retried on the next round, and orphan services without
+	// any workload are cleaned up as well.
+	keepIndices := make([]int, 0, len(indexedWorkLoads))
+	for index, workloads := range indexedWorkLoads {
+		if len(workloads) > 0 {
+			keepIndices = append(keepIndices, index)
+		}
+	}
+	return d.deleteServicesNotInIndices(ctx, selectLabels, indexer.Namespace, keepIndices)
 }
 
 // GetWorkLoadReadyReplicas returns the number of ready replicas of the deployment
@@ -339,11 +356,15 @@ func (d *DeploymentHandler) GetWorkLoadReadyReplicas(
 	return readyReplicas, nil
 }
 
-func (d *DeploymentHandler) deleteExtraService(
+// deleteServicesNotInIndices deletes the services whose instance index is not in keepIndices.
+// The keep set comes from the workloads that survive this round, which makes the cleanup
+// retryable: a service whose workload was already deleted is still selected, and services
+// without any workload (orphans) are removed as well.
+func (d *DeploymentHandler) deleteServicesNotInIndices(
 	ctx context.Context,
 	selectLabels map[string]string,
 	namespace string,
-	indexLimit int) error {
+	keepIndices []int) error {
 	// 1. fetch services
 	serviceList := &corev1.ServiceList{}
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
@@ -358,25 +379,20 @@ func (d *DeploymentHandler) deleteExtraService(
 		hwlog.RunLog.Errorf("Failed to list ServiceList<%s>: %v", selectLabels, err)
 		return common.NewRequeueError(err.Error())
 	}
-	// 2. delete extra services
+	// 2. delete the services whose instance index is not in the keep set
+	keepIndexSet := make(map[int]struct{}, len(keepIndices))
+	for _, index := range keepIndices {
+		keepIndexSet[index] = struct{}{}
+	}
 	for _, service := range serviceList.Items {
-		instanceIndexStr, ok := service.Labels[common.InstanceIndexLabelKey]
+		index, ok := parseInstanceIndex(service.ObjectMeta)
 		if !ok {
 			continue
 		}
-		instanceIndex, err := strconv.Atoi(instanceIndexStr)
-		if err != nil {
-			hwlog.RunLog.Warnf("service<%s> Failed to convert instance index to int: %v",
-				service.Name, instanceIndexStr)
-			// invalid workload, skip it
+		if _, keep := keepIndexSet[index]; keep {
 			continue
 		}
-		if instanceIndex < indexLimit && instanceIndex >= 0 {
-			// normal range, keep it
-			continue
-		}
-		err = d.client.Delete(ctx, &service)
-		if err != nil {
+		if err = d.client.Delete(ctx, &service); err != nil {
 			hwlog.RunLog.Errorf("Failed to delete Extra Service<%s>: %v", service.Name, err)
 			return common.NewRequeueError(err.Error())
 		}
