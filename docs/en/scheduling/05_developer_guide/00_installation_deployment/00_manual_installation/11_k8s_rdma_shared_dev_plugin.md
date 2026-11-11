@@ -66,10 +66,12 @@ By default, the component works in shared mode. To use exclusive mode, modify th
 Exclusive mode configuration description:
 
 1. To enable exclusive mode, add `-ub-excl-mode`. For details about the parameter, see [Table 1](#table1862682843615).
-2. The component uses the configuration file `/etc/rdma-plugin/npu-nic-mapping.json` built into the image to complete the mapping from the NPU ID to the DPU device.
-3. Device allocation in exclusive mode is based on UB-type RDMA devices.
+2. The NPU-DPU mapping is obtained from the driver interface first: at startup, the component obtains the topology affinity between each NPU and UB NICs through the DCMI topology query interface (the same data source as [NPU-NIC Affinity Auto-Discovery](04_ascend_device_plugin.md#section_npu_nic_auto_discovery) of Ascend Device Plugin). After that, it polls the number of valid NICs on the node every 5 minutes and re-queries only when the number changes. If the query fails, the last valid result is retained.
+3. If the driver does not support this query interface or the query fails, the component falls back to the configuration file `/etc/rdma-plugin/npu-nic-mapping.json` built into the image to complete the mapping from the NPU ID to the DPU device.
+4. Device allocation in exclusive mode is based on UB-type RDMA devices.
+5. The maximum duration to wait for the driver (DCMI) initialization to complete when the component starts can be configured through `-deviceResetTimeout`. The value range is [10, 600], in seconds, and the default value is 600.
 
-After exclusive mode is enabled, when processing the Pod's `Allocate` request, the component obtains the NPU ID from the service Pod's `huawei.com/npu` annotation (automatically written by Volcano during scheduling), maps it to a DPU device through `npu-nic-mapping.json`, and completes the allocation.
+After exclusive mode is enabled, when processing the Pod's `Allocate` request, the component obtains the NPU ID from the service Pod's `huawei.com/npu` annotation (automatically written by Volcano during scheduling), maps it to a DPU device based on the NPU-DPU mapping obtained from the driver query (or the fallback configuration), and completes the allocation.
 
 ## Parameter Description<a name="section1851191618363"></a>
 
@@ -159,6 +161,15 @@ After exclusive mode is enabled, when processing the Pod's `Allocate` request, t
 </td>
 <td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971515"><a name="p589551971515"></a><a name="p589551971515"></a><span id="ph4556742141521"><a name="ph4556742141521"></a><a name="ph4556742141521"></a>Whether to enable the exclusive mode of UB devices. This parameter is a flag bit and does not require a value. After it is enabled, the component allocates real UB devices to the Pod based on the NPU-DPU mapping relationship, and writes the allocation result to the Pod's k8s.v1.cni.cncf.io/device-status annotation. Example: ./k8s-rdma-shared-dp -ub-excl-mode</span></p>
 <div class="note"><span class="notetitle">[!NOTE]</span><div class="notebody"><p>For the configuration method of exclusive mode, see <a href="#section187410285361">Exclusive Mode Configuration</a>.</p></div></div>
+</td>
+</tr>
+<tr id="row68317556192"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p0894319101524"><a name="p0894319101524"></a><a name="p0894319101524"></a><span id="ph96781327191524"><a name="ph96781327191524"></a><a name="ph96781327191524"></a>-deviceResetTimeout</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p108941719151520"><a name="p108941719151520"></a><a name="p108941719151520"></a><span id="ph1899563312159"><a name="ph1899563312159"></a><a name="ph1899563312159"></a>int</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p19894131961518"><a name="p19894131961518"></a><a name="p19894131961518"></a><span id="ph67327379157"><a name="ph67327379157"></a><a name="ph67327379157"></a>600</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971516"><a name="p589551971516"></a><a name="p589551971516"></a><span id="ph4556742141522"><a name="ph4556742141522"></a><a name="ph4556742141522"></a>The maximum duration to wait for the driver (DCMI) initialization to complete when the component starts, which is used by the NPU-NIC affinity query. The value range is [10, 600], in seconds.</span></p>
 </td>
 </tr>
 <tr id="row10282191492319"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172319"><a name="p8283714172319"></a><a name="p8283714172319"></a>--enable-healthz</p>

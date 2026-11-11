@@ -116,7 +116,7 @@
     - 其他类型节点，修改对应启动YAML文件中Ascend Device Plugin的启动参数。
 
    <!-- npu="950" id1 -->
-4. <a name="step_npu_nic_mapping"></a>（<term>Ascend 950PR&950DT系列产品</term>可选）若计算节点存在UB网卡（DPU），Ascend Device Plugin通过`npu-nic-mapping.json`读取NPU与UB网卡的连接关系，用于生成<term>Ascend 950PR&950DT系列产品</term>的RoCE通信地址。软件包内的默认配置不一定匹配节点实际拓扑，建议按节点实际情况自行创建映射文件并挂载到容器内。
+4. <a name="step_npu_nic_mapping"></a>（<term>Ascend 950PR&950DT系列产品</term>可选）若计算节点存在UB网卡（DPU），Ascend Device Plugin启动时自动从驱动获取NPU与UB网卡的亲和关系，用于生成<term>Ascend 950PR&950DT系列产品</term>的RoCE通信地址，通常无需手动配置。当驱动不支持该查询接口或查询失败时，组件回退读取`npu-nic-mapping.json`，此时可按以下步骤创建映射文件并挂载到容器内。自动发现机制请参见[NPU-NIC亲和自动发现](#section_npu_nic_auto_discovery)。
 
     1. 从驱动侧获取NPU与UB网卡的物理连接关系。
 
@@ -169,8 +169,8 @@
         上述`hostPath.path`为文件在计算节点上的实际路径（宿主机路径可调整，但不支持软连接）。
 
     >[!NOTE]
-    >- 不同节点的NPU与UB网卡物理连接关系可能不同，请按各节点实际拓扑分别创建并挂载。
-    >- 该配置文件在组件启动时读取，修改后需重启组件使配置生效。
+    >- 不同节点的NPU与UB网卡物理连接关系可能不同，回退配置文件需按各节点实际拓扑分别创建并挂载。
+    >- 组件优先使用驱动查询结果；该配置文件仅在组件启动时驱动查询失败的情况下读取，修改后需重启组件使配置生效。
     <!-- end id1 -->
 
 5. （可选）使用**断点续训**（包括进程级恢复）或**弹性训练**时，根据需要使用的故障处理模式，修改Ascend Device Plugin组件的启动YAML。
@@ -349,6 +349,34 @@
 >- 安装组件后，组件的Pod状态为ContainerCreating，可参考[集群调度组件Pod处于ContainerCreating状态](https://gitcode.com/Ascend/mind-cluster/issues/343)章节进行处理。
 >- 启动组件失败，可参考[启动集群调度组件失败，日志打印"get sem errno =13"](https://gitcode.com/Ascend/mind-cluster/issues/390)章节信息。
 >- 组件启动成功，找不到组件对应的Pod，可参考[组件启动YAML执行成功，找不到组件对应的Pod](https://gitcode.com/Ascend/mind-cluster/issues/345)章节信息。
+
+## NPU-NIC亲和自动发现<a name="section_npu_nic_auto_discovery"></a>
+
+对于<term>Ascend 950PR&950DT系列产品</term>，当节点存在UB网卡（DPU）时，Ascend Device Plugin启动时自动获取NPU与UB网卡的亲和关系，用于生成RoCE通信地址，无需手动维护映射文件。
+
+**数据来源**
+
+组件通过驱动（DCMI）的拓扑查询接口获取各NPU与各网卡的连接关系，并结合节点上的RDMA设备信息确定网卡：
+
+1. 枚举`/sys/class/infiniband`下已绑定以太网接口的RDMA设备（即`/sys/class/infiniband/<设备名>/device/net`目录存在），从中获取驱动侧的网卡名称及其对应的以太网接口名称。一个RDMA设备只应绑定一个以太网接口。
+2. 逐一查询每个NPU与上述网卡的拓扑类型，仅保留拓扑类型为UB的网卡。
+3. 按网卡名称的字典序为各NPU匹配主网卡，尽量使不同NPU使用不同的主网卡，并将主网卡放在该NPU网卡列表的首位。列表中的其他网卡作为备用，组件依次遍历并使用第一个存在有效IP地址的网卡生成RoCE通信地址。
+
+**刷新机制**
+
+- 组件启动时同步查询一次亲和关系。
+- 组件每5分钟轮询一次节点上的有效网卡数量，仅当数量发生变化时才重新向驱动查询，避免频繁访问驱动。
+- 重新查询失败时保留上一次的有效结果，已运行的业务不受影响。
+
+**回退配置**
+
+当驱动不支持拓扑查询接口（例如驱动版本过低）或查询结果为空时，组件读取`/user/mindx-dl/npu/npu-nic-mapping.json`作为回退配置，挂载方法参见[操作步骤](#step_npu_nic_mapping)中的步骤4。回退配置中的`nicNames`需按优先级从高到低排列。
+
+**约束与说明**
+
+- 该能力仅在<term>Ascend 950PR&950DT系列产品</term>且节点存在UB网卡时生效，其他产品不做NPU-NIC亲和查询。
+- 组件YAML默认已配置`hostNetwork: true`，用于读取宿主机网卡的IP地址生成RoCE通信地址，请勿删除。
+- 每张NPU查询到的亲和关系记录在组件日志中。
 
 ## 参数说明<a name="section479917441223"></a>
 
