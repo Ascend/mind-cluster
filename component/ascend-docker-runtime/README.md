@@ -21,6 +21,7 @@ Ascend Docker Runtime（昇腾容器运行时）为 AI 训练/推理作业提供
 - 设备隔离：在宿主机上配置容器的 device cgroup，确保容器只能使用被指定的 NPU，实现设备隔离。
 - 虚拟化支持：支持挂载静态 vNPU；在部分硬件形态下，支持根据 `ASCEND_VNPU_SPECS` 自动完成动态 vNPU 的切分与销毁。
 - 自定义挂载：支持通过 `ASCEND_RUNTIME_MOUNTS` 读取自定义挂载配置文件，按需裁剪挂载到容器内的内容。
+- UB网卡挂载：Legacy模式下通过`ASCEND_RDMA_DEVICES`指定UB网卡的RDMA字符设备，按宿主机设备身份选择并只读挂载对应驱动文件，可与NPU、UB驱动挂载组合使用。
 - 容器快照：支持推理服务的容器快照（checkpoint/restore），Pod 异常删除或扩容时可基于快照快速恢复服务。
 
 ## 软件架构
@@ -103,7 +104,7 @@ runtime 模块不再注入用于设备挂载的 Prestart Hook，而是在内存�
 
 - 设备节点：为每个芯片生成对应的设备节点，物理芯片使用 `/dev/davinci*`，虚拟芯片使用 `vdavinci*` 宿主机路径。
 - 公共设备与文件：包含公共管理设备、HDK 驱动与自定义挂载文件，并设置 `LD_LIBRARY_PATH` 环境变量。
-- 运行参数：支持与 legacy 相同的一组运行参数。
+- 运行参数：支持与legacy相同的NPU运行参数；CDI模式会忽略`ASCEND_RDMA_DEVICES`，不会根据该参数自动注入RDMA设备及挂载对应驱动文件。
 
 两种注入方式的能力对比如下：
 
@@ -113,7 +114,7 @@ runtime 模块不再注入用于设备挂载的 Prestart Hook，而是在内存�
 | 设备注入实现 | 容器创建前由 hook 与 cli 模块挂载 | runtime 生成 CDI Spec 并直接注入 OCI Spec |
 | 是否依赖 Prestart Hook | 依赖 | 不依赖 |
 | 动态 vNPU 销毁 | 由 Poststop Hook 调用 destroy 模块 | 由 Poststop Hook 调用 destroy 模块 |
-| 支持的运行参数 | 全部支持 | 全部支持 |
+| 支持的运行参数 | NPU与RDMA运行参数 | NPU运行参数，当前不支持RDMA注入 |
 
 > [!NOTE]
 >
@@ -205,7 +206,7 @@ runtime 模块不再注入用于设备挂载的 Prestart Hook，而是在内存�
 
 Ascend Docker Runtime 基于自身关键特性的使用指导，请参见 MindCluster 集群调度组件用户指南对应章节：
 
-- 容器化支持的使用前必读，请参见[使用前必读](../../docs/zh/scheduling/04_usage/00_containerization/00_before_you_start.md)。
+- 容器化支持（含UB网卡设备及驱动挂载）的使用前必读，请参见[使用前必读](../../docs/zh/scheduling/04_usage/00_containerization/00_before_you_start.md)。
 - 按需裁剪容器内挂载内容，请参见[（可选）配置自定义挂载内容](../../docs/zh/scheduling/04_usage/00_containerization/01_configuring_custom_mounted_content.md)。
 - 在 Docker 客户端挂载芯片，请参见[在Docker客户端使用](../../docs/zh/scheduling/04_usage/00_containerization/02_usage_on_the_docker_client.md)。
 - 在 Containerd 客户端挂载芯片，请参见[在Containerd客户端使用](../../docs/zh/scheduling/04_usage/00_containerization/03_usage_on_the_containerd_client.md)。
