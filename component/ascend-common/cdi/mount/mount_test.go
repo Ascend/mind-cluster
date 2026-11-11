@@ -356,8 +356,8 @@ func TestCheckSymlinkOwner(t *testing.T) {
 	}
 
 	// Non-symlink files pass through regardless of owner.
-	if !checkSymlinkOwner(target, true, "") {
-		t.Error("checkSymlinkOwner must pass non-symlink files through")
+	if !CheckSymlinkOwner(target, true, "") {
+		t.Error("CheckSymlinkOwner must pass non-symlink files through")
 	}
 
 	if os.Geteuid() == 0 {
@@ -365,8 +365,8 @@ func TestCheckSymlinkOwner(t *testing.T) {
 		if err := os.Lchown(link, 1000, 1000); err != nil {
 			t.Fatal(err)
 		}
-		if checkSymlinkOwner(link, true, "") {
-			t.Error("checkSymlinkOwner must reject non-root-owned symlink")
+		if CheckSymlinkOwner(link, true, "") {
+			t.Error("CheckSymlinkOwner must reject non-root-owned symlink")
 		}
 
 		rootTarget := filepath.Join(tmpDir, "root_target.so")
@@ -375,19 +375,19 @@ func TestCheckSymlinkOwner(t *testing.T) {
 		if err := os.Symlink(rootTarget, rootLink); err != nil {
 			t.Fatal(err)
 		}
-		if !checkSymlinkOwner(rootLink, true, "") {
-			t.Error("checkSymlinkOwner must pass root-owned symlink")
+		if !CheckSymlinkOwner(rootLink, true, "") {
+			t.Error("CheckSymlinkOwner must pass root-owned symlink")
 		}
 	} else {
 		// Non-root: the created symlink is already non-root owned.
-		if checkSymlinkOwner(link, true, "") {
-			t.Error("checkSymlinkOwner must reject non-root-owned symlink")
+		if CheckSymlinkOwner(link, true, "") {
+			t.Error("CheckSymlinkOwner must reject non-root-owned symlink")
 		}
 	}
 
 	// Lstat failure on a missing path is rejected.
-	if checkSymlinkOwner(filepath.Join(tmpDir, "missing.so"), true, "") {
-		t.Error("checkSymlinkOwner must reject missing path")
+	if CheckSymlinkOwner(filepath.Join(tmpDir, "missing.so"), true, "") {
+		t.Error("CheckSymlinkOwner must reject missing path")
 	}
 }
 
@@ -402,11 +402,11 @@ func TestCheckSymlinkOwner_AllowLinkDisabled(t *testing.T) {
 
 	// allowLink=false: symlink entries are skipped regardless of ownership,
 	// while non-symlink entries still pass.
-	if checkSymlinkOwner(link, false, "") {
-		t.Error("checkSymlinkOwner with allowLink=false must reject symlink")
+	if CheckSymlinkOwner(link, false, "") {
+		t.Error("CheckSymlinkOwner with allowLink=false must reject symlink")
 	}
-	if !checkSymlinkOwner(target, false, "") {
-		t.Error("checkSymlinkOwner with allowLink=false must pass non-symlink files")
+	if !CheckSymlinkOwner(target, false, "") {
+		t.Error("CheckSymlinkOwner with allowLink=false must pass non-symlink files")
 	}
 }
 
@@ -450,7 +450,7 @@ func TestParseMountEntry(t *testing.T) {
 		"/data/a:/container/a?",     // '?' belongs to the deny list
 		"/data/a:/container/[a]",    // '[' belongs to the deny list
 		"/data/a:/cont\x01ainer/a",  // control characters are rejected
-		"/data/a:/x///",             // container path with only slashes
+		"/data/a:///",               // container path contains only slashes
 		"/data/a:/c/" + strings.Repeat("a", MaxContainerPathLen-2), // exceeds the CLI bound
 	}
 	for _, entry := range invalid {

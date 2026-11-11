@@ -156,6 +156,9 @@ const (
 	AscendDockerRuntimeEnv = "ASCEND_DOCKER_RUNTIME"
 	// AscendVisibleDevicesEnv env variable
 	AscendVisibleDevicesEnv = "ASCEND_VISIBLE_DEVICES"
+	// AscendRdmaDevicesEnv selects RDMA HCAs by their sysfs names.
+	// Request devices by full HCA name and parse them independently of NPU indices.
+	AscendRdmaDevicesEnv = "ASCEND_RDMA_DEVICES"
 	// AscendRuntimeOptionsEnv env variable
 	AscendRuntimeOptionsEnv = "ASCEND_RUNTIME_OPTIONS"
 	// AscendRuntimeMountsEnv env variable

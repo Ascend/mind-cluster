@@ -167,3 +167,18 @@ func parseAscendStyle(devices, containerID string) []int {
 	}
 	return deviceIDs
 }
+
+// GetEnvValue returns the first matching environment value, preserving equals signs in the value.
+// Malformed entries are skipped, and a missing key returns an empty value.
+func GetEnvValue(env []string, key string) string {
+	for _, entry := range env {
+		parts := strings.SplitN(entry, "=", envSliceLen)
+		if len(parts) != envSliceLen {
+			continue
+		}
+		if parts[0] == key {
+			return parts[1]
+		}
+	}
+	return ""
+}
