@@ -116,7 +116,7 @@ Before installing Ascend Device Plugin, you need to understand the relevant cons
     - For other types of nodes, modify the startup parameters of Ascend Device Plugin in the corresponding startup YAML file.
 
    <!-- npu="950" id1 -->
-4. <a name="step_npu_nic_mapping"></a> (Optional for Ascend 950PR&950DT products) If the compute node has a UB NIC (DPU), Ascend Device Plugin reads the connection relationship between NPUs and UB NICs through `npu-nic-mapping.json`, which is used to generate RoCE communication addresses for Ascend 950PR&950DT products. The default configuration in the software package may not match the actual topology of the node. It is recommended to create the mapping file manually according to the node's actual conditions and mount it into the container.
+4. <a name="step_npu_nic_mapping"></a> (Optional for Ascend 950PR&950DT products) If the compute node has a 1825 NIC (DPU), Ascend Device Plugin automatically obtains the NPU-NIC affinity from the driver at startup, which is used to generate RoCE communication addresses for Ascend 950PR&950DT products. Manual configuration is usually not required. If the driver does not support this query interface or the query fails, the component falls back to `npu-nic-mapping.json`. In that case, create and mount the mapping file as follows. For the automatic discovery mechanism, see [NPU-NIC Affinity Auto-Discovery](#section_npu_nic_auto_discovery).
 
     1. Obtain the physical connection relationship between NPUs and UB NICs from the driver side.
 
@@ -169,8 +169,8 @@ Before installing Ascend Device Plugin, you need to understand the relevant cons
         `hostPath.path` above is the actual path of the file on the compute node (the host path can be adjusted, but symbolic links are not supported).
 
     >[!NOTE]
-    >- The physical connection relationships between NPUs and UB NICs may differ across nodes. Please create and mount the file separately according to the actual topology of each node.
-    >- This configuration file is read when the component starts. After modification, the component needs to be restarted for the configuration to take effect.
+    >- The physical connection relationships between NPUs and 1825 NICs may differ across nodes. Create and mount the fallback configuration file separately according to the actual topology of each node.
+    >- The component preferentially uses the driver query result. This configuration file is read only when the driver query fails during component startup. After modification, the component needs to be restarted for the configuration to take effect.
     <!-- end id1 -->
 
 5. (Optional) To use **resumable training** (including process-level recovery) or **elastic training**, modify the startup YAML of the Ascend Device Plugin component based on the fault handling mode to be used.
@@ -349,6 +349,34 @@ Before installing Ascend Device Plugin, you need to understand the relevant cons
 >- If the pod status of the component is `ContainerCreating` after installation, see [Cluster Scheduling Component Pod in ContainerCreating State](https://gitcode.com/Ascend/mind-cluster/issues/343).
 >- If the component fails to start, see [Cluster Scheduling Component Startup Failure, Log Prints "get sem errno =13"](https://gitcode.com/Ascend/mind-cluster/issues/390).
 >- If the component starts successfully but the corresponding pod cannot be found, see [Component Startup YAML Executed Successfully but Corresponding Pod Not Found](https://gitcode.com/Ascend/mind-cluster/issues/345).
+
+## NPU-NIC Affinity Auto-Discovery<a name="section_npu_nic_auto_discovery"></a>
+
+For Ascend 950PR&950DT products, when the node has UB NICs (DPUs), Ascend Device Plugin automatically obtains the NPU-NIC affinity at startup, which is used to generate RoCE communication addresses. Manual maintenance of the mapping file is not required.
+
+**Data source**
+
+The component obtains the connection relationship between each NPU and each NIC through the topology query interface of the driver (DCMI), and determines the NICs based on the RDMA devices on the node:
+
+1. Enumerate the RDMA devices under `/sys/class/infiniband` that are bound to an Ethernet interface (that is, the directory `/sys/class/infiniband/<device name>/device/net` exists), and obtain the NIC name used by the driver and its corresponding Ethernet interface name. An RDMA device should be bound to only one Ethernet interface. If the driver reports multiple interfaces, the component records a warning and uses one of them.
+2. Query the topology type between each NPU and each NIC one by one, and keep only the NICs whose topology type is UB.
+3. Match a primary NIC for each NPU in lexicographic order of the NIC names so that different NPUs preferably use different primary NICs, and place the primary NIC at the beginning of the NIC list of that NPU. The other NICs in the list are used as backups. The component traverses the list in order and uses the first NIC with a valid IP address to generate the RoCE communication address.
+
+**Refresh mechanism**
+
+- The affinity is queried synchronously once when the component starts.
+- The component polls the number of valid NICs on the node every 5 minutes, and queries the driver again only when the number changes, avoiding frequent driver access.
+- If the re-query fails, the last valid result is retained and running services are not affected.
+
+**Fallback configuration**
+
+If the driver does not support the topology query interface (for example, the driver version is too early) or the query result is empty, the component reads `/user/mindx-dl/npu/npu-nic-mapping.json` as the fallback configuration. For the mounting method, see step 4 in [Procedure](#step_npu_nic_mapping). The `nicNames` in the fallback configuration must be arranged in descending order of priority.
+
+**Constraints and notes**
+
+- This capability takes effect only on Ascend 950PR&950DT products when UB NICs exist on the node. No NPU-NIC affinity query is performed on other products.
+- The component YAML is configured with `hostNetwork: true` by default, which is used to read the IP addresses of host NICs to generate RoCE communication addresses. Do not delete it.
+- The affinity queried for each NPU is recorded in the component logs.
 
 ## Parameter Description<a name="section479917441223"></a>
 

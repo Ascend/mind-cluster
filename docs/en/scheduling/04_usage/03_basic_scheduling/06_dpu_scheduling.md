@@ -115,7 +115,7 @@ In exclusive mode, device mounting depends on Multus CNI that reads the `k8s.v1.
 
 1. During scheduling, Volcano writes the NPU information allocated to the Pod to the `huawei.com/npu` annotation of the Pod, in the format of an NPU ID list, for example, `"0,1"`.
 2. After the Pod is created, the component reads the service Pod information of the node through the kubelet `/pods` endpoint to obtain the NPU ID in the `huawei.com/npu` annotation.
-3. The component maps the NPU ID to the DPU device that uses this NPU as the primary NIC, through the `/etc/rdma-plugin/npu-nic-mapping.json` configuration file built into the image.
+3. The component obtains the NPU-DPU affinity through the driver interface and maps the NPU ID to the DPU device that uses this NPU as the primary NIC. The affinity is queried through DCMI at component startup and refreshed automatically when the number of NICs on the node changes. If the driver does not support this query interface or the query fails, the component falls back to the `/etc/rdma-plugin/npu-nic-mapping.json` configuration file built into the image.
 4. After the component completes device allocation, it writes the allocation result to the `k8s.v1.cni.cncf.io/device-status` annotation of the Pod, so that Multus CNI and UB Host Device CNI can complete device mounting.
 
 ### Service Pod Resource Configuration Example in Exclusive Mode

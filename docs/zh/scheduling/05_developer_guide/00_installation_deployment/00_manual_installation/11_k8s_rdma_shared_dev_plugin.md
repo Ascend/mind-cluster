@@ -66,10 +66,12 @@
 独占模式配置说明：
 
 1. 开启独占模式需为组件增加`-ub-excl-mode`启动参数，参数说明请参见[表1](#table1862682843615)。
-2. 组件通过镜像内置的配置文件`/etc/rdma-plugin/npu-nic-mapping.json`完成NPU ID到DPU设备的映射。
-3. 独占模式的设备分配基于UB类型的RDMA设备。
+2. NPU-DPU映射关系优先由驱动接口获取：组件启动时通过DCMI的拓扑查询接口获取各NPU与UB网卡的亲和关系（数据来源与Ascend Device Plugin的[NPU-NIC亲和自动发现](04_ascend_device_plugin.md#section_npu_nic_auto_discovery)一致），之后每5分钟轮询一次节点上的有效网卡数量，仅当数量变化时重新查询；查询失败时保留上一次的有效结果。
+3. 当驱动不支持该查询接口或查询失败时，组件回退读取镜像内置的配置文件`/etc/rdma-plugin/npu-nic-mapping.json`完成NPU ID到DPU设备的映射。
+4. 独占模式的设备分配基于UB类型的RDMA设备。
+5. 可通过`-deviceResetTimeout`配置组件启动时等待驱动（DCMI）初始化完成的最大时长，取值范围为[10, 600]，单位为秒，默认值为600。
 
-开启独占模式后，组件在处理Pod的Allocate请求时，从业务Pod的`huawei.com/npu`注解（由Volcano调度时自动写入）获取NPU ID，经`npu-nic-mapping.json`映射为DPU设备并完成分配。
+开启独占模式后，组件在处理Pod的Allocate请求时，从业务Pod的`huawei.com/npu`注解（由Volcano调度时自动写入）获取NPU ID，根据驱动查询（或回退配置）得到的NPU-DPU映射关系映射为DPU设备并完成分配。
 
 ## 参数说明<a name="section1851191618363"></a>
 
@@ -159,6 +161,15 @@
 </td>
 <td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971515"><a name="p589551971515"></a><a name="p589551971515"></a><span id="ph4556742141521"><a name="ph4556742141521"></a><a name="ph4556742141521"></a>是否开启UB设备的独占模式，该参数为标志位，无需跟值。开启后组件按NPU与DPU的映射关系为Pod分配真实UB设备，并将分配结果写入Pod的k8s.v1.cni.cncf.io/device-status注解。使用示例：./k8s-rdma-shared-dp -ub-excl-mode</span></p>
 <div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>独占模式的配置方法请参见<a href="#section187410285361">独占模式配置</a>。</p></div></div>
+</td>
+</tr>
+<tr id="row68317556192"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p0894319101524"><a name="p0894319101524"></a><a name="p0894319101524"></a><span id="ph96781327191524"><a name="ph96781327191524"></a><a name="ph96781327191524"></a>-deviceResetTimeout</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p108941719151520"><a name="p108941719151520"></a><a name="p108941719151520"></a><span id="ph1899563312159"><a name="ph1899563312159"></a><a name="ph1899563312159"></a>int</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p19894131961518"><a name="p19894131961518"></a><a name="p19894131961518"></a><span id="ph67327379157"><a name="ph67327379157"></a><a name="ph67327379157"></a>600</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971516"><a name="p589551971516"></a><a name="p589551971516"></a><span id="ph4556742141522"><a name="ph4556742141522"></a><a name="ph4556742141522"></a>组件启动时等待驱动（DCMI）初始化完成的最大时长，用于NPU-NIC亲和关系查询。取值范围为[10, 600]，单位为秒。</span></p>
 </td>
 </tr>
 <tr id="row10282191492319"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172319"><a name="p8283714172319"></a><a name="p8283714172319"></a>--enable-healthz</p>

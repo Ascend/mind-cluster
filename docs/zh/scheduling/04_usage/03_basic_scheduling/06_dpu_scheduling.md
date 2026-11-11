@@ -115,7 +115,7 @@ rdma-app   1/1     Running   0          10s   10.244.1.*   compute-node-1
 
 1. Volcano在调度时将分配给Pod的NPU卡信息写入Pod的`huawei.com/npu`注解，格式为NPU ID列表，例如`"0,1"`。
 2. Pod创建后，组件通过kubelet `/pods`端点读取本节点业务Pod信息，获取`huawei.com/npu`注解中的NPU ID。
-3. 组件通过镜像内置的`/etc/rdma-plugin/npu-nic-mapping.json`配置文件，将NPU ID映射为以该NPU作为主网卡的DPU设备。
+3. 组件通过驱动接口获取NPU与DPU的亲和关系，将NPU ID映射为以该NPU作为主网卡的DPU设备。亲和关系在组件启动时通过DCMI查询，并在节点网卡数量变化时自动刷新；当驱动不支持该查询接口或查询失败时，组件回退读取镜像内置的`/etc/rdma-plugin/npu-nic-mapping.json`配置文件。
 4. 组件完成设备分配后，将分配结果写入Pod的`k8s.v1.cni.cncf.io/device-status`注解，供Multus CNI与UB Host Device CNI完成设备挂载。
 
 ### 独占模式下业务Pod的资源配置示例

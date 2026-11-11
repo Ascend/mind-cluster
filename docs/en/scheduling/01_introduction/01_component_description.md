@@ -355,9 +355,10 @@ Kubernetes needs to be aware of RDMA network device resource information to impl
 **Working Mode<a name="section15761025111720"></a>**
 
 - **Shared mode (default)**: All pods in the cluster share all RDMA devices on the node, and no specific device needs to be allocated to a single pod. The component creates virtual devices based on the `rdmaHcaMax` parameter and reports them to kubelet. After a pod requests the resource, it can use any device.
-- **Exclusive mode (beta)**: Each NPU corresponds to a specific DPU device in a one-to-one manner, and device allocation is completed through the NPU-NIC mapping relationship. Based on the NPU requested by the pod, the component finds the corresponding DPU device through the mapping file and mounts it to the container, implementing device-level isolation.
+- **Exclusive mode (beta)**: Each NPU corresponds to a specific DPU device in a one-to-one manner, and device allocation is completed through the NPU-NIC affinity relationship. Based on the NPU requested by the pod, the component finds the corresponding DPU device through the affinity queried from the driver interface and mounts it to the container, implementing device-level isolation.
   - **How to enable**: Add the `--ub-excl-mode` parameter when starting the component to enable exclusive mode.
-  - **Allocation logic**: When a pod is created, the component reads the NPU ID requested by the pod, finds the corresponding DPU device through the mapping relationship, and mounts it to the container.
+  - **Affinity data source**: At startup, the component queries the topology affinity between NPUs and UB NICs through DCMI, and refreshes it automatically when the number of NICs on the node changes. If the driver does not support this interface or the query fails, the component falls back to the built-in `npu-nic-mapping.json`.
+  - **Allocation logic**: When a pod is created, the component reads the NPU ID requested by the pod, finds the corresponding DPU device through the affinity relationship, and mounts it to the container.
   - **Device reporting**: In exclusive mode, the UB devices actually discovered on the node are reported, and the reported quantity is the same as the actual number of DPU devices on the node.
 
 **Component Function<a name="section1112014512117"></a>**
