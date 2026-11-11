@@ -26,9 +26,10 @@ import (
 )
 
 var (
-	pendingCache     = silentfault.NewPendingCache()
-	firstFaultMgr    = silentfault.NewFirstFaultMgr()
-	faultHardwareLog = hardwarefault.NewFaultHardwareLog()
+	pendingCache         = silentfault.NewPendingCache()
+	firstFaultMgr        = silentfault.NewFirstFaultMgr()
+	faultHardwareLog     = hardwarefault.NewFaultHardwareLog()
+	dpuFaultHardwareLog  = hardwarefault.NewFaultHardwareLog()
 	// SilentFaultCmInfo silent fault result cache (message-driven, updated by the manualfault-side handler)
 	SilentFaultCmInfo = silentfault.NewSilentFaultCmInfo()
 )
@@ -53,10 +54,11 @@ func ClearDetectionCache() {
 	firstFaultMgr.Reset()
 }
 
-// StartFaultHardwareLogCleanup starts the daily cleanup of the shared hardware fault log in its
-// own goroutine. The cleanup logic lives in the public hardwarefault package.
+// StartFaultHardwareLogCleanup starts the daily cleanup of the shared hardware fault logs (device/node/switch
+// and DPU) in background goroutines. The cleanup logic lives in the public hardwarefault package.
 func StartFaultHardwareLogCleanup(ctx context.Context) {
-	faultHardwareLog.RunDailyCleanup(ctx)
+	go faultHardwareLog.RunDailyCleanup(ctx)
+	go dpuFaultHardwareLog.RunDailyCleanup(ctx)
 }
 
 // SilentFaultIsEmpty reports whether the silent fault result cache is empty

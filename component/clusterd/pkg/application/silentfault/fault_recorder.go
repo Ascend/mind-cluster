@@ -49,6 +49,8 @@ func (r *faultRecorderProcessor) Process(info any) any {
 		r.recordNodeFaults(content.AllConfigmap)
 	case constant.OneConfigmapContent[*constant.SwitchInfo]:
 		r.recordSwitchFaults(content.AllConfigmap)
+	case constant.OneConfigmapContent[*constant.DpuInfo]:
+		r.recordDpuFaults(content.AllConfigmap)
 	}
 	return info
 }
@@ -132,6 +134,37 @@ func (r *faultRecorderProcessor) recordSwitchFaults(switchCms map[string]*consta
 			}
 		}
 	}
+}
+
+// recordDpuFaults appends DPU faults (HCA and node-level faults reported by dpu-dp) to the dedicated DPU hardware fault log
+func (r *faultRecorderProcessor) recordDpuFaults(dpuCms map[string]*constant.DpuInfo) {
+	for cmName, dpuCm := range dpuCms {
+		if dpuCm == nil {
+			continue
+		}
+		node := strings.TrimPrefix(cmName, constant.DpuInfoPrefix)
+		for _, item := range dpuCm.DPUInfo.DPUList {
+			for _, fault := range item.FaultList {
+				appendDpuFault(node, dpuCm.UpdateTime, fault.Time)
+			}
+		}
+		if dpuCm.DPUInfo.NodeEvent == nil {
+			continue
+		}
+		for _, fault := range dpuCm.DPUInfo.NodeEvent.FaultList {
+			appendDpuFault(node, dpuCm.UpdateTime, fault.Time)
+		}
+	}
+}
+
+// appendDpuFault appends a DPU fault occurrence time to the dedicated DPU fault log, falling back
+// to UpdateTime when the fault time is missing. DPU faults are kept separate from device/node/switch
+// faults so the validator can decide whether to count them based on whether the job requested DPU.
+func appendDpuFault(node string, fallback, faultTime int64) {
+	if faultTime == 0 {
+		faultTime = fallback
+	}
+	dpuFaultHardwareLog.Append(node, faultTime)
 }
 
 // isSilentSelfFault reports whether the fault is a silent-fault self-injected entry, which is not used as hardware fault evidence

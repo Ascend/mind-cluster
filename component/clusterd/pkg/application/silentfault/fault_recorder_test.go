@@ -193,3 +193,31 @@ func TestProcessDispatchNodeSwitch(t *testing.T) {
 		convey.So(faultHardwareLog.HasFaultIn("n1", 300000, 300000), convey.ShouldBeTrue)
 	})
 }
+
+func TestRecordDpuFaults(t *testing.T) {
+	convey.Convey("record dpu faults", t, func() {
+		dpuFaultHardwareLog.Reset()
+		FaultRecorderProcessor.recordDpuFaults(map[string]*constant.DpuInfo{
+			constant.DpuInfoPrefix + "n1": {
+				DpuInfoCfg: constant.DpuInfoCfg{
+					DPUInfo: constant.DpuInfoBody{
+						DPUList: []constant.DpuItem{
+							{DeviceID: "0x8200", FaultList: []constant.DpuFaultDetail{
+								{FaultCode: "21000023", Time: 300000},
+								{FaultCode: "21000024"},
+							}},
+						},
+						NodeEvent: &constant.DpuNodeEvent{
+							NodeName:  "n1",
+							FaultList: []constant.DpuFaultDetail{{FaultCode: "21000025", Time: 400000}},
+						},
+					},
+					UpdateTime: 200000,
+				},
+			},
+		})
+		convey.So(dpuFaultHardwareLog.HasFaultIn("n1", 300000, 300000), convey.ShouldBeTrue)
+		convey.So(dpuFaultHardwareLog.HasFaultIn("n1", 400000, 400000), convey.ShouldBeTrue)
+		convey.So(dpuFaultHardwareLog.HasFaultIn("n1", 200000, 200000), convey.ShouldBeTrue)
+	})
+}

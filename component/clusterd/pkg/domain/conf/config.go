@@ -39,7 +39,9 @@ const (
 	NotRelease = -1
 )
 
-var config GlobalConfig
+var config = GlobalConfig{
+	SilentFaultPolicy: SilentFaultPolicy{Enabled: DefaultSilentFaultEnabled},
+}
 
 // GlobalConfig global config
 type GlobalConfig struct {
@@ -113,6 +115,9 @@ func Check(policy ManuallySeparatePolicy) error {
 const (
 	// DetectInterval detect loop interval. unit: second
 	DetectInterval = 60
+
+	// DefaultSilentFaultEnabled default silent fault detection switch, enabled by default
+	DefaultSilentFaultEnabled = true
 
 	// DefaultMinTaskCards default min task cards
 	DefaultMinTaskCards = 16

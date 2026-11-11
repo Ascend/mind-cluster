@@ -16,6 +16,7 @@ package silentfault
 
 import (
 	"encoding/json"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -23,7 +24,9 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/conf"
 	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/silentfault"
+	"clusterd/pkg/interface/kube"
 )
 
 // rescheduleReason set of reschedule reasons for a single job
@@ -139,7 +142,39 @@ func buildPendingEvent(jobID, failPod, failNode string, ts int64) *silentfault.P
 		hwlog.RunLog.Infof("skip silent fault record: job %s node %s has no task nodes", jobID, failNode)
 		return nil
 	}
-	return &silentfault.PendingEvent{JobID: jobID, FailNode: failNode, TaskNodes: nodes, Timestamp: ts}
+	return &silentfault.PendingEvent{JobID: jobID, FailNode: failNode, TaskNodes: nodes, Timestamp: ts,
+		UseDPU: jobUsesDpu(jobID, failNode)}
+}
+
+// jobUsesDpu reports whether the job requested the DPU resource. The DPU resource name is
+// read from the node annotation; any pod of the job that requested it is enough, since the whole-node
+// check is already done upstream and the rescheduled pod may no longer be on the failed node.
+func jobUsesDpu(jobID, nodeName string) bool {
+	node := kube.GetNode(nodeName)
+	if node == nil {
+		return false
+	}
+	rdmaResName, ok := node.Annotations[constant.DpuResourceNameKey]
+	if !ok || rdmaResName == "" {
+		return false
+	}
+	rdmaResSet := make(map[string]struct{})
+	for _, name := range strings.Split(rdmaResName, constant.Comma) {
+		if name = strings.TrimSpace(name); name != "" {
+			rdmaResSet[name] = struct{}{}
+		}
+	}
+	if len(rdmaResSet) == 0 {
+		return false
+	}
+	for _, podInfo := range pod.GetSimplePodByJobId(jobID) {
+		for resName := range podInfo.ResourceRequests {
+			if _, ok := rdmaResSet[resName]; ok {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // jobCardsAtLeast reports whether the job's total card count is at least the threshold (rule 1).

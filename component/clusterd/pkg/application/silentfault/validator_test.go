@@ -85,3 +85,47 @@ func TestValidatePendingHardwarePresent(t *testing.T) {
 		convey.So(len(firstFaultMgr.Nodes()), convey.ShouldEqual, 0)
 	})
 }
+
+func TestValidatePendingDpuHardwarePresent(t *testing.T) {
+	convey.Convey("validate pending skips when dpu fault present and job uses dpu", t, func() {
+		pendingCache.ResetEvents()
+		pendingCache.ResetProcessed()
+		firstFaultMgr.Reset()
+		faultHardwareLog.Reset()
+		dpuFaultHardwareLog.Reset()
+		enableSilentFault()
+		now := int64(150)
+		p := gomonkey.ApplyFunc(time.Now, func() time.Time { return time.Unix(now, 0) })
+		defer p.Reset()
+
+		ts := int64(100)
+		dpuFaultHardwareLog.Append("n1", ts*1000)
+		pendingCache.Add(&silentfault.PendingEvent{
+			JobID: "j1", FailNode: "n1", TaskNodes: []string{"n1"}, Timestamp: ts, UseDPU: true,
+		})
+		validatePending()
+		convey.So(len(firstFaultMgr.Nodes()), convey.ShouldEqual, 0)
+	})
+}
+
+func TestValidatePendingDpuFaultIgnoredWithoutDpu(t *testing.T) {
+	convey.Convey("validate pending dispatches when dpu fault present but job does not use dpu", t, func() {
+		pendingCache.ResetEvents()
+		pendingCache.ResetProcessed()
+		firstFaultMgr.Reset()
+		faultHardwareLog.Reset()
+		dpuFaultHardwareLog.Reset()
+		enableSilentFault()
+		now := int64(150)
+		p := gomonkey.ApplyFunc(time.Now, func() time.Time { return time.Unix(now, 0) })
+		defer p.Reset()
+
+		ts := int64(100)
+		dpuFaultHardwareLog.Append("n1", ts*1000)
+		pendingCache.Add(&silentfault.PendingEvent{
+			JobID: "j1", FailNode: "n1", TaskNodes: []string{"n1"}, Timestamp: ts,
+		})
+		validatePending()
+		convey.So(len(firstFaultMgr.Nodes()), convey.ShouldEqual, 1)
+	})
+}

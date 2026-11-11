@@ -42,7 +42,7 @@
         release:
           fault_free_hours: 48
       silent_fault_policy.conf: |
-        enabled: false
+        enabled: true
         detect:
           min_task_cards: 16
           consecutive_times: 3
@@ -73,7 +73,7 @@
 
     |一级参数|二级参数|类型|说明|
     |--|--|--|--|
-    |enabled|-|bool|静默故障检测开关。取值包括：<ul><li>true：开启静默故障检测功能。</li><li>false：关闭静默故障检测功能。</li></ul><p>默认值为false。关闭该开关时，ClusterD会清除clusterd-manual-info-cm和statistic-fault-info ConfigMap中的的静默故障。</p>|
+    |enabled|-|bool|静默故障检测开关。取值包括：<ul><li>true：开启静默故障检测功能。</li><li>false：关闭静默故障检测功能。</li></ul><p>默认值为true。关闭该开关时，ClusterD会清除clusterd-manual-info-cm和statistic-fault-info ConfigMap中的静默故障。</p>|
     |detect|min_task_cards|int|静默故障判定需要满足的任务总NPU数量。取值范围为(0, 10000000)，默认值为16。|
     |detect|consecutive_times|int|判定为静默故障需要在判定时间窗内达到的有效重调度次数。取值范围为(0, 10000)，默认值为3。|
     |detect|hardware_fault_window_seconds|int|重调度前后无硬件故障窗口。取值范围为(3, 86400)，默认值为30，单位为s（秒）。|
@@ -83,7 +83,7 @@
     >[!NOTE]
     >- 静默故障的故障码与级别在publicFaultConfiguration.json中配置，用户可通过publicCustomization.json调整级别；发送方clusterd已默认配置在publicFaultResource中。
     >- 手动删除clusterd-manual-info-cm中该节点的静默故障条目（Total字段value值中全部芯片清空），可提前解除静默故障。clusterd-manual-info-cm的说明请参见[clusterd-manual-info-cm](../../../06_api/04_clusterd/00_cluster_resources.md#clusterd-manual-info-cm)。
-    >- 若enabled字段缺失，ClusterD识别为false；若其他字段不配置或取值不合法，ClusterD使用该字段的默认值。
+    >- 若enabled字段缺失，ClusterD识别为true；若其他字段不配置或取值不合法，ClusterD使用该字段的默认值。
 
 5. 在管理节点的YAML所在路径，执行以下命令，启动ClusterD。
 

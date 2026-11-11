@@ -2,11 +2,11 @@
 
 ## 概述
 
-静默故障指ClusterD根据软件故障与硬件故障信息综合判定的特殊公共故障。本章节介绍如何通过ConfigMap（clusterd-config-cm）中的silent_fault_policy.conf配置项，开启静默故障检测并调整检测与释放参数。静默故障的定义、判定条件与检测原理请参见[静默故障](../02_fault_types/07_silent_faults.md)。
+静默故障指ClusterD根据软件故障与硬件故障信息综合判定的特殊公共故障。本章节介绍如何通过ConfigMap（clusterd-config-cm）中的silent_fault_policy.conf配置项，配置静默故障检测并调整检测与释放参数。静默故障的定义、判定条件与检测原理请参见[静默故障](../02_fault_types/07_silent_faults.md)。
 
 ## 配置文件说明
 
-静默故障检测默认关闭，需用户显式开启。ClusterD根据ConfigMap（clusterd-config-cm）中silent_fault_policy.conf配置项的内容，执行静默故障检测。silent_fault_policy.conf参数说明请参见[表1](#silent_table01)。
+静默故障检测默认开启。ClusterD根据ConfigMap（clusterd-config-cm）中silent_fault_policy.conf配置项的内容，执行静默故障检测。silent_fault_policy.conf参数说明请参见[表1](#silent_table01)。
 
 >[!NOTE]
 >
@@ -18,7 +18,7 @@
 
 |一级参数|二级参数|类型|说明|
 |--|--|--|--|
-|enabled|-|bool|静默故障检测开关。取值包括：<ul><li>true：开启静默故障检测功能。</li><li>false：关闭静默故障检测功能。</li></ul><p>默认配置为false。关闭该开关时，ClusterD会清除clusterd-manual-info-cm和statistic-fault-info ConfigMap中的的静默故障。</p>|
+|enabled|-|bool|静默故障检测开关。取值包括：<ul><li>true：开启静默故障检测功能。</li><li>false：关闭静默故障检测功能。</li></ul><p>默认配置为true。关闭该开关时，ClusterD会清除clusterd-manual-info-cm和statistic-fault-info ConfigMap中的静默故障。</p>|
 |detect|min_task_cards|int|静默故障判定需要满足的任务总NPU数量。取值范围为(0, 10000000)，默认配置为16。|
 |detect|consecutive_times|int|判定为静默故障需要在判定时间窗内达到的有效重调度次数。取值范围为(0, 10000)，默认配置为3。|
 |detect|hardware_fault_window_seconds|int|重调度前后无硬件故障窗口。取值范围为(3, 86400)，默认配置为30，单位为s（秒）。|
@@ -27,13 +27,13 @@
 
 >[!NOTE]
 >
->若enabled字段缺失，ClusterD识别为false；若其他字段不配置或取值不合法，ClusterD使用该字段的默认值。
+>若enabled字段缺失，ClusterD识别为true；若其他字段不配置或取值不合法，ClusterD使用该字段的默认值。
 
-## （可选）开启静默故障检测
+## （可选）配置静默故障检测
 
 **操作步骤**
 
-以开启静默故障检测为例。
+以配置静默故障检测为例。
 
 1. 登录环境，执行以下命令，查询当前配置。
 
