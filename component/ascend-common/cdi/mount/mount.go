@@ -248,7 +248,7 @@ func roBindOptions() []string {
 // mapping; container paths are validated centrally so that entries from both
 // the list mode and the JSON profile mode are equally guarded; plain entries
 // are existence-checked (via StatHostPath) and symlink-validated via
-// checkSymlinkOwner.
+// CheckSymlinkOwner.
 func buildMounts(entries []MountEntry, hostFsPrefix string, allowLink bool) ([]*cdispec.Mount, error) {
 	mounts := make([]*cdispec.Mount, 0, len(entries))
 	for _, entry := range entries {
@@ -271,7 +271,7 @@ func buildMounts(entries []MountEntry, hostFsPrefix string, allowLink bool) ([]*
 				hwlog.RunLog.Warnf("Mount: skip non-existent path %q: %v", path, err)
 				continue
 			}
-			if !checkSymlinkOwner(path, allowLink, hostFsPrefix) {
+			if !CheckSymlinkOwner(path, allowLink, hostFsPrefix) {
 				continue
 			}
 			mounts = append(mounts, newBindMount(path, containerPath))
@@ -371,7 +371,7 @@ func expandGlobPath(pattern string, allowLink bool, hostFsPrefix string) []strin
 			continue
 		}
 
-		if !checkSymlinkOwner(hostPath, allowLink, hostFsPrefix) {
+		if !CheckSymlinkOwner(hostPath, allowLink, hostFsPrefix) {
 			continue
 		}
 		paths = append(paths, hostPath)
@@ -425,13 +425,13 @@ func getFileUID(info os.FileInfo) uint32 {
 	return 0
 }
 
-// checkSymlinkOwner verifies that the entry at absPath is mountable:
+// CheckSymlinkOwner verifies that the entry at absPath is mountable:
 // non-symlinks pass through; symlinks are rejected when allowLink is
 // disabled, otherwise both the symlink and its target must be owned by root
 // (UID 0). The symlink target is resolved in the host filesystem namespace
 // (an absolute target is re-rooted under hostFsPrefix) so non-/dev paths are
 // checked against the host root rather than the container's own filesystem.
-func checkSymlinkOwner(absPath string, allowLink bool, hostFsPrefix string) bool {
+func CheckSymlinkOwner(absPath string, allowLink bool, hostFsPrefix string) bool {
 	statPath := toContainerPath(hostFsPrefix, absPath)
 	linkStat, err := os.Lstat(statPath)
 	if err != nil {

@@ -290,3 +290,29 @@ func TestParseAscendStyle_InvalidDeviceID(t *testing.T) {
 		t.Errorf("expected 0 devices, got %d", len(devices))
 	}
 }
+
+func TestGetEnvValueFirstMatch(t *testing.T) {
+	tests := []struct {
+		name string
+		env  []string
+		want string
+	}{
+		{name: "missing"},
+		{name: "first matching key", env: []string{"OTHER=2", "RDMA=0", "RDMA=1"}, want: "0"},
+		{name: "first value empty", env: []string{"RDMA=", "RDMA=1"}},
+		{name: "exact key", env: []string{"RDMA_OTHER=2", "RDMA=1"}, want: "1"},
+		{name: "equals in value", env: []string{"RDMA=a=b"}, want: "a=b"},
+		{name: "malformed before match", env: []string{"BROKEN", "RDMA=1"}, want: "1"},
+		{name: "multiple malformed entries", env: []string{"", "BROKEN", "OTHER=2", "INVALID", "RDMA=1"}, want: "1"},
+		{name: "malformed before empty match", env: []string{"BROKEN", "RDMA=", "RDMA=1"}},
+		{name: "only malformed entries", env: []string{"BROKEN", ""}},
+		{name: "malformed after match", env: []string{"RDMA=1", "BROKEN"}, want: "1"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetEnvValue(tt.env, "RDMA"); got != tt.want {
+				t.Fatalf("GetEnvValue(%v) = %q; want %q", tt.env, got, tt.want)
+			}
+		})
+	}
+}
