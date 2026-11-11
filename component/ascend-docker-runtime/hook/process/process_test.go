@@ -16,7 +16,6 @@
 package process
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -484,7 +483,7 @@ func TestReadConfigsOfDir(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := readConfigsOfDir(tt.dir, tt.configs)
+			got, got1, err := readConfigsOfDir(tt.dir, tt.configs, nil)
 			if (err == nil) == tt.wantErr {
 				t.Errorf("readConfigsOfDir() got = %v, want %v", err, tt.wantErr)
 			}
@@ -496,43 +495,27 @@ func TestReadConfigsOfDir(t *testing.T) {
 
 // TestDoPrestartHook tests the function DoPrestartHook
 func TestDoPrestartHook(t *testing.T) {
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{
-			name:    "DoPrestartHook success case 1",
-			wantErr: true,
-		},
+	patches := prepareRDMAHook(t, []string{api.AscendVisibleDevicesEnv + "=0-3,5,7",
+		api.AscendRuntimeMountsEnv + "=a", api.AscendUBDrvMountEnv + "=False"})
+	readCalls, execCalls := 0, 0
+	readConfigsStub := readConfigsOfDir
+	readConfigsStub = func(dir string, configNames []string, rdmaCollections map[string]bool) ([]string, []string, error) {
+		readCalls++
+		assert.Equal(t, configDir, dir)
+		assert.Equal(t, []string{"a"}, configNames)
+		assert.Nil(t, rdmaCollections)
+		return []string{"/host/driver.so"}, []string{"/host/config"}, nil
 	}
-	conCfg := containerConfig{
-		Pid:    pidSample,
-		Rootfs: ".",
-		Env:    []string{api.AscendVisibleDevicesEnv + "=0-3,5,7", api.AscendRuntimeMountsEnv + "=a"},
+	patches.ApplyFunc(readConfigsOfDir, readConfigsStub)
+	doExec = func(_ string, args, _ []string) error {
+		execCalls++
+		assert.Equal(t, []string{"/usr/local/bin/ascend-docker-cli", "--allow-link", "False", "--pid", "123",
+			"--rootfs", "/rootfs", "--mount-file", "/host/driver.so", "--mount-dir", "/host/config"}, args)
+		return nil
 	}
-	patchCfg := gomonkey.ApplyFuncReturn(getContainerConfig, &conCfg, nil)
-	defer patchCfg.Reset()
-	patch := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
-		return &fileInfoMock{}, nil
-	})
-	defer patch.Reset()
-	patchReadConfigsOfDir := gomonkey.ApplyFunc(readConfigsOfDir,
-		func(dir string, configs []string) ([]string, []string, error) {
-			return []string{}, []string{}, nil
-		})
-	defer patchReadConfigsOfDir.Reset()
-	patchSize := gomonkey.ApplyMethod(reflect.TypeOf(&fileInfoMock{}), "Mode", func(f *fileInfoMock) fs.FileMode {
-		return fs.ModeDir
-	})
-	defer patchSize.Reset()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := DoPrestartHook()
-			if (err == nil) == tt.wantErr {
-				t.Errorf("DoPrestartHook() got = %v, want %v", err, tt.wantErr)
-			}
-		})
-	}
+	assert.NoError(t, DoPrestartHook())
+	assert.Equal(t, 1, readCalls)
+	assert.Equal(t, 1, execCalls)
 }
 
 // TestParseRuntimeOptions tests the function parseRuntimeOptions
@@ -674,6 +657,9 @@ func TestExpandGlobPathWhenSymlinkNotOwnedByRoot(t *testing.T) {
 		})
 		defer mockStat.Reset()
 		mockLstat := gomonkey.ApplyFunc(os.Lstat, func(name string) (os.FileInfo, error) {
+			if name != "/usr/lib64/libummu.so" {
+				return mockFileInfo{mode: os.ModeDir}, nil
+			}
 			return mockFileInfo{mode: os.ModeSymlink}, nil
 		})
 		defer mockLstat.Reset()
@@ -702,6 +688,9 @@ func TestExpandGlobPathWhenRealFileNotOwnedByRoot(t *testing.T) {
 		})
 		defer mockStat.Reset()
 		mockLstat := gomonkey.ApplyFunc(os.Lstat, func(name string) (os.FileInfo, error) {
+			if name != "/usr/lib64/libummu.so" {
+				return mockFileInfo{mode: os.ModeDir}, nil
+			}
 			return mockFileInfo{mode: os.ModeSymlink}, nil
 		})
 		defer mockLstat.Reset()
@@ -862,57 +851,58 @@ func TestReadMountConfigGlobMapping(t *testing.T) {
 	})
 }
 
-// TestReadMountConfig tests the function readMountConfig
-func TestReadMountConfig(t *testing.T) {
-	convey.Convey("test readMountConfig", t, func() {
-		convey.Convey("01-get abs path failed, should return error", func() {
-			patch := gomonkey.ApplyFuncReturn(filepath.Abs, "", testError)
-			defer patch.Reset()
-			_, _, err := readMountConfig("", "")
-			convey.So(err, convey.ShouldBeError)
-		})
-		patches := gomonkey.ApplyFuncReturn(filepath.Abs, "", nil)
-		defer patches.Reset()
-		convey.Convey("02-stat error, should return error", func() {
-			patch := gomonkey.ApplyFuncReturn(os.Stat, fileInfoMock{}, testError)
-			defer patch.Reset()
-			_, _, err := readMountConfig("", "")
-			convey.So(err, convey.ShouldBeError)
-		})
-		patches.ApplyFuncReturn(os.Stat, fileInfoMock{}, nil).
-			ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil)
-		convey.Convey("03-file info is not regular, should return error", func() {
-			var fm os.FileMode
-			patch := gomonkey.ApplyMethodReturn(fm, "IsRegular", false)
-			defer patch.Reset()
-			_, _, err := readMountConfig("", "")
-			convey.So(err, convey.ShouldBeError)
-		})
-		var fm os.FileMode
-		patches.ApplyMethodReturn(fm, "IsRegular", true)
-		convey.Convey("04-open file error, should return error", func() {
-			patch := gomonkey.ApplyFuncReturn(os.Open, &os.File{}, testError)
-			defer patch.Reset()
-			_, _, err := readMountConfig("", "")
-			convey.So(err, convey.ShouldBeError)
-		})
-		patches.ApplyFuncReturn(os.Open, &os.File{}, nil)
-		convey.Convey("05-success, should return nil", func() {
-			scanNum := 0
-			patch := gomonkey.ApplyMethod(&bufio.Scanner{}, "Scan",
-				func(scanner *bufio.Scanner) bool {
-					scanNum++
-					if scanNum > 1 {
-						return false
-					} else {
-						return true
-					}
+func TestReadMountConfigFailures(t *testing.T) {
+	for _, test := range []struct{ stage, want string }{
+		{"path", "failed to assemble base config file path"},
+		{"check", testError.Error()},
+		{"open", "failed to open base configuration file"},
+	} {
+		t.Run(test.stage, func(t *testing.T) {
+			openCalls := 0
+			patches := gomonkey.NewPatches().
+				ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil).
+				ApplyFunc(os.Open, func(string) (*os.File, error) {
+					openCalls++
+					return nil, testError
 				})
-			defer patch.Reset()
-			_, _, err := readMountConfig("", "")
-			convey.So(err, convey.ShouldBeNil)
+			defer patches.Reset()
+			switch test.stage {
+			case "path":
+				patches.ApplyFuncReturn(filepath.Abs, "", testError)
+			case "check":
+				patches.ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", testError)
+			}
+			files, dirs, err := readMountConfig("/config", "base")
+			assert.ErrorContains(t, err, test.want)
+			assert.Nil(t, files)
+			assert.Nil(t, dirs)
+			wantOpenCalls := 0
+			if test.stage == "open" {
+				wantOpenCalls = 1
+			}
+			assert.Equal(t, wantOpenCalls, openCalls)
 		})
-	})
+	}
+}
+
+func TestReadMountConfigClassifiesEntries(t *testing.T) {
+	patches := gomonkey.ApplyFuncReturn(mindxcheckutils.RealFileChecker, "", nil)
+	defer patches.Reset()
+	dir := t.TempDir()
+	sourcePath := filepath.Join(dir, "driver.so")
+	if err := os.WriteFile(sourcePath, []byte("driver"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	contents := "# driver list\n\n" + sourcePath + ":/container/driver.so\n" + dir + "\n" + filepath.Join(dir, "missing") + "\n"
+	if err := os.WriteFile(filepath.Join(dir, "base.list"), []byte(contents), 0600); err != nil {
+		t.Fatal(err)
+	}
+	files, dirs, err := readMountConfig(dir, "base")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, []string{sourcePath + ":/container/driver.so"}, files)
+	assert.Equal(t, []string{dir}, dirs)
 }
 
 func TestParseUBDrvMount(t *testing.T) {
@@ -986,4 +976,55 @@ func mockStat() *gomonkey.Patches {
 		}
 		return mockMountItemMap[name], nil
 	})
+}
+
+func TestExpandGlobPathKeepsOrdinaryLinkedParentBehavior(t *testing.T) {
+	dir := t.TempDir()
+	realDir, linkedDir := filepath.Join(dir, "real"), filepath.Join(dir, "linked")
+	if err := os.Mkdir(realDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(realDir, linkedDir); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(realDir, "driver.so"), []byte("driver"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	files, dirs := expandGlobPath(filepath.Join(linkedDir, "*.so"))
+	if len(files) != 0 || len(dirs) != 0 {
+		t.Fatalf("ordinary glob must retain its original parent comparison: files=%v dirs=%v", files, dirs)
+	}
+}
+
+func TestDeduplicateMountEntries(t *testing.T) {
+	tests := []struct {
+		name    string
+		entries []string
+		want    []string
+	}{
+		{"empty", nil, []string{}},
+		{"identical", []string{"/host/a:/container/a", "/host/b:/container/b", "/host/a:/container/a"},
+			[]string{"/host/a:/container/a", "/host/b:/container/b"}},
+		{"normalized", []string{"/host/a", "/host/a:/host/a", "/host//a:/host/./a"}, []string{"/host/a"}},
+		{"distinct targets", []string{"/host/a:/container/a", "/host/a:/container/b"},
+			[]string{"/host/a:/container/a", "/host/a:/container/b"}},
+		{"distinct sources", []string{"/host/first:/container/a", "/host/second:/container/./a", "/host/first:/container/a"},
+			[]string{"/host/first:/container/a", "/host/second:/container/./a"}},
+		{"symlink spelling", []string{"/host/lib.so", "/host/lib.so.1", "/host/lib.so"},
+			[]string{"/host/lib.so", "/host/lib.so.1"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			files, dirs := deduplicateMountEntries(tt.entries, nil)
+			assert.Equal(t, tt.want, files)
+			assert.Empty(t, dirs)
+		})
+	}
+}
+
+func TestDeduplicateMountEntriesSharesFileAndDirectoryKeys(t *testing.T) {
+	files, dirs := deduplicateMountEntries([]string{"/host/first:/container/item"},
+		[]string{"/host/first:/container/item", "/host/second:/container/item"})
+	assert.Equal(t, []string{"/host/first:/container/item"}, files)
+	assert.Equal(t, []string{"/host/second:/container/item"}, dirs)
 }

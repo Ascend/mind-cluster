@@ -35,6 +35,8 @@ import (
 	"ascend-common/cdi/mount"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
+	"ascend-common/common-utils/parser"
+	"ascend-common/rdma"
 	"ascend-docker-runtime/mindxcheckutils"
 )
 
@@ -268,17 +270,9 @@ func readMountConfig(dir string, name string) ([]string, []string, error) {
 		return nil, nil, fmt.Errorf("failed to assemble base config file path: %v", err)
 	}
 
-	fileInfo, err := os.Stat(baseConfigFilePath)
 	if _, err := mindxcheckutils.RealFileChecker(baseConfigFilePath, true, false,
 		mindxcheckutils.DefaultSize); err != nil {
 		return nil, nil, err
-	}
-	if err != nil {
-		return nil, nil, fmt.Errorf("cannot stat base configuration file %s : %v", baseConfigFilePath, err)
-	}
-
-	if !fileInfo.Mode().IsRegular() {
-		return nil, nil, fmt.Errorf("base configuration file damaged because is not a regular file")
 	}
 
 	f, err := os.Open(baseConfigFilePath)
@@ -412,7 +406,7 @@ func checkSymlinkOwner(match string, realStat os.FileInfo) bool {
 	return true
 }
 
-func readConfigsOfDir(dir string, configs []string) ([]string, []string, error) {
+func readConfigsOfDir(dir string, configNames []string, rdmaCollections map[string]bool) ([]string, []string, error) {
 	fileInfo, err := os.Stat(dir)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cannot stat configuration directory %s : %v", dir, err)
@@ -425,10 +419,16 @@ func readConfigsOfDir(dir string, configs []string) ([]string, []string, error) 
 	fileMountList := make([]string, 0)
 	dirMountList := make([]string, 0)
 
-	for _, config := range configs {
-		fileList, dirList, err := readMountConfig(dir, config)
+	for _, collectionName := range configNames {
+		var fileList, dirList []string
+		var err error
+		if rdmaCollections[collectionName] {
+			fileList, dirList, err = rdma.ReadMountEntries(dir, collectionName)
+		} else {
+			fileList, dirList, err = readMountConfig(dir, collectionName)
+		}
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to process config %s: %v", config, err)
+			return nil, nil, fmt.Errorf("failed to process config %s: %w", collectionName, err)
 		}
 
 		fileMountList = append(fileMountList, fileList...)
@@ -436,6 +436,35 @@ func readConfigsOfDir(dir string, configs []string) ([]string, []string, error) 
 	}
 
 	return fileMountList, dirMountList, nil
+}
+
+type mountEntryKey struct {
+	sourcePath string
+	targetPath string
+}
+
+// Files and directories share source/target keys; preserve the first path spelling.
+func deduplicateMountEntries(fileEntries, dirEntries []string) ([]string, []string) {
+	seen := make(map[mountEntryKey]bool)
+	merge := func(entries []string) []string {
+		merged := make([]string, 0, len(entries))
+		for _, entry := range entries {
+			sourcePath, targetPath, _ := strings.Cut(entry, ":")
+			sourcePath = path.Clean(sourcePath)
+			if targetPath == "" {
+				targetPath = sourcePath
+			} else {
+				targetPath = path.Clean(targetPath)
+			}
+			key := mountEntryKey{sourcePath: sourcePath, targetPath: targetPath}
+			if !seen[key] {
+				seen[key] = true
+				merged = append(merged, entry)
+			}
+		}
+		return merged
+	}
+	return merge(fileEntries), merge(dirEntries)
 }
 
 func getArgs(cliPath string, containerConfig *containerConfig, fileMountList []string,
@@ -468,33 +497,51 @@ func shouldMountUBDriverFiles(mountUBDrv bool) bool {
 	return false
 }
 
-// DoPrestartHook parses the environment variables in the container to obtain the files and directories to be mounted.
+// DoPrestartHook validates mount inputs and invokes the CLI for NPU or RDMA requests.
+// Return early when neither device type is requested; reject invalid RDMA input or host dependencies.
 func DoPrestartHook() error {
 	containerConfig, err := getContainerConfig()
 	if err != nil {
 		return fmt.Errorf("failed to get container config: %#v", err)
 	}
 
-	if visibleDevices := getValueByKey(containerConfig.Env, ascendVisibleDevices); visibleDevices == "" {
+	hcaNames, err := rdma.ParseRDMADevices(parser.GetEnvValue(containerConfig.Env, api.AscendRdmaDevicesEnv))
+	if err != nil {
+		return err
+	}
+	visibleNPUDevices := strings.TrimSpace(getValueByKey(containerConfig.Env, ascendVisibleDevices))
+	hasNPURequest := visibleNPUDevices != "" && visibleNPUDevices != "void"
+	if !hasNPURequest && len(hcaNames) == 0 {
 		return nil
 	}
 
-	mountConfigs := parseMounts(getValueByKey(containerConfig.Env, ascendRuntimeMounts))
-
-	mountUBDrv, err := parseUBDrvMount(getValueByKey(containerConfig.Env, api.AscendUBDrvMountEnv))
-	if err != nil {
-		return fmt.Errorf("failed to parse UB driver mount option: %#v", err)
+	var mountConfigs []string
+	mountUBDrv := false
+	// Preserve NPU and UB mounting only for NPU requests.
+	if hasNPURequest {
+		mountConfigs = parseMounts(getValueByKey(containerConfig.Env, ascendRuntimeMounts))
+		mountUBDrv, err = parseUBDrvMount(getValueByKey(containerConfig.Env, api.AscendUBDrvMountEnv))
+		if err != nil {
+			return fmt.Errorf("failed to parse UB driver mount option: %#v", err)
+		}
+		if shouldMountUBDriverFiles(mountUBDrv) {
+			mountConfigs = append(mountConfigs, ubDriverConfig)
+		}
 	}
-	if shouldMountUBDriverFiles(mountUBDrv) {
-		mountConfigs = append(mountConfigs, ubDriverConfig)
+	mountConfigs, rdmaCollections, err := selectHookMountConfigs(mountConfigs, hcaNames)
+	if err != nil {
+		return err
 	}
 
-	fileMountList, dirMountList, err := readConfigsOfDir(configDir, mountConfigs)
+	fileMountList, dirMountList, err := readConfigsOfDir(configDir, mountConfigs, rdmaCollections)
 	if err != nil {
-		return fmt.Errorf("failed to read configuration from config directory: %#v", err)
+		return fmt.Errorf("failed to read configuration from config directory: %w", err)
 	}
 	// adapt a5 ub mount
-	fileMountList, dirMountList = addUBMount(fileMountList, dirMountList)
+	if hasNPURequest {
+		fileMountList, dirMountList = addUBMount(fileMountList, dirMountList)
+	}
+	fileMountList, dirMountList = deduplicateMountEntries(fileMountList, dirMountList)
 	hwlog.RunLog.Infof("mount files: [%v]", strings.Join(fileMountList, ", "))
 	hwlog.RunLog.Infof("mount directories: [%v]", strings.Join(dirMountList, ", "))
 
@@ -510,6 +557,10 @@ func DoPrestartHook() error {
 
 	if allowLink == "False" && shouldMountUBDriverFiles(mountUBDrv) {
 		hwlog.RunLog.Warnf("need UB driver files mounting, but allow link is False, will set allow link to True")
+		allowLink = "True"
+	}
+	// RDMA libraries may use symlinks; enable CLI symlink handling after validation.
+	if len(hcaNames) > 0 {
 		allowLink = "True"
 	}
 

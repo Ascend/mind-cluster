@@ -264,6 +264,34 @@ function prepare_ub_driver_list()
     fi
 }
 
+function prepare_rdma_driver_list()
+{
+    local rdma_config
+    local rdma_target
+    # Deploy the packaged device table and all RDMA lists regardless of the host NIC model.
+    local rdma_configs=(./rdma_devices.conf ./rdma_*.list)
+    for rdma_config in "${rdma_configs[@]}"; do
+        if [[ ! -f "${rdma_config}" ]]; then
+            log "[ERROR]" "RDMA package configuration is missing: ${rdma_config}"
+            return 1
+        fi
+        rdma_target="${ASCEND_RUNTIME_CONFIG_DIR}/${rdma_config##*/}"
+        if ! check_path "${rdma_target}"; then
+            log "[ERROR]" "RDMA configuration path is invalid: ${rdma_target}"
+            return 1
+        fi
+        if ! cp -f -- "${rdma_config}" "${rdma_target}"; then
+            log "[ERROR]" "failed to deploy RDMA configuration: ${rdma_target}"
+            return 1
+        fi
+        if ! chmod 440 -- "${rdma_target}"; then
+            log "[ERROR]" "failed to set RDMA configuration permissions: ${rdma_target}"
+            return 1
+        fi
+        log "[INFO]" "deployed RDMA configuration: ${rdma_target}"
+    done
+}
+
 function install()
 {
     check_eula
@@ -348,6 +376,10 @@ function install()
 
     if ! prepare_ub_driver_list; then
         log "[ERROR]" "install failed, prepare ub_driver.list failed"
+        exit 1
+    fi
+    if ! prepare_rdma_driver_list; then
+        log "[ERROR]" "install failed, prepare RDMA configuration failed"
         exit 1
     fi
 
@@ -523,6 +555,10 @@ function upgrade()
 
     if ! prepare_ub_driver_list; then
         log "[ERROR]" "upgrade failed, prepare ub_driver.list failed"
+        exit 1
+    fi
+    if ! prepare_rdma_driver_list; then
+        log "[ERROR]" "upgrade failed, prepare RDMA configuration failed"
         exit 1
     fi
 
