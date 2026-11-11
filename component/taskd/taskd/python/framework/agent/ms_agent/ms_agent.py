@@ -14,13 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+# f-string logging and exit() are used widely in taskd, keep them for consistency
+# pylint: disable=logging-fstring-interpolation,consider-using-sys-exit,broad-exception-raised
 import os
 import time
 import json
 import queue
+import signal
 
-from taskd.python.framework.agent.ms_mgr.ms_utils import check_monitor_res_valid, calculate_global_rank, \
-    calculate_local_rank_by_global_rank
+from taskd.python.framework.agent.ms_mgr.ms_utils import (
+    check_monitor_res_valid,
+    calculate_global_rank,
+    calculate_local_rank_by_global_rank,
+)
 from taskd.python.toolkit.constants import constants
 from taskd.python.utils.log import run_log
 from taskd.python.framework.agent.base_agent.agent_network import init_network_client
@@ -78,14 +84,53 @@ class MsAgent(BaseAgent):
             if time_use > constants.INIT_TIMEOUT:
                 raise RuntimeError("start_worker timeout")
 
+    def register_signal_handlers(self):
+        """
+        register_signal_handlers registers SIGTERM/SIGINT handlers.
+
+        In MindSpore scenario, msrun hands the training processes over to taskd and does not
+        handle SIGTERM anymore. Without a handler here, deleting the pod leaves the training
+        processes running until the termination grace period expires.
+        """
+        try:
+            signal.signal(signal.SIGTERM, self.handle_signal)
+            signal.signal(signal.SIGINT, self.handle_signal)
+        except (ValueError, OSError) as e:
+            run_log.warning(f"nodeRank:{self.node_rank} register signal handler failed, e:{e}")
+
+    def handle_signal(self, signum, frame):
+        """
+        handle_signal stops all training processes of this node and exits the agent.
+
+        The signal is sent by kubelet when the pod is being terminated, so the agent can no
+        longer wait for a command from the manager. os._exit is used because the interpreter
+        would block on the non-daemon threads if exit() is used.
+        """
+        run_log.warning(f"nodeRank:{self.node_rank} received signal:{signum}, stop all workers and exit")
+        try:
+            self._func_map.get(constants.KILL_ALL_WORKER_CALLBACK_NAME)([constants.KILL_ALL_WORKERS])
+        except Exception as e:  # pylint: disable=broad-except
+            run_log.error(f"stop workers by signal encountered exception: {e}")
+        finally:
+            # keep the exit code non-zero unless the training has already succeeded, so that
+            # a pod stopped by signal will not be treated as a succeeded task.
+            os._exit(0 if self.all_rank_succeed else 1)
+
     def start(self):
         kill_worker_func = self._func_map.get(constants.KILL_ALL_WORKER_CALLBACK_NAME)
         start_worker_func = self._func_map.get(constants.START_ALL_WORKER_CALLBACK_NAME)
         monitor_func = self._func_map.get(constants.MONITOR_CALLBACK_NAME)
         start_single_worker_func = self._func_map.get(constants.START_WORKER_LIST_CALLBACK_NAME)
-        if (kill_worker_func is None or start_worker_func is None or monitor_func is None or
-                start_single_worker_func is None):
+        if (
+            kill_worker_func is None
+            or start_worker_func is None
+            or monitor_func is None
+            or start_single_worker_func is None
+        ):
             raise Exception(f"{self.FRAMEWORK_MS_NAME} hasn't fully registered all callbacks")
+        # register before any blocking call, start_worker may wait for STARTAGENTCODE for
+        # a long time, a pod deletion during that window must be handled as well.
+        self.register_signal_handlers()
         self.node_global_rank_ids = calculate_global_rank()
         init_network_client(self.network_config, self.msg_queue, self.logger)
         self.check_network()
@@ -121,8 +166,11 @@ class MsAgent(BaseAgent):
         for key, details in rank_status_dict.items():
             # if process is in ok, not start yet[msrun taken over by taskd, monitor maybe called before training],
             # sleeping[during process recover]
-            if details[constants.RANK_STATUS_KEY] not in {constants.RANK_STATUS_OK, constants.RANK_STATUS_NOT_START,
-                                                          constants.RANK_STATUS_COMPLETE}:
+            if details[constants.RANK_STATUS_KEY] not in {
+                constants.RANK_STATUS_OK,
+                constants.RANK_STATUS_NOT_START,
+                constants.RANK_STATUS_COMPLETE,
+            }:
                 self.rank_status = self.RANK_STATUS_UNHEALTHY
                 fault_ranks.append(int(key))
                 all_healthy = False
@@ -143,12 +191,14 @@ class MsAgent(BaseAgent):
         if not self.check_new_fault(fault_ranks):
             run_log.info(f'no additional fault process, fault_rank: {fault_ranks}')
             if self.is_report_timeout():
-                run_log.error(f'agent report fault rank timeout, exiting...')
+                run_log.error('agent report fault rank timeout, exiting...')
                 exit(1)
             return
         self.report_fault_time = time.time()
         report_info = AgentReportInfo(fault_ranks=fault_ranks)
-        self.send_message_to_manager('STATUS', constants.REPORT_CODE, report_info, {"REPORT_FAULT_TIME": str(int(time.time()))})
+        self.send_message_to_manager(
+            'STATUS', constants.REPORT_CODE, report_info, {"REPORT_FAULT_TIME": str(int(time.time()))}
+        )
         self.local_fault_rank = fault_ranks
         run_log.info(f'New fault process detected, fault_rank: {fault_ranks}')
         return
@@ -185,13 +235,14 @@ class MsAgent(BaseAgent):
     def restart_workers(self, msg):
         run_log.info(f'receive {msg.code} command, start to restart workers')
         self._func_map.get('KILL_WORKER')([constants.KILL_ALL_WORKERS])
-        run_log.warning(f"nodeRank:{self.node_rank}"
-                        f"will sleep for {constants.KILL_INTERVAL} secs, after kill workers to restart")
+        run_log.warning(
+            f"nodeRank:{self.node_rank} will sleep for {constants.KILL_INTERVAL} secs, after kill workers to restart"
+        )
         time.sleep(constants.KILL_INTERVAL)
         self._func_map.get('START_ALL_WORKER')()
         self.local_fault_rank = []
         self.report_fault_time = None
-        
+
     def recover_in_place(self, msg):
         run_log.info(f'receive {msg.code} command, start to recover in place')
         fault_ranks = json.loads(msg.message)
@@ -211,7 +262,7 @@ class MsAgent(BaseAgent):
             run_log.info(f"nodeRank:{self.node_rank} restart part workers, pid:{fault_pid_list}")
             restart_local_rank = calculate_local_rank_by_global_rank(local_fault_ranks)
             self._func_map.get(constants.KILL_ALL_WORKER_CALLBACK_NAME)(fault_pid_list)
-            time.sleep(constants.RELEASE_INTERVAL) # wait for device release resources
+            time.sleep(constants.RELEASE_INTERVAL)  # wait for device release resources
             self._func_map.get(constants.START_WORKER_LIST_CALLBACK_NAME)(restart_local_rank)
             self.local_fault_rank = []
             self.report_fault_time = None
@@ -234,9 +285,7 @@ class MsAgent(BaseAgent):
     def handle_all_process_succeed(self):
         if not self.all_rank_succeed:
             return
-        run_log.info(
-            f"nodeRank:{self.node_rank} successfully finished."
-        )
+        run_log.info(f"nodeRank:{self.node_rank} successfully finished.")
         # wait for MS release resources
         time.sleep(constants.WAITING_INTERVAL * constants.WAIT_TIMES)
         stop_res = self._func_map.get(constants.KILL_ALL_WORKER_CALLBACK_NAME)([constants.KILL_ALL_WORKERS])
