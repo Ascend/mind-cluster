@@ -33,8 +33,8 @@ import (
 )
 
 const (
-	// maxEntriesPerFile limits the number of mount entries in a single .list file.
-	maxEntriesPerFile = 128
+	// MaxEntriesPerFile limits the number of mount entries in a single .list file.
+	MaxEntriesPerFile = 128
 
 	// ubDriverConfig is the mount collection name for UB driver user-space files
 	// (corresponds to ub_driver.list under Dir).
@@ -175,8 +175,8 @@ func parseListFile(path string) ([]MountEntry, error) {
 		}
 
 		entryCount++
-		if entryCount > maxEntriesPerFile {
-			return nil, fmt.Errorf("mount list too long in %s (max %d entries)", path, maxEntriesPerFile)
+		if entryCount > MaxEntriesPerFile {
+			return nil, fmt.Errorf("mount list too long in %s (max %d entries)", path, MaxEntriesPerFile)
 		}
 
 		hostPath, containerPath, err := ParseMountEntry(line)
