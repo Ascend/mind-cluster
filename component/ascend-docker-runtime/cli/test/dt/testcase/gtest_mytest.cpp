@@ -64,6 +64,7 @@ extern "C" bool CheckExistsFile(const char *filePath, const size_t filePathLen, 
 extern "C" int VerifyPathInfo(const struct PathInfo *pathInfo);
 extern "C" bool CheckExternalFile(const char *filePath, const size_t filePathLen, const size_t maxFileSizeMb,
                                   const bool checkOwner);
+extern "C" bool CheckDstInsideRootfs(const char *rootfs, const char *dstPath);
 extern "C" int LogLoop(const char *filename);
 extern "C" void Logger(const char *msg, int level, int screen);
 extern "C" int EnterNsByPath(const char *path, int nsType);
@@ -151,6 +152,8 @@ int Stub_CheckDirExists_Success(char *dir, int len) { return 0; }
 int Stub_MakeDirWithParent_Success(const char *path, mode_t mode) { return 0; }
 
 int Stub_MakeDirWithParent_Failed(const char *path, mode_t mode) { return -1; }
+
+bool Stub_CheckDstInsideRootfs_Success(const char *rootfs, const char *dstPath) { return true; }
 
 int Stub_CheckDirExists_Failed(char *dir, int len) { return -1; }
 
@@ -477,6 +480,7 @@ TEST_F(Test_Fhho, StatusThreeMakeDirWithParent)
 
 TEST_F(Test_Fhho, StatusThreeMountDir)
 {
+    MOCKER(CheckDstInsideRootfs).stubs().will(invoke(Stub_CheckDstInsideRootfs_Success));
     MOCKER(CheckDirExists).stubs().will(invoke(Stub_CheckDirExists_Failed));
     MOCKER(MkDir).stubs().will(invoke(stub_MkDir_failed));
     char *rootfs = "/rootfs";
@@ -637,6 +641,7 @@ TEST_F(Test_Fhho, MountDirForDstOverflowWithRootfs)
 
 TEST_F(Test_Fhho, MountFileForStatFailed)
 {
+    MOCKER(CheckDstInsideRootfs).stubs().will(invoke(Stub_CheckDstInsideRootfs_Success));
     MOCKER(stat).stubs().will(invoke(stub_stat_failed));
     char *rootfs = "/rootfs";
     char *filepath = "/tmp/test.txt";
@@ -647,6 +652,7 @@ TEST_F(Test_Fhho, MountFileForStatFailed)
 
 TEST_F(Test_Fhho, MountFileForMakeMountPointsFailed)
 {
+    MOCKER(CheckDstInsideRootfs).stubs().will(invoke(Stub_CheckDstInsideRootfs_Success));
     MOCKER(stat).stubs().will(invoke(stub_stat_success));
     MOCKER(MakeMountPoints).stubs().will(invoke(Stub_MakeMountPoints_Failed));
     char *rootfs = "/rootfs";
@@ -658,6 +664,7 @@ TEST_F(Test_Fhho, MountFileForMakeMountPointsFailed)
 
 TEST_F(Test_Fhho, MountFileForMountFailed)
 {
+    MOCKER(CheckDstInsideRootfs).stubs().will(invoke(Stub_CheckDstInsideRootfs_Success));
     MOCKER(stat).stubs().will(invoke(stub_stat_success));
     MOCKER(MakeMountPoints).stubs().will(invoke(Stub_MakeMountPoints_Success));
     MOCKER(Mount).stubs().will(invoke(stub_Mount_failed));
@@ -844,6 +851,30 @@ TEST_F(Test_Fhho, CheckDstPathForInvalidPath)
     EXPECT_EQ(false, CheckDstPath(tooLong));  // exceeds the BUF_SIZE assembly buffer limit
 }
 
+TEST_F(Test_Fhho, CheckDstInsideRootfsForNullArgs)
+{
+    EXPECT_EQ(false, CheckDstInsideRootfs(nullptr, "/container/a"));
+    EXPECT_EQ(false, CheckDstInsideRootfs("/tmp", nullptr));
+}
+
+TEST_F(Test_Fhho, CheckDstInsideRootfsForPathInside)
+{
+    EXPECT_EQ(true, CheckDstInsideRootfs("/", "/container/a"));                // "/" covers the whole filesystem
+    EXPECT_EQ(true, CheckDstInsideRootfs("/tmp", "/tmp/ut_not_exist_dir/a"));  // target not created yet
+}
+
+TEST_F(Test_Fhho, CheckDstInsideRootfsForEscapedSymlink)
+{
+    char linkPath[PATH_MAX] = {0};
+    snprintf_s(linkPath, sizeof(linkPath), sizeof(linkPath) - 1, "/tmp/ut_esc_link_%d", getpid());
+    (void)unlink(linkPath);
+    ASSERT_EQ(0, symlink("/etc", linkPath));
+    char dst[PATH_MAX] = {0};
+    snprintf_s(dst, sizeof(dst), sizeof(dst) - 1, "%s/passwd", linkPath);
+    EXPECT_EQ(false, CheckDstInsideRootfs("/tmp", dst));
+    (void)unlink(linkPath);
+}
+
 TEST_F(Test_Fhho, MountFileCmdArgParserForMappingEntrySuccess)
 {
     char *tempFilename = NULL;
@@ -905,6 +936,7 @@ TEST_F(Test_Fhho, LinkCheckCmdArgParserForInvalidAllowLink)
 
 TEST_F(Test_Fhho, StatusTwoMountDir)
 {
+    MOCKER(CheckDstInsideRootfs).stubs().will(invoke(Stub_CheckDstInsideRootfs_Success));
     MOCKER(CheckDirExists).stubs().will(invoke(Stub_CheckDirExists_Failed));
     MOCKER(MakeDirWithParent).stubs().will(invoke(Stub_MakeDirWithParent_Failed));
     char *rootfs = "/rootfs";
@@ -915,6 +947,7 @@ TEST_F(Test_Fhho, StatusTwoMountDir)
 
 TEST_F(Test_Fhho, StatusFourMountDir)
 {
+    MOCKER(CheckDstInsideRootfs).stubs().will(invoke(Stub_CheckDstInsideRootfs_Success));
     MOCKER(CheckDirExists).stubs().will(invoke(Stub_CheckDirExists_Failed));
     MOCKER(MakeDirWithParent).stubs().will(invoke(Stub_MakeDirWithParent_Success));
     MOCKER(mount).stubs().will(invoke(stub_mount_failed));
@@ -926,6 +959,7 @@ TEST_F(Test_Fhho, StatusFourMountDir)
 
 TEST_F(Test_Fhho, StatusFiveMountDir)
 {
+    MOCKER(CheckDstInsideRootfs).stubs().will(invoke(Stub_CheckDstInsideRootfs_Success));
     MOCKER(stat).stubs().will(invoke(stub_stat_failed));
     MOCKER(MakeDirWithParent).stubs().will(invoke(Stub_MakeDirWithParent_Success));
     MOCKER(Mount).stubs().will(invoke(stub_Mount_success));

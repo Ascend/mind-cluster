@@ -263,6 +263,20 @@ func buildMountEntry(hostPath, containerPath string) string {
 	return hostPath + ":" + containerPath
 }
 
+// buildMountEntries turns glob matches into mount entries: an explicit
+// containerPath is a directory and every match keeps its basename under it.
+func buildMountEntries(hostPaths []string, containerPath string) []string {
+	entries := make([]string, 0, len(hostPaths))
+	for _, hostPath := range hostPaths {
+		dst := containerPath
+		if dst != "" {
+			dst = filepath.Join(dst, filepath.Base(hostPath))
+		}
+		entries = append(entries, buildMountEntry(hostPath, dst))
+	}
+	return entries
+}
+
 func readMountConfig(dir string, name string) ([]string, []string, error) {
 	configFileName := fmt.Sprintf("%s.%s", name, configFileSuffix)
 	baseConfigFilePath, err := filepath.Abs(filepath.Join(dir, configFileName))
@@ -298,9 +312,6 @@ func readMountConfig(dir string, name string) ([]string, []string, error) {
 		if err != nil {
 			return nil, nil, err
 		}
-		if containerPath != "" && containsGlob(hostPath) {
-			return nil, nil, fmt.Errorf("mount entry %s: glob path does not support container mapping", hostPath)
-		}
 		absMountPath, err := filepath.Abs(hostPath)
 		if err != nil {
 			hwlog.RunLog.Warnf("skip mount entry %s: failed to get absolute path: %v", hostPath, err)
@@ -310,8 +321,8 @@ func readMountConfig(dir string, name string) ([]string, []string, error) {
 
 		if containsGlob(hostPath) {
 			fileList, dirList := expandGlobPath(hostPath)
-			fileMountList = append(fileMountList, fileList...)
-			dirMountList = append(dirMountList, dirList...)
+			fileMountList = append(fileMountList, buildMountEntries(fileList, containerPath)...)
+			dirMountList = append(dirMountList, buildMountEntries(dirList, containerPath)...)
 			continue
 		}
 
@@ -348,6 +359,10 @@ func expandGlobPath(pattern string) ([]string, []string) {
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
 		hwlog.RunLog.Warnf("failed to glob %s: %v", pattern, err)
+		return fileList, dirList
+	}
+	if len(matches) == 0 {
+		hwlog.RunLog.Warnf("glob %s matched no path, the mount entry is skipped", pattern)
 		return fileList, dirList
 	}
 	expectedDir := filepath.Dir(pattern)
@@ -542,6 +557,12 @@ func DoPrestartHook() error {
 		fileMountList, dirMountList = addUBMount(fileMountList, dirMountList)
 	}
 	fileMountList, dirMountList = deduplicateMountEntries(fileMountList, dirMountList)
+	// share one container-path set so a file source and a directory source on
+	// the same dst also conflict: identical entries are dropped, the later
+	// source is skipped with a warning, and file entries are processed first
+	seenMountDst := make(map[string]string)
+	fileMountList = dedupMountList(fileMountList, seenMountDst)
+	dirMountList = dedupMountList(dirMountList, seenMountDst)
 	hwlog.RunLog.Infof("mount files: [%v]", strings.Join(fileMountList, ", "))
 	hwlog.RunLog.Infof("mount directories: [%v]", strings.Join(dirMountList, ", "))
 
@@ -608,4 +629,33 @@ func addUBMount(fileMountList []string, dirMountList []string) ([]string, []stri
 	}
 
 	return fileMountList, dirMountList
+}
+
+// dedupMountList deduplicates entries by their effective container path, using
+// the shared seen set so file and directory entries also conflict with each
+// other. Identical (src, dst) repeats are dropped silently; a different src on
+// an occupied dst is dropped with a warning. Input order is preserved.
+func dedupMountList(mountList []string, seen map[string]string) []string {
+	result := make([]string, 0, len(mountList))
+	for _, item := range mountList {
+		src, dst := item, item
+		if idx := strings.Index(item, ":"); idx >= 0 {
+			src, dst = item[:idx], item[idx+1:]
+		}
+		// normalize trailing slashes like ParseMountEntry so "/c/a" and
+		// "/c/a/" share the same container path
+		if trimmed := strings.TrimRight(dst, "/"); trimmed != "" {
+			dst = trimmed
+		}
+		if firstSrc, ok := seen[dst]; ok {
+			if firstSrc != src {
+				hwlog.RunLog.Warnf("Mount: skip conflicting mount %s: container path %s is already mounted from %s",
+					src, dst, firstSrc)
+			}
+			continue
+		}
+		seen[dst] = src
+		result = append(result, item)
+	}
+	return result
 }

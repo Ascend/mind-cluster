@@ -214,6 +214,75 @@ STATIC bool ShowExceptionInfo(const char *exceptionInfo)
     return false;
 }
 
+STATIC bool IsPathInside(const char *realPath, const char *realRoot)
+{
+    size_t rootLen = strlen(realRoot);
+    if ((rootLen == 1) && (realRoot[0] == '/'))
+    {
+        return true;
+    }
+    if (strncmp(realPath, realRoot, rootLen) != 0)
+    {
+        return false;
+    }
+    return (realPath[rootLen] == '\0') || (realPath[rootLen] == '/');
+}
+
+/*
+ * CheckDstInsideRootfs verifies that the assembled dst path resolves inside
+ * rootfs, so a symlink component cannot redirect the mount to the host. The
+ * target may not exist yet: the nearest existing ancestor is resolved instead.
+ */
+bool CheckDstInsideRootfs(const char *rootfs, const char *dstPath)
+{
+    if ((rootfs == NULL) || (dstPath == NULL))
+    {
+        return ShowExceptionInfo("rootfs or dst path is null!");
+    }
+
+    char realRoot[PATH_MAX] = {0};
+    if (realpath(rootfs, realRoot) == NULL)
+    {
+        char *str = FormatLogMessage("failed to resolve rootfs %s, errno: %d.", rootfs, errno);
+        Logger(str, LEVEL_ERROR, SCREEN_YES);
+        free(str);
+        return false;
+    }
+
+    char probe[PATH_MAX] = {0};
+    if (strncpy_s(probe, sizeof(probe), dstPath, strlen(dstPath)) != EOK)
+    {
+        return ShowExceptionInfo("dst path is too long to check!");
+    }
+
+    char realDst[PATH_MAX] = {0};
+    while (realpath(probe, realDst) == NULL)
+    {
+        if (errno != ENOENT)
+        {
+            char *str = FormatLogMessage("failed to resolve %s, errno: %d.", probe, errno);
+            Logger(str, LEVEL_ERROR, SCREEN_YES);
+            free(str);
+            return false;
+        }
+        char *slash = strrchr(probe, '/');
+        if ((slash == NULL) || (slash == probe))
+        {
+            return ShowExceptionInfo("dst path has no existing ancestor!");
+        }
+        *slash = '\0';
+    }
+
+    if (!IsPathInside(realDst, realRoot))
+    {
+        char *str = FormatLogMessage("dst %s resolves outside rootfs %s: %s.", dstPath, realRoot, realDst);
+        Logger(str, LEVEL_ERROR, SCREEN_YES);
+        free(str);
+        return false;
+    }
+    return true;
+}
+
 STATIC bool CheckFileOwner(const struct stat fileStat, const bool checkOwner)
 {
     if (checkOwner)
