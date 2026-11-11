@@ -44,7 +44,9 @@ function clean() {
 function build() {
   cd "${TOP_DIR}/cmd/k8s-rdma-shared-dp"
   export CGO_ENABLED=1
-  go build -mod=mod -ldflags "-s -linkmode external -extldflags \"-static\"
+  export CGO_CFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
+  export CGO_CPPFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
+  go build -mod=mod -buildmode=pie -ldflags "-s -extldflags=-Wl,-z,relro,-z,now,-z,noexecstack
     -X main.BuildVersion=${build_version}_linux-${arch} \
     -X main.BuildName=${OUTPUT_NAME} \
     -X ascend-common/common-utils/version.Version=${build_version} \

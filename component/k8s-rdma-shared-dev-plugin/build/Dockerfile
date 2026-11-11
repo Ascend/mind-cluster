@@ -2,6 +2,9 @@ FROM ubuntu:22.04
 
 RUN apt-get update && apt-get install -y libmnl-dev
 
+# libdcmi.so is dynamically loaded from the driver installed on the host, which is mounted at the same path.
+ENV LD_LIBRARY_PATH /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common
+
 RUN usermod root -s /usr/sbin/nologin
 
 COPY k8s-rdma-shared-dp /usr/local/bin/

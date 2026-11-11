@@ -175,6 +175,9 @@ spec:
               readOnly: true
             - name: hinic-log
               mountPath: /var/log/hinic5
+            - name: hiai-driver
+              mountPath: /usr/local/Ascend/driver
+              readOnly: true
           env:
             - name: NODE_NAME
               valueFrom:
@@ -213,3 +216,6 @@ spec:
           hostPath:
             path: /var/log/hinic5
             type: DirectoryOrCreate
+        - name: hiai-driver
+          hostPath:
+            path: /usr/local/Ascend/driver
