@@ -29,7 +29,7 @@
 |metadata.annotations['ra-block']|字符串 (string)|-|<p>框亲和性调度的标识符。指定ra-block字段，在支持动态配比的前提下，单框64卡被分为8个OS，每个OS在K8s集群中被认为是一个节点，框内通信时延比框间通信时延低，配置此字段用于训练任务的框亲和性调度。</p><p>取值范围是1~64且必须是2的幂次方。</p><p>穷举可得ra-block的取值为{1，2，4，8，16，32，64}。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>仅支持在Atlas 950 SuperPoD超节点中使用该字段。</li><li>ra-block配置需要小于等于sp-block。</li></ul></div></div>|
 |metadata.annotations['huawei.com/parameterplane.unhealthy-tolerance']|字符串 (string)|-|<p>配置分布式Ascend910/Ascend950任务在调度时忽略参数面网络不健康NPU。</p><ul><li>"ignore"：忽略参数面网络不健康NPU，允许调度到网络不健康NPU。</li><li>不设置或其他值：过滤参数面网络不健康NPU，不允许调度到网络不健康NPU。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>默认不设置，即过滤网络不健康NPU。</li><li>该注解仅对分布式任务（NPUTaskNum &gt; 1）生效，单机任务不受影响。</li><li>该注解仅对huawei.com/Ascend910和huawei.com/npu资源类型生效，其他资源类型不受影响。</li></ul></div></div>|
 |metadata.annotations['huawei.com/silent.unhealthy-tolerance.after-time']|字符串 (string)|-|静默故障芯片退避容忍时长，单位为s（秒）。<ul><li>0：立即允许，不退避。</li><li>-1：永久禁止，任务不调度到静默故障芯片，已运行任务使用到静默故障芯片时会被驱逐并重调度。</li><li>N（N>0）：任务排队N秒后才允许使用静默故障芯片。</li></ul><p>默认值为600，取值范围为[-1, 1800]。</p>|
-|metadata.annotations['huawei.com/pod.error-tolerance.after-time']|字符串 (string)|-|Pod错误芯片退避容忍时长，单位为s（秒）。<ul><li>0：立即允许，不退避。</li><li>N（N>0）：任务在Pod失败后N秒内避让导致本次失败的芯片。</li></ul><p>默认值为0，取值范围为[0, 300]。Pod错误退避为临时退避，不支持配置-1（永久禁止）。</p>|
+|metadata.annotations['huawei.com/pod.error-tolerance.after-time']|字符串 (string)|-|上一轮Pod故障芯片退避容忍时长，单位为s（秒）。<ul><li>0：立即允许，不退避。</li><li>N（N>0）：任务在Pod失败后N秒内避让导致本次失败的芯片。</li></ul><p>默认值为0，取值范围为[0, 300]。Pod错误退避为临时退避，不支持配置-1（永久禁止）。</p>|
 |<a name="p_subhealthy_tolerance_acjob"></a>metadata.annotations['huawei.com/subhealthy.tolerance.after-time']|字符串 (string)|-|<p>亚健康资源退避容忍时长，单位为s（秒）。默认值为10，取值范围为[0, 300]，详细说明请参见[Pod annotation使用说明](./12_k8s.md#p_subhealthy_tolerance_k8s)。</p>|
 |metadata.annotations['huawei.com/schedule_policy']|字符串 (string)|-|配置任务需要调度的AI芯片布局形态。Volcano会根据该字段选择合适的调度策略。目前支持[huawei.com/schedule_policy配置说明](#huaweicomschedule_policy配置说明)中的配置。|
 |metadata.annotations['huawei.com/schedule.mode']|字符串 (string)|-|<p>配置芯片亲和性调度的严格程度。具体取值及含义请参见[huawei.com/schedule.mode](./01_volcano.md#podgroup)中的说明。</p>|
@@ -212,7 +212,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p_pod_error_tolerance_vcjob_val"><a name="p_pod_error_tolerance_vcjob_val"></a><a name="p_pod_error_tolerance_vcjob_val"></a><ul><li>0：立即允许，不退避。</li><li>N（N>0）：任务在Pod失败后N秒内避让导致本次失败的芯片。</li></ul></p>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p_pod_error_tolerance_vcjob_desc"><a name="p_pod_error_tolerance_vcjob_desc"></a><a name="p_pod_error_tolerance_vcjob_desc"></a>Pod错误芯片退避容忍时长，单位为s（秒）。默认值为0，取值范围为[0, 300]。Pod错误退避为临时退避，不支持配置-1（永久禁止）。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p_pod_error_tolerance_vcjob_desc"><a name="p_pod_error_tolerance_vcjob_desc"></a><a name="p_pod_error_tolerance_vcjob_desc"></a>上一轮Pod故障芯片退避容忍时长，单位为s（秒）。默认值为0，取值范围为[0, 300]。Pod错误退避为临时退避，不支持配置-1（永久禁止）。</p>
 </td>
 </tr>
 <tr id="row_subhealthy_tolerance_vcjob"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p_subhealthy_tolerance_vcjob"><a name="p_subhealthy_tolerance_vcjob"></a><a name="p_subhealthy_tolerance_vcjob"></a>metadata.annotations['huawei.com/subhealthy.tolerance.after-time']</p>
@@ -659,7 +659,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p_pod_error_tolerance_deploy_val"><a name="p_pod_error_tolerance_deploy_val"></a><a name="p_pod_error_tolerance_deploy_val"></a><ul><li>0：立即允许，不退避。</li><li>N（N>0）：任务在Pod失败后N秒内避让导致本次失败的芯片。</li></ul></p>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p_pod_error_tolerance_deploy_desc"><a name="p_pod_error_tolerance_deploy_desc"></a><a name="p_pod_error_tolerance_deploy_desc"></a>Pod错误芯片退避容忍时长，单位为s（秒）。默认值为0，取值范围为[0, 300]。Pod错误退避为临时退避，不支持配置-1（永久禁止）。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p_pod_error_tolerance_deploy_desc"><a name="p_pod_error_tolerance_deploy_desc"></a><a name="p_pod_error_tolerance_deploy_desc"></a>上一轮Pod故障芯片退避容忍时长，单位为s（秒）。默认值为0，取值范围为[0, 300]。Pod错误退避为临时退避，不支持配置-1（永久禁止）。</p>
 </td>
 </tr>
 <tr id="row_subhealthy_tolerance_deploy"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p_subhealthy_tolerance_deploy"><a name="p_subhealthy_tolerance_deploy"></a><a name="p_subhealthy_tolerance_deploy"></a>metadata.annotations['huawei.com/subhealthy.tolerance.after-time']</p>
