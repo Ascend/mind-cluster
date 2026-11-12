@@ -14512,6 +14512,31 @@
                 "in": ["ubDestroyJetty failed", "jettyHandle="]
             }
         },
+        "AISW_CANN_HCCL_Custom_01": {
+	        "attribute": {
+		        "class": "Software",
+		        "component": "CANN",
+		        "module": "HCCL",
+		        "cause_zh": "TLS信息配置不一致",
+		        "description_zh": "通信域创建阶段，Server节点收集域内所有Rank信息后校验，发现各Rank的TLS配置不一致。",
+		        "suggestion_zh": [
+			        "1. 查询集合通信场景下各服务器的TLS状态开关；",
+			        "2. 若TLS状态开关不一致，建议统一将TLS状态置为开启；",
+			        "3. 若TLS状态开关一致，请核查所有服务器上各Device的TLS证书信息是否一致，不一致则替换证书套件；"
+		        ],
+		        "cause_en": "Inconsistent TLS configurations.",
+		        "description_en": "During communicator creation, after the server node collects information of all ranks within the communicator, verification detects inconsistent TLS configurations across ranks.",
+		        "suggestion_en": [
+			        "1. Check the TLS status switch of each server for collective communication.",
+			        "2. If TLS status switches differ, uniformly enable TLS.",
+			        "3. If TLS status switches are consistent, verify that TLS certificate information for each Device on all servers is identical. Replace the certificate suite if mismatched."
+		        ]
+	        },
+	        "source_file": "CANN_Plog",
+	        "regex": {
+		        "in": ["Value", "Disable", "for config", "tls", "is invalid"]
+	        }
+        },
         "AISW_CANN_HCCP_001": {
             "attribute": {
                 "class": "Software/Hardware",

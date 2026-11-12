@@ -127,6 +127,8 @@ class RCDiagWorker:
             for info in rc_parser_dict.values():
                 self.pid_find_flag = True
                 pid_parse_info = PlogPidParseInfo.from_dict(info)
+                if pid_parse_info.base:
+                    pid_parse_info.base.timeout_param = info.get("base", {}).get("timeout_param", {})
                 self._get_single_pid_parser_info(worker_name, worker_dir_path, pid_parse_info, aicpu_notify_wait_dict)
                 self.coll_vnic_info(worker_name, pid_parse_info)
         self.add_aicpu_notify_wait_relation(aicpu_notify_wait_dict)

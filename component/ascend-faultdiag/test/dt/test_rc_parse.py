@@ -22,6 +22,9 @@ import unittest.mock
 from ascend_fd.pkg.parse.root_cluster.parser import PidFileParser, BaseInfoParser, ErrorParser
 from ascend_fd.pkg.parse.root_cluster.rc_parse_job import parse_npu_info_file
 from ascend_fd.pkg.parse.blacklist.blacklist_op import BlackListManager
+from ascend_fd.model.parse_info import RemoteInfo
+from ascend_fd.pkg.diag.root_cluster.utils import Device, DeviceTable, ErrorChecker, Identifier
+from ascend_fd.utils import regular_table
 
 TEST_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 TESTCASE_KG_PARSE_INPUT = os.path.join(TEST_DIR, "st_module_testcase", "rc_parse")
@@ -872,3 +875,119 @@ class TestSocketTimeoutEidChannelStatus(unittest.TestCase):
             parser.socket_error_data_cache.remote_info[0].eid,
             "0000:0000:0000:0000:0000:0000:0000:0002",
         )
+
+
+class TestA5TransportInitErrorRelation(unittest.TestCase):
+    """Test cases for A5 transport init error diag: build relation by identifier+rank id"""
+
+    @staticmethod
+    def _build_table(relation, ranks=None):
+        """
+        Build a device table with given waiting relation
+        :param relation: {本端rank: 对端rank}, 同一通信域network-0
+        :param ranks: 需要创建设备的rank列表, 缺省时取relation涉及的rank
+        :return: (DeviceTable, {rank: Device})
+        """
+        table = DeviceTable()
+        if ranks is None:
+            ranks = sorted(set(relation.keys()) | set(relation.values()))
+        identifier_instance = Identifier("network-0", len(ranks))
+        devices = {}
+        for rank in ranks:
+            device = Device(pid="pid-r{}".format(rank), worker_name="worker-r{}".format(rank))
+            device.generation_info = regular_table.GENERATION_SIGN_A5
+            device.first_error_module = "TRANSPORT"
+            device.first_error_time = "2026-01-01 00:00:00"
+            device.transport_init_error_happened = True
+            table.add_device(device)
+            # rank id在解析侧为字符串, 测试保持与真实路径一致
+            identifier_instance.update_device(device, str(rank))
+            devices[rank] = device
+        table.identifier_dict.update({"network-0": identifier_instance})
+        for local_rank, remote_rank in relation.items():
+            devices[local_rank].transport_error_remote = RemoteInfo(
+                tag_name="network-0", remote_rank_id=str(remote_rank)
+            )
+        return table, devices
+
+    @staticmethod
+    def _root_ranks(checker):
+        return sorted(int(d.worker_name.rsplit("-r", 1)[1]) for d in checker.root_devices)
+
+    def test_a5_relation_built_by_identifier_and_rank(self):
+        table, devices = self._build_table({0: 1, 1: 2})
+        relation_map = table.get_a5_transport_init_error_relation()
+        self.assertEqual(
+            relation_map,
+            {devices[0]: devices[1], devices[1]: devices[2]},
+        )
+
+    def test_a5_relation_remote_rank_id_zero_not_skipped(self):
+        table, devices = self._build_table({0: 1, 1: 0})
+        relation_map = table.get_a5_transport_init_error_relation()
+        self.assertEqual(
+            relation_map,
+            {devices[0]: devices[1], devices[1]: devices[0]},
+        )
+
+    def test_a5_relation_unknown_remote_falls_back_default_device(self):
+        # 对端rank不存在(如对端无日志), 用占位Device记录通信域和rank id
+        table, devices = self._build_table({0: 9}, ranks=[0])
+        relation_map = table.get_a5_transport_init_error_relation()
+        remote_device = relation_map[devices[0]]
+        self.assertIsNot(remote_device, devices[0])
+        self.assertEqual(remote_device.unknown_device_label, "network-0:9")
+
+    def test_a5_relation_skipped_when_no_tag_name(self):
+        table, devices = self._build_table({0: 1})
+        devices[0].transport_error_remote = RemoteInfo(tag_name="", remote_rank_id=1)
+        relation_map = table.get_a5_transport_init_error_relation()
+        self.assertEqual(relation_map, {})
+
+    def test_a5_relation_skipped_when_identifier_missing(self):
+        table, devices = self._build_table({0: 1})
+        devices[0].transport_error_remote = RemoteInfo(tag_name="unknown_group", remote_rank_id=1)
+        relation_map = table.get_a5_transport_init_error_relation()
+        self.assertEqual(relation_map, {})
+
+    def test_check_a5_chain_root_is_chain_end(self):
+        table, _ = self._build_table({0: 1, 1: 2})
+        relation_map = table.get_a5_transport_init_error_relation()
+        checker = ErrorChecker(table)
+        self.assertTrue(checker.check_a5_error_relation(relation_map))
+        self.assertEqual(self._root_ranks(checker), [2])
+        self.assertEqual(
+            [s.split(" ", 1)[0] for s in checker.remote_links],
+            ["worker-r0", "worker-r1", "worker-r2"],
+        )
+
+    def test_check_a5_cycle_all_in_cycle_are_roots(self):
+        table, _ = self._build_table({0: 1, 1: 2, 2: 0})
+        relation_map = table.get_a5_transport_init_error_relation()
+        checker = ErrorChecker(table)
+        self.assertTrue(checker.check_a5_error_relation(relation_map))
+        self.assertEqual(self._root_ranks(checker), [0, 1, 2])
+
+    def test_check_a5_multi_chain_only_longest_link_displayed(self):
+        # 两条链 0->2->3 与 1->2->3: 根因去重为rank3, 展示只取最长的一条链
+        table, _ = self._build_table({0: 2, 1: 2, 2: 3})
+        relation_map = table.get_a5_transport_init_error_relation()
+        checker = ErrorChecker(table)
+        self.assertTrue(checker.check_a5_error_relation(relation_map))
+        self.assertEqual(self._root_ranks(checker), [3])
+        self.assertEqual(len(checker.remote_links), 3)
+
+    def test_check_a5_empty_relation_returns_false(self):
+        table, _ = self._build_table({0: 1})
+        checker = ErrorChecker(table)
+        self.assertFalse(checker.check_a5_error_relation({}))
+
+    def test_check_a5_chain_with_unknown_remote(self):
+        # 对端无日志: 不再往下找, 根因为等待该未知对端的本端设备, 链展示含"通信域:rank id"
+        table, devices = self._build_table({0: 9}, ranks=[0])
+        relation_map = table.get_a5_transport_init_error_relation()
+        checker = ErrorChecker(table)
+        self.assertTrue(checker.check_a5_error_relation(relation_map))
+        self.assertIs(checker.root_devices[0], devices[0])
+        self.assertEqual(len(checker.remote_links), 2)
+        self.assertTrue(checker.remote_links[1].startswith("network-0:9"))

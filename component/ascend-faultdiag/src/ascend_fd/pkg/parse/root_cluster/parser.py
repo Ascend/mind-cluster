@@ -43,6 +43,9 @@ from ascend_fd.utils.regular_table import (
     IPV6_ADDR_PATTERN,
     ERROR_CQE_A5,
     ERROR_CQE_A5_SPLIT,
+    TLS_SWITCH,
+    ERROR_CQE_NEW_A5,
+    ERROR_CQE_NEW_A5_SPLIT,
 )
 from ascend_fd.utils.tool import safe_write_open, SHOW_LINES_NUM, get_log_module_and_time, safe_read_open
 from ascend_fd.utils.net_tools import IPAddress
@@ -53,6 +56,7 @@ rc_logger = logging.getLogger("ROOT_CLUSTER")
 
 INVALID_ID = "-1"  # nosec
 INVALID_IP = "0.0.0.0"  # nosec
+TLS_SWITCH_PATTERN = re.compile(TLS_SWITCH)
 
 
 class PidFileParser:
@@ -262,6 +266,7 @@ class BaseInfoParser:
         self.device_ip = ""
         self.vNic_ip = ""
         self.server_id = ""
+        self.tls_status = ""
         # {identifier_name: {"rank_id": rank id str, "rank_num": int}}
         self.rank_map = {}
         self.root_for_identifiers = set()
@@ -288,7 +293,7 @@ class BaseInfoParser:
         if regular_table.GENERATION_INFO_A5 in line:
             self.generation_info = regular_table.GENERATION_SIGN_A5
         # rank基础信息
-        if regular_table.GET_ROOT_INFO in line:
+        if regular_table.GET_ROOT_INFO in line or regular_table.GET_ROOT_INFO_A5 in line:
             self._parse_root_init_info(line)
             return True
         rank_info_flag = regular_table.ENTRY_RANKS_INFO in line and regular_table.RANK_INFO in line
@@ -303,6 +308,13 @@ class BaseInfoParser:
             return True
         if regular_table.TOTAL_RANK_INFO in line and regular_table.SERVER_ID_INFO in line:
             self._parse_common_init_info(line)
+            return True
+        if (
+            regular_table.COMM_ID_INFO in line
+            and regular_table.USER_RANK_INFO in line
+            and regular_table.USER_RANK_SIZE_INFO in line
+        ):
+            self._parse_common_init_info_a5(line)
             return True
         # 超时信息
         for cate, keyword in self.DEFAULT_TIMEOUT_SET_KEYWORD.items():
@@ -322,9 +334,19 @@ class BaseInfoParser:
         if regular_table.EID_PLANE_INFO in line:
             self._parse_eid_plane_id(line)
             return True
+        if "Communicator Key Info" in line:
+            self._parse_communicator_key_info(line)
+            return True
+        if "LocalRank Key Info" in line:
+            self._parse_local_rank_key_info(line)
+            return True
         # VNic 信息
         if regular_table.SOCKET_VIRTUAL_NIC_IP_INFO in line and regular_table.SOCKET_PHY_ID_INFO in line:
             self._parse_vNic_ip_phy_device_id(line)
+            return True
+        if "TLS SWITCH" in line:
+            tls_switch_match = TLS_SWITCH_PATTERN.search(line.strip())
+            self.tls_status = tls_switch_match.group(1) if tls_switch_match else ""
             return True
         return False
 
@@ -350,7 +372,13 @@ class BaseInfoParser:
             rank_id = rank_info.get("rank_id")
             if rank_id:
                 data = RankInfo.from_dict(rank_info)
-                data.eid_plane_list = self.rank_eid_plane_info.get((rank_id, identifier_name), [])
+                # 子通信域继承父通信域的eid信息
+                father_identifier_name = (
+                    identifier_name.replace(regular_table.SON_IDENTIFIER_SUF, "")
+                    if identifier_name.endswith(regular_table.SON_IDENTIFIER_SUF)
+                    else identifier_name
+                )
+                data.eid_plane_list = self.rank_eid_plane_info.get((rank_id, father_identifier_name), [])
                 plog_base_info.rank_map[identifier_name] = data
         return plog_base_info
 
@@ -394,6 +422,62 @@ class BaseInfoParser:
                 self.phy_device_id = phy_id
                 return
         self.phy_device_id = self.logic_device_id
+
+    def _parse_communicator_key_info(self, line):
+        """
+        Filter and save the Device Communicator Key Info from plog HCCL logs.
+        Log e.g:
+        [coll_comm.cc:354] [2652368][Communicator Key Info]identifier[xxx.xxx.xxx_xxx]
+        rankSize[2] comm[0x*****]
+        """
+        identifier_name = (
+            filter_single_rank_info(line, regular_table.IDENTIFIER_INFO) or regular_table.DEFAULT_IDENTIFIER
+        )
+        if identifier_name != regular_table.DEFAULT_IDENTIFIER:
+            self.current_identifier_name = identifier_name
+        rank_num_str = filter_single_rank_info(line, regular_table.RANK_SIZE_INFO)
+        if identifier_name != regular_table.DEFAULT_IDENTIFIER and rank_num_str:
+            # skip line when not found identifier and use root info to init
+            try:
+                rank_num = int(rank_num_str)
+            except ValueError:
+                rank_num = -1
+            self.rank_map.setdefault(identifier_name, dict()).update({"rank_num": rank_num})
+
+    def _parse_local_rank_key_info(self, line: str):
+        """
+        Filter and save the Device LocalRank Key Info from plog HCCL logs.
+        Log e.g:
+        [coll_comm.cc:372] [2652368][LocalRank Key Info]deviceLogicId[0] devicePhyId[0] hostIp[xxx.xxx.x.xx]
+        localRank[0] hostPort[xxx] netLayer[0] eid[xxxx:xxx:...] planeId[0]
+
+        [coll_comm.cc:385] [3372687][LocalRank Key Info]userRank[0] rootinfoDetail: L0{netLayer=0, netInstId=az0-rack0,
+        netType=xx, netAttr=, addrs=[{addrType=AddrType::EID, addr=xxxx:xxxx..., socketPort=xx, ports=0/0, planeId=0}]}
+        """
+        rank_id = filter_single_rank_info(line, regular_table.LOCAL_RANK_INFO)
+        if self.current_identifier_name != regular_table.DEFAULT_IDENTIFIER:
+            self.rank_map.setdefault(self.current_identifier_name, dict()).update({"rank_id": rank_id})
+        logic_device_id = filter_single_rank_info(line, regular_table.ENTRY_DEVICE_INFO)
+        if logic_device_id == INVALID_ID:
+            logic_device_id = ""
+        self.logic_device_id = self.logic_device_id or logic_device_id
+        phy_device_id = filter_single_rank_info(line, regular_table.DEVICE_PHY_INFO)
+        if phy_device_id == INVALID_ID:
+            phy_device_id = ""
+        self.phy_device_id = self.phy_device_id or phy_device_id
+        server_info = filter_single_rank_info(line, regular_table.HOST_IP_INFO_A5)
+        if server_info:
+            server_info = server_info.split("%")[0]  # remove the network adapter info
+            if not IPAddress.is_valid_ip(server_info):
+                server_info = ""
+        self.server_id = self.server_id or server_info
+
+        eid = filter_single_rank_info(line, regular_table.EID_ID_INFO)
+        plane_id = filter_single_rank_info(line, regular_table.PLANE_ID_INFO)
+        if rank_id and eid and plane_id:
+            self.rank_eid_plane_info.setdefault((rank_id, self.current_identifier_name), []).append(
+                EidPlaneInfo(eid, plane_id)
+            )
 
     def _parse_vNic_ip_phy_device_id(self, line: str):
         """
@@ -601,6 +685,35 @@ class BaseInfoParser:
         new_server_id = filter_single_rank_info(line, regular_table.SERVER_ID_INFO)
         self.server_id = self.server_id or server_info or new_server_id
 
+    def _parse_common_init_info_a5(self, line: str):
+        """
+        Filter and save the Device InitCollComm from plog HCCL logs.
+        Log e.g:
+        [hccl_comm_host.cc:394] [347014][InitCollComm]success, commId[group_name_0], deviceLogicId[0], devicePhyId[0],
+        devType[6], userRank[0], userRankSize[2], opExpansionMode[2], taskExceptionEnable[1], notifyWaitTimeout[68],
+        plfDebugConfig[0x4].
+        """
+        identifier_name = filter_single_rank_info(line, regular_table.COMM_ID_INFO) or regular_table.DEFAULT_IDENTIFIER
+        if identifier_name != regular_table.DEFAULT_IDENTIFIER:
+            self.current_identifier_name = identifier_name
+        rank_id = filter_single_rank_info(line, regular_table.USER_RANK_INFO)
+        rank_num_str = filter_single_rank_info(line, regular_table.USER_RANK_SIZE_INFO)
+        if identifier_name != regular_table.DEFAULT_IDENTIFIER and rank_num_str:
+            # skip line when not found identifier and use root info to init
+            try:
+                rank_num = int(rank_num_str)
+            except ValueError:
+                rank_num = -1
+            self.rank_map.setdefault(identifier_name, dict()).update({"rank_num": rank_num, "rank_id": rank_id})
+        logic_device_id = filter_single_rank_info(line, regular_table.ENTRY_DEVICE_INFO)
+        if logic_device_id == INVALID_ID:
+            logic_device_id = ""
+        self.logic_device_id = self.logic_device_id or logic_device_id
+        phy_device_id = filter_single_rank_info(line, regular_table.DEVICE_PHY_INFO)
+        if phy_device_id == INVALID_ID:
+            phy_device_id = ""
+        self.phy_device_id = self.phy_device_id or phy_device_id
+
     def _parse_eid_plane_id(self, line: str):
         """
         Parse eid and plane id
@@ -691,21 +804,22 @@ class ErrorParser:
         if not line.startswith(regular_table.ERROR_HCCL):  # extract more only for hccl errors
             return
         self._filter_cqe_error_from_log(line)  # get cqe err info
+        self._filter_cqe_error_from_log_a5(line)
         self._filter_cluster_exception(line)  # get cluster exception info
         self._filter_root_info_timeout_error_from_log(line, err_time)  # get root info timeout err info
+        self._filter_root_info_timeout_error_a5(line, err_time)
         self._filter_notify_timeout_error_from_log(line, err_time)  # get notify timeout err info
         self._filter_other_timeout_error_from_log(line, err_time)  # get other timeout err info
         self._filter_socket_timeout_error_from_log(line, err_time)  # get socket timeout err info
         self._filter_transport_error_from_log(line)
+        self._filter_transport_error_from_log_a5(line)
 
     def _filter_cqe_error_from_log(self, line: str):
         """
         Filter the cqe error link info from log
         :return:
         """
-        for keyword, split_key in zip(
-            [ERROR_CQE, ERROR_CQE_NEW, ERROR_CQE_A5], [ERROR_CQE_SPLIT, ERROR_CQE_NEW_SPLIT, ERROR_CQE_A5_SPLIT]
-        ):
+        for keyword, split_key in zip([ERROR_CQE, ERROR_CQE_NEW], [ERROR_CQE_SPLIT, ERROR_CQE_NEW_SPLIT]):
             if keyword in line:
                 cqe_remote_info = filter_single_rank_info(line, split_key)
                 if ERROR_CQE_LATEST in line:
@@ -714,6 +828,30 @@ class ErrorParser:
                 if not cqe_remote_info:
                     return
                 self.cqe_links.add(cqe_remote_info)
+
+    def _filter_cqe_error_from_log_a5(self, line: str):
+        for keyword, split_key in zip([ERROR_CQE_A5, ERROR_CQE_NEW_A5], [ERROR_CQE_A5_SPLIT, ERROR_CQE_NEW_A5_SPLIT]):
+            if keyword in line:
+                cqe_remote_info = filter_single_rank_info(line, split_key)
+                if not cqe_remote_info or "eid" in cqe_remote_info:
+                    continue
+                self.cqe_links.add(cqe_remote_info)
+
+    def _filter_root_info_timeout_error_a5(self, line: str, err_time: str):
+        if ("rank_info_detect_client.cc" in line and "recv rankTable error" in line) or (
+            "rank_info_detect_service.cc" in line and "server get socket fail" in line
+        ):
+            self.root_info_error_data_cache.add_timeout_info(err_time, False)
+            self.root_info_error_data_cache.add_key_info(line)
+            return
+
+        if "RootInfoDetect failed" in line and regular_table.IDENTIFIER_INFO in line:
+            identifier_name = filter_single_rank_info(line, regular_table.IDENTIFIER_INFO)
+            if not identifier_name or not self.root_info_error_data_cache.exist_data_flag:
+                return
+            self.root_info_error_data_cache.add_key_info(line)
+            error_info = self.root_info_error_data_cache.format_data(identifier_name)
+            self.timeout_error_events_list.append(error_info)
 
     def _filter_root_info_timeout_error_from_log(self, line: str, err_time: str):
         """
@@ -794,7 +932,11 @@ class ErrorParser:
         :param err_time: time of printing error log
         """
         # socket timeout key log
-        if "the connection failure" in line or "Wait links establish completed failed" in line:
+        if (
+            "the connection failure" in line
+            or "Wait links establish completed failed" in line
+            or "channel connect failed" in line
+        ):
             self.socket_error_data_cache.exist_data_flag = True
             self.socket_error_data_cache.add_error_type(regular_table.TIMEOUT_SOCKET, err_time)
             self.socket_error_data_cache.add_key_info(line)
@@ -870,6 +1012,14 @@ class ErrorParser:
         )
         if match and IPAddress.is_valid_ip(match[1]):
             self.transport_error_remote = RemoteInfo(phy_device_id=match[2], server_ip=match[1])
+
+    def _filter_transport_error_from_log_a5(self, line):
+        if self.transport_error_remote or "CMD information" not in line:
+            return
+        self.transport_init_error_happened = True
+        tag_name = filter_single_rank_info(line, "group[")
+        remote_rank_id = filter_single_rank_info(line, "remoteRank[")
+        self.transport_error_remote = RemoteInfo(tag_name=tag_name, remote_rank_id=remote_rank_id)
 
 
 class RootInfoErrorDataCache:
@@ -993,16 +1143,17 @@ class SocketErrorDataCache:
         return TimeoutEvent(error_type=self.error_type, error_time=self.error_time, key_info=key_info_str)
 
 
-def filter_single_rank_info(line, key):
+def filter_single_rank_info(line, key, end_sig="]"):
     """
     Get rank info by split func
     :param line: plog line
     :param key: keyword
+    :param end_sig: end signal
     :return: key info
     """
     if key not in line:
         return ""
     key_info_list = line.split(key, 1)
-    if len(key_info_list) < 2:
+    if len(key_info_list) <= 1:
         return ""
-    return key_info_list[1].split("]")[0]
+    return key_info_list[1].split(end_sig)[0]
