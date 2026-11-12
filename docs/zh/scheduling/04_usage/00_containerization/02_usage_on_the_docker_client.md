@@ -107,6 +107,7 @@ npu-smi
     >      --mount type=bind,src=/usr/lib64/libibv_extend.so,dst=/usr/lib64/libibv_extend.so,readonly \
     >      --mount type=bind,src=/usr/lib64/libibv_extend.so.4,dst=/usr/lib64/libibv_extend.so.4,readonly \
     >      --mount type=bind,src=/usr/lib64/libibv_extend.so.4.2.0,dst=/usr/lib64/libibv_extend.so.4.2.0,readonly \
+    >      --mount type=bind,src=/usr/lib64/libc_sec.so,dst=/usr/lib64/libc_sec.so,readonly \
     >      {image-name:tag} /bin/bash
     >    ```
 
