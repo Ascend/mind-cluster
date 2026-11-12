@@ -216,7 +216,7 @@
 </tr>
 <tr id="row_pod_error_tolerance_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_pod_error_tolerance_1"><a name="p_pod_error_tolerance_1"></a><a name="p_pod_error_tolerance_1"></a>huawei.com/pod.error-tolerance.after-time</p>
 </td>
-<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Pod错误芯片退避容忍时长，单位为s（秒）。</p>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>上一轮Pod故障芯片退避容忍时长，单位为s（秒）。</p>
 </td>
 <td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0：立即允许，不退避。</li><li>N（N>0）：任务在Pod失败后N秒内避让导致本次失败的芯片。</li></ul><p>默认值为0，取值范围为[0, 300]。Pod错误退避为临时退避，不支持配置-1（永久禁止）。</p>
 </td>
@@ -503,7 +503,7 @@
 </tr>
 <tr id="row_pod_error_tolerance_2"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_pod_error_tolerance_2"><a name="p_pod_error_tolerance_2"></a><a name="p_pod_error_tolerance_2"></a>huawei.com/pod.error-tolerance.after-time</p>
 </td>
-<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>Pod错误芯片退避容忍时长，单位为s（秒）。</p>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>上一轮Pod故障芯片退避容忍时长，单位为s（秒）。</p>
 </td>
 <td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>0：立即允许，不退避。</li><li>N（N>0）：任务在Pod失败后N秒内避让导致本次失败的芯片。</li></ul><p>默认值为0，取值范围为[0, 300]。Pod错误退避为临时退避，不支持配置-1（永久禁止）。</p>
 </td>

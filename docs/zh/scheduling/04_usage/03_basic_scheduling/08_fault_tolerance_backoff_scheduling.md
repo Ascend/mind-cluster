@@ -66,7 +66,7 @@
 metadata:
   annotations:
     huawei.com/silent.unhealthy-tolerance.after-time: "1800"   # 静默故障芯片退避容忍时长，单位为s（秒）
-    huawei.com/pod.error-tolerance.after-time: "60"            # Pod错误芯片退避容忍时长，单位为s（秒）
+    huawei.com/pod.error-tolerance.after-time: "60"            # 上一轮Pod故障芯片退避容忍时长，单位为s（秒）
     huawei.com/subhealthy.tolerance.after-time: "60"           # 亚健康资源退避容忍时长，单位为s（秒）
 ...
 ```
@@ -78,7 +78,7 @@ metadata:
 | 参数                                               | 默认值 | 取值范围       | 含义                                                                                                                                                              |
 |--------------------------------------------------|-----|------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | huawei.com/silent.unhealthy-tolerance.after-time | 600 | [-1, 1800] | 静默故障芯片退避容忍时长，单位为s（秒）。<ul><li>0：立即允许，不退避。</li><li>-1：永久禁止，任务不调度到静默故障芯片，已运行任务使用到静默故障芯片时会被驱逐并重调度。</li><li>N（N>0）：任务排队N秒后才允许使用静默故障芯片，N超过1800时按1800处理。</li></ul>     |
-| huawei.com/pod.error-tolerance.after-time        | 0   | [0, 300]   | Pod错误芯片退避容忍时长，单位为s（秒）。<ul><li>0：立即允许，不退避。</li><li>N（N>0）：任务在Pod失败后N秒内避让导致本次失败的芯片，N超过300时按300处理。</li></ul><p>Pod错误退避为临时退避，不支持配置-1（永久禁止）。</p>                     |
+| huawei.com/pod.error-tolerance.after-time        | 0   | [0, 300]   | 上一轮Pod故障芯片退避容忍时长，单位为s（秒）。<ul><li>0：立即允许，不退避。</li><li>N（N>0）：任务在Pod失败后N秒内避让导致本次失败的芯片，N超过300时按300处理。</li></ul><p>Pod错误退避为临时退避，不支持配置-1（永久禁止）。</p>                     |
 | huawei.com/subhealthy.tolerance.after-time       | 10  | [0, 300]   | 亚健康资源退避容忍时长，单位为s（秒）。任务等待时长在容忍时长内时，调度器不会将任务调度到亚健康资源；超过容忍时长后放行，保证无健康资源可用时任务仍可调度。详细取值说明请参见[Pod annotation使用说明](../../06_api/12_k8s.md#p_subhealthy_tolerance_k8s)。 |
 
 >[!NOTE]
