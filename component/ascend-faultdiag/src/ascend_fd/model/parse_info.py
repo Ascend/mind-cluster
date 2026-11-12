@@ -114,11 +114,15 @@ class RemoteInfo(JsonObj):  # 对端关系
         phy_device_id: str = "",
         server_ip: str = "",
         eid: str = "",
+        tag_name: str = "",
+        remote_rank_id: str = "",
     ):
         self.device_ip = device_ip
         self.phy_device_id = phy_device_id
         self.server_ip = server_ip
         self.eid = eid
+        self.tag_name = tag_name
+        self.remote_rank_id = remote_rank_id
 
 
 class TimeoutEvent(JsonObj):

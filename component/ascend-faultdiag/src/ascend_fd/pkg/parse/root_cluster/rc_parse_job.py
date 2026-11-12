@@ -161,9 +161,10 @@ def start_rc_parse_job(cfg):
         pid_file_parser.save_pid_log(cfg.output_path)  # 落盘原始日志，后续删除
         if check_device_id_repeat(pid, this_pid_result, device_pid_map, pid_parse_result):
             continue
-        tls_status = tls_status_map.get(pid)
-        if tls_status:
-            this_pid_result.tls_status = tls_status
+        # tls 信息：A3从CANN_Device中获取，A5从CANN_Plog中获取
+        tls_status = tls_status_map.get(pid, "")
+        this_pid_result.tls_status = tls_status or pid_file_parser.base_info_parser.tls_status
+
         this_pid_result.aicpu_notify_wait_remote = filter_device_error(device_log_dict.get(pid))
         pid_parse_result.update({pid: this_pid_result.to_dict()})
 

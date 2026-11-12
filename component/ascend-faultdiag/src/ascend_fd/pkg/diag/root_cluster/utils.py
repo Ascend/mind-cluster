@@ -84,6 +84,8 @@ class Device:
         self.timeout_error_events_list = []
         self.transport_error_remote = None
         self.transport_init_error_happened = False
+        # 占位Device(对端无日志)的展示标签, 格式"通信域:rank id", 供展示等待链
+        self.unknown_device_label = ""
         # indicates whether a timeout error occurs first.
         # error type contain: socket, p2p, notify, ffts+, root_info init. Not contain normal
         self.first_timeout_error_event = None
@@ -98,6 +100,8 @@ class Device:
         return False
 
     def __str__(self):
+        if self.unknown_device_label:
+            return self.unknown_device_label
         if self.worker_name == "worker-NA":
             return "Unknown Device"
         if self.device_id == NEGATIVE_ONE and self.device_table:
@@ -482,6 +486,49 @@ class DeviceTable:
             if not IPAddress.is_valid_ip(device.device_ip) or not IPAddress.is_valid_ip(remote_device.device_ip):
                 continue
             relation_map[device.device_ip] = remote_device.device_ip
+        return relation_map
+
+    def has_a5_transport_init_error(self):
+        """
+        Check whether there is an A5 device with transport init error
+        :return: True if exists
+        """
+        for device in self.device_map.values():
+            if device.generation_info == regular_table.GENERATION_SIGN_A5 and device.transport_init_error_happened:
+                return True
+        return False
+
+    def get_a5_transport_init_error_relation(self):
+        """
+        A5: 通过通信域(identifier)和rank id反查对端设备, 直接以Device实例构建等待关系
+        对端无日志等场景下反查不到, 赋默认Device()(UNKNOWN_DEVICE)
+        :return: {本端Device(等待者): 对端Device}
+        """
+        relation_map = {}
+        for device in self.device_map.values():
+            if device.transport_init_error_happened:
+                self.transport_init_error_flag = device.transport_init_error_happened
+            remote_info = device.transport_error_remote
+            if not remote_info:
+                continue
+            if not remote_info.tag_name or not remote_info.remote_rank_id:
+                continue
+            identifier_instance = self.identifier_dict.get(remote_info.tag_name)
+            if not identifier_instance:
+                continue
+            local_rank_id = identifier_instance.device_rank_id_map.get(device)
+            if not local_rank_id:
+                continue
+            remote_device = UNKNOWN_DEVICE
+            for store_device, store_rank_id in identifier_instance.device_rank_id_map.items():
+                if str(store_rank_id) == str(remote_info.remote_rank_id) and store_device != device:
+                    remote_device = store_device
+                    break
+            if remote_device is UNKNOWN_DEVICE:
+                # 对端无日志等场景下反查不到, 用占位Device记录通信域和rank id, 供展示等待链
+                remote_device = Device()
+                remote_device.unknown_device_label = "{}:{}".format(remote_info.tag_name, remote_info.remote_rank_id)
+            relation_map[device] = remote_device
         return relation_map
 
 
@@ -916,6 +963,51 @@ class ErrorChecker(BaseChecker):
             result_list.append(traversed_device_list[-1])
         return result_list, traversed_device_list
 
+    @staticmethod
+    def build_a5_chains(relation_map: Dict[Device, Device]):
+        """
+        遍历等待关系, 从每个未覆盖的等待者出发沿链找对端, 形成所有等待链
+        成环则环内设备相互等待, 均为根因; 未成环则链末端设备为根因
+        :param relation_map: 等待关系, key为本端Device(等待者), value为对端Device
+        :return: (root_device_list, longest_link)
+        """
+        root_device_list = []
+        longest_link = []  # 所有等待链中最长的一条, 用于展示
+        processed_keys = set()  # 记录已被某条链覆盖过的节点
+        # 每个key都是一个"等待者"节点, 从任一未处理的节点出发沿等待关系找对端, 形成一条链
+        for start_device in relation_map:
+            if start_device in processed_keys:
+                continue
+            chain = []
+            visited = set()  # 当前链的局部访问集合, 用于检测成环
+            current_device = start_device
+            while current_device:
+                if current_device in visited:
+                    # 当前节点再次出现说明绕回起点, 等待链成环:
+                    # 环内设备相互等待(谁也无法先释放), 从环入口到链尾全部为根因
+                    repeat_index = chain.index(current_device)
+                    root_device_list.extend(chain[repeat_index:])
+                    chain.append(current_device)  # 补重复节点, 便于展示出环
+                    break
+                visited.add(current_device)
+                chain.append(current_device)
+                # 找当前节点的对端: 该对端不在key中说明它不等待任何人
+                next_device = relation_map.get(current_device, None)
+                if next_device is None:
+                    # 链末端设备为根因
+                    root_device_list.append(current_device)
+                    break
+                if next_device.unknown_device_label:
+                    # 对端未知(如对端无日志): 占位节点加入链展示, 根因取等待它的当前节点
+                    chain.append(next_device)
+                    root_device_list.append(current_device)
+                    break
+                current_device = next_device
+            processed_keys.update(chain)
+            if len(chain) > 1 and len(chain) > len(longest_link):
+                longest_link = chain
+        return root_device_list, longest_link
+
     def check_error_relation(self, relation_map: Dict[str, str]):
         check_result = False
         if not relation_map:
@@ -946,6 +1038,29 @@ class ErrorChecker(BaseChecker):
             check_result = True
         return check_result
 
+    def check_a5_error_relation(self, relation_map: Dict[Device, Device]):
+        """
+        A5: 遍历等待关系形成等待链, 节点直接为Device实例
+        成环则环内设备相互等待, 均为根因; 未成环则链末端设备为根因
+        展示只展示最长的一条等待链
+        :param relation_map: 等待关系, key为本端Device(等待者), value为对端Device
+        """
+        check_result = False
+        if not relation_map:
+            return check_result
+        root_device_list, longest_link = self.build_a5_chains(relation_map)
+        # 等待关系要两个节点及以上, 只展示最长的一条链
+        if len(longest_link) > 1:
+            for device in longest_link:
+                self.remote_links.append(str(device))
+        # 多条链可能共享末端/环, 去重
+        temp_root_devices = list(dict.fromkeys(root_device_list))
+        if temp_root_devices:
+            self.root_devices = temp_root_devices
+            self.fault_description = fault_description.TRANSPORT_INIT_ERROR
+            check_result = True
+        return check_result
+
     def check(self):
         if not self.device_table.err_device:
             if self.suspected_lagging_devices:
@@ -965,8 +1080,12 @@ class ErrorChecker(BaseChecker):
         if self._check_cluster_exception():
             return
         # Transport init error检查
-        if self.check_error_relation(self.device_table.get_transport_init_error_relation()):
-            return
+        if self.device_table.has_a5_transport_init_error():
+            if self.check_a5_error_relation(self.device_table.get_a5_transport_init_error_relation()):
+                return
+        else:
+            if self.check_error_relation(self.device_table.get_transport_init_error_relation()):
+                return
         if self._check_timeout_err():
             return
         all_time_out_devices = self._get_all_timeout_devices()
