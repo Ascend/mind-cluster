@@ -35,6 +35,7 @@
     /usr/lib64/libibv_extend.so
     /usr/lib64/libibv_extend.so.4
     /usr/lib64/libibv_extend.so.4.2.0
+    /usr/lib64/libc_sec.so
     ```
 
     >[!NOTE]
