@@ -90,7 +90,7 @@ class TestOpticalModuleInfo(unittest.TestCase):
     def test_get_abnormal_bias_infos(self):
         module = self._make_module(
             [
-                ("0", "1", "1", "", "", "15", PowerUnitType.MW),
+                ("0", "1", "1", "", "", "210", PowerUnitType.MW),
                 ("1", "1", "1", "", "", "8", PowerUnitType.MW),
             ]
         )

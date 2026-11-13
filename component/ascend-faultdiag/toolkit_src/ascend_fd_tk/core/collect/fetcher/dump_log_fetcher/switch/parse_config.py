@@ -24,9 +24,14 @@ from ascend_fd_tk.utils import helpers
 
 
 class SwiCliOutputParseConfig:
-
-    def __init__(self, primary_keys: List[str], data_type: SwiCliOutputDataType, desc="",
-                 multi_parts_judge_func: Callable = None, is_multi_item=False):
+    def __init__(
+        self,
+        primary_keys: List[str],
+        data_type: SwiCliOutputDataType,
+        desc="",
+        multi_parts_judge_func: Callable = None,
+        is_multi_item=False,
+    ):
         self.primary_keys = primary_keys
         self.data_type = data_type
         self.desc = desc
@@ -58,46 +63,80 @@ def _display_alarm_history_judge_func(content: str):
 
 
 PARSE_CONFIGS = [
-    SwiCliOutputParseConfig(["AlarmId", "AlarmName", "AlarmType", "State : active"],
-                            SwiCliOutputDataType.ALARM_ACTIVE_VERBOSE, "display alarm active verbose"),
-    SwiCliOutputParseConfig(["AlarmId", "AlarmName", "AlarmType", "State : cleared"],
-                            SwiCliOutputDataType.ALARM_HISTORY_VERBOSE, "display alarm active verbose"),
-    SwiCliOutputParseConfig(["Sequence", "AlarmId", "Severity", "Date Time", "Description"],
-                            SwiCliOutputDataType.ALARM_ACTIVE, "display alarm active",
-                            _display_alarm_active_judge_func),
-    SwiCliOutputParseConfig(["Sequence", "AlarmId", "Severity", "Date Time", "Description"],
-                            SwiCliOutputDataType.ALARM_HISTORY, "display alarm history",
-                            _display_alarm_history_judge_func),
-    SwiCliOutputParseConfig(["Local Interface", "Exptime(s)", "Neighbor Interface", "Neighbor Device"],
-                            SwiCliOutputDataType.LLDP_NEI_B),
-    SwiCliOutputParseConfig(["Items", "Value", "HighAlarm", "HighWarn", "LowAlarm", "Status"],
-                            SwiCliOutputDataType.OPTICAL_MODULE),
-    SwiCliOutputParseConfig(["Interface", "PHY", "Protocol", "InUti", "OutUti", "inErrors", "outErrors"],
-                            SwiCliOutputDataType.IF_BRIEF),
+    SwiCliOutputParseConfig(
+        ["AlarmId", "AlarmName", "AlarmType", "State : active"],
+        SwiCliOutputDataType.ALARM_ACTIVE_VERBOSE,
+        "display alarm active verbose",
+    ),
+    SwiCliOutputParseConfig(
+        ["AlarmId", "AlarmName", "AlarmType", "State : cleared"],
+        SwiCliOutputDataType.ALARM_HISTORY_VERBOSE,
+        "display alarm active verbose",
+    ),
+    SwiCliOutputParseConfig(
+        ["Sequence", "AlarmId", "Severity", "Date Time", "Description"],
+        SwiCliOutputDataType.ALARM_ACTIVE,
+        "display alarm active",
+        _display_alarm_active_judge_func,
+    ),
+    SwiCliOutputParseConfig(
+        ["Sequence", "AlarmId", "Severity", "Date Time", "Description"],
+        SwiCliOutputDataType.ALARM_HISTORY,
+        "display alarm history",
+        _display_alarm_history_judge_func,
+    ),
+    SwiCliOutputParseConfig(
+        ["interface", "Errors", "CRC"],
+        SwiCliOutputDataType.INTERFACE_COUNTERS_ERRORS,
+        "display interface counters errors",
+    ),
+    SwiCliOutputParseConfig(
+        ["Local Interface", "Exptime(s)", "Neighbor Interface", "Neighbor Device"], SwiCliOutputDataType.LLDP_NEI_B
+    ),
+    SwiCliOutputParseConfig(
+        ["Items", "Value", "HighAlarm", "HighWarn", "LowAlarm", "Status"], SwiCliOutputDataType.OPTICAL_MODULE
+    ),
+    SwiCliOutputParseConfig(
+        ["Interface", "PHY", "Protocol", "InUti", "OutUti", "inErrors", "outErrors"], SwiCliOutputDataType.IF_BRIEF
+    ),
     SwiCliOutputParseConfig(["Current state", "Speed"], SwiCliOutputDataType.BIT_ERR_RATE),
     SwiCliOutputParseConfig(["current state", "Description", "Port Mode"], SwiCliOutputDataType.IF_INFO),
     SwiCliOutputParseConfig(["MainBoard", "ESN"], SwiCliOutputDataType.LICENSE_ESN),
     SwiCliOutputParseConfig(["clock", "Time Zone"], SwiCliOutputDataType.CLOCK),
     SwiCliOutputParseConfig(["transceiver information:"], SwiCliOutputDataType.IF_TRANSCEIVER_INFO),
-    SwiCliOutputParseConfig(["Interface", "IfIndex", "TB", "TP", "Chip", "Port", "Core"],
-                            SwiCliOutputDataType.PORT_MAPPING),
+    SwiCliOutputParseConfig(
+        ["Interface", "IfIndex", "TB", "TP", "Chip", "Port", "Core"], SwiCliOutputDataType.PORT_MAPPING
+    ),
     # hccs
-    SwiCliOutputParseConfig(["Interface", "RemoteProxyMiss", "RemoteProxyRxTimeout", "RemoteProxyTxTimeout",
-                             "LocalProxyMiss", "LocalProxyRxTimeout", "LocalProxyTxTimeout"],
-                            SwiCliOutputDataType.HCCS_PROXY_RESP_STATISTIC),
-    SwiCliOutputParseConfig(["ProxyType", "ResponseType", "Address", "CollectTime"],
-                            SwiCliOutputDataType.HCCS_PROXY_RESP_DETAIL),
-    SwiCliOutputParseConfig(['Interface', 'RpDirection', 'LpDirection', 'NcDirection'],
-                            SwiCliOutputDataType.HCCS_ROUTE_MISS),
+    SwiCliOutputParseConfig(
+        [
+            "Interface",
+            "RemoteProxyMiss",
+            "RemoteProxyRxTimeout",
+            "RemoteProxyTxTimeout",
+            "LocalProxyMiss",
+            "LocalProxyRxTimeout",
+            "LocalProxyTxTimeout",
+        ],
+        SwiCliOutputDataType.HCCS_PROXY_RESP_STATISTIC,
+    ),
+    SwiCliOutputParseConfig(
+        ["ProxyType", "ResponseType", "Address", "CollectTime"], SwiCliOutputDataType.HCCS_PROXY_RESP_DETAIL
+    ),
+    SwiCliOutputParseConfig(
+        ['Interface', 'RpDirection', 'LpDirection', 'NcDirection'], SwiCliOutputDataType.HCCS_ROUTE_MISS
+    ),
     SwiCliOutputParseConfig(["[ GET LINK STATUS ] Link status record"], SwiCliOutputDataType.HCCS_PORT_LINK_STATUS),
     SwiCliOutputParseConfig(['Dfx_StatName', 'Dfx_Result'], SwiCliOutputDataType.HCCS_PORT_STATISTIC_CHIP_INFO),
     SwiCliOutputParseConfig(["Ub-instance", "link-group", "RPLP", "NC"], SwiCliOutputDataType.HCCS_PORT_INVALID_DROP),
-    SwiCliOutputParseConfig(["Interface", "VL", "Back-pressure Counts", "Last-time"],
-                            SwiCliOutputDataType.HCCS_PORT_CREDIT_BACK_PRESSURES_STATISTIC),
+    SwiCliOutputParseConfig(
+        ["Interface", "VL", "Back-pressure Counts", "Last-time"],
+        SwiCliOutputDataType.HCCS_PORT_CREDIT_BACK_PRESSURES_STATISTIC,
+    ),
     SwiCliOutputParseConfig(["Interface", "StartAddr", "EndAddr", "BaseEid"], SwiCliOutputDataType.HCCS_MAP_TABLE),
     SwiCliOutputParseConfig(["interfaceName", "lane1", "lane2", "lane3", "lane4"], SwiCliOutputDataType.HCCS_IF_SNR),
-    SwiCliOutputParseConfig(["interfaceName", "running-lane-num", "real-lane-num"],
-                            SwiCliOutputDataType.HCCS_IF_LANE_INFO),
-    SwiCliOutputParseConfig(["PORT SNR ]"], SwiCliOutputDataType.HCCS_PORT_SNR)
-
+    SwiCliOutputParseConfig(
+        ["interfaceName", "running-lane-num", "real-lane-num"], SwiCliOutputDataType.HCCS_IF_LANE_INFO
+    ),
+    SwiCliOutputParseConfig(["PORT SNR ]"], SwiCliOutputDataType.HCCS_PORT_SNR),
 ]

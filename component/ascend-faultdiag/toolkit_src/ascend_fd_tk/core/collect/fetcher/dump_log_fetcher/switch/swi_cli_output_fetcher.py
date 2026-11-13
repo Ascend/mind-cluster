@@ -77,6 +77,9 @@ class SwiCliOutputFetcher(SwitchFetcher):
     async def fetch_history_alarms_verbose(self) -> str:
         return self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.ALARM_HISTORY_VERBOSE.name)
 
+    async def fetch_crc_counters_errors(self) -> str:
+        return self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.INTERFACE_COUNTERS_ERRORS.name)
+
     async def fetch_interface_info(self) -> str:
         return self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.IF_INFO.name)
 

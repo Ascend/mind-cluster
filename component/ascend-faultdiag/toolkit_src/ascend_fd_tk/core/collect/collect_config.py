@@ -49,6 +49,7 @@ class SwiCliOutputDataType(Enum):
     ALARM_HISTORY = auto()
     ALARM_ACTIVE_VERBOSE = auto()
     ALARM_HISTORY_VERBOSE = auto()
+    INTERFACE_COUNTERS_ERRORS = auto()
     LLDP_NEI_B = auto()
     BIT_ERR_RATE = auto()
     OPTICAL_MODULE = auto()

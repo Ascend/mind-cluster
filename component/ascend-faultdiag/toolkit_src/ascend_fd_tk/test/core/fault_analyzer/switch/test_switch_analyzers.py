@@ -22,13 +22,13 @@ from unittest.mock import MagicMock, patch
 from ascend_fd_tk.core.common.constants import BIT_ERROR_RATE_LIMIT
 from ascend_fd_tk.core.config.threshold_config import BaseThreshold
 from ascend_fd_tk.core.fault_analyzer.switch.bit_err_rate_analyzer import BitErrRateAnalyzer
-from ascend_fd_tk.core.fault_analyzer.switch.crc_err_rising_alarm_analyzer import CrcRisingCheckItem
+from ascend_fd_tk.core.fault_analyzer.switch.crc_err_analyzer import CrcCountersErrorsCheckItem, CrcRisingCheckItem
 from ascend_fd_tk.core.fault_analyzer.switch.lane_reduction_analyzer import LaneReductionAnalyzer
 from ascend_fd_tk.core.fault_analyzer.switch.op_los_alarm_analyzer import OpticalInvalidAnalyzer
 from ascend_fd_tk.core.fault_analyzer.switch.op_state_flag_diag_info_analyzer import OpStateFlagDiagInfoAnalyzer
 from ascend_fd_tk.core.fault_analyzer.switch.qos_credit_analyzer_a5 import QosCreditAnalyzerA5
 from ascend_fd_tk.core.fault_analyzer.switch.switch_analyzer import SwitchAnalyzer
-from ascend_fd_tk.core.model.switch import QosCreditPortInfo, SwitchInfo, QosCreditInfo
+from ascend_fd_tk.core.model.switch import CRCCountersErrors, QosCreditPortInfo, SwitchInfo, QosCreditInfo
 
 
 def _cluster_with_switch(switch_info):
@@ -123,6 +123,30 @@ class TestSwitchAnalyzers(unittest.TestCase):
         self.assertEqual(results[0].domain.slot_id, "61")
         self.assertEqual(results[0].domain.interface, "100GE1/0/1")
         self.assertIn("统计次数9，阈值5", results[0].fault_info)
+
+    def test_crc_counters_errors_reports_outlier_beyond_three_sigma(self):
+        local_info = SimpleNamespace(device_id="10.0.0.1", interface="100GE1/0/1")
+        if_info = MagicMock()
+        if_info.get_inspection_interface_info.return_value = local_info
+        crc_counters_errors = [
+            CRCCountersErrors(interface_name=f"100GE1/0/{idx}", crc_errors="0") for idx in range(2, 13)
+        ]
+        crc_counters_errors.append(CRCCountersErrors(interface_name="100GE1/0/1", crc_errors="100"))
+        switch_info = SimpleNamespace(
+            swi_id="10.0.0.1",
+            slot_id="61",
+            interface_full_infos={"100GE1/0/1": if_info},
+            crc_counters_errors=crc_counters_errors,
+        )
+        cluster = _cluster_with_switch(switch_info)
+        cluster.find_peer_swi_interface_info_by_if_info = MagicMock(return_value=(None, None))
+
+        results = CrcCountersErrorsCheckItem(cluster).analyse()
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].domain.slot_id, "61")
+        self.assertEqual(results[0].domain.interface, "100GE1/0/1")
+        self.assertIn("统计次数100", results[0].fault_info)
 
     def test_optical_los_alarm_reports_reason_and_skips_other_codes_or_bad_descriptions(self):
         alarm = SimpleNamespace(

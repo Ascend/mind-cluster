@@ -63,7 +63,7 @@ class BaseThreshold:
     # 光模块在位状态
     OPTICAL_PRESENT_THRESHOLD = Threshold(normal_value_alarm="present", desc="optical module status", unit="")
     # 电流
-    TX_BIAS_MA = Threshold(low_value_alarm="6", high_value_alarm="10", desc="tx bias", unit="mA")
+    TX_BIAS_MA = Threshold(low_value_alarm="6", high_value_alarm="200", desc="tx bias", unit="mA")
     # 功率阈值(mW)
     TX_POWER_MW = Threshold(low_value_alarm="0.2", high_value_alarm="2.5", desc="tx power", unit="mW")
     RX_POWER_MW = Threshold(

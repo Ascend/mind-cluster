@@ -142,7 +142,7 @@ class TestTypedThresholdJsonOverride(unittest.TestCase):
         self.assertEqual(view.TX_BIAS_MA.high_alarm_th, "1")
         # 未配置项保持默认（ODSP 用基础阈值）
         self.assertEqual(OpticalThreshold800G.TX_BIAS_MA.high_alarm_th, "13.00")
-        self.assertEqual(BaseThreshold.TX_BIAS_MA.high_alarm_th, "10")
+        self.assertEqual(BaseThreshold.TX_BIAS_MA.high_alarm_th, "200")
 
     def test_json_override_applies_to_diagnosis(self):
         """JSON 覆盖 LPO_TX_BIAS_MA 后，诊断判定随类型阈值变化"""

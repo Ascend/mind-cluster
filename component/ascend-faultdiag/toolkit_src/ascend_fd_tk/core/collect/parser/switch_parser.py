@@ -35,6 +35,7 @@ from ascend_fd_tk.core.model.switch import (
     QosCreditPortInfo,
     QosCreditInfo,
     QosCreditRow,
+    CRCCountersErrors,
 )
 from ascend_fd_tk.utils import logger
 from ascend_fd_tk.utils.form_parser import FormParser
@@ -152,6 +153,19 @@ class SwitchParser:
                 cur_alarm.date_time += alarm.date_time
                 cur_alarm.description += alarm.description
         return result
+
+    @classmethod
+    def parse_crc_counters_errors(cls, cmd_res) -> List[CRCCountersErrors]:
+        cmd_res_list = split_str(cmd_res, f"{INTERFACE_STR} ", regex=False)
+        crc_counters_errors_list = []
+        for cmd_res_part in cmd_res_list:
+            header_line, _, body = cmd_res_part.partition("\n")
+            parse_data_dict = FormParser().parse(body)
+            crc_errors = parse_data_dict.get("CRC")
+            interface = header_line.split()[1] if len(header_line.split()) > 1 else ""
+            if crc_errors and interface:
+                crc_counters_errors_list.append(CRCCountersErrors(interface, crc_errors))
+        return crc_counters_errors_list
 
     @classmethod
     def parse_interface_info(cls, cmd_res) -> List[InterfaceInfo]:
