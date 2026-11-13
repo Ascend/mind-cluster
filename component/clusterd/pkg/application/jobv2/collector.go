@@ -31,8 +31,11 @@ func PodGroupCollector(oldPGInfo, newPGInfo *v1beta1.PodGroup, operator string) 
 	case constant.AddOperator, constant.UpdateOperator:
 		podgroup.SavePodGroup(newPGInfo)
 	case constant.DeleteOperator:
-		kube.RecoverFaultJobInfoCm(podgroup.GetJobKeyByPG(newPGInfo), "")
+		jobKey := podgroup.GetJobKeyByPG(newPGInfo)
+		kube.RecoverFaultJobInfoCm(jobKey, "")
 		podgroup.DeletePodGroup(newPGInfo)
+		// the job is gone, its remembered resource request names are no longer needed
+		pod.DeleteJobRequests(jobKey)
 	default:
 		hwlog.RunLog.Debugf("error operator: %s", operator)
 		return

@@ -35,6 +35,7 @@ type Manager struct {
 	podMap      map[string]v1.Pod
 	nodePodMap  map[string]map[string]v1.Pod // key: node name, value: pods in node
 	jobPodMap   map[string]map[string]v1.Pod
+	jobReqMap   map[string]map[string]struct{} // key: job id, value: union of observed resource request names
 	podMapMutex sync.RWMutex
 }
 
@@ -42,6 +43,7 @@ func init() {
 	podManager.podMap = make(map[string]v1.Pod, initPodNum)
 	podManager.nodePodMap = make(map[string]map[string]v1.Pod)
 	podManager.jobPodMap = make(map[string]map[string]v1.Pod, initJobNum)
+	podManager.jobReqMap = make(map[string]map[string]struct{}, initJobNum)
 	podManager.podMapMutex = sync.RWMutex{}
 }
 
@@ -224,8 +226,48 @@ func addPodInCache(podInfo *v1.Pod) (string, string) {
 			podManager.jobPodMap[jobKey] = map[string]v1.Pod{}
 		}
 		podManager.jobPodMap[jobKey][podKey] = *podInfo
+		mergeJobRequests(jobKey, podInfo.Spec.Containers)
 	}
 	return podKey, jobKey
+}
+
+// mergeJobRequests unions the container request names into the job's remembered set. The set
+// only grows (pod templates are immutable) and is not cleared on pod deletion, so it stays
+// stable across the job-wide pod restart of rescheduling, during which the live pod cache is
+// transiently empty. The caller must hold the lock.
+func mergeJobRequests(jobKey string, containers []v1.Container) {
+	set := podManager.jobReqMap[jobKey]
+	if set == nil {
+		set = make(map[string]struct{})
+		podManager.jobReqMap[jobKey] = set
+	}
+	for _, container := range containers {
+		for resName := range container.Resources.Requests {
+			set[string(resName)] = struct{}{}
+		}
+	}
+}
+
+// HasJobRequest reports whether the job has ever been observed requesting any of the given
+// resource names. The observation is maintained by SavePod/UpdatePod and survives pod deletion
+// (e.g. the job-wide pod restart of rescheduling), so it is more stable than iterating the
+// live pods of the job. Clear it with DeleteJobRequests when the job is deleted.
+func HasJobRequest(jobKey string, resNames map[string]struct{}) bool {
+	podManager.podMapMutex.RLock()
+	defer podManager.podMapMutex.RUnlock()
+	for name := range podManager.jobReqMap[jobKey] {
+		if _, ok := resNames[name]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+// DeleteJobRequests deletes the job's remembered request names, called when the job is deleted
+func DeleteJobRequests(jobKey string) {
+	podManager.podMapMutex.Lock()
+	defer podManager.podMapMutex.Unlock()
+	delete(podManager.jobReqMap, jobKey)
 }
 
 func deletePodInCache(podInfo *v1.Pod) (string, string) {

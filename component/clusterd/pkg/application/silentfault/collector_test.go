@@ -20,6 +20,8 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/conf"
@@ -75,6 +77,8 @@ func TestIsWholeNodeJob(t *testing.T) {
 
 func TestJobUsesDpuOnNode(t *testing.T) {
 	convey.Convey("job uses dpu on node", t, func() {
+		pod.DeleteJobRequests("j1")
+		defer pod.DeleteJobRequests("j1")
 		convey.Convey("node nil returns false", func() {
 			p := gomonkey.ApplyFunc(kube.GetNode, func(string) *v1.Node { return nil })
 			defer p.Reset()
@@ -85,36 +89,90 @@ func TestJobUsesDpuOnNode(t *testing.T) {
 			defer p.Reset()
 			convey.So(jobUsesDpu("j1", "n1"), convey.ShouldBeFalse)
 		})
-		convey.Convey("any pod requesting dpu resource returns true even on other node or partial count", func() {
+		convey.Convey("any task requesting dpu resource returns true even on other node", func() {
 			p := gomonkey.ApplyFunc(kube.GetNode, func(string) *v1.Node {
 				node := &v1.Node{}
 				node.Annotations = map[string]string{constant.DpuResourceNameKey: "huawei.com/ub_rdma"}
 				return node
 			})
 			defer p.Reset()
-			p2 := gomonkey.ApplyFunc(pod.GetSimplePodByJobId, func(string) map[string]*constant.SimplePodInfo {
-				return map[string]*constant.SimplePodInfo{
-					"pod1": {NodeName: "n2", ResourceRequests: map[string]int64{"huawei.com/ub_rdma": 1}},
-				}
-			})
-			defer p2.Reset()
+			controller := true
+			dpuPod := &v1.Pod{Spec: v1.PodSpec{NodeName: "n2", Containers: []v1.Container{{
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{"huawei.com/ub_rdma": resource.MustParse("1")},
+				},
+			}}}}
+			dpuPod.UID = "pod-dpu-1"
+			dpuPod.OwnerReferences = []metav1.OwnerReference{{UID: "j1", Name: "job1", Controller: &controller}}
+			pod.SavePod(dpuPod)
+			defer pod.DeletePod(dpuPod)
 			convey.So(jobUsesDpu("j1", "n1"), convey.ShouldBeTrue)
 		})
-		convey.Convey("no pod requesting dpu resource returns false", func() {
+		convey.Convey("no task requesting dpu resource returns false", func() {
+			pod.DeleteJobRequests("j1")
 			p := gomonkey.ApplyFunc(kube.GetNode, func(string) *v1.Node {
 				node := &v1.Node{}
 				node.Annotations = map[string]string{constant.DpuResourceNameKey: "huawei.com/ub_rdma"}
 				return node
 			})
 			defer p.Reset()
-			p2 := gomonkey.ApplyFunc(pod.GetSimplePodByJobId, func(string) map[string]*constant.SimplePodInfo {
-				return map[string]*constant.SimplePodInfo{
-					"pod1": {NodeName: "n1", ResourceRequests: map[string]int64{"npu.huawei.com/NPU": 8}},
-				}
-			})
-			defer p2.Reset()
+			controller := true
+			npuPod := &v1.Pod{Spec: v1.PodSpec{Containers: []v1.Container{{
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{"npu.huawei.com/NPU": resource.MustParse("8")},
+				},
+			}}}}
+			npuPod.UID = "pod-npu-1"
+			npuPod.OwnerReferences = []metav1.OwnerReference{{UID: "j1", Name: "job1", Controller: &controller}}
+			pod.SavePod(npuPod)
+			defer pod.DeletePod(npuPod)
 			convey.So(jobUsesDpu("j1", "n1"), convey.ShouldBeFalse)
 		})
+	})
+}
+
+func TestJobUsesDpuFromRememberedRequests(t *testing.T) {
+	// patchNode mocks the fail node annotation
+	patchNode := func(patches *gomonkey.Patches) {
+		patches.ApplyFunc(kube.GetNode, func(string) *v1.Node {
+			node := &v1.Node{}
+			node.Annotations = map[string]string{constant.DpuResourceNameKey: "huawei.com/ub_rdma"}
+			return node
+		})
+	}
+	// remember saves a pod of job "j1" with the given requests into the pod domain and then
+	// deletes it, leaving only the remembered request names (the rescheduling scenario)
+	remember := func(requests v1.ResourceList) {
+		controller := true
+		p := &v1.Pod{Spec: v1.PodSpec{Containers: []v1.Container{{
+			Resources: v1.ResourceRequirements{Requests: requests},
+		}}}}
+		p.UID = "pod-remember-1"
+		p.OwnerReferences = []metav1.OwnerReference{{UID: "j1", Name: "job1", Controller: &controller}}
+		pod.SavePod(p)
+		pod.DeletePod(p)
+	}
+
+	convey.Convey("job uses dpu judged from remembered requests when the live pod cache is empty",
+		t, func() {
+			pod.DeleteJobRequests("j1")
+			defer pod.DeleteJobRequests("j1")
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+			patchNode(patches)
+			// the live pod cache is empty during the job-wide restart (the original bug scenario)
+			remember(v1.ResourceList{"huawei.com/ub_rdma": resource.MustParse("1")})
+			convey.So(jobUsesDpu("j1", "n1"), convey.ShouldBeTrue)
+		})
+
+	convey.Convey("remembered requests without dpu returns false", t, func() {
+		pod.DeleteJobRequests("j1")
+		defer pod.DeleteJobRequests("j1")
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patchNode(patches)
+		remember(v1.ResourceList{"npu.huawei.com/NPU": resource.MustParse("8")})
+		convey.So(jobUsesDpu("j1", "n1"), convey.ShouldBeFalse)
 	})
 }
 

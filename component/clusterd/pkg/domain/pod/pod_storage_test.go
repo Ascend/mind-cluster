@@ -11,6 +11,7 @@ import (
 
 	"github.com/smartystreets/goconvey/convey"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -273,5 +274,45 @@ func TestDeletePodInCache(t *testing.T) {
 			convey.So(podKey, convey.ShouldEqual, podUid2)
 			convey.So(jobKey, convey.ShouldEqual, jobUid1)
 		})
+	})
+}
+
+func TestJobRequests(t *testing.T) {
+	const reqJobKey = "job-req-uid"
+	controller := true
+	newReqPod := func(podUID string, requests v1.ResourceList) *v1.Pod {
+		p := &v1.Pod{Spec: v1.PodSpec{Containers: []v1.Container{{
+			Resources: v1.ResourceRequirements{Requests: requests},
+		}}}}
+		p.UID = types.UID(podUID)
+		p.OwnerReferences = []metav1.OwnerReference{{UID: reqJobKey, Name: "job1", Controller: &controller}}
+		return p
+	}
+
+	convey.Convey("job request names are learned on save and survive pod deletion", t, func() {
+		DeleteJobRequests(reqJobKey)
+		p1 := newReqPod("pod-req-1", v1.ResourceList{"npu.huawei.com/NPU": resource.MustParse("8")})
+		SavePod(p1)
+		// a second task of the same job requesting a different resource is unioned in
+		p2 := newReqPod("pod-req-2", v1.ResourceList{"huawei.com/ub_rdma": resource.MustParse("1")})
+		SavePod(p2)
+		convey.So(HasJobRequest(reqJobKey, map[string]struct{}{"npu.huawei.com/NPU": {}}),
+			convey.ShouldBeTrue)
+		convey.So(HasJobRequest(reqJobKey, map[string]struct{}{"huawei.com/ub_rdma": {}}),
+			convey.ShouldBeTrue)
+		convey.So(HasJobRequest(reqJobKey, map[string]struct{}{"unknown-resource": {}}),
+			convey.ShouldBeFalse)
+
+		// deleting all pods keeps the learned names (rescheduling restarts all pods)
+		DeletePod(p1)
+		DeletePod(p2)
+		convey.So(len(GetSimplePodByJobId(reqJobKey)), convey.ShouldEqual, 0)
+		convey.So(HasJobRequest(reqJobKey, map[string]struct{}{"huawei.com/ub_rdma": {}}),
+			convey.ShouldBeTrue)
+
+		// job deletion clears them
+		DeleteJobRequests(reqJobKey)
+		convey.So(HasJobRequest(reqJobKey, map[string]struct{}{"huawei.com/ub_rdma": {}}),
+			convey.ShouldBeFalse)
 	})
 }

@@ -147,8 +147,12 @@ func buildPendingEvent(jobID, failPod, failNode string, ts int64) *silentfault.P
 }
 
 // jobUsesDpu reports whether the job requested the DPU resource. The DPU resource name is
-// read from the node annotation; any pod of the job that requested it is enough, since the whole-node
+// read from the node annotation; any task of the job requesting it is enough, since the whole-node
 // check is already done upstream and the rescheduled pod may no longer be on the failed node.
+// The request names remembered by the pod domain are used because they survive the job-wide
+// pod restart of rescheduling, during which the live pod cache is transiently empty. The
+// remembered set is maintained by the same code path as the live pod cache, so a job whose
+// live pods are visible has already been remembered.
 func jobUsesDpu(jobID, nodeName string) bool {
 	node := kube.GetNode(nodeName)
 	if node == nil {
@@ -167,14 +171,7 @@ func jobUsesDpu(jobID, nodeName string) bool {
 	if len(rdmaResSet) == 0 {
 		return false
 	}
-	for _, podInfo := range pod.GetSimplePodByJobId(jobID) {
-		for resName := range podInfo.ResourceRequests {
-			if _, ok := rdmaResSet[resName]; ok {
-				return true
-			}
-		}
-	}
-	return false
+	return pod.HasJobRequest(jobID, rdmaResSet)
 }
 
 // jobCardsAtLeast reports whether the job's total card count is at least the threshold (rule 1).

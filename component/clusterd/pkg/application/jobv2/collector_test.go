@@ -13,6 +13,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
@@ -64,8 +65,20 @@ func TestPodGroupCollector(t *testing.T) {
 		})
 		convey.Convey("test delete podGroup message", func() {
 			uniqueQueue = sync.Map{}
+			// the remembered request names of the job must be cleared on podgroup delete
+			pod.DeleteJobRequests(jobUid1)
+			reqPod := getDemoPod(podName1, podNameSpace1, podUid1, podRank1)
+			reqPod.Spec.Containers = []v1.Container{{Resources: v1.ResourceRequirements{
+				Requests: v1.ResourceList{"huawei.com/ub_rdma": resource.MustParse("1")},
+			}}}
+			pod.SavePod(reqPod)
+			convey.So(pod.HasJobRequest(jobUid1, map[string]struct{}{"huawei.com/ub_rdma": {}}),
+				convey.ShouldBeTrue)
 			PodGroupCollector(oldPGInfo, newPGInfo, queueOperatorDelete)
 			convey.So(podgroup.GetPodGroup(jobUid1).Namespace, convey.ShouldBeBlank)
+			convey.So(pod.HasJobRequest(jobUid1, map[string]struct{}{"huawei.com/ub_rdma": {}}),
+				convey.ShouldBeFalse)
+			pod.DeletePod(reqPod)
 			value, ok := uniqueQueue.Load(podgroup.GetJobKeyByPG(newPGInfo))
 			convey.So(ok, convey.ShouldEqual, true)
 			convey.So(value, convey.ShouldEqual, queueOperatorPreDelete)
