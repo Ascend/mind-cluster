@@ -79,6 +79,10 @@ class SwitchFetcher(Fetcher):
         return ""
 
     @abc.abstractmethod
+    async def fetch_crc_counters_errors(self) -> str:
+        return ""
+
+    @abc.abstractmethod
     async def fetch_interface_info(self) -> str:
         return ""
 

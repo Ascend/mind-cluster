@@ -17,6 +17,8 @@
 import re
 from typing import List, Dict, Tuple, TypedDict
 
+from ascend_fd_tk.utils.helpers import to_int
+
 from ascend_fd_tk.core.common.diag_enum import OpticalModuleType, PowerUnitType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.model.hccs import HccsInfo
@@ -300,6 +302,12 @@ class InterfaceInfo(JsonObj):
         return True
 
 
+class CRCCountersErrors(JsonObj):
+    def __init__(self, interface_name="", crc_errors=""):
+        self.interface_name = interface_name
+        self.crc_errors = to_int(crc_errors)
+
+
 class InterfaceFullInfo(JsonObj, OpticalModule):
     def __init__(
         self,
@@ -483,6 +491,7 @@ class SwitchInfo(JsonObj):
         bit_error_rate: List[BitErrRate] = None,
         transceiver_infos: List[TransceiverInfo] = None,
         qos_credit_infos: List[QosCreditInfo] = None,
+        crc_counters_errors: List[CRCCountersErrors] = None,
     ):
         self.sn = sn
         self.name = name
@@ -500,6 +509,7 @@ class SwitchInfo(JsonObj):
         self.hccs_info = hccs_info
         self.date_time = date_time
         self.bit_error_rate = bit_error_rate or []
+        self.crc_counters_errors = crc_counters_errors or []
         self.transceiver_infos = transceiver_infos or []
         # NPU 槽位芯片 QoS Credit 信息，仅 A5 PoDManager NPU 槽位 SwitchInfo 有值
         self.qos_credit_infos = qos_credit_infos or []

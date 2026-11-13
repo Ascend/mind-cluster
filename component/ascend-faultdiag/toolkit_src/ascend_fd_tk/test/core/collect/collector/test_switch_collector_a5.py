@@ -48,6 +48,7 @@ def _make_fetcher() -> MagicMock:
         "fetch_datetime",
         "fetch_bit_error_rate",
         "fetch_transceiver_info",
+        "fetch_crc_counters_errors",
     ]:
         setattr(fetcher, name, AsyncMock(return_value="raw"))
     return fetcher
@@ -69,6 +70,7 @@ def _make_parser() -> MagicMock:
         "parse_lldp_nei_brief",
         "parse_bit_err_rate",
         "parse_transceiver_info",
+        "parse_crc_counters_errors",
     ]:
         setattr(parser, name, MagicMock(return_value=[]))
     return parser

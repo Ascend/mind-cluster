@@ -97,6 +97,10 @@ class SwiSshFetcher(SshFetcher, SwitchFetcher):
     async def fetch_history_alarms_verbose(self) -> str:
         return ""
 
+    async def fetch_crc_counters_errors(self) -> str:
+        cmd_res = await self.executor.run_cmd(CmdTask("display interface counters errors | no-more"))
+        return cmd_res.stdout
+
     async def fetch_interface_info(self) -> str:
         cmd_res = await self.executor.run_cmd(CmdTask("display interface | no-more", timeout=10, timeout_once=0.4))
         return cmd_res.stdout

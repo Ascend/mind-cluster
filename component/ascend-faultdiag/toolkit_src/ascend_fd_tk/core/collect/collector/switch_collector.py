@@ -29,6 +29,7 @@ from ascend_fd_tk.core.model.switch import (
     InterfaceInfo,
     BitErrRate,
     TransceiverInfo,
+    CRCCountersErrors,
 )
 
 
@@ -51,6 +52,7 @@ class SwitchCollector(Collector):
         interface_mapping = await self.coll_lldp_nei_brief()
         date_time = await self.coll_datetime()
         bit_error_rate_list = await self.coll_bit_error_rate()
+        crc_counters_errors = await self.coll_crc_counters_errors()
         transceiver_infos = await self.coll_transceiver_info()
         await self.fetcher.last_quit()
         switch_info = SwitchInfo(
@@ -66,6 +68,7 @@ class SwitchCollector(Collector):
             date_time=date_time,
             bit_error_rate=bit_error_rate_list,
             transceiver_infos=transceiver_infos,
+            crc_counters_errors=crc_counters_errors,
         )
         return switch_info
 
@@ -119,6 +122,10 @@ class SwitchCollector(Collector):
         history_alarms_verbose = await self.fetcher.fetch_history_alarms_verbose()
         result.extend(self.parser.parse_alarm_verbose(history_alarms_verbose))
         return result
+
+    async def coll_crc_counters_errors(self) -> List[CRCCountersErrors]:
+        crc_counters_errors = await self.fetcher.fetch_crc_counters_errors()
+        return self.parser.parse_crc_counters_errors(crc_counters_errors)
 
     async def coll_interface_info(self) -> List[InterfaceInfo]:
         interface_info = await self.fetcher.fetch_interface_info()

@@ -40,7 +40,7 @@ class TestBmcOpticalAnalyzer(unittest.TestCase):
             optical_module_id="op-new",
             tx_power_current="1000 30000 0 0 0 0 0 0",
             rx_power_current="1000 30000 0 0 0 0 0 0",
-            tx_bias_current="5000 11000 0 0 0 0 0 0",
+            tx_bias_current="5000 210000 0 0 0 0 0 0",
             tx_los="0x1",
             rx_los="0x2",
             host_snr="17 25 0 0 0 0 0 0",
@@ -66,7 +66,7 @@ class TestBmcOpticalAnalyzer(unittest.TestCase):
         self.assertIn("lane0: media snr实际值：17，低于故障阈值：18，单位：dB", result.fault_info)
         self.assertIn("lane1: tx power实际值：3.0，高于故障阈值：2.5，单位：mW", result.fault_info)
         self.assertIn("lane1: rx power实际值：3.0，高于故障阈值：2.3，单位：mW", result.fault_info)
-        self.assertIn("lane1: tx bias实际值：11.0，高于故障阈值：10，单位：mA", result.fault_info)
+        self.assertIn("lane1: tx bias实际值：210.0，高于故障阈值：200，单位：mA", result.fault_info)
         self.assertIn("Tx los值0x1大于0", result.fault_info)
         self.assertIn("Rx los值0x2大于0", result.fault_info)
 
