@@ -2,7 +2,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # ruff: noqa: C0302
-# Copyright 2025 Huawei Technologies Co., Ltd
+# Copyright 2026 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -254,6 +254,190 @@ class TestKnowledgeGraphParser(unittest.TestCase):
         self.assertIn("AISW_CANN_Runtime_021", root_cause.keys())
         device_id = root_cause.get("AISW_CANN_Runtime_021", {}).get("events_attribute", {})[0].get("source_device", "")
         self.assertEqual(expected_device_id, device_id)
+
+    def test_cann_device_without_plog(self):
+        input_list = [
+            {
+                "log_domain": {"server": "x.x.x.x"},
+                "log_items": [
+                    {
+                        "item_type": CANN_DEVICE_SOURCE,
+                        "path": "debug/device-2/device-16241_20261114145648.log",
+                        "log_lines": [
+                            "[ERROR] HCCL(16241,aicpu_scheduler):2026-11-14-14:56:08.932.097 "
+                            "[transport_device_p2p.cc:75][291577] Send model timeout, tsdaemon will kill aicpu-sd "
+                            "process, model id "
+                        ],
+                    }
+                ],
+            }
+        ]
+        root_cause = self.get_root_cause("Unknown", parse_knowledge_graph(input_list))
+        self.assertIn("AISW_CANN_AICPU_07", root_cause.keys())
+
+    def test_cann_device_without_plog_with_device_id(self):
+        input_list = [
+            {
+                "log_domain": {"server": "x.x.x.x"},
+                "log_items": [
+                    {
+                        "item_type": CANN_DEVICE_SOURCE,
+                        "path": "debug/device-2/device-16241_20261114145648.log",
+                        "device_id": 3,
+                        "log_lines": [
+                            "[ERROR] HCCL(16241,aicpu_scheduler):2026-11-14-14:56:08.932.097 "
+                            "[transport_device_p2p.cc:75][291577] Send model timeout, tsdaemon will kill aicpu-sd "
+                            "process, model id "
+                        ],
+                    }
+                ],
+            }
+        ]
+        root_cause = self.get_root_cause("3", parse_knowledge_graph(input_list))
+        self.assertIn("AISW_CANN_AICPU_07", root_cause.keys())
+
+    def test_cann_device_without_plog_reports_all_device(self):
+        device_line = (
+            "[ERROR] HCCL(16241,aicpu_scheduler):2026-11-14-14:56:08.932.097 "
+            "[transport_device_p2p.cc:75][291577] Send model timeout, tsdaemon will kill aicpu-sd "
+            "process, model id "
+        )
+        input_list = [
+            {
+                "log_domain": {"server": "x.x.x.x"},
+                "log_items": [
+                    {
+                        "item_type": CANN_DEVICE_SOURCE,
+                        "path": "debug/device-2/device-16241_20261114145648.log",
+                        "device_id": 0,
+                        "log_lines": [device_line],
+                    },
+                    {
+                        "item_type": CANN_DEVICE_SOURCE,
+                        "path": "debug/device-2/device-16242_20261114145648.log",
+                        "device_id": 1,
+                        "log_lines": [device_line],
+                    },
+                ],
+            }
+        ]
+        kg_analyzer_list, _ = parse_knowledge_graph(input_list)
+        for device_id in ["0", "1"]:
+            root_cause = self.get_root_cause(device_id, (kg_analyzer_list, []))
+            self.assertIn("AISW_CANN_AICPU_07", root_cause.keys())
+
+    def test_cann_device_with_plog_same_pid(self):
+        input_list = [
+            {
+                "log_domain": {"server": "x.x.x.x"},
+                "log_items": [
+                    {
+                        "item_type": CANN_DEVICE_SOURCE,
+                        "path": "debug/device-2/device-16241_20261114145648.log",
+                        "log_lines": [
+                            "[ERROR] HCCL(16241,aicpu_scheduler):2026-11-14-14:56:08.932.097 "
+                            "[transport_device_p2p.cc:75][291577] Send model timeout, tsdaemon will kill aicpu-sd "
+                            "process, model id "
+                        ],
+                    },
+                    {
+                        "item_type": CANN_PLOG_SOURCE,
+                        "path": "debug/plog/plog-16241_20261114145648.log",
+                        "log_lines": [
+                            "[INFO] HCCL(16241,python3):2026-11-14-14:56:07.000.000 "
+                            "[hccl_comm.cc:100][16241] Entry-HcclCommInitRootInfo"
+                        ],
+                    },
+                ],
+            }
+        ]
+        root_cause = self.get_root_cause("Unknown", parse_knowledge_graph(input_list))
+        self.assertIn("AISW_CANN_AICPU_07", root_cause.keys())
+
+    def test_cann_device_with_plog_different_pid_keeps_events(self):
+        input_list = [
+            {
+                "log_domain": {"server": "x.x.x.x"},
+                "log_items": [
+                    {
+                        "item_type": CANN_DEVICE_SOURCE,
+                        "path": "debug/device-2/device-16241_20261114145648.log",
+                        "log_lines": [
+                            "[ERROR] HCCL(16241,aicpu_scheduler):2026-11-14-14:56:08.932.097 "
+                            "[transport_device_p2p.cc:75][291577] Send model timeout, tsdaemon will kill aicpu-sd "
+                            "process, model id "
+                        ],
+                    },
+                    {
+                        "item_type": CANN_PLOG_SOURCE,
+                        "path": "debug/plog/plog-999_20261114145648.log",
+                        "log_lines": [
+                            "[INFO] HCCL(999,python3):2026-11-14-14:56:07.000.000 "
+                            "[hccl_comm.cc:100][999] Entry-HcclCommInitRootInfo"
+                        ],
+                    },
+                ],
+            }
+        ]
+        root_cause = self.get_root_cause("Unknown", parse_knowledge_graph(input_list))
+        self.assertIn("AISW_CANN_AICPU_07", root_cause.keys())
+
+    def test_cann_device_with_empty_path_plog(self):
+        input_list = [
+            {
+                "log_domain": {"server": "x.x.x.x"},
+                "log_items": [
+                    {
+                        "item_type": CANN_DEVICE_SOURCE,
+                        "path": "debug/device-2/device-16241_20261114145648.log",
+                        "log_lines": [
+                            "[ERROR] HCCL(16241,aicpu_scheduler):2026-11-14-14:56:08.932.097 "
+                            "[transport_device_p2p.cc:75][291577] Send model timeout, tsdaemon will kill aicpu-sd "
+                            "process, model id "
+                        ],
+                    },
+                    {
+                        "item_type": CANN_PLOG_SOURCE,
+                        "path": "",
+                        "device_id": 0,
+                        "log_lines": [
+                            "[INFO] HCCL(16241,python3):2026-11-14-14:56:07.000.000 "
+                            "[hccl_comm.cc:100][16241] Entry-HcclCommInitRootInfo"
+                        ],
+                    },
+                ],
+            }
+        ]
+        root_cause = self.get_root_cause("Unknown", parse_knowledge_graph(input_list))
+        self.assertIn("AISW_CANN_AICPU_07", root_cause.keys())
+
+    def test_cann_device_with_nonstandard_plog_name(self):
+        input_list = [
+            {
+                "log_domain": {"server": "x.x.x.x"},
+                "log_items": [
+                    {
+                        "item_type": CANN_DEVICE_SOURCE,
+                        "path": "debug/device-2/device-16241_20261114145648.log",
+                        "log_lines": [
+                            "[ERROR] HCCL(16241,aicpu_scheduler):2026-11-14-14:56:08.932.097 "
+                            "[transport_device_p2p.cc:75][291577] Send model timeout, tsdaemon will kill aicpu-sd "
+                            "process, model id "
+                        ],
+                    },
+                    {
+                        "item_type": CANN_PLOG_SOURCE,
+                        "path": "custom_plog.log",
+                        "log_lines": [
+                            "[INFO] HCCL(16241,python3):2026-11-14-14:56:07.000.000 "
+                            "[hccl_comm.cc:100][16241] Entry-HcclCommInitRootInfo"
+                        ],
+                    },
+                ],
+            }
+        ]
+        root_cause = self.get_root_cause("Unknown", parse_knowledge_graph(input_list))
+        self.assertIn("AISW_CANN_AICPU_07", root_cause.keys())
 
     def test_log_lines_type_err(self):
         input_list = [

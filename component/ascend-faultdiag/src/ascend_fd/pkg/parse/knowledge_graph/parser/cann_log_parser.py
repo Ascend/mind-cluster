@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright 2025 Huawei Technologies Co., Ltd
+# Copyright 2026 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -188,9 +188,19 @@ class CANNLogParser(FileParser):
                 events_list.extend(event_list)
                 self._update_train_time(start_end_time[0], start_end_time[1])
         else:  # source_file == "CANN_Device"
-            usefully_pid = self.params.get("useful_pid", [])
+            usefully_pid = self.params.get("useful_pid") or []
+            device_pids = {pid_device_id[0] for _, _, pid_device_id in results.values()}
+            # sdk input may miss CANN_Plog or use plog files with nonstandard names, keep all device events
+            keep_all_pid = self.is_sdk_input and not device_pids.intersection(usefully_pid)
+            if keep_all_pid:
+                kg_logger.warning(
+                    "CANN_Plog pids %s have no intersection with CANN_Device pids %s, "
+                    "keep all CANN_Device events for sdk input",
+                    usefully_pid,
+                    sorted(device_pids),
+                )
             for event_list, _, pid_device_id in results.values():
-                if pid_device_id[0] not in usefully_pid:
+                if not keep_all_pid and pid_device_id[0] not in usefully_pid:
                     continue
                 events_list.extend(event_list)
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
