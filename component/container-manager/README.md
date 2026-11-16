@@ -6,7 +6,7 @@
 
 # 编译
 
-1.  通过git拉取源码，获得container-manager组件代码。
+1. 通过git拉取源码，获得container-manager组件代码。
 
     示例：源码放在/home/mind-cluster/component/container-manager目录下
 
