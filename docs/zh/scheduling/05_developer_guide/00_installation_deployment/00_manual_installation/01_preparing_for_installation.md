@@ -592,6 +592,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <tr id="row141082412331"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1410824123311"><a name="p1410824123311"></a><a name="p1410824123311"></a><span id="ph1410824123312"><a name="ph1410824123312"></a><a name="ph1410824123312"></a>Agent Core/Node Collector</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Agent Core和Node Collector共用同一个镜像ascend-clusterops-agent，一个镜像即可满足两个组件的部署。在软件包解压目录执行以下命令。</p>
+    <p>由于基础镜像python:3.13-slim的限制，构建该镜像要求Docker版本不低于<b>20.10.10</b>（推荐24.0及以上版本）。该基础镜像使用新版glibc（2.41），其apt-get会调用clone3系统调用；Docker版本低于20.10.10时默认seccomp策略会将clone3系统调用返回ENOSYS，导致构建过程中执行<b>apt-get update</b>时报“Problem executing scripts APT::Update::Post-Invoke”错误，镜像构建失败。</p>
     <pre class="screen" id="screen141082412331"><a name="screen141082412331"></a><a name="screen141082412331"></a>docker build --no-cache -t ascend-clusterops-agent:<em id="i141082412331"><a name="i141082412331"></a><a name="i141082412331"></a>{tag}</em> .</pre>
     <p>构建命令在软件包解压目录执行（组件Whl与Dockerfile同层）。该镜像以python:3.13-slim为基础镜像，构建前请提前下载<a href="https://gitcode.com/Ascend/mind-cluster/releases">Ascend-mindxdl-faultdiag_<i>{version}</i>_linux-<i>{arch}</i>.zip</a>，解压后仅提取其中ascend_faultdiag-*.whl，放到软件包解压目录（与Dockerfile同目录），否则镜像内无法安装ascend-fd，诊断功能不可用。</p>
     <p>Agent Core和Node Collector的组件包为通用架构，构建镜像时还需服务器能访问互联网，镜像内pip会自动安装运行依赖。软件包解压目录（与Dockerfile同目录）中需放置ascend_faultdiag-*.whl，构建时Dockerfile会自动挑选与目标架构匹配的wheel（默认x86_64，检测到aarch64时选aarch64架构），匹配架构的wheel缺失时镜像构建会直接报错。</p>
