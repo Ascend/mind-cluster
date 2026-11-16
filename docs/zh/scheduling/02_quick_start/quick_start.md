@@ -5,11 +5,11 @@
 - **10分钟快速入门**：仅部署Ascend Device Plugin和Ascend Docker Runtime，使用Kubernetes原生调度器调度普通Pod，快速验证NPU资源调度能力，适合初学者快速体验。
 - **训练业务快速入门**：部署完整的集群调度组件（NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator），以PyTorch训练任务为例，体验端到端的训练流程。
 
-用户可以根据实际需求选择合适的入门路径。
+用户可根据实际需求选择合适的入门路径。
 
 ## 环境准备<a name="section159013591917"></a>
 
-入门示例需要确保集群环境已经搭建完成。
+入门示例要求集群环境已搭建完成。
 
 - 所有节点已安装Kubernetes，支持的版本为1.17.x\~1.36.x。（如需安装Volcano组件，请安装1.21.x及以上版本的Kubernetes，具体Kubernetes版本请参见[Volcano官网中对应的Kubernetes版本](https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility)）。如需获取软件包，请参见[Kubernetes社区](https://kubernetes.io/zh-cn/docs/setup/)。
 - 所有节点已安装Docker，支持的版本为18.09.x\~28.5.1。如需获取软件包，请参见[Docker社区或官网](https://docs.docker.com/engine/install/)。
@@ -214,7 +214,7 @@
 
 ## 训练业务快速入门
 
-本章节依然以一台Atlas 800T A2训练服务器、CPU架构为AArch64为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
+本章节同样以一台Atlas 800T A2训练服务器、CPU架构为AArch64为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
 
 ### 操作说明<a name="section17940333114314"></a>
 
