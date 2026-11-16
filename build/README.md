@@ -169,7 +169,6 @@ build_all.sh 末尾会构建 helm-deploy-tool（打包 chart），该组件依�
         git clone -b release-1.7 https://github.com/volcano-sh/volcano.git
 
     > 注：以上拉取的均为 release 分支（如 `release-1.12`、`release-1.9`、`release-1.7`），而非 tag。
-
     > 注：国内网络从 github 克隆 volcano 限速严重。可改用 gitee 镜像加速：
     >
     > `git clone -b release-1.9 https://gitee.com/mirrors/volcano.git`（1.7 对应 `-b release-1.7`，1.12 对应 `-b release-1.12`）。
