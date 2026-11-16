@@ -119,7 +119,7 @@ The scheduling principle of a deploy job is shown in [Figure 4](#fig06571541566)
 
 **Figure 4**  deploy job scheduling principle<a name="fig06571541566"></a>
 
-![](../../../figures/scheduling/deploy job scheduling principle diagram.png "deploy job scheduling principle diagram")
+![](../../../figures/scheduling/deploy-scheduling.png "deploy job scheduling principle diagram")
 
 The steps are described as follows:
 
