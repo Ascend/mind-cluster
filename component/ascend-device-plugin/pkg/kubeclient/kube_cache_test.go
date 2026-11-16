@@ -397,6 +397,54 @@ func TestGetActivePodListCache02(t *testing.T) {
 	})
 }
 
+// TestPodListCacheAnnotationIsolation ensures the annotations of a cached pod are not shared with
+// callers: TryUpdatePodCacheAnnotation writes them after the copy has been returned.
+func TestPodListCacheAnnotationIsolation(t *testing.T) {
+	getters := map[string]func(*ClientK8s) []v1.Pod{
+		"GetActivePodListCache": (*ClientK8s).getActivePodListCache,
+		"GetAllPodListCache":    (*ClientK8s).getAllPodListCache,
+	}
+	for name, get := range getters {
+		t.Run(name, func(t *testing.T) {
+			podUID := types.UID("test-uid")
+			oldPodCache := podCache
+			defer func() { podCache = oldPodCache }()
+			podCache = map[types.UID]*podInfo{
+				podUID: {Pod: &v1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						UID:         podUID,
+						Name:        "test1",
+						Namespace:   "default",
+						Annotations: map[string]string{common.PodPredicateTime: "1"},
+					},
+				}},
+			}
+
+			podList := get(&ClientK8s{})
+			if len(podList) != 1 {
+				t.Fatalf("expect 1 pod, got %d", len(podList))
+			}
+
+			// cache to caller: an update of the cached pod must not show up in the returned snapshot
+			lock.Lock()
+			podCache[podUID].Annotations[common.PodPredicateTime] = "2"
+			lock.Unlock()
+			if got := podList[0].Annotations[common.PodPredicateTime]; got != "1" {
+				t.Fatalf("returned pod shares annotations with the cache, got %q", got)
+			}
+
+			// caller to cache: mutating the returned pod must not pollute the cache
+			podList[0].Annotations["extra"] = "x"
+			lock.RLock()
+			_, leaked := podCache[podUID].Annotations["extra"]
+			lock.RUnlock()
+			if leaked {
+				t.Fatal("mutation of the returned pod leaked into the pod cache")
+			}
+		})
+	}
+}
+
 // TestGetNodeIpCache test case for get node ip
 func TestGetNodeIpCache(t *testing.T) {
 	client, err := newTestClientK8s()

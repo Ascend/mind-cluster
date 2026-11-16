@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"hash/fnv"
+	"maps"
 	"math"
 	"strconv"
 	"sync"
@@ -204,12 +205,12 @@ func (ki *ClientK8s) getAllPodListCache() []v1.Pod {
 	if ki.IsApiErr {
 		ki.refreshPodList()
 	}
-	pods := make([]v1.Pod, 0, len(podCache))
 	lock.Lock()
 	defer lock.Unlock()
 
+	pods := make([]v1.Pod, 0, len(podCache))
 	for _, pi := range podCache {
-		pods = append(pods, *pi.Pod)
+		pods = append(pods, clonePodForRead(pi.Pod))
 	}
 	return pods
 }
@@ -238,10 +239,20 @@ func (ki *ClientK8s) getActivePodListCache() []v1.Pod {
 		if pi.Status.Phase == v1.PodFailed || pi.Status.Phase == v1.PodSucceeded {
 			continue
 		}
-		newPodList = append(newPodList, *pi.Pod)
+		newPodList = append(newPodList, clonePodForRead(pi.Pod))
 	}
 
 	return newPodList
+}
+
+// clonePodForRead returns a copy of a cached pod that callers can still read after the lock is
+// released. Only ObjectMeta.Annotations needs a deep copy: it is the only field of a cached pod
+// that may be written after publishing (see TryUpdatePodCacheAnnotation). Labels, Spec and Status
+// are read-only after publishing and can stay shared; do not replace this with a full DeepCopy.
+func clonePodForRead(pod *v1.Pod) v1.Pod {
+	cloned := *pod
+	cloned.Annotations = maps.Clone(pod.Annotations)
+	return cloned
 }
 
 // GetNodeIpCache Get Node Server ID with cache
