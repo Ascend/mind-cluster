@@ -200,7 +200,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 </thead>
 <tbody><tr id="row961811511228"><td class="cellrowborder" valign="top" width="19.06%" headers="mcps1.2.5.1.1 "><p id="p7618125114229"><a name="p7618125114229"></a><a name="p7618125114229"></a>NotHandleFault</p>
 </td>
-<td class="cellrowborder" valign="top" width="35.78%" headers="mcps1.2.5.1.2 "><p id="p1261835110227"><a name="p1261835110227"></a><a name="p1261835110227"></a>对业务无影响的故障，无需处理。</p>
+<td class="cellrowborder" valign="top" width="35.78%" headers="mcps1.2.5.1.2 "><p id="p1261835110227"><a name="p1261835110227"></a><a name="p1261835110227"></a>该类故障判定为无需处理，但该类故障仍可能对业务产生影响，如果遇到实际影响业务的故障，请按需调整为其他故障等级。</p>
 </td>
 <td class="cellrowborder" valign="top" width="20.349999999999998%" headers="mcps1.2.5.1.3 "><p id="p10638123115414"><a name="p10638123115414"></a><a name="p10638123115414"></a>暂不处理</p>
 </td>
