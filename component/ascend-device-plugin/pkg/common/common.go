@@ -666,18 +666,39 @@ func IntInList(num int32, list []int32) bool {
 	return false
 }
 
-// GetJobNameOfPod get job name of pod from annotations or labels
+// jobNameLabelKeys lists the labels that carry a training job name (vcjob / AscendJob), in priority order.
+var jobNameLabelKeys = []string{
+	ResetTaskNameKey,
+	ResetTaskNameKeyInLabel,
+}
+
+// softShareJobNameLabelKeys lists the labels that carry the workload name of a soft share device pod,
+// in priority order. Deployment / StatefulSet pods only carry deploy-name, so it is the last fallback.
+var softShareJobNameLabelKeys = []string{
+	ResetTaskNameKey,
+	ResetTaskNameKeyInLabel,
+	DeploymentNameKeyInLabel,
+}
+
+// GetJobNameOfPod gets the training job name of the pod. It returns "" for pods that are not created
+// by a vcjob / AscendJob, e.g. Deployment or StatefulSet inference pods.
 func GetJobNameOfPod(pod *v1.Pod) string {
+	return getJobNameByLabelKeys(pod, jobNameLabelKeys)
+}
+
+// GetSoftShareJobNameOfPod gets the workload name used to group soft share device pods.
+// Training jobs use the job name, while Deployment / StatefulSet pods fall back to deploy-name.
+func GetSoftShareJobNameOfPod(pod *v1.Pod) string {
+	return getJobNameByLabelKeys(pod, softShareJobNameLabelKeys)
+}
+
+func getJobNameByLabelKeys(pod *v1.Pod, labelKeys []string) string {
 	if pod == nil {
 		return ""
 	}
-	var jobLabelKeys = []string{
-		ResetTaskNameKey,
-		ResetTaskNameKeyInLabel,
-		DeploymentNameKeyInLabel,
-	}
-	for _, key := range jobLabelKeys {
-		if val, exists := pod.Labels[key]; exists {
+	for _, key := range labelKeys {
+		// an existing but empty label must not shadow the following keys
+		if val := pod.Labels[key]; val != "" {
 			return val
 		}
 	}

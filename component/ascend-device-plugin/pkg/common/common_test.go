@@ -718,10 +718,10 @@ func TestGetJobNameOfPod(t *testing.T) {
 			convey.So(res, convey.ShouldEqual, fakeJobName)
 		})
 
-		convey.Convey("Label DeploymentNameKeyInLabel exists (lowest priority)", func() {
+		convey.Convey("Only deployment label exists, return empty string", func() {
 			pod := newTestPod(map[string]string{DeploymentNameKeyInLabel: fakeJobName})
 			res := GetJobNameOfPod(pod)
-			convey.So(res, convey.ShouldEqual, fakeJobName)
+			convey.So(res, convey.ShouldEqual, "")
 		})
 
 		convey.Convey("Multiple target labels exist, verify priority rule", func() {
@@ -729,6 +729,15 @@ func TestGetJobNameOfPod(t *testing.T) {
 				ResetTaskNameKey:         fakeJobName,
 				ResetTaskNameKeyInLabel:  "other-job",
 				DeploymentNameKeyInLabel: "other-job2",
+			})
+			res := GetJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, fakeJobName)
+		})
+
+		convey.Convey("Empty job label does not shadow the next key", func() {
+			pod := newTestPod(map[string]string{
+				ResetTaskNameKey:        "",
+				ResetTaskNameKeyInLabel: fakeJobName,
 			})
 			res := GetJobNameOfPod(pod)
 			convey.So(res, convey.ShouldEqual, fakeJobName)
@@ -743,6 +752,67 @@ func TestGetJobNameOfPod(t *testing.T) {
 		convey.Convey("Pod has empty label map, return empty string", func() {
 			pod := newTestPod(map[string]string{})
 			res := GetJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, "")
+		})
+	})
+}
+
+// TestGetSoftShareJobNameOfPod
+func TestGetSoftShareJobNameOfPod(t *testing.T) {
+	convey.Convey("Test GetSoftShareJobNameOfPod function", t, func() {
+		const fakeJobName = "job1"
+		convey.Convey("Pod pointer is nil", func() {
+			res := GetSoftShareJobNameOfPod(nil)
+			convey.So(res, convey.ShouldEqual, "")
+		})
+
+		convey.Convey("Label ResetTaskNameKey exists (highest priority)", func() {
+			pod := newTestPod(map[string]string{ResetTaskNameKey: fakeJobName})
+			res := GetSoftShareJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, fakeJobName)
+		})
+
+		convey.Convey("Label ResetTaskNameKeyInLabel exists (second priority)", func() {
+			pod := newTestPod(map[string]string{ResetTaskNameKeyInLabel: fakeJobName})
+			res := GetSoftShareJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, fakeJobName)
+		})
+
+		convey.Convey("Only deployment label exists (lowest priority)", func() {
+			pod := newTestPod(map[string]string{DeploymentNameKeyInLabel: fakeJobName})
+			res := GetSoftShareJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, fakeJobName)
+		})
+
+		convey.Convey("Multiple target labels exist, verify priority rule", func() {
+			pod := newTestPod(map[string]string{
+				ResetTaskNameKey:         fakeJobName,
+				ResetTaskNameKeyInLabel:  "other-job",
+				DeploymentNameKeyInLabel: "other-job2",
+			})
+			res := GetSoftShareJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, fakeJobName)
+		})
+
+		convey.Convey("Empty job label falls back to deployment label", func() {
+			pod := newTestPod(map[string]string{
+				ResetTaskNameKey:         "",
+				ResetTaskNameKeyInLabel:  "",
+				DeploymentNameKeyInLabel: fakeJobName,
+			})
+			res := GetSoftShareJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, fakeJobName)
+		})
+
+		convey.Convey("No target labels exist, return empty string", func() {
+			pod := newTestPod(map[string]string{"other-label": "val"})
+			res := GetSoftShareJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, "")
+		})
+
+		convey.Convey("Pod has empty label map, return empty string", func() {
+			pod := newTestPod(map[string]string{})
+			res := GetSoftShareJobNameOfPod(pod)
 			convey.So(res, convey.ShouldEqual, "")
 		})
 	})
