@@ -159,6 +159,16 @@ func TestDRAOption_Validate(t *testing.T) {
 		{"passes with existing directories", setupExistingDirs, false, ""},
 		{"cdi-root is a file", setupCdiRootFile, true, "cdi-root path validate failed"},
 		{
+			"deviceResetTimeout below minimum", setupResetTimeout(api.MinDeviceResetTimeout - 1),
+			true, api.DeviceResetTimeout,
+		},
+		{
+			"deviceResetTimeout above maximum", setupResetTimeout(api.MaxDeviceResetTimeout + 1),
+			true, api.DeviceResetTimeout,
+		},
+		{"deviceResetTimeout at minimum", setupResetTimeout(api.MinDeviceResetTimeout), false, ""},
+		{"deviceResetTimeout at maximum", setupResetTimeout(api.MaxDeviceResetTimeout), false, ""},
+		{
 			"registrar path is a file", setupRegistrarFile,
 			true, "kubelet-registrar-directory-path validate failed",
 		},
@@ -279,6 +289,16 @@ func setupExistingDirs(t *testing.T) *DRAOption {
 		}
 	}
 	return newTestDRAOption(cdi, registrar, plugins)
+}
+
+// setupResetTimeout builds an option with valid directories and the given
+// DeviceResetTimeout value.
+func setupResetTimeout(timeout int) func(t *testing.T) *DRAOption {
+	return func(t *testing.T) *DRAOption {
+		opt := setupExistingDirs(t)
+		opt.DeviceResetTimeout = timeout
+		return opt
+	}
 }
 
 // setupCdiRootFile builds an option whose cdi-root path is a regular file.

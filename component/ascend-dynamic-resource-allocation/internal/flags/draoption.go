@@ -70,8 +70,15 @@ func (d *DRAOption) RegisterFlags() {
 			"the driver to report all chips, unit second, range [10, 600]")
 }
 
-// Validate ensures required directories exist (creating them if necessary).
+// Validate ensures required directories exist (creating them if necessary)
+// and the DeviceResetTimeout flag is within the valid range.
 func (d *DRAOption) Validate() error {
+	if d.DeviceResetTimeout < api.MinDeviceResetTimeout ||
+		d.DeviceResetTimeout > api.MaxDeviceResetTimeout {
+		return fmt.Errorf("%s must be in range [%d, %d], got %d", api.DeviceResetTimeout,
+			api.MinDeviceResetTimeout, api.MaxDeviceResetTimeout, d.DeviceResetTimeout)
+	}
+
 	if err := ensureDir(d.CdiRoot); err != nil {
 		return fmt.Errorf("cdi-root path validate failed: %w", err)
 	}
