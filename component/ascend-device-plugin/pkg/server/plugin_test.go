@@ -2004,7 +2004,7 @@ func TestGetNPUInfoConfigDirFromPod(t *testing.T) {
 				patchGetValidLogicID := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ps), "getValidLogicDeviceID",
 					func(_ *PluginServer, devices []string) (int, error) { return tt.mockGetValidLogicID() })
 				defer patchGetValidLogicID.Reset()
-				patchGetJobName := gomonkey.ApplyFuncReturn(common.GetJobNameOfPod, tt.mockGetJobName)
+				patchGetJobName := gomonkey.ApplyFuncReturn(common.GetSoftShareJobNameOfPod, tt.mockGetJobName)
 				defer patchGetJobName.Reset()
 				patchBuildConfigDir := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ps), "buildConfigDirPath",
 					func(_ *PluginServer, pod *v1.Pod, jobName string, logicID int, vNPUId string) string {

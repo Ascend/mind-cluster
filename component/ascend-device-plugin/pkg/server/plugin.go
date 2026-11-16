@@ -926,7 +926,7 @@ func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string
 	npuInfoConfigDir := ps.getNPUInfoConfigDirFromPod(oldestPod, allocateDevices)
 	if npuInfoConfigDir != "" {
 		podKey := fmt.Sprintf("%s/%s", oldestPod.Namespace, oldestPod.Name)
-		jobName := common.GetJobNameOfPod(oldestPod)
+		jobName := common.GetSoftShareJobNameOfPod(oldestPod)
 		ps.softShareJobs.Store(podKey, oldestPod.Namespace+"."+jobName)
 	}
 	return allocateDevices, npuInfoConfigDir, nil
@@ -1056,7 +1056,7 @@ func (ps *PluginServer) getNPUInfoConfigDirFromPod(pod *v1.Pod, devices []string
 		return ""
 	}
 	annotations.vNPUId = strconv.Itoa(nextVirtualID)
-	jobName := common.GetJobNameOfPod(pod)
+	jobName := common.GetSoftShareJobNameOfPod(pod)
 	npuInfoConfigDir := ps.buildConfigDirPath(pod, jobName, physicalID, annotations.vNPUId)
 	if npuInfoConfigDir == "" {
 		return ""

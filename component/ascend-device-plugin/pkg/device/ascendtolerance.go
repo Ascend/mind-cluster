@@ -193,7 +193,7 @@ func (hrt *HotResetTools) handlePodAddEvent(obj interface{}) {
 	}
 	jobName := common.GetJobNameOfPod(pod)
 	if jobName == "" {
-		hwlog.RunLog.Errorf("get job name of pod(%s) failed", event.Key)
+		hwlog.RunLog.Warnf("pod(%s) is not a hot reset job pod, skip", event.Key)
 		hrt.queue.Forget(obj)
 		return
 	}
@@ -252,7 +252,7 @@ func (hrt *HotResetTools) handlePodDeleteEvent(obj interface{}) {
 	}
 	jobName, ok := hrt.jobs[event.Key]
 	if !ok {
-		hwlog.RunLog.Errorf("job of pod(%s) not found in cache", event.Key)
+		hwlog.RunLog.Warnf("pod(%s) is not a hot reset job pod, skip", event.Key)
 		hrt.queue.Forget(obj)
 		return
 	}
