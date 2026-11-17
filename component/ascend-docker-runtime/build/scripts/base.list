@@ -3,3 +3,5 @@
 /usr/local/dcmi
 /usr/local/bin/npu-smi
 /var/queue_schedule
+/usr/local/Ascend/driver/version.info
+/etc/ascend_install.info
