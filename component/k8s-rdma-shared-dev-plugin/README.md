@@ -126,7 +126,7 @@ RDMA 共享设备插件应部署在满足以下条件的节点上：
 
 可使用 [Node Feature Discovery (NFD)](https://github.com/kubernetes-sigs/node-feature-discovery) 发现节点功能并将其作为节点标签暴露：
 
-1. 部署 NFD（v0.6.0 或更新版本）
+**1.** 部署 NFD（v0.6.0 或更新版本）
 
 ```bash
 export NFD_VERSION=v0.6.0
@@ -134,7 +134,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/node-feature-
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/node-feature-discovery/$NFD_VERSION/nfd-worker-daemonset.yaml.template
 ```
 
-2. 检查节点上的新标签
+**2.** 检查节点上的新标签
 
 ```bash
 kubectl get nodes --show-labels
