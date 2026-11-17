@@ -194,7 +194,35 @@
     npu-smi info
     ```
 
-5. 清理测试资源。
+5. 自定义调度集成（Downward API）。
+
+    前述步骤中，Ascend Device Plugin在分配NPU设备时，会将分配结果写入容器的`ASCEND_VISIBLE_DEVICES`环境变量，Ascend Docker Runtime读取该变量完成NPU设备挂载。可在容器内执行以下命令验证：
+
+    ```shell
+    echo $ASCEND_VISIBLE_DEVICES
+    ```
+
+    回显示例如下，表示当前容器分配到了0号NPU芯片。
+
+    ```output
+    0
+    ```
+
+    如果集群使用自定义调度器（或Volcano调度器）决定具体分配的芯片，**推荐采用Downward API方案进行集成**，这也是MindCluster组件间约定的标准集成方式：**调度器在Pod绑定时，将分配的芯片ID列表写入Pod注解；容器内通过Downward API读取该注解，注入`ASCEND_VISIBLE_DEVICES`环境变量**。在Pod的容器配置中添加如下环境变量即可：
+
+    ```yaml
+    env:
+    - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime会使用该字段
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.annotations['huawei.com/Ascend910']   # 注解名称需与resources中请求的NPU资源名称一致
+    ```
+
+    >[!NOTE]
+    >
+    > 自定义调度器只需在Pod绑定时按上述约定写入注解（如`huawei.com/Ascend910: 0`），即可无缝对接Ascend Device Plugin、Ascend Docker Runtime等组件，无需额外适配。
+
+6. 清理测试资源。
 
     ```shell
     VERSION=26.1.0
