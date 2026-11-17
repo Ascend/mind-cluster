@@ -12,7 +12,7 @@
 
 - 通过插件方式开发自定义指标
 
-    用户可通过编写插件的方式自定义指标，使用该插件前，开发者需要自行学习了解cgo、go相关语言特性。用户可参考提供的demo，或将代码拷贝到plugins目录下，重新编译部署，下面对demo中各文件进行说明：
+    用户可通过编写插件的方式自定义指标，使用该插件前，开发者需自行学习cgo、go相关语言特性。用户可参考提供的demo，或将代码拷贝到plugins目录下，重新编译部署，下面对demo中各文件进行说明：
 
     - `dcmi.go`、`dcmi_interface_api.h`：用户自定义NPU指标的接口声明与cgo实现，用于对接驱动DCMI接口，具体可参考demo实现，全部DCMI接口可参考驱动的《[DCMI接口文档](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=api-reference)》。
     - `custom_metrics.go`：实现`MetricCollector`的接口，用于指标采集与上报，需要实现下面的接口，具体可参考demo实现：
@@ -23,10 +23,12 @@
         - IsSupported：检测当前环境，判断当前设备是否支持
         - PreCollect：正式开始采集前执行一次，可用于设备初始化。可以为空
         - PostCollect：采集结束后执行一次，可用于数据的回收。可以为空
-    - `register.go`：提供插件注册函数，在NPU Exporter启动时完成插件注册并完成DCMI接口初始化，**RegisterPlugin函数签名不要修改**，在RegisterPlugin函数中通过`registerPlugin(插件名称, &插件类{})`完成注册，指标名称需要与`pluginConfiguration.json`中的指标组名称保持一致。
-    - 插件指标组内定义的指标名称，不要与已有的插件指标（当前NPU指标、插件指标）重名。
-    - 插件指标组内定义的指标名称、指标label仅支持使用字母、数字、下划线，且不能以数字开头。
-    - 自定义插件采集时间超过10s后，NPU Exporter会打印日志，提示插件采集时间过长，执行下一个插件采集。
+    - `register.go`：提供插件注册函数，在NPU Exporter启动时完成插件注册并完成DCMI接口初始化。约束如下：
+        - RegisterPlugin函数签名不要修改。
+        - 在RegisterPlugin函数中通过`registerPlugin(插件名称, &插件类{})`完成注册。
+        - 插件名称需要与`pluginConfiguration.json`中的指标组名称保持一致。
+    - 插件指标组内定义的指标名称、指标label仅支持使用字母、数字、下划线，不能以数字开头，且不得与已有插件指标（当前NPU指标、插件指标）重名。
+    - 自定义插件采集时间超过10s后，NPU Exporter会打印日志提示采集超时，并中止当前插件的本次采集，继续执行下一个插件。
 
     **dcmi.go示例**
 
@@ -382,6 +384,5 @@
 
 >[!NOTICE]
 >
->- 开发者需对自定义插件的稳定性负责，确保不引入运行时panic等问题。
->- 开发者需要对自定义指标文件格式的正确性负责。
+>- 开发者需对自定义插件的稳定性负责（确保不引入运行时panic等问题），并对自定义指标文件格式的正确性负责。
 >- 示例代码中的DCMI接口需要根据不同产品代际确定是否可用。
