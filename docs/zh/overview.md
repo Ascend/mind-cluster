@@ -50,7 +50,7 @@ MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）构建�
 |NodeD| 提供节点状态上报功能，上报如节点健康状态、CPU和内存等故障信息。                                      |
 |TaskD| 提供昇腾设备上训练及推理任务的状态监测和状态控制能力。                                            |
 |MindIO ACP| 在大模型训练中，使用训练服务器内存作为缓存，对Checkpoint的保存及加载进行加速。                           |
-|MindIO TFT| 提供TTP、UCE和ARF等功能。                                                      |
+|MindIO TFT| 在大模型训练中，提供训练临终CKPT、进程级别重调度、进程级别在线恢复等功能。                                                      |
 |Container Manager| 提供无K8s场景下的业务容器恢复能力，主要用于一体机。                                            |
 |Infer Operator| 根据推理服务的配置，管理推理服务生命周期，支持实例级扩缩容以及任务角色扩展。                                 |
 |K8s RDMA Shared Dev Plugin| 基于开源组件的功能，以共享的方式提供华为UB RDMA DPU设备的发现和故障检测功能。                           |
