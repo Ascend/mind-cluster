@@ -80,7 +80,7 @@
         telegraf --config npu_plugin.conf
         ```
 
-        Telegraf运行成功后，回显示例如下，从npu_chip_link_speed开始之后的信息即为监测的昇腾AI处理器的数据信息。
+        Telegraf运行成功后，回显示例如下，其中npu_chip_link_speed及之后的信息即为监测的昇腾AI处理器的数据信息。
 
         ```ColdFusion
         2023-09-15T10:11:31Z I! Loading config file: ../npu_plugin.conf
