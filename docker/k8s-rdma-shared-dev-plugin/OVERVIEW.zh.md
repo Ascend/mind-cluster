@@ -86,7 +86,7 @@ K8s RDMA 共享设备插件是一个 Kubernetes 设备插件，用于以共享�
 
 1. 获取对应架构的 Dockerfile
 
-   前往[支持的 Tags 及 Dockerfile 链接](#支持的-Tags-及-Dockerfile-链接)章节，打开目标版本对应的 Dockerfile.ubuntu
+   前往支持的 Tags 及 Dockerfile 链接章节，打开目标版本对应的 Dockerfile.ubuntu
    链接，保存文件至 aarch64 架构环境的本地目录。
 
 2. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
@@ -97,9 +97,11 @@ K8s RDMA 共享设备插件是一个 Kubernetes 设备插件，用于以共享�
 
 > **重要注意事项**
 > 若 Docker 版本低于 18.09，或未手动开启 BuildKit，构建镜像时将无法读取 TARGETPLATFORM 变量，会造成镜像构建失败。
+>
 > 1. TARGETPLATFORM 为 Docker BuildKit 内置全局变量，用于识别当前构建目标平台，示例：linux/amd64、linux/arm64。
 > 2. 该变量仅在 BuildKit 启用后自动注入；老旧 Docker 环境、默认关闭 BuildKit 的环境无法使用此参数。
 > 3. 构建前可执行以下命令临时开启 BuildKit：
+>
 > ```bash
 > export DOCKER_BUILDKIT=1
 > ```

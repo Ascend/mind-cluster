@@ -179,7 +179,7 @@ Ascend for Volcano 包含两个镜像：
 
 1. 获取对应架构的 Dockerfile
 
-   前往[支持的 Tags 及 Dockerfile 链接](#支持的-Tags-及-Dockerfile-链接)章节，打开目标版本对应的
+   前往支持的 Tags 及 Dockerfile 链接章节，打开目标版本对应的
    Dockerfile-scheduler.alpine 和 Dockerfile-controller.alpine 链接，保存文件至 aarch64 架构环境的本地目录。
 
 2. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
@@ -194,9 +194,11 @@ Ascend for Volcano 包含两个镜像：
 
 > **重要注意事项**
 > 若 Docker 版本低于 18.09，或未手动开启 BuildKit，构建镜像时将无法读取 TARGETPLATFORM 变量，会造成镜像构建失败。
+>
 > 1. TARGETPLATFORM 为 Docker BuildKit 内置全局变量，用于识别当前构建目标平台，示例：linux/amd64、linux/arm64。
 > 2. 该变量仅在 BuildKit 启用后自动注入；老旧 Docker 环境、默认关闭 BuildKit 的环境无法使用此参数。
 > 3. 构建前可执行以下命令临时开启 BuildKit：
+>
 > ```bash
 > export DOCKER_BUILDKIT=1
 > ```
@@ -234,6 +236,7 @@ Ascend for Volcano 包含两个镜像：
    ```
 
 > **注意**：
+>
 > - TARGETPLATFORM 是 Docker BuildKit 提供的全局内置参数，用于获取当前构建的目标平台（如 linux/amd64、linux/arm64）。
 > - 只有启用 BuildKit，才会自动注入这个变量。旧版 Docker / 默认关闭 BuildKit
     的环境，构建时不存在这个变量，需要在运行构建指令前通过 <b>export DOCKER_BUILDKIT=1</b> 临时启用。

@@ -119,7 +119,7 @@ Example: build an NodeD image of architecture linux-aarch64, version v26.1.0, ba
 
 1. Obtain the target Dockerfile
 
-   Navigate to the chapter [Supported Tags and Dockerfile Links](#Supported-Tags-and-Dockerfile-Links), open the
+   Navigate to the chapter Supported Tags and Dockerfile Links, open the
    Dockerfile.ubuntu link corresponding to your target version, and save the file to a local directory on your aarch64
    environment.
 
@@ -132,11 +132,13 @@ Example: build an NodeD image of architecture linux-aarch64, version v26.1.0, ba
 > **Important Notes**
 > If your Docker version is earlier than 18.09 or BuildKit is not manually enabled, the TARGETPLATFORM variable cannot
 > be read during image building, which will cause the image build to fail.
+>
 > 1. TARGETPLATFORM is a built-in global variable of Docker BuildKit for identifying the target build platform, e.g.
      linux/amd64, linux/arm64.
 > 2. This variable is automatically injected only after BuildKit is enabled. It cannot be used in legacy Docker
      environments or environments where BuildKit is disabled by default.
 > 3. Run the following command before building to enable BuildKit temporarily:
+>
 > ```bash
 > export DOCKER_BUILDKIT=1
 > ```
