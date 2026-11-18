@@ -36,7 +36,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-var downgradeEnabledAnno = map[string]string{util.SchedulerDowngradeAnnoKey: "true"}
+var downgradeEnabledAnno = map[string]string{util.SchedulerDowngradeTimeoutAnnoKey: "60"}
 
 // fixtureWindow is the downgrade window the fixtures configure the handler with,
 // the configuration layer defaults the value to DefaultSchedulerDowngradeTimeout.
@@ -111,27 +111,33 @@ func (p *nodeGroupPolicy) apply(config string) bool {
 }
 
 type isDowngradeEnabledTest struct {
-	name       string
-	annotation map[string]string
-	want       bool
+	name    string
+	jobID   api.JobID
+	window  int // the session window stamped for the job, 0 means none
+	want    bool
 }
 
 func buildIsDowngradeEnabledTestCases() []isDowngradeEnabledTest {
 	return []isDowngradeEnabledTest{
-		{name: "01 disabled when the annotation is absent"},
-		{name: "02 disabled when the annotation is not true",
-			annotation: map[string]string{util.SchedulerDowngradeAnnoKey: "yes"}},
-		{name: "03 enabled when the annotation is true",
-			annotation: map[string]string{util.SchedulerDowngradeAnnoKey: "true"}, want: true},
+		{name: "01 disabled when the session holds no window", jobID: "job-no-window"},
+		{name: "02 disabled when the session window is off",
+			jobID: "job-window-off", window: -1},
+		{name: "03 enabled when the session window is positive",
+			jobID: "job-window-on", window: 60, want: true},
 	}
 }
 
 func TestIsDowngradeEnabled(t *testing.T) {
 	for _, tt := range buildIsDowngradeEnabledTestCases() {
 		t.Run(tt.name, func(t *testing.T) {
+			downgrade.ResetDowngradeCacheForTest()
+			if tt.window != 0 {
+				downgrade.StampSession(map[api.JobID]bool{tt.jobID: true},
+					map[api.JobID]int{tt.jobID: tt.window})
+			}
 			tp := &NPUHandler{}
 			tp.SchedulerJobAttr = util.SchedulerJobAttr{
-				ComJob: util.ComJob{Annotation: tt.annotation},
+				ComJob: util.ComJob{Name: tt.jobID},
 			}
 			if got := tp.IsDowngradeEnabled(); got != tt.want {
 				t.Errorf("IsDowngradeEnabled() = %v, want %v", got, tt.want)
@@ -223,12 +229,15 @@ func newDowngradeTestHandler(jobID api.JobID, annotation map[string]string) *NPU
 	cache.ResetTimeoutCacheForTest()
 	downgrade.ResetDowngradeCacheForTest()
 	tp := &NPUHandler{}
-	tp.SchedulerJobAttr = util.SchedulerJobAttr{ComJob: util.ComJob{Annotation: annotation}}
+	tp.SchedulerJobAttr = util.SchedulerJobAttr{
+		ComJob: util.ComJob{Name: jobID, Annotation: annotation},
+	}
 	tp.MaxNodeNPUNum = 8
 	tp.FrameAttr.SchedulerDowngradeTimeout = plugin.DefaultSchedulerDowngradeTimeout
 	cache.RecordWaitStart(jobID)
 	cache.StampSession(map[api.JobID]bool{jobID: true})
-	downgrade.StampSession(map[api.JobID]bool{jobID: true})
+	downgrade.StampSession(map[api.JobID]bool{jobID: true},
+		map[api.JobID]int{jobID: plugin.DefaultSchedulerDowngradeTimeout})
 	return tp
 }
 
@@ -237,7 +246,8 @@ func newDowngradeTestHandler(jobID api.JobID, annotation map[string]string) *NPU
 func stampWait(jobID api.JobID, waited time.Duration, allWaiting bool) {
 	cache.SetTimeoutNowFuncForTest(func() time.Time { return time.Now().Add(waited) })
 	cache.StampSession(map[api.JobID]bool{jobID: allWaiting})
-	downgrade.StampSession(map[api.JobID]bool{jobID: allWaiting})
+	downgrade.StampSession(map[api.JobID]bool{jobID: allWaiting},
+		map[api.JobID]int{jobID: plugin.DefaultSchedulerDowngradeTimeout})
 }
 
 // assertInts verifies a recorded sequence of the stub policy, in order.

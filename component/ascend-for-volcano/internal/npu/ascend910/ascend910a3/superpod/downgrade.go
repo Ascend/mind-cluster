@@ -95,5 +95,6 @@ func (tp *module910SuperPod) applySpBlockConfig(config string) bool {
 		return false
 	}
 	tp.spBlock = cfg.SpBlock / tp.MaxNodeNPUNum
+	tp.SpBlockNPUNum = cfg.SpBlock
 	return true
 }

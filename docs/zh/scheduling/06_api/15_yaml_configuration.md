@@ -34,6 +34,7 @@
 |metadata.annotations['huawei.com/schedule_policy']|字符串 (string)|-|配置任务需要调度的AI芯片布局形态。Volcano会根据该字段选择合适的调度策略。目前支持[huawei.com/schedule_policy配置说明](#huaweicomschedule_policy配置说明)中的配置。|
 |metadata.annotations['huawei.com/schedule.mode']|字符串 (string)|-|<p>配置芯片亲和性调度的严格程度。具体取值及含义请参见[huawei.com/schedule.mode](./01_volcano.md#podgroup)中的说明。</p>|
 |metadata.annotations['huawei.com/affinity-config']|字符串 (string)|-|<p>配置任务的多级调度的亲和性层级。</p><p>取值为：level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p><p>要求满足格式为leveli=ni样式的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>|
+|metadata.annotations['huawei.com/scheduler.downgrade.timeout']|整数 (int)|-|<p>配置超节点/多级调度任务调度约束回退的降级窗口与开关。</p><ul><li>[1, 86400]：降级窗口，整数，单位为秒，任务持续无法按原始拓扑约束（sp-block、ra-block或affinity-config）调度时逐档降级。</li><li>-1：关闭该任务的降级开关。</li></ul><p>任务级别配置优先于Volcano启动参数的全局配置（默认120秒），未配置时默认开启并使用全局窗口。详细说明请参见[huawei.com/scheduler.downgrade.timeout](./01_volcano.md#row_scheduler_downgrade_pod)。</p>|
 |spec|对象 (object)|-|AscendJob期望状态的规格描述。必填字段：replicaSpecs。|
 |spec.template.metadata.annotations['huawei.com/recover_policy_path']|字符串 (string)|-|任务重调度策略。当取值为pod，则只支持Pod级重调度，不升级为Job级别。|
 |spec.template.metadata.annotations['huawei.com/schedule_minAvailable']|整数|-|默认值为任务总副本数。Ascend Operator启用“gang”调度生效，且调度器为Volcano时，任务运行总副本数。|
@@ -244,6 +245,13 @@
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p175075613422"><a name="p175075613422"></a><a name="p175075613422"></a>指定ra-block字段，在支持动态配比的前提下，单框64卡被分为8个OS，每个OS在K8s集群中被认为是一个节点，框内通信时延比框间通信时延低，配置此字段用于训练任务的框亲和性调度。</p><p id="p175075613422"><a name="p175075613422"></a><a name="ul1150756144219"></a><a name="ul1150756144219"></a>取值范围是1-64且必须是2的幂次方。</p><p id="p175075613422"><a name="p175075613422"></a><a name="ul1150756144219"></a><a name="ul1150756144219"></a>穷举可得 ra-block 取值为 {1，2，4，8，16，32，64}。</p>
 <div class="note" id="note550714615429"><a name="note550714615429"></a><a name="note550714615429"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a>仅支持在Atlas 950 SuperPoD液冷超节点中使用该字段。<p id="p175075613423">ra-block配置需要小于等于sp-block。</p>
 </div></div>
+</td>
+</tr>
+<tr id="row_scheduler_downgrade_vcjob"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p_scheduler_downgrade_vcjob"><a name="p_scheduler_downgrade_vcjob"></a><a name="p_scheduler_downgrade_vcjob"></a>metadata.annotations['huawei.com/scheduler.downgrade.timeout']</p>
+</td>
+<td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p_scheduler_downgrade_vcjob_val"><a name="p_scheduler_downgrade_vcjob_val"></a><a name="p_scheduler_downgrade_vcjob_val"></a><ul><li>[1, 86400]：降级窗口，整数，单位为秒。</li><li>-1：关闭该任务的降级开关。</li></ul></p>
+</td>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p_scheduler_downgrade_vcjob_desc"><a name="p_scheduler_downgrade_vcjob_desc"></a><a name="p_scheduler_downgrade_vcjob_desc"></a>配置超节点/多级调度任务调度约束回退的降级窗口与开关。任务级别配置优先于Volcano启动参数的全局配置（默认120秒），未配置时默认开启并使用全局窗口。详细说明请参见<a href="./01_volcano.md#row_scheduler_downgrade_pod">huawei.com/scheduler.downgrade.timeout</a>。</p>
 </td>
 </tr>
 <tr id="row862818313577"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p132726845716"><a name="p132726845716"></a><a name="p132726845716"></a>metadata.labels['tor-affinity']</p>
@@ -638,6 +646,13 @@
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p175075613422"><a name="p175075613422"></a><a name="p175075613422"></a>指定ra-block字段，在支持动态配比的前提下，单框64卡被分为8个OS，每个OS在K8s集群中被认为是一个节点，框内通信时延比框间通信时延低，配置此字段用于训练任务的框亲和性调度。</p><p id="p175075613422"><a name="p175075613422"></a><a name="ul1150756144219"></a><a name="ul1150756144219"></a>取值范围是1-64且必须是2的幂次方。</p><p id="p175075613422"><a name="p175075613422"></a><a name="ul1150756144219"></a><a name="ul1150756144219"></a>穷举可得 ra-block 取值为 {1，2，4，8，16，32，64}。</p>
 <div class="note" id="note550714615429"><a name="note550714615429"></a><a name="note550714615429"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a>仅支持在Atlas 950 SuperPoD液冷超节点中使用该字段。<p id="p175075613423">ra-block配置需要小于等于sp-block。</p>
 </div></div>
+</td>
+</tr>
+<tr id="row_scheduler_downgrade_deploy"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p_scheduler_downgrade_deploy"><a name="p_scheduler_downgrade_deploy"></a><a name="p_scheduler_downgrade_deploy"></a>metadata.annotations['huawei.com/scheduler.downgrade.timeout']</p>
+</td>
+<td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p_scheduler_downgrade_deploy_val"><a name="p_scheduler_downgrade_deploy_val"></a><a name="p_scheduler_downgrade_deploy_val"></a><ul><li>[1, 86400]：降级窗口，整数，单位为秒。</li><li>-1：关闭该任务的降级开关。</li></ul></p>
+</td>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p_scheduler_downgrade_deploy_desc"><a name="p_scheduler_downgrade_deploy_desc"></a><a name="p_scheduler_downgrade_deploy_desc"></a>配置超节点/多级调度任务调度约束回退的降级窗口与开关。任务级别配置优先于Volcano启动参数的全局配置（默认120秒），未配置时默认开启并使用全局窗口。详细说明请参见<a href="./01_volcano.md#row_scheduler_downgrade_pod">huawei.com/scheduler.downgrade.timeout</a>。</p>
 </td>
 </tr>
 <tr id="row_ignore_roce_deploy"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p_ignore_roce_deploy"><a name="p_ignore_roce_deploy"></a><a name="p_ignore_roce_deploy"></a>metadata.annotations['huawei.com/parameterplane.unhealthy-tolerance']</p>

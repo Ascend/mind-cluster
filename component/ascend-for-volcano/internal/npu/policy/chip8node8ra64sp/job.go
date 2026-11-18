@@ -122,9 +122,6 @@ func (tp *chip8node8ra64sp) calculateTpBlockAndCheck() *api.ValidateResult {
 	// ra-block=16 -> tpBlock=2
 	// ra-block=32 -> tpBlock=4
 	// ra-block=64 -> tpBlock=8
-	const (
-		plusTpBlockNum = 7
-	)
 	tp.tpBlock = (tp.TpBlockNPUNum + plusTpBlockNum) / tp.MaxNodeNPUNum
 
 	if tp.tpBlock > tp.spBlock {

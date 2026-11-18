@@ -643,6 +643,12 @@ func (reScheduler *ReScheduler) doRestartJob(ssn *framework.Session, env plugin.
 				updateRescheduleReason(reScheduler.JobRecentRescheduleRecords[restartFaultJob.JobUID], restartFaultJob)
 		}
 		restartFaultJob.DeleteExecutedFlag = true
+		// the job-level rebuild starts a brand-new waiting round: the wait clock
+		// of the deleted round is dropped, the rebuilt pods wait their downgrade
+		// windows from scratch instead of inheriting the already-waited time
+		cache.EndRound(restartFaultJob.JobUID)
+		klog.V(util.LogInfoLev).Infof("job <%s> rebuilt by the job-level rescheduling, "+
+			"its wait clock starts over", restartFaultJob.JobName)
 		if restartFaultJob.faultReason == PodFailed {
 			reScheduler.JobRemainRetryTimes[restartFaultJob.JobUID].Times -= 1
 			klog.V(util.LogWarningLev).Infof("job<%s> restart success, "+

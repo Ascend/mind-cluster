@@ -63,11 +63,13 @@ type inferServiceSPInfo struct {
 }
 
 type jobParams struct {
-	spBlock         int
-	tpBlock         int
-	totalCount      int
-	netUnhealthyKey string
-	faultNPUKey     string
+	spBlock           int // node num
+	tpBlock           int // node num
+	configuredSpBlock int // node num
+	configuredRaBlock int // node num,raBlock is same as tpBlock
+	totalCount        int
+	netUnhealthyKey   string
+	faultNPUKey       string
 }
 
 type superPodsInfo struct {

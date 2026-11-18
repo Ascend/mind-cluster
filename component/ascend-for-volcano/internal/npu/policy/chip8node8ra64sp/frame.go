@@ -82,6 +82,9 @@ func (tp *chip8node8ra64sp) ValidNPUJob() *api.ValidateResult {
 			return err
 		}
 	}
+	// snapshot the configured constraints, the downgrade ladder derives from them
+	tp.configuredSpBlock = tp.spBlock
+	tp.configuredRaBlock = tp.tpBlock
 
 	return nil
 }

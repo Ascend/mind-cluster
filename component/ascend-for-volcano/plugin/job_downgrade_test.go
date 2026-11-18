@@ -24,63 +24,9 @@ import (
 
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/downgrade"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
-
-type downgradeCompatibilityTest struct {
-	name       string
-	annotation map[string]string
-	label      map[string]string
-	wantValid  bool
-}
-
-func buildDowngradeCompatibilityTestCases() []downgradeCompatibilityTest {
-	return []downgradeCompatibilityTest{
-		{
-			name:       "01 downgrade with pod rescheduling is rejected",
-			annotation: map[string]string{util.SchedulerDowngradeAnnoKey: "true"},
-			label:      map[string]string{util.SinglePodTag: util.EnableFunc},
-			wantValid:  false,
-		},
-		{
-			name:       "02 downgrade with process recover is rejected",
-			annotation: map[string]string{util.SchedulerDowngradeAnnoKey: "true"},
-			label:      map[string]string{util.ProcessRecoverEnable: util.EnableFunc},
-			wantValid:  false,
-		},
-		{
-			name:       "03 downgrade without incompatible configuration passes",
-			annotation: map[string]string{util.SchedulerDowngradeAnnoKey: "true"},
-			label:      map[string]string{},
-			wantValid:  true,
-		},
-		{
-			name:      "04 disabled downgrade with pod rescheduling passes",
-			label:     map[string]string{util.SinglePodTag: util.EnableFunc},
-			wantValid: true,
-		},
-		{
-			name:       "05 pod rescheduling turned off passes with downgrade",
-			annotation: map[string]string{util.SchedulerDowngradeAnnoKey: "true"},
-			label:      map[string]string{util.SinglePodTag: "off"},
-			wantValid:  true,
-		},
-	}
-}
-
-func TestValidDowngradeCompatibility(t *testing.T) {
-	for _, tt := range buildDowngradeCompatibilityTestCases() {
-		t.Run(tt.name, func(t *testing.T) {
-			sJob := &SchedulerJob{}
-			sJob.SchedulerJobAttr = util.SchedulerJobAttr{
-				ComJob: util.ComJob{Annotation: tt.annotation, Label: tt.label},
-			}
-			if result := sJob.validDowngradeCompatibility(); (result == nil) != tt.wantValid {
-				t.Errorf("validDowngradeCompatibility() result = %#v, wantValid %v", result, tt.wantValid)
-			}
-		})
-	}
-}
 
 // mockDowngradePolicyHandler extends mockPolicyHandler with the optional
 // downgrade hook and a controllable validation result, tracking whether the
@@ -109,10 +55,11 @@ type validJobDowngradeHookTest struct {
 }
 
 func buildValidJobDowngradeHookTestCases() []validJobDowngradeHookTest {
+	enabledAnno := map[string]string{util.SchedulerDowngradeTimeoutAnnoKey: "60"}
 	return []validJobDowngradeHookTest{
 		{
 			name:       "01 downgrade enabled job triggers the hook after validation",
-			annotation: map[string]string{util.SchedulerDowngradeAnnoKey: "true"},
+			annotation: enabledAnno,
 			reqNPUName: "huawei.com/Ascend910",
 			wantPass:   true,
 			wantHits:   1,
@@ -124,13 +71,13 @@ func buildValidJobDowngradeHookTestCases() []validJobDowngradeHookTest {
 		},
 		{
 			name:        "03 failed validation skips the hook",
-			annotation:  map[string]string{util.SchedulerDowngradeAnnoKey: "true"},
+			annotation:  enabledAnno,
 			reqNPUName:  "huawei.com/Ascend910",
 			validResult: &api.ValidateResult{Pass: false},
 		},
 		{
 			name:       "04 virtual device job returns before the hook",
-			annotation: map[string]string{util.SchedulerDowngradeAnnoKey: "true"},
+			annotation: enabledAnno,
 			reqNPUName: "huawei.com/Ascend910-16c",
 			wantPass:   true,
 		},
@@ -141,12 +88,19 @@ func buildValidJobDowngradeHookTestCases() []validJobDowngradeHookTest {
 // invoked right after the job validation passes and only for the jobs
 // enabling the downgrade.
 func TestValidJobFnDegradeConstraintHook(t *testing.T) {
+	const hookJobID = api.JobID("downgrade-hook-job")
+	const hookWindow = 60
 	for _, tt := range buildValidJobDowngradeHookTestCases() {
 		t.Run(tt.name, func(t *testing.T) {
+			downgrade.ResetDowngradeCacheForTest()
+			if tt.wantHits > 0 {
+				downgrade.StampSession(map[api.JobID]bool{hookJobID: true},
+					map[api.JobID]int{hookJobID: hookWindow})
+			}
 			sJob := &SchedulerJob{}
 			sJob.SchedulerJobAttr = util.SchedulerJobAttr{
 				ComJob: util.ComJob{
-					Name:       api.JobID("downgrade-hook-job"),
+					Name:       hookJobID,
 					Annotation: tt.annotation,
 				},
 				NPUJob: &util.NPUJob{ReqNPUName: tt.reqNPUName},

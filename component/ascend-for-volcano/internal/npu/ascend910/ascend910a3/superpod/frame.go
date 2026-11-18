@@ -557,7 +557,7 @@ func (tp *module910SuperPod) selectNodesForFaultJob(task *api.TaskInfo, totalNod
 
 	notReadySuperPod, err := tp.selectNodeFromOriginVSuperPod(fJob, sMap, selectNodes, totalNodes, vSuperPodID)
 	if err != nil {
-		return selectNodes, nil
+		return selectNodes, err
 	}
 
 	tp.selectNodeFromOriginSuperPod(fJob, notReadySuperPod, totalNodes, vSuperPodID, selectNodes)
@@ -607,10 +607,64 @@ func (tp *module910SuperPod) selectNodeFromOriginVSuperPod(fJob *rescheduling.Fa
 	if _, ok := tp.SuperPodInfo.SuperPodReschdInfo[fJob.JobUID]; ok {
 		fJob.SuperPods = tp.SuperPodInfo.SuperPodReschdInfo[fJob.JobUID]
 	}
+	if !tp.superPodsLayoutMatchesSpBlock(fJob) {
+		return tp.handleLayoutMismatch(fJob)
+	}
 	if tp.ifPodLevelRescheduling(fJob) {
 		return tp.selectForPodRescheduling(fJob, selectNodes, vSuperPodID)
 	}
 	return tp.selectForJobRescheduling(fJob, sMap, selectNodes, totalNodes, vSuperPodID)
+}
+
+// superPodsLayoutMatchesSpBlock checks the cached logical super pods against the
+// effective sp-block of the session: every block has to be a whole sp-block, a
+// short trailing block is tolerated for the soft-affinity layout. A layout which
+// does not cover the whole job is not a stale whole-job layout, the generic
+// selection fills its missing blocks.
+func (tp *module910SuperPod) superPodsLayoutMatchesSpBlock(fJob *rescheduling.FaultJob) bool {
+	if tp == nil || fJob == nil || tp.NPUJob == nil || tp.spBlock <= 0 || len(fJob.SuperPods) == 0 {
+		return true
+	}
+	nodeNum := 0
+	for _, sp := range fJob.SuperPods {
+		nodeNum += len(sp)
+	}
+	if nodeNum != tp.NPUTaskNum {
+		return true
+	}
+	maxRank := -1
+	for key := range fJob.SuperPods {
+		if rank, err := strconv.Atoi(key); err == nil && rank > maxRank {
+			maxRank = rank
+		}
+	}
+	for key, sp := range fJob.SuperPods {
+		if len(sp) == tp.spBlock {
+			continue
+		}
+		rank, err := strconv.Atoi(key)
+		if err == nil && rank == maxRank && len(sp) < tp.spBlock {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
+// handleLayoutMismatch drops a layout which does not follow the effective
+// sp-block. Running pods pin the old layout, so a pod-level round waits for the
+// job-level upgrade; a job-level round clears the cache and lets the generic
+// selection rebuild the layout under the current sp-block.
+func (tp *module910SuperPod) handleLayoutMismatch(fJob *rescheduling.FaultJob) (map[string]struct{}, error) {
+	if tp.ifPodLevelRescheduling(fJob) {
+		return nil, fmt.Errorf("job %s cached super pods layout mismatches effective sp-block %d",
+			fJob.JobName, tp.spBlock)
+	}
+	klog.V(util.LogInfoLev).Infof("job %s cached super pods layout mismatches effective sp-block %d, "+
+		"rebuild the layout", fJob.JobName, tp.spBlock)
+	fJob.SuperPods = nil
+	delete(tp.SuperPodInfo.SuperPodReschdInfo, fJob.JobUID)
+	return nil, nil
 }
 
 func (tp *module910SuperPod) selectForJobRescheduling(fJob *rescheduling.FaultJob, sMap map[string]float64,

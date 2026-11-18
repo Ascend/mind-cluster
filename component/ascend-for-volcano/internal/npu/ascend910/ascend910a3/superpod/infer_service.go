@@ -87,9 +87,14 @@ func (tp *module910SuperPod) selectNodesForInferServicePodLevel(task *api.TaskIn
 
 	// Stage 1: keep healthy super pods. selectNodeFromOriginVSuperPod restores
 	// SuperPodReschdInfo first, then dispatches by ifPodLevelRescheduling
-	// (the pod-level branch does not read sMap, passing nil is safe).
-	notReadySuperPod, _ := tp.selectNodeFromOriginVSuperPod(fJob, nil,
+	// (the pod-level branch does not read sMap, passing nil is safe). A layout
+	// which does not follow the effective sp-block must not fall through to the
+	// stage 2-4 refill, the round waits for the job-level upgrade instead.
+	notReadySuperPod, err := tp.selectNodeFromOriginVSuperPod(fJob, nil,
 		selectNodes, totalNodes, vSuperPodID)
+	if err != nil {
+		return nil, err
+	}
 
 	// Stage 2: select brand-new node group within the same physical super pod
 	tp.selectNodeFromOriginSuperPod(fJob, notReadySuperPod, totalNodes, vSuperPodID, selectNodes)

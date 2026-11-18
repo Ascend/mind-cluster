@@ -105,9 +105,10 @@ const (
 
 // constants for schedule downgrade
 const (
-	// SchedulerDowngradeAnnoKey key of job scheduler downgrade switch, only "true"
-	// enables the stepwise constraint downgrade after the schedule timeout
-	SchedulerDowngradeAnnoKey = "huawei.com/scheduler.downgrade"
+	// SchedulerDowngradeTimeoutAnnoKey key of the job level downgrade window
+	// annotation in seconds: -1 disables the downgrade, [1, 86400] is the
+	// window length, it wins over the global configuration when valid
+	SchedulerDowngradeTimeoutAnnoKey = "huawei.com/scheduler.downgrade.timeout"
 	// SchedulerDowngradedAnnoKey key of the observable pod annotation holding the
 	// unix timestamp when the downgrade took effect
 	SchedulerDowngradedAnnoKey = "huawei.com/scheduler.downgrade.timestamp"

@@ -248,15 +248,18 @@ func TestSweep(t *testing.T) {
 	}
 }
 
-// TestStampSession verifies the snapshot carries the all-waiting fact of the job and
-// is rebuilt from scratch by every stamp, the level of the wait being a pure function
-// of it (no mark of an already taken step is stored).
+// TestStampSession verifies the snapshot carries the all-waiting fact and the
+// effective window of the job and is rebuilt from scratch by every stamp, the
+// level of the wait being a pure function of it (no mark of an already taken
+// step is stored).
 func TestStampSession(t *testing.T) {
 	ResetDowngradeCacheForTest()
 	waitingJob := api.JobID("stamp-waiting-job")
 	partialJob := api.JobID("stamp-partial-job")
+	testWindow := 60
 
-	StampSession(map[api.JobID]bool{waitingJob: true, partialJob: false})
+	StampSession(map[api.JobID]bool{waitingJob: true, partialJob: false},
+		map[api.JobID]int{waitingJob: testWindow, partialJob: testWindow})
 
 	if !SessionAllWaiting(waitingJob) {
 		t.Errorf("the all-waiting fact should come from the stamp input")
@@ -264,12 +267,15 @@ func TestStampSession(t *testing.T) {
 	if SessionAllWaiting(partialJob) {
 		t.Errorf("the all-waiting fact should come from the stamp input")
 	}
-	if SessionAllWaiting(api.JobID("unknown-job")) {
-		t.Errorf("an unknown job is not all waiting")
+	if got := SessionWindow(waitingJob); got != testWindow {
+		t.Errorf("the window should come from the stamp input, got %d", got)
+	}
+	if got := SessionWindow(api.JobID("unknown-job")); got > 0 {
+		t.Errorf("an unknown job holds no positive window, got %d", got)
 	}
 
 	// the next session rebuilds the snapshot from scratch
-	StampSession(map[api.JobID]bool{waitingJob: false})
+	StampSession(map[api.JobID]bool{waitingJob: false}, map[api.JobID]int{waitingJob: testWindow})
 	if SessionAllWaiting(waitingJob) {
 		t.Errorf("the new session should read the new all-waiting fact")
 	}
@@ -286,7 +292,7 @@ func TestEmptyJobSafe(t *testing.T) {
 	SeedDowngrade("", configSmall, 160)
 	MarkEffective("")
 	ResetConstraint("")
-	StampSession(map[api.JobID]bool{"": true})
+	StampSession(map[api.JobID]bool{"": true}, map[api.JobID]int{"": 60})
 	Sweep(func(api.JobID) bool { return true })
 	if _, ok := DowngradeConfig(""); ok {
 		t.Errorf("an empty job should hold no downgrade config")

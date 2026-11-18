@@ -118,6 +118,8 @@ func (tp *chip8node8sp) checkSpBlock() *api.ValidateResult {
 				tp.SpBlockNPUNum, tp.MaxNodeNPUNum, tp.spBlock, tp.FrameAttr.SuperPodSize),
 		}
 	}
+	// snapshot the configured constraint, the downgrade ladder derives from it
+	tp.configuredSpBlock = tp.spBlock
 	return nil
 }
 
@@ -463,7 +465,7 @@ func (tp *chip8node8sp) selectNodesForFaultJob(task *api.TaskInfo, totalNodes ma
 
 	notReadySuperPod, err := tp.selectNodeFromOriginVSuperPod(fJob, sMap, selectNodes, totalNodes, vSuperPodID)
 	if err != nil {
-		return selectNodes, nil
+		return selectNodes, err
 	}
 
 	tp.selectNodeFromOriginSuperPod(fJob, notReadySuperPod, totalNodes, vSuperPodID, selectNodes)
@@ -520,10 +522,82 @@ func (tp *chip8node8sp) selectNodeFromOriginVSuperPod(fJob *rescheduling.FaultJo
 	if _, ok := tp.SuperPodInfo.SuperPodReschdInfo[fJob.JobUID]; ok {
 		fJob.SuperPods = tp.SuperPodInfo.SuperPodReschdInfo[fJob.JobUID]
 	}
+	if !tp.superPodsLayoutMatchesSpBlock(fJob) {
+		return tp.handleLayoutMismatch(fJob)
+	}
 	if tp.ifPodLevelRescheduling(fJob) {
 		return tp.selectForPodRescheduling(fJob, selectNodes, vSuperPodID)
 	}
 	return tp.selectForJobRescheduling(fJob, sMap, selectNodes, totalNodes, vSuperPodID)
+}
+
+// superPodsLayoutMatchesSpBlock checks the cached logical super pods against the
+// effective sp-block of the session: every block has to be a whole sp-block, a
+// short trailing block is tolerated for the soft-affinity layout. A layout which
+// does not cover the whole job is not a stale whole-job layout, the generic
+// selection fills its missing blocks.
+func (tp *chip8node8sp) superPodsLayoutMatchesSpBlock(fJob *rescheduling.FaultJob) bool {
+	if tp == nil || fJob == nil || tp.NPUJob == nil || tp.spBlock <= 0 || len(fJob.SuperPods) == 0 {
+		return true
+	}
+	nodeNum := 0
+	for _, sp := range fJob.SuperPods {
+		nodeNum += len(sp)
+	}
+	if nodeNum != tp.NPUTaskNum {
+		return true
+	}
+	maxRank := -1
+	for key := range fJob.SuperPods {
+		if rank, err := strconv.Atoi(key); err == nil && rank > maxRank {
+			maxRank = rank
+		}
+	}
+	for key, sp := range fJob.SuperPods {
+		if len(sp) == tp.spBlock {
+			continue
+		}
+		rank, err := strconv.Atoi(key)
+		if err == nil && rank == maxRank && len(sp) < tp.spBlock {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
+// handleLayoutMismatch drops a layout which does not follow the effective
+// sp-block. The branch follows the live task state instead of the rescheduling
+// labels: the labels only tell which features the job configured, a job-level
+// rebuild of a job with pod-level labels configured would wait forever
+// otherwise. Running pods pin the old layout, so a round with placed tasks
+// keeps the layout and reports an error to wait; a round with every task
+// pending (a job-level rebuild) clears the cache and lets the generic
+// selection rebuild the layout under the current sp-block.
+func (tp *chip8node8sp) handleLayoutMismatch(fJob *rescheduling.FaultJob) (map[string]struct{}, error) {
+	if tp.jobHasPlacedTask() {
+		return nil, fmt.Errorf("job %s cached super pods layout mismatches effective sp-block %d",
+			fJob.JobName, tp.spBlock)
+	}
+	klog.V(util.LogInfoLev).Infof("job %s cached super pods layout mismatches effective sp-block %d, "+
+		"rebuild the layout", fJob.JobName, tp.spBlock)
+	fJob.SuperPods = nil
+	delete(tp.SuperPodInfo.SuperPodReschdInfo, fJob.JobUID)
+	return nil, nil
+}
+
+// jobHasPlacedTask tells whether any task of the job still holds a node, a
+// pod under eviction keeps its node too, such a round must not drop the layout.
+func (tp *chip8node8sp) jobHasPlacedTask() bool {
+	if tp == nil {
+		return false
+	}
+	for _, task := range tp.Tasks {
+		if task.NodeName != "" {
+			return true
+		}
+	}
+	return false
 }
 
 func (tp *chip8node8sp) selectForJobRescheduling(fJob *rescheduling.FaultJob, sMap map[string]float64,
@@ -597,6 +671,12 @@ func judgeLasTimeTaskIsHealthy(fJob *rescheduling.FaultJob, nodeName string) boo
 func (tp *chip8node8sp) schedulable(fJob *rescheduling.FaultJob, totalNodes map[int32]superPod) bool {
 	if tp == nil || fJob == nil {
 		return false
+	}
+	// An empty layout (cleared by the downgrade rebuild) pins nothing, the
+	// generic selection decides; ifSchedule would fail it on the empty count
+	// and the job would never come back.
+	if len(fJob.SuperPods) == 0 {
+		return true
 	}
 
 	count := make(map[int32]int)

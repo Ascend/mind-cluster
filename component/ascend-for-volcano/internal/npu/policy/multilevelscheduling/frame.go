@@ -71,6 +71,11 @@ func (mh *MultilevelHandler) checkLevels() *api.ValidateResult {
 		}
 	}
 	mh.taskLevels = taskLevels
+	// snapshot the configured affinity blocks, the downgrade ladder derives from them
+	mh.configuredAffinityBlocks = make(map[string]int, len(mh.AffinityBlocks))
+	for level, reqNode := range mh.AffinityBlocks {
+		mh.configuredAffinityBlocks[level] = reqNode
+	}
 	return nil
 }
 

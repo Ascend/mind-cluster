@@ -450,7 +450,10 @@ type roundInfo struct {
 	jobInfo    *api.JobInfo
 	count      roundTaskCount
 	allWaiting bool
-	downgrade  bool
+	// downgradeWindow is the effective downgrade window seconds of the round:
+	// the job level annotation wins over the global configuration, a negative
+	// value means the downgrade is off for the job
+	downgradeWindow int
 }
 
 // reconcileTimingState reconciles the package-wide timeout and downgrade
@@ -484,11 +487,14 @@ func (sHandle *ScheduleHandler) collectRoundInfo(ssnJobs map[api.JobID]*api.JobI
 			continue
 		}
 		count := countRoundTasks(jobInfo)
+		// an eviction over the round leaves a scope behind which is not all
+		// waiting: the evicted tasks were placed a moment ago
+		allWaiting := count.pending == count.scoped && count.evicting == 0
 		rounds[jobID] = roundInfo{
-			jobInfo:    jobInfo,
-			count:      count,
-			allWaiting: count.pending == count.scoped,
-			downgrade:  vcJob.isSchedulerDowngradeEnabled(),
+			jobInfo:         jobInfo,
+			count:           count,
+			allWaiting:      allWaiting,
+			downgradeWindow: vcJob.downgradeWindow(sHandle.FrameAttr.SchedulerDowngradeTimeout),
 		}
 	}
 	return rounds
@@ -504,22 +510,42 @@ func (sHandle *ScheduleHandler) collectRoundInfo(ssnJobs map[api.JobID]*api.JobI
 func (sHandle *ScheduleHandler) reconcileDowngrade(rounds map[api.JobID]roundInfo) {
 	downgrade.Sweep(sHandle.isAliveJob)
 	guards := make(map[api.JobID]bool, len(rounds))
+	windows := make(map[api.JobID]int, len(rounds))
 	for jobID, round := range rounds {
-		if !round.downgrade {
+		if round.downgradeWindow <= 0 {
 			continue
 		}
-		// job-level reschedule (the whole scope is waiting again): only the level
-		// is dropped, the wait clock is never touched, so the level of the new
-		// round is derived from the time already waited; pod-level reschedule
-		// (part of the scope still scheduled) keeps its level
-		if downgrade.IsEffective(jobID) && round.allWaiting {
+		reconcileEvictionGuard(jobID, round)
+		// job-level reschedule (the whole scope is waiting again): the level
+		// starts over, the new round waits its windows from scratch; its wait
+		// clock was already dropped by the job-level restart itself (see
+		// doRestartJob); pod-level reschedule (part of the scope still
+		// scheduled, or guarded by an eviction mark) keeps its level and clock
+		if downgrade.IsEffective(jobID) && round.allWaiting && !downgrade.PodEvictionProtected(jobID) {
 			downgrade.ResetConstraint(jobID)
 		} else {
 			seedDowngradeFromPods(jobID, round.jobInfo)
 		}
 		guards[jobID] = round.allWaiting
+		windows[jobID] = round.downgradeWindow
 	}
-	downgrade.StampSession(guards)
+	downgrade.StampSession(guards, windows)
+}
+
+// reconcileEvictionGuard watches the eviction in flight over the round: placed
+// tasks being deleted while others survive mark a pod-level reschedule, the
+// settled constraint of such a job survives the all-waiting round the eviction
+// leaves behind; the whole scope being deleted at once is the shape of a
+// job-level reschedule, the guard is dropped so the reset goes through.
+func reconcileEvictionGuard(jobID api.JobID, round roundInfo) {
+	if round.count.evicting == 0 {
+		return
+	}
+	if round.count.scoped == 0 {
+		downgrade.ClearPodEviction(jobID)
+		return
+	}
+	downgrade.MarkPodEviction(jobID)
 }
 
 // reconcileWaitClock runs the session lifecycle of common/cache over the
@@ -534,12 +560,19 @@ func (sHandle *ScheduleHandler) reconcileWaitClock(rounds map[api.JobID]roundInf
 	for jobID, round := range rounds {
 		// the round is complete only in the committed states: a pipelined task
 		// still rolls back to pending, so a rolled back round keeps its wait
-		// clock alive and the elapsed time accumulates across the rollback
-		if round.count.scheduled == round.count.scoped {
+		// clock alive and the elapsed time accumulates across the rollback;
+		// the eviction window of a job-level reschedule holds no live task
+		// either (scoped 0), the wait clock of that round was already dropped
+		// by the job-level restart itself (see doRestartJob), nothing is left
+		// to end here
+		if round.count.scheduled == round.count.scoped && round.count.scoped > 0 {
 			cache.EndRound(jobID)
 		}
 		// the wait starts when the scheduler first sees the job waiting, the
-		// queue starvation before the first predicate is waited time too
+		// queue starvation before the first predicate is waited time too; the
+		// clock restarts at the boundaries of a round: the placement completes
+		// or the job-level restart rebuilds the whole scope (see doRestartJob);
+		// the intermediate pod rebuilds of one round accumulate their wait
 		if round.count.pending > 0 {
 			cache.RecordWaitStart(jobID)
 		}
@@ -1226,39 +1259,44 @@ func getGraceDeleteTime(conf map[string]string) int64 {
 }
 
 // getSchedulerDowngradeTimeout get the global scheduler downgrade timeout in
-// seconds, invalid or absent value falls back to the default.
+// seconds: -1 disables the feature globally, an unparsable or absent value
+// falls back to the default, an out-of-range value settles on the boundary.
 func getSchedulerDowngradeTimeout(conf map[string]string) int {
 	if len(conf) == 0 {
 		return DefaultSchedulerDowngradeTimeout
 	}
-	timeoutStr, ok := conf[schedulerDowngradeTimeoutKey]
+	timeoutStr, ok := conf[util.SchedulerDowngradeTimeoutAnnoKey]
 	if !ok {
-		klog.V(util.LogDebugLev).Infof("key %s doesn't exist, set default scheduler downgrade timeout: %d",
-			schedulerDowngradeTimeoutKey, DefaultSchedulerDowngradeTimeout)
+		klog.V(util.LogDebugLev).Infof("key %s doesn't exist, set default scheduler downgrade timeout: %ds",
+			util.SchedulerDowngradeTimeoutAnnoKey, DefaultSchedulerDowngradeTimeout)
 		return DefaultSchedulerDowngradeTimeout
 	}
 	timeout, err := strconv.ParseInt(timeoutStr, util.Base10, util.BitSize64)
 	if err != nil {
-		klog.V(util.LogWarningLev).Infof("scheduler downgrade timeout is invalid [%s], set default: %d",
+		klog.V(util.LogWarningLev).Infof("scheduler downgrade timeout is unparsable [%s], set default: %ds",
 			util.SafePrint(timeoutStr), DefaultSchedulerDowngradeTimeout)
 		return DefaultSchedulerDowngradeTimeout
 	}
-	// check the timeout range validity
-	if !checkSchedulerDowngradeTimeoutValid(timeout) {
-		return DefaultSchedulerDowngradeTimeout
+	if timeout == SchedulerDowngradeDisabled {
+		return SchedulerDowngradeDisabled
 	}
-	return int(timeout)
+	return clampSchedulerDowngradeTimeout(timeout)
 }
 
-// checkSchedulerDowngradeTimeoutValid checks the timeout is in the valid range.
-func checkSchedulerDowngradeTimeoutValid(timeout int64) bool {
-	if timeout < minSchedulerDowngradeTimeout || timeout > maxSchedulerDowngradeTimeout {
-		klog.V(util.LogWarningLev).Infof("scheduler downgrade timeout should be in range [%d, %d], "+
-			"configured is [%d], fall back to default %d", minSchedulerDowngradeTimeout,
-			maxSchedulerDowngradeTimeout, timeout, DefaultSchedulerDowngradeTimeout)
-		return false
+// clampSchedulerDowngradeTimeout clamps the timeout into the valid range:
+// an out-of-range value settles on the nearest boundary with a warn log.
+func clampSchedulerDowngradeTimeout(timeout int64) int {
+	if timeout < minSchedulerDowngradeTimeout {
+		klog.V(util.LogWarningLev).Infof("scheduler downgrade timeout [%d] is below the lower bound %d, clamp to %ds",
+			timeout, minSchedulerDowngradeTimeout, minSchedulerDowngradeTimeout)
+		return minSchedulerDowngradeTimeout
 	}
-	return true
+	if timeout > maxSchedulerDowngradeTimeout {
+		klog.V(util.LogWarningLev).Infof("scheduler downgrade timeout [%d] is above the upper bound %d, clamp to %ds",
+			timeout, maxSchedulerDowngradeTimeout, maxSchedulerDowngradeTimeout)
+		return maxSchedulerDowngradeTimeout
+	}
+	return int(timeout)
 }
 
 // getUseClusterDConfig check use cluster info manager by config, default true

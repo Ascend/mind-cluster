@@ -36,6 +36,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/downgrade"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
@@ -786,6 +787,9 @@ type roundTaskCount struct {
 	pending int
 	// scheduled is the number of in-scope tasks placed (see isPlacedTask)
 	scheduled int
+	// evicting is the number of terminating tasks which were placed: an eviction
+	// is running over the round, the scope it leaves behind is not all waiting
+	evicting int
 }
 
 // countRoundTasks counts the current round of the job, the caller freezes the
@@ -793,7 +797,13 @@ type roundTaskCount struct {
 func countRoundTasks(vcJob *api.JobInfo) roundTaskCount {
 	count := roundTaskCount{}
 	for _, task := range vcJob.Tasks {
-		if !util.IsNPUTask(task) || isTerminatingTask(task) {
+		if !util.IsNPUTask(task) {
+			continue
+		}
+		if isTerminatingTask(task) {
+			if task.NodeName != "" {
+				count.evicting++
+			}
 			continue
 		}
 		count.scoped++
@@ -955,7 +965,8 @@ func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
 // validation runs once per scheduling action, the policy entry derives the level
 // from the session-start snapshot, so the repeated invocations settle one constraint.
 func (sJob SchedulerJob) downgradeConstraintAfterValid() {
-	if !sJob.isSchedulerDowngradeEnabled() {
+	// a non positive session window means the downgrade is off for the job
+	if downgrade.SessionWindow(sJob.Name) <= 0 {
 		return
 	}
 	if downgradeHook, ok := sJob.policyHandler.(DowngradeConstraintHook); ok {
@@ -1197,37 +1208,29 @@ func (sHandle *ScheduleHandler) JobValid(obj interface{}) *api.ValidateResult {
 		return nil
 	}
 
-	if result = vcJob.validDowngradeCompatibility(); result != nil {
-		return result
-	}
-
 	result = vcJob.validJobFn()
 	return result
 }
 
-// isSchedulerDowngradeEnabled returns true when the job enables the scheduler
-// downgrade, disabled by default.
-func (sJob SchedulerJob) isSchedulerDowngradeEnabled() bool {
-	return sJob.Annotation[util.SchedulerDowngradeAnnoKey] == "true"
-}
-
-// validDowngradeCompatibility rejects the job enabling the scheduler downgrade
-// together with pod-level or process-level rescheduling.
-func (sJob *SchedulerJob) validDowngradeCompatibility() *api.ValidateResult {
-	if sJob == nil || !sJob.isSchedulerDowngradeEnabled() {
-		return nil
+// downgradeWindow returns the effective downgrade window seconds of the job:
+// the job level annotation wins over the global configuration, -1 (off) and
+// in-range values pass through, an out-of-range value settles on the boundary
+// and an unparsable one falls back to the default.
+func (sJob SchedulerJob) downgradeWindow(globalWindow int) int {
+	raw, ok := sJob.Annotation[util.SchedulerDowngradeTimeoutAnnoKey]
+	if !ok {
+		return globalWindow
 	}
-	if sJob.Label[util.SinglePodTag] == util.EnableFunc {
-		return &api.ValidateResult{Pass: false, Reason: util.InvalidArgumentReason,
-			Message: "job enables scheduler downgrade and pod rescheduling at the same time, " +
-				"the scheduler downgrade only supports job-level rescheduling"}
+	window, err := strconv.ParseInt(raw, util.Base10, util.BitSize64)
+	if err != nil {
+		klog.V(util.LogWarningLev).Infof("job <%s> downgrade timeout is unparsable [%s],"+
+			" set default: %ds", sJob.Name, util.SafePrint(raw), DefaultSchedulerDowngradeTimeout)
+		return DefaultSchedulerDowngradeTimeout
 	}
-	if sJob.Label[util.ProcessRecoverEnable] == util.EnableFunc {
-		return &api.ValidateResult{Pass: false, Reason: util.InvalidArgumentReason,
-			Message: "job enables scheduler downgrade and process recover at the same time, " +
-				"the scheduler downgrade only supports job-level rescheduling"}
+	if window == int64(SchedulerDowngradeDisabled) {
+		return SchedulerDowngradeDisabled
 	}
-	return nil
+	return clampSchedulerDowngradeTimeout(window)
 }
 
 // SetJobPendReasonByNodesCase In nodes select case, set node failed and add failed reason.
