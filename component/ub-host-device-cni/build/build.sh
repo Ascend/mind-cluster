@@ -55,7 +55,6 @@ function build() {
 
 function mv_file() {
   mv "${TOP_DIR}"/cmd/${OUTPUT_NAME} "${TOP_DIR}"/output
-  cp "${TOP_DIR}"/build/nad-cni-inherit-config.yaml "${TOP_DIR}"/output/nad-cni-inherit-config.yaml
   chmod 500 "${TOP_DIR}"/output/${OUTPUT_NAME}
 }
 

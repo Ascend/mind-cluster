@@ -29,3 +29,7 @@ const (
 	InvalidFaultDetectionPeriod = 0
 	DPUResourceAnnotationKey    = "huawei.com/dpu.resource.name"
 )
+
+// UseAscendDocker records whether ascend-docker-runtime is enabled on the node,
+// assigned at plugin startup from the ASCEND_DOCKER_RUNTIME environment variable.
+var UseAscendDocker bool
