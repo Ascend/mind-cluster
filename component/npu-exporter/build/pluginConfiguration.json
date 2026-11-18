@@ -1,4 +1,5 @@
 [
   {"metricsGroup": "text", "state": "ON", "intervalSeconds": 60},
+  {"metricsGroup": "enpu", "state": "OFF", "intervalSeconds": 60},
   {"metricsGroup": "myPlugin", "state": "OFF", "intervalSeconds": 60}
 ]
