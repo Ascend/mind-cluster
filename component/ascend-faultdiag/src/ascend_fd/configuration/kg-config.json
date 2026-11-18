@@ -30994,6 +30994,966 @@
             },
             "attr_regex": " NPU(?P<npu_id>[0-9])"
         },
+        "0x8F19A036": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V8_DVDD08_AIC_D1_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V8_DVDD08_AIC_D1_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A036", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A037": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "1V2_DVDD12_PFM4_7_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "1V2_DVDD12_PFM4_7_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A037", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A038": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V8_DVDD08_PERI_D0U0_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V8_DVDD08_PERI_D0U0_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A038", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A039": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V8_DVDD08_PERI_D1U1_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V8_DVDD08_PERI_D1U1_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A039", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A03A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V8_DVDD08_SIO_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V8_DVDD08_SIO_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A03A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A03B": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V85_DVDD_BUS_D0_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V85_DVDD_BUS_D0_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A03B", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A03C": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V5_DVDD05_PFM0_3_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V5_DVDD05_PFM0_3_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A03C", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A03D": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V85_DVDD_BUS_D1_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V85_DVDD_BUS_D1_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A03D", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A03E": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V5_DVDD05_PFM4_7_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V5_DVDD05_PFM4_7_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A03E", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A03F": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V75_AVDD075_SDS_U0_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V75_AVDD075_SDS_U0_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A03F", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A040": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "1V0_AVDD10_SDS_U0_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "1V0_AVDD10_SDS_U0_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A040", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A041": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V75_AVDD075_SDS_U1_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V75_AVDD075_SDS_U1_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A041", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A042": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "1V0_AVDD10_SDS_U1_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "1V0_AVDD10_SDS_U1_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A042", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A043": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "1V2_AVDD12_VTT_U0_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "1V2_AVDD12_VTT_U0_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A043", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A044": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "1V2_AVDD12_VTT_U1_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "1V2_AVDD12_VTT_U1_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A044", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A045": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "1V8_DVDD_1_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "1V8_DVDD_1_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A045", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A046": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "3V3_MOS_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "3V3_MOS_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A046", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A047": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "6V_0_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "6V_0_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A047", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A048": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V8_DVDD_PERI_D1U1_CURRENT_120数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V8_DVDD_PERI_D1U1_CURRENT_120 data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A048", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A049": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V8_DVDD_PERI_D0U0_CURRENT_120数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V8_DVDD_PERI_D0U0_CURRENT_120 data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A049", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A04A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "1V1_DVDD_HBM_01_CURRENT_120数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "1V1_DVDD_HBM_01_CURRENT_120 data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A04A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A04B": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "1V1_DVDD_HBM_23_CURRENT_120数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "1V1_DVDD_HBM_23_CURRENT_120 data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A04B", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A04C": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V8_DVDD_SIO_CURRENT_120数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V8_DVDD_SIO_CURRENT_120 data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A04C", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A04D": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V4_DVDD_HBM_23_CURRENT_120数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V4_DVDD_HBM_23_CURRENT_120 data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A04D", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A04E": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V4_DVDD_HBM_01_CURRENT数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V4_DVDD_HBM_01_CURRENT data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A04E", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180292": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V5_DVDD_PFM_4_7的第1相开路（950PR标卡）",
+                "description_zh": "V_0V5_DVDD_PFM_4_7的物理第1相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 1 of V_0V5_DVDD_PFM_4_7 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 1 of V_0V5_DVDD_PFM_4_7 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180292", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180291": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V5_DVDD_PFM_4_7的第2相开路（950PR标卡）",
+                "description_zh": "V_0V5_DVDD_PFM_4_7的物理第2相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 2 of V_0V5_DVDD_PFM_4_7 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 2 of V_0V5_DVDD_PFM_4_7 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180291", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180290": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V5_DVDD_PFM_0_3的第2相开路（950PR标卡）",
+                "description_zh": "V_0V5_DVDD_PFM_0_3的物理第2相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 2 of V_0V5_DVDD_PFM_0_3 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 2 of V_0V5_DVDD_PFM_0_3 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180290", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18028F": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V5_DVDD_PFM_0_3的第1相开路（950PR标卡）",
+                "description_zh": "V_0V5_DVDD_PFM_0_3的物理第1相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 1 of V_0V5_DVDD_PFM_0_3 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 1 of V_0V5_DVDD_PFM_0_3 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18028F", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18028E": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D1的第6相开路（950PR标卡）",
+                "description_zh": "V_0V85_DVDD_BUS_D1的物理第6相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 6 of V_0V85_DVDD_BUS_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 6 of V_0V85_DVDD_BUS_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18028E", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18028D": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D1的第5相开路（950PR标卡）",
+                "description_zh": "V_0V85_DVDD_BUS_D1的物理第4相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 5 of V_0V85_DVDD_BUS_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 4 of V_0V85_DVDD_BUS_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18028D", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18028C": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D1的第4相开路（950PR标卡）",
+                "description_zh": "V_0V85_DVDD_BUS_D1的物理第2相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 4 of V_0V85_DVDD_BUS_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 2 of V_0V85_DVDD_BUS_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18028C", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18028B": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D1的第3相开路（950PR标卡）",
+                "description_zh": "V_0V85_DVDD_BUS_D1的物理第5相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 3 of V_0V85_DVDD_BUS_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 5 of V_0V85_DVDD_BUS_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18028B", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18028A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D1的第2相开路（950PR标卡）",
+                "description_zh": "V_0V85_DVDD_BUS_D1的物理第3相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 2 of V_0V85_DVDD_BUS_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 3 of V_0V85_DVDD_BUS_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18028A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180289": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D1的第1相开路（950PR标卡）",
+                "description_zh": "V_0V85_DVDD_BUS_D1的物理第1相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 1 of V_0V85_DVDD_BUS_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 1 of V_0V85_DVDD_BUS_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180289", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180288": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_PERI_D1U1的第1相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_PERI_D1U1的物理第1相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 1 of V_0V8_DVDD_PERI_D1U1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 1 of V_0V8_DVDD_PERI_D1U1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180288", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180287": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_PERI_D1U1的第2相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_PERI_D1U1的物理第2相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 2 of V_0V8_DVDD_PERI_D1U1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 2 of V_0V8_DVDD_PERI_D1U1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180287", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180286": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1的第12相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D1的物理第12相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 12 of V_0V8_DVDD_AIC_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 12 of V_0V8_DVDD_AIC_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180286", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180285": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1的第11相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D1的物理第11相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 11 of V_0V8_DVDD_AIC_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 11 of V_0V8_DVDD_AIC_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180285", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180284": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1的第10相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D1的物理第10相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 10 of V_0V8_DVDD_AIC_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 10 of V_0V8_DVDD_AIC_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180284", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
         "0x8F180283": {
             "attribute": {
                 "class": "Hardware",
