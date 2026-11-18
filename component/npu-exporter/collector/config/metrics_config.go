@@ -114,6 +114,7 @@ var (
 	}
 	defaultPluginConfigs = []MetricsGroupConfig{
 		buildDefaultConfig(groupText, stateOn, defaultIntervalSeconds),
+		buildDefaultConfig("enpu", stateOFF, defaultIntervalSeconds),
 	}
 )
 
