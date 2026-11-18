@@ -30994,6 +30994,944 @@
             },
             "attr_regex": " NPU(?P<npu_id>[0-9])"
         },
+        "0x8F180283": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1的第9相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D1的物理第9相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 9 of V_0V8_DVDD_AIC_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 9 of V_0V8_DVDD_AIC_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180283", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180282": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1的第8相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D1的物理第8相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 8 of V_0V8_DVDD_AIC_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 8 of V_0V8_DVDD_AIC_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180282", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180281": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1的第7相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D1的物理第7相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 7 of V_0V8_DVDD_AIC_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 7 of V_0V8_DVDD_AIC_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180281", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180280": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1的第6相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D1的物理第6相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 6 of V_0V8_DVDD_AIC_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 6 of V_0V8_DVDD_AIC_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180280", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18027F": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1的第5相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D1的物理第5相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 5 of V_0V8_DVDD_AIC_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 5 of V_0V8_DVDD_AIC_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18027F", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18027E": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1的第4相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D1的物理第4相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 4 of V_0V8_DVDD_AIC_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 4 of V_0V8_DVDD_AIC_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18027E", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18027D": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1的第3相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D1的物理第3相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 3 of V_0V8_DVDD_AIC_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 3 of V_0V8_DVDD_AIC_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18027D", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18027C": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1的第2相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D1的物理第2相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 2 of V_0V8_DVDD_AIC_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 2 of V_0V8_DVDD_AIC_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18027C", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18027B": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1的第1相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D1的物理第1相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 1 of V_0V8_DVDD_AIC_D1 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 1 of V_0V8_DVDD_AIC_D1 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18027B", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18027A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V2_DVDD_PFM_4_7的第1相开路（950PR标卡）",
+                "description_zh": "V_1V2_DVDD_PFM_4_7的物理第1相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 1 of V_1V2_DVDD_PFM_4_7 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 1 of V_1V2_DVDD_PFM_4_7 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18027A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180279": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V2_DVDD_PFM_4_7的第2相开路（950PR标卡）",
+                "description_zh": "V_1V2_DVDD_PFM_4_7的物理第2相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 2 of V_1V2_DVDD_PFM_4_7 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 2 of V_1V2_DVDD_PFM_4_7 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180279", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180278": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V2_DVDD_PFM_0_3的第2相开路（950PR标卡）",
+                "description_zh": "V_1V2_DVDD_PFM_0_3的物理第2相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 2 of V_1V2_DVDD_PFM_0_3 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 2 of V_1V2_DVDD_PFM_0_3 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180278", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180277": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V2_DVDD_PFM_0_3的第1相开路（950PR标卡）",
+                "description_zh": "V_1V2_DVDD_PFM_0_3的物理第1相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 1 of V_1V2_DVDD_PFM_0_3 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 1 of V_1V2_DVDD_PFM_0_3 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180277", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180276": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_SIO的第1相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_SIO的物理第1相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 1 of V_0V8_DVDD_SIO open circuit (950PR add-in card)",
+                "description_en": "Physical phase 1 of V_0V8_DVDD_SIO is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180276", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180275": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_SIO的第2相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_SIO的物理第3相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 2 of V_0V8_DVDD_SIO open circuit (950PR add-in card)",
+                "description_en": "Physical phase 3 of V_0V8_DVDD_SIO is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180275", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180274": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_SIO的第3相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_SIO的物理第5相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 3 of V_0V8_DVDD_SIO open circuit (950PR add-in card)",
+                "description_en": "Physical phase 5 of V_0V8_DVDD_SIO is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180274", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180273": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_SIO的第4相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_SIO的物理第2相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 4 of V_0V8_DVDD_SIO open circuit (950PR add-in card)",
+                "description_en": "Physical phase 2 of V_0V8_DVDD_SIO is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180273", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180272": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_SIO的第5相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_SIO的物理第4相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 5 of V_0V8_DVDD_SIO open circuit (950PR add-in card)",
+                "description_en": "Physical phase 4 of V_0V8_DVDD_SIO is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180272", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180271": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_SIO的第6相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_SIO的物理第6相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 6 of V_0V8_DVDD_SIO open circuit (950PR add-in card)",
+                "description_en": "Physical phase 6 of V_0V8_DVDD_SIO is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180271", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180270": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D0的第6相开路（950PR标卡）",
+                "description_zh": "V_0V85_DVDD_BUS_D0的物理第6相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 6 of V_0V85_DVDD_BUS_D0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 6 of V_0V85_DVDD_BUS_D0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180270", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18026F": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D0的第5相开路（950PR标卡）",
+                "description_zh": "V_0V85_DVDD_BUS_D0的物理第4相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 5 of V_0V85_DVDD_BUS_D0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 4 of V_0V85_DVDD_BUS_D0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18026F", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18026E": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D0的第4相开路（950PR标卡）",
+                "description_zh": "V_0V85_DVDD_BUS_D0的物理第2相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 4 of V_0V85_DVDD_BUS_D0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 2 of V_0V85_DVDD_BUS_D0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18026E", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18026D": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D0的第3相开路（950PR标卡）",
+                "description_zh": "V_0V85_DVDD_BUS_D0的物理第5相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 3 of V_0V85_DVDD_BUS_D0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 5 of V_0V85_DVDD_BUS_D0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18026D", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180269": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_PERI_D0U0的第2相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_PERI_D0U0的物理第2相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 2 of V_0V8_DVDD_PERI_D0U0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 2 of V_0V8_DVDD_PERI_D0U0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180269", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180268": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D0的第12相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D0的物理第12相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 12 of V_0V8_DVDD_AIC_D0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 12 of V_0V8_DVDD_AIC_D0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180268", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180267": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D0的第11相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D0的物理第11相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 11 of V_0V8_DVDD_AIC_D0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 11 of V_0V8_DVDD_AIC_D0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180267", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180266": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D0的第10相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D0的物理第10相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 10 of V_0V8_DVDD_AIC_D0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 10 of V_0V8_DVDD_AIC_D0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180266", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180265": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D0的第9相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D0的物理第9相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 9 of V_0V8_DVDD_AIC_D0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 9 of V_0V8_DVDD_AIC_D0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180265", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180264": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D0的第8相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D0的物理第8相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 8 of V_0V8_DVDD_AIC_D0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 8 of V_0V8_DVDD_AIC_D0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180264", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180263": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D0的第7相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D0的物理第7相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 7 of V_0V8_DVDD_AIC_D0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 7 of V_0V8_DVDD_AIC_D0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180263", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180262": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D0的第6相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D0的物理第6相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 6 of V_0V8_DVDD_AIC_D0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 6 of V_0V8_DVDD_AIC_D0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180262", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180261": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D0的第5相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D0的物理第5相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 5 of V_0V8_DVDD_AIC_D0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 5 of V_0V8_DVDD_AIC_D0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180261", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180260": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D0的第4相开路（950PR标卡）",
+                "description_zh": "V_0V8_DVDD_AIC_D0的物理第4相开路。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Phase 4 of V_0V8_DVDD_AIC_D0 open circuit (950PR add-in card)",
+                "description_en": "Physical phase 4 of V_0V8_DVDD_AIC_D0 is open.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180260", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x12000023": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Chassis",
+                "cause_zh": "液冷漏液掉卡",
+                "description_zh": "漏液检测模块检测到液冷装置发生漏液，可能原因：\n  a. 液冷装置损坏；\n  b. 漏液检测模块故障。",
+                "suggestion_zh": [
+                    "1. 将服务器下电；",
+                    "2. 检查液冷装置是否损坏（是 => 3，否 => 4）；",
+                    "3. 更换液冷装置并将服务器上电后，检查告警是否清除（是 => 处理完毕，否 => 4）；",
+                    "4. 更换漏液检测模块并将服务器上电后，检查告警是否清除（是 => 处理完毕，否 => 5）；",
+                    "5. 请联系技术支持处理；"
+                ],
+                "cause_en": "Liquid cooling leakage card drop",
+                "description_en": "The leak detection module detects that the liquid cooling device is leaking. Possible causes:\n  a. The liquid cooling device is damaged;\n  b. The leak detection module is faulty.",
+                "suggestion_en": [
+                    "1. Power off the server.",
+                    "2. Check whether the liquid cooling device is damaged (yes => 3, no => 4).",
+                    "3. Replace the liquid cooling device and power on the server, then check whether the alarm is cleared (yes => resolved, no => 4).",
+                    "4. Replace the leak detection module and power on the server, then check whether the alarm is cleared (yes => resolved, no => 5).",
+                    "5. Contact technical support."
+                ]
+            },
+            "rule": [
+                {"dst_code": "0x8F180215"}
+            ],
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x12000023", "Asserted"]
+            }
+        },
+        "0x04000005": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Fan",
+                "cause_zh": "风冷散热模块故障掉卡-风扇冗余失效",
+                "description_zh": "检测到服务器的指定风扇模块不在位，可能原因：\n  a. 风扇模块被拔出；\n  b. 风扇模块与主板接触不良。",
+                "suggestion_zh": [
+                    "1. 检查机箱是否存在风扇空槽位（是 => 2，否 => 3）；",
+                    "2. 为空闲槽位插入风扇模块，检查告警是否清除（是 => 处理完毕，否 => 5）；",
+                    "3. 重新拔插风扇，检查告警是否清除（是 => 处理完毕，否 => 4）；",
+                    "4. 更换风扇模块，并查看告警是否清除（是 => 处理完毕，否 => 5）；",
+                    "5. 请联系技术支持处理；"
+                ],
+                "cause_en": "Air-cooled heat dissipation module fault and card drop - fan redundancy failure",
+                "description_en": "The specified fan module of the server is detected to be not in position. Possible causes:\n  a. The fan module is removed;\n  b. The fan module has poor contact with the mainboard.",
+                "suggestion_en": [
+                    "1. Check whether there is an empty fan slot in the chassis (yes => 2, no => 3).",
+                    "2. Insert a fan module into the idle slot and check whether the alarm is cleared (yes => resolved, no => 5).",
+                    "3. Reinsert the fan and check whether the alarm is cleared (yes => resolved, no => 4).",
+                    "4. Replace the fan module and check whether the alarm is cleared (yes => resolved, no => 5).",
+                    "5. Contact technical support."
+                ]
+            },
+            "rule": [
+                {"dst_code": "0x8F180215"}
+            ],
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x04000005", "Asserted"]
+            }
+        },
+        "0x18000003": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Fan Backplane",
+                "cause_zh": "风冷散热模块故障掉卡-风扇背板电源故障",
+                "description_zh": "风扇背板电源故障，影响服务器散热。",
+                "suggestion_zh": [
+                    "1. 更换风扇背板，检查告警是否清除（是 => 处理完毕，否 => 2）；",
+                    "2. 请联系技术支持处理；"
+                ],
+                "cause_en": "Air-cooled heat dissipation module fault and card drop - fan backplane power failure",
+                "description_en": "The fan backplane power supply is faulty, affecting server heat dissipation.",
+                "suggestion_en": [
+                    "1. Replace the fan backplane and check whether the alarm is cleared (yes => resolved, no => 2).",
+                    "2. Contact technical support."
+                ]
+            },
+            "rule": [
+                {"dst_code": "0x8F180215"}
+            ],
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x18000003", "Asserted"]
+            }
+        },
+        "0x1800000D": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "FAN Backplane",
+                "cause_zh": "风冷散热模块故障掉卡-风扇背板 MCU 自检异常",
+                "description_zh": "风扇背板MCU自检异常，可能原因：\n  a. 风扇背板低速线缆接触不良；\n  b. 风扇背板故障。",
+                "suggestion_zh": [
+                    "1. 将整机下电后，拔插风扇板低速线缆，再将整机上电。检查告警是否清除（是 => 处理完毕，否 => 2）；",
+                    "2. 更换风扇背板，检查告警是否清除（是 => 处理完毕，否 => 3）；",
+                    "3. 请联系技术支持处理；"
+                ],
+                "cause_en": "Air-cooled heat dissipation module fault and card drop - fan backplane MCU self-check abnormal",
+                "description_en": "The fan backplane MCU self-check is abnormal. Possible causes:\n  a. The fan backplane low-speed cable has poor contact;\n  b. The fan backplane is faulty.",
+                "suggestion_en": [
+                    "1. Power off the whole device, reinsert the fan board low-speed cable, and then power on the whole device. Check whether the alarm is cleared (yes => resolved, no => 2).",
+                    "2. Replace the fan backplane and check whether the alarm is cleared (yes => resolved, no => 3).",
+                    "3. Contact technical support."
+                ]
+            },
+            "rule": [
+                {"dst_code": "0x8F180215"}
+            ],
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x1800000D", "Asserted"]
+            }
+        },
+        "0x04000007": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Fan",
+                "cause_zh": "风冷散热模块故障掉卡-风扇转速偏差大",
+                "description_zh": "检测到指定风扇模块型号不匹配或故障，可能原因：\n  a. 风扇模块故障；\n  b. 风扇模块类型错误；\n  c. 风扇背板故障。",
+                "suggestion_zh": [
+                    "1. 更换产生告警的风扇模块，并查看告警是否清除（是 => 处理完毕，否 => 2）；",
+                    "2. 如果服务器有风扇背板，更换风扇背板，并查看告警是否清除（是 => 处理完毕，否 => 3；",
+                    "3. 请联系技术支持处理；"
+                ],
+                "cause_en": "Air-cooled heat dissipation module fault and card drop - large fan speed deviation",
+                "description_en": "The specified fan module is detected to have a mismatched model or be faulty. Possible causes:\n  a. The fan module is faulty;\n  b. The fan module type is incorrect;\n  c. The fan backplane is faulty.",
+                "suggestion_en": [
+                    "1. Replace the fan module that generated the alarm and check whether the alarm is cleared (yes => resolved, no => 2).",
+                    "2. If the server has a fan backplane, replace the fan backplane and check whether the alarm is cleared (yes => resolved, no => 3.",
+                    "3. Contact technical support."
+                ]
+            },
+            "rule": [
+                {"dst_code": "0x8F180215"}
+            ],
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x04000007", "Asserted"]
+            }
+        },
         "AISW_CANN_AMCT_ALL_001": {
             "attribute": {
                 "class": "Software",
