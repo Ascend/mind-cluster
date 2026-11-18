@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
@@ -395,7 +396,7 @@ func TestAllocateRequestPhysicalDevice(t *testing.T) {
 			ps.deepCopyDevice(devices)
 			deviceID := "1"
 			requests.ContainerRequests = []*v1beta1.
-			ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-" + deviceID}}}
+				ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-" + deviceID}}}
 			resp, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(resp, convey.ShouldNotBeNil)
@@ -417,14 +418,14 @@ func TestAllocateRequestVirtualDevice(t *testing.T) {
 		convey.Convey("request more than 1 virtual device", func() {
 			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2, DeviceName: "Ascend910-2c-100-0"}}
 			requests.ContainerRequests = []*v1beta1.
-			ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-0", "Ascend910-2c-100-1"}}}
+				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-0", "Ascend910-2c-100-1"}}}
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("request virtual device not exist", func() {
 			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2, DeviceName: "Ascend910-2c-100-0"}}
 			requests.ContainerRequests = []*v1beta1.
-			ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-1"}}}
+				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-1"}}}
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
@@ -436,7 +437,7 @@ func TestAllocateRequestVirtualDevice(t *testing.T) {
 			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2,
 				DeviceName: api.Ascend910 + "-2c-" + deviceID + "-0"}}
 			requests.ContainerRequests = []*v1beta1.
-			ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-2c-" + deviceID + "-0"}}}
+				ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-2c-" + deviceID + "-0"}}}
 			resp, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(resp, convey.ShouldNotBeNil)
@@ -2250,6 +2251,7 @@ func TestIsJobNameStillInUse(t *testing.T) {
 func TestAllocateWithSoftShareDevice(t *testing.T) {
 	ps := NewPluginServer(api.Ascend910, devices, []string{common.HiAIManagerDevice},
 		device.NewHwAscend910Manager())
+	ps.softShareManager.socketPath = filepath.Join(t.TempDir(), "missing.sock")
 	convey.Convey("test Allocate with soft share device", t, func() {
 		mockGetNPUsFunc := mockGetNPUs()
 		defer mockGetNPUsFunc.Reset()
@@ -2260,9 +2262,11 @@ func TestAllocateWithSoftShareDevice(t *testing.T) {
 				return map[int]int{}, []int{0}, nil
 			})
 		defer mockGetDeviceListID.Reset()
+		var mountedConfigDir string
 		mockMountShareDeviceConfig := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(PluginServer)),
 			"mountShareDeviceConfig", func(_ *PluginServer, _ *v1beta1.ContainerAllocateResponse,
-				_ []int, _ string) {
+				_ []int, dir string) {
+				mountedConfigDir = dir
 			})
 		defer mockMountShareDeviceConfig.Reset()
 		mockSetNPUDeviceMount := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(PluginServer)),
@@ -2281,7 +2285,7 @@ func TestAllocateWithSoftShareDevice(t *testing.T) {
 			{DevicesIDs: []string{api.Ascend910 + "-0"}},
 		}
 
-		convey.Convey("when IsSupportSoftShareDevice is true and UseVolcanoType is true, should call useVolcano", func() {
+		convey.Convey("without a manager socket, Allocate passes the local config directory to the legacy mount", func() {
 			mockParam := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{
 				UseVolcanoType:        true,
 				PresetVDevice:         true,
@@ -2290,17 +2294,19 @@ func TestAllocateWithSoftShareDevice(t *testing.T) {
 			})
 			defer mockParam.Reset()
 
+			const configDir = "/etc/enpu/default.job/0_1"
 			useVolcanoCalled := false
 			mockUseVolcano := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(PluginServer)), "useVolcano",
 				func(_ *PluginServer, _ []string) ([]string, string, error) {
 					useVolcanoCalled = true
-					return []string{api.Ascend910 + "-0"}, "", nil
+					return []string{api.Ascend910 + "-0"}, configDir, nil
 				})
 			defer mockUseVolcano.Reset()
 
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(useVolcanoCalled, convey.ShouldBeTrue)
+			convey.So(mountedConfigDir, convey.ShouldEqual, configDir)
 		})
 
 		convey.Convey("when IsSupportSoftShareDevice is true but UseVolcanoType is false, should not call useVolcano", func() {
