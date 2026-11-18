@@ -29074,6 +29074,966 @@
             },
             "attr_regex": " NPU(?P<npu_id>[0-9])"
         },
+        "0x8F181219": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "PG9电源异常",
+                "description_zh": "标卡、模组：\n以下某路或多路电源轨异常：\na. PERI_D0U0/AIC_D0电源轨异常\nb. PERI_D1U1/AIC_D1电源轨异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PG9 power supply abnormal",
+                "description_en": "Add-in card, module:\nOne or more of the following power rails are abnormal:\na. PERI_D0U0/AIC_D0 power rail abnormal\nb. PERI_D1U1/AIC_D1 power rail abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F181219", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18121A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "PG10电源异常",
+                "description_zh": "标卡、模组：\n以下某路或多路电源轨异常：\na. 1V0_SDS_U0电源轨异常\nb. 1V0_DCO_U0/1V0_DCO_U1电源轨异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PG10 power supply abnormal",
+                "description_en": "Add-in card, module:\nOne or more of the following power rails are abnormal:\na. 1V0_SDS_U0 power rail abnormal\nb. 1V0_DCO_U0/1V0_DCO_U1 power rail abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18121A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C10": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问VDM通路异常告警",
+                "description_zh": "a. VDM损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to VDM path abnormal alarm",
+                "description_en": "a. The VDM is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C10", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C11": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问gemini1通路异常告警",
+                "description_zh": "a. gemini1损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to gemini1 path abnormal alarm",
+                "description_en": "a. The gemini1 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C11", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C12": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问gemini2通路异常告警",
+                "description_zh": "a. gemini2损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to gemini2 path abnormal alarm",
+                "description_en": "a. The gemini2 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C12", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C13": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问gemini3通路异常告警",
+                "description_zh": "a. gemini3损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to gemini3 path abnormal alarm",
+                "description_en": "a. The gemini3 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C13", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C14": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问gemini4通路异常告警",
+                "description_zh": "a. gemini4损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to gemini4 path abnormal alarm",
+                "description_en": "a. The gemini4 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C14", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C15": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问gemini5通路异常告警",
+                "description_zh": "a. gemini5损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to gemini5 path abnormal alarm",
+                "description_en": "a. The gemini5 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C15", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C16": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问VRD1通路异常告警",
+                "description_zh": "a. VRD1损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to VRD1 path abnormal alarm",
+                "description_en": "a. The VRD1 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C16", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C17": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问VRD2通路异常告警",
+                "description_zh": "a. VRD2损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to VRD2 path abnormal alarm",
+                "description_en": "a. The VRD2 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C17", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C18": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问VRD3通路异常告警",
+                "description_zh": "a. VRD3损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to VRD3 path abnormal alarm",
+                "description_en": "a. The VRD3 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C18", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C19": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问VRD4通路异常告警",
+                "description_zh": "a. VRD4损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to VRD4 path abnormal alarm",
+                "description_en": "a. The VRD4 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C19", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C1A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问VRD5通路异常告警",
+                "description_zh": "a. VRD5损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to VRD5 path abnormal alarm",
+                "description_en": "a. The VRD5 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C1A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C1B": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问VRD6通路异常告警",
+                "description_zh": "a. VRD6损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to VRD6 path abnormal alarm",
+                "description_en": "a. The VRD6 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C1B", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C1C": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问gemini6通路异常告警",
+                "description_zh": "a. gemini6损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to gemini6 path abnormal alarm",
+                "description_en": "a. The gemini6 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C1C", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C1E": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问KTA7828_1V0_DCO_U0通路异常告警",
+                "description_zh": "a. ADC1损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to KTA7828_1V0_DCO_U0 path abnormal alarm",
+                "description_en": "a. The ADC1 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C1E", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C1F": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问KTA7828_1V0_DCO_U1通路异常告警",
+                "description_zh": "a. ADC2损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to KTA7828_1V0_DCO_U1 path abnormal alarm",
+                "description_en": "a. The ADC2 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C1F", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C21": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问KTA7828_0V8_REF_DU0通路异常告警",
+                "description_zh": "a. ADC3损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to KTA7828_0V8_REF_DU0 path abnormal alarm",
+                "description_en": "a. The ADC3 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C21", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C22": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问KTA7828_0V8_REF_DU1通路异常告警",
+                "description_zh": "a. ADC4损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to KTA7828_0V8_REF_DU1 path abnormal alarm",
+                "description_en": "a. The ADC4 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C22", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C23": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问KTA7828_1V8_CLK通路异常告警",
+                "description_zh": "a. ADC5损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to KTA7828_1V8_CLK path abnormal alarm",
+                "description_en": "a. The ADC5 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C23", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F184C24": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问KTA7828_1V8_EFUSE通路异常告警",
+                "description_zh": "a. ADC6损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to KTA7828_1V8_EFUSE path abnormal alarm",
+                "description_en": "a. The ADC6 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F184C24", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0X8F184C25": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0x21电源故障相冗余PMBUS访问不通",
+                "description_zh": "0x21电源故障相冗余PMBUS访问不通。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Power supply 0x21 fault: redundant PMBus unreachable",
+                "description_en": "Power supply 0x21 fault: redundant PMBus unreachable.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0X8F184C25", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0X8F184C26": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0x22电源故障相冗余PMBUS访问不通",
+                "description_zh": "0x22电源故障相冗余PMBUS访问不通。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Power supply 0x22 fault: redundant PMBus unreachable",
+                "description_en": "Power supply 0x22 fault: redundant PMBus unreachable.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0X8F184C26", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0X8F184C27": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0x23电源故障相冗余PMBUS访问不通",
+                "description_zh": "0x23电源故障相冗余PMBUS访问不通。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Power supply 0x23 fault: redundant PMBus unreachable",
+                "description_en": "Power supply 0x23 fault: redundant PMBus unreachable.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0X8F184C27", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0X8F184C28": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0x24电源故障相冗余PMBUS访问不通",
+                "description_zh": "0x24电源故障相冗余PMBUS访问不通。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Power supply 0x24 fault: redundant PMBus unreachable",
+                "description_en": "Power supply 0x24 fault: redundant PMBus unreachable.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0X8F184C28", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0X8F184C29": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0x25电源故障相冗余PMBUS访问不通",
+                "description_zh": "0x25电源故障相冗余PMBUS访问不通。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Power supply 0x25 fault: redundant PMBus unreachable",
+                "description_en": "Power supply 0x25 fault: redundant PMBus unreachable.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0X8F184C29", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0X8F184C2A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0x26电源故障相冗余PMBUS访问不通",
+                "description_zh": "0x26电源故障相冗余PMBUS访问不通。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "Power supply 0x26 fault: redundant PMBus unreachable",
+                "description_en": "Power supply 0x26 fault: redundant PMBus unreachable.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0X8F184C2A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A001": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V8_DVDD08_AIC_D0_TEMP数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V8_DVDD08_AIC_D0_TEMP data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A001", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A002": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "1V2_DVDD12_PFM0_3_TEMP数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "1V2_DVDD12_PFM0_3_TEMP data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A002", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A003": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V8_DVDD08_AIC_D1_TEMP数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V8_DVDD08_AIC_D1_TEMP data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A003", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A004": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "1V2_DVDD12_PFM4_7_TEMP数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "1V2_DVDD12_PFM4_7_TEMP data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A004", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A005": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V8_DVDD08_PERI_D0U0_TEMP数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V8_DVDD08_PERI_D0U0_TEMP data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A005", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A006": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V8_DVDD08_PERI_D1U1_TEMP数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V8_DVDD08_PERI_D1U1_TEMP data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A006", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A007": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V8_DVDD08_SIO_TEMP数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V8_DVDD08_SIO_TEMP data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A007", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A008": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V85_DVDD_BUS_D0_TEMP数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V85_DVDD_BUS_D0_TEMP data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A008", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A009": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V5_DVDD05_PFM0_3_TEMP数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V5_DVDD05_PFM0_3_TEMP data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A009", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A00A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V85_DVDD_BUS_D1_TEMP数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V85_DVDD_BUS_D1_TEMP data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A00A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A00B": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V5_DVDD05_PFM4_7_TEMP数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V5_DVDD05_PFM4_7_TEMP data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A00B", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A00C": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "0V75_AVDD075_SDS_U0_TEMP数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "0V75_AVDD075_SDS_U0_TEMP data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A00C", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F19A00D": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "1V0_AVDD10_SDS_U0_TEMP数据转换失败",
+                "description_zh": "数据转换失败。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "1V0_AVDD10_SDS_U0_TEMP data conversion failed",
+                "description_en": "Data conversion failed.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F19A00D", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
         "AISW_CANN_AMCT_ALL_001": {
             "attribute": {
                 "class": "Software",
