@@ -83,6 +83,44 @@ class BMCParser(FileParser):
 class BMCAppDumpParser(BMCParser):
     TARGET_FILE_PATTERNS = "bmc_app_dump_log_path"
     SOURCE_FILE = "BMCAppDumpLog"
+    TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+    def _parse_file(self, file_source: Union[str, LogInfoSaver]):
+        """
+        Parse single bmc log line by line
+        :param file_source: log file path
+        :return: a list of event dict
+        """
+        event_storage = EventStorage()
+        for log_line in self._yield_log(file_source):
+            occur_time = self._filter_log_time(log_line)
+            if not occur_time:
+                continue
+            if self.start_time and occur_time < self.start_time:
+                continue
+            if self.end_time and occur_time > self.end_time:
+                continue
+            event_dict = self.parse_single_line(log_line)
+            if not event_dict:
+                continue
+            self.supplement_common_info(event_dict, file_source, occur_time)
+            event_storage.record_event(event_dict)
+        return event_storage.generate_event_list()
+
+    def _filter_log_time(self, log_line) -> str:
+        """
+        Filter log time
+        :param log_line: log line
+        :return: filtered log time
+        """
+        log_parts = [p.strip() for p in log_line.split('|')]
+        if len(log_parts) <= 1:
+            return ""
+        try:
+            time_obj = datetime.strptime(log_parts[1], self.TIME_FORMAT)
+            return str(time_obj) + ".000000"
+        except ValueError:
+            return ""
 
 
 class BMCDeviceDumpParser(BMCParser):
