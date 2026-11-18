@@ -25,15 +25,16 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"k8s.io/client-go/kubernetes"
 	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 	registerapi "k8s.io/kubelet/pkg/apis/pluginregistration/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/cdi"
@@ -68,8 +69,9 @@ type ubResourceServer struct {
 	cdi             cdi.CDI
 	cdiResourceName string
 	exclMode        bool
-	// k8sClient queries pod info for NPU-based DPU allocation
-	k8sClient *kubernetes.Clientset
+	// useAscendDocker records whether ascend-docker-runtime is enabled on the node,
+	// so RDMA devices can be mounted by ascend-docker-runtime instead of the plugin
+	useAscendDocker bool
 }
 
 // resourcesServerPort implements types.ResourceServerPort interface
@@ -79,7 +81,7 @@ type resourcesServerPort struct {
 
 // NewUbResourceServer returns an initialized UB device server
 func NewUbResourceServer(config *types.UserConfig, devices []types.Device, watcherMode bool,
-	socketSuffix string, useCdi bool, exclMode bool, k8sClient *kubernetes.Clientset) (UbResourceServer, error) {
+	socketSuffix string, useCdi bool, exclMode bool) (UbResourceServer, error) {
 
 	if config.RdmaHcaMax < 0 {
 		return nil, fmt.Errorf("invalid value for rdmaHcaMax < 0: %d", config.RdmaHcaMax)
@@ -124,7 +126,7 @@ func NewUbResourceServer(config *types.UserConfig, devices []types.Device, watch
 		cdi:             cdi.New(),
 		cdiResourceName: config.ResourceName,
 		exclMode:        exclMode,
-		k8sClient:       k8sClient,
+		useAscendDocker: common.UseAscendDocker,
 	}, nil
 }
 
@@ -381,30 +383,25 @@ func (rs *ubResourceServer) ListAndWatch(e *pluginapi.Empty, s pluginapi.DeviceP
 // GetDevicePluginOptions returns plugin options
 func (rs *ubResourceServer) GetDevicePluginOptions(ctx context.Context, e *pluginapi.Empty) (*pluginapi.DevicePluginOptions, error) {
 	return &pluginapi.DevicePluginOptions{
-		PreStartRequired:                false,
-		GetPreferredAllocationAvailable: rs.exclMode,
+		PreStartRequired: false,
 	}, nil
 }
 
 // Allocate allocates UB devices to pods
 func (rs *ubResourceServer) Allocate(ctx context.Context, reqs *pluginapi.AllocateRequest) (*pluginapi.AllocateResponse, error) {
-	// Write lock prevents concurrent annotation updates by allocateByNpu.
-	rs.mutex.Lock()
-	defer rs.mutex.Unlock()
+	// Read lock keeps the allocation consistent with the reported device list.
+	rs.mutex.RLock()
+	defer rs.mutex.RUnlock()
 
 	responses := pluginapi.AllocateResponse{}
 	if rs.exclMode {
-		// Validate devices exist before recording, so a failed Allocate leaves no stale state.
+		// Validate devices exist, then mount exactly the devices kubelet assigned.
 		for _, container := range reqs.ContainerRequests {
 			for _, id := range container.DevicesIDs {
 				if _, ok := rs.deviceSpecByID(id); !ok {
 					return nil, fmt.Errorf("device %q not found in %s devices", id, rs.resourceName)
 				}
 			}
-		}
-		// Record the allocation, then mount exactly the devices kubelet assigned.
-		if err := rs.allocateByNpu(ctx, allRequestedDeviceIDs(reqs)); err != nil {
-			return nil, err
 		}
 		for _, container := range reqs.ContainerRequests {
 			response, err := rs.allocateExclContainer(container)
@@ -422,34 +419,82 @@ func (rs *ubResourceServer) Allocate(ctx context.Context, reqs *pluginapi.Alloca
 	return &responses, nil
 }
 
-// allRequestedDeviceIDs collects the device IDs kubelet assigned to the containers
-// of this Allocate request.
-func allRequestedDeviceIDs(reqs *pluginapi.AllocateRequest) []string {
-	var ids []string
-	for _, container := range reqs.ContainerRequests {
-		ids = append(ids, container.DevicesIDs...)
-	}
-	return ids
-}
-
 // allocateExclContainer allocates the DPU devices for one container in exclusive mode.
 func (rs *ubResourceServer) allocateExclContainer(container *pluginapi.ContainerAllocateRequest) (*pluginapi.ContainerAllocateResponse, error) {
 	response := &pluginapi.ContainerAllocateResponse{Envs: map[string]string{}}
+	deviceSpecs := make([]*pluginapi.DeviceSpec, 0)
+	hcaNames := make([]string, 0, len(container.DevicesIDs))
 	for _, id := range container.DevicesIDs {
 		specs, ok := rs.deviceSpecByID(id)
 		if !ok {
 			return nil, fmt.Errorf("device %q not found in %s devices", id, rs.resourceName)
 		}
-		response.Devices = append(response.Devices, specs...)
+		deviceSpecs = append(deviceSpecs, specs...)
+		name, ok := rs.deviceNameByID(id)
+		if !ok {
+			return nil, fmt.Errorf("failed to get HCA name for device %q", id)
+		}
+		hcaNames = append(hcaNames, name)
 	}
+	rs.setRdmaDeviceMount(response, deviceSpecs, hcaNames)
 	return response, nil
 }
 
 // allocateSharedContainer mounts all UB devices to one container in shared mode
 func (rs *ubResourceServer) allocateSharedContainer() *pluginapi.ContainerAllocateResponse {
 	response := &pluginapi.ContainerAllocateResponse{Envs: map[string]string{}}
-	response.Devices = append(response.Devices, rs.deviceSpec...)
+	hcaNames := make([]string, 0, len(rs.ubDevices))
+	for _, dev := range rs.ubDevices {
+		if ubDev, ok := dev.(types.UbDevice); ok {
+			hcaNames = append(hcaNames, ubDev.GetDeviceName())
+		}
+	}
+	rs.setRdmaDeviceMount(response, rs.deviceSpec, hcaNames)
 	return response
+}
+
+// setRdmaDeviceMount mounts the RDMA devices directly, or delegates the mounting
+// to ascend-docker-runtime via the ASCEND_RDMA_DEVICES environment variable.
+func (rs *ubResourceServer) setRdmaDeviceMount(resp *pluginapi.ContainerAllocateResponse,
+	deviceSpecs []*pluginapi.DeviceSpec, hcaNames []string) {
+	if !rs.useAscendDocker {
+		hwlog.RunLog.Info("device-plugin will use origin mount way")
+		resp.Devices = append(resp.Devices, deviceSpecs...)
+		return
+	}
+	setAscendRdmaDevicesEnv(resp, hcaNames)
+	hwlog.RunLog.Info("device-plugin will use ascend-docker-runtime to mount")
+}
+
+// setAscendRdmaDevicesEnv writes the HCA device names (e.g. hrn5_0) into
+// ASCEND_RDMA_DEVICES, so ascend-docker-runtime mounts them.
+func setAscendRdmaDevicesEnv(resp *pluginapi.ContainerAllocateResponse, hcaNames []string) {
+	resp.Envs[api.AscendRdmaDevicesEnv] = strings.Join(hcaNames, ",")
+	hwlog.RunLog.Infof("allocate resp env: %s=%s", api.AscendRdmaDevicesEnv, resp.Envs[api.AscendRdmaDevicesEnv])
+}
+
+// deviceSpecByID returns the RDMA device specs of the UB device with the given ID.
+func (rs *ubResourceServer) deviceSpecByID(id string) ([]*pluginapi.DeviceSpec, bool) {
+	for _, dev := range rs.ubDevices {
+		if dev.GetName() == id {
+			return dev.GetRdmaSpec(), true
+		}
+	}
+	return nil, false
+}
+
+// deviceNameByID returns the HCA device name of the UB device with the given ID.
+func (rs *ubResourceServer) deviceNameByID(id string) (string, bool) {
+	for _, dev := range rs.ubDevices {
+		if dev.GetName() != id {
+			continue
+		}
+		if ubDev, ok := dev.(types.UbDevice); ok {
+			return ubDev.GetDeviceName(), true
+		}
+		return "", false
+	}
+	return "", false
 }
 
 // PreStartContainer performs pre-start operations on containers (not used for UB devices)
@@ -457,22 +502,12 @@ func (rs *ubResourceServer) PreStartContainer(ctx context.Context, _ *pluginapi.
 	return &pluginapi.PreStartContainerResponse{}, nil
 }
 
-// GetPreferredAllocation returns the preferred DPU device IDs to allocate for each container.
-func (rs *ubResourceServer) GetPreferredAllocation(ctx context.Context, reqs *pluginapi.PreferredAllocationRequest) (*pluginapi.PreferredAllocationResponse, error) {
-	rs.mutex.RLock()
-	defer rs.mutex.RUnlock()
-
-	response := &pluginapi.PreferredAllocationResponse{}
-	for _, req := range reqs.ContainerRequests {
-		ids, err := rs.preferredDeviceIDs(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		response.ContainerResponses = append(response.ContainerResponses, &pluginapi.ContainerPreferredAllocationResponse{
-			DeviceIDs: ids,
-		})
-	}
-	return response, nil
+// GetPreferredAllocation is a stub required by the device plugin API.
+// Preferred allocation is not offered (GetPreferredAllocationAvailable is false),
+// so kubelet selects devices on its own.
+func (rs *ubResourceServer) GetPreferredAllocation(
+	_ context.Context, _ *pluginapi.PreferredAllocationRequest) (*pluginapi.PreferredAllocationResponse, error) {
+	return nil, nil
 }
 
 // gRPC Plugin Registration API implementations (for watch mode)

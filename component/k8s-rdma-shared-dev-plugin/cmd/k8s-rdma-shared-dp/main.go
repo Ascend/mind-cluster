@@ -182,6 +182,14 @@ func checkDeviceResetTimeout() bool {
 	return true
 }
 
+// setUseAscendDocker records whether ascend-docker-runtime is used on the node,
+// indicated by the ASCEND_DOCKER_RUNTIME environment variable set to "True".
+func setUseAscendDocker() {
+	common.UseAscendDocker = os.Getenv(api.AscendDockerRuntimeEnv) == "True"
+	hwlog.RunLog.Infof("useAscendDocker: %v", common.UseAscendDocker)
+
+}
+
 func main() {
 	// Initialize flags first - this must be done before flag.Parse()
 	initFlags()
@@ -218,6 +226,9 @@ func main() {
 	}
 
 	hwlog.RunLog.Infof("Starting K8s RDMA Shared Device Plugin version=%s", version)
+
+	// Check whether ascend-docker-runtime is used on the node
+	setUseAscendDocker()
 
 	// First, read the config file to determine which device types to enable
 	hwlog.RunLog.Info("Reading configuration to determine device types")
@@ -268,7 +279,7 @@ func main() {
 	if enableUb {
 		hwlog.RunLog.Infof("UB device mode: excl=%v", ubExclMode)
 
-		// Create k8s client for NPU-based device allocation in exclusive mode
+		// Create k8s client for DPU resource annotation and fault reporting
 		k8sClient, err := createK8sClient()
 		if err != nil {
 			hwlog.RunLog.Errorf("Failed to create k8s client: %v", err)
@@ -284,7 +295,7 @@ func main() {
 		utils.InitNpuNicMapping(ctx, dcMgr)
 
 		rm, stopPeriodicUpdate = initAndStartDevices("UB", func() types.ResourceManager {
-			return ub_device.NewUbResourceManager(configFilePath, useCdi, ubExclMode, k8sClient)
+			return ub_device.NewUbResourceManager(configFilePath, useCdi, ubExclMode)
 		})
 
 		if ubRm, ok := rm.(ub_device.UbResourceManager); ok {

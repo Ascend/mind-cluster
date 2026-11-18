@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
 
 	ver "ascend-common/common-utils/version"
 	"github.com/containernetworking/cni/pkg/skel"
@@ -340,7 +341,8 @@ func applyHostAddrs(containerNs ns.NetNS, ifName string, ha *hostAddrs) error {
 			return fmt.Errorf("failed to find %q in container ns: %v", ifName, err)
 		}
 		for i := range ha.addrs {
-			// Link-local addrs are re-derived from the MAC; adding them fails (EPERM).
+			// Link-local addrs are re-derived from the NIC MAC by the kernel when
+			// the link comes up in the new netns; no need to replay them.
 			if ha.addrs[i].IP.IsLinkLocalUnicast() {
 				continue
 			}
@@ -349,6 +351,12 @@ func applyHostAddrs(containerNs ns.NetNS, ifName string, ha *hostAddrs) error {
 			}
 		}
 		for i := range ha.routes {
+			// Kernel-derived routes are auto-recreated by the kernel once the
+			// link is up and the addrs above are re-added; replaying them is
+			// unnecessary and not idempotent.
+			if isKernelDerivedRoute(ha.routes[i]) {
+				continue
+			}
 			// Point the route at the moved interface and re-add it; EEXIST means
 			// the route is already present, so it can be safely skipped.
 			ha.routes[i].LinkIndex = link.Attrs().Index
@@ -358,6 +366,18 @@ func applyHostAddrs(containerNs ns.NetNS, ifName string, ha *hostAddrs) error {
 		}
 		return nil
 	})
+}
+
+// isKernelDerivedRoute reports whether the route is recreated by the kernel
+// itself after AddrAdd in the new netns (proto kernel connected routes and
+// link-local autoconf); such routes must not be replayed manually. Routes from
+// RA, DHCP or admin-added static config are NOT rebuilt in the new netns and
+// are replayed to keep the container reachable.
+func isKernelDerivedRoute(r netlink.Route) bool {
+	if r.Protocol == unix.RTPROT_KERNEL {
+		return true
+	}
+	return r.Dst != nil && r.Dst.IP.IsLinkLocalUnicast()
 }
 
 // cmdAddUB mounts the UB devices into the container netns.
@@ -468,8 +488,8 @@ func setupUBDevice(cfg *NetConf, args *skel.CmdArgs, containerNs ns.NetNS, devic
 		}
 	}
 
-	// Keep the host interface name inside the container namespace.
-	contDev, err := moveLinkIn(hostDev, containerNs, hostDev.Attrs().Name)
+	// The interface is renamed to the name requested by the runtime.
+	contDev, err := moveLinkIn(hostDev, containerNs, args.IfName)
 	if err != nil {
 		return fmt.Errorf("failed to move link %v", err)
 	}
@@ -532,7 +552,9 @@ func applyInheritedAddrs(containerNs ns.NetNS, iface *current.Interface, ha *hos
 	return nil
 }
 
-// cmdDelUB moves the UB interfaces (host names, not args.IfName) back to host.
+// cmdDelUB moves the UB interface back to the host netns. ADD renamed the
+// interface to args.IfName, so it is located by that name exactly like the
+// non-UB path; the host name is restored from the alias set at ADD time.
 func cmdDelUB(args *skel.CmdArgs, cfg *NetConf) error {
 	containerNs, err := ns.GetNS(args.Netns)
 	if err != nil {
@@ -546,45 +568,25 @@ func cmdDelUB(args *skel.CmdArgs, cfg *NetConf) error {
 		}
 	}
 
-	// Interfaces keep their host names, so move out every UB-owned one.
-	ifNames, err := ubInterfaceNamesInNetns(containerNs)
-	if err != nil {
-		return err
-	}
-	for _, ifName := range ifNames {
-		if err := moveLinkOut(containerNs, ifName); err != nil {
-			return err
+	// DEL may be replayed after partial cleanup; a missing interface means
+	// the work is already done, so succeed instead of failing.
+	missing := false
+	err = containerNs.Do(func(_ ns.NetNS) error {
+		_, lerr := netlinksafe.LinkByName(args.IfName)
+		if _, ok := lerr.(netlink.LinkNotFoundError); ok {
+			missing = true
+			return nil
 		}
-	}
-	return nil
-}
-
-// ubInterfaceNamesInNetns lists the UB-owned interfaces in a namespace.
-func ubInterfaceNamesInNetns(containerNs ns.NetNS) ([]string, error) {
-	var names []string
-	err := containerNs.Do(func(_ ns.NetNS) error {
-		links, err := netlink.LinkList()
-		if err != nil {
-			return err
-		}
-		for _, l := range links {
-			if isUbNetdev(l.Attrs().Name) {
-				names = append(names, l.Attrs().Name)
-			}
-		}
-		return nil
+		return lerr
 	})
-	return names, err
-}
-
-// isUbNetdev reports whether a netdev's sysfs device link points into
-// /sys/bus/ub/devices (raw target; EvalSymlinks would break the match).
-func isUbNetdev(ifName string) bool {
-	target, err := os.Readlink(filepath.Join("/sys/class/net", ifName, "device"))
 	if err != nil {
-		return false
+		return fmt.Errorf("failed to look up %q in container ns: %v", args.IfName, err)
 	}
-	return strings.Contains(target, "/bus/ub/devices/")
+	if missing {
+		return nil
+	}
+
+	return moveLinkOut(containerNs, args.IfName)
 }
 
 func moveLinkIn(hostDev netlink.Link, containerNs ns.NetNS, containerIfName string) (netlink.Link, error) {

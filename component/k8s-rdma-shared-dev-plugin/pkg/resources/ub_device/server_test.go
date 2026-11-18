@@ -27,6 +27,7 @@ import (
 	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 	registerapi "k8s.io/kubelet/pkg/apis/pluginregistration/v1"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
@@ -88,7 +89,7 @@ func TestNewUbResourceServerInvalidRdmaHcaMax(t *testing.T) {
 	config := &types.UserConfig{RdmaHcaMax: -1}
 
 	convey.Convey("When rdmaHcaMax is negative", t, func() {
-		_, err := NewUbResourceServer(config, nil, false, "sock", false, false, nil)
+		_, err := NewUbResourceServer(config, nil, false, "sock", false, false)
 		convey.Convey("Then an error should be returned", func() {
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(err.Error(), convey.ShouldContainSubstring, "rdmaHcaMax")
@@ -100,7 +101,7 @@ func TestNewUbResourceServerEmptyResourcePrefix(t *testing.T) {
 	config := &types.UserConfig{RdmaHcaMax: 100, ResourcePrefix: ""}
 
 	convey.Convey("When resourcePrefix is empty", t, func() {
-		_, err := NewUbResourceServer(config, nil, false, "sock", false, false, nil)
+		_, err := NewUbResourceServer(config, nil, false, "sock", false, false)
 		convey.Convey("Then an error should be returned", func() {
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(err.Error(), convey.ShouldContainSubstring, "resourcePrefix")
@@ -125,10 +126,38 @@ func TestNewUbResourceServerSuccess(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("When valid config is provided", t, func() {
-		rs, err := NewUbResourceServer(config, devices, false, "sock", false, false, nil)
+		rs, err := NewUbResourceServer(config, devices, false, "sock", false, false)
 		convey.Convey("Then server should be created successfully", func() {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(rs, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestNewUbResourceServerUseAscendDocker(t *testing.T) {
+	config := &types.UserConfig{
+		ResourceName:   "ub_dev",
+		ResourcePrefix: "huawei.com",
+		RdmaHcaMax:     100,
+	}
+	devices := []types.Device{&ubDevice{ubID: "ub0", ifName: "enp0s1"}}
+
+	patches := gomonkey.ApplyFunc(getUbDevicesSpec,
+		func(devices []types.Device) []*pluginapi.DeviceSpec {
+			return []*pluginapi.DeviceSpec{
+				{HostPath: "/dev/ub0", ContainerPath: "/dev/ub0", Permissions: "rw"},
+			}
+		})
+	defer patches.Reset()
+
+	convey.Convey("When ascend-docker-runtime is enabled", t, func() {
+		common.UseAscendDocker = true
+		defer func() { common.UseAscendDocker = false }()
+
+		rs, err := NewUbResourceServer(config, devices, false, "sock", false, false)
+		convey.Convey("Then the server should record the ascend-docker-runtime flag", func() {
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(rs.(*ubResourceServer).useAscendDocker, convey.ShouldBeTrue)
 		})
 	})
 }
@@ -147,7 +176,7 @@ func TestNewUbResourceServerWatchMode(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("When watchMode is true", t, func() {
-		rs, err := NewUbResourceServer(config, nil, true, "sock", false, false, nil)
+		rs, err := NewUbResourceServer(config, nil, true, "sock", false, false)
 		convey.Convey("Then server should be created in watch mode", func() {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(rs, convey.ShouldNotBeNil)
@@ -169,7 +198,7 @@ func TestNewUbResourceServerWithCDI(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("When useCdi is true", t, func() {
-		rs, err := NewUbResourceServer(config, nil, false, "sock", true, false, nil)
+		rs, err := NewUbResourceServer(config, nil, false, "sock", true, false)
 		convey.Convey("Then server should be created with CDI enabled", func() {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(rs, convey.ShouldNotBeNil)
@@ -207,9 +236,9 @@ func TestUbResourceServerGetPreferredAllocation(t *testing.T) {
 
 	convey.Convey("When GetPreferredAllocation is called", t, func() {
 		resp, err := rs.GetPreferredAllocation(context.Background(), &pluginapi.PreferredAllocationRequest{})
-		convey.Convey("Then empty response should be returned", func() {
+		convey.Convey("Then no preference should be offered", func() {
 			convey.So(err, convey.ShouldBeNil)
-			convey.So(resp, convey.ShouldNotBeNil)
+			convey.So(resp, convey.ShouldBeNil)
 		})
 	})
 }
@@ -562,12 +591,6 @@ func TestUbResourceServerAllocateExclMode(t *testing.T) {
 		}},
 	}
 
-	patches := gomonkey.ApplyPrivateMethod((*ubResourceServer)(nil), "allocateByNpu",
-		func(rs *ubResourceServer, ctx context.Context, deviceIDs []string) error {
-			return nil
-		})
-	defer patches.Reset()
-
 	convey.Convey("When Allocate is called in exclusive mode", t, func() {
 		reqs := &pluginapi.AllocateRequest{
 			ContainerRequests: []*pluginapi.ContainerAllocateRequest{
@@ -596,12 +619,6 @@ func TestUbResourceServerAllocateExclModeMultipleDevices(t *testing.T) {
 		}},
 	}
 
-	patches := gomonkey.ApplyPrivateMethod((*ubResourceServer)(nil), "allocateByNpu",
-		func(rs *ubResourceServer, ctx context.Context, deviceIDs []string) error {
-			return nil
-		})
-	defer patches.Reset()
-
 	convey.Convey("When Allocate requests multiple devices in exclusive mode", t, func() {
 		reqs := &pluginapi.AllocateRequest{
 			ContainerRequests: []*pluginapi.ContainerAllocateRequest{
@@ -617,7 +634,7 @@ func TestUbResourceServerAllocateExclModeMultipleDevices(t *testing.T) {
 	})
 }
 
-func TestUbResourceServerAllocateExclModeNoFallback(t *testing.T) {
+func TestUbResourceServerAllocateExclModeUnknownDevice(t *testing.T) {
 	rs := newTestUbServer()
 	rs.exclMode = true
 	rs.ubDevices = []types.Device{
@@ -626,23 +643,77 @@ func TestUbResourceServerAllocateExclModeNoFallback(t *testing.T) {
 		}},
 	}
 
-	patches := gomonkey.ApplyPrivateMethod((*ubResourceServer)(nil), "allocateByNpu",
-		func(rs *ubResourceServer, ctx context.Context, deviceIDs []string) error {
-			return errors.New("NPU mapping failed")
-		})
-	defer patches.Reset()
-
-	convey.Convey("When NPU mapping allocation fails in exclusive mode", t, func() {
+	convey.Convey("When Allocate requests an unknown device in exclusive mode", t, func() {
 		reqs := &pluginapi.AllocateRequest{
 			ContainerRequests: []*pluginapi.ContainerAllocateRequest{
-				{DevicesIDs: []string{"ub0"}},
+				{DevicesIDs: []string{"ub9"}},
 			},
 		}
 		resp, err := rs.Allocate(context.Background(), reqs)
-		convey.Convey("Then Allocate should fail without fallback to device IDs", func() {
+		convey.Convey("Then Allocate should fail", func() {
 			convey.So(err, convey.ShouldNotBeNil)
-			convey.So(err.Error(), convey.ShouldContainSubstring, "NPU mapping failed")
+			convey.So(err.Error(), convey.ShouldContainSubstring, "not found")
 			convey.So(resp, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestUbResourceServerAllocateSharedModeWithAscendDocker(t *testing.T) {
+	rs := newTestUbServer()
+	rs.useAscendDocker = true
+	rs.deviceSpec = []*pluginapi.DeviceSpec{
+		{HostPath: "/dev/infiniband/rdma_cm", ContainerPath: "/dev/infiniband/rdma_cm", Permissions: "rwm"},
+		{HostPath: "/dev/infiniband/uverbs0", ContainerPath: "/dev/infiniband/uverbs0", Permissions: "rwm"},
+		{HostPath: "/dev/infiniband/uverbs1", ContainerPath: "/dev/infiniband/uverbs1", Permissions: "rwm"},
+	}
+	rs.ubDevices = []types.Device{
+		&ubDevice{ubID: "ub0", deviceName: "hrn5_0"},
+		&ubDevice{ubID: "ub1", deviceName: "hrn5_1"},
+	}
+
+	convey.Convey("When Allocate is called in shared mode with ascend-docker-runtime", t, func() {
+		reqs := &pluginapi.AllocateRequest{
+			ContainerRequests: []*pluginapi.ContainerAllocateRequest{{}, {}},
+		}
+		resp, err := rs.Allocate(context.Background(), reqs)
+		convey.Convey("Then all HCA device names should be written to ASCEND_RDMA_DEVICES", func() {
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(resp.ContainerResponses), convey.ShouldEqual, 2)
+			for _, cr := range resp.ContainerResponses {
+				convey.So(len(cr.Devices), convey.ShouldEqual, 0)
+				convey.So(cr.Envs[api.AscendRdmaDevicesEnv], convey.ShouldEqual, "hrn5_0,hrn5_1")
+			}
+		})
+	})
+}
+
+func TestUbResourceServerAllocateExclModeWithAscendDocker(t *testing.T) {
+	rs := newTestUbServer()
+	rs.exclMode = true
+	rs.useAscendDocker = true
+	rs.ubDevices = []types.Device{
+		&ubDevice{ubID: "ub0", deviceName: "hrn5_0", rdmaSpec: []*pluginapi.DeviceSpec{
+			{HostPath: "/dev/infiniband/rdma_cm", ContainerPath: "/dev/infiniband/rdma_cm", Permissions: "rwm"},
+			{HostPath: "/dev/infiniband/uverbs0", ContainerPath: "/dev/infiniband/uverbs0", Permissions: "rwm"},
+		}},
+		&ubDevice{ubID: "ub1", deviceName: "hrn5_1", rdmaSpec: []*pluginapi.DeviceSpec{
+			{HostPath: "/dev/infiniband/rdma_cm", ContainerPath: "/dev/infiniband/rdma_cm", Permissions: "rwm"},
+			{HostPath: "/dev/infiniband/uverbs1", ContainerPath: "/dev/infiniband/uverbs1", Permissions: "rwm"},
+		}},
+	}
+
+	convey.Convey("When Allocate is called in exclusive mode with ascend-docker-runtime", t, func() {
+		reqs := &pluginapi.AllocateRequest{
+			ContainerRequests: []*pluginapi.ContainerAllocateRequest{
+				{DevicesIDs: []string{"ub0", "ub1"}},
+			},
+		}
+		resp, err := rs.Allocate(context.Background(), reqs)
+		convey.Convey("Then only requested HCA device names should be written to ASCEND_RDMA_DEVICES", func() {
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(resp.ContainerResponses), convey.ShouldEqual, 1)
+			convey.So(len(resp.ContainerResponses[0].Devices), convey.ShouldEqual, 0)
+			convey.So(resp.ContainerResponses[0].Envs[api.AscendRdmaDevicesEnv], convey.ShouldEqual, "hrn5_0,hrn5_1")
 		})
 	})
 }
@@ -665,7 +736,7 @@ func TestNewUbResourceServerExclMode(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("When valid config is provided with exclusive mode", t, func() {
-		rs, err := NewUbResourceServer(config, devices, false, "sock", false, true, nil)
+		rs, err := NewUbResourceServer(config, devices, false, "sock", false, true)
 		convey.Convey("Then server should be created with exclusive devices", func() {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(rs, convey.ShouldNotBeNil)

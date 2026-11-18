@@ -32,6 +32,7 @@ import (
 	"github.com/containernetworking/plugins/pkg/netlinksafe"
 	"github.com/containernetworking/plugins/pkg/ns"
 	"github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
 )
 
 func newFakeUBBus(t *testing.T, devs map[string]string) string {
@@ -407,13 +408,6 @@ func TestValidateCniContainerInterface(t *testing.T) {
 	intf = current.Interface{Name: "definitely-not-a-real-iface-xyz", Sandbox: "netns1"}
 	if err := validateCniContainerInterface(intf); err == nil {
 		t.Fatal("expected an error for a non-existent interface")
-	}
-}
-
-// TestIsUbNetdev verifies that an unresolvable name is not a UB device.
-func TestIsUbNetdev(t *testing.T) {
-	if isUbNetdev("") {
-		t.Fatal("expected false for an unresolvable interface name")
 	}
 }
 
@@ -846,14 +840,6 @@ func TestApplyInheritedAddrsError(t *testing.T) {
 	}
 }
 
-// TestUbInterfaceNamesInNetns verifies listing UB-owned interfaces in a namespace.
-func TestUbInterfaceNamesInNetns(t *testing.T) {
-	fake := &fakeNetNS{}
-	if _, err := ubInterfaceNamesInNetns(fake); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
 // TestPrintLink verifies that a link is rendered into a result and printed.
 func TestPrintLink(t *testing.T) {
 	p := gomonkey.NewPatches()
@@ -1133,6 +1119,40 @@ func TestCmdAddUBSuccess(t *testing.T) {
 	}
 }
 
+// TestCmdAddUBIfNameRename verifies the container-side interface is renamed
+// to the name requested by the runtime (args.IfName).
+func TestCmdAddUBIfNameRename(t *testing.T) {
+	orig := sysBusUb
+	t.Cleanup(func() { sysBusUb = orig })
+	sysBusUb = newFakeUBBus(t, map[string]string{"00015": "ens0f0"})
+
+	dummy := &netlink.Dummy{LinkAttrs: netlink.LinkAttrs{Name: "ens0f0", HardwareAddr: net.HardwareAddr{0x02, 0, 0, 0, 0, 1}}}
+	p := stubNetlinkFlow(dummy)
+	defer p.Reset()
+	p.ApplyFunc(ns.GetNS, func(_ string) (ns.NetNS, error) { return &fakeNetNS{}, nil })
+	p.ApplyFunc(ipam.ExecAdd, func(_ string, _ []byte) (types.Result, error) {
+		return &current.Result{CNIVersion: "1.0.0", IPs: []*current.IPConfig{{
+			Interface: current.Int(0),
+			Address:   net.IPNet{IP: net.IPv4(10, 0, 0, 2), Mask: net.CIDRMask(24, 32)},
+		}}}, nil
+	})
+	p.ApplyFunc(ipam.ConfigureIface, func(_ string, _ *current.Result) error { return nil })
+	var renamedTo string
+	p.ApplyFunc(netlink.LinkSetName, func(_ netlink.Link, name string) error {
+		if renamedTo == "" {
+			renamedTo = name
+		}
+		return nil
+	})
+	args := &skel.CmdArgs{IfName: "net1", Netns: "/fake/netns", StdinData: []byte(`{"cniVersion":"0.3.1","name":"ub","type":"ub-host-device","ubMode":true,"device":"ens0f0","ipam":{"type":"host-local"}}`)}
+	if err := cmdAdd(args); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if renamedTo != "net1" {
+		t.Fatalf("expected rename to %q, got %q", "net1", renamedTo)
+	}
+}
+
 // TestCmdDelNonUBWithIPAMSuccess verifies the full non-UB cmdDel flow with IPAM.
 func TestCmdDelNonUBWithIPAMSuccess(t *testing.T) {
 	dummy := &netlink.Dummy{LinkAttrs: netlink.LinkAttrs{Name: "eth0", Alias: "eth0", HardwareAddr: net.HardwareAddr{0x02, 0, 0, 0, 0, 1}}}
@@ -1156,9 +1176,22 @@ func TestCmdDelUBSuccess(t *testing.T) {
 	defer p.Reset()
 	p.ApplyFunc(ns.GetNS, func(_ string) (ns.NetNS, error) { return &fakeNetNS{}, nil })
 	p.ApplyFunc(ipam.ExecDel, func(_ string, _ []byte) error { return nil })
-	p.ApplyFunc(netlink.LinkList, func() ([]netlink.Link, error) { return []netlink.Link{dummy}, nil })
-	p.ApplyFunc(isUbNetdev, func(string) bool { return true })
 	args := &skel.CmdArgs{IfName: "eth0", Netns: "/fake/netns", StdinData: []byte(`{"cniVersion":"0.3.1","name":"ub","type":"ub-host-device","ubMode":true,"device":"eth0","ipam":{"type":"host-local"}}`)}
+	if err := cmdDel(args); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// TestCmdDelUBIdempotent verifies that a replayed UB cmdDel on a netns where
+// the interface is already gone is a no-op.
+func TestCmdDelUBIdempotent(t *testing.T) {
+	p := gomonkey.NewPatches()
+	defer p.Reset()
+	p.ApplyFunc(ns.GetNS, func(_ string) (ns.NetNS, error) { return &fakeNetNS{}, nil })
+	p.ApplyFunc(netlinksafe.LinkByName, func(_ string) (netlink.Link, error) {
+		return nil, netlink.LinkNotFoundError{}
+	})
+	args := &skel.CmdArgs{IfName: "net1", Netns: "/fake/netns", StdinData: []byte(`{"cniVersion":"0.3.1","name":"ub","type":"ub-host-device","ubMode":true,"device":"ens0f0","inheritHostIP":true}`)}
 	if err := cmdDel(args); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -1178,5 +1211,34 @@ func TestCmdCheckNonDPDKSuccess(t *testing.T) {
 	args := &skel.CmdArgs{IfName: "eth0", Netns: "/fake/netns", StdinData: []byte(`{"cniVersion":"0.3.1","name":"ub","type":"ub-host-device","device":"eth0","ipam":{"type":"host-local"},` + prev + `}`)}
 	if err := cmdCheck(args); err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// TestIsKernelDerivedRoute verifies kernel-derived routes are detected for replay skip.
+func TestIsKernelDerivedRoute(t *testing.T) {
+	fe80Net := &net.IPNet{IP: net.ParseIP("fe80::"), Mask: net.CIDRMask(64, 128)}
+	llV4Net := &net.IPNet{IP: net.IPv4(169, 254, 0, 0), Mask: net.CIDRMask(16, 32)}
+	globalV6Net := &net.IPNet{IP: net.ParseIP("2001:db8::"), Mask: net.CIDRMask(64, 128)}
+	subnetV4Net := &net.IPNet{IP: net.IPv4(10, 0, 0, 0), Mask: net.CIDRMask(24, 32)}
+	cases := []struct {
+		name  string
+		route netlink.Route
+		want  bool
+	}{
+		{"v6 link-local proto kernel", netlink.Route{Dst: fe80Net, Protocol: unix.RTPROT_KERNEL, Scope: netlink.SCOPE_LINK}, true},
+		{"v6 link-local unspecified proto", netlink.Route{Dst: fe80Net}, true},
+		{"v4 link-local scope link", netlink.Route{Dst: llV4Net, Scope: netlink.SCOPE_LINK}, true},
+		{"v4 connected route", netlink.Route{Dst: subnetV4Net, Protocol: unix.RTPROT_KERNEL, Scope: netlink.SCOPE_LINK}, true},
+		{"ra autoconf route", netlink.Route{Dst: globalV6Net, Protocol: unix.RTPROT_RA}, false},
+		{"dhcp default route", netlink.Route{Protocol: unix.RTPROT_DHCP, Scope: netlink.SCOPE_UNIVERSE}, false},
+		{"dhcp subnet route", netlink.Route{Dst: subnetV4Net, Protocol: unix.RTPROT_DHCP}, false},
+		{"boot scope link static route", netlink.Route{Dst: subnetV4Net, Protocol: unix.RTPROT_BOOT, Scope: netlink.SCOPE_LINK}, false},
+		{"static default route", netlink.Route{Protocol: unix.RTPROT_BOOT, Scope: netlink.SCOPE_UNIVERSE}, false},
+		{"static subnet route", netlink.Route{Dst: subnetV4Net, Protocol: unix.RTPROT_STATIC, Scope: netlink.SCOPE_UNIVERSE}, false},
+	}
+	for _, tc := range cases {
+		if got := isKernelDerivedRoute(tc.route); got != tc.want {
+			t.Errorf("%s: isKernelDerivedRoute = %v, want %v", tc.name, got, tc.want)
+		}
 	}
 }
