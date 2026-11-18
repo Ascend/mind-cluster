@@ -402,7 +402,7 @@ faultCode.json：配置参数面光链路成员端口故障的故障级别。
 ### （可选）参数面光链路成员端口故障<a name="zh-cn_topic_0000002479387566_section_custom_opticalportfaultlevel"></a>
 
 若用户需要对参数面光链路成员端口故障后的NPU进行放行或其他操作，可参考[使用faultCode.json配置故障级别](./03_chip_faults.md#zh-cn_topic_0000001951258609_section112139052513)修改此故障码的故障级别，修改后的mindx-dl-fault-config示例如下：
-自定义时需对配置的产品形态进行区分，当Atlas 850E超节点、Atlas 850超节点、Atlas 650E服务器、Atlas 650服务器的出UBoE口故障时，配置110001024和110000002；当为Atlas 950 SuperPoD超节点及其他产品形态时，配置020001002和020000002。
+自定义时需对配置的产品形态进行区分，当Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器的出UBoE口故障时，配置110001024和110000002；当为Atlas 950 SuperPoD液冷超节点及其他产品形态时，配置020001002和020000002。
 
 ```json
    ...

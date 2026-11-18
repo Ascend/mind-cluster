@@ -4,13 +4,13 @@
 
 **MindCluster集群调度组件关键特性**
 
-- **断点续训与故障恢复能力增强**：支持DPU故障与DPU亚健康触发断点续训，支持RL场景实例级恢复。Atlas 950 SuperPoD超节点支持UB网络故障进程级在线恢复。
+- **断点续训与故障恢复能力增强**：支持DPU故障与DPU亚健康触发断点续训，支持RL场景实例级恢复。Atlas 950 SuperPoD液冷超节点支持UB网络故障进程级在线恢复。
 - **推理高可用增强**：支持弹性伸缩复合指标定义；支持弹性扩缩容时使能容器快照；支持推理任务缩卡、缩Pod恢复。
-- **调度与设备管理**：支持任务调度忽略RoCE网络健康状态；支持节点内的通用亲和性调度与跨迭代混合调度。支持Atlas 950 SuperPoD Flex超节点亲和性调度。
+- **调度与设备管理**：支持任务调度忽略RoCE网络健康状态；支持节点内的通用亲和性调度与跨迭代混合调度。支持Atlas 950 SuperPoD Flex液冷超节点亲和性调度。
 - **生态版本适配**：支持Kubernetes 1.36版本和Volcano 1.15版本。
 - **运行时能力扩展**：Ascend Docker Runtime新增支持CRI-O，支持挂载UMDK和UB驱动用户态文件。
 - **可观测性增强**：新增DPU Exporter组件，支持1825指标采集；NPU Exporter支持上报可用芯片数量；Ascend Device Plugin支持上报设备NUMA信息。
-- **机型适配**：适配Atlas 950 SuperPoD Flex机型。
+- **机型适配**：适配Atlas 950 SuperPoD Flex液冷超节点。
 
 **MindCluster Ascend FaultDiag关键特性**
 
@@ -359,10 +359,10 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 **1、断点续训与故障恢复**
 
-- Atlas 950 SuperPoD超节点支持DPU故障触发断点续训。
-- Atlas 950 SuperPoD超节点支持DPU亚健康可配置策略主动触发断点续训。
+- Atlas 950 SuperPoD液冷超节点支持DPU故障触发断点续训。
+- Atlas 950 SuperPoD液冷超节点支持DPU亚健康可配置策略主动触发断点续训。
 - Atlas 900 A3 SuperPoD超节点支持RL场景实例级恢复。
-- Atlas 950 SuperPoD超节点支持UB网络故障进程级在线恢复。
+- Atlas 950 SuperPoD液冷超节点支持UB网络故障进程级在线恢复。
 
 **2、推理高可靠**
 
@@ -372,9 +372,9 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 **3、可靠性与健壮性**
 
-- 完成Atlas 950 SuperPod Flex的Job重调度、Pod重调度、进程级重调度、进程级在线恢复可靠性能力验证。
-- 完成Atlas 950 SuperPod Flex的降lane等亚健康故障主动隔离节点可靠性能力验证。
-- 支持Atlas 850E超节点、Atlas 850超节点、Atlas 650E服务器、Atlas 650服务器、Atlas 350加速卡双机一体机自愈型故障100%自愈。
+- 完成Atlas 950 SuperPoD Flex液冷超节点的Job重调度、Pod重调度、进程级重调度、进程级在线恢复可靠性能力验证。
+- 完成Atlas 950 SuperPoD Flex液冷超节点的降lane等亚健康故障主动隔离节点可靠性能力验证。
+- 支持Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器、Atlas 350加速卡双机一体机自愈型故障100%自愈。
 
 **4、调度**
 
@@ -384,7 +384,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 - 支持Volcano 1.15版本。
 - job-summary中的ranktable支持<term>Ascend 950PR&950DT系列产品</term>。
 - 支持节点内的通用亲和性调度与跨迭代混合调度。
-- 支持Atlas 950 SuperPoD Flex超节点亲和性调度。
+- 支持Atlas 950 SuperPoD Flex液冷超节点亲和性调度。
 - 亲和性调度支持Pod类型。
 - 提供硬件基础能力标签。
 - Infer Operator支持自动配置实例亲和性。
@@ -411,7 +411,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 **8、机型适配**
 
-适配Atlas 950 SuperPoD Flex机型。
+适配Atlas 950 SuperPoD Flex液冷超节点。
 
 **9、架构优化**
 
@@ -427,7 +427,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 **1、日志诊断工具**
 
 - 基于Cqe error status错误类型并结合日志细化、增强UB链路故障诊断能力。
-- 新增支持Atlas 950 SuperPoD Flex故障诊断。
+- 新增支持Atlas 950 SuperPoD Flex液冷超节点故障诊断。
 
 **2、链路诊断工具**
 

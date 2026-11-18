@@ -25,8 +25,8 @@
 |metadata.labels['ring-controller.atlas']|字符串 (string)|-|用于区分任务使用的芯片的类型。<ul><li><term>Atlas A2训练系列产品</term>、A200T A3 Box8超节点服务器、Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器取值为：ascend-{xxx}b</li><li>Atlas 800训练服务器，服务器（插Atlas 300T训练卡）取值为：ascend-910</li><li>（可选）<term>Ascend 950PR&950DT系列产品</term>取值为：ascend-npu</li></ul>|
 |metadata.labels['podgroup-sched-enable']|字符串 (string)|-|<p>仅在集群使用openFuyao定制Kubernetes和volcano-ext组件场景下配置。</p><ul><li>取值配置为字符串"true"时，表示开启批量调度功能。</li><li>取值配置为其他字符串时，表示批量调度功能不生效，使用普通调度。</li></ul><p>若不配置该参数，表示批量调度功能不生效，使用普通调度。</p><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>该参数只支持使用Volcano调度器的整卡调度特性。</li><li>仅支持在Atlas 900 A3 SuperPoD超节点和Atlas 800T A3超节点服务器中使用本参数。</li></ul></div>|
 |metadata.labels['tor-affinity']|字符串 (string)|-|<p>默认值为null，表示不使用交换机亲和性调度。</p><ul><li>large-model-schema：大模型任务或填充任务</li><li>normal-schema：普通任务</li><li>null：不使用交换机亲和性调度</li></ul><span class="notetitle">[!NOTE] 说明</span><div class="notebody">用户需要根据任务副本数，选择任务类型。任务副本数小于4为填充任务。任务副本数大于或等于4为大模型任务。普通任务不限制任务副本数。</div><p>用户需要根据任务类型进行配置。</p><ul><li>交换机亲和性调度1.0版本支持<term>Atlas训练系列产品</term>和<term>Atlas A2训练系列产品</term>；支持PyTorch和MindSpore框架。</li><li>交换机亲和性调度2.0版本支持<term>Atlas A2训练系列产品</term>；支持PyTorch框架。</li><li>只支持整卡进行交换机亲和性调度，不支持静态vNPU进行交换机亲和性调度。</li></ul>|
-|metadata.annotations['sp-block']|字符串 (string)|-|<p>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。若用户未指定该字段，调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</p><ul><li>单机时需要和任务请求的芯片数量一致。</li><li>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</li></ul><p>详细说明请参见[灵衢总线设备节点网络说明](../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod超节点)。</p><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>仅支持在Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器、Atlas 800I A3超节点服务器、Atlas 850E超节点、Atlas 850超节点、Atlas 950 SuperPoD超节点、Atlas 950 SuperPoD Flex中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：[任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败](https://gitcode.com/Ascend/mind-cluster/issues/377)</li></ul></div>|
-|metadata.annotations['ra-block']|字符串 (string)|-|<p>框亲和性调度的标识符。指定ra-block字段，在支持动态配比的前提下，单框64卡被分为8个OS，每个OS在K8s集群中被认为是一个节点，框内通信时延比框间通信时延低，配置此字段用于训练任务的框亲和性调度。</p><p>取值范围是1~64且必须是2的幂次方。</p><p>穷举可得ra-block的取值为{1，2，4，8，16，32，64}。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>仅支持在Atlas 950 SuperPoD超节点中使用该字段。</li><li>ra-block配置需要小于等于sp-block。</li></ul></div></div>|
+|metadata.annotations['sp-block']|字符串 (string)|-|<p>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。若用户未指定该字段，调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</p><ul><li>单机时需要和任务请求的芯片数量一致。</li><li>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</li></ul><p>详细说明请参见[灵衢总线设备节点网络说明](../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod超节点)。</p><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>仅支持在Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器、Atlas 800I A3超节点服务器、Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 950 SuperPoD液冷超节点、Atlas 950 SuperPoD Flex液冷超节点中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：[任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败](https://gitcode.com/Ascend/mind-cluster/issues/377)</li></ul></div>|
+|metadata.annotations['ra-block']|字符串 (string)|-|<p>框亲和性调度的标识符。指定ra-block字段，在支持动态配比的前提下，单框64卡被分为8个OS，每个OS在K8s集群中被认为是一个节点，框内通信时延比框间通信时延低，配置此字段用于训练任务的框亲和性调度。</p><p>取值范围是1~64且必须是2的幂次方。</p><p>穷举可得ra-block的取值为{1，2，4，8，16，32，64}。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>仅支持在Atlas 950 SuperPoD液冷超节点中使用该字段。</li><li>ra-block配置需要小于等于sp-block。</li></ul></div></div>|
 |metadata.annotations['huawei.com/parameterplane.unhealthy-tolerance']|字符串 (string)|-|<p>配置分布式Ascend910/Ascend950任务在调度时忽略参数面网络不健康NPU。</p><ul><li>"ignore"：忽略参数面网络不健康NPU，允许调度到网络不健康NPU。</li><li>不设置或其他值：过滤参数面网络不健康NPU，不允许调度到网络不健康NPU。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>默认不设置，即过滤网络不健康NPU。</li><li>该注解仅对分布式任务（NPUTaskNum &gt; 1）生效，单机任务不受影响。</li><li>该注解仅对huawei.com/Ascend910和huawei.com/npu资源类型生效，其他资源类型不受影响。</li></ul></div></div>|
 |metadata.annotations['huawei.com/silent.unhealthy-tolerance.after-time']|字符串 (string)|-|静默故障芯片退避容忍时长，单位为s（秒）。<ul><li>0：立即允许，不退避。</li><li>-1：永久禁止，任务不调度到静默故障芯片，已运行任务使用到静默故障芯片时会被驱逐并重调度。</li><li>N（N>0）：任务排队N秒后才允许使用静默故障芯片。</li></ul><p>默认值为600，取值范围为[-1, 1800]。</p>|
 |metadata.annotations['huawei.com/pod.error-tolerance.after-time']|字符串 (string)|-|上一轮Pod故障芯片退避容忍时长，单位为s（秒）。<ul><li>0：立即允许，不退避。</li><li>N（N>0）：任务在Pod失败后N秒内避让导致本次失败的芯片。</li></ul><p>默认值为0，取值范围为[0, 300]。Pod错误退避为临时退避，不支持配置-1（永久禁止）。</p>|
@@ -47,7 +47,7 @@
 |spec.replicaSpecs.[ReplicaType].template.spec.containers.name|字符串 (string)|-|容器名称，当前必须为ascend。|
 |spec.replicaSpecs.[ReplicaType].template.spec.containers.image|字符串 (string)|-|训练镜像名称，请根据实际修改（用户在制作镜像章节制作的镜像名称）。|
 |spec.replicaSpecs.[ReplicaType].template.spec.containers.ports|对象 (object)|-|分布式训练集合通信端口。“name”取值只能为“ascendjob-port”，“containerPort”用户可根据实际情况设置，若未进行设置则采用默认端口2222。|
-|<ul><li>spec.replicaSpecs.[ReplicaType].template.spec.containers.resources.requests</li><li>spec.replicaSpecs.[ReplicaType].template.spec.containers.resources.limits</li></ul>|对象 (object)|-|<p>限制请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。limits需要和requests的芯片名称和数量需保持一致。</p><p><strong>整卡调度：</strong></p><ul><li><term>Ascend 950PR&950DT系列产品</term>：配置为huawei.com/npu: <em>x</em></li><li>推理服务器（插Atlas 300I推理卡）：配置为huawei.com/Ascend310: <em>x</em></li><li><term>Atlas推理系列产品</term>非混插模式：配置为huawei.com/Ascend310P: <em>x</em></li><li><term>Atlas推理系列产品</term>混插模式：<ul><li>配置为huawei.com/Ascend310P-V: <em>x</em></li><li>配置为huawei.com/Ascend310P-VPro: <em>x</em></li><li>配置为huawei.com/Ascend310P-IPro: <em>x</em></li></ul></li><li>其他产品配置为huawei.com/Ascend910: <em>x</em></li></ul><p>根据所使用芯片类型不同，x取值如下：</p><ul><li>Atlas 800训练服务器（NPU满配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、8</li><li>分布式任务：1、2、4、8</li></ul></li><li>Atlas 800训练服务器（NPU半配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4</li><li>分布式任务：1、2、4</li></ul></li><li>服务器（插Atlas 300T训练卡）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2</li><li>分布式任务：2</li></ul></li><li>Atlas 800T A2训练服务器和Atlas 900 A2 PoD集群基础单元：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8</li><li>分布式任务：1、2、3、4、5、6、7、8</li></ul></li><li>Atlas 200T A2 Box16异构子框：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式任务：1、2、3、4、5、6、7、8、10、12、14、16</li></ul></li><li>Atlas 900 A3 SuperPoD超节点、A200T A3 Box8超节点服务器、Atlas 800T A3超节点服务器：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、6、8、10、12、14、16</li><li>分布式任务：2、4、6、8、10、12、14、16</li><li>针对Atlas 900 A3 SuperPoD超节点的逻辑超节点亲和任务：16</li></ul></li><li>服务器（插Atlas 350加速卡）（无互联节点内8卡）：<ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul></li><li>服务器（插Atlas 350加速卡）（无互联节点内16卡）：<ul><li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li><li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li></ul></li><li>服务器（插Atlas 350加速卡）（4P mesh 8卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8</li><li>单机（不保证亲和性）：5、6、7</li><li>分布式（满足亲和性）：1、2、3、4、8</li><li>分布式（不保证亲和性）：5、6、7</li></ul></li><li>服务器（插Atlas 350加速卡）（4P mesh 16卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8、12、16</li><li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li><li>分布式（满足亲和性）：1、2、3、4、8、12、16</li><li>分布式（不保证亲和性）：5、6、7、9、10、11、13、14、15</li></ul></li><li>Atlas 650E服务器、Atlas 650服务器：<ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul></li><li>Atlas 850E超节点、Atlas 850超节点：<ul><li>单机：1、2、4、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul></li><li>Atlas 950 SuperPoD超节点：<ul><li>单机：1、2、3、4、5、6、7、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul></li><li>Atlas 950 SuperPoD Flex：<ul><li>单机（huawei.com/schedule.mode为soft或未配置）：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li><li>单机（huawei.com/schedule.mode为hard）：1、2、3、4、5、6、7、8、16</li><li>单机场景完全按照[节点内通用亲和性调度策略](../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#section_in_node_general_affinity_scheduling_strategy)调度，配置的sp-block参数不生效。</li><li>分布式：16（sp-block参数取值需为16或16的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul></li></ul><p><strong>静态vNPU调度：</strong></p><p>huawei.com/Ascend910-Y: 1</p><p>取值为1。只能使用一个NPU下的vNPU。</p><p>如huawei.com/Ascend910-6c.1cpu.16g: 1</p>|
+|<ul><li>spec.replicaSpecs.[ReplicaType].template.spec.containers.resources.requests</li><li>spec.replicaSpecs.[ReplicaType].template.spec.containers.resources.limits</li></ul>|对象 (object)|-|<p>限制请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。limits需要和requests的芯片名称和数量需保持一致。</p><p><strong>整卡调度：</strong></p><ul><li><term>Ascend 950PR&950DT系列产品</term>：配置为huawei.com/npu: <em>x</em></li><li>推理服务器（插Atlas 300I推理卡）：配置为huawei.com/Ascend310: <em>x</em></li><li><term>Atlas推理系列产品</term>非混插模式：配置为huawei.com/Ascend310P: <em>x</em></li><li><term>Atlas推理系列产品</term>混插模式：<ul><li>配置为huawei.com/Ascend310P-V: <em>x</em></li><li>配置为huawei.com/Ascend310P-VPro: <em>x</em></li><li>配置为huawei.com/Ascend310P-IPro: <em>x</em></li></ul></li><li>其他产品配置为huawei.com/Ascend910: <em>x</em></li></ul><p>根据所使用芯片类型不同，x取值如下：</p><ul><li>Atlas 800训练服务器（NPU满配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、8</li><li>分布式任务：1、2、4、8</li></ul></li><li>Atlas 800训练服务器（NPU半配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4</li><li>分布式任务：1、2、4</li></ul></li><li>服务器（插Atlas 300T训练卡）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2</li><li>分布式任务：2</li></ul></li><li>Atlas 800T A2训练服务器和Atlas 900 A2 PoD集群基础单元：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8</li><li>分布式任务：1、2、3、4、5、6、7、8</li></ul></li><li>Atlas 200T A2 Box16异构子框：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式任务：1、2、3、4、5、6、7、8、10、12、14、16</li></ul></li><li>Atlas 900 A3 SuperPoD超节点、A200T A3 Box8超节点服务器、Atlas 800T A3超节点服务器：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、6、8、10、12、14、16</li><li>分布式任务：2、4、6、8、10、12、14、16</li><li>针对Atlas 900 A3 SuperPoD超节点的逻辑超节点亲和任务：16</li></ul></li><li>服务器（插Atlas 350加速卡）（无互联节点内8卡）：<ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul></li><li>服务器（插Atlas 350加速卡）（无互联节点内16卡）：<ul><li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li><li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li></ul></li><li>服务器（插Atlas 350加速卡）（4P mesh 8卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8</li><li>单机（不保证亲和性）：5、6、7</li><li>分布式（满足亲和性）：1、2、3、4、8</li><li>分布式（不保证亲和性）：5、6、7</li></ul></li><li>服务器（插Atlas 350加速卡）（4P mesh 16卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8、12、16</li><li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li><li>分布式（满足亲和性）：1、2、3、4、8、12、16</li><li>分布式（不保证亲和性）：5、6、7、9、10、11、13、14、15</li></ul></li><li>Atlas 650E服务器、Atlas 650服务器：<ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul></li><li>Atlas 850E风冷超节点、Atlas 850风冷超节点：<ul><li>单机：1、2、4、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul></li><li>Atlas 950 SuperPoD液冷超节点：<ul><li>单机：1、2、3、4、5、6、7、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul></li><li>Atlas 950 SuperPoD Flex液冷超节点：<ul><li>单机（huawei.com/schedule.mode为soft或未配置）：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li><li>单机（huawei.com/schedule.mode为hard）：1、2、3、4、5、6、7、8、16</li><li>单机场景完全按照[节点内通用亲和性调度策略](../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#section_in_node_general_affinity_scheduling_strategy)调度，配置的sp-block参数不生效。</li><li>分布式：16（sp-block参数取值需为16或16的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul></li></ul><p><strong>静态vNPU调度：</strong></p><p>huawei.com/Ascend910-Y: 1</p><p>取值为1。只能使用一个NPU下的vNPU。</p><p>如huawei.com/Ascend910-6c.1cpu.16g: 1</p>|
 |spec.replicaSpecs.{Master\|Scheduler\|Worker}.template.spec.containers[0].env[name==ASCEND_VISIBLE_DEVICES].valueFrom.fieldRef.fieldPath|字符串 (string)|-|<p>取值为metadata.annotations['huawei.com/AscendXXX']，其中XXX表示芯片的型号，支持的取值为910，310和310P。取值需要和环境上实际的芯片类型保持一致。</p><p>Ascend Docker Runtime会获取该参数值，用于给容器挂载相应类型的NPU。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>该参数只支持使用Volcano调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</li><li><term>Ascend 950PR&950DT系列产品</term>需配置为metadata.annotations['huawei.com/npu']。</li></ul></div></div>|
 |spec.replicaSpecs.{Master\|Scheduler\|Worker}.template.spec.terminationGracePeriodSeconds|整数 (integer)|-|<p>容器收到SIGTERM到被K8s强制停止经历的时间，K8s默认为30s，如果需要修改配置该字段时，该时间需要大于0且小于volcano-scheduler配置configmap中的"<strong>grace-over-time</strong>"参数取值，同时还需要保证能够保存CKPT文件，请根据实际情况修改。具体说明请参见K8s官网[容器生命周期回调](https://kubernetes.io/zh/docs/concepts/containers/container-lifecycle-hooks/)。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">只有当fault-scheduling配置为grace时，该字段才生效；fault-scheduling配置为force时，该字段无效。</div></div>|
 |spec.runPolicy|对象 (object)|-|封装分布式训练作业的运行时策略（如资源清理、活动时间）。|
@@ -80,7 +80,7 @@
 |status.replicaStatuses.[ReplicaType].labelSelector.matchExpressions|数组 (array)|-|标签匹配规则（支持In、NotIn、Exists、DoesNotExist等操作符）。|
 |status.replicaStatuses.[ReplicaType].labelSelector.matchLabels|对象 (object)|-|标签匹配的键值对（等价于matchExpressions条件）。|
 |status.startTime|字符串 (string)|date-time|作业开始时间（RFC3339格式，UTC）。|
-|metadata.labels['super-pod-affinity']|字符串 (string)|-|<p>仅支持在Atlas 900 A3 SuperPoD超节点、Atlas 950 SuperPoD超节点、Atlas 950 SuperPoD Flex、Atlas 850E超节点、Atlas 850超节点中使用本参数。超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p><ul><li>soft：开启软亲和特性，集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>|
+|metadata.labels['super-pod-affinity']|字符串 (string)|-|<p>仅支持在Atlas 900 A3 SuperPoD超节点、Atlas 950 SuperPoD液冷超节点、Atlas 950 SuperPoD Flex液冷超节点、Atlas 850E风冷超节点、Atlas 850风冷超节点中使用本参数。超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p><ul><li>soft：开启软亲和特性，集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>|
 |<ul><li>metadata.labels['customJobKey']</li><li>metadata.labels['custom-job-id']</li></ul>|字符串 (string)|-|<p>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。在资源AscendJob的metadata.labels标签中设置。</p><ul><li>customJobKey：用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<p>customJobKey: tid</p><p>tid: "123456"</p></li><li>custom-job-id：用户自定义标签，直接设置作业唯一标识符，如：<p>custom-job-id："123456"</p></li></ul>|
 |metadata.labels['huawei.com/scheduler.softShareDev.aicoreQuota']|字符串 (string)|-|请求的AICore百分比，取值范围为[1, 100]。|
 |metadata.labels['huawei.com/scheduler.softShareDev.hbmQuota']|字符串 (string)|-|<p>请求的高带宽内存量，取值范围为[1, maxHBM]，单位为MB。</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|
@@ -233,7 +233,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p175075613422"><a name="p175075613422"></a><a name="p175075613422"></a>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。<span id="zh-cn_topic_0000002511347099_ph521204025916"><a name="zh-cn_topic_0000002511347099_ph521204025916"></a><a name="zh-cn_topic_0000002511347099_ph521204025916"></a>若用户未指定该字段，</span><span id="zh-cn_topic_0000002511347099_ph172121408590"><a name="zh-cn_topic_0000002511347099_ph172121408590"></a><a name="zh-cn_topic_0000002511347099_ph172121408590"></a>Volcano</span><span id="zh-cn_topic_0000002511347099_ph192121140135911"><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a>调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</span></p>
 <p id="p1250719624216"><a name="p1250719624216"></a><a name="p1250719624216"></a>详细说明请参见<a href="../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod超节点">灵衢总线设备节点网络说明</a>。</p>
-<div class="note" id="note550714615429"><a name="note550714615429"></a><a name="note550714615429"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><ul id="zh-cn_topic_0000002511347099_ul546892712569"><li>仅支持在Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器、Atlas 800I A3超节点服务器、Atlas 850E超节点、Atlas 850超节点、Atlas 950 SuperPoD超节点、Atlas 950 SuperPoD Flex中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="https://gitcode.com/Ascend/mind-cluster/issues/377">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
+<div class="note" id="note550714615429"><a name="note550714615429"></a><a name="note550714615429"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><ul id="zh-cn_topic_0000002511347099_ul546892712569"><li>仅支持在Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器、Atlas 800I A3超节点服务器、Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 950 SuperPoD液冷超节点、Atlas 950 SuperPoD Flex液冷超节点中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="https://gitcode.com/Ascend/mind-cluster/issues/377">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
 </div></div>
 </td>
 </tr>
@@ -242,7 +242,7 @@
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p550719674212"><a name="p550719674212"></a><a name="p550719674212"></a>框亲和性调度的标识符。</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p175075613422"><a name="p175075613422"></a><a name="p175075613422"></a>指定ra-block字段，在支持动态配比的前提下，单框64卡被分为8个OS，每个OS在K8s集群中被认为是一个节点，框内通信时延比框间通信时延低，配置此字段用于训练任务的框亲和性调度。</p><p id="p175075613422"><a name="p175075613422"></a><a name="ul1150756144219"></a><a name="ul1150756144219"></a>取值范围是1-64且必须是2的幂次方。</p><p id="p175075613422"><a name="p175075613422"></a><a name="ul1150756144219"></a><a name="ul1150756144219"></a>穷举可得 ra-block 取值为 {1，2，4，8，16，32，64}。</p>
-<div class="note" id="note550714615429"><a name="note550714615429"></a><a name="note550714615429"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a>仅支持在Atlas 950 SuperPoD超节点中使用该字段。<p id="p175075613423">ra-block配置需要小于等于sp-block。</p>
+<div class="note" id="note550714615429"><a name="note550714615429"></a><a name="note550714615429"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a>仅支持在Atlas 950 SuperPoD液冷超节点中使用该字段。<p id="p175075613423">ra-block配置需要小于等于sp-block。</p>
 </div></div>
 </td>
 </tr>
@@ -308,21 +308,21 @@
     </ul>
 </li>
 <li>
-    <span>Atlas 850E超节点、Atlas 850超节点</span>：
+    <span>Atlas 850E风冷超节点、Atlas 850风冷超节点</span>：
     <ul>
         <li>单机：1、2、4、8（sp-block参数取值与其保持一致）</li>
         <li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li>
     </ul>
 </li>
 <li>
-    <span>Atlas 950 SuperPoD超节点</span>：
+    <span>Atlas 950 SuperPoD液冷超节点</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8（sp-block参数取值与其保持一致）</li>
         <li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li>
     </ul>
 </li>
 <li>
-    <span>Atlas 950 SuperPoD Flex</span>：
+    <span>Atlas 950 SuperPoD Flex液冷超节点</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16（sp-block参数取值与其保持一致）</li>
         <li>分布式：16（sp-block参数取值需为16或16的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li>
@@ -360,7 +360,7 @@
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p1531312713409"><a name="p1531312713409"></a><a name="p1531312713409"></a>超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p>
 <a name="ul231337194020"></a><a name="ul231337194020"></a><ul id="ul231337194020"><li>soft：开启软亲和特性，集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p2313117194012"><a name="p2313117194012"></a><a name="p2313117194012"></a>仅支持在<span id="ph133130710403"><a name="ph133130710403"></a><a name="ph133130710403"></a>Atlas 900 A3 SuperPoD超节点</span>、Atlas 950 SuperPoD超节点、Atlas 950 SuperPoD Flex、Atlas 850E超节点、Atlas 850超节点中使用本参数。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p2313117194012"><a name="p2313117194012"></a><a name="p2313117194012"></a>仅支持在<span id="ph133130710403"><a name="ph133130710403"></a><a name="ph133130710403"></a>Atlas 900 A3 SuperPoD超节点</span>、Atlas 950 SuperPoD液冷超节点、Atlas 950 SuperPoD Flex液冷超节点、Atlas 850E风冷超节点、Atlas 850风冷超节点中使用本参数。</p>
 </td>
 </tr>
 <tr id="rowcustomjobkey2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobkey2"><a name="pcustomjobkey2"></a><a name="pcustomjobkey2"></a>metadata.labels['customJobKey']</p>
@@ -627,7 +627,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p175075613422"><a name="p175075613422"></a><a name="p175075613422"></a>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。<span id="zh-cn_topic_0000002511347099_ph521204025916"><a name="zh-cn_topic_0000002511347099_ph521204025916"></a><a name="zh-cn_topic_0000002511347099_ph521204025916"></a>若用户未指定该字段，</span><span id="zh-cn_topic_0000002511347099_ph172121408590"><a name="zh-cn_topic_0000002511347099_ph172121408590"></a><a name="zh-cn_topic_0000002511347099_ph172121408590"></a>Volcano</span><span id="zh-cn_topic_0000002511347099_ph192121140135911"><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a>调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</span></p>
 <p id="p1250719624216"><a name="p1250719624216"></a><a name="p1250719624216"></a>详细说明请参见<a href="../04_usage/03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod超节点">灵衢总线设备节点网络说明</a>。</p>
-<div class="note" id="note550714615429"><a name="note550714615429"></a><a name="note550714615429"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><ul id="zh-cn_topic_0000002511347099_ul546892712569"><li>仅支持在Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器、Atlas 800I A3超节点服务器、Atlas 850E超节点、Atlas 850超节点、Atlas 950 SuperPoD超节点、Atlas 950 SuperPoD Flex中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="https://gitcode.com/Ascend/mind-cluster/issues/377">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
+<div class="note" id="note550714615429"><a name="note550714615429"></a><a name="note550714615429"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><ul id="zh-cn_topic_0000002511347099_ul546892712569"><li>仅支持在Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器、Atlas 800I A3超节点服务器、Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 950 SuperPoD液冷超节点、Atlas 950 SuperPoD Flex液冷超节点中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="https://gitcode.com/Ascend/mind-cluster/issues/377">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
 </div></div>
 </td>
 </tr>
@@ -636,7 +636,7 @@
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p550719674212"><a name="p550719674212"></a><a name="p550719674212"></a>框亲和性调度的标识符。</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p175075613422"><a name="p175075613422"></a><a name="p175075613422"></a>指定ra-block字段，在支持动态配比的前提下，单框64卡被分为8个OS，每个OS在K8s集群中被认为是一个节点，框内通信时延比框间通信时延低，配置此字段用于训练任务的框亲和性调度。</p><p id="p175075613422"><a name="p175075613422"></a><a name="ul1150756144219"></a><a name="ul1150756144219"></a>取值范围是1-64且必须是2的幂次方。</p><p id="p175075613422"><a name="p175075613422"></a><a name="ul1150756144219"></a><a name="ul1150756144219"></a>穷举可得 ra-block 取值为 {1，2，4，8，16，32，64}。</p>
-<div class="note" id="note550714615429"><a name="note550714615429"></a><a name="note550714615429"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a>仅支持在Atlas 950 SuperPoD超节点中使用该字段。<p id="p175075613423">ra-block配置需要小于等于sp-block。</p>
+<div class="note" id="note550714615429"><a name="note550714615429"></a><a name="note550714615429"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a>仅支持在Atlas 950 SuperPoD液冷超节点中使用该字段。<p id="p175075613423">ra-block配置需要小于等于sp-block。</p>
 </div></div>
 </td>
 </tr>
@@ -750,21 +750,21 @@
     </ul>
 </li>
 <li>
-    <span>Atlas 850E超节点、Atlas 850超节点</span>：
+    <span>Atlas 850E风冷超节点、Atlas 850风冷超节点</span>：
     <ul>
         <li>单机：1、2、4、8（sp-block参数取值与其保持一致）</li>
         <li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li>
     </ul>
 </li>
 <li>
-    <span>Atlas 950 SuperPoD超节点</span>：
+    <span>Atlas 950 SuperPoD液冷超节点</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8（sp-block参数取值与其保持一致）</li>
         <li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li>
     </ul>
 </li>
 <li>
-    <span>Atlas 950 SuperPoD Flex</span>：
+    <span>Atlas 950 SuperPoD Flex液冷超节点</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16（sp-block参数取值与其保持一致）</li>
         <li>分布式：16（sp-block参数取值需为16或16的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li>
@@ -792,7 +792,7 @@
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p1531312713409"><a name="p1531312713409"></a><a name="p1531312713409"></a>超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p>
 <a name="ul231337194020"></a><a name="ul231337194020"></a><ul id="ul231337194020"><li>soft：开启软亲和特性，集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p2313117194012"><a name="p2313117194012"></a><a name="p2313117194012"></a>仅支持在<span id="ph133130710403"><a name="ph133130710403"></a><a name="ph133130710403"></a>Atlas 900 A3 SuperPoD超节点</span>、Atlas 950 SuperPoD超节点、Atlas 950 SuperPoD Flex、Atlas 850E超节点、Atlas 850超节点中使用本参数。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p2313117194012"><a name="p2313117194012"></a><a name="p2313117194012"></a>仅支持在<span id="ph133130710403"><a name="ph133130710403"></a><a name="ph133130710403"></a>Atlas 900 A3 SuperPoD超节点</span>、Atlas 950 SuperPoD液冷超节点、Atlas 950 SuperPoD Flex液冷超节点、Atlas 850E风冷超节点、Atlas 850风冷超节点中使用本参数。</p>
 </td>
 </tr>
 <tr id="rowcustomjobkey2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobkey2"><a name="pcustomjobkey2"></a><a name="pcustomjobkey2"></a>spec.template.metadata.labels['customJobKey']</p>
@@ -879,7 +879,7 @@
 |chip4-node8|1个节点8张芯片，每4个芯片形成1个互联环。|Atlas 800训练服务器（型号：9000）/Atlas 800训练服务器（型号：9010）芯片的整模块场景/Atlas 350加速卡共8张卡，每4张卡通过UB扣板连接|
 |chip1-node2|1个节点2张芯片。|Atlas 300T训练卡的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡|
 |chip4-node4|1个节点4张芯片，形成1个互联环。|Atlas 800训练服务器（型号：9000）/Atlas 800训练服务器（型号：9010）芯片的半配场景|
-|chip8-node8|1个节点8张卡，8张卡都在1个互联环上。|Atlas 800T A2训练服务器/Atlas 850E超节点/Atlas 850超节点/Atlas 650E服务器/Atlas 650服务器|
+|chip8-node8|1个节点8张卡，8张卡都在1个互联环上。|Atlas 800T A2训练服务器/Atlas 850E风冷超节点/Atlas 850风冷超节点/Atlas 650E服务器/Atlas 650服务器|
 |chip8-node16|1个节点16张卡，每8张卡在1个互联环上。|Atlas 200T A2 Box16异构子框|
 |chip2-node8|1个节点8张卡，每2张卡在1个互联环上。|Atlas 9000 A3 SuperPoD集群算力系统|
 |chip2-node16|1个节点16张卡，每2张卡在1个互联环上。|Atlas 800T A3超节点服务器|
@@ -888,8 +888,8 @@
 |chip4-node16|1个节点16张卡，每4张卡都在1个互联环上。|Atlas 350加速卡共16张卡，每4张卡通过UB扣板连接|
 |chip1-node8|1个节点8张卡，每张卡之间无互联。|Atlas 350加速卡共8张卡，每张卡之间无互联|
 |chip1-node16|1个节点16张卡，每张卡之间无互联。|Atlas 350加速卡共16张卡，每张卡之间无互联|
-|chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。|Atlas 850E超节点/Atlas 850超节点|
-|chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。|Atlas 950 SuperPoD超节点|
-|chip8-node16-sp|1个节点16张卡，每8张卡在1个互联环上，多个服务器形成超节点。|Atlas 950 SuperPoD Flex|
+|chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。|Atlas 850E风冷超节点/Atlas 850风冷超节点|
+|chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。|Atlas 950 SuperPoD液冷超节点|
+|chip8-node16-sp|1个节点16张卡，每8张卡在1个互联环上，多个服务器形成超节点。|Atlas 950 SuperPoD Flex液冷超节点|
 |chip1-softShareDev|软切分虚拟化专用调度策略。|Atlas 800I A2，Atlas 800I A3，Atlas 350加速卡|
-|multilevel|多级调度场景使用，多级调度的详细使用方法请参见[多级调度](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md)。|Atlas 900 A3 SuperPoD超节点，Atlas 950 SuperPoD超节点|
+|multilevel|多级调度场景使用，多级调度的详细使用方法请参见[多级调度](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md)。|Atlas 900 A3 SuperPoD超节点，Atlas 950 SuperPoD液冷超节点|

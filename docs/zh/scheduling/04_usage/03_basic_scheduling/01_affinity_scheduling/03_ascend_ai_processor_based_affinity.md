@@ -56,17 +56,17 @@ A200T A3 Box8超节点服务器、Atlas 800I A3超节点服务器和Atlas 800T A
 <!-- end id4 -->
 
 <!-- npu="950" id5 -->
-### Atlas 850E超节点、Atlas 850超节点<a name="ZH-CN_TOPIC_0000002479386929"></a>
+### Atlas 850E风冷超节点、Atlas 850风冷超节点<a name="ZH-CN_TOPIC_0000002479386929"></a>
 
-Atlas 850E超节点、Atlas 850超节点的昇腾AI处理器是华为研发的高性能AI处理器，其内部由2个计算DIE和2个IO DIE合封成一个芯片。每个超节点包含8个昇腾AI处理器。昇腾AI处理器之间采用HCCS互联的方式组成mesh全连接。服务器之间通过5808交换机连接，每个5808下面最多连接16个超节点，最多128个昇腾AI处理器。两层5808交换机组网可支持1k规模超节点，可根据需求灵活定制超节点规模。
+Atlas 850E风冷超节点、Atlas 850风冷超节点的昇腾AI处理器是华为研发的高性能AI处理器，其内部由2个计算DIE和2个IO DIE合封成一个芯片。每个超节点包含8个昇腾AI处理器。昇腾AI处理器之间采用HCCS互联的方式组成mesh全连接。服务器之间通过5808交换机连接，每个5808下面最多连接16个超节点，最多128个昇腾AI处理器。两层5808交换机组网可支持1k规模超节点，可根据需求灵活定制超节点规模。
 
 单机任务可申请昇腾AI处理器的数量为1-8，申请的昇腾AI处理器需要优先占满整个节点。而分布式任务只支持满卡调度，即配置为8。调度优先级按照通信效率从高到低排序，即优先调度到节点内，若节点资源不足，则调度到超节点内的昇腾AI处理器。
 
-### Atlas 950 SuperPoD超节点<a name="ZH-CN_TOPIC_0000002479386930"></a>
+### Atlas 950 SuperPoD液冷超节点<a name="ZH-CN_TOPIC_0000002479386930"></a>
 
-Atlas 950 SuperPoD超节点的昇腾AI处理器是华为研发的高性能AI处理器，其内部由2个计算DIE和2个IO DIE合封成一个芯片。每个Atlas 950 SuperPoD超节点包含8个昇腾AI处理器。昇腾AI处理器之间采用HCCS互联的方式组成mesh全连接，构成1D-FullMesh中的X轴。Atlas 950 SuperPoD超节点的机架包含8个OS，机架内Y轴同位置的昇腾AI处理器通过LRS实现跨板互联，8个OS共64个昇腾AI处理器实现2D全互联，构成2D-FullMesh中的Y轴。Atlas 950 SuperPoD超节点的机架之间通过LRS输出UB x128 IO用于Z轴连接，多个机架组成一个物理超节点，形成直接的全互联，构成3D-FullMesh中的Z轴。匹配LLM流量局部性，X-Y-Z轴提供逐级收敛带宽。
+Atlas 950 SuperPoD液冷超节点的昇腾AI处理器是华为研发的高性能AI处理器，其内部由2个计算DIE和2个IO DIE合封成一个芯片。每个Atlas 950 SuperPoD液冷超节点包含8个昇腾AI处理器。昇腾AI处理器之间采用HCCS互联的方式组成mesh全连接，构成1D-FullMesh中的X轴。Atlas 950 SuperPoD液冷超节点的机架包含8个OS，机架内Y轴同位置的昇腾AI处理器通过LRS实现跨板互联，8个OS共64个昇腾AI处理器实现2D全互联，构成2D-FullMesh中的Y轴。Atlas 950 SuperPoD液冷超节点的机架之间通过LRS输出UB x128 IO用于Z轴连接，多个机架组成一个物理超节点，形成直接的全互联，构成3D-FullMesh中的Z轴。匹配LLM流量局部性，X-Y-Z轴提供逐级收敛带宽。
 
-**图 4** Atlas 950 SuperPoD超节点互联拓扑<a name="fig1920102817166"></a>
+**图 4** Atlas 950 SuperPoD液冷超节点互联拓扑<a name="fig1920102817166"></a>
 
 ![](../../../../figures/scheduling/Atlas-950-SuperPoD-互联拓扑.png "Atlas-950-SuperPoD-互联拓扑")
 
@@ -125,7 +125,7 @@ npu-310-strategy参数取值说明如下：
 
 ### 单机调度场景<a name="section_chip_affinity_single_node_scene"></a>
 
-单机调度场景下，任务无需配置`huawei.com/schedule_policy`注解，Volcano默认采用芯片亲和性调度策略。例如，Atlas 950 SuperPoD Flex（单节点16张昇腾AI处理器，每8张卡在1个互联环上）的单机任务，只需申请`huawei.com/npu`资源，无需配置`huawei.com/schedule_policy`，Volcano会按芯片亲和性调度策略将任务申请的芯片优先放入互联更紧密的同一互联环内，降低跨环通信开销。
+单机调度场景下，任务无需配置`huawei.com/schedule_policy`注解，Volcano默认采用芯片亲和性调度策略。例如，Atlas 950 SuperPoD Flex液冷超节点（单节点16张昇腾AI处理器，每8张卡在1个互联环上）的单机任务，只需申请`huawei.com/npu`资源，无需配置`huawei.com/schedule_policy`，Volcano会按芯片亲和性调度策略将任务申请的芯片优先放入互联更紧密的同一互联环内，降低跨环通信开销。
 
 ### 使用约束<a name="section_chip_affinity_constraint"></a>
 
@@ -420,13 +420,13 @@ Atlas 650E服务器和Atlas 650服务器的特征和资源利用的规则如下�
 - 单机/分布式任务申请的昇腾AI处理器数量支持1-8（满足亲和性）。
 - 当多个任务Pod调度到单个节点时，不支持Pod间的集合通信。
 
-### Atlas 850E超节点和Atlas 850超节点
+### Atlas 850E风冷超节点和Atlas 850风冷超节点
 
 #### 亲和性调度策略
 
-Atlas 850E超节点和Atlas 850超节点的特征和资源利用的规则如下表所示。
+Atlas 850E风冷超节点和Atlas 850风冷超节点的特征和资源利用的规则如下表所示。
 
-**表 15** Atlas 850E超节点和Atlas 850超节点亲和性策略
+**表 15** Atlas 850E风冷超节点和Atlas 850风冷超节点亲和性策略
 
 |优先级|策略名称|策略描述|
 |--|--|--|
@@ -440,17 +440,17 @@ Atlas 850E超节点和Atlas 850超节点的特征和资源利用的规则如下�
 - 单机任务申请的昇腾AI处理器数量支持1、2、4、8（满足亲和性），而分布式任务只支持满卡调度，即配置为8。
 - 当多个任务Pod调度到单个节点时，不支持Pod间的集合通信。
 
-### Atlas 950 SuperPoD超节点
+### Atlas 950 SuperPoD液冷超节点
 
 #### 亲和性调度策略
 
-Atlas 950 SuperPoD超节点的特征和资源利用的规则如下表所示。
+Atlas 950 SuperPoD液冷超节点的特征和资源利用的规则如下表所示。
 
-**表 16** Atlas 950 SuperPoD超节点亲和性策略
+**表 16** Atlas 950 SuperPoD液冷超节点亲和性策略
 
 |优先级|策略名称|策略描述|
 |--|--|--|
-|1|优先占满节点|节点芯片数量越少，优先级越高。<p>下发单机任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><ul><li>现象说明：如在Atlas 950 SuperPoD超节点中，同时下发2卡、6卡任务，存在2卡和6卡任务未调度到同一个节点。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo-${node_name}存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li></ul>|
+|1|优先占满节点|节点芯片数量越少，优先级越高。<p>下发单机任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><ul><li>现象说明：如在Atlas 950 SuperPoD液冷超节点中，同时下发2卡、6卡任务，存在2卡和6卡任务未调度到同一个节点。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo-${node_name}存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li></ul>|
 |2|优先剩余保留节点|当超节点保留节点为2，两个超节点中分别剩余3个节点和2个节点时，优先选择剩余3个节点的超节点。|
 |3|优先占满超节点|当超节点保留节点为2，两个超节点中分别剩余4个节点和3个节点时，优先选择剩余3个节点的超节点。|
 
@@ -509,14 +509,14 @@ Atlas 950 SuperPoD超节点的特征和资源利用的规则如下表所示。
 - 任务申请的昇腾AI处理器数量不能大于节点的昇腾AI处理器总数。
 - 当任务申请的昇腾AI处理器数量小于或等于8个时，需要将任务调度到同一个服务器内。
 
-**Atlas 850E超节点、Atlas 850超节点分布式亲和性策略<a name="section235141656114619"></a>**
+**Atlas 850E风冷超节点、Atlas 850风冷超节点分布式亲和性策略<a name="section235141656114619"></a>**
 
-- Atlas 850E超节点、Atlas 850超节点分布式任务每个节点申请的昇腾AI处理器个数固定为8个，服务器内8卡为FullMesh全互联。
+- Atlas 850E风冷超节点、Atlas 850风冷超节点分布式任务每个节点申请的昇腾AI处理器个数固定为8个，服务器内8卡为FullMesh全互联。
 - 若为逻辑超节点亲和任务，即任务YAML中的sp-block字段配置了逻辑超节点大小，则申请的昇腾AI处理器数量只能为sp-block的倍数。
 
-**Atlas 950 SuperPoD超节点分布式亲和性策略<a name="section245141656114620"></a>**
+**Atlas 950 SuperPoD液冷超节点分布式亲和性策略<a name="section245141656114620"></a>**
 
-- Atlas 950 SuperPoD超节点分布式任务每个节点申请的昇腾AI处理器个数固定为8个，OS内8卡为FullMesh全互联。
+- Atlas 950 SuperPoD液冷超节点分布式任务每个节点申请的昇腾AI处理器个数固定为8个，OS内8卡为FullMesh全互联。
 - 若为逻辑超节点亲和任务，即任务YAML中的sp-block字段配置了逻辑超节点大小，则申请的昇腾AI处理器数量只能为sp-block的倍数。
 - 若为框亲和任务，即任务YAML中的ra-block字段配置了逻辑框大小，则申请的昇腾AI处理器数量需为ra-block和sp-block的公倍数。
 <!-- end id16 -->

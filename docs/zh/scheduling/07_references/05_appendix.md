@@ -826,7 +826,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p91009106505"><a name="p91009106505"></a><a name="p91009106505"></a>可申请NPU的数目为1N、2N、3N、4N、5N、6N、7N、8N。N表示节点个数，其中每个节点的NPU调度约束同单机场景。</p>
 </td>
 </tr>
-<tr id="row91009108501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009108501"><a name="p91009108501"></a><a name="p91009108501"></a><span id="ph91009108501"><a name="ph91009108501"></a><a name="ph91009108501"></a>Atlas 850E超节点或Atlas 850超节点</span></p>
+<tr id="row91009108501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009108501"><a name="p91009108501"></a><a name="p91009108501"></a><span id="ph91009108501"><a name="ph91009108501"></a><a name="ph91009108501"></a>Atlas 850E风冷超节点或Atlas 850风冷超节点</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009108502"><a name="p91009108502"></a><a name="p91009108502"></a>单机场景</p>
 </td>
@@ -838,7 +838,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p91009108505"><a name="p91009108505"></a><a name="p91009108505"></a>分布式任务每个节点固定申请8卡，即可申请NPU的数目为8N。N表示节点个数。若为逻辑超节点亲和任务，即任务YAML中的sp-block字段配置了逻辑超节点大小，则sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小。</p>
 </td>
 </tr>
-<tr id="row91009109501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009109501"><a name="p91009109501"></a><a name="p91009109501"></a><span id="ph91009109501"><a name="ph91009109501"></a><a name="ph91009109501"></a>Atlas 950 SuperPoD超节点</span></p>
+<tr id="row91009109501"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009109501"><a name="p91009109501"></a><a name="p91009109501"></a><span id="ph91009109501"><a name="ph91009109501"></a><a name="ph91009109501"></a>Atlas 950 SuperPoD液冷超节点</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009109502"><a name="p91009109502"></a><a name="p91009109502"></a>单机场景</p>
 </td>
@@ -850,7 +850,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p91009109505"><a name="p91009109505"></a><a name="p91009109505"></a>分布式任务每个节点固定申请8卡，即可申请NPU的数目为8N。N表示节点个数。若为逻辑超节点亲和任务，即任务YAML中的sp-block字段配置了逻辑超节点大小，则sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小。</p>
 </td>
 </tr>
-<tr id="row91009109511"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009109511"><a name="p91009109511"></a><a name="p91009109511"></a><span id="ph91009109511"><a name="ph91009109511"></a><a name="ph91009109511"></a>Atlas 950 SuperPoD Flex</span></p>
+<tr id="row91009109511"><td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p91009109511"><a name="p91009109511"></a><a name="p91009109511"></a><span id="ph91009109511"><a name="ph91009109511"></a><a name="ph91009109511"></a>Atlas 950 SuperPoD Flex液冷超节点</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p91009109512"><a name="p91009109512"></a><a name="p91009109512"></a>单机场景</p>
 </td>

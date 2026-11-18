@@ -108,7 +108,7 @@ NodeD调用DCMI接口启动pingmesh任务，并周期性查询pingmesh结果，�
 <!-- npu="950" id2 -->
 ## 光链路成员端口故障<a name="ZH-CN_TOPIC_0000002511426421"></a>
 
-包括Atlas 950 SuperPoD超节点中的npu到unions及5808的端口故障，以及Atlas 850E超节点、Atlas 850超节点、Atlas 650E服务器、Atlas 650服务器中的npu到1825及5808端口的故障等。
+包括Atlas 950 SuperPoD液冷超节点中的npu到unions及5808的端口故障，以及Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器中的npu到1825及5808端口的故障等。
 
 ### 检测原理<a name="zh-cn_topic_0000002216292814_section_hangdetectprinciple"></a>
 
@@ -128,7 +128,7 @@ UB PORT link状态变化（UP -> DOWN）；UBOE PORT link状态变化 (UP -> DOW
 
 ### 使用约束<a name="zh-cn_topic_0000002193288232_section156679598384-duplicate-2"></a>
 
-本功能仅支持在以下产品型号中使用：适用于Atlas 950 SuperPoD超节点、Atlas 850E超节点、Atlas 850超节点、Atlas 650E服务器、Atlas 650服务器。
+本功能仅支持在以下产品型号中使用：适用于Atlas 950 SuperPoD液冷超节点、Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器。
 
 |故障码|故障说明|故障级别|
 |--|--|--|
@@ -139,7 +139,7 @@ UB PORT link状态变化（UP -> DOWN）；UBOE PORT link状态变化 (UP -> DOW
 
 ## UB网卡故障<a name="ZH-CN_TOPIC_0000002511426422"></a>
 
-UB（Unified Bus）网卡故障是针对Atlas 950 SuperPoD超节点、Atlas 850E超节点、Atlas 850超节点、Atlas 650E服务器、Atlas 650服务器中使用的UB网卡的故障。
+UB（Unified Bus）网卡故障是针对Atlas 950 SuperPoD液冷超节点、Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器中使用的UB网卡的故障。
 
 ### 检测原理
 
@@ -163,7 +163,7 @@ Job级别重调度、Pod级别重调度
 
 ### 使用约束
 
-- 本功能仅支持在以下产品型号中使用：Atlas 950 SuperPoD超节点、Atlas 850E超节点、Atlas 850超节点、Atlas 650E服务器、Atlas 650服务器。
+- 本功能仅支持在以下产品型号中使用：Atlas 950 SuperPoD液冷超节点、Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器。
 - 若要使用DPU故障触发断点续训的能力，则分布式训练任务需申请节点上的全部NPU资源和每个NPU资源对应的DPU资源。
 - 仅支持主机网络。
 
