@@ -28090,6 +28090,990 @@
             },
             "attr_regex": " NPU(?P<npu_id>[0-9])"
         },
+        "0x8F180461": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V2_DVDD12_PFM0_3 欠压致命告警（950PR模组）",
+                "description_zh": "V_1V2_DVDD12_PFM0_3器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V2_DVDD12_PFM0_3 under-voltage fatal alarm (950PR module)",
+                "description_en": "The V_1V2_DVDD12_PFM0_3 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180461", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180462": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1 欠压致命告警",
+                "description_zh": "V_0V8_DVDD_AIC_D1器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_AIC_D1 under-voltage fatal alarm",
+                "description_en": "The V_0V8_DVDD_AIC_D1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180462", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180463": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V2_DVDD12_PFM4_7 欠压致命告警（950PR模组）",
+                "description_zh": "V_1V2_DVDD12_PFM4_7器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V2_DVDD12_PFM4_7 under-voltage fatal alarm (950PR module)",
+                "description_en": "The V_1V2_DVDD12_PFM4_7 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180463", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180464": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_PERI_D0U0 欠压致命告警（950PR模组）",
+                "description_zh": "V_0V8_DVDD_PERI_D0U0 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_PERI_D0U0 under-voltage fatal alarm (950PR module)",
+                "description_en": "The V_0V8_DVDD_PERI_D0U0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180464", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180465": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_PERI_D1U1 欠压致命告警（950PR模组）",
+                "description_zh": "V_0V8_DVDD_PERI_D1U1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_PERI_D1U1 under-voltage fatal alarm (950PR module)",
+                "description_en": "The V_0V8_DVDD_PERI_D1U1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180465", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180466": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_SIO 欠压致命告警（950PR模组）",
+                "description_zh": "V_0V8_DVDD_SIO器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_SIO under-voltage fatal alarm (950PR module)",
+                "description_en": "The V_0V8_DVDD_SIO device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180466", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180467": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D0 欠压致命告警",
+                "description_zh": "V_0V85_DVDD_BUS_D0 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V85_DVDD_BUS_D0 under-voltage fatal alarm",
+                "description_en": "The V_0V85_DVDD_BUS_D0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180467", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180468": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V5_DVDD05_PFM0_3 欠压致命告警（950PR模组）",
+                "description_zh": "V_0V5_DVDD05_PFM0_3器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V5_DVDD05_PFM0_3 under-voltage fatal alarm (950PR module)",
+                "description_en": "The V_0V5_DVDD05_PFM0_3 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180468", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180469": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D1 欠压致命告警",
+                "description_zh": "V_0V85_DVDD_BUS_D1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V85_DVDD_BUS_D1 under-voltage fatal alarm",
+                "description_en": "The V_0V85_DVDD_BUS_D1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180469", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18046A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V5_DVDD05_PFM4_7 欠压致命告警（950PR模组）",
+                "description_zh": "V_0V5_DVDD05_PFM4_7器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V5_DVDD05_PFM4_7 under-voltage fatal alarm (950PR module)",
+                "description_en": "The V_0V5_DVDD05_PFM4_7 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18046A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18046B": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V75_AVDD075_SDS_U0 欠压致命告警",
+                "description_zh": "V_0V75_AVDD075_SDS_U0 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V75_AVDD075_SDS_U0 under-voltage fatal alarm",
+                "description_en": "The V_0V75_AVDD075_SDS_U0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18046B", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18046C": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V0_AVDD10_SDS_U0 欠压致命告警",
+                "description_zh": "V_1V0_AVDD10_SDS_U0 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V0_AVDD10_SDS_U0 under-voltage fatal alarm",
+                "description_en": "The V_1V0_AVDD10_SDS_U0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18046C", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18046D": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V75_AVDD075_SDS_U1 欠压致命告警",
+                "description_zh": "V_0V75_AVDD075_SDS_U1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V75_AVDD075_SDS_U1 under-voltage fatal alarm",
+                "description_en": "The V_0V75_AVDD075_SDS_U1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18046D", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18046E": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V0_AVDD10_SDS_U1 欠压致命告警",
+                "description_zh": "V_1V0_AVDD10_SDS_U1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V0_AVDD10_SDS_U1 under-voltage fatal alarm",
+                "description_en": "The V_1V0_AVDD10_SDS_U1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18046E", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18046F": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V2_AVDD12_VTT_U0 欠压致命告警",
+                "description_zh": "V_1V2_AVDD12_VTT_U0 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V2_AVDD12_VTT_U0 under-voltage fatal alarm",
+                "description_en": "The V_1V2_AVDD12_VTT_U0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18046F", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180470": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V2_AVDD12_VTT_U1 欠压致命告警",
+                "description_zh": "V_1V2_AVDD12_VTT_U1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V2_AVDD12_VTT_U1 under-voltage fatal alarm",
+                "description_en": "The V_1V2_AVDD12_VTT_U1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180470", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180471": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V8_DVDD_1 欠压致命告警",
+                "description_zh": "V_1V8_DVDD_1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V8_DVDD_1 under-voltage fatal alarm",
+                "description_en": "The V_1V8_DVDD_1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180471", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180472": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_3V3_MOS 欠压致命告警（950PR模组）",
+                "description_zh": "V_3V3_MOS 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_3V3_MOS under-voltage fatal alarm (950PR module)",
+                "description_en": "The V_3V3_MOS device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180472", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180473": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "6V_0 欠压致命告警",
+                "description_zh": "6V_0器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "6V_0 under-voltage fatal alarm",
+                "description_en": "The 6V_0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180473", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180474": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V1_DVDD_HBM_2_3 欠压致命告警（950DT模组）",
+                "description_zh": "V_1V1_DVDD_HBM_0_1器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V1_DVDD_HBM_2_3 under-voltage fatal alarm (950DT module)",
+                "description_en": "The V_1V1_DVDD_HBM_0_1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180474", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180475": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V4_DVDD_HBM_0_1 欠压致命告警（950DT模组）",
+                "description_zh": "V_0V4_DVDD_HBM_0_1器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V4_DVDD_HBM_0_1 under-voltage fatal alarm (950DT module)",
+                "description_en": "The V_0V4_DVDD_HBM_0_1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180475", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180476": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V4_DVDD_HBM_2_3 欠压致命告警（950DT模组）",
+                "description_zh": "V_0V4_DVDD_HBM_2_3器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V4_DVDD_HBM_2_3 under-voltage fatal alarm (950DT module)",
+                "description_en": "The V_0V4_DVDD_HBM_2_3 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180476", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180477": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_SIO 欠压致命告警（950DT模组）",
+                "description_zh": "V_0V8_DVDD_SIO器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_SIO under-voltage fatal alarm (950DT module)",
+                "description_en": "The V_0V8_DVDD_SIO device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180477", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180478": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V1_DVDD_HBM_0_1 欠压致命告警（950DT模组）",
+                "description_zh": "V_1V1_DVDD_HBM_0_1器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V1_DVDD_HBM_0_1 under-voltage fatal alarm (950DT module)",
+                "description_en": "The V_1V1_DVDD_HBM_0_1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180478", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180479": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_PERI_D0U0 欠压致命告警（950DT模组）",
+                "description_zh": "V_0V8_DVDD_PERI_D0U0 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_PERI_D0U0 under-voltage fatal alarm (950DT module)",
+                "description_en": "The V_0V8_DVDD_PERI_D0U0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180479", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18047A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_PERI_D1U1 欠压致命告警（950DT模组）",
+                "description_zh": "V_0V8_DVDD_PERI_D1U1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_PERI_D1U1 under-voltage fatal alarm (950DT module)",
+                "description_en": "The V_0V8_DVDD_PERI_D1U1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18047A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18047B": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_3V3_MOS 欠压致命告警（950DT模组）",
+                "description_zh": "V_3V3_MOS 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_3V3_MOS under-voltage fatal alarm (950DT module)",
+                "description_en": "The V_3V3_MOS device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18047B", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18047C": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_3V3_MOS 欠压致命告警（950PR标卡）",
+                "description_zh": "V_3V3_MOS 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_3V3_MOS under-voltage fatal alarm (950PR add-in card)",
+                "description_en": "The V_3V3_MOS device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18047C", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180669": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问KTA7828_3V3_CLK通路异常告警",
+                "description_zh": "a. ADC7损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to KTA7828_3V3_CLK path abnormal alarm",
+                "description_en": "a. The ADC7 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180669", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18066A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "pmbus 访问KTA7828_1V8_AO_EFUSE通路异常告警",
+                "description_zh": "a. ADC8损坏\nb. pmbus总线负载严重\nc. pmbus通路异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PMBus access to KTA7828_1V8_AO_EFUSE path abnormal alarm",
+                "description_en": "a. The ADC8 is damaged.\nb. The PMBus bus load is too heavy.\nc. The PMBus path is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18066A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F181020": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "VRD升级失败",
+                "description_zh": "VRD升级失败。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "VRD upgrade failed",
+                "description_en": "VRD upgrade failed.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F181020", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F181022": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "VDM升级失败",
+                "description_zh": "VDM升级失败。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "VDM upgrade failed",
+                "description_en": "VDM upgrade failed.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F181022", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F181210": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "PG0电源异常",
+                "description_zh": "标卡、模组：\n以下某路或多路电源轨异常：\na. 3V3_VRD短路\nb. 3V3_VRD前级EFUSE异常\nc. 3V3_STB异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PG0 power supply abnormal",
+                "description_en": "Add-in card, module:\nOne or more of the following power rails are abnormal:\na. 3V3_VRD short circuit\nb. 3V3_VRD upstream EFUSE abnormal\nc. 3V3_STB abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F181210", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F181211": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "PG1电源异常",
+                "description_zh": "标卡：\na. 12V缓启异常\n模组：\na. 54V缓启异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PG1 power supply abnormal",
+                "description_en": "Add-in card:\na. 12V soft-start abnormal\nModule:\na. 54V soft-start abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F181211", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F181212": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "PG2电源异常",
+                "description_zh": "标卡：\na. 3V3_MOS异常\n模组：\n以下某路或多路电源轨异常：\na. 6V0输入异常\nb. 12V_MOS输入异常\nc. 3V3_MOS异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PG2 power supply abnormal",
+                "description_en": "Add-in card:\na. 3V3_MOS abnormal\nModule:\nOne or more of the following power rails are abnormal:\na. 6V0 input abnormal\nb. 12V_MOS input abnormal\nc. 3V3_MOS abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F181212", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F181213": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "PG3电源异常",
+                "description_zh": "标卡、模组DV100：\na. BUS_D0/D1或SIO电源轨异常\n模组950DT：\na. V_0V8_DVDD08_SIO电源轨异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PG3 power supply abnormal",
+                "description_en": "Add-in card, DV100 module:\na. BUS_D0/D1 or SIO power rail abnormal\n950DT module:\na. V_0V8_DVDD08_SIO power rail abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F181213", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F181214": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "PG4电源异常",
+                "description_zh": "标卡、模组：\n以下某路或多路电源轨异常：\na. 1V8_DVDD电源轨异常\nb. 0V8_REF_DU0电源轨异常\nc. 0V8_REF_DU1电源轨异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PG4 power supply abnormal",
+                "description_en": "Add-in card, module:\nOne or more of the following power rails are abnormal:\na. 1V8_DVDD power rail abnormal\nb. 0V8_REF_DU0 power rail abnormal\nc. 0V8_REF_DU1 power rail abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F181214", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F181215": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "PG5电源异常",
+                "description_zh": "标卡、模组DV100：\n以下某路或多路电源轨异常：\na. 1V2_PFM_0_3电源轨异常\nb. V_1V2_PFM_4_7电源轨异常\n模组950DT：\n以下某路或多路电源轨异常：\na. BUS_D0/1V1_HBM_0_1电源轨异常\nb. BUS_D1/1V1_HBM_2_3电源轨异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PG5 power supply abnormal",
+                "description_en": "Add-in card, DV100 module:\nOne or more of the following power rails are abnormal:\na. 1V2_PFM_0_3 power rail abnormal\nb. V_1V2_PFM_4_7 power rail abnormal\n950DT module:\nOne or more of the following power rails are abnormal:\na. BUS_D0/1V1_HBM_0_1 power rail abnormal\nb. BUS_D1/1V1_HBM_2_3 power rail abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F181215", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F181216": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "PG6电源异常",
+                "description_zh": "标卡、模组DV100：\n以下某路或多路电源轨异常：\na. 0V5_PFM_0_3电源轨异常\nb. 0V5_PFM_4_7电源轨异常\n模组950DT：\n以下某路或多路电源轨异常：\na. 0V9_AIC_D0/0V4_HBM_0_1电源轨异常\nb. 0V9_AIC_D1/0V4_HBM_2_3电源轨异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PG6 power supply abnormal",
+                "description_en": "Add-in card, DV100 module:\nOne or more of the following power rails are abnormal:\na. 0V5_PFM_0_3 power rail abnormal\nb. 0V5_PFM_4_7 power rail abnormal\n950DT module:\nOne or more of the following power rails are abnormal:\na. 0V9_AIC_D0/0V4_HBM_0_1 power rail abnormal\nb. 0V9_AIC_D1/0V4_HBM_2_3 power rail abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F181216", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F181217": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "PG7电源异常",
+                "description_zh": "标卡、模组：\n以下某路或多路电源轨异常：\na. 1V2_PLL/VTT_U1电源轨异常\nb. 1V2_PLL/VTT_U0电源轨异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PG7 power supply abnormal",
+                "description_en": "Add-in card, module:\nOne or more of the following power rails are abnormal:\na. 1V2_PLL/VTT_U1 power rail abnormal\nb. 1V2_PLL/VTT_U0 power rail abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F181217", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F181218": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "PG8电源异常",
+                "description_zh": "标卡、模组：\n以下某路或多路电源轨异常：\na. 0V75_SDS_U0电源轨异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "PG8 power supply abnormal",
+                "description_en": "Add-in card, module:\nOne or more of the following power rails are abnormal:\na. 0V75_SDS_U0 power rail abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F181218", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
         "AISW_CANN_AMCT_ALL_001": {
             "attribute": {
                 "class": "Software",
