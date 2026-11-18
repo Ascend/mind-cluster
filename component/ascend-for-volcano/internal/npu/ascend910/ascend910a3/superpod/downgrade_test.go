@@ -65,7 +65,8 @@ func buildSelectSuperPodDowngradeTestCases() []selectSuperPodDowngradeTest {
 			wantNodeNum:    npuTaskNum4,
 		},
 		{
-			name:        "03 downgrade disabled by default, keep the original constraint",
+			name:        "03 downgrade disabled by the -1 annotation, keep the original constraint",
+			annotation:  downgradeDisabledAnno,
 			expired:     true,
 			wantErr:     true,
 			wantRecord:  true,
@@ -99,7 +100,24 @@ func buildDowngradeFallbackNodes() ([]*api.NodeInfo, map[string]plugin.NPUNode) 
 	return nodeInfos, npuNodes
 }
 
-var downgradeEnabledAnno = map[string]string{util.SchedulerDowngradeAnnoKey: "true"}
+var downgradeEnabledAnno = map[string]string{util.SchedulerDowngradeTimeoutAnnoKey: "60"}
+
+// downgradeDisabledAnno is the job level -1 annotation, the only way the
+// downgrade turns off for a job since an absent one defaults to on.
+var downgradeDisabledAnno = map[string]string{util.SchedulerDowngradeTimeoutAnnoKey: "-1"}
+
+// sessionWindowOf derives the session window the round collection does: the
+// job level annotation wins, -1 disables, an absent one falls back to the
+// global default the fixture configures.
+func sessionWindowOf(annotation map[string]string) int {
+	window := plugin.DefaultSchedulerDowngradeTimeout
+	if raw, ok := annotation[util.SchedulerDowngradeTimeoutAnnoKey]; ok {
+		if parsed, err := strconv.Atoi(raw); err == nil {
+			window = parsed
+		}
+	}
+	return window
+}
 
 // fixtureWindow is the downgrade window the fixtures configure the handler with,
 // the configuration layer defaults the value to DefaultSchedulerDowngradeTimeout.
@@ -122,11 +140,13 @@ func newDowngradeSession(jobID api.JobID, annotation map[string]string) (*module
 	return plg, nodeInfos
 }
 
-// expireSession stamps an expired session snapshot of the job.
-func expireSession(jobID api.JobID, over time.Duration, allWaiting bool) {
+// expireSession stamps an expired session snapshot of the job, the window is
+// the one the round collection derives from the job annotation.
+func expireSession(jobID api.JobID, window int, over time.Duration, allWaiting bool) {
 	cache.SetTimeoutNowFuncForTest(func() time.Time { return time.Now().Add(over) })
 	cache.StampSession(map[api.JobID]bool{jobID: allWaiting})
-	downgrade.StampSession(map[api.JobID]bool{jobID: allWaiting})
+	downgrade.StampSession(map[api.JobID]bool{jobID: allWaiting},
+		map[api.JobID]int{jobID: window})
 }
 
 func TestSelectSuperPodForJobDowngrade(t *testing.T) {
@@ -146,7 +166,7 @@ func TestSelectSuperPodForJobDowngrade(t *testing.T) {
 			}
 			if tt.expired {
 				// the wait covers the windows of a pre-recorded step too
-				expireSession(task.Job, fixtureWindow*3+time.Minute, true)
+				expireSession(task.Job, sessionWindowOf(tt.annotation), fixtureWindow*3+time.Minute, true)
 			}
 			// the downgrade settles at the post-validation hook, the node
 			// selection below runs under the settled constraint
@@ -196,7 +216,7 @@ func TestSelectSuperPodForJobRestoreDowngrade(t *testing.T) {
 	// effective
 	plg, nodeInfos := newDowngradeSession(jobID, downgradeEnabledAnno)
 	cache.RecordWaitStart(jobID)
-	expireSession(jobID, fixtureWindow+time.Minute, true)
+	expireSession(jobID, sessionWindowOf(downgradeEnabledAnno), fixtureWindow+time.Minute, true)
 	plg.DowngradeConstraint(jobID)
 	selectedNodes, err := plg.selectSuperPodForJob(task, nodeInfos, make(map[string]float64))
 	if err != nil {
@@ -217,7 +237,7 @@ func TestSelectSuperPodForJobRestoreDowngrade(t *testing.T) {
 	if nextPlg.spBlock != spBlockNum2 {
 		t.Fatalf("the rebuilt handler should start from the original sp-block %d", spBlockNum2)
 	}
-	expireSession(jobID, fixtureWindow*3+time.Minute, false)
+	expireSession(jobID, sessionWindowOf(downgradeEnabledAnno), fixtureWindow*3+time.Minute, false)
 	nextPlg.DowngradeConstraint(jobID)
 	selectedNodes, err = nextPlg.selectSuperPodForJob(task, nodeInfos, make(map[string]float64))
 	if err != nil {
@@ -305,6 +325,7 @@ func TestApplySpBlockConfig(t *testing.T) {
 	for _, tt := range buildApplySpBlockConfigTestCases() {
 		t.Run(tt.name, func(t *testing.T) {
 			plg, _ := New(A3x16SchedulerName, ascend910a3.NodeNPUNumber16).(*module910SuperPod)
+			plg.NPUJob = &util.NPUJob{}
 			plg.spBlock = tt.curSpBlock
 			plg.MaxNodeNPUNum = tt.maxNodeNPU
 
@@ -334,7 +355,7 @@ func TestDowngradeConstraintWithoutConfiguredSpBlock(t *testing.T) {
 	plg, _ := newDowngradeSession(jobID, downgradeEnabledAnno)
 	plg.configuredSpBlock = 0
 	cache.RecordWaitStart(jobID)
-	expireSession(jobID, fixtureWindow+time.Minute, true)
+	expireSession(jobID, sessionWindowOf(downgradeEnabledAnno), fixtureWindow+time.Minute, true)
 
 	plg.DowngradeConstraint(jobID)
 
@@ -497,7 +518,7 @@ func TestSpecialJobDowngradesSpBlock(t *testing.T) {
 			plg, _ := newDowngradeSession(tt.jobID, downgradeEnabledAnno)
 			plg.Label = tt.label
 			cache.RecordWaitStart(tt.jobID)
-			expireSession(tt.jobID, fixtureWindow+time.Minute, true)
+			expireSession(tt.jobID, sessionWindowOf(downgradeEnabledAnno), fixtureWindow+time.Minute, true)
 
 			if !tt.isKind(plg) {
 				t.Fatalf("the test fixture should be a %s job", tt.kindName)

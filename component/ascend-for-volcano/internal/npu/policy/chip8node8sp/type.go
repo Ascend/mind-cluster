@@ -38,6 +38,7 @@ type chip8node8sp struct {
 	// SuperPod specific fields
 	netUnhealthyKey        string
 	spBlock                int
+	configuredSpBlock      int
 	nodeVPodId             map[string]string
 	isSoftSuperPodAffinity bool
 	isInferServiceJob      bool

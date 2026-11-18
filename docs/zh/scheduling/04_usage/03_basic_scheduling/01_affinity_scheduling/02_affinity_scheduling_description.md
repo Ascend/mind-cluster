@@ -58,29 +58,67 @@
 |RoCE连接单层连接|通过Leaf单层连接|单层交换机亲和性调度|-|使用单层组网即可满足参数面互联要求，大大降低组网成本。|若两个资源的网络情况一致，则选择调度后产生的资源碎片少的资源。|
 |灵衢总线设备+RoCE|通过Spine-Leaf全局互联，通过灵衢总线设备网络形成多个超节点|逻辑超节点亲和性调度|根据任务的切分策略，获取网络通信需求高的网络亲和单元。保证每一个网络亲和单元都是分布在一个灵衢总线设备网络下。|-|若两个资源的网络情况一致，则选择调度后产生的资源碎片少的资源。|
 
-<!-- npu="A3" id1 -->
-## A3超节点亲和性自动降级<a name="section_a3_superpod_downgrade"></a>
+<!-- npu="950,A3" id1 -->
+## 亲和性自动降级<a name="section_affinity_auto_downgrade"></a>
 
-A3超节点任务按`sp-block`划分逻辑超节点（详细请参见[逻辑超节点亲和性调度](./04_node_based_affinity.md#逻辑超节点亲和性调度)），一个逻辑超节点内的节点必须完整落在同一个物理超节点内。当集群资源碎片化、节点故障未恢复时，任务可能长时间无法按原始`sp-block`调度而持续处于Pending状态。开启A3超节点亲和性自动降级后，Volcano会在任务持续无法按原始`sp-block`调度时按档位自动降低`sp-block`大小，使任务能够使用更小粒度的资源完成调度，避免任务无限等待。
+超节点任务按`sp-block`、`ra-block`划分逻辑超节点（详细请参见[逻辑超节点亲和性调度](./04_node_based_affinity.md#逻辑超节点亲和性调度)），多级调度任务通过`huawei.com/affinity-config`声明层级拓扑约束。当集群资源碎片化、节点故障未恢复时，任务可能长时间无法按原始拓扑约束调度而持续处于Pending状态。开启亲和性自动降级后，Volcano会在任务持续无法按原始约束调度时按档位自动放宽约束，使任务能够使用更小粒度的资源完成调度，避免任务无限等待。
 
 > [!NOTE]
 >
-> 降级仅放宽节点间的逻辑超节点约束，不改变节点内昇腾AI处理器的亲和性，也不会修改任务YAML中配置的`sp-block`。降级后任务内各逻辑超节点的rank ID仍然连续，跨物理超节点的分布仅发生在逻辑超节点之间，任务通信性能可能下降。对拓扑敏感的任务请谨慎开启。
+> 降级仅放宽节点间或层级间的拓扑约束，不改变节点内昇腾AI处理器的亲和性，也不会修改任务YAML中配置的`sp-block`、`ra-block`或`affinity-config`。降级后任务通信性能可能下降。对拓扑敏感的任务请谨慎开启。
 
-**支持的产品形态<a name="section_a3_downgrade_products"></a>**
+**支持的产品形态与调度策略<a name="section_downgrade_products"></a>**
 
-- Atlas 900 A3 SuperPoD超节点
-- Atlas 9000 A3 SuperPoD集群算力系统
+| 产品形态                                                  |调度策略|降级约束字段|
+|-------------------------------------------------------|--|--|
+| Atlas 900 A3 SuperPoD超节点、Atlas 9000 A3 SuperPoD集群算力系统 |`chip2-node16-sp`、`chip2-node8-sp`|`sp-block`|
+| Atlas 850E风冷超节点、Atlas 850风冷超节点                        |`chip8-node8-sp`|`sp-block`|
+| Atlas 950 SuperPoD Flex液冷超节点                            |`chip8-node16-sp`|`sp-block`|
+| Atlas 950 SuperPoD液冷超节点                               |`chip8-node8-ra64-sp`|`ra-block`、`sp-block`|
+| 多级调度                                                  |`multilevel`|层级`affinity-config`|
 
-**降级规则<a name="section_a3_downgrade_rules"></a>**
+**通用降级规则<a name="section_downgrade_rules"></a>**
 
-- 任务每持续1个回退时间（`scheduler-downgrade-timeout`，参见volcano启动参数）无法调度，任务亲和性降级档位加1。
-- 第n档为在原始`sp-block`上连续减半n次。减半后的`sp-block`必须为整节点数（即节点内昇腾AI处理器数量的整数倍），否则直接降至单节点底线。降级底线为单个节点的昇腾AI处理器数量，降至底线后不再继续降级；若资源仍不满足，任务继续等待。
-- 降级档位由每个任务全部pod pending的时长确定。volcano同一调度session内不会连续下调。
-- 任务首次按降级后的`sp-block`完成调度后，当前档位固定，不再继续降级。仅Job级重调度（本次调度范围内全部任务重新待调度）会将档位重置为原始`sp-block`，并按已累计的等待时长重新推导。
-- 任务全部完成调度后，降级档位仍保留；后续该任务的部分pod重新待调度时，未调度的pod沿用已生效档位，不会继续降级。
+- 任务每持续1个回退时间（`huawei.com/scheduler.downgrade.timeout`，参见Volcano启动参数）无法调度，任务亲和性降级档位加1。
+- 降级档位由每个任务全部Pod pending的时长确定。Volcano同一调度session内不会连续下调。
+- 任务首次按降级后的约束完成调度后，当前档位固定，不再继续降级。仅Job级重调度（本次调度范围内全部任务重新待调度）会将档位重置为原始配置，并按已累计的等待时长重新推导。
+- 任务全部完成调度后，降级档位仍保留；后续该任务的部分Pod重新待调度时，未调度的Pod沿用已生效档位，不会继续降级。
 
-**表 3** A3超节点亲和性自动降级档位示例（每节点16个昇腾AI处理器，原始`sp-block`为4个节点）
+**使用约束<a name="section_downgrade_constraints"></a>**
+
+- 本功能仅支持在MindCluster 26.3.0及以上版本中使用。
+- 仅使用超节点调度策略（`huawei.com/schedule_policy`配置为`chip2-node16-sp`、`chip2-node8-sp`、`chip8-node8-sp`或`chip8-node8-ra64-sp`）以及多级调度策略（`multilevel`）的任务生效，其他调度策略即使配置降级窗口也不会降级。
+- 降级特性默认开启。可通过Volcano启动参数或任务注解`huawei.com/scheduler.downgrade.timeout`配置降级窗口并关闭降级开关，任务级别配置优先于全局配置。开启后与job级重调度、Pod级重调度及进程级恢复兼容。
+- 任务调度最小副本数（`huawei.com/schedule_minAvailable`）需要等于任务副本数。
+
+**配置降级窗口<a name="section_downgrade_config"></a>**
+
+降级窗口支持全局配置与任务级别配置，均使用`huawei.com/scheduler.downgrade.timeout`，取值范围为`[1, 86400]`（单位：秒）或`-1`，详细取值说明请参见[huawei.com/scheduler.downgrade.timeout](../../../06_api/01_volcano.md#row_scheduler_downgrade_pod)：
+
+- 全局配置：通过Volcano启动参数配置，对所有任务生效，默认值为120秒，配置为`-1`时关闭全局降级开关。配置方法请参见[安装Volcano](../../../05_developer_guide/00_installation_deployment/00_manual_installation/05_volcano.md#安装volcano)。
+- 任务级别配置：在任务PodGroup或Pod的`metadata.annotations`中增加如下注解，对该任务生效；存在任务级别配置时忽略全局配置。
+
+```yaml
+metadata:
+  annotations:
+    huawei.com/scheduler.downgrade.timeout: "60"   # 任务级降级窗口为60秒，配置为-1时关闭该任务的降级开关
+```
+
+**查看降级结果<a name="section_downgrade_observe"></a>**
+
+降级生效后，Volcano在成功调度的Pod上写入以下只读注解，用户不可修改：
+
+- `huawei.com/scheduler.downgrade.timestamp`：降级生效时间，Unix时间戳，单位为秒。
+- `huawei.com/scheduler.downgrade.effected-config`：当前生效的降级约束，由调度策略序列化的JSON表示，具体取值参见下文各策略说明。
+
+同一任务的不同Pod可能记录不同的降级档位，判断任务当前生效的档位时，取该任务所有Pod中最新的`huawei.com/scheduler.downgrade.timestamp`及对应的`huawei.com/scheduler.downgrade.effected-config`。
+
+<!-- npu="950,A3" id2 -->
+### 超节点亲和性自动降级（sp-block）<a name="section_sp_block_downgrade"></a>
+
+适用于A3超节点、Atlas 850E/850风冷超节点与Atlas 950 SuperPoD Flex液冷超节点（`chip2-node16-sp`、`chip2-node8-sp`、`chip8-node8-sp`、`chip8-node16-sp`策略），降级仅约束`sp-block`，逐档减半。减半后的`sp-block`必须为整节点数（即节点内昇腾AI处理器数量的整数倍），否则直接降至单节点底线。降级底线为单个节点的昇腾AI处理器数量，降至底线后不再继续降级；若资源仍不满足，任务继续等待。
+
+**表 3** 超节点亲和性自动降级档位示例（每节点16个昇腾AI处理器，原始`sp-block`为4个节点，如Atlas 950 SuperPoD Flex超节点）
 
 <a name="table_a3_downgrade_level"></a>
 
@@ -90,31 +128,27 @@ A3超节点任务按`sp-block`划分逻辑超节点（详细请参见[逻辑超�
 |第1档|达到1个回退时间|32|2|
 |第2档|达到2个回退时间|16|1|
 
-**使用约束<a name="section_a3_downgrade_constraints"></a>**
+`huawei.com/scheduler.downgrade.effected-config`取值为`{"sp-block":16}`这类取值，数值为生效`sp-block`对应的昇腾AI处理器个数，例如`{"sp-block":16}`表示已降至单节点底线。
+<!-- end id2 -->
 
-- 本功能仅支持在MindCluster 26.3.0及以上版本中使用。
-- 仅使用A3超节点调度策略（`huawei.com/schedule_policy`配置为`chip2-node16-sp`或`chip2-node8-sp`）的任务生效，其他调度策略即使配置降级开关也不会降级。
-- 降级开关默认关闭，需通过任务注解显式开启。开启后不能同时开启Pod级重调度（`pod-rescheduling`）或进程级恢复（`process-recover-enable`），否则任务校验被拒绝。
-- 任务调度最小副本数（`huawei.com/schedule_minAvailable`）需要等于任务副本数。
+<!-- npu="950" id3 -->
+### 逻辑框亲和性自动降级（ra-block、sp-block）<a name="section_ra64_sp_downgrade"></a>
 
-**配置降级开关<a name="section_a3_downgrade_config"></a>**
+适用于Atlas 950 SuperPoD液冷超节点（`chip8-node8-ra64-sp`策略），降级分两个阶段：先降低`ra-block`，逐档减半直至整节点（rack内节点数）；`ra-block`降至整节点后，再逐档降低`sp-block`直至单节点底线。
 
-在任务PodGroup或Pod的`metadata.annotations`中增加如下注解：
+`huawei.com/scheduler.downgrade.effected-config`取值为`{"sp-block":16,"ra-block":8}`这类取值，数值分别为生效的sp-block与ra-block对应的NPU数量。
+<!-- end id3 -->
 
-```yaml
-metadata:
-  annotations:
-    huawei.com/scheduler.downgrade: "true"   # 开启A3超节点亲和性自动降级
-```
+<!-- npu="A3" id4 -->
+### 多级调度亲和性自动降级<a name="section_multi_level_downgrade"></a>
 
-全局回退时间由调度器启动参数`scheduler-downgrade-timeout`控制，配置方法请参见[安装Volcano](../../../05_developer_guide/00_installation_deployment/00_manual_installation/05_volcano.md#安装volcano)。
+多级调度任务通过`huawei.com/affinity-config`声明层级拓扑约束（如`level1=2,level2=4`）。开启亲和性自动降级后，任务持续无法按原始层级调度时，按`level1`、`level2`……由低到高（由细到粗）的顺序逐档放宽约束，直至全部层级约束消失（等价于整卡调度）。
 
-**查看降级结果<a name="section_a3_downgrade_observe"></a>**
+- 每经过一个回退时间（`huawei.com/scheduler.downgrade.timeout`），对当前待降层级的ReqNode逐档减半；某层ReqNode降至1（约束消失）后，开始降上一层级，依此类推。
+- 减半后若破坏"上层ReqNode是下层整数倍"关系，该层直接降到1。
+- 全部中间层级ReqNode均为1后，层级约束完全失效，退化为整卡调度。
 
-降级生效后，Volcano在成功调度的Pod上写入以下只读注解，用户不可修改：
+`huawei.com/scheduler.downgrade.effected-config`取值为JSON对象，键为层级名、值为生效后的ReqNode，如`{"level1":1,"level2":2}`。
+<!-- end id4 -->
 
-- `huawei.com/scheduler.downgrade.timestamp`：降级生效时间，Unix时间戳，单位为秒。
-- `huawei.com/scheduler.downgrade.effected-config`：当前生效的降级约束，由调度策略序列化的JSON表示。A3超节点策略下为`{"sp-block":16}`这类取值，数值为生效`sp-block`对应的昇腾AI处理器个数，例如`{"sp-block":16}`表示已降至单节点底线。
-
-同一任务的不同Pod可能记录不同的降级档位，判断任务当前生效的档位时，取该任务所有Pod中最新的`huawei.com/scheduler.downgrade.timestamp`及对应的`huawei.com/scheduler.downgrade.effected-config`。
 <!-- end id1 -->

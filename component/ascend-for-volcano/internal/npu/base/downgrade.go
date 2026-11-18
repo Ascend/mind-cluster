@@ -31,13 +31,14 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
-// IsDowngradeEnabled reports the huawei.com/scheduler.downgrade annotation,
-// the feature is off by default.
+// IsDowngradeEnabled reports whether the effective downgrade window of the
+// session is positive: the job level huawei.com/scheduler.downgrade.timeout
+// annotation wins over the global configuration, the feature is on by default.
 func (tp *NPUHandler) IsDowngradeEnabled() bool {
 	if tp == nil {
 		return false
 	}
-	return tp.Annotation[util.SchedulerDowngradeAnnoKey] == "true"
+	return downgrade.SessionWindow(tp.Name) > 0
 }
 
 // DowngradeConstraintIfTimeout is the common entry of the constraint downgrade, run
@@ -76,14 +77,24 @@ func (tp *NPUHandler) restoreDowngradedConstraint(jobID api.JobID, applyConfig f
 
 // downgradeConstraintOnTimeout settles the constraint of the level the wait of the
 // session buys: the policy ladder is asked for that level in one call, the level and
-// the constraint it maps to settle the session at once.
+// the constraint it maps to settle the session at once. A job which already placed a
+// task under the settled constraint never deepens: the wait of the pod-level
+// rescheduling behind it keeps the constraint it scheduled with.
 func (tp *NPUHandler) downgradeConstraintOnTimeout(jobID api.JobID,
 	nextConfig func(windows int) (string, int, bool), applyConfig func(config string) bool) {
 	if !downgrade.SessionAllWaiting(jobID) {
 		return
 	}
-	// the configuration layer validates and defaults the window
-	window := time.Duration(tp.FrameAttr.SchedulerDowngradeTimeout) * time.Second
+	if downgrade.IsEffective(jobID) {
+		tp.keepSettledConstraint(jobID, applyConfig)
+		return
+	}
+	// the session window carries the job level override of the global one,
+	// a non positive value means the feature is off for the job
+	window := time.Duration(downgrade.SessionWindow(jobID)) * time.Second
+	if window <= 0 {
+		return
+	}
 	windows, ok := tp.waitedWindows(jobID, window)
 	if !ok {
 		return
@@ -100,6 +111,17 @@ func (tp *NPUHandler) downgradeConstraintOnTimeout(jobID api.JobID,
 	}
 	klog.V(util.LogInfoLev).Infof("job <%s> waited %d windows, downgrade to <%s>", jobID, windows, config)
 	downgrade.RecordDowngrade(jobID, config, effectTime)
+	tp.markDowngraded(config, effectTime)
+}
+
+// keepSettledConstraint re-applies the settled constraint of an effective job: the
+// whole scope waits again after a pod-level rescheduling, the constraint the tasks
+// already scheduled under is the one the new round follows.
+func (tp *NPUHandler) keepSettledConstraint(jobID api.JobID, applyConfig func(string) bool) {
+	config, effectTime, ok := downgrade.DowngradeState(jobID)
+	if !ok || !applyConfig(config) {
+		return
+	}
 	tp.markDowngraded(config, effectTime)
 }
 

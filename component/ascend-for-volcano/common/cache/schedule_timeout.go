@@ -52,8 +52,13 @@ func newScheduleTimeoutCache() *scheduleTimeoutCache {
 }
 
 // RecordWaitStart starts the wait clock of a job when the scheduler first
-// sees it waiting (at the session open), the first record wins and survives
-// a job-level reschedule.
+// sees it waiting (at the session open), the first record wins and the queue
+// starvation before the first predicate is waited time too. The clock starts
+// over at the boundaries of a round: the whole scope is placed (EndRound by
+// the reconciliation), the job-level restart rebuilds the whole scope
+// (EndRound by the rescheduling) or the job is swept; the intermediate pod
+// rebuilds of one round never restart it, their wait accumulates so the round
+// still reaches its window.
 func RecordWaitStart(jobID api.JobID) {
 	if jobID == "" {
 		return

@@ -39,6 +39,10 @@ type downgradeCache struct {
 	downgrades map[api.JobID]downgradeState
 	// session is the guard snapshot stamped at the session start
 	session map[api.JobID]sessionGuard
+	// podEvictions holds the jobs whose placed tasks were partly evicted by a
+	// pod-level reschedule: such a job keeps its settled constraint even when
+	// the eviction leaves the whole scope waiting again
+	podEvictions map[api.JobID]bool
 }
 
 // downgradeState is the downgrade progress of one job: the config is the
@@ -58,12 +62,17 @@ type downgradeState struct {
 type sessionGuard struct {
 	// allWaiting reports whether the whole scope was waiting at the session start
 	allWaiting bool
+	// window is the effective downgrade window seconds of the session: the job
+	// level annotation wins over the global configuration, a non positive value
+	// means the feature is off for the job this session
+	window int
 }
 
 // newDowngradeCache builds an empty state.
 func newDowngradeCache() *downgradeCache {
 	return &downgradeCache{
-		downgrades: map[api.JobID]downgradeState{},
+		downgrades:   map[api.JobID]downgradeState{},
+		podEvictions: map[api.JobID]bool{},
 	}
 }
 
@@ -100,21 +109,58 @@ func isJSONObject(config string) bool {
 }
 
 // MarkEffective freezes the current constraint snapshot once a task is
-// scheduled under it.
+// scheduled under it. A task placed again also ends the pod eviction guard:
+// the constraint took effect on the new round, the guard has done its job.
 func MarkEffective(jobID api.JobID) {
 	if jobID == "" {
 		return
 	}
 	downgradeStore.mu.Lock()
 	defer downgradeStore.mu.Unlock()
+	delete(downgradeStore.podEvictions, jobID)
 	if state, ok := downgradeStore.downgrades[jobID]; ok && !state.effective {
 		state.effective = true
 		downgradeStore.downgrades[jobID] = state
 	}
 }
 
-// ResetConstraint drops the constraint of a job rescheduled at job level, the
-// wait clock held by common/cache is kept.
+// MarkPodEviction guards the constraint of a job whose placed tasks were partly
+// evicted: the pod-level reschedule keeps the settled constraint, so the round
+// which sees the whole scope waiting again after the eviction must not mistake
+// it for a job-level reschedule.
+func MarkPodEviction(jobID api.JobID) {
+	if jobID == "" {
+		return
+	}
+	downgradeStore.mu.Lock()
+	defer downgradeStore.mu.Unlock()
+	downgradeStore.podEvictions[jobID] = true
+}
+
+// ClearPodEviction drops the guard of a job whose whole scope was evicted at
+// once, the shape of a job-level reschedule: the next all-waiting round resets.
+func ClearPodEviction(jobID api.JobID) {
+	if jobID == "" {
+		return
+	}
+	downgradeStore.mu.Lock()
+	defer downgradeStore.mu.Unlock()
+	delete(downgradeStore.podEvictions, jobID)
+}
+
+// PodEvictionProtected reports whether a pod-level eviction guards the settled
+// constraint of the job, the job-level reset steps over such a job.
+func PodEvictionProtected(jobID api.JobID) bool {
+	if jobID == "" {
+		return false
+	}
+	downgradeStore.mu.Lock()
+	defer downgradeStore.mu.Unlock()
+	return downgradeStore.podEvictions[jobID]
+}
+
+// ResetConstraint drops the constraint of a job rescheduled at job level. The
+// wait clock of common/cache is restarted by the caller for the new round.
 func ResetConstraint(jobID api.JobID) {
 	if jobID == "" {
 		return
@@ -178,13 +224,15 @@ func HasState(jobID api.JobID) bool {
 
 // StampSession rebuilds the guard snapshot once per session from the view the
 // caller holds. The snapshot is the only freeze point of a session: the
-// level is a pure function of it.
-func StampSession(allWaitingOf map[api.JobID]bool) {
+// level is a pure function of it. Only the downgrade enabled jobs carry a
+// guard, the disabled ones read a zero window and every downgrade path of
+// them short circuits.
+func StampSession(allWaitingOf map[api.JobID]bool, windows map[api.JobID]int) {
 	downgradeStore.mu.Lock()
 	defer downgradeStore.mu.Unlock()
 	downgradeStore.session = make(map[api.JobID]sessionGuard, len(allWaitingOf))
 	for jobID, allWaiting := range allWaitingOf {
-		downgradeStore.session[jobID] = sessionGuard{allWaiting: allWaiting}
+		downgradeStore.session[jobID] = sessionGuard{allWaiting: allWaiting, window: windows[jobID]}
 	}
 }
 
@@ -198,6 +246,18 @@ func SessionAllWaiting(jobID api.JobID) bool {
 	downgradeStore.mu.Lock()
 	defer downgradeStore.mu.Unlock()
 	return downgradeStore.session[jobID].allWaiting
+}
+
+// SessionWindow returns the effective downgrade window seconds of the job of
+// the session: a non positive value means the feature is off, the entry of
+// the downgrade path and the eager freeze check it alike.
+func SessionWindow(jobID api.JobID) int {
+	if jobID == "" {
+		return -1
+	}
+	downgradeStore.mu.Lock()
+	defer downgradeStore.mu.Unlock()
+	return downgradeStore.session[jobID].window
 }
 
 // Sweep removes the records of the jobs which are no longer alive. The key
@@ -225,6 +285,7 @@ func Sweep(alive func(api.JobID) bool) {
 	defer downgradeStore.mu.Unlock()
 	for _, jobID := range dead {
 		delete(downgradeStore.downgrades, jobID)
+		delete(downgradeStore.podEvictions, jobID)
 	}
 }
 

@@ -219,7 +219,9 @@ func TestNPUAllocateFuncMarksLevelEffective(t *testing.T) {
 			task.NodeName = "effective-node"
 			anno := map[string]string{}
 			if tt.downgradeOn {
-				anno[util.SchedulerDowngradeAnnoKey] = "true"
+				anno[util.SchedulerDowngradeTimeoutAnnoKey] = "60"
+				downgrade.StampSession(map[api.JobID]bool{task.Job: true},
+					map[api.JobID]int{task.Job: 60})
 			}
 			sHandle := &ScheduleHandler{ScheduleEnv: ScheduleEnv{ClusterCache: ClusterCache{
 				Jobs: map[api.JobID]SchedulerJob{task.Job: {
@@ -269,7 +271,7 @@ func TestNPUDeallocateFuncRollbackMarker(t *testing.T) {
 				Jobs: map[api.JobID]SchedulerJob{task.Job: {
 					SchedulerJobAttr: util.SchedulerJobAttr{
 						ComJob: util.ComJob{Annotation: map[string]string{
-							util.SchedulerDowngradeAnnoKey: "true"}},
+							util.SchedulerDowngradeTimeoutAnnoKey: "60"}},
 						NPUJob: &util.NPUJob{}},
 					policyHandler: New(testPluginName),
 				}},

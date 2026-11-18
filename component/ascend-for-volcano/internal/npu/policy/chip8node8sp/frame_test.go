@@ -357,9 +357,10 @@ func TestSchedulableCase1(t *testing.T) {
 
 		convey.Convey("Edge cases", func() {
 			convey.Convey("Empty SuperPods", func() {
+				// the downgrade rebuild clears the layout, the generic selection decides
 				fJob.SuperPods = make(map[string][]plugin.SuperNode)
 				result := tp.schedulable(fJob, totalNodes)
-				convey.So(result, convey.ShouldBeFalse)
+				convey.So(result, convey.ShouldBeTrue)
 			})
 
 			convey.Convey("Empty FaultTasks", func() {

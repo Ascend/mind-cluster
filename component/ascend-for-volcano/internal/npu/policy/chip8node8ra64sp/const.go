@@ -45,6 +45,8 @@ const (
 	rackNPUNumber     = 64
 	maxSuperPodNPUNum = 1024
 	uBMemRackNumber   = 16
+	// plusTpBlockNum the round-up offset turning a ra-block npu number into its node count
+	plusTpBlockNum = 7
 
 	scoreForNode         = 100000000
 	jobCheckFailedReason = "npu num is invalid"

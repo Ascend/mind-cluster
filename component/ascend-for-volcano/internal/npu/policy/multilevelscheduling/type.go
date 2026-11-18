@@ -28,6 +28,9 @@ import (
 type MultilevelHandler struct {
 	base.NPUHandler
 	taskLevels []util.TaskTreeLevel
+	// configuredAffinityBlocks is the snapshot of the user configured affinity-config,
+	// the downgrade ladder derives from it
+	configuredAffinityBlocks map[string]int
 }
 
 // schedulingTreeNode contains all node data for scheduling

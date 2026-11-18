@@ -41,18 +41,18 @@ func buildSchedulerDowngradeTimeoutTestCases() []schedulerDowngradeTimeoutTest {
 	return []schedulerDowngradeTimeoutTest{
 		{name: "01 nil conf falls back to default", conf: nil, want: DefaultSchedulerDowngradeTimeout},
 		{name: "02 absent key falls back to default", conf: map[string]string{}, want: DefaultSchedulerDowngradeTimeout},
-		{name: "03 invalid value falls back to default",
-			conf: map[string]string{schedulerDowngradeTimeoutKey: "abc"}, want: DefaultSchedulerDowngradeTimeout},
-		{name: "04 non-positive value falls back to default",
-			conf: map[string]string{schedulerDowngradeTimeoutKey: "-5"}, want: DefaultSchedulerDowngradeTimeout},
-		{name: "05 zero value falls back to default",
-			conf: map[string]string{schedulerDowngradeTimeoutKey: "0"}, want: DefaultSchedulerDowngradeTimeout},
-		{name: "06 value over the upper bound falls back to default",
-			conf: map[string]string{schedulerDowngradeTimeoutKey: "86401"}, want: DefaultSchedulerDowngradeTimeout},
-		{name: "07 lower bound value", conf: map[string]string{schedulerDowngradeTimeoutKey: "1"}, want: 1},
+		{name: "03 unparsable value falls back to default",
+			conf: map[string]string{util.SchedulerDowngradeTimeoutAnnoKey: "12s"}, want: DefaultSchedulerDowngradeTimeout},
+		{name: "04 value below the lower bound settles on the boundary",
+			conf: map[string]string{util.SchedulerDowngradeTimeoutAnnoKey: "-5"}, want: minSchedulerDowngradeTimeout},
+		{name: "05 zero value settles on the lower bound",
+			conf: map[string]string{util.SchedulerDowngradeTimeoutAnnoKey: "0"}, want: minSchedulerDowngradeTimeout},
+		{name: "06 value over the upper bound settles on the boundary",
+			conf: map[string]string{util.SchedulerDowngradeTimeoutAnnoKey: "86401"}, want: maxSchedulerDowngradeTimeout},
+		{name: "07 lower bound value", conf: map[string]string{util.SchedulerDowngradeTimeoutAnnoKey: "1"}, want: 1},
 		{name: "08 upper bound value",
-			conf: map[string]string{schedulerDowngradeTimeoutKey: "86400"}, want: 86400},
-		{name: "09 valid value", conf: map[string]string{schedulerDowngradeTimeoutKey: "30"}, want: 30},
+			conf: map[string]string{util.SchedulerDowngradeTimeoutAnnoKey: "86400"}, want: 86400},
+		{name: "09 valid value", conf: map[string]string{util.SchedulerDowngradeTimeoutAnnoKey: "30"}, want: 30},
 	}
 }
 
@@ -69,10 +69,14 @@ func TestGetSchedulerDowngradeTimeout(t *testing.T) {
 // newDowngradeJob builds a downgrade-enabled job.
 func newDowngradeJob() SchedulerJob {
 	return SchedulerJob{SchedulerJobAttr: util.SchedulerJobAttr{
-		ComJob: util.ComJob{Annotation: map[string]string{util.SchedulerDowngradeAnnoKey: "true"}},
+		ComJob: util.ComJob{Annotation: map[string]string{util.SchedulerDowngradeTimeoutAnnoKey: "60"}},
 		NPUJob: &util.NPUJob{},
 	}}
 }
+
+// downgradeDisabledAnno is the job level -1 annotation, the only way the
+// downgrade turns off for a job since an absent one defaults to on.
+var downgradeDisabledAnno = map[string]string{util.SchedulerDowngradeTimeoutAnnoKey: "-1"}
 
 // buildRoundJobInfo builds an api job of scopedNum npu tasks: pendingNum of
 // them waiting, pipelinedNum holding a reserved node without a committed
@@ -173,7 +177,7 @@ func TestReconcileTimingStateSeed(t *testing.T) {
 			}
 			vcJob := newDowngradeJob()
 			if tt.disabled {
-				vcJob.SchedulerJobAttr.ComJob.Annotation = nil
+				vcJob.SchedulerJobAttr.ComJob.Annotation = downgradeDisabledAnno
 			}
 			if tt.preConfig != "" {
 				downgrade.RecordDowngrade(jobID, tt.preConfig, 500)
@@ -230,8 +234,8 @@ func TestReconcileTimingStateJobReschedule(t *testing.T) {
 			downgrade.ResetDowngradeCacheForTest()
 			sHandle := &ScheduleHandler{}
 			jobID := api.JobID("reschedule-job")
-			// the wait clock of the fault episode, the level reset keeps it so
-			// the job degrades on top of the already waited time
+			// the wait clock of the fault episode, the job-level reset
+			// restarts it for the new round while the kept state leaves it
 			cache.RecordWaitStart(jobID)
 			downgrade.RecordDowngrade(jobID, configSpBlock2, 1000)
 			if tt.effective {
@@ -242,7 +246,7 @@ func TestReconcileTimingStateJobReschedule(t *testing.T) {
 			}
 			vcJob := newDowngradeJob()
 			if tt.disabled {
-				vcJob.SchedulerJobAttr.ComJob.Annotation = nil
+				vcJob.SchedulerJobAttr.ComJob.Annotation = downgradeDisabledAnno
 			}
 			sHandle.Jobs = map[api.JobID]SchedulerJob{jobID: vcJob}
 
@@ -256,7 +260,8 @@ func TestReconcileTimingStateJobReschedule(t *testing.T) {
 			if tt.wantStateKept && config != configSpBlock2 {
 				t.Errorf("the kept config = %q, want %q", config, configSpBlock2)
 			}
-			// the wait clock survives both the reset and the kept state
+			// the clock exists after the session too: the reset restarts it on
+			// the pending round, the kept state carries it untouched
 			if _, clockOK := cache.WaitStartTime(jobID); !clockOK {
 				t.Errorf("the wait clock should survive the session reconciliation")
 			}
@@ -376,7 +381,7 @@ func TestReconcileTimingStateAnchorsWaitClock(t *testing.T) {
 			}
 			vcJob := newDowngradeJob()
 			if tt.disabled {
-				vcJob.SchedulerJobAttr.ComJob.Annotation = nil
+				vcJob.SchedulerJobAttr.ComJob.Annotation = downgradeDisabledAnno
 			}
 			sHandle.Jobs = map[api.JobID]SchedulerJob{jobID: vcJob}
 

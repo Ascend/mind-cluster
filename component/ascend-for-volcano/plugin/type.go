@@ -104,7 +104,7 @@ var (
 		util.AffinityConfig,
 		util.ParameterPlaneUnhealthyToleranceAnnoKey,
 		util.ScheduleModeAnnoKey,
-		util.SchedulerDowngradeAnnoKey,
+		util.SchedulerDowngradeTimeoutAnnoKey,
 		util.SilentUnhealthyToleranceAnnoKey,
 		util.PodErrorToleranceAnnoKey,
 		util.SubHealthyToleranceAnnoKey,
@@ -196,9 +196,9 @@ type DynamicParameters struct {
 
 	// PreferPreviousNode enables "prefer previous node" feature
 	PreferPreviousNode bool
-	// SchedulerDowngradeTimeout is the global timeout in seconds after which a
-	// job with the scheduler downgrade annotation enabled is scheduled with the
-	// downgraded constraint, default is DefaultSchedulerDowngradeTimeout
+	// SchedulerDowngradeTimeout is the global downgrade window in seconds, -1
+	// disables the feature globally, a job level scheduler.downgrade.timeout
+	// annotation overrides it, default is DefaultSchedulerDowngradeTimeout
 	SchedulerDowngradeTimeout int
 }
 

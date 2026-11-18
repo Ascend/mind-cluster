@@ -57,7 +57,7 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 		klog.V(util.LogWarningLev).Infof("%s npuAllocateFunc %s not exist.", PluginName, task.NodeName)
 		return
 	}
-	if vcJob.isSchedulerDowngradeEnabled() {
+	if downgrade.SessionWindow(task.Job) > 0 {
 		// The constraint is frozen eagerly at the pipeline moment and survives a
 		// rollback by design: the next session hits the all-waiting factory
 		// reset and rebuilds the equivalent state, no compensation here.

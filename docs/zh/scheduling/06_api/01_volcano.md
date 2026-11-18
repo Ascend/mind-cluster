@@ -90,30 +90,30 @@
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_schedule_mode_4"><a name="p_schedule_mode_4"></a><a name="p_schedule_mode_4"></a><span id="ph_schedule_mode_volcano"><a name="ph_schedule_mode_volcano"></a><a name="ph_schedule_mode_volcano"></a>Volcano</span></p>
 </td>
 </tr>
-<tr id="row_scheduler_downgrade_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgrade_1"><a name="p_scheduler_downgrade_1"></a><a name="p_scheduler_downgrade_1"></a>huawei.com/scheduler.downgrade</p>
+<tr id="row_scheduler_downgrade_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgrade_1"><a name="p_scheduler_downgrade_1"></a><a name="p_scheduler_downgrade_1"></a>huawei.com/scheduler.downgrade.timeout</p>
 </td>
-<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgrade_2"><a name="p_scheduler_downgrade_2"></a><a name="p_scheduler_downgrade_2"></a>配置A3超节点任务调度约束降级（回退拓扑约束）开关。</p>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgrade_2"><a name="p_scheduler_downgrade_2"></a><a name="p_scheduler_downgrade_2"></a>配置超节点/多级调度任务调度约束回退的降级窗口与开关。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>true：开启。任务持续无法按原始sp-block调度时，每等待一个调度器全局回退时间（scheduler-downgrade-timeout）档位加1：第 n 档为在原始 sp-block 上连续减半 n 次（减半必须为整节点数，否则直接到单节点底线）。档位由每个调度会话起点的等待时长快照推导，每个调度会话只推导一次，会话内保持不变：等待时长跨多个窗口时允许一次跨多档（例如 64→16），但同一会话内不会连续下调。任务在更细粒度下完成调度，pod上会写入只读标记注解huawei.com/scheduler.downgrade.timestamp与huawei.com/scheduler.downgrade.effected-config。</li><li>false（默认）：关闭，与现状一致。</li></ul>
-<p id="p_scheduler_downgrade_3"><a name="p_scheduler_downgrade_3"></a><a name="p_scheduler_downgrade_3"></a>未配置该注解或取值非true时，默认关闭。仅对A3超节点调度策略生效；推理服务（infer-service）任务同样生效，其节点选择同样以生效后的sp-block为准；开启后不能同时开启pod级重调度（pod-rescheduling）或进程级恢复（process-recover-enable），否则任务校验被拒绝。任务首次按某档完成调度后档位固定、不再加深；job级重调度（调度范围内全部任务重新待调度）时档位重置为原始 sp-block 并按已等待时长重新推导，pod级重调度（部分任务待调度）时沿用已生效档位。</p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>[1, 86400]：降级窗口，整数，单位为秒，任务持续无法按原始拓扑约束（sp-block、ra-block或affinity-config）调度时逐档降级。</li><li>-1：关闭该任务的降级开关。</li></ul>
+<p id="p_scheduler_downgrade_3"><a name="p_scheduler_downgrade_3"></a><a name="p_scheduler_downgrade_3"></a>该注解同时支持作为Volcano启动参数配置全局降级窗口（默认120秒），任务级别配置优先于全局配置，未配置时默认开启并使用全局窗口。降级路径、生效策略等详细说明请参见<a href="#row_scheduler_downgrade_pod">huawei.com/scheduler.downgrade.timeout</a>。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_scheduler_downgrade_4"><a name="p_scheduler_downgrade_4"></a><a name="p_scheduler_downgrade_4"></a><span id="ph_scheduler_downgrade_volcano"><a name="ph_scheduler_downgrade_volcano"></a><a name="ph_scheduler_downgrade_volcano"></a>Volcano</span></p>
 </td>
 </tr>
 <tr id="row_scheduler_downgraded_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgraded_1"><a name="p_scheduler_downgraded_1"></a><a name="p_scheduler_downgraded_1"></a>huawei.com/scheduler.downgrade.timestamp</p>
 </td>
-<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgraded_2"><a name="p_scheduler_downgraded_2"></a><a name="p_scheduler_downgraded_2"></a>记录A3超节点任务调度约束降级的生效时间。Volcano自动更新。</p>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgraded_2"><a name="p_scheduler_downgraded_2"></a><a name="p_scheduler_downgraded_2"></a>记录超节点/多级调度任务调度约束降级的生效时间。Volcano自动更新。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_scheduler_downgraded_3"><a name="p_scheduler_downgraded_3"></a><a name="p_scheduler_downgraded_3"></a>Unix时间戳，单位为秒。由Volcano在Pod绑定成功时写入，同一Pod已有标记则不改写，预留回撤时会被清除、下次绑定成功时重新写入，用户不应修改该注解。同一任务的不同Pod可能记录不同的降级档位，判断任务当前生效的档位请取该任务所有Pod中最新的时间戳。</p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_scheduler_downgraded_3"><a name="p_scheduler_downgraded_3"></a><a name="p_scheduler_downgraded_3"></a>Unix时间戳，单位为秒。由Volcano在Pod绑定成功时写入，同一Pod已有标记则不改写，预留回撤时会被清除，下次绑定成功时重新写入，用户不可修改该注解。同一任务的不同Pod可能记录不同的降级档位，判断任务当前生效的档位请取该任务所有Pod中最新的时间戳。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_scheduler_downgraded_4"><a name="p_scheduler_downgraded_4"></a><a name="p_scheduler_downgraded_4"></a><span id="ph_scheduler_downgraded_volcano"><a name="ph_scheduler_downgraded_volcano"></a><a name="ph_scheduler_downgraded_volcano"></a>Volcano</span></p>
 </td>
 </tr>
 <tr id="row_scheduler_downgraded_level_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgraded_level_1"><a name="p_scheduler_downgraded_level_1"></a><a name="p_scheduler_downgraded_level_1"></a>huawei.com/scheduler.downgrade.effected-config</p>
 </td>
-<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgraded_level_2"><a name="p_scheduler_downgraded_level_2"></a><a name="p_scheduler_downgraded_level_2"></a>记录A3超节点任务生效的降级约束。Volcano自动更新。</p>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgraded_level_2"><a name="p_scheduler_downgraded_level_2"></a><a name="p_scheduler_downgraded_level_2"></a>记录超节点/多级调度任务生效的降级约束。Volcano自动更新。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_scheduler_downgraded_level_3"><a name="p_scheduler_downgraded_level_3"></a><a name="p_scheduler_downgraded_level_3"></a>取值为生效的降级约束快照，由调度策略序列化的JSON表示：A3超节点策略下为{"sp-block":16}这类取值，数值等于生效的sp-block对应的NPU数量，例如{"sp-block":16}表示已降到单节点底线。与huawei.com/scheduler.downgrade.timestamp同时写入，同一Pod已有标记则不改写，预留回撤时会被清除、下次绑定成功时重新写入，用户不应修改该注解。该注解对应的生效时间请参见huawei.com/scheduler.downgrade.timestamp。</p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_scheduler_downgraded_level_3"><a name="p_scheduler_downgraded_level_3"></a><a name="p_scheduler_downgraded_level_3"></a>取值为生效的降级约束快照，由调度策略序列化的JSON表示：<ul><li>A3超节点、Atlas 850E风冷超节点、Atlas 850风冷超节点与Atlas 950 SuperPoD Flex液冷超节点策略下为{"sp-block":16}这类取值，数值等于生效的sp-block对应的NPU数量，例如{"sp-block":16}表示已降到单节点底线。</li><li>Atlas 950 SuperPoD液冷超节点策略下为{"sp-block":16,"ra-block":8}这类取值，数值分别为生效的sp-block与ra-block对应的NPU数量。</li><li>多级调度策略下为{"level1":1,"level2":2}这类取值，键为层级名、值为生效后的ReqNode。</li></ul>与huawei.com/scheduler.downgrade.timestamp同时写入，同一Pod已有标记则不改写，预留回撤时会被清除，下次绑定成功时重新写入，用户不可修改该注解。该注解对应的生效时间请参见huawei.com/scheduler.downgrade.timestamp。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_scheduler_downgraded_level_4"><a name="p_scheduler_downgraded_level_4"></a><a name="p_scheduler_downgraded_level_4"></a><span id="ph_scheduler_downgraded_level_volcano"><a name="ph_scheduler_downgraded_level_volcano"></a><a name="ph_scheduler_downgraded_level_volcano"></a>Volcano</span></p>
 </td>
@@ -399,30 +399,31 @@
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_schedule_mode_pod_4"><a name="p_schedule_mode_pod_4"></a><a name="p_schedule_mode_pod_4"></a><span id="ph_schedule_mode_pod_volcano"><a name="ph_schedule_mode_pod_volcano"></a><a name="ph_schedule_mode_pod_volcano"></a>Volcano</span></p>
 </td>
 </tr>
-<tr id="row_scheduler_downgrade_pod"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgrade_pod_1"><a name="p_scheduler_downgrade_pod_1"></a><a name="p_scheduler_downgrade_pod_1"></a>huawei.com/scheduler.downgrade</p>
+<tr id="row_scheduler_downgrade_pod"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgrade_pod_1"><a name="p_scheduler_downgrade_pod_1"></a><a name="p_scheduler_downgrade_pod_1"></a>huawei.com/scheduler.downgrade.timeout</p>
 </td>
-<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgrade_pod_2"><a name="p_scheduler_downgrade_pod_2"></a><a name="p_scheduler_downgrade_pod_2"></a>配置A3超节点任务调度约束降级（回退拓扑约束）开关。</p>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgrade_pod_2"><a name="p_scheduler_downgrade_pod_2"></a><a name="p_scheduler_downgrade_pod_2"></a>配置超节点/多级调度任务调度约束回退的降级窗口与开关。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>true：开启。任务持续无法按原始sp-block调度时，每等待一个调度器全局回退时间（scheduler-downgrade-timeout）档位加1：第 n 档为在原始 sp-block 上连续减半 n 次（减半必须为整节点数，否则直接到单节点底线）。档位由每个调度会话起点的等待时长快照推导，每个调度会话只推导一次，会话内保持不变：等待时长跨多个窗口时允许一次跨多档（例如 64→16），但同一会话内不会连续下调。任务在更细粒度下完成调度，pod上会写入只读标记注解huawei.com/scheduler.downgrade.timestamp与huawei.com/scheduler.downgrade.effected-config。</li><li>false（默认）：关闭，与现状一致。</li></ul>
-<p id="p_scheduler_downgrade_pod_3"><a name="p_scheduler_downgrade_pod_3"></a><a name="p_scheduler_downgrade_pod_3"></a>未配置该注解或取值非true时，默认关闭。仅对A3超节点调度策略生效；推理服务（infer-service）任务同样生效，其节点选择同样以生效后的sp-block为准；开启后不能同时开启pod级重调度（pod-rescheduling）或进程级恢复（process-recover-enable），否则任务校验被拒绝。任务首次按某档完成调度后档位固定、不再加深；job级重调度（调度范围内全部任务重新待调度）时档位重置为原始 sp-block 并按已等待时长重新推导，pod级重调度（部分任务待调度）时沿用已生效档位。</p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>[1, 86400]：降级窗口，整数，单位为秒。任务持续无法按原始拓扑约束（sp-block、ra-block或affinity-config）调度时，每等待一个降级窗口档位加1。降级路径依调度策略而定：<ul><li>A3超节点、Atlas 850E风冷超节点、Atlas 850风冷超节点与Atlas 950 SuperPoD Flex液冷超节点按sp-block逐档减半，减半必须为整节点数，否则直接到单节点底线。</li><li>Atlas 950 SuperPoD液冷超节点先按ra-block逐档减半到整节点，再按sp-block逐档减半。</li><li>多级调度按level1、level2……由低到高逐层减半。</li></ul>档位由每个调度会话起点的等待时长快照推导，每个调度会话只推导一次，会话内保持不变：等待时长跨多个窗口时允许一次跨多档（例如64→16），但同一会话内不会连续下调。任务在更细粒度下完成调度，Pod上会写入只读标记注解huawei.com/scheduler.downgrade.timestamp与huawei.com/scheduler.downgrade.effected-config。</li><li>-1：关闭该任务的降级开关，与现状一致。</li></ul>
+<p id="p_scheduler_downgrade_pod_3"><a name="p_scheduler_downgrade_pod_3"></a><a name="p_scheduler_downgrade_pod_3"></a>该注解同时支持作为Volcano启动参数配置全局降级窗口（默认120秒）。</p>
+<ul><li>任务级别配置优先于全局配置，存在任务级别配置时忽略全局配置；未配置时默认开启并使用全局窗口。</li><li>注解值超出[1, 86400]范围时按最近的边界值（1或86400）生效，无法解析时取默认值120秒。</li><li>仅对A3超节点（chip2-node8-sp、chip2-node16-sp）、Atlas 850E风冷超节点/Atlas 850风冷超节点（chip8-node8-sp）、Atlas 950 SuperPoD Flex液冷超节点（chip8-node16-sp）、Atlas 950 SuperPoD液冷超节点（chip8-node8-ra64-sp）与多级调度（multilevel）策略生效。</li><li>任务首次按某档完成调度后档位固定、不再加深；job级重调度时档位重置为原始拓扑约束并按已等待时长重新推导，pod级重调度时沿用已生效档位。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_scheduler_downgrade_pod_4"><a name="p_scheduler_downgrade_pod_4"></a><a name="p_scheduler_downgrade_pod_4"></a><span id="ph_scheduler_downgrade_pod_volcano"><a name="ph_scheduler_downgrade_pod_volcano"></a><a name="ph_scheduler_downgrade_pod_volcano"></a>Volcano</span></p>
 </td>
 </tr>
 <tr id="row_scheduler_downgraded_pod"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgraded_pod_1"><a name="p_scheduler_downgraded_pod_1"></a><a name="p_scheduler_downgraded_pod_1"></a>huawei.com/scheduler.downgrade.timestamp</p>
 </td>
-<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgraded_pod_2"><a name="p_scheduler_downgraded_pod_2"></a><a name="p_scheduler_downgraded_pod_2"></a>记录A3超节点任务调度约束降级的生效时间。Volcano自动更新。</p>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgraded_pod_2"><a name="p_scheduler_downgraded_pod_2"></a><a name="p_scheduler_downgraded_pod_2"></a>记录超节点/多级调度任务调度约束降级的生效时间。Volcano自动更新。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_scheduler_downgraded_pod_3"><a name="p_scheduler_downgraded_pod_3"></a><a name="p_scheduler_downgraded_pod_3"></a>Unix时间戳，单位为秒。由Volcano在Pod绑定成功时写入，同一Pod已有标记则不改写，预留回撤时会被清除、下次绑定成功时重新写入，用户不应修改该注解。同一任务的不同Pod可能记录不同的降级档位，判断任务当前生效的档位请取该任务所有Pod中最新的时间戳。</p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_scheduler_downgraded_pod_3"><a name="p_scheduler_downgraded_pod_3"></a><a name="p_scheduler_downgraded_pod_3"></a>Unix时间戳，单位为秒。由Volcano在Pod绑定成功时写入，同一Pod已有标记则不改写，预留回撤时会被清除，下次绑定成功时重新写入，用户不可修改该注解。同一任务的不同Pod可能记录不同的降级档位，判断任务当前生效的档位请取该任务所有Pod中最新的时间戳。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_scheduler_downgraded_pod_4"><a name="p_scheduler_downgraded_pod_4"></a><a name="p_scheduler_downgraded_pod_4"></a><span id="ph_scheduler_downgraded_pod_volcano"><a name="ph_scheduler_downgraded_pod_volcano"></a><a name="ph_scheduler_downgraded_pod_volcano"></a>Volcano</span></p>
 </td>
 </tr>
 <tr id="row_scheduler_downgraded_level_pod"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_scheduler_downgraded_level_pod_1"><a name="p_scheduler_downgraded_level_pod_1"></a><a name="p_scheduler_downgraded_level_pod_1"></a>huawei.com/scheduler.downgrade.effected-config</p>
 </td>
-<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgraded_level_pod_2"><a name="p_scheduler_downgraded_level_pod_2"></a><a name="p_scheduler_downgraded_level_pod_2"></a>记录A3超节点任务生效的降级约束。Volcano自动更新。</p>
+<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p_scheduler_downgraded_level_pod_2"><a name="p_scheduler_downgraded_level_pod_2"></a><a name="p_scheduler_downgraded_level_pod_2"></a>记录超节点/多级调度任务生效的降级约束。Volcano自动更新。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_scheduler_downgraded_level_pod_3"><a name="p_scheduler_downgraded_level_pod_3"></a><a name="p_scheduler_downgraded_level_pod_3"></a>取值为生效的降级约束快照，由调度策略序列化的JSON表示：A3超节点策略下为{"sp-block":16}这类取值，数值等于生效的sp-block对应的NPU数量，例如{"sp-block":16}表示已降到单节点底线。与huawei.com/scheduler.downgrade.timestamp同时写入，同一Pod已有标记则不改写，预留回撤时会被清除、下次绑定成功时重新写入，用户不应修改该注解。该注解对应的生效时间请参见huawei.com/scheduler.downgrade.timestamp。</p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p_scheduler_downgraded_level_pod_3"><a name="p_scheduler_downgraded_level_pod_3"></a><a name="p_scheduler_downgraded_level_pod_3"></a>取值为生效的降级约束快照，由调度策略序列化的JSON表示：<ul><li>A3超节点、Atlas 850E风冷超节点、Atlas 850风冷超节点与Atlas 950 SuperPoD Flex液冷超节点策略下为{"sp-block":16}这类取值，数值等于生效的sp-block对应的NPU数量，例如{"sp-block":16}表示已降到单节点底线。</li><li>Atlas 950 SuperPoD液冷超节点策略下为{"sp-block":16,"ra-block":8}这类取值，数值分别为生效的sp-block与ra-block对应的NPU数量。</li><li>多级调度策略下为{"level1":1,"level2":2}这类取值，键为层级名、值为生效后的ReqNode。</li></ul>与huawei.com/scheduler.downgrade.timestamp同时写入，同一Pod已有标记则不改写，预留回撤时会被清除，下次绑定成功时重新写入，用户不可修改该注解。该注解对应的生效时间请参见huawei.com/scheduler.downgrade.timestamp。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p_scheduler_downgraded_level_pod_4"><a name="p_scheduler_downgraded_level_pod_4"></a><a name="p_scheduler_downgraded_level_pod_4"></a><span id="ph_scheduler_downgraded_level_pod_volcano"><a name="ph_scheduler_downgraded_level_pod_volcano"></a><a name="ph_scheduler_downgraded_level_pod_volcano"></a>Volcano</span></p>
 </td>
