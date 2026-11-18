@@ -595,7 +595,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
     <tbody>
         <tr>
             <td class="cellrowborder" rowspan="1" valign="top" width="8.799999999999999%" headers="mcps1.2.7.1.1 "><p>Ascend Job</p></td>
-            <td class="cellrowborder" rowspan="1" valign="top" width="15%" headers="mcps1.2.7.1.2 "><p><span>Atlas 950 SuperPoD超节点</span></p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="15%" headers="mcps1.2.7.1.2 "><p><span>Atlas 950 SuperPoD液冷超节点</span></p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>pytorch_standalone_acjob_950.yaml</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>示例默认为单机8卡任务。</p></td>
@@ -631,7 +631,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD超节点</p><p>Atlas 850E超节点</p><p>Atlas 850超节点</p><p>Atlas 350加速卡</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD液冷超节点</p><p>Atlas 850E风冷超节点</p><p>Atlas 850风冷超节点</p><p>Atlas 350加速卡</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-deploy-950.yaml</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-deploy-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 </td>
@@ -656,7 +656,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD超节点</p><p>Atlas 850E超节点</p><p>Atlas 850超节点</p><p>Atlas 350加速卡</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD液冷超节点</p><p>Atlas 850E风冷超节点</p><p>Atlas 850风冷超节点</p><p>Atlas 350加速卡</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-vcjob-950.yaml</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/release_v26.2.0/samples/inference/volcano/infer-vcjob-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 </td>
@@ -849,7 +849,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
     <tbody>
         <tr>
             <td class="cellrowborder" rowspan="1" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Volcano Job</p></td>
-            <td class="cellrowborder" rowspan="1" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD超节点</p><p>Atlas 850E超节点</p><p>Atlas 850超节点</p><p>Atlas 350加速卡</p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD液冷超节点</p><p>Atlas 850E风冷超节点</p><p>Atlas 850风冷超节点</p><p>Atlas 350加速卡</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>atlas_950_pytorch_vcjob.yaml</p></td>
             <td class="cellrowborder" rowspan="2" valign="top" width="12.26%" headers="mcps1.2.7.1.5 "><p>示例默认为单机8卡任务。</p></td>
@@ -859,7 +859,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
         </tr>
         <tr>
             <td class="cellrowborder" rowspan="1" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Deployment</p></td>
-            <td class="cellrowborder" rowspan="1" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD超节点</p><p>Atlas 850E超节点</p><p>Atlas 850超节点</p><p>Atlas 350加速卡</p></td>
+            <td class="cellrowborder" rowspan="1" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD液冷超节点</p><p>Atlas 850E风冷超节点</p><p>Atlas 850风冷超节点</p><p>Atlas 350加速卡</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>atlas_950_pytorch_deployment.yaml</p></td>
         </tr>
@@ -902,7 +902,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 </td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD超节点</p><p>Atlas 850E超节点</p><p>Atlas 850超节点</p><p>Atlas 350加速卡</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD液冷超节点</p><p>Atlas 850E风冷超节点</p><p>Atlas 850风冷超节点</p><p>Atlas 350加速卡</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>pytorch_multinodes_acjob_infer_950_with_ranktable.yaml</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/release_v26.2.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_950_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 </td>

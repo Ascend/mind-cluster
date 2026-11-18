@@ -34,9 +34,9 @@
     <tr><td>Atlas A3推理系列产品：<p>Atlas 800I A3超节点服务器</p></td></tr>
     <tr>
       <td rowspan="2">Ascend 950PR&950DT系列产品</td>
-      <td>Ascend 950PR系列产品：<ul><li>Atlas 350加速卡</li><li>Atlas 850超节点</li><li>Atlas 650服务器</li></ul></td>
+      <td>Ascend 950PR系列产品：<ul><li>Atlas 350加速卡</li><li>Atlas 850风冷超节点</li><li>Atlas 650服务器</li></ul></td>
     </tr>
-    <tr><td>Ascend 950DT系列产品：<ul><li>Atlas 850E超节点</li><li>Atlas 650E服务器</li><li>Atlas 950 SuperPoD超节点</li><li>Atlas 950 SuperPoD Flex</li></ul></td></tr>
+    <tr><td>Ascend 950DT系列产品：<ul><li>Atlas 850E风冷超节点</li><li>Atlas 650E服务器</li><li>Atlas 950 SuperPoD液冷超节点</li><li>Atlas 950 SuperPoD Flex液冷超节点</li></ul></td></tr>
   </tbody>
 </table>
 <!-- markdownlint-enable -->

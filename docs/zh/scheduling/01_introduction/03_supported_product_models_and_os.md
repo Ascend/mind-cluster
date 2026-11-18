@@ -23,22 +23,22 @@
 </thead>
 <tbody><tr id="rowAtlas950"><td class="cellrowborder" rowspan="7" valign="top" width="15.93%" headers="mcpsGen1.2.4.1.1 "><p id="pAtlas950"><a name="pAtlas950"></a><a name="pAtlas950"></a><span id="phAtlas950"><a name="phAtlas950"></a><a name="phAtlas950"></a>Ascend 950PR&950DT系列产品</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas950SuperPoD"><a name="pAtlas950SuperPoD"></a><a name="pAtlas950SuperPoD"></a><span id="phAtlas950SuperPoD"><a name="phAtlas950SuperPoD"></a><a name="phAtlas950SuperPoD"></a>Atlas 950 SuperPoD超节点</span></p>
+<td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas950SuperPoD"><a name="pAtlas950SuperPoD"></a><a name="pAtlas950SuperPoD"></a><span id="phAtlas950SuperPoD"><a name="phAtlas950SuperPoD"></a><a name="phAtlas950SuperPoD"></a>Atlas 950 SuperPoD液冷超节点</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas950OS"><a name="pAtlas950OS"></a><a name="pAtlas950OS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
 </td>
 </tr>
-<tr id="rowAtlas950SuperPoDFlex"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas950SuperPoDFlex"><a name="pAtlas950SuperPoDFlex"></a><a name="pAtlas950SuperPoDFlex"></a><span id="phAtlas950SuperPoDFlex"><a name="phAtlas950SuperPoDFlex"></a><a name="phAtlas950SuperPoDFlex"></a>Atlas 950 SuperPoD Flex</span></p>
+<tr id="rowAtlas950SuperPoDFlex"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas950SuperPoDFlex"><a name="pAtlas950SuperPoDFlex"></a><a name="pAtlas950SuperPoDFlex"></a><span id="phAtlas950SuperPoDFlex"><a name="phAtlas950SuperPoDFlex"></a><a name="phAtlas950SuperPoDFlex"></a>Atlas 950 SuperPoD Flex液冷超节点</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas950SuperPoDFlexOS"><a name="pAtlas950SuperPoDFlexOS"></a><a name="pAtlas950SuperPoDFlexOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
 </td>
 </tr>
-<tr id="rowAtlas850"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850Server"><a name="pAtlas850Server"></a><a name="pAtlas850Server"></a><span id="phAtlas850Server"><a name="phAtlas850Server"></a><a name="phAtlas850Server"></a>Atlas 850E超节点</span></p>
+<tr id="rowAtlas850"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850Server"><a name="pAtlas850Server"></a><a name="pAtlas850Server"></a><span id="phAtlas850Server"><a name="phAtlas850Server"></a><a name="phAtlas850Server"></a>Atlas 850E风冷超节点</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850ServerOS"><a name="pAtlas850ServerOS"></a><a name="pAtlas850ServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
 </td>
 </tr>
-<tr id="rowAtlas850"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850Server"><a name="pAtlas850Server"></a><a name="pAtlas850Server"></a><span id="phAtlas850Server"><a name="phAtlas850Server"></a><a name="phAtlas850Server"></a>Atlas 850超节点</span></p>
+<tr id="rowAtlas850"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850Server"><a name="pAtlas850Server"></a><a name="pAtlas850Server"></a><span id="phAtlas850Server"><a name="phAtlas850Server"></a><a name="phAtlas850Server"></a>Atlas 850风冷超节点</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850ServerOS"><a name="pAtlas850ServerOS"></a><a name="pAtlas850ServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
 </td>

@@ -18,11 +18,11 @@
 - Atlas 900 A2 PoD集群基础单元
 - Atlas 900 A3 SuperPoD超节点
 - Atlas 800T A3超节点服务器
-- Atlas 850E超节点
-- Atlas 850超节点
+- Atlas 850E风冷超节点
+- Atlas 850风冷超节点
 - Atlas 650E服务器
 - Atlas 650服务器
-- Atlas 950 SuperPoD超节点
+- Atlas 950 SuperPoD液冷超节点
 - Atlas 350加速卡
 - Atlas 300I Pro推理卡
 - Atlas 300V视频解析卡

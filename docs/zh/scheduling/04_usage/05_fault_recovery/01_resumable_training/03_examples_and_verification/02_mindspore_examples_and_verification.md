@@ -2,7 +2,7 @@
 
 >[!NOTE]
 >
->- 本章节以在Atlas 950 SuperPoD超节点上训练DeepSeek-V4-Flash模型为例，说明MindSpore **动态图（PyNative）**场景下**Job级重调度**与**Pod级重调度**的使用方法。
+>- 本章节以在Atlas 950 SuperPoD液冷超节点上训练DeepSeek-V4-Flash模型为例，说明MindSpore **动态图（PyNative）**场景下**Job级重调度**与**Pod级重调度**的使用方法。
 >- 示例中的模型、数据集与并行配置仅用于演示操作流程，实际使用时请根据业务替换。
 >- 如需使用Atlas A2系列产品/Atlas A3系列产品 及MindSpore **静态图**能力，请使用26.2.0版本的[MindSpore场景示例](https://gitcode.com/Ascend/mind-cluster/blob/v26.2.0/docs/zh/scheduling/04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/02_mindspore_examples_and_verification.md)及其配套版本，本章节不再提供该部分内容。
 
@@ -134,7 +134,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_mindspore_a5_pkg_r10c3"><a name="zh-cn_topic_mindspore_a5_pkg_r10c3"></a>MindSpore训练框架。</p>
 </td>
-<td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_mindspore_a5_pkg_r10c4p1"><a name="zh-cn_topic_mindspore_a5_pkg_r10c4p1"></a>从<a href="https://www.mindspore.cn/versions" target="_blank" rel="noopener noreferrer">MindSpore下载页</a>获取与CANN 9.2.1、Atlas 950 SuperPoD超节点配套的whl包放到"v26.3.0/pkgs/wheels/"目录下</p>
+<td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_mindspore_a5_pkg_r10c4p1"><a name="zh-cn_topic_mindspore_a5_pkg_r10c4p1"></a>从<a href="https://www.mindspore.cn/versions" target="_blank" rel="noopener noreferrer">MindSpore下载页</a>获取与CANN 9.2.1、Atlas 950 SuperPoD液冷超节点配套的whl包放到"v26.3.0/pkgs/wheels/"目录下</p>
 <p id="zh-cn_topic_mindspore_a5_pkg_r10c4p3"><a name="zh-cn_topic_mindspore_a5_pkg_r10c4p3"></a>示例使用mindspore-2.12.0-cp312-cp312-linux_aarch64.whl。</p>
 </td>
 </tr>
@@ -394,7 +394,7 @@
 >
 >- 若使用TaskD组件且训练容器使用Host网络，则先通过`sysctl net.ipv4.ip_local_reserved_ports`查询当前预留端口配置后，通过`sysctl -w net.ipv4.ip_local_reserved_ports="xxx,9601,9602"`新增预留端口9601、9602（其中xxx指的是前面查出来已配置的端口，若无则省略）。
 
-训练代码与数据集准备，可以参考[MindFormers文档](https://gitcode.com/mindspore/mindformers/blob/master/configs/deepseek4/README.md)。下面以两台Atlas 950 SuperPoD超节点为例，说明具体操作步骤。
+训练代码与数据集准备，可以参考[MindFormers文档](https://gitcode.com/mindspore/mindformers/blob/master/configs/deepseek4/README.md)。下面以两台Atlas 950 SuperPoD液冷超节点为例，说明具体操作步骤。
 
 #### 准备代码<a name="section_mindspore_a5_prepare_code"></a>
 
@@ -630,7 +630,7 @@ bash /job/code/scripts/msrun_launcher.sh "python run_mindformer.py --config conf
 <tr id="zh-cn_topic_mindspore_a5_yaml_row1">
 <td class="cellrowborder" valign="top" width="12%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_mindspore_a5_yaml_r1c1"><a name="zh-cn_topic_mindspore_a5_yaml_r1c1"></a>Ascend Job</p>
 </td>
-<td class="cellrowborder" valign="top" width="24%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_mindspore_a5_yaml_r1c2"><a name="zh-cn_topic_mindspore_a5_yaml_r1c2"></a>Atlas 950 SuperPoD超节点</p>
+<td class="cellrowborder" valign="top" width="24%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_mindspore_a5_yaml_r1c2"><a name="zh-cn_topic_mindspore_a5_yaml_r1c2"></a>Atlas 950 SuperPoD液冷超节点</p>
 </td>
 <td class="cellrowborder" valign="top" width="12%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_mindspore_a5_yaml_r1c3"><a name="zh-cn_topic_mindspore_a5_yaml_r1c3"></a>MindSpore</p>
 </td>

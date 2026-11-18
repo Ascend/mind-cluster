@@ -481,7 +481,7 @@ m为从0开始递增的整数。集群规模每增加2000个节点，则会新�
 
 m为从0开始递增的整数。集群规模每增加1000个节点，则会新增一个ConfigMap文件cluster-info-dpu-$\{m\}。
 
-以Atlas 950 SuperPoD超节点为例，回显示例如下；不同设备的回显参数可能不同，以实际为准，关键参数说明请参见[ConfigMap说明](../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_configmap_k8s_rdma_shared_dev_plugin)。
+以Atlas 950 SuperPoD液冷超节点为例，回显示例如下；不同设备的回显参数可能不同，以实际为准，关键参数说明请参见[ConfigMap说明](../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_configmap_k8s_rdma_shared_dev_plugin)。
 
 ```ColdFusion
 {"dpuinfo-<nodename>":{"DPUInfo":{"DPUList":[{"HcaName":"hrn5_0","EthName":"ens0f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[0]},{"HcaName":"hrn5_1","EthName":"ens0f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[2]},{"HcaName":"hrn5_2","EthName":"ens0f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[4]},{"HcaName":"hrn5_3","EthName":"ens0f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[6]},{"HcaName":"hrn5_4","EthName":"ens1f0","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[1]},{"HcaName":"hrn5_5","EthName":"ens1f1","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[3]},{"HcaName":"hrn5_6","EthName":"ens1f2","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[5]},{"HcaName":"hrn5_7","EthName":"ens1f3","IpAddr":"","DeviceID":"0x8200","VendorID":"0xcc08","FaultList":null,"AffectedNPU":[7]}],"NodeEvent":{"NodeName":"<nodename>","FaultList":null}},"UpdateTime":1787715568988}}

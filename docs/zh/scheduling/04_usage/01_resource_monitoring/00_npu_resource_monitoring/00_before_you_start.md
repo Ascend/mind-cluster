@@ -30,5 +30,5 @@
 - A200I A2 Box异构组件
 - Atlas 800I A3超节点服务器
 - Atlas 350加速卡
-- Atlas 950 SuperPoD超节点
-- Atlas 950 SuperPoD Flex
+- Atlas 950 SuperPoD液冷超节点
+- Atlas 950 SuperPoD Flex液冷超节点

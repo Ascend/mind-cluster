@@ -6,7 +6,7 @@
 
 - 在使用容器化支持特性前，需要确保Ascend Docker Runtime组件已经安装，若没有安装，可以参考[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
 <!-- npu="950" id2 -->
-- （可选）在Atlas 950 SuperPoD超节点和Atlas 850超节点场景下，如需挂载UB网卡设备及驱动，还需满足以下条件：
+- （可选）在Atlas 950 SuperPoD液冷超节点和Atlas 850风冷超节点场景下，如需挂载UB网卡设备及驱动，还需满足以下条件：
   - 已安装Ascend Docker Runtime，并使用Legacy注入模式。安装方法请参见[Ascend Docker Runtime](../../05_developer_guide/00_installation_deployment/00_manual_installation/02_ascend_docker_runtime.md)。
   - 宿主机搭载UB网卡，已安装并加载UB网卡驱动；已安装版本为openEuler 24.03 LTS SP4的操作系统。
   - 确保容器内`glibc`版本不低于宿主机版本，`rdma-core`版本与宿主机一致。在宿主机和容器内执行`rpm -qa | grep rdma-core`命令查询`rdma-core`的版本，不满足要求时，需先准备兼容镜像。
@@ -18,10 +18,10 @@
 - 若使用Volcano进行任务调度，则不建议通过Docker或Containerd指令创建/挂载NPU卡的容器，否则可能会触发Volcano调度问题。
 - 容器化支持会自动挂载宿主机的二进制、动态库文件到容器中，可能会涉及glibc依赖，此时容器OS的glibc版本需>=宿主机OS的glibc版本，以便挂载到容器内可以正常运行。
 <!-- npu="950" id1 -->
-- 在Atlas 850E超节点、Atlas 850超节点、Atlas 650E服务器、Atlas 650服务器、Atlas 950 SuperPoD超节点等存在UB总线的产品形态下，会默认挂载ub_driver.list中的UB驱动相关内容。ub_driver.list中的文件依赖宿主机的glibc版本，目前支持的OS版本和glibc版本如下：
+- 在Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器、Atlas 950 SuperPoD液冷超节点等存在UB总线的产品形态下，会默认挂载ub_driver.list中的UB驱动相关内容。ub_driver.list中的文件依赖宿主机的glibc版本，目前支持的OS版本和glibc版本如下：
   - 宿主机：openEuler24.03（glibc2.38）
   - 容器内：openEuler24.03（glibc2.38）、Ubuntu24.04（glibc2.39）。
-- 在Atlas 950 SuperPoD超节点和Atlas 850超节点场景下，支持通过环境变量`ASCEND_RDMA_DEVICES`指定待挂载RDMA设备的HCA名称（取值为UB网卡在“/sys/class/infiniband/”下的完整HCA名称，如`hrn5_0,hrn5_1`），将对应的UB网卡字符设备和驱动文件挂载到容器中。`ASCEND_RDMA_DEVICES`与`ASCEND_VISIBLE_DEVICES`独立配置，支持仅挂载NPU设备、仅挂载RDMA设备，或同时挂载NPU和RDMA设备：
+- 在Atlas 950 SuperPoD液冷超节点和Atlas 850风冷超节点场景下，支持通过环境变量`ASCEND_RDMA_DEVICES`指定待挂载RDMA设备的HCA名称（取值为UB网卡在“/sys/class/infiniband/”下的完整HCA名称，如`hrn5_0,hrn5_1`），将对应的UB网卡字符设备和驱动文件挂载到容器中。`ASCEND_RDMA_DEVICES`与`ASCEND_VISIBLE_DEVICES`独立配置，支持仅挂载NPU设备、仅挂载RDMA设备，或同时挂载NPU和RDMA设备：
   - 仅支持Legacy模式；CDI模式会忽略`ASCEND_RDMA_DEVICES`，不会根据该参数自动注入RDMA设备及挂载对应驱动文件。在CDI模式下，该参数去除首尾空白后既非空也非`void`时，会记录警告，不会因此终止容器创建。
   - 每个所选HCA的“device/infiniband_verbs/”目录中，必须有一个`uverbsX`的`ibdev`内容与该HCA名称一致；同一目录可以包含对应不同HCA的多个`uverbsX`。Ascend Docker Runtime据此挂载对应的“/dev/infiniband/uverbsX”字符设备（宿主机存在“/dev/infiniband/rdma_cm”时一并挂载），不会挂载整个“/dev/infiniband”目录。
   - 默认读取“/etc/ascend-docker-runtime.d/rdma_driver.list”，将如下UB网卡驱动配置文件和动态库以只读方式挂载至容器中（默认配置文件无需用户修改）：
