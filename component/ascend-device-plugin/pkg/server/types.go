@@ -54,6 +54,8 @@ type PluginServer struct {
 	restartTimes         atomic.Uint64
 	podLock              sync.Mutex
 	softShareJobs        sync.Map
+	softShareManager     *softShareManager
+	enpuProvider         *EnpuConfigProvider
 }
 
 // PodDevice define device info in pod

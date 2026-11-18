@@ -142,16 +142,19 @@ func (ps *PluginServer) register() error {
 	}()
 
 	client := v1beta1.NewRegistrationClient(conn)
-	resourceName := customname.ReplaceDevicePublicType(ps.deviceType, api.ResourceNamePrefix+ps.deviceType)
 	reqt := &v1beta1.RegisterRequest{
 		Version:      v1beta1.Version,
 		Endpoint:     fmt.Sprintf("%s.sock", ps.deviceType),
-		ResourceName: resourceName,
+		ResourceName: ps.resourceName(),
 	}
 	if _, err = client.Register(context.Background(), reqt); err != nil {
 		return fmt.Errorf("register to kubelet fail: %v", err)
 	}
 	return nil
+}
+
+func (ps *PluginServer) resourceName() string {
+	return customname.ReplaceDevicePublicType(ps.deviceType, api.ResourceNamePrefix+ps.deviceType)
 }
 
 // need privilege

@@ -35,6 +35,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
+	"Ascend-device-plugin/pkg/enpuconfig"
 	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -923,8 +924,28 @@ func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string
 	}
 	hwlog.RunLog.Infof("vol found: %#v", allocateDevices)
 	ps.updateAllocMap(allocateDevices, requestDevices)
-	npuInfoConfigDir := ps.getNPUInfoConfigDirFromPod(oldestPod, allocateDevices)
-	if npuInfoConfigDir != "" {
+	// Only soft share jobs on soft share capable nodes need the enpu-manager socket.
+	// Probe it after the annotation checks, so ordinary Pods skip the stat and are not
+	// failed by an enabled() error they do not depend on.
+	managerEnabled := false
+	if common.IsSupportSoftShareDevice() && common.IsSoftShareDevJob(oldestPod) {
+		// An existing manager socket means this node uses enpu-manager; a missing socket keeps
+		// the local configuration and only warns once.
+		managerEnabled, err = ps.softShareManager.requireManager()
+		if err != nil {
+			return nil, "", err
+		}
+	}
+	var npuInfoConfigDir string
+	if managerEnabled {
+		npuInfoConfigDir, err = ps.getManagerNPUInfoConfigDir(oldestPod, allocateDevices)
+		if err != nil {
+			return nil, "", err
+		}
+	} else {
+		npuInfoConfigDir = ps.getNPUInfoConfigDirFromPod(oldestPod, allocateDevices)
+	}
+	if npuInfoConfigDir != "" && !managerEnabled {
 		podKey := fmt.Sprintf("%s/%s", oldestPod.Namespace, oldestPod.Name)
 		jobName := common.GetSoftShareJobNameOfPod(oldestPod)
 		ps.softShareJobs.Store(podKey, oldestPod.Namespace+"."+jobName)
@@ -1413,17 +1434,24 @@ func (ps *PluginServer) PreStartContainer(ctx context.Context,
 // NewPluginServer returns an initialized PluginServer
 func NewPluginServer(deviceType string, devices []*common.NpuDevice, defaultDevs []string,
 	manager device.DevManager) *PluginServer {
+	return newPluginServer(deviceType, devices, defaultDevs, manager, newSoftShareManager())
+}
+
+func newPluginServer(deviceType string, devices []*common.NpuDevice, defaultDevs []string,
+	manager device.DevManager, softShare *softShareManager) *PluginServer {
 	ps := &PluginServer{
-		restart:        true,
-		reciChan:       make(chan interface{}, 1),
-		deviceType:     deviceType,
-		defaultDevs:    defaultDevs,
-		stop:           make(chan interface{}),
-		klt2RealDevMap: make(map[string]string, common.MaxDevicesNum),
-		isRunning:      common.NewAtomicBool(false),
-		manager:        manager,
-		deviceSyncStat: common.NewSendStats(common.DefaultSendRecordLength),
-		podLock:        sync.Mutex{},
+		restart:          true,
+		reciChan:         make(chan interface{}, 1),
+		deviceType:       deviceType,
+		defaultDevs:      defaultDevs,
+		stop:             make(chan interface{}),
+		klt2RealDevMap:   make(map[string]string, common.MaxDevicesNum),
+		isRunning:        common.NewAtomicBool(false),
+		manager:          manager,
+		deviceSyncStat:   common.NewSendStats(common.DefaultSendRecordLength),
+		softShareManager: softShare,
+		enpuProvider:     &EnpuConfigProvider{client: &enpuconfig.Provider{ResourceClient: softShare.client}},
+		podLock:          sync.Mutex{},
 	}
 	ps.restartTimes.Store(0)
 	ps.deepCopyDevice(devices)

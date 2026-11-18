@@ -89,6 +89,7 @@ type HwDevManager struct {
 	unifiedResetMgr  *UnifiedHotResetManager
 	labelGroup       *label.Group
 	annotationGroup  *annotation.Group
+	softShareManager *softShareManager
 }
 
 type shareDevResourceQuota struct {
@@ -413,14 +414,15 @@ func (hdm *HwDevManager) initPluginServer() error {
 		hwlog.RunLog.Error("get default device error")
 		return err
 	}
+	hdm.softShareManager = newSoftShareManager()
 	if !common.ParamOption.PresetVDevice {
-		hdm.ServerMap[common.AiCoreResourceName] = NewPluginServer(common.AiCoreResourceName,
-			hdm.allInfo.AICoreDevs, defaultDevices, hdm.manager)
+		hdm.ServerMap[common.AiCoreResourceName] = newPluginServer(common.AiCoreResourceName,
+			hdm.allInfo.AICoreDevs, defaultDevices, hdm.manager, hdm.softShareManager)
 		return nil
 	}
 	for _, deviceType := range hdm.allInfo.AllDevTypes {
-		hdm.ServerMap[deviceType] = NewPluginServer(deviceType, hdm.groupDevice[deviceType], defaultDevices,
-			hdm.manager)
+		hdm.ServerMap[deviceType] = newPluginServer(deviceType, hdm.groupDevice[deviceType], defaultDevices,
+			hdm.manager, hdm.softShareManager)
 	}
 	return nil
 }
@@ -1078,6 +1080,14 @@ func (hdm *HwDevManager) SignCatch(cancel context.CancelFunc) {
 
 // Serve Serve function
 func (hdm *HwDevManager) Serve(ctx context.Context) {
+	if common.IsSupportSoftShareDevice() && hdm.softShareManager != nil {
+		kubeClient := hdm.manager.GetKubeClient()
+		if kubeClient != nil && kubeClient.Clientset != nil && kubeClient.NodeName != "" {
+			workerCtx, cancel := context.WithCancel(ctx)
+			defer cancel()
+			go hdm.softShareManager.reconcilePeriodically(workerCtx, kubeClient)
+		}
+	}
 	// initiate a global socket path watcher
 	hwlog.RunLog.Info("Serve start")
 	watcher, err := common.NewFileWatch()
