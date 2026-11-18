@@ -59,12 +59,12 @@
 
     >[!NOTE]
     >
-    > `VERSION` 环境变量用于指定Ascend组件版本，`BASE`环境变量用于指定基础镜像版本类型，本文档以`26.2.0`为例，`26.2.0`镜像版本有两种，即`ubuntu22.04`和`openeuler24.03`，本文以`openeuler24.03`为例。每个独立的代码块中均需设置此变量。
+    > `VERSION` 环境变量用于指定Ascend组件版本，`BASE`环境变量用于指定基础镜像版本类型，本文档以`26.3.0`为例，`26.3.0`镜像版本有两种，即`ubuntu22.04`和`openeuler24.03`，本文以`openeuler24.03`为例。每个独立的代码块中均需设置此变量。
 
     1. 部署Ascend Docker Runtime。
 
         ```shell
-        VERSION=26.2.0
+        VERSION=26.3.0
         mkdir -p /tmp/Ascend-docker-runtime
         cd /tmp/Ascend-docker-runtime
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-docker-runtime_${VERSION}_linux-aarch64.run
@@ -92,7 +92,7 @@
     2. 拉取Ascend Device Plugin镜像。
 
         ```shell
-        VERSION=26.2.0
+        VERSION=26.3.0
         BASE=openeuler24.03
         # 从华为云镜像仓拉取Ascend Device Plugin镜像
         docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}-${BASE}
@@ -104,7 +104,7 @@
     3. 部署Ascend Device Plugin。
 
         ```shell
-        VERSION=26.2.0
+        VERSION=26.3.0
         # 拉取配置文件
         mkdir -p /tmp/devicePlugin
         cd /tmp/devicePlugin
@@ -194,10 +194,40 @@
     npu-smi info
     ```
 
-5. 清理测试资源。
+5. 自定义调度集成（Downward API）。
+
+   前述步骤中，Ascend Device Plugin在分配NPU设备时，会将分配结果写入容器的`ASCEND_VISIBLE_DEVICES`环境变量，Ascend Docker Runtime读取该变量完成NPU设备挂载。可在容器内执行以下命令验证：
 
     ```shell
-    VERSION=26.2.0
+    echo $ASCEND_VISIBLE_DEVICES
+    ```
+
+   回显示例如下，表示当前容器分配到了0号NPU芯片。
+
+    ```output
+    0
+    ```
+
+   该环境变量的标准集成方案为**Volcano调度器的整卡调度**：Volcano调度插件在Pod绑定时，将实际分配的芯片ID列表写入Pod注解；容器内通过Downward API读取该注解，注入`ASCEND_VISIBLE_DEVICES`环境变量，Ascend Docker Runtime读取该变量完成NPU设备挂载。使用Volcano整卡调度时，在Pod的容器配置中添加如下环境变量即可：
+
+    ```yaml
+    env:
+    - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime会使用该字段
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.annotations['huawei.com/Ascend910']   # 注解名称需与resources中请求的NPU资源名称一致
+    ```
+
+   >[!NOTE]
+   >
+   >- 若需通过自定义调度器集成整卡调度，需满足以下前置条件：调度器在Pod绑定阶段将实际分配的芯片ID列表写入`huawei.com/Ascend910`注解，且注解值与Ascend Device Plugin的实际分配结果保持一致，否则会导致NPU设备挂载异常。
+   >- 静态vNPU调度及其他调度器场景不应配置该环境变量，需删除示例YAML中相关字段。
+   >- 更多参数说明请参见[任务YAML配置说明](../06_api/15_yaml_configuration.md)和[环境变量说明](../06_api/13_environment_variable_description.md)。
+
+6. 清理测试资源。
+
+    ```shell
+    VERSION=26.3.0
     # 删除测试Pod
     kubectl delete pod npu-test
 
@@ -240,12 +270,12 @@
 2. 安装组件。以AArch64架构为例，用户需根据实际情况下载对应架构的软件包。
     >[!NOTE]
     >
-    >快速入门以Helm快捷部署为例，要求MindCluster版本为26.2.0及以上，详细请参见[使用Helm安装](../03_installation_guide/02_installation/00_helm_installation.md)。
+    >快速入门以Helm快捷部署为例，要求MindCluster版本为26.3.0及以上，详细请参见[使用Helm安装](../03_installation_guide/02_installation/00_helm_installation.md)。
 
     1. 安装Ascend Docker Runtime。
 
         ```shell
-        VERSION=26.2.0
+        VERSION=26.3.0
         mkdir -p /tmp/Ascend-docker-runtime
         cd /tmp/Ascend-docker-runtime
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-docker-runtime_${VERSION}_linux-aarch64.run
@@ -257,7 +287,7 @@
     2. 通过Helm安装NodeD、Ascend Device Plugin、Volcano、ClusterD、Ascend Operator组件。
 
         ```shell
-        VERSION=26.2.0
+        VERSION=26.3.0
         mkdir /tmp/helm
         cd /tmp/helm
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-helm-deploy-tool_${VERSION}_linux.zip
