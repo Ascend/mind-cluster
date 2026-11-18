@@ -27106,6 +27106,990 @@
             },
             "attr_regex": " NPU(?P<npu_id>[0-9])"
         },
+        "0x8F180432": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_3V3_MOS 过压严重告警（950PR模组）",
+                "description_zh": "V_3V3_MOS 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_3V3_MOS over-voltage major alarm (950PR module)",
+                "description_en": "The V_3V3_MOS device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180432", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180433": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "6V_0 过压严重告警",
+                "description_zh": "6V_0器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "6V_0 over-voltage major alarm",
+                "description_en": "The 6V_0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180433", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180434": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V1_DVDD_HBM_2_3 过压严重告警（950DT模组）",
+                "description_zh": "V_1V1_DVDD_HBM_0_1器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V1_DVDD_HBM_2_3 over-voltage major alarm (950DT module)",
+                "description_en": "The V_1V1_DVDD_HBM_0_1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180434", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180435": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V4_DVDD_HBM_0_1过压严重告警（950DT模组）",
+                "description_zh": "V_0V4_DVDD_HBM_0_1器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V4_DVDD_HBM_0_1 over-voltage major alarm (950DT module)",
+                "description_en": "The V_0V4_DVDD_HBM_0_1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180435", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180436": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V4_DVDD_HBM_2_3 过压严重告警（950DT模组）",
+                "description_zh": "V_0V4_DVDD_HBM_2_3器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V4_DVDD_HBM_2_3 over-voltage major alarm (950DT module)",
+                "description_en": "The V_0V4_DVDD_HBM_2_3 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180436", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180437": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_SIO 过压严重告警（950DT模组）",
+                "description_zh": "V_0V8_DVDD_SIO器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_SIO over-voltage major alarm (950DT module)",
+                "description_en": "The V_0V8_DVDD_SIO device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180437", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180438": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V1_DVDD_HBM_0_1 过压严重告警（950DT模组）",
+                "description_zh": "V_1V1_DVDD_HBM_0_1器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V1_DVDD_HBM_0_1 over-voltage major alarm (950DT module)",
+                "description_en": "The V_1V1_DVDD_HBM_0_1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180438", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180439": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_PERI_D0U0 过压严重告警（950DT模组）",
+                "description_zh": "V_0V8_DVDD_PERI_D0U0 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_PERI_D0U0 over-voltage major alarm (950DT module)",
+                "description_en": "The V_0V8_DVDD_PERI_D0U0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180439", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18043A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_PERI_D1U1 过压严重告警（950DT模组）",
+                "description_zh": "V_0V8_DVDD_PERI_D1U1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_PERI_D1U1 over-voltage major alarm (950DT module)",
+                "description_en": "The V_0V8_DVDD_PERI_D1U1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18043A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18043B": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_3V3_MOS 过压严重告警（950DT模组）",
+                "description_zh": "V_3V3_MOS 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_3V3_MOS over-voltage major alarm (950DT module)",
+                "description_en": "The V_3V3_MOS device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18043B", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18043C": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_3V3_MOS 过压严重告警（950PR标卡）",
+                "description_zh": "V_3V3_MOS 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_3V3_MOS over-voltage major alarm (950PR add-in card)",
+                "description_en": "The V_3V3_MOS device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18043C", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180440": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D0 欠压严重告警",
+                "description_zh": "V_0V8_DVDD_AIC_D0器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_AIC_D0 under-voltage major alarm",
+                "description_en": "The V_0V8_DVDD_AIC_D0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180440", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180441": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V2_DVDD12_PFM0_3 欠压严重告警（950PR模组）",
+                "description_zh": "V_1V2_DVDD12_PFM0_3器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V2_DVDD12_PFM0_3 under-voltage major alarm (950PR module)",
+                "description_en": "The V_1V2_DVDD12_PFM0_3 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180441", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180442": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D1 欠压严重告警",
+                "description_zh": "V_0V8_DVDD_AIC_D1器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_AIC_D1 under-voltage major alarm",
+                "description_en": "The V_0V8_DVDD_AIC_D1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180442", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180443": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V2_DVDD12_PFM4_7 欠压严重告警（950PR模组）",
+                "description_zh": "V_1V2_DVDD12_PFM4_7器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V2_DVDD12_PFM4_7 under-voltage major alarm (950PR module)",
+                "description_en": "The V_1V2_DVDD12_PFM4_7 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180443", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180444": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_PERI_D0U0 欠压严重告警（950PR模组）",
+                "description_zh": "V_0V8_DVDD_PERI_D0U0 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_PERI_D0U0 under-voltage major alarm (950PR module)",
+                "description_en": "The V_0V8_DVDD_PERI_D0U0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180444", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180445": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_PERI_D1U1 欠压严重告警（950PR模组）",
+                "description_zh": "V_0V8_DVDD_PERI_D1U1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_PERI_D1U1 under-voltage major alarm (950PR module)",
+                "description_en": "The V_0V8_DVDD_PERI_D1U1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180445", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180446": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_SIO 欠压严重告警（950PR模组）",
+                "description_zh": "V_0V8_DVDD_SIO器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_SIO under-voltage major alarm (950PR module)",
+                "description_en": "The V_0V8_DVDD_SIO device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180446", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180447": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D0 欠压严重告警",
+                "description_zh": "V_0V85_DVDD_BUS_D0 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V85_DVDD_BUS_D0 under-voltage major alarm",
+                "description_en": "The V_0V85_DVDD_BUS_D0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180447", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180448": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V5_DVDD05_PFM0_3 欠压严重告警（950PR模组）",
+                "description_zh": "V_0V5_DVDD05_PFM0_3器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V5_DVDD05_PFM0_3 under-voltage major alarm (950PR module)",
+                "description_en": "The V_0V5_DVDD05_PFM0_3 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180448", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180449": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V85_DVDD_BUS_D1 欠压严重告警",
+                "description_zh": "V_0V85_DVDD_BUS_D1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V85_DVDD_BUS_D1 under-voltage major alarm",
+                "description_en": "The V_0V85_DVDD_BUS_D1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180449", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18044A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V5_DVDD05_PFM4_7 欠压严重告警（950PR模组）",
+                "description_zh": "V_0V5_DVDD05_PFM4_7器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V5_DVDD05_PFM4_7 under-voltage major alarm (950PR module)",
+                "description_en": "The V_0V5_DVDD05_PFM4_7 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18044A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18044B": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V75_AVDD075_SDS_U0 欠压严重告警",
+                "description_zh": "V_0V75_AVDD075_SDS_U0 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V75_AVDD075_SDS_U0 under-voltage major alarm",
+                "description_en": "The V_0V75_AVDD075_SDS_U0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18044B", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18044C": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V0_AVDD10_SDS_U0 欠压严重告警",
+                "description_zh": "V_1V0_AVDD10_SDS_U0 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V0_AVDD10_SDS_U0 under-voltage major alarm",
+                "description_en": "The V_1V0_AVDD10_SDS_U0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18044C", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18044D": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V75_AVDD075_SDS_U1 欠压严重告警",
+                "description_zh": "V_0V75_AVDD075_SDS_U1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V75_AVDD075_SDS_U1 under-voltage major alarm",
+                "description_en": "The V_0V75_AVDD075_SDS_U1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18044D", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18044E": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V0_AVDD10_SDS_U1 欠压严重告警",
+                "description_zh": "V_1V0_AVDD10_SDS_U1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V0_AVDD10_SDS_U1 under-voltage major alarm",
+                "description_en": "The V_1V0_AVDD10_SDS_U1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18044E", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18044F": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V2_AVDD12_VTT_U0 欠压严重告警",
+                "description_zh": "V_1V2_AVDD12_VTT_U0 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V2_AVDD12_VTT_U0 under-voltage major alarm",
+                "description_en": "The V_1V2_AVDD12_VTT_U0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18044F", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180450": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V2_AVDD12_VTT_U1 欠压严重告警",
+                "description_zh": "V_1V2_AVDD12_VTT_U1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V2_AVDD12_VTT_U1 under-voltage major alarm",
+                "description_en": "The V_1V2_AVDD12_VTT_U1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180450", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180451": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V8_DVDD_1 欠压严重告警",
+                "description_zh": "V_1V8_DVDD_1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V8_DVDD_1 under-voltage major alarm",
+                "description_en": "The V_1V8_DVDD_1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180451", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180452": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_3V3_MOS 欠压严重告警（950PR模组）",
+                "description_zh": "V_3V3_MOS 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_3V3_MOS under-voltage major alarm (950PR module)",
+                "description_en": "The V_3V3_MOS device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180452", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180453": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "6V_0 欠压严重告警",
+                "description_zh": "6V_0器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "6V_0 under-voltage major alarm",
+                "description_en": "The 6V_0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180453", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180454": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V1_DVDD_HBM_2_3 欠压严重告警（950DT模组）",
+                "description_zh": "V_1V1_DVDD_HBM_0_1器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V1_DVDD_HBM_2_3 under-voltage major alarm (950DT module)",
+                "description_en": "The V_1V1_DVDD_HBM_0_1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180454", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180455": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V4_DVDD_HBM_0_1 欠压严重告警（950DT模组）",
+                "description_zh": "V_0V4_DVDD_HBM_0_1器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V4_DVDD_HBM_0_1 under-voltage major alarm (950DT module)",
+                "description_en": "The V_0V4_DVDD_HBM_0_1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180455", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180456": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V4_DVDD_HBM_2_3 欠压严重告警（950DT模组）",
+                "description_zh": "V_0V4_DVDD_HBM_2_3器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V4_DVDD_HBM_2_3 under-voltage major alarm (950DT module)",
+                "description_en": "The V_0V4_DVDD_HBM_2_3 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180456", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180457": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_SIO 欠压严重告警（950DT模组）",
+                "description_zh": "V_0V8_DVDD_SIO器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_SIO under-voltage major alarm (950DT module)",
+                "description_en": "The V_0V8_DVDD_SIO device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180457", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180458": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_1V1_DVDD_HBM_0_1 欠压严重告警（950DT模组）",
+                "description_zh": "V_1V1_DVDD_HBM_0_1器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_1V1_DVDD_HBM_0_1 under-voltage major alarm (950DT module)",
+                "description_en": "The V_1V1_DVDD_HBM_0_1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180458", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180459": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_PERI_D0U0 欠压严重告警（950DT模组）",
+                "description_zh": "V_0V8_DVDD_PERI_D0U0 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_PERI_D0U0 under-voltage major alarm (950DT module)",
+                "description_en": "The V_0V8_DVDD_PERI_D0U0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180459", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18045A": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_PERI_D1U1 欠压严重告警（950DT模组）",
+                "description_zh": "V_0V8_DVDD_PERI_D1U1 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_PERI_D1U1 under-voltage major alarm (950DT module)",
+                "description_en": "The V_0V8_DVDD_PERI_D1U1 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18045A", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18045B": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_3V3_MOS 欠压严重告警（950DT模组）",
+                "description_zh": "V_3V3_MOS 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_3V3_MOS under-voltage major alarm (950DT module)",
+                "description_en": "The V_3V3_MOS device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18045B", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F18045C": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_3V3_MOS 欠压严重告警（950PR标卡）",
+                "description_zh": "V_3V3_MOS 器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：业务未中断则无需处理，否则隔离NPU，重试AI业务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_3V3_MOS under-voltage major alarm (950PR add-in card)",
+                "description_en": "The V_3V3_MOS device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: If the service is not interrupted, no action is required; otherwise, isolate the NPU and retry the AI service.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F18045C", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
+        "0x8F180460": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Power",
+                "cause_zh": "V_0V8_DVDD_AIC_D0 欠压致命告警",
+                "description_zh": "V_0V8_DVDD_AIC_D0器件异常。",
+                "suggestion_zh": [
+                    "1. 业务面：建议隔离NPU，重新执行AI任务；",
+                    "2. 运维面：尝试通过AC上下电恢复故障，如果无法恢复建议更换NPU；"
+                ],
+                "cause_en": "V_0V8_DVDD_AIC_D0 under-voltage fatal alarm",
+                "description_en": "The V_0V8_DVDD_AIC_D0 device is abnormal.",
+                "suggestion_en": [
+                    "1. Service plane: It is recommended to isolate the NPU and re-execute the AI task.",
+                    "2. O&M plane: Try to recover the fault by power-cycling the AC. If it cannot be recovered, replace the NPU."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": ["0x8F180460", "Asserted"]
+            },
+            "attr_regex": " NPU(?P<npu_id>[0-9])"
+        },
         "AISW_CANN_AMCT_ALL_001": {
             "attribute": {
                 "class": "Software",
