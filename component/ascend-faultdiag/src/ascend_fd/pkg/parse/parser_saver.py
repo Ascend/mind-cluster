@@ -671,6 +671,7 @@ class BMCLogSaver(BaseLogSaver):
     FRU_INFO_KEY = "fruinfo.txt"
     MDB_INFO_KEY = "mdb_info.log"
     REMOTE_LOG_KEY = "remote_log"
+    SEL_TXT_FILE = "sel.txt"
     APP_DUMP_KEY = "AppDump"
     DEVICE_DUMP_KEY = "DeviceDump"
     LOG_DUMP_KEY = "LogDump"
@@ -716,11 +717,12 @@ class BMCLogSaver(BaseLogSaver):
                 if self.LOG_DUMP_KEY in file_path:
                     self.collect_remote_log(file_name, file_path)
                     continue
+                if self.APP_DUMP_KEY in file_path and file_name == self.SEL_TXT_FILE:
+                    self.bmc_app_dump_log_list.append(file_path)
+                    continue
                 if not file_name.endswith(".log"):
                     continue
-                if self.APP_DUMP_KEY in file_path:
-                    self.bmc_app_dump_log_list.append(file_path)
-                elif self.DEVICE_DUMP_KEY in file_path:
+                if self.DEVICE_DUMP_KEY in file_path:
                     self.bmc_device_dump_log_list.append(file_path)
 
     def collect_remote_log(self, file_name, file_path):

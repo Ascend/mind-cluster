@@ -140,6 +140,8 @@ class TestFilterBmcLog(unittest.TestCase):
             f.write('test')
         with open(os.path.join(self.temp_dir, "AppDump", 'app_dump.log'), 'w', encoding='utf-8') as f:
             f.write('test')
+        with open(os.path.join(self.temp_dir, "AppDump", 'sel.txt'), 'w', encoding='utf-8') as f:
+            f.write('test')
         with open(os.path.join(self.temp_dir, "DeviceDump", 'device_dump.log'), 'w', encoding='utf-8') as f:
             f.write('test')
         with open(os.path.join(self.temp_dir, "LogDump", 'remote_log'), 'w', encoding='utf-8') as f:
@@ -150,12 +152,34 @@ class TestFilterBmcLog(unittest.TestCase):
         self.instance.filter_log(self.temp_dir)
         self.assertEqual(self.instance.fruinfo_files, [os.path.join(self.temp_dir, 'fruinfo.txt')])
         self.assertEqual(self.instance.mdb_info_files, [os.path.join(self.temp_dir, "chassis", 'mdb_info.log')])
-        self.assertEqual(self.instance.bmc_app_dump_log_list, [os.path.join(self.temp_dir, "AppDump", 'app_dump.log')])
+        self.assertEqual(self.instance.bmc_app_dump_log_list, [os.path.join(self.temp_dir, "AppDump", 'sel.txt')])
         self.assertEqual(
             self.instance.bmc_device_dump_log_list, [os.path.join(self.temp_dir, "DeviceDump", 'device_dump.log')]
         )
         self.assertEqual(self.instance.bmc_log_dump_log_list, [os.path.join(self.temp_dir, "LogDump", 'remote_log')])
         self.assertEqual(self.instance.bmc_log_list, [])
+
+    def test_app_dump_only_sel_txt_collected(self):
+        app_dump_dir = os.path.join(self.temp_dir, "AppDump")
+        os.makedirs(app_dump_dir, exist_ok=True)
+        for file_name in ('app_dump.log', 'other.log', 'sel.txt'):
+            with open(os.path.join(app_dump_dir, file_name), 'w', encoding='utf-8') as f:
+                f.write('test')
+
+        self.instance.filter_log(self.temp_dir)
+        self.assertEqual(self.instance.bmc_app_dump_log_list, [os.path.join(app_dump_dir, 'sel.txt')])
+        self.assertEqual(self.instance.bmc_device_dump_log_list, [])
+
+    def test_sel_txt_not_in_app_dump_ignored(self):
+        with open(os.path.join(self.temp_dir, 'sel.txt'), 'w', encoding='utf-8') as f:
+            f.write('test')
+        os.makedirs(os.path.join(self.temp_dir, "DeviceDump"), exist_ok=True)
+        with open(os.path.join(self.temp_dir, "DeviceDump", 'sel.txt'), 'w', encoding='utf-8') as f:
+            f.write('test')
+
+        self.instance.filter_log(self.temp_dir)
+        self.assertEqual(self.instance.bmc_app_dump_log_list, [])
+        self.assertEqual(self.instance.bmc_device_dump_log_list, [])
 
 
 class TestGetSuperPodAnalyzerDict(unittest.TestCase):
