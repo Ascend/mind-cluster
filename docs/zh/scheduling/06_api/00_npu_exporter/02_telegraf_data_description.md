@@ -47,6 +47,9 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 <!-- npu="950" id21 -->
 - [UB数据信息](#section998877563214)
 <!-- end id21 -->
+<!-- npu="950,A3,910b" id23 -->
+- [软切分利用率数据信息](#section_enpu_telegraf)
+<!-- end id23 -->
 
 >[!NOTE]
 >
@@ -1644,6 +1647,48 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </tbody>
 </table>
 <!-- end id22 -->
+
+<!-- npu="950,A3,910b" id24 -->
+## 软切分利用率数据信息<a name="section_enpu_telegraf"></a>
+
+该组指标为软切分（vCANN-RT）场景下的指标，由enpu-manager提供，measurement名称为`enpu`，默认不采集；若需要采集，请参考[NPU Exporter安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/03_npu_exporter.md#section83111543151612)。
+
+该组指标与[vNPU数据信息](#section814111613432)中的`vnpu_pod_*`指标来源不同：前者来自enpu-manager，仅适用于软切分场景；后者由DCMI采集。两者不可混算，HBM相关指标单位为Byte（1 KB = 1024 Byte）。
+
+**表 16**  软切分利用率数据信息
+
+<table>
+<thead align="left">
+<tr>
+<th class="cellrowborder" valign="top" width="8%"><p>类别</p></th>
+<th class="cellrowborder" valign="top" width="32%"><p>数据信息名称</p></th>
+<th class="cellrowborder" valign="top" width="30%"><p>数据信息说明</p></th>
+<th class="cellrowborder" valign="top" width="9%"><p>单位</p></th>
+<th class="cellrowborder" valign="top" width="21%"><p>支持的产品形态</p></th>
+</tr>
+</thead>
+<tbody align="left">
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_utilization_percent</td><td class="cellrowborder">物理NPU整卡利用率</td><td class="cellrowborder">%</td><td class="cellrowborder" rowspan="16" valign="top"><ul><li><term>Atlas A2系列产品</term></li><li><term>Atlas A3系列产品</term></li><li><term>Ascend 950PR&950DT系列产品</term></li></ul></td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_aicore_utilization_percent</td><td class="cellrowborder">物理NPU的AICore利用率</td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_aicpu_utilization_percent</td><td class="cellrowborder">物理NPU的AICPU利用率</td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_ctrlcpu_utilization_percent</td><td class="cellrowborder">物理NPU的CtrlCPU利用率</td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_cube_utilization_percent</td><td class="cellrowborder">物理NPU的AICube利用率</td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_vector_utilization_percent</td><td class="cellrowborder">物理NPU的VectorCore利用率</td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_metric_valid</td><td class="cellrowborder">物理NPU指标的数据是否有效，1表示有效，0表示无效</td><td class="cellrowborder">-</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_allocation_info</td><td class="cellrowborder">vNPU分配信息，值固定为1，用于关联业务信息与物理设备</td><td class="cellrowborder">-</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_utilization_percent</td><td class="cellrowborder">vNPU的利用率估算值，非配额使用率</td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_aicore_utilization_percent</td><td class="cellrowborder">vNPU的AICore利用率估算值，非配额使用率</td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_aicore_quota_percent</td><td class="cellrowborder">vNPU配置的AICore算力配额，仅在启用算力限流时输出</td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_core_limit_enabled</td><td class="cellrowborder">vNPU是否启用AICore算力限流，1表示启用，0表示未启用</td><td class="cellrowborder">-</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_hbm_request_bytes</td><td class="cellrowborder">vNPU配置的HBM申请量</td><td class="cellrowborder">Byte</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_hbm_limit_bytes</td><td class="cellrowborder">vNPU配置的HBM上限</td><td class="cellrowborder">Byte</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_hbm_used_bytes</td><td class="cellrowborder">业务容器在所绑定设备上的HBM实际用量</td><td class="cellrowborder">Byte</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_metric_valid</td><td class="cellrowborder">vNPU指标的数据是否有效，1表示有效，0表示无效</td><td class="cellrowborder">-</td></tr>
+</tbody>
+</table>
+
+指标详细信息（包括标签、有效性及调度策略相关说明）可参考[enpu-manager资料](https://gitcode.com/openeuler/ubs-virt/tree/master/ubs-virt-enpu/enpu-manager)中的“查询 Prometheus 指标”章节。
+<!-- end id24 -->
 
 ## 调用的HDK接口<a name="section345820153363"></a>
 

@@ -93,6 +93,9 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <!-- npu="950" id21 -->
 - [UB数据信息](#section9638996666653)
 <!-- end id21 -->
+<!-- npu="950,A3,910b" id23 -->
+- [软切分利用率数据信息](#section_enpu_metrics)
+<!-- end id23 -->
 
 了解以上各项数据信息中标签的说明，请参见[标签数据信息说明](#section129583351126)。
 
@@ -2635,11 +2638,54 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </table>
 <!-- end id22 -->
 
+<!-- npu="950,A3,910b" id24 -->
+## 软切分利用率数据信息<a name="section_enpu_metrics"></a>
+
+该组指标为软切分（vCANN-RT）场景下的指标，由enpu-manager提供，默认不采集；若需要采集，请参考[NPU Exporter安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/03_npu_exporter.md#section83111543151612)。
+
+该组指标与[vNPU数据信息](#section81411161343)中的`vnpu_pod_*`指标来源不同：前者来自enpu-manager，仅适用于软切分场景；后者由DCMI采集。两者不可混淆，HBM相关指标单位为Byte（1 KB = 1024 Byte）。
+
+**表 16**  软切分利用率数据信息
+
+<table>
+<thead align="left">
+<tr>
+<th class="cellrowborder" valign="top" width="7%"><p>类别</p></th>
+<th class="cellrowborder" valign="top" width="26%"><p>数据信息名称</p></th>
+<th class="cellrowborder" valign="top" width="24%"><p>数据信息说明</p></th>
+<th class="cellrowborder" valign="top" width="18%"><p>数据信息标签字段</p></th>
+<th class="cellrowborder" valign="top" width="8%"><p>单位</p></th>
+<th class="cellrowborder" valign="top" width="17%"><p>支持的产品形态</p></th>
+</tr>
+</thead>
+<tbody align="left">
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_utilization_percent</td><td class="cellrowborder">物理NPU整卡利用率</td><td class="cellrowborder"><a href="#table191895615241">标签9</a></td><td class="cellrowborder">%</td><td class="cellrowborder" rowspan="16" valign="top"><ul><li><term>Atlas A2系列产品</term></li><li><term>Atlas A3系列产品</term></li><li><term>Ascend 950PR&950DT系列产品</term></li></ul></td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_aicore_utilization_percent</td><td class="cellrowborder">物理NPU的AICore利用率</td><td class="cellrowborder"><a href="#table191895615241">标签9</a></td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_aicpu_utilization_percent</td><td class="cellrowborder">物理NPU的AICPU利用率</td><td class="cellrowborder"><a href="#table191895615241">标签9</a></td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_ctrlcpu_utilization_percent</td><td class="cellrowborder">物理NPU的CtrlCPU利用率</td><td class="cellrowborder"><a href="#table191895615241">标签9</a></td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_cube_utilization_percent</td><td class="cellrowborder">物理NPU的AICube利用率</td><td class="cellrowborder"><a href="#table191895615241">标签9</a></td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_vector_utilization_percent</td><td class="cellrowborder">物理NPU的VectorCore利用率</td><td class="cellrowborder"><a href="#table191895615241">标签9</a></td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_npu_metric_valid</td><td class="cellrowborder">物理NPU指标的数据是否有效，1表示有效，0表示无效</td><td class="cellrowborder"><a href="#table191895615241">标签9</a>、<a href="#table191895615241">标签11</a></td><td class="cellrowborder">-</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_allocation_info</td><td class="cellrowborder">vNPU分配信息，值固定为1，用于关联业务信息与物理设备</td><td class="cellrowborder"><a href="#table191895615241">标签10</a></td><td class="cellrowborder">-</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_utilization_percent</td><td class="cellrowborder">vNPU的利用率估算值，非配额使用率</td><td class="cellrowborder"><a href="#table191895615241">标签10</a></td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_aicore_utilization_percent</td><td class="cellrowborder">vNPU的AICore利用率估算值，非配额使用率</td><td class="cellrowborder"><a href="#table191895615241">标签10</a></td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_aicore_quota_percent</td><td class="cellrowborder">vNPU配置的AICore算力配额，仅在启用算力限流时输出</td><td class="cellrowborder"><a href="#table191895615241">标签10</a></td><td class="cellrowborder">%</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_core_limit_enabled</td><td class="cellrowborder">vNPU是否启用AICore算力限流，1表示启用，0表示未启用</td><td class="cellrowborder"><a href="#table191895615241">标签10</a></td><td class="cellrowborder">-</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_hbm_request_bytes</td><td class="cellrowborder">vNPU配置的HBM申请量</td><td class="cellrowborder"><a href="#table191895615241">标签10</a></td><td class="cellrowborder">Byte</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_hbm_limit_bytes</td><td class="cellrowborder">vNPU配置的HBM上限</td><td class="cellrowborder"><a href="#table191895615241">标签10</a></td><td class="cellrowborder">Byte</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_hbm_used_bytes</td><td class="cellrowborder">业务容器在所绑定设备上的HBM实际用量</td><td class="cellrowborder"><a href="#table191895615241">标签10</a></td><td class="cellrowborder">Byte</td></tr>
+<tr><td class="cellrowborder">enpu</td><td class="cellrowborder">enpu_vnpu_metric_valid</td><td class="cellrowborder">vNPU指标的数据是否有效，1表示有效，0表示无效</td><td class="cellrowborder"><a href="#table191895615241">标签10</a>、<a href="#table191895615241">标签11</a></td><td class="cellrowborder">-</td></tr>
+</tbody>
+</table>
+
+指标详细信息（包括标签、有效性及调度策略相关说明）可参考[enpu-manager资料](https://gitcode.com/openeuler/ubs-virt/tree/master/ubs-virt-enpu/enpu-manager)中的“查询 Prometheus 指标”章节。
+<!-- end id24 -->
+
 ## 标签数据信息说明<a name="section129583351126"></a>
 
 关于以上表格中所用到的数据信息标签说明如下。
 
-**表 16**  数据信息标签
+**表 17**  数据信息标签
 
 <a name="table191895615241"></a>
 <table><thead align="left"><tr id="row8191356112418"><th class="cellrowborder" valign="top" width="9.43%" id="mcps1.2.4.1.1"><p id="p1919205692417"><a name="p1919205692417"></a><a name="p1919205692417"></a>名称</p>
@@ -2998,6 +3044,47 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
 </td>
 </tr>
+<tr><td class="cellrowborder" rowspan="1" valign="top" width="9.43%" headers="mcps1.2.4.1.1 "><p>标签9</p>
+</td>
+<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p>phy_id：节点内的物理NPU ID</p>
+</td>
+<td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" rowspan="5" valign="top" width="9.43%" headers="mcps1.2.4.1.1 "><p>标签10</p>
+</td>
+<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p>allocation_id：vNPU分配的唯一标识</p>
+</td>
+<td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>phy_id：节点内的物理NPU ID</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>vnpu_id：物理NPU下的vNPU ID</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>pod_uid：业务Pod的UID，未填写时为空字符串</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>container_name：业务容器名，未填写时为空字符串</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" rowspan="1" valign="top" width="9.43%" headers="mcps1.2.4.1.1 "><p>标签11</p>
+</td>
+<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p>metric：有效性指标所描述的指标名称，用来指明当前这条valid指标说明的是哪个指标的数值是否有效。取值为所描述指标名去掉enpu_npu_或enpu_vnpu_前缀后的部分。例如：enpu_npu_metric_valid{phy_id="0",metric="utilization_percent"} 1 表示enpu_npu_utilization_percent当前值有效；enpu_vnpu_metric_valid{…,metric="hbm_used_bytes"} 1 表示enpu_vnpu_hbm_used_bytes当前值有效。取值范围：<ul><li>`enpu_npu_metric_valid`：utilization_percent、aicore_utilization_percent、aicpu_utilization_percent、ctrlcpu_utilization_percent、cube_utilization_percent、vector_utilization_percent</li><li>`enpu_vnpu_metric_valid`：hbm_used_bytes、utilization_percent、aicore_utilization_percent</li></ul></p>
+</td>
+<td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p>string</p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -3014,7 +3101,7 @@ NPU Exporter是通过调用底层的HDK接口，获取相应的信息。数据�
 
 ## 状态码<a name="zh-cn_topic_0000001446964912_section1287016166169"></a>
 
-**表 17**  状态码
+**表 18**  状态码
 
 <a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_table10702170191419"></a>
 
