@@ -33,6 +33,9 @@
     - [在Docker客户端使用](./04_usage/00_containerization/02_usage_on_the_docker_client.md)
     - [在Containerd客户端使用](./04_usage/00_containerization/03_usage_on_the_containerd_client.md)
     - [通过crictl命令行工具使用CRI-O](./04_usage/00_containerization/04_usage_on_the_crio_client.md)
+    <!-- npu="950" id1825 -->
+    - [容器化网络使用ROCE网卡](./04_usage/00_containerization/05_1825_container_network.md)
+    <!-- end id1825 -->
   <!-- npu="950,A3,910b,910,310p" id1 -->
   - [资源监测特性指南](./04_usage/01_resource_monitoring/menu_resource_monitoring.md)
     - [NPU资源监测](./04_usage/01_resource_monitoring/00_npu_resource_monitoring/menu_npu_resource_monitoring.md)
@@ -237,6 +240,7 @@
       - [Container Manager](./05_developer_guide/00_installation_deployment/00_manual_installation/10_container-manager.md)
       <!-- end id42 -->
       <!-- npu="950" id25 -->
+      - [UB Host Device CNI](./05_developer_guide/00_installation_deployment/00_manual_installation/17_ub_host_device_cni.md)
       - [K8s RDMA Shared Dev Plugin](./05_developer_guide/00_installation_deployment/00_manual_installation/11_k8s_rdma_shared_dev_plugin.md)
       - [DPU Exporter](./05_developer_guide/00_installation_deployment/00_manual_installation/12_dpu_exporter.md)
       <!-- end id25 -->

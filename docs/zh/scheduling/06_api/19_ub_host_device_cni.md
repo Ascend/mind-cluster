@@ -1,36 +1,20 @@
 # UB Host Device CNI<a name="ZH-CN_TOPIC_ub_host_device_cni"></a>
 
-UB Host Device CNI是基于Host Device CNI适配UB（DPU）网络设备的CNI插件，以二进制方式部署在各work宿主机`/opt/cni/bin`下，由Multus CNI调用，将宿主机的UB网络设备挂载进Pod的网络命名空间，使容器能够通过UB设备进行RDMA高速通信。
-
-UB设备挂在`/sys/bus/ub/devices/<addr>/net`下（UB总线）。UB Host Device CNI通过`ubMode`开启UB挂载逻辑。
+UB Host Device CNI由Multus CNI调用，将宿主机UB网卡移入Pod网络命名空间。安装方法请参见[UB Host Device CNI安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/17_ub_host_device_cni.md)。
 
 ## 配置文件说明<a name="ZH-CN_TOPIC_config_ub_host_device_cni"></a>
 
-UB Host Device CNI通过`NetworkAttachmentDefinition`（NAD）中的`spec.config`配置插件参数。
+插件通过NetworkAttachmentDefinition（NAD）的`spec.config`接收JSON格式的CNI配置。容器化网络使用ROCE网卡时，使用按网卡名称配置的NAD，每个网络接口对应一个NAD。
 
-**配置示例：**
+NAD的通用字段配置字段的含义请参见上游官方文档：Multus CNI（`https://github.com/k8snetworkplumbingwg/multus-cni`）及host-device CNI（`https://github.com/k8snetworkplumbingwg/host-device-cni`）。
 
-```json
-{
-  "cniVersion": "0.3.1",
-  "name": "roce-network",
-  "type": "ub-host-device",
-  "ubMode": true,
-  "inheritHostIP": true,
-  "capabilities": { "deviceID": true }
-}
-```
+**表 1**  UB Host Device CNI字段约束
 
-**表 1**  配置字段说明
-
-| 字段 | 是否必选 | 类型 | 说明 |
-|------|---------|------|------|
-| type | 是 | string | 固定为`ub-host-device`。 |
-| ubMode | 否 | bool | 是否开启UB设备挂载逻辑。开启后只走UB路径，不做PCI归类及DPDK检测。默认值false。 |
-| device | 否 | string | 设备名，填写**宿主网卡名**（如`eth0`），非UB模式与UB模式语义一致。非UB模式按网卡名直接查找；UB模式按网卡名反查其所属的UB设备（扫描`/sys/bus/ub/devices`），详见[UB设备分配来源](#ZH-CN_TOPIC_ub_device_source)。 |
-| inheritHostIP | 否 | bool | 挂载时沿用宿主网卡的IP/路由，而不是向IPAM重新申请。默认值false。 |
-| capabilities | 否 | object | 声明插件支持的运行时能力。配置`"deviceID": true`后，接收Multus CNI下发的`runtimeConfig.deviceID`作为UB设备挂载来源，详见[UB设备分配来源](#ZH-CN_TOPIC_ub_device_source)。 |
-| ipam | 否 | object | IPAM插件配置（如calico-ipam）。`inheritHostIP=true`时可不配置。 |
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| spec.config.type | string | CNI插件类型，固定为`ub-host-device`，Multus以此在CNI二进制目录中查找插件。 |
+| spec.config.ubMode | bool | 是否开启UB设备挂载逻辑。开启后只走UB路径，不做PCI归类及DPDK检测。默认值false。 |
+| spec.config.inheritHostIP | bool | 网卡移入Pod时是否继承宿主机IP及用户态路由，未开启时需配置ipam。不会迁移宿主机的策略路由规则，容器内需单独配置。 |
 
 ## UB设备分配来源<a name="ZH-CN_TOPIC_ub_device_source"></a>
 
@@ -41,64 +25,52 @@ UB Host Device CNI通过`NetworkAttachmentDefinition`（NAD）中的`spec.config
 
 ## NAD配置示例<a name="ZH-CN_TOPIC_nad_config_example"></a>
 
-以下为UB模式下通过K8s RDMA Shared Device Plugin下发的设备，使用`inheritHostIP`、沿用宿主网卡IP的NAD示例：
+rdma-dp部署文件中预定义了以下16个NAD，每个NAD的`metadata.name`、`spec.config.name`和`spec.config.device`需采用相同的网卡名称。
+
+**表 2**  预定义NAD名称
+
+| 分组 | NAD名称（与宿主机网卡名一致） |
+|------|---------------------------|
+| ens0 | ens0f0、ens0f1、ens0f2、ens0f3 |
+| ens1 | ens1f0、ens1f1、ens1f2、ens1f3 |
+| ens2 | ens2f0、ens2f1、ens2f2、ens2f3 |
+| ens3 | ens3f0、ens3f1、ens3f2、ens3f3 |
+
+以下为`ens0f0`的完整模板。
 
 ```yaml
-apiVersion: "k8s.cni.cncf.io/v1"
+apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  name: roce-network
+  name: ens0f0
   namespace: default
-  annotations:
-    k8s.v1.cni.cncf.io/resourceName: "huawei.com/ub_rdma"
 spec:
   config: |
     {
       "cniVersion": "0.3.1",
-      "name": "roce-network",
+      "name": "ens0f0",
       "type": "ub-host-device",
       "ubMode": true,
       "inheritHostIP": true,
-      "capabilities": { "deviceID": true }
+      "device": "ens0f0"
     }
+```
+
+创建前，在每个目标计算节点执行以下命令查询真实名称。网卡已移入Pod时，需在相应Pod网络命名空间内查询。
+
+```shell
+rdma link show
 ```
 
 ## 业务Pod使用及挂载资源说明<a name="ZH-CN_TOPIC_biz_pod_check_ub_host_device_cni"></a>
 
-业务Pod使用UB设备时，需要通过Multus CNI注解挂载NAD对应网络，并申请对应的RDMA设备资源。以下步骤用于验证业务Pod的资源申请和设备挂载状态。
-
 ### 业务Pod资源申请配置<a name="ZH-CN_TOPIC_biz_pod_resource_config"></a>
 
-业务Pod使用UB设备需要在Pod配置中声明资源请求，并通过`k8s.v1.cni.cncf.io/networks`注解指定挂载的NAD网络，配置示例如下：
+Pod通过`k8s.v1.cni.cncf.io/networks`引用NAD，格式为`<NAD名称>@<容器内接口名称>`。例如`ens0f0@ens0f0`。
 
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: testpod1
-  annotations:
-    k8s.v1.cni.cncf.io/networks: roce-network
-spec:
-  restartPolicy: OnFailure
-  containers:
-    - image: ubuntu:22.04
-      name: appcntr1
-      imagePullPolicy: IfNotPresent
-      resources:
-        requests:
-          huawei.com/ub_rdma: '1'
-        limits:
-          huawei.com/ub_rdma: '1'
-      command:
-        - /bin/bash
-        - -c
-        - sleep 300000
-```
+UB Host Device CNI会按Multus传入的接口名重命名网卡，此处须通过配置显式指定与宿主机网络设备一致的接口名。
 
-> [!NOTE]
->
-> - `k8s.v1.cni.cncf.io/networks`注解值为NAD的名称（可带命名空间前缀`<namespace>/<name>`），需与[NAD配置示例](#ZH-CN_TOPIC_nad_config_example)中的NAD对应，申请多少个设备就要写多少个名称。
-> - 资源名称格式为`<resourcePrefix>/<resourceName>`，需要在设备插件（如K8s RDMA Shared Dev Plugin）的配置文件中定义。
+容器化网络使用ROCE网卡的详细指导请参见[容器化网络使用ROCE网卡](../04_usage/00_containerization/05_1825_container_network.md)。
 
 ### 业务Pod状态检查步骤<a name="ZH-CN_TOPIC_biz_pod_status_check"></a>
 
@@ -125,7 +97,7 @@ spec:
    kubectl describe pod testpod1
    ```
 
-   正常情况下，`network-status`注解中应包含`roce-network`网络及对应的IP地址（如`10.244.102.182`）。
+   正常情况下，`network-status`注解中应包含申请的网络设备（如`ens0f0`）及对应的IP地址（如`10.244.102.182`）。
 
 ### Pod内设备验证<a name="ZH-CN_TOPIC_biz_pod_device_verify"></a>
 

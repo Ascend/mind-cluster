@@ -18,6 +18,7 @@
 - [Container Manager](./10_container-manager.md)
 <!-- end id3 -->
 <!-- npu="950" id4 -->
+- [UB Host Device CNI](./17_ub_host_device_cni.md)
 - [K8s RDMA Shared Dev Plugin](./11_k8s_rdma_shared_dev_plugin.md)
 - [DPU Exporter](./12_dpu_exporter.md)
 <!-- end id4 -->

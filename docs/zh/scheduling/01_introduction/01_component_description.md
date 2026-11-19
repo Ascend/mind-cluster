@@ -345,21 +345,16 @@ Kubernetes需要感知RDMA网络设备资源信息来实现资源调度。为了
 
 > [!NOTE]
 >
-> 业务容器使用1825 DPU设备时，除了需要组件挂载外，还需要：
->
-> - 配置主机网络 `hostNetwork: true`
-> - 配置用户态驱动，以下两种方式任选其一：
+> - 业务容器使用1825 DPU设备时，除了需要组件挂载外，还需要配置用户态驱动，以下两种方式任选其一
 >   - 在镜像中安装1825 DPU的OFED驱动
 >   - 启动容器后从主机挂载1825 DPU的OFED驱动
+> - 主机网络使用时配置`hostNetwork: true`；容器化网络使用RDMA设备请参见[容器化网络使用RDMA设备](../04_usage/00_containerization/05_1825_container_network.md)。
 
 **工作模式<a name="section15761025111720"></a>**
 
 - **共享模式（默认）**：集群内所有Pod共享节点上的全部RDMA设备，无需为单个Pod分配特定设备。组件根据`rdmaHcaMax`参数创建虚拟设备并上报给kubelet，Pod请求该资源后即可使用任一设备。
-- **独占模式（beta特性）**：每个NPU与特定的DPU设备一一对应，通过NPU-NIC亲和关系完成设备分配。组件根据Pod申请的NPU，通过驱动接口查询的亲和关系找到对应的DPU设备并挂载到容器中，实现设备级隔离。
+- **独占模式（beta特性）**：业务Pod申请资源后，组件将kubelet为该Pod分配的RDMA设备挂载到Pod中，单个设备同一时间仅分配给一个Pod。
   - **使能方式**：启动组件时添加`--ub-excl-mode`参数开启独占模式。
-  - **亲和数据来源**：组件启动时通过DCMI查询各NPU与UB网卡的拓扑亲和关系，节点网卡数量变化时自动刷新；驱动不支持该查询接口或查询失败时，回退读取镜像内置的`npu-nic-mapping.json`。
-  - **分配逻辑**：创建Pod时，组件读取Pod申请的NPU编号，通过亲和关系查找对应的DPU设备并挂载到容器。
-  - **设备上报**：独占模式下上报节点上真实发现的UB设备，上报数量与节点实际DPU设备数一致。
 
 **组件功能<a name="section1112014512117"></a>**
 
@@ -381,7 +376,7 @@ Kubernetes需要感知RDMA网络设备资源信息来实现资源调度。为了
 2. 上报RDMA设备的类型、数量和状态给kubelet。
 3. 通过hinicadm5工具进行RDMA设备的故障检测。
 4. RDMA设备故障上报，通过ClusterD进行故障汇总。
-5. 独占模式从业务Pod获取Volcano写入的NPU卡信息。
+5. RDMA设备故障上报，volcano通过Configmap获取故障信息。
 
 ## UB Host Device CNI<a name="ZH-CN_TOPIC_0000002524312661"></a>
 
