@@ -1,4 +1,4 @@
-# Examples and Verification in MindSpore Scenario
+# Examples and Verification in PyTorch Scenario
 
 ## Building an Image<a name="ZH-CN_TOPIC_0000002511426469"></a>
 
@@ -6,11 +6,11 @@
 
 Resumable training can be built based on the base training image. For details on building the base training image, see the [Building a Container Image Using Dockerfile (PyTorch)](../../../../07_references/02_common_operations.md#building-a-container-image-using-dockerfile-pytorch) section.
 
-This chapter shows how to build a training image based on Ubuntu 20.04 by following the steps for building a training base image.
+This chapter uses DeepSeek-V4-Flash to describe resumable training with PyTorch 2.10.0 and torch_npu 2.10.0 on Atlas A3 and Atlas 950 SuperPoD (A5). Build separate images using Ubuntu 22.04 for A3 and openEuler 24.03 for A5.
 
 >[!NOTE]
 >
->- The following example uses MindSpeed-LLM 26.2.0.
+>- Use a MindSpeed-LLM version supporting DeepSeek-V4-Flash with matching MindSpeed and Megatron-LM versions. The examples use Python 3.12.16, CANN 9.2.0, PyTorch 2.10.0, and torch_npu 2.10.0.post7. Select actual versions according to component compatibility and model requirements. Use TaskD and MindIO TFT packages matching the cluster release.
 >- For product forms with UB, such as Atlas 850E, Atlas 850, Atlas 650E, Atlas 650, and Atlas 950 SuperPoD, UB driver related files need to be added to the training image. The following two methods are supported:
 >   - Download from the archive directory of the <a href="https://mirrors.huaweicloud.com/ascend/">Huawei Cloud image repository</a> and install it in the training image.
 >   - Install Ascend Docker Runtime, which mounts the UB driver related content in `ub_driver.list` by default. The files in `ub_driver.list` depend on the glibc version of the host. The currently supported OS versions and glibc versions are as follows:
@@ -39,7 +39,7 @@ As shown in [Table 1](#zh-cn_topic_0000002039339945_table1172542119019),obtain t
 <td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.2 "><p id="p4321152352612"><a name="p4321152352612"></a>Yes</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p205155310512"><a name="zh-cn_topic_0000002039339945_p205155310512"></a>Resumable training whl package.</p>
-<div class="note" id="zh-cn_topic_0000002039339945_note494818501423"><a name="zh-cn_topic_0000002039339945_note494818501423"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p159489506423"><a name="zh-cn_topic_0000002039339945_p159489506423"></a>Before installing <span id="ph1670711477256"><a name="ph1670711477256"></a>TaskD</span>, ensure that the <span id="zh-cn_topic_0000002039339945_ph998914174412"><a name="zh-cn_topic_0000002039339945_ph998914174412"></a>PyTorch</span> framework is correctly installed. The currently supported <span id="zh-cn_topic_0000002039339945_ph2908133144419"><a name="zh-cn_topic_0000002039339945_ph2908133144419"></a>PyTorch</span> versions are 2.1.0, 2.3.0, 2.4.0, 2.5.0, 2.6.0, 2.7.1. TaskD depends on the PyTorch framework. Select a PyTorch version without known security vulnerabilities or obtain the corresponding version with security issues fixed from the official community.</p>
+<div class="note" id="zh-cn_topic_0000002039339945_note494818501423"><a name="zh-cn_topic_0000002039339945_note494818501423"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p159489506423"><a name="zh-cn_topic_0000002039339945_p159489506423"></a>Before installing <span id="ph1670711477256"><a name="ph1670711477256"></a>TaskD</span>, ensure that the <span id="zh-cn_topic_0000002039339945_ph998914174412"><a name="zh-cn_topic_0000002039339945_ph998914174412"></a>PyTorch</span> framework is correctly installed. The currently supported <span id="zh-cn_topic_0000002039339945_ph2908133144419"><a name="zh-cn_topic_0000002039339945_ph2908133144419"></a>PyTorch</span> versions are 2.1.0 to 2.10.0. TaskD depends on the PyTorch framework. Select a PyTorch version without known security vulnerabilities or obtain the corresponding version with security issues fixed from the official community.</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p19595310517"><a name="zh-cn_topic_0000002039339945_p19595310517"></a><a href="https://www.hiascend.com/en/developer/software/mindcluster/download?versionId=460&ids=53%2C154%2C%2C58%2C60%2C63%2C" target="_blank" rel="noopener noreferrer">Download Link</a></p>
@@ -63,31 +63,31 @@ As shown in [Table 1](#zh-cn_topic_0000002039339945_table1172542119019),obtain t
 <p id="zh-cn_topic_0000002039339945_p1861353651"><a name="zh-cn_topic_0000002039339945_p1861353651"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p166105316515"><a name="zh-cn_topic_0000002039339945_p166105316515"></a>Mixed precision training uses a mix of single-precision (float32) and half-precision (float16) data types during training, combining both and using the same hyperparameters to achieve almost the same precision as float32.</p>
-<p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a>The cp3x in the software package indicates the Python version number. For example, x being 10 indicates Python 3.10. The specific Python version is subject to the MindSpeed-LLM version.</p>
+<p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a>The cp3x in the software package indicates the Python version number. For example, x being 12 indicates Python 3.12. The specific Python version is subject to the MindSpeed-LLM version.</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a>For details, see the "<a href="https://gitcode.com/Ascend/apex/blob/master/docs/en/installing_apex.md">Installing the APEX Module</a>" section in <span id="zh-cn_topic_0000002039339945_ph156792413596"><a name="zh-cn_topic_0000002039339945_ph156792413596"></a>Ascend Extension for PyTorch Installation Guide</span>, and compile the APEX package based on the actual situation.</p>
 <p id="zh-cn_topic_0000002039339945_p1761531257"><a name="zh-cn_topic_0000002039339945_p1761531257"></a></p>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000002039339945_row197268213011"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p1361953254"><a name="zh-cn_topic_0000002039339945_p1361953254"></a>torch_npu-2.7.1.<em id="zh-cn_topic_0000002039339945_i16204112111321"><a name="zh-cn_topic_0000002039339945_i16204112111321"></a>{version}</em>-cp3x-cp3x-manylinux_2_28_{arch}.whl</p>
+<tr id="zh-cn_topic_0000002039339945_row197268213011"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p1361953254"><a name="zh-cn_topic_0000002039339945_p1361953254"></a>torch_npu-2.10.0.post<em id="zh-cn_topic_0000002039339945_i16204112111321"><a name="zh-cn_topic_0000002039339945_i16204112111321"></a>{version}</em>-cp3x-cp3x-manylinux_2_28_{arch}.whl</p>
 </td>
 <td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002039339945_p56185314510"><a name="zh-cn_topic_0000002039339945_p56185314510"></a>Yes</p>
 <p id="zh-cn_topic_0000002039339945_p186653757"><a name="zh-cn_topic_0000002039339945_p186653757"></a>MindSpeed-LLM dependency</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p15720535517"><a name="zh-cn_topic_0000002039339945_p15720535517"></a>Ascend Extension for PyTorch is a deep learning adaptation framework based on Ascend, enabling Ascend NPUs to support the PyTorch framework, providing PyTorch users with the superior computing power of Ascend AI processors.</p>
-<p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"></a>The cp3x in the software package indicates the Python version number. For example, x being 10 indicates Python 3.10. The specific Python version is subject to the MindSpeed-LLM version.</p>
+<p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"></a>The cp3x in the software package indicates the Python version number. For example, x being 12 indicates Python 3.12. The specific Python version is subject to the MindSpeed-LLM version.</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p10718533510"><a name="zh-cn_topic_0000002039339945_p10718533510"></a><a href="https://www.hiascend.com/document/detail/en/Pytorch/720/configandinstg/instg/insg_0004.html" target="_blank" rel="noopener noreferrer">Download Link</a></p>
 <div class="note" id="zh-cn_topic_0000002039339945_note1165115165020"><a name="zh-cn_topic_0000002039339945_note1165115165020"></a><span class="notetitle">[!NOTE]</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p167047813263"><a name="zh-cn_topic_0000002039339945_p167047813263"></a>To use the <span id="zh-cn_topic_0000002039339945_ph1987542822613"><a name="zh-cn_topic_0000002039339945_ph1987542822613"></a>PyTorch</span> model from the MindSpeed-LLM code repository, <span id="zh-cn_topic_0000002039339945_ph1412723132619"><a name="zh-cn_topic_0000002039339945_ph1412723132619"></a>Ascend Extension for PyTorch</span> 2.6.0 or later is required.</p>
 </div></div>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000002039339945_row1412215399516"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><a name="zh-cn_topic_0000002039339945_ul104867135415"></a><ul id="zh-cn_topic_0000002039339945_ul104867135415"><li><span id="zh-cn_topic_0000002039339945_ph0853174512272"><a name="zh-cn_topic_0000002039339945_ph0853174512272"></a>x86_64</span> architecture: torch-2.7.1+cpu.cxx11.abi-cp3x-cp3x-linux_x86_64.whl</li><li><span id="zh-cn_topic_0000002039339945_ph7852164518272"><a name="zh-cn_topic_0000002039339945_ph7852164518272"></a>ARM</span> architecture: torch-2.7.1+cpu-cp3x-cp3x-manylinux_2_28_aarch64.whl</li></ul>
+<tr id="zh-cn_topic_0000002039339945_row1412215399516"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><a name="zh-cn_topic_0000002039339945_ul104867135415"></a><ul id="zh-cn_topic_0000002039339945_ul104867135415"><li><span id="zh-cn_topic_0000002039339945_ph0853174512272"><a name="zh-cn_topic_0000002039339945_ph0853174512272"></a>x86_64</span> architecture: torch-2.10.0+cpu-cp3x-cp3x-manylinux_2_28_x86_64.whl</li><li><span id="zh-cn_topic_0000002039339945_ph7852164518272"><a name="zh-cn_topic_0000002039339945_ph7852164518272"></a>ARM</span> architecture: torch-2.10.0+cpu-cp3x-cp3x-manylinux_2_28_aarch64.whl</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002039339945_p871953357"><a name="zh-cn_topic_0000002039339945_p871953357"></a>Yes</p>
 <p id="zh-cn_topic_0000002039339945_p17715531453"><a name="zh-cn_topic_0000002039339945_p17715531453"></a>MindSpeed-LLM dependency</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"></a>Official <span id="zh-cn_topic_0000002039339945_ph19355165113512"><a name="zh-cn_topic_0000002039339945_ph19355165113512"></a>PyTorch</span> package.</p><p>The cp3x in the software package indicates the Python version number. For example, x being 10 indicates Python 3.10. The specific Python version is subject to the MindSpeed-LLM version.</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"></a>Official <span id="zh-cn_topic_0000002039339945_ph19355165113512"><a name="zh-cn_topic_0000002039339945_ph19355165113512"></a>PyTorch</span> package.</p><p>The cp3x in the software package indicates the Python version number. For example, x being 12 indicates Python 3.12. The specific Python version is subject to the MindSpeed-LLM version.</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p99745421447"><a name="zh-cn_topic_0000002039339945_p99745421447"></a><a href="https://download.pytorch.org/whl/torch/" target="_blank" rel="noopener noreferrer">Download Link</a></p>
 <p id="zh-cn_topic_0000002039339945_p483943610920"><a name="zh-cn_topic_0000002039339945_p483943610920"></a></p>
@@ -123,7 +123,7 @@ As shown in [Table 1](#zh-cn_topic_0000002039339945_table1172542119019),obtain t
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p7482193913619"><a name="zh-cn_topic_0000002039339945_p7482193913619"></a>git clone https://gitcode.com/Ascend/MindSpeed.git</p>
 <p id="zh-cn_topic_0000002039339945_p9482139663"><a name="zh-cn_topic_0000002039339945_p9482139663"></a>cd MindSpeed</p>
-<p id="zh-cn_topic_0000002039339945_p1948213912618"><a name="zh-cn_topic_0000002039339945_p1948213912618"></a>git checkout e4d5855250f0074670f41c423021286502410bf1</p>
+<p id="zh-cn_topic_0000002039339945_p1948213912618"><a name="zh-cn_topic_0000002039339945_p1948213912618"></a>git checkout eb0ad7e73dc8227291e44504041aa7c58136aaa3  # 26.2.0_core_r0.12.1 branch</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002039339945_row144125121466"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p848215391768"><a name="zh-cn_topic_0000002039339945_p848215391768"></a>version.info</p>
@@ -155,13 +155,13 @@ As shown in [Table 1](#zh-cn_topic_0000002039339945_table1172542119019),obtain t
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p1548619391164"><a name="zh-cn_topic_0000002039339945_p1548619391164"></a>git clone https://github.com/NVIDIA/dllogger.git</p>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000002039339945_row33025197610"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p0486133919618"><a name="zh-cn_topic_0000002039339945_p0486133919618"></a>get-pip.py</p>
+<tr id="zh-cn_topic_0000002039339945_row33025197610"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p0486133919618"><a name="zh-cn_topic_0000002039339945_p0486133919618"></a>Python-3.12.16.tar.xz</p>
 </td>
 <td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002039339945_p1148619393610"><a name="zh-cn_topic_0000002039339945_p1148619393610"></a>Yes</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p164861439461"><a name="zh-cn_topic_0000002039339945_p164861439461"></a>Used to install the pip module.</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p164861439461"><a name="zh-cn_topic_0000002039339945_p164861439461"></a>Used to build Python 3.12; pip is installed with ensurepip during the build.</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p34865396611"><a name="zh-cn_topic_0000002039339945_p34865396611"></a>curl -k https://bootstrap.pypa.io/get-pip.py -o get-pip.py</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p34865396611"><a name="zh-cn_topic_0000002039339945_p34865396611"></a>Obtain the Python 3.12.16 source archive from the official Python release source.</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002039339945_row03021191165"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p15486163919616"><a name="zh-cn_topic_0000002039339945_p15486163919616"></a>Dockerfile</p>
@@ -177,166 +177,510 @@ As shown in [Table 1](#zh-cn_topic_0000002039339945_table1172542119019),obtain t
 </table>
 
 >[!NOTE]
-> This section uses a single Atlas 800T A2, Ubuntu 20.04 Arm, and Python 3.10 as an example to describe how to build a training image. Modify the relevant steps based on the actual situation during use.
+>The build context must contain the packages in Table 1, `Python-3.12.16.tar.xz`, and the MindSpeed and MindSpeed-LLM source directories. Prepare matching source versions and requirements.txt files according to their release instructions. Use `CHIP=A3` for A3 and `CHIP=950` for A5. Install only one chip-specific ops package in each image.
 
 **Procedure<a name="zh-cn_topic_0000002039339945_section20489630477"></a>**
 
 1. Prepare the software packages on the host by referring to [Table 1](#zh-cn_topic_0000002039339945_table1172542119019).
-2. Write the following Dockerfile.
+    For build directory layout and arguments, see the [mindcluster-deploy PyTorch image guide](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/docker/pytorch/OVERVIEW.md) and [Dockerfile](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/docker/pytorch/Dockerfile). The manual example below requires an APEX wheel and installs it explicitly.
+
+    Place matching torch, torch_npu, and APEX wheels in the build context `whl/` directory. Prepare APEX as described in [Installing the APEX Module](https://gitcode.com/Ascend/apex/blob/master/docs/en/installing_apex.md). When building from Ascend/apex source, run the following in an environment matching the target image architecture, Python, and PyTorch versions:
+
+    ```shell
+    git clone https://gitcode.com/Ascend/apex.git
+    cd apex
+    bash scripts/build.sh --python=3.12
+    ```
+
+    Copy the generated `apex/dist/apex-*.whl` to `whl/` in the image build directory. The script creates a wheel; the pip command below installs it in the image. The reference image provides the Python part of APEX. If the model uses fused extensions such as `apex_C`, prepare a matching wheel containing those extensions according to the APEX installation instructions.
+
+    ```shell
+    mkdir -p whl
+    ```
+
+    **DeepSeek-V4-Flash Optimizer State Adaptation**
+
+    The following changes apply to the MindSpeed-LLM baseline `bfa35e3c8502995810d64077ed7fd18b8b296012` used here. File paths are relative to the MindSpeed-LLM root, and line numbers refer to this baseline.
+
+    | File | Location | Change |
+    |---|---|---|
+    | `mindspeed_llm/core/optimizer/distrib_optimizer.py` | In `distributed_optimizer_init()`, after the `_build_model_and_main_param_groups()` call ending at line 131 and before `if isinstance(self.optimizer, HybridDeviceOptimizer)` at line 133 | Rebuild `model_param_group_index_map` in the actual FP32-then-FP16 parameter order |
+    | `mindspeed_llm/core/high_availability/tft_replica_optimizer.py` | In `TTPReplicaOptimizer`, after `state_dict_memory()` ends at line 565 and before `load_state_dict_memory()` at line 567 | Add `load_state_dict()` to initialize empty optimizer state storage using local main-parameter shards |
+
+    Save the complete diff below as `mindspeed_llm_26_2_0_arf_optimizer_state_fix.patch` at the image build context root, preserving leading spaces and the `+` and `-` prefixes. The Dockerfile below applies it.
+
+    ```diff
+    diff --git a/mindspeed_llm/core/optimizer/distrib_optimizer.py b/mindspeed_llm/core/optimizer/distrib_optimizer.py
+    --- a/mindspeed_llm/core/optimizer/distrib_optimizer.py
+    +++ b/mindspeed_llm/core/optimizer/distrib_optimizer.py
+    @@ -130,6 +130,12 @@
+             self.gbuf_ranges, self.model_param_gbuf_map, self.opt_group_ranges, config
+         )
+
+    +    for group_index, (model_fp32_params, model_float16_params) in enumerate(
+    +        zip(self.model_fp32_groups, self.model_float16_groups)
+    +    ):
+    +        for group_order, model_param in enumerate([*model_fp32_params, *model_float16_params]):
+    +            self.model_param_group_index_map[model_param] = (group_index, group_order)
+    +
+         if isinstance(self.optimizer, HybridDeviceOptimizer):
+             self.optimizer = HybridDeviceOptimizer(
+                 params=[g["orig_group"] for g in self.opt_group_ranges], **self.optimizer.defaults
+    diff --git a/mindspeed_llm/core/high_availability/tft_replica_optimizer.py b/mindspeed_llm/core/high_availability/tft_replica_optimizer.py
+    --- a/mindspeed_llm/core/high_availability/tft_replica_optimizer.py
+    +++ b/mindspeed_llm/core/high_availability/tft_replica_optimizer.py
+    @@ -564,5 +564,10 @@
+         def state_dict_memory(self):
+             return self.state_dict()
+
+    +    def load_state_dict(self, state_dict):
+    +        if len(self.optimizer.state) == 0 and self.init_state_fn is not None:
+    +            self.init_state_fn(self.optimizer, self.config)
+    +        super().load_state_dict(state_dict)
+    +
+         def load_state_dict_memory(self, state_dict):
+             self.load_state_dict(state_dict)
+    ```
+
+    From the image build context root, check the source version and patch compatibility:
+
+    ```shell
+    git -C MindSpeed-LLM rev-parse HEAD
+    git -C MindSpeed-LLM apply --check \
+        "$PWD/mindspeed_llm_26_2_0_arf_optimizer_state_fix.patch"
+    ```
+
+    Retain the `.git` directory in the build context MindSpeed-LLM source for the in-image baseline check. Initialization allocates matching storage only when optimizer state is empty; checkpoint or peer data fills it during recovery. Applying the patch during the build is sufficient, without inserting the changes manually again. If the source already includes both changes, omit patch application and update the source version and build steps together.
+
+    The key build context directories are shown below. Place the CANN, TaskD, MindIO TFT, and Python source packages as described in Table 1 and the Dockerfile.
 
     ```text
-    FROM ubuntu:20.04
-    WORKDIR /root
-    COPY . .
+    build-context/
+    ├── Dockerfile
+    ├── MindSpeed/
+    ├── MindSpeed-LLM/
+    ├── mindspeed_llm_26_2_0_arf_optimizer_state_fix.patch
+    ├── dllogger/
+    └── whl/
+        ├── torch-2.10.0+cpu-cp312-cp312-manylinux_2_28_aarch64.whl
+        ├── torch_npu-2.10.0.post7-cp312-cp312-manylinux_2_28_aarch64.whl
+        └── apex-0.1+ascend-cp312-cp312-linux_aarch64.whl
+    ```
 
-    ARG PYTORCH_WHL=torch-2.7.1+cpu-cp310-cp310-manylinux_2_28_aarch64.whl
-    ARG PYTORCH_NPU_WHL=torch_npu-2.7.1.{version}-cp310-cp310-manylinux_2_28_aarch64.whl
-    ARG APEX_WHL=apex-0.1+ascend-cp310-cp310-linux_aarch64.whl
-    ARG HOST_ASCEND_BASE=/usr/local/Ascend
-    ARG TOOLKIT_PATH=/usr/local/Ascend/cann
-    # The CANN version used in the example is 8.5.0. Modify it based on the actual situation during use.
-    ARG TOOLKIT=Ascend-cann-toolkit_8.5.0_linux-aarch64.run
-    ARG OPS=Ascend-cann-910b-ops_8.5.0_linux-aarch64.run
-    ARG TASKD_WHL=taskd-7.3.0-py3-none-linux_aarch64.whl
-    ARG MINDIO_TTP_WHL=mindio_ttp-1.0.0-py3-none-linux_aarch64.whl
-    ARG MINDSPEED=MindSpeed
-    ARG DLLOGGER=dllogger
+2. Write the following Dockerfile.
 
-    RUN echo "nameserver 114.114.114.114" > /etc/resolv.conf
+    ```dockerfile
+    # MindCluster resumable-training PyTorch sample image
+    # Build with --network=host; the context must provide version.info, ascend_install.info,
+    # whl/, dllogger/, and the MindSpeed-LLM optimizer-state patch.
 
-    RUN echo "deb http://repo.huaweicloud.com/ubuntu-ports/ focal main restricted universe multiverse\n\
-    deb http://repo.huaweicloud.com/ubuntu-ports/ focal-updates main restricted universe multiverse\n\
-    deb http://repo.huaweicloud.com/ubuntu-ports/ focal-backports main restricted universe multiverse\n\
-    deb http://ports.ubuntu.com/ubuntu-ports/ focal-security main restricted universe multiverse" > /etc/apt/sources.list
+    ARG BASE_IMAGE=ubuntu:22.04
+    FROM ${BASE_IMAGE}
 
-    ARG DEBIAN_FRONTEND=noninteractive
+    # A3 uses CHIP=A3 and A5 uses CHIP=950; each image installs one chip ops package.
+    ARG CHIP=A3
+    ARG PYTHON_VERSION=3.12
+    ARG CANN_VERSION=9.2.0
 
-    # System packages
-    RUN umask 0022 && apt update && \
-        apt-get install -y --no-install-recommends \
-        software-properties-common
-    RUN umask 0022 && add-apt-repository ppa:deadsnakes/ppa && \
-        apt update && \
-        apt autoremove -y python python3 && \
-        apt install -y python3.10 python3.10-dev
-    # Set up Python symbolic links
-    RUN ln -s /usr/bin/python3.10 /usr/bin/python
-    RUN ln -s /usr/bin/python3.10 /usr/bin/python3
-    RUN ln -s /usr/bin/python3.10-config /usr/bin/python-config
-    RUN ln -s /usr/bin/python3.10-config /usr/bin/python3-config
-    # System packages
-    RUN umask 0022 && apt update && \
-            apt-get install -y --no-install-recommends \
-            gcc g++ make cmake vim \
-            zlib1g zlib1g-dev \
-            openssl libsqlite3-dev libssl-dev \
-            libffi-dev unzip pciutils \
-            net-tools libblas-dev \
-            gfortran libblas3 libopenblas-dev \
-            curl unzip liblapack3 liblapack-dev \
-            libhdf5-dev libxml2 patch
-    # Time zone
-    RUN ln -sf /usr/share/zoneinfo/UTC /etc/localtime
-    # Configure the pip source
-    RUN mkdir -p ~/.pip \
-    && echo '[global] \n\
-    index-url=https://mirrors.huaweicloud.com/repository/pypi/simple\n\
-    trusted-host=mirrors.huaweicloud.com' >> ~/.pip/pip.conf
-    # pip3.10
-    RUN cd /tmp && \
-        apt-get download python3-distutils && \
-        dpkg-deb -x python3-distutils_*.deb / && \
-        rm python3-distutils_*.deb && \
-        cd - && \
-        python get-pip.py && \
-        rm get-pip.py
-    RUN umask 0022 && \
-        pip install sympy==1.4 && \
-        pip install cffi && \
-        pip install pathlib2 && \
-        pip install grpcio && \
-        pip install grpcio-tools && \
-        pip install torchvision==0.22.1 && \
-        pip install transformers==4.51.0 && \
-        pip install absl-py && \
-        pip install datasets && \
-        pip install tokenizers==0.20.1
-    RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser
-    # Install torch, TorchNPU, and apex packages
-    RUN umask 0022 && pip install $PYTORCH_WHL && \
-        pip install $PYTORCH_NPU_WHL && \
-        pip install $APEX_WHL
+    # Download sources
+    ARG CANN_BASE_URL=https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/CANN/CANN%209.2.0
+    ARG PIP_INDEX_URL=https://repo.huaweicloud.com/repository/pypi/simple
+    ARG PIP_TRUSTED_HOST=repo.huaweicloud.com
+    ARG APT_MIRROR=repo.huaweicloud.com
+    ARG TRITON_ASCEND_INDEX_URL=https://mirrors.huaweicloud.com/ascend/repos/pypi
 
-    # Ascend package
-    # Before building, copy /usr/local/Ascend/driver/version.info from the host to the current directory
-    RUN umask 0022 &&  \
-        cp ascend_install.info /etc/ && \
-        mkdir -p /usr/local/Ascend/driver/ && \
-        cp version.info /usr/local/Ascend/driver/ && \
-        chmod +x $TOOLKIT && \
-        chmod +x $OPS
+    # PyTorch, torch_npu, torchvision, and wheel Python ABI must match.
+    ARG TORCH_VERSION=2.10.0
+    ARG TORCH_NPU_PKG_VERSION=2.10.0.post7
+    ARG TASKD_WHEEL_VERSION=26.3.0
+    ARG MINDIO_TTP_WHEEL_VERSION=26.2.0
+    ARG TRITON_ASCEND_VERSION=3.6.0
 
-    RUN umask 0022 && ./$TOOLKIT --install-path=/usr/local/Ascend/ --install --quiet
-    RUN echo "source /usr/local/Ascend/cann/set_env.sh" >> ~/.bashrc
-    RUN umask 0022 && ./$OPS --install --quiet
+    # Pinned model source versions and matching Megatron-LM.
+    ARG MINDSPEED_COMMIT=eb0ad7e73dc8227291e44504041aa7c58136aaa3
+    ARG MINDSPEED_LLM_COMMIT=bfa35e3c8502995810d64077ed7fd18b8b296012
+    ARG MINDSPEED_LLM_ARF_PATCH=mindspeed_llm_26_2_0_arf_optimizer_state_fix.patch
+    ARG MEGATRON_TAG=core_v0.12.1
+    ARG MINDCLUSTER_TAG=v26.2.0
 
-    # After the toolkit package is installed, clear the following files. During container startup, the toolkit package is mounted by Ascend Docker Runtime.
-    RUN rm -f version.info && rm -f ascend_install.info && \
-        rm -rf /usr/local/Ascend/driver/
+    # Validate package file names and versions before build.
+    COPY check_packages.sh /tmp/check_packages.sh
+    RUN bash /tmp/check_packages.sh --filename-only \
+          "taskd-${TASKD_WHEEL_VERSION}-py3-none-linux_aarch64.whl:${TASKD_WHEEL_VERSION}" \
+          "mindio_ttp-${MINDIO_TTP_WHEEL_VERSION}-py3-none-linux_aarch64.whl:${MINDIO_TTP_WHEEL_VERSION}"
 
-    RUN umask 0022 && cd $MINDSPEED && \
-        pip install -r requirements.txt && \
-        pip install -e . && \
-        echo "export PYTHONPATH=/root/MindSpeed:\$PYTHONPATH" >> ~/.bashrc
+    # Base system dependencies
+    COPY version.info /tmp/ascend-driver/version.info
+    COPY ascend_install.info /tmp/ascend-driver/ascend_install.info
 
-    RUN umask 0022 && cd $DLLOGGER && \
-        python setup.py build && \
-        python setup.py install
+    ENV DEBIAN_FRONTEND=noninteractive
+    ENV TZ=UTC
 
-    # Import environment variables
-    ENV HCCL_WHITELIST_DISABLE=1
-
-    # Create /lib64/ld-linux-aarch64.so.1
-    RUN umask 0022 && \
-        if [ ! -d "/lib64" ]; \
-        then \
-            mkdir /lib64 && ln -sf /lib/ld-linux-aarch64.so.1 /lib64/ld-linux-aarch64.so.1; \
+    RUN set -eux; \
+        for f in /tmp/ascend-driver/version.info /tmp/ascend-driver/ascend_install.info; do \
+            if [ ! -s "$f" ]; then \
+                echo "ERROR: Missing driver metadata file $f" >&2; \
+                echo "Provide it in the build context: cp /usr/local/Ascend/driver/version.info ." >&2; \
+                echo "                        cp /etc/ascend_install.info ." >&2; \
+                exit 1; \
+            fi; \
+        done; \
+        if command -v apt-get >/dev/null 2>&1; then \
+            echo "deb http://${APT_MIRROR}/ubuntu-ports/ jammy main restricted universe multiverse" >  /etc/apt/sources.list; \
+            echo "deb http://${APT_MIRROR}/ubuntu-ports/ jammy-updates main restricted universe multiverse" >> /etc/apt/sources.list; \
+            echo "deb http://${APT_MIRROR}/ubuntu-ports/ jammy-security main restricted universe multiverse" >> /etc/apt/sources.list; \
+            apt-get update -qq; \
+            apt-get install -y -qq --no-install-recommends \
+                ca-certificates curl wget git \
+                gcc g++ make cmake patch \
+                zlib1g zlib1g-dev libsqlite3-dev libssl-dev libffi-dev \
+                unzip pciutils net-tools binutils procps hostname \
+                libblas-dev libblas3 libopenblas-dev gfortran \
+                liblapack3 liblapack-dev libhdf5-dev libxml2 \
+                swig \
+                libexpat1-dev libbz2-dev libreadline-dev liblzma-dev libncurses-dev libgdbm-dev libnss3-dev uuid-dev \
+                tzdata; \
+            ln -sf /usr/share/zoneinfo/UTC /etc/localtime; \
+            echo UTC > /etc/timezone; \
+        elif command -v dnf >/dev/null 2>&1 || command -v yum >/dev/null 2>&1; then \
+            PKG=$(command -v dnf >/dev/null 2>&1 && echo dnf || echo yum); \
+            ${PKG} install -y \
+                ca-certificates curl wget git tar \
+                gcc gcc-c++ gcc-gfortran make cmake patch \
+                zlib zlib-devel sqlite-devel openssl openssl-devel libffi-devel \
+                unzip pciutils net-tools binutils procps-ng hostname \
+                openblas-devel lapack-devel hdf5-devel libxml2-devel \
+                expat-devel bzip2-devel readline-devel xz-devel ncurses-devel gdbm-devel uuid-devel \
+                nss nss-devel nspr nspr-devel \
+                tzdata swig; \
+            ${PKG} clean all || true; \
+        else \
+            echo "ERROR: Neither apt-get nor dnf/yum; unsupported BASE_IMAGE" >&2; exit 1; \
         fi
 
-    # MindCluster resumable training adaptation script.
-    RUN umask 0022 && \
-        pip install $TASKD_WHL && \
-        pip install $MINDIO_TTP_WHL
+    # Build Python from source to match cp312 wheels.
+    ARG PY_VERSION=3.12.16
+    ARG PY_BASE_URL=https://mirrors.huaweicloud.com/python
 
-    # Optional. The following commands must be configured when using graceful fault tolerance, pod-level rescheduling, or process-level rescheduling.
-    RUN sed -i '/import os/i import taskd.python.adaptor.patch' $(pip3 show torch | grep Location | awk -F ' ' '{print $2}')/torch/distributed/run.py
+    RUN set -eux; \
+        cd /tmp; \
+        curl -fsSL --retry 3 -o py.tgz "${PY_BASE_URL}/${PY_VERSION}/Python-${PY_VERSION}.tgz"; \
+        tar -xzf py.tgz; \
+        cd "Python-${PY_VERSION}"; \
+        S=$(date +%s); \
+        ./configure --prefix=/usr/local --enable-shared --with-ensurepip=install > /tmp/pycfg.log 2>&1 \
+            || { echo "ERROR: Python configure failed"; tail -30 /tmp/pycfg.log; exit 1; }; \
+        echo "python configure: $(( $(date +%s) - S ))s"; \
+        make -j"$(nproc)" > /tmp/pymake.log 2>&1 \
+            || { echo "ERROR: Python make failed"; tail -30 /tmp/pymake.log; exit 1; }; \
+        echo "python make: $(( $(date +%s) - S ))s"; \
+        make install > /tmp/pyinst.log 2>&1 \
+            || { echo "ERROR: Python make install failed"; tail -40 /tmp/pyinst.log; exit 1; }; \
+        echo "python install: $(( $(date +%s) - S ))s"; \
+        if [ -d /etc/ld.so.conf.d ]; then \
+            echo "/usr/local/lib" > /etc/ld.so.conf.d/usr-local.conf; \
+        else \
+            echo "/usr/local/lib" >> /etc/ld.so.conf; \
+        fi; \
+        ldconfig; \
+        rm -rf /tmp/Python-${PY_VERSION} /tmp/py.tgz; \
+        /usr/local/bin/python3 -V; \
+        /usr/local/bin/python3 -c "import pyexpat, ssl, sqlite3, zlib, bz2, lzma, ctypes; print('stdlib extensions OK')"
 
-    # Add the dependency library for job scheduling installation
-    RUN pip install apscheduler
+    ENV PATH=/usr/local/bin:${PATH}
+    # openEuler does not search /usr/local/lib by default; configure the shared-library path.
+    ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
+    RUN set -eux; \
+        ln -sf /usr/local/bin/python3 /usr/bin/python3; \
+        ln -sf /usr/local/bin/python3 /usr/bin/python; \
+        ln -sf /usr/local/bin/pip3 /usr/bin/pip3; \
+        ln -sf /usr/local/bin/pip3 /usr/bin/pip; \
+        python3 -V; \
+        python3 -c "import sys; assert sys.version_info[:3] == (3, 12, 16), sys.version; print('python version OK: 3.12.16')"; \
+        mkdir -p /root/.pip; \
+        printf '[global]\nindex-url=%s\ntrusted-host=%s\ntimeout=120\n' \
+            "${PIP_INDEX_URL}" "${PIP_TRUSTED_HOST}" > /root/.pip/pip.conf; \
+        python3 -m pip install --no-cache-dir -U pip setuptools wheel packaging; \
+        python3 -m pip --version
 
-    RUN rm -rf tmp && \
-        rm -f $PYTORCH_WHL && \
-        rm -f $PYTORCH_NPU_WHL && \
-        rm -f $APEX_WHL && \
-        rm -f $TOOLKIT && \
-        rm -f $OPS && \
-        rm -f $TASKD_WHL && \
-        rm -f $MINDIO_TTP_WHL && \
-        rm -rf $DLLOGGER && \
-        rm -rf Dockerfile
-    # Pack the preceding content into the image mindspeed-dl:v1.
+    # Provide build-host driver metadata only for CANN install; runtime driver is host-mounted.
+    RUN set -eux; \
+        cd /tmp; \
+        mkdir -p /usr/local/Ascend/driver; \
+        cp /tmp/ascend-driver/version.info /usr/local/Ascend/driver/version.info; \
+        cp /tmp/ascend-driver/ascend_install.info /etc/ascend_install.info; \
+        curl -fsSL --retry 3 -o toolkit.run "${CANN_BASE_URL}/Ascend-cann-toolkit_${CANN_VERSION}_linux-aarch64.run"; \
+        curl -fsSL --retry 3 -o ops.run     "${CANN_BASE_URL}/Ascend-cann-${CHIP}-ops_${CANN_VERSION}_linux-aarch64.run"; \
+        chmod +x toolkit.run ops.run; \
+        ./toolkit.run --install-path=/usr/local/Ascend/ --install --quiet; \
+        ./ops.run     --install --quiet; \
+        rm -f /etc/ascend_install.info; \
+        rm -f /tmp/ascend-driver/version.info /tmp/ascend-driver/ascend_install.info; \
+        rm -rf /tmp/ascend-driver /usr/local/Ascend/driver; \
+        rm -f toolkit.run ops.run; \
+        find /usr/local/Ascend -maxdepth 4 -name 'ascend_ops_install.info' -exec cat {} \; ; \
+        echo "--- kernel directory size (only Ascend 93-series should be GB scale) ---"; \
+        du -sh /usr/local/Ascend/ascend-toolkit/latest/opp/built-in/op_impl/ai_core/tbe/kernel/* 2>/dev/null || true
+
+    ENV ASCEND_HOME_PATH=/usr/local/Ascend/ascend-toolkit/latest
+    ENV PATH=${ASCEND_HOME_PATH}/bin:${ASCEND_HOME_PATH}/tools/ccec_compiler/bin:${PATH}
+
+    # ENV provides runtime values; RUN commands that need the full CANN environment still source set_env.sh.
+    ENV ASCEND_TOOLKIT_HOME=${ASCEND_HOME_PATH}
+    ENV ASCEND_OPP_PATH=${ASCEND_HOME_PATH}/opp
+    ENV LD_LIBRARY_PATH=${ASCEND_HOME_PATH}/lib64:${ASCEND_HOME_PATH}/lib64/plugin/opskernel:${ASCEND_HOME_PATH}/lib64/plugin/nnengine:${ASCEND_HOME_PATH}/opp/built-in/op_impl/ai_core/tbe/op_tiling:/usr/local/Ascend/ascend-toolkit/latest/devlib:${LD_LIBRARY_PATH}
+
+    RUN echo "source /usr/local/Ascend/ascend-toolkit/set_env.sh" >> /root/.bashrc; \
+        echo "source /usr/local/Ascend/ascend-toolkit/set_env.sh" >> /etc/profile.d/ascend.sh
+
+    # whl/ must provide cp312/aarch64 wheels for torch, torch_npu, torchvision, and APEX.
+    # When using fused extensions such as apex_C, the APEX wheel must include them.
+    ARG APEX_WHL=apex-0.1+ascend-cp312-cp312-linux_aarch64.whl
+    COPY whl/ /tmp/whl/
+
+    # Prevent later model-dependency installs from replacing pinned PyTorch / torch_npu versions.
+    RUN printf 'torch==%s\ntorch_npu==%s\n' "${TORCH_VERSION}" "${TORCH_NPU_PKG_VERSION}" > /tmp/constraints.txt
+    ENV PIP_CONSTRAINT=/tmp/constraints.txt
+
+    RUN set -eux; \
+        ls -l /tmp/whl/; \
+        python3 -m pip install --no-cache-dir --no-deps \
+            "/tmp/whl/torch-${TORCH_VERSION}+cpu-cp312-cp312-manylinux_2_28_aarch64.whl"; \
+        python3 -m pip install --no-cache-dir \
+            filelock "typing-extensions>=4.10.0" "sympy>=1.13.3" \
+            networkx jinja2 fsspec numpy pyyaml; \
+        python3 -m pip install --no-cache-dir --no-deps \
+            "/tmp/whl/torch_npu-${TORCH_NPU_PKG_VERSION}-cp312-cp312-manylinux_2_28_aarch64.whl"; \
+        python3 -m pip install --no-cache-dir --no-deps \
+            "/tmp/whl/torchvision-0.25.0+cpu-cp312-cp312-manylinux_2_28_aarch64.whl"; \
+        . /usr/local/Ascend/ascend-toolkit/set_env.sh; \
+        TORCH_DEVICE_BACKEND_AUTOLOAD=0 \
+        python3 -c "import torch, torch_npu; print('torch', torch.__version__); print('torch_npu', torch_npu.__version__)"; \
+        python3 -c "import numpy, yaml; print('numpy', numpy.__version__); print('pyyaml', yaml.__version__)"; \
+        echo "ASCEND_OPP_PATH=$ASCEND_OPP_PATH"; \
+        test -f "/tmp/whl/${APEX_WHL}" || { echo "ERROR: A matching APEX wheel is required: whl/${APEX_WHL}" >&2; exit 1; }; \
+        python3 -m pip install --no-cache-dir "/tmp/whl/${APEX_WHL}"; \
+        TORCH_DEVICE_BACKEND_AUTOLOAD=0 python3 -c "import apex; print('apex', apex.__file__)"; \
+        rm -rf /tmp/whl
+
+    # Triton-Ascend matches MindSpeed-LLM 26.2.0 and is installed from the Huawei Cloud Ascend PyPI index.
+    RUN set -eux; \
+        . /usr/local/Ascend/ascend-toolkit/set_env.sh; \
+        python3 -m pip install --no-cache-dir \
+            "triton-ascend==${TRITON_ASCEND_VERSION}" \
+            --extra-index-url="${TRITON_ASCEND_INDEX_URL}"; \
+        python3 -c "import triton; print('triton', triton.__version__)"
+
+    RUN set -eux; \
+        python3 -m pip install --no-cache-dir \
+            cffi grpcio grpcio-tools absl-py apscheduler; \
+        python3 -m pip install --no-cache-dir numpy pillow
+
+    # TaskD source build requires Go 1.21.13.
+    ARG GO_VERSION=1.21.13
+    RUN set -eux; \
+        cd /tmp; \
+        curl -fsSL --retry 3 -o go.tar.gz \
+            "https://golang.google.cn/dl/go${GO_VERSION}.linux-arm64.tar.gz"; \
+        tar -C /usr/local -xzf go.tar.gz; \
+        rm -f go.tar.gz; \
+        /usr/local/go/bin/go version; \
+        ln -sf /usr/local/go/bin/go /usr/local/bin/go; \
+        ln -sf /usr/local/go/bin/gofmt /usr/local/bin/gofmt
+    ENV GOROOT=/usr/local/go
+    ENV GOPATH=/root/go
+    ENV PATH=${GOROOT}/bin:${GOPATH}/bin:${PATH}
+    ENV GOPROXY=https://goproxy.cn,https://mirrors.aliyun.com/goproxy/,direct
+    ENV GOSUMDB=off
+
+    RUN set -eux; \
+        python3 -m pip install --no-cache-dir datasets; \
+        TORCH_DEVICE_BACKEND_AUTOLOAD=0 \
+        python3 -c "import torch, torchvision; print('torch', torch.__version__); print('torchvision', torchvision.__version__); assert torchvision.__version__.startswith('0.25.0'), torchvision.__version__"
+
+    # Apply the optimizer-state patch and validate the baseline before installing model dependencies.
+    # transformers / tokenizers versions are determined by the model source requirements.txt.
+    COPY ${MINDSPEED_LLM_ARF_PATCH} /tmp/mindspeed_llm_arf.patch
+    COPY dllogger/ /tmp/dllogger/
+    RUN set -eux; \
+        clone5() { i=0; until git clone "$1" "$2"; do i=$((i+1)); if [ "$i" -ge 5 ]; then echo "ERROR: Failed to clone $1" >&2; return 1; fi; echo "Clone $1 failed on attempt $i; retrying"; rm -rf "$2"; sleep 5; done; }; \
+        . /usr/local/Ascend/ascend-toolkit/set_env.sh; \
+        cd /root; \
+        clone5 https://gitcode.com/Ascend/MindSpeed.git MindSpeed; \
+        cd MindSpeed; \
+        git checkout "${MINDSPEED_COMMIT}"; \
+        python3 -m pip install --no-cache-dir -r requirements.txt; \
+        python3 -m pip install --no-cache-dir -e .; \
+        cd /root; \
+        clone5 https://gitcode.com/Ascend/MindSpeed-LLM.git MindSpeed-LLM; \
+        cd MindSpeed-LLM; \
+        git checkout "${MINDSPEED_LLM_COMMIT}"; \
+        test "$(git rev-parse HEAD)" = "${MINDSPEED_LLM_COMMIT}"; \
+        git apply --check /tmp/mindspeed_llm_arf.patch; \
+        git apply /tmp/mindspeed_llm_arf.patch; \
+        git diff --check; \
+        python3 -m pip install --no-cache-dir -r requirements.txt; \
+        python3 -m pip install --no-cache-dir /tmp/dllogger; \
+        rm -rf /tmp/dllogger /tmp/mindspeed_llm_arf.patch; \
+        cd /root
+
+    RUN set -eux; \
+        cd /root; \
+        ( git clone --depth 1 --branch "${MEGATRON_TAG}" https://github.com/NVIDIA/Megatron-LM.git \
+          || git clone --depth 1 --branch "${MEGATRON_TAG}" https://gitee.com/mirrors/Megatron-LM.git \
+          || git clone --depth 1 --branch "${MEGATRON_TAG}" https://gitcode.com/gh_mirrors/me/Megatron-LM.git ); \
+        test -d Megatron-LM; \
+        cp -r /root/Megatron-LM/megatron /root/MindSpeed-LLM/; \
+        rm -rf /root/Megatron-LM
+
+    ENV PYTHONPATH=/root/MindSpeed:/root/MindSpeed-LLM
+
+    # Check imports after model dependencies are installed.
+    RUN python3 -c "import transformers, tokenizers; print('transformers', transformers.__version__); print('tokenizers', tokenizers.__version__)"
+
+    # Build TaskD / MindIO TTP: set the TaskD version, fix C++17 and ZIP timestamps.
+    # CMake must use Python 3.12 under /usr/local to avoid mixing system Python ABI.
+    RUN set -eux; \
+        cd /tmp; \
+        i=0; \
+        until git clone --depth 1 --branch "${MINDCLUSTER_TAG}" https://gitcode.com/Ascend/mind-cluster.git mc; do \
+            i=$((i+1)); rm -rf mc; \
+            if [ "$i" -ge 5 ]; then echo "ERROR: Failed to clone mind-cluster" >&2; exit 1; fi; \
+            echo "mind-cluster clone failed on attempt $i; retrying"; sleep 5; \
+        done; \
+        cd mc/component/taskd; \
+        printf 'mindxdlversion=%s\n' "${TASKD_WHEEL_VERSION}" > service_config.ini; \
+        cd build && bash build.sh; \
+        cd /tmp/mc/component/mindio/tft; \
+        test -f build/build.sh || { echo "ERROR: mindio build.sh does not exist"; exit 1; }; \
+        sed -i 's|-std=c++11|-std=c++17|g' cmake_modules/ttp_common.cmake; \
+        sed -i "s|os.environ\['SOURCE_DATE_EPOCH'\] = '0'|os.environ['SOURCE_DATE_EPOCH'] = '315532800'|" src/python/setup.py; \
+        grep -n 'std=c++17' cmake_modules/ttp_common.cmake; \
+        grep -n 'SOURCE_DATE_EPOCH' src/python/setup.py; \
+        echo '--- PYTHON DIAG ---'; \
+        echo "PATH=$PATH"; \
+        (which -a python3 || true); \
+        (python3 -V || true); \
+        /usr/local/bin/python3 -V; \
+        (/usr/bin/python3 -V || true); \
+        echo '--- END DIAG ---'; \
+        cd build; \
+        bash build.sh -f -DPython3_EXECUTABLE=/usr/local/bin/python3 -DPython3_ROOT_DIR=/usr/local -DPython3_FIND_STRATEGY=LOCATION > /tmp/mindio_build.log 2>&1 || { \
+            echo "ERROR: mindio_ttp build failed"; \
+            grep -nE 'error:|ValueError|CMake Error|Could NOT find' /tmp/mindio_build.log | head -20; \
+            tail -25 /tmp/mindio_build.log; \
+            exit 1; \
+        }; \
+        PYINC=$(find /tmp/mc/component/mindio/tft -name flags.make -exec grep -hoE '\-I[^ ]*python3\.[0-9]+' {} \; | sort -u); \
+        echo "PYINC=[$PYINC]"; \
+        if ! echo "$PYINC" | grep -q 'python3\.12'; then echo "ERROR: CMake did not use Python 3.12 headers (found: $PYINC)"; exit 1; fi; \
+        if echo "$PYINC" | grep -Eq 'python3\.(10|11)'; then echo "ERROR: Build mixed Python 3.10/3.11 headers; extension ABI does not match runtime 3.12.16"; exit 1; fi; \
+        echo "OK: CMake build uses Python 3.12 headers"; \
+        TTP_SO=$(find /tmp/mc -name '_ttp_c2python_api.so' | head -1); \
+        test -n "$TTP_SO" || { echo "ERROR: _ttp_c2python_api.so was not generated"; exit 1; }; \
+        echo "OK: Generated $TTP_SO"; \
+        mkdir -p /tmp/wheels; \
+        find /tmp/mc -name "taskd-*.whl" -exec cp {} /tmp/wheels/ \; ; \
+        find /tmp/mc -name "mindio_ttp-*.whl" -exec cp {} /tmp/wheels/ \; ; \
+        ls -l /tmp/wheels/; \
+        test -f "/tmp/wheels/taskd-${TASKD_WHEEL_VERSION}-py3-none-linux_aarch64.whl" \
+          || { echo "ERROR: taskd wheel was not generated"; exit 1; }; \
+        test -f "/tmp/wheels/mindio_ttp-${MINDIO_TTP_WHEEL_VERSION}-py3-none-linux_aarch64.whl" \
+          || { echo "ERROR: mindio_ttp wheel was not generated (check CMake output above; common cause: missing SWIG)"; exit 1; }
+
+    # Validate wheel file names and METADATA versions before install.
+    RUN set -eux; \
+        cd /tmp/wheels; \
+        bash /tmp/check_packages.sh \
+            "taskd-${TASKD_WHEEL_VERSION}-py3-none-linux_aarch64.whl:${TASKD_WHEEL_VERSION}" \
+            "mindio_ttp-${MINDIO_TTP_WHEEL_VERSION}-py3-none-linux_aarch64.whl:${MINDIO_TTP_WHEEL_VERSION}"; \
+        python3 -m pip install --no-cache-dir \
+            "taskd-${TASKD_WHEEL_VERSION}-py3-none-linux_aarch64.whl" \
+            "mindio_ttp-${MINDIO_TTP_WHEEL_VERSION}-py3-none-linux_aarch64.whl"; \
+        rm -rf /tmp/wheels /tmp/mc /tmp/check_packages.sh
+
+    # TaskD process-level recovery requires adapting torch/distributed/run.py.
+    RUN set -eux; \
+        DIST_RUN=$(TORCH_DEVICE_BACKEND_AUTOLOAD=0 python3 -c "import torch,os;print(os.path.join(os.path.dirname(torch.__file__),'distributed','run.py'))"); \
+        test -f "$DIST_RUN"; \
+        if ! grep -q '^import taskd.python.adaptor.patch' "$DIST_RUN"; then \
+            sed -i '/^import os/i import taskd.python.adaptor.patch' "$DIST_RUN"; \
+        fi; \
+        grep -n '^import taskd.python.adaptor.patch' "$DIST_RUN"
+
+    # Runtime environment
+    ENV HCCL_WHITELIST_DISABLE=1
+
+    RUN set -eux; \
+        (getent group HwHiAiUser >/dev/null || groupadd -g 1000 HwHiAiUser); \
+        (getent passwd HwHiAiUser >/dev/null || useradd -d /home/HwHiAiUser -u 1000 -g 1000 -m -s /bin/bash HwHiAiUser)
+
+    RUN set -eux; \
+        if [ ! -d /lib64 ]; then mkdir -p /lib64; ln -sf /lib/ld-linux-aarch64.so.1 /lib64/ld-linux-aarch64.so.1; fi
+
+    # Image build information
+    ARG BUILD_DATE=unknown
+    LABEL org.opencontainers.image.title="torch-npu-sample-dl" \
+          org.opencontainers.image.description="MindCluster resumable-training PyTorch sample image" \
+          org.opencontainers.image.version="v26.3.0" \
+          org.opencontainers.image.created="${BUILD_DATE}" \
+          org.opencontainers.image.licenses="Apache-2.0" \
+          com.mindcluster.cann.version="${CANN_VERSION}" \
+          com.mindcluster.chip="${CHIP}" \
+          com.mindcluster.torch="${TORCH_VERSION}+cpu" \
+          com.mindcluster.torch_npu="${TORCH_NPU_PKG_VERSION}" \
+          com.mindcluster.mindspeed="${MINDSPEED_COMMIT}" \
+          com.mindcluster.mindspeed_llm="${MINDSPEED_LLM_COMMIT}" \
+          com.mindcluster.megatron="${MEGATRON_TAG}" \
+          com.mindcluster.taskd="${TASKD_WHEEL_VERSION}" \
+          com.mindcluster.mindio_ttp="${MINDIO_TTP_WHEEL_VERSION}"
+
+    RUN set -eux; \
+        . /usr/local/Ascend/ascend-toolkit/set_env.sh; \
+        echo "=== Component version self-check ==="; \
+        python3 -V; \
+        echo "ASCEND_OPP_PATH=$ASCEND_OPP_PATH"; \
+        TORCH_DEVICE_BACKEND_AUTOLOAD=0 python3 -c "import torch; print('torch', torch.__version__)"; \
+        TORCH_DEVICE_BACKEND_AUTOLOAD=0 python3 -c "import torch_npu; print('torch_npu', torch_npu.__version__)"; \
+        cat /usr/local/Ascend/ascend-toolkit/latest/opp/version.info | head -2; \
+        find /usr/local/Ascend -maxdepth 4 -name 'ascend_ops_install.info' -exec sh -c 'grep -E "package_name|^version" $1' _ {} \; ; \
+        python3 -m pip show taskd mindio_ttp 2>/dev/null | grep -E '^(Name|Version)' || echo "WARNING: taskd/mindio_ttp installation failed"; \
+        TORCH_DEVICE_BACKEND_AUTOLOAD=0 python3 -c "import apex; print('apex OK')"; \
+        python3 -c "import triton; print('triton', triton.__version__)"; \
+        python3 -m pip check; \
+        echo "=== Confirm driver credentials are not baked into the image (must be empty) ==="; \
+        test ! -f /etc/ascend_install.info && echo "OK: /etc/ascend_install.info does not exist"; \
+        test ! -d /usr/local/Ascend/driver && echo "OK: driver directory does not exist"
+
+    WORKDIR /root
+    CMD ["bash"]
+
     ```
 
     >[!NOTE]
-    >If Python 3.10 cannot be installed successfully through PPA, or the deadsnakes PPA does not provide an image source for Python 3.10, you can download the source code and manually compile and install it.
+    >Replace `{version}` with the matching package version. For another architecture, also change the base image and wheel architecture fields. The Python ABI of torch, torch_npu, and APEX must match Python 3.12. Install Transformers and tokenizers according to the model source requirements.txt. Install Triton-Ascend 3.6.0 from the Huawei Cloud Ascend PyPI source as described in the MindSpeed-LLM installation guide; the Dockerfile already includes this step.
 
-3. Build the image. Run the following command to generate the image. To make the Dockerfile more secure, you can define a `HEALTHCHECK` in it based on your service. Check the container running status by running the **HEALTHCHECK** _\[OPTIONS\]_ **CMD** command inside the container. **Do not omit the dot (".") at the end of the command.**
+    Before installing model dependencies, the build applies both adaptations to `/root/MindSpeed-LLM` in the image and checks the source baseline and patch context. The TaskD adaptation of `torch/distributed/run.py` remains a separate Dockerfile step.
+
+    If a training job mounts shared source over the image code directory, use the same source versions and adaptations as the image. You can copy `/root/MindSpeed` and `/root/MindSpeed-LLM` from the completed image to shared storage to retain the adaptations.
+
+3. Build an image for each server type from the Dockerfile directory. Retain the final period in each command.
 
     ```shell
-    docker build -t mindspeed-dl:v1 .
+    # A3
+    docker build --network=host --build-arg BASE_IMAGE=ubuntu:22.04 --build-arg CHIP=A3 -t mindspeed-dl:deepseek4-a3 .
+    # A5
+    docker build --network=host --build-arg BASE_IMAGE=openeuler/openeuler:24.03-lts --build-arg CHIP=950 -t mindspeed-dl:deepseek4-a5 .
     ```
 
-4. In addition to manually building an image by following the preceding process, you can also directly use the out-of-the-box sample image: `torch-npu-sample-dl:v26.2.0-cann8.5.0-torch_npu2.7.1.post2-910b-ubuntu22.04-py3.10-aarch64` or `torch-npu-sample-dl:v26.2.0-cann9.1.1-torch_npu2.7.1.post8-950-ubuntu24.04-py3.10-aarch64` (integrated UB driver-related files). The sample image can be obtained from [AscendHub](https://www.hiascend.com/en/developer/ascendhub) for quick verification.
+4. Push the images to a registry accessible to the cluster, or import them on every node that may host the job, and configure the image address in the job YAML. For A5, also configure the UB driver files described in this section.
+
+    Instead of building an image manually, you can use the following ready-to-use example images available from [AscendHub](https://www.hiascend.com/developer/ascendhub). Select the image matching the server type.
+
+    | Server Type | Image Name and Tag |
+    |---|---|
+    | A3 | `torch-npu-sample-dl:v26.3.0-cann9.2.0-torch_npu2.10.0-A3-ubuntu22.04-py3.12-aarch64` |
+    | A5 (950) | `torch-npu-sample-dl:v26.3.0-cann9.2.0-torch_npu2.10.0-950-openeuler24.03-py3.12-aarch64` |
 
 ## Script Adaptation<a name="ZH-CN_TOPIC_0000002511426481"></a>
 
@@ -354,7 +698,7 @@ This chapter guides users through the adaptation steps for resumable training, s
 
 >[!NOTE]
 >
->- To ensure that graceful fault tolerance and process-level online recovery work properly, keep the clocks of the master and worker nodes of the K8s cluster consistent.
+>- To ensure that resumable training works properly, keep the clocks of the master and worker nodes of the K8s cluster consistent.
 >- The component code shown for resumable training is open-source code. For related security statements, see [Security Statement](../../../../07_references/05_appendix.md#ZH-CN_TOPIC_0000002479386374).
 >- The model example code below may differ from the actual version. The actual version code prevails.
 >- Write the model parameter configuration based on the model configuration in the model repository and the actual situation. Improper modification may cause unpredictable problems.
@@ -367,91 +711,63 @@ This chapter guides users through the adaptation steps for resumable training, s
 >
 >- If TaskD is used and the training container uses the host network, first query the current reserved port configuration by running `sysctl net.ipv4.ip_local_reserved_ports`, and then add reserved ports 9601 and 9602 by running `sysctl -w net.ipv4.ip_local_reserved_ports="xxx,9601,9602"` (where *xxx* refers to the ports already configured in the preceding query; omit it if there are none).
 
-For training code and dataset preparation, see [MindSpeed-LLM User Guide](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.2.0/docs/en/pytorch/training/pretrain/mcore/pretrain.md). The following uses two Atlas 800T A2 as an example to describe the specific operation steps.
+For training code and dataset preparation, see [MindSpeed-LLM User Guide](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.2.0/docs/en/pytorch/training/pretrain/mcore/pretrain.md). The following uses two A3 or two A5 servers with eight NPUs per server. Configure resources and parallelism according to the DeepSeek-V4-Flash training mode and memory requirements.
 
-1. Pull the training code.
+1. Prepare MindSpeed-LLM source supporting DeepSeek-V4-Flash, together with matching MindSpeed and Megatron-LM versions. Use the same source versions as the image. If the image already contains the source, you can copy it to shared storage.
 
     ```shell
     mkdir -p /data/atlas_dls/public/code
     cd /data/atlas_dls/public/code
-    git clone https://gitcode.com/Ascend/MindSpeed-LLM.git
-    git clone https://github.com/NVIDIA/Megatron-LM.git
-    cd MindSpeed-LLM
-    git checkout 2af5bab9785ce64af3b7d1fe12972a27152cd7af
-    cd ..
-    cd Megatron-LM
-    git checkout core_v0.12.1
-    cp -r megatron ../MindSpeed-LLM # Copy the Megatron directory under the Megatron-LM project to the MindSpeed-LLM project.
-    ## Rename MindSpeed-LLM to QWEN3_for_PyTorch_2.7_code.
-    cd ..
-    mv MindSpeed-LLM QWEN3_for_PyTorch_2.7_code
+    git clone https://gitcode.com/Ascend/MindSpeed-LLM.git DeepSeek_V4_Flash_for_PyTorch_2.10_code
+    cd DeepSeek_V4_Flash_for_PyTorch_2.10_code
+    # Select a branch or commit supporting DeepSeek-V4-Flash and matching the image.
+    git checkout bfa35e3c8502995810d64077ed7fd18b8b296012
     ```
 
-2. Obtain model weights.
+    To use process-level recovery with DeepSeek-V4-Flash, this source must also include the two optimizer state adaptations in [Building an Image](#zh-cn_topic_0000002039339945_section20489630477). Prefer copying the adapted `/root/MindSpeed-LLM` from the image to the shared code directory. If cloning source separately, apply the same patch to the matching baseline before mounting it at `/job/code`.
 
-    Download model weights from [Qwen3](https://huggingface.co/Qwen/Qwen3-8B/tree/main) and place them in a directory on the server, such as `/data/atlas_dls/public/dataset/qwen3-8b-hf`.
+    The source example pairs with MindSpeed `eb0ad7e73dc8227291e44504041aa7c58136aaa3` and Megatron-LM `core_v0.12.1`; use the same versions when building the image. Prepare Megatron-LM according to the model instructions for that release and place its `megatron` directory in the model code directory. Mount the complete model code directory at `/job/code` and the data and weights root at `/job/data` in the training containers. All training and spare nodes must access the same code, data, and checkpoints.
 
-3. Prepare a dataset.
+2. Download the complete weights, configuration files, and tokenizer from the official [DeepSeek-V4-Flash model file directory](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/tree/main) and place them in `/data/atlas_dls/public/dataset/DeepSeek-V4-Flash`. If dequantization or weight conversion is required, follow the DeepSeek-V4-Flash instructions for the selected MindSpeed-LLM release before configuring the training load path.
 
-    Download the detailed dataset, for example, [Alpaca](https://huggingface.co/datasets/tatsu-lab/alpaca/blob/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet), and place it in a directory on the server, such as `/data/atlas_dls/public/dataset/qwen3-alpaca`.
+3. Obtain the training data. This resumable-training example uses the [Alpaca dataset](https://huggingface.co/datasets/tatsu-lab/alpaca). Download its [Parquet file](https://huggingface.co/datasets/tatsu-lab/alpaca/blob/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet) to `/data/atlas_dls/public/dataset/deepseek4-alpaca/`. The file contains a `text` field matching `--json-keys text` in the preprocessing command below. You can also use the [direct download link](https://huggingface.co/datasets/tatsu-lab/alpaca/resolve/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet):
 
-4. Process the dataset.
-    1. Start the container.
+    ```shell
+    mkdir -p /data/atlas_dls/public/dataset/deepseek4-alpaca
+    curl -fL \
+        https://huggingface.co/datasets/tatsu-lab/alpaca/resolve/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet \
+        -o /data/atlas_dls/public/dataset/deepseek4-alpaca/train-00000-of-00001-a09b74b3ef9c3b56.parquet
+    ```
 
-        ```shell
-        docker run -it -v /data/atlas_dls/public/:/data/atlas_dls/public/ -e ASCEND_VISIBLE_DEVICES=0-7 mindspeed-dl:v1 bash
-        ```
+4. Process the data in a container using the training image. Mount the shared code and data directories at `/job/code` and `/job/data`, respectively, and run the following commands. Install Transformers, tokenizers, and other model dependencies using the versions in the model source requirements.txt.
 
-    2. Perform the following operations in the container.
+    ```shell
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    cd /job/code
+    python preprocess_data.py \
+        --input /job/data/deepseek4-alpaca/train-00000-of-00001-a09b74b3ef9c3b56.parquet \
+        --tokenizer-name-or-path /job/data/DeepSeek-V4-Flash \
+        --tokenizer-type PretrainedFromHF \
+        --handler-name GeneralPretrainHandler \
+        --output-prefix /job/data/deepseek4-alpaca/alpaca \
+        --json-keys text \
+        --append-eod \
+        --workers 4 \
+        --log-interval 1000
+    ```
 
-        ```shell
-        export TORCH_DEVICE_BACKEND_AUTOLOAD=0
-        source /usr/local/Ascend/cann/set_env.sh
-        cd /data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code
-        # Optional. The following describes how to install the MindSpeed acceleration library. This operation can be performed in any directory. If it has been installed during image creation, skip this operation.
-        git clone https://gitcode.com/ascend/MindSpeed.git
-        cd MindSpeed
-        git checkout e4d5855250f0074670f41c423021286502410bf1
-        pip install -r requirements.txt
-        pip install -e .
-        export PYTHONPATH=/data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/MindSpeed:$PYTHONPATH
-        cd ..
-        ```
+    The commands generate `alpaca_text_document.bin` and `alpaca_text_document.idx`. Set `DATA_PATH` in the training script to the file prefix without an extension.
 
-    3. Process the dataset.
-
-        Qwen3 requires that Transformers version be 4.51.0 or later. Therefore, Python 3.9 or later and Transformers 4.51.0 or later must be installed.
-
-        ```shell
-        python preprocess_data.py \
-            --input /data/atlas_dls/public/dataset/qwen3-alpaca/train-00000-of-00001-a09b74b3ef9c3b56.parquet \ # Dataset file path
-            --tokenizer-name-or-path /data/atlas_dls/public/dataset/qwen3-8b-hf \ # Open-source model weight file directory
-            --tokenizer-type PretrainedFromHF \
-            --handler-name GeneralPretrainHandler \
-            --output-prefix /data/atlas_dls/public/dataset/qwen3-alpaca/alpaca \ # Generates alpaca_text_document.bin and .idx files
-            --json-keys text \
-            --workers 4 \
-            --log-interval 1000
-        ```
-
-        >[!NOTE]
-        >If the error "/usr/local/lib/python3.10/dist-packages/sklearn/utils/../../scikit_learn.libs/libgomp-947d5fa1.so.1.0.0: cannot allocate memory in static TLS block" is displayed, run the following command to preload the libgomp library.
-        >
-        >```shell
-        >export LD_PRELOAD=/usr/local/lib/python3.10/dist-packages/scikit_learn.libs/libgomp-947d5fa1.so.1.0.0:$LD_PRELOAD
-        >```
-
-5. Go to the "[mindcluster-deploy](https://gitcode.com/Ascend/mindcluster-deploy)" repository, switch to the branch corresponding to the version according to the [mindcluster-deploy open-source repository version description](../../../../07_references/05_appendix.md#mindcluster-deploy-open-source-repository-version-description), obtain the `train_start.sh` file from the `samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3` directory, and construct the following directory structure on the management node.
+5. Create `scripts/train_start.sh` in the model code directory based on the model training script under `examples/mcore/deepseek4_flash` in the selected release. Retain the DeepSeek-V4-Flash model structure, weight conversion, and training parameters, and adapt the launch and recovery logic as described in step 7.
 
     ```text
-    root@ubuntu:/data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/scripts#
-    scripts/
-    └── train_start.sh
+    DeepSeek_V4_Flash_for_PyTorch_2.10_code/
+    ├── scripts/
+    │   └── train_start.sh
+    └── manager.py
     ```
 
-6. Obtain the [training job YAML](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml). This YAML has already configured pod-level rescheduling, process-level rescheduling, process-level online recovery, elastic training, and more. Set the IP address of the server to which the volume is mounted and rescheduling levels as required.
-
-    Training process recovery functions such as process-level rescheduling, process-level online recovery, and elastic training cannot coexist with graceful fault tolerance. For details about how to configure graceful fault tolerance, see [Graceful Fault Tolerance Mode](./menu_examples_and_verification.md#ZH-CN_TOPIC_0000002511346449).
+6. Use the DeepSeek-V4-Flash example YAML at `samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/DeepSeek-V4-Flash/yamls/pytorch_multinodes_acjob_deepseek4.yaml` in the matching `mindcluster-deploy` repository. The file is named `pytorch_multinodes_acjob_deepseek4.yaml` and defaults to A5, two nodes with eight NPUs each, and process-level recovery. Replace the NFS server and confirm the shared code and data paths. For A3 images, scheduling policies, and alternative recovery settings, see `README.md` in the example directory and [Preparing a Job YAML](#ZH-CN_TOPIC_0000002511426415). Graceful fault tolerance is a sunset feature; use the recovery strategies described in this chapter for new configurations.
 
 7. Configure `train_start.sh` and the training job YAML based on the actual situation.
     1. Modify the basic parameters of the startup script.
@@ -459,7 +775,7 @@ For training code and dataset preparation, see [MindSpeed-LLM User Guide](https:
         ```shell
         mkdir -p /job/code/alllogs/$MINDX_TASK_ID/ttplogs
         mkdir -p /job/code/alllogs/$MINDX_TASK_ID/trainlogs
-        mkdir -p /job/code/alllogs/$MINDX_TASK_ID/demo/
+        mkdir -p /job/code/alllogs/$MINDX_TASK_ID/taskd
         # Log save path, which can be modified based on the actual situation
         export ASCEND_PROCESS_LOG_PATH=/job/code/alllogs/$MINDX_TASK_ID/plogs/$XDL_IP       # Set the plog save path, where $MINDX_TASK_ID is the task UID environment variable injected by Ascend Operator, and $XDL_IP is the environment variable status.hostIP written in the YAML
         export TTP_LOG_PATH=/job/code/alllogs/$MINDX_TASK_ID/ttplogs/ttplog$XDL_IP-$RANK    # Set the TTP log save path, where $RANK is the environment variable injected by Ascend Operator for the PyTorch framework
@@ -468,12 +784,24 @@ For training code and dataset preparation, see [MindSpeed-LLM User Guide](https:
         export HCCL_SOCKET_IFNAME=enp189s0f0               # If hostNetwork is set to false in the YAML, set it to eth0.
 
         CKPT_SAVE_DIR="/job/code/output/ckpt" # The weight save path after training is completed
-        DATA_PATH="/job/data/alpaca_text_document" # Dataset path. Enter the data path saved during data preprocessing.
-        TOKENIZER_PATH="/job/data/qwen3-8b-hf" # Tokenizer path. Enter the downloaded open-source weight tokenizer path
-        CKPT_LOAD_DIR="/job/code/output/ckpt" # Weight loading path
+        DATA_PATH="/job/data/deepseek4-alpaca/alpaca_text_document" # Dataset path. Enter the data path saved during data preprocessing.
+        TOKENIZER_PATH="/job/data/DeepSeek-V4-Flash" # Tokenizer path. Enter the downloaded open-source weight tokenizer path
         ```
 
-    2. To use TaskD for process-level rescheduling, process-level online recovery, process-level in-place recovery, or elastic training, you also need to start TaskD Manager.
+        Set `--save "$CKPT_SAVE_DIR"`, `--save-interval 10`, and `--train-iters 60` in the model training command. Add the following load logic and pass the `LOAD_ARGS` array to the model entry point. `INITIAL_LOAD_DIR` is the converted initial weights directory. Use the same checkpoint save directory for the initial and recovery launches. If the initial weights contain no optimizer or RNG state, add `--no-load-optim --no-load-rng` only when loading those initial weights. Load the saved full state when resuming from a training checkpoint.
+
+        ```shell
+        INITIAL_LOAD_DIR="/job/data/DeepSeek-V4-Flash-mcore"
+        LOAD_ARGS=(--load "$INITIAL_LOAD_DIR" --no-load-optim --no-load-rng)
+        if [ -f "$CKPT_SAVE_DIR/latest_checkpointed_iteration.txt" ]; then
+            LOAD_ARGS=(--load "$CKPT_SAVE_DIR")
+        fi
+        # Add to the model entry point arguments: "${LOAD_ARGS[@]}"
+        ```
+
+        Use `--enable-high-availability` for process-level rescheduling. For online recovery, also add `--enable-hbmfault-repair` and set `HCCL_ASYNC_ERROR_HANDLING=0`. Always pass `--load` for online recovery, retain optimizer replicas, and omit `--distributed-optimizer-no-replica`. Parallelism must also satisfy the HA replica group requirement: `DP/EP` must be a multiple of `REPLICA_NUM` (2 by default). Follow the DeepSeek-V4-Flash instructions for the selected release for model structure and weight conversion parameters.
+
+    2. To use TaskD for pod-level rescheduling, process-level rescheduling, process-level online recovery, process-level in-place recovery, or elastic training, you also need to start TaskD Manager.
         1. Create a `manager.py` file in the current directory when calling the training script. The content of the `manager.py` file is as follows.
 
             ```python
@@ -481,8 +809,8 @@ For training code and dataset preparation, see [MindSpeed-LLM User Guide](https:
             import os
 
             job_id=os.getenv("MINDX_TASK_ID")
-            node_nums=XX         # Total number of nodes
-            proc_per_node=XX     # Number of training processes per node
+            node_nums=2         # Total number of nodes
+            proc_per_node=8     # Number of training processes per node
 
             init_taskd_manager({"job_id":job_id, "node_nums": node_nums, "proc_per_node": proc_per_node})
             start_taskd_manager()
@@ -496,17 +824,23 @@ For training code and dataset preparation, see [MindSpeed-LLM User Guide](https:
             In the following code, the two statements `TASKD_SO_PATH` and `export LD_PRELOAD` are used to configure the path of `libtaskd.so` after installing TaskD into the environment variable `LD_PRELOAD`. If these two statements fail to configure successfully, you can manually run the `pip show taskd` command to obtain the value of Location, concatenate it with `/taskd/python/cython_api/libs/libtaskd.so`, and then set it via `export`.
 
             ```shell
-            sed -i '/import os/i import taskd.python.adaptor.patch' $(pip3 show torch | grep Location | awk -F ' ' '{print $2}')/torch/distributed/run.py
+            DIST_RUN=$(TORCH_DEVICE_BACKEND_AUTOLOAD=0 python -c 'import os, torch; print(os.path.join(os.path.dirname(torch.__file__), "distributed", "run.py"))')
+            grep -q '^import taskd.python.adaptor.patch' "$DIST_RUN" || sed -i '/^import os/i import taskd.python.adaptor.patch' "$DIST_RUN"
             TASKD_SO_PATH="$(pip show taskd | awk '/^Location: / {print $2"/taskd/python/cython_api/libs/libtaskd.so"}')"
             export LD_PRELOAD=$TASKD_SO_PATH:$LD_PRELOAD
-            export TASKD_PROCESS_ENABLE="on"
+            export TASKD_PROCESS_ENABLE="${TASKD_PROCESS_ENABLE:-on}"
             if [[ "${RANK}" == 0 ]]; then
                 export MASTER_ADDR=${POD_IP}
                 python /job/code/manager.py 2>> /job/code/alllogs/$MINDX_TASK_ID/taskd/error.log &   # The specific execution path of manager.py is determined by the current path, and the error.log path must be created in advance.
             fi
 
-            torchrun $DISTRIBUTED_ARGS ...
+            cd /job/code
+            DISTRIBUTED_ARGS="--nnodes 2 --nproc_per_node 8 --node_rank ${RANK} --master_addr ${MASTER_ADDR} --master_port ${MASTER_PORT}"
+            # MODEL_ARGS retains the full DeepSeek-V4-Flash model script arguments, including training, parallelism, and checkpoints.
+            torchrun $DISTRIBUTED_ARGS --max_restarts 32767 pretrain_deepseek4.py $MODEL_ARGS "${LOAD_ARGS[@]}"
             ```
+
+            The launch command uses the pretraining entry point `pretrain_deepseek4.py`. Set `MODEL_ARGS` to the complete arguments from the model script. For LoRA or another fine-tuning mode, retain that script's `posttrain_gpt.py` entry point and fine-tuning arguments, and adapt the same distributed launch, checkpoint, and recovery logic. Keep the node and per-node process counts consistent with `manager.py`.
 
         3. Modify the training job YAML to add container ports, and add port 9601 used for TaskD communication under all Pods (skip this step if it already exists).
 
@@ -539,7 +873,7 @@ Cluster scheduling components provide YAML examples. Select the corresponding YA
 </th>
 <th class="cellrowborder" valign="top" width="15.393078615723146%" id="mcps1.2.8.1.5"><p id="p19672186404"><a name="p19672186404"></a>YAML File Name</p>
 </th>
-<th class="cellrowborder" valign="top" width="15.433086617323463%" id="mcps1.2.8.1.6"><p id="p1096741894013"><a name="p1096741894013"></a>Download Link</p>
+<th class="cellrowborder" valign="top" width="15.433086617323463%" id="mcps1.2.8.1.6"><p id="p1096741894013"><a name="p1096741894013"></a>Source</p>
 </th>
 <th class="cellrowborder" valign="top" width="15.413082616523303%" id="mcps1.2.8.1.7"><p id="p2967518174012"><a name="p2967518174012"></a>Description</p>
 </th>
@@ -551,11 +885,11 @@ Cluster scheduling components provide YAML examples. Select the corresponding YA
 </td>
 <td class="cellrowborder" valign="top" width="8.521704340868173%" headers="mcps1.2.8.1.3 "><p id="p319343422611"><a name="p319343422611"></a><span id="ph310231710274"><a name="ph310231710274"></a>PyTorch</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="13.672734546909378%" headers="mcps1.2.8.1.4 "><p id="p493616294406"><a name="p493616294406"></a><span id="ph22631282914"><a name="ph22631282914"></a>Qwen3</span></p>
+<td class="cellrowborder" valign="top" width="13.672734546909378%" headers="mcps1.2.8.1.4 "><p id="p493616294406"><a name="p493616294406"></a><span id="ph22631282914"><a name="ph22631282914"></a>DeepSeek-V4-Flash</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5 "><p id="p893610293406"><a name="p893610293406"></a>pytorch_multinodes_acjob_910b.yaml</p>
+<td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5 "><p id="p893610293406"><a name="p893610293406"></a>pytorch_multinodes_acjob_deepseek4.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml" target="_blank" rel="noopener noreferrer">pytorch_multinodes_acjob_910b.yaml</a></p>
+<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a>In the matching mindcluster-deploy repository: <code>samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/DeepSeek-V4-Flash/yamls/pytorch_multinodes_acjob_deepseek4.yaml</code></p>
 </td>
 <td class="cellrowborder" valign="top" width="15.413082616523303%" headers="mcps1.2.8.1.7 "><p id="p8936152964011"><a name="p8936152964011"></a>A two-server eight-chip job is presented in the example file by default.</p>
 </td>
@@ -563,18 +897,80 @@ Cluster scheduling components provide YAML examples. Select the corresponding YA
 </tbody>
 </table>
 
+The example uses two servers of the same type (A3 or A5), with eight NPUs requested per Pod. Save the YAML as `pytorch_multinodes_acjob_deepseek4.yaml` and name the job `default-test-pytorch`. Both Master and Worker run `bash /job/code/scripts/train_start.sh` and share the code, data, and checkpoint directories. Select the image for the server type.
+
+Select a recovery capability and add the corresponding fields to the job `metadata.labels`, `metadata.annotations`, and the Master/Worker container `env` entries. The following table describes configurations for experiencing each capability separately.
+
+| Configuration | Job-Level Rescheduling | Pod-Level Rescheduling | Process-Level Rescheduling | Process-Level Online Recovery |
+|---|---|---|---|---|
+| `labels.fault-scheduling` | `"grace"` | `"grace"` | `"grace"` | `"grace"` |
+| `labels.pod-rescheduling` | Omit | `"on"` | Omit | Omit |
+| `annotations.recover-strategy` | Omit | Omit | `"recover,recover-in-place"` | `"retry"` |
+| `TASKD_PROCESS_ENABLE` | Omit | `"off"` | `"on"` | `"on"` |
+| TaskD Manager and container ports 8000 and 9601 | Not required | Required | Required | Required |
+| Model launch arguments | Checkpoint save/load | Checkpoint save/load | `--enable-high-availability` | `--enable-high-availability --enable-hbmfault-repair` |
+
 >[!NOTE]
->Currently, some training frameworks do not provide resumable training example YAMLs for Atlas 900 A3 SuperPoD. You can add an annotations field under labels in the example YAML. An example is shown below:
->
->```yaml
->...
->  labels:
->...
->  annotations:
->    sp-block: "32"   # Number of chips in a logical super node. For details about the sp-block field, see the YAML parameter description.
->    huawei.com/schedule_policy: "chip2-node16-sp"    # Set the scheduling policy based on the hardware form
->...
->```
+>`TASKD_PROCESS_ENABLE=off` for pod-level recovery disables only process-level recovery. TaskD Manager must still be started. Retain the existing training and checkpoint arguments in the model launch command.
+
+For scenarios using TaskD, add the following fields under `spec.replicaSpecs.<role>.template.spec.containers` for both Master and Worker, and ensure that each training Pod can communicate with ClusterD.
+
+```yaml
+env:
+  - name: POD_IP
+    valueFrom:
+      fieldRef:
+        fieldPath: status.podIP
+  - name: XDL_IP
+    valueFrom:
+      fieldRef:
+        fieldPath: status.hostIP
+  - name: TTP_PORT
+    value: "8000"
+ports:
+  - containerPort: 8000
+    name: ttp-port
+  - containerPort: 9601
+    name: taskd-port
+```
+
+The job YAML must also include a `reset-config-<job-name>` ConfigMap mounted in both Master and Worker. For the job `default-test-pytorch` in namespace `default`, add the following resource.
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reset-config-default-test-pytorch
+  namespace: default
+  labels:
+    reset: "true"
+data:
+  reset.json: |
+    {"status":"initializing"}
+```
+
+Add the following mount under the container `volumeMounts` and the volume under the Pod `volumes` in each role template.
+
+```yaml
+# spec.replicaSpecs.<role>.template.spec.containers[*]
+volumeMounts:
+  - name: reset-config
+    mountPath: /user/restore/reset/config
+# spec.replicaSpecs.<role>.template.spec
+volumes:
+  - name: reset-config
+    configMap:
+      name: reset-config-default-test-pytorch
+```
+
+Set the logical SuperPoD size and scheduling policy for A3 and A5 according to the actual resource topology. The following values illustrate a 16-NPU job. Add them under the job `metadata.annotations`, at the same level as `labels`.
+
+| Server Type | `sp-block` | `huawei.com/schedule_policy` |
+|---|---|---|
+| A3 | `"16"` | `"chip2-node16-sp"` |
+| A5 | `"16"` | `"chip8-node8-ra64-sp"` |
+
+Before submitting the job, ensure that shared storage is readable and writable, container `/dev/shm` and file descriptor limits meet training requirements, and node clocks are synchronized. To experience rescheduling to another node, prepare a spare node with matching resources, image, and mounts.
 
 ## Delivering a Job<a name="ZH-CN_TOPIC_0000002479226548"></a>
 
@@ -590,7 +986,7 @@ In the example YAML, the job is deployed in the default namespace. This chapter 
     For example:
 
     ```shell
-    kubectl apply -f pytorch_multinodes_acjob_910b.yaml
+    kubectl apply -f pytorch_multinodes_acjob_deepseek4.yaml
     ```
 
     Command output:
@@ -636,7 +1032,10 @@ kubectl logs default-test-pytorch-worker-0 -n default -f
 
 The following is an output example. The presence of `loss` indicates that the job is running properly.
 
-![](../../../../../figures/scheduling/unnaming-71.png)
+```text
+iteration        1/      60 | ... | lm loss: ...
+iteration        2/      60 | ... | lm loss: ...
+```
 
 **Checking Whether CKPT Files Exist<a name="section979416428371"></a>**
 
@@ -647,7 +1046,7 @@ After the training job has been running for longer than the CKPT saving interval
 1. Log in to the storage node and run the following command to go to the CKPT file path.
 
     ```shell
-    cd /data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/output/ckpt
+    cd /data/atlas_dls/public/code/DeepSeek_V4_Flash_for_PyTorch_2.10_code/output/ckpt
     ```
 
 2. Run the following command to check whether a periodic CKPT file exists in the current directory.
@@ -660,7 +1059,7 @@ After the training job has been running for longer than the CKPT saving interval
 
     ```ColdFusion
     total 8
-    drwxr-xr-x  18 root root   8192 Jun 22 18:39 iter_0000100
+    drwxr-xr-x  18 root root   8192 Jun 22 18:39 iter_0000020
     -rw-r--r--  1 root root    2    Jun 22 18:39 latest_checkpointed_iteration.txt
     ```
 
@@ -715,8 +1114,8 @@ Simulate node status loss caused by node power-off by restarting the training no
     The following is an output example, which indicates that when the fault occurs, training is recovered from the most recently saved checkpoint at step 9, so that the training job continues from the 10th iteration.
 
     ```ColdFusion
-    [2025-06-22 14:47:00] iteration       10/    5000 | consumed samples:          640 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    64 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
-    [2025-06-22 14:47:02] iteration       11/    5000 | consumed samples:          704 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    64 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
+    [2025-06-22 14:47:00] iteration       21/      60 | consumed samples:          336 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    16 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
+    [2025-06-22 14:47:02] iteration       22/      60 | consumed samples:          352 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    16 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
     ......
     ```
 
@@ -763,8 +1162,8 @@ Simulate a parameter plane network fault by disconnecting the NPU network link. 
     The following is an output example, which indicates that when the fault occurs, training is recovered from the most recently saved checkpoint at step 9, so that the training job continues from the 10th iteration.
 
     ```ColdFusion
-    [2025-06-22 14:47:00] iteration       10/    5000 | consumed samples:          640 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    64 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
-    [2025-06-22 14:47:02] iteration       11/    5000 | consumed samples:          704 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    64 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
+    [2025-06-22 14:47:00] iteration       21/      60 | consumed samples:          336 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    16 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
+    [2025-06-22 14:47:02] iteration       22/      60 | consumed samples:          352 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    16 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
     ......
     ```
 
@@ -820,8 +1219,8 @@ Simulate a service plane fault by deleting the training process.
     The following is an output example, which indicates that when the fault occurs, training is recovered from the most recently saved checkpoint at step 9, so that the training job continues from the 10th iteration.
 
     ```ColdFusion
-    [2025-06-22 14:47:00] iteration       10/    5000 | consumed samples:          640 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    64 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
-    [2025-06-22 14:47:02] iteration       11/    5000 | consumed samples:          704 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    64 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
+    [2025-06-22 14:47:00] iteration       21/      60 | consumed samples:          336 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    16 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
+    [2025-06-22 14:47:02] iteration       22/      60 | consumed samples:          352 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    16 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
     ......
     ```
 
@@ -838,7 +1237,7 @@ Log in to the management node and run the following command to view the running 
 kubectl get pods -A -o wide
 ```
 
-Before the fault, if the training job is scheduled to node1 and node2, and a fault occurs on node1, Volcano reschedules the training job on node1 and node2 to node2 and node3. The output after rescheduling is as follows.
+The following illustrates job-level rescheduling. Before the fault, if the training job is scheduled to node1 and node2, and a fault occurs on node1, Volcano reschedules the training job on node1 and node2 to node2 and node3. The output after rescheduling is as follows.
 
 ```ColdFusion
 NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE   IP                NODE           NOMINATED NODE   READINESS GATES
@@ -855,33 +1254,12 @@ Run the following command to check the running status of the training job on a s
 kubectl logs default-test-pytorch-worker-0 -n default -f
 ```
 
-The sample output below shows that the latest checkpoint file from the ninth iteration is used to resume training at the tenth iteration after a fault occurs.
+The sample output below shows that the latest checkpoint file from the 20th iteration is used to resume training at the 21st iteration after a fault occurs.
 
-```ColdFusion
-2025-09-08 11:34:00.400331 warn 1900637 [77840][PYH tft_replica_optimizer.py:659] Replica optimizer increase Memory On Chip Usage by:0.6572 GB!
-2025-09-08 11:34:00.401841 warn 1900631 [28432][PYH tft_replica_optimizer.py:659] Replica optimizer increase Memory On Chip Usage by:0.6572 GB!
-2025-09-08 11:34:00.402489 warn 1900639 [10928][PYH tft_replica_optimizer.py:659] Replica optimizer increase Memory On Chip Usage by:0.6572 GB!
-2025-09-08 11:34:00.426989 warn 1900627 [98608][PYH tft_replica_optimizer.py:659] Replica optimizer increase Memory On Chip Usage by:0.6572 GB!
-2025-09-08 11:34:00.429141 warn 1900634 [24592][PYH tft_replica_optimizer.py:659] Replica optimizer increase Memory On Chip Usage by:0.6572 GB!
-(min, max) time across ranks (ms):
-    load-checkpoint ................................: (32107.12, 32108.53)
-(min, max) time across ranks (ms):
-    model-and-optimizer-setup ......................: (32528.79, 32544.35)
-    train/valid/test-data-iterators-setup ..........: (72.68, 656.79)
-[rank16]:[W908 11:34:01.252908110 compiler_depend.ts:335] Warning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (function operator())
-[rank24]:[W908 11:34:01.254614170 compiler_depend.ts:335] Warning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (function operator())
-[rank17]:[W908 11:34:01.421349990 compiler_depend.ts:335] Warning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (function operator())
-[rank20]:[W908 11:34:01.431165020 compiler_depend.ts:335] Warning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (function operator())
-[rank19]:[W908 11:34:01.431240250 compiler_depend.ts:335] Warning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (function operator())
-[rank30]:[W908 11:34:01.431707980 compiler_depend.ts:335] Warning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (function operator())
-...
-/root/MindSpeed/mindspeed/core/fp8_utils.py:11: UserWarning: Currently, it is not supported to Cast shard fp32 main params to fp8 model params
-  warnings.warn("Currently, it is not supported to Cast shard fp32 main params to fp8 model params")
-/root/MindSpeed/mindspeed/core/fp8_utils.py:11: UserWarning: Currently, it is not supported to Cast shard fp32 main params to fp8 model params
-  warnings.warn("Currently, it is not supported to Cast shard fp32 main params to fp8 model params")
- [2025-09-08 11:37:00] iteration       10/    5000 | consumed samples:          640 | elapsed time per iteration (ms): 6932.5 | learning rate: 2.500000E-07 | global batch size:    64 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
- [2025-09-08 11:37:03] iteration       11/    5000 | consumed samples:          704 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    64 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
-...
+```text
+load-checkpoint ................................: ...
+iteration       21/      60 | consumed samples: 336 | ... | global batch size: 16 | lm loss: ...
+iteration       22/      60 | consumed samples: 352 | ... | global batch size: 16 | lm loss: ...
 ```
 
 **Viewing Job Rescheduling Records<a name="section97707231547"></a>**
@@ -915,7 +1293,7 @@ This chapter guides users through viewing training information when the graceful
 
 The training logs of the restarted training process are stored in "_training_script_path_/newlog". The details are as follows.
 
-- QWEN3 (PyTorch) training logs: `/data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/alllogs`
+- DeepSeek-V4-Flash (PyTorch) training logs: `/data/atlas_dls/public/code/DeepSeek_V4_Flash_for_PyTorch_2.10_code/alllogs`
 
 **Procedure<a name="section25042117188"></a>**
 
@@ -960,13 +1338,22 @@ This document provides verification methods for various fault handling policies.
 - [Verifying Process-Level Rescheduling](#verifying-process-level-rescheduling)
 - [Verifying Process-Level Online Recovery](#verifying-process-level-online-recovery)
 
+Before proceeding, ensure that training is iterating normally. For job-level and pod-level recovery, wait until the latest checkpoint has been saved. Introduce one fault at a time and wait for training to resume before the next operation. Replace the example job names and namespaces with the actual values.
+
+Record Pod UIDs, nodes, and container restart counts before and after recovery, and use training logs to identify the recovery scope and resume point.
+
+```bash
+kubectl get pods -n <namespace> -l job-name=<job-name> \
+  -o custom-columns=NAME:.metadata.name,UID:.metadata.uid,NODE:.spec.nodeName,RESTARTS:.status.containerStatuses[0].restartCount
+```
+
 ### Verifying Job-Level Rescheduling
 
-**Test Preparation**
+**Prerequisites**
 
 In the job YAML for basic scheduling, add the configuration for job-level rescheduling. For the configuration description, see [Configuring Job-Level Rescheduling](../02_configuration/01_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002479226580); for the principle, see [Job-Level Rescheduling](../01_solutions_principles/01_fault_handling.md#ZH-CN_TOPIC_0000002479226586).
 
-**Test Operations**
+**Procedure**
 
 1. Deliver the job.
 
@@ -991,8 +1378,8 @@ In the job YAML for basic scheduling, add the configuration for job-level resche
       <pre codetype="ColdFusion">
       NAMESPACE        NAME                                            READY   STATUS    RESTARTS   AGE     IP                NODE                    NOMINATED NODE   READINESS GATES
       ...              ...                                             ...     ...       ...        ...     ...               ...                     ...              ...
-      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>    0          2s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>    0          3s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>    0          2s     xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>    0          3s     xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
       </pre>
 
    2. Check the UIDs of the two Pods.
@@ -1009,27 +1396,14 @@ In the job YAML for basic scheduling, add the configuration for job-level resche
       997add9e-6115-456c-9e8e-e05e4b70bb12
       ```
 
-3. Construct a fault.
+3. Query the training launcher in the Master Pod, confirm its PID, and terminate that launcher to experience recovery of the entire job.
 
-   1. Query the job process.
+   ```bash
+   kubectl exec -n trjob taskmgr-npu-020-default-test-0 -- pgrep -af 'torchrun|torch.distributed.run'
+   kubectl exec -n trjob taskmgr-npu-020-default-test-0 -- kill -9 <launcher-pid>
+   ```
 
-      ```bash
-      npu-smi info|grep python|awk '{print $5}'
-      ```
-
-      Command output:
-
-      ```ColdFusion
-      2398104
-      2398105
-      2398107
-      ```
-
-   2. Terminate the process to simulate a fault.
-
-      ```bash
-      kill -9 2398104
-      ```
+   Target the launcher rather than an individual training rank. This operation demonstrates job-level recovery after training is interrupted. For parameter plane network faults, see [Constructing a Parameter Plane Network Fault](#section22113033919).
 
 4. Observe the rescheduling process.
 
@@ -1042,31 +1416,31 @@ In the job YAML for basic scheduling, add the configuration for job-level resche
    The historical statuses of the two Pods of the job are as follows. By observing the changes of the bold fields, you can see that the two Pods go through `Terminating`, `Pending`, `ContainerCreating`, and `Running` and then run normally, indicating that job rescheduling is successful:
 
    <pre codetype="ColdFusion">
-   trjob            taskmgr-npu-020-default-test-0                  1/1     Running             0          2s      xx.xx.xx.xx       node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            taskmgr-npu-020-default-test-1                  1/1     Running             0          3s      xx.xx.xx.xx       localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            taskmgr-npu-020-default-test-0                  1/1     Running             0          2s      xx.xx.xx.xx       node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            taskmgr-npu-020-default-test-1                  1/1     Running             0          3s      xx.xx.xx.xx       node2   &lt;none&gt;           &lt;none&gt;
    // ===================== Inject a fault ======================
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
    trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          0s      &lt;none&gt;            &lt;none&gt;                  &lt;none&gt;           &lt;none&gt;
    trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          1s      &lt;none&gt;            &lt;none&gt;                  &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          73s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          85s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          85s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          73s     xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          85s     xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          85s     xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
    trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          0s      &lt;none&gt;            &lt;none&gt;                  &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          1s      &lt;none&gt;                 localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          43s     &lt;none&gt;                 node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          43s     &lt;none&gt;                 node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          1s      &lt;none&gt;                 localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>ContainerCreating</strong>   0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0          1s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0          1s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>ContainerCreating</strong>   0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Running</strong>             0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0          2s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          1s      &lt;none&gt;                 node2   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          43s     &lt;none&gt;                 node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          43s     &lt;none&gt;                 node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          1s      &lt;none&gt;                 node2   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>ContainerCreating</strong>   0          43s     xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0          1s      xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0          1s      xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>ContainerCreating</strong>   0          43s     xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Running</strong>             0          43s     xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0          2s      xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
    </pre>
 
-**Expected Result**
+**Recovery Results**
 
 1. Check the job status and UID.
 
@@ -1081,8 +1455,8 @@ In the job YAML for basic scheduling, add the configuration for job-level resche
       <pre codetype="ColdFusion">
       NAMESPACE        NAME                                            READY   STATUS    RESTARTS   AGE     IP                NODE                    NOMINATED NODE   READINESS GATES
       ...              ...                                             ...     ...       ...        ...     ...               ...                     ...              ...
-      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          2s      xx.xx.xx.xx      node173   &lt;none&gt;           &lt;none&gt;
-      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          33s     xx.xx.xx.xx      node173   &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          2s      xx.xx.xx.xx      node1   &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          33s     xx.xx.xx.xx      node1   &lt;none&gt;           &lt;none&gt;
       </pre>
 
    2. Check the UIDs of the two Pods:
@@ -1099,13 +1473,20 @@ In the job YAML for basic scheduling, add the configuration for job-level resche
       074f9f9c-35f1-4b9e-9298-5b2bcf3759e7
       ```
 
+2. Check the resumed training logs and `job-reschedule-reason`. The UIDs of all job Pods change, and the logs show loading from the most recent checkpoint followed by subsequent iterations.
+
+   ```bash
+   kubectl describe cm -n mindx-dl job-reschedule-reason
+   kubectl logs -n trjob taskmgr-npu-020-default-test-0 --all-containers=true
+   ```
+
 ### Verifying Pod-Level Rescheduling
 
-**Test Preparation**
+**Prerequisites**
 
 In the job YAML for basic scheduling, add the configuration for Pod-level rescheduling. For the configuration description, see [Configuring Pod-Level Rescheduling](../02_configuration/01_configuring_fault_handling_policies.md#configuring-pod-level-rescheduling); for the principle, see [Pod-Level Rescheduling](../01_solutions_principles/01_fault_handling.md#ZH-CN_TOPIC_0000002511346429).
 
-**Test Operations**
+**Procedure**
 
 1. Deliver the job.
 
@@ -1128,8 +1509,8 @@ In the job YAML for basic scheduling, add the configuration for Pod-level resche
       The following is an output example. The presence of `Running` indicates that the job is running properly.
 
       <pre codetype="ColdFusion">
-      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
       </pre>
 
    2. Check the UIDs of the two Pods.
@@ -1146,27 +1527,19 @@ In the job YAML for basic scheduling, add the configuration for Pod-level resche
       47291595-85b0-47ff-8393-c922d0e2dfb2
       ```
 
-3. Construct a fault.
+3. Introduce a node fault on the node hosting the Worker Pod. Ensure that this node does not host the Master Pod and that a spare node has sufficient resources.
 
-   1. Query the job process.
+   ```bash
+   kubectl get pod -n trjob taskmgr-npu-020-default-test-1 -o wide
+   ```
 
-      ```bash
-      npu-smi info|grep python|awk '{print $5}'
-      ```
+   Log in to the Worker node identified above and run:
 
-      Command output:
+   ```bash
+   reboot
+   ```
 
-      ```ColdFusion
-      2398132
-      2398144
-      2398158
-      ```
-
-   2. Terminate the process to simulate a fault.
-
-      ```bash
-      kill -9 2398144
-      ```
+   After the node recovers, confirm that it returns to Ready. To observe recovery on another node, run `kubectl cordon <worker-node>` before rebooting, then run `kubectl uncordon <worker-node>` after the faulty Pod has been scheduled on the spare node and the original node has recovered.
 
 4. Observe the rescheduling process.
 
@@ -1179,21 +1552,21 @@ In the job YAML for basic scheduling, add the configuration for Pod-level resche
    The historical statuses of the two Pods of the job are as follows. By observing the changes of the bold fields, you can see that the faulty Pod (`taskmgr-npu-020-default-test-1`) goes through `Error`, `Terminating`, `Pending`, `ContainerCreating`, and `Running` and then runs normally, indicating that Pod rescheduling is successful:
 
    <pre codetype="ColdFusion">
-   trjob            taskmgr-npu-020-default-test-0                  1/1     Running              0          6s      xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            taskmgr-npu-020-default-test-1                  1/1     Running              0          6s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            taskmgr-npu-020-default-test-0                  1/1     Running              0          6s      xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            taskmgr-npu-020-default-test-1                  1/1     Running              0          6s      xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
    // ===================== Inject a fault ======================
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Error</strong>               0          34s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          35s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          35s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Error</strong>               0          34s     xx.xx.xx.xx      node3   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          35s     xx.xx.xx.xx      node3   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          35s     xx.xx.xx.xx      node3   &lt;none&gt;           &lt;none&gt;
    trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           0s      &lt;none&gt;            &lt;none&gt;                  &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           1s      &lt;none&gt;                localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           1s      &lt;none&gt;                localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0           1s      xx.xx.xx.xx     localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0           1s      xx.xx.xx.xx     localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0           2s      xx.xx.xx.xx     localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           1s      &lt;none&gt;                node3   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           1s      &lt;none&gt;                node3   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0           1s      xx.xx.xx.xx     node3   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0           1s      xx.xx.xx.xx     node3   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0           2s      xx.xx.xx.xx     node3   &lt;none&gt;           &lt;none&gt;
    </pre>
 
-**Expected Result**
+**Recovery Results**
 
 1. Check the job status and UID.
 
@@ -1206,8 +1579,8 @@ In the job YAML for basic scheduling, add the configuration for Pod-level resche
       The following is an output example. The presence of `Running` indicates that the job is running properly.
 
       <pre codetype="ColdFusion">
-      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          66s      xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          31s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          66s      xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          31s      xx.xx.xx.xx      node3   &lt;none&gt;           &lt;none&gt;
       </pre>
 
    2. Check the UIDs of the two Pods again.
@@ -1224,13 +1597,15 @@ In the job YAML for basic scheduling, add the configuration for Pod-level resche
       6eb3c217-3b63-457a-9010-9d236d281634
       ```
 
+2. Check the node hosting the resumed Pod and the training logs. The faulty Worker Pod receives a new UID and is scheduled on an available node. The Master Pod UID and container restart count remain unchanged, and training resumes from the most recent checkpoint. A fault on the Master node may require recovery of the entire job; this section therefore targets the Worker node.
+
 ### Verifying Process-Level Rescheduling
 
-**Test Preparation**
+**Prerequisites**
 
 In the job YAML for basic scheduling, add the configuration for process-level rescheduling. For the configuration description, see [Configuring Process-Level Rescheduling](../02_configuration/01_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002511426407); for the principle, see [Process-Level Rescheduling](../01_solutions_principles/01_fault_handling.md#ZH-CN_TOPIC_0000002511346457).
 
-**Test Operations**
+**Procedure**
 
 1. Deliver the job.
 
@@ -1250,50 +1625,35 @@ In the job YAML for basic scheduling, add the configuration for process-level re
 
    The following is an output example. The presence of `Running` indicates that the job is running properly:
    <pre codetype="ColdFusion">
-   trjob            process-reschedule-function-master-0   1/1     Running   0               14s   xx.xx.xx.xx     master-69-117   &lt;none&gt;           &lt;none&gt;
-   trjob            process-reschedule-function-worker-0   1/1     Running   0               14s   xx.xx.xx.xx     work-69-115     &lt;none&gt;           &lt;none&gt;
+   trjob            process-reschedule-function-master-0   1/1     Running   0               14s   xx.xx.xx.xx     node1   &lt;none&gt;           &lt;none&gt;
+   trjob            process-reschedule-function-worker-0   1/1     Running   0               14s   xx.xx.xx.xx     node2     &lt;none&gt;           &lt;none&gt;
    </pre>
 
 3. Check the number of training log iterations to confirm that training iterates normally.
 
    ```bash
-   kubectl logs -n trjob process-reschedule-function-worker-0|grep -Po '] iteration [[:space:]]*'|wc -l
+   kubectl logs -n trjob process-reschedule-function-worker-0 | grep -E 'iteration[[:space:]]+[0-9]+[[:space:]]*/' | tail -n 5
    ```
 
       Command output:
+
+   ```text
+   iteration       25/      60 | ...
+   ```
+
+4. Query the training processes and local ranks in the Worker Pod and select a non-rank0 training process. Depending on the training mode, the entry point may be `pretrain_deepseek4.py` or `posttrain_gpt.py`.
 
    ```bash
-   50
+   kubectl exec -n trjob process-reschedule-function-worker-0 -- \
+     pgrep -af 'pretrain_deepseek4.py|posttrain_gpt.py'
+   kubectl exec -n trjob process-reschedule-function-worker-0 -- bash -c \
+     "tr '\\0' '\\n' < /proc/<training-pid>/environ | grep -E '^(RANK|LOCAL_RANK)='"
+   kubectl exec -n trjob process-reschedule-function-worker-0 -- kill -9 <training-pid>
    ```
 
-4. Check the process ID and construct a fault.
+   Confirm that the target belongs to this job before terminating it. Do not terminate the launcher or TaskD Manager.
 
-   1. Check the process ID.
-
-      ```bash
-      npu-smi info|grep python|awk '{print $5}'
-      ```
-
-      Command output:
-
-      ```ColdFusion
-      635755
-      635756
-      635760
-      635770
-      635777
-      635784
-      635791
-      635795
-      ```
-
-   2. Terminate one of the processes to simulate a fault.
-
-      ```bash
-      kill -9 635777
-      ```
-
-**Expected Result**
+**Recovery Results**
 
 1. Observe the training logs.
 
@@ -1320,12 +1680,14 @@ In the job YAML for basic scheduling, add the configuration for process-level re
    The following is an output example, which contains information such as the rescheduling time, the pod, node, and rank that trigger rescheduling, and the current number of rescheduling attempts of this job:
 
    ```ColdFusion
-   {"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07":{"JobID":"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07","TotalRescheduleTimes":1,"RescheduleRecords":[{"LogFileFormatTime":"I0603 05:16:52","RescheduleTimeStamp":1780435012,"ReasonOfTask":[{"RescheduleReason":"pod-failed","PodName":"process-reschedule-function-worker-0","NodeName":"work-69-115","NodeRankIndex":"1"}]}]}}
+   {"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07":{"JobID":"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07","TotalRescheduleTimes":1,"RescheduleRecords":[{"LogFileFormatTime":"I0603 05:16:52","RescheduleTimeStamp":1780435012,"ReasonOfTask":[{"RescheduleReason":"pod-failed","PodName":"process-reschedule-function-worker-0","NodeName":"node2","NodeRankIndex":"1"}]}]}}
    ```
+
+3. Continue checking the training logs for subsequent iterations after repair. For in-place recovery, Pod UIDs and container restart counts remain unchanged while the faulty training process is relaunched. For migration recovery, only the faulty Pod receives a new UID. Compare the before/after snapshots and iteration positions to observe the selected recovery strategy.
 
 ### Verifying Process-Level Online Recovery
 
-This chapter guides users through the adaptation steps for verifying process-level online recovery by instrumenting the training code to construct an on-chip memory UCE fault.
+This section uses DeepSeek-V4-Flash and a training code stub to introduce a UCE exception and demonstrate process-level online recovery. On A5, you can also introduce an HCCL/UB business plane exception as described below to observe step retry after a communication exception.
 
 >[!NOTE]
 >
@@ -1373,7 +1735,7 @@ This chapter guides users through the adaptation steps for verifying process-lev
                      DoStepRetry: processor.canDoStepRetry(podInfo.jobId, nodeName, deviceName),
                      DeviceId:    deviceInfo.DeviceID,
                })
-               <strong>collector.ReportInfoCollector.ReportRetryInfo(podInfo.jobId, deviceInfo.RankID, constant.JobNotRecover, constant.UceFaultType)   // Set the service plane fault time to an invalid time to prevent a single fault from repeatedly triggering process-level online recovery</strong>
+               <strong>collector.ReportInfoCollector.ReportRetryInfo(podInfo.jobId, deviceInfo.RankID, constant.JobNotRecover, deviceDetail.FaultType)   // Set the service plane fault time to an invalid time to prevent a single fault from repeatedly triggering process-level online recovery</strong>
             }
         …
       </pre>
@@ -1435,138 +1797,114 @@ This chapter guides users through the adaptation steps for verifying process-lev
 
 1. Set up the training environment and start training. For details, see [PyTorch Scenario Adaptation Example (Based on MindSpeed-LLM)](#ZH-CN_TOPIC_0000002511346445).
 2. Enable process-level online recovery. For details, see [Configuring Process-Level Online Recovery](../02_configuration/01_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002479386492).
-3. Add the following bold content to the "QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py" code to instrument and inject a fault. The new code obtains the fault injection iteration position and faulty rank information based on the environment variable "RAISE\_UCE\_ERROR\_STEP\_AND\_RANK".
+3. Add the following code to the training loop in `/job/code/mindspeed_llm/training/training.py`. Environment variables select the exception type, iteration, and global rank. Each injection point triggers only once per process to prevent repeated injection after rollback.
 
-   <pre codetype="Python">
-      <strong>import os</strong>
-      <strong>import ast</strong>
-      <strong>…</strong>
-      <strong>GLB_CNT = 0</strong>
-      def train(forward_step_func, model, optimizer, opt_param_scheduler,
-              train_data_iterator, valid_data_iterator,
-              process_non_loss_data_func, config):
-         """Train the model function."""
-         args = get_args()
-         timers = get_timers()
-         …
-         while iteration < args.train_iters:
-            …
-            num_microbatches = get_num_microbatches()
-            update_num_microbatches(args.consumed_train_samples, consistency_check=True)
-            <strong>global GLB_CNT</strong>
-            <strong>cur_rank = torch.distributed.get_rank()</strong>
-            <strong>uce_env = os.getenv("RAISE_UCE_ERROR_STEP_AND_RANK", "{}")</strong>
-            <strong>uce_step_rank = ast.literal_eval(uce_env)</strong>
-            <strong>if iteration in uce_step_rank and cur_rank == uce_step_rank[iteration] and GLB_CNT < iteration:</strong>
-               <strong>GLB_CNT = iteration</strong>
-               <strong>print(f"############# rank:{cur_rank} start UCE error #############")</strong>
-               <strong>raise RuntimeError('UCE ERROR')</strong>
-            args.curr_iteration = iteration
-            …
-   </pre>
+   ```python
+   import ast
+   import os
 
-4. Modify the startup script "QWEN3\_for\_PyTorch\_2.7\_code/scripts/train\_start.sh".
+   _injected_faults = set()
+
+   def train(forward_step_func, model, optimizer, opt_param_scheduler,
+             train_data_iterator, valid_data_iterator,
+             process_non_loss_data_func, config):
+       # ... retain the original initialization ...
+       while iteration < args.train_iters:
+           # ... retain the original loop setup ...
+           cur_rank = torch.distributed.get_rank()
+           for env_name, error_message in (
+               ("RAISE_UCE_ERROR_STEP_AND_RANK", "UCE ERROR"),
+               ("RAISE_HCCL_ERROR_STEP_AND_RANK",
+                "HCCL OP RETRY FAILED, device error type 7c000"),
+           ):
+               step_rank = ast.literal_eval(os.getenv(env_name, "{}"))
+               fault_key = (env_name, iteration, cur_rank)
+               if (step_rank.get(iteration) == cur_rank
+                       and fault_key not in _injected_faults):
+                   _injected_faults.add(fault_key)
+                   print(f"inject {env_name}, rank:{cur_rank}, iteration:{iteration}",
+                         flush=True)
+                   raise RuntimeError(error_message)
+           args.curr_iteration = iteration
+           # ... retain the original training code ...
+   ```
+
+4. Modify `/job/code/scripts/train_start.sh` and select one exception type. The following introduces a UCE exception at iteration 26 on global rank 9 (local rank 1 on Worker).
 
    ```shell
-   …
-   export RAISE_UCE_ERROR_STEP_AND_RANK="{3:8,10:9}"  # Configure the iterations and card numbers for fault injection; inject a UCE fault on rank 8 at the 3rd iteration and on rank 9 at the 10th iteration
-   sed -i 's/check_memory_result = torch_npu.npu.check_uce_in_memory(device)/check_memory_result = ha_constant.UCE_HIGH_LEVEL/g' /job/code/mindspeed_llm/core/high_availability/tft_stop_clean.py # Modify the return value of the TorchNPU API to identify the exception thrown by the training code as a UCE fault
-   …
+   export RAISE_UCE_ERROR_STEP_AND_RANK="{26:9}"
+   unset RAISE_HCCL_ERROR_STEP_AND_RANK
+   export HCCL_ASYNC_ERROR_HANDLING=0
+   sed -i 's/check_memory_result = torch_npu.npu.check_uce_in_memory(device)/check_memory_result = ha_constant.UCE_HIGH_LEVEL/g' /job/code/mindspeed_llm/core/high_availability/tft_stop_clean.py
    ```
+
+   The interface return value replacement above is used only for the UCE software stub. To experience an HCCL/UB business plane exception on A5, restore the original file contents first and use the following variables instead. Run the two exception scenarios separately.
+
+   ```shell
+   unset RAISE_UCE_ERROR_STEP_AND_RANK
+   export RAISE_HCCL_ERROR_STEP_AND_RANK="{26:9}"
+   export HCCL_ASYNC_ERROR_HANDLING=0
+   ```
+
+   The HCCL/UB example demonstrates recovery from a training-side communication exception without operating physical UB ports. After the exercise, remove the stub, unset the injection variables, and restore the modified interface return value.
 
 #### Verification Process
 
-The following example is based on a **dual-node 16-rank** environment (8 ranks per node, ranks 0 to 7 on master and ranks 8 to 15 on worker), consistent with the configuration in [Script Adaptation](#ZH-CN_TOPIC_0000002479226412) `RAISE_UCE_ERROR_STEP_AND_RANK="{3:8,10:9}"`. If you use a single node or another topology, adjust the environment variables and the rank and Pod name in `grep` accordingly.
+This example uses 16 NPUs across two nodes, with global ranks 0–7 on Master and 8–15 on Worker. For another scale, adjust the injection rank, TaskD Manager parameters, and Pod names below.
 
-**Test Preparation**
+**Prerequisites**
 
-- In the job YAML for basic scheduling, add the configuration for process-level online recovery. For the configuration description, see [Configuring Process-Level Online Recovery](../02_configuration/01_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002479386492); for the principle, see [Process-Level Online Recovery](../01_solutions_principles/01_fault_handling.md#ZH-CN_TOPIC_0000002479386460).
-- MindCluster adaptation and script adaptation have been completed; the `RAISE_UCE_ERROR_STEP_AND_RANK` in the startup script is consistent with the rank and iteration steps in the verification commands below.
+- Complete the adaptation in this section and ensure that training iterates normally. Set `recover-strategy: "retry"` for the job.
+- Set `--enable-high-availability --enable-hbmfault-repair`, retain optimizer replicas, always pass `--load`, and set `HCCL_ASYNC_ERROR_HANDLING=0`.
+- The example uses `--train-iters 60` and injection configuration `{26:9}`. Introduce the exception during normal training iterations, rather than during HCCL connection setup.
 
-**Test Operations**
+**Procedure**
 
-1. Deliver the job.
+1. Save the configured online recovery job YAML as `trjob.yaml`, record the job name and namespace, and submit it.
 
    ```bash
    kubectl apply -f trjob.yaml
    ```
 
-   >[!NOTE]
-   > - Replace `trjob.yaml` with the actual job YAML file. If you adapted the QWEN3 script as described above, use the corresponding job YAML and Pod name.
-   > - The Pod name and namespace vary with the configuration in the job YAML. The `process-online-recovery-` and `trjob` shown below are example values.
+   The following uses namespace `trjob` and Pods `process-online-recovery-master-0` and `process-online-recovery-worker-0` as examples. Replace them with the actual values.
 
-2. Check the job status.
+2. Before and after injection, check the UIDs, nodes, and container restart counts of both Pods.
 
    ```bash
-   kubectl get pod -A -o wide
+   kubectl get pod -n trjob process-online-recovery-master-0 process-online-recovery-worker-0 \
+     -o custom-columns=NAME:.metadata.name,UID:.metadata.uid,NODE:.spec.nodeName,RESTARTS:.status.containerStatuses[0].restartCount
    ```
 
-      The following is an output example. The presence of Running indicates that the job is running properly.
+3. Observe exception reporting and repair in the training logs. If the startup script writes logs to shared storage, inspect the corresponding training and TTP log files.
 
-   ```ColdFusion
-   trjob            process-online-recovery-master-0                   1/1     Running   0                 14s     xx.xx.xx.xx     master-x   <none>           <none>
-   trjob            process-online-recovery-worker-0                   1/1     Running   0                 14s     xx.xx.xx.xx     worker-x   <none>           <none>
+   ```bash
+   kubectl logs -n trjob process-online-recovery-master-0 --all-containers=true | \
+     grep -E 'status error, rank:9|Mindio do repair operation ok|rollback'
+   kubectl logs -n trjob process-online-recovery-worker-0 --all-containers=true | \
+     grep -E 'inject RAISE_|HCCL OP RETRY FAILED|Mindio do repair operation ok|rollback'
    ```
 
-3. Monitor training logs
-   1. Monitor the training logs to check whether a UCE fault is triggered.
+**Recovery Results**
 
-      ```bash
-      kubectl logs -n trjob process-online-recovery-master-0 --all-containers=true | grep -Fa "status error, rank:8"
-      ```
+1. In the UCE scenario, logs show the UCE status report for rank 9, memory replica repair, and rollback. In the HCCL/UB scenario, logs show recognition of `HCCL OP RETRY FAILED` and step retry. The repair result includes:
 
-      >[!NOTE]
-      > In this example, the fault is injected into rank 8 at step 3. The rank in the `grep` keyword must be consistent with the global rank configured in the environment variable.
+   ```text
+   Mindio do repair operation ok
+   successfully gather and rollback at iteration 26
+   ```
 
-      The following is an output example, which indicates that a UCE fault is triggered.
+2. The UIDs, nodes, and container restart counts of both Pods remain unchanged, and training continues from the rollback position. With injection at iteration 26, check for the subsequent iteration 27:
 
-      ```ColdFusion
-      2026-06-04 09:24:31.767278 warn 3062106 [TTP controller.cpp:2510] status error, rank:8 step: 3 npu_status: 2 run_status: 0 data_aval: 0 data_status: 0 diff_time : 0
-      2026-06-04 09:24:33.767422 warn 3062106 [TTP controller.cpp:2510] status error, rank:8 step: 3 npu_status: 2 run_status: 0 data_aval: 0 data_status: 0 diff_time : 1417
-      ```
+   ```bash
+   kubectl logs -n trjob process-online-recovery-master-0 --all-containers=true | \
+     grep -E 'iteration[[:space:]]+27[[:space:]]*/'
+   kubectl logs -n trjob process-online-recovery-worker-0 --all-containers=true | \
+     grep -E 'iteration[[:space:]]+27[[:space:]]*/'
+   ```
 
-      >[!NOTE]
-      >`step: 3` in the log indicates that the fault is triggered at the 3rd training step. `npu_status: 2` indicates that MindIO/TTP has entered the UCE handling state. In this instrumentation scenario, it is triggered by a software simulation path and does not represent a real hardware on-chip memory fault.
+   Iteration logs may appear only in some Pods or be redirected to files. Check the paths configured in the startup script. The expression matches the complete iteration number, excluding values such as 270.
 
-**Expected Result**
-
-   1. Check the recovery result of the fault at step 3. If the output on any Pod of master or worker is greater than or equal to 1, the repair is successful.
-
-      ```bash
-      kubectl logs -n trjob process-online-recovery-master-0 --all-containers=true | grep -Fa "(0, 'Mindio do repair operation ok', {}, 'retry')"|wc -l
-      ```
-
-   2. Check whether the iterations are normal.
-
-      1. Check the job status.
-
-      ```bash
-      kubectl get pod -A -o wide
-      ```
-
-      Command output:
-
-      ```ColdFusion
-      trjob            process-online-recovery-master-0                   1/1     Running   0                 110s    xx.xx.xx.xx     master-x   <none>           <none>
-      trjob            process-online-recovery-worker-0                   1/1     Running   0                 110s    xx.xx.xx.xx     worker-x   <none>           <none>
-      ```
-
-      >[!NOTE]
-      > Check the `RESTARTS` column here. The value must remain 0, which proves that the Pod container was never restarted during the entire UCE fault and repair process.
-
-   3. Check the number of training iterations.
-
-      ```bash
-      kubectl logs -n trjob process-online-recovery-master-0 | grep -Po "] iteration [[:space:]]*4"|wc -l
-      # Return: 0
-      kubectl logs -n trjob process-online-recovery-worker-0 | grep -Po "] iteration [[:space:]]*4"|wc -l
-      # Return: 11
-      ```
-
-      >[!NOTE]
-      > - The iteration step in the `grep` command above (for example, `iteration 4`) must be adjusted based on the step at which the fault is actually injected. If the fault is injected at step `N`, training should continue from step `N+1` after recovery, so the command should be `grep iteration [[:space:]]*{N+1}`. In this example, the fault at step 3 corresponds to `iteration 4`, and the fault at step 10 corresponds to `iteration 11`.
-      > - In distributed multi-node training, due to the log redirection mechanism of the training framework, the iteration logs of each rank may be output only to the stdout of some nodes, or redirected to local physical log files.
-      > - In this example, the master node returns 0 and the Worker node returns 11. As long as the count on any node is greater than 0, it proves that training has passed the corresponding fault step and continued after the hot repair.
+3. Continue observing subsequent iterations until the configured training steps are complete. Online recovery resumes training through memory rollback without rescheduling Pods. Use the repair logs, Pod information, and continuous iteration output together to observe the recovery process.
 
 ## Deleting a Job<a name="ZH-CN_TOPIC_0000002479386566"></a>
 
@@ -1581,7 +1919,7 @@ kubectl delete -f XXX.yaml
 An example is shown below:
 
 ```shell
-kubectl delete -f pytorch_multinodes_acjob_910b.yaml
+kubectl delete -f pytorch_multinodes_acjob_deepseek4.yaml
 ```
 
 Command output:
