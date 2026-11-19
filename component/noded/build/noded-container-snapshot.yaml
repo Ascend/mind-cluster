@@ -156,6 +156,7 @@ spec:
               mountPath: /usr/local/Ascend/driver/include
             - name: var-kubelet
               mountPath: /var/lib/kubelet
+              mountPropagation: HostToContainer
       volumes:
         - name: log-noded
           hostPath:
