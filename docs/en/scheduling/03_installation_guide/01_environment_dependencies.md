@@ -7,9 +7,9 @@
 **Ascend Docker Runtime<a name="section14779174114012"></a>**
 
 - The Docker version in the current environment must be 18.09 and later.
-- The host machine must have the drivers and firmware installed. For details, see "Installing the NPU Driver and Firmware" in the [CANN Software Installation Guide (Commercial)](https://www.hiascend.com/document/detail/en/canncommercial/900/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian) or "Installing the NPU Driver and Firmware" in the [CANN Software Installation Guide (Community)](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/900/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler).
+- The host machine must have the drivers and firmware installed. For details, see "Installing the NPU Driver and Firmware" in the [CANN Software Installation Guide](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler).
 - For Atlas 500 A2 intelligent station, installing Ascend Docker Runtime requires modifying the Docker configuration. Run the **vi /etc/sysconfig/docker** command to delete the `--config-file=""` parameter, and run **systemctl restart docker** to make the configuration take effect.
-- The MEF service pre-installed on the Atlas 500 A2 intelligent station performs security hardening on Docker. Ascend Docker Runtime does not support running in a security-hardened Docker environment. If you need to use Ascend Docker Runtime, manually uninstall the MEF service by referring to the "Uninstalling MEF Edge" in the [MindEdge Framework User Guide](https://gitcode.com/Ascend/MEF/blob/master/docs/en/user_guide/installation_guide.md#%E5%8D%B8%E8%BD%BDmef-edge).
+- The MEF service pre-installed on the Atlas 500 A2 intelligent station performs security hardening on Docker. Ascend Docker Runtime does not support running in a security-hardened Docker environment. If you need to use Ascend Docker Runtime, manually uninstall the MEF service by referring to the "[Uninstalling MEF Edge](https://gitcode.com/Ascend/MEF/blob/master/docs/en/user_guide/installation_guide.md#uninstalling-mef-edge)" in the *MindEdge Framework User Guide*.
 
     >[!NOTE]
     >

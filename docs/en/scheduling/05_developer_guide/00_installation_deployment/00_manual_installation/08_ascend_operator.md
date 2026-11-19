@@ -1,8 +1,8 @@
-# Ascend Operator<a name="ZH-CN_TOPIC_0000002479386414"></a>
+# Ascend Operator<a name="ZH-CN_TOPIC_0000002479386415"></a>
 
 - Users who use full-NPU scheduling (training), static vNPU scheduling (training), resumable training, or elastic training must install Ascend Operator. If Volcano is used as the scheduler, it must be installed first; otherwise, Ascend Operator will fail to start.
-- Users who use full-NPU scheduling (inference) and scheduling upon inference card faults to submit distributed inference job of the AscendJob type must install Ascend Operator.
-- Users who only use containerization and resource monitoring, inference card fault recovery, or scheduling upon inference card faults (single-node jobs) do not need to install Ascend Operator. Please skip this chapter directly.
+- Users who use full-NPU scheduling (inference) and rescheduling upon hardware faults and submit distributed inference job of the AscendJob type must install Ascend Operator.
+- Users who only use containerization and resource monitoring, hardware fault recovery, or rescheduling upon hardware faults (single-node jobs) do not need to install Ascend Operator. Please skip this chapter directly.
 - Before starting Ascend Operator, Volcano must be started first. Ascend Operator needs to perceive PodGroup resources.
 - The maximum number of replicas for a single AscendJob that Ascend Operator allows to create is 20,000.
 

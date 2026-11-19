@@ -2,7 +2,7 @@
 
 ## Installing Volcano<a name="ZH-CN_TOPIC_0000002511426351"></a>
 
-- Users who use full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, inference card fault recovery, or inference card fault rescheduling must install a **scheduler** on the master node. This scheduler can be Volcano or another scheduler.
+- Users who use full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, hardware fault recovery, or rescheduling upon hardware faults must install a **scheduler** on the master node. This scheduler can be Volcano or another scheduler.
 - If Volcano is used for job scheduling, it is not recommended to create or mount NPU containers through Docker or Containerd instructions and run jobs inside the containers. Otherwise, Volcano scheduling issues may be triggered.
 - Users who only use containerization support and resource monitoring do not need to install Volcano. Please skip this chapter directly.
 
@@ -294,7 +294,7 @@
     ...
         configurations:
           - name: init-params
-            arguments: {<strong>"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2","useClusterInfoManager":"false","self-maintain-available-card":"true","super-pod-size": "48","reserve-nodes": "2","forceEnqueue":"true","prefer-previous-node":"true"</strong>}
+            arguments: {<strong>"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2","useClusterInfoManager":"false","self-maintain-available-card":"true","super-pod-size": "128","reserve-nodes": "2","forceEnqueue":"true","prefer-previous-node":"true"</strong>}
     ...</pre>
 
     **Table 3**  Parameter description
@@ -360,10 +360,10 @@
     </tr>
     <tr id="row4612538250"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p26130381510"><a name="p26130381510"></a><a name="p26130381510"></a>super-pod-size</p>
     </td>
-    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p6613173818516"><a name="p6613173818516"></a><a name="p6613173818516"></a>48</p>
+    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p6613173818516"><a name="p6613173818516"></a><a name="p6613173818516"></a>128</p>
     </td>
     <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p461323812519"><a name="p461323812519"></a><a name="p461323812519"></a><span id="ph128111331314"><a name="ph128111331314"></a><a name="ph128111331314"></a>The number of nodes with an </span>Atlas 900 A3 SuperPoD.</p>
-    <p id="p1704246153099"><a name="p1704246153099"></a><a name="p1704246153099"></a>Value range: greater than 0. If set to 0, a negative number, or a non-numeric value, it is treated as a configuration error and the default value of 48 is used.</p>
+    <p id="p1704246153099"><a name="p1704246153099"></a><a name="p1704246153099"></a>Value range: greater than 0. If set to 0, a negative number, or a non-numeric value, it is treated as a configuration error and the default value of 128 is used.</p>
     </td>
     </tr>
     <tr id="row9561856657"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p956215565514"><a name="p956215565514"></a><a name="p956215565514"></a>reserve-nodes</p>
@@ -371,8 +371,8 @@
     <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p125626567516"><a name="p125626567516"></a><a name="p125626567516"></a>2</p>
     </td>
     <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p25637568515"><a name="p25637568515"></a><a name="p25637568515"></a><span id="ph915032251212"><a name="ph915032251212"></a><a name="ph915032251212"></a>The number of reserved nodes</span> within an Atlas 900 A3 SuperPoD.</p>
-    <p id="p1704246153100"><a name="p1704246153100"></a><a name="p1704246153100"></a>Value range: greater than or equal to `0`. When set to `0`, no nodes are reserved.</p>
-    <div class="note" id="note1514175285210"><a name="note1514175285210"></a><a name="note1514175285210"></a><span class="notetitle">Note</span><div class="notebody"><p id="p96481321115510"><a name="p96481321115510"></a><a name="p96481321115510"></a>If reserve-nodes is greater than super-pod-size, the following applies:</p>
+    <p id="p1704246153100"><a name="p1704246153100"></a><a name="p1704246153100"></a>Value range: greater than or equal to 0 (0 to 47 for Atlas 900 A3 SuperPoD). When set to 0, no nodes are reserved.</p>
+    <div class="note" id="note1514175285210"><a name="note1514175285210"></a><a name="note1514175285210"></a><span class="notetitle">Note</span><div class="notebody"><p id="p96481321115510"><a name="p96481321115510"></a><a name="p96481321115510"></a>If reserve-nodes is greater than or equal to super-pod-size, the following applies:</p>
     <a name="ul13842528165510"></a><a name="ul13842528165510"></a><ul id="ul13842528165510"><li>If super-pod-size is greater than 2, reserve-nodes is reset to the default value of 2.</li><li>If super-pod-size is less than or equal to 2, reserve-nodes is reset to 0.</li></ul>
     </div></div>
     </td>
@@ -880,7 +880,7 @@ The cluster scheduling Volcano component adds NPU scheduling-related features on
                    - name: binpack
                 <strong>configurations:           # Add the following bold fields, which are Volcano configuration fields</strong>
                   <strong>- name: init-params</strong>
-                    <strong>arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2","useClusterInfoManager":"false","super-pod-size": "48","reserve-nodes": "2"}</strong>
+                    <strong>arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2","useClusterInfoManager":"false","super-pod-size": "128","reserve-nodes": "2"}</strong>
             ...
             kind: Deployment
             apiVersion: apps/v1

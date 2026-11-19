@@ -1,7 +1,5 @@
 # Uninstallation with Helm<a name="ZH-CN_TOPIC_0000002511426390"></a>
 
-<!-- md-trans-meta sourceCommit=1add3fb0e10984a5f5f80d259f8bb278e17a1a27 translatedAt=2026-08-27T02:28:11.677Z pushedAt=2026-08-27T06:46:31.966Z -->
-
 ## Uninstallation Description<a name="section_uninstall_desc"></a>
 
 This document describes how to uninstall MindCluster components using Helm.
@@ -26,6 +24,7 @@ This document describes how to uninstall MindCluster components using Helm.
 1. Install the Helm command on the management node<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>. If Helm 3.x already exists in the environment, you can skip this step.
    1. Before installing Helm, refer to [Helm Version Support Policy](https://v3.helm.sh/docs/v3/topics/version_skew/) to check the version compatibility between Helm and K8s, and select a Helm version based on the actual situation.
    2. Refer to [Helm Installation Documentation](https://helm.sh/docs/v3/intro/install) to install the Helm command on the management node.
+
    3. After the installation is successful, run the following command to check the Helm version:
 
         ```bash
@@ -49,8 +48,8 @@ This document describes how to uninstall MindCluster components using Helm.
 
        ```ColdFusion
        NAME               NAMESPACE   REVISION  UPDATED                                  STATUS       CHART                                        APP VERSION
-       mindcluster        default    1         2026-03-24 15:30:00.000000000 +0800 CST  deployed     mindcluster-deploy-tool-26.1.0                26.1.0
-       mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.1.0           26.1.0
+       mindcluster        default     1         2026-03-24 15:30:00.000000000 +0800 CST  deployed     mindcluster-deploy-tool-26.1.0               26.1.0
+       mindcluster-crds   default     1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.1.0          26.1.0
        ```
 
    2. Determine whether the components are managed by Helm based on the command output.
@@ -90,8 +89,6 @@ This document describes how to uninstall MindCluster components using Helm.
     ```
 
 3. Uninstall the MindCluster CRD resources.
-
-    Run the following command to uninstall the MindCluster CRD resources:
 
     ```bash
     helm uninstall mindcluster-crds

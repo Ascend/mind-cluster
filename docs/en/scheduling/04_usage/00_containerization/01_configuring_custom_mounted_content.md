@@ -23,5 +23,4 @@ Ascend Docker Runtime automatically mounts the driver and all contents from the 
     docker run --rm -it -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_RUNTIME_MOUNTS=hostlog {image-name:tag} /bin/bash
     ```
 
-    >[!NOTE]
-    >- For descriptions of the `ASCEND_VISIBLE_DEVICES` and `ASCEND_RUNTIME_MOUNTS` parameters, see [Table 1](./02_usage_on_the_docker_client.md#parameter-description).
+    In the example, `{image-name:tag}` is the image name and tag. For descriptions of other parameters, see [Table 1](./02_usage_on_the_docker_client.md#parameter-description).

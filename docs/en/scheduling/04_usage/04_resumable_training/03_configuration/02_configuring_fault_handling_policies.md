@@ -381,7 +381,7 @@ This part describes key steps for configuring operator-level online recovery. Fo
 
 **Configuring Environment Variables<a name="section12610013287a"></a>**
 
-Before using operator-level online recovery, configure the environment variables `HCCL_OP_RETRY_ENABLE` and `HCCL_OP_RETRY_PARAMS` in the training startup script. For detailed descriptions of these environment variables, see the *[CANN Environment Variable Reference](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/commlib/hcclug/docs/en/user_guide/hccl_env/HCCL_OP_RETRY_ENABLE.md)*. A configuration example is shown below.
+Before using operator-level online recovery, configure the environment variables `HCCL_OP_RETRY_ENABLE` and `HCCL_OP_RETRY_PARAMS` in the training startup script. For detailed descriptions of these environment variables, see the *[CANN Huawei Collective Communication Library](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/commlib/hcclug/docs/en/user_guide/hccl_env/HCCL_OP_RETRY_ENABLE.md)*. A configuration example is shown below.
 
 ```shell
 export HCCL_OP_RETRY_ENABLE="L0:0, L1:1, L2:1"     # Whether to enable the re-execution feature of HCCL operators
@@ -749,7 +749,7 @@ Modify the startup YAML of Ascend Device Plugin, set `-hotReset=1` to enable hot
         command: [ "/bin/bash", "-c", "--"]
         args: [ "device-plugin
                  -volcanoType=true                    # Volcano must be used for rescheduling
-                 -autoStowing=true                    # This field has been deprecated. Whether to enable automatic management switch; defaults to true. Setting to false disables automatic management, meaning that when a chip's health status changes from unhealthy to healthy, it will not be automatically added back to the schedulable resource pool. With automatic management disabled, when the chip's parameter-plane network fault is recovered, it will not be automatically added back to the schedulable resource pool. This feature only applies to <term>Atlas training products</term>
+                 -autoStowing=true                    # This field has been deprecated. Whether to enable automatic management switch; defaults to true. Setting to false disables automatic management, meaning that when a chip's health status changes from unhealthy to healthy, it will not be automatically added back to the schedulable resource pool. With automatic management disabled, when the chip's parameter-plane network fault is recovered, it will not be automatically added back to the schedulable resource pool. This feature only applies to Atlas training products
                  -listWatchPeriod=5                   # Sets the health check interval; range [3,1800]; unit is seconds
                  -hotReset=1      # When using resumable training, the hot reset feature can be enabled on top of Job-level or Pod-level rescheduling to use graceful fault tolerance mode (this feature has been deprecated)
                  -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log
@@ -864,7 +864,7 @@ This section guides users through the key steps for configuring online stress te
         ...
            annotations:
              ...
-             <strong>recover-strategy: "recover"    # Recovery strategy. The value recover indicates enabling process-level rescheduling. If stress testing has a fault occurred, use this field to enable process-level rescheduling.</strong>
+             <strong>recover-strategy: "recover"    # Recovery strategy. The value recover indicates enabling process-level rescheduling. If a fault occurrs after stress testing, use this field to enable process-level rescheduling.</strong>
          ...
         ...
         spec:
@@ -1019,7 +1019,7 @@ This section describes how to configure online stress testing. For details about
         ...
            annotations:
              ...
-             <strong>recover-strategy: "recover"    # Recovery policy. The value is recover, indicating that process-level rescheduling is enabled. If the stress testing has a fault occurred, set this field to enable process-level rescheduling.</strong>
+             <strong>recover-strategy: "recover"    # Recovery policy. The value is recover, indicating that process-level rescheduling is enabled. If a fault occurrs after stress testing, set this field to enable process-level rescheduling.</strong>
          ...
         ...
         spec:

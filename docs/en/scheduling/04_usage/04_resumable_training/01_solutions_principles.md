@@ -18,7 +18,7 @@ Among MindCluster cluster scheduling components, Ascend Device Plugin detects NP
 
 **Supported Fault Types<a name="zh-cn_topic_0000002039699773_section8301627182117"></a>**
 
-Currently, more than 200 faults can be detected. For details about the fault types, see [Table 1](#zh-cn_topic_0000002039699773_table9980135316395).For detailed fault descriptions, see [Typical Faults](../../../resource/Typical_Faults.xlsx).
+Currently, more than 200 faults can be detected. For details about the fault types, see [Table 1](#zh-cn_topic_0000002039699773_table9980135316395).For detailed fault descriptions, see [Typical Faults](https://raw.gitcode.com/Ascend/mind-cluster/blobs/258f6db313be04050c0965a6332beba3b93b9086/Typical_Faults.xlsx).
 
 **Table 1** Fault types
 
@@ -78,7 +78,7 @@ To ensure the proper functioning of the node fault detection feature, the follow
 **Constraints<a name="section16867482102"></a>**
 
 - The node hardware fault reporting capability of NodeD only supports the following products: Atlas 800T A2 training server, Atlas 900 A2 PoD cluster basic unit, Atlas 900 A3 SuperPoD.
-- Only iBMC versions V2 3.15.0.1 and later, or V2 3.10.02.55, with the IPMC driver installed, support the node hardware fault reporting capability of NodeD. If an earlier iBMC or IPMI version fails to obtain node fault information, only the node health status will be reported.
+- Only iBMC versions V2 3.15.0.1 and later, or V2 3.10.02.55, with the IPMI driver installed, support the node hardware fault reporting capability of NodeD. If an earlier iBMC or IPMI version fails to obtain node fault information, only the node health status will be reported.
 - To use the SuperPoD fault detection feature, iBMC V3 5.8.3.35 or later is required.
 - To use the DPC fault detection feature, Scale-Out Storage DPC 24.2.0 or later is required.
 
@@ -1493,10 +1493,10 @@ This feature is applicable to the Atlas 950 SuperPoD, Atlas 850E SuperPoD, and A
 
 |Fault Code|Fault Description|Fault Level|
 |--|--|--|
-|`020001002`|Hyper-plane route cannot converge.       |`SeparateNPUCodes`|
-|`020000002`|Hyper-plane route can converge but device is sub-healthy.|`SubHealthFaultCodes`|
-|`110001024`|Parameter-plane route cannot converge.       |`PreSeparateNPUCodes`|
-|`110000002`|Parameter-plane route can converge but device is sub-healthy.|`SubHealthFaultCode`|
+|`020001002`|Hyper-plane route cannot converge.       |`SeparateNPU`|
+|`020000002`|Hyper-plane route can converge but device is sub-healthy.|`SubHealthFault`|
+|`110001024`|Parameter-plane route cannot converge.       |`PreSeparateNPU`|
+|`110000002`|Parameter-plane route can converge but device is sub-healthy.|`SubHealthFault`|
 
 ## Fault Handling<a name="ZH-CN_TOPIC_0000002511346405"></a>
 
@@ -2449,7 +2449,7 @@ When a hardware fault occurs and there are no available backup resources in the 
 - Since elastic training creates additional communication groups, it may increase on-chip memory usage.
 - Currently not supported in IPv6 scenarios.
 
-    Memory size calculation formula: `Maximum increased memory (MB) = HCCL_BUFFSIZE * 2 * 9`, where `HCCL_BUFFSIZE` defaults to 200 MB. For details about `HCCL_BUFFSIZE`, see the "[HCCL_BUFFSIZE](https://www.hiascend.com/document/detail/en/canncommercial/900/maintenref/envvar/envref_07_0080.html)" section in the *CANN Environment Variable Reference*.
+    Memory size calculation formula: `Maximum increased memory (MB) = HCCL_BUFFSIZE * 2 * 9`, where `HCCL_BUFFSIZE` defaults to 200 MB. For details about `HCCL_BUFFSIZE`, see the "[HCCL_BUFFSIZE](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/commlib/hcclug/docs/en/user_guide/hccl_env/HCCL_BUFFSIZE.md)" section in the *CANN Huawei Collective Communication Library*.
 - This feature depends on MindIO. Please first read [Constraints](../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#constraints) of MindIO.
 
 For more constraints, see [MindSpeed-LLM Elastic Training Constraints](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/docs/pytorch/features/high_availability.md).
@@ -2645,7 +2645,7 @@ For non-MindSpeed-LLM/MindCluster users, adapt the following functions listed in
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p5422211095"><a name="p5422211095"></a><a name="p5422211095"></a>Gradient precision calculation</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p5282161815916"><a name="p5282161815916"></a><a name="p5282161815916"></a>Adapts to precision gradient changes caused by changes such as num_micro_batches during scale-in.</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p5282161815916"><a name="p5282161815916"></a><a name="p5282161815916"></a>Adapts to precision gradient changes caused by changes such as num_microbatches during scale-in.</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p17653121214259"><a name="p17653121214259"></a><a name="p17653121214259"></a><a href="https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/mindspeed_llm/features_manager/high_availability/high_availability.py" target="_blank" rel="noopener noreferrer">LLM repository reference link 1</a></p>
 <p id="p116531412172515"><a name="p116531412172515"></a><a name="p116531412172515"></a><a href="https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/pretrain_gpt.py#:~text=if args.enable_elastic_training:" target="_blank" rel="noopener noreferrer">LLM repository reference link 2</a></p>
@@ -2726,8 +2726,8 @@ Native Megatron uses the group corresponding to the `data_parallel_group_gloo` m
 
     In [LLM Repository Reference Link 1](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/mindspeed_llm/features_manager/high_availability/high_availability.py), `start_grad_sync_wrapper`, `forward_step_wrapper`, and `elastic_training_get_forward_backward_func_wrapper`, as well as the `loss\_func` code pointed to by [LLM Repository Reference Link 2](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/pretrain_gpt.py#:~text=if%20args.enable_elastic_training%3A), are patched or modified to adapt to precision gradient changes caused by scaling in.
 
-    - `loss_func` is modified from performing all\_reduce communication within the DP group for each `micro_batch` to not performing communication during scaling-in training. The reason is that after scaling in, the number of `num_micro_batches` within each DP domain may differ, causing the first few DPs to execute one extra all\_reduce and become stuck.
-    - In `start_grad_sync_wrapper`, `gradient_scaling_factor` is modified to `1.0/(arguments.global_batch_size/arguments.micro_batch_size)`, i.e., dividing by `num_micro_batches` on top of the original `1/dp_size`.
+    - `loss_func` is modified from performing all\_reduce communication within the DP group for each `micro_batch` to not performing communication during scaling-in training. The reason is that after scaling in, the number of `num_microbatches` within each DP domain may differ, causing the first few DPs to execute one extra all\_reduce and become stuck.
+    - In `start_grad_sync_wrapper`, `gradient_scaling_factor` is modified to `1.0/(arguments.global_batch_size/arguments.micro_batch_size)`, i.e., dividing by `num_microbatches` on top of the original `1/dp_size`.
     - `forward_step_wrapper` changes `num_microbatches` to 1, so that the loss calculation no longer divides by `num_microbatches`, because it has already been divided by `num_microbatches` in `start_grad_sync_wrapper`.
     - In `elastic_training_get_forward_backward_func_wrapper`, because `loss_func` does not perform all_reduce within the DP group, after the native `forward_backward_func` completes, at the last PP stage, the sum of each key in `losses_reduced` (i.e., the sum of `lm loss` across all `micro_batches`) performs an all_reduce sum operation within the DP group.
 

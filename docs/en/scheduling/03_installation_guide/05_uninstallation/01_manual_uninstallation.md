@@ -9,4 +9,4 @@ Manual uninstallation consists of the following steps:
 
 After uninstallation is complete, it is recommended to check the relevant configuration files and log directories to ensure a thorough cleanup.
 
-For detailed uninstallation steps, please refer to [Developer Guide - Manual Uninstallation](../../05_developer_guide/00_installation_deployment/02_uninstallation.md).
+For detailed uninstallation steps, please refer to [Manual Uninstallation](../../05_developer_guide/00_installation_deployment/02_uninstallation.md).

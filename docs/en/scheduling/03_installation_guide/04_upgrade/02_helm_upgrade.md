@@ -1,7 +1,5 @@
 # Upgrade with Helm<a name="ZH-CN_TOPIC_0000002479226453"></a>
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-27T02:28:39.377Z pushedAt=2026-08-27T06:46:31.974Z -->
-
 ## Upgrade Description<a name="section_helm_upgrade_desc"></a>
 
 This document describes how to upgrade MindCluster components using Helm.
@@ -50,8 +48,8 @@ This document describes how to upgrade MindCluster components using Helm.
 
        ```ColdFusion
        NAME               NAMESPACE   REVISION  UPDATED                                  STATUS       CHART                                        APP VERSION
-       mindcluster        default    1         2026-03-24 15:30:00.000000000 +0800 CST  deployed  mindcluster-deploy-tool-26.1.0                26.1.0
-       mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.1.0           26.1.0
+       mindcluster        default     1         2026-03-24 15:30:00.000000000 +0800 CST  deployed     mindcluster-deploy-tool-26.1.0               26.1.0
+       mindcluster-crds   default     1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.1.0          26.1.0
        ```
 
    2. Determine the component upgrade method based on the command output.
@@ -108,8 +106,8 @@ If the components are installed manually through kubectl and have not yet been b
     > [!NOTE]
     >- The following three components contain CRDs: Ascend Operator, Volcano, and Infer Operator. If you do not need to upgrade these three components, skip this step.
     >- If CRDs differ between the two versions before and after component upgrade:
-    >   1. Upgrade CRD first, and then upgrade the component.
-    >   2. This may interrupt workloads. Confirm this before the upgrade.
+    >   - Upgrade CRD first, and then upgrade the component.
+    >   - This may interrupt workloads. Confirm this before the upgrade.
     >- Select either **default configuration installation** or **custom configuration installation** as needed.
    - **Default configuration installation**: If the [CRD default configuration](../02_installation/00_helm_installation.md#default_crds_yaml_install_config) meets requirements, run the following commands.
 
@@ -304,8 +302,8 @@ If components run abnormally after an upgrade, use the Helm rollback feature to 
 
       ```ColdFusion
       REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
-      1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-26.0.0        26.0.0       Install complete
-      2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-26.1.0        26.1.0       Upgrade complete
+      1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-26.0.0       26.0.0       Install complete
+      2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-26.1.0       26.1.0       Upgrade complete
       ```
 
     - View the upgrade history of the `Release` instance for component CRDs:
@@ -317,7 +315,7 @@ If components run abnormally after an upgrade, use the Helm rollback feature to 
        The output example is as follows:
 
       ```ColdFusion
-      REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
+      REVISION  UPDATED                   STATUS      CHART                                      APP VERSION  DESCRIPTION
       1         2026-03-24 15:30:00.000   superseded  mindcluster-crds-deploy-tool-26.0.0        26.0.0       Install complete
       2         2026-03-25 10:00:00.000   deployed    mindcluster-crds-deploy-tool-26.1.0        26.1.0       Upgrade complete
       ```

@@ -1,10 +1,10 @@
-# Rescheduling upon Inference Card Faults<a name="ZH-CN_TOPIC_0000002479387124"></a>
+# Rescheduling upon Hardware Faults<a name="ZH-CN_TOPIC_0000002479387124"></a>
 
 <!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-30T12:22:10.240Z pushedAt=2026-06-30T12:23:24.391Z -->
 
 ## Before You Start<a name="ZH-CN_TOPIC_0000002479387116"></a>
 
-The rescheduling upon inference card faults feature refers to the capability where, after a hardware resource failure occurs in the K8s cluster, the cluster scheduling components can automatically detect the hardware fault, report and isolate it, and then reschedule the Pods to new healthy nodes or chips according to the rescheduling policy configured in the user-submitted job.
+The rescheduling upon faults feature refers to the capability where, after a hardware resource failure occurs in the K8s cluster, the cluster scheduling components can automatically detect the hardware fault, report and isolate it, and then reschedule the Pods to new healthy nodes or chips according to the rescheduling policy configured in the user-submitted job.
 
 The following content in this section takes the inference scenario as an example to describe how, after a failure occurs on an inference chip resource managed by the cluster scheduling component, the faulty resource (corresponding chip) is isolated and automatically rescheduled.
 
@@ -22,19 +22,18 @@ The following content in this section takes the inference scenario as an example
 
 **Usage Methods<a name="zh-cn_topic_0000001559979444_section91871616135119"></a>**
 
-The usage methods for rescheduling upon inference card faults are as follows:
+The usage methods for rescheduling upon inference scenario faults are as follows:
 
-- [Using via Command Line](#ZH-CN_TOPIC_0000002511427039): Install cluster scheduling components and use rescheduling upon inference card faults via the command line.
+- [Using via Command Line](#ZH-CN_TOPIC_0000002511427039): Install cluster scheduling components and use rescheduling upon inference scenario faults via the command line.
 - [using after integration](#ZH-CN_TOPIC_0000002479387118): Integrate the cluster scheduling components into an existing third-party AI platform or an AI platform developed based on these component.
 
 **Usage Notes<a name="section10769161412815"></a>**
 
 - Resource monitoring can be used together with all features in inference scenarios.
 - When multiple inference jobs run concurrently in a cluster, each job can use different features, but jobs using static vNPUs and jobs using dynamic vNPUs cannot coexist.
-- The rescheduling upon inference card faults feature uses full-NPU scheduling by default; static vNPU scheduling is not supported; dynamic vNPU scheduling is supported for <term>Atlas inference products</term>.
-- Rescheduling upon inference card faults supports submitting single-node jobs with single or multiple replicas, where each replica works independently. It only supports distributed jobs of the AscendJob type deployed on inference servers (with Atlas 300I Duo inference cards), Atlas 800I A2 inference servers, and A200I A2 Box heterogeneous subracks.
-
-- Rescheduling upon inference card faults supports VolcanoJob or Deployment job types, and the label `fault-scheduling` for the rescheduling switch must be added to such jobs and set to `grace` or `force`.
+- The rescheduling upon inference scenario faults feature uses full-NPU scheduling by default; static vNPU scheduling is not supported; dynamic vNPU scheduling is supported for <term>Atlas inference products</term>.
+- Rescheduling upon inference scenario faults supports submitting single-node jobs with single or multiple replicas, where each replica works independently. It only supports distributed jobs of the AscendJob type deployed on inference servers (with Atlas 300I Duo inference cards), Atlas 800I A2 inference servers, and A200I A2 Box heterogeneous subracks.
+- Rescheduling upon inference scenario faults supports VolcanoJob or Deployment job types, and the label `fault-scheduling` for the rescheduling switch must be added to such jobs and set to `grace` or `force`.
 
 **Supported Product Forms<a name="section169961844182917"></a>**
 
@@ -331,7 +330,7 @@ default          resnetinfer1-2-scpr5                      1/1     Running   0  
 ...
 ```
 
-### Result Viewing of Rescheduling Upon Inference Card Faults<a name="ZH-CN_TOPIC_0000002511347069"></a>
+### Result Viewing of Rescheduling Upon Inference Scenario Faults<a name="ZH-CN_TOPIC_0000002511347069"></a>
 
 If a fault occurs during the running of an inference job, Volcano schedules the job to another NPU.
 

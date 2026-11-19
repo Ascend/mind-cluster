@@ -88,7 +88,7 @@ hccl.json:
 }
 ```
 
-## Atlas 350 Accelerator Card, Atlas 850E SuperPoD, Atlas 650E Server, Atlas 950 SuperPoD<a name="section285395510348"></a>
+## Atlas 350 Accelerator Card, Atlas 850E SuperPoD, Atlas 650E Server, Atlas 950 SuperPoD
 
 The `hccl.json` file example is as follows:
 

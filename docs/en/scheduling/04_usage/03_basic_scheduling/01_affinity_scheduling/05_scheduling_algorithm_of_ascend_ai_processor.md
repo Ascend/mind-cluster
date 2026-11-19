@@ -97,6 +97,10 @@ The idle switch resources are divided into two 2D arrays. One is partitioned hor
 3. If resources are still insufficient, use the resources in Queue 2. Queue 2 is sorted by the number of remaining nodes in descending order, and SuperPoD selection proceeds from the first entry onward.
 4. If resources are still insufficient, and the SuperPoD affinity scheduling policy configured for the job is `Soft` (non-mandatory affinity), use the resources in Queue 3. Queue 3 is sorted by remaining nodes in descending order, and SuperPoD selection proceeds from the first entry onward.
 
+>[!NOTE]
+>
+>- Soft affinity supports only Job-level scheduling.
+
 **Logical Rack Affinity Scheduling<a name="section941034517442"></a>**
 
 1. Based on the logical rack size of the job, convert the number of nodes required by the job into the number of logical racks required. For example, if the logical rack size is 16 and the total number of chips required by the job is 64, the number of logical racks *X* = 4.

@@ -121,7 +121,7 @@
     - [升级](./05_developer_guide/00_installation_deployment/01_upgrade.md)
     - [卸载](./05_developer_guide/00_installation_deployment/02_uninstallation.md)
   - [自定义指标开发](./05_developer_guide/01_custom_metrics_development.md)
-  - [DP热复位插件开发](./05_developer_guide/02_dp_hot_reset_plugin_development.md)
+  - [芯片热复位插件开发](./05_developer_guide/02_dp_hot_reset_plugin_development.md)
   - [公共故障上报](./05_developer_guide/03_clusterd_fault_awareness.md)
 - [API参考](./06_api/menu_api.md)
   - [NPU Exporter](./06_api/00_npu_exporter/menu_npu_exporter.md)

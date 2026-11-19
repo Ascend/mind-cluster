@@ -14,7 +14,7 @@
 
     用户可通过编写插件的方式自定义指标，使用该插件前，开发者需要自行学习了解cgo、go相关语言特性。用户可参考提供的demo，或将代码拷贝到plugins目录下，重新编译部署，下面对demo中各文件进行说明：
 
-    - `dcmi.go`、`dcmi_interface_api.h`：用户自定义NPU指标的接口声明与cgo实现，用于对接驱动dcmi接口，具体可参考demo实现，全部dcmi接口需参考驱动的dcmi接口文档。
+    - `dcmi.go`、`dcmi_interface_api.h`：用户自定义NPU指标的接口声明与cgo实现，用于对接驱动DCMI接口，具体可参考demo实现，全部DCMI接口需参考驱动的DCMI接口文档。
     - `custom_metrics.go`：实现`MetricCollector`的接口，用于指标采集与上报，需要实现下面的接口，具体可参考demo实现：
         - Describe：Prometheus上报指标前，需要先定义指标，该接口用于Prometheus的指标定义
         - CollectToCache：指标采集方法，每个采集周期都会执行，从外部获取数据，并传入到内部缓存中
@@ -379,9 +379,9 @@
 
     **编译部署**
 
-    插件开发完后，执行Npu-exporter代码目录下的`build/build.sh`完成编译，需要提前准备go开发环境。
+    插件开发完后，执行NPU Exporter代码目录下的`build/build.sh`完成编译，需要提前准备go开发环境。
 
-    编译完成后，会在output目录下生成新的二进制文件与相关配置文件，根据需要打开或关闭相应开关，根据安装部署章节的安装指导，重新作镜像部署即可。
+    编译完成后，会在output目录下生成新的二进制文件与相关配置文件，根据需要打开或关闭相应开关，根据安装部署章节的安装指导，重新进行镜像部署即可。
 
 >[!NOTICE]
 >

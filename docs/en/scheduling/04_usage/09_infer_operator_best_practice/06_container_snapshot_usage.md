@@ -17,113 +17,115 @@ The environment requirements for using the container snapshot feature are as fol
 
 **Prerequisites**
 
-- To use the container snapshot feature, ensure that the following components are installed.
-    - Volcano (This feature supports only Volcano as the scheduler. Other schedulers are not supported.)
-    - Ascend Device Plugin
-    - Ascend Docker Runtime
-    - ClusterD
-    - NodeD
-    - Infer Operator
+To use the container snapshot feature, ensure that the following components are installed.
 
-- If they are not installed, refer to [Installation and Deployment](../../03_installation_guide/02_installation/00_helm_installation.md) for the procedure. Note that some installation steps need to be modified for NodeD and Infer Operator.
+- Volcano (This feature supports only Volcano as the scheduler. Other schedulers are not supported.)
+- Ascend Device Plugin
+- Ascend Docker Runtime
+- ClusterD
+- NodeD
+- Infer Operator
 
-  - NodeD
-     - The NodeD image must be built using the following Dockerfile, where `http_proxy` and `https_proxy` are configured as proxies that can access the public network.
+If they are not installed, refer to [Installation and Deployment](../../03_installation_guide/02_installation/00_helm_installation.md) for the procedure. Note that some installation steps need to be modified for NodeD and Infer Operator.
 
-        ```Dockerfile
-        FROM openeuler-24.03-lts-sp2:latest
+- NodeD
+  - The NodeD image must be built using the following Dockerfile, where `http_proxy` and `https_proxy` are configured as proxies that can access the public network.
 
-        RUN sed -i 's/root:x:0:0:root:\/root:.*$/root:x:0:0:root:\/root:\/sbin\/nologin/' /etc/passwd
+    ```Dockerfile
+    FROM openeuler-24.03-lts-sp2:latest
 
-        ENV http_proxy=xxx
-        ENV https_proxy=xxx
-        RUN echo "sslverify=0" >> /etc/yum.conf
-        RUN yum makecache
-        RUN dnf install -y protobuf-c protobuf libmnl libnftnl libseccomp libnet libnl3 iptables
-        ENV http_proxy ""
-        ENV https_proxy ""
+    RUN sed -i 's/root:x:0:0:root:\/root:.*$/root:x:0:0:root:\/root:\/sbin\/nologin/' /etc/passwd
 
-        ENV LD_LIBRARY_PATH /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common
+    ENV http_proxy=xxx
+    ENV https_proxy=xxx
+    RUN echo "sslverify=0" >> /etc/yum.conf
+    RUN yum makecache
+    RUN dnf install -y protobuf-c protobuf libmnl libnftnl libseccomp libnet libnl3 iptables
+    ENV http_proxy ""
+    ENV https_proxy ""
 
-        COPY ./noded /usr/local/bin
-        COPY ./NodeDConfiguration.json /usr/local/
-        COPY ./fdConfig.yaml /usr/local/fdConfig.yaml
+    ENV LD_LIBRARY_PATH /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common
 
-        RUN chmod 550 /usr/local/bin/noded &&\
-            chmod 550 /usr/local/bin &&\
-            chmod 440 /usr/local/NodeDConfiguration.json &&\
-            chmod 440 /usr/local/fdConfig.yaml &&\
-            echo 'umask 027' >> /etc/profile &&\
-            echo 'source /etc/profile' >> ~/.bashrc
-        ```
+    COPY ./noded /usr/local/bin
+    COPY ./NodeDConfiguration.json /usr/local/
+    COPY ./fdConfig.yaml /usr/local/fdConfig.yaml
 
-     - The startup YAML of NodeD must use `noded-container-snapshot.yaml` corresponding to the container snapshot feature in the component package, where the snapshot path `/user/snapshot` is configured according to the actual situation and must be shared storage
+    RUN chmod 550 /usr/local/bin/noded &&\
+        chmod 550 /usr/local/bin &&\
+        chmod 440 /usr/local/NodeDConfiguration.json &&\
+        chmod 440 /usr/local/fdConfig.yaml &&\
+        echo 'umask 027' >> /etc/profile &&\
+        echo 'source /etc/profile' >> ~/.bashrc
+    ```
 
-        ```Yaml
-           - name: image-path
-             mountPath: /user/snapshot
+  - The startup YAML of NodeD must use `noded-container-snapshot.yaml` corresponding to the container snapshot feature in the component package, where the snapshot path `/user/snapshot` is configured according to the actual situation and must be shared storage
 
-           - name: image-path
-             hostPath:
-               path: /user/snapshot
-               type: Directory
-       ```
+    ```Yaml
+        - name: image-path
+          mountPath: /user/snapshot
 
-  - Infer Operator
-     - Add the snapshot path mount item to the startup YAML of Infer Operator, where `mountPath` and `hostPath` are configured according to the actual situation and must be the same as the snapshot path of NodeD. In addition, `snapshotTimeout` (>= 1, in minutes) can be configured, with a default of 60 minutes.
+        - name: image-path
+          hostPath:
+            path: /user/snapshot
+            type: Directory
+    ```
 
-        ```Yaml
-           - name: image-path
-             mountPath: /user/snapshot
+- Infer Operator
 
-           - name: image-path
-             hostPath:
-               path: /user/snapshot
-               type: Directory
+  Add the snapshot path mount item to the startup YAML of Infer Operator, where `mountPath` and `hostPath` are configured according to the actual situation and must be the same as the snapshot path of NodeD. In addition, `snapshotTimeout` (>= 1, in minutes, with a default of 60 minutes) can be configured.
 
-           containers:
-             - command: [ "/bin/bash", "-c", "--"]
-               args: [ "infer-operator
-                       --logFile=/var/log/mindx-dl/infer-operator/infer-operator.log
-                       --logLevel=0 --snapshotTimeout=120
-                       --enable-healthz=true --healthz-address=11254" ]
-        ```
+  ```Yaml
+      - name: image-path
+        mountPath: /user/snapshot
+
+      - name: image-path
+        hostPath:
+          path: /user/snapshot
+          type: Directory
+
+      containers:
+        - command: [ "/bin/bash", "-c", "--"]
+          args: [ "infer-operator
+                  --logFile=/var/log/mindx-dl/infer-operator/infer-operator.log
+                  --logLevel=0 --snapshotTimeout=120
+                  --enable-healthz=true --healthz-address=11254" ]
+  ```
 
 **Usage Notes**
 
-- Container snapshot supports only jobs whose workload is of the `StatefulSet` type. For such jobs, the label `infer.huawei.com/container-snapshot` that enables container snapshot must be added and set to `true`. In addition, the same snapshot path as that of NodeD must be configured in the container environment variables, as shown below:
+Container snapshot supports only jobs whose workload is of the `StatefulSet` type. For such jobs, the label `infer.huawei.com/container-snapshot` that enables container snapshot must be added and set to `true`. In addition, the same snapshot path as that of NodeD must be configured in the container environment variables, as shown below:
 
-   ```Yaml
-      - name: prefill
-        replicas: 1
-        workload:
-          apiVersion: apps/v1
-          kind: StatefulSet
-        metadata:
-          labels:
-            infer.huawei.com/container-snapshot: 'true'
+```Yaml
+  - name: prefill
+    replicas: 1
+    workload:
+      apiVersion: apps/v1
+      kind: StatefulSet
+    metadata:
+      labels:
+        infer.huawei.com/container-snapshot: 'true'
 
-      ...
-        spec:
-          containers:
-          - env:
-            - name: host_snapshot_dir_path
-              value: "/user/snapshot"
-   ```
+  ...
+    spec:
+      containers:
+      - env:
+        - name: host_snapshot_dir_path
+          value: "/user/snapshot"
+```
 
-For details about inference job deployment and usage, see [Usage Instructions](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/features/container_snapshot.md). The following demonstration only shows the usage process.
+The following demonstration only shows the usage process.
 
 **Supported Product Forms**
 
 The following products support container snapshots.
 
-- <term>Atlas A2 training products</term>
+<term>Atlas A2 training products</term>
 
 ## Use Case
 
-### Viewing Job Processes After a Job Is Successfully Delivered
+### Viewing Job Processes
 
-Run the following command to view the Pod running status.
+After a Job Is Successfully Delivered, view the Pod running status.
 
 ```shell
 kubectl get pod --all-namespaces
@@ -168,7 +170,7 @@ Enter the container and terminate the inference service process:
 kill -9 xxx
 ```
 
-The pod restarts successfully:
+The Pod restarts successfully:
 
 ```ColdFusion
 NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE
@@ -188,9 +190,9 @@ If the Pod fails to restart, check the fault in the restore log of Ascend Docker
 [root@worker]# tail -f restore.log
 ```
 
-### Ascend Docker Runtime Log Shows Successful Container Restoration
+### Viewing Ascend Docker Runtime Log
 
-View `runtime-run.log` in the Ascend Docker Runtime log directory:
+View `runtime-run.log` in the Ascend Docker Runtime log directory, show Container restoration successful:
 
 ```ColdFusion
 ...

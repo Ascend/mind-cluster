@@ -18,5 +18,5 @@
   - [手动升级](00_installation_deployment/01_upgrade.md)
   - [手动卸载](00_installation_deployment/02_uninstallation.md)
 - [自定义指标开发](./01_custom_metrics_development.md)
-- [DP热复位插件开发](./02_dp_hot_reset_plugin_development.md)
+- [芯片热复位插件开发](./02_dp_hot_reset_plugin_development.md)
 - [公共故障上报](./03_clusterd_fault_awareness.md)

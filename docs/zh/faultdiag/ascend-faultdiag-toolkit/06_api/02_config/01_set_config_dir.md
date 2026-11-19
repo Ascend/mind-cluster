@@ -19,7 +19,7 @@
 
 ## LLD.xlsx 文件结构
 
-需要提供 `LLD.xlsx` 文件，样例文件可参考：[LLD.xlsx](../../../../resource/LLD.xlsx)。该文件需包含两个 Sheet：
+需要提供 `LLD.xlsx` 文件，样例文件可参考：[LLD.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/1c76693517e8e08dc2b3403497eb945134946916/LLD.xlsx)。该文件需包含两个 Sheet：
 
 | Sheet 名 | 必填项 | 用途 |
 |----------|--------|------|

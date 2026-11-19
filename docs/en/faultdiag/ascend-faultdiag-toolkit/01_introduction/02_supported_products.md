@@ -20,7 +20,7 @@ The servers supported by the ascend-fd-tk tool are listed in the following table
 <td>Atlas 800T A2 training server</td>
 </tr>
 <tr>
-<td>Atlas 900 A2 PoD cluster base unit</td>
+<td>Atlas 900 A2 PoD cluster basic unit</td>
 </tr>
 <tr>
 <td rowspan="4">Atlas A3 training products</td>

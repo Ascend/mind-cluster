@@ -61,7 +61,7 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
 
    >[!NOTE]
    >
-   > The `VERSION` environment variable specifies the Ascend component version. This document uses `26.1.0` as an example. This variable must be set in each independent code block.
+   > `VERSION` specifies the version of the Ascend components, and `BASE` specifies the version type of the base image. This document uses `26.1.0` as an example. There are two image versions for 26.1.0, namely `ubuntu22.04` and `openeuler24.03`. This document uses `ubuntu22.04` as an example. This variable must be set in each independent code block.
 
     1. Deploy Ascend Docker Runtime.
 
@@ -95,11 +95,12 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
 
         ```shell
         VERSION=26.1.0
+        BASE=ubuntu22.04
         # Pull the Ascend Device Plugin image from the Huawei Cloud image repository.
-        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}
+        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}-${BASE}
 
         # Add a local label to the image.
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION} ascend-k8sdeviceplugin:v${VERSION}
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}-${BASE} ascend-k8sdeviceplugin:v${VERSION}-${BASE}
         ```
 
     3. Deploy Ascend Device Plugin.
@@ -112,7 +113,7 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-device-plugin_${VERSION}_linux-aarch64.zip
         unzip Ascend-mindxdl-device-plugin_${VERSION}_linux-aarch64.zip
 
-        # Deploy Device Plugin. If VERSION is earlier than 26.1.0, the yaml file is device-plugin-910-v${VERSION}.yaml.
+        # Deploy Ascend Device Plugin. If VERSION is earlier than 26.1.0, the YAML file is device-plugin-910-v${VERSION}.yaml.
         kubectl apply -f device-plugin-v${VERSION}.yaml
         ```
 
@@ -171,13 +172,15 @@ The following Atlas 800T A2 training server (compute node) with an AArch64 CPU a
     kubectl apply -f npu-test-pod.yaml
     ```
 
-3. Verify Pod scheduling.
+3. Check the Pod status.
 
     ```shell
-    # View the Pod status.
     kubectl get pods npu-test -o wide
+    ```
 
-    # Expected output (STATUS is Running, indicating successful scheduling)
+    The command output is as follows. `Running STATUS` indicates successful scheduling.
+
+    ```output
     NAME      READY   STATUS    RESTARTS   AGE   IP           NODE      NOMINATED NODE
     npu-test  1/1     Running   0          10s   10.244.1.2   worker01  <none>
     ```
@@ -239,7 +242,7 @@ The Atlas 800T A2 training server is used as an example in the following steps. 
 2. Install components. Using the AArch64 architecture as an example, download the software packages that match your actual architecture.
     >[!NOTE]
     >
-    >Helm is used as an example for quick deployment, which requires MindCluster version 26.1.0 or later. See [Installing with Helm](../03_installation_guide/02_installation/00_helm_installation.md).
+    >Helm is used as an example for quick deployment, which requires MindCluster version 26.1.0 or later. For details, see [Installing with Helm](../03_installation_guide/02_installation/00_helm_installation.md).
 
     1. Install Ascend Docker Runtime.
 
@@ -295,7 +298,7 @@ The Atlas 800T A2 training server is used as an example in the following steps. 
 
         The example output is as follows, indicating that NodeD is running normally.
 
-        ```shell
+        ```output
         NAME                                  READY   STATUS    RESTARTS   AGE
         ...
         noded-694474f599-54w6b                1/1     Running   0          11s
@@ -344,10 +347,10 @@ The Atlas 800T A2 training server is used as an example in the following steps. 
         wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/pytorch_standalone_acjob_quickstart.yaml
         ```
 
-    4. (Optional) Prepare the dataset. The `--dummy` parameter is set by default in `pytorch_standalone_acjob_quickstart.yaml`, which automatically generates a random dataset for the training job, so the training job can be started without a real dataset. If you need to use a real dataset, delete the `--dummy` parameter from this yaml file, prepare the dataset corresponding to ResNet-50 by yourself, and upload the dataset to `/data/atlas_dls/public/dataset/resnet50/imagenet` in compliance with the corresponding specifications.
+    4. (Optional) Prepare the dataset. The `--dummy` parameter is set by default in `pytorch_standalone_acjob_quickstart.yaml`, which automatically generates a random dataset for the training job, so the training job can be started without a real dataset. If you need to use a real dataset, delete the `--dummy` parameter from this YAML file, prepare the dataset corresponding to ResNet-50 by yourself, and upload the dataset to `/data/atlas_dls/public/dataset/resnet50/imagenet` in compliance with the corresponding specifications.
 
         ```shell
-        mkdir /data/atlas_dls/public/dataset/resnet50/imagenet
+        mkdir -p /data/atlas_dls/public/dataset/resnet50/imagenet
         cd /data/atlas_dls/public/dataset/resnet50/imagenet
         ```
 

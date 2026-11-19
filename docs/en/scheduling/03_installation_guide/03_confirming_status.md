@@ -1,7 +1,5 @@
 # Component Status Confirmation<a name="ZH-CN_TOPIC_0000002479386390"></a>
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-27T07:53:12.377Z pushedAt=2026-08-27T07:54:25.870Z -->
-
 ## Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002511426307"></a>
 
 If Ascend Docker Runtime has been installed, perform the following procedure on all nodes where this component is installed to confirm the status of Ascend Docker Runtime.
@@ -81,7 +79,7 @@ If Ascend Docker Runtime has been installed, perform the following procedure on 
         Run the following command to mount the physical chip.
 
         ```shell
-        ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 docker.io/library/ubuntu:22.04 containerID
+        ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 docker.io/library/ubuntu:22.04 {containerID}
         ```
 
     >[!NOTE]

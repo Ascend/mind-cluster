@@ -26,7 +26,7 @@
 ![](../../figures/scheduling/containerid--json-log文件所在路径示例.png "containerid--json-log文件所在路径示例")
 
 >[!NOTE]
->如果边缘管理平台不支持该目录下日志文件的绕接或日志绕接配置错误，会导致<b>/var/lib/docker</b>被占满，从而影响新容器的部署及其他容器业务的正常运行。故不建议采用该方式。
+>如果边缘管理平台不支持该目录下日志文件的轮转或日志轮转配置错误，会导致<b>/var/lib/docker</b>被占满，从而影响新容器的部署及其他容器业务的正常运行。故不建议采用该方式。
 
 **（推荐）挂载到主机目录方式<a name="zh-cn_topic_0000001589264561_section139871046185718"></a>**
 
@@ -36,7 +36,7 @@
 
 ![](../../figures/scheduling/方案架构.png "方案架构")
 
-应用将容器日志挂载到边缘主机上。边缘管理平台提供主机上日志收集能力，并将主机文件日志进行绕接。
+应用将容器日志挂载到边缘主机上。边缘管理平台提供主机上日志收集能力，并将主机文件日志进行轮转。
 
 >[!NOTE]
 >
@@ -94,7 +94,7 @@ Ascend Docker Runtime会根据实际环境情况默认以只读方式挂载以�
 </th>
 </tr>
 </thead>
-<tbody><tr id="zh-cn_topic_0000001538584750_row887398115"><td class="cellrowborder" valign="top" width="42.86%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001538584750_p3873913114"><a name="zh-cn_topic_0000001538584750_p3873913114"></a><a name="zh-cn_topic_0000001538584750_p3873913114"></a>/dev/davinciX</p>
+<tbody><tr id="zh-cn_topic_0000001538584750_row887398115"><td class="cellrowborder" valign="top" width="42.86%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001538584750_p3873913114"><a name="zh-cn_topic_0000001538584750_p3873913114"></a><a name="zh-cn_topic_0000001538584750_p3873913114"></a>/dev/davinci<em>X</em></p>
 </td>
 <td class="cellrowborder" valign="top" width="57.14%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001538584750_p987149212"><a name="zh-cn_topic_0000001538584750_p987149212"></a><a name="zh-cn_topic_0000001538584750_p987149212"></a>NPU设备，X是ID号。例如：davinci0。</p>
 </td>
@@ -262,7 +262,7 @@ Ascend Docker Runtime会根据实际环境情况默认以只读方式挂载以�
 </th>
 </tr>
 </thead>
-<tbody><tr id="zh-cn_topic_0000001538584750_row424018316537"><td class="cellrowborder" valign="top" width="42.86%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001538584750_p91141812145416"><a name="zh-cn_topic_0000001538584750_p91141812145416"></a><a name="zh-cn_topic_0000001538584750_p91141812145416"></a>/dev/davinciX</p>
+<tbody><tr id="zh-cn_topic_0000001538584750_row424018316537"><td class="cellrowborder" valign="top" width="42.86%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001538584750_p91141812145416"><a name="zh-cn_topic_0000001538584750_p91141812145416"></a><a name="zh-cn_topic_0000001538584750_p91141812145416"></a>/dev/davinci<em>X</em></p>
 </td>
 <td class="cellrowborder" valign="top" width="57.14%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001538584750_p1733622015418"><a name="zh-cn_topic_0000001538584750_p1733622015418"></a><a name="zh-cn_topic_0000001538584750_p1733622015418"></a>NPU设备，X是ID号。例如：davinci0。</p>
 </td>
@@ -742,7 +742,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p230416293218"><a name="p230416293218"></a><a name="p230416293218"></a>单机场景</p>
 </td>
 <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p202281257143415"><a name="p202281257143415"></a><a name="p202281257143415"></a>可申请NPU的数目为1、2、3、4、5、6、7、8、10、12、14、16。</p>
-<a name="ul14261149163515"></a><a name="ul14261149163515"></a><ul id="ul14261149163515"><li>当申请NPU数目小于8时，根据亲和性约束分配的NPU只能在同一台服务器同一个环内（0~7号NPU为一个环，8~16号NPU为一个环）。</li><li>当申请NPU数目为10、12、14时，需要将所需的NPU平均分配到两个环，相对的物理地址也一致。例如申请了2个NPU进行训练，则分配的2个NPU要么都在同一台服务器的0~7号上或者都在8~16号上。不能出现一个在0~7号上，另一个在8~16号上。</li></ul>
+<a name="ul14261149163515"></a><a name="ul14261149163515"></a><ul id="ul14261149163515"><li>当申请NPU数目小于8时，根据亲和性约束分配的NPU只能在同一台服务器同一个环内（0~7号NPU为一个环，8~15号NPU为一个环）。</li><li>当申请NPU数目为10、12、14时，需要将所需的NPU平均分配到两个环，相对的物理地址也一致。例如申请了2个NPU进行训练，则分配的2个NPU要么都在同一台服务器的0~7号上或者都在8~15号上。不能出现一个在0~7号上，另一个在8~15号上。</li></ul>
 </td>
 </tr>
 <tr id="row20219245321"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p95591734153713"><a name="p95591734153713"></a><a name="p95591734153713"></a>分布式场景</p>
@@ -1041,7 +1041,7 @@ MindCluster集群调度组件是基于K8s生态的功能组件，因此训练任
 <p id="p175123717238"><a name="p175123717238"></a><a name="p175123717238"></a>启动参数</p>
 <p id="p3785160112316"><a name="p3785160112316"></a><a name="p3785160112316"></a></p>
 </td>
-<td class="cellrowborder" valign="top" width="41.675832416758325%" headers="mcps1.2.5.1.2 "><p id="p207408581462"><a name="p207408581462"></a><a name="p207408581462"></a>--max-request-inflight和--max-mutating-requests-inflight参数表示在给定时间内限制并行处理读写请求的最大数量限制。</p>
+<td class="cellrowborder" valign="top" width="41.675832416758325%" headers="mcps1.2.5.1.2 "><p id="p207408581462"><a name="p207408581462"></a><a name="p207408581462"></a>--max-request-inflight和--max-mutating-requests-inflight参数表示在给定时间内限制并行处理读写请求的最大数量。</p>
 <p id="p277719526010"><a name="p277719526010"></a><a name="p277719526010"></a>若配置过低会出现请求超限错误，若配置过高会出现占用过多内存。</p>
 </td>
 <td class="cellrowborder" valign="top" width="25.51744825517448%" headers="mcps1.2.5.1.3 "><pre class="screen" id="screen19731459194413"><a name="screen19731459194413"></a><a name="screen19731459194413"></a>--max-request-inflight=20000

@@ -515,7 +515,7 @@ This chapter only guides users on upgrading the binary file version within a con
 >[!NOTE]
 >Elastic Agent has been deprecated as of version 7.3.0. This chapter is retained solely as a historical migration reference. If Elastic Agent is no longer used in your current environment, you may skip this chapter.
 
-Elastic Agent has been deprecated. This chapter provides operational guidance for upgrading Elastic Agent to TaskD.
+This chapter provides operational guidance for upgrading Elastic Agent to TaskD.
 
 **Prerequisites<a name="section565512391204"></a>**
 
@@ -622,25 +622,27 @@ Elastic Agent has been deprecated. This chapter provides operational guidance fo
 
     2. Add the following code to the training script to start TaskD Manager.
 
-        <pre codetype="Python">
-        <strong>export TASKD_PROCESS_ENABLE="on"
+        ```Python
+        export TASKD_PROCESS_ENABLE="on"
         # Take PyTorch framework as an example
         if [[ "${RANK}" == 0 ]]; then
             export MASTER_ADDR=${POD_IP}
             python /job/code/manager.py 2>> /job/code/alllogs/$MINDX_TASK_ID/taskd/error.log &           # The specific execution path of manager.py is determined by the current path, and the error.log path must be created in advance.
-        fi</strong>
+        fi
 
-        torchrun ...</pre>
+        torchrun ...
+        ```
 
     3. Modify the container port in the job YAML, and add `port 9601` for TaskD communication under all Pods.
 
-        <pre codetype="yaml">
+        ```yaml
         ...
                 spec:
         ...
                    containers:
         ...
-                     <strong>ports:
+                     ports:
                        - containerPort: 9601
-                         name: taskd-port</strong>
-        ...</pre>
+                         name: taskd-port
+        ...
+        ```

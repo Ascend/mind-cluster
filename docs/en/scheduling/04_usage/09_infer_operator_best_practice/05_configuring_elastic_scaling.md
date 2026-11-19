@@ -164,4 +164,4 @@ spec:
 
 > [!NOTE]
 >
->- This feature supports Kubernetes 1.23 and later.
+>This feature supports Kubernetes 1.23 and later.

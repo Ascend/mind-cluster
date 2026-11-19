@@ -88,7 +88,7 @@ hccl.json:
 }
 ```
 
-## Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点<a name="section285395510348"></a>
+## Atlas 350 加速卡、Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点
 
 hccl.json文件示例如下：
 

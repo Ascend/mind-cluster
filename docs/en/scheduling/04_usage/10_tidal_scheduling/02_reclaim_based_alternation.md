@@ -1,7 +1,5 @@
 # Tidal Scheduling of Inference/Training Jobs Based on Reclaim<a name="ZH-CN_TOPIC_000000_reclaim_alternation"></a>
 
-<!-- md-trans-meta sourceCommit=cd1b1f6db3dd6679ea1d2324ac11637806933eae translatedAt=2026-08-27T10:56:13.732Z pushedAt=2026-08-27T10:56:40.864Z -->
-
 ## Overview<a name="section_overview_reclaim"></a>
 
 Reclaim is the resource return mechanism of the Volcano scheduler: when a high-weight queue runs short of resources, resources are reclaimed from low-weight queues with `reclaimable: true`. Unlike Preempt, which is based on job priority, Reclaim is based on queue weight, making it suitable for managing resource priorities by service line.
@@ -90,7 +88,7 @@ sequenceDiagram
        configurations:
          - name: init-params
            arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2",
-       "useClusterInfoManager":"true","self-maintain-available-card":"true","super-pod-size": "48", "reserve-nodes": "2",
+       "useClusterInfoManager":"true","self-maintain-available-card":"true","super-pod-size": "128", "reserve-nodes": "2",
        "forceEnqueue": "true", "prefer-previous-node": "true"}
    ```
 

@@ -193,35 +193,33 @@ spec:
 >
 > - Configure `hostNetwork: true`
 > - Configure the user-mode driver. Choose either of the following two methods:
->   1. Install the OFED driver for the 1825 DPU in the image.
->   2. Mount the OFED driver for the 1825 DPU from the host after the container starts.
+>   - Install the OFED driver for the 1825 DPU in the image.
+>   - Mount the OFED driver for the 1825 DPU from the host after the container starts.
 
-1. **Check the Pod status.**
+Run the following command to check whether the Pod is created successfully:
 
-   Run the following command to check whether the business Pod is created successfully:
+```shell
+kubectl get pod rdma-app -o wide
+```
 
-    ```shell
-    kubectl get pod rdma-app -o wide
-    ```
+The following is an example of the output. **Running** indicates that the Pod is created successfully:
 
-   The following is an example of the output. **Running** indicates that the Pod is created successfully:
-
-    ```ColdFusion
-    NAME       READY   STATUS    RESTARTS   AGE   IP            NODE
-    rdma-app   1/1     Running   0          10s   10.244.1.*   compute-node-1
-    ```
+```ColdFusion
+NAME       READY   STATUS    RESTARTS   AGE   IP            NODE
+rdma-app   1/1     Running   0          10s   10.244.1.*   compute-node-1
+```
 
 ### RDMA Device Verification in a Pod<a name="ZH-CN_TOPIC_biz_pod_rdma_verify"></a>
 
-After the service Pod is created successfully, you can verify whether the RDMA devices are correctly mounted by the component through the following steps:
+After the Pod is created successfully, you can verify whether the RDMA devices are correctly mounted by the component through the following steps:
 
-1. **Enter the Pod.**
+1. Enter the Pod.
 
     ```shell
     kubectl exec -it rdma-app -- /bin/bash
     ```
 
-2. **Check the RDMA device nodes.**
+2. Check the RDMA device nodes.
 
     ```shell
     ls -la /dev/infiniband/
@@ -229,9 +227,9 @@ After the service Pod is created successfully, you can verify whether the RDMA d
 
    Under normal circumstances, device node files such as `uverbs0` and `uverbs1` should be displayed. If the device nodes are empty or do not exist, the RDMA devices are not correctly mounted.
 
-After the service Pod is created successfully, you also need to check the mounting status of the RDMA NIC devices and the corresponding network interfaces:
+After the Pod is created successfully, you also need to check the mounting status of the RDMA NIC devices and the corresponding network interfaces:
 
-1. **Check Infiniband device information.**
+1. Check Infiniband device information.
 
     ```shell
     ls -la /sys/class/infiniband/
@@ -239,10 +237,10 @@ After the service Pod is created successfully, you also need to check the mounti
 
    Under normal circumstances, the RDMA NIC devices on the current node should be displayed, such as `hrn5_0` and `hrn5_1`.
 
-2. **Check network interface information.**
+2. Check network interface information.
 
-     ```shell
-     ls -la /sys/class/net/
-     ```
+    ```shell
+    ls -la /sys/class/net/
+    ```
 
-   Under normal circumstances, the network interface devices on the node should be displayed, including the network interfaces corresponding to the RDMA NICs (such as `ens***`). If the network does not appear in the Pod, check whether hostNetwork is set to true.
+   Under normal circumstances, the network interface devices on the node should be displayed, including the network interfaces corresponding to the RDMA NICs (such as `ens***`). If the network does not appear in the Pod, check whether hostNetwork is set to `true`.

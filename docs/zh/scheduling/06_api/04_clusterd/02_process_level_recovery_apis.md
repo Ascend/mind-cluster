@@ -198,7 +198,7 @@ rpc HealthCheck(ClientInfo) returns (Status) {}
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<li>0：表示故障恢复流程正常。</li><li>其他值：表示故障恢复流程异常，并触发重调度。</li></p><p>**Status.info**：返回信息描述。</p>|
+|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<li>0：表示gRPC连接正常。</li><li>其他值：表示gRPC连接异常。</li></p><p>**Status.info**：返回信息描述。</p>|
 
 ## 对接第三方AI平台控制相关接口<a name="ZH-CN_TOPIC_0000002511346803"></a>
 

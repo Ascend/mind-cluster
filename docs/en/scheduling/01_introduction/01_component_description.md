@@ -364,8 +364,8 @@ Kubernetes needs to be aware of RDMA network device resource information to impl
 >
 > - Configure `hostNetwork: true`
 > - Configure the user-mode driver. Choose either of the following two methods:
->   1. Install the OFED driver for the 1825 DPU in the image.
->   2. Mount the OFED driver for the 1825 DPU from the host after the container starts.
+>   - Install the OFED driver for the 1825 DPU in the image.
+>   - Mount the OFED driver for the 1825 DPU from the host after the container starts.
 
 **Component Function<a name="section1112014512117"></a>**
 

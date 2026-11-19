@@ -15,7 +15,7 @@
   - [Usage Guide](./ascend-faultdiag/05_usage/menu_usage.md)
     - [Usage Overview](./ascend-faultdiag/05_usage/01_usage_overview.md)
     - [Log Collection](./ascend-faultdiag/05_usage/02_log_collection.md)
-    - [Log Cleaning](./ascend-faultdiag/05_usage/03_log_parsing.md)
+    - [Log Parsing](./ascend-faultdiag/05_usage/03_log_parsing.md)
     - [Fault Diagnosis](./ascend-faultdiag/05_usage/04_fault_diagnosis.md)
     - [Single-Server Diagnosis](./ascend-faultdiag/05_usage/05_single_server_diagnosis.md)
     - [SuperPoD Diagnosis](./ascend-faultdiag/05_usage/06_superpod_diagnosis.md)

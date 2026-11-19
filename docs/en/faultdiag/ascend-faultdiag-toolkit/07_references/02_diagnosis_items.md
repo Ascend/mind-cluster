@@ -108,8 +108,8 @@ Diagnostic items are categorized by device type, and each diagnostic item specif
 <td>NPU Peer LLDP Information Missing Detection</td>
 <td><code>hccn_tool -i {chip_phy_id} -lldp -g</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: <code>lldp.log</code></td>
-<td>Check whether the lldp information of the peer of the NPU optical module is collected</td>
-<td>The lldp information of the peer of the NPU optical module is not collected</td>
+<td>Check whether the LLDP information of the peer of the NPU optical module is collected</td>
+<td>The LLDP information of the peer of the NPU optical module is not collected</td>
 </tr>
 <tr>
 <td>Loopback Detection</td>

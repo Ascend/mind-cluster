@@ -198,7 +198,7 @@ rpc HealthCheck(ClientInfo) returns (Status) {}
 
 |Return Value|Type (Protobuf Definition)|Description|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**: Return code.<li>`0`: the fault recovery process is normal.</li><li>Other values: the fault recovery process is abnormal, triggering rescheduling.</li></p><p>**Status.info**: Return information.</p>|
+|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**: Return code.<li>`0`: the gRPC connection is normal.</li><li>Other values: the gRPC connection is abnormal.</li></p><p>**Status.info**: Return information.</p>|
 
 ## Interfaces for Integrating with Third-Party AI Platforms<a name="ZH-CN_TOPIC_0000002511346803"></a>
 

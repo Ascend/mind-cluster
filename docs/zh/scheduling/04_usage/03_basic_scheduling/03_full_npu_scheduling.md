@@ -168,7 +168,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 - [MindSpore](#zh-cn_topic_0000001558834814_section868111733711)
 
     >[!NOTE]
-    >- 本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。
+    >- 本节中使用的数据集为[ImageNet2012](https://ieee-dataport.org/documents/imagenet?spm=5176.28103460.0.0.29032988VkKSGu)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范，本链接仅供参考，请自行准备好数据集**）。
     >- 下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
     >- 以下MindSpore示例需使用CANN 8.5.0之前版本。
 
@@ -298,7 +298,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 
 >[!NOTE]
 >
->- 本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。
+>- 本节中使用的数据集为[ImageNet2012](https://ieee-dataport.org/documents/imagenet?spm=5176.28103460.0.0.29032988VkKSGu)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范，本链接仅供参考，请自行准备好数据集**）。
 >- 下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
 >- 以下MindSpore示例需使用CANN 8.5.0之前版本。
 >- rank_table.sh不适用于Ascend 950系列产品下的非acjob任务。

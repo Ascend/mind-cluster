@@ -1,7 +1,5 @@
 # Preempt-based Tidal Scheduling for Inference/Training Jobs<a name="ZH-CN_TOPIC_000000_preempt_alternation"></a>
 
-<!-- md-trans-meta sourceCommit=cd1b1f6db3dd6679ea1d2324ac11637806933eae translatedAt=2026-08-27T10:56:17.674Z pushedAt=2026-08-27T10:56:40.866Z -->
-
 ## Overview<a name="section_overview_preempt"></a>
 
 Preempt is a core mechanism of the Volcano scheduler: when a high-priority job cannot find sufficient resources, the scheduler selects a victim from low-priority jobs and evicts the Pods it occupies to release resources.
@@ -92,7 +90,7 @@ sequenceDiagram
        configurations:
          - name: init-params
            arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2",
-       "useClusterInfoManager":"true","self-maintain-available-card":"true","super-pod-size": "48", "reserve-nodes": "2",
+       "useClusterInfoManager":"true","self-maintain-available-card":"true","super-pod-size": "128", "reserve-nodes": "2",
        "forceEnqueue": "true", "prefer-previous-node": "true"}
    ```
 

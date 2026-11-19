@@ -8,12 +8,13 @@ Container Manager runs directly on the physical machine in binary mode, providin
 ## Supported Product Forms<a name="section_supported_products"></a>
 
 - The following products support fault management and automatic container recovery for fault containers:
-    - <term>Atlas training products</term>
-    - <term>Atlas A2 training products</term>
-    - <term>Atlas A3 training products</term>
-    - <term>Atlas inference products</term>
-    - <term>Atlas A2 inference products</term>
-    - <term>Atlas A3 inference products</term>
+
+- <term>Atlas training products</term>
+- <term>Atlas A2 training products</term>
+- <term>Atlas A3 training products</term>
+- <term>Atlas inference products</term>
+- <term>Atlas A2 inference products</term>
+- <term>Atlas A3 inference products</term>
 
 ## Procedure
 

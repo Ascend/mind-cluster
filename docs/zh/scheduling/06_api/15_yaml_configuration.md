@@ -84,7 +84,7 @@
 |huawei.com/scheduler.softShareDev.policy|字符串 (string)|-|<p>软切分策略，取值包括：</p><ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|
 |podAffinity|字符串 (string)|-|<p>表示逻辑超节点会往具有更多亲和性Pod的物理超节点调度。</p><p>仅支持MindIE Motor推理任务Atlas 800I A3 超节点服务器上使用本参数。</p>|
 |sp-fit|字符串 (string)|-|<p>超节点调度策略。仅支持MindIE Motor推理任务Atlas 800I A3 超节点服务器上使用本参数。</p><ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul>|
-|metadata.labels['duo']|字符串 (string)|-|<p>仅支持推理服务器（插Atlas 300I Duo 推理卡）的参数。</p><ul><li>true：使用Atlas300I Duo 推理卡。</li><li>false：不使用Atlas300I Duo 推理卡。</li></ul>|
+|metadata.labels['duo']|字符串 (string)|-|<p>仅支持推理服务器（插Atlas 300I Duo 推理卡）的参数。</p><ul><li>true：使用Atlas 300I Duo 推理卡。</li><li>false：不使用Atlas 300I Duo 推理卡。</li></ul>|
 |metadata.labels['npu-310-strategy']|字符串 (string)|-|<p>仅支持推理服务器（插Atlas 300I Duo 推理卡）的参数。</p><ul><li>card：按推理卡调度，request请求的昇腾AI处理器个数不超过2，使用同一张Atlas 300I Duo 推理卡上的昇腾AI处理器。</li><li>chip：按昇腾AI处理器调度，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul>|
 |metadata.labels['distributed']|字符串 (string)|-|<p>是否使用分布式推理。仅支持推理服务器（插Atlas 300I Duo 推理卡）的参数。</p><ul><li>true：使用分布式推理。使用chip模式时，必须将任务调度到整张Atlas 300I Duo 推理卡。若任务需要的昇腾AI处理器数量为单数时，使用单个昇腾AI处理器的部分，将优先调度到剩余昇腾AI处理器数量为1的Atlas 300I Duo 推理卡上。</li><li>false：使用非分布式推理。使用chip模式时，请求的昇腾AI处理器个数不超过单个节点的最大值。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>无论是否为分布式推理，card模式的调度策略不变。</li><li>当distributed为true时，只支持单机多卡；当distributed为false时，只支持多机多卡。</li><li>当distributed为true时，不支持Deployment任务。</li></ul></div></div>|
 

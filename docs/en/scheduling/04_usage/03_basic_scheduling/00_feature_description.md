@@ -1,11 +1,9 @@
 # Feature Description<a name="ZH-CN_TOPIC_0000002511347091"></a>
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-06-22T09:45:42.901Z pushedAt=2026-06-22T09:46:04.501Z -->
-
 Basic scheduling features:
 
 - Training jobs: [Full-NPU Scheduling](../../01_introduction/02_feature_description.md#full-npu-scheduling), [Multi-Level Scheduling](../../01_introduction/02_feature_description.md#multi-level-scheduling), and [Resumable Training](../../04_usage/04_resumable_training/00_feature_description.md).
-- Inference jobs: [Full-NPU Scheduling](../../01_introduction/02_feature_description.md#full-npu-scheduling), [Recovery of Inference Card Faults](../../01_introduction/02_feature_description.md#recovery-of-inference-card-faults), and [Rescheduling upon Inference Card Faults](../../01_introduction/02_feature_description.md#rescheduling-upon-inference-card-faults).
+- Inference jobs: [Full-NPU Scheduling](../../01_introduction/02_feature_description.md#full-npu-scheduling), [Hardware Fault Recovery](../../01_introduction/02_feature_description.md#hardware-fault-recovery), and [Rescheduling upon Hardware Faults](../../01_introduction/02_feature_description.md#rescheduling-upon-hardware-faults).
 
     Different features depend on different components. For details, see the [Basic Scheduling](../../01_introduction/02_feature_description.md#basic-scheduling) chapter.
 
