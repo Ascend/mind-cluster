@@ -494,6 +494,40 @@ func TestSyncAnnotation(t *testing.T) {
 			}
 		}
 	})
+	t.Run("test syncAnnotation, device info health annotations carried from last session", func(t *testing.T) {
+		// The device info CM is merged into the annotation map only when its
+		// UpdateTime advances; the health lists must therefore survive the
+		// per-session reset, otherwise a stable node (for example all cards
+		// network-unhealthy and nothing newly scheduled) loses them and
+		// distributed jobs fail with "don't have resource<...>".
+		cNode := NPUNode{CommonNode: CommonNode{Annotation: map[string]string{
+			util.NPU910CardName:                               "Ascend910-0",
+			util.NPU910CardName + util.NPUUnhealthySuffix:     "Ascend910-1",
+			util.NPU910CardName + util.NPUNetworkUnhealthy:    "Ascend910-2",
+			util.NPU910CardName + util.DeviceFaultCmKeySuffix: "[]",
+			util.NPU910CardName + util.RecoveringSuffix:       "Ascend910-3",
+			util.TopologyAnnoKey:                              "last-session-topology",
+		}}}
+		nodeNew := &api.NodeInfo{
+			Node: &v1.Node{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}},
+		}
+		cNode.syncAnnotation(nodeNew, k8s.NodeDNodeInfo{}, k8s.SwitchFaultInfo{})
+		for _, keep := range []string{
+			util.NPU910CardName,
+			util.NPU910CardName + util.NPUUnhealthySuffix,
+			util.NPU910CardName + util.NPUNetworkUnhealthy,
+			util.NPU910CardName + util.DeviceFaultCmKeySuffix,
+			util.NPU910CardName + util.RecoveringSuffix,
+		} {
+			if _, exist := cNode.Annotation[keep]; !exist {
+				t.Errorf("device info annotation %q should be carried from last session, got %#v",
+					keep, cNode.Annotation)
+			}
+		}
+		if _, exist := cNode.Annotation[util.TopologyAnnoKey]; exist {
+			t.Errorf("stale topology annotation should still be dropped, got %#v", cNode.Annotation)
+		}
+	})
 }
 
 func TestUpdateNPUNodeDeviceInfos(t *testing.T) {
@@ -501,6 +535,31 @@ func TestUpdateNPUNodeDeviceInfos(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.node.updateNPUNodeDeviceInfos(tt.data)
 		})
+	}
+}
+
+func TestDeviceInfoHealthAnnotationsSurviveUnchangedCm(t *testing.T) {
+	// Regression: on a stable node the device info CM keeps the same UpdateTime,
+	// so updateNPUNodeDeviceInfos skips the merge. The health lists must still be
+	// visible after the per-session annotation rebuild, otherwise distributed
+	// jobs fail with "don't have resource<huawei.com/Ascend910-NetworkUnhealthy>".
+	const updateTime = int64(100)
+	cNode := NPUNode{CommonNode: CommonNode{
+		devInfoUpdateTime: updateTime,
+		Annotation: map[string]string{
+			util.NPU910CardName:                            "Ascend910-0",
+			util.NPU910CardName + util.NPUNetworkUnhealthy: "Ascend910-0",
+		},
+	}}
+	cNode.syncAnnotation(&api.NodeInfo{
+		Node: &v1.Node{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}},
+	}, k8s.NodeDNodeInfo{}, k8s.SwitchFaultInfo{})
+	cNode.updateNPUNodeDeviceInfos(k8s.NodeDeviceInfoWithID{
+		NodeDeviceInfo: k8s.NodeDeviceInfo{UpdateTime: updateTime, DeviceList: map[string]string{}},
+	})
+	got, exist := cNode.Annotation[util.NPU910CardName+util.NPUNetworkUnhealthy]
+	if !exist || got != "Ascend910-0" {
+		t.Fatalf("network-unhealthy annotation lost after an unchanged device info CM: %#v", cNode.Annotation)
 	}
 }
 

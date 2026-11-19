@@ -404,7 +404,7 @@ func GetUnhealthyDevInfo(devList map[string]string) (string, []string) {
 
 // GetRecoveringDevInfo get recovering device info from device list
 func GetRecoveringDevInfo(devList map[string]string) (string, []string) {
-	recoveringKey := HwPreName + GetDeviceType(devList) + "-Recovering"
+	recoveringKey := HwPreName + GetDeviceType(devList) + RecoveringSuffix
 	klog.V(LogDebugLev).Infof("recovering device key: %s", recoveringKey)
 	recoveringDevStr := devList[recoveringKey]
 	if len(recoveringDevStr) == 0 {
@@ -453,6 +453,26 @@ func IsNPUResource(res v1.ResourceName) bool {
 // name, e.g. huawei.com/Ascend910-2c.
 func IsStaticVnpuResource(res v1.ResourceName) bool {
 	return ascend910VirtualDevNameReg.MatchString(string(res)) || ascend310VirtualDevNameReg.MatchString(string(res))
+}
+
+// IsNPUDeviceInfoAnnotation reports whether key is an annotation maintained
+// from the device info CM: a canonical NPU resource list or one of its health
+// lists (-Unhealthy, -NetworkUnhealthy, -Fault, -Recovering). syncAnnotation
+// rebuilds the node annotation map every session, while
+// updateNPUNodeDeviceInfos re-merges the CM only when its UpdateTime advances,
+// so these keys must be carried across sessions or they disappear until the
+// device info changes.
+func IsNPUDeviceInfoAnnotation(key string) bool {
+	if IsNPUResource(v1.ResourceName(key)) {
+		return true
+	}
+	if !strings.HasPrefix(key, HwPreName) {
+		return false
+	}
+	return strings.HasSuffix(key, NPUUnhealthySuffix) ||
+		strings.HasSuffix(key, NPUNetworkUnhealthy) ||
+		strings.HasSuffix(key, DeviceFaultCmKeySuffix) ||
+		strings.HasSuffix(key, RecoveringSuffix)
 }
 
 // IsDRATask reports whether the task requests devices through Kubernetes Dynamic Resource Allocation.

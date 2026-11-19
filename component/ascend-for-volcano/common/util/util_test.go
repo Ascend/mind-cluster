@@ -1603,3 +1603,33 @@ func TestIsStaticVnpuResource(t *testing.T) {
 		})
 	}
 }
+
+func TestIsNPUDeviceInfoAnnotation(t *testing.T) {
+	tests := []struct {
+		name string
+		key  string
+		want bool
+	}{
+		{"01 generic npu resource list", NPUCardName, true},
+		{"02 Ascend910 resource list", NPU910CardName, true},
+		{"03 Ascend310 resource list", NPU310CardName, true},
+		{"04 Ascend310P resource list", NPU310PCardName, true},
+		{"05 npu-core resource list", AscendNPUCore, true},
+		{"06 unhealthy health list", NPU910CardName + NPUUnhealthySuffix, true},
+		{"07 network-unhealthy health list", NPU910CardName + NPUNetworkUnhealthy, true},
+		{"08 generic npu network-unhealthy health list", NPUCardName + NPUNetworkUnhealthy, true},
+		{"09 fault list", NPU910CardName + DeviceFaultCmKeySuffix, true},
+		{"10 recovering list", NPU910CardName + RecoveringSuffix, true},
+		{"11 topology annotation is not device info", TopologyAnnoKey, false},
+		{"12 static vNPU resource list is not carried", HwPreName + Ascend910 + "-2c", false},
+		{"13 unrelated huawei key", HwPreName + "AscendReal", false},
+		{"14 non-huawei key", "volcano-npu-cache", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsNPUDeviceInfoAnnotation(tt.key); got != tt.want {
+				t.Errorf("IsNPUDeviceInfoAnnotation(%q) = %v, want %v", tt.key, got, tt.want)
+			}
+		})
+	}
+}
