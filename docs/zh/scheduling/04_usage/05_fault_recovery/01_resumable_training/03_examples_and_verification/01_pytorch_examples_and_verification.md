@@ -6,7 +6,7 @@
 
 断点续训可以基于基础训练镜像制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（PyTorch）](../../../../07_references/02_common_operations.md#使用dockerfile构建容器镜像pytorch)章节进行操作。
 
-本章节以 DeepSeek-V4-Flash 为例，介绍在 Atlas A3、Atlas 950 SuperPoD（A5）上使用 PyTorch 2.10.0 和 torch_npu 2.10.0 的断点续训配置。A3 使用 Ubuntu 22.04，A5 使用 openEuler 24.03；两类机型分别制作镜像。
+本章节以 DeepSeek-V4-Flash 为例，介绍在 Atlas A3、Atlas 950 SuperPoD（A5）上使用 Python 3.12、PyTorch 2.10.0 和 torch_npu 2.10.0 的断点续训配置。A3 使用 Ubuntu 22.04，A5 使用 openEuler 24.03；两类机型分别制作镜像。
 
 >[!NOTE]
 >

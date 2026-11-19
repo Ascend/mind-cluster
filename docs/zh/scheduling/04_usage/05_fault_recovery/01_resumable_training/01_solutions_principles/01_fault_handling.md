@@ -517,7 +517,7 @@ Atlas A3训练系列产品支持在发生参数面网络故障时，HCCL会执�
 
 相比于进程级别重调度，进程级在线恢复不会重调度故障进程，减少了大量进程间不同步的等待耗时。同时通过NPU卡间的参数面高速网络P2P传递CKPT信息，避免了CKPT保存和加载的耗时。
 
-该故障处理模式默认关闭，若要开启请参见[（可选）配置组件](../03_examples_and_verification/menu_examples_and_verification.md#ZH-CN_TOPIC_0000002511346449)。
+该故障处理模式默认关闭，若要开启请参见[（可选）配置组件](../03_examples_and_verification/00_before_you_start.md#ZH-CN_TOPIC_0000002511346449)。
 
 了解进程级在线恢复的关键配置步骤，请参见[配置进程级在线恢复](../02_configuration/01_configuring_fault_handling_policies.md#配置进程级在线恢复)。
 
@@ -1141,8 +1141,8 @@ Atlas A3训练系列产品场景下，MindCluster集群调度组件提供训练�
 
     在[LLM仓参考链接1](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/mindspeed_llm/features_manager/high_availability/high_availability.py)中，start\_grad\_sync\_wrapper、forward\_step\_wrapper、elastic\_training\_get\_forward\_backward\_func\_wrapper以及[LLM仓参考链接2](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/pretrain_gpt.py#:~text=if%20args.enable_elastic_training%3A)所指向的loss\_func的代码是为了适配因缩容导致的精度梯度变化而patch或修改。
 
-    - loss\_func由每个micro\_batch都要进行DP组内all\_reduce通信修改为缩容训练时不进行通信，原因是缩容后每个DP域内num\_micro\_batches数量可能不一样，导致前几个DP会多执行一次all\_reduce而卡住。
-    - start\_grad\_sync\_wrapper中将梯度缩放因子gradient\_scaling\_factor修改为1.0 / \(arguments.global\_batch\_size / arguments.micro\_batch\_size\)，即在原1/dp\_size基础上再除以num\_micro\_batches。
+    - loss\_func由每个micro\_batch都要进行DP组内all\_reduce通信修改为缩容训练时不进行通信，原因是缩容后每个DP域内num\_microbatches数量可能不一样，导致前几个DP会多执行一次all\_reduce而卡住。
+    - start\_grad\_sync\_wrapper中将梯度缩放因子gradient\_scaling\_factor修改为1.0 / \(arguments.global\_batch\_size / arguments.micro\_batch\_size\)，即在原1/dp\_size基础上再除以num\_microbatches。
     - forward\_step\_wrapper将入参num\_microbatches修改为1，目的是loss计算时不再除以num\_microbatches，因为在start\_grad\_sync\_wrapper中已经除以了num\_microbatches。
     - elastic\_training\_get\_forward\_backward\_func\_wrapper因为loss\_func没有执行DP组内all\_reduce，原生forward\_backward\_func执行完成后，在最后一个PP时将losses\_reduced每个key的和（即所有micro\_batch的lm loss相加）在DP组内执行all\_reduce操作求和。
 <!-- end id6 -->
