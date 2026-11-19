@@ -16,9 +16,12 @@
 package utils
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"syscall"
 	"testing"
@@ -229,4 +232,54 @@ func TestDoCheckOwnerAndPermission(t *testing.T) {
 		err := DoCheckOwnerAndPermission(testPath, excludePermissions, rootUID)
 		convey.So(err, convey.ShouldBeNil)
 	})
+}
+
+// exitCodeErr runs a shell command exiting with the given code and returns its *exec.ExitError
+func exitCodeErr(t *testing.T, code string) error {
+	t.Helper()
+	err := exec.Command("/bin/sh", "-c", "exit "+code).Run()
+	if err == nil {
+		t.Errorf("expect an exit error for code %s", code)
+	}
+	return err
+}
+
+func TestIsGrepNoMatch(t *testing.T) {
+	convey.Convey("test isGrepNoMatch", t, func() {
+		convey.Convey("01-exit code 1 means no match, even when wrapped", func() {
+			convey.So(isGrepNoMatch(exitCodeErr(t, "1")), convey.ShouldBeTrue)
+			convey.So(isGrepNoMatch(fmt.Errorf("wait grep: %w", exitCodeErr(t, "1"))), convey.ShouldBeTrue)
+		})
+		convey.Convey("02-other exit codes are real failures", func() {
+			convey.So(isGrepNoMatch(exitCodeErr(t, "2")), convey.ShouldBeFalse)
+		})
+		convey.Convey("03-nil and plain errors are not a no-match", func() {
+			convey.So(isGrepNoMatch(nil), convey.ShouldBeFalse)
+			convey.So(isGrepNoMatch(errors.New("boom")), convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestParseLibFromLdCmdNoLogOnMiss(t *testing.T) {
+	convey.Convey("test ParseLibFromLdCmd no log on miss", t, func() {
+		// the whole point of the fix: grep exits 1 when the library is absent from the ld cache,
+		// which must stay silent instead of being reported as "command exec failed"
+		var buf bytes.Buffer
+		log.SetOutput(&buf)
+		defer log.SetOutput(os.Stderr)
+
+		_, err := parseLibFromLdCmd("lib-not-exist-for-ut.so")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(buf.String(), convey.ShouldBeEmpty)
+	})
+}
+
+func TestParseLibFromLdCmdFound(t *testing.T) {
+	libPath, err := parseLibFromLdCmd("libc.so.6")
+	if err != nil {
+		t.Skipf("libc.so.6 is not in the ld cache or ldconfig is unavailable: %v", err)
+	}
+	if libPath == "" {
+		t.Fatalf("expect a non-empty lib path for libc.so.6")
+	}
 }

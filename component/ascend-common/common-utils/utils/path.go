@@ -49,6 +49,17 @@ const (
 	grepCommand = "/bin/grep"
 )
 
+// grepExitNoMatch is the exit code grep returns when no line is selected, which means the target
+// library is absent from the ld cache rather than the grep command failing
+const grepExitNoMatch = 1
+
+// isGrepNoMatch reports whether err is grep's "no line selected" exit, which only means the target
+// library is absent from the ld cache rather than the grep command failing
+func isGrepNoMatch(err error) bool {
+	var exitErr *exec.ExitError
+	return errors.As(err, &exitErr) && exitErr.ExitCode() == grepExitNoMatch
+}
+
 // IsDir check whether the path is a directory.
 func IsDir(path string) bool {
 	if path == "" {
@@ -332,9 +343,11 @@ func parseLibFromLdCmd(libraryName string) (string, error) {
 		return "", fmt.Errorf("command exec failed: %v", err)
 	}
 	defer func() {
-		if err = grepCmd.Wait(); err != nil {
-			log.Printf("command exec failed, %v", err)
+		waitErr := grepCmd.Wait()
+		if waitErr == nil || isGrepNoMatch(waitErr) {
+			return
 		}
+		log.Printf("failed to wait grep for library %s: %v", libraryName, waitErr)
 	}()
 	reader := bufio.NewReader(stdout)
 	count := 0
