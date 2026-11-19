@@ -16,6 +16,7 @@
 package devicefactory
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -23,6 +24,7 @@ import (
 
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"ascend-common/api"
+	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager"
 )
 
@@ -30,46 +32,44 @@ import (
 func TestInitDevManager(t *testing.T) {
 	convey.Convey("test initDevManager", t, func() {
 		convey.Convey("test init dcmi manager failed, should return err", func() {
-			devM, _, err := initDevManager()
+			devM, err := initDevManager()
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(devM, convey.ShouldBeNil)
 		})
-		convey.Convey("test init lqdcmi manager failed, "+
-			"err should be nil and lq manager should be nil", func() {
-			devM := &devmanager.DeviceManager{DevType: "test1"}
-			p1 := gomonkey.ApplyFuncReturn(devmanager.AutoInit, devM, nil)
+	})
+}
+
+// TestInitSwitchDevManager for test initSwitchDevManager
+func TestInitSwitchDevManager(t *testing.T) {
+	convey.Convey("test initSwitchDevManager", t, func() {
+		convey.Convey("910A5 should skip without loading the switch library", func() {
+			libPathCalled := false
+			p1 := gomonkey.ApplyFunc(utils.GetDriverLibPath, func(string) (string, error) {
+				libPathCalled = true
+				return "", nil
+			})
 			defer p1.Reset()
-			devMIntf, lqM, err := initDevManager()
-			devM, ok := devMIntf.(*devmanager.DeviceManager)
-			convey.So(ok, convey.ShouldBeTrue)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(devM, convey.ShouldNotBeNil)
-			convey.So(lqM, convey.ShouldBeNil)
-		})
-		convey.Convey("test init manager success,"+
-			" err should be nil and lq manager should not be nil", func() {
-			devM := &devmanager.DeviceManager{DevType: "test1"}
-			p1 := gomonkey.ApplyFuncReturn(devmanager.AutoInit, devM, nil)
-			p1.ApplyMethodReturn(deviceswitch.NewSwitchDevManager(), "InitSwitchDev", nil)
-			defer p1.Reset()
-			devMIntf, lqM, err := initDevManager()
-			devM, ok := devMIntf.(*devmanager.DeviceManager)
-			convey.So(ok, convey.ShouldBeTrue)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(devM, convey.ShouldNotBeNil)
-			convey.So(lqM, convey.ShouldNotBeNil)
-		})
-		convey.Convey("test init manager success,"+
-			" err should be nil and lq manager should be nil", func() {
 			devM := &devmanager.DeviceManager{DevType: api.Ascend910A5}
-			p1 := gomonkey.ApplyFuncReturn(devmanager.AutoInit, devM, nil)
+			convey.So(initSwitchDevManager(devM), convey.ShouldBeNil)
+			convey.So(libPathCalled, convey.ShouldBeFalse)
+		})
+		convey.Convey("non-A3 device should still try to load the switch library", func() {
+			p1 := gomonkey.ApplyFuncReturn(utils.GetDriverLibPath, "", errors.New("lib not found"))
 			defer p1.Reset()
-			devMIntf, lqM, err := initDevManager()
-			devM, ok := devMIntf.(*devmanager.DeviceManager)
-			convey.So(ok, convey.ShouldBeTrue)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(devM, convey.ShouldNotBeNil)
-			convey.So(lqM, convey.ShouldBeNil)
+			devM := &devmanager.DeviceManager{DevType: api.Ascend910B}
+			convey.So(initSwitchDevManager(devM), convey.ShouldBeNil)
+		})
+		convey.Convey("910A3 without switch library should return nil manager", func() {
+			p1 := gomonkey.ApplyFuncReturn(utils.GetDriverLibPath, "", errors.New("lib not found"))
+			defer p1.Reset()
+			devM := &devmanager.DeviceManager{DevType: api.Ascend910A3}
+			convey.So(initSwitchDevManager(devM), convey.ShouldBeNil)
+		})
+		convey.Convey("910A3 with switch library inited should return manager", func() {
+			p1 := gomonkey.ApplyMethodReturn(deviceswitch.NewSwitchDevManager(), "InitSwitchDev", nil)
+			defer p1.Reset()
+			devM := &devmanager.DeviceManager{DevType: api.Ascend910A3}
+			convey.So(initSwitchDevManager(devM), convey.ShouldNotBeNil)
 		})
 	})
 }

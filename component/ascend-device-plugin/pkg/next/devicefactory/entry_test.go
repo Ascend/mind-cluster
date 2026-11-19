@@ -36,13 +36,15 @@ func TestInitFunction(t *testing.T) {
 		})
 		mockDevManager := &devmanager.DeviceManager{}
 		convey.Convey("test initDevManager success but NewHwDevManager failed, should return err", func() {
-			p1 := gomonkey.ApplyFuncReturn(initDevManager, mockDevManager, nil, nil)
+			p1 := gomonkey.ApplyFuncReturn(initDevManager, mockDevManager, nil)
+			p1.ApplyFuncReturn(initSwitchDevManager, nil)
 			defer p1.Reset()
 			_, err := InitFunction()
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("test initDevManager success and NewHwDevManager success, err should be nil", func() {
-			p1 := gomonkey.ApplyFuncReturn(initDevManager, mockDevManager, nil, nil)
+			p1 := gomonkey.ApplyFuncReturn(initDevManager, mockDevManager, nil)
+			p1.ApplyFuncReturn(initSwitchDevManager, nil)
 			p1.ApplyFuncReturn(server.NewHwDevManager, &server.HwDevManager{})
 			p1.ApplyMethodReturn(&server.HwDevManager{}, "InitUnifiedResetMgr", nil)
 			defer p1.Reset()
@@ -50,12 +52,23 @@ func TestInitFunction(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 		})
 		convey.Convey("test switchDevM is not nil, EnableSwitchFault should be true", func() {
-			p1 := gomonkey.ApplyFuncReturn(initDevManager, mockDevManager, &deviceswitch.SwitchDevManager{}, nil)
+			p1 := gomonkey.ApplyFuncReturn(initDevManager, mockDevManager, nil)
+			p1.ApplyFuncReturn(initSwitchDevManager, &deviceswitch.SwitchDevManager{})
 			p1.ApplyFuncReturn(server.NewHwDevManager, &server.HwDevManager{})
 			p1.ApplyMethodReturn(&server.HwDevManager{}, "InitUnifiedResetMgr", nil)
 			defer p1.Reset()
 			_, _ = InitFunction()
 			convey.So(common.ParamOption.EnableSwitchFault, convey.ShouldBeTrue)
+		})
+		convey.Convey("test switchDevM is nil, EnableSwitchFault should be false", func() {
+			common.ParamOption.EnableSwitchFault = true
+			p1 := gomonkey.ApplyFuncReturn(initDevManager, mockDevManager, nil)
+			p1.ApplyFuncReturn(initSwitchDevManager, nil)
+			p1.ApplyFuncReturn(server.NewHwDevManager, &server.HwDevManager{})
+			p1.ApplyMethodReturn(&server.HwDevManager{}, "InitUnifiedResetMgr", nil)
+			defer p1.Reset()
+			_, _ = InitFunction()
+			convey.So(common.ParamOption.EnableSwitchFault, convey.ShouldBeFalse)
 		})
 	})
 }

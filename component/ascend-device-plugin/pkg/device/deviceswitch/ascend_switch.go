@@ -17,6 +17,7 @@ package deviceswitch
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"runtime"
 	"strconv"
@@ -100,6 +101,17 @@ const (
 	invalidNum  = 0xFFFFFFFF
 )
 
+// SwitchLibName is the name of the switch library which provides fault interfaces
+const SwitchLibName = "liblingqu-dcmi.so"
+
+// Errors returned by InitSwitchDev, which allow callers to tell a missing library apart
+// from a broken one
+var (
+	ErrSwitchLibNotFound   = errors.New("switch library not found")
+	ErrSwitchLibLoadFailed = errors.New("switch library load failed")
+	ErrSwitchLibInitFailed = errors.New("switch library init failed")
+)
+
 // SwitchDevManager is the manager for switch
 type SwitchDevManager struct {
 }
@@ -136,22 +148,18 @@ func NewSwitchDevManager() *SwitchDevManager {
 
 // InitSwitchDev try to call init func of driver, before call any other function
 func (sdm *SwitchDevManager) InitSwitchDev() error {
-	// path is not determined yet
-	dcmiLibName := "liblingqu-dcmi.so"
-	dcmiLibPath, err := utils.GetDriverLibPath(dcmiLibName)
+	dcmiLibPath, err := utils.GetDriverLibPath(SwitchLibName)
 	if err != nil {
-		return fmt.Errorf("failed to find switch library so, err: %s", err.Error())
+		return fmt.Errorf("%w: %s: %w", ErrSwitchLibNotFound, SwitchLibName, err)
 	}
 	cDcmiTemplateName := C.CString(dcmiLibPath)
 	defer C.free(unsafe.Pointer(cDcmiTemplateName))
 	if retCode := C.dcmiInit_lq(cDcmiTemplateName); retCode != C.SUCCESS {
-		return fmt.Errorf("dcmi lib load failed, error code: %d", int32(retCode))
+		return fmt.Errorf("%w: %s: return code %d", ErrSwitchLibLoadFailed, SwitchLibName, int32(retCode))
 	}
 	if retCode := C.dcmi_init_lq(); retCode != C.SUCCESS {
-		return fmt.Errorf("dcmi init call failed, error code: %d", int32(retCode))
+		return fmt.Errorf("%w: %s: return code %d", ErrSwitchLibInitFailed, SwitchLibName, int32(retCode))
 	}
-	hwlog.RunLog.Info("init switch library succeeded")
-
 	return nil
 }
 

@@ -17,6 +17,7 @@ package deviceswitch
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -25,6 +26,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	devmanagercommon "ascend-common/devmanager/common"
 )
 
@@ -173,6 +175,19 @@ func TestUpdateSwitchFaultCode(t *testing.T) {
 			defer patches.Reset()
 			updateSwitchFaultCode(true)
 			convey.So(len(mockCurrentSwitchFault), convey.ShouldEqual, 1)
+		})
+	})
+}
+
+// TestInitSwitchDev for test InitSwitchDev
+func TestInitSwitchDev(t *testing.T) {
+	convey.Convey("test InitSwitchDev", t, func() {
+		convey.Convey("01-lib not found should return ErrSwitchLibNotFound", func() {
+			p1 := gomonkey.ApplyFuncReturn(utils.GetDriverLibPath, "", errors.New("lib not found"))
+			defer p1.Reset()
+			err := NewSwitchDevManager().InitSwitchDev()
+			convey.So(errors.Is(err, ErrSwitchLibNotFound), convey.ShouldBeTrue)
+			convey.So(err.Error(), convey.ShouldContainSubstring, SwitchLibName)
 		})
 	})
 }
