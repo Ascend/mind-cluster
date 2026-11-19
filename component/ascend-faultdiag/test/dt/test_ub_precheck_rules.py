@@ -24,14 +24,18 @@ from ascend_fd.utils.constant.ub_const import (
     HCOMM_TA_CTP_UB_TIMEOUT,
     ICRC_ERR_COUNT_METRICS,
     LQC_TAI_DFX_ALARM,
+    NIC_TX_L2_ERR_DROP_PKT_CNT,
     PHY_REINIT_CNT,
+    PPP_RLT_DROP_NUM,
     PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT,
+    PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA,
     PRECHECK_RXDMA_ICRC_DATA,
     PRECHECK_UBCTL_DATA,
     PRECHECK_UBMEM_TIMEOUT,
     RC_FULL_QUEUE_CNT,
     RULE_DFX_TM_CRD_CTRL_INVALID,
     RULE_HCOMM_TA_CTP_UB_TIMEOUT,
+    RULE_LCNE_END_SIDE_ACTIVE_DROP,
     RULE_LQC_TAI_DFX_ALARM_BIT45,
     RULE_PHY_REINIT_CNT_EXCEED,
     RULE_RC_FULL_QUEUE_NONZERO,
@@ -497,3 +501,55 @@ class TestPrepareUbctlLogRuleIntegration(PrecheckRuleTestBase):
         checker = self.new_checker(self.build_ubctl_event({"udie0": {}, "udie1": {}}, {"udie0": {}, "udie1": {}}))
         checker._prepare_ubctl_log_rule()
         self.assertEqual(checker.rule_flags, {})
+
+
+class TestPrepareSnapshootRule(PrecheckRuleTestBase):
+    @staticmethod
+    def build_snapshoot_event(before_tree, after_tree):
+        return {
+            PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA: {
+                "source_device": "Unknown",
+                "attribute": {
+                    "before": before_tree,
+                    "after": after_tree,
+                    "source_lines": {"before": [], "after": []},
+                },
+            }
+        }
+
+    def test_any_drop_metric_growth_flagged(self):
+        before = {"udie0": {"0": {PPP_RLT_DROP_NUM: "0x1", NIC_TX_L2_ERR_DROP_PKT_CNT: "0x2"}}, "udie1": {}}
+        after = {"udie0": {"0": {PPP_RLT_DROP_NUM: "0x2", NIC_TX_L2_ERR_DROP_PKT_CNT: "0x2"}}, "udie1": {}}
+        checker = self.new_checker(self.build_snapshoot_event(before, after))
+        checker._prepare_snapshoot_rule()
+        self.assertTrue(checker.rule_flags[RULE_LCNE_END_SIDE_ACTIVE_DROP]["value"])
+        self.assertEqual(checker.rule_flags[RULE_LCNE_END_SIDE_ACTIVE_DROP]["ports"], ["udie0/port0"])
+
+    def test_multi_ports_sorted_in_line(self):
+        before = {"udie0": {"0": {PPP_RLT_DROP_NUM: "0x1"}, "3": {PPP_RLT_DROP_NUM: "0x1"}}, "udie1": {}}
+        after = {"udie0": {"0": {PPP_RLT_DROP_NUM: "0x3"}, "3": {PPP_RLT_DROP_NUM: "0x2"}}, "udie1": {}}
+        checker = self.new_checker(self.build_snapshoot_event(before, after))
+        checker._prepare_snapshoot_rule()
+        flag = checker.rule_flags[RULE_LCNE_END_SIDE_ACTIVE_DROP]
+        self.assertEqual(flag["ports"], ["udie0/port0", "udie0/port3"])
+        self.assertIn("udie0/port0", flag["line"])
+        self.assertIn("udie0/port3", flag["line"])
+
+    def test_not_flagged_cases(self):
+        tree = {"udie0": {"0": {PPP_RLT_DROP_NUM: "0x2"}}, "udie1": {}}
+        cases = [
+            # 计数未增长
+            (self.build_snapshoot_event(tree, tree), "no growth"),
+            # before 侧没有该端口，无法判增长
+            (
+                self.build_snapshoot_event({"udie0": {}, "udie1": {}}, tree),
+                "before port missing",
+            ),
+            # 无 snapshoot 事件
+            ({}, "no event"),
+        ]
+        for event, name in cases:
+            with self.subTest(name=name):
+                checker = self.new_checker(event)
+                checker._prepare_snapshoot_rule()
+                self.assertNotIn(RULE_LCNE_END_SIDE_ACTIVE_DROP, checker.rule_flags)

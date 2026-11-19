@@ -15,7 +15,10 @@
 # limitations under the License.
 # ==============================================================================
 import unittest
+from unittest.mock import patch
 
+from ascend_fd.configuration.config import KNOWLEDGE_GRAPH_CONF
+from ascend_fd.pkg.parse.knowledge_graph.parser.lcne_parser import LCNEParser
 from ascend_fd.pkg.parse.knowledge_graph.prechecker.merge_precheck_cause import MergePrecheckCause
 from ascend_fd.pkg.parse.knowledge_graph.tools.utils import get_device_precheck_event
 from ascend_fd.utils.constant.str_const import UNKNOWN_DEVICE_ID
@@ -23,13 +26,18 @@ from ascend_fd.utils.constant.ub_const import (
     AGE_PERIOD_KEYWORD,
     Comp_CANN_HCCL_Custom_CQE0x2,
     Comp_CANN_HCCL_Custom_CQE0x5,
+    Comp_Custom_CQE0x5_LOST_PKG_EAD,
+    Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD,
     DFX_TM_CRD_CTRL,
     HCOMM_TA_CTP_UB_TIMEOUT,
     ICRC_ERR_COUNT_METRICS,
     LQC_TAI_DFX_ALARM,
+    NIC_TX_L2_ERR_DROP_PKT_CNT,
     PHY_REINIT_CNT,
+    PPP_RLT_DROP_NUM,
     PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT,
     PRECHECK_KERNEL_AE_TYPE23,
+    PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA,
     PRECHECK_RXDMA_ICRC_DATA,
     PRECHECK_UBCTL_DATA,
     PRECHECK_UBMEM_TIMEOUT,
@@ -39,6 +47,7 @@ from ascend_fd.utils.constant.ub_const import (
     RX_VL7_PKT_NUM,
     RX_VL10_PKT_NUM,
     RX_VL11_PKT_NUM,
+    SNAPSHOOT_TAG,
     TAI_COMPACT_ALARM,
     TAI_COMPACT_TOP_ALARM,
     TAACK_ABNORM_HEADER,
@@ -71,12 +80,37 @@ CQE0X5_SUB_CODES = (
     "Comp_Custom_CQE0x5_FLOW_CFG_ERR",
     "Comp_Custom_CQE0x5_TPM_CFG_ERR",
     "Comp_Custom_CQE0x5_RXDMA_ICRC_ERR",
+    Comp_Custom_CQE0x5_LOST_PKG_EAD,
 )
 UBMEM_SUB_CODES = (
     "Comp_Custom_UBMEM_TIMEOUT_LOW",
     "Comp_Custom_UBMEM_TIMEOUT_RETRAINING",
     "Comp_Custom_UBMEM_TIMEOUT_LOST_PKG",
+    Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD,
 )
+
+
+def udie0(metrics):
+    """udie0/port0 指标树，udie1 为空"""
+    return {"udie0": {0: metrics}, "udie1": {}}
+
+
+# VL10/11 不平衡（UBMem 丢包规则）与 VL6/7 不平衡（CQE0x5 丢包规则）的公共指标树
+VL10_BEFORE = udie0({RX_VL10_PKT_NUM: "0x0", TX_VL10_PKT_NUM: "0x0", RX_VL11_PKT_NUM: "0x0", TX_VL11_PKT_NUM: "0x0"})
+VL10_UNBALANCED = udie0(
+    {RX_VL10_PKT_NUM: "0x2", TX_VL10_PKT_NUM: "0x1", RX_VL11_PKT_NUM: "0x0", TX_VL11_PKT_NUM: "0x0"}
+)
+VL67_BEFORE = udie0({RX_VL7_PKT_NUM: "0x0", TX_VL7_PKT_NUM: "0x0", RX_VL6_PKT_NUM: "0x0", TX_VL6_PKT_NUM: "0x0"})
+VL67_UNBALANCED = udie0({RX_VL7_PKT_NUM: "0x3", TX_VL7_PKT_NUM: "0x2", RX_VL6_PKT_NUM: "0x1", TX_VL6_PKT_NUM: "0x1"})
+VL10_BALANCED = udie0({RX_VL10_PKT_NUM: "0x2", TX_VL10_PKT_NUM: "0x2"})
+VL67_BALANCED = udie0({RX_VL7_PKT_NUM: "0x2", TX_VL7_PKT_NUM: "0x2"})
+# 同时触发 VL10/11 与 VL6/7 不平衡（UBMem + CQE0x5 两条丢包规则）
+BOTH_BEFORE = udie0({**VL10_BEFORE["udie0"][0], **VL67_BEFORE["udie0"][0]})
+BOTH_UNBALANCED = udie0({**VL10_UNBALANCED["udie0"][0], **VL67_UNBALANCED["udie0"][0]})
+# snapshoot 端侧丢包增长/未增长
+SNAP_GROWTH_BEFORE = udie0({PPP_RLT_DROP_NUM: "0x1"})
+SNAP_GROWTH_AFTER = udie0({PPP_RLT_DROP_NUM: "0x2"})
+SNAP_FLAT = udie0({NIC_TX_L2_ERR_DROP_PKT_CNT: "0x2"})
 
 
 def make_schema():
@@ -142,6 +176,25 @@ def ubctl_event(source_device="0", before=None, after=None, occur_time="2026-01-
     }
 
 
+def snapshoot_event(before, after, source_device=UNKNOWN_DEVICE_ID):
+    """构造 lcne nsdk_hccl_shapshot 预检事件（默认来自未知设备，按全局事件生效）"""
+    return {
+        "event_code": PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA,
+        "source_device": source_device,
+        "occur_time": "2026-01-01 00:00:00",
+        "is_custom_event": False,
+        "type": "LCNELog",
+        "source_file": "nsdk_hccl_shapshot.log",
+        "key_info": "snapshoot before/after raw data",
+        "occurrence": [],
+        "attribute": {
+            "before": before,
+            "after": after,
+            "source_lines": {"before": [], "after": []},
+        },
+    }
+
+
 class PrecheckCheckerTestBase(unittest.TestCase):
     def setUp(self):
         self.schema = make_schema()
@@ -185,6 +238,17 @@ class TestGetDevicePrecheckEvent(unittest.TestCase):
     def test_missing_device_returns_empty(self):
         self.assertEqual(get_device_precheck_event({}, "0"), {})
         self.assertEqual(get_device_precheck_event({"0": []}, "0"), {})
+
+    def test_ubctl_and_snapshoot_events_coexist(self):
+        # 8.2-6：snapshoot 独立事件码与 PRECHECK_UBCTL_DATA 同设备共存，按 event_code 分别保留不互踩
+        info = {
+            "0": [
+                {"event_code": PRECHECK_UBCTL_DATA},
+                {"event_code": PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA},
+            ]
+        }
+        events = get_device_precheck_event(info, "0")
+        self.assertEqual(set(events.keys()), {PRECHECK_UBCTL_DATA, PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA})
 
 
 class TestCqe0x2CheckerIntegration(PrecheckCheckerTestBase):
@@ -311,6 +375,57 @@ class TestUBMemCheckerIntegration(PrecheckCheckerTestBase):
         # 无 RAS 损耗情况下，不应输出 LOST_PKG 细分码
         self.assertNotIn("Comp_Custom_UBMEM_TIMEOUT_LOST_PKG", result)
 
+    def test_lost_pkg_without_ead_diagnoses_old_code(self):
+        """场景 1：未命中端侧主动丢包时，仍输出旧丢包码"""
+        before, after = self.vlan_unbalanced_tree()
+        result = self.run_analyze({"0": [ubctl_event(before=before, after=after)]}, self.base_entry(self.BASE_CODE))
+        self.assertIn("Comp_Custom_UBMEM_TIMEOUT_LOST_PKG", result)
+        self.assertNotIn(Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD, result)
+
+    def test_lost_pkg_with_ead_shows_only_new_code(self):
+        """场景 2：VL 不平衡 + snapshoot 端侧丢包增长，只输出 EAD 新码"""
+        before, after = self.vlan_unbalanced_tree()
+        precheck_info = {
+            "0": [ubctl_event(before=before, after=after)],
+            UNKNOWN_DEVICE_ID: [snapshoot_event(SNAP_GROWTH_BEFORE, SNAP_GROWTH_AFTER)],
+        }
+        result = self.run_analyze(precheck_info, self.base_entry(self.BASE_CODE))
+        self.assertIn(Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD, result)
+        self.assertNotIn("Comp_Custom_UBMEM_TIMEOUT_LOST_PKG", result)
+        self.assertNotIn(self.BASE_CODE, result)
+        precheck_event, _ = result[Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD]["events_attribute"]
+        self.assertEqual(precheck_event["event_code"], PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA)
+        chain = result[Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD]["chains"][self.source_device]
+        # 与旧 UBMem 丢包码链路保持一致：保留 lost package，再追加端侧主动丢包证据
+        self.assertIn("+lost package(", chain)
+        self.assertIn("end-side active drop(", chain)
+
+    def test_ead_without_vlan_imbalance_keeps_base_code(self):
+        """snapshoot 有增长但 VL 平衡：不产生任何丢包细分码"""
+        result = self.run_analyze(
+            {
+                "0": [ubctl_event(before=VL10_BEFORE, after=VL10_BALANCED)],
+                UNKNOWN_DEVICE_ID: [snapshoot_event(SNAP_GROWTH_BEFORE, SNAP_GROWTH_AFTER)],
+            },
+            self.base_entry(self.BASE_CODE),
+        )
+        self.assertIn(self.BASE_CODE, result)
+        self.assertNotIn(Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD, result)
+        self.assertNotIn("Comp_Custom_UBMEM_TIMEOUT_LOST_PKG", result)
+
+    def test_ead_without_growth_keeps_old_code(self):
+        """snapshoot 计数未增长：回退旧丢包码"""
+        before, after = self.vlan_unbalanced_tree()
+        result = self.run_analyze(
+            {
+                "0": [ubctl_event(before=before, after=after)],
+                UNKNOWN_DEVICE_ID: [snapshoot_event(SNAP_FLAT, SNAP_FLAT)],
+            },
+            self.base_entry(self.BASE_CODE),
+        )
+        self.assertIn("Comp_Custom_UBMEM_TIMEOUT_LOST_PKG", result)
+        self.assertNotIn(Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD, result)
+
     def test_ubmem_timeout_low_by_rule16(self):
         sub_code = "Comp_Custom_UBMEM_TIMEOUT_LOW"
         ubmem_event = {
@@ -371,6 +486,37 @@ class TestCqe0x5CheckerIntegration(PrecheckCheckerTestBase):
         result = self.run_analyze({"0": [ubctl_event(before=before, after=after)]}, self.base_entry(self.BASE_CODE))
         self.assertIn(sub_code, result)
         self.assertNotIn(self.BASE_CODE, result)
+        self.assertNotIn(Comp_Custom_CQE0x5_LOST_PKG_EAD, result)
+
+    def test_lost_pkg_with_ead_shows_only_new_code(self):
+        """CQE0x5：VL6/7 不平衡 + snapshoot 端侧丢包增长，只输出 EAD 新码"""
+        precheck_info = {
+            "0": [ubctl_event(before=VL67_BEFORE, after=VL67_UNBALANCED)],
+            UNKNOWN_DEVICE_ID: [snapshoot_event(SNAP_GROWTH_BEFORE, SNAP_GROWTH_AFTER)],
+        }
+        result = self.run_analyze(precheck_info, self.base_entry(self.BASE_CODE))
+        self.assertIn(Comp_Custom_CQE0x5_LOST_PKG_EAD, result)
+        self.assertNotIn("Comp_Custom_CQE0x5_LOST_PKG", result)
+        self.assertNotIn(self.BASE_CODE, result)
+        precheck_event, _ = result[Comp_Custom_CQE0x5_LOST_PKG_EAD]["events_attribute"]
+        self.assertEqual(precheck_event["event_code"], PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA)
+        chain = result[Comp_Custom_CQE0x5_LOST_PKG_EAD]["chains"][self.source_device]
+        # 与旧 CQE0x5 丢包码链路保持一致：旧链路不带 lost package，只追加端侧主动丢包证据
+        self.assertNotIn("+lost package(", chain)
+        self.assertIn("end-side active drop(", chain)
+
+    def test_ead_without_vlan_imbalance_keeps_base_code(self):
+        """snapshoot 有增长但 VL6/7 平衡：不产生丢包细分码"""
+        result = self.run_analyze(
+            {
+                "0": [ubctl_event(before=VL67_BEFORE, after=VL67_BALANCED)],
+                UNKNOWN_DEVICE_ID: [snapshoot_event(SNAP_GROWTH_BEFORE, SNAP_GROWTH_AFTER)],
+            },
+            self.base_entry(self.BASE_CODE),
+        )
+        self.assertIn(self.BASE_CODE, result)
+        self.assertNotIn(Comp_Custom_CQE0x5_LOST_PKG_EAD, result)
+        self.assertNotIn("Comp_Custom_CQE0x5_LOST_PKG", result)
 
     def test_timeout_ta_ctp_low_by_rule15(self):
         sub_code = "Comp_Custom_CQE0x5_TIMEOUT_TA_CTP_LOW"
@@ -486,3 +632,105 @@ class TestCqe0x5CheckerIntegration(PrecheckCheckerTestBase):
             self.assertNotIn(sub_code, result)
         self.assertIn("AISW_CANN_OTHER", result)
         self.assertIn(PRECHECK_UBCTL_DATA, result)
+
+
+class TestEadOutputGating(PrecheckCheckerTestBase):
+    """8.2-4：端侧主动丢包细分码的输出门禁（基础码在场才出码，双基础码出双码，均不在场静默）"""
+
+    def _both_rule_info(self):
+        return {
+            "0": [ubctl_event(before=BOTH_BEFORE, after=BOTH_UNBALANCED)],
+            UNKNOWN_DEVICE_ID: [snapshoot_event(SNAP_GROWTH_BEFORE, SNAP_GROWTH_AFTER)],
+        }
+
+    def test_both_base_codes_produce_both_ead_codes(self):
+        device_causes = self.base_entry(REMOTE_MEM_ACCESS_NET_TIMEOUT)
+        device_causes.update(self.base_entry(Comp_CANN_HCCL_Custom_CQE0x5))
+        result = self.run_analyze(self._both_rule_info(), device_causes)
+        self.assertIn(Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD, result)
+        self.assertIn(Comp_Custom_CQE0x5_LOST_PKG_EAD, result)
+        self.assertNotIn(REMOTE_MEM_ACCESS_NET_TIMEOUT, result)
+        self.assertNotIn(Comp_CANN_HCCL_Custom_CQE0x5, result)
+
+    def test_rule_hit_without_base_codes_is_silent(self):
+        # 规则命中（VL 不平衡 + snapshoot 增长）但两个基础码均不在场：不产出任何 EAD 细分码
+        result = self.run_analyze(self._both_rule_info(), {"AISW_CANN_OTHER": {"code": "AISW_CANN_OTHER"}})
+        self.assertIn("AISW_CANN_OTHER", result)
+        self.assertNotIn(Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD, result)
+        self.assertNotIn(Comp_Custom_CQE0x5_LOST_PKG_EAD, result)
+
+
+class TestEadEndToEnd(PrecheckCheckerTestBase):
+    """snapshoot 原始日志 -> 解析事件 -> 规则置位 -> 出码 全链路诊断验证"""
+
+    SNAP_TAG = "2026-11-03 09:29:06.920 [INFO]" + SNAPSHOOT_TAG
+
+    @staticmethod
+    def _pair_log_lines():
+        after_tag = "2026-11-03 10:29:06.920 [INFO]" + SNAPSHOOT_TAG
+        return [
+            f"{TestEadEndToEnd.SNAP_TAG}devid = 0, dieid = 0, start_end = 0, hccl_pid = 1, hccp_pid = 2",
+            f"{TestEadEndToEnd.SNAP_TAG}port              0            1",
+            f"{TestEadEndToEnd.SNAP_TAG}PPP_RLT_DROP_NUM  10           20",
+            f"{after_tag}devid = 0, dieid = 0, start_end = 1, hccl_pid = 1, hccp_pid = 2",
+            f"{after_tag}port              0            1",
+            f"{after_tag}PPP_RLT_DROP_NUM  11           20",
+        ]
+
+    def parse_snapshoot_events(self):
+        """走真实 parser，把日志行解析成 PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA 事件"""
+        parser = LCNEParser({"default_conf": {}, "user_conf": {}})
+
+        class CtxStub:
+            is_sdk_input = False
+            parse_file_path = None
+
+        with (
+            patch.object(parser, "find_log", return_value=["nsdk_hccl_shapshot.log"]),
+            patch.object(parser, "_yield_log", return_value=self._pair_log_lines()),
+        ):
+            events, error = parser.parse(CtxStub(), "task_id")
+        self.assertEqual(error, {})
+        self.assertEqual(len(events), 1)
+        return events
+
+    def test_ead_diagnosed_from_raw_log(self):
+        cases = [
+            (
+                REMOTE_MEM_ACCESS_NET_TIMEOUT,
+                VL10_BEFORE,
+                VL10_UNBALANCED,
+                Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD,
+                "Comp_Custom_UBMEM_TIMEOUT_LOST_PKG",
+            ),
+            (
+                Comp_CANN_HCCL_Custom_CQE0x5,
+                VL67_BEFORE,
+                VL67_UNBALANCED,
+                Comp_Custom_CQE0x5_LOST_PKG_EAD,
+                "Comp_Custom_CQE0x5_LOST_PKG",
+            ),
+        ]
+        for base_code, before, after, ead_code, old_code in cases:
+            with self.subTest(base_code=base_code):
+                result = self.run_analyze(
+                    {"0": [ubctl_event(before=before, after=after)], UNKNOWN_DEVICE_ID: self.parse_snapshoot_events()},
+                    self.base_entry(base_code),
+                )
+                self.assertIn(ead_code, result)
+                self.assertNotIn(old_code, result)
+                self.assertNotIn(base_code, result)
+
+
+class TestEadSchemaEntities(unittest.TestCase):
+    """两个 EAD 细分码必须在默认 kg-config.json 中有实体，否则出码会 AttributeError"""
+
+    def test_ead_codes_exist_in_default_config(self):
+        schema = Schema([KNOWLEDGE_GRAPH_CONF])
+        for code in (Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD, Comp_Custom_CQE0x5_LOST_PKG_EAD):
+            entity = schema.get_schema_entity(code)
+            self.assertIsNotNone(entity, code)
+            attribute = entity.attribute.to_json()
+            self.assertTrue(attribute.get("cause_zh"), code)
+            self.assertTrue(attribute.get("description_zh"), code)
+            self.assertTrue(attribute.get("suggestion_zh"), code)

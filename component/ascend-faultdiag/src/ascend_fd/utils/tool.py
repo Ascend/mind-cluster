@@ -1298,7 +1298,8 @@ def check_and_format_time_str(time_str, timezone_trans_flag=False):
         "%Y-%m-%dT%H:%M:%S%z",  # 格式3：ISO格式带时区
         "%Y-%m-%d %H:%M:%S.%f%z",  # 格式4：空格分隔带毫秒和时区
         "%Y-%m-%d %H:%M:%S.%f",  # 格式5：空格字符分割
-        "%Y%m%d%H%M%S",  # 格式6：紧凑型日期时间
+        "%Y-%m-%d %H:%M:%S",  # 格式6：空格字符分割不带微秒
+        "%Y%m%d%H%M%S",  # 格式7：紧凑型日期时间
     ]
     dt = None
     for fmt in formats:

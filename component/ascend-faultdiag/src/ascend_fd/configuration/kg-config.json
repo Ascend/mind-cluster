@@ -36114,6 +36114,44 @@
             "source_file": "NPU_UBCtl",
             "regex": {}
         },
+        "Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "网络超时",
+                "description_zh": "端侧主动丢包",
+                "suggestion_zh": [
+                    "联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "Network timeout",
+                "description_en": "End-side active packet drop.",
+                "suggestion_en": [
+                    "Contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
+        "Comp_Custom_CQE0x5_LOST_PKG_EAD": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "UB",
+                "cause_zh": "网络超时",
+                "description_zh": "端侧主动丢包",
+                "suggestion_zh": [
+                    "联系华为工程师进一步定位详细根因"
+                ],
+                "cause_en": "Network timeout",
+                "description_en": "End-side active packet drop.",
+                "suggestion_en": [
+                    "Contact Huawei engineers for further root cause analysis."
+                ]
+            },
+            "source_file": "NPU_UBCtl",
+            "regex": {}
+        },
         "Comp_Custom_CQE0x5_TIMEOUT_TA_CTP_LOW": {
             "attribute": {
                 "class": "Software",

@@ -22,14 +22,20 @@ from ascend_fd.utils.constant.str_const import UNKNOWN_DEVICE_ID
 from ascend_fd.utils.constant.ub_const import (
     Comp_CANN_HCCL_Custom_CQE0x2,
     Comp_CANN_HCCL_Custom_CQE0x5,
+    Comp_Custom_CQE0x5_LOST_PKG,
+    Comp_Custom_CQE0x5_LOST_PKG_EAD,
+    Comp_Custom_UBMEM_TIMEOUT_LOST_PKG,
+    Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD,
     PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT,
     PRECHECK_KERNEL_AE_TYPE23,
+    PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA,
     PRECHECK_RXDMA_ICRC_DATA,
     PRECHECK_UBCTL_DATA,
     PRECHECK_UBMEM_TIMEOUT,
     REMOTE_MEM_ACCESS_NET_TIMEOUT,
     RULE_DFX_TM_CRD_CTRL_INVALID,
     RULE_HCOMM_TA_CTP_UB_TIMEOUT,
+    RULE_LCNE_END_SIDE_ACTIVE_DROP,
     RULE_LQC_TAI_DFX_ALARM_BIT45,
     RULE_PHY_REINIT_CNT_EXCEED,
     RULE_RC_FULL_QUEUE_NONZERO,
@@ -54,6 +60,9 @@ lb = get_label_for_language()
 
 class Checker(ABC):
     base_code = None
+    # 基础码可能来自知识图谱推理结果（嵌套 cause dict）。为 True 时从 events_attribute 中
+    # 取与当前设备匹配的原始事件，避免嵌套 cause 的 source_device 丢失；目前仅 Cqe0x5 需要。
+    unwrap_base_cause = False
 
     def __init__(self, source_device, merge_obj):
         # merge_obj: MergePrecheckCause 实例（provides schema / rule_flags / precheck 事件）
@@ -89,24 +98,29 @@ class Checker(ABC):
         )
         return link + suffix
 
-    def _build_cqe_cause(self, device_causes, code, rule=None, event_key=PRECHECK_UBCTL_DATA):
+    def _build_cqe_cause(self, device_causes, code, rule=None, event_key=PRECHECK_UBCTL_DATA, suffix=""):
         """构建并写入细分故障码的公共逻辑（基础码取本类属性 self.base_code）。
 
         :param device_causes: 输出的故障原因字典
         :param code: 细分故障码（Comp_Custom_*）
         :param rule: 命中规则的 rule_flags 条目（含 "line"）；为 None 时不写 key_info/occurrence
         :param event_key: 预检事件键，默认 PRECHECK_UBCTL_DATA
+        :param suffix: 追加到故障链尾部的证据文本
         """
         # 先拿 code 的实体，再从本类基础码 self.base_code 取 unknown 事件
         base_code = self.base_code
         code_entity = self.schema.get_schema_entity(code)
         entities_attribute = code_entity.attribute.to_json()  # {'component':..., 'cause_zh':..., ...}
-        link = self._build_link(code, base_code)
+        link = self._build_link(code, base_code, suffix)
         base_event = self.single_device_precheck_event.get(base_code, {}) or device_causes.get(base_code, {})
+        if self.unwrap_base_cause and base_event and "events_attribute" in base_event:
+            base_event = self._unwrap_base_event(base_event)
         event_attribute = copy.deepcopy(base_event)
 
         tmp = self.single_device_precheck_event.get(event_key, {})
         precheck_event = copy.deepcopy(tmp)
+        if precheck_event.get("source_device") == UNKNOWN_DEVICE_ID:
+            precheck_event["source_device"] = self.source_device
         if rule:
             precheck_event["key_info"] = rule.get("line", "")
             precheck_event["occurrence"] = [
@@ -123,6 +137,51 @@ class Checker(ABC):
                     "chains": {self.source_device: link},
                 }
             }
+        )
+
+    def _unwrap_base_event(self, base_event):
+        """
+        基础码为知识图谱推理结果（嵌套 cause dict）时，取出原始事件；
+        优先选择与当前设备匹配的事件，找不到则取第一条，空列表时原样返回。
+        """
+        events = base_event.get("events_attribute") or []
+        if not events:
+            return base_event
+        for event in events:
+            if event.get("source_device") == self.source_device:
+                return event
+        return events[0]
+
+    def _lost_pkg_rule_state(self, lost_rule_key, old_code, ead_code):
+        """
+        计算丢包细分码的取值状态。
+        :return: (丢包规则, 端侧主动丢包规则, 待输出 code, 是否命中端侧主动丢包)
+        """
+        lost_rule = self.rule_flags.get(lost_rule_key, {})
+        ead_rule = self.rule_flags.get(RULE_LCNE_END_SIDE_ACTIVE_DROP, {})
+        is_ead = ead_rule.get("value", False)
+        return lost_rule, ead_rule, (ead_code if is_ead else old_code), is_ead
+
+    def _add_ead_lost_pkg_cause(
+        self, device_causes, code, old_code, lost_rule, ead_rule, build_cause, with_lost_pkg=True
+    ):
+        """
+        命中端侧主动丢包时：移除旧丢包码，改为输出 EAD 细分码并附加规则证据。
+        with_lost_pkg 与旧丢包码的链路保持一致：旧 UBMem 链路带 lost package，旧 CQE0x5 链路不带。
+        """
+        device_causes.pop(old_code, None)
+        if with_lost_pkg:
+            suffix = "+lost package({}); end-side active drop({})".format(
+                lost_rule.get("line", ""), ead_rule.get("line", "")
+            )
+        else:
+            suffix = "+end-side active drop({})".format(ead_rule.get("line", ""))
+        build_cause(
+            device_causes,
+            code,
+            ead_rule,
+            event_key=PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA,
+            suffix=suffix,
         )
 
 
@@ -322,7 +381,10 @@ class UBMemChecker(Checker):
         return True
 
     def add_ubmem_timeout_lost_pkg_causes(self, device_causes):
-        code = "Comp_Custom_UBMEM_TIMEOUT_LOST_PKG"
+        old_code = Comp_Custom_UBMEM_TIMEOUT_LOST_PKG
+        rule_lost_pkt, ead_rule, code, is_ead = self._lost_pkg_rule_state(
+            RULE_VLAN10_11_BALANCE, old_code, Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD
+        )
         if code in device_causes:
             return True
 
@@ -333,10 +395,15 @@ class UBMemChecker(Checker):
         if not set(UB_RAS_CODES).isdisjoint(device_causes.keys()):
             return False
 
-        rule_lost_pkt = self.rule_flags.get(RULE_VLAN10_11_BALANCE, {})
         # 没有丢包
         if not rule_lost_pkt.get("value", False):
             return False
+
+        if is_ead:
+            self._add_ead_lost_pkg_cause(
+                device_causes, code, old_code, rule_lost_pkt, ead_rule, self._build_ubmem_cause
+            )
+            return True
 
         self._build_ubmem_cause(
             device_causes,
@@ -349,6 +416,7 @@ class UBMemChecker(Checker):
 
 class Cqe0x5Checker(Checker):
     base_code = Comp_CANN_HCCL_Custom_CQE0x5
+    unwrap_base_cause = True
 
     def analyze(self, device_causes):
         fault_codes = list(
@@ -376,12 +444,19 @@ class Cqe0x5Checker(Checker):
 
     def add_cqe0x5_lost_pkg_causes(self, device_causes):
         """返回值仅表示是否本故障匹配成功"""
-        code = "Comp_Custom_CQE0x5_LOST_PKG"
+        old_code = Comp_Custom_CQE0x5_LOST_PKG
+        rule, ead_rule, code, is_ead = self._lost_pkg_rule_state(
+            RULE_VLAN6_7_BALANCE, old_code, Comp_Custom_CQE0x5_LOST_PKG_EAD
+        )
         if code in device_causes:
             return True
-        rule = self.rule_flags.get(RULE_VLAN6_7_BALANCE, {})
         if not rule.get("value", False):
             return False
+        if is_ead:
+            self._add_ead_lost_pkg_cause(
+                device_causes, code, old_code, rule, ead_rule, self._build_cqe_cause, with_lost_pkg=False
+            )
+            return True
         self._build_cqe_cause(device_causes, code, rule)
         return True
 
