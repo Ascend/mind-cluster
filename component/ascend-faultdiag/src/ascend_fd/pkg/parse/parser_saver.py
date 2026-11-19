@@ -672,6 +672,7 @@ class BMCLogSaver(BaseLogSaver):
     MDB_INFO_KEY = "mdb_info.log"
     REMOTE_LOG_KEY = "remote_log"
     SEL_TXT_FILE = "sel.txt"
+    FDM_LOG_FILE = "fdm_log"
     APP_DUMP_KEY = "AppDump"
     DEVICE_DUMP_KEY = "DeviceDump"
     LOG_DUMP_KEY = "LogDump"
@@ -717,7 +718,7 @@ class BMCLogSaver(BaseLogSaver):
                 if self.LOG_DUMP_KEY in file_path:
                     self.collect_remote_log(file_name, file_path)
                     continue
-                if self.APP_DUMP_KEY in file_path and file_name == self.SEL_TXT_FILE:
+                if self.APP_DUMP_KEY in file_path and file_name in (self.SEL_TXT_FILE, self.FDM_LOG_FILE):
                     self.bmc_app_dump_log_list.append(file_path)
                     continue
                 if not file_name.endswith(".log"):
@@ -930,6 +931,7 @@ class DevLogSaver(BaseLogSaver):
         ('bbox', 'os', 'os_info.txt'),
         ('mntn', 'hbm.txt'),
         HIST_DEVICE_OS_PATH_ARRAY,
+        ('bbox', 'bbox_info.txt'),
     )
     LEGACY_MODE = "legacy"
 
