@@ -2,7 +2,7 @@
 
 With Ascend Deployer, you can install cluster scheduling components in batches, significantly reducing the complex configuration operations involved in manual installation and streamlining the installation process. It is suitable for batch component installation in cluster scenarios.
 
-**Key Steps for Tool Installation**
+## Key Steps
 
 1. Verify that the hardware product and OS are supported in the Ascend Deployer support list.
 2. Deploy Ascend Deployer, ensuring that the tool version matches the cluster scheduling component version.

@@ -98,9 +98,9 @@ MindCluster (AI cluster system software) is a set of deep learning components th
   | Custom Fault Entities            | [Custom Fault Entities](./docs/en/faultdiag/ascend-faultdiag/05_usage/07_custom_fault_entities.md) | ✅        |
   | Fault Log Masking              | [Fault Log Masking](./docs/en/faultdiag/ascend-faultdiag/05_usage/08_fault_log_masking.md) | ✅        |
   | Custom Configuration Files            | [Custom Configuration Files](./docs/en/faultdiag/ascend-faultdiag/05_usage/09_custom_configuration.md) | ✅        |
-  | Service Log Cleaning (SDK)       | [Service Log Parsing (SDK)](./docs/en/faultdiag/ascend-faultdiag/05_usage/10_service_flow_parsing.md) | ✅        |
-  | Root Cause Node Cleaning and Diagnosis (SDK) | [Root Cause Node Parsing and Diagnosis (SDK)](./docs/en/faultdiag/ascend-faultdiag/05_usage/11_root_cause_parsing_diagnosis.md) | ✅        |
-  | Fault Event Cleaning and Diagnosis (SDK) | [Fault Event Parsing and Diagnosis (SDK)](./docs/en/faultdiag/ascend-faultdiag/05_usage/12_fault_event_parsing_diagnosis.md) | ✅        |
+  | Service Log Parsing (SDK)       | [Service Log Parsing (SDK)](./docs/en/faultdiag/ascend-faultdiag/05_usage/10_service_flow_parsing.md) | ✅        |
+  | Root Cause Node Parsing and Diagnosis (SDK) | [Root Cause Node Parsing and Diagnosis (SDK)](./docs/en/faultdiag/ascend-faultdiag/05_usage/11_root_cause_parsing_diagnosis.md) | ✅        |
+  | Fault Event Parsing and Diagnosis (SDK) | [Fault Event Parsing and Diagnosis (SDK)](./docs/en/faultdiag/ascend-faultdiag/05_usage/12_fault_event_parsing_diagnosis.md) | ✅        |
 
 - Link Diagnostic Tool
 

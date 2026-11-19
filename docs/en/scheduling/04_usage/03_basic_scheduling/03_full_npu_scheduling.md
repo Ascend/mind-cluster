@@ -167,7 +167,7 @@ Configuring resource information through environment variables supports creating
 - [MindSpore](#zh-cn_topic_0000001558834814_section868111733711)
 
     >[!NOTE]
-    >- The dataset used in this section is [ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php) (**Note: If you use this dataset, you must comply with the usage specifications of the dataset provider**).
+    >- The dataset used in this section is [ImageNet2012](https://ieee-dataport.org/documents/imagenet?spm=5176.28103460.0.0.29032988VkKSGu) (**Note: If you use this dataset, you must comply with the usage specifications of the dataset provider. This link is provided for reference only; please prepare your own dataset**).
     >- The model sample code below may differ from the actual version; refer to the actual version code.
     >- The following MindSpore examples require a CANN version earlier than 8.5.0.
 
@@ -297,7 +297,7 @@ Configuring resource information through files supports creating the following t
 
 >[!NOTE]
 >
->- The dataset used in this section is [ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php) (**Note: If this dataset is used, the usage specifications of the dataset provider must be followed**).
+>- The dataset used in this section is [ImageNet2012](https://ieee-dataport.org/documents/imagenet?spm=5176.28103460.0.0.29032988VkKSGu) (**Note: If this dataset is used, the usage specifications of the dataset provider must be followed. This link is provided for reference only; please prepare your own dataset**).
 >- The model sample code below may differ from the actual version. Use the code of the actual version as the standard.
 >- The following MindSpore examples require a version earlier than CANN 8.5.0.
 >- `rank_table.sh` is not applicable to non-acjob on<term>Ascend 950PR&950DT products</term>.
