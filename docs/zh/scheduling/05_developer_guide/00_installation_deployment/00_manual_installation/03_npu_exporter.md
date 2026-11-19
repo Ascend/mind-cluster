@@ -176,6 +176,18 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
     4. <a name="li151815494115"></a>按“Esc”键，输入:wq!保存并退出。
     5. 参考[2.b](#li11364381194)到[2.d](#li151815494115)，修改pluginConfiguration.json文件，根据实际需要配置自定义指标组的采集开关和采集周期。
 
+        >[!NOTE]
+        > 需要上报软切分容器的vNPU利用率等指标时，只需将pluginConfiguration.json中`enpu`指标组的`state`配置为`ON`（使用不含该指标组的旧版本配置文件时，需先补充该项配置）。`enpu`属于插件指标组，只能在pluginConfiguration.json中配置，请勿添加到metricConfiguration.json。`enpu`指标组依赖节点上的enpu-manager，开启前请先参考[软切分调度](../../../04_usage/02_virtual_instance/01_virtual_instance_with_vcann_rt/01_soft_allocation_scheduling_inference.md)章节完成enpu-manager的安装，并确认`/run/enpu/enpu-manager.sock`可访问。
+
+        pluginConfiguration.json示例如下。`enpu`指标组默认关闭（`OFF`），需要上报软切分指标时将其`state`改为`ON`：
+
+        ```json
+            [
+                {"metricsGroup": "text", "state": "ON", "intervalSeconds": 60},
+                {"metricsGroup": "enpu", "state": "OFF", "intervalSeconds": 60}
+            ]
+        ```
+
         <a name="table970154420512"></a>
 
         |参数|说明|
@@ -360,6 +372,24 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
                     path: /run/containerd
          ...</pre>
 
+    （可选，仅开启`enpu`指标组时需要）节点需已安装enpu-manager，并在YAML的`volumeMounts`和`volumes`中增加`/run/enpu`目录的只读挂载，同时在pluginConfiguration.json中将`enpu`指标组的`state`配置为`ON`。
+
+    ```yaml
+    ...
+          volumeMounts:
+    ...
+            - name: enpu-manager-socket-dir
+              mountPath: /run/enpu/
+              readOnly: true
+    ...
+          volumes:
+    ...
+            - name: enpu-manager-socket-dir
+              hostPath:
+                path: /run/enpu/
+                type: Directory
+    ```
+
 7. 如不修改组件的其他启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中NPU Exporter的启动参数。启动参数如[表2](#table872410431914)所示，也可执行<b>./npu-exporter -h</b>查看参数说明。
 8. 在管理节点的YAML所在路径，执行以下命令，启动NPU Exporter。
 
@@ -420,6 +450,7 @@ NPU Exporter组件以镜像方式运行时需使用特权容器、root用户和�
 >
 >- 以二进制方式部署NPU Exporter时，可以使用非root用户（例如hwMindX）进行部署。请将日志目录权限修改为hwMindX，命令示例如下：**chown <i>hwMindX:hwMindX</i> /var/log/mindx-dl/npu-exporter**。
 >- 下文步骤中的用户均为hwMindX。
+>- 如需上报软切分容器的vNPU利用率等指标，请先在节点上安装并启动enpu-manager，并在pluginConfiguration.json中将`enpu`指标组的`state`配置为`ON`。二进制方式部署时，NPU Exporter直接访问宿主机默认路径`/run/enpu/enpu-manager.sock`，无需额外挂载。
 
 1. 使用root用户登录服务器。
 2. 将NPU Exporter软件包上传至服务器的任意目录（如“/home/ascend-npu-exporter”）并进行解压操作。

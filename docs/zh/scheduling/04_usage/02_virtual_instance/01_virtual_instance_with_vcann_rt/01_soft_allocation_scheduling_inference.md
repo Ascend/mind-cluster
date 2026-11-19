@@ -90,12 +90,23 @@
     在软切分虚拟化功能和非软切分虚拟化功能混合部署场景下，若节点不支持软切分虚拟化功能，则需要为节点增加标签huawei.com/scheduler.chip1softsharedev.enable=false。
 
 2. 获取"Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run"，安装容器引擎插件。
-3. 参见[安装部署](../../../03_installation_guide/02_installation/00_helm_installation.md)章节，完成各组件的安装。
+3. （可选）如果需要查询软切分容器的vNPU利用率指标，请参考[enpu-manager部署说明](https://gitcode.com/openeuler/ubs-virt/tree/master/ubs-virt-enpu/enpu-manager)中的“部署”和“启动服务”章节完成安装和启动，确认服务可用后，再进行后续组件安装。
+
+    enpu-manager的安装、卸载和重启约束如下：
+
+    - **安装或卸载enpu-manager前**：确认该节点上没有正在运行的软切分任务，并在操作完成前暂停向该节点调度新的软切分任务。已有任务按原有方式结束后再操作。
+    - **卸载enpu-manager后**：重启该节点上的Ascend Device Plugin，并从其YAML中移除/run/enpu/目录挂载。
+    - **重启enpu-manager服务**：可以在软切分任务运行期间执行，不影响已有任务。服务恢复后先确认Socket可连接，再重启该节点上的Ascend Device Plugin和NPU Exporter。
+    - **不安装enpu-manager**：软切分功能仍可正常使用（由Ascend Device Plugin在本地生成npu_info.config文件），但无法查询软切分容器的vNPU利用率指标，后续步骤无需添加/run/enpu/目录挂载。
+
+    如需通过Prometheus或Telegraf展示vNPU利用率指标，还需参考[NPU Exporter](../../../05_developer_guide/00_installation_deployment/00_manual_installation/03_npu_exporter.md)完成enpu指标组的配置。
+
+4. 参见[安装部署](../../../03_installation_guide/02_installation/00_helm_installation.md)章节，完成各组件的安装。
 
     虚拟化实例涉及修改相关参数的集群调度组件为Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 
     1. 在device-plugin-volcano-v\{version\}.yaml中添加-shareDevCount=100 -softShareDevConfigDir=/share_device/，其中/share_device/由用户手动创建。当<term>Atlas A3系列产品</term>使用软切分虚拟化功能时，需额外增加启动参数-useSingleDieMode=true。
-    2. 在device-plugin-volcano-v\{version\}.yaml中volumeMounts和volumes增加名为enpu-config-dir和share-device-config-dir的挂载项，其中enpu-config-dir的路径固定为/etc/enpu/，用于存放生成的软切分虚拟化任务的配置文件npu_info.config，share-device-config-dir的路径需与-softShareDevConfigDir参数值保持一致，用于存放软切分虚拟化任务的共享内存配置文件。
+    2. 在device-plugin-volcano-v\{version\}.yaml中volumeMounts和volumes增加名为enpu-config-dir和share-device-config-dir的挂载项，其中enpu-config-dir的路径固定为/etc/enpu/，用于存放生成的软切分虚拟化任务的配置文件npu_info.config，share-device-config-dir的路径需与-softShareDevConfigDir参数值保持一致，用于存放软切分虚拟化任务的共享内存配置文件。使用enpu-manager时（即已按第3步安装），还需增加名为enpu-manager-socket-dir的挂载项，将宿主机的/run/enpu/目录只读挂载到容器同一路径，供Ascend Device Plugin访问enpu-manager的socket文件。该挂载项仅在使用enpu-manager的节点上添加，未安装enpu-manager的节点无需添加。
 
        ```yaml
        ...
@@ -109,6 +120,9 @@
                    mountPath: /etc/enpu/
                  - name: share-device-config-dir
                    mountPath: /share_device/
+                 - name: enpu-manager-socket-dir
+                   mountPath: /run/enpu/
+                   readOnly: true
            ...
        volumes:
              ...
@@ -119,6 +133,10 @@
            hostPath:
              path: /share_device/
              type: DirectoryOrCreate
+         - name: enpu-manager-socket-dir
+           hostPath:
+             path: /run/enpu/
+             type: Directory
        ```
 
         软切分虚拟化实例启动参数说明如下：
@@ -164,6 +182,9 @@
                      mountPath: /etc/enpu/
                    - name: share-device-config-dir
                      mountPath: /share_device/
+                   - name: enpu-manager-socket-dir
+                     mountPath: /run/enpu/
+                     readOnly: true
              ...
          volumes:
                ...
@@ -174,6 +195,10 @@
              hostPath:
                path: /share_device/
                type: DirectoryOrCreate
+           - name: enpu-manager-socket-dir
+             hostPath:
+               path: /run/enpu/
+               type: Directory
          ```
 
        - 在不支持软切分虚拟化功能的节点上安装原始的Ascend Device Plugin，device-plugin-volcano-v\{version\}.yaml修改如下：
