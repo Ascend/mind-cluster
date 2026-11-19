@@ -441,10 +441,10 @@ func (d *DcV2Manager) DcInit() error {
 	cDcmiTemplateName := C.CString(dcmiLibPath)
 	defer C.free(unsafe.Pointer(cDcmiTemplateName))
 	if retCode := C.dcmiv2Init_dl(cDcmiTemplateName); retCode != C.SUCCESS {
-		return fmt.Errorf("dcmi lib load failed, error code: %d", int32(retCode))
+		return dcmiErrorf(retCode, "dcmi lib load failed, error code: %d", int32(retCode))
 	}
 	if retCode := C.dcmiv2_init_new(); retCode != C.SUCCESS {
-		return fmt.Errorf("dcmiv2 init failed, error code: %d", int32(retCode))
+		return dcmiErrorf(retCode, "dcmiv2 init failed, error code: %d", int32(retCode))
 	}
 	return nil
 }
@@ -452,7 +452,7 @@ func (d *DcV2Manager) DcInit() error {
 // DcShutDown clean the dynamically loaded resource
 func (d *DcV2Manager) DcShutDown() error {
 	if retCode := C.dcmiShutDown(); retCode != C.SUCCESS {
-		return fmt.Errorf("dcmi shut down failed, error code: %d", int32(retCode))
+		return dcmiErrorf(retCode, "dcmi shut down failed, error code: %d", int32(retCode))
 	}
 	return nil
 }
@@ -462,7 +462,7 @@ func (d *DcV2Manager) DcGetDcmiVersion() (string, error) {
 	cDcmiVer := C.CString(string(make([]byte, DcmiVersionLen)))
 	defer C.free(unsafe.Pointer(cDcmiVer))
 	if retCode := C.dcmiv2_get_dcmi_version(cDcmiVer, DcmiVersionLen+1); int32(retCode) != common.Success {
-		return "", fmt.Errorf("get dcmi version failed, errCode: %d", int32(retCode))
+		return "", dcmiErrorf(retCode, "get dcmi version failed, errCode: %d", int32(retCode))
 	}
 	return C.GoString(cDcmiVer), nil
 }
@@ -472,7 +472,7 @@ func (d *DcV2Manager) DcGetDriverVersion() (string, error) {
 	cDriverVer := C.CString(string(make([]byte, DriverVersionLen)))
 	defer C.free(unsafe.Pointer(cDriverVer))
 	if retCode := C.dcmiv2_get_driver_version(cDriverVer, DriverVersionLen); int32(retCode) != common.Success {
-		return "", fmt.Errorf("get driver version failed, errCode: %d", int32(retCode))
+		return "", dcmiErrorf(retCode, "get driver version failed, errCode: %d", int32(retCode))
 	}
 	return C.GoString(cDriverVer), nil
 }
@@ -481,7 +481,7 @@ func (d *DcV2Manager) DcGetDriverVersion() (string, error) {
 func (d *DcV2Manager) DcGetAllDeviceCount() (int32, error) {
 	var allDeviceCount C.int
 	if retCode := C.dcmiv2_get_all_device_count(&allDeviceCount); int32(retCode) != common.Success {
-		return common.RetError, fmt.Errorf("get all device count failed, ret code: %d", int32(retCode))
+		return common.RetError, dcmiErrorf(retCode, "get all device count failed, ret code: %d", int32(retCode))
 	}
 	return int32(allDeviceCount), nil
 }
@@ -493,7 +493,7 @@ func (d *DcV2Manager) DcGetDeviceHealth(logicID int32) (int32, error) {
 	}
 	var health C.uint
 	if retCode := C.dcmiv2_get_device_health(C.int(logicID), &health); int32(retCode) != common.Success {
-		return common.RetError, fmt.Errorf("get device (logicID: %d) health state failed, ret "+
+		return common.RetError, dcmiErrorf(retCode, "get device (logicID: %d) health state failed, ret "+
 			"code: %d, health code: %d", logicID, int32(retCode), int64(health))
 	}
 	if common.IsGreaterThanOrEqualInt32(int64(health)) {
@@ -520,7 +520,7 @@ func (d *DcV2Manager) DcGetDeviceNetWorkHealth(logicID int32) (uint32, error) {
 	select {
 	case res := <-result:
 		if res.RetCode != common.Success {
-			return common.UnRetError, fmt.Errorf("get device network healthCode failed, logicID(%d),"+
+			return common.UnRetError, dcmiErrorf(res.RetCode, "get device network healthCode failed, logicID(%d),"+
 				" ret code: %d, health code: %d", logicID, res.RetCode, res.HealthCode)
 		}
 
@@ -591,7 +591,7 @@ func (d *DcV2Manager) DcGetDeviceTemperature(logicID int32) (int32, error) {
 	}
 	var temp C.int
 	if retCode := C.dcmiv2_get_device_temperature(C.int(logicID), &temp); int32(retCode) != common.Success {
-		return common.RetError, fmt.Errorf("get device (logicID: %d) temperature failed, error "+
+		return common.RetError, dcmiErrorf(retCode, "get device (logicID: %d) temperature failed, error "+
 			"code is : %d", logicID, int32(retCode))
 	}
 	parsedTemp := int32(temp)
@@ -609,7 +609,7 @@ func (d *DcV2Manager) DcGetDeviceVoltage(logicID int32) (float32, error) {
 	}
 	var vol C.uint
 	if retCode := C.dcmiv2_get_device_voltage(C.int(logicID), &vol); int32(retCode) != common.Success {
-		return common.RetError, fmt.Errorf("failed to obtain the voltage based on logicID(%d) "+
+		return common.RetError, dcmiErrorf(retCode, "failed to obtain the voltage based on logicID(%d) "+
 			", error code: %d", logicID, int32(retCode))
 	}
 	// the voltage's value is error if it's greater than or equal to MaxInt32
@@ -628,7 +628,7 @@ func (d *DcV2Manager) DcGetDevicePowerInfo(logicID int32) (float32, error) {
 	}
 	var cpower C.int
 	if retCode := C.dcmiv2_get_device_power_info(C.int(logicID), &cpower); int32(retCode) != common.Success {
-		return common.RetError, fmt.Errorf("failed to obtain the power based on logicID(%d)"+
+		return common.RetError, dcmiErrorf(retCode, "failed to obtain the power based on logicID(%d)"+
 			", error code: %d", logicID, int32(retCode))
 	}
 	parsedPower := float32(cpower)
@@ -687,7 +687,7 @@ func (d *DcV2Manager) DcGetDeviceErrorCode(logicID int32) (int32, int64, error) 
 	var errCodeArray [common.MaxErrorCodeCount]C.uint
 	if retCode := C.dcmiv2_get_device_error_code_list(C.int(logicID), &errCount, &errCodeArray[0],
 		common.MaxErrorCodeCount); int32(retCode) != common.Success {
-		return common.RetError, common.RetError, fmt.Errorf("failed to obtain the device errorcode based on "+
+		return common.RetError, common.RetError, dcmiErrorf(retCode, "failed to obtain the device errorcode based on "+
 			"logicID(%d), error code: %d, error count: %d", logicID, int32(retCode), int32(errCount))
 	}
 	if int32(errCount) < 0 || int32(errCount) > common.MaxErrorCodeCount {
@@ -707,7 +707,7 @@ func (d *DcV2Manager) DcGetChipInfo(logicID int32) (*common.ChipInfo, error) {
 	if rCode := C.dcmiv2_get_device_chip_info(C.int(logicID), &chipInfo); int32(rCode) != common.Success {
 		hwlog.RunLog.Debugf("get device ChipInfo information failed, logicID(%d),"+
 			" error code: %d", logicID, int32(rCode))
-		return nil, fmt.Errorf("get device ChipInfo information failed, logicID(%d),"+
+		return nil, dcmiErrorf(rCode, "get device ChipInfo information failed, logicID(%d),"+
 			" error code: %d", logicID, int32(rCode))
 	}
 	chip.Name = string(convertUCharToCharArr(chipInfo.chip_name))
@@ -730,7 +730,7 @@ func (d *DcV2Manager) DcGetPhysicIDFromLogicID(logicID int32) (int32, error) {
 	}
 	var physicID C.uint
 	if rCode := C.dcmiv2_get_chip_phy_id_by_dev_id(C.uint(logicID), &physicID); int32(rCode) != common.Success {
-		return common.RetError, fmt.Errorf("get physic id from logicID(%d) failed, error code: %d", logicID, int32(rCode))
+		return common.RetError, dcmiErrorf(rCode, "get physic id from logicID(%d) failed, error code: %d", logicID, int32(rCode))
 	}
 	if !common.IsValidLogicIDOrPhyID(int32(physicID)) {
 		return common.RetError, fmt.Errorf("get wrong physicID(%d) from logicID(%d)", uint32(physicID), logicID)
@@ -745,7 +745,7 @@ func (d *DcV2Manager) DcGetLogicIDFromPhysicID(physicID int32) (int32, error) {
 	}
 	var logicID C.uint
 	if rCode := C.dcmiv2_get_dev_id_by_chip_phy_id(C.uint(physicID), &logicID); int32(rCode) != common.Success {
-		return common.RetError, fmt.Errorf("get logicID from physicID(%d) failed, error code: %d",
+		return common.RetError, dcmiErrorf(rCode, "get logicID from physicID(%d) failed, error code: %d",
 			physicID, int32(rCode))
 	}
 
@@ -792,7 +792,7 @@ func (d *DcV2Manager) DcGetDeviceList() (int32, []int32, error) {
 	var ids [common.HiAIMaxCardNum]C.int
 	var dNum C.int
 	if retCode := C.dcmiv2_get_device_list(&ids[0], &dNum, common.HiAIMaxCardNum); int32(retCode) != common.Success {
-		return common.RetError, nil, fmt.Errorf("get device list failed, error code: %d", int32(retCode))
+		return common.RetError, nil, dcmiErrorf(retCode, "get device list failed, error code: %d", int32(retCode))
 	}
 	// checking device's quantity
 	if dNum <= 0 || dNum > common.HiAIMaxCardNum {
@@ -813,12 +813,11 @@ func (d *DcV2Manager) DcGetDeviceList() (int32, []int32, error) {
 }
 
 func buildDcmiV2Err(logicID int32, msg string, errCode C.int) error {
-	errDesc, ok := dcmiErrMap[int32(errCode)]
-	if !ok {
-		errDesc = "unknown error code"
-	}
-	return fmt.Errorf("logicID(%d):get %s info failed,error code: %v,error desc: %v",
-		logicID, msg, errCode, errDesc)
+	rawCode := int32(errCode)
+	desc := dcmiDesc(rawCode)
+	rendered := fmt.Sprintf("logicID(%d):get %s info failed,error code: %v,error desc: %v",
+		logicID, msg, rawCode, desc)
+	return &DcmiError{code: ErrorCode(rawCode), desc: desc, rendered: rendered}
 }
 
 // DcGetUrmaDeviceCount get urma device count
@@ -828,7 +827,7 @@ func (d *DcV2Manager) DcGetUrmaDeviceCount(logicID int32) (int32, error) {
 	}
 	var cnt C.uint
 	if retCode := C.dcmiv2_get_urma_device_cnt(C.int(logicID), &cnt); retCode != common.Success {
-		return common.RetError, fmt.Errorf("dcmi get urma device count failed logicID(%d) error "+
+		return common.RetError, dcmiErrorf(retCode, "dcmi get urma device count failed logicID(%d) error "+
 			"code: %d", logicID, int32(retCode))
 	}
 	return int32(cnt), nil
@@ -849,7 +848,7 @@ func (d *DcV2Manager) DcGetUrmaDevEidList(logicID int32, urmaDevIndex int32) (*c
 	eidCnt := C.uint(common.EidNumMax)
 	if ret := C.dcmiv2_get_eid_list_by_urma_dev_index(C.int(logicID), C.uint(urmaDevIndex), eidInfoListPtr,
 		&eidCnt); ret != common.Success {
-		return nil, fmt.Errorf("dcmi get urma device info failed, logicID(%d) index(%d) ret(%d)",
+		return nil, dcmiErrorf(ret, "dcmi get urma device info failed, logicID(%d) index(%d) ret(%d)",
 			logicID, urmaDevIndex, int(ret))
 	}
 
@@ -912,7 +911,7 @@ func (d *DcV2Manager) DcStartUbPingMesh(logicID int32, operate common.HccspingMe
 
 	if retCode := C.dcmiv2_start_ub_ping_mesh(C.int(logicID), C.int(len(ops)),
 		cOpsPtrStruct); retCode != common.Success {
-		return fmt.Errorf("dcmi start ub ping mesh failed logicID(%d) error code: %d",
+		return dcmiErrorf(retCode, "dcmi start ub ping mesh failed logicID(%d) error code: %d",
 			logicID, int32(retCode))
 	}
 
@@ -938,7 +937,7 @@ func (d *DcV2Manager) DcGetUbPingMeshInfo(logicID int32, taskID uint, meshReplyS
 		C.int(logicID), C.int(taskID), (*C.struct_dcmi_ub_ping_mesh_info)(cInfosPtr),
 		C.int(meshReplySize), &count,
 	); retCode != common.Success {
-		return nil, fmt.Errorf("dcmi get ub ping mesh info failed logicID(%d) error code: %d",
+		return nil, dcmiErrorf(retCode, "dcmi get ub ping mesh info failed logicID(%d) error code: %d",
 			logicID, int32(retCode))
 	}
 
@@ -957,7 +956,7 @@ func (d *DcV2Manager) DcStopUbPingMesh(logicID int32, taskID uint) error {
 		return fmt.Errorf("taskID(%d) is invalid", taskID)
 	}
 	if retCode := C.dcmiv2_stop_ub_ping_mesh(C.int(logicID), C.int(taskID)); retCode != common.Success {
-		return fmt.Errorf("dcmi stop ub ping mesh failed logicID(%d) error code: %d", logicID, int32(retCode))
+		return dcmiErrorf(retCode, "dcmi stop ub ping mesh failed logicID(%d) error code: %d", logicID, int32(retCode))
 	}
 	return nil
 }
@@ -972,7 +971,7 @@ func (d *DcV2Manager) DcGetUbPingMeshState(logicID int32, taskID uint) (int, err
 	}
 	var state C.uint
 	if retCode := C.dcmiv2_get_ub_ping_mesh_state(C.int(logicID), C.int(taskID), &state); retCode != common.Success {
-		return common.RetError, fmt.Errorf("dcmi get ub ping mesh state failed logicID(%d) "+
+		return common.RetError, dcmiErrorf(retCode, "dcmi get ub ping mesh state failed logicID(%d) "+
 			"error code: %d", logicID, int32(retCode))
 	}
 	return int(state), nil
@@ -1025,7 +1024,7 @@ func (d *DcV2Manager) DcGetDeviceVDevResource(logicID int32, vDevID uint32) (com
 	vDevResource.vdev_id = C.uint(vDevID)
 	if retCode := C.dcmiv2_get_device_info(C.int(logicID), cMainCmd, C.uint(subCmd),
 		unsafe.Pointer(&vDevResource), &size); int32(retCode) != common.Success {
-		return common.CgoVDevQueryStru{}, fmt.Errorf("get device info failed, error is: %d", int32(retCode))
+		return common.CgoVDevQueryStru{}, dcmiErrorf(retCode, "get device info failed, error is: %d", int32(retCode))
 	}
 	return convertVDevQueryStruV2(vDevResource), nil
 }
@@ -1041,7 +1040,7 @@ func (d *DcV2Manager) DcGetDeviceTotalResource(logicID int32) (common.CgoSocTota
 	size := C.uint(unsafe.Sizeof(totalResource))
 	if retCode := C.dcmiv2_get_device_info(C.int(logicID), cMainCmd, C.uint(subCmd),
 		unsafe.Pointer(&totalResource), &size); int32(retCode) != common.Success {
-		return common.CgoSocTotalResource{}, fmt.Errorf("get device info failed, error is: %d", int32(retCode))
+		return common.CgoSocTotalResource{}, dcmiErrorf(retCode, "get device info failed, error is: %d", int32(retCode))
 	}
 	if uint32(totalResource.vdev_num) > DcmiMaxVdevNum {
 		return common.CgoSocTotalResource{}, fmt.Errorf("get error virtual quantity: %d",
@@ -1059,7 +1058,7 @@ func (d *DcV2Manager) DcGetSuperPodInfo(logicID int32) (common.CgoSuperPodInfo, 
 
 	var unitType C.enum_dcmi_unit_type
 	if retCode := C.dcmiv2_get_device_type(C.int(logicID), &unitType); int32(retCode) != common.Success {
-		return common.CgoSuperPodInfo{}, fmt.Errorf("get device type failed, error is: %d", int32(retCode))
+		return common.CgoSuperPodInfo{}, dcmiErrorf(retCode, "get device type failed, error is: %d", int32(retCode))
 	}
 	if int32(unitType) != common.NpuType {
 		return common.CgoSuperPodInfo{}, fmt.Errorf("not support unit type: %d", int32(unitType))
@@ -1071,7 +1070,7 @@ func (d *DcV2Manager) DcGetSuperPodInfo(logicID int32) (common.CgoSuperPodInfo, 
 	size := C.uint(unsafe.Sizeof(sPodInfo))
 	if retCode := C.dcmiv2_get_device_info(C.int(logicID), cMainCmd, C.uint(subCmd),
 		unsafe.Pointer(&sPodInfo), &size); int32(retCode) != common.Success {
-		return common.CgoSuperPodInfo{}, fmt.Errorf("get super pod info failed, error is: %d", int32(retCode))
+		return common.CgoSuperPodInfo{}, dcmiErrorf(retCode, "get super pod info failed, error is: %d", int32(retCode))
 	}
 
 	return convertSuperPodInfo(sPodInfo), nil
@@ -1088,7 +1087,7 @@ func (d *DcV2Manager) DcGetDeviceFreeResource(logicID int32) (common.CgoSocFreeR
 	size := C.uint(unsafe.Sizeof(freeResource))
 	if retCode := C.dcmiv2_get_device_info(C.int(logicID), cMainCmd, C.uint(subCmd),
 		unsafe.Pointer(&freeResource), &size); int32(retCode) != common.Success {
-		return common.CgoSocFreeResource{}, fmt.Errorf("get device info failed, error is: %d", int32(retCode))
+		return common.CgoSocFreeResource{}, dcmiErrorf(retCode, "get device info failed, error is: %d", int32(retCode))
 	}
 	return convertSocFreeResource(freeResource), nil
 }
@@ -1108,7 +1107,7 @@ func (d *DcV2Manager) DcGetVDevActivityInfo(logicID int32, vDevID uint32) (commo
 	vDevActivityInfo.vdev_id = C.uint(vDevID)
 	if retCode := C.dcmiv2_get_device_info(C.int(logicID), cMainCmd, C.uint(subCmd),
 		unsafe.Pointer(&vDevActivityInfo), &size); int32(retCode) != common.Success {
-		return common.VDevActivityInfo{}, fmt.Errorf("retCode: %d", int32(retCode))
+		return common.VDevActivityInfo{}, dcmiErrorf(retCode, "retCode: %d", int32(retCode))
 	}
 	totalMemSize := uint64(vDevActivityInfo.query_info.computing.vdev_memory_total)
 	usedMemSize := totalMemSize - uint64(vDevActivityInfo.query_info.computing.vdev_memory_free)
@@ -1131,7 +1130,7 @@ func (d *DcV2Manager) DcGetVDeviceInfo(logicID int32) (common.VirtualDevInfo, er
 	}
 	var unitType C.enum_dcmi_unit_type
 	if retCode := C.dcmiv2_get_device_type(C.int(logicID), &unitType); int32(retCode) != common.Success {
-		return common.VirtualDevInfo{}, fmt.Errorf("get device type failed, error is: %d", int32(retCode))
+		return common.VirtualDevInfo{}, dcmiErrorf(retCode, "get device type failed, error is: %d", int32(retCode))
 	}
 	if int32(unitType) != common.NpuType {
 		return common.VirtualDevInfo{}, fmt.Errorf("not support unit type: %d", int32(unitType))
@@ -1139,12 +1138,12 @@ func (d *DcV2Manager) DcGetVDeviceInfo(logicID int32) (common.VirtualDevInfo, er
 
 	cgoDcmiSocTotalResource, err := d.DcGetDeviceTotalResource(logicID)
 	if err != nil {
-		return common.VirtualDevInfo{}, fmt.Errorf("get device total resource failed, error is: %v", err)
+		return common.VirtualDevInfo{}, fmt.Errorf("get device total resource failed, error is: %w", err)
 	}
 
 	cgoDcmiSocFreeResource, err := d.DcGetDeviceFreeResource(logicID)
 	if err != nil {
-		return common.VirtualDevInfo{}, fmt.Errorf("get device free resource failed, error is: %v", err)
+		return common.VirtualDevInfo{}, fmt.Errorf("get device free resource failed, error is: %w", err)
 	}
 	dcmiVDevInfo := common.VirtualDevInfo{
 		TotalResource: cgoDcmiSocTotalResource,
@@ -1153,7 +1152,7 @@ func (d *DcV2Manager) DcGetVDeviceInfo(logicID int32) (common.VirtualDevInfo, er
 	for _, vDevID := range cgoDcmiSocTotalResource.VDevID {
 		cgoVDevQueryStru, err := d.DcGetDeviceVDevResource(logicID, vDevID)
 		if err != nil {
-			return common.VirtualDevInfo{}, fmt.Errorf("get device virtual resource failed, error is: %v", err)
+			return common.VirtualDevInfo{}, fmt.Errorf("get device virtual resource failed, error is: %w", err)
 		}
 		dcmiVDevInfo.VDevInfo = append(dcmiVDevInfo.VDevInfo, cgoVDevQueryStru)
 		vDevActivityInfo, err := d.DcGetVDevActivityInfo(logicID, vDevID)
@@ -1180,7 +1179,7 @@ func (d *DcV2Manager) DcGetOutBandChannelState(logicID int32) error {
 	var channelState C.int
 	errCode := C.dcmiv2_get_device_outband_channel_state(C.int(logicID), &channelState)
 	if errCode != common.Success {
-		return fmt.Errorf("get out band channel state error, errCode: %v", errCode)
+		return dcmiErrorf(errCode, "get out band channel state error, errCode: %v", errCode)
 	}
 	if channelState != common.ChannelStateOk {
 		return fmt.Errorf("chip reset not support, channel state: %v", channelState)
@@ -1192,7 +1191,7 @@ func (d *DcV2Manager) DcGetOutBandChannelState(logicID int32) error {
 func (d *DcV2Manager) DcPreResetSoc(logicID int32) error {
 	errCode := C.dcmiv2_pre_reset_device(C.int(logicID))
 	if errCode != common.Success {
-		return fmt.Errorf("pre reset failed, cardID: %v, errCode: %v", logicID, errCode)
+		return dcmiErrorf(errCode, "pre reset failed, cardID: %v, errCode: %v", logicID, errCode)
 	}
 	return nil
 }
@@ -1208,7 +1207,7 @@ func (d *DcV2Manager) setDeviceReset(logicID int32, channelType C.enum_dcmi_rese
 		return fmt.Errorf("logicID(%d) is invalid", logicID)
 	}
 	if errCode := C.dcmiv2_reset_device(C.int(logicID), channelType); errCode != 0 {
-		return fmt.Errorf("cardID(%d) hot reset errCode: %v", logicID, errCode)
+		return dcmiErrorf(errCode, "cardID(%d) hot reset errCode: %v", logicID, errCode)
 	}
 	return nil
 }
@@ -1217,7 +1216,7 @@ func (d *DcV2Manager) setDeviceReset(logicID int32, channelType C.enum_dcmi_rese
 func (d *DcV2Manager) DcRescanSoc(logicID int32) error {
 	errCode := C.dcmiv2_rescan_device(C.int(logicID))
 	if errCode != common.Success {
-		return fmt.Errorf("fail to rescan chip logicID %d, errCode: %v", logicID, errCode)
+		return dcmiErrorf(errCode, "fail to rescan chip logicID %d, errCode: %v", logicID, errCode)
 	}
 	return nil
 }
@@ -1229,7 +1228,7 @@ func (d *DcV2Manager) DcGetDeviceBootStatus(logicID int32) (int, error) {
 	}
 	var bootStatus C.enum_dcmi_boot_status = C.DCMI_BOOT_STATUS_FINISH
 	if errCode := C.dcmiv2_get_device_boot_status(C.int(logicID), &bootStatus); errCode != 0 {
-		return common.RetError, fmt.Errorf("device boot status errCode: %v", errCode)
+		return common.RetError, dcmiErrorf(errCode, "device boot status errCode: %v", errCode)
 	}
 	return int(bootStatus), nil
 }
@@ -1247,7 +1246,7 @@ func (d *DcV2Manager) DcGetDeviceAllErrorCode(logicID int32) (int32, []int64, er
 	var health C.uint
 	healthRetCode := C.dcmiv2_get_device_health(C.int(logicID), &health)
 	if int32(retCode) != common.Success && int32(healthRetCode) != common.DeviceNotReadyErrCode {
-		return common.RetError, nil, fmt.Errorf("failed to obtain the device errorcode based on logicID("+
+		return common.RetError, nil, dcmiErrorf(retCode, "failed to obtain the device errorcode based on logicID("+
 			"%d), error code: %d, error count: %d", logicID, int32(retCode), int32(errCount))
 	}
 
@@ -1286,7 +1285,7 @@ func (d *DcV2Manager) DcGetDeviceAllErrorCodeWithTimeout(logicID int32, timeout 
 	retCode := C.dcmiv2_get_device_error_code_list(C.int(logicID), &errCount, &errCodeArray[0],
 		common.MaxErrorCodeCount)
 	if int32(retCode) != common.Success {
-		return common.RetError, nil, fmt.Errorf("failed to obtain the device errorcode based on logicID(%d), "+
+		return common.RetError, nil, dcmiErrorf(retCode, "failed to obtain the device errorcode based on logicID(%d), "+
 			"error code: %d, error count: %d", logicID, int32(retCode), int32(errCount))
 	}
 
@@ -1299,7 +1298,7 @@ func (d *DcV2Manager) DcGetDeviceAllErrorCodeWithTimeout(logicID int32, timeout 
 		retCode = C.dcmiv2_get_device_error_code_list(C.int(logicID), &errCount, &errCodeArray[0],
 			common.MaxErrorCodeCount)
 		if int32(retCode) != common.Success {
-			return common.RetError, nil, fmt.Errorf("failed to obtain the device errorcode after get device health "+
+			return common.RetError, nil, dcmiErrorf(retCode, "failed to obtain the device errorcode after get device health "+
 				"based on logicID(%d), error code: %d, error count: %d", logicID, int32(retCode), int32(errCount))
 		}
 	}
@@ -1355,7 +1354,7 @@ func (d *DcV2Manager) DcSubscribeDeviceFaultEvent(logicID int32) error {
 
 	var filter C.struct_dcmi_event_filter
 	if rCode := C.dcmiv2_subscribe_fault_event(C.int(logicID), filter); int32(rCode) != common.Success {
-		return fmt.Errorf("subscribe fault event failed, logicID(%d), error code: %d", logicID, int32(rCode))
+		return dcmiErrorf(rCode, "subscribe fault event failed, logicID(%d), error code: %d", logicID, int32(rCode))
 	}
 	return nil
 }
@@ -1578,7 +1577,7 @@ func (d *DcV2Manager) DcGetCardElabel(logicID int32) (common.ElabelInfo, error) 
 	}
 	var elabelInfo C.struct_dcmi_elabel_info
 	if retCode := C.dcmiv2_get_device_elabel_info(C.int(logicID), &elabelInfo); int32(retCode) != common.Success {
-		return common.ElabelInfo{}, fmt.Errorf("logicID(%d): get elabel info failed, error code: %v", logicID, retCode)
+		return common.ElabelInfo{}, dcmiErrorf(retCode, "logicID(%d): get elabel info failed, error code: %v", logicID, retCode)
 	}
 	return common.ElabelInfo{
 		ProductName:      C.GoString(&elabelInfo.product_name[0]),
