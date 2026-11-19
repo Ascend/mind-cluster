@@ -3,6 +3,11 @@
 - 使用UB RDMA网络功能时，建议安装K8s RDMA Shared Dev Plugin。
 - 仅使用基础容器化支持和资源监测的用户，可以不安装该组件，请直接跳过本章节。
 
+## 安装前准备
+
+- 配合Ascend Docker Runtime自动挂载RDMA设备和驱动时，必须先安装并配置[Ascend Docker Runtime](./02_ascend_docker_runtime.md)，确保K8s RDMA Shared Dev Plugin与业务容器均由该运行时创建。可以通过检查K8s RDMA Shared Dev Plugin容器的1号进程环境变量是否包含`ASCEND_DOCKER_RUNTIME=true`来判断容器是否由Ascend Docker Runtime拉起，参考指令：`kubectl exec -n kube-system <pod-name> -- cat /proc/1/environ`。
+- 当前部署YAML包含16个预定义的NAD资源配置， 预定义NAD位于`default`命名空间，名称为`ens0f0`至`ens3f3`。字段约束与模板请参见[NAD配置示例](../../../06_api/19_ub_host_device_cni.md#ZH-CN_TOPIC_nad_config_example)。
+
 ## 操作步骤<a name="section135381552125415"></a>
 
 1. 以root用户登录各计算节点，并执行以下命令查看镜像和版本号是否正确。
@@ -59,19 +64,21 @@
 >- 安装组件后，组件的Pod状态为
    ContainerCreating，可参考[集群调度组件Pod处于ContainerCreating状态](https://gitcode.com/Ascend/mind-cluster/issues/343)章节进行处理。
 
+## NPU-DPU亲和关系获取<a name="section_npu_dpu_affinity"></a>
+
+K8s RDMA Shared Dev Plugin组件会获取NPU与UB网卡的亲和关系，用于DPU资源信息及故障关联上报。
+
+1. 亲和关系优先由驱动接口获取：组件启动时通过DCMI的拓扑查询接口获取各NPU与UB网卡的亲和关系（数据来源与Ascend Device Plugin的[NPU-NIC亲和自动发现](./04_ascend_device_plugin.md#section_npu_nic_auto_discovery)一致），之后每5分钟轮询一次节点上的有效网卡数量，仅当数量变化时重新查询；查询失败时保留上一次的有效结果。
+2. 当驱动不支持该查询接口或查询失败时，组件回退读取镜像内置的配置文件`/etc/rdma-plugin/npu-nic-mapping.json`完成NPU ID到DPU设备的映射。
+3. `-deviceResetTimeout`用于配置组件启动时等待驱动（DCMI）初始化完成的最大时长，取值范围为[10, 600]，单位为秒，默认值为600，参数详情请参见[表1](#table1862682843615)。
+
 ## 独占模式配置（beta特性）<a name="section187410285361"></a>
 
-默认情况下组件工作在共享模式。如需独占模式，请在[步骤3](#li26221441999)中修改YAML文件，为组件增加`-ub-excl-mode`启动参数。独占模式下，组件根据业务Pod的NPU注解与NPU-DPU映射关系为Pod分配节点上发现的真实UB设备，并将分配结果写入Pod的`k8s.v1.cni.cncf.io/device-status`注解，供Multus CNI与UB Host Device CNI完成设备挂载。
+默认情况下组件工作在共享模式。如需独占模式，请在[步骤3](#li26221441999)中为组件增加`-ub-excl-mode`启动参数。
 
-独占模式配置说明：
+独占模式仅适用于UB类型设备。kubelet选择设备后，组件按Allocate请求挂载对应数量的真实设备，不支持根据NPU亲和关系选择DPU。使用Ascend Docker Runtime时，通过`ASCEND_RDMA_DEVICES`传递所选HCA名称，由运行时挂载设备和驱动；否则由组件返回字符设备挂载信息。
 
-1. 开启独占模式需为组件增加`-ub-excl-mode`启动参数，参数说明请参见[表1](#table1862682843615)。
-2. NPU-DPU映射关系优先由驱动接口获取：组件启动时通过DCMI的拓扑查询接口获取各NPU与UB网卡的亲和关系（数据来源与Ascend Device Plugin的[NPU-NIC亲和自动发现](04_ascend_device_plugin.md#section_npu_nic_auto_discovery)一致），之后每5分钟轮询一次节点上的有效网卡数量，仅当数量变化时重新查询；查询失败时保留上一次的有效结果。
-3. 当驱动不支持该查询接口或查询失败时，组件回退读取镜像内置的配置文件`/etc/rdma-plugin/npu-nic-mapping.json`完成NPU ID到DPU设备的映射。
-4. 独占模式的设备分配基于UB类型的RDMA设备。
-5. 可通过`-deviceResetTimeout`配置组件启动时等待驱动（DCMI）初始化完成的最大时长，取值范围为[10, 600]，单位为秒，默认值为600。
-
-开启独占模式后，组件在处理Pod的Allocate请求时，从业务Pod的`huawei.com/npu`注解（由Volcano调度时自动写入）获取NPU ID，根据驱动查询（或回退配置）得到的NPU-DPU映射关系映射为DPU设备并完成分配。
+Volcano与rdma-dp独占模式配合使用时目前仅支持满DPU卡调度。
 
 ## 参数说明<a name="section1851191618363"></a>
 
@@ -159,7 +166,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p19894131961517"><a name="p19894131961517"></a><a name="p19894131961517"></a><span id="ph67327379156"><a name="ph67327379156"></a><a name="ph67327379156"></a>false</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971515"><a name="p589551971515"></a><a name="p589551971515"></a><span id="ph4556742141521"><a name="ph4556742141521"></a><a name="ph4556742141521"></a>是否开启UB设备的独占模式，该参数为标志位，无需跟值。开启后组件按NPU与DPU的映射关系为Pod分配真实UB设备，并将分配结果写入Pod的k8s.v1.cni.cncf.io/device-status注解。使用示例：./k8s-rdma-shared-dp -ub-excl-mode</span></p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971515"><a name="p589551971515"></a><a name="p589551971515"></a><span id="ph4556742141521"><a name="ph4556742141521"></a><a name="ph4556742141521"></a>是否开启UB设备的独占模式，该参数为标志位，无需跟值。开启后组件按kubelet的分配结果挂载对应数量的真实UB设备。使用示例：./k8s-rdma-shared-dp -ub-excl-mode</span></p>
 <div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>独占模式的配置方法请参见<a href="#section187410285361">独占模式配置</a>。</p></div></div>
 </td>
 </tr>
