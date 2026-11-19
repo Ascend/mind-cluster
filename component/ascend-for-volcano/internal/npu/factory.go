@@ -246,7 +246,7 @@ func get910CardHandlerName(attr util.SchedulerJobAttr) string {
 				basePolicy := stripAffinitySegments(policy)
 				if baseHandler, ok := policy910HandlerMap[basePolicy]; ok {
 					klog.V(util.LogInfoLev).Infof("single task job<%s> route schedule policy %s to %s",
-						attr.Name, basePolicy, baseHandler)
+						attr.Name, policy, basePolicy)
 					return baseHandler
 				}
 				klog.V(util.LogInfoLev).Infof(
