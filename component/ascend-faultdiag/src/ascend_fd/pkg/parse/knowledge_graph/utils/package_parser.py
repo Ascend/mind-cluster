@@ -75,6 +75,8 @@ class PackageParser:
         BMCDeviceDumpParser,
         BMCAppDumpParser,
         NpuInfoParser,
+        # kernel.log 单次遍历收集 DFX 组写入 ctx，供 UbctlLogParser 复用，需在 other 阶段前执行
+        NpuHistoryLogParser,
     ]
     MAX_POOL_SIZE = 20
 
@@ -152,7 +154,6 @@ class PackageParser:
                 HostSysMonParser,
                 HostVmCoreParser,
                 TrainLogParser,
-                NpuHistoryLogParser,
                 NpuOsLogParser,
                 NpuDeviceLogParser,
                 NpuHostLogParser,
