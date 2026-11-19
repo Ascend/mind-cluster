@@ -27,22 +27,21 @@ import (
 // InitFunction init function
 func InitFunction() (*server.HwDevManager, error) {
 	customname.InitPublicNameConfig()
-	devM, switchDevM, err := initDevManager()
+	devM, err := initDevManager()
 	if err != nil {
 		hwlog.RunLog.Errorf("init dev manager failed, err: %v", err)
 		return nil, err
 	}
+	// keep the switch init before the device manager construction, which is the same order as before
+	switchDevM := initSwitchDevManager(devM)
 	hdm := server.NewHwDevManager(devM)
 	if hdm == nil {
 		hwlog.RunLog.Error("init device manager failed")
 		return nil, fmt.Errorf("init device manager failed")
 	}
 	hwlog.RunLog.Info("init device manager success")
-	common.ParamOption.EnableSwitchFault = false
-	if switchDevM != nil {
-		hdm.SwitchDevManager = switchDevM
-		common.ParamOption.EnableSwitchFault = true
-	}
+	hdm.SwitchDevManager = switchDevM
+	common.ParamOption.EnableSwitchFault = switchDevM != nil
 	if err := hdm.InitUnifiedResetMgr(); err != nil {
 		return nil, err
 	}
