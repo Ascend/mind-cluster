@@ -4,6 +4,7 @@
 package slownet
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -18,11 +19,16 @@ const (
 	detectConf        = "cathelper.conf"
 )
 
+// ErrRasNetRootPathNotSet means the optional slow network diagnosis feature is not enabled,
+// i.e. RAS_NET_ROOT_PATH is not configured. Callers should treat it as disabled, not failed.
+var ErrRasNetRootPathNotSet = errors.New("env " + rasNetRootPathKey +
+	" not exists, please config it before starting")
+
 // GetRasNetRootPath get ras net fault detect root path from env
 func GetRasNetRootPath() (string, error) {
 	rootPath := os.Getenv(rasNetRootPathKey)
 	if len(rootPath) == 0 {
-		return "", fmt.Errorf("env %s not exists, please config it before starting", rasNetRootPathKey)
+		return "", ErrRasNetRootPathNotSet
 	}
 	if !utils.IsDir(rootPath) {
 		return "", fmt.Errorf("env %s=%s, which is not dir", rasNetRootPathKey, rootPath)
@@ -48,7 +54,6 @@ func GetPingListFilePath(superPodId, serverIndex string) (string, error) {
 func GetSuperPodInfoFilePath(superPodID, superPodPrefix string) (string, error) {
 	rootPath, err := GetRasNetRootPath()
 	if err != nil {
-		hwlog.RunLog.Errorf("get ras net root path failed, err : %v", err)
 		return "", err
 	}
 	superPodPathName := fmt.Sprintf("%s-%s", superPodPrefix, superPodID)
@@ -65,7 +70,6 @@ func GetSuperPodInfoFilePath(superPodID, superPodPrefix string) (string, error) 
 func GetConfigPathForDetect(superPodId string) (string, error) {
 	rasNetRootPath, err := GetRasNetRootPath()
 	if err != nil {
-		hwlog.RunLog.Errorf("get ras net root path failed, err: %v", err)
 		return "", err
 	}
 	confPath := filepath.Join(rasNetRootPath, netFaultSubPath, fmt.Sprintf("super-pod-%s", superPodId), detectConf)
