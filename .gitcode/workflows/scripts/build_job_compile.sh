@@ -458,7 +458,7 @@ else
             git clone -b v1.1.16 https://atomgit.com/openeuler/libboundscheck.git ${servicename}/component/mindio/acp/3rdparty/libboundscheck/libboundscheck
             wget -c --no-check-certificate -O ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/acp/3rdparty/spdlog/spdlog-1.12.0.zip ${SPDLOG_OBS_URL}
             unzip -d ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/acp/3rdparty/spdlog/ ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/acp/3rdparty/spdlog/spdlog-1.12.0.zip && mv ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/acp/3rdparty/spdlog/spdlog-1.12.0 ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/acp/3rdparty/spdlog/spdlog
-            git clone -b master https://atomgit.com/openeuler/ubs-comm.git ${servicename}/component/mindio/acp/3rdparty/ubs-comm/ubs-comm
+            git clone -b v1.0.0 https://atomgit.com/openeuler/ubs-comm.git ${servicename}/component/mindio/acp/3rdparty/ubs-comm/ubs-comm
 
             git clone -b v1.1.16 https://atomgit.com/openeuler/libboundscheck.git ${servicename}/component/mindio/tft/3rdparty/libboundscheck/libboundscheck
             wget -c --no-check-certificate -O ${ATOMGIT_WORKSPACE}/mind-cluster/component/mindio/tft/3rdparty/spdlog/spdlog-1.12.0.zip ${SPDLOG_OBS_URL}

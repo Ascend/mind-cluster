@@ -17,6 +17,10 @@ add_library(ock_memfs_core_object OBJECT ${MEMFS_CORE_SRC})
 target_include_directories(ock_memfs_core_object PUBLIC ${CMAKE_CURRENT_LIST_DIR} bmm common fs)
 target_link_libraries(ock_memfs_core_object PUBLIC memfs_common_interface ockio_common_interface)
 
+# MEMFS_CORE_SRC is a recursive glob that also compiles bmm/bmm_pool.cpp (numa.h),
+# so it needs the same path as fs_bmm_object in src/memfs/bmm/CMakeLists.txt.
+target_compile_options(ock_memfs_core_object PRIVATE "-idirafter" "/usr/include")
+
 add_library(ock_memfs_core_static STATIC $<TARGET_OBJECTS:ock_memfs_core_object>)
 set_target_properties(ock_memfs_core_static PROPERTIES OUTPUT_NAME "ock_memfs_core")
 set_target_properties(ock_memfs_core_static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
