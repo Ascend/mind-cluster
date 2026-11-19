@@ -262,6 +262,8 @@ PYMOTOR_VLLM_SOURCE = "PyMotor_vLLM_Log"
 VLLM_FILENAME_PATTERN = r"^vllm-[a-z0-9_-]+.*\.log$"
 # PyMotor component logs: mindie-motor-*.log (controller, coordinator, etc.)
 PYMOTOR_FILENAME_PATTERN = r"^mindie-motor-[a-z0-9_-]+.*\.log$"
+# Memcache logs: any log file whose name starts with "mmc"
+MMC_FILENAME_PATTERN = r"^mmc.*\.log$"
 
 DEVICE_ID_PATTERN = r"device_id:\s*(\d+)"
 IPADDR_PATTERN = r"ipaddr:([^\n']+)"

@@ -29,6 +29,7 @@ from ascend_fd.utils.regular_table import (
     KG_MAX_TIME,
     VLLM_FILENAME_PATTERN,
     PYMOTOR_FILENAME_PATTERN,
+    MMC_FILENAME_PATTERN,
     DEVICE_ID_PATTERN,
     IPADDR_PATTERN,
     NETMASK_PATTERN,
@@ -59,14 +60,19 @@ class PyMotorVLLMParser(FileParser):
     File naming:
       - vllm-*.log          -> vLLM logs + PyMotor internal components (NodeManager, EngineServer)
       - mindie-motor-*.log  -> PyMotor standalone components (controller, coordinator)
+      - mmc*.log            -> Memcache logs
     """
 
     _type = "pymotor_vllm"
     TARGET_FILE_PATTERNS = "pymotor_vllm_log_path"
     SOURCE_FILE = PYMOTOR_VLLM_SOURCE
 
-    # Accept both file patterns from shared log directory (pre-compiled for performance)
-    ACCEPTED_PATTERNS = [re.compile(VLLM_FILENAME_PATTERN), re.compile(PYMOTOR_FILENAME_PATTERN)]
+    # Accept all file patterns from shared log directory (pre-compiled for performance)
+    ACCEPTED_PATTERNS = [
+        re.compile(VLLM_FILENAME_PATTERN),
+        re.compile(PYMOTOR_FILENAME_PATTERN),
+        re.compile(MMC_FILENAME_PATTERN),
+    ]
 
     SOURCE_DEVICE_KEY = "source_device"
     DEFAULT_DEVICE_ID = "Unknown"
@@ -96,7 +102,7 @@ class PyMotorVLLMParser(FileParser):
     def parse(self, parse_ctx: KGParseCtx, task_id: str):
         """
         Parse vLLM/PyMotor log file(s) from shared log folder.
-        Accepts both vllm-*.log and mindie-motor-*.log files.
+        Accepts vllm-*.log, mindie-motor-*.log and mmc-*.log files.
 
         :param parse_ctx: knowledge graph parser context
         :param task_id: unique task id

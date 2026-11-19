@@ -1932,8 +1932,8 @@ class PyMotorVLLMLogSaver(BaseLogSaver):
     """
     Saver for PyMotor + vLLM logs from shared log directory.
 
-    Collects both vllm-*.log (vLLM + PyMotor NodeManager/EngineServer)
-    and mindie-motor-*.log (PyMotor controller/coordinator) files.
+    Collects vllm-*.log (vLLM + PyMotor NodeManager/EngineServer),
+    mindie-motor-*.log (PyMotor controller/coordinator) and mmc-*.log (Memcache) files.
     """
 
     LOG_TYPE = "pymotor_vllm log"
@@ -1946,15 +1946,17 @@ class PyMotorVLLMLogSaver(BaseLogSaver):
 
     def filter_log(self, file_dir: str):
         """
-        Filter vLLM and PyMotor log files from shared directory.
-        :param file_dir: directory containing vllm-*.log and mindie-motor-*.log
+        Filter vLLM, PyMotor and Memcache log files from shared directory.
+        :param file_dir: directory containing vllm-*.log, mindie-motor-*.log and mmc-*.log
         """
         if not file_dir or not os.path.isdir(file_dir):
             return
         for root, _, files in safe_walk(file_dir):
             for filename in files:
-                if re.match(regular_table.VLLM_FILENAME_PATTERN, filename) or re.match(
-                    regular_table.PYMOTOR_FILENAME_PATTERN, filename
+                if (
+                    re.match(regular_table.VLLM_FILENAME_PATTERN, filename)
+                    or re.match(regular_table.PYMOTOR_FILENAME_PATTERN, filename)
+                    or re.match(regular_table.MMC_FILENAME_PATTERN, filename)
                 ):
                     self.pymotor_vllm_log_list.append(os.path.join(root, filename))
 

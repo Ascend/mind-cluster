@@ -341,5 +341,231 @@ class TestPyMotorVLLMParserMultiLineFaultMode(unittest.TestCase):
             os.unlink(file_path)
 
 
+MEM_FAULT_LOG_CASES = {
+    "MF-GEN-001": [
+        ("src/smem/csrc/smem_bm/smem_bm_entry.cpp:300 SmemBmEntry::Join timeout waiting for PROMOTE_TO_ACTIVE, rank=3"),
+        (
+            "src/smem/csrc/smem_trans/smem_trans_connection.cpp:649 "
+            "SmemTransConnection::Join timeout waiting for PROMOTE_TO_ACTIVE, rank=3 name:pod-0"
+        ),
+    ],
+    "MF-SDMA-001": [
+        ("src/hybm/csrc/mm/hybm_vmm_based_segment.cpp:155 Try HalMemCreate ret:507899 dev:0 spend time:12 size:4096"),
+    ],
+    "MF-SDMA-002": [
+        (
+            "src/hybm/csrc/ts_engine/hybm_stream.cpp:384 "
+            "task exec failed, stream:1 sqeType:11 cqeErrorCode:8(sdma move COMPERR ERROR) cqeErrorType:2"
+        ),
+        (
+            "src/hybm/csrc/ts_engine/hybm_stream.cpp:384 "
+            "task exec failed, stream:1 sqeType:11 cqeErrorCode:9(sdma move COMPDATAERR ERROR) cqeErrorType:2"
+        ),
+    ],
+    "MF-RDMA-001": [
+        (
+            "src/hybm/csrc/mm/hybm_conn_based_segment.cpp:116 "
+            "Unable to alloc size:1073741824 with hugepage via mmap error:12"
+        ),
+    ],
+    "MF-SHM-001": [
+        ("src/smem/csrc/smem_bm/smem_bm.cpp:313 HOST_SHM op type only supports DRAM shared memory without HBM"),
+        ("src/smem/csrc/smem_bm/smem_bm.cpp:321 HOST_SHM op type does not support mixing with other data op types"),
+    ],
+    "MEMCACHE-002": [
+        "src/memcache/csrc/client/mmc_client.cpp:120 client 12 batch get lease expired.",
+        "src/memcache/csrc/client/mmc_client.cpp:150 client 12 batch copy read lease expired.",
+        "src/memcache/csrc/client/mmc_client.cpp:180 client 12 get 34 lease expired after read.",
+    ],
+    "MF-CLUSTER-001": [
+        (
+            "src/memcache/csrc/meta_service/mmc_meta_service_process.cpp:321 "
+            "Fatal signal caught, signo=11 code=1 errno=0 sender_pid=123 sender_uid=0 addr=0x1 addr_lsb=0"
+        ),
+        (
+            "src/memcache/csrc/meta_service/mmc_meta_service.cpp:200 "
+            "HaConfigStore elected as leader, starting MetaNetServer and enabling KvEvents"
+        ),
+        (
+            "src/memcache/csrc/meta_service/mmc_meta_service.cpp:210 "
+            "HaConfigStore became standby/follower, stopping MetaNetServer and disabling KvEvents"
+        ),
+    ],
+    "MF-CLUSTER-002": [
+        "src/memcache/csrc/meta_service/mmc_meta_net_client.cpp:346 10.0.0.1 link broken",
+        "src/memcache/csrc/meta_service/mmc_meta_net_client.cpp:231 10.0.0.1 server changed notify",
+    ],
+}
+
+
+class TestPyMotorVLLMParserMemFaultModes(unittest.TestCase):
+    """Fault mode tests for MemFabric and Memcache entries in kg-config"""
+
+    CONFIG_PATH = os.path.join(
+        os.path.dirname(__file__), '..', '..', 'src', 'ascend_fd', 'configuration', 'kg-config.json'
+    )
+
+    @classmethod
+    def setUpClass(cls):
+        from ascend_fd.utils.load_kg_config import ParseRegexMap
+
+        parse_regex = ParseRegexMap(config_pkg_list=[cls.CONFIG_PATH]).get_parse_regex()
+        cls.config = parse_regex.get(PyMotorVLLMParser.SOURCE_FILE, {})
+
+    def _create_parser(self):
+        return PyMotorVLLMParser(
+            {
+                "default_conf": {PyMotorVLLMParser.SOURCE_FILE: self.config},
+                "user_conf": {},
+            }
+        )
+
+    def _create_temp_file(self, content, prefix="vllm-memfault"):
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.log', prefix=prefix + "-", delete=False) as tmp_file:
+            tmp_file.write(content)
+            return tmp_file.name
+
+    def _parse_event_codes(self, log_lines):
+        content = "".join(f"2026-11-11 10:00:00,000 - ERROR - {line}\n" for line in log_lines)
+        file_path = self._create_temp_file(content)
+        try:
+            result = self._create_parser()._parse_file(file_path)
+            return {ev.get("event_code") for ev in result.event_list}
+        finally:
+            os.unlink(file_path)
+
+    def _assert_fault_matched(self, event_code):
+        for log_line in MEM_FAULT_LOG_CASES[event_code]:
+            with self.subTest(event_code=event_code, log_line=log_line):
+                self.assertIn(event_code, self._parse_event_codes([log_line]))
+
+    def test_mf_gen_001_join_timeout(self):
+        """MF-GEN-001: Join timeout of either entry should be matched"""
+        self._assert_fault_matched("MF-GEN-001")
+
+    def test_mf_sdma_001_hal_mem_create_failure(self):
+        """MF-SDMA-001: HalMemCreate failure log should be matched"""
+        self._assert_fault_matched("MF-SDMA-001")
+
+    def test_mf_sdma_002_sdma_move_error(self):
+        """MF-SDMA-002: Both COMPERR and COMPDATAERR cqe error codes should be matched"""
+        self._assert_fault_matched("MF-SDMA-002")
+
+    def test_mf_rdma_001_alloc_local_memory_failure(self):
+        """MF-RDMA-001: Segment slice allocation failure should be matched"""
+        self._assert_fault_matched("MF-RDMA-001")
+
+    def test_mf_shm_001_host_shm_param_conflict(self):
+        """MF-SHM-001: Both HOST_SHM parameter conflict logs should be matched"""
+        self._assert_fault_matched("MF-SHM-001")
+
+    def test_memcache_002_kvcache_lease_expired(self):
+        """MEMCACHE-002: All lease expired key logs should be matched"""
+        self._assert_fault_matched("MEMCACHE-002")
+
+    def test_mf_cluster_001_leader_process_crash(self):
+        """MF-CLUSTER-001: All leader crash and switchover key logs should be matched"""
+        self._assert_fault_matched("MF-CLUSTER-001")
+
+    def test_mf_cluster_002_management_link_broken(self):
+        """MF-CLUSTER-002: Link broken and server changed notify logs should be matched"""
+        self._assert_fault_matched("MF-CLUSTER-002")
+
+    def test_normal_log_not_matched(self):
+        """Normal MemFabric and Memcache logs should not trigger the new fault modes"""
+        event_codes = self._parse_event_codes(
+            [
+                "src/smem/csrc/smem_bm/smem_bm_entry.cpp:100 SmemBmEntry init success, rank=0",
+                "src/memcache/csrc/meta_service/mmc_meta_service.cpp:100 meta service running normally",
+            ]
+        )
+        self.assertFalse(event_codes & set(MEM_FAULT_LOG_CASES))
+
+
+class TestPyMotorVLLMParserMMCLog(unittest.TestCase):
+    """Test cases for mmc-*.log (Memcache) log file support"""
+
+    CONFIG_PATH = os.path.join(
+        os.path.dirname(__file__), '..', '..', 'src', 'ascend_fd', 'configuration', 'kg-config.json'
+    )
+
+    def _load_config(self):
+        from ascend_fd.utils.load_kg_config import ParseRegexMap
+
+        parse_regex = ParseRegexMap(config_pkg_list=[self.CONFIG_PATH]).get_parse_regex()
+        return parse_regex.get(PyMotorVLLMParser.SOURCE_FILE, {})
+
+    def _create_parser(self):
+        config = self._load_config()
+        return PyMotorVLLMParser(
+            {
+                "default_conf": {PyMotorVLLMParser.SOURCE_FILE: config},
+                "user_conf": {},
+            }
+        )
+
+    def test_mmc_filename_accepted(self):
+        """Any log filename starting with mmc should be accepted by the parser"""
+        for filename in (
+            "mmc_local_8600.log",
+            "mmc-090.log",
+            "mmc_090.log",
+            "mmc090.log",
+            "mmc-d0-20250101.log",
+        ):
+            self.assertTrue(PyMotorVLLMParser._is_accepted_file(filename), filename)
+
+    def test_non_mmc_filename_rejected(self):
+        """Filenames not starting with mmc or not ending with .log should be rejected"""
+        for filename in ("amc-090.log", "mm-090.log", "mmc-090.txt", "mmc_090", "other-090.log"):
+            self.assertFalse(PyMotorVLLMParser._is_accepted_file(filename), filename)
+
+    def test_mmc_log_in_subdir_collected(self):
+        """mmc*.log in a subdirectory should be collected by the log saver"""
+        from ascend_fd.pkg.parse.parser_saver import PyMotorVLLMLogSaver
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sub_dir = os.path.join(tmp_dir, "MF-GEN-001")
+            os.makedirs(sub_dir)
+            mmc_path = os.path.join(sub_dir, "mmc_local_8600.log")
+            vllm_path = os.path.join(tmp_dir, "vllm-d0.log")
+            ignored_path = os.path.join(tmp_dir, "unrelated.log")
+            for path in (mmc_path, vllm_path, ignored_path):
+                with open(path, "w", encoding="utf-8") as tmp_file:
+                    tmp_file.write("INFO - no event\n")
+
+            saver = PyMotorVLLMLogSaver()
+            saver.filter_log(tmp_dir)
+            collected = saver.get_pymotor_vllm_log_list()
+
+            self.assertIn(mmc_path, collected)
+            self.assertIn(vllm_path, collected)
+            self.assertNotIn(ignored_path, collected)
+
+    def test_parse_mmc_log_in_subdir(self):
+        """Parsing a mmc-*.log file in a subdirectory should produce events"""
+        from ascend_fd.model.context import KGParseCtx
+        from ascend_fd.model.parse_info import KGParseFilePath
+
+        log_content = (
+            "2026-05-26 15:15:49,409 - ERROR - "
+            "(APIServer pid=2056) AssertionError: EPLB must used in expert parallelism.\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sub_dir = os.path.join(tmp_dir, "MF-GEN-001")
+            os.makedirs(sub_dir)
+            file_path = os.path.join(sub_dir, "mmc-090.log")
+            with open(file_path, "w", encoding="utf-8") as tmp_file:
+                tmp_file.write(log_content)
+
+            parse_file_path = KGParseFilePath(pymotor_vllm_log_path=[file_path])
+            parse_ctx = KGParseCtx(parse_file_path=parse_file_path, is_sdk_input=False)
+
+            events, _ = self._create_parser().parse(parse_ctx, "test-task")
+
+            event_codes = {ev.get("event_code") for ev in events}
+            self.assertIn("AISW_VLLM_ASCEND_EPLB_001", event_codes)
+
+
 if __name__ == '__main__':
     unittest.main()
