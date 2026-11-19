@@ -135,6 +135,7 @@
         - [配置故障处理](./04_usage/05_fault_recovery/01_resumable_training/02_configuration/01_configuring_fault_handling_policies.md)
         - [配置恢复加速](./04_usage/05_fault_recovery/01_resumable_training/02_configuration/02_configuring_training_recovery.md)
       - [示例与验证](./04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/menu_examples_and_verification.md)
+        - [（可选）配置组件](./04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/00_before_you_start.md)
         - [PyTorch场景示例](./04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/01_pytorch_examples_and_verification.md)
         - [MindSpore场景示例](./04_usage/05_fault_recovery/01_resumable_training/03_examples_and_verification/02_mindspore_examples_and_verification.md)
     <!-- end id43 -->
