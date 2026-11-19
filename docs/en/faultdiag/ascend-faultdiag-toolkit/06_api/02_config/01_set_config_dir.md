@@ -87,7 +87,7 @@ Notes:
 
 - For `DUPLEX_THRESHOLD`, `NET_HEALTH_THRESHOLD`, `LINK_STATUS_THRESHOLD`, `OPTICAL_PRESENT_THRESHOLD`, and `NIC_LANE_FLAG`, the normal value is determined by string comparison: a value is considered normal only when it equals the configured normal value; all other values are considered abnormal.
 - `HCCN_LINK_DOWN_CNT` is considered sub-health when it exceeds the warning threshold, and abnormal when it exceeds the alarm (fault) threshold.
-- Related thresholds of the NIO and LPO optical module are used only by <term>Ascend 950PR&950DT products</term>.
+- Related thresholds of the NIC and LPO optical module are used only by <term>Ascend 950PR&950DT products</term>.
 - Optical module thresholds vary by module type: ODSP and LPO optical modules are supported. When the optical module type is not identified, the ODSP type is used by default.
 
 Configuration validation rules:

@@ -8,5 +8,6 @@
   - [Configuring Fault Handling](./02_configuration/01_configuring_fault_handling_policies.md)
   - [Configuring Recovery Acceleration](./02_configuration/02_configuring_training_recovery.md)
 - [Examples and Verification](./03_examples_and_verification/menu_examples_and_verification.md)
+  - [(Optional) Configuring Components](./03_examples_and_verification/00_before_you_start.md)
   - [Examples and Verification in PyTorch Scenario](./03_examples_and_verification/01_pytorch_examples_and_verification.md)
   - [Examples and Verification in MindSpore Scenario](./03_examples_and_verification/02_mindspore_examples_and_verification.md)

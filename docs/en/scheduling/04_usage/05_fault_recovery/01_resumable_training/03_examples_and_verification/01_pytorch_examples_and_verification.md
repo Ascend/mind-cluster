@@ -6,7 +6,7 @@
 
 Resumable training can be built based on the base training image. For details on building the base training image, see the [Building a Container Image Using Dockerfile (PyTorch)](../../../../07_references/02_common_operations.md#building-a-container-image-using-dockerfile-pytorch) section.
 
-This chapter shows how to build a training image based on Ubuntu 20.04 by following the steps for building a training base image.
+This chapter shows how to build a training image based on Ubuntu 20.04, Python 3.10, PyTorch 2.7.1 by following the steps for building a training base image.
 
 >[!NOTE]
 >
@@ -177,12 +177,12 @@ As shown in [Table 1](#zh-cn_topic_0000002039339945_table1172542119019),obtain t
 </table>
 
 >[!NOTE]
-> This section uses a single Atlas 800T A2, Ubuntu 20.04 Arm, and Python 3.10 as an example to describe how to build a training image. Modify the relevant steps based on the actual situation during use.
+> This section uses a single Atlas 800T A2, Ubuntu 20.04 Arm, and Python 3.10, PyTorch 2.7.1 as an example to describe how to build a training image. Modify the relevant steps based on the actual situation during use.
 
 **Procedure<a name="zh-cn_topic_0000002039339945_section20489630477"></a>**
 
 1. Prepare the software packages on the host by referring to [Table 1](#zh-cn_topic_0000002039339945_table1172542119019).
-2. Write the following Dockerfile.
+2. Write the Dockerfile by following the example below, or prepare your own Dockerfile.
 
     ```text
     FROM ubuntu:20.04
@@ -451,7 +451,7 @@ For training code and dataset preparation, see [MindSpeed-LLM User Guide](https:
 
 6. Obtain the [training job YAML](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml). This YAML has already configured pod-level rescheduling, process-level rescheduling, process-level online recovery, elastic training, and more. Set the IP address of the server to which the volume is mounted and rescheduling levels as required.
 
-    Training process recovery functions such as process-level rescheduling, process-level online recovery, and elastic training cannot coexist with graceful fault tolerance. For details about how to configure graceful fault tolerance, see [Graceful Fault Tolerance Mode](./menu_examples_and_verification.md#ZH-CN_TOPIC_0000002511346449).
+    Training process recovery functions such as process-level rescheduling, process-level online recovery, and elastic training cannot coexist with graceful fault tolerance. For details about how to configure graceful fault tolerance, see [Graceful Fault Tolerance Mode](./00_before_you_start.md).
 
 7. Configure `train_start.sh` and the training job YAML based on the actual situation.
     1. Modify the basic parameters of the startup script.

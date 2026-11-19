@@ -8,5 +8,6 @@
   - [配置故障处理](./02_configuration/01_configuring_fault_handling_policies.md)
   - [配置恢复加速](./02_configuration/02_configuring_training_recovery.md)
 - [示例与验证](./03_examples_and_verification/menu_examples_and_verification.md)
+  - [（可选）配置组件](./03_examples_and_verification/00_before_you_start.md)
   - [PyTorch场景示例](./03_examples_and_verification/01_pytorch_examples_and_verification.md)
   - [MindSpore场景示例](./03_examples_and_verification/02_mindspore_examples_and_verification.md)

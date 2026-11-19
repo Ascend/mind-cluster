@@ -515,7 +515,7 @@ In the above two scenarios, if the fault cannot be recovered, the system falls b
 
 Compared with process-level rescheduling, process-level online recovery does not reschedule the faulty process, which greatly reduces the waiting time caused by the desynchronization between processes. In addition, CKPT information is transferred through the parameter plane high-speed network P2P between NPU cards, avoiding the time consumed by CKPT saving and loading.
 
-This fault handling mode is disabled by default. To enable it, see [(Optional) Configuring Components](../03_examples_and_verification/menu_examples_and_verification.md#ZH-CN_TOPIC_0000002511346449).
+This fault handling mode is disabled by default. To enable it, see [(Optional) Configuring Components](../03_examples_and_verification/00_before_you_start.md).
 
 For the key configuration steps of process-level online recovery, see [Configuring Process-Level Online Recovery](../02_configuration/01_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002479386492).
 
@@ -1137,8 +1137,8 @@ Adaptation items 1-6 in [Table 17](#table19955141136107) are the common logic of
 
     In [LLM Repository Reference Link 1](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/mindspeed_llm/features_manager/high_availability/high_availability.py), `start_grad_sync_wrapper`, `forward_step_wrapper`, and `elastic_training_get_forward_backward_func_wrapper`, as well as the `loss_func` code pointed to by [LLM Repository Reference Link 2](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/pretrain_gpt.py#:~text=if%20args.enable_elastic_training%3A), are patched or modified to adapt to the precision gradient changes caused by scale-in.
 
-    - `loss_func` is changed from performing DP group all\_reduce communication for each `micro_batch` to not performing communication during scale-in training, because after scale-in the number of `num_micro_batches` in each DP domain may differ, which causes the first few DPs to execute all\_reduce one extra time and get stuck.
-    - In `start_grad_sync_wrapper`, `gradient_scaling_factor` is changed to `1.0/(arguments.global_batch_size/arguments.micro_batch_size)`, that is, the original `1/dp_size` is further divided by `num_micro_batches`.
+    - `loss_func` is changed from performing DP group all\_reduce communication for each `micro_batch` to not performing communication during scale-in training, because after scale-in the number of `num_microbatches` in each DP domain may differ, which causes the first few DPs to execute all\_reduce one extra time and get stuck.
+    - In `start_grad_sync_wrapper`, `gradient_scaling_factor` is changed to `1.0/(arguments.global_batch_size/arguments.micro_batch_size)`, that is, the original `1/dp_size` is further divided by `num_microbatches`.
     - `forward_step_wrapper` changes the input parameter `num_microbatches` to 1, so that loss calculation no longer divides by `num_microbatches`, because `num_microbatches` has already been divided in `start_grad_sync_wrapper`.
     - Because `loss_func` does not perform DP group all\_reduce, `elastic_training_get_forward_backward_func_wrapper`, after the native `forward_backward_func` is executed, performs an all\_reduce operation in the DP group at the last PP to sum the value of each key in `losses_reduced` (that is, the sum of `lm loss` of all `micro_batches`).
 <!-- end id6 -->

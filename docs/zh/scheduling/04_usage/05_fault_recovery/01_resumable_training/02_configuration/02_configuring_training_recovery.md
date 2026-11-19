@@ -654,4 +654,4 @@ test_tensor = torch.ones(1).to(f'npu:{rank}') * (rank + 1)  # 构建一个测试
 torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  # 在通信组X执行all reduce算子
 ```
 
-该配置用于降低故障发生在HCCL建链阶段导致恢复失败的风险；现有原文未提供其缩短集合通信时间的直接证据，因此不作为集合通信初始化耗时优化配置。
+该配置用于降低故障发生在HCCL建链阶段导致恢复失败的风险；本文档未提供其缩短集合通信时间的直接证据，因此不作为集合通信初始化耗时优化配置。

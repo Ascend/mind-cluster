@@ -6,7 +6,7 @@
 
 断点续训可以基于基础训练镜像制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（PyTorch）](../../../../07_references/02_common_operations.md#使用dockerfile构建容器镜像pytorch)章节进行操作。
 
-本章节结合基础训练镜像的制作步骤，展示基于Ubuntu 20.04来构建训练镜像。
+本章节结合基础训练镜像的制作步骤，展示基于Ubuntu 20.04、Python 3.10、PyTorch 2.7.1来构建训练镜像。
 
 >[!NOTE]
 >
@@ -177,12 +177,12 @@
 </table>
 
 >[!NOTE]
->本章节以单台Atlas 800T A2训练服务器、Ubuntu 20.04 Arm、配套Python 3.10为例来介绍训练镜像的制作，使用过程中需根据实际情况修改相关步骤。
+>本章节以单台Atlas 800T A2训练服务器、Ubuntu 20.04 Arm、配套Python 3.10、PyTorch 2.7.1为例来介绍训练镜像的制作，使用过程中需根据实际情况修改相关步骤。
 
 **操作步骤<a name="zh-cn_topic_0000002039339945_section20489630477"></a>**
 
 1. 参照[表1](#zh-cn_topic_0000002039339945_table1172542119019)，在宿主机上完成软件包的准备工作。
-2. 编写如下Dockerfile。
+2. 按照如下示例编写或自行准备Dockerfile。
 
     ```text
     FROM ubuntu:20.04
@@ -451,7 +451,7 @@
 
 6. 获取[训练任务YAML](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml)。该YAML中已经配置了Pod级别重调度、进程级别重调度、进程级在线恢复、弹性训练等。根据实际情况配置挂载卷的服务器IP地址、各种重调度级别等。
 
-    进程级别重调度、进程级在线恢复、弹性训练等训练进程级别的恢复与优雅容错不可同时存在。优雅容错的配置步骤请参见[优雅容错模式](./menu_examples_and_verification.md#ZH-CN_TOPIC_0000002511346449)。
+    进程级别重调度、进程级在线恢复、弹性训练等训练进程级别的恢复与优雅容错不可同时存在。优雅容错的配置步骤请参见[优雅容错模式](./00_before_you_start.md)。
 
 7. 配置训练启动脚本train\_start.sh和训练任务YAML，请根据实际情况进行修改。
     1. 修改启动脚本基础参数。

@@ -1,6 +1,6 @@
 # Telegraf Data Information Description<a name="ZH-CN_TOPIC_0000002511426775"></a>
 
-After Telegraf runs, the monitored data information of the Ascend AI Processor will be displayed. The following information is for reference only, and the actual display shall prevail. For detailed description of the data information, see below or [Data Description.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/6d94cd44e839440a329507e803dc225beb80d46e/Data_Description.xlsx).
+After Telegraf runs, the monitored data information of the Ascend AI Processor will be displayed. The following information is for reference only, and the actual display shall prevail. For detailed description of the data information, see below or [Data Description.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/aaaa02587f4d33db0a7590db65701a62c660b35b/Data_Description.xlsx).
 
 ```ColdFusion
 ...
@@ -1647,7 +1647,7 @@ This interface supports querying default metric groups and custom metric groups.
 
 ## HDK Interface Call<a name="section345820153363"></a>
 
-NPU Exporter obtains corresponding information by calling the underlying HDK interfaces. For more details, refer to [HDK APIs Called by NPU Exporter.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/bf05e2cc441c9cf12792bc8f4536c4b01f7f00a8/HDK_APIs_called_by_NPU_Exporter.xlsx). To find the HDK interface corresponding to the data information, refer to the following steps.
+NPU Exporter obtains corresponding information by calling the underlying HDK interfaces. For more details, refer to [HDK APIs Called by NPU Exporter.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/bbe75d1a4eb8d551ad1d1cb8dac9ba704f7197c9/HDK_APIs_called_by_NPU_Exporter.xlsx). To find the HDK interface corresponding to the data information, refer to the following steps.
 
 1. Log in to the [Ascend Computing Documentation](https://support.huawei.com/enterprise/en/category/ascend-computing-pid-1557196528909?submodel=doc) center, select and click the corresponding product name to enter the documentation page. For example, to search for the Atlas 800I A2 documentation, click "Atlas 800I A2".
 2. Find "Secondary Development" in the left navigation bar.
