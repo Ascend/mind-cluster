@@ -21,7 +21,6 @@ import (
 	"ascend-common/devmanager/dcmi"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 )
@@ -260,8 +259,8 @@ func getDeviceUtilizationRateV1Common(logicID int32,
 			allFailed = false
 			hwlog.ResetErrCnt(devType.Name, logicID)
 		} else {
-			// Don't print error again if it's a cached unsupported device type
-			if !strings.Contains(errs[i].Error(), "is not supported (cached)") {
+			// Don't print error again if the device type/API is already confirmed unsupported
+			if !IsNotSupported(errs[i]) {
 				hwlog.RunLog.ErrorfWithLimit(devType.Name, logicID,
 					"get %s utilization rate failed, logicID(%d), err: %v", devType.Name, logicID, errs[i])
 			}

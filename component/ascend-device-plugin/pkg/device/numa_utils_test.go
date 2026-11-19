@@ -27,6 +27,7 @@ import (
 	"Ascend-device-plugin/pkg/common"
 	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager"
+	"ascend-common/devmanager/dcmi"
 )
 
 func mockNumaNodeManager() *NumaNodeManager {
@@ -334,5 +335,47 @@ func TestGetNumaNodesByPhyID_Found(t *testing.T) {
 		convey.So(len(nodes), convey.ShouldEqual, 2)
 		convey.So(nodes[0], convey.ShouldEqual, int64(0))
 		convey.So(nodes[1], convey.ShouldEqual, int64(1))
+	})
+}
+
+// TestSetNumaNodesByAffinityCpu_NotSupported covers the error branches of
+// setNumaNodesByAffinityCpu: -8255 (not supported) is downgraded to a debug log,
+// while -99998 (function not found) is reported as an error like any other fault.
+// Both must be propagated without setting the numa cache.
+func TestSetNumaNodesByAffinityCpu_NotSupported(t *testing.T) {
+	convey.Convey("01-should propagate and classify -8255 as not supported", t, func() {
+		mgr := mockNumaNodeManager()
+		dev := common.NpuDevice{LogicID: 4, PhyID: 4, DeviceName: "Ascend910-4"}
+
+		affinityErr := dcmi.Errorf(dcmi.NotSupportErrorCodeInt, "affinity cpu not supported")
+		patchAffinity := gomonkey.ApplyMethod(reflect.TypeOf(&devmanager.DeviceManagerMock{}),
+			"GetAffinityCpuInfo",
+			func(_ *devmanager.DeviceManagerMock, logicID int32) (string, error) {
+				return "", affinityErr
+			})
+		defer patchAffinity.Reset()
+
+		err := mgr.setNumaNodesByAffinityCpu(&dev)
+		convey.So(devmanager.IsNotSupported(err), convey.ShouldBeTrue)
+		convey.So(err, convey.ShouldEqual, affinityErr)
+		convey.So(mgr.getNumaNodesByPhyID(4), convey.ShouldBeNil)
+	})
+
+	convey.Convey("02-should propagate and classify -99998 as function not found", t, func() {
+		mgr := mockNumaNodeManager()
+		dev := common.NpuDevice{LogicID: 5, PhyID: 5, DeviceName: "Ascend910-5"}
+
+		affinityErr := dcmi.Errorf(dcmi.FuncNotFoundErrorCodeInt, "affinity cpu function missing")
+		patchAffinity := gomonkey.ApplyMethod(reflect.TypeOf(&devmanager.DeviceManagerMock{}),
+			"GetAffinityCpuInfo",
+			func(_ *devmanager.DeviceManagerMock, logicID int32) (string, error) {
+				return "", affinityErr
+			})
+		defer patchAffinity.Reset()
+
+		err := mgr.setNumaNodesByAffinityCpu(&dev)
+		convey.So(devmanager.IsFuncNotFound(err), convey.ShouldBeTrue)
+		convey.So(err, convey.ShouldEqual, affinityErr)
+		convey.So(mgr.getNumaNodesByPhyID(5), convey.ShouldBeNil)
 	})
 }

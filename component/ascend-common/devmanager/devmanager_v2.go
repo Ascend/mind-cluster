@@ -406,13 +406,14 @@ func (d *DeviceManagerV2) GetDeviceNetWorkHealth(logicID int32) (uint32, error) 
 func (d *DeviceManagerV2) GetDeviceUtilizationRate(logicID int32, deviceType common.DeviceType) (uint32, error) {
 	// Check if device type is already known to be unsupported
 	if d.unsupportedDeviceTypeCache.isUnsupported(deviceType.Code) {
-		return common.UnRetError, fmt.Errorf("device type %s is not supported (cached)", deviceType.Name)
+		return common.UnRetError, dcmi.Errorf(dcmi.NotSupportErrorCodeInt,
+			"device type %s is not supported (cached)", deviceType.Name)
 	}
 
 	rate, err := d.DcMgr.DcGetDeviceUtilizationRate(logicID, deviceType)
 	if err != nil {
 		// Check if error indicates device type is unsupported (-8255)
-		if strings.Contains(err.Error(), common.NotSupportErrorCode) {
+		if IsNotSupported(err) {
 			d.unsupportedDeviceTypeCache.markAsUnsupported(deviceType.Code)
 		}
 		return common.UnRetError, err
@@ -470,7 +471,7 @@ func (d *DeviceManagerV2) GetDeviceTemperature(logicID int32) (int32, error) {
 	temp, err := d.DcMgr.DcGetDeviceTemperature(logicID)
 	if err != nil {
 		hwlog.RunLog.Error(err)
-		return common.RetError, fmt.Errorf("failed to get temperature by logicID(%d)", logicID)
+		return common.RetError, fmt.Errorf("failed to get temperature by logicID(%d): %w", logicID, err)
 	}
 
 	return temp, nil
@@ -481,7 +482,7 @@ func (d *DeviceManagerV2) GetDeviceVoltage(logicID int32) (float32, error) {
 	voltage, err := d.DcMgr.DcGetDeviceVoltage(logicID)
 	if err != nil {
 		hwlog.RunLog.Error(err)
-		return common.UnRetError, fmt.Errorf("failed to get voltage by logicID(%d)", logicID)
+		return common.UnRetError, fmt.Errorf("failed to get voltage by logicID(%d): %w", logicID, err)
 	}
 
 	return voltage, nil
@@ -492,7 +493,7 @@ func (d *DeviceManagerV2) GetDevicePowerInfo(logicID int32) (float32, error) {
 	power, err := d.DcMgr.DcGetDevicePowerInfo(logicID)
 	if err != nil {
 		hwlog.RunLog.Error(err)
-		return common.UnRetError, fmt.Errorf("failed to get power by logicID(%d)", logicID)
+		return common.UnRetError, fmt.Errorf("failed to get power by logicID(%d): %w", logicID, err)
 	}
 
 	return power, nil
@@ -503,7 +504,7 @@ func (d *DeviceManagerV2) GetDeviceFrequency(logicID int32, deviceType common.De
 	frequency, err := d.DcMgr.DcGetDeviceFrequency(logicID, deviceType)
 	if err != nil {
 		hwlog.RunLog.Error(err)
-		return common.UnRetError, fmt.Errorf("failed to get frequency by logicID(%d)", logicID)
+		return common.UnRetError, fmt.Errorf("failed to get frequency by logicID(%d): %w", logicID, err)
 	}
 
 	return frequency, nil
@@ -542,8 +543,8 @@ func (d *DeviceManagerV2) GetDeviceErrorCode(logicID int32) (int32, int64, error
 	errCount, errCode, err := d.DcMgr.DcGetDeviceErrorCode(logicID)
 	if err != nil {
 		hwlog.RunLog.Error(err)
-		return common.RetError, common.RetError, fmt.Errorf("failed to get device error code by logicID(%d)",
-			logicID)
+		return common.RetError, common.RetError, fmt.Errorf("failed to get device error code by logicID(%d): %w",
+			logicID, err)
 	}
 
 	return errCount, errCode, nil
@@ -554,7 +555,7 @@ func (d *DeviceManagerV2) GetChipInfo(logicID int32) (*common.ChipInfo, error) {
 	chipInfo, err := d.DcMgr.DcGetChipInfo(logicID)
 	if err != nil {
 		hwlog.RunLog.Error(err)
-		return nil, fmt.Errorf("failed to get chip info code by logicID(%d)", logicID)
+		return nil, fmt.Errorf("failed to get chip info code by logicID(%d): %w", logicID, err)
 	}
 
 	return chipInfo, nil
@@ -565,7 +566,7 @@ func (d *DeviceManagerV2) GetPhysicIDFromLogicID(logicID int32) (int32, error) {
 	physicID, err := d.DcMgr.DcGetPhysicIDFromLogicID(logicID)
 	if err != nil {
 		hwlog.RunLog.Error(err)
-		return common.RetError, fmt.Errorf("failed to get physicID by logicID(%d)", logicID)
+		return common.RetError, fmt.Errorf("failed to get physicID by logicID(%d): %w", logicID, err)
 	}
 
 	return physicID, nil
@@ -576,7 +577,7 @@ func (d *DeviceManagerV2) GetLogicIDFromPhysicID(physicID int32) (int32, error) 
 	logicID, err := d.DcMgr.DcGetLogicIDFromPhysicID(physicID)
 	if err != nil {
 		hwlog.RunLog.Error(err)
-		return common.RetError, fmt.Errorf("failed to get logicID by physicID(%d)", physicID)
+		return common.RetError, fmt.Errorf("failed to get logicID by physicID(%d): %w", physicID, err)
 	}
 
 	return logicID, nil
@@ -605,7 +606,7 @@ func (d *DeviceManagerV2) GetVirtualDeviceInfo(logicID int32) (common.VirtualDev
 	cgoVDevInfo, err := d.DcMgr.DcGetVDeviceInfo(logicID)
 	if err != nil {
 		hwlog.RunLog.Debug(err)
-		return common.VirtualDevInfo{}, fmt.Errorf("get virtual device info failed, error is: %v ", err)
+		return common.VirtualDevInfo{}, fmt.Errorf("get virtual device info failed, error is: %w ", err)
 	}
 	for _, vDevInfo := range cgoVDevInfo.VDevInfo {
 		if !common.IsValidTemplateName(d.DevType, vDevInfo.QueryInfo.Name) {
@@ -683,7 +684,7 @@ func (d *DeviceManagerV2) GetDeviceAllErrorCode(logicID int32) (int32, []int64, 
 	errCount, errCodes, err := d.DcMgr.DcGetDeviceAllErrorCode(logicID)
 	if err != nil {
 		hwlog.RunLog.Error(err)
-		return common.RetError, nil, fmt.Errorf("failed to get device error code by logicID(%d)", logicID)
+		return common.RetError, nil, fmt.Errorf("failed to get device error code by logicID(%d): %w", logicID, err)
 	}
 	return errCount, errCodes, nil
 }
@@ -693,7 +694,7 @@ func (d *DeviceManagerV2) GetDeviceAllErrorCodeWithTimeOut(logicID int32, timeou
 	errCount, errCodes, err := d.DcMgr.DcGetDeviceAllErrorCodeWithTimeout(logicID, timeout)
 	if err != nil {
 		hwlog.RunLog.Error(err)
-		return common.RetError, nil, fmt.Errorf("failed to get device all error code by logicID(%d)", logicID)
+		return common.RetError, nil, fmt.Errorf("failed to get device all error code by logicID(%d): %w", logicID, err)
 	}
 	return errCount, errCodes, nil
 }
@@ -702,7 +703,7 @@ func (d *DeviceManagerV2) GetDeviceAllErrorCodeWithTimeOut(logicID int32, timeou
 func (d *DeviceManagerV2) SubscribeDeviceFaultEvent(logicID int32) error {
 	if err := d.DcMgr.DcSubscribeDeviceFaultEvent(logicID); err != nil {
 		hwlog.RunLog.Error(err)
-		return fmt.Errorf("failed to subscribe device error code by logicID(%d)", logicID)
+		return fmt.Errorf("failed to subscribe device error code by logicID(%d): %w", logicID, err)
 	}
 	return nil
 }
@@ -787,7 +788,7 @@ func (d *DeviceManagerV2) GetSuperPodInfo(logicID int32) (common.CgoSuperPodInfo
 
 	cgoSuperPodInfo, err := d.DcMgr.DcGetSuperPodInfo(logicID)
 	if err != nil {
-		return common.CgoSuperPodInfo{}, fmt.Errorf("failed to get super pod info by logicID(%d), error: %v",
+		return common.CgoSuperPodInfo{}, fmt.Errorf("failed to get super pod info by logicID(%d), error: %w",
 			logicID, err)
 	}
 
@@ -830,13 +831,13 @@ func (d *DeviceManagerV2) GetHccsBandwidthInfo(logicID int32) (*common.HccsBandw
 func (d *DeviceManagerV2) GetChipBaseInfos() ([]*common.ChipBaseInfo, error) {
 	_, devList, err := d.DcMgr.DcGetDeviceList()
 	if err != nil {
-		return nil, fmt.Errorf("get device list failed, error: %v", err)
+		return nil, fmt.Errorf("get device list failed, error: %w", err)
 	}
 	var chips []*common.ChipBaseInfo
 	for _, logicID := range devList {
 		physicID, err := d.DcMgr.DcGetPhysicIDFromLogicID(logicID)
 		if err != nil {
-			return nil, fmt.Errorf("get device (logicID: %d) physic id failed, error: %v", logicID, err)
+			return nil, fmt.Errorf("get device (logicID: %d) physic id failed, error: %w", logicID, err)
 		}
 		hwlog.RunLog.Infof("get chip base info, logicID: %d, physicID: %d", logicID, physicID)
 		chips = append(chips, &common.ChipBaseInfo{

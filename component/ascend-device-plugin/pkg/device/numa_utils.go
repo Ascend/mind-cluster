@@ -181,7 +181,15 @@ func (n *NumaNodeManager) setNumaNodes(dev *common.NpuDevice) {
 func (n *NumaNodeManager) setNumaNodesByAffinityCpu(dev *common.NpuDevice) error {
 	cpuList, errCpu := n.dmgr.GetAffinityCpuInfo(dev.LogicID)
 	if errCpu != nil {
-		hwlog.RunLog.Errorf("get affinity cpu info for npu %d failed, error: %v", dev.LogicID, errCpu)
+		// Some generations (e.g. A3 SuperPod) do not support getting the cpu affinity info.
+		// It is a normal case for them, so downgrade the log instead of reporting an error.
+		// Note: IsFuncNotFound (-99998, function missing, need to upgrade driver) is a real
+		// fault and should not be treated as not supported, so it falls through to Errorf.
+		if devmanager.IsNotSupported(errCpu) {
+			hwlog.RunLog.Debugf("get affinity cpu info for npu %d not supported, error: %v", dev.LogicID, errCpu)
+		} else {
+			hwlog.RunLog.Errorf("get affinity cpu info for npu %d failed, error: %v", dev.LogicID, errCpu)
+		}
 		return errCpu
 	}
 	n.cpuListToNumaNodeMu.RLock()

@@ -21,7 +21,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
@@ -230,6 +229,8 @@ func queryNpuNics(dcMgr devmanager.DeviceInterface, logicID int32, nics []nicDev
 }
 
 // isNotSupportErr checks whether the error means the driver does not support the interface.
+// The structured-code check plus the legacy string fallback are centralized in
+// devmanager.IsNotSupported during the transition.
 func isNotSupportErr(err error) bool {
-	return err != nil && strings.Contains(err.Error(), common.NotSupportErrorCode)
+	return devmanager.IsNotSupported(err)
 }
