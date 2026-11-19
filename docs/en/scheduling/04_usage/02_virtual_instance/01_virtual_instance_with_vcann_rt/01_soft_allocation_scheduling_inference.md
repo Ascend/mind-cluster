@@ -1,7 +1,5 @@
 # Soft Partitioning Scheduling (Inference)<a name="ZH-CN_TOPIC_0000002511428569"></a>
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-28T09:27:52.258Z pushedAt=2026-08-28T10:52:27.706Z -->
-
 ## Before You Start<a name="ZH-CN_TOPIC_0000002511347125"></a>
 
 ### Usage Notes<a name="ZH-CN_TOPIC_00000025113463450356vcann"></a>
@@ -51,7 +49,7 @@ Before using soft partitioning virtualization, see scenario description in [Tabl
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>Kubernetes mechanisms such as affinity are supported.</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>Rescheduling upon chip faults and node faults is supported. For details, see <a href="../../03_basic_scheduling/06_recovery_of_inference_card_faults.md">Recovery of Inference Card Faults</a> and <a href="../../03_basic_scheduling/05_rescheduling_upon_inference_card_faults.md">Rescheduling upon Inference Card Faults</a>.</p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>Rescheduling upon chip faults and node faults is supported. For details, see <a href="../../03_basic_scheduling/06_recovery_of_inference_card_faults.md">Hardware Fault Recovery</a> and <a href="../../03_basic_scheduling/05_rescheduling_upon_inference_card_faults.md">Rescheduling upon Hardware Faults</a>.</p>
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>Support mixed deployment of soft partitioning virtualization and non-soft partitioning virtualization in a cluster.</p>
@@ -247,7 +245,7 @@ On the host side, use the `npu-smi` tool to enable container sharing mode, which
 ```shell
 # Atlas A2/A3 training or inference products: set container sharing mode
 npu-smi set -t device-share -i ${id} -c ${chip_id} -d ${value}
-# Ascend 950PR: set container sharing mode
+# Ascend 950 products: set container sharing mode
 npu-smi set -t device-share -i ${id} -d ${value}
 
 # Query the container sharing mode of a device
@@ -262,7 +260,7 @@ npu-smi info -t device-share -i ${id}
 |`chip_id`|Chip ID. The Chip ID obtained by running the `npu-smi info -m` command is the chip ID.|
 |`value`|Startup status of the container sharing mode.<ul><li>`0`: disabled</li><li>`1`: enabled</li></ul>It is disabled by default.|
 
-The following uses the Ascend 950PR product as an example:
+The following uses the Ascend 950 products as an example:
 Enable the container sharing mode for all chips on device 0, and query the container sharing mode of device 0.
 
   ```shell
@@ -346,7 +344,7 @@ This section uses the inference image in the Ascend image repository as an examp
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_acjob_infer_910b_softsharedev.yaml" target="_blank" rel="noopener noreferrer">YAML</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 accelerator card</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p><term>Ascend 950 products</term></p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>pytorch_acjob_infer_950_softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_acjob_infer_950_softsharedev.yaml" target="_blank" rel="noopener noreferrer">YAML</a></p></td>
     </tr>
@@ -357,7 +355,7 @@ This section uses the inference image in the Ascend image repository as an examp
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-vcjob-910-softsharedev.yaml" target="_blank" rel="noopener noreferrer">YAML</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 accelerator card</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p><term>Ascend 950 products</term></p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-vcjob-950-softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-vcjob-950-softsharedev.yaml" target="_blank" rel="noopener noreferrer">YAML</a></p></td>
     </tr>
@@ -368,7 +366,7 @@ This section uses the inference image in the Ascend image repository as an examp
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy-softsharedev.yaml" target="_blank" rel="noopener noreferrer">YAML</a></p></td>
     </tr>
     <tr>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 accelerator card</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p><term>Ascend 950 products</term></p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-deploy-950-softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy-950-softsharedev.yaml" target="_blank" rel="noopener noreferrer">YAML</a></p></td>
     </tr>
@@ -577,8 +575,8 @@ The output example is as follows. The actual output prevails.
 ```ColdFusion
 [20260304150146] [INFO] [eNPU] [vCANN_RT] [1799:281472853921824:config.c:145] Success to load config: physical-npu-id, value: 2
 [20260304150146] [INFO] [eNPU] [vCANN_RT] [1799:281472853921824:config.c:145] Success to load config: virtual-npu-id, value: 0
-[20260304150146] [INFO] [eNPU] [vCANN_RT] [1799:281472853921824:config.c:145] Success to load config: aicore-quota, value: 100
-[20260304150146] [INFO] [eNPU] [vCANN_RT] [1799:281472853921824:config.c:145] Success to load config: memory-quota, value: 60000
+[20260304150146] [INFO] [eNPU] [vCANN_RT] [1799:281472853921824:config.c:145] Success to load config: aicore-quota, value: 50
+[20260304150146] [INFO] [eNPU] [vCANN_RT] [1799:281472853921824:config.c:145] Success to load config: memory-quota, value: 2048
 [20260304150146] [INFO] [eNPU] [vCANN_RT] [1799:281472853921824:config.c:145] Success to load config: shm-id, value: C281A66C-80A047F2-0A645632-CC500485-100301E3
 [20260304150146] [INFO] [eNPU] [vCANN_RT] [1799:281472853921824:config.c:145] Success to load config: scheduling-policy, value: 2
 [20260304150146] [INFO] [eNPU] [vCANN_RT] [1799:281472853921824:npu-manager.c:127] Successfully to initialize vnpu device.

@@ -8,7 +8,7 @@
 
 |功能名称|说明|原理介绍及配置步骤|
 |--|--|--|
-|故障检测|该特性具有故障检测功能，支持实时监测350+硬件类故障的故障检测。|[故障检测](#故障检测)|
+|故障检测|该特性具有故障检测功能，支持实时检测350+硬件类故障。|[故障检测](#故障检测)|
 |故障处理|该特性具有故障处理功能，针对故障级别配置为RestartRequestCodes、RestartBusinessCodes、FreeRestartNPUCodes和RestartNPUCodes的故障，故障发生后不需要人工介入就可自动恢复故障设备。|[故障处理](#故障处理)|
 |容器恢复|该特性具有容器恢复功能，用户可配置容器启停的策略，针对故障级别配置为RestartRequestCodes、RestartBusinessCodes、FreeRestartNPUCodes和RestartNPUCodes的故障，故障发生时将容器停止，故障恢复后重新将容器拉起。|[容器恢复](#容器恢复)|
 

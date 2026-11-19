@@ -94,7 +94,7 @@ Ascend Docker Runtime mounts the following directories and files into containers
 </th>
 </tr>
 </thead>
-<tbody><tr id="zh-cn_topic_0000001538584750_row887398115"><td class="cellrowborder" valign="top" width="42.86%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001538584750_p3873913114"><a name="zh-cn_topic_0000001538584750_p3873913114"></a><a name="zh-cn_topic_0000001538584750_p3873913114"></a>/dev/davinciX</p>
+<tbody><tr id="zh-cn_topic_0000001538584750_row887398115"><td class="cellrowborder" valign="top" width="42.86%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001538584750_p3873913114"><a name="zh-cn_topic_0000001538584750_p3873913114"></a><a name="zh-cn_topic_0000001538584750_p3873913114"></a>/dev/davinci<em>X</em></p>
 </td>
 <td class="cellrowborder" valign="top" width="57.14%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001538584750_p987149212"><a name="zh-cn_topic_0000001538584750_p987149212"></a><a name="zh-cn_topic_0000001538584750_p987149212"></a>NPU device, where *X* is the ID number. For example: davinci0.</p>
 </td>
@@ -262,7 +262,7 @@ Ascend Docker Runtime mounts the following directories and files into containers
 </th>
 </tr>
 </thead>
-<tbody><tr id="zh-cn_topic_0000001538584750_row424018316537"><td class="cellrowborder" valign="top" width="42.86%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001538584750_p91141812145416"><a name="zh-cn_topic_0000001538584750_p91141812145416"></a><a name="zh-cn_topic_0000001538584750_p91141812145416"></a>/dev/davinciX</p>
+<tbody><tr id="zh-cn_topic_0000001538584750_row424018316537"><td class="cellrowborder" valign="top" width="42.86%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001538584750_p91141812145416"><a name="zh-cn_topic_0000001538584750_p91141812145416"></a><a name="zh-cn_topic_0000001538584750_p91141812145416"></a>/dev/davinci<em>X</em></p>
 </td>
 <td class="cellrowborder" valign="top" width="57.14%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001538584750_p1733622015418"><a name="zh-cn_topic_0000001538584750_p1733622015418"></a><a name="zh-cn_topic_0000001538584750_p1733622015418"></a>NPU device, where *X* is the ID number. For example: davinci0.</p>
 </td>
@@ -742,7 +742,7 @@ The table below lists constraints on training jobs based on server type when sch
 <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.2 "><p id="p230416293218"><a name="p230416293218"></a><a name="p230416293218"></a>Single-server scenario</p>
 </td>
 <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.3 "><p id="p202281257143415"><a name="p202281257143415"></a><a name="p202281257143415"></a>The number of NPUs that can be requested is 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, or 16.</p>
-<a name="ul14261149163515"></a><a name="ul14261149163515"></a><ul id="ul14261149163515"><li>When the requested number of NPUs is fewer than 8, the allocated NPUs must be on the same server and within the same ring (NPUs 0–7 form one ring, and NPUs 8–16 form another ring) due to affinity constraints.</li><li>When the requested number of NPUs is 10, 12, or 14, the required NPUs must be evenly distributed across the two rings, and the corresponding physical addresses must also be consistent. For example, if 2 NPUs are requested for training, the allocated 2 NPUs must either both be among NPUs 0–7 of the same server or both be among NPUs 8–16. It is not allowed for one to be among NPUs 0–7 and the other among NPUs 8–16.</li></ul>
+<a name="ul14261149163515"></a><a name="ul14261149163515"></a><ul id="ul14261149163515"><li>When the requested number of NPUs is fewer than 8, the allocated NPUs must be on the same server and within the same ring (NPUs 0–7 form one ring, and NPUs 8–15 form another ring) due to affinity constraints.</li><li>When the requested number of NPUs is 10, 12, or 14, the required NPUs must be evenly distributed across the two rings, and the corresponding physical addresses must also be consistent. For example, if 2 NPUs are requested for training, the allocated 2 NPUs must either both be among NPUs 0–7 of the same server or both be among NPUs 8–15. It is not allowed for one to be among NPUs 0–7 and the other among NPUs 8–15.</li></ul>
 </td>
 </tr>
 <tr id="row20219245321"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p95591734153713"><a name="p95591734153713"></a><a name="p95591734153713"></a>Distributed scenario</p>

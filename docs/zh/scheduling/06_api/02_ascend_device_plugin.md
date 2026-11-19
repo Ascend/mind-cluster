@@ -92,7 +92,7 @@ Ascend Device Plugin的ConfigMap中的描述信息如[表5](#table97108314503)�
 Ascend Device Plugin上报的NPU设备故障信息如[表6](#table68216761214)所示。对象名称是<device-plugin-pod-name\>.<上报时间\><故障芯片ID\>，对象类型为Event。
 
 >[!NOTE]
->下表仅展示与MindCluster业务相关的字段说明，更多字段的说明详细请参见[Event core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#event-v1-core)。
+>下表仅展示与MindCluster业务相关的字段说明，更多字段的详细说明请参见[Event core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#event-v1-core)。
 
 **表 6**  NPU设备故障信息
 
@@ -468,7 +468,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 >- 如果一个故障码同时配置了故障频率和故障超时策略，只有当故障超时后，故障才算发生，频次才会增加一次。故障恢复超过RecoverTimeout才算恢复，恢复后再次故障超时才能累积下一次计数。
 >- 故障ID为81078603的网络故障只支持配置为NotHandleFault、PreSeparateNPU或SeparateNPU三种故障处理策略，若配置为其他策略则使用默认配置NotHandleFault。
 >- 当Ascend Device Plugin从26.0.0之前版本升级到26.0.0及之后版本时，若Ascend Device Plugin的ConfigMap中已经包含了ManuallySeparateNPU键值，则其降级的时间窗为faultCustomization.json中最大的ReleaseTimeWindow值，若没有任何故障码配置ReleaseTimeWindow，则ConfigMap已有的ManuallySeparateNPU不降级。
->- 在修改/删除mindx-dl-fault-config中的策略后，支持已升级的故障处理策略也会随配置更新。但是ManuallySeparateNPU策略升级后，删除故障处理策略配置项不会被解除，需要遵循ManuallySeparateNPU的解除方式。并且，其他故障级别配置更新为ManuallySeparateNPU时，配置不生效或者不满足期望。
+>- 在修改/删除mindx-dl-fault-config中的策略后，已升级的故障处理策略也会随配置更新。但是ManuallySeparateNPU策略升级后，删除故障处理策略配置项不会被解除，需要遵循ManuallySeparateNPU的解除方式。并且，其他故障级别配置更新为ManuallySeparateNPU时，配置不生效或者不满足期望。
 
 ## 自定义灵衢设备故障<a name="ZH-CN_TOPIC_0000002511426735"></a>
 

@@ -104,7 +104,7 @@ Directory structure:
 > [!NOTE]
 >
 > - CANN App logs are stored in the `$HOME/ascend/log` directory by default, and the log storage path can be customized through the environment variable `ASCEND_PROCESS_LOG_PATH`.
-> - App logs printed by CANN include two types: host-side App logs `plog-{pid}_{unix time}.log` and device-side App logs `device-{pid}_{unix time}.log`. For more log-related information, see [Viewing Logs (Ascend EP)](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/maintenref/logreference/logreference_0002.html) in [*CANN Log Reference*](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/maintenref/logreference/logreference_0001.html).
+> - App logs printed by CANN include two types: host-side App logs `plog-{pid}_{unix time}.log` and device-side App logs `device-{pid}_{unix time}.log`. For more log-related information, see [Viewing Logs (Ascend EP)](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/910/maintenref/logreference/logreference_0002.html) in *CANN Log Reference*.
 
 ### User Training/Inference Logs
 
@@ -463,5 +463,5 @@ You are required to manually copy the logs to `{collection_directory}/pymotor_vl
 
 > [!NOTE]
 >
-> - For details on MindIE-PyMotor deployment, see [MindIE-PyMotor Deployment](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/en/user_guide/deployment/k8s/pd_aggregation_deployment.).
+> - For details on MindIE-PyMotor deployment, see [MindIE-PyMotor Deployment](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/deployment/k8s/pd_aggregation_deployment.md#%E6%9F%A5%E7%9C%8B%E9%9B%86%E7%BE%A4%E7%8A%B6%E6%80%81%E4%B8%8E%E6%97%A5%E5%BF%97).
 > - The log naming formats are `mindie-motor-controller-*.log`, `mindie-motor-coordinator-*.log`, `vllm-d0-*.log`, and `vllm-p0-*.log`.

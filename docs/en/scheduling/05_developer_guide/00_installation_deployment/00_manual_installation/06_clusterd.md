@@ -1,6 +1,6 @@
 # ClusterD<a name="ZH-CN_TOPIC_0000002511346341"></a>
 
-- Users who use full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, inference card fault recovery, or rescheduling upon inference card faults must install ClusterD. ClusterD can provide full information collection services only when both Ascend Device Plugin and NodeD components exist in the cluster.
+- Users who use full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, hardware fault recovery, or rescheduling upon hardware faults must install ClusterD. ClusterD can provide full information collection services only when both Ascend Device Plugin and NodeD components exist in the cluster.
 - When you install ClusterD, it is recommended to install Volcano in advance. If ClusterD is installed before Volcano, the Pod where ClusterD resides may experience `CrashLoopBackOff`. ClusterD will return to normal only after the Volcano Pod starts.
 - Users who only use containerization support and resource monitoring do not need to install ClusterD. Please skip this chapter directly.
 - Before starting ClusterD, you need to start Ascend Operator first. ClusterD needs to perceive Ascend Job resources.

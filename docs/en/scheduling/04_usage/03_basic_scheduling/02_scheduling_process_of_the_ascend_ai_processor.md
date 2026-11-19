@@ -26,16 +26,16 @@ The overall scheduling logic is shown in the figure below Ascend Device Plugin d
 
     ![](../../../figures/scheduling/scheduling-process-2.png)
 
-If the value of the self-maintain-available-card parameter in the Volcano startup YAML is set to false, the scheduling process for Ascend AI processors is as follows:
+    If the value of the self-maintain-available-card parameter in the Volcano startup YAML is set to false, the scheduling process for Ascend AI processors is as follows:
 
-1. Ascend Device Plugin reports the health status of Ascend AI processors.
-2. Ascend Device Plugin writes the information of currently idle Ascend AI processors (healthy Ascend AI processors - used Ascend AI processors) to the `DeviceInfo` field of the ConfigMap `mindx-dl-deviceinfo-{nodeName}` through kube-apiserver.
-3. The user calls kube-apiserver to create a service container that uses NPUs, such as vcjob.
-4. Volcano obtains the currently available Ascend AI processors through `DeviceInfo`.
-5. Based on the affinity scheduling principle, Volcano writes the allocation status of Ascend AI processors into the Pod's annotations, along with the timestamp of the allocation. After writing the resource information, Volcano submits a Pod binding request to Kubernetes.
-6. kubelet detects that a Pod has been scheduled to its node and calls the `Allocate` function of Ascend Device Plugin to mount NPU devices. Mounting NPU devices using Ascend Docker Runtime is also supported.
-7. Ascend Device Plugin queries the list of Pods in `Pending` state on the current node, identifies the Pod with the earliest timestamp after affinity scheduling, obtains the device ID to be mounted, and feeds it back to kubelet for device mounting.
-8. Ascend Device Plugin updates the allocatable Ascend AI processors in the `DeviceInfo` field.
+    1. Ascend Device Plugin reports the health status of Ascend AI processors.
+    2. Ascend Device Plugin writes the information of currently idle Ascend AI processors (healthy Ascend AI processors - used Ascend AI processors) to the `DeviceInfo` field of the ConfigMap `mindx-dl-deviceinfo-{nodeName}` through kube-apiserver.
+    3. The user calls kube-apiserver to create a service container that uses NPUs, such as vcjob.
+    4. Volcano obtains the currently available Ascend AI processors through `DeviceInfo`.
+    5. Based on the affinity scheduling principle, Volcano writes the allocation status of Ascend AI processors into the Pod's annotations, along with the timestamp of the allocation. After writing the resource information, Volcano submits a Pod binding request to Kubernetes.
+    6. kubelet detects that a Pod has been scheduled to its node and calls the `Allocate` function of Ascend Device Plugin to mount NPU devices. Mounting NPU devices using Ascend Docker Runtime is also supported.
+    7. Ascend Device Plugin queries the list of Pods in `Pending` state on the current node, identifies the Pod with the earliest timestamp after affinity scheduling, obtains the device ID to be mounted, and feeds it back to kubelet for device mounting.
+    8. Ascend Device Plugin updates the allocatable Ascend AI processors in the `DeviceInfo` field.
 
 ## Specific Interaction Field Description<a name="section154080418522"></a>
 

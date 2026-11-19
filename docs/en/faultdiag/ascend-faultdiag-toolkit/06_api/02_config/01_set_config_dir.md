@@ -21,7 +21,7 @@ Sets the configuration file directory path. The tool automatically scans and loa
 
 ## LLD.xlsx File Structure
 
-You need to provide the `LLD.xlsx` file. For a sample file, see [LLD.xlsx](../../../../resource/LLD.xlsx). The file must contain two sheets:
+You need to provide the `LLD.xlsx` file. For a sample file, see [LLD.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/81bc2b850ea97aab32379a9cd6e65935857e620b/LLD.xlsx). The file must contain two sheets:
 
 | Sheet Name | Mandatory Fields | Purpose |
 |----------|--------|------|

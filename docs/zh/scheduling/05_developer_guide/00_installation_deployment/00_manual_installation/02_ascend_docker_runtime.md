@@ -280,7 +280,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     [INFO] ascend-docker-runtime install success
     ```
 
-4. （可选）如果安装失败，可参考[Containerd场景下安装Ascend Docker Runtime](#zh-cn_topic_0000001930317932_section196591123133116)中的[步骤5](#zh-cn_topic_0000001930317932_section19659112313311605)。
+4. （可选）如果安装失败，可参考[Containerd场景下安装Ascend Docker Runtime](#zh-cn_topic_0000001930317932_section196591123133116)中的[步骤4](#zh-cn_topic_0000001930317932_section19659112313311605)。
 
 5. 如需将节点上的容器运行时从Docker更改为Containerd，需要修改节点上kubelet的配置文件kubeadm-flags.env。详情请参见[K8s官方文档](https://kubernetes.io/docs/tasks/administer-cluster/migrating-from-dockershim/change-runtime-containerd/)。
 

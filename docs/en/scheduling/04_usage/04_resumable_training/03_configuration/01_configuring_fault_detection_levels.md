@@ -1622,28 +1622,28 @@ The fault code for public faults is 9 digits, as described below.
 </td>
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p_hangfault001_desc"><a name="p_hangfault001_desc"></a><a name="p_hangfault001_desc"></a>Hyper-plane optical link member port fault (route can converge)</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>SubHealthFaultCodes</p>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>SubHealthFault</p>
 </td>
 </tr>
 <tr id="row_hangfault001"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p_hangfault001_code"><a name="p_hangfault001_code"></a><a name="p_hangfault001_code"></a>020001002</p>
 </td>
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p_hangfault001_desc"><a name="p_hangfault001_desc"></a><a name="p_hangfault001_desc"></a>Hyper-plane optical link member port fault (route cannot converge)</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>SeparateNPUCodes</p>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>SeparateNPU</p>
 </td>
 </tr>
 <tr id="row_hangfault001"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p_hangfault001_code"><a name="p_hangfault001_code"></a><a name="p_hangfault001_code"></a>110001024</p>
 </td>
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p_hangfault001_desc"><a name="p_hangfault001_desc"></a><a name="p_hangfault001_desc"></a>Parameter-plane optical link member port fault (UBOE fault, route cannot converge)</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>PreSeparateNPUCodes</p>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>PreSeparateNPU</p>
 </td>
 </tr>
 <tr id="row_hangfault001"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p_hangfault001_code"><a name="p_hangfault001_code"></a><a name="p_hangfault001_code"></a>110000002</p>
 </td>
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p_hangfault001_desc"><a name="p_hangfault001_desc"></a><a name="p_hangfault001_desc"></a>Parameter-plane optical link member port fault (UBOE fault, route can converge)</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>SubHealthFaultCodes</p>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>SubHealthFault</p>
 </td>
 </tr>
 </tbody>

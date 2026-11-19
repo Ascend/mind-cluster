@@ -731,7 +731,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
         >- 若日志出现“modify  _xxx_  success”，表示ConfigMap中faultCustomization.json里的<i>xxx</i>参数设置成功。
         >- 若日志出现“insert fault frequency success”，表示记录了一次频率故障发生时间，在频率窗口内，该卡的该故障记录次数达到频率故障触发次数以后，就会上报频率故障对应的故障级别。
 
-8. （可选）手动恢复强制隔离的芯片。故障的处理策略为ManuallySeparateNPU时，故障恢复后该芯片也处于隔离状态，在未达到释放条件时若需要手动恢复强制隔离的芯片。
+8. （可选）手动恢复强制隔离的芯片。故障的处理策略为ManuallySeparateNPU时，故障恢复后该芯片也处于隔离状态，在未达到释放条件时需要手动恢复强制隔离的芯片。
     1. 执行以下命令，查找该节点的Ascend Device Plugin上报的device-info-cm。
 
         ```shell
@@ -1622,28 +1622,28 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
 </td>
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p_hangfault001_desc"><a name="p_hangfault001_desc"></a><a name="p_hangfault001_desc"></a>超平面光链路成员端口故障（路由可收敛）</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>SubHealthFaultCodes</p>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>SubHealthFault</p>
 </td>
 </tr>
 <tr id="row_hangfault001"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p_hangfault001_code"><a name="p_hangfault001_code"></a><a name="p_hangfault001_code"></a>020001002</p>
 </td>
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p_hangfault001_desc"><a name="p_hangfault001_desc"></a><a name="p_hangfault001_desc"></a>超平面光链路成员端口故障（路由不可收敛）</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>SeparateNPUCodes</p>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>SeparateNPU</p>
 </td>
 </tr>
 <tr id="row_hangfault001"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p_hangfault001_code"><a name="p_hangfault001_code"></a><a name="p_hangfault001_code"></a>110001024</p>
 </td>
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p_hangfault001_desc"><a name="p_hangfault001_desc"></a><a name="p_hangfault001_desc"></a>参数面光链路成员端口故障（UBOE故障，路由不可收敛）</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>PreSeparateNPUCodes</p>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>PreSeparateNPU</p>
 </td>
 </tr>
 <tr id="row_hangfault001"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p_hangfault001_code"><a name="p_hangfault001_code"></a><a name="p_hangfault001_code"></a>110000002</p>
 </td>
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p_hangfault001_desc"><a name="p_hangfault001_desc"></a><a name="p_hangfault001_desc"></a>参数面光链路成员端口故障（UBOE故障，路由可收敛）</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>SubHealthFaultCodes</p>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p_hangfault001_level"><a name="p_hangfault001_level"></a><a name="p_hangfault001_level"></a>SubHealthFault</p>
 </td>
 </tr>
 </tbody>

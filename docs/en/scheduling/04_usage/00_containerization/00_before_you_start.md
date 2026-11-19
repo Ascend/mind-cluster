@@ -4,9 +4,7 @@ Containerization is a technical capability that packages an application and its 
 
 ## Prerequisites<a name="section1632062465010"></a>
 
-Before using the containerization feature, ensure that the relevant components are installed. If they are not installed, refer to the [Installation and Deployment](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md) section for instructions.
-
-- Ascend Docker Runtime
+Before using the containerization feature, ensure that Ascend Docker Runtime has been installed. If not installed, refer to the [Installation and Deployment](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md) section for instructions.
 
 ## Usage Instructions<a name="section44381612353"></a>
 
@@ -17,7 +15,7 @@ Before using the containerization feature, ensure that the relevant components a
 
 The following products support containerization.
 
-- Atlas training products
+- <term>Atlas training products</term>
 - <term>Atlas A2 training products</term>
 - <term>Atlas A3 training products</term>
 - Inference server (with Atlas 300I inference card)

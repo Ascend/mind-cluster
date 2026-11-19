@@ -1,7 +1,5 @@
 # Hardware Fault Recovery<a name="ZH-CN_TOPIC_0000002479227136"></a>
 
-<!-- md-trans-meta sourceCommit=f8c727966e9dd4576ec4ccafd8e5d7ef6397cead translatedAt=2026-08-31T01:42:37.499Z pushedAt=2026-08-31T01:43:04.751Z -->
-
 The hardware fault recovery feature leverages the offline hot reset capability of Ascend Device Plugin to automatically restore chips to a healthy state when partial hardware faults occur on chip resources in the cluster.
 
 ## Before You Start<a name="section_precondition"></a>

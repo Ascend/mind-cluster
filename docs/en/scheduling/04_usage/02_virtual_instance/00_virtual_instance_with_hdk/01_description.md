@@ -1,7 +1,5 @@
 # Feature Description<a name="ZH-CN_TOPIC_0000002511426281"></a>
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-28T08:18:35.294Z pushedAt=2026-08-28T08:38:32.782Z -->
-
 The HDK-based virtual instance function refers to partitioning the NPU configured on a physical machine or virtual machine into multiple virtual NPUs (vNPUs) through resource virtualization, and mounting them to containers for use.
 
 The HDK-based virtual instance function offers the following advantages:
@@ -178,7 +176,7 @@ Ascend NPU hardware resources mainly include AICore (used for AI model computati
 - A vNPU can be used by only one task container. Multiple task containers are not supported to use the same vNPU.
 - The working modes of the two chips on the Atlas 300I Duo inference card must be consistent. That is, both chips must use the virtual instance function, or both must use the entire card. Plan this according to your service requirements.
 - The virtual instance template is used to partition resources of all NPUs on the entire server. Mixing standard cards of different specifications is not supported. For example, the Atlas 300V Pro video analysis card supports 24 GB and 48 GB memory specifications, but mixing cards of these two memory specifications for virtualization is not supported. Mixing <term>Atlas training products</term> with 30 AICores and <term>Atlas training products</term> with 32 AICores is also not supported.
-- When the server is an Atlas training product, the virtualization function is supported only when the NPU chip works in AMP mode, and SMP mode is not supported. The procedure for query and configuration of the NPU chip working mode is as follows (ensure that the server operating system is powered off):
+- For <term>Atlas training products</term>, the virtualization function is supported only when the NPU chip works in AMP mode, and SMP mode is not supported. The procedure for query and configuration of the NPU chip working mode is as follows (ensure that the server operating system is powered off):
 
     1. Log in to the iBMC command line.
     2. Run the **ipmcget -d npuworkmode** command to query the working mode of the NPU chip. If it is AMP mode, no switching is required.

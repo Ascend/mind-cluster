@@ -63,8 +63,8 @@ Required components for dynamic virtualization:
 
 **Usage Instructions<a name="section1350915844811"></a>**
 
-- For installation, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
-- For feature usage instructions, see [HDK-Based Virtual Instance](../04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md).
+1. For installation, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
+2. For feature usage instructions, see [HDK-Based Virtual Instance](../04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md).
 
 ### vCANN-RT-Based Virtual Instance<a name="ZH-CN_TOPIC_0000002511346855vcann"></a>
 
@@ -95,7 +95,7 @@ When users run training or inference tasks, the tasks can be scheduled to an ent
 
 The more complex the network topology between chips, the more complex the scheduling logic. For details, see [Affinity Scheduling](../04_usage/03_basic_scheduling/01_affinity_scheduling/00_solution_description.md).
 
-Preempt and Reclaim Action operations are supported. Preempt is used for resource preemption between tasks in the same queue. When a high-priority task needs resources, it can preempt resources from a low-priority task. Reclaim is used for resource reclamation between different queues. When a task in a queue needs resources and the queue has not exceeded its resource quota, resources can be reclaimed from other reclaimable queues. Both enable dynamic adjustment and optimized allocation of resources. For details about Preempt and Reclaim Action, see [relevant information on the official Volcano website](https://volcano.sh/docs/Scheduler/Actions).
+Preempt and Reclaim Action operations are supported. Preempt is used for resource preemption between tasks in the same queue. When a high-priority task needs resources, it can preempt resources from a low-priority task. Reclaim is used for resource reclamation between different queues. When a task in a queue needs resources and the queue has not exceeded its resource quota, resources can be reclaimed from other reclaimable queues. Both enable dynamic adjustment and optimized allocation of resources. For details about Preempt and Reclaim Action, visit [official Volcano website](https://volcano.sh/docs/Scheduler/Actions).
 
 **Required Components<a name="section15655185785119"></a>**
 
@@ -118,7 +118,7 @@ Preempt and Reclaim Action operations are supported. Preempt is used for resourc
 
 **Feature Highlights<a name="section1788818281655"></a>**
 
-Multi-level scheduling is an advanced scheduling strategy of the ascend-for-volcano plugin, designed specifically for NPU clusters with complex network topologies. Multi-level scheduling is a special scenario of full-NPU scheduling. It abstracts cluster resources into a multi-level structure based on the hierarchical relationships of the NPU network topology, providing efficient, flexible, and reliable scheduling capabilities for NPU clusters. When users run training tasks, they select appropriate NPU devices based on the network topology to maximize NPU performance and achieve optimal allocation of NPU scheduling for training tasks.
+Multi-level scheduling is an advanced scheduling strategy of the ascend-for-volcano plugin, designed specifically for NPU clusters with complex network topologies. Multi-level scheduling is a special scenario of full-NPU scheduling. It abstracts cluster resources into a multi-level structure based on the hierarchical relationships of the NPU network topology. When users run training tasks, they select appropriate NPU devices based on the network topology to maximize NPU performance and achieve optimal allocation of NPU scheduling for training tasks.
 
 **Required Components<a name="section15655185785119"></a>**
 
@@ -134,7 +134,7 @@ Multi-level scheduling is an advanced scheduling strategy of the ascend-for-volc
 1. For installation components, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
 2. For feature usage guidance, see [Multi-level Scheduling](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md).
 
-### Recovery of Inference Card Faults<a name="ZH-CN_TOPIC_0000002479226952"></a>
+### Hardware Fault Recovery<a name="ZH-CN_TOPIC_0000002479226952"></a>
 
 **Feature Introduction<a name="section113779818313"></a>**
 
@@ -150,10 +150,10 @@ When an inference NPU resource managed by the cluster scheduling component fails
 
 **Usage Instructions<a name="section74221327111220"></a>**
 
-- For installation components, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
-- For feature usage instructions, see [Recovery of Inference Card Faults](../04_usage/03_basic_scheduling/06_recovery_of_inference_card_faults.md).
+1. For installation components, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
+2. For feature usage instructions, see [Hardware Fault Recovery](../04_usage/03_basic_scheduling/06_recovery_of_inference_card_faults.md).
 
-### Rescheduling upon Inference Card Faults<a name="ZH-CN_TOPIC_0000002511346875"></a>
+### Rescheduling upon Hardware Faults<a name="ZH-CN_TOPIC_0000002511346875"></a>
 
 **Feature Introduction<a name="section119259203315"></a>**
 
@@ -171,8 +171,8 @@ After a fault occurs on an inference NPU resource managed by the cluster schedul
 
 **Usage Instructions<a name="section18894171918127"></a>**
 
-- For component installation, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
-- For feature usage guidance, see [Rescheduling upon Inference Card Faults](../04_usage/03_basic_scheduling/05_rescheduling_upon_inference_card_faults.md).
+1. For component installation, see [Installation and Deployment](../03_installation_guide/02_installation/00_helm_installation.md).
+2. For feature usage guidance, see [Rescheduling upon Hardware Faults](../04_usage/03_basic_scheduling/05_rescheduling_upon_inference_card_faults.md).
 
 ## Resumable Training<a name="ZH-CN_TOPIC_0000002511346867"></a>
 
@@ -214,7 +214,7 @@ When a training task encounters a fault, the task is rescheduled to a healthy de
 In scenarios without K8s, when a training or inference process becomes abnormal, container fault recovery can be performed by configuring the container recovery feature.
 
 - **Fault detection**: Detects task faults through the Container Manager component.
-- **Fault handling**: After a fault occurs, the faulty device is automatically recovered without manual intervention.
+- **Fault handling**: After a fault occurs, the faulty container is automatically recovered without manual intervention.
 - **Container recovery**: When a fault occurs, the container is stopped, and after the fault is recovered, the container is restarted.
 
 **Required Components<a name="section15655185785119"></a>**
@@ -224,7 +224,7 @@ Container Manager
 **Usage Instructions<a name="section1245612501584"></a>**
 
 1. For installation components, see [Installation and Deployment](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md).
-2. For feature usage instructions, see [Appliance Feature Guide](../04_usage/05_appliance/01_npu_hardware_fault_detection_and_rectification.md).
+2. For feature usage instructions, see [Appliance Feature Guide](../04_usage/05_appliance/00_before_you_start.md).
 
 ## Container Snapshot<a name="ZH-CN_TOPIC_0000002511346881"></a>
 

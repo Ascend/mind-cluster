@@ -1,4 +1,4 @@
-# DP Hot Reset Plugin Development
+# Chip Hot Reset Plugin Development
 
 Ascend Device Plugin provides a plugin mechanism in the offline hot reset flow, allowing developers to insert custom logic at key points of the reset, such as collecting NPU information before the reset and recording events after the reset.
 

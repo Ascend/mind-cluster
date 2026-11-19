@@ -143,7 +143,7 @@ To understand the description of labels in the above data information, see [Data
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p_machine_card_nums_label">-</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p_machine_card_nums_unit">Unit: pcs</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p_machine_card_nums_unit">Unit: count</p>
 </td>
 <td class="cellrowborder" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><ul><li><term>Atlas training products</term></li><li><term>Atlas A2 training products</term></li><li><term>Atlas A3 training products</term></li><li>Inference server (with Atlas 300I inference card)</li><li><term>Atlas inference products</term></li><li><span>Atlas 800I A2 inference server</span></li><li><span>A200I A2 Box heterogeneous subrack</span></li></ul>
 </td>

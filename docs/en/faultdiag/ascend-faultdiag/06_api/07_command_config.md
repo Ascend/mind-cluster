@@ -77,7 +77,7 @@ The custom configuration file is in JSON format.
     }
     ```
 
-- JSON file field description
+- JSON file description
 
     | Field                                 | Type         | Default Value | Description                                                          |
     |---------------------------------------|--------------|---------------|---------------------------------------------------------------|

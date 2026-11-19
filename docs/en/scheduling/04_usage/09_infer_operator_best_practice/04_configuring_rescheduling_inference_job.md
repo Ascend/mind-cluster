@@ -22,7 +22,7 @@ When adapting to other serving platforms (for example, MindIE PyMotor) to enable
 
 ## Configuring Instance-Level Rescheduling
 
-The following is an example of configuring instance-level rescheduling for an Infer Operator job. You need to modify the bolded configurations below. For descriptions of related configuration items, see [YAML Parameter Description](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md#YAML-parameter-description).
+The following is an example of configuring instance-level rescheduling for an Infer Operator job. You need to modify the bolded configurations below. For descriptions of related configuration items, see [YAML Parameter Description](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md#yaml-parameter-description).
 <pre codetype="yaml">
 apiVersion: mindcluster.huawei.com/v1
 kind: InferServiceSet

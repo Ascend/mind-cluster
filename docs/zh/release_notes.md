@@ -279,7 +279,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 |组件名称| 特性描述 |
 |--|----------|
 |MindCluster Ascend FaultDiag| <ul><li>在已有故障模式库中，针对<term>Ascend 950 系列产品</term>补充故障模式，并新增支持基于pyMotor+vLLM的故障模式。</li><li>优化链路诊断工具输出报告的内容。</li><li>故障诊断支持IPv6场景。</li></ul>   |
-|MindCluster集群调度组件| <ul><li>支持存储DTFS故障。</li><li>Atlas 950 SuperPoD 超节点支持IPv6场景（参数面除外）。Atlas A2/A3 系列产品支持IPv6。</li><li>Volcano支持Pod优先调度回原运行节点。</li><li>Ascend Device Plugin故障处理插件化。</li><li>支持带内检测1825故障上报。</li><li>提供1825网卡的RDMA设备插件。</li><li>支持helm一键化部署易用性提升。</li><li>NPU Exporter支持分组配置采集周期。</li><li>多级调度场景支持亚健康热切。</li><li>支持配置存活探针。</li><li>新增卡死检测与恢复功能。</li><li>支持Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点的设备管理、亲和性调度、指标监控、故障检测，RankTable生成等基础能力。</li><li>支持Atlas 850E 超节点、Atlas 650E 服务器的基础断点续训能力；支持Atlas 950 SuperPoD 超节点的全量断点续训能力。</li><li>支持Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点的容器化能力。</li><li>支持推理故障恢复能力，包括优先级调度、缩P保D和实例级重调度。</li><li>支持推理场景基于负载的弹性扩缩容能力和容器快照能力。</li></ul> |
+|MindCluster集群调度组件| <ul><li>支持存储DTFS故障。</li><li>Atlas 950 SuperPoD 超节点支持IPv6场景（参数面除外）。Atlas A2/A3 系列产品支持IPv6。</li><li>Volcano支持Pod优先调度回原运行节点。</li><li>Ascend Device Plugin故障处理插件化。</li><li>支持带内检测1825故障上报。</li><li>提供UB网卡的RDMA设备插件。</li><li>支持helm一键化部署易用性提升。</li><li>NPU Exporter支持分组配置采集周期。</li><li>多级调度场景支持亚健康热切。</li><li>支持配置存活探针。</li><li>新增卡死检测与恢复功能。</li><li>支持Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点的设备管理、亲和性调度、指标监控、故障检测，RankTable生成等基础能力。</li><li>支持Atlas 850E 超节点、Atlas 650E 服务器的基础断点续训能力；支持Atlas 950 SuperPoD 超节点的全量断点续训能力。</li><li>支持Atlas 850E 超节点、Atlas 650E 服务器和Atlas 950 SuperPoD 超节点的容器化能力。</li><li>支持推理故障恢复能力，包括优先级调度、缩P保D和实例级重调度。</li><li>支持推理场景基于负载的弹性扩缩容能力和容器快照能力。</li></ul> |
 
 ### 关键特性变更
 

@@ -103,11 +103,11 @@
 <td>NPU端口与对端交换机：SWITCH-01，ip：0.0.0.1，端口10GE1/0/1连接信息不相同，本端Speed：100G，Duplex：full。对端Speed：50G，Duplex：full</td>
 </tr>
 <tr>
-<td>NPU对端lldp信息缺失检测</td>
+<td>NPU对端LLDP信息缺失检测</td>
 <td><code>hccn_tool -i {chip_phy_id} -lldp -g</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: <code>lldp.log</code></td>
-<td>检查 NPU 光模块对端 lldp 信息是否采集到</td>
-<td>未采集到NPU光模块对端lldp信息</td>
+<td>检查 NPU 光模块对端LLDP信息是否采集到</td>
+<td>未采集到NPU光模块对端LLDP信息</td>
 </tr>
 <tr>
 <td>环回检测</td>

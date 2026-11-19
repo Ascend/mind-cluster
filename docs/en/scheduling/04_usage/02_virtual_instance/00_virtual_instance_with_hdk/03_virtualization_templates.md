@@ -14,7 +14,7 @@
     <tr>
         <td><term>Atlas training products</term> (30 or 32 AICores)</td>
         <td>Virtual instance templates include: vir02, vir04, vir08, vir16.</td>
-        <td><ul><li>The number after vir indicates the number of AICores.</li></ul></td>
+        <td>The number after vir indicates the number of AICores.</td>
     </tr>
     <tr>
         <td><term>Atlas inference products</term> (8 AICores)</td>

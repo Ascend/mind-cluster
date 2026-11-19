@@ -308,7 +308,7 @@ In a K8s cluster, if a node containing an Ascend AI Processor is used as the K8s
 
 ## Preparing an Image<a name="ZH-CN_TOPIC_0000002479226488"></a>
 
-You can prepare images in the following two ways. After obtaining the images, create node labels, users, log directories, and namespaces for the corresponding components to be installed in sequence.
+You can prepare images in the following two ways.
 
 - (Recommended) [Create Images](#section106851195114): Taking Ascend Operator as an example, this section describes the steps for creating images required for container deployment of cluster scheduling components. The Dockerfile in the software package is for reference only, and you can create customized images based on this example.
 
@@ -436,7 +436,7 @@ You can prepare images in the following two ways. After obtaining the images, cr
     </tr>
     <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142916"></a><a name="p1519601142916"></a><span id="ph138789131470"><a name="ph138789131470"></a><a name="ph138789131470"></a>Atlas 850E SuperPoD, Atlas 650E server, Atlas 950 SuperPoD</span></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t ascend-k8sdeviceplugin:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>The value of the UMDK_PKG parameter is the UMDK software package file name, which needs to be downloaded from the archive directory in the <a href="https://mirrors.huaweicloud.com/ascend/"> Huawei Cloud image repository.</a></p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t ascend-k8sdeviceplugin:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>The value of the UMDK_PKG parameter is the UMDK software package file name, which needs to be downloaded from the archive directory in the <a href="https://mirrors.huaweicloud.com/ascend/"> Huawei Cloud image repository. Currently, UMDK supports only the AArch64 architecture.</a></p>
     </td>
     </tr>
     <tr id="row098844612415"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p3927139182817"><a name="p3927139182817"></a><a name="p3927139182817"></a>Other products</p>
@@ -453,7 +453,7 @@ You can prepare images in the following two ways. After obtaining the images, cr
     </tr>
     <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142917"></a><a name="p1519601142917"></a><span id="ph138789131471"><a name="ph138789131471"></a><a name="ph138789131471"></a>Atlas 850E SuperPoD, Atlas 650E server, Atlas 950 SuperPoD</span></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t npu-exporter:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>The value of the UMDK_PKG parameter is the UMDK software package file name, which needs to be downloaded from the archive directory in the <a href="https://mirrors.huaweicloud.com/ascend/"> Huawei Cloud image repository.</a></p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t npu-exporter:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>The value of the UMDK_PKG parameter is the UMDK software package file name, which needs to be downloaded from the archive directory in the <a href="https://mirrors.huaweicloud.com/ascend/"> Huawei Cloud image repository. Currently, UMDK supports only the AArch64 architecture.</a></p>
     </td>
     </tr>
     <tr id="row098844612416"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p3927139182818"><a name="p3927139182818"></a><a name="p3927139182818"></a>Other products</p>
@@ -465,7 +465,7 @@ You can prepare images in the following two ways. After obtaining the images, cr
     </tr>
     <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142918"></a><a name="p1519601142918"></a><span id="ph138789131472"><a name="ph138789131472"></a><a name="ph138789131472"></a>Atlas 850E SuperPoD, Atlas 650E server, Atlas 950 SuperPoD</span></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t noded:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>The value of the UMDK_PKG parameter is the UMDK software package file name, which needs to be downloaded from the archive directory in the <a href="https://mirrors.huaweicloud.com/ascend/"> Huawei Cloud image repository.</a></p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t noded:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>The value of the UMDK_PKG parameter is the UMDK software package file name, which needs to be downloaded from the archive directory in the <a href="https://mirrors.huaweicloud.com/ascend/"> Huawei Cloud image repository. Currently, UMDK supports only the AArch64 architecture.</a></p>
     </td>
     </tr>
     <tr id="row16602529173910"><td class="cellrowborder" rowspan="6" valign="top" headers="mcps1.2.5.1.1 "><p id="p119247391094"><a name="p119247391094"></a><a name="p119247391094"></a>Other products</p>

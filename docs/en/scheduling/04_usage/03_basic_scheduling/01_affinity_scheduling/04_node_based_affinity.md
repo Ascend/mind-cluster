@@ -161,7 +161,7 @@ When a fault occurs on the node or Ascend AI processor where the job is located,
 **Usage Instructions<a name="section773381911315"></a>**
 
 - The number of logical SuperPoDs must be less than the number of physical SuperPoDs.
-- Nodes within a logical SuperPoD must be within a physical SuperPoD.
+- Nodes within a logical SuperPoD must be within the same physical SuperPoD.
 - The rank IDs of NPUs within a logical SuperPoD are consecutive.
 - When submitting jobs, it is recommended to reserve backup nodes within each physical SuperPoD to enable rapid recovery after fault-triggered job rescheduling.
 
@@ -173,8 +173,9 @@ When a fault occurs on the node or Ascend AI processor where the job is located,
 **Fault Rescheduling<a name="section84520611516"></a>**
 
 - If no nodes in the logical SuperPoD have failed, the nodes under that logical SuperPoD must continue to be used during rescheduling.
-- If some nodes in the logical SuperPoD become faulty and unavailable, nodes are selected from the physical SuperPoD where they reside, while other nodes remain unchanged.
+- If some nodes in a logical SuperPoD become unavailable due to hardware failures, nodes are selected from the physical SuperPoD where faulty nodes reside, while other healthy nodes remain unchanged.
 - If the remaining nodes in the physical SuperPoD can no longer satisfy the logical SuperPoD requirements, all jobs on the logical SuperPoD are scheduled to other physical SuperPoDs.
+- Nodes that have only experienced software failures may still be used during rescheduling, even if they previously had service failures.
 
 **MindIE Service Inference Job Scheduling<a name="section243084619505"></a>**
 
@@ -203,5 +204,6 @@ For MindIE Service inference jobs, the following affinity scheduling policy is a
 **Fault Rescheduling**<a name="section_logic_frame_fault"></a>
 
 - If all nodes in the logical rack have no faults, the nodes under this logical rack must continue to be used during rescheduling.
-- If some nodes in the logical rack become faulty and unavailable, nodes are selected from the physical rack they belong to, while other nodes remain unchanged.
+- If some nodes in the logical rack become unavailable due to hardware failures, nodes are selected from the physical rack where faulty nodes reside, while other healthy nodes remain unchanged.
 - If the remaining nodes in the physical rack can no longer satisfy the logical rack requirements, all jobs on the logical rack are scheduled to other physical racks.
+- Nodes that have only experienced software failures may still be used during rescheduling, even if they previously had service failures.

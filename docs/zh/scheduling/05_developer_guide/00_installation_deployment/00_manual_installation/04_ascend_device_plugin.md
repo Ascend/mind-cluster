@@ -112,11 +112,11 @@
 
     - 其他类型节点，修改对应启动YAML文件中Ascend Device Plugin的启动参数。
 
-4. <a name="step_npu_nic_mapping"></a>（A5可选）若计算节点存在1825网卡（DPU），Ascend Device Plugin通过`npu-nic-mapping.json`读取NPU与1825网卡的连接关系，用于生成A5设备的RoCE通信地址。软件包内的默认配置不一定匹配节点实际拓扑，建议按节点实际情况自行创建映射文件并挂载到容器内。
+4. <a name="step_npu_nic_mapping"></a>（Ascend 950 系列产品可选）若计算节点存在UB网卡（DPU），Ascend Device Plugin通过`npu-nic-mapping.json`读取NPU与UB网卡的连接关系，用于生成Ascend 950 系列产品的RoCE通信地址。软件包内的默认配置不一定匹配节点实际拓扑，建议按节点实际情况自行创建映射文件并挂载到容器内。
 
-    - 从驱动侧获取NPU与1825网卡的物理连接关系。
+    - 从驱动侧获取NPU与UB网卡的物理连接关系。
 
-        1825网卡为UB网络设备，在系统中以以太网接口形式存在，执行以下命令可查询各RDMA设备对应的以太网接口名称（例如ens0f0）。
+        UB网卡为UB网络设备，在系统中以以太网接口形式存在，执行以下命令可查询各RDMA设备对应的以太网接口名称（例如ens0f0）。
 
         ```shell
         ls /sys/class/infiniband/*/device/net/
@@ -142,7 +142,7 @@
         字段说明：
         - `npuNics`：NPU与网卡的映射列表。
         - `npuId`：NPU的物理ID，节点上每颗NPU均需配置一条对应记录。
-        - `nicNames`：与该NPU连接的1825网卡接口名称列表，按优先级从高到低排列。组件将依次遍历该列表，使用第一个存在有效IP地址的网卡生成RoCE通信地址。
+        - `nicNames`：与该NPU连接的UB网卡接口名称列表，按优先级从高到低排列。组件将依次遍历该列表，使用第一个存在有效IP地址的网卡生成RoCE通信地址。
 
     - 在Ascend Device Plugin的YAML中增加以下挂载声明，将创建的文件挂载到容器内固定路径`/user/mindx-dl/npu/npu-nic-mapping.json`（该路径不可修改）。
 
@@ -165,7 +165,7 @@
         上述`hostPath.path`为文件在计算节点上的实际路径（宿主机路径可调整，但不支持软连接）。
 
     >[!NOTE]
-    >- 不同节点的NPU与1825网卡物理连接关系可能不同，请按各节点实际拓扑分别创建并挂载。
+    >- 不同节点的NPU与UB网卡物理连接关系可能不同，请按各节点实际拓扑分别创建并挂载。
     >- 该配置文件在组件启动时读取，修改后需重启组件使配置生效。
 
 5. （可选）使用**断点续训**（包括进程级恢复）或**弹性训练**时，根据需要使用的故障处理模式，修改Ascend Device Plugin组件的启动YAML。
@@ -185,7 +185,7 @@
             command: [ "/bin/bash", "-c", "--"]
             args: [ "device-plugin
                      <strong>-volcanoType=true                    # 重调度场景下必须使用Volcano
-                     -autoStowing=true                    # 该字段已日落。是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于<term>Atlas 训练系列产品</term>
+                     -autoStowing=true                    # 该字段已日落。是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品
                      -listWatchPeriod=5                   # 设置健康状态检查周期，范围[3,1800]，单位为秒
                      -hotReset=2 # 使用进程级恢复时，请将hotReset参数值设置为2，开启离线恢复模式</strong>
                      -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log

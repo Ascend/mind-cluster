@@ -14,7 +14,8 @@ The resource monitoring feature is a basic feature that does not distinguish bet
 
 ## Usage Instructions<a name="section44381612353"></a>
 
-Resource monitoring can be used together with all features in training scenarios and all features in inference scenarios.
+- Resource monitoring can be used together with all features in training scenarios and all features in inference scenarios.
+- NPU Exporter obtains metrics from the underlying layer by calling driver interfaces or other means, which may consume some resources. You can disable other irrelevant metrics based on the metrics you care about. For details, see [NPU Exporter Installation and Deployment](../../05_developer_guide/00_installation_deployment/00_manual_installation/03_npu_exporter.md).
 
 ## Supported Product Forms<a name="section169961844182917"></a>
 

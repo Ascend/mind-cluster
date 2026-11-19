@@ -48,7 +48,7 @@ Ascend NPU hardware resources mainly include AICore (used for AI model computati
 <td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 inference products</term></td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" width="30%">Atlas 350 accelerator card</td>
+<td class="cellrowborder" valign="top" width="30%"><term>Ascend 950 products</term></td>
 </tr>
 </tbody>
 </table>

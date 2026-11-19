@@ -23,7 +23,7 @@
 
 在进行各组件的升级步骤前，请根据实际安装场景，选择相应的组件进行检查。
 
-1. 检查是否有正在运行的任务。若用户正在执行的任务，请等待任务执行完成或提前停止任务后，再升级MindCluster组件。
+1. 检查是否有正在运行的任务。若用户有正在执行的任务，请等待任务执行完成或提前停止任务后，再升级MindCluster组件。
     1. 请执行以下命令检查是否有正在运行的任务。
 
         ```shell
@@ -59,7 +59,7 @@
     2. <a name="li1427143773119"></a>（可选）修改activate字段的取值。
         - 如果超节点ID在pingmesh-config ConfigMap中，修改该超节点ID字段下的activate为off。
         - 如果超节点ID不在pingmesh-config ConfigMap中，可通过以下2种方式进行设置。
-            - 在pingmesh-config ConfigMap中新增该超节点信息，并将activate为off。
+            - 在pingmesh-config ConfigMap中新增该超节点信息，并将activate设置为off。
             - 删除pingmesh-config ConfigMap中所有超节点的信息，并将global配置中activate字段的值设置为off。
 
 3. 检查已安装的MindCluster组件。
@@ -101,7 +101,7 @@
 
 **升级步骤<a name="section520182224617"></a>**
 
-1. 下载新版本组件安装包，详情请参见参考[获取软件包](00_manual_installation/00_obtaining_software_packages.md)章节。
+1. 下载新版本组件安装包，详情请参见[获取软件包](00_manual_installation/00_obtaining_software_packages.md)章节。
 2. <a name="li12599722163212"></a>进入安装包（run包）所在路径，在该路径下执行以下命令为软件包添加可执行权限。
 
     ```shell
@@ -143,7 +143,7 @@
         systemctl daemon-reload && systemctl restart containerd
         ```
 
-5. <a name="li76002022113215"></a>参考[组件状态确认](../../03_installation_guide/03_confirming_status.md)章节，检查新版本Ascend Docker Runtime是否升级成功状态。
+5. <a name="li76002022113215"></a>参考[组件状态确认](../../03_installation_guide/03_confirming_status.md)章节，检查新版本Ascend Docker Runtime是否升级成功。
 6. （可选）恢复旧版本。下载旧版本安装包，依次重新执行[步骤2](#li12599722163212)到[步骤5](#li76002022113215)。
 
 ## 升级TaskD<a name="ZH-CN_TOPIC_0000002479226444"></a>
@@ -178,7 +178,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
         pip uninstall taskd -y
         ```
 
-        回显示例如下表示卸载成功。
+        回显示例如下，表示卸载成功。
 
         ```ColdFusion
         Successfully uninstalled taskd-{version}
@@ -513,9 +513,9 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 ## Elastic Agent（已日落）升级TaskD<a name="ZH-CN_TOPIC_0000002515202401"></a>
 
 >[!NOTE]
->Elastic Agent 组件已在 7.3.0 版本日落，本章节仅作为历史迁移参考保留。如当前环境已不再使用 Elastic Agent，可跳过本章节。
+>Elastic Agent组件已在7.3.0版本日落，本章节仅作为历史迁移参考保留。如当前环境已不再使用Elastic Agent，可跳过本章节。
 
-Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为TaskD组件的操作指导。
+本章节提供将Elastic Agent组件升级为TaskD组件的操作指导。
 
 **前提条件<a name="section565512391204"></a>**
 
@@ -622,25 +622,27 @@ Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为
 
     2. 在训练脚本中增加以下代码拉起TaskD  Manager。
 
-        <pre codetype="Python">
-        <strong>export TASKD_PROCESS_ENABLE="on"
+        ```Python
+        export TASKD_PROCESS_ENABLE="on"
         # 以PyTorch框架为例
         if [[ "${RANK}" == 0 ]]; then
             export MASTER_ADDR=${POD_IP}
             python /job/code/manager.py 2>> /job/code/alllogs/$MINDX_TASK_ID/taskd/error.log &           # manager.py具体执行路径由当前路径决定，error.log日志路径需提前创建
-        fi</strong>
+        fi
 
-        torchrun ...</pre>
+        torchrun ...
+        ```
 
     3. 在任务YAML中修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
-        <pre codetype="yaml">
+        ```yaml
         ...
                 spec:
         ...
                    containers:
         ...
-                     <strong>ports:
+                     ports:
                        - containerPort: 9601
-                         name: taskd-port</strong>
-        ...</pre>
+                         name: taskd-port
+        ...
+        ```

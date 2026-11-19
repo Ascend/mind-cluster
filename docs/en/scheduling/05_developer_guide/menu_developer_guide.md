@@ -20,5 +20,5 @@
   - [Manual Upgrade](00_installation_deployment/01_upgrade.md)
   - [Manual Uninstallation](00_installation_deployment/02_uninstallation.md)
 - [Custom Metrics Development](./01_custom_metrics_development.md)
-- [DP Hot Reset Plugin Development](./02_dp_hot_reset_plugin_development.md)
+- [Chip Hot Reset Plugin Development](./02_dp_hot_reset_plugin_development.md)
 - [Public Fault Reporting](./03_clusterd_fault_awareness.md)

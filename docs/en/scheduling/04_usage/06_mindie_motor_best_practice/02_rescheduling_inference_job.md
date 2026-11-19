@@ -89,7 +89,7 @@ default          mindie-server-master-0                     1/1     Running   0 
 ...
 ```
 
-### Viewing Inference Card Fault Rescheduling Results<a name="ZH-CN_TOPIC_0000002511347069"></a>
+### Viewing Rescheduling Results<a name="ZH-CN_TOPIC_0000002511347069"></a>
 
 When a fault occurs while an inference job is running (an error can be actively triggered through the service code), Volcano schedules the job to another NPU.
 
@@ -196,7 +196,7 @@ default          mindie-coordinator-worker-1                1/1     Running   0 
 ...
 ```
 
-### Viewing Inference Card Fault Rescheduling Results<a name="ZH-CN_TOPIC_0000002511347069"></a>
+### Viewing Rescheduling Results<a name="ZH-CN_TOPIC_0000002511347069"></a>
 
 When a fault occurs on a Pod while the inference job is running (which can be triggered proactively by the service code reporting an error), Volcano reschedules that Pod to another NPU.
 

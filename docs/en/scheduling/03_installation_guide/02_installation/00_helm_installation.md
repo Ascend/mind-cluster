@@ -173,14 +173,15 @@ Then run the following command:
       TEST SUITE: None
       ```
 
-1. Refer to [Component Status Confirmation](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390) to confirm the component installation status.
-2. If the component status is abnormal, check whether the installation configuration is correct, troubleshoot the cause of the abnormality, and then reinstall.
-   - Before reinstalling, run the following commands to uninstall the related resources.
+5. Refer to [Component Status Confirmation](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390) to confirm the component installation status.
+6. If the component status is abnormal, check whether the installation configuration is correct, troubleshoot the cause of the abnormality, and then reinstall.
 
-     ```bash
-     helm uninstall mindcluster-crds # Uninstall CRDs.
-     helm uninstall mindcluster      # Uninstall components.
-     ```
+   Before re-installation, run the following commands to uninstall the related resources.
+
+    ```bash
+    helm uninstall mindcluster-crds # Uninstall CRDs.
+    helm uninstall mindcluster      # Uninstall components.
+    ```
 
 ## Default Configuration
 
@@ -380,7 +381,7 @@ Then run the following command:
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano.volcanoVersion</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string</p><p>Values include:<ul><li>v1.7.0</li><li>v1.9.0</li><li>v1.12.0</li></ul></p><p>The default value is v1.9.0.</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>Select the volcano version to enable.</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>Select the Volcano version to enable.</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>Infer Operator</p></td>
@@ -427,7 +428,7 @@ Then run the following command:
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>&lt;component&gt;.args</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string array</p><p>If not set or set to "", then the component default startup command is used.</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>Indicates the startup command of the component.</p><p>If you need to modify the startup command to enable certain component features (for example, enabling hot reset for ascend-device-plugin), set this parameter as needed.</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>Indicates the startup command of the component.</p><p>If you need to modify the startup command to enable certain component features (for example, enabling hot reset for Ascend Device Plugin), set this parameter as needed.</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>&lt;component&gt;.image.repository</p></td>
@@ -483,12 +484,12 @@ Then run the following command:
 <tbody>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>mindcluster-crds-deploy-tool-{chart_version}.tgz</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>A Helm Chart package file, which is a deployment tool used to deploy and manage the CRDs required by each MindCluster component in a K8s cluster.</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>A Helm Chart package file, used as the CRD deployment tool required to deploy and manage the various MindCluster components in a K8s cluster.</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>For the description of user-configurable installation parameters, see <a href="#table15274931175241">Table 1</a>.</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>mindcluster-deploy-tool-{chart_version}.tgz</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>Helm Chart package file, a deployment tool used to deploy and manage the MindCluster components in a K8s cluster.</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>Helm Chart package file, used as a deployment tool required to deploy and manage the various MindCluster components in a K8s cluster.</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>For the user-configurable installation parameter description, see <a href="#table15274931175242">Table 2</a> and <a href="#table15274931175243">Table 3</a>.</p></td>
   </tr>
   <tr>

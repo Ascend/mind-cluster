@@ -121,7 +121,7 @@
     - [Upgrade](./05_developer_guide/00_installation_deployment/01_upgrade.md)
     - [Uninstallation](./05_developer_guide/00_installation_deployment/02_uninstallation.md)
   - [Custom Metrics Development](./05_developer_guide/01_custom_metrics_development.md)
-  - [DP Hot Reset Plugin Development](./05_developer_guide/02_dp_hot_reset_plugin_development.md)
+  - [Chip Hot Reset Plugin Development](./05_developer_guide/02_dp_hot_reset_plugin_development.md)
   - [Public Fault Reporting](./05_developer_guide/03_clusterd_fault_awareness.md)
 - [API Reference](./06_api/menu_api.md)
   - [NPU Exporter](./06_api/00_npu_exporter/menu_npu_exporter.md)

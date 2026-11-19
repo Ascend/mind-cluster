@@ -1,6 +1,6 @@
 # NodeD<a name="ZH-CN_TOPIC_0000002479226406"></a>
 
-- NodeD must be installed when full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, inference card fault recovery, rescheduling upon inference card faults, resumable training, or elastic training are required.
+- NodeD must be installed when full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, hardware fault recovery, rescheduling upon hardware faults, resumable training, or elastic training are required.
 - Users who only use containerization support and resource monitoring can skip installing NodeD and proceed directly past this chapter.
 - NodeD must be installed before using the slow node & slow network fault detection feature. For details, see [Slow Node & Slow Network Faults](../../../04_usage/04_resumable_training/01_solutions_principles.md#slow-nodes--slow-network-faults).
 

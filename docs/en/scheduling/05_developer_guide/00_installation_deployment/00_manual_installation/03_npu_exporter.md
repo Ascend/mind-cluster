@@ -1,7 +1,5 @@
 # NPU Exporter<a name="ZH-CN_TOPIC_0000002511426331"></a>
 
-<!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-09-02T01:25:38.351Z pushedAt=2026-09-02T01:30:48.464Z -->
-
 - When using **resource monitoring**, NPU Exporter must be installed. This component supports integration with Prometheus or Telegraf.
     - When integrating with Prometheus, NPU Exporter can be deployed in either image mode or binary mode. For deployment differences, see [Image and Binary Deployment Differences](../../../07_references/05_appendix.md#differences-between-image-and-binary-deployments).
     - When integrating with Telegraf, see the [Working with Telegraf](../../../04_usage/01_resource_monitoring/03_working_with_telegraf.md) section to install NPU Exporter and Telegraf.

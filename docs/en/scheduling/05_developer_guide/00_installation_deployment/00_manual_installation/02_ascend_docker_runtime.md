@@ -1,6 +1,6 @@
 # Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002479226434"></a>
 
-- Users who demand containerization support, full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, inference card fault recovery, or rescheduling upon inference card faults must install Ascend Docker Runtime.
+- Users who demand containerization, full-NPU scheduling, static vNPU scheduling, dynamic vNPU scheduling, resumable training, elastic training, hardware fault recovery, or rescheduling upon hardware faults must install Ascend Docker Runtime.
 - Users who only use resource monitoring do not need to install Ascend Docker Runtime and can skip this chapter directly.
 
 ## Prerequisites<a name="section137058405153"></a>
@@ -280,7 +280,7 @@ The installation procedure of Ascend Docker Runtime in the K8s-Docker integrated
     [INFO] ascend-docker-runtime install success
     ```
 
-4. (Optional) If the installation fails, refer to [Step 5](#zh-cn_topic_0000001930317932_section19659112313311605) in [Installing Ascend Docker Runtime in the Containerd Scenario](#zh-cn_topic_0000001930317932_section196591123133116).
+4. (Optional) If the installation fails, refer to [Step 4](#zh-cn_topic_0000001930317932_section19659112313311605) in [Installing Ascend Docker Runtime in the Containerd Scenario](#zh-cn_topic_0000001930317932_section196591123133116).
 
 5. If you need to change the container runtime on the node from Docker to Containerd, you must modify the kubelet configuration file `kubeadm-flags.env` on the node. For details, see the [K8s official documentation](https://kubernetes.io/docs/tasks/administer-cluster/migrating-from-dockershim/change-runtime-containerd/).
 

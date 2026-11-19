@@ -18,7 +18,7 @@ MindCluster集群调度组件Ascend Device Plugin提供NPU芯片故障检测能�
 
 **支持的故障模式<a name="zh-cn_topic_0000002039699773_section8301627182117"></a>**
 
-当前已支持200+故障的检测。支持的故障类型请参见[表1](#zh-cn_topic_0000002039699773_table9980135316395)，详细的故障说明请参见[典型故障.xlsx](../../../resource/典型故障.xlsx)。
+当前已支持200+故障的检测。支持的故障类型请参见[表1](#zh-cn_topic_0000002039699773_table9980135316395)，详细的故障说明请参见[典型故障.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/186ce3d9ebf9580a60537bfdbc7d5895b1ff7be7/%E5%85%B8%E5%9E%8B%E6%95%85%E9%9A%9C.xlsx)。
 
 **表 1**  故障类型说明
 
@@ -78,7 +78,7 @@ MindCluster集群调度组件Ascend Device Plugin提供NPU芯片故障检测能�
 **使用约束<a name="section16867482102"></a>**
 
 - NodeD的节点硬件故障上报能力仅支持以下产品型号：Atlas 800T A2 训练服务器、Atlas 900 A2 PoD 集群基础单元、Atlas 900 A3 SuperPoD 超节点。
-- 仅V2 3.15.0.1及以上版本或者V2 3.10.02.55版本的iBMC，且安装了IPMC驱动的产品，支持NodeD的节点硬件故障上报能力。低版本的iBMC或IPMI获取节点故障信息失败时，将只上报节点健康状态。
+- 仅V2 3.15.0.1及以上版本或者V2 3.10.02.55版本的iBMC，且安装了IPMI驱动的产品，支持NodeD的节点硬件故障上报能力。低版本的iBMC或IPMI获取节点故障信息失败时，将只上报节点健康状态。
 - 如需使用超节点故障检测功能，需使用V3 5.8.3.35及以上版本的iBMC。
 - 如需使用DPC故障检测功能，需使用Scale-Out Storage DPC 24.2.0及以上版本。
 
@@ -1332,14 +1332,14 @@ ClusterD与FD-OL（Fault Diagnose Online）框架在同一进程中，都部署�
     ![](../../../figures/scheduling/zh-cn_image_0000002477523808.png)
 
 2. 再使用<b>kubectl logs -n mindx-dl clusterd-7d5db546d8-kdslz | grep "got degradation, slow rank"</b>查询日志数据。
-3. 若日志中出现如下图所示，则表明出现节点劣化。
+3. 若日志中出现如下图所示的数据，则表明出现节点劣化。
 
     ![](../../../figures/scheduling/zh-cn_image_0000002457147010.png)
 
 **方式二：通过落盘日志查询集群侧慢节点诊断日志**
 
 1. 使用<b>cat /var/log/mindx-dl.clusterd.clusterd.log | grep "got degradation, slow rank"</b>命令查询日志数据。
-2. 若日志中出现如下图所示，则表明出现节点劣化。
+2. 若日志中出现如下图所示的数据，则表明出现节点劣化。
 
     ![](../../../figures/scheduling/zh-cn_image_0000002490267057.png)
 
@@ -1493,10 +1493,10 @@ UB PORT link状态变化（UP -> DOWN）；UBOE PORT link状态变化 (UP -> DOW
 
 |故障码|故障说明|故障级别|
 |--|--|--|
-|020001002|超平面路由不可收敛。       |SeparateNPUCodes：隔离NPU故障。|
-|020000002|超平面路由可收敛设备亚健康。|SubHealthFaultCodes：亚健康故障。|
-|110001024|参数面路由不可收敛。       |PreSeparateNPUCodes：预隔离NPU故障。|
-|110000002|参数面路由可收敛设备亚健康。|SubHealthFaultCodes：亚健康故障。|
+|020001002|超平面路由不可收敛。       |SeparateNPU：隔离NPU故障。|
+|020000002|超平面路由可收敛设备亚健康。|SubHealthFault：亚健康故障。|
+|110001024|参数面路由不可收敛。       |PreSeparateNPU：预隔离NPU故障。|
+|110000002|参数面路由可收敛设备亚健康。|SubHealthFault：亚健康故障。|
 
 ## 故障处理<a name="ZH-CN_TOPIC_0000002511346405"></a>
 
@@ -2728,8 +2728,8 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 
     在[LLM仓参考链接1](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/mindspeed_llm/features_manager/high_availability/high_availability.py)中，start\_grad\_sync\_wrapper、forward\_step\_wrapper、elastic\_training\_get\_forward\_backward\_func\_wrapper以及[LLM仓参考链接2](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/pretrain_gpt.py#:~text=if%20args.enable_elastic_training%3A)所指向的loss\_func的代码是为了适配因缩容导致的精度梯度变化而patch或修改。
 
-    - loss\_func由每个micro\_batch都要进行DP组内all\_reduce通信修改为缩容训练时不进行通信，原因是缩容后每个DP域内num\_micro\_batches数量可能不一样，导致前几个DP会多执行一次all\_reduce而卡住。
-    - start\_grad\_sync\_wrapper中将梯度缩放因子gradient\_scaling\_factor修改为1.0 / \(arguments.global\_batch\_size / arguments.micro\_batch\_size\)，即在原1/dp\_size基础上再除以num\_micro\_batches。
+    - loss\_func由每个micro\_batch都要进行DP组内all\_reduce通信修改为缩容训练时不进行通信，原因是缩容后每个DP域内num\_microbatches数量可能不一样，导致前几个DP会多执行一次all\_reduce而卡住。
+    - start\_grad\_sync\_wrapper中将梯度缩放因子gradient\_scaling\_factor修改为1.0 / \(arguments.global\_batch\_size / arguments.micro\_batch\_size\)，即在原1/dp\_size基础上再除以num\_microbatches。
     - forward\_step\_wrapper将入参num\_microbatches修改为1，目的是loss计算时不再除以num\_microbatches，因为在start\_grad\_sync\_wrapper中已经除以了num\_microbatches。
     - elastic\_training\_get\_forward\_backward\_func\_wrapper因为loss\_func没有执行DP组内all\_reduce，原生forward\_backward\_func执行完成后，在最后一个PP时将losses\_reduced每个key的和（即所有micro\_batch的lm loss相加）在DP组内执行all\_reduce操作求和。
 

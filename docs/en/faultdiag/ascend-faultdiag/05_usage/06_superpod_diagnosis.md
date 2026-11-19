@@ -2,7 +2,7 @@
 
 <!-- md-trans-meta sourceCommit=a277c409db3c3340f95d7c4831c0d54fa24e71a7 translatedAt=2026-08-24T02:29:08.887Z pushedAt=2026-08-24T02:51:43.284Z -->
 
-SuperPoD fault diagnosis is a diagnostic feature specifically designed for the Atlas A3 SuperPoD, which requires simultaneous consideration of three types of logs: Host (server), BMC (management controller), and LCNE (UnifiedBus switch).
+SuperPoD fault diagnosis is a diagnostic feature specifically designed for the Atlas A3 SuperPoD, which requires simultaneous consideration of three types of logs: Host (server), BMC (baseboard management controller), and LCNE (UnifiedBus switch).
 
 Host logs refer to all logs other than BMC and LCNE logs in the [Log Collection Archive Directory Structure](02_log_collection.md#log-collection-archive-directory-structure).
 

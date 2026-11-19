@@ -1648,7 +1648,7 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
 
 ## Integrating UMDK into the Container Base Image<a name="ZH-CN_TOPIC_0000002516255288"></a>
 
-1. From the archive directory of the [Huawei Cloud Mirror Repository](https://mirrors.huaweicloud.com/ascend/), download the UMDK package in the corresponding format as needed, taking `umdk-urma-*.aarch64.rpm.tar.gz` as an example.
+1. From the archive directory of the [Huawei Cloud Mirror Repository](https://mirrors.huaweicloud.com/ascend/), download the UMDK package in the corresponding format as needed, taking `umdk-urma-*.aarch64.rpm.tar.gz` as an example. Currently, UMDK supports only the AArch64 architecture.
 2. Log in to the server as the `root` user.
 3. Create the `/home/umdk` directory and upload the UMDK package to this directory.
 
@@ -1680,8 +1680,7 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
                     tar -mzxf "/tmp/${UMDK_PKG}" -C /tmp/umdk_pkgs; \
                     rpm -ivh /tmp/umdk_pkgs/*.rpm; \
                 else \
-                    echo "warning: umdk package not provided, install from yum"; \
-                    yum install -y umdk-urma-bin umdk-urma-devel umdk-urma-lib umdk-urma-tools; \
+                    echo "note: umdk package not provided, it is necessary for unified bus scenario only"; \
                 fi && \
                 yum clean all && \
                 rm -rf /var/cache/yum && \
@@ -1705,8 +1704,7 @@ This section uses Ubuntu x86_64 as an example. The code in the following steps i
                    tar -mzxf "/tmp/${UMDK_PKG}" -C /tmp/umdk_pkgs ; \
                    dpkg -i /tmp/umdk_pkgs/*.deb; \
                else \
-                   echo "error: umdk package not provided"; \
-                   exit 1; \
+                   echo "note: umdk package not provided, it is necessary for unified bus scenario only"; \
               fi && \
               apt-get clean && \
               rm -rf /var/lib/apt/lists/* && \
