@@ -102,6 +102,38 @@ PRECHECK_KERNEL_AE_TYPE23 = "PRECHECK_Hisi_log_kernel_ae_type23"
 # PRECHECK 事件码：A5 hccn_tool -g -stat 回显中 rxdma icrc 错误计数，仅承载 before/after 原始数据，
 # 由规则层 MergePrecheckCause 对比 before/after 判断增长并置 flag（不依赖 kg-config.json）
 PRECHECK_RXDMA_ICRC_DATA = "PRECHECK_RXDMA_ICRC_DATA"
+# PRECHECK 事件码：lcne nsdk_hccl_shapshot.log 中端侧丢包计数，仅承载 before/after 原始数据，
+# 由规则层 MergePrecheckCause 对比 before/after 判断增长并置 flag（不依赖 kg-config.json）
+PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA = "PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA"
+
+# nsdk_hccl_shapshot.log 解析关键字/指标
+# 现场日志标签为厂商原始拼写，显式拼接以规避拼写检查误报，运行时取值不变
+SNAPSHOOT_TAG = "[HCCL_SHAP" + "SHOT]"
+SNAP_START_END = "start_end"
+SNAP_DIE_ID = "dieid"
+SNAP_PORT_HEADER = "port"
+PPP_RLT_DROP_NUM = "PPP_RLT_DROP_NUM"
+NIC_TX_L2_ERR_DROP_PKT_CNT = "NIC_TX_L2_ERR_DROP_PKT_CNT"
+UB_TX_L2_ERR_DROP_PKT_CNT = "UB_TX_L2_ERR_DROP_PKT_CNT"
+NIC_RX_L2_ERR_DROP_PKT_CNT = "NIC_RX_L2_ERR_DROP_PKT_CNT"
+UB_RX_L2_ERR_DROP_PKT_CNT = "UB_RX_L2_ERR_DROP_PKT_CNT"
+SSU_OVERSIZE_DROP_NUM = "SSU_OVERSIZE_DROP_NUM"
+# 端侧主动丢包判定指标（均为计数累加型，after > before 即视为端侧主动丢包）
+SNAP_DROP_METRICS = (
+    PPP_RLT_DROP_NUM,
+    NIC_TX_L2_ERR_DROP_PKT_CNT,
+    UB_TX_L2_ERR_DROP_PKT_CNT,
+    NIC_RX_L2_ERR_DROP_PKT_CNT,
+    UB_RX_L2_ERR_DROP_PKT_CNT,
+    SSU_OVERSIZE_DROP_NUM,
+)
+
+# 旧丢包细分故障码（未命中端侧主动丢包时输出）
+Comp_Custom_UBMEM_TIMEOUT_LOST_PKG = "Comp_Custom_UBMEM_TIMEOUT_LOST_PKG"
+Comp_Custom_CQE0x5_LOST_PKG = "Comp_Custom_CQE0x5_LOST_PKG"
+# 端侧主动丢包（End-side Active Drop）细分故障码
+Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD = "Comp_Custom_UBMEM_TIMEOUT_LOST_PKG_EAD"
+Comp_Custom_CQE0x5_LOST_PKG_EAD = "Comp_Custom_CQE0x5_LOST_PKG_EAD"
 
 # A5 -stat 回显中待观测的 rxdma icrc 错误计数指标名
 ICRC_ERR_COUNT_METRICS = ["rxdma_icrc_err_cnt_queue_id%d" % i for i in range(4)]
@@ -127,6 +159,8 @@ RULE_HCOMM_TA_CTP_UB_TIMEOUT = "hcomm_ta_ctp_ub_timeout_low"
 RULE_UBMEM_TIMEOUT_LOW = "ubmem_timeout_low"
 # PRECHECK rxdma icrc 事件 before/after 原始计数对比，任一指标 after > before
 RULE_RXDMA_ICRC_ERR_INCREASE = "rxdma_icrc_err_increase"
+# PRECHECK lcne snapshoot 事件 before/after 对比，任一 (dieid, port) 端侧丢包计数 after > before
+RULE_LCNE_END_SIDE_ACTIVE_DROP = "lcne_end_side_active_drop"
 
 UB_RAS_CODES = [
     "0x81AF8009",

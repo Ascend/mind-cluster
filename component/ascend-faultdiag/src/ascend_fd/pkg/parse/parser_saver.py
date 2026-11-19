@@ -798,6 +798,7 @@ class LCNELogSaver(BaseLogSaver):
     DIAGLOG_ZIP_PATTERN = re.compile(r"^diaglog_\d{1,3}_\d{14}.log.zip$")
     DIAG_LOG_FILE = "diag.log"
     DIAG_LOG_PATTERN = r'diaglog_1_\d{13,15}\.log$'
+    SNAP_SHOT_LOG = "nsdk_hccl_shapshot.log"
 
     def __init__(self):
         """
@@ -833,6 +834,9 @@ class LCNELogSaver(BaseLogSaver):
                 if file_name == self.DEVM_BDDRVADP_KEY and self.DEVM_BDDRVADP_DIR in file_path:
                     self.devm_bddvadp_files.append(file_path)
                     continue
+                if file_name == self.SNAP_SHOT_LOG:
+                    self._add_lcne_log(file_path)
+                    continue
                 if self.VARLOG_SLOT_DIR in file_path and "varlog.zip" == file_name:
                     self.collect_cpdt_checkcc_log(file_path)
                     continue
@@ -860,7 +864,8 @@ class LCNELogSaver(BaseLogSaver):
 
     def collect_cpdt_checkcc_log(self, zip_file_path: str):
         """
-        Decompress varlog.zip and find the cpdt_checkcc.log file path
+        Decompress varlog.zip and find the cpdt_checkcc.log file path,
+        meanwhile collect nsdk_hccl_shapshot.log if it is packed in the zip
         :param zip_file_path: varlog.zip file path
         """
         if not zip_file_path:
@@ -872,7 +877,12 @@ class LCNELogSaver(BaseLogSaver):
             for name in files:
                 if name == self.CPDT_CHECKCC_LOG:
                     self.cpdt_checkcc_log = os.path.join(root, name)
-                    return
+                elif name == self.SNAP_SHOT_LOG:
+                    self._add_lcne_log(os.path.join(root, name))
+
+    def _add_lcne_log(self, file_path: str):
+        if file_path not in self.lcne_log_list:
+            self.lcne_log_list.append(file_path)
 
     def collect_diag_log(self, zip_file_path: str):
         """

@@ -35,12 +35,14 @@ from ascend_fd.utils.constant.ub_const import (
     LQC_TAI_DFX_ALARM,
     PHY_REINIT_CNT,
     PRECHECK_HCOMM_TA_CTP_UB_TIMEOUT,
+    PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA,
     PRECHECK_RXDMA_ICRC_DATA,
     PRECHECK_UBCTL_DATA,
     PRECHECK_UBMEM_TIMEOUT,
     RC_FULL_QUEUE_CNT,
     RULE_DFX_TM_CRD_CTRL_INVALID,
     RULE_HCOMM_TA_CTP_UB_TIMEOUT,
+    RULE_LCNE_END_SIDE_ACTIVE_DROP,
     RULE_LQC_TAI_DFX_ALARM_BIT45,
     RULE_PHY_REINIT_CNT_EXCEED,
     RULE_RC_FULL_QUEUE_NONZERO,
@@ -60,6 +62,7 @@ from ascend_fd.utils.constant.ub_const import (
     RX_VL11_PKT_NUM,
     RX_VL6_PKT_NUM,
     RX_VL7_PKT_NUM,
+    SNAP_DROP_METRICS,
     TAACK_ABNORM_HEADER,
     TAACK_ABNORM_SSN,
     TAI_COMPACT_ALARM,
@@ -481,6 +484,54 @@ class MergePrecheckCause:
         if increased_lines:
             self.rule_flags[RULE_RXDMA_ICRC_ERR_INCREASE] = {"value": True, "line": "; ".join(increased_lines)}
 
+    def _prepare_snapshoot_rule(self):
+        """
+        对比 lcne nsdk_hccl_shapshot.log before/after 原始计数：
+        任一 (dieid, port) 的任一丢包指标 after > before，即判定该端口端侧主动丢包，
+        置 RULE_LCNE_END_SIDE_ACTIVE_DROP flag（before 缺失的端口不判增长）。
+        """
+        if self.rule_flags.get(RULE_LCNE_END_SIDE_ACTIVE_DROP, {}):
+            return
+        data = self.single_device_precheck_event.get(PRECHECK_LCNE_HCCL_SNAPSHOOT_DATA, {})
+        attribute = data.get("attribute", {})
+        before_tree = attribute.get("before", {})
+        after_tree = attribute.get("after", {})
+        if not after_tree:
+            return
+        source_device = data.get("source_device", "")
+        drop_ports = []
+        for udie, after_ports in after_tree.items():
+            before_ports = before_tree.get(udie, {})
+            for port, after_metrics in after_ports.items():
+                before_metrics = before_ports.get(port)
+                if not before_metrics:
+                    # before 侧缺失：视为无故障可判
+                    kg_logger.warning(
+                        "Snapshoot: device %s udie %s port %s has no before data, treated as no fault.",
+                        source_device,
+                        udie,
+                        port,
+                    )
+                    continue
+                if self._has_drop_increase(before_metrics, after_metrics):
+                    drop_ports.append(f"{udie}/port{port}")
+        if drop_ports:
+            self.rule_flags[RULE_LCNE_END_SIDE_ACTIVE_DROP] = {
+                "value": True,
+                "line": "end-side active drop: " + ", ".join(drop_ports),
+                "ports": drop_ports,
+            }
+
+    def _has_drop_increase(self, before_metrics: dict, after_metrics: dict):
+        for metric in SNAP_DROP_METRICS:
+            before_val = self._to_int(before_metrics.get(metric))
+            after_val = self._to_int(after_metrics.get(metric))
+            if before_val is None or after_val is None:
+                continue
+            if after_val > before_val:
+                return True
+        return False
+
     def _prepare_unknown_device_rule(self):
         self._check_hcomm_ta_ctp_ub_timeout()
 
@@ -510,6 +561,7 @@ class MergePrecheckCause:
         self._prepare_ubctl_log_rule()
         self._check_ubmem_timeout_low()
         self._prepare_icrc_rule()
+        self._prepare_snapshoot_rule()
         # unknown_device预检查
         self._prepare_unknown_device_rule()
 
