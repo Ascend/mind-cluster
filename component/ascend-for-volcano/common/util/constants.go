@@ -26,6 +26,9 @@ const (
 	HwPreName           = "huawei.com/"
 	NPUUnhealthySuffix  = "-Unhealthy"
 	NPUNetworkUnhealthy = "-NetworkUnhealthy"
+	// RecoveringSuffix is the annotation suffix carrying the devices that are
+	// recovering from a reset.
+	RecoveringSuffix = "-Recovering"
 	// DeviceFaultCmKeySuffix is the annotation suffix carrying the device fault
 	// list (a JSON array of device faults) reported by the fault monitor.
 	DeviceFaultCmKeySuffix = "-Fault"

@@ -829,7 +829,7 @@ func (n *NPUNode) syncAnnotation(npuNode *api.NodeInfo, nodeInfoOfNodeD k8s.Node
 	}
 	// 2. last session device infos
 	for annoKey, annoValue := range n.Annotation {
-		if util.IsNPUResource(v1.ResourceName(annoKey)) {
+		if util.IsNPUDeviceInfoAnnotation(annoKey) {
 			existAnno[annoKey] = annoValue
 			continue
 		}
