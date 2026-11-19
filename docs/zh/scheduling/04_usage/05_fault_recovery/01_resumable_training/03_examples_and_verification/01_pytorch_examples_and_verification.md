@@ -6,11 +6,11 @@
 
 断点续训可以基于基础训练镜像制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（PyTorch）](../../../../07_references/02_common_operations.md#使用dockerfile构建容器镜像pytorch)章节进行操作。
 
-本章节结合基础训练镜像的制作步骤，展示基于Ubuntu 20.04来构建训练镜像。
+本章节以 DeepSeek-V4-Flash 为例，介绍在 Atlas A3、Atlas 950 SuperPoD（A5）上使用 PyTorch 2.10.0 和 torch_npu 2.10.0 的断点续训配置。A3 使用 Ubuntu 22.04，A5 使用 openEuler 24.03；两类机型分别制作镜像。
 
 >[!NOTE]
 >
->- 以下示例使用MindSpeed-LLM  26.2.0版本。
+>- 以下示例使用支持 DeepSeek-V4-Flash 的 MindSpeed-LLM 及配套 MindSpeed、Megatron-LM。本文示例选用 Python 3.12.16、CANN 9.2.0、PyTorch 2.10.0 和 torch_npu 2.10.0.post7，实际版本按组件兼容性及模型配套要求选择；TaskD、MindIO TFT 使用与集群版本配套的软件包。
 >- Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器、Atlas 950 SuperPoD液冷超节点等存在UB总线的产品形态下，训练镜像内需要增加UB驱动相关文件。支持如下两种方式：
 >   - 从<a href="https://mirrors.huaweicloud.com/ascend/">华为云镜像仓地址</a>的archive目录下载，然后安装到训练镜像中。
 >   - 安装Ascend Docker Runtime，默认挂载ub\_driver.list中的UB驱动相关内容。ub\_driver.list中的文件依赖宿主机的glibc版本，目前支持的OS版本和glibc版本如下：
@@ -39,7 +39,7 @@
 <td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.2 "><p id="p4321152352612"><a name="p4321152352612"></a>是</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p205155310512"><a name="zh-cn_topic_0000002039339945_p205155310512"></a>集群调度组件断点续训whl包。</p>
-<div class="note" id="zh-cn_topic_0000002039339945_note494818501423"><a name="zh-cn_topic_0000002039339945_note494818501423"></a><span class="notetitle"> [!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p159489506423"><a name="zh-cn_topic_0000002039339945_p159489506423"></a>安装<span id="ph1670711477256"><a name="ph1670711477256"></a>TaskD</span>组件前需确保<span id="zh-cn_topic_0000002039339945_ph998914174412"><a name="zh-cn_topic_0000002039339945_ph998914174412"></a>PyTorch</span>框架已正确安装，当前支持的<span id="zh-cn_topic_0000002039339945_ph2908133144419"><a name="zh-cn_topic_0000002039339945_ph2908133144419"></a>PyTorch</span>版本为：2.1.0、2.3.0、2.4.0、2.5.0、2.6.0、2.7.1。TaskD运行依赖PyTorch框架，请选择无已知安全漏洞的PyTorch版本或从官方社区获取已修复安全问题的对应版本。</p>
+<div class="note" id="zh-cn_topic_0000002039339945_note494818501423"><a name="zh-cn_topic_0000002039339945_note494818501423"></a><span class="notetitle"> [!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p159489506423"><a name="zh-cn_topic_0000002039339945_p159489506423"></a>安装<span id="ph1670711477256"><a name="ph1670711477256"></a>TaskD</span>组件前需确保<span id="zh-cn_topic_0000002039339945_ph998914174412"><a name="zh-cn_topic_0000002039339945_ph998914174412"></a>PyTorch</span>框架已正确安装，当前支持的<span id="zh-cn_topic_0000002039339945_ph2908133144419"><a name="zh-cn_topic_0000002039339945_ph2908133144419"></a>PyTorch</span>版本为：2.1.0~2.10.0。TaskD运行依赖PyTorch框架，请选择无已知安全漏洞的PyTorch版本或从官方社区获取已修复安全问题的对应版本。</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p19595310517"><a name="zh-cn_topic_0000002039339945_p19595310517"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann" target="_blank" rel="noopener noreferrer">获取链接</a></p>
@@ -63,31 +63,31 @@
 <p id="zh-cn_topic_0000002039339945_p1861353651"><a name="zh-cn_topic_0000002039339945_p1861353651"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p166105316515"><a name="zh-cn_topic_0000002039339945_p166105316515"></a>混合精度训练是在训练时混合使用单精度（float32）与半精度(float16)数据类型，将两者结合在一起，并使用相同的超参数实现了与float32几乎相同的精度。</p>
-<p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10，具体Python版本以MindSpeed-LLM版本说明为准。</p>
+<p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a>软件包中的cp3x表示Python版本号，例如x为12表示Python 3.12，具体Python版本以MindSpeed-LLM版本说明为准。</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a>请参见<span id="zh-cn_topic_0000002039339945_ph156792413596"><a name="zh-cn_topic_0000002039339945_ph156792413596"></a>《Ascend Extension for PyTorch 软件安装指南》中的“<a href="https://gitcode.com/Ascend/apex/blob/master/docs/zh/installing_apex.md">安装APEX模块</a>”章节</span>，根据实际情况编译APEX软件包。</p>
 <p id="zh-cn_topic_0000002039339945_p1761531257"><a name="zh-cn_topic_0000002039339945_p1761531257"></a></p>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000002039339945_row197268213011"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p1361953254"><a name="zh-cn_topic_0000002039339945_p1361953254"></a>torch_npu-2.7.1.<em id="zh-cn_topic_0000002039339945_i16204112111321"><a name="zh-cn_topic_0000002039339945_i16204112111321"></a>{version}</em>-cp3x-cp3x-manylinux_2_28_{arch}.whl</p>
+<tr id="zh-cn_topic_0000002039339945_row197268213011"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p1361953254"><a name="zh-cn_topic_0000002039339945_p1361953254"></a>torch_npu-2.10.0.post<em id="zh-cn_topic_0000002039339945_i16204112111321"><a name="zh-cn_topic_0000002039339945_i16204112111321"></a>{version}</em>-cp3x-cp3x-manylinux_2_28_{arch}.whl</p>
 </td>
 <td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002039339945_p56185314510"><a name="zh-cn_topic_0000002039339945_p56185314510"></a>是</p>
 <p id="zh-cn_topic_0000002039339945_p186653757"><a name="zh-cn_topic_0000002039339945_p186653757"></a>MindSpeed-LLM依赖</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p15720535517"><a name="zh-cn_topic_0000002039339945_p15720535517"></a>Ascend Extension for PyTorch插件是基于昇腾的深度学习适配框架，使昇腾NPU可以支持PyTorch框架，为PyTorch框架的使用者提供昇腾AI处理器的超强算力。</p>
-<p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"></a>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10，具体Python版本以MindSpeed-LLM版本说明为准。</p>
+<p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"></a>软件包中的cp3x表示Python版本号，例如x为12表示Python 3.12，具体Python版本以MindSpeed-LLM版本说明为准。</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p10718533510"><a name="zh-cn_topic_0000002039339945_p10718533510"></a><a href="https://www.hiascend.com/document/detail/zh/Pytorch/720/configandinstg/instg/insg_0004.html" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 <div class="note" id="zh-cn_topic_0000002039339945_note1165115165020"><a name="zh-cn_topic_0000002039339945_note1165115165020"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p167047813263"><a name="zh-cn_topic_0000002039339945_p167047813263"></a>如果使用MindSpeed-LLM代码仓上的<span id="zh-cn_topic_0000002039339945_ph1987542822613"><a name="zh-cn_topic_0000002039339945_ph1987542822613"></a>PyTorch</span>模型，需要使用<span id="zh-cn_topic_0000002039339945_ph1412723132619"><a name="zh-cn_topic_0000002039339945_ph1412723132619"></a>Ascend Extension for PyTorch</span> 2.6.0及以上版本。</p>
 </div></div>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000002039339945_row1412215399516"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><a name="zh-cn_topic_0000002039339945_ul104867135415"></a><ul id="zh-cn_topic_0000002039339945_ul104867135415"><li><span id="zh-cn_topic_0000002039339945_ph0853174512272"><a name="zh-cn_topic_0000002039339945_ph0853174512272"></a>x86_64</span>架构：torch-2.7.1+cpu.cxx11.abi-cp3x-cp3x-linux_x86_64.whl</li><li><span id="zh-cn_topic_0000002039339945_ph7852164518272"><a name="zh-cn_topic_0000002039339945_ph7852164518272"></a>ARM</span>架构：torch-2.7.1+cpu-cp3x-cp3x-manylinux_2_28_aarch64.whl</li></ul>
+<tr id="zh-cn_topic_0000002039339945_row1412215399516"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><a name="zh-cn_topic_0000002039339945_ul104867135415"></a><ul id="zh-cn_topic_0000002039339945_ul104867135415"><li><span id="zh-cn_topic_0000002039339945_ph0853174512272"><a name="zh-cn_topic_0000002039339945_ph0853174512272"></a>x86_64</span>架构：torch-2.10.0+cpu-cp3x-cp3x-manylinux_2_28_x86_64.whl</li><li><span id="zh-cn_topic_0000002039339945_ph7852164518272"><a name="zh-cn_topic_0000002039339945_ph7852164518272"></a>ARM</span>架构：torch-2.10.0+cpu-cp3x-cp3x-manylinux_2_28_aarch64.whl</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002039339945_p871953357"><a name="zh-cn_topic_0000002039339945_p871953357"></a>是</p>
 <p id="zh-cn_topic_0000002039339945_p17715531453"><a name="zh-cn_topic_0000002039339945_p17715531453"></a>MindSpeed-LLM依赖</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"></a>官方<span id="zh-cn_topic_0000002039339945_ph19355165113512"><a name="zh-cn_topic_0000002039339945_ph19355165113512"></a>PyTorch</span>包。</p><p>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10，具体Python版本以MindSpeed-LLM版本说明为准。</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"></a>官方<span id="zh-cn_topic_0000002039339945_ph19355165113512"><a name="zh-cn_topic_0000002039339945_ph19355165113512"></a>PyTorch</span>包。</p><p>软件包中的cp3x表示Python版本号，例如x为12表示Python 3.12，具体Python版本以MindSpeed-LLM版本说明为准。</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p99745421447"><a name="zh-cn_topic_0000002039339945_p99745421447"></a><a href="https://download.pytorch.org/whl/torch/" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 <p id="zh-cn_topic_0000002039339945_p483943610920"><a name="zh-cn_topic_0000002039339945_p483943610920"></a></p>
@@ -123,7 +123,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p7482193913619"><a name="zh-cn_topic_0000002039339945_p7482193913619"></a>git clone https://gitcode.com/Ascend/MindSpeed.git</p>
 <p id="zh-cn_topic_0000002039339945_p9482139663"><a name="zh-cn_topic_0000002039339945_p9482139663"></a>cd MindSpeed</p>
-<p id="zh-cn_topic_0000002039339945_p1948213912618"><a name="zh-cn_topic_0000002039339945_p1948213912618"></a>git checkout e4d5855250f0074670f41c423021286502410bf1</p>
+<p id="zh-cn_topic_0000002039339945_p1948213912618"><a name="zh-cn_topic_0000002039339945_p1948213912618"></a>git checkout eb0ad7e73dc8227291e44504041aa7c58136aaa3  # 26.2.0_core_r0.12.1 分支</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002039339945_row144125121466"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p848215391768"><a name="zh-cn_topic_0000002039339945_p848215391768"></a>version.info</p>
@@ -155,13 +155,13 @@
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p1548619391164"><a name="zh-cn_topic_0000002039339945_p1548619391164"></a>git clone https://github.com/NVIDIA/dllogger.git</p>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000002039339945_row33025197610"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p0486133919618"><a name="zh-cn_topic_0000002039339945_p0486133919618"></a>get-pip.py</p>
+<tr id="zh-cn_topic_0000002039339945_row33025197610"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p0486133919618"><a name="zh-cn_topic_0000002039339945_p0486133919618"></a>Python-3.12.16.tar.xz</p>
 </td>
 <td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002039339945_p1148619393610"><a name="zh-cn_topic_0000002039339945_p1148619393610"></a>是</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p164861439461"><a name="zh-cn_topic_0000002039339945_p164861439461"></a>用于安装pip模块。</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p164861439461"><a name="zh-cn_topic_0000002039339945_p164861439461"></a>用于编译 Python 3.12，构建时通过 ensurepip 安装 pip。</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p34865396611"><a name="zh-cn_topic_0000002039339945_p34865396611"></a>curl -k https://bootstrap.pypa.io/get-pip.py -o get-pip.py</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p34865396611"><a name="zh-cn_topic_0000002039339945_p34865396611"></a>从 Python 官方发行源获取 Python 3.12.16 源码包。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002039339945_row03021191165"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p15486163919616"><a name="zh-cn_topic_0000002039339945_p15486163919616"></a>Dockerfile</p>
@@ -177,166 +177,510 @@
 </table>
 
 >[!NOTE]
->本章节以单台Atlas 800T A2训练服务器、Ubuntu 20.04 Arm、配套Python 3.10为例来介绍训练镜像的制作，使用过程中需根据实际情况修改相关步骤。
+>镜像构建上下文需包含表1中的软件包、`Python-3.12.16.tar.xz`、MindSpeed 和 MindSpeed-LLM 源码目录。按各自版本说明准备配套源码及 requirements.txt。A3 使用 `CHIP=A3`，A5 使用 `CHIP=950`；同一镜像中只安装一种芯片的 ops 包。
 
 **操作步骤<a name="zh-cn_topic_0000002039339945_section20489630477"></a>**
 
 1. 参照[表1](#zh-cn_topic_0000002039339945_table1172542119019)，在宿主机上完成软件包的准备工作。
-2. 编写如下Dockerfile。
+    镜像构建目录及参数可参考 [mindcluster-deploy PyTorch镜像说明](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/docker/pytorch/OVERVIEW.zh.md)和 [Dockerfile](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/docker/pytorch/Dockerfile)。本文保留手动构建示例，APEX wheel 必须提供并安装。
+
+    将配套的 torch、torch_npu 和 APEX wheel 放到构建上下文的 `whl/` 目录。APEX 可按[安装APEX模块](https://gitcode.com/Ascend/apex/blob/master/docs/zh/installing_apex.md)准备；使用 Ascend/apex 源码构建时，在与目标镜像架构、Python 和 PyTorch 配套的环境中执行：
+
+    ```shell
+    git clone https://gitcode.com/Ascend/apex.git
+    cd apex
+    bash scripts/build.sh --python=3.12
+    ```
+
+    将构建产物 `apex/dist/apex-*.whl` 复制到镜像构建目录的 `whl/`。该脚本生成 wheel，镜像中还需执行下文的 pip 安装命令。参考镜像提供的是 APEX 的 Python 部分；如模型使用 `apex_C` 等融合扩展，需按 APEX 安装说明准备包含对应扩展的配套 wheel。
+
+    ```shell
+    mkdir -p whl
+    ```
+
+    **DeepSeek-V4-Flash 优化器状态适配**
+
+    以下修改适用于本文的 MindSpeed-LLM `bfa35e3c8502995810d64077ed7fd18b8b296012` 基线。两个文件路径均相对于 MindSpeed-LLM 根目录，行号以该基线为准，具体插入位置如下：
+
+    | 文件 | 位置 | 修改内容 |
+    |---|---|---|
+    | `mindspeed_llm/core/optimizer/distrib_optimizer.py` | `distributed_optimizer_init()`，第131行 `_build_model_and_main_param_groups()` 调用结束后、第133行 `if isinstance(self.optimizer, HybridDeviceOptimizer)` 前 | 按 FP32 参数、FP16 参数的实际排列重建 `model_param_group_index_map` |
+    | `mindspeed_llm/core/high_availability/tft_replica_optimizer.py` | `TTPReplicaOptimizer` 类，第565行 `state_dict_memory()` 结束后、第567行 `load_state_dict_memory()` 前 | 增加 `load_state_dict()`，在优化器状态为空时按本地主参数分片初始化状态存储 |
+
+    将以下完整 diff 保存为镜像构建上下文根目录的 `mindspeed_llm_26_2_0_arf_optimizer_state_fix.patch`，保留每行开头的空格、`+` 和 `-`。实际应用由下文 Dockerfile 完成。
+
+    ```diff
+    diff --git a/mindspeed_llm/core/optimizer/distrib_optimizer.py b/mindspeed_llm/core/optimizer/distrib_optimizer.py
+    --- a/mindspeed_llm/core/optimizer/distrib_optimizer.py
+    +++ b/mindspeed_llm/core/optimizer/distrib_optimizer.py
+    @@ -130,6 +130,12 @@
+             self.gbuf_ranges, self.model_param_gbuf_map, self.opt_group_ranges, config
+         )
+
+    +    for group_index, (model_fp32_params, model_float16_params) in enumerate(
+    +        zip(self.model_fp32_groups, self.model_float16_groups)
+    +    ):
+    +        for group_order, model_param in enumerate([*model_fp32_params, *model_float16_params]):
+    +            self.model_param_group_index_map[model_param] = (group_index, group_order)
+    +
+         if isinstance(self.optimizer, HybridDeviceOptimizer):
+             self.optimizer = HybridDeviceOptimizer(
+                 params=[g["orig_group"] for g in self.opt_group_ranges], **self.optimizer.defaults
+    diff --git a/mindspeed_llm/core/high_availability/tft_replica_optimizer.py b/mindspeed_llm/core/high_availability/tft_replica_optimizer.py
+    --- a/mindspeed_llm/core/high_availability/tft_replica_optimizer.py
+    +++ b/mindspeed_llm/core/high_availability/tft_replica_optimizer.py
+    @@ -564,5 +564,10 @@
+         def state_dict_memory(self):
+             return self.state_dict()
+
+    +    def load_state_dict(self, state_dict):
+    +        if len(self.optimizer.state) == 0 and self.init_state_fn is not None:
+    +            self.init_state_fn(self.optimizer, self.config)
+    +        super().load_state_dict(state_dict)
+    +
+         def load_state_dict_memory(self, state_dict):
+             self.load_state_dict(state_dict)
+    ```
+
+    可在镜像构建上下文根目录先检查源码版本和补丁是否匹配：
+
+    ```shell
+    git -C MindSpeed-LLM rev-parse HEAD
+    git -C MindSpeed-LLM apply --check \
+        "$PWD/mindspeed_llm_26_2_0_arf_optimizer_state_fix.patch"
+    ```
+
+    构建上下文中的 MindSpeed-LLM 源码需保留 `.git` 目录，供镜像内校验基线。状态初始化仅在优化器状态为空时分配匹配的存储，恢复时由 checkpoint 或对端数据填充。构建时应用上述补丁即可，无需重复手动插入；如所用源码已包含两项修改，应省略补丁应用并同步调整源码版本和构建步骤。
+
+    构建上下文的关键目录如下；CANN、TaskD、MindIO TFT 和 Python 源码包仍按表1及下文 Dockerfile 放置。
 
     ```text
-    FROM ubuntu:20.04
-    WORKDIR /root
-    COPY . .
+    build-context/
+    ├── Dockerfile
+    ├── MindSpeed/
+    ├── MindSpeed-LLM/
+    ├── mindspeed_llm_26_2_0_arf_optimizer_state_fix.patch
+    ├── dllogger/
+    └── whl/
+        ├── torch-2.10.0+cpu-cp312-cp312-manylinux_2_28_aarch64.whl
+        ├── torch_npu-2.10.0.post7-cp312-cp312-manylinux_2_28_aarch64.whl
+        └── apex-0.1+ascend-cp312-cp312-linux_aarch64.whl
+    ```
 
-    ARG PYTORCH_WHL=torch-2.7.1+cpu-cp310-cp310-manylinux_2_28_aarch64.whl
-    ARG PYTORCH_NPU_WHL=torch_npu-2.7.1.{version}-cp310-cp310-manylinux_2_28_aarch64.whl
-    ARG APEX_WHL=apex-0.1+ascend-cp310-cp310-linux_aarch64.whl
-    ARG HOST_ASCEND_BASE=/usr/local/Ascend
-    ARG TOOLKIT_PATH=/usr/local/Ascend/cann
-    # 示例使用的CANN版本为8.5.0,使用过程中请根据实际情况修改
-    ARG TOOLKIT=Ascend-cann-toolkit_8.5.0_linux-aarch64.run
-    ARG OPS=Ascend-cann-910b-ops_8.5.0_linux-aarch64.run
-    ARG TASKD_WHL=taskd-7.3.0-py3-none-linux_aarch64.whl
-    ARG MINDIO_TTP_WHL=mindio_ttp-1.0.0-py3-none-linux_aarch64.whl
-    ARG MINDSPEED=MindSpeed
-    ARG DLLOGGER=dllogger
+2. 编写如下Dockerfile。
 
-    RUN echo "nameserver 114.114.114.114" > /etc/resolv.conf
+    ```dockerfile
+    # MindCluster 断点续训 PyTorch 示例镜像
+    # 构建使用 --network=host；上下文需提供 version.info、ascend_install.info、
+    # whl/、dllogger/ 和 MindSpeed-LLM 优化器状态补丁。
 
-    RUN echo "deb http://repo.huaweicloud.com/ubuntu-ports/ focal main restricted universe multiverse\n\
-    deb http://repo.huaweicloud.com/ubuntu-ports/ focal-updates main restricted universe multiverse\n\
-    deb http://repo.huaweicloud.com/ubuntu-ports/ focal-backports main restricted universe multiverse\n\
-    deb http://ports.ubuntu.com/ubuntu-ports/ focal-security main restricted universe multiverse" > /etc/apt/sources.list
+    ARG BASE_IMAGE=ubuntu:22.04
+    FROM ${BASE_IMAGE}
 
-    ARG DEBIAN_FRONTEND=noninteractive
+    # A3 使用 CHIP=A3，A5 使用 CHIP=950；每个镜像只安装一种芯片的 ops 包。
+    ARG CHIP=A3
+    ARG PYTHON_VERSION=3.12
+    ARG CANN_VERSION=9.2.0
 
-    # 系统包
-    RUN umask 0022 && apt update && \
-        apt-get install -y --no-install-recommends \
-        software-properties-common
-    RUN umask 0022 && add-apt-repository ppa:deadsnakes/ppa && \
-        apt update && \
-        apt autoremove -y python python3 && \
-        apt install -y python3.10 python3.10-dev
-    # 建立Python软链
-    RUN ln -s /usr/bin/python3.10 /usr/bin/python
-    RUN ln -s /usr/bin/python3.10 /usr/bin/python3
-    RUN ln -s /usr/bin/python3.10-config /usr/bin/python-config
-    RUN ln -s /usr/bin/python3.10-config /usr/bin/python3-config
-    # 系统
-    RUN umask 0022 && apt update && \
-            apt-get install -y --no-install-recommends \
-            gcc g++ make cmake vim \
-            zlib1g zlib1g-dev \
-            openssl libsqlite3-dev libssl-dev \
-            libffi-dev unzip pciutils \
-            net-tools libblas-dev \
-            gfortran libblas3 libopenblas-dev \
-            curl unzip liblapack3 liblapack-dev \
-            libhdf5-dev libxml2 patch
-    # 时区
-    RUN ln -sf /usr/share/zoneinfo/UTC /etc/localtime
-    # 配置pip源
-    RUN mkdir -p ~/.pip \
-    && echo '[global] \n\
-    index-url=https://mirrors.huaweicloud.com/repository/pypi/simple\n\
-    trusted-host=mirrors.huaweicloud.com' >> ~/.pip/pip.conf
-    # pip3.10
-    RUN cd /tmp && \
-        apt-get download python3-distutils && \
-        dpkg-deb -x python3-distutils_*.deb / && \
-        rm python3-distutils_*.deb && \
-        cd - && \
-        python get-pip.py && \
-        rm get-pip.py
-    RUN umask 0022 && \
-        pip install sympy==1.4 && \
-        pip install cffi && \
-        pip install pathlib2 && \
-        pip install grpcio && \
-        pip install grpcio-tools && \
-        pip install torchvision==0.22.1 && \
-        pip install transformers==4.51.0 && \
-        pip install absl-py && \
-        pip install datasets && \
-        pip install tokenizers==0.20.1
-    RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser
-    # 安装torch、TorchNPU、apex包
-    RUN umask 0022 && pip install $PYTORCH_WHL && \
-        pip install $PYTORCH_NPU_WHL && \
-        pip install $APEX_WHL
+    # 下载源
+    ARG CANN_BASE_URL=https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/CANN/CANN%209.2.0
+    ARG PIP_INDEX_URL=https://repo.huaweicloud.com/repository/pypi/simple
+    ARG PIP_TRUSTED_HOST=repo.huaweicloud.com
+    ARG APT_MIRROR=repo.huaweicloud.com
+    ARG TRITON_ASCEND_INDEX_URL=https://mirrors.huaweicloud.com/ascend/repos/pypi
 
-    # Ascend包
-    # 构建之前把host的/usr/local/Ascend/driver/version.info拷贝一份到当前目录
-    RUN umask 0022 &&  \
-        cp ascend_install.info /etc/ && \
-        mkdir -p /usr/local/Ascend/driver/ && \
-        cp version.info /usr/local/Ascend/driver/ && \
-        chmod +x $TOOLKIT && \
-        chmod +x $OPS
+    # PyTorch、torch_npu、torchvision 和 wheel 的 Python ABI 必须配套。
+    ARG TORCH_VERSION=2.10.0
+    ARG TORCH_NPU_PKG_VERSION=2.10.0.post7
+    ARG TASKD_WHEEL_VERSION=26.3.0
+    ARG MINDIO_TTP_WHEEL_VERSION=26.2.0
+    ARG TRITON_ASCEND_VERSION=3.6.0
 
-    RUN umask 0022 && ./$TOOLKIT --install-path=/usr/local/Ascend/ --install --quiet
-    RUN echo "source /usr/local/Ascend/cann/set_env.sh" >> ~/.bashrc
-    RUN umask 0022 && ./$OPS --install --quiet
+    # 固定模型源码版本及配套 Megatron-LM。
+    ARG MINDSPEED_COMMIT=eb0ad7e73dc8227291e44504041aa7c58136aaa3
+    ARG MINDSPEED_LLM_COMMIT=bfa35e3c8502995810d64077ed7fd18b8b296012
+    ARG MINDSPEED_LLM_ARF_PATCH=mindspeed_llm_26_2_0_arf_optimizer_state_fix.patch
+    ARG MEGATRON_TAG=core_v0.12.1
+    ARG MINDCLUSTER_TAG=v26.2.0
 
-    # 只为了安装toolkit包，所以需要清理，容器启动时通过Ascend Docker Runtime挂载进来
-    RUN rm -f version.info && rm -f ascend_install.info && \
-        rm -rf /usr/local/Ascend/driver/
+    # 构建前校验软件包文件名与版本。
+    COPY check_packages.sh /tmp/check_packages.sh
+    RUN bash /tmp/check_packages.sh --filename-only \
+          "taskd-${TASKD_WHEEL_VERSION}-py3-none-linux_aarch64.whl:${TASKD_WHEEL_VERSION}" \
+          "mindio_ttp-${MINDIO_TTP_WHEEL_VERSION}-py3-none-linux_aarch64.whl:${MINDIO_TTP_WHEEL_VERSION}"
 
-    RUN umask 0022 && cd $MINDSPEED && \
-        pip install -r requirements.txt && \
-        pip install -e . && \
-        echo "export PYTHONPATH=/root/MindSpeed:\$PYTHONPATH" >> ~/.bashrc
+    # 基础系统依赖
+    COPY version.info /tmp/ascend-driver/version.info
+    COPY ascend_install.info /tmp/ascend-driver/ascend_install.info
 
-    RUN umask 0022 && cd $DLLOGGER && \
-        python setup.py build && \
-        python setup.py install
+    ENV DEBIAN_FRONTEND=noninteractive
+    ENV TZ=UTC
 
-    # 导入环境变量
-    ENV HCCL_WHITELIST_DISABLE=1
-
-    # 创建/lib64/ld-linux-aarch64.so.1
-    RUN umask 0022 && \
-        if [ ! -d "/lib64" ]; \
-        then \
-            mkdir /lib64 && ln -sf /lib/ld-linux-aarch64.so.1 /lib64/ld-linux-aarch64.so.1; \
+    RUN set -eux; \
+        for f in /tmp/ascend-driver/version.info /tmp/ascend-driver/ascend_install.info; do \
+            if [ ! -s "$f" ]; then \
+                echo "ERROR: 缺少驱动信息文件 $f" >&2; \
+                echo "请在构建上下文中提供：cp /usr/local/Ascend/driver/version.info ." >&2; \
+                echo "                        cp /etc/ascend_install.info ." >&2; \
+                exit 1; \
+            fi; \
+        done; \
+        if command -v apt-get >/dev/null 2>&1; then \
+            echo "deb http://${APT_MIRROR}/ubuntu-ports/ jammy main restricted universe multiverse" >  /etc/apt/sources.list; \
+            echo "deb http://${APT_MIRROR}/ubuntu-ports/ jammy-updates main restricted universe multiverse" >> /etc/apt/sources.list; \
+            echo "deb http://${APT_MIRROR}/ubuntu-ports/ jammy-security main restricted universe multiverse" >> /etc/apt/sources.list; \
+            apt-get update -qq; \
+            apt-get install -y -qq --no-install-recommends \
+                ca-certificates curl wget git \
+                gcc g++ make cmake patch \
+                zlib1g zlib1g-dev libsqlite3-dev libssl-dev libffi-dev \
+                unzip pciutils net-tools binutils procps hostname \
+                libblas-dev libblas3 libopenblas-dev gfortran \
+                liblapack3 liblapack-dev libhdf5-dev libxml2 \
+                swig \
+                libexpat1-dev libbz2-dev libreadline-dev liblzma-dev libncurses-dev libgdbm-dev libnss3-dev uuid-dev \
+                tzdata; \
+            ln -sf /usr/share/zoneinfo/UTC /etc/localtime; \
+            echo UTC > /etc/timezone; \
+        elif command -v dnf >/dev/null 2>&1 || command -v yum >/dev/null 2>&1; then \
+            PKG=$(command -v dnf >/dev/null 2>&1 && echo dnf || echo yum); \
+            ${PKG} install -y \
+                ca-certificates curl wget git tar \
+                gcc gcc-c++ gcc-gfortran make cmake patch \
+                zlib zlib-devel sqlite-devel openssl openssl-devel libffi-devel \
+                unzip pciutils net-tools binutils procps-ng hostname \
+                openblas-devel lapack-devel hdf5-devel libxml2-devel \
+                expat-devel bzip2-devel readline-devel xz-devel ncurses-devel gdbm-devel uuid-devel \
+                nss nss-devel nspr nspr-devel \
+                tzdata swig; \
+            ${PKG} clean all || true; \
+        else \
+            echo "ERROR: 既无 apt-get 也无 dnf/yum，不支持的 BASE_IMAGE" >&2; exit 1; \
         fi
 
-    # MindCluster断点续训适配脚本。
-    RUN umask 0022 && \
-        pip install $TASKD_WHL && \
-        pip install $MINDIO_TTP_WHL
+    # 源码编译 Python，以匹配 cp312 wheel。
+    ARG PY_VERSION=3.12.16
+    ARG PY_BASE_URL=https://mirrors.huaweicloud.com/python
 
-    # 可选，使用优雅容错、Pod级别重调度或进程级别重调度时必须配置以下命令。
-    RUN sed -i '/import os/i import taskd.python.adaptor.patch' $(pip3 show torch | grep Location | awk -F ' ' '{print $2}')/torch/distributed/run.py
+    RUN set -eux; \
+        cd /tmp; \
+        curl -fsSL --retry 3 -o py.tgz "${PY_BASE_URL}/${PY_VERSION}/Python-${PY_VERSION}.tgz"; \
+        tar -xzf py.tgz; \
+        cd "Python-${PY_VERSION}"; \
+        S=$(date +%s); \
+        ./configure --prefix=/usr/local --enable-shared --with-ensurepip=install > /tmp/pycfg.log 2>&1 \
+            || { echo "ERROR: Python configure 失败"; tail -30 /tmp/pycfg.log; exit 1; }; \
+        echo "python configure: $(( $(date +%s) - S ))s"; \
+        make -j"$(nproc)" > /tmp/pymake.log 2>&1 \
+            || { echo "ERROR: Python make 失败"; tail -30 /tmp/pymake.log; exit 1; }; \
+        echo "python make: $(( $(date +%s) - S ))s"; \
+        make install > /tmp/pyinst.log 2>&1 \
+            || { echo "ERROR: Python make install 失败"; tail -40 /tmp/pyinst.log; exit 1; }; \
+        echo "python install: $(( $(date +%s) - S ))s"; \
+        if [ -d /etc/ld.so.conf.d ]; then \
+            echo "/usr/local/lib" > /etc/ld.so.conf.d/usr-local.conf; \
+        else \
+            echo "/usr/local/lib" >> /etc/ld.so.conf; \
+        fi; \
+        ldconfig; \
+        rm -rf /tmp/Python-${PY_VERSION} /tmp/py.tgz; \
+        /usr/local/bin/python3 -V; \
+        /usr/local/bin/python3 -c "import pyexpat, ssl, sqlite3, zlib, bz2, lzma, ctypes; print('stdlib extensions OK')"
 
-    # 增加安装任务调度依赖库
-    RUN pip install apscheduler
+    ENV PATH=/usr/local/bin:${PATH}
+    # openEuler 默认不搜索 /usr/local/lib，需显式配置共享库路径。
+    ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
+    RUN set -eux; \
+        ln -sf /usr/local/bin/python3 /usr/bin/python3; \
+        ln -sf /usr/local/bin/python3 /usr/bin/python; \
+        ln -sf /usr/local/bin/pip3 /usr/bin/pip3; \
+        ln -sf /usr/local/bin/pip3 /usr/bin/pip; \
+        python3 -V; \
+        python3 -c "import sys; assert sys.version_info[:3] == (3, 12, 16), sys.version; print('python version OK: 3.12.16')"; \
+        mkdir -p /root/.pip; \
+        printf '[global]\nindex-url=%s\ntrusted-host=%s\ntimeout=120\n' \
+            "${PIP_INDEX_URL}" "${PIP_TRUSTED_HOST}" > /root/.pip/pip.conf; \
+        python3 -m pip install --no-cache-dir -U pip setuptools wheel packaging; \
+        python3 -m pip --version
 
-    RUN rm -rf tmp && \
-        rm -f $PYTORCH_WHL && \
-        rm -f $PYTORCH_NPU_WHL && \
-        rm -f $APEX_WHL && \
-        rm -f $TOOLKIT && \
-        rm -f $OPS && \
-        rm -f $TASKD_WHL && \
-        rm -f $MINDIO_TTP_WHL && \
-        rm -rf $DLLOGGER && \
-        rm -rf Dockerfile
-    ## 最后打包成镜像mindspeed-dl:v1
+    # CANN 安装时临时提供构建机驱动信息，安装后删除；运行时由宿主机挂载。
+    RUN set -eux; \
+        cd /tmp; \
+        mkdir -p /usr/local/Ascend/driver; \
+        cp /tmp/ascend-driver/version.info /usr/local/Ascend/driver/version.info; \
+        cp /tmp/ascend-driver/ascend_install.info /etc/ascend_install.info; \
+        curl -fsSL --retry 3 -o toolkit.run "${CANN_BASE_URL}/Ascend-cann-toolkit_${CANN_VERSION}_linux-aarch64.run"; \
+        curl -fsSL --retry 3 -o ops.run     "${CANN_BASE_URL}/Ascend-cann-${CHIP}-ops_${CANN_VERSION}_linux-aarch64.run"; \
+        chmod +x toolkit.run ops.run; \
+        ./toolkit.run --install-path=/usr/local/Ascend/ --install --quiet; \
+        ./ops.run     --install --quiet; \
+        rm -f /etc/ascend_install.info; \
+        rm -f /tmp/ascend-driver/version.info /tmp/ascend-driver/ascend_install.info; \
+        rm -rf /tmp/ascend-driver /usr/local/Ascend/driver; \
+        rm -f toolkit.run ops.run; \
+        find /usr/local/Ascend -maxdepth 4 -name 'ascend_ops_install.info' -exec cat {} \; ; \
+        echo "--- kernel 目录体量（应只有 ascend_93 系为 GB 级）---"; \
+        du -sh /usr/local/Ascend/ascend-toolkit/latest/opp/built-in/op_impl/ai_core/tbe/kernel/* 2>/dev/null || true
+
+    ENV ASCEND_HOME_PATH=/usr/local/Ascend/ascend-toolkit/latest
+    ENV PATH=${ASCEND_HOME_PATH}/bin:${ASCEND_HOME_PATH}/tools/ccec_compiler/bin:${PATH}
+
+    # ENV 提供运行时环境；需要完整 CANN 环境的 RUN 仍需加载 set_env.sh。
+    ENV ASCEND_TOOLKIT_HOME=${ASCEND_HOME_PATH}
+    ENV ASCEND_OPP_PATH=${ASCEND_HOME_PATH}/opp
+    ENV LD_LIBRARY_PATH=${ASCEND_HOME_PATH}/lib64:${ASCEND_HOME_PATH}/lib64/plugin/opskernel:${ASCEND_HOME_PATH}/lib64/plugin/nnengine:${ASCEND_HOME_PATH}/opp/built-in/op_impl/ai_core/tbe/op_tiling:/usr/local/Ascend/ascend-toolkit/latest/devlib:${LD_LIBRARY_PATH}
+
+    RUN echo "source /usr/local/Ascend/ascend-toolkit/set_env.sh" >> /root/.bashrc; \
+        echo "source /usr/local/Ascend/ascend-toolkit/set_env.sh" >> /etc/profile.d/ascend.sh
+
+    # whl/ 需提供 torch、torch_npu、torchvision 的 cp312/aarch64 wheel 及 APEX wheel。
+    # 使用 apex_C 等融合扩展时，APEX wheel 必须包含对应扩展。
+    ARG APEX_WHL=apex-0.1+ascend-cp312-cp312-linux_aarch64.whl
+    COPY whl/ /tmp/whl/
+
+    # 防止后续安装模型依赖时替换 PyTorch / torch_npu 配套版本。
+    RUN printf 'torch==%s\ntorch_npu==%s\n' "${TORCH_VERSION}" "${TORCH_NPU_PKG_VERSION}" > /tmp/constraints.txt
+    ENV PIP_CONSTRAINT=/tmp/constraints.txt
+
+    RUN set -eux; \
+        ls -l /tmp/whl/; \
+        python3 -m pip install --no-cache-dir --no-deps \
+            "/tmp/whl/torch-${TORCH_VERSION}+cpu-cp312-cp312-manylinux_2_28_aarch64.whl"; \
+        python3 -m pip install --no-cache-dir \
+            filelock "typing-extensions>=4.10.0" "sympy>=1.13.3" \
+            networkx jinja2 fsspec numpy pyyaml; \
+        python3 -m pip install --no-cache-dir --no-deps \
+            "/tmp/whl/torch_npu-${TORCH_NPU_PKG_VERSION}-cp312-cp312-manylinux_2_28_aarch64.whl"; \
+        python3 -m pip install --no-cache-dir --no-deps \
+            "/tmp/whl/torchvision-0.25.0+cpu-cp312-cp312-manylinux_2_28_aarch64.whl"; \
+        . /usr/local/Ascend/ascend-toolkit/set_env.sh; \
+        TORCH_DEVICE_BACKEND_AUTOLOAD=0 \
+        python3 -c "import torch, torch_npu; print('torch', torch.__version__); print('torch_npu', torch_npu.__version__)"; \
+        python3 -c "import numpy, yaml; print('numpy', numpy.__version__); print('pyyaml', yaml.__version__)"; \
+        echo "ASCEND_OPP_PATH=$ASCEND_OPP_PATH"; \
+        test -f "/tmp/whl/${APEX_WHL}" || { echo "ERROR: 必须提供配套的 APEX wheel: whl/${APEX_WHL}" >&2; exit 1; }; \
+        python3 -m pip install --no-cache-dir "/tmp/whl/${APEX_WHL}"; \
+        TORCH_DEVICE_BACKEND_AUTOLOAD=0 python3 -c "import apex; print('apex', apex.__file__)"; \
+        rm -rf /tmp/whl
+
+    # Triton-Ascend 与 MindSpeed-LLM 26.2.0 配套，从华为云 Ascend PyPI 源安装。
+    RUN set -eux; \
+        . /usr/local/Ascend/ascend-toolkit/set_env.sh; \
+        python3 -m pip install --no-cache-dir \
+            "triton-ascend==${TRITON_ASCEND_VERSION}" \
+            --extra-index-url="${TRITON_ASCEND_INDEX_URL}"; \
+        python3 -c "import triton; print('triton', triton.__version__)"
+
+    RUN set -eux; \
+        python3 -m pip install --no-cache-dir \
+            cffi grpcio grpcio-tools absl-py apscheduler; \
+        python3 -m pip install --no-cache-dir numpy pillow
+
+    # TaskD 源码构建要求 Go 1.21.13。
+    ARG GO_VERSION=1.21.13
+    RUN set -eux; \
+        cd /tmp; \
+        curl -fsSL --retry 3 -o go.tar.gz \
+            "https://golang.google.cn/dl/go${GO_VERSION}.linux-arm64.tar.gz"; \
+        tar -C /usr/local -xzf go.tar.gz; \
+        rm -f go.tar.gz; \
+        /usr/local/go/bin/go version; \
+        ln -sf /usr/local/go/bin/go /usr/local/bin/go; \
+        ln -sf /usr/local/go/bin/gofmt /usr/local/bin/gofmt
+    ENV GOROOT=/usr/local/go
+    ENV GOPATH=/root/go
+    ENV PATH=${GOROOT}/bin:${GOPATH}/bin:${PATH}
+    ENV GOPROXY=https://goproxy.cn,https://mirrors.aliyun.com/goproxy/,direct
+    ENV GOSUMDB=off
+
+    RUN set -eux; \
+        python3 -m pip install --no-cache-dir datasets; \
+        TORCH_DEVICE_BACKEND_AUTOLOAD=0 \
+        python3 -c "import torch, torchvision; print('torch', torch.__version__); print('torchvision', torchvision.__version__); assert torchvision.__version__.startswith('0.25.0'), torchvision.__version__"
+
+    # 安装模型依赖前校验基线并应用优化器状态补丁。
+    # transformers / tokenizers 版本由模型源码的 requirements.txt 决定。
+    COPY ${MINDSPEED_LLM_ARF_PATCH} /tmp/mindspeed_llm_arf.patch
+    COPY dllogger/ /tmp/dllogger/
+    RUN set -eux; \
+        clone5() { i=0; until git clone "$1" "$2"; do i=$((i+1)); if [ "$i" -ge 5 ]; then echo "ERROR: clone $1 失败" >&2; return 1; fi; echo "clone $1 第 $i 次失败，重试"; rm -rf "$2"; sleep 5; done; }; \
+        . /usr/local/Ascend/ascend-toolkit/set_env.sh; \
+        cd /root; \
+        clone5 https://gitcode.com/Ascend/MindSpeed.git MindSpeed; \
+        cd MindSpeed; \
+        git checkout "${MINDSPEED_COMMIT}"; \
+        python3 -m pip install --no-cache-dir -r requirements.txt; \
+        python3 -m pip install --no-cache-dir -e .; \
+        cd /root; \
+        clone5 https://gitcode.com/Ascend/MindSpeed-LLM.git MindSpeed-LLM; \
+        cd MindSpeed-LLM; \
+        git checkout "${MINDSPEED_LLM_COMMIT}"; \
+        test "$(git rev-parse HEAD)" = "${MINDSPEED_LLM_COMMIT}"; \
+        git apply --check /tmp/mindspeed_llm_arf.patch; \
+        git apply /tmp/mindspeed_llm_arf.patch; \
+        git diff --check; \
+        python3 -m pip install --no-cache-dir -r requirements.txt; \
+        python3 -m pip install --no-cache-dir /tmp/dllogger; \
+        rm -rf /tmp/dllogger /tmp/mindspeed_llm_arf.patch; \
+        cd /root
+
+    RUN set -eux; \
+        cd /root; \
+        ( git clone --depth 1 --branch "${MEGATRON_TAG}" https://github.com/NVIDIA/Megatron-LM.git \
+          || git clone --depth 1 --branch "${MEGATRON_TAG}" https://gitee.com/mirrors/Megatron-LM.git \
+          || git clone --depth 1 --branch "${MEGATRON_TAG}" https://gitcode.com/gh_mirrors/me/Megatron-LM.git ); \
+        test -d Megatron-LM; \
+        cp -r /root/Megatron-LM/megatron /root/MindSpeed-LLM/; \
+        rm -rf /root/Megatron-LM
+
+    ENV PYTHONPATH=/root/MindSpeed:/root/MindSpeed-LLM
+
+    # 模型依赖安装后检查导入。
+    RUN python3 -c "import transformers, tokenizers; print('transformers', transformers.__version__); print('tokenizers', tokenizers.__version__)"
+
+    # 构建 TaskD / MindIO TTP：显式设置 TaskD 版本，修正 C++17 和 ZIP 时间戳。
+    # CMake 必须使用 /usr/local 下的 Python 3.12，避免混入系统 Python ABI。
+    RUN set -eux; \
+        cd /tmp; \
+        i=0; \
+        until git clone --depth 1 --branch "${MINDCLUSTER_TAG}" https://gitcode.com/Ascend/mind-cluster.git mc; do \
+            i=$((i+1)); rm -rf mc; \
+            if [ "$i" -ge 5 ]; then echo "ERROR: mind-cluster 克隆失败" >&2; exit 1; fi; \
+            echo "mind-cluster clone 第 $i 次失败，重试"; sleep 5; \
+        done; \
+        cd mc/component/taskd; \
+        printf 'mindxdlversion=%s\n' "${TASKD_WHEEL_VERSION}" > service_config.ini; \
+        cd build && bash build.sh; \
+        cd /tmp/mc/component/mindio/tft; \
+        test -f build/build.sh || { echo "ERROR: mindio build.sh 不存在"; exit 1; }; \
+        sed -i 's|-std=c++11|-std=c++17|g' cmake_modules/ttp_common.cmake; \
+        sed -i "s|os.environ\['SOURCE_DATE_EPOCH'\] = '0'|os.environ['SOURCE_DATE_EPOCH'] = '315532800'|" src/python/setup.py; \
+        grep -n 'std=c++17' cmake_modules/ttp_common.cmake; \
+        grep -n 'SOURCE_DATE_EPOCH' src/python/setup.py; \
+        echo '--- PYTHON DIAG ---'; \
+        echo "PATH=$PATH"; \
+        (which -a python3 || true); \
+        (python3 -V || true); \
+        /usr/local/bin/python3 -V; \
+        (/usr/bin/python3 -V || true); \
+        echo '--- END DIAG ---'; \
+        cd build; \
+        bash build.sh -f -DPython3_EXECUTABLE=/usr/local/bin/python3 -DPython3_ROOT_DIR=/usr/local -DPython3_FIND_STRATEGY=LOCATION > /tmp/mindio_build.log 2>&1 || { \
+            echo "ERROR: mindio_ttp 构建失败"; \
+            grep -nE 'error:|ValueError|CMake Error|Could NOT find' /tmp/mindio_build.log | head -20; \
+            tail -25 /tmp/mindio_build.log; \
+            exit 1; \
+        }; \
+        PYINC=$(find /tmp/mc/component/mindio/tft -name flags.make -exec grep -hoE '\-I[^ ]*python3\.[0-9]+' {} \; | sort -u); \
+        echo "PYINC=[$PYINC]"; \
+        if ! echo "$PYINC" | grep -q 'python3\.12'; then echo "ERROR: CMake 未使用 python3.12 头文件（实际：$PYINC）"; exit 1; fi; \
+        if echo "$PYINC" | grep -Eq 'python3\.(10|11)'; then echo "ERROR: 编译混入 python3.10/3.11 头文件，扩展与运行期 3.12.16 ABI 不匹配"; exit 1; fi; \
+        echo "OK: CMake 编译使用 python3.12 头文件"; \
+        TTP_SO=$(find /tmp/mc -name '_ttp_c2python_api.so' | head -1); \
+        test -n "$TTP_SO" || { echo "ERROR: 未生成 _ttp_c2python_api.so"; exit 1; }; \
+        echo "OK: 已生成 $TTP_SO"; \
+        mkdir -p /tmp/wheels; \
+        find /tmp/mc -name "taskd-*.whl" -exec cp {} /tmp/wheels/ \; ; \
+        find /tmp/mc -name "mindio_ttp-*.whl" -exec cp {} /tmp/wheels/ \; ; \
+        ls -l /tmp/wheels/; \
+        test -f "/tmp/wheels/taskd-${TASKD_WHEEL_VERSION}-py3-none-linux_aarch64.whl" \
+          || { echo "ERROR: taskd whl 未生成"; exit 1; }; \
+        test -f "/tmp/wheels/mindio_ttp-${MINDIO_TTP_WHEEL_VERSION}-py3-none-linux_aarch64.whl" \
+          || { echo "ERROR: mindio_ttp whl 未生成（检查上面的 CMake 输出，常见原因：缺 SWIG）"; exit 1; }
+
+    # 安装前校验 wheel 文件名及 METADATA 版本。
+    RUN set -eux; \
+        cd /tmp/wheels; \
+        bash /tmp/check_packages.sh \
+            "taskd-${TASKD_WHEEL_VERSION}-py3-none-linux_aarch64.whl:${TASKD_WHEEL_VERSION}" \
+            "mindio_ttp-${MINDIO_TTP_WHEEL_VERSION}-py3-none-linux_aarch64.whl:${MINDIO_TTP_WHEEL_VERSION}"; \
+        python3 -m pip install --no-cache-dir \
+            "taskd-${TASKD_WHEEL_VERSION}-py3-none-linux_aarch64.whl" \
+            "mindio_ttp-${MINDIO_TTP_WHEEL_VERSION}-py3-none-linux_aarch64.whl"; \
+        rm -rf /tmp/wheels /tmp/mc /tmp/check_packages.sh
+
+    # TaskD 进程级恢复需要适配 torch/distributed/run.py。
+    RUN set -eux; \
+        DIST_RUN=$(TORCH_DEVICE_BACKEND_AUTOLOAD=0 python3 -c "import torch,os;print(os.path.join(os.path.dirname(torch.__file__),'distributed','run.py'))"); \
+        test -f "$DIST_RUN"; \
+        if ! grep -q '^import taskd.python.adaptor.patch' "$DIST_RUN"; then \
+            sed -i '/^import os/i import taskd.python.adaptor.patch' "$DIST_RUN"; \
+        fi; \
+        grep -n '^import taskd.python.adaptor.patch' "$DIST_RUN"
+
+    # 运行环境
+    ENV HCCL_WHITELIST_DISABLE=1
+
+    RUN set -eux; \
+        (getent group HwHiAiUser >/dev/null || groupadd -g 1000 HwHiAiUser); \
+        (getent passwd HwHiAiUser >/dev/null || useradd -d /home/HwHiAiUser -u 1000 -g 1000 -m -s /bin/bash HwHiAiUser)
+
+    RUN set -eux; \
+        if [ ! -d /lib64 ]; then mkdir -p /lib64; ln -sf /lib/ld-linux-aarch64.so.1 /lib64/ld-linux-aarch64.so.1; fi
+
+    # 镜像构建信息
+    ARG BUILD_DATE=unknown
+    LABEL org.opencontainers.image.title="torch-npu-sample-dl" \
+          org.opencontainers.image.description="MindCluster resumable-training PyTorch sample image" \
+          org.opencontainers.image.version="v26.3.0" \
+          org.opencontainers.image.created="${BUILD_DATE}" \
+          org.opencontainers.image.licenses="Apache-2.0" \
+          com.mindcluster.cann.version="${CANN_VERSION}" \
+          com.mindcluster.chip="${CHIP}" \
+          com.mindcluster.torch="${TORCH_VERSION}+cpu" \
+          com.mindcluster.torch_npu="${TORCH_NPU_PKG_VERSION}" \
+          com.mindcluster.mindspeed="${MINDSPEED_COMMIT}" \
+          com.mindcluster.mindspeed_llm="${MINDSPEED_LLM_COMMIT}" \
+          com.mindcluster.megatron="${MEGATRON_TAG}" \
+          com.mindcluster.taskd="${TASKD_WHEEL_VERSION}" \
+          com.mindcluster.mindio_ttp="${MINDIO_TTP_WHEEL_VERSION}"
+
+    RUN set -eux; \
+        . /usr/local/Ascend/ascend-toolkit/set_env.sh; \
+        echo "=== 组件版本自检 ==="; \
+        python3 -V; \
+        echo "ASCEND_OPP_PATH=$ASCEND_OPP_PATH"; \
+        TORCH_DEVICE_BACKEND_AUTOLOAD=0 python3 -c "import torch; print('torch', torch.__version__)"; \
+        TORCH_DEVICE_BACKEND_AUTOLOAD=0 python3 -c "import torch_npu; print('torch_npu', torch_npu.__version__)"; \
+        cat /usr/local/Ascend/ascend-toolkit/latest/opp/version.info | head -2; \
+        find /usr/local/Ascend -maxdepth 4 -name 'ascend_ops_install.info' -exec sh -c 'grep -E "package_name|^version" $1' _ {} \; ; \
+        python3 -m pip show taskd mindio_ttp 2>/dev/null | grep -E '^(Name|Version)' || echo "WARNING: taskd/mindio_ttp 未安装成功"; \
+        TORCH_DEVICE_BACKEND_AUTOLOAD=0 python3 -c "import apex; print('apex OK')"; \
+        python3 -c "import triton; print('triton', triton.__version__)"; \
+        python3 -m pip check; \
+        echo "=== 确认驱动凭证未被烤进镜像（必须为空）==="; \
+        test ! -f /etc/ascend_install.info && echo "OK: /etc/ascend_install.info 不存在"; \
+        test ! -d /usr/local/Ascend/driver && echo "OK: driver 目录不存在"
+
+    WORKDIR /root
+    CMD ["bash"]
+
     ```
 
     >[!NOTE]
-    >Python 3.10若无法通过PPA直接安装成功，或者deadsnakes PPA不提供Python 3.10版本的镜像源，则可下载源码手动编译安装。
+    >将 `{version}` 替换为配套软件包的版本号。使用其他架构时，同步替换基础镜像和 wheel 的架构字段；torch、torch_npu、APEX 的 Python ABI 必须与 Python 3.12 一致。Transformers 和 tokenizers 按模型源码的 requirements.txt 安装；Triton-Ascend 3.6.0 按 MindSpeed-LLM 安装指导从华为云 Ascend PyPI 源安装，Dockerfile 中已包含该步骤。
 
-3. 构建镜像。执行以下命令生成镜像。为了使Dockerfile更加安全，用户可以根据业务在其中定义HEALTHCHECK检查。通过在容器内部运行**HEALTHCHECK** _\[OPTIONS\]_ **CMD**命令来检查容器的运行状况。**注意不要遗漏命令结尾的**“.”。
+    上述构建步骤在安装模型依赖前，将两项适配应用到镜像内的 `/root/MindSpeed-LLM`，并检查源码基线与补丁上下文。TaskD 对 `torch/distributed/run.py` 的适配仍按 Dockerfile 中的独立步骤完成。
+
+    若训练任务使用共享存储源码覆盖镜像中的代码目录，共享存储需使用与镜像一致的源码版本和适配内容。可从构建完成的镜像复制 `/root/MindSpeed` 和 `/root/MindSpeed-LLM`，避免挂载其他源码覆盖镜像内容。
+
+3. 构建对应机型的镜像。在 Dockerfile 所在目录执行以下命令，注意保留命令结尾的“.”。
 
     ```shell
-    docker build -t mindspeed-dl:v1 .
+    # A3
+    docker build --network=host --build-arg BASE_IMAGE=ubuntu:22.04 --build-arg CHIP=A3 -t mindspeed-dl:deepseek4-a3 .
+    # A5
+    docker build --network=host --build-arg BASE_IMAGE=openeuler/openeuler:24.03-lts --build-arg CHIP=950 -t mindspeed-dl:deepseek4-a5 .
     ```
 
-4. 除按上述流程手动构建镜像外，用户也可直接使用开箱即用的示例镜像`torch-npu-sample-dl:v26.2.0-cann8.5.0-torch_npu2.7.1.post2-910b-ubuntu22.04-py3.10-aarch64`、`torch-npu-sample-dl:v26.2.0-cann9.1.1-torch_npu2.7.1.post8-950-ubuntu24.04-py3.10-aarch64`（已集成UB驱动相关文件）。示例镜像可通过[AscendHub](https://www.hiascend.com/developer/ascendhub)获取，用于快速验证。
+4. 将镜像推送到集群可访问的镜像仓库，或导入所有可能承载任务的节点，并在任务 YAML 中填写对应镜像地址。A5 还需按本节说明配置 UB 驱动文件。
+
+    除手动构建镜像外，也可使用以下开箱即用的示例镜像。请选择与机型对应的镜像，示例镜像可通过 [AscendHub](https://www.hiascend.com/developer/ascendhub) 获取。
+
+    | 机型 | 镜像名和tag |
+    |---|---|
+    | A3 | `torch-npu-sample-dl:v26.3.0-cann9.2.0-torch_npu2.10.0-A3-ubuntu22.04-py3.12-aarch64` |
+    | A5（950） | `torch-npu-sample-dl:v26.3.0-cann9.2.0-torch_npu2.10.0-950-openeuler24.03-py3.12-aarch64` |
 
 ## 脚本适配<a name="ZH-CN_TOPIC_0000002511426481"></a>
 
@@ -367,91 +711,63 @@
 >
 >- 若使用TaskD组件且训练容器使用Host网络，则先通过`sysctl net.ipv4.ip_local_reserved_ports`查询当前预留端口配置后，通过`sysctl -w net.ipv4.ip_local_reserved_ports="xxx,9601,9602"`新增预留端口9601、9602（其中xxx指的是前面查出来已配置的端口，若无则省略）。
 
-训练代码与数据集准备，可以参考[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.2.0/docs/zh/pytorch/training/pretrain/mcore/pretrain.md)。下面以两台Atlas 800T A2训练服务器为例，说明具体操作步骤。
+训练代码与数据集准备，可以参考[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.2.0/docs/zh/pytorch/training/pretrain/mcore/pretrain.md)。下面以两台同型号的 A3 或 A5 服务器、每台8卡为例，说明具体操作步骤。根据 DeepSeek-V4-Flash 的训练方式和显存需求配置资源及并行策略。
 
-1. 拉取训练代码。
+1. 准备支持 DeepSeek-V4-Flash 的 MindSpeed-LLM 源码，以及版本配套的 MindSpeed、Megatron-LM。使用与镜像中一致的源码版本；如已在镜像中准备源码，可复制到共享存储后使用。
 
     ```shell
     mkdir -p /data/atlas_dls/public/code
     cd /data/atlas_dls/public/code
-    git clone https://gitcode.com/Ascend/MindSpeed-LLM.git
-    git clone https://github.com/NVIDIA/Megatron-LM.git
-    cd MindSpeed-LLM
-    git checkout 2af5bab9785ce64af3b7d1fe12972a27152cd7af
-    cd ..
-    cd Megatron-LM
-    git checkout core_v0.12.1
-    cp -r megatron ../MindSpeed-LLM #此处目的是将Megatron-LM项目下的Megatron目录复制到MindSpeed-LLM项目下
-    ## 重命名MindSpeed-LLM为QWEN3_for_PyTorch_2.7_code
-    cd ..
-    mv MindSpeed-LLM QWEN3_for_PyTorch_2.7_code
+    git clone https://gitcode.com/Ascend/MindSpeed-LLM.git DeepSeek_V4_Flash_for_PyTorch_2.10_code
+    cd DeepSeek_V4_Flash_for_PyTorch_2.10_code
+    # 根据模型与镜像的配套版本，切换到支持 DeepSeek-V4-Flash 的分支或提交
+    git checkout bfa35e3c8502995810d64077ed7fd18b8b296012
     ```
 
-2. 获取模型权重。
+    体验 DeepSeek-V4-Flash 进程级恢复时，该源码还需包含[制作镜像](#zh-cn_topic_0000002039339945_section20489630477)中的两项优化器状态适配。推荐将镜像内已适配的 `/root/MindSpeed-LLM` 复制到共享代码目录；若另行拉取源码，则对相同基线应用同一补丁后再挂载到 `/job/code`。
 
-    请用户自行从[Qwen3](https://huggingface.co/Qwen/Qwen3-8B/tree/main)下载模型权重放到服务器某目录下，如“/data/atlas\_dls/public/dataset/qwen3-8b-hf”。
+    上述源码示例配套 MindSpeed `eb0ad7e73dc8227291e44504041aa7c58136aaa3`、Megatron-LM `core_v0.12.1`，镜像构建时也使用同一组版本。按该版本的模型说明准备 Megatron-LM，并将 `megatron` 目录放到模型代码目录中。将完整模型代码目录挂载到训练容器的 `/job/code`，将数据和权重根目录挂载到 `/job/data`。所有训练节点及备机均需访问相同的代码、数据和 checkpoint。
 
-3. 获取数据集。
+2. 从 DeepSeek 官方发布的 [DeepSeek-V4-Flash 模型文件目录](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/tree/main)下载完整权重、配置文件和 tokenizer，放到 `/data/atlas_dls/public/dataset/DeepSeek-V4-Flash`。如模型权重需要反量化或格式转换，请按所选 MindSpeed-LLM 版本的 DeepSeek-V4-Flash 模型说明完成后，再配置训练脚本的加载路径。
 
-    请用户自行从[Alpaca](https://huggingface.co/datasets/tatsu-lab/alpaca/blob/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet)下载数据集（以Alpaca数据集为例）放到服务器某目录下，如“/data/atlas\_dls/public/dataset/qwen3-alpaca”。
+3. 获取训练数据。以下使用 [Alpaca 数据集](https://huggingface.co/datasets/tatsu-lab/alpaca)作为断点续训示例数据，下载其中的 [Parquet 文件](https://huggingface.co/datasets/tatsu-lab/alpaca/blob/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet)，保存到 `/data/atlas_dls/public/dataset/deepseek4-alpaca/`。该文件包含 `text` 字段，与后续预处理命令中的 `--json-keys text` 对应。也可通过[直接下载地址](https://huggingface.co/datasets/tatsu-lab/alpaca/resolve/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet)获取文件：
 
-4. 处理数据集。
-    1. 启动容器。
+    ```shell
+    mkdir -p /data/atlas_dls/public/dataset/deepseek4-alpaca
+    curl -fL \
+        https://huggingface.co/datasets/tatsu-lab/alpaca/resolve/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet \
+        -o /data/atlas_dls/public/dataset/deepseek4-alpaca/train-00000-of-00001-a09b74b3ef9c3b56.parquet
+    ```
 
-        ```shell
-        docker run -it -v /data/atlas_dls/public/:/data/atlas_dls/public/ -e ASCEND_VISIBLE_DEVICES=0-7 mindspeed-dl:v1 bash
-        ```
+4. 在训练镜像的容器内处理数据。先将共享代码和数据目录分别挂载为 `/job/code`、`/job/data`，再执行以下命令。Transformers、tokenizers 及其他模型依赖使用模型代码 requirements.txt 中的配套版本。
 
-    2. 在容器中执行如下操作。
+    ```shell
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    cd /job/code
+    python preprocess_data.py \
+        --input /job/data/deepseek4-alpaca/train-00000-of-00001-a09b74b3ef9c3b56.parquet \
+        --tokenizer-name-or-path /job/data/DeepSeek-V4-Flash \
+        --tokenizer-type PretrainedFromHF \
+        --handler-name GeneralPretrainHandler \
+        --output-prefix /job/data/deepseek4-alpaca/alpaca \
+        --json-keys text \
+        --append-eod \
+        --workers 4 \
+        --log-interval 1000
+    ```
 
-        ```shell
-        export TORCH_DEVICE_BACKEND_AUTOLOAD=0
-        source /usr/local/Ascend/cann/set_env.sh
-        cd /data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code
-        # 可选，如下为安装MindSpeed加速库操作，可在任意目录下执行。若制作镜像时已安装，则跳过该操作
-        git clone https://gitcode.com/ascend/MindSpeed.git
-        cd MindSpeed
-        git checkout e4d5855250f0074670f41c423021286502410bf1
-        pip install -r requirements.txt
-        pip install -e .
-        export PYTHONPATH=/data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/MindSpeed:$PYTHONPATH
-        cd ..
-        ```
+    命令生成 `alpaca_text_document.bin` 和 `alpaca_text_document.idx`，训练脚本中的 `DATA_PATH` 填写不带扩展名的文件前缀。
 
-    3. 处理数据集。
-
-        Qwen3要求使用Transformers\>=4.51.0，因此Python需使用3.9及以上版本且需要安装4.51.0及以上的Transformers。
-
-        ```shell
-        python preprocess_data.py \
-            --input /data/atlas_dls/public/dataset/qwen3-alpaca/train-00000-of-00001-a09b74b3ef9c3b56.parquet \ # 数据集文件路径
-            --tokenizer-name-or-path /data/atlas_dls/public/dataset/qwen3-8b-hf \ # 开源模型权重文件目录
-            --tokenizer-type PretrainedFromHF \
-            --handler-name GeneralPretrainHandler \
-            --output-prefix /data/atlas_dls/public/dataset/qwen3-alpaca/alpaca \ # 会生成alpaca_text_document.bin和.idx文件
-            --json-keys text \
-            --workers 4 \
-            --log-interval 1000
-        ```
-
-        >[!NOTE]
-        >若出现报错：/usr/local/lib/python3.10/dist-packages/sklearn/utils/../../scikit\_learn.libs/libgomp-947d5fa1.so.1.0.0: cannot allocate memory in static TLS block，可执行以下命令预加载libgomp库。
-        >
-        >```shell
-        >export LD_PRELOAD=/usr/local/lib/python3.10/dist-packages/scikit_learn.libs/libgomp-947d5fa1.so.1.0.0:$LD_PRELOAD
-        >```
-
-5. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindcluster-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../../../07_references/05_appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3”目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。
+5. 在模型代码目录中创建 `scripts/train_start.sh`。以所选版本 `examples/mcore/deepseek4_flash` 下的模型训练脚本为基础，保留 DeepSeek-V4-Flash 的模型结构、权重转换及训练参数，按步骤7适配启动和恢复逻辑。
 
     ```text
-    root@ubuntu:/data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/scripts#
-    scripts/
-    └── train_start.sh
+    DeepSeek_V4_Flash_for_PyTorch_2.10_code/
+    ├── scripts/
+    │   └── train_start.sh
+    └── manager.py
     ```
 
-6. 获取[训练任务YAML](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml)。该YAML中已经配置了Pod级别重调度、进程级别重调度、进程级在线恢复、弹性训练等。根据实际情况配置挂载卷的服务器IP地址、各种重调度级别等。
-
-    进程级别重调度、进程级在线恢复、弹性训练等训练进程级别的恢复与优雅容错不可同时存在。优雅容错的配置步骤请参见[优雅容错模式](./menu_examples_and_verification.md#ZH-CN_TOPIC_0000002511346449)。
+6. 使用配套 `mindcluster-deploy` 仓库中的 DeepSeek-V4-Flash 示例 YAML：`samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/DeepSeek-V4-Flash/yamls/pytorch_multinodes_acjob_deepseek4.yaml`。文件名为 `pytorch_multinodes_acjob_deepseek4.yaml`，默认使用 A5 双机16卡和进程级恢复配置。按实际环境替换 NFS 服务地址，并核对共享代码和数据目录。A3 镜像、调度策略及其他恢复策略的调整说明见该示例目录中的 `README.md`，恢复策略也可参考[准备任务YAML](#ZH-CN_TOPIC_0000002511426415)。优雅容错为已日落的历史功能，新配置使用本章介绍的恢复策略。
 
 7. 配置训练启动脚本train\_start.sh和训练任务YAML，请根据实际情况进行修改。
     1. 修改启动脚本基础参数。
@@ -459,7 +775,7 @@
         ```shell
         mkdir -p /job/code/alllogs/$MINDX_TASK_ID/ttplogs
         mkdir -p /job/code/alllogs/$MINDX_TASK_ID/trainlogs
-        mkdir -p /job/code/alllogs/$MINDX_TASK_ID/demo/
+        mkdir -p /job/code/alllogs/$MINDX_TASK_ID/taskd
         # 日志保存路径，可根据实际情况修改
         export ASCEND_PROCESS_LOG_PATH=/job/code/alllogs/$MINDX_TASK_ID/plogs/$XDL_IP       # 设置plog保存路径，其中$MINDX_TASK_ID为Ascend Operator注入的任务UID环境变量，$XDL_IP为任务YAML中写入的环境变量status.hostIP
         export TTP_LOG_PATH=/job/code/alllogs/$MINDX_TASK_ID/ttplogs/ttplog$XDL_IP-$RANK    # 设置TTP日志保存路径，其中$RANK为Ascend Operator为PyTorch框架注入的环境变量
@@ -468,12 +784,24 @@
         export HCCL_SOCKET_IFNAME=enp189s0f0               # 如任务YAML中配置hostNetwork为false，则设置为eth0
 
         CKPT_SAVE_DIR="/job/code/output/ckpt" # 训练完成后的权重保存路径
-        DATA_PATH="/job/data/alpaca_text_document" # 数据集路径，填入数据预处理时保存的数据路径
-        TOKENIZER_PATH="/job/data/qwen3-8b-hf" # 词表路径，填入下载的开源权重词表路径
-        CKPT_LOAD_DIR="/job/code/output/ckpt" # 权重加载路径
+        DATA_PATH="/job/data/deepseek4-alpaca/alpaca_text_document" # 数据集路径，填入数据预处理时保存的数据路径
+        TOKENIZER_PATH="/job/data/DeepSeek-V4-Flash" # 词表路径，填入下载的开源权重词表路径
         ```
 
-    2. 使用TaskD完成进程级别重调度、进程级在线恢复、进程级别原地恢复或弹性训练，还需拉起TaskD Manager。
+        在模型训练命令中设置 `--save "$CKPT_SAVE_DIR"`、`--save-interval 10` 和 `--train-iters 60`，并加入以下加载逻辑，将 `LOAD_ARGS` 数组传给模型训练入口。`INITIAL_LOAD_DIR` 为已完成转换的初始权重目录；首次启动和恢复启动使用相同的 checkpoint 保存目录。若初始权重不含优化器和 RNG 状态，仅首次加载时追加 `--no-load-optim --no-load-rng`，从训练 checkpoint 恢复时加载已保存的完整状态。
+
+        ```shell
+        INITIAL_LOAD_DIR="/job/data/DeepSeek-V4-Flash-mcore"
+        LOAD_ARGS=(--load "$INITIAL_LOAD_DIR" --no-load-optim --no-load-rng)
+        if [ -f "$CKPT_SAVE_DIR/latest_checkpointed_iteration.txt" ]; then
+            LOAD_ARGS=(--load "$CKPT_SAVE_DIR")
+        fi
+        # 在训练入口参数中加入："${LOAD_ARGS[@]}"
+        ```
+
+        进程级重调度使用 `--enable-high-availability`；在线恢复在此基础上增加 `--enable-hbmfault-repair`，并设置 `HCCL_ASYNC_ERROR_HANDLING=0`。在线恢复须始终传递 `--load`，保留优化器副本，不配置 `--distributed-optimizer-no-replica`。并行策略还需满足 HA 副本组大小要求：`DP/EP` 为 `REPLICA_NUM`（默认2）的整数倍。模型结构和权重转换参数以所选版本的 DeepSeek-V4-Flash 说明为准。
+
+    2. 使用TaskD完成Pod级别重调度、进程级别重调度、进程级在线恢复、进程级别原地恢复或弹性训练，还需拉起TaskD Manager。
         1. 创建manager.py文件，放在调用训练脚本时的当前目录下。manager.py文件内容如下所示。
 
             ```python
@@ -481,8 +809,8 @@
             import os
 
             job_id=os.getenv("MINDX_TASK_ID")
-            node_nums=XX         # 用户填入任务节点总数
-            proc_per_node=XX     # 用户填入任务每个节点的训练进程数量
+            node_nums=2         # 用户填入任务节点总数
+            proc_per_node=8     # 用户填入任务每个节点的训练进程数量
 
             init_taskd_manager({"job_id":job_id, "node_nums": node_nums, "proc_per_node": proc_per_node})
             start_taskd_manager()
@@ -496,17 +824,23 @@
             在以下代码中，TASKD\_SO\_PATH和export LD\_PRELOAD两条语句的作用是将安装TaskD后libtaskd.so的路径配置到环境变量LD\_PRELOAD中。如果这两条语句配置不成功，可通过手动执行pip show taskd命令获取Location的值拼接上/taskd/python/cython\_api/libs/libtaskd.so，然后通过export设置。
 
             ```shell
-            sed -i '/import os/i import taskd.python.adaptor.patch' $(pip3 show torch | grep Location | awk -F ' ' '{print $2}')/torch/distributed/run.py
+            DIST_RUN=$(TORCH_DEVICE_BACKEND_AUTOLOAD=0 python -c 'import os, torch; print(os.path.join(os.path.dirname(torch.__file__), "distributed", "run.py"))')
+            grep -q '^import taskd.python.adaptor.patch' "$DIST_RUN" || sed -i '/^import os/i import taskd.python.adaptor.patch' "$DIST_RUN"
             TASKD_SO_PATH="$(pip show taskd | awk '/^Location: / {print $2"/taskd/python/cython_api/libs/libtaskd.so"}')"
             export LD_PRELOAD=$TASKD_SO_PATH:$LD_PRELOAD
-            export TASKD_PROCESS_ENABLE="on"
+            export TASKD_PROCESS_ENABLE="${TASKD_PROCESS_ENABLE:-on}"
             if [[ "${RANK}" == 0 ]]; then
                 export MASTER_ADDR=${POD_IP}
                 python /job/code/manager.py 2>> /job/code/alllogs/$MINDX_TASK_ID/taskd/error.log &           # manager.py具体执行路径由当前路径决定，error.log日志路径需提前创建
             fi
 
-            torchrun $DISTRIBUTED_ARGS ...
+            cd /job/code
+            DISTRIBUTED_ARGS="--nnodes 2 --nproc_per_node 8 --node_rank ${RANK} --master_addr ${MASTER_ADDR} --master_port ${MASTER_PORT}"
+            # MODEL_ARGS 保留 DeepSeek-V4-Flash 模型训练脚本的完整参数，包括训练、并行和 checkpoint 配置
+            torchrun $DISTRIBUTED_ARGS --max_restarts 32767 pretrain_deepseek4.py $MODEL_ARGS "${LOAD_ARGS[@]}"
             ```
+
+            上述拉起命令以预训练入口 `pretrain_deepseek4.py` 为例。`MODEL_ARGS` 使用模型脚本中的完整参数；选择 LoRA 等微调方式时，保留对应脚本的 `posttrain_gpt.py` 入口及微调参数，仅适配相同的分布式启动、checkpoint 和恢复逻辑。节点数、每节点进程数还需与 `manager.py` 保持一致。
 
         3. 修改训练任务YAML，新增容器端口，在所有的Pod下增加TaskD通信使用的端口9601（如已有则跳过）。
 
@@ -539,7 +873,7 @@
 </th>
 <th class="cellrowborder" valign="top" width="15.393078615723146%" id="mcps1.2.8.1.5"><p id="p19672186404"><a name="p19672186404"></a>YAML文件名称</p>
 </th>
-<th class="cellrowborder" valign="top" width="15.433086617323463%" id="mcps1.2.8.1.6"><p id="p1096741894013"><a name="p1096741894013"></a>获取链接</p>
+<th class="cellrowborder" valign="top" width="15.433086617323463%" id="mcps1.2.8.1.6"><p id="p1096741894013"><a name="p1096741894013"></a>获取方式</p>
 </th>
 <th class="cellrowborder" valign="top" width="15.413082616523303%" id="mcps1.2.8.1.7"><p id="p2967518174012"><a name="p2967518174012"></a>说明</p>
 </th>
@@ -547,15 +881,15 @@
 </thead>
 <tbody><tr id="row4503174412371"><td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.1 "><p id="p09365292408"><a name="p09365292408"></a>Ascend Job</p>
 </td>
-<td class="cellrowborder" valign="top" width="16.173234646929384%" headers="mcps1.2.8.1.2 "><a name="ul129364297402"></a><ul id="ul129364297402"><li><span id="ph157633217501"><a name="ph157633217501"></a>Atlas 800T A2训练服务器</span></li><li>Atlas 900 A2 PoD集群基础单元</li></ul>
+<td class="cellrowborder" valign="top" width="16.173234646929384%" headers="mcps1.2.8.1.2 "><a name="ul129364297402"></a><ul id="ul129364297402"><li><span id="ph157633217501"><a name="ph157633217501"></a>Atlas A3服务器</span></li><li>Atlas 950 SuperPoD超节点（A5）</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="8.521704340868173%" headers="mcps1.2.8.1.3 "><p id="p319343422611"><a name="p319343422611"></a><span id="ph310231710274"><a name="ph310231710274"></a>PyTorch</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="13.672734546909378%" headers="mcps1.2.8.1.4 "><p id="p493616294406"><a name="p493616294406"></a><span id="ph22631282914"><a name="ph22631282914"></a>Qwen3</span></p>
+<td class="cellrowborder" valign="top" width="13.672734546909378%" headers="mcps1.2.8.1.4 "><p id="p493616294406"><a name="p493616294406"></a><span id="ph22631282914"><a name="ph22631282914"></a>DeepSeek-V4-Flash</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5 "><p id="p893610293406"><a name="p893610293406"></a>pytorch_multinodes_acjob_910b.yaml</p>
+<td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5 "><p id="p893610293406"><a name="p893610293406"></a>pytorch_multinodes_acjob_deepseek4.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/release_v26.2.0/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml" target="_blank" rel="noopener noreferrer">pytorch_multinodes_acjob_910b.yaml</a></p>
+<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a>配套 mindcluster-deploy 仓库中的 <code>samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/DeepSeek-V4-Flash/yamls/pytorch_multinodes_acjob_deepseek4.yaml</code></p>
 </td>
 <td class="cellrowborder" valign="top" width="15.413082616523303%" headers="mcps1.2.8.1.7 "><p id="p8936152964011"><a name="p8936152964011"></a>示例默认使用2*8卡任务</p>
 </td>
@@ -563,18 +897,80 @@
 </tbody>
 </table>
 
+以下示例使用同型号的两台 A3 或 A5 服务器，每个 Pod 申请8卡。将示例 YAML 另存为 `pytorch_multinodes_acjob_deepseek4.yaml`，任务名使用 `default-test-pytorch`。Master 和 Worker 分别启动 `bash /job/code/scripts/train_start.sh`，共享代码、数据和 checkpoint 目录；镜像按实际机型填写。
+
+按需要选择恢复能力，相关字段分别添加到任务的 `metadata.labels`、`metadata.annotations` 和 Master/Worker 容器的 `env` 中。下表用于分别体验各项能力。
+
+| 配置项 | Job级别重调度 | Pod级别重调度 | 进程级别重调度 | 进程级在线恢复 |
+|---|---|---|---|---|
+| `labels.fault-scheduling` | `"grace"` | `"grace"` | `"grace"` | `"grace"` |
+| `labels.pod-rescheduling` | 不配置 | `"on"` | 不配置 | 不配置 |
+| `annotations.recover-strategy` | 不配置 | 不配置 | `"recover,recover-in-place"` | `"retry"` |
+| `TASKD_PROCESS_ENABLE` | 不配置 | `"off"` | `"on"` | `"on"` |
+| TaskD Manager、容器端口8000和9601 | 无需 | 配置 | 配置 | 配置 |
+| 模型启动参数 | checkpoint保存和加载 | checkpoint保存和加载 | `--enable-high-availability` | `--enable-high-availability --enable-hbmfault-repair` |
+
 >[!NOTE]
->当前部分训练框架未提供Atlas 900 A3 SuperPoD超节点的断点续训示例YAML，用户可以在示例YAML中的labels下新增annotations字段即可。示例如下：
->
->```yaml
->...
->  labels:
->...
->  annotations:
->    sp-block: "32"   # 逻辑超节点芯片数量，sp-block字段的详细说明，可以参见YAML参数说明。
->    huawei.com/schedule_policy: "chip2-node16-sp"    # 根据硬件形态设置调度策略
->...
->```
+>Pod级别的 `TASKD_PROCESS_ENABLE=off` 仅关闭进程级恢复，仍需启动 TaskD Manager。模型启动参数还需保留原有的训练及 checkpoint 配置。
+
+使用 TaskD 的场景，在 Master 和 Worker 的 `spec.replicaSpecs.<角色>.template.spec.containers` 下补充以下字段，并确认各训练 Pod 能与 ClusterD 通信。
+
+```yaml
+env:
+  - name: POD_IP
+    valueFrom:
+      fieldRef:
+        fieldPath: status.podIP
+  - name: XDL_IP
+    valueFrom:
+      fieldRef:
+        fieldPath: status.hostIP
+  - name: TTP_PORT
+    value: "8000"
+ports:
+  - containerPort: 8000
+    name: ttp-port
+  - containerPort: 9601
+    name: taskd-port
+```
+
+任务 YAML 还需包含 `reset-config-<job-name>` ConfigMap，并在 Master、Worker 中挂载。以任务名 `default-test-pytorch`、命名空间 `default` 为例，添加如下资源。
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reset-config-default-test-pytorch
+  namespace: default
+  labels:
+    reset: "true"
+data:
+  reset.json: |
+    {"status":"initializing"}
+```
+
+在各角色的 Pod 模板中，容器下的 `volumeMounts` 与 Pod 下的 `volumes` 分别添加以下内容。
+
+```yaml
+# spec.replicaSpecs.<role>.template.spec.containers[*]
+volumeMounts:
+  - name: reset-config
+    mountPath: /user/restore/reset/config
+# spec.replicaSpecs.<role>.template.spec
+volumes:
+  - name: reset-config
+    configMap:
+      name: reset-config-default-test-pytorch
+```
+
+A3、A5 的逻辑超节点大小和调度策略按实际资源拓扑设置。以下是16卡任务的配置示例，添加在任务的 `metadata.annotations` 下；该字段与 `labels` 同级。
+
+| 机型 | `sp-block` | `huawei.com/schedule_policy` |
+|---|---|---|
+| A3 | `"16"` | `"chip2-node16-sp"` |
+| A5 | `"16"` | `"chip8-node8-ra64-sp"` |
+
+下发前确认共享存储可读写，容器 `/dev/shm` 和文件句柄数量满足训练要求，节点时钟同步。体验跨节点重调度时，另准备满足相同资源、镜像和挂载要求的空闲节点。
 
 ## 下发任务<a name="ZH-CN_TOPIC_0000002479226548"></a>
 
@@ -590,7 +986,7 @@
     例如：
 
     ```shell
-    kubectl apply -f pytorch_multinodes_acjob_910b.yaml
+    kubectl apply -f pytorch_multinodes_acjob_deepseek4.yaml
     ```
 
     回显如下：
@@ -636,7 +1032,10 @@ kubectl logs default-test-pytorch-worker-0 -n default -f
 
 回显示例如下，出现loss即表示任务正常运行。
 
-![](../../../../../figures/scheduling/unnaming-71.png)
+```text
+iteration        1/      60 | ... | lm loss: ...
+iteration        2/      60 | ... | lm loss: ...
+```
 
 **查看是否存在CKPT文件<a name="section979416428371"></a>**
 
@@ -647,7 +1046,7 @@ kubectl logs default-test-pytorch-worker-0 -n default -f
 1. 登录存储节点，执行以下命令，进入CKPT文件路径。
 
     ```shell
-    cd /data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/output/ckpt
+    cd /data/atlas_dls/public/code/DeepSeek_V4_Flash_for_PyTorch_2.10_code/output/ckpt
     ```
 
 2. 执行以下命令，查看当前目录是否存在周期性CKPT文件。
@@ -660,7 +1059,7 @@ kubectl logs default-test-pytorch-worker-0 -n default -f
 
     ```ColdFusion
     total 8
-    drwxr-xr-x  18 root root   8192 Jun 22 18:39 iter_0000100
+    drwxr-xr-x  18 root root   8192 Jun 22 18:39 iter_0000020
     -rw-r--r--  1 root root    2    Jun 22 18:39 latest_checkpointed_iteration.txt
     ```
 
@@ -712,11 +1111,11 @@ kubectl logs default-test-pytorch-worker-0 -n default -f
     kubectl logs -n 命名空间名称 Pod名称
     ```
 
-    回显示例如下，表示发生故障时，使用最近保存的第9步的Checkpoint文件恢复，实现训练任务第10个iteration开始继续训练。
+    回显示例如下，表示发生故障时，使用最近保存的第20步的Checkpoint文件恢复，实现训练任务第21个iteration开始继续训练。
 
     ```ColdFusion
-    [2025-06-22 14:47:00] iteration       10/    5000 | consumed samples:          640 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    64 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
-    [2025-06-22 14:47:02] iteration       11/    5000 | consumed samples:          704 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    64 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
+    [2025-06-22 14:47:00] iteration       21/      60 | consumed samples:          336 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    16 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
+    [2025-06-22 14:47:02] iteration       22/      60 | consumed samples:          352 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    16 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
     ......
     ```
 
@@ -760,11 +1159,11 @@ kubectl logs default-test-pytorch-worker-0 -n default -f
     kubectl logs -n 命名空间名称 Pod名称
     ```
 
-    回显示例如下，表示发生故障时，使用最近保存的第9步的Checkpoint文件恢复，实现训练任务第10个iteration开始继续训练。
+    回显示例如下，表示发生故障时，使用最近保存的第20步的Checkpoint文件恢复，实现训练任务第21个iteration开始继续训练。
 
     ```ColdFusion
-    [2025-06-22 14:47:00] iteration       10/    5000 | consumed samples:          640 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    64 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
-    [2025-06-22 14:47:02] iteration       11/    5000 | consumed samples:          704 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    64 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
+    [2025-06-22 14:47:00] iteration       21/      60 | consumed samples:          336 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    16 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
+    [2025-06-22 14:47:02] iteration       22/      60 | consumed samples:          352 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    16 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
     ......
     ```
 
@@ -817,11 +1216,11 @@ kubectl logs default-test-pytorch-worker-0 -n default -f
     kubectl logs -n 命名空间名称 Pod名称
     ```
 
-    回显示例如下，表示发生故障时，使用最近保存的第9步的Checkpoint文件恢复，实现训练任务第10个iteration开始继续训练。
+    回显示例如下，表示发生故障时，使用最近保存的第20步的Checkpoint文件恢复，实现训练任务第21个iteration开始继续训练。
 
     ```ColdFusion
-    [2025-06-22 14:47:00] iteration       10/    5000 | consumed samples:          640 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    64 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
-    [2025-06-22 14:47:02] iteration       11/    5000 | consumed samples:          704 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    64 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
+    [2025-06-22 14:47:00] iteration       21/      60 | consumed samples:          336 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    16 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
+    [2025-06-22 14:47:02] iteration       22/      60 | consumed samples:          352 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    16 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
     ......
     ```
 
@@ -838,7 +1237,7 @@ kubectl logs default-test-pytorch-worker-0 -n default -f
 kubectl get pods -A -o wide
 ```
 
-故障前，若训练任务调度到了node1和node2上面，当node1节点上发生故障，此时Volcano组件会将node1和node2上训练任务重调度到node2和node3节点上，重调度后回显示例如下。
+以下以 Job 级别重调度为例。故障前，若训练任务调度到了node1和node2上面，当node1节点上发生故障，此时Volcano组件会将node1和node2上训练任务重调度到node2和node3节点上，重调度后回显示例如下。
 
 ```ColdFusion
 NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE   IP                NODE           NOMINATED NODE   READINESS GATES
@@ -855,33 +1254,12 @@ default          default-test-pytorch-worker-0              1/1     Running   0 
 kubectl logs default-test-pytorch-worker-0 -n default -f
 ```
 
-回显如下表示发生故障时，使用最近保存的第9步的Checkpoint文件恢复，实现训练任务第10个iteration开始继续训练。
+回显如下表示发生故障时，使用最近保存的第20步的Checkpoint文件恢复，实现训练任务第21个iteration开始继续训练。
 
-```ColdFusion
-2025-09-08 11:34:00.400331 warn 1900637 [77840][PYH tft_replica_optimizer.py:659] Replica optimizer increase Memory On Chip Usage by:0.6572 GB!
-2025-09-08 11:34:00.401841 warn 1900631 [28432][PYH tft_replica_optimizer.py:659] Replica optimizer increase Memory On Chip Usage by:0.6572 GB!
-2025-09-08 11:34:00.402489 warn 1900639 [10928][PYH tft_replica_optimizer.py:659] Replica optimizer increase Memory On Chip Usage by:0.6572 GB!
-2025-09-08 11:34:00.426989 warn 1900627 [98608][PYH tft_replica_optimizer.py:659] Replica optimizer increase Memory On Chip Usage by:0.6572 GB!
-2025-09-08 11:34:00.429141 warn 1900634 [24592][PYH tft_replica_optimizer.py:659] Replica optimizer increase Memory On Chip Usage by:0.6572 GB!
-(min, max) time across ranks (ms):
-    load-checkpoint ................................: (32107.12, 32108.53)
-(min, max) time across ranks (ms):
-    model-and-optimizer-setup ......................: (32528.79, 32544.35)
-    train/valid/test-data-iterators-setup ..........: (72.68, 656.79)
-[rank16]:[W908 11:34:01.252908110 compiler_depend.ts:335] Warning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (function operator())
-[rank24]:[W908 11:34:01.254614170 compiler_depend.ts:335] Warning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (function operator())
-[rank17]:[W908 11:34:01.421349990 compiler_depend.ts:335] Warning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (function operator())
-[rank20]:[W908 11:34:01.431165020 compiler_depend.ts:335] Warning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (function operator())
-[rank19]:[W908 11:34:01.431240250 compiler_depend.ts:335] Warning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (function operator())
-[rank30]:[W908 11:34:01.431707980 compiler_depend.ts:335] Warning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (function operator())
-...
-/root/MindSpeed/mindspeed/core/fp8_utils.py:11: UserWarning: Currently, it is not supported to Cast shard fp32 main params to fp8 model params
-  warnings.warn("Currently, it is not supported to Cast shard fp32 main params to fp8 model params")
-/root/MindSpeed/mindspeed/core/fp8_utils.py:11: UserWarning: Currently, it is not supported to Cast shard fp32 main params to fp8 model params
-  warnings.warn("Currently, it is not supported to Cast shard fp32 main params to fp8 model params")
- [2025-09-08 11:37:00] iteration       10/    5000 | consumed samples:          640 | elapsed time per iteration (ms): 6932.5 | learning rate: 2.500000E-07 | global batch size:    64 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
- [2025-09-08 11:37:03] iteration       11/    5000 | consumed samples:          704 | elapsed time per iteration (ms): 1981.0 | learning rate: 2.750000E-07 | global batch size:    64 | lm loss: 1.044677E+01 | loss scale: 1.0 | g      rad norm: 57.590 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
-...
+```text
+load-checkpoint ................................: ...
+iteration       21/      60 | consumed samples: 336 | ... | global batch size: 16 | lm loss: ...
+iteration       22/      60 | consumed samples: 352 | ... | global batch size: 16 | lm loss: ...
 ```
 
 **查看任务重调度记录<a name="section97707231547"></a>**
@@ -915,7 +1293,7 @@ Events:  <none>
 
 重新拉起的训练进程的训练日志在“_训练脚本路径_/newlog”中，具体说明如下。
 
-- QWEN3（PyTorch）训练日志：“/data/atlas\_dls/public/code/QWEN3\_for\_PyTorch\_2.7\_code/alllogs”。
+- DeepSeek-V4-Flash（PyTorch）训练日志：“/data/atlas\_dls/public/code/DeepSeek\_V4\_Flash\_for\_PyTorch\_2.10\_code/alllogs”。
 
 **操作步骤<a name="section25042117188"></a>**
 
@@ -960,13 +1338,22 @@ Events:  <none>
 - [验证进程级别重调度](#验证进程级别重调度)
 - [验证进程级别在线恢复](#验证进程级别在线恢复)
 
+进行以下操作前，先确认训练能够正常迭代；体验 Job/Pod 级别恢复时，等待最近一次 checkpoint 保存完成。每次仅构造一个故障，恢复训练后再进行下一次操作。以下任务名和命名空间为示例，请替换为实际值。
+
+记录故障前后的 Pod UID、节点和容器重启次数，结合训练日志查看恢复范围和续训位置。
+
+```bash
+kubectl get pods -n <namespace> -l job-name=<job-name> \
+  -o custom-columns=NAME:.metadata.name,UID:.metadata.uid,NODE:.spec.nodeName,RESTARTS:.status.containerStatuses[0].restartCount
+```
+
 ### 验证Job级别重调度<a name="验证job级别重调度"></a>
 
-**测试准备**
+**前提条件**
 
 在基础调度的任务YAML中，添加Job级别重调度的配置，配置说明可参考[配置Job级别重调度](../02_configuration/01_configuring_fault_handling_policies.md#配置job级别重调度)，原理可参考[Job级别重调度](../01_solutions_principles/01_fault_handling.md#job级别重调度)。
 
-**测试操作**
+**操作步骤**
 
 1. 下发任务。
 
@@ -991,8 +1378,8 @@ Events:  <none>
       <pre codetype="ColdFusion">
       NAMESPACE        NAME                                            READY   STATUS    RESTARTS   AGE     IP                NODE                    NOMINATED NODE   READINESS GATES
       ...              ...                                             ...     ...       ...        ...     ...               ...                     ...              ...
-      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>    0          2s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>    0          3s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>    0          2s     xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>    0          3s     xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
       </pre>
 
    2. 查看2个Pod的UID：
@@ -1009,27 +1396,14 @@ Events:  <none>
       997add9e-6115-456c-9e8e-e05e4b70bb12
       ```
 
-3. 构造故障。
+3. 在 Master Pod 中查询训练拉起器，确认目标 PID 后终止该拉起器，体验整个任务的恢复过程。
 
-   1. 查询任务进程。
+   ```bash
+   kubectl exec -n trjob taskmgr-npu-020-default-test-0 -- pgrep -af 'torchrun|torch.distributed.run'
+   kubectl exec -n trjob taskmgr-npu-020-default-test-0 -- kill -9 <launcher-pid>
+   ```
 
-      ```bash
-      npu-smi info|grep python|awk '{print $5}'
-      ```
-
-      回显示例如下：
-
-      ```ColdFusion
-      2398104
-      2398105
-      2398107
-      ```
-
-   2. 终止进程模拟故障。
-
-      ```bash
-      kill -9 2398104
-      ```
+   此处操作对象是拉起器，而非单个训练 rank。该方式用于体验训练中断后的 Job 级别恢复；构造参数面网络故障的方法见[构造参数面网络故障](#section22113033919)。
 
 4. 观察重调度过程。
 
@@ -1042,31 +1416,31 @@ Events:  <none>
    该Job的2个Pod历史状态如下，观察加粗字段的变化可以发现该Job的2个Pod会经历Terminating→Pending→ContainerCreating→Running阶段，然后正常运行，表示Job重调度成功：
 
    <pre codetype="ColdFusion">
-   trjob            taskmgr-npu-020-default-test-0                  1/1     Running             0          2s      xx.xx.xx.xx       node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            taskmgr-npu-020-default-test-1                  1/1     Running             0          3s      xx.xx.xx.xx       localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            taskmgr-npu-020-default-test-0                  1/1     Running             0          2s      xx.xx.xx.xx       node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            taskmgr-npu-020-default-test-1                  1/1     Running             0          3s      xx.xx.xx.xx       node2   &lt;none&gt;           &lt;none&gt;
    // ===================== 注入故障 ======================
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
    trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          0s      &lt;none&gt;            &lt;none&gt;                  &lt;none&gt;           &lt;none&gt;
    trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          1s      &lt;none&gt;            &lt;none&gt;                  &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          73s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          85s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          85s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          73s     xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          85s     xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          85s     xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
    trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          0s      &lt;none&gt;            &lt;none&gt;                  &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          1s      &lt;none&gt;                 localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          43s     &lt;none&gt;                 node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          43s     &lt;none&gt;                 node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          1s      &lt;none&gt;                 localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>ContainerCreating</strong>   0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0          1s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0          1s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>ContainerCreating</strong>   0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Running</strong>             0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0          2s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          1s      &lt;none&gt;                 node2   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          43s     &lt;none&gt;                 node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          43s     &lt;none&gt;                 node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          1s      &lt;none&gt;                 node2   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>ContainerCreating</strong>   0          43s     xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0          1s      xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0          1s      xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>ContainerCreating</strong>   0          43s     xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Running</strong>             0          43s     xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0          2s      xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
    </pre>
 
-**预期结果**
+**恢复结果说明**
 
 1. 查看任务状态和UID。
 
@@ -1081,8 +1455,8 @@ Events:  <none>
       <pre codetype="ColdFusion">
       NAMESPACE        NAME                                            READY   STATUS    RESTARTS   AGE     IP                NODE                    NOMINATED NODE   READINESS GATES
       ...              ...                                             ...     ...       ...        ...     ...               ...                     ...              ...
-      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          2s      xx.xx.xx.xx      node173   &lt;none&gt;           &lt;none&gt;
-      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          33s     xx.xx.xx.xx      node173   &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          2s      xx.xx.xx.xx      node1   &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          33s     xx.xx.xx.xx      node1   &lt;none&gt;           &lt;none&gt;
       </pre>
 
    2. 查看2个Pod的UID：
@@ -1099,13 +1473,20 @@ Events:  <none>
       074f9f9c-35f1-4b9e-9298-5b2bcf3759e7
       ```
 
+2. 查看恢复后的训练日志及 `job-reschedule-reason`。整个任务的 Pod UID 更新，日志显示从最近保存的 checkpoint 加载，并继续输出后续 iteration。
+
+   ```bash
+   kubectl describe cm -n mindx-dl job-reschedule-reason
+   kubectl logs -n trjob taskmgr-npu-020-default-test-0 --all-containers=true
+   ```
+
 ### 验证Pod级别重调度<a name="验证pod级别重调度"></a>
 
-**测试准备**
+**前提条件**
 
 在基础调度的任务YAML中，添加Pod级别重调度的配置，配置说明可参考[配置Pod级别重调度](../02_configuration/01_configuring_fault_handling_policies.md#配置pod级别重调度)，原理可参考[Pod级别重调度](../01_solutions_principles/01_fault_handling.md#pod级别重调度)。
 
-**测试操作**
+**操作步骤**
 
 1. 下发任务。
 
@@ -1128,8 +1509,8 @@ Events:  <none>
       回显示例如下，出现Running表示任务正常运行。
 
       <pre codetype="ColdFusion">
-      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
       </pre>
 
    2. 查看2个Pod的UID。
@@ -1146,27 +1527,19 @@ Events:  <none>
       47291595-85b0-47ff-8393-c922d0e2dfb2
       ```
 
-3. 构造故障。
+3. 在承载 Worker Pod 的节点上构造节点故障。先确认该节点不承载 Master Pod，并准备具有空闲资源的备机。
 
-   1. 查询任务进程。
+   ```bash
+   kubectl get pod -n trjob taskmgr-npu-020-default-test-1 -o wide
+   ```
 
-      ```bash
-      npu-smi info|grep python|awk '{print $5}'
-      ```
+   登录上一步查询到的 Worker 节点后执行：
 
-      回显示例如下：
+   ```bash
+   reboot
+   ```
 
-      ```ColdFusion
-      2398132
-      2398144
-      2398158
-      ```
-
-   2. 终止进程模拟故障。
-
-      ```bash
-      kill -9 2398144
-      ```
+   节点恢复后，确认其重新处于 Ready 状态。为观察跨节点恢复，可在重启前对该 Worker 节点执行 `kubectl cordon <worker-node>`，待故障 Pod 调度到备机且节点恢复后执行 `kubectl uncordon <worker-node>`。
 
 4. 观察重调度过程。
 
@@ -1176,24 +1549,24 @@ Events:  <none>
    kubectl get pod -A -o wide -w | grep trjob
    ```
 
-   该Job的2个Pod历史状态如下，观察加粗字段的变化可以发现故障Pod（taskmgr-npu-020-default-test-1）会经历Error→Terminating→Pending→ContainerCreating→Running阶段，然后正常运行，表示Pod重调度成功：
+   该Job的2个Pod历史状态如下，观察加粗字段的变化可以发现故障Pod（taskmgr-npu-020-default-test-1）会经历Terminating→Pending→ContainerCreating→Running阶段，然后正常运行，表示Pod重调度成功：
 
    <pre codetype="ColdFusion">
-   trjob            taskmgr-npu-020-default-test-0                  1/1     Running              0          6s      xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-   trjob            taskmgr-npu-020-default-test-1                  1/1     Running              0          6s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            taskmgr-npu-020-default-test-0                  1/1     Running              0          6s      xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+   trjob            taskmgr-npu-020-default-test-1                  1/1     Running              0          6s      xx.xx.xx.xx      node2   &lt;none&gt;           &lt;none&gt;
    // ===================== 注入故障 ======================
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Error</strong>               0          34s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          35s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          35s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Error</strong>               0          34s     xx.xx.xx.xx      node3   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          35s     xx.xx.xx.xx      node3   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          35s     xx.xx.xx.xx      node3   &lt;none&gt;           &lt;none&gt;
    trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           0s      &lt;none&gt;            &lt;none&gt;                  &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           1s      &lt;none&gt;                localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           1s      &lt;none&gt;                localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0           1s      xx.xx.xx.xx     localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0           1s      xx.xx.xx.xx     localhost.localdomain   &lt;none&gt;           &lt;none&gt;
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0           2s      xx.xx.xx.xx     localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           1s      &lt;none&gt;                node3   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           1s      &lt;none&gt;                node3   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0           1s      xx.xx.xx.xx     node3   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0           1s      xx.xx.xx.xx     node3   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0           2s      xx.xx.xx.xx     node3   &lt;none&gt;           &lt;none&gt;
    </pre>
 
-**预期结果**
+**恢复结果说明**
 
 1. 查看任务状态和UID。
 
@@ -1206,8 +1579,8 @@ Events:  <none>
       回显示例如下，出现Running表示任务正常运行。
 
       <pre codetype="ColdFusion">
-      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          66s      xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
-      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          31s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          66s      xx.xx.xx.xx      node1                 &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          31s      xx.xx.xx.xx      node3   &lt;none&gt;           &lt;none&gt;
       </pre>
 
    2. 再次查看2个Pod的UID。
@@ -1224,13 +1597,15 @@ Events:  <none>
       6eb3c217-3b63-457a-9010-9d236d281634
       ```
 
+2. 查看恢复后的 Pod 所在节点及训练日志。故障 Worker Pod 的 UID 更新并调度到可用节点，Master Pod 的 UID 和容器重启次数保持不变；训练从最近保存的 checkpoint 继续。若故障节点承载 Master Pod，恢复范围可能扩大至整个任务，因此本节选择 Worker 节点进行操作。
+
 ### 验证进程级别重调度<a name="验证进程级别重调度"></a>
 
-**测试准备**
+**前提条件**
 
 在基础调度的任务YAML中，添加进程级别重调度的配置，配置说明可参考[配置进程级别重调度](../02_configuration/01_configuring_fault_handling_policies.md#配置进程级别重调度)，原理可参考[进程级别重调度](../01_solutions_principles/01_fault_handling.md#进程级别重调度)。
 
-**测试操作**
+**操作步骤**
 
 1. 下发任务。
 
@@ -1250,50 +1625,35 @@ Events:  <none>
 
    回显示例如下，出现Running表示任务正常运行：
    <pre codetype="ColdFusion">
-   trjob            process-reschedule-function-master-0   1/1     Running   0               14s   xx.xx.xx.xx     master-69-117   &lt;none&gt;           &lt;none&gt;
-   trjob            process-reschedule-function-worker-0   1/1     Running   0               14s   xx.xx.xx.xx     work-69-115     &lt;none&gt;           &lt;none&gt;
+   trjob            process-reschedule-function-master-0   1/1     Running   0               14s   xx.xx.xx.xx     node1   &lt;none&gt;           &lt;none&gt;
+   trjob            process-reschedule-function-worker-0   1/1     Running   0               14s   xx.xx.xx.xx     node2     &lt;none&gt;           &lt;none&gt;
    </pre>
 
 3. 查看训练日志迭代步数，确认训练已正常迭代。
 
    ```bash
-   kubectl logs -n trjob process-reschedule-function-worker-0|grep -Po '] iteration [[:space:]]*'|wc -l
+   kubectl logs -n trjob process-reschedule-function-worker-0 | grep -E 'iteration[[:space:]]+[0-9]+[[:space:]]*/' | tail -n 5
    ```
 
    回显示例如下：
 
-   ```bash
-   50
+   ```text
+   iteration       25/      60 | ...
    ```
 
-4. 查看进程ID，并构造故障。
+4. 在 Worker Pod 内查询训练进程及 local rank，选择一个非 rank0 的训练进程。以下为查询示例；根据所选训练方式，入口可能为 `pretrain_deepseek4.py` 或 `posttrain_gpt.py`。
 
-   1. 查看进程ID。
+   ```bash
+   kubectl exec -n trjob process-reschedule-function-worker-0 -- \
+     pgrep -af 'pretrain_deepseek4.py|posttrain_gpt.py'
+   kubectl exec -n trjob process-reschedule-function-worker-0 -- bash -c \
+     "tr '\\0' '\\n' < /proc/<training-pid>/environ | grep -E '^(RANK|LOCAL_RANK)='"
+   kubectl exec -n trjob process-reschedule-function-worker-0 -- kill -9 <training-pid>
+   ```
 
-      ```bash
-      npu-smi info|grep python|awk '{print $5}'
-      ```
+   确认目标属于本任务后再执行终止操作，不要终止拉起器或 TaskD Manager。
 
-      回显示例如下：
-
-      ```ColdFusion
-      635755
-      635756
-      635760
-      635770
-      635777
-      635784
-      635791
-      635795
-      ```
-
-   2. 终止其中一个进程模拟故障。
-
-      ```bash
-      kill -9 635777
-      ```
-
-**预期结果**
+**恢复结果说明**
 
 1. 观察训练日志。
 
@@ -1320,16 +1680,18 @@ Events:  <none>
    回显示例如下，其中包含重调度的时间，触发重调度的pod、node、rank，本任务当前重调度次数等信息：
 
    ```ColdFusion
-   {"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07":{"JobID":"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07","TotalRescheduleTimes":1,"RescheduleRecords":[{"LogFileFormatTime":"I0603 05:16:52","RescheduleTimeStamp":1780435012,"ReasonOfTask":[{"RescheduleReason":"pod-failed","PodName":"process-reschedule-function-worker-0","NodeName":"work-69-115","NodeRankIndex":"1"}]}]}}
+   {"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07":{"JobID":"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07","TotalRescheduleTimes":1,"RescheduleRecords":[{"LogFileFormatTime":"I0603 05:16:52","RescheduleTimeStamp":1780435012,"ReasonOfTask":[{"RescheduleReason":"pod-failed","PodName":"process-reschedule-function-worker-0","NodeName":"node2","NodeRankIndex":"1"}]}]}}
    ```
+
+3. 继续查看训练日志，确认修复后持续输出后续 iteration。原地恢复时，Pod UID 与容器重启次数保持不变，故障训练进程重新拉起；迁移恢复时，仅故障 Pod 的 UID 更新。结合故障前后的快照和实际迭代位置，查看所选恢复策略的行为。
 
 ### 验证进程级别在线恢复<a name="验证进程级别在线恢复"></a>
 
-本章节通过在训练代码中打桩构造片上内存的UCE故障，指导用户完成进程级在线恢复验证的适配步骤。
+本章节以 DeepSeek-V4-Flash 为例，通过训练代码打桩构造 UCE 异常，指导用户体验进程级在线恢复。A5 还可按下文构造 HCCL/UB 业务面异常，观察通信异常后的 step 重试。
 
 >[!NOTE]
 >
->- 本章节相关修改仅用于指导用户在测试环境下验证进程级在线恢复功能，切勿将此打桩版本上线到生产环境。
+>- 本章节相关修改仅用于指导用户在体验环境下验证进程级在线恢复功能，切勿将此打桩版本上线到生产环境。
 >- 配置本章节步骤前，请确保训练能正常拉起并已配置进程级在线恢复。
 >- 为保证进程级在线恢复功能的正常使用，请将K8s集群master节点与worker节点的时钟保持一致。
 >- 下文中代码可能与实际版本存在差异，请以实际版本代码为准。
@@ -1373,7 +1735,7 @@ Events:  <none>
                      DoStepRetry: processor.canDoStepRetry(podInfo.jobId, nodeName, deviceName),
                      DeviceId:    deviceInfo.DeviceID,
                })
-               <strong>collector.ReportInfoCollector.ReportRetryInfo(podInfo.jobId, deviceInfo.RankID, constant.JobNotRecover, constant.UceFaultType)   // 业务面故障时间设置为无效时间，避免单次故障重复触发进程级在线恢复</strong>
+               <strong>collector.ReportInfoCollector.ReportRetryInfo(podInfo.jobId, deviceInfo.RankID, constant.JobNotRecover, deviceDetail.FaultType)   // 业务面故障时间设置为无效时间，避免单次故障重复触发进程级在线恢复</strong>
             }
         …
       </pre>
@@ -1435,138 +1797,114 @@ Events:  <none>
 
 1. 搭建训练环境，拉起训练，详细请参见[PyTorch场景适配示例（基于MindSpeed-LLM）](#ZH-CN_TOPIC_0000002511346445)。
 2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](../02_configuration/01_configuring_fault_handling_policies.md#配置进程级在线恢复)。
-3. 在“QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py”代码中增加如下加粗内容，打桩注入故障，新增代码根据环境变量“RAISE\_UCE\_ERROR\_STEP\_AND\_RANK”获取注入故障迭代位置和故障rank信息。
+3. 在 `/job/code/mindspeed_llm/training/training.py` 的训练循环内添加以下代码。根据环境变量选择异常类型、迭代位置和全局 rank；同一进程中每个注入点只触发一次，避免回滚后重复注入。
 
-   <pre codetype="Python">
-      <strong>import os</strong>
-      <strong>import ast</strong>
-      <strong>…</strong>
-      <strong>GLB_CNT = 0</strong>
-      def train(forward_step_func, model, optimizer, opt_param_scheduler,
-              train_data_iterator, valid_data_iterator,
-              process_non_loss_data_func, config):
-         """Train the model function."""
-         args = get_args()
-         timers = get_timers()
-         …
-         while iteration < args.train_iters:
-            …
-            num_microbatches = get_num_microbatches()
-            update_num_microbatches(args.consumed_train_samples, consistency_check=True)
-            <strong>global GLB_CNT</strong>
-            <strong>cur_rank = torch.distributed.get_rank()</strong>
-            <strong>uce_env = os.getenv("RAISE_UCE_ERROR_STEP_AND_RANK", "{}")</strong>
-            <strong>uce_step_rank = ast.literal_eval(uce_env)</strong>
-            <strong>if iteration in uce_step_rank and cur_rank == uce_step_rank[iteration] and GLB_CNT < iteration:</strong>
-               <strong>GLB_CNT = iteration</strong>
-               <strong>print(f"############# rank:{cur_rank} start UCE error #############")</strong>
-               <strong>raise RuntimeError('UCE ERROR')</strong>
-            args.curr_iteration = iteration
-            …
-   </pre>
+   ```python
+   import ast
+   import os
 
-4. 修改启动脚本“QWEN3\_for\_PyTorch\_2.7\_code/scripts/train\_start.sh”。
+   _injected_faults = set()
+
+   def train(forward_step_func, model, optimizer, opt_param_scheduler,
+             train_data_iterator, valid_data_iterator,
+             process_non_loss_data_func, config):
+       # ... retain the original initialization ...
+       while iteration < args.train_iters:
+           # ... retain the original loop setup ...
+           cur_rank = torch.distributed.get_rank()
+           for env_name, error_message in (
+               ("RAISE_UCE_ERROR_STEP_AND_RANK", "UCE ERROR"),
+               ("RAISE_HCCL_ERROR_STEP_AND_RANK",
+                "HCCL OP RETRY FAILED, device error type 7c000"),
+           ):
+               step_rank = ast.literal_eval(os.getenv(env_name, "{}"))
+               fault_key = (env_name, iteration, cur_rank)
+               if (step_rank.get(iteration) == cur_rank
+                       and fault_key not in _injected_faults):
+                   _injected_faults.add(fault_key)
+                   print(f"inject {env_name}, rank:{cur_rank}, iteration:{iteration}",
+                         flush=True)
+                   raise RuntimeError(error_message)
+           args.curr_iteration = iteration
+           # ... retain the original training code ...
+   ```
+
+4. 修改 `/job/code/scripts/train_start.sh`，选择一种异常进行体验。以下在第26步、全局 rank9（Worker 的 local rank1）注入 UCE 异常。
 
    ```shell
-   …
-   export RAISE_UCE_ERROR_STEP_AND_RANK="{3:8,10:9}"  # 配置故障注入的迭代和卡号，在第3个迭代的rank 8卡和第10个迭代的rank 9卡上注入UCE故障
-   sed -i 's/check_memory_result = torch_npu.npu.check_uce_in_memory(device)/check_memory_result = ha_constant.UCE_HIGH_LEVEL/g' /job/code/mindspeed_llm/core/high_availability/tft_stop_clean.py #修改TorchNPU接口返回值，将训练代码抛出的异常识别为UCE故障
-   …
+   export RAISE_UCE_ERROR_STEP_AND_RANK="{26:9}"
+   unset RAISE_HCCL_ERROR_STEP_AND_RANK
+   export HCCL_ASYNC_ERROR_HANDLING=0
+   sed -i 's/check_memory_result = torch_npu.npu.check_uce_in_memory(device)/check_memory_result = ha_constant.UCE_HIGH_LEVEL/g' /job/code/mindspeed_llm/core/high_availability/tft_stop_clean.py
    ```
+
+   上述接口返回值替换仅用于 UCE 软件打桩体验。A5 体验 HCCL/UB 业务面异常时，先恢复该文件的原始内容，再改用以下变量；两种异常分别运行，不要同时配置。
+
+   ```shell
+   unset RAISE_UCE_ERROR_STEP_AND_RANK
+   export RAISE_HCCL_ERROR_STEP_AND_RANK="{26:9}"
+   export HCCL_ASYNC_ERROR_HANDLING=0
+   ```
+
+   HCCL/UB 示例用于观察训练侧通信异常后的恢复行为，不需要操作物理 UB 端口。体验结束后，删除打桩代码、清除注入变量，并恢复修改过的接口返回值。
 
 #### 验证流程
 
-以下示例基于**双机16卡**（单机8卡，Master rank 0–7、Worker rank 8–15）环境，与[脚本适配](#ZH-CN_TOPIC_0000002479226412)中 `RAISE_UCE_ERROR_STEP_AND_RANK="{3:8,10:9}"` 的配置一致。若使用单机或其他拓扑，请同步调整环境变量与下文 `grep` 中的rank、Pod名称。
+以下示例基于双机16卡，Master 为全局 rank0～7，Worker 为全局 rank8～15。若使用其他规模，请同步调整注入 rank、TaskD Manager 参数及下文 Pod 名称。
 
-**测试准备**
+**前提条件**
 
-- 在基础调度的任务 YAML 中，添加进程级在线恢复的配置，配置说明可参考[配置进程级在线恢复](../02_configuration/01_configuring_fault_handling_policies.md#配置进程级在线恢复)，原理可参考[进程级在线恢复](../01_solutions_principles/01_fault_handling.md#进程级在线恢复)。
-- 已完成 MindCluster 适配和脚本适配；启动脚本中的 `RAISE_UCE_ERROR_STEP_AND_RANK` 与下文验证命令中的 rank、迭代步保持一致。
+- 已完成本节适配，训练正常迭代；任务设置 `recover-strategy: "retry"`。
+- 模型配置 `--enable-high-availability --enable-hbmfault-repair`，保留优化器副本，始终传递 `--load`，设置 `HCCL_ASYNC_ERROR_HANDLING=0`。
+- 示例使用 `--train-iters 60`，注入设置为 `{26:9}`。在训练进入正常迭代后构造异常，避免在 HCCL 建链阶段注入。
 
-**测试操作**
+**操作步骤**
 
-1. 下发任务。
+1. 将已配置的在线恢复任务 YAML 保存为 `trjob.yaml`，记录任务名及命名空间后下发。
 
    ```bash
    kubectl apply -f trjob.yaml
    ```
 
-   >[!NOTE]
-   > - 请将 `trjob.yaml` 替换为实际的任务YAML文件；若按上文QWEN3脚本适配，请使用对应的任务YAML与Pod名称。
-   > - 任务Pod的名称、命名空间会根据任务YAML中的配置而变化，以下出现的 `process-online-recovery-` 和 `trjob` 均为示例值。
+   下文使用命名空间 `trjob`、Pod `process-online-recovery-master-0` 和 `process-online-recovery-worker-0` 作为示例，请按实际配置替换。
 
-2. 查看任务状态。
+2. 在注入前后分别查看两个 Pod 的 UID、所在节点和容器重启次数。
 
    ```bash
-   kubectl get pod -A -o wide
+   kubectl get pod -n trjob process-online-recovery-master-0 process-online-recovery-worker-0 \
+     -o custom-columns=NAME:.metadata.name,UID:.metadata.uid,NODE:.spec.nodeName,RESTARTS:.status.containerStatuses[0].restartCount
    ```
 
-   回显示例如下，出现Running表示任务正常运行。
+3. 在训练日志中观察异常上报和修复过程。如果启动脚本将日志写入共享目录，请查看对应的训练日志和 TTP 日志文件。
 
-   ```ColdFusion
-   trjob            process-online-recovery-master-0                   1/1     Running   0                 14s     xx.xx.xx.xx     master-x   <none>           <none>
-   trjob            process-online-recovery-worker-0                   1/1     Running   0                 14s     xx.xx.xx.xx     worker-x   <none>           <none>
+   ```bash
+   kubectl logs -n trjob process-online-recovery-master-0 --all-containers=true | \
+     grep -E 'status error, rank:9|Mindio do repair operation ok|rollback'
+   kubectl logs -n trjob process-online-recovery-worker-0 --all-containers=true | \
+     grep -E 'inject RAISE_|HCCL OP RETRY FAILED|Mindio do repair operation ok|rollback'
    ```
 
-3. 监控训练日志
-   1. 监控训练日志检查是否触发UCE故障。
+**恢复结果说明**
 
-      ```bash
-      kubectl logs -n trjob process-online-recovery-master-0 --all-containers=true | grep -Fa "status error, rank:8"
-      ```
+1. UCE 场景下，可在日志中观察到 rank9 的 UCE 状态上报、内存副本修复和回滚；HCCL/UB 场景下，可观察到 `HCCL OP RETRY FAILED` 异常识别及 step 重试。修复结果包含以下信息：
 
-      >[!NOTE]
-      > 本示例在第3步将故障注入rank 8。`grep` 关键字中的rank需与环境变量中配置的全局rank保持一致。
+   ```text
+   Mindio do repair operation ok
+   successfully gather and rollback at iteration 26
+   ```
 
-      回显示例如下，触发UCE故障。
+2. 两个 Pod 的 UID、所在节点及容器重启次数保持不变，训练从回滚位置继续。第26步注入对应后续第27步，查看命令如下：
 
-      ```ColdFusion
-      2026-06-04 09:24:31.767278 warn 3062106 [TTP controller.cpp:2510] status error, rank:8 step: 3 npu_status: 2 run_status: 0 data_aval: 0 data_status: 0 diff_time : 0
-      2026-06-04 09:24:33.767422 warn 3062106 [TTP controller.cpp:2510] status error, rank:8 step: 3 npu_status: 2 run_status: 0 data_aval: 0 data_status: 0 diff_time : 1417
-      ```
+   ```bash
+   kubectl logs -n trjob process-online-recovery-master-0 --all-containers=true | \
+     grep -E 'iteration[[:space:]]+27[[:space:]]*/'
+   kubectl logs -n trjob process-online-recovery-worker-0 --all-containers=true | \
+     grep -E 'iteration[[:space:]]+27[[:space:]]*/'
+   ```
 
-      >[!NOTE]
-      >日志中的 `step: 3` 表示故障在第3个训练迭代步触发。`npu_status: 2` 表示MindIO/TTP侧已进入UCE处理状态；在本打桩场景下由软件模拟路径触发，不代表真实硬件片上内存故障。
+   各 rank 的迭代日志可能只输出在部分 Pod 或被重定向至文件，按启动脚本配置的路径查看。上述匹配限定了完整步数，避免将第270步等内容识别为第27步。
 
-**预期结果**
-
-   1. 检查第3步故障的恢复结果。在Master或Worker任一Pod上输出大于等于1，即说明修复成功。
-
-      ```bash
-      kubectl logs -n trjob process-online-recovery-master-0 --all-containers=true | grep -Fa "(0, 'Mindio do repair operation ok', {}, 'retry')"|wc -l
-      ```
-
-   2. 检查迭代是否正常。
-
-      1. 查看任务状态：
-
-      ```bash
-      kubectl get pod -A -o wide
-      ```
-
-      回显示例如下：
-
-      ```ColdFusion
-      trjob            process-online-recovery-master-0                   1/1     Running   0                 110s    xx.xx.xx.xx     master-x   <none>           <none>
-      trjob            process-online-recovery-worker-0                   1/1     Running   0                 110s    xx.xx.xx.xx     worker-x   <none>           <none>
-      ```
-
-      >[!NOTE]
-      > 此时请检查RESTARTS列，该数值必须保持为0。证明在整个UCE故障及修复过程中，Pod容器从未发生过重启。
-
-   3. 查看训练迭代步数。
-
-      ```bash
-      kubectl logs -n trjob process-online-recovery-master-0 | grep -Po "] iteration [[:space:]]*4"|wc -l
-      # 返回：0
-      kubectl logs -n trjob process-online-recovery-worker-0 | grep -Po "] iteration [[:space:]]*4"|wc -l
-      # 返回：11
-      ```
-
-      >[!NOTE]
-      > - 以上命令中 `grep` 的迭代步数（如 `iteration 4`）需根据实际注入故障的步数调整。若故障注入在第 `N` 步，恢复后应从第 `N+1` 步继续训练，因此应为 `grep iteration [[:space:]]*{N+1}`。本示例中第3步故障对应 `iteration 4`，第10步故障对应 `iteration 11`。
-      > - 在分布式多机训练中，受训练框架的日志重定向机制影响，各Rank的迭代日志可能仅输出在部分节点的stdout中，或被重定向至本地物理日志文件。
-      > - 本示例中Master节点返回0、Worker节点返回11，只要任一节点存在大于0的计数，即证明热修复后训练已跨越对应故障步数并继续。
+3. 持续查看后续 iteration，直至配置的训练步数完成。在线恢复通过内存回滚继续当前训练，不重新调度 Pod；结合修复日志、Pod 信息和连续迭代输出查看完整恢复过程。
 
 ## 删除任务<a name="ZH-CN_TOPIC_0000002479386566"></a>
 
@@ -1581,7 +1919,7 @@ kubectl delete -f XXX.yaml
 示例如下：
 
 ```shell
-kubectl delete -f pytorch_multinodes_acjob_910b.yaml
+kubectl delete -f pytorch_multinodes_acjob_deepseek4.yaml
 ```
 
 回显示例如下：
