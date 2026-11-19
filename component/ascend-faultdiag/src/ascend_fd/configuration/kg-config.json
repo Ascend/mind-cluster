@@ -35335,6 +35335,213 @@
                 "in": ["Unknown instruction ignored"]
             }
         },
+        "MF-GEN-001": {
+            "attribute": {
+                "class": "Software",
+                "component": "MemFabric",
+                "module": "Common",
+                "cause_zh": "Join超时",
+                "description_zh": "集群加入串行，规模大或网络延迟大，默认60s未完成。",
+                "suggestion_zh": [
+                    "1）设置环境变量export MF_GROUP_JOIN_MAX_TIMEOUT=600加大join时延",
+                    "2）重启服务，确认Join完成"
+                ],
+                "cause_en": "Join timeout",
+                "description_en": "The cluster join is serialized. When the cluster scale is large or the network latency is high, the join is not complete within the default 60s.",
+                "suggestion_en": [
+                    "1) Set the environment variable export MF_GROUP_JOIN_MAX_TIMEOUT=600 to increase the join timeout.",
+                    "2) Restart the service and confirm that the join is complete."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": [
+                    ["SmemBmEntry::Join timeout waiting for PROMOTE_TO_ACTIVE"],
+                    ["SmemTransConnection::Join timeout waiting for PROMOTE_TO_ACTIVE"]
+                ]
+            }
+        },
+        "MF-SDMA-001": {
+            "attribute": {
+                "class": "Software",
+                "component": "MemFabric",
+                "module": "Device SDMA",
+                "cause_zh": "HalMemCreate失败",
+                "description_zh": "NUMA DRAM不足、整体内存不足或HCCS可寻址DRAM有限。",
+                "suggestion_zh": [
+                    "1）通过lsmem命令查询本机的物理地址范围，和如下HCCS的4个区间取交集得到具体可用容量：",
+                    "0x29580000000-0x34000000000",
+                    "0xa9580000000-0xb4000000000",
+                    "0x129580000000-0x134000000000",
+                    "0x1a9580000000-0x1b4000000000",
+                    "2）mfcli mem scan命令扫描可用内存，当2MB远多1GB则碎片严重，建议重启或者减少内存配置；"
+                ],
+                "cause_en": "HalMemCreate failure",
+                "description_en": "Insufficient NUMA DRAM, insufficient overall memory, or limited HCCS-addressable DRAM.",
+                "suggestion_en": [
+                    "1) Run the lsmem command to query the physical address range of the local host, and intersect it with the following four HCCS ranges to obtain the available capacity:",
+                    "0x29580000000-0x34000000000",
+                    "0xa9580000000-0xb4000000000",
+                    "0x129580000000-0x134000000000",
+                    "0x1a9580000000-0x1b4000000000",
+                    "2) Run the mfcli mem scan command to scan the available memory. If 2 MB blocks are far more than 1 GB, fragmentation is severe. You are advised to restart the service or reduce the memory configuration."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["Try HalMemCreate ret:"]
+            }
+        },
+        "MF-SDMA-002": {
+            "attribute": {
+                "class": "Software",
+                "component": "MemFabric",
+                "module": "Device SDMA",
+                "cause_zh": "sdma move COMPERR/COMPDATAERR",
+                "description_zh": "SDMA引擎搬移错误，与1520配置或版本相关。",
+                "suggestion_zh": "1）优先检查是否升级了1520到推荐版本，然后可以登录1520，输入命令display startup，查看system software打印的LCN版本是不是1.5.0以上版本，如果低于1.5.0版本需要升级1520；如果版本已经满足，可以输入命令display hccs decode and map table interface 200GHL 1/1/2，查看是否有0x800000000000以上地址段的配置项，没有的话可能1520配置有问题；可以输入以下命令查询当前配置display superpod information，期望Configuration mode为Typical，如果不是可以使用下面指令切换：sys、superpod configuration typical atlas800t_192_topo1、commit、q、reboot；进一步，可以执行如下命令观测1520上是否存在超时代答等异常，有异常需要联系华为1520工程师定位：display hccs proxy response statistics、display hccs route miss statistics、display alarm active",
+                "cause_en": "sdma move COMPERR/COMPDATAERR",
+                "description_en": "The SDMA engine fails to move data, which is related to the 1520 configuration or version.",
+                "suggestion_en": "1) First check whether the 1520 has been upgraded to the recommended version. Log in to the 1520 and run display startup. Check whether the LCN version printed by system software is later than 1.5.0. If the version is earlier than 1.5.0, upgrade the 1520. If the version meets the requirement, run display hccs decode and map table interface 200GHL 1/1/2 and check whether a configuration item for an address segment above 0x800000000000 exists. If not, the 1520 configuration may be incorrect. Run display superpod information to query the current configuration. The expected Configuration mode is Typical; if it is not, run sys, superpod configuration typical atlas800t_192_topo1, commit, q, and reboot to switch. Further, run display hccs proxy response statistics, display hccs route miss statistics, and display alarm active to check whether exceptions such as timeout proxy responses exist on the 1520. If yes, contact Huawei 1520 engineers for locating."
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": [
+                    ["task exec failed", "sqeType:11", "cqeErrorCode:"]
+                ]
+            }
+        },
+        "MF-RDMA-001": {
+            "attribute": {
+                "class": "Software",
+                "component": "MemFabric",
+                "module": "Device RDMA",
+                "cause_zh": "AllocLocalMemory内存分配失败",
+                "description_zh": "conn_based_segment需要静态大页但未配置。",
+                "suggestion_zh": [
+                    "1）查询配置数量：cat /proc/meminfo | grep HugePages_Total",
+                    "2）按需配置大页：如echo 65536 > /proc/sys/vm/nr_hugepages",
+                    "3）若预期跑SDMA场景，走到了conn_base_segment，建议更新HDK至对应配套版本",
+                    "4）重启服务恢复正常"
+                ],
+                "cause_en": "AllocLocalMemory memory allocation failure",
+                "description_en": "conn_based_segment requires static huge pages, but they are not configured.",
+                "suggestion_en": [
+                    "1) Query the number of configured huge pages: cat /proc/meminfo | grep HugePages_Total",
+                    "2) Configure huge pages as required, for example: echo 65536 > /proc/sys/vm/nr_hugepages",
+                    "3) If the SDMA scenario is expected but conn_base_segment is used, update the HDK to the matching version.",
+                    "4) Restart the service to recover."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["Unable to alloc size:", "with hugepage via mmap", "error:"]
+            }
+        },
+        "MF-SHM-001": {
+            "attribute": {
+                "class": "Software",
+                "component": "MemFabric",
+                "module": "HOST_SHM",
+                "cause_zh": "HOST_SHM参数冲突：DRAM/HBM或协议混用",
+                "description_zh": "localDRAMSize==0或localHBMSize!=0；dataOpType混用。",
+                "suggestion_zh": [
+                    "1）当调用smem_bm_create2接口时，配置smem_bm_create_option_t参数结构体合法，即当数据操作类型是HOST_SHM时，localHBMSize配置不为0且dataOpType不与HOST_SHM冲突，才可以正常请求接口成功"
+                ],
+                "cause_en": "HOST_SHM parameter conflict: DRAM/HBM or data operation type mixing",
+                "description_en": "localDRAMSize==0 or localHBMSize!=0, or dataOpType is mixed.",
+                "suggestion_en": [
+                    "1) When calling the smem_bm_create2 API, configure the smem_bm_create_option_t structure properly. That is, when the data operation type is HOST_SHM, localHBMSize must not be 0 and dataOpType must not conflict with HOST_SHM, so that the API request can succeed."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": [
+                    ["HOST_SHM op type only supports DRAM shared memory without HBM"],
+                    ["HOST_SHM op type does not support mixing with other data op types"]
+                ]
+            }
+        },
+        "MEMCACHE-002": {
+            "attribute": {
+                "class": "Software",
+                "component": "Memcache",
+                "module": "Common",
+                "cause_zh": "推理过程中去kvcache失败",
+                "description_zh": "数据量过大，处理时间超过租约时间。",
+                "suggestion_zh": [
+                    "1）用户单次batch copy的数据过大，适当减少调用batch copy接口传入的数量量大小",
+                    "2）或者停止meta server服务后，通过修改meta的配置项：ock.mmc.meta.lease_ttl_ms，适当调大即可解决，比如设置50000，重启服务后恢复正常"
+                ],
+                "cause_en": "Failed to get KV cache during inference",
+                "description_en": "The data volume is too large and the processing time exceeds the lease time.",
+                "suggestion_en": [
+                    "1) The data volume of a single batch copy is too large. Reduce the amount of data passed to the batch copy API.",
+                    "2) Alternatively, stop the meta server service, modify the meta configuration item ock.mmc.meta.lease_ttl_ms to a larger value (for example, 50000), and restart the service."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": [
+                    ["batch get lease expired"],
+                    ["batch copy read lease expired"],
+                    ["lease expired after read"]
+                ]
+            }
+        },
+        "MF-CLUSTER-001": {
+            "attribute": {
+                "class": "Software",
+                "component": "Memcache",
+                "module": "Master",
+                "cause_zh": "主进程crash",
+                "description_zh": "主进程崩溃后自动切主并恢复满员。",
+                "suggestion_zh": [
+                    "1）自主恢复主进程，确保HA端口≥2空闲，避免崩溃期间避免SIGSTOP",
+                    "2）可ps -ef查看主进程是否恢复，或者查看集群运行日志确认集群",
+                    "3）若遇长时间未自动恢复情况，用户可执行重启进程恢复"
+                ],
+                "cause_en": "Leader process crash",
+                "description_en": "After the leader process crashes, leader switchover is automatically performed and the cluster recovers to full membership.",
+                "suggestion_en": [
+                    "1) The leader process recovers automatically. Ensure that at least two HA ports are idle and avoid SIGSTOP during the crash.",
+                    "2) Run ps -ef to check whether the leader process has recovered, or check the cluster running log to confirm the cluster status.",
+                    "3) If automatic recovery does not occur for a long time, restart the process to recover."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": [
+                    ["Fatal signal caught", "signo=", "sender_pid="],
+                    ["HaConfigStore elected as leader, starting MetaNetServer and enabling KvEvents"],
+                    ["HaConfigStore became standby/follower, stopping MetaNetServer and disabling KvEvents"]
+                ]
+            }
+        },
+        "MF-CLUSTER-002": {
+            "attribute": {
+                "class": "Software",
+                "component": "Memcache",
+                "module": "Slave",
+                "cause_zh": "管理面链路断开",
+                "description_zh": "集群满员后管理面链路断开，自动回收资源。",
+                "suggestion_zh": [
+                    "1）自主恢复管理面链路，检查日志确认搜索关键字\"server changed notify\"回收链完成"
+                ],
+                "cause_en": "Management plane link broken",
+                "description_en": "After the cluster is full, the management plane link is broken and resources are automatically reclaimed.",
+                "suggestion_en": [
+                    "1) Restore the management plane link automatically. Search the log for the keyword \"server changed notify\" to confirm that the reclamation link is complete."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": [
+                    ["mmc_meta_net_client", "link broken"],
+                    ["mmc_meta_net_client", "server changed notify"]
+                ]
+            }
+        },
         "0x8C484E00": {
             "attribute": {
                 "class": "Software",

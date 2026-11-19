@@ -64,7 +64,7 @@ LCNE 组件日志为 LCNE 组件运行时产生的日志。
     |-- npu_info_before.txt     # 训练前 NPU 环境检查
     |-- npu_info_after.txt      # 训练后 NPU 环境检查
     └── host_metrics_{core_num}.json  # 主机资源监测
-|-- pymotor_vllm_log     # PyMotor/vLLM 日志
+|-- pymotor_vllm_log     # MindIE-Motor/vLLM 日志
 └── bmc_log              # BMC 侧日志
     └── dump_info
         |-- AppDump
@@ -584,15 +584,27 @@ cp -r ~/ttp_log {采集目录}/dl_log/ttp_log
 > - 两种方式采集的 BMC 文件，均为压缩包，需要手动解压后放到 `采集目录/bmc_log/` 下。
 > - 如果不能确定 BMC 归属于哪个节点，请单独放置到一个目录，如 `BMC采集日志/` 下，使用请参考[场景一拓扑信息自动关联推荐](./06_superpod_diagnosis.md#场景一拓扑信息自动关联推荐)。
 
-### PyMotor/vLLM 日志
+### MindIE-Motor/Memfabric/Memcache 日志
 
-MindIE-PyMotor、vLLM、vLLM-Ascend 运行产生的日志。
+MindIE-Motor、Memfabric、Memcache 运行产生的日志。
 
-MindIE-PyMotor 部署完成后，会自动启动 MindIE-PyMotor、vLLM 和 vLLM-Ascend 日志的收集。
+**MindIE-Motor**
+
+MindIE-Motor 部署完成后，会自动启动 MindIE-Motor、vLLM 和 vLLM-Ascend 日志的收集。
 
 要求用户手动将日志复制至 `采集目录/pymotor_vllm_log/` 下。
 
+**Memfabric/Memcache**
+
+请参考组件文档[配置项说明](https://ascend-memcache.readthedocs.io/zh-cn/latest/memcache_config/#metaservice-config)进行日志地址配置。
+
+执行以下命令将日志复制到 `采集目录/pymotor_vllm_log/` 下，假设日志地址为 `/var/log/memcache_hybrid/`：
+
+```shell
+cp -r /var/log/memcache_hybrid/ {采集目录}/pymotor_vllm_log/
+```
+
 > [!NOTE]
 >
-> - MindIE-PyMotor 部署详情请参见[MindIE-PyMotor 部署](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/deployment/k8s/pd_aggregation_deployment.md#%E6%9F%A5%E7%9C%8B%E9%9B%86%E7%BE%A4%E7%8A%B6%E6%80%81%E4%B8%8E%E6%97%A5%E5%BF%97)。
-> - 日志名格式为 `mindie-motor-controller-*.log`、`mindie-motor-coordinator-*.log`、`vllm-d0-*.log`、`vllm-p0-*.log`。
+> - MindIE-Motor 部署详情请参见[MindIE-Motor 部署](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/deployment/k8s/pd_aggregation_deployment.md#%E6%9F%A5%E7%9C%8B%E9%9B%86%E7%BE%A4%E7%8A%B6%E6%80%81%E4%B8%8E%E6%97%A5%E5%BF%97)。
+> - 支持诊断日志名格式为 `mindie-motor-controller-*.log`、`mindie-motor-coordinator-*.log`、`vllm-d0-*.log`、`vllm-p0-*.log`，以及以 `mmc` 开头的 `mmc*.log` 日志。
