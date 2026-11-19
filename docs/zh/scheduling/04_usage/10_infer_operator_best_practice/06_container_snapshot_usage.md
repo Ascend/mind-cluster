@@ -30,7 +30,7 @@
 
 - NodeD
   - 需要使用组件软件包中容器快照特性对应的`Dockerfile-container-snapshot`Dockerfile制作NodeD镜像。
-  - NodeD的启动YAML需使用组件软件包中容器快照特性对应的`noded-container-snapshot.yaml`，其中可根据实际快照大小修改CPU和内存资源请求与限制，此外快照路径`/user/snapshot`需根据实际情况配置，且为共享存储路径。
+  - NodeD的启动需使用组件软件包中容器快照特性对应的以`noded-container-snapshot`为前缀的YAML，其中可根据实际快照大小修改CPU和内存资源请求与限制，此外快照路径`/user/snapshot`需根据实际情况配置，且为共享存储路径。
 
       ```Yaml
       ...
@@ -53,14 +53,19 @@
   Infer Operator的启动YAML中添加快照路径挂载项，其中mountPath与hostPath根据实际情况配置并与NodeD的快照路径相同，此外还可配置快照超时参数snapshotTimeout（>= 1，单位为分钟，默认60分钟）。
 
   ```Yaml
-  - name: image-path
-    mountPath: /user/snapshot
-
-  - name: image-path
-    hostPath:
-      path: /user/snapshot
-      type: Directory
-
+  ...
+      volumeMounts:
+  ...
+        - name: image-path
+          mountPath: /user/snapshot
+  ...
+  volumes:
+  ...
+    - name: image-path
+      hostPath:
+        path: /user/snapshot
+        type: Directory
+  ...
   containers:
     - command: [ "/bin/bash", "-c", "--"]
       args: [ "infer-operator
@@ -106,7 +111,7 @@ modprobe ip6table_filter
           value: "/user/snapshot"
 ```
 
-推理任务部署使用说明详见[使用说明](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/features/container_snapshot.md)，下面使用示例仅展示使用流程。
+推理任务部署使用说明详见[使用说明](https://gitcode.com/Ascend/MindIE-Motor/blob/master/docs/zh/user_guide/features/scaling_deployment/container_snapshot.md)，下面使用示例仅展示使用流程。
 
 **支持的产品形态**
 
