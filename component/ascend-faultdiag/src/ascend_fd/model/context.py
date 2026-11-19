@@ -29,6 +29,7 @@ class KGParseCtx(JsonObj):
         is_sdk_input: bool = False,
         custom_info_list: List = None,
         device_info_map: dict = None,
+        kernel_dfx_groups: dict = None,
     ):
         self.parse_file_path = parse_file_path
         self.resuming_training_time = resuming_training_time
@@ -36,3 +37,6 @@ class KGParseCtx(JsonObj):
         self.custom_info_list = custom_info_list or []
         # 该数据为逻辑 id 和物理 id 的映射关系，从 hisi_logs/device_info.txt 解析得到, 格式为 {逻辑 id: 物理 id}
         self.device_info_map = device_info_map or {}
+        # kernel.log 单次遍历收集的 DFX 数据块 {dev_id: [数据块]}，供 UbctlLogParser 复用；
+        # NpuHistoryLogParser 在 primary 阶段写入，None 表示尚未解析
+        self.kernel_dfx_groups = kernel_dfx_groups

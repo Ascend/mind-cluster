@@ -14,10 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-# pylint: disable=duplicate-code
+# pylint: disable=duplicate-code,too-many-lines
 import bisect
+import copy
 from datetime import datetime, timedelta
 import logging
+import multiprocessing
 import os
 from pathlib import Path
 import re
@@ -28,11 +30,17 @@ from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import (
     EventStorage,
     FileParser,
 )
+from ascend_fd.pkg.parse.knowledge_graph.tools.utils import GroupSelectMixin
 from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
 from ascend_fd.utils.constant.dev_log_const import HIST_DEVICE_OS_PATH_ARRAY
 from ascend_fd.utils.constant.str_const import UNKNOWN_DEVICE_ID
 from ascend_fd.utils.constant.ub_const import (
     ALL_UBCTL_KEYS,
+    KERNEL_DFX_LOGIC_PORT_ID,
+    KERNEL_DFX_METRIC_MAP,
+    KERNEL_DFX_PRINT_FUNC,
+    KERNEL_STATUS_END,
+    KERNEL_STATUS_START,
     PRECHECK_KERNEL_AE_TYPE23,
     PRECHECK_UBCTL_DATA,
     SIDE_AFTER,
@@ -198,6 +206,12 @@ class NpuHistoryLogParser(BaseNpuLogParser):
 
     # 日志格式为UDMA xxxxxxxx ae xxxxx, event type is 2, sub type is 3
     KERNEL_AE_KEYWORDS = ("UDMA", "ae", "event type is 2", "sub type is 3")
+    # kernel.log 中 aubdfx 网络 DFX 打印解析（UB 维测主数据源）
+    KERNEL_DIE_PATTERN = re.compile(r"\[die id:(\d+)\]")
+    KERNEL_PORT_PATTERN = re.compile(rf"{KERNEL_DFX_LOGIC_PORT_ID}\s*=\s*(\d+)")
+    KERNEL_METRIC_PATTERN = re.compile(r"([A-Za-z][A-Za-z0-9_]*)\s*=\s*(0[xX][0-9a-fA-F]+|\d+)")
+    # 换算后的绝对时间，形如 "[2026-09-20 12:45:34.644410]"
+    KERNEL_ABS_TIME_PATTERN = re.compile(r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{1,6})\]")
     # ---------- kernel.log 时间精确化：device_os.log 时间参照 ----------
     # device_os.log 相对时间戳子目录路径：<子目录>/log/slog/debug/device_os.log
     _DEVICE_OS_LOG_REL_PATH = os.path.join(*HIST_DEVICE_OS_PATH_ARRAY)
@@ -215,6 +229,14 @@ class NpuHistoryLogParser(BaseNpuLogParser):
         super().__init__(params)
         # 非 SDK 离线日志场景：{时间戳子目录: device_os.log 时间参照}，parse() 时构建
         self.time_reference_map = {}
+        # kernel DFX 组在主进程与 worker 之间共享：{kernel.log 路径: [数据块]}
+        self.kernel_dfx_shared = None
+        # 当前文件的 DFX 收集状态
+        self._current_kernel_collect = False
+        self._current_kernel_source_path = ""
+        self._current_kernel_dev_id = UNKNOWN_DEVICE_ID
+        self._pending_kernel_dfx_groups = []
+        self._collecting_kernel_group = False
 
     @staticmethod
     def _get_occur_time(line, dir_name):
@@ -222,6 +244,7 @@ class NpuHistoryLogParser(BaseNpuLogParser):
         Get the time info.
         history.log e.g: [yyyy-mm-dd-hh:mm:ss.******] *****
         :param line: log line
+        :param dir_name: log dir used as the fallback timestamp
         :return: time info
         """
         time_str = line[line.find("[") + 1 : line.find("]")]
@@ -233,33 +256,30 @@ class NpuHistoryLogParser(BaseNpuLogParser):
 
     def _yield_log(self, file_source: Union[str, LogInfoSaver]):  # pylint: disable=arguments-differ
         """
-        非 SDK（离线日志目录）场景解析 kernel.log 时：行首为开机时长且该子目录有时间参照，
-        先把行首的开机时长换算为实际时间再产出，使基类解析流程的 _get_occur_time 与
-        任务 [start, end] 窗口过滤基于精确时间生效；其余场景（SDK 输入、history.log 等）原样产出。
-        父类 FileParser._yield_log 为静态方法，此处需访问实例状态（is_sdk_input/time_reference_map），
-        因此覆盖为实例方法（self 在绑定调用中由实例提供，外部调用方式不变）。
+        非 SDK（离线日志目录）场景解析 kernel.log 时，仅对 AE 事件行和 DFX 数据块行，
+        用 device_os.log 参照把行首开机时长换算为实际时间；其余行原样产出。
+        与之前 UB 需求的 kernel.log 读取方式保持一致。
         """
-        if self.is_sdk_input or self._get_filename(file_source) != "kernel.log":
+        is_kernel_file = not self.is_sdk_input and self._get_filename(file_source) == "kernel.log"
+        self._reset_kernel_dfx_state(file_source, is_kernel_file)
+        if not is_kernel_file:
             yield from super()._yield_log(file_source)
             return
         reference = self._get_kernel_file_reference(file_source)
         for line in super()._yield_log(file_source):
             yield self._convert_line_uptime(line, reference)
 
-    def _convert_line_uptime(self, line: str, reference: Optional[tuple]) -> str:
-        """
-        仅对命中 PRECHECK 关键字（KERNEL_AE_KEYWORDS）且行首为开机时长的 kernel.log 行，
-        把开机时长替换为换算后的实际时间；其余行原样返回，避免逐行转换。
-        :param line: log line
-        :param reference: 时间参照 (W0 实际时间, T0 开机时长) 或 None
-        """
-        if not reference or not self._is_ae_keyword_line(line):
-            return line
-        time_str = line[line.find("[") + 1 : line.find("]")].strip()
-        if not self._HISI_UPTIME_PATTERN.match(time_str):
-            return line
-        real_time = self._convert_uptime_to_real_time(reference, float(time_str))
-        return "[{}]{}".format(real_time, line[line.find("]") + 1 :])
+    def _reset_kernel_dfx_state(self, file_source, is_kernel_file: bool):
+        """每个文件开始解析前重置 DFX 收集状态。"""
+        self._current_kernel_collect = is_kernel_file
+        self._collecting_kernel_group = False
+        self._pending_kernel_dfx_groups = []
+        if not is_kernel_file:
+            self._current_kernel_source_path = ""
+            self._current_kernel_dev_id = UNKNOWN_DEVICE_ID
+            return
+        self._current_kernel_source_path = self._get_file_path(file_source)
+        self._current_kernel_dev_id = self._determine_device_id(file_source) or UNKNOWN_DEVICE_ID
 
     @staticmethod
     def _is_ae_keyword_line(line: str) -> bool:
@@ -268,6 +288,98 @@ class NpuHistoryLogParser(BaseNpuLogParser):
         :param line: log line
         """
         return all(keyword in line for keyword in NpuHistoryLogParser.KERNEL_AE_KEYWORDS)
+
+    @staticmethod
+    def _is_dfx_line(line: str) -> bool:
+        """判断行是否为 kernel.log 中 aubdfx 网络 DFX 打印行。"""
+        return (
+            KERNEL_DFX_PRINT_FUNC in line
+            or KERNEL_DFX_LOGIC_PORT_ID in line
+            or KERNEL_STATUS_START in line
+            or KERNEL_STATUS_END in line
+        )
+
+    def _collect_kernel_dfx_line(self, line, occur_time):
+        """
+        由 _match_precheck_line 逐行调用：收集 kernel.log 中 aubdfx 网络 DFX 数据块。
+        该行已通过基类的时间窗过滤，occur_time 为换算后的绝对时间。
+        """
+        if not self._current_kernel_collect:
+            return
+        die_match = self.KERNEL_DIE_PATTERN.search(line) if line else None
+        is_group_head = bool(die_match and (KERNEL_STATUS_START in line or KERNEL_STATUS_END in line))
+        if is_group_head:
+            self._collecting_kernel_group = True
+            self._pending_kernel_dfx_groups.append(
+                {
+                    "side": SIDE_BEFORE if KERNEL_STATUS_START in line else SIDE_AFTER,
+                    "udie": f"udie{int(die_match.group(1))}",
+                    "ports": {},
+                    "die_metrics": {},
+                    "source_path": self._current_kernel_source_path,
+                    "dev_id": self._current_kernel_dev_id,
+                    "time": self._kernel_group_time(line, occur_time),
+                }
+            )
+            self._sync_kernel_dfx_shared()
+            return
+        if not (self._collecting_kernel_group and self._pending_kernel_dfx_groups):
+            return
+        if die_match and self._pending_kernel_dfx_groups[-1]["udie"] != f"udie{int(die_match.group(1))}":
+            return
+        current = self._pending_kernel_dfx_groups[-1]
+        # 仅解析 aubdfx 打印行/带 logic_port_id 的指标行，避免误命中其它内核日志
+        if KERNEL_DFX_PRINT_FUNC in line or KERNEL_DFX_LOGIC_PORT_ID in line:
+            metrics = self._parse_kernel_metrics(line)
+            port_match = self.KERNEL_PORT_PATTERN.search(line)
+            if metrics and port_match:
+                port = int(port_match.group(1))
+                # port 取值为 [0, 8]，UDIE_MAX_PORT_NUM 是端口数量（9）
+                if 0 <= port <= UDIE_MAX_PORT_NUM - 1:
+                    current["ports"].setdefault(port, {}).update(metrics)
+            elif metrics:
+                # abnorm_ssn/abnorm_header 等 die 维度指标
+                current["die_metrics"].update(metrics)
+            self._sync_kernel_dfx_shared()
+
+    def _kernel_group_time(self, line: str, occur_time: str) -> str:
+        """组头时间取父类已解析的时间；行首无绝对时间时不记录组时间。"""
+        return occur_time if self.KERNEL_ABS_TIME_PATTERN.match(line.strip()) else ""
+
+    def _sync_kernel_dfx_shared(self):
+        """把当前文件已收集的数据块写入共享容器，worker 进程也能回传主进程。"""
+        if self.kernel_dfx_shared is None or not self._current_kernel_source_path:
+            return
+        self.kernel_dfx_shared[self._current_kernel_source_path] = copy.deepcopy(self._pending_kernel_dfx_groups)
+
+    def _build_kernel_dfx_groups(self) -> dict:
+        """汇总各文件的数据块：die 维度指标补到 port，丢弃无端口数据的块，按设备归组。"""
+        groups_by_dev = {}
+        for groups in (self.kernel_dfx_shared or {}).values():
+            for group in groups:
+                ports = {port: dict(metrics) for port, metrics in group["ports"].items()}
+                if not ports:
+                    continue
+                for port_metrics in ports.values():
+                    for key, value in group["die_metrics"].items():
+                        port_metrics.setdefault(key, value)
+                merged = dict(group, ports=ports)
+                groups_by_dev.setdefault(merged["dev_id"], []).append(merged)
+        return groups_by_dev
+
+    def _convert_line_uptime(self, line: str, reference: Optional[tuple]) -> str:
+        """
+        把 kernel.log 行首开机时长替换为换算后的实际时间；行首不是开机时长或无可换算参照时原样返回。
+        :param line: log line
+        :param reference: 时间参照 (W0 实际时间, T0 开机时长) 或 None
+        """
+        if not reference or not (self._is_ae_keyword_line(line) or self._is_dfx_line(line)):
+            return line
+        time_str = line[line.find("[") + 1 : line.find("]")].strip()
+        if not self._HISI_UPTIME_PATTERN.match(time_str):
+            return line
+        real_time = self._convert_uptime_to_real_time(reference, float(time_str))
+        return "[{}]{}".format(real_time, line[line.find("]") + 1 :])
 
     def _get_kernel_file_reference(self, file_source) -> Optional[tuple]:
         """
@@ -335,6 +447,18 @@ class NpuHistoryLogParser(BaseNpuLogParser):
         return references
 
     @staticmethod
+    def _parse_kernel_metrics(line: str):
+        """
+        提取一行中的目标指标，保留日志中的原始计数值
+        """
+        metrics = {}
+        for key, value in NpuHistoryLogParser.KERNEL_METRIC_PATTERN.findall(line):
+            mapped_key = KERNEL_DFX_METRIC_MAP.get(key)
+            if mapped_key:
+                metrics[mapped_key] = value
+        return metrics
+
+    @staticmethod
     def _extract_timestamp_from_dir(path: str) -> Optional[str]:
         """
         Extract the timestamp from log dir path.
@@ -370,7 +494,19 @@ class NpuHistoryLogParser(BaseNpuLogParser):
         parse_file_path = self.find_log(parse_ctx.parse_file_path)
         if not self.is_sdk_input:
             self.time_reference_map = self._prepare_time_references(parse_file_path)
-        return self.process_parse_file_list(parse_file_path, task_id)
+        # kernel.log 在 worker 中解析，DFX 组通过共享容器回传主进程
+        manager = multiprocessing.Manager() if not self.is_sdk_input else None
+        self.kernel_dfx_shared = manager.dict() if manager else {}
+        try:
+            events, err = self.process_parse_file_list(parse_file_path, task_id)
+            if not self.is_sdk_input:
+                # 同一次遍历收集的 kernel DFX 组，供 UbctlLogParser 直接复用，避免重复解析 kernel.log
+                parse_ctx.kernel_dfx_groups = self._build_kernel_dfx_groups()
+        finally:
+            self.kernel_dfx_shared = None
+            if manager:
+                manager.shutdown()
+        return events, err
 
     def _match_precheck_line(self, log_line: str) -> dict:
         """
@@ -379,6 +515,8 @@ class NpuHistoryLogParser(BaseNpuLogParser):
         :param log_line: single log line
         :return: PRECHECK event dict or {}
         """
+        # 逐行收集 kernel.log 的 aubdfx DFX 数据块（非 kernel.log 时由 _current_kernel_collect 拦截）
+        self._collect_kernel_dfx_line(log_line, self._get_occur_time(log_line, ""))
         if not all(keyword in log_line for keyword in self.KERNEL_AE_KEYWORDS):
             return {}
         return {
@@ -489,7 +627,7 @@ class NpuHostLogParser(NpuSlogParser):
         return self.process_parse_file_list(self.find_log(parse_ctx.parse_file_path), task_id)
 
 
-class UbctlLogParser(BaseNpuLogParser):
+class UbctlLogParser(BaseNpuLogParser, GroupSelectMixin):
     TARGET_FILE_PATTERNS = "ubctl_log_path"
     SOURCE_FILE = NPU_UBCTL_SOURCE
 
@@ -535,13 +673,19 @@ class UbctlLogParser(BaseNpuLogParser):
             # legacy 兜底：走 TARGET_FILE_PATTERNS=ubctl_log_path 单字段（filter_log收的 ubctl_log.txt）
             legacy_files = self.find_log(parse_ctx.parse_file_path) or []
             after_roots = legacy_files
-        if not before_roots and not after_roots:
+
+        # ubctl_log.txt 为主数据源，kernel.log 覆盖相同指标并补齐 kernel 独有指标
+        kernel_before, kernel_after = self._collect_kernel_dfx(parse_ctx)
+        kernel_ready = bool(kernel_before and kernel_after)
+        if not kernel_ready and not before_roots and not after_roots:
             kg_logger.info("No %s files matched, skip.", self.SOURCE_FILE)
             return [], {}
 
         kg_logger.info(
-            "%s parse start (files: before=%s, after=%s, start=%s, end=%s).",
+            "%s parse start (kernel_devs: before=%s, after=%s, ubctl files: before=%s, after=%s, start=%s, end=%s).",
             self.SOURCE_FILE,
+            len(kernel_before),
+            len(kernel_after),
             len(before_roots),
             len(after_roots),
             self.start_time,
@@ -558,13 +702,54 @@ class UbctlLogParser(BaseNpuLogParser):
             list(target_after.keys()),
         )
 
-        collect_before_result = self._parse_ubctl_content(target_before, side=SIDE_BEFORE, task_id=task_id)
-        collect_after_result = self._parse_ubctl_content(target_after, side=SIDE_AFTER, task_id=task_id)
+        # ubctl 为主数据源作为底稿，kernel 覆盖相同指标并补齐 kernel 独有指标
+        collect_before_result = {}
+        collect_after_result = {}
+        if target_before or target_after:
+            collect_before_result = self._parse_ubctl_content(target_before, side=SIDE_BEFORE, task_id=task_id)
+            collect_after_result = self._parse_ubctl_content(target_after, side=SIDE_AFTER, task_id=task_id)
+        self._merge_kernel_result(collect_before_result, kernel_before)
+        self._merge_kernel_result(collect_after_result, kernel_after)
 
         events = self._assemble_precheck_events(parse_ctx, collect_before_result, collect_after_result)
 
         kg_logger.info("%s parse complete, user emit %s PRECHECK events.", self.SOURCE_FILE, len(events))
         return events, {}
+
+    def _merge_kernel_result(self, ubctl_result: dict, kernel_result: dict):
+        """
+        指标级双源合并：以 ubctl 为底稿，kernel 覆盖相同指标并补充 kernel 独有指标；
+        ubctl 独有的指标保持不动；ubctl 未覆盖的设备整体采用 kernel 数据。
+        kernel 确有指标覆盖或补充时，其 source_path 追加到事件溯源中。
+        :param ubctl_result: ubctl_log.txt 解析结果 {dev_id: {udieX: {port: {指标: 值}}}}
+        :param kernel_result: kernel.log 解析结果，结构同 ubctl_result
+        """
+        for dev_id, kernel_dev_data in kernel_result.items():
+            ubctl_dev_data = ubctl_result.get(dev_id)
+            if ubctl_dev_data is None:
+                ubctl_result[dev_id] = kernel_dev_data
+                continue
+            merged = False
+            for udie in self.UDIES:
+                ubctl_udie = ubctl_dev_data.setdefault(udie, {})
+                for port, kernel_port_metrics in kernel_dev_data.get(udie, {}).items():
+                    ubctl_port_metrics = ubctl_udie.setdefault(port, {})
+                    for metric, value in kernel_port_metrics.items():
+                        # kernel 覆盖 ubctl 同名指标；kernel 独有的指标直接补入
+                        ubctl_port_metrics[metric] = value
+                        merged = True
+            if merged:
+                self._append_source_path(ubctl_dev_data, kernel_dev_data.get("source_path", ""))
+
+    @staticmethod
+    def _append_source_path(dev_data: dict, source_path: str):
+        """把补充数据源的路径追加到 source_path（去重、保持顺序），保证事件溯源包含双源。"""
+        if not source_path:
+            return
+        paths = [path for path in dev_data.get("source_path", "").splitlines() if path]
+        if source_path not in paths:
+            paths.append(source_path)
+        dev_data["source_path"] = "\n".join(paths)
 
     def _pick_ubctl_file(self, ubctl_in_list, side: str):
         """
@@ -736,6 +921,68 @@ class UbctlLogParser(BaseNpuLogParser):
             "source_path": ubctl_log_txt_path,
             "occur_time": occur_time,
         }
+
+    # ====================== 以下函数为解析 kernel.log 中 aubdfx 网络 DFX 数据的辅助函数 ======================
+    def _collect_kernel_dfx(self, parse_ctx: KGParseCtx):
+        """
+        从 kernel.log 中解析 UB 网络 DFX 指标，用于覆盖 ubctl 同名指标并补齐其独有指标。
+        kernel.log 不可用（无打印/只有单侧采集/解析异常）时不返回数据，不影响 ubctl 主数据。
+        :param parse_ctx: knowledge graph parser context
+        :return: before/after 两个 {dev_id: {udie0/udie1/source_path/occur_time}}
+        """
+        # kernel DFX 组由 NpuHistoryLogParser 在解析 kernel.log 的同一次遍历中写入 ctx；
+        # UbctlLogParser 只消费结果，自身不读取 kernel.log
+        groups_by_dev = getattr(parse_ctx, "kernel_dfx_groups", None) or {}
+        if not groups_by_dev:
+            return {}, {}
+
+        before_result, after_result = {}, {}
+        for dev_id, groups in groups_by_dev.items():
+            before_tree, after_tree, source_path, (before_time, after_time) = self._pair_kernel_groups(groups)
+            if not before_tree or not after_tree:
+                continue
+            before_result[dev_id] = {
+                "udie0": before_tree.get("udie0", {}),
+                "udie1": before_tree.get("udie1", {}),
+                "source_path": source_path,
+                "occur_time": before_time,
+            }
+            after_result[dev_id] = {
+                "udie0": after_tree.get("udie0", {}),
+                "udie1": after_tree.get("udie1", {}),
+                "source_path": source_path,
+                "occur_time": after_time,
+            }
+        kg_logger.info(
+            "kernel dfx data collected, devs: before=%s, after=%s.",
+            list(before_result.keys()),
+            list(after_result.keys()),
+        )
+        return before_result, after_result
+
+    def _pair_kernel_groups(self, groups: list):
+        """
+        按任务时间窗逐 die 选择 before/after 数据块（选组逻辑统一由 GroupSelectMixin 实现）。
+        :param groups: 全部数据块（可跨文件）
+        :return: before 树、after 树、源文件路径、(before 组时间, after 组时间)
+        """
+        before_groups, after_groups = self._select_before_after_groups(
+            groups,
+            getattr(self, "start_time", ""),
+            getattr(self, "end_time", ""),
+            getattr(self, "resuming_training_time", ""),
+        )
+        before_tree = {udie: group["ports"] for udie, group in before_groups.items()}
+        after_tree = {udie: group["ports"] for udie, group in after_groups.items()}
+        source_paths = set()
+        for udie, group in before_groups.items():
+            source_paths.add(group["source_path"])
+            source_paths.add(after_groups[udie]["source_path"])
+        times = (
+            max((group.get("time", "") for group in before_groups.values()), default=""),
+            max((group.get("time", "") for group in after_groups.values()), default=""),
+        )
+        return before_tree, after_tree, "\n".join(sorted(source_paths)), times
 
     # ====================== 以下函数为解析ubctl_log.txt中指标数据的统计辅助函数 ======================
     def feed_line(self, line: str):

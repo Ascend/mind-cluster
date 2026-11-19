@@ -128,6 +128,28 @@ SNAP_DROP_METRICS = (
     SSU_OVERSIZE_DROP_NUM,
 )
 
+# kernel.log aubdfx 网络 DFX 打印关键字
+KERNEL_DFX_PRINT_FUNC = "aubdfx_net_dfx_info_print"
+KERNEL_STATUS_START = "[status:start]"
+KERNEL_STATUS_END = "[status:end]"
+KERNEL_DFX_ABNORM_SSN = "abnorm_ssn"
+KERNEL_DFX_ABNORM_HEADER = "abnorm_header"
+KERNEL_DFX_LOGIC_PORT_ID = "logic_port_id"
+# kernel.log 指标名 -> 旧 ubctl_log.txt 指标名（保持下游规则层无感知）
+KERNEL_DFX_METRIC_MAP = {
+    "pmu_tx_vl_6": TX_VL6_PKT_NUM,
+    "pmu_rx_vl_6": RX_VL6_PKT_NUM,
+    "pmu_tx_vl_7": TX_VL7_PKT_NUM,
+    "pmu_rx_vl_7": RX_VL7_PKT_NUM,
+    "pmu_tx_vl_10": TX_VL10_PKT_NUM,
+    "pmu_rx_vl_10": RX_VL10_PKT_NUM,
+    "pmu_tx_vl_11": TX_VL11_PKT_NUM,
+    "pmu_rx_vl_11": RX_VL11_PKT_NUM,
+    "phy_reinit_cnt_port": PHY_REINIT_CNT,
+    KERNEL_DFX_ABNORM_SSN: TAACK_ABNORM_SSN,
+    KERNEL_DFX_ABNORM_HEADER: TAACK_ABNORM_HEADER,
+}
+
 # 旧丢包细分故障码（未命中端侧主动丢包时输出）
 Comp_Custom_UBMEM_TIMEOUT_LOST_PKG = "Comp_Custom_UBMEM_TIMEOUT_LOST_PKG"
 Comp_Custom_CQE0x5_LOST_PKG = "Comp_Custom_CQE0x5_LOST_PKG"
