@@ -17,6 +17,7 @@ package topology
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -68,9 +69,14 @@ func RasTopoWriteTask(ctx context.Context, hdm *server.HwDevManager) {
 		hwlog.RunLog.Error("illegal input, hdm is nil")
 		return
 	}
-	_, err := slownet.GetRasNetRootPath()
-	if err != nil {
-		hwlog.RunLog.Errorf("get ras net root path failed, err: %v", err)
+	if _, err := slownet.GetRasNetRootPath(); err != nil {
+		if errors.Is(err, slownet.ErrRasNetRootPathNotSet) {
+			hwlog.RunLog.Info("RAS_NET_ROOT_PATH is not configured, slow network diagnosis is disabled, " +
+				"skip RasTopoWriteTask; configure it and restart the pod if the feature is required")
+			return
+		}
+		hwlog.RunLog.Errorf("RAS_NET_ROOT_PATH is invalid, rack topology will not be written and slow "+
+			"network diagnosis may not work, fix the env and restart the pod, err: %v", err)
 		return
 	}
 	hdm.ManagerLock.Lock()
