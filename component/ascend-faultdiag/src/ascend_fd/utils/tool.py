@@ -782,8 +782,8 @@ def check_owner(path):
     """
     path_stat = os.stat(path)
     path_owner, path_gid = path_stat.st_uid, path_stat.st_gid
-    user_check = path_owner == os.getuid() and path_owner == os.geteuid()
-    return path_owner == 0 or path_gid in os.getgroups() or user_check
+    user_check = path_owner == os.getuid() and path_owner == os.geteuid()  # pylint: disable=no-member
+    return path_owner == 0 or path_gid in os.getgroups() or user_check  # pylint: disable=no-member
 
 
 def safe_read_line(file_path: str):
@@ -916,7 +916,7 @@ def safe_chmod(file: str, mode):
     :param mode: file mode
     """
     with safe_read_open(file) as file_stream:
-        os.fchmod(file_stream.fileno(), mode)
+        os.fchmod(file_stream.fileno(), mode)  # pylint: disable=no-member
 
 
 def get_user_info():
@@ -927,10 +927,10 @@ def get_user_info():
     user_name = getpass.getuser()
     user_host = get_user_host()
     try:
-        current_terminal = os.ttyname(sys.stdout.fileno())
+        current_terminal = os.ttyname(sys.stdout.fileno())  # pylint: disable=no-member
     except OSError:
         current_terminal = "UnKnown"
-    user_id = os.getuid()
+    user_id = os.getuid()  # pylint: disable=no-member
     return f'{user_host}@{current_terminal}', f'{user_name}({user_id})'
 
 
@@ -1318,6 +1318,93 @@ def check_and_format_time_str(time_str, timezone_trans_flag=False):
         dt = dt.replace(tzinfo=datetime.timezone.utc)
 
     return dt.strftime("%Y-%m-%d %H:%M:%S.%f")
+
+
+def normalize_occur_time(occur_time: str, resuming_train_time: str = "") -> str:
+    """
+    Normalize an event occur time string into a comparable datetime format.
+    Handles missing year (volcano style "MM-DD hh:mm:ss.******") by borrowing the
+    year from the resuming train time, and normalizes repeats of "  " to "-".
+    :param occur_time: the raw occur time string
+    :param resuming_train_time: the resuming training time to fill the year
+    :return: "YYYY-MM-DD HH:MM:SS.%f" or "" if the raw string is invalid
+    """
+    if not occur_time or not isinstance(occur_time, str):
+        return ""
+    processed = occur_time.strip()
+    if " " in processed:
+        date_part = processed.split(" ")[0]
+        # volcano 场景时间缺少年份，借用断点时间首年的年份
+        if len(date_part) < 10 and resuming_train_time:
+            processed = resuming_train_time[:5] + processed
+        processed = processed.replace(" ", "-")
+    # bmc sel/fdm 时间无微秒时补齐，保证转换可成功
+    head, sep, us = processed.partition(".")
+    if not sep:
+        processed = processed + ".000000"
+    else:
+        processed = head + "." + us.ljust(6, "0")
+    return check_and_format_time_str(processed)
+
+
+def get_event_occur_times(event: dict) -> list:
+    """解析事件的全部 occur_time（occur_time 字段 + occurrence 列表），返回去重后的 datetime 列表。
+
+    清洗阶段与 diag 阶段共用的时间归一入口：缺失的 occurrence 条目/无法解析的时间会被忽略，
+    返回空列表表示该事件所有 occurrence 均无有效时间。
+    :param event: PRECHECK 事件 dict
+    :return: 去重后的有效时间列表
+    """
+    if not isinstance(event, dict):
+        return []
+    raw_times = []
+    occur_time = event.get("occur_time") or ""
+    if occur_time:
+        raw_times.append(occur_time)
+    for occurrence_item in event.get("occurrence") or []:
+        if occurrence_item:
+            raw_times.append(occurrence_item[0])
+    times = set()
+    for raw_time in raw_times:
+        event_time = _parse_event_occur_time(raw_time)
+        if event_time is not None:
+            times.add(event_time)
+    return sorted(times)
+
+
+def times_within_window(anchor_times: list, evidence_times_by_code: dict, window_sec: int) -> bool:
+    """校验锚点与各证据故障码的时间组是否存在窗内匹配（锚点为中心语义）。
+
+    每个故障码/证据事件的时间组按 code 单独组织，便于按故障码的 occurrence 时间分别
+    判定：遍历锚点全部 occurrence，若存在某条锚点 occurrence 使每个证据码的时间组都各有
+    一条 occurrence 与其差值 ≤ window_sec 即命中；锚点或任一证据码时间组为空时匹配不到。
+    :param anchor_times: 锚点事件的全部有效 occurrence 时间
+    :param evidence_times_by_code: 证据事件的故障码 -> 有效 occurrence 时间组
+    :param window_sec: 时间窗（秒）
+    :return: 存在共同时间窗组合时返回 True
+    """
+    if not anchor_times:
+        return False
+    if not evidence_times_by_code or any(not times for times in evidence_times_by_code.values()):
+        return False
+    for anchor_time in anchor_times:
+        if all(
+            any(abs(event_time - anchor_time) <= datetime.timedelta(seconds=window_sec) for event_time in times)
+            for times in evidence_times_by_code.values()
+        ):
+            return True
+    return False
+
+
+def _parse_event_occur_time(occur_time) -> datetime.datetime:
+    """把事件时间字符串解析为 datetime，失败返回 None。"""
+    normalized = normalize_occur_time(occur_time)
+    if not normalized:
+        return None
+    try:
+        return datetime.datetime.strptime(normalized, "%Y-%m-%d %H:%M:%S.%f")
+    except ValueError:
+        return None
 
 
 def check_file_num_and_size(files, logger, file_num=FILE_MAX_NUM, file_size=FILES_SIZE_THRESHOLD):
