@@ -6,3 +6,4 @@
 - [使用故障诊断](./03_using_fault_diagnosis.md)
 - [配置和清除LLM](./04_configuring_llm.md)
 - [查询集群与任务状态](./05_querying_cluster_status.md)
+- [使用WebUI对话式运维](./06_using_webui.md)

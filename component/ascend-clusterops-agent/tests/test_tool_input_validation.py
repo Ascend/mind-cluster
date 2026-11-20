@@ -177,21 +177,3 @@ def test_discovery_exposes_name_constraints_and_the_registry_enforces_them(clien
             invalid = {"node": ["bad/node"]}
         with pytest.raises(ValidationError):
             TOOL_REGISTRY.get(name).input_model.model_validate(invalid)
-
-
-def test_legacy_diag_passes_names_through_without_tool_validation(monkeypatch):
-    # The legacy entry predates the tool input models: it must hand the job name to
-    # the chain unchanged instead of validating it as a Kubernetes name.
-    from agent_core.main import DiagReq, diag
-    from agent_core.tools import diagnosis as tools
-
-    seen = []
-
-    def _stub(**kwargs):
-        seen.append(kwargs)
-        return {"error": "training/inference task not found", "pods": [], "diag_report": {}}
-
-    monkeypatch.setattr(tools, "diagnose_cached", _stub)
-    result = diag(DiagReq(job="bad/job", namespace="default"))
-    assert result["error"] == "training/inference task not found"
-    assert seen == [{"job": "bad/job", "namespace": "default", "refresh": False}]

@@ -2,6 +2,9 @@
 
 集群运维Agent可以对接LLM服务，对ascend-fd生成的诊断报告进行智能总结，输出简明根因报告（故障事件、根因节点、建议处置）。LLM配置为可选项，未配置或清除配置后，诊断默认返回确定性诊断报告，不影响诊断主流程。
 
+> [!NOTE]
+> 本组件**仅支持OpenAI兼容（OpenAI-compatible）接口格式**的大模型服务：`base-url`必须指向服务方提供的OpenAI兼容API（Application Programming Interface，应用程序编程接口）端点（例如`https://open.bigmodel.cn/api/paas/v4`），不支持其他私有协议格式的服务。
+
 ## 添加LLM配置<a name="sectionfaultdiagnosisllmcreate"></a>
 
 通过`kubectl clusterops --create-llm-config`命令添加LLM配置，支持交互输入、命令行参数和环境变量三种方式。

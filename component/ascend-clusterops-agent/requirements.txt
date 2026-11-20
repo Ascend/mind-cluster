@@ -1,7 +1,10 @@
 # 诊断 Agent 运行时依赖
-langchain-openai>=0.2.0       # 接 glm 的 OpenAI 兼容端点
+langchain>=1.0               # ReAct 图入口
+langgraph>=1.0               # 图运行时与 MemorySaver
+langchain-openai>=1.0        # 接 glm 的 OpenAI 兼容端点
 kubernetes>=29.0.0            # in-cluster APIServer 访问
 pyyaml>=6.0                   # 读 collect_manifest.yaml
+pydantic>=2.0                 # model_fields/model_json_schema
 grpcio>=1.60.0                # agent↔collector gRPC (含流式 tar 回传)
 protobuf>=4.25                # diag.proto 生成的协议桩运行时
 fastapi>=0.110.0              # agent 对外 HTTP 入口 (/diag, CLI 用)

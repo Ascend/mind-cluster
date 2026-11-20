@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- Copyright 2026 Huawei Technologies Co., Ltd. Licensed under the Apache License, Version 2.0 -->
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MindCluster 运维助手</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- 首屏状态（有没有模型）：服务端 GET /ui 在请求时把它替换成一行内联 boot 脚本，
+       页面因此不需要额外的状态接口（页面入口只有 GET /ui 一个） -->
+  <!--AGENT_BOOT-->
+</head>
+<body>
+  <div id="app" class="app layout-sidebar">
+    <!-- 左栏：产品名 + 新建会话 + 历史会话空态 + 模型状态角标；历史会话区纯文案零交互 -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-mark" aria-hidden="true">◆</span>
+        <span class="brand-name">MindCluster 运维助手</span>
+      </div>
+      <button id="new-session-btn" class="new-session-btn" type="button" title="新建会话">＋ 新建会话</button>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">历史会话</div>
+        <p id="history-empty" class="sidebar-empty">历史会话将在后续版本提供</p>
+      </div>
+      <div class="sidebar-foot">
+        <p class="sidebar-hint">会话仅在当前进程内有效，组件重启后需重新开会话。</p>
+        <span id="model-badge" class="badge badge-unknown">LLM：检测中…</span>
+      </div>
+    </aside>
+
+    <!-- 右栏主区：空会话时灰色问候语贴输入卡上方、与卡内文左缘对齐，加厚卡整体居中（is-welcome）；
+         发首条消息后回到底部布局。无横幅，引导由占位符与 error 提示承载。 -->
+    <main id="chat-pane" class="pane pane-chat is-welcome">
+      <div id="chat-flow" class="chat-flow" aria-live="polite"></div>
+      <p id="welcome-hint" class="welcome-hint">你好，我是 MindCluster 运维助手</p>
+      <!-- method="post"：无 JS 时表单也不会把用户输入拼进 URL 查询串（app.js 挂载后提交被拦截，走 SSE 流） -->
+      <form id="chat-form" class="input-bar" autocomplete="off" method="post">
+        <textarea id="chat-input" name="message" rows="1" maxlength="16384" placeholder="正在检测模型配置…"
+                  aria-label="输入消息"></textarea>
+        <button id="send-btn" type="submit">发送</button>
+      </form>
+    </main>
+  </div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
