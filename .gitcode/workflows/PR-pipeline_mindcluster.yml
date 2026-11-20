@@ -218,7 +218,7 @@ stages:
         if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.build_job.yml
         with:
-          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindCluster_20260813"
+          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindcluster_openeuler_2403_20261119"
           runs_on_arch: "x86"
 
       Build_arm:
@@ -226,7 +226,7 @@ stages:
         if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.build_job.yml
         with:
-          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:mindCluster_20260813"
+          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:mindcluster_openeuler_2403_20261119"
           runs_on_arch: "arm"
 
       UT_go:
@@ -234,7 +234,7 @@ stages:
         if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.ut_go.yml
         with:
-          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindCluster_20260813"
+          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindcluster_openeuler_2403_20261119"
           runs_on_arch: "x86"
 
       UT_cpp:
