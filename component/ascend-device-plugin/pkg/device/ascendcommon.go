@@ -375,9 +375,11 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 		// if subscribe failed, will use get interface
 		if common.SwitchSubscribeFailed && common.ParamOption.EnableSwitchFault {
 			newFaults, err := deviceswitch.GetSwitchFaults()
-			common.SetSwitchFaultCode(newFaults)
 			if err != nil {
-				hwlog.RunLog.Error("failed to query all fault codes of switch")
+				// keep the last known good switch fault state to avoid false fault recovery
+				hwlog.RunLog.Errorf("failed to query all fault codes of switch, err: %v", err)
+			} else {
+				common.SetSwitchFaultCode(newFaults)
 			}
 		}
 		switchFaultInfo := common.GetSwitchFaultInfo()
