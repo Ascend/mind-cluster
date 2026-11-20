@@ -17,12 +17,17 @@
 
 """kubectl plugin: unified cluster operations entry (kubectl clusterops).
 
-Usage:
-    kubectl clusterops --create-llm-config [--base-url U] [--model M]
-    kubectl clusterops --clear-llm-config
+Business subcommands:
+    tools
+        list the registered capabilities (GET /tools)
+    tool <name> [--param NAME=VALUE ...] [--params-json JSON]
+        generic entry for every registered tool, driven by the GET /tools catalog
+Management commands (unchanged):
+    --create-llm-config [--base-url U] [--model M]
+    --clear-llm-config
 
-Create/clear the LLM Secret (llm-secret, namespace from env ASCEND_CLUSTEROPS_NS, default mindx-dl)
-consumed by agent-core (consistent with the scripts/ops/create-llm-secret.sh contract).
+``kubectl ascend_diag`` remains the legacy diagnosis entry; no per-tool or
+diagnosis alias subcommands are registered here.
 """
 
 from __future__ import annotations
@@ -32,17 +37,75 @@ import base64
 import getpass
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
+
+import clusterops_query_client as client
 
 DEFAULT_NS = os.environ.get("ASCEND_CLUSTEROPS_NS", "mindx-dl")
 SECRET_NAME = "llm-secret"  # nosec B105 - k8s resource name, not a hardcoded credential
 SECRET_KEYS = ("api-key", "base-url", "model")  # consistent with the env references in agent-core.yaml
 
+# collect manifest CM (consistent with node-collector's MANIFEST_CM contract)
+MANIFEST_CM = os.environ.get("ASCEND_CLUSTEROPS_AGENT_COLLECT_MANIFEST_CM", "collect-manifest")
+MANIFEST_NS = os.environ.get("ASCEND_CLUSTEROPS_AGENT_COLLECT_MANIFEST_NS", "cluster-system")
+MANIFEST_KEY = "collect_manifest.yaml"
+
+# Query tools with a dedicated human-readable renderer; every other tool falls back
+# to a generic status/data view so a newly registered tool is usable without CLI changes.
+_QUERY_RENDERERS = frozenset({"faulty_device", "isolated_device", "cluster_resource", "task_status"})
+
 
 def _kubectl() -> str | None:
     return shutil.which("kubectl") or shutil.which("kubectl.exe")
+
+
+def _update_collect_manifest(path: str) -> int:
+    """Write a local collect_manifest.yaml into the cluster ConfigMap (create-or-replace, idempotent).
+
+    Rendered via kubectl create --dry-run=client then applied; no extra Python library needed;
+    the current kubeconfig needs create/apply permission on the ConfigMap's namespace.
+    """
+    kubectl = _kubectl()
+    if not kubectl:
+        print("error: kubectl not found, make sure it is installed and on PATH", file=sys.stderr)
+        return 127
+    if not os.path.isfile(path):
+        print(f"error: collect manifest file does not exist: {path}", file=sys.stderr)
+        return 1
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
+    if not content.strip():
+        print(f"error: collect manifest file is empty: {path}", file=sys.stderr)
+        return 1
+    render = [
+        kubectl,
+        "create",
+        "configmap",
+        MANIFEST_CM,
+        "-n",
+        MANIFEST_NS,
+        f"--from-file={MANIFEST_KEY}={path}",
+        "--dry-run=client",
+        "-o",
+        "yaml",
+    ]
+    r = subprocess.run(render, capture_output=True, text=True, check=False)
+    if r.returncode != 0:
+        print(f"error: failed to render collect manifest ConfigMap: {r.stderr.strip()}", file=sys.stderr)
+        return 1
+    apply_ = subprocess.run([kubectl, "apply", "-f", "-"], input=r.stdout, capture_output=True, text=True, check=False)
+    if apply_.returncode != 0:
+        print(f"error: failed to apply collect manifest ConfigMap: {apply_.stderr.strip()}", file=sys.stderr)
+        return 1
+    print(f"collect manifest written to ConfigMap {MANIFEST_CM}/{MANIFEST_NS}: {path}")
+    print(
+        "subsequent diagnostics will use the updated collect manifest "
+        "(node-collector re-reads this CM on every collection, no restart needed)"
+    )
+    return 0
 
 
 def create_llm_config(args: argparse.Namespace) -> int:
@@ -119,25 +182,634 @@ def clear_llm_config(args: argparse.Namespace) -> int:
     return 0
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(prog="kubectl-clusterops", description="cluster operations kubectl plugin")
-    ap.add_argument("--create-llm-config", action="store_true", help="configure the LLM Secret (llm-secret)")
-    ap.add_argument(
+# --------------------------------------------------------------------------- #
+# Business calls
+# --------------------------------------------------------------------------- #
+def _call(args: argparse.Namespace, method: str, path: str, payload=None, tool: str = "clusterops", timeout=None):
+    try:
+        with client.PortForward(args.agent_core_service) as forward:
+            status_code, result = client.request_json(
+                forward.local, method, path, payload, timeout or client.QUERY_TIMEOUT
+            )
+    except (client.TransportError, ValueError) as exc:
+        return client.EXIT_FAILED, client.transport_error_envelope(tool, str(exc))
+    except Exception as exc:  # noqa: BLE001  # never leak a traceback; contract is a TRANSPORT_ERROR envelope
+        return client.EXIT_FAILED, client.transport_error_envelope(
+            tool, f"failed to call agent-core ({type(exc).__name__}: {exc})"
+        )
+    return status_code, result
+
+
+def _is_tool_envelope(payload) -> bool:
+    return isinstance(payload, dict) and "tool" in payload and "status" in payload
+
+
+def _print_errors(result):
+    for error in result.get("errors") or []:
+        print(f"error: {error.get('code')}: {error.get('message')}", file=sys.stderr)
+
+
+def _row(values) -> str:
+    return "\t".join("" if value is None else str(value) for value in values)
+
+
+def _print_partial(result):
+    """A partial answer publishes the gap issues here; correlate through request_id and logs."""
+    if result.get("status") != "partial":
+        return
+    request_id = result.get("request_id") or "-"
+    print(
+        f"warning: partial result (request_id={request_id}); see agent-core logs for the uncovered targets",
+        file=sys.stderr,
+    )
+    for issue in result.get("errors") or []:
+        print(f"warning: {issue.get('code')}: {issue.get('message')}", file=sys.stderr)
+
+
+def _print_diagnosis_result(result) -> None:
+    """Human output for diagnose (stdout report, stderr diagnostics).
+
+    All tool entries use the unchanged flat /diag fields inside data.
+    """
+    if result.get("status") == "error":
+        for issue in result.get("errors") or []:
+            message = issue.get("message") or issue.get("code") or "diagnosis failed"
+            if issue.get("code") == "TRANSPORT_ERROR":
+                print(f"diagnosis error, {message}", file=sys.stderr)
+            else:
+                print(message, file=sys.stderr)
+        return
+    data = result.get("data") or {}
+    # Legacy flat data (the old /diag body): keep the original presentation rules.
+    if data.get("cached"):
+        print(
+            data.get("cached_note") or "result from cache, use --refresh for the latest diagnosis",
+            file=sys.stderr,
+        )
+    final_text = data.get("final_text")
+    if final_text:
+        print(final_text)
+        return
+    if data.get("diag_report_text"):
+        print(data["diag_report_text"])
+    elif data.get("diag_report"):
+        print(json.dumps(data["diag_report"], ensure_ascii=False, indent=2))
+    else:
+        print("(no output)")
+
+
+_FAULT_SOURCES = ("devices", "switch", "dpu", "public_faults")
+
+
+def _superpod_text(record) -> str:
+    """Render superpod identity for device records; empty when the producer omitted it."""
+    superpod = record.get("superpod") or {}
+    values = [superpod.get("super_pod_id"), superpod.get("rack_id"), superpod.get("server_index")]
+    if not superpod or all(value is None for value in values):
+        return ""
+    return "superpod=" + "/".join("-" if value is None else str(value) for value in values)
+
+
+def _extra_text(source, record) -> str:
+    """Per-source relation that has no column of its own (superpod / affected_npu)."""
+    if source == "devices":
+        return _superpod_text(record)
+    if source == "dpu":
+        affected = record.get("affected_npu") or []
+        return "affected_npu=" + ",".join(str(item) for item in affected) if affected else ""
+    return ""
+
+
+def _fault_rows(source, record):
+    """One row per fault code.
+
+    Device records nest their codes under ``faults[]``; switch/dpu/public records are
+    already flat. A record without details still shows its identity.
+    """
+    details = (record.get("faults") or [{}]) if source == "devices" else [record]
+    return [
+        [
+            record.get("device_id") or "-",
+            record.get("fault_type") or record.get("device_type") or "",
+            detail.get("fault_handling") or "",
+            detail.get("fault_code") or "",
+            detail.get("last_time") or "",
+            _extra_text(source, record),
+        ]
+        for detail in details
+    ]
+
+
+def _print_faults(data) -> None:
+    nodes = data.get("node") or {}
+
+    print("NODE\tSOURCE\tDEVICE\tTYPE\tHANDLING\tCODES\tLAST_TIME\tEXTRA")
+    rows = 0
+    for node, entry in nodes.items():
+        # Render every faulty-device source: dropping switch/dpu/public_faults made
+        # DPU, switch and public faults look absent in human-readable output.
+        for source in _FAULT_SOURCES:
+            for record in entry.get(source) or []:
+                for cells in _fault_rows(source, record):
+                    print(_row([node, source] + cells))
+                    rows += 1
+    health = [
+        (node, (entry.get("node_health") or {}).get("node_status"))
+        for node, entry in nodes.items()
+        if (entry.get("node_health") or {}).get("node_status")
+    ]
+    if health:
+        print("NODE_HEALTH")
+        print("NODE\tSTATUS")
+        for node, status in health:
+            print(_row([node, status]))
+            rows += 1
+    if not rows:
+        print("no fault devices or node health records")
+
+
+def _print_query(result, tool: str) -> None:
+    _print_partial(result)
+    if result.get("status") == "error":
+        _print_errors(result)
+        return
+    data = result.get("data") or {}
+    if tool == "faulty_device":
+        _print_faults(data)
+    elif tool == "isolated_device":
+        nodes = data.get("node") or {}
+        print("NODE\tDEVICE\tFAULT_LEVEL\tFAULT_CODE\tLAST_SEPARATE_TIME")
+        for node, entry in nodes.items():
+            for device in entry.get("devices") or []:
+                print(
+                    _row(
+                        [
+                            node,
+                            device.get("device_id", ""),
+                            device.get("fault_level") or "",
+                            device.get("fault_code") or "",
+                            device.get("last_separate_time") or "",
+                        ]
+                    )
+                )
+        if not nodes:
+            print("no isolated devices")
+    elif tool == "cluster_resource":
+        nodes = data.get("node") or {}
+        print("NODE\tRESOURCE\tCAPACITY\tALLOCATABLE\tUSED\tIDLE\tFAULT\tISOLATED")
+        for node, entry in nodes.items():
+            cpu = entry.get("cpu") or {}
+            print(
+                _row(
+                    [
+                        node,
+                        "cpu",
+                        cpu.get("capacity_cores"),
+                        cpu.get("allocatable_cores"),
+                        cpu.get("used_cores"),
+                        cpu.get("idle_cores"),
+                    ]
+                )
+            )
+            for bucket, values in entry.items():
+                if bucket == "cpu":
+                    continue
+                print(
+                    _row(
+                        [
+                            node,
+                            bucket,
+                            values.get("capacity"),
+                            values.get("allocatable"),
+                            values.get("used"),
+                            values.get("idle"),
+                            values.get("fault"),
+                            values.get("isolated"),
+                        ]
+                    )
+                )
+        if not nodes:
+            print("no resource records")
+    elif tool == "task_status":
+        print(
+            f"job: {data.get('job_name', '')} ns={data.get('namespace', '')} "
+            f"type={data.get('job_type') or '-'} status={data.get('status', 'unknown')}"
+        )
+        pods = data.get("pods") or []
+        if pods:
+            print(_row(["pod", "status"]))
+            for pod in pods:
+                print(_row([pod.get("pod_name") or "", pod.get("status") or ""]))
+        else:
+            print("no pods")
+    else:
+        print(json.dumps(data, ensure_ascii=False, indent=2))
+
+
+def _print_catalog(result) -> None:
+    for index, descriptor in enumerate(result.get("tools") or []):
+        if index:
+            print()
+        _print_descriptor(descriptor)
+
+
+def _print_descriptor(result) -> None:
+    print(f"name: {result.get('name')}")
+    print(f"description: {result.get('description')}")
+    schema = result.get("input_schema") or {}
+    required = set(schema.get("required") or [])
+    properties = schema.get("properties") or {}
+    if not properties:
+        print("  (no parameters)")
+    for name, field in properties.items():
+        default = field.get("default", "-")
+        enum = ",".join(str(item) for item in field.get("enum") or [])
+        print(
+            f"  {name}: type={field.get('type')} required={name in required} "
+            f"default={default}" + (f" enum={enum}" if enum else "")
+        )
+
+
+def _run_catalog(args: argparse.Namespace) -> int:
+    status_code, result = _call(args, "GET", "/tools", tool="catalog")
+    client.emit(result, args.json)
+    if not args.json:
+        if result.get("status") == "error":
+            _print_errors(result)
+        else:
+            _print_catalog(result)
+    return client.exit_code(status_code, result)
+
+
+# --------------------------------------------------------------------------- #
+# Generic tool entry: parameters are driven by the descriptor input_schema
+# --------------------------------------------------------------------------- #
+class _ParamError(ValueError):
+    """A local CLI parameter error; the execution request is never sent."""
+
+
+def _resolve_schema(schema, root):
+    """Resolve local ``$ref`` pointers (pydantic emits ``$defs`` for nested models)."""
+    if not isinstance(schema, dict):
+        return {}
+    seen = 0
+    while "$ref" in schema and seen < 32:
+        ref = schema.get("$ref") or ""
+        parts = ref[2:].split("/") if ref.startswith("#/") else []
+        node = root
+        for part in parts:
+            part = part.replace("~1", "/").replace("~0", "~")
+            if not isinstance(node, dict) or part not in node:
+                return schema
+            node = node[part]
+        if not parts or not isinstance(node, dict):
+            return schema
+        merged = dict(node)
+        merged.update({key: value for key, value in schema.items() if key != "$ref"})
+        schema = merged
+        seen += 1
+    return schema
+
+
+def _schema_branches(schema, root):
+    """Flatten anyOf/oneOf/type arrays into the branches a single value may match."""
+    schema = _resolve_schema(schema, root)
+    for key in ("anyOf", "oneOf"):
+        if isinstance(schema.get(key), list):
+            return [_resolve_schema(item, root) for item in schema[key]]
+    types = schema.get("type")
+    if isinstance(types, list):
+        return [{**schema, "type": item} for item in types]
+    return [schema]
+
+
+def _validate_string(text, schema, name):
+    """Apply the string constraints the catalog publishes, so bad input never reaches the server."""
+    min_length = schema.get("minLength")
+    if isinstance(min_length, int) and len(text) < min_length:
+        raise _ParamError(f"invalid value for --param {name}: {text!r} is shorter than {min_length}")
+    max_length = schema.get("maxLength")
+    if isinstance(max_length, int) and len(text) > max_length:
+        raise _ParamError(f"invalid value for --param {name}: {text!r} is longer than {max_length}")
+    pattern = schema.get("pattern")
+    if isinstance(pattern, str) and pattern:
+        try:
+            matched = re.search(pattern, text)
+        except re.error:
+            # The pattern is server-owned; an unrunnable regex must not block a valid call.
+            return
+        if matched is None:
+            raise _ParamError(f"invalid value for --param {name}: {text!r} does not match {pattern}")
+
+
+def _convert_leaf(schema, text, name, root):
+    schema = _resolve_schema(schema, root)
+    enum = schema.get("enum")
+    if isinstance(enum, list) and enum:
+        for allowed in enum:
+            if isinstance(allowed, str) and text == allowed:
+                return allowed
+        allowed_text = ", ".join(str(item) for item in enum)
+        raise _ParamError(f"invalid value for --param {name}: {text!r} (allowed: {allowed_text})")
+    value_type = schema.get("type")
+    if value_type == "boolean":
+        lowered = text.strip().lower()
+        if lowered in ("true", "false"):
+            return lowered == "true"
+        raise _ParamError(f"invalid value for --param {name}: {text!r} (expected true or false)")
+    if value_type == "integer":
+        try:
+            return int(text.strip(), 10)
+        except ValueError:
+            raise _ParamError(f"invalid value for --param {name}: {text!r} (expected an integer)") from None
+    if value_type == "number":
+        try:
+            return float(text.strip())
+        except ValueError:
+            raise _ParamError(f"invalid value for --param {name}: {text!r} (expected a number)") from None
+    if value_type == "array":
+        raise _ParamError(f"--param {name} is an array; repeat --param or use --params-json")
+    if value_type == "object":
+        raise _ParamError(f"--param {name} is an object; use --params-json")
+    # string / null / untyped: keep the raw text ('null' is handled by _convert_value)
+    _validate_string(text, schema, name)
+    return text
+
+
+def _convert_value(schema, text, name, root):
+    schema = _resolve_schema(schema, root)
+    branches = _schema_branches(schema, root)
+    if len(branches) > 1:
+        nullable = any(branch.get("type") == "null" for branch in branches)
+        if nullable and text.strip().lower() == "null":
+            return None
+        # keep the branch error readable for the common `T | null` (and `T[] | null`) fields
+        candidates = [branch for branch in branches if branch.get("type") != "null"]
+        if len(candidates) == 1:
+            return _convert_value(candidates[0], text, name, root)
+        if not candidates:
+            raise _ParamError(f"invalid value for --param {name}: {text!r} (expected null)")
+        errors = []
+        for branch in candidates:
+            try:
+                return _convert_value(branch, text, name, root)
+            except _ParamError as exc:
+                errors.append(str(exc))
+        raise _ParamError(f"invalid value for --param {name}: {text!r} ({'; '.join(errors)})")
+    branch = branches[0]
+    if branch.get("type") == "array":
+        # a single --param for an array field becomes a one-item array
+        return [_convert_value(branch.get("items") or {}, text, name, root)]
+    if branch.get("type") == "null":
+        if text.strip().lower() == "null":
+            return None
+        raise _ParamError(f"invalid value for --param {name}: {text!r} (expected null)")
+    return _convert_leaf(branch, text, name, root)
+
+
+def _convert_values(schema, values, name, root):
+    schema = _resolve_schema(schema, root)
+    if len(values) > 1:
+        arrays = [branch for branch in _schema_branches(schema, root) if branch.get("type") == "array"]
+        if not arrays:
+            raise _ParamError(f"--param {name} does not accept multiple values")
+        item_schema = arrays[0].get("items") or {}
+        return [_convert_value(item_schema, value, name, root) for value in values]
+    return _convert_value(schema, values[0], name, root)
+
+
+def _unknown_param_message(names, properties):
+    known = ", ".join(sorted(properties)) or "-"
+    return f"unknown parameter(s): {', '.join(names)} (known: {known})"
+
+
+def _parse_tool_params(schema, params, params_json):
+    """Build the POST body from --param/--params-json using ``input_schema``.
+
+    Returns ``(payload, None)`` on success or ``(None, message)`` for a local
+    argument error. The server stays the final validator and authorizer; this only
+    converts types/enums and rejects unknown or missing fields before any POST.
+    """
+    schema = schema if isinstance(schema, dict) else {}
+    properties = schema.get("properties") or {}
+    required = list(schema.get("required") or [])
+    params = list(params or [])
+    if params and params_json is not None:
+        return None, "--param and --params-json are mutually exclusive"
+
+    if params_json is not None:
+        try:
+            payload = json.loads(params_json)
+        except (TypeError, ValueError) as exc:
+            return None, f"invalid --params-json: {exc}"
+        if not isinstance(payload, dict):
+            return None, "--params-json must contain a JSON object"
+        unknown = sorted(set(payload) - set(properties))
+        if unknown:
+            return None, _unknown_param_message(unknown, properties)
+        missing = [name for name in required if name not in payload]
+        if missing:
+            return None, f"missing required parameter(s): {', '.join(missing)}"
+        return payload, None
+
+    grouped = {}
+    for item in params:
+        name, separator, value = item.partition("=")
+        if not separator:
+            return None, f"invalid --param {item!r}: expected NAME=VALUE"
+        name = name.strip()
+        if not name:
+            return None, f"invalid --param {item!r}: empty parameter name"
+        if name not in properties:
+            return None, _unknown_param_message([name], properties)
+        grouped.setdefault(name, []).append(value)
+
+    payload = {}
+    for name, values in grouped.items():
+        try:
+            payload[name] = _convert_values(properties[name], values, name, schema)
+        except _ParamError as exc:
+            return None, str(exc)
+    missing = [name for name in required if name not in payload]
+    if missing:
+        return None, f"missing required parameter(s): {', '.join(missing)}"
+    return payload, None
+
+
+def _build_tool_payload(descriptor, args):
+    return _parse_tool_params(descriptor.get("input_schema") or {}, args.param, args.params_json)
+
+
+def _generic_exit_code(status_code, result, is_diagnosis) -> int:
+    if is_diagnosis:
+        # diagnosis keeps its historical exit contract: partial evidence still exits 0
+        if result.get("status") == "error" or status_code >= 400:
+            return client.EXIT_FAILED
+        return client.EXIT_OK
+    return client.exit_code(status_code, result)
+
+
+def _print_generic_tool_result(result, tool: str, is_diagnosis: bool) -> None:
+    if is_diagnosis:
+        _print_diagnosis_result(result)
+        return
+    if tool in _QUERY_RENDERERS:
+        _print_query(result, tool)
+        return
+    # No dedicated renderer (a newly registered tool): show the envelope summary and raw data.
+    _print_partial(result)
+    print(f"status: {result.get('status')}")
+    if result.get("status") == "error":
+        _print_errors(result)
+        return
+    print(json.dumps(result.get("data"), ensure_ascii=False, indent=2))
+
+
+def _collect_manifest_arg(args: argparse.Namespace) -> str | None:
+    """Read the local manifest path from diagnose parameters before contacting the server.
+    Updating the manifest exits without running diagnosis.
+    """
+    value: str | None = None
+    for item in args.param or []:
+        name, separator, raw = item.partition("=")
+        if separator and name.strip() in ("collect-manifest", "collect_manifest"):
+            value = raw
+    if args.params_json:
+        try:
+            payload = json.loads(args.params_json)
+        except (TypeError, ValueError):
+            return value
+        if isinstance(payload, dict):
+            for key in ("collect-manifest", "collect_manifest"):
+                if isinstance(payload.get(key), str):
+                    value = payload[key]
+    return value
+
+
+def _run_generic_tool(args: argparse.Namespace) -> int:
+    """Call any registered tool: catalog first, then schema-driven params, then POST.
+
+    Only the two public endpoints from the RFC are used: ``GET /tools`` (discovery)
+    and ``POST /tools/{name}`` (execution).
+    """
+    tool_name = args.tool_name
+    if tool_name == "diagnose":
+        manifest = _collect_manifest_arg(args)
+        if manifest is not None:
+            return _update_collect_manifest(manifest)
+    status_code, catalog = _call(args, "GET", "/tools", tool="catalog")
+    if status_code >= 400 or (isinstance(catalog, dict) and catalog.get("status") == "error"):
+        if args.json:
+            client.emit(catalog, True)
+        elif isinstance(catalog, dict) and catalog.get("errors"):
+            _print_errors(catalog)
+        else:
+            print(f"error: cannot load the tool catalog (HTTP {status_code})", file=sys.stderr)
+        return client.EXIT_FAILED
+
+    descriptor = None
+    for item in (catalog.get("tools") or []) if isinstance(catalog, dict) else []:
+        if item.get("name") == tool_name:
+            descriptor = item
+            break
+    if descriptor is None:
+        print(f"error: unknown tool {tool_name!r}; use 'kubectl clusterops tools'", file=sys.stderr)
+        return client.EXIT_ARGUMENT
+
+    payload, error = _build_tool_payload(descriptor, args)
+    if error:
+        print(f"error: {error}", file=sys.stderr)
+        return client.EXIT_ARGUMENT
+
+    # The catalog no longer carries a category, so the diagnosis contract is keyed by name.
+    is_diagnosis = tool_name == "diagnose"
+    timeout = client.DIAG_TIMEOUT if is_diagnosis else None
+    status_code, result = _call(args, "POST", f"/tools/{tool_name}", payload, tool=tool_name, timeout=timeout)
+    if args.json:
+        client.emit(result, True)
+    elif _is_tool_envelope(result):
+        _print_generic_tool_result(result, tool_name, is_diagnosis)
+    else:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    return _generic_exit_code(status_code, result, is_diagnosis)
+
+
+# --------------------------------------------------------------------------- #
+# Parser
+# --------------------------------------------------------------------------- #
+def _common(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--agent-core-service", default=None, help="Agent Core Service, format svc.ns:9700")
+    parser.add_argument("--json", action="store_true", help="print exactly one JSON object")
+
+
+def _tool_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--param",
+        action="append",
+        default=[],
+        metavar="NAME=VALUE",
+        help="tool parameter; repeat the same NAME for an array (a single value also becomes a one-item array)",
+    )
+    parser.add_argument(
+        "--params-json",
+        default=None,
+        metavar="JSON",
+        help="complete parameter object as JSON; mutually exclusive with --param",
+    )
+    _common(parser)
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="kubectl-clusterops", description="cluster operations kubectl plugin")
+    parser.add_argument("--create-llm-config", action="store_true", help="configure the LLM Secret (llm-secret)")
+    parser.add_argument(
         "--clear-llm-config",
         action="store_true",
         help="clear all LLM config (delete llm-secret, effective immediately)",
     )
-    ap.add_argument("--base-url", default=None, help="LLM Base URL (prompted; or env LLM_BASE_URL)")
-    ap.add_argument("--model", default=None, help="LLM model name (prompted; or env LLM_MODEL)")
-    args = ap.parse_args()
+    parser.add_argument("--base-url", default=None, help="LLM Base URL (prompted; or env LLM_BASE_URL)")
+    parser.add_argument("--model", default=None, help="LLM model name (prompted; or env LLM_MODEL)")
+
+    subparsers = parser.add_subparsers(dest="command")
+
+    tools = subparsers.add_parser("tools", help="list all capabilities with their parameters")
+    _common(tools)
+
+    tool = subparsers.add_parser(
+        "tool",
+        help="call any registered tool by name (covers every input_schema parameter)",
+        description=(
+            "Call any tool from 'kubectl clusterops tools' by name. Parameters are driven by "
+            "the server-side input_schema: repeat --param NAME=VALUE to build an array, or pass the "
+            "complete object with --params-json (required for empty arrays and nested objects). "
+            "For diagnose, --param collect_manifest=PATH updates the collection ConfigMap "
+            "using the local kubeconfig and exits without running diagnosis."
+        ),
+    )
+    tool.add_argument("tool_name", help="registered tool name (see 'tools')")
+    _tool_args(tool)
+    return parser
+
+
+def main() -> int:
+    argv = sys.argv[1:]
+    ap = _build_parser()
+    args = ap.parse_args(argv)
+    manage = args.create_llm_config or args.clear_llm_config
     if args.create_llm_config and args.clear_llm_config:
         ap.error("--create-llm-config and --clear-llm-config are mutually exclusive")
+    if manage and args.command:
+        ap.error("management options cannot be combined with a business subcommand")
     if args.clear_llm_config:
         return clear_llm_config(args)
     if args.create_llm_config:
         return create_llm_config(args)
-    ap.print_help()
-    return 2
+    if not args.command:
+        ap.print_help()
+        return client.EXIT_ARGUMENT
+    if args.command == "tools":
+        return _run_catalog(args)
+    return _run_generic_tool(args)
 
 
 if __name__ == "__main__":

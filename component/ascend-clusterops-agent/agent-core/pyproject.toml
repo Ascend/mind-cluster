@@ -18,16 +18,24 @@ dependencies = [
   "kubernetes>=29.0.0",
   "fastapi>=0.110.0",
   "uvicorn>=0.29.0",
-  "langgraph>=0.2.0",
   "langchain-openai>=0.2.0",
 ]
 
 [tool.setuptools]
-packages = ["agent_core", "clusterops_common", "diagproto"]
+packages = [
+  "agent_core",
+  "agent_core.datasources",
+  "agent_core.datasources.clusterd",
+  "agent_core.tools",
+  "clusterops_common",
+  "diagproto",
+]
 
 [tool.setuptools.package-dir]
 # The source directory name (agent-core/) contains a hyphen and cannot be a Python package
 # name; the project root is the package root, mapped to the valid package name agent_core.
+# Subpackages are located through this parent mapping; do not add dotted keys here (unquoted
+# dotted TOML keys become nested tables and conflict with the scalar agent_core value).
 agent_core = "."
 # Shared common code (logging etc.) and gRPC stubs are embedded into the component wheel.
 clusterops_common = "../common"

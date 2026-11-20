@@ -1074,7 +1074,7 @@ def test_upload_result_end_to_end(tmp_path, monkeypatch):
 
     job, node = "job-e2e", "node-a"
     tracker.register(job, [node])
-    from agent_core import tools
+    from agent_core.tools import diagnosis as tools
 
     tools._active_diags[("testns", job)] = time.time()
     server = _start_upload_server(tmp_path, monkeypatch)
@@ -1109,7 +1109,7 @@ def test_upload_failure_records_error(tmp_path, monkeypatch):
 
     job, node = "job-fail", "node-b"
     tracker.register(job, [node])
-    from agent_core import tools
+    from agent_core.tools import diagnosis as tools
 
     tools._active_diags[("default", job)] = time.time()
     server = _start_upload_server(tmp_path, monkeypatch)
@@ -1141,7 +1141,7 @@ def test_upload_rejects_non_active_job(tmp_path, monkeypatch):
 
 
 def test_upload_rejects_path_traversal(tmp_path, monkeypatch):
-    from agent_core import tools
+    from agent_core.tools import diagnosis as tools
     from diagproto import diag_pb2_grpc
 
     job, node = "job-trav", "node-d"

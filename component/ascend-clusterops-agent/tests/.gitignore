@@ -1,0 +1,13 @@
+# Local deployment, collection and performance probes are not the mock unit-test deliverable.
+/env-179/
+/local_e2e/
+/local_smoke/
+/pressure/
+/query_verify/Dockerfile.query
+/query_verify/README.md
+/query_verify/inject-bad-shard.yaml
+/query_verify/inject-broken-node.yaml
+/query_verify/prepare_fixtures.py
+/real_cluster/
+/test_real_cluster_checker.py
+__pycache__/

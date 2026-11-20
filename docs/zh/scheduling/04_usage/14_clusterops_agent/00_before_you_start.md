@@ -10,6 +10,7 @@
 - **集中诊断**：Agent Core聚合各节点上报的清洗结果，组装为诊断输入目录，调用ascend-fd diag执行集中诊断，生成诊断报告。
 - **结果缓存**：诊断完成后自动缓存诊断结果，重复诊断时直接返回缓存结果，支持通过`--refresh`参数强制刷新。
 - **智能总结**：可选对接LLM服务，对诊断报告进行智能总结，输出根因报告；未配置LLM时默认返回确定性诊断报告。
+- **状态查询**：通过`kubectl clusterops`查询故障设备、隔离卡、集群资源与任务状态，结果以统一契约返回，支持按节点范围过滤与JSON输出。
 
 ## 前提条件<a name="sectionfaultdiagnosisprereq"></a>
 
@@ -25,3 +26,4 @@
 2. [配置日志采集](./02_configuring_log_collection.md)：配置任务日志的采集方式及采集契约。
 3. [使用故障诊断](./03_using_fault_diagnosis.md)：通过`kubectl ascend_diag`命令对异常任务执行诊断。
 4. [配置和清除LLM](./04_configuring_llm.md)（可选）：对接LLM服务，对诊断报告进行智能总结。
+5. [查询集群与任务状态](./05_querying_cluster_status.md)（可选）：按需查询故障设备、隔离卡、集群资源与任务状态。

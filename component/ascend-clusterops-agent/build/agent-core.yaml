@@ -60,6 +60,17 @@ rules:
   - apiGroups: [""]
     resources: ["nodes"]           # _collector_pod_ip 按 node 找 collector pod
     verbs: ["get", "list"]
+  # 查询工具：按任务所在 namespace 读取任务对象与 Pod。
+  # 任务 namespace 不固定、名称动态，无法用前缀 resourceNames 约束；仅放行只读 get。
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get"]
+  - apiGroups: ["mindxdl.gitee.com"]
+    resources: ["ascendjobs"]      # task_status 任务状态唯一来源 (AscendJob)
+    verbs: ["get"]
+  - apiGroups: ["batch.volcano.sh"]
+    resources: ["jobs"]            # task_status 任务状态唯一来源 (Volcano Job)
+    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -160,6 +171,81 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: agent-core-llm
+subjects:
+  - kind: ServiceAccount
+    name: agent-core
+    namespace: mindx-dl
+---
+# 查询工具只读 ConfigMap: mindx-dl (ClusterD 设备/节点/交换机/DPU 汇总 + job statistics)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agent-core-query-read
+  namespace: mindx-dl
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agent-core-query-read
+  namespace: mindx-dl
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agent-core-query-read
+subjects:
+  - kind: ServiceAccount
+    name: agent-core
+    namespace: mindx-dl
+---
+# 查询工具只读 ConfigMap: kube-system (DP deviceinfo 回退源)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agent-core-query-read
+  namespace: kube-system
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agent-core-query-read
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agent-core-query-read
+subjects:
+  - kind: ServiceAccount
+    name: agent-core
+    namespace: mindx-dl
+---
+# 查询工具只读 ConfigMap: cluster-system (公共故障 / 手工隔离 / job statistics / 调度异常)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agent-core-query-read
+  namespace: cluster-system
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agent-core-query-read
+  namespace: cluster-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agent-core-query-read
 subjects:
   - kind: ServiceAccount
     name: agent-core

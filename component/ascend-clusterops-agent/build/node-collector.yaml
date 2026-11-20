@@ -59,7 +59,7 @@ spec:
       - name: node-collector
         image: ascend-clusterops-agent:v26.2.0
         # 权限最小化: privileged 仅因 npu-smi/驱动访问/msnpureport 需要 (与 npu-exporter/device-plugin
-        # 一致, 仓库内 Ascend DaemonSet 均如此; 进一步降级见 RFC 风险节)。其余全部收紧:
+        # 一致, 仓库内 Ascend DaemonSet 均如此; 进一步降级见设计风险节)。其余全部收紧:
         # seccomp=RuntimeDefault, 只读根文件系统, 只读挂载宿主日志/驱动。
         # 注意: privileged=true 时 allowPrivilegeEscalation 必须为 true (不能设 false)。
         # SA token 挂载 (只读 CM 权限)。

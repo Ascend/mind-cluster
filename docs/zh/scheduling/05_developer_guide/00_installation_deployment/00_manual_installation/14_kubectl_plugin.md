@@ -1,6 +1,6 @@
 # Kubectl Plugin<a name="ZH-CN_TOPIC_0000002524428760"></a>
 
-Kubectl Plugin是集群运维Agent特性的客户端命令行工具，包含 `kubectl ascend-diag` 和 `kubectl clusterops` 两个命令，安装在用户机上。Kubectl Plugin将故障诊断能力封装为kubectl命令，用户通过 `kubectl ascend-diag` 命令一键触发诊断，通过 `kubectl clusterops` 命令管理LLM服务配置。
+Kubectl Plugin是集群运维Agent特性的客户端命令行工具，包含 `kubectl ascend-diag` 和 `kubectl clusterops` 两个命令，安装在用户机上。Kubectl Plugin将故障诊断能力封装为kubectl命令，用户通过 `kubectl ascend-diag` 命令一键触发诊断；通过 `kubectl clusterops` 命令发现和调用Agent Core的全部工具（四类只读查询、通用工具入口、诊断），并管理LLM服务配置。工具接口的完整说明请参见[查询工具接口](../../../06_api/21_clusterops_agent_tools.md)。
 
 - 使用[集群运维Agent](../../../01_introduction/02_feature_description.md#ZH-CN_TOPIC_0000002524312690)特性的用户，必须安装Kubectl Plugin。
 - Kubectl Plugin为纯Python标准库实现的客户端工具，无需pip安装。
@@ -13,10 +13,11 @@ Kubectl Plugin是集群运维Agent特性的客户端命令行工具，包含 `ku
 
     ```shell
     Ascend-mindxdl-ascend-clusterops-agent_{version}_linux.zip
-    └── kubectl-plugin/           # Kubectl Plugin
-        ├── install.sh            # 一键安装脚本
-        ├── kubectl-ascend_diag   # kubectl ascend-diag插件文件
-        └── kubectl-clusterops    # kubectl clusterops插件文件
+    └── kubectl-plugin/              # Kubectl Plugin
+        ├── install.sh               # 一键安装脚本
+        ├── kubectl-ascend_diag      # kubectl ascend-diag插件文件
+        ├── kubectl-clusterops       # kubectl clusterops插件文件
+        └── clusterops_query_client.py  # kubectl clusterops的HTTP客户端（需与kubectl-clusterops同目录）
     ```
 
 3. 以root用户登录用户机，进入kubectl-plugin目录，执行以下命令安装插件。
@@ -61,16 +62,23 @@ Kubectl Plugin是集群运维Agent特性的客户端命令行工具，包含 `ku
                             write a local collect_manifest.yaml into the cluster ConfigMap and exit
 
     $ kubectl clusterops --help
-    usage: kubectl-clusterops [-h] [--create-llm-config] [--clear-llm-config] [--base-url BASE_URL] [--model MODEL]
+    usage: kubectl-clusterops [-h] [--create-llm-config] [--clear-llm-config]
+                              [--base-url BASE_URL] [--model MODEL]
+                              {tools,tool} ...
 
     cluster operations kubectl plugin
 
-    optional arguments:
-    -h, --help           show this help message and exit
-    --create-llm-config  configure the LLM Secret (llm-secret)
-    --clear-llm-config   clear all LLM config (delete llm-secret, effective immediately)
-    --base-url BASE_URL  LLM Base URL (prompted; or env LLM_BASE_URL)
-    --model MODEL        LLM model name (prompted; or env LLM_MODEL)
+    positional arguments:
+      {tools,tool}
+        tools               list all capabilities with their parameters
+        tool                call any registered tool by name (covers every input_schema parameter)
+
+    options:
+      -h, --help           show this help message and exit
+      --create-llm-config  configure the LLM Secret (llm-secret)
+      --clear-llm-config   clear all LLM config (delete llm-secret, effective immediately)
+      --base-url BASE_URL  LLM Base URL (prompted; or env LLM_BASE_URL)
+      --model MODEL        LLM model name (prompted; or env LLM_MODEL)
     ```
 
 5. （可选）配置LLM服务。如需对诊断报告进行智能总结，可通过`kubectl clusterops`命令创建LLM配置；不配置时，诊断报告默认为原始诊断结果。配置及清除LLM的具体方法请参见[配置和清除LLM](../../../04_usage/14_clusterops_agent/04_configuring_llm.md)。
@@ -115,3 +123,13 @@ Kubectl Plugin是集群运维Agent特性的客户端命令行工具，包含 `ku
     ```
 
     完整的诊断输出说明与真实样例请参见[使用故障诊断](../../../04_usage/14_clusterops_agent/03_using_fault_diagnosis.md)。
+
+7. （可选）验证查询功能。执行以下命令确认能力目录与查询链路正常。
+
+    ```shell
+    kubectl clusterops tools
+    kubectl clusterops tool faulty_device --param node={node_name}
+    kubectl clusterops tool task_status --param job={job_name} --param namespace={namespace}
+    ```
+
+    命令输出工具清单或对应查询结果即表示链路正常。四类查询的参数、返回体、错误码与退出码请参见[查询工具接口](../../../06_api/21_clusterops_agent_tools.md)。

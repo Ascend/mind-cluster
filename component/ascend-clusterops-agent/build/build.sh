@@ -13,7 +13,11 @@
 #   node-collector.yaml
 #   Dockerfile
 #   collect_manifest.yaml
-#   kubectl-plugin/                     (install.sh + kubectl-ascend_diag + kubectl-clusterops)
+#   kubectl-plugin/                     (install.sh + kubectl-ascend_diag + kubectl-clusterops
+#                                        + clusterops_query_client.py)
+#
+# 构建/校验分离: 本脚本只负责构建与组装 output/, 不做任何校验。
+# 单元测试从 tests/run_dt.sh 进入, 通过 mock/fake 隔离 Kubernetes、LLM 与外部命令。
 #
 # 注意事项:
 #   - 版本号默认 v26.2.0; 若组件根目录存在 service_config.ini, 则读取其中版本号
@@ -44,6 +48,51 @@ function clean() {
     mkdir -p "${OUTPUT_DIR}"
 }
 
+# 清理 Python 构建中间产物. 只删白名单路径, 绝不删除部署资产目录 build/.
+# 背景: pip wheel --no-build-isolation 会复用 <package>/build/lib; 源码删除的模块
+# 若残留在该目录, 会被重新打进 wheel (B-01).
+function clean_python_build_intermediates() {
+    local component_real
+    component_real="$(realpath -m "${COMPONENT_DIR}")"
+    local paths=(
+        "${COMPONENT_DIR}/agent-core/build"
+        "${COMPONENT_DIR}/node-collector/build"
+        "${COMPONENT_DIR}/common/diagproto/build"
+    )
+    local pattern
+    for pattern in \
+        "${COMPONENT_DIR}/agent-core/"*.egg-info \
+        "${COMPONENT_DIR}/node-collector/"*.egg-info \
+        "${COMPONENT_DIR}/common/diagproto/"*.egg-info; do
+        if [ -e "${pattern}" ]; then
+            paths+=("${pattern}")
+        fi
+    done
+
+    local path resolved
+    for path in "${paths[@]}"; do
+        resolved="$(realpath -m "${path}")"
+        case "${resolved}" in
+            "${component_real}/agent-core/build" | \
+            "${component_real}/node-collector/build" | \
+            "${component_real}/common/diagproto/build")
+                ;;
+            "${component_real}/agent-core/"*.egg-info | \
+            "${component_real}/node-collector/"*.egg-info | \
+            "${component_real}/common/diagproto/"*.egg-info)
+                ;;
+            *)
+                echo "ERROR: refusing to clean unexpected build path: ${resolved}" >&2
+                return 1
+                ;;
+        esac
+        if [ -e "${resolved}" ]; then
+            rm -rf -- "${resolved}"
+            echo "==> cleaned build intermediate: ${resolved}"
+        fi
+    done
+}
+
 # 检查 ascend-fd 安装包是否已提前就绪 (build.sh 不下载, 见 README.md 下载地址)
 function check_ascend_fd() {
     if compgen -G "${CUR_DIR}/ascend_faultdiag-*.whl" >/dev/null; then
@@ -61,6 +110,7 @@ function build_whl() {
     # 每次从干净状态构建, 避免多版本 whl 累积
     rm -rf "${WHL_DIR}"
     mkdir -p "${WHL_DIR}"
+    clean_python_build_intermediates
 
     # whl 版本号与 zip 交付版本号保持一致 (BUILD_VERSION 覆盖时同步注入; 构建后还原源码)
     _pyprojects=("${COMPONENT_DIR}/agent-core/pyproject.toml" "${COMPONENT_DIR}/node-collector/pyproject.toml")
@@ -97,6 +147,8 @@ function package() {
     mkdir -p "${OUTPUT_DIR}"/kubectl-plugin
     cp "${COMPONENT_DIR}"/kubectl-plugin/kubectl-ascend_diag "${OUTPUT_DIR}"/kubectl-plugin/
     cp "${COMPONENT_DIR}"/kubectl-plugin/kubectl-clusterops "${OUTPUT_DIR}"/kubectl-plugin/
+    # 查询客户端模块: kubectl-clusterops 运行时从脚本同目录 import
+    cp "${COMPONENT_DIR}"/kubectl-plugin/clusterops_query_client.py "${OUTPUT_DIR}"/kubectl-plugin/
     cp "${CUR_DIR}"/install.sh "${OUTPUT_DIR}"/kubectl-plugin/install.sh
     chmod +x "${OUTPUT_DIR}"/kubectl-plugin/install.sh \
         "${OUTPUT_DIR}"/kubectl-plugin/kubectl-ascend_diag \
