@@ -442,6 +442,7 @@ class K8s:
     """Lazy, memoized Kubernetes API access (in-cluster, falling back to kubeconfig)."""
 
     _core: client.CoreV1Api | None = None
+    _custom: client.CustomObjectsApi | None = None
 
     @classmethod
     def core(cls) -> client.CoreV1Api:
@@ -453,6 +454,14 @@ class K8s:
                 config.load_kube_config()
             cls._core = client.CoreV1Api()
         return cls._core
+
+    @classmethod
+    def custom(cls) -> client.CustomObjectsApi:
+        """Return a memoized CustomObjectsApi sharing the same loaded configuration."""
+        if cls._custom is None:
+            cls.core()  # loads in-cluster/kubeconfig configuration on first use
+            cls._custom = client.CustomObjectsApi()
+        return cls._custom
 
     @classmethod
     def namespace(cls) -> str:
