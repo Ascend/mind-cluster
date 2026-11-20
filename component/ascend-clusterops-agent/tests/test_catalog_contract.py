@@ -19,12 +19,17 @@
 
 The third field (``input_schema``) must be generated from the registered input model, so
 the catalog can never drift from the validation the server actually applies.
+
+The package layout is the same kind of contract: ``agent-core`` ships code plus the static
+payload named by the pyproject package-data whitelist, and nothing else.
 """
 
 # pylint: disable=redefined-outer-name  # pytest fixtures are injected by parameter name
 
 from __future__ import annotations
 
+import re
+from fnmatch import fnmatch
 from pathlib import Path
 
 import pytest
@@ -45,7 +50,7 @@ EXPECTED_TOOLS = [
 # 这里只跳过打包器文件、构建中间产物与构建脚本的临时备份。
 PACKAGE_DIR = Path(__file__).resolve().parents[1] / "agent-core"
 PACKAGE_PACKAGING_FILES = {"pyproject.toml"}
-IGNORED_PARTS = {"build", "__pycache__", ".pytest_cache"}
+IGNORED_PARTS = {"build", "dist", ".eggs", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox"}
 
 
 @pytest.fixture
@@ -89,20 +94,42 @@ def test_catalog_is_sorted_and_stable(client):
     ]
 
 
-def test_package_ships_code_only():
-    """查询工具不暴露配置面：agent_core 包内不得随包投放数据文件.
+def _package_data_whitelist() -> list[str]:
+    """The pyproject package-data patterns: the only static payload the package may ship."""
+    text = (PACKAGE_DIR / "pyproject.toml").read_text(encoding="utf-8")
+    block = text.split("[tool.setuptools.package-data]", 1)[1].split("\n[", 1)[0]
+    patterns = re.findall(r'"([^"]+)"', block)
+    assert patterns, "pyproject declares no package-data: the static payload would never ship"
+    return patterns
 
-    该不变量原先只写在构建脚本的产物校验里；放进契约测试后，包布局变化只需改一处，
-    且不需要先构建即可回归。构建器自身的 pyproject 与构建脚本的 *.orig 备份不算随包数据。
-    """
-    data_files = []
+
+def _data_files():
+    """Every file under the package root, build litter and caches excluded."""
     for path in PACKAGE_DIR.rglob("*"):
+        relative = path.relative_to(PACKAGE_DIR)
         if not path.is_file():
             continue
-        relative = path.relative_to(PACKAGE_DIR)
         if any(part in IGNORED_PARTS or part.endswith(".egg-info") for part in relative.parts[:-1]):
             continue
-        if path.suffix == ".py" or relative.name in PACKAGE_PACKAGING_FILES or relative.name.endswith(".orig"):
+        yield path, relative
+
+
+def test_package_ships_code_only():
+    """agent_core 包内只投放代码：pyproject 的 package-data 白名单之外不得有随包数据文件。
+
+    白名单即 WebUI 与技能正文这两类静态载荷的唯一来源；构建器 pyproject 与 *.orig 备份不算随包数据。
+    """
+    whitelist = _package_data_whitelist()
+    assert all(pattern.startswith(("webui/", "skills/")) for pattern in whitelist), (
+        "the package-data whitelist may only cover the WebUI and the skill bodies"
+    )
+    data_files = []
+    for path, relative in _data_files():
+        posix = relative.as_posix()
+        if any(fnmatch(posix, pattern) for pattern in whitelist):
             continue
-        data_files.append(str(relative))
+        build_artifact = path.suffix in {".py", ".whl"} or relative.name.endswith(".orig")
+        if build_artifact or relative.name in PACKAGE_PACKAGING_FILES:
+            continue
+        data_files.append(posix)
     assert not data_files, "agent_core 只能包含代码, 发现随包数据文件: " + ", ".join(sorted(data_files))

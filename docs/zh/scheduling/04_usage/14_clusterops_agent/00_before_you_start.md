@@ -27,3 +27,4 @@
 3. [使用故障诊断](./03_using_fault_diagnosis.md)：通过`kubectl ascend_diag`命令对异常任务执行诊断。
 4. [配置和清除LLM](./04_configuring_llm.md)（可选）：对接LLM服务，对诊断报告进行智能总结。
 5. [查询集群与任务状态](./05_querying_cluster_status.md)（可选）：按需查询故障设备、隔离卡、集群资源与任务状态。
+6. [使用WebUI对话式运维](./06_using_webui.md)（可选）：对接LLM服务，使用WebUI对话式运维。

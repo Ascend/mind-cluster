@@ -177,7 +177,7 @@ Agent Core提供以下两级诊断结果缓存：
 
 >[!NOTE]
 >
-> 9710和9720为集群内部端口，不对外暴露，仅供Agent Core与Node Collector在集群内互相调用。
+> 9710和9720为集群内部端口，不对外暴露，仅供Agent Core与Node Collector在集群内互相调用。30443端口对外暴露：当前为HTTP，URL 为 `http://<节点IP>:30443/ui`；改用HTTPS时URL 为 `https://<节点IP>:30443/ui`，端口号不变。
 
 ## Kubectl Plugin<a name="sectionascendclusteropskubectl"></a>
 
