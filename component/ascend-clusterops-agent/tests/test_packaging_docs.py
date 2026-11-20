@@ -55,15 +55,19 @@ MENU = GUIDE.parent / "menu_fault_diagnosis.md"
 README = COMPONENT_ROOT / "README.md"
 API_DOC = Path(__file__).resolve().parents[3] / "docs" / "zh" / "scheduling" / "06_api" / "20_clusterops_agent.md"
 
-# The WebUI Service port contract: the node port stays put, the target port serves the app.
+# The WebUI Service port contract: the node port stays put, the target port serves HTTPS.
 NODE_PORT = 30443
-TARGET_PORT = 9700
+TARGET_PORT = 9743
 
 SUBPACKAGES = (
     "agent_core",
     "agent_core.adapters",
     "agent_core.api",
     "agent_core.chat",
+    "agent_core.datasources",
+    "agent_core.datasources.clusterd",
+    "agent_core.https",
+    "agent_core.tools",
     "clusterops_common",
     "diagproto",
 )
@@ -125,13 +129,19 @@ def test_declared_static_files_exist_in_the_source_tree():
             assert (skill_dir / "SKILL.md").is_file(), f"skill without SKILL.md: {skill_dir}"
 
 
-def test_deployment_manifest_documents_the_optional_env():
+def test_deployment_manifest_documents_the_https_env():
     yaml_text = MANIFEST.read_text(encoding="utf-8")
-    for env_name in ("AGENT_WEBUI_ACCESS", "AGENT_WEBUI_PORT"):
+    for env_name in ("WEBUI_HTTPS_PORT", "WEBUI_RATELIMIT_MAX_REQUESTS", "WEBUI_RATELIMIT_WINDOW_SECONDS"):
         assert env_name in yaml_text, f"agent-core.yaml does not document {env_name}"
-    # The tool layer is called in process and routing has one mode: no capability gateway,
-    # no routing switch.
-    for retired in ("CAPABILITIES_MODE", "CAPABILITIES_BASE", "AGENT_MODE"):
+    # The access plane is decided by the listener port, so the transitional mode switch is
+    # gone; the tool layer is called in process and routing has one mode.
+    for retired in (
+        "AGENT_WEBUI_ACCESS",
+        "AGENT_WEBUI_PORT",
+        "CAPABILITIES_MODE",
+        "CAPABILITIES_BASE",
+        "AGENT_MODE",
+    ):
         assert retired not in yaml_text, f"agent-core.yaml still offers the retired {retired}"
 
 

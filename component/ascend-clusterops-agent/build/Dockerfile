@@ -31,7 +31,7 @@ COPY collect_manifest.yaml /home/hwMindX/collect_manifest.yaml
 RUN chown hwMindX:hwMindX /home/hwMindX/collect_manifest.yaml && \
     chmod 440 /home/hwMindX/collect_manifest.yaml
 
-EXPOSE 9700 9710 9720
+EXPOSE 9700 9710 9720 9743
 
 # hwMindX 为镜像默认运行用户 (非特权)
 USER hwMindX
@@ -39,6 +39,6 @@ USER hwMindX
 # 启动: 按 SERVICE 参数启动对应项目
 CMD case "${SERVICE:-agent-core}" in \
         node-collector) exec python -m node_collector.collector ;; \
-        agent-core)     exec uvicorn agent_core.main:app --host 0.0.0.0 --port "${AGENT_PORT:-9700}" ;; \
+        agent-core)     exec python -m agent_core.serve ;; \
         *) echo "unknown SERVICE=${SERVICE} (expect agent-core|node-collector)" >&2; exit 1 ;; \
     esac

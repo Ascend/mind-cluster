@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!-- Copyright 2026 Huawei Technologies Co., Ltd. Licensed under the Apache License, Version 2.0 -->
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MindCluster 运维助手 - 登录</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/ui/login.css">
+</head>
+<body>
+  <!-- The login shell holds no application markup: the authenticated page is index.html,
+       fetched by login.js with the verified token (a navigation cannot carry the header). -->
+  <section id="login-panel" class="login-overlay" aria-labelledby="login-title">
+    <div class="login-card">
+      <p class="eyebrow">MindCluster · ClusterOps</p>
+      <h1 id="login-title">登录 HTTPS 管理入口</h1>
+      <p>输入管理员提供的共享 WebUI token。</p>
+      <form id="login-form" method="post">
+        <label for="webui-token">共享 WebUI token</label>
+        <input id="webui-token" type="password" required autocomplete="current-password" spellcheck="false" autocapitalize="off" aria-describedby="token-help login-error">
+        <p id="token-help" class="muted">管理员从 Kubernetes Secret <code>agent-core-webui-token</code> 获取此值。请原样输入；这里不填写模型 API Key。</p>
+        <button id="login-submit" type="submit">登录</button>
+        <p id="login-error" class="error" role="alert" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+  <script type="module" src="/ui/login.js"></script>
+</body>
+</html>

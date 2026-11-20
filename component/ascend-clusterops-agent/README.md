@@ -130,6 +130,8 @@ kubectl clusterops tool task_status --param job=train-a --param namespace=defaul
 
 参数写法、返回体字段、错误码、退出码与行为边界见[查询工具接口](../../docs/zh/scheduling/06_api/21_clusterops_agent_tools.md)；查询操作步骤见[查询集群与任务状态](../../docs/zh/scheduling/04_usage/14_clusterops_agent/05_querying_cluster_status.md)；诊断全流程（配置任务类型、配置日志采集、使用故障诊断、配置和清除LLM）见[集群运维Agent特性指南](../../docs/zh/scheduling/04_usage/14_clusterops_agent/00_before_you_start.md)。
 
+WebUI 对话式运维见[使用WebUI对话式运维](../../docs/zh/scheduling/04_usage/14_clusterops_agent/06_using_webui.md)；HTTPS 入口、证书与共享 token 的运维细节见[HTTPS 安全接入](../../docs/zh/scheduling/04_usage/14_clusterops_agent/07_https_access.md)。
+
 ## 说明
 
 - 当前容器方式部署本组件，本组件的认证鉴权方式为ServiceAccount，该认证鉴权方式为ServiceAccount的token明文显示，建议用户自行进行安全加强。

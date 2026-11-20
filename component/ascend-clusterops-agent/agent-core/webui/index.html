@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MindCluster 运维助手</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
   <!-- 首屏状态（有没有模型）：服务端 GET /ui 在请求时把它替换成一行内联 boot 脚本，
        页面因此不需要额外的状态接口（页面入口只有 GET /ui 一个） -->
@@ -26,6 +27,7 @@
       <div class="sidebar-foot">
         <p class="sidebar-hint">会话仅在当前进程内有效，组件重启后需重新开会话。</p>
         <span id="model-badge" class="badge badge-unknown">LLM：检测中…</span>
+        <button id="webui-logout" class="logout-btn" type="button">退出登录</button>
       </div>
     </aside>
 

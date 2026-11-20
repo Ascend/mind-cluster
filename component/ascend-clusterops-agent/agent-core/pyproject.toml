@@ -24,7 +24,12 @@ dependencies = [
   "langchain>=1.0",
   "langgraph>=1.0",
   "langchain-openai>=1.0",
+  # HTTPS listener: certificate/token bootstrap and TLS serving.
+  "cryptography>=43.0",
 ]
+
+[project.scripts]
+clusterops-agent = "agent_core.serve:main"
 
 [tool.setuptools]
 packages = [
