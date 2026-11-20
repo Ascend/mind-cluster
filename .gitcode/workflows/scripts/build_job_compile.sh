@@ -97,7 +97,7 @@ else
         export GO111MODULE='auto'
         export GOSUMDB=sum.golang.google.cn
         export GOPROXY="https://mirrors.huaweicloud.com/repository/goproxy/"
-        export PYTHON_HOME=/usr/local/python3.7.5/bin
+        export PYTHON_HOME=/usr/local/python3.10.16/bin
         export PATH=${PYTHON_HOME}:$GOROOT/bin:$PATH
         export GOPATH=${ATOMGIT_WORKSPACE}
         pip3 show setuptools
