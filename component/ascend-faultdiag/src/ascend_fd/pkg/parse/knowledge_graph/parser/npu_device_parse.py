@@ -32,7 +32,23 @@ from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import (
 )
 from ascend_fd.pkg.parse.knowledge_graph.tools.utils import GroupSelectMixin
 from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
-from ascend_fd.utils.constant.dev_log_const import HIST_DEVICE_OS_PATH_ARRAY
+from ascend_fd.utils.constant.dev_log_const import (
+    HIST_DEVICE_OS_PATH_ARRAY,
+    HISI_OS_INFO_FILE_NAME,
+    HISI_DEVICE_INFO_FILE_NAME,
+    PRECHECK_BBOX_OS_OOM_EXCEPTION,
+    PRECHECK_OS_INFO_OS_OOM_EXCEPTION,
+    PRECHECK_KERNEL_PANIC,
+    PRECHECK_KERNEL_PANIC_SOFTLOCKUP,
+    PRECHECK_KERNEL_ERR_TYPE3_MULTI_BIT_ECC,
+    PRECHECK_KERNEL_OOM_HUGE_PAGE_EXHAUSTED,
+    PRECHECK_KERNEL_EXECUTE_NON_EXECUTABLE,
+    PRECHECK_KERNEL_HARD_LOCKUP,
+    PRECHECK_KERNEL_CORE_LOCKUP,
+    PRECHECK_DEVICE_INFO_HEARTBEAT_LOST,
+    PRECHECK_KERNEL_WATCHDOG_TIMEOUT,
+    PRECHECK_SMMU_TIMEOUT,
+)
 from ascend_fd.utils.constant.str_const import UNKNOWN_DEVICE_ID
 from ascend_fd.utils.constant.ub_const import (
     ALL_UBCTL_KEYS,
@@ -71,9 +87,19 @@ TS_PATTERN = re.compile(r'^(\d{14})-\d{9}$')
 # 对完整文件路径匹配即可，不依赖固定目录层级（history.log / kernel.log / os_info.txt / hbm.txt / ubctl_log.txt 等任意深度）
 DEVICE_ID_PATTERN = re.compile(r"(?:(?<=[\\/])|^)(?:device|dev-os)-(\d{1,3})(?=$|[\\/])")
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+TIME_FORMAT_MICRO = "%Y-%m-%d %H:%M:%S.%f"
+# device_info.txt 数据行 dir 列（device-X），用于 heartbeat 事件解析卡号
+_DEVICE_INFO_DIR_PATTERN = re.compile(r"device-(\d+)")
 
 
 class BaseNpuLogParser(FileParser):
+    def __init__(self, params: dict):
+        super().__init__(params)
+        # kernel.log Kernel panic 与 panic reason: softlockup 的 1 分钟窗口配对状态，
+        # _parse_single_file 每个文件解析前会重置
+        self._kernel_panic_recent = []
+        self._kernel_softlockup_recent = []
+
     @staticmethod
     def _get_occur_time(line, dir_name) -> str:
         pass
@@ -147,7 +173,17 @@ class BaseNpuLogParser(FileParser):
         device_id = self._determine_device_id(file_source)
         dir_name = os.path.dirname(file_source.path) if self.is_sdk_input else os.path.dirname(file_source)
         event_storage = EventStorage()
+        # 每个文件独立解析：重置 kernel panic/softlockup 配对窗口（SDK 场景同一实例会串行解析多个文件）
+        self._kernel_panic_recent = []
+        self._kernel_softlockup_recent = []
         for line in self._yield_log(file_source):
+            # device_info.txt 为纯状态文件：仅匹配 heartbeat lost 状态行（无行内时间戳、
+            # 不参与时间窗），命中即产事件，随后跳过时间校验/通用匹配等无关流程
+            if self._get_filename(file_source) == HISI_DEVICE_INFO_FILE_NAME:
+                event_dict = self._match_device_info_heartbeat(line, file_source)
+                if event_dict:
+                    event_storage.record_event(event_dict)
+                continue
             occur_time = self._get_occur_time(line, dir_name)
             if not occur_time or occur_time < self.resuming_training_time:
                 continue  # when cannot get time or this line is before resuming training, ignore this line
@@ -159,7 +195,7 @@ class BaseNpuLogParser(FileParser):
             event_dict = self.parse_single_line(line)
             if not event_dict:
                 # kg-config.json 未命中时，尝试匹配 PRECHECK 行
-                event_dict = self._match_precheck_line(line)
+                event_dict = self._match_precheck_line(line, occur_time, file_source)
             if not event_dict:
                 continue
             # if rf_lf does not exist or when rf_lf is 1, pcs_err_cnt is equal to 0, the fault condition is not met
@@ -169,19 +205,69 @@ class BaseNpuLogParser(FileParser):
             local_fault_not_met = (rf_lf == LOCAL_FAULT_FLAG) and (pcs_err_cnt == PCS_NORMAL_TH)
             if is_custom_fault and (not rf_lf or local_fault_not_met):
                 continue
-            event_dict.update({"source_device": device_id})
+            # matcher 已从行内解析 source_device（如 device_info.txt 的 device-X）时保留，否则用文件级
+            event_dict.setdefault("source_device", device_id)
             self.supplement_common_info(event_dict, file_source, occur_time)
             event_storage.record_event(event_dict)
+        # kernel panic 与 softlockup reason 行的 1 分钟窗口配对（panic 判定要等后续行，延迟到文件尾）
+        self._flush_kernel_panic_prechecks(event_storage, file_source, device_id)
+        # watchdog stuck 与 rlock SOFT-WATCHDOG 的 1 分钟窗口配对
+        self._flush_watchdog_prechecks(event_storage, file_source, device_id)
         return event_storage.generate_event_list()
 
-    def _match_precheck_line(self, log_line: str) -> dict:
+    def _match_device_info_heartbeat(self, log_line: str, file_source) -> dict:
+        """device_info.txt 中状态为 heartbeat lost 的卡；dir 列（device-X）即卡号，行内解析。
+
+        仅由 _parse_single_file 对 device_info.txt 调用（文件类型已隔离），不注册进
+        DIRECT_PREECHECK_MATCHERS。事件字典自足构造，不依赖子类方法。
+        """
+        if not log_line.rstrip().endswith("heartbeat lost"):
+            return None
+        event_dict = {
+            "event_code": PRECHECK_DEVICE_INFO_HEARTBEAT_LOST,
+            "key_info": log_line,
+            "attribute": {},
+            "is_custom_event": False,
+        }
+        # device_info.txt 位于 hisi_logs 根目录，文件级 device_id 推断不到；从行首 dir 列解析
+        device_match = _DEVICE_INFO_DIR_PATTERN.search(log_line)
+        if device_match:
+            event_dict["source_device"] = device_match.group(1)
+        self.supplement_common_info(event_dict, file_source, self.start_time or datetime.min.strftime(TIME_FORMAT))
+        return event_dict
+
+    def _match_precheck_line(
+        self, log_line: str, occur_time: str = "", file_source: Union[str, LogInfoSaver] = None
+    ) -> dict:
         """
         Hook for subclasses: match a PRECHECK line not covered by kg-config.json.
         Override to generate a PRECHECK event, return {} by default.
         :param log_line: single log line
+        :param occur_time: line occur time
+        :param file_source: current log file source
         :return: PRECHECK event dict or {}
         """
         return {}
+
+    def _flush_watchdog_prechecks(self, event_storage: EventStorage, file_source, device_id) -> None:
+        """
+        Hook for subclasses: flush the watchdog stuck + rlock paired events
+        which were deferred in _match_precheck_line. No-op by default.
+        :param event_storage: per-file event storage
+        :param file_source: the log file
+        :param device_id: device id of the file
+        """
+        return
+
+    def _flush_kernel_panic_prechecks(self, event_storage: EventStorage, file_source, device_id) -> None:
+        """
+        Hook for subclasses: flush the kernel panic events which were deferred in
+        _match_precheck_line. No-op by default.
+        :param event_storage: per-file event storage
+        :param file_source: the log file
+        :param device_id: device id of the file
+        """
+        pass
 
     def _determine_device_id(self, file_source):
         dir_name = os.path.dirname(file_source.path) if self.is_sdk_input else os.path.dirname(file_source)
@@ -212,6 +298,39 @@ class NpuHistoryLogParser(BaseNpuLogParser):
     KERNEL_METRIC_PATTERN = re.compile(r"([A-Za-z][A-Za-z0-9_]*)\s*=\s*(0[xX][0-9a-fA-F]+|\d+)")
     # 换算后的绝对时间，形如 "[2026-09-20 12:45:34.644410]"
     KERNEL_ABS_TIME_PATTERN = re.compile(r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{1,6})\]")
+    # 直接产出类的 PRECHECK 匹配器（按表顺序先到先得）；新增事件只需加 _match_* 方法与表项
+    DIRECT_PREECHECK_MATCHERS = (
+        "_match_bbox_exception",
+        "_match_smmu_timeout",
+        "_match_kernel_multi_bit_ecc",
+        "_match_kernel_oom_huge_page",
+        "_match_kernel_execute_non_executable",
+        "_match_kernel_hard_lockup",
+        "_match_kernel_core_lockup",
+        "_match_kernel_ae_type23",
+    )
+    KERNEL_PANIC_KEYWORD = "Kernel panic"
+    # "panic reason: softlockup" 冒号后的空格数不确定（可能无空格），用正则兼容
+    KERNEL_PANIC_SOFTLOCKUP_REASON = re.compile(r"panic reason:\s*softlockup")
+    # panic 行与 softlockup reason 行的配对时间窗口（秒）
+    SOFTLOCKUP_WINDOW_SEC = 60
+    # bbox_info.txt system exception code 异常行，仅解析指定的异常码；TimeStamp 值形如 20250620034218-696557
+    BBOX_EXCEPTION_CODE = "0xA4040001"
+    BBOX_TIMESTAMP_PATTERN = re.compile(r"TimeStamp\s*\[(\d{14})-\d{6}\]")
+    # kernel.log SMMU：行内含 "svm_smmu ... CMD_SYNC timeout"
+    SMMU_CMD_SYNC_TIMEOUT_PATTERN = re.compile(r"svm_smmu.*CMD_SYNC timeout")
+    # kernel.log multi-bit ECC：关键字 "error_type: 3" 与 "multi-bit ECC"
+    KERNEL_MULTI_BIT_ECC_PATTERN = re.compile(r"error_type: 3.*multi-bit ECC")
+    # kernel.log OOM big page 耗尽：关键字 "oom space, huge page memory is exhausted"
+    KERNEL_OOM_HUGE_PAGE_PATTERN = re.compile(r"oom space, huge page memory is exhausted")
+    # kernel.log 非可执行内存执行失败：匹配 "Unable ... kernel execute ... non-executable memory at virtual address"
+    KERNEL_EXECUTE_NON_EXEC_PATTERN = re.compile(r"Unable.*kernel execute.* non-executable memory at virtual address")
+    # kernel.log 两个独立 LOCKUP 事件：Watchdog hard lockup 与 panic reason: Core LOCKUP
+    KERNEL_HARD_LOCKUP_PATTERN = re.compile(r"Watchdog detected hard LOCKUP")
+    KERNEL_CORE_LOCKUP_PATTERN = re.compile(r"panic reason:Core LOCKUP")
+    # kernel.log watchdog stuck + rlock SOFT-WATCHDOG 配对（1 分钟窗口）
+    KERNEL_WATCHDOG_STUCK_PATTERN = re.compile(r"watchdog:.*soft lockup")
+    KERNEL_RLOCK_SOFT_WATCHDOG_PATTERN = re.compile(r"rlock reason:SOFT-WATCHDOG")
     # ---------- kernel.log 时间精确化：device_os.log 时间参照 ----------
     # device_os.log 相对时间戳子目录路径：<子目录>/log/slog/debug/device_os.log
     _DEVICE_OS_LOG_REL_PATH = os.path.join(*HIST_DEVICE_OS_PATH_ARRAY)
@@ -222,7 +341,7 @@ class NpuHistoryLogParser(BaseNpuLogParser):
     _DEVICE_OS_REAL_TIME_PATTERN = re.compile(r"KERNEL\([^)]*\):\s*([^ ]+)")
     # 提取方括号中的开机时长（形如 [90032.054298]，单位秒），即参照开机时长 T0
     _DEVICE_OS_UPTIME_PATTERN = re.compile(r"\[(\d+\.\d+)\]")
-    # kernel.log 行首开机时长（形如 [95186.485753]）
+    # kernel.log 行首方括号内的开机时长（如 [95186.485753] 中的 95186.485753，纯数字）
     _HISI_UPTIME_PATTERN = re.compile(r"^\d+(?:\.\d+)?$")
 
     def __init__(self, params: dict):
@@ -238,6 +357,12 @@ class NpuHistoryLogParser(BaseNpuLogParser):
         self._pending_kernel_dfx_groups = []
         self._collecting_kernel_group = False
 
+        # kernel.log 配对事件的状态：panic+softlockup、watchdog stuck+rlock，均延迟到文件尾判定
+        self._kernel_panic_recent = []
+        self._kernel_softlockup_recent = []
+        self._kernel_watchdog_recent = []
+        self._kernel_rlock_recent = []
+
     @staticmethod
     def _get_occur_time(line, dir_name):
         """
@@ -247,6 +372,9 @@ class NpuHistoryLogParser(BaseNpuLogParser):
         :param dir_name: log dir used as the fallback timestamp
         :return: time info
         """
+        bbox_time_match = NpuHistoryLogParser.BBOX_TIMESTAMP_PATTERN.search(line)
+        if bbox_time_match:
+            return datetime.strptime(bbox_time_match.group(1), "%Y%m%d%H%M%S").strftime(TIME_FORMAT)
         time_str = line[line.find("[") + 1 : line.find("]")]
         occur_time = check_and_format_time_str(time_str.strip())
         if not occur_time:
@@ -280,24 +408,6 @@ class NpuHistoryLogParser(BaseNpuLogParser):
             return
         self._current_kernel_source_path = self._get_file_path(file_source)
         self._current_kernel_dev_id = self._determine_device_id(file_source) or UNKNOWN_DEVICE_ID
-
-    @staticmethod
-    def _is_ae_keyword_line(line: str) -> bool:
-        """
-        判断行是否命中 PRECHECK 关键字（与 _match_precheck_line 的判定一致）。
-        :param line: log line
-        """
-        return all(keyword in line for keyword in NpuHistoryLogParser.KERNEL_AE_KEYWORDS)
-
-    @staticmethod
-    def _is_dfx_line(line: str) -> bool:
-        """判断行是否为 kernel.log 中 aubdfx 网络 DFX 打印行。"""
-        return (
-            KERNEL_DFX_PRINT_FUNC in line
-            or KERNEL_DFX_LOGIC_PORT_ID in line
-            or KERNEL_STATUS_START in line
-            or KERNEL_STATUS_END in line
-        )
 
     def _collect_kernel_dfx_line(self, line, occur_time):
         """
@@ -369,11 +479,14 @@ class NpuHistoryLogParser(BaseNpuLogParser):
 
     def _convert_line_uptime(self, line: str, reference: Optional[tuple]) -> str:
         """
-        把 kernel.log 行首开机时长替换为换算后的实际时间；行首不是开机时长或无可换算参照时原样返回。
+        对行首为开机时长（[uptime] 纯数字）的 kernel.log 行，把开机时长替换为
+        换算后的实际时间；其余行原样返回。关键字判定不在本处做（matcher 阶段
+        只需一次正则），开机时长格式由 _HISI_UPTIME_PATTERN 兜底，非时长行
+        （标准时间戳等）不受影响。
         :param line: log line
         :param reference: 时间参照 (W0 实际时间, T0 开机时长) 或 None
         """
-        if not reference or not (self._is_ae_keyword_line(line) or self._is_dfx_line(line)):
+        if not reference:
             return line
         time_str = line[line.find("[") + 1 : line.find("]")].strip()
         if not self._HISI_UPTIME_PATTERN.match(time_str):
@@ -411,7 +524,7 @@ class NpuHistoryLogParser(BaseNpuLogParser):
                     real_time = check_and_format_time_str(real_time_match.group(1))
                     if not real_time:
                         return None
-                    real_dt = datetime.strptime(real_time, "%Y-%m-%d %H:%M:%S.%f")
+                    real_dt = datetime.strptime(real_time, TIME_FORMAT_MICRO)
                     return real_dt, float(uptime_match.group(1))
         except (OSError, ValueError):
             return None
@@ -426,7 +539,7 @@ class NpuHistoryLogParser(BaseNpuLogParser):
         :return: "%Y-%m-%d %H:%M:%S.%f" 格式的实际时间字符串
         """
         real_dt = reference[0] + timedelta(seconds=uptime - reference[1])
-        return real_dt.strftime("%Y-%m-%d %H:%M:%S.%f")
+        return real_dt.strftime(TIME_FORMAT_MICRO)
 
     def _prepare_time_references(self, log_list: list) -> dict:
         """
@@ -508,23 +621,223 @@ class NpuHistoryLogParser(BaseNpuLogParser):
                 manager.shutdown()
         return events, err
 
-    def _match_precheck_line(self, log_line: str) -> dict:
+    def _match_precheck_line(
+        self, log_line: str, occur_time: str = "", file_source: Union[str, LogInfoSaver] = None
+    ) -> dict:
         """
-        Match the UDMA AE line in hisi kernel.log and generate a PRECHECK event.
+        Match the PRECHECK lines in hisi logs:
+        - 延迟观测类（watchdog/rlock/panic/softlockup）：仅记录时间与行，文件尾配对判定；
+        - 直接产出类：按 DIRECT_PREECHECK_MATCHERS 顺序逐个匹配，先到先得。
         Line sample: "... UDMA ... ae ... event type is 2 ... sub type is 3 ..."
         :param log_line: single log line
+        :param occur_time: line occur time
+        :param file_source: current log file source, used to distinguish
+                            bbox_info.txt / os_info.txt / device_info.txt
         :return: PRECHECK event dict or {}
         """
         # 逐行收集 kernel.log 的 aubdfx DFX 数据块（非 kernel.log 时由 _current_kernel_collect 拦截）
         self._collect_kernel_dfx_line(log_line, self._get_occur_time(log_line, ""))
-        if not all(keyword in log_line for keyword in self.KERNEL_AE_KEYWORDS):
+        # 延迟观测类（watchdog/rlock/panic/softlockup）：仅记录时间与行，文件尾配对判定；
+        if self._record_paired_observing_line(log_line, occur_time):
             return {}
+        for matcher_name in self.DIRECT_PREECHECK_MATCHERS:
+            event_dict = getattr(self, matcher_name)(log_line, file_source)
+            if event_dict:
+                return event_dict
+        return {}
+
+    def _record_paired_observing_line(self, log_line: str, occur_time: str) -> bool:
+        """
+        Record the paired-observing lines which are not independent events:
+        watchdog stuck / rlock SOFT-WATCHDOG / panic reason softlockup / Kernel panic.
+        They are paired at file end within a 1-minute window to build the event
+        :param log_line: single log line
+        :param occur_time: line occur time
+        :return: True if the line belongs to the paired-observing group
+        """
+        if self.KERNEL_WATCHDOG_STUCK_PATTERN.search(log_line):
+            # watchdog stuck 行延迟记录，文件尾与 rlock SOFT-WATCHDOG 1 分钟窗口配对
+            self._kernel_watchdog_recent.append((occur_time, log_line))
+            return True
+        if self.KERNEL_RLOCK_SOFT_WATCHDOG_PATTERN.search(log_line):
+            # rlock SOFT-WATCHDOG 行仅观测时间，供 watchdog stuck 配对
+            if occur_time:
+                self._kernel_rlock_recent.append((occur_time, log_line))
+            return True
+        if self.KERNEL_PANIC_SOFTLOCKUP_REASON.search(log_line):
+            # panic reason 行不是独立事件，记录整行供 1min 窗口内配对并拼进 key_info
+            if occur_time:
+                self._kernel_softlockup_recent.append((occur_time, log_line))
+            return True
+        if self.KERNEL_PANIC_KEYWORD in log_line:
+            # 是否 softlockup 要等后续 reason 行出现，先延迟记录，文件尾统一判定
+            self._kernel_panic_recent.append((occur_time, log_line))
+            return True
+        return False
+
+    def _match_bbox_exception(self, log_line: str, file_source) -> dict:
+        """bbox_info.txt / os_info.txt 的 system exception code 异常行（如 OS_OOM），按来源文件区分"""
+        if self.BBOX_EXCEPTION_CODE not in log_line:
+            return None
+        filename = self._get_filename(file_source) if file_source is not None else ""
+        precheck_code = (
+            PRECHECK_OS_INFO_OS_OOM_EXCEPTION if filename == HISI_OS_INFO_FILE_NAME else PRECHECK_BBOX_OS_OOM_EXCEPTION
+        )
+        return self._build_precheck_event(precheck_code, log_line)
+
+    def _match_smmu_timeout(self, log_line: str, file_source) -> dict:
+        """kernel.log 中 svm_smmu ... CMD_SYNC timeout"""
+        if self.SMMU_CMD_SYNC_TIMEOUT_PATTERN.search(log_line):
+            return self._build_precheck_event(PRECHECK_SMMU_TIMEOUT, log_line)
+        return None
+
+    def _match_kernel_multi_bit_ecc(self, log_line: str, file_source) -> dict:
+        """kernel.log 中 error_type: 3, multi-bit ECC → 多比特事件"""
+        if self.KERNEL_MULTI_BIT_ECC_PATTERN.search(log_line):
+            return self._build_precheck_event(PRECHECK_KERNEL_ERR_TYPE3_MULTI_BIT_ECC, log_line)
+        return None
+
+    def _match_kernel_oom_huge_page(self, log_line: str, file_source) -> dict:
+        """kernel.log 中 "oom space, huge page memory is exhausted" """
+        if self.KERNEL_OOM_HUGE_PAGE_PATTERN.search(log_line):
+            return self._build_precheck_event(PRECHECK_KERNEL_OOM_HUGE_PAGE_EXHAUSTED, log_line)
+        return None
+
+    def _match_kernel_execute_non_executable(self, log_line: str, file_source) -> dict:
+        """kernel.log 中 Unable ... non-executable memory at virtual address 执行失败"""
+        if self.KERNEL_EXECUTE_NON_EXEC_PATTERN.search(log_line):
+            return self._build_precheck_event(PRECHECK_KERNEL_EXECUTE_NON_EXECUTABLE, log_line)
+        return None
+
+    def _match_kernel_hard_lockup(self, log_line: str, file_source) -> dict:
+        """kernel.log 中 Watchdog detected hard LOCKUP"""
+        if self.KERNEL_HARD_LOCKUP_PATTERN.search(log_line):
+            return self._build_precheck_event(PRECHECK_KERNEL_HARD_LOCKUP, log_line)
+        return None
+
+    def _match_kernel_core_lockup(self, log_line: str, file_source) -> dict:
+        """kernel.log 中 panic reason:Core LOCKUP"""
+        if self.KERNEL_CORE_LOCKUP_PATTERN.search(log_line):
+            return self._build_precheck_event(PRECHECK_KERNEL_CORE_LOCKUP, log_line)
+        return None
+
+    def _match_kernel_ae_type23(self, log_line: str, file_source) -> dict:
+        """kernel.log 中 UDMA ae event type is 2 sub type is 3"""
+        if all(keyword in log_line for keyword in self.KERNEL_AE_KEYWORDS):
+            return self._build_precheck_event(PRECHECK_KERNEL_AE_TYPE23, log_line)
+        return None
+
+    @staticmethod
+    def _build_precheck_event(precheck_code: str, log_line: str) -> dict:
+        """
+        Build the PRECHECK event dict shared by all direct-match alarms
+        :param precheck_code: PRECHECK event code defined in dev_log_const
+        :param log_line: the matched raw log line
+        :return: PRECHECK event dict
+        """
         return {
-            "event_code": PRECHECK_KERNEL_AE_TYPE23,
+            "event_code": precheck_code,
             "key_info": log_line,
             "attribute": {},
             "is_custom_event": False,
         }
+
+    def _flush_kernel_panic_prechecks(self, event_storage: EventStorage, file_source, device_id) -> None:
+        """
+        Flush the paired kernel panic prechecks: every panic line yields a
+        PRECHECK_KERNEL_PANIC event; a "panic reason: softlockup" line within
+        1 minute additionally yields a PRECHECK_KERNEL_PANIC_SOFTLOCKUP event
+        with both lines in key_info
+        :param event_storage: per-file event storage
+        :param file_source: the kernel.log file
+        :param device_id: device id of the file
+        """
+        for occur_time, log_line in self._kernel_panic_recent:
+            # panic 行固定产出 PANIC 事件；附近 1min 内有 softlockup reason 时
+            # 再额外产出一个 SOFTLOCKUP 事件（两行均放入 key_info）
+            softlockup_line = self._find_softlockup_nearby(occur_time)
+            event_codes_with_key = [(PRECHECK_KERNEL_PANIC, log_line)]
+            if softlockup_line is not None:
+                event_codes_with_key.append((PRECHECK_KERNEL_PANIC_SOFTLOCKUP, f"{log_line}\n{softlockup_line}"))
+            for precheck_code, key_info in event_codes_with_key:
+                event_dict = {
+                    "event_code": precheck_code,
+                    "key_info": key_info,
+                    "attribute": {},
+                    "is_custom_event": False,
+                    "source_device": device_id,
+                }
+                self.supplement_common_info(event_dict, file_source, occur_time)
+                event_storage.record_event(event_dict)
+
+    def _find_softlockup_nearby(self, panic_time: str) -> Optional[str]:
+        """
+        Find the "panic reason: softlockup" line within 1 minute of the panic
+        :param panic_time: kernel panic line time
+        :return: the softlockup line, or None if no softlockup is nearby
+        """
+        if not panic_time:
+            return None
+        panic_dt = self._parse_occur_time(panic_time)
+        if panic_dt is None:
+            return None
+        for softlockup_time, softlockup_line in self._kernel_softlockup_recent:
+            softlockup_dt = self._parse_occur_time(softlockup_time)
+            if softlockup_dt is None:
+                continue
+            if abs((softlockup_dt - panic_dt).total_seconds()) <= self.SOFTLOCKUP_WINDOW_SEC:
+                return softlockup_line
+        return None
+
+    def _flush_watchdog_prechecks(self, event_storage: EventStorage, file_source, device_id) -> None:
+        """
+        Pair each "watchdog:...soft lockup" line with a nearby
+        "rlock reason:SOFT-WATCHDOG" line within 1 minute; each pair yields
+        one PRECHECK event with both lines in key_info. Unpaired lines dropped
+        :param event_storage: per-file event storage
+        :param file_source: the kernel.log file
+        :param device_id: device id of the file
+        """
+        for occur_time, log_line in self._kernel_watchdog_recent:
+            rlock_line = self._find_rlock_soft_watchdog_nearby(occur_time)
+            if rlock_line is None:
+                continue
+            event_dict = {
+                "event_code": PRECHECK_KERNEL_WATCHDOG_TIMEOUT,
+                "key_info": f"{log_line}\n{rlock_line}",
+                "attribute": {},
+                "is_custom_event": False,
+                "source_device": device_id,
+            }
+            self.supplement_common_info(event_dict, file_source, occur_time)
+            event_storage.record_event(event_dict)
+
+    def _find_rlock_soft_watchdog_nearby(self, watchdog_time: str) -> Optional[str]:
+        """
+        Find the "rlock reason:SOFT-WATCHDOG" line within 1 minute of the
+        watchdog stuck line
+        :param watchdog_time: watchdog stuck line time
+        :return: the rlock line, or None if no rlock is nearby
+        """
+        if not watchdog_time:
+            return None
+        watchdog_dt = self._parse_occur_time(watchdog_time)
+        if watchdog_dt is None:
+            return None
+        for rlock_time, rlock_line in self._kernel_rlock_recent:
+            rlock_dt = self._parse_occur_time(rlock_time)
+            if rlock_dt is None:
+                continue
+            if abs((rlock_dt - watchdog_dt).total_seconds()) <= self.SOFTLOCKUP_WINDOW_SEC:
+                return rlock_line
+        return None
+
+    @staticmethod
+    def _parse_occur_time(time_str: str):
+        try:
+            return datetime.strptime(time_str, TIME_FORMAT_MICRO)
+        except (ValueError, TypeError):
+            return None
 
 
 class NpuSlogParser(BaseNpuLogParser):
