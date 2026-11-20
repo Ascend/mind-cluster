@@ -37,6 +37,7 @@ import (
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
+	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/device/hangdetection"
 	"Ascend-device-plugin/pkg/kubeclient"
 	"ascend-common/api"
@@ -2641,6 +2642,106 @@ func TestGetDeviceIP(t *testing.T) {
 			ip, err := tool.GetDeviceIP(api.Ascend910, 0)
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(ip, convey.ShouldEqual, "")
+		})
+	})
+}
+
+func TestUpdateNodeDeviceInfoSwitchFaultWhenSubscribeFailed(t *testing.T) {
+	convey.Convey("test switch fault when subscribe failed", t, func() {
+		const (
+			lastSwitchFaultCode = "0x00f1ff09"
+			newSwitchFaultCode  = "0x00f1ff0a"
+		)
+
+		tool := &AscendTools{
+			name:   api.Ascend910,
+			client: &kubeclient.ClientK8s{},
+			dmgr:   &devmanager.DeviceManagerMock{},
+		}
+
+		originalSubscribeFailed := common.SwitchSubscribeFailed
+		originalEnableSwitchFault := common.ParamOption.EnableSwitchFault
+		originalCardType := common.ParamOption.RealCardType
+		common.SwitchSubscribeFailed = true
+		common.ParamOption.EnableSwitchFault = true
+		common.ParamOption.RealCardType = api.Ascend910A3
+		common.SwitchFaultLevelMapLock.Lock()
+		common.SwitchFaultLevelMap[lastSwitchFaultCode] = common.SeparateFaultLevel
+		common.SwitchFaultLevelMap[newSwitchFaultCode] = common.SeparateFaultLevel
+		common.SwitchFaultLevelMapLock.Unlock()
+		defer func() {
+			common.SwitchSubscribeFailed = originalSubscribeFailed
+			common.ParamOption.EnableSwitchFault = originalEnableSwitchFault
+			common.ParamOption.RealCardType = originalCardType
+			common.SwitchFaultLevelMapLock.Lock()
+			delete(common.SwitchFaultLevelMap, lastSwitchFaultCode)
+			delete(common.SwitchFaultLevelMap, newSwitchFaultCode)
+			common.SwitchFaultLevelMapLock.Unlock()
+			common.SetSwitchFaultCode([]common.SwitchFaultEvent{})
+		}()
+
+		var writtenSwitchFaultInfo common.SwitchFaultInfo
+		var pollSucceeded bool
+		patches := gomonkey.NewPatches().
+			ApplyPrivateMethod(tool, "checkAndInitNodeDeviceInfo", func(_ *AscendTools) {}).
+			ApplyMethod(reflect.TypeOf(&kubeclient.ClientK8s{}), "GetDeviceInfoCMCache",
+				func(_ *kubeclient.ClientK8s) *common.NodeDeviceInfoCache {
+					return &common.NodeDeviceInfoCache{
+						DeviceInfo: common.NodeDeviceInfo{DeviceList: map[string]string{}},
+					}
+				}).
+			ApplyPrivateMethod(tool, "handleManuallySeparateNPUFaultInfo",
+				func(_ *AscendTools) (string, []common.LogicId) { return "", nil }).
+			ApplyPrivateMethod(tool, "delVirDevInfo", func(_ *AscendTools, _ map[string]string) {}).
+			ApplyFuncReturn(common.CopyUpgradeFaultCache, common.UpgradeFaultReasonMap[common.LogicId]{}).
+			ApplyPrivateMethod(tool, "writeDeviceInfoCm",
+				func(_ *AscendTools, _ string, _ map[string]string,
+					_ common.UpgradeFaultReasonMap[common.LogicId], switchFaultInfo common.SwitchFaultInfo) (bool, error) {
+					writtenSwitchFaultInfo = switchFaultInfo
+					return true, nil
+				}).
+			ApplyFunc(wait.PollImmediate, func(_, _ time.Duration, condition wait.ConditionFunc) error {
+				pollSucceeded, _ = condition()
+				return nil
+			})
+		defer patches.Reset()
+
+		updateFunc := func(_, _ map[string]string, _ common.DevStatusSet) error {
+			return nil
+		}
+
+		convey.Convey("01-query failed, keep the last known switch fault", func() {
+			common.SetSwitchFaultCode([]common.SwitchFaultEvent{{AssembledFaultCode: lastSwitchFaultCode}})
+			writtenSwitchFaultInfo = common.SwitchFaultInfo{}
+			pollSucceeded = false
+			failedPatches := gomonkey.ApplyFuncReturn(deviceswitch.GetSwitchFaults,
+				[]common.SwitchFaultEvent{}, fmt.Errorf("query switch fault failed"))
+			defer failedPatches.Reset()
+
+			err := tool.UpdateNodeDeviceInfo(common.DevStatusSet{}, updateFunc)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(pollSucceeded, convey.ShouldBeTrue)
+			convey.So(len(common.GetSwitchFaultCode()), convey.ShouldEqual, 1)
+			convey.So(common.GetSwitchFaultCode()[0].AssembledFaultCode, convey.ShouldEqual, lastSwitchFaultCode)
+			convey.So(len(writtenSwitchFaultInfo.FaultCode), convey.ShouldEqual, 1)
+			convey.So(writtenSwitchFaultInfo.FaultLevel, convey.ShouldEqual, common.SeparateFaultLevelStr)
+		})
+
+		convey.Convey("02-query succeed, update to the queried switch fault", func() {
+			common.SetSwitchFaultCode([]common.SwitchFaultEvent{{AssembledFaultCode: lastSwitchFaultCode}})
+			writtenSwitchFaultInfo = common.SwitchFaultInfo{}
+			pollSucceeded = false
+			succeedPatches := gomonkey.ApplyFuncReturn(deviceswitch.GetSwitchFaults,
+				[]common.SwitchFaultEvent{{AssembledFaultCode: newSwitchFaultCode}}, nil)
+			defer succeedPatches.Reset()
+
+			err := tool.UpdateNodeDeviceInfo(common.DevStatusSet{}, updateFunc)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(pollSucceeded, convey.ShouldBeTrue)
+			convey.So(len(common.GetSwitchFaultCode()), convey.ShouldEqual, 1)
+			convey.So(common.GetSwitchFaultCode()[0].AssembledFaultCode, convey.ShouldEqual, newSwitchFaultCode)
+			convey.So(len(writtenSwitchFaultInfo.FaultCode), convey.ShouldEqual, 1)
+			convey.So(writtenSwitchFaultInfo.FaultLevel, convey.ShouldEqual, common.SeparateFaultLevelStr)
 		})
 	})
 }
