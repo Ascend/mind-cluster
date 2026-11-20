@@ -24,6 +24,20 @@ from ascend_fd.pkg.parse.knowledge_graph.prechecker.ub_cqe_checker import (
     Cqe0x5Checker,
     UBMemChecker,
 )
+from ascend_fd.pkg.parse.knowledge_graph.prechecker.lost_device_checker import (
+    AicEccLostChecker,
+    AicpuCeLostChecker,
+    CorelockupLostChecker,
+    HardlockupLostChecker,
+    HbmMainMirrorLostChecker,
+    HbmOomLostChecker,
+    IllegalAddrLostChecker,
+    MataEccLostChecker,
+    SmmuTimeoutLostChecker,
+    SoftlockupLostChecker,
+    ThermalOomLostChecker,
+    UcePanicLostChecker,
+)
 from ascend_fd.pkg.parse.knowledge_graph.tools.utils import get_device_precheck_event
 from ascend_fd.utils.constant.str_const import UNKNOWN_DEVICE_ID
 from ascend_fd.utils.constant.ub_const import (
@@ -566,7 +580,24 @@ class MergePrecheckCause:
         self._prepare_unknown_device_rule()
 
         # 2.开始分析、合并PRECHECK和其他故障
-        checker_list = [Cqe0x2Checker, Cqe0x3Checker, UBMemChecker, Cqe0x5Checker]
+        checker_list = [
+            Cqe0x2Checker,
+            Cqe0x3Checker,
+            UBMemChecker,
+            Cqe0x5Checker,
+            HbmMainMirrorLostChecker,
+            AicEccLostChecker,
+            AicpuCeLostChecker,
+            UcePanicLostChecker,
+            ThermalOomLostChecker,
+            SmmuTimeoutLostChecker,
+            MataEccLostChecker,
+            HbmOomLostChecker,
+            IllegalAddrLostChecker,
+            HardlockupLostChecker,
+            CorelockupLostChecker,
+            SoftlockupLostChecker,
+        ]
         for cls in checker_list:
             checker = cls(source_device, self)
             checker.analyze(device_causes)

@@ -16,13 +16,20 @@
 # ==============================================================================
 import copy
 import logging
-import os
 
 from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
 from ascend_fd.model.node_info import FaultFilterTime
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.kg_engine_main import kg_engine_analyze
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.model.package_data import PackageData
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.model.response import RootCause, Response
+from ascend_fd.pkg.diag.knowledge_graph.lost_device_diag import (
+    _get_analyzer_file,
+    _get_kg_parser_file,
+    get_host_worker_name_by_bmc_worker_name,
+    get_host_worker_name_by_lcne_worker_name,
+    get_super_pod_analyzer_dict,
+    cross_side_lost_device_analyze,
+)
 from ascend_fd.pkg.diag.message import (
     MULTI_FAULT_IN_KNOWLEDGE_GRAPH,
     SOME_SUBTASKS_FAILED,
@@ -57,14 +64,13 @@ from ascend_fd.utils.regular_table import (
     OS_FAULT_PREFIX,
     MINDIE_FAULT_PREFIX,
 )
-from ascend_fd.utils.status import FileNotExistError, InfoNotFoundError, InnerError
+from ascend_fd.utils.status import InfoNotFoundError, InnerError
 from ascend_fd.utils.tool import (
     MultiProcessJob,
     get_version,
     load_json_data,
     get_component_version,
     get_parse_json,
-    collect_parse_results,
 )
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
@@ -128,28 +134,11 @@ def start_kg_diag_job(cfg):
     if len(failed_details) == len(cfg.root_worker_devices):
         first_key, first_value = next(iter(failed_details.items()))
         raise InnerError(f"All subjobs execute failed. The first subjob: {first_key}, error reason is: {first_value}")
+    # 掉卡类跨侧联合判定仅超节点场景需要：sel 锚点在 BMC worker、kernel/bbox/os_info 证据在
+    # host worker，依赖跨 worker 关联（按 source_device 归并），且须在所有单 worker 分析完成后执行
+    if parsed_saver.scene == SUPER_POD_SCENE:
+        results.update(cross_side_lost_device_analyze(cfg, parsed_saver))
     return hand_all_root_cause(results, failed_details, cfg)
-
-
-def get_super_pod_analyzer_dict(cfg, parsed_saver):
-    analyzer_dict = cfg.root_worker_devices.copy()
-    if parsed_saver.infer_task_flag:
-        instance_key = parsed_saver.infer_instance
-        container_ips = parsed_saver.cluster_info.get(instance_key, [])
-        infer_workers = {
-            parsed_saver.container_worker_map[ip] for ip in container_ips if ip in parsed_saver.container_worker_map
-        }
-        worker_mappings = [
-            (parsed_saver.bmc_path_dict, get_host_worker_name_by_bmc_worker_name),
-            (parsed_saver.lcne_path_dict, get_host_worker_name_by_lcne_worker_name),
-        ]
-        for path_dict, name_func in worker_mappings:
-            filtered = {worker: path for worker, path in path_dict.items() if name_func(worker, cfg) in infer_workers}
-            analyzer_dict.update(filtered)
-    else:
-        analyzer_dict.update(parsed_saver.bmc_path_dict)
-        analyzer_dict.update(parsed_saver.lcne_path_dict)
-    return analyzer_dict
 
 
 def single_diag_job(parsed_data, cfg):
@@ -526,43 +515,6 @@ def _resp_check(response, worker_name):
         )
 
 
-def _get_analyzer_file(worker_name, parsed_saver):
-    """
-    Get the kg_analyzer file path
-    :param worker_name: worker name
-    :param parsed_saver: to obtain worker directory path
-    :return: path of the JSON file
-    """
-    input_path = ""
-    try:
-        input_path = _get_kg_parser_file(worker_name, parsed_saver, "kg-analyzer.json", fuzzy_match=True)
-    except FileNotExistError as err:
-        kg_logger.error(str(err))
-    return input_path
-
-
-def _get_kg_parser_file(worker_name, parsed_saver, file_name, fuzzy_match=False):
-    """
-    Get the parsed JSON file in the parse folder
-    :param worker_name: worker name
-    :param parsed_saver: to obtain worker directory path
-    :param file_name: file name
-    :return: file path for single worker
-    """
-    worker_dir = parsed_saver.get_worker_dir_path(worker_name)
-    if not worker_dir:
-        kg_logger.error('The %s dir is not exist.', worker_name)
-        raise FileNotExistError(f'The {worker_name} dir is not exist.')
-    path_list = []
-    if fuzzy_match:
-        path_list = collect_parse_results(worker_dir, file_name)
-    file_path = path_list[0] if path_list else os.path.join(worker_dir, file_name)
-    if not os.path.exists(file_path):
-        kg_logger.error('The %s is not exist in %s.', file_name, worker_dir)
-        raise FileNotExistError(f'The {file_name} is not exist in {worker_dir}.')
-    return file_path
-
-
 def _get_kg_note_msgs(failed_details: dict, fault_chains_flag: bool, max_worker_chains_flag: bool) -> list:
     """
     Get kg result note messages
@@ -656,20 +608,6 @@ def _format_and_sort_fault_chains(fault_chains_dict: dict) -> list:
         new_chain_list.append({"worker": sorted(workers), "chains": chains})
     new_chain_list.sort(key=lambda x: (len(x.get("worker", [])), len(x.get("chains", "").split("-> "))), reverse=True)
     return new_chain_list
-
-
-def get_host_worker_name_by_bmc_worker_name(worker_name, cfg):
-    host_info_instance = cfg.parsed_saver.super_pod_info_saver.find_host_by_bmc_worker_name(
-        worker_name.split()[0].split(":")[-1]
-    )
-    return host_info_instance and host_info_instance.log_dir.split("/")[1]
-
-
-def get_host_worker_name_by_lcne_worker_name(worker_name, cfg):
-    host_info_instance = cfg.parsed_saver.super_pod_info_saver.find_host_by_lcne_worker_name(
-        worker_name.split()[0].split(":")[-1]
-    )
-    return host_info_instance and host_info_instance.log_dir.split("/")[1]
 
 
 def filter_super_pod_dict(code_dict: dict, cfg):

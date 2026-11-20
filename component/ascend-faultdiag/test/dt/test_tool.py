@@ -191,8 +191,8 @@ class TestGetSuperPodAnalyzerDict(unittest.TestCase):
         self.parsed_saver.bmc_path_dict = {'worker3': 'path3', 'worker4': 'path4'}
         self.parsed_saver.lcne_path_dict = {'worker5': 'path5', 'worker6': 'path6'}
 
-    @patch('ascend_fd.pkg.diag.knowledge_graph.kg_diag_job.get_host_worker_name_by_bmc_worker_name')
-    @patch('ascend_fd.pkg.diag.knowledge_graph.kg_diag_job.get_host_worker_name_by_lcne_worker_name')
+    @patch('ascend_fd.pkg.diag.knowledge_graph.lost_device_diag.get_host_worker_name_by_bmc_worker_name')
+    @patch('ascend_fd.pkg.diag.knowledge_graph.lost_device_diag.get_host_worker_name_by_lcne_worker_name')
     def test_infer_task_flag_false(self, mock_lcne_func, mock_bmc_func):
         analyzer_dict = get_super_pod_analyzer_dict(self.cfg, self.parsed_saver)
         expected_dict = {
@@ -208,8 +208,8 @@ class TestGetSuperPodAnalyzerDict(unittest.TestCase):
         mock_bmc_func.assert_not_called()
         mock_lcne_func.assert_not_called()
 
-    @patch('ascend_fd.pkg.diag.knowledge_graph.kg_diag_job.get_host_worker_name_by_bmc_worker_name')
-    @patch('ascend_fd.pkg.diag.knowledge_graph.kg_diag_job.get_host_worker_name_by_lcne_worker_name')
+    @patch('ascend_fd.pkg.diag.knowledge_graph.lost_device_diag.get_host_worker_name_by_bmc_worker_name')
+    @patch('ascend_fd.pkg.diag.knowledge_graph.lost_device_diag.get_host_worker_name_by_lcne_worker_name')
     def test_infer_task_flag_true(self, mock_lcne_func, mock_bmc_func):
         self.parsed_saver.infer_task_flag = True
         self.parsed_saver.infer_instance = 'instance1'
