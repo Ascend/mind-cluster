@@ -26,10 +26,9 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from agent_core import llm, pathmap, relcache
 from agent_core.adapters.tool_adapter import ToolAdapter
@@ -37,13 +36,14 @@ from agent_core.api import stream_api
 from agent_core.chat.skill_loader import SkillLoader
 from agent_core.chat.tool_control import AgentTools, ToolControl
 from agent_core.diagnosis_presentation import present_diagnosis, summarize_diagnosis
+from agent_core.https.auth_middleware import WebUIAuthMiddleware
 from agent_core.query_api import router as query_router
 from agent_core.tools import diagnosis as tools
 from agent_core.tools.diagnosis_adapter import diagnosis_failure
 from agent_core.upload import start_upload_server
 from clusterops_common.log import init_logging
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from langgraph.checkpoint.memory import MemorySaver
 from pydantic import BaseModel
@@ -83,6 +83,20 @@ async def lifespan(_app):
 
 
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(WebUIAuthMiddleware)
+
+
+@app.post("/api/v1/auth/check", include_in_schema=False)
+async def webui_authentication() -> dict:
+    """Probe for the shared HTTPS token.
+
+    The middleware validates first, so reaching this function means the credentials are
+    correct. Invalid credentials are answered with 200 and ``{"ok": false, ...}`` before
+    the request gets here; the token is never echoed back.
+    """
+    return {"ok": True}
+
+
 app.include_router(query_router)
 
 app.include_router(stream_api.router)
@@ -132,50 +146,6 @@ if _UI_INDEX.is_file():
 # /ui 下的静态资源（上面两条页面路由先接住 HTML 入口）。
 if _UI_ROOT.is_dir():
     app.mount("/ui", StaticFiles(directory=str(_UI_ROOT), html=True), name="ui")
-
-
-# --- WebUI 访问面闸门 ---------------------------------------------------------
-# combined（默认）：任何端口都答所有路径。
-# cli_only：CLI 入口端口上 WebUI 路径一律 404，/diag 与 /tools* 照常服务 kubectl 插件与 CLI；
-# WebUI 专用入口端口上一切照旧。闸门从 ASGI scope 读本地端口，单应用双监听与独立 WebUI 监听都成立。
-_WEBUI_ACCESS_ENV = "AGENT_WEBUI_ACCESS"
-_WEBUI_PORT_ENV = "AGENT_WEBUI_PORT"
-_WEBUI_DEFAULT_PORT = 9743
-_WEBUI_PATH_PREFIXES = ("/ui", "/chat/stream")
-
-
-def _webui_access_mode() -> str:
-    mode = (os.environ.get(_WEBUI_ACCESS_ENV) or "combined").strip().lower()
-    return mode if mode in ("combined", "cli_only") else "combined"
-
-
-def _is_webui_entry_port(server: Any) -> bool:
-    """请求是否从 WebUI 专用端口进来。"""
-    try:
-        webui_port = int(os.environ.get(_WEBUI_PORT_ENV) or _WEBUI_DEFAULT_PORT)
-    except ValueError:
-        webui_port = _WEBUI_DEFAULT_PORT
-    try:
-        return int(server[1]) == webui_port
-    except (TypeError, ValueError, IndexError):
-        return False
-
-
-def _is_webui_path(path: str) -> bool:
-    """按子树前缀匹配，不只精确路径：/ui/index.html 也算 WebUI。"""
-    for prefix in _WEBUI_PATH_PREFIXES:
-        if path == prefix or path.startswith(prefix + "/"):
-            return True
-    return False
-
-
-@app.middleware("http")
-async def webui_access_gate(request, call_next):  # type: ignore[no-untyped-def]
-    """cli_only 下 CLI 端口只服务 CLI/插件面。"""
-    if _webui_access_mode() == "cli_only" and not _is_webui_entry_port(request.scope.get("server")):
-        if _is_webui_path(request.url.path):
-            return JSONResponse(status_code=404, content={"detail": "Not Found"})
-    return await call_next(request)
 
 
 class DiagReq(BaseModel):

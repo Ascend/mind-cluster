@@ -131,6 +131,22 @@ html, body {
 
 .sidebar-hint { margin: 0; color: var(--text-muted); font-size: 11px; line-height: 1.6; }
 
+/* 退出登录：清掉本浏览器的共享 token 并回到登录页（设计 F03） */
+.logout-btn {
+  width: 100%;
+  min-height: 34px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--accent);
+  background: #ffffff;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.logout-btn:hover { background: #eff6ff; }
+
 /* ---------- 窗格骨架 ---------- */
 .pane {
   background: var(--panel);

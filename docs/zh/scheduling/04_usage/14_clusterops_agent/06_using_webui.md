@@ -4,11 +4,13 @@
 
 ## 打开页面<a name="sectionwebuiaccess"></a>
 
-浏览器访问（端口以部署清单为准，默认9700；对外经Service `agent-core-ui`的NodePort 30443暴露）：
+浏览器访问（对外经Service `agent-core-ui`的NodePort 30443暴露，对应组件内HTTPS监听9743）：
 
 ```shell
-http://<节点IP>:30443/ui/
+https://<节点IP>:30443/ui/
 ```
+
+首次访问需在登录页输入管理员提供的共享WebUI token（从Kubernetes Secret `agent-core-webui-token` 获取）；自签名证书首次访问会有浏览器告警，确认后继续。token获取方式与证书说明见[HTTPS安全接入](./07_https_access.md)。
 
 页面为「新建会话按钮 + 对话区 + 底部输入框」布局。点「＋ 新建会话」开始新话题；在输入框输入问题后点击「发送」或按Enter（Shift+Enter换行）。会话保存在组件进程内：重启组件或刷新页面后上下文丢失，需要留存的结论请自行复制。
 

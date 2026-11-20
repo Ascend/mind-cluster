@@ -276,6 +276,7 @@ spec:
         ports:
         - containerPort: 9700 # HTTP (kubectl 插件 / CLI)
         - containerPort: 9710 # gRPC 上报 (node-collector → agent)
+        - containerPort: 9743 # Authenticated HTTPS
         resources: # 常态内存几十MB; 上限防 relcache/pathmap 大集群场景失控
           requests:
             memory: 512Mi
@@ -288,6 +289,24 @@ spec:
           value: agent-core
         - name: AGENT_PORT # HTTP 服务端口
           value: "9700"
+        - name: WEBUI_HTTPS_PORT # Authenticated HTTPS listener port
+          value: "9743"
+        - name: POD_NAMESPACE # Downward API: namespace used by the bootstrap
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: HOST_IP # Downward API: node IP added to the certificate SANs
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        # Optional: comma-separated extra SANs (IP or DNS) for additional addresses
+        - name: WEBUI_TLS_SANS
+          value: ""
+        # HTTPS global rate limit (one window shared by all requests; protected paths get 429)
+        - name: WEBUI_RATELIMIT_MAX_REQUESTS
+          value: "600"
+        - name: WEBUI_RATELIMIT_WINDOW_SECONDS
+          value: "60"
         - name: AGENT_GRPC_PORT # 接收 node-collector 上报的 gRPC 端口
           value: "9710"
         - name: POD_TTL # 已删除(历史)任务 Pod 的保留时长(秒), 默认 7 天 = 604800
@@ -296,15 +315,8 @@ spec:
         # 不再通过 env secretKeyRef 注入 (env 在启动时固定, 无法实时更新)
         #
         # 对话式运维可选 env:
-        # 访问面开关:
-        #   AGENT_WEBUI_ACCESS combined|cli_only, 默认 combined (全路径全端口可用);
-        #     cli_only = CLI 入口端口上 WebUI 面 404 (/ui、/chat/stream),
-        #     /diag 与 /tools* 照常供 kubectl 插件与 CLI 使用
-        #   AGENT_WEBUI_PORT   WebUI 专用入口端口, 默认 9743 (cli_only 判定的参照端口;
-        #     过渡期 30443 NodePort 直通 9700 时保持 combined, 不受影响)
-        # 按需取消注释启用:
-        # - name: AGENT_WEBUI_ACCESS
-        #   value: "combined"
+        # 访问面由监听端口决定, 无需开关: 9700 仅 /diag、/tools* (kubectl 插件与 CLI),
+        # 9743 (WebUI, NodePort 30443) 提供 /ui、/api/v1/* 与 /chat/stream 并要求共享 token。
         - name: PYTHONDONTWRITEBYTECODE
           value: "1"
         - name: PYTHONPYCACHEPREFIX
@@ -357,12 +369,41 @@ spec:
     port: 9710
     targetPort: 9710
 ---
-# WebUI 对外入口: 独立 Service agent-core-ui, nodePort 固定 30443,
-# URL 恒为 https://<节点IP>:30443/ui (固定值保 URL 稳定)。
-#   当前: port/targetPort = 9700 (明文 HTTP), 运维与测试先用它;
-#   收口: 同一个 Service 改为 port/targetPort = 9743 (HTTPS + 共享 token, 由暴露侧交付),
-#         nodePort 30443 不变 —— 30443 不下线, 9743 只是 targetPort。
-# 注意: 过渡期 AGENT_WEBUI_ACCESS 必须保持 combined (默认); 收口时同步切 cli_only。
+# HTTPS bootstrap is API-based: missing Secrets never block Pod scheduling.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agent-core-webui-secrets
+  namespace: mindx-dl
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["agent-core-webui-tls", "agent-core-webui-token"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["agent-core-webui-tls"]
+    verbs: ["patch"]
+  # Kubernetes does not support resourceNames constraints on create.
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agent-core-webui-secrets
+  namespace: mindx-dl
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agent-core-webui-secrets
+subjects:
+  - kind: ServiceAccount
+    name: agent-core
+    namespace: mindx-dl
+---
+# Dedicated WebUI Service. Existing HTTP 9700 / upload 9710 Service is unchanged.
 apiVersion: v1
 kind: Service
 metadata:
@@ -373,7 +414,7 @@ spec:
   selector:
     app: agent-core
   ports:
-  - name: webui # 过渡期浏览器入口 (30443 -> 9700, plain HTTP)
-    port: 9700
-    targetPort: 9700
+  - name: https
+    port: 9743
+    targetPort: 9743
     nodePort: 30443

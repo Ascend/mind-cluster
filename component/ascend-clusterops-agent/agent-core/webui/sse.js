@@ -5,6 +5,8 @@
 // 用 fetch + ReadableStream 手动分帧（浏览器原生的事件源只支持 GET，承载不了 POST 体），
 // 按空行切帧、按 "event:" / "data:" 解析；以 ":" 开头的注释帧（心跳 keep-alive）直接忽略。
 
+import { authFetch } from "./auth.js";
+
 const PATH = "/chat/stream";
 // 服务端每 15 秒发一帧心跳注释；连续 3 个周期一帧未到即视为流卡死：抛错让上层复位 busy，
 // 而不是让页面永远等下去。
@@ -67,7 +69,7 @@ export async function streamChat(body, handlers) {
   const firstByteTimer = setTimeout(() => controller.abort(), STALL_AFTER_MS);
   let response;
   try {
-    response = await fetch(PATH, {
+    response = await authFetch(PATH, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
