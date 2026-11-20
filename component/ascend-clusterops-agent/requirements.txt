@@ -1,5 +1,4 @@
 # 诊断 Agent 运行时依赖
-langgraph>=0.2.0
 langchain-openai>=0.2.0       # 接 glm 的 OpenAI 兼容端点
 kubernetes>=29.0.0            # in-cluster APIServer 访问
 pyyaml>=6.0                   # 读 collect_manifest.yaml

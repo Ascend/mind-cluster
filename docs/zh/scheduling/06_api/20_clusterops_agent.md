@@ -2,6 +2,8 @@
 
 集群运维Agent特性包含以下三个组件，Agent Core是诊断的集中控制中心，Node Collector负责节点日志采集与清洗，Kubectl Plugin提供`kubectl ascend_diag`和`kubectl clusterops`命令入口。
 
+Agent Core在诊断能力之外还提供4个只读查询工具（故障设备、隔离卡、集群资源、任务状态）和1个封装后的诊断工具，通过`GET /tools`与`POST /tools/{name}`统一对外，详见[查询工具接口](21_clusterops_agent_tools.md)。
+
 - **Agent Core**：Deployment形态部署，维护任务与Pod的中心关系缓存，向各节点Node Collector下发采集指令，聚合清洗产物并调用ascend-fd diag执行集中诊断，生成诊断报告。
 - **Node Collector**：DaemonSet形态部署，每个NPU节点一份，按采集契约从宿主机采集任务日志，本地调用ascend-fd parse完成清洗并上报。
 - **Kubectl Plugin**：纯标准库实现，复用本机kubeconfig鉴权，通过`kubectl port-forward`访问Agent Core服务。
@@ -82,6 +84,8 @@ relcache/pathmap快照按顺序填充分片存储，分片0写满后写分片1�
 - 历史任务过期：已删除Pod条目默认保留**7天**（可通过agent-core.yaml中环境变量`POD_TTL`进行修改），超期后从内存表与分片快照中删除；内存占用超过容量上限时，按最老优先淘汰。
 
 ## HTTP接口<a name="sectionascendclusteropshttp"></a>
+
+除下表列出的诊断接口外，Agent Core还提供能力发现与统一执行接口（`GET /tools`、`POST /tools/{name}`），以及4个只读查询工具和诊断工具的请求/响应契约，请参见[查询工具接口](21_clusterops_agent_tools.md)。
 
 **表4**  诊断接口
 
@@ -202,7 +206,9 @@ kubectl ascend_diag --collect-manifest ./collect_manifest.yaml
 
 ### kubectl clusterops<a name="sectionascendclusteropsclusterops"></a>
 
-配置和清除LLM服务配置。
+`kubectl clusterops`除配置和清除LLM服务配置外，还提供能力发现与通用工具入口（`tools`、`tool`）；四类查询和诊断工具统一经`kubectl clusterops tool <name>`调用，不再提供按工具划分的别名子命令。子命令、参数写法、返回体与退出码请参见[查询工具接口](21_clusterops_agent_tools.md#sectionclusteropstoolscli)；旧诊断入口`kubectl ascend_diag`保持不变。
+
+配置和清除LLM服务配置的参数如下。
 
 **表11**  参数说明
 

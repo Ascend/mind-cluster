@@ -144,7 +144,7 @@ def _newer_pod(a: dict, b: dict) -> bool:
 def _group_by_node(pods: list[dict]) -> dict[str, list[dict]]:
     """Group pods by node; issue once per node carrying all its pods (pod_uid/ns/name).
 
-    host_paths are not sent: resolved by the collector's local pathmap (RFC §3.3.5).
+    host_paths are not sent: resolved by the collector's local path map.
     Pods sharing the same (node, name) are the same logical pod rescheduled on the
     same node: keep only the latest instance (_newer_pod).
     """
@@ -301,7 +301,15 @@ def assemble_diag_input(collected: list[dict], job: str, namespace: str) -> str:
 # Diagnosis (skill: call the ascend-fd diag CLI)
 # --------------------------------------------------------------------------- #
 class _DiagError(Exception):
-    """ascend-fd diag failed (carries a CLI stderr summary); turned into a readable error by diagnose."""
+    """ascend-fd diag failed (carries a CLI stderr summary); turned into a readable error by diagnose.
+
+    ``kind`` is an internal machine state (``timeout`` / ``failed``) consumed by
+    the diagnosis tool adapter; it is never written into the legacy response fields.
+    """
+
+    def __init__(self, message: str, kind: str = "failed"):
+        super().__init__(message)
+        self.kind = kind
 
 
 def run_diag(diag_input_dir: str) -> tuple[str, dict, str]:
@@ -323,7 +331,8 @@ def run_diag(diag_input_dir: str) -> tuple[str, dict, str]:
     except subprocess.TimeoutExpired as e:
         logger.error("ascend-fd diag timed out: %s", e)
         raise _DiagError(
-            "Diagnosis error: ascend-fd diagnosis timed out, please check the relevant logs or retry later"
+            "Diagnosis error: ascend-fd diagnosis timed out, please check the relevant logs or retry later",
+            kind="timeout",
         ) from e
     except subprocess.CalledProcessError as e:
         detail = (e.stderr or e.stdout or "")[-2000:]
@@ -355,6 +364,7 @@ def diagnose(job: str, namespace: str = "default") -> dict:
         return {
             "error": f"Diagnosis error: no diagnosable pod for task {job} (ns={namespace}), please confirm the task is running properly",
             "pods": [],
+            "_status": "failed",
         }
     collected = dispatch_collect(job, pods)
     ok = [c for c in collected if c.get("ok")]
@@ -364,6 +374,7 @@ def diagnose(job: str, namespace: str = "default") -> dict:
             "error": "Diagnosis error: all node collections failed, please check the agent-core and node-collector logs",
             "pods": pods,
             "collected": collected,
+            "_status": "failed",
         }
     incomplete_nodes = [c.get("host_ip") or c["node"] for c in collected if not c.get("ok") and c.get("node")]
     # detect empty uploads before assemble_diag_input: it moves worker dirs into the diag input
@@ -393,6 +404,7 @@ def diagnose(job: str, namespace: str = "default") -> dict:
             "incomplete_nodes": incomplete_nodes,
             "empty_nodes": empty_nodes,
             "error": str(e),
+            "_status": e.kind,
         }
     logger.info(
         "diagnosis completed: job=%s ns=%s workers=%d report_keys=%s", job, namespace, len(ok), list(report)[:10]
@@ -407,6 +419,7 @@ def diagnose(job: str, namespace: str = "default") -> dict:
         "incomplete_nodes": incomplete_nodes,
         "empty_nodes": empty_nodes,
         "error": None,
+        "_status": "partial" if (incomplete_nodes or empty_nodes) else "ok",
     }
 
 
@@ -519,6 +532,7 @@ def diagnose_cached(job: str, namespace: str = "default", refresh: bool = False)
                 f"{time.strftime('%H:%M:%S', time.localtime(started))}), please do not run it again",
                 "pods": [],
                 "diag_report": {},
+                "_status": "busy",
             }
         _active_diags[key] = time.time()
     try:
@@ -530,6 +544,7 @@ def diagnose_cached(job: str, namespace: str = "default", refresh: bool = False)
                 "error": f"Training/inference task not found: job={job} in ns={namespace}",
                 "pods": [],
                 "diag_report": {},
+                "_status": "not_found",
             }
         if not refresh:
             cached = _read_diag_cache(job, namespace)
@@ -551,6 +566,7 @@ def diagnose_cached(job: str, namespace: str = "default", refresh: bool = False)
                 "error": result.get("error"),
                 "cached_at": time.time(),
                 "cached": False,
+                "_status": result.get("_status"),
             }
             _write_diag_cache(job, namespace, snapshot)
             logger.info("diagnosis completed, result cached: job=%s ns=%s", job, namespace)
@@ -561,6 +577,7 @@ def diagnose_cached(job: str, namespace: str = "default", refresh: bool = False)
             "error": f"Diagnosis error: an exception occurred during diagnosis, please check the agent-core logs ({e})",
             "pods": [],
             "diag_report": {},
+            "_status": "failed",
         }
     finally:
         with _active_lock:

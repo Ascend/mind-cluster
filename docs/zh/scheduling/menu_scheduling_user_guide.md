@@ -219,6 +219,7 @@
     - [配置日志采集](./04_usage/14_clusterops_agent/02_configuring_log_collection.md)
     - [使用故障诊断](./04_usage/14_clusterops_agent/03_using_fault_diagnosis.md)
     - [配置和清除LLM](./04_usage/14_clusterops_agent/04_configuring_llm.md)
+- [查询集群与任务状态](./04_usage/14_clusterops_agent/05_querying_cluster_status.md)
 - [开发者指南](./05_developer_guide/menu_developer_guide.md)
   - [手动安装部署](./05_developer_guide/00_installation_deployment/menu_installation_deployment.md)
     - [安装部署](./05_developer_guide/00_installation_deployment/00_manual_installation/menu_manual_installation.md)
@@ -335,6 +336,7 @@
   - [UB Host Device Cni](./06_api/19_ub_host_device_cni.md)
   <!-- end id38 -->
   - [Agent Core、Node Collector与Kubectl Plugin](./06_api/20_clusterops_agent.md)
+  - [Agent Core查询工具接口](./06_api/21_clusterops_agent_tools.md)
 - [参考](./07_references/menu_references.md)
   <!-- npu="950,A3,910b" id40 -->
   - [故障恢复加速](./07_references/00_fault_recovery_acceleration/menu_fault_recovery_acceleration.md)

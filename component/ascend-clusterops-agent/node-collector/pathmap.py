@@ -15,7 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Collector-local pod -> host_paths table (RFC §3.3.5; data shipped per collect request).
+"""Collector-local pod -> host_paths table shipped with each collect request.
 
 agent-core resolves task-pod host:container mount pairs and env values in its pathmap and
 ships them inside the TriggerCollect request (CollectRequest.mounts). The collector caches

@@ -24,7 +24,7 @@ import threading
 
 import pytest
 
-from agent_core import tools
+from agent_core.tools import diagnosis as tools
 
 
 @pytest.fixture(autouse=True)

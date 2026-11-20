@@ -25,6 +25,8 @@ sudo rm -f /usr/local/bin/kubectl-ascend-diag
 # kubectl 插件按 `kubectl <name>` 找 PATH 下 kubectl-<name>; 文件名即插件名, 同名安装即可
 sudo cp kubectl-ascend_diag /usr/local/bin/kubectl-ascend_diag
 sudo cp kubectl-clusterops /usr/local/bin/kubectl-clusterops
+# 查询客户端模块 (kubectl-clusterops 运行时 import), 与插件同目录
+sudo cp clusterops_query_client.py /usr/local/bin/clusterops_query_client.py
 
 echo "installed. 验证:"
 if ! kubectl ascend-diag --help >/dev/null 2>&1 || ! kubectl clusterops --help >/dev/null 2>&1; then

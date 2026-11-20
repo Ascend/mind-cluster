@@ -17,6 +17,8 @@
 
 """agent.tools unit tests (mocks k8s/HTTP/ascend-fd, no real cluster needed)."""
 
+# pylint: disable=duplicate-code  # pylint aggregates duplicate-code reports across the changed test set
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -24,7 +26,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from agent_core import k8s, tools
+from agent_core import k8s
+from agent_core.tools import diagnosis as tools
 
 
 # --------------------------------------------------------------------------- #
