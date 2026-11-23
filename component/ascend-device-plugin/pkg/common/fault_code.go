@@ -175,12 +175,6 @@ var (
 
 // fault customization
 var (
-	// WaitProcessReadCMTime is the time used in waiting for process read cm
-	WaitProcessReadCMTime time.Duration = DefaultProcessReadCMTime
-	// WaitFaultSelfHealingTime for waiting for fault self-healing
-	WaitFaultSelfHealingTime time.Duration = DefaultWaitFaultSelfHealingTime
-	// WaitDeviceResetTime is the time used in waiting device reset
-	WaitDeviceResetTime time.Duration = DefaultWaitDeviceResetTime
 	// faultFrequencyMap is the cache saving to occur frequency of a fault, key is event id
 	faultFrequencyMap = make(map[string]*FaultFrequencyCache, common.MaxErrorCodeCount)
 	// faultFrequencyMapLock is the lock of faultFrequencyMap
@@ -305,16 +299,8 @@ type SwitchFaultFileInfo struct {
 
 // FaultCustomization is the customization info of fault
 type FaultCustomization struct {
-	GraceTolerance GraceToleranceCustomization
 	FaultFrequency []FaultFrequencyCustomization
 	FaultDuration  []FaultDurationCustomization
-}
-
-// GraceToleranceCustomization is the customization info of grace tolerance
-type GraceToleranceCustomization struct {
-	WaitProcessReadCMTime    int64
-	WaitDeviceResetTime      int64
-	WaitFaultSelfHealingTime int64
 }
 
 // FaultFrequencyCustomization is the customization info of fault frequency
@@ -763,7 +749,6 @@ func LoadFaultCustomization(faultCustomizationByte []byte) error {
 		hwlog.RunLog.Errorf("load fault customization failed, unmarshal err: %v", err)
 		return err
 	}
-	loadGraceToleranceCustomization(faultCustomization.GraceTolerance)
 	// Build both maps off to the side and swap them in under one exclusive lock
 	// hold, using a fixed lock order (duration -> frequency). This keeps the
 	// published pair atomic: concurrent fault handling never sees a duration
@@ -916,38 +901,6 @@ func loadFaultDurationCustomization(customization []FaultDurationCustomization) 
 	faultDurationMap = buildFaultDurationCustomization(customization, faultDurationMap)
 }
 
-func loadGraceToleranceCustomization(customization GraceToleranceCustomization) {
-	if customization.WaitDeviceResetTime < MinWaitDeviceResetTime ||
-		customization.WaitDeviceResetTime > MaxWaitDeviceResetTime {
-		hwlog.RunLog.Errorf("WaitDeviceResetTime(%d) exceed limit(%d~%d), use default(%d)",
-			customization.WaitDeviceResetTime, MinWaitDeviceResetTime,
-			MaxWaitDeviceResetTime, DefaultWaitDeviceResetTime)
-		WaitDeviceResetTime = DefaultWaitDeviceResetTime
-	} else {
-		hwlog.RunLog.Debugf("modify WaitDeviceResetTime(%d) success", customization.WaitDeviceResetTime)
-		WaitDeviceResetTime = time.Duration(customization.WaitDeviceResetTime)
-	}
-	if customization.WaitProcessReadCMTime < MinWaitProcessReadCMTime || customization.
-		WaitProcessReadCMTime > MaxWaitProcessReadCMTime {
-		hwlog.RunLog.Errorf("WaitProcessReadCMTime(%d) exceed limit(%d~%d), use default(%d)",
-			customization.WaitProcessReadCMTime, MinWaitProcessReadCMTime,
-			MaxWaitProcessReadCMTime, DefaultProcessReadCMTime)
-		WaitProcessReadCMTime = DefaultProcessReadCMTime
-	} else {
-		hwlog.RunLog.Debugf("modify WaitProcessReadCMTime(%d) success", customization.WaitProcessReadCMTime)
-		WaitProcessReadCMTime = time.Duration(customization.WaitProcessReadCMTime)
-	}
-	if customization.WaitFaultSelfHealingTime < MinWaitFaultSelfHealingTime ||
-		time.Duration(customization.WaitFaultSelfHealingTime) > MaxWaitFaultSelfHealingTime {
-		hwlog.RunLog.Errorf("WaitFaultSelfHealingTime(%d) exceed limit(%d~%d), use default(%d)",
-			customization.WaitFaultSelfHealingTime,
-			MinWaitFaultSelfHealingTime, WaitProcessReadCMTime, DefaultWaitFaultSelfHealingTime)
-		WaitFaultSelfHealingTime = DefaultWaitFaultSelfHealingTime
-	} else {
-		hwlog.RunLog.Debugf("modify WaitFaultSelfHealingTime(%d) success", customization.WaitFaultSelfHealingTime)
-		WaitFaultSelfHealingTime = time.Duration(customization.WaitFaultSelfHealingTime)
-	}
-}
 
 func setAutofillReasonReleaseTime() {
 	faultFrequencyMapLock.Lock()

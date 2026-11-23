@@ -1,9 +1,4 @@
 {
-  "GraceTolerance": {
-    "WaitProcessReadCMTime": 30,
-    "WaitDeviceResetTime": 150,
-    "WaitFaultSelfHealingTime": 15
-  },
   "FaultFrequency": [
     {
       "EventId": [

@@ -21,7 +21,7 @@ Ascend Device Plugin从驱动获取到故障码后，将根据故障码对设备
 
 在制作Ascend Device Plugin镜像时，会将故障级别配置文件**SwitchFaultCode.json**内置在镜像中，启动Ascend Device Plugin时会读取这个文件的默认配置，作为当前故障处理依据。
 
-如果用户想要自定义故障级别或者优雅容错相关配置，可以在集群中创建ConfigMap文件（mindx-dl-fault-config）。
+如果用户想要自定义故障级别，可以在集群中创建ConfigMap文件（mindx-dl-fault-config）。
 
 - 如果Ascend Device Plugin启动时，集群中已经存在mindx-dl-fault-config，Ascend Device Plugin会优先按照已存在的mindx-dl-fault-config中配置的内容，作为当前故障处理依据。
 - 如果重新安装Ascend Device Plugin后，集群中已经存在mindx-dl-fault-config，Ascend Device Plugin的默认**SwitchFaultCode.json**将不会生效，使用集群中已经存在的mindx-dl-fault-config。

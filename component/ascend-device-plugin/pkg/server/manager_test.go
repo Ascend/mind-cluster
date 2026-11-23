@@ -632,46 +632,6 @@ func TestFlattenMap(t *testing.T) {
 	}
 }
 
-// TestIsSupportGraceTolerance test isSupportGraceTolerance
-func TestIsSupportGraceTolerance(t *testing.T) {
-	var hdm HwDevManager
-	tmpGraceToleranceOn := common.ParamOption.GraceToleranceOn
-	tmpHotReset := common.ParamOption.HotReset
-
-	common.ParamOption.GraceToleranceOn = false
-	convey.Convey("test isSupportGraceTolerance when hot reset mode error", t, func() {
-		common.ParamOption.HotReset = common.HotResetInfer
-		hdm.isSupportGraceTolerance()
-		convey.So(common.ParamOption.GraceToleranceOn, convey.ShouldNotEqual, true)
-	})
-
-	common.ParamOption.HotReset = common.HotResetTrainOffLine
-	convey.Convey("test isSupportGraceTolerance when run mode is not Ascend910", t, func() {
-		hdm.RunMode = api.Ascend310P
-		hdm.isSupportGraceTolerance()
-		convey.So(common.ParamOption.GraceToleranceOn, convey.ShouldNotEqual, true)
-	})
-
-	hdm.RunMode = api.Ascend910
-	tmpRealCardType := common.ParamOption.RealCardType
-	common.ParamOption.RealCardType = api.Ascend910A
-	convey.Convey("test isSupportGraceTolerance when SMP chip mode is not for Ascend910", t, func() {
-		hdm.WorkMode = common.AMPMode
-		hdm.isSupportGraceTolerance()
-		convey.So(common.ParamOption.GraceToleranceOn, convey.ShouldNotEqual, true)
-	})
-
-	hdm.WorkMode = common.SMPMode
-	convey.Convey("test isSupportGraceTolerance when GraceToleranceOn is true", t, func() {
-		hdm.isSupportGraceTolerance()
-		convey.So(common.ParamOption.GraceToleranceOn, convey.ShouldEqual, true)
-	})
-
-	common.ParamOption.HotReset = tmpHotReset
-	common.ParamOption.RealCardType = tmpRealCardType
-	common.ParamOption.GraceToleranceOn = tmpGraceToleranceOn
-}
-
 // TestUpdateAllInfo test updateAllInfo
 func TestUpdateAllInfo(t *testing.T) {
 	hdm := &HwDevManager{}
