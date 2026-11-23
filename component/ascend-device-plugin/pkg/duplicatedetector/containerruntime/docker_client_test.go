@@ -27,7 +27,10 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	dockererrdefs "github.com/docker/docker/errdefs"
 	"github.com/smartystreets/goconvey/convey"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	dtypes "Ascend-device-plugin/pkg/duplicatedetector/types"
 	"github.com/docker/docker/api/types/events"
@@ -252,6 +255,34 @@ func TestNewDockerClient(t *testing.T) {
 			_, err := NewDockerClient("/run/docker.sock", "/invalid/socket")
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(err.Error(), convey.ShouldContainSubstring, "invalid oci endpoint")
+		})
+	})
+}
+
+func TestDockerClient_ParseSingleContainerNotRunning(t *testing.T) {
+	convey.Convey("TestDockerClient_ParseSingleContainer", t, func() {
+		ctx := context.Background()
+		mockClient := &dockerClient{
+			client:    &client.Client{},
+			ociClient: &ociClient{client: &containerd.Client{}},
+		}
+		convey.Convey("04-not running container keeps the original error for callers", func() {
+			containerJSON := types.ContainerJSON{Config: &container.Config{}}
+			patch := gomonkey.ApplyMethodReturn(mockClient.client, "ContainerInspect", containerJSON, nil).
+				ApplyMethodReturn(mockClient.ociClient, "ParseSingleContainer", nil,
+					status.Error(codes.NotFound, "task test-container-id not found"))
+			defer patch.Reset()
+			_, err := mockClient.ParseSingleContainer(ctx, "test-container-id")
+			convey.So(IsNotFound(err), convey.ShouldBeTrue)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "task test-container-id not found")
+		})
+		convey.Convey("05-inspect not found should still be classified after wrapping", func() {
+			patch := gomonkey.ApplyMethodReturn(mockClient.client, "ContainerInspect", nil,
+				dockererrdefs.NotFound(errors.New("no such container")))
+			defer patch.Reset()
+			_, err := mockClient.ParseSingleContainer(ctx, "test-container-id")
+			convey.So(IsNotFound(err), convey.ShouldBeTrue)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "no such container")
 		})
 	})
 }

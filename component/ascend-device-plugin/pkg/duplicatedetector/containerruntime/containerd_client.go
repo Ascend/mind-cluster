@@ -17,6 +17,7 @@ package containerruntime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -25,6 +26,8 @@ import (
 	"github.com/containerd/containerd/events"
 	"github.com/containerd/containerd/namespaces"
 	"github.com/containerd/typeurl/v2"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"Ascend-device-plugin/pkg/duplicatedetector/types"
 	"ascend-common/common-utils/hwlog"
@@ -63,6 +66,7 @@ func (c *containerdClient) ParseAllContainers(ctx context.Context) (map[string]*
 		return nil, fmt.Errorf("failed to list containers: %w", err)
 	}
 	containerInfos := make(map[string]*types.ContainerNPUInfo)
+	skipped := 0
 	for _, ns := range nss {
 		nsCtx := namespaces.WithNamespace(ctx, ns)
 		containers, err := c.client.Containers(nsCtx)
@@ -73,15 +77,42 @@ func (c *containerdClient) ParseAllContainers(ctx context.Context) (map[string]*
 		for _, ctr := range containers {
 			info, err := c.ociClient.ParseSingleContainer(nsCtx, ctr.ID())
 			if err != nil {
-				hwlog.RunLog.Warnf("failed to parse container %s: %v", ctr.ID(), err)
+				if isScanCanceled(ctx, err) {
+					hwlog.RunLog.Debugf("stop scanning containers in namespace %s: %v", ns, err)
+					return nil, fmt.Errorf("container scan interrupted: %w", err)
+				}
+				if IsNotFound(err) {
+					// a container stays in the metadata store after its task exits, this is expected
+					skipped++
+					hwlog.RunLog.Debugf("skip non-running container in namespace %s: %v", ns, err)
+					continue
+				}
+				hwlog.RunLog.Warnf("failed to parse container %s in namespace %s: %v", ctr.ID(), ns, err)
 				continue
 			}
 			info.Namespace = ns
 			containerInfos[ctr.ID()] = info
 		}
 	}
-
+	if skipped > 0 {
+		hwlog.RunLog.Infof("skipped %d containers that have no running task", skipped)
+	}
 	return containerInfos, nil
+}
+
+// isScanCanceled reports whether the scan was interrupted by ctx cancellation or timeout.
+// grpc turns ctx.Err() into a status error, and errors.Is(statusErr, context.Canceled) is always
+// false because *status.Error only compares with another status error, so the context itself and
+// the grpc status code are checked as well.
+func isScanCanceled(ctx context.Context, err error) bool {
+	if ctx.Err() != nil {
+		return true
+	}
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+	code := status.Code(err)
+	return code == codes.Canceled || code == codes.DeadlineExceeded
 }
 
 // WatchContainerEvents watches for container events

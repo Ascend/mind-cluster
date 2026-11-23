@@ -25,6 +25,10 @@ import (
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/api/services/tasks/v1"
+	"github.com/containerd/containerd/errdefs"
+	"github.com/docker/docker/client"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"Ascend-device-plugin/pkg/duplicatedetector/types"
 	"Ascend-device-plugin/pkg/kubeclient"
@@ -35,8 +39,21 @@ import (
 
 type Client interface {
 	ParseAllContainers(ctx context.Context) (map[string]*types.ContainerNPUInfo, error)
+	// ParseSingleContainer returns the original error untouched, classify it with IsNotFound
 	ParseSingleContainer(ctx context.Context, containerID string) (*types.ContainerNPUInfo, error)
 	WatchContainerEvents(ctx context.Context, handler types.EventHandler)
+}
+
+// IsNotFound reports whether err means the target object does not exist, which is the normal state
+// of an exited, not-yet-started or concurrently removed container rather than a failure.
+// The clients return the original errors untouched, so every runtime shape is recognized here:
+// containerd may surface a raw gRPC status or the errdefs sentinel, docker uses its own type.
+func IsNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	return errors.Is(err, errdefs.ErrNotFound) || status.Code(err) == codes.NotFound ||
+		client.IsErrNotFound(err)
 }
 
 const (
@@ -54,9 +71,9 @@ func (c *ociClient) ParseSingleContainer(ctx context.Context, containerID string
 	if err != nil {
 		return nil, err
 	}
-
 	if task.GetProcess() == nil {
-		return nil, fmt.Errorf("task not found for container %s", containerID)
+		// there is no underlying error here, so classify it as NotFound for the callers
+		return nil, fmt.Errorf("%w: container %s has no running task", errdefs.ErrNotFound, containerID)
 	}
 
 	ctr, err := c.client.LoadContainer(ctx, containerID)
@@ -65,8 +82,11 @@ func (c *ociClient) ParseSingleContainer(ctx context.Context, containerID string
 	}
 
 	spec, err := ctr.Spec(ctx)
-	if err != nil || spec == nil {
+	if err != nil {
 		return nil, fmt.Errorf("failed to get container spec: %w", err)
+	}
+	if spec == nil {
+		return nil, fmt.Errorf("container %s returns empty spec", containerID)
 	}
 	labels, err := ctr.Labels(ctx)
 	if err != nil {

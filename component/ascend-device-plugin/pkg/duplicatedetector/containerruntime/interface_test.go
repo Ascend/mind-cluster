@@ -17,6 +17,7 @@ package containerruntime
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -25,7 +26,11 @@ import (
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/api/services/tasks/v1"
 	"github.com/containerd/containerd/api/types/task"
+	"github.com/containerd/containerd/errdefs"
+	dockererrdefs "github.com/docker/docker/errdefs"
 	"github.com/smartystreets/goconvey/convey"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"Ascend-device-plugin/pkg/duplicatedetector/types"
 	"Ascend-device-plugin/pkg/kubeclient"
@@ -165,7 +170,7 @@ func TestParseSingleContainer01(t *testing.T) {
 			defer patch.Reset()
 
 			_, err := mockClient.ParseSingleContainer(context.Background(), containerID)
-			convey.So(err.Error(), convey.ShouldEqual, "task not found for container containerID")
+			convey.So(errors.Is(err, errdefs.ErrNotFound), convey.ShouldBeTrue)
 		})
 		convey.Convey("03-load container failed will return error", func() {
 			patch := gomonkey.ApplyMethodReturn(mockClient.client, "TaskService", mtc).
@@ -221,4 +226,39 @@ func TestParseSingleContainer02(t *testing.T) {
 
 type mockTasksClient struct {
 	tasks.TasksClient
+}
+
+func TestIsNotFound(t *testing.T) {
+	convey.Convey("test isNotFound", t, func() {
+		convey.Convey("01-grpc not found should be true", func() {
+			convey.So(IsNotFound(status.Error(codes.NotFound, "task not found")), convey.ShouldBeTrue)
+		})
+		convey.Convey("02-wrapped errdefs not found should be true", func() {
+			convey.So(IsNotFound(fmt.Errorf("parse container: %w", errdefs.ErrNotFound)), convey.ShouldBeTrue)
+		})
+		convey.Convey("03-docker not found should be true", func() {
+			convey.So(IsNotFound(dockererrdefs.NotFound(errors.New("container gone"))), convey.ShouldBeTrue)
+		})
+		convey.Convey("04-other errors should be false", func() {
+			convey.So(IsNotFound(errors.New("spec broken")), convey.ShouldBeFalse)
+			convey.So(IsNotFound(status.Error(codes.Unavailable, "conn refused")), convey.ShouldBeFalse)
+			convey.So(IsNotFound(nil), convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestParseSingleContainerKeepsOriginalError(t *testing.T) {
+	convey.Convey("test ParseSingleContainer keeps the original error", t, func() {
+		mockClient := &ociClient{client: &containerd.Client{}}
+		mtc := &mockTasksClient{}
+		convey.Convey("01-task not found returns the raw error", func() {
+			patch := gomonkey.ApplyMethodReturn(mockClient.client, "TaskService", mtc).
+				ApplyMethodReturn(mtc, "Get", nil, status.Error(codes.NotFound, "task abc not found"))
+			defer patch.Reset()
+			_, err := mockClient.ParseSingleContainer(context.Background(), "abc")
+			convey.So(IsNotFound(err), convey.ShouldBeTrue)
+			convey.So(status.Code(err), convey.ShouldEqual, codes.NotFound)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "task abc not found")
+		})
+	})
 }
