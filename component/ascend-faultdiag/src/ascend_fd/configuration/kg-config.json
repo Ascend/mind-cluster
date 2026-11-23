@@ -36588,13 +36588,13 @@
                 "component": "NPU",
                 "module": "HBM",
                 "cause_zh": "HBM主副空间同时故障导致掉卡",
-                "description_zh": "BMC sel.txt检测到NPU掉卡告警，且掉卡时间前1分钟内fdm_log存在HBM主空间(dmc_rdata_main_error)与副空间(dmc_rdata_mirror_error)同时故障，判断为HBM主副空间同时故障导致掉卡。",
+                "description_zh": "片上内存有Mirror空间，分为主空间和备份空间，主空间出错时会去备份空间读取数据，如果主备空间同时故障可能引起掉卡。",
                 "suggestion_zh": [
                     "1. 建议AC上下电恢复；",
                     "2. 若AC后未恢复，请联系华为工程师处理。"
                 ],
                 "cause_en": "HBM main and mirror space fault leads to NPU disconnection",
-                "description_en": "The BMC sel.txt detects an NPU disconnection alarm, and the fdm_log shows that the HBM main space (dmc_rdata_main_error) and mirror space (dmc_rdata_mirror_error) fail simultaneously within 1 minute before the disconnection.",
+                "description_en": "The on-chip memory includes a mirror space divided into a primary region and a backup region. When an error occurs in the primary region, data is read from the backup region. A simultaneous failure of both the primary and backup regions may cause the card to drop out.",
                 "suggestion_en": [
                     "1. It is advised to recover by AC power cycling.",
                     "2. If the device does not recover after AC power cycling, contact technical support."
@@ -36609,13 +36609,13 @@
                 "component": "NPU",
                 "module": "HBM",
                 "cause_zh": "HBM多bit UCE导致Device OS Kernel Panic掉卡",
-                "description_zh": "BMC sel.txt检测到NPU掉卡告警；kernel.log存在Kernel panic；fdm_log在掉卡时间点附近出现HBM模块不可纠正错误（UER/UEO/UEU之一），判断为HBM多bit UCE导致Device OS Kernel Panic掉卡。",
+                "description_zh": "片上内存出现UCE故障，可能引起代码段异常Device OS Kernel Panic，引起掉卡。",
                 "suggestion_zh": [
                     "1. 建议AC上下电恢复；",
                     "2. 若AC后未恢复，请联系华为工程师处理。"
                 ],
                 "cause_en": "HBM multi-bit UCE causes Device OS kernel panic and NPU disconnection",
-                "description_en": "The BMC sel.txt detects an NPU disconnection alarm; the kernel.log contains a kernel panic; the fdm_log has an uncorrectable HBM error (UER/UEO/UEU) near the disconnection time.",
+                "description_en": "The on-chip memory includes a UCE fault, which may cause Device OS kernel panic and NPU disconnection.",
                 "suggestion_en": [
                     "1. It is advised to recover by AC power cycling.",
                     "2. If the device does not recover after AC power cycling, contact technical support."
@@ -36629,14 +36629,14 @@
                 "class": "Hardware",
                 "component": "NPU",
                 "module": "HBM",
-                "cause_zh": "HBM多bit ECC与热隔离失败伴OS_OOM导致掉卡",
-                "description_zh": "先经BMC sel.txt确认NPU掉卡告警（状态Asserted）；再在掉卡事件时间点往前推1min内查bbox_info.txt存在0xA4040001错误码，且sel.txt同一行含BMC告警编码0x56000003与NPU错误码0x80e01801，命中即判断为HBM多bit ECC与热隔离失败伴OS_OOM导致掉卡。",
+                "cause_zh": "HBM多bit ECC且热隔离失败伴随OS_OOM导致掉卡",
+                "description_zh": "多bit ECC且热隔离失败伴随OS_OOM导致掉卡",
                 "suggestion_zh": [
                     "1. 建议AC上下电恢复；",
                     "2. 若AC后未恢复，请联系华为工程师处理。"
                 ],
                 "cause_en": "HBM multi-bit ECC, thermal isolation failure and OS_OOM lead to NPU disconnection",
-                "description_en": "The BMC sel.txt confirms an NPU disconnection alarm (Asserted); within 1 minute before the disconnection, the bbox_info.txt contains the error code 0xA4040001, and the sel.txt contains the BMC alarm code 0x56000003 with the NPU error code 0x80e01801 in the same line, indicating HBM multi-bit ECC with thermal isolation failure and OS_OOM leading to NPU disconnection.",
+                "description_en": "The on-chip memory includes multi-bit ECC, thermal isolation failure and OS_OOM leading to NPU disconnection.",
                 "suggestion_en": [
                     "1. It is advised to recover by AC power cycling.",
                     "2. If the device does not recover after AC power cycling, contact technical support."
@@ -36651,13 +36651,13 @@
                 "component": "NPU",
                 "module": "AIC",
                 "cause_zh": "AI Core多bit ECC导致掉卡",
-                "description_zh": "BMC sel.txt检测到NPU掉卡告警（状态Asserted），且伴生0x80c98008告警码，判断为AI Core多bit ECC导致掉卡。",
+                "description_zh": "AI Core多bit ECC导致掉卡",
                 "suggestion_zh": [
                     "1. 建议AC复位恢复；",
                     "2. 若复位不恢复，建议更换NPU设备。"
                 ],
                 "cause_en": "AI Core multi-bit ECC leads to NPU disconnection",
-                "description_en": "The BMC sel.txt detects an NPU disconnection alarm (status Asserted) with the accompanying alarm code 0x80c98008, indicating a multi-bit ECC error of the AI Core.",
+                "description_en": "AI Core multi-bit ECC leads to NPU disconnection",
                 "suggestion_en": [
                     "1. It is advised to recover by AC reset.",
                     "2. If the device does not recover after the reset, replace the NPU device."
@@ -36671,14 +36671,14 @@
                 "class": "Hardware",
                 "component": "NPU",
                 "module": "AICPU",
-                "cause_zh": "AICPU Cache CE风暴导致掉卡",
-                "description_zh": "BMC sel.txt检测到NPU掉卡告警（状态Asserted）；掉卡事件时间点往前推1min内fdm_log中CPU_CORE上报CE错误（SERRCODE含Data error from associative memory且IERRCODE为Undefined），且无HBM ECC告警，判断为AICPU Cache CE风暴导致掉卡。",
+                "cause_zh": "AICPU Cache CE故障导致掉卡",
+                "description_zh": "AICPU Cache CE故障导致掉卡",
                 "suggestion_zh": [
                     "1. 建议AC复位恢复；",
                     "2. 若复位不恢复，建议更换NPU设备。"
                 ],
-                "cause_en": "AICPU cache CE storm leads to NPU disconnection",
-                "description_en": "The BMC sel.txt detects an NPU disconnection alarm; the fdm_log reports a CPU_CORE CE error (SERRCODE with Data error from associative memory and IERRCODE as Undefined) without any HBM ECC alarm.",
+                "cause_en": "AICPU cache CE fault leads to NPU disconnection",
+                "description_en": "AICPU cache CE fault leads to NPU disconnection",
                 "suggestion_en": [
                     "1. It is advised to recover by AC reset.",
                     "2. If the device does not recover after the reset, replace the NPU device."
@@ -36693,13 +36693,13 @@
                 "component": "NPU",
                 "module": "SMMU",
                 "cause_zh": "SMMU故障导致掉卡",
-                "description_zh": "先经BMC sel.txt确认NPU掉卡告警（状态Asserted）；再在掉卡事件时间点往前推1min内查kernel.log打印svm_smmu CMD_SYNC timeout，命中即判断为SMMU故障导致掉卡。",
+                "description_zh": "SMMU故障导致掉卡",
                 "suggestion_zh": [
                     "1. 建议AC复位恢复；",
                     "2. 若复位不恢复，建议更换NPU设备。"
                 ],
                 "cause_en": "SMMU fault leads to NPU disconnection",
-                "description_en": "The BMC sel.txt confirms an NPU disconnection alarm (Asserted); the kernel.log prints a svm_smmu CMD_SYNC timeout within 1 minute before the disconnection, indicating an SMMU fault.",
+                "description_en": "SMMU fault leads to NPU disconnection",
                 "suggestion_en": [
                     "1. It is advised to recover by AC reset.",
                     "2. If the device does not recover after the reset, replace the NPU device."
@@ -36714,13 +36714,13 @@
                 "component": "NPU",
                 "module": "MATA",
                 "cause_zh": "MATA多bit ECC导致掉卡",
-                "description_zh": "BMC sel.txt检测到NPU掉卡告警（状态Asserted）；kernel.log存在error_type: 3, multi-bit ECC的RAS打印；fdm_log确认MATA模块DDRC多比特，三者均满足即判断为MATA多bit ECC导致掉卡。",
+                "description_zh": "MATA多bit ECC导致掉卡",
                 "suggestion_zh": [
                     "1. 建议AC复位恢复；",
                     "2. 若复位不恢复，建议更换NPU设备。"
                 ],
                 "cause_en": "MATA multi-bit ECC leads to NPU disconnection",
-                "description_en": "The BMC sel.txt detects an NPU disconnection alarm (Asserted); the kernel.log has an error_type: 3, multi-bit ECC RAS log; the fdm_log confirms a MATA module DDRC multi-bit error.",
+                "description_en": "MATA multi-bit ECC leads to NPU disconnection",
                 "suggestion_en": [
                     "1. It is advised to recover by AC reset.",
                     "2. If the device does not recover after the reset, replace the NPU device."
@@ -36734,13 +36734,13 @@
                 "class": "Software",
                 "component": "NPU",
                 "module": "HBM",
-                "cause_zh": "NPU上内存耗尽（HBM OOM）导致掉卡",
-                "description_zh": "BMC sel.txt检测到NPU掉卡告警（状态Asserted）；对应设备os_info.txt存在0xA4040001（NPU OOM（HBM）错误）；kernel.log存在oom space, huge page memory is exhausted打印，三者均满足即判断为NPU上内存耗尽导致掉卡。",
+                "cause_zh": "片上内存耗尽导致掉卡",
+                "description_zh": "片上内存耗尽导致掉卡",
                 "suggestion_zh": [
-                    "1. 建议升级到HDK23.0.5及之后版本（增加device-os镜像空间预留）；"
+                    "1. 建议升级到Ascend HDK23.0.5及之后版本"
                 ],
-                "cause_en": "HBM OOM on the NPU leads to NPU disconnection",
-                "description_en": "The BMC sel.txt detects an NPU disconnection alarm (Asserted); the os_info.txt contains 0xA4040001 (NPU HBM OOM error); the kernel.log prints oom space, huge page memory is exhausted.",
+                "cause_en": "On-chip memory exhaustion leads to NPU disconnection",
+                "description_en": "On-chip memory exhaustion leads to NPU disconnection",
                 "suggestion_en": [
                     "1. It is advised to upgrade to HDK 23.0.5 or later (with reserved device-OS image space)."
                 ]
@@ -36753,14 +36753,14 @@
                 "class": "Software",
                 "component": "NPU",
                 "module": "OS",
-                "cause_zh": "软件访问非法地址异常（内存飞踩）导致掉卡",
-                "description_zh": "先经BMC sel.txt确认NPU掉卡告警（状态Asserted）；再在掉卡事件时间点往前推1min内查kernel.log存在非法踩内存地址导致device-os panic挂死（non-executable memory at virtual address），命中即判断为软件访问非法地址异常导致掉卡。",
+                "cause_zh": "软件访问非法地址异常导致掉卡",
+                "description_zh": "软件访问非法地址异常导致掉卡",
                 "suggestion_zh": [
                     "1. 建议AC上下电恢复；",
                     "2. 若AC后未恢复，请联系华为工程师处理。"
                 ],
                 "cause_en": "Illegal memory access leads to NPU disconnection",
-                "description_en": "The BMC sel.txt confirms an NPU disconnection alarm (Asserted); the kernel.log shows an illegal memory access causing device-OS panic (non-executable memory at virtual address) within 1 minute before the disconnection.",
+                "description_en": "Illegal memory access leads to NPU disconnection",
                 "suggestion_en": [
                     "1. It is advised to recover by AC power cycling.",
                     "2. If the device does not recover after AC power cycling, contact technical support."
@@ -36775,13 +36775,13 @@
                 "component": "NPU",
                 "module": "OS",
                 "cause_zh": "Device OS HardLockup导致掉卡",
-                "description_zh": "先经BMC sel.txt确认NPU掉卡告警（状态Asserted）；再在掉卡事件时间点往前推1min内查kernel.log（黑匣子日志）存在hard LOCKUP，命中即判断为Device OS HardLockup导致掉卡。",
+                "description_zh": "Device OS HardLockup导致掉卡",
                 "suggestion_zh": [
                     "1. 建议AC上下电恢复；",
                     "2. 若AC后未恢复，请联系华为工程师处理。"
                 ],
                 "cause_en": "Device OS hard lockup leads to NPU disconnection",
-                "description_en": "The BMC sel.txt confirms an NPU disconnection alarm (Asserted); the kernel.log (black box log) contains hard LOCKUP within 1 minute before the disconnection, indicating a Device OS hard lockup.",
+                "description_en": "Device OS hard lockup leads to NPU disconnection",
                 "suggestion_en": [
                     "1. It is advised to recover by AC power cycling.",
                     "2. If the device does not recover after AC power cycling, contact technical support."
@@ -36796,13 +36796,13 @@
                 "component": "NPU",
                 "module": "OS",
                 "cause_zh": "Device OS CoreLockup导致掉卡",
-                "description_zh": "先经BMC sel.txt确认NPU掉卡告警（状态Asserted）；再在掉卡事件时间点往前推1min内查kernel.log（黑匣子日志）存在Core LOCKUP，命中即判断为Device OS CoreLockup导致掉卡。",
+                "description_zh": "Device OS CoreLockup导致掉卡",
                 "suggestion_zh": [
                     "1. 建议AC上下电恢复；",
                     "2. 若AC后未恢复，请联系华为工程师处理。"
                 ],
                 "cause_en": "Device OS core lockup leads to NPU disconnection",
-                "description_en": "The BMC sel.txt confirms an NPU disconnection alarm (Asserted); the kernel.log (black box log) contains Core LOCKUP within 1 minute before the disconnection, indicating a Device OS core lockup.",
+                "description_en": "Device OS core lockup leads to NPU disconnection",
                 "suggestion_en": [
                     "1. It is advised to recover by AC power cycling.",
                     "2. If the device does not recover after AC power cycling, contact technical support."
@@ -36817,13 +36817,13 @@
                 "component": "NPU",
                 "module": "OS",
                 "cause_zh": "Device OS Softlockup导致掉卡",
-                "description_zh": "先经BMC sel.txt确认NPU掉卡告警（状态Asserted）；再在掉卡事件时间点往前推1min内查device_info.txt确认掉卡数量和heartbeat lost状态；kernel.log存在Kernel panic及panic reason:softlockup: hung tasks（相近1分钟内）；kernel.log存在watchdog: BUG: soft lockup及SOFT-WATCHDOG detected（相近1分钟内），条件均满足即判断为Device OS Softlockup导致掉卡。",
+                "description_zh": "Device OS Softlockup导致掉卡",
                 "suggestion_zh": [
                     "1. 建议AC上下电恢复；",
                     "2. 若AC后未恢复，请联系华为工程师处理。"
                 ],
                 "cause_en": "Device OS soft lockup leads to NPU disconnection",
-                "description_en": "The device_info.txt confirms heartbeat lost; the kernel.log has a kernel panic with reason softlockup: hung tasks (within 1 minute); the kernel.log also has watchdog: BUG: soft lockup and SOFT-WATCHDOG detected (within 1 minute).",
+                "description_en": "Device OS soft lockup leads to NPU disconnection",
                 "suggestion_en": [
                     "1. It is advised to recover by AC power cycling.",
                     "2. If the device does not recover after AC power cycling, contact technical support."
