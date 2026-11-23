@@ -56,9 +56,9 @@
 <tr id="zh-cn_topic_mindspore_a5_pkg_row3">
 <td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_mindspore_a5_pkg_r3c1"><a name="zh-cn_topic_mindspore_a5_pkg_r3c1"></a>umdk-urma-{version}.{arch}.rpm.tar.gz</p>
 </td>
-<td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_mindspore_a5_pkg_r3c2"><a name="zh-cn_topic_mindspore_a5_pkg_r3c2"></a>是</p>
+<td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_mindspore_a5_pkg_r3c2"><a name="zh-cn_topic_mindspore_a5_pkg_r3c2"></a>否</p>
 </td>
-<td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_mindspore_a5_pkg_r3c3"><a name="zh-cn_topic_mindspore_a5_pkg_r3c3"></a>UB用户态库。版本需与宿主一致，当前仅支持aarch64架构。</p>
+<td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_mindspore_a5_pkg_r3c3"><a name="zh-cn_topic_mindspore_a5_pkg_r3c3"></a>UMDK（UB驱动用户态文件）。使用Ascend Docker Runtime时无需安装：runtime会将宿主机上的UMDK/UB用户态驱动文件挂载进训练容器；仅在需要镜像自带UMDK时安装，且版本需与宿主机保持一致。</p>
 </td>
 <td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_mindspore_a5_pkg_r3c4p1"><a name="zh-cn_topic_mindspore_a5_pkg_r3c4p1"></a>从<a href="https://mirrors.huaweicloud.com/ascend/" target="_blank" rel="noopener noreferrer">华为云镜像仓</a>的archive目录下载。</p>
 </td>
@@ -110,7 +110,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_mindspore_a5_pkg_r8c3"><a name="zh-cn_topic_mindspore_a5_pkg_r8c3"></a>构建一个大模型训练、微调、评估、推理、部署的全流程开发套件，提供业内主流的Transformer类预训练模型和SOTA下游任务应用，涵盖丰富的并行特性。</p>
 </td>
-<td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_mindspore_a5_pkg_r8c4p1"><a name="zh-cn_topic_mindspore_a5_pkg_r8c4p1"></a>git clone -b r2.1.0 https://atomgit.com/mindspore/mindformers.git</p>
+<td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_mindspore_a5_pkg_r8c4p1"><a name="zh-cn_topic_mindspore_a5_pkg_r8c4p1"></a>git clone -b r2.1.0 https://gitcode.com/mindspore/mindformers.git</p>
 <p id="zh-cn_topic_mindspore_a5_pkg_r8c4p2"><a name="zh-cn_topic_mindspore_a5_pkg_r8c4p2"></a>commit 63ee1d5bed3d46289f0cf50cfce7e7e778cd89c9</p>
 <p id="zh-cn_topic_mindspore_a5_pkg_r8c4p3"><a name="zh-cn_topic_mindspore_a5_pkg_r8c4p3"></a>镜像内源码编译安装。</p>
 </td>
@@ -122,7 +122,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_mindspore_a5_pkg_r9c3"><a name="zh-cn_topic_mindspore_a5_pkg_r9c3"></a>昇腾超节点亲和的分布式并行加速库。</p>
 </td>
-<td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_mindspore_a5_pkg_r9c4p1"><a name="zh-cn_topic_mindspore_a5_pkg_r9c4p1"></a>git clone -b r1.0.0 https://atomgit.com/mindspore/hyper-parallel.git</p>
+<td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_mindspore_a5_pkg_r9c4p1"><a name="zh-cn_topic_mindspore_a5_pkg_r9c4p1"></a>git clone -b r1.0.0 https://gitcode.com/mindspore/hyper-parallel.git</p>
 <p id="zh-cn_topic_mindspore_a5_pkg_r9c4p2"><a name="zh-cn_topic_mindspore_a5_pkg_r9c4p2"></a>commit c95c7514053abdd9460b6b55cf4b4021ffbc246d</p>
 <p id="zh-cn_topic_mindspore_a5_pkg_r9c4p3"><a name="zh-cn_topic_mindspore_a5_pkg_r9c4p3"></a>镜像内源码编译安装。</p>
 </td>
@@ -165,7 +165,7 @@
 >
 >- 本章节以Python 3.12.4、CANN 9.2.1、MindSpore 2.12.0、MindFormers 2.1.0、HyperParallel 1.0.0为例制作，镜像标签为`mindspore-sample-dl:v26.3.0-cann9.2.1-mindspore2.12.0-950-py3.12-aarch64`，实际使用时需根据实际情况修改相关步骤。
 >- MindFormers、HyperParallel的版本需要与MindSpore版本保持配套，请参见[MindFormers](https://www.mindspore.cn/mindformers/docs/zh-CN/r2.1.0/installation.html)查看配套关系。
->- CANN软件包需与服务器型号匹配，UMDK版本需与宿主驱动配套。
+>- CANN软件包需与服务器型号匹配。UMDK为可选组件：使用Ascend Docker Runtime时无需安装（runtime会将宿主机的UMDK/UB用户态驱动文件挂载进训练容器），此时也无需准备该软件包并删除Dockerfile中的UMDK安装步骤；若安装，其版本需与宿主机驱动版本配套。
 >- MindSpore通过whl包安装，MindFormers、HyperParallel通过commit ID固定源码版本，制作镜像时会校验源码仓当前提交的commit ID，若与要求的commit ID不一致，将中断构建。
 
 ### 操作步骤<a name="section_mindspore_a5_steps"></a>
@@ -178,7 +178,7 @@
         ├── Dockerfile.openeuler
         └── pkgs/
             ├── Python-3.12.4.tgz
-            ├── umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz
+            ├── umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz   # 可选，使用Ascend Docker Runtime时不需要
             ├── Ascend-cann-toolkit_9.2.1_linux-aarch64.run
             ├── Ascend-cann-950-ops_9.2.1_linux-aarch64.run
             ├── version.info
@@ -221,7 +221,8 @@
           gcc gcc-c++ make \
           openssl-devel bzip2-devel libffi-devel zlib-devel readline-devel \
           sqlite-devel xz-devel ncurses-devel gdbm-devel \
-          gcc-gfortran openblas lapack hdf5; \
+          gcc-gfortran openblas lapack hdf5 \
+          libibverbs librdmacm libibumad rdma-core; \
         yum clean all; rm -rf /var/cache/yum
 
     # 2. UMDK
@@ -229,7 +230,8 @@
     RUN set -eux; \
         mkdir -p /tmp/p; tar -mzxf /tmp/${UMDK_PKG} -C /tmp/p; \
         find /tmp/p -name '*.rpm' \( -name '*kmod*' -o -name '*debug*' \) -delete; \
-        rpm -ivh --replacepkgs /tmp/p/*.rpm && ldconfig; \
+        rpm -ivh --replacepkgs /tmp/p/*.rpm; \
+        ldconfig; \
         rm -rf /tmp/p /tmp/${UMDK_PKG}
 
     # 3. Python
@@ -288,7 +290,7 @@
     RUN set -eux; \
         mkdir -p /tmp/hp-src; cd /tmp/hp-src; \
         git init -q; \
-        git remote add origin https://atomgit.com/mindspore/hyper-parallel.git; \
+        git remote add origin https://gitcode.com/mindspore/hyper-parallel.git; \
         git fetch --depth 1 origin "${HP_COMMIT}"; \
         git checkout -q FETCH_HEAD; \
         test "$(git rev-parse HEAD)" = "${HP_COMMIT}"; \
@@ -300,7 +302,7 @@
     RUN set -eux; \
         mkdir -p /tmp/mf-src; cd /tmp/mf-src; \
         git init -q; \
-        git remote add origin https://atomgit.com/mindspore/mindformers.git; \
+        git remote add origin https://gitcode.com/mindspore/mindformers.git; \
         git fetch --depth 1 origin "${MF_COMMIT}"; \
         git checkout -q FETCH_HEAD; \
         test "$(git rev-parse HEAD)" = "${MF_COMMIT}"; \
@@ -420,7 +422,7 @@ mv mindformers DeepSeekV4_for_MS_code
 1. 下载数据集。请自行从[DagsHub](https://dagshub.com/DagsHub/WIkiText-103/src/main/dataset/tokens/wiki.train.tokens)下载`wiki.train.tokens`，并放到服务器目录下，如“/data/atlas_dls/public/code/DeepSeekV4_for_MS_code/dataset”。
 
 2. 转换数据集。
-    1. 下载数据集转换脚本。从[数据集转换](https://gitee.com/mindspore/mindformers/issues/ICOKGY)下载转换脚本`gen_wiki_json.py`，放到服务器目录下，如“/data/atlas_dls/public/code/DeepSeekV4_for_MS_code/dataset/gen_wiki_json.py”。
+    1. 创建数据集转换脚本。访问MindFormers仓库[《如何将wiki数据集转换为jsonl格式》](https://gitee.com/mindspore/mindformers/issues/ICOKGY)，复制评论区中的脚本内容，保存为“/data/atlas_dls/public/code/DeepSeekV4_for_MS_code/dataset/gen_wiki_json.py”。
 
     2. 下载tokenizer文件。从[DeepSeek-V4-Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash)下载tokenizer文件（DeepSeek-V4-Pro与DeepSeek-V4-Flash的tokenizer相同），放到服务器目录下，如“/data/atlas_dls/public/code/DeepSeekV4_for_MS_code/dataset/DeepSeek-V4-Flash”。
 
@@ -472,9 +474,9 @@ mv mindformers DeepSeekV4_for_MS_code
 │   ├── wiki.jsonl                                # 中间结果
 │   ├── DeepSeek-V4-Flash/                        # tokenizer 文件
 │   └── wiki103-megatron_text_document.bin/.idx   # Megatron 格式数据集
+├── alllogs/                                      # 训练日志（按 MINDX_TASK_ID 分目录，内含 plogs/taskd/traininglog）
 └── output/
-    ├── checkpoint/                               # 周期 CKPT
-    └── alllogs/                                  # 训练日志
+    └── checkpoint/                               # 周期 CKPT
 ```
 
 >[!NOTE]
@@ -531,16 +533,17 @@ bash /job/code/scripts/msrun_launcher.sh "python run_mindformer.py --config conf
     >
     >`manager.py`文件中的参数详细说明请参见[def init_taskd_manager(config:dict) -> bool:](../../../../06_api/07_taskd/04_taskd_manager_apis.md#ZH-CN_TOPIC_0000002479386834)。
 
-2. 在训练脚本中增加以下代码拉起TaskD Manager。前两条语句的作用是将安装TaskD后`libtaskd.so`的路径配置到环境变量`LD_PRELOAD`中。如果这两条语句配置不成功，可通过手动执行`pip show taskd`命令获取`Location`的值拼接上`/taskd/python/cython_api/libs/libtaskd.so`，然后通过`export`设置。
+2. 在训练脚本中增加以下代码拉起TaskD Manager。前两条语句的作用是将安装TaskD后`libtaskd.so`的路径配置到环境变量`LD_PRELOAD`中。如果这两条语句配置不成功，可通过手动执行`pip show taskd`命令获取`Location`的值拼接上`/taskd/python/cython_api/libs/libtaskd.so`，然后通过`export`设置。以下代码需插入到启动脚本`msrun_launcher.sh`中的`# Init msrun Command`之前；该位置之后使用`exec msrun`启动训练，其后的语句不会被执行。
 
     ```shell
+    # ↓↓↓ 新增代码：插入到 "# Init msrun Command" 之前 ↓↓↓
     TASKD_SO_PATH="$(pip show taskd | awk '/^Location: / {print $2"/taskd/python/cython_api/libs/libtaskd.so"}')"
     export LD_PRELOAD=$TASKD_SO_PATH:$LD_PRELOAD
     export TASKD_PROCESS_ENABLE="on"
     if [[ "${MS_SCHED_HOST}" == "${POD_IP}" ]]; then
         python /job/code/manager.py 2>> /job/code/alllogs/$MINDX_TASK_ID/taskd/error.log &   # manager.py具体执行路径由当前路径决定，error.log日志路径需提前创建
     fi
-    msrun ...
+    # ↑↑↑ 新增代码结束 ↑↑↑
     ```
 
 3. 修改训练任务YAML，新增容器端口，在所有的Pod下增加TaskD通信使用的端口9601（如已有则跳过）。
@@ -586,16 +589,20 @@ bash /job/code/scripts/msrun_launcher.sh "python run_mindformer.py --config conf
           global_batch_size: 16
         ```
 
-    3. 如需开启周期CKPT保存与断点续训，打开`enable_save`并设置保存路径。
+    3. 如需开启周期CKPT保存与断点续训，打开`enable_save`，并设置保存路径、加载路径与保存间隔。
 
         ```yaml
         checkpoint:
           enable_save: True
           save_path: "/job/code/output/checkpoint"
           load_path: "/job/code/output/checkpoint"
+          save_interleaved_steps: 50
+          no_load_optim: False
         ```
 
-        `save_path`为周期CKPT的保存目录，`load_path`为续训时加载CKPT的目录，两者配置为同一目录即可。训练开始时会从`load_path`目录下按`latest_checkpointed_iteration.txt`记录查找最新的CKPT并加载；当目录为空或不存在可用CKPT时，将会从头开始训练。
+        - `save_path`为周期CKPT的保存目录，`load_path`为续训时加载CKPT的目录，两者配置为同一目录即可。训练开始时会从`load_path`目录下按`latest_checkpointed_iteration.txt`记录查找最新的CKPT并加载；当目录为空或不存在可用CKPT时，将会从头开始训练。
+        - `save_interleaved_steps`为CKPT保存间隔（单位：步），示例表示每50步保存一次；MindFormers默认值为1000，可按训练规模调整。
+        - `no_load_optim`为续训时必须显式设置为`False`：表示加载CKPT时同时恢复优化器状态，保证续训后训练曲线与中断前一致；若设置为`True`，则只加载模型权重、不加载优化器状态，无法实现真正的断点续训（相当于仅加载权重重新开始训练）。
 
 3. 按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
