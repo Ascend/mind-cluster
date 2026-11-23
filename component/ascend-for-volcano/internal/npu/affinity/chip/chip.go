@@ -85,21 +85,22 @@ func (tp *chipHandler) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNod
 	klog.V(util.LogDebugLev).Infof("%s CheckNodeNPUByTask task<%s> node<%s> req<%d> mode<%v> allowNetUnhealthy"+
 		"<%v> chips[%s]", tp.GetPluginName(), task.Name, node.Name, reqNum, tp.ScheduleMode,
 		tp.ParameterPlaneUnhealthyTolerance, root.State())
-	result := root.Fit(&util.Request{
+	request := &util.Request{
 		ReqNPUName:        reqName,
 		ReqNPUNum:         reqNum,
 		Mode:              tp.ScheduleMode,
 		AllowNetUnhealthy: tp.ParameterPlaneUnhealthyTolerance,
-	})
+	}
+	result := root.Fit(request)
 	switch result {
 	case topo.FitNormal:
 		return nil
 	case topo.FitEvict:
-		return fmt.Errorf("%s node<%s> don't have enough free npu, req<%d>, can be satisfied by eviction",
-			util.NPUResourceShortageError, node.Name, reqNum)
+		return fmt.Errorf("%s node<%s> chips<%s> don't have enough free npu, req<%v>, can be satisfied by eviction",
+			util.NPUResourceShortageError, node.Name, root.State(), request)
 	default: // topo.FitFailed
-		return fmt.Errorf("%s node<%s> cannot satisfy task req<%d> even with eviction",
-			util.NPUResourceUnavailableError, node.Name, reqNum)
+		return fmt.Errorf("%s node<%s> chips<%s> cannot satisfy task req<%v> even with eviction",
+			util.NPUResourceUnavailableError, node.Name, root.State(), request)
 	}
 }
 

@@ -294,3 +294,66 @@ func TestRestoreAnnotation(t *testing.T) {
 		t.Errorf("duplicate RestoreAnnotation should be rejected, got %v", got2)
 	}
 }
+
+// TestCheckNodeNPUByTaskErrorDetail pins the diagnostic detail carried by the
+// predicate errors: the failure class prefix, the node, the topology state and
+// the request that cannot be satisfied.
+func TestCheckNodeNPUByTaskErrorDetail(t *testing.T) {
+	tp := newTestHandler()
+	good := mockChipTask(4)
+
+	assertContains := func(t *testing.T, msg string, wants ...string) {
+		t.Helper()
+		for _, want := range wants {
+			if !strings.Contains(msg, want) {
+				t.Errorf("error %q does not contain %q", msg, want)
+			}
+		}
+	}
+
+	t.Run("missing topology reports the node and failure class", func(t *testing.T) {
+		err := tp.CheckNodeNPUByTask(good, mockChipNode("n2", nil))
+		if err == nil {
+			t.Fatal("nil ChipTopo should error")
+		}
+		if !strings.HasPrefix(err.Error(), util.NPUResourceUnavailableError) {
+			t.Errorf("error %q should start with %q", err.Error(), util.NPUResourceUnavailableError)
+		}
+		assertContains(t, err.Error(), "node<n2>", "has no topology tree")
+	})
+
+	t.Run("fit failure reports chips and request", func(t *testing.T) {
+		err := tp.CheckNodeNPUByTask(good, flatNode("n4", 2))
+		if err == nil {
+			t.Fatal("flat2 req4 should error")
+		}
+		if !strings.HasPrefix(err.Error(), util.NPUResourceUnavailableError) {
+			t.Errorf("error %q should start with %q", err.Error(), util.NPUResourceUnavailableError)
+		}
+		assertContains(t, err.Error(),
+			"node<n4>",
+			"chips<0:free 1:free>",
+			"cannot satisfy task req<",
+			"huawei.com/Ascend910",
+			"even with eviction")
+	})
+
+	t.Run("shortage reports occupied chips and request", func(t *testing.T) {
+		busy := topo.ParseTopology(topo.BuildFlatTopology(8))
+		busy.Init(nil, nil, map[string][]int{"o": {0, 1, 2, 3, 4, 5, 6, 7}})
+		err := tp.CheckNodeNPUByTask(good, mockChipNode("n5", busy))
+		if err == nil {
+			t.Fatal("fully-busy flat8 req4 soft should report shortage")
+		}
+		if !strings.HasPrefix(err.Error(), util.NPUResourceShortageError) {
+			t.Errorf("error %q should start with %q", err.Error(), util.NPUResourceShortageError)
+		}
+		assertContains(t, err.Error(),
+			"node<n5>",
+			"chips<0:a(o) 1:a(o) 2:a(o) 3:a(o) 4:a(o) 5:a(o) 6:a(o) 7:a(o)>",
+			"don't have enough free npu",
+			"req<",
+			"huawei.com/Ascend910",
+			"can be satisfied by eviction")
+	})
+}
