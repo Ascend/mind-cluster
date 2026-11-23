@@ -1,9 +1,10 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright 2025 Huawei Technologies Co., Ltd.
+
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+       http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -226,7 +227,7 @@ var npuJson = `{
 					 "ServerID":"1",
                      "NodeName": "work1",
                      "DeviceMap": {"1": "1","2": "2"}
-                      
+
               },
               "work2": {
                      "ServerID":"2",
@@ -262,7 +263,7 @@ func TestHandlePingList(t *testing.T) {
 			convey.So(ret, convey.ShouldBeNil)
 		})
 
-		convey.Convey("should return NewPingList when vaild", func() {
+		convey.Convey("should return NewPingList when valid", func() {
 			allPingList := []any{
 				map[string]any{"srcAddr": localhost, "dstAddr": dstAddr},
 			}
@@ -274,7 +275,7 @@ func TestHandlePingList(t *testing.T) {
 }
 
 func TestGenSuperPodServersPingList(t *testing.T) {
-	convey.Convey("Test GenSuperPodServersPingList when input invaild part I", t, func() {
+	convey.Convey("Test GenSuperPodServersPingList when input invalid part I", t, func() {
 		convey.Convey("should return getCrrentSuperPodInfo err", func() {
 			mockGetCurrentSuperPod := gomonkey.ApplyFunc(getCurrentSuperPodInfo,
 				func(_ string, _ *algo.NetDetect) (*SuperPodInfo, map[string]any) {
@@ -534,7 +535,7 @@ func TestSiftRoceTaskFromNPUMapInterface(t *testing.T) {
 }
 
 func TestSiftRoceTaskFromNPUMapWhenfaild(t *testing.T) {
-	convey.Convey("test siftRoceTaskFromNPUMap when faild", t, func() {
+	convey.Convey("test siftRoceTaskFromNPUMap when failed", t, func() {
 		superPodPingListMock := make(map[string]interface{})
 		npuMapMock := make(map[string]algo.NpuInfo)
 		convey.Convey("return false when given pingList is not a slice", func() {

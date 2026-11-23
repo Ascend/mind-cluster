@@ -1,9 +1,10 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright 2025 Huawei Technologies Co., Ltd.
+
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+       http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -62,11 +63,11 @@ func useTimeDetection(haveDataRanks []int,
 }
 
 /* 用于获取当前npus中哪些npu卡是存在数据的 */
-func getValidNpusAndData(npus []int, datas map[int][]float64) ([]int, [][]float64) {
+func getValidNpusAndData(npus []int, dataMap map[int][]float64) ([]int, [][]float64) {
 	detectionDatas := make([][]float64, 0)
 	haveDataRanks := make([]int, 0)
 	for _, npuId := range npus {
-		data := datas[npuId]
+		data := dataMap[npuId]
 		/* 数据长度为0表示本轮检测增量数据为0，及该卡的comm.csv可能在读取时相较于上一次没有更新 */
 		if len(data) == 0 {
 			continue

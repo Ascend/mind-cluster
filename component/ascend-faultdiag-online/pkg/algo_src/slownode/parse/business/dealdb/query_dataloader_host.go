@@ -1,9 +1,10 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright 2025 Huawei Technologies Co., Ltd.
+
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+       http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,10 +32,10 @@ func QueryHostStartEndTime(dbCtx *db.SnpDbContext, stepId int64) (*model.StartEn
 	querySql := `
 		SELECT
 			startNs,
-			endNs 
+			endNs
 		FROM
 			MSTX_EVENTS
-			LEFT JOIN STRING_IDS AS MSG_IDS ON MSTX_EVENTS.message == MSG_IDS.id 
+			LEFT JOIN STRING_IDS AS MSG_IDS ON MSTX_EVENTS.message == MSG_IDS.id
 		WHERE
 			lower( MSG_IDS.value ) like ('%step ' || ? || '%')
 		`
@@ -47,12 +48,12 @@ func QueryDataLoaderHost(dbCtx *db.SnpDbContext, startNsMin int64,
 	startNsMax int64) (*model.Duration, error) {
 	querySql := `
 		SELECT
-			CAST(ROUND(COALESCE(AVG(endNs - startNs), 0)) AS INTEGER) AS duration 
+			CAST(ROUND(COALESCE(AVG(endNs - startNs), 0)) AS INTEGER) AS duration
 		FROM
 			MSTX_EVENTS
-			LEFT JOIN STRING_IDS AS MSG_IDS ON MSTX_EVENTS.message == MSG_IDS.id 
+			LEFT JOIN STRING_IDS AS MSG_IDS ON MSTX_EVENTS.message == MSG_IDS.id
 		WHERE
-			MSG_IDS.value = ? 
+			MSG_IDS.value = ?
 			AND startNs >= ?
 			AND startNs <= ?
 		`

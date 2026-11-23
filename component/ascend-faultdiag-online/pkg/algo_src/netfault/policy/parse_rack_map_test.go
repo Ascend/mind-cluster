@@ -1,9 +1,10 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright 2025 Huawei Technologies Co., Ltd.
+
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+       http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -148,7 +149,7 @@ func TestStoreNpuBoard2DFullMeshIp(t *testing.T) {
 			storeNpuBoard2DFullMeshIp(map[int]string{}, portInfo, 0)
 		})
 
-		convey.Convey("should store when portInfo vaild", func() {
+		convey.Convey("should store when portInfo valid", func() {
 			portInfo := &VnicInfo{
 				VnicIp: "0.0.0.0",
 			}
@@ -172,7 +173,7 @@ func TestStoreNpuNetPlaneLink(t *testing.T) {
 			}
 			storeNpuNetPlaneLink(0, 0, 0, portInfo, map[string][]string{})
 		})
-		convey.Convey("should store when switch vaild", func() {
+		convey.Convey("should store when switch valid", func() {
 			portInfo := &VnicInfo{
 				PortId: "1",
 				VnicIp: "0.0.0.0",
