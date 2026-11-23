@@ -55,6 +55,8 @@ const (
 	rightParenthesis   = ")"
 	postCommUtimeIndex = utimeIndex - 2
 	postCommStimeIndex = stimeIndex - 2
+
+	domain = "hang detection"
 )
 
 // HangDetector implements NPU hang detection
@@ -92,7 +94,10 @@ func StartHangDetectionProducer(ctx context.Context, dmgr devmanager.DeviceInter
 
 	setClkTck()
 	common.LoadHangDetectionConfigFromFile()
-
+	if !common.IsHangDetectionEnabled() {
+		hwlog.RunLog.Info("hang detection disabled")
+		return
+	}
 	runHangDetectionProducer(ctx)
 }
 
@@ -157,7 +162,10 @@ func (hd *HangDetector) detectNPU(logicID int32) {
 	hd.refreHangStateIfProcessChanged(logicID, extractAndSortPids(procInfo))
 
 	var metrics HangMetrics = HangMetrics{}
-	hd.collectMetrics(logicID, procInfo, &metrics)
+	if err := hd.collectMetrics(logicID, procInfo, &metrics); err != nil {
+		hd.npuHangEventDisappear(logicID, nil)
+		return
+	}
 	hwlog.RunLog.Debugf("hang detection metrics, logicID=%d, metrics=%v", logicID, metrics)
 
 	if hd.isHangConditionMet(logicID, &metrics) {
@@ -196,15 +204,18 @@ func extractAndSortPids(procInfo *npuCommon.DevProcessInfo) []int32 {
 	return pids
 }
 
-func (hd *HangDetector) collectMetrics(logicID int32, procInfo *npuCommon.DevProcessInfo, metrics *HangMetrics) {
+func (hd *HangDetector) collectMetrics(logicID int32, procInfo *npuCommon.DevProcessInfo, metrics *HangMetrics) error {
 	if metrics == nil {
-		return
+		return nil
 	}
 	metrics.ProcessNum = int8(procInfo.ProcNum)
+	if err := hd.collectCPUTime(procInfo, metrics); err != nil {
+		return err
+	}
 	hd.collectUtilization(logicID, metrics)
 	hd.collectMemoryUsage(logicID, metrics)
 	hd.collectTraffic(logicID, metrics)
-	hd.collectCPUTime(procInfo, metrics)
+	return nil
 }
 
 func (hd *HangDetector) collectUtilization(logicID int32, metrics *HangMetrics) {
@@ -275,17 +286,18 @@ func (hd *HangDetector) collectUBTraffic(logicID int32, metrics *HangMetrics) {
 	metrics.UBRxFlits = currentTotalRx
 }
 
-func (hd *HangDetector) collectCPUTime(procInfo *npuCommon.DevProcessInfo, metrics *HangMetrics) {
+func (hd *HangDetector) collectCPUTime(procInfo *npuCommon.DevProcessInfo, metrics *HangMetrics) error {
 	var totalCPUTime int64
 	for _, proc := range procInfo.DevProcArray {
 		cpuTime, err := getProcessCPUTime(proc.Pid)
 		if err != nil {
-			hwlog.RunLog.Errorf("hang detection get CPU time failed, pid=%d: %v", proc.Pid, err)
-			continue
+			hwlog.RunLog.WarnfWithLimit(domain, proc.Pid, "hang detection get CPU time failed, pid=%d: %v", proc.Pid, err)
+			return err
 		}
 		totalCPUTime += cpuTime
 	}
 	metrics.CPUTime = totalCPUTime
+	return nil
 }
 
 func (hd *HangDetector) isHangConditionMet(logicID int32, curMetrics *HangMetrics) bool {
@@ -391,7 +403,12 @@ func getProcessCPUTime(pid int32) (int64, error) {
 	}
 	data, err := utils.LoadFile(fmt.Sprintf(procStatPath, pid))
 	if err != nil {
-		return 0, fmt.Errorf("load proc stat file failed: %v", err)
+		return 0, fmt.Errorf("load proc [%d] stat file failed: %v", pid, err)
+	}
+	// utils.LoadFile returns nil data without error when the file does not exist (e.g. the process has
+	// exited or the container has no permission to access the host pid), which must not be parsed as stat content.
+	if len(data) == 0 {
+		return 0, fmt.Errorf("proc stat file of pid %d is empty or not exist", pid)
 	}
 	statStr := string(data)
 
@@ -405,11 +422,11 @@ func getProcessCPUTime(pid int32) (int64, error) {
 	}
 	utime, err := strconv.ParseInt(fields[postCommUtimeIndex], common.BaseDec, common.BitSize)
 	if err != nil {
-		return 0, fmt.Errorf("parse utime failed: %v", err)
+		return 0, fmt.Errorf("parse utime failed for pid %d: %v", pid, err)
 	}
 	stime, err := strconv.ParseInt(fields[postCommStimeIndex], common.BaseDec, common.BitSize)
 	if err != nil {
-		return 0, fmt.Errorf("parse stime failed: %v", err)
+		return 0, fmt.Errorf("parse stime failed for pid %d: %v", pid, err)
 	}
 	return (utime + stime) / clkTck, nil
 }

@@ -99,7 +99,7 @@ func TestDetectNPU(t *testing.T) {
 		})
 		convey.Convey("when procNum > 0 and hang condition met after two rounds, should call npuHangEventOccur", func() {
 			patches := gomonkey.ApplyPrivateMethod(hd, "collectMetrics",
-				func(_ int32, _ *npuCommon.DevProcessInfo, metrics *HangMetrics) {}).
+				func(_ int32, _ *npuCommon.DevProcessInfo, metrics *HangMetrics) error { return nil }).
 				ApplyPrivateMethod(hd, "isHangConditionMet",
 					func(_ int32, _ *HangMetrics) bool { return true }).
 				ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {}).
@@ -113,6 +113,35 @@ func TestDetectNPU(t *testing.T) {
 			state := hd.getOrCreateHangState(mockLogicID)
 			convey.So(state.HangCount, convey.ShouldBeGreaterThanOrEqualTo, 1)
 		})
+		convey.Convey("when collect metrics failed, should trigger recover and reset state", func() {
+			resetHangState()
+			state := hd.getOrCreateHangState(mockLogicID)
+			state.IsFault = true
+			state.HangCount = 1
+			hangConditionCalled := false
+			patches := gomonkey.ApplyMethod(&devmanager.DeviceManager{}, "GetDevProcessInfo",
+				func(_ *devmanager.DeviceManager, _ int32) (*npuCommon.DevProcessInfo, error) {
+					return &npuCommon.DevProcessInfo{ProcNum: 1}, nil
+				}).
+				ApplyPrivateMethod(hd, "collectMetrics",
+					func(_ int32, _ *npuCommon.DevProcessInfo, _ *HangMetrics) error {
+						return fmt.Errorf("mock collect metrics error")
+					}).
+				ApplyPrivateMethod(hd, "isHangConditionMet",
+					func(_ int32, _ *HangMetrics) bool {
+						hangConditionCalled = true
+						return true
+					})
+			defer patches.Reset()
+			hd.detectNPU(mockLogicID)
+			convey.So(hangConditionCalled, convey.ShouldBeFalse)
+			convey.So(state.HangCount, convey.ShouldEqual, 0)
+			convey.So(state.IsFault, convey.ShouldBeFalse)
+			convey.So(state.Metrics, convey.ShouldBeNil)
+			faultInfos := GetAndCleanAllHangFaultCache()
+			convey.So(len(faultInfos), convey.ShouldEqual, 1)
+			convey.So(faultInfos[0].Assertion, convey.ShouldEqual, npuCommon.FaultRecover)
+		})
 	})
 }
 
@@ -120,6 +149,11 @@ func TestDetectNPU(t *testing.T) {
 func TestCollectMetrics(t *testing.T) {
 	convey.Convey("test collectMetrics", t, func() {
 		hd := newTestHangDetector()
+
+		convey.Convey("01-when metrics is nil, should return nil", func() {
+			convey.So(hd.collectMetrics(mockLogicID, &npuCommon.DevProcessInfo{ProcNum: 1}, nil),
+				convey.ShouldBeNil)
+		})
 
 		convey.Convey("02-when metrics is not nil, should fill all fields", func() {
 			calledTimes := 0
@@ -130,11 +164,31 @@ func TestCollectMetrics(t *testing.T) {
 				ApplyPrivateMethod(hd, "collectTraffic",
 					func(int32, *HangMetrics) { calledTimes++ }).
 				ApplyPrivateMethod(hd, "collectCPUTime",
-					func(*npuCommon.DevProcessInfo, *HangMetrics) { calledTimes++ })
+					func(*npuCommon.DevProcessInfo, *HangMetrics) error { calledTimes++; return nil })
 			defer patches.Reset()
-			hd.collectMetrics(mockLogicID, &npuCommon.DevProcessInfo{ProcNum: 1}, &HangMetrics{})
+			err := hd.collectMetrics(mockLogicID, &npuCommon.DevProcessInfo{ProcNum: 1}, &HangMetrics{})
+			convey.So(err, convey.ShouldBeNil)
 			const expectedCalledTimes = 4
 			convey.So(calledTimes, convey.ShouldEqual, expectedCalledTimes)
+		})
+
+		convey.Convey("03-when collectCPUTime failed, should return error and skip other collectors", func() {
+			otherCollectorCalled := false
+			patches := gomonkey.ApplyPrivateMethod(hd, "collectUtilization",
+				func(int32, *HangMetrics) { otherCollectorCalled = true }).
+				ApplyPrivateMethod(hd, "collectMemoryUsage",
+					func(int32, *HangMetrics) { otherCollectorCalled = true }).
+				ApplyPrivateMethod(hd, "collectTraffic",
+					func(int32, *HangMetrics) { otherCollectorCalled = true }).
+				ApplyPrivateMethod(hd, "collectCPUTime",
+					func(*npuCommon.DevProcessInfo, *HangMetrics) error {
+						return fmt.Errorf("mock cpu time error")
+					})
+			defer patches.Reset()
+			err := hd.collectMetrics(mockLogicID, &npuCommon.DevProcessInfo{ProcNum: 1}, &HangMetrics{})
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "mock cpu time error")
+			convey.So(otherCollectorCalled, convey.ShouldBeFalse)
 		})
 	})
 }
@@ -276,8 +330,29 @@ func TestCollectCPUTime(t *testing.T) {
 				DevProcArray: []npuCommon.DevProcInfo{{Pid: 1}},
 			}
 			metrics := &HangMetrics{}
-			hd.collectCPUTime(procInfo, metrics)
+			err := hd.collectCPUTime(procInfo, metrics)
+			convey.So(err, convey.ShouldBeNil)
 			convey.So(metrics.CPUTime, convey.ShouldEqual, cpuTime)
+		})
+
+		convey.Convey("02-when any proc stat is unreadable, should return error without partial sum", func() {
+			patches := gomonkey.ApplyFunc(getProcessCPUTime, func(pid int32) (int64, error) {
+				if pid == 1 {
+					return cpuTime, nil
+				}
+				return 0, fmt.Errorf("mock proc stat not accessible")
+			})
+			defer patches.Reset()
+
+			procInfo := &npuCommon.DevProcessInfo{
+				ProcNum:      2,
+				DevProcArray: []npuCommon.DevProcInfo{{Pid: 1}, {Pid: 2}},
+			}
+			metrics := &HangMetrics{}
+			err := hd.collectCPUTime(procInfo, metrics)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "mock proc stat not accessible")
+			convey.So(metrics.CPUTime, convey.ShouldEqual, 0)
 		})
 	})
 }
@@ -478,6 +553,29 @@ func TestGetProcessCPUTime(t *testing.T) {
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(err.Error(), convey.ShouldContainSubstring, "missing comm field")
 		})
+
+		convey.Convey("05-when proc stat file does not exist, should return error", func() {
+			patches := gomonkey.ApplyFunc(utils.LoadFile, func(_ string) ([]byte, error) {
+				return nil, nil
+			})
+			defer patches.Reset()
+
+			_, err := getProcessCPUTime(int32(os.Getpid()))
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "empty or not exist")
+		})
+
+		convey.Convey("06-when loading proc stat file failed, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(utils.IsExist, true).
+				ApplyFunc(utils.LoadFile, func(_ string) ([]byte, error) {
+					return nil, fmt.Errorf("mock permission denied")
+				})
+			defer patches.Reset()
+
+			_, err := getProcessCPUTime(int32(os.Getpid()))
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "stat file failed")
+		})
 	})
 }
 
@@ -658,6 +756,21 @@ func TestStartHangDetectionProducer(t *testing.T) {
 			defer patches.Reset()
 			StartHangDetectionProducer(context.Background(), &devmanager.DeviceManager{})
 			convey.So(called, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("when hang detection disabled, should not start producer", func() {
+			hangDetector = &HangDetector{npuDevPortInfos: make(map[int][]npuCommon.NpuDevPortInfo)}
+			called := false
+			patches := gomonkey.ApplyPrivateMethod(hangDetector, "getNpuDevNetPortInfos",
+				func(*HangDetector) (map[int][]npuCommon.NpuDevPortInfo, error) { return nil, nil }).
+				ApplyFuncReturn(common.LoadHangDetectionConfigFromFile).
+				ApplyFunc(common.IsHangDetectionEnabled, func() bool { return false }).
+				ApplyFunc(runHangDetectionProducer, func(ctx context.Context) {
+					called = true
+				})
+			defer patches.Reset()
+			StartHangDetectionProducer(context.Background(), &devmanager.DeviceManager{})
+			convey.So(called, convey.ShouldBeFalse)
 		})
 	})
 }
