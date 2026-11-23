@@ -1,17 +1,16 @@
-/*
-Copyright(C)2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright 2025 Huawei Technologies Co., Ltd.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+       http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 */
 
 // Package model is common struct
@@ -19,7 +18,7 @@ package model
 
 // HcclJson is the chip info the training job uses
 type HcclJson struct {
-	// ServerList is a node info list which traning job uses
+	// ServerList is a node info list which training job uses
 	ServerList []struct {
 		// HostIp is the ip of node
 		HostIp string `json:"host_ip"`
@@ -29,7 +28,7 @@ type HcclJson struct {
 		ServerSn string `json:"server_sn"`
 		// Device is a list including rank info
 		Device []struct {
-			// RankId is the rank id which traning job uses
+			// RankId is the rank id which training job uses
 			RankId string `json:"rank_id"`
 		} `json:"device"`
 	} `json:"server_list"`

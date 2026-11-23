@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# pylint: disable=R0801
 # Copyright 2026 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 
+# pylint: disable=R0801
 import json
 import os.path
 from typing import Callable, Dict, Type

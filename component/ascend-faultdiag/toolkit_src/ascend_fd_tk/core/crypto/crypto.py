@@ -1,3 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright 2026 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
 import base64
 import os
 
@@ -33,7 +50,7 @@ class RootKeyCrypto:
             length=32,  # 32字节 = 256位
             salt=self.salt,
             iterations=self.iterations,
-            backend=default_backend()
+            backend=default_backend(),
         )
         self.derived_key = kdf.derive(self.master_key)
 
@@ -63,22 +80,13 @@ class RootKeyCrypto:
         iv = os.urandom(16)
 
         # 4. 加密数据
-        cipher = Cipher(
-            algorithms.AES(encryption_key),
-            modes.GCM(iv),
-            backend=default_backend()
-        )
+        cipher = Cipher(algorithms.AES(encryption_key), modes.GCM(iv), backend=default_backend())
         encryptor = cipher.encryptor()
 
         ciphertext = encryptor.update(plaintext) + encryptor.finalize()
 
         # 5. 组合所有组件：随机部分 + IV + 密文 + 认证标签
-        combined = (
-                random_component +
-                iv +
-                ciphertext +
-                encryptor.tag
-        )
+        combined = random_component + iv + ciphertext + encryptor.tag
 
         # 6. 返回base64编码结果
         return base64.b64encode(combined).decode('utf-8')
@@ -104,11 +112,7 @@ class RootKeyCrypto:
         encryption_key = self._combine_keys(random_component)
 
         # 4. 解密数据
-        cipher = Cipher(
-            algorithms.AES(encryption_key),
-            modes.GCM(iv, tag),
-            backend=default_backend()
-        )
+        cipher = Cipher(algorithms.AES(encryption_key), modes.GCM(iv, tag), backend=default_backend())
         decryptor = cipher.decryptor()
 
         plaintext = decryptor.update(ciphertext) + decryptor.finalize()
@@ -136,11 +140,7 @@ class RootKeyCrypto:
         ciphertext = data[16:].decode('utf-8')
 
         # 使用相同的盐值初始化新的实例
-        temp_crypto = RootKeyCrypto(
-            master_key=self.master_key,
-            salt=salt,
-            iterations=self.iterations
-        )
+        temp_crypto = RootKeyCrypto(master_key=self.master_key, salt=salt, iterations=self.iterations)
 
         return temp_crypto.decrypt(ciphertext)
 
@@ -150,9 +150,5 @@ class RootKeyCrypto:
         使用HMAC确保完整性
         """
         # 使用HMAC-SHA256结合密钥
-        hmac_obj = hmac.new(
-            self.derived_key,
-            random_component,
-            hashlib.sha256
-        )
+        hmac_obj = hmac.new(self.derived_key, random_component, hashlib.sha256)
         return hmac_obj.digest()

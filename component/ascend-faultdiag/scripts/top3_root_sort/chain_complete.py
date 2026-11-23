@@ -1,15 +1,29 @@
-import copy
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright 2025 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
+# pylint: skip-file
 import json
 import networkx as nx
 import re
 from collections import defaultdict
 import os
-import pickle
-import numpy as np
-from scipy.stats import fisher_exact
-from datetime import datetime, timedelta
 
 ASCEND_KG_CONFIG_PATH = '../data/ascend-kg-config.json'
+
 
 def read_json_file(file_path_list: list) -> dict:
     merged_dict = {}
@@ -149,7 +163,7 @@ def process_all_errorcode(all_config_data: dict, json_data: dict, output_path: s
         errorcode_match_dict[errorcode] = match_result
         if match_result:
             count += 1
-    print('the average courage is ', count/len(all_errorcode_data.keys()))
+    print('the average courage is ', count / len(all_errorcode_data.keys()))
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(errorcode_match_dict, f, indent=4)
         f.close()
@@ -158,28 +172,34 @@ def process_all_errorcode(all_config_data: dict, json_data: dict, output_path: s
 
 def extract_all_sub_graph(nx_graph, errorcode_match_dict: dict, output_file_path: str):
     sub_graph = nx.DiGraph()
-    errorcode_list = list(errorcode_match_dict.keys())
+    # 仅保留匹配到函数位置的错误码，跳过空列表可省去大量无意义的内层遍历
+    matched_funcs = {errorcode: funcs for errorcode, funcs in errorcode_match_dict.items() if funcs}
+    errorcode_list = list(matched_funcs.keys())
     chain_dict = defaultdict(list)
     for u in errorcode_list:
         for v in errorcode_list:
-            if u != v:
-                for i in errorcode_match_dict[u]:
-                    for j in errorcode_match_dict[v]:
-                        try:
-                            path = nx.shortest_path(nx_graph, i, j, weight=None)
-                            nx.add_path(sub_graph, path)
-                            print('find chain from ', v, ' to ', u, ' : ', list(path))
-                            check_accuracy(v, u)
-                            chain_dict[v].append(u)
-                        except Exception as e:
-                            pass
+            if u == v:
+                continue
+            for i in matched_funcs[u]:
+                for j in matched_funcs[v]:
+                    try:
+                        path = nx.shortest_path(nx_graph, i, j, weight=None)
+                    except (nx.NetworkXNoPath, nx.NodeNotFound):
+                        continue
+                    nx.add_path(sub_graph, path)
+                    print('find chain from ', v, ' to ', u, ' : ', list(path))
+                    # 同一对 (v -> u) 只记录并校验一次，避免 (i, j) 组合产生重复项
+                    if u not in chain_dict[v]:
+                        check_accuracy(v, u)
+                        chain_dict[v].append(u)
     with open(output_file_path, 'w', encoding='utf-8') as f:
         json.dump(chain_dict, f, indent=4)
-        f.close()
     return sub_graph, chain_dict
 
 
-def chain_completion(all_config_data: dict, json_data: dict, output_path: str, output_chain_file_path: str, nx_graph, re_calculate=True):
+def chain_completion(
+    all_config_data: dict, json_data: dict, output_path: str, output_chain_file_path: str, nx_graph, re_calculate=True
+):
     if re_calculate:
         match_result = process_all_errorcode(all_config_data, json_data, output_path)
     else:
@@ -188,15 +208,25 @@ def chain_completion(all_config_data: dict, json_data: dict, output_path: str, o
     return sub_graph, chain_dict, match_result
 
 
-def check_accuracy(caller: str, callee: str) -> None:
-    config_file = read_json_file([ASCEND_KG_CONFIG_PATH])
-    all_code = config_file['knowledge-repository']
+_KNOWLEDGE_REPOSITORY_CACHE = None
+
+
+def get_knowledge_repository() -> dict:
+    """加载并缓存知识库，避免在循环中反复读取配置文件"""
+    global _KNOWLEDGE_REPOSITORY_CACHE
+    if _KNOWLEDGE_REPOSITORY_CACHE is None:
+        config_file = read_json_file([ASCEND_KG_CONFIG_PATH])
+        _KNOWLEDGE_REPOSITORY_CACHE = config_file['knowledge-repository']
+    return _KNOWLEDGE_REPOSITORY_CACHE
+
+
+def check_accuracy(caller: str, callee: str):
+    all_code = get_knowledge_repository()
     callee_info = all_code.get(callee, {})
     dst_code_list = callee_info.get('rule', [])
     for i in dst_code_list:
         if i.get('dst_code', '') == caller:
             print('confirmed ', callee, ' to ', caller)
-    return
 
 
 def main():
@@ -208,8 +238,9 @@ def main():
     nx_graph = generate_prob_graph(json_data, name_to_func_data)
     _ = read_log_json_file(parsed_file_directory)
     all_config_data = read_json_file([ASCEND_KG_CONFIG_PATH])
-    _, chain_dict, _ = chain_completion(all_config_data, json_data, '../output/output.json',
-                                     '../output/output_chain.json', nx_graph, re_calculate=True)
+    _, chain_dict, _ = chain_completion(
+        all_config_data, json_data, '../output/output.json', '../output/output_chain.json', nx_graph, re_calculate=True
+    )
     errorcode_graph = generate_errorcode_graph(json_data, name_to_func_data, all_config_data, chain_dict)
     nx.write_graphml(nx_graph, "../output/nx_graph.graphml")
     nx.write_graphml(errorcode_graph, "../output/errorcode_graph.graphml")
@@ -217,4 +248,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

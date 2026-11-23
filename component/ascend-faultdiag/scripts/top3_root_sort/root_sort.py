@@ -1,15 +1,31 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright 2025 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
+# pylint: skip-file
 import copy
 import json
 import networkx as nx
-import re
-from collections import defaultdict
 import os
-import pickle
 import numpy as np
 from scipy.stats import fisher_exact
 from datetime import datetime, timedelta
 
 ASCEND_KG_CONFIG_PATH = '../data/ascend-kg-config.json'
+
 
 def read_json_file(file_path_list: list) -> dict:
     merged_dict = {}
@@ -85,7 +101,6 @@ def created_related_graph(ori_errorcode_graph, error_node_list: list, rc_list: l
     创建新的带权重子图
     """
     G = nx.DiGraph()
-    single_code_list = [c[0] for c in error_node_list]
     for i in error_node_list:
         G.add_node(i[0])
         if i[0] in ori_errorcode_graph.nodes:
@@ -105,7 +120,9 @@ def find_new_edges_from_log(root_cause_list: list) -> list:
     for i in range(len(root_cause_list)):
         for j in range(len(root_cause_list)):
             if i != j:
-                if root_cause_list[i]['code'].startswith('AISW_TRACEBACK') or root_cause_list[j]['code'].startswith('AISW_TRACEBACK'):
+                if root_cause_list[i]['code'].startswith('AISW_TRACEBACK') or root_cause_list[j]['code'].startswith(
+                    'AISW_TRACEBACK'
+                ):
                     continue
                 try:
                     src_log = process_log(root_cause_list[i])
@@ -114,9 +131,11 @@ def find_new_edges_from_log(root_cause_list: list) -> list:
                     table = build_contingency(src_log, tar_log, delta_ms=10000)
                     odds_ratio, p_value = fisher_exact(table)
                     if p_value < 0.05 and odds_ratio > 1:
-                        print('create fisher edge from ', root_cause_list[i]['code'], ' to ', root_cause_list[j]['code'])
+                        print(
+                            'create fisher edge from ', root_cause_list[i]['code'], ' to ', root_cause_list[j]['code']
+                        )
                         edge_list.append((root_cause_list[j]['code'], root_cause_list[i]['code']))
-                except:
+                except Exception:
                     continue
     return edge_list
 
@@ -143,8 +162,7 @@ def build_contingency(log_a, log_b, delta_ms=1000):
             n10 += 1
     t_min, t_max = min(times_a + times_b), max(times_a + times_b)
     total_seconds = (t_max - t_min).total_seconds()
-    random_times = [t_min + timedelta(seconds=np.random.uniform(0, total_seconds))
-                    for _ in range(len(times_a))]
+    random_times = [t_min + timedelta(seconds=np.random.uniform(0, total_seconds)) for _ in range(len(times_a))]
     for t_r in random_times:
         has_b = any(t_r <= t_b <= t_r + delta for t_b in times_b)
         if has_b:
@@ -268,7 +286,7 @@ def main():
             else:
                 print('error file name is ', error_data['file_name'])
     print('final rerank file num is ', file_count)
-    print('accuracy is ', correct_count, '/', all_file_count, '=', correct_count/all_file_count)
+    print('accuracy is ', correct_count, '/', all_file_count, '=', correct_count / all_file_count)
     return new_error_data
 
 
