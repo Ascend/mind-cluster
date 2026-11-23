@@ -17,6 +17,7 @@ package containerruntime
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -28,6 +29,8 @@ import (
 	"github.com/containerd/containerd/oci"
 	"github.com/containerd/typeurl/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"Ascend-device-plugin/pkg/duplicatedetector/types"
 )
@@ -303,6 +306,76 @@ func TestNewContainerdClient(t *testing.T) {
 			_, err := NewContainerdClient("/run/containerd/containerd.sock", "/run/containerd/containerd.sock")
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(err.Error(), convey.ShouldContainSubstring, "create client failed")
+		})
+	})
+}
+
+func TestContainerdClient_ParseAllContainers03(t *testing.T) {
+	convey.Convey("TestContainerdClient_ParseAllContainers", t, func() {
+		ctx := context.Background()
+		mockClient := &containerdClient{
+			ociClient: &ociClient{client: &containerd.Client{}},
+		}
+		mns := &mockNamespaceService{}
+		convey.Convey("07-not running container should be skipped", func() {
+			patch := gomonkey.ApplyMethodReturn(mockClient.client, "NamespaceService", mns).
+				ApplyMethodReturn(mns, "List", []string{"moby"}, nil).
+				ApplyMethodReturn(mockClient.client, "Containers", []containerd.Container{&mockContainer{}}, nil).
+				ApplyMethodReturn(mockClient.ociClient, "ParseSingleContainer", nil,
+					status.Error(codes.NotFound, "task test-container-id not found"))
+			defer patch.Reset()
+			info, err := mockClient.ParseAllContainers(ctx)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(info), convey.ShouldEqual, 0)
+		})
+		convey.Convey("08-cancelled scan should stop and report interruption", func() {
+			cancelCtx, cancel := context.WithCancel(ctx)
+			cancel()
+			patch := gomonkey.ApplyMethodReturn(mockClient.client, "NamespaceService", mns).
+				ApplyMethodReturn(mns, "List", []string{"moby"}, nil).
+				ApplyMethodReturn(mockClient.client, "Containers", []containerd.Container{&mockContainer{}}, nil).
+				ApplyMethodReturn(mockClient.ociClient, "ParseSingleContainer", nil,
+					status.Error(codes.Canceled, "context canceled"))
+			defer patch.Reset()
+			info, err := mockClient.ParseAllContainers(cancelCtx)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(info, convey.ShouldBeNil)
+		})
+		convey.Convey("09-grpc canceled error should interrupt even if ctx is alive", func() {
+			patch := gomonkey.ApplyMethodReturn(mockClient.client, "NamespaceService", mns).
+				ApplyMethodReturn(mns, "List", []string{"moby"}, nil).
+				ApplyMethodReturn(mockClient.client, "Containers", []containerd.Container{&mockContainer{}}, nil).
+				ApplyMethodReturn(mockClient.ociClient, "ParseSingleContainer", nil,
+					status.Error(codes.Canceled, "rpc error: code = Canceled"))
+			defer patch.Reset()
+			info, err := mockClient.ParseAllContainers(ctx)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(info, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestIsScanCanceled(t *testing.T) {
+	convey.Convey("test isScanCanceled", t, func() {
+		convey.Convey("01-cancelled context should be treated as interrupted", func() {
+			cancelCtx, cancel := context.WithCancel(context.Background())
+			cancel()
+			convey.So(isScanCanceled(cancelCtx, errors.New("any")), convey.ShouldBeTrue)
+		})
+		convey.Convey("02-bare context sentinel should be treated as interrupted", func() {
+			convey.So(isScanCanceled(context.Background(), context.Canceled), convey.ShouldBeTrue)
+			convey.So(isScanCanceled(context.Background(), context.DeadlineExceeded), convey.ShouldBeTrue)
+		})
+		convey.Convey("03-grpc status error should be treated as interrupted", func() {
+			convey.So(isScanCanceled(context.Background(), status.Error(codes.Canceled, "x")),
+				convey.ShouldBeTrue)
+			convey.So(isScanCanceled(context.Background(),
+				fmt.Errorf("wrap: %w", status.Error(codes.DeadlineExceeded, "x"))), convey.ShouldBeTrue)
+		})
+		convey.Convey("04-other errors should not be treated as interrupted", func() {
+			convey.So(isScanCanceled(context.Background(), errors.New("boom")), convey.ShouldBeFalse)
+			convey.So(isScanCanceled(context.Background(), status.Error(codes.NotFound, "x")),
+				convey.ShouldBeFalse)
 		})
 	})
 }

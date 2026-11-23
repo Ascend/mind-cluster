@@ -91,7 +91,12 @@ func (d *dockerClient) ParseAllContainers(ctx context.Context) (map[string]*dtyp
 	for _, ctr := range ctrs {
 		info, err := d.ParseSingleContainer(nsCtx, ctr.ID)
 		if err != nil {
-			hwlog.RunLog.Debugf("Failed to parse container %s: %v", ctr.ID, err)
+			if IsNotFound(err) {
+				// the container exited between listing and parsing, nothing to detect
+				hwlog.RunLog.Debugf("skip non-running container: %v", err)
+				continue
+			}
+			hwlog.RunLog.Warnf("failed to parse container %s: %v", ctr.ID, err)
 			continue
 		}
 		info.PodName = ctr.Labels["io.kubernetes.pod.name"]
