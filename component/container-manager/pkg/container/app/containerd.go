@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"strings"
 	"syscall"
 
 	"github.com/containerd/containerd"
@@ -32,6 +31,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/parser"
 	"ascend-common/common-utils/utils"
 	"container-manager/pkg/common"
 	"container-manager/pkg/container/domain"
@@ -176,7 +176,7 @@ func (c *ContainerdClient) doGetUsedDevs(cs containerd.Container, ctx context.Co
 	// To avoid the presence of environment variables ASCEND_VISIBLE_DEVICES in the image, iterate from back to front
 	for i := len(envs) - 1; i >= 0; i-- {
 		env := envs[i]
-		if strings.Contains(env, api.AscendDeviceInfo) {
+		if parser.IsEnvName(env, api.AscendDeviceInfo) {
 			usedDevs, err := getUsedDevsWithAscendRuntime(env)
 			if err != nil {
 				return nil, fmt.Errorf("parse env %s failed, error: %v", api.AscendDeviceInfo, err)

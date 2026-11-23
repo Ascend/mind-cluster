@@ -102,7 +102,7 @@ func (c *ociClient) ParseSingleContainer(ctx context.Context, containerID string
 	if spec.Process != nil {
 		for i := len(spec.Process.Env) - 1; i >= 0; i-- {
 			env := strings.TrimSpace(spec.Process.Env[i])
-			if strings.Contains(env, api.AscendDeviceInfo) {
+			if parser.IsEnvName(env, api.AscendDeviceInfo) {
 				info.Devices = parser.ParseAscendDeviceInfo(env, ctr.ID())
 				break
 			}

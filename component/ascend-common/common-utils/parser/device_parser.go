@@ -182,3 +182,10 @@ func GetEnvValue(env []string, key string) string {
 	}
 	return ""
 }
+
+// IsEnvName reports whether the variable name (the part before the first '=')
+// of the "KEY=VALUE" entry equals name.
+func IsEnvName(env, name string) bool {
+	parts := strings.SplitN(env, "=", envSliceLen)
+	return len(parts) == envSliceLen && parts[0] == name
+}

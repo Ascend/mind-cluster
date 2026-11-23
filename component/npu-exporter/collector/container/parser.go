@@ -30,6 +30,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/parser"
 	"ascend-common/common-utils/utils"
 	"huawei.com/npu-exporter/v6/collector/container/isula"
 	"huawei.com/npu-exporter/v6/collector/container/v1"
@@ -233,7 +234,7 @@ func (dp *DevicesParser) parseDevicesInContainerd(ctx context.Context, c *Common
 	envs := spec.Process.Env
 	for i := len(envs) - 1; i >= 0; i-- {
 		e := envs[i]
-		if strings.Contains(e, api.AscendDeviceInfo) {
+		if parser.IsEnvName(e, api.AscendDeviceInfo) {
 			deviceInfo, err = dp.getDevicesWithAscendRuntime(e, c)
 			return err
 		}
@@ -429,7 +430,7 @@ func (dp *DevicesParser) parseDeviceInIsula(ctx context.Context, c *CommonContai
 	envs := containerInfo.Config.Env
 	for i := len(envs) - 1; i >= 0; i-- {
 		e := envs[i]
-		if strings.Contains(e, api.AscendDeviceInfo) {
+		if parser.IsEnvName(e, api.AscendDeviceInfo) {
 			deviceInfo, err = dp.getDevicesWithAscendRuntime(e, c)
 			return err
 		}
