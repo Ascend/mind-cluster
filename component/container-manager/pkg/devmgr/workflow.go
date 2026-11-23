@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	waitDevResetMaxTime = 60
+	waitDevResetMaxTime = 600
 )
 
 // DevMgr hwDevMgr instance

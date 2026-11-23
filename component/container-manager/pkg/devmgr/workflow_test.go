@@ -82,6 +82,20 @@ func testMethodInitDmgr() {
 	expErr := errors.New("init devmanager failed")
 	convey.So(err, convey.ShouldResemble, expErr)
 	p2.Reset()
+
+	convey.Convey("initDmgr should pass the device reset wait timeout to AutoInit", func() {
+		var gotResetTimeout int
+		var p3 = gomonkey.ApplyFunc(devmanager.AutoInit,
+			func(_ string, resetTimeout int) (devmanager.DeviceInterface, error) {
+				gotResetTimeout = resetTimeout
+				return nil, nil
+			})
+		defer p3.Reset()
+		err := mockDevMgr.initDmgr()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(gotResetTimeout, convey.ShouldEqual, waitDevResetMaxTime)
+		convey.So(gotResetTimeout, convey.ShouldEqual, 600)
+	})
 }
 
 func testInitInfoRelatedDev() {
