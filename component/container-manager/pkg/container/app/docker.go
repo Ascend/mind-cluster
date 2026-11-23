@@ -28,6 +28,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/parser"
 	"container-manager/pkg/common"
 	"container-manager/pkg/container/domain"
 )
@@ -102,7 +103,7 @@ func (d *DockerClient) doGetUsedDevs(cs types.Container) ([]int32, error) {
 	}
 	for i := len(containerJSON.Config.Env) - 1; i >= 0; i-- {
 		env := containerJSON.Config.Env[i]
-		if strings.Contains(env, api.AscendDeviceInfo) {
+		if parser.IsEnvName(env, api.AscendDeviceInfo) {
 			usedDevs, err := getUsedDevsWithAscendRuntime(env)
 			if err != nil {
 				return nil, fmt.Errorf("parse env %s failed, error: %v", api.AscendDeviceInfo, err)

@@ -316,3 +316,28 @@ func TestGetEnvValueFirstMatch(t *testing.T) {
 		})
 	}
 }
+
+func TestIsEnvName(t *testing.T) {
+	tests := []struct {
+		name string
+		env  string
+		key  string
+		want bool
+	}{
+		{name: "exact match", env: api.AscendDeviceInfo + "=0", key: api.AscendDeviceInfo, want: true},
+		{name: "empty value", env: api.AscendDeviceInfo + "=", key: api.AscendDeviceInfo, want: true},
+		{name: "keyword in value", env: "VLLM_PRIFILL_ENV=" + api.AscendDeviceInfo + "=", key: api.AscendDeviceInfo, want: false},
+		{name: "prefix-like name", env: api.AscendDeviceInfo + "_EXTRA=0", key: api.AscendDeviceInfo, want: false},
+		{name: "no equals sign", env: api.AscendDeviceInfo, key: api.AscendDeviceInfo, want: false},
+		{name: "other key", env: "RDMA=0", key: "RDMA", want: true},
+		{name: "other key mismatch", env: "RDMA=0", key: api.AscendDeviceInfo, want: false},
+		{name: "empty name", env: "=0", key: "RDMA", want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsEnvName(tt.env, tt.key); got != tt.want {
+				t.Fatalf("IsEnvName(%q, %q) = %v; want %v", tt.env, tt.key, got, tt.want)
+			}
+		})
+	}
+}
