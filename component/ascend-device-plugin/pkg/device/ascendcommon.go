@@ -1128,9 +1128,7 @@ func classifyDevByType(allDevs []common.NpuDevice, suffix string) []*common.NpuD
 
 func (tool *AscendTools) isHealthy(device *common.NpuDevice) string {
 	faultType := common.GetFaultType(device.FaultCodes, device.LogicID)
-	if faultType == common.NormalNPU || faultType == common.NotHandleFault || faultType == common.SubHealthFault ||
-		(faultType == common.FreeRestartNPU &&
-			tool.npuIsUsedNow(device.DeviceName) && common.ParamOption.GraceToleranceOn == true) {
+	if faultType == common.NormalNPU || faultType == common.NotHandleFault || faultType == common.SubHealthFault {
 		return v1beta1.Healthy
 	}
 	if faultType == common.PreSeparateNPU && tool.npuIsUsedNow(device.DeviceName) {

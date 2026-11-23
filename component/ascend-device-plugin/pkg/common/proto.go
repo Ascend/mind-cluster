@@ -159,7 +159,6 @@ type Option struct {
 	AutoStowingDevs       bool     // auto stowing fixes devices or not
 	PresetVDevice         bool     // preset virtual device
 	Use310PMixedInsert    bool     // chose 310P mixed insert mode
-	GraceToleranceOn      bool     // check if grace tolerance is on
 	ListAndWatchPeriod    int      // set listening device state period
 	HotReset              int      // unhealthy chip hot reset
 	ShareCount            uint     // share device count

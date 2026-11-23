@@ -540,26 +540,8 @@ const (
 	FaultCustomizationKey = "faultCustomization.json"
 	// PollIntervalKey is the key to find poll interval in cm
 	PollIntervalKey = "PollInterval"
-	// DefaultProcessReadCMTime is the default time for process read configmap
-	DefaultProcessReadCMTime = 30
-	// DefaultWaitFaultSelfHealingTime for waiting for fault self-healing
-	DefaultWaitFaultSelfHealingTime = 15
-	// MinWaitFaultSelfHealingTime for min time of waiting for fault self-healing
-	MinWaitFaultSelfHealingTime = 1
-	// MaxWaitFaultSelfHealingTime for max time of waiting for fault self-healing
-	MaxWaitFaultSelfHealingTime = 30
 	// DefaultPollingInterval  represents the time between polls of the dcmi interface
 	DefaultPollingInterval = 1
-	// MaxWaitProcessReadCMTime for max time waiting for process to read cm
-	MaxWaitProcessReadCMTime = 90
-	// MinWaitProcessReadCMTime for min time waiting for process to read cm
-	MinWaitProcessReadCMTime = 5
-	// DefaultWaitDeviceResetTime is the default time used in waiting device reset
-	DefaultWaitDeviceResetTime = 150
-	// MaxWaitDeviceResetTime is the max time used in waiting device reset
-	MaxWaitDeviceResetTime = 180
-	// MinWaitDeviceResetTime is the min time used in waiting device reset
-	MinWaitDeviceResetTime = 60
 	// MaxFaultFrequencyTimeWindow is the max time for the time window of fault frequency
 	MaxFaultFrequencyTimeWindow = 864000
 	// MinFaultFrequencyTimeWindow is the min time for the time window of fault frequency

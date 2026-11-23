@@ -129,7 +129,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
 在制作Ascend Device Plugin镜像时，会将faultCode.json和faultCustomization.json配置文件内置在镜像中，启动Ascend Device Plugin时会读取这两个文件的默认配置，作为当前故障处理依据。faultCode.json和faultCustomization.json的说明请参见[配置文件说明](#ZH-CN_TOPIC_0000002511346521)。
 
-如果用户想要自定义故障级别或者优雅容错相关配置，可以在集群中创建ConfigMap文件（mindx-dl-fault-config）。
+如果用户想要自定义故障级别，可以在集群中创建ConfigMap文件（mindx-dl-fault-config）。
 
 - 如果Ascend Device Plugin启动时，集群中已经存在mindx-dl-fault-config，Ascend Device Plugin会优先按照已存在的mindx-dl-fault-config中配置的内容，作为当前故障处理依据。
 - 如果重新安装Ascend Device Plugin后，集群中已经存在mindx-dl-fault-config，Ascend Device Plugin的默认faultCode.json将不会生效，使用集群中已经存在的mindx-dl-fault-config。
@@ -334,7 +334,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
     </td>
     <td class="cellrowborder" valign="top" width="11.701170117011701%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002136360238_zh-cn_topic_0000001762151497_p122981952113016"><a name="zh-cn_topic_0000002136360238_zh-cn_topic_0000001762151497_p122981952113016"></a>否</p>
     </td>
-    <td class="cellrowborder" valign="top" width="54.96549654965496%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002136360238_zh-cn_topic_0000001762151497_p7298145218303"><a name="zh-cn_topic_0000002136360238_zh-cn_topic_0000001762151497_p7298145218303"></a>用于自定义优雅容错时间、故障频率、故障持续时间（仅支持参数面网络故障）等配置，不指定该参数则没有故障频率配置，其余配置使用默认值进行处理。必须与faultCustomization.json文件名称保持一致。</p>
+    <td class="cellrowborder" valign="top" width="54.96549654965496%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002136360238_zh-cn_topic_0000001762151497_p7298145218303"><a name="zh-cn_topic_0000002136360238_zh-cn_topic_0000001762151497_p7298145218303"></a>用于自定义故障频率、故障持续时间（仅支持参数面网络故障）等配置，不指定该参数则没有故障频率配置，其余配置使用默认值进行处理。必须与faultCustomization.json文件名称保持一致。</p>
     </td>
     </tr>
     </tbody>
@@ -365,11 +365,6 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
     # 修改芯片故障的故障频率和时长
     faultCustomization.json: |
     {
-     "GraceTolerance": {
-     "WaitProcessReadCMTime": 30,
-     "WaitDeviceResetTime": 150,
-     "WaitFaultSelfHealingTime": 15
-    },
     "FaultFrequency": [
      {
       "EventId": [

@@ -281,10 +281,6 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
 |一级参数名称|二级参数名称|说明|
 |--|--|--|
-|GraceTolerance|-|优雅容错相关配置。<p>GraceTolerance及其子参数不存在或者超出取值范围，则使用默认值。</p>|
-|-|WaitProcessReadCMTime|使用优雅容错模式时，等待管理进程读取ConfigMap文件的时间，单位为秒，取值范围为5~90，默认值为30。|
-|-|WaitDeviceResetTime|使用优雅容错模式时，等待芯片重启的最大时长，单位为秒，取值范围为60~180，默认值为150。|
-|-|WaitFaultSelfHealingTime|使用优雅容错模式时，等待RestartBusiness级别故障恢复时间，单位为秒，取值范围为1~30，默认值为15。|
 |FaultFrequency|-|自定义故障频率，即某一故障在时间窗口内出现次数达到次数上限时，根据配置的故障处理策略进行处理。<ul><li>FaultFrequency及其子参数取值范围不正确，则忽略该条配置。</li><li>FaultFrequency及其子参数数据格式不正确，则会使用默认配置。</li></ul>|
 |-|EventId|故障码ID。<p>每个故障码（EventId）只允许配置一个FaultFrequency参数，如果配置了多个，则只有第一条正确的会生效。</p>|
 |-|TimeWindow|时间窗口，即统计当前时间减去TimeWindow的时间至当前时间，这段时间范围内的故障次数，单位为秒，取值范围为60~864000。|

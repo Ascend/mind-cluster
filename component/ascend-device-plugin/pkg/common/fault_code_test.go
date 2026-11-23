@@ -146,27 +146,14 @@ func TestLoadFaultCustomizationFromFile(t *testing.T) {
 // TestLoadFaultCustomization for test LoadFaultCustomization
 func TestLoadFaultCustomization(t *testing.T) {
 	convey.Convey("TestLoadFaultCustomization", t, func() {
-		// 01-stub function, load fault customization success, should return nil
-		mockRestTime := gomonkey.ApplyGlobalVar(&WaitDeviceResetTime, time.Duration(0))
-		defer mockRestTime.Reset()
-		mockReadCMTime := gomonkey.ApplyGlobalVar(&WaitProcessReadCMTime, time.Duration(0))
-		defer mockReadCMTime.Reset()
-		mockHealTime := gomonkey.ApplyGlobalVar(&WaitFaultSelfHealingTime, time.Duration(0))
-		defer mockHealTime.Reset()
+		// 01-load fault customization with empty configuration, should return nil
 		faultCustomization := FaultCustomization{
-			GraceTolerance: GraceToleranceCustomization{
-				WaitProcessReadCMTime:    30,
-				WaitDeviceResetTime:      150,
-				WaitFaultSelfHealingTime: 15,
-			},
+			FaultFrequency: nil,
 		}
 		codeBytes, err := json.Marshal(faultCustomization)
 		convey.So(err, convey.ShouldBeNil)
 		err = LoadFaultCustomization(codeBytes)
 		convey.So(err, convey.ShouldBeNil)
-		convey.So(WaitDeviceResetTime, convey.ShouldEqual, time.Duration(150))
-		convey.So(WaitProcessReadCMTime, convey.ShouldEqual, time.Duration(30))
-		convey.So(WaitFaultSelfHealingTime, convey.ShouldEqual, time.Duration(15))
 	})
 }
 
@@ -1530,40 +1517,6 @@ func TestDeleteManuallyFaultInfo(t *testing.T) {
 	})
 }
 
-// TestLoadGraceToleranceCustomization for test loadGraceToleranceCustomization
-func TestLoadGraceToleranceCustomization(t *testing.T) {
-	convey.Convey("test loadGraceToleranceCustomization success", t, func() {
-		graceToleranceCustomization := GraceToleranceCustomization{
-			WaitDeviceResetTime:      150,
-			WaitProcessReadCMTime:    30,
-			WaitFaultSelfHealingTime: 15,
-		}
-		WaitDeviceResetTime = time.Duration(0)
-		WaitProcessReadCMTime = time.Duration(0)
-		WaitFaultSelfHealingTime = time.Duration(0)
-		loadGraceToleranceCustomization(graceToleranceCustomization)
-		expectResetTime, expectReadCMTime, expectSelfHealingTime := 150, 30, 15
-		convey.So(WaitDeviceResetTime, convey.ShouldEqual, expectResetTime)
-		convey.So(WaitProcessReadCMTime, convey.ShouldEqual, expectReadCMTime)
-		convey.So(WaitFaultSelfHealingTime, convey.ShouldEqual, expectSelfHealingTime)
-	})
-
-	convey.Convey("test loadGraceToleranceCustomization abnormal condition success", t, func() {
-		graceToleranceCustomization := GraceToleranceCustomization{
-			WaitDeviceResetTime:      59,
-			WaitProcessReadCMTime:    91,
-			WaitFaultSelfHealingTime: 0,
-		}
-		WaitDeviceResetTime = time.Duration(0)
-		WaitProcessReadCMTime = time.Duration(0)
-		WaitFaultSelfHealingTime = time.Duration(0)
-		loadGraceToleranceCustomization(graceToleranceCustomization)
-		expectResetTime, expectReadCMTime, expectSelfHealingTime := 150, 30, 15
-		convey.So(WaitDeviceResetTime, convey.ShouldEqual, expectResetTime)
-		convey.So(WaitProcessReadCMTime, convey.ShouldEqual, expectReadCMTime)
-		convey.So(WaitFaultSelfHealingTime, convey.ShouldEqual, expectSelfHealingTime)
-	})
-}
 
 // TestValidateFaultFrequencyCustomizationPart1 for test validateFaultFrequencyCustomization
 func TestValidateFaultFrequencyCustomizationPart1(t *testing.T) {

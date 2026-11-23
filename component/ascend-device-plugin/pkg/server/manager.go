@@ -1458,23 +1458,6 @@ func (hdm *HwDevManager) syncCM(ctx context.Context, groupDevice map[string][]*c
 	return
 }
 
-func (hdm *HwDevManager) isSupportGraceTolerance() {
-	if common.ParamOption.HotReset != common.HotResetTrainOffLine {
-		hwlog.RunLog.Debugf("train device hot reset mode error: %d", common.ParamOption.HotReset)
-		return
-	}
-
-	if hdm.RunMode != api.Ascend910 {
-		hwlog.RunLog.Debugf("grace tolerance only support training chip")
-		return
-	}
-	if common.ParamOption.RealCardType == api.Ascend910A && hdm.WorkMode != common.SMPMode {
-		hwlog.RunLog.Debug("grace tolerance only support SMP chip mode for 910")
-		return
-	}
-	common.ParamOption.GraceToleranceOn = true
-}
-
 func (hdm *HwDevManager) pollFaultCodeCM(ctx context.Context, interval int) {
 	for {
 		select {
