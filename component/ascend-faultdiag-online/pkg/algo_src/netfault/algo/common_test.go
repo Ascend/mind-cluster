@@ -1,9 +1,10 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright 2025 Huawei Technologies Co., Ltd.
+
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+       http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -241,7 +242,7 @@ func TestDeduplicateSlice(t *testing.T) {
 
 func TestMergeAndDeduplicate(t *testing.T) {
 	convey.Convey("Test MergeAndDeduplicate", t, func() {
-		convey.Convey(`when a is [{"key": "value1"}, {"key": "value2"}] and b is [{"key": "value2"}, 
+		convey.Convey(`when a is [{"key": "value1"}, {"key": "value2"}] and b is [{"key": "value2"},
 			{"key": "value3"}]`, func() {
 			a := []map[string]any{
 				{"key": "value1"},

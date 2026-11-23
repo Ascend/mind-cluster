@@ -1,9 +1,10 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright 2025 Huawei Technologies Co., Ltd.
+
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+       http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -128,21 +129,21 @@ func readTargetColumnFromCsv(filePath string, columnName string) ([]float64, []i
 }
 
 func getDetectionData(curDetectedStepIndex int,
-	allDatas []float64,
+	allData []float64,
 	conf config.AlgoInputConfig,
 	npuId int,
 	column string) []float64 {
 	returnData := make([]float64, 0)
 	/* 未被覆盖取增量部分， 增量不够用历史数据 */
-	if curDetectedStepIndex > len(allDatas)-1 {
+	if curDetectedStepIndex > len(allData)-1 {
 		return returnData
 	}
-	increment := allDatas[curDetectedStepIndex+1:]
+	increment := allData[curDetectedStepIndex+1:]
 	historyData := conf.NconsecAnomaliesSignifySlow - len(increment)
 	if historyData > 0 {
 		nodeleveldatarecorder.SetJobDetectionRecorderHistoryData(conf.JobName, npuId, column, historyData)
 		for i := 0; i < historyData && (curDetectedStepIndex-i >= 0); i++ {
-			returnData = append(returnData, allDatas[curDetectedStepIndex-i])
+			returnData = append(returnData, allData[curDetectedStepIndex-i])
 		}
 		/* 历史数据量不够 */
 		if len(returnData) < historyData {
@@ -155,25 +156,25 @@ func getDetectionData(curDetectedStepIndex int,
 }
 
 /* 仅获取增量部分(无增量取历史)，steptime.csv更新，comm.csv不判断更新 */
-func updateCalculatorLatencyStepRecord(allDatas []float64,
+func updateCalculatorLatencyStepRecord(allData []float64,
 	allSteps []int,
 	npuId int,
 	column string,
 	conf config.AlgoInputConfig) []float64 {
-	if len(allDatas) == 0 || len(allSteps) == 0 {
+	if len(allData) == 0 || len(allSteps) == 0 {
 		return []float64{}
 	}
 	detectedMaxStep := nodeleveldatarecorder.GetJobDetectionRecorderMaxDetectedStep(conf.JobName, npuId, column)
 	curDetectedStepIndex := -1
 	/* 第一次检测 */
 	if detectedMaxStep == 0 {
-		if len(allDatas) < (conf.NormalNumber + conf.NconsecAnomaliesSignifySlow) {
+		if len(allData) < (conf.NormalNumber + conf.NconsecAnomaliesSignifySlow) {
 			hwlog.RunLog.Warnf("[SLOWNODE ALGO]%s,  %d calculator data not enough", conf.JobName, npuId)
 			return []float64{}
 		}
 		nodeleveldatarecorder.SetJobDetectionRecorderMaxDetectedStep(
 			conf.JobName, npuId, allSteps[len(allSteps)-1], column)
-		return allDatas
+		return allData
 	}
 	/* 非第一次检测 */
 	for i := 0; i < len(allSteps); i++ {
@@ -183,16 +184,16 @@ func updateCalculatorLatencyStepRecord(allDatas []float64,
 	}
 	/* 全覆盖为全新数据（不考虑中间截断情况） */
 	if curDetectedStepIndex == -1 &&
-		len(allDatas) >= conf.NconsecAnomaliesSignifySlow {
+		len(allData) >= conf.NconsecAnomaliesSignifySlow {
 		nodeleveldatarecorder.SetJobDetectionRecorderMaxDetectedStep(
 			conf.JobName, npuId, allSteps[len(allSteps)-1], column)
-		return allDatas
+		return allData
 	}
-	if curDetectedStepIndex == -1 && len(allDatas) < conf.NconsecAnomaliesSignifySlow {
+	if curDetectedStepIndex == -1 && len(allData) < conf.NconsecAnomaliesSignifySlow {
 		hwlog.RunLog.Warnf("[SLOWNODE ALGO]%s,  %d calculator data not enough", conf.JobName, npuId)
 		return []float64{}
 	}
-	returnData := getDetectionData(curDetectedStepIndex, allDatas, conf, npuId, column)
+	returnData := getDetectionData(curDetectedStepIndex, allData, conf, npuId, column)
 	nodeleveldatarecorder.SetJobDetectionRecorderMaxDetectedStep(
 		conf.JobName, npuId, allSteps[len(allSteps)-1], column)
 	return returnData

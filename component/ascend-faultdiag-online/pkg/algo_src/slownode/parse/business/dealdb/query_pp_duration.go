@@ -1,9 +1,10 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright 2025 Huawei Technologies Co., Ltd.
+
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+       http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,17 +29,17 @@ func QueryPpDevDuration(dbCtx *db.SnpDbContext, groupName int64, startNsMin int6
 	startNsMax int64) (*model.Duration, error) {
 	querySql := `
 		SELECT
-			endNs - startNs AS duration 
+			endNs - startNs AS duration
 		FROM
 			COMMUNICATION_OP
-			LEFT JOIN STRING_IDS ON COMMUNICATION_OP.opType = STRING_IDS.id 
+			LEFT JOIN STRING_IDS ON COMMUNICATION_OP.opType = STRING_IDS.id
 		WHERE
-			groupName = ? 
+			groupName = ?
 			AND startNs >= ?
-			AND startNs <= ? 
+			AND startNs <= ?
 			AND lower( value ) = 'hcclsend'
 		ORDER BY
-			startNs 
+			startNs
 			LIMIT 1
 		`
 	return db.QuerySingleLine(dbCtx, querySql, []any{groupName, startNsMin, startNsMax},
@@ -55,14 +56,14 @@ func QueryPpHostDuration(dbCtx *db.SnpDbContext, groupName int64, startNsMin int
 			CANN_API
 		INNER JOIN (
 			SELECT
-				connectionId 
+				connectionId
 			FROM
 				COMMUNICATION_OP
-				LEFT JOIN STRING_IDS ON COMMUNICATION_OP.opType = STRING_IDS.id 
+				LEFT JOIN STRING_IDS ON COMMUNICATION_OP.opType = STRING_IDS.id
 			WHERE
-				groupName = ? 
+				groupName = ?
 				AND startNs >= ?
-				AND startNs <= ? 
+				AND startNs <= ?
 				AND lower( value ) = 'hcclsend'
 			) B ON CANN_API.connectionId = B.connectionId
 		`
