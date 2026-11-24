@@ -257,12 +257,6 @@ func (r *InstanceSetReconciler) validate(instanceSet *apiv1.InstanceSet) error {
 		r.Recorder.Eventf(instanceSet, corev1.EventTypeWarning, common.ValidateErrorReason, errorMsg)
 		return errors.New(errorMsg)
 	}
-	if *replicas < 0 {
-		errorMsg := fmt.Sprintf("jobSpec is not valid: replicas can not be negative num, but but got %d",
-			*replicas)
-		r.Recorder.Eventf(instanceSet, corev1.EventTypeWarning, common.ValidateErrorReason, errorMsg)
-		return errors.New(errorMsg)
-	}
 	// 3. validate labels
 	if _, ok := instanceSet.Labels[common.InferServiceNameLabelKey]; !ok {
 		errorMsg := fmt.Sprintf("label <%s> is missing", common.InferServiceNameLabelKey)

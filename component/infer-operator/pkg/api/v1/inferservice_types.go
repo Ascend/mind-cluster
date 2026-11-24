@@ -29,6 +29,7 @@ type InferServiceSpec struct {
 
 // SchedulingStrategy defines the scheduling strategy of InferService
 type SchedulingStrategy struct {
+	// +kubebuilder:validation:Enum="";Parallel;Priority
 	Type string `json:"type,omitempty"`
 }
 
