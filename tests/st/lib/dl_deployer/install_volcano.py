@@ -15,9 +15,12 @@
 # limitations under the License.
 # ==============================================================================
 import os.path
+import re
 import time
 
 from tests.st.lib.dl_deployer.dl import Installer
+
+VOLCANO_YAML_RE = re.compile(r'^volcano-v(\d+)\.(\d+)\.(\d+)\.yaml$')
 
 logrotate_content = """/var/log/mindx-dl/volcano-*/*.log{
    daily
@@ -41,19 +44,47 @@ class VolcanoInstaller(Installer):
     component_name = 'volcano'
 
     def get_yaml_path(self):
+        """pick the volcano deployment yaml for the cluster k8s version.
+
+        New k8s picks the newest volcano version; old k8s the oldest; prefer openeuler variant.
+        """
         yaml_files = []
         for root, _, files in os.walk(self.extract_dir):
             for filename in files:
-                if filename.endswith('.yaml'):
+                if VOLCANO_YAML_RE.match(filename):
                     yaml_files.append(os.path.join(root, filename))
         if not yaml_files:
-            raise Exception('failed to find yaml in {}'.format(self.extract_dir))
-        return sorted(yaml_files, reverse=self.use_new_k8s)[0]
+            raise RuntimeError('failed to find volcano yaml in {}'.format(self.extract_dir))
+
+        def version_of(path):
+            match = VOLCANO_YAML_RE.match(os.path.basename(path))
+            if not match:
+                raise RuntimeError('invalid volcano yaml name: {}'.format(path))
+            return tuple(int(part) for part in match.groups())
+
+        def is_openeuler_variant(path):
+            relative_dir = os.path.relpath(os.path.dirname(path), self.extract_dir)
+            return 'openeuler' in [part.lower() for part in relative_dir.split(os.sep)]
+
+        yaml_files.sort(key=version_of)
+        target_version = version_of(yaml_files[-1]) if self.use_new_k8s else version_of(yaml_files[0])
+        same_version_files = [path for path in yaml_files if version_of(path) == target_version]
+        openeuler_files = [path for path in same_version_files if is_openeuler_variant(path)]
+        if openeuler_files:
+            return openeuler_files[0]
+        self.module.logger.warning(
+            'volcano %s has no openeuler variant in %s, fallback to %s',
+            target_version,
+            self.extract_dir,
+            same_version_files[0],
+        )
+        return same_version_files[0]
 
     def docker_build_with_retry(self, tag, docker_file_name, build_dir, max_retries=3, retry_delay=20):
         for attempt in range(max_retries):
-            out = self.module.execute_command('docker build -q -t {} -f {} .'.format(tag, docker_file_name),
-                                              path=build_dir)
+            out = self.module.execute_command(
+                'docker build -q -t {} -f {} .'.format(tag, docker_file_name), path=build_dir
+            )
             if not out:
                 time.sleep(retry_delay)
             else:
