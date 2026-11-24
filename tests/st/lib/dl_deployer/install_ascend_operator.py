@@ -14,9 +14,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+import os
+import re
+
 from tests.st.lib.dl_deployer.dl import Installer
+
+ASCEND_OPERATOR_YAML_RE = re.compile(r'^ascend-operator-v\d+\.\d+\.\d+\.yaml$')
 
 
 class AscendOperatorInstaller(Installer):
     component_name = 'ascend-operator'
 
+    def get_yaml_path(self):
+        """pick the versioned ascend-operator deployment yaml.
+
+        Exclude CRD/config files as well as the without/1usoc variants excluded by the
+        base Installer, and match the versioned filename instead of a loose prefix.
+        """
+        for root, _, files in os.walk(self.extract_dir):
+            for filename in files:
+                if ASCEND_OPERATOR_YAML_RE.match(filename) and 'without' not in filename and '1usoc' not in filename:
+                    return os.path.join(root, filename)
+        raise RuntimeError("Failed to find ascend-operator yaml in {}".format(self.extract_dir))
