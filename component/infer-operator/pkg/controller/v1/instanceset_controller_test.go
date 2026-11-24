@@ -875,7 +875,7 @@ func TestInstanceSetReconcilerValidate(t *testing.T) {
 // TestInstanceSetReconcilerValidate2 tests the validate method of InstanceSetReconciler.
 func TestInstanceSetReconcilerValidate2(t *testing.T) {
 	convey.Convey("Test InstanceSetReconciler validate method", t, func() {
-		convey.Convey("Should return error when replicas is negative", func() {
+		convey.Convey("Should successfully validate zero replicas", func() {
 			fakeClient := NewFakeClient().Build()
 			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
 			bufferSize := 10
@@ -885,10 +885,12 @@ func TestInstanceSetReconcilerValidate2(t *testing.T) {
 				Recorder:           record.NewFakeRecorder(bufferSize),
 			}
 
-			replicas := int32(-1)
+			patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "Validate", nil)
+			defer patches.Reset()
+			replicas := int32(0)
 			instanceSet := CreateTestInstanceSet("test-instance", "default", replicas)
 			err := reconciler.validate(instanceSet)
-			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err, convey.ShouldBeNil)
 		})
 
 		convey.Convey("Should return error when InferServiceNameLabelKey is missing", func() {

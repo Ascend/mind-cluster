@@ -44,13 +44,15 @@ type ServiceSpec struct {
 
 // ScalingPolicy defines the scaling policy for InstanceSet
 type ScalingPolicy struct {
+	// +kubebuilder:validation:Enum="";HPA
 	Type string               `json:"type,omitempty"`
 	Spec runtime.RawExtension `json:"spec,omitempty"`
 }
 
 // InstanceSetSpec defines the desired state of InstanceSet
 type InstanceSetSpec struct {
-	Name               string               `json:"name,omitempty"`
+	Name string `json:"name,omitempty"`
+	// +kubebuilder:validation:Minimum=0
 	Replicas           *int32               `json:"replicas,omitempty"`
 	Services           []ServiceSpec        `json:"services,omitempty"`
 	WorkloadTypeMeta   WorkloadType         `json:"workload,omitempty"`

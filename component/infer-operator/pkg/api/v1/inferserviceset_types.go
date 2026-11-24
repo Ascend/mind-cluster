@@ -23,6 +23,7 @@ import (
 
 // InferServiceSetSpec defines the desired state of InferServiceSet
 type InferServiceSetSpec struct {
+	// +kubebuilder:validation:Minimum=1
 	Replicas             *int32           `json:"replicas,omitempty"`
 	InferServiceTemplate InferServiceSpec `json:"template,omitempty"`
 }

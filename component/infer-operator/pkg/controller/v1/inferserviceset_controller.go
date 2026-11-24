@@ -131,10 +131,10 @@ func (r *InferServiceSetReconciler) validate(ctx context.Context, iss *apiv1.Inf
 		iss.Spec.Replicas = new(int32)
 		*iss.Spec.Replicas = 1
 	}
-	if *iss.Spec.Replicas > common.MaxInferServiceReplicas || *iss.Spec.Replicas < 1 {
-		hwlog.RunLog.Errorf("InferServiceSet %s replicas %d exceeds max %d or less than 1",
+	if *iss.Spec.Replicas > common.MaxInferServiceReplicas {
+		hwlog.RunLog.Errorf("InferServiceSet %s replicas %d exceeds max %d",
 			req.NamespacedName, *iss.Spec.Replicas, common.MaxInferServiceReplicas)
-		return fmt.Errorf("inferServiceSet %s replicas %d exceeds max %d or less than 1",
+		return fmt.Errorf("inferServiceSet %s replicas %d exceeds max %d",
 			req.NamespacedName, *iss.Spec.Replicas, common.MaxInferServiceReplicas)
 	}
 

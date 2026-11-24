@@ -113,20 +113,20 @@ func TestReconcileScalingResourceNilPolicy(t *testing.T) {
 	})
 }
 
-func TestReconcileScalingResourceUnsupportedType(t *testing.T) {
-	convey.Convey("TestReconcileScalingResource unsupported type", t, func() {
+func TestReconcileScalingResourceEmptyType(t *testing.T) {
+	convey.Convey("TestReconcileScalingResource empty type allowed by the CRD", t, func() {
 		scheme := buildTestScheme()
 		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
 		mgr := NewScalingManager(fakeClient, scheme)
 
 		instanceSet := buildTestInstanceSet("test", "default", &apiv1.ScalingPolicy{
-			Type: "Unsupported",
+			Type: "",
 		})
 		status, err := mgr.ReconcileScalingResource(context.Background(), instanceSet)
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(status, convey.ShouldNotBeNil)
 		convey.So(status.Ready, convey.ShouldBeFalse)
-		convey.So(status.Type, convey.ShouldEqual, "Unsupported")
+		convey.So(status.Type, convey.ShouldEqual, "")
 		convey.So(status.Message, convey.ShouldContainSubstring, "unsupported")
 	})
 }
