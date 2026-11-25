@@ -1,0 +1,32 @@
+name: api-scan
+
+on:
+  pull_request_target:   # 确保读取默认分支的最新 workflow 配置
+    branches: [ 'master' ]          # 按目标分支调整
+
+jobs:
+  api-scan:
+    permissions:
+      repository: read
+      id-token: write
+    name: api-scan task
+    runs-on: [ self-hosted, default, x86, cpu=8 ]
+    steps:
+      - name: checkout repository
+        uses: checkout
+        with:
+          ref: ${{ atomgit.event.pull_request.merge_commit_sha || '' }}
+          allow-unsafe-pr-checkout: true
+
+      - name: setup-python
+        uses: setup-python
+        with:
+          version: 3.14.3
+
+      - name: setup-go
+        uses: setup-go
+        with:
+          version: 1.21
+
+      - name: api-scan
+        uses: openlibing/api-scan-action@v1.0.2

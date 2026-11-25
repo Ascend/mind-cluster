@@ -66,13 +66,6 @@ env:
   img_ut_mindio_cpp_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_ub22_ut_20260421_cluster"
   img_presmoke_arm: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:SDK_20260112_1"
 
-permissions:
-  project: read
-  repository: read
-  id-token: write
-  pr: write
-  note: write
-
 concurrency:
   enable: true
   max: 5
@@ -87,7 +80,7 @@ stages:
     jobs:
       Detect_file_changes:
         name: Detect_file_changes
-        runs-on: [ self-hosted, x86, cpu=16 ]
+        runs-on: [ self-hosted, default, x86, cpu=16 ]
         container:
           image: swr.cn-north-4.myhuaweicloud.com/pytorch_images_x86/pytorchx86:v_03
         outputs:
@@ -137,7 +130,7 @@ stages:
       associate_pr_comment:
         name: associate_pr_comment
         select: selected_by_default
-        runs-on: [ self-hosted, x86, cpu=16 ]
+        runs-on: [ self-hosted, default, x86, cpu=16 ]
         container:
           image: swr.cn-north-4.myhuaweicloud.com/atlas-ci/common:latest
         steps:
@@ -160,7 +153,7 @@ stages:
     jobs:
       pre-commit:
         name: pre-commit
-        runs-on: [ self-hosted, x86, cpu=16 ]
+        runs-on: [ self-hosted, default, x86, cpu=16 ]
         container:
           image: swr.cn-north-4.myhuaweicloud.com/atlas-ci/common:latest
           options: --user root
@@ -182,8 +175,11 @@ stages:
             uses: openlibing/pre-commit-action@v1.0.0
 
       SCA:
+        permissions:
+          repository: read
+          id-token: write
         name: SCA
-        runs-on: [ self-hosted, x86, cpu=8 ]
+        runs-on: [ self-hosted, default, x86, cpu=8 ]
         container:
           image: swr.cn-north-4.myhuaweicloud.com/atlas-ci/common:latest
           options: --user root
@@ -198,8 +194,11 @@ stages:
               project-name: MindCluster
 
       malicious-scan:
+        permissions:
+          repository: read
+          id-token: write
         name: antipoison
-        runs-on: [ self-hosted, x86, cpu=8 ]
+        runs-on: [ self-hosted, default, x86, cpu=8 ]
         container:
           image: swr.cn-north-4.myhuaweicloud.com/atlas-ci/common:latest
           options: --user root
@@ -283,7 +282,7 @@ stages:
 post:
   jobs:
     query_pipeline:
-      runs-on: [ self-hosted, x86, cpu=16 ]
+      runs-on: [ self-hosted, default, x86, cpu=16 ]
       container:
         image: swr.cn-north-4.myhuaweicloud.com/atlas-ci/common:latest
       steps:

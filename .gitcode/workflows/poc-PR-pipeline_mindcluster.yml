@@ -61,13 +61,6 @@ env:
   img_ut_mindio_cpp_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_ub22_ut_20260421_cluster"
   img_presmoke_arm: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:SDK_20260112_1"
 
-permissions:
-  project: read
-  repository: read
-  id-token: write
-  pr: write
-  note: write
-
 concurrency:
   enable: true
   max: 5
@@ -177,6 +170,9 @@ stages:
             uses: openlibing/pre-commit-action@v1.0.0
 
       SCA:
+        permissions:
+          repository: read
+          id-token: write
         name: SCA
         runs-on: [ self-hosted, x86, cpu=8 ]
         container:
@@ -193,6 +189,9 @@ stages:
               project-name: MindCluster
 
       malicious-scan:
+        permissions:
+          repository: read
+          id-token: write
         name: antipoison
         runs-on: [ self-hosted, x86, cpu=8 ]
         container:
