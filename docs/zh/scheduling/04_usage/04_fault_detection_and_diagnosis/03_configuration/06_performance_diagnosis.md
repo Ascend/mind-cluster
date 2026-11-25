@@ -11,7 +11,7 @@
 
 #### 准备软件包<a name="zh-cn_topic_0000002194466236_section8281518121516"></a>
 
-**表 1**  准备软件包
+**表 1** 准备软件包
 
 <a name="zh-cn_topic_0000002194466236_table232305471415"></a>
 
@@ -38,7 +38,7 @@
 
               需保证import的顺序在import torch和import torch\_npu后面，示例如下。
 
-              ```shell
+              ```python
               import torch
               import torch_npu
               import mstx_torch_plugin
@@ -190,7 +190,7 @@
                   ```
 
               >[!NOTE]
-              >- 该挂载方式仅适用通过ConfigMap方式开启轻量profiling获取落盘数据。
+              >- 该挂载方式仅适用于通过ConfigMap方式开启轻量profiling获取落盘数据。
           2. 挂载轻量profiling落盘文件：轻量profiling数据写在容器内的/user/cluster-info/profiling路径下。如需在宿主机获取，请修改任务YAML，将该路径挂出。
               - 容器内YAML挂载示例如下。
 
@@ -385,7 +385,7 @@
 
 #### 准备软件包<a name="zh-cn_topic_0000002194466236_section8281518121516-duplicate-2"></a>
 
-**表 2**  准备软件包
+**表 2** 准备软件包
 
 <a name="zh-cn_topic_0000002194466236_table232305471415-duplicate-2"></a>
 
@@ -733,7 +733,7 @@ ClusterD与FD-OL（Fault Diagnose Online）框架在同一进程中，都部署�
                          get_num_microbatches()</pre>
 
 2. 完成[使用前准备](#zh-cn_topic_0000002333550505_section420815439315)和[部署形态](#zh-cn_topic_0000002333550505_section1048011118418)。
-3. 使用**kubectl apply -f ajob-2pod-16npu.yaml**命令，创建慢节点诊断任务写入configMap。
+3. 使用**kubectl apply -f ajob-2pod-16npu.yaml**命令，创建慢节点诊断任务写入ConfigMap。
 
     ![](../../../../figures/scheduling/zh-cn_image_0000002333860285.png)
 
@@ -758,7 +758,7 @@ ClusterD与FD-OL（Fault Diagnose Online）框架在同一进程中，都部署�
     ---
     ```
 
-    **表 3**  YAML文件回显说明
+    **表 3** YAML文件回显说明
 
     <a name="zh-cn_topic_0000002278667326_table1834456175114"></a>
 
@@ -817,7 +817,7 @@ ClusterD与FD-OL（Fault Diagnose Online）框架在同一进程中，都部署�
         kubectl edit cm -n cluster-system pingmesh-config
         ```
 
-        **表 4**  pingmesh-config文件参数说明
+        **表 4** pingmesh-config文件参数说明
 
         <a name="zh-cn_topic_0000002313236861_table15591134151811"></a>
 

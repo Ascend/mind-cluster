@@ -1,5 +1,7 @@
 # 使用Helm卸载<a name="ZH-CN_TOPIC_0000002511426390"></a>
 
+本章节介绍如何通过Helm卸载MindCluster组件，包括卸载前的Helm版本确认、组件确认与执行卸载、卸载结果确认。
+
 ## 卸载说明<a name="section_uninstall_desc"></a>
 
 本文档介绍如何通过Helm卸载MindCluster组件。
@@ -64,7 +66,7 @@
 >- 卸载操作需要在K8s管理节点执行。
 >- 卸载前请确认集群中无正在使用MindCluster组件管理的工作负载，避免业务中断。
 
-1. （可选）关闭pingmesh灵衢网络检测。pingmesh灵衢网络检测是针对超节点内部（包括节点内和节点间）的HCCS网络提供的NPU网络故障检测，用于监控超节点间网络连通性。卸载前关闭pingmesh可避免卸载后残留的网络检测配置干扰集群网络。
+1. （可选）关闭pingmesh灵衢网络检测。pingmesh灵衢网络检测是针对超节点内部（包括节点内和节点间）的HCCS网络提供的NPU网络故障检测，用于监控超节点内网络连通性。卸载前关闭pingmesh可避免卸载后残留的网络检测配置干扰集群网络。
     1. 执行以下命令编辑pingmesh-config ConfigMap。
 
         ```bash
@@ -89,7 +91,7 @@
     release "mindcluster" uninstalled
     ```
 
-3. 卸载MindCluster CRD资源。
+3. 卸载MindCluster CRD。
 
     ```bash
     helm uninstall mindcluster-crds

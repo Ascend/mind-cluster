@@ -1,5 +1,7 @@
 # 组件介绍
 
+本章节介绍MindCluster集群调度各组件的应用场景、组件功能与上下游依赖关系。
+
 ## Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002511426843"></a>
 
 **应用场景<a name="section15761025111720"></a>**
@@ -28,10 +30,10 @@
 
 **图 1** 组件上下游依赖<a name="fig24667426549"></a>
 
-![](../../figures/scheduling/01_introduction/01_component_description/ascend_docker_runtime.png "组件上下游依赖")
+![Ascend Docker Runtime上下游依赖架构图，展示install、runtime、hook&&cli、destroy模块协作挂载昇腾驱动文件](../../figures/scheduling/01_introduction/01_component_description/ascend_docker_runtime.png "组件上下游依赖")
 
 1. install模块：部署时，修改docker/containerd/cri-o的配置文件，将容器运行时改为昇腾容器运行时。
-2. runtime模块：修改容器配置文件，使能hook、destroy钩子函数。并做好vNPU切分，芯片设备文件解析等挂载前的准备工作。
+2. runtime模块：修改容器配置文件，使能hook、destroy钩子函数，并做好vNPU切分，芯片设备文件解析等挂载前的准备工作。
 3. hook&&cli：容器创建前被调用，负责整理芯片设备文件、驱动文件、用户自定义文件，并将其挂载到容器中。
 4. destroy：容器销毁前被调用，负责销毁创建出来的vNPU。
 
@@ -49,9 +51,9 @@
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 2**  组件上下游依赖<a name="fig129782047111818"></a>
+**图 2** 组件上下游依赖<a name="fig129782047111818"></a>
 
-![](../../figures/scheduling/组件上下游依赖-0.png "组件上下游依赖-0")
+![NPU Exporter上下游依赖架构图，展示从驱动与CRI接口获取芯片网络数据、经Prometheus与Telegraf上报的关系](../../figures/scheduling/组件上下游依赖-0.png "组件上下游依赖-0")
 
 1. 从驱动中获取芯片以及网络信息，并放入本地缓存。
 2. 从K8s标准化接口CRI中获取容器信息，并放入本地缓存。
@@ -72,9 +74,9 @@
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 3**  组件上下游依赖<a name="fig18917163118163"></a>
+**图 3** 组件上下游依赖<a name="fig18917163118163"></a>
 
-![](../../figures/scheduling/组件上下游依赖-1.png "组件上下游依赖-1")
+![Ascend Device Plugin上下游依赖架构图，展示从DCMI获取芯片信息上报kubelet、配合ClusterD与环境变量挂载设备的关系](../../figures/scheduling/组件上下游依赖-1.png "组件上下游依赖-1")
 
 1. 从DCMI中获取芯片的类型、数量、健康状态及所属的NUMA Node信息，或者下发芯片复位命令。
 2. 上报芯片的类型、数量、状态及所属NUMA Node信息给kubelet。
@@ -95,9 +97,9 @@
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 4**  组件上下游依赖<a name="fig1383773934815"></a>
+**图 4** 组件上下游依赖<a name="fig1383773934815"></a>
 
-![](../../figures/scheduling/组件上下游依赖-2.png "组件上下游依赖-2")
+![Volcano上下游依赖架构图，展示融合K8s Node、Pod与ClusterD故障芯片信息后向设备插件传递调度结果的关系](../../figures/scheduling/组件上下游依赖-2.png "组件上下游依赖-2")
 
 1. 从K8s的Node对象上获取芯片总数，从Pod对象上获取已使用芯片信息，从ClusterD中获取故障芯片信息，三者结合得到集群可用芯片信息。
 2. 接收任务配置，根据集群资源信息，选择最优资源调度。
@@ -107,7 +109,7 @@
 
 **应用场景<a name="section15761025111720"></a>**
 
-集群中多个故障间往往存在关联性，需要集群视角的故障监控，才能更准确地分辨故障的根因。 MindCluster提供了ClusterD服务，汇聚集群资源信息，提供更准确的故障感知和更快速的故障恢复能力。
+集群中多个故障间往往存在关联性，需要集群视角的故障监控，才能更准确地分辨故障的根因。MindCluster提供了ClusterD服务，汇聚集群资源信息，提供更准确的故障感知和更快速的故障恢复能力。
 
 **组件功能<a name="section1112014512117"></a>**
 
@@ -116,9 +118,9 @@
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 5**  组件上下游依赖<a name="fig17906165344115"></a>
+**图 5** 组件上下游依赖<a name="fig17906165344115"></a>
 
-![](../../figures/scheduling/组件上下游依赖-3.png "组件上下游依赖-3")
+![ClusterD上下游依赖架构图，展示汇聚各节点设备插件、NodeD与RDMA插件信息并上报Volcano的集群故障感知关系](../../figures/scheduling/组件上下游依赖-3.png "组件上下游依赖-3")
 
 1. 从各个计算节点的Ascend Device Plugin中获取芯片的信息。
 2. 从各个计算节点的NodeD中获取计算节点的CPU、内存、硬盘的健康状态，以及节点共享存储故障、灵衢慢网络故障信息。
@@ -149,9 +151,9 @@
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 6**  组件上下游依赖<a name="fig1853091182713"></a>
+**图 6** 组件上下游依赖<a name="fig1853091182713"></a>
 
-![](../../figures/scheduling/01_introduction/01_component_description/ascend_operator.png "组件上下游依赖-4")
+![Ascend Operator上下游依赖架构图，展示经Volcano确认资源后创建Pod并注入集合通信参数环境变量的流程](../../figures/scheduling/01_introduction/01_component_description/ascend_operator.png "组件上下游依赖-4")
 
 1. 通过Volcano感知当前任务所需资源是否满足。
 2. 资源满足后，针对任务创建对应的Pod并注入集合通信参数的环境变量。
@@ -162,7 +164,7 @@
 
 **应用场景<a name="section15761025111720"></a>**
 
-任务要想在节点上稳定的运行，除了保证NPU的健康以外，节点的CPU、内存或硬盘的健康也需要保证。MindCluster提供了NodeD组件，用于节点的异常检测及上报。
+任务要想在节点上稳定地运行，除了保证NPU的健康以外，节点的CPU、内存或硬盘的健康也需要保证。MindCluster提供了NodeD组件，用于节点的异常检测及上报。
 
 **组件功能<a name="section1112014512117"></a>**
 
@@ -171,9 +173,9 @@
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 7**  组件上下游依赖<a name="fig10531114511617"></a>
+**图 7** 组件上下游依赖<a name="fig10531114511617"></a>
 
-![](../../figures/scheduling/01_introduction/01_component_description/noded.png "组件上下游依赖-5")
+![NodeD上下游依赖架构图，展示从IPMI与共享存储客户端获取节点CPU、内存、硬盘异常并上报ClusterD的路径](../../figures/scheduling/01_introduction/01_component_description/noded.png "组件上下游依赖-5")
 
 1. 从IPMI中获取计算节点的CPU、内存、硬盘的故障信息。
 2. 从共享存储客户端中获取共享存储异常信息。
@@ -197,11 +199,11 @@
 
 **组件上下游依赖<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section4941922192110"></a>**
 
-**图 8**  组件上下游依赖<a name="fig19841330125219"></a>
+**图 8** 组件上下游依赖<a name="fig19841330125219"></a>
 
-![](../../figures/scheduling/组件上下游依赖-6.png "组件上下游依赖-6")
+![Elastic Agent上下游依赖架构图，展示经ConfigMap获取设备与任务状态并对接K8s集群控制中心完成训练管理的路径](../../figures/scheduling/组件上下游依赖-6.png "组件上下游依赖-6")
 
-- MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写入ConfigMap中，并映射到容器内，ConfigMap名称为[reset-config-任务名称](../06_api/01_volcano.md#任务信息)。
+- MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写入ConfigMap中，并映射到容器内，ConfigMap名称为[reset-config-<任务名称\>](../06_api/01_volcano.md#任务信息)。
 - Elastic Agent通过ConfigMap获取当前训练容器所使用的设备状况和训练任务状态等信息。
 - Elastic Agent对接K8s集群控制中心，根据集群控制中心完成训练管理。
 <!-- end id2 -->
@@ -233,24 +235,24 @@
   - TaskD Manager通过ConfigMap获取当前训练容器所使用的设备状况和训练任务状态等信息。
   - TaskD Manager对接K8s集群控制中心，根据集群控制中心完成训练管理。
 
-  **图 9**  组件上下游依赖\_业务流**一**<a name="fig113811033154417"></a>
+  **图 9** 组件上下游依赖\_业务流**一**<a name="fig113811033154417"></a>
 
-  ![](../../figures/scheduling/组件上下游依赖_业务流一.png "组件上下游依赖_业务流一")
+  ![TaskD业务流一场景上下游依赖架构图，展示TaskD Manager经ConfigMap获取设备状况与训练状态并对接集群控制中心的关系](../../figures/scheduling/组件上下游依赖_业务流一.png "组件上下游依赖_业务流一")
 
 - **业务流二场景下组件的上下游依赖说明如下。**
 
   - TaskD Worker通过ConfigMap获取当前任务的训练检测功能开启指令。
   - TaskD Manager通过gRPC获取当前任务的训练检测功能开启指令。
 
-  **图 10**  组件上下游依赖\_业务流二<a name="fig1894945324911"></a>
+  **图 10** 组件上下游依赖\_业务流二<a name="fig1894945324911"></a>
 
-  ![](../../figures/scheduling/组件上下游依赖_业务流二.png "组件上下游依赖_业务流二")
+  ![TaskD业务流二场景上下游依赖架构图，展示TaskD Worker与Manager分别经ConfigMap和gRPC获取训练检测功能开启指令](../../figures/scheduling/组件上下游依赖_业务流二.png "组件上下游依赖_业务流二")
 
 ## MindIO ACP<a name="ZH-CN_TOPIC_0000002479226942"></a>
 
 **应用场景<a name="section15761025111720"></a>**
 
-Checkpoint是模型中断训练后恢复的关键点，Checkpoint的密集程度、保存和恢复的性能较为关键，它可以提高训练系统的有效吞吐率。MindIO ACP针对Checkpoint的加速方案，支持昇腾产品在LLM模型领域扩展市场空间。
+Checkpoint是模型中断训练后恢复的关键点，其密集程度以及保存和恢复的性能较为关键，可以提高训练系统的有效吞吐率。MindIO ACP针对Checkpoint的加速方案，支持昇腾产品在LLM模型领域扩展市场空间。
 
 **组件功能<a name="section1112014512117"></a>**
 
@@ -260,7 +262,7 @@ Checkpoint是模型中断训练后恢复的关键点，Checkpoint的密集程度
 
 **图 11** MindIO ACP<a name="fig117818118587"></a>
 
-![](../../figures/scheduling/MindIO-ACP.png "MindIO-ACP")
+![MindIO ACP组件上下游依赖架构图，展示以训练服务器内存作为缓存加速Checkpoint保存与加载的数据通路](../../figures/scheduling/MindIO-ACP.png "MindIO-ACP")
 
 ## MindIO TFT<a name="ZH-CN_TOPIC_0000002511426847"></a>
 
@@ -280,7 +282,7 @@ MindIO TFT包括临终Checkpoint保存、进程级在线恢复和优雅容错等
 
 **图 12** MindIO TFT<a name="fig117818118588"></a>
 
-![](../../figures/scheduling/MindIO-TFT.png "MindIO-TFT")
+![MindIO TFT组件上下游依赖架构图，展示临终Checkpoint保存、进程级在线恢复与优雅容错三项能力的协作关系](../../figures/scheduling/MindIO-TFT.png "MindIO-TFT")
 <!-- end id3 -->
 
 <!-- npu="950,A3,910b,910,310p" id4 -->
@@ -299,9 +301,9 @@ MindIO TFT包括临终Checkpoint保存、进程级在线恢复和优雅容错等
 
 **组件上下游依赖<a name="section16318132318112"></a>**
 
-**图 13**  组件上下游依赖<a name="fig107831859288"></a>
+**图 13** 组件上下游依赖<a name="fig107831859288"></a>
 
-![](../../figures/scheduling/组件上下游依赖-7.png "组件上下游依赖-7")
+![Container Manager上下游依赖架构图，展示从DCMI获取芯片信息并向Docker或Containerd下发容器启停与复位命令的关系](../../figures/scheduling/组件上下游依赖-7.png "组件上下游依赖-7")
 
 1. 从DCMI中获取芯片的类型、数量、健康状态信息。
 2. 向DCMI下发芯片复位命令。
@@ -327,9 +329,9 @@ MindCluster提供Infer Operator组件，根据推理服务的实例配置，批�
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 14**  组件上下游依赖<a name="fig107831859289"></a>
+**图 14** 组件上下游依赖<a name="fig107831859289"></a>
 
-![](../../figures/scheduling/introduction_infer-operator.PNG "introduction_infer-operator")
+![Infer Operator上下游依赖架构图，展示由任务YAML创建推理Workload、Volcano选定资源与设备插件挂载NPU的关系](../../figures/scheduling/introduction_infer-operator.PNG "introduction_infer-operator")
 
 1. 基于用户配置的任务YAML创建推理实例Workload。
 2. Workload Controller创建Pod后，Volcano进行资源的最终选定。
@@ -343,7 +345,7 @@ MindCluster提供Infer Operator组件，根据推理服务的实例配置，批�
 
 Kubernetes需要感知RDMA网络设备资源信息来实现资源调度。为了让容器能够使用RDMA网络进行高速数据传输，需要通过设备插件机制将RDMA设备资源注册给Kubernetes。MindCluster提供了部署在计算节点的K8s RDMA Shared Dev Plugin组件，用于管理RDMA设备资源。
 
-> [!NOTE]
+>[!NOTE]
 >
 > - 业务容器使用1825 DPU设备时，除了需要组件挂载外，还需要配置用户态驱动，以下两种方式任选其一
 >   - 在镜像中安装1825 DPU的OFED驱动
@@ -364,13 +366,13 @@ Kubernetes需要感知RDMA网络设备资源信息来实现资源调度。为了
 - 支持共享和独占两种工作模式。
 - 支持RDMA设备的热插拔和动态更新。
 - 可配置日志级别、日志备份数量、日志保留天数等日志参数。
-- 可配置故障检测周期，每周期对筛选后的UB设备进行故障检测，并写入 dpuinfo-\<nodename\> configMap。
+- 可配置故障检测周期，每周期对筛选后的UB设备进行故障检测，并写入dpuinfo-\<nodename\> ConfigMap。
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 15**  组件上下游依赖<a name="fig18917163118164"></a>
+**图 15** 组件上下游依赖<a name="fig18917163118164"></a>
 
-![](../../figures/scheduling/01_introduction/01_component_description/k8s-rdma-shared-dev-plugin.png "组件上下游依赖-8")
+![K8s RDMA Shared Dev Plugin上下游依赖架构图，展示读取设备信息上报kubelet、hinicadm5故障检测与ClusterD故障汇总的关系](../../figures/scheduling/01_introduction/01_component_description/k8s-rdma-shared-dev-plugin.png "组件上下游依赖-8")
 
 1. 从设备目录读取设备信息。
 2. 上报RDMA设备的类型、数量和状态给kubelet。
@@ -393,11 +395,11 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 16**  组件上下游依赖<a name="fig18917163118167"></a>
+**图 16** 组件上下游依赖<a name="fig18917163118167"></a>
 
-![](../../figures/scheduling/01_introduction/01_component_description/ub-host-device-cni.png "组件上下游依赖-9")
+![UB Host Device CNI上下游依赖架构图，展示从Multus获取设备ID查询网卡并经IPAM插件分配IP的挂载流程](../../figures/scheduling/01_introduction/01_component_description/ub-host-device-cni.png "组件上下游依赖-9")
 
-1. 挂载设备来源之一： Multus CNI下发的`runtimeConfig.deviceID`。
+1. 挂载设备来源之一：Multus CNI下发的`runtimeConfig.deviceID`。
 2. 根据获取的设备ID查询具体的网卡设备。
 3. 通过IPAM插件为挂载的网卡分配IP地址。
 
@@ -418,9 +420,9 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 17**  组件上下游依赖<a name="fig129782047111819"></a>
+**图 17** 组件上下游依赖<a name="fig129782047111819"></a>
 
-![](../../figures/scheduling/组件上下游依赖-9.png "组件上下游依赖-9")
+![DPU Exporter上下游依赖架构图，展示从网卡管理工具、sysfs文件系统与RDMA子系统采集指标并经Prometheus上报的路径](../../figures/scheduling/组件上下游依赖-9.png "组件上下游依赖-9")
 
 1. 从网卡管理工具hinicadm5获取DPU卡级全局指标，放入缓存。
 2. 从sysfs文件系统获取Interface级指标，放入缓存。
@@ -433,7 +435,7 @@ Kubernetes通过设备组件（如K8s RDMA Shared Dev Plugin）感知并上报UB
 
 **应用场景<a name="section15761025111720"></a>**
 
-Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（Dynamic Resource Allocation，DRA）驱动插件。组件在节点上自动发现昇腾NPU设备，并以ResourceSlice的形式上报至集群，业务通过ResourceClaim申报所需资源后，调度器根据设备上报信息完成匹配与分配，并通过CDI（Container Device Interface）机制将设备注入业务容器，实现从资源申报到设备使用的全流程自动化。
+Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配DRA（Dynamic Resource Allocation）驱动插件。组件在节点上自动发现昇腾NPU设备，并以ResourceSlice的形式上报至集群，业务通过ResourceClaim申报所需资源后，调度器根据设备上报信息完成匹配与分配，并通过CDI（Container Device Interface）机制将设备注入业务容器，实现从资源申报到设备使用的全流程自动化。
 
 **组件功能<a name="section1112014512117"></a>**
 
@@ -444,9 +446,9 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
-**图 18**  组件上下游依赖<a name="fig18917163118166"></a>
+**图 18** 组件上下游依赖<a name="fig18917163118166"></a>
 
-![](../../figures/scheduling/组件上下游依赖-10.png "组件上下游依赖-10")
+![Ascend Dynamic Resource Allocation上下游依赖架构图，展示从DCMI发现芯片、上报ResourceSlice并完成分配与CDI注入](../../figures/scheduling/组件上下游依赖-10.png "组件上下游依赖-10")
 
 1. 从DCMI中获取昇腾芯片的类型、物理ID、逻辑ID等信息，完成设备发现。
 2. 通过kubelet插件机制完成注册。
@@ -474,7 +476,7 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 
 **图 19** Agent Core组件上下游依赖<a name="fig117818118589"></a>
 
-![](../../figures/scheduling/组件上下游依赖-11.png "组件上下游依赖-11")
+![Agent Core上下游依赖架构图，展示从K8s API Server接收任务请求并向Node Collector下发采集指令、回收采集结果的关系](../../figures/scheduling/组件上下游依赖-11.png "组件上下游依赖-11")
 
 1. 从K8s API Server获取任务请求。
 2. 从ConfigMap中获取任务缓存信息、训练/推理任务的挂载对和env信息。
@@ -502,7 +504,7 @@ Ascend Dynamic Resource Allocation是昇腾NPU的Kubernetes动态资源分配（
 
 **图 20** Node Collector组件上下游依赖<a name="fig117818118590"></a>
 
-![](../../figures/scheduling/组件上下游依赖-12.png "组件上下游依赖-12")
+![Node Collector上下游依赖架构图，展示从Agent Core接收采集清洗指令、在宿主机采集数据并上报清洗结果的关系](../../figures/scheduling/组件上下游依赖-12.png "组件上下游依赖-12")
 
 1. 从Agent Core接收采集和清洗指令。
 2. 按照采集契约，在宿主机中执行相关的数据采集。

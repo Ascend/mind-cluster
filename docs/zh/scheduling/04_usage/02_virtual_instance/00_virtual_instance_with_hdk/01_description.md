@@ -17,7 +17,7 @@
 
 ## 产品支持说明<a name="section17326115542216"></a>
 
-**表 1**  产品支持情况说明
+**表 1** 产品支持情况说明
 
 <a name="table32786155236"></a>
 <table><thead align="left"><tr id="row4278815202313"><th class="cellrowborder" valign="top" width="31.78%" id="mcps1.2.5.1.1"><p id="p22785157230"><a name="p22785157230"></a><a name="p22785157230"></a>产品系列</p>
@@ -156,7 +156,7 @@
 - 物理NPU虚拟化出vNPU后，不支持再将该物理NPU挂载到容器使用，也不支持再将该物理NPU直通到虚拟机使用。
 - 一个vNPU只能被一个任务容器使用，不支持多个任务容器使用同一个vNPU。
 <!-- npu="310p" id1 -->
-- Atlas 300I Duo推理卡上两个芯片的工作模式必须一致。即均使用虚拟化实例功能，或均整卡使用。请根据业务自行规划。
+- Atlas 300I Duo推理卡上两个芯片的工作模式必须一致，即均使用虚拟化实例功能，或均整卡使用。请根据业务自行规划。
 <!-- end id1 -->
 - 虚拟化实例模板用于对整台服务器上所有NPU进行资源切分，不支持不同规格的标卡混插。例如：Atlas 300V Pro视频解析卡支持24GB和48GB内存规格，不支持这两种内存规格的卡混插进行虚拟化；不支持30个AICore的<term>Atlas训练系列产品</term>和32个AICore的<term>Atlas训练系列产品</term>混插。
 <!-- npu="910" id2 -->
@@ -166,5 +166,5 @@
     2. 执行**ipmcget -d npuworkmode**命令查询NPU芯片的工作模式，若为AMP模式，则无需切换。
     3. 执行**ipmcset -d npuworkmode -v 0**命令设置NPU芯片的工作模式为AMP模式。
 
-    查询和设置NPU芯片工作模式的详细介绍，请参见《[Atlas 800训练服务器 iBMC用户指南（型号 9000）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583)》中的"[查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)"章节。
+    查询和设置NPU芯片工作模式的详细介绍，请参见《[Atlas 800训练服务器 iBMC用户指南（型号 9000）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583)》中的“[查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。
 <!-- end id2 -->

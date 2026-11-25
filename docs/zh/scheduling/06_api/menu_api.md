@@ -42,7 +42,7 @@
 - [Container Manager](18_container-manager.md)
 <!-- end id9 -->
 <!-- npu="950" id10 -->
-- [UB Host Device Cni](19_ub_host_device_cni.md)
+- [UB Host Device CNI](19_ub_host_device_cni.md)
 <!-- end id10 -->
 - [Agent Core、Node Collector与Kubectl Plugin](20_clusterops_agent.md)
 - [Agent Core查询工具接口](21_clusterops_agent_tools.md)

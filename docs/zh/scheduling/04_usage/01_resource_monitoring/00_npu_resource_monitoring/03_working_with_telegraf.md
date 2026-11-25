@@ -26,7 +26,7 @@
 
     command字段的输入参数说明如[表1](#table5347115241118)所示。
 
-    **表 1**  参数说明
+    **表 1** 参数说明
 
     <a name="table5347115241118"></a>
 
@@ -61,7 +61,7 @@
         1. 进入[Telegraf下载页面](https://www.influxdata.com/downloads/)。
         2. 在下拉框选择操作系统及Telegraf版本。
 
-            **图 1**  下载Telegraf<a name="fig131640329479"></a>
+            **图 1** 下载Telegraf<a name="fig131640329479"></a>
 
             ![下载Telegraf下载页示意图](../../../../figures/scheduling/下载Telegraf.png "下载Telegraf")
 

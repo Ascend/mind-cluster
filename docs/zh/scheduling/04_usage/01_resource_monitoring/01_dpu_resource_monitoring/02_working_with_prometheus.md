@@ -19,7 +19,7 @@
     >- 获取镜像前，请确保能够正常访问互联网。
     >- 若不使用集群调度提供的prometheus.yaml，需要参考该YAML在相应位置加上app: prometheus字段，否则可能出现DPU Exporter连接超时。
 
-3. prometheus.yaml默认包含获取NPU-Exporter metrics的相关配置，用户需将其中的job替换为获取DPU-Exporter metrics的配置。以下为获取DPU-Exporter metrics的相关配置，DPU Exporter部署在dpu-exporter命名空间下，服务端口为8083。
+3. prometheus.yaml默认包含获取NPU-Exporter metrics的相关配置，用户需将其中的job替换为获取DPU Exporter metrics的配置。以下为获取DPU Exporter metrics的相关配置，DPU Exporter部署在dpu-exporter命名空间下，服务端口为8083。
 
     ```yaml
     ...
@@ -65,7 +65,6 @@
     回显如下，表示安装成功。
 
     ```ColdFusion
-    [root@centos check_env]# kubectl apply -f prometheus.yaml
     clusterrole.rbac.authorization.k8s.io/prometheus created
     serviceaccount/prometheus created
     clusterrolebinding.rbac.authorization.k8s.io/prometheus created
@@ -137,7 +136,7 @@
 
 3. 安装Prometheus。
     1. <a name="li601241164212"></a>进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](../../../07_references/05_appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/utils/prometheus/base”目录下的prometheus.yaml文件。
-    2. 参考[直接对接Prometheus](#section875071183215)章节的步骤3，将prometheus.yaml中DPU-Exporter metrics的获取配置修改为实际所需配置。
+    2. 参考[直接对接Prometheus](#section875071183215)章节的步骤3，将prometheus.yaml中DPU Exporter metrics的获取配置修改为实际所需配置。
     3. 将[步骤1](#li601241164212)中获取到的prometheus.yaml上传至环境任意路径。
     4. 在“prometheus.yaml”存放路径，执行以下命令，安装Prometheus。
 

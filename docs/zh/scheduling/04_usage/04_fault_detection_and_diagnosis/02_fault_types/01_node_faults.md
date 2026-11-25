@@ -1,6 +1,6 @@
 # 节点故障<a name="ZH-CN_TOPIC_0000002479386528"></a>
 
-节点故障的发现主要通过NodeD组件实现。节点故障包括节点健康状态和节点硬件故障、节点共享存储故障，详细说明如下：
+节点故障的发现主要通过NodeD组件实现。节点故障详细说明如下：
 
 - 节点健康状态
 
@@ -12,21 +12,21 @@
 
 - 节点共享存储故障
 
-    针对使用Scale-Out Storage DPC、DTFS产品的节点，可以使用NodeD安装包下的noded-dpc-\{version\}.yaml启动NodeD服务。开启对共享存储的异常检测和上报。
+    针对使用Scale-Out Storage DPC、DTFS产品的节点，可以使用NodeD安装包下的noded-dpc-\{version\}.yaml启动NodeD服务，开启对共享存储的异常检测和上报。
 
     >[!NOTE]
     >当节点发生故障时，NodeD会上报节点健康状态和节点硬件故障。无故障时，默认节点健康。
 
-**图 1**  节点故障上报<a name="fig1329112151382"></a>
+**图 1** 节点故障上报<a name="fig1329112151382"></a>
 
-![](../../../../figures/scheduling/节点故障上报.png "节点故障上报")
+![节点故障上报流程图：NodeD采集节点健康状态与硬件故障信息后上报至Volcano](../../../../figures/scheduling/节点故障上报.png "节点故障上报")
 
 - 当节点发生故障时，NodeD最短5秒（默认）更新本节点的node-info-cm内容，其中字段说明见[mindx-dl-nodeinfo-&lt;nodename&gt;](../../../06_api/03_noded.md#节点资源)表。
 - NodeD每隔60秒（默认）从iBMC查询故障信息。当查到的故障信息相比上次查到的有变化或与上次上报的时间间隔30分钟以上时，会在1秒内上报到node-info-cm中。
 
 ## 所需组件<a name="zh-cn_topic_0000002194466236_section138036504533"></a>
 
-为保证节点故障检测功能的正常使用，需要安装以下组件：Volcano、Ascend Operator、NodeD、ClusterD
+为保证节点故障检测功能的正常使用，需要安装以下组件：Volcano、Ascend Operator、NodeD、ClusterD。
 
 ## 使用约束<a name="section16867482102"></a>
 

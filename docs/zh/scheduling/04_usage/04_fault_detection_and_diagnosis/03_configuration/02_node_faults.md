@@ -33,7 +33,7 @@ NodeD组件的配置文件NodeDConfiguration.json为系统配置文件，若用�
     configmap/mindx-dl-node-fault-config created
     ```
 
-    **表 1**  参数说明
+    **表 1** 参数说明
 
     <a name="table1925220306444"></a>
     <table><thead align="left"><tr id="row172531430134411"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p16253163094420"><a name="p16253163094420"></a>参数名称</p>
@@ -83,7 +83,7 @@ NodeD组件的配置文件NodeDConfiguration.json为系统配置文件，若用�
     >- 文件格式异常或故障码取值错误，故障码只能为8位的包含数字和字母的字符串。
     >- 同一故障码同时配置在多个故障级别中。
 
-5. 将故障码0100001D在**NotHandleFaultCodes**中删除，并添加到**PreSeparateFaultCodes**中。
+5. 将故障码0100001D从**NotHandleFaultCodes**中删除，并添加到**PreSeparateFaultCodes**中。
 
     ```json
      "FaultTypeCode": {

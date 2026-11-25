@@ -27,19 +27,19 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 
 ### 使用约束<a name="zh-cn_topic_0000002039194017_section1178044918127"></a>
 
-- 对于PyTorch训练框架，需配合MindSpeed-LLM  2.3.0版本使用，版本配套请参见[MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/2.3.0)。
+- 对于PyTorch训练框架，需配合MindSpeed-LLM 2.3.0版本使用，版本配套请参见[MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/2.3.0)。
 - 对于MindSpore训练框架，需配合MindFormers master版本使用，版本配套请参见[MindSpore MindFormers](https://gitcode.com/mindspore/mindformers/tree/master)。
 - 请在训练正常迭代后，再进行在线压测指令的下发。
 - 确保已开启进程级恢复相关功能特性。
 - 压测过程中不支持重启ClusterD，如果ClusterD异常重启，需要重启训练并下发压测任务。
 - 压测过程中，需要关闭热复位功能。
-- P2P压测需确保device侧有10GB以上的空闲内存。
+- P2P压测需确保Device侧有10GB以上的空闲内存。
 - 对于MindSpore训练框架，需要在启动TaskD Manager前设置export TASKD\_PROCESS\_ENABLE="on"。
 - 本功能依赖MindIO组件，使用前请先了解MindIO的[约束限制](../../07_references/00_fault_recovery_acceleration/02_installation_and_deployment.md#约束限制)。
 
 ### 支持的产品型号和AI框架<a name="zh-cn_topic_0000002039194017_section140112935318"></a>
 
-**表 1**  在线压测支持的产品和框架
+**表 1** 在线压测支持的产品和框架
 
 <a name="zh-cn_topic_0000002039194017_table6198201175416_benchmark"></a>
 
@@ -50,7 +50,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 
 ### 在线压测原理<a name="section56986212179"></a>
 
-**图 1**  原理图<a name="fig9336113210132"></a>
+**图 1** 原理图<a name="fig9336113210132"></a>
 
 ![](../../../figures/scheduling/原理图-10.png "原理图-10")
 
@@ -68,7 +68,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 
 对于非MindSpeed-LLM、MindCluster平台用户，需在框架侧完成[表2](#table19955141136103)的功能适配。
 
-**表 2**  在线压测框架适配功能点
+**表 2** 在线压测框架适配功能点
 
 <a name="table19955141136103"></a>
 <table><thead align="left"><tr id="row169591493619"><th class="cellrowborder" valign="top" width="18.98%" id="mcps1.2.5.1.1"><p id="p46603387387"><a name="p46603387387"></a>适配功能点</p>

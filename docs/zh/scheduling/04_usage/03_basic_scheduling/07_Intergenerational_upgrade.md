@@ -22,7 +22,7 @@
 
 从<term>Atlas A3系列产品</term>升级至<term>Ascend 950PR&950DT系列产品</term>场景下，任务YAML可能的修改点请参见[表1](#zh-cn_topic_0000001609074213_table5589101114528)，若其中可选配置项未使用，可忽略。[表2](#zh-cn_topic_0000001609074213_table5589101114529)以Atlas 950 SuperPoD液冷超节点为例，提供了YAML文件的具体配置样例。
 
-**表 1**  YAML文件变更参数说明
+**表 1** YAML文件变更参数说明
 
 <a name="zh-cn_topic_0000001609074213_table5589101114528"></a>
 <table>
@@ -47,11 +47,11 @@
 <tr>
 <td>ring-controller.atlas</td>
 <td><ul><li><term>Atlas A3系列产品</term>取值为ascend-910b</li><li><term>Ascend 950PR&950DT系列产品</term>需修改为ascend-npu</li></ul></td>
-<td>用于区分任务使用的芯片的类型。相比于<term>Atlas A3系列产品</term>，<term>Ascend 950PR&950DT系列产品</term>在芯片资源名称上存在变更。</td>
+<td>用于区分任务使用的芯片类型。相比于<term>Atlas A3系列产品</term>，<term>Ascend 950PR&950DT系列产品</term>在芯片资源名称上存在变更。</td>
 </tr>
 <tr>
 <td>（可选）huawei.com/schedule_policy</td>
-<td>该字段取值需要参考实际的硬件型号与芯片布局：<ul><li>Atlas 350加速卡，单节点8卡，卡间无UB互联: chip1-node8</li><li>Atlas 350加速卡，单节点8卡，每4卡UB互联: chip4-node8</li><li>Atlas 350加速卡，单节点16卡，卡间无UB互联: chip1-node16</li><li>Atlas 350加速卡，单节点16卡，每4卡UB互联: chip4-node16</li><li>Atlas 650E服务器、Atlas 650服务器: chip8-node8</li><li>Atlas 850E风冷超节点、Atlas 850风冷超节点: chip8-node8-sp</li><li>Atlas 950 SuperPoD液冷超节点: chip8-node8-ra64-sp</li><li>Atlas 950 SuperPoD Flex液冷超节点: chip8-node16-sp</li></ul>关于该字段的详细说明可参考：<a href="../../06_api/01_volcano.md#podgroup">参数说明</a>中表3对huawei.com/schedule_policy字段的说明</td>
+<td>该字段取值需要参考实际的硬件型号与芯片布局：<ul><li>Atlas 350加速卡，单节点8卡，卡间无UB互联：chip1-node8</li><li>Atlas 350加速卡，单节点8卡，每4卡UB互联：chip4-node8</li><li>Atlas 350加速卡，单节点16卡，卡间无UB互联：chip1-node16</li><li>Atlas 350加速卡，单节点16卡，每4卡UB互联：chip4-node16</li><li>Atlas 650E服务器、Atlas 650服务器：chip8-node8</li><li>Atlas 850E风冷超节点、Atlas 850风冷超节点：chip8-node8-sp</li><li>Atlas 950 SuperPoD液冷超节点：chip8-node8-ra64-sp</li><li>Atlas 950 SuperPoD Flex液冷超节点：chip8-node16-sp</li></ul>关于该字段的详细说明请参见<a href="../../06_api/01_volcano.md#podgroup">参数说明</a>中表3对huawei.com/schedule_policy字段的说明</td>
 <td>配置任务需要调度的AI芯片布局形态，使用Volcano调度时可选配置该字段。Volcano会根据该字段选择合适的调度策略。</td>
 </tr>
 <tr>
@@ -79,7 +79,7 @@
 </tbody>
 </table>
 
-**表 2**  <term>Ascend 950PR&950DT系列产品</term>任务YAML文件样例参考
+**表 2** <term>Ascend 950PR&950DT系列产品</term>任务YAML文件样例参考
 
 <a name="zh-cn_topic_0000001609074213_table5589101114529"></a>
 

@@ -29,7 +29,7 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 >- 用户在使用过程中，请勿重复定义和在容器镜像中固定ASCEND_VISIBLE_DEVICES、ASCEND_RUNTIME_OPTIONS和ASCEND_VNPU_SPECS环境变量。
 >- 使用动态虚拟化时，若发生服务器重启，则此场景下可能无法自动销毁vnpu，需用户自己手动销毁。
 
-**表 1**  参数解释
+**表 1** 参数解释
 
 |参数|说明|举例|
 |--|--|--|
@@ -115,7 +115,7 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 
 ### 使用说明<a name="section10769161412815"></a>
 
-**表 3**  场景说明
+**表 3** 场景说明
 
 <a name="table625511844619"></a>
 <table><thead align="left"><tr id="row9255148204610"><th class="cellrowborder" valign="top" width="19.98%" id="mcps1.2.3.1.1"><p id="p4381442125317"><a name="p4381442125317"></a><a name="p4381442125317"></a>场景</p>
@@ -152,7 +152,7 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 </tr>
 <tr id="row32567817461"><td class="cellrowborder" rowspan="2" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p id="p1325613818460"><a name="p1325613818460"></a><a name="p1325613818460"></a>特性支持的场景</p>
 </td>
-<td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p id="p32561983469"><a name="p32561983469"></a><a name="p32561983469"></a>支持多副本，但多副本中的每个pod都必须使用vNPU。</p>
+<td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p id="p32561983469"><a name="p32561983469"></a><a name="p32561983469"></a>支持多副本，但多副本中的每个Pod都必须使用vNPU。</p>
 </td>
 </tr>
 <tr id="row825611817468"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p2795151384913"><a name="p2795151384913"></a><a name="p2795151384913"></a>支持芯片故障和节点故障的重调度。具体参考<a href="../../../03_basic_scheduling/05_rescheduling.md">重调度</a>章节。</p>
@@ -179,7 +179,7 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 </tbody>
 </table>
 
-**表 4**  虚拟化实例模板与vNPU类型关系表
+**表 4** 虚拟化实例模板与vNPU类型关系表
 
 <a name="table47415104403"></a>
 <table><thead align="left"><tr id="row67416101402"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.5.1.1"><p id="p117491014400"><a name="p117491014400"></a><a name="p117491014400"></a>NPU类型</p>
@@ -296,7 +296,7 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 
 通过命令行使用动态vNPU调度特性流程可以参见[图1](#zh-cn_topic_0000001559979444_fig242524985412)。
 
-**图 1**  使用流程<a name="zh-cn_topic_0000001559979444_fig242524985412"></a>
+**图 1** 使用流程<a name="zh-cn_topic_0000001559979444_fig242524985412"></a>
 
 ![](../../../../../figures/scheduling/使用流程-3.png "使用流程-3")
 
@@ -308,7 +308,7 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 
 vcjob任务原理图如[图2](#fig1918122131712)所示。
 
-**图 2**  vcjob任务调度原理图<a name="fig1918122131712"></a>
+**图 2** vcjob任务调度原理图<a name="fig1918122131712"></a>
 
 ![](../../../../../figures/scheduling/vcjob任务调度原理图-4.png "vcjob任务调度原理图-4")
 
@@ -330,7 +330,7 @@ vcjob任务原理图如[图2](#fig1918122131712)所示。
 
 deploy任务原理图如[图3](#fig349112913199)所示。
 
-**图 3**  deploy任务调度原理图<a name="fig349112913199"></a>
+**图 3** deploy任务调度原理图<a name="fig349112913199"></a>
 
 ![](../../../../../figures/scheduling/deploy任务调度原理图-5.png "deploy任务调度原理图-5")
 
@@ -354,7 +354,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 
 可选择以下方式中的一种来获取推理镜像。
 
-- 推荐从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)根据系统架构（ARM或者x86\_64）下载**推理基础镜像（**如：[mindie](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)**）**。
+- 推荐从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)根据系统架构（ARM或者x86\_64）下载**推理基础镜像（**如：[MindIE](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)**）**。
 
     >[!NOTE]
     >基础镜像中不包含推理模型、脚本等文件，因此，用户需要根据自己的需求进行定制化修改（如加入推理脚本代码、模型等）后才能使用。
@@ -374,7 +374,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 **从昇腾镜像仓库获取示例脚本<a name="section8181015175911"></a>**
 
 1. 确保服务器能访问互联网后，访问[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)。
-2. 在左侧导航栏选择推理镜像，然后选择[mindie](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)镜像，获取推理示例脚本。
+2. 在左侧导航栏选择推理镜像，然后选择[MindIE](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)镜像，获取推理示例脚本。
 
     >[!NOTE]
     >若无下载权限，请根据页面提示申请权限。提交申请后等待管理员审核，审核通过后即可下载镜像。
@@ -390,7 +390,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 
 1. 获取相应的YAML文件。
 
-    **表 5**  YAML说明
+    **表 5** YAML说明
 
     <a name="table0265132716351"></a>
     <table><thead align="left"><tr id="row132651727163516"><th class="cellrowborder" valign="top" width="15.36%" id="mcps1.2.5.1.1"><p id="p1447515933616"><a name="p1447515933616"></a><a name="p1447515933616"></a>任务类型</p>
@@ -465,7 +465,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
     > [!NOTE]
     > 对于Atlas A2/A3系列产品，`ring-controller.atlas` 需设置为 `ascend-910b`，且不需要配置 `vnpu-dvpp` 和 `vnpu-level`（Atlas A2/A3系列产品不支持dvpp和level配置降级）。
 
-    **表 6**  infer-deploy-dynamic.yaml参数说明
+    **表 6** infer-deploy-dynamic.yaml参数说明
 
     <a name="table116201128162111"></a>
     <table><thead align="left"><tr id="row362062812113"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.1"><p id="p11620628192119"><a name="p11620628192119"></a><a name="p11620628192119"></a>参数</p>
@@ -527,12 +527,12 @@ deploy任务原理图如[图3](#fig349112913199)所示。
    >[!NOTE]
    >vnpu-level和vnpu-dvpp的选择结果，具体请参见[表7](#table83781115185619)。
    >
-   >- 表中“降级”表示AICore满足的情况下，其他资源不够（如AICPU）时，模板会选择同AICore下的其他满足资源要求的模板。如在只剩一颗芯片上只有2个AICore，1个AICPU时，vir02模板会降级为vir02\_1c。
+   >- 表中“降级”表示AICore满足的情况下，其他资源不够（如AICPU）时，模板会选择同AICore下的其他满足资源要求的模板。如在只剩一颗芯片上只有2个AICore、1个AICPU时，vir02模板会降级为vir02\_1c。
    >- 表中“选择模板”中的值来源于[虚拟化模板](./../03_virtualization_templates.md)中表1的Atlas推理系列产品、“虚拟化实例模板”列的取值。
    >- 表中“vnpu-level”列的“其他值”表示除去“low”和“high”后的任意取值。
    >- 整卡场景下vnpu-dvpp与vnpu-level可以取任意值。
 
-    **表 7**  <term>Atlas推理系列产品</term>dvpp和level作用结果表
+    **表 7** <term>Atlas推理系列产品</term>dvpp和level作用结果表
 
     <a name="table83781115185619"></a>
     <table><thead align="left"><tr id="row1837817157565"><th class="cellrowborder" valign="top" width="17.2982701729827%" id="mcps1.2.7.1.1"><p id="p11560216112"><a name="p11560216112"></a><a name="p11560216112"></a>产品型号</p>
@@ -702,7 +702,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
     ```
 
     >[!NOTE]
-    >- /path-to-weights为模型权重，需要用户自行准备。mindie镜像可以参考镜像中$ATB\_SPEED\_HOME\_PATH/examples/models/llama3/README.md文件中的说明进行下载。
+    >- /path-to-weights为模型权重，需要用户自行准备。MindIE镜像可以参考镜像中$ATB\_SPEED\_HOME\_PATH/examples/models/llama3/README.md文件中的说明进行下载。
     >- ATB_SPEED_HOME_PATH默认路径为“/usr/local/Ascend/atb-models”，在source模型仓中执行set_env.sh脚本时已配置，用户无需自行配置。
 
 4. 修改所选YAML中的容器启动命令，即“command”字段内容，如果没有则需添加。
@@ -720,7 +720,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 
 #### 下发任务<a name="ZH-CN_TOPIC_0000002479227134"></a>
 
-在管理节点示例YAML所在路径，执行以下命令，使用YAML下发推理任务。
+在管理节点的示例YAML所在路径下，执行以下命令，使用YAML下发推理任务。
 
 ```shell
 kubectl apply -f XXX.yaml
@@ -831,7 +831,6 @@ kubectl delete -f infer-deploy-dynamic.yaml
 回显示例如下：
 
 ```ColdFusion
-root@ubuntu:/home/test/yaml# kubectl delete -f infer-deploy-dynamic.yaml
 deployment.apps "resnetinfer1-1-deploy" deleted
 ```
 

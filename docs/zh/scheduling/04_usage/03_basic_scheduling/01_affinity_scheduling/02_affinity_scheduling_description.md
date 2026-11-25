@@ -41,11 +41,11 @@
 
 节点间通过RoCE网络或者灵衢总线设备+RoCE网络连接。调度任务时，优先使用灵衢总线设备网络。RoCE网络采用Spine-Leaf网络架构，优先将网络流量控制在Leaf层内，必须使用Spine层时，保证流量均匀分布到各个Spine层。
 
-- 采用RoCE连接的产品：Atlas 800T A2训练服务器、Atlas 800I A2推理服务器、A200I A2 Box异构组件、Atlas 200T A2 Box16异构子框、Atlas 200I A2 Box16异构子框、Atlas 800训练服务器（型号：9000）和 Atlas 800训练服务器（型号：9010）
+- 采用RoCE连接的产品：Atlas 800T A2训练服务器、Atlas 800I A2推理服务器、A200I A2 Box异构组件、Atlas 200T A2 Box16异构子框、Atlas 200I A2 Box16异构子框、Atlas 800训练服务器（型号：9000）和Atlas 800训练服务器（型号：9010）
 - 采用RoCE连接单层连接的产品：Atlas 800I A2推理服务器、A200I A2 Box异构组件
 - 采用灵衢+RoCE连接的产品：Atlas 900 A3 SuperPoD超节点、Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 950 SuperPoD液冷超节点
 
-**图 2**  节点间网络<a name="fig1728811518184"></a>
+**图 2** 节点间网络<a name="fig1728811518184"></a>
 
 ![](../../../../figures/scheduling/节点间网络.png "节点间网络")
 
@@ -116,9 +116,9 @@ metadata:
 <!-- npu="950,A3" id2 -->
 ### 超节点亲和性自动降级（sp-block）<a name="section_sp_block_downgrade"></a>
 
-适用于A3超节点、Atlas 850E/850风冷超节点与Atlas 950 SuperPoD Flex液冷超节点（`chip2-node16-sp`、`chip2-node8-sp`、`chip8-node8-sp`、`chip8-node16-sp`策略），降级仅约束`sp-block`，逐档减半。减半后的`sp-block`必须为整节点数（即节点内昇腾AI处理器数量的整数倍），否则直接降至单节点底线。降级底线为单个节点的昇腾AI处理器数量，降至底线后不再继续降级；若资源仍不满足，任务继续等待。
+适用于A3超节点、Atlas 850E风冷超节点、Atlas 850风冷超节点与Atlas 950 SuperPoD Flex液冷超节点（`chip2-node16-sp`、`chip2-node8-sp`、`chip8-node8-sp`、`chip8-node16-sp`策略），降级仅约束`sp-block`，逐档减半。减半后的`sp-block`必须为整节点数（即节点内昇腾AI处理器数量的整数倍），否则直接降至单节点底线。降级底线为单个节点的昇腾AI处理器数量，降至底线后不再继续降级；若资源仍不满足，任务继续等待。
 
-**表 3** 超节点亲和性自动降级档位示例（每节点16个昇腾AI处理器，原始`sp-block`为4个节点，如Atlas 950 SuperPoD Flex超节点）
+**表 3** 超节点亲和性自动降级档位示例（每节点16个昇腾AI处理器，原始`sp-block`为4个节点，如Atlas 950 SuperPoD Flex液冷超节点）
 
 <a name="table_a3_downgrade_level"></a>
 

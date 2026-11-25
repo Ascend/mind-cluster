@@ -1,10 +1,12 @@
 # 使用Helm升级<a name="ZH-CN_TOPIC_0000002479226453"></a>
 
+本章节介绍通过Helm升级MindCluster组件的操作，包括升级前准备、Helm部署Release实例、Helm升级Release实例与版本回退。
+
 ## 升级说明<a name="section_helm_upgrade_desc"></a>
 
 本文档介绍如何通过Helm升级MindCluster组件。
 
-**版本兼容性说明**：可跨大版本升级，如从 7.x.x 升级到 26.x.x。
+**版本兼容性说明**：可跨大版本升级，如从7.x.x升级到26.x.x。
 
 **使用约束**
 
@@ -25,7 +27,7 @@
 
 ## 升级前准备<a name="section_helm_upgrade_prepare"></a>
 
-1. 在管理节点安装Helm 命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在Helm 3.x版本，可以跳过此步骤。
+1. 在管理节点安装Helm命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在Helm 3.x版本，可以跳过此步骤。
    1. 安装Helm前请参考[Helm版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询Helm与K8s间的版本兼容性，根据实际情况选择Helm版本。
    2. 请参考[Helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装Helm命令。
    3. 安装成功后，执行如下命令检查Helm版本：
@@ -108,8 +110,8 @@
 3. 安装MindCluster CRD的Release实例。
       > [!NOTE]
     >- 以下三个组件包含CRD：Ascend Operator、Volcano和Infer Operator。若用户不需要升级这三个组件，可跳过此步骤。
-    >- 若组件升级前后两个版本的CRD定义有变更：
-    >   - 需先升级CRD，再升级应用组件;
+    >- 若组件升级前后两个版本的CRD有变更：
+    >   - 需先升级CRD，再升级应用组件。
     >   - 可能会导致工作负载中断，请用户在升级前确认。
     >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式进行操作即可。
    - **默认配置安装**：若[CRD默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)符合用户需求，可执行如下命令。
@@ -211,7 +213,7 @@
 2. 升级MindCluster CRD的Release实例。
     >[!NOTE]
     >- 以下三个组件包含CRD：Ascend Operator、Volcano和Infer Operator。若用户不需要升级这三个组件，可跳过此步骤。
-    >- 若组件升级前后两个版本的CRD定义有变更：
+    >- 若组件升级前后两个版本的CRD有变更：
     >   - 需先升级CRD，再升级应用组件。
     >   - 可能会导致工作负载中断，请用户在升级前确认。
     >- 请用户按需选择**默认配置升级**或**自定义配置升级**其中一种方式进行操作即可。
@@ -328,7 +330,7 @@
       ```
 
     >[!NOTE]
-    >Helm的REVISION是一个简单的递增整数，它的核心作用是记录和回滚：每次应用变更都会生成一个新的REVISION，需要时可以通过REVISION号快速恢复到过去的任意稳定版本，从而实现应用发布的可追溯和故障快速恢复。
+    >Helm的REVISION是一个简单的递增整数，它的核心作用是记录和回退：每次应用变更都会生成一个新的REVISION，需要时可以通过REVISION号快速恢复到过去的任意稳定版本，从而实现应用发布的可追溯和故障快速恢复。
 
 2. 执行以下命令，回退CRD到指定REVISION版本。以回退到REVISION 1为例：
 

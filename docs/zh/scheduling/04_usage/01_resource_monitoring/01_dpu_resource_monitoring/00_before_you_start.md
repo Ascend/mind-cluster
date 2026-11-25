@@ -19,7 +19,7 @@ Prometheus是一个开源的完整监测解决方案，具有易管理、高效�
 
 ## 使用说明<a name="section45381612353"></a>
 
-- DPU资源监测可以和训练场景下的所有特性一起使用，也可以和推理场景的所有特性一起使用。
+- DPU资源监测可以和训练场景下的所有特性一起使用，也可以和推理场景下的所有特性一起使用。
 - DPU Exporter组件周期性调用hinicadm5工具、执行`rdma resource show`命令并读取sysfs文件接口获取指标。用户可以根据自身关注的指标，通过配置文件中的metricWhiteList指标白名单控制hinicadm5采集的DPU卡级全局指标范围，参考[DPU Exporter安装部署](../../../05_developer_guide/00_installation_deployment/00_manual_installation/12_dpu_exporter.md)章节。
 - 监测指标数据格式的相关说明，请参见[Prometheus Metrics接口](../../../06_api/16_dpu_exporter.md)章节。
 

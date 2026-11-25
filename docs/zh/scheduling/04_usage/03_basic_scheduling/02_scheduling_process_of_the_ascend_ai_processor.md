@@ -6,7 +6,7 @@
 
 - **调度流程1**
 
-    **图 1**  调度流程1<a name="fig63404531065"></a>
+    **图 1** 调度流程1<a name="fig63404531065"></a>
 
     ![调度流程1](../../../figures/scheduling/调度流程1.png "调度流程1")
 
@@ -23,7 +23,7 @@
 
 - **调度流程2**
 
-    **图 2**  调度流程2<a name="fig39301952134114"></a>
+    **图 2** 调度流程2<a name="fig39301952134114"></a>
 
     ![调度流程2](../../../figures/scheduling/调度流程2.png "调度流程2")
 
@@ -47,13 +47,13 @@
     >- 用户可通过登录后台环境，执行**kubectl describe cm mindx-dl-deviceinfo-_\{__nodeName__\}_ -n kube-system**命令获取上报的资源信息。
     >- 该字段“huawei.com/资源名”正在日落，后续版本该字段不再呈现。默认情况下，节点的可用芯片由Volcano维护，该字段不生效。如果需要生效，可以修改Volcano的配置参数“self-maintain-available-card”值为false。
 
-    **图 3**  节点NPU资源信息<a name="fig83207421331"></a>
+    **图 3** 节点NPU资源信息<a name="fig83207421331"></a>
 
     ![节点NPU资源信息](../../../figures/scheduling/节点NPU资源信息.png "节点NPU资源信息")
 
-2. Volcano组件通过节点信息和ConfigMap信息计算当前可用的昇腾AI处理器。（如果Volcano配置开关self-maintain-available-card关闭，Volcano会以“huawei.com/资源名”为key，读取“DeviceInfo”字段信息作为可用昇腾AI处理器的依据。）根据亲和性调度策略，判断出任务需要的符合亲和性规则的昇腾AI处理器后（即分配给任务的昇腾AI处理器）。Volcano会将分配芯片信息写入任务Pod的“Annotations”，如[图4](#fig29119551778)标出的第一个部分所示；第二个需要写入的字段为“predicate-time”，表示为任务分配资源的当前时间，不需要向可读时间格式做转换，可比较大小即可。kubelet监测到有Pod调度到自己所在节点，调用Device-plugin的Allocate函数挂载NPU设备。
+2. Volcano组件通过节点信息和ConfigMap信息计算当前可用的昇腾AI处理器（如果Volcano配置开关self-maintain-available-card关闭，Volcano会以“huawei.com/资源名”为key，读取“DeviceInfo”字段信息作为可用昇腾AI处理器的依据）。根据亲和性调度策略，判断出任务需要的符合亲和性规则的昇腾AI处理器后（即分配给任务的昇腾AI处理器），Volcano会将分配芯片信息写入任务Pod的“Annotations”，如[图4](#fig29119551778)标出的第一个部分所示；第二个需要写入的字段为“predicate-time”，表示为任务分配资源的当前时间，不需要向可读时间格式做转换，可比较大小即可。kubelet监测到有Pod调度到自己所在节点，调用Ascend Device Plugin的Allocate函数挂载NPU设备。
 
-    **图 4**  分配给Pod的NPU信息<a name="fig29119551778"></a>
+    **图 4** 分配给Pod的NPU信息<a name="fig29119551778"></a>
 
     ![分配给Pod的NPU信息](../../../figures/scheduling/分配给Pod的NPU信息.png "分配给Pod的NPU信息")
 

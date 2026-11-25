@@ -13,7 +13,7 @@ NPU的参数面网络故障包括芯片网络相关故障和灵衢总线设备�
 
 参数面网络故障检测由设备管理组件Ascend Device Plugin负责，详细原理如[图1](#fig68743107307)所示。
 
-**图 1**  故障检测<a name="fig68743107307"></a>
+**图 1** 故障检测<a name="fig68743107307"></a>
 
 ![](../../../../figures/scheduling/故障检测.png "故障检测")
 
@@ -21,7 +21,7 @@ NPU的参数面网络故障包括芯片网络相关故障和灵衢总线设备�
 
 #### 芯片网络故障
 
-1. NPU定时检测和网关地址的通信是否正常，通过故障管理框架上报结果。
+1. NPU定时检测与网关地址的通信是否正常，通过故障管理框架上报结果。
 2. RoCE驱动实时监测NPU网口Link状态，通过故障管理框架上报Linkdown或Linkup事件。
 3. Ascend Device Plugin通过DCMI接口从故障管理框架获取信息，通过轮询的方式查询网关探测结果，并实时订阅网口Linkdown或Linkup事件并进行上报。Ascend Device Plugin统计网关检测异常持续时间、Linkdown持续时间。如果小于或等于RoCE网络超时时间（默认为20秒）则标记为NPU网络故障（默认不处理，可能会引起参数面网络故障）；如果大于20秒，则升级成配置的故障等级。
 
@@ -33,7 +33,7 @@ NPU的参数面网络故障包括芯片网络相关故障和灵衢总线设备�
 
 ### 故障上报机制<a name="section1874141093019"></a>
 
-- **芯片发生网络故障时**，NPU故障管理框架获取故障信息后，将该信息上报给NPU驱动。NPU驱动收到故障信息后，通过DCMI接口上报给Ascend Device Plugin。Ascend Device Plugin通过DCMI接口获取芯片健康状态。当前提供如下两种获取模式：
+- **芯片发生网络故障时**，故障管理框架获取故障信息后，将该信息上报给NPU驱动。NPU驱动收到故障信息后，通过DCMI接口上报给Ascend Device Plugin。Ascend Device Plugin通过DCMI接口获取芯片健康状态。当前提供如下两种获取模式：
     - 故障订阅模式。Ascend Device Plugin启动时会先调用DCMI故障订阅接口注册监测，故障发生或恢复时，驱动通过该接口将故障发生或恢复事件上报给Ascend Device Plugin。
     - 故障轮询模式。每隔固定时间，通过故障查询接口查询芯片故障状态。当设备驱动不支持订阅能力时将切换该模式。
 
@@ -47,7 +47,7 @@ Ascend Device Plugin获取到参数面网络故障后，将故障信息写入到
 
 Ascend Device Plugin的故障上报机制如[图2](#fig1587571063011)所示。
 
-**图 2**  故障上报<a name="fig1587571063011"></a>
+**图 2** 故障上报<a name="fig1587571063011"></a>
 
 ![](../../../../figures/scheduling/故障上报.png "故障上报")
 
@@ -62,7 +62,7 @@ Ascend Device Plugin的故障上报机制如[图2](#fig1587571063011)所示。
 
 ### 所需组件<a name="zh-cn_topic_0000002194466236_section138036504533"></a>
 
-为保证参数面网络故障检测功能的正常使用，需要安装以下组件：Volcano、Ascend Operator、Ascend Device Plugin、ClusterD
+为保证参数面网络故障检测功能的正常使用，需要安装以下组件：Volcano、Ascend Operator、Ascend Device Plugin、ClusterD。
 
 ### 支持的故障处理类型<a name="section099935818571"></a>
 
@@ -90,7 +90,7 @@ NodeD调用DCMI接口启动pingmesh任务，并周期性查询pingmesh结果，�
 
 ### 所需组件
 
-在相应节点上完成以下组件的安装：NodeD（必选）、Ascend Device Plugin（可选）、ClusterD（可选）
+在相应节点上完成以下组件的安装：NodeD（必选）、Ascend Device Plugin（可选）、ClusterD（可选）。
 
 ### 使用约束<a name="zh-cn_topic_0000002193288232_section156679598384"></a>
 
@@ -108,7 +108,7 @@ NodeD调用DCMI接口启动pingmesh任务，并周期性查询pingmesh结果，�
 <!-- npu="950" id2 -->
 ## 光链路成员端口故障<a name="ZH-CN_TOPIC_0000002511426421"></a>
 
-包括Atlas 950 SuperPoD液冷超节点中的npu到unions及5808的端口故障，以及Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器中的npu到1825及5808端口的故障等。
+包括Atlas 950 SuperPoD液冷超节点中的npu到unions及5808的端口故障，以及Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器中的NPU到1825及5808端口的故障等。
 
 ### 检测原理<a name="zh-cn_topic_0000002216292814_section_hangdetectprinciple"></a>
 
@@ -120,15 +120,15 @@ NodeD调用DCMI接口启动pingmesh任务，并周期性查询pingmesh结果，�
 
 ### 所需组件<a name="zh-cn_topic_0000002216292814_section_hangcomponents"></a>
 
-为保证参数面光链路成员端口故障检测功能的正常使用，需要安装以下组件：Ascend Device Plugin
+为保证参数面光链路成员端口故障检测功能的正常使用，需要安装以下组件：Ascend Device Plugin。
 
 ### 需处理的故障类型<a name="zh-cn_topic_0000002216292814_section_hanghandler"></a>
 
-UB PORT link状态变化（UP -> DOWN）；UBOE PORT link状态变化 (UP -> DOWN)。
+UB PORT link状态变化（UP -> DOWN）；UBOE PORT link状态变化（UP -> DOWN）。
 
 ### 使用约束<a name="zh-cn_topic_0000002193288232_section156679598384-duplicate-2"></a>
 
-本功能仅支持在以下产品型号中使用：适用于Atlas 950 SuperPoD液冷超节点、Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器。
+本功能仅支持在以下产品型号中使用：Atlas 950 SuperPoD液冷超节点、Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器。
 
 |故障码|故障说明|故障级别|
 |--|--|--|
@@ -155,7 +155,7 @@ K8s RDMA Shared Dev Plugin采用轮询模式检测UB网卡故障。检测到故�
 
 ### 所需组件
 
-为保证UB网卡故障检测功能的正常使用，需要安装以下组件：K8s RDMA Shared Dev Plugin
+为保证UB网卡故障检测功能的正常使用，需要安装以下组件：K8s RDMA Shared Dev Plugin。
 
 ### 支持的故障处理类型
 

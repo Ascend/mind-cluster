@@ -1,5 +1,7 @@
 # 在Docker客户端使用<a name="ZH-CN_TOPIC_0000002479387248"></a>
 
+本章节介绍在Docker客户端使用Ascend Docker Runtime挂载芯片的方法。
+
 ## 使用说明<a name="section0966931165317"></a>
 
 - Ascend Docker Runtime支持挂载物理芯片，同时支持挂载虚拟芯片。挂载虚拟芯片前需要参考[创建vNPU](../02_virtual_instance/00_virtual_instance_with_hdk/04_static_vnpu_scheduling/01_creating_vnpu.md)章节，对物理芯片进行虚拟化操作，支持对物理芯片进行静态虚拟化和动态虚拟化。
@@ -151,7 +153,7 @@ ls -l /dev/infiniband && ibv_devices
     >- 如果Atlas 200I SoC A1核心板的驱动是1.0.0（Ascend HDK 22.0.0）及之前的版本，则需要挂载/dev/xsmem\_dev和/dev/event\_sched这两个设备。
     >- 如果Atlas 200I SoC A1核心板的驱动是1.0.0（Ascend HDK 22.0.0）之后的版本，则不需要挂载/dev/xsmem\_dev和/dev/event\_sched这两个设备。
 
-- Atlas 500 A2智能小站不使用Ascend Docker Runtime运行推理任务，可参考《Atlas 500 A2智能小站 昇腾软件安装指南》的“部署昇腾软件（定制系统场景）\> 容器部署 \>  [制作容器镜像](https://support.huawei.com/enterprise/zh/doc/EDOC1100438187/97777e51?idPath=23710424|251366513|254884019|261408772|258915651)”章节中的“启动容器”，运行推理任务。
+- Atlas 500 A2智能小站不使用Ascend Docker Runtime运行推理任务，可参考《Atlas 500 A2智能小站 昇腾软件安装指南》的“部署昇腾软件（定制系统场景）\> 容器部署 \> [制作容器镜像](https://support.huawei.com/enterprise/zh/doc/EDOC1100438187/97777e51?idPath=23710424|251366513|254884019|261408772|258915651)”章节中的“启动容器”，运行推理任务。
 
 ## 参数说明<a name="section131432039144912"></a>
 
@@ -169,7 +171,7 @@ ls -l /dev/infiniband && ibv_devices
 |ASCEND_VNPU_SPECS|从物理NPU设备中切分出一定数量的AICore，指定为虚拟设备。支持的取值请参见[虚拟化模板](../02_virtual_instance/00_virtual_instance_with_hdk/03_virtualization_templates.md)中表1的“虚拟化实例模板”列。<ul><li>只有支持动态虚拟化的产品形态，才能使用该参数。</li><li>需配合参数“ASCEND_VISIBLE_DEVICES”一起使用，参数“ASCEND_VISIBLE_DEVICES”指定用于虚拟化的物理NPU设备。</li><li>参数ASCEND_RUNTIME_OPTIONS的取值包含VIRTUAL时，ASCEND_VNPU_SPECS参数将不再生效。</li></ul>|ASCEND_VNPU_SPECS=vir04表示切分4个AICore作为虚拟设备，挂载至容器中。|
 |ASCEND_RDMA_DEVICES|指定待挂载的RDMA设备，参数取值为UB网卡在“/sys/class/infiniband/”下的完整HCA名称，在Atlas 950 SuperPoD液冷超节点和Atlas 850风冷超节点场景下使用，仅在Legacy注入模式下支持；CDI模式会忽略ASCEND_RDMA_DEVICES，不会根据该参数自动注入RDMA设备及挂载对应驱动文件。<ul><li>ASCEND_RDMA_DEVICES未设置、取值为空或void时，不读取RDMA设备表，不自动发现和注入RDMA设备及驱动。</li><li>仅支持使用英文逗号分隔的HCA设备全称，去重后最多支持512个。名称仅支持英文字母、数字和下划线，不支持纯数字或“0-7”等范围格式，且必须以英文字母开头。</li></ul><p>该参数与ASCEND_VISIBLE_DEVICES相互独立，前提条件和默认驱动挂载说明请参见[使用前必读](./00_before_you_start.md)。</p>|<ul><li>ASCEND_RDMA_DEVICES=void，表示不自动发现和注入RDMA设备及驱动；若仍申请NPU，ASCEND_RUNTIME_MOUNTS手动指定的集合仍按普通规则挂载。NPU和RDMA都未申请时，不执行Hook挂载流程。</li><li>ASCEND_RDMA_DEVICES=hrn5_0，表示挂载hrn5_0对应的“/dev/infiniband/uverbsX”字符设备（宿主机存在“/dev/infiniband/rdma_cm”时一并挂载）及匹配的RDMA驱动文件。</li><li>ASCEND_RDMA_DEVICES=hrn5_0,hrn5_1，表示同时挂载hrn5_0和hrn5_1对应的RDMA字符设备及驱动文件。</li></ul>|
 
-**表 2**  其他参数解释
+**表 2** 其他参数解释
 
 <a name="table46513386334"></a>
 
@@ -184,12 +186,12 @@ ls -l /dev/infiniband && ibv_devices
 |/dev/vpc|将dvpp相关的设备挂载到容器。|
 |/dev/log_drv|将日志记录相关的设备挂载到容器。|
 |/dev/upgrade|将获取昇腾系统相关配置、固件设备挂载到容器。|
-|/dev/spi_smbus|将设备带外spi通信相关的设备挂载到容器。|
+|/dev/spi_smbus|将带外SPI通信相关的设备挂载到容器。|
 |/dev/user_config|将管理用户配置相关的设备挂载到容器。|
 |/dev/memory_bandwidth|将内存带宽相关的设备挂载到容器。|
 |-v /var/slogd:/var/slogd|将宿主机日志进程文件以只读方式挂载到容器。|
 |-v /var/dmp_daemon:/var/dmp_daemon|将dmp守护进程挂载到容器。|
-|-v /var/log/npu/conf/slog:/var/log/npu/conf/slog|将npu日志模块挂载到容器。|
+|-v /var/log/npu/conf/slog:/var/log/npu/conf/slog|将NPU日志模块挂载到容器。|
 |-v /usr/lib64/libyaml-0.so.2:/usr/lib64/libyaml-0.so.2:ro|将宿主机libyaml的.so文件挂载到容器中。|
 |-v /usr/local/Ascend/driver/tools:/usr/local/Ascend/driver/tools|将驱动相关工具目录“/usr/local/Ascend/driver/tools”挂载到容器中。|
 |-v /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64|将驱动依赖动态库目录“/usr/local/Ascend/driver/lib64”挂载到容器中。|

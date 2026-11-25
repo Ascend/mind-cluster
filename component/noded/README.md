@@ -150,7 +150,7 @@ flowchart TB
 
    使用容器快照时，需先准备 Dockerfile 中指定的基础镜像及快照运行环境，具体要求请参见[容器快照使用指南](../../docs/zh/scheduling/04_usage/10_infer_operator_best_practice/06_container_snapshot_usage.md)。
 
-   在Atlas 850E 超节点、Atlas 650E 服务器、Atlas 950 SuperPoD 超节点场景下，`Dockerfile.openeuler` 支持通过 `UMDK_PKG` 构建参数安装软件包。需要将匹配环境的 RPM 压缩包放入 `output` 目录，再执行以下命令；软件包获取与适用范围请参见[容器基础镜像集成 UMDK 安装指导](../../docs/zh/scheduling/07_references/02_common_operations.md#ZH-CN_TOPIC_0000002516255288)。
+   在Atlas 850E风冷超节点、Atlas 650E服务器、Atlas 950 SuperPoD液冷超节点场景下，`Dockerfile.openeuler` 支持通过 `UMDK_PKG` 构建参数安装软件包。需要将匹配环境的 RPM 压缩包放入 `output` 目录，再执行以下命令；软件包获取与适用范围请参见[容器基础镜像集成 UMDK 安装指导](../../docs/zh/scheduling/07_references/02_common_operations.md#ZH-CN_TOPIC_0000002516255288)。
 
    ```shell
    # 将占位名称替换为实际软件包文件名

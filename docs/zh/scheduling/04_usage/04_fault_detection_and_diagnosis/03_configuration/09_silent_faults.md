@@ -12,7 +12,7 @@
 >
 >静默故障的故障码与级别在publicFaultConfiguration.json中配置，用户可通过publicCustomization.json调整级别，详细请参见[配置公共故障](./08_public_faults.md)。
 
-**表 1**  silent_fault_policy.conf的参数说明
+**表 1** silent_fault_policy.conf的参数说明
 
 <a name="silent_table01"></a>
 

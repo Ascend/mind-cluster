@@ -9,7 +9,7 @@
 
 <a name="zh-cn_topic_0000002479387566_table_hangdetectionconfig"></a>
 
-**表 1**  hangDetectionConfig.json字段说明
+**表 1** hangDetectionConfig.json字段说明
 
 |参数|说明|默认值|
 |--|--|--|

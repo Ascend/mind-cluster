@@ -8,7 +8,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 
 当前支持的打点数据如[表1](#zh-cn_topic_0000002194466236_table5530103025919)所示。
 
-**表 1**  打点数据说明
+**表 1** 打点数据说明
 
 <a name="zh-cn_topic_0000002194466236_table5530103025919"></a>
 
@@ -32,7 +32,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 
 当前支持的打点数据如[表2](#zh-cn_topic_0000002194466236_table553010302591923)所示。
 
-**表 2**  打点数据说明
+**表 2** 打点数据说明
 
 <a name="zh-cn_topic_0000002194466236_table553010302591923"></a>
 
@@ -63,7 +63,7 @@ MindCluster集群调度组件结合MindCluster Ascend FaultDiag（故障诊断�
 当前仅支持与ClusterD和NodeD集成进行在线部署，请参见[安装部署](../../../03_installation_guide/02_installation/00_helm_installation.md)章节完成ClusterD和NodeD部署。
 
 - 慢节点算法：基于训练场景关键性能指标，感知实时劣化状态；针对通信算子、计算算子同步关系，实现慢计算卡、慢通信域问题定界。
-- 慢节点清洗：对节点内部增量数据转化并清洗，生成清洗结果csv文件。
+- 慢节点清洗：对节点内部增量数据进行转化并清洗，生成清洗结果CSV文件。
 - 慢节点调度：调度慢节点整体流程，控制数据清洗和慢节点算法。
 
 ### 慢网络诊断<a name="ZH-CN_TOPIC_0000002500720860"></a>

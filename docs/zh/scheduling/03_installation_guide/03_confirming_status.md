@@ -1,5 +1,7 @@
 # 组件状态确认<a name="ZH-CN_TOPIC_0000002479386390"></a>
 
+本章节介绍MindCluster各组件安装完成后的状态确认方法，通过执行查询命令并比对回显示例判断组件是否安装成功、功能是否正常。
+
 ## Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002511426307"></a>
 
 如已安装Ascend Docker Runtime，请在所有安装了该组件的节点上执行如下步骤确认Ascend Docker Runtime的状态。
@@ -8,7 +10,7 @@
 
 1. 执行以下命令，查看配置文件是否修改成功。
 
-   - Docker（或K8s集成Docker场景）。
+   - Docker（或K8s集成Docker场景）
 
        ```shell
        cat /etc/docker/daemon.json | grep ascend
@@ -22,7 +24,7 @@
                "path": "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime",
        ```
 
-   - Containerd（或K8s集成Containerd场景）。
+   - Containerd（或K8s集成Containerd场景）
 
        ```shell
        cat /etc/containerd/config.toml | grep ascend
@@ -37,7 +39,7 @@
                    BinaryName = "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime"
        ```
 
-   - CRI-O（或K8s集成CRI-O场景）。
+   - CRI-O（或K8s集成CRI-O场景）
 
        ```shell
        cat /etc/crio/crio.conf.d/99-ascend-runtime.conf | grep ascend
@@ -56,7 +58,7 @@
 
 2. 执行以下命令，查看是否存在基础镜像。
 
-   - Docker（或K8s集成Docker场景）。
+   - Docker（或K8s集成Docker场景）
 
        ```shell
        docker images | grep ubuntu
@@ -68,7 +70,7 @@
        ubuntu              22.04               6526a1858e5d        2 years ago         64.2MB
        ```
 
-   - Containerd（或K8s集成Containerd场景）。
+   - Containerd（或K8s集成Containerd场景）
 
        ```shell
        ctr i ls | grep ubuntu
@@ -90,17 +92,17 @@
 
        ```ColdFusion
        docker.io/library/ubuntu:22.04     22.04              ec1c05cc9451e       246MB
-
+       ```
 
 3. 执行以下命令，使用Ascend Docker Runtime挂载物理芯片ID为0的芯片。
 
-   - Docker（或K8s集成Docker场景）。
+   - Docker（或K8s集成Docker场景）
 
        ```shell
        docker run -it -e ASCEND_VISIBLE_DEVICES=0 ubuntu:22.04 /bin/bash
        ```
 
-   - Containerd（或K8s集成Containerd场景）。
+   - Containerd（或K8s集成Containerd场景）
 
      执行以下命令，挂载物理芯片。
 
@@ -108,7 +110,7 @@
        ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 docker.io/library/ubuntu:22.04 {containerID}
        ```
 
-   - CRI-O（或K8s集成CRI-O场景）。
+   - CRI-O（或K8s集成CRI-O场景）
 
      CRI-O场景使用方法可参见：[CRI-O场景使用方法](../04_usage/00_containerization/04_usage_on_the_crio_client.md)
 
@@ -343,7 +345,7 @@
        ...
        ```
 
-   - 以服务器（插Atlas 300I Pro推理卡）为例。非混插模式，节点包含<term>Atlas推理系列产品</term>，回显示例如下，节点上芯片个数请以实际为准。
+   - 以服务器（插Atlas 300I Pro推理卡）为例，非混插模式，节点包含<term>Atlas推理系列产品</term>，回显示例如下，节点上芯片个数请以实际为准。
 
        ```ColdFusion
        root@ubuntu:~# kubectl describe node ubuntu
@@ -368,7 +370,7 @@
        ...
        ```
 
-   - 以服务器（插Atlas 300I Pro推理卡）为例。混插模式，节点包含<term>Atlas推理系列产品</term>，回显示例如下，节点上芯片个数请以实际为准。
+   - 以服务器（插Atlas 300I Pro推理卡）为例，混插模式，节点包含<term>Atlas推理系列产品</term>，回显示例如下，节点上芯片个数请以实际为准。
 
        ```ColdFusion
        root@ubuntu:~# kubectl describe node ubuntu
@@ -437,7 +439,7 @@
     [INFO]     2026/07/15 10:30:25.567890 7       ub_device/server.go:289    exposing "8" devices
     ```
 
-3. 通过如下命令查看K8s中节点的RDMA资源信息。如果节点详情中的"Capacity"字段和"Allocatable"字段出现了RDMA共享设备的相关信息，表示K8s RDMA Shared Dev Plugin给K8s上报资源正常，组件运行正常。
+3. 通过如下命令查看K8s中节点的RDMA资源信息。如果节点详情中的“Capacity”字段和“Allocatable”字段出现了RDMA共享设备的相关信息，表示K8s RDMA Shared Dev Plugin给K8s上报资源正常，组件运行正常。
 
     ```shell
     kubectl describe node {K8s中的节点名}

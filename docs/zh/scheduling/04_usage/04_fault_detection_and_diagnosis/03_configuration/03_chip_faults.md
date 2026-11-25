@@ -15,7 +15,7 @@ Ascend Device Plugin和ClusterD均提供了按照故障频率进行人工隔离�
 
 Ascend Device Plugin和ClusterD的人工隔离芯片功能，理论上涉及的故障码不需要重复。若不想使用Ascend Device Plugin的隔离功能，请参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)章节，将faultCustomization.json文件中的人工隔离芯片相关的配置删除；若不想使用ClusterD的隔离功能，请参见[（可选）配置芯片故障频率](#可选配置芯片故障频率)章节，将人工隔离芯片功能开关关闭。
 
-若Ascend Device Plugin和ClusterD对同一张芯片都进行了人工隔离，需要各自解除隔离。Ascend Device Plugin解除隔离的方法请参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)中"手动恢复强制隔离的芯片"步骤；ClusterD解除隔离的方法请参见[（可选）配置芯片故障频率](#可选配置芯片故障频率)中"手动恢复人工隔离的芯片"步骤。
+若Ascend Device Plugin和ClusterD对同一张芯片都进行了人工隔离，需要各自解除隔离。Ascend Device Plugin解除隔离的方法请参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)中“手动恢复强制隔离的芯片”步骤；ClusterD解除隔离的方法请参见[（可选）配置芯片故障频率](#可选配置芯片故障频率)中“手动恢复人工隔离的芯片”步骤。
 
 ## Ascend Device Plugin<a name="ZH-CN_TOPIC_0000002511346521_02"></a>
 
@@ -90,9 +90,9 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 >
 >- 故障的处理策略为ManuallySeparateNPU时，可以参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)中“手动恢复强制隔离的芯片”步骤进行处理。
 >- 除可以识别的硬件故障外，faultCustomization.json文件中还包含以下几类故障。
->     - 无需处理的故障：该类故障出现不影响训练任务及设备，不提供提升故障级别的初始化配置。
->     - 无法识别出是硬件还是软件类故障：该类故障无法准确识别是硬件还是软件故障，且会影响训练任务。该类故障不提供提升故障级别的初始化配置，建议用户根据实际情况手动配置任务支持的断点续训最大次数和达到最大次数后故障的处理策略，可以参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)进行配置。
->     - 软件配置类故障：该类故障为软件配置类问题，正常情况下不会出现。该类故障不提供提升故障级别的初始化配置，建议用户检查软件版本是否配套。
+>   - 无需处理的故障：该类故障出现不影响训练任务及设备，不提供提升故障级别的初始化配置。
+>   - 无法识别出是硬件还是软件类故障：该类故障无法准确识别是硬件还是软件故障，且会影响训练任务。该类故障不提供提升故障级别的初始化配置，建议用户根据实际情况手动配置任务支持的断点续训最大次数和达到最大次数后故障的处理策略，可以参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)进行配置。
+>   - 软件配置类故障：该类故障为软件配置类问题，正常情况下不会出现。该类故障不提供提升故障级别的初始化配置，建议用户检查软件版本是否配套。
 
 **EscalationMode（故障升级模式）说明**
 
@@ -138,7 +138,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
 **使用faultCode.json配置故障级别<a name="zh-cn_topic_0000001951258609_section112139052513"></a>**
 
-以故障名称dmp\_daemon节点状态检测异常，对应故障码80E21007为例。将当前故障的处理策略NotHandleFaultCodes（无需处理）修改为RestartNPUCodes（隔离芯片，进行任务重调度）的操作示例如下。
+以故障名称dmp\_daemon节点状态检测异常，对应故障码80E21007为例，将当前故障的处理策略NotHandleFaultCodes（无需处理）修改为RestartNPUCodes（隔离芯片，进行任务重调度）的操作示例如下。
 
 1. 登录环境，进入Ascend Device Plugin解压目录。
 2. 执行以下命令，创建动态配置故障码所需ConfigMap文件（mindx-dl-fault-config）。
@@ -153,7 +153,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
     configmap/mindx-dl-fault-config created
     ```
 
-    **表 1**  参数说明
+    **表 1** 参数说明
 
     <a name="zh-cn_topic_0000001951258609_table16314861918"></a>
     <table><thead align="left"><tr id="zh-cn_topic_0000001951258609_row763648161914"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000001951258609_p16631548171910"><a name="zh-cn_topic_0000001951258609_p16631548171910"></a>参数名</p>
@@ -182,7 +182,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
     </td>
     <td class="cellrowborder" valign="top" width="11.701170117011701%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001951258609_p1164748191916"><a name="zh-cn_topic_0000001951258609_p1164748191916"></a>否</p>
     </td>
-    <td class="cellrowborder" valign="top" width="54.96549654965496%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001951258609_p876012211206"><a name="zh-cn_topic_0000001951258609_p876012211206"></a>不指定该参数则默认取值为300s。用于指定查询mindx-dl-fault-config文件是否更新的周期时间，单位为秒，取值范围为30~3600。PollInterval的修改将在下一个周期生效。</p>
+    <td class="cellrowborder" valign="top" width="54.96549654965496%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001951258609_p876012211206"><a name="zh-cn_topic_0000001951258609_p876012211206"></a>不指定该参数则默认取值为300s，用于指定查询mindx-dl-fault-config文件是否更新的周期时间，单位为秒，取值范围为30~3600。PollInterval的修改将在下一个周期生效。</p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000001951258609_row176474851911"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951258609_p1964748141915"><a name="zh-cn_topic_0000001951258609_p1964748141915"></a>faultCode.json</p>
@@ -291,7 +291,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
     configmap/mindx-dl-fault-config created
     ```
 
-    **表 2**  参数说明
+    **表 2** 参数说明
 
     <a name="zh-cn_topic_0000002136360238_zh-cn_topic_0000001721780141_table16314861918"></a>
     <table><thead align="left"><tr id="zh-cn_topic_0000002136360238_zh-cn_topic_0000001721780141_row763648161914"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002136360238_zh-cn_topic_0000001721780141_p16631548171910"><a name="zh-cn_topic_0000002136360238_zh-cn_topic_0000001721780141_p16631548171910"></a>参数名</p>
@@ -320,7 +320,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
     </td>
     <td class="cellrowborder" valign="top" width="11.701170117011701%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002136360238_zh-cn_topic_0000001721780141_p1164748191916"><a name="zh-cn_topic_0000002136360238_zh-cn_topic_0000001721780141_p1164748191916"></a>否</p>
     </td>
-    <td class="cellrowborder" valign="top" width="54.96549654965496%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002136360238_zh-cn_topic_0000001721780141_p876012211206"><a name="zh-cn_topic_0000002136360238_zh-cn_topic_0000001721780141_p876012211206"></a>不指定该参数则默认取值为300s。用于指定查询mindx-dl-fault-config文件是否更新的周期时间，单位为秒，取值范围为30~3600。PollInterval的修改将在下一个周期生效。</p>
+    <td class="cellrowborder" valign="top" width="54.96549654965496%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002136360238_zh-cn_topic_0000001721780141_p876012211206"><a name="zh-cn_topic_0000002136360238_zh-cn_topic_0000001721780141_p876012211206"></a>不指定该参数则默认取值为300s，用于指定查询mindx-dl-fault-config文件是否更新的周期时间，单位为秒，取值范围为30~3600。PollInterval的修改将在下一个周期生效。</p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000002136360238_zh-cn_topic_0000001721780141_row176474851911"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002136360238_zh-cn_topic_0000001721780141_p1964748141915"><a name="zh-cn_topic_0000002136360238_zh-cn_topic_0000001721780141_p1964748141915"></a>faultCode.json</p>
@@ -468,7 +468,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
     3. 将data下面的ManuallySeparateNPU后面已恢复健康的芯片名称删除。
 
-        ```Yaml
+        ```yaml
         apiVersion: v1
         kind: ConfigMap
         data:
@@ -477,7 +477,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
         ```
 
         >[!NOTE]
-        >删除ManuallySeparateNPU字段后所有芯片名称，并将取值设置为空“”。
+        >删除ManuallySeparateNPU字段后面的所有芯片名称，并将取值设置为空“”。
 
     4. 修改完成后，按“Esc”键，输入:wq!保存并退出。
     5. 等待1个上报周期（若设备信息有变化，那么在健康状态检查周期内就会上报，如果设备信息没有变化，那么上报周期固定为5分钟）后，执行以下命令，查看device-info-cm中ManuallySeparateNPU是否存在刚才删除的芯片名称。若不存在，则芯片恢复健康成功，可继续正常使用该芯片。
@@ -525,7 +525,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
     将以下内容保存为文件cm.yaml：
 
-    ```Yaml
+    ```yaml
         apiVersion: v1
         kind: ConfigMap
         metadata:
@@ -562,7 +562,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
     根据实际情况，修改人工隔离芯片的故障频率。参数说明请参见[表1](../../../05_developer_guide/00_installation_deployment/00_manual_installation/06_clusterd.md)。
 
-    ```Yaml
+    ```yaml
     # Please edit the object below. Lines beginning with a '#' will be ignored,
     # and an empty file will abort the edit. If an error occurs while saving this file will be
     # reopened with the relevant failures.

@@ -4,14 +4,14 @@
 
 ## NPU上报机制<a name="section15950121613265"></a>
 
-NPU发生故障时，故障管理框架获取到故障信息后，将该信息上传给NPU驱动的故障管理框架。故障管理框架收到故障信息后，通过DCMI接口上报给Ascend Device Plugin，如[图1](#fig3951191610267)所示。
+NPU发生故障时，故障管理框架获取到故障信息后，将该信息上报给NPU驱动的故障管理框架。故障管理框架收到故障信息后，通过DCMI接口上报给Ascend Device Plugin，如[图1](#fig3951191610267)所示。
 
 Ascend Device Plugin通过DCMI接口获取芯片健康状态。当前提供如下两种获取模式：
 
 - 故障订阅模式。Ascend Device Plugin启动时会先调用DCMI故障订阅接口注册监测，故障发生时驱动通过该接口将故障事件上报给Ascend Device Plugin。故障恢复时通过该接口将恢复事件上报给Ascend Device Plugin。
 - 故障轮询模式。每隔固定时间，通过故障查询接口查询芯片故障状态，当设备驱动不支持订阅能力时将切换该模式。
 
-**图 1**  芯片故障上报<a name="fig3951191610267"></a>
+**图 1** 芯片故障上报<a name="fig3951191610267"></a>
 
 ![](../../../../figures/scheduling/芯片故障上报.png "芯片故障上报")
 
@@ -19,7 +19,7 @@ Ascend Device Plugin通过DCMI接口获取芯片健康状态。当前提供如�
 
 Ascend Device Plugin获取到芯片故障信息后，通过ConfigMap的形式上报给K8s。Ascend Device Plugin的故障上报机制如下：
 
-**图 2**  上报故障到K8s<a name="fig10951101692610"></a>
+**图 2** 上报故障到K8s<a name="fig10951101692610"></a>
 
 ![](../../../../figures/scheduling/上报故障到K8s.png "上报故障到K8s")
 
@@ -33,7 +33,7 @@ Ascend Device Plugin获取到芯片故障信息后，通过ConfigMap的形式上
 
 ## 所需组件<a name="zh-cn_topic_0000002194466236_section138036504533"></a>
 
-为保证芯片故障检测功能的正常使用，需要安装以下组件：Volcano、Ascend Operator、Ascend Device Plugin、ClusterD
+为保证芯片故障检测功能的正常使用，需要安装以下组件：Volcano、Ascend Operator、Ascend Device Plugin、ClusterD。
 
 ## （可选）配置故障检测的级别<a name="section1343172016386"></a>
 

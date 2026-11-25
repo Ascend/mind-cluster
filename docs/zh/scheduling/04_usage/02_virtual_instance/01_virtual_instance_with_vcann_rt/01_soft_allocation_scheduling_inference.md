@@ -12,7 +12,7 @@
 
 使用软切分虚拟化前，需要提前了解[表1 场景说明](#table62551184461989657)中的场景说明。
 
-**表 1**  场景说明
+**表 1** 场景说明
 
 <a name="table62551184461989657"></a>
 <table><thead align="left"><tr><th class="cellrowborder" valign="top" width="19.98%" id="mcps1.2.3.1.1"><p>场景</p>
@@ -28,7 +28,7 @@
 <ul>
 <li>huawei.com/scheduler.softShareDev.aicoreQuota：取值为1-100，表示软切分任务请求的AICore百分比。</li>
 <li>huawei.com/scheduler.softShareDev.hbmQuota：取值为1-maxHBM，其中maxHBM为通过npu-smi info命令查询出的HBM-Usage(MB)中HBM的值，表示软切分任务请求的高带宽内存量。</li>
-<li>huawei.com/scheduler.softShareDev.policy：取值为fixed-share（固定配额模式）、elastic（弹性模式）、best-effort（争抢模式），表示软切分任务的策略</li>
+<li>huawei.com/scheduler.softShareDev.policy：取值为fixed-share（固定配额模式）、elastic（弹性模式）、best-effort（争抢模式），表示软切分任务的策略。</li>
 </ul></p>
 </td>
 </tr>
@@ -63,7 +63,7 @@
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>任务运行过程中，不支持卸载Volcano。</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>开启了软切分特性的节点，仅允许通过Ascend for Volcano调度使用，不允许通过原生调度器、docker等方式使用。</p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>开启了软切分特性的节点，仅允许通过Ascend for Volcano调度使用，不允许通过原生调度器、Docker等方式使用。</p>
 </td>
 </tr>
 </tbody>
@@ -232,7 +232,7 @@
 
 通过命令行使用软切分调度特性流程可以参见[图1](#fig24252498666vcann)。
 
-**图 1**  使用流程<a name="fig24252498666vcann"></a>
+**图 1** 使用流程<a name="fig24252498666vcann"></a>
 
 ![](../../../../figures/scheduling/basic_scheduling_001.png "basic_scheduling_001")
 
@@ -240,7 +240,7 @@
 
 以Ascend Job为例，其原理图如[图2](#fig23698010123)所示。
 
-**图 2**  acjob任务调度原理图<a name="fig23698010123"></a>
+**图 2** acjob任务调度原理图<a name="fig23698010123"></a>
 
 ![](../../../../figures/scheduling/basic_scheduling_002.PNG "basic_scheduling_002")
 
@@ -315,7 +315,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
 
 可选择以下方式中的一种来获取推理镜像。
 
-- 推荐从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)根据系统架构（ARM或者x86\_64）下载**推理基础镜像（**如：[mindie](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)**）**。
+- 推荐从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)根据系统架构（ARM或者x86\_64）下载**推理基础镜像（**如：[MindIE](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)**）**。
 
     >[!NOTE]
     >基础镜像中不包含推理模型、脚本等文件，因此，用户需要根据自己的需求进行定制化修改（如加入推理脚本代码、模型等）后才能使用。
@@ -335,7 +335,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
 **从昇腾镜像仓库获取示例脚本<a name="section8181015175911"></a>**
 
 1. 确保服务器能访问互联网后，访问[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)。
-2. 在左侧导航栏选择推理镜像，然后选择[mindie](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)镜像，获取推理示例脚本。
+2. 在左侧导航栏选择推理镜像，然后选择[MindIE](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)镜像，获取推理示例脚本。
 
     >[!NOTE]
     >若无下载权限，请根据页面提示申请权限。提交申请后等待管理员审核，审核通过后即可下载镜像。
@@ -351,7 +351,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
 
 1. 获取相应的YAML文件。
 
-    **表 5**  YAML说明
+    **表 5** YAML说明
     <table>
     <thead align="left">
     <tr>
@@ -437,7 +437,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
                 example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
               containers:
                 - name: ascend # do not modify
-                  image: pytorch-test:latest         # training framework image， which can be modified
+                  image: pytorch-test:latest         # training framework image, which can be modified
                   imagePullPolicy: IfNotPresent
                   env:
                     - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running
