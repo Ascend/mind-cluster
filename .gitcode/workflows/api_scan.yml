@@ -3,6 +3,10 @@ name: api-scan
 on:
   pull_request_target:   # 确保读取默认分支的最新 workflow 配置
     branches: [ 'master' ]          # 按目标分支调整
+  pull_request_comment:
+    types: [ created ]
+    branches: [ 'master' ]
+    comments: [ '^api_scan$' ]
 
 jobs:
   api-scan:
