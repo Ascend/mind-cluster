@@ -1,5 +1,7 @@
 # 安装
 
+本章节介绍ascend-fd-tk工具的安装流程。
+
 ## 安装前必读
 
 - ascend-fd-tk 工具要求 Python 版本不低于 3.8，安装前请检查 Python 版本是否满足要求。
@@ -57,7 +59,7 @@ python3 setup.py --version {version} bdist_wheel
 >[!NOTE]
 >
 > - `{version}` 为版本号，需替换为实际版本，例：`v1.0.0`。
-> - 根据 Wheel 标准生成 Whl 包名称：`ascend_faultdiag_toolkit-{去掉 version 的前缀 ‘v’ }-py3-none-any.whl`，例：`ascend_faultdiag_toolkit-1.0.0-py3-none-any.whl`
+> - 根据 Wheel 标准生成 Whl 包名称：`ascend_faultdiag_toolkit-{去掉 version 的前缀 ‘v’ }-py3-none-any.whl`，例：`ascend_faultdiag_toolkit-1.0.0-py3-none-any.whl`。
 
 生成的 Whl 包位于 `dist/` 目录下：
 
@@ -84,7 +86,7 @@ pip3 install ascend_faultdiag_toolkit-{version}-py3-none-any.whl
 
 安装成功回显示例：
 
-```txt
+```output
 Successfully installed ascend-faultdiag-toolkit-{version}
 ```
 
@@ -100,18 +102,18 @@ ascend-fd-tk about
 
 **软件包 SUM 值校验步骤**：
 
-1. 下载[Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)文件
+1. 下载[Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum](https://gitcode.com/Ascend/mind-cluster/releases/v26.2.0)文件。
 
-2. 将 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum` 和 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` 放置到同一目录，执行以下命令进行校验：
+2. 将 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum` 和 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` 放置到同一目录，执行以下命令进行校验。
 
     ```bash
     sha256sum -c Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum
     ```
 
-3. 校验结果
+3. 校验结果。
 
     回显示例如下，即代表软件包校验通过。
 
-    ```bash
+    ```output
     Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip: OK
     ```

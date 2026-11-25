@@ -2,7 +2,7 @@
 
 ## 命令功能
 
-指定单条链路进行诊断，IP自动识别设备类型（host/switch/bmc），设备类型不同端口含义不同。
+指定单条链路进行诊断，根据IP自动识别设备类型（Host/Switch/BMC），设备类型不同端口含义不同。
 
 - 工具读取缓存目录中的结构化数据，执行全量诊断与根因分析，在结果展示阶段仅保留指定链路（本端或对端命中IP+端口）的诊断结果，并生成报告。
 - 需先执行 `auto_collect`（可多次分批执行），再执行本命令启动单链路诊断。
@@ -18,8 +18,8 @@
 
 | 参数 | 说明                                                                                                         |
 |------|------------------------------------------------------------------------------------------------------------|
-| ip | 设备IP地址。支持host、switch、bmc三类设备                                                                               |
-| id | 端口ID。设备类型不同，含义不同：<ul><li>host：NPU端口号（npu_id，取值范围0~7）</li><li>switch：交换机端口名（如400GE1/0/1:10）</li><li>bmc：关联主机的NPU端口号（取值范围0~7）</li></ul>|
+| ip | 设备IP地址，支持Host、Switch、BMC三类设备                                                                               |
+| id | 端口ID。设备类型不同，含义不同：<ul><li>Host：NPU端口号（npu_id，取值范围0~7）</li><li>Switch：交换机端口名（如400GE1/0/1:10）</li><li>BMC：关联主机的NPU端口号（取值范围0~7）</li></ul>|
 
 ## 执行前提
 
@@ -38,7 +38,7 @@
 非交互式方式（展示命令与回显）：
 
 ```bash
-ascend-fd-tk set_conn_config /home/user/conn.ini auto_collect auto_single_diag 1.1.1.1 5
+ascend-fd-tk set_conn_config /home/user/conn.ini auto_collect auto_single_diag 10.1.1.1 5
 # 其他日志输出...
 单链路诊断完成，共发现 2 条故障，诊断结果仅展示该链路
 ```
@@ -47,13 +47,13 @@ ascend-fd-tk set_conn_config /home/user/conn.ini auto_collect auto_single_diag 1
 
 ```bash
 ascend-fd-tk
->>> auto_single_diag 1.1.1.1 5
+>>> auto_single_diag 10.1.1.1 5
 单链路诊断完成，共发现 2 条故障，诊断结果仅展示该链路
 ```
 
 诊断交换机端口链路：
 
 ```bash
->>> auto_single_diag 1.1.1.3 400GE1/0/1:10
+>>> auto_single_diag 10.1.1.3 400GE1/0/1:10
 单链路诊断完成，共发现 1 条故障，诊断结果仅展示该链路
 ```

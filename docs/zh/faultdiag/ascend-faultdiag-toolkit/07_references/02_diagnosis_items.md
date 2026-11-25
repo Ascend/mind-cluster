@@ -6,11 +6,11 @@
 
 | 设备类型 | 详细说明 |
 |----------|----------|
-| 主机侧相关诊断 | [查看](#主机侧相关诊断) |
-| BMC相关诊断 | [查看](#bmc-相关诊断) |
-| 交换机相关诊断 | [查看](#交换机相关诊断) |
-| HCCS相关诊断 | [查看](#hccs-相关诊断) |
-| 通用诊断 | [查看](#通用诊断) |
+| 主机侧相关诊断 | [主机侧相关诊断](#主机侧相关诊断) |
+| BMC相关诊断 | [BMC相关诊断](#bmc相关诊断) |
+| 交换机相关诊断 | [交换机相关诊断](#交换机相关诊断) |
+| HCCS相关诊断 | [HCCS相关诊断](#hccs相关诊断) |
+| 通用诊断 | [通用诊断](#通用诊断) |
 
 ## 主机侧相关诊断
 
@@ -103,14 +103,14 @@
 <td><code>hccn_tool -i {chip_phy_id} -net_health -g</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: <code>optical.log</code>（net_health不支持）</td>
 <td>检查NPU端口的网络健康状态是否偏离正常阈值，并附带对端交换机与端口信息</td>
-<td>端口光模块状态异常，网络健康状态：abnormal。 对端交换机：SWITCH-01，对端端口：10GE1/0/1。</td>
+<td>端口光模块状态异常，网络健康状态：abnormal。对端交换机：SWITCH-01，对端端口：10GE1/0/1。</td>
 </tr>
 <tr>
 <td>端口连接状态检测</td>
 <td><code>hccn_tool -i {chip_phy_id} -link -g</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: <code>optical.log</code></td>
 <td>检查NPU端口的连接状态是否偏离正常阈值，并附带对端交换机与端口信息</td>
-<td>端口光模块状态异常，连接状态：down。 对端交换机：SWITCH-01，对端端口：10GE1/0/1。</td>
+<td>端口光模块状态异常，连接状态：down。对端交换机：SWITCH-01，对端端口：10GE1/0/1。</td>
 </tr>
 <tr>
 <td>链路状态检测</td>
@@ -265,7 +265,7 @@
 </table>
 <!-- end id1 -->
 
-## BMC 相关诊断
+## BMC相关诊断
 
 <table>
 <thead>
@@ -575,7 +575,7 @@
 </tbody>
 </table>
 
-## HCCS 相关诊断
+## HCCS相关诊断
 
 <table>
 <thead>

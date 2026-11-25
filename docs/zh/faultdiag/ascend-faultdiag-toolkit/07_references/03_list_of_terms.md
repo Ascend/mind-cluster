@@ -8,7 +8,7 @@
 | CDR             | Clock Data Recovery，时钟数据恢复 |
 | FaultLevel      | 故障等级分类，包含故障态、次故障态、亚健康态三级 |
 | FRU             | Field Replaceable Unit，现场可更换单元 |
-| HBM             | High Bandwidth Memory，高带宽存储器 |
+| HBM             | High Bandwidth Memory，高带宽内存 |
 | Host            | 主机服务器，运行训练或推理任务的计算节点 |
 | hinicadm5       | 华为 hinic 网卡管理命令行工具，用于查询网卡列表、端口数及 SFP 光模块信息 |
 | iBMC            | Intelligent Baseboard Management Controller，华为服务器智能基板管理控制器 |
@@ -22,10 +22,10 @@
 | PSU             | Power Supply Unit，电源模块，工具可检测 PSU 过温等告警 |
 | RoCE            | RDMA over Converged Ethernet，基于以太网的 RDMA 技术 |
 | RoCE 交换机        | RoCE 参数平面使用的叶脊以太网交换机，承载参数同步、数据读写等业务流量 |
-| Serdes          | Serializer / Deserializer，串行器 / 解串器 |
+| SerDes          | Serializer / Deserializer，串行器 / 解串器 |
 | SEL             | System Event Log，系统事件日志（BMC 侧） |
 | SNR             | Signal-to-Noise Ratio，信噪比 |
-| SFP             | Small Form-factor Pluggable，光模块热插拔封装。NIC 端口使用 SFP 光模块，通过 hinicadm5 命令采集 lane 级指标 |
+| SFP             | Small Form-factor Pluggable，小封装可插拔收发器。NIC 端口使用 SFP 光模块，通过 hinicadm5 命令采集 lane 级指标 |
 | SPOD            | Single Port Of Death，NPU 故障端口定位信息 |
 | TX LoL / RX LoL | 发送 / 接收失锁（Loss of Lock） |
 | TX Los / RX Los | 发送 / 接收信号丢失（Loss of Signal） |

@@ -2,7 +2,10 @@
 
 ## 命令功能
 
-设置配置文件目录路径，工具会自动扫描该目录下的配置文件并加载。当前支持加载机房位置配置文件 `LLD.xlsx`（包含灵衢 L1/L2 网络对应关系），用于在诊断报告中关联机柜、机房等位置维度信息；同时支持加载阈值配置文件 `threshold_config.json` 覆盖默认诊断阈值。
+设置配置文件目录路径，工具会自动扫描该目录下的配置文件并加载。当前支持加载机房位置配置文件 `LLD.xlsx`（包含灵衢L1/L2网络对应关系），用于在诊断报告中关联机柜、机房等位置维度信息；同时支持加载阈值配置文件 `threshold_config.json` 覆盖默认诊断阈值。
+
+>[!NOTE]
+>若未配置`set_config_dir`，工具仍可工作，但不会进行机房位置维度的关联分析、故障阈值按默认值配置。
 
 ## 命令格式
 
@@ -15,22 +18,22 @@
 
 | 参数 | 类型 | 是否必填 | 说明                                                                  |
 |------|-----|------|---------------------------------------------------------------------|
-| `<目录路径>` | string | 是 | 配置文件所在目录路径。目录内需包含 `LLD.xlsx`、`threshold_config.json`。 |
+| `<目录路径>` | string | 是 | 配置文件所在目录路径。 |
 
 ## LLD.xlsx文件说明
 
-需要提供 `LLD.xlsx` 文件，样例文件可参考：[LLD.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/1c76693517e8e08dc2b3403497eb945134946916/LLD.xlsx)。该文件需包含两个 Sheet：
+机房位置配置文件 `LLD.xlsx` 用于在诊断报告中关联机柜、机房等位置维度信息。该文件需放置在 `set_config_dir` 设置的目录下，工具加载配置时自动读取。示例文件请参见[LLD.xlsx](https://raw.gitcode.com/Ascend/mind-cluster/blobs/1c76693517e8e08dc2b3403497eb945134946916/LLD.xlsx)。该文件需包含两个Sheet：
 
 | Sheet 名 | 必填项 | 用途 |
 |----------|--------|------|
-| 灵衢L1网络对应关系 | 服务器、机房名称、机柜编号、主机 SN、L1 名称、L1_IP、L1_SN | 描述主机与 L1 交换机的对应关系 |
-| 灵衢L2网络对应关系 | 设备名、机房名称、机柜编号、管理 IP 配置、SN | 描述 L2 交换机的机房位置信息 |
+| 灵衢L1网络对应关系 | 服务器、机房名称、机柜编号、主机SN、L1名称、L1_IP、L1_SN | 描述主机与L1交换机的对应关系 |
+| 灵衢L2网络对应关系 | 设备名、机房名称、机柜编号、管理IP配置、SN | 描述L2交换机的机房位置信息 |
 
 ## threshold_config.json文件说明
 
-阈值配置文件 `threshold_config.json` 用于覆盖各诊断项的默认阈值，便于根据实际环境调整判障标准。该文件需放置在 `set_config_dir` 设置的配置目录下，工具加载配置时自动读取；未放置该文件时使用代码内置默认阈值。完整示例文件请参见[threshold_config.json](https://raw.gitcode.com/Ascend/mind-cluster/blobs/a507a1f8b90420c25290e69c7d431c947e522ef2/threshold_config.json)。
+阈值配置文件 `threshold_config.json` 用于覆盖各诊断项的默认阈值，便于根据实际环境调整判障标准。该文件需放置在 `set_config_dir` 设置的目录下，工具加载配置时自动读取；未放置该文件时使用代码内置默认阈值。示例文件请参见[threshold_config.json](https://raw.gitcode.com/Ascend/mind-cluster/blobs/a507a1f8b90420c25290e69c7d431c947e522ef2/threshold_config.json)。
 
-配置文件为 JSON 对象，每个配置项对应一个阈值名称，阈值字段统一嵌套在 `threshold` 子对象内，例：
+配置文件为JSON对象，每个配置项对应一个阈值名称，阈值字段统一嵌套在 `threshold` 子对象内，例如：
 
 ```json
 {
@@ -46,8 +49,8 @@
 | `low_value_alarm` / `high_value_alarm` | string | 低值/高值告警阈值（数值类字符串）                   |
 | `low_value_warn` / `high_value_warn` | string | 低值/高值预警阈值（数值字符串）                       |
 | `normal_value_alarm` | string | 正常值判定字符串（如 `"UP"`、`"present"`）      |
-| `desc` | string | 阈值描述，最长 128 字符                      |
-| `unit` | string | 单位（如 `"dB"`、`"mW"`、`"mA"`），最长 16 字符 |
+| `desc` | string | 阈值描述，最长128字符                      |
+| `unit` | string | 单位（如 `"dB"`、`"mW"`、`"mA"`），最长16字符 |
 
 阈值配置项含义：
 
@@ -55,16 +58,16 @@
 |--------|----------------------------------|------|
 | `CDR_HOST_SNR_DB` | CDR（时钟数据恢复）主机侧信噪比                | dB |
 | `CDR_MEDIA_SNR_DB` | CDR（时钟数据恢复）介质侧信噪比                | dB |
-| `CHIP_CPU_PORT_SNR_LINE` | CPU 与 L1 交换机间端口 SNR（线性值，约 56 dB） | - |
-| `CHIP_NPU_PORT_SNR_LINE` | NPU 与 L1 交换机间端口 SNR（线性值）         | - |
-| `SWITCH_PORT_SNR_LINE` | L1 与 L2 交换机间端口 SNR（线性值）          | - |
-| `DUPLEX_THRESHOLD` | 端口双工模式，正常值 `Full`                | - |
-| `NET_HEALTH_THRESHOLD` | 网络健康检查结果，正常值 `Success`           | - |
-| `LINK_STATUS_THRESHOLD` | 链路状态，正常值 `UP`                    | - |
-| `OPTICAL_PRESENT_THRESHOLD` | 光模块在位状态，正常值 `present`            | - |
-| `SNR_LANE_DIFF_DB` | 光模块各 lane 间 SNR 的最大差值            | dB |
-| `POWER_LANE_DIFF_DB` | 光模块各 lane 间光功率的最大差值              | dBm |
-| `HCCN_LINK_DOWN_CNT` | 24 小时内 HCCN 链路 down 次数           | 次 |
+| `CHIP_CPU_PORT_SNR_LINE` | CPU与L1交换机间端口SNR（线性值，约 56 dB） | - |
+| `CHIP_NPU_PORT_SNR_LINE` | NPU与L1交换机间端口SNR（线性值）         | - |
+| `SWITCH_PORT_SNR_LINE` | L1与L2交换机间端口SNR（线性值）          | - |
+| `DUPLEX_THRESHOLD` | 端口双工模式，正常值为 `Full`                | - |
+| `NET_HEALTH_THRESHOLD` | 网络健康检查结果，正常值为 `Success`           | - |
+| `LINK_STATUS_THRESHOLD` | 链路状态，正常值为 `UP`                    | - |
+| `OPTICAL_PRESENT_THRESHOLD` | 光模块在位状态，正常值为 `present`            | - |
+| `SNR_LANE_DIFF_DB` | 光模块各lane间SNR的最大差值            | dB |
+| `POWER_LANE_DIFF_DB` | 光模块各lane间光功率的最大差值              | dBm |
+| `HCCN_LINK_DOWN_CNT` | 24小时内HCCN链路down次数           | 次 |
 | `TX_POWER_MW` | host侧光模块发射光功率（mW 口径）             | mW |
 | `RX_POWER_MW` | host侧光模块接收光功率（mW 口径）             | mW |
 | `TX_POWER_DBM` | switch侧光模块发射光功率（dBm 口径）          | dBm |
@@ -77,18 +80,18 @@
 | `NIC_RX_POWER_DBM` | 网卡（NIC SFP）光模块接收光功率              | dBm |
 | `NIC_HOST_SNR_DB` | 网卡（NIC SFP）光模块主机侧信噪比             | dB |
 | `NIC_MEDIA_SNR_DB` | 网卡（NIC SFP）光模块介质侧信噪比             | dB |
-| `NIC_LANE_FLAG` | 网卡 lane 异常标志，正常值 `0`             | - |
-| `LPO_TX_BIAS_MA` | LPO 光模块发射偏置电流| mA |
-| `LPO_TX_POWER_DBM` | LPO 光模块发射光功率| dBm |
-| `LPO_RX_POWER_DBM` | LPO 光模块接收光功率| dBm |
-| `LPO_POWER_LANE_DIFF_DB` | LPO 光模块各 lane 间光功率的最大差值| dBm |
+| `NIC_LANE_FLAG` | 网卡 lane 异常标志，正常值为 `0`             | - |
+| `LPO_TX_BIAS_MA` | LPO光模块发射偏置电流| mA |
+| `LPO_TX_POWER_DBM` | LPO光模块发射光功率| dBm |
+| `LPO_RX_POWER_DBM` | LPO光模块接收光功率| dBm |
+| `LPO_POWER_LANE_DIFF_DB` | LPO光模块各lane间光功率的最大差值| dBm |
 
 说明：
 
 - `DUPLEX_THRESHOLD`、`NET_HEALTH_THRESHOLD`、`LINK_STATUS_THRESHOLD`、`OPTICAL_PRESENT_THRESHOLD`、`NIC_LANE_FLAG` 为字符串正常值判定：仅当实际值等于配置的正常值时判定为正常，其余均判定为异常。
 - `HCCN_LINK_DOWN_CNT` 超过预警阈值判定为亚健康，超过告警（故障）阈值判定为异常。
 - 网卡（NIC）和LPO光模块相关阈值仅<term>Ascend 950PR&950DT系列产品</term>使用。
-- 光模块阈值按模块类型区分：支持 ODSP/LPO 两种光模块，未识别到光模块类型时，默认ODSP类型。
+- 光模块阈值按模块类型区分：支持ODSP/LPO两种光模块，未识别到光模块类型时，默认ODSP类型。
 
 配置校验规则：
 
@@ -97,9 +100,6 @@
 - `desc`/`unit`/`normal_value_alarm` 必须为字符串，非字符串时该字段被忽略。
 - `desc` 超过128字符、`unit` 超过16字符时该字段被忽略。不建议修改`desc`和`unit`，否则会影响判断和结果展示。
 - 未知字段名、非对象配置项等非法内容会被忽略并记录告警日志，不影响其他配置生效。
-
->[!NOTE]
-> `set_config_dir` 为可选配置命令，未设置时工具仍可工作，但不会进行机房位置维度的关联分析、故障阈值按默认值配置。
 
 ## 输出说明
 

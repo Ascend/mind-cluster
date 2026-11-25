@@ -19,22 +19,22 @@
 
 ## 配置文件结构
 
-```conn.ini
+```ini
 [host]
 # port指定端口,不写默认22, username指定用户名, password指定密码, private_key指定私钥文件
-1.1.1.1 port="22" username="root" private_key="~/.ssh/your_private_key"
-1.1.1.2 port="22" username="root" password="<your_password>"
+10.1.1.1 port="22" username="root" private_key="~/.ssh/your_private_key"
+10.1.1.2 port="22" username="root" password="<your_password>"
 
 [bmc]
-1.1.1.3 username="Administrator" password="<your_password>"
+10.1.1.3 username="Administrator" password="<your_password>"
 
 [switch]
 # 支持ip1-ip2 ip段方式填写(需保证账号密码相同), 通过step设置步长
-1.1.1.4-1.1.1.10 step=2 username="root" password="<your_password>"
+10.1.1.4-10.1.1.10 step=2 username="root" password="<your_password>"
 
 [pod_manager]
-# PoDManager 为 Atlas 950 SuperPoD液冷超节点的设备统一管理入口，登录后会切换到各个槽位号采集信息
-1.1.1.11 username="root" password="<your_password>"
+# PoDManager为Atlas 950 SuperPoD超节点的设备统一管理入口，登录后会切换到各个槽位号采集信息
+10.1.1.11 username="root" password="<your_password>"
 
 [config]
 # 支持设置全局的私钥文件

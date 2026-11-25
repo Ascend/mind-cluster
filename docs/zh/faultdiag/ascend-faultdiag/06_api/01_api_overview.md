@@ -1,9 +1,9 @@
-# API 概述
+# API概述
 
-ascend-fd 提供两种接口方式：
+ascend-fd提供两种接口方式：
 
 - **命令行接口**：通过 `ascend-fd` 命令使用，适合运维人员和普通用户。
-- **SDK 接口**：作为第三方库被 Python 程序导入使用，适合开发者集成到自己的系统中。
+- **SDK 接口**：作为第三方库被Python程序导入使用，适合开发者集成到自己的系统中。
 
 ## 命令行接口
 
@@ -23,17 +23,17 @@ ascend-fd <子命令> [参数]
 | [entity](./05_command_entity.md)           | 自定义故障实体 | 管理自定义故障检测规则       |
 | [blacklist](./06_command_blacklist.md)     | 屏蔽故障日志   | 管理日志屏蔽规则             |
 | [config](./07_command_config.md)           | 查看配置文件   | 管理当前使用的配置文件路径   |
-| [version](./08_command_version.md)         | 查看版本       | 显示当前 ascend-fd 版本      |
+| [version](./08_command_version.md)         | 查看版本       | 显示当前ascend-fd版本      |
 
 > [!NOTE]
 >
 > 参数请参考子命令具体章节说明。
 
-## SDK 接口
+## SDK接口
 
-ascend-fd 提供 Python SDK，方便开发者集成到自动化流程中。
+ascend-fd提供Python SDK，方便开发者集成到自动化流程中。
 
-### SDK 模块
+### SDK模块
 
 | 接口                                                           | 功能说明         |
 |----------------------------------------------------------------|------------------|

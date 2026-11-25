@@ -9,7 +9,7 @@
 | 模式 | 适用场景 | 前置条件 |
 |------|----------|----------|
 | **在线SSH采集** | 设备可网络访问（IP/账号密码/密钥/免密），实时采集 | 工具所在节点到目标设备端口可达 |
-| **离线日志收集** | 已获取到日志文件，仅需归档分析 | 提前收集日志到工具所在节点的目录 |
+| **离线日志采集** | 已获取到日志文件，仅需归档分析 | 提前采集日志到工具所在节点的目录 |
 
 >[!NOTE]
 >
@@ -70,7 +70,7 @@
 
 ### 离线日志采集
 
-工具支持3个版本的离线日志结构，版本识别由工具自动完成，无需手动指定。通过以下任意一种[host 日志采集脚本](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/ascend-fd-tk/host_collector)收集日志，收集后获得 `{file_name}.tar.gz`，直接将压缩包放入日志采集目录即可。
+工具支持3个版本的离线日志结构，版本识别由工具自动完成，无需手动指定，通过以下任意一种[Host日志采集脚本](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/ascend-fd-tk/host_collector)收集日志，收集后获得 `{file_name}.tar.gz`，直接将压缩包放入日志采集目录即可。
 
 - 版本 1：通过执行 `tool_log_collection_out_version_all_<version>.sh` 脚本收集日志。
 - 版本 2：通过执行 `device_log_collect_<version>.sh` 脚本收集日志。
@@ -118,7 +118,7 @@ host日志采集目录/
 
 <a id="BMC-log"></a>
 
-## BMC 日志
+## BMC日志
 
 ### 在线数据采集
 
@@ -134,7 +134,7 @@ host日志采集目录/
 
 此外，工具也提供内置命令 [collect_bmc_dump_info](../06_api/03_collect/collect_bmc_dump_info.md) 用于在线收集BMC dump info日志。该命令通过`ipmcget -d diaginfo`触发BMC一键收集，将`dump_info.tar.gz`下载到`家目录/cache/bmc_dump_cache/`。下载的压缩包解压后包含上表所示数据项，可直接放入BMC日志采集目录用于离线诊断。
 
-非交互式方式示例BMC日志采集（展示命令与回显）：
+非交互式方式BMC日志采集（展示命令与回显）：
 
 ```bash
 # 配置BMC信息（IP/账号密码/密钥/免密）与BMC日志采集
@@ -201,7 +201,7 @@ bmc日志采集目录/
 | 接口hilink SNR | `dis int hilink snr \| n` |
 | 收发器信息 | `display interface transceiver verbose \| no-more` |
 | 接口通道信息 | `display interface information \| no-more` |
-| Serdes转储信息 | `display for info enp s 1 c {chip_id} "get port serdes dump-info macro-id {port_id} lane-id {lane_id} hilink {type}" \| no-more` |
+| SerDes转储信息 | `display for info enp s 1 c {chip_id} "get port serdes dump-info macro-id {port_id} lane-id {lane_id} hilink {type}" \| no-more` |
 
 <a id="switch-offline-log"></a>
 
@@ -209,14 +209,14 @@ bmc日志采集目录/
 
 交换机离线日志主要需要以下两种日志：
 
-- **CLI输出日志（diag文本日志）**：包含各种交换机命令的执行结果。使用以下任意一种方式收集：
+- **CLI输出日志（diag文本日志）**：包含各种交换机命令的执行结果，使用以下任意一种方式收集：
   - 方式 1：登录交换机后执行 `display diagnostic-information {filename}.txt`。
   - 方式 2：登录交换机后手动执行关键命令（必须包含`display current-configuration`），将回显的文本保存到`.txt`文件并导出。执行的命令可参考[switch命令](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/ascend-fd-tk/switch_collector)。
 - **诊断日志**：由交换机诊断工具生成的结构化日志（`diagnostic_information.zip`）。登录交换机后执行`collect diagnostic information`，并导出zip包。
 
 将以上方式采集的日志统一压缩到一个压缩包中，直接放入到switch日志采集目录，在清洗日志时会自动解压分析日志信息。
 
-交换机日志目录结构如下：
+交换机日志采集目录结构如下：
 
 ```text
 switch日志采集目录/

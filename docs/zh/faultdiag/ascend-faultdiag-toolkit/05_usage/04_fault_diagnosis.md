@@ -1,6 +1,6 @@
 # 故障诊断
 
-ascend-fd-tk 工具完成 [日志采集](02_log_collection.md) 与 [日志清洗](03_log_parse.md)后，使用诊断功能对清洗后的结构化数据进行故障分析。
+ascend-fd-tk 工具完成[日志采集](02_log_collection.md)与[日志清洗](03_log_parse.md)后，使用诊断功能对清洗后的结构化数据进行故障分析。
 
 ## 诊断命令
 
@@ -8,8 +8,8 @@ ascend-fd-tk 工具完成 [日志采集](02_log_collection.md) 与 [日志清洗
 
 | 命令                                                    | 说明                                                     |
 |-------------------------------------------------------|--------------------------------------------------------|
-| [auto_collect_diag](../06_api/04_parse_diagnosis/03_auto_collect_diag.md) | 一键式诊断。整合采集、清洗、诊断三个步骤，等价于 `auto_collect` + `auto_diag`。适用于一次完成端到端诊断的场景 |
-| [auto_diag](../06_api/04_parse_diagnosis/02_auto_diag.md)            | 仅诊断（需先完成采集）                                            |
+| [auto_collect_diag](../06_api/04_parse_diagnosis/03_auto_collect_diag.md) | 一键式诊断，整合采集、清洗、诊断三个步骤，等价于 `auto_collect` + `auto_diag`。适用于一次完成端到端诊断的场景。 |
+| [auto_diag](../06_api/04_parse_diagnosis/02_auto_diag.md)            | 仅诊断（需先完成采集） 。                                           |
 
 ## 使用 `auto_collect_diag` 命令
 

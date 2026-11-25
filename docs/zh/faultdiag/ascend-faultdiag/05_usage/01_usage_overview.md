@@ -1,35 +1,35 @@
 # 特性概览
 
-ascend-fd 提供以下功能特性，本章将逐一介绍每个特性的使用方法和适用场景。
+ascend-fd提供以下功能特性，本章将逐一介绍每个特性的使用方法和适用场景。
 
 ## 使用说明
 
-- 使用诊断功能时，因 Linux 系统最大文件描述符数限制（默认为 1024），集群规模建议不超过 128 台服务器（1024 卡）。若超过此规模，需使用 `ulimit -n <值>` 命令调整文件描述符上限。使用请阅读 [集群规模较大时诊断失败](../07_references/02_faq.md#集群规模较大时诊断失败)。
-- 使用 ascend-fd 命令时，尽量不要使用管道命令，这可能会影响用户 IP 的获取和日志审计。
+- 使用诊断功能时，因Linux系统最大文件描述符数限制（默认为1024），集群规模建议不超过128台服务器（1024卡）。若超过此规模，需使用`ulimit -n <值>`命令调整文件描述符上限。使用前请阅读[集群规模较大时诊断失败](../07_references/02_faq.md#集群规模较大时诊断失败)。
+- 使用ascend-fd命令时，尽量不要使用管道命令，这可能会影响用户IP的获取和日志审计。
 
 ## 任务规格
 
-ascend-fd 仅支持对**整机满卡**训练或推理任务提供故障诊断。如果是非满卡场景，执行诊断可能导致故障根因定位错误或失败。
+ascend-fd仅支持对**整机满卡**训练或推理任务提供故障诊断。如果是非满卡场景，执行诊断可能导致故障根因定位错误或失败。
 
 ## 系统时间要求
 
 - 请同步各训练/推理服务器的系统时间，时间不一致可能导致分析结果不准确。
-- 请同步每个服务器上 Host 系统时间与 Device 系统时间。
+- 请同步每个服务器上Host系统时间与Device系统时间。
 - 如果使用容器执行任务，请同步宿主机与容器的系统时间。
 
 ## 日志版本配套表
 
 | 日志文件             | 对应软件                                | 软件版本                                                  | 说明                          |
 |----------------------|-----------------------------------------|-----------------------------------------------------------|-------------------------------|
-| CANN 应用类日志      | CANN                                    | 7.0.RC1 及以上                                            | Host 侧和 Device 侧应用类日志 |
-| PyTorch 框架日志     | PyTorch 适配插件                        | 5.0.RC3 及以上                                            | -                             |
-| MindSpore 框架日志   | MindSpore                               | 2.1.0 及以上                                              | 部分故障有特定版本要求        |
-| Host OS 日志         | 操作系统                                | CentOS 7.6, Debian 10.0, EulerOS 2.10/2.12, CTyunOS 22.06 | 建议日志大小 512MB 以内       |
-| Device 侧日志        | Ascend HDK                              | 23.0.RC3 及以上                                           | -                             |
-| MindCluster 组件日志 | Ascend Device Plugin, NodeD, Volcano 等 | 6.0.RC3 及以上                                            | -                             |
-| MindIE 组件日志      | MindIE Server, LLM, SD, RT 等           | 6.0.0 及以上                                              | -                             |
-| AMCT 组件日志        | AMCT 模型压缩                           | 7.0.RC1 及以上                                            | -                             |
-| PyMotor/vLLM 日志    | MindIE-PyMotor, vLLM                    | 26.1.0 及以上                                             | -                             |
+| CANN应用类日志      | CANN                                    | 7.0.RC1及以上                                            | Host和Device侧应用类日志 |
+| PyTorch框架日志     | PyTorch适配插件                        | 5.0.RC3及以上                                            | -                             |
+| MindSpore框架日志   | MindSpore                               | 2.1.0及以上                                              | 部分故障有特定版本要求        |
+| Host OS日志         | 操作系统                                | CentOS 7.6、Debian 10.0、EulerOS 2.10/2.12、CTyunOS 22.06 | 建议日志大小512MB以内       |
+| Device侧日志        | Ascend HDK                              | 23.0.RC3及以上                                           | -                             |
+| MindCluster组件日志 | Ascend Device Plugin、NodeD、Volcano等 | 6.0.RC3及以上                                            | -                             |
+| MindIE组件日志      | MindIE Server、LLM、SD、RT等           | 6.0.0及以上                                              | -                             |
+| AMCT组件日志        | AMCT模型压缩                           | 7.0.RC1及以上                                            | -                             |
+| PyMotor/vLLM日志    | MindIE-PyMotor、vLLM                    | 26.1.0及以上                                             | -                             |
 
 ## 特性列表
 
@@ -43,6 +43,6 @@ ascend-fd 仅支持对**整机满卡**训练或推理任务提供故障诊断。
 | [自定义故障实体](07_custom_fault_entities.md)                    | 添加用户自定义的故障检测规则        |
 | [屏蔽故障日志](08_fault_log_masking.md)                          | 过滤不需要关注的日志信息          |
 | [自定义配置文件](09_custom_configuration.md)                     | 自定义日志清洗和诊断的行为         |
-| [业务日志清洗（SDK）](10_service_flow_parsing.md)                | 通过 SDK 接口清洗业务日志       |
-| [根因节点清洗及诊断（SDK）](11_root_cause_parsing_diagnosis.md)  | 通过 SDK 接口进行根因分析       |
-| [故障事件清洗及诊断（SDK）](12_fault_event_parsing_diagnosis.md) | 通过 SDK 接口进行故障事件分析     |
+| [业务日志清洗（SDK）](10_service_flow_parsing.md)                | 通过SDK接口清洗业务日志       |
+| [根因节点清洗及诊断（SDK）](11_root_cause_parsing_diagnosis.md)  | 通过SDK接口进行根因分析       |
+| [故障事件清洗及诊断（SDK）](12_fault_event_parsing_diagnosis.md) | 通过SDK接口进行故障事件分析     |

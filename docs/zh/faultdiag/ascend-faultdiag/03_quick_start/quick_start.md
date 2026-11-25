@@ -1,19 +1,19 @@
 # 快速入门
 
-本章节旨在帮助用户完成 ascend-fd 的安装并运行一个基础诊断示例，使用示例日志体验 ascend-fd 诊断出 NPU 光模块不在位的问题。
+本章节旨在帮助用户完成ascend-fd的安装并运行一个基础诊断示例，使用示例日志体验ascend-fd诊断出NPU光模块不在位的问题。
 
 ## 前提条件
 
-- Linux 系统，已安装 unzip 工具。
-- 已安装 Python 3.7 及以上版本。
-- 已安装 pip3。
+- Linux系统，已安装unzip工具。
+- 已安装Python 3.7及以上版本。
+- 已安装pip3。
 - 确保网络连接正常，安装过程需联网下载三方依赖库。
 
-## 步骤1：安装 ascend-fd
+## 步骤1：安装ascend-fd
 
 1. 获取软件包
 
-    通过 `arch` 命令得到当前环境架构，使用以下命令自动从开源社区下载软件包：
+    通过`arch`命令得到当前环境架构，使用以下命令自动从开源社区下载软件包：
 
     - aarch64
 
@@ -51,7 +51,7 @@
 
     如果回显版本号，说明安装成功，如：
 
-    ```shell
+    ```output
     ascend-fd v26.2.0
     ```
 
@@ -73,7 +73,7 @@
     wget https://raw.gitcode.com/Ascend/mind-cluster/blobs/d58f9ef2e4c1930ba720353d452ebdcdb3ee2aad/environment_check.zip
     ```
 
-    - 解压到 `/tmp/faultdiag_demo/log_dir` 目录
+    - 解压到`/tmp/faultdiag_demo/log_dir`目录
 
     ```shell
     unzip environment_check.zip -d /tmp/faultdiag_demo/log_dir
@@ -95,7 +95,7 @@
 
     如果回显类似以下内容，说明清洗成功：
 
-    ```text
+    ```output
     The parse job starts. Please wait. Job id: [20260701031834593100_c414615b-0550-467f-b84b-24791115befa], run log file is [ascend_faultdiag_815671.log].
     These job ['KNOWLEDGE_GRAPH'] succeeded.
     Warn: The job ROOT_CLUSTER failed. The error is: [FileNotExistError(502): No plog file that meets the path specifications is found.].
@@ -104,8 +104,8 @@
 
     > [!NOTE]
     >
-    > - 具体的命令请查询 [parse 命令（日志清洗）](../06_api/02_command_parse.md)。
-    > - `ROOT_CLUSTER failed` 由于无 plog（CANN 应用类日志）文件，根因数据不能清洗，该告警可以忽略。
+    > - 具体的命令请查询[parse命令（日志清洗）](../06_api/02_command_parse.md)。
+    > - `ROOT_CLUSTER failed`由于无plog（CANN 应用类日志）文件，根因数据不能清洗，该告警可以忽略。
 
 ## 步骤4：故障诊断
 
@@ -123,12 +123,12 @@
 
     > [!NOTE]
     >
-    > 具体的命令请查询 [diag 命令（集群故障诊断）](../06_api/03_command_diag.md)。
+    > 具体的命令请查询 [diag命令（集群故障诊断）](../06_api/03_command_diag.md)。
 
     诊断完成后，终端会输出诊断报告：
 
     <!-- markdownlint-disable-next-line MD033 -->
-    <pre>
+    ```text
     The diag job starts. Please wait. Job id: [20260701033838010337_09257e70-b5e9-452d-9bb6-bb32aa32507c], run log file is [ascend_faultdiag_848424.log].
     +---------------------------------------------------------------------------------------------------------------------------------------+
     |                                                      Ascend-fd Fault-Diag Report                                                      |
@@ -166,18 +166,18 @@
     |              |            | Comp_Network_Custom_05（NPU光模块不在位）-> Comp_Network_Custom_09（光模块RX/TX无收发光）                 |
     +--------------+------------+-----------------------------------------------------------------------------------------------------------+
     The diag job is complete.
-    </pre>
+    ```
 
 ## 结果解读
 
 - 从日志读取到相关软件的版本，并在诊断报告中展示。
-- 清洗输入中没有 CANN 日志，诊断结果中提示没有 plog 文件。
-- 根因节点显示 `Unknown Device`，是由于日志采集不完整，此处是正常情况。
-- 根据环境检查日志，检测出 device-0 和 device-4 上的 NPU 光模块不在位。
+- 清洗输入中没有CANN日志，诊断结果中提示没有plog文件。
+- 根因节点显示`Unknown Device`，是由于日志采集不完整，此处是正常情况。
+- 根据环境检查日志，检测出device-0和device-4上的NPU光模块不在位。
 - 相关状态码可以参考[已支持故障](../07_references/04_appendix.md#已支持故障)。
-- 详细报告可以查看 `/tmp/faultdiag_demo/diag_out/fault_diag_result/diag_report.json`。
+- 详细报告可以查看`/tmp/faultdiag_demo/diag_out/fault_diag_result/diag_report.json`。
 
 ## 下一步
 
 - 参考[特性指南](../05_usage/menu_usage.md)了解更多功能。
-- 参考 [API 参考](../06_api/menu_api.md)了解更多命令。
+- 参考[API 参考](../06_api/menu_api.md)了解更多命令。

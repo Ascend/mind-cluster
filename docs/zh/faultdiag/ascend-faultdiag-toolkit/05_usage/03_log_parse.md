@@ -45,7 +45,7 @@ bmc日志采集目录/
     ├── {bmc_02_file_name}.tar.gz
     └── ...
 switch日志采集目录/
-    ├── {switch_011_file_name}.zip
+    ├── {switch_01_file_name}.zip
     ├── {switch_02_file_name}.zip
     └── ...
 ```

@@ -1,6 +1,6 @@
 # 故障巡检
 
-ascend-fd-tk 工具完成 [日志采集](02_log_collection.md) 与 [日志清洗](03_log_parse.md)后，使用 [auto_inspection](../06_api/05_inspection/auto_inspection.md) 巡检命令，按不同客户类型预定义规则进行批量健康检查，定期对集群进行巡检，提前发现潜在链路异常。巡检特性是 beta 特性，不建议在正式环境中使用。
+ascend-fd-tk 工具完成[日志采集](02_log_collection.md)与[日志清洗](03_log_parse.md)后，使用[auto_inspection](../06_api/05_inspection/auto_inspection.md)巡检命令，按不同客户类型的预定义规则进行批量健康检查，定期对集群进行巡检，提前发现潜在链路异常。巡检特性是 beta 特性，不建议在正式环境中使用。
 
 诊断与巡检的主要区别：
 
@@ -69,4 +69,4 @@ ascend-fd-tk
 
 ## 查看巡检报告
 
-巡检完成后报告自动生成至工具家目录下的 report 子目录，详见[诊断 / 巡检报告说明](06_fault_analysis_report.md)。
+巡检完成后报告自动生成至工具家目录下的 report 子目录，详见[诊断/巡检报告说明](06_fault_analysis_report.md)。

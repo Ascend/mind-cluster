@@ -1,5 +1,7 @@
 # 支持的产品形态
 
+本章节介绍ascend-fd支持的产品形态。
+
 <!-- markdownlint-disable -->
 <table>
   <thead>
