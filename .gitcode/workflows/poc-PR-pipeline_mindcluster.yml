@@ -6,7 +6,7 @@ on:
     keyword: '^rebuild_poc$'
   pull_request_comment:
     types: [created]
-    branches: [ 'resource_migration_poc', 'branch_v26.1.0', 'branch_v26.0.0', 'branch_v7.3.0' ]
+    branches: [ 'resource_migration_poc', 'branch_v26.1.0', 'branch_v26.0.0', 'poc_master_superpod-defrag', 'poc_master_volcano-refactor', 'branch_v7.3.0' ]
     comments: [ '^rebuild_poc$' ]
   workflow_dispatch:
     inputs:
