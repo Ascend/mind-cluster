@@ -29578,7 +29578,7 @@
             },
             "attr_regex": " NPU(?P<npu_id>[0-9])"
         },
-        "0X8F184C25": {
+        "0x8F184C25": {
             "attribute": {
                 "class": "Hardware",
                 "component": "BMC",
@@ -29598,11 +29598,11 @@
             },
             "source_file": "BMCAppDumpLog",
             "regex": {
-                "in": ["0X8F184C25", "Asserted"]
+                "in": ["0x8F184C25", "Asserted"]
             },
             "attr_regex": " NPU(?P<npu_id>[0-9])"
         },
-        "0X8F184C26": {
+        "0x8F184C26": {
             "attribute": {
                 "class": "Hardware",
                 "component": "BMC",
@@ -29622,11 +29622,11 @@
             },
             "source_file": "BMCAppDumpLog",
             "regex": {
-                "in": ["0X8F184C26", "Asserted"]
+                "in": ["0x8F184C26", "Asserted"]
             },
             "attr_regex": " NPU(?P<npu_id>[0-9])"
         },
-        "0X8F184C27": {
+        "0x8F184C27": {
             "attribute": {
                 "class": "Hardware",
                 "component": "BMC",
@@ -29646,11 +29646,11 @@
             },
             "source_file": "BMCAppDumpLog",
             "regex": {
-                "in": ["0X8F184C27", "Asserted"]
+                "in": ["0x8F184C27", "Asserted"]
             },
             "attr_regex": " NPU(?P<npu_id>[0-9])"
         },
-        "0X8F184C28": {
+        "0x8F184C28": {
             "attribute": {
                 "class": "Hardware",
                 "component": "BMC",
@@ -29670,11 +29670,11 @@
             },
             "source_file": "BMCAppDumpLog",
             "regex": {
-                "in": ["0X8F184C28", "Asserted"]
+                "in": ["0x8F184C28", "Asserted"]
             },
             "attr_regex": " NPU(?P<npu_id>[0-9])"
         },
-        "0X8F184C29": {
+        "0x8F184C29": {
             "attribute": {
                 "class": "Hardware",
                 "component": "BMC",
@@ -29694,11 +29694,11 @@
             },
             "source_file": "BMCAppDumpLog",
             "regex": {
-                "in": ["0X8F184C29", "Asserted"]
+                "in": ["0x8F184C29", "Asserted"]
             },
             "attr_regex": " NPU(?P<npu_id>[0-9])"
         },
-        "0X8F184C2A": {
+        "0x8F184C2A": {
             "attribute": {
                 "class": "Hardware",
                 "component": "BMC",
@@ -29718,7 +29718,7 @@
             },
             "source_file": "BMCAppDumpLog",
             "regex": {
-                "in": ["0X8F184C2A", "Asserted"]
+                "in": ["0x8F184C2A", "Asserted"]
             },
             "attr_regex": " NPU(?P<npu_id>[0-9])"
         },
