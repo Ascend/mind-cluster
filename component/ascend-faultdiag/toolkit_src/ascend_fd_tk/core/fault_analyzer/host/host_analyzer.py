@@ -200,7 +200,7 @@ class HostAnalyzer(Analyzer):
             # 连续3次>10、24小时出现多次>10且伴随闪断、24小时出现1~2次>100且伴随闪断
             if first_item.diff_seconds(second_item) < UNCORR_CW_THRESHOLD:
                 fault_info = (
-                    f"持续连续3次出现uncorr_cw_cnt > 10，发生时间：{uncorr_cw_cnt_list[i].date_time}，"
+                    f"连续3次出现uncorr_cw_cnt > 10，发生时间：{uncorr_cw_cnt_list[i].date_time}，"
                     f"{uncorr_cw_cnt_list[i + 1].date_time}，{uncorr_cw_cnt_list[i + self.NUM_TWO].date_time}"
                 )
                 suggestion = "连续3次出现uncorr_cw_cnt > 10，请优先排查光纤脏污，然后排查两端光模块"
