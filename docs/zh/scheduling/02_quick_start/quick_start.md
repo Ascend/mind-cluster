@@ -194,7 +194,37 @@
     npu-smi info
     ```
 
-5. 清理测试资源。
+5. 自定义调度集成（Downward API）。
+
+   前述步骤中，Ascend Device Plugin在分配NPU设备时，会将分配结果写入容器的`ASCEND_VISIBLE_DEVICES`环境变量，Ascend Docker Runtime读取该变量完成NPU设备挂载。可在容器内执行以下命令验证：
+
+    ```shell
+    echo $ASCEND_VISIBLE_DEVICES
+    ```
+
+   回显示例如下，表示当前容器分配到了0号NPU芯片。
+
+    ```output
+    0
+    ```
+
+   该环境变量的标准集成方案为**Volcano调度器的整卡调度**：Volcano调度插件在Pod绑定时，将实际分配的芯片ID列表写入Pod注解；容器内通过Downward API读取该注解，注入`ASCEND_VISIBLE_DEVICES`环境变量，Ascend Docker Runtime读取该变量完成NPU设备挂载。使用Volcano整卡调度时，在Pod的容器配置中添加如下环境变量即可：
+
+    ```yaml
+    env:
+    - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime会使用该字段
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.annotations['huawei.com/Ascend910']   # 注解名称需与resources中请求的NPU资源名称一致
+    ```
+
+   >[!NOTE]
+   >
+   >- 若需通过自定义调度器集成整卡调度，需满足以下前置条件：调度器在Pod绑定阶段将实际分配的芯片ID列表写入`huawei.com/Ascend910`注解，且注解值与Ascend Device Plugin的实际分配结果保持一致，否则会导致NPU设备挂载异常。
+   >- 静态vNPU调度及其他调度器场景不应配置该环境变量，需删除示例YAML中相关字段。
+   >- 更多参数说明请参见[任务YAML配置说明](../06_api/15_yaml_configuration.md)和[环境变量说明](../06_api/13_environment_variable_description.md)。
+
+6. 清理测试资源。
 
     ```shell
     VERSION=26.2.0
