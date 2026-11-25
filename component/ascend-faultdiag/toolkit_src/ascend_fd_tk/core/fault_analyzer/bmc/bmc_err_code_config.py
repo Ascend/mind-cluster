@@ -51,12 +51,12 @@ _HARDWARE_PATTERN = re.compile(
 _ERR_CODE_EVENT_LIST = [
     BmcErrCodeEvent(0x80E01801, "发生多Bit ECC故障", "请对该NPU HBM进行压测", _HARDWARE_PATTERN),
     BmcErrCodeEvent(0x80E18402, "多Bit ECC故障，隔离行已满64", "请立即更换NPU备件", _HARDWARE_PATTERN),
-    BmcErrCodeEvent(0x80CB800A, "AIV算子超时，NPU热复位", "建议对硬件做AICode压测", _HARDWARE_PATTERN),
-    BmcErrCodeEvent(0x80CB8009, "AIV总线访问错误", "建议对硬件做AICode压测", _HARDWARE_PATTERN),
+    BmcErrCodeEvent(0x80CB800A, "AIV算子超时，NPU热复位", "建议对硬件做AI Core压测", _HARDWARE_PATTERN),
+    BmcErrCodeEvent(0x80CB8009, "AIV总线访问错误", "建议对硬件做AI Core压测", _HARDWARE_PATTERN),
     BmcErrCodeEvent(
         0x2800004B,
         "HCCS 断链告警",
-        "1、下电检查接触不良；\n2、尝试更换 hccs 线缆；\n3、必要时更换 NPU 板",
+        "1、下电检查接触不良；\n2、尝试更换 HCCS 线缆；\n3、必要时更换 NPU 板",
         _HARDWARE_PATTERN,
     ),
     # 掉卡故障
@@ -186,11 +186,13 @@ _ERR_CODE_EVENT_LIST = [
     ),
     BmcErrCodeEvent(0x56000009, "NPU 过热关机", "NPU 过热关机，请联系运维处理", _HARDWARE_PATTERN),
     BmcErrCodeEvent(0x12000023, "液冷装置发生漏液", "液冷装置发生漏液，请联系运维处理", _HARDWARE_PATTERN),
-    BmcErrCodeEvent(0x120000C3, "液冷装置(LAAC)异常，液冷泵不在位", "液冷泵不在位，请联系运维处理", _HARDWARE_PATTERN),
     BmcErrCodeEvent(
-        0x120000C7, "液冷装置(LAAC)异常，液冷泵转速异常", "液冷泵转速异常，请联系运维处理", _HARDWARE_PATTERN
+        0x120000C3, "液冷装置（LAAC）异常，液冷泵不在位", "液冷泵不在位，请联系运维处理", _HARDWARE_PATTERN
     ),
-    BmcErrCodeEvent(0x120000C9, "液冷装置(LAAC)异常，液冷泵故障", "液冷泵故障，请联系运维处理", _HARDWARE_PATTERN),
+    BmcErrCodeEvent(
+        0x120000C7, "液冷装置（LAAC）异常，液冷泵转速异常", "液冷泵转速异常，请联系运维处理", _HARDWARE_PATTERN
+    ),
+    BmcErrCodeEvent(0x120000C9, "液冷装置（LAAC）异常，液冷泵故障", "液冷泵故障，请联系运维处理", _HARDWARE_PATTERN),
     BmcErrCodeEvent(0x04000005, "风冷散热模块故障，风扇冗余失效", "风扇冗余失效，请联系运维处理", _HARDWARE_PATTERN),
     BmcErrCodeEvent(
         0x18000003, "风冷散热模块故障，风扇背板电源故障", "风扇背板电源故障，请联系运维处理", _HARDWARE_PATTERN

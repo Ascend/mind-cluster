@@ -53,7 +53,7 @@
 <td>光模块SNR异常：lane0: Host SNR值7.2dB低于阈值8.0dB</td>
 </tr>
 <tr>
-<td>光模块SNR LANE间差值</td>
+<td>光模块SNR LANE间差值检测</td>
 <td>检查不同lane间的SNR差值是否超过阈值</td>
 <td>光模块SNR LANE间差值异常：LANE0与LANE3差值为4.2dB</td>
 </tr>
@@ -72,7 +72,7 @@
 <td rowspan="2"><code>msnpureport</code> 自动采集</td>
 <td rowspan="2">V1-V3: <code>msnpureport</code> 报告目录下的时间戳子目录</td>
 <td>检查连续 3 次 uncorr_cw_cnt 是否大于 10</td>
-<td>持续连续3次出现uncorr_cw_cnt > 10，发生时间：2025-10-01-14:30:00.123456，2025-10-01-14:30:01.234567，2025-10-01-14:30:02.345678</td>
+<td>连续3次出现uncorr_cw_cnt > 10，发生时间：2025-10-01-14:30:00.123456，2025-10-01-14:30:01.234567，2025-10-01-14:30:02.345678</td>
 </tr>
 <tr>
 <td>光模块IIC通信故障检测</td>
@@ -357,19 +357,19 @@
 <td>AIV</td>
 <td><code>0x80cb800a</code></td>
 <td>AIV 算子超时，NPU 热复位</td>
-<td>建议对硬件做 AICode 压测</td>
+<td>建议对硬件做AI Core压测</td>
 </tr>
 <tr>
 <td>AIV</td>
 <td><code>0x80cb8009</code></td>
 <td>AIV 总线访问错误</td>
-<td>建议对硬件做 AICode 压测</td>
+<td>建议对硬件做AI Core压测</td>
 </tr>
 <tr>
 <td>HCCS</td>
 <td><code>0x2800004B</code></td>
 <td>HCCS 断链告警</td>
-<td>1. 下电检查接触不良；2. 尝试更换 hccs 线缆；3. 必要时更换 NPU 板</td>
+<td>1、下电检查接触不良；2、尝试更换 HCCS 线缆；3、必要时更换 NPU 板</td>
 </tr>
 <tr>
 <td>NPU 健康</td>
@@ -428,19 +428,19 @@
 <tr>
 <td>液冷（LAAC）</td>
 <td><code>0x120000C3</code></td>
-<td>液冷装置(LAAC)异常，液冷泵不在位</td>
+<td>液冷装置（LAAC）异常，液冷泵不在位</td>
 <td>液冷泵不在位，请联系运维处理</td>
 </tr>
 <tr>
 <td>液冷（LAAC）</td>
 <td><code>0x120000C7</code></td>
-<td>液冷装置(LAAC)异常，液冷泵转速异常</td>
+<td>液冷装置（LAAC）异常，液冷泵转速异常</td>
 <td>液冷泵转速异常，请联系运维处理</td>
 </tr>
 <tr>
 <td>液冷（LAAC）</td>
 <td><code>0x120000C9</code></td>
-<td>液冷装置(LAAC)异常，液冷泵故障</td>
+<td>液冷装置（LAAC）异常，液冷泵故障</td>
 <td>液冷泵故障，请联系运维处理</td>
 </tr>
 <tr>
@@ -589,7 +589,7 @@
 </thead>
 <tbody>
 <tr>
-<td>HCCS Serdes CDR失锁检测</td>
+<td>HCCS SerDes CDR失锁检测</td>
 <td rowspan="2"><code>display for info enp s 1 c {chip_id} "get port serdes dump-info macro-id {port_id} lane-id {lane_id} hilink {type}"</code></td>
 <td rowspan="2"><code>switch_cli_output.txt</code>、<code>diag_info.txt</code></td>
 <td>hilink_type 取值为 4，检查 CDR 是否失锁（<code>cdr_los == "1"</code>）</td>
