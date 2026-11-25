@@ -19,7 +19,7 @@ import re
 from datetime import datetime
 
 from itertools import chain
-from typing import Union
+from typing import Optional, Union
 
 from ascend_fd.model.context import KGParseCtx
 from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
@@ -125,10 +125,9 @@ class BMCParser(FileParser):
             if file_path.endswith(self.SEL_TXT_FILE) or file_path.endswith(self.FDM_LOG_FILE):
                 self._match_precheck_line(log_line, file_source, event_storage, sel_events)
                 continue
-            if self.start_time or self.end_time:
-                occur_time = self._filter_log_time(log_line)
-            else:
-                occur_time = ""
+            occur_time = self._filter_log_time(log_line)
+            if not occur_time:
+                continue
             if self.start_time and occur_time < self.start_time:
                 continue
             if self.end_time and occur_time > self.end_time:
@@ -158,11 +157,15 @@ class BMCParser(FileParser):
 
     def _match_precheck_line(
         self, log_line: str, file_source: str, event_storage: EventStorage, sel_events: dict = None
-    ) -> dict:
+    ) -> None:
         """
-        Match precheck event in line
+        Match precheck event in line, matched events are recorded into
+        event_storage directly. No return value.
         :param log_line: log line
-        :return: precheck event dict or None
+        :param file_source: log file source
+        :param event_storage: event storage to record matched events
+        :param sel_events: sel npu state table keyed by event keyword, only used
+                           by the sel.txt branch (fdm log branch does not consume it)
         """
         pass
 
@@ -272,7 +275,7 @@ class BMCParser(FileParser):
             for fault_line, fault_keyword in self._find_fault_keyword_lines()
         ]
 
-    def _find_mata_error_type_line(self) -> (str, str):
+    def _find_mata_error_type_line(self) -> (Optional[str], Optional[str]):
         """
         Find the line whose Error Type is one of the uncorrected errors
         UER / UEO / UEU, the value is used as the fault keyword of the event
@@ -297,7 +300,7 @@ class BMCParser(FileParser):
                     matched[keyword] = line
         return [(line, keyword) for keyword, line in matched.items()]
 
-    def _find_ierr_ddrc_line(self) -> str:
+    def _find_ierr_ddrc_line(self) -> Optional[str]:
         """
         Match the MATA DDRC multi-bit line, the IERRCODE description contains
         "DDRC" (case-insensitive)
@@ -308,7 +311,7 @@ class BMCParser(FileParser):
                 return line
         return None
 
-    def _match_cpu_core_ce_error(self) -> str:
+    def _match_cpu_core_ce_error(self) -> Optional[str]:
         """
         Match the CPU_CORE CE pattern by the three keyword sentences:
         1) Error Type:At least one error was corrected.(CE)
@@ -367,11 +370,15 @@ class BMCAppDumpParser(BMCParser):
 
     def _match_precheck_line(
         self, log_line: str, file_source: str, event_storage: EventStorage, sel_events: dict = None
-    ) -> dict:
+    ) -> None:
         """
-        Match precheck event in line
+        Match precheck event in line, matched events are recorded into
+        event_storage directly. No return value.
         :param log_line: log line
-        :return: precheck event dict or None
+        :param file_source: log file source
+        :param event_storage: event storage to record matched events
+        :param sel_events: sel npu state table keyed by event keyword, only used
+                            by the sel.txt branch (fdm log branch does not consume it)
         """
         file_path = self._get_file_path(file_source)
         if file_path.endswith(self.FDM_LOG_FILE):
@@ -397,8 +404,8 @@ class BMCAppDumpParser(BMCParser):
         group is finalized and its precheck events are returned
         :param log_line: single fdm log line
         :param file_source: fdm log file
-        :return: parsed, event_list, parsed is always True for fdm log,
-                 event_list is the completed previous group's precheck events
+        :return: precheck events of the completed previous fdm data group
+                 (empty list when the current line is not a group header)
         """
         fdm_events = []
         # 非一组数据开头，就结算判定这组数据
@@ -448,10 +455,9 @@ class BMCAppDumpParser(BMCParser):
 
         # 未命中以上类型（含列数不足的 AppDump 简化行）走通用解析
         if not event_list:
-            if self.start_time or self.end_time:
-                occur_time = self._filter_log_time(log_line)
-            else:
-                occur_time = ""
+            occur_time = self._filter_log_time(log_line)
+            if not occur_time:
+                return []
             if self.start_time and occur_time < self.start_time:
                 return []
             if self.end_time and occur_time > self.end_time:
@@ -466,7 +472,7 @@ class BMCAppDumpParser(BMCParser):
 
     def parse_npu_connection_lost_line(
         self, log_line: str, fields: list, file_source: Union[str, LogInfoSaver], sel_events: dict
-    ) -> dict:
+    ) -> Optional[dict]:
         """
         Parse "NPU connection has been lost" line
         :param log_line: single sel.txt line
@@ -492,7 +498,7 @@ class BMCAppDumpParser(BMCParser):
         fields: list,
         file_source: Union[str, LogInfoSaver],
         precheck_code: str,
-    ) -> dict:
+    ) -> Optional[dict]:
         """
         Parse an Asserted multi-bit ECC sel.txt line, e.g. NPU health critical
         (Event Code 0x56000003, Error Code 0x80e01801) or AIC (description
