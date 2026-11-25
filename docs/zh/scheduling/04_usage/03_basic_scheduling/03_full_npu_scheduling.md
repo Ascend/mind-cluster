@@ -45,7 +45,7 @@
 
 通过命令行使用Volcano和其他调度器的使用流程一致。使用其他调度器准备任务YAML需要参考[通过命令行使用（其他调度器）](#通过命令行使用其他调度器)章节创建任务YAML。使用其他调度器的其余操作和使用Volcano一致，可以参考[通过命令行使用（Volcano）](#通过命令行使用volcano)进行操作。
 
-**图 1**  整卡调度使用流程<a name="fig107864120214"></a>
+**图 1** 整卡调度使用流程<a name="fig107864120214"></a>
 
 ![](../../../figures/scheduling/整卡调度使用流程.PNG "整卡调度使用流程")
 
@@ -60,7 +60,7 @@
 
 acjob任务原理图如[图2](#fig5188536014)所示。
 
-**图 2**  acjob任务调度原理图<a name="fig5188536014"></a>
+**图 2** acjob任务调度原理图<a name="fig5188536014"></a>
 
 ![](../../../figures/scheduling/acjob任务调度原理图.png "acjob任务调度原理图")
 
@@ -69,7 +69,7 @@ acjob任务原理图如[图2](#fig5188536014)所示。
 1. 集群调度组件定期上报节点和芯片信息。
     - kubelet上报节点芯片数量到节点对象（node）中。
     - Ascend Device Plugin定期上报芯片拓扑信息。
-        - 上报整卡信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）、已使用的芯片数量（allocated）和芯片的基础信息（device ip和super\_device\_ip）上报到Node中，用于整卡调度。
+        - 上报整卡信息，将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）、已使用的芯片数量（allocated）和芯片的基础信息（device ip和super\_device\_ip）上报到Node中，用于整卡调度。
 
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息到node-info-cm中，将共享存储故障信息上报到ClusterD的公共故障中。
 
@@ -87,7 +87,7 @@ acjob任务原理图如[图2](#fig5188536014)所示。
 
 vcjob任务的原理图如[图3](#fig8717151315416)所示。
 
-**图 3**  vcjob任务调度原理图<a name="fig8717151315416"></a>
+**图 3** vcjob任务调度原理图<a name="fig8717151315416"></a>
 
 ![](../../../figures/scheduling/vcjob任务调度原理图.png "vcjob任务调度原理图")
 
@@ -96,7 +96,7 @@ vcjob任务的原理图如[图3](#fig8717151315416)所示。
 1. 集群调度组件定期上报节点和芯片信息。
     - kubelet上报节点芯片数量到节点对象（node）中。
     - Ascend Device Plugin定期上报芯片拓扑信息。
-        - 上报整卡信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）和已使用的芯片数量（allocated）上报到Node中，用于整卡调度。
+        - 上报整卡信息，将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）和已使用的芯片数量（allocated）上报到Node中，用于整卡调度。
 
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息到node-info-cm中，将共享存储故障信息上报到ClusterD的公共故障中。
 
@@ -114,7 +114,7 @@ vcjob任务的原理图如[图3](#fig8717151315416)所示。
 
 deploy任务原理图如[图4](#fig06571541566)所示。
 
-**图 4**  deploy任务调度原理图<a name="fig06571541566"></a>
+**图 4** deploy任务调度原理图<a name="fig06571541566"></a>
 
 ![](../../../figures/scheduling/deploy任务调度原理图.png "deploy任务调度原理图")
 
@@ -123,7 +123,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 1. 集群调度组件定期上报节点和芯片信息。
     - kubelet上报节点芯片数量到节点对象（node）中。
     - Ascend Device Plugin定期上报芯片拓扑信息。
-        - 上报整卡信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）和已使用的芯片数量（allocated）上报到Node中，用于整卡调度。
+        - 上报整卡信息，将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）和已使用的芯片数量（allocated）上报到Node中，用于整卡调度。
 
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息到node-info-cm中，将共享存储故障信息上报到ClusterD的公共故障中。
 
@@ -608,7 +608,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 <!-- end id8 -->
 
 <!-- npu="950,A3,910b,310p" id15 -->
-**表 5**  推理任务类型与硬件型号对应YAML文件
+**表 5** 推理任务类型与硬件型号对应YAML文件
 
 <a name="zh-cn_topic_0000001609074213_table15169151021912"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0000001609074213_row16169201019192"><th class="cellrowborder" valign="top" width="18.48%" id="mcps1.2.5.1.1"><p id="zh-cn_topic_0000001609074213_p4169191017192"><a name="zh-cn_topic_0000001609074213_p4169191017192"></a><a name="zh-cn_topic_0000001609074213_p4169191017192"></a>任务类型</p>
@@ -868,7 +868,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 <!-- end id14 -->
 
 <!-- npu="950,A3,910b,310p" id16 -->
-**表 9**  推理任务类型与硬件型号对应YAML文件
+**表 9** 推理任务类型与硬件型号对应YAML文件
 
 <a name="zh-cn_topic_0000001609074213_table15169151021912"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0000001609074213_row16169201019192"><th class="cellrowborder" valign="top" width="18.48%" id="mcps1.2.5.1.1"><p id="zh-cn_topic_0000001609074213_p4169191017192"><a name="zh-cn_topic_0000001609074213_p4169191017192"></a><a name="zh-cn_topic_0000001609074213_p4169191017192"></a>任务类型</p>
@@ -1070,10 +1070,10 @@ deploy任务原理图如[图4](#fig06571541566)所示。
 
     >[!NOTE]
     >推理场景下：
-    >- /path-to-weights为模型权重，需要用户自行准备。mindie镜像可以参考镜像中$ATB\_SPEED\_HOME\_PATH/examples/models/llama3/README.md文件中的说明进行下载。
+    >- /path-to-weights为模型权重，需要用户自行准备。MindIE镜像可以参考镜像中$ATB\_SPEED\_HOME\_PATH/examples/models/llama3/README.md文件中的说明进行下载。
     >- ATB_SPEED_HOME_PATH默认路径为“/usr/local/Ascend/atb-models”，在source模型仓中执行set_env.sh脚本时已配置，用户无需自行配置。
 
-4. 修改示例YAML中容器启动命令，即"command"字段内容，如果没有则需添加。请根据实际业务场景修改启动命令。
+4. 修改示例YAML中容器启动命令，即“command”字段内容，如果没有则需添加。请根据实际业务场景修改启动命令。
 
     ```yaml
     ...
@@ -1262,7 +1262,7 @@ deploy任务原理图如[图4](#fig06571541566)所示。
     >[!NOTE]
     >`<pod-name>`为[步骤1](#ZH-CN_TOPIC_0000002511347103_li96791230183711)中创建任务对应的Pod名称。
 
-2. 查看日志。这里以 PyTorch 训练场景为例，如果出现如下内容表示成功，具体以实际回显为准。
+2. 查看日志。这里以PyTorch训练场景为例，如果出现如下内容表示成功，具体以实际回显为准。
 
       ```ColdFusion
       [gpu id: 0 ] Test: [77/85]      Time  0.117 ( 0.281)    Loss 1.073741e+01 (1.078090e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.00 (  0.12)
@@ -1313,7 +1313,7 @@ xx "xxx" deleted
 
 ## 通过命令行使用（其他调度器）<a name="ZH-CN_TOPIC_0000002511427069"></a>
 
-通过命令行使用（其他调度器）和通过命令行使用（Volcano）使用流程一致，只有任务YAML有所不同，用户可以准备好相应YAML后参考[通过命令行使用（Volcano）](#通过命令行使用volcano)章节使用。Device Plugin 已经按 k8s 设备插件机制将昇腾硬件上报到 Node.Resource 下，只需在创建任务时，指定所需的昇腾硬件资源即可。
+通过命令行使用（其他调度器）和通过命令行使用（Volcano）使用流程一致，只有任务YAML有所不同，用户可以准备好相应YAML后参考[通过命令行使用（Volcano）](#通过命令行使用volcano)章节使用。Ascend Device Plugin已经按k8s设备插件机制将昇腾硬件上报到Node.Resource下，只需在创建任务时，指定所需的昇腾硬件资源即可。
 
 **操作步骤**
 
@@ -1351,7 +1351,7 @@ xx "xxx" deleted
 
 **集成前说明<a name="section16646104012516"></a>**
 
-集成操作中会涉及到很多接口，请用户根据实际情况去相关官网了解接口的详细信息，本文档不再进行二次说明。
+集成操作中会涉及很多接口，请用户根据实际情况去相关官网了解接口的详细信息，本文档不再进行二次说明。
 
 - K8s相关接口请根据编程语言找到对应的K8s的[官方API库](https://github.com/kubernetes-client)了解相关内容。
 - Ascend Job可参考[acjob任务yaml参数说明](../../06_api/15_yaml_configuration.md#acjob)中的参数说明，了解相关内容。
@@ -1414,7 +1414,7 @@ xx "xxx" deleted
               initLabels(map[string]string{     // 初始化任务标签
                  "ring-controller.atlas": "ascend-{xxx}b",   // 标识任务使用的芯片的产品类型
                  "framework":             "pytorch",       // 使用的训练框架名
-                 "tor-affinity":          "normal-schema", // 是否使用交换亲和性调度。value为large-model-schema，表示使用大模型调度模式；value为normal-schema，使用普通任务调度模式；value为null，表示关闭交换机亲和性调度
+                 "tor-affinity":          "normal-schema", // 是否使用交换机亲和性调度。value为large-model-schema，表示使用大模型调度模式；value为normal-schema，使用普通任务调度模式；value为null，表示关闭交换机亲和性调度
                  "podgroup-sched-enable": "true",  // 仅在集群使用openFuyao定制Kubernetes和volcano-ext组件场景下配置。取值为字符串"true"时，表示开启批量调度功能；取值为其他字符串时，表示批量调度功能不生效，使用普通调度。若不配置该参数，表示批量调度功能不生效，使用普通调度
               }).
               initSchedulerName("volcano"). // 初始化调度器名

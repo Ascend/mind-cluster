@@ -21,7 +21,7 @@
     |--|--|
     |mode|<p>虚拟化实例模式。取值为0或1：</p><ul><li>0：容器模式，表示创建的vNPU挂载到容器中使用。</li><li>1：虚拟机模式（预留，当前暂不可用），表示创建的vNPU分配给虚拟机使用。</li></ul>|
 
-- 在物理机执行以下命令查询虚拟化模式
+- 在物理机执行以下命令查询虚拟化模式。
 
     **npu-smi info -t vnpu-mode**
 
@@ -39,7 +39,7 @@
 
 - 创建vNPU。命令格式如下：
 
-    **npu-smi set -t create-vnpu -i** _id_ **-c** _chip\_id_ **-f** _vnpu\_config_  \[**-v** _vnpu\_id_\] \[**-g** _vgroup\_id_\]
+    **npu-smi set -t create-vnpu -i** _id_ **-c** _chip\_id_ **-f** _vnpu\_config_ \[**-v** _vnpu\_id_\] \[**-g** _vgroup\_id_\]
 
     **表 3** 参数说明
 
@@ -57,22 +57,25 @@
 
     - 在设备0中编号为0的芯片上根据模板vir02创建vNPU。
 
-        ```shell
-        npu-smi set -t create-vnpu -i 0 -c 0 -f vir02
+        **npu-smi set -t create-vnpu -i 0 -c 0 -f vir02**
+
+        ```ColdFusion
                 Status : OK         Message : Create vnpu success
         ```
 
     - 在设备0中编号为0的芯片上指定vnpu\_id为100创建vNPU设备，此vNPU的模板为vir02。
 
-        ```shell
-        npu-smi set -t create-vnpu -i 0 -c 0 -f vir02 -v 100
+        **npu-smi set -t create-vnpu -i 0 -c 0 -f vir02 -v 100**
+
+        ```ColdFusion
                 Status : OK         Message : Create vnpu success
         ```
 
     - 在设备0中编号为0的芯片上指定vnpu\_id为100并指定vgroup\_id为1创建vNPU设备，此vNPU的模板为vir02。
 
-        ```shell
-        npu-smi set -t create-vnpu -i 0 -c 0 -f vir02 -v 100 -g 1
+        **npu-smi set -t create-vnpu -i 0 -c 0 -f vir02 -v 100 -g 1**
+
+        ```ColdFusion
                 Status : OK         Message : Create vnpu success
         ```
 
@@ -80,7 +83,7 @@
 
     **npu-smi set -t vnpu-cfg-recover -d** _mode_
 
-    mode表示vNPU的配置恢复状态，"1"表示开启状态，"0"表示关闭状态，默认为开启状态。
+    mode表示vNPU的配置恢复状态，“1”表示开启状态，“0”表示关闭状态，默认为开启状态。
 
     执行如下命令设置vNPU的配置恢复状态，以下命令表示将vNPU的配置恢复状态设置为开启状态。
 
@@ -122,6 +125,6 @@
 
     <!-- npu="910,310p" id1 -->
     >[!NOTE]
-    ><term>Atlas推理系列产品</term>支持返回AICPU，Vgroup ID信息，<term>Atlas训练系列产品</term>不支持返回AICPU，Vgroup ID信息。
+    ><term>Atlas推理系列产品</term>支持返回AICPU、Vgroup ID信息，<term>Atlas训练系列产品</term>不支持返回AICPU、Vgroup ID信息。
 
     <!-- end id1 -->

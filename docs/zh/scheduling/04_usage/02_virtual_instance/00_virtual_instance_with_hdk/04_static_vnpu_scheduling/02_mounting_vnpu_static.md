@@ -2,7 +2,7 @@
 
 ## 方式一：基于原生Docker挂载vNPU
 
-原生Docker场景下（未部署MindCluster集群调度组件），需要使用npu-smi工具创建vNPU后，将vNPU挂载到容器。具体操作请参见《Atlas 中心训练服务器 NPU驱动和固件安装指南》的“昇腾虚拟化实例（AVI）容器场景下的安装与卸载 \> [多容器场景下安装](https://support.huawei.com/enterprise/zh/doc/EDOC1100591788/5b32515a)”章节，该章节指导用户安装Docker和将vNPU挂载进容器。
+原生Docker场景下（未部署MindCluster集群调度组件），需要使用npu-smi工具创建vNPU后，将vNPU挂载到容器。具体操作请参见《Atlas 中心训练服务器 NPU驱动和固件安装指南》的“昇腾虚拟化实例（AVI）容器场景下的安装与卸载 \> [多容器场景下安装](https://support.huawei.com/enterprise/zh/doc/EDOC1100591788/5b32515a)”章节，该章节指导用户安装Docker并将vNPU挂载进容器。
 
 ## 方式二：Ascend Docker Runtime挂载vNPU
 
@@ -38,7 +38,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 >- image-name:tag：镜像名称与标签，请根据实际情况修改。
 >- 用户在使用过程中，请勿重复定义和在容器镜像中固定ASCEND_VISIBLE_DEVICES和ASCEND_RUNTIME_OPTIONS环境变量。
 
-**表 1**  参数解释
+**表 1** 参数解释
 
 |参数|说明|举例|
 |--|--|--|
@@ -49,7 +49,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 
 ### 使用说明<a name="ZH-CN_TOPIC_0000002511426303"></a>
 
-在Kubernetes场景，当用户需要使用vNPU资源时，需要通过结合集群调度组件Ascend Device Plugin的使用，使Kubernetes可以管理昇腾处理器资源。静态虚拟化场景使用时，不能与动态虚拟化混合使用。昇腾虚拟化实例特性需要的集群调度组件如下所示，支持的产品型号情况请参见[特性说明](../01_description.md)中的“表1 产品支持情况说明”。
+在Kubernetes场景，当用户需要使用vNPU资源时，需要结合集群调度组件Ascend Device Plugin，使Kubernetes可以管理昇腾处理器资源。静态虚拟化场景使用时，不能与动态虚拟化混合使用。昇腾虚拟化实例特性需要的集群调度组件如下所示，支持的产品型号情况请参见[特性说明](../01_description.md)中的“表1 产品支持情况说明”。
 
 - Ascend Docker Runtime
 - Ascend Device Plugin
@@ -86,7 +86,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
   ...
   ```
 
-**表 2**  虚拟化实例模板与vNPU类型关系表
+**表 2** 虚拟化实例模板与vNPU类型关系表
 
 <a name="table47415104403"></a>
 <table><thead align="left"><tr id="row67416101402"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.5.1.1"><p id="p117491014400"><a name="p117491014400"></a><a name="p117491014400"></a>NPU类型</p>
@@ -277,7 +277,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 
 ### 前提条件
 
-1. 需要先获取"Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run"，安装容器引擎插件。
+1. 需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
 2. 参见[安装部署](../../../../03_installation_guide/02_installation/00_helm_installation.md)章节，完成各组件的安装。
 
     虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
@@ -296,17 +296,17 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
         |参数|类型|默认值|说明|
         |--|--|--|--|
         |-volcanoType|bool|false|是否使用Volcano进行调度，如使用动态虚拟化，需要设置为true。|
-        |-presetVirtualDevice|bool|true|静态虚拟化功能开关，值只能为true。<p>如使用动态虚拟化，需要设置为false，并需要同步开启Volcano，即设置"-volcanoType"参数为true。</p>|
+        |-presetVirtualDevice|bool|true|静态虚拟化功能开关，值只能为true。<p>如使用动态虚拟化，需要设置为false，并需要同步开启Volcano，即设置“-volcanoType”参数为true。</p>|
 
         YAML启动说明如下：
 
-        - K8s集群中存在使用<term>Atlas推理系列产品</term>、<term>Atlas训练系列产品</term>、<term>Atlas A2系列产品</term>、<term>Atlas A3系列产品</term>节点（Ascend Device Plugin独立工作，不配合Volcano和Ascend Operator使用）。
+        - K8s集群中存在使用<term>Atlas推理系列产品</term>、<term>Atlas训练系列产品</term>、<term>Atlas A2系列产品</term>、<term>Atlas A3系列产品</term>的节点（Ascend Device Plugin独立工作，不配合Volcano和Ascend Operator使用）。
 
             ```shell
             kubectl apply -f device-plugin-v{version}.yaml
             ```
 
-        - K8s集群中存在使用<term>Atlas推理系列产品</term>、<term>Atlas训练系列产品</term>、<term>Atlas A2系列产品</term>、<term>Atlas A3系列产品</term>节点（配合Volcano和Ascend Operator使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
+        - K8s集群中存在使用<term>Atlas推理系列产品</term>、<term>Atlas训练系列产品</term>、<term>Atlas A2系列产品</term>、<term>Atlas A3系列产品</term>的节点（配合Volcano和Ascend Operator使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
 
             ```shell
             kubectl apply -f device-plugin-volcano-v{version}.yaml
@@ -316,7 +316,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 
     2. Volcano参数修改及启动说明：
 
-        在Volcano部署文件"volcano-v<i>\{version\}</i>.yaml"中，需要配置"presetVirtualDevice"且值只能为"true"。
+        在Volcano部署文件“volcano-v<i>\{version\}</i>.yaml”中，需要配置“presetVirtualDevice”且值只能为“true”。
 
         ```Yaml
         ...

@@ -30,7 +30,7 @@
 
 灵衢网络检测的pingmesh结果写入文件&lt;nodename&gt;.log中。该文件中各字段的详细说明如下表所示。
 
-**表 1**  &lt;nodename&gt;.log
+**表 1** &lt;nodename&gt;.log
 
 <a name="zh-cn_topic_0000002193288232_table313985322113"></a>
 
@@ -41,8 +41,8 @@
 |physicID|NPU卡物理ID。|[0~15]|
 |taskID|任务ID，0代表节点内部、1代表节点间。|0或1|
 |DestNum|本次pingmesh目标地址数量。|[0~47]|
-|source_addr|源地址|IPv4网络地址|
-|target_addr|目标地址|IPv4网络地址|
+|source_addr|源地址。|IPv4网络地址|
+|target_addr|目标地址。|IPv4网络地址|
 |suc_pkt_num|发送成功的包数量。|-|
 |fail_pkt_num|发送失败的包数量。|-|
 |max_time|最长响应时间。|<ul><li>ping失败的时候，值为-1。</li><li>正常情况下为非负值。</li></ul>|
@@ -62,7 +62,7 @@ kubectl describe cm -n cluster-system pingmesh-fault-<nodename>
 
 故障信息中各字段的详细说明如下所示。
 
-**表 2**  pingmesh-fault-&lt;nodename&gt;
+**表 2** pingmesh-fault-&lt;nodename&gt;
 
 <a name="zh-cn_topic_0000002193288232_table2371535113510"></a>
 
@@ -82,7 +82,7 @@ kubectl describe cm -n cluster-system pingmesh-fault-<nodename>
     >- /user/cluster-info/profiling达到配置的上限大小后，将进行文件老化，默认每次删除修改时间最早的20%的文件。不同TaskD版本的上限配置请参见：
     >    - 使用7.1.RC1及以上版本TaskD：PyTorch场景参考[“拉起TaskD Worker”步骤](./03_configuration/06_performance_diagnosis.md#li23023)；MindSpore场景参考[“拉起TaskD Worker”步骤](./03_configuration/06_performance_diagnosis.md#li2302301)。
     >    - 使用其他版本TaskD：PyTorch场景参考[步骤5](./03_configuration/06_performance_diagnosis.md#li230238965)；MindSpore场景参考[步骤3](./03_configuration/06_performance_diagnosis.md#li23023896501)。
-    >- 轻量profiling文件以时间戳命名，各条记录以换行分割，每次追加写入rank下最新文件。最新文件大小超过10MB时，TaskD会新建profiling文件。如果使用NFS等网络存储方式，当数据同步较慢时，可能存在文件大小未达到10MB即创建新文件的情况。
+    >- 轻量profiling文件以时间戳命名，各条记录以换行分隔，每次追加写入rank下最新文件。最新文件大小超过10MB时，TaskD会新建profiling文件。如果使用NFS等网络存储方式，当数据同步较慢时，可能存在文件大小未达到10MB即创建新文件的情况。
 
 ## 查询慢节点诊断结果
 
@@ -90,7 +90,7 @@ kubectl describe cm -n cluster-system pingmesh-fault-<nodename>
 
 ### 方式一：通过K8s日志查询集群侧慢节点诊断日志
 
-1. 通过**kubectl get pods -n mindx-dl**命令，查询启动的ClusterD和NodeD节点数据。
+1. 通过**kubectl get pods -n mindx-dl**命令，查询启动的ClusterD和NodeD节点。
 
     ![](../../../figures/scheduling/zh-cn_image_0000002477523808.png)
 
@@ -125,7 +125,7 @@ kubectl describe cm -n cluster-system pingmesh-fault-<nodename>
 
 网络检测的pingmesh结果将写入文件&lt;nodename&gt;.log中，该文件中各字段的详细说明如下表所示。
 
-**表 3**  &lt;nodename&gt;.log文件参数说明
+**表 3** &lt;nodename&gt;.log文件参数说明
 
 <a name="zh-cn_topic_0000002313236861_table1485915561131"></a>
 

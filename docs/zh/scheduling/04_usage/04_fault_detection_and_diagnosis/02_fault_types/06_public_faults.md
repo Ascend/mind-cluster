@@ -12,7 +12,7 @@
 - 通过ConfigMap获取。故障发现者将故障信息写入ConfigMap中，然后由ClusterD获取故障信息。用户可通过调用ConfigMap接口的方式来注入公共故障，详细说明请参见[ConfigMap](../../../06_api/04_clusterd/03_public_fault_apis.md#configmap)。
 - 通过gRPC获取。故障发现者将故障信息通过gRPC通道发送给ClusterD，然后由ClusterD获取故障信息。用户可通过调用gRPC接口的方式来注入公共故障，说明请参见[gRPC接口](../../../06_api/04_clusterd/03_public_fault_apis.md#grpc接口)。
 
-**图 1**  公共故障上报<a name="fig72618571585"></a>
+**图 1** 公共故障上报<a name="fig72618571585"></a>
 
 ![](../../../../figures/scheduling/公共故障上报.png "公共故障上报")
 

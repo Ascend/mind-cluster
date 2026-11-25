@@ -12,7 +12,7 @@
 >- 主机路径可由用户根据实际情况自行配置：在ClusterD的启动YAML中修改挂载卷名称为config-clusterd的主机挂载路径。
 >- 多master场景下，建议每个master节点上都同步一份最新的publicCustomization.json文件。避免重启ClusterD后，ClusterD被调度到其他master节点，从而导致自定义故障配置文件丢失的问题。
 
-**表 1**  故障级别及处理说明
+**表 1** 故障级别及处理说明
 
 <a name="zh-cn_topic_0000002181110120_zh-cn_topic_0000002171521329_table169151711124319"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0000002181110120_zh-cn_topic_0000002171521329_row19916131120434"><th class="cellrowborder" valign="top" width="15.09499941718149%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002181110120_zh-cn_topic_0000002171521329_p1291621144314"><a name="zh-cn_topic_0000002181110120_zh-cn_topic_0000002171521329_p1291621144314"></a>故障级别</p>
@@ -55,15 +55,15 @@
 </tr>
 <tr id="row_silentfault_lv"><td class="cellrowborder" valign="top" width="15.09499941718149%" headers="mcps1.2.4.1.1 "><p id="p_silentfault_lv1"><a name="p_silentfault_lv1"></a>SilentFault</p>
 </td>
-<td class="cellrowborder" valign="top" width="42.54575125305979%" headers="mcps1.2.4.1.2 "><p id="p_silentfault_lv2"><a name="p_silentfault_lv2"></a>静默故障，节点存在反复软件故障但无硬件故障上报。追加故障列表，不改变芯片健康状态。</p>
+<td class="cellrowborder" valign="top" width="42.54575125305979%" headers="mcps1.2.4.1.2 "><p id="p_silentfault_lv2"><a name="p_silentfault_lv2"></a>静默故障，节点反复出现软件故障但无硬件故障上报。追加故障列表，不改变芯片健康状态。</p>
 </td>
-<td class="cellrowborder" valign="top" width="42.35924932975871%" headers="mcps1.2.4.1.3 "><p id="p_silentfault_lv3"><a name="p_silentfault_lv3"></a>暂不处理。</p>
+<td class="cellrowborder" valign="top" width="42.35924932975871%" headers="mcps1.2.4.1.3 "><p id="p_silentfault_lv3"><a name="p_silentfault_lv3"></a>暂不处理</p>
 </td>
 </tr>
 </tbody>
 </table>
 
-**表 2**  publicFaultConfiguration.json字段说明
+**表 2** publicFaultConfiguration.json字段说明
 
 <a name="zh-cn_topic_0000002181110120_table8202741102717"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0000002181110120_row18202164117272"><th class="cellrowborder" valign="top" width="28.93%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002181110120_p1120213413271"><a name="zh-cn_topic_0000002181110120_p1120213413271"></a>参数名称</p>
@@ -79,13 +79,13 @@
 </tr>
 <tr id="zh-cn_topic_0000002181110120_row14606121802219"><td class="cellrowborder" valign="top" width="28.93%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002181110120_p1760617182224"><a name="zh-cn_topic_0000002181110120_p1760617182224"></a>publicFaultResource</p>
 </td>
-<td class="cellrowborder" valign="top" width="71.07%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002181110120_p1606118102218"><a name="zh-cn_topic_0000002181110120_p1606118102218"></a>公共故障发送方配置。其中clusterd为ClusterD内部静默故障检测专用，仅用于静默故障场景，非外部发送方。</p>
+<td class="cellrowborder" valign="top" width="71.07%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002181110120_p1606118102218"><a name="zh-cn_topic_0000002181110120_p1606118102218"></a>公共故障发送方配置，其中clusterd为ClusterD内部静默故障检测专用，仅用于静默故障场景，非外部发送方。</p>
 </td>
 </tr>
 </tbody>
 </table>
 
-**表 3**  publicFaultCode字段说明
+**表 3** publicFaultCode字段说明
 
 <a name="zh-cn_topic_0000002181110120_table1689274753416"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0000002181110120_row16892144733413"><th class="cellrowborder" valign="top" width="28.849999999999998%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002181110120_p689264723412"><a name="zh-cn_topic_0000002181110120_p689264723412"></a>参数名称</p>
@@ -126,7 +126,7 @@
 
 公共故障的故障码为9位，说明如下。
 
-**表 4**  故障码说明
+**表 4** 故障码说明
 
 <a name="table1237891465117"></a>
 <table><thead align="left"><tr id="row1137891413516"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.1"><p id="p1937816143519"><a name="p1937816143519"></a>位数</p>
@@ -190,7 +190,7 @@
 
 ## 已支持的公共故障<a name="zh-cn_topic_0000002181110120_section4960201383813"></a>
 
-**表 5**  已支持的公共故障
+**表 5** 已支持的公共故障
 
 <a name="zh-cn_topic_0000002181110120_table31451934163811"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0000002181110120_row514523493819"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002181110120_p1114523420389"><a name="zh-cn_topic_0000002181110120_p1114523420389"></a>故障码</p>

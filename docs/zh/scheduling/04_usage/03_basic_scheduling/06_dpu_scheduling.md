@@ -18,7 +18,7 @@ K8s RDMA Shared Dev Plugin将节点上的DPU（UB RDMA设备）上报为`<resour
 
 ### 配置业务Pod资源<a name="ZH-CN_TOPIC_biz_pod_resource_config"></a>
 
-业务Pod使用RDMA共享设备需要在Pod配置中声明资源请求，配置示例（申请1份RDMA设备资源，最大值配置可参考[配置文件说明](../../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_config_k8s_rdma_shared_dev_plugin)中的`rdmaHcaMax`）如下：
+业务Pod使用RDMA共享设备需要在Pod配置中声明资源请求，配置示例（申请1个RDMA设备资源，最大值配置可参考[配置文件说明](../../06_api/11_k8s_rdma_shared_dev_plugin.md#ZH-CN_TOPIC_config_k8s_rdma_shared_dev_plugin)中的`rdmaHcaMax`）如下：
 
 <pre codetype="yaml">
 apiVersion: v1
@@ -59,11 +59,10 @@ spec:
 
 > [!NOTE]
 >
-> 业务容器使用1825 DPU设备时，除了需要组件挂载外，还需要：
+> 业务容器使用1825 DPU设备时，除了需要组件挂载外，还需要配置用户态驱动，两种方式任选其一：
 >
-> - 配置用户态驱动，两种方式任选其一：
->   - 在镜像中安装1825 DPU的OFED驱动
->   - 从主机侧挂载1825 DPU的OFED驱动（挂载方式参见[容器场景配置](../../06_api/11_k8s_rdma_shared_dev_plugin.md#容器场景配置)）
+>- 在镜像中安装1825 DPU的OFED驱动
+>- 从主机侧挂载1825 DPU的OFED驱动（挂载方式参见[容器场景配置](../../06_api/11_k8s_rdma_shared_dev_plugin.md#容器场景配置)）
 
 执行以下命令，查看业务Pod是否创建成功：
 
@@ -86,44 +85,46 @@ rdma-app   1/1     Running   0          10s   10.244.1.*   compute-node-1
 
 ## 验证Pod内RDMA设备<a name="ZH-CN_TOPIC_biz_pod_rdma_verify"></a>
 
-- 业务Pod创建成功后，可以通过以下步骤验证RDMA字符设备是否被组件正确挂载：
+业务Pod创建成功后，可以通过以下步骤验证Pod内RDMA设备。
 
-- 1.进入Pod内部
+1. 验证RDMA字符设备是否被组件正确挂载。
 
-```shell
-kubectl exec -it rdma-app -- /bin/bash
-```
+   1. 进入Pod内部。
 
-- 2.检查RDMA设备节点
+      ```shell
+      kubectl exec -it rdma-app -- /bin/bash
+      ```
 
-```shell
-ls -la /dev/infiniband/
-```
+   2. 检查RDMA设备节点。
 
-- 正常情况下显示`uverbs0`、`uverbs1`等设备节点文件。如果设备节点为空或不存在，说明RDMA字符设备未正确挂载。
+      ```shell
+      ls -la /dev/infiniband/
+      ```
 
-业务Pod创建成功后，还需检查RDMA网卡设备及对应的网络接口挂载情况：
+      正常情况下显示`uverbs0`、`uverbs1`等设备节点文件。如果设备节点为空或不存在，说明RDMA字符设备未正确挂载。
 
-- 1.检查Infiniband设备信息
+2. 检查RDMA网卡设备及对应的网络接口挂载情况。
 
-```shell
-ibv_devices
-```
+   1. 检查Infiniband设备信息。
 
-正常情况下显示当前节点上的RDMA网卡设备，如`hrn5_0`、`hrn5_1`。
+      ```shell
+      ibv_devices
+      ```
 
-- 2.检查网络接口信息
+      正常情况下显示当前节点上的RDMA网卡设备，如`hrn5_0`、`hrn5_1`。
 
-```shell
-ls -la /sys/class/net
-```
+   2. 检查网络接口信息。
 
-正常情况下显示任务申请的RDMA网卡对应的网络接口（如ens***）。
+      ```shell
+      ls -la /sys/class/net
+      ```
 
-- 3.检查nic设备数量
+      正常情况下显示任务申请的RDMA网卡对应的网络接口（如ens***）。
 
-```shell
-hinicadm5 info
-```
+   3. 检查NIC设备数量。
 
-正常情况下显示当前节点的card信息，包含'Card num'和'Device Information'信息。（需自行安装或挂载该工具）
+      ```shell
+      hinicadm5 info
+      ```
+
+      正常情况下显示当前节点的card信息，包含`Card num`和`Device Information`信息（需自行安装或挂载该工具）。

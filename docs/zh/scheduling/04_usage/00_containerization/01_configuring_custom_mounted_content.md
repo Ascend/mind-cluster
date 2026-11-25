@@ -1,6 +1,6 @@
 # （可选）配置自定义挂载内容<a name="ZH-CN_TOPIC_0000002511427171"></a>
 
-Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/etc/ascend-docker-runtime.d/base.list”和“/etc/ascend-docker-runtime.d/ub_driver.list”中的全部内容，并且Ascend Docker Runtime默认会检查路径“/usr/local/Ascend/driver/lib64/common”、“/usr/local/Ascend/driver/lib64/driver”和“/usr/lib64”，如果存在，则会自动添加到LD_LIBRARY_PATH环境变量中，以便npu-smi info命令自动可用。base.list和ub_driver.list中的内容正常挂载至容器，否则影响容器内相关功能使用，文件中已有的默认挂载路径配置项无需修改。若用户需要新增挂载其他文件或目录，可创建自定义配置文件，操作如下：
+Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/etc/ascend-docker-runtime.d/base.list”和“/etc/ascend-docker-runtime.d/ub_driver.list”中的全部内容，并且Ascend Docker Runtime默认会检查路径“/usr/local/Ascend/driver/lib64/common”、“/usr/local/Ascend/driver/lib64/driver”和“/usr/lib64”，如果存在，则会自动添加到LD_LIBRARY_PATH环境变量中，以便npu-smi info命令自动可用。base.list和ub_driver.list中的内容需正常挂载至容器，否则影响容器内相关功能使用，文件中已有的默认挂载路径配置项无需修改。若用户需要新增挂载其他文件或目录，可创建自定义配置文件，操作如下：
 
 1. 进入配置文件目录。
 
@@ -34,7 +34,7 @@ Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/e
     ```
 
     >[!NOTE]
-    >- ub_driver.list属于UB驱动的挂载配置文件，仅当UB总线场景下，才会默认挂载ub_driver.list中的内容。若用户不需要挂载ub_driver.list中的内容，可以指定ASCEND_UB_DRV_MOUNT参数为"False"，不建议通过ASCEND_RUNTIME_MOUNTS参数挂载ub_driver.list中的内容。
+    >- ub_driver.list属于UB驱动的挂载配置文件，仅当UB总线场景下，才会默认挂载ub_driver.list中的内容。若用户不需要挂载ub_driver.list中的内容，可以指定ASCEND_UB_DRV_MOUNT参数为“False”，不建议通过ASCEND_RUNTIME_MOUNTS参数挂载ub_driver.list中的内容。
     >- 示例中的\{image-name:tag\}为镜像名称与标签，其他参数说明请参见[表1](./02_usage_on_the_docker_client.md#参数说明)。
     >- 挂载条目的配置方式与约束请参见下方“使用约束”。
 

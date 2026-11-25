@@ -6,7 +6,7 @@
 
 业务面故障发现原理如[图1](#fig1761563615337)所示。
 
-**图 1**  发现原理<a name="fig1761563615337"></a>
+**图 1** 发现原理<a name="fig1761563615337"></a>
 
 ![](../../../../figures/scheduling/发现原理.png "发现原理")
 
@@ -14,7 +14,7 @@
 
 >[!NOTE]
 >
->- 如需使用无条件重试功能，需在任务YAML中配置以下3个参数：fault-retry-times，restartPolicy及policies，详细参数说明请参见[YAML配置说明](../../../06_api/15_yaml_configuration.md#yaml_configuration)（policies是vcjob原生字段）。
+>- 如需使用无条件重试功能，需在任务YAML中配置以下3个参数：fault-retry-times、restartPolicy及policies，详细参数说明请参见[YAML配置说明](../../../06_api/15_yaml_configuration.md#yaml_configuration)（policies是vcjob原生字段）。
 >- 在使用Ascend Operator的场景下，若希望任务所有Pod的Status在转变为Failed后仍发生重调度，可参考[使用Volcano和Ascend Operator组件场景下，业务面故障的任务所有Pod的Status全部变为Failed，任务无法触发无条件重试重调度](https://gitcode.com/Ascend/mind-cluster/issues/362)。
 >- 任务状态可以接入外部监控平台，Job状态可以通过[ClusterD的任务接口](../../../06_api/04_clusterd/01_job_information.md)监控到任务状态变更。业务面Pod非0退出，状态变成Failed时，或者任务长时间处于Pending状态时，都能够通过任务信息接口获取到相关信息。
 
@@ -29,7 +29,7 @@ NPU上Task执行异常（业务面故障）可能导致任务中正常NPU无法�
 
 ### 所需组件<a name="zh-cn_topic_0000002194466236_section138036504533"></a>
 
-为保证业务面故障检测功能的正常使用，需要安装以下组件：Volcano、Ascend Operator
+为保证业务面故障检测功能的正常使用，需要安装以下组件：Volcano、Ascend Operator。
 
 ### 支持的故障处理类型<a name="section099935818571"></a>
 
@@ -39,9 +39,9 @@ Job级别重调度、Pod级别重调度、进程级别重调度、优雅容错�
 
 任务卡死故障是指NPU上有进程运行，但进程长时间未取得实质性进展的异常状态。实际场景中存在多种卡死情况：
 
-- 计算卡死： 进程停留在某个算子，无输出但NPU利用率低
-- 内存卡死： 显存分配异常导致进程挂起
-- 通信卡死： HCCL集合通信死锁
+- 计算卡死：进程停留在某个算子，无输出但NPU利用率低
+- 内存卡死：显存分配异常导致进程挂起
+- 通信卡死：HCCL集合通信死锁
 - 其他卡死情况
 
 任务卡死检测功能可以及时发现并上报任务卡死故障，避免任务运行无进展，提高效率和资源利用率。
@@ -55,7 +55,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度、优雅容错�
    - AICore利用率：通过驱动接口获取NPU的AICore使用率。
    - HBM显存使用率：通过驱动接口获取NPU的HBM显存使用率。
    - 网络通信流量：
-     - 对于<term>Ascend 950PR&950DT系列产品</term>场景，通过hccn_tool工具采集UB的tx_busi_flit_num和rx_busi_flit_num统计量；
+     - 对于<term>Ascend 950PR&950DT系列产品</term>场景，通过hccn_tool工具采集UB的tx_busi_flit_num和rx_busi_flit_num统计量。
      - 对于其他场景，通过hccn_tool工具采集RoCE的roce_tx_all_pkt_num和roce_rx_all_pkt_num统计量。
    - 进程CPU时间：通过读取/proc/{pid}/stat文件获取进程的utime和stime，计算所有NPU关联进程的CPU时间。
 3. 将当前轮次指标与上一轮次保存的指标进行对比，计算各项指标的增量值。
@@ -81,7 +81,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度、优雅容错�
 
 ### 所需组件<a name="zh-cn_topic_0000002216292814_section_hangcomponents"></a>
 
-为保证NPU卡死故障检测功能的正常使用，需要安装以下组件：Ascend Device Plugin
+为保证NPU卡死故障检测功能的正常使用，需要安装以下组件：Ascend Device Plugin。
 
 ### 支持的故障处理类型<a name="zh-cn_topic_0000002216292814_section_hanghandler"></a>
 

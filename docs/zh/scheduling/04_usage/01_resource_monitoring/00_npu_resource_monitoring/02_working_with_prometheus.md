@@ -18,7 +18,7 @@
     >- 获取镜像前，请确保能够正常访问互联网。
     >- 若不使用集群调度提供的prometheus.yaml，需要参考该YAML在相应位置加上app: prometheus字段，否则可能出现NPU Exporter连接超时。
 
-3. prometheus.yaml已经默认包含获取NPU-Exporter metrics的相关配置文件，用户可以根据需求自行修改相应的配置。以下从job_name开始之后的内容为获取的NPU-Exporter metrics的相关配置。
+3. prometheus.yaml已经默认包含获取NPU Exporter metrics的相关配置文件，用户可以根据需求自行修改相应的配置。以下从job_name开始的内容为获取的NPU Exporter metrics的相关配置。
 
     ```yaml
     ...
@@ -64,7 +64,6 @@
     回显如下，表示安装成功。
 
     ```ColdFusion
-    [root@centos check_env]# kubectl apply -f prometheus.yaml
     clusterrole.rbac.authorization.k8s.io/prometheus created
     serviceaccount/prometheus created
     clusterrolebinding.rbac.authorization.k8s.io/prometheus created
@@ -93,7 +92,7 @@
 
     3. 选择NPU的相关标签，查看对应数据信息，如下图为查询集群内NPU卡在过去15分钟的功率信息。
 
-        **图 1**  查询集群内NPU卡功率信息<a name="fig-npu-power-query"></a>
+        **图 1** 查询集群内NPU卡功率信息<a name="fig-npu-power-query"></a>
         ![](../../../../figures/scheduling/Prometheus-示例01.png "查询集群内NPU卡功率信息")
 
 ## 通过Prometheus Operator对接Prometheus<a name="section1031014512341"></a>
@@ -263,5 +262,5 @@
 
     3. 选择NPU的相关标签，查看对应数据信息，如下图为查询集群内NPU卡在过去15分钟的温度信息。
 
-        **图 2**  查询集群内NPU卡温度信息<a name="fig-npu-temperature-query"></a>
+        **图 2** 查询集群内NPU卡温度信息<a name="fig-npu-temperature-query"></a>
         ![](../../../../figures/scheduling/Prometheus-示例02.png "查询集群内NPU卡温度信息")

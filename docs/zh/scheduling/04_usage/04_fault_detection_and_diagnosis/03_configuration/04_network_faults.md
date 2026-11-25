@@ -33,7 +33,7 @@ Ascend Device Plugin从驱动获取到故障码后，将根据故障码对设备
 
 以总线设备故障码\[0x00f1ff09,155913,cpu,na\]为例。该故障码由四部分组成：告警ID、故障ID、对端设备类型、端口号，如[表1 故障码说明](#zh-cn_topic_0000002007978080_table167355241939)所示。
 
-**表 1**  故障码说明
+**表 1** 故障码说明
 
 <a name="zh-cn_topic_0000002007978080_table167355241939"></a>
 
@@ -69,7 +69,7 @@ Ascend Device Plugin从驱动获取到故障码后，将根据故障码对设备
     configmap/mindx-dl-fault-config created
     ```
 
-    **表 2**  参数说明
+    **表 2** 参数说明
 
     <a name="zh-cn_topic_0000002007978080_table14147138184211"></a>
     <table><thead align="left"><tr id="zh-cn_topic_0000002007978080_row1814716812426"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002007978080_p141471483423"><a name="zh-cn_topic_0000002007978080_p141471483423"></a>参数名</p>
@@ -181,7 +181,7 @@ Ascend Device Plugin从驱动获取到故障码后，将根据故障码对设备
 
 relationFaultCustomization.json、faultDuration.json为系统配置文件，若用户无特殊需求，请勿随意修改。
 
-**表 3**  relationFaultCustomization文件说明
+**表 3** relationFaultCustomization文件说明
 
 <a name="zh-cn_topic_0000002157130117_table5148194813113"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0000002157130117_row1614914482114"><th class="cellrowborder" valign="top" width="13.701370137013702%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002157130117_p278365710116"><a name="zh-cn_topic_0000002157130117_p278365710116"></a>参数</p>
@@ -221,7 +221,7 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
 </tbody>
 </table>
 
-**表 4**  faultDuration.json文件说明
+**表 4** faultDuration.json文件说明
 
 <a name="zh-cn_topic_0000002157130117_table1484617498414"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0000002157130117_row1284615492415"><th class="cellrowborder" valign="top" width="13.36133613361336%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002157130117_p116699222514"><a name="zh-cn_topic_0000002157130117_p116699222514"></a>参数</p>
@@ -261,11 +261,11 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
 
 在制作ClusterD镜像时，会将关联故障的两个配置文件内置在镜像中，启动ClusterD会读取这两个文件的默认配置，作为当前故障处理依据。
 
-如果用户想要自定义关联的故障码以及对应的处理策略。可以在制作ClusterD镜像时，修改对应的relationFaultCustomization.json和faultDuration.json配置文件。
+如果用户想要自定义关联的故障码以及对应的处理策略，可以在制作ClusterD镜像时，修改对应的relationFaultCustomization.json和faultDuration.json配置文件。
 
 **操作步骤<a name="zh-cn_topic_0000002157048501_section2086912531189"></a>**
 
-以RelationFaults为故障码81078603，TriggerFault为故障码8C1F8609为例。如果发生了芯片81078603的故障码，需要在后面60s内出现8C1F8609故障时忽略8C1F8609故障，并且隔离发生的81078603故障的任务。可以手动配置关联故障的处理策略为Separate。
+以RelationFaults为故障码81078603，TriggerFault为故障码8C1F8609为例。如果发生了芯片81078603的故障码，需要在后面60s内出现8C1F8609故障时忽略8C1F8609故障，并且隔离发生的81078603故障的任务，可以手动配置关联故障的处理策略为Separate。
 
 1. 登录环境，进入ClusterD解压后的目录。
 2. 执行**vi relationFaultCustomization.json**命令编辑配置文件。
@@ -361,7 +361,7 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
             kubectl edit cm -n cluster-system pingmesh-config
             ```
 
-            **表 5**  pingmesh-config cm
+            **表 5** pingmesh-config cm
 
             <a name="zh-cn_topic_0000002193288232_table985012534578"></a>
 
@@ -399,7 +399,7 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
 
 faultCode.json：配置参数面光链路成员端口故障的故障级别。
 
-### （可选）参数面光链路成员端口故障<a name="zh-cn_topic_0000002479387566_section_custom_opticalportfaultlevel"></a>
+### （可选）配置参数面光链路成员端口故障<a name="zh-cn_topic_0000002479387566_section_custom_opticalportfaultlevel"></a>
 
 若用户需要对参数面光链路成员端口故障后的NPU进行放行或其他操作，可参考[使用faultCode.json配置故障级别](./03_chip_faults.md#zh-cn_topic_0000001951258609_section112139052513)修改此故障码的故障级别，修改后的mindx-dl-fault-config示例如下：
 自定义时需对配置的产品形态进行区分，当Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器的出UBoE口故障时，配置110001024和110000002；当为Atlas 950 SuperPoD液冷超节点及其他产品形态时，配置020001002和020000002。
@@ -417,7 +417,7 @@ faultCode.json：配置参数面光链路成员端口故障的故障级别。
 
 ### PyTorch场景
 
-由于集群中出现的参数面网络故障不一定会影响训练任务，因此集群调度组件不会强制中断任务；当参数面网络故障影响训练任务时，会触发集合通信的网络超时等待机制，在等待时间（默认为30分钟）后，集群调度组件才能感知到该故障，从而触发断点续训。针对该问题，PyTorch  Adapter插件（TorchNPU）提供**watchdog故障检测**功能，可用于检测训练任务是否受到影响，缩短故障检测时间，该功能的详细说明请参见[表6](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table4822175901415)。
+由于集群中出现的参数面网络故障不一定会影响训练任务，因此集群调度组件不会强制中断任务；当参数面网络故障影响训练任务时，会触发集合通信的网络超时等待机制，在等待时间（默认为30分钟）后，集群调度组件才能感知到该故障，从而触发断点续训。针对该问题，PyTorch Adapter插件（TorchNPU）提供**watchdog故障检测**功能，可用于检测训练任务是否受到影响，缩短故障检测时间，该功能的详细说明请参见[表6](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table4822175901415)。
 
 **表 6** watchdog故障检测功能说明
 
@@ -429,7 +429,7 @@ faultCode.json：配置参数面光链路成员端口故障的故障级别。
 </tr>
 <tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row58231859181412"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.2.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1882355910149"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1882355910149"></a>功能特点</p>
 </th>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.2.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p98238590143"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p98238590143"></a>训练启动时，同时启动一个监测线程不断获取通信异常以及task执行异常。监测到故障发生后，快速抛出异常并终止训练任务进程，触发重调度流程。</p>
+<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.2.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p98238590143"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p98238590143"></a>训练启动时，同时启动一个监测线程不断获取通信异常以及任务执行异常。监测到故障发生后，快速抛出异常并终止训练任务进程，触发重调度流程。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row138235598144"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.3.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p15823155941416"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p15823155941416"></a>使用说明</p>

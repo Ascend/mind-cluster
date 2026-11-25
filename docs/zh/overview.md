@@ -4,7 +4,7 @@ MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）构建�
 
 **图 1** MindCluster堆栈图<a name="fig163081328205916"></a>
 
-![](figures/scheduling/full_view.png "MindCluster堆栈图")
+![MindCluster软硬件堆栈分层图：上层训练推理任务经集群调度组件调用昇腾NPU设备资源](figures/scheduling/full_view.png "MindCluster堆栈图")
 
 **MindCluster特性说明<a name="section921922516408"></a>**
 
@@ -12,7 +12,7 @@ MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）构建�
 |--|--|------------------------------------------------------------------------------------------------------------|
 |安装部署|提供昇腾软件和其依赖软件的在线下载、安装和签名校验。| [安装部署](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/01_introduction/01_introduction.md)     |
 |性能测试|提供Atlas硬件产品兼容性检查、性能测试、压力测试等功能。| [性能测试](https://www.hiascend.com/document/detail/zh/mindcluster/2620/toolbox/toolboxug/toolboxug_0002.html) |
-|故障诊断|提供日志诊断和链路诊断功能。定位训练或推理任务失败根因和集群链路故障。| [故障诊断](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)                                                                              |
+|故障诊断|提供日志诊断和链路诊断功能，定位训练或推理任务失败根因和集群链路故障。| [故障诊断](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)                                                                              |
 |集群调度|提供NPU资源调度和管理、生成分布式训练集合通信配置、断点续训等功能。| [集群调度](./scheduling/01_introduction/00_overview.md) |
 
 **MindCluster组件说明<a name="section3934175581912"></a>**
@@ -45,8 +45,8 @@ MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）构建�
 |NPU Exporter| 实时监测昇腾AI处理器的资源指标，获取如昇腾AI处理器的利用率、温度、电压等信息。                              |
 |DPU Exporter| 实时监测DPU的运行状态与统计指标：DPU卡级全局指标包括RoCE错包、丢包、ECN、CNP及PSN异常重传等；RDMA设备级全局指标包括保护域（PD）、完成队列（CQ）、队列对（QP）、通信管理ID（CM ID）、内存区域（MR）、上下文（CTX）及共享接收队列（SRQ）；Interface级指标包括各网卡端口链路状态、收发流量等。                              |
 |Volcano| 基于开源Volcano调度插件机制，增加昇腾AI处理器的亲和性调度、故障重调度等特性，最大化发挥昇腾AI处理器计算性能。           |
-|ClusterD| 提供集群级别的可用资源信息。收集集群任务信息、资源信息和故障信息及影响范围，从任务、芯片和故障维度统计分析。                 |
-|Ascend Operator| 提供训练任务生命周期管理，为不同AI框架的分布式训练任务提供相应的环境变量、生成分布式训练任务依赖的集合通讯配置。              |
+|ClusterD| 提供集群级别的可用资源信息，收集集群任务信息、资源信息和故障信息及影响范围，从任务、芯片和故障维度统计分析。                 |
+|Ascend Operator| 提供训练任务生命周期管理，为不同AI框架的分布式训练任务提供相应的环境变量、生成分布式训练任务依赖的集合通信配置。              |
 |NodeD| 提供节点状态上报功能，上报如节点健康状态、CPU和内存等故障信息。                                      |
 |TaskD| 提供昇腾设备上训练及推理任务的状态监测和状态控制能力。                                            |
 |MindIO ACP| 在大模型训练中，使用训练服务器内存作为缓存，对Checkpoint的保存及加载进行加速。                           |

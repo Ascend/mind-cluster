@@ -155,11 +155,11 @@
     spec:
       containers:
       - name: npu-container
-        image: ubuntu:22.04          # 测试pod镜像，可以自定义
+        image: ubuntu:22.04          # 测试Pod镜像，可以自定义
         command: ["/bin/bash", "-c", "sleep 3600"]
         resources:
           limits:
-            huawei.com/Ascend910: 1  # 请求1个NPU卡
+            huawei.com/Ascend910: 1  # 请求1张NPU卡
           requests:
             huawei.com/Ascend910: 1
     ```
@@ -248,7 +248,7 @@
 
 ### 操作说明<a name="section17940333114314"></a>
 
-**表 1**  关键步骤说明
+**表 1** 关键步骤说明
 
 |操作步骤|操作说明|更多参考|
 |--|--|--|

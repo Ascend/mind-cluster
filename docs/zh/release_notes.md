@@ -46,7 +46,7 @@
 
 ### 相关产品版本配套说明
 
-**表 1**  MindCluster软件版本配套表
+**表 1** MindCluster软件版本配套表
 
 |MindCluster|CANN| HDK    |MindSpeed-LLM|TorchNPU|
 |--|--|--------|--|--|
@@ -58,7 +58,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 >[!NOTE]
 >本节表格中“/”表示不可配套，“Y”表示可配套。
 
-**表 2**  MindCluster与CANN版本兼容
+**表 2** MindCluster与CANN版本兼容
 
 <table style="table-layout: fixed; width: 433px"><colgroup>
 <col style="width: 156px">
@@ -110,7 +110,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 </tbody>
 </table>
 
-**表 3**  MindCluster与HDK版本兼容
+**表 3** MindCluster与HDK版本兼容
 
 <table style="table-layout: fixed; width: 433px"><colgroup>
 <col style="width: 156px">
@@ -191,7 +191,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 </tbody>
 </table>
 
-**表 4**  MindCluster与MindSpeed-LLM版本兼容
+**表 4** MindCluster与MindSpeed-LLM版本兼容
 
 <table style="table-layout: fixed; width: 433px"><colgroup>
 <col style="width: 156px">
@@ -243,7 +243,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 </tbody>
 </table>
 
-**表 5**  MindCluster与TorchNPU版本兼容
+**表 5** MindCluster与TorchNPU版本兼容
 
 <table style="table-layout: fixed; width: 433px"><colgroup>
 <col style="width: 156px">
@@ -295,7 +295,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 </tbody>
 </table>
 
-**表 6**  MindCluster与MindSpore版本兼容
+**表 6** MindCluster与MindSpore版本兼容
 
 <table style="table-layout: fixed; width: 433px"><colgroup>
 <col style="width: 156px">
@@ -365,7 +365,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 - Atlas 900 A3 SuperPoD超节点支持RL场景实例级恢复。
 - Atlas 950 SuperPoD液冷超节点支持UB网络故障进程级在线恢复。
 
-**2、推理高可靠**
+**2、推理高可用**
 
 - 支持弹性伸缩复合指标定义。
 - 支持弹性扩缩容时使能容器快照。
@@ -427,7 +427,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 **1、日志诊断工具**
 
-- 基于Cqe error status错误类型并结合日志细化、增强UB链路故障诊断能力。
+- 基于CQE error status错误类型并结合日志细化、增强UB链路故障诊断能力。
 - 新增支持Atlas 950 SuperPoD Flex液冷超节点故障诊断。
 
 **2、链路诊断工具**
@@ -463,7 +463,7 @@ NPU Exporter部分hccn_tool命令接口调整为基于DCMI接口实现，优化�
 
 ### 遗留问题
 
-进程级别重调度特性在多次重调度恢复后，存在PyTorch原生组件gloo的段错误问题，概率约0.00125，详细请参见[issue 188266](https://github.com/pytorch/pytorch/issues/188266)。可以通过配置Job/Pod重调度作为兜底措施。
+进程级重调度特性在多次重调度恢复后，存在PyTorch原生组件gloo的段错误问题，概率约0.00125，详细请参见[issue 188266](https://github.com/pytorch/pytorch/issues/188266)。可以通过配置Job/Pod重调度作为兜底措施。
 
 ## 升级影响
 

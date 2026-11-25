@@ -10,11 +10,11 @@
 **前提条件**
 
 - 使用前请先了解MindIO TFT的[约束限制](./02_installation_and_deployment.md#约束限制)。
-- MindSpeed-LLM框架准备参见[MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/2.3.0)。匹配的Megatron-LM的版本为 **core\_v0.12.1**。
+- MindSpeed-LLM框架准备参见[MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/26.2.0)。匹配的Megatron-LM的版本为 **core\_v0.12.1**。
 
-> [!NOTE]说明
+> [!NOTE] 说明
 >
-> - 本次发布包配套MindSpeed-LLM的 **2.3.0** 分支，环境、代码、数据集准备请用户参考MindSpeed-LLM仓库的相关指导说明，并确保其安全性。
+> - 本次发布包配套MindSpeed-LLM的 **26.2.0** 分支，环境、代码、数据集准备请用户参考MindSpeed-LLM仓库的相关指导说明，并确保其安全性。
 > - MindIO TFT对接MindSpeed-LLM框架，目前支持MindIO TTP、MindIO UCE和MindIO ARF功能。
 > - 对于PyTorch类框架，安装或开启MindCluster后，跳过[步骤1](#step_tft_li001)对“torchrun”文件的修改，由MindCluster控制进程退出。
 > - MindSpeed-LLM框架开启MindIO ACP周期性Checkpoint加速功能时，与MindIO TFT特性不兼容，无法同时安装使用。
@@ -47,41 +47,29 @@
 
 2. <a id="step_tft_li002"></a>编辑预训练脚本（仅供参考）。
 
-    此处以编辑“examples/mcore/llama2/pretrain\_llama2\_7b\_ptd.sh”脚本为例。
+    此处以编辑“examples/mcore/qwen3/pretrain_qwen3_8b_4K_ptd.sh”脚本为例。
 
-    1. 打开“examples/mcore/llama2/pretrain\_llama2\_7b\_ptd.sh”脚本。
+    1. 打开“pretrain_qwen3_8b_4K_ptd.sh”脚本。
 
         ```bash
-        vim examples/mcore/llama2/pretrain_llama2_7b_ptd.sh
+        vim examples/mcore/qwen3/pretrain_qwen3_8b_4K_ptd.sh
         ```
 
-    2. 按“i”进入编辑模式，开启高可用功能需要在脚本中增加如下内容。
+    2. 按“i”进入编辑模式，在脚本中做如下修改以启用高可用功能。
 
-        ```bash
-        export GLOO_SOCKET_IFNAME=enp189s0f0
-        export TTP_ADDR="master node ip"
-        source /usr/local/Ascend/cann/set_env.sh
-
-        # 在GPT_ARGS中的--bf16后增加如下内容
-            \
-            --enable-high-availability \
-            --enable-hbmfault-repair \
-            --enable-worker-reboot \
-            --distributed-optimizer-no-replica \
-
-        ```
-
-        修改后的pretrain_llama2_7b_ptd.sh脚本示例如下：
-
-        ```bash
+        ```diff
         #!/bin/bash
 
+        export HCCL_CONNECT_TIMEOUT=3600
+        export HCCL_EXEC_TIMEOUT=3600
         export CUDA_DEVICE_MAX_CONNECTIONS=1
         export PYTORCH_NPU_ALLOC_CONF=expandable_segments:True
+        export NPU_ASD_ENABLE=0
+        export TASK_QUEUE_ENABLE=2
 
-        export GLOO_SOCKET_IFNAME=enp189s0f0
-        export TTP_ADDR="master node ip"
-        source /usr/local/Ascend/cann/set_env.sh
+        + export GLOO_SOCKET_IFNAME=enp189s0f0
+        + export TTP_ADDR="master node ip"
+        + source /usr/local/Ascend/cann/set_env.sh
 
         NPUS_PER_NODE=8
         MASTER_ADDR=localhost
@@ -90,12 +78,19 @@
         NODE_RANK=0
         WORLD_SIZE=$(($NPUS_PER_NODE*$NNODES))
 
+        # please fill these path configurations
         CKPT_SAVE_DIR="your model save ckpt path"
         DATA_PATH="your data path"
-        TOKENIZER_MODEL="your tokenizer path"
+        TOKENIZER_PATH="your tokenizer path"
         CKPT_LOAD_DIR="your model ckpt path"
+
         TP=1
         PP=2
+        CP=1
+        MBS=1
+        GBS=64
+        SEQ_LENGTH=4096
+        TRAIN_ITERS=2000
 
         DISTRIBUTED_ARGS="
             --nproc_per_node $NPUS_PER_NODE \
@@ -105,82 +100,111 @@
             --master_port $MASTER_PORT
         "
 
-        GPT_ARGS="
-            --use-mcore-models \
-            --tensor-model-parallel-size ${TP} \
-            --pipeline-model-parallel-size ${PP} \
-            --sequence-parallel \
-            --num-layers 32 \
-            --hidden-size 4096 \
-            --ffn-hidden-size 11008 \
-            --num-attention-heads 32 \
-            --tokenizer-type Llama2Tokenizer \
-            --tokenizer-model ${TOKENIZER_MODEL} \
-            --seq-length 4096 \
-            --max-position-embeddings 4096 \
-            --micro-batch-size 1 \
-            --global-batch-size 256 \
-            --make-vocab-size-divisible-by 1 \
-            --lr 1.25e-6 \
-            --train-iters 5000 \
-            --lr-decay-style cosine \
-            --untie-embeddings-and-output-weights \
-            --disable-bias-linear \
-            --attention-dropout 0.0 \
-            --init-method-std 0.01 \
-            --hidden-dropout 0.0 \
-            --position-embedding-type rope \
-            --normalization RMSNorm \
-            --use-fused-rmsnorm \
-            --swiglu \
+        OPTIMIZE_ARGS="
             --use-flash-attn \
-
+            --use-fused-rotary-pos-emb \
+            --use-rotary-position-embeddings \
+            --use-fused-swiglu \
+            --use-fused-rmsnorm \
             --no-masked-softmax-fusion \
-            --attention-softmax-in-fp32 \
+            --use-distributed-optimizer \
+            --reuse-fp32-param \
+            --overlap-grad-reduce \
+            --overlap-param-gather \
+            --use-ascend-coc
+        "
+
+        TRAIN_ARGS="
+            --micro-batch-size ${MBS} \
+            --global-batch-size ${GBS} \
+            --lr 1.25e-6 \
+            --lr-decay-style cosine \
             --min-lr 1.25e-7 \
             --weight-decay 1e-1 \
             --lr-warmup-fraction 0.01 \
+            --attention-dropout 0.0 \
+            --init-method-std 0.01 \
+            --hidden-dropout 0.0 \
             --clip-grad 1.0 \
             --adam-beta1 0.9 \
-            --initial-loss-scale 65536 \
             --adam-beta2 0.95 \
-            --no-gradient-accumulation-fusion \
-            --no-load-optim \
-            --no-load-rng \
-            --use-distributed-optimizer \
-            --use-fused-swiglu \
-            --use-fused-rotary-pos-emb \
-            --overlap-grad-reduce \
+            --initial-loss-scale 4096 \
+            --seed 42 \
             --bf16 \
-            --enable-high-availability \
-            --enable-hbmfault-repair \
-            --enable-worker-reboot \
-            --distributed-optimizer-no-replica \
+            --train-iters ${TRAIN_ITERS} \
+            --seq-length ${SEQ_LENGTH}
+        "
+
+        MODEL_PARALLEL_ARGS="
+            --tensor-model-parallel-size ${TP} \
+            --pipeline-model-parallel-size ${PP} \
+        "
+
+        GPT_ARGS="
+            --use-mcore-models \
+            --spec mindspeed_llm.tasks.models.spec.qwen3_spec layer_spec \
+            --qk-layernorm \
+            --tokenizer-name-or-path ${TOKENIZER_PATH} \
+            --max-position-embeddings ${SEQ_LENGTH} \
+            --num-layers 36 \
+            --hidden-size 4096 \
+            --ffn-hidden-size 12288 \
+            --num-attention-heads 32 \
+            --tokenizer-type PretrainedFromHF \
+            --make-vocab-size-divisible-by 1 \
+            --padded-vocab-size 151936 \
+            --rotary-base 1000000 \
+            --untie-embeddings-and-output-weights \
+            --disable-bias-linear \
+            --position-embedding-type rope \
+            --normalization RMSNorm \
+            --swiglu \
+            --attention-softmax-in-fp32 \
+            --no-gradient-accumulation-fusion \
+            --group-query-attention \
+            --num-query-groups 8 \
+            --norm-epsilon 1e-6 \
+            --ckpt-format torch \
+        +   --enable-high-availability \
+        +   --enable-hbmfault-repair \
+        +   --enable-worker-reboot \
+        +   --distributed-optimizer-no-replica \
         "
 
         DATA_ARGS="
+            --handler-name GeneralPretrainHandler \
+            --workers 4 \
             --data-path $DATA_PATH \
-            --split 949,50,1
+            --split 100,0,0
         "
 
         OUTPUT_ARGS="
             --log-interval 1 \
-            --save-interval 10000 \
-            --eval-interval 1000 \
-            --eval-iters 10 \
+            --save-interval ${TRAIN_ITERS} \
+            --eval-interval ${TRAIN_ITERS} \
+            --eval-iters 0 \
+            --no-load-optim \
+            --no-load-rng
         "
 
         torchrun $DISTRIBUTED_ARGS pretrain_gpt.py \
             $GPT_ARGS \
             $DATA_ARGS \
+            $MOE_ARGS \
             $OUTPUT_ARGS \
+            $OPTIMIZE_ARGS \
+            $TRAIN_ARGS \
+            $MODEL_PARALLEL_ARGS \
+            --load ${CKPT_LOAD_DIR} \
+            --save ${CKPT_SAVE_DIR} \
             --distributed-backend nccl \
-            --load $CKPT_LOAD_DIR \
-            --save $CKPT_SAVE_DIR \
-            | tee logs/train_llama2_7b.log
+            --transformer-impl local \
+            --enable-hf2mg-convert \
+            --model-type-hf qwen3 \
+            | tee logs/train_mcore_qwen3_8b.log
         ```
 
-        高可用功能相关参数说明如下：
+        **高可用**功能相关参数说明如下：
 
         - **GLOO\_SOCKET\_IFNAME**：根据主节点高速网卡实际情况进行配置。
         - **TTP\_ADDR**：集群主节点的IP地址，须符合IPv4或IPv6标准格式。参数详情请参见[环境变量](./06_appendixes.md#环境变量)。
@@ -191,8 +215,8 @@
 
             对于分布式优化器而言，由于增加了优化器副本，导致静态内存有所增加。但是集群规模越大时，DP Size越大，平均到单卡的显存增加量很小，这样可以避免OOM，因此推荐在大集群中使用。根据显存情况选择开启与否，调节参数。
 
-        - **enable-hbmfault-repair**：MindIO UCE功能开关，默认关闭，配置后对片上内存和网络状态进行故障检测，并完成在线修复，实现进程级在线恢复功能。本开关在开启 enable-high-availability 时生效。此特性依赖PyTorch的内存管理机制，仅在PyTorch的环境变量 PYTORCH\_NO\_NPU\_MEMORY\_CACHING 未配置，即开启内存复用机制时，才可使用此特性，若 export PYTORCH\_NO\_NPU\_MEMORY\_CACHING = 1，则无法使用此特性。
-        - **enable-worker-reboot**：MindIO ARF功能开关，默认关闭，配置后在发生一般性故障时，进行进程级重调度修复，继续训练。本开关在开启 enable-high-availability 时生效。
+        - **enable-hbmfault-repair**：MindIO UCE功能开关，默认关闭，配置后对片上内存和网络状态进行故障检测，并完成在线修复，实现进程级在线恢复功能。本开关在开启 `enable-high-availability` 时生效。此特性依赖PyTorch的内存管理机制，仅在PyTorch的环境变量 `PYTORCH_NO_NPU_MEMORY_CACHING` 未配置，即开启内存复用机制时，才可使用此特性，若 `export PYTORCH_NO_NPU_MEMORY_CACHING = 1`，则无法使用此特性。
+        - **enable-worker-reboot**：MindIO ARF功能开关，默认关闭，配置后在发生一般性故障时，进行进程级重调度修复，继续训练。本开关在开启 `enable-high-availability` 时生效。
         - **distributed-optimizer-no-replica**：开启高可用特性后，分布式优化器默认增加优化器副本，会导致片上内存使用增加，开启该开关后，分布式优化器不增加副本内存占用；在MindIO UCE和MindIO ARF场景下，直接使用周期Checkpoint进行在线修复。
 
         **表 1<a id="table_tft_03"></a>**  原生优化器与使用MindIO TFT后优化器参数的理论数值变化

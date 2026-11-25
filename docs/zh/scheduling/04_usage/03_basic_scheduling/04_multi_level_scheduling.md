@@ -32,7 +32,7 @@
 
 通过命令行使用多级调度特性流程可以参见[图1](#fig2425249866601duoji)。
 
-**图 1**  使用流程<a name="fig2425249866601duoji"></a>
+**图 1** 使用流程<a name="fig2425249866601duoji"></a>
 
 ![多级调度使用流程](../../../figures/scheduling/多级调度使用流程.png "多级调度使用流程")
 
@@ -50,7 +50,7 @@
 
   资源树中的网络层级可以参考Volcano的[网络拓扑感知调度](https://volcano.sh/docs/keyfeatures/networktopologyaware/)特性中的HyperNode定义。
 
-  **图 2**  资源树样例<a name="fig69396965487duoji"></a>
+  **图 2** 资源树样例<a name="fig69396965487duoji"></a>
 
   ![资源树样例](../../../figures/scheduling/资源树.PNG "资源树")
 
@@ -191,7 +191,7 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
 
 4. 准备网络配置文件。
 
-   配置文件的格式为csv，第一行表头依次为nodeName，节点标签key。后续每一行的数据为集群中的节点名称，节点标签value。样例如下：
+   配置文件的格式为csv，第一行表头依次为nodeName、节点标签key。后续每一行的数据为集群中的节点名称、节点标签value。样例如下：
 
     ```csv
     nodeName,huawei.com/topotree,huawei.com/topotree.groupid
@@ -383,7 +383,7 @@ root（default拓扑树，groupid=0，共8个节点）
 
 本章节仅提供多级调度需要使用的YAML参数，详细的任务YAML参数说明请参见[acjob任务yaml参数说明](../../06_api/15_yaml_configuration.md#acjob)。
 
-**表 2**  YAML参数说明
+**表 2** YAML参数说明
 
 <a name="table159746356276duoji"></a>
 
@@ -443,7 +443,7 @@ spec:
                 name: ascendjob-port        # do not modify
             resources:
               limits:
-                huawei.com/Ascend910: 8   # 任务申请的芯片数量，多级调度任务必须和节点最大npu数量一致
+                huawei.com/Ascend910: 8   # 任务申请的芯片数量，多级调度任务必须和节点最大NPU数量一致
               requests:
                 huawei.com/Ascend910: 8   # 与limits取值一致
 ...
@@ -473,7 +473,7 @@ spec:
                 name: ascendjob-port        # do not modify
             resources:
               limits:
-                huawei.com/Ascend910: 8   # 任务申请的芯片数量，多级调度任务必须和节点最大npu数量一致
+                huawei.com/Ascend910: 8   # 任务申请的芯片数量，多级调度任务必须和节点最大NPU数量一致
               requests:
                 huawei.com/Ascend910: 8   # 与limits取值一致
 </pre>

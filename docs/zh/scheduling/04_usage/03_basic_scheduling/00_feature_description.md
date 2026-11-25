@@ -22,7 +22,7 @@ Ascend Operator提供以下2种方式配置资源信息：
         每个acjob任务YAML中包含一些固定字段，例如apiVersion、kind等，如果想了解这些字段的详细说明请参见[acjob任务yaml参数说明](../../06_api/15_yaml_configuration.md#acjob)。
 
     - Volcano Job：简称vcjob，适用于批处理任务，任务有完成状态。
-    - Deployment：简称deploy，适用于后台常驻任务，任务没有完成状态。在需要持续训练任务、持续占用资源，调试训练任务，或者提供推理服务接口的时候选用。
+    - Deployment：简称deploy，适用于后台常驻任务，任务没有完成状态。在需要持续训练任务、持续占用资源、调试训练任务，或者提供推理服务接口的时候选用。
 
         >[!NOTE]
         >不支持Deployment的更新操作，如果需要更新，请先删除再创建。
@@ -37,7 +37,7 @@ Volcano在多任务或者单任务场景下，在Atlas 800T A2训练服务器设
 
 - 单任务调度时间说明如[表1](#table18378013481)所示。
 
-    **表 1**  单任务多Pod调度说明
+    **表 1** 单任务多Pod调度说明
 
     <a name="table18378013481"></a>
 

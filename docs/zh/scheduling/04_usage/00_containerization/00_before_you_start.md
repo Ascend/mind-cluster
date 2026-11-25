@@ -16,11 +16,11 @@
 
 - 容器化支持可以和训练场景下的所有特性一起使用，也可以和推理场景的所有特性一起使用。
 - 若使用Volcano进行任务调度，则不建议通过Docker或Containerd指令创建/挂载NPU卡的容器，否则可能会触发Volcano调度问题。
-- 容器化支持会自动挂载宿主机的二进制、动态库文件到容器中，可能会涉及glibc依赖，此时容器OS的glibc版本需>=宿主机OS的glibc版本，以便挂载到容器内可以正常运行。
+- 容器化支持会自动挂载宿主机的二进制、动态库文件到容器中，可能会涉及glibc依赖，此时容器OS的glibc版本需 >= 宿主机OS的glibc版本，以便挂载到容器内可以正常运行。
 <!-- npu="950" id1 -->
 - 在Atlas 850E风冷超节点、Atlas 850风冷超节点、Atlas 650E服务器、Atlas 650服务器、Atlas 950 SuperPoD液冷超节点等存在UB总线的产品形态下，会默认挂载ub_driver.list中的UB驱动相关内容。ub_driver.list中的文件依赖宿主机的glibc版本，目前支持的OS版本和glibc版本如下：
-  - 宿主机：openEuler24.03（glibc2.38）
-  - 容器内：openEuler24.03（glibc2.38）、Ubuntu24.04（glibc2.39）。
+  - 宿主机：openEuler 24.03（glibc 2.38）
+  - 容器内：openEuler 24.03（glibc 2.38）、Ubuntu 24.04（glibc 2.39）。
 - 在Atlas 950 SuperPoD液冷超节点和Atlas 850风冷超节点场景下，支持通过环境变量`ASCEND_RDMA_DEVICES`指定待挂载RDMA设备的HCA名称（取值为UB网卡在“/sys/class/infiniband/”下的完整HCA名称，如`hrn5_0,hrn5_1`），将对应的UB网卡字符设备和驱动文件挂载到容器中。`ASCEND_RDMA_DEVICES`与`ASCEND_VISIBLE_DEVICES`独立配置，支持仅挂载NPU设备、仅挂载RDMA设备，或同时挂载NPU和RDMA设备：
   - 仅支持Legacy模式；CDI模式会忽略`ASCEND_RDMA_DEVICES`，不会根据该参数自动注入RDMA设备及挂载对应驱动文件。在CDI模式下，该参数去除首尾空白后既非空也非`void`时，会记录警告，不会因此终止容器创建。
   - 每个所选HCA的“device/infiniband_verbs/”目录中，必须有一个`uverbsX`的`ibdev`内容与该HCA名称一致；同一目录可以包含对应不同HCA的多个`uverbsX`。Ascend Docker Runtime据此挂载对应的“/dev/infiniband/uverbsX”字符设备（宿主机存在“/dev/infiniband/rdma_cm”时一并挂载），不会挂载整个“/dev/infiniband”目录。

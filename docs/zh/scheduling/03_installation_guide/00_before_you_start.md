@@ -18,8 +18,8 @@ Elastic Agent、TaskD和MindIO组件需部署在容器内，详细安装步骤�
 
 安装部署集群调度组件时，可以参考[图1](#fig87391254145620)，将相应的集群调度组件或其他第三方软件安装到相应的节点上。大部分组件都使用镜像方式部署；Ascend Docker Runtime和Container Manager组件使用二进制方式部署；只有NPU Exporter和DPU Exporter组件既可以使用镜像方式部署，又可以使用二进制方式部署。
 
-**图 1**  K8s环境下组件安装部署<a name="fig87391254145620"></a>
-![](../../figures/scheduling/installation_guide_001.png "installation_guide_001")
+**图 1** K8s环境下组件安装部署<a name="fig87391254145620"></a>
+![K8s环境下集群调度组件部署关系：镜像与二进制方式下各组件在各节点上的安装位置](../../figures/scheduling/installation_guide_001.png "installation_guide_001")
 
 >[!NOTE]
 >

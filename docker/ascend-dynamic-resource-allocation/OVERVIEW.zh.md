@@ -88,7 +88,7 @@ Ascend Dynamic Resource Allocation（Ascend DRA）是 MindCluster 集群调度�
 | Kubernetes   | 1.36.x  | 所有节点 | 了解 K8s 的使用请参见 [Kubernetes 文档](https://kubernetes.io/zh-cn/docs/) |
 | Containerd   | 2.0+    | 所有节点 | 必须支持 CDI。可从 Containerd 的 [官网](https://containerd.io/downloads/) 获取                                              |
 | 昇腾AI处理器驱动和固件 | 请参见版本配套表 | 计算节点 | 请参见《[CANN 软件安装指南](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910/softwareinst/instg/instg_0005.html?OS=openEuler&InstallType=local)》中的"安装NPU驱动和固件"章节                                                                                   |
-| UMDK软件包      | 请参见版本配套表 | 计算节点 | 针对Atlas 850E 超节点、Atlas 650E服务器、Atlas 950 SuperPod超节点，在构建镜像时需要，详情请参见[容器基础镜像集成UMDK安装指导](https://www.hiascend.com/document/detail/zh/mindcluster/latest/clustersched/dlug/docs/zh/scheduling/07_references/02_common_operations.html#容器基础镜像集成umdk安装指导)                                                                 |
+| UMDK软件包      | 请参见版本配套表 | 计算节点 | 针对Atlas 850E风冷超节点、Atlas 650E服务器、Atlas 950 SuperPoD液冷超节点，在构建镜像时需要，详情请参见[容器基础镜像集成UMDK安装指导](https://www.hiascend.com/document/detail/zh/mindcluster/latest/clustersched/dlug/docs/zh/scheduling/07_references/02_common_operations.html#容器基础镜像集成umdk安装指导)                                                                 |
 
 #### 硬件规格要求
 

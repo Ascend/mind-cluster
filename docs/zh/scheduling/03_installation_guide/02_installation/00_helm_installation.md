@@ -1,5 +1,7 @@
 # 使用Helm安装<a name="ZH-CN_centerIC_0000002479226452"></a>
 
+本章节介绍使用Helm安装MindCluster组件，包括安装前准备、执行安装、默认配置和参数说明。
+
 ## 安装说明<a name="ZH-CN_centerIC_0000002511346381_install_desc"></a>
 
 Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户快速部署、升级和管理Kubernetes应用程序。MindCluster Helm部署工具可以快速部署和管理MindCluster组件。
@@ -90,7 +92,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     > [!NOTE]
     >- 以下三个组件包含CRD：Ascend Operator、Volcano和Infer Operator。若用户不需要安装这三个组件，可跳过此步骤。
     >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式进行操作即可。
-    - **默认配置安装**：若[CRD默认配置](#default_crds_yaml_install_config)符合用户需求，可执行如下命令安装CRD资源。
+    - **默认配置安装**：若[CRD默认配置](#default_crds_yaml_install_config)符合用户需求，可执行如下命令安装CRD。
 
       ```bash
       #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
@@ -175,7 +177,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       ```
 
 5. 参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节确认组件安装状态。
-6. 若组件状态异常，请确认检查安装配置是否正确，排查异常原因后重新安装。
+6. 若组件状态异常，请检查安装配置是否正确，排查异常原因后重新安装。
 
    重新安装前执行如下命令卸载相关资源。
 
@@ -203,8 +205,8 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 
 - 应用组件默认配置<a name="default_app_yaml_install_config"></a>。
     > [!NOTE]
-    >- 默认安装的组件包括：Ascend Device Plugin、Ascend Operator、Volcano、ClusterD、NodeD、NPU Exporter、DPU Exporter和Infer Operator，Volcano版本为v1.9.0。
-    >- 默认不安装的组件包括：K8s RDMA Shared Dev Plugin和Ascend Dynamic Resource Allocation。
+    >- 默认安装的组件包括：Ascend Device Plugin、Ascend Operator、Volcano、ClusterD、NodeD、NPU Exporter和Infer Operator，Volcano版本为v1.9.0。
+    >- 默认不安装的组件包括：K8s RDMA Shared Dev Plugin、DPU Exporter和Ascend Dynamic Resource Allocation。
     >- Ascend Dynamic Resource Allocation组件与Ascend Device Plugin组件功能等价，均提供昇腾NPU设备的发现上报、分配与挂载能力，部署其中一种即可，因此默认安装Ascend Device Plugin组件、不安装Ascend Dynamic Resource Allocation组件。该组件要求K8s版本为1.36.x，低版本K8s集群请勿开启。若需要使用动态资源分配功能，请通过自定义配置将该组件的enabled设置为true，并建议同时将Ascend Device Plugin组件的enabled设置为false。
     >- 参数说明可参见[表2](#table15274931175242)和[表3](#table15274931175243)，其中[表3](#table15274931175243)中的参数未在下方YAML配置中展示，用户可根据实际情况新增或修改。
     >- 26.1.0版本中，tag字段默认值为`v26.1.0`，不带`-openeuler24.03`、`-ubuntu22.04`或`-alpinelatest`后缀，与昇腾镜像仓库中的镜像tag不一致，直接使用默认值可能导致镜像拉取失败。可将其配置为`v26.1.0-openeuler24.03`、`v26.1.0-ubuntu22.04`、`v1.9.0-v26.1.0-alpinelatest`等带后缀的tag。
@@ -306,7 +308,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 
 ## 参数说明
 
-**表 1**  CRD资源的可配置参数说明
+**表 1** CRD的可配置参数说明
 <a name="table15274931175241"></a>
 <table>
 <thead align="left">
@@ -344,7 +346,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 </tbody>
 </table>
 
-**表 2**  组件的可配置参数说明
+**表 2** 组件的可配置参数说明
 <a name="table15274931175242"></a>
 <table>
 <thead align="left">
@@ -444,7 +446,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 </tbody>
 </table>
 
-**表 3**  组件的其他可配置参数
+**表 3** 组件的其他可配置参数
 <a name="table15274931175243"></a>
 <table>
 <thead align="left">
@@ -499,9 +501,9 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 </table>
 
 >[!NOTE]
-> 表3中`<component>`取值为：clusterd、noded、npu-exporter、dpu-exporter、ascend-operator、**ascend-for-volcano.scheduler**、**ascend-for-volcano.controller**、infer-operator、ascend-device-plugin、k8s-rdma-shared-dev-plugin。以 clusterd 为例，`<component>.image.repository` 替换为 `clusterd.image.repository`，依此类推。
+> 表3中`<component>`取值为：clusterd、noded、npu-exporter、dpu-exporter、ascend-operator、**ascend-for-volcano.scheduler**、**ascend-for-volcano.controller**、infer-operator、ascend-device-plugin、k8s-rdma-shared-dev-plugin、ascend-dynamic-resource-allocation。以clusterd为例，`<component>.image.repository` 替换为 `clusterd.image.repository`，依此类推。
 
-**表 4**  Helm部署工具压缩包文件列表说明
+**表 4** Helm部署工具压缩包文件列表说明
 <a name="table15274931175244"></a>
 <table>
 <thead align="left">

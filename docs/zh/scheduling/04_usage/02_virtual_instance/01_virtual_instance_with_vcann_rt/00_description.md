@@ -1,6 +1,6 @@
 # 特性说明<a name="ZH-CN_TOPIC_0000002511426281vcann"></a>
 
-基于vCANN-RT的虚拟化功能，是指通过向vCANN-RT提供软切分配置文件的方式，将物理机配置的NPU（昇腾AI处理器）挂载到容器中使用。
+基于vCANN-RT的虚拟化实例功能，是指通过向vCANN-RT提供软切分配置文件的方式，将物理机配置的NPU（昇腾AI处理器）挂载到容器中使用。
 
 基于vCANN-RT的虚拟化实例功能具有以下优点：
 
@@ -11,13 +11,13 @@
 
 昇腾NPU硬件资源主要包括AICore（用于AI模型计算）、AICPU和内存等。基于vCANN-RT的虚拟化实例功能的核心原理是：根据用户指定的资源需求，以软切分配置文件的方式，通过vCANN-RT实现按需分配。例如，用户只需50% AICore的算力和2GB高带宽内存时，系统会创建一个npu_info配置文件，通过vCANN-RT从NPU芯片获取上述资源提供给容器使用。基于vCANN-RT的虚拟化实例方案如[图 1 基于vCANN-RT的虚拟化实例方案](#fig987114711574vcann)所示。
 
-**图 1**  基于vCANN-RT的虚拟化实例方案<a name="fig987114711574vcann"></a>
+**图 1** 基于vCANN-RT的虚拟化实例方案<a name="fig987114711574vcann"></a>
 
 ![](../../../../figures/scheduling/virtual_instance_vcann.PNG "virtual_instance_vcann")
 
 ## 产品支持说明<a name="section17326115542216vcann"></a>
 
-**表 1**  产品支持情况说明
+**表 1** 产品支持情况说明
 
 <a name="table32786155236vcann"></a>
 <table>
@@ -65,4 +65,4 @@
 <!-- end id1 -->
 - 物理NPU软切分虚拟化后，仅支持将物理NPU挂载到容器，不支持将该物理NPU直通到虚拟机。
 - 在软切分虚拟化场景下，如果所有容器都挂载了相同的物理NPU，则该物理NPU必须采用相同的软切分策略。
-- 由于硬件设备的限制(可以参考[使用约束](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/920/others/acldevg/docs/zh/app-dev/c/constraints.md))，建议vCANN-RT最大切分数量不超过单个device支持的最大用户进程数。
+- 由于硬件设备的限制（可以参考[使用约束](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/920/others/acldevg/docs/zh/app-dev/c/constraints.md)），建议vCANN-RT最大切分数量不超过单个Device支持的最大用户进程数。

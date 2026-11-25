@@ -6,7 +6,7 @@
 
 断点续训可以基于基础训练镜像制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（PyTorch）](../../../../07_references/02_common_operations.md#使用dockerfile构建容器镜像pytorch)章节进行操作。
 
-本章节以 DeepSeek-V4-Flash 为例，介绍在 Atlas A3、Atlas 950 SuperPoD（A5）上使用 Python 3.12、PyTorch 2.10.0 和 torch_npu 2.10.0 的断点续训配置。A3 使用 Ubuntu 22.04，A5 使用 openEuler 24.03；两类机型分别制作镜像。
+本章节以DeepSeek-V4-Flash为例，介绍在Atlas A3系列产品、Ascend 950PR&950DT系列产品上使用Python 3.12、PyTorch 2.10.0和torch_npu 2.10.0的断点续训配置。Atlas A3系列产品使用Ubuntu 22.04；Ascend 950PR&950DT系列产品使用openEuler 24.03，两类机型分别制作镜像。
 
 >[!NOTE]
 >
@@ -177,7 +177,7 @@
 </table>
 
 >[!NOTE]
->镜像构建上下文需包含表1中的软件包、`Python-3.12.16.tar.xz`、MindSpeed 和 MindSpeed-LLM 源码目录。按各自版本说明准备配套源码及 requirements.txt。A3 使用 `CHIP=A3`，A5 使用 `CHIP=950`；同一镜像中只安装一种芯片的 ops 包。
+>镜像构建上下文需包含表1中的软件包、`Python-3.12.16.tar.xz`、MindSpeed和MindSpeed-LLM源码目录。按各自版本说明准备配套源码及requirements.txt。Atlas A3系列产品使用 `CHIP=A3`，Ascend 950PR&950DT系列产品使用 `CHIP=950`；同一镜像中只安装一种芯片的ops包。
 
 **操作步骤<a name="zh-cn_topic_0000002039339945_section20489630477"></a>**
 
@@ -250,7 +250,7 @@
         "$PWD/mindspeed_llm_26_2_0_arf_optimizer_state_fix.patch"
     ```
 
-    构建上下文中的 MindSpeed-LLM 源码需保留 `.git` 目录，供镜像内校验基线。状态初始化仅在优化器状态为空时分配匹配的存储，恢复时由 checkpoint 或对端数据填充。构建时应用上述补丁即可，无需重复手动插入；如所用源码已包含两项修改，应省略补丁应用并同步调整源码版本和构建步骤。
+    构建上下文中的MindSpeed-LLM源码需保留 `.git` 目录，供镜像内校验基线。状态初始化仅在优化器状态为空时分配匹配的存储，恢复时由Checkpoint或对端数据填充。构建时应用上述补丁即可，无需重复手动插入；如所用源码已包含两项修改，应省略补丁应用并同步调整源码版本和构建步骤。
 
     构建上下文的关键目录如下；CANN、TaskD、MindIO TFT 和 Python 源码包仍按表1及下文 Dockerfile 放置。
 
@@ -277,7 +277,7 @@
     ARG BASE_IMAGE=ubuntu:22.04
     FROM ${BASE_IMAGE}
 
-    # A3 使用 CHIP=A3，A5 使用 CHIP=950；每个镜像只安装一种芯片的 ops 包。
+    # Atlas A3系列产品使用CHIP=A3，Ascend 950PR&950DT系列产品使用CHIP=950；每个镜像只安装一种芯片的ops包。
     ARG CHIP=A3
     ARG PYTHON_VERSION=3.12
     ARG CANN_VERSION=9.2.0
@@ -658,29 +658,29 @@
     ```
 
     >[!NOTE]
-    >将 `{version}` 替换为配套软件包的版本号。使用其他架构时，同步替换基础镜像和 wheel 的架构字段；torch、torch_npu、APEX 的 Python ABI 必须与 Python 3.12 一致。Transformers 和 tokenizers 按模型源码的 requirements.txt 安装；Triton-Ascend 3.6.0 按 MindSpeed-LLM 安装指导从华为云 Ascend PyPI 源安装，Dockerfile 中已包含该步骤。
+    >将 `{version}` 替换为配套软件包的版本号。使用其他架构时，同步替换基础镜像和wheel的架构字段；torch、torch_npu、APEX的Python ABI必须与Python 3.12一致。Transformers和tokenizers按模型源码的requirements.txt安装；Triton-Ascend 3.6.0按MindSpeed-LLM安装指导从华为云Ascend PyPI源安装，Dockerfile中已包含该步骤。
 
-    上述构建步骤在安装模型依赖前，将两项适配应用到镜像内的 `/root/MindSpeed-LLM`，并检查源码基线与补丁上下文。TaskD 对 `torch/distributed/run.py` 的适配仍按 Dockerfile 中的独立步骤完成。
+    上述构建步骤在安装模型依赖前，将两项适配应用到镜像内的 `/root/MindSpeed-LLM`，并检查源码基线与补丁上下文。TaskD对 `torch/distributed/run.py` 的适配仍按Dockerfile中的独立步骤完成。
 
     若训练任务使用共享存储源码覆盖镜像中的代码目录，共享存储需使用与镜像一致的源码版本和适配内容。可从构建完成的镜像复制 `/root/MindSpeed` 和 `/root/MindSpeed-LLM`，避免挂载其他源码覆盖镜像内容。
 
-3. 构建对应机型的镜像。在 Dockerfile 所在目录执行以下命令，注意保留命令结尾的“.”。
+3. 构建对应机型的镜像。在Dockerfile所在目录执行以下命令，注意保留命令结尾的“.”。
 
     ```shell
-    # A3
+    # Atlas A3系列产品
     docker build --network=host --build-arg BASE_IMAGE=ubuntu:22.04 --build-arg CHIP=A3 -t mindspeed-dl:deepseek4-a3 .
-    # A5
+    # Ascend 950PR&950DT系列产品
     docker build --network=host --build-arg BASE_IMAGE=openeuler/openeuler:24.03-lts --build-arg CHIP=950 -t mindspeed-dl:deepseek4-a5 .
     ```
 
-4. 将镜像推送到集群可访问的镜像仓库，或导入所有可能承载任务的节点，并在任务 YAML 中填写对应镜像地址。A5 还需按本节说明配置 UB 驱动文件。
+4. 将镜像推送到集群可访问的镜像仓库，或导入所有可能承载任务的节点，并在任务YAML中填写对应镜像地址。Ascend 950PR&950DT系列产品还需按本节说明配置UB驱动文件。
 
-    除手动构建镜像外，也可使用以下开箱即用的示例镜像。请选择与机型对应的镜像，示例镜像可通过 [AscendHub](https://www.hiascend.com/developer/ascendhub) 获取。
+    除手动构建镜像外，也可使用以下开箱即用的示例镜像。请选择与机型对应的镜像，示例镜像可通过[AscendHub](https://www.hiascend.com/developer/ascendhub) 获取。
 
     | 机型 | 镜像名和tag |
     |---|---|
-    | A3 | `torch-npu-sample-dl:v26.3.0-cann9.2.0-torch_npu2.10.0-A3-ubuntu22.04-py3.12-aarch64` |
-    | A5（950） | `torch-npu-sample-dl:v26.3.0-cann9.2.0-torch_npu2.10.0-950-openeuler24.03-py3.12-aarch64` |
+    | Atlas A3系列产品| `torch-npu-sample-dl:v26.3.0-cann9.2.0-torch_npu2.10.0-A3-ubuntu22.04-py3.12-aarch64` |
+    | Ascend 950PR&950DT系列产品| `torch-npu-sample-dl:v26.3.0-cann9.2.0-torch_npu2.10.0-950-openeuler24.03-py3.12-aarch64` |
 
 ## 脚本适配<a name="ZH-CN_TOPIC_0000002511426481"></a>
 
@@ -711,9 +711,9 @@
 >
 >- 若使用TaskD组件且训练容器使用Host网络，则先通过`sysctl net.ipv4.ip_local_reserved_ports`查询当前预留端口配置后，通过`sysctl -w net.ipv4.ip_local_reserved_ports="xxx,9601,9602"`新增预留端口9601、9602（其中xxx指的是前面查出来已配置的端口，若无则省略）。
 
-训练代码与数据集准备，可以参考[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.2.0/docs/zh/pytorch/training/pretrain/mcore/pretrain.md)。下面以两台同型号的 A3 或 A5 服务器、每台8卡为例，说明具体操作步骤。根据 DeepSeek-V4-Flash 的训练方式和显存需求配置资源及并行策略。
+训练代码与数据集准备，可以参考[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.2.0/docs/zh/pytorch/training/pretrain/mcore/pretrain.md)。下面以两台同型号的Atlas A3系列产品或Ascend 950PR&950DT系列产品、每台8卡为例，说明具体操作步骤。根据DeepSeek-V4-Flash的训练方式和显存需求配置资源及并行策略。
 
-1. 准备支持 DeepSeek-V4-Flash 的 MindSpeed-LLM 源码，以及版本配套的 MindSpeed、Megatron-LM。使用与镜像中一致的源码版本；如已在镜像中准备源码，可复制到共享存储后使用。
+1. 准备支持DeepSeek-V4-Flash的MindSpeed-LLM源码，以及版本配套的MindSpeed、Megatron-LM。使用与镜像中一致的源码版本；如已在镜像中准备源码，可复制到共享存储后使用。
 
     ```shell
     mkdir -p /data/atlas_dls/public/code
@@ -726,11 +726,11 @@
 
     体验 DeepSeek-V4-Flash 进程级恢复时，该源码还需包含[制作镜像](#zh-cn_topic_0000002039339945_section20489630477)中的两项优化器状态适配。推荐将镜像内已适配的 `/root/MindSpeed-LLM` 复制到共享代码目录；若另行拉取源码，则对相同基线应用同一补丁后再挂载到 `/job/code`。
 
-    上述源码示例配套 MindSpeed `eb0ad7e73dc8227291e44504041aa7c58136aaa3`、Megatron-LM `core_v0.12.1`，镜像构建时也使用同一组版本。按该版本的模型说明准备 Megatron-LM，并将 `megatron` 目录放到模型代码目录中。将完整模型代码目录挂载到训练容器的 `/job/code`，将数据和权重根目录挂载到 `/job/data`。所有训练节点及备机均需访问相同的代码、数据和 checkpoint。
+    上述源码示例配套MindSpeed `eb0ad7e73dc8227291e44504041aa7c58136aaa3`、Megatron-LM `core_v0.12.1`，镜像构建时也使用同一组版本。按该版本的模型说明准备Megatron-LM，并将 `megatron` 目录放到模型代码目录中。将完整模型代码目录挂载到训练容器的 `/job/code`，将数据和权重根目录挂载到 `/job/data`。所有训练节点及备机均需访问相同的代码、数据和Checkpoint。
 
-2. 从 DeepSeek 官方发布的 [DeepSeek-V4-Flash 模型文件目录](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/tree/main)下载完整权重、配置文件和 tokenizer，放到 `/data/atlas_dls/public/dataset/DeepSeek-V4-Flash`。如模型权重需要反量化或格式转换，请按所选 MindSpeed-LLM 版本的 DeepSeek-V4-Flash 模型说明完成后，再配置训练脚本的加载路径。
+2. 从DeepSeek官方发布的[DeepSeek-V4-Flash模型文件目录](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/tree/main)下载完整权重、配置文件和tokenizer，放到 `/data/atlas_dls/public/dataset/DeepSeek-V4-Flash`。如模型权重需要反量化或格式转换，请按所选MindSpeed-LLM版本的DeepSeek-V4-Flash模型说明完成后，再配置训练脚本的加载路径。
 
-3. 获取训练数据。以下使用 [Alpaca 数据集](https://huggingface.co/datasets/tatsu-lab/alpaca)作为断点续训示例数据，下载其中的 [Parquet 文件](https://huggingface.co/datasets/tatsu-lab/alpaca/blob/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet)，保存到 `/data/atlas_dls/public/dataset/deepseek4-alpaca/`。该文件包含 `text` 字段，与后续预处理命令中的 `--json-keys text` 对应。也可通过[直接下载地址](https://huggingface.co/datasets/tatsu-lab/alpaca/resolve/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet)获取文件：
+3. 获取训练数据。以下使用[Alpaca数据集](https://huggingface.co/datasets/tatsu-lab/alpaca)作为断点续训示例数据，下载其中的[Parquet文件](https://huggingface.co/datasets/tatsu-lab/alpaca/blob/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet)，保存到 `/data/atlas_dls/public/dataset/deepseek4-alpaca/`。该文件包含 `text` 字段，与后续预处理命令中的 `--json-keys text` 对应。也可通过[直接下载地址](https://huggingface.co/datasets/tatsu-lab/alpaca/resolve/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet)获取文件：
 
     ```shell
     mkdir -p /data/atlas_dls/public/dataset/deepseek4-alpaca
@@ -739,7 +739,7 @@
         -o /data/atlas_dls/public/dataset/deepseek4-alpaca/train-00000-of-00001-a09b74b3ef9c3b56.parquet
     ```
 
-4. 在训练镜像的容器内处理数据。先将共享代码和数据目录分别挂载为 `/job/code`、`/job/data`，再执行以下命令。Transformers、tokenizers 及其他模型依赖使用模型代码 requirements.txt 中的配套版本。
+4. 在训练镜像的容器内处理数据。先将共享代码和数据目录分别挂载为 `/job/code`、`/job/data`，再执行以下命令。Transformers、tokenizers及其他模型依赖使用模型代码requirements.txt中的配套版本。
 
     ```shell
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
@@ -767,7 +767,7 @@
     └── manager.py
     ```
 
-6. 使用配套 `mindcluster-deploy` 仓库中的 DeepSeek-V4-Flash 示例 YAML：`samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/DeepSeek-V4-Flash/yamls/pytorch_multinodes_acjob_deepseek4.yaml`。文件名为 `pytorch_multinodes_acjob_deepseek4.yaml`，默认使用 A5 双机16卡和进程级恢复配置。按实际环境替换 NFS 服务地址，并核对共享代码和数据目录。A3 镜像、调度策略及其他恢复策略的调整说明见该示例目录中的 `README.md`，恢复策略也可参考[准备任务YAML](#ZH-CN_TOPIC_0000002511426415)。优雅容错为已日落的历史功能，新配置使用本章介绍的恢复策略。
+6. 使用配套 `mindcluster-deploy` 仓库中的DeepSeek-V4-Flash示例YAML：`samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/DeepSeek-V4-Flash/yamls/pytorch_multinodes_acjob_deepseek4.yaml`。文件名为 `pytorch_multinodes_acjob_deepseek4.yaml`，默认使用Ascend 950PR&950DT系列产品双机16卡和进程级恢复配置。按实际环境替换NFS服务地址，并核对共享代码和数据目录。Atlas A3系列产品镜像、调度策略及其他恢复策略的调整说明请参见该示例目录中的 `README.md`，恢复策略也可参考[准备任务YAML](#ZH-CN_TOPIC_0000002511426415)。优雅容错为已日落的历史功能，新配置使用本章介绍的恢复策略。
 
 7. 配置训练启动脚本train\_start.sh和训练任务YAML，请根据实际情况进行修改。
     1. 修改启动脚本基础参数。
@@ -788,7 +788,7 @@
         TOKENIZER_PATH="/job/data/DeepSeek-V4-Flash" # 词表路径，填入下载的开源权重词表路径
         ```
 
-        在模型训练命令中设置 `--save "$CKPT_SAVE_DIR"`、`--save-interval 10` 和 `--train-iters 60`，并加入以下加载逻辑，将 `LOAD_ARGS` 数组传给模型训练入口。`INITIAL_LOAD_DIR` 为已完成转换的初始权重目录；首次启动和恢复启动使用相同的 checkpoint 保存目录。若初始权重不含优化器和 RNG 状态，仅首次加载时追加 `--no-load-optim --no-load-rng`，从训练 checkpoint 恢复时加载已保存的完整状态。
+        在模型训练命令中设置 `--save "$CKPT_SAVE_DIR"`、`--save-interval 10` 和 `--train-iters 60`，并加入以下加载逻辑，将 `LOAD_ARGS` 数组传给模型训练入口。`INITIAL_LOAD_DIR` 为已完成转换的初始权重目录；首次启动和恢复启动使用相同的Checkpoint保存目录。若初始权重不含优化器和RNG状态，仅首次加载时追加 `--no-load-optim --no-load-rng`，从训练Checkpoint恢复时加载已保存的完整状态。
 
         ```shell
         INITIAL_LOAD_DIR="/job/data/DeepSeek-V4-Flash-mcore"
@@ -799,7 +799,7 @@
         # 在训练入口参数中加入："${LOAD_ARGS[@]}"
         ```
 
-        进程级重调度使用 `--enable-high-availability`；在线恢复在此基础上增加 `--enable-hbmfault-repair`，并设置 `HCCL_ASYNC_ERROR_HANDLING=0`。在线恢复须始终传递 `--load`，保留优化器副本，不配置 `--distributed-optimizer-no-replica`。并行策略还需满足 HA 副本组大小要求：`DP/EP` 为 `REPLICA_NUM`（默认2）的整数倍。模型结构和权重转换参数以所选版本的 DeepSeek-V4-Flash 说明为准。
+        进程级重调度使用 `--enable-high-availability`；在线恢复在此基础上增加 `--enable-hbmfault-repair`，并设置 `HCCL_ASYNC_ERROR_HANDLING=0`。在线恢复须始终传递 `--load`，保留优化器副本，不配置 `--distributed-optimizer-no-replica`。并行策略还需满足 HA 副本组大小要求：`DP/EP` 为 `REPLICA_NUM`（默认2）的整数倍。模型结构和权重转换参数以所选版本的DeepSeek-V4-Flash说明为准。
 
     2. 使用TaskD完成Pod级别重调度、进程级别重调度、进程级在线恢复、进程级别原地恢复或弹性训练，还需拉起TaskD Manager。
         1. 创建manager.py文件，放在调用训练脚本时的当前目录下。manager.py文件内容如下所示。
@@ -836,11 +836,11 @@
 
             cd /job/code
             DISTRIBUTED_ARGS="--nnodes 2 --nproc_per_node 8 --node_rank ${RANK} --master_addr ${MASTER_ADDR} --master_port ${MASTER_PORT}"
-            # MODEL_ARGS 保留 DeepSeek-V4-Flash 模型训练脚本的完整参数，包括训练、并行和 checkpoint 配置
+            # MODEL_ARGS保留DeepSeek-V4-Flash模型训练脚本的完整参数，包括训练、并行和Checkpoint配置
             torchrun $DISTRIBUTED_ARGS --max_restarts 32767 pretrain_deepseek4.py $MODEL_ARGS "${LOAD_ARGS[@]}"
             ```
 
-            上述拉起命令以预训练入口 `pretrain_deepseek4.py` 为例。`MODEL_ARGS` 使用模型脚本中的完整参数；选择 LoRA 等微调方式时，保留对应脚本的 `posttrain_gpt.py` 入口及微调参数，仅适配相同的分布式启动、checkpoint 和恢复逻辑。节点数、每节点进程数还需与 `manager.py` 保持一致。
+            上述拉起命令以预训练入口 `pretrain_deepseek4.py` 为例。`MODEL_ARGS` 使用模型脚本中的完整参数；选择LoRA等微调方式时，保留对应脚本的 `posttrain_gpt.py` 入口及微调参数，仅适配相同的分布式启动、Checkpoint和恢复逻辑。节点数、每节点进程数还需与 `manager.py` 保持一致。
 
         3. 修改训练任务YAML，新增容器端口，在所有的Pod下增加TaskD通信使用的端口9601（如已有则跳过）。
 
@@ -881,7 +881,7 @@
 </thead>
 <tbody><tr id="row4503174412371"><td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.1 "><p id="p09365292408"><a name="p09365292408"></a>Ascend Job</p>
 </td>
-<td class="cellrowborder" valign="top" width="16.173234646929384%" headers="mcps1.2.8.1.2 "><a name="ul129364297402"></a><ul id="ul129364297402"><li><span id="ph157633217501"><a name="ph157633217501"></a>Atlas A3服务器</span></li><li>Atlas 950 SuperPoD超节点（A5）</li></ul>
+<td class="cellrowborder" valign="top" width="16.173234646929384%" headers="mcps1.2.8.1.2 "><a name="ul129364297402"></a><ul id="ul129364297402"><li><span id="ph157633217501"><a name="ph157633217501"></a>Atlas A3系列产品</span></li><li>Ascend 950PR&950DT系列产品</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="8.521704340868173%" headers="mcps1.2.8.1.3 "><p id="p319343422611"><a name="p319343422611"></a><span id="ph310231710274"><a name="ph310231710274"></a>PyTorch</span></p>
 </td>
@@ -889,7 +889,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5 "><p id="p893610293406"><a name="p893610293406"></a>pytorch_multinodes_acjob_deepseek4.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a>配套 mindcluster-deploy 仓库中的 <code>samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/DeepSeek-V4-Flash/yamls/pytorch_multinodes_acjob_deepseek4.yaml</code></p>
+<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a>配套mindcluster-deploy仓库中的 <code>samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/DeepSeek-V4-Flash/yamls/pytorch_multinodes_acjob_deepseek4.yaml</code></p>
 </td>
 <td class="cellrowborder" valign="top" width="15.413082616523303%" headers="mcps1.2.8.1.7 "><p id="p8936152964011"><a name="p8936152964011"></a>示例默认使用2*8卡任务</p>
 </td>
@@ -897,9 +897,9 @@
 </tbody>
 </table>
 
-以下示例使用同型号的两台 A3 或 A5 服务器，每个 Pod 申请8卡。将示例 YAML 另存为 `pytorch_multinodes_acjob_deepseek4.yaml`，任务名使用 `default-test-pytorch`。Master 和 Worker 分别启动 `bash /job/code/scripts/train_start.sh`，共享代码、数据和 checkpoint 目录；镜像按实际机型填写。
+以下示例使用同型号的两台A3或950服务器，每个Pod申请8卡。将示例YAML另存为 `pytorch_multinodes_acjob_deepseek4.yaml`，任务名使用 `default-test-pytorch`。Master和Worker分别启动 `bash /job/code/scripts/train_start.sh`，共享代码、数据和Checkpoint目录；镜像按实际机型填写。
 
-按需要选择恢复能力，相关字段分别添加到任务的 `metadata.labels`、`metadata.annotations` 和 Master/Worker 容器的 `env` 中。下表用于分别体验各项能力。
+按需要选择恢复能力，相关字段分别添加到任务的 `metadata.labels`、`metadata.annotations` 和Master/Worker容器的 `env` 中。下表用于分别体验各项能力。
 
 | 配置项 | Job级别重调度 | Pod级别重调度 | 进程级别重调度 | 进程级在线恢复 |
 |---|---|---|---|---|
@@ -908,12 +908,12 @@
 | `annotations.recover-strategy` | 不配置 | 不配置 | `"recover,recover-in-place"` | `"retry"` |
 | `TASKD_PROCESS_ENABLE` | 不配置 | `"off"` | `"on"` | `"on"` |
 | TaskD Manager、容器端口8000和9601 | 无需 | 配置 | 配置 | 配置 |
-| 模型启动参数 | checkpoint保存和加载 | checkpoint保存和加载 | `--enable-high-availability` | `--enable-high-availability --enable-hbmfault-repair` |
+| 模型启动参数 | Checkpoint保存和加载 | Checkpoint保存和加载 | `--enable-high-availability` | `--enable-high-availability --enable-hbmfault-repair` |
 
 >[!NOTE]
->Pod级别的 `TASKD_PROCESS_ENABLE=off` 仅关闭进程级恢复，仍需启动 TaskD Manager。模型启动参数还需保留原有的训练及 checkpoint 配置。
+>Pod级别的 `TASKD_PROCESS_ENABLE=off` 仅关闭进程级恢复，仍需启动TaskD Manager。模型启动参数还需保留原有的训练及Checkpoint配置。
 
-使用 TaskD 的场景，在 Master 和 Worker 的 `spec.replicaSpecs.<角色>.template.spec.containers` 下补充以下字段，并确认各训练 Pod 能与 ClusterD 通信。
+使用TaskD的场景，在Master和Worker的 `spec.replicaSpecs.<角色>.template.spec.containers` 下补充以下字段，并确认各训练Pod能与ClusterD通信。
 
 ```yaml
 env:
@@ -963,12 +963,12 @@ volumes:
       name: reset-config-default-test-pytorch
 ```
 
-A3、A5 的逻辑超节点大小和调度策略按实际资源拓扑设置。以下是16卡任务的配置示例，添加在任务的 `metadata.annotations` 下；该字段与 `labels` 同级。
+Atlas A3系列产品、Ascend 950PR&950DT系列产品的逻辑超节点大小和调度策略按实际资源拓扑设置。以下是16卡任务的配置示例，添加在任务的 `metadata.annotations` 下；该字段与 `labels` 同级。
 
 | 机型 | `sp-block` | `huawei.com/schedule_policy` |
 |---|---|---|
-| A3 | `"16"` | `"chip2-node16-sp"` |
-| A5 | `"16"` | `"chip8-node8-ra64-sp"` |
+| Atlas A3系列产品 | `"16"` | `"chip2-node16-sp"` |
+| Ascend 950PR&950DT系列产品 | `"16"` | `"chip8-node8-ra64-sp"` |
 
 下发前确认共享存储可读写，容器 `/dev/shm` 和文件句柄数量满足训练要求，节点时钟同步。体验跨节点重调度时，另准备满足相同资源、镜像和挂载要求的空闲节点。
 
@@ -1338,9 +1338,9 @@ Events:  <none>
 - [验证进程级别重调度](#验证进程级别重调度)
 - [验证进程级别在线恢复](#验证进程级别在线恢复)
 
-进行以下操作前，先确认训练能够正常迭代；体验 Job/Pod 级别恢复时，等待最近一次 checkpoint 保存完成。每次仅构造一个故障，恢复训练后再进行下一次操作。以下任务名和命名空间为示例，请替换为实际值。
+进行以下操作前，先确认训练能够正常迭代；体验Job/Pod级别恢复时，等待最近一次Checkpoint保存完成。每次仅构造一个故障，恢复训练后再进行下一次操作。以下任务名和命名空间为示例，请替换为实际值。
 
-记录故障前后的 Pod UID、节点和容器重启次数，结合训练日志查看恢复范围和续训位置。
+记录故障前后的Pod UID、节点和容器重启次数，结合训练日志查看恢复范围和续训位置。
 
 ```bash
 kubectl get pods -n <namespace> -l job-name=<job-name> \
@@ -1473,7 +1473,7 @@ kubectl get pods -n <namespace> -l job-name=<job-name> \
       074f9f9c-35f1-4b9e-9298-5b2bcf3759e7
       ```
 
-2. 查看恢复后的训练日志及 `job-reschedule-reason`。整个任务的 Pod UID 更新，日志显示从最近保存的 checkpoint 加载，并继续输出后续 iteration。
+2. 查看恢复后的训练日志及 `job-reschedule-reason`。整个任务的Pod UID更新，日志显示从最近保存的Checkpoint加载，并继续输出后续iteration。
 
    ```bash
    kubectl describe cm -n mindx-dl job-reschedule-reason
@@ -1597,7 +1597,7 @@ kubectl get pods -n <namespace> -l job-name=<job-name> \
       6eb3c217-3b63-457a-9010-9d236d281634
       ```
 
-2. 查看恢复后的 Pod 所在节点及训练日志。故障 Worker Pod 的 UID 更新并调度到可用节点，Master Pod 的 UID 和容器重启次数保持不变；训练从最近保存的 checkpoint 继续。若故障节点承载 Master Pod，恢复范围可能扩大至整个任务，因此本节选择 Worker 节点进行操作。
+2. 查看恢复后的Pod所在节点及训练日志。故障Worker Pod的UID更新并调度到可用节点，Master Pod的UID和容器重启次数保持不变；训练从最近保存的Checkpoint继续。若故障节点承载Master Pod，恢复范围可能扩大至整个任务，因此本节选择Worker节点进行操作。
 
 ### 验证进程级别重调度<a name="验证进程级别重调度"></a>
 
@@ -1687,7 +1687,7 @@ kubectl get pods -n <namespace> -l job-name=<job-name> \
 
 ### 验证进程级别在线恢复<a name="验证进程级别在线恢复"></a>
 
-本章节以 DeepSeek-V4-Flash 为例，通过训练代码打桩构造 UCE 异常，指导用户体验进程级在线恢复。A5 还可按下文构造 HCCL/UB 业务面异常，观察通信异常后的 step 重试。
+本章节以DeepSeek-V4-Flash为例，通过训练代码打桩构造UCE异常，指导用户体验进程级在线恢复。Ascend 950PR&950DT系列产品还可按下文构造HCCL/UB业务面异常，观察通信异常后的step重试。
 
 >[!NOTE]
 >
@@ -1838,7 +1838,7 @@ kubectl get pods -n <namespace> -l job-name=<job-name> \
    sed -i 's/check_memory_result = torch_npu.npu.check_uce_in_memory(device)/check_memory_result = ha_constant.UCE_HIGH_LEVEL/g' /job/code/mindspeed_llm/core/high_availability/tft_stop_clean.py
    ```
 
-   上述接口返回值替换仅用于 UCE 软件打桩体验。A5 体验 HCCL/UB 业务面异常时，先恢复该文件的原始内容，再改用以下变量；两种异常分别运行，不要同时配置。
+   上述接口返回值替换仅用于UCE软件打桩体验。Ascend 950PR&950DT系列产品体验HCCL/UB业务面异常时，先恢复该文件的原始内容，再改用以下变量；两种异常分别运行，不要同时配置。
 
    ```shell
    unset RAISE_UCE_ERROR_STEP_AND_RANK
