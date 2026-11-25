@@ -810,13 +810,20 @@ def safe_read_open(file, *args, **kwargs):
     :return: file_stream
     """
     if os.path.islink(file):
-        raise FileOpenError(f"The {os.path.basename(file)} should not be a symbolic link file.")
+        raise FileOpenError(f"The {os.path.basename(file)} should not be a symbolic link file.")  # pylint: disable=W0719
+    # pylint: disable=R0801
     file_real_path = os.path.realpath(file)
-    file_stream = open(file_real_path, *args, **kwargs)  # noqa: SIM115  # pylint: disable=unspecified-encoding,consider-using-with
+    mode = args[0] if args else "r"
+    is_binary = "b" in mode
+    if is_binary:
+        file_stream = open(file_real_path, *args, **kwargs)  # noqa: SIM115  # pylint: disable=unspecified-encoding,consider-using-with
+    else:
+        kwargs.setdefault("errors", "replace")  # 文本模式，默认容错
+        file_stream = open(file_real_path, *args, **kwargs)  # noqa: SIM115  # pylint: disable=unspecified-encoding,consider-using-with
     file_info = os.stat(file_stream.fileno())
     if file_info.st_size > MAX_SIZE:
         file_stream.close()
-        raise FileOpenError(f"The size of {os.path.basename(file)} should be less than {MAX_SIZE >> MB_SHIFT} MB.")
+        raise FileOpenError(f"The size of {os.path.basename(file)} should be less than {MAX_SIZE >> MB_SHIFT} MB.")  # pylint: disable=W0719
     return file_stream
 
 

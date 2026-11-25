@@ -28,6 +28,7 @@ from unittest import mock
 from ascend_fd_tk.utils import file_tool
 
 
+# pylint: disable=R0801
 class TestSafeReadOpen(unittest.TestCase):
     def test_open_normal_file(self):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as f:
@@ -41,6 +42,7 @@ class TestSafeReadOpen(unittest.TestCase):
 
     def test_open_symbolic_link_raises(self):
         with mock.patch("ascend_fd_tk.utils.file_tool.os.path.islink", return_value=True):
+            # pylint: disable=R0801
             with self.assertRaises(Exception) as ctx:
                 file_tool.safe_read_open("dummy.txt")
             self.assertIn("symbolic link", str(ctx.exception))
@@ -53,8 +55,63 @@ class TestSafeReadOpen(unittest.TestCase):
             with mock.patch("ascend_fd_tk.utils.file_tool.os.stat") as mock_stat:
                 mock_stat.return_value.st_size = file_tool.MAX_SIZE + 1
                 with self.assertRaises(Exception) as ctx:
+                    # pylint: disable=R0801
                     file_tool.safe_read_open(tmp, "r", encoding="utf-8")
                 self.assertIn("less than", str(ctx.exception))
+        finally:
+            os.unlink(tmp)
+
+    def test_open_text_mode_invalid_utf8_replaced(self):
+        """文本模式默认 errors='replace'，非法字节被替换为占位符而非抛异常"""
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as f:
+            f.write(b"ok\xff\xfeend")
+            tmp = f.name
+        try:
+            # pylint: disable=R0801
+            with file_tool.safe_read_open(tmp, "r", encoding="utf-8") as stream:
+                content = stream.read()
+            self.assertTrue(content.startswith("ok"))
+            self.assertTrue(content.endswith("end"))
+            self.assertIn("\ufffd", content)
+        finally:
+            os.unlink(tmp)
+
+    def test_open_text_mode_explicit_errors_not_overridden(self):
+        """显式传入 errors='strict' 时不应被默认值覆盖，非法字节抛 UnicodeDecodeError"""
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as f:
+            f.write(b"\xff\xfe")
+            tmp = f.name
+        try:
+            with self.assertRaises(UnicodeDecodeError):
+                with file_tool.safe_read_open(tmp, "r", encoding="utf-8", errors="strict") as stream:
+                    stream.read()
+        finally:
+            os.unlink(tmp)
+
+    def test_open_binary_mode_returns_bytes(self):
+        """二进制模式读取返回 bytes，不注入 errors 参数"""
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".bin") as f:
+            # pylint: disable=R0801
+            f.write(b"\xff\xfe\x00data")
+            tmp = f.name
+        try:
+            # pylint: disable=R0801
+            with file_tool.safe_read_open(tmp, "rb") as stream:
+                self.assertEqual(stream.read(), b"\xff\xfe\x00data")
+        finally:
+            os.unlink(tmp)
+
+    def test_open_default_mode_is_text(self):
+        """不传 mode 时默认按文本 'r' 打开，非法字节被替换"""
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as f:
+            f.write(b"abc\xff")
+            tmp = f.name
+        try:
+            # pylint: disable=R0801
+            with file_tool.safe_read_open(tmp, encoding="utf-8") as stream:
+                content = stream.read()
+            self.assertTrue(content.startswith("abc"))
+            self.assertIn("\ufffd", content)
         finally:
             os.unlink(tmp)
 
