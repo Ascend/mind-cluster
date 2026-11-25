@@ -2,7 +2,7 @@
 
 ## 命令功能
 
-查看诊断工具的版本信息，常用于安装验证或问题定位时提供版本信息。
+查看诊断工具的版本信息，常用于安装验证或问题定位。
 
 ## 命令格式
 
@@ -17,7 +17,7 @@
 
 ## 输出说明
 
-控制台返回版本信息： `MindCluster ascend-faultdiag-toolkit诊断工具版本：<version>` 。
+控制台返回版本信息：`MindCluster ascend-faultdiag-toolkit诊断工具版本：<version>`
 
 ## 示例
 

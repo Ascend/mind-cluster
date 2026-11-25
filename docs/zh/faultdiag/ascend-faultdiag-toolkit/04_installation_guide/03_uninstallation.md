@@ -10,14 +10,14 @@
 
     卸载成功回显：
 
-    ```txt
+    ```output
     Successfully uninstalled ascend-faultdiag-toolkit-{version}
     ```
 
 2. 清理缓存与运行数据
 
    - Linux 平台：工具数据统一存放在用户主目录下，执行 `rm -rf ~/.ascend-faultdiag-toolkit/`。
-   - Windows 平台：工具数据存放在**各次启动工具时所在的当前工作目录**下，每个工作目录下均可能生成 `.ascend-faultdiag-toolkit` 文件夹。可通过 PowerShell 批量查找后删除：
+   - Windows 平台：工具数据存放在**各次启动工具时所在的当前工作目录**下，每个工作目录下均可能生成 `.ascend-faultdiag-toolkit` 文件夹，可通过 PowerShell 批量查找后删除：
 
      ```powershell
      # 批量查找所有残留目录

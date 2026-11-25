@@ -28,15 +28,15 @@
 
 | 命令 | 功能简述 | 是否需要参数 | 详细说明 |
 |------|----------|--------------|----------|
-| `collect_bmc_dump_info` | 在线收集 BMC dump info 日志 | 否 | [collect_bmc_dump_info](03_collect/collect_bmc_dump_info.md) |
+| `collect_bmc_dump_info` | 在线采集 BMC dump info 日志 | 否 | [collect_bmc_dump_info](03_collect/collect_bmc_dump_info.md) |
 
 ### 清洗和诊断命令
 
 | 命令 | 功能简述 | 是否需要参数 | 详细说明 |
 |------|----------|--------------|----------|
-| `auto_collect` | 启动自动信息采集，支持离线、在线采集，适用于不同网络平面分批收集 | 否 | [auto_collect](04_parse_diagnosis/01_auto_collect.md) |
+| `auto_collect` | 启动自动信息采集，支持离线、在线采集，适用于不同网络平面分批采集 | 否 | [auto_collect](04_parse_diagnosis/01_auto_collect.md) |
 | `auto_diag` | 启动自动诊断（配合分批采集使用） | 否 | [auto_diag](04_parse_diagnosis/02_auto_diag.md) |
-| `auto_collect_diag` | 一键式自动收集 + 诊断 | 否 | [auto_collect_diag](04_parse_diagnosis/03_auto_collect_diag.md) |
+| `auto_collect_diag` | 一键式自动采集 + 诊断 | 否 | [auto_collect_diag](04_parse_diagnosis/03_auto_collect_diag.md) |
 | `auto_single_diag` | 指定单条链路进行诊断（设备IP + 端口） | 是（IP、端口） | [auto_single_diag](04_parse_diagnosis/04_auto_single_diag.md) |
 
 ### 巡检命令

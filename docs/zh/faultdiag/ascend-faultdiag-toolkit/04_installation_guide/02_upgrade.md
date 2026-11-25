@@ -18,7 +18,7 @@
 
     升级成功回显示例：
 
-    ```txt
+    ```output
     Successfully installed ascend-faultdiag-toolkit-{version}
     ```
 
