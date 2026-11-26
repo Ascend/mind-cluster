@@ -55,7 +55,6 @@ from ascend_fd.utils.fault_code import (
     COMP_LOST_DEV_SOFTLOCKUP_CUSTOM,
     COMP_LOST_DEV_UCE_PANIC_CUSTOM,
 )
-from ascend_fd.utils.i18n import LANG
 from ascend_fd.utils.tool import get_event_occur_times, times_within_window
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
@@ -145,7 +144,6 @@ class LostDeviceChecker(Checker):
         # 先拿 code 的实体属性；kg-config 未注册时回退空属性，避免清洗阶段崩溃
         code_entity = self.schema.get_schema_entity(code) if self.schema else None
         entities_attribute = code_entity.attribute.to_json() if code_entity else {}
-        link = self._format_link_key(entities_attribute.get(f"cause_{LANG}", ""), code)
 
         event_codes = []
         if self.anchor_code:
@@ -159,7 +157,6 @@ class LostDeviceChecker(Checker):
                     "code": code,
                     "entities_attribute": entities_attribute,
                     "events_attribute": events_attribute,
-                    "chains": {self.source_device: link},
                 }
             }
         )

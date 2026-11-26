@@ -161,7 +161,6 @@ class LostDeviceCheckerTestBase(unittest.TestCase):
         self.assertIn(self.out_code, result)
         entry = result[self.out_code]
         self.assertEqual(entry["code"], self.out_code)
-        self.assertTrue(entry["chains"].get(self.source_device))
         # Events loaded into anchor + evidence (no_window codes are not subject to the time window but are loaded as evidence)
         expected_events = [self.anchor_code] + list(self.evidence_codes)
         self.assertEqual([e["event_code"] for e in entry["events_attribute"]], expected_events)
@@ -306,8 +305,11 @@ class TestCorelockupLostChecker(LostDeviceCheckerTestBase):
 
 
 class TestSoftlockupLostChecker(LostDeviceCheckerTestBase):
-    """Mode 14: heartbeat lost (no timestamp, not subject to the time window) + kernel panic softlockup + watchdog timeout"""
+    """Mode 14:
+    heartbeat lost (no timestamp, not subject to the time window) + kernel panic softlockup + watchdog timeout
+    """
 
+    # pylint: disable=R0801
     out_code = COMP_LOST_DEV_SOFTLOCKUP_CUSTOM
     evidence_codes = (
         PRECHECK_DEVICE_INFO_HEARTBEAT_LOST,
