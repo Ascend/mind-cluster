@@ -251,6 +251,10 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
         若日志出现“load fault code from configmap success”，表示手动配置故障码操作成功。
 
+>[!NOTE]
+>
+>- 在faultCode.json中配置芯片故障级别时，故障ID为81078603的网络故障只支持配置为NotHandleFault、PreSeparateNPU或SeparateNPU三种故障处理策略，若配置为其他策略（如RestartNPUCodes等），则该故障码使用默认配置NotHandleFault。
+
 ### （可选）配置芯片故障频率及时长<a name="ZH-CN_TOPIC_0000002511426473"></a>
 
 在制作Ascend Device Plugin镜像时，会将faultCode.json和faultCustomization.json配置文件内置在镜像中，启动Ascend Device Plugin时会读取这两个文件的默认配置，作为当前故障处理依据。faultCode.json和faultCustomization.json的说明请参见[配置文件说明](#ZH-CN_TOPIC_0000002511346521)。
@@ -485,6 +489,13 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
         ```shell
         kubectl describe cm -n kube-system {configMapName}
         ```
+
+>[!NOTE]
+>
+>- 如果一个故障码同时配置了故障频率（FaultFrequency）和故障超时策略（FaultDuration），该故障码在TimeWindow时间窗口中超时次数达到任务支持的最大次数，则采用以下三者中最严重的等级进行处理。这三者分别为：故障本身的故障处理策略、FaultFrequency和FaultDuration中配置的故障处理策略。
+>- 如果一个故障码同时配置了故障频率和故障超时策略，默认故障升级模式（combined）下，只有当故障超时后，故障才算发生，频次才会增加一次。故障恢复超过RecoverTimeout才算恢复，恢复后再次故障超时才能累积下一次计数。若在FaultFrequency中配置EscalationMode为independent，则每次故障发生直接计频次，时长超时不再增加频次，仅触发时长升级。
+>- 当Ascend Device Plugin从26.0.0之前版本升级到26.0.0及之后版本时，若Ascend Device Plugin的ConfigMap中已经包含了ManuallySeparateNPU键值，则其降级的时间窗为faultCustomization.json中最大的ReleaseTimeWindow值，若没有任何故障码配置ReleaseTimeWindow，则ConfigMap已有的ManuallySeparateNPU不降级。
+>- 在修改/删除mindx-dl-fault-config中的策略后，已升级的故障处理策略也会随配置更新。但是ManuallySeparateNPU策略升级后，删除故障处理策略配置项不会被解除，需要遵循ManuallySeparateNPU的解除方式。并且，其他故障级别配置更新为ManuallySeparateNPU时，配置不生效或者不满足期望。
 
 ## ClusterD<a name="ZH-CN_TOPIC_0000002511346521_03"></a>
 

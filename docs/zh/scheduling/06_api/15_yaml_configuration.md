@@ -21,7 +21,7 @@
 |metadata.annotations['recover-strategy']|字符串 (string)|-|<p>任务可用恢复策略。recover-strategy配置在任务YAML的annotations下，取值为6种策略的随意组合，策略之间由逗号分割。</p><ul><li>retry：进程级在线恢复。</li><li>recover：进程级别重调度。</li><li>recover-in-place：进程级原地恢复。</li><li>elastic-training：弹性训练。</li><li>dump：保存临终遗言。</li><li>exit：退出训练。</li></ul>|
 |metadata.labels['subHealthyStrategy']|字符串 (string)|-|<p>节点状态为亚健康（SubHealthy）的节点的处理策略。</p><ul><li>ignore：调度新任务时默认10s的退避窗口内不使用该亚健康节点，退避窗口外不优先调度该节点，可通过<a href="#p_subhealthy_tolerance_vcjob">huawei.com/subhealthy.tolerance.after-time配置说明</a>调整退避窗口。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>hotSwitch：执行亚健康热切，拉起备份Pod后，暂停训练任务，并使用新节点重新拉起训练。</li><li>默认取值为ignore。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>使用graceExit策略时，需保证任务开启了临终CKPT保存功能。</li><li>hotSwitch策略的使用约束请参见[使用约束](../04_usage/05_fault_recovery/01_resumable_training/01_solutions_principles/01_fault_handling.md#亚健康热切)。</li></ul></div></div>|
 |metadata.labels['fault-scheduling']|字符串 (string)|-|<ul><li>grace：配置任务采用优雅删除模式，并在过程中先优雅删除原Pod，15分钟后若还未成功，强制删除原Pod。进程级别重调度和进程级在线恢复场景，需将本参数配置为grace。</li><li>force：配置任务采用强制删除模式，在过程中强制删除原Pod。</li><li>off：该任务不使用断点续训特性，K8s的maxRetry仍然生效。</li><li>无（无fault-scheduling字段）：该任务不使用断点续训特性，K8s的maxRetry仍然生效。</li><li>其他值：该任务不使用断点续训特性，K8s的maxRetry仍然生效。</li></ul>|
-|metadata.labels['fault-retry-times']|整数 (integer)|int32|<p>处理业务面故障，必须配置业务面可无条件重试的次数。</p><ul><li>0 &lt; fault-retry-times：处理业务面故障，必须配置业务面可无条件重试的次数。</li><li>无（无fault-retry-times）或0：该任务不使用无条件重试功能，无法感知业务面故障，vcjob的maxRetry仍然生效。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>使用无条件重试功能需保证训练进程异常时会导致容器异常退出，若容器未异常退出则无法成功重试。</li><li>进行进程级恢复时，将会触发业务面故障，如需使用进程级恢复，必须配置此参数。</li></ul></div></div>|
+|metadata.labels['fault-retry-times']|字符串 (string)|-|<p>处理业务面故障，必须配置业务面可无条件重试的次数。标签值为字符串形式的正整数（如fault-retry-times: "10"），配置后按重试次数解析。</p><ul><li>0 &lt; fault-retry-times：处理业务面故障，必须配置业务面可无条件重试的次数。</li><li>无（无fault-retry-times）或0：该任务不使用无条件重试功能，无法感知业务面故障，vcjob的maxRetry仍然生效。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>使用无条件重试功能需保证训练进程异常时会导致容器异常退出，若容器未异常退出则无法成功重试。</li><li>进行进程级恢复时，将会触发业务面故障，如需使用进程级恢复，必须配置此参数。</li></ul></div></div>|
 |metadata.labels['ring-controller.atlas']|字符串 (string)|-|用于区分任务使用的芯片的类型。<ul><li><term>Atlas A2训练系列产品</term>、A200T A3 Box8超节点服务器、Atlas 900 A3 SuperPoD超节点、Atlas 800T A3超节点服务器取值为：ascend-{xxx}b</li><li>Atlas 800训练服务器，服务器（插Atlas 300T训练卡）取值为：ascend-910</li><li>（可选）<term>Ascend 950PR&950DT系列产品</term>取值为：ascend-npu</li></ul>|
 |metadata.labels['podgroup-sched-enable']|字符串 (string)|-|<p>仅在集群使用openFuyao定制Kubernetes和volcano-ext组件场景下配置。</p><ul><li>取值配置为字符串"true"时，表示开启批量调度功能。</li><li>取值配置为其他字符串时，表示批量调度功能不生效，使用普通调度。</li></ul><p>若不配置该参数，表示批量调度功能不生效，使用普通调度。</p><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>该参数只支持使用Volcano调度器的整卡调度特性。</li><li>仅支持在Atlas 900 A3 SuperPoD超节点和Atlas 800T A3超节点服务器中使用本参数。</li></ul></div>|
 |metadata.labels['tor-affinity']|字符串 (string)|-|<p>默认值为null，表示不使用交换机亲和性调度。</p><ul><li>large-model-schema：大模型任务或填充任务</li><li>normal-schema：普通任务</li><li>null：不使用交换机亲和性调度</li></ul><span class="notetitle">[!NOTE] 说明</span><div class="notebody">用户需要根据任务副本数，选择任务类型。任务副本数小于4为填充任务。任务副本数大于或等于4为大模型任务。普通任务不限制任务副本数。</div><p>用户需要根据任务类型进行配置。</p><ul><li>交换机亲和性调度1.0版本支持<term>Atlas训练系列产品</term>和<term>Atlas A2训练系列产品</term>；支持PyTorch和MindSpore框架。</li><li>交换机亲和性调度2.0版本支持<term>Atlas A2训练系列产品</term>；支持PyTorch框架。</li><li>只支持整卡进行交换机亲和性调度，不支持静态vNPU进行交换机亲和性调度。</li></ul>|
@@ -883,11 +883,125 @@
 </tbody>
 </table>
 
+## InferServiceSet任务yaml参数说明<a name="inferserviceset"></a>
+
+InferServiceSet是Infer Operator提供的推理服务集合CRD（apiVersion为mindcluster.huawei.com/v1），用于部署PD分离等多角色推理服务。用户下发InferServiceSet任务后，Infer Operator会自动创建InferService及各角色（如prefill、decode、router）的InstanceSet，并根据配置创建对应的workload（Deployment或StatefulSet）、Service等资源。在InferServiceSet推理任务中，可使用的YAML参数说明如下表所示。
+
+**表 4** InferServiceSet任务关键字段说明
+
+|字段路径|类型|格式|描述|
+|--|--|--|--|
+|apiVersion|字符串 (string)|-|定义对象表示的版本化资源模式，取值为mindcluster.huawei.com/v1。服务器会转换为最新内部值，拒绝不识别的版本。更多信息请参见[Types](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds)。|
+|kind|字符串 (string)|-|表示此对象对应的REST资源类型，取值为InferServiceSet。值通过端点推断，不可更新，采用驼峰命名。更多信息请参见[Resources](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources)。|
+|metadata|对象 (object)|-|Kubernetes元数据（如命名空间、标签等）。更多信息请参见[Metadata](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata)。|
+|spec|对象 (object)|-|InferServiceSet期望状态的规格描述。必填字段：replicas、template。|
+|spec.replicas|整数 (integer)|int32|推理服务（InferService）的副本数量，默认为1。|
+|spec.template|对象 (object)|-|推理服务模板，定义InferService期望状态的规格。|
+|spec.template.schedulingStrategy|对象 (object)|-|推理服务各角色实例的调度策略。|
+|spec.template.schedulingStrategy.type|字符串 (string)|-|<p>调度策略类型：</p><ul><li>Parallel：并发调度，默认调度方式，并发创建所有角色实例。</li><li>Priority：优先级调度，按照优先级顺序依次创建不同角色实例。当需要适配其他服务化平台使用缩P保D特性时，必须开启优先级调度，并配置decode实例优先级高于prefill实例，以确保高优先级实例先于低优先级实例被调度。优先级的配置见priority字段说明。</li></ul>|
+|spec.template.roles|数组 (array)|-|角色实例集（InstanceSet）规格列表，如PD分离场景下的prefill、decode及router角色。|
+|spec.template.roles.[role].name|字符串 (string)|-|角色名称，如prefill、decode、router。Infer Operator会基于该名称创建对应角色的InstanceSet。|
+|spec.template.roles.[role].replicas|整数 (integer)|int32|该角色实例集（InstanceSet）的副本数量，默认为1。|
+|spec.template.roles.[role].priority|整数 (integer)|int32|<p>该角色实例的调度优先级，取值范围为1-32。仅开启优先级调度（schedulingStrategy.type配置为Priority）时生效。</p><ul><li>该字段值越小，优先级越高。</li><li>PD分离场景下，建议配置prefill角色的priority值大于decode角色的priority值，以确保decode实例先于prefill实例被调度。</li></ul>|
+|spec.template.roles.[role].workload|对象 (object)|-|该角色实例对应的workload CRD类型信息。|
+|spec.template.roles.[role].workload.apiVersion|字符串 (string)|-|workload的API版本，如apps/v1。|
+|spec.template.roles.[role].workload.kind|字符串 (string)|-|workload类型，当前支持StatefulSet和Deployment。|
+|spec.template.roles.[role].metadata|对象 (object)|-|该角色workload的元数据（labels、annotations）。|
+|spec.template.roles.[role].metadata.labels|对象 (object)|-|附加到该角色workload上的标签键值对。可配置infer.huawei.com/gang-schedule等MindCluster相关标签。|
+|spec.template.roles.[role].metadata.labels['infer.huawei.com/gang-schedule']|字符串 (string)|-|<ul><li>true：开启组调度。开启后，Infer Operator将为该角色每个实例（workload）创建对应的PodGroup，确保同一PodGroup内的所有Pod能够同时启动。</li><li>其他值或不使用该字段：关闭组调度，默认关闭。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">workload为StatefulSet场景下，开启组调度的同时需要配置podManagementPolicy为Parallel，否则StatefulSet无法正常调度。</div></div>|
+|spec.template.roles.[role].metadata.annotations|对象 (object)|-|附加到该角色workload上的注解键值对。当取值为超节点调度策略（以-sp结尾）的huawei.com/schedule_policy配置在角色metadata的annotations中时，Infer Operator会自动为同一推理服务下的所有实例配置inferserviceid标签以开启推理服务亲和性调度，详细请参见[配置推理服务亲和性调度](../04_usage/10_infer_operator_best_practice/07_configuring_infer_service_affinity_scheduling.md)。|
+|spec.template.roles.[role].services|数组 (array)|-|该角色的Service列表，定义的service在一个角色范围内仅创建一个。|
+|spec.template.roles.[role].services.[service].name|字符串 (string)|-|Service名称。|
+|spec.template.roles.[role].services.[service].metadata|对象 (object)|-|Service的元数据（labels、annotations）。|
+|spec.template.roles.[role].services.[service].spec|对象 (object)|-|Kubernetes Service规格（如ports、selector、type等），更多信息请参见[Kubernetes Service](https://kubernetes.io/zh/docs/concepts/services-networking/service/)。selector需与对应角色Pod模板中的labels配置保持一致。|
+|spec.template.roles.[role].spec|对象 (object)|-|该角色workload的规格描述，内容需符合所配置workload（StatefulSet或Deployment）的spec规范，如replicas、selector、template等。|
+|spec.template.roles.[role].spec.replicas|整数 (integer)|int32|该角色workload的Pod副本数。|
+|spec.template.roles.[role].spec.podManagementPolicy|字符串 (string)|-|Pod管理策略。当workload为StatefulSet且infer.huawei.com/gang-schedule为true时，需配置为Parallel。|
+|spec.template.roles.[role].spec.selector|对象 (object)|-|workload的标签选择器，matchLabels需与Pod模板中labels配置保持一致。|
+|spec.template.roles.[role].spec.template|对象 (object)|-|Kubernetes Pod模板，更多信息请参见[Kubernetes Pod模板](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-template-v1/)。|
+|spec.template.roles.[role].spec.template.metadata.labels|对象 (object)|-|Pod标签。用户自定义标签（如app）需与selector中matchLabels保持一致；fault-scheduling、fault-retry-times、ring-controller.atlas、pod-rescheduling等MindCluster相关标签也可配置在此处，取值说明请参见[acjob任务yaml参数说明](#acjob)。|
+|spec.template.roles.[role].spec.template.metadata.labels['pod-rescheduling']|字符串 (string)|-|<p>Pod级重调度，表示任务发生故障后，不会删除PodGroup内的所有任务Pod，而是将发生故障的Pod进行删除，由控制器重新创建新Pod后进行重调度。</p><ul><li>on：开启Pod级别重调度。</li><li>其他值或不使用该字段：关闭Pod级别重调度。</li></ul>|
+|spec.template.roles.[role].spec.template.metadata.labels['fault-scheduling']|字符串 (string)|-|<ul><li>grace：配置任务采用优雅删除模式，并在过程中先优雅删除原Pod，15分钟后若还未成功，使用强制删除原Pod。</li><li>force：配置任务采用强制删除模式，在过程中强制删除原Pod。</li><li>external-grace：配置任务开启重调度。Infer Operator先删除workload或者故障Pod，K8s级联删除Pod（遵循Pod自身terminationGracePeriodSeconds），Infer Operator按Pod的terminationGracePeriodSeconds启动定时器，超时后强删残留Pod（GracePeriodSeconds=0）。若Pod未配置terminationGracePeriodSeconds，默认等待30秒。</li><li>external-force：配置任务开启重调度。Infer Operator立即强删workload及Pod（GracePeriodSeconds=0），terminationGracePeriodSeconds不生效。</li><li>external-force-pod-failed：配置任务开启重调度。Infer Operator仅处理业务面故障（Pod内进程非零退出），立即强删workload或者故障Pod（GracePeriodSeconds=0），硬件故障时不删除故障节点Pod。</li><li>off、无（无fault-scheduling字段）或其他值：该推理任务不使用故障重调度特性。</li></ul>|
+|spec.template.roles.[role].spec.template.metadata.labels['fault-retry-times']|字符串 (string)|-|<p>处理业务面故障，必须配置业务面可无条件重试的次数。标签值为字符串形式的正整数（如fault-retry-times: "10"），配置后按重试次数解析。</p><ul><li>0 &lt; fault-retry-times：处理业务面故障，必须配置业务面可无条件重试的次数。</li><li>无（无fault-retry-times）或0：该任务不使用无条件重试功能，发生业务面故障之后Volcano不会主动删除故障的Pod。</li></ul>|
+|spec.template.roles.[role].spec.template.metadata.labels['ring-controller.atlas']|字符串 (string)|-|用于区分任务使用的芯片的类型，取值说明请参见[acjob任务yaml参数说明](#acjob)中metadata.labels['ring-controller.atlas']字段。|
+|spec.template.roles.[role].spec.template.metadata.annotations|对象 (object)|-|附加到Pod上的注解键值对，可配置huawei.com/schedule_policy等MindCluster相关注解。|
+|spec.template.roles.[role].spec.template.metadata.annotations['huawei.com/schedule_policy']|字符串 (string)|-|配置任务需要调度的AI芯片布局形态。Volcano会根据该字段选择合适的调度策略，根据需要运行任务的节点类型选取不同的值。目前支持[huawei.com/schedule_policy配置说明](#huaweicomschedule_policy配置说明)中的配置。|
+|spec.template.roles.[role].spec.template.spec.schedulerName|字符串 (string)|-|Pod调度器名称。|
+|spec.template.roles.[role].spec.template.spec.containers|数组 (array)|-|容器列表，容器名称与镜像请根据实际修改。|
+|<ul><li>spec.template.roles.[role].spec.template.spec.containers.resources.requests</li><li>spec.template.roles.[role].spec.template.spec.containers.resources.limits</li></ul>|对象 (object)|-|<p>限制请求的NPU数量（只能请求一种类型），当前仅支持整机调度，请根据实际硬件卡数与需求卡数进行修改。</p><ul><li><term>Atlas 800I A2推理服务器</term>：1-8</li><li><term>Atlas 800I A3超节点服务器</term>：1-16</li><li><term>Atlas 350加速卡</term>（节点内8卡）：1-8</li><li><term>Atlas 350加速卡</term>（节点内16卡）：1-16</li><li><term>Atlas 850E风冷超节点</term>、<term>Atlas 850风冷超节点</term>、<term>Atlas 650E服务器</term>、<term>Atlas 650服务器</term>：1-8</li><li><term>Atlas 950 SuperPoD液冷超节点</term>：1-8</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><term>Ascend 950PR&950DT系列产品</term>需将参数名称修改为huawei.com/npu。</div></div>|
+|spec.template.roles.[role].scalingPolicy|对象 (object)|-|给对应实例配置基于负载的弹性扩缩容策略，Infer Operator会根据该配置自动创建并管理HPA等扩缩容控制器资源。详细配置请参见[配置弹性扩缩容策略](../04_usage/10_infer_operator_best_practice/05_configuring_elastic_scaling.md)。|
+|spec.template.roles.[role].scalingPolicy.type|字符串 (string)|-|弹性扩缩容策略类型，当前支持HPA。|
+|spec.template.roles.[role].scalingPolicy.spec|对象 (object)|-|HPA配置（如metrics、target等），需符合HPA配置规范。|
+|status|对象 (object)|-|InferServiceSet的最新观察状态（只读）。|
+|status.observedGeneration|整数 (integer)|int64|控制器最近一次调和时观察到的generation。|
+|status.replicas|整数 (integer)|int32|推理服务集合的总副本数。|
+|status.readyReplicas|整数 (integer)|int32|就绪的副本数。|
+|status.conditions|数组 (array)|-|当前推理服务集合的条件数组，包含lastTransitionTime（条件状态转换时间）、message（条件详细描述）、observedGeneration、reason（条件转换原因）、status（条件状态：True、False、Unknown）、type（条件类型）字段。|
+
+### InferService任务字段说明<a name="inferservice"></a>
+
+InferService是Infer Operator提供的推理服务CRD（apiVersion为mindcluster.huawei.com/v1，kind为InferService）。用户下发InferServiceSet任务后，Infer Operator会根据InferServiceSet的spec.template自动创建InferService，并由其进一步创建各角色的InstanceSet。InferService通常由Infer Operator自动管理，用户一般无需直接创建或修改，可通过查询该资源了解推理服务的整体状态。InferService任务中可使用的YAML参数说明如下表所示。
+
+**表 5** InferService任务关键字段说明
+
+|字段路径|类型|格式|描述|
+|--|--|--|--|
+|apiVersion|字符串 (string)|-|定义对象表示的版本化资源模式，取值为mindcluster.huawei.com/v1。服务器会转换为最新内部值，拒绝不识别的版本。更多信息请参见[Types](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds)。|
+|kind|字符串 (string)|-|表示此对象对应的REST资源类型，取值为InferService。值通过端点推断，不可更新，采用驼峰命名。更多信息请参见[Resources](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources)。|
+|metadata|对象 (object)|-|Kubernetes元数据（如命名空间、标签等）。更多信息请参见[Metadata](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata)。|
+|spec|对象 (object)|-|InferService期望状态的规格描述，由Infer Operator根据InferServiceSet的spec.template生成。必填字段：roles。|
+|spec.roles|数组 (array)|-|角色实例集规格列表，结构同InferServiceSet的spec.template.roles，详细字段说明请参见[InferServiceSet任务yaml参数说明](#inferserviceset)。|
+|spec.roles.[role].name|字符串 (string)|-|角色名称，如prefill、decode、router。|
+|spec.roles.[role].replicas|整数 (integer)|int32|该角色实例集的副本数量，默认为1。|
+|spec.roles.[role].priority|整数 (integer)|int32|该角色实例的调度优先级，取值范围为1-32，数值越小优先级越高。仅开启优先级调度时生效。|
+|spec.roles.[role].workload|对象 (object)|-|该角色实例对应的workload CRD类型信息，包含apiVersion（如apps/v1）和kind（StatefulSet或Deployment）字段。|
+|spec.roles.[role].metadata|对象 (object)|-|该角色workload的元数据（labels、annotations），可配置infer.huawei.com/gang-schedule组调度标签等。|
+|spec.roles.[role].services|数组 (array)|-|该角色的Service列表，包含name（Service名称）、metadata（元数据）和spec（Kubernetes Service规格）字段。|
+|spec.roles.[role].spec|对象 (object)|-|该角色workload的规格描述，内容符合所配置workload（StatefulSet或Deployment）的spec规范。|
+|spec.roles.[role].scalingPolicy|对象 (object)|-|该角色实例的弹性扩缩容策略，包含type（策略类型，当前支持HPA）和spec（HPA配置）字段。|
+|status|对象 (object)|-|InferService的最新观察状态（只读）。|
+|status.observedGeneration|整数 (integer)|int64|控制器最近一次调和时观察到的generation。|
+|status.replicas|整数 (integer)|int32|该推理服务的总副本数。|
+|status.readyReplicas|整数 (integer)|int32|该推理服务就绪的副本数。|
+|status.conditions|数组 (array)|-|当前推理服务的条件数组，包含lastTransitionTime（条件状态转换时间）、message（条件详细描述）、observedGeneration、reason（条件转换原因）、status（条件状态：True、False、Unknown）、type（条件类型）字段。|
+
+### InstanceSet任务字段说明<a name="instanceset"></a>
+
+InstanceSet是Infer Operator提供的角色实例集CRD（apiVersion为mindcluster.huawei.com/v1，kind为InstanceSet）。Infer Operator会为InferService的每个角色（如prefill、decode、router）分别创建一个InstanceSet，由其创建并管理该角色对应的workload（Deployment或StatefulSet）及Service等资源，同时负责故障重调度、弹性扩缩容等生命周期管理。InstanceSet支持scale子资源，HPA等扩缩容控制器可通过scale子资源（/scale）对其进行扩缩容。InstanceSet通常由Infer Operator自动管理，用户一般无需直接创建或修改，可通过查询该资源了解各角色实例集的运行状态。InstanceSet任务中可使用的YAML参数说明如下表所示。
+
+**表 6** InstanceSet任务关键字段说明
+
+|字段路径|类型|格式|描述|
+|--|--|--|--|
+|apiVersion|字符串 (string)|-|定义对象表示的版本化资源模式，取值为mindcluster.huawei.com/v1。服务器会转换为最新内部值，拒绝不识别的版本。更多信息请参见[Types](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds)。|
+|kind|字符串 (string)|-|表示此对象对应的REST资源类型，取值为InstanceSet。值通过端点推断，不可更新，采用驼峰命名。更多信息请参见[Resources](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources)。|
+|metadata|对象 (object)|-|Kubernetes元数据（如命名空间、标签等）。更多信息请参见[Metadata](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata)。|
+|spec|对象 (object)|-|InstanceSet期望状态的规格描述。必填字段：name。|
+|spec.name|字符串 (string)|-|实例集名称，对应InferService中的角色名称（如prefill、decode、router）。|
+|spec.replicas|整数 (integer)|int32|该实例集期望的副本数量，默认为1。HPA等扩缩容控制器通过scale子资源修改该字段实现扩缩容。|
+|spec.priority|整数 (integer)|int32|该实例集的调度优先级，取值范围为1-32，数值越小优先级越高。仅开启优先级调度时生效。|
+|spec.workload|对象 (object)|-|该实例集对应的workload CRD类型信息。|
+|spec.workload.apiVersion|字符串 (string)|-|workload的API版本，如apps/v1。|
+|spec.workload.kind|字符串 (string)|-|workload类型，当前支持StatefulSet和Deployment。|
+|spec.metadata|对象 (object)|-|该实例集workload的元数据（labels、annotations），取值说明请参见[InferServiceSet任务yaml参数说明](#inferserviceset)。|
+|spec.services|数组 (array)|-|该实例集的Service列表，定义的service在一个角色范围内仅创建一个。包含name（Service名称）、metadata（元数据）和spec（Kubernetes Service规格，如ports、selector、type等）字段。|
+|spec.spec|对象 (object)|-|该实例集workload的原始规格描述（RawExtension），内容需符合所配置workload（StatefulSet或Deployment）的spec规范，如replicas、podManagementPolicy、selector、template等，详细字段说明请参见[InferServiceSet任务yaml参数说明](#inferserviceset)。|
+|spec.scalingPolicy|对象 (object)|-|该实例集的弹性扩缩容策略，由Infer Operator据此创建并管理HPA等扩缩容控制器资源。|
+|spec.scalingPolicy.type|字符串 (string)|-|弹性扩缩容策略类型，当前支持HPA。|
+|spec.scalingPolicy.spec|对象 (object)|-|HPA配置（如metrics、target等），需符合HPA配置规范。详细配置请参见[配置弹性扩缩容策略](../04_usage/10_infer_operator_best_practice/05_configuring_elastic_scaling.md)。|
+|status|对象 (object)|-|InstanceSet的最新观察状态（只读）。|
+|status.observedGeneration|整数 (integer)|int64|控制器最近一次调和时观察到的generation。|
+|status.replicas|整数 (integer)|int32|该实例集的总副本数。|
+|status.readyReplicas|整数 (integer)|int32|该实例集就绪的副本数。|
+|status.labelSelector|字符串 (string)|-|该实例集管理的Pod的标签选择器，供scale子资源使用。|
+|status.scalingResourceStatus|对象 (object)|-|扩缩容资源（如HPA）的状态。包含type（扩缩容资源类型，如HPA）、name（扩缩容资源名称）、ready（扩缩容资源是否就绪）、message（扩缩容资源状态附加信息）字段。|
+|status.conditions|数组 (array)|-|当前实例集的条件数组，包含lastTransitionTime（条件状态转换时间）、message（条件详细描述）、observedGeneration、reason（条件转换原因）、status（条件状态：True、False、Unknown）、type（条件类型）字段。|
+
 ## 其他参数说明
 
 ### huawei.com/schedule_policy配置说明<a name="schedule_policy"></a>
 
-**表 4**  huawei.com/schedule\_policy配置说明
+**表 7**  huawei.com/schedule\_policy配置说明
 
 |配置|说明|形态举例|
 |--|--|--|
