@@ -746,6 +746,143 @@ func TestA950HyperPlaneNewOverallFaultModify(t *testing.T) {
 			convey.So(devices[1].FaultCodes, convey.ShouldContain, UBSubHealFaultCode)
 			convey.So(ubFaultRecoverTime, convey.ShouldEqual, 0)
 		})
+		convey.Convey("single device dropped by CardDrop flag, other devices should convert to sub heal", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			ubFaultRecoverTime = 0
+			curTime := time.Now().UnixMilli()
+			devices := make([]*NpuDevice, 0, 8)
+			for i := 0; i < 8; i++ {
+				device := &NpuDevice{
+					LogicID:      int32(i),
+					FaultCodes:   []int64{UBPortDownCode},
+					FaultTimeMap: map[int64]int64{UBPortDownCode: curTime},
+				}
+				if i == 0 {
+					// the resetting device is dropped, it can not report its UB port status
+					device.FaultCodes = []int64{CardDropFaultCode}
+					device.FaultTimeMap = map[int64]int64{CardDropFaultCode: curTime}
+					device.CardDrop = true
+				}
+				devices = append(devices, device)
+			}
+			a950HyperPlaneNewOverallFaultModify(devices)
+			for i := 1; i < 8; i++ {
+				convey.So(devices[i].FaultCodes, convey.ShouldContain, UBSubHealFaultCode)
+				convey.So(devices[i].FaultCodes, convey.ShouldNotContain, UBSeparateFaultCode)
+			}
+			convey.So(devices[0].FaultCodes, convey.ShouldContain, CardDropFaultCode)
+		})
+		convey.Convey("single device dropped by fault code only, other devices should convert to sub heal", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			ubFaultRecoverTime = 0
+			curTime := time.Now().UnixMilli()
+			devices := make([]*NpuDevice, 0, 8)
+			for i := 0; i < 8; i++ {
+				device := &NpuDevice{
+					LogicID:      int32(i),
+					FaultCodes:   []int64{UBPortDownCode},
+					FaultTimeMap: map[int64]int64{UBPortDownCode: curTime},
+				}
+				if i == 0 {
+					// the CardDrop flag is rebuilt every cycle, the fault code is the persistent evidence
+					device.FaultCodes = []int64{CardDropFaultCode}
+					device.FaultTimeMap = map[int64]int64{CardDropFaultCode: curTime}
+				}
+				devices = append(devices, device)
+			}
+			a950HyperPlaneNewOverallFaultModify(devices)
+			for i := 1; i < 8; i++ {
+				convey.So(devices[i].FaultCodes, convey.ShouldContain, UBSubHealFaultCode)
+				convey.So(devices[i].FaultCodes, convey.ShouldNotContain, UBSeparateFaultCode)
+			}
+		})
+		convey.Convey("all devices are dropped, should not be a node level fault", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			ubFaultRecoverTime = 0
+			devices := []*NpuDevice{
+				{LogicID: 0, CardDrop: true, FaultCodes: []int64{CardDropFaultCode}},
+				{LogicID: 1, CardDrop: true, FaultCodes: []int64{CardDropFaultCode}},
+			}
+			a950HyperPlaneNewOverallFaultModify(devices)
+			for _, device := range devices {
+				convey.So(device.FaultCodes, convey.ShouldNotContain, UBSubHealFaultCode)
+				convey.So(device.FaultCodes, convey.ShouldNotContain, UBSeparateFaultCode)
+			}
+			convey.So(ubFaultRecoverTime, convey.ShouldEqual, 0)
+		})
+		convey.Convey("dropped device should not get sub heal fault and can be separated later", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			ubFaultRecoverTime = 0
+			curTime := time.Now().UnixMilli()
+			devices := make([]*NpuDevice, 0, 8)
+			for i := 0; i < 8; i++ {
+				device := &NpuDevice{
+					LogicID:      int32(i),
+					FaultCodes:   []int64{UBPortDownCode},
+					FaultTimeMap: map[int64]int64{UBPortDownCode: curTime},
+				}
+				if i == 0 {
+					device.FaultCodes = []int64{CardDropFaultCode}
+					device.FaultTimeMap = map[int64]int64{CardDropFaultCode: curTime}
+					device.CardDrop = true
+				}
+				devices = append(devices, device)
+			}
+			// the resetting device must not be given a sub heal fault code it can not recover from
+			a950HyperPlaneNewOverallFaultModify(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldNotContain, UBSubHealFaultCode)
+			for i := 1; i < 8; i++ {
+				convey.So(devices[i].FaultCodes, convey.ShouldContain, UBSubHealFaultCode)
+			}
+			// the device recovers and then has a single device UB port down fault
+			devices[0].CardDrop = false
+			devices[0].FaultCodes = Int64Tool.Remove(devices[0].FaultCodes, CardDropFaultCode)
+			devices[0].FaultCodes = append(devices[0].FaultCodes, UBPortDownCode)
+			for i := 1; i < 8; i++ {
+				devices[i].FaultCodes = []int64{}
+				devices[i].FaultTimeMap = map[int64]int64{}
+			}
+			a950HyperPlaneNewOverallFaultModify(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldNotContain, UBSeparateFaultCode)
+			a950HyperPlaneNewOverallFaultModify(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldContain, UBSeparateFaultCode)
+		})
+		convey.Convey("dropped device with UB port down fault should still get sub heal fault", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			ubPortDownConfirmedMap = make(map[int32]bool, GeneralMapSize)
+			ubFaultRecoverTime = 0
+			curTime := time.Now().UnixMilli()
+			devices := make([]*NpuDevice, 0, 8)
+			for i := 0; i < 8; i++ {
+				device := &NpuDevice{
+					LogicID:      int32(i),
+					FaultCodes:   []int64{UBPortDownCode},
+					FaultTimeMap: map[int64]int64{UBPortDownCode: curTime},
+				}
+				if i == 0 {
+					// the device reported its UB port status before it dropped
+					device.FaultCodes = []int64{UBPortDownCode, CardDropFaultCode}
+					device.FaultTimeMap = map[int64]int64{UBPortDownCode: curTime, CardDropFaultCode: curTime}
+					device.CardDrop = true
+				}
+				devices = append(devices, device)
+			}
+			a950HyperPlaneNewOverallFaultModify(devices)
+			for _, device := range devices {
+				convey.So(device.FaultCodes, convey.ShouldContain, UBSubHealFaultCode)
+			}
+			// 8603 is the only recovery path of the sub heal fault code, it must be kept
+			convey.So(devices[0].FaultCodes, convey.ShouldContain, UBPortDownCode)
+		})
 	})
 }
 
