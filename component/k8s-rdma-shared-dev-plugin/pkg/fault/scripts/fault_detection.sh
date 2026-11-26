@@ -130,64 +130,60 @@ function check_dpu_card_drop() {
 		echo "false:hinicadm5 not found, cannot check card drop for hca $hca"
 		return
 	fi
-
-	eth_name=$(get_eth_name_by_hca_name $hca)
-	if [[ -z "$eth_name" ]]; then
-		echo "false:cannot get eth name for hca $hca"
-		return
-	fi
-
-	phy_num=-1
-	card_type=""
-
-	# Query card_type from device/ directory first (for backward compatibility)
-	device_card_type_path="/sys/class/net/$eth_name/device/card_type"
-	if [[ -f "$device_card_type_path" ]]; then
-		card_type=$(cat "$device_card_type_path" 2>/dev/null)
-	fi
-
-	# Query card_type directly under net/$eth_name/
-	if [[ -z "$card_type" ]]; then
-		card_type_path="/sys/class/net/$eth_name/card_type"
-		if [[ -f "$card_type_path" ]]; then
-			card_type=$(cat "$card_type_path" 2>/dev/null)
-		fi
-	fi
-
-	# Determine phy_num based on card_type
-	if [[ -n "$card_type" ]]; then
-		case "$card_type" in
-			A5Server)
-				phy_num=4
-				;;
-			A5Pod400G*)
-				phy_num=4
-				;;
-			A5Pod200G*)
-				phy_num=2
-				;;
-		esac
-	fi
-
-	if [[ $phy_num -lt 0 ]]; then
-		if [[ -z "$card_type" ]]; then
-			echo "false:card_type file not found for $eth_name"
-		else
-			echo "false:unknown card_type '$card_type'"
-		fi
-		return
-	fi
-
 	card_num=$(hinicadm5 info 2>/dev/null | grep -oP "Card num[^0-9]*\K[0-9]+")
 	if [[ -z "$card_num" ]]; then
 		echo "false:failed to get card num"
 		return
 	fi
+	if [[ "$card_num" -eq 0 ]]; then
+		echo "false:get card num = 0, skip"
+		return
+	fi
 
-	if [[ "$card_num" -eq "$phy_num" ]]; then
+	for((i=0;i<$card_num;i++))
+	do
+		cfg_template_index=$(hinicadm5 cfg_template -i hinic$i 2>/dev/null | grep -oP "Current[^0-9]*\K[0-9]+")
+		# 配置模板为如下格式：
+		# "Template[ 1]: ETH_2X400GR4_4DAVID_2HOST"
+		cfg_template=$(hinicadm5 cfg_template -i hinic$i 2>/dev/null | grep -oP "Template\[ ${cfg_template_index}\]: \K\S+")
+		if [[ ! -z "$cfg_template" ]]; then
+			break
+		fi
+	done
+	if [[ -z "$cfg_template" ]]; then
+		echo "false:failed to get cfg template"
+		return
+	fi
+	# 配置模板说明
+	# ETH_2X400GR4_UBC_4DAVID_2HOST   物理口为2个400G，每个DPU对应4个NPU
+	# ETH_2X400GR4_UBC_2DAVID_1HOST   物理口为2个400G，每个DPU对应2个NPU
+	# ETH_4X200GR2_UBC_4DAVID_2HOST   物理口为4个200G，每个DPU对应4个NPU
+	# ETH_4X200GR2_UBC_2DAVID_1HOST   物理口为4个200G，每个DPU对应2个NPU
+	# 服务器两类配置模板,主要区别在物理口速率，DPU数量不变
+	# ETH_2X400GR4_UBC_2HOST_UB_EXP
+	# ETH_4X200GR4_UBC_2HOST_UB_EXP
+	case $cfg_template in
+		ETH_2X400GR4_UBC_4DAVID_2HOST|ETH_4X200GR2_UBC_4DAVID_2HOST)
+			expected_phy_num=2
+			;;
+		ETH_2X400GR4_UBC_2DAVID_1HOST|ETH_4X200GR2_UBC_2DAVID_1HOST)
+			expected_phy_num=4
+			;;
+		ETH_2X400GR4_UBC_2HOST_UB_EXP|ETH_4X200GR4_UBC_2HOST_UB_EXP) # server
+			expected_phy_num=4
+			;;
+		*) # 其他不支持机型设置为0，不检查
+			expected_phy_num=0
+			;;
+	esac
+	if [[ "$expected_phy_num" -eq 0 ]]; then
+		echo "false:no card drop detected, expected_phy_num=0"
+		return
+	fi
+	if [[ "$card_num" -ge "$expected_phy_num" ]]; then
 		echo "false:no card drop detected, card num=$card_num"
 	else
-		echo "true:card drop detected, expected=$phy_num, actual=$card_num"
+		echo "true:card drop detected, expected=$expected_phy_num, actual=$card_num"
 	fi
 }
 
