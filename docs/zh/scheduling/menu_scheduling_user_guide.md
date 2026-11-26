@@ -285,9 +285,6 @@
     - [集群版本信息](./06_api/04_clusterd/11_cluster_version.md)
   - [Ascend Operator](./06_api/05_ascend_operator.md)
   <!-- end id28 -->
-  <!-- npu="A3,910b" id29 -->
-  - [Elastic-Agent（断点续训相关接口）](./06_api/06_elastic_agent.md)
-  <!-- end id29 -->
   <!-- npu="950,A3,910b" id30 -->
   - [TaskD](./06_api/07_taskd/menu_taskd.md)
     - [taskd.\_\_version_\_](./06_api/07_taskd/00_taskd_version.md)

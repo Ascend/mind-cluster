@@ -182,32 +182,6 @@
 3. 将异常信息上报给ClusterD。
 <!-- end id1 -->
 
-<!-- npu="A3,910b" id2 -->
-## Elastic Agent<a name="ZH-CN_TOPIC_0000002479386918"></a>
-
->[!NOTE]
->Elastic Agent组件已经日落，相关内容将于2026年12月30日的版本删除。后续进程级恢复能力将使用TaskD组件承载。
-
-**应用场景<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section15761025111720"></a>**
-
-因大模型训练任务过程中容易出现各种软硬件故障，导致训练任务受到影响，MindCluster集群调度组件提供了部署在计算节点的Elastic Agent的二进制包，用于提供昇腾设备上训练任务的管理功能。
-
-**组件功能<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section1112014512117"></a>**
-
-- 针对PyTorch框架提供适配昇腾设备的进程管理功能，在出现软硬件故障时，完成训练进程的停止或重启。
-- 负责对接K8s集群中的集群控制中心，根据集群控制中心完成训练管理。
-
-**组件上下游依赖<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section4941922192110"></a>**
-
-**图 8** 组件上下游依赖<a name="fig19841330125219"></a>
-
-![Elastic Agent上下游依赖架构图，展示经ConfigMap获取设备与任务状态并对接K8s集群控制中心完成训练管理的路径](../../figures/scheduling/组件上下游依赖-6.png "组件上下游依赖-6")
-
-- MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写入ConfigMap中，并映射到容器内，ConfigMap名称为[reset-config-<任务名称\>](../06_api/01_volcano.md#任务信息)。
-- Elastic Agent通过ConfigMap获取当前训练容器所使用的设备状况和训练任务状态等信息。
-- Elastic Agent对接K8s集群控制中心，根据集群控制中心完成训练管理。
-<!-- end id2 -->
-
 <!-- npu="950,A3,910b" id3 -->
 ## TaskD<a name="ZH-CN_TOPIC_0000002479386914"></a>
 

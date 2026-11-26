@@ -1234,23 +1234,6 @@ export MS_ENABLE_TFT="{RSC:1}"      # MindSpore场景下配置此字段开启优
 <td class="cellrowborder" valign="top" width="9.71%"><p id="p1799893511398"><a name="p1799893511398"></a>-</p>
 </td>
 </tr>
-<tr id="row19391344114010"><td class="cellrowborder" valign="top" width="15.24%"><p id="p1794014446408"><a name="p1794014446408"></a>ELASTIC_PROCESS_RECOVER_ENABLE</p>
-</td>
-<td class="cellrowborder" valign="top" width="13%"><p id="p1494064419401"><a name="p1494064419401"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="11.92%"><p id="p19940944134019"><a name="p19940944134019"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.07%"><p id="p2094054414013"><a name="p2094054414013"></a>√</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.87%"><p id="p494084464017"><a name="p494084464017"></a>√</p>
-</td>
-<td class="cellrowborder" valign="top" width="11.87%"><p id="p69402446400"><a name="p69402446400"></a>√</p>
-</td>
-<td class="cellrowborder" valign="top" width="11.32%"><p id="p894014464011"><a name="p894014464011"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.71%"><p id="p199403441401"><a name="p199403441401"></a>-</p>
-</td>
-</tr>
 <tr id="row448045664010"><td class="cellrowborder" valign="top" width="15.24%"><p id="p1848011565403"><a name="p1848011565403"></a>--enable-high-availability（MindSpeed-LLM侧参数）</p>
 </td>
 <td class="cellrowborder" valign="top" width="13%"><p id="p948075615409"><a name="p948075615409"></a>-</p>
@@ -1384,9 +1367,8 @@ export MS_ENABLE_TFT="{RSC:1}"      # MindSpore场景下配置此字段开启优
 |fault-scheduling|训练任务YAML的metadata.labels| 重调度开关。                                                                                                                                                                                                                                                                               |
 |process-recover-enable|训练任务YAML的metadata.labels| <ul><li>on：开启进程级别重调度及进程级在线恢复。进程级别重调度和优雅容错不能同时开启，若同时开启，断点续训将通过job级重调度恢复训练。</li><li>pause：暂时关闭进程级别重调度及进程级在线恢复。</li><li>off或不使用该字段：关闭进程级别重调度及进程级在线恢复。</li></ul>                                                                                                                         |
 |recover-strategy|训练任务YAML的metadata.annotations| 任务可用恢复策略。<ul><li>retry：进程级在线恢复。</li><li>recover：进程级别重调度。</li><li>recover-in-place：进程级原地恢复。</li><li>elastic-training：弹性训练。</li><li>dump：保存临终遗言。</li><li>exit：退出训练。</li></ul>                                                                                                          |
-|PROCESS_RECOVER|训练任务YAML的spec.replicaSpecs.{ Master \|Scheduler\| Worker}.template.spec.containers.env| 进程级别重调度及进程级在线恢复Elastic Agent/TaskD侧总开关。<ul><li>on：开启。</li><li>off：关闭。</li></ul>                                                                                                                                                                                                      |
-|ELASTIC_PROCESS_RECOVER_ENABLE|启动训练YAML的spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args| Elastic Agent侧进程级别重调度、进程级在线恢复、临终CKPT恢复功能开关。<ul><li>取值为1：开启本功能。</li><li>其他值：关闭本功能。<p>关闭本功能时，MindIO侧相关功能需同时关闭。</p></li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>Elastic Agent组件已经日落，相关资料将于2026年12月30日的版本删除。该环境变量会随之删除。</p></div></div> |
-|ENABLE_RESTART_FAULT_PROCESS|启动训练YAML的spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args| Elastic Agent/TaskD组件开启故障进程原地恢复功能的开关。<ul><li>on：开启本功能；</li><li>其他值：关闭本功能</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>Elastic Agent组件已经日落，相关资料将于2026年12月30日的版本删除。</p></div></div> |
+|PROCESS_RECOVER|训练任务YAML的spec.replicaSpecs.{ Master \|Scheduler\| Worker}.template.spec.containers.env| 进程级别重调度及进程级在线恢复TaskD侧总开关。<ul><li>on：开启。</li><li>off：关闭。</li></ul>                                                                                                                                                                                                      |
+|ENABLE_RESTART_FAULT_PROCESS|启动训练YAML的spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args| TaskD组件开启故障进程原地恢复功能的开关。<ul><li>on：开启本功能；</li><li>其他值：关闭本功能</li></ul> |
 |--enable-high-availability|训练脚本pretrain_gpt.py的启动参数| 故障快速恢复特性开关，默认关闭，配置后即开启临终遗言功能。                                                                                                                                                                                                                                                        |
 |--enable-hbmfault-repair|训练脚本pretrain_gpt.py的启动参数| 进程级在线恢复功能开关，默认关闭，配置后对片上内存进行故障检测，并完成在线修复。需同时开启enable-high-availability。                                                                                                                                                                                                               |
 |--enable-worker-reboot|训练脚本pretrain_gpt.py的启动参数| 进程级别重调度功能开关，默认关闭。配置后在发生一般性故障时，进行进程级别调度。需同时开启enable-high-availability。                                                                                                                                                                                                                |
@@ -1417,16 +1399,16 @@ export MS_ENABLE_TFT="{RSC:1}"      # MindSpore场景下配置此字段开启优
 </tr>
 <tr id="row10283115171018"><td class="cellrowborder" valign="top" width="7.580000000000002%"><p id="p1621320131319"><a name="p1621320131319"></a><span id="ph1551815244211"><a name="ph1551815244211"></a>PyTorch</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="15.500000000000004%"><a name="ul22620111313"></a><ul id="ul22620111313"><li>PROCESS_RECOVER=on</li><li>ELASTIC_PROCESS_RECOVER_ENABLE=1</li><li>HIGH_AVAILABILITY=recover</li></ul>
+<td class="cellrowborder" valign="top" width="15.500000000000004%"><a name="ul22620111313"></a><ul id="ul22620111313"><li>PROCESS_RECOVER=on</li><li>HIGH_AVAILABILITY=recover</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="14.830000000000002%"><a name="ul62102015138"></a><ul id="ul62102015138"><li>PROCESS_RECOVER=on</li><li>ELASTIC_PROCESS_RECOVER_ENABLE=1</li><li>HIGH_AVAILABILITY=retry<p id="p102420141318"><a name="p102420141318"></a></p>
+<td class="cellrowborder" valign="top" width="14.830000000000002%"><a name="ul62102015138"></a><ul id="ul62102015138"><li>PROCESS_RECOVER=on</li><li>HIGH_AVAILABILITY=retry<p id="p102420141318"><a name="p102420141318"></a></p>
 </li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="19.39%"><a name="ul721720131318"></a><ul id="ul721720131318"><li>PROCESS_RECOVER=on</li><li>ELASTIC_PROCESS_RECOVER_ENABLE=1</li><li>ENABLE_RESTART_FAULT_PROCESS=on</li><li>HIGH_AVAILABILITY=recover</li></ul>
+<td class="cellrowborder" valign="top" width="19.39%"><a name="ul721720131318"></a><ul id="ul721720131318"><li>PROCESS_RECOVER=on</li><li>ENABLE_RESTART_FAULT_PROCESS=on</li><li>HIGH_AVAILABILITY=recover</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="9.920000000000002%"><a name="ul4462124162110"></a><ul id="ul4462124162110"><li>PROCESS_RECOVER=on</li><li>HIGH_AVAILABILITY=elastic-training</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="16.200000000000003%"><a name="ul182142017135"></a><ul id="ul182142017135"><li>PROCESS_RECOVER=on</li><li>ELASTIC_PROCESS_RECOVER_ENABLE=1</li><li>HIGH_AVAILABILITY=dump<p id="p5216201131"><a name="p5216201131"></a></p>
+<td class="cellrowborder" valign="top" width="16.200000000000003%"><a name="ul182142017135"></a><ul id="ul182142017135"><li>PROCESS_RECOVER=on</li><li>HIGH_AVAILABILITY=dump<p id="p5216201131"><a name="p5216201131"></a></p>
 </li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="7.000000000000002%"><p id="p102102012138"><a name="p102102012138"></a>-</p>
@@ -1436,18 +1418,18 @@ export MS_ENABLE_TFT="{RSC:1}"      # MindSpore场景下配置此字段开启优
 </tr>
 <tr id="row1628391516107"><td class="cellrowborder" valign="top" width="7.580000000000002%"><p id="p139556322136"><a name="p139556322136"></a>MindSpore</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.500000000000004%"><a name="ul295563211139"></a><ul id="ul295563211139"><li>PROCESS_RECOVER=on</li><li>ELASTIC_PROCESS_RECOVER_ENABLE=1</li><li>MINDIO_FOR_MINDSPORE=1</li><li>MS_ENABLE_TFT={ ARF:1}<p id="p16955153219134"><a name="p16955153219134"></a></p>
+<td class="cellrowborder" valign="top" width="15.500000000000004%"><a name="ul295563211139"></a><ul id="ul295563211139"><li>PROCESS_RECOVER=on</li><li>MINDIO_FOR_MINDSPORE=1</li><li>MS_ENABLE_TFT={ ARF:1}<p id="p16955153219134"><a name="p16955153219134"></a></p>
 </li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="14.830000000000002%"><a name="ul109551632111320"></a><ul id="ul109551632111320"><li>PROCESS_RECOVER=on</li><li>ELASTIC_PROCESS_RECOVER_ENABLE=1</li><li>MINDIO_FOR_MINDSPORE=1</li><li>MS_ENABLE_TFT={ UCE:1, HCCE:1}<p id="p1595593241313"><a name="p1595593241313"></a></p>
+<td class="cellrowborder" valign="top" width="14.830000000000002%"><a name="ul109551632111320"></a><ul id="ul109551632111320"><li>PROCESS_RECOVER=on</li><li>MINDIO_FOR_MINDSPORE=1</li><li>MS_ENABLE_TFT={ UCE:1, HCCE:1}<p id="p1595593241313"><a name="p1595593241313"></a></p>
 </li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="19.39%"><a name="ul195583215139"></a><ul id="ul195583215139"><li>PROCESS_RECOVER=on</li><li>ELASTIC_PROCESS_RECOVER_ENABLE=1</li><li>ENABLE_RESTART_FAULT_PROCESS=on</li><li>MINDIO_FOR_MINDSPORE=1</li><li>MS_ENABLE_TFT={ ARF:1}<p id="p1095514325133"><a name="p1095514325133"></a></p>
+<td class="cellrowborder" valign="top" width="19.39%"><a name="ul195583215139"></a><ul id="ul195583215139"><li>PROCESS_RECOVER=on</li><li>ENABLE_RESTART_FAULT_PROCESS=on</li><li>MINDIO_FOR_MINDSPORE=1</li><li>MS_ENABLE_TFT={ ARF:1}<p id="p1095514325133"><a name="p1095514325133"></a></p>
 </li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="9.920000000000002%"><p id="p324776161612"><a name="p324776161612"></a>-</p>
 </td>
-<td class="cellrowborder" valign="top" width="16.200000000000003%"><a name="ul1595513218133"></a><ul id="ul1595513218133"><li>PROCESS_RECOVER=on</li><li>ELASTIC_PROCESS_RECOVER_ENABLE=1</li><li>MINDIO_FOR_MINDSPORE=1</li><li>MS_ENABLE_TFT={ TTP:1}<p id="p495553210131"><a name="p495553210131"></a></p>
+<td class="cellrowborder" valign="top" width="16.200000000000003%"><a name="ul1595513218133"></a><ul id="ul1595513218133"><li>PROCESS_RECOVER=on</li><li>MINDIO_FOR_MINDSPORE=1</li><li>MS_ENABLE_TFT={ TTP:1}<p id="p495553210131"><a name="p495553210131"></a></p>
 </li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="7.000000000000002%"><p id="p7955193220131"><a name="p7955193220131"></a>-</p>

@@ -295,7 +295,7 @@ seccomp配置可约束容器的系统调用，减少容器对系统的影响面�
 
 >[!NOTE]
 >
->除Elastic Agent、TaskD组件外，所有MindCluster组件都需修改启动配置文件。
+>除TaskD组件外，所有MindCluster组件都需修改启动配置文件。
 
 ```Yaml
     metadata:
@@ -739,13 +739,6 @@ TaskD运行后，会启动gRPC客户端与ClusterD进行gRPC通信，同时TaskD
     ## 执行以下命令启动nginx，并根据提示输入密钥口令
     nginx -c /etc/nginx/conf/{master或worker}_nginx.conf
     ```
-
-## Elastic Agent安全加固<a name="ZH-CN_TOPIC_0000002511346397"></a>
-
->[!NOTE]
->Elastic Agent组件已经日落，相关资料将于2026年12月30日的版本删除。
-
-Elastic Agent的安全加固请参见[TaskD安全加固](#taskd安全加固)章节。
 
 ## 健康探针安全加固<a name="ZH-CN_TOPIC_0000002511346467"></a>
 
