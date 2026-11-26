@@ -256,6 +256,9 @@ func (ki *ClientK8s) GetContainerRuntime() (string, error) {
 	if strings.HasPrefix(runtimeVersion, "containerd://") {
 		return ContainerdRuntime, nil
 	}
+	if strings.HasPrefix(runtimeVersion, "cri-o://") {
+		return CrioRuntime, nil
+	}
 
 	return "", fmt.Errorf("unknown container runtime: %s", runtimeVersion)
 }

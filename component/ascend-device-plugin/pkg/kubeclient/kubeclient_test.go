@@ -721,3 +721,17 @@ func TestCheckPod(t *testing.T) {
 		})
 	})
 }
+
+func TestGetContainerRuntime_Crio(t *testing.T) {
+	client, err := newTestClientK8s()
+	if err != nil {
+		t.Fatal(err)
+	}
+	node := &v1.Node{Status: v1.NodeStatus{NodeInfo: v1.NodeSystemInfo{ContainerRuntimeVersion: "cri-o://1.28.0"}}}
+	patch := gomonkey.ApplyMethodReturn(&ClientK8s{}, "GetNode", node, nil)
+	defer patch.Reset()
+	runtime, err := client.GetContainerRuntime()
+	if err != nil || runtime != CrioRuntime {
+		t.Fatalf("runtime=%s error=%v", runtime, err)
+	}
+}

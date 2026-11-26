@@ -22,6 +22,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 
+	"Ascend-device-plugin/pkg/duplicatedetector/cache"
 	"Ascend-device-plugin/pkg/duplicatedetector/containerruntime"
 	"Ascend-device-plugin/pkg/duplicatedetector/types"
 	"ascend-common/common-utils/hwlog"
@@ -41,6 +42,8 @@ func init() {
 
 type mockClient struct {
 	containers map[string]*types.ContainerNPUInfo
+	parseCalls int
+	onWatch    func(types.EventHandler)
 }
 
 func (m *mockClient) ParseAllContainers(ctx context.Context) (map[string]*types.ContainerNPUInfo, error) {
@@ -48,6 +51,7 @@ func (m *mockClient) ParseAllContainers(ctx context.Context) (map[string]*types.
 }
 
 func (m *mockClient) ParseSingleContainer(ctx context.Context, containerID string) (*types.ContainerNPUInfo, error) {
+	m.parseCalls++
 	if info, ok := m.containers[containerID]; ok {
 		return info, nil
 	}
@@ -55,6 +59,39 @@ func (m *mockClient) ParseSingleContainer(ctx context.Context, containerID strin
 }
 
 func (m *mockClient) WatchContainerEvents(ctx context.Context, handler types.EventHandler) {
+	if m.onWatch != nil {
+		m.onWatch(handler)
+	}
+}
+
+func TestManager_ContainerEventSnapshot(t *testing.T) {
+	for _, wantCalls := range []int{0, 1} {
+		snapshot := wantCalls == 0
+		info := &types.ContainerNPUInfo{ID: "worker", Devices: []int{6}}
+		client := &mockClient{containers: map[string]*types.ContainerNPUInfo{info.ID: info}}
+		event := types.ContainerEvent{Type: types.ContainerEventCreate, ContainerID: info.ID, Namespace: "cri-o"}
+		if snapshot {
+			event.ContainerInfo = info
+		}
+		manager := &Manager{client: client, cache: cache.NewContainerCache()}
+		client.onWatch = func(handler types.EventHandler) {
+			handler(event)
+			probe := &types.ContainerNPUInfo{ID: "probe", Devices: []int{6}}
+			duplicates := manager.cache.StoreSingleAndFindDuplicates(probe)
+			if len(duplicates) != 1 || len(duplicates[0].Containers) != 2 || info.Namespace != event.Namespace {
+				t.Fatalf("snapshot=%v: created container was not cached: %+v", snapshot, duplicates)
+			}
+			manager.cache.RemoveContainer(probe.ID)
+			handler(types.ContainerEvent{Type: types.ContainerEventDestroy, ContainerID: info.ID})
+			if duplicates := manager.cache.StoreSingleAndFindDuplicates(probe); len(duplicates) != 0 {
+				t.Fatalf("snapshot=%v: destroyed container remained cached", snapshot)
+			}
+		}
+		manager.watchContainerEvents(context.Background())
+		if client.parseCalls != wantCalls {
+			t.Fatalf("snapshot=%v: got %d repeated queries, want %d", snapshot, client.parseCalls, wantCalls)
+		}
+	}
 }
 
 func TestNewManager_NilConfig(t *testing.T) {

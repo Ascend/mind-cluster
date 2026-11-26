@@ -100,6 +100,10 @@ func (m *Manager) watchContainerEvents(ctx context.Context) {
 		switch event.Type {
 		case types.ContainerEventCreate:
 			hwlog.RunLog.Infof("new container detected: %s", event.ContainerID)
+			if event.ContainerInfo != nil {
+				m.storeContainerInfo(event.ContainerInfo, event.Namespace)
+				break
+			}
 			if err := m.HandleNewContainer(ctx, event.ContainerID, event.Namespace); err != nil {
 				hwlog.RunLog.Warnf("failed to handle new container %s: %v", event.ContainerID, err)
 			}
@@ -149,16 +153,19 @@ func (m *Manager) HandleNewContainer(ctx context.Context, containerID string, na
 	if err != nil {
 		return fmt.Errorf("failed to parse container %s after %d retries: %w", containerID, maxRetries, err)
 	}
+	m.storeContainerInfo(info, namespace)
+	return nil
+}
+
+func (m *Manager) storeContainerInfo(info *types.ContainerNPUInfo, namespace string) {
 	if info == nil || len(info.Devices) == 0 {
-		return nil
+		return
 	}
 	info.Namespace = namespace
 
 	for _, dup := range m.cache.StoreSingleAndFindDuplicates(info) {
 		m.logDuplicate(dup)
 	}
-
-	return nil
 }
 
 // HandleContainerRemoval handles a container removal event

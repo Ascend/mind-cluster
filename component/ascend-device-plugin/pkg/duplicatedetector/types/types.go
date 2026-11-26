@@ -37,10 +37,10 @@ type DuplicateMountInfo struct {
 
 // DetectorConfig contains configuration for the duplicate detector
 type DetectorConfig struct {
-	// CriEndpoint is the containerd or docker socket endpoint (e.g., unix:///run/containerd/containerd.sock)
+	// CriEndpoint is the containerd, docker or CRI-O socket endpoint.
 	CriEndpoint string
 
-	// RuntimeType is the runtime type used by the containers (e.g., docker, containerd)
+	// RuntimeType is the runtime type used by the containers (docker, containerd or cri-o).
 	RuntimeType string
 }
 
@@ -60,6 +60,8 @@ type ContainerEvent struct {
 	ContainerID string
 	Namespace   string
 	Timestamp   time.Time
+	// ContainerInfo carries an already parsed snapshot when the runtime provides it.
+	ContainerInfo *ContainerNPUInfo
 }
 
 // EventHandler is a callback function for container events
