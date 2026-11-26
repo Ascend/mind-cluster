@@ -49,4 +49,5 @@ const (
 const (
 	DockerRuntime     = "docker"
 	ContainerdRuntime = "containerd"
+	CrioRuntime       = "cri-o"
 )

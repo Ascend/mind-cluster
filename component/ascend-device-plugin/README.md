@@ -67,7 +67,7 @@ flowchart TB
 
         KUBELET[("kubelet")]
         DCMI[("NPU驱动<br/>DCMI")]
-        CRI[("容器运行时<br/>Docker/Containerd")]
+        CRI[("容器运行时<br/>Docker/Containerd/CRI-O")]
         ADR[("Ascend Docker Runtime<br/>昇腾容器运行时")]
         APISERVER[("Kubernetes<br/>API Server")]
     end
@@ -106,7 +106,7 @@ flowchart TB
 - **外部依赖**：
   - **kubelet**：接收设备插件注册，感知芯片资源。
   - **NPU驱动（DCMI）**：提供芯片与灵衢总线设备的类型、健康状态信息，接收芯片复位命令。
-  - **容器运行时（Docker/Containerd）**：接收 Ascend Docker Runtime 的设备挂载指令，供重复设备检测查询容器挂载信息。
+  - **容器运行时（Docker/Containerd/CRI-O）**：接收 Ascend Docker Runtime 的设备挂载指令，供重复设备检测查询容器挂载信息。
   - **Ascend Docker Runtime**：接收 Allocate 接口下发的芯片选中信息（ASCEND_VISIBLE_DEVICES环境变量），完成昇腾设备到容器的挂载。
   - **Kubernetes API Server**：接收节点标签/注解更新、超节点拓扑信息及 Pod 管理请求。
 
@@ -183,3 +183,13 @@ Ascend Device Plugin 组件的典型使用场景，请参见以下文档：
 - 芯片故障恢复（离线热复位，需将启动参数-hotReset取值设置为0或2），请参见[MindCluster 集群调度组件用户指南 - 芯片故障恢复](../../docs/zh/scheduling/04_usage/05_fault_recovery/00_chip_fault_recovery.md)。
 - 故障检测与诊断（芯片故障分类与处理策略、任务挂死检测），请参见[MindCluster 集群调度组件用户指南 - 故障检测与诊断](../../docs/zh/scheduling/04_usage/04_fault_detection_and_diagnosis/00_feature_description.md)。
 - 组件上报的芯片资源与故障信息说明（包含mindx-dl-deviceinfo ConfigMap字段、灵衢总线设备故障信息等），请参见[MindCluster 集群调度组件用户指南 - API - Ascend Device Plugin](../../docs/zh/scheduling/06_api/02_ascend_device_plugin.md)。
+
+### CRI-O 重复设备检测
+
+检测器根据节点的 `cri-o://` 标识使用 CRI v1，默认访问 `/var/run/crio/crio.sock`。
+仅转换 root 所有且父目录安全的 `/var/run -> /run` 系统别名，再校验路径、所有者和权限。
+手动部署时，用 volume 和 volumeMount 将宿主机的 CRI-O socket 目录挂载到 `/run/crio`。插件容器内的 `/var/run` 为真实目录时，挂载到 `/var/run/crio`。
+
+检测器每秒尝试查询运行中的容器，从 `ContainerStatus(verbose=true)` 的 `Info["info"].runtimeSpec` 解析信息。
+发现变化时输出 `new container detected` 或 `container removed`。实际感知时间受 RPC 和处理耗时影响，两次成功查询之间的短命容器可能无法感知。
+列表查询失败时保留上次状态。成功解析的新容器快照直接交给管理器入缓存，避免重复查询。

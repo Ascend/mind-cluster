@@ -12,7 +12,7 @@
    limitations under the License.
 */
 
-// Package containerruntime is the client for interacting with docker and containerd runtime
+// Package containerruntime provides clients for docker, containerd and CRI-O.
 
 package containerruntime
 
@@ -116,10 +116,14 @@ func (c *ociClient) ParseSingleContainer(ctx context.Context, containerID string
 	return info, nil
 }
 
-// NewClient creates a new containerd client, If endpoint is empty, it will auto-detect the containerd socket path
+// NewClient creates a runtime client and selects a default socket when needed.
 func NewClient(config *types.DetectorConfig) (Client, error) {
 	if config == nil {
 		return nil, fmt.Errorf("config is nil")
+	}
+	if config.RuntimeType == kubeclient.CrioRuntime {
+		hwlog.RunLog.Info("using CRI-O runtime")
+		return NewCrioClient(config.CriEndpoint)
 	}
 	ociEndpoint, err := autoDetectOciEndpoint()
 	if err != nil {

@@ -19,6 +19,7 @@ require (
 	k8s.io/apimachinery v0.28.15
 	k8s.io/client-go v0.28.15
 	k8s.io/component-helpers v0.28.15
+	k8s.io/cri-api v0.28.15
 	k8s.io/kubelet v0.28.15
 	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2
 )

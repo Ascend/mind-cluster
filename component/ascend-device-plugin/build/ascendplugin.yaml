@@ -165,6 +165,7 @@ spec:
 #          - name: containerd
 #            mountPath: /run/containerd
 #            readOnly: true
+# Without Ascend Docker Runtime, add a read-only crio volumeMount at /run/crio for /var/run/crio/crio.sock. See README for path variants.
         env:
           - name: MOUNT_BY_RUNTIME_FOR_DP
             value: "true"
@@ -215,3 +216,4 @@ spec:
 #        - name: containerd
 #          hostPath:
 #            path: /run/containerd
+# Define a matching crio hostPath volume of type Directory with the actual host socket directory, typically /run/crio.
