@@ -457,7 +457,7 @@
                       --logtostderr=false
                       --log_dir=/var/log/mindx-dl/volcano-scheduler
                       --log_file=/var/log/mindx-dl/volcano-scheduler/volcano-scheduler.log
-                      -v=2 2>&1"]
+                      -v=3 2>&1"]
               imagePullPolicy: "IfNotPresent"
               resources:
                 requests:
@@ -576,7 +576,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p133061010218"><a name="p133061010218"></a><a name="p133061010218"></a>int</p>
 </td>
-<td class="cellrowborder" valign="top" width="29.69%" headers="mcps1.2.5.1.3 "><p id="p23068042118"><a name="p23068042118"></a><a name="p23068042118"></a>2</p>
+<td class="cellrowborder" valign="top" width="29.69%" headers="mcps1.2.5.1.3 "><p id="p23068042118"><a name="p23068042118"></a><a name="p23068042118"></a>3</p>
 </td>
 <td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.4 "><p id="p43067042115"><a name="p43067042115"></a><a name="p43067042115"></a>日志输出级别：</p>
 <a name="ul03064012212"></a><a name="ul03064012212"></a><ul id="ul03064012212"><li>取值为1：error</li><li>取值为2：warning</li><li>取值为3：info</li><li>取值为4：debug</li></ul>
