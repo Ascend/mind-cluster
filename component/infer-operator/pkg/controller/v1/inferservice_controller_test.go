@@ -23,9 +23,11 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -1503,5 +1505,321 @@ func TestListKPAManagedTargets(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 		_, found := targets["target"]
 		convey.So(found, convey.ShouldBeTrue)
+	})
+}
+
+// nextFakeEvent reads one event from the fake recorder, returning false if none arrives in time
+func nextFakeEvent(recorder *record.FakeRecorder) (string, bool) {
+	select {
+	case e := <-recorder.Events:
+		return e, true
+	case <-time.After(time.Second):
+		return "", false
+	}
+}
+
+// makeReadyCondition builds a Ready condition for tests
+func makeReadyCondition(conditionType string, status metav1.ConditionStatus, reason, message string) metav1.Condition {
+	return metav1.Condition{
+		Type:               conditionType,
+		Status:             status,
+		Reason:             reason,
+		Message:            message,
+		LastTransitionTime: metav1.Now(),
+	}
+}
+
+func TestReadyConditionTransitioned(t *testing.T) {
+	convey.Convey("TestReadyConditionTransitioned", t, func() {
+		conditionType := string(common.InferServiceReady)
+		readyTrue := makeReadyCondition(conditionType, metav1.ConditionTrue,
+			common.AllInstanceSetsReadyReason, "All InstanceSet replicas are ready")
+		readyFalse := makeReadyCondition(conditionType, metav1.ConditionFalse,
+			common.InstanceSetsNotReadyReason, "1 of 3 InstanceSet replicas are ready")
+
+		convey.Convey("no old condition and new false is a transition", func() {
+			convey.So(readyConditionTransitioned(nil, readyFalse), convey.ShouldBeTrue)
+		})
+		convey.Convey("no old condition and new true is not a transition", func() {
+			convey.So(readyConditionTransitioned(nil, readyTrue), convey.ShouldBeFalse)
+		})
+		convey.Convey("true to false is a transition", func() {
+			convey.So(readyConditionTransitioned([]metav1.Condition{readyTrue}, readyFalse), convey.ShouldBeTrue)
+		})
+		convey.Convey("false to true is a transition", func() {
+			convey.So(readyConditionTransitioned([]metav1.Condition{readyFalse}, readyTrue), convey.ShouldBeTrue)
+		})
+		convey.Convey("false to false with only message change is not a transition", func() {
+			updated := readyFalse
+			updated.Message = "2 of 3 InstanceSet replicas are ready"
+			convey.So(readyConditionTransitioned([]metav1.Condition{readyFalse}, updated), convey.ShouldBeFalse)
+		})
+		convey.Convey("true to true is not a transition", func() {
+			convey.So(readyConditionTransitioned([]metav1.Condition{readyTrue}, readyTrue), convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestInferServiceEmitEventNilRecorder(t *testing.T) {
+	convey.Convey("emitEvent with nil recorder does not panic", t, func() {
+		reconciler := &InferServiceReconciler{}
+		reconciler.emitEvent(&apiv1.InferService{}, corev1.EventTypeNormal,
+			common.InferServiceCreatedReason, "no recorder")
+	})
+}
+
+// newInferServiceEventReconciler returns a reconciler with a fake client and a fake event recorder
+func newInferServiceEventReconciler(objects ...runtime.Object) (*InferServiceReconciler, *record.FakeRecorder) {
+	scheme := runtime.NewScheme()
+	apiv1.AddToScheme(scheme)
+	fakeClient := fake.NewClientBuilder().WithScheme(scheme).
+		WithStatusSubresource(&apiv1.InferService{}).
+		WithRuntimeObjects(objects...).Build()
+	fakeRecorder := record.NewFakeRecorder(int10)
+	return &InferServiceReconciler{client: fakeClient, scheme: scheme, recorder: fakeRecorder}, fakeRecorder
+}
+
+// newInferServiceForEvent builds an InferService carrying the given generation and status
+func newInferServiceForEvent(generation, observedGeneration int64, readyReplicas, totalReplicas int32,
+	conditions []metav1.Condition) *apiv1.InferService {
+	roles := make([]apiv1.InstanceSetSpec, totalReplicas)
+	for i := range roles {
+		roles[i] = apiv1.InstanceSetSpec{Name: fmt.Sprintf("role%d", i)}
+	}
+	return &apiv1.InferService{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:              "test",
+			Namespace:         "default",
+			Generation:        generation,
+			CreationTimestamp: metav1.NewTime(time.Now()),
+		},
+		Spec: apiv1.InferServiceSpec{Roles: roles},
+		Status: apiv1.InferServiceStatus{
+			Replicas:           totalReplicas,
+			ReadyReplicas:      readyReplicas,
+			ObservedGeneration: observedGeneration,
+			Conditions:         conditions,
+		},
+	}
+}
+
+// readyInstanceSetList builds an InstanceSet list with the given number of ready items
+func readyInstanceSetList(readyCount int) *apiv1.InstanceSetList {
+	list := &apiv1.InstanceSetList{}
+	for i := 0; i < readyCount; i++ {
+		list.Items = append(list.Items, apiv1.InstanceSet{
+			ObjectMeta: metav1.ObjectMeta{Name: fmt.Sprintf("ist-%d", i), Namespace: "default"},
+			Status: apiv1.InstanceSetStatus{Conditions: []metav1.Condition{
+				{Type: string(common.InferServiceReady), Status: metav1.ConditionTrue},
+			}},
+		})
+	}
+	return list
+}
+
+func TestISUpdateStatusEvents(t *testing.T) {
+	convey.Convey("Test updateStatus event emission for InferService", t, func() {
+		conditionType := string(common.InferServiceReady)
+		readyTrue := makeReadyCondition(conditionType, metav1.ConditionTrue,
+			common.AllInstanceSetsReadyReason, "All InstanceSet replicas are ready")
+		readyFalse := makeReadyCondition(conditionType, metav1.ConditionFalse,
+			common.InstanceSetsNotReadyReason, "1 of 3 InstanceSet replicas are ready")
+
+		convey.Convey("transition true to false emits one warning event", func() {
+			is := newInferServiceForEvent(2, 1, 2, 2, []metav1.Condition{readyTrue})
+			reconciler, fakeRecorder := newInferServiceEventReconciler(is.DeepCopy())
+			err := reconciler.updateStatus(context.Background(), is, &apiv1.InstanceSetList{})
+			convey.So(err, convey.ShouldBeNil)
+			e, ok := nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(e, convey.ShouldContainSubstring, corev1.EventTypeWarning)
+			convey.So(e, convey.ShouldContainSubstring, common.InstanceSetsNotReadyReason)
+			convey.So(e, convey.ShouldContainSubstring, "0 of 2 InstanceSet replicas are ready")
+			_, ok = nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("transition false to true emits one normal event", func() {
+			is := newInferServiceForEvent(2, 1, 0, 2, []metav1.Condition{readyFalse})
+			reconciler, fakeRecorder := newInferServiceEventReconciler(is.DeepCopy())
+			err := reconciler.updateStatus(context.Background(), is, readyInstanceSetList(int2))
+			convey.So(err, convey.ShouldBeNil)
+			e, ok := nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(e, convey.ShouldContainSubstring, corev1.EventTypeNormal)
+			convey.So(e, convey.ShouldContainSubstring, common.AllInstanceSetsReadyReason)
+			_, ok = nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("ready stays true emits no event", func() {
+			is := newInferServiceForEvent(2, 1, 2, 2, []metav1.Condition{readyTrue})
+			reconciler, fakeRecorder := newInferServiceEventReconciler(is.DeepCopy())
+			err := reconciler.updateStatus(context.Background(), is, readyInstanceSetList(int2))
+			convey.So(err, convey.ShouldBeNil)
+			_, ok := nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("ready stays false with only message change emits no event", func() {
+			is := newInferServiceForEvent(2, 1, 1, 3, []metav1.Condition{readyFalse})
+			reconciler, fakeRecorder := newInferServiceEventReconciler(is.DeepCopy())
+			err := reconciler.updateStatus(context.Background(), is, readyInstanceSetList(int2))
+			convey.So(err, convey.ShouldBeNil)
+			_, ok := nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("ready condition first appearing as false emits one warning event", func() {
+			is := newInferServiceForEvent(2, 1, 2, 2, nil)
+			reconciler, fakeRecorder := newInferServiceEventReconciler(is.DeepCopy())
+			err := reconciler.updateStatus(context.Background(), is, &apiv1.InstanceSetList{})
+			convey.So(err, convey.ShouldBeNil)
+			e, ok := nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(e, convey.ShouldContainSubstring, corev1.EventTypeWarning)
+			convey.So(e, convey.ShouldContainSubstring, common.InstanceSetsNotReadyReason)
+			_, ok = nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("first successful reconcile emits one created event", func() {
+			is := newInferServiceForEvent(1, 0, 0, 1, nil)
+			reconciler, fakeRecorder := newInferServiceEventReconciler(is.DeepCopy())
+			err := reconciler.updateStatus(context.Background(), is, readyInstanceSetList(1))
+			convey.So(err, convey.ShouldBeNil)
+			e, ok := nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(e, convey.ShouldContainSubstring, corev1.EventTypeNormal)
+			convey.So(e, convey.ShouldContainSubstring, common.InferServiceCreatedReason)
+			convey.So(e, convey.ShouldContainSubstring, "InferService default/test created")
+			_, ok = nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("first reconcile with not ready emits created then warning", func() {
+			is := newInferServiceForEvent(1, 0, 0, 1, nil)
+			reconciler, fakeRecorder := newInferServiceEventReconciler(is.DeepCopy())
+			err := reconciler.updateStatus(context.Background(), is, &apiv1.InstanceSetList{})
+			convey.So(err, convey.ShouldBeNil)
+			e, ok := nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(e, convey.ShouldContainSubstring, common.InferServiceCreatedReason)
+			e, ok = nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(e, convey.ShouldContainSubstring, corev1.EventTypeWarning)
+			convey.So(e, convey.ShouldContainSubstring, common.InstanceSetsNotReadyReason)
+		})
+
+		convey.Convey("later reconcile emits no created event", func() {
+			is := newInferServiceForEvent(2, 1, 2, 2, []metav1.Condition{readyTrue})
+			reconciler, fakeRecorder := newInferServiceEventReconciler(is.DeepCopy())
+			err := reconciler.updateStatus(context.Background(), is, &apiv1.InstanceSetList{})
+			convey.So(err, convey.ShouldBeNil)
+			e, ok := nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(e, convey.ShouldNotContainSubstring, common.InferServiceCreatedReason)
+			_, ok = nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("pre-existing object with empty status emits no created event", func() {
+			is := newInferServiceForEvent(1, 0, 0, 1, nil)
+			is.CreationTimestamp = metav1.NewTime(time.Now().Add(-time.Hour))
+			reconciler, fakeRecorder := newInferServiceEventReconciler(is.DeepCopy())
+			reconciler.startTime = time.Now()
+			err := reconciler.updateStatus(context.Background(), is, readyInstanceSetList(1))
+			convey.So(err, convey.ShouldBeNil)
+			_, ok := nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestGetInferServiceDeletedEvents(t *testing.T) {
+	convey.Convey("Test getInferService deleted events", t, func() {
+		req := ctrl.Request{
+			NamespacedName: types.NamespacedName{Name: "test", Namespace: "default"},
+		}
+
+		convey.Convey("not found emits deleted event with minimal reference", func() {
+			reconciler, fakeRecorder := newInferServiceEventReconciler()
+			result, err := reconciler.getInferService(context.Background(), req)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result == nil, convey.ShouldBeTrue)
+			e, ok := nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(e, convey.ShouldContainSubstring, corev1.EventTypeNormal)
+			convey.So(e, convey.ShouldContainSubstring, common.InferServiceDeletedReason)
+			convey.So(e, convey.ShouldContainSubstring, "InferService default/test deleted")
+			_, ok = nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("deletion timestamp emits deleted event", func() {
+			now := metav1.Now()
+			is := &apiv1.InferService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "test",
+					Namespace:         "default",
+					DeletionTimestamp: &now,
+					Finalizers:        []string{"test-finalizer"},
+				},
+			}
+			reconciler, fakeRecorder := newInferServiceEventReconciler(is)
+			result, err := reconciler.getInferService(context.Background(), req)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result == nil, convey.ShouldBeTrue)
+			e, ok := nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(e, convey.ShouldContainSubstring, corev1.EventTypeNormal)
+			convey.So(e, convey.ShouldContainSubstring, common.InferServiceDeletedReason)
+			convey.So(e, convey.ShouldContainSubstring, "InferService default/test deleted")
+			_, ok = nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("repeated not found emits deleted event only once", func() {
+			reconciler, fakeRecorder := newInferServiceEventReconciler()
+			for i := 0; i < 3; i++ {
+				_, err := reconciler.getInferService(context.Background(), req)
+				convey.So(err, convey.ShouldBeNil)
+			}
+			e, ok := nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(e, convey.ShouldContainSubstring, common.InferServiceDeletedReason)
+			_, ok = nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("recreated object clears dedupe marker for a later deletion", func() {
+			ctx := context.Background()
+			is := &apiv1.InferService{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			}
+			reconciler, fakeRecorder := newInferServiceEventReconciler(is)
+			_, err := reconciler.getInferService(ctx, req)
+			convey.So(err, convey.ShouldBeNil)
+
+			convey.So(reconciler.client.Delete(ctx, is), convey.ShouldBeNil)
+			_, err = reconciler.getInferService(ctx, req)
+			convey.So(err, convey.ShouldBeNil)
+			e, ok := nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(e, convey.ShouldContainSubstring, common.InferServiceDeletedReason)
+
+			recreated := &apiv1.InferService{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			}
+			convey.So(reconciler.client.Create(ctx, recreated), convey.ShouldBeNil)
+			_, err = reconciler.getInferService(ctx, req)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(reconciler.client.Delete(ctx, recreated), convey.ShouldBeNil)
+			_, err = reconciler.getInferService(ctx, req)
+			convey.So(err, convey.ShouldBeNil)
+			e, ok = nextFakeEvent(fakeRecorder)
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(e, convey.ShouldContainSubstring, common.InferServiceDeletedReason)
+		})
 	})
 }

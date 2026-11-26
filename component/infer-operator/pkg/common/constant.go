@@ -90,7 +90,23 @@ const (
 	AllWorkloadReadyMessage = "All WorkLoad replicas are ready"
 	// WorkloadNotReadyReason is the reason of instanceSet's workload not ready condition
 	WorkloadNotReadyReason = "ReplicasNotReady"
-	DefaultReplicas        = int32(1)
+	// AllInstanceSetsReadyReason is the reason of infer service ready condition and event
+	AllInstanceSetsReadyReason = "AllInstanceSetsReady"
+	// InstanceSetsNotReadyReason is the reason of infer service not ready condition and event
+	InstanceSetsNotReadyReason = "ReplicasNotReady"
+	// AllInferServicesReadyReason is the reason of infer serviceset ready condition and event
+	AllInferServicesReadyReason = "AllInferServicesReady"
+	// InferServicesNotReadyReason is the reason of infer serviceset not ready condition and event
+	InferServicesNotReadyReason = "ReplicasNotReady"
+	// InferServiceCreatedReason is the reason of the infer service created event
+	InferServiceCreatedReason = "Created"
+	// InferServiceDeletedReason is the reason of the infer service deleted event
+	InferServiceDeletedReason = "Deleted"
+	// InferServiceSetCreatedReason is the reason of the infer serviceset created event
+	InferServiceSetCreatedReason = "Created"
+	// InferServiceSetDeletedReason is the reason of the infer serviceset deleted event
+	InferServiceSetDeletedReason = "Deleted"
+	DefaultReplicas              = int32(1)
 	// TrueBool is the value of the true boolean
 	TrueBool = "true"
 	// FalseBool is the value of the false boolean

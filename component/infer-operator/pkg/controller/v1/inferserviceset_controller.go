@@ -21,9 +21,11 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,18 +48,21 @@ import (
 
 // InferServiceSetReconciler reconciles a InferServiceSet object
 type InferServiceSetReconciler struct {
-	client   client.Client
-	scheme   *runtime.Scheme
-	recorder record.EventRecorder
-	counter  atomic.Uint64
+	client        client.Client
+	scheme        *runtime.Scheme
+	recorder      record.EventRecorder
+	counter       atomic.Uint64
+	startTime     time.Time
+	deletedEvents sync.Map
 }
 
 // NewInferServiceSetReconciler returns a new InferServiceSetReconciler
 func NewInferServiceSetReconciler(mgr ctrl.Manager) *InferServiceSetReconciler {
 	return &InferServiceSetReconciler{
-		client:   mgr.GetClient(),
-		scheme:   mgr.GetScheme(),
-		recorder: mgr.GetEventRecorderFor(common.InferServiceSetControllerName),
+		client:    mgr.GetClient(),
+		scheme:    mgr.GetScheme(),
+		recorder:  mgr.GetEventRecorderFor(common.InferServiceSetControllerName),
+		startTime: time.Now(),
 	}
 }
 
@@ -112,6 +117,9 @@ func (r *InferServiceSetReconciler) getInferServiceSet(ctx context.Context, req 
 		hwlog.RunLog.Warnf("unable to get InferServiceSet %s: %v, may be deleted", req.NamespacedName, err)
 		if errors.IsNotFound(err) {
 			hwlog.RunLog.Infof("InferServiceSet %s not found, skip reconcile", req.NamespacedName)
+			r.emitDeletedEvent(&apiv1.InferServiceSet{
+				ObjectMeta: metav1.ObjectMeta{Name: req.Name, Namespace: req.Namespace},
+			}, req.NamespacedName, fmt.Sprintf("InferServiceSet %s/%s deleted", req.Namespace, req.Name))
 			return nil, nil
 		}
 		return nil, err
@@ -119,9 +127,12 @@ func (r *InferServiceSetReconciler) getInferServiceSet(ctx context.Context, req 
 
 	if !(iss.DeletionTimestamp == nil || iss.DeletionTimestamp.IsZero()) {
 		hwlog.RunLog.Infof("InferServiceSet %s is being deleted", req.NamespacedName)
+		r.emitDeletedEvent(iss, req.NamespacedName, fmt.Sprintf("InferServiceSet %s/%s deleted", iss.Namespace, iss.Name))
 		return nil, nil
 	}
 
+	// The object exists again (possibly recreated), so a future deletion must emit a new event.
+	r.deletedEvents.Delete(req.NamespacedName)
 	return iss, nil
 }
 
@@ -262,7 +273,26 @@ func (r *InferServiceSetReconciler) updateStatus(ctx context.Context, iss *apiv1
 		return nil
 	}
 
-	return r.updateStatusWithRetry(ctx, iss, newStatus)
+	created := r.createdWhileRunning(iss)
+	newCondition := meta.FindStatusCondition(newStatus.Conditions, string(common.InferServiceSetReady))
+	transitioned := newCondition != nil && readyConditionTransitioned(iss.Status.Conditions, *newCondition)
+
+	if err := r.updateStatusWithRetry(ctx, iss, newStatus); err != nil {
+		return err
+	}
+
+	if created {
+		r.emitEvent(iss, corev1.EventTypeNormal, common.InferServiceSetCreatedReason,
+			fmt.Sprintf("InferServiceSet %s/%s created", iss.Namespace, iss.Name))
+	}
+	if transitioned {
+		eventType := corev1.EventTypeNormal
+		if newCondition.Status == metav1.ConditionFalse {
+			eventType = corev1.EventTypeWarning
+		}
+		r.emitEvent(iss, eventType, newCondition.Reason, newCondition.Message)
+	}
+	return nil
 }
 
 // calculateStatus calculates the new status for the InferServiceSet
@@ -296,7 +326,7 @@ func (r *InferServiceSetReconciler) createReadyCondition(readyReplicas, totalRep
 		return metav1.Condition{
 			Type:               string(common.InferServiceSetReady),
 			Status:             metav1.ConditionTrue,
-			Reason:             "AllInferServicesReady",
+			Reason:             common.AllInferServicesReadyReason,
 			Message:            "All InferService replicas are ready",
 			LastTransitionTime: metav1.Now(),
 		}
@@ -305,11 +335,41 @@ func (r *InferServiceSetReconciler) createReadyCondition(readyReplicas, totalRep
 	return metav1.Condition{
 		Type:   string(common.InferServiceSetReady),
 		Status: metav1.ConditionFalse,
-		Reason: "ReplicasNotReady",
+		Reason: common.InferServicesNotReadyReason,
 		Message: fmt.Sprintf("%d of %d InferService replicas are ready",
 			readyReplicas, totalReplicas),
 		LastTransitionTime: metav1.Now(),
 	}
+}
+
+// emitEvent records an event for the given object; it is a no-op when no recorder is configured
+func (r *InferServiceSetReconciler) emitEvent(obj runtime.Object, eventType, reason, msg string) {
+	if r.recorder == nil {
+		return
+	}
+	r.recorder.Event(obj, eventType, reason, msg)
+}
+
+// createdWhileRunning reports whether the object was created after this controller
+// instance started. A zero ObservedGeneration alone only proves that status has not
+// been recorded yet, and also matches objects that existed before the controller;
+// CreationTimestamp compared with the start time is the available creation signal.
+func (r *InferServiceSetReconciler) createdWhileRunning(iss *apiv1.InferServiceSet) bool {
+	if iss.Status.ObservedGeneration != 0 || iss.CreationTimestamp.IsZero() {
+		return false
+	}
+	return iss.CreationTimestamp.Time.After(r.startTime)
+}
+
+// emitDeletedEvent records a Deleted event once per object name. Reconciles for an
+// already vanished object would otherwise emit duplicates, and the minimal reference
+// object carries no UID for event aggregation. The marker is cleared when the object
+// is observed existing again, so a recreated object still gets its own Deleted event.
+func (r *InferServiceSetReconciler) emitDeletedEvent(obj runtime.Object, key types.NamespacedName, msg string) {
+	if _, loaded := r.deletedEvents.LoadOrStore(key, struct{}{}); loaded {
+		return
+	}
+	r.emitEvent(obj, corev1.EventTypeNormal, common.InferServiceSetDeletedReason, msg)
 }
 
 // updateStatusWithRetry updates the status of the InferServiceSet with retry on conflict
