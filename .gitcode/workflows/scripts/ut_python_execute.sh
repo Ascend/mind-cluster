@@ -5,7 +5,7 @@ export GOROOT=/opt/buildtools/go_1.21.12
 export GO111MODULE='auto'
 export GONOSUMDB=*
 export GOPROXY="https://goproxy.cn,direct"
-export PYTHON_HOME=/usr/local/python3.9.11/bin
+export PYTHON_HOME=/opt/buildtools/python-3.11.4/bin
 export PATH=${PYTHON_HOME}:$GOROOT/bin:$PATH
 export GOPATH=/opt/buildtools/
 
@@ -38,13 +38,13 @@ if grep -q "component/mindio/acp/python_whl/mindio_acp/mindio_acp" "${ATOMGIT_WO
     pip3 install pytest-mock
     pip3 install numpy
 
-    which python3.10
-    ls -al /usr/bin/python3
-    ls -al /usr/bin/python3.10
+    which python3.10 || true
+    ls -al /usr/bin/python3 || true
+    ls -al /usr/bin/python3.10 || true
     rm -fr /usr/bin/python3
     rm -fr /usr/bin/python3.10
 
-    export PYTHON_HOME=/opt/buildtools/python-3.9.11
+    export PYTHON_HOME=/opt/buildtools/python-3.11.4
     export Python3_ROOT=$PYTHON_HOME
     export PATH=$PYTHON_HOME/bin:$PATH
     export LD_LIBRARY_PATH=$PYTHON_HOME/lib:$LD_LIBRARY_PATH

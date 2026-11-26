@@ -60,10 +60,10 @@ env:
   img_build_faultdiag_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:SDK_20260113_1"
   img_build_faultdiag_arm: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:SDK_20260113_1"
   img_ut_go_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindCluster_20260617"
-  img_ut_cpp_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86_runtime_dt:mindxdl_DT_20240124"
-  img_ut_python_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_ub22_ut_20260421_cluster"
-  img_ut_faultdiag_python_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:SDK_20260113_1"
-  img_ut_mindio_cpp_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_ub22_ut_20260421_cluster"
+  img_ut_cpp_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_image:mindcluster-ut-cpp-x86_64-202611250842"
+  img_ut_python_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_image:mindcluster-ut-python-x86_64-202611250842"
+  img_ut_faultdiag_python_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_image:mindcluster-ut-python-x86_64-202611250842"
+  img_ut_mindio_cpp_x86: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_image:mindcluster-ut-cpp-x86_64-202611250842"
   img_presmoke_arm: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_arm:SDK_20260112_1"
 
 concurrency:
@@ -241,7 +241,7 @@ stages:
         if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.ut_cpp.yml
         with:
-          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86_runtime_dt:mindxdl_DT_20240124"
+          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_image:mindcluster-ut-cpp-x86_64-202611250842"
           runs_on_arch: "x86"
 
       UT_python:
@@ -249,7 +249,7 @@ stages:
         if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.ut_python.yml
         with:
-          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_ub22_ut_20260421_cluster"
+          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_image:mindcluster-ut-python-x86_64-202611250842"
           runs_on_arch: "x86"
 
       UT_faultdiag_python:
@@ -257,7 +257,7 @@ stages:
         if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.ut_faultdiag_python.yml
         with:
-          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:SDK_20260113_1"
+          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_image:mindcluster-ut-python-x86_64-202611250842"
           runs_on_arch: "x86"
 
       UT_mindio_cpp:
@@ -265,7 +265,7 @@ stages:
         if : ${{ jobs.Detect_file_changes.outputs.need_build == 'yes' }}
         uses: .gitcode/workflows/.ut_mindio_cpp.yml
         with:
-          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_x86:mindxdl_go1207_ub22_ut_20260421_cluster"
+          IMAGE_FLAG: "swr.cn-north-4.myhuaweicloud.com/ascend-mindx/mindx_image:mindcluster-ut-cpp-x86_64-202611250842"
           runs_on_arch: "x86"
 
   stage_2:
