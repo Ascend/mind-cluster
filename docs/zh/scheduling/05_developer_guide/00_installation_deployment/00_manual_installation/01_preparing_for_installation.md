@@ -86,14 +86,11 @@
 <tr id="row1674814434406"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p97491434407"><a name="p97491434407"></a><a name="p97491434407"></a><span id="ph1566531814589"><a name="ph1566531814589"></a><a name="ph1566531814589"></a>Ascend Operator</span></p>
 </td>
 </tr>
-<tr id="row6784854202610"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p11621711181811"><a name="p11621711181811"></a><a name="p11621711181811"></a><span id="ph1790811553279"><a name="ph1790811553279"></a><a name="ph1790811553279"></a>Elastic Agent</span></p>
+<tr id="row6784854202610"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p11621711181811"><a name="p11621711181811"></a><a name="p11621711181811"></a><span id="ph1790811553279"><a name="ph1790811553279"></a><a name="ph1790811553279"></a>TaskD</span></p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p161622011121819"><a name="p161622011121819"></a><a name="p161622011121819"></a>由用户自行决定，建议使用非root用户。</p>
+<td class="cellrowborder" rowspan="1" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p161622011121819"><a name="p161622011121819"></a><a name="p161622011121819"></a>由用户自行决定，建议使用非root用户。</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p1916271131815"><a name="p1916271131815"></a><a name="p1916271131815"></a>由用户自行决定，建议不使用特权容器。</p>
-</td>
-</tr>
-<tr id="row315419369301"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p715593611302"><a name="p715593611302"></a><a name="p715593611302"></a><span id="ph11742444163719"><a name="ph11742444163719"></a><a name="ph11742444163719"></a>TaskD</span></p>
+<td class="cellrowborder" rowspan="1" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p1916271131815"><a name="p1916271131815"></a><a name="p1916271131815"></a>由用户自行决定，建议不使用特权容器。</p>
 </td>
 </tr>
 <tr id="row3502131311115"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p175021513201117"><a name="p175021513201117"></a><a name="p175021513201117"></a><span id="ph16988102112717"><a name="ph16988102112717"></a><a name="ph16988102112717"></a>Container Manager</span></p>
@@ -132,7 +129,7 @@
 
 ## （可选）创建日志目录<a name="ZH-CN_TOPIC_0000002511346417"></a>
 
-Elastic Agent、TaskD之外的其他组件安装可跳过本章节。
+TaskD之外的其他组件安装可跳过本章节。
 
 在对应节点创建组件日志父目录和各组件的日志目录，并设置目录对应属主和权限。
 
@@ -165,7 +162,7 @@ Elastic Agent、TaskD之外的其他组件安装可跳过本章节。
     <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1657216638"><a name="screen1657216638"></a><a name="screen1657216638"></a>mkdir -m 750 /var/log/mindx-dl/devicePlugin
    chown root:root /var/log/mindx-dl/devicePlugin</pre>
     </td>
-    <td class="cellrowborder" rowspan="8" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p11572661536"><a name="p11572661536"></a><a name="p11572661536"></a>计算节点</p>
+    <td class="cellrowborder" rowspan="7" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p11572661536"><a name="p11572661536"></a><a name="p11572661536"></a>计算节点</p>
     </td>
     <td class="cellrowborder" rowspan="6" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p557592110325"><a name="p557592110325"></a><a name="p557592110325"></a>-</p>
     </td>
@@ -198,14 +195,6 @@ Elastic Agent、TaskD之外的其他组件安装可跳过本章节。
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen3597060117202"><a name="screen3597060117202"></a><a name="screen3597060117202"></a>mkdir -m 750 /var/log/mindx-dl/ascend-dra
    chown root:root /var/log/mindx-dl/ascend-dra</pre>
-    </td>
-    </tr>
-    <tr id="row55731961237"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p15573961314"><a name="p15573961314"></a><a name="p15573961314"></a><span id="ph13573106431"><a name="ph13573106431"></a><a name="ph13573106431"></a>Elastic Agent</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen55735616314"><a name="screen55735616314"></a><a name="screen55735616314"></a>mkdir -m 750 /var/log/mindx-dl/elastic
-   chown <em id="i15731661134"><a name="i15731661134"></a><a name="i15731661134"></a>由用户自行定义</em> /var/log/mindx-dl/elastic</pre>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><a name="ul958614153510"></a><a name="ul958614153510"></a><ul id="ul958614153510"><li>目录属主由用户自定义。注意：安装<span id="ph67093892615"><a name="ph67093892615"></a><a name="ph67093892615"></a>Elastic Agent</span>的用户属组、调用<span id="ph1642075902418"><a name="ph1642075902418"></a><a name="ph1642075902418"></a>Elastic Agent</span>的运行用户属组、挂载宿主机的目录属组请保持一致。</li><li>用户可自定义<span id="ph1790811553279"><a name="ph1790811553279"></a><a name="ph1790811553279"></a>Elastic Agent</span>的运行日志的落盘路径，在该路径下，用户可查看<span id="ph1529820279122"><a name="ph1529820279122"></a><a name="ph1529820279122"></a>Elastic Agent</span>所有节点日志，无需逐一登录每个节点查看。</li></ul>
     </td>
     </tr>
     <tr id="row189638410329"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p7963164113217"><a name="p7963164113217"></a><a name="p7963164113217"></a><span id="ph11742444163719"><a name="ph11742444163719"></a><a name="ph11742444163719"></a>TaskD</span></p>

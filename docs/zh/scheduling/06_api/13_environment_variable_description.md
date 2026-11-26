@@ -30,7 +30,7 @@ MindCluster组件使用的环境变量说明如[表1](#table1132513610543)所示
 |TASKD_LOG_PATH|-|否|字符串|表示TaskD组件运行日志的落盘路径|
 |MINDX_SERVER_IP|容器创建时由Ascend Operator写入|是|字符串|表示任务与ClusterD通信的IP地址，同时也是clusterd-grpc-svc的svc IP|
 |MINDX_SERVER_DOMAIN|容器创建时由Ascend Operator写入|是|字符串|表示任务与ClusterD通信的域名，默认值为"clusterd-grpc-svc.mindx-dl.svc.cluster.local"|
-|MINDX_TASK_ID|容器创建时Ascend Operator写入|否|MindIE推理任务场景下，取值为acjob任务中label字段下jobID字段的值|Elastic Agent/TaskD向ClusterD注册gRPC服务和TaskD profiling功能保存日志需要提供MINDX_TASK_ID信息|
+|MINDX_TASK_ID|容器创建时Ascend Operator写入|否|MindIE推理任务场景下，取值为acjob任务中label字段下jobID字段的值|TaskD向ClusterD注册gRPC服务和TaskD profiling功能保存日志需要提供MINDX_TASK_ID信息|
 |GROUP_BASE_DIR|任务启动脚本中写入|否|文件夹路径|表示TaskD组件的并行域信息导出路径|
 |MINDIO_WAIT_MINDX_TIME|任务YAML中写入|否|数字字符串，取值范围为[1, 3600]|不开启进程级重调度，开启弹性训练时等待故障Pod调度的超时时间|
 |RAS_NET_ROOT_PATH|用户配置|否|ClusterD和NodeD共享目录的根路径|在慢网络诊断场景下ClusterD和NodeD通过共享存储进行交互，详细请参见[慢网络诊断](../04_usage/04_fault_detection_and_diagnosis/02_fault_types/05_performance_degradation.md#慢网络诊断)|
@@ -154,7 +154,7 @@ Ascend Operator为不同AI框架的分布式训练任务（acjob）提供相应�
 </tr>
 <tr id="row0703116194918"><td class="cellrowborder" valign="top" width="16.869999999999997%" headers="mcps1.2.6.1.2 "><p id="p1022716206493"><a name="p1022716206493"></a><a name="p1022716206493"></a>MINDX_TASK_ID</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.77%" headers="mcps1.2.6.1.3 "><p id="p922752054917"><a name="p922752054917"></a><a name="p922752054917"></a><span id="ph159662220018"><a name="ph159662220018"></a><a name="ph159662220018"></a>Elastic Agent</span>/<span id="ph126107511246"><a name="ph126107511246"></a><a name="ph126107511246"></a>TaskD</span>向<span id="ph1722782017491"><a name="ph1722782017491"></a><a name="ph1722782017491"></a>ClusterD</span>注册gRPC服务需要提供MINDX_TASK_ID信息。</p>
+<td class="cellrowborder" valign="top" width="27.77%" headers="mcps1.2.6.1.3 "><p id="p922752054917"><a name="p922752054917"></a><a name="p922752054917"></a><span id="ph159662220018"><a name="ph159662220018"></a><a name="ph159662220018"></a><a name="ph126107511246"></a><a name="ph126107511246"></a>TaskD</span>向<span id="ph1722782017491"><a name="ph1722782017491"></a><a name="ph1722782017491"></a>ClusterD</span>注册gRPC服务需要提供MINDX_TASK_ID信息。</p>
 <p id="p11227154910536"><a name="p11227154910536"></a><a name="p11227154910536"></a>MindIE推理任务场景下，取值为acjob任务中label字段下jobID字段的值。</p>
 </td>
 <td class="cellrowborder" valign="top" width="19.79%" headers="mcps1.2.6.1.4 "><p id="p6227142012497"><a name="p6227142012497"></a><a name="p6227142012497"></a>字符串</p>
@@ -285,26 +285,15 @@ Ascend Operator为不同AI框架的分布式训练任务（acjob）提供相应�
 <a name="ul2113204145911"></a><a name="ul2113204145911"></a><ul id="ul2113204145911"><li>retry：进程级在线恢复。</li><li>recover：进程级别重调度。</li><li>dump：保存临终遗言。</li><li>elastic-training：弹性训练。</li></ul>
 </td>
 </tr>
-<tr id="row83631024143218"><td class="cellrowborder" valign="top" width="12.379999999999999%" headers="mcps1.2.6.1.1 "><p id="p1018165914322"><a name="p1018165914322"></a><a name="p1018165914322"></a><span id="ph12546182614219"><a name="ph12546182614219"></a><a name="ph12546182614219"></a>PyTorch</span>、MindSpore</p>
-</td>
-<td class="cellrowborder" valign="top" width="16.869999999999997%" headers="mcps1.2.6.1.2 "><p id="p118117596323"><a name="p118117596323"></a><a name="p118117596323"></a>ELASTIC_PROCESS_RECOVER_ENABLE</p>
-</td>
-<td class="cellrowborder" valign="top" width="27.77%" headers="mcps1.2.6.1.3 "><p id="p1518175973216"><a name="p1518175973216"></a><a name="p1518175973216"></a><span id="ph1072282311518"><a name="ph1072282311518"></a><a name="ph1072282311518"></a>Elastic Agent</span>侧进程级别重调度、进程级在线恢复、临终CheckPoint恢复功能开关。</p>
-</td>
-<td class="cellrowborder" valign="top" width="19.79%" headers="mcps1.2.6.1.4 "><a name="ul167945693511"></a><a name="ul167945693511"></a><ul id="ul167945693511"><li>取值为1：开启本功能。</li><li>取值为其他值：关闭本功能。关闭本功能时，MindIO侧相关功能需同时关闭。</li></ul>
-</td>
-<td class="cellrowborder" rowspan="4" valign="top" width="23.189999999999998%" headers="mcps1.2.6.1.5 "><p id="p923972485920"><a name="p923972485920"></a><a name="p923972485920"></a>进程级别重调度、进程级在线恢复、进程级原地恢复场景下注入该环境变量。</p>
-</td>
-</tr>
 <tr id="row0765193853210"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1918295993216"><a name="p1918295993216"></a><a name="p1918295993216"></a><span id="ph5168103016219"><a name="ph5168103016219"></a><a name="ph5168103016219"></a>PyTorch</span>、MindSpore</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p17182145910321"><a name="p17182145910321"></a><a name="p17182145910321"></a>ENABLE_RESTART_FAULT_PROCESS</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p71821759193216"><a name="p71821759193216"></a><a name="p71821759193216"></a><span id="ph249610307518"><a name="ph249610307518"></a><a name="ph249610307518"></a>Elastic Agent</span>/<span id="ph1513354715617"><a name="ph1513354715617"></a><a name="ph1513354715617"></a>TaskD</span>组件开启故障进程级原地恢复功能开关。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p71821759193216"><a name="p71821759193216"></a><a name="p71821759193216"></a><span id="ph249610307518"><a name="ph249610307518"></a><a name="ph249610307518"></a><a name="ph1513354715617"></a><a name="ph1513354715617"></a>TaskD</span>组件开启故障进程级原地恢复功能开关。</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><a name="ul1032320399361"></a><a name="ul1032320399361"></a><ul id="ul1032320399361"><li>on：开启本功能。</li><li>其他值：关闭本功能。</li></ul>
-<div class="note" id="note21949542365"><a name="note21949542365"></a><a name="note21949542365"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul11833105863616"></a><a name="ul11833105863616"></a><ul id="ul11833105863616"><li><span id="ph1982841320618"><a name="ph1982841320618"></a><a name="ph1982841320618"></a>PyTorch</span>框架下，本功能由<span id="ph193151321661"><a name="ph193151321661"></a><a name="ph193151321661"></a>Elastic Agent/TaskD</span>提供。</li><li>MindSpore框架下，本功能由<span id="ph5518105017616"><a name="ph5518105017616"></a><a name="ph5518105017616"></a>TaskD</span>提供。</li></ul>
-</div></div>
+</td>
+<td class="cellrowborder" rowspan="4" valign="top" width="23.189999999999998%" headers="mcps1.2.6.1.5 "><p id="p923972485920"><a name="p923972485920"></a><a name="p923972485920"></a>进程级别重调度、进程级在线恢复、进程级原地恢复场景下注入该环境变量。</p>
 </td>
 </tr>
 <tr id="row1276511386323"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p618295953218"><a name="p618295953218"></a><a name="p618295953218"></a>MindSpore</p>
@@ -363,28 +352,6 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 |PERF_DUMP_CONFIG|迭代时延和分组信息启停开关|字符串|仅在慢节点检测场景下写入|
 |KUBELET_PORT|指定当前节点kubelet默认端口号（若用户未自定义kubelet端口，则无需配置）。|0~65535的整数|若用户修改kubelet默认端口，需要设置该环境变量的值为自定义端口号。<p>若用户未修改kubelet默认端口，则忽略该环境变量。</p>|
 |HOST_IP|指定当前节点的物理IP。|合法的IP地址，格式为字符串，要求为常规IPv4或IPv6格式|固定配置项，初始YAML文件已提供。|
-
-<!-- npu="A3,910b" id1 -->
-## Elastic Agent环境变量说明<a name="section8853192413411"></a>
-
->[!NOTE]
->Elastic Agent组件已经日落，相关资料将于2026年12月30日的版本删除。
-
-使用Elastic Agent组件时可以配置的环境变量。如需了解其他来自源码的环境变量，请参见[PyTorch相关资料](https://pytorch.ac.cn/#google_vignette)。
-
-**表 4** Elastic Agent环境变量说明
-
-<a name="table159711045543"></a>
-
-|环境变量名称|功能|取值|说明|
-| --- | --- | --- | --- |
-|ELASTIC\_LOG\_PATH|Elastic Agent组件运行日志的落盘路径。|字符串|配置时需区分该日志的节点名称。参考示例：<pre class="screen">ELASTIC_LOG_PATH=/job/code/alllogs/\$MINDX_TASK_ID/elasticlogs/elastic-log\$XDL_IP-\$RANK</pre><ul><li>请将\$XDL_IP替换成实际使用的节点IP。</li><li>请将\$RANK替换成实际使用的节点RANK。</li></ul>|
-|ELASTIC\_PROCESS\_RECOVER\_ENABLE|Elastic Agent侧进程级别重调度、进程级在线恢复、临终CheckPoint恢复功能开关。|字符串|<ul><li>取值为1：开启本功能。</li><li>其他值：关闭本功能。</li></ul>关闭本功能时，MindIO侧相关功能需同时关闭。|
-|ENABLE\_RESTART\_FAULT\_PROCESS|Elastic Agent组件开启进程级别原地恢复功能的开关。|字符串|<ul><li>on：开启本功能。</li><li>其他值：关闭本功能。</li></ul>|
-|RESTART\_FAULT\_PROCESS\_TYPE|Elastic Agent通知MindIO重启故障进程的类型。|字符串|<ul><li>worker：不退出Pod，只重启故障进程。</li><li>pod：重启Pod。</li></ul>|
-|RANK\_TABLE\_FILE|RankTable文件路径。|字符串|hccl.json文件的路径。|
-|PROCESS\_RECOVER|进程级别重调度或进程级在线恢复开关。|字符串|<ul><li>on：开启本功能。</li><li>其他值：关闭本功能。</li></ul>|
-<!-- end id1 -->
 
 <!-- npu="950,A3,910b" id2 -->
 ## TaskD环境变量说明<a name="section6616275583"></a>

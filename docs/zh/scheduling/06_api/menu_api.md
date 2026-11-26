@@ -8,9 +8,6 @@
 - [ClusterD](./04_clusterd/menu_clusterd.md)
 - [Ascend Operator](05_ascend_operator.md)
 <!-- end id1 -->
-<!-- npu="A3,910b" id2 -->
-- [Elastic-Agent（断点续训相关接口）](06_elastic_agent.md)
-<!-- end id2 -->
 <!-- npu="950,A3,910b,910,310p" id3 -->
 - [TaskD](./07_taskd/menu_taskd.md)
 - [Ascend Job](08_ascend_job.md)
