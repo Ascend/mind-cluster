@@ -4,7 +4,8 @@
 
 ```ColdFusion
 ...
-Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt_num=0i,npu_chip_roce_unexpected_ack_num=0i,npu_chip_optical_vcc=3245.1,npu_chip_optical_rx_power_1=0.8585,npu_chip_info_hbm_used_memory=0i,npu_chip_mac_rx_pause_num=0i,npu_chip_roce_tx_all_pkt_num=0i,npu_chip_roce_tx_cnp_pkt_num=0i,npu_chip_info_temperature=46,npu_chip_mac_rx_bad_pkt_num=0i,npu_chip_roce_tx_err_pkt_num=0i,npu_chip_optical_rx_power_3=0.8466,npu_chip_optical_rx_power_0=0.7933,npu_chip_info_network_status=0i,npu_chip_mac_rx_pfc_pkt_num=0i,npu_chip_mac_tx_bad_pkt_num=0i,npu_chip_roce_rx_all_pkt_num=0i,npu_chip_mac_rx_bad_oct_num=0i,npu_chip_optical_tx_power_1=0.9162,npu_chip_info_utilization=0,npu_chip_info_power=73.9000015258789,npu_chip_info_link_status=1i,npu_chip_info_bandwidth_rx=0,npu_chip_mac_tx_pfc_pkt_num=0i,npu_chip_roce_rx_err_pkt_num=0i,npu_chip_roce_verification_err_num=0i,npu_chip_optical_state=1i,npu_chip_info_bandwidth_tx=0,npu_chip_mac_tx_bad_oct_num=0i,npu_chip_roce_out_of_order_num=0i,npu_chip_roce_qp_status_err_num=0i,npu_chip_optical_rx_power_2=0.855,npu_chip_optical_tx_power_0=0.9095,npu_chip_info_hbm_utilization=0,npu_chip_link_up_num=2i,npu_chip_info_health_status=1i,npu_chip_mac_tx_pause_num=0i,npu_chip_roce_new_pkt_rty_num=0i,npu_chip_optical_temp=53,npu_chip_optical_tx_power_2=1.0342,npu_chip_optical_tx_power_3=0.9715 1694772754612200641,npu_chip_info_process_info_num=0i
+Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt_num=0i,npu_chip_roce_unexpected_ack_num=0i,npu_chip_optical_vcc=3245.1,npu_chip_optical_rx_power_1=0.8585,npu_chip_info_hbm_used_memory=0i,npu_chip_mac_rx_pause_num=0i,npu_chip_roce_tx_all_pkt_num=0i,npu_chip_roce_tx_cnp_pkt_num=0i,npu_chip_info_temperature=46,npu_chip_mac_rx_bad_pkt_num=0i,npu_chip_roce_tx_err_pkt_num=0i,npu_chip_optical_rx_power_3=0.8466,npu_chip_optical_rx_power_0=0.7933,npu_chip_info_network_status=0i,npu_chip_mac_rx_pfc_pkt_num=0i,npu_chip_mac_tx_bad_pkt_num=0i,npu_chip_roce_rx_all_pkt_num=0i,npu_chip_mac_rx_bad_oct_num=0i,npu_chip_optical_tx_power_1=0.9162,npu_chip_info_utilization=0,npu_chip_info_power=73.9000015258789,npu_chip_info_link_status=1i,npu_chip_info_bandwidth_rx=0,npu_chip_mac_tx_pfc_pkt_num=0i,npu_chip_roce_rx_err_pkt_num=0i,npu_chip_roce_verification_err_num=0i,npu_chip_optical_state=1i,npu_chip_info_bandwidth_tx=0,npu_chip_mac_tx_bad_oct_num=0i,npu_chip_roce_out_of_order_num=0i,npu_chip_roce_qp_status_err_num=0i,npu_chip_optical_rx_power_2=0.855,npu_chip_optical_tx_power_0=0.9095,npu_chip_info_hbm_utilization=0,npu_chip_link_up_num=2i,npu_chip_mac_tx_pause_num=0i,npu_chip_roce_new_pkt_rty_num=0i,npu_chip_optical_temp=53,npu_chip_optical_tx_power_2=1.0342,npu_chip_optical_tx_power_3=0.9715 1694772754612200641,npu_chip_info_process_info_num=0i
+Ascend910-0,host=xxx,status=Healthy npu_chip_info_health_status=1i 1694772754612200641
 ```
 
 本接口支持查询默认指标组和自定义指标组。自定义指标组的方法详细请参见[自定义指标开发](../../05_developer_guide/01_custom_metrics_development.md)；默认指标组包含如下几个部分。指标组的采集和上报由配置文件中的开关控制，若开关配置为开启，则对应的指标组会进行采集和上报；若开关配置为关闭，则对应的指标组不会进行采集和上报。
@@ -177,6 +178,17 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p316933865416"><a name="p316933865416"></a><a name="p316933865416"></a>取值为0、1或-1</p>
 <a name="ul1016913885417"></a><a name="ul1016913885417"></a><ul id="ul1016913885417"><li>1：健康</li><li>0：不健康</li><li>-1：未知（DCMI接口调用失败）</li></ul>
+<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">
+<p>Telegraf场景下，npu_chip_info_health_status指标新增status标签，取值与样本值的对应关系如下：</p>
+<ul>
+<li>status="Healthy"：原始健康码0，样本值为1</li>
+<li>status="Warning"：原始健康码1（一般告警），样本值为0</li>
+<li>status="Alarm"：原始健康码2（重要告警），样本值为0</li>
+<li>status="Critical"：原始健康码3（紧急告警），样本值为0</li>
+<li>status="Unknown"：DCMI接口调用失败或返回未定义状态，样本值为-1</li>
+</ul>
+<p>该status标签仅用于npu_chip_info_health_status指标，其他指标不新增该标签。</p>
+</div></div>
 </td>
 </tr>
 <tr id="row10385175935311"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p316943810545"><a name="p316943810545"></a><a name="p316943810545"></a>NPU</p>

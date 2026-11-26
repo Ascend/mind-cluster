@@ -261,30 +261,58 @@ type getHealthTestCase struct {
 	healthCode   uint32
 	getHealthErr error
 	expectStatus string
+	expectLabel  string
 }
 
 func buildGetHealthTestCases() []getHealthTestCase {
 	return []getHealthTestCase{
 		{
-			name:         "should return Unknown when GetDeviceHealth fails",
+			name:         "should return Unknown/Unknown when GetDeviceHealth fails",
 			logicID:      testLogicID,
 			healthCode:   0,
 			getHealthErr: errors.New(apiCallFailedMsg),
 			expectStatus: colcommon.Unknown,
+			expectLabel:  colcommon.Unknown,
 		},
 		{
-			name:         "should return Healthy when health is 0",
+			name:         "should return Healthy/Healthy when health is 0",
 			logicID:      testLogicID,
-			healthCode:   0,
+			healthCode:   healthCodeHealthy,
 			getHealthErr: nil,
 			expectStatus: colcommon.Healthy,
+			expectLabel:  colcommon.Healthy,
 		},
 		{
-			name:         "should return UnHealthy when health is not 0",
+			name:         "should return UnHealthy/Warning when health is 1",
 			logicID:      testLogicID,
-			healthCode:   1,
+			healthCode:   healthCodeWarning,
 			getHealthErr: nil,
 			expectStatus: colcommon.UnHealthy,
+			expectLabel:  colcommon.Warning,
+		},
+		{
+			name:         "should return UnHealthy/Alarm when health is 2",
+			logicID:      testLogicID,
+			healthCode:   healthCodeAlarm,
+			getHealthErr: nil,
+			expectStatus: colcommon.UnHealthy,
+			expectLabel:  colcommon.Alarm,
+		},
+		{
+			name:         "should return UnHealthy/Critical when health is 3",
+			logicID:      testLogicID,
+			healthCode:   healthCodeCritical,
+			getHealthErr: nil,
+			expectStatus: colcommon.UnHealthy,
+			expectLabel:  colcommon.Critical,
+		},
+		{
+			name:         "should return Unknown/Unknown when health code is undefined",
+			logicID:      testLogicID,
+			healthCode:   4,
+			getHealthErr: nil,
+			expectStatus: colcommon.Unknown,
+			expectLabel:  colcommon.Unknown,
 		},
 	}
 }
@@ -296,8 +324,9 @@ func TestGetHealth(t *testing.T) {
 			patches := gomonkey.ApplyMethodReturn(dmgr, "GetDeviceHealth", tt.healthCode, tt.getHealthErr)
 			defer patches.Reset()
 
-			result := getHealth(tt.logicID, dmgr)
-			convey.So(result, convey.ShouldEqual, tt.expectStatus)
+			status, label := getHealth(tt.logicID, dmgr)
+			convey.So(status, convey.ShouldEqual, tt.expectStatus)
+			convey.So(label, convey.ShouldEqual, tt.expectLabel)
 		})
 	}
 }
@@ -328,6 +357,21 @@ func buildGetHealthCodeTestCases() []getHealthCodeTestCase {
 		{
 			name:         "should return UnhealthyCode when health is UnHealthy",
 			healthStatus: colcommon.UnHealthy,
+			expectCode:   colcommon.UnhealthyCode,
+		},
+		{
+			name:         "should return UnhealthyCode when health is Warning",
+			healthStatus: colcommon.Warning,
+			expectCode:   colcommon.UnhealthyCode,
+		},
+		{
+			name:         "should return UnhealthyCode when health is Alarm",
+			healthStatus: colcommon.Alarm,
+			expectCode:   colcommon.UnhealthyCode,
+		},
+		{
+			name:         "should return UnhealthyCode when health is Critical",
+			healthStatus: colcommon.Critical,
 			expectCode:   colcommon.UnhealthyCode,
 		},
 	}
@@ -456,16 +500,32 @@ func gatherGaugeValues(ch chan prometheus.Metric) map[string]float64 {
 	return values
 }
 
+func defaultHealthLabel(status string) string {
+	switch status {
+	case colcommon.UnHealthy:
+		return colcommon.Warning
+	case colcommon.Unknown:
+		return colcommon.Unknown
+	default:
+		return colcommon.Healthy
+	}
+}
+
 func mockChipCacheWithHealth(n *colcommon.NpuCollector, c *BaseInfoCollector, chips []colcommon.HuaWeiAIChip,
-	healthByPhyID map[int32]string) {
+	healthByPhyID map[int32]string, labelByPhyID map[int32]string) {
 	localCache := sync.Map{}
 	for _, chip := range chips {
 		status := healthByPhyID[chip.PhyId]
 		if status == "" {
 			status = colcommon.Healthy
 		}
+		label := labelByPhyID[chip.PhyId]
+		if label == "" {
+			label = defaultHealthLabel(status)
+		}
 		localCache.Store(chip.PhyId, chipCache{chip: chip, timestamp: time.Now(), HealthStatus: status,
-			ErrorCodes: []int64{0}, Temperature: 0, Power: 0, Voltage: 0, AICoreCurrentFreq: 0,
+			HealthStatusLabel: label,
+			ErrorCodes:        []int64{0}, Temperature: 0, Power: 0, Voltage: 0, AICoreCurrentFreq: 0,
 			NetHealthStatus: colcommon.Healthy, DevProcessInfo: mockProcessInfo()})
 	}
 	colcommon.UpdateCache[chipCache](n, colcommon.GetCacheKey(c), &localCache)
@@ -503,7 +563,7 @@ func TestUpdatePrometheusMachineHealthMetrics(t *testing.T) {
 			n := mockNewNpuCollector()
 			c := &BaseInfoCollector{}
 			chips := mockGetNPUChipList()
-			mockChipCacheWithHealth(n, c, chips, tt.healthByPhyID)
+			mockChipCacheWithHealth(n, c, chips, tt.healthByPhyID, nil)
 
 			ch := make(chan prometheus.Metric, maxMetricsCount)
 			go func() {
@@ -518,6 +578,66 @@ func TestUpdatePrometheusMachineHealthMetrics(t *testing.T) {
 			convey.So(values["machine_unknown_npu_nums"], convey.ShouldEqual, tt.expectUnknown)
 		})
 	}
+}
+
+func TestUpdatePrometheusHealthStatusMetric(t *testing.T) {
+	type healthSample struct {
+		labels map[string]string
+		value  float64
+	}
+	chips := mockGetNPUChipList()[:5]
+	healthByPhyID := map[int32]string{
+		0: colcommon.Healthy,
+		1: colcommon.UnHealthy,
+		2: colcommon.UnHealthy,
+		3: colcommon.UnHealthy,
+		4: colcommon.Unknown,
+	}
+	labelByPhyID := map[int32]string{
+		0: colcommon.Healthy,
+		1: colcommon.Warning,
+		2: colcommon.Alarm,
+		3: colcommon.Critical,
+		4: colcommon.Unknown,
+	}
+	expect := map[string]healthSample{
+		"0": {labels: map[string]string{"status": colcommon.Healthy}, value: 1},
+		"1": {labels: map[string]string{"status": colcommon.Warning}, value: 0},
+		"2": {labels: map[string]string{"status": colcommon.Alarm}, value: 0},
+		"3": {labels: map[string]string{"status": colcommon.Critical}, value: 0},
+		// getHealthCode(Unknown) returns common.FailedValue (math.MaxInt32); doUpdateMetric converts it to -1.
+		"4": {labels: map[string]string{"status": colcommon.Unknown}, value: -1},
+	}
+
+	convey.Convey("should expose status label and sample value for all health levels", t, func() {
+		n := mockNewNpuCollector()
+		c := &BaseInfoCollector{}
+		mockChipCacheWithHealth(n, c, chips, healthByPhyID, labelByPhyID)
+
+		ch := make(chan prometheus.Metric, maxMetricsCount)
+		go func() {
+			defer close(ch)
+			c.UpdatePrometheus(ch, n, mockGetContainerNPUInfo(), chips)
+		}()
+
+		samples := make(map[string]healthSample)
+		for m := range ch {
+			if m.Desc() != descHealthStatus {
+				continue
+			}
+			labels, value := readMetricLabelsAndValue(m)
+			samples[labels["id"]] = healthSample{labels: labels, value: value}
+		}
+
+		convey.So(samples, convey.ShouldHaveLength, len(chips))
+		for id, want := range expect {
+			got, ok := samples[id]
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(got.labels["status"], convey.ShouldEqual, want.labels["status"])
+			convey.So(got.value, convey.ShouldEqual, want.value)
+			convey.So(got.labels, convey.ShouldHaveLength, len(colcommon.CardLabel)+1)
+		}
+	})
 }
 
 func readMetricLabelsAndValue(m prometheus.Metric) (labels map[string]string, value float64) {

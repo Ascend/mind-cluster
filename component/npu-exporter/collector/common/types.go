@@ -66,6 +66,8 @@ type TelegrafMetric struct {
 	DeviceID int32
 	// VDevID virtual device id; less than 0 means not a virtual device
 	VDevID int32
+	// ExtraLabels are additional tags merged with the default device tags.
+	ExtraLabels map[string]string
 }
 
 // NewDeviceMetric build a TelegrafMetric for a physical device metric

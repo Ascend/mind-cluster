@@ -180,7 +180,7 @@ const (
 	testTagValTrain = "train"
 )
 
-// TestBuildTags should return custom labels when Labels is set
+// TestBuildTags should build default device tags and merge custom labels.
 func TestBuildTags(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -188,14 +188,23 @@ func TestBuildTags(t *testing.T) {
 		devTag   string
 		expected map[string]string
 	}{
-		{name: "should return custom labels when Labels is set",
-			data:     common.TelegrafMetric{Labels: map[string]string{testTagJob: testTagValTrain}},
+		{name: "should return custom labels when node-level Labels is set",
+			data: common.TelegrafMetric{
+				DeviceID: common.NoDeviceID,
+				VDevID:   common.NoDeviceID,
+				Labels:   map[string]string{testTagJob: testTagValTrain},
+			},
 			devTag:   testDevTagValue,
 			expected: map[string]string{testTagJob: testTagValTrain}},
 		{name: "should return node level tag when DeviceID < 0 and Labels nil",
 			data:     common.TelegrafMetric{DeviceID: common.NoDeviceID, VDevID: common.NoDeviceID},
 			devTag:   testDevTagValue,
 			expected: map[string]string{deviceTagKey: testDevTagValue}},
+		{name: "should return custom labels for device-level metric when Labels is set",
+			data: common.TelegrafMetric{DeviceID: testDeviceID0, VDevID: common.NoDeviceID,
+				Labels: map[string]string{testTagJob: testTagValTrain}},
+			devTag:   testDevTagValue,
+			expected: map[string]string{testTagJob: testTagValTrain}},
 		{name: "should return device tag when DeviceID >= 0 and VDevID < 0",
 			data:     common.TelegrafMetric{DeviceID: testDeviceID0, VDevID: common.NoDeviceID},
 			devTag:   testDevTagValue,
@@ -204,6 +213,14 @@ func TestBuildTags(t *testing.T) {
 			data:     common.TelegrafMetric{DeviceID: testDeviceID1, VDevID: testVDevID100},
 			devTag:   testDevTagValue,
 			expected: map[string]string{deviceTagKey: testDevTagValue + "-1", vDevTagKey: "100"}},
+		{name: "should merge extra labels with device tags",
+			data: common.TelegrafMetric{DeviceID: testDeviceID0, VDevID: common.NoDeviceID,
+				ExtraLabels: map[string]string{"status": common.Healthy}},
+			devTag: testDevTagValue,
+			expected: map[string]string{
+				deviceTagKey: testDevTagValue + "-0",
+				"status":     common.Healthy,
+			}},
 	}
 	for _, tt := range tests {
 		convey.Convey(tt.name, t, func() {
@@ -334,6 +351,19 @@ func TestConsumeAndReport(t *testing.T) {
 			expectedKeys: []string{
 				metricKey(devName, device0Tag),
 				metricKey(devName, device0Tag, vDevTagKey+"=100")}},
+		{name: "should merge extra labels with device tags for health metric",
+			metrics: []common.TelegrafMetric{
+				newDeviceMetric(testDeviceID0, singleField),
+				{
+					DeviceID:    testDeviceID0,
+					VDevID:      common.NoDeviceID,
+					ExtraLabels: map[string]string{"status": common.Healthy},
+					Fields:      map[string]interface{}{"npu_chip_info_health_status": mockValue50},
+				},
+			},
+			expectedKeys: []string{
+				metricKey(devName, device0Tag),
+				metricKey(devName, device0Tag, "status="+common.Healthy)}},
 	}
 	for _, tt := range tests {
 		convey.Convey(tt.name, t, func() {

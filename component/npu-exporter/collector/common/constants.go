@@ -37,6 +37,12 @@ const (
 	Unknown = "Unknown"
 	// NotReport status of NotReport
 	NotReport = "NotReport"
+	// Warning status of Warning
+	Warning = "Warning"
+	// Alarm status of Alarm
+	Alarm = "Alarm"
+	// Critical status of Critical
+	Critical = "Critical"
 
 	// HealthyCode healthy code
 	HealthyCode = 1

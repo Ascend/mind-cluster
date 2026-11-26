@@ -344,6 +344,18 @@ func TestUpdateTelegraf(t *testing.T) {
 
 		t.Logf("TestUpdateTelegraf received len(ch):%v", len(received))
 		convey.So(received, convey.ShouldNotBeEmpty)
+
+		healthMetricCount := 0
+		for i := range received {
+			if _, ok := received[i].Fields["npu_chip_info_health_status"]; ok {
+				healthMetricCount++
+				convey.So(received[i].ExtraLabels["status"], convey.ShouldEqual, colcommon.Healthy)
+			}
+			if received[i].ExtraLabels["status"] != "" {
+				convey.So(received[i].Fields, convey.ShouldHaveLength, 1)
+			}
+		}
+		convey.So(healthMetricCount, convey.ShouldEqual, len(chips))
 	})
 }
 
@@ -544,6 +556,7 @@ func mockChipCache(n *colcommon.NpuCollector, chips []colcommon.HuaWeiAIChip, ca
 	for _, chip := range chips {
 		localCache.Store(chip.PhyId, chipCache{chip: chip, timestamp: time.Now(),
 			HealthStatus:      "Healthy",
+			HealthStatusLabel: colcommon.Healthy,
 			ErrorCodes:        []int64{0},
 			Temperature:       0,
 			Power:             0,

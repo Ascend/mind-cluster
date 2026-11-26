@@ -37,6 +37,9 @@ machine_unknown_npu_nums 1
 # HELP machine_card_nums Amount of card installed on the machine.
 # TYPE machine_card_nums gauge
 machine_card_nums 8
+# HELP npu_chip_info_health_status the npu health status
+# TYPE npu_chip_info_health_status gauge
+npu_chip_info_health_status{container_name="",id="0",model_name="910A-Ascend-V1",namespace="",pcie_bus_info="0000:61:00.0",pod_name="",status="Healthy",vdie_id="185011D4-21104518-A0C4ED94-14CC040A-56102003"} 1 1723621883587
 # HELP npu_chip_info_aicore_current_freq the npu ai core current frequency, unit is 'MHz'
 # TYPE npu_chip_info_aicore_current_freq gauge
 npu_chip_info_aicore_current_freq{container_name="",id="0",model_name="910A-Ascend-V1",namespace="",pcie_bus_info="0000:61:00.0",pod_name="",vdie_id="185011D4-21104518-A0C4ED94-14CC040A-56102003"} 1000 1723621883587
@@ -251,10 +254,26 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p316151110465"><a name="p316151110465"></a><a name="p316151110465"></a><span id="ph216161112462"><a name="ph216161112462"></a><a name="ph216161112462"></a>昇腾AI处理器</span>健康状态</p>
 <p id="p060821114612"><a name="p060821114612"></a><a name="p060821114612"></a></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p1253882563818"><a name="p1253882563818"></a><a name="p1253882563818"></a><a href="#table191895615241">标签1</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p1253882563818"><a name="p1253882563818"></a><a name="p1253882563818"></a><a href="#table191895615241">标签12</a></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p18162911154611"><a name="p18162911154611"></a><a name="p18162911154611"></a>取值为0、1或-1</p>
 <a name="ul1216271124619"></a><a name="ul1216271124619"></a><ul id="ul1216271124619"><li>1：健康</li><li>0：不健康</li><li>-1：未知（DCMI接口调用失败）</li></ul>
+<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">
+<p>status标签的取值与样本值的对应关系如下：</p>
+<table>
+<thead align="left">
+<tr><th class="cellrowborder" valign="top">status</th><th class="cellrowborder" valign="top">原始健康码</th><th class="cellrowborder" valign="top">样本值</th><th class="cellrowborder" valign="top">说明</th></tr>
+</thead>
+<tbody>
+<tr><td class="cellrowborder" valign="top">Healthy</td><td class="cellrowborder" valign="top">0</td><td class="cellrowborder" valign="top">1</td><td class="cellrowborder" valign="top">健康</td></tr>
+<tr><td class="cellrowborder" valign="top">Warning</td><td class="cellrowborder" valign="top">1</td><td class="cellrowborder" valign="top">0</td><td class="cellrowborder" valign="top">一般告警</td></tr>
+<tr><td class="cellrowborder" valign="top">Alarm</td><td class="cellrowborder" valign="top">2</td><td class="cellrowborder" valign="top">0</td><td class="cellrowborder" valign="top">重要告警</td></tr>
+<tr><td class="cellrowborder" valign="top">Critical</td><td class="cellrowborder" valign="top">3</td><td class="cellrowborder" valign="top">0</td><td class="cellrowborder" valign="top">紧急告警</td></tr>
+<tr><td class="cellrowborder" valign="top">Unknown</td><td class="cellrowborder" valign="top">-</td><td class="cellrowborder" valign="top">-1</td><td class="cellrowborder" valign="top">DCMI接口调用失败或返回未定义状态</td></tr>
+</tbody>
+</table>
+<p>不健康三个级别的样本值均为0，字段取值为1、0或-1。</p>
+</div></div>
 </td>
 </tr>
 <tr id="row68995374572"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p4931350175717"><a name="p4931350175717"></a><a name="p4931350175717"></a>NPU</p>
@@ -3083,6 +3102,48 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p>metric：有效性指标所描述的指标名称，用来指明当前这条valid指标说明的是哪个指标的数值是否有效。取值为所描述指标名去掉enpu_npu_或enpu_vnpu_前缀后的部分。例如：enpu_npu_metric_valid{phy_id="0",metric="utilization_percent"} 1 表示enpu_npu_utilization_percent当前值有效；enpu_vnpu_metric_valid{…,metric="hbm_used_bytes"} 1 表示enpu_vnpu_hbm_used_bytes当前值有效。取值范围：<ul><li>`enpu_npu_metric_valid`：utilization_percent、aicore_utilization_percent、aicpu_utilization_percent、ctrlcpu_utilization_percent、cube_utilization_percent、vector_utilization_percent</li><li>`enpu_vnpu_metric_valid`：hbm_used_bytes、utilization_percent、aicore_utilization_percent</li></ul></p>
 </td>
 <td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" rowspan="8" valign="top" width="9.43%" headers="mcps1.2.4.1.1 "><p>标签12</p>
+</td>
+<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p>container_name：容器名。一张NPU卡被多个Pod挂载的场景下，该值为not_displayed_for_multi_pod。</p>
+</td>
+<td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>id：NPU的ID</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>model_name：昇腾AI处理器名称。该字段由芯片名称、芯片类型和芯片版本三部分组成。这三部分可通过<b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i>命令查询，分别对应返回信息中的Chip Name、Chip Type和Chip Version。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><term>Atlas A3系列产品</term>的返回信息中无Chip Type字段。</div></div>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>namespace：命名空间名。一张NPU卡被多个Pod挂载的场景下，该值为not_displayed_for_multi_pod。</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>pcie_bus_info：昇腾AI处理器的PCIe信息</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>pod_name：Pod名。一张NPU卡被多个Pod挂载的场景下，该值为not_displayed_for_multi_pod。</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>vdie_id：昇腾AI处理器唯一标识，可作为NPU的UUID</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>status：昇腾AI处理器健康状态标签，仅npu_chip_info_health_status指标使用，取值为Healthy、Warning、Alarm、Critical或Unknown。</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
 </td>
 </tr>
 </tbody>

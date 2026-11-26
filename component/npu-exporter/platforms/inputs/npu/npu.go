@@ -149,12 +149,17 @@ func buildTags(data common.TelegrafMetric, devTagValue string) map[string]string
 	if data.Labels != nil {
 		return data.Labels
 	}
+
 	if data.DeviceID < 0 {
 		return map[string]string{deviceTagKey: devTagValue}
 	}
+
 	tags := map[string]string{deviceTagKey: devTagValue + "-" + strconv.Itoa(int(data.DeviceID))}
 	if data.VDevID >= 0 {
 		tags[vDevTagKey] = strconv.Itoa(int(data.VDevID))
+	}
+	for key, value := range data.ExtraLabels {
+		tags[key] = value
 	}
 	return tags
 }
