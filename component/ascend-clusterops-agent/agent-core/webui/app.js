@@ -1,4 +1,17 @@
-// Copyright 2026 Huawei Technologies Co., Ltd. Licensed under the Apache License, Version 2.0.
+/* Copyright 2026 Huawei Technologies Co., Ltd.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
 // WebUI 装配：唯一页面状态 = 当前会话 id（浏览器生成）。
 // 页面能力：对话气泡 token 流式、工具调用折叠、新会话按钮、无模型引导；api-key 只存服务端。
 // 首屏「有没有模型」来自页面内联的 boot 对象（GET /ui 注入），页面不单独请求状态接口。

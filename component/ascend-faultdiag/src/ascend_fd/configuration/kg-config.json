@@ -32873,7 +32873,7 @@
                 "description_zh": "检测到指定风扇模块型号不匹配或故障，可能原因：\n  a. 风扇模块故障；\n  b. 风扇模块类型错误；\n  c. 风扇背板故障。",
                 "suggestion_zh": [
                     "1. 更换产生告警的风扇模块，并查看告警是否清除（是 => 处理完毕，否 => 2）；",
-                    "2. 如果服务器有风扇背板，更换风扇背板，并查看告警是否清除（是 => 处理完毕，否 => 3；",
+                    "2. 如果服务器有风扇背板，更换风扇背板，并查看告警是否清除（是 => 处理完毕，否 => 3）；",
                     "3. 请联系技术支持处理；"
                 ],
                 "cause_en": "Air-cooled heat dissipation module fault and card drop - large fan speed deviation",
