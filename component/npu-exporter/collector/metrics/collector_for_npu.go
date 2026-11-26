@@ -42,15 +42,21 @@ const (
 	cardLabelWithContainerInfoLen       = 3
 	// hexBase is the base for formatting error codes as hexadecimal strings
 	hexBase = 16
+
+	healthCodeHealthy  uint32 = 0
+	healthCodeWarning  uint32 = 1
+	healthCodeAlarm    uint32 = 2
+	healthCodeCritical uint32 = 3
 )
 
 var (
-	errorCodeDescs        []*prometheus.Desc
-	cardLabelForProcess   = append(colcommon.CardLabel, "process_id", "container_id")
-	cardLabelForSN        = append(colcommon.CardLabel, "serial_number")
-	cardLabelForProduct   = append(colcommon.CardLabel, "product_type")
-	cardLabelForNpuName   = make([]string, len(colcommon.CardLabel))
-	cardLabelForContainer []string
+	errorCodeDescs           []*prometheus.Desc
+	cardLabelForProcess      = append(colcommon.CardLabel, "process_id", "container_id")
+	cardLabelForSN           = append(colcommon.CardLabel, "serial_number")
+	cardLabelForProduct      = append(colcommon.CardLabel, "product_type")
+	cardLabelForHealthStatus = append(colcommon.CardLabel, "status")
+	cardLabelForNpuName      = make([]string, len(colcommon.CardLabel))
+	cardLabelForContainer    []string
 
 	notSupportedNetworkHealthDevices = map[uint32]bool{
 		api.Atlas3501PMainBoardID: true,
@@ -80,7 +86,8 @@ var (
 
 	descAICoreFreq = colcommon.BuildDesc("npu_chip_info_aicore_current_freq",
 		"the npu ai core current frequency, unit is 'MHz'")
-	descHealthStatus  = colcommon.BuildDesc("npu_chip_info_health_status", "the npu health status")
+	descHealthStatus = colcommon.BuildDescWithLabel("npu_chip_info_health_status", "the npu health status",
+		cardLabelForHealthStatus)
 	descDevProcessNum = colcommon.BuildDesc("npu_chip_info_process_info_num",
 		"the npu process num")
 
@@ -130,6 +137,8 @@ type chipCache struct {
 
 	// the healthy status of the  AI chip
 	HealthStatus string `json:"health_status"`
+	// the status label of the AI chip, one of Healthy/Warning/Alarm/Critical/Unknown
+	HealthStatusLabel string `json:"health_status_label"`
 	// the all error codes of the chip
 	ErrorCodes []int64 `json:"error_codes"`
 	// the temperature of the chip
@@ -214,12 +223,14 @@ func (c *BaseInfoCollector) CollectToCache(n *colcommon.NpuCollector, chipList [
 			logger.Warnf("there are error(s) on chip(logicID: %v), errorCodes: %v", logicID, errCodesInHex)
 		}
 
+		healthStatus, healthStatusLabel := getHealth(logicID, dmgr)
 		cache := &chipCache{
 			chip:              chip,
 			AICoreCurrentFreq: freq,
 			Temperature:       int(temp),
 			Voltage:           vol,
-			HealthStatus:      getHealth(logicID, dmgr),
+			HealthStatus:      healthStatus,
+			HealthStatusLabel: healthStatusLabel,
 			ErrorCodes:        errCodes,
 		}
 		collectPower(logicID, dmgr, cache)
@@ -276,7 +287,8 @@ func (c *BaseInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *col
 		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.AICoreCurrentFreq), cardLabel, descAICoreFreq)
 		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.Temperature), cardLabel, descTemp)
 		doUpdateMetricWithValidateNum(ch, timestamp, 1, cardLabel, descNpuName)
-		doUpdateMetricWithValidateNum(ch, timestamp, float64(getHealthCode(cache.HealthStatus)), cardLabel, descHealthStatus)
+		doUpdateMetricWithValidateNum(ch, timestamp, float64(getHealthCode(cache.HealthStatus)),
+			append(cardLabel, cache.HealthStatusLabel), descHealthStatus)
 		if isSupportNetworkHealthDevices(n.Dmgr.GetDevType(), cache.chip.MainBoardId) {
 			doUpdateMetricWithValidateNum(ch, timestamp, float64(getHealthCode(cache.NetHealthStatus)),
 				cardLabel, descNetworkStatus)
@@ -451,7 +463,6 @@ func (c *BaseInfoCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n
 		doUpdateTelegrafWithValidateNum(metric.Fields, descPower, float64(cache.Power), "")
 		doUpdateTelegrafWithValidateNum(metric.Fields, descVoltage, float64(cache.Voltage), "")
 		doUpdateTelegrafWithValidateNum(metric.Fields, descAICoreFreq, float64(cache.AICoreCurrentFreq), "")
-		doUpdateTelegrafWithValidateNum(metric.Fields, descHealthStatus, float64(getHealthCode(cache.HealthStatus)), "")
 		if isSupportNetworkHealthDevices(n.Dmgr.GetDevType(), chip.MainBoardId) {
 			doUpdateTelegrafWithValidateNum(metric.Fields, descNetworkStatus, float64(getHealthCode(cache.NetHealthStatus)), "")
 		}
@@ -467,6 +478,14 @@ func (c *BaseInfoCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n
 			doUpdateTelegraf(metric.Fields, descNPUProduct, cache.chip.ProductType, "")
 		}
 		ch <- metric
+
+		healthMetric := colcommon.NewDeviceMetric(cache.chip.LogicID)
+		healthMetric.ExtraLabels = map[string]string{
+			"status": cache.HealthStatusLabel,
+		}
+		doUpdateTelegrafWithValidateNum(healthMetric.Fields, descHealthStatus,
+			float64(getHealthCode(cache.HealthStatus)), "")
+		ch <- healthMetric
 	}
 
 	metric := colcommon.NewGeneralMetric()
@@ -530,15 +549,25 @@ func getNetworkHealthy(logicID int32, dmgr devmanager.DeviceInterface) string {
 	return colcommon.UnHealthy
 }
 
-func getHealth(logicID int32, dmgr devmanager.DeviceInterface) string {
+func getHealth(logicID int32, dmgr devmanager.DeviceInterface) (healthClass string, statusLabel string) {
 	health, err := dmgr.GetDeviceHealth(logicID)
 	if err != nil {
-		return colcommon.Unknown
+		return colcommon.Unknown, colcommon.Unknown
 	}
-	if health != 0 {
-		return colcommon.UnHealthy
+	logger.Debugf("chip %d health code is %d", logicID, health)
+
+	switch health {
+	case healthCodeHealthy:
+		return colcommon.Healthy, colcommon.Healthy
+	case healthCodeWarning:
+		return colcommon.UnHealthy, colcommon.Warning
+	case healthCodeAlarm:
+		return colcommon.UnHealthy, colcommon.Alarm
+	case healthCodeCritical:
+		return colcommon.UnHealthy, colcommon.Critical
+	default:
+		return colcommon.Unknown, colcommon.Unknown
 	}
-	return colcommon.Healthy
 }
 
 func getHealthCode(health string) int {
