@@ -1802,15 +1802,42 @@ func a950HyperPlaneFaultOccur(hyperPlaneFaultInfos []common.DevFaultInfo, device
 	}
 }
 
-func a950HyperPlaneNewOverallFaultModify(devices []*NpuDevice) {
-	allHaveHyperPlaneFaultCode := true
+// isCardDrop reports whether the device is in the card drop state, in which its UB (hyper plane)
+// port status can not be queried. The drop card fault code is kept in the fault code list until the
+// fault recovers, while the CardDrop flag is rebuilt every cycle, so both of them are checked here.
+func isCardDrop(device *NpuDevice) bool {
+	return device.CardDrop || Int64Tool.Contains(device.FaultCodes, CardDropFaultCode)
+}
+
+// isHyperPlaneOverallFault reports whether the UB port down fault should be handled as an overall
+// fault of the hyper plane, which means every device that can report its UB port status has the UB
+// port down fault code. A device in card drop state can not report its UB port status, so its
+// missing fault code must not deny the overall judgment, otherwise a single device reset would
+// separate all the other devices of the node. It returns false when no device can report its UB
+// port status.
+func isHyperPlaneOverallFault(devices []*NpuDevice) bool {
+	reportable := false
 	for _, device := range devices {
-		if !Int64Tool.Contains(device.FaultCodes, UBPortDownCode) {
-			allHaveHyperPlaneFaultCode = false
+		if device == nil {
+			continue
 		}
+		if isCardDrop(device) {
+			hwlog.RunLog.Infof("device %d is dropped or resetting, excluded from the overall judgment",
+				device.LogicID)
+			continue
+		}
+		if !Int64Tool.Contains(device.FaultCodes, UBPortDownCode) {
+			return false
+		}
+		reportable = true
 	}
-	// if all device has UB port down fault code, then convert status from separate fault code to sub heal fault code
-	if allHaveHyperPlaneFaultCode {
+	return reportable
+}
+
+func a950HyperPlaneNewOverallFaultModify(devices []*NpuDevice) {
+	// a device in card drop state can not report its UB port status, it must not deny the overall
+	// judgment, otherwise the other devices would be separated on a single device reset
+	if isHyperPlaneOverallFault(devices) {
 		// all ports down on all devices means a switch fault, which starts a new fault episode,
 		// reset the recover window here
 		ubFaultRecoverTime = 0
@@ -1826,6 +1853,13 @@ func a950HyperPlaneNewOverallFaultModify(devices []*NpuDevice) {
 					AlarmRaisedTime: curTime,
 				}
 				updateDeviceFaultTimeMap(device, tmpFaultInfo, false)
+			}
+			// the sub heal fault code is written only to the devices that are in the UB port down
+			// state: its only recovery path is the recover event of the UB port down fault code, so
+			// a device without it would keep the sub heal fault code forever and could never be
+			// promoted to the separate fault later
+			if !Int64Tool.Contains(device.FaultCodes, UBPortDownCode) {
+				continue
 			}
 			if !Int64Tool.Contains(device.FaultCodes, UBSubHealFaultCode) {
 				tmpFaultInfo := common.DevFaultInfo{
