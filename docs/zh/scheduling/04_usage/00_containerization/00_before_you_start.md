@@ -44,6 +44,8 @@
     >- 挂载RDMA驱动文件时会自动允许合法软链接（软链接及其目标文件属主须为root），无需额外指定`ASCEND_ALLOW_LINK=True`。
     >- 指定`ASCEND_RUNTIME_OPTIONS=NODRV`时，跳过普通集合及RDMA集合中文件和目录的自动挂载（仍注入所选字符设备并校验宿主机RDMA依赖），用户可通过容器卷（如Docker `--mount`/`-v`、Containerd `--mount`、CRI-O `mounts`或Kubernetes `volumeMounts`）按需挂载驱动文件。
 
+  - 容器内的`rdma-core`版本必须与宿主机一致。默认清单中的`/usr/lib64/libhrn5-rdmav34.so`对应PABI版本34（宏`IBVERBS_PABI_VERSION`）。如果宿主机上的驱动库使用其他PABI版本，需在创建容器前手动修改宿主机上的`/etc/ascend-docker-runtime.d/rdma_driver.list`，将该条目替换为宿主机上对应版本的驱动库绝对路径。
+
 <!-- end id1 -->
 
 ## 支持的产品形态<a name="section169961844182917"></a>
