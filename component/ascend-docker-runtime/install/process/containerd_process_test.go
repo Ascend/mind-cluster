@@ -1,4 +1,4 @@
-/* Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2024-2026. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -65,41 +65,6 @@ func TestGetCriRuntimePluginName(t *testing.T) {
 		})
 		convey.Convey("version 3", func() {
 			convey.So(getCriRuntimePluginName(configVersion3), convey.ShouldEqual, version3RuntimePluginName)
-		})
-	})
-}
-
-// TestGetSubtreeByPath tests the function getSubtreeByPath
-func TestGetSubtreeByPath(t *testing.T) {
-	convey.Convey("Test getSubtreeByPath", t, func() {
-		tree, _ := toml.Load(`
-[plugins.cri.containerd.runtimes.runc]
-runtime_type = "io.containerd.runc.v2"
-`)
-		convey.Convey("path exists", func() {
-			keys := []string{pluginsKey, version1RuntimePluginName, containerdKey, runtimesKey, "runc"}
-			subtree := getSubtreeByPath(keys, tree)
-			convey.So(subtree, convey.ShouldNotBeNil)
-		})
-		convey.Convey("path not exists", func() {
-			keys := []string{pluginsKey, version1RuntimePluginName, containerdKey, runtimesKey, "invalid"}
-			subtree := getSubtreeByPath(keys, tree)
-			convey.So(subtree, convey.ShouldBeNil)
-		})
-	})
-}
-
-// TestCopy tests the function copy
-func TestCopy(t *testing.T) {
-	convey.Convey("Test copy", t, func() {
-		convey.Convey("tree is nil", func() {
-			convey.So(copy(nil), convey.ShouldBeNil)
-		})
-		convey.Convey("tree is not nil", func() {
-			tree, _ := toml.Load("key = 'value'")
-			copyTree := copy(tree)
-			convey.So(copyTree, convey.ShouldNotBeNil)
-			convey.So(copyTree.Get("key"), convey.ShouldEqual, "value")
 		})
 	})
 }
@@ -276,3 +241,47 @@ func (f *FileInfoMockContainerd) Mode() os.FileMode  { return 0 }
 func (f *FileInfoMockContainerd) ModTime() time.Time { return time.Time{} }
 func (f *FileInfoMockContainerd) IsDir() bool        { return false }
 func (f *FileInfoMockContainerd) Sys() interface{}   { return nil }
+
+// TestContainerdConfigRoundTrip validates add/remove using real configuration files.
+func TestContainerdConfigRoundTrip(t *testing.T) {
+	exerciseConfigRoundTrip(t, "containerd", "version = 2\n[plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.runc]\nruntime_type = \"io.containerd.runc.v2\"",
+		ContainerdProcess, assertContainerdRuntime)
+}
+
+func TestContainerdRejectsUnsafeMissingSourceParent(t *testing.T) {
+	assertUnsafeMissingSourceParent(t, ContainerdProcess)
+}
+
+func TestContainerdMissingSourceUnsafeParentRealValidation(t *testing.T) {
+	assertUnsafeMissingSourceParentReal(t, "containerd", ContainerdProcess)
+}
+
+func assertContainerdRuntime(t *testing.T, path, bin string, installed bool) {
+	t.Helper()
+	tree, err := toml.LoadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runtimePath := []string{pluginsKey, version2RuntimePluginName, containerdKey, runtimesKey, runtimeName}
+	defaultPath := []string{pluginsKey, version2RuntimePluginName, containerdKey, defaultRuntimeNameKey}
+
+	if tree.Get("version") != int64(2) || tree.GetPath([]string{pluginsKey, version2RuntimePluginName, containerdKey, runtimesKey, "runc"}) == nil {
+		t.Fatal("Containerd config lost")
+	}
+	if (tree.GetPath(runtimePath) != nil) != installed {
+		t.Fatal("wrong runtime presence")
+	}
+	expectedDefault := defaultRuntimeValue
+	if installed {
+		expectedDefault = runtimeName
+	}
+	if tree.GetPath(defaultPath) != expectedDefault {
+		t.Fatal("wrong default runtime")
+	}
+	if installed {
+		binaryPath := append(append([]string(nil), runtimePath...), optionsKey, binaryNameKey)
+		if tree.GetPath(binaryPath) != bin {
+			t.Fatal("wrong runtime binary path")
+		}
+	}
+}

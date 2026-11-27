@@ -20,55 +20,25 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
-
-	"ascend-docker-runtime/mindxcheckutils"
 )
 
 var reserveDefaultRuntime = false
 
 // DockerProcess modifies the docker configuration file when installing or uninstalling the docker scenario.
 func DockerProcess(command []string) (string, error) {
-	if len(command) == 0 {
-		return "", fmt.Errorf("error param, length of command is 0")
-	}
-	action := command[actionPosition]
-	correctParam, behavior := checkParamAndGetBehavior(action, command)
-	if !correctParam {
-		return "", fmt.Errorf("error param")
-	}
-
-	srcFilePath := command[srcFilePosition]
-	if _, err := os.Stat(srcFilePath); os.IsNotExist(err) {
-		if _, err := mindxcheckutils.RealDirChecker(filepath.Dir(srcFilePath), true, false); err != nil {
-			return behavior, err
-		}
-	} else {
-		if _, err := mindxcheckutils.RealFileChecker(srcFilePath, true, false, mindxcheckutils.DefaultSize); err != nil {
-			return behavior, err
-		}
-	}
-
-	destFilePath := command[destFilePosition]
-	if _, err := mindxcheckutils.RealDirChecker(filepath.Dir(destFilePath), true, false); err != nil {
+	arg, behavior, err := parseAndValidateCommand(command)
+	if err != nil {
 		return behavior, err
-	}
-	runtimeFilePath := ""
-	if len(command) == addCommandLength {
-		runtimeFilePath = command[runtimeFilePosition]
-		if _, err := mindxcheckutils.RealFileChecker(runtimeFilePath, true, false, mindxcheckutils.DefaultSize); err != nil {
-			return behavior, err
-		}
 	}
 
 	setReserveDefaultRuntime(command)
 
 	// check file permission
-	writeContent, err := createJsonString(srcFilePath, runtimeFilePath, action)
+	writeContent, err := createJsonString(arg.srcFilePath, arg.runtimeFilePath, arg.action)
 	if err != nil {
 		return behavior, err
 	}
-	return behavior, writeJson(destFilePath, writeContent)
+	return behavior, writeJson(arg.destFilePath, writeContent)
 }
 
 func createJsonString(srcFilePath, runtimeFilePath, action string) ([]byte, error) {
