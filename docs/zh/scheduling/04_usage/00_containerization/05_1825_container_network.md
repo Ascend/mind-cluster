@@ -22,7 +22,7 @@
 
 ## 环境准备
 
-> - 1\. 确保各计算节点ROCE网卡处于可用状态。可以通过`rdma link show`查看ROCE网卡网络设备的名称，例如：
+1. 确保各计算节点ROCE网卡处于可用状态。可以通过`rdma link show`查看ROCE网卡网络设备的名称，例如：
 
     ```shell
     link hrn5_0/1 state ACTIVE physical_state LINK_UP netdev ens0f0
@@ -30,13 +30,13 @@
 
     其中，`ens0f0`为网络接口名称，用于NAD和任务网络注解。
 
-> - 2\. （可选）安装Ascend Docker Runtime。K8s RDMA Shared Dev Plugin可与Ascend Docker Runtime协作进行字符设备的挂载，需先安装Ascend Docker Runtime，再部署K8s RDMA Shared Dev Plugin。安装流程请参见[Ascend Docker Runtime](../../05_developer_guide/00_installation_deployment/00_manual_installation/02_ascend_docker_runtime.md)。
+2. （可选）安装Ascend Docker Runtime。K8s RDMA Shared Dev Plugin可与Ascend Docker Runtime协作进行字符设备的挂载，需先安装Ascend Docker Runtime，再部署K8s RDMA Shared Dev Plugin。安装流程请参见[Ascend Docker Runtime](../../05_developer_guide/00_installation_deployment/00_manual_installation/02_ascend_docker_runtime.md)。
 
     > [!NOTE]
     > Ascend Docker Runtime仅挂载ROCE网卡驱动文件及RDMA字符设备，`rdma-core`等开源用户态库不会被自动挂载，需在业务镜像中提前安装。
     > 无Ascend Docker Runtime场景下，rdma-dp仅挂载RDMA字符设备，`rdma-core`及ROCE网卡驱动文件需手动安装挂载，请参见[容器场景配置](../../06_api/11_k8s_rdma_shared_dev_plugin.md)
 
-> - 3\. 部署Multus CNI插件，可参考官方仓库`https://github.com/k8snetworkplumbingwg/multus-cni`，执行以下命令以DaemonSet方式部署。
+3. 部署Multus CNI插件，可参考官方仓库`https://github.com/k8snetworkplumbingwg/multus-cni`，执行以下命令以DaemonSet方式部署。
 
     ```shell
     kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset.yml
@@ -56,11 +56,22 @@
     kube-multus-ds-pq6vz   1/1   Running   0        68s
     ```
 
-> - 4\. 部署UB Host Device CNI，部署流程请参见[UB Host Device CNI](../../05_developer_guide/00_installation_deployment/00_manual_installation/17_ub_host_device_cni.md)。
-> - 5\. 部署[K8s RDMA Shared Dev Plugin](../../05_developer_guide/00_installation_deployment/00_manual_installation/11_k8s_rdma_shared_dev_plugin.md)。组件部署YAML中同时预定义了各网络端口的NAD（NetworkAttachmentDefinition）。
+4. 部署UB Host Device CNI，部署流程请参见[UB Host Device CNI](../../05_developer_guide/00_installation_deployment/00_manual_installation/17_ub_host_device_cni.md)。
+5. 部署K8s RDMA Shared Dev Plugin，部署流程请参见[K8s RDMA Shared Dev Plugin](../../05_developer_guide/00_installation_deployment/00_manual_installation/11_k8s_rdma_shared_dev_plugin.md)。
+6. 实例化NAD。NAD资源YAML文件（`k8s-rdma-shared-dp-nad.yaml`）为ROCE网卡的各网络端口预定义NAD，NAD依赖Multus CNI提供的CRD，需在部署Multus CNI后，于YAML所在路径执行以下命令完成实例化。
+
+    ```shell
+    kubectl apply -f k8s-rdma-shared-dp-nad.yaml
+    ```
+
+    执行以下命令确认NAD实例化成功，回显应包含全部16个预定义NAD（`ens0f0`至`ens3f3`）。
+
+    ```shell
+    kubectl get network-attachment-definitions -n default
+    ```
 
     > [!NOTE]
-    > 部署YAML中为ROCE网卡的网络端口预定义NAD，每个端口一个，共16个（`ens0f0`至`ens3f3`）。以`ens0f0`为例，NAD内容示例如下。
+    > 每个网络端口对应一个NAD，共16个。以`ens0f0`为例，NAD内容示例如下。
     >
     > ```yaml
     > apiVersion: "k8s.cni.cncf.io/v1"

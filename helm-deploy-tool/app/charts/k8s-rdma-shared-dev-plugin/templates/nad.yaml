@@ -1,0 +1,17 @@
+{{- if .Capabilities.APIVersions.Has "k8s.cni.cncf.io/v1/NetworkAttachmentDefinition" -}}
+{{- $filePath := "yamls/nad/**.yaml" -}}
+
+{{- $files := .Files.Glob $filePath -}}
+{{- if not $files -}}
+  {{- fail (printf "No files found matching pattern: %s" $filePath) -}}
+{{- end -}}
+
+{{- $currentScope := . }}
+{{- range $path, $_ := .Files.Glob $filePath }}
+  {{- with $currentScope }}
+    {{- $content := $.Files.Get $path -}}
+    {{- tpl $content $ }}
+---
+  {{- end }}
+{{- end }}
+{{- end -}}

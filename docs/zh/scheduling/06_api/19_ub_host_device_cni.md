@@ -25,7 +25,7 @@ NAD的通用字段配置字段的含义请参见上游官方文档：Multus CNI�
 
 ## NAD配置示例<a name="ZH-CN_TOPIC_nad_config_example"></a>
 
-rdma-dp部署文件中预定义了以下16个NAD，每个NAD的`metadata.name`、`spec.config.name`和`spec.config.device`需采用相同的网卡名称。
+NAD资源YAML文件（`k8s-rdma-shared-dp-nad.yaml`）中预定义了以下16个NAD，每个NAD的`metadata.name`、`spec.config.name`和`spec.config.device`需采用相同的网卡名称。
 
 **表 2**  预定义NAD名称
 
@@ -61,6 +61,8 @@ spec:
 ```shell
 rdma link show
 ```
+
+若节点实际网卡名称与预定义NAD名称不一致，请以`rdma link show`查询到的实际名称为准调整NAD。以实际网卡名为`ens5f0`为例，将`ens0f0`模板中的`metadata.name`、`spec.config.name`和`spec.config.device`三处统一替换为`ens5f0`，其余字段保持不变。
 
 ## 业务Pod使用及挂载资源说明<a name="ZH-CN_TOPIC_biz_pod_check_ub_host_device_cni"></a>
 
