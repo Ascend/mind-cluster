@@ -16,7 +16,6 @@ package process
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -196,25 +195,6 @@ func TestCriOProcessSuccess(t *testing.T) {
 	})
 }
 
-// TestWriteTomlConfigToFile tests the shared writer
-func TestWriteTomlConfigToFile(t *testing.T) {
-	convey.Convey("Test writeTomlConfigToFile", t, func() {
-		convey.Convey("tree is nil, should return error", func() {
-			err := writeTomlConfigToFile(nil, "test.toml")
-			convey.So(err, convey.ShouldBeError)
-		})
-		convey.Convey("write a real tree, content persisted", func() {
-			tree, _ := toml.Load(`runtime_type = "oci"`)
-			tmpFile := filepath.Join(os.TempDir(), "ascend-crio-ut.conf")
-			defer os.Remove(tmpFile)
-			convey.So(writeTomlConfigToFile(tree, tmpFile), convey.ShouldBeNil)
-			data, rErr := os.ReadFile(tmpFile)
-			convey.So(rErr, convey.ShouldBeNil)
-			convey.So(string(data), convey.ShouldContainSubstring, "oci")
-		})
-	})
-}
-
 // FileInfoMockCriO is a mock for os.FileInfo
 type FileInfoMockCriO struct{}
 
@@ -224,3 +204,47 @@ func (f *FileInfoMockCriO) Mode() os.FileMode  { return 0 }
 func (f *FileInfoMockCriO) ModTime() time.Time { return time.Time{} }
 func (f *FileInfoMockCriO) IsDir() bool        { return false }
 func (f *FileInfoMockCriO) Sys() interface{}   { return nil }
+
+// TestCriOConfigRoundTrip validates add/remove using real configuration files.
+func TestCriOConfigRoundTrip(t *testing.T) {
+	exerciseConfigRoundTrip(t, "crio", "[crio.runtime]\ncustom = \"keep\"\n[crio.runtime.runtimes.runc]\nruntime_type = \"oci\"",
+		CriOProcess, assertCriORuntime)
+}
+
+func TestCriORejectsUnsafeMissingSourceParent(t *testing.T) {
+	assertUnsafeMissingSourceParent(t, CriOProcess)
+}
+
+func TestCriOMissingSourceUnsafeParentRealValidation(t *testing.T) {
+	assertUnsafeMissingSourceParentReal(t, "crio", CriOProcess)
+}
+
+func assertCriORuntime(t *testing.T, path, bin string, installed bool) {
+	t.Helper()
+	tree, err := toml.LoadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runtimePath := crioRuntimePath(runtimeName)
+	defaultPath := []string{crioSectionKey, crioRuntimeSectionKey, crioDefaultRuntimeKey}
+
+	if tree.GetPath([]string{crioSectionKey, crioRuntimeSectionKey, "custom"}) != "keep" || tree.GetPath(crioRuntimePath("runc")) == nil {
+		t.Fatal("CRI-O config lost")
+	}
+	if (tree.GetPath(runtimePath) != nil) != installed {
+		t.Fatal("wrong runtime presence")
+	}
+	expectedDefault := defaultRuntimeValue
+	if installed {
+		expectedDefault = runtimeName
+	}
+	if tree.GetPath(defaultPath) != expectedDefault {
+		t.Fatal("wrong default runtime")
+	}
+	if installed {
+		binaryPath := append(append([]string(nil), runtimePath...), crioRuntimePathKey)
+		if tree.GetPath(binaryPath) != bin {
+			t.Fatal("wrong runtime binary path")
+		}
+	}
+}

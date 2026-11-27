@@ -1,4 +1,4 @@
-/* Copyright(C) 2021. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2021-2026. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -479,4 +479,52 @@ func TestSetReserveDefaultRuntime(t *testing.T) {
 			convey.So(reserveDefaultRuntime, convey.ShouldBeTrue)
 		})
 	})
+}
+
+// TestDockerConfigRoundTrip validates add/remove using real configuration files.
+func TestDockerConfigRoundTrip(t *testing.T) {
+	oldReserve := reserveDefaultRuntime
+	reserveDefaultRuntime = false
+	defer func() { reserveDefaultRuntime = oldReserve }()
+	exerciseConfigRoundTrip(t, "docker", `{"custom":"keep"}`,
+		DockerProcess, assertDockerRuntime)
+}
+
+func TestDockerRejectsUnsafeMissingSourceParent(t *testing.T) {
+	assertUnsafeMissingSourceParent(t, DockerProcess)
+}
+
+func TestDockerMissingSourceUnsafeParentRealValidation(t *testing.T) {
+	assertUnsafeMissingSourceParentReal(t, "docker", DockerProcess)
+}
+
+func assertDockerRuntime(t *testing.T, path, bin string, installed bool) {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var config map[string]interface{}
+	if err := json.Unmarshal(data, &config); err != nil {
+		t.Fatal(err)
+	}
+	if config["custom"] != "keep" {
+		t.Fatal("unrelated Docker setting lost")
+	}
+	runtimes, ok := config["runtimes"].(map[string]interface{})
+	if !ok {
+		t.Fatal("runtimes not a map")
+	}
+	runtime, present := runtimes[runtimeName]
+	if present != installed {
+		t.Fatal("wrong runtime presence")
+	}
+	if installed {
+		if runtime.(map[string]interface{})["path"] != bin || config[defaultRuntimeKey] != runtimeName {
+			t.Fatal("wrong Docker runtime config")
+		}
+	}
+	if !installed && config[defaultRuntimeKey] == runtimeName {
+		t.Fatal("Docker default not restored")
+	}
 }

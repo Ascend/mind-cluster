@@ -17,11 +17,99 @@ package process
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/pelletier/go-toml"
 
 	"ascend-common/common-utils/hwlog"
+	"ascend-docker-runtime/mindxcheckutils"
 )
+
+type commandArgs struct {
+	action          string
+	srcFilePath     string
+	runtimeFilePath string
+	destFilePath    string
+}
+
+// parseAndValidateCommand validates all paths before any engine edits its config.
+// A missing source still requires a safe parent directory.
+
+func parseAndValidateCommand(command []string) (*commandArgs, string, error) {
+
+	if len(command) == 0 {
+		return nil, "", fmt.Errorf("error param, length of command is 0")
+	}
+
+	action := command[actionPosition]
+
+	correctParam, behavior := checkParamAndGetBehavior(action, command)
+	if !correctParam {
+		return nil, "", fmt.Errorf("error param")
+	}
+
+	arg := &commandArgs{
+		action:       action,
+		srcFilePath:  command[srcFilePosition],
+		destFilePath: command[destFilePosition],
+	}
+	if _, err := os.Stat(arg.srcFilePath); os.IsNotExist(err) {
+		if _, err := mindxcheckutils.RealDirChecker(filepath.Dir(arg.srcFilePath), true, false); err != nil {
+			return nil, behavior, err
+		}
+	} else {
+		if _, err := mindxcheckutils.RealFileChecker(arg.srcFilePath, true, false,
+			mindxcheckutils.DefaultSize); err != nil {
+			return nil, behavior, err
+		}
+	}
+
+	if _, err := mindxcheckutils.RealDirChecker(filepath.Dir(arg.destFilePath), true, false); err != nil {
+		return nil, behavior, err
+	}
+
+	if action == addCommand {
+		arg.runtimeFilePath = command[runtimeFilePosition]
+		if _, err := mindxcheckutils.RealFileChecker(arg.runtimeFilePath, true, false,
+			mindxcheckutils.DefaultSize); err != nil {
+			return nil, behavior, err
+		}
+	}
+	return arg, behavior, nil
+}
+
+// deleteRuntimeAndEmptyParents preserves sibling keys and never deletes the root.
+
+func deleteRuntimeAndEmptyParents(tree *toml.Tree, runtimePath []string) error {
+	if tree == nil || len(runtimePath) == 0 {
+		return nil
+	}
+	if err := deleteConfigPath(tree, runtimePath); err != nil {
+		return err
+	}
+	for length := len(runtimePath) - 1; length > 0; length-- {
+		parentPath := runtimePath[:length]
+		parentNode := getSubtreeByPath(parentPath, tree)
+		if parentNode == nil || len(parentNode.Keys()) != 0 {
+			break
+		}
+		if err := deleteConfigPath(tree, parentPath); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func deleteConfigPath(tree *toml.Tree, path []string) error {
+	if err := tree.DeletePath(path); err != nil {
+		if !strings.Contains(err.Error(), tomlPathNotFoundMessage) &&
+			!strings.Contains(err.Error(), tomlNoSuchKeyMessage) {
+			return err
+		}
+	}
+	return nil
+}
 
 func checkParamAndGetBehavior(action string, command []string) (bool, string) {
 	correctParam, behavior := false, ""
@@ -76,4 +164,33 @@ func writeTomlConfigToFile(configTree *toml.Tree, destFilePath string) (err erro
 	}
 
 	return nil
+}
+
+// getSubtreeByPath returns a TOML table at keys, or nil for a missing or non-table value.
+func getSubtreeByPath(keys []string, t *toml.Tree) *toml.Tree {
+	subtree := t.GetPath(keys)
+	if subtree == nil {
+		return nil
+	}
+
+	switch subtree := subtree.(type) {
+	case *toml.Tree:
+		return subtree
+	default:
+		hwlog.RunLog.Errorf("invalid subtree type %T", subtree)
+		return nil
+	}
+}
+
+// copy clones a TOML tree so runtime options can be edited independently.
+func copy(t *toml.Tree) *toml.Tree {
+	if t == nil {
+		return nil
+	}
+	copyTree, err := toml.Load(t.String())
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to load toml: %v", err)
+		return nil
+	}
+	return copyTree
 }

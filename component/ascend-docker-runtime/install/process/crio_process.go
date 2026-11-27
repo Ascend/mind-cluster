@@ -18,13 +18,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/pelletier/go-toml"
 
 	"ascend-common/common-utils/hwlog"
-	"ascend-docker-runtime/mindxcheckutils"
 )
 
 // crioRuntimePath returns a fresh TOML path under [crio.runtime.runtimes].
@@ -38,40 +35,9 @@ func crioRuntimePath(name ...string) []string {
 // CriOProcess modifies the CRI-O configuration drop-in when installing or
 // uninstalling the ascend runtime under the CRI-O container engine.
 func CriOProcess(command []string) (string, error) {
-	if len(command) == 0 {
-		return "", fmt.Errorf("error param, length of command is 0")
-	}
-	action := command[actionPosition]
-	correctParam, behavior := checkParamAndGetBehavior(action, command)
-	if !correctParam {
-		return "", fmt.Errorf("error param")
-	}
-	srcFilePath := command[srcFilePosition]
-	if _, err := os.Stat(srcFilePath); !os.IsNotExist(err) {
-		if _, err := mindxcheckutils.RealFileChecker(srcFilePath, true, false, mindxcheckutils.DefaultSize); err != nil {
-			hwlog.RunLog.Errorf("check failed, error: %v", err)
-			return behavior, err
-		}
-	}
-	destFilePath := command[destFilePosition]
-	if _, err := mindxcheckutils.RealDirChecker(filepath.Dir(destFilePath), true, false); err != nil {
+	arg, behavior, err := parseAndValidateCommand(command)
+	if err != nil {
 		return behavior, err
-	}
-
-	runtimeFilePath := ""
-	if len(command) == addCommandLength {
-		runtimeFilePath = command[runtimeFilePosition]
-		if _, err := mindxcheckutils.RealFileChecker(runtimeFilePath, true, false, mindxcheckutils.DefaultSize); err != nil {
-			hwlog.RunLog.Errorf("failed to check, error: %v", err)
-			return behavior, err
-		}
-	}
-
-	arg := &commandArgs{
-		action:          action,
-		srcFilePath:     srcFilePath,
-		runtimeFilePath: runtimeFilePath,
-		destFilePath:    destFilePath,
 	}
 
 	if err := editCriOConfig(arg); err != nil {
@@ -177,32 +143,5 @@ func removeCriORuntime(name string, tree *toml.Tree) error {
 	}
 	tree.SetPath([]string{crioSectionKey, crioRuntimeSectionKey, crioDefaultRuntimeKey}, defaultRuntimeValue)
 
-	runtimePath := crioRuntimePath(name)
-	if err := tree.DeletePath(runtimePath); err != nil {
-		// If path doesn't exist, ignore error.
-		if !strings.Contains(err.Error(), "path not found") &&
-			!strings.Contains(err.Error(), "no such key to delete") {
-			hwlog.RunLog.Errorf("failed to remove runtime, error: %v", err)
-			return err
-		}
-	}
-
-	// Clean up empty parent directories.
-	for i := 1; i < len(runtimePath); i++ {
-		parentPath := runtimePath[:len(runtimePath)-i]
-		parentNode := getSubtreeByPath(parentPath, tree)
-		if parentNode != nil && len(parentNode.Keys()) == 0 {
-			if err := tree.DeletePath(parentPath); err != nil {
-				if !strings.Contains(err.Error(), "path not found") &&
-					!strings.Contains(err.Error(), "no such key to delete") {
-					return err
-				}
-			}
-		} else {
-			// If parent has other keys, stop cleaning up.
-			break
-		}
-	}
-
-	return nil
+	return deleteRuntimeAndEmptyParents(tree, crioRuntimePath(name))
 }

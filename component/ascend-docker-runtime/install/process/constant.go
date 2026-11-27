@@ -89,3 +89,9 @@ const (
 	crioOciRuntimeType     = "oci"
 	pathEnvValue           = "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 )
+
+// TOML deletion error fragments used to tolerate missing configuration paths.
+const (
+	tomlPathNotFoundMessage = "path not found"
+	tomlNoSuchKeyMessage    = "no such key to delete"
+)
