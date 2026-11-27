@@ -6,7 +6,7 @@
 ## 安装前准备
 
 - 配合Ascend Docker Runtime自动挂载RDMA设备和驱动时，必须先安装并配置[Ascend Docker Runtime](./02_ascend_docker_runtime.md)，确保K8s RDMA Shared Dev Plugin与业务容器均由该运行时创建。可以通过检查K8s RDMA Shared Dev Plugin容器的1号进程环境变量是否包含`ASCEND_DOCKER_RUNTIME=true`来判断容器是否由Ascend Docker Runtime拉起，参考指令：`kubectl exec -n kube-system <pod-name> -- cat /proc/1/environ`。
-- 当前部署YAML包含16个预定义的NAD资源配置， 预定义NAD位于`default`命名空间，名称为`ens0f0`至`ens3f3`。字段约束与模板请参见[NAD配置示例](../../../06_api/19_ub_host_device_cni.md#ZH-CN_TOPIC_nad_config_example)。
+- NAD资源YAML文件（`k8s-rdma-shared-dp-nad.yaml`）包含16个预定义NAD，位于`default`命名空间，名称为`ens0f0`至`ens3f3`。容器化网络使用RoCE网卡时，需先部署Multus CNI，后部署此文件来完成实例化。部署Multus CNI请参见[容器化网络使用RoCE网卡](../../../04_usage/00_containerization/05_1825_container_network.md)，字段约束与模板请参见[NAD配置示例](../../../06_api/19_ub_host_device_cni.md#ZH-CN_TOPIC_nad_config_example)。
 
 ## 操作步骤<a name="section135381552125415"></a>
 
@@ -55,6 +55,18 @@
     ...
     rdma-shared-dp-ds-fd6t8                           1/1    Running      0        74s
     ...
+    ```
+
+6. <a name="li_nad_apply"></a>（可选）容器化网络使用ROCE网卡时，需先部署Multus CNI，再执行以下命令完成预定义NAD的实例化。
+
+    ```shell
+    kubectl apply -f k8s-rdma-shared-dp-nad.yaml
+    ```
+
+   执行以下命令确认NAD实例化成功，回显应包含全部16个预定义NAD（`ens0f0`至`ens3f3`）。
+
+    ```shell
+    kubectl get network-attachment-definitions -n default
     ```
 
 > [!NOTE]
