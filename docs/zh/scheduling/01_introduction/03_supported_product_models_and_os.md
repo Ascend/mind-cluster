@@ -1,18 +1,17 @@
 # 支持的产品形态和OS清单
 
-集群场景下的管理节点、计算节点和存储节点支持的产品形态各不相同；其中计算节点支持的产品形态和单机场景支持的产品形态一致。
+集群场景下的管理节点、计算节点和存储节点支持的产品形态各不相同。
 
-## 集群场景
+## 管理节点
 
-- 管理节点：支持多种类型服务器，如Taishan 200服务器（型号2280）、FusionServer Pro 2288H V5等。
-- 计算节点：支持的产品形态和单机场景支持的产品一致，请参见下表。
-- 存储节点：存储服务器。
+支持多种类型服务器，如Taishan 200服务器（型号2280）、FusionServer Pro 2288H V5等。
+管理节点的MindCluster组件对于OS无强依赖，建议使用K8s支持的OS版本。
 
-## 单机场景
+## 计算节点
 
-单机场景下，训练推理都支持的产品形态和OS如下表所示。
+计算节点支持的产品形态和OS参见以下各表。
 
-**表 1** 支持的产品形态和OS
+**表 1**  训练与推理场景均支持的产品形态和OS
 
 <a name="tableAtlasGeneral"></a>
 <table><thead align="left"><tr>
@@ -61,11 +60,7 @@
 </tbody>
 </table>
 
-## 单机场景（训练）
-
-单机训练场景下，支持的产品形态和OS如下表所示。
-
-**表 2** 支持的产品形态和OS
+**表 2**  训练场景下支持的产品形态和OS
 
 <a name="table7314423114217"></a>
 <table><thead align="left"><tr id="row83141238425"><th class="cellrowborder" valign="top" width="15.93%" id="mcps1.2.4.1.1"><p id="p1731452318420"><a name="p1731452318420"></a><a name="p1731452318420"></a>产品系列</p>
@@ -100,7 +95,7 @@
 </tr>
 <tr id="row1731412319425"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1931492374219"><a name="p1931492374219"></a><a name="p1931492374219"></a><span id="ph12314923104215"><a name="ph12314923104215"></a><a name="ph12314923104215"></a>Atlas 900 PoD（型号：9000）</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1486510460560"></a><a name="ul1486510460560"></a><ul id="ul1486510460560"><li>CentOS 7.6 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>openEuler 20.03 for aarch64</li><li>openEuler 22.03 for aarch64</li><li>Ubuntu 20.04 for aarch64</li><li>UOS V20 1020e for aarch64</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1486510460560"></a><a name="ul1486510460560"></a><ul id="ul1486510460560"><li>CentOS 7.6 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>openEuler 20.03 for aarch64</li><li>openEuler 22.03 for aarch64</li><li>Ubuntu 20.04  for aarch64</li><li>UOS V20 1020e for aarch64</li></ul>
 </td>
 </tr>
 <tr id="row5314823154211"><td class="cellrowborder" rowspan="4" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p73141323184218"><a name="p73141323184218"></a><a name="p73141323184218"></a><span id="ph2314323124211"><a name="ph2314323124211"></a><a name="ph2314323124211"></a>Atlas A2训练系列产品</span></p>
@@ -134,7 +129,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p1315152304215"><a name="p1315152304215"></a><a name="p1315152304215"></a><span id="ph1731512317424"><a name="ph1731512317424"></a><a name="ph1731512317424"></a>Atlas 900 A3 SuperPoD超节点</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul1330454618016"></a><a name="ul1330454618016"></a><ul id="ul1330454618016"><li>HCE 2.0 for aarch64</li><li>Debian 10.2 for aarch64</li><li>BC-Linux_21.10 U4 for aarch64</li><li>MTOS for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>openEuler 22.03 LTS SP1 for aarch64 (6.6.0-72.0.0.76.oe2403sp1.aarch64 kernel) </li><li>CentOS 7.5 for aarch64</li><li>Linux Kernel 6.6 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>CTYunOS 4.0 for aarch64</li><li><span id="ph103053469018"><a name="ph103053469018"></a><a name="ph103053469018"></a>AntOS</span> 6.6.47 for aarch64</li><li>Kylin V10 SP3 2403 for aarch64</li><li>Kylin V11 for aarch64</li><li>Velinux 2.0 for aarch64</li><li>VesselOS 2.0 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul1330454618016"></a><a name="ul1330454618016"></a><ul id="ul1330454618016"><li>HCE 2.0 for aarch64</li><li>Debian 10.2 for aarch64</li><li>BC-Linux_21.10 U4 for aarch64</li><li>MTOS for aarch64</li><li>openEuler 24.03 LTS SP1  for aarch64</li><li>openEuler 22.03 LTS SP1 for aarch64 (6.6.0-72.0.0.76.oe2403sp1.aarch64 kernel) </li><li>CentOS 7.5 for aarch64</li><li>Linux Kernel 6.6 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>CTYunOS 4.0 for aarch64</li><li><span id="ph103053469018"><a name="ph103053469018"></a><a name="ph103053469018"></a>AntOS</span> 6.6.47 for aarch64</li><li>Kylin V10 SP3 2403 for aarch64</li><li>Kylin V11 for aarch64</li><li>Velinux 2.0 for aarch64</li><li>VesselOS 2.0 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>
 </tr>
 <tr id="row73155239422"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1231542318428"><a name="p1231542318428"></a><a name="p1231542318428"></a><span id="ph1031518232426"><a name="ph1031518232426"></a><a name="ph1031518232426"></a>Atlas 800T A3超节点服务器</span></p>
@@ -144,17 +139,13 @@
 </tr>
 <tr id="row16507172322215"><td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p166420278225"><a name="p166420278225"></a><a name="p166420278225"></a><span id="ph064214271224"><a name="ph064214271224"></a><a name="ph064214271224"></a>A200T A3 Box8超节点服务器</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul164242719228"></a><a name="ul164242719228"></a><ul id="ul164242719228"><li>Tlinux 3.1 for x86_64</li><li>Tlinux 4.0 for x86_64 (6.6.80.29.tl4.x86_64 kernel) </li><li>Velinux 1.4 for x86_64</li></ul>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul164242719228"></a><a name="ul164242719228"></a><ul id="ul164242719228"><li>Tlinux 3.1 for x86_64</li><li>Tlinux 4.0 for x86_64 (6.6.80-29.tl4.x86_64 kernel) </li><li>Velinux 1.4 for x86_64</li></ul>
 </td>
 </tr>
 </tbody>
 </table>
 
-## 单机场景（推理）
-
-单机推理场景下，支持的产品形态和OS如下表所示。
-
-**表 3** 支持的产品形态和OS
+**表 3**  推理场景下支持的产品形态和OS
 
 <a name="table107471445138"></a>
 <table><thead align="left"><tr id="row207471745039"><th class="cellrowborder" valign="top" width="15.93%" id="mcps1.2.4.1.1"><p id="p074714451932"><a name="p074714451932"></a><a name="p074714451932"></a>产品系列</p>
@@ -275,3 +266,7 @@
 </tr>
 </tbody>
 </table>
+
+## 存储节点
+
+存储节点上无mindcluster组件部署，按照实际使用的存储服务器要求即可。
