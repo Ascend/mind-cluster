@@ -157,6 +157,7 @@ class LostDeviceChecker(Checker):
                     "code": code,
                     "entities_attribute": entities_attribute,
                     "events_attribute": events_attribute,
+                    "chains": {},
                 }
             }
         )
