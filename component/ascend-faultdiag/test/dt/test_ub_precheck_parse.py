@@ -71,6 +71,60 @@ class TestNpuHistoryPrecheckLine(unittest.TestCase):
         self.assertEqual(self.parser._match_precheck_line(""), {})
 
 
+class TestNpuHistoryTimeReference(unittest.TestCase):
+    """device_os.log 时间参照解析（kernel.log 开机时长换算基准）。"""
+
+    def setUp(self):
+        self.parser = NpuHistoryLogParser(EMPTY_PARAMS)
+
+    @staticmethod
+    def _write_device_os(lines):
+        path = os.path.join(tempfile.mkdtemp(), "device_os.log")
+        with open(path, "w", encoding="UTF-8") as file_stream:
+            file_stream.write("\n".join(lines))
+        return path
+
+    @staticmethod
+    def _reference_line(real_dt: datetime, uptime="90032.054298"):
+        # 参照行时间戳形如 "2026-09-20-12:45:34.644.410"（微秒拆两段）；传入同一 datetime
+        # 同时决定日志行内容与断言期望值，避免时间数字重复书写
+        time_str = real_dt.strftime("%Y-%m-%d-%H:%M:%S") + ".{:03d}.{:03d}".format(
+            real_dt.microsecond // 1000, real_dt.microsecond % 1000
+        )
+        return "[ERROR] KERNEL(3869,slogd):{} [slogd_kernel_log.c:254][{}] sample".format(time_str, uptime)
+
+    def test_invalid_date_reference_line_skipped(self):
+        # 第一条 [ERROR] KERNEL 行日期为 1970-01-01（底板时钟未同步）时应被跳过，改用后续有效行
+        valid_time = datetime(2026, 9, 20, 12, 45, 34, 644410)
+        path = self._write_device_os(
+            [
+                "[INFO] KERNEL(100,slogd):2026-09-20-08:00:00.000.000 [x][100.0] non-reference",
+                self._reference_line(datetime(1970, 1, 1)),
+                self._reference_line(valid_time),
+            ]
+        )
+        ref = self.parser._parse_time_reference(path)
+        self.assertEqual(ref, (valid_time, 90032.054298))
+
+    def test_malformed_reference_lines_skipped(self):
+        # 字段缺失/时间非法的 [ERROR] KERNEL 行一律跳过，取后续首个可解析行作参照
+        valid_time = datetime(2026, 9, 20, 12, 45, 34, 644410)
+        path = self._write_device_os(
+            [
+                "[ERROR] KERNEL(3869,slogd):no_uptime sample",
+                "[ERROR] KERNEL(3869,slogd):bogus_time [slogd_kernel_log.c:254][90032.054298] sample",
+                self._reference_line(valid_time),
+            ]
+        )
+        ref = self.parser._parse_time_reference(path)
+        self.assertEqual(ref, (valid_time, 90032.054298))
+
+    def test_all_invalid_date_lines_return_none(self):
+        # 全量为 1970-01-01 参照行时无有效基准，返回 None（与"无参照"同语义）
+        path = self._write_device_os([self._reference_line(datetime(1970, 1, 1))])
+        self.assertIsNone(self.parser._parse_time_reference(path))
+
+
 class TestLcnePrecheckLine(unittest.TestCase):
     def setUp(self):
         self.parser = LCNEParser(EMPTY_PARAMS)

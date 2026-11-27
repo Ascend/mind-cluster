@@ -336,6 +336,7 @@ class NpuHistoryLogParser(BaseNpuLogParser):
     _DEVICE_OS_LOG_REL_PATH = os.path.join(*HIST_DEVICE_OS_PATH_ARRAY)
     # 参照行必须以 [ERROR] KERNEL 开头，且只取第一条
     _DEVICE_OS_REFERENCE_HEAD = "[ERROR] KERNEL"
+    _INVALID_DATE = "1970-01-01"
     # 参照行示例：[ERROR] KERNEL(3869,slogd):2026-09-20-12:45:34.644.410 [slogd_kernel_log.c:254][90032.054298] ...
     # 提取 "KERNEL(pid,组):" 之后的实际时间（到空格为止），即参照实际时间 W0
     _DEVICE_OS_REAL_TIME_PATTERN = re.compile(r"KERNEL\([^)]*\):\s*([^ ]+)")
@@ -504,9 +505,10 @@ class NpuHistoryLogParser(BaseNpuLogParser):
     @staticmethod
     def _parse_time_reference(device_os_path: str) -> Optional[tuple]:
         """
-        解析 device_os.log 第一条 [ERROR] KERNEL 行，得到时间参照：同一时刻的实际时间 W0 与开机时长 T0。
+        解析 device_os.log，取得首个可解析的 [ERROR] KERNEL 行，得到时间参照：同一时刻的实际时间 W0 与开机时长 T0。
+        字段缺失、时间非法或日期为 1970-01-01 的参照行（底板时钟未同步）跳过，继续解析后续行。
         :param device_os_path: device_os.log 绝对路径
-        :return: (W0 实际时间 datetime, T0 开机时长)；文件缺失、无 [ERROR] KERNEL 行或解析失败返回 None
+        :return: (W0 实际时间 datetime, T0 开机时长)；文件缺失或无可解析参照行返回 None
         """
         if not device_os_path or not os.path.isfile(device_os_path):
             return None
@@ -516,14 +518,14 @@ class NpuHistoryLogParser(BaseNpuLogParser):
                     line = raw_line.strip()
                     if not line.startswith(NpuHistoryLogParser._DEVICE_OS_REFERENCE_HEAD):
                         continue
-                    # 第一条 [ERROR] KERNEL 行解析 W0/T0，任一失败即视为参照不可用
+                    # 任一校验不通过即跳过本行，取后续首个可用的 [ERROR] KERNEL 行作参照
                     real_time_match = NpuHistoryLogParser._DEVICE_OS_REAL_TIME_PATTERN.search(line)
                     uptime_match = NpuHistoryLogParser._DEVICE_OS_UPTIME_PATTERN.search(line)
                     if not real_time_match or not uptime_match:
-                        return None
+                        continue
                     real_time = check_and_format_time_str(real_time_match.group(1))
-                    if not real_time:
-                        return None
+                    if not real_time or NpuHistoryLogParser._INVALID_DATE in line:
+                        continue
                     real_dt = datetime.strptime(real_time, TIME_FORMAT_MICRO)
                     return real_dt, float(uptime_match.group(1))
         except (OSError, ValueError):
