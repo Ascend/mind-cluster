@@ -186,19 +186,19 @@ func goFaultEventHandler(event *C.struct_LqDcmiEvent) {
 			faultEvent.PeerPortId, faultEvent.SwitchChipId, faultEvent.SwitchPortId, faultEvent.Assertion,
 			faultEvent.AlarmRaisedTime), faultEvent.AssembledFaultCode)
 	// for recovered fault, delete them from current fault codes
-	if int8(faultEvent.Assertion) == devmanagercommon.FaultRecover {
-		newFaultCodes := make([]common.SwitchFaultEvent, 0)
-		for _, errInfo := range common.GetSwitchFaultCode() {
-			// only in faultEvent and recoverEvent major info is the same it will be thought as recover
-			if !isFaultRecoveredEvent(errInfo, faultEvent) {
-				newFaultCodes = append(newFaultCodes, errInfo)
+	common.UpdateSwitchFaultCode(func(faults []common.SwitchFaultEvent) []common.SwitchFaultEvent {
+		if int8(faultEvent.Assertion) == devmanagercommon.FaultRecover {
+			newFaultCodes := make([]common.SwitchFaultEvent, 0)
+			for _, errInfo := range faults {
+				// only in faultEvent and recoverEvent major info is the same it will be thought as recover
+				if !isFaultRecoveredEvent(errInfo, faultEvent) {
+					newFaultCodes = append(newFaultCodes, errInfo)
+				}
 			}
+			return newFaultCodes
 		}
-		common.SetSwitchFaultCode(newFaultCodes)
-		return
-	}
-	currentFault := common.GetSwitchFaultCode()
-	common.SetSwitchFaultCode(append(currentFault, faultEvent))
+		return append(faults, faultEvent)
+	})
 }
 
 func updateSwitchFaultCode(isInit bool) {

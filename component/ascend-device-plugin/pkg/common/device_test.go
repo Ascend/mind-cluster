@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -34,6 +35,7 @@ const (
 	cardNum          = 2
 	generalFaultCode = "[0x00f103b0,155649,na,NoneExist]"
 	firstFaultIdx    = 0
+	updateGoRoutine  = 5
 )
 
 // TestToString for test ToString
@@ -321,6 +323,56 @@ func TestSetSwitchFaultCode(t *testing.T) {
 		defer patch.Reset()
 		SetSwitchFaultCode(nil)
 		convey.So(GetSwitchFaultCode(), convey.ShouldBeNil)
+	})
+}
+
+// TestUpdateSwitchFaultCode for test UpdateSwitchFaultCode
+func TestUpdateSwitchFaultCode(t *testing.T) {
+	convey.Convey("test UpdateSwitchFaultCode", t, func() {
+		convey.Convey("01-update with nil updateFunc, fault codes keep unchanged", func() {
+			patch := gomonkey.ApplyGlobalVar(&currentSwitchFault,
+				[]SwitchFaultEvent{{AssembledFaultCode: generalFaultCode}})
+			defer patch.Reset()
+			UpdateSwitchFaultCode(nil)
+			faults := GetSwitchFaultCode()
+			convey.So(len(faults), convey.ShouldEqual, 1)
+			convey.So(faults[firstFaultIdx].AssembledFaultCode, convey.ShouldEqual, generalFaultCode)
+		})
+		convey.Convey("02-append new fault and remove recovered fault success", func() {
+			patch := gomonkey.ApplyGlobalVar(&currentSwitchFault,
+				[]SwitchFaultEvent{{AssembledFaultCode: generalFaultCode}})
+			defer patch.Reset()
+			UpdateSwitchFaultCode(func(faults []SwitchFaultEvent) []SwitchFaultEvent {
+				return append(faults, SwitchFaultEvent{AssembledFaultCode: generalFaultCode})
+			})
+			convey.So(len(GetSwitchFaultCode()), convey.ShouldEqual, 2)
+			UpdateSwitchFaultCode(func(faults []SwitchFaultEvent) []SwitchFaultEvent {
+				newFaults := make([]SwitchFaultEvent, 0)
+				for _, fault := range faults {
+					if fault.AssembledFaultCode != generalFaultCode {
+						newFaults = append(newFaults, fault)
+					}
+				}
+				return newFaults
+			})
+			convey.So(len(GetSwitchFaultCode()), convey.ShouldEqual, 0)
+		})
+		convey.Convey("03-concurrent update, no fault lost", func() {
+			patch := gomonkey.ApplyGlobalVar(&currentSwitchFault, make([]SwitchFaultEvent, 0, GeneralMapSize))
+			defer patch.Reset()
+			var wg sync.WaitGroup
+			for i := 0; i < updateGoRoutine; i++ {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					UpdateSwitchFaultCode(func(faults []SwitchFaultEvent) []SwitchFaultEvent {
+						return append(faults, SwitchFaultEvent{})
+					})
+				}()
+			}
+			wg.Wait()
+			convey.So(len(GetSwitchFaultCode()), convey.ShouldEqual, updateGoRoutine)
+		})
 	})
 }
 

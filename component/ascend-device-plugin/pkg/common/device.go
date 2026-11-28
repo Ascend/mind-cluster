@@ -116,11 +116,17 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 	SwitchFaultLock.Lock()
 	defer SwitchFaultLock.Unlock()
 
+	// UpdateSwitchFaultLevel replaces the map instead of modifying it in place,
+	// so snapshot the reference under lock to avoid concurrent read and write of the map
+	SwitchFaultLevelMapLock.Lock()
+	switchFaultLevelMap := SwitchFaultLevelMap
+	SwitchFaultLevelMapLock.Unlock()
+
 	reportFaultCodes := make([]string, 0)
 	tmpFaultCodeLevelMap := make(map[string]int)
 	tmpFaultTimeAndLevelMap := make(map[string]FaultTimeAndLevel)
-	for _, faultInfo := range GetSwitchFaultCode() {
-		if _, ok := SwitchFaultLevelMap[faultInfo.AssembledFaultCode]; !ok {
+	for _, faultInfo := range getSwitchFaultCode() {
+		if _, ok := switchFaultLevelMap[faultInfo.AssembledFaultCode]; !ok {
 			hwlog.RunLog.Warnf("received unregisterd faultCode:%s, will not report", faultInfo.AssembledFaultCode)
 			continue
 		}
@@ -129,7 +135,7 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 			continue
 		}
 		if GetSyncMapLen(Ascend910ResetGoroutine) == 0 {
-			tmpFaultCodeLevelMap[faultInfo.AssembledFaultCode] = SwitchFaultLevelMap[faultInfo.AssembledFaultCode]
+			tmpFaultCodeLevelMap[faultInfo.AssembledFaultCode] = switchFaultLevelMap[faultInfo.AssembledFaultCode]
 		} else {
 			tmpFaultCodeLevelMap[faultInfo.AssembledFaultCode] = switchFaultCodeLevelToCm[faultInfo.AssembledFaultCode]
 		}
@@ -142,7 +148,7 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 		}
 	}
 	switchFaultCodeLevelToCm = tmpFaultCodeLevelMap
-	faultLevel, NodeStatus := getSwitchFaultLevelAndNodeStatus()
+	faultLevel, NodeStatus := getSwitchFaultLevelAndNodeStatus(switchFaultLevelMap)
 	return SwitchFaultInfo{
 		FaultCode:            reportFaultCodes,
 		FaultLevel:           faultLevel,
@@ -167,7 +173,7 @@ func UpdateSwitchFaultInfoAndFaultLevel(si *SwitchFaultInfo) {
 	switchFaultCodeLevelToCm = tmpSwitchFaultCodeLevelToCm
 }
 
-// checkL1toL2PlaneDown must be used in SwitchFaultLevelMapLock block
+// checkL1toL2PlaneDown must be used with SwitchFaultLock held, it reads currentSwitchFault
 func checkL1toL2PlaneDown() bool {
 	cnt := make(map[uint]map[uint]struct{})
 	for _, code := range currentSwitchFault {
@@ -189,22 +195,24 @@ func checkL1toL2PlaneDown() bool {
 	return allDown
 }
 
-// getSwitchFaultLevelAndNodeStatus get the fault level and node status of the switch
-func getSwitchFaultLevelAndNodeStatus() (string, string) {
+// getSwitchFaultLevelAndNodeStatus get the fault level and node status of the switch,
+// switchFaultLevelMap is an immutable snapshot taken by the caller, so the whole
+// report is calculated against one consistent version of the fault config
+func getSwitchFaultLevelAndNodeStatus(switchFaultLevelMap map[string]int) (string, string) {
 	if len(currentSwitchFault) == 0 {
 		return "", nodeHealthy
 	}
 
-	maxFaultLevel := calculateMaxSwitchFaultLevel()
+	maxFaultLevel := calculateMaxSwitchFaultLevel(switchFaultLevelMap)
 
 	return mapFaultLevelToStatus(maxFaultLevel)
 }
 
-// calculateMaxSwitchFaultLevel calculate the highest fault level of the switch
-func calculateMaxSwitchFaultLevel() int {
-	SwitchFaultLevelMapLock.Lock()
-	defer SwitchFaultLevelMapLock.Unlock()
-
+// calculateMaxSwitchFaultLevel calculate the highest fault level of the switch.
+// The caller must hold SwitchFaultLock: this function reads currentSwitchFault and
+// switchFaultCodeLevelToCm without locking. switchFaultLevelMap is an immutable
+// snapshot, so it can be read without SwitchFaultLevelMapLock.
+func calculateMaxSwitchFaultLevel(switchFaultLevelMap map[string]int) int {
 	maxLevel := 0
 	for _, code := range currentSwitchFault {
 		assembledCode := code.AssembledFaultCode
@@ -214,7 +222,7 @@ func calculateMaxSwitchFaultLevel() int {
 			}
 			continue
 		}
-		if level := SwitchFaultLevelMap[assembledCode]; level > maxLevel {
+		if level := switchFaultLevelMap[assembledCode]; level > maxLevel {
 			maxLevel = level
 		}
 	}
@@ -286,7 +294,25 @@ func SetSwitchFaultCode(newFaults []SwitchFaultEvent) {
 
 // GetSwitchFaultCode get switch fault code
 func GetSwitchFaultCode() []SwitchFaultEvent {
+	SwitchFaultLock.Lock()
+	defer SwitchFaultLock.Unlock()
+	return getSwitchFaultCode()
+}
+
+// getSwitchFaultCode get switch fault code without lock, the caller must hold SwitchFaultLock
+func getSwitchFaultCode() []SwitchFaultEvent {
 	return currentSwitchFault
+}
+
+// UpdateSwitchFaultCode update switch fault code atomically, updateFunc takes the current faults
+// as input and its return value will be set as the new faults
+func UpdateSwitchFaultCode(updateFunc func(faults []SwitchFaultEvent) []SwitchFaultEvent) {
+	if updateFunc == nil {
+		return
+	}
+	SwitchFaultLock.Lock()
+	defer SwitchFaultLock.Unlock()
+	currentSwitchFault = updateFunc(currentSwitchFault)
 }
 
 // GetDeviceListID get device id by input device name
