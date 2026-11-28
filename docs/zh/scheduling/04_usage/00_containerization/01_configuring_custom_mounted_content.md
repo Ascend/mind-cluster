@@ -1,6 +1,10 @@
 # （可选）配置自定义挂载内容<a name="ZH-CN_TOPIC_0000002511427171"></a>
 
-Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/etc/ascend-docker-runtime.d/base.list”和“/etc/ascend-docker-runtime.d/ub_driver.list”中的全部内容，并且Ascend Docker Runtime默认会检查路径“/usr/local/Ascend/driver/lib64/common”、“/usr/local/Ascend/driver/lib64/driver”和“/usr/lib64”，如果存在，则会自动添加到LD_LIBRARY_PATH环境变量中，以便npu-smi info命令自动可用。base.list和ub_driver.list中的内容需正常挂载至容器，否则影响容器内相关功能使用，文件中已有的默认挂载路径配置项无需修改。若用户需要新增挂载其他文件或目录，可创建自定义配置文件，操作如下：
+Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/etc/ascend-docker-runtime.d/base.list”和“/etc/ascend-docker-runtime.d/ub_driver.list”中的全部内容，并且Ascend Docker Runtime默认会检查路径“/usr/local/Ascend/driver/lib64/common”、“/usr/local/Ascend/driver/lib64/driver”和“/usr/lib64”，如果存在，则会自动添加到LD_LIBRARY_PATH环境变量中，以便npu-smi info命令自动可用。base.list和ub_driver.list中的内容需正常挂载至容器，否则影响容器内相关功能使用，文件中已有的默认挂载路径配置项无需修改。
+
+在legacy模式下，通过`ASCEND_RDMA_DEVICES`指定UB网卡RDMA设备时，Ascend Docker Runtime根据设备信息选择驱动挂载配置文件，默认配置文件为“/etc/ascend-docker-runtime.d/rdma_driver.list”，并将配置的驱动文件以只读方式挂载至容器。用户可根据实际环境修改该配置文件，具体挂载内容和校验规则请参见[使用前必读](./00_before_you_start.md#使用说明)。
+
+若用户需要新增挂载其他文件或目录，可创建自定义配置文件，操作如下：
 
 1. 进入配置文件目录。
 
@@ -49,5 +53,5 @@ Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/e
 - 仅支持挂载条目本身（最后一级）为软链接，且须指定ASCEND_ALLOW_LINK=True；软链接及其目标文件的属主必须为root。
 - 自定义挂载内容均以只读方式挂载至容器，不支持配置为可写挂载。
 <!-- npu="950" id1 -->
-- UB网卡默认驱动挂载清单及校验规则请参见[使用前必读](./00_before_you_start.md#使用说明)。
+- UB网卡RDMA驱动挂载配置文件及校验规则请参见[使用前必读](./00_before_you_start.md#使用说明)。
 <!-- end id1 -->

@@ -7,7 +7,7 @@
 - 在使用容器化支持特性前，需要确保Ascend Docker Runtime组件已经安装，若没有安装，可以参考[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
 <!-- npu="950" id2 -->
 - （可选）在Atlas 950 SuperPoD液冷超节点和Atlas 850风冷超节点场景下，如需挂载UB网卡设备及驱动，还需满足以下条件：
-  - 已安装Ascend Docker Runtime，并使用Legacy注入模式。安装方法请参见[Ascend Docker Runtime](../../05_developer_guide/00_installation_deployment/00_manual_installation/02_ascend_docker_runtime.md)。
+  - 已安装Ascend Docker Runtime，并使用legacy注入模式。安装方法请参见[Ascend Docker Runtime](../../05_developer_guide/00_installation_deployment/00_manual_installation/02_ascend_docker_runtime.md)。
   - 宿主机搭载UB网卡，已安装并加载UB网卡驱动；已安装版本为openEuler 24.03 LTS SP4的操作系统。
   - 确保容器内`glibc`版本不低于宿主机版本，`rdma-core`版本与宿主机一致。在宿主机和容器内执行`rpm -qa | grep rdma-core`命令查询`rdma-core`的版本，不满足要求时，需先准备兼容镜像。
 <!-- end id2 -->
@@ -22,9 +22,12 @@
   - 宿主机：openEuler 24.03（glibc 2.38）
   - 容器内：openEuler 24.03（glibc 2.38）、Ubuntu 24.04（glibc 2.39）。
 - 在Atlas 950 SuperPoD液冷超节点和Atlas 850风冷超节点场景下，支持通过环境变量`ASCEND_RDMA_DEVICES`指定待挂载RDMA设备的HCA名称（取值为UB网卡在“/sys/class/infiniband/”下的完整HCA名称，如`hrn5_0,hrn5_1`），将对应的UB网卡字符设备和驱动文件挂载到容器中。`ASCEND_RDMA_DEVICES`与`ASCEND_VISIBLE_DEVICES`独立配置，支持仅挂载NPU设备、仅挂载RDMA设备，或同时挂载NPU和RDMA设备：
-  - 仅支持Legacy模式；CDI模式会忽略`ASCEND_RDMA_DEVICES`，不会根据该参数自动注入RDMA设备及挂载对应驱动文件。在CDI模式下，该参数去除首尾空白后既非空也非`void`时，会记录警告，不会因此终止容器创建。
+  - 仅支持legacy模式；CDI模式会忽略`ASCEND_RDMA_DEVICES`，不会根据该参数自动注入RDMA设备及挂载对应驱动文件。在CDI模式下，该参数去除首尾空白后既非空也非`void`时，会记录警告，不会因此终止容器创建。
   - 每个所选HCA的“device/infiniband_verbs/”目录中，必须有一个`uverbsX`的`ibdev`内容与该HCA名称一致；同一目录可以包含对应不同HCA的多个`uverbsX`。Ascend Docker Runtime据此挂载对应的“/dev/infiniband/uverbsX”字符设备（宿主机存在“/dev/infiniband/rdma_cm”时一并挂载），不会挂载整个“/dev/infiniband”目录。
-  - 默认读取“/etc/ascend-docker-runtime.d/rdma_driver.list”，将如下UB网卡驱动配置文件和动态库以只读方式挂载至容器中（默认配置文件无需用户修改）：
+  - 挂载RDMA驱动文件时，容器内glibc版本需不低于宿主机版本。支持的OS版本如下：
+    - 宿主机：openEuler 24.03。
+    - 容器内：openEuler 24.03、Ubuntu 24.04。
+  - Ascend Docker Runtime默认读取“/etc/ascend-docker-runtime.d/rdma_driver.list”文件，会将该文件中的UB网卡驱动配置文件和动态库以只读方式挂载至容器中。如果宿主机和容器的OS和glibc不满足上述要求，需根据实际环境和宿主机驱动文件修改配置文件。默认配置文件内容如下：
 
     ```text
     /etc/libibverbs.d/hrn5.driver
@@ -40,11 +43,11 @@
 
     >[!NOTE]
     >
-    >- 默认清单中，除“/usr/lib64/libibverbs/libhrn5-rdmav34.so”在宿主机不存在时会跳过挂载外，其余驱动文件缺失、软链接无效，或所选HCA及其`uverbsX`设备节点不存在、校验失败时，均会报错并终止容器创建。
+    >- 默认配置文件中，除“/usr/lib64/libibverbs/libhrn5-rdmav34.so”在宿主机不存在时会跳过挂载外，其余驱动文件缺失、软链接无效，或所选HCA及其`uverbsX`设备节点不存在、校验失败时，均会报错并终止容器创建。
     >- 挂载RDMA驱动文件时会自动允许合法软链接（软链接及其目标文件属主须为root），无需额外指定`ASCEND_ALLOW_LINK=True`。
     >- 指定`ASCEND_RUNTIME_OPTIONS=NODRV`时，跳过普通集合及RDMA集合中文件和目录的自动挂载（仍注入所选字符设备并校验宿主机RDMA依赖），用户可通过容器卷（如Docker `--mount`/`-v`、Containerd `--mount`、CRI-O `mounts`或Kubernetes `volumeMounts`）按需挂载驱动文件。
 
-  - 容器内的`rdma-core`版本必须与宿主机一致。默认清单中的`/usr/lib64/libhrn5-rdmav34.so`对应PABI版本34（宏`IBVERBS_PABI_VERSION`）。如果宿主机上的驱动库使用其他PABI版本，需在创建容器前手动修改宿主机上的`/etc/ascend-docker-runtime.d/rdma_driver.list`，将该条目替换为宿主机上对应版本的驱动库绝对路径。
+  - 容器内的`rdma-core`版本必须与宿主机一致。默认配置文件中的`/usr/lib64/libhrn5-rdmav34.so`对应PABI版本34（宏`IBVERBS_PABI_VERSION`）。如果宿主机上的驱动库使用其他PABI版本，需在创建容器前手动修改宿主机上的`/etc/ascend-docker-runtime.d/rdma_driver.list`，将该条目替换为宿主机上对应版本的驱动库绝对路径。
 
 <!-- end id1 -->
 
