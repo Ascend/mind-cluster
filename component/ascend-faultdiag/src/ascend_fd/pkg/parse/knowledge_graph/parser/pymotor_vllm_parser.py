@@ -23,7 +23,6 @@ from typing import Union
 
 from ascend_fd.model.context import KGParseCtx
 from ascend_fd.model.node_info import DeviceInfo
-from ascend_fd.model.parse_info import SingleFileParseInfo
 from ascend_fd.utils.regular_table import (
     PYMOTOR_VLLM_SOURCE,
     KG_MAX_TIME,
@@ -33,10 +32,13 @@ from ascend_fd.utils.regular_table import (
     DEVICE_ID_PATTERN,
     IPADDR_PATTERN,
     NETMASK_PATTERN,
-    HOST_IP_PATTERN,
-    POD_IP_PATTERN,
 )
-from ascend_fd.utils.tool import check_and_format_time_str, PatternSingleOrMultiLineMatcher
+from ascend_fd.utils.tool import (
+    MultiProcessJob,
+    PatternSingleOrMultiLineMatcher,
+    check_and_format_time_str,
+    safe_read_open,
+)
 from ascend_fd.utils.net_tools import IPAddress
 from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
 from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import (
@@ -68,20 +70,27 @@ class PyMotorVLLMParser(FileParser):
     SOURCE_FILE = PYMOTOR_VLLM_SOURCE
 
     # Accept all file patterns from shared log directory (pre-compiled for performance)
+    MMC_FILENAME_REGEX = re.compile(MMC_FILENAME_PATTERN)
     ACCEPTED_PATTERNS = [
         re.compile(VLLM_FILENAME_PATTERN),
         re.compile(PYMOTOR_FILENAME_PATTERN),
-        re.compile(MMC_FILENAME_PATTERN),
+        MMC_FILENAME_REGEX,
     ]
+    # Memcache logs are verbose, their DEBUG lines are skipped before the fault rule matching.
+    LOG_LEVEL_REGEX = re.compile(r"\b(DEBUG|INFO|WARNING|WARN|ERROR|FATAL)\b", re.IGNORECASE)
+    # Only the log header is inspected so that a DEBUG word inside the message body is ignored.
+    LOG_LEVEL_SEARCH_LIMIT = 80
 
     SOURCE_DEVICE_KEY = "source_device"
     DEFAULT_DEVICE_ID = "Unknown"
     TIME_ZERO_MICROSECOND = ".000000"
 
     # Time format regexes (ordered by specificity):
-    # 1. vLLM with milliseconds:   2026-05-26 15:15:48,667 - INFO -
-    # 2. PyMotor style (no ms):     2026-05-26 15:16:20  [INFO][root]
-    # 3. vLLM short (no year):     INFO 05-26 15:16:42 [vllm.py:788]
+    # 1. memcache/memfabric:       2026-11-13 18:56:55.164739 DEBUG
+    # 2. vLLM with milliseconds:   2026-05-26 15:15:48,667 - INFO -
+    # 3. PyMotor style (no ms):    2026-05-26 15:16:20  [INFO][root]
+    # 4. vLLM short (no year):     INFO 05-26 15:16:42 [vllm.py:788]
+    DATETIME_MICROSECOND_REGEX = re.compile(r"(\d{4}-\d{2}-\d{2}\s{1,}\d{2}:\d{2}:\d{2}\.\d{6})")
     DATETIME_MS_REGEX = re.compile(r"(\d{4}-\d{2}-\d{2}\s{1,}\d{2}:\d{2}:\d{2}[,.]\d{3})")
     DATETIME_NO_MS_REGEX = re.compile(r"(\d{4}-\d{2}-\d{2}\s{1,}\d{2}:\d{2}:\d{2})\s{1,}\[")
     DATETIME_SHORT_REGEX = re.compile(r"(?:INFO|WARNING|ERROR|DEBUG)\s{1,}(\d{2}-\d{2}\s{1,}\d{2}:\d{2}:\d{2})\s{1,}\[")
@@ -89,10 +98,11 @@ class PyMotorVLLMParser(FileParser):
     def __init__(self, params):
         super().__init__(params)
         self.pattern_matcher = PatternSingleOrMultiLineMatcher()
-        self.host_ip = ""
-        self.pod_ip = ""
-        self.device_info_list = []
         self.timezone_trans_flag = self.get_timezone_trans_flag()
+        self._last_line_time = ""
+        self._plog_start_time = ""
+        self._plog_end_time = ""
+        self._is_mmc_file = False
 
     @staticmethod
     def _is_accepted_file(filename):
@@ -110,72 +120,68 @@ class PyMotorVLLMParser(FileParser):
         """
         self.is_sdk_input = parse_ctx.is_sdk_input
         self.resuming_training_time = parse_ctx.resuming_training_time
-        plog_start_time = self.params.get("start_time")
-        plog_end_time = self.params.get("end_time")
 
         file_list = self.find_log(parse_ctx.parse_file_path)
-        # SDK input: file_list contains LogInfoSaver objects, skip filename filtering
-        if not self.is_sdk_input:
+        err_msg = {}
+
+        if self.is_sdk_input:
+            # SDK input: file_list contains LogInfoSaver objects, skip filename filtering
+            results = {
+                f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_file(file_source)
+                for idx, file_source in enumerate(file_list)
+            }
+        else:
             file_list = [f for f in file_list if self._is_accepted_file(os.path.basename(f))]
-
-        if not file_list:
-            return [], {}
-
-        results = dict()
-        pv_start_time, pv_end_time = "", ""
-        for idx, file_source in enumerate(sorted(file_list)):
-            result = self._parse_file(file_source)
-            results.update({f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": result})
-            if result.start_time:
-                pv_start_time = result.start_time if not pv_start_time else min(pv_start_time, result.start_time)
-            if result.end_time:
-                pv_end_time = result.end_time if not pv_end_time else max(pv_end_time, result.end_time)
-
-        intersect_start_time = (
-            max(plog_start_time, pv_start_time) if plog_start_time and pv_start_time else pv_start_time
-        )
-        intersect_end_time = min(plog_end_time, pv_end_time) if plog_end_time and pv_end_time else pv_end_time
+            if not file_list:
+                kg_logger.info("No %s files matched, skip the %s log parse job.", self.SOURCE_FILE, self.SOURCE_FILE)
+                return [], {}
+            multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_list), task_id=task_id)
+            for idx, file_source in enumerate(file_list):
+                multiprocess_job.add_security_job(
+                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}",
+                    self._parse_file,
+                    file_source,
+                )
+            results, err_msg = multiprocess_job.join_and_get_results()
 
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
 
         event_list = []
-        for result in results.values():
-            for event in result.event_list:
-                event_time = event.get("occur_time", "")
-                if not event_time:
-                    continue
-                if intersect_start_time and event_time < intersect_start_time:
-                    continue
-                if intersect_end_time and event_time > intersect_end_time:
-                    continue
-                event_list.append(event)
+        for file_event_list in results.values():
+            event_list.extend(file_event_list)
 
-        return event_list, {}
+        err_msg_dict = {self.__class__.__name__: list(err_msg.values())} if err_msg else {}
+        return event_list, err_msg_dict
 
     def get_log_time(self, line):
         """
         Extract time from log line.
-        Supports all formats found across vLLM and PyMotor logs:
-        1. 2026-05-26 15:15:48,667 - INFO - (vLLM with milliseconds)
-        2. 2026-05-26 15:16:20  [INFO][root]... (PyMotor / vLLM no ms)
-        3. INFO 05-26 15:16:42 [vllm.py:788] (vLLM short, no year)
+        Supports all formats found across vLLM, PyMotor and memcache logs:
+        1. 2026-11-13 18:56:55.164739 DEBUG (memcache / memfabric, microseconds)
+        2. 2026-05-26 15:15:48,667 - INFO - (vLLM with milliseconds)
+        3. 2026-05-26 15:16:20  [INFO][root]... (PyMotor / vLLM no ms)
+        4. INFO 05-26 15:16:42 [vllm.py:788] (vLLM short, no year)
         """
+        match = self.DATETIME_MICROSECOND_REGEX.search(line)
+        if match:
+            return check_and_format_time_str(match.group(1), self.timezone_trans_flag)
+
         match = self.DATETIME_MS_REGEX.search(line)
         if match:
-            occur_time = match.group(1).replace(",", ".")
-            return check_and_format_time_str(occur_time, self.timezone_trans_flag)
+            line_time = match.group(1).replace(",", ".")
+            return check_and_format_time_str(line_time, self.timezone_trans_flag)
 
         match = self.DATETIME_NO_MS_REGEX.search(line)
         if match:
-            occur_time = match.group(1) + self.TIME_ZERO_MICROSECOND
-            return check_and_format_time_str(occur_time, self.timezone_trans_flag)
+            line_time = match.group(1) + self.TIME_ZERO_MICROSECOND
+            return check_and_format_time_str(line_time, self.timezone_trans_flag)
 
         match = self.DATETIME_SHORT_REGEX.search(line)
         if match:
             short_time = match.group(1)
             current_year = datetime.now(timezone(timedelta(hours=8))).year
-            occur_time = f"{current_year}-{short_time}{self.TIME_ZERO_MICROSECOND}"
-            return check_and_format_time_str(occur_time, self.timezone_trans_flag)
+            line_time = f"{current_year}-{short_time}{self.TIME_ZERO_MICROSECOND}"
+            return check_and_format_time_str(line_time, self.timezone_trans_flag)
 
         return ""
 
@@ -206,81 +212,115 @@ class PyMotorVLLMParser(FileParser):
 
         return device_info
 
-    def extract_host_pod_ip(self, log_line):
-        """
-        Extract host_ip and pod_ip from log line
-        Format: host_ip: X.X.X.X / pod_ip: X.X.X.X
-        """
-        if not self.host_ip:
-            host_match = re.search(HOST_IP_PATTERN, log_line)
-            if host_match and IPAddress.is_valid_ip(host_match.group(1)):
-                self.host_ip = host_match.group(1)
-
-        if not self.pod_ip:
-            pod_match = re.search(POD_IP_PATTERN, log_line)
-            if pod_match and IPAddress.is_valid_ip(pod_match.group(1)):
-                self.pod_ip = pod_match.group(1)
-
     def _parse_file(self, file_source: Union[str, LogInfoSaver]):
         """
         Parse single log file line by line.
-        Handles both vLLM and PyMotor log content transparently.
+        File input is streamed, so the cross-line matcher reads the following lines on demand
+        instead of the whole file being cached in memory. SDK input keeps its in-memory line list.
 
         :param file_source: log file path or LogInfoSaver instance
-        :return: SingleFileParseInfo with events and device info
+        :return: a list of event dict
         """
         event_storage = EventStorage()
         device_info_collector = {}
-        start_time, end_time = "", ""
+        self._last_line_time = ""
+        self._plog_start_time = self.params.get("start_time")
+        self._plog_end_time = self.params.get("end_time")
+        self._is_mmc_file = self._is_mmc_log(file_source)
+        if self.is_sdk_input:
+            self._parse_sdk_input(event_storage, file_source, device_info_collector)
+        else:
+            self._parse_filestream(event_storage, file_source, device_info_collector)
+        return event_storage.generate_event_list()
 
-        log_lines = list(self._yield_log(file_source))
-        self.pattern_matcher.log_lines = log_lines
-        for line_num, log_line in enumerate(log_lines, start=1):
-            self.pattern_matcher.update_line_index(line_num - 1)
-            occur_time, start_time, end_time = self._process_line(
-                log_line,
-                line_num,
-                file_source,
-                event_storage,
-                device_info_collector,
-                start_time,
-                end_time,
-            )
+    def _parse_sdk_input(self, event_storage, file_source, device_info_collector):
+        """
+        Parse the in-memory lines of the SDK input, the line index is used for multiline matching.
 
-        return self._build_result(event_storage, start_time, end_time, device_info_collector)
+        :param event_storage: event storage
+        :param file_source: LogInfoSaver instance
+        :param device_info_collector: device info collector
+        """
+        self.pattern_matcher.log_lines = file_source.log_lines
+        for index, log_line in enumerate(file_source.log_lines):
+            event_dict, stop = self._parse_single_log(log_line, file_source, device_info_collector, index)
+            if stop:
+                break
+            if not event_dict:
+                continue
+            event_storage.record_event(event_dict)
 
-    def _process_line(
-        self,
-        log_line,
-        line_num,
-        file_source,
-        event_storage,
-        device_info_collector,
-        start_time,
-        end_time,
-    ):
-        """Process a single log line: extract info, record event."""
-        self.extract_host_pod_ip(log_line)
+    def _parse_filestream(self, event_storage, file_path: str, device_info_collector):
+        """
+        Parse the log file from the file stream, the file stream is used for multiline matching.
 
+        :param event_storage: event storage
+        :param file_path: log file path
+        :param device_info_collector: device info collector
+        """
+        self.pattern_matcher.log_lines = None
+        with safe_read_open(file_path, "r", encoding="UTF-8") as file_stream:
+            while True:
+                raw_line = file_stream.readline()
+                if not raw_line:
+                    break
+                log_line = raw_line.replace("\00", "").strip()
+                event_dict, stop = self._parse_single_log(log_line, file_path, device_info_collector, file_stream)
+                if stop:
+                    break
+                if not event_dict:
+                    continue
+                event_storage.record_event(event_dict)
+
+    def _update_matcher_by_locator(self, multi_line_locator):
+        """
+        Update the matcher location for multiline parsing: line index for SDK input,
+        file stream for file input
+        """
+        if self.is_sdk_input:
+            self.pattern_matcher.update_line_index(multi_line_locator)
+            return
+        self.pattern_matcher.update_stream(multi_line_locator)
+
+    def _parse_single_log(self, log_line, file_source, device_info_collector, multi_line_locator):
+        """
+        Process a single log line, return the matched event dict and whether the remaining
+        lines should be skipped.
+
+        :return: (event dict, True if the plog end time is exceeded)
+        """
+        # Memcache DEBUG lines are noisy and never carry a fault, skip them before parsing.
+        if self._is_mmc_file and self._is_debug_log_line(log_line):
+            return {}, False
+        log_time = self.get_log_time(log_line)
+        if log_time:
+            self._last_line_time = log_time
+        # Lines without a timestamp inherit the time of the previous line.
+        line_time = log_time or self._last_line_time
+        if line_time and self._plog_end_time and line_time > self._plog_end_time:
+            # The plog end time is exceeded, all the remaining lines are out of the window.
+            return {}, True
+        if line_time and self._plog_start_time and line_time < self._plog_start_time:
+            # Earlier than the plog start time, skip the current line only.
+            return {}, False
+
+        self._update_matcher_by_locator(multi_line_locator)
         current_device_info = self.find_device_info(log_line)
         if current_device_info:
             device_info_collector[current_device_info.device_id] = current_device_info
 
-        occur_time = self.get_log_time(log_line)
-        if not occur_time:
-            occur_time = start_time or end_time or getattr(file_source, "modification_time", "") or KG_MAX_TIME
-
-        if occur_time and occur_time >= self.resuming_training_time:
-            if not start_time or occur_time < start_time:
-                start_time = occur_time
-            if not end_time or occur_time > end_time:
-                end_time = occur_time
+        event_time = line_time or getattr(file_source, "modification_time", "") or KG_MAX_TIME
+        # The fallback time of untimestamped lines must also stay in the plog window.
+        if self._plog_start_time and event_time < self._plog_start_time:
+            return {}, False
+        if self._plog_end_time and event_time > self._plog_end_time:
+            return {}, False
 
         event_dict = self.parse_single_line(log_line)
         if not event_dict:
-            return occur_time, start_time, end_time
+            return {}, False
 
-        self.supplement_common_info(event_dict, file_source, occur_time)
+        self.supplement_common_info(event_dict, file_source, event_time)
 
         # Use real device_id extracted from log content instead of default
         if current_device_info and event_dict.get(self.SOURCE_DEVICE_KEY) == self.DEFAULT_DEVICE_ID:
@@ -290,22 +330,18 @@ class PyMotorVLLMParser(FileParser):
         if device_id_from_event and device_id_from_event in device_info_collector:
             event_dict["device_ip"] = device_info_collector[device_id_from_event].device_ip
 
-        event_storage.record_event(event_dict)
-        return occur_time, start_time, end_time
+        return event_dict, False
 
-    def _build_result(self, event_storage, start_time, end_time, device_info_collector):
-        """Assemble SingleFileParseInfo from collected data."""
-        result = SingleFileParseInfo("", [], DeviceInfo(), {})
-        result.container_ip = self.pod_ip or self.host_ip
-        result.event_list = event_storage.generate_event_list()
-        result.start_time = start_time
-        result.end_time = end_time
+    @classmethod
+    def _is_mmc_log(cls, file_source):
+        """Check whether the file is a Memcache (mmc*.log) log file."""
+        return bool(cls.MMC_FILENAME_REGEX.match(cls._get_filename(file_source)))
 
-        if device_info_collector:
-            devices = list(device_info_collector.values())
-            result.device_info = devices[0]
-            result.device_info_list = devices
-        else:
-            result.device_info_list = []
-
-        return result
+    @classmethod
+    def _is_debug_log_line(cls, line):
+        """
+        Check whether the log level of a line is DEBUG.
+        Only the log header is inspected so that a DEBUG word inside the message body is ignored.
+        """
+        match = cls.LOG_LEVEL_REGEX.search(line, 0, cls.LOG_LEVEL_SEARCH_LIMIT)
+        return bool(match) and match.group(1).upper() == "DEBUG"

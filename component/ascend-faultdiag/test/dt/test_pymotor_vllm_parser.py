@@ -58,18 +58,6 @@ class TestPyMotorVLLMParser(unittest.TestCase):
 
         self.assertTrue(time_str.startswith("2026-05-26 15:15:48"))
 
-    def test_extract_host_pod_ip(self):
-        """Test extracting host_ip and pod_ip"""
-        log_line_host = "2026-05-26 15:15:48,694 - INFO - host_ip: 90.90.97.42"
-        log_line_pod = "2026-05-26 15:15:48,694 - INFO - pod_ip: 192.168.222.203"
-
-        parser = self._create_parser()
-        parser.extract_host_pod_ip(log_line_host)
-        parser.extract_host_pod_ip(log_line_pod)
-
-        self.assertEqual(parser.host_ip, "90.90.97.42")
-        self.assertEqual(parser.pod_ip, "192.168.222.203")
-
     def test_invalid_ip_rejected(self):
         """Test that invalid IP addresses are rejected"""
         log_line = "2026-05-26 15:15:49,051 - INFO - device_id: 0, device_ip_info: ['ipaddr:invalid_ip\\n', 'netmask:255.255.255.0\\n']"
@@ -77,40 +65,6 @@ class TestPyMotorVLLMParser(unittest.TestCase):
         device_info = parser.find_device_info(log_line)
 
         self.assertIsNone(device_info)
-
-    def test_multiple_devices_parsed(self):
-        """Test parsing multiple devices from log content"""
-        log_content = """2026-05-26 15:15:49,051 - INFO - device_id: 0, device_ip_info: ['ipaddr:10.0.245.11\\n', 'netmask:255.255.255.0\\n']
-2026-05-26 15:15:50,285 - INFO - device_id: 1, device_ip_info: ['ipaddr:10.0.244.11\\n', 'netmask:255.255.255.0\\n']
-2026-05-26 15:15:51,175 - INFO - device_id: 10, device_ip_info: ['ipaddr:10.0.245.16\\n', 'netmask:255.255.255.0\\n']"""
-
-        parser = self._create_parser()
-        file_path = self._create_temp_file(log_content)
-
-        try:
-            result = parser._parse_file(file_path)
-
-            self.assertEqual(len(result.device_info_list), 3)
-            device_ids = {d.device_id for d in result.device_info_list}
-            self.assertEqual(device_ids, {"0", "1", "10"})
-        finally:
-            os.unlink(file_path)
-
-    def test_container_ip_from_pod_ip(self):
-        """Test that container IP is set from pod_ip"""
-        log_content = """2026-05-26 15:15:48,694 - INFO - host_ip: 90.90.97.42
-2026-05-26 15:15:48,694 - INFO - pod_ip: 192.168.222.203
-2026-05-26 15:15:49,051 - INFO - device_id: 0, device_ip_info: ['ipaddr:10.0.245.11\\n', 'netmask:255.255.255.0\\n']"""
-
-        parser = self._create_parser()
-        file_path = self._create_temp_file(log_content)
-
-        try:
-            result = parser._parse_file(file_path)
-
-            self.assertEqual(result.container_ip, "192.168.222.203")
-        finally:
-            os.unlink(file_path)
 
 
 class TestPyMotorVLLMParserIPv6(unittest.TestCase):
@@ -150,58 +104,6 @@ class TestPyMotorVLLMParserIPv6(unittest.TestCase):
         self.assertIsNotNone(device_info)
         self.assertEqual(device_info.device_id, "3")
         self.assertEqual(device_info.device_ip, "2001:0db8:85a3:0000:0000:8a2e:0370:7334")
-
-    def test_extract_host_pod_ip_ipv6(self):
-        """Test extracting host_ip and pod_ip with IPv6"""
-        log_line_host = "2026-06-08 10:00:02,000 - INFO - host_ip: fe80::1c01:3c0"
-        log_line_pod = "2026-06-08 10:00:02,000 - INFO - pod_ip: 2001:db8::1"
-
-        parser = self._create_parser()
-        parser.extract_host_pod_ip(log_line_host)
-        parser.extract_host_pod_ip(log_line_pod)
-
-        self.assertEqual(parser.host_ip, "fe80::1c01:3c0")
-        self.assertEqual(parser.pod_ip, "2001:db8::1")
-
-    def test_container_ip_from_pod_ip_ipv6(self):
-        """Test that container IP is set from IPv6 pod_ip"""
-        log_content = """2026-06-08 10:00:03,000 - INFO - host_ip: fe80::1c01:3c0
-2026-06-08 10:00:03,000 - INFO - pod_ip: 2001:db8::1
-2026-06-08 10:00:04,000 - INFO - device_id: 0, device_ip_info: ['ipaddr:fe80::1c01:3c0\\n', 'netmask:ffff:ffff::\\n']"""
-
-        parser = self._create_parser()
-        file_path = self._create_temp_file(log_content)
-
-        try:
-            result = parser._parse_file(file_path)
-
-            self.assertEqual(result.container_ip, "2001:db8::1")
-        finally:
-            os.unlink(file_path)
-
-    def test_multiple_devices_parsed_ipv6(self):
-        """Test parsing multiple devices with IPv6 addresses"""
-        log_content = (
-            "2026-06-08 10:00:05,000 - INFO - device_id: 0, device_ip_info: ['ipaddr:fe80::1c01:3c0\\n', 'netmask:ffff:ffff::\\n']\n"
-            "2026-06-08 10:00:06,000 - INFO - device_id: 1, device_ip_info: ['ipaddr:2001:db8::2\\n', 'netmask:ffff:ffff::\\n']\n"
-            "2026-06-08 10:00:07,000 - INFO - device_id: 2, device_ip_info: ['ipaddr:fd00::100\\n', 'netmask:ffff:ffff::\\n']\n"
-        )
-
-        parser = self._create_parser()
-        file_path = self._create_temp_file(log_content)
-
-        try:
-            result = parser._parse_file(file_path)
-
-            self.assertEqual(len(result.device_info_list), 3)
-            device_ids = {d.device_id for d in result.device_info_list}
-            self.assertEqual(device_ids, {"0", "1", "2"})
-            ips = {d.device_ip for d in result.device_info_list}
-            self.assertIn("fe80::1c01:3c0", ips)
-            self.assertIn("2001:db8::2", ips)
-            self.assertIn("fd00::100", ips)
-        finally:
-            os.unlink(file_path)
 
 
 class TestPyMotorVLLMParserSDKInput(unittest.TestCase):
@@ -319,7 +221,7 @@ class TestPyMotorVLLMParserMultiLineFaultMode(unittest.TestCase):
         file_path = self._create_temp_file(log_content)
         try:
             result = parser._parse_file(file_path)
-            event_codes = {ev.get("event_code") for ev in result.event_list}
+            event_codes = {ev.get("event_code") for ev in result}
             self.assertIn("AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_002", event_codes)
         finally:
             os.unlink(file_path)
@@ -335,10 +237,80 @@ class TestPyMotorVLLMParserMultiLineFaultMode(unittest.TestCase):
         file_path = self._create_temp_file(log_content)
         try:
             result = parser._parse_file(file_path)
-            event_codes = {ev.get("event_code") for ev in result.event_list}
+            event_codes = {ev.get("event_code") for ev in result}
             self.assertNotIn("AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_002", event_codes)
         finally:
             os.unlink(file_path)
+
+    def test_mooncake_002_cross_line_match_sdk_input(self):
+        """MOONCAKE_002 opt/all groups on different lines must match in SDK input mode"""
+        from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
+
+        log_lines = [
+            "\x1b[93m2026-06-24 10:46:50.237365 WARNING  \x1b[0m\x1b[0K[3591] "
+            "[client_pool.hpp:445] send request to 80.48.37.140:50060 failed. connection refused. ",
+            "E20260624 10:46:50.237413  3591 master_client.cpp:234] Client not available ",
+            "(Worker_TP1 pid=3193) ERROR 06-24 10:46:50 [mooncake_backend.py:146] "
+            "[vllm-ascend] [distributed] - Initialize mooncake failed. ret=-600, "
+            "metadata_server=P2PHANDSHAKE. Check mooncake config and network. ",
+        ]
+        log_saver = LogInfoSaver(
+            source_file=PyMotorVLLMParser.SOURCE_FILE,
+            path="/log/debug/vllm-mooncake.log",
+            device_id=0,
+            log_lines=log_lines,
+            modification_time="",
+            component="",
+        )
+        parser = self._create_parser()
+        parser.is_sdk_input = True
+        event_codes = {ev.get("event_code") for ev in parser._parse_file(log_saver)}
+        self.assertIn("AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_002", event_codes)
+
+
+class TestPyMotorVLLMParserPlogWindow(unittest.TestCase):
+    """Log lines outside the plog time window must be skipped"""
+
+    CONFIG_PATH = os.path.join(
+        os.path.dirname(__file__), '..', '..', 'src', 'ascend_fd', 'configuration', 'kg-config.json'
+    )
+
+    def _create_parser(self, start_time, end_time):
+        from ascend_fd.utils.load_kg_config import ParseRegexMap
+
+        parse_regex = ParseRegexMap(config_pkg_list=[self.CONFIG_PATH]).get_parse_regex()
+        config = parse_regex.get(PyMotorVLLMParser.SOURCE_FILE, {})
+        return PyMotorVLLMParser(
+            {
+                "default_conf": {PyMotorVLLMParser.SOURCE_FILE: config},
+                "user_conf": {},
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+        )
+
+    def test_lines_outside_plog_window_are_skipped(self):
+        """Lines before start_time and after end_time must not produce events"""
+        log_content = (
+            "2026-11-11 10:00:00,000 - ERROR - AssertionError: EPLB must used in expert parallelism.\n"
+            "2026-11-11 10:05:00,000 - ERROR - AssertionError: EPLB must used in expert parallelism.\n"
+            "2026-11-11 10:20:00,000 - ERROR - batch get lease expired, key_count=256\n"
+        )
+        parser = self._create_parser("2026-11-11 10:01:00.000000", "2026-11-11 10:10:00.000000")
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", prefix="vllm-window-", delete=False) as tmp_file:
+            tmp_file.write(log_content)
+            file_path = tmp_file.name
+        try:
+            events = parser._parse_file(file_path)
+        finally:
+            os.unlink(file_path)
+
+        event_codes = [ev.get("event_code") for ev in events]
+        self.assertIn("AISW_VLLM_ASCEND_EPLB_001", event_codes)
+        self.assertNotIn("MEMCACHE-002", event_codes)
+        eplb_events = [ev for ev in events if ev.get("event_code") == "AISW_VLLM_ASCEND_EPLB_001"]
+        self.assertEqual(len(eplb_events), 1)
+        self.assertEqual(eplb_events[0].get("occur_time"), "2026-11-11 10:05:00.000000")
 
 
 MEM_FAULT_LOG_CASES = {
@@ -430,7 +402,7 @@ class TestPyMotorVLLMParserMemFaultModes(unittest.TestCase):
         file_path = self._create_temp_file(content)
         try:
             result = self._create_parser()._parse_file(file_path)
-            return {ev.get("event_code") for ev in result.event_list}
+            return {ev.get("event_code") for ev in result}
         finally:
             os.unlink(file_path)
 
@@ -480,6 +452,245 @@ class TestPyMotorVLLMParserMemFaultModes(unittest.TestCase):
             ]
         )
         self.assertFalse(event_codes & set(MEM_FAULT_LOG_CASES))
+
+
+VLLM_FAULT_LOG_CASES = {
+    "AISW_VLLM_DPLB_001": [
+        "vllm serve: data_parallel_start_local must be set to use data_parallel_hybrid_lb",
+        "vllm serve: data_parallel_rank or node_rank must be specified if data_parallel_external_lb is enable",
+        "vllm serve: data_parallel_external_lb can only be set when data_parallel_size > 1",
+    ],
+    "AISW_VLLM_SCHEDULER_001": [
+        (
+            "vllm serve: error: argument --scheduling-policy: invalid choice: 'priority2' "
+            "(choose from 'fcfs', 'priority')"
+        ),
+    ],
+    "AISW_VLLM_SAMPLER_001": [
+        "NPUModelRunner init failed: Failed to load LogitsProcessor plugin vllm.ascend_example",
+    ],
+    "AISW_VLLM_ENGINE_001": [
+        (
+            "ValueError: No available memory for the cache blocks. Try increasing "
+            "gpu_memory_utilization when initializing the engine."
+        ),
+    ],
+    "AISW_VLLM_ENGINE_002": [
+        (
+            "Free memory on device (12.3/64.0 GiB) on startup is less than desired GPU memory "
+            "utilization (0.92, request 58.9 GiB). Decrease GPU memory utilization or reduce GPU "
+            "memory used by other processes."
+        ),
+    ],
+    "AISW_VLLM_ASCEND_QUANTIZATION_001": [
+        "vllm-ascend quantization W8A8_DYNAMIC requires soc version, flash_common3 context is required",
+    ],
+    "AISW_VLLM_ASCEND_QUANTIZATION_002": [
+        "MC2 group metadata unavailable, skip mc2 group initialization",
+    ],
+    "AISW_VLLM_ASCEND_QUANTIZATION_003": [
+        (
+            "FAKQuant: Attempted to load weight of shape torch.Size([4096, 4096]) into parameter "
+            "model.layers.0.mlp.down_proj.weight when TP size=16 TP rank=3"
+        ),
+    ],
+    "AISW_VLLM_ASCEND_QUANTIZATION_COMPRESSED_TENSORS_001": [
+        (
+            "TypeError: AscendCompressedTensorsConfig.__init__() missing 3 required positional "
+            "arguments: 'quant_format', 'activation_scheme', 'weight_strategy'"
+        ),
+    ],
+    "AISW_VLLM_ASCEND_QUANTIZATION_ASCEND_001": [
+        "ModelSlim Quantization Config Not Found in model config.json",
+    ],
+    "AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_001": [
+        "RuntimeError: Worker failed with error No such file or directory: /mnt/mooncake/config.json",
+    ],
+    "AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_002": [
+        "client_pool.hpp:445 send request to 10.0.0.1:50060 failed. connection refused.",
+        (
+            "mooncake_backend.py:146 Initialize mooncake failed. ret=-600, metadata_server=P2PHANDSHAKE. "
+            "Check mooncake config and network."
+        ),
+    ],
+    "AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_003": [
+        "Failed to allocate memory for kv pool, ret code 207001",
+    ],
+    "AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_004": [
+        "RuntimeError: HCCL_BUFFSIZE should be positive, but got 0",
+    ],
+    "AISW_VLLM_WEIGHT_LOADER_001": [
+        "KeyError: 'model.layers.0.mlp.experts.down_proj.weight'",
+    ],
+    "AISW_VLLM_ASCEND_SAMPLER_001": [
+        (
+            "sample: sampler Triton not available, falling back to vLLM default penalty "
+            "implementation. Penalty performance may be degraded on NPU."
+        ),
+        (
+            "sample: rejection_sampler Triton not available, falling back to vLLM default penalty "
+            "implementation in rejection sampler. Rejection sampling performance may be degraded on NPU."
+        ),
+    ],
+    "AISW_VLLM_ASCEND_EPLB_001": [
+        "AssertionError: EPLB must used in expert parallelism mode",
+    ],
+    "AISW_VLLM_ASCEND_EPLB_002": [
+        "ValueError: EPLB not support for dense model",
+    ],
+    "AISW_VLLM_ASCEND_SPECDECODE_001": [
+        "ValidationError: 1 validation error for SpeculativeConfig method",
+    ],
+    "AISW_PYMOTOR_ENGINESERVER_001": [
+        "Health check is disabled because npu_usage_threshold is abnormal, threshold=0.9",
+    ],
+    "AISW_VLLM_WEIGHT_LOADER_SCHEME_001": [
+        "NotImplementedError: Currently, vLLM Ascend doesn't support quant_type W4A16",
+    ],
+    "AISW_VLLM_WEIGHT_LOADER_RFORK_001": [
+        "ModuleNotFoundError: No module named 'yr'",
+    ],
+}
+
+# Fault codes whose log case needs several lines together (cross-line all groups).
+VLLM_MULTI_LINE_CASES = {"AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_002"}
+
+
+class TestPyMotorVLLMParserVLLMFaultModes(unittest.TestCase):
+    """Fault mode tests for vLLM and PyMotor entries in kg-config"""
+
+    CONFIG_PATH = os.path.join(
+        os.path.dirname(__file__), '..', '..', 'src', 'ascend_fd', 'configuration', 'kg-config.json'
+    )
+
+    @classmethod
+    def setUpClass(cls):
+        from ascend_fd.utils.load_kg_config import ParseRegexMap
+
+        parse_regex = ParseRegexMap(config_pkg_list=[cls.CONFIG_PATH]).get_parse_regex()
+        cls.config = parse_regex.get(PyMotorVLLMParser.SOURCE_FILE, {})
+
+    def _create_parser(self):
+        return PyMotorVLLMParser(
+            {
+                "default_conf": {PyMotorVLLMParser.SOURCE_FILE: self.config},
+                "user_conf": {},
+            }
+        )
+
+    def _parse_event_codes(self, log_lines):
+        content = "".join(f"2026-11-11 10:00:00,000 - ERROR - {line}\n" for line in log_lines)
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.log', prefix="vllm-fault-", delete=False) as tmp_file:
+            tmp_file.write(content)
+            file_path = tmp_file.name
+        try:
+            result = self._create_parser()._parse_file(file_path)
+            return {ev.get("event_code") for ev in result}
+        finally:
+            os.unlink(file_path)
+
+    def _assert_fault_matched(self, event_code):
+        self.assertIn(event_code, self.config, f"{event_code} is missing in kg-config")
+        log_cases = VLLM_FAULT_LOG_CASES[event_code]
+        # Always check the whole case block, multi-line rules need every line together.
+        self.assertIn(event_code, self._parse_event_codes(log_cases))
+        if event_code in VLLM_MULTI_LINE_CASES:
+            return
+        for log_line in log_cases:
+            with self.subTest(event_code=event_code, log_line=log_line):
+                self.assertIn(event_code, self._parse_event_codes([log_line]))
+
+    def test_dplb_001_data_parallel_lb_config_error(self):
+        """AISW_VLLM_DPLB_001: All DPLB configuration error logs should be matched"""
+        self._assert_fault_matched("AISW_VLLM_DPLB_001")
+
+    def test_scheduler_001_invalid_scheduling_policy(self):
+        """AISW_VLLM_SCHEDULER_001: Unsupported scheduling policy should be matched"""
+        self._assert_fault_matched("AISW_VLLM_SCHEDULER_001")
+
+    def test_sampler_001_logits_processor_load_failure(self):
+        """AISW_VLLM_SAMPLER_001: LogitsProcessor plugin load failure should be matched"""
+        self._assert_fault_matched("AISW_VLLM_SAMPLER_001")
+
+    def test_engine_001_kv_cache_init_failure(self):
+        """AISW_VLLM_ENGINE_001: KV cache block allocation failure should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ENGINE_001")
+
+    def test_engine_002_insufficient_device_memory(self):
+        """AISW_VLLM_ENGINE_002: Insufficient NPU memory should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ENGINE_002")
+
+    def test_quantization_001_multistream_overlap_gate(self):
+        """AISW_VLLM_ASCEND_QUANTIZATION_001: W8A8_DYNAMIC without shared experts should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ASCEND_QUANTIZATION_001")
+
+    def test_quantization_002_mc2_group_metadata(self):
+        """AISW_VLLM_ASCEND_QUANTIZATION_002: MC2 group metadata unavailable should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ASCEND_QUANTIZATION_002")
+
+    def test_quantization_003_fakquant_tp_weight_load(self):
+        """AISW_VLLM_ASCEND_QUANTIZATION_003: FAKQuant TP weight load error should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ASCEND_QUANTIZATION_003")
+
+    def test_quantization_compressed_tensors_001(self):
+        """AISW_VLLM_ASCEND_QUANTIZATION_COMPRESSED_TENSORS_001: config init TypeError should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ASCEND_QUANTIZATION_COMPRESSED_TENSORS_001")
+
+    def test_quantization_ascend_001_config_not_found(self):
+        """AISW_VLLM_ASCEND_QUANTIZATION_ASCEND_001: ModelSlim config missing should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ASCEND_QUANTIZATION_ASCEND_001")
+
+    def test_kv_pool_mooncake_001_worker_failed(self):
+        """AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_001: Missing mooncake config file should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_001")
+
+    def test_kv_pool_mooncake_002_config_or_port_error(self):
+        """AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_002: Cross-line mooncake config error should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_002")
+
+    def test_kv_pool_mooncake_003_allocate_memory_failed(self):
+        """AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_003: KV pool memory allocation failure should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_003")
+
+    def test_kv_pool_mooncake_004_hccl_buffsize(self):
+        """AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_004: Non-positive HCCL_BUFFSIZE should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_004")
+
+    def test_weight_loader_001_expert_weight_key_error(self):
+        """AISW_VLLM_WEIGHT_LOADER_001: Expert down_proj weight KeyError should be matched"""
+        self._assert_fault_matched("AISW_VLLM_WEIGHT_LOADER_001")
+
+    def test_ascend_sampler_001_triton_fallback(self):
+        """AISW_VLLM_ASCEND_SAMPLER_001: Both sampler Triton fallback logs should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ASCEND_SAMPLER_001")
+
+    def test_eplb_001_expert_parallelism_assert(self):
+        """AISW_VLLM_ASCEND_EPLB_001: EPLB outside expert parallelism should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ASCEND_EPLB_001")
+
+    def test_eplb_002_not_support(self):
+        """AISW_VLLM_ASCEND_EPLB_002: EPLB unsupported scenario should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ASCEND_EPLB_002")
+
+    def test_specdecode_001_validation_error(self):
+        """AISW_VLLM_ASCEND_SPECDECODE_001: SpeculativeConfig validation error should be matched"""
+        self._assert_fault_matched("AISW_VLLM_ASCEND_SPECDECODE_001")
+
+    def test_pymotor_engineserver_001_health_check_disabled(self):
+        """AISW_PYMOTOR_ENGINESERVER_001: Abnormal npu_usage_threshold should be matched"""
+        self._assert_fault_matched("AISW_PYMOTOR_ENGINESERVER_001")
+
+    def test_weight_loader_scheme_001_unsupported_quant_type(self):
+        """AISW_VLLM_WEIGHT_LOADER_SCHEME_001: Unsupported quant_type should be matched"""
+        self._assert_fault_matched("AISW_VLLM_WEIGHT_LOADER_SCHEME_001")
+
+    def test_weight_loader_rfork_001_missing_module(self):
+        """AISW_VLLM_WEIGHT_LOADER_RFORK_001: Missing 'yr' module should be matched"""
+        self._assert_fault_matched("AISW_VLLM_WEIGHT_LOADER_RFORK_001")
+
+    def test_vllm_fault_cases_cover_all_kg_config_entries(self):
+        """Every PyMotor_vLLM_Log entry must have a fault log case"""
+        self.assertEqual(set(self.config), set(VLLM_FAULT_LOG_CASES) | set(MEM_FAULT_LOG_CASES))
 
 
 class TestPyMotorVLLMParserMMCLog(unittest.TestCase):
@@ -565,6 +776,73 @@ class TestPyMotorVLLMParserMMCLog(unittest.TestCase):
 
             event_codes = {ev.get("event_code") for ev in events}
             self.assertIn("AISW_VLLM_ASCEND_EPLB_001", event_codes)
+
+
+class TestPyMotorVLLMParserMMCDebugSkip(unittest.TestCase):
+    """Memcache (mmc*.log) DEBUG lines must be skipped before the fault matching"""
+
+    CONFIG_PATH = os.path.join(
+        os.path.dirname(__file__), '..', '..', 'src', 'ascend_fd', 'configuration', 'kg-config.json'
+    )
+
+    @classmethod
+    def setUpClass(cls):
+        from ascend_fd.utils.load_kg_config import ParseRegexMap
+
+        parse_regex = ParseRegexMap(config_pkg_list=[cls.CONFIG_PATH]).get_parse_regex()
+        cls.config = parse_regex.get(PyMotorVLLMParser.SOURCE_FILE, {})
+
+    def _create_parser(self):
+        return PyMotorVLLMParser(
+            {
+                "default_conf": {PyMotorVLLMParser.SOURCE_FILE: self.config},
+                "user_conf": {},
+            }
+        )
+
+    def _parse_event_codes(self, filename, content):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path = os.path.join(tmp_dir, filename)
+            with open(file_path, "w", encoding="utf-8") as tmp_file:
+                tmp_file.write(content)
+            result = self._create_parser()._parse_file(file_path)
+            return {ev.get("event_code") for ev in result}
+
+    def test_mmc_debug_line_skipped(self):
+        """A DEBUG line in mmc*.log should not produce an event"""
+        content = (
+            "2026-11-13 18:56:55.164739 DEBUG [123] batch get lease expired, key_count=256\n"
+            "2026-11-13 18:56:56.164739 ERROR [123] Fatal signal caught, signo=11 sender_pid=123\n"
+        )
+        event_codes = self._parse_event_codes("mmc-090.log", content)
+        self.assertNotIn("MEMCACHE-002", event_codes)
+        self.assertIn("MF-CLUSTER-001", event_codes)
+
+    def test_vllm_debug_line_not_skipped(self):
+        """The DEBUG skip only applies to mmc*.log, vLLM DEBUG lines are still parsed"""
+        content = "2026-05-26 15:15:48,667 - DEBUG - batch get lease expired, key_count=256\n"
+        self.assertIn("MEMCACHE-002", self._parse_event_codes("vllm-d0.log", content))
+
+    def test_debug_word_in_message_body_not_skipped(self):
+        """A DEBUG word inside the message body must not skip a real fault line"""
+        content = "2026-11-13 18:56:55.164739 INFO [123] current log level DEBUG, batch get lease expired\n"
+        self.assertIn("MEMCACHE-002", self._parse_event_codes("mmc-090.log", content))
+
+    def test_is_debug_log_line(self):
+        """Only the level token of the log header should be detected"""
+        self.assertTrue(PyMotorVLLMParser._is_debug_log_line("2026-11-13 18:56:55.164739 DEBUG [1] x"))
+        self.assertTrue(PyMotorVLLMParser._is_debug_log_line("2026-11-13 18:56:55.164739 [DEBUG] x"))
+        self.assertTrue(PyMotorVLLMParser._is_debug_log_line("2026-11-13 18:56:55.164739 debug [1] x"))
+        self.assertTrue(PyMotorVLLMParser._is_debug_log_line("2026-11-13 18:56:55.164739 Debug [1] x"))
+        self.assertFalse(PyMotorVLLMParser._is_debug_log_line("2026-11-13 18:56:55.164739 INFO level DEBUG"))
+        self.assertFalse(PyMotorVLLMParser._is_debug_log_line("plain line without level"))
+
+    def test_is_mmc_log(self):
+        """mmc*.log should be recognized as Memcache logs"""
+        self.assertTrue(PyMotorVLLMParser._is_mmc_log("mmc-090.log"))
+        self.assertTrue(PyMotorVLLMParser._is_mmc_log("mmc_local_8600.log"))
+        self.assertFalse(PyMotorVLLMParser._is_mmc_log("vllm-d0.log"))
+        self.assertFalse(PyMotorVLLMParser._is_mmc_log("mindie-motor-controller-090.log"))
 
 
 if __name__ == '__main__':
